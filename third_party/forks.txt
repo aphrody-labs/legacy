@@ -129,3 +129,4 @@ longbridge/gpui-fast Rust
 remorses/gpuix Rust
 zed-industries/awesome-gpui Python
 zed-industries/create-gpui-app Rust
+aphrody-labs/ghidra Java
