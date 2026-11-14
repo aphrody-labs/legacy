@@ -289,7 +289,11 @@ async function ensureCli() {
   if (!sel("android-cli")) return;
   const dest = join(homedir(), ".local/bin", WIN ? "android.exe" : "android").replaceAll("\\", "/");
   if (existsSync(dest)) return log("android cli present", dest);
-  await fetchTo(man.cli[HOST], dest);
+  try {
+    await fetchTo(man.cli[HOST], dest);
+  } catch (e) {
+    return log("android cli skipped (not needed for builds):", String(e));
+  }
   if (!WIN) chmodSync(dest, 0o755);
   const sum = await sha(dest, "sha256");
   const lock = existsSync(LOCK) ? JSON.parse(readFileSync(LOCK, "utf8")) : {};
