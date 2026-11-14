@@ -99,6 +99,9 @@ pub enum Cmd {
     /// Patch stacks of the bun and Chromium forks: status, sync, check, pr, mark, gc, export (packages/upstream)
     #[command(disable_help_flag = true)]
     Upstream(Rest),
+    /// GNU upstream tracker and distributor: status, search, package, feed, diff, kernel, sync, site (packages/gnu)
+    #[command(disable_help_flag = true)]
+    Gnu(Rest),
     /// Omarchy (quattro) + CachyOS command center: commands, theme, plugin, font, manual, kernel, pkg, wsl
     #[command(disable_help_flag = true)]
     Omarchy(Rest),
@@ -304,6 +307,7 @@ pub fn route(cmd: Cmd) -> Route {
         Cmd::Ui(r) => Route::Ui(r.args),
         Cmd::Jules(r) => Route::Package("ai-os", prefixed(&["jules"], &r.args)),
         Cmd::Upstream(r) => Route::Package("upstream", r.args),
+        Cmd::Gnu(r) => Route::Package("gnu", r.args),
         Cmd::Omarchy(r) => Route::Omarchy(r.args),
         Cmd::Linux(r) => Route::Linux(r.args),
         Cmd::Pkg(r) => Route::Pkg(r.args),
@@ -642,6 +646,8 @@ mod tests {
     fn upstream_runs_the_bun_package() {
         assert_eq!(parse("upstream status bun --json"), Route::Package("upstream", v(&["status", "bun", "--json"])));
         assert_eq!(parse("upstream --help"), Route::Package("upstream", v(&["--help"])));
+        assert_eq!(parse("gnu status --json"), Route::Package("gnu", v(&["status", "--json"])));
+        assert_eq!(parse("gnu kernel"), Route::Package("gnu", v(&["kernel"])));
     }
 
     #[test]
