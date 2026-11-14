@@ -4638,6 +4638,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/tauri": {
+      "path": "third_party/tauri",
+      "url": "https://github.com/aphrody-labs/tauri.git",
+      "upstream_url": "https://github.com/tauri-apps/tauri.git",
+      "commit": "271c15e1eaebb8e12aac8c4e63eead1ff17fd93a",
+      "branch": "v3",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/tauri.git",
+        "upstream": "https://github.com/tauri-apps/tauri.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/tensorzero": {
       "path": "third_party/tensorzero",
       "url": "https://github.com/tensorzero/tensorzero.git",
@@ -6920,7 +6934,7 @@
       "path": "third_party/zed",
       "url": "https://github.com/aphrody-labs/zed.git",
       "upstream_url": "https://github.com/zed-industries/zed.git",
-      "commit": "3def8bad0b62dbda02d5b67b00df96fe8d3957bd",
+      "commit": "2de90a45a393db5f5e7dc64eceaaaa2fbdd5dfb4",
       "branch": "main",
       "engine": "git",
       "pillar": "git",

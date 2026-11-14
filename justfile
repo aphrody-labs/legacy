@@ -83,8 +83,3 @@ lint:
 [group('dev')]
 test ref="origin/main":
     just test-affected {{ref}}
-
-# Ghidra fork: LLVM full-LTO decompiler/sleigh on fr1 (clone /srv/ghidra)
-[group('re')]
-ghidra-build:
-    ssh vps "make -C /srv/ghidra/Ghidra/Features/Decompiler/src/decompile/cpp -j12 LLVM=1 ghidra_opt sleigh_opt"
