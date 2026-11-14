@@ -38,6 +38,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "IFS= read -r -d '' j; s=${j#*\\\"session_id\\\":\\\"}; s=${s%%\\\"*}; d=${RELAY_HOME:-${LOCALAPPDATA:+$LOCALAPPDATA/aphrody/relay}}; d=${d:-${XDG_STATE_HOME:-$HOME/.local/state}/aphrody/relay}; [ -e \"$d/sessions/$s.pending\" ] && printf %s \"$j\" | bun {src}/packages/ai-os/src/relay/session-hook.ts deliver; exit 0",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -48,6 +58,39 @@
             "type": "command",
             "command": "IFS= read -r -d '' j; c=${j#*\\\"command\\\":\\\"}; c=${c%%\\\",\\\"*}; c=\" ; ${c//[;&|(]/ ; } \"; c=${c//  / }; c=${c//  / }; r=; case \"$c\" in *\"; cat \"*|*\"; grep \"*|*\"; sed \"*|*\"; ls \"*|*\"; find \"*|*\"; du \"*|*\"; curl \"*|*\"; cd \"*) r=\"coreutils: use rg, fd, sd, dua, xh, jaq or Read/Grep/Glob/Edit, absolute paths, no cd\";; esac; case \"$c\" in *\"; git commit \"*) case \"$c\" in *\" -- \"*) ;; *) r=\"plain git commit takes the whole shared index: git commit -m <msg> -- <files>, ay code commit, or a private index\";; esac;; esac; case \"$c\" in *\"; git add -A\"*|*\"; git add . \"*|*\"; git add --all\"*|*\"; git stash\"*) r=\"shared tree: stage explicit files, never stash\";; esac; case \"$c\" in *\"; git commit \"*\" -- \"*\"/ \"*|*\"; git commit \"*\" -- \"*\"/ ;\"*) r=\"git commit -- <dir>/ also takes files of other sessions in that dir: list the files\";; esac; [ -n \"$r\" ] && printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"%s\"}}' \"$r\"; exit 0",
             "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun {src}/packages/ai-os/src/relay/session-hook.ts start",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "IFS= read -r -d '' j; s=${j#*\\\"session_id\\\":\\\"}; s=${s%%\\\"*}; d=${RELAY_HOME:-${LOCALAPPDATA:+$LOCALAPPDATA/aphrody/relay}}; d=${d:-${XDG_STATE_HOME:-$HOME/.local/state}/aphrody/relay}; [ -e \"$d/sessions/$s.pending\" ] && printf %s \"$j\" | bun {src}/packages/ai-os/src/relay/session-hook.ts deliver; exit 0",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "IFS= read -r -d '' j; s=${j#*\\\"session_id\\\":\\\"}; s=${s%%\\\"*}; d=${RELAY_HOME:-${LOCALAPPDATA:+$LOCALAPPDATA/aphrody/relay}}; d=${d:-${XDG_STATE_HOME:-$HOME/.local/state}/aphrody/relay}; [ -e \"$d/sessions/$s.pending\" ] && printf %s \"$j\" | bun {src}/packages/ai-os/src/relay/session-hook.ts stop; exit 0",
+            "timeout": 10
           }
         ]
       }

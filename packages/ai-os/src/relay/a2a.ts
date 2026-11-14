@@ -28,6 +28,7 @@ export const A2A_SKILLS = [
   "gemini_review",
   "agent_run",
   "llm_ask",
+  "session_send",
 ];
 
 // Codes JSON-RPC des erreurs A2A (§5.4) et raisons google.rpc.ErrorInfo.
@@ -210,6 +211,9 @@ function argsFor(skill: string, m: Message, prompt: string, chat?: string) {
       return { task: prompt, ...(md.model ? { model: md.model } : {}) };
     case "llm_ask":
       return { model: md.model, prompt };
+    case "session_send":
+      // A2A peer messaging: metadata {from, to, reply_to?}; the task completes with the recipient reply.
+      return { from: md.from, to: md.to, text: prompt, ...(md.reply_to ? { reply_to: md.reply_to } : {}), wait_s: Number(md.wait_s ?? 600) };
     case "claude_ask":
     case "agy_ask":
       return { prompt, ...(md.model ? { model: md.model } : {}) };
@@ -278,6 +282,14 @@ function start(r: Req): Start {
         r.id,
         "message.metadata.model",
         "llm_ask needs provider/model",
+      ),
+    };
+  if (skill === "session_send" && (!md.from || !md.to))
+    return {
+      error: badRequest(
+        r.id,
+        !md.from ? "message.metadata.from" : "message.metadata.to",
+        "session_send needs metadata.from (your session) and metadata.to (recipient)",
       ),
     };
   const pr = promptOf(m.parts);

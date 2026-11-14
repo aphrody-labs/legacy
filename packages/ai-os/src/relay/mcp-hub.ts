@@ -3,6 +3,7 @@
 // une ligne JSON par message) ; http : POST JSON-RPC avec les en-têtes configurés. Les valeurs d'env/en-têtes ne sont
 // jamais journalisées. Les connecteurs claude.ai (Gmail, Drive, Docs, Slides, Sheets, Calendar) ne sont joignables que
 // par une session Claude Code : outil `workspace_ask` (tools.ts).
+import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { outboundFetch } from "./outbound.ts";
@@ -67,6 +68,14 @@ export async function userServers(): Promise<Record<string, Conf>> {
   };
 }
 
+/** Enfants stdio vivants : tués à la sortie du relais (sinon un `agent-desktop mcp` orphelin par pont stdio). */
+const children = new Set<ReturnType<typeof Bun.spawn>>();
+export const closeHub = () => {
+  for (const c of children) c.kill();
+  children.clear();
+};
+process.once("exit", closeHub);
+
 class StdioServer {
   private p: ReturnType<typeof Bun.spawn> | null = null;
   private seq = 0;
@@ -76,13 +85,22 @@ class StdioServer {
 
   private async start() {
     if (this.p) return;
+    // agent-desktop refuse un état dont le propriétaire diffère du jeton (session élevée = BUILTIN\Administrateurs,
+    // non élevée = utilisateur) : racine d'état dédiée au relais, créée par son propre processus.
+    const home = /agent-desktop(\.exe)?$/i.test(this.conf.command ?? "")
+      ? { AGENT_DESKTOP_HOME: join(relayHome(), "agent-desktop") }
+      : {};
+    if (home.AGENT_DESKTOP_HOME)
+      mkdirSync(home.AGENT_DESKTOP_HOME, { recursive: true });
     const p = Bun.spawn([this.conf.command!, ...(this.conf.args ?? [])], {
       stdin: "pipe",
       stdout: "pipe",
       stderr: "ignore",
-      env: { ...process.env, ...(this.conf.env ?? {}) },
+      env: { ...process.env, ...home, ...(this.conf.env ?? {}) },
     });
     this.p = p;
+    children.add(p);
+    p.exited.then(() => children.delete(p));
     (async () => {
       for await (const c of p.stdout as ReadableStream<Uint8Array>) {
         this.buf += Buffer.from(c).toString("utf8");

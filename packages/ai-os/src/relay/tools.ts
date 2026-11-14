@@ -7,6 +7,7 @@ import { hubCall, hubTools } from "./mcp-hub.ts";
 import { CORE_TOOLS } from "./core-tools.ts";
 import { ORCH_TOOLS } from "./orch-tools.ts";
 import { TERM_TOOLS } from "../term/mcp-tools.ts";
+import { SESSION_TOOLS } from "./session-tools.ts";
 // packages/ai-os/src/google may be absent from a checkout (module not yet on main): the relay then
 // starts without these tools instead of crashing (prd rollback 2026-11-13, src-checkout-update).
 const GOOGLE_TOOLS: Tool[] = await import("../google/tools.ts").then(
@@ -533,6 +534,7 @@ TOOLS.push(
     readOnly: false,
     run: (a) => hubCall(String(a.name), a.arguments ?? {}),
   },
+  ...SESSION_TOOLS,
   ...AGENT_TOOLS,
   ...CORE_TOOLS,
   ...ORCH_TOOLS,
