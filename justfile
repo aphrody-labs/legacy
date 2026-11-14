@@ -13,11 +13,13 @@ root := env("SRC_ROOT", justfile_directory())
 image := env("SRC_IMAGE", "aphrody/monorepo-dev:local")
 
 import "src/ay/ay.just"
+import "src/gnu/gnu.just"
 import "scripts/scripts.just"
 import "packages/ai-os/ai-os.just"
 import "packages/core/core.just"
 import "packages/chromium-bun/chromium-bun.just"
 import "packages/env-kit/env-kit.just"
+import "packages/gnu/gnu.just"
 import "packages/machine/machine.just"
 import "packages/release/release.just"
 import "packages/upstream/upstream.just"
