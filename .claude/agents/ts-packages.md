@@ -26,10 +26,7 @@ You change TypeScript in C:\src with Bun only (no node, npm or tsc).
 - Run `bun scripts/checkdeps.ts`.
 
 ## Commit
-- Use a private index (see `.claude/agents/rust-crates.md`), or `ay code commit -m <msg> <files>`.
-- Never stash, reset or branch, and never add a directory to the shared index.
-- Push with `git push aphrody HEAD:main`.
-
+- `bun scripts/commit.ts -m "<msg>" --push <paths>...`: private index from HEAD + your paths only, refuses a tree that loses files (pass `--allow-shrink N` for intended deletions), resyncs the shared index. Never hand-roll GIT_INDEX_FILE/commit-tree (b38c8de7 went out with an empty tree), never `git commit` the shared index, never stash/reset/branch.
 ## Tools
 - rg, fd, jaq, sd, xh, bun.
 - Never cat, grep, sed, find, ls, du, curl or cd.

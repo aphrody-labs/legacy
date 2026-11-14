@@ -25,7 +25,8 @@ You absorb upstream code into C:\src and remove duplicate copies.
 2. Keep one copy per project:
    - the pin lives in `src.lock.json`, and `ay manifests` derives DEPS and .gitmodules from it;
    - a fork is `aphrody-labs/<name>`, rebased on upstream main;
-   - Rust leaf crates are flattened by `ay flat sync --fork third_party/<fork>`, as already done for bun-flat and diffutils-flat.
+   - Rust leaf crates are flattened by `ay flat sync --fork third_party/<fork>`, as already done for diffutils-flat.
+   - Bun's crates are the exception: they are imported under their upstream names into `src/` (docs/ARCHITECTURE.md section 9.5), never flattened.
 3. Before copying, rg for an existing first-party or third_party copy of the same code, and keep the most upstream-recent one.
 4. After the move, delete the duplicate in the same commit and update every reference.
 
@@ -35,10 +36,7 @@ You absorb upstream code into C:\src and remove duplicate copies.
 - TS goes through targeted `bun test <path>`.
 
 ## Commit
-- Use a private index, as described in `.claude/agents/rust-crates.md`.
-- Never stash, reset or branch, and never add a directory to the shared index.
-- Push with `git push aphrody HEAD:main` alone.
-
+- `bun scripts/commit.ts -m "<msg>" --push <paths>...`: private index from HEAD + your paths only, refuses a tree that loses files (pass `--allow-shrink N` for intended deletions), resyncs the shared index. Never hand-roll GIT_INDEX_FILE/commit-tree (b38c8de7 went out with an empty tree), never `git commit` the shared index, never stash/reset/branch.
 ## Tools
 - rg, fd, jaq, sd, xh, bun, gh.
 - Never cat, grep, sed, find, ls, du, curl or cd.

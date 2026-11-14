@@ -19,7 +19,11 @@ Guidance for Claude Code (`claude.ai/code`). Canonical contract: [`AGENTS.md`](.
   - `coherence-fixer`
   - `fact-checker`: read-only.
   - `Explore` / `Plan` for read-only research.
-- Commits in the shared tree go through a private index (`GIT_INDEX_FILE`, `commit-tree`, `update-ref`) or `ay code commit`, never a plain `git commit` of the shared index.
+- Commits in the shared tree go through `bun scripts/commit.ts -m "<msg>" --push <paths>...`.
+  - It builds the commit in a private index and refuses a tree that loses files: b38c8de7 shipped an empty tree on 2026-11-15.
+  - Never use a plain `git commit` of the shared index.
+- Sessions talk through the relay mailbox, via MCP `session_send`, `session_inbox` and `session_list`, or the A2A skill `session_send`.
+  - Each Claude Code session learns its name from the SessionStart hook.
 
 ## Essential Commands
 

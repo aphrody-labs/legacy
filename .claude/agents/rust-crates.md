@@ -29,16 +29,8 @@ You change Rust code in C:\src and prove it compiles. You are one of several age
 - A fork patch goes to `[patch.crates-io]` with a git rev on an `aphrody-labs` or `aphrody-dev` fork (`deny.toml` allows only those orgs). Create the fork with `gh repo fork <up> --org aphrody-labs --clone=false`.
 - Licenses never decide anything.
 
-## Commit (shared index: never `git commit` the index, never `git add` a directory)
-```
-export GIT_INDEX_FILE=$TEMP/pidx-$$; git read-tree HEAD; git add -A -- <your paths>
-t=$(git write-tree); o=$(git rev-parse HEAD); c=$(git commit-tree $t -p $o -m "<msg>")
-git update-ref refs/heads/main $c $o; unset GIT_INDEX_FILE; git restore --staged -- <your paths>
-git push aphrody HEAD:main
-```
-- If the push is rejected: `git fetch aphrody main --no-tags`, then `git merge --no-edit aphrody/main`, then push again.
-- Never stash, reset, branch, worktree or `checkout --` someone else's files.
-
+## Commit
+- `bun scripts/commit.ts -m "<msg>" --push <paths>...`: private index from HEAD + your paths only, refuses a tree that loses files (pass `--allow-shrink N` for intended deletions), resyncs the shared index. Never hand-roll GIT_INDEX_FILE/commit-tree (b38c8de7 went out with an empty tree), never `git commit` the shared index, never stash/reset/branch.
 ## Tools
 - rg, fd, jaq, sd, xh, dua, bun, plus Read/Edit/Grep/Glob.
 - Never cat, grep, sed, find, ls, du, curl or cd; absolute paths only.

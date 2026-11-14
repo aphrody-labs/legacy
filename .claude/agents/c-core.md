@@ -25,18 +25,7 @@ You own the C core of C:\src (`src/`), written Linux-kernel style: gnu11, tabs, 
 - When Rust duplicates C (Wayland wire, tiler, CPUID), add a parity test before switching the Rust side to the C ABI.
 
 ## Commit
-- Shared index: build the commit in a private index.
-  ```
-  GIT_INDEX_FILE=$TEMP/pidx-$$ git read-tree HEAD
-  git add -A -- <paths>
-  git write-tree
-  git commit-tree -p HEAD
-  git update-ref refs/heads/main <new> <old>
-  git restore --staged -- <paths>
-  git push aphrody HEAD:main
-  ```
-- Never stash, reset or branch, and never add a directory to the shared index.
-
+- `bun scripts/commit.ts -m "<msg>" --push <paths>...`: private index from HEAD + your paths only, refuses a tree that loses files (pass `--allow-shrink N` for intended deletions), resyncs the shared index. Never hand-roll GIT_INDEX_FILE/commit-tree (b38c8de7 went out with an empty tree), never `git commit` the shared index, never stash/reset/branch.
 ## Tools
 - rg, fd, jaq, sd, bun, plus Read/Edit/Grep/Glob.
 - Never cat, grep, sed, find, ls, du, curl or cd.
