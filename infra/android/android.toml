@@ -18,7 +18,7 @@ avd_name = "ay-x64"
 [[jdk]]
 name = "temurin-25-lts"
 version = "25.0.5+8"
-profiles = ["pc", "ci"]
+profiles = ["pc", "ci"", "emu"]
 linux = { url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_linux_hotspot_25.0.5_8.tar.gz", sha256 = "68982529869257d0ee6b824ec5aa270ff8b118bb438670da0b97ebdab178d7fb" }
 windows = { url = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.5%2B8/OpenJDK25U-jdk_x64_windows_hotspot_25.0.5_8.zip", sha256 = "636bdc13dc649ddc7d5921c5c7d23cca6e44fd19d662b45cc9c02135a6c96c42" }
 
@@ -33,17 +33,17 @@ windows = { url = "https://github.com/adoptium/temurin27-binaries/releases/downl
 [[sdk]]
 path = "cmdline-tools;latest"
 rev = "23.0"
-profiles = ["pc", "ci"]
+profiles = ["pc", "ci"", "emu"]
 
 [[sdk]]
 path = "platform-tools"
 rev = "37.0.1"
-profiles = ["pc", "ci"]
+profiles = ["pc", "ci"", "emu"]
 
 [[sdk]]
 path = "emulator"
 rev = "37.2.13"
-profiles = ["pc", "ci"]
+profiles = ["pc", "ci"", "emu"]
 
 [[sdk]]
 path = "build-tools;37.0.0"
@@ -79,7 +79,7 @@ profiles = ["pc"]
 [[sdk]]
 path = "system-images;android-37.2;google_apis_ps16k;x86_64"
 rev = "7"
-profiles = ["pc", "ci"]
+profiles = ["pc", "ci"", "emu"]
 
 [[sdk]]
 path = "system-images;android-37.0;google_apis;x86_64"
