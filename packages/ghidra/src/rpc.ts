@@ -52,7 +52,12 @@ export class Session {
   #pending = new Map<number, { res: (v: any) => void; rej: (e: Error) => void }>();
   #buf = "";
   #release: number[] = [];
+  /** live proxies per Java handle id (the bridge returns the same id for the same object) */
+  #refs = new Map<number, number>();
   #registry = new FinalizationRegistry<number>((h) => {
+    const n = (this.#refs.get(h) ?? 1) - 1;
+    if (n > 0) { this.#refs.set(h, n); return; }
+    this.#refs.delete(h);
     this.#release.push(h);
     if (this.#release.length === 1) queueMicrotask(() => this.#flushRelease());
   });
@@ -153,7 +158,11 @@ export class Session {
 
   decode(v: any): any {
     if (v === null || typeof v !== "object") return v;
-    if (Array.isArray(v)) return v.map((x) => this.decode(x));
+    if (Array.isArray(v)) {
+      const a = v.map((x) => this.decode(x));
+      Object.defineProperty(a, "$list", { value: async () => a });
+      return a;
+    }
     if ("$h" in v) return this.#wrap(v.$h, v.c);
     if ("$long" in v) return BigInt(v.$long);
     if ("$double" in v) return Number(v.$double);
@@ -172,7 +181,9 @@ export class Session {
       $setField: (f: string, v: unknown) => self.#send({ op: "setfield", h, f, a: [self.encode(v)] }),
       $instanceOf: (cls: string) => self.#send({ op: "instanceof", h, c: cls }),
       $release: () => self.#send({ op: "release", hs: [h] }).then(() => undefined),
-      toString: () => `[java ${c}#${h}]`,
+      /** java.lang.Object.toString() (async); string coercion yields a debug tag */
+      toString: () => self.#send({ op: "str", h }),
+      [Symbol.toPrimitive]: () => `[java ${c}#${h}]`,
       [Symbol.for("nodejs.util.inspect.custom")]: () => `[java ${c}#${h}]`,
     };
     const p = new Proxy(meta, {
@@ -182,6 +193,9 @@ export class Session {
         return (...args: unknown[]) => self.#send({ op: "call", h, m: name, a: args.map((x) => self.encode(x)) });
       },
     });
+    this.#refs.set(h, (this.#refs.get(h) ?? 0) + 1);
+    const pend = this.#release.indexOf(h);
+    if (pend >= 0) this.#release.splice(pend, 1); // re-referenced before the release was sent
     this.#registry.register(p, h);
     return p as unknown as JObject;
   }

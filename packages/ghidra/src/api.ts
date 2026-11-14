@@ -281,7 +281,16 @@ export async function openProgram(binaryPath: string | null, o: OpenProgramOptio
   let loc = o.projectLocation ? resolve(o.projectLocation) : dirname(bp!);
   if (o.nestedProjectLocation ?? true) loc = join(loc, projectName);
   const GP = s.cls("ghidra.base.project.GhidraProject");
-  const loaderCls: unknown = o.loader ? { $class: o.loader } : undefined;
+  let loaderCls: unknown = undefined;
+  if (o.loader) {
+    const Class = s.cls("java.lang.Class");
+    try { loaderCls = await Class.forName(o.loader); } catch (e: any) {
+      if (e?.type === "java.lang.ClassNotFoundException") throw new Error(`Invalid loader ${o.loader}`);
+      throw e;
+    }
+    const iface = await Class.forName("ghidra.app.util.opinion.Loader");
+    if (!(await iface.isAssignableFrom(loaderCls))) throw new TypeError(`${o.loader} does not implement ghidra.app.util.opinion.Loader`);
+  }
   const locator = await s.newObject("ghidra.framework.model.ProjectLocator", loc, projectName);
   let project: JObject;
   if (await locator.exists()) project = await GP.openProject(loc, projectName, true);
@@ -338,7 +347,14 @@ export async function withProgram<T>(binaryPath: string | null, o: OpenProgramOp
 // ---- scripts ---------------------------------------------------------------------------------------
 
 /** pyghidra.get_current_interpreter: the script context of the running bun-ghidra script, if any. */
-export function getCurrentInterpreter(): ScriptContext | undefined { return getContext(); }
+let headlessInterpreter: ScriptContext | undefined;
+export function getCurrentInterpreter(): ScriptContext | undefined {
+  const c = getContext();
+  if (c) return c;
+  if (!started()) return undefined;
+  // pyghidra headless: a default script with no program
+  return (headlessInterpreter ??= { session: jvm(), flat: createFlat({ callFlat: async () => { throw new Error("no current program"); } }), scriptName: "interpreter" });
+}
 
 /**
  * pyghidra.run_script analogue: open `binaryPath`, expose the script context (see `@aphrody/ghidra/script`)
