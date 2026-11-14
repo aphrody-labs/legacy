@@ -1,0 +1,113 @@
+# Canary channel (docs/packaging/VERSIONING.md): every green ci run on main + daily, built on fr1, published
+# as the rolling GitHub prerelease `canary` (Bun canary / Chromium Canary / Rust nightly model).
+name: canary
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+permissions: { contents: write, actions: read }
+jobs:
+  canary:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: [self-hosted, fr1]
+    # Job level: a skipped run (red ci) never takes the group, so it cannot cancel a running canary.
+    concurrency: { group: canary, cancel-in-progress: false }
+    timeout-minutes: 90
+    env:
+      RUSTC_WRAPPER: ""
+      CARGO_TERM_COLOR: never
+      CARGO_TARGET_DIR: ${{ github.workspace }}/../canary-target
+      HEAVY_WAIT_MAX: "2700"
+      TARGET: x86_64-unknown-linux-gnu # chromium-157 toolchain ships no musl std (run 43368108045)
+    steps:
+      - name: Resolve green SHA
+        # workflow_run = the commit ci just passed; schedule/dispatch = newest green ci on main, never raw HEAD.
+        # No-op when that SHA already carries the canary tag (cron, re-run) or is older than it (out-of-order queue).
+        id: ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          WR_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$EVENT" = workflow_run ]; then sha=$WR_SHA
+          else sha=$(gh run list -w ci.yml -b main -s success -L 1 --json headSha -q '.[0].headSha'); fi
+          [ -n "$sha" ] || { echo "no green ci run on main"; exit 1; }
+          prev=$(gh api "repos/$GH_REPO/git/ref/tags/canary" -q .object.sha 2>/dev/null || true)
+          skip=false
+          if [ -n "$prev" ]; then
+            [ "$prev" = "$sha" ] && [ "$EVENT" != workflow_dispatch ] && skip=true
+            st=$(gh api "repos/$GH_REPO/compare/$prev...$sha" -q .status 2>/dev/null || echo unknown)
+            case $st in behind|diverged) echo "skip: $sha is $st of canary $prev"; skip=true ;; esac
+          fi
+          echo "SHA=$sha" >> "$GITHUB_ENV"; echo "skip=$skip" >> "$GITHUB_OUTPUT"
+      - id: app
+        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, borné aux permissions listées.
+        if: steps.ref.outputs.skip != 'true' && vars.APHRODY_APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.APHRODY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.APHRODY_APP_KEY }}
+          permission-contents: read
+      - if: steps.ref.outputs.skip != 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ env.SHA }}
+          token: ${{ steps.app.outputs.token || github.token }}
+          # Full history without blobs: the release notes are the git log since the last stable tag.
+          fetch-depth: 0
+          filter: blob:none
+          submodules: false
+      - name: Toolchain
+        if: steps.ref.outputs.skip != 'true'
+        run: bun scripts/toolchain.ts install
+      - name: Build ay (profile dist, linux-gnu)
+        if: steps.ref.outputs.skip != 'true'
+        run: aphrody-heavy cargo build --profile dist -p aphrody --target "$TARGET"
+      - name: Package
+        if: steps.ref.outputs.skip != 'true'
+        id: pkg
+        run: |
+          base=$(cargo metadata --no-deps --format-version 1 | jaq -r '.packages[]|select(.name=="aphrody").version')
+          ver="${base%%-*}-canary.${{ github.run_number }}+${SHA::7}"
+          out="$RUNNER_TEMP/canary"; rm -rf "$out"; mkdir -p "$out/aphrody-$TARGET"
+          cp "$CARGO_TARGET_DIR/$TARGET/dist/ay" "$out/aphrody-$TARGET/ay"
+          echo "$ver" > "$out/aphrody-$TARGET/VERSION"
+          tar -C "$out" -cJf "$out/aphrody-$TARGET.tar.xz" "aphrody-$TARGET"
+          (cd "$out" && sha256sum "aphrody-$TARGET.tar.xz" > "aphrody-$TARGET.tar.xz.sha256")
+          echo "ver=$ver" >> "$GITHUB_OUTPUT"; echo "dir=$out" >> "$GITHUB_OUTPUT"
+      - name: Canary ring (fr1, side by side, before publishing)
+        if: steps.ref.outputs.skip != 'true'
+        run: |
+          install -D -m755 "$CARGO_TARGET_DIR/$TARGET/dist/ay" "$HOME/.local/bin/ay-canary"
+          "$HOME/.local/bin/ay-canary" --version
+          echo "${{ steps.pkg.outputs.ver }}" > "$HOME/.local/bin/ay-canary.VERSION"
+      - name: Publish rolling prerelease
+        # In place (move tag, clobber assets, edit notes): the channel never 404s mid-upload.
+        if: steps.ref.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dir="${{ steps.pkg.outputs.dir }}"
+          stable=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)
+          {
+            echo "Canary ${{ steps.pkg.outputs.ver }} from main@$SHA (docs/packaging/VERSIONING.md). Not for production."
+            echo
+            echo "sha256: \`$(cut -d' ' -f1 "$dir/aphrody-$TARGET.tar.xz.sha256")\`  aphrody-$TARGET.tar.xz"
+            echo
+            echo "## Changes since ${stable:-the first commit} ($(git rev-list --count ${stable:+$stable..}"$SHA") commits, last 200)"
+            git log --no-merges --format='- %s (%h)' -n 200 ${stable:+$stable..}"$SHA" | cut -c1-300
+          } > "$dir/NOTES.md"
+          title="canary ${{ steps.pkg.outputs.ver }}"
+          set -- "$dir/aphrody-$TARGET.tar.xz" "$dir/aphrody-$TARGET.tar.xz.sha256"
+          if gh release view canary >/dev/null 2>&1; then
+            gh api -X PATCH "repos/${{ github.repository }}/git/refs/tags/canary" -f sha="$SHA" -F force=true >/dev/null
+            gh release upload canary --clobber "$@"
+            gh release edit canary --prerelease --latest=false --title "$title" --notes-file "$dir/NOTES.md"
+          else
+            gh release create canary --target "$SHA" --prerelease --latest=false --title "$title" --notes-file "$dir/NOTES.md" "$@"
+          fi

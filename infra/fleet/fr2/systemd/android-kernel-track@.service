@@ -1,0 +1,9 @@
+[Unit]
+Description=Android GKI branch tracker (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/bin/sh -c "mkdir -p /srv/research/android/state/%i && /home/ubuntu/.local/bin/bun /srv/research/tools/android-kernel-track.ts %i > /srv/research/android/state/%i/latest.json.tmp && mv /srv/research/android/state/%i/latest.json.tmp /srv/research/android/state/%i/latest.json && cp /srv/research/android/state/%i/latest.json /srv/research/android/state/%i/$(date -u +%%Y%%m%%dT%%H%%M).json"

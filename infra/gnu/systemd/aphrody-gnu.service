@@ -1,0 +1,29 @@
+# GNU upstream tracker on fr2: polls ftp.gnu.org, info-gnu, Savannah, GSRC, Guix, GitHub, crates.io and kernel.org
+# every GNU_INTERVAL seconds, rebuilds feed.json, feed.atom and the site in /srv/gnu, mirrors tarballs to R2.
+# Doc: docs/native/gnu/DISTRIBUTION.md. Installed by infra/gnu/install.sh.
+[Unit]
+Description=Aphrody GNU upstream tracker (feed, site, R2 mirror)
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/srv/gnu
+Environment=HOME=/home/ubuntu
+Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
+Environment=GNU_HOME=/srv/gnu
+Environment=GNU_GSRC=/srv/research/gsrc
+Environment=GNU_KERNEL_KEYRING=/srv/gnu/kernel-keyring.pgp
+Environment=GNU_BUCKET=aphrody-gnu
+Environment=GNU_INTERVAL=600
+ExecStart=/home/ubuntu/.local/bin/bun --no-env-file /srv/src/packages/gnu/src/cli.ts daemon
+Restart=always
+RestartSec=20s
+Nice=10
+MemoryMax=2G
+CPUWeight=50
+
+[Install]
+WantedBy=multi-user.target

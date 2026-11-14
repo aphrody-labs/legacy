@@ -1,0 +1,16 @@
+[package]
+name = "depot-cas"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository = "https://github.com/aphrody-dev/depot"
+description = "Content-addressed artifact store for depot tooling, after Lore: FastCDC v2020 fragments (32/64/256 KiB), blake3 ids, zstd, sha256 file index"
+
+[dependencies]
+blake3.workspace = true
+fastcdc = { workspace = true }
+sha2 = { workspace = true }
+zstd = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

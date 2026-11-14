@@ -1,0 +1,19 @@
+[package]
+repository.workspace = true
+description = "smithay-wayland-wire: part of the Aphrody monorepo"
+name = "smithay-wayland-wire"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+byteorder.workspace = true
+tracing.workspace = true
+thiserror.workspace = true
+
+# Windows host parts only (Hyper-V socket transport, D3D12 dmabuf mapping); the wire, protocol,
+# state and compositor build and test on Linux too.
+[target.'cfg(windows)'.dependencies]
+dx12-hal.workspace = true
+windows.workspace = true

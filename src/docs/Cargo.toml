@@ -1,0 +1,24 @@
+[package]
+publish = false
+name = "aphrody-docs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "`ay docs`: imports Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) into a SQLite FTS5 index and serves search for people and agents"
+repository.workspace = true
+
+[lib]
+name = "aphrody_docs"
+
+[dependencies]
+bun-flat = { version = "0.4.0", package = "aphrody-bun-flat", path = "../bun-flat" }
+rusqlite = { workspace = true, features = ["bundled"] }
+serde_json.workspace = true
+ureq.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

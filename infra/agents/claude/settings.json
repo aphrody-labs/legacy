@@ -1,0 +1,62 @@
+{
+  "useAutoModeDuringPlan": true,
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "AskUserQuestion",
+      "ScheduleWakeup",
+      "ReportFindings",
+      "NotebookEdit"
+    ]
+  },
+  "skipDangerousModePermissionPrompt": true,
+  "statusLine": {
+    "type": "command",
+    "command": "bun {src}/plugins/aphrody-nhitl/src/statusline.ts"
+  },
+  "verbose": false,
+  "fileCheckpointingEnabled": false,
+  "outputStyle": "Autonome",
+  "awaySummaryEnabled": false,
+  "env": {
+    "BASH_MAX_OUTPUT_LENGTH": "12000",
+    "MAX_MCP_OUTPUT_TOKENS": "8000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "CLAUDE_CODE_GIT_BASH_PATH": "C:\\Users\\aphro\\AppData\\Local\\Programs\\Niubash\\winuxcmd\\bin\\bash.exe",
+    "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "IFS= read -r -d '' j; case \"$j\" in *\"git commit\"*) printf %s \"$j\" | bun {src}/packages/ai-os/src/relay/hook.ts;; esac",
+            "timeout": 900,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "IFS= read -r -d '' j; c=${j#*\\\"command\\\":\\\"}; c=${c%%\\\",\\\"*}; c=\" ; ${c//[;&|(]/ ; } \"; c=${c//  / }; c=${c//  / }; r=; case \"$c\" in *\"; cat \"*|*\"; grep \"*|*\"; sed \"*|*\"; ls \"*|*\"; find \"*|*\"; du \"*|*\"; curl \"*|*\"; cd \"*) r=\"coreutils: use rg, fd, sd, dua, xh, jaq or Read/Grep/Glob/Edit, absolute paths, no cd\";; esac; case \"$c\" in *\"; git commit \"*) case \"$c\" in *\" -- \"*) ;; *) r=\"plain git commit takes the whole shared index: git commit -m <msg> -- <files>, ay code commit, or a private index\";; esac;; esac; case \"$c\" in *\"; git add -A\"*|*\"; git add . \"*|*\"; git add --all\"*|*\"; git stash\"*) r=\"shared tree: stage explicit files, never stash\";; esac; [ -n \"$r\" ] && printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"%s\"}}' \"$r\"; exit 0",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "spinnerTipsEnabled": false,
+  "skillListingBudgetFraction": 0.003
+}

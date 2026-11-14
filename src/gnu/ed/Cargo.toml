@@ -1,0 +1,23 @@
+[package]
+publish = false
+name = "aphrody-gnu-ed"
+description = "GNU ed in Rust: the POSIX line editor"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+name = "gnu_ed"
+doctest = false
+
+[[bin]]
+name = "ed"
+path = "src/main.rs"
+[dependencies]
+gnu-rt = { package = "aphrody-gnu-rt", path = "../rt" }
+gnu-posix-re = { package = "aphrody-gnu-posix-re", path = "../posix-re" }
+
+[lints]
+workspace = true

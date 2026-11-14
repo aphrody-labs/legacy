@@ -1,0 +1,92 @@
+{
+  "admin.aphrody.com": 302,
+  "ai.aphrody.com": 200,
+  "aphrody.app": 200,
+  "aphrody.com": 200,
+  "api.aphrody.app": {
+    "status": 302,
+    "why": "API d'aphrody.app (Worker aphrody-deploy) ; / redirige vers /api/projects"
+  },
+  "api.aphrody.com": 200,
+  "app-audio.aphrody.app": 200,
+  "app-cad.aphrody.app": 200,
+  "app-compositing.aphrody.app": 200,
+  "app-documents.aphrody.app": 200,
+  "app-generation.aphrody.app": 200,
+  "app-images.aphrody.app": 200,
+  "app-interface-layouts.aphrody.app": 200,
+  "app-layout.aphrody.app": 200,
+  "app-pdf.aphrody.app": 200,
+  "app-photo-processing.aphrody.app": 200,
+  "app-slides.aphrody.app": 200,
+  "app-tables.aphrody.app": 200,
+  "app-vectors.aphrody.app": 200,
+  "app-video.aphrody.app": 200,
+  "art.aphrody.com": 200,
+  "auth.aphrody.app": 302,
+  "auth.aphrody.com": 200,
+  "bot.aphrody.com": 200,
+  "bxc.aphrody.com": 200,
+  "cad.aphrody.com": 200,
+  "calendar.aphrody.com": 200,
+  "cdn.aphrody.com": 200,
+  "chat.aphrody.com": 200,
+  "console.aphrody.com": 302,
+  "control.aphrody.com": 302,
+  "craft.aphrody.app": 302,
+  "creator.aphrody.com": 200,
+  "dbfr.aphrody.com": 200,
+  "deploy.aphrody.app": {
+    "status": 302,
+    "why": "redirection vers https://aphrody.app/dashboard (Worker aphrody-deploy)"
+  },
+  "design.aphrody.com": 200,
+  "docs.aphrody.com": 200,
+  "downloads.aphrody.com": {
+    "status": 404,
+    "why": "404 du Worker ou du conteneur (pas de page racine)"
+  },
+  "drive.aphrody.com": 200,
+  "fig.aphrody.com": 200,
+  "git.aphrody.app": {
+    "status": 302,
+    "why": "redirection vers https://github.com/aphrody-labs/src (Worker aphrody-deploy)"
+  },
+  "https://aphrody.com/api/health": 200,
+  "inacord.aphrody.com": 200,
+  "mail.aphrody.com": 200,
+  "maps.aphrody.com": 200,
+  "mcp.aphrody.com": 200,
+  "meet.aphrody.com": 200,
+  "mig-commons.aphrody.com": 302,
+  "mig-depot.aphrody.com": 302,
+  "mig-test.aphrody.com": 200,
+  "n2b.aphrody.com": 200,
+  "nie.aphrody.com": 200,
+  "os.aphrody.com": 200,
+  "pdf.aphrody.com": 200,
+  "photos.aphrody.com": 200,
+  "play.aphrody.app": 200,
+  "play.aphrody.com": 200,
+  "search.aphrody.com": 200,
+  "sheets.aphrody.com": 200,
+  "slides.aphrody.com": 200,
+  "sound.aphrody.com": 200,
+  "source.aphrody.app": {
+    "status": 302,
+    "why": "redirection vers https://github.com/aphrody-labs/src (Worker aphrody-deploy)"
+  },
+  "ssh-fr2.aphrody.com": 302,
+  "ssh-prd.aphrody.com": 302,
+  "status.aphrody.com": 200,
+  "store.aphrody.com": 200,
+  "translate.aphrody.com": 200,
+  "www.aphrody.app": {
+    "status": 301,
+    "why": "redirection www -> apex (Location https://aphrody.app/), constatée et relue le 2026-11-13"
+  },
+  "www.aphrody.com": {
+    "status": 301,
+    "why": "redirection vers l'apex aphrody.com (Worker aphrody, apps/aphrody/edge)"
+  }
+}

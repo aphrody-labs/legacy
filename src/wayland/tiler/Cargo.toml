@@ -1,0 +1,12 @@
+[package]
+repository.workspace = true
+description = "hypr-tiler: part of the Aphrody monorepo"
+name = "hypr-tiler"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+taffy.workspace = true

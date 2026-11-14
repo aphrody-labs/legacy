@@ -1,0 +1,33 @@
+{
+  "name": "@aphrody/env-kit",
+  "version": "1.0.0",
+  "description": "Zero-dependency cross-language environment sharing, secret redaction, 3-principal Google Cloud IAM, and editor/agent sync toolkit for C:/src",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "check": "bun check",
+    "fmt": "bun fmt",
+    "fmt:check": "bun fmt --check",
+    "test": "bun test",
+    "doctor": "bun run src/cli.ts doctor",
+    "accounts": "bun run src/cli.ts accounts status"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aphrody-labs/aphrody.git",
+    "directory": "packages/env-kit"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./github-app": "./src/github-app.ts",
+    "./secret-store": "./src/secret-store.ts"
+  }
+}

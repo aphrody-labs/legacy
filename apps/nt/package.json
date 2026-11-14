@@ -1,0 +1,16 @@
+{
+  "name": "@aphrody/nt",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@aphrody/ffi-bridge": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@webgpu/types": "catalog:",
+    "tree-sitter-c": "catalog:",
+    "tree-sitter-cpp": "catalog:",
+    "web-tree-sitter": "catalog:"
+  }
+}

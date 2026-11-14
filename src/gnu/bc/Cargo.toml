@@ -1,0 +1,24 @@
+[package]
+publish = false
+name = "aphrody-gnu-bc"
+description = "GNU bc in Rust: POSIX arbitrary-precision calculator language with the GNU extensions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+name = "gnu_bc"
+doctest = false
+
+[[bin]]
+name = "bc"
+path = "src/main.rs"
+[dependencies]
+gnu-rt = { package = "aphrody-gnu-rt", path = "../rt" }
+num-bigint = "0.5"
+num-traits = "0.2"
+
+[lints]
+workspace = true

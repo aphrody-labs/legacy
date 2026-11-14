@@ -1,0 +1,19 @@
+{
+  "name": "aphrody",
+  "owner": {
+    "name": "aphrody-dev"
+  },
+  "description": "Marketplace cross-agent du monorepo src (Claude Code, Codex, agy). Source de vérité : infra/agents/toolchain.toml ; généré et vérifié par packages/machine/src/toolchain.ts.",
+  "plugins": [
+    {
+      "name": "aphrody-skills",
+      "source": "./.agents",
+      "description": "Skills de src (.agents/skills, chargés sur place depuis le checkout)."
+    },
+    {
+      "name": "aphrody-nhitl",
+      "source": "./plugins/aphrody-nhitl",
+      "description": "No human in the loop hooks, status line and headless launcher (bun)."
+    }
+  ]
+}

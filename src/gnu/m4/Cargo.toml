@@ -1,0 +1,23 @@
+[package]
+publish = false
+name = "aphrody-gnu-m4"
+description = "GNU m4 in Rust: the macro processor (GNU m4 1.4 core)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+name = "gnu_m4"
+doctest = false
+
+[[bin]]
+name = "m4"
+path = "src/main.rs"
+[dependencies]
+gnu-rt = { package = "aphrody-gnu-rt", path = "../rt" }
+gnu-posix-re = { package = "aphrody-gnu-posix-re", path = "../posix-re" }
+
+[lints]
+workspace = true

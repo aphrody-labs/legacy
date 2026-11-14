@@ -1,0 +1,25 @@
+[package]
+repository.workspace = true
+license = "MIT"
+name = "aphrody-lore-error-set"
+version = "0.1.0"
+edition = "2024"
+description = "Composable, traceable error handling for Rust"
+
+[features]
+default = ["track-locations"]
+track-locations = []
+
+[lib]
+name = "lore_error_set"
+test = false
+
+[dependencies]
+lore-error-set-macro = { workspace = true }
+
+[dev-dependencies]
+thiserror = { workspace = true }
+trybuild = { workspace = true }
+
+[lints]
+workspace = true
