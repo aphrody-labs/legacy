@@ -15,6 +15,7 @@ image := env("SRC_IMAGE", "aphrody/monorepo-dev:local")
 import "src/ay/ay.just"
 import "src/gnu/gnu.just"
 import "scripts/scripts.just"
+import "infra/android/android.just"
 import "packages/ai-os/ai-os.just"
 import "packages/core/core.just"
 import "packages/chromium-bun/chromium-bun.just"

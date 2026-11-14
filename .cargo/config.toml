@@ -63,6 +63,13 @@ rustflags = [
 
 # Linux x86_64: nothing to set; nightly links with the bundled rust-lld. [build] flags apply.
 
+# Android x86_64 (bionic). Linker = NDK clang wrapper found on PATH; `bun scripts/android-setup.ts env` exports PATH,
+# CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER (overrides this key), CC_/AR_ for build scripts. The custom chromium-157
+# toolchain ships no std for this target: build with `-Zbuild-std=std,panic_abort` (just android-x64). No rustflags
+# here on purpose, so the [build] list above still applies.
+[target.x86_64-linux-android]
+linker = "x86_64-linux-android29-clang"
+
 [target.aarch64-unknown-linux-gnu]
 # Portable baseline. Graviton3+/Neoverse V1: add --config .cargo/neoverse-512tvb.toml
 # --features lore-base/neoverse-512tvb.
@@ -111,6 +118,9 @@ rustflags = [
 # Repository root for include!/include_str!/concat! paths: `concat!(env!("SRC_ROOT"), "/packages/...")`
 # survives crate moves, unlike CARGO_MANIFEST_DIR + "/../..".
 SRC_ROOT = { value = ".", relative = true }
+# Generated sources of the Bun crates in src/ (build_options.rs, aot_*.rs, cpp.rs...): `bun scripts/bun-codegen.ts` writes them
+# here; their build.rs read BUN_CODEGEN_DIR (docs/ARCHITECTURE.md section 9).
+BUN_CODEGEN_DIR = { value = "build/debug-codegen/codegen", relative = true }
 # Lore tests must not relay to, or stop, a developer's running Lore service
 # (rationale: labs .cargo/config.toml history, src/lore/tests/service_api.rs).
 LORE_USE_SERVICE = "0"

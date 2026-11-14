@@ -1,7 +1,7 @@
 // Reproducible Android toolchain installer. Manifest: infra/android/android.toml, lock: infra/android/android.lock.json.
 // Usage: bun scripts/android-setup.ts [install|check|lock|env|avd] [--profile pc|ci|studio|studio-canary,...] [--only <substr>]
 // Idempotent; Windows (PC) and Linux (fr1, fr2). Downloads and SDK installs only, nothing is compiled.
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, chmodSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, chmodSync, rmSync, statSync } from "node:fs";
 import { homedir, platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
@@ -125,19 +125,34 @@ function primaryJava(): string {
 }
 
 // ---- SDK ----
-const sdkmanager = () => join(SDK, "cmdline-tools/latest/bin", WIN ? "sdkmanager.bat" : "sdkmanager").replaceAll("\\", "/");
-const sdkRun = (args: string[], stdin?: string, quiet = false) =>
-  run(WIN ? ["cmd", "/c", sdkmanager(), `--sdk_root=${SDK}`, ...args] : [sdkmanager(), `--sdk_root=${SDK}`, ...args], {
+// cmdline-tools are run through java directly: cmd /c splits package paths on ';'.
+const cltool = (main: string, args: string[], o: { stdin?: string; quiet?: boolean } = {}) => {
+  const home = join(SDK, "cmdline-tools/latest").replaceAll("\\", "/");
+  const java = join(primaryJava(), "bin", WIN ? "java.exe" : "java").replaceAll("\\", "/");
+  return run([java, `-Dcom.android.sdkmanager.toolsdir=${home}`, "-classpath", `${home}/lib/*`, main, ...args], {
     env: { JAVA_HOME: primaryJava(), ANDROID_HOME: SDK, ANDROID_SDK_ROOT: SDK },
-    stdin,
-    quiet,
+    ...o,
   });
+};
+const sdkRun = (args: string[], stdin?: string, quiet = false) =>
+  cltool("com.android.sdklib.tool.sdkmanager.SdkManagerCli", [`--sdk_root=${SDK}`, ...args], { stdin, quiet });
 
+// dl.google.com answers 404 for some datacenter IPs (fr1); the same files are served by edgedl.me.gvt1.com.
+const DL = "https://dl.google.com/android/repository/";
+const EDGE = "https://edgedl.me.gvt1.com/edgedl/android/repository/";
+let mirror = false;
+async function probeMirror() {
+  if (process.env.ANDROID_MIRROR === "1") mirror = true;
+  else if (process.env.ANDROID_MIRROR === "0") mirror = false;
+  else mirror = (await fetch(man.meta.sdk_xml, { method: "HEAD" }).catch(() => null))?.status !== 200;
+  if (mirror) log("dl.google.com unreachable here, using", EDGE);
+}
 async function xmlPackages() {
-  const urls: string[] = [man.meta.sdk_xml, ...man.meta.sysimg_xml];
-  const res: Record<string, { sha1: string; size: number; url: string; rev: string }> = {};
+  const urls: string[] = [man.meta.sdk_xml, ...man.meta.sysimg_xml].map((u) => (mirror ? u.replace(DL, EDGE) : u));
+  const res: Record<string, any> = {};
   for (const u of urls) {
     const t = await (await fetch(u)).text();
+    const ns = t.match(/<(?:sdk|sys-img):sdk[a-z-]*\s([^>]*)>/)?.[1] ?? "";
     const base = u.slice(0, u.lastIndexOf("/") + 1);
     for (const m of t.matchAll(/<remotePackage path="([^"]+)"[^>]*>([\s\S]*?)<\/remotePackage>/g)) {
       if (res[m[1]] || m[2].match(/<channelRef ref="([^"]+)"/)?.[1] !== "channel-0") continue;
@@ -150,6 +165,10 @@ async function xmlPackages() {
         size: Number(pick.match(/<size>(\d+)</)![1]),
         url: base + pick.match(/<url>([^<]+)</)![1],
         rev,
+        ns,
+        td: m[2].match(/<type-details[\s\S]*?<\/type-details>|<type-details[^>]*\/>/)?.[0] ?? "",
+        revXml: m[2].match(/<revision>[\s\S]*?<\/revision>/)![0],
+        dn: m[2].match(/<display-name>[\s\S]*?<\/display-name>/)?.[0] ?? "",
       };
     }
   }
@@ -157,6 +176,7 @@ async function xmlPackages() {
 }
 
 async function cmdLock() {
+  await probeMirror();
   const pk = await xmlPackages();
   const lock: Record<string, unknown> = { generated: new Date().toISOString().slice(0, 10), host: HOST, sdk: {} };
   for (const s of man.sdk as any[]) {
@@ -166,12 +186,34 @@ async function cmdLock() {
       continue;
     }
     if (norm(p.rev) !== norm(s.rev)) fail(`lock: ${s.path} repository rev ${p.rev} != manifest ${s.rev}`);
-    (lock.sdk as any)[s.path] = { rev: p.rev, sha1: p.sha1, size: p.size, url: p.url };
+    (lock.sdk as any)[s.path] = { rev: p.rev, sha1: p.sha1, size: p.size, url: p.url.replace(EDGE, DL) };
   }
   const prev = existsSync(LOCK) ? JSON.parse(readFileSync(LOCK, "utf8")) : {};
   if (prev.cli) lock.cli = prev.cli;
   writeFileSync(LOCK, JSON.stringify(lock, null, 2) + "\n");
   log("lock written", LOCK);
+}
+
+const viaMirror = (u: string) => (mirror ? u.replace(DL, EDGE) : u);
+
+// Manual install (mirror mode): unzip, strip a single top-level directory like sdkmanager, write a package.xml.
+async function manualInstall(path: string, e: any) {
+  const file = join(CACHE, e.url.split("/").pop()).replaceAll("\\", "/");
+  await fetchTo(viaMirror(e.url), file, e.sha1, "sha1");
+  const tmp = join(CACHE, "x-" + path.replace(/[^\w.-]/g, "_")).replaceAll("\\", "/");
+  rmSync(tmp, { recursive: true, force: true });
+  await extract(file, tmp);
+  const top = readdirSync(tmp);
+  const src = top.length === 1 && statSync(join(tmp, top[0])).isDirectory() ? join(tmp, top[0]) : tmp;
+  const dest = pkgDir(path);
+  rmSync(dest, { recursive: true, force: true });
+  mkdirSync(dirname(dest), { recursive: true });
+  const r = await run(WIN ? ["cmd", "/c", "move", src.replaceAll("/", "\\"), dest.replaceAll("/", "\\")] : ["mv", src, dest]);
+  if (r.code !== 0) throw new Error(`move ${path} failed`);
+  const xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><common:repository xmlns:common="http://schemas.android.com/repository/android/common/02" xmlns:generic="http://schemas.android.com/repository/android/generic/02" xmlns:sdk="http://schemas.android.com/sdk/android/repo/repository2/03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ${e.ns.replace(/xmlns:xsi="[^"]*"/, "")}><localPackage path="${path}" obsolete="false">${e.td}${e.revXml}${e.dn}</localPackage></common:repository>`;
+  writeFileSync(join(dest, "package.xml"), xml);
+  rmSync(tmp, { recursive: true, force: true });
+  log("manual install", path, e.rev);
 }
 
 async function ensureCmdlineTools() {
@@ -180,7 +222,7 @@ async function ensureCmdlineTools() {
   const pk = lock?.host === HOST ? lock.sdk : null;
   const e = pk?.["cmdline-tools;latest"] ?? (await xmlPackages())["cmdline-tools;latest"];
   const file = join(CACHE, e.url.split("/").pop()).replaceAll("\\", "/");
-  await fetchTo(e.url, file, e.sha1, "sha1");
+  await fetchTo(viaMirror(e.url), file, e.sha1, "sha1");
   const tmp = join(CACHE, "cmdline-extract").replaceAll("\\", "/");
   rmSync(tmp, { recursive: true, force: true });
   await extract(file, tmp);
@@ -193,13 +235,21 @@ async function ensureCmdlineTools() {
 
 async function ensureSdk() {
   mkdirSync(SDK, { recursive: true });
+  await probeMirror();
   await ensureCmdlineTools();
-  await sdkRun(["--licenses"], "y\n".repeat(60), true);
+  if (!mirror) await sdkRun(["--licenses"], "y\n".repeat(60), true);
   const todo = (man.sdk as any[]).filter((s) => want(s.profiles) && sel(s.path) && (() => {
     const r = installedRev(s.path);
     return !r || norm(r) !== norm(s.rev);
   })());
-  if (todo.length) {
+  if (todo.length && mirror) {
+    const pk = await xmlPackages();
+    for (const t of todo) {
+      if (!pk[t.path]) fail(`${t.path}: not in repository XML`);
+      else if (norm(pk[t.path].rev) !== norm(t.rev)) fail(`${t.path}: repository rev ${pk[t.path].rev} != pinned ${t.rev}`);
+      else await manualInstall(t.path, pk[t.path]);
+    }
+  } else if (todo.length) {
     log("sdkmanager install", todo.map((t) => t.path).join(" "));
     const r = await sdkRun(todo.map((t) => t.path), "y\n".repeat(20));
     if (r.code !== 0) fail(`sdkmanager exit ${r.code}`);
@@ -291,11 +341,9 @@ async function ensureAvd() {
   if (!want(["pc", "ci"]) || !sel("avd")) return;
   const img = man.meta.emulator_api_image as string;
   if (!installedRev(img)) return log("avd skipped, image not installed", img);
-  const avdm = join(SDK, "cmdline-tools/latest/bin", WIN ? "avdmanager.bat" : "avdmanager").replaceAll("\\", "/");
-  const env = { JAVA_HOME: primaryJava(), ANDROID_HOME: SDK, ANDROID_SDK_ROOT: SDK };
   const name = man.meta.avd_name;
   const args = ["create", "avd", "-n", name, "-k", img, "-d", "pixel_6", "--force"];
-  const r = await run(WIN ? ["cmd", "/c", avdm, ...args] : [avdm, ...args], { env, stdin: "no\n", quiet: true });
+  const r = await cltool("com.android.sdklib.tool.AvdManagerCli", args, { stdin: "no\n", quiet: true });
   if (r.code !== 0) return fail(`avdmanager: ${r.out}`);
   const cfg = join(process.env.ANDROID_AVD_HOME || join(homedir(), ".android/avd"), `${name}.avd`, "config.ini").replaceAll("\\", "/");
   if (existsSync(cfg)) {
@@ -309,6 +357,7 @@ async function ensureAvd() {
 }
 
 async function cmdLockCheck() {
+  await probeMirror();
   if (!existsSync(LOCK)) return fail("no lock; run lock");
   const lock = JSON.parse(readFileSync(LOCK, "utf8"));
   const pk = await xmlPackages();

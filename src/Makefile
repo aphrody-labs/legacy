@@ -48,7 +48,7 @@ C_SRCS := \
 
 ASM_X86_64 := arch/x86/entry_64.S
 
-.PHONY: all linux windows wasm wasi compositor verify clean
+.PHONY: all linux windows android-x64 wasm wasi compositor verify clean
 
 all: wasm compositor verify
 
@@ -62,6 +62,20 @@ windows:
 	$(CC) $(CFLAGS_BASE) --target=x86_64-pc-windows-msvc -flto=thin -fuse-ld=lld \
 		-nostdlib -Wl,/NOENTRY -Wl,/DLL \
 		$(C_SRCS) $(ASM_X86_64) -o $(OUT_DIR)/aysys.dll
+
+# Android x86_64 (bionic): NDK clang resolved from ANDROID_NDK_HOME (infra/android/android.toml, scripts/android-setup.ts env).
+ANDROID_API ?= 29
+NDK_LLVM    ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin
+ANDROID_CC  ?= $(NDK_LLVM)/clang --target=x86_64-linux-android$(ANDROID_API)
+ANDROID_OUT ?= $(OUT_DIR)/android-x86_64
+
+android-x64:
+	@test -n "$(ANDROID_NDK_HOME)" || { echo "ANDROID_NDK_HOME unset: bun scripts/android-setup.ts env"; exit 1; }
+	mkdir -p $(ANDROID_OUT)
+	$(ANDROID_CC) $(CFLAGS_BASE) -fPIC -flto=thin -fuse-ld=lld -shared -Wl,-soname,libaysys.so \
+		-Wl,-z,max-page-size=16384 $(C_SRCS) $(ASM_X86_64) -o $(ANDROID_OUT)/libaysys.so
+	$(ANDROID_CC) -std=gnu11 -O2 -Wall -Wextra -Werror -Iinclude -fuse-ld=lld -Wl,-z,max-page-size=16384 \
+		android/smoke.c -L$(ANDROID_OUT) -laysys -Wl,-rpath,'$$ORIGIN' -o $(ANDROID_OUT)/ay_smoke
 
 wasm:
 	mkdir -p $(OUT_DIR)
