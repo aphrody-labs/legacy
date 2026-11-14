@@ -1151,6 +1151,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/browse": {
+      "path": "third_party/browse",
+      "url": "https://github.com/aphrody-labs/browse.git",
+      "upstream_url": "https://github.com/anomalyco/browse.git",
+      "commit": "e3a45fd944e653f6415f9be6fc54d2d8a224b676",
+      "branch": "dev",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/browse.git",
+        "upstream": "https://github.com/anomalyco/browse.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/browser-compat-data": {
       "path": "third_party/browser-compat-data",
       "url": "https://github.com/mdn/browser-compat-data.git",
@@ -1161,6 +1175,20 @@
       "remotes": {
         "aphrody": "https://github.com/aphrody-labs/browser-compat-data.git",
         "origin": "https://github.com/mdn/browser-compat-data.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/browser-control": {
+      "path": "third_party/browser-control",
+      "url": "https://github.com/aphrody-labs/browser-control.git",
+      "upstream_url": "https://github.com/anomalyco/browser-control.git",
+      "commit": "9ea31dc454ea70aaa6582231285984e04f6d8a6f",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/browser-control.git",
+        "upstream": "https://github.com/anomalyco/browser-control.git"
       },
       "sparse_paths": null
     },
@@ -2451,7 +2479,7 @@
       "path": "third_party/hex",
       "url": "https://github.com/aphrody-labs/hex.git",
       "upstream_url": "https://github.com/anomalyco/hex.git",
-      "commit": "e14c03040a6c0fdc7b6037e36bb6b84ca2d640a1",
+      "commit": "31feb6f0e8569700faea46ac54db083a535602cd",
       "branch": "dev",
       "engine": "git",
       "pillar": "git",
@@ -3181,6 +3209,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/models.dev": {
+      "path": "third_party/models.dev",
+      "url": "https://github.com/aphrody-labs/models.dev.git",
+      "upstream_url": "https://github.com/anomalyco/models.dev.git",
+      "commit": "aeba6448ae541d8e09ebd8980e1a5518063a0514",
+      "branch": "dev",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/models.dev.git",
+        "upstream": "https://github.com/anomalyco/models.dev.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/modern-web-guidance": {
       "path": "third_party/modern-web-guidance",
       "url": "https://github.com/GoogleChrome/modern-web-guidance.git",
@@ -3605,6 +3647,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/openauth": {
+      "path": "third_party/openauth",
+      "url": "https://github.com/aphrody-labs/openauth.git",
+      "upstream_url": "https://github.com/anomalyco/openauth.git",
+      "commit": "98dc59625e656eace1d7be165500af8ec351be41",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/openauth.git",
+        "upstream": "https://github.com/anomalyco/openauth.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/openclaw": {
       "path": "third_party/openclaw",
       "url": "https://github.com/aphrody-labs/openclaw",
@@ -3619,13 +3675,15 @@
     },
     "third_party/opencode": {
       "path": "third_party/opencode",
-      "url": "https://github.com/anomalyco/opencode.git",
-      "commit": "c5a153288b0d85f886c47436783c3c5f7913f0de",
+      "url": "https://github.com/aphrody-labs/opencode.git",
+      "upstream_url": "https://github.com/anomalyco/opencode.git",
+      "commit": "38bd73789a43bf043599d6196af96583228035d7",
       "branch": "dev",
       "engine": "git",
       "pillar": "git",
       "remotes": {
-        "origin": "https://github.com/anomalyco/opencode.git"
+        "origin": "https://github.com/aphrody-labs/opencode.git",
+        "upstream": "https://github.com/anomalyco/opencode.git"
       },
       "sparse_paths": null
     },
@@ -3660,12 +3718,14 @@
     "third_party/opentui": {
       "path": "third_party/opentui",
       "url": "https://github.com/aphrody-labs/opentui.git",
-      "commit": "4d40024a7b9f58d320aad211c22ab7e5f0665d87",
+      "upstream_url": "https://github.com/anomalyco/opentui.git",
+      "commit": "0c48678dddcc6a371c0783f26735f5ed788f8ccb",
       "branch": "main",
       "engine": "git",
       "pillar": "git",
       "remotes": {
-        "origin": "https://github.com/aphrody-labs/opentui.git"
+        "origin": "https://github.com/aphrody-labs/opentui.git",
+        "upstream": "https://github.com/anomalyco/opentui.git"
       },
       "sparse_paths": null
     },
@@ -3673,7 +3733,7 @@
       "path": "third_party/opentunnel",
       "url": "https://github.com/aphrody-labs/opentunnel.git",
       "upstream_url": "https://github.com/anomalyco/opentunnel.git",
-      "commit": "42af396d19fb154db1df9581897ad9bfca7df098",
+      "commit": "6e757aa2c763ae18495a397fba7bc62e5fb481e6",
       "branch": "dev",
       "engine": "git",
       "pillar": "git",
@@ -4077,7 +4137,7 @@
       "path": "third_party/rune",
       "url": "https://github.com/aphrody-labs/rune.git",
       "upstream_url": "https://github.com/anomalyco/rune.git",
-      "commit": "d80c872f06323f5a871c6012df29c7a2b7f09d70",
+      "commit": "bd4d42b12c0101660c939063b608edbd2a086686",
       "branch": "dev",
       "engine": "git",
       "pillar": "git",

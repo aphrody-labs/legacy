@@ -14,9 +14,13 @@ name = "openrouter"
 kind = "openrouter"
 url = "https://openrouter.ai/api/v1/models"
 
+# models.dev = anomalyco/models.dev (fork aphrody-labs/models.dev, pinned in src.lock.json): `dir` is the checkout, read first
+# (providers/*/provider.toml + providers/*/models/**/*.toml, the repo is the source of the published api.json);
+# `url` is the fallback when the checkout is absent. Same output format either way.
 [[source]]
 name = "models.dev"
 kind = "modelsdev"
+dir = "third_party/models.dev"
 url = "https://models.dev/api.json"
 
 [[source]]

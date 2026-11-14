@@ -8,6 +8,8 @@ type Source = {
   name: string;
   kind: "openrouter" | "modelsdev" | "litellm" | "arena";
   url: string;
+  /** modelsdev only: checkout of anomalyco/models.dev (third_party/models.dev); read first, `url` is the fallback. */
+  dir?: string;
 };
 type Conf = {
   settings: { depth: number; concurrency: number; timeout_ms: number };
@@ -36,6 +38,47 @@ const get = async (url: string) => {
   };
 };
 
+// models.dev source of truth: providers/<id>/provider.toml (api, doc) and providers/<id>/models/**/*.toml (one per model,
+// ids may be nested, e.g. MiniMaxAI/MiniMax-M3). Read from the git objects of the checkout (HEAD), not the work tree:
+// model files such as amazon.nova-lite-v1:0.toml cannot be checked out on Windows. Returns the shape of
+// https://models.dev/api.json so the pipeline and docs/ai/providers.json do not change; null without a checkout.
+const modelsDevRepo = async (dir: string) => {
+  const git = (args: string[], stdin?: string) => {
+    const r = Bun.spawnSync(["git", "-C", dir, ...args], {
+      stdin: stdin === undefined ? "ignore" : Buffer.from(stdin),
+      maxBuffer: 256 * 1024 * 1024,
+    });
+    return r.exitCode === 0 ? r.stdout : null;
+  };
+  const tree = git(["ls-tree", "-r", "HEAD", "--", "providers"]);
+  if (!tree) return null;
+  const out: Record<string, { api?: string; doc?: string; models: Record<string, 1> }> = {};
+  const meta = new Map<string, string>(); // provider id -> blob oid of provider.toml
+  for (const line of tree.toString().split("\n")) {
+    const m = /^\d+ blob (\w+)\t(providers\/([^/]+)\/(.+))$/.exec(line);
+    if (!m) continue;
+    const [, oid, , id, rest] = m as unknown as [string, string, string, string, string];
+    if (rest === "provider.toml") meta.set(id, oid);
+    else if (rest.startsWith("models/") && rest.endsWith(".toml"))
+      (out[id] ??= { models: {} }).models[rest.slice(7, -5)] = 1;
+  }
+  if (!meta.size) return null;
+  // one cat-file --batch for every provider.toml
+  const ids = [...meta.keys()];
+  const blobs = git(["cat-file", "--batch"], `${ids.map((i) => meta.get(i)).join("\n")}\n`);
+  if (!blobs) return null;
+  let at = 0;
+  for (const id of ids) {
+    const nl = blobs.indexOf(10, at);
+    const size = Number(blobs.subarray(at, nl).toString().split(" ")[2]);
+    const body = blobs.subarray(nl + 1, nl + 1 + size).toString();
+    at = nl + 1 + size + 1;
+    const p = Bun.TOML.parse(body) as { api?: string; doc?: string };
+    out[id] = { api: p.api, doc: p.doc, models: out[id]?.models ?? {} };
+  }
+  return out;
+};
+
 const all = new Map<string, Provider>();
 const add = (
   id: string,
@@ -54,14 +97,20 @@ const add = (
 const failed: string[] = [];
 await Promise.all(
   conf.source.map(async (s) => {
-    const { status, json } = /^https?:/.test(s.url)
-      ? await get(s.url).catch(() => ({ status: 0, json: null }))
-      : {
-          status: 200,
-          json: await Bun.file(join(SRC, s.url))
-            .json()
-            .catch(() => null),
-        };
+    const repo =
+      s.kind === "modelsdev" && s.dir
+        ? await modelsDevRepo(join(SRC, s.dir)).catch(() => null)
+        : null;
+    const { status, json } = repo
+      ? { status: 200, json: repo }
+      : /^https?:/.test(s.url)
+        ? await get(s.url).catch(() => ({ status: 0, json: null }))
+        : {
+            status: 200,
+            json: await Bun.file(join(SRC, s.url))
+              .json()
+              .catch(() => null),
+          };
     if (!json) return failed.push(`${s.name} (HTTP ${status})`);
     if (s.kind === "openrouter")
       for (const m of json.data ?? [])
