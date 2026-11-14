@@ -1,6 +1,6 @@
 // Hôtes de l'orchestrateur et exécution bornée sur chacun.
 // Sources : infra/agents/fleet.toml (hôtes, rôles, checkout `src` du runner, couche de labs-1b) et infra/deploy.toml
-// (`ssh_alias`, `role`). Un nœud de rôle `build` (fr1 : Chromium et LLVM) ne reçoit jamais d'agent.
+// (`ssh_alias`). fr1 (rôle `build` de fleet.toml) reçoit compilations, conteneurs et agents lourds ; prd : backends de production.
 // Tout tourne en priorité basse : `nice -n 19` + `timeout` à distance, BELOW_NORMAL en local (hérité par les enfants).
 import { existsSync, readFileSync } from "node:fs";
 import { constants, hostname, setPriority } from "node:os";
@@ -60,7 +60,6 @@ export function hosts(root = srcRoot()): Host[] {
     const node =
       nodes.find(([n]) => n === id) ??
       nodes.find(([, n]) => n.ssh_alias === id);
-    if (node?.[1].role === "build") continue; // fr1
     const local = id === me;
     if (!local && typeof h.src !== "string") continue; // checkout du runner inconnu
     const cap = posInt(
@@ -84,9 +83,8 @@ export function hosts(root = srcRoot()): Host[] {
       maxAgents: cap,
     });
   }
-  // Machine absente de fleet.toml : ajoutée en local, sauf si c'est un nœud de build (fr1).
-  const meNode = nodes.find(([n, v]) => n === me || v.ssh_alias === me);
-  if (!out.some((h) => h.local) && meNode?.[1].role !== "build")
+  // Machine absente de fleet.toml : ajoutée en local.
+  if (!out.some((h) => h.local))
     out.unshift({
       id: me,
       local: true,
@@ -95,6 +93,16 @@ export function hosts(root = srcRoot()): Host[] {
       maxAgents: posInt(Bun.env.ORCH_MAX_AGENTS, 3),
     });
   return out;
+}
+
+/** Hôte de compilation et de conteneurs : premier hôte de fleet.toml qui porte le rôle `build` (fr1). */
+export function buildHost(root = srcRoot()): string {
+  const fleet = toml(join(root, "infra/agents/fleet.toml"));
+  const id = Object.entries<any>(fleet.hosts ?? {}).find(
+    ([, h]) => Array.isArray(h.roles) && h.roles.includes("build"),
+  )?.[0];
+  if (!id) throw new Error("fleet.toml : aucun hôte avec le rôle build");
+  return id;
 }
 
 /** Guillemets sh : 'a'\''b'. */

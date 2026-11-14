@@ -25,7 +25,6 @@ impl TempWorkspace {
         fs::create_dir_all(dir.join("infra")).unwrap();
         fs::create_dir_all(dir.join("tools")).unwrap();
         fs::create_dir_all(dir.join("docs")).unwrap();
-        fs::write(dir.join("infra/go.mod"), "module aphrody/infra\ngo 1.27\n").unwrap();
         Self { root: dir }
     }
 

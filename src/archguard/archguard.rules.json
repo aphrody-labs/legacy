@@ -144,7 +144,6 @@
     },
     "infra": {
       "path": "infra",
-      "required_manifest": "go.mod",
       "allowed_bun_subpackages": ["mesh-vn"]
     },
     "tools": {

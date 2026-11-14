@@ -1,5 +1,5 @@
 // ai-os orch : orchestrateur multi-hôtes, multi-moteurs. Sorties JSON sur stdout, journal JSONL par exécution.
-//   ai-os orch hosts                              hôtes (fleet.toml + deploy.toml, fr1 exclu), état des runners
+//   ai-os orch hosts                              hôtes (fleet.toml + deploy.toml), état des runners
 //   ai-os orch engines [--host H] [--edit]        candidats et ordre `providers` calculé pour un besoin
 //   ai-os orch run <workflow.json|->  [--dry-run] graphe d'étapes (format : docs/ORCHESTRATOR.md)
 //   ai-os orch plan "<objectif>" [--dry-run]      un planificateur génère le graphe (étape expand), puis exécution

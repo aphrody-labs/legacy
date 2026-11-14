@@ -1,6 +1,6 @@
 ---
 name: ai-os-orchestrator
-description: "Run multi-agent work across the fleet without a human: task graphs (agent, cmd, tool steps) in parallel on pc, prd and fr2, engines chosen from what is really installed and discovered, automatic failover on quota/429/auth, fix tickets, budgets, lifecycle (fmt, check, tests, judges, docker, deploy dry-run, monitor, optimize), held external effects. Use for any request to parallelise agents, delegate to sub-agents, route between CLIs or providers, or run the src lifecycle unattended."
+description: "Run multi-agent work across the fleet without a human: task graphs (agent, cmd, tool steps) in parallel on pc, fr1, prd and fr2, engines chosen from what is really installed and discovered, automatic failover on quota/429/auth, fix tickets, budgets, lifecycle (fmt, check, tests, judges, docker, deploy dry-run, monitor, optimize), held external effects. Use for any request to parallelise agents, delegate to sub-agents, route between CLIs or providers, or run the src lifecycle unattended."
 ---
 
 # ai-os orchestrator
@@ -19,7 +19,7 @@ Reference: `packages/ai-os/docs/ORCHESTRATOR.md`. Code: `packages/ai-os/src/orch
 
 1. Never write a model or provider chain into a workflow: declare `needs` (`edit`, `context`, `tools`, `prefer`, `only`, `ignore`, `models` as preferences) and let `select.ts` compute `providers` from the probe, `llm_models`, models.dev and observed health.
 2. Steps that edit files need `needs.edit` and go through the runner queue with `check` and `commit.paths`; read-only steps may run inline.
-3. Compilation and containers run on prd only (`nice -n 19`, `-j 4`); fr1 never receives agents (excluded via `infra/deploy.toml` role `build`).
+3. Compilation, containers and heavy agent steps run on fr1 (`nice -n 19`, `-j 4`; host = the one carrying role `build` in `infra/agents/fleet.toml`, never a literal); prd keeps production backends only.
 4. Publication, messages and spending are `effect: "external"`: held in `var/agents/outbox/` unless `.agents/owner-rules.json` (owner-written) has a matching rule. The same file drives `pre-tool-guard.ts` under `AGENT_GUARD=enforce`.
 5. Judges' verdicts go to `docs/reviews/` (`out` field); verify every defect before fixing.
 6. Budgets are mandatory for long runs: `limits.budgetUsd`, `tokenBudget`, `maxSteps`, `deadlineMs`; the run stops after `maxConsecutiveFailures`.

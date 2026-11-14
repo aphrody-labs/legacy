@@ -10,19 +10,6 @@ pub fn check_infra_domain(root: &Path, findings: &mut Vec<ArchFinding>) {
         return;
     }
 
-    let go_mod = infra_dir.join("go.mod");
-    if !go_mod.is_file() {
-        findings.push(ArchFinding {
-            rule_id: "ARCH-006".into(),
-            category: "infra-domain-purity".into(),
-            severity: Severity::Error,
-            path: normalize_rel(root, &go_mod),
-            line: None,
-            message: "Missing `go.mod` in `infra/` root (infra is the sovereign Go 1.27/CGO deployment layer)".into(),
-            remediation: "Initialize `infra/go.mod` with `module aphrody/infra` and `go 1.27`.".into(),
-        });
-    }
-
     // Check for unapproved TypeScript code outside mesh-vn (bun packages live in packages/)
     let allowed_bun_subs = ["mesh-vn"];
     if let Ok(entries) = fs::read_dir(&infra_dir) {
@@ -61,7 +48,7 @@ pub fn check_infra_domain(root: &Path, findings: &mut Vec<ArchFinding>) {
                         path: normalize_rel(root, &p),
                         line: None,
                         message: format!("Loose TypeScript/JavaScript file `{name}` at root of `infra/`"),
-                        remediation: "Keep `infra/` root pure Go; move TypeScript tools to `packages/`.".into(),
+                        remediation: "Move TypeScript tools from the `infra/` root to `packages/`.".into(),
                     });
                 }
             }

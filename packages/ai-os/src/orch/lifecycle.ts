@@ -1,11 +1,11 @@
 // Workflows reproductibles du cycle de vie de src, sans humain : ils ne figent ni moteur ni modèle (sélection par
-// select.ts), seulement les étapes, leurs hôtes et leurs garde-fous. Compilation et conteneurs sur prd uniquement
-// (nice -n 19, -j 4) ; le poste ne fait que formater, typer, tester en bun et juger.
+// select.ts), seulement les étapes, leurs hôtes et leurs garde-fous. Compilation et conteneurs sur l'hôte de rôle
+// build de fleet.toml (fr1 ; nice -n 19, -j 4) ; prd ne garde que la production ; le poste ne fait que formater, typer, tester en bun et juger.
 //   software : code -> fmt -> check/arch/clippy -> tests -> tribunal (ai-os review) -> correction -> build/docker
 //              -> déploiement (dry-run sauf --apply) -> surveillance -> optimisation (étapes générées)
 //   design   : PRD + DESIGN.md (gds plan) -> gds verify -> wck 100/100 -> juge
 //   market   : brouillons rédigés et mis en file ; la publication est un effet externe retenu (policy.ts)
-import { shq } from "./fleet";
+import { buildHost, shq } from "./fleet";
 import type { Step, Workflow } from "./run";
 
 export type LifecycleOptions = {
@@ -15,7 +15,7 @@ export type LifecycleOptions = {
   apply?: boolean;
   /** Paquets bun à tester (défaut : packages/ai-os). */
   bunTests?: string[];
-  /** Hôte de compilation (défaut prd). */
+  /** Hôte de compilation (défaut : hôte de rôle build de fleet.toml). */
   build?: string;
   slug?: string;
 };
@@ -34,7 +34,7 @@ const q = (xs: string[]) => xs.map(shq).join(" ");
 
 export function software(o: LifecycleOptions = {}): Workflow {
   const paths = o.paths?.length ? o.paths : ["packages/ai-os"];
-  const build = o.build ?? "prd";
+  const build = o.build ?? buildHost();
   const slug = o.slug ?? slugOf(o.task ?? paths.join("-"));
   const msg = (what: string) => `${paths[0]} : ${what}`;
   const steps: Step[] = [];
@@ -104,14 +104,6 @@ export function software(o: LifecycleOptions = {}): Workflow {
       timeout_s: 5400,
     },
     {
-      id: "test-go",
-      do: "cmd",
-      deps: ["test-cargo"], // une compilation à la fois sur prd
-      hosts: [build],
-      run: heavy("go -C infra test ./..."),
-      timeout_s: 2400,
-    },
-    {
       id: "diff",
       do: "cmd",
       deps: ["test-bun", "arch"],
@@ -155,7 +147,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
     {
       id: "docker",
       do: "cmd",
-      deps: ["fix", "test-cargo", "test-go"],
+      deps: ["fix", "test-cargo"],
       hosts: [build],
       // Resynchronisé : les corrections des juges ont été poussées par le runner depuis « sync ».
       run: synced(

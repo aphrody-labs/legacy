@@ -616,7 +616,7 @@ export function scanHook(): Violation[] {
 // ---------------------------------------------------------------- files d'agents
 type Target = { host: string; ssh?: string[]; local?: string; dir?: string };
 
-/** Hôtes de la file : fleet.toml (pc local, prd, fr2 ; jamais fr1). ssh = cibles essayées dans l'ordre, puis rebond. */
+/** Hôtes de la file : fleet.toml (pc local, fr1, prd, fr2). ssh = cibles essayées dans l'ordre, puis rebond. */
 export function queueTargets(root = srcRoot()): Target[] {
   const fleet: any = existsSync(join(root, "infra/agents/fleet.toml"))
     ? Bun.TOML.parse(
