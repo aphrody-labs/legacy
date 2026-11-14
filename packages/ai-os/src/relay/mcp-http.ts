@@ -65,13 +65,11 @@ export function parseMcpBody(body: string, id?: number): any {
 }
 
 /** Message JSON-RPC portant `id`, sinon erreur (flux coupé ou réponse absente ne passent pas pour un succès). */
-function reply(body: string, id: number, shared = false): any {
-  // A body replayed by outboundFetch (cache hit, coalesced flight) answers an earlier request: `id` is ignored in its
-  // cache key, so it carries that request's id; the one-request body is taken as is.
-  const m = parseMcpBody(body, shared ? undefined : id);
+function reply(body: string, id: number): any {
+  const m = parseMcpBody(body, id);
   if (m.error)
     throw new McpRpcError(m.error.code, m.error.message, m.error.data);
-  if (shared ? !("result" in m) : m.id !== id)
+  if (m.id !== id)
     throw new McpRpcError(-32603, `réponse JSON-RPC ${id} absente`);
   return m.result;
 }
@@ -161,7 +159,7 @@ export class McpHttpClient {
     const send = async () => {
       const id = ++this.seq;
       const r = await this.post({ jsonrpc: "2.0", id, method, params }, opts);
-      return reply(await r.text(), id, r.headers.has("x-aphrody-cache")) as T;
+      return reply(await r.text(), id) as T;
     };
     try {
       return await send();

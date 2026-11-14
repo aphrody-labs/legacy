@@ -4,7 +4,7 @@ Entry docs: [ARCHITECTURE.md](ARCHITECTURE.md) (layers, dependency directions, t
 
 | Directory     | Holds                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------- |
-| `agents/`     | Agent-first operation, Windows-native port, the Claude Code plugin `labs` (`PLUGIN.md`)        |
+| `agents/`     | Agent-first operation, Windows-native port                                                     |
 | `ai/`         | Distributed inference, provider and arena data                                                 |
 | `ay/`         | The `ay` CLI: migration plan and command naming (`NAMING.md`)                                  |
 | `base-ui/`    | Upstream tracking for the base-ui fork (blog, commits, PRs, fork notes)                        |

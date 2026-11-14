@@ -10,11 +10,6 @@ ai-os *args:
 ai-os-test:
     bun --cwd "{{root}}/packages/ai-os" test
 
-# Live relay E2E (service AphrodyRelay on 127.0.0.1:8790): protocols, hub MCP, skills, subagents, CLIs, hook guard; skipped if the relay is down
-[group('ai-os')]
-relay-e2e:
-    bun test "{{root}}/packages/ai-os/test/relay/e2e.test.ts"
-
 # Markdown skills archive for Gemini (var/skills-archive; --publish uploads to R2) and two-way Claude<->Gemini memory sync
 [group('ai-os')]
 skills-archive *args:
