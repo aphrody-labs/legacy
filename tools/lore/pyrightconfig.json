@@ -1,8 +1,0 @@
-{
-  "pythonVersion": "3.13",
-  "venvPath": ".",
-  "venv": ".venv",
-  "include": ["scripts"],
-  "extraPaths": ["scripts/test"],
-  "typeCheckingMode": "standard"
-}

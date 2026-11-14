@@ -1,3 +1,0 @@
-# checkdeps layer rules (see docs/ARCHITECTURE.md). Inherited by subdirectories.
-layer = 2
-use src/core/capi   # bun:ffi dlopen of the core C ABI

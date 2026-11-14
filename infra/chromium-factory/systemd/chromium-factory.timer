@@ -1,7 +1,0 @@
-[Unit]
-Description=Rebuild labs_agent when Chrome Stable moves (weekly)
-[Timer]
-OnCalendar=Sun 03:00
-Persistent=true
-[Install]
-WantedBy=timers.target

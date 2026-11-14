@@ -1,6 +1,0 @@
-{
-  "projects": [
-    { "name": "projects/p-fix", "title": "Fixture Project" },
-    { "name": "projects/p-two", "title": "Second Project" }
-  ]
-}
