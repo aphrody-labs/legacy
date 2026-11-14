@@ -1,0 +1,11 @@
+# Keeps the tracker checkout on origin/main (fast-forward only) and restarts the daemon when feed.json is older than 45 min.
+[Unit]
+Description=Aphrody GNU tracker watchdog
+
+[Service]
+Type=oneshot
+User=ubuntu
+Environment=HOME=/home/ubuntu
+ExecStartPre=-/usr/bin/env git -C /srv/src fetch -q --no-recurse-submodules origin main
+ExecStartPre=-/usr/bin/env git -C /srv/src merge -q --ff-only FETCH_HEAD
+ExecStart=/bin/sh -c 'test -n "$(find /srv/gnu/feed.json -mmin -45 2>/dev/null)" || sudo -n systemctl restart aphrody-gnu.service'

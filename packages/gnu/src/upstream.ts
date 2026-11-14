@@ -94,9 +94,9 @@ export function latestRelease(
   listing: FtpListing,
   dir: string,
   hints: string[] = [],
+  opts: { strict?: boolean; major?: string } = {},
 ): Release | null {
   const cands: Release[] = [];
-  const names = new Set(hints.map((h) => h.toLowerCase()));
   for (const [path, files] of listing) {
     if (path !== dir && !path.startsWith(`${dir}/`)) continue;
     if (path.slice(dir.length + 1).split("/").length > 1) continue;
@@ -118,18 +118,25 @@ export function latestRelease(
     }
   }
   if (!cands.length) return null;
-  const named = cands.filter((c) => names.has(c.name.toLowerCase()));
-  const pool = named.length
-    ? named
-    : cands.filter(
-        (c) =>
-          c.name ===
-          cands.toSorted((a, b) => b.date.localeCompare(a.date))[0]!.name,
-      );
-  return pool.toSorted(
-    (a, b) =>
-      versionCmp(b.version, a.version) || extRank(b.file) - extRank(a.file),
-  )[0]!;
+  // Hints in priority order (GSRC tarball name, id, directory): the first one that names a tarball wins.
+  let pool: Release[] = [];
+  for (const h of hints.filter(Boolean)) {
+    pool = cands.filter((c) => c.name.toLowerCase() === h.toLowerCase());
+    if (pool.length) break;
+  }
+  if (!pool.length) {
+    if (opts.strict) return null;
+    const top = cands.toSorted((a, b) => b.date.localeCompare(a.date))[0]!.name;
+    pool = cands.filter((c) => c.name === top);
+  }
+  if (opts.major)
+    pool = pool.filter((c) => c.version.split(/[.-]/)[0] === opts.major);
+  return (
+    pool.toSorted(
+      (a, b) =>
+        versionCmp(b.version, a.version) || extRank(b.file) - extRank(a.file),
+    )[0] ?? null
+  );
 }
 
 /** Resolve the ftp directory of a package from its GSRC MASTER_SUBDIR, tarball name and id. */

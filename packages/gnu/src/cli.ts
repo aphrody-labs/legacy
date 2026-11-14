@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// ay gnu <status|search|package|sync|feed|diff|kernel|site|verify> -- GNU upstream tracker.
+// ay gnu <status|search|package|sync|feed|diff|kernel|daemon|site|verify> -- GNU upstream tracker.
 import { buildSite } from "./site.ts";
 import { paths, readEvents } from "./store.ts";
 import { sync } from "./sync.ts";
@@ -24,6 +24,7 @@ const USAGE = `usage: ay gnu <command> [options]
   kernel                      Linux kernel upstream: releases, trees, GKI, ChromeOS, Rust for Linux
   sync [--mirror] [--no-heads] [--no-rust] [--no-kernel] [--no-site] [--bucket B] [--gsrc DIR]
                               one poll cycle: fetch sources, rebuild feed/site, optionally mirror to R2
+  daemon                      poll forever (GNU_INTERVAL seconds, default 600) with R2 mirroring; run by aphrody-gnu.service
   site [--out DIR]            rebuild the static site from the current feed
   verify                      signature tooling check (sqv)
 env: GNU_HOME (work dir, default var/gnu), GNU_FEED (feed path or URL), GNU_BUCKET (default aphrody-gnu)
@@ -145,6 +146,26 @@ async function main(): Promise<number> {
       });
       console.log(`ok ${f.counts.packages} packages, generated ${f.generated}`);
       return 0;
+    }
+    case "daemon": {
+      // Long-running poller (systemd aphrody-gnu.service): one cycle per GNU_INTERVAL seconds (default 600), mirror on.
+      const every = Math.max(60, Number(Bun.env.GNU_INTERVAL ?? 600)) * 1000;
+      for (;;) {
+        const t = Date.now();
+        try {
+          const f = await sync({
+            mirror: Bun.env.GNU_MIRROR !== "0",
+            gsrcRoot: Bun.env.GNU_GSRC,
+            log: (m) => console.log(m),
+          });
+          console.log(
+            `cycle ok ${f.counts.packages} packages in ${Math.round((Date.now() - t) / 1000)}s`,
+          );
+        } catch (e) {
+          console.error(`cycle failed: ${String(e).slice(0, 300)}`);
+        }
+        await Bun.sleep(Math.max(5000, every - (Date.now() - t)));
+      }
     }
     case "site": {
       const p = paths();

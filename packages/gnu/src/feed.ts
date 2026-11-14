@@ -25,17 +25,28 @@ export async function buildFeed(
     ...Object.keys(inv.pkgs),
   ]);
   const ftpDirs = new Map<string, string>(); // ftp dir -> id already claimed
+  const share = new Map<string, number>(); // ftp dir -> number of ids mapped to it
   const entries: Entry[] = [];
   const announceNames = new Set<string>();
   const dirOf: Record<string, string | null> = {};
   for (const id of ids) {
     const g = inv.gsrc[id];
-    dirOf[id] = ftpDirFor(listing, id, g?.tarball, g?.subdir);
+    dirOf[id] = /snapshot$/.test(id)
+      ? null
+      : ftpDirFor(listing, id, g?.tarball, g?.subdir);
+    if (dirOf[id]) share.set(dirOf[id]!, (share.get(dirOf[id]!) ?? 0) + 1);
     if (dirOf[id]) ftpDirs.set(dirOf[id]!, id);
   }
   // ftp directories with real tarballs that neither GSRC nor the inventory know about.
   for (const dir of listing.keys()) {
-    if (!dir || dir.includes("/") || ftpDirs.has(dir) || ids.has(dir)) continue;
+    if (
+      !dir ||
+      dir.includes("/") ||
+      dir === "non-gnu" ||
+      ftpDirs.has(dir) ||
+      ids.has(dir)
+    )
+      continue;
     if (latestRelease(listing, dir, [dir])) {
       ids.add(dir);
       dirOf[dir] = dir;
@@ -65,7 +76,21 @@ export async function buildFeed(
     const p = inv.pkgs[id] ?? inv.pkgs[g?.tarball ?? ""];
     const dir = dirOf[id] ?? null;
     const rel: Release | null = dir
-      ? latestRelease(listing, dir, [dir, id, g?.tarball ?? ""])
+      ? (() => {
+          const shared = (share.get(dir) ?? 0) > 1;
+          const versioned =
+            id.startsWith(dir) && /^\d/.test(id.slice(dir.length));
+          const hints = [
+            g?.tarball ?? "",
+            id,
+            ...(!shared || id === dir || versioned ? [dir] : []),
+          ];
+          const major =
+            shared && versioned
+              ? /^\d+/.exec(g?.version ?? "")?.[0]
+              : undefined;
+          return latestRelease(listing, dir, hints, { strict: shared, major });
+        })()
       : null;
     const mir = st.mirror[id];
     const sameAsGsrc = !!rel && !!g && g.sha256[rel.file] !== undefined;
@@ -117,7 +142,10 @@ export async function buildFeed(
           : null,
       guix: guixV ? { version: guixV } : null,
       drift: {
-        gsrc: !!rel && !!gv && versionCmp(rel.version, bareVersion(gv)) > 0,
+        gsrc:
+          !!rel &&
+          /^\d/.test(gv ?? "") &&
+          versionCmp(rel.version, bareVersion(gv)) > 0,
         guix:
           !!rel && !!guixV && versionCmp(rel.version, bareVersion(guixV)) > 0,
       },

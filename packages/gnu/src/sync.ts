@@ -119,7 +119,7 @@ async function fetchHeads(
   st: State,
   inv: Inventory,
   ids: string[],
-  batch = 60,
+  batch = 120,
 ) {
   const todo = ids
     .map((id) => ({

@@ -321,6 +321,17 @@ const inv = {
       builddeps: [],
       libdeps: [],
     },
+    gcc9: {
+      label: "GCC 9",
+      tarball: "gcc9",
+      version: "9.1.0",
+      description: "GCC 9",
+      home: null,
+      subdir: "gnu/gcc/gcc-$(GARVERSION)/",
+      sha256: {},
+      builddeps: [],
+      libdeps: [],
+    },
     gcc16: {
       label: "GCC 16",
       tarball: "gcc16",
@@ -382,6 +393,9 @@ describe("feed", () => {
     expect(c.rust[0]!.version).toBe("0.12.0");
     expect(c.savannah?.head).toBe("abc");
     expect(c.upstream.signature.status).toBe("unverified");
+    const g9 = pkg(f, "gcc9")!;
+    expect(g9.upstream.version).toBe("9.1.0"); // shared ftp directory: the major of the GSRC pin selects the series
+    expect(g9.drift.gsrc).toBe(false);
     const g = pkg(f, "gcc16")!;
     expect(g.upstream.sha256).toBe("f".repeat(64));
     expect(g.upstream.sha256_source).toBe("gsrc");
