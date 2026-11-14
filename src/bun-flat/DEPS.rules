@@ -1,3 +1,0 @@
-# checkdeps layer rules (see docs/ARCHITECTURE.md). Inherited by subdirectories.
-# Verbatim leaf crates of the bun fork: base layer, no first-party dependency.
-layer = 1

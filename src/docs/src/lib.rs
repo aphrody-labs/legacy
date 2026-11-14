@@ -9,15 +9,15 @@
 //!   plus the page count of `https://bun.com/llms.txt`;
 //! - `skills`: every `bun*` agent skill under `~/.claude/skills` and `<repo>/.agents/skills`.
 //!
-//! Sync is incremental: a document is rewritten only when its wyhash (the bun crate flattened in
-//! `aphrody-bun-flat`) changes, and documents gone from a source are deleted. `sync` is the command
+//! Sync is incremental: a document is rewritten only when its wyhash (Bun's `bun_wyhash` crate)
+//! changes, and documents gone from a source are deleted. `sync` is the command
 //! shared by the scheduled task and the upstream watch (`ay bun watch`): run it after the fork or
 //! bun.com moves. Plan: docs/ay/MIGRATION.md.
 
 pub mod schedule;
 
-use bun_flat::sort_by_number::SortByNumber;
-use bun_flat::wyhash::Wyhash;
+use bun_sort_by_number::SortByNumber;
+use bun_wyhash::Wyhash;
 use rusqlite::{OptionalExtension, params};
 /// Re-exported so callers need no direct rusqlite dependency.
 pub use rusqlite::Connection;

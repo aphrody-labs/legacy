@@ -215,13 +215,13 @@ T:	git https://github.com/aphrody-dev/pi-opencode.git
 F:	.agents/
 F:	packages/ai-os/
 
-LAYER L1 BASE (src/core, net, sys, design tokens, lore-base/io, depot-core/cas)
+LAYER L1 BASE (src/core, net, machine, design tokens, lore-base/io, depot-core/cas)
 M:	skill:bun agent:claude <contact@aphrody.com>
 S:	Supported
 F:	src/core/
 F:	src/corelib/
 F:	src/net/
-F:	src/sys/
+F:	src/machine/
 F:	src/depot/core/
 F:	src/depot/cas/
 F:	src/lore/base/

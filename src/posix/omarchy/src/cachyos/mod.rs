@@ -81,9 +81,9 @@ fn classify_gpu(vendor_id: u16, name: &str) -> (&'static str, &'static str) {
 }
 
 impl SystemHardwareProfile {
-    /// Probe live CPU, GPU, and RAM telemetry using `aphrody-sys`.
+    /// Probe live CPU, GPU, and RAM telemetry using `aphrody-machine`.
     pub fn probe() -> Self {
-        let probed = sys::probe(sys::Options {
+        let probed = machine::probe(machine::Options {
             skip_toolchains: true,
             include_identifiers: false,
         });

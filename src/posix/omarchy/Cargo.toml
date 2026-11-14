@@ -7,7 +7,7 @@ license.workspace = true
 description = "Unified Omarchy + CachyOS + Arch/Linux orchestration engine: hardware probe, kernel/patchsets, multi-distro recipes, Aether themes, plugins, and WSL2 bundle builder"
 
 [dependencies]
-sys = { version = "0.4.0", path = "../../sys", package = "aphrody-sys" }
+machine = { version = "0.4.0", path = "../../machine", package = "aphrody-machine" }
 bun-steam = { version = "1.4.8", package = "steam-depot", path = "../../steam" }
 anyhow.workspace = true
 clap.workspace = true

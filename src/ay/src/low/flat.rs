@@ -1,24 +1,24 @@
-//! `ay flat` (resync of src/bun-flat from the bun fork), and the commands the flattened crates
-//! back: `ay hash` (wyhash) and `ay time` (HdrHistogram percentiles).
+//! `ay flat` (resync of a `src/<fork>-flat` crate from its fork), and the commands Bun's crates
+//! back: `ay hash` (`bun_wyhash`) and `ay time` (`bun_histogram` percentiles).
 
-use bun_flat::histogram::Histogram;
-use bun_flat::sync::{self, Manifest};
-use bun_flat::wyhash::{Wyhash, Wyhash11};
+use super::flat_sync::{self as sync, Manifest};
+use bun_histogram::Histogram;
+use bun_wyhash::{Wyhash, Wyhash11};
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::time::Instant;
 
 #[derive(clap::Args, Debug, PartialEq)]
-#[command(after_help = "Examples:\n  ay flat list\n  ay flat check            fails when src/bun-flat and the fork disagree\n  ay flat sync             regenerate from third_party/bun at HEAD, record the commit\n  ay flat check --fork third_party/diffutils     manifest src/diffutils-flat/flat.toml\n  ay flat list --fork third_party/x --manifest path/to/flat.toml")]
+#[command(after_help = "Examples:\n  ay flat list\n  ay flat check            fails when src/diffutils-flat and the fork disagree\n  ay flat sync             regenerate from third_party/diffutils at HEAD, record the commit\n  ay flat check --fork third_party/x     manifest src/x-flat/flat.toml\n  ay flat list --fork third_party/x --manifest path/to/flat.toml")]
 pub struct FlatArgs {
     /// Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
     #[arg(long, global = true)]
     pub root: Option<PathBuf>,
-    /// Fork checkout (default: <root>/third_party/bun)
+    /// Fork checkout (default: <root>/third_party/diffutils)
     #[arg(long, global = true)]
     pub fork: Option<PathBuf>,
-    /// flat.toml of the fork (default: <root>/crates/<fork directory>-flat/flat.toml)
+    /// flat.toml of the fork (default: <root>/src/<fork directory>-flat/flat.toml)
     #[arg(long, global = true)]
     pub manifest: Option<PathBuf>,
     #[command(subcommand)]
@@ -49,7 +49,7 @@ pub enum FlatCmd {
 /// (flat crate directory, flat.toml, fork checkout). A relative `--fork` / `--manifest` is taken from the root.
 fn dirs(root: Option<PathBuf>, fork: Option<PathBuf>, manifest: Option<PathBuf>) -> (PathBuf, PathBuf, PathBuf) {
     let root = root.unwrap_or_else(crate::repo_root);
-    let fork = root.join(fork.unwrap_or_else(|| PathBuf::from("third_party").join("bun")));
+    let fork = root.join(fork.unwrap_or_else(|| PathBuf::from("third_party").join("diffutils")));
     let manifest = match manifest {
         Some(m) => root.join(m),
         None => {
@@ -316,9 +316,9 @@ mod tests {
 
     #[test]
     fn manifest_of_the_checkout_parses() {
-        let crate_dir = Path::new(env!("SRC_ROOT")).join("src/bun-flat");
+        let crate_dir = Path::new(env!("SRC_ROOT")).join("src/diffutils-flat");
         let m = Manifest::load(&crate_dir).unwrap();
-        assert!(m.modules.iter().any(|x| x.name == "wyhash"));
+        assert!(!m.modules.is_empty());
         assert_eq!(m.commit.len(), 40);
     }
 
@@ -326,7 +326,7 @@ mod tests {
     fn manifest_path_follows_the_fork_directory() {
         let root = PathBuf::from("/r");
         let (dir, manifest, fork) = dirs(Some(root.clone()), None, None);
-        assert_eq!((dir, manifest, fork), (root.join("src/bun-flat"), root.join("src/bun-flat/flat.toml"), root.join("third_party/bun")));
+        assert_eq!((dir, manifest, fork), (root.join("src/diffutils-flat"), root.join("src/diffutils-flat/flat.toml"), root.join("third_party/diffutils")));
         let (dir, manifest, fork) = dirs(Some(root.clone()), Some("third_party/diffutils".into()), None);
         assert_eq!((dir, manifest, fork), (root.join("src/diffutils-flat"), root.join("src/diffutils-flat/flat.toml"), root.join("third_party/diffutils")));
         let (dir, manifest, _) = dirs(Some(root.clone()), Some("third_party/x".into()), Some("m/flat.toml".into()));
@@ -338,7 +338,7 @@ mod tests {
     fn manifests_of_the_checkout_pass_the_license_gate() {
         let root = Path::new(env!("SRC_ROOT"));
         let allow = sync::allow_list(&std::fs::read_to_string(root.join("deny.toml")).unwrap()).unwrap();
-        for entry in std::fs::read_dir(root.join("crates")).unwrap().flatten() {
+        for entry in std::fs::read_dir(root.join("src")).unwrap().flatten() {
             let path = entry.path().join(sync::MANIFEST);
             if path.is_file() {
                 Manifest::load_file(&path).unwrap().check_licenses(&allow).unwrap_or_else(|e| panic!("{}: {e}", path.display()));

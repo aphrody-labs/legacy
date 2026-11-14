@@ -1,8 +1,8 @@
 //! Low-level commands of `ay` for Bun and Chromium, one module each, merged into the top-level
 //! command table with `#[command(flatten)]` so `lib.rs` carries a single variant for all of them:
 //! - `ay docs`: Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) in a SQLite FTS5 index;
-//! - `ay flat`, `ay hash`, `ay time`: the Rust crates of the bun fork flattened into
-//!   `src/bun-flat`, their resync, and the commands they back (wyhash, HdrHistogram);
+//! - `ay flat`: resync of the leaf crates of a fork flattened into `src/<fork>-flat` (diffutils);
+//!   `ay hash`, `ay time`: the commands backed by Bun's `bun_wyhash` and `bun_histogram` crates;
 //! - `ay chromium`: depot_tools, gclient, gn and autoninja of the Chromium checkout on the build
 //!   host (fr1), delegated over `ay ssh` from any other machine;
 //! - `ay engines`: the engines facade of `packages/chromium-bun` (V8, JavaScriptCore, Dawn, wgpu,
@@ -17,13 +17,14 @@ pub mod chromium_chain;
 pub mod docs;
 pub mod engines;
 pub mod flat;
+pub mod flat_sync;
 pub mod steam;
 
 #[derive(clap::Subcommand, Debug, PartialEq)]
 pub enum LowCmd {
     /// Bun docs in ay: sync (fork md/mdx, bun.com llms-full.txt, skills), bun <query> [--json], show, stats, schedule
     Docs(docs::DocsArgs),
-    /// Rust crates of the bun fork flattened into src/bun-flat: list, sync, check
+    /// Leaf crates of a fork flattened into src/<fork>-flat (default: diffutils): list, sync, check
     Flat(flat::FlatArgs),
     /// wyhash (bun's hash) of files or stdin
     Hash(flat::HashArgs),

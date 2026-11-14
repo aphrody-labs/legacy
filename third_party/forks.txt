@@ -1,17 +1,6 @@
 # Canonical upstream forks maintained in aphrody-labs (purged 2026-11-14 around Linux 7.4-rc, LLVM, Freedesktop, Chromium, Bun, Gaming).
 # owner/repo language
 a2aproject/A2A Shell
-anomalyco/browse TypeScript
-anomalyco/browser-control TypeScript
-anomalyco/deadbolt Rust
-anomalyco/hex Rust
-anomalyco/models.dev TypeScript
-anomalyco/openauth TypeScript
-anomalyco/opencode TypeScript
-anomalyco/opentui TypeScript
-anomalyco/opentunnel Rust
-anomalyco/rift Rust
-anomalyco/rune Rust
 anomalyco/terminal-control Rust
 aphrody-labs/android-skills Kotlin
 aphrody-labs/llvm-project
@@ -87,6 +76,7 @@ nodejs/node JavaScript
 open-source-parsers/jsoncpp C++
 Open-Wine-Components/umu-launcher Python
 oven-sh/bun Rust
+oven-sh/lol-html Rust
 oven-sh/WebKit C++
 puppeteer/puppeteer TypeScript
 PyO3/pyo3 Rust
@@ -96,6 +86,7 @@ ratatui/ratatui Rust
 sched-ext/scx C
 seiunx-dev/cridecoder Rust
 servo/servo Rust
+sru-systems/rust-argon2 Rust
 storytold/artcraft Rust
 torvalds/linux C
 ublue-os/bazzite Shell
@@ -141,4 +132,3 @@ remorses/gpuix Rust
 zed-industries/awesome-gpui Python
 zed-industries/create-gpui-app Rust
 tauri-apps/tauri Rust
-aphrody-labs/ghidra Java

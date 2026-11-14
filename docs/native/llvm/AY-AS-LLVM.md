@@ -97,7 +97,7 @@ crates/depot-ay/tests/lit/driver/   argv0.test, help.test, unknown-tool.test
 | Package (inchangé) | Dossier actuel    | Dossier cible          | Couche | Travail                                                                                           |
 | ------------------ | ----------------- | ---------------------- | ------ | ------------------------------------------------------------------------------------------------- |
 | depot-core         | src/depot/core | idem                   | 0      | + `ToolContext`, racine, identity ; sortir moteurs lourds plus tard                               |
-| sys                | src/sys        | crates/sys-probe       | 0      | `ay sys` → `sys::tool`                                                                            |
+| machine            | src/machine    | crates/sys-probe       | 0      | `ay sys` → `machine::tool`                                                                         |
 | sovereign-corelib  | src/corelib    | crates/sys-corelib     | 0      | —                                                                                                 |
 | depot-cas          | idem              | idem                   | 1      | —                                                                                                 |
 | depot-treesitter   | idem              | idem                   | 1      | reçoit `commands/{ast,rope}`                                                                      |

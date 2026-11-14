@@ -41,6 +41,8 @@ graphify-out/
 !/test/
 !/infra/
 !/tools/
+# Shell completions of Bun, embedded by src/runtime/cli/shell_completions.rs.
+!/completions/
 !/third_party/
 !/plugins/
 !/conformance/

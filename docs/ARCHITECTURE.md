@@ -144,7 +144,7 @@ Le C reste propriétaire des protocoles filaires et de la portabilité (AGENTS.m
 | `smithay-wayland-wire`, `hypr-tiler`, `cosmic-compat` | `src/wayland/{smithay,tiler,cosmic}` |
 | `gamescope-{core,cli,wgsl,web-wasm}` | `src/wayland/gamescope/{core,cli,wgsl,web-wasm}` |
 | `unix-omarchy`, `wslg-cli` | `src/posix/{omarchy,wslg}` |
-| `sys`, `net`, `remote`, `rt`, `up`, `re`, `ffi`, `ay`, `archguard`, `xtask`, `apm`, `corelib`, `game`, `docs` | `src/<même nom>` |
+| `machine`, `net`, `remote`, `rt`, `up`, `re`, `ffi`, `ay`, `archguard`, `xtask`, `apm`, `corelib`, `game`, `docs` | `src/<même nom>` |
 | `core`, `core-capi`, `core-py`, `core-jni` | `src/core`, `src/core/{capi,py,jni}` |
 | `depot-*` | `src/depot/<suffixe>` |
 | `lore`, `lore-*` | `src/lore`, `src/lore/<suffixe>` |
@@ -154,7 +154,8 @@ Le C reste propriétaire des protocoles filaires et de la portabilité (AGENTS.m
 | `factory`, `steam-depot`, `craft-formats`, `adblock-capi`, `rust-stack` | `src/chromium/factory`, `src/steam`, `src/craft`, `src/corelib/adblock-capi`, `src/rust-stack` |
 | `bench` | `bench/` |
 | `conformance`, `asset-test`, `lore-integration-tests` | `test/{conformance,assets,lore}` |
-| `taffy`, `bun-flat`, `diffutils-flat` | third party : fork `aphrody-labs` épinglé dans `third_party/` (`[patch]`/git rev), pas de copie dans `src/` |
+| `taffy`, `diffutils-flat` | third party : fork `aphrody-labs` épinglé dans `third_party/` (`[patch]`/git rev), pas de copie dans `src/` |
+| `bun-flat` (supprimée le 2026-11-14) | remplacée par les vraies crates Bun `src/{wyhash,histogram,sort_by_number}` (§9.5) ; le moteur de `ay flat` vit dans `src/ay/src/low/flat_sync.rs` |
 
 ### 9.3 Hors `src/`
 
@@ -169,9 +170,24 @@ Le C reste propriétaire des protocoles filaires et de la portabilité (AGENTS.m
 
 1. Stabiliser `main` : commiter le WIP orphelin (absorption RE dans `src/re`, `n2b` dans `depot-migrate`, suppressions `apps/r2b`, `apps/l2l`, `packages/shell-matrix`, `apps/unixwin`). Lock régénéré, `age` patché vers `aphrody-labs/rage` (`ml-kem 0.3` partagé avec `russh`). Gate : `cargo check --workspace --locked` sur fr1.
 2. Déménager `crates/*` en `src/*` d'un seul commit. Outil : réécriture littérale des chemins, contrôlée par `cargo metadata`. Couverture : `members` explicites, `[workspace.dependencies]`, `path =` relatifs, `include_str!`, workflows, `DEPS.rules`, archguard, MAINTAINERS, docs.
-3. Third party hors de `src/` : `taffy`, `bun-flat`, `diffutils-flat`.
+3. Third party hors de `src/` : `taffy`, `diffutils-flat` ; les crates Bun entrent dans `src/` sous leurs noms upstream (§9.5).
 4. Dédup Rust sur C (CPUID, fil Wayland, tuilage) derrière des tests de parité.
 5. Navigateur : un seul moteur Chromium 157 (V8, Skia, Dawn, depot_tools) ; Firefox et Lightpanda retirés (`768dd797`) ; état des forks dans `docs/native/deps/CHROMIUM-STACK-ALIGNMENT.md`.
+
+### 9.5 Crates Bun dans `src/` (2026-11-14)
+
+Ordre du propriétaire : les crates Rust de Bun ont priorité sur les nôtres, qui viennent après.
+
+- **Source** : `oven-sh/bun` main `9b72307ac3e1ea390441819e69fa2dfbb115dfe5` (2026-11-14T21:45:23Z), prise via le fork `aphrody-labs/bun` main `fa5d5b862662a904a9e3cfafa4e8503fa27eae28` (upstream rebasé, 25 commits du fork conservés, plus un correctif `unused_mut` dans `src/archive/zip.rs`). Pin : `src.lock.json`, `third_party/bun`. Provenance aussi en tête de `Cargo.toml`.
+- **Importé** : 135 crates membres de Bun sous `src/<nom>` (mêmes noms, même layout, `src/sema/driver`, `src/lint/*`), plus `src/css_derive` (dépendance de chemin, non membre) et le reste de `src/` de Bun (C++ de `src/jsc/bindings`, `src/js`, `src/codegen`). Hors de `src/`, ce que les crates incluent par `include_str!`/`include_bytes!` : `packages/bun-types`, `packages/bun-usockets/root_certs.der`, `completions/`, `docs/compiler/`.
+- **Non importé** : `src/CLAUDE.md` et `src/AGENTS.md` de Bun (leurs règles « préférer `bun_sys` à `std` » contredisent celles de nos crates), `clippy.toml` et `rustfmt.toml` (leurs `disallowed-*` s'appliqueraient à toutes nos crates ; clippy sur les crates Bun se lance avec `CLIPPY_CONF_DIR=third_party/bun`). Le `.clang-format` de Bun est à `src/jsc/bindings/.clang-format` ; celui du cœur C (style Linux) reste `src/.clang-format`.
+- **Collisions de noms** : une seule, `src/sys` (crate `sys`, profil machine derrière `ay sys`), renommée `src/machine` (paquet `aphrody-machine`, lib `machine`). Aucune de nos crates ne porte un nom `bun_*`.
+- **Doublons supprimés** : `src/bun-flat` (wyhash, histogram, sort_by_number aplatis) ; `ay` et `aphrody-docs` utilisent `bun_wyhash`, `bun_histogram`, `bun_sort_by_number`. Le moteur de `ay flat sync|check|list` (sert encore `diffutils-flat`) est `src/ay/src/low/flat_sync.rs`.
+- **Doublons constatés, non remplacés** : `parse_dotenv` (`src/env`) et `dotenvy` (`src/ay`, `src/up`) face à `bun_dotenv` ; quatre `fn which` (`src/up/src/probe.rs`, `src/ay/src/build.rs`, `src/ay/src/ai.rs`, `src/re/src/pipeline/util.rs`) face à `bun_which` ; `glob_match` (`src/remote/src/config.rs`), `globset` (`src/depot/{core,ingest}`), `glob-match` (`src/lore/revision`) face à `bun_glob` ; `Semver` (`src/depot/migrate/src/dotnet.rs`) face à `bun_semver`. Raison : ces crates Bun dépendent toutes de `bun_core` et de `bun_sys`/`bun_paths` (`bun_which`, `bun_glob`, `bun_semver`, `bun_dotenv` : lues dans leurs `Cargo.toml`), donc de `bun_simdutf_sys`, Highway et mimalloc compilés par le build ninja de Bun ; `ay` ne les relie pas sans ces objets C/C++. Seules les crates feuilles (`wyhash`, `histogram`, `sort_by_number`) se relient seules.
+- **Workspace** : `members` = nos crates + les 135 de Bun (tri alphabétique). `[workspace.dependencies]` : celles de Bun ajoutées ; clé commune gardée à la nôtre quand elle est de la même majeure et pas plus ancienne (`getrandom`, `libc`, `bitflags`, `thiserror`, `smallvec`, `bstr` avec la feature `alloc` de Bun) ; `rustix` garde le 0.38 de Bun et `src/machine` dépend directement du 1.x ; `lol_html` et `rust-argon2`, des dépendances de chemin `vendor/` chez Bun, sont les forks `aphrody-labs/lol-html` (`725ce499`, la rev de Bun) et `aphrody-labs/rust-argon2` (`bc5b8b86`, les deux patchs de `patches/rust-argon2`) épinglés par rev. `[workspace.lints]` : les tables de Bun telles quelles (`warnings = "deny"`, `unreachable_pub`, `dead_code`) ; nos crates portent chacune leur ancienne table en `[lints]` dans leur manifeste. `[profile.release]` et `[profile.dev]` restent les nôtres (LTO fat, abort) : un `lto = "off"` dégraderait `ay`, et le lien LTO de Bun est fait par son build ninja, pas par cargo ; les profils propres à Bun (`release-profiling`, `shim`, `bun_png`, `bun_sema_*`, `bun_react_compiler`, `bun_*_conformance`) sont ajoutés. `Cargo.lock` : `generic-array` reste en 0.14.7 (le 0.14.9 déprécie `from_mut_slice`, que `bun_runtime` appelle sous `warnings = "deny"`).
+- **Toolchain** : le `rust-toolchain.toml` de Bun épingle `nightly-2026-09-15` ; le nôtre (`chromium-157`, rustc 1.100.0-nightly du 2026-09-09, LLVM 24) est gardé. Mesuré sur fr1 le 2026-11-14 : le workspace de Bun seul (135 membres, `Cargo.lock` de Bun, sources générées présentes) passe `cargo +chromium-157 check --workspace --keep-going` avec 0 erreur (8 min 05 s à froid). `nightly-2026-09-15` n'a pas été rejoué avec les sources générées.
+- **Entrées natives de `cargo check`** (vérifiées, pas supposées) : ni JavaScriptCore/WebKit précompilé, ni BoringSSL. Les `build.rs` exigent seulement des sources générées dans `BUN_CODEGEN_DIR` (`build/debug-codegen/codegen`, fixé dans `.cargo/config.toml`) : `build_options.rs`, `json_byte_class.rs`, `aot_schema*.rs`, `aot_builtin_*.rs`, `cpp.rs`. `bun scripts/bun-codegen.ts` les produit sur fr1 : générateurs de Bun lancés depuis le checkout épinglé `third_party/bun` (`bun scripts/build.ts --mode=codegen`), plus les deux générateurs AOT de WebKit, lus dans un clone partiel de `oven-sh/WebKit` (`Source/JavaScriptCore`, au commit `WEBKIT_VERSION` du fork : `c495a7e0e4e6ebc599b6022541ba57537be345a3`). Aucune crate n'est exclue de `default-members` (il n'y en a pas). L'édition de liens de `bun_runtime` (JSC précompilé ou `vendor/WebKit` local, mimalloc, BoringSSL, uSockets, libuv, zlib-ng, simdutf, Highway...) reste le build ninja de Bun (`bun run build`, `scripts/build/deps/*.ts`) ; elle n'est pas faite ici.
+- **Racine** : `completions/` ajouté à l'allowlist de `.gitignore` et `bench`, `build`, `completions`, `test` à `ALLOWED_ROOT_PHYSICAL_DIRS` d'archguard (ARCH-005).
 
 ## Annexe A : architecture produit web (labs v0, ex-ROOT-ARCHITECTURE.md)
 

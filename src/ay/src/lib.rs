@@ -30,7 +30,7 @@ const OVERVIEW: &str = "\
 Areas:
   repo       arch, lock, manifests, git, ingest, graph, conformance, brand
   toolchain  up, doctor, sys, build, self-update, rt
-  bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in src/bun-flat), hash, time
+  bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in src/<fork>-flat), hash, time
   chromium   chromium (fr1 build chain), gclient, fetch, gn, ninja, cipd, cl, vpy, engines (V8, JSC, Dawn, wgpu)
   fleet      ssh, deploy, auth, secret, vault, ai, agents
   linux      omarchy, linux, pkg (Omarchy quattro command center + CachyOS kernel/pkg/WSL2 via aphrody-omarchy)
@@ -199,7 +199,7 @@ pub enum Cmd {
 
 #[derive(clap::Args, Debug, PartialEq, Default)]
 pub struct SysArgs {
-    /// Full profile as JSON (schema `sys::SCHEMA_VERSION`)
+    /// Full profile as JSON (schema `machine::SCHEMA_VERSION`)
     #[arg(long)]
     pub json: bool,
     /// Keep serials, UUIDs and public addresses (local use only, never agent context)
@@ -348,7 +348,7 @@ pub fn route(cmd: Cmd) -> Route {
 }
 
 fn run_sys(a: SysArgs) -> i32 {
-    let profile = sys::probe(sys::Options { skip_toolchains: a.no_tools, include_identifiers: a.ids });
+    let profile = machine::probe(machine::Options { skip_toolchains: a.no_tools, include_identifiers: a.ids });
     if a.json {
         match serde_json::to_string_pretty(&profile) {
             Ok(s) => println!("{s}"),

@@ -25,7 +25,10 @@ doctest = false
 [dependencies]
 archguard.workspace = true
 aphrody-conformance = { version = "0.4.0", path = "../../test/conformance" }
-aphrody-re.workspace = true
+aphrody-re = { workspace = true, features = ["index"] }
+# `ay index`: the in-process index pipeline (src/core/src/pipeline) and its file watcher.
+aphrody-core = { workspace = true, features = ["pipeline"] }
+notify = "9.0.0-rc.8"
 clap.workspace = true
 depot-cli.workspace = true
 depot-cipd.workspace = true
