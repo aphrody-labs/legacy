@@ -24,6 +24,7 @@ fn max_functions() -> usize {
 pub fn analyze_json(path: &Path, max_fns: usize) -> Result<String, String> {
     let opts = SreAnalyzeOptions { max_functions: max_fns.max(1), ..SreAnalyzeOptions::default() };
     let rep = analyze_binary_file(path, &opts)?;
+    #[allow(unused_mut)]
     let mut v = serde_json::to_value(&rep).map_err(|e| e.to_string())?;
     #[cfg(feature = "decompile")]
     {
@@ -60,11 +61,9 @@ fn render_module(report_json: &str) -> String {
 
 #[no_mangle]
 pub extern "C" fn ghidra_on_before_parse(
-    args: *const bun_native_plugin::sys::OnBeforeParseArguments,
+    args: *mut bun_native_plugin::sys::OnBeforeParseArguments,
     result: *mut bun_native_plugin::sys::OnBeforeParseResult,
 ) {
-    // SAFETY: Bun passes valid pointers for the duration of the call.
-    let (args, result) = unsafe { (&*args, &mut *result) };
     let Ok(mut handle) = OnBeforeParse::from_raw(args, result) else { return };
     let Ok(path) = handle.path().map(|p| p.into_owned()) else {
         handle.log_error("ghidra: cannot read path");
