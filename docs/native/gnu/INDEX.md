@@ -1,15 +1,16 @@
-# Écosystème GNU : index (2026-11-12)
+# Écosystème GNU : index (2026-11-12, complété 2026-11-14)
 
 Recensement, classification et verdicts pour notre stack (LLVM seul, Rust en priorité, pas de MinGW/MSYS sous Windows).
 
 ## Navigation
 
 - [PHILOSOPHY.md](PHILOSOPHY.md) : quatre libertés, copyleft, GPL/LGPL/AGPL/GFDL, GNU/Linux, FSF, chronologie 1983→2026
-- [PACKAGES.md](PACKAGES.md) : table des 459 entrées classées (388 actives, 71 décommissionnées)
+- [PACKAGES.md](PACKAGES.md) : table des entrées classées (459 de l'index initial, plus 13 répertoires ftp ajoutés le 2026-11-14)
 - [DISTROS.md](DISTROS.md) : Ubuntu 26.10 (stonking) et Arch : versions, socles, remplacements déjà faits
 - [MODERN.md](MODERN.md) : équivalents et réécritures, avec maturité et taux de tests
 - [PLAN.md](PLAN.md) : notre feuille de route de remplacement (top 10)
-- [gnu-packages.json](gnu-packages.json) : données machine, générées par `tools/gnu-index/build.ts` (curation dans `curated.ts`)
+- [gnu-packages.json](gnu-packages.json) : données machine, générées par `tools/gnu-index/build.ts` (curation dans `curated.ts`), puis complétées par `tools/gnu-index/merge.ts` : `purpose` depuis les blurbs officiels (`docs/research/gnu-blurbs-2026-11-14.json`, texte complet dans `blurb`), `gsrc` (id, version, sha256, dépendances) et `latest_release` quand GSRC est plus récent (`docs/research/gsrc-gnu-2026-11-14.json`), 13 répertoires ftp absents ajoutés (guile-debbugs, micron, sauce, speedx, aspell-dict-{csb,ga,hr,is,it,sk} ; cfengine, flex et git marqués `hosted_only` : projets hors GNU hébergés sur ftp.gnu.org)
+- [OS.md](OS.md) : cible « Aphrody système GNU » ; `src/gnu/packages.toml` (généré par `scripts/gnu-packages.ts`, gate de dérive `just gnu-drift`) et un `PROOF.md` par paquet dans `src/gnu/<id>/`
 
 ## Comptes par catégorie
 
@@ -54,6 +55,8 @@ La catégorie vient d'abord de la curation, sinon de la section FSF du [GNU Manu
 - Ubuntu 26.10 : 176 paquets GNU présents, 22 dans le socle (Essential/required/important). **coreutils est passé à uutils** (rust-coreutils 0.12.0 par défaut). APT vérifie ses dépôts avec `sqv` (Sequoia). `ubuntu-minimal` installe sudo-rs et sudo.
 - Arch : 113 paquets GNU présents ; 11 dans `base`, 18 dans `base-devel`. Aucun remplacement par défaut.
 - uutils coreutils passe 676 des 719 tests de la suite GNU (94,0 %, CI du 2026-11-12).
+
+Les listings HTML de ftp.gnu.org expirent depuis le PC, fr1 et fr2 le 2026-11-14 : les répertoires ajoutés sont lus sur le miroir `mirrors.kernel.org/gnu/` (même contenu, depuis fr2) ; les tarballs de `just gnu-check` viennent de ftp.gnu.org directement et sont vérifiés par le sha256 de GSRC.
 
 ## Limites
 

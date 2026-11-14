@@ -1,0 +1,108 @@
+#!/bin/bash
+# GNU testsuite of one first-party port, GNU binary against the aphrody-gnu binary. Runs on fr2 (`just gnu-check <id>`).
+# Usage: gnu-proof.sh <time|ed|m4|bc|which> <gnu version> <sha256 of the GSRC distfile>
+# Needs the aphrody binary in $R (shipped from fr1 by scripts/gnu-check.ts). Writes $L/proof-<id>.txt (key=value).
+B=/srv/build/gnu-rust; S=$B/gnu-src; R=$B/target/ws/release; L=$B/log; mkdir -p $S $L $B/gnu-bin
+export CC=gcc CFLAGS="-O2 -std=gnu17 -Wno-error" MAKEFLAGS=-j6 TERM=dumb LC_ALL=C
+id=$1; ver=$2; sha=$3; out=$L/proof-$id.txt; : > $out
+kv() { echo "$1=$2" >> $out; }
+
+# GNU tarball (checked against the GSRC sha256), configured and built once.
+if [ ! -x $S/$id/.built ]; then
+  rm -rf $S/$id; mkdir -p $S/$id; ok=
+  for ext in tar.gz tar.xz tar.lz; do
+    # ftp.gnu.org answers slowly or not at all from the fleet: the kernel.org mirror first, short timeouts
+    wget -q -T 30 -t 1 "https://mirrors.kernel.org/gnu/$id/$id-$ver.$ext" -O $S/$id.tar 2>/dev/null \
+      || wget -q -T 30 -t 1 "https://ftp.gnu.org/gnu/$id/$id-$ver.$ext" -O $S/$id.tar 2>/dev/null || continue
+    [ "$(sha256sum $S/$id.tar | cut -d' ' -f1)" = "$sha" ] || { echo "sha256 mismatch for $id-$ver.$ext" >&2; continue; }
+    tar -xf $S/$id.tar -C $S/$id --strip-components=1 2>/dev/null || tar --lzip -xf $S/$id.tar -C $S/$id --strip-components=1 && ok=1 && break
+  done
+  [ -n "$ok" ] || { kv error "cannot fetch $id-$ver"; exit 1; }
+  case $id in
+    bc) for d in lib bc dc; do make -C $S/$id/$d >$L/make-$id-$d.log 2>&1; done ;;
+    ed) (cd $S/$id && ./configure >$L/cfg-$id.log 2>&1 && make >$L/make-$id.log 2>&1) ;;
+    *)  (cd $S/$id && ./configure -q >$L/cfg-$id.log 2>&1 && make -s >$L/make-$id.log 2>&1) ;;
+  esac
+  touch $S/$id/.built; chmod +x $S/$id/.built
+fi
+
+kv id $id; kv gnu_version $ver; kv sha256 $sha; kv host "$(hostname)"; kv date "$(date -u +%FT%TZ)"
+kv ours_bytes "$(stat -c %s $R/$id)"; kv ours_sha256 "$(sha256sum $R/$id | cut -c1-16)"
+
+am_totals() { # automake test-suite.log
+  echo "total=$(rg -N '^# TOTAL:' $1 | rg -o '[0-9]+') pass=$(rg -N '^# PASS:' $1 | rg -o '[0-9]+') skip=$(rg -N '^# SKIP:' $1 | rg -o '[0-9]+') fail=$(rg -N '^# FAIL:' $1 | rg -o '[0-9]+') error=$(rg -N '^# ERROR:' $1 | rg -o '[0-9]+')"
+}
+# differential: same stdout and exit code on the same stdin and arguments
+diffcase() { # gnu ours stdin-file args...
+  local g=$1 o=$2 in=$3; shift 3
+  local go gr oo or
+  go=$(timeout 60 "$g" "$@" < $in 2>/dev/null); gr=$?
+  oo=$(timeout 60 "$o" "$@" < $in 2>/dev/null); or=$?
+  [ "$go" = "$oo" ] && [ $gr = $or ]
+}
+
+case $id in
+time)
+  [ -x $B/gnu-bin/time ] || { rm -f $S/time/src/time; make -C $S/time >/dev/null 2>&1; cp $S/time/src/time $B/gnu-bin/time; }
+  cp $B/gnu-bin/time $S/time/src/time && touch $S/time/src/time
+  make -C $S/time check >$L/check-time-gnu.log 2>&1
+  kv gnu "$(am_totals $S/time/tests/test-suite.log)"
+  kv gnu_bytes "$(stat -c %s $B/gnu-bin/time)"
+  cp $R/time $S/time/src/time && touch $S/time/src/time
+  make -C $S/time check >$L/check-time-ours.log 2>&1
+  kv ours "$(am_totals $S/time/tests/test-suite.log)"
+  kv ours_failed "$(rg -N '^FAIL: ' $L/check-time-ours.log | tr '\n' ' ')"
+  cp $B/gnu-bin/time $S/time/src/time
+  ;;
+ed)
+  kv gnu_bytes "$(stat -c %s $S/ed/ed)"
+  for w in gnu ours; do
+    d=$B/ed-obj-$w; rm -rf $d; mkdir -p $d
+    if [ $w = gnu ]; then cp $S/ed/ed $d/ed; else cp $R/ed $d/ed; fi
+    (cd $d && timeout 300 sh $S/ed/testsuite/check.sh $S/ed/testsuite $w > $L/check-ed-$w.log 2>&1; echo $? > rc)
+    kv ${w}_rc "$(cat $d/rc)"
+    kv ${w}_failed_lines "$(rg -N -o '^ [0-9]+( [0-9]+)*|^( [0-9]+(\([a-z0-9._]*\))?)+' $L/check-ed-$w.log | tr '\n' ' ')"
+    kv ${w}_tail "$(rg -N '' $L/check-ed-$w.log | tail -1 | cut -c1-120)"
+  done
+  ;;
+m4)
+  kv gnu_bytes "$(stat -c %s $S/m4/src/m4)"
+  for w in gnu ours; do
+    M4=$S/m4/src/m4; [ $w = ours ] && M4=$R/m4
+    (cd $S/m4/checks && f=$(ls [0-9]*.*) && timeout 1200 sh ./check-them -I ../examples -m $M4 $f > $L/check-m4-$w.log 2>&1; echo $? > $B/m4-$w.rc)
+    kv ${w}_rc "$(cat $B/m4-$w.rc)"
+    kv ${w}_tail "$(rg -N '' $L/check-m4-$w.log | tail -3 | tr '\n' '|' | cut -c1-300)"
+    kv ${w}_pass "$(rg -N -c '^(PASS|ok)' $L/check-m4-$w.log)"
+    kv ${w}_fail "$(rg -N -c '^(FAIL|not ok)' $L/check-m4-$w.log)"
+  done
+  ;;
+bc)
+  kv gnu_bytes "$(stat -c %s $S/bc/bc/bc)"
+  p=0; t=0; fails=
+  for f in $S/bc/Test/*.b; do
+    t=$((t+1)); if diffcase $S/bc/bc/bc $R/bc $f -l; then p=$((p+1)); else fails="$fails $(basename $f)"; fi
+  done
+  kv differential "pass=$p total=$t"; kv differential_failed "$fails"
+  ;;
+which)
+  T=$(mktemp -d); mkdir -p $T/d1 $T/d2 $T/.dot $T/d1/baz; printf '#!/bin/sh\n' > $T/d1/foo; cp $T/d1/foo $T/d2/foo; cp $T/d1/foo $T/d1/bar; cp $T/d1/foo $T/.dot/dotcmd
+  chmod 755 $T/d1/foo $T/d2/foo $T/.dot/dotcmd; chmod 644 $T/d1/bar
+  G=$S/which/which; O=$R/which; p=0; t=0; fails=
+  run() { # PATH args...
+    local P=$1; shift; t=$((t+1))
+    local go gr oo or
+    go=$(cd $T && PATH=$P HOME=$T/d1 timeout 20 $G "$@" 2>/dev/null); gr=$?
+    oo=$(cd $T && PATH=$P HOME=$T/d1 timeout 20 $O "$@" 2>/dev/null); or=$?
+    if [ "$go" = "$oo" ] && [ $gr = $or ]; then p=$((p+1)); else fails="$fails [$*]"; fi
+  }
+  P1="$T/d1:$T/d2:/usr/bin:/bin"; P2=".dot:d1:/usr/bin"
+  run $P1 foo; run $P1 -a foo; run $P1 bar; run $P1 baz; run $P1 nosuch; run $P1 foo nosuch foo; run $P1 sh; run $P1 -a sh
+  run $P1 $T/d1/foo; run $P1 d1/foo; run $P1 /nonexistent/x; run $P1 --all foo; run $P1 -- foo
+  run $P2 dotcmd; run $P2 --skip-dot dotcmd; run $P2 --show-dot dotcmd; run $P2 -a foo; run $P2 --skip-dot foo
+  run "$T/d1:~/d2" -a foo; run "~/d2:$T/d1" --skip-tilde foo; run "$T/d1:$T/d2" --show-tilde foo; run "$T/d1" --show-tilde -a foo
+  run "$P1:" foo; run ":$P1" foo; run "" foo; run $P1 --tty-only foo; run $P1 -i foo; run $P1 --skip-alias foo
+  run $P1; run $P1 --bogus; run $P1 -x
+  kv differential "pass=$p total=$t"; kv differential_failed "$fails"
+  ;;
+esac
+echo done >> $out

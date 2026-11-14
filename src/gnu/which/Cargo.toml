@@ -1,0 +1,23 @@
+[package]
+publish = false
+name = "aphrody-gnu-which"
+description = "GNU which in Rust: locate a command in PATH (GNU which 2.x CLI)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+name = "gnu_which"
+doctest = false
+
+[[bin]]
+name = "which"
+path = "src/main.rs"
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[lints]
+workspace = true
