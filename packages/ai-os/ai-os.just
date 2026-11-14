@@ -10,6 +10,12 @@ ai-os *args:
 ai-os-test:
     bun --cwd "{{root}}/packages/ai-os" test
 
+# Markdown skills archive for Gemini (var/skills-archive; --publish uploads to R2) and two-way Claude<->Gemini memory sync
+[group('ai-os')]
+skills-archive *args:
+    bun "{{root}}/packages/ai-os/src/brain/skills-archive.ts" {{args}}
+    bun "{{root}}/packages/ai-os/src/brain/memory-sync.ts"
+
 # ai-os orchestrator (packages/ai-os/docs/ORCHESTRATOR.md): hosts, engines, health, run <workflow.json>, plan "<goal>", design, market
 [group('ai-os')]
 orch *args:

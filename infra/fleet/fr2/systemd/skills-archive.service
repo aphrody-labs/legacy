@@ -1,0 +1,16 @@
+# Regenerates the markdown skills archive and the Gemini memory pull, then publishes to R2 (docs/infra/GEMINI-WEB-MCP.md).
+# /etc/aphrody/relay.env also holds CLOUDFLARE_API_TOKEN (R2 write on bucket aphrody-skills-archive) for `cf`.
+[Unit]
+Description=Aphrody skills archive build and publish
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/srv/src
+EnvironmentFile=/etc/aphrody/relay.env
+Environment=PATH=/home/ubuntu/.local/bin:/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStartPre=/usr/bin/git -C /srv/src fetch -q --no-recurse-submodules origin main
+ExecStartPre=/usr/bin/git -C /srv/src merge -q --ff-only FETCH_HEAD
+ExecStart=/home/ubuntu/.local/bin/bun /srv/src/packages/ai-os/src/brain/skills-archive.ts --publish
+ExecStartPost=/home/ubuntu/.local/bin/bun /srv/src/packages/ai-os/src/brain/memory-sync.ts

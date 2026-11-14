@@ -20,3 +20,5 @@ description: Cloudflare Developer Platform reference covering Workers (workerd, 
 ## MCP
 
 Declared for Claude Code on the PC in `infra/agents/toolchain.toml`: `cloudflare` (`https://mcp.cloudflare.com/mcp`) and `cloudflare-docs` (`https://docs.mcp.cloudflare.com/mcp`).
+
+Public gateway to the Aphrody relay (OAuth 2.1 Worker `infra/cloudflare/workers/aphrody-mcp-gateway`, origin on fr2 via tunnel `mcp-origin.aphrody.com`), skills archive and Gemini memory sync: `docs/infra/GEMINI-WEB-MCP.md`.

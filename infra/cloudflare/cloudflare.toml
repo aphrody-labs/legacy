@@ -46,6 +46,9 @@ id = "88aa6a53-0a9a-4a5b-a9b6-3d3394dd978d"
 host = "fr2"
 ingress = [
   { hostname = "ssh-fr2.aphrody.com", service = "ssh://127.0.0.1:22" },
+  # Origin of the public MCP gateway (Worker mcp.aphrody.com, docs/infra/GEMINI-WEB-MCP.md): relay on fr2 loopback, bearer token.
+  { hostname = "mcp-origin.aphrody.com", service = "http://127.0.0.1:8790" },
+  { hostname = "gnu.aphrody.com", service = "http://127.0.0.1:80" }, # live ingress kept as is (gnu mirror), not managed by the MCP work
   { service = "http_status:404" },
 ]
 
@@ -54,6 +57,7 @@ ingress = [
 "aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
 "ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "delete" }
 "ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:fr2", rollback = "delete" }
+"mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:fr2", rollback = "delete" }
 "os.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
 "admin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "ai.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
