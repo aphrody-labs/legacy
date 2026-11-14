@@ -87,7 +87,7 @@ function installedRev(path: string): string | null {
     const rv = readFileSync(x, "utf8").match(/<revision>([\s\S]*?)<\/revision>/)?.[1];
     return rv ? [...rv.matchAll(/<(?:major|minor|micro)>(\d+)</g)].map((m) => m[1]).join(".") : null;
   }
-  return readFileSync(f, "utf8").match(/^Pkg\.Revision=(.+)$/m)?.[1].trim() ?? null;
+  return readFileSync(f, "utf8").match(/^Pkg\.Revision\s*=\s*(.+)$/m)?.[1].trim() ?? null;
 }
 
 // ---- JDK ----
