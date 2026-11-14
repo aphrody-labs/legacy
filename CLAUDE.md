@@ -18,6 +18,11 @@ Guidance for Claude Code (`claude.ai/code`). Canonical contract: [`AGENTS.md`](.
   - `ts-packages`: Bun.
   - `coherence-fixer`
   - `fact-checker`: read-only.
+  - `reviewer`: Gemini Carbon review, verdict archived.
+  - `researcher`: Context7 and live source, read-only.
+  - `fleet-operator`: the three VPS.
+  - `web-ui`: apps/aphrody and the design system.
+  - `re-analyst`: REA and `ay re`.
   - `Explore` / `Plan` for read-only research.
 - Commits in the shared tree go through `bun scripts/commit.ts -m "<msg>" --push <paths>...`.
   - It builds the commit in a private index and refuses a tree that loses files: b38c8de7 shipped an empty tree on 2026-11-15.
