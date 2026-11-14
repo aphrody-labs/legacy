@@ -1,6 +1,6 @@
 # Audit de l'écosystème design / UI / UX
 
-Commande du propriétaire, 2026-11-13 : auditer tout l'écosystème design contre la pile unifiée de src, porter ce qui manque au plus natif, sans doublon. Goûts fixés : GPUI, Microsoft WebUI, Native SDK de Vercel (`vercel-labs/native`), vrai Material 3. Ce document complète `docs/ui/STACK.md` (cibles) et `docs/ui/INVENTORY.md` (surfaces) ; il ne les répète pas.
+Commande du propriétaire, 2026-11-13 : auditer tout l'écosystème design contre la pile unifiée de src, porter ce qui manque au plus natif, sans doublon. Goûts fixés : GPUI, Microsoft WebUI, Native SDK de Vercel (`vercel-labs/native`), vrai Material 3. Ce document complète `docs/ui/STACK.md` (cibles) ; il ne le répète pas.
 
 Sources vues en direct le 2026-11-13 : `gh api repos/<r>` + `commits/<branche>` + `releases/latest` (commit = HEAD de la branche par défaut, date du commit), registres npm, crates.io, pub.dev, NuGet, Maven Google, `releases_windows.json` de Flutter, context7 (Angular, shadcn, MUI, gpui-kit), sources amont lues pour les formats (chemins cités). Licence = `license.spdx_id` GitHub, vérifiée dans le dépôt quand GitHub dit `NOASSERTION`.
 

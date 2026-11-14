@@ -5,7 +5,7 @@ description: Règles UI uniques du monorepo. Utiliser AVANT toute création ou m
 
 # ui-system
 
-Source de vérité : `packages/design` (tokens, DESIGN.md, composants), `docs/ui/STACK.md` (cibles et sources), `docs/ui/INVENTORY.md` (surfaces et plan de migration).
+Source de vérité : `packages/design` (tokens, DESIGN.md, composants), `docs/ui/STACK.md` (cibles et sources).
 
 ## Cibles autorisées (décision du propriétaire, 2026-11-13)
 

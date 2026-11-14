@@ -21,7 +21,7 @@ Patch contents:
 3. Internal dev-dependencies inherited from the workspace become path-only, which cargo strips when packaging. Without this, the cycle `lore-base` → `lore-io` → (dev) `lore-base` blocks.
 4. `publish = false` and `publish.workspace` are removed, except for the blocked crates (B1) and `lore-integration-tests`.
 5. Metadata: `license` (lore*: `MIT` + a copy of `licenses/lore/LICENSE` in each crate, Epic notice kept; `xtk`, `stack-bench`: `license.workspace`), `description` when missing, `repository.workspace`. In src, `repository` is fixed: `aphrody-labs/src` does not exist, the right repository is `aphrody-dev/src`. LICENSE-MIT and LICENSE-APACHE are added at the root of src. For labs, both files are already added at the root.
-6. npm (src/packages): see NPM.md.
+6. npm (src/packages): see [../infra/NPM.md](../infra/NPM.md).
 
 ## Names
 

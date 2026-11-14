@@ -1,7 +1,7 @@
 # Pile UI cible du monorepo
 
 > Amendement du propriétaire, 2026-11-13 (après ce document) : le framework est libre (Bevy UI, craft-ui et egui, wgpu, iced, WinUI 3, Tauri, etc.) tant que le rendu est beau, optimisé et fonctionnel. Les quatre références ci-dessous restent des options documentées, plus une liste fermée.
-> Décision du propriétaire, 2026-11-13 : toutes les UI actuelles sont rejetées sauf quatre références, GPUI (Zed), Microsoft WebUI, la « Vercel native Zig UI » et le vrai Material 3. Ce document cite les sources vues en direct le 2026-11-13 (`gh api`, registre npm, crates.io, context7, Microsoft Learn MCP, MCP Figma) et fixe la cible de chaque surface. Système de design : `packages/design`. Inventaire et plan : `docs/ui/INVENTORY.md`. Skill pour les agents : `.agents/skills/ui-system`.
+> Décision du propriétaire, 2026-11-13 : toutes les UI actuelles sont rejetées sauf quatre références, GPUI (Zed), Microsoft WebUI, la « Vercel native Zig UI » et le vrai Material 3. Ce document cite les sources vues en direct le 2026-11-13 (`gh api`, registre npm, crates.io, context7, Microsoft Learn MCP, MCP Figma) et fixe la cible de chaque surface. Système de design : `packages/design`. Skill pour les agents : `.agents/skills/ui-system`.
 
 ## 1. GPUI (Zed)
 
@@ -37,7 +37,7 @@
 | Modèle         | cœur TypeScript (sous-ensemble vérifié, compilé en natif) ou cœur Zig (`--template zig-core`), vues en balisage `.native`, architecture message/update/effets ; Zig 0.16                                                                                                           | README, https://native-sdk.dev/docs                                     |
 | Windows        | hôte desktop Windows : présentation Direct2D/DirectWrite des paquets retenus, repli sur un rendu logiciel déterministe ; IME Windows non encore vérifiée sur matériel réel                                                                                                         | https://native-sdk.dev/docs/platform-support                            |
 | Contrainte     | la CLI `@native-sdk/cli` exige Node.js 24 : incompatible avec la règle bun ; usage limité au cœur Zig piloté par `zig build`, sans la CLI npm. Procédure de build sans Node non encore écrite : la ligne Zig de la matrice reste conditionnelle tant qu'un outil n'en a pas besoin | README                                                                  |
-| Rôle chez nous | outils natifs dont le cœur est déjà en Zig ; tokens `packages/design/tokens/tokens.zig` ; aucune surface actuelle ne l'exige (voir INVENTORY)                                                                                                                                      | —                                                                       |
+| Rôle chez nous | outils natifs dont le cœur est déjà en Zig ; tokens `packages/design/tokens/tokens.zig` ; aucune surface actuelle ne l'exige                                                                                                                                                       | —                                                                       |
 
 ## 4. Material 3
 
@@ -49,7 +49,7 @@
 | Tokens Material Web      | `@material/web/tokens/versions/v0_192/_md-sys-*.scss` : échelle typographique, formes, mouvement, élévation, états ; `material-foundation/material-tokens` est archivé (dernier push 2023-08-15)                                                                                                | paquet installé, `gh api`       |
 | Material Symbols         | `google/material-design-icons` (Apache-2.0), npm `material-symbols` 0.49.0 (polices variables Outlined/Rounded/Sharp) et `@material-symbols/svg-400` 0.49.0 ; catalogue https://fonts.google.com/icons                                                                                          | registre npm                    |
 | Figma                    | Material 3 Design Kit officiel : https://www.figma.com/community/file/1035203688168086460/material-3-design-kit (redirection vérifiée) ; nos variables : fichier `2xsZi5wLPAYLGNCLZ2ZJUv` (équipe Aphrody, plan Professional, 4 modes par collection), voir `packages/design/tokens/figma.json` | MCP Figma `whoami`, `use_figma` |
-| design.md                | `google-labs-code/design.md` (Apache-2.0, HEAD `1ed38aa9dd`), npm `@google/design.md` 0.4.0, CLI `designmd lint`, absorbé en bun pur dans `packages/google-design/src/design-md` (`ay design lint`, aucune dépendance npm) ; format front matter YAML `version: alpha`                          | `docs/spec.md` du dépôt         |
+| design.md                | `google-labs-code/design.md` (Apache-2.0, HEAD `1ed38aa9dd`), npm `@google/design.md` 0.4.0, CLI `designmd lint`, validation par `lint` de `packages/design/src/cli.ts` (aucune dépendance npm) ; format front matter YAML `version: alpha`                          | `docs/spec.md` du dépôt         |
 
 Forks aphrody-labs ajoutés le 2026-11-13 (`gh api`, licence SPDX et dernier push vus ce jour ; `third_party/forks.txt`) :
 
@@ -60,7 +60,7 @@ Forks aphrody-labs ajoutés le 2026-11-13 (`gh api`, licence SPDX et dernier pus
 | Icônes, référence | `lucide-icons/lucide`                                                                                                         | ISC                       | jamais livrée (Material Symbols seule)                                             |
 | 3D                | `mrdoob/three.js` r187 (2026-10-30), `gfx-rs/wgpu` v30.0.2 (2026-11-12)                                                       | MIT, MIT OR Apache-2.0    | skill `threejs-webgpu`                                                             |
 | Skills            | `nextlevelbuilder/ui-ux-pro-max-skill`, `blader/humanizer`, `CloudAI-X/threejs-skills`, `anthropics/skills` (frontend-design) | MIT, MIT, MIT, Apache-2.0 | absorbées dans `.agents/skills/{ui-ux-pro-max,humanizer,threejs-webgpu,ui-system}` |
-| Sécurité          | `trailofbits/skills` (fork `aphrody-labs/skills-4`)                                                                           | CC-BY-SA-4.0              | forké, non absorbé (partage à l'identique)                                         |
+| Sécurité          | `trailofbits/skills` (fork `aphrody-labs/skills-4`)                                                                           | CC-BY-SA-4.0              | forké                                                                              |
 
 Police : Google Sans Flex, SIL OFL 1.1 sans Reserved Font Name (google/fonts `ofl/googlesansflex`, voir `assets/brand/brand.toml`) ; le nom ne doit pas servir de nom de produit.
 
@@ -101,6 +101,6 @@ Ce que nous reprenons : un seul système de tokens généré (Google), une synch
 
 ## 8. Ce qui est remplacé
 
-- `packages/google-design` (studio « gds », port maison de HCT, serveur miroir, Stitch simulé) : remplacé par `packages/design` qui appelle le Material Color Utilities officiel. Ses consommateurs migrent (INVENTORY), puis le paquet est supprimé.
-- `crates/aphrody-design-*` (moteur HCT Rust, émetteurs multi-cibles) : la génération passe à `packages/design` ; `crates/aphrody-brand` (agent marque) reste le producteur des assets graphiques et doit lire `packages/design/tokens/tokens.json` au lieu de recalculer le schéma (même résultat vérifié : primary `#1242FF`, dark primary `#BAC3FF`).
+- `packages/google-design` (studio « gds », port maison de HCT, serveur miroir, Stitch simulé) : supprimé, remplacé par `packages/design` qui appelle le Material Color Utilities officiel.
+- Moteur HCT Rust et émetteurs multi-cibles (`aphrody-design-*`) : supprimés, la génération est dans `packages/design`. `aphrody-brand` (`src/ui/kit`) reste le producteur des assets graphiques et doit lire `packages/design/tokens/tokens.json` au lieu de recalculer le schéma (même résultat vérifié : primary `#1242FF`, dark primary `#BAC3FF`).
 - Tailwind, shadcn, Base UI et CSS de couleurs maison dans les apps : retirés au fil des migrations.

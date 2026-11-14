@@ -46,4 +46,4 @@ These repositories stay private permanently, and the owner cannot lift this cons
 ## Outside GitHub
 
 - `third_party/` subfolders under the Steam SDK license, AGPL or without a license: never integrate them (vendoring) into a public repository or crate (audit §2).
-- `@aphrody/epic-games` (npm) and the `steam-depot` crate: do not publish them (see NPM.md and CRATES.md).
+- `@aphrody/epic-games` (npm) and the `steam-depot` crate: do not publish them (see [../infra/NPM.md](../infra/NPM.md) and CRATES.md).
