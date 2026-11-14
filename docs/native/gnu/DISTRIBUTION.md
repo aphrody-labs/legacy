@@ -18,7 +18,7 @@ Suite de [OS.md](OS.md) : suivre et distribuer chaque amont GNU, son équivalent
 
 - GNU : `ftp.gnu.org/ls-lrRt.txt.gz` (ETag), archive `info-gnu` (mois courant et précédent), têtes git Savannah (HTTP intelligent, 120 dépôts par cycle en rotation), révision bzr GSRC, tête Guix. Inventaire : `docs/research/gsrc-gnu-*.json`, `guix-gnu-*.json`, `docs/native/gnu/gnu-packages.json`.
 - Rust : releases GitHub (ETag, jeton `gh` ou `GITHUB_TOKEN` si présent) et crates.io pour les équivalents de `packages/gnu/src/rust.ts`.
-- Noyau : `kernel.org/releases.json`, `sha256sums.asc`, arbres `git.kernel.org` (torvalds, stable, linux-next), branches gitiles Android GKI et ChromeOS, Rust for Linux (`rust/` par série, docs, `rust-next`), `google/kernel-research`.
+- Noyau : `kernel.org/releases.json`, `sha256sums.asc`, arbres `git.kernel.org` (torvalds, stable, linux-next), branches gitiles Android GKI et ChromeOS, Rust for Linux (`rust/` par série, docs, `rust-next`), `google/kernel-research`, et la sortie du suivi Android GKI (`scripts/android-kernel-track.ts`, `/srv/research/android/state/<branche>/latest.json` : tête, base, classes de patchs, phase KMI, versions clang et rustc, Binder Rust ; section `kernel.android`, non dupliquée).
 - `www.gnu.org/software/recent-releases.html` expire depuis tous les hôtes : non utilisé. Les pages cgit de Savannah expirent aussi.
 
 ## Feed
@@ -37,6 +37,6 @@ ay gnu status        # fraîcheur du feed (stale si > 60 min)
 
 ## Limites connues
 
-- Premier miroir : 30 tarballs par cycle (plafond 400 Mo), rattrapage sur plusieurs heures. Un fichier sans `.sig` ou sans trousseau GSRC reste `missing` ou `unverified`.
+- Téléchargements via `ftpmirror.gnu.org` : `ftp.gnu.org` a bloqué fr2 (2026-11-14) après un miroir trop rapide ; seul le listing `ls-lrRt.txt.gz` reste sur `ftp.gnu.org` (copie en cache si le serveur ne répond pas). 8 tarballs par cycle (plafond 400 Mo), rattrapage sur plusieurs heures. Un fichier sans `.sig` ou sans trousseau GSRC reste `missing` ou `unverified`.
 - La couverture Rust n'est affichée que si elle est mesurée (coreutils : 94,0 %, PLAN.md) ; `proof` reste `none` tant que `src/gnu/<id>/PROOF.md` n'existe pas.
 - `ay gnu` exige un `ay` reconstruit (sinon `just gnu` ou `bun packages/gnu/src/cli.ts`).
