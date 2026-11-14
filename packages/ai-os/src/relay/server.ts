@@ -13,7 +13,15 @@ import { webmcpPage } from "./webmcp.ts";
 import { a2aHttp, agentCard } from "./a2a.ts";
 import { createOAuth, relayCookie } from "./oauth.ts";
 import { warmHub } from "./mcp-hub.ts";
+import { handle as acpHandle } from "./acp.ts";
 import { outbound } from "./outbound.ts";
+import { router } from "../router/index.ts";
+import {
+  chatCompletions,
+  countTokens,
+  messages,
+  models,
+} from "../router/http.ts";
 import { dispatch, mcpRpc, nativeRpc, VERSION } from "./protocols.ts";
 
 /** Jeton du relais (32 octets aléatoires, créé au premier lancement dans le dossier privé de l'utilisateur). */
@@ -56,6 +64,16 @@ export async function serve() {
       if (v === "insufficient") return oauth.challenge(req, resource, true);
       return v ? h(req) : oauth.challenge(req, resource);
     };
+  const apiKey =
+    (h: (req: Request) => Response | Promise<Response>) => (req: Request) => {
+      const k = req.headers.get("x-api-key");
+      if (k && !req.headers.get("authorization")) {
+        const hd = new Headers(req.headers);
+        hd.set("authorization", `Bearer ${k}`);
+        req = new Request(req, { headers: hd });
+      }
+      return h(req);
+    };
   // Page WebMCP : ouverte une fois avec ?token=…, le jeton passe en cookie HttpOnly et quitte l'URL.
   const webmcp = async (req: Request) => {
     const u = new URL(req.url);
@@ -93,7 +111,32 @@ export async function serve() {
       ? new Response(null, { status: 202 })
       : Response.json(out);
   };
-  const http = Bun.serve<{ open: number }>({
+  const acpHttp = async (req: Request) => {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return Response.json({
+        jsonrpc: "2.0",
+        id: null,
+        error: { code: -32700, message: "Parse error" },
+      });
+    }
+    const msgs: unknown[] = [];
+    await acpHandle(body as any, (m) => msgs.push(m));
+    const reply = msgs.find(
+      (m: any) => m && typeof m === "object" && "id" in m && m.id !== undefined,
+    );
+    const updates = msgs.filter((m) => m !== reply);
+    return reply
+      ? Response.json(
+          updates.length ? { ...(reply as object), _updates: updates } : reply,
+        )
+      : updates.length
+        ? Response.json({ jsonrpc: "2.0", id: null, _updates: updates })
+        : new Response(null, { status: 202 });
+  };
+  const http = Bun.serve<{ open: number; kind?: "rpc" | "acp" }>({
     hostname: host,
     port,
     idleTimeout: 255,
@@ -109,6 +152,19 @@ export async function serve() {
           headers: { "content-type": "text/plain; version=0.0.4" },
         }),
       "/rpc": { POST: guard("rpc", rpc(nativeRpc)) },
+      "/acp": { POST: guard("rpc", acpHttp) },
+      // Routeur de modèles (src/router) : OpenAI et Anthropic, même autorisation que le relais ; Anthropic envoie
+      // aussi le jeton en x-api-key.
+      "/v1/chat/completions": {
+        POST: apiKey(guard("rpc", (req) => chatCompletions(req, router()))),
+      },
+      "/v1/models": { GET: apiKey(guard("rpc", () => models(router()))) },
+      "/v1/messages": {
+        POST: apiKey(guard("rpc", (req) => messages(req, router()))),
+      },
+      "/v1/messages/count_tokens": {
+        POST: apiKey(guard("rpc", (req) => countTokens(req))),
+      },
       "/webmcp": webmcp,
       "/mcp": {
         POST: guard("mcp", rpc(mcpRpc)),
@@ -121,15 +177,42 @@ export async function serve() {
       "/a2a": {
         POST: guard("a2a", a2aHttp),
       },
-      "/ws": (req: Request, srv: Bun.Server<{ open: number }>) =>
+      "/ws": (
+        req: Request,
+        srv: Bun.Server<{ open: number; kind?: "rpc" | "acp" }>,
+      ) =>
         !authed(req, "rpc")
           ? oauth.challenge(req, "rpc")
-          : srv.upgrade(req, { data: { open: Date.now() } })
+          : srv.upgrade(req, { data: { open: Date.now(), kind: "rpc" } })
+            ? undefined
+            : new Response("WebSocket attendu", { status: 426 }),
+      "/acp/ws": (
+        req: Request,
+        srv: Bun.Server<{ open: number; kind?: "rpc" | "acp" }>,
+      ) =>
+        !authed(req, "rpc")
+          ? oauth.challenge(req, "rpc")
+          : srv.upgrade(req, { data: { open: Date.now(), kind: "acp" } })
             ? undefined
             : new Response("WebSocket attendu", { status: 426 }),
     },
     websocket: {
       async message(ws, msg) {
+        if (ws.data?.kind === "acp") {
+          try {
+            const parsed = JSON.parse(String(msg));
+            await acpHandle(parsed, (m) => ws.send(JSON.stringify(m)));
+          } catch (e) {
+            ws.send(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                id: null,
+                error: { code: -32700, message: String(e) },
+              }),
+            );
+          }
+          return;
+        }
         const out = await dispatch(JSON.parse(String(msg)), nativeRpc).catch(
           (e) => ({
             jsonrpc: "2.0",

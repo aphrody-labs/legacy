@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use rust_stack_ffi::{
     auth::{ApiKeyCreateRequest, AuthEngine, issue_hs256_jwt, verify_hs256_jwt},
     coding_agent::CodingAgent,
-    gateway::{GatewayState, deterministic_simd_embedding, serve_http},
+    gateway::{GatewayState, serve_http},
     shadcn_rs::{
         REGISTRY_COMPONENTS, RenderTarget, ThemeMode, add_component_to_dir,
         default_primitive_for_slug, render_card_fast, theme_css_tokens,
@@ -16,7 +16,7 @@ use std::time::Instant;
 #[command(
     name = "rust-stack",
     version = "0.1.0",
-    about = "100% Pure-Rust Aphrody Stack: Better-Auth + shadcn_rs + Open-WebUI + OpenCode + OpenAI Gateway"
+    about = "100% Pure-Rust Aphrody Stack: Better-Auth + shadcn_rs + Open-WebUI + OpenCode (model routing lives in the relay router)"
 )]
 struct Cli {
     #[command(subcommand)]
@@ -25,7 +25,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Start the unified HTTP server (Gateway + Better-Auth + shadcn_rs Registry + Native WebUI)
+    /// Start the unified HTTP server (Better-Auth + shadcn_rs Registry + Native WebUI)
     Serve {
         #[arg(long, default_value = "127.0.0.1")]
         host: String,
@@ -33,8 +33,6 @@ enum Commands {
         port: u16,
         #[arg(long, default_value_os_t = default_db())]
         db: PathBuf,
-        #[arg(long, default_value_t = false)]
-        offline_only: bool,
     },
     /// shadcn_rs component & design-token CLI (`rust-stack ui add <component> --target html|dioxus|gpui`)
     Ui {
@@ -49,9 +47,9 @@ enum Commands {
         prompt: String,
         #[arg(long, default_value = ".")]
         workspace: PathBuf,
-        #[arg(long, default_value = "http://127.0.0.1:4320")]
+        #[arg(long, default_value = "http://127.0.0.1:8790")]
         gateway: String,
-        #[arg(long, default_value = "sovereign/ring3-local")]
+        #[arg(long, default_value = "auto")]
         model: String,
     },
     /// Better-Auth native IAM utilities (issue scoped API keys, inspect JWKS)
@@ -59,7 +57,7 @@ enum Commands {
         #[command(subcommand)]
         action: AuthCommands,
     },
-    /// Run deterministic microbenchmarks (Blake3, HS256/Ed25519 JWT, SSR Card, SIMD Embeddings)
+    /// Run deterministic microbenchmarks (Blake3, HS256/Ed25519 JWT, SSR Card)
     Bench {
         #[arg(long, default_value_t = 100_000)]
         iterations: usize,
@@ -130,16 +128,14 @@ async fn dispatch(cli: Cli) -> Result<(), String> {
             host,
             port,
             db,
-            offline_only,
         } => {
             let secret = resolve_hmac_key();
             let auth = AuthEngine::open(&db, &secret)?;
             let webui = WebUiStore::open(&db)?;
-            let state = GatewayState::new(auth, webui, !offline_only);
+            let state = GatewayState::new(auth, webui);
             let bind = format!("{host}:{port}");
             println!("rust-stack v0.1.0 listening on http://{bind}");
             println!("  WebUI Workspace : http://{bind}/");
-            println!("  OpenAI Gateway  : http://{bind}/v1/chat/completions");
             println!("  Better-Auth API : http://{bind}/api/auth/jwks");
             println!("  shadcn_rs API   : http://{bind}/api/ui/components");
             serve_http(&bind, state).await
@@ -282,20 +278,9 @@ fn run_benchmarks(iters: usize) -> Result<(), String> {
     let card_secs = t2.elapsed().as_secs_f64();
     let card_ops = (n as f64) / card_secs;
 
-    let embed_iters = (n / 10).max(1_000);
-    let t3 = Instant::now();
-    let mut emb_acc = 0.0f32;
-    for _ in 0..embed_iters {
-        let v = deterministic_simd_embedding("SIMD normalized 256-d vector", 256);
-        emb_acc += v[0];
-    }
-    let emb_secs = t3.elapsed().as_secs_f64();
-    let emb_ops = (embed_iters as f64) / emb_secs;
-
     println!("=== rust-stack Pure-Rust Benchmark Suite (n={n}) ===");
     println!("blake3_prompt_hash   : {:>12.0} ops/sec (checksum={acc})", blake3_ops);
     println!("jwt_hs256_verify     : {:>12.0} ops/sec (verified={valid_count})", jwt_ops);
     println!("shadcn_rs_card_ssr   : {:>12.0} ops/sec (bytes={html_bytes})", card_ops);
-    println!("simd_embed_256d      : {:>12.0} ops/sec (acc={emb_acc:.3})", emb_ops);
     Ok(())
 }

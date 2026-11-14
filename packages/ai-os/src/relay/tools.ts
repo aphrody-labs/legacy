@@ -6,6 +6,7 @@ import { AGENT_TOOLS } from "./agent-tools.ts";
 import { hubCall, hubTools } from "./mcp-hub.ts";
 import { CORE_TOOLS } from "./core-tools.ts";
 import { ORCH_TOOLS } from "./orch-tools.ts";
+import { ROUTER_TOOLS } from "../router/tools.ts";
 import { TERM_TOOLS } from "../term/mcp-tools.ts";
 import { SESSION_TOOLS } from "./session-tools.ts";
 // packages/ai-os/src/google may be absent from a checkout (module not yet on main): the relay then
@@ -538,6 +539,7 @@ TOOLS.push(
   ...AGENT_TOOLS,
   ...CORE_TOOLS,
   ...ORCH_TOOLS,
+  ...ROUTER_TOOLS,
   ...TERM_TOOLS,
   ...GOOGLE_TOOLS,
 );
