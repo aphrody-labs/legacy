@@ -20,9 +20,11 @@ import {
 import type { Entry, Feed, FtpListing, GnuEvent } from "./types.ts";
 import {
   FTP_LISTING,
+  GNU_KEYRING,
   GSRC_REVNO,
   INFO_GNU,
   UA,
+  mirrorUrl,
   parseInfoGnu,
   parseInfoRefs,
   parseListing,
@@ -187,6 +189,20 @@ async function fetchRevno(st: State) {
 
 const rclone = (args: string[]) => Bun.$`rclone ${args}`.quiet().nothrow();
 
+async function ensureGnuKeyring(dir: string): Promise<string | null> {
+  const f = join(dir, "gnu-keyring.gpg");
+  const file = Bun.file(f);
+  if ((await file.exists()) && Date.now() - file.lastModified < 86_400_000)
+    return f;
+  try {
+    const r = await get(GNU_KEYRING, {}, 60_000);
+    if (r.ok) await Bun.write(f, r);
+  } catch {
+    // keep the previous copy
+  }
+  return (await Bun.file(f).exists()) ? f : null;
+}
+
 async function mirrorTarballs(
   feed: Feed,
   st: State,
@@ -195,6 +211,7 @@ async function mirrorTarballs(
   events: GnuEvent[],
 ) {
   const log = opts.log ?? (() => {});
+  const gnuKeyring = await ensureGnuKeyring(join(staging, ".."));
   const todo = feed.entries
     .filter(
       (e) =>
@@ -205,13 +222,14 @@ async function mirrorTarballs(
     )
     .slice(0, opts.maxFiles);
   for (const e of todo) {
+    await Bun.sleep(2000); // politeness towards the mirrors
     const u = e.upstream;
     const dir = join(staging, e.id);
     rmSync(dir, { recursive: true, force: true });
     mkdirSync(dir, { recursive: true });
     const file = join(dir, u.file!);
     try {
-      const r = await get(u.url!, {}, 600_000);
+      const r = await get(mirrorUrl(u.url!), {}, 600_000);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       await Bun.write(file, r);
       const sha = await sha256File(file);
@@ -219,7 +237,7 @@ async function mirrorTarballs(
         throw new Error(`sha256 differs from GSRC (${sha})`);
       let sigPath: string | null = null;
       if (u.sig_url) {
-        const s = await get(u.sig_url, {}, 30_000);
+        const s = await get(mirrorUrl(u.sig_url), {}, 30_000);
         if (s.ok) {
           sigPath = `${file}.sig`;
           await Bun.write(sigPath, s);
@@ -228,7 +246,10 @@ async function mirrorTarballs(
       const keyring = opts.gsrcRoot
         ? await gsrcKeyring(opts.gsrcRoot, e.id)
         : null;
-      const signature = await verifySignature(file, sigPath, keyring);
+      const signature = await verifySignature(file, sigPath, [
+        keyring,
+        gnuKeyring,
+      ]);
       const key = `gnu/${e.ftp}/${u.file}`;
       const up = await rclone(["copyto", file, `r2:${opts.bucket}/${key}`]);
       if (up.exitCode)
@@ -410,7 +431,7 @@ export async function sync(opts: SyncOpts = {}): Promise<Feed> {
       {
         ...opts,
         bucket,
-        maxFiles: opts.maxFiles ?? 30,
+        maxFiles: opts.maxFiles ?? 8,
         maxBytes: opts.maxBytes ?? 400_000_000,
       },
       p.staging,

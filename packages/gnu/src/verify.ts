@@ -21,15 +21,19 @@ export async function gsrcKeyring(
 export async function sqvDetached(
   file: string,
   sig: string,
-  keyring: string,
+  keyrings: string | string[],
 ): Promise<Signature> {
   const sqv = sqvPath();
   if (!sqv) return { status: "unverified", detail: "sqv not installed" };
+  const rings = [keyrings].flat();
+  const kr = rings.flatMap((k) => ["--keyring", k]);
   const run = (extra: string[]) =>
-    Bun.$`${sqv} ${extra} --keyring ${keyring} --signature-file ${sig} ${file}`
+    Bun.$`${sqv} ${extra} ${kr} --signature-file ${sig} ${file}`
       .quiet()
       .nothrow();
-  const ring = keyring.split(/[\\/]/).slice(-3).join("/");
+  const ring = rings
+    .map((k) => k.split(/[\\/]/).slice(-2).join("/"))
+    .join(" + ");
   let r = await run([]);
   if (r.exitCode === 0)
     return { status: "verified", detail: `sqv, keyring ${ring}` };
@@ -44,26 +48,28 @@ export async function sqvDetached(
     err = (r.stderr.toString() || r.stdout.toString()).trim();
   }
   const last = err.split("\n").at(-1) ?? "";
-  return /bad signature|hash mismatch|digest|does not match|verification failed/i.test(
+  return /bad signature|hash mismatch|does not match|verification failed/i.test(
     err,
   )
     ? { status: "invalid", detail: last.slice(0, 160) }
     : { status: "unverified", detail: last.slice(0, 160) };
 }
 
+/** Verify with the GSRC per-package keyring and the GNU maintainers keyring (gnu-keyring.gpg), whichever exist. */
 export async function verifySignature(
   file: string,
   sig: string | null,
-  keyring: string | null,
+  keyrings: (string | null)[],
 ): Promise<Signature> {
   if (!sig) return { status: "missing", detail: "no .sig on ftp.gnu.org" };
   if (!sqvPath()) return { status: "unverified", detail: "sqv not installed" };
-  if (!keyring)
+  const rings = keyrings.filter((k): k is string => !!k);
+  if (!rings.length)
     return {
       status: "unverified",
-      detail: "no GSRC gpg-keyring for this package",
+      detail: "no keyring (GSRC gpg-keyring, gnu-keyring.gpg)",
     };
-  return sqvDetached(file, sig, keyring);
+  return sqvDetached(file, sig, rings);
 }
 
 export async function sha256File(file: string): Promise<string> {

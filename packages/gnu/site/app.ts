@@ -125,7 +125,20 @@ function kernel() {
           `<li><span class="mono">${esc(b.name)}</span> <span class="dim mono">${esc(b.head.slice(0, 10))}</span></li>`,
       )
       .join("");
+  const and = (k.android ?? [])
+    .map(
+      (a) =>
+        `<tr><td class="mono">${esc(a.branch)}</td><td>${esc(a.kernel ?? "")}</td><td class="mono">${esc(a.head.commit.slice(0, 10))}</td><td>${ago(a.head.date)}</td><td>${esc(a.upstream_base ?? "")} +${esc(a.commits_since_base ?? "?")}</td><td>${badge("m-stable", a.kmi.phase ?? "?")}</td><td class="mono">clang ${esc(a.clang ?? "?")}, rustc ${esc(a.rustc ?? "?")}</td><td>${a.rust_binder === "y" ? badge("s-verified", "Rust Binder") : '<span class="dim">C Binder</span>'}</td><td class="dim">${esc(
+          Object.entries(a.patch_classes)
+            .slice(0, 4)
+            .map(([c, n]) => c + " " + n)
+            .join(", "),
+        )}</td></tr>`,
+    )
+    .join("");
   el.innerHTML = `
+  <h2>Android GKI tracker</h2>
+  <table id="atable"><thead><tr><th>Branch</th><th>Kernel</th><th>Head</th><th>Date</th><th>Base</th><th>KMI</th><th>Toolchain pins</th><th>Binder</th><th>Patch classes</th></tr></thead><tbody>${and || '<tr><td colspan="9" class="dim">No tracker output yet.</td></tr>'}</tbody></table>
   <h2>Kernel releases (kernel.org)</h2>
   <table id="ktable"><thead><tr><th>Branch</th><th>Version</th><th>Date</th><th>Signature</th><th>Rust in tree</th><th>sha256</th><th>Links</th></tr></thead><tbody>${rel}</tbody></table>
   <div class="cols">

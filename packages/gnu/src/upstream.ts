@@ -2,6 +2,10 @@
 import type { Announce, FtpFile, FtpListing, Release } from "./types.ts";
 
 export const UA = "aphrody-gnu-tracker/0.1 (+https://gnu.aphrody.com)";
+/** Tarballs and signatures are downloaded through the mirror redirector: ftp.gnu.org rate-limits (blocked fr2 on 2026-11-14). */
+export const mirrorUrl = (u: string) =>
+  u.replace("https://ftp.gnu.org/gnu/", "https://ftpmirror.gnu.org/gnu/");
+export const GNU_KEYRING = "https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg";
 export const FTP_LISTING = "https://ftp.gnu.org/ls-lrRt.txt.gz";
 export const INFO_GNU = "https://lists.gnu.org/archive/html/info-gnu/";
 export const GSRC_REVNO =

@@ -8,6 +8,7 @@ import {
   parseGitiles,
   parseSums,
   pickBranches,
+  trimAndroid,
 } from "../src/kernel.ts";
 import {
   RUST_MAP,
@@ -181,6 +182,40 @@ describe("kernel", () => {
       "chromeos-6.12",
       "chromeos-5.4",
     ]);
+  });
+  test("android tracker output is trimmed into the section", () => {
+    const t = trimAndroid({
+      branch: "android18-7.3",
+      fetched: "2026-11-14T22:30:16Z",
+      head: {
+        commit: "8cb307d9ca5e",
+        date: "2026-11-13T14:41:47-08:00",
+        subject: "x",
+      },
+      kernel: "7.3.0",
+      upstream_base: "v7.3",
+      commits_since_base: 4799,
+      patch_classes: { ANDROID: 3104 },
+      kmi: { phase: "development", enforced: false },
+      toolchain: {
+        CLANG_VERSION: "r596125",
+        RUSTC_VERSION: "1.96.0",
+        KMI_GENERATION: "0",
+      },
+      defconfig: { RUST: "y", ANDROID_BINDER_IPC_RUST: "y" },
+      rust: { files: 501 },
+    })!;
+    expect(t).toMatchObject({
+      clang: "r596125",
+      rustc: "1.96.0",
+      rust_binder: "y",
+      rust_files: 501,
+      commits_since_base: 4799,
+    });
+    expect(trimAndroid({})).toBeNull();
+    const ks = emptyKernel();
+    ks.android = { [t.branch]: t };
+    expect(buildKernel(ks).android[0]!.branch).toBe("android18-7.3");
   });
   test("sha256sums", () => {
     const s = parseSums(

@@ -21,6 +21,29 @@ export type KernelRelease = {
   mirror: { key: string; sign_key: string | null; at: string } | null;
 };
 
+/** Per-branch analysis written by scripts/android-kernel-track.ts (units android-kernel-track@<branch>.timer on fr2). */
+export type AndroidTrack = {
+  branch: string;
+  fetched: string;
+  head: { commit: string; date: string; subject: string };
+  kernel: string | null;
+  upstream_base: string | null;
+  commits_since_base: number | null;
+  patch_classes: Record<string, number>;
+  kmi: {
+    phase: string | null;
+    enforced: boolean | null;
+    abi_definition: boolean | null;
+    symbol_lists: number | null;
+  };
+  clang: string | null;
+  rustc: string | null;
+  kmi_generation: string | null;
+  rust_binder: string | null;
+  rust_config: string | null;
+  rust_files: number | null;
+};
+
 export type KernelBranch = { name: string; head: string };
 export type KernelTree = {
   name: string;
@@ -44,6 +67,7 @@ export type KernelState = {
   trees: Record<string, { head: string; changed_at: string }>;
   gki: Record<string, string>;
   chromeos: Record<string, string>;
+  android: Record<string, AndroidTrack>;
   rust_tree: Record<string, boolean>; // kernel series ref -> rust/ exists in tree
   rfl: { head: string | null; changed_at: string | null };
   research: { pushed: string | null; url: string };
@@ -68,6 +92,7 @@ export const emptyKernel = (): KernelState => ({
   sums: {},
   trees: {},
   gki: {},
+  android: {},
   chromeos: {},
   rust_tree: {},
   rfl: { head: null, changed_at: null },
@@ -82,6 +107,7 @@ export type KernelSection = {
   releases: KernelRelease[];
   trees: KernelTree[];
   gki: KernelBranch[];
+  android: AndroidTrack[];
   chromeos: KernelBranch[];
   rust: {
     docs: string;
@@ -235,6 +261,7 @@ export async function pollKernel(
       // keep
     }
   }
+  ks.android = { ...ks.android, ...(await readAndroid()) };
   try {
     ks.docs_rust = (await get("https://docs.kernel.org/rust/index.html")).ok;
   } catch {
@@ -276,6 +303,52 @@ export async function pollKernel(
     }
   }
   ks.checked = Date.now();
+}
+
+/** Trim one latest.json of scripts/android-kernel-track.ts to the fields the feed carries. */
+export function trimAndroid(j: any): AndroidTrack | null {
+  if (!j?.branch || !j.head?.commit) return null;
+  return {
+    branch: String(j.branch),
+    fetched: String(j.fetched ?? ""),
+    head: {
+      commit: String(j.head.commit),
+      date: String(j.head.date ?? ""),
+      subject: String(j.head.subject ?? ""),
+    },
+    kernel: j.kernel ?? null,
+    upstream_base: j.upstream_base ?? null,
+    commits_since_base: j.commits_since_base ?? null,
+    patch_classes: j.patch_classes ?? {},
+    kmi: {
+      phase: j.kmi?.phase ?? null,
+      enforced: j.kmi?.enforced ?? null,
+      abi_definition: j.kmi?.abi_definition ?? null,
+      symbol_lists: j.kmi?.symbol_lists ?? null,
+    },
+    clang: j.toolchain?.CLANG_VERSION ?? null,
+    rustc: j.toolchain?.RUSTC_VERSION ?? null,
+    kmi_generation: j.toolchain?.KMI_GENERATION ?? null,
+    rust_binder: j.defconfig?.ANDROID_BINDER_IPC_RUST ?? null,
+    rust_config: j.defconfig?.RUST ?? null,
+    rust_files: j.rust?.files ?? null,
+  };
+}
+
+/** Read /srv/research/android/state/<branch>/latest.json (GNU_ANDROID_STATE overrides); empty when the tracker is absent. */
+export async function readAndroid(
+  dir = Bun.env.GNU_ANDROID_STATE ?? "/srv/research/android/state",
+): Promise<Record<string, AndroidTrack>> {
+  const out: Record<string, AndroidTrack> = {};
+  try {
+    for (const rel of new Bun.Glob("*/latest.json").scanSync({ cwd: dir })) {
+      const t = trimAndroid(await Bun.file(join(dir, rel)).json());
+      if (t) out[t.branch] = t;
+    }
+  } catch {
+    // directory absent (PC): nothing to read
+  }
+  return out;
 }
 
 export function buildKernel(ks: KernelState): KernelSection {
@@ -330,6 +403,9 @@ export function buildKernel(ks: KernelState): KernelSection {
       head: ks.trees[name]?.head ?? null,
       changed_at: ks.trees[name]?.changed_at ?? null,
     })),
+    android: Object.values(ks.android ?? {}).toSorted((a, b) =>
+      byBranchDesc({ name: a.branch, head: "" }, { name: b.branch, head: "" }),
+    ),
     gki: Object.entries(ks.gki)
       .map(([name, head]) => ({ name, head }))
       .toSorted(byBranchDesc),
