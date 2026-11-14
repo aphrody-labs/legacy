@@ -61,6 +61,18 @@ test("full OAuth + MCP proxy", async () => {
   } finally { done(); }
 });
 
+test("a2a is proxied with the same token, unauthenticated refused", async () => {
+  const { env, seen, done } = setup();
+  try {
+    expect((await call(env, "/a2a", { method: "POST", body: "{}" })).status).toBe(401);
+    const { reg, verifier, back } = await login(env);
+    const t = await (await call(env, "/token", { method: "POST", body: new URLSearchParams({ grant_type: "authorization_code", code: back.searchParams.get("code")!, client_id: reg.client_id, redirect_uri: "https://gemini.test/cb", code_verifier: verifier }) })).json() as any;
+    const r = await call(env, "/a2a", { method: "POST", headers: { authorization: `Bearer ${t.access_token}` }, body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "message/send" }) });
+    expect(r.status).toBe(200);
+    expect(new URL(seen[0].url).pathname).toBe("/a2a");
+  } finally { done(); }
+});
+
 test("other Google account denied, bad PKCE rejected", async () => {
   const s = setup("intruder@example.test");
   try {

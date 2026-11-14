@@ -77,7 +77,7 @@ ingress = [
 "inacord.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "mail.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "maps.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
-"mcp.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
+# mcp.aphrody.com is the Worker aphrody-mcp-gateway (custom domain, record owned by Workers: infra/cloudflare/workers/aphrody-mcp-gateway/deploy.ts); rollback = CNAME tunnel:mig-prd.
 "meet.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "n2b.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "nie.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }

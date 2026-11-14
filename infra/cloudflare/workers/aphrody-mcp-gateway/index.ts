@@ -221,7 +221,7 @@ export default {
     const ip = req.headers.get("cf-connecting-ip") ?? "?";
     if (limited(`${ip}:${p.startsWith("/mcp") ? "mcp" : "oauth"}`, p.startsWith("/mcp") ? 600 : 60)) return json({ error: "rate_limited" }, 429, { "retry-after": "30" });
 
-    if (p === "/healthz") return json({ ok: true });
+    if (p === "/healthz" || p === "/") return json({ ok: true, service: "aphrody-mcp-gateway", mcp: `${o}/mcp`, a2a: `${o}/a2a` });
     if (p.startsWith("/.well-known/oauth-protected-resource")) return json(meta(o).rs);
     if (p.startsWith("/.well-known/oauth-authorization-server") || p === "/.well-known/openid-configuration") return json(meta(o).as);
     if (p === "/register" && req.method === "POST") return register(env, req);
@@ -229,7 +229,14 @@ export default {
     if (p === "/google/callback") return googleCallback(env, url);
     if (p === "/token" && req.method === "POST") return token(env, req, o);
 
-    const needAuth = p === "/mcp" || p.startsWith("/archive/");
+    // Agent card (A2A discovery) is public metadata: relay card with its url rewritten to the gateway.
+    if (p === "/.well-known/agent-card.json" && req.method === "GET") {
+      const c = await fetch(`${env.ORIGIN_URL.replace(/\/$/, "")}/.well-known/agent-card.json`, { headers: originHeaders(env, req) });
+      if (!c.ok) return json({ error: "origin_unavailable" }, 502);
+      const card: any = await c.json();
+      return json({ ...card, url: `${o}/a2a`, supportedInterfaces: undefined });
+    }
+    const needAuth = p === "/mcp" || p === "/a2a" || p.startsWith("/archive/");
     if (!needAuth) return json({ error: "not_found" }, 404);
     if (!(await bearer(env, req, o))) {
       log({ ev: "401", path: p });
@@ -241,7 +248,7 @@ export default {
       const obj = await env.ARCHIVE.get(key);
       return obj ? new Response(obj.body, { headers: { "content-type": "text/markdown; charset=utf-8", etag: obj.httpEtag, "cache-control": "private, max-age=300" } }) : json({ error: "not_found" }, 404);
     }
-    const up = await fetch(`${env.ORIGIN_URL.replace(/\/$/, "")}/mcp`, {
+    const up = await fetch(`${env.ORIGIN_URL.replace(/\/$/, "")}${p}`, {
       method: req.method,
       headers: originHeaders(env, req),
       body: req.method === "GET" || req.method === "DELETE" ? undefined : req.body,
