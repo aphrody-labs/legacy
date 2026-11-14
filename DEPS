@@ -345,6 +345,7 @@ deps = {
   'third_party/symphony': 'https://github.com/openai/symphony.git@be10a1b79df723d6d7612b5651c8522704dafb2e',
   'third_party/tabby': 'https://github.com/TabbyML/tabby.git@21b29048d7bcf6b94f9f482f2d0fd05efadfd19f',
   'third_party/tailscale': 'https://github.com/tailscale/tailscale.git@e3ecbb9894cdcb3805e4ffc1c63c08aecb454316',
+  'third_party/tauri': 'https://github.com/aphrody-labs/tauri.git@271c15e1eaebb8e12aac8c4e63eead1ff17fd93a',
   'third_party/tensorzero': 'https://github.com/tensorzero/tensorzero.git@62eb8f63e8ec62018d70420dbf1a8c5d1c026315',
   'third_party/terminal-control': 'https://github.com/aphrody-labs/terminal-control.git@6c255aa4816d48fad78b45c9700235f3b7b71bc5',
   'third_party/test262': 'https://github.com/tc39/test262.git@2e58f87d8350ad51224617a041c6e041d52f8444',
@@ -528,7 +529,7 @@ deps = {
   'third_party/wpt': 'https://github.com/web-platform-tests/wpt.git@8af128e89e4d51dd18298361058d3616bbe81afc',
   'third_party/wterm': 'https://github.com/aphrody-labs/wterm.git@73c9e77b43234ac1125b7bb8c9262f1a17c41600',
   'third_party/yash-rs': 'https://github.com/aphrody-labs/yash-rs.git@0b899fb0c237fab3eb5b2e7c39664f6ec6a92983',
-  'third_party/zed': 'https://github.com/aphrody-labs/zed.git@3def8bad0b62dbda02d5b67b00df96fe8d3957bd',
+  'third_party/zed': 'https://github.com/aphrody-labs/zed.git@2de90a45a393db5f5e7dc64eceaaaa2fbdd5dfb4',
   'third_party/zen-browser-desktop': 'https://github.com/zen-browser/desktop.git@0057b295aee4a1ff00e0bd24e1150b7bc1a28503',
 }
 
