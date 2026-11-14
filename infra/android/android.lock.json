@@ -62,12 +62,6 @@
       "size": 2433862944,
       "url": "https://dl.google.com/android/repository/sys-img/google_apis/x86_64-ps16k-37.2_r07.zip"
     },
-    "system-images;android-37.0;google_apis;x86_64": {
-      "rev": "8",
-      "sha1": "a266cfbcf4d6c769b166c0af4d68eff0e4f4a5e3",
-      "size": 2143899425,
-      "url": "https://dl.google.com/android/repository/sys-img/google_apis/x86_64-37.0_r08.zip"
-    },
     "system-images;android-canary-20261104;google_apis_ps16k;x86_64": {
       "rev": "18",
       "sha1": "c70a1ca109f4018b126810532b79a32894359791",
@@ -91,6 +85,12 @@
       "sha1": "06bc3fe29aa49297dcc11a2ffe3a999445df05ae",
       "size": 21045753,
       "url": "https://dl.google.com/android/repository/cmake-4.1.2-windows.zip"
+    }
+  },
+  "cli": {
+    "windows": {
+      "sha256": "a236aa879f63ee7f2e4267047b2fcdc2fa09cd56024803e3844df67ff1789636",
+      "date": "2026-11-14"
     }
   }
 }

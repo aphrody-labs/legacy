@@ -82,11 +82,6 @@ rev = "7"
 profiles = ["pc", "ci", "emu"]
 
 [[sdk]]
-path = "system-images;android-37.0;google_apis;x86_64"
-rev = "8"
-profiles = ["pc"]
-
-[[sdk]]
 path = "system-images;android-canary-20261104;google_apis_ps16k;x86_64"
 rev = "18"
 profiles = ["pc"]
