@@ -82,11 +82,12 @@ const run = async (title: string, script: string) => {
   if (r.code !== 0) failed = true;
 };
 const D = "/data/local/tmp/ay";
-await run("push + run ay_smoke (links libaysys.so)", `adb shell mkdir -p ${D} && adb push target/sys/android-x86_64/libaysys.so target/sys/android-x86_64/ay_smoke ${D}/ >/dev/null && adb shell "cd ${D} && LD_LIBRARY_PATH=${D} ./ay_smoke; echo rc=\\$?" | tr -d '\\r' | tee /dev/stderr | rg -q '^rc=0$'`);
+const adbRun = (c: string) => `out=$(adb shell "${c}; echo rc=\\$?" | tr -d '\\r'); echo "$out"; echo "$out" | rg -q '^rc=0$'`;
+await run("push + run ay_smoke (links libaysys.so)", `adb shell mkdir -p ${D} && adb push target/sys/android-x86_64/libaysys.so target/sys/android-x86_64/ay_smoke ${D}/ >/dev/null && ${adbRun(`cd ${D} && LD_LIBRARY_PATH=${D} ./ay_smoke`)}`);
 const tests = existsSync(`${OUT}/rust-tests.txt`) ? (await Bun.file(`${OUT}/rust-tests.txt`).text()).trim().split("\n").filter(Boolean) : [];
 for (const t of tests) {
   const name = t.split("/").pop()!;
-  await run(`push + run rust test ${name}`, `adb push ${t} ${D}/${name} >/dev/null && adb shell "cd ${D} && ./${name}; echo rc=\\$?" | tr -d '\\r' | tee /dev/stderr | rg -q '^rc=0$'`);
+  await run(`push + run rust test ${name}`, `adb push ${t} ${D}/${name} >/dev/null && ${adbRun(`cd ${D} && chmod +x ./${name} && ./${name}`)}`);
 }
 await sh(`${ENV}; adb exec-out screencap -p > ${OUT}/screen.png; adb shell dumpsys window | rg -m3 'mCurrentFocus|mFocusedApp' > ${OUT}/focus.txt; true`, true);
 await sh(`${ENV}; adb emu kill >/dev/null 2>&1; true`, true);
