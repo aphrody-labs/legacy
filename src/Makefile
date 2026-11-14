@@ -76,6 +76,11 @@ android-x64:
 		-Wl,-z,max-page-size=16384 $(C_SRCS) $(ASM_X86_64) -o $(ANDROID_OUT)/libaysys.so
 	$(ANDROID_CC) -std=gnu11 -O2 -Wall -Wextra -Werror -Iinclude -fuse-ld=lld -Wl,-z,max-page-size=16384 \
 		android/smoke.c -L$(ANDROID_OUT) -laysys -Wl,-rpath,'$$ORIGIN' -o $(ANDROID_OUT)/ay_smoke
+	# JNI shim + jniLibs staging for apps/android-shell (Gradle jniLibs.srcDir = target/sys/android-x86_64/jniLibs)
+	$(ANDROID_CC) -std=gnu11 -O2 -Wall -Wextra -Werror -Iinclude -fPIC -shared -fuse-ld=lld -Wl,-z,max-page-size=16384 \
+		android/jni.c -L$(ANDROID_OUT) -laysys -Wl,-rpath,'$$ORIGIN' -o $(ANDROID_OUT)/libayjni.so
+	mkdir -p $(ANDROID_OUT)/jniLibs/x86_64
+	cp $(ANDROID_OUT)/libaysys.so $(ANDROID_OUT)/libayjni.so $(ANDROID_OUT)/jniLibs/x86_64/
 
 wasm:
 	mkdir -p $(OUT_DIR)
