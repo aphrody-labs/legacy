@@ -1,0 +1,32 @@
+[workspace]
+members = ["."]
+resolver = "3"
+
+[package]
+name = "py2bun"
+version = "0.1.0"
+edition = "2024"
+description = "Python 3 to Bun TypeScript transpiler (ruff_python_parser), with Ghidra script idioms"
+publish = false
+
+[lib]
+name = "py2bun"
+crate-type = ["rlib", "cdylib"]
+
+[[bin]]
+name = "py2bun-rs"
+path = "src/main.rs"
+
+[features]
+# PyO3 extension module (maturin builds with --features python)
+python = ["dep:pyo3"]
+
+[dependencies]
+ruff_python_parser = "=0.0.22"
+ruff_python_ast = "=0.0.22"
+ruff_text_size = "=0.0.22"
+pyo3 = { version = "0.30.1", features = ["abi3-py39", "extension-module"], optional = true }
+
+[profile.release]
+lto = "thin"
+opt-level = 3
