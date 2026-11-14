@@ -3,7 +3,7 @@
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { parseInfoRefs, UA, versionCmp } from "./upstream.ts";
-import { sha256File, sqvPath } from "./verify.ts";
+import { sha256File, sqvDetached, sqvPath } from "./verify.ts";
 import type { SigStatus, Signature } from "./types.ts";
 
 export type KernelRelease = {
@@ -372,8 +372,7 @@ export async function verifyKernel(
   keyring = Bun.env.GNU_KERNEL_KEYRING,
 ): Promise<Signature> {
   if (!sign) return { status: "missing", detail: "no .tar.sign" };
-  const sqv = sqvPath();
-  if (!sqv) return { status: "unverified", detail: "sqv not installed" };
+  if (!sqvPath()) return { status: "unverified", detail: "sqv not installed" };
   if (!keyring || !(await Bun.file(keyring).exists()))
     return {
       status: "unverified",
@@ -383,20 +382,10 @@ export async function verifyKernel(
   const x = await Bun.$`xz -dc ${tarXz} > ${tar}`.quiet().nothrow();
   if (x.exitCode) return { status: "unverified", detail: "xz failed" };
   try {
-    const r =
-      await Bun.$`${sqv} --keyring ${keyring} --signature-file ${sign} ${tar}`
-        .quiet()
-        .nothrow();
-    if (r.exitCode === 0)
-      return {
-        status: "verified",
-        detail:
-          "sqv, kernel.org developer keyring (tar.sign over the uncompressed tar)",
-      };
-    const err = (r.stderr.toString() || "").trim().split("\n").at(-1) ?? "";
-    return /no (valid|acceptable)|not (found|issued)|unknown|missing/i.test(err)
-      ? { status: "unverified", detail: err.slice(0, 160) }
-      : { status: "invalid", detail: err.slice(0, 160) };
+    const r = await sqvDetached(tar, sign, keyring);
+    return r.status === "verified"
+      ? { ...r, detail: `${r.detail}; tar.sign over the uncompressed tar` }
+      : r;
   } finally {
     rmSync(tar, { force: true });
   }

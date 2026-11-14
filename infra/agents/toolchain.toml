@@ -229,6 +229,13 @@ state = "absent"
 name = "context7"
 url = "https://mcp.context7.com/mcp"
 
+# GNU upstream tracker (packages/gnu feed: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix, Rust equivalents, Linux kernel).
+# hub_call gnu__gnu_status | gnu__gnu_search | gnu__gnu_package | gnu__gnu_feed | gnu__gnu_kernel; feed from GNU_FEED, GNU_HOME or https://gnu.aphrody.com/feed.json.
+[[hub.mcp]]
+name = "gnu"
+command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/gnu-mcp.ts"]
+hosts = ["pc"]
+
 [[hub.mcp]]
 name = "agent-desktop"
 command = ["{bin}/agent-desktop.exe", "mcp"]

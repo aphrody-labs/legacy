@@ -410,7 +410,7 @@ export async function sync(opts: SyncOpts = {}): Promise<Feed> {
       {
         ...opts,
         bucket,
-        maxFiles: opts.maxFiles ?? 12,
+        maxFiles: opts.maxFiles ?? 30,
         maxBytes: opts.maxBytes ?? 400_000_000,
       },
       p.staging,

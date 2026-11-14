@@ -13,35 +13,57 @@ export async function gsrcKeyring(
   return (await Bun.file(f).exists()) ? f : null;
 }
 
+/**
+ * sqv detached verification. Many GNU maintainer keys carry SHA-1 binding signatures that the default sequoia policy
+ * rejects: that case is retried with the policy as of 2022-01-01 and reported as verified with a legacy note.
+ * Only a clear signature or hash mismatch is reported as invalid; any other failure stays unverified.
+ */
+export async function sqvDetached(
+  file: string,
+  sig: string,
+  keyring: string,
+): Promise<Signature> {
+  const sqv = sqvPath();
+  if (!sqv) return { status: "unverified", detail: "sqv not installed" };
+  const run = (extra: string[]) =>
+    Bun.$`${sqv} ${extra} --keyring ${keyring} --signature-file ${sig} ${file}`
+      .quiet()
+      .nothrow();
+  const ring = keyring.split(/[\\/]/).slice(-3).join("/");
+  let r = await run([]);
+  if (r.exitCode === 0)
+    return { status: "verified", detail: `sqv, keyring ${ring}` };
+  let err = (r.stderr.toString() || r.stdout.toString()).trim();
+  if (/policy|not considered secure|not bound|sha1/i.test(err)) {
+    r = await run(["--policy-as-of", "2022-01-01"]);
+    if (r.exitCode === 0)
+      return {
+        status: "verified",
+        detail: `sqv legacy policy (SHA-1 key binding), keyring ${ring}`,
+      };
+    err = (r.stderr.toString() || r.stdout.toString()).trim();
+  }
+  const last = err.split("\n").at(-1) ?? "";
+  return /bad signature|hash mismatch|digest|does not match|verification failed/i.test(
+    err,
+  )
+    ? { status: "invalid", detail: last.slice(0, 160) }
+    : { status: "unverified", detail: last.slice(0, 160) };
+}
+
 export async function verifySignature(
   file: string,
   sig: string | null,
   keyring: string | null,
 ): Promise<Signature> {
   if (!sig) return { status: "missing", detail: "no .sig on ftp.gnu.org" };
-  const sqv = sqvPath();
-  if (!sqv) return { status: "unverified", detail: "sqv not installed" };
+  if (!sqvPath()) return { status: "unverified", detail: "sqv not installed" };
   if (!keyring)
     return {
       status: "unverified",
       detail: "no GSRC gpg-keyring for this package",
     };
-  const r =
-    await Bun.$`${sqv} --keyring ${keyring} --signature-file ${sig} ${file}`
-      .quiet()
-      .nothrow();
-  if (r.exitCode === 0)
-    return {
-      status: "verified",
-      detail: `sqv, keyring ${keyring.split(/[\\/]/).slice(-3).join("/")}`,
-    };
-  const err =
-    (r.stderr.toString() || r.stdout.toString()).trim().split("\n").at(-1) ??
-    "";
-  // A missing certificate is not proof of forgery; a failed check against a matching key is.
-  return /no (valid|acceptable)|not (found|issued)|unknown|missing/i.test(err)
-    ? { status: "unverified", detail: err.slice(0, 160) }
-    : { status: "invalid", detail: err.slice(0, 160) };
+  return sqvDetached(file, sig, keyring);
 }
 
 export async function sha256File(file: string): Promise<string> {
