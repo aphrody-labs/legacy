@@ -2,10 +2,23 @@
 # GNU testsuite of one first-party port, GNU binary against the aphrody-gnu binary. Runs on fr2 (`just gnu-check <id>`).
 # Usage: gnu-proof.sh <time|ed|m4|bc|which> <gnu version> <sha256 of the GSRC distfile>
 # Needs the aphrody binary in $R (shipped from fr1 by scripts/gnu-check.ts). Writes $L/proof-<id>.txt (key=value).
-B=/srv/build/gnu-rust; S=$B/gnu-src; R=$B/target/ws/release; L=$B/log; mkdir -p $S $L $B/gnu-bin
+# Phase 1 (network): tarball by sha256, configure, make. Phase 2 (sandbox, docs/native/gnu/OS.md rule 9): the tests.
+B=/srv/build/gnu-rust; S=$B/gnu-src; R=$B/target/ws/release; L=$B/log; mkdir -p $S $L $B/gnu-bin $B/home $B/tmp
 export CC=gcc CFLAGS="-O2 -std=gnu17 -Wno-error" MAKEFLAGS=-j6 TERM=dumb LC_ALL=C
 id=$1; ver=$2; sha=$3; out=$L/proof-$id.txt; : > $out
 kv() { echo "$1=$2" >> $out; }
+
+# No network, read-only root, fresh /tmp, memory and task limits, empty environment (no credentials).
+sbx() {
+  if command -v bwrap >/dev/null && sudo -n true 2>/dev/null; then
+    sudo systemd-run --quiet --scope --uid="$(id -un)" -p MemoryMax=10G -p TasksMax=4096 \
+      bwrap --unshare-net --unshare-pid --die-with-parent --ro-bind / / --bind $B $B --dev /dev --proc /proc --tmpfs /tmp \
+      --clearenv --setenv PATH "$PATH" --setenv HOME $B/home --setenv LC_ALL C --setenv TERM dumb "$@"
+  else
+    "$@"
+  fi
+}
+command -v bwrap >/dev/null && sudo -n true 2>/dev/null && kv sandbox "bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096)" || kv sandbox "none (bwrap or sudo missing)"
 
 # GNU tarball (checked against the GSRC sha256), configured and built once.
 if [ ! -x $S/$id/.built ]; then
@@ -19,7 +32,7 @@ if [ ! -x $S/$id/.built ]; then
   done
   [ -n "$ok" ] || { kv error "cannot fetch $id-$ver"; exit 1; }
   case $id in
-    bc) for d in lib bc dc; do make -C $S/$id/$d >$L/make-$id-$d.log 2>&1; done ;;
+    bc) (cd $S/$id && ./configure -q >$L/cfg-$id.log 2>&1; for d in lib bc dc; do make -C $d >$L/make-$id-$d.log 2>&1; done) ;;
     ed) (cd $S/$id && ./configure >$L/cfg-$id.log 2>&1 && make >$L/make-$id.log 2>&1) ;;
     *)  (cd $S/$id && ./configure -q >$L/cfg-$id.log 2>&1 && make -s >$L/make-$id.log 2>&1) ;;
   esac
@@ -30,14 +43,16 @@ kv id $id; kv gnu_version $ver; kv sha256 $sha; kv host "$(hostname)"; kv date "
 kv ours_bytes "$(stat -c %s $R/$id)"; kv ours_sha256 "$(sha256sum $R/$id | cut -c1-16)"
 
 am_totals() { # automake test-suite.log
-  echo "total=$(rg -N '^# TOTAL:' $1 | rg -o '[0-9]+') pass=$(rg -N '^# PASS:' $1 | rg -o '[0-9]+') skip=$(rg -N '^# SKIP:' $1 | rg -o '[0-9]+') fail=$(rg -N '^# FAIL:' $1 | rg -o '[0-9]+') error=$(rg -N '^# ERROR:' $1 | rg -o '[0-9]+')"
+  local n=
+  for k in TOTAL PASS SKIP XFAIL FAIL XPASS ERROR; do n="$n $(echo $k | tr A-Z a-z)=$(rg -N "^# $k:" $1 | rg -o '[0-9]+' | head -1)"; done
+  echo $n
 }
 # differential: same stdout and exit code on the same stdin and arguments
 diffcase() { # gnu ours stdin-file args...
   local g=$1 o=$2 in=$3; shift 3
   local go gr oo or
-  go=$(timeout 60 "$g" "$@" < $in 2>/dev/null); gr=$?
-  oo=$(timeout 60 "$o" "$@" < $in 2>/dev/null); or=$?
+  go=$(sbx timeout 60 "$g" "$@" < $in 2>/dev/null); gr=$?
+  oo=$(sbx timeout 60 "$o" "$@" < $in 2>/dev/null); or=$?
   [ "$go" = "$oo" ] && [ $gr = $or ]
 }
 
@@ -45,35 +60,38 @@ case $id in
 time)
   [ -x $B/gnu-bin/time ] || { rm -f $S/time/src/time; make -C $S/time >/dev/null 2>&1; cp $S/time/src/time $B/gnu-bin/time; }
   cp $B/gnu-bin/time $S/time/src/time && touch $S/time/src/time
-  make -C $S/time check >$L/check-time-gnu.log 2>&1
+  sbx make -C $S/time check >$L/check-time-gnu.log 2>&1
   kv gnu "$(am_totals $S/time/tests/test-suite.log)"
   kv gnu_bytes "$(stat -c %s $B/gnu-bin/time)"
   cp $R/time $S/time/src/time && touch $S/time/src/time
-  make -C $S/time check >$L/check-time-ours.log 2>&1
+  sbx make -C $S/time check >$L/check-time-ours.log 2>&1
   kv ours "$(am_totals $S/time/tests/test-suite.log)"
   kv ours_failed "$(rg -N '^FAIL: ' $L/check-time-ours.log | tr '\n' ' ')"
   cp $B/gnu-bin/time $S/time/src/time
   ;;
 ed)
   kv gnu_bytes "$(stat -c %s $S/ed/ed)"
+  nscripts=$(rg --files $S/ed/testsuite | rg -c '\.ed$')
   for w in gnu ours; do
     d=$B/ed-obj-$w; rm -rf $d; mkdir -p $d
     if [ $w = gnu ]; then cp $S/ed/ed $d/ed; else cp $R/ed $d/ed; fi
-    (cd $d && timeout 300 sh $S/ed/testsuite/check.sh $S/ed/testsuite $w > $L/check-ed-$w.log 2>&1; echo $? > rc)
+    (cd $d && timeout 300 sbx sh $S/ed/testsuite/check.sh $S/ed/testsuite $w > $L/check-ed-$w.log 2>&1; echo $? > rc)
     kv ${w}_rc "$(cat $d/rc)"
-    kv ${w}_failed_lines "$(rg -N -o '^ [0-9]+( [0-9]+)*|^( [0-9]+(\([a-z0-9._]*\))?)+' $L/check-ed-$w.log | tr '\n' ' ')"
+    kv ${w}_scripts_failed "$(rg -N -c '^\*\*\* ' $L/check-ed-$w.log) of $nscripts"
+    kv ${w}_failed_lines "$(rg -N -o '^( [0-9]+(\([a-z0-9._]*\))?)+$' $L/check-ed-$w.log | tr '\n' ' ')"
     kv ${w}_tail "$(rg -N '' $L/check-ed-$w.log | tail -1 | cut -c1-120)"
   done
   ;;
 m4)
   kv gnu_bytes "$(stat -c %s $S/m4/src/m4)"
   for w in gnu ours; do
-    M4=$S/m4/src/m4; [ $w = ours ] && M4=$R/m4
-    (cd $S/m4/checks && f=$(ls [0-9]*.*) && timeout 1200 sh ./check-them -I ../examples -m $M4 $f > $L/check-m4-$w.log 2>&1; echo $? > $B/m4-$w.rc)
+    # the checks compare stderr, which carries the program name: run both as `m4` from a directory of their own
+    mkdir -p $B/m4-bin-$w; if [ $w = gnu ]; then cp $S/m4/src/m4 $B/m4-bin-$w/m4; else cp $R/m4 $B/m4-bin-$w/m4; fi
+    (cd $S/m4/checks && f=$(ls [0-9]*.*) && PATH=$B/m4-bin-$w:$PATH timeout 1200 sbx sh ./check-them -I ../examples -m m4 $f > $L/check-m4-$w.log 2>&1; echo $? > $B/m4-$w.rc)
     kv ${w}_rc "$(cat $B/m4-$w.rc)"
-    kv ${w}_tail "$(rg -N '' $L/check-m4-$w.log | tail -3 | tr '\n' '|' | cut -c1-300)"
-    kv ${w}_pass "$(rg -N -c '^(PASS|ok)' $L/check-m4-$w.log)"
-    kv ${w}_fail "$(rg -N -c '^(FAIL|not ok)' $L/check-m4-$w.log)"
+    kv ${w}_failed_checks "$(rg -N -A1 '^Failed checks were:' $L/check-m4-$w.log | tail -n +2 | tr ' ' '\n' | cut -d: -f1 | sort -u | rg -c '[0-9]')"
+    kv ${w}_skipped_checks "$(rg -N -A1 '^Skipped checks were:' $L/check-m4-$w.log | tail -n +2 | tr ' ' '\n' | rg -c '[0-9]')"
+    kv ${w}_total_checks "$(ls $S/m4/checks/[0-9]*.* | wc -l)"
   done
   ;;
 bc)
@@ -85,14 +103,14 @@ bc)
   kv differential "pass=$p total=$t"; kv differential_failed "$fails"
   ;;
 which)
-  T=$(mktemp -d); mkdir -p $T/d1 $T/d2 $T/.dot $T/d1/baz; printf '#!/bin/sh\n' > $T/d1/foo; cp $T/d1/foo $T/d2/foo; cp $T/d1/foo $T/d1/bar; cp $T/d1/foo $T/.dot/dotcmd
+  T=$(mktemp -d -p $B/tmp); mkdir -p $T/d1 $T/d2 $T/.dot $T/d1/baz; printf '#!/bin/sh\n' > $T/d1/foo; cp $T/d1/foo $T/d2/foo; cp $T/d1/foo $T/d1/bar; cp $T/d1/foo $T/.dot/dotcmd
   chmod 755 $T/d1/foo $T/d2/foo $T/.dot/dotcmd; chmod 644 $T/d1/bar
-  G=$S/which/which; O=$R/which; p=0; t=0; fails=
+  G=$S/which/which; O=$R/which; p=0; t=0; fails=; kv gnu_bytes "$(stat -c %s $G)"
   run() { # PATH args...
     local P=$1; shift; t=$((t+1))
     local go gr oo or
-    go=$(cd $T && PATH=$P HOME=$T/d1 timeout 20 $G "$@" 2>/dev/null); gr=$?
-    oo=$(cd $T && PATH=$P HOME=$T/d1 timeout 20 $O "$@" 2>/dev/null); or=$?
+    go=$(cd $T && sbx env PATH=$P HOME=$T/d1 timeout 20 $G "$@" 2>/dev/null < /dev/null); gr=$?
+    oo=$(cd $T && sbx env PATH=$P HOME=$T/d1 timeout 20 $O "$@" 2>/dev/null < /dev/null); or=$?
     if [ "$go" = "$oo" ] && [ $gr = $or ]; then p=$((p+1)); else fails="$fails [$*]"; fi
   }
   P1="$T/d1:$T/d2:/usr/bin:/bin"; P2=".dot:d1:/usr/bin"

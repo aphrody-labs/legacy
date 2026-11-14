@@ -16,6 +16,7 @@ doctest = false
 name = "ed"
 path = "src/main.rs"
 [dependencies]
+gnu-rt = { package = "aphrody-gnu-rt", path = "../rt" }
 gnu-posix-re = { package = "aphrody-gnu-posix-re", path = "../posix-re" }
 
 [lints]

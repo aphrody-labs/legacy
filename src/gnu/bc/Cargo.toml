@@ -16,6 +16,7 @@ doctest = false
 name = "bc"
 path = "src/main.rs"
 [dependencies]
+gnu-rt = { package = "aphrody-gnu-rt", path = "../rt" }
 num-bigint = "0.5"
 num-traits = "0.2"
 
