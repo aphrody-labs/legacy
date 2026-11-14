@@ -62,7 +62,7 @@ all = { level = "warn", priority = -1 }
 
 [profile.release]
 opt-level = 3
-lto = "fat"
+lto = "thin"
 codegen-units = 1
 panic = "abort"
 strip = "symbols"
@@ -71,8 +71,13 @@ const tar = Bun.spawnSync(["tar", "-cf", "-", "-C", root, "src/gnu"]);
 ssh(FR1, `mkdir -p ${WS}/ws && rm -rf ${WS}/ws/src && tar -x -C ${WS}/ws`, tar.stdout);
 ssh(FR1, `cat > ${WS}/ws/Cargo.toml`, rootToml);
 console.log(`fr1: build aphrody-gnu-${id}`);
-ssh(FR1, `RUSTC_WRAPPER= CARGO_BUILD_RUSTC_WRAPPER= CARGO_TARGET_DIR=${WS}/target/ws cargo build --release --manifest-path ${WS}/ws/Cargo.toml --workspace 2>&1 | tail -3`);
+ssh(FR1, `RUSTC_WRAPPER= CARGO_BUILD_RUSTC_WRAPPER= RUSTFLAGS="-C target-cpu=x86-64-v3" CARGO_TARGET_DIR=${WS}/target/ws cargo build --release --manifest-path ${WS}/ws/Cargo.toml --workspace 2>&1 | tail -3`);
 const fr1 = ssh(FR1, "hostname").toString().trim();
+
+// hyperfine for the benchmark (fr2 has none): relayed once from fr1
+if (!ssh(FR2, `test -x ${WS}/hyperfine && echo y || echo n`).toString().startsWith("y")) {
+  ssh(FR2, `cat > ${WS}/hyperfine && chmod +x ${WS}/hyperfine`, ssh(FR1, "cat /home/ubuntu/.cargo/bin/hyperfine"));
+}
 
 // 2. relay the binary fr1 -> fr2 (fr1 and fr2 do not reach each other: the PC pipes)
 const bin = ssh(FR1, `cat ${WS}/target/ws/release/${id}`);
@@ -126,6 +131,7 @@ if (kv.ours?.includes("total=")) {
   rows += `| checks/ de m4 : réussis / exécutés | ${tot - gsk - gf} / ${tot - gsk} | ${tot - osk - of} / ${tot - osk} |\n| checks ignorés | ${gsk} / ${tot} | ${osk} / ${tot} |\n`;
 }
 const smoke = "non mesuré";
+const perf = kv.bench ? `\nPerformance (hyperfine, 15 mesures, fr2 ; GNU C en -O3 -march=x86-64-v3, Rust en -O3 x86-64-v3 ThinLTO, modèle CachyOS) : ${kv.bench}.\n` : "";
 const ok = passRate >= thr && skipDelta <= 1 && errors === 0;
 const fmt = (x: number) => (Number.isNaN(x) ? "?" : x.toFixed(1));
 const verdict = Number.isNaN(passRate)
@@ -149,7 +155,7 @@ Quadruplet (docs/native/gnu/OS.md règle 8) :
 | error_count | ${errors} | 0 |
 | critical_smoke | ${smoke} | 100 % sur de vrais scripts configure |
 
-${detail}
+${detail}${perf}
 Verdict : ${verdict}.
 `;
 mkdirSync(join(root, `src/gnu/${id}`), { recursive: true });

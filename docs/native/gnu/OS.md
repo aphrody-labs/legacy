@@ -8,6 +8,7 @@ Sources de vérité, toutes sous `docs/research/` :
 
 - Liste et versions : GSRC, bzr `gsrc/trunk` (revno 12334, 434 paquets `pkg/gnu`), extrait par `scripts/gsrc-gnu.ts` dans `gsrc-gnu-2026-11-14.json`.
 - Recettes, entrées et phases `check` : Guix `gnu/packages/*.scm` (`guix-gnu-2026-11-14.json`) ; amorçage dans `commencement.scm` (hex0 -> mes -> tcc -> gcc), référence seulement.
+- Recettes de référence côté distribution : CachyOS (`docs/research/cachyos-2026-11-15.md`, PKGBUILDS clonés sur fr1 dans `/srv/research/cachyos/CachyOS-PKGBUILDS`) : drapeaux, patches et `check()` de chaque paquet GNU se lisent à côté de Guix et de GSRC.
 - Descriptions : `manual/blurbs.html` (`gnu-blurbs-2026-11-14.json`).
 - Inventaire et verdicts : `docs/native/gnu/gnu-packages.json` (472 entrées après `tools/gnu-index/merge.ts`). Adoption : PLAN.md.
 - Registre canonique : `src/gnu/packages.toml`, généré par `scripts/gnu-packages.ts` (D3).
@@ -38,6 +39,7 @@ Sources de vérité, toutes sous `docs/research/` :
 9. **Isolation (D7).** Chaque `gnu-check` exécute les tests dans un bac à sable : `bwrap --unshare-net --unshare-pid --ro-bind / / --clearenv`, scope `systemd-run` avec `MemoryMax` et `TasksMax`, `/tmp` en tmpfs, locales pré-générées, aucun identifiant R2. La phase réseau (téléchargement du tarball, sha256 GSRC, configure et make) précède le bac à sable. fr2 n'a ni `systemd-nspawn` ni `podman` : `bwrap` fait office d'équivalent rootless. Le service `aphrody-gnu` reste isolé des tests.
 10. **GNU Coding Standards (D8).** Chaque binaire : `--help`, `--version`, options longues, codes de sortie. La crate `src/gnu/rt` restaure SIGPIPE à `SIG_DFL`, normalise `--help`/`--version` et fournit des E/S d'octets (bstr) : pas d'hypothèse UTF-8 sur les fichiers, `LC_COLLATE` respecté.
 11. **Licence et provenance (D9).** `license` (SPDX ou texte GSRC/inventaire) et `provenance` (`clean-room`, `derived-gnu`, `third-party-fork`, `upstream-tarball`) sont consignés pour la traçabilité, jamais comme critère d'architecture (règle propriétaire : les licences ne décident de rien).
+12. **Profil de build (modèle CachyOS).** C : `-O3 -march=x86-64-v3 -pipe -fno-plt`, `LDFLAGS=-Wl,-O1 -Wl,--sort-common -Wl,--as-needed -Wl,-z,relro -Wl,-z,now` (`CachyOS-PKGBUILDS/pacman/makepkg.conf`) ; Rust : `-C target-cpu=x86-64-v3`, `opt-level = 3`, ThinLTO, une unité de codegen. `just gnu-check` construit ainsi (fr1) et mesure chaque port contre le GNU C compilé avec les mêmes drapeaux (`-O3 -march=x86-64-v3`) par `hyperfine` sur fr2 ; le résultat entre dans le `PROOF.md`. Le profil `release` du workspace racine (LTO complet) reste celui qui est livré. Les drapeaux ne s'adoptent que mesurés.
 
 ## Étapes
 

@@ -933,7 +933,15 @@ pub fn run(args: Vec<String>, stdin: &mut dyn Read, out: &mut dyn Write, err: &m
         } else {
             match a.as_str() {
                 "-P" | "--prefix-builtins" => prefix = true,
-                "-G" | "-Q" | "-E" | "-s" | "--traditional" | "--quiet" | "--silent" | "-e" | "-N" | "-H" | "--fatal-warnings" => {}
+                "-G" | "-Q" | "-E" | "-s" | "-e" | "--traditional" | "--quiet" | "--silent" | "--fatal-warnings" | "--synclines" | "--warnings" | "--interactive" => {}
+                // GNU options read and ignored: debugging, tracing, limits, frozen state (not implemented)
+                "-l" | "-o" | "-L" | "-t" | "-H" | "-N" | "-F" | "-R" | "-W" | "-B" | "-S" | "-T" => {
+                    it.next();
+                }
+                s if s.starts_with("-d")
+                    || ["--debug", "--debugfile", "--arglength", "--nesting-limit", "--hashsize", "--diversions", "--trace", "--freeze-state", "--reload-state", "--word-regexp"]
+                        .iter()
+                        .any(|o| s == *o || s.starts_with(&format!("{o}="))) => {}
                 "--version" => {
                     let _ = writeln!(out, "m4 (aphrody-gnu) {}", env!("CARGO_PKG_VERSION"));
                     return 0;
