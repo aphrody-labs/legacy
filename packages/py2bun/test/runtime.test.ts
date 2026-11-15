@@ -197,3 +197,60 @@ describe("review fixes 3", () => {
     expect(await a.a_mod(7, 4)).toBe(3);
   });
 });
+
+describe("str and dict methods added by the review", () => {
+  test("rpartition removeprefix removesuffix swapcase popitem", () => {
+    expect(py.m.rpartition("a.b.c", ".")).toEqual(["a.b", ".", "c"]);
+    expect(py.m.removeprefix("foobar", "foo")).toBe("bar");
+    expect(py.m.removesuffix("foobar", "bar")).toBe("foo");
+    expect(py.m.swapcase("aBc")).toBe("AbC");
+    const d = new Map([["a", 1], ["b", 2]]);
+    expect(py.m.popitem(d)).toEqual(["b", 2]);
+    expect(d.size).toBe(1);
+  });
+});
+
+describe("runtime review fixes 4", () => {
+  test("replace/rsplit/startswith/find/splitlines", () => {
+    expect(py.m.replace("abc", "", "X")).toBe("XaXbXcX");
+    expect(py.m.replace("abc", "", "X", 2)).toBe("XaXbc");
+    expect(py.m.rsplit("  a b c", null, 1)).toEqual(["  a b", "c"]);
+    expect(py.m.rsplit("a,b,c", ",", 1)).toEqual(["a,b", "c"]);
+    expect(() => py.m.rsplit("abc", "", 1)).toThrow();
+    expect(py.m.startswith("hello", "ll", 2)).toBe(true);
+    expect(py.m.endswith("hello", "ell", 0, 4)).toBe(true);
+    expect(py.m.find("hello", "l", -2)).toBe(3);
+    expect(py.m.splitlines("a\nb\r\nc", true)).toEqual(["a\n", "b\r\n", "c"]);
+    expect(py.m.splitlines("a\nb")).toEqual(["a", "b"]);
+  });
+  test("int/float/bytes/hash/reduce validation", () => {
+    expect(() => py.int("1", 99)).toThrow();
+    expect(() => py.int(5, 10)).toThrow();
+    expect(() => py.int("010", 0)).toThrow();
+    expect(py.int("1_000")).toBe(1000);
+    expect(() => py.int("1__0")).toThrow();
+    expect(() => py.float(null)).toThrow();
+    expect(() => py.bytes("x")).toThrow();
+    expect(() => py.bytes([256])).toThrow();
+    expect(() => py.hash([1])).toThrow();
+    expect(() => py.reduce((a: any, b: any) => a + b, [])).toThrow();
+    expect(py.isinstance(true, py.int)).toBe(true);
+  });
+  test("arithmetic type errors, shifts, ranges, cmp", () => {
+    expect(() => py.add([], "a")).toThrow();
+    expect(py.mul("a", true)).toBe("a");
+    expect(() => py.mul("a", 2.5)).toThrow();
+    expect(() => py.shl(1, -1)).toThrow();
+    expect(() => py.band(1.5, 2)).toThrow();
+    expect(py.contains(py.range(10), true)).toBe(true);
+    expect(() => py.range(3).at(99)).toThrow();
+    expect(() => py.cmp(1, "a")).toThrow();
+    expect(Number.isNaN(py.cmp(NaN, 1))).toBe(true);
+    expect(py.sorted([3, 1, 2], py.kw({ reverse: true }))).toEqual([3, 2, 1]);
+    expect(() => py.sum(["a"], "")).toThrow();
+    expect(py.round(2.5)).toBe(2);
+    expect(py.round(0.125, 2)).toBe(0.12);
+    expect(py.round(2.675, 2)).toBe(2.67);
+    expect(String(new py.BaseException(1, 2).message)).toBe("(1, 2)");
+  });
+});

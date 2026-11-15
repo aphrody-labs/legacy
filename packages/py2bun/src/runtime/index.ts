@@ -10,7 +10,7 @@ export class BaseException extends Error {
   args: any[];
   __cause__: any = null;
   constructor(...args: any[]) {
-    super(args.length === 1 ? str(args[0]) : args.length ? str(args) : "");
+    super(args.length === 1 ? str(args[0]) : args.length ? "(" + args.map(repr).join(", ") + ")" : "");
     this.args = args;
     this.name = new.target.name;
   }
@@ -18,6 +18,7 @@ export class BaseException extends Error {
 export class Exception extends BaseException {}
 export class SystemExit extends BaseException {}
 export class KeyboardInterrupt extends BaseException {}
+export class GeneratorExit extends BaseException {}
 export class ArithmeticError extends Exception {}
 export class ZeroDivisionError extends ArithmeticError {}
 export class OverflowError extends ArithmeticError {}
@@ -54,7 +55,7 @@ export function withCause(e: any, c: any) {
 export function catches(e: any, t: any): boolean {
   if (Array.isArray(t)) return t.some((x) => catches(e, x));
   if (t === BaseException) return true;
-  if (t === Exception) return !(e instanceof SystemExit || e instanceof KeyboardInterrupt);
+  if (t === Exception) return !(e instanceof SystemExit || e instanceof KeyboardInterrupt || e instanceof GeneratorExit);
   if (t === undefined || t === null) return false;
   try {
     return e instanceof t;
@@ -86,14 +87,22 @@ export function mapObject(x: any): Record<string, any> {
 }
 
 // ---------- slices / ranges ----------
+/** slice bound: int, bool, bigint or __index__ only (floats and strings are a TypeError) */
+function sliceIdx(v: any): number {
+  if (typeof v === "boolean") return v ? 1 : 0;
+  if (typeof v === "bigint") return Number(v);
+  if (typeof v === "number" && Number.isInteger(v)) return v;
+  if (v && typeof v.__index__ === "function") return Number(v.__index__());
+  throw new TypeError("slice indices must be integers or None or have an __index__ method");
+}
 export class PySlice {
   constructor(public start: any, public stop: any, public step: any) {}
   indices(len: number): [number, number, number] {
-    const step = this.step == null ? 1 : Number(this.step);
+    const step = this.step == null ? 1 : sliceIdx(this.step);
     if (step === 0) throw new ValueError("slice step cannot be zero");
     const norm = (v: any, dflt: number, lo: number, hi: number) => {
       if (v == null) return dflt;
-      let n = Number(v);
+      let n = sliceIdx(v);
       if (n < 0) n += len;
       return Math.min(Math.max(n, lo), hi);
     };
@@ -101,7 +110,7 @@ export class PySlice {
     return [norm(this.start, len - 1, -1, len - 1), norm(this.stop, -1, -1, len - 1), step];
   }
 }
-export const slice = (a: any, b?: any, c?: any) => (b === undefined && c === undefined ? new PySlice(null, a, null) : new PySlice(a, b, c));
+export const slice = (a: any, b?: any, c?: any) => (b === undefined && c === undefined ? new PySlice(null, a, null) : new PySlice(a, b ?? null, c ?? null));
 
 export class PyRange {
   constructor(public start: number, public stop: number, public step: number) {}
@@ -115,14 +124,27 @@ export class PyRange {
     else for (let i = start; i > stop; i += step) yield i;
   }
   at(i: number) {
-    return this.start + (i < 0 ? i + this.length : i) * this.step;
+    const n = this.length;
+    const j = i < 0 ? i + n : i;
+    if (j < 0 || j >= n) throw new IndexError("range object index out of range");
+    return this.start + j * this.step;
+  }
+  has(x: number): boolean {
+    const { start, stop, step } = this;
+    if (!Number.isInteger(x)) return false;
+    return step > 0 ? x >= start && x < stop && (x - start) % step === 0 : x <= start && x > stop && (start - x) % -step === 0;
   }
 }
+const rangeInt = (x: any): number => {
+  const v = int(x);
+  if (typeof v === "bigint") throw new OverflowError("Python int too large to convert to C ssize_t");
+  return v;
+};
 export function range(a: number, b?: number, c?: number): PyRange {
-  if (b === undefined) return new PyRange(0, int(a) as number, 1);
-  const step = c === undefined ? 1 : (int(c) as number);
+  if (b === undefined) return new PyRange(0, rangeInt(a), 1);
+  const step = c === undefined ? 1 : rangeInt(c);
   if (step === 0) throw new ValueError("range() arg 3 must not be zero");
-  return new PyRange(int(a) as number, int(b) as number, step);
+  return new PyRange(rangeInt(a), rangeInt(b), step);
 }
 
 // ---------- truthiness & logic ----------
@@ -138,6 +160,7 @@ export function truth(x: any): boolean {
     case "string":
       return x.length > 0;
     case "object": {
+      if (x instanceof DataView) return x.byteLength > 0;
       if (Array.isArray(x) || ArrayBuffer.isView(x)) return (x as any).length > 0;
       if (x instanceof Map || x instanceof Set) return x.size > 0;
       if (x instanceof PyRange) return x.length > 0;
@@ -173,7 +196,12 @@ const MAXS = BigInt(Number.MAX_SAFE_INTEGER);
 const norm = (b: bigint): number | bigint => (b <= MAXS && b >= -MAXS ? Number(b) : b);
 const isBig = (x: any) => typeof x === "bigint";
 const isInt = (x: any) => typeof x === "number" ? Number.isInteger(x) : isBig(x);
-const bi = (x: any): bigint => (isBig(x) ? x : typeof x === "boolean" ? (x ? 1n : 0n) : BigInt(x));
+const bi = (x: any): bigint => {
+  if (isBig(x)) return x;
+  if (typeof x === "boolean") return x ? 1n : 0n;
+  if (typeof x === "number" && Number.isInteger(x)) return BigInt(x);
+  throw new TypeError(`'${typeName(x)}' object cannot be interpreted as an integer`);
+};
 
 export function add(a: any, b: any): any {
   if (typeof a === "number" && typeof b === "number") return a + b;
@@ -184,11 +212,23 @@ export function add(a: any, b: any): any {
   }
   if (Array.isArray(a) && Array.isArray(b)) return a.concat(b);
   if (typeof a === "object" && a && typeof a.__add__ === "function") return a.__add__(b);
-  if ((typeof a === "string") !== (typeof b === "string") && a != null && b != null && typeof a !== "object" && typeof b !== "object")
-    throw new TypeError(`unsupported operand type(s) for +: '${typeName(a)}' and '${typeName(b)}'`);
-  return a + b;
+  if (b && typeof b === "object" && typeof b.__radd__ === "function") return b.__radd__(a);
+  if (typeof a === "bigint" || typeof b === "bigint") {
+    if ((isInt(a) || typeof a === "boolean") && (isInt(b) || typeof b === "boolean")) return norm(bi(a) + bi(b));
+    if (typeof a === "number" || typeof b === "number") return Number(a) + Number(b);
+  }
+  if (typeof a === "number" && typeof b === "boolean") return a + Number(b);
+  if (typeof a === "boolean" && (typeof b === "number" || typeof b === "boolean")) return Number(a) + Number(b);
+  if (a instanceof Uint8Array && b instanceof Uint8Array) {
+    const o = new Uint8Array(a.length + b.length);
+    o.set(a);
+    o.set(b, a.length);
+    return o;
+  }
+  throw new TypeError(`unsupported operand type(s) for +: '${typeName(a)}' and '${typeName(b)}'`);
 }
 export function iadd(a: any, b: any): any {
+  if (a && typeof a === "object" && typeof a.__iadd__ === "function") return a.__iadd__(b);
   if (Array.isArray(a)) {
     a.push(...iter(b));
     return a;
@@ -197,12 +237,26 @@ export function iadd(a: any, b: any): any {
 }
 export function mul(a: any, b: any): any {
   if (typeof a === "number" && typeof b === "number") return a * b;
-  if (typeof a === "string" && typeof b === "number") return b > 0 ? a.repeat(b) : "";
-  if (typeof b === "string" && typeof a === "number") return a > 0 ? b.repeat(a) : "";
-  if (Array.isArray(a) && typeof b === "number") return Array.from({ length: Math.max(0, b) }, () => a).flat(1);
-  if (Array.isArray(b) && typeof a === "number") return mul(b, a);
-  if (isBig(a) || isBig(b)) return norm(bi(a) * bi(b));
-  return a * b;
+  if (typeof a === "boolean") a = a ? 1 : 0;
+  if (typeof b === "boolean") b = b ? 1 : 0;
+  const cnt = (n: any): number => {
+    if (isBig(n)) return Number(n);
+    if (typeof n === "number" && Number.isInteger(n)) return n;
+    throw new TypeError("can't multiply sequence by non-int of type 'float'");
+  };
+  if (typeof a === "string" && (isInt(b))) return cnt(b) > 0 ? a.repeat(cnt(b)) : "";
+  if (typeof b === "string" && (isInt(a))) return cnt(a) > 0 ? b.repeat(cnt(a)) : "";
+  if (Array.isArray(a) && isInt(b)) return Array.from({ length: Math.max(0, cnt(b)) }, () => a).flat(1);
+  if (Array.isArray(b) && isInt(a)) return mul(b, a);
+  if (a && typeof a === "object" && typeof a.__mul__ === "function") return a.__mul__(b);
+  if (b && typeof b === "object" && typeof b.__rmul__ === "function") return b.__rmul__(a);
+  if (typeof a === "number" && typeof b === "number") return a * b;
+  if (isBig(a) || isBig(b)) {
+    if (isInt(a) && isInt(b)) return norm(bi(a) * bi(b));
+    if (typeof a === "number" || typeof b === "number") return Number(a) * Number(b);
+  }
+  if ((typeof a === "string" && typeof b === "number") || (typeof b === "string" && typeof a === "number")) throw new TypeError("can't multiply sequence by non-int of type 'float'");
+  throw new TypeError(`unsupported operand type(s) for *: '${typeName(a)}' and '${typeName(b)}'`);
 }
 export function sub(a: any, b: any): any {
   if (a instanceof Set && b instanceof Set) return new Set([...a].filter((x) => !b.has(x)));
@@ -214,6 +268,7 @@ export function truediv(a: any, b: any): number {
   return Number(a) / Number(b);
 }
 export function floordiv(a: any, b: any): any {
+  if ((isBig(a) || isBig(b)) && !(isInt(a) && isInt(b))) return floordiv(Number(a), Number(b));
   if (isBig(a) || isBig(b)) {
     const [x, y] = [bi(a), bi(b)];
     if (y === 0n) throw new ZeroDivisionError("integer division or modulo by zero");
@@ -226,12 +281,14 @@ export function floordiv(a: any, b: any): any {
 }
 export function mod(a: any, b: any): any {
   if (typeof a === "string") return percent(a, b);
-  if (isBig(a) || isBig(b)) {
+  if ((isBig(a) || isBig(b)) && isInt(a) && isInt(b)) {
     const [x, y] = [bi(a), bi(b)];
     if (y === 0n) throw new ZeroDivisionError("integer division or modulo by zero");
     return norm(((x % y) + y) % y);
   }
+  if (isBig(a) || isBig(b)) return mod(Number(a), Number(b));
   if (b === 0) throw new ZeroDivisionError("integer division or modulo by zero");
+  if (!Number.isFinite(b)) return Number.isFinite(a) ? (a === 0 || Math.sign(a) === Math.sign(b) ? a : b) : NaN;
   return ((a % b) + b) % b;
 }
 export function pow(a: any, b: any, m?: any): any {
@@ -267,15 +324,20 @@ export function pow(a: any, b: any, m?: any): any {
   return a ** b;
 }
 const bitop = (a: any, b: any, f: (x: bigint, y: bigint) => bigint, g: (x: number, y: number) => number) => {
-  if (typeof a === "number" && typeof b === "number" && Math.abs(a) < 2 ** 31 && Math.abs(b) < 2 ** 31) return g(a, b);
+  if (typeof a === "number" && typeof b === "number" && Number.isInteger(a) && Number.isInteger(b) && Math.abs(a) < 2 ** 31 && Math.abs(b) < 2 ** 31) return g(a, b);
   return norm(f(bi(a), bi(b)));
 };
 export const band = (a: any, b: any) => bitop(a, b, (x, y) => x & y, (x, y) => x & y);
 export const bor = (a: any, b: any) => bitop(a, b, (x, y) => x | y, (x, y) => x | y);
 export const bxor = (a: any, b: any) => bitop(a, b, (x, y) => x ^ y, (x, y) => x ^ y);
-export const shl = (a: any, b: any) => norm(bi(a) << bi(b));
-export const shr = (a: any, b: any) => norm(bi(a) >> bi(b));
-export const inv = (a: any) => (isBig(a) ? norm(~a) : -a - 1);
+const shiftCount = (b: any): bigint => {
+  const n = bi(b);
+  if (n < 0n) throw new ValueError("negative shift count");
+  return n;
+};
+export const shl = (a: any, b: any) => norm(bi(a) << shiftCount(b));
+export const shr = (a: any, b: any) => norm(bi(a) >> shiftCount(b));
+export const inv = (a: any) => norm(~bi(a));
 
 export function eq(a: any, b: any): boolean {
   if (a === b) return true;
@@ -304,7 +366,7 @@ export function contains(c: any, x: any): boolean {
   }
   if (Array.isArray(c)) return c.some((y) => eq(y, x));
   if (c instanceof Set || c instanceof Map) return c.has(x);
-  if (c instanceof PyRange) return typeof x === "number" && [...c].includes(x);
+  if (c instanceof PyRange) return c.has(typeof x === "boolean" ? Number(x) : x);
   if (ArrayBuffer.isView(c)) return (c as any).includes(x);
   if (c && typeof c.contains === "function") return !!c.contains(x);
   if (c && typeof c.__contains__ === "function") return !!c.__contains__(x);
@@ -318,7 +380,12 @@ export function contains(c: any, x: any): boolean {
 
 // ---------- indexing ----------
 function seqIndex(len: number, k: any, what: string): number {
-  let i = Number(k);
+  let i: number;
+  if (typeof k === "boolean") i = k ? 1 : 0;
+  else if (typeof k === "bigint") i = Number(k);
+  else if (typeof k === "number") i = k;
+  else if (k && typeof k.__index__ === "function") i = Number(k.__index__());
+  else throw new TypeError(`${what} indices must be integers or slices, not ${typeName(k)}`);
   if (!Number.isInteger(i)) throw new TypeError(`${what} indices must be integers or slices, not ${typeName(k)}`);
   if (i < 0) i += len;
   if (i < 0 || i >= len) throw new IndexError(`${what} index out of range`);
@@ -431,9 +498,7 @@ export function reversed(x: any): any[] {
   return Array.from(iter(x)).reverse();
 }
 export function next(it: any, ...d: any[]) {
-  if (!it.next) {
-    it = iter(it)[Symbol.iterator]();
-  }
+  if (it == null || typeof it.next !== "function") throw new TypeError(`'${typeName(it)}' object is not an iterator`);
   const r = it.next();
   if (r.done) {
     if (d.length) return d[0];
@@ -475,8 +540,14 @@ export function items(x: any): any[] {
 
 // ---------- ordering ----------
 export function cmp(a: any, b: any): number {
-  if (typeof a === "number" || typeof a === "bigint" || typeof a === "boolean") return a < b ? -1 : a > b ? 1 : 0;
-  if (typeof a === "string") return a < b ? -1 : a > b ? 1 : 0;
+  const numish = (x: any) => typeof x === "number" || typeof x === "bigint" || typeof x === "boolean";
+  if (numish(a) && numish(b)) {
+    if (a !== a || b !== b) return NaN; // every ordering comparison with NaN is false
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
+  if (typeof a === "string" && typeof b === "string") return a < b ? -1 : a > b ? 1 : 0;
+  if ((numish(a) || typeof a === "string") && (numish(b) || typeof b === "string" || b == null))
+    throw new TypeError(`'<' not supported between instances of '${typeName(a)}' and '${typeName(b)}'`);
   if (Array.isArray(a) && Array.isArray(b)) {
     for (let i = 0; i < Math.min(a.length, b.length); i++) {
       const c = cmp(a[i], b[i]);
@@ -495,11 +566,8 @@ export function sorted(it: any, ...a: any[]) {
 }
 function sortArr(arr: any[], key?: any, reverse?: any) {
   const keyed = arr.map((v, i) => [key ? key(v) : v, v, i] as const);
-  keyed.sort((x, y) => cmp(x[0], y[0]) || x[2] - y[2]);
-  if (truth(reverse)) {
-    // stable reverse: sort descending keeping original order of equals
-    keyed.sort((x, y) => cmp(y[0], x[0]) || x[2] - y[2]);
-  }
+  const dir = truth(reverse) ? -1 : 1; // stable in both directions: ties keep the original order
+  keyed.sort((x, y) => dir * (cmp(x[0], y[0]) || 0) || x[2] - y[2]);
   for (let i = 0; i < arr.length; i++) arr[i] = keyed[i][1];
   return arr;
 }
@@ -523,7 +591,10 @@ function minmax(name: string, sign: number, a: any[]) {
 }
 export const min = (...a: any[]) => minmax("min", -1, a);
 export const max = (...a: any[]) => minmax("max", 1, a);
-export function sum(it: any, start: any = 0) {
+export function sum(it: any, ...a: any[]) {
+  const [pos, k] = splitKw(a);
+  const start = pos[0] ?? k.start ?? 0;
+  if (typeof start === "string") throw new TypeError("sum() can't sum strings [use ''.join(seq) instead]");
   let t = start;
   for (const v of iter(it)) t = add(t, v);
   return t;
@@ -537,7 +608,31 @@ export const all = (it: any) => {
   return true;
 };
 export const abs = (x: any) => (isBig(x) ? (x < 0n ? -x : x) : Math.abs(x));
-export function round(x: number, n?: number): number {
+export function round(x: any, n?: number): any {
+  if (isBig(x)) {
+    if (n == null || n >= 0) return x;
+    const p = 10n ** BigInt(-n);
+    let q = x / p;
+    const r = x - q * p;
+    const twice = (r < 0n ? -r : r) * 2n;
+    if (twice > p || (twice === p && q % 2n !== 0n)) q += x < 0n ? -1n : 1n;
+    return norm(q * p);
+  }
+  if (n != null && n > 308) return x;
+  if (n != null && n < -308) return 0;
+  if (n != null && n > 0 && Number.isFinite(x)) {
+    // exact decimal expansion of the double decides ties (2.675 is below the tie, 0.125 is one)
+    const ax = Math.abs(x);
+    const full = /^(\d+)\.(\d+)$/.exec(ax.toFixed(Math.min(100, n + 30)))!;
+    const digits = full[2]!;
+    if (/^50*$/.test(digits.slice(n))) {
+      const head = full[1] + "." + digits.slice(0, n);
+      const lastEven = Number(head[head.length - 1]) % 2 === 0;
+      const r = lastEven ? Number(head) : Number(ax.toFixed(n));
+      return x < 0 ? -r : r;
+    }
+    return Number(x.toFixed(Math.min(n, 100)));
+  }
   if (n == null) {
     const f = Math.floor(x);
     const d = x - f;
@@ -576,6 +671,7 @@ export function typeName(x: any): string {
 }
 export function int(x?: any, base?: any): any {
   if (x === undefined) return 0;
+  if (base !== undefined && base !== null && typeof x !== "string") throw new TypeError("int() can't convert non-string with explicit base");
   if (typeof x === "boolean") return x ? 1 : 0;
   if (typeof x === "number") {
     if (!isFinite(x)) throw new (isNaN(x) ? ValueError : OverflowError)(`cannot convert float ${x} to integer`);
@@ -583,8 +679,9 @@ export function int(x?: any, base?: any): any {
   }
   if (typeof x === "bigint") return norm(x);
   if (typeof x === "string") {
-    let s = x.trim().replace(/_/g, "");
+    let s = x.trim();
     let b = base == null ? 10 : Number(base);
+    if (!(b === 0 || (b >= 2 && b <= 36)) || !Number.isInteger(b)) throw new ValueError("int() base must be >= 2 and <= 36, or 0");
     let neg = false;
     if (s.startsWith("-")) (neg = true), (s = s.slice(1));
     else if (s.startsWith("+")) s = s.slice(1);
@@ -592,7 +689,14 @@ export function int(x?: any, base?: any): any {
     if (pre && (b === 0 || b === { x: 16, o: 8, b: 2 }[pre[1].toLowerCase() as "x"])) {
       b = { x: 16, o: 8, b: 2 }[pre[1].toLowerCase() as "x"];
       s = s.slice(2);
-    } else if (b === 0) b = 10;
+      if (s.startsWith("_")) s = s.slice(1);
+    } else if (b === 0) {
+      if (/^0+[1-9]/.test(s)) throw new ValueError(`invalid literal for int() with base 0: ${repr(x)}`);
+      b = 10;
+    }
+    // `_` is only allowed between two digits
+    if (/(^_|_$|__)/.test(s)) throw new ValueError(`invalid literal for int() with base ${base ?? 10}: ${repr(x)}`);
+    s = s.replace(/_/g, "");
     const digits = "0123456789abcdefghijklmnopqrstuvwxyz".slice(0, b);
     if (!s.length || ![...s.toLowerCase()].every((c) => digits.includes(c))) throw new ValueError(`invalid literal for int() with base ${base ?? 10}: ${repr(x)}`);
     let v = 0n;
@@ -607,13 +711,23 @@ export function int(x?: any, base?: any): any {
 export function float(x?: any): number {
   if (x === undefined) return 0;
   if (typeof x === "string") {
-    const s = x.trim().toLowerCase().replace(/_/g, "");
+    const raw = x.trim().toLowerCase();
+    if (/(^|[^0-9])_|_($|[^0-9])/.test(raw)) throw new ValueError(`could not convert string to float: ${repr(x)}`);
+    const s = raw.replace(/_/g, "");
     if (/^[+-]?(inf|infinity)$/.test(s)) return s.startsWith("-") ? -Infinity : Infinity;
     if (/^[+-]?nan$/.test(s)) return NaN;
     if (!/^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/.test(s)) throw new ValueError(`could not convert string to float: ${repr(x)}`);
     return parseFloat(s);
   }
-  return Number(x);
+  if (typeof x === "bigint") {
+    const f = Number(x);
+    if (!Number.isFinite(f)) throw new OverflowError("int too large to convert to float");
+    return f;
+  }
+  if (typeof x === "number") return x;
+  if (typeof x === "boolean") return x ? 1 : 0;
+  if (x && typeof x.__float__ === "function") return x.__float__();
+  throw new TypeError(`float() argument must be a string or a real number, not '${typeName(x)}'`);
 }
 export const bool = (x?: any) => truth(x);
 export const object = class PyObject {};
@@ -662,7 +776,12 @@ export function repr(x: any): string {
   if (x instanceof Map) return "{" + [...x].map(([k, v]) => repr(k) + ": " + repr(v)).join(", ") + "}";
   if (x instanceof Set) return x.size ? "{" + [...x].map(repr).join(", ") + "}" : "set()";
   if (x instanceof BaseException) return `${x.name}(${x.args.map(repr).join(", ")})`;
-  if (ArrayBuffer.isView(x)) return "b" + reprStr(String.fromCharCode(...(x as any)));
+  if (ArrayBuffer.isView(x)) {
+    const u = new Uint8Array((x as any).buffer, (x as any).byteOffset, (x as any).byteLength);
+    let o = "";
+    for (const c of u) o += c === 0x5c ? "\\\\" : c === 0x27 ? "\\'" : c === 10 ? "\\n" : c === 13 ? "\\r" : c === 9 ? "\\t" : c < 0x20 || c >= 0x7f ? "\\x" + c.toString(16).padStart(2, "0") : String.fromCharCode(c);
+    return "b'" + o + "'";
+  }
   if (x && typeof x.__repr__ === "function") return x.__repr__();
   return str(x);
 }
@@ -678,11 +797,18 @@ export function ord(c: string): number {
   if ([...c].length !== 1) throw new TypeError(`ord() expected a character, but string of length ${[...c].length} found`);
   return c.codePointAt(0)!;
 }
-export const bytes = (x?: any): Uint8Array => {
+export const bytes = (x?: any, encoding?: any): Uint8Array => {
   if (x === undefined) return new Uint8Array(0);
   if (typeof x === "number") return new Uint8Array(x);
-  if (typeof x === "string") return new TextEncoder().encode(x);
-  return Uint8Array.from(iter(x) as Iterable<number>, (v) => Number(v));
+  if (typeof x === "string") {
+    if (encoding === undefined) throw new TypeError("string argument without an encoding");
+    return new TextEncoder().encode(x);
+  }
+  return Uint8Array.from(iter(x) as Iterable<number>, (v) => {
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < 0 || n > 255) throw new ValueError("bytes must be in range(0, 256)");
+    return n;
+  });
 };
 export const bytearray = bytes;
 
@@ -692,9 +818,9 @@ export function isinstance(x: any, t: any): boolean {
   if (Array.isArray(t)) return t.some((y) => isinstance(x, y));
   switch (t) {
     case int:
-      return (typeof x === "number" && Number.isInteger(x)) || typeof x === "bigint";
+      return (typeof x === "number" && Number.isInteger(x)) || typeof x === "bigint" || typeof x === "boolean";
     case float:
-      return typeof x === "number";
+      return typeof x === "number" && !Number.isInteger(x);
     case bool:
       return typeof x === "boolean";
     case str:
@@ -722,6 +848,8 @@ export function isinstance(x: any, t: any): boolean {
 }
 export function issubclass(a: any, b: any): boolean {
   if (Array.isArray(b)) return b.some((y) => issubclass(a, y));
+  if (b === object) return true;
+  if (a === bool && b === int) return true;
   return a === b || (typeof a === "function" && a.prototype instanceof b);
 }
 export function type(x: any): any {
@@ -759,7 +887,10 @@ export function id(x: any): number {
   return ids.get(x)!;
 }
 export function hash(x: any): number {
-  if (typeof x === "number") return x | 0;
+  if (Array.isArray(x) || x instanceof Map || x instanceof Set) throw new TypeError(`unhashable type: '${typeName(x)}'`);
+  if (typeof x === "boolean") return x ? 1 : 0;
+  if (typeof x === "bigint") return Number(BigInt.asIntN(32, x));
+  if (typeof x === "number") return Number.isInteger(x) ? x | 0 : Math.trunc(x * 1000003) | 0;
   const s = str(x);
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
@@ -814,6 +945,7 @@ export const unichr = chr;
 export const basestring = str;
 export function reduce(f: any, it: any, ...init: any[]) {
   const a = Array.from(iter(it));
+  if (!init.length && !a.length) throw new TypeError("reduce() of empty iterable with no initial value");
   let acc = init.length ? init[0] : a.shift();
   for (const x of a) acc = f(acc, x);
   return acc;
@@ -826,16 +958,24 @@ class PyFile {
   closed = false;
   constructor(private path: string, private mode: string) {
     const bin = mode.includes("b");
-    if (mode.startsWith("r") || mode.includes("+")) {
+    if (mode.startsWith("r") || mode.startsWith("a") || (mode.includes("+") && !mode.startsWith("w"))) {
       try {
         this.buf = bin ? new Uint8Array(fs.readFileSync(path)) : fs.readFileSync(path, "utf8");
       } catch (e: any) {
-        throw new FileNotFoundError(`[Errno 2] No such file or directory: ${repr(path)}`);
+        if (mode.startsWith("a")) this.buf = bin ? new Uint8Array(0) : "";
+        else if (e?.code === "EACCES" || e?.code === "EPERM") throw new PermissionError(`[Errno 13] Permission denied: ${repr(path)}`);
+        else if (e?.code === "EISDIR") throw new OSError(`[Errno 21] Is a directory: ${repr(path)}`);
+        else throw new FileNotFoundError(`[Errno 2] No such file or directory: ${repr(path)}`);
       }
     }
+    if (mode.startsWith("w") && mode.includes("+")) this.buf = bin ? new Uint8Array(0) : "";
     if (mode.startsWith("w")) fs.writeFileSync(path, bin ? new Uint8Array(0) : "");
   }
+  private check() {
+    if (this.closed) throw new ValueError("I/O operation on closed file");
+  }
   read(n?: number): any {
+    this.check();
     const b = this.buf as any;
     if (b == null) throw new OSError("not readable");
     const e = n == null || n < 0 ? b.length : Math.min(b.length, this.pos + n);
@@ -843,26 +983,43 @@ class PyFile {
     this.pos = e;
     return r;
   }
-  readline(): string {
-    const b = this.buf as string;
-    if (this.pos >= b.length) return "";
-    const i = b.indexOf("\n", this.pos);
+  readline(): any {
+    this.check();
+    const b = this.buf as any;
+    if (b == null) throw new OSError("not readable");
+    if (this.pos >= b.length) return b instanceof Uint8Array ? new Uint8Array(0) : "";
+    const i = b instanceof Uint8Array ? b.indexOf(10, this.pos) : b.indexOf("\n", this.pos);
     const e = i < 0 ? b.length : i + 1;
     const r = b.slice(this.pos, e);
     this.pos = e;
     return r;
   }
-  readlines(): string[] {
-    const r: string[] = [];
-    for (let l = this.readline(); l; l = this.readline()) r.push(l);
+  readlines(): any[] {
+    const r: any[] = [];
+    for (let l = this.readline(); l.length; l = this.readline()) r.push(l);
     return r;
   }
   *[Symbol.iterator]() {
-    for (let l = this.readline(); l; l = this.readline()) yield l;
+    for (let l = this.readline(); l.length; l = this.readline()) yield l;
   }
   write(s: any): number {
+    this.check();
     if (this.mode.startsWith("r") && !this.mode.includes("+")) throw new OSError("not writable");
-    fs.appendFileSync(this.path, typeof s === "string" ? s : Buffer.from(s));
+    const data = typeof s === "string" ? Buffer.from(s, "utf8") : Buffer.from(s);
+    if (this.mode.startsWith("a")) fs.appendFileSync(this.path, data);
+    else {
+      // write at the current position (r+, w, w+), keeping the read buffer in sync
+      const fd = fs.openSync(this.path, fs.existsSync(this.path) ? "r+" : "w+");
+      try {
+        fs.writeSync(fd, data, 0, data.length, this.pos);
+      } finally {
+        fs.closeSync(fd);
+      }
+      this.pos += typeof s === "string" ? s.length : data.length;
+    }
+    if (this.buf != null) {
+      this.buf = this.mode.includes("b") ? new Uint8Array(fs.readFileSync(this.path)) : fs.readFileSync(this.path, "utf8");
+    }
     return typeof s === "string" ? s.length : s.length;
   }
   writelines(l: any) {
@@ -934,6 +1091,16 @@ function stripChars(s: string, chars: string | null | undefined, l: boolean, r: 
   if (r) while (b > a && set.has(cs[b - 1])) b--;
   return cs.slice(a, b).join("");
 }
+/** Python-style `s[start:end]` normalization (negative bounds, clamping). */
+function sliceStr(o: string, s?: any, e?: any): string {
+  const n = o.length;
+  const fix = (v: any, d: number) => (v == null ? d : Math.min(Math.max(v < 0 ? v + n : v, 0), n));
+  return o.slice(fix(s, 0), fix(e, n));
+}
+function bounds(n: number, s?: any, e?: any): [number, number] {
+  const fix = (v: any, d: number) => (v == null ? d : Math.min(Math.max(v < 0 ? v + n : v, 0), n));
+  return [fix(s, 0), fix(e, n)];
+}
 export const m = {
   join(o: any, it?: any) {
     if (typeof o !== "string") return native(o, "join", [it]);
@@ -946,20 +1113,26 @@ export const m = {
   },
   replace(o: any, a?: any, b?: any, n?: any) {
     if (typeof o !== "string") return native(o, "replace", [a, b, n]);
+    if (a === "") {
+      // Python inserts `b` before every character and at the end, at most n times
+      const cs = [...o];
+      const lim = n == null || n < 0 ? cs.length + 1 : n;
+      let out = "";
+      for (let i = 0; i <= cs.length; i++) out += (i < lim ? b : "") + (cs[i] ?? "");
+      return out;
+    }
     if (n == null || n < 0) return o.split(a).join(b);
-    let out = o;
     let idx = 0;
     let c = 0;
     let res = "";
     while (c < n) {
-      const i = out.indexOf(a, idx);
+      const i = o.indexOf(a, idx);
       if (i < 0) break;
-      res += out.slice(idx, i) + b;
+      res += o.slice(idx, i) + b;
       idx = i + a.length;
       c++;
-      if (a.length === 0) break;
     }
-    return res + out.slice(idx);
+    return res + o.slice(idx);
   },
   split(o: any, ...a: any[]) {
     if (typeof o !== "string") return native(o, "split", a);
@@ -999,11 +1172,31 @@ export const m = {
     const [pos, k] = splitKw(a);
     const sep = pos[0] ?? k.sep ?? null;
     const max = pos[1] ?? k.maxsplit ?? -1;
-    if (max < 0) return m.split(o, sep);
-    const parts: string[] = sep === null ? m.split(o) : o.split(sep);
-    if (parts.length <= max + 1) return parts;
-    const head = parts.slice(0, parts.length - max).join(sep ?? " ");
-    return [head, ...parts.slice(parts.length - max)];
+    if (sep === "") throw new ValueError("empty separator");
+    if (max < 0) return sep === null ? m.split(o) : m.split(o, sep);
+    // scan from the right so spacing and leading whitespace are preserved
+    const out: string[] = [];
+    let rest = o;
+    if (sep === null) {
+      rest = rest.replace(/[\s\u0085]+$/, "");
+      while (out.length < max) {
+        const mm = /[\s\u0085]+([^\s\u0085]+)$/.exec(rest);
+        if (!mm) break;
+        out.unshift(mm[1]!);
+        rest = rest.slice(0, mm.index);
+      }
+      if (out.length === max) out.unshift(rest);
+      else if (rest.trim() !== "") out.unshift(rest.replace(/^[\s\u0085]+/, ""));
+      return out;
+    }
+    while (out.length < max) {
+      const i = rest.lastIndexOf(sep);
+      if (i < 0) break;
+      out.unshift(rest.slice(i + sep.length));
+      rest = rest.slice(0, i);
+    }
+    out.unshift(rest);
+    return out;
   },
   format(o: any, ...a: any[]) {
     if (typeof o !== "string") return native(o, "format", a);
@@ -1015,14 +1208,15 @@ export const m = {
   rstrip: (o: any, c?: any) => (typeof o === "string" ? stripChars(o, c, false, true) : native(o, "rstrip", [c])),
   upper: (o: any) => (typeof o === "string" ? o.toUpperCase() : native(o, "upper", [])),
   lower: (o: any) => (typeof o === "string" ? o.toLowerCase() : native(o, "lower", [])),
-  startswith(o: any, p: any, s?: any) {
-    if (typeof o !== "string") return native(o, "startswith", [p, s]);
-    const t = s ? o.slice(s) : o;
+  startswith(o: any, p: any, s?: any, e?: any) {
+    if (typeof o !== "string") return native(o, "startswith", [p, s, e]);
+    const t = sliceStr(o, s, e);
     return Array.isArray(p) ? p.some((x) => t.startsWith(x)) : t.startsWith(p);
   },
-  endswith(o: any, p: any) {
-    if (typeof o !== "string") return native(o, "endswith", [p]);
-    return Array.isArray(p) ? p.some((x) => o.endsWith(x)) : o.endsWith(p);
+  endswith(o: any, p: any, s?: any, e?: any) {
+    if (typeof o !== "string") return native(o, "endswith", [p, s, e]);
+    const t = sliceStr(o, s, e);
+    return Array.isArray(p) ? p.some((x) => t.endsWith(x)) : t.endsWith(p);
   },
   append(o: any, x: any) {
     if (Array.isArray(o)) return void o.push(x);
@@ -1062,6 +1256,7 @@ export const m = {
       throw new KeyError(repr(a[0]));
     }
     if (o instanceof Set) {
+      if (!o.size) throw new KeyError("pop from an empty set");
       const v = o.values().next().value;
       o.delete(v);
       return v;
@@ -1070,7 +1265,8 @@ export const m = {
   },
   get(o: any, k: any, d?: any) {
     if (o instanceof Map) return o.has(k) ? o.get(k) : d ?? null;
-    return native(o, "get", [k]) ?? d ?? null;
+    const v = native(o, "get", [k]);
+    return v === undefined ? d ?? null : v;
   },
   setdefault(o: any, k: any, d: any = null) {
     if (o instanceof Map) {
@@ -1082,12 +1278,13 @@ export const m = {
   update(o: any, ...a: any[]) {
     if (o instanceof Map) {
       const [pos, k] = splitKw(a);
+      if (pos.length > 1) throw new TypeError(`update expected at most 1 argument, got ${pos.length}`);
       if (pos.length) for (const [kk, v] of pos[0] instanceof Map ? pos[0] : iter(pos[0])) o.set(kk, v);
       for (const [kk, v] of Object.entries(k)) o.set(kk, v);
       return;
     }
     if (o instanceof Set) {
-      for (const x of a) for (const y of iter(x)) o.add(y);
+      for (const x of stripKw(a)) for (const y of iter(x)) o.add(y);
       return;
     }
     return native(o, "update", a);
@@ -1110,24 +1307,32 @@ export const m = {
   },
   index(o: any, x: any, ...r: any[]) {
     if (Array.isArray(o)) {
-      const i = o.findIndex((y) => eq(y, x));
-      if (i < 0) throw new ValueError(`${repr(x)} is not in list`);
-      return i;
+      const [s, e] = bounds(o.length, r[0], r[1]);
+      for (let i = s; i < e; i++) if (eq(o[i], x)) return i;
+      throw new ValueError(`${repr(x)} is not in list`);
     }
     if (typeof o === "string") {
-      const i = o.indexOf(x, r[0]);
+      const [s, e] = bounds(o.length, r[0], r[1]);
+      const i = o.slice(0, e).indexOf(x, s);
       if (i < 0) throw new ValueError("substring not found");
       return i;
     }
     return native(o, "index", [x, ...r]);
   },
-  find(o: any, x: any, s?: any) {
-    if (typeof o === "string") return o.indexOf(x, s);
-    return native(o, "find", [x, s]);
+  find(o: any, x: any, s?: any, e?: any) {
+    if (typeof o === "string") {
+      const [a, b] = bounds(o.length, s, e);
+      return o.slice(0, b).indexOf(x, a);
+    }
+    return native(o, "find", [x, s, e]);
   },
-  rfind(o: any, x: any) {
-    if (typeof o === "string") return o.lastIndexOf(x);
-    return native(o, "rfind", [x]);
+  rfind(o: any, x: any, s?: any, e?: any) {
+    if (typeof o === "string") {
+      const [a, b] = bounds(o.length, s, e);
+      const i = o.slice(0, b).lastIndexOf(x);
+      return i >= a ? i : -1;
+    }
+    return native(o, "rfind", [x, s, e]);
   },
   count(o: any, x: any) {
     if (Array.isArray(o)) return o.filter((y) => eq(y, x)).length;
@@ -1144,10 +1349,10 @@ export const m = {
   },
   encode: (o: any, enc?: any) => (typeof o === "string" ? new TextEncoder().encode(o) : native(o, "encode", [enc])),
   decode: (o: any, enc?: any) => (o instanceof Uint8Array ? new TextDecoder(enc ?? "utf-8").decode(o) : native(o, "decode", [enc])),
-  isdigit: (o: any) => (typeof o === "string" ? /^\d+$/.test(o) : native(o, "isdigit", [])),
+  isdigit: (o: any) => (typeof o === "string" ? /^[\p{Nd}\p{No}]+$/u.test(o) : native(o, "isdigit", [])),
   isalpha: (o: any) => (typeof o === "string" ? /^\p{L}+$/u.test(o) : native(o, "isalpha", [])),
   isalnum: (o: any) => (typeof o === "string" ? /^[\p{L}\p{N}]+$/u.test(o) : native(o, "isalnum", [])),
-  isspace: (o: any) => (typeof o === "string" ? /^\s+$/.test(o) : native(o, "isspace", [])),
+  isspace: (o: any) => (typeof o === "string" ? /^[\s\x1c-\x1f\x85]+$/.test(o) : native(o, "isspace", [])),
   isupper: (o: any) => (typeof o === "string" ? o !== o.toLowerCase() && o === o.toUpperCase() : native(o, "isupper", [])),
   islower: (o: any) => (typeof o === "string" ? o !== o.toUpperCase() && o === o.toLowerCase() : native(o, "islower", [])),
   zfill(o: any, w: number) {
@@ -1165,11 +1370,41 @@ export const m = {
   },
   title: (o: any) => (typeof o === "string" ? o.toLowerCase().replace(/(^|[^\p{L}])(\p{L})/gu, (_a, p, c) => p + c.toUpperCase()) : native(o, "title", [])),
   capitalize: (o: any) => (typeof o === "string" ? o.charAt(0).toUpperCase() + o.slice(1).toLowerCase() : native(o, "capitalize", [])),
-  splitlines: (o: any, keep = false) => (typeof o === "string" ? o.split(/(?<=\r\n|\n|\r)/).filter((x) => x.length).map((x) => (keep ? x : x.replace(/\r?\n|\r$/, ""))) : native(o, "splitlines", [keep])),
+  splitlines(o: any, ...a: any[]) {
+    if (typeof o !== "string") return native(o, "splitlines", a);
+    const [pos, k] = splitKw(a);
+    const keep = truth(pos[0] ?? k.keepends ?? false);
+    const out: string[] = [];
+    for (const mm of o.matchAll(/([^\n\r\v\f\x1c-\x1e\x85\u2028\u2029]*)(\r\n|[\n\r\v\f\x1c-\x1e\x85\u2028\u2029]|$)/g)) {
+      if (mm[0] === "") break;
+      out.push(keep ? mm[0] : mm[1]!);
+    }
+    return out;
+  },
   partition(o: any, sep: string) {
     if (typeof o !== "string") return native(o, "partition", [sep]);
+    if (sep === "") throw new ValueError("empty separator");
     const i = o.indexOf(sep);
     return i < 0 ? [o, "", ""] : [o.slice(0, i), sep, o.slice(i + sep.length)];
+  },
+  rpartition(o: any, sep: string) {
+    if (typeof o !== "string") return native(o, "rpartition", [sep]);
+    if (sep === "") throw new ValueError("empty separator");
+    const i = o.lastIndexOf(sep);
+    return i < 0 ? ["", "", o] : [o.slice(0, i), sep, o.slice(i + sep.length)];
+  },
+  removeprefix: (o: any, p: string) => (typeof o === "string" ? (o.startsWith(p) ? o.slice(p.length) : o) : native(o, "removeprefix", [p])),
+  removesuffix: (o: any, p: string) => (typeof o === "string" ? (p && o.endsWith(p) ? o.slice(0, o.length - p.length) : o) : native(o, "removesuffix", [p])),
+  swapcase: (o: any) => (typeof o === "string" ? [...o].map((c) => (c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase())).join("") : native(o, "swapcase", [])),
+  popitem(o: any) {
+    if (o instanceof Map) {
+      if (!o.size) throw new KeyError("popitem(): dictionary is empty");
+      const k = [...o.keys()].pop();
+      const v = o.get(k);
+      o.delete(k);
+      return [k, v];
+    }
+    return native(o, "popitem", []);
   },
 };
 

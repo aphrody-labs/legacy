@@ -31,7 +31,8 @@ pub const METHODS: &[&str] = &[
     "startswith", "endswith", "append", "extend", "items", "sort", "pop", "get", "find", "rfind",
     "count", "index", "insert", "remove", "update", "setdefault", "copy", "clear", "encode", "decode",
     "isdigit", "isalpha", "isalnum", "isspace", "isupper", "islower", "zfill", "ljust", "rjust",
-    "center", "title", "capitalize", "splitlines", "partition", "discard",
+    "center", "title", "capitalize", "splitlines", "partition", "discard", "rpartition", "removeprefix",
+    "removesuffix", "swapcase", "popitem",
 ];
 
 /// Top-level packages that live in the JVM (resolved through the Ghidra java proxy).
@@ -44,18 +45,13 @@ pub const JAVA_ROOTS: &[&str] = &[
 pub const STDLIB: &[&str] = &["math", "json", "os", "sys", "re", "time", "string", "struct", "random"];
 
 /// Modules that may be silently dropped.
-pub const IGNORED_MODULES: &[&str] = &["__future__", "typing", "__main__", "jarray", "exceptions"];
+pub const IGNORED_MODULES: &[&str] = &["__future__", "typing", "__main__", "exceptions"];
 
 /// Names importable from `@aphrody/ghidra/script`: the fields of `packages/ghidra/src/script.ts` plus
-
 /// every async function of `packages/ghidra/src/script.generated.ts` (GhidraScript + FlatProgramAPI,
-
 /// generated from the Java sources by `packages/ghidra/scripts/gen-script-exports.ts`).
-
 pub const GHIDRA_FLAT: &[&str] = &[
-
     "currentProgram", "currentAddress", "currentLocation", "currentSelection", "currentHighlight",
-
     "monitor", "state", "sourceFile",
     "addEntryPoint", "addInstructionXref", "analyze", "analyzeAll", "analyzeChanges", "askAddress", 
     "askBytes", "askChoice", "askChoices", "askDirectory", "askDomainFile", "askDouble", "askFile", 
@@ -98,15 +94,9 @@ pub const GHIDRA_FLAT: &[&str] = &[
     "setPreComment", "setReferencePrimary", "setRepeatableComment", "setReusePreviousChoices", 
     "setScriptArgs", "setShort", "setToolStatusMessage", "start", "toAddr", 
 ];
-
 /// Generic names that are in the generated script exports but must not capture an unbound Python name.
-
-pub const FLAT_AMBIGUOUS: &[&str] = &["start", "end", "set", "show", "execute", "cleanup", "print", "toString", "analyze"];
-
-
+pub const FLAT_AMBIGUOUS: &[&str] = &["start", "end", "set", "print", "analyze", "run", "find"];
 
 pub fn is_flat(id: &str) -> bool {
-
     GHIDRA_FLAT.contains(&id) && !FLAT_AMBIGUOUS.contains(&id)
-
 }
