@@ -50,6 +50,15 @@ Exit status 1 when the input does not parse or an error diagnostic exists (the `
 Errors (unsupported): `match`, `except*`, decorators other than `staticmethod`/`classmethod`/`property`/`setter`, class decorators, multiple inheritance, metaclasses, complex literals, star imports, unmapped modules, `**` in dict comprehension, matrix multiplication.
 Warnings: unresolved names, class attributes emitted as `static`, eager generator expressions, keyword arguments to unresolved callees, Python 2 rewrites.
 
+## Conversion rate on aphrody-labs/ghidra (aa800ba9, all 146 `*.py` of the repo)
+
+| Set | Files | Transpiled, no diagnostic | No error diagnostic | Valid TS (`bun build --no-bundle`) | Executed under bun-ghidra |
+|---|---|---|---|---|---|
+| `*/ghidra_scripts/*.py` (Jython and PyGhidra scripts) | 25 | 3 | 21 | 25 | 0 (pending) |
+| whole repo (adds PyGhidra library, debugger agents, IDA plugins) | 146 | 15 | 36 | 144 (2 inputs do not parse) | 0 (pending) |
+
+Most remaining diagnostics on the full set are library code (decorators, third-party modules such as `comtypes`, `lldb`, class bodies). Run under bun-ghidra is pending: `@aphrody/ghidra/java` and `@aphrody/ghidra/java/*` are not exported by `packages/ghidra` yet, and a headless Ghidra run on fr2 spends minutes in import and analysis per script. Emitted TS from plain Python is executed end to end by `packages/py2bun/test/wrapper.test.ts`.
+
 ## Tests
 
 ```sh

@@ -20,6 +20,14 @@ fn except_comma_rewritten() {
 }
 
 #[test]
+fn one_line_compound_and_continuation() {
+    let o = transpile("x = 1\nif x != 0: print \"v\" + str(x)\nprint \"a\", x, \\\n    \"b\"\nprint 2\n");
+    assert!(!o.ts.is_empty(), "{:?}", o.diagnostics);
+    assert!(o.ts.contains("__py.add(\"v\", __py.str(x))"));
+    assert!(o.ts.contains("__py.print(\"a\", x,"));
+}
+
+#[test]
 fn genuine_syntax_error_still_fails() {
     assert!(transpile("x = = 1\n").ts.is_empty());
 }
