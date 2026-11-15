@@ -1,6 +1,6 @@
 // sh/bash conformance cases. Each case: a script, the expected output (exact stdout, normalized line endings).
 // Groupes : `claude` = ce que Claude Code exige (preuve : binaire claude.exe 2.1.318, voir
-// apps/nt/docs/research/shell-replacement.md), `posix`, `bash`, `windows`.
+// docs/research/shell-replacement.md), `posix`, `bash`, `windows`.
 export type Case = {
   id: string;
   group: "claude" | "posix" | "bash" | "windows";

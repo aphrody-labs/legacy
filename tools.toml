@@ -910,7 +910,7 @@ package = "apify-cli"
 # Shell: niubash replaces Git Bash and pwsh (native Rust bash 5.3, MSVC git, no MSYS).
 # Reference installation: configuration/shell.dsc.winget (winget configure); this entry
 # pins the same version and verifies the binary on the PATH. Proofs: nt repository,
-# apps/nt/docs/research/shell-replacement.md (test Claude Code de bout en bout, imports PE).
+# docs/research/shell-replacement.md (test Claude Code de bout en bout, imports PE).
 # First installation only: the niu.exe in service comes from the aphrody-labs forks (niubash + rubash)
 # built by prd or by the fork's CI, then `just unixwin-install`.
 # `bin` is not a {version} template: update it together with `version`.

@@ -20,7 +20,7 @@ Do not copy versions from this file. The last sourced snapshot (.NET, D3D12 Agil
 
 ## Rust in Windows
 
-Investigation: `apps/nt/docs/research/rust-in-windows.md`.
+Investigation: `docs/research/rust-in-windows.md`.
 
 ## Plugins
 
