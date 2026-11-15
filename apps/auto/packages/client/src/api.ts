@@ -1,6 +1,7 @@
-// Client typé de l'API `/v1`. Dans le navigateur : même origine, cookie de session HttpOnly envoyé par le
-// navigateur ; toute mutation part en `application/json` (exigé par l'anti-CSRF de l'API).
+// Typed client of the `/v1` API. In the browser: same origin, HttpOnly session cookie sent by the
+// browser; every mutation goes out as `application/json` (required by the API's anti-CSRF).
 import type { Categorie, Declencheur, Definition, Etape, Modele } from "@auto/automate";
+import { traducteur } from "./i18n";
 import type { Document, Employe, Ligne, Partie, Statut, Totaux, Type, TypeAbsence } from "@auto/domain";
 import type {
   Absence,
@@ -105,7 +106,7 @@ export interface Moi {
 
 export type DocumentApi = LigneDocument & { totaux: Totaux };
 
-/** Brouillon envoyé à l'API : l'émetteur et la franchise sont imposés par le serveur. */
+/** Draft sent to the API: the issuer and the VAT exemption are imposed by the server. */
 export type BrouillonApi = Omit<Document, "emetteur" | "client"> & {
   client?: Partie;
   clientId?: string | null;
@@ -155,7 +156,7 @@ export type { Definition, Etape, Modele };
 
 export type StatutExecution = "en_cours" | "succes" | "erreur";
 
-/** Workflow tel que listé : sans sa définition. */
+/** Workflow as listed: without its definition. */
 export interface ResumeAutomatisation {
   id: string;
   nom: string;
@@ -184,7 +185,7 @@ export interface Execution {
 
 export type ResumeExecution = Omit<Execution, "etapes">;
 
-/** Version précédente d'un workflow (50 au plus, la plus récente d'abord). */
+/** Previous version of a workflow (50 at most, most recent first). */
 export interface VersionAutomatisation {
   numero: number;
   nom: string;
@@ -194,7 +195,7 @@ export interface VersionAutomatisation {
   createdAt: string;
 }
 
-/** Schéma JSON (draft 2020-12) des paramètres d'un type de nœud, tel que le produit Zod. */
+/** JSON Schema (draft 2020-12) of the parameters of a node type, as Zod produces it. */
 export interface SchemaJson {
   type?: string | string[];
   enum?: unknown[];
@@ -214,7 +215,7 @@ export interface SchemaJson {
   description?: string;
 }
 
-/** Entrée du catalogue des nœuds (`catalogueJson()` du moteur). */
+/** Entry of the node catalog (`catalogueJson()` of the engine). */
 export interface TypeNoeudApi {
   type: string;
   libelle: string;
@@ -243,10 +244,10 @@ export class ErreurApi extends Error {
 }
 
 export interface OptionsClient {
-  /** Origine de l'API (vide dans le navigateur : même origine). */
+  /** API origin (empty in the browser: same origin). */
   base?: string;
   fetch?: typeof fetch;
-  /** Jeton Bearer (tests, intégrations) ; le navigateur utilise le cookie. */
+  /** Bearer token (tests, integrations); the browser uses the cookie. */
   jeton?: string;
 }
 export interface ConnexionPa {
@@ -288,7 +289,7 @@ export function clientApi(o: OptionsClient = {}) {
         body: methode === "GET" ? undefined : JSON.stringify(corps ?? {}),
       });
     } catch {
-      throw new ErreurApi("Serveur injoignable : vérifiez votre connexion.", 0);
+      throw new ErreurApi(traducteur().t("api.unreachable"), 0);
     }
     const texte = await res.text();
     let json: unknown = null;
@@ -314,7 +315,7 @@ export function clientApi(o: OptionsClient = {}) {
   };
 
   return {
-    /** URL d'un fichier servi par l'API (PDF, XML, exports) : ouverte ou téléchargée par le navigateur. */
+    /** URL of a file served by the API (PDF, XML, exports): opened or downloaded by the browser. */
     url: (chemin: string) => `${base}${chemin}`,
     connexionPa: async () => {
       try {
@@ -345,8 +346,8 @@ export function clientApi(o: OptionsClient = {}) {
     modifierDocument: (id: string, d: BrouillonApi) => put<DocumentApi>(`/v1/documents/${id}`, d),
     supprimerDocument: (id: string) => appel<null>("DELETE", `/v1/documents/${id}`),
     emettre: (id: string) => post<DocumentApi>(`/v1/documents/${id}/emettre`),
-    /** Lien public d'un devis émis : le client l'accepte ou le refuse sans compte (30 jours). */
-    /** Lien de paiement en ligne d'une facture émise (paiement par carte sur le compte Stripe de l'entreprise). */
+    /** Public link of an issued quote: the customer accepts or refuses it without an account (30 days). */
+    /** Online payment link of an issued invoice (card payment on the company's Stripe account). */
     lienPaiement: (id: string) => post<{ url: string; expire: string }>(`/v1/documents/${id}/lien-paiement`, {}),
     encaissement: () =>
       get<{ actif: boolean; fournisseur: string | null; apercu: string | null }>("/v1/parametres/encaissement"),
@@ -427,11 +428,11 @@ export function clientApi(o: OptionsClient = {}) {
         });
       } catch (e) {
         if (signal?.aborted) throw e;
-        throw new ErreurApi("Serveur injoignable : vérifiez votre connexion puis reprenez l’import.", 0);
+        throw new ErreurApi(traducteur().t("api.import.unreachable"), 0);
       }
       const resultat = await res.json().catch(() => null);
-      if (!res.ok) throw new ErreurApi(resultat?.erreur ?? `Import refusé (${res.status})`, res.status);
-      if (!resultat?.id) throw new ErreurApi("Réponse d’import incomplète. Réessayez le fichier.", 502);
+      if (!res.ok) throw new ErreurApi(resultat?.erreur ?? traducteur().t("api.import.refused", { status: res.status }), res.status);
+      if (!resultat?.id) throw new ErreurApi(traducteur().t("api.import.incomplete"), 502);
       return resultat;
     },
     devisRecus: () => get<DevisRecu[]>("/v1/devis-recus"),
@@ -483,7 +484,7 @@ export function clientApi(o: OptionsClient = {}) {
     importer: (cible: "clients" | "produits", fichier: string, correspondance: Record<string, number>, entete = 0) =>
       post<ResultatImport>(`/v1/imports/${cible}`, { fichier, correspondance, entete }),
 
-    /** URL d'un export comptable (journal des ventes, créances, FEC), téléchargé par le navigateur. */
+    /** URL of an accounting export (sales journal, receivables, FEC), downloaded by the browser. */
     urlExport: (e: "ventes.xlsx" | "creances.xlsx" | "fec", p: { du?: string; au?: string } = {}) =>
       `${base}/v1/exports/${e}${qs(e === "creances.xlsx" ? { au: p.au } : p)}`,
 
@@ -518,7 +519,7 @@ export function clientApi(o: OptionsClient = {}) {
     recues: (statut?: Recue["statut"]) => get<Recue[]>(`/v1/factures-recues${qs({ statut })}`),
     deciderRecue: (id: string, statut: "validee" | "rejetee", motif?: string) =>
       post<Recue>(`/v1/factures-recues/${id}/decision`, { statut, motif }),
-    /** URL du fichier d'origine (PDF, Factur-X ou XML), ouvert dans le navigateur. */
+    /** URL of the original file (PDF, Factur-X or XML), opened in the browser. */
     urlFichierRecu: (id: string) => `${base}/v1/factures-recues/${id}/fichier`,
 
     automatisations: () => get<ResumeAutomatisation[]>("/v1/automatisations"),
@@ -530,10 +531,10 @@ export function clientApi(o: OptionsClient = {}) {
       a: Partial<{ nom: string; description: string; definition: Definition; actif: boolean }>,
     ) => put<Automatisation>(`/v1/automatisations/${id}`, a),
     supprimerAutomatisation: (id: string) => appel<null>("DELETE", `/v1/automatisations/${id}`),
-    /** Exécution synchrone d'un workflow enregistré. */
+    /** Synchronous run of a saved workflow. */
     executerAutomatisation: (id: string, donnees?: Record<string, unknown>) =>
       post<Execution>(`/v1/automatisations/${id}/executer`, { donnees }),
-    /** Essai d'une définition sans l'enregistrer (bouton « Tester » de l'éditeur). */
+    /** Trial of a definition without saving it (the editor's "Test" button). */
     essaiAutomatisation: (definition: Definition, donnees?: Record<string, unknown>) =>
       post<Execution>("/v1/automatisations/essai", { definition, donnees }),
     executionsAutomatisation: (id: string) => get<ResumeExecution[]>(`/v1/automatisations/${id}/executions`),
@@ -544,13 +545,13 @@ export function clientApi(o: OptionsClient = {}) {
     webhookAutomatisation: (id: string) => get<{ url: string }>(`/v1/automatisations/${id}/webhook`),
     catalogueAutomatisations: () => get<TypeNoeudApi[]>("/v1/automatisations/catalogue"),
     modelesAutomatisations: () => get<Modele[]>("/v1/automatisations/modeles"),
-    /** Conversion d'un export JSON de n8n en définition auto (rien n'est enregistré). */
+    /** Conversion of an n8n JSON export into an auto definition (nothing is saved). */
     importerN8n: (workflow: unknown) =>
       post<{
         nom: string;
         definition: Definition;
         avertissements: string[];
-        /** Un workflow par déclencheur n8n supplémentaire. */
+        /** One workflow per additional n8n trigger. */
         autres: { nom: string; definition: Definition }[];
       }>("/v1/automatisations/importer-n8n", {
         workflow,
@@ -564,7 +565,7 @@ export function clientApi(o: OptionsClient = {}) {
 
 export type ClientApi = ReturnType<typeof clientApi>;
 
-/** Client du navigateur (même origine). */
+/** Browser client (same origin). */
 export const api = clientApi();
 
 export type { Ligne };

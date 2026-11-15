@@ -7,7 +7,7 @@ const t = totaux([
 ]);
 const client = { nom: "Société Durand", siret: "73282932000074" };
 
-test("vente équilibrée, TVA par taux, avoir inversé, devis ignoré", () => {
+test("balanced sale, VAT per rate, reversed credit note, quote ignored", () => {
   const v = ecritureVente({ type: "facture", numero: "F-2026-0001", date: "2026-10-01", client, totaux: t });
   expect(v.map((l) => [l.compteNum, l.compteLib, l.debitCents, l.creditCents])).toEqual([
     ["411000", "Clients", 17275, 0],
@@ -24,7 +24,7 @@ test("vente équilibrée, TVA par taux, avoir inversé, devis ignoré", () => {
   expect(compteClient("Société Durand")).toBe("CSOCIETEDU");
 });
 
-test("FEC : 18 champs, dates AAAAMMJJ, virgule décimale, tri, équilibre exigé", () => {
+test("FEC: 18 fields, YYYYMMDD dates, decimal comma, sorting, balance required", () => {
   const lignes = [
     ...ecritureEncaissement({
       numero: "BQ-0001",

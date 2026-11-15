@@ -1,4 +1,4 @@
-// Abonnement SaaS : plans, quotas, compteurs et Stripe (REST par fetch).
+// SaaS subscription: plans, quotas, counters and Stripe (REST via fetch).
 export * from "./plans";
 export * from "./quotas";
 export * from "./stripe";

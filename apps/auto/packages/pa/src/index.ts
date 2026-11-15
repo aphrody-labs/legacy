@@ -1,4 +1,4 @@
-// Connecteurs de plateformes agréées (PA) : contrat `Plateforme`, adaptateurs mock et B2Brouter.
+// Approved platform (PA) connectors: `Plateforme` contract, mock and B2Brouter adapters.
 import { b2brouter, type IdentifiantsB2brouter, type OptionsB2brouter } from "./b2brouter";
 import { mock, type IdentifiantsMock } from "./mock";
 import { ErreurPa, type NomPlateforme, type Plateforme } from "./types";
@@ -23,7 +23,7 @@ export interface Options {
   horloge?: () => Date;
 }
 
-/** Adaptateur d'une PA à partir des identifiants déchiffrés du tenant. */
+/** Adapter of a PA from the tenant's decrypted credentials. */
 export function plateforme(nom: NomPlateforme, ids: Identifiants, o: Options = {}): Plateforme {
   switch (nom) {
     case "mock":

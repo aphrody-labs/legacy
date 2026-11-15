@@ -1,11 +1,11 @@
-// Proxy same-origin vers l'API (`/v1`, Better Auth, MCP), partagé par le front et la console opérateur.
+// Same-origin proxy to the API (`/v1`, Better Auth, MCP), shared by the front end and the operator console.
 
-/** En-têtes propres à un saut HTTP : jamais retransmis par le proxy. */
+/** Hop-by-hop HTTP headers: never forwarded by the proxy. */
 const SAUT = ["connection", "keep-alive", "transfer-encoding", "upgrade", "host", "content-length"];
 
 /**
- * Proxy vers l'API : même origine pour le navigateur, donc le cookie `auto.session_token` (HttpOnly, Secure,
- * SameSite=Lax) et l'anti-CSRF par `Content-Type` fonctionnent sans CORS.
+ * Proxy to the API: same origin for the browser, so the `auto.session_token` cookie (HttpOnly, Secure,
+ * SameSite=Lax) and `Content-Type` anti-CSRF work without CORS.
  */
 export function proxifier(api: string | URL) {
   const base = new URL(api);
@@ -15,7 +15,7 @@ export function proxifier(api: string | URL) {
     const entree = new Headers(req.headers);
     for (const h of SAUT) entree.delete(h);
     entree.delete("accept-encoding");
-    // Origine publique vue par le navigateur : l'API s'en sert pour les liens qu'elle fabrique (devis, paiement).
+    // Public origin as seen by the browser: the API uses it for the links it builds (quote, payment).
     entree.set("x-forwarded-host", u.host);
     entree.set("x-forwarded-proto", u.protocol.replace(":", ""));
     const corps = req.method === "GET" || req.method === "HEAD" ? undefined : await req.arrayBuffer();

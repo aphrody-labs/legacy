@@ -1,6 +1,6 @@
-// Adaptateur `mock` : PA simulée en mémoire, déterministe (identifiants séquentiels par compte,
-// horloge injectable). Sert au dev et aux tests ; `bacMock` pilote la PA comme le ferait l'acheteur
-// ou l'administration (statuts, factures entrantes) et produit les webhooks signés correspondants.
+// `mock` adapter: in-memory simulated PA, deterministic (sequential ids per account,
+// injectable clock). Used for dev and tests; `bacMock` drives the PA as the buyer
+// or the tax authority would (statuses, incoming invoices) and produces the matching signed webhooks.
 import { egal, hmac, sha256 } from "./chiffrement";
 import {
   estStatut,
@@ -41,7 +41,7 @@ function compte(id: string): Compte {
 
 const prochain = (c: Compte, prefixe: string) => `${prefixe}-${String(++c.seq).padStart(6, "0")}`;
 
-/** Clé de Luhn du SIREN. */
+/** SIREN Luhn check digit. */
 export function sirenValide(siren: string): boolean {
   if (!/^\d{9}$/.test(siren)) return false;
   let s = 0;
@@ -118,9 +118,9 @@ export function mock(ids: IdentifiantsMock, horloge: () => Date = () => new Date
   };
 }
 
-/** Pilotage de la PA simulée, côté « reste du monde ». */
+/** Driving the simulated PA, from the "rest of the world" side. */
 export const bacMock = {
-  /** Fait avancer une facture déposée (statut posé par l'acheteur, la PA ou l'administration). */
+  /** Advances a submitted invoice (status set by the buyer, the PA or the tax authority). */
   avancer(idCompte: string, idPa: string, statut: StatutCycle, date: string, motif?: string): EvenementPa {
     const f = compte(idCompte).factures.get(idPa);
     if (!f) throw new ErreurPa(`mock : facture ${idPa} inconnue`, 404);
@@ -128,14 +128,14 @@ export const bacMock = {
     f.statuts.push(e);
     return { type: "statut", ...e };
   },
-  /** Met une facture entrante (Factur-X) à disposition du compte. */
+  /** Makes an incoming invoice (Factur-X) available to the account. */
   livrer(idCompte: string, contenu: Uint8Array, date: string): EvenementPa {
     const c = compte(idCompte);
     const idPa = prochain(c, "MOCK-IN");
     c.entrantes.set(idPa, { date, contenu });
     return { type: "recue", idPa, date };
   },
-  /** Corps et en-têtes d'un webhook signé comme le ferait la PA simulée. */
+  /** Body and headers of a webhook signed as the simulated PA would. */
   webhook(secret: string, evenements: EvenementPa[]) {
     const corps = JSON.stringify({ evenements });
     return { corps, entetes: { "content-type": "application/json", [ENTETE_MOCK]: `sha256=${hmac(secret, corps)}` } };

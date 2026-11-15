@@ -1,8 +1,8 @@
-// Contrat d'une plateforme agréée (PA) vu par une solution compatible.
+// Contract of an approved platform (PA) as seen by a compatible solution.
 
 /**
- * Statuts du cycle de vie (norme XP Z12-012, annexe du dossier de spécifications externes) :
- * 200 Déposée, 210 Refusée, 212 Encaissée et 213 Rejetée sont obligatoires ; les autres sont facultatifs.
+ * Lifecycle statuses (standard XP Z12-012, annex of the external specifications file):
+ * 200 Submitted, 210 Refused, 212 Paid and 213 Rejected are mandatory; the others are optional.
  */
 export const STATUTS = {
   deposee: 200,
@@ -38,14 +38,14 @@ export interface EvenementStatut {
   motif?: string;
 }
 
-/** Événement normalisé tiré d'un webhook de PA. */
+/** Normalized event taken from a PA webhook. */
 export type EvenementPa = ({ type: "statut" } & EvenementStatut) | { type: "recue"; idPa: string; date: string };
 
 export interface Depot {
-  /** Exemplaire Factur-X figé (PDF/A-3b). */
+  /** Frozen Factur-X copy (PDF/A-3b). */
   facturx: Uint8Array;
   numero: string;
-  /** SIREN du destinataire, pour l'adressage par l'annuaire. */
+  /** Recipient SIREN, for addressing through the directory. */
   destinataireSiren?: string | null;
 }
 
@@ -57,19 +57,19 @@ export interface Entrante {
 export interface EntreeAnnuaire {
   siren: string;
   nom?: string;
-  /** PA de réception déclarée à l'annuaire, si la PA interrogée la communique. */
+  /** Receiving PA declared in the directory, if the queried PA reports it. */
   plateforme: string | null;
 }
 
-/** E-reporting des opérations hors e-invoicing : ventes B2C et opérations internationales. */
+/** E-reporting of operations outside e-invoicing: B2C sales and international operations. */
 export interface Ereporting {
   nature: "b2c" | "international";
-  /** Période déclarée, AAAA-MM. */
+  /** Declared period, YYYY-MM. */
   periode: string;
   lignes: { tva: number; htCents: number; tvaCents: number; pays?: string }[];
 }
 
-/** Mandat donné par l'entreprise cliente à la solution compatible pour agir auprès de sa PA. */
+/** Mandate given by the customer company to the compatible solution to act with its PA. */
 export interface Mandat {
   siren: string;
   signataire: string;
@@ -81,21 +81,21 @@ export interface Mandat {
 
 export interface Plateforme {
   readonly nom: NomPlateforme;
-  /** Dépose une facture émise ; renvoie l'identifiant attribué par la PA et le premier statut. */
+  /** Submits an issued invoice; returns the id assigned by the PA and the first status. */
   deposer(d: Depot): Promise<{ idPa: string; statut: StatutCycle; motif?: string }>;
-  /** Historique connu des statuts d'une facture déposée. */
+  /** Known history of a submitted invoice's statuses. */
   statuts(idPa: string): Promise<EvenementStatut[]>;
-  /** Statut posé par l'entreprise (ex. encaissée, renseignée par le vendeur). */
+  /** Status set by the company (e.g. paid, entered by the seller). */
   signaler(idPa: string, statut: StatutCycle, motif?: string): Promise<void>;
-  /** Factures entrantes mises à disposition depuis une date (ISO). */
+  /** Incoming invoices made available since a date (ISO). */
   entrantes(depuis?: string): Promise<Entrante[]>;
-  /** Fichier de la facture entrante, tel que reçu. */
+  /** File of the incoming invoice, as received. */
   telecharger(idPa: string): Promise<Uint8Array>;
-  /** Annuaire : SIREN → plateforme de réception ; null si non inscrit. */
+  /** Directory: SIREN → receiving platform; null if not registered. */
   annuaire(siren: string): Promise<EntreeAnnuaire | null>;
   ereporting(e: Ereporting): Promise<{ idPa: string; statut: StatutCycle }>;
   mandater(m: Mandat): Promise<{ reference: string }>;
-  /** Webhook entrant : événements normalisés, ou null si la signature est invalide. */
+  /** Incoming webhook: normalized events, or null if the signature is invalid. */
   webhook(corps: string, entetes: Headers): Promise<EvenementPa[] | null>;
 }
 

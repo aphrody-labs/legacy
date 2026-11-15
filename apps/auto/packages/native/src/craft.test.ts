@@ -9,7 +9,7 @@ import {
   champsDocx,
   remplirDocx,
 } from "./index";
-test("Gridcraft : édition ciblée, conservation des autres feuilles et recalcul dépendant", () => {
+test("Gridcraft: targeted edit, other sheets kept and dependent recalculation", () => {
   const original = ecrireXlsx({
     feuilles: [
       {
@@ -34,7 +34,7 @@ test("Gridcraft : édition ciblée, conservation des autres feuilles et recalcul
   expect(() => modifierXlsx(original, [{ feuille: "Calcul", ligne: 0, colonne: 1, valeur: 2 }])).toThrow();
   expect(() => modifierXlsx(original, [{ feuille: "Absente", ligne: 1, colonne: 1, valeur: 2 }])).toThrow();
 });
-test("Wordcraft : remplacement Unicode hors gabarit et conservation des champs", () => {
+test("Wordcraft: Unicode replacement outside the template and fields kept", () => {
   const original = creerDocx({
     titre: "Compte rendu",
     paragraphes: [{ texte: "Bonjour Élodie, chantier {{lot}}.", gras: true }, { texte: "Élodie suit la livraison." }],

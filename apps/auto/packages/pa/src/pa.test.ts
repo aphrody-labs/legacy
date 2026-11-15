@@ -15,27 +15,27 @@ import {
 const MAITRE = "m".repeat(32);
 const PDF = new TextEncoder().encode("%PDF-1.7 factur-x");
 
-test("statuts XP Z12-012 : codes 200 à 214", () => {
+test("XP Z12-012 statuses: codes 200 to 214", () => {
   expect(STATUTS.deposee).toBe(200);
   expect(STATUTS.refusee).toBe(210);
   expect(STATUTS.encaissee).toBe(212);
   expect(STATUTS.rejetee).toBe(213);
 });
 
-test("chiffrement AES-GCM par tenant", async () => {
+test("AES-GCM encryption per tenant", async () => {
   const c = await chiffrer(MAITRE, "t1", { cleApi: "secret" });
   expect(new TextDecoder().decode(c)).not.toContain("secret");
   expect(await dechiffrer(MAITRE, "t1", c)).toEqual({ cleApi: "secret" });
-  // Autre tenant, autre secret maître ou chiffré altéré : refus.
+  // Other tenant, other master secret or tampered ciphertext: refused.
   await expect(dechiffrer(MAITRE, "t2", c)).rejects.toThrow();
   await expect(dechiffrer("x".repeat(32), "t1", c)).rejects.toThrow();
   const altere = c.slice();
   altere[20]! ^= 1;
   await expect(dechiffrer(MAITRE, "t1", altere)).rejects.toThrow();
-  await expect(chiffrer("court", "t1", {})).rejects.toThrow("32 caractères");
+  await expect(chiffrer("court", "t1", {})).rejects.toThrow("32 characters");
 });
 
-test("mock déterministe : dépôt, doublon, rejet, statuts, entrantes, annuaire, webhook", async () => {
+test("deterministic mock: submission, duplicate, rejection, statuses, incoming, directory, webhook", async () => {
   bacMock.vider("c1");
   const horloge = () => new Date("2026-10-22T10:00:00Z");
   const p = plateforme("mock", { compte: "c1", secretWebhook: "s" }, { horloge });
@@ -66,7 +66,7 @@ test("mock déterministe : dépôt, doublon, rejet, statuts, entrantes, annuaire
   expect(await p.webhook(w.corps, new Headers())).toBeNull();
 });
 
-// Serveur Bun.serve qui simule l'API B2Brouter (chemins et formats de la documentation publique).
+// Bun.serve server simulating the B2Brouter API (paths and formats of the public documentation).
 let api: ReturnType<typeof Bun.serve>;
 const recu: {
   methode: string;
@@ -158,7 +158,7 @@ test("B2Brouter désactivé sans identifiants", () => {
   expect(() => b2b({ cleApi: "", compte: "1", secretWebhook: "s" })).toThrow("désactivé");
 });
 
-test("B2Brouter : dépôt, statuts, mark_as, réception, annuaire, e-reporting", async () => {
+test("B2Brouter: submission, statuses, mark_as, reception, directory, e-reporting", async () => {
   const p = b2b();
   const d = await p.deposer({ facturx: PDF, numero: "F-2026-0001" });
   expect(d).toEqual({ idPa: "85373", statut: "deposee" });
@@ -197,7 +197,7 @@ test("B2Brouter : dépôt, statuts, mark_as, réception, annuaire, e-reporting",
   await expect(b2b({ ...IDS, cleApi: "mauvaise" }).deposer({ facturx: PDF, numero: "F" })).rejects.toThrow("HTTP 401");
 });
 
-test("B2Brouter : statuts alignés sur le cycle de vie France documenté", async () => {
+test("B2Brouter: statuses aligned with the documented French lifecycle", async () => {
   for (const [state, statut] of [
     ["sent", "deposee"],
     ["registered", "recue"],
@@ -211,7 +211,7 @@ test("B2Brouter : statuts alignés sur le cycle de vie France documenté", async
   }
 });
 
-test("B2Brouter : le suivi d'annuaire et les redirections ne divulguent pas la clé", async () => {
+test("B2Brouter: directory polling and redirects do not leak the key", async () => {
   let fuites = 0;
   const tiers = Bun.serve({
     port: 0,
@@ -238,7 +238,7 @@ test("B2Brouter : le suivi d'annuaire et les redirections ne divulguent pas la c
   }
 });
 
-test("B2Brouter : webhook signé t=…,s=… (HMAC-SHA256 de « t.corps »)", async () => {
+test("B2Brouter: signed webhook t=…,s=… (HMAC-SHA256 of \"t.body\")", async () => {
   const p = b2b();
   const t = Math.floor(maintenant.getTime() / 1000);
   const corps = JSON.stringify({
@@ -251,7 +251,7 @@ test("B2Brouter : webhook signé t=…,s=… (HMAC-SHA256 de « t.corps »)", as
     { type: "statut", idPa: "85373", statut: "refusee", date: maintenant.toISOString(), motif: "CMD_ERR" },
   ]);
   expect(await p.webhook(corps, h(`t=${t},s=${hmac("autre", `${t}.${corps}`)}`))).toBeNull();
-  // Horodatage hors tolérance : rejeu refusé.
+  // Timestamp outside tolerance: replay refused.
   const vieux = t - 3600;
   expect(await p.webhook(corps, h(`t=${vieux},s=${hmac("whsec", `${vieux}.${corps}`)}`))).toBeNull();
 

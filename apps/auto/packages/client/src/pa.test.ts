@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { clientApi, ErreurApi } from "./api";
 
-test("connexion PA : absence, enregistrement et déconnexion par l'API", async () => {
+test("PA connection: absence, registration and disconnection through the API", async () => {
   let active = false;
   let indisponible = false;
   let payload: unknown;

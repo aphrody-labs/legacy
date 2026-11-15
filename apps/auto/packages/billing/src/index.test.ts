@@ -10,7 +10,7 @@ import {
   verifierSignatureStripe,
 } from "./index";
 
-test("plans : prix HT, annuel à dix mois, essai Pro, quotas croissants", () => {
+test("plans: prices excl. tax, yearly at ten months, Pro trial, increasing quotas", () => {
   expect(PLANS.pro.prixHtCents).toEqual({ mensuel: 1400, annuel: 14000 });
   expect(PLANS.business.prixHtCents.annuel).toBe(PLANS.business.prixHtCents.mensuel * 10);
   expect(PLANS.pro.essaiJours).toBe(30);
@@ -22,7 +22,7 @@ test("plans : prix HT, annuel à dix mois, essai Pro, quotas croissants", () => 
   expect(planEffectif({ plan: "gratuit", statut: "aucun" }).id).toBe("gratuit");
 });
 
-test("période au fuseau de Paris", () => {
+test("period in the Paris time zone", () => {
   expect(periode(new Date("2026-10-31T23:30:00Z"))).toBe("2026-11");
   expect(periode(new Date("2026-10-31T22:30:00Z"))).toBe("2026-10");
 });
@@ -42,7 +42,7 @@ test("encodage de formulaire Stripe", () => {
   expect(f.has("x")).toBe(false);
 });
 
-test("signature des webhooks : HMAC, plusieurs v1, tolérance, corps altéré", () => {
+test("webhook signature: HMAC, several v1, tolerance, tampered body", () => {
   const secret = "whsec_test";
   const corps = '{"id":"evt_1"}';
   const t = 1_800_000_000;

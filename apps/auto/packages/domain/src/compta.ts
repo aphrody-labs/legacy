@@ -1,5 +1,5 @@
-// Écritures comptables des ventes et des encaissements, et Fichier des Écritures Comptables (FEC,
-// art. A47 A-1 du livre des procédures fiscales : 18 champs, en-tête, dates AAAAMMJJ, montants à virgule).
+// Accounting entries for sales and payments, and the Fichier des Écritures Comptables (FEC,
+// art. A47 A-1 of the livre des procédures fiscales: 18 fields, header, YYYYMMDD dates, decimal-comma amounts).
 
 import type { Totaux, Type } from "./index";
 
@@ -21,7 +21,7 @@ export interface LigneEcriture {
   validDate: string;
 }
 
-/** Plan de comptes utilisé (PCG). */
+/** Chart of accounts used (PCG). */
 export const COMPTES = {
   clients: { num: "411000", lib: "Clients" },
   ventes: { num: "706000", lib: "Prestations de services" },
@@ -31,7 +31,7 @@ export const COMPTES = {
 
 const JOURNAUX = { VE: "Ventes", BQ: "Banque" } as const;
 
-/** Compte auxiliaire client stable : « C » + 8 premiers caractères du SIREN, sinon du nom. */
+/** Stable customer auxiliary account: "C" + first 8 characters of the SIREN, otherwise of the name. */
 export function compteClient(nom: string, siret?: string): string {
   const base = (siret?.replace(/\D/g, "").slice(0, 9) || nom.normalize("NFD").replace(/[^A-Za-z0-9]/g, ""))
     .toUpperCase()
@@ -48,8 +48,8 @@ export interface PieceVente {
 }
 
 /**
- * Écriture de vente : client au débit (TTC), ventes et TVA par taux au crédit. Un avoir inverse les sens.
- * Les devis ne sont pas comptabilisés.
+ * Sales entry: customer on the debit side (tax-inclusive), sales and VAT per rate on the credit side. A credit note reverses the sides.
+ * Quotes are not booked.
  */
 export function ecritureVente(p: PieceVente, validDate = p.date): LigneEcriture[] {
   if (p.type === "devis") return [];
@@ -100,7 +100,7 @@ export interface Encaissement {
   montantCents: number;
 }
 
-/** Encaissement : banque au débit, client au crédit. */
+/** Payment: bank on the debit side, customer on the credit side. */
 export function ecritureEncaissement(e: Encaissement): LigneEcriture[] {
   const base = {
     journalCode: "BQ",
@@ -132,7 +132,7 @@ export function ecritureEncaissement(e: Encaissement): LigneEcriture[] {
   ];
 }
 
-/** Écarts débit/crédit par écriture (journal + numéro) ; vide si tout est équilibré. */
+/** Debit/credit gaps per entry (journal + number); empty when everything balances. */
 export function desequilibres(lignes: LigneEcriture[]): string[] {
   const soldes = new Map<string, number>();
   for (const l of lignes) {
@@ -165,10 +165,10 @@ export const CHAMPS_FEC = [
 
 const dateFec = (d: string) => d.slice(0, 10).replaceAll("-", "");
 const montantFec = (cents: number) => `${Math.trunc(cents / 100)},${String(cents % 100).padStart(2, "0")}`;
-/** Le séparateur (tabulation) et les fins de ligne ne peuvent pas apparaître dans un champ. */
+/** The separator (tab) and line endings cannot appear in a field. */
 const champ = (s = "") => s.replace(/[\t\r\n|]+/g, " ").trim();
 
-/** Texte du FEC, tabulations et CRLF, lignes triées par date, journal et numéro. */
+/** FEC text, tabs and CRLF, lines sorted by date, journal and number. */
 export function fec(lignes: LigneEcriture[]): string {
   const ecart = desequilibres(lignes);
   if (ecart.length) throw new Error(`FEC déséquilibré : ${ecart.join(" ; ")}`);
@@ -205,10 +205,10 @@ export function fec(lignes: LigneEcriture[]): string {
   return [CHAMPS_FEC.join("\t"), ...rangs].join("\r\n") + "\r\n";
 }
 
-/** Nom réglementaire : SIREN + « FEC » + date de clôture AAAAMMJJ. */
+/** Regulatory name: SIREN + "FEC" + closing date YYYYMMDD. */
 export const nomFec = (siren: string, cloture: string) => `${siren}FEC${dateFec(cloture)}.txt`;
 
-/** Encodage ISO 8859-15 (jeu admis pour le FEC) ; caractère hors jeu remplacé par « ? ». */
+/** ISO 8859-15 encoding (character set allowed for the FEC); characters outside the set replaced by "?". */
 export function latin9(s: string): Uint8Array<ArrayBuffer> {
   const speciaux: Record<string, number> = { "€": 0xa4, Š: 0xa6, š: 0xa8, Ž: 0xb4, ž: 0xb8, Œ: 0xbc, œ: 0xbd, Ÿ: 0xbe };
   const remplaces = new Set([0xa4, 0xa6, 0xa8, 0xb4, 0xb8, 0xbc, 0xbd, 0xbe]);

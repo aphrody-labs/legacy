@@ -1,0 +1,6 @@
+{
+  "api.unreachable": "Serveur injoignable : vérifiez votre connexion.",
+  "api.import.unreachable": "Serveur injoignable : vérifiez votre connexion puis reprenez l’import.",
+  "api.import.refused": "Import refusé ({$status})",
+  "api.import.incomplete": "Réponse d’import incomplète. Réessayez le fichier."
+}

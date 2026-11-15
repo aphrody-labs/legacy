@@ -1,4 +1,4 @@
-// Gestion des employés : contrats, jours fériés, jours ouvrables et congés payés (Code du travail, L3141-3 et suivants).
+// Employee management: contracts, public holidays, working days and paid leave (Code du travail, L3141-3 et seq.).
 
 export type Contrat = "cdi" | "cdd" | "apprentissage" | "professionnalisation" | "stage" | "interim";
 export const CONTRATS: Contrat[] = ["cdi", "cdd", "apprentissage", "professionnalisation", "stage", "interim"];
@@ -24,12 +24,12 @@ export interface Employe {
   /** AAAA-MM-JJ */
   dateEntree: string;
   dateSortie?: string;
-  /** Temps de travail en pourcentage d'un temps plein (100 = temps plein). */
+  /** Working time as a percentage of full time (100 = full time). */
   tempsTravail: number;
   salaireBrutMensuelCents: number;
 }
 
-/** Acquisition légale : 2,5 jours ouvrables par mois de travail effectif, 30 au plus par période. */
+/** Statutory accrual: 2.5 working days per month of actual work, 30 at most per period. */
 export const CP_PAR_MOIS = 2.5;
 export const CP_MAX_PERIODE = 30;
 
@@ -37,7 +37,7 @@ const jour = (d: string) => new Date(`${d}T00:00:00Z`);
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const plusJours = (d: Date, n: number) => new Date(d.getTime() + n * 86_400_000);
 
-/** Dimanche de Pâques (algorithme de Meeus/Jones/Butcher, calendrier grégorien). */
+/** Easter Sunday (Meeus/Jones/Butcher algorithm, Gregorian calendar). */
 export function paques(annee: number): string {
   const a = annee % 19;
   const b = Math.floor(annee / 100);
@@ -56,7 +56,7 @@ export function paques(annee: number): string {
   return `${annee}-${String(mois).padStart(2, "0")}-${String(j).padStart(2, "0")}`;
 }
 
-/** Les 11 jours fériés légaux de métropole (L3133-1), hors jours propres à l'Alsace-Moselle et aux DOM. */
+/** The 11 statutory public holidays of mainland France (L3133-1), excluding Alsace-Moselle and overseas specifics. */
 export function joursFeries(annee: number): string[] {
   const p = jour(paques(annee));
   return [
@@ -74,7 +74,7 @@ export function joursFeries(annee: number): string[] {
   ].sort();
 }
 
-/** Jours ouvrables (lundi à samedi, hors jours fériés) entre deux dates incluses. */
+/** Working days (Monday to Saturday, excluding public holidays) between two dates, inclusive. */
 export function joursOuvrables(debut: string, fin: string): number {
   if (fin < debut) return 0;
   const feries = new Set<string>();
@@ -85,16 +85,16 @@ export function joursOuvrables(debut: string, fin: string): number {
   return n;
 }
 
-/** Début de la période de référence (1er juin) qui contient la date. */
+/** Start of the reference period (1 June) that contains the date. */
 export function debutPeriode(date: string): string {
   const a = Number(date.slice(0, 4));
   return date.slice(5) >= "06-01" ? `${a}-06-01` : `${a - 1}-06-01`;
 }
 
 /**
- * Congés payés acquis (jours ouvrables, arrondis au jour supérieur comme l'impose L3141-7) sur la période
- * de référence qui contient `au`, d'après les mois entiers de présence. Les absences assimilées ou non
- * à du travail effectif ne sont pas déduites ici.
+ * Paid leave accrued (working days, rounded up to the day as L3141-7 requires) over the reference
+ * period containing `au`, from whole months of presence. Absences treated or not
+ * as actual work are not deducted here.
  */
 export function congesAcquis(e: Pick<Employe, "dateEntree" | "dateSortie">, au: string): number {
   const debut = [debutPeriode(au), e.dateEntree].sort().at(-1)!;
@@ -109,7 +109,7 @@ export function congesAcquis(e: Pick<Employe, "dateEntree" | "dateSortie">, au: 
   return Math.min(CP_MAX_PERIODE, Math.ceil(mois * CP_PAR_MOIS));
 }
 
-/** Erreurs de saisie d'un employé ; tableau vide si valide. */
+/** Input errors of an employee; empty array if valid. */
 export function verifierEmploye(e: Partial<Employe>): string[] {
   const err: string[] = [];
   if (!e.nom?.trim()) err.push("nom obligatoire");

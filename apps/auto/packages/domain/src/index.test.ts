@@ -25,7 +25,7 @@ const devis: Document = {
   validiteJours: 30,
 };
 
-test("totaux par taux", () => {
+test("totals per rate", () => {
   const t = totaux([
     { designation: "a", quantite: 2, prixUnitaireHtCents: 5000, tva: 200 },
     { designation: "b", quantite: 1, prixUnitaireHtCents: 1000, tva: 55 },
@@ -43,14 +43,14 @@ test("siret, siren, tva intracom", () => {
   expect(tvaIntracomFr("732829320")).toBe("FR44732829320");
 });
 
-test("numérotation par série", () => {
+test("numbering per series", () => {
   expect(numero("facture", 2026, 1)).toBe("F-2026-0001");
   expect(numero("acompte", 2026, 2)).toBe("F-2026-0002");
   expect(numero("avoir", 2026, 1)).toBe("A-2026-0001");
   expect(numero("devis", 2026, 12)).toBe("D-2026-0012");
 });
 
-test("devis valide, facture issue du devis valide", () => {
+test("valid quote, invoice issued from the valid quote", () => {
   expect(verifier(devis)).toEqual([]);
   const f = devisVersFacture(devis, "D-2026-0001", "2026-10-10", "2026-11-09");
   expect(verifier(f)).toEqual(["date de livraison ou de prestation manquante"]);
@@ -66,7 +66,7 @@ test("mentions obligatoires de facture", () => {
   expect(verifier(avecMentionsParDefaut({ ...f, echeance: "2026-11-01", datePrestation: "2026-10-01" }))).toEqual([]);
 });
 
-test("franchise en base", () => {
+test("VAT exemption (franchise en base)", () => {
   const f: Document = { ...devis, emetteur: { ...emetteur, tvaIntracom: undefined }, franchiseTva: true };
   expect(verifier(f)).toContain("franchise en base : toutes les lignes doivent être à 0 % de TVA");
   expect(verifier({ ...f, lignes: [{ ...devis.lignes[0]!, tva: 0 }] })).toEqual([]);
@@ -80,7 +80,7 @@ test("avoir", () => {
   expect(() => avoirTotal(devis, "D-1", "2026-10-20")).toThrow();
 });
 
-test("remises identiques à auto-modele", () => {
+test("discounts identical to auto-modele", () => {
   const l = (quantite: number, prixUnitaireHtCents: number, remiseBp: number) =>
     htLigne({ designation: "x", quantite, prixUnitaireHtCents, tva: 200, remiseBp });
   expect(l(3, 33333, 1250)).toBe(87499);

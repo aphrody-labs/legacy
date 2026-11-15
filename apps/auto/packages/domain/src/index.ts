@@ -1,10 +1,10 @@
-export type Tva = 0 | 21 | 55 | 100 | 200; // taux en dixièmes de % : 0, 2,1, 5,5, 10, 20
+export type Tva = 0 | 21 | 55 | 100 | 200; // rate in tenths of a percent: 0, 2.1, 5.5, 10, 20
 
 export interface Ligne {
   designation: string;
   quantite: number;
   prixUnitaireHtCents: number;
-  /** Remise sur la ligne en points de base : 1000 = 10 %. */
+  /** Discount on the line in basis points: 1000 = 10%. */
   remiseBp?: number;
   tva: Tva;
   unite?: string;
@@ -26,24 +26,24 @@ export type Statut = "brouillon" | "emis" | "envoye" | "accepte" | "refuse" | "d
 
 export interface Document {
   type: Type;
-  date: string; // ISO, date d'émission
+  date: string; // ISO, issue date
   emetteur: Partie;
   client: Partie;
   lignes: Ligne[];
   datePrestation?: string;
   echeance?: string;
   conditionsPaiement?: string;
-  /** Taux des pénalités de retard, ex. « 3 fois le taux d'intérêt légal ». */
+  /** Late-payment penalty rate, e.g. "3 times the legal interest rate". */
   penalitesRetard?: string;
-  /** Conditions d'escompte, ou « aucun escompte ». */
+  /** Discount terms, or "no discount". */
   escompte?: string;
-  /** Franchise en base de TVA (art. 293 B du CGI). */
+  /** VAT exemption (franchise en base, art. 293 B of the CGI). */
   franchiseTva?: boolean;
-  /** Avoir : numéro de la facture rectifiée. Facture : numéro du devis d'origine. */
+  /** Credit note: number of the corrected invoice. Invoice: number of the original quote. */
   origine?: string;
   validiteJours?: number; // devis
   notes?: string;
-  /** Mise en forme du tenant, ajoutée au rendu (jamais stockée dans le document). */
+  /** Tenant branding, added to the rendering (never stored in the document). */
   gabarit?: Gabarit;
 }
 
@@ -51,7 +51,7 @@ export const MENTION_FRANCHISE = "TVA non applicable, art. 293 B du CGI";
 export const INDEMNITE_RECOUVREMENT_CENTS = 4000;
 export const PENALITES_DEFAUT = "3 fois le taux d'intérêt légal";
 
-/** Mise en forme d'un tenant : couleur d'accent, logo JPEG RVB en base64, ligne de pied de page. */
+/** Tenant branding: accent color, RGB JPEG logo in base64, footer line. */
 export interface Gabarit {
   couleur?: string;
   logo?: { jpeg: string; largeur: number; hauteur: number };
@@ -65,10 +65,10 @@ export interface Totaux {
   ttcCents: number;
 }
 
-/** HT brut d'une ligne (avant remise). */
+/** Gross excl. tax amount of a line (before discount). */
 export const brutLigne = (l: Ligne) => Math.round(l.quantite * l.prixUnitaireHtCents);
 
-/** HT net d'une ligne : même ordre d'opérations que auto-modele (Rust) pour des totaux identiques. */
+/** Net excl. tax amount of a line: same order of operations as auto-modele (Rust) for identical totals. */
 export const htLigne = (l: Ligne) =>
   Math.round((l.quantite * l.prixUnitaireHtCents * (10000 - (l.remiseBp ?? 0))) / 10000);
 
@@ -103,38 +103,38 @@ function luhn(s: string): boolean {
   return sum % 10 === 0;
 }
 
-/** SIRET : 14 chiffres, clé de Luhn. */
+/** SIRET: 14 digits, Luhn check. */
 export function siretValide(siret: string): boolean {
   const s = siret.replace(/\s/g, "");
   return /^\d{14}$/.test(s) && luhn(s);
 }
 
-/** SIREN : 9 chiffres, clé de Luhn. */
+/** SIREN: 9 digits, Luhn check. */
 export function sirenValide(siren: string): boolean {
   const s = siren.replace(/\s/g, "");
   return /^\d{9}$/.test(s) && luhn(s);
 }
 
-/** TVA intracommunautaire française : FR + clé (2 chiffres) + SIREN. */
+/** French intra-community VAT number: FR + key (2 digits) + SIREN. */
 export function tvaIntracomFr(siren: string): string {
   const n = BigInt(siren.replace(/\s/g, ""));
   const cle = (12n + 3n * (n % 97n)) % 97n;
   return `FR${String(cle).padStart(2, "0")}${siren.replace(/\s/g, "")}`;
 }
 
-/** Série de numérotation : factures et acomptes partagent la série F. */
+/** Numbering series: invoices and deposit invoices share series F. */
 export function serie(type: Type): "D" | "F" | "A" {
   return type === "devis" ? "D" : type === "avoir" ? "A" : "F";
 }
 
-/** Numérotation continue sans trou, par série et par année : F-2026-0001. */
+/** Continuous numbering without gaps, per series and year: F-2026-0001. */
 export function numero(type: Type, annee: number, seq: number): string {
   return `${serie(type)}-${annee}-${String(seq).padStart(4, "0")}`;
 }
 
 const estFacture = (t: Type) => t !== "devis";
 
-/** Mentions obligatoires manquantes ou incohérentes (liste vide = ok). */
+/** Missing or inconsistent mandatory mentions (empty list = ok). */
 export function verifier(doc: Document): string[] {
   const e: string[] = [];
   if (!siretValide(doc.emetteur.siret)) e.push("siret émetteur invalide");
@@ -163,7 +163,7 @@ export function verifier(doc: Document): string[] {
   return e;
 }
 
-/** Valeurs par défaut des mentions légales d'une facture. */
+/** Default values of an invoice's legal mentions. */
 export function avecMentionsParDefaut(doc: Document): Document {
   if (!estFacture(doc.type)) return doc;
   return {
@@ -174,21 +174,21 @@ export function avecMentionsParDefaut(doc: Document): Document {
   };
 }
 
-/** Facture issue d'un devis accepté. */
+/** Invoice issued from an accepted quote. */
 export function devisVersFacture(devis: Document, numeroDevis: string, date: string, echeance: string): Document {
   if (devis.type !== "devis") throw new Error("le document source n'est pas un devis");
   const { validiteJours: _, ...rest } = devis;
   return avecMentionsParDefaut({ ...rest, type: "facture", date, echeance, origine: numeroDevis });
 }
 
-/** Avoir total annulant une facture. */
+/** Full credit note cancelling an invoice. */
 export function avoirTotal(facture: Document, numeroFacture: string, date: string): Document {
   if (facture.type === "devis" || facture.type === "avoir")
     throw new Error("seule une facture peut être annulée par un avoir");
   return { ...facture, type: "avoir", date, origine: numeroFacture };
 }
 
-/** Avoir partiel : seules les lignes (ou quantités) rectifiées de la facture. */
+/** Partial credit note: only the corrected lines (or quantities) of the invoice. */
 export function avoirPartiel(facture: Document, numeroFacture: string, date: string, lignes: Ligne[]): Document {
   if (facture.type === "devis" || facture.type === "avoir")
     throw new Error("seule une facture peut être rectifiée par un avoir");

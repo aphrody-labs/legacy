@@ -1,22 +1,22 @@
-// Plans, prix HT et quotas (justification des prix : docs/TARIFS.md).
+// Plans, prices excl. tax and quotas (pricing rationale: docs/TARIFS.md).
 
 export type PlanId = "gratuit" | "pro" | "business";
 export type Periodicite = "mensuel" | "annuel";
 
-/** Ressources limitées : compteurs par période (factures, appels LLM) ou jauges instantanées. */
+/** Limited resources: per-period counters (invoices, LLM calls) or instantaneous gauges. */
 export type Ressource = "factures" | "employes" | "stockage" | "appels_llm" | "boites_mail";
 
-/** Compteurs remis à zéro chaque mois ; les autres ressources sont des jauges (état courant). */
+/** Counters reset every month; the other resources are gauges (current state). */
 export const MENSUELLES: readonly Ressource[] = ["factures", "appels_llm"];
 
 export interface Plan {
   id: PlanId;
   nom: string;
-  /** Prix HT en centimes ; l'annuel vaut dix mois (deux mois offerts). */
+  /** Price excl. tax in cents; yearly is ten months (two months free). */
   prixHtCents: Record<Periodicite, number>;
-  /** Jours d'essai gratuit à la première souscription (0 : aucun). */
+  /** Free trial days on first subscription (0: none). */
   essaiJours: number;
-  /** `null` : illimité. Stockage en octets. */
+  /** `null`: unlimited. Storage in bytes. */
   quotas: Record<Ressource, number | null>;
 }
 
@@ -56,10 +56,10 @@ export const LIBELLES: Record<Ressource, string> = {
   boites_mail: "boîtes mail",
 };
 
-/** Statuts Stripe qui ouvrent les quotas du plan souscrit ; `past_due` garde le plan pendant les relances Stripe. */
+/** Stripe statuses that open the subscribed plan's quotas; `past_due` keeps the plan during Stripe dunning. */
 const OUVERTS = new Set(["trialing", "active", "past_due"]);
 
-/** Plan dont les quotas s'appliquent : le plan souscrit si l'abonnement est en cours, sinon Gratuit. */
+/** Plan whose quotas apply: the subscribed plan while the subscription is active, otherwise Free. */
 export function planEffectif(a: { plan: PlanId; statut: string }): Plan {
   return OUVERTS.has(a.statut) ? PLANS[a.plan] : PLANS.gratuit;
 }
@@ -72,7 +72,7 @@ export function estPeriodicite(x: unknown): x is Periodicite {
   return x === "mensuel" || x === "annuel";
 }
 
-/** Période de comptage `AAAA-MM`, au fuseau de Paris. */
+/** Counting period `YYYY-MM`, in the Paris time zone. */
 export function periode(d = new Date()): string {
   const p = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit" })
     .formatToParts(d)

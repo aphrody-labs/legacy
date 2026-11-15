@@ -55,18 +55,18 @@ test("Factur-X conforme, XML extractible", () => {
   expect(extraireXml(rendrePdf(facture))).toBeNull();
 });
 
-test("erreurs remontées", () => {
+test("surfaced errors", () => {
   expect(() => xmlCii({ ...facture, type: "devis" })).toThrow(ErreurNative);
   expect(() => rendrePdf({})).toThrow(/missing field/);
 });
 
-test("total TTC lu dans le XML", () => {
+test("total including tax read from the XML", () => {
   expect(totalTtcCents("<ram:GrandTotalAmount>2160.05</ram:GrandTotalAmount>")).toBe(216005);
   expect(totalTtcCents("<ram:GrandTotalAmount>-12.30</ram:GrandTotalAmount>")).toBe(-1230);
   expect(totalTtcCents("<x/>")).toBeNull();
 });
 
-test("tableur : écriture xlsx typée, relecture, csv", () => {
+test("spreadsheet: typed xlsx writing, re-reading, csv", () => {
   const xlsx = ecrireXlsx({
     feuilles: [
       {
@@ -118,7 +118,7 @@ test("Word : gabarit, texte, PDF", () => {
 const donneesSignature = (nom: string) =>
   Bun.file(new URL(`../../../vendor/suite/crates/pdfcraft-sign/tests/data/${nom}`, import.meta.url));
 
-test("PDF : caviardage définitif", () => {
+test("PDF: permanent redaction", () => {
   const pdf = docxEnPdf(
     creerDocx({
       titre: "Relevé",
@@ -138,7 +138,7 @@ test("PDF : caviardage définitif", () => {
   expect(() => caviarderPdf(pdf, {})).toThrow(ErreurNative);
 });
 
-test("PDF : signature PAdES et vérification", async () => {
+test("PDF: PAdES signature and verification", async () => {
   const p12 = await donneesSignature("rsa-aes.p12").bytes();
   const pdf = docxEnPdf(creerDocx({ titre: "Contrat", paragraphes: [] }));
   expect(verifierSignaturesPdf(pdf)).toEqual([]);
@@ -156,7 +156,7 @@ test("PDF : signature PAdES et vérification", async () => {
   expect(datePdf(new Date("2026-10-23T12:34:56Z"))).toBe("D:20261023123456Z");
 });
 
-test("Présentation : PPTX et PDF", () => {
+test("Presentation: PPTX and PDF", () => {
   const pptx = creerPptx({
     titre: "Bilan",
     sous_titre: "Atelier",
@@ -170,7 +170,7 @@ test("Présentation : PPTX et PDF", () => {
   expect(() => creerPptx({ diapositives: [] })).toThrow(ErreurNative);
 });
 
-test("connaissance : découpage prose et Markdown, plus proches voisins", () => {
+test("knowledge: prose and Markdown chunking, nearest neighbors", () => {
   const prose = decouperTexte("contrat.pdf", "Le contrat couvre les pièces et la main-d'œuvre. ".repeat(50), 400);
   expect(prose.length).toBeGreaterThan(4);
   expect(prose.map((m) => m.position)).toEqual(prose.map((_, i) => i));

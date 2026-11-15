@@ -1,7 +1,7 @@
-// Pont bun:ffi vers crates/auto-ffi : rendu PDF, Factur-X, XML CII, extraction, contrôle PDF/A, tableurs,
-// fichiers PDF (fusion, pages, texte) et Word (gabarit, création, export PDF), base de connaissances (découpage,
-// plus proches voisins).
-// Bibliothèque : AUTO_FFI_LIB, sinon dist/native/<plateforme>/ (bun run build:native).
+// bun:ffi bridge to crates/auto-ffi: PDF rendering, Factur-X, CII XML, extraction, PDF/A check, spreadsheets,
+// PDF files (merge, pages, text) and Word (template, creation, PDF export), knowledge base (chunking,
+// nearest neighbors).
+// Library: AUTO_FFI_LIB, otherwise dist/native/<platform>/ (bun run build:native).
 import { dlopen, FFIType, toArrayBuffer, type Pointer } from "bun:ffi";
 import { existsSync } from "node:fs";
 
@@ -13,8 +13,8 @@ const PLATEFORMES: Record<string, string> = {
 function chemin(): string {
   if (Bun.env.AUTO_FFI_LIB) return Bun.env.AUTO_FFI_LIB;
   const rel = PLATEFORMES[`${process.platform}-${process.arch}`];
-  if (!rel) throw new Error(`auto-ffi : plateforme non prise en charge (${process.platform}-${process.arch})`);
-  // Paquet publié : binaires embarqués dans native/ ; dépôt : dist/native/ (bun run build:native).
+  if (!rel) throw new Error(`auto-ffi: unsupported platform (${process.platform}-${process.arch})`);
+  // Published package: binaries embedded in native/; repository: dist/native/ (bun run build:native).
   const embarque = Bun.fileURLToPath(new URL(`../native/${rel}`, import.meta.url));
   return existsSync(embarque) ? embarque : Bun.fileURLToPath(new URL(`../../../dist/native/${rel}`, import.meta.url));
 }
@@ -56,7 +56,7 @@ const json = (doc: unknown) => encodeur.encode(JSON.stringify(doc));
 /** Document (JSON de @auto/domain + numero) → PDF A4. */
 export const rendrePdf = (doc: unknown) => appeler("rendre", json(doc));
 
-/** Facture émise → Factur-X EN 16931 (PDF/A-3b avec factur-x.xml), contrôlé avant retour. */
+/** Issued invoice → Factur-X EN 16931 (PDF/A-3b with factur-x.xml), checked before returning. */
 export function facturx(doc: unknown, date = new Date()): Uint8Array<ArrayBuffer> {
   const corps = json(doc);
   const entree = new Uint8Array(8 + corps.length);
@@ -65,20 +65,20 @@ export function facturx(doc: unknown, date = new Date()): Uint8Array<ArrayBuffer
   return appeler("facturx", entree);
 }
 
-/** XML CII EN 16931 d'une facture émise. */
+/** EN 16931 CII XML of an issued invoice. */
 export const xmlCii = (doc: unknown) => new TextDecoder().decode(appeler("xml", json(doc)));
 
-/** XML Factur-X embarqué d'un PDF reçu, ou null. */
+/** Factur-X XML embedded in a received PDF, or null. */
 export function extraireXml(pdf: Uint8Array): string | null {
   const x = new TextDecoder().decode(appeler("extraire", pdf));
   return x || null;
 }
 
-/** Non-conformités PDF/A-3b (vide = conforme). */
+/** PDF/A-3b non-conformities (empty = conformant). */
 export const verifierPdfA = (pdf: Uint8Array): string[] =>
   JSON.parse(new TextDecoder().decode(appeler("verifier_pdfa", pdf)));
 
-/** Montant TTC (BT-112, GrandTotalAmount) d'un XML CII, en centimes. */
+/** Total including tax (BT-112, GrandTotalAmount) of a CII XML, in cents. */
 export function totalTtcCents(xml: string): number | null {
   const m = /<ram:GrandTotalAmount>(-?\d+)\.(\d{2})<\/ram:GrandTotalAmount>/.exec(xml);
   if (!m) return null;
@@ -93,7 +93,7 @@ export interface Lecture {
   avertissements: string[];
 }
 
-/** Classeur xlsx, xls, xlsb, ods ou csv → lignes de valeurs (dates Excel en numéros de série). */
+/** Workbook xlsx, xls, xlsb, ods or csv → rows of values (Excel dates as serial numbers). */
 export const lireTableur = (octets: Uint8Array): Lecture =>
   JSON.parse(new TextDecoder().decode(appeler("tableur_lire", octets)));
 
@@ -102,12 +102,12 @@ export interface Classeur {
   feuilles: {
     nom: string;
     colonnes: { titre: string; type?: TypeColonne; largeur?: number }[];
-    /** euros en centimes, pourcent en points de base, date « AAAA-MM-JJ ». */
+    /** euros in cents, percent in basis points, date "YYYY-MM-DD". */
     lignes: CelluleLue[][];
   }[];
 }
 
-/** Classeur typé → xlsx (en-tête en gras figée). */
+/** Typed workbook → xlsx (frozen bold header). */
 export const ecrireXlsx = (c: Classeur) => appeler("xlsx_ecrire", json(c));
 export interface EditionCellule {
   feuille: string;
@@ -116,20 +116,20 @@ export interface EditionCellule {
   valeur?: CelluleLue;
   formule?: string;
 }
-/** Coordonnées à partir de 1 ; formules recalculées par Gridcraft, styles conservés. */
+/** Coordinates from 1; formulas recalculated by Gridcraft, styles kept. */
 export const modifierXlsx = (xlsx: Uint8Array, editions: EditionCellule[]) =>
   appeler("xlsx_modifier", trames([json(editions), xlsx]));
 export const remplacerDocx = (docx: Uint8Array, remplacements: { chercher: string; remplacer: string }[]) =>
   appeler("docx_remplacer", trames([json(remplacements), docx]));
 
-/** Numéro de série Excel (système 1900) → « AAAA-MM-JJ ». */
+/** Excel serial number (1900 system) → "YYYY-MM-DD". */
 export function dateExcel(serie: number): string {
   return new Date(Date.UTC(1899, 11, 30) + Math.round(serie) * 86_400_000).toISOString().slice(0, 10);
 }
 
-// Fichiers PDF et Word (crate auto-fichiers) ------------------------------------------------------
+// PDF and Word files (auto-fichiers crate) ------------------------------------------------------
 
-/** Concatène des trames `u32` LE de longueur + octets (entrée des opérations à plusieurs parties). */
+/** Concatenates `u32` LE length-prefixed frames + bytes (input of multi-part operations). */
 function trames(parties: Uint8Array[]): Uint8Array {
   const sortie = new Uint8Array(parties.reduce((n, p) => n + 4 + p.length, 0));
   const vue = new DataView(sortie.buffer);
@@ -142,18 +142,18 @@ function trames(parties: Uint8Array[]): Uint8Array {
   return sortie;
 }
 
-/** PDF fusionnés dans l'ordre, un signet par fichier (son nom). */
+/** PDFs merged in order, one bookmark per file (its name). */
 export const fusionnerPdf = (pdfs: { nom: string; octets: Uint8Array }[]) =>
   appeler("pdf_fusionner", trames(pdfs.flatMap((p) => [encodeur.encode(p.nom), p.octets])));
 
-/** Nouveau PDF fait des pages données (numérotées à partir de 1, dans l'ordre donné). */
+/** New PDF made of the given pages (numbered from 1, in the given order). */
 export const extrairePagesPdf = (pdf: Uint8Array, pages: number[]) =>
   appeler("pdf_pages", trames([json(pages.map((p) => p - 1)), pdf]));
 
 /** Nombre de pages d'un PDF. */
 export const nombrePagesPdf = (pdf: Uint8Array) => Number(new TextDecoder().decode(appeler("pdf_nombre_pages", pdf)));
 
-/** Texte de chaque page dans l'ordre de lecture (500 pages au plus ; vide pour une page scannée). */
+/** Text of each page in reading order (500 pages at most; empty for a scanned page). */
 export const textePdf = (pdf: Uint8Array): string[] =>
   (JSON.parse(new TextDecoder().decode(appeler("pdf_texte", pdf))) as { pages: string[] }).pages;
 
@@ -162,26 +162,26 @@ export interface DocumentSimple {
   paragraphes: { texte: string; style?: "titre" | "titre1" | "titre2" | "titre3"; gras?: boolean }[];
 }
 
-/** Document Word A4 : titre puis paragraphes (une ligne de texte = un paragraphe). */
+/** A4 Word document: title then paragraphs (one line of text = one paragraph). */
 export const creerDocx = (d: DocumentSimple) => appeler("docx_creer", json(d));
 
-/** Noms des champs `{{ nom }}` d'un gabarit Word, sans doublon. */
+/** Names of the `{{ name }}` fields of a Word template, without duplicates. */
 export const champsDocx = (docx: Uint8Array): string[] =>
   JSON.parse(new TextDecoder().decode(appeler("docx_champs", docx)));
 
-/** Gabarit Word dont les champs `{{ nom }}` connus sont remplacés (les autres restent). */
+/** Word template whose known `{{ name }}` fields are replaced (the others remain). */
 export const remplirDocx = (docx: Uint8Array, valeurs: Record<string, string>) =>
   appeler("docx_remplir", trames([json(valeurs), docx]));
 
-/** Texte du corps d'un document Word, un paragraphe par ligne. */
+/** Body text of a Word document, one paragraph per line. */
 export const texteDocx = (docx: Uint8Array) => new TextDecoder().decode(appeler("docx_texte", docx));
 
-/** Document Word → PDF (mise en page wordcraft, polices embarquées). */
+/** Word document → PDF (wordcraft layout, embedded fonts). */
 export const docxEnPdf = (docx: Uint8Array) => appeler("docx_pdf", docx);
 
-// Caviardage, signature et présentations (crate auto-fichiers) ------------------------------------
+// Redaction, signing and presentations (auto-fichiers crate) ------------------------------------
 
-/** Lit des trames `u32` LE de longueur + octets (sortie des opérations à plusieurs parties). */
+/** Reads `u32` LE length-prefixed frames + bytes (output of multi-part operations). */
 function lireTrames(o: Uint8Array): Uint8Array[] {
   const vue = new DataView(o.buffer, o.byteOffset, o.byteLength);
   const parties: Uint8Array[] = [];
@@ -214,7 +214,7 @@ export interface RapportCaviardage {
   champs: number;
 }
 
-/** Caviardage définitif (contenu supprimé, pavé noir, vérification) ; sans occurrence, PDF inchangé. */
+/** Permanent redaction (content removed, black box, verification); with no occurrence, PDF unchanged. */
 export function caviarderPdf(pdf: Uint8Array, o: OptionsCaviardage) {
   const [rapport, sortie] = lireTrames(appeler("pdf_caviarder", trames([json(o), pdf])));
   return { pdf: sortie!.slice(), rapport: JSON.parse(new TextDecoder().decode(rapport)) as RapportCaviardage };
@@ -222,15 +222,15 @@ export function caviarderPdf(pdf: Uint8Array, o: OptionsCaviardage) {
 
 export interface OptionsSignature {
   mot_de_passe: string;
-  /** Date PDF `D:AAAAMMJJHHmmSSZ` ; par défaut maintenant. */
+  /** PDF date `D:YYYYMMDDHHmmSSZ`; defaults to now. */
   date?: string;
   raison?: string;
   lieu?: string;
   contact?: string;
   champ?: string;
-  /** Page du nouveau champ, à partir de 0. */
+  /** Page of the new field, from 0. */
   page?: number;
-  /** Rectangle visible `[x0, y0, x1, y1]` en points, origine en bas à gauche ; sinon invisible. */
+  /** Visible rectangle `[x0, y0, x1, y1]` in points, origin at bottom left; otherwise invisible. */
   rectangle?: [number, number, number, number];
   certifier?: 1 | 2 | 3;
 }
@@ -238,7 +238,7 @@ export interface OptionsSignature {
 /** Date PDF UTC (`D:20261023120000Z`). */
 export const datePdf = (d = new Date()) => `D:${d.toISOString().replace(/\D/g, "").slice(0, 14)}Z`;
 
-/** Signature PAdES B-B (ETSI.CAdES.detached) avec une identité PKCS #12, en mise à jour incrémentale. */
+/** PAdES B-B signature (ETSI.CAdES.detached) with a PKCS #12 identity, as an incremental update. */
 export const signerPdf = (pdf: Uint8Array, p12: Uint8Array, o: OptionsSignature) =>
   appeler("pdf_signer", trames([json({ ...o, date: o.date ?? datePdf() }), p12, pdf]));
 
@@ -260,7 +260,7 @@ export interface SignatureVerifiee {
   details: string[];
 }
 
-/** Signatures d'un PDF vérifiées ; `confiance` : certificats de confiance PEM (sinon identités inconnues). */
+/** Verified signatures of a PDF; `confiance`: trusted PEM certificates (otherwise unknown identities). */
 export const verifierSignaturesPdf = (pdf: Uint8Array, confiance = ""): SignatureVerifiee[] =>
   JSON.parse(new TextDecoder().decode(appeler("pdf_signatures", trames([encodeur.encode(confiance), pdf]))));
 
@@ -270,25 +270,25 @@ export interface NouvellePresentation {
   diapositives: { titre?: string; puces?: (string | { texte: string; niveau?: number })[]; notes?: string }[];
 }
 
-/** Présentation PPTX 16:9 : diapositive de titre puis diapositives titre et puces. */
+/** 16:9 PPTX presentation: title slide then title-and-bullets slides. */
 export const creerPptx = (p: NouvellePresentation) => appeler("pptx_creer", json(p));
 
-/** PPTX → PDF, une diapositive par page (rendu DeckCraft, texte sélectionnable). */
+/** PPTX → PDF, one slide per page (DeckCraft rendering, selectable text). */
 export const pptxEnPdf = (pptx: Uint8Array) => appeler("pptx_pdf", pptx);
 
 // Base de connaissances (crate auto-connaissance, aphrody-rag-core) --------------------------------
 
 export interface Morceau {
-  /** Position dans le document, à partir de 0. */
+  /** Position in the document, from 0. */
   position: number;
   texte: string;
-  /** Fil des titres (`Guide > Garantie`) d'une source Markdown. */
+  /** Heading trail (`Guide > Warranty`) of a Markdown source. */
   titre: string | null;
   ligne_debut: number;
   ligne_fin: number;
 }
 
-/** Morceaux d'un texte : sections par titres pour une source `.md`, sinon phrases regroupées (chevauchement 15 %). */
+/** Chunks of a text: sections by headings for a `.md` source, otherwise grouped sentences (15% overlap). */
 export const decouperTexte = (source: string, texte: string, taille?: number): Morceau[] =>
   JSON.parse(new TextDecoder().decode(appeler("rag_decouper", json({ source, texte, taille }))));
 
@@ -298,8 +298,8 @@ const octetsF32 = (v: Float32Array | number[]) => {
 };
 
 /**
- * Les `k` lignes de `matrice` (vecteurs de `dimension` nombres mis bout à bout) les plus proches de `question`
- * par similarité cosinus, score décroissant ; `diversite` (λ de MMR, 0 à 1) écarte les quasi-doublons.
+ * The `k` rows of `matrice` (vectors of `dimension` numbers laid end to end) closest to `question`
+ * by cosine similarity, highest score first; `diversite` (MMR λ, 0 to 1) drops near-duplicates.
  */
 export const plusProches = (
   question: Float32Array | number[],

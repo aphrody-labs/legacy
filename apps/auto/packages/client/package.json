@@ -11,6 +11,7 @@
   "dependencies": {
     "@auto/automate": "workspace:*",
     "@auto/domain": "workspace:*",
+    "@auto/i18n": "workspace:*",
     "@auto/store": "workspace:*"
   }
 }

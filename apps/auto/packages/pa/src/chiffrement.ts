@@ -1,13 +1,13 @@
-// Identifiants de PA chiffrés au repos : AES-256-GCM, clé dérivée par HKDF-SHA256 du secret maître
-// (AUTO_CLE_MAITRE) et du tenant. Le tenant est aussi la donnée authentifiée : un chiffré copié vers
-// un autre tenant ne se déchiffre pas.
+// PA credentials encrypted at rest: AES-256-GCM, key derived by HKDF-SHA256 from the master secret
+// (AUTO_CLE_MAITRE) and the tenant. The tenant is also the authenticated data: a ciphertext copied to
+// another tenant does not decrypt.
 
 const enc = new TextEncoder();
 const VERSION = 1;
 const SEL = enc.encode("auto/pa/identifiants/v1");
 
 async function cle(maitre: string, tenantId: string): Promise<CryptoKey> {
-  if (maitre.length < 32) throw new Error("AUTO_CLE_MAITRE : au moins 32 caractères");
+  if (maitre.length < 32) throw new Error("AUTO_CLE_MAITRE: at least 32 characters");
   const base = await crypto.subtle.importKey("raw", enc.encode(maitre), "HKDF", false, ["deriveKey"]);
   return crypto.subtle.deriveKey(
     { name: "HKDF", hash: "SHA-256", salt: SEL, info: enc.encode(tenantId) },
@@ -18,7 +18,7 @@ async function cle(maitre: string, tenantId: string): Promise<CryptoKey> {
   );
 }
 
-/** Chiffré : octet de version, IV de 12 octets, puis texte chiffré et étiquette GCM. */
+/** Ciphertext: version byte, 12-byte IV, then ciphertext and GCM tag. */
 export async function chiffrer(maitre: string, tenantId: string, valeur: unknown): Promise<Uint8Array<ArrayBuffer>> {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const ct = await crypto.subtle.encrypt(
@@ -43,11 +43,11 @@ export async function dechiffrer<T>(maitre: string, tenantId: string, chiffre: U
   return JSON.parse(new TextDecoder().decode(clair)) as T;
 }
 
-/** HMAC-SHA256 hexadécimal. */
+/** Hex HMAC-SHA256. */
 export const hmac = (secret: string, donnees: string) =>
   new Bun.CryptoHasher("sha256", secret).update(donnees).digest("hex");
 
-/** Comparaison en temps constant de deux chaînes. */
+/** Constant-time comparison of two strings. */
 export function egal(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
   let d = 0;
@@ -57,5 +57,5 @@ export function egal(a: string, b: string): boolean {
 
 export const sha256 = (o: Uint8Array | string) => new Bun.CryptoHasher("sha256").update(o).digest("hex");
 
-/** Secret aléatoire (256 bits, hexadécimal). */
+/** Random secret (256 bits, hex). */
 export const secretAleatoire = () => Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("hex");

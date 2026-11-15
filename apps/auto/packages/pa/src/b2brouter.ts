@@ -1,23 +1,23 @@
-// Adaptateur B2Brouter (PA immatriculée), d'après sa documentation publique (docs.b2brouter.net,
-// b2brouter.readme.io, API 2026-06-26). Inactif sans identifiants. Points non vérifiés : voir docs/PA.md.
+// B2Brouter adapter (registered PA), from its public documentation (docs.b2brouter.net,
+// b2brouter.readme.io, API 2026-06-26). Inactive without credentials. Unverified points: see docs/PA.md.
 import { egal, hmac } from "./chiffrement";
 import { ErreurPa, type EvenementPa, type Plateforme, type StatutCycle } from "./types";
 
 export interface IdentifiantsB2brouter {
-  /** Clé `X-B2B-API-Key` (préfixe `test_` en bac à sable). */
+  /** `X-B2B-API-Key` key (`test_` prefix in the sandbox). */
   cleApi: string;
-  /** Identifiant du compte (`identifier` de GET /accounts). */
+  /** Account identifier (`identifier` of GET /accounts). */
   compte: string;
-  /** `signing_secret` renvoyé à la création du webhook (POST /web_hooks). */
+  /** `signing_secret` returned when the webhook is created (POST /web_hooks). */
   secretWebhook: string;
 }
 
 export interface OptionsB2brouter {
   base?: string;
   fetch?: typeof fetch;
-  /** Attente entre deux interrogations de l'annuaire (réponse 202). */
+  /** Wait between two directory polls (202 response). */
   attenteMs?: number;
-  /** Tolérance d'horodatage des webhooks, en secondes. */
+  /** Webhook timestamp tolerance, in seconds. */
   toleranceS?: number;
   horloge?: () => Date;
 }
@@ -26,7 +26,7 @@ export const B2BROUTER_URL = "https://api.b2brouter.net";
 export const B2BROUTER_VERSION = "2026-06-26";
 export const ENTETE_B2BROUTER = "x-b2brouter-signature";
 
-/** États B2Brouter d'une facture → statuts du cycle de vie ; les autres sont ignorés. */
+/** B2Brouter invoice states → lifecycle statuses; the others are ignored. */
 export const ETATS: Record<string, StatutCycle> = {
   new: "deposee",
   sending: "deposee",
@@ -46,7 +46,7 @@ export const ETATS: Record<string, StatutCycle> = {
   invalid: "rejetee",
 };
 
-/** Statuts que l'entreprise peut poser (POST /invoices/{id}/mark_as). */
+/** Statuses the company may set (POST /invoices/{id}/mark_as). */
 const VERS_ETAT: Partial<Record<StatutCycle, string>> = {
   encaissee: "paid",
   refusee: "refused",
@@ -140,7 +140,7 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
       return new Uint8Array(await res.arrayBuffer());
     },
     async annuaire(siren) {
-      // Recherche asynchrone : 202 avec polling_url, à interroger jusqu'à 200, 404, 422 ou 424.
+      // Asynchronous search: 202 with polling_url, polled until 200, 404, 422 or 424.
       let url = `/directory/0002/${encodeURIComponent(siren)}`;
       for (let essai = 0; essai < 10; essai++) {
         const res = await appel(url);
@@ -159,11 +159,11 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
       );
     },
     async mandater(m) {
-      // Aucune API de mandat publiée : le mandat est porté par le compte B2Brouter de l'entreprise.
+      // No mandate API published: the mandate is carried by the company's B2Brouter account.
       return { reference: `B2BROUTER-${ids.compte}-${m.siren}-${m.date}` };
     },
     async webhook(corps, entetes) {
-      // En-tête `t=<horodatage>,s=<HMAC-SHA256 hex de "t.corps">`.
+      // Header `t=<timestamp>,s=<hex HMAC-SHA256 of "t.body">`.
       const p = Object.fromEntries(
         (entetes.get(ENTETE_B2BROUTER) ?? "").split(",").map((kv) => kv.trim().split("=") as [string, string]),
       );
@@ -190,9 +190,9 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
 }
 
 /**
- * Ancien brouillon XML conservé pour compatibilité ; ce n'est pas un Flux 10 valide et l'adaptateur
- * refuse de le transmettre. Le dépôt B2Brouter exige un Report conforme au XSD DGFiP v3.2.
- * @deprecated Ne pas utiliser pour une déclaration réelle.
+ * Old XML draft kept for compatibility; it is not a valid Flux 10 and the adapter
+ * refuses to send it. B2Brouter submission requires a Report conforming to the DGFiP XSD v3.2.
+ * @deprecated Do not use for a real declaration.
  */
 export function xmlEreporting(e: {
   nature: string;

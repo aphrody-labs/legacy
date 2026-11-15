@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { congesAcquis, debutPeriode, joursFeries, joursOuvrables, paques, verifierEmploye } from "./rh";
 
-test("Pâques et jours fériés mobiles", () => {
+test("Easter and movable public holidays", () => {
   expect(paques(2024)).toBe("2024-03-31");
   expect(paques(2026)).toBe("2026-04-05");
   expect(paques(2027)).toBe("2027-03-28");
@@ -20,20 +20,20 @@ test("Pâques et jours fériés mobiles", () => {
   ]);
 });
 
-test("jours ouvrables : dimanches et fériés exclus", () => {
-  // du lundi 4 au dimanche 10 mai 2026 : 8 mai férié, dimanche exclu
+test("working days: Sundays and public holidays excluded", () => {
+  // Monday 4 to Sunday 10 May 2026: 8 May is a holiday, Sunday excluded
   expect(joursOuvrables("2026-05-04", "2026-05-10")).toBe(5);
   expect(joursOuvrables("2026-08-03", "2026-08-08")).toBe(6);
   expect(joursOuvrables("2026-12-28", "2027-01-02")).toBe(5);
   expect(joursOuvrables("2026-05-10", "2026-05-04")).toBe(0);
 });
 
-test("congés acquis : 2,5 jours par mois entier, plafond 30", () => {
+test("accrued leave: 2.5 days per whole month, cap 30", () => {
   expect(debutPeriode("2026-05-31")).toBe("2025-06-01");
   expect(debutPeriode("2026-06-01")).toBe("2026-06-01");
   const e = { dateEntree: "2020-01-01" };
   expect(congesAcquis(e, "2026-06-15")).toBe(0);
-  expect(congesAcquis(e, "2026-07-01")).toBe(3); // 1 mois, 2,5 arrondi au supérieur
+  expect(congesAcquis(e, "2026-07-01")).toBe(3); // 1 month, 2.5 rounded up
   expect(congesAcquis(e, "2026-10-31")).toBe(13); // 5 mois
   expect(congesAcquis(e, "2027-05-31")).toBe(30);
   expect(congesAcquis({ dateEntree: "2026-09-15" }, "2026-10-14")).toBe(3);
@@ -41,7 +41,7 @@ test("congés acquis : 2,5 jours par mois entier, plafond 30", () => {
   expect(congesAcquis({ dateEntree: "2026-06-01", dateSortie: "2026-08-31" }, "2026-10-31")).toBe(8);
 });
 
-test("vérification d'un employé", () => {
+test("employee verification", () => {
   const ok = {
     nom: "Martin",
     prenom: "Léa",

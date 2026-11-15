@@ -1,27 +1,27 @@
-// Client REST Stripe (fetch, sans SDK) et vérification des webhooks signés.
+// Stripe REST client (fetch, no SDK) and signed webhook verification.
 import { ErreurMetier } from "@auto/store";
 import type { Periodicite, PlanId } from "./plans";
 
 export type CleTarif = `${Exclude<PlanId, "gratuit">}_${Periodicite}`;
 
 export interface ConfigStripe {
-  /** Clé secrète (`sk_test_…` ou `sk_live_…`). */
+  /** Secret key (`sk_test_…` or `sk_live_…`). */
   cle: string;
   /** Secret de signature de l'endpoint webhook (`whsec_…`). */
   secretWebhook: string;
-  /** Base de l'API ; remplacée par un faux serveur dans les tests. */
+  /** API base; replaced by a fake server in tests. */
   base: string;
-  /** Version d'API épinglée (en-tête `Stripe-Version`), sinon celle du compte. */
+  /** Pinned API version (`Stripe-Version` header), otherwise the account's. */
   version?: string;
-  /** Identifiants des prix Stripe (`price_…`) par plan et périodicité. */
+  /** Stripe price ids (`price_…`) per plan and billing period. */
   tarifs: Partial<Record<CleTarif, string>>;
-  /** Taux de TVA Stripe (`txr_…`) appliqué aux abonnements, pour que la facture Stripe soit TTC. */
+  /** Stripe tax rate (`txr_…`) applied to subscriptions so the Stripe invoice is tax-inclusive. */
   tauxTva?: string;
 }
 
 const CLES: CleTarif[] = ["pro_mensuel", "pro_annuel", "business_mensuel", "business_annuel"];
 
-/** Lit `STRIPE_*` ; `null` si Stripe n'est pas configuré. */
+/** Reads `STRIPE_*`; `null` when Stripe is not configured. */
 export function configStripeDepuisEnv(env: Record<string, string | undefined> = Bun.env): ConfigStripe | null {
   if (!env.STRIPE_SECRET_KEY || !env.STRIPE_WEBHOOK_SECRET) return null;
   const tarifs: ConfigStripe["tarifs"] = {};
@@ -39,7 +39,7 @@ export function configStripeDepuisEnv(env: Record<string, string | undefined> = 
   };
 }
 
-/** Plan et périodicité d'un prix Stripe configuré. */
+/** Plan and billing period of a configured Stripe price. */
 export function tarifInverse(c: ConfigStripe, prix: string | undefined) {
   const k = CLES.find((x) => prix && c.tarifs[x] === prix);
   if (!k) return null;
@@ -85,7 +85,7 @@ export class Stripe {
     return body;
   }
 
-  /** Client Stripe du tenant ; `metadata.tenant_id` relie les événements au tenant. */
+  /** The tenant's Stripe customer; `metadata.tenant_id` ties events back to the tenant. */
   creerClient(p: { tenantId: string; nom: string; email?: string }) {
     return this.post<{ id: string }>(
       "/v1/customers",
@@ -94,7 +94,7 @@ export class Stripe {
     );
   }
 
-  /** Checkout Session en mode abonnement. */
+  /** Checkout Session in subscription mode. */
   creerCheckout(p: {
     tenantId: string;
     client: string;
@@ -123,7 +123,7 @@ export class Stripe {
     });
   }
 
-  /** Session du portail client (moyen de paiement, factures Stripe, résiliation). */
+  /** Customer portal session (payment method, Stripe invoices, cancellation). */
   creerPortail(client: string, retour: string) {
     return this.post<{ id: string; url: string }>("/v1/billing_portal/sessions", {
       customer: client,
@@ -144,15 +144,15 @@ function egal(a: string, b: string): boolean {
   return d === 0;
 }
 
-/** En-tête `Stripe-Signature` d'un corps : `t=<horodatage>,v1=<HMAC-SHA256 de "t.corps">`. */
+/** `Stripe-Signature` header for a body: `t=<timestamp>,v1=<HMAC-SHA256 of "t.body">`. */
 export function signerStripe(secret: string, corps: string, t = Math.floor(Date.now() / 1000)): string {
   return `t=${t},v1=${hmac(secret, `${t}.${corps}`)}`;
 }
 
 /**
- * Vérification selon la documentation Stripe : HMAC-SHA256 de `t.corps_brut` avec le secret de
- * l'endpoint, comparé en temps constant à chaque signature `v1` ; horodatage à ±`tolerance` secondes
- * (300 par défaut) contre le rejeu.
+ * Verification per the Stripe documentation: HMAC-SHA256 of `t.raw_body` with the endpoint secret,
+ * compared in constant time against each `v1` signature; timestamp within ±`tolerance` seconds
+ * (300 by default) against replay.
  */
 export function verifierSignatureStripe(
   corps: string,
