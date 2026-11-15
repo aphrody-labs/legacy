@@ -260,6 +260,11 @@ fn tauri_project_is_complete_and_valid() {
     let shim = std::fs::read_to_string(out.join("shim/electron-compat.ts")).unwrap();
     assert!(shim.contains("\"app:get-version\":\"ipc_app_get_version\"") && shim.contains("expose(\"electronAPI\""));
     assert!(shim.contains("ipcRenderer.invoke(\"file:read\""));
+    // icons: the fixture ships none, so a generated placeholder PNG + PNG-in-ICO are written for generate_context!
+    let png = std::fs::read(out.join("src-tauri/icons/icon.png")).unwrap();
+    assert!(png.starts_with(b"\x89PNG\r\n\x1a\n") && png.ends_with(&[0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82]), "IEND chunk with its fixed CRC");
+    assert_eq!(&std::fs::read(out.join("src-tauri/icons/icon.ico")).unwrap()[..6], &[0, 0, 1, 0, 1, 0]);
+    assert_eq!(conf["bundle"]["icon"][0], "icons/icon.png");
     // The sidecar entry has no top-level await: `bun build --bytecode` emits CommonJS.
     let side = std::fs::read_to_string(out.join("sidecar/main.ts")).unwrap();
     assert!(side.contains("async function main()") && side.contains("import(\"./app/main.js\")"));

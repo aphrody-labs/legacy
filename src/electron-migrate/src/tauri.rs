@@ -230,7 +230,7 @@ pub fn tauri_conf(m: &Manifest) -> Value {
         "identifier": format!("com.aphrody.migrated.{}", slug(&name).replace('-', "")),
         "build": { "beforeBuildCommand": "bun run build", "frontendDist": "../dist" },
         "app": { "withGlobalTauri": false, "security": { "csp": null }, "windows": window_config(m) },
-        "bundle": { "active": true, "targets": "all", "icon": [], "externalBin": ["binaries/electron-main"] },
+        "bundle": { "active": true, "targets": "all", "icon": ["icons/icon.png", "icons/icon.ico"], "externalBin": ["binaries/electron-main"] },
     });
     if !m.deep_links.schemes.is_empty() {
         conf["plugins"] = json!({ "deep-link": { "desktop": { "schemes": m.deep_links.schemes } } });
@@ -563,7 +563,7 @@ pub fn main_rs(m: &Manifest) -> String {
     if has_menu {
         s.push_str("mod menu;\n");
     }
-    s.push_str("\nuse serde_json::Value;\nuse sidecar::Sidecar;\nuse tauri::{Manager, State, WebviewWindowBuilder};\n\n/// Renderer shim (`bun run build:shim`): window.electronAPI-style bridges over invoke/listen.\nconst SHIM: &str = include_str!(\"../shim/electron-compat.js\");\n\n");
+    s.push_str("\nuse serde_json::Value;\nuse sidecar::Sidecar;\nuse tauri::{State, WebviewWindowBuilder};\n\n/// Renderer shim (`bun run build:shim`): window.electronAPI-style bridges over invoke/listen.\nconst SHIM: &str = include_str!(\"../shim/electron-compat.js\");\n\n");
     s.push_str("/// Generic dispatcher for channels without a typed command (dynamic names).\n#[tauri::command]\nasync fn electron_ipc(state: State<'_, Sidecar>, channel: String, args: Option<Vec<Value>>) -> Result<Value, String> {\n    state.invoke(&channel, args.unwrap_or_default()).await\n}\n\n#[tauri::command]\nfn electron_send(state: State<'_, Sidecar>, channel: String, args: Option<Vec<Value>>) -> Result<(), String> {\n    state.send(&channel, args.unwrap_or_default())\n}\n\n");
     for (channel, id) in &cmds {
         s.push_str(&format!("#[tauri::command]\nasync fn ipc_{id}(state: State<'_, Sidecar>, args: Option<Vec<Value>>) -> Result<Value, String> {{\n    state.invoke({}, args.unwrap_or_default()).await\n}}\n\n", rust_str(channel)));
@@ -692,6 +692,78 @@ pub fn package_json(m: &Manifest) -> String {
         "devDependencies": { "@tauri-apps/cli": TAURI_NPM_CLI_REQ, "@types/bun": "latest" },
     });
     serde_json::to_string_pretty(&v).unwrap_or_default() + "\n"
+}
+
+fn crc32(data: &[u8]) -> u32 {
+    let mut crc = 0xFFFF_FFFFu32;
+    for &b in data {
+        crc ^= u32::from(b);
+        for _ in 0..8 {
+            crc = if crc & 1 == 1 { (crc >> 1) ^ 0xEDB8_8320 } else { crc >> 1 };
+        }
+    }
+    !crc
+}
+
+fn png_chunk(out: &mut Vec<u8>, kind: &[u8; 4], body: &[u8]) {
+    out.extend_from_slice(&(body.len() as u32).to_be_bytes());
+    let mut crc_in = kind.to_vec();
+    crc_in.extend_from_slice(body);
+    out.extend_from_slice(&crc_in);
+    out.extend_from_slice(&crc32(&crc_in).to_be_bytes());
+}
+
+/// A valid 32x32 RGBA PNG (flat dark square) for apps whose bundle ships no icon: `tauri::generate_context!`
+/// fails without `icons/icon.png`. Stored (uncompressed) zlib blocks keep the encoder dependency-free.
+pub fn placeholder_png() -> Vec<u8> {
+    const N: usize = 32;
+    let mut raw = Vec::with_capacity(N * (1 + N * 4));
+    for _ in 0..N {
+        raw.push(0);
+        for _ in 0..N {
+            raw.extend_from_slice(&[0x1e, 0x1e, 0x1e, 0xff]);
+        }
+    }
+    let (mut a, mut b) = (1u32, 0u32);
+    for &x in &raw {
+        a = (a + u32::from(x)) % 65521;
+        b = (b + a) % 65521;
+    }
+    let mut z = vec![0x78, 0x01];
+    let blocks: Vec<&[u8]> = raw.chunks(65535).collect();
+    for (i, blk) in blocks.iter().enumerate() {
+        z.push(u8::from(i + 1 == blocks.len()));
+        z.extend_from_slice(&(blk.len() as u16).to_le_bytes());
+        z.extend_from_slice(&(!(blk.len() as u16)).to_le_bytes());
+        z.extend_from_slice(blk);
+    }
+    z.extend_from_slice(&((b << 16) | a).to_be_bytes());
+    let mut out = b"\x89PNG\r\n\x1a\n".to_vec();
+    let mut ihdr = Vec::new();
+    ihdr.extend_from_slice(&(N as u32).to_be_bytes());
+    ihdr.extend_from_slice(&(N as u32).to_be_bytes());
+    ihdr.extend_from_slice(&[8, 6, 0, 0, 0]);
+    png_chunk(&mut out, b"IHDR", &ihdr);
+    png_chunk(&mut out, b"IDAT", &z);
+    png_chunk(&mut out, b"IEND", &[]);
+    out
+}
+
+/// Wrap a PNG into a single-image `.ico` (PNG-compressed entries are valid since Windows Vista).
+pub fn ico_from_png(png: &[u8]) -> Option<Vec<u8>> {
+    if png.len() < 24 || &png[..8] != b"\x89PNG\r\n\x1a\n" {
+        return None;
+    }
+    let w = u32::from_be_bytes(png[16..20].try_into().ok()?);
+    let h = u32::from_be_bytes(png[20..24].try_into().ok()?);
+    if w == 0 || h == 0 || w > 256 || h > 256 {
+        return None;
+    }
+    let mut out = vec![0, 0, 1, 0, 1, 0, if w == 256 { 0 } else { w as u8 }, if h == 256 { 0 } else { h as u8 }, 0, 0, 1, 0, 32, 0];
+    out.extend_from_slice(&(png.len() as u32).to_le_bytes());
+    out.extend_from_slice(&22u32.to_le_bytes());
+    out.extend_from_slice(png);
+    Some(out)
 }
 
 /// Frontend placeholder for apps that only load a remote URL: the window navigates away at once.
