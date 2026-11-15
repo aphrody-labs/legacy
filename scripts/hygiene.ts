@@ -87,6 +87,19 @@ const SCRAPE =
 const SCRAPE_HOST =
   /(github\.com\/[^/\s"'`]+\/[^/\s"'`]+\/(releases|tags)\b(?!\/download)|kernel\.org\/(?!releases\.json)|android\.googlesource\.com)/;
 
+/** node: APIs with a native Bun replacement (https://bun.com/docs/runtime/file-io and the Bun API reference). */
+export const NODE_REPLACED: [RegExp, string][] = [
+  [/from ["']node:child_process["']|require\(["']node:child_process["']\)/, "Bun.spawn / Bun.spawnSync / Bun.$"],
+  [/\bfileURLToPath\(/, "Bun.fileURLToPath or import.meta.dir / import.meta.path"],
+  [/\bcreateHash\(/, "Bun.CryptoHasher"],
+  [/from ["']node:zlib["']/, "Bun.gzipSync / Bun.deflateSync / Bun.zstdCompressSync"],
+  [/from ["']node:https?["']/, "Bun.serve / fetch"],
+  [/from ["']node:(test|assert(\/strict)?)["']/, "bun:test"],
+  [/from ["']node:sqlite["']/, "bun:sqlite"],
+  [/\bpromisify\(/, "the promise API itself"],
+  [/from ["']node:readline["']/, "for await (const line of console)"],
+];
+
 /** Locale catalogues are the only place a non-English string may live. */
 const LOCALE_FILE =
   /(^|\/)(locales?|messages|i18n|l10n|translations?)\/|(^|[./])(fr|fr-FR)\.(json|ftl|arb|po|xlf|xliff|properties|ts)$|\/values-fr\/|\.fr\.(md|mdx|html)$|(^|\/)(fr|es|ja|zh-CN|de|it|pt)\//;
@@ -98,11 +111,16 @@ export const RULES: Rule[] = [
     line: (l, f) => isNonSourceProse(l, CODE.test(f), SOURCE_LANG),
   },
   {
+    id: "node-builtin",
+    why: "A node: API that Bun replaces natively (bun-only stack; Bun's file-io docs keep node:fs for mkdir/readdir/stat and node:path/node:os have no Bun equivalent, so those stay)",
+    files: (f) => /\.(ts|tsx|js|mjs|cjs)$/.test(f) && !UPSTREAM_PORT.test(f) && !/(^|\/)node_modules\//.test(f),
+    line: (l) => NODE_REPLACED.some(([re]) => re.test(l)),
+  },
+  {
     id: "sovereign",
     why: "Legacy 'Sovereign' wording often wraps fake outputs; verify the claim or delete it",
     files: (f) =>
-      (CODE.test(f) || DOC.test(f)) &&
-      !/^\.agents\/skills\/rust-stack-sovereign\//.test(f),
+      CODE.test(f) || DOC.test(f),
     line: (l) => SOVEREIGN.test(l),
   },
   {
