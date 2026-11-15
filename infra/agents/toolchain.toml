@@ -246,6 +246,15 @@ name = "agent-browser"
 command = ["{bin}/agent-browser.exe", "mcp"]
 hosts = ["pc"]
 
+# Chrome DevTools MCP (ChromeDevTools/chrome-devtools-mcp 1.13.0, 33 outils; skills chrome-*): hub_call chrome-devtools__<tool>.
+# Headless + profil jetable (le relais est un service sans bureau); usage statistics Google coupées; probe 2026-11-15: initialize + tools/list OK.
+[[hub.mcp]]
+name = "chrome-devtools"
+command = ["{home}/.bun/bin/chrome-devtools-mcp.exe", "--headless", "--isolated", "--memoryDebugging", "--categoryExtensions", "--categoryNetworkMocks"]
+env = { CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS = "1" }
+install = ["bun", "add", "-g", "chrome-devtools-mcp"]
+hosts = ["pc"]
+
 # --- MCP externes / tiers (retirés) ---
 [[claude.mcp]]
 name = "chrome-devtools"

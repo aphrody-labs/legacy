@@ -1318,7 +1318,7 @@
       "path": "third_party/chrome-devtools-mcp",
       "url": "https://github.com/aphrody-labs/chrome-devtools-mcp.git",
       "upstream_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp.git",
-      "commit": "1417f93ee3f83b87270c910b0c0337de475f6f17",
+      "commit": "8ba2ac945ebaf1adb92208c29f3a30e73a920956",
       "branch": "main",
       "engine": "git",
       "pillar": "git",
@@ -2159,7 +2159,7 @@
     "third_party/gemini-skills": {
       "path": "third_party/gemini-skills",
       "url": "https://github.com/google-gemini/gemini-skills.git",
-      "commit": "0f596dbdcbde186e3d418d1279f7f499fe9afbf5",
+      "commit": "87fb0173d36fea4f87de4c3fbd0678cf929c0588",
       "branch": "main",
       "engine": "git",
       "pillar": "aosp",
@@ -2274,7 +2274,7 @@
     "third_party/google-skills": {
       "path": "third_party/google-skills",
       "url": "https://github.com/google/skills.git",
-      "commit": "64d010629e61e4a7d59fc21e042362f370b5888b",
+      "commit": "e3c591afe426ea585e4c21799e5199d6d47cd1be",
       "branch": "main",
       "engine": "git",
       "pillar": "aosp",

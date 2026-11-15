@@ -61,6 +61,7 @@ out/Default/unit_tests --gtest_filter="Suite.*"
 - Incompatible: `headless_enable_commands` + `headless_use_embedded_resources` -> assert at `headless/BUILD.gn:22`.
 - Upstream preset `build/args/headless.gn` (`import("//build/args/headless.gn")`): ozone_platform="headless", embedded resources ON, commands OFF, prefs OFF, `use_bundled_fontconfig=true`, `icu_use_data_file=false`, `v8_use_external_startup_data=false`, alsa/bluez/cups/dbus/gio/kerberos/libpci/pulseaudio/udev/glib/gtk/qt5/qt6/pangocairo/mold off, `rtc_use_pipewire=false`.
 - Run: `headless_shell --remote-debugging-port=9222 <url>`; Chrome itself: `chrome --headless` (old headless removed from chrome binary, headless/README.md; standalone headless_shell binaries published since M118).
+- Debugging it (snapshots, network, console, traces, Lighthouse, heap snapshots): skills `chrome-devtools` (MCP through the relay), `chrome-devtools-cli`, `chrome-troubleshooting`; attach a server with `--browserUrl http://127.0.0.1:9222`.
 
 ### labs_agent (browser/factory/args/labs_agent.gn)
 
