@@ -1,6 +1,6 @@
 // Generates every token output of @aphrody/design from assets/brand/brand.toml.
 // Color: official @material/material-color-utilities (DynamicScheme, MaterialDynamicColors).
-// Type scale, shape, motion, elevation, state: parsed from @material/web tokens/versions/latest.
+// Type scale, shape, elevation, state: docs/design/specs/tokens/material-3.json ; motion: Angular Material M3 tokens.
 // `bun run src/build.ts` writes tokens/ and DESIGN.md ; `--check` fails if anything would change.
 import {
   argbFromHex,
@@ -9,7 +9,8 @@ import {
   MaterialDynamicColors,
   TonalPalette,
 } from "@material/material-color-utilities";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import * as sass from "sass";
 import { moduleDir } from "./modules.ts";
 import { SCHEMES, type Variant } from "./schemes.ts";
 
@@ -41,8 +42,8 @@ const mcuVersion = (
     join(moduleDir("@material/material-color-utilities"), "package.json"),
   ).json()
 ).version;
-const mwcVersion = (
-  await Bun.file(join(moduleDir("@material/web"), "package.json")).json()
+const angularMaterialVersion = (
+  await Bun.file(join(moduleDir("@angular/material"), "package.json")).json()
 ).version;
 
 const Scheme = SCHEMES[brand.variant as Variant];
@@ -96,92 +97,75 @@ for (const [name, p] of Object.entries({
   );
 }
 
-// --- Material Web sys tokens (SCSS maps, hardcoded values) ---
-// Official latest token set published by Google (tokens/versions/latest/sass), never a pinned version directory.
-const v = join(moduleDir("@material/web"), "tokens/versions/latest/sass");
-async function scss(name: string): Promise<Record<string, string>> {
-  const src = (await Bun.file(join(v, `_md-${name}.scss`)).text()).replace(
-    /\s+/g,
-    " ",
-  );
-  const r: Record<string, string> = {};
-  for (const m of src.matchAll(
-    /'([a-z0-9-]+)': if\(\$exclude-hardcoded-values, null, (.+?)\)(?:,(?= ')| \);)/g,
-  ))
-    r[m[1]] = m[2].trim();
-  for (const m of src.matchAll(
-    /'([a-z0-9-]+)': map\.get\(\$deps, 'md-ref-typeface', '([a-z-]+)'\)/g,
-  ))
-    r[m[1]] = `ref:${m[2]}`;
-  // Format published since the 34.x token sets: one Sass variable per token ("$body-large-size: 1rem;").
-  for (const m of src.matchAll(/\$([a-z0-9-]+): (.+?);/g)) {
-    const ref = m[2].match(/^md-ref-typeface\.\$([a-z-]+)$/);
-    r[m[1]] ??= ref ? `ref:${ref[1]}` : m[2].trim();
-  }
-  // aliases inside the same set ("$easing-emphasized: $easing-standard;")
-  for (const [k, x] of Object.entries(r))
-    if (x.startsWith("$") && r[x.slice(1)] !== undefined) r[k] = r[x.slice(1)];
-  return r;
+// --- Non-color sys tokens (type scale, shape, elevation, state, motion) ---
+// Type scale, shape, elevation and state: the latest official M3 values kept in docs/design/specs/tokens/material-3.json
+// (verified against material-web and androidx). Motion: Angular Material's own M3 motion tokens (the library the web
+// target renders with). When the spec file is absent (CI checkout without docs/), the previously generated tokens.json
+// is the source, so --check stays reproducible.
+const specFile = Bun.file(
+  join(root, "docs/design/specs/tokens/material-3.json"),
+);
+type Sys = {
+  typescale: Record<string, Record<string, string | number>>;
+  shape: Record<string, string>;
+  elevation: Record<string, string>;
+  state: Record<string, unknown>;
+};
+const sys: Sys = (await specFile.exists())
+  ? (await specFile.json()).tokens
+  : await Bun.file(join(out, "tokens.json")).json();
+// Angular Material motion map ("duration-short1: 50ms," / "easing-standard: cubic-bezier(...),").
+const motionSrc = await Bun.file(
+  join(moduleDir("@angular/material"), "core/tokens/m3/_md-sys-motion.scss"),
+).text();
+const motion: Record<string, string> = {};
+for (const m of motionSrc.matchAll(
+  /^\s+((?:duration|easing)-[a-z0-9-]+):\s*(.+?),?\s*$/gm,
+))
+  motion[m[1]] = m[2].trim();
+// keep the historical order (the bare emphasized easing last) so generated outputs stay stable
+if (motion["easing-emphasized"]) {
+  const v = motion["easing-emphasized"];
+  delete motion["easing-emphasized"];
+  motion["easing-emphasized"] = v;
 }
-const [typeRaw, refType, shapeRaw, motionRaw, elevRaw, stateRaw] =
-  await Promise.all(
-    [
-      "sys-typescale",
-      "ref-typeface",
-      "sys-shape",
-      "sys-motion",
-      "sys-elevation",
-      "sys-state",
-    ].map(scss),
-  );
 const fontStack = [brand.font, ...brand.font_fallback]
   .map((f) => (f.includes(" ") ? `"${f}"` : f))
   .join(", ");
-const ref: Record<string, string> = {
-  ...refType,
-  brand: fontStack,
-  plain: fontStack,
-};
-const strip = (x: string) => x.replace(/^\((.*)\)$/, "$1");
-const resolve = (x: string) =>
-  x.startsWith("ref:") ? ref[x.slice(4)] : strip(x);
-
 const typescale: Record<string, Record<string, string>> = {};
-for (const [k, val] of Object.entries(typeRaw)) {
-  const m = k.match(
-    /^(display|headline|title|body|label)-(large|medium|small)(?:-prominent)?-(font|line-height|size|tracking|weight)$/,
-  );
-  if (!m || k.includes("prominent")) continue;
-  (typescale[`${m[1]}-${m[2]}`] ??= {})[m[3]] = resolve(val);
+for (const role of Object.keys(sys.typescale)
+  .filter((k) =>
+    /^(display|headline|title|body|label)-(large|medium|small)$/.test(k),
+  )
+  .sort()) {
+  const t = sys.typescale[role];
+  typescale[role] = {
+    "line-height": String(t["line-height"]),
+    size: String(t.size),
+    tracking: String(t.tracking),
+    font: fontStack,
+    weight: String(t.weight),
+  };
 }
 const shape = Object.fromEntries(
-  Object.entries(shapeRaw)
-    .filter(([k]) =>
-      /^corner-(none|extra-small|small|medium|large|extra-large|full)$/.test(k),
-    )
-    .map(([k, x]) => [k, strip(x)]),
-);
-const motion = Object.fromEntries(
-  Object.entries(motionRaw)
-    .filter(([k]) => /^(duration|easing)-/.test(k))
-    .map(([k, x]) => [k, strip(x)]),
+  Object.entries(sys.shape).filter(([k]) =>
+    /^corner-(none|extra-small|small|medium|large|extra-large|full)$/.test(k),
+  ),
 );
 const elevation = Object.fromEntries(
-  Object.entries(elevRaw)
-    .filter(([k]) => /^level\d$/.test(k))
-    .map(([k, x]) => [k, `${strip(x).replace(/px$/, "")}dp`]),
+  Object.entries(sys.elevation).filter(([k]) => /^level\d$/.test(k)),
 );
 const state = Object.fromEntries(
-  Object.entries(stateRaw)
+  Object.entries(sys.state)
     .filter(([k]) => /state-layer-opacity$/.test(k))
-    .map(([k, x]) => [k, strip(x)]),
+    .map(([k, x]) => [k, String(x)]),
 );
 
-// Garde-fous : une mise à jour de @material/web qui change le format SCSS doit casser le build, pas le vider.
+// Garde-fous : un format de source qui change doit casser le build, pas le vider.
 const expect = (what: string, got: number, want: number) => {
   if (got !== want)
     throw new Error(
-      `${what} : ${got} au lieu de ${want} (format @material/web changé ?)`,
+      `${what} : ${got} au lieu de ${want} (format de source changé ?)`,
     );
 };
 expect("rôles typescale", Object.keys(typescale).length, 15);
@@ -210,8 +194,7 @@ const tokens = {
     seed: brand.seed.toUpperCase(),
     variant: brand.variant,
     "material-color-utilities": mcuVersion,
-    "material-web": mwcVersion,
-    "material-web-tokens": "latest",
+    "angular-material": angularMaterialVersion,
   },
   color,
   custom: { bolt: brand.accent.toUpperCase() },
@@ -292,6 +275,71 @@ ${Object.keys(motion)
   }
 }
 `;
+
+// --- Angular Material M3 theme (Sass `mat.theme` + `mat.theme-overrides`) ---
+// Every --mat-sys-* variable of Angular Material is pointed at the --md-sys-* tokens above (MCU colors per mode,
+// typescale, shape, state layers), so light/dark/contrast switching of tokens.css themes the Angular components.
+// angular-material.css is the compiled form (real Sass compile) for pages that do not run the Sass builder.
+const sassStr = (x: string) => x.replace(/"/g, '\\"');
+const matColor = Object.keys(color.light)
+  .map((k) => `    ${k}: var(--md-sys-color-${k}),`)
+  .join("\n");
+const matType = Object.entries(typescale)
+  .flatMap(([n, p]) =>
+    ["size", "line-height", "tracking"].map(
+      (k) => `    ${n}-${k}: var(--md-sys-typescale-${n}-${k}),`,
+    ),
+  )
+  .join("\n");
+const matShape = Object.keys(shape)
+  .map((k) => `    ${k}: var(--md-sys-shape-${k}),`)
+  .join("\n");
+const matState = Object.keys(state)
+  .map((k) => `    ${k}: var(--md-sys-state-${k}),`)
+  .join("\n");
+const families = [brand.font, ...brand.font_fallback]
+  .map((x) =>
+    /^[a-z-]+$/i.test(x) && !/^(Inter)$/.test(x) ? x : `"${sassStr(x)}"`,
+  )
+  .join(", ");
+files["angular-theme.scss"] =
+  `${header("//")}// Usage (Angular app styles.scss): @use "@aphrody/design/angular-theme"; the components then render with the
+// brand tokens. Needs tokens.css (the --md-sys-* variables) loaded on the page.
+@use "@angular/material" as mat;
+
+html {
+  @include mat.theme(
+    (
+      color: (
+        theme-type: color-scheme,
+        primary: mat.$violet-palette,
+      ),
+      typography: (
+        plain-family: (${families}),
+        brand-family: (${families}),
+        bold-weight: 700,
+        medium-weight: 500,
+        regular-weight: 400,
+      ),
+      density: 0,
+    )
+  );
+  @include mat.theme-overrides(
+    (
+${matColor}
+${matType}
+${matShape}
+${matState}
+    )
+  );
+}
+`;
+const sassRes = sass.compileString(files["angular-theme.scss"], {
+  loadPaths: [dirname(dirname(moduleDir("@angular/material")))],
+  style: "expanded",
+  quietDeps: true,
+});
+files["angular-material.css"] = `${header("/*")}*/\n${sassRes.css}\n`;
 
 const UP = (s: string) => s.replace(/-/g, "_").toUpperCase();
 const rgba = (hex: string) => `0x${hex.slice(1)}FF`;
@@ -632,7 +680,7 @@ Rôles M3 générés par Material Color Utilities (\`DynamicScheme\`), six modes
 
 ## Typography
 
-Échelle M3 de Material Web (tokens v0_192) : display, headline, title, body, label en large/medium/small, police ${brand.font}, code en Google Sans Code.
+Échelle M3 officielle : display, headline, title, body, label en large/medium/small, police ${brand.font}, code en Google Sans Code.
 
 ## Layout
 
@@ -648,7 +696,7 @@ Coins M3 : none 0, extra-small 4, small 8, medium 12, large 16, extra-large 28, 
 
 ## Components
 
-Web : Material Web (\`@material/web\` ${mwcVersion}) uniquement, via \`@aphrody/design/components\`. Icônes : SVG 2 statiques (\`assets/brand/gen/symbols/sprite.svg\`, \`svg/*.svg\`) et structs Rust typées à la compilation (\`tokens/symbols.rs\` \`IconData\` / \`lucide-dioxus\` / \`lucide-leptos\` / \`dioxus-icons\` / \`icondata_core\`, tree-shakées par LLVM/wasm-opt sans chargement \`.woff2\` runtime). Desktop natif GPU : enum \`Symbol::codepoint()\` (\`tokens/symbols.rs\`, compatible \`egui_material_icons\` / \`iced_lucide\` / \`cosmic-text\`) avec \`tokens.rs\`. TUI : \`ansi.json\`.
+Web : Angular Material (\`@angular/material\`) uniquement, thème M3 via \`@aphrody/design/angular\` (\`tokens/angular-material.css\`, \`tokens/angular-theme.scss\`). Icônes : SVG 2 statiques (\`assets/brand/gen/symbols/sprite.svg\`, \`svg/*.svg\`) et structs Rust typées à la compilation (\`tokens/symbols.rs\` \`IconData\` / \`lucide-dioxus\` / \`lucide-leptos\` / \`dioxus-icons\` / \`icondata_core\`, tree-shakées par LLVM/wasm-opt sans chargement \`.woff2\` runtime). Desktop natif GPU : enum \`Symbol::codepoint()\` (\`tokens/symbols.rs\`, compatible \`egui_material_icons\` / \`iced_lucide\` / \`cosmic-text\`) avec \`tokens.rs\`. TUI : \`ansi.json\`.
 
 ## Do's and Don'ts
 

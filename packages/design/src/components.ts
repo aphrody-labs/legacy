@@ -1,50 +1,80 @@
-// Seule bibliothèque de composants web du monorepo : Material Web (@material/web), thémée par tokens.css.
-// Importer ce module enregistre les éléments <md-*> utilisés par les sites et dashboards.
-import "@material/web/button/filled-button.js";
-import "@material/web/button/filled-tonal-button.js";
-import "@material/web/button/outlined-button.js";
-import "@material/web/button/text-button.js";
-import "@material/web/iconbutton/icon-button.js";
-import "@material/web/iconbutton/filled-icon-button.js";
-import "@material/web/icon/icon.js";
-import "@material/web/fab/fab.js";
-import "@material/web/chips/chip-set.js";
-import "@material/web/chips/assist-chip.js";
-import "@material/web/chips/filter-chip.js";
-import "@material/web/chips/input-chip.js";
-import "@material/web/textfield/outlined-text-field.js";
-import "@material/web/textfield/filled-text-field.js";
-import "@material/web/select/outlined-select.js";
-import "@material/web/select/select-option.js";
-import "@material/web/checkbox/checkbox.js";
-import "@material/web/radio/radio.js";
-import "@material/web/switch/switch.js";
-import "@material/web/slider/slider.js";
-import "@material/web/list/list.js";
-import "@material/web/list/list-item.js";
-import "@material/web/menu/menu.js";
-import "@material/web/menu/menu-item.js";
-import "@material/web/dialog/dialog.js";
-import "@material/web/tabs/tabs.js";
-import "@material/web/tabs/primary-tab.js";
-import "@material/web/tabs/secondary-tab.js";
-import "@material/web/progress/linear-progress.js";
-import "@material/web/progress/circular-progress.js";
-import "@material/web/divider/divider.js";
-import "@material/web/elevation/elevation.js";
-import "@material/web/ripple/ripple.js";
-import "@material/web/focus/md-focus-ring.js";
-import { styles as typescaleStyles } from "@material/web/typography/md-typescale-styles.js";
+// Seule bibliothèque de composants web du monorepo : Angular Material (@angular/material), thémée par
+// tokens.css + angular-theme.scss. Composants standalone d'Angular, compilés par le builder Angular de l'app.
+// Importer 'APHRODY_MATERIAL' dans le tableau 'imports' d'un composant standalone.
+export { MatButtonModule } from "@angular/material/button";
+export { MatButtonToggleModule } from "@angular/material/button-toggle";
+export { MatCardModule } from "@angular/material/card";
+export { MatCheckboxModule } from "@angular/material/checkbox";
+export { MatChipsModule } from "@angular/material/chips";
+export { MatDialogModule } from "@angular/material/dialog";
+export { MatDividerModule } from "@angular/material/divider";
+export { MatFormFieldModule } from "@angular/material/form-field";
+export { MatIconModule } from "@angular/material/icon";
+export { MatInputModule } from "@angular/material/input";
+export { MatListModule } from "@angular/material/list";
+export { MatMenuModule } from "@angular/material/menu";
+export { MatProgressBarModule } from "@angular/material/progress-bar";
+export { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+export { MatRadioModule } from "@angular/material/radio";
+export { MatSelectModule } from "@angular/material/select";
+export { MatSidenavModule } from "@angular/material/sidenav";
+export { MatSlideToggleModule } from "@angular/material/slide-toggle";
+export { MatSliderModule } from "@angular/material/slider";
+export { MatTableModule } from "@angular/material/table";
+export { MatTabsModule } from "@angular/material/tabs";
+export { MatToolbarModule } from "@angular/material/toolbar";
+export { MatTooltipModule } from "@angular/material/tooltip";
+export { MatBadgeModule } from "@angular/material/badge";
 
-/** Applique les classes .md-typescale-* de Material Web au document. */
-export function adoptTypescale(doc: Document = document): void {
-  if (
-    typescaleStyles.styleSheet &&
-    !doc.adoptedStyleSheets.includes(typescaleStyles.styleSheet)
-  ) {
-    doc.adoptedStyleSheets = [
-      ...doc.adoptedStyleSheets,
-      typescaleStyles.styleSheet,
-    ];
-  }
-}
+import { MatBadgeModule } from "@angular/material/badge";
+import { MatButtonModule } from "@angular/material/button";
+import { MatButtonToggleModule } from "@angular/material/button-toggle";
+import { MatCardModule } from "@angular/material/card";
+import { MatCheckboxModule } from "@angular/material/checkbox";
+import { MatChipsModule } from "@angular/material/chips";
+import { MatDialogModule } from "@angular/material/dialog";
+import { MatDividerModule } from "@angular/material/divider";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from "@angular/material/icon";
+import { MatInputModule } from "@angular/material/input";
+import { MatListModule } from "@angular/material/list";
+import { MatMenuModule } from "@angular/material/menu";
+import { MatProgressBarModule } from "@angular/material/progress-bar";
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
+import { MatRadioModule } from "@angular/material/radio";
+import { MatSelectModule } from "@angular/material/select";
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatSlideToggleModule } from "@angular/material/slide-toggle";
+import { MatSliderModule } from "@angular/material/slider";
+import { MatTableModule } from "@angular/material/table";
+import { MatTabsModule } from "@angular/material/tabs";
+import { MatToolbarModule } from "@angular/material/toolbar";
+import { MatTooltipModule } from "@angular/material/tooltip";
+
+/** Every Angular Material module of the design system, for the 'imports' of a standalone component. */
+export const APHRODY_MATERIAL = [
+  MatBadgeModule,
+  MatButtonModule,
+  MatButtonToggleModule,
+  MatCardModule,
+  MatCheckboxModule,
+  MatChipsModule,
+  MatDialogModule,
+  MatDividerModule,
+  MatFormFieldModule,
+  MatIconModule,
+  MatInputModule,
+  MatListModule,
+  MatMenuModule,
+  MatProgressBarModule,
+  MatProgressSpinnerModule,
+  MatRadioModule,
+  MatSelectModule,
+  MatSidenavModule,
+  MatSlideToggleModule,
+  MatSliderModule,
+  MatTableModule,
+  MatTabsModule,
+  MatToolbarModule,
+  MatTooltipModule,
+] as const;

@@ -255,7 +255,7 @@ Rôles M3 générés par Material Color Utilities (`DynamicScheme`), six modes :
 
 ## Typography
 
-Échelle M3 de Material Web (tokens v0_192) : display, headline, title, body, label en large/medium/small, police Google Sans Flex, code en Google Sans Code.
+Échelle M3 officielle : display, headline, title, body, label en large/medium/small, police Google Sans Flex, code en Google Sans Code.
 
 ## Layout
 
@@ -271,7 +271,7 @@ Coins M3 : none 0, extra-small 4, small 8, medium 12, large 16, extra-large 28, 
 
 ## Components
 
-Web : Material Web (`@material/web` 2.5.0) uniquement, via `@aphrody/design/components`. Icônes : SVG 2 statiques (`assets/brand/gen/symbols/sprite.svg`, `svg/*.svg`) et structs Rust typées à la compilation (`tokens/symbols.rs` `IconData` / `lucide-dioxus` / `lucide-leptos` / `dioxus-icons` / `icondata_core`, tree-shakées par LLVM/wasm-opt sans chargement `.woff2` runtime). Desktop natif GPU : enum `Symbol::codepoint()` (`tokens/symbols.rs`, compatible `egui_material_icons` / `iced_lucide` / `cosmic-text`) avec `tokens.rs`. TUI : `ansi.json`.
+Web : Angular Material (`@angular/material`) uniquement, thème M3 via `@aphrody/design/angular` (`tokens/angular-material.css`, `tokens/angular-theme.scss`). Icônes : SVG 2 statiques (`assets/brand/gen/symbols/sprite.svg`, `svg/*.svg`) et structs Rust typées à la compilation (`tokens/symbols.rs` `IconData` / `lucide-dioxus` / `lucide-leptos` / `dioxus-icons` / `icondata_core`, tree-shakées par LLVM/wasm-opt sans chargement `.woff2` runtime). Desktop natif GPU : enum `Symbol::codepoint()` (`tokens/symbols.rs`, compatible `egui_material_icons` / `iced_lucide` / `cosmic-text`) avec `tokens.rs`. TUI : `ansi.json`.
 
 ## Do's and Don'ts
 

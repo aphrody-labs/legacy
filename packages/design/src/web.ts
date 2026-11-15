@@ -1,11 +1,13 @@
 // @aphrody/design/web : inputs of web pages from the design system. tokens.css (Material Color Utilities from
-// assets/brand/brand.toml), a Material Web subset bundled by bun, and the M3 typescale as CSS.
-// Same API shape as tokensCss/componentsBundle of packages/deploy/src/m3.ts, without the repository root argument.
+// assets/brand/brand.toml), the Angular Material M3 theme (--mat-sys-* on those tokens), the Angular Material
+// module map, and the M3 typescale as CSS. Angular components are compiled by the Angular builder of the consuming
+// app (apps/aphrody/web), never bundled here.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const PKG = join(import.meta.dir, "..");
 const TOKENS = join(PKG, "tokens", "tokens.css");
+const ANGULAR_THEME = join(PKG, "tokens", "angular-material.css");
 
 /** Minify CSS conservatively: comments and whitespace only. */
 export function minifyCss(css: string): string {
@@ -39,69 +41,99 @@ export const typescale = (role: string): string =>
 export const typescaleCss = (): string =>
   TYPE_ROLES.map((r) => `.md-typescale-${r}{${typescale(r)}}`).join("");
 
-const ELEMENT = /^md-[a-z0-9-]+$/;
+/** Angular Material secondary entry point and NgModule of every selector the sites use (tag or attribute). */
+const MATERIAL: Record<string, readonly [entry: string, module: string]> = {
+  matButton: ["button", "MatButtonModule"],
+  "mat-button": ["button", "MatButtonModule"],
+  "mat-flat-button": ["button", "MatButtonModule"],
+  "mat-stroked-button": ["button", "MatButtonModule"],
+  "mat-raised-button": ["button", "MatButtonModule"],
+  "mat-icon-button": ["button", "MatButtonModule"],
+  "mat-fab": ["button", "MatButtonModule"],
+  "mat-mini-fab": ["button", "MatButtonModule"],
+  "mat-button-toggle": ["button-toggle", "MatButtonToggleModule"],
+  "mat-button-toggle-group": ["button-toggle", "MatButtonToggleModule"],
+  "mat-card": ["card", "MatCardModule"],
+  "mat-checkbox": ["checkbox", "MatCheckboxModule"],
+  "mat-chip": ["chips", "MatChipsModule"],
+  "mat-chip-set": ["chips", "MatChipsModule"],
+  "mat-chip-listbox": ["chips", "MatChipsModule"],
+  "mat-chip-option": ["chips", "MatChipsModule"],
+  "mat-chip-grid": ["chips", "MatChipsModule"],
+  "mat-dialog-content": ["dialog", "MatDialogModule"],
+  "mat-divider": ["divider", "MatDividerModule"],
+  "mat-form-field": ["form-field", "MatFormFieldModule"],
+  "mat-label": ["form-field", "MatFormFieldModule"],
+  "mat-hint": ["form-field", "MatFormFieldModule"],
+  "mat-error": ["form-field", "MatFormFieldModule"],
+  "mat-icon": ["icon", "MatIconModule"],
+  matInput: ["input", "MatInputModule"],
+  "mat-list": ["list", "MatListModule"],
+  "mat-nav-list": ["list", "MatListModule"],
+  "mat-action-list": ["list", "MatListModule"],
+  "mat-selection-list": ["list", "MatListModule"],
+  "mat-list-item": ["list", "MatListModule"],
+  "mat-menu": ["menu", "MatMenuModule"],
+  "mat-progress-bar": ["progress-bar", "MatProgressBarModule"],
+  "mat-progress-spinner": ["progress-spinner", "MatProgressSpinnerModule"],
+  "mat-radio-button": ["radio", "MatRadioModule"],
+  "mat-radio-group": ["radio", "MatRadioModule"],
+  "mat-select": ["select", "MatSelectModule"],
+  "mat-option": ["select", "MatSelectModule"],
+  "mat-sidenav": ["sidenav", "MatSidenavModule"],
+  "mat-sidenav-container": ["sidenav", "MatSidenavModule"],
+  "mat-slide-toggle": ["slide-toggle", "MatSlideToggleModule"],
+  "mat-slider": ["slider", "MatSliderModule"],
+  "mat-table": ["table", "MatTableModule"],
+  "mat-tab-group": ["tabs", "MatTabsModule"],
+  "mat-tab": ["tabs", "MatTabsModule"],
+  "mat-toolbar": ["toolbar", "MatToolbarModule"],
+  matTooltip: ["tooltip", "MatTooltipModule"],
+  matBadge: ["badge", "MatBadgeModule"],
+};
 
-/** Module path of a Material Web element (md-filled-button -> @material/web/button/filled-button.js). */
-export function elementModule(tag: string): string {
-  if (!ELEMENT.test(tag)) throw new Error(`not a Material Web element: ${tag}`);
-  const name = tag.slice(3);
-  const dirs: Record<string, string> = {
-    button: "button",
-    "icon-button": "iconbutton",
-    fab: "fab",
-    chip: "chips",
-    "list-item": "list",
-    list: "list",
-    checkbox: "checkbox",
-    switch: "switch",
-    radio: "radio",
-    divider: "divider",
-    "linear-progress": "progress",
-    "circular-progress": "progress",
-    "text-field": "textfield",
-    tabs: "tabs",
-    tab: "tabs",
-    menu: "menu",
-    "menu-item": "menu",
-    dialog: "dialog",
-    ripple: "ripple",
-    "focus-ring": "focus",
-    elevation: "elevation",
-    icon: "icon",
-    slider: "slider",
-    select: "select",
-    "select-option": "select",
-  };
-  const key = Object.keys(dirs)
-    .sort((a, b) => b.length - a.length)
-    .find((k) => name === k || name.endsWith(`-${k}`));
-  if (!key) throw new Error(`unknown Material Web element: ${tag}`);
-  return `@material/web/${dirs[key]}/${name}.js`;
+/** Angular Material entry point of a selector (mat-card -> @angular/material/card, matButton -> .../button). */
+export function materialEntry(selector: string): string {
+  const m = MATERIAL[selector];
+  if (!m) throw new Error(`unknown Angular Material selector: ${selector}`);
+  return `@angular/material/${m[0]}`;
 }
 
-/** Minified browser bundle registering only the given Material Web elements, resolved from this package. */
-export async function componentsBundle(elements: string[]): Promise<string> {
-  const mods = [...new Set(elements)].sort().map(elementModule);
-  for (const m of mods) Bun.resolveSync(m, PKG);
-  const entry = mods.map((m) => `import ${JSON.stringify(m)};`).join("\n");
-  const r = await Bun.build({
-    entrypoints: ["aphrody-md-entry.ts"],
-    target: "browser",
-    format: "esm",
-    minify: true,
-    files: { "aphrody-md-entry.ts": entry },
-    plugins: [
-      {
-        name: "aphrody-design-web",
-        setup(b) {
-          b.onResolve({ filter: /^@material\/web\// }, (a) => ({
-            path: Bun.resolveSync(a.path, PKG),
-          }));
-        },
-      },
-    ],
-  } as Parameters<typeof Bun.build>[0]);
-  if (!r.success)
-    throw new Error(`Material Web bundle: ${r.logs.map(String).join("\n")}`);
-  return r.outputs[0]!.text();
+/** NgModule of a selector (mat-card -> MatCardModule), for a standalone component's 'imports'. */
+export function materialModule(selector: string): string {
+  const m = MATERIAL[selector];
+  if (!m) throw new Error(`unknown Angular Material selector: ${selector}`);
+  return m[1];
+}
+
+/** Every selector of the table, sorted. */
+export const materialSelectors = (): string[] => Object.keys(MATERIAL).sort();
+
+/** TypeScript import lines and the 'imports' array of a standalone component using the given selectors. */
+export function materialImports(selectors: string[]): {
+  imports: string;
+  array: string;
+} {
+  const byEntry = new Map<string, Set<string>>();
+  for (const sel of selectors) {
+    const e = materialEntry(sel);
+    (byEntry.get(e) ?? byEntry.set(e, new Set()).get(e)!).add(
+      materialModule(sel),
+    );
+  }
+  const entries = [...byEntry].sort(([x], [y]) => x.localeCompare(y));
+  return {
+    imports: entries
+      .map(([e, m]) => `import { ${[...m].sort().join(", ")} } from "${e}";`)
+      .join("\n"),
+    array: `[${entries
+      .flatMap(([, m]) => [...m])
+      .sort()
+      .join(", ")}]`,
+  };
+}
+
+/** packages/design/tokens/angular-material.css (Angular Material --mat-sys-* mapped on --md-sys-*), minified. */
+export function angularThemeCss(): string {
+  return minifyCss(readFileSync(ANGULAR_THEME, "utf8"));
 }
