@@ -1,0 +1,4 @@
+# fr1: /home is btrfs on sdb+sdc (95 % busy, 80 ms read await measured 2026-11-15). The io scheduler is "none"
+# (65-aphrody-vps.rules, all OVH disks), where cgroup io.weight has no effect. bfq on these two disks makes the IOWeight
+# of the agents/bench/build slices effective. Must sort after 65-aphrody-vps.rules.
+ACTION=="add|change", KERNEL=="sd[bc]", ATTR{queue/scheduler}="bfq"

@@ -30,6 +30,7 @@ if [ -d "$off/etc" ]; then
     rel=${f#"$off/etc/"}; inst "$f" "/etc/$rel" 0644 && { case $rel in udev/*|modules-load.d/*) udev=1;; esac; }
   done < <(find "$off/etc" -type f)
 fi
+[ "$mode" = apply ] && [ -e /etc/udev/rules.d/60-fleet-bfq.rules ] && rm -f /etc/udev/rules.d/60-fleet-bfq.rules   # renamed to 66 (must sort after 65-aphrody-vps)
 if [ -f "$off/atop.default" ]; then inst "$off/atop.default" /etc/default/atop 0644 && atopcfg=1 || atopcfg=0; else atopcfg=0; fi
 
 if [ "$mode" = apply ]; then
