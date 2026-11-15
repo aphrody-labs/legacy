@@ -1,5 +1,5 @@
-// Tissu d'inférence : lecture de infra/ai/fabric.toml, ordre de -ts (nœuds RPC puis CUDA0), arguments du coordinateur
-// (jamais d'écoute hors boucle locale), ligne ssh (valeurs citées), port fermé. Aucun hôte distant contacté.
+// Inference fabric: reading infra/ai/fabric.toml, -ts order (RPC nodes then CUDA0), coordinator arguments
+// (never listening off loopback), ssh line (quoted values), closed port. No remote host contacted.
 import { expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,7 +11,7 @@ const { coordinatorArgs, loadFabric, reachable, remoteLine, tensorSplit } =
 
 const f = loadFabric();
 
-test("fabric.toml : coordinateur local, nœuds liés à WireGuard, binaires épinglés", () => {
+test("fabric.toml: local coordinator, nodes bound to WireGuard, pinned binaries", () => {
   expect(f.coordinator.host).toBe("127.0.0.1");
   expect(f.release.tag).toMatch(/^b\d+$/);
   for (const n of f.node.filter((x) => x.os === "linux")) {
@@ -25,7 +25,7 @@ test("fabric.toml : coordinateur local, nœuds liés à WireGuard, binaires épi
   expect(f.node.find((n) => n.id === "fr1")!.gate).toBe("no-build");
 });
 
-test("-ts : nœuds RPC dans l'ordre admis, puis l'appareil local ; vide si une part manque", () => {
+test("-ts: RPC nodes in admitted order, then the local device; empty if a share is missing", () => {
   expect(tensorSplit(f, ["fr1"])).toEqual([1, 7]);
   expect(tensorSplit(f, ["fr1", "prd"])).toEqual([1, 1, 7]);
   expect(tensorSplit(f, [])).toEqual([]);
@@ -50,12 +50,12 @@ test("ligne ssh : valeurs entre apostrophes, sudo -n hors root", () => {
   expect(l.endsWith(`node.sh 'up'`)).toBe(true);
 });
 
-test("port fermé : non joignable, sans exception", async () => {
+test("closed port: unreachable, no exception", async () => {
   expect(await reachable("127.0.0.1", 1, 1000)).toBe(false);
   expect(await reachable("", 50052)).toBe(false);
 });
 
-test("[trial] : prd sondé par ensure, une couche distante sur Qwen3-0.6B", () => {
+test("[trial]: prd probed by ensure, one remote layer on Qwen3-0.6B", () => {
   expect(f.trial?.nodes).toContain("prd");
   expect(f.model[f.trial!.model]).toBeTruthy();
   expect(f.trial!.split.length).toBe(2);

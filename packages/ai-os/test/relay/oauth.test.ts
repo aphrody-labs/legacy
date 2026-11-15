@@ -1,5 +1,5 @@
-// Autorisation MCP 2026-07-28 et A2A 1.0 du relais : métadonnées RFC 9728 / 8414, DCR, PKCE S256, iss (RFC 9207),
-// audience RFC 8707, rotation des jetons de rafraîchissement, client_credentials, device flow RFC 8628.
+// MCP authorization 2026-07-28 and A2A 1.0 of the relay: RFC 9728 / 8414 metadata, DCR, PKCE S256, iss (RFC 9207),
+// RFC 8707 audience, refresh token rotation, client_credentials, RFC 8628 device flow.
 import { afterAll, expect, test } from "bun:test";
 import { createHash, randomBytes } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -39,7 +39,7 @@ const mcpInit = (auth?: string) =>
     body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" }),
   });
 
-test("401 avec resource_metadata, métadonnées PRM et AS", async () => {
+test("401 with resource_metadata, PRM and AS metadata", async () => {
   const r = await mcpInit();
   expect(r.status).toBe(401);
   const h = r.headers.get("www-authenticate") ?? "";
@@ -58,7 +58,7 @@ test("401 avec resource_metadata, métadonnées PRM et AS", async () => {
   expect(as.code_challenge_methods_supported).toEqual(["S256"]);
   expect(as.client_id_metadata_document_supported).toBe(true);
   expect(as.authorization_response_iss_parameter_supported).toBe(true);
-  // Jeton dans l'URL refusé sur /mcp.
+  // Token in the URL refused on /mcp.
   expect(
     (
       await fetch(`${base}/mcp?token=jeton-oauth-test`, {
@@ -67,7 +67,7 @@ test("401 avec resource_metadata, métadonnées PRM et AS", async () => {
       })
     ).status,
   ).toBe(401);
-  // Jeton fixe en en-tête : usage local conservé.
+  // Fixed token in a header: local use kept.
   expect((await mcpInit("Bearer jeton-oauth-test")).status).toBe(200);
 });
 
@@ -112,7 +112,7 @@ test("DCR + code PKCE, approbation automatique en boucle locale, iss, audience, 
     }),
   );
   expect(bad.status).toBe(400);
-  // Le code est à usage unique : nouvelle autorisation.
+  // The code is single-use: new authorization.
   const a2 = await fetch(`${base}/oauth/authorize?${q}`, {
     redirect: "manual",
   });
@@ -153,7 +153,7 @@ test("DCR + code PKCE, approbation automatique en boucle locale, iss, audience, 
     )
   ).json()) as any;
   expect(r1.access_token).toBeString();
-  // Réutilisation de l'ancien jeton : famille révoquée, le nouveau ne marche plus.
+  // Reuse of the old token: family revoked, the new one no longer works.
   expect(
     (
       await fetch(
@@ -180,7 +180,7 @@ test("DCR + code PKCE, approbation automatique en boucle locale, iss, audience, 
   ).toBe(400);
 });
 
-test("client_credentials exige le jeton du relais à l'enregistrement", async () => {
+test("client_credentials requires the relay token at registration", async () => {
   const body = JSON.stringify({
     client_name: "agent",
     grant_types: ["client_credentials"],
@@ -217,11 +217,11 @@ test("client_credentials exige le jeton du relais à l'enregistrement", async ()
   ).json()) as any;
   expect(t.scope).toBe("a2a");
   expect(t.refresh_token).toBeUndefined();
-  // Portée a2a seulement : /mcp répond 401 (audience absente).
+  // a2a scope only: /mcp answers 401 (missing audience).
   expect((await mcpInit(`Bearer ${t.access_token}`)).status).toBe(401);
 });
 
-test("device flow : en attente, approbation par le jeton du relais, jeton émis", async () => {
+test("device flow: pending, approval by the relay token, token issued", async () => {
   const c = (await (
     await fetch(`${base}/oauth/register`, {
       method: "POST",
@@ -259,7 +259,7 @@ test("device flow : en attente, approbation par le jeton du relais, jeton émis"
   expect((await mcpInit(`Bearer ${t.access_token}`)).status).toBe(200);
 });
 
-test("carte A2A : securitySchemes OAuth 2 conformes à a2a.proto", async () => {
+test("A2A card: OAuth 2 securitySchemes compliant with a2a.proto", async () => {
   const card = (await (
     await fetch(`${base}/.well-known/agent-card.json`)
   ).json()) as any;
@@ -276,7 +276,7 @@ test("carte A2A : securitySchemes OAuth 2 conformes à a2a.proto", async () => {
   );
 });
 
-test("redirection avec fragment refusée, métadonnées sans alias OpenID", async () => {
+test("redirect with fragment refused, metadata without OpenID alias", async () => {
   const r = await fetch(`${base}/oauth/register`, {
     method: "POST",
     headers: { "content-type": "application/json" },

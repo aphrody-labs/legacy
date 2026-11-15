@@ -1,6 +1,6 @@
-// ai-os review : notes au contrat des verdicts archivés, cible (chemins, plages, commit), ancrage (sources officielles
-// en cache, listes de contrôle), voix en parallèle puis juge, repli de moteur, cache sha256 + singleflight, NHITL,
-// boucle de correction gelée après deux tours sans progrès, branchement dans l'orchestrateur.
+// ai-os review: scores per the archived verdict contract, target (paths, ranges, commit), anchoring (cached official
+// sources, checklists), parallel voices then judge, engine fallback, sha256 cache + singleflight, NHITL,
+// fix loop frozen after two rounds without progress, wiring into the orchestrator.
 import { afterAll, expect, test } from "bun:test";
 import {
   existsSync,
@@ -82,7 +82,7 @@ function repo() {
   return { d, first, g };
 }
 
-test("note /20 : tous les formats des verdicts archivés", () => {
+test("/20 score: all formats of the archived verdicts", () => {
   expect(parseScore("**Note : 11/20**")).toBe(11);
   expect(parseScore("Note : **12,5/20**.")).toBe(12.5);
   expect(parseScore("Score: 7 / 20 — triples faux")).toBe(7);
@@ -94,7 +94,7 @@ test("note /20 : tous les formats des verdicts archivés", () => {
   expect(parseJudgeScore("Notes : Gemini 3,5/20, juge 4/20.")).toBe(4);
 });
 
-test("tableau des défauts", () => {
+test("defects table (legacy French labels)", () => {
   const f = parseFindings(
     "Note : 9/20\n| # | fichier:ligne | gravité | défaut | correction | source |\n|---|---|---|---|---|---|\n| 1 | a.ts:3 | haute | injection | argv | checklist:shell-justfile |\n| x | pas une ligne | | | |\n",
   );
@@ -106,7 +106,7 @@ test("tableau des défauts", () => {
   });
 });
 
-test("cible : chemins numérotés, plage, commit, filtre, refus hors racine", async () => {
+test("target: numbered paths, range, commit, filter, refusal outside the root", async () => {
   const { d, first } = repo();
   const p = await collect(["src/a.ts"], { root: d });
   expect(p.kind).toBe("paths");
@@ -131,7 +131,7 @@ test("cible : chemins numérotés, plage, commit, filtre, refus hors racine", as
   expect(t.text).toContain("[truncated");
 });
 
-test("sources : sujets, extraits pertinents, cache quotidien, copie périmée hors réseau", async () => {
+test("sources: topics, relevant excerpts, daily cache, stale copy offline", async () => {
   expect(topicsOf(["packages/x/a.ts", "justfile"], realConfig.topics)).toEqual(
     expect.arrayContaining(["bun-ts", "shell-justfile"]),
   );
@@ -184,7 +184,7 @@ const fakeSources = (root: string) =>
     url: "https://github.com/google/eng-practices/blob/b/x.md",
   }));
 
-test("tribunal : voix en parallèle, juge avec plaidoiries, repli, verdicts, INDEX, NHITL", async () => {
+test("tribunal: parallel voices, judge with pleas, fallback, verdicts, INDEX, NHITL", async () => {
   const { d, first } = repo();
   const prompts: Record<string, string> = {};
   let inflight = 0;
@@ -220,7 +220,7 @@ test("tribunal : voix en parallèle, juge avec plaidoiries, repli, verdicts, IND
   expect(peak).toBe(2); // gemini et claude ensemble, juge ensuite
   expect(prompts.j).toContain("Plea of the Gemini voice");
   expect(prompts.j).toContain("Plea of the Claude voice");
-  expect(prompts.g).toContain("Object.hasOwn"); // section bun-ts de CHECKLISTS.md injectée
+  expect(prompts.g).toContain("Object.hasOwn"); // bun-ts section of CHECKLISTS.md injected
   expect(prompts.g).toContain("Keep CLs small");
   expect(r.score).toBe(13);
   expect(r.status).toBe("needs-fix");
@@ -301,7 +301,7 @@ test("boucle de correction : freeze after two rounds without progress, compliant
   expect(fixes).toEqual([1]);
 });
 
-test("moteur : clé sha256 + singleflight + cache du relais, échecs non gardés", async () => {
+test("engine: sha256 key + singleflight + relay cache, failures not kept", async () => {
   let n = 0;
   const call = (async (_h: unknown, p: string) => {
     n++;
@@ -325,7 +325,7 @@ test("moteur : clé sha256 + singleflight + cache du relais, échecs non gardés
   expect(n).toBe(3);
 });
 
-test("INDEX : ligne remplacée par clé, sinon ajoutée", () => {
+test("INDEX: row replaced by key, otherwise appended", () => {
   const base =
     "| Doc | Score | P | S |\n|---|---|---|---|\n| a ([v](judge-x.md)) | 1/20 | p | s |\n";
   expect(
@@ -340,10 +340,10 @@ test("INDEX : ligne remplacée par clé, sinon ajoutée", () => {
   ).toHaveLength(4);
 });
 
-test("fouille : notes des verdicts réels de docs/reviews", () => {
+test("mining: scores of the real verdicts in docs/reviews", () => {
   const m = mine(srcRoot());
   const ai = m.verdicts.find((v) => v.file === "gemini-2026-11-13-ai-os.md");
-  if (!ai) return; // dépôt partiel
+  if (!ai) return; // partial repository
   expect(ai.score).toBe(11);
   expect(
     m.verdicts.find((v) => v.file === "judge-2026-11-13-ci.md")?.score,

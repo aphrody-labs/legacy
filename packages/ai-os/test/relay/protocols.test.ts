@@ -1,5 +1,5 @@
-// Cadrage des protocoles (sans moteur : seuls les outils en lecture et les erreurs sont appelés).
-// Sans agrégation : aucun serveur MCP externe lancé pendant les tests.
+// Protocol framing (no engine: only read tools and errors are called).
+// No aggregation: no external MCP server launched during the tests.
 process.env.RELAY_HUB = "0";
 process.env.RELAY_BUILTIN_MCP = "0";
 import { expect, test } from "bun:test";
@@ -22,7 +22,7 @@ test("MCP 2025-11-25 : initialize puis tools/list", async () => {
   expect(list.result.resultType).toBeUndefined();
 });
 
-test("MCP 2026-07-28 : server/discover, _meta par requête, version refusée", async () => {
+test("MCP 2026-07-28: server/discover, per-request _meta, version refused", async () => {
   const meta = { "io.modelcontextprotocol/protocolVersion": "2026-07-28" };
   const d: any = await mcpRpc({
     jsonrpc: "2.0",
@@ -50,7 +50,7 @@ test("MCP 2026-07-28 : server/discover, _meta par requête, version refusée", a
   expect(bad.error.message).toBe("UnsupportedProtocolVersionError");
 });
 
-test("MCP : outil inconnu et notification sans réponse", async () => {
+test("MCP: unknown tool and notification without response", async () => {
   const r: any = await mcpRpc({
     jsonrpc: "2.0",
     id: 1,
@@ -70,14 +70,14 @@ test("MCP : outil inconnu et notification sans réponse", async () => {
   ).toBeNull();
 });
 
-test("JSON-RPC : code d'erreur toujours entier (erreur réseau à code texte)", async () => {
+test("JSON-RPC: error code always an integer (network error with text code)", async () => {
   const { rpcCode } = await import("../../src/relay/protocols.ts");
   expect(rpcCode({ code: "ECONNREFUSED" }, -32603)).toBe(-32603);
   expect(rpcCode({ code: -32602 }, -32603)).toBe(-32602);
   expect(rpcCode(undefined, -32000)).toBe(-32000);
 });
 
-test("MCP tools/call : nom absent ou vide -> -32602, serveur agrégé inconnu -> -32602, erreur d'exécution -> isError", async () => {
+test("MCP tools/call: missing or empty name -> -32602, unknown aggregated server -> -32602, execution error -> isError", async () => {
   for (const name of [undefined, 42, ""]) {
     const r: any = await mcpRpc({
       jsonrpc: "2.0",
@@ -109,7 +109,7 @@ test("MCP tools/call : nom absent ou vide -> -32602, serveur agrégé inconnu ->
   expect(bad.result.isError).toBe(true);
 });
 
-test("/mcp/core : un outil d'un serveur agrégé est refusé à l'appel comme au listage", async () => {
+test("/mcp/core: a tool of an aggregated server is refused at call time as at listing time", async () => {
   const res: any = await mcpRpc(
     {
       jsonrpc: "2.0",

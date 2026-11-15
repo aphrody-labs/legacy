@@ -61,7 +61,7 @@ const msg = (t: string, extra: object = {}) => ({
   ...extra,
 });
 
-test("canonical : clés triées, champs volatils retirés", () => {
+test("canonical: sorted keys, volatile fields removed", () => {
   expect(canonical({ b: 1, a: { d: 2, c: 3 }, user: "u", id: 7 })).toBe(
     '{"a":{"c":3,"d":2},"b":1}',
   );
@@ -73,7 +73,7 @@ test("canonical : clés triées, champs volatils retirés", () => {
   );
 });
 
-test("singleflight : 5 requêtes identiques concurrentes, un seul appel amont", async () => {
+test("singleflight: 5 identical concurrent requests, a single upstream call", async () => {
   const o = fresh();
   calls = 0;
   const rs = await Promise.all(
@@ -90,7 +90,7 @@ test("singleflight : 5 requêtes identiques concurrentes, un seul appel amont", 
     "miss",
   ]);
   expect(o.stats()).toMatchObject({ miss: 1, coalesced: 4, stored: 0 });
-  // Non déterministe : pas de cache, l'appel suivant repart vers l'amont.
+  // Non-deterministic: no cache, the next call goes upstream again.
   await (await post(o, msg("x", { temperature: 0.7 }))).json();
   expect(calls).toBe(2);
 });
@@ -128,7 +128,7 @@ test("bypass : x-aphrody-cache: bypass et Cache-Control: no-store", async () => 
     "x-aphrody-cache": "bypass",
   });
   await r1.json();
-  expect(seen.marker).toBeNull(); // en-tête interne non propagé
+  expect(seen.marker).toBeNull(); // internal header not propagated
   const r2 = await post(o, msg("b", { temperature: 0 }), {
     "cache-control": "no-store",
   });
@@ -137,7 +137,7 @@ test("bypass : x-aphrody-cache: bypass et Cache-Control: no-store", async () => 
   expect(o.stats()).toMatchObject({ bypass: 2, hit: 0 });
 });
 
-test("erreurs jamais cachées (HTTP 500 et error JSON en 200)", async () => {
+test("errors never cached (HTTP 500 and error JSON in a 200)", async () => {
   const o = fresh();
   calls = 0;
   for (let i = 0; i < 2; i++) {
@@ -154,11 +154,11 @@ test("erreurs jamais cachées (HTTP 500 et error JSON en 200)", async () => {
   expect(o.stats()).toMatchObject({ stored: 0, hit: 0 });
 });
 
-test("streaming SSE : un flux amont diffusé à tous les abonnés, puis rejoué depuis le cache", async () => {
+test("SSE streaming: one upstream stream broadcast to all subscribers, then replayed from the cache", async () => {
   const o = fresh();
   calls = 0;
   const first = await post(o, msg("s", { stream: true, temperature: 0 }));
-  await Bun.sleep(40); // le second arrive en cours de flux : rattrapage des morceaux déjà lus
+  await Bun.sleep(40); // the second arrives mid-stream: catch-up on chunks already read
   const second = await post(o, msg("s", { stream: true, temperature: 0 }));
   const [a, b] = await Promise.all([first.text(), second.text()]);
   const want = "data: a\n\ndata: b\n\ndata: c\n\ndata: [DONE]\n\n";
@@ -173,7 +173,7 @@ test("streaming SSE : un flux amont diffusé à tous les abonnés, puis rejoué 
   expect(calls).toBe(1);
 });
 
-test("mesh : hôte:port distant -> port LB local, Idempotency-Key sur les POST des ports LB", async () => {
+test("mesh: remote host:port -> local LB port, Idempotency-Key on LB port POSTs", async () => {
   const toml = `
 [nodes.usa]
 public_ip = "72.60.186.43"
@@ -196,12 +196,12 @@ cache = "micro"
   expect(m.routes.get("prd:28081")?.lbPort).toBe(up.port);
   expect(m.routes.get("72.60.186.43:28081")?.cached).toBe(true);
   const o = new Outbound({ db: ":memory:", mesh: m });
-  // prd:28081 -> 127.0.0.1:<port de test> (à l'écoute) ; repli sur l'URL d'origine si absent.
+  // prd:28081 -> 127.0.0.1:<test port> (listening); fall back to the original URL if absent.
   const r = await o.route("http://prd:28081/v1/chat/completions");
   expect(r.url).toBe(`http://127.0.0.1:${up.port}/v1/chat/completions`);
   expect((await o.route("http://10.200.77.5:8766/x")).url).toBe(
     "http://10.200.77.5:8766/x",
-  ); // 19766 n'écoute pas ici
+  ); // 19766 does not listen here
   calls = 0;
   const res = await o.fetch("http://prd:28081/v1/chat/completions", {
     method: "POST",

@@ -9,7 +9,7 @@
 //   - anchoring: official Google sources (sources.ts) + checklists distilled from the verdicts (CHECKLISTS.md);
 //   - output: docs/reviews/<voice>-<date>-<slug>.md (score /20, defects, sources), docs/reviews/INDEX.md line;
 //   - fix loop: orchestrator coder ticket, new review, freeze after two rounds without progress
-//     (docs/ALPHABET.md, "Arrêt et gel"); missing engine = violation in var/agents/nhitl.sqlite.
+//     (docs/ALPHABET.md, "Arrêt et gel" section); missing engine = violation in var/agents/nhitl.sqlite.
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fingerprint, Index as Nhitl, scrub } from "../nhitl/index";

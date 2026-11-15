@@ -9,7 +9,7 @@ import { join } from "node:path";
 process.env.AGENT_HOME = mkdtempSync(join(tmpdir(), "ai-os-relay-"));
 const { mcpRpc } = await import("../../src/relay/protocols.ts");
 
-test("MCP : outils de l'agent listés, aller-retour mémoire", async () => {
+test("MCP: agent tools listed, memory round trip", async () => {
   const l: any = await mcpRpc({ jsonrpc: "2.0", id: 1, method: "tools/list" });
   const names = l.result.tools.map((t: any) => t.name);
   for (const n of [
@@ -38,7 +38,7 @@ test("MCP : outils de l'agent listés, aller-retour mémoire", async () => {
   expect(r.result.content[0].text).toContain("teal");
 });
 
-test("MCP : agent_run sur le modèle echo", async () => {
+test("MCP: agent_run on the echo model", async () => {
   const r: any = await mcpRpc({
     jsonrpc: "2.0",
     id: 4,
@@ -51,7 +51,7 @@ test("MCP : agent_run sur le modèle echo", async () => {
   expect(r.result.structuredContent.text).toBe("bot: ping");
 });
 
-test("JSON-RPC : lot vide, élément invalide, structuredContent objet seulement, arguments validés, cwd confiné", async () => {
+test("JSON-RPC: empty batch, invalid element, structuredContent object only, validated arguments, confined cwd", async () => {
   const { dispatch } = await import("../../src/relay/protocols.ts");
   expect(((await dispatch([], mcpRpc)) as any).error.code).toBe(-32600);
   const batch: any = await dispatch(

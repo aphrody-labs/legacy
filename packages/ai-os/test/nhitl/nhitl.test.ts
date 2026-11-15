@@ -42,7 +42,7 @@ test("aucun secret dans les extraits", () => {
   expect(redact("x".repeat(500)).length).toBeLessThanOrEqual(160);
 });
 
-test("file d'agents : échec d'auth, remise en file, effet retenu", () => {
+test("agent queue: auth failure, requeue, held effect", () => {
   const dump = [
     "@@failed /q/failed/t1.json",
     JSON.stringify({ id: "t1", role: "coder" }),
@@ -86,7 +86,7 @@ test("remplacement par source et tri persistant", () => {
   ix.close();
 });
 
-test("registre versionné lisible", () => {
+test("versioned registry readable", () => {
   const l = scanLedger();
   expect(l.length).toBeGreaterThan(5);
   expect(

@@ -1,4 +1,4 @@
-// TCP et TLS du relais : poignée de main par jeton puis JSON-RPC NDJSON (certificat auto-signé si RELAY_TEST_TLS_* défini).
+// Relay TCP and TLS: token handshake then NDJSON JSON-RPC (self-signed certificate if RELAY_TEST_TLS_* is set).
 import { afterAll, expect, test } from "bun:test";
 
 process.env.RELAY_TOKEN = "jeton-de-test";
@@ -35,7 +35,7 @@ async function roundTrip(port: number, tls: boolean) {
     port,
     ...(tls ? { tls: { rejectUnauthorized: false } } : {}),
     socket: {
-      // TLS : écrire après la poignée de main (les octets écrits avant sont perdus côté client bun).
+      // TLS: write after the handshake (bytes written before are lost on the bun client side).
       open(s) {
         if (!tls) send(s);
       },
@@ -69,7 +69,7 @@ test.skipIf(!s.tls)("TLS : jeton puis tools/list", async () => {
   expect(JSON.parse(res!).id).toBe(7);
 });
 
-test("HTTP : jeton exigé, carte A2A publique", async () => {
+test("HTTP: token required, public A2A card", async () => {
   const base = `http://127.0.0.1:${s.http.port}`;
   expect(
     (await fetch(`${base}/rpc`, { method: "POST", body: "{}" })).status,

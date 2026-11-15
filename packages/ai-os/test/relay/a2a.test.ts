@@ -1,4 +1,4 @@
-// A2A 1.0 (liaison JSON-RPC) : carte, version, validation, cycle de vie des tâches et flux SSE, sur le modèle echo.
+// A2A 1.0 (JSON-RPC binding): card, version, validation, task lifecycle and SSE streams, on the echo model.
 process.env.RELAY_HUB = "0";
 process.env.RELAY_BUILTIN_MCP = "0";
 import { expect, test } from "bun:test";
@@ -34,7 +34,7 @@ const events = async (r: Response) =>
     .filter((l) => l.startsWith("data: "))
     .map((l) => JSON.parse(l.slice(6)));
 
-test("carte d'agent : interface JSON-RPC 1.0, flux annoncé, skills existants", () => {
+test("agent card: JSON-RPC 1.0 interface, announced stream, existing skills", () => {
   const c = agentCard("http://127.0.0.1:8790");
   expect(c.supportedInterfaces[0]).toEqual({
     url: "http://127.0.0.1:8790/a2a",
@@ -46,7 +46,7 @@ test("carte d'agent : interface JSON-RPC 1.0, flux annoncé, skills existants", 
   for (const s of c.skills) expect(s.tags.length).toBeGreaterThan(0);
 });
 
-test("A2A-Version : absent = 0.3 refusé (-32009), 1.0 et 1.1 acceptés", async () => {
+test("A2A-Version: absent = 0.3 refused (-32009), 1.0 and 1.1 accepted", async () => {
   expect(versionSupported(null)).toBe(false);
   expect(versionSupported("0.3")).toBe(false);
   expect(versionSupported("1.0")).toBe(true);
@@ -62,7 +62,7 @@ test("A2A-Version : absent = 0.3 refusé (-32009), 1.0 et 1.1 acceptés", async 
   expect(r.id).toBe(1);
 });
 
-test("erreurs : JSON invalide -32700, paramètres -32602 (BadRequest), méthode inconnue -32601, tâche absente -32001", async () => {
+test("errors: invalid JSON -32700, parameters -32602 (BadRequest), unknown method -32601, missing task -32001", async () => {
   expect(((await (await post("{")).json()) as any).error.code).toBe(-32700);
   const noRole: any = await a2aRpc({
     jsonrpc: "2.0",
@@ -118,7 +118,7 @@ test("erreurs : JSON invalide -32700, paramètres -32602 (BadRequest), méthode 
   expect(ext.error.code).toBe(-32007);
 });
 
-test("SendMessage bloquant -> tâche COMPLETED avec artefact ; GetTask, historyLength, ListTasks, CancelTask terminal -32002", async () => {
+test("blocking SendMessage -> COMPLETED task with artifact; GetTask, historyLength, ListTasks, terminal CancelTask -32002", async () => {
   const r: any = await a2aRpc({
     jsonrpc: "2.0",
     id: 10,
@@ -164,7 +164,7 @@ test("SendMessage bloquant -> tâche COMPLETED avec artefact ; GetTask, historyL
   expect(again.error.code).toBe(-32004);
 });
 
-test("returnImmediately puis CancelTask : tâche CANCELED, SubscribeToTask refusé (-32004)", async () => {
+test("returnImmediately then CancelTask: CANCELED task, SubscribeToTask refused (-32004)", async () => {
   const r: any = await a2aRpc({
     jsonrpc: "2.0",
     id: 20,
@@ -235,7 +235,7 @@ test("SendStreamingMessage : SSE Task, WORKING, artefact, COMPLETED puis fermetu
   expect(bad[0].error.code).toBe(-32602);
 });
 
-test("échec de l'outil : tâche FAILED avec message d'agent, pas d'erreur JSON-RPC", async () => {
+test("tool failure: FAILED task with agent message, no JSON-RPC error", async () => {
   const r: any = await a2aRpc({
     jsonrpc: "2.0",
     id: 40,

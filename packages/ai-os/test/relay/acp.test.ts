@@ -1,4 +1,4 @@
-// ACP v1 : négociation, paramètres requis, codes d'erreur, persistance + session/load, session/cancel -> cancelled.
+// ACP v1: negotiation, required parameters, error codes, persistence + session/load, session/cancel -> cancelled.
 import { expect, mock, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -30,7 +30,7 @@ const rpc = async (
 };
 const cwd = process.platform === "win32" ? "C:\\w" : "/w";
 
-test("initialize : version négociée, loadSession et session/list annoncés", async () => {
+test("initialize: negotiated version, loadSession and session/list announced", async () => {
   const [r] = await rpc("initialize", { protocolVersion: 7 });
   expect(r.result.protocolVersion).toBe(1);
   expect(r.result.agentCapabilities.loadSession).toBe(true);
@@ -38,7 +38,7 @@ test("initialize : version négociée, loadSession et session/list annoncés", a
   expect((await rpc("initialize", {}))[0].error.code).toBe(-32602);
 });
 
-test("session/new : cwd absolu et mcpServers requis ; session inconnue -32002 ; échec moteur -32603", async () => {
+test("session/new: absolute cwd and mcpServers required; unknown session -32002; engine failure -32603", async () => {
   expect((await rpc("session/new", { mcpServers: [] }))[0].error.code).toBe(
     -32602,
   );
@@ -104,7 +104,7 @@ test("session/cancel pendant un tour : stopReason cancelled", async () => {
   expect(out.some((m) => m.method === "session/update")).toBe(false);
 });
 
-test("_meta.model : modèle découvert, historique repris au tour suivant", async () => {
+test("_meta.model: discovered model, history carried into the next turn", async () => {
   const [n] = await rpc("session/new", {
     cwd,
     mcpServers: [],
