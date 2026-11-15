@@ -1,27 +1,27 @@
-# Retouches de la config LiteLLM écrite par `ay ai config`, appliquées par infra/ai/litellm-serve.ts avant le
-# démarrage du proxy (unité ay-ai-litellm, drop-in infra/ai/systemd/ay-ai-litellm.service.d/10-creds.conf).
-# Sert ce que ai.toml ne sait pas encore exprimer : en-têtes, plafonds de dépense, routes à retirer par hôte.
-# Valeurs "env:X" : lues dans l'environnement du proxy (identifiants systemd-creds), jamais écrites ici.
+# Patches of the LiteLLM config written by `ay ai config`, applied by infra/ai/litellm-serve.ts before the
+# proxy starts (ay-ai-litellm unit, drop-in infra/ai/systemd/ay-ai-litellm.service.d/10-creds.conf).
+# Serves what ai.toml cannot yet express: headers, spending caps, routes to remove per host.
+# "env:X" values: read from the proxy environment (systemd-creds credentials), never written here.
 
-# Routes retirées (model_name), par hôte (`hostname` ou AY_AI_HOST).
+# Routes removed (model_name), per host (`hostname` or AY_AI_HOST).
 [drop]
 prd = ["vllm/*", "mistralrs/*"]
 
-# En-têtes ajoutés à litellm_params.extra_headers d'une route.
+# Headers added to a route's litellm_params.extra_headers.
 [headers."anthropic/*"]
 anthropic-workspace-id = "env:ANTHROPIC_WORKSPACE_ID"
 
-# Plafond par route payante (USD par période) : la route est écartée par le routeur une fois le plafond atteint.
+# Cap per paid route (USD per period): the route is dropped by the router once the cap is reached.
 [budget."anthropic/*"]
 max_budget = 2.0
 budget_duration = "1d"
 
-# Plafond global du proxy (toutes routes).
+# Global proxy cap (all routes).
 [litellm_settings]
 max_budget = 5.0
 budget_duration = "1d"
 
-# Ordre de préférence publié à côté de la config (lu par le relais) : gratuits ou locaux d'abord.
+# Preference order published next to the config (read by the relay): free or local first.
 [prefer]
 order = [
   "ollama/*",

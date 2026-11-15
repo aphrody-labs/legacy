@@ -26,7 +26,7 @@ jobs:
       WF: ${{ github.event.workflow_run.name }}
     steps:
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, borné aux permissions listées.
+        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md): 1 h installation token, bounded to the listed permissions.
         if: vars.APHRODY_APP_CLIENT_ID != ''
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
@@ -34,7 +34,7 @@ jobs:
           private-key: ${{ secrets.APHRODY_APP_KEY }}
           owner: aphrody-labs
           permission-contents: write
-      # Push du revert avec le jeton de l'App : il relance judge/ci sur main (un push de GITHUB_TOKEN ne déclenche rien).
+      # Revert push with the App token: it retriggers judge/ci on main (a GITHUB_TOKEN push triggers nothing).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ steps.app.outputs.token || github.token }}

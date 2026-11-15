@@ -8,7 +8,7 @@
     {
       "name": "aphrody-skills",
       "source": "./.agents",
-      "description": "Skills de src (.agents/skills, chargés sur place depuis le checkout)."
+      "description": "src skills (.agents/skills, loaded in place from the checkout)."
     },
     {
       "name": "aphrody-nhitl",

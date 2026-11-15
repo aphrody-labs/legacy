@@ -2,8 +2,8 @@
 # applier : packages/machine/src/toolchain.ts (`ay agents install|sync|check|list`).
 # Nettoyé le 2026-11-14 : plugins de skills tiers désinstallés ; les skills utiles (dont android-*, issues de android/skills) sont versionnées dans .agents/skills et servies par `aphrody-skills`. Outils AI : `relay`, `agent-desktop`, `agent-browser`.
 
-# Config globale de Claude Code, versionnée dans infra/agents/claude ({src} et {home} substitués).
-# settings.json : fusion des clés gérées seulement (modèle, effort, mode rapide et plugins restent au choix du poste).
+# Global Claude Code config, versioned in infra/agents/claude ({src} and {home} substituted).
+# settings.json: merge of the managed keys only (model, effort, fast mode and plugins stay at the workstation's choice).
 [[claude.home]]
 src = "infra/agents/claude/CLAUDE.md"
 dest = "{home}/.claude/CLAUDE.md"
@@ -22,7 +22,7 @@ hosts = ["pc"]
 name = "aphrody"
 path = "."
 
-# Marketplaces dont plus aucun plugin n'est installé (clones et vérifications de mise à jour inutiles).
+# Marketplaces with no plugin installed anymore (useless clones and update checks).
 [[claude.marketplace]]
 name = "anthropic-agent-skills"
 state = "absent"
@@ -48,7 +48,7 @@ name = "rosegriffon-plugins"
 path = "apps/rosegriffon"
 hosts = ["pc"]
 
-# --- Plugins Aphrody (conservés) ---
+# --- Aphrody plugins (kept) ---
 [[claude.plugin]]
 id = "aphrody-skills@aphrody"
 refresh = true
@@ -57,8 +57,8 @@ refresh = true
 id = "aphrody-nhitl@aphrody"
 refresh = true
 
-# Plugins d'atelier (création de plugins, skills, serveurs MCP) : installés mais désactivés, leurs skills et agents
-# chargeaient chaque session ; `claude plugin enable <id>` le temps d'un besoin.
+# Workshop plugins (creating plugins, skills, MCP servers): installed but disabled, their skills and agents
+# loaded in every session; `claude plugin enable <id>` for as long as needed.
 [[claude.plugin]]
 id = "plugin-dev@anthropic-plugin-directory"
 hosts = ["pc"]
@@ -74,7 +74,7 @@ id = "skill-creator@anthropic-plugin-directory"
 hosts = ["pc"]
 state = "disabled"
 
-# --- Plugins externes / tiers (désinstallés) ---
+# --- External / third-party plugins (uninstalled) ---
 [[claude.plugin]]
 id = "document-skills@anthropic-agent-skills"
 scope = "user"
@@ -100,7 +100,7 @@ id = "android-skills@android-skills"
 scope = "user"
 state = "absent"
 
-# figma et cloudflare : installés par le propriétaire sur le PC le 2026-11-14 ; absents de la flotte.
+# figma and cloudflare: installed by the owner on the PC on 2026-11-14; absent from the fleet.
 [[claude.plugin]]
 id = "figma@claude-plugins-official"
 hosts = ["pc"]
@@ -170,15 +170,15 @@ id = "resend@anthropic-plugin-directory"
 hosts = ["pc"]
 state = "absent"
 
-# --- MCP Aphrody / AI Tools (conservés) ---
-# ~/.claude.json est la seule liste de serveurs MCP : le relais les agrège (<serveur>__<outil>) pour les autres agents.
-# Claude Code les déclare déjà : il prend le relais sans agrégat (/mcp/core) ; shared_url = route complète des autres.
+# --- Aphrody MCP / AI Tools (kept) ---
+# ~/.claude.json is the only list of MCP servers: the relay aggregates them (<server>__<tool>) for the other agents.
+# Claude Code already declares them: it takes the relay without aggregate (/mcp/core); shared_url = full route of the others.
 [[claude.mcp]]
 name = "relay"
 url = "http://127.0.0.1:8790/mcp/core"
 shared_url = "http://127.0.0.1:8790/mcp"
 headers_helper = "bun {src}/packages/ai-os/src/relay/headers.ts"
-# agy n'a ni OAuth vérifiable ni en-tête sans secret en clair : même serveur en stdio, sans autorisation.
+# agy has neither verifiable OAuth nor a header without a plaintext secret: same server over stdio, without authorization.
 stdio_command = ["bun", "{src}/packages/ai-os/src/relay/cli.ts", "mcp-stdio"]
 hosts = ["pc"]
 
@@ -192,8 +192,8 @@ name = "cloudflare-docs"
 url = "https://docs.mcp.cloudflare.com/mcp"
 hosts = ["pc"]
 
-# vercel (230 outils, équipe bloquée depuis 2026-06) et rea (250 outils) ne sont plus déclarés dans Claude Code :
-# leurs noms d'outils chargeaient chaque session. rea reste joignable par le relais (hub_tools / hub_call).
+# vercel (230 tools, team blocked since 2026-06) and rea (250 tools) are no longer declared in Claude Code:
+# their tool names loaded in every session. rea stays reachable through the relay (hub_tools / hub_call).
 [[claude.mcp]]
 name = "vercel"
 hosts = ["pc"]
@@ -204,16 +204,16 @@ name = "rea"
 hosts = ["pc"]
 state = "absent"
 
-# Serveurs réservés au relais (<dossier du relais>/hub.json) : aucun outil dans le contexte des clients.
+# Servers reserved for the relay (<relay folder>/hub.json): no tool in the clients' context.
 [[hub.mcp]]
 name = "rea"
 command = ["C:/Program Files/nodejs/node.exe", "{home}/.bun/install/global/node_modules/rea-agents/scripts/rea.mjs", "mcp"]
-# JAVA_HOME vient de l'environnement utilisateur (aucun chemin de correctif JDK figé ici).
+# JAVA_HOME comes from the user environment (no JDK patch path pinned here).
 env = { GHIDRA_INSTALL_DIR = "{home}/AppData/Local/ghidra" }
 install = ["bun", "add", "-g", "rea-agents"]
 hosts = ["pc"]
 
-# agent-desktop (67 outils) et agent-browser (33) : derrière le relais aussi (hub_tools / hub_call, desktop_use, browser_use).
+# agent-desktop (67 tools) and agent-browser (33): also behind the relay (hub_tools / hub_call, desktop_use, browser_use).
 [[claude.mcp]]
 name = "agent-desktop"
 hosts = ["pc"]
@@ -267,7 +267,7 @@ command = ["{bin}/agent-browser.exe", "mcp"]
 hosts = ["pc"]
 
 # Chrome DevTools MCP (ChromeDevTools/chrome-devtools-mcp 1.13.0, 33 outils; skills chrome-*): hub_call chrome-devtools__<tool>.
-# Headless + profil jetable (le relais est un service sans bureau); usage statistics Google coupées; probe 2026-11-15: initialize + tools/list OK.
+# Headless + disposable profile (the relay is a service without a desktop); Google usage statistics off; probe 2026-11-15: initialize + tools/list OK.
 [[hub.mcp]]
 name = "chrome-devtools"
 command = ["{home}/.bun/bin/chrome-devtools-mcp.exe", "--headless", "--isolated", "--memoryDebugging", "--categoryExtensions", "--categoryNetworkMocks"]
@@ -275,7 +275,7 @@ env = { CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS = "1" }
 install = ["bun", "add", "-g", "chrome-devtools-mcp"]
 hosts = ["pc"]
 
-# --- MCP externes / tiers (retirés) ---
+# --- External / third-party MCP (removed) ---
 [[claude.mcp]]
 name = "chrome-devtools"
 hosts = ["pc"]
@@ -301,7 +301,7 @@ name = "hostinger-api"
 hosts = ["pc"]
 state = "absent"
 
-# Skills propres à une machine (hors dépôt public) : contrôle de présence seul.
+# Machine-specific skills (outside the public repository): presence check only.
 [[skill.private]]
 name = "windows-machine"
 hosts = ["pc"]
@@ -314,8 +314,8 @@ hosts = ["pc"]
 name = "shell"
 hosts = ["pc"]
 
-# Autres agents : mêmes plugins depuis la marketplace racine (copie dans leur propre cache, aucun lien).
-# mcp = liste exclusive : tout autre serveur MCP de l'agent est retiré (le relais l'expose déjà).
+# Other agents: same plugins from the root marketplace (copy into their own cache, no link).
+# mcp = exclusive list: any other MCP server of the agent is removed (the relay already exposes it).
 [codex]
 marketplace = "aphrody"
 plugins = ["aphrody-skills@aphrody"]
@@ -325,8 +325,8 @@ mcp = ["relay"]
 plugins = ["aphrody-skills@aphrody"]
 mcp = ["relay"]
 
-# Agents configurés par fichier : la clé MCP est réécrite (les autres clés sont conservées, les commentaires JSONC non).
-# Fichier absent = agent non installé, ignoré.
+# Agents configured by file: the MCP key is rewritten (other keys are kept, JSONC comments are not).
+# Missing file = agent not installed, ignored.
 [[mcpfile]]
 agent = "opencode"
 path = "{home}/.config/opencode/opencode.jsonc"
@@ -334,7 +334,7 @@ key = "mcp"
 shape = "opencode"
 mcp = ["relay"]
 
-# Claude Desktop : serveurs stdio seulement ; le relais en stdio remplace les serveurs à clé d'API en clair.
+# Claude Desktop: stdio servers only; the stdio relay replaces the servers with a plaintext API key.
 [[mcpfile]]
 agent = "claude-desktop"
 path = "{appdata}/Claude/claude_desktop_config.json"
@@ -359,8 +359,8 @@ mcp = ["relay"]
 [gemini]
 extensions = [".agents"]
 
-# Liens et copies interdits : tout lien (symlink, jonction) ou copie homonyme d'une skill de src dans ces dossiers est retiré,
-# le plugin aphrody-skills la fournit déjà.
+# Links and copies forbidden: any link (symlink, junction) or same-name copy of a src skill in these folders is removed,
+# the aphrody-skills plugin already provides it.
 [cleanup]
 link_dirs = [
   "{home}/.claude/skills",

@@ -1,8 +1,8 @@
 #!/bin/sh
-# Installe le démarrage LiteLLM de prd depuis le dépôt (depuis la racine de src) :
+# Installs the prd LiteLLM startup from the repository (from the src root):
 #   sh infra/ai/systemd/install-prd.sh [arguments ssh vers root@prd]
-# défaut : rebond par fr2 sur le mesh WireGuard (clé d'hôte vérifiée sous l'IP publique de prd).
-# Identifiants préalables dans /etc/credstore.encrypted : CLOUDFLARE_API_TOKEN, LITELLM_MASTER_KEY,
+# default: hop through fr2 over the WireGuard mesh (host key verified under prd's public IP).
+# Prerequisite credentials in /etc/credstore.encrypted: CLOUDFLARE_API_TOKEN, LITELLM_MASTER_KEY,
 # ANTHROPIC_API_KEY, ANTHROPIC_WORKSPACE_ID, VERTEX_APHRODY_SA_KEY (valeur en stdin de
 # `systemd-creds encrypt --name=<NOM> - /etc/credstore.encrypted/<NOM>`).
 set -eu

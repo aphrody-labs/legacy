@@ -1,6 +1,6 @@
-# CI packages/ai-os (fusionné depuis aphrody-labs/agent) : tests bun du paquet (Windows et Linux) et publication NativeAOT
-# du service Windows du relais (artefact relay-service, installé par packages/ai-os/native/relay-windows/install.ps1).
-# Versions des actions : celles de nt.yml (relevées le 2026-11-12).
+# CI packages/ai-os (merged from aphrody-labs/agent): bun tests of the package (Windows and Linux) and NativeAOT publication
+# of the relay's Windows service (relay-service artifact, installed by packages/ai-os/native/relay-windows/install.ps1).
+# Action versions: those of nt.yml (surveyed on 2026-11-12).
 name: ai-os
 on:
   push:

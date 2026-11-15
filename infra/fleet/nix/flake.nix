@@ -1,7 +1,7 @@
-# Shells de la flotte Linux via home-manager (standalone) : même environnement que le poste Windows,
+# Fleet Linux shells through home-manager (standalone): same environment as the Windows workstation,
 # lu depuis packages/machine/shells (env.toml -> env.sh/env.nu/env.fish, configs nu/fish/bash, spec ay).
-# Nix n'est installé sur aucun hôte (2026-11-13) ; évalué dans le conteneur nixos/nix sur prd.
-# Usage (hôte avec nix, checkout git de src) :
+# Nix is installed on no host (2026-11-13); evaluated in the nixos/nix container on prd.
+# Usage (host with nix, git checkout of src):
 #   nix run home-manager/master -- switch --flake ~/src/infra/fleet/nix#root@prd
 {
   description = "aphrody fleet shells (bash, brush, nushell, fish) — home-manager";

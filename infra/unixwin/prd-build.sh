@@ -1,9 +1,9 @@
 #!/bin/sh
-# Construit niu (niubash + moteur rubash) sur prd depuis les forks aphrody-labs, aux commits de src.lock.json.
-# Cible Windows : cargo xwin (CRT MSVC et SDK Windows en cache dans ~/.cache/cargo-xwin, lld-link) ; cible Linux :
-# cargo build. Priorité minimale (nice -n 19), JOBS tâches (4 par défaut). Lancé par infra/unixwin/unixwin.ts build.
+# Builds niu (niubash + rubash engine) on prd from the aphrody-labs forks, at the src.lock.json commits.
+# Windows target: cargo xwin (MSVC CRT and Windows SDK cached in ~/.cache/cargo-xwin, lld-link); Linux target:
+# cargo build. Minimum priority (nice -n 19), JOBS tasks (4 by default). Launched by infra/unixwin/unixwin.ts build.
 # Usage : JOBS=4 sh prd-build.sh <triple> <commit niubash> <commit rubash>
-# Sortie : une ligne « ARTIFACT <chemin> <sha256> » ; le binaire et SHA256SUMS dans $UNIXWIN_WORK/out/<triple>/.
+# Output: one line "ARTIFACT <path> <sha256>"; the binary and SHA256SUMS in $UNIXWIN_WORK/out/<triple>/.
 set -eu
 [ $# -eq 3 ] || { echo "usage: prd-build.sh <triple> <niubash> <rubash>" >&2; exit 2; }
 TARGET=$1 NIU=$2 RUB=$3
@@ -12,8 +12,8 @@ W=${UNIXWIN_WORK:-$HOME/unixwin}
 export PATH="$HOME/.cargo/bin:$PATH" CARGO_TARGET_DIR="$W/target"
 mkdir -p "$W"
 
-# Clone partiel, puis exactement le commit demandé ; niubash et rubash côte à côte : le [patch] de niubash
-# (rubash = { path = "../rubash" }) prend ce rubash-là.
+# Partial clone, then exactly the requested commit; niubash and rubash side by side: niubash's [patch]
+# (rubash = { path = "../rubash" }) takes that rubash.
 pin() {
   d="$W/$1"
   [ -d "$d/.git" ] || git clone -q --filter=blob:none --no-checkout "https://github.com/aphrody-labs/$1.git" "$d"

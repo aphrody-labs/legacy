@@ -1,9 +1,9 @@
-# Unité systemd utilisateur du relais de @aphrody/ai-os (Linux : prd et postes), sans navigateur.
+# User systemd unit of the @aphrody/ai-os relay (Linux: prd and workstations), without a browser.
 # Source : packages/ai-os/src/relay, lu depuis un checkout git en lecture seule (SRC_ROOT, prd : /srv/src, clone
-# partiel et sparse tenu à jour par src-checkout-update.timer, qui redémarre le relais si packages/ai-os change).
+# partial sparse checkout kept up to date by src-checkout-update.timer, which restarts the relay if packages/ai-os changes).
 # Installation : install -Dm644 aphrody-relay.service ~/.config/systemd/user/aphrody-relay.service
 #                systemctl --user daemon-reload && systemctl --user enable --now aphrody-relay
-#                loginctl enable-linger "$USER"   (démarrage sans session ouverte)
+#                loginctl enable-linger "$USER"   (start without an open session)
 [Unit]
 Description=Aphrody relay (Claude Code <-> Gemini, MCP, A2A, ACP, TCP/TLS)
 After=network-online.target

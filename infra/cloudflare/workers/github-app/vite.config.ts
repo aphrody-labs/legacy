@@ -1,4 +1,4 @@
-// Délégué de build imposé par `cf deploy` (aucune autre utilisation de vite dans ce Worker).
+// Build delegate required by `cf deploy` (no other use of vite in this Worker).
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { defineConfig } from "vite";
 

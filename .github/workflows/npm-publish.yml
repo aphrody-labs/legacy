@@ -1,10 +1,10 @@
-# Publication npm sans humain (docs/infra/NPM.md).
-# Trusted publishing OIDC (npm >= 11.5.1, Node >= 22.14, id-token: write, runner hébergé par GitHub) : aucun jeton,
-# provenance automatique (dépôt et paquet publics). Repli sur le secret d'org NPM_TOKEN tant que le trusted publisher
-# du paquet n'existe pas (premier publish) : npm/cli lib/utils/oidc.js ne remplace le jeton qu'après un échange OIDC réussi.
-# bun pack (résout workspace: et catalog:) ; npm publie, car bun publish ne gère ni OIDC ni --provenance
-# (oven-sh/bun#22423, #15601 ouverts au 2026-11-13 ; le release.yml de bun publie lui-même avec npm publish).
-# Les dépôts des sous-modules (rosegriffon, shenron) appellent ce workflow depuis leur propre npm-publish.yml : npm
+# Human-free npm publication (docs/infra/NPM.md).
+# OIDC trusted publishing (npm >= 11.5.1, Node >= 22.14, id-token: write, GitHub-hosted runner): no token,
+# automatic provenance (public repository and package). Falls back to the NPM_TOKEN org secret while the package's trusted publisher
+# does not exist (first publish): npm/cli lib/utils/oidc.js only replaces the token after a successful OIDC exchange.
+# bun pack (resolves workspace: and catalog:); npm publishes, because bun publish handles neither OIDC nor --provenance
+# (oven-sh/bun#22423, #15601 open as of 2026-11-13; bun's own release.yml publishes with npm publish).
+# The submodule repositories (rosegriffon, shenron) call this workflow from their own npm-publish.yml: npm
 # vérifie le nom du workflow appelant, d'où le même nom de fichier partout. Un dry-run ne fait ni échange OIDC ni
 # signature de provenance : il valide pack, version et registre ; l'OIDC se prouve au premier vrai publish.
 name: npm-publish
@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       packages:
-        description: "Dossiers des paquets, relatifs au dépôt, séparés par des espaces"
+        description: "Package folders, relative to the repository, separated by spaces"
         required: true
       dry_run:
         description: "npm publish --dry-run"
@@ -47,7 +47,7 @@ concurrency:
 
 jobs:
   publish:
-    # Le trusted publishing refuse les runners auto-hébergés (docs.npmjs.com/trusted-publishers).
+    # Trusted publishing refuses self-hosted runners (docs.npmjs.com/trusted-publishers).
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -75,12 +75,12 @@ jobs:
           [[ "$TAG" =~ ^[a-z][a-z0-9._-]*$ ]] || { echo "::error::dist-tag invalide : $TAG"; exit 1; }
           out="$RUNNER_TEMP/npm"; mkdir -p "$out"
           for dir in $PACKAGES; do
-            case "$dir" in /*|*..*) echo "::error::chemin refusé : $dir"; exit 1;; esac
-            [ -f "$dir/package.json" ] || { echo "::error::$dir/package.json absent"; exit 1; }
+            case "$dir" in /*|*..*) echo "::error::path refused: $dir"; exit 1;; esac
+            [ -f "$dir/package.json" ] || { echo "::error::$dir/package.json missing"; exit 1; }
             name=$(jq -er .name "$dir/package.json"); version=$(jq -er .version "$dir/package.json")
-            if [ "$(jq -r '.private // false' "$dir/package.json")" = true ]; then echo "::warning::$name privé, ignoré"; continue; fi
+            if [ "$(jq -r '.private // false' "$dir/package.json")" = true ]; then echo "::warning::$name private, skipped"; continue; fi
             if v=$(npm view "$name@$version" version 2>"$out/view.err"); then
-              if [ -n "$v" ]; then echo "$name@$version déjà publié"; continue; fi
+              if [ -n "$v" ]; then echo "$name@$version already published"; continue; fi
             elif ! grep -q E404 "$out/view.err"; then cat "$out/view.err"; exit 1; fi
             (cd "$dir" && bun run --if-present build)
             tgz=$(cd "$dir" && bun pm pack --destination "$out" --quiet | tail -1)

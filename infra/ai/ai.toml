@@ -1,19 +1,19 @@
-# Fournisseurs d'inférence pour `ay ai` (src/ay/src/ai.rs), passerelle unique LiteLLM.
-# Rien n'est figé dans le code : un fournisseur est actif si sa clé est dans le coffre (`--env-file`,
-# `$AY_ENV_FILE` ou `<repo>/.env`, puis l'environnement) ou si son serveur local répond ; ses modèles
-# viennent de l'API du fournisseur, via les routes joker de LiteLLM (`<id>/*`, check_provider_endpoint).
+# Inference providers for `ay ai` (src/ay/src/ai.rs), single LiteLLM gateway.
+# Nothing is pinned in the code: a provider is active if its key is in the vault (`--env-file`,
+# `$AY_ENV_FILE` or `<repo>/.env`, then the environment) or if its local server answers; its models
+# come from the provider's API, through LiteLLM wildcard routes (`<id>/*`, check_provider_endpoint).
 #
-# [settings]   proxy LiteLLM (host, port), config générée (`config`), prompt de vérification,
-#              master_key (variable de la clé maîtresse du proxy, créée et rangée si absente)
-# [[runtime]]  serveur : os (défaut : tous), bin (présent = installé), install.<windows|linux> (argv),
-#              serve (argv au premier plan), env, health (URL), pull (argv avec {model}), models
-#              path (dossiers ajoutés au PATH). Gabarits : {config} {host} {port} {prompt} {model}
-#              {env:X} {ollama_gguf:<modèle>} (GGUF téléchargé par Ollama, lien dur en .gguf)
-# [[provider]] (complète ou ajoute au registre) `route` (fournisseur LiteLLM), `key`, `requires`,
-#              `api_base`, `health` (chemin sous api_base, fournisseur local), `params` (litellm_params ;
+# [settings]   LiteLLM proxy (host, port), generated config (`config`), check prompt,
+#              master_key (variable of the proxy master key, created and stored if missing)
+# [[runtime]]  server: os (default: all), bin (present = installed), install.<windows|linux> (argv),
+#              serve (foreground argv), env, health (URL), pull (argv with {model}), models
+#              path (folders added to PATH). Templates: {config} {host} {port} {prompt} {model}
+#              {env:X} {ollama_gguf:<model>} (GGUF downloaded by Ollama, hard link as .gguf)
+# [[provider]] (completes or adds to the registry) `route` (LiteLLM provider), `key`, `requires`,
+#              `api_base`, `health` (path under api_base, local provider), `params` (litellm_params;
 #              "env:X" -> os.environ/X), `credentials` (Vertex : "env:VAR" JSON ou "file:~/..."), `probe`
-#              (regex facultative du modèle d'essai), `auth_url` + `key_pattern` + `validate` (`ay ai auth`),
-#              `cli` (hors LiteLLM : argv `models` et `ask` avec {model} {prompt}).
+#              (optional regex of the trial model), `auth_url` + `key_pattern` + `validate` (`ay ai auth`),
+#              `cli` (outside LiteLLM: `models` and `ask` argv with {model} {prompt}).
 
 [settings]
 host = "127.0.0.1"
@@ -25,9 +25,9 @@ registry = "https://models.dev/api.json"
 
 # --- Serveurs ---------------------------------------------------------------------------------
 
-# Passerelle : roue construite depuis le fork aphrody-labs/litellm (extension Rust, maturin) et
-# publiée en release du fork avec litellm-proxy-extras et litellm-enterprise du même commit (absents de
-# PyPI à ces versions) ; aucune compilation sur le poste.
+# Gateway: wheel built from the aphrody-labs/litellm fork (Rust extension, maturin) and
+# published as a release of the fork with litellm-proxy-extras and litellm-enterprise of the same commit (absent from
+# PyPI at those versions); no compilation on the workstation.
 [[runtime]]
 id = "litellm"
 bin = "litellm"
@@ -86,10 +86,10 @@ serve = ["ollama", "serve"]
 env = { OLLAMA_HOST = "127.0.0.1:11434", OLLAMA_MAX_LOADED_MODELS = "1", OLLAMA_NUM_PARALLEL = "1" }
 health = "http://127.0.0.1:11434/api/version"
 pull = ["ollama", "pull", "{model}"]
-# Bibliothèque Ollama relevée le 2026-11-13 : gemma4:e2b = 4,6 Go (tient dans 12 Go de VRAM).
+# Ollama library surveyed on 2026-11-13: gemma4:e2b = 4.6 GB (fits in 12 GB of VRAM).
 models = ["gemma4:e2b"]
 
-# llama.cpp sert le GGUF déjà téléchargé par Ollama (pas de second téléchargement).
+# llama.cpp serves the GGUF already downloaded by Ollama (no second download).
 [[runtime]]
 id = "llamacpp"
 os = ["windows"]
@@ -115,7 +115,7 @@ serve = [
 ]
 health = "http://127.0.0.1:8080/health"
 
-# LM Studio sans interface : démon llmster + CLI lms (installateur officiel lmstudio.ai).
+# Headless LM Studio: llmster daemon + lms CLI (official lmstudio.ai installer).
 [[runtime]]
 id = "lmstudio"
 os = ["windows"]
@@ -135,7 +135,7 @@ install.linux = [
 serve = ["lms", "server", "start", "--port", "1234", "--bind", "127.0.0.1"]
 oneshot = true
 health = "http://127.0.0.1:1234/v1/models"
-# Lien dur du GGUF d'Ollama (aucun second téléchargement) ; un ré-import est signalé « déjà présent ».
+# Hard link of Ollama's GGUF (no second download); a re-import is reported "already present".
 pull = [
   "lms",
   "import",
@@ -149,7 +149,7 @@ pull = [
 [[runtime]]
 id = "jan"
 os = ["windows"]
-# Application de bureau : son serveur API (port 1337) ne tourne que dans l'application ouverte.
+# Desktop application: its API server (port 1337) only runs in the open application.
 bin = "~/AppData/Local/Programs/Jan/Jan-Desktop.exe"
 install.windows = [
   [
@@ -168,9 +168,9 @@ install.windows = [
 ]
 health = "http://127.0.0.1:1337/v1/models"
 
-# prd (sans GPU) : roue CPU officielle de vLLM et binaire CPU de mistral.rs, installables, jamais servis :
-# pas de serveur d'inférence CPU sur l'hôte de production (consigne du 2026-11-13, charge à 306).
-# Ligne `serve` en commentaire : sans elle, `ay ai service` et `ay ai up` les ignorent.
+# prd (no GPU): official vLLM CPU wheel and mistral.rs CPU binary, installable, never served:
+# no CPU inference server on the production host (instruction of 2026-11-13, load at 306).
+# `serve` line commented out: without it, `ay ai service` and `ay ai up` ignore them.
 [[runtime]]
 id = "vllm"
 os = ["linux"]
@@ -201,13 +201,13 @@ env = { RAYON_NUM_THREADS = "4", OMP_NUM_THREADS = "4" }
 health = "http://127.0.0.1:8001/v1/models"
 
 # --- Fournisseurs -------------------------------------------------------------------------------
-# Découverts dans le registre models.dev (format d'opencode : `env`, `api`, `npm`, `models` avec prix) :
-# un fournisseur du registre est actif dès que sa clé est présente ; ses modèles viennent de son API
-# via LiteLLM, sinon du catalogue du registre ; le modèle d'essai est le moins cher (prix du registre).
-# Les entrées [[provider]] ci-dessous n'ajoutent que ce que le registre ignore : serveurs locaux,
-# comptes de service Vertex, Mammouth (absent du registre), pages de clés pour `ay ai auth`.
+# Discovered in the models.dev registry (opencode format: `env`, `api`, `npm`, `models` with prices):
+# a registry provider is active as soon as its key is present; its models come from its API
+# through LiteLLM, otherwise from the registry catalog; the trial model is the cheapest (registry price).
+# The [[provider]] entries below only add what the registry ignores: local servers,
+# Vertex service accounts, Mammouth (absent from the registry), key pages for `ay ai auth`.
 
-# Vocabulaire du registre -> LiteLLM : paquet AI SDK d'un point d'accès, puis identifiant.
+# Registry vocabulary -> LiteLLM: AI SDK package of an endpoint, then identifier.
 [litellm.npm]
 "@ai-sdk/openai-compatible" = "openai"
 [litellm.providers]
@@ -215,11 +215,11 @@ google = "gemini"
 google-vertex = "vertex_ai"
 vercel = "vercel_ai_gateway"
 
-# Noms du registre -> noms du coffre de src.
+# Registry names -> src vault names.
 [env]
 CLOUDFLARE_API_KEY = "CLOUDFLARE_API_TOKEN"
 
-# Serveurs locaux (sans clé, actifs s'ils répondent).
+# Local servers (no key, active if they answer).
 [[provider]]
 id = "ollama"
 route = "ollama_chat"
@@ -256,7 +256,7 @@ route = "hosted_vllm"
 api_base = "http://127.0.0.1:8001/v1"
 health = "/models"
 
-# Pages de clés (`ay ai auth`) : ouvertes dans le navigateur, clé lue au presse-papiers.
+# Key pages (`ay ai auth`): opened in the browser, key read from the clipboard.
 [[provider]]
 id = "openai"
 auth_url = "https://platform.openai.com/api-keys"
@@ -281,7 +281,7 @@ auth_url = "https://vercel.com/d?to=%2F%5Bteam%5D%2F%7E%2Fai%2Fapi-keys"
 key_pattern = "^[A-Za-z0-9_-]{24,}$"
 validate = "https://ai-gateway.vercel.sh/v1/credits"
 
-# Absent du registre models.dev au 2026-11-13 ; API OpenAI-compatible (info.mammouth.ai/docs).
+# Absent from the models.dev registry as of 2026-11-13; OpenAI-compatible API (info.mammouth.ai/docs).
 [[provider]]
 id = "mammouth"
 route = "openai"
@@ -291,8 +291,8 @@ auth_url = "https://mammouth.ai/app/account/settings/api"
 key_pattern = "^sk-[A-Za-z0-9_-]{16,}$"
 validate = "https://api.mammouth.ai/v1/models"
 
-# Une route par compte de service lisible (projet lu dans le JSON) au lieu des variables
-# GOOGLE_VERTEX_* du registre.
+# One route per readable service account (project read from the JSON) instead of the registry's
+# GOOGLE_VERTEX_* variables.
 [[provider]]
 id = "google-vertex"
 route = "vertex_ai"
@@ -303,14 +303,14 @@ credentials = [
 ]
 params = { vertex_location = "env:GOOGLE_CLOUD_LOCATION" }
 
-# Anthropic (clé payante, rattachée à un espace de travail) : en-tête anthropic-workspace-id et plafond de
-# dépense ajoutés par infra/ai/litellm-overlay.toml (ay ne sait pas encore écrire extra_headers ni max_budget).
+# Anthropic (paid key, tied to a workspace): anthropic-workspace-id header and spending cap
+# added by infra/ai/litellm-overlay.toml (ay cannot yet write extra_headers or max_budget).
 [[provider]]
 id = "anthropic"
 route = "anthropic"
 key = "ANTHROPIC_API_KEY"
 
-# Hors LiteLLM : CLI Antigravity authentifiée (modèles listés par la CLI).
+# Outside LiteLLM: authenticated Antigravity CLI (models listed by the CLI).
 [[provider]]
 id = "antigravity"
 cli = { models = ["agy", "models"], ask = [

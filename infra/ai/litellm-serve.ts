@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 // Starts the LiteLLM proxy on a Linux host (prd) without a plaintext secrets file:
 //   1. systemd-creds credentials ($CREDENTIALS_DIRECTORY, LoadCredentialEncrypted=) -> proxy environment;
-//   2. `ay ai config --manifest <ai.toml>` écrit les routes (références os.environ/X, aucune valeur) ;
-//   3. infra/ai/litellm-overlay.toml : routes retirées pour l'hôte, extra_headers, plafonds de dépense ;
+//   2. `ay ai config --manifest <ai.toml>` writes the routes (os.environ/X references, no value);
+//   3. infra/ai/litellm-overlay.toml: routes removed for the host, extra_headers, spending caps;
 //   4. exec litellm on the patched config ($RUNTIME_DIRECTORY, 0600).
-// Usage (unité) : bun litellm-serve.ts [--manifest ai.toml] [--overlay litellm-overlay.toml] [--dry-run]
+// Usage (unit): bun litellm-serve.ts [--manifest ai.toml] [--overlay litellm-overlay.toml] [--dry-run]
 import {
   chmodSync,
   existsSync,

@@ -1,8 +1,8 @@
-# CI apps/nt (fusionné depuis aphrody-labs/nt) : toute compilation se fait ici (aucune compilation sur le poste du propriétaire).
-# Windows : coque WinUI 3 (NativeAOT, non empaquetée + MSIX signé par un certificat de test), sonde D3D12 (C++23 import std,
-# vcpkg), échantillon WinUI en Rust (windows-reactor), scène GPU. Linux : lint et scène GPU.
-# interop : .NET 11 -> bun sans node-api-dotnet (NativeAOT + CoreCLR/hostfxr), liaisons générées, tests et mesures.
-# Versions des actions relevées le 2026-11-12 (gh api repos/<action>/releases/latest).
+# CI apps/nt (merged from aphrody-labs/nt): every compilation happens here (no compilation on the owner's workstation).
+# Windows: WinUI 3 shell (NativeAOT, unpackaged + MSIX signed with a test certificate), D3D12 probe (C++23 import std,
+# vcpkg), WinUI sample in Rust (windows-reactor), GPU scene. Linux: lint and GPU scene.
+# interop: .NET 11 -> bun without node-api-dotnet (NativeAOT + CoreCLR/hostfxr), generated bindings, tests and measurements.
+# Action versions surveyed on 2026-11-12 (gh api repos/<action>/releases/latest).
 name: nt
 on:
   push:
@@ -29,10 +29,10 @@ jobs:
   windows:
     runs-on: windows-2025-vs2026
     timeout-minutes: 60
-    # packages: write : cache binaire vcpkg sur GitHub Packages (NuGet).
+    # packages: write: vcpkg binary cache on GitHub Packages (NuGet).
     permissions: { contents: read, packages: write }
     env:
-      # Learn « Binary caching configuration » : NuGet recommandé pour GitHub Packages ; x-gha est retiré de vcpkg.
+      # Learn "Binary caching configuration": NuGet recommended for GitHub Packages; x-gha is removed from vcpkg.
       VCPKG_FEED: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
       VCPKG_DISABLE_METRICS: "1"
       CARGO_TERM_COLOR: always
@@ -45,13 +45,13 @@ jobs:
       - uses: taiki-e/install-action@v2
         with: { tool: just }
       - uses: mozilla-actions/sccache-action@v0.0.11
-      # DXC, Agility SDK, niubash (shell des recettes just, ajouté au PATH), CMake 4.5.0 et Ninja 1.13.2 (sonde import std).
+      # DXC, Agility SDK, niubash (shell of the just recipes, added to PATH), CMake 4.5.0 and Ninja 1.13.2 (import std probe).
       - run: bun sdk/tools/fetch-tools.ts
       - run: just lint
       - run: just web
-      # Cache vcpkg (Learn « Set up a vcpkg binary cache using GitHub Packages ») dans un nuget.config dédié, fournisseur
-      # nugetconfig (Learn « Binary caching configuration ») : ajoutée au nuget.config de l'utilisateur, la source cassait la
-      # restauration .NET en gestion centrale des paquets (NU1507 : 2 sources sans mappage), run 43282716395.
+      # vcpkg cache (Learn "Set up a vcpkg binary cache using GitHub Packages") in a dedicated nuget.config, nugetconfig
+      # provider (Learn "Binary caching configuration"): added to the user's nuget.config, the source broke the
+      # .NET restore under central package management (NU1507: 2 sources without mapping), run 43282716395.
       - name: vcpkg binary cache (GitHub Packages)
         shell: bash
         run: |
@@ -65,8 +65,8 @@ jobs:
           echo "VCPKG_BINARY_SOURCES=clear;nugetconfig,$cfg,readwrite" >> "$GITHUB_ENV"
       - run: just probe
       - run: just app
-      # Certificat de test MSIX généré à chaque exécution (Learn « Create a certificate for package signing »), jamais versionné :
-      # sujet = Publisher de Package.appxmanifest ; la clé reste dans RUNNER_TEMP, seul le .cer public est publié.
+      # MSIX test certificate generated on each run (Learn "Create a certificate for package signing"), never versioned:
+      # subject = Publisher of Package.appxmanifest; the key stays in RUNNER_TEMP, only the public .cer is published.
       - name: MSIX test certificate
         shell: pwsh
         run: |
@@ -122,10 +122,10 @@ jobs:
         with: { bun-version-file: package.json }
       - uses: taiki-e/install-action@v2
         with: { tool: just }
-      # niubash : shell des recettes just sous Windows.
+      # niubash: shell of the just recipes on Windows.
       - if: runner.os == 'Windows'
         run: bun sdk/tools/fetch-tools.ts
-      # NativeAOT sous Linux : clang et zlib (Learn « Native AOT deployment », prérequis).
+      # NativeAOT on Linux: clang and zlib (Learn "Native AOT deployment", prerequisite).
       - if: runner.os == 'Linux'
         run: sudo apt-get install -y --no-install-recommends clang zlib1g-dev
       - run: just interop

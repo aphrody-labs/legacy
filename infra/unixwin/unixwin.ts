@@ -1,13 +1,13 @@
-// Chaîne unixwin de src : épinglage des clones, build de niu (niubash + rubash) depuis les forks aphrody-labs, sur prd
-// (cargo xwin pour Windows, nice -n 19, 4 tâches) ou par la CI du fork (.github/workflows/aphrody-build.yml),
-// puis installation du binaire sur le poste.
-// Usage (racine du dépôt) :
-//   bun infra/unixwin/unixwin.ts status                     écarts forks / amont, pins, niu installé
-//   bun infra/unixwin/unixwin.ts lock                       épingle les clones unixwin dans src.lock.json
-//   bun infra/unixwin/unixwin.ts build [triple]             build sur prd, binaire rapatrié dans var/unixwin/prd/<triple>
-//   bun infra/unixwin/unixwin.ts fetch-ci [triple]          artefact CI du fork au commit épinglé -> var/unixwin/ci/<triple>
-//   bun infra/unixwin/unixwin.ts install [prd|ci] [triple]  remplace niu.exe (et ses copies bash.exe/sh.exe) du poste
-//   bun infra/unixwin/unixwin.ts test-fr1 <filtre>          cargo test ciblé de rubash sur fr1, l'usine (suite complète : CI du fork)
+// src unixwin chain: clone pinning, niu (niubash + rubash) build from the aphrody-labs forks, on prd
+// (cargo xwin for Windows, nice -n 19, 4 tasks) or by the fork CI (.github/workflows/aphrody-build.yml),
+// then installation of the binary on the workstation.
+// Usage (repository root):
+//   bun infra/unixwin/unixwin.ts status                     fork / upstream gaps, pins, installed niu
+//   bun infra/unixwin/unixwin.ts lock                       pins the unixwin clones in src.lock.json
+//   bun infra/unixwin/unixwin.ts build [triple]             build on prd, binary brought back to var/unixwin/prd/<triple>
+//   bun infra/unixwin/unixwin.ts fetch-ci [triple]          fork CI artifact at the pinned commit -> var/unixwin/ci/<triple>
+//   bun infra/unixwin/unixwin.ts install [prd|ci] [triple]  replaces the workstation's niu.exe (and its bash.exe/sh.exe copies)
+//   bun infra/unixwin/unixwin.ts test-fr1 <filter>          targeted cargo test of rubash on fr1, the factory (full suite: fork CI)
 import { createHash } from "node:crypto";
 import {
   existsSync,
@@ -75,12 +75,12 @@ const pinOf = async (rel: string) => {
   const c = (await readLock()).repositories[rel]?.commit;
   if (!c)
     throw new Error(
-      `${rel} absent de src.lock.json : bun infra/unixwin/unixwin.ts lock`,
+      `${rel} missing from src.lock.json: bun infra/unixwin/unixwin.ts lock`,
     );
   return c;
 };
 
-// Entrée au format de src.lock.json (version 2), chemin relatif (règle LOCK-ABS de docs/native/deps/POLICY.md).
+// Entry in src.lock.json format (version 2), relative path (LOCK-ABS rule of docs/native/deps/POLICY.md).
 const entry = (rel: string): Entry => {
   const dir = join(repo, rel);
   const remotes: Record<string, string> = {};
@@ -110,7 +110,7 @@ async function lock() {
   for (const rel of DIRS) {
     if (!existsSync(join(repo, rel, ".git"))) {
       console.log(
-        `absent  ${rel} (bun packages/machine/src/forks.ts ${rel.split("/").pop()})`,
+        `missing  ${rel} (bun packages/machine/src/forks.ts ${rel.split("/").pop()})`,
       );
       continue;
     }
@@ -135,7 +135,7 @@ async function status() {
       .replace(/^https:\/\/github\.com\//, "")
       .replace(/\.git$/, "");
     if (!fork || !up) {
-      console.log(`${rel}  non épinglé`);
+      console.log(`${rel}  not pinned`);
       continue;
     }
     const b = run(
@@ -194,9 +194,9 @@ async function build(triple: string) {
   );
   const out = await new Response(p.stdout).text();
   process.stdout.write(out);
-  if ((await p.exited) !== 0) throw new Error("build prd en échec");
+  if ((await p.exited) !== 0) throw new Error("prd build failed");
   const m = out.match(/^ARTIFACT (\S+) ([0-9a-f]{64})$/m);
-  if (!m) throw new Error("ligne ARTIFACT absente");
+  if (!m) throw new Error("ARTIFACT line missing");
   const dst = join(repo, "var", "unixwin", "prd", triple);
   mkdirSync(dst, { recursive: true });
   const remoteDir = m[1]!.slice(0, m[1]!.lastIndexOf("/"));
@@ -230,7 +230,7 @@ async function fetchCi(triple: string) {
   );
   if (!id)
     throw new Error(
-      `aucun run « aphrody build » réussi pour niubash@${niu.slice(0, 12)}`,
+      `no successful "aphrody build" run for niubash@${niu.slice(0, 12)}`,
     );
   const dst = join(repo, "var", "unixwin", "ci", triple);
   rmSync(dst, { recursive: true, force: true });
@@ -288,13 +288,13 @@ function installDir() {
   return base ? join(base, "Programs", "Niubash") : undefined;
 }
 
-// Remplace niu.exe et ses copies identiques (winuxcmd/bin/bash.exe, sh.exe). Un exécutable en cours d'usage ne
-// s'écrase pas sous Windows mais se renomme : l'ancien part en *.old et est supprimé à l'installation suivante.
+// Replaces niu.exe and its identical copies (winuxcmd/bin/bash.exe, sh.exe). An executable in use cannot be
+// overwritten on Windows but can be renamed: the old one becomes *.old and is deleted at the next installation.
 async function install(from: string, triple: string) {
   const dir = installDir();
   if (process.platform !== "win32" || !dir || !existsSync(join(dir, "niu.exe")))
     throw new Error(
-      "niubash absent du poste (winget install --id Unixwin.Niubash) ou hôte non Windows",
+      "niubash missing from the workstation (winget install --id Unixwin.Niubash) or non-Windows host",
     );
   const src = join(repo, "var", "unixwin", from, triple);
   await verify(src, triple);
@@ -310,21 +310,21 @@ async function install(from: string, triple: string) {
     try {
       rmSync(f, { force: true });
     } catch {
-      // encore exécuté par une session ouverte : supprimé à la prochaine installation
+      // still executed by an open session: deleted at the next installation
     }
   };
-  // Anciens exécutables laissés par une installation précédente (verrouillés à l'époque) : purge best effort.
+  // Old executables left by a previous installation (locked at the time): best-effort purge.
   for (const d of new Set(targets.map((t) => dirname(t))))
     for (const f of readdirSync(d))
       if (/\.exe\.old-\d+$/i.test(f)) drop(join(d, f));
   const stamp = Date.now();
   for (const t of targets) {
-    // Copie complète et revérifiée à côté, puis échange par renommages ; restauration si l'échange échoue.
-    // L'ancien binaire prend un nom unique : un exécutable en cours d'usage se renomme mais ne se supprime pas.
+    // Complete copy, verified again alongside, then swap by renames; restore if the swap fails.
+    // The old binary takes a unique name: an executable in use can be renamed but not deleted.
     const prev = `${t}.old-${stamp}`;
     copyFileSync(fresh, `${t}.new`);
     if ((await sha256(`${t}.new`)) !== want)
-      throw new Error(`${t}.new : sha256 différent après copie`);
+      throw new Error(`${t}.new: different sha256 after copy`);
     renameSync(t, prev);
     try {
       renameSync(`${t}.new`, t);
@@ -336,7 +336,7 @@ async function install(from: string, triple: string) {
   }
   console.log(must(dir, join(dir, "niu.exe"), "--version").split("\n")[0]);
   console.log(
-    `installé (${from}) : ${targets.length} fichier(s), sha256 ${want}`,
+    `installed (${from}): ${targets.length} file(s), sha256 ${want}`,
   );
 }
 
@@ -359,7 +359,7 @@ switch (cmd) {
       throw new Error("filtre : identifiant de test cargo");
     if (!a1)
       throw new Error(
-        "filtre obligatoire : la suite complète tourne dans la CI du fork (aphrody tests)",
+        "filter mandatory: the full suite runs in the fork CI (aphrody tests)",
       );
     await testFr1(a1);
     break;

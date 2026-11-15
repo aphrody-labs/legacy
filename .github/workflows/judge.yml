@@ -92,11 +92,11 @@ jobs:
       - name: Suite
         run: ${{ matrix.run }}
 
-  # Tribunal ai-os review (docs/reviews/README.md) sur les commits du push : job séparé et indicatif (continue-on-error),
-  # il ne ralentit pas les portes ci-dessus et ne déclenche jamais ci-revert. Verdict du juge dans le résumé du run ; la
-  # CI ne commite rien (les verdicts archivés viennent de `just review` et de `ai-os orch lifecycle`). Moteurs : registre
-  # du runner (CLI claude avec ANTHROPIC_API_KEY, Workers AI si le jeton Cloudflare l'autorise) ; voix sans moteur = notée
-  # « sans moteur ». @anthropic-ai/claude-code 2.1.323 (bun info, 2026-11-13).
+  # ai-os review tribunal (docs/reviews/README.md) on the push commits: separate, advisory job (continue-on-error),
+  # it does not slow the gates above and never triggers ci-revert. Judge verdict in the run summary; the
+  # CI commits nothing (archived verdicts come from `just review` and `ai-os orch lifecycle`). Engines: runner
+  # registry (claude CLI with ANTHROPIC_API_KEY, Workers AI if the Cloudflare token allows it); voice without engine = scored
+  # "no-engine". @anthropic-ai/claude-code 2.1.323 (bun info, 2026-11-13).
   review:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -108,7 +108,7 @@ jobs:
         with: { bun-version-file: package.json }
       - name: Claude Code CLI (voix claude et juge)
         run: bun add -g @anthropic-ai/claude-code@2.1.323 && echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
-      - name: Tribunal sur le push
+      - name: Tribunal on the push
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -1,6 +1,6 @@
 # GPU HAL (dx12-hal) and its users on GitHub-hosted runners: windows-msvc and linux-gnu (dx12-001, nt-001).
 # fr1 stays reserved to Chromium/LLVM; ci.yml does not build these Windows-only crates.
-# Toolchain from rust-toolchain.toml (rustup on the runner). Runner images relevés dans nt.yml (2026-11-12).
+# Toolchain from rust-toolchain.toml (rustup on the runner). Runner images surveyed in nt.yml (2026-11-12).
 name: hal
 on:
   push:

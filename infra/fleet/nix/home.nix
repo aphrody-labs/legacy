@@ -1,7 +1,7 @@
-# Options vérifiées dans nix-community/home-manager (modules/programs/{bash,fish,nushell,carapace,zoxide}.nix, master).
+# Options verified in nix-community/home-manager (modules/programs/{bash,fish,nushell,carapace,zoxide}.nix, master).
 { pkgs, ... }:
 let
-  # Copié tel quel dans le store : les chemins relatifs des configs (../env.nu, status dirname) restent valides.
+  # Copied as is into the store: the relative paths of the configs (../env.nu, status dirname) stay valid.
   shells = ../../../packages/machine/shells;
 in
 {
@@ -16,7 +16,7 @@ in
     just
   ];
 
-  # Famille bash : bashrc partagé (agent A), qui source ../env.sh.
+  # Bash family: shared bashrc (agent A), which sources ../env.sh.
   programs.bash = {
     enable = true;
     bashrcExtra = ''. "${shells}/bash/bashrc"'';
@@ -29,13 +29,13 @@ in
   xdg.configFile."fish/completions/ay.fish".source = "${shells}/completions/ay.fish";
 
   programs.nushell = {
-    loadSessionVariables = false; # env.nu du dépôt pose les variables
+    loadSessionVariables = false; # the repository env.nu sets the variables
     enable = true;
     extraEnv = "source ${shells}/nu/env.nu";
     extraConfig = "source ${shells}/nu/config.nu";
   };
 
-  # Complétion partagée (spec ay + git/cargo/just) ; fish garde ses complétions natives.
+  # Shared completion (ay + git/cargo/just spec); fish keeps its native completions.
   programs.carapace = {
     enable = true;
     enableFishIntegration = false;

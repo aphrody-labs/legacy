@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-// Recherche BM25 dans les données UI/UX absorbées de nextlevelbuilder/ui-ux-pro-max-skill (MIT),
-// portage bun de scripts/core.py + search.py (k1 = 1.5, b = 0.75), sans dépendance.
-//   bun search.ts "<requête>" [--domain <d>] [--stack threejs|winui] [-n 3] [--json] [--ofl]
+// BM25 search over the UI/UX data absorbed from nextlevelbuilder/ui-ux-pro-max-skill (MIT),
+// bun port of scripts/core.py + search.py (k1 = 1.5, b = 0.75), dependency-free.
+//   bun search.ts "<query>" [--domain <d>] [--stack threejs|winui] [-n 3] [--json] [--ofl]
 //   bun search.ts "<produit> <secteur> <mots>" --brief     produit + style + landing + ux + chart
 import { join } from "node:path";
 
@@ -168,7 +168,7 @@ const STACK_COLS = {
 };
 const STACKS = ["threejs", "winui"];
 
-/** CSV RFC 4180 : guillemets doublés, champs multilignes. */
+/** RFC 4180 CSV: doubled quotes, multiline fields. */
 function parseCsv(text: string): Record<string, string>[] {
   const rows: string[][] = [];
   let row: string[] = [];
@@ -347,11 +347,11 @@ else
   for (const [d, hits] of Object.entries(result)) {
     const list = hits as Record<string, unknown>[];
     console.log(
-      `## ${d} (${list.length} résultat${list.length > 1 ? "s" : ""})`,
+      `## ${d} (${list.length} result${list.length > 1 ? "s" : ""})`,
     );
     if (!list.length)
       console.log(
-        "aucun résultat : resserrer la requête ou forcer --domain ; ne rien inventer.",
+        "no result: narrow the query or force --domain; invent nothing.",
       );
     for (const h of list) {
       console.log("");

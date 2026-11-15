@@ -37,7 +37,7 @@ gate() {
       building && { echo "build en cours : $(pgrep -xl "$BUILD_RE" | head -n1)"; return 1; }
       load_ok "$own" || { echo "charge $(load1) >= $half"; return 1; } ;;
     proxy)
-      systemctl is-active --quiet nginx || { echo "nginx inactif : le proxy passe d'abord"; return 1; }
+      systemctl is-active --quiet nginx || { echo "nginx inactive: the proxy goes first"; return 1; }
       load_ok "$own" || { echo "charge $(load1) >= $half"; return 1; } ;;
     prd)
       load_ok "$own" || { echo "charge $(load1) >= $half"; return 1; }
@@ -45,7 +45,7 @@ gate() {
         code=$(curl -s -m 3 -o /dev/null -w '%{http_code}' "$PRIO" || true)
         [ "$code" = 200 ] || { echo "service prioritaire $PRIO : HTTP $code"; return 1; }
       fi
-      [ "$(mem_avail_mb)" -ge "$(mem_need_mb)" ] || { echo "mémoire disponible $(mem_avail_mb) Mio < $(mem_need_mb) Mio"; return 1; }
+      [ "$(mem_avail_mb)" -ge "$(mem_need_mb)" ] || { echo "available memory $(mem_avail_mb) MiB < $(mem_need_mb) MiB"; return 1; }
       # Opportunistic node: it never holds the heavy lock and withdraws as soon as heavy work takes it.
       if [ -n "${LOCK:-}" ]; then
         ( exec 9>"$LOCK"; flock -n 9 ) || { echo "verrou lourd $LOCK pris"; return 1; }
@@ -61,15 +61,15 @@ install_bin() {
   [ -n "$(rpc_bin 2>/dev/null || true)" ] && return 0
   tmp=$(mktemp -d)
   curl -fsSL -o "$tmp/a.tgz" "https://github.com/ggml-org/llama.cpp/releases/download/$TAG/$ASSET"
-  echo "$SHA  $tmp/a.tgz" | sha256sum -c --quiet - || { echo "sha256 invalide pour $ASSET" >&2; rm -rf "$tmp"; exit 2; }
+  echo "$SHA  $tmp/a.tgz" | sha256sum -c --quiet - || { echo "invalid sha256 for $ASSET" >&2; rm -rf "$tmp"; exit 2; }
   mkdir -p "$BIN_DIR"
   tar -xzf "$tmp/a.tgz" -C "$BIN_DIR"
   rm -rf "$tmp"
-  [ -n "$(rpc_bin)" ] || { echo "ggml-rpc-server absent de $ASSET" >&2; exit 2; }
+  [ -n "$(rpc_bin)" ] || { echo "ggml-rpc-server missing from $ASSET" >&2; exit 2; }
 }
 
 nft_on() {
-  command -v nft >/dev/null 2>&1 || { echo "nft absent : seule l'adresse d'écoute WireGuard protège le port" >&2; return 0; }
+  command -v nft >/dev/null 2>&1 || { echo "nft missing: only the WireGuard listen address protects the port" >&2; return 0; }
   nft delete table inet aphrody_rpc 2>/dev/null || true
   nft -f - <<EOF
 table inet aphrody_rpc {
@@ -99,12 +99,12 @@ watch() {
       exit 0
     fi
   done
-  echo "fin $(date -u +%FT%TZ) : rpc-server terminé" > "$STATE"
+  echo "end $(date -u +%FT%TZ): rpc-server finished" > "$STATE"
   nft_off
 }
 
 up() {
-  if systemctl is-active --quiet "$UNIT"; then echo "déjà actif"; return 0; fi
+  if systemctl is-active --quiet "$UNIT"; then echo "already active"; return 0; fi
   why=$(gate) || { echo "refus : $why"; exit 75; }
   install_bin
   nft_on
@@ -118,8 +118,8 @@ up() {
   # prd: no lock held; watch tests the heavy lock on each tick (gate) and yields.
   "$@" sh "$ROOT/fabric/node.sh" watch
   sleep 2
-  systemctl is-active --quiet "$UNIT" || { echo "échec : $(cat "$STATE" 2>/dev/null)"; journalctl -u "$UNIT" -n 20 --no-pager; exit 1; }
-  echo "actif sur $BIND:$PORT"
+  systemctl is-active --quiet "$UNIT" || { echo "failed: $(cat "$STATE" 2>/dev/null)"; journalctl -u "$UNIT" -n 20 --no-pager; exit 1; }
+  echo "active on $BIND:$PORT"
 }
 
 MODELS=/var/cache/aphrody-models
@@ -136,10 +136,10 @@ warm() {
   systemd-run --unit aphrody-rpc-warm --collect --wait --quiet \
     -p CPUQuota="${CPU:-100%}" -p MemoryMax="${MEM:-2G}" -p Nice=19 -p IOSchedulingClass=idle \
     "$cli" -m "$f" --rpc "$BIND:$PORT" -ngl 999 -n 1 -p ok --no-warmup -t 1 >/dev/null 2>&1 || true
-  echo "cache : $(du -sm "$CACHE" | cut -f1) Mio dans $CACHE"
+  echo "cache: $(du -sm "$CACHE" | cut -f1) MiB in $CACHE"
 }
 
-down() { systemctl stop "$UNIT" 2>/dev/null || true; nft_off; echo "arrêté"; }
+down() { systemctl stop "$UNIT" 2>/dev/null || true; nft_off; echo "stopped"; }
 
 status() {
   active=$(systemctl is-active "$UNIT" 2>/dev/null || true)

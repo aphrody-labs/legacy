@@ -1,5 +1,5 @@
 [Unit]
-Description=Outillage agent (skills, plugins, MCP) pour root et agent depuis /srv/src
+Description=Agent tooling (skills, plugins, MCP) for root and agent from /srv/src
 Wants=network-online.target
 After=network-online.target src-checkout-update.service
 [Service]

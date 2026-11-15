@@ -1,8 +1,8 @@
-// Plafonnement de facturation : budget Cloud Billing -> Pub/Sub billing-alerts -> cette fonction.
-// Modèle officiel « cap costs » (docs.cloud.google.com/billing/docs/how-to/disable-billing-with-notifications),
-// réécrit sans dépendance : jeton du serveur de métadonnées + REST Cloud Billing v1.
-// Agit seulement si : budget nommé « project-<id>-<N>eur-month », <id> dans CAP_PROJECTS, coût > montant, DRY_RUN=0.
-// Couper la facturation arrête tous les services du projet ; réactivation : `env-kit billing relink <id>`.
+// Billing cap: Cloud Billing budget -> Pub/Sub billing-alerts -> this function.
+// Official "cap costs" model (docs.cloud.google.com/billing/docs/how-to/disable-billing-with-notifications),
+// rewritten without dependencies: metadata server token + Cloud Billing v1 REST.
+// Acts only if: budget named "project-<id>-<N>eur-month", <id> in CAP_PROJECTS, cost > amount, DRY_RUN=0.
+// Cutting billing stops all services of the project; reactivation: `env-kit billing relink <id>`.
 
 const CAP = new Set(
   (process.env.CAP_PROJECTS ?? "")
@@ -41,7 +41,7 @@ exports.capBilling = async (event) => {
   if (!m) return log("INFO", "budget hors projet, alerte seule", ctx);
   const project = m[1];
   if (!(d.costAmount > d.budgetAmount))
-    return log("INFO", "sous le plafond", { project, ...ctx });
+    return log("INFO", "under the cap", { project, ...ctx });
   if (!CAP.has(project))
     return log("WARNING", "plafond depasse, projet non arme (alerte seule)", {
       project,

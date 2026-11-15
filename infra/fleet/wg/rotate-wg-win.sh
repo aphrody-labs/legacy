@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Rotation de la clé du pair Windows (10.200.77.2 / 10.200.78.2), clé fuitée dans aphrody-labs/mesh-vn.
-# À lancer depuis le PC en session élevée (Claude Code tourne élevé : aucune invite). Rotation faite le 2026-11-13 (nouvelle clé dans ~/.ssh/fleet/wg/wg-win.pub).
-# ssh passe par les IP publiques : couper le tunnel ne coupe pas l'accès aux serveurs.
-# Nouvelle paire : ~/.ssh/fleet/wg/wg-win.{key,pub}, conf : ~/.ssh/fleet/wg/wg-win.conf (hors dépôt).
+# Rotation of the Windows peer key (10.200.77.2 / 10.200.78.2), key leaked in aphrody-labs/mesh-vn.
+# Run from the PC in an elevated session (Claude Code runs elevated: no prompt). Rotation done on 2026-11-13 (new key in ~/.ssh/fleet/wg/wg-win.pub).
+# ssh goes through the public IPs: cutting the tunnel does not cut access to the servers.
+# New pair: ~/.ssh/fleet/wg/wg-win.{key,pub}, conf: ~/.ssh/fleet/wg/wg-win.conf (outside the repository).
 set -euo pipefail
 OLD='up+fbCDKsbVlLZSFXR3k4U3I784oSqwO8/ijyHSM/yM='
 NEW=$(cat ~/.ssh/fleet/wg/wg-win.pub)
@@ -17,9 +17,9 @@ swap() { # host iface allowed-ip from to
 }
 rollback() { swap vps wg1 10.200.77.2/32 "$NEW" "$OLD"; swap prd prod 10.200.78.2/32 "$NEW" "$OLD"; echo "ROLLBACK serveurs faits"; }
 
-# 1. client d'abord (sudo/UAC) ; si refusé, rien n'a bougé côté serveurs
-# Le service tunnel tourne en LocalSystem : la conf doit être dans le magasin de WireGuard (Data\Configurations,
-# chiffré DPAPI à l'import), pas sous ~/.ssh dont l'ACL n'autorise que l'utilisateur. Session élevée requise.
+# 1. client first (sudo/UAC); if refused, nothing moved on the server side
+# The tunnel service runs as LocalSystem: the conf must be in WireGuard's store (Data\Configurations,
+# DPAPI-encrypted at import), not under ~/.ssh whose ACL only allows the user. Elevated session required.
 pwsh -NoProfile -Command "\$wg='$WGDIR\\wireguard.exe'; \$store='$WGDIR\\Data\\Configurations';
   & \$wg /uninstalltunnelservice wg-win; Start-Sleep 3;
   Copy-Item '$CONF' (Join-Path \$store 'wg-win.conf') -Force; Start-Sleep 3;
@@ -28,7 +28,7 @@ pwsh -NoProfile -Command "\$wg='$WGDIR\\wireguard.exe'; \$store='$WGDIR\\Data\\C
 # 2. serveurs
 swap vps wg1 10.200.77.2/32 "$OLD" "$NEW"
 swap prd prod 10.200.78.2/32 "$OLD" "$NEW"
-# 3. vérification (fr1, prd, fr2) ; rollback auto si échec
+# 3. verification (fr1, prd, fr2); automatic rollback on failure
 ok=1
 for ip in 10.200.77.1 10.200.77.5 10.200.77.3; do ping -n 3 "$ip" >/dev/null || { echo "KO $ip"; ok=0; }; done
 if [ $ok = 1 ]; then echo "mesh OK avec la nouvelle clé $NEW"; else rollback; echo "Remettre l'ancien tunnel : réimporter la conf précédente dans l'UI WireGuard"; exit 1; fi
