@@ -85,6 +85,9 @@ router-windows:
 		-fuse-ld=lld router/ay-router.c router/router.c -lws2_32 -lwinhttp -o $(OUT_DIR)/ay-router.exe
 	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=gnu11 -O2 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS -Iinclude \
 		-fuse-ld=lld router/ay-chat.c router/router.c ui/hct.c -lws2_32 -lwinhttp -o $(OUT_DIR)/ay-chat.exe
+	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=gnu11 -O2 -Wall -Wextra -D_CRT_SECURE_NO_WARNINGS -DUNICODE -Iinclude \
+		-fuse-ld=lld -Wl,/subsystem:windows -Wl,/entry:wWinMainCRTStartup router/ay-chat-gui.c router/router.c ui/hct.c \
+		-lws2_32 -lwinhttp -luser32 -lgdi32 -o $(OUT_DIR)/ay-chat-gui.exe
 
 windows:
 	mkdir -p $(OUT_DIR)
