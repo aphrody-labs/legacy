@@ -111,8 +111,8 @@ pub fn run(args: &[String]) -> i32 {
                  Examples:\n  ay engines list --json\n  ay engines matrix\n  ay engines js            V8, JavaScriptCore, Dawn, wgpu\n  \
                  ay engines path chrome@beta\n  ay engines install chrome@stable\n  ay engines launch chrome@stable --port 9222\n  \
                  ay engines build v8 dawn --detach   d8 and dawn_end2end_tests on fr1 (ay chromium build)\n  \
-                 ay engines backend list               C++ backends: bun (JSC) or chromium@stable|beta|dev|canary|local (V8)\n  \
-                 ay engines backend use --use render --write   pick by use case, install, record .engine-version"
+                 ay engines backend pick --need webgpu --channel canary   C++ backend from registry needs\n  \
+                 ay engines backend use chrome@dev --write   install, record .engine-version"
             );
             0
         }
