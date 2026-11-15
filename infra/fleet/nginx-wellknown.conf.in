@@ -1,8 +1,9 @@
 # /.well-known/aphrody/host: role, hostname, mesh addresses and services of this host, written by fleet-probe --well-known
-# (fleet-wellknown.timer). Mesh and loopback listeners only; rendered at install (site_install), the address is discovered.
+# (fleet-wellknown.timer). Mesh and loopback listeners only. fleet-offload.sh renders it per host: __ROLE__ is the role,
+# the mesh address is discovered at install (site_render); never committed.
 server {
     listen 127.0.0.1:8399;
-    listen @@hosts.fr2.mesh_ip@@:8399;
+    listen @@hosts.__ROLE__.mesh_ip@@:8399;
     access_log off;
     location = /.well-known/aphrody/host {
         default_type application/json;

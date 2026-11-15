@@ -24,7 +24,19 @@ done
 inst "$src/cluster.toml" /etc/fleet/cluster.toml 0644 || true
 inst "$src/../../packages/env-kit/loaders/shell/discover.sh" /usr/local/lib/aphrody/discover.sh 0644 || true
 inst "$src/../../packages/env-kit/loaders/shell/site.sh" /usr/local/lib/aphrody/site.sh 0644 || true
-for u in fleet-cgsample.service fleet-cgsample.timer; do inst "$src/systemd/$u" "/etc/systemd/system/$u" 0644 && sysd=1; done
+# /.well-known/aphrody/host listener (mesh + loopback :8399) in nginx, rendered for this host. prd (production) gets the files and the timer only:
+# its nginx conf and reload wait for the owner's prd window (listed at the end of apply).
+ngx=0 ngx_skipped=0
+if [ -d /etc/nginx/conf.d ]; then
+  . "$src/../../packages/env-kit/loaders/shell/site.sh"
+  wk=$(mktemp); sed "s/__ROLE__/$role/g" "$src/nginx-wellknown.conf.in" > "$wk.in"
+  if site_render "$wk.in" > "$wk"; then
+    if [ "$role" = prd ]; then cmp -s "$wk" /etc/nginx/conf.d/aphrody-wellknown.conf 2>/dev/null || ngx_skipped=1
+    else inst "$wk" /etc/nginx/conf.d/aphrody-wellknown.conf 0644 && ngx=1; fi
+  else echo "wellknown: mesh address of $role not discovered, nginx listener skipped" >&2; fi
+  rm -f "$wk" "$wk.in"
+fi
+for u in fleet-cgsample.service fleet-cgsample.timer fleet-wellknown.service fleet-wellknown.timer; do inst "$src/systemd/$u" "/etc/systemd/system/$u" 0644 && sysd=1; done
 if [ -d "$off/systemd" ]; then
   while IFS= read -r f; do inst "$f" "/etc/systemd/system/${f#"$off/systemd/"}" 0644 && sysd=1; done < <(find "$off/systemd" -type f)
 fi
@@ -47,6 +59,11 @@ if [ "$mode" = apply ]; then
   [ -e /var/log/fleet/offload-bench.tsv ] || install -m 0666 /dev/null /var/log/fleet/offload-bench.tsv
   [ "$sysd" = 1 ] && systemctl daemon-reload
   systemctl enable --now fleet-cgsample.timer >/dev/null
+  systemctl enable --now fleet-wellknown.timer >/dev/null; systemctl start fleet-wellknown.service || true
+  if [ "$ngx" = 1 ]; then
+    if nginx -t -q 2>/dev/null; then systemctl reload nginx; else rm -f /etc/nginx/conf.d/aphrody-wellknown.conf; echo "nginx -t failed: wellknown listener removed" >&2; fi
+  fi
+  [ "$ngx_skipped" = 1 ] && echo "prd window: render $src/nginx-wellknown.conf.in to /etc/nginx/conf.d/aphrody-wellknown.conf (site_render after sed __ROLE__=prd), nginx -t, reload nginx"
   if [ "$udev" = 1 ] || { [ -f "$off/etc/modules-load.d/fleet-bfq.conf" ] && ! rg -q '\[bfq\]' /sys/block/sdb/queue/scheduler 2>/dev/null; }; then
     modprobe bfq 2>/dev/null || true
     udevadm control --reload; udevadm trigger --subsystem-match=block --action=change
