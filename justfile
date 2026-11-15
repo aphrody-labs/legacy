@@ -45,6 +45,11 @@ default:
 doctor:
     ay doctor
 
+# E2E desktop on the PC: Gemini app (agent-desktop), rea, ghidra, agent-browser, gnu; report in var/ and docs/reviews/
+[group('dev')]
+e2e-desktop:
+    bun scripts/e2e-desktop.ts
+
 # Format entire Bun workspace
 [group('dev')]
 fmt:
