@@ -1,6 +1,6 @@
 // unixwin as a stdio MCP server (protocol 2025-11-25, one JSON message per line), reached through the relay hub:
 // hub_call unixwin__unixwin_applets | unixwin__unixwin_plugin_manifest | unixwin__unixwin_validate_bundle | unixwin__unixwin_sh.
-// Registered by [[hub.mcp]] unixwin in infra/agents/toolchain.toml. Backends: infra/unixwin/applets.toml (provider table of the
+// Registered by [[hub.mcp]] unixwin in infra/agents/toolchain.toml. Backends: infra/os/unixwin/applets.toml (provider table of the
 // `ay applet` multicall), packages/omniu (plugin host and bundle validator), the `ay` binary ($AY_BIN, else PATH; `ay sh` is the
 // embedded Bash engine). Skill: .agents/skills/unixwin.
 import { join } from "node:path";
@@ -17,7 +17,7 @@ const SRC = join(import.meta.dir, "..", "..", "..", "..");
 
 /** The provider table of `ay applet`: `{ name: "winux" | "uutils" | "winux-cxx" }`. */
 export async function applets(root: string = SRC): Promise<Record<string, string>> {
-  const doc = Bun.TOML.parse(await Bun.file(join(root, "infra/unixwin/applets.toml")).text()) as Record<string, { provider: string }>;
+  const doc = Bun.TOML.parse(await Bun.file(join(root, "infra/os/unixwin/applets.toml")).text()) as Record<string, { provider: string }>;
   return Object.fromEntries(Object.entries(doc).map(([k, v]) => [k, v.provider]));
 }
 

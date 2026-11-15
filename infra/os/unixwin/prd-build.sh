@@ -1,7 +1,7 @@
 #!/bin/sh
 # Builds niu (niubash + rubash engine) on prd from the aphrody-labs forks, at the src.lock.json commits.
 # Windows target: cargo xwin (MSVC CRT and Windows SDK cached in ~/.cache/cargo-xwin, lld-link); Linux target:
-# cargo build. Minimum priority (nice -n 19), JOBS tasks (4 by default). Launched by infra/unixwin/unixwin.ts build.
+# cargo build. Minimum priority (nice -n 19), JOBS tasks (4 by default). Launched by infra/os/unixwin/unixwin.ts build.
 # Usage : JOBS=4 sh prd-build.sh <triple> <commit niubash> <commit rubash>
 # Output: one line "ARTIFACT <path> <sha256>"; the binary and SHA256SUMS in $UNIXWIN_WORK/out/<triple>/.
 set -eu

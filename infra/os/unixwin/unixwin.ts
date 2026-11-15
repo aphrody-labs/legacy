@@ -2,12 +2,12 @@
 // (cargo xwin for Windows, nice -n 19, 4 tasks) or by the fork CI (.github/workflows/aphrody-build.yml),
 // then installation of the binary on the workstation.
 // Usage (repository root):
-//   bun infra/unixwin/unixwin.ts status                     fork / upstream gaps, pins, installed niu
-//   bun infra/unixwin/unixwin.ts lock                       pins the unixwin clones in src.lock.json
-//   bun infra/unixwin/unixwin.ts build [triple]             build on prd, binary brought back to var/unixwin/prd/<triple>
-//   bun infra/unixwin/unixwin.ts fetch-ci [triple]          fork CI artifact at the pinned commit -> var/unixwin/ci/<triple>
-//   bun infra/unixwin/unixwin.ts install [prd|ci] [triple]  replaces the workstation's niu.exe (and its bash.exe/sh.exe copies)
-//   bun infra/unixwin/unixwin.ts test-fr1 <filter>          targeted cargo test of rubash on fr1, the factory (full suite: fork CI)
+//   bun infra/os/unixwin/unixwin.ts status                     fork / upstream gaps, pins, installed niu
+//   bun infra/os/unixwin/unixwin.ts lock                       pins the unixwin clones in src.lock.json
+//   bun infra/os/unixwin/unixwin.ts build [triple]             build on prd, binary brought back to var/unixwin/prd/<triple>
+//   bun infra/os/unixwin/unixwin.ts fetch-ci [triple]          fork CI artifact at the pinned commit -> var/unixwin/ci/<triple>
+//   bun infra/os/unixwin/unixwin.ts install [prd|ci] [triple]  replaces the workstation's niu.exe (and its bash.exe/sh.exe copies)
+//   bun infra/os/unixwin/unixwin.ts test-fr1 <filter>          targeted cargo test of rubash on fr1, the factory (full suite: fork CI)
 import {
   existsSync,
   readdirSync,
@@ -18,7 +18,7 @@ import {
 } from "node:fs";
 import { dirname, join } from "node:path";
 
-const repo = join(import.meta.dir, "..", "..");
+const repo = join(import.meta.dir, "..", "..", "..");
 const lockPath = join(repo, "src.lock.json");
 const gh = (r: string) => `https://github.com/${r}.git`;
 
@@ -74,7 +74,7 @@ const pinOf = async (rel: string) => {
   const c = (await readLock()).repositories[rel]?.commit;
   if (!c)
     throw new Error(
-      `${rel} missing from src.lock.json: bun infra/unixwin/unixwin.ts lock`,
+      `${rel} missing from src.lock.json: bun infra/os/unixwin/unixwin.ts lock`,
     );
   return c;
 };
@@ -368,7 +368,7 @@ switch (cmd) {
     break;
   default:
     console.log(
-      "usage : bun infra/unixwin/unixwin.ts status | lock | build [triple] | fetch-ci [triple] | install [prd|ci] [triple] | test-fr1 [filtre]",
+      "usage : bun infra/os/unixwin/unixwin.ts status | lock | build [triple] | fetch-ci [triple] | install [prd|ci] [triple] | test-fr1 [filtre]",
     );
     process.exit(cmd ? 2 : 0);
 }

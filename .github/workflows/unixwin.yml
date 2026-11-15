@@ -8,7 +8,7 @@ on:
     paths:
       - "src/winux/**"
       - "src/ay/**"
-      - "infra/unixwin/**"
+      - "infra/os/unixwin/**"
       - "scripts/unixwin-applets.ts"
       - ".github/workflows/unixwin.yml"
   workflow_dispatch:

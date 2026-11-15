@@ -34,7 +34,7 @@ import "infra/fleet/fleet.just"
 import "infra/lfs/lfs.just"
 import "infra/nix/nix.just"
 # unixwin chain (niubash, rubash, WinuxCmd): unixwin-* recipes
-import "infra/unixwin/unixwin.just"
+import "infra/os/unixwin/unixwin.just"
 
 # Default recipe: list available commands
 default:

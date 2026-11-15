@@ -46,7 +46,7 @@ Fork state (resolved with `gh api repos/<o>/<r>/commits/<branch>` on 2026-11-15)
 | `tools.toml` and `ay up` against wpm | `ay up` is the resolver, wpm index entries become `tools.toml` rows (step 6) |
 | Bun crates in `src/` against rubash and niubash embedding | no overlap in code: Bun has no bash engine; `src/rubash` stays a leaf crate and `ay` depends on it |
 | `packages/i18n` against winuxcmd-i18n | catalogs merged, step 5 |
-| `infra/unixwin` (`just unixwin-*`) | builds `niu` from the pins today; step 2 moves it to `cargo build -p niubash` |
+| `infra/os/unixwin` (`just unixwin-*`) | builds `niu` from the pins today; step 2 moves it to `cargo build -p niubash` |
 
 ## Step 2 measurements (fr2, 2026-11-15)
 
@@ -56,7 +56,7 @@ Fork state (resolved with `gh api repos/<o>/<r>/commits/<branch>` on 2026-11-15)
 
 ## Step 5: WinuxCmd base, one multicall
 
-- Source of the matrix: `scripts/unixwin-applets.ts` (WinuxCmd `DOCS/2.0-inventory.tsv`, differential `baseline.json`, the niubash completion catalog; uutils clap definitions scanned from the coreutils, findutils and diffutils checkouts; `src/gnu/coreutils/PROOF.md` for the GNU suite failures). It writes the table below and `infra/unixwin/applets.toml`, the provider table that `ay applet` embeds.
+- Source of the matrix: `scripts/unixwin-applets.ts` (WinuxCmd `DOCS/2.0-inventory.tsv`, differential `baseline.json`, the niubash completion catalog; uutils clap definitions scanned from the coreutils, findutils and diffutils checkouts; `src/gnu/coreutils/PROOF.md` for the GNU suite failures). It writes the table below and `infra/os/unixwin/applets.toml`, the provider table that `ay applet` embeds.
 - Decision rule: an applet WinuxCmd has stays WinuxCmd's. uutils fills what WinuxCmd lacks and what the multicall cannot carry (C++ applets: `ay` links Rust only). The WinuxCmd library is Win32-only (console, handles, ACLs): `ay` links it on Windows; elsewhere a `winux` applet runs through the uutils multicall. No second coreutils is linked or built.
 - Evidence is per side, not a shared run: the WinuxCmd differential corpus (GNU oracle, pass/total) and the GNU test suite on uutils (fr1 run, `src/gnu/coreutils/PROOF.md`: 598 of 637 executed tests). Option columns count long options (W: completion catalog, U: clap scan); they are a coverage signal, not a parity proof. Running the WinuxCmd corpus against uutils on one oracle is not done.
 - The 60 C++-only applets (2026-11-15): the matrix now also scans uutils procps, util-linux, acl, bsdutils, hostname, shadow, tar, grep, sed and awk; 15 of the 60 exist there (free, pgrep, pidof, pkill, ps, top, vmstat, w, watch, cal, hexdump, renice, getfacl, grep, sed) and their provider is `uutils`. Seven were ported to portable Rust in `src/winux/extra` (dos2unix, unix2dos, d2u, u2d, envsubst, look, strings): they run in process on every host and are compared with the gettext, util-linux and binutils originals by `test/winux-extra`. 38 stay `winux-cxx` (Win32-specific or large: cygpath, regtool, mkpasswd, mkgroup, tic, infocmp, toe, tput, less, cpio, diff3, patch, tree...). The C++ sources are not deleted: they live in the WinuxCmd fork at the pin, whose Windows build is the product, and none of the 7 Rust applets has passed the WinuxCmd corpus yet (that corpus needs a Windows run with a GNU oracle; the `unixwin` workflow covers its master subset).
