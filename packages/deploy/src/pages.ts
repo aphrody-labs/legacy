@@ -1,14 +1,20 @@
 // Server-rendered HTML of aphrody.app (landing, labs, dashboard). Design system: packages/design (tokens.css in the
 // registry, M3 buttons in native HTML styled by the tokens, Google Sans Flex). Only M3 tokens are referenced in CSS.
 // Pages read without JavaScript: links, buttons, lists and chips are native HTML that already carry their text.
-import { catalogs } from "@aphrody/i18n";
+import {
+  catalogs,
+  createTranslator,
+  negotiate,
+  sourceLocale,
+  type MessageArgs,
+  type Translator,
+} from "@aphrody/i18n";
 import { FONT_LINK, NATIVE_CSS, m3List, paintMark, type } from "./m3.ts";
 import { UI_CSS, themeButton } from "./ui.ts";
 import { METRICS, rating, type Summary } from "./runtime.ts";
 import {
   previewUrl,
   type Deployment,
-  type LabCard,
   type Project,
   type ProjectState,
   type Registry,
@@ -24,29 +30,44 @@ const HTML_ENT: Record<string, string> = {
 export const esc = (s: unknown): string =>
   String(s ?? "").replace(/[&<>"']/g, (c) => HTML_ENT[c]!);
 
-export const LOCALES = ["fr", "en", "zh-CN", "ja", "es"] as const;
-export type Locale = (typeof LOCALES)[number];
-const NATIVE_NAME: Record<Locale, string> = {
-  fr: "Français",
-  en: "English",
-  "zh-CN": "中文",
-  ja: "日本語",
-  es: "Español",
+/** Locales with a catalog in packages/i18n/locales (a catalog dropped there is served without a code change). */
+export const LOCALES: readonly string[] = Object.keys(catalogs);
+export type Locale = string;
+/** Locale of a request: best match of its Accept-Language header, else the source locale. */
+export const pickLocale = (acceptLanguage: string | null | undefined): Locale =>
+  negotiate(acceptLanguage, LOCALES, sourceLocale());
+const nativeName = (l: Locale): string => {
+  const n = new Intl.DisplayNames([l], { type: "language" }).of(l) ?? l;
+  return n.charAt(0).toLocaleUpperCase(l) + n.slice(1);
 };
-const OG_LOCALE: Record<Locale, string> = {
-  fr: "fr_FR",
-  en: "en_US",
-  "zh-CN": "zh_CN",
-  ja: "ja_JP",
-  es: "es_ES",
+const ogLocale = (l: Locale): string => {
+  const m = new Intl.Locale(l).maximize();
+  return `${m.language}_${m.region}`;
 };
-/** Public path of the landing page in a locale (French is the root, as on aphrody.com). */
-export const localePath = (l: Locale) => (l === "fr" ? "/" : `/${l}`);
-/** Text of a packages/i18n key in a locale (French gets narrow no-break spaces before ; : ! ?). */
-export const tr = (l: Locale, key: string): string => {
-  const v = (catalogs[l] as Record<string, string>)[key];
-  if (v === undefined) throw new Error(`i18n key ${key} missing in ${l}`);
-  return l === "fr" ? v.replace(/ ([;:!?])/g, "\u202f$1") : v;
+/** Public path of the landing page in a locale; `/` itself is negotiated from Accept-Language. */
+export const localePath = (l: Locale) => `/${l}`;
+const translators = new Map<string, Translator>();
+const translator = (l: Locale): Translator => {
+  let t = translators.get(l);
+  if (!t) translators.set(l, (t = createTranslator(catalogs, l)));
+  return t;
+};
+/** Writing direction of a locale. */
+export const dirOf = (l: Locale) => translator(l).dir;
+/**
+ * Text of a packages/i18n key in a locale (MF2). Plain text unless the message carries trusted markup, in which
+ * case every argument must already be escaped HTML. Typography is a property of the language: French sets
+ * narrow no-break spaces before ; : ! ?
+ */
+export const tr = (
+  l: Locale,
+  key: string,
+  args?: MessageArgs,
+): string => {
+  const t = translator(l);
+  if (!t.has(key)) throw new Error(`i18n key ${key} missing in ${l}`);
+  const v = t.t(key, args);
+  return new Intl.Locale(t.locale).language === "fr" ? v.replace(/ ([;:!?])/g, "\u202f$1") : v;
 };
 
 const HERO_CSS = `
@@ -113,9 +134,7 @@ export const pagePath = (tab: Tab, l: Locale): string =>
   tab === "home"
     ? localePath(l)
     : tab === "platform"
-      ? l === "fr"
-        ? "/platform"
-        : `/${l}/platform`
+      ? `/${l}/platform`
       : `/${tab}`;
 
 const ORG = {
@@ -136,7 +155,7 @@ export interface LayoutOpts {
 }
 
 // Public pages: no code, repository, package or command is named (owner order, 2026-11-13). The dashboard,
-// behind Cloudflare Access, keeps its technical detail and stays in French.
+// behind Cloudflare Access, keeps its technical detail; its text comes from the same catalogs.
 export function layout(
   reg: Pick<Registry, "css" | "mark">,
   title: string,
@@ -144,7 +163,7 @@ export function layout(
   body: string,
   o: LayoutOpts = {},
 ): string {
-  const l = o.l ?? "fr";
+  const l = o.l ?? sourceLocale();
   const desc = o.desc ?? "";
   const ld = o.ld ?? [];
   const t = (k: string) => tr(l, k);
@@ -164,24 +183,21 @@ export function layout(
             `<link rel="alternate" hreflang="${x}" href="https://aphrody.app${pagePath(tab, x)}">`,
         ).join("") +
         `<link rel="alternate" hreflang="x-default" href="https://aphrody.app/">`
-      : `<link rel="alternate" hreflang="fr" href="${url}">`;
+      : `<link rel="alternate" hreflang="${l}" href="${url}">`;
   const langs =
     tab === "home" || tab === "platform"
-      ? `<nav class="langs" aria-label="${esc(t("home.lang"))}">${LOCALES.map((x) => `<a href="${pagePath(tab, x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="page"' : ""}>${NATIVE_NAME[x]}</a>`).join("")}</nav>`
+      ? `<nav class="langs" aria-label="${esc(t("home.lang"))}">${LOCALES.map((x) => `<a href="${pagePath(tab, x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="page"' : ""}>${esc(nativeName(x))}</a>`).join("")}</nav>`
       : "";
-  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${desc ? `<meta name="description" content="${esc(desc)}">` : ""}<meta name="color-scheme" content="light dark"><link rel="canonical" href="${url}">${alt}<link rel="icon" href="https://aphrody.com/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="https://aphrody.com/apple-touch-icon.png"><meta property="og:type" content="website"><meta property="og:site_name" content="aphrody.app"><meta property="og:locale" content="${OG_LOCALE[l]}"><meta property="og:title" content="${esc(title)}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}<meta property="og:url" content="${url}"><meta property="og:image" content="https://aphrody.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">${tab === "dashboard" ? '<meta name="robots" content="noindex">' : '<meta name="robots" content="index, follow, max-image-preview:large">'}${FONT_LINK}<style>${reg.css}${NATIVE_CSS}${BASE_CSS}${UI_CSS}${HERO_CSS}</style><script src="/_/theme.js"></script><script src="/_/hero.js" defer></script><script src="/_aphrody/insights.js" defer></script>${graph}</head><body><a class="skip" href="#main">${esc(t("plat.skip"))}</a><header class="top-app-bar"><a class="brand" href="${localePath(l)}">${paintMark(reg.mark)}<span>aphrody.app</span></a><nav aria-label="${esc(t("plat.nav.label"))}">${nav("home", localePath(l), esc(t("plat.nav.home")))}${nav("platform", pagePath("platform", l), esc(t("plat.nav.platform")))}${nav("dashboard", "/dashboard", esc(t("plat.nav.dash")))}</nav>${langs}${themeButton(t("home.theme"))}</header>${o.hero ?? ""}<main id="main">${body}</main><footer><p>Aphrody. <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>. ${esc(t("plat.footer"))} <a href="https://aphrody.com/">aphrody.com</a>.</p></footer></body></html>`;
+  return `<!doctype html><html lang="${l}" dir="${dirOf(l)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${desc ? `<meta name="description" content="${esc(desc)}">` : ""}<meta name="color-scheme" content="light dark"><link rel="canonical" href="${url}">${alt}<link rel="icon" href="https://aphrody.com/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="https://aphrody.com/apple-touch-icon.png"><meta property="og:type" content="website"><meta property="og:site_name" content="aphrody.app"><meta property="og:locale" content="${ogLocale(l)}"><meta property="og:title" content="${esc(title)}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}<meta property="og:url" content="${url}"><meta property="og:image" content="https://aphrody.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">${tab === "dashboard" ? '<meta name="robots" content="noindex">' : '<meta name="robots" content="index, follow, max-image-preview:large">'}${FONT_LINK}<style>${reg.css}${NATIVE_CSS}${BASE_CSS}${UI_CSS}${HERO_CSS}</style><script src="/_/theme.js"></script><script src="/_/hero.js" defer></script><script src="/_aphrody/insights.js" defer></script>${graph}</head><body><a class="skip" href="#main">${esc(t("plat.skip"))}</a><header class="top-app-bar"><a class="brand" href="${localePath(l)}">${paintMark(reg.mark)}<span>aphrody.app</span></a><nav aria-label="${esc(t("plat.nav.label"))}">${nav("home", localePath(l), esc(t("plat.nav.home")))}${nav("platform", pagePath("platform", l), esc(t("plat.nav.platform")))}${nav("dashboard", "/dashboard", esc(t("plat.nav.dash")))}</nav>${langs}${themeButton(t("home.theme"))}</header>${o.hero ?? ""}<main id="main">${body}</main><footer><p>Aphrody. <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>. ${esc(t("plat.footer"))} <a href="https://aphrody.com/">aphrody.com</a>.</p></footer></body></html>`;
 }
 
-const when = (iso?: string) =>
+const when = (iso: string | undefined, l: Locale) =>
   iso
     ? `<time datetime="${esc(iso)}">${esc(iso.slice(0, 16).replace("T", " "))} UTC</time>`
-    : "jamais";
+    : esc(tr(l, "dep.never"));
 const state = (d: Deployment) =>
   `<span class="${d.state === "ready" ? "ok" : d.state === "error" ? "err" : ""}">${esc(d.state)}</span>`;
-const chip = (label: string, href?: string) =>
-  href
-    ? `<a class="chip" href="${esc(href)}">${esc(label)}</a>`
-    : `<span class="chip">${esc(label)}</span>`;
+const code = (x: string) => `<code>${esc(x)}</code>`;
 
 export interface ProjectView {
   project: Project;
@@ -194,7 +210,7 @@ const FEATURE_IDS = [1, 2, 3, 4, 5, 6, 7, 8];
 export function platform(
   reg: Registry,
   views: ProjectView[],
-  l: Locale = "fr",
+  l: Locale = sourceLocale(),
 ): string {
   const t = (k: string) => tr(l, k);
   const sites = views
@@ -208,7 +224,7 @@ export function platform(
     (i) =>
       `<li class="card"><h3 class="title">${esc(t(`plat.f${i}.t`))}</h3><p class="support">${esc(t(`plat.f${i}.d`))}</p></li>`,
   ).join("");
-  const hero = `<section class="hero-art" aria-labelledby="h"><div data-hero-stage><div class="bg sun-css"></div><div class="bg hills-css"></div><div class="bg hills-css near"></div></div><div class="hero-copy"><h1 id="h">${esc(t("plat.h1"))}</h1><p class="lead">${esc(t("plat.lead"))}</p><div class="actions"><a class="btn btn-filled" href="#f">${esc(t("plat.features"))}</a><a class="btn btn-outlined" href="https://aphrody.com${l === "fr" ? "/" : "/" + l}">aphrody.com</a></div></div></section>`;
+  const hero = `<section class="hero-art" aria-labelledby="h"><div data-hero-stage><div class="bg sun-css"></div><div class="bg hills-css"></div><div class="bg hills-css near"></div></div><div class="hero-copy"><h1 id="h">${esc(t("plat.h1"))}</h1><p class="lead">${esc(t("plat.lead"))}</p><div class="actions"><a class="btn btn-filled" href="#f">${esc(t("plat.features"))}</a><a class="btn btn-outlined" href="https://aphrody.com/">aphrody.com</a></div></div></section>`;
   const body = `<section aria-labelledby="f"><h2 id="f">${esc(t("plat.features"))}</h2><ul class="grid" role="list">${features}</ul></section><section aria-labelledby="s"><h2 id="s">${esc(t("plat.sites"))}</h2><ul class="grid" role="list">${sites || `<li class="support">${esc(t("plat.none"))}</li>`}</ul></section><section aria-labelledby="c"><h2 id="c">${esc(t("plat.contact"))}</h2><p>${esc(t("plat.contact.p"))} <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>.</p></section>`;
   const desc = t("plat.desc");
   return layout(reg, t("plat.title"), "platform", body, {
@@ -277,7 +293,7 @@ const LAUNCH_CARDS: {
 ];
 
 /** aphrody.app home: entry of the Aphrody launcher (fullscreen, controller-first shell). Only what exists is linked. */
-export function landing(reg: Registry, l: Locale = "fr"): string {
+export function landing(reg: Registry, l: Locale = sourceLocale()): string {
   const t = (k: string) => tr(l, k);
   const cards = LAUNCH_CARDS.map(
     (c) =>
@@ -313,31 +329,23 @@ export function landing(reg: Registry, l: Locale = "fr"): string {
   });
 }
 
-export function labs(reg: Registry): string {
-  const card = (c: LabCard) =>
-    `<article class="card"><a class="title" href="${esc(c.url)}">${esc(c.name)}</a><p class="support">${esc(c.description)}</p>${c.metric ? `<p class="support">Métrique : ${esc(c.metric)}</p>` : ""}<div class="chips">${c.language ? chip(c.language) : ""}${c.pushedAt ? chip(`mis à jour ${c.pushedAt.slice(0, 10)}`) : ""}${c.homepage ? chip(c.homepage.replace(/^https?:\/\//, ""), c.homepage) : ""}</div></article>`;
-  const bets = reg.labs.filter((c) => c.source === "alphabet");
-  const repos = reg.labs.filter((c) => c.source === "github");
-  const body = `<h1>aphrody-labs</h1><p class="lead">Les projets expérimentaux d'Aphrody. Les paris viennent de <a href="https://github.com/aphrody-labs/src/blob/main/docs/ALPHABET.md">docs/ALPHABET.md</a> ; les dépôts sont ceux de l'organisation <a href="https://github.com/aphrody-labs">github.com/aphrody-labs</a> qui ne sont ni des forks ni archivés, avec leur description GitHub.</p><h2>Paris du monorepo</h2><div class="grid">${bets.map(card).join("")}</div><h2>Dépôts</h2><div class="grid">${repos.map(card).join("")}</div><p class="support">Liste générée au commit <code>${esc(reg.commit.slice(0, 7))}</code> le ${when(reg.generatedAt)}.</p>`;
-  return layout(reg, "Labs, aphrody.app", "labs", body, {
-    desc: "Projets expérimentaux de l'organisation aphrody-labs.",
-  });
-}
-
 const fmt = (m: string, v: number) =>
   m === "CLS" ? v.toFixed(3) : `${Math.round(v)} ms`;
 
 /** Web Analytics and Speed Insights of one project (Durable Object Insights, last `s.days` days). */
-export function insightsHtml(s: Summary | null): string {
-  if (!s)
-    return '<p class="support">Analytics non branchées (binding INSIGHTS absent).</p>';
+export function insightsHtml(
+  s: Summary | null,
+  l: Locale = sourceLocale(),
+): string {
+  const t = (k: string, a?: MessageArgs) => esc(tr(l, k, a));
+  if (!s) return `<p class="support">${t("dep.ins.off")}</p>`;
   const top = (title: string, rows: { key: string; n: number }[]) =>
-    `<section class="card"><h3 class="title">${title}</h3>${rows.length ? `<table><thead><tr><th scope="col">Valeur</th><th scope="col">Vues</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.key || "(direct)")}</td><td>${r.n}</td></tr>`).join("")}</tbody></table>` : '<p class="support">Aucune donnée.</p>'}</section>`;
+    `<section class="card"><h3 class="title">${title}</h3>${rows.length ? `<table><thead><tr><th scope="col">${t("dep.ins.value")}</th><th scope="col">${t("dep.ins.views")}</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${r.key ? esc(r.key) : t("dep.ins.direct")}</td><td>${r.n}</td></tr>`).join("")}</tbody></table>` : `<p class="support">${t("dep.ins.nodata")}</p>`}</section>`;
   const vit = METRICS.map((m) => {
     const x = s.vitals[m];
-    return `<section class="card"><h3 class="title">${m === "INP" ? "INP approché" : m} (p75)</h3>${x ? `<p class="kpi ${rating(m, x.p75)}">${fmt(m, x.p75)}</p><p class="support">${x.n} visites</p>` : '<p class="support">Aucune mesure.</p>'}</section>`;
+    return `<section class="card"><h3 class="title">${t(m === "INP" ? "dep.ins.inp" : "dep.ins.p75", { metric: m })}</h3>${x ? `<p class="kpi ${rating(m, x.p75)}">${fmt(m, x.p75)}</p><p class="support">${t("dep.ins.visits", { n: x.n })}</p>` : `<p class="support">${t("dep.ins.nomeasure")}</p>`}</section>`;
   }).join("");
-  return `<h2>Analytics (${s.days} jours)</h2><div class="grid"><section class="card"><h3 class="title">Pages vues</h3><p class="kpi">${s.views}</p><p class="support">Sans cookie ni identifiant ; robots exclus.</p></section>${top("Pages", s.paths)}${top("Référents", s.referrers)}${top("Pays", s.countries)}${top("Appareils", s.devices)}</div><h2>Speed Insights</h2><p class="support">Core Web Vitals mesurées chez les visiteurs (RUM), 75e centile, seuils web.dev. INP approché : plus longue interaction de la visite (web-vitals prend le 98e centile au-delà de 50 interactions).</p><div class="grid">${vit}</div>`;
+  return `<h2>${t("dep.ins.h2", { days: s.days })}</h2><div class="grid"><section class="card"><h3 class="title">${t("dep.ins.pageviews")}</h3><p class="kpi">${s.views}</p><p class="support">${t("dep.ins.nocookie")}</p></section>${top(t("dep.ins.pages"), s.paths)}${top(t("dep.ins.referrers"), s.referrers)}${top(t("dep.ins.countries"), s.countries)}${top(t("dep.ins.devices"), s.devices)}</div><h2>${t("dep.ins.speed")}</h2><p class="support">${t("dep.ins.speed.note")}</p><div class="grid">${vit}</div>`;
 }
 
 export function dashboard(
@@ -345,20 +353,27 @@ export function dashboard(
   views: ProjectView[],
   who: string,
   platform: Summary | null = null,
+  l: Locale = sourceLocale(),
 ): string {
+  const t = (k: string, a?: MessageArgs) => esc(tr(l, k, a));
   const rows = m3List(
     views.map(({ project: p, state: s, latest: d }) => ({
       headline: esc(p.name),
-      supporting: `${p.domains.map(esc).join(", ") || "aucun domaine"} ; production ${esc(s?.production?.slice(0, 7) ?? "-")} ; dernier ${esc(d?.sha.slice(0, 7) ?? "-")}`,
+      supporting: t("dep.proj.row", {
+        domains: p.domains.join(", ") || tr(l, "dep.proj.nodomain"),
+        prod: s?.production?.slice(0, 7) ?? "-",
+        latest: d?.sha.slice(0, 7) ?? "-",
+      }),
       trailing: d ? esc(d.state) : "",
       href: `/dashboard/${esc(p.name)}`,
     })),
   );
   return layout(
     reg,
-    "Tableau de bord, aphrody.app",
+    tr(l, "dep.dash.title"),
     "dashboard",
-    `<h1>Tableau de bord</h1><p class="lead">Connecté via Cloudflare Access : ${esc(who)}.</p>${rows}<h2>Plateforme aphrody.app</h2>${insightsHtml(platform)}`,
+    `<h1>${t("dep.dash.h1")}</h1><p class="lead">${t("dep.dash.who", { who })}</p>${rows}<h2>${t("dep.dash.platform")}</h2>${insightsHtml(platform, l)}`,
+    { l },
   );
 }
 
@@ -369,7 +384,11 @@ export function projectPage(
   deps: Deployment[],
   ins: Summary | null = null,
   cfg: Record<string, unknown> = {},
+  l: Locale = sourceLocale(),
 ): string {
+  const t = (k: string, a?: MessageArgs) => esc(tr(l, k, a));
+  // Messages that carry markup: their arguments are already escaped HTML.
+  const h = (k: string, a: MessageArgs) => tr(l, k, a);
   const prod = s?.production;
   const prodIdx = prod ? deps.findIndex((x) => x.sha === prod) : -1;
   const items = deps
@@ -377,22 +396,35 @@ export function projectPage(
       const live = d.sha === prod;
       const action =
         !live && d.state === "ready"
-          ? `<form method="post" action="/dashboard/${esc(p.name)}/promote"><input type="hidden" name="sha" value="${esc(d.sha)}"><button class="btn btn-tonal" type="submit">${prodIdx >= 0 && i > prodIdx ? "Rollback ici" : "Promouvoir"}</button></form>`
+          ? `<form method="post" action="/dashboard/${esc(p.name)}/promote"><input type="hidden" name="sha" value="${esc(d.sha)}"><button class="btn btn-tonal" type="submit">${t(prodIdx >= 0 && i > prodIdx ? "dep.dep.rollback" : "dep.dep.promote")}</button></form>`
           : "";
-      return `<article class="card"><a class="title" href="${esc(previewUrl(p.name, d.sha))}"><code>${esc(d.sha.slice(0, 7))}</code>${live ? " (production)" : ""}</a><p class="support">${esc(d.message)}</p><p class="support">${esc(d.branch)}, ${state(d)}, ${when(d.readyAt ?? d.createdAt)}${d.files ? `, ${d.files} fichiers, ${Math.round((d.bytes ?? 0) / 1024)} Kio` : ""}</p><div class="actions"><a class="btn btn-text" href="/dashboard/${esc(p.name)}/${esc(d.sha)}/log">Journal</a>${d.run ? `<a class="btn btn-text" href="${esc(d.run)}">CI</a>` : ""}${action}</div></article>`;
+      const size = d.files
+        ? t("dep.dep.size", {
+            files: d.files,
+            kib: Math.round((d.bytes ?? 0) / 1024),
+          })
+        : "";
+      return `<article class="card"><a class="title" href="${esc(previewUrl(p.name, d.sha))}"><code>${esc(d.sha.slice(0, 7))}</code>${live ? ` ${t("dep.dep.live")}` : ""}</a><p class="support">${esc(d.message)}</p><p class="support">${esc(d.branch)}, ${state(d)}, ${when(d.readyAt ?? d.createdAt, l)}${size}</p><div class="actions"><a class="btn btn-text" href="/dashboard/${esc(p.name)}/${esc(d.sha)}/log">${t("dep.dep.log")}</a>${d.run ? `<a class="btn btn-text" href="${esc(d.run)}">CI</a>` : ""}${action}</div></article>`;
     })
     .join("");
   const hist = m3List(
     (s?.history ?? [])
       .slice(-10)
       .reverse()
-      .map((h) => ({
-        headline: `<code>${esc(h.sha.slice(0, 7))}</code> ${esc(h.action)}`,
-        supporting: `par ${esc(h.by)}, ${when(h.at)}`,
+      .map((x) => ({
+        headline: `<code>${esc(x.sha.slice(0, 7))}</code> ${esc(x.action)}`,
+        supporting: h("dep.hist.by", {
+          by: esc(x.by),
+          when: when(x.at, l),
+        }),
       })),
   );
-  const body = `<h1>${esc(p.name)}</h1><p class="lead"><code>${esc(p.path)}</code>, construit par <code>${esc(p.build)}</code>, sortie <code>${esc(p.out)}</code>${p.worker ? `, servi en production par le Worker <code>${esc(p.worker)}</code>` : ""}.</p><div class="grid"><section class="card"><h2 class="title">Domaines</h2><p class="support">${p.domains.map((x) => `<a href="https://${esc(x)}">${esc(x)}</a>`).join("<br>") || "aucun"}</p></section><section class="card"><h2 class="title">Variables (coffre env-kit)</h2><p class="support">${p.env.length ? p.env.map((x) => `<code>${esc(x)}</code>`).join(" ") : "aucune"}</p></section><section class="card"><h2 class="title">Production</h2><p class="support">${prod ? `<a href="${esc(previewUrl(p.name, prod))}"><code>${esc(prod.slice(0, 7))}</code></a>` : "aucune"}</p></section></div><h2>Déploiements</h2><div class="grid">${items || '<p class="support">Aucun déploiement.</p>'}</div><h2>Historique de production</h2>${s?.history?.length ? hist : '<p class="support">Vide.</p>'}${insightsHtml(ins)}<h2>Edge Config</h2><p class="support">Lue par les déploiements sur <code>/_aphrody/config</code> (publique, sans secret) ; écriture : <code>PUT /api/projects/${esc(p.name)}/config</code>.</p><pre>${esc(JSON.stringify(cfg, null, 2))}</pre><h2>Optimisation d'images</h2><p class="support"><code>/_aphrody/image?url=/chemin.png&amp;w=640&amp;q=75</code> sur chaque déploiement : redimensionnement, AVIF ou WebP selon Accept, cache immuable par commit.</p>`;
-  return layout(reg, `${p.name}, aphrody.app`, "dashboard", body);
+  const none = t("dep.proj.none");
+  const lead = `${h("dep.proj.lead", { path: code(p.path), build: code(p.build), out: code(p.out) })}${p.worker ? h("dep.proj.worker", { worker: code(p.worker) }) : ""}.`;
+  const body = `<h1>${esc(p.name)}</h1><p class="lead">${lead}</p><div class="grid"><section class="card"><h2 class="title">${t("dep.proj.domains")}</h2><p class="support">${p.domains.map((x) => `<a href="https://${esc(x)}">${esc(x)}</a>`).join("<br>") || none}</p></section><section class="card"><h2 class="title">${t("dep.proj.vars")}</h2><p class="support">${p.env.length ? p.env.map(code).join(" ") : none}</p></section><section class="card"><h2 class="title">${t("dep.proj.prod")}</h2><p class="support">${prod ? `<a href="${esc(previewUrl(p.name, prod))}"><code>${esc(prod.slice(0, 7))}</code></a>` : none}</p></section></div><h2>${t("dep.proj.deploys")}</h2><div class="grid">${items || `<p class="support">${t("dep.proj.nodeploys")}</p>`}</div><h2>${t("dep.proj.history")}</h2>${s?.history?.length ? hist : `<p class="support">${t("dep.proj.empty")}</p>`}${insightsHtml(ins, l)}<h2>Edge Config</h2><p class="support">${h("dep.proj.config.p", { read: code("/_aphrody/config"), write: code(`PUT /api/projects/${p.name}/config`) })}</p><pre>${esc(JSON.stringify(cfg, null, 2))}</pre><h2>${t("dep.proj.img")}</h2><p class="support">${h("dep.proj.img.p", { url: code("/_aphrody/image?url=/path.png&w=640&q=75") })}</p>`;
+  return layout(reg, tr(l, "dep.proj.title", { name: p.name }), "dashboard", body, {
+    l,
+  });
 }
 
 export function logPage(
@@ -400,11 +432,14 @@ export function logPage(
   p: string,
   sha: string,
   log: string,
+  l: Locale = sourceLocale(),
 ): string {
+  const ref = `${esc(p)}@<code>${esc(sha.slice(0, 7))}</code>`;
   return layout(
     reg,
-    `Journal ${p}@${sha.slice(0, 7)}`,
+    tr(l, "dep.log.title", { ref: `${p}@${sha.slice(0, 7)}` }),
     "dashboard",
-    `<h1>Journal de ${esc(p)}@<code>${esc(sha.slice(0, 7))}</code></h1><div class="actions"><a class="btn btn-text" href="/dashboard/${esc(p)}">Retour</a></div><pre>${esc(log)}</pre>`,
+    `<h1>${tr(l, "dep.log.h1", { ref })}</h1><div class="actions"><a class="btn btn-text" href="/dashboard/${esc(p)}">${esc(tr(l, "dep.log.back"))}</a></div><pre>${esc(log)}</pre>`,
+    { l },
   );
 }

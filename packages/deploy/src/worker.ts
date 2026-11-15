@@ -22,11 +22,15 @@ import {
   LOCALES,
   localePath,
   pagePath,
+  dirOf,
+  esc,
+  pickLocale,
   logPage,
   tr,
   projectPage,
   type ProjectView,
 } from "./pages.ts";
+import { sourceLocale, type MessageArgs } from "@aphrody/i18n";
 import { HERO_JS, THEME_JS } from "./ui.ts";
 import {
   forgetState,
@@ -61,19 +65,26 @@ export interface Env {
 
 export { Insights } from "./runtime.ts";
 const PLATFORM = "aphrody-app";
-const LLMS = `# aphrody.app
-
-> La plateforme de mise en ligne d'Aphrody : une adresse de prévisualisation par version, mise en ligne et retour arrière en quelques secondes, statistiques de visite sans cookie, vitesse mesurée chez les visiteurs, images allégées, réglages modifiables sans republier.
-
-## Pages
-
-- [Accueil](https://aphrody.app/): présentation de la plateforme et liste des sites publiés
-
-## Groupe
-
-- [Aphrody](https://aphrody.com/): le groupe et ses produits
-- Contact : contact@aphrody.com
-`; // analytics project of the platform pages themselves
+/** llms.txt: English, from the source-locale catalog. */
+const llms = (): string => {
+  const l = sourceLocale();
+  const t = (k: string, a?: MessageArgs) => tr(l, k, a);
+  return [
+    "# aphrody.app",
+    "",
+    `> ${t("dep.llms.summary")}`,
+    "",
+    `## ${t("dep.llms.pages")}`,
+    "",
+    `- [${t("dep.llms.home")}](https://aphrody.app/): ${t("dep.llms.home.d")}`,
+    "",
+    `## ${t("dep.llms.group")}`,
+    "",
+    `- [Aphrody](https://aphrody.com/): ${t("dep.llms.group.d")}`,
+    `- ${t("dep.llms.contact", { mail: "contact@aphrody.com" })}`,
+    "",
+  ].join("\n");
+}; // analytics project of the platform pages themselves
 
 const APEX = new Set(["aphrody.app", "www.aphrody.app"]);
 // Names of the zone that had no backend (tunnel catch-all to prd:3010, nothing listening): served by the platform.
@@ -438,10 +449,11 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
 }
 
 async function dash(req: Request, env: Env, url: URL): Promise<Response> {
+  const loc = pickLocale(req.headers.get("accept-language"));
   const a = await authorize(req, env);
   if (!a)
     return html(
-      "<!doctype html><title>401</title><p>Accès réservé (Cloudflare Access).</p>",
+      `<!doctype html><title>401</title><p>${tr(loc, "dep.err.access")}</p>`,
       401,
     );
   const reg = await registry(env);
@@ -453,17 +465,21 @@ async function dash(req: Request, env: Env, url: URL): Promise<Response> {
         await views(env, reg),
         a.by,
         await insightsSummary(env, PLATFORM, { days: 7 }).catch(() => null),
+        loc,
       ),
     );
   const project = reg.projects.find((x) => x.name === seg[0]);
   if (!project)
-    return html("<!doctype html><title>404</title><p>Projet inconnu.</p>", 404);
+    return html(
+      `<!doctype html><title>404</title><p>${tr(loc, "dep.err.project")}</p>`,
+      404,
+    );
   if (seg[1] === "promote" && req.method === "POST") {
     // CSRF: the form posts from the dashboard itself; anything else (no Origin, cross-site) is refused.
     const origin = req.headers.get("origin");
     const site = req.headers.get("sec-fetch-site");
     if (origin ? origin !== url.origin : site !== "same-origin")
-      return html("<p>Origine refusée.</p>", 403);
+      return html(`<p>${tr(loc, "dep.err.origin")}</p>`, 403);
     const form = await req.formData();
     const sha = String(form.get("sha") ?? "");
     const s = await readState(env.BUCKET, project.name, true);
@@ -479,7 +495,7 @@ async function dash(req: Request, env: Env, url: URL): Promise<Response> {
   if (seg[1] && SHA.test(seg[1]) && seg[2] === "log") {
     const o = await env.BUCKET.get(keys.log(project.name, seg[1]));
     return html(
-      logPage(reg, project.name, seg[1], o ? await o.text() : "Aucun journal."),
+      logPage(reg, project.name, seg[1], o ? await o.text() : tr(loc, "dep.log.none"), loc),
     );
   }
   const s = await readState(env.BUCKET, project.name, true);
@@ -488,7 +504,7 @@ async function dash(req: Request, env: Env, url: URL): Promise<Response> {
     insightsSummary(env, project.name, { days: 7 }).catch(() => null),
     readConfig(env.BUCKET, project.name, true),
   ]);
-  return html(projectPage(reg, project, s, deps, ins, cfg));
+  return html(projectPage(reg, project, s, deps, ins, cfg, loc));
 }
 
 export default {
@@ -515,13 +531,18 @@ export default {
       )
         return dash(req, env, url);
       const reg = await registry(env);
-      if (url.pathname === "/") return html(landing(reg));
-      const loc = LOCALES.find((x) => x !== "fr" && url.pathname === `/${x}`);
-      if (loc) return html(landing(reg, loc));
-      const plat = LOCALES.find(
-        (x) => pagePath("platform", x) === url.pathname,
-      );
-      if (plat) return html(platform(reg, await views(env, reg), plat));
+      // /<locale>[/platform] is explicit; the same pages without a prefix negotiate from Accept-Language.
+      const [, first, ...rest] = url.pathname.split("/");
+      const explicit = first !== undefined && LOCALES.includes(first);
+      const loc = explicit ? first : pickLocale(req.headers.get("accept-language"));
+      const sub = "/" + (explicit ? rest : [first, ...rest]).filter(Boolean).join("/");
+      const page = (body: string, status = 200) => {
+        const r = html(body, status);
+        if (!explicit) r.headers.append("vary", "accept-language");
+        return r;
+      };
+      if (sub === "/" && (explicit || url.pathname === "/")) return page(landing(reg, loc));
+      if (sub === "/platform") return page(platform(reg, await views(env, reg), loc));
       if (url.pathname === "/_/theme.js" || url.pathname === "/_/hero.js")
         return new Response(
           url.pathname === "/_/theme.js" ? THEME_JS : HERO_JS,
@@ -533,9 +554,9 @@ export default {
             },
           },
         );
-      if (url.pathname === "/labs") return html(landing(reg));
+      if (url.pathname === "/labs") return page(landing(reg, loc));
       if (url.pathname === "/llms.txt")
-        return new Response(LLMS, {
+        return new Response(llms(), {
           headers: {
             "content-type": "text/markdown; charset=utf-8",
             "cache-control": "public, max-age=3600",
@@ -568,10 +589,10 @@ export default {
         return Response.redirect("https://aphrody.com/favicon.svg", 301);
       if (url.pathname === "/favicon.ico")
         return Response.redirect("https://aphrody.com/favicon.ico", 301);
-      return html(
-        landing(reg).replace(
+      return page(
+        landing(reg, loc).replace(
           "<h1",
-          `<p class="lead">${tr("fr", "plat.notfound")}</p><h1`,
+          `<p class="lead">${esc(tr(loc, "plat.notfound"))}</p><h1`,
         ),
         404,
       );
@@ -598,9 +619,12 @@ export default {
           host,
         });
       }
+      const sl = pickLocale(req.headers.get("accept-language"));
+      const t = (k: string, a?: MessageArgs) => esc(tr(sl, k, a));
       const res = html(
-        `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Aphrody Studio - ${studio}</title><link rel="stylesheet" href="https://aphrody.com/tokens.css"></head><body style="font-family:system-ui,sans-serif;margin:0;padding:2rem;background:var(--md-sys-color-surface,#fbf8ff);color:var(--md-sys-color-on-surface,#1a1b25)"><main style="max-width:44rem;margin:0 auto"><h1>Aphrody ${studio}</h1><p>Studio WebGPU/Wayland unifie sur <code>${host}</code>.</p><p><a href="https://aphrody.com/wayland/">Ouvrir le compositeur Wayland WASM</a> · <a href="https://aphrody.app/">Lanceur aphrody.app</a></p></main></body></html>`,
+        `<!doctype html><html lang="${sl}" dir="${dirOf(sl)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${t("dep.studio.title", { studio })}</title><link rel="stylesheet" href="https://aphrody.com/tokens.css"></head><body style="font-family:system-ui,sans-serif;margin:0;padding:2rem;background:var(--md-sys-color-surface,#fbf8ff);color:var(--md-sys-color-on-surface,#1a1b25)"><main style="max-width:44rem;margin:0 auto"><h1>Aphrody ${esc(studio)}</h1><p>${t("dep.studio.body", { host })}</p><p><a href="https://aphrody.com/wayland/">${t("dep.studio.open")}</a> · <a href="https://aphrody.app/">${t("dep.studio.launcher")}</a></p></main></body></html>`,
       );
+      res.headers.append("vary", "accept-language");
       res.headers.set("x-craft-studio", studio);
       return res;
     }
