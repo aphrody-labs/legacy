@@ -1,34 +1,16 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  getAdapter,
-  resolveAdapter,
-  type CatalogFile,
-  type MessageAdapter,
-  type MessageArgs,
-} from "./adapter.ts";
+import { resolveAdapter, type CatalogFile } from "./adapter.ts";
 import { defaultLocalesDir, readConfig } from "./config.ts";
-import { isRtl } from "./mf2.ts";
-import { matchLocale } from "./negotiate.ts";
+import {
+  createTranslatorCore,
+  type Catalog,
+  type Catalogs,
+  type Translator,
+  type TranslatorOptions,
+} from "./translator.ts";
 
-export type Catalog = Readonly<Record<string, string>>;
-export type Catalogs = Readonly<Partial<Record<string, Catalog>>>;
-
-export interface Translator {
-  readonly locale: string;
-  /** Translate `key`; missing in the locale falls back to its base language, then the source locale, then the key itself. */
-  t(key: string, args?: MessageArgs): string;
-  has(key: string): boolean;
-  /** Writing direction of the locale. */
-  readonly dir: "ltr" | "rtl";
-}
-
-export interface TranslatorOptions {
-  /** Source locale; default from i18n.config.json. */
-  source?: string;
-  /** Message format adapter or id; default from the config, else detected from the catalogs, else mf2. */
-  format?: string | MessageAdapter;
-}
+export type { Catalog, Catalogs, Translator, TranslatorOptions };
 
 export function createTranslator(
   catalogs: Catalogs,
@@ -38,33 +20,13 @@ export function createTranslator(
   const o: TranslatorOptions =
     typeof opts === "string" ? { source: opts } : opts;
   const source = o.source ?? readConfig().sourceLocale;
-  const known = Object.keys(catalogs);
-  const resolved = matchLocale(locale, known) ?? source;
-  const base = new Intl.Locale(resolved).language;
-  const chain = [...new Set([resolved, base, source])];
   const adapter =
     typeof o.format === "object"
       ? o.format
       : o.format
-        ? getAdapter(o.format)
+        ? o.format
         : resolveAdapter(readConfig().format, sampleFiles(catalogs));
-  const find = (key: string): { text: string; from: string } | undefined => {
-    for (const l of chain) {
-      const text = catalogs[l]?.[key];
-      if (text !== undefined) return { text, from: l };
-    }
-    return undefined;
-  };
-  return {
-    locale: resolved,
-    dir: isRtl(resolved) ? "rtl" : "ltr",
-    has: (key) => find(key) !== undefined,
-    t(key, args) {
-      const hit = find(key);
-      if (!hit) return key;
-      return adapter.compile(hit.text, hit.from).format(args);
-    },
-  };
+  return createTranslatorCore(catalogs, locale, source, adapter);
 }
 
 function sampleFiles(catalogs: Catalogs): CatalogFile[] {
