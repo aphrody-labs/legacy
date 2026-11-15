@@ -177,7 +177,7 @@ async function build(triple: string) {
     "ay",
     "ssh",
     "cp",
-    join(repo, "infra", "unixwin", "prd-build.sh"),
+    join(repo, "infra", "os", "unixwin", "prd-build.sh"),
     "prd:unixwin-prd-build.sh",
   );
   const p = Bun.spawn(
@@ -257,7 +257,7 @@ async function testFr1(filter: string) {
     "ay",
     "ssh",
     "cp",
-    join(repo, "infra", "unixwin", "fr1-test.sh"),
+    join(repo, "infra", "os", "unixwin", "fr1-test.sh"),
     "fr1:unixwin-fr1-test.sh",
   );
   const p = Bun.spawn(

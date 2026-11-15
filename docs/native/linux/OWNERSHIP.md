@@ -11,13 +11,13 @@ Commands: `ay linux` and `ay pkg` (`packages/linux`, run by bun; routing in `src
 | forks             | `third_party/<name>` (untracked clones, pinned in `src.lock.json`), registered in `third_party/forks.txt` | upstream code + our commits                                                  |
 | patches           | `infra/upstream/patches/<stack>/` (`.patches` + one `.patch` per change, Electron format)                 | our changes to the Linux forks                                               |
 | stacks            | `infra/upstream/stacks.toml` (`ay upstream`)                                                              | which fork follows which upstream                                            |
-| tracked patchsets | `infra/linux/patchsets.toml` (`ay linux status/sync`)                                                     | pinned upstream versions: kernels, patchsets, GKI, ChromeOS, GPU, llvm-mingw |
-| kernel flavors    | `infra/linux/kernels.toml` + `infra/linux/build/kernel.sh`                                                | CachyOS settings per host, build image                                       |
+| tracked patchsets | `infra/os/linux/patchsets.toml` (`ay linux status/sync`)                                                     | pinned upstream versions: kernels, patchsets, GKI, ChromeOS, GPU, llvm-mingw |
+| kernel flavors    | `infra/os/linux/kernels.toml` + `infra/os/linux/build/kernel.sh`                                                | CachyOS settings per host, build image                                       |
 | package recipes   | `infra/pkg/recipes/<package>.toml`                                                                        | one package, all distros                                                     |
 | distro matrix     | `infra/pkg/distros.toml`                                                                                  | build containers, pinned by digest                                           |
-| GPU               | `infra/linux/gpu/` (scripts + `manifest.toml`)                                                            | NVIDIA/AMD installation, official sources                                    |
-| AOSP / ChromiumOS | `infra/linux/android/` (partial fr1 mirror, manifests)                                                    | tracked GKI and ChromeOS branches                                            |
-| base images       | `infra/linux/images/<distro>/`, `infra/linux/cross-windows/`                                              | `ghcr.io/aphrody-labs/base-*`                                                |
+| GPU               | `infra/os/linux/gpu/` (scripts + `manifest.toml`)                                                            | NVIDIA/AMD installation, official sources                                    |
+| AOSP / ChromiumOS | `infra/os/linux/android/` (partial fr1 mirror, manifests)                                                    | tracked GKI and ChromeOS branches                                            |
+| base images       | `infra/os/linux/images/<distro>/`, `infra/os/linux/cross-windows/`                                              | `ghcr.io/aphrody-labs/base-*`                                                |
 | CI                | `.github/workflows/linux-pkg.yml`, `linux-kernel.yml`, `linux-images.yml`                                 | matrix, kernel, images                                                       |
 
 Generated outputs (`ay pkg gen`) go to `var/pkg/` (ignored): only the recipes are versioned, one source per package.
@@ -70,7 +70,7 @@ Debian/Ubuntu rule: these are output targets for their users. Their containers s
 - A single patch-tracking mechanism: `ay upstream` (stacks), extended from bun/Chromium to the Linux forks; `ay linux sync` calls it instead of duplicating an engine.
 - A single local kernel tree (`third_party/linux`): CachyOS, zen, XanMod, ChromeOS and GKI are remotes in it, not clones.
 - `docs/packaging/KERNELS.md` and `RECOMMENDATION.md` keep the comparative study; this folder contains the implementation.
-- `crates/unix-cachyos` still writes `-march=raptorlake` (noted in `docs/packaging/OURS.md`): the flags reference becomes `infra/linux/images/arch/makepkg-aphrody.conf` (x86-64-v3) and `infra/linux/kernels.toml` (znver4 for prd).
+- `crates/unix-cachyos` still writes `-march=raptorlake` (noted in `docs/packaging/OURS.md`): the flags reference becomes `infra/os/linux/images/arch/makepkg-aphrody.conf` (x86-64-v3) and `infra/os/linux/kernels.toml` (znver4 for prd).
 - The Chromium series stays in `infra/upstream/chromium/patches` (path read by `chromium-verify.sh` on fr1); new stacks use `infra/upstream/patches/<stack>/`.
 
 ## 5. Exclusions

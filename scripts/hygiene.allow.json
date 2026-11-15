@@ -127,7 +127,7 @@
     "infra/fleet/bin/terminal-prd-build.sh",
     "infra/fleet/ffmpeg-lgpl/build.sh",
     "infra/lfs/lfs.just",
-    "infra/linux/build/kernel.sh",
+    "infra/os/linux/build/kernel.sh",
     "infra/os/unixwin/unixwin.ts",
     "package.json",
     "packages/ai-os/docs/ROADMAP.md",

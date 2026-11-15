@@ -1,6 +1,6 @@
 # Kernel patchsets, distro kernels and GPU stacks that src follows (docs/native/linux/PATCHSETS.md).
 # `ay linux status` reads the live upstream value of every entry with its `method` and compares it with
-# `pinned`; `ay linux sync --write` moves the pins (daily on prd: infra/linux/systemd). The entries that
+# `pinned`; `ay linux sync --write` moves the pins (daily on prd: infra/os/linux/systemd). The entries that
 # carry Aphrody patches are also stacks of `ay upstream` (infra/upstream/stacks.toml).
 #
 # Methods: kernel-org (releases.json), github-pkgbuild (version vars of a PKGBUILD), github-dirs, github-files,

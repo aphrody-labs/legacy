@@ -9,13 +9,13 @@ on:
     paths:
       [
         "infra/pkg/**",
-        "infra/linux/**",
+        "infra/os/linux/**",
         "infra/fleet/sysctl/**",
         "src/posix/omarchy/**",
         ".github/workflows/linux-pkg.yml",
       ]
   pull_request:
-    paths: ["infra/pkg/**", "infra/linux/**", "src/posix/omarchy/**"]
+    paths: ["infra/pkg/**", "infra/os/linux/**", "src/posix/omarchy/**"]
   workflow_dispatch:
 concurrency:
   group: linux-pkg-${{ github.ref }}
@@ -36,13 +36,13 @@ jobs:
         run: |
           cargo run -q -p aphrody-omarchy --bin omarchy -- pkg gen all --out "$RUNNER_TEMP/pkg"
           find "$RUNNER_TEMP/pkg" \( -name PKGBUILD -o -name APKBUILD -o -name '*.ebuild' -o -name build.sh \) -exec bash -n {} \;
-          shellcheck -S warning infra/linux/gpu/*.sh infra/linux/build/kernel.sh infra/linux/android/mirror.sh
-          sh infra/linux/gpu/nvidia.sh --dry-run
-          sh infra/linux/gpu/amd.sh --dry-run
+          shellcheck -S warning infra/os/linux/gpu/*.sh infra/os/linux/build/kernel.sh infra/os/linux/android/mirror.sh
+          sh infra/os/linux/gpu/nvidia.sh --dry-run
+          sh infra/os/linux/gpu/amd.sh --dry-run
       - id: m
         run: echo "matrix=$(cargo run -q -p aphrody-omarchy --bin omarchy -- pkg matrix --json)" >> "$GITHUB_OUTPUT"
   # Boot harness of linux-kernel.yml on the CachyOS repository kernel: proves the QEMU/KVM path and the
-  # PID 1 of infra/linux/build/boot/init.c on every change, without the multi-hour kernel build.
+  # PID 1 of infra/os/linux/build/boot/init.c on every change, without the multi-hour kernel build.
   boot-harness:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -55,7 +55,7 @@ jobs:
       - run: |
           f=$(curl -fsSL https://mirror.cachyos.org/repo/x86_64/cachyos/ | grep -oE 'linux-cachyos-[0-9][^"]*-x86_64\.pkg\.tar\.zst' | sort -uV | tail -1)
           curl -fsSLo "$RUNNER_TEMP/$f" "https://mirror.cachyos.org/repo/x86_64/cachyos/$f"
-          REQUIRE_KVM=1 sh infra/linux/build/boot.sh "$RUNNER_TEMP/$f" "$RUNNER_TEMP/boot.log" | tee -a "$GITHUB_STEP_SUMMARY"
+          REQUIRE_KVM=1 sh infra/os/linux/build/boot.sh "$RUNNER_TEMP/$f" "$RUNNER_TEMP/boot.log" | tee -a "$GITHUB_STEP_SUMMARY"
   build:
     needs: plan
     name: ${{ matrix.recipe }} / ${{ matrix.distro }}

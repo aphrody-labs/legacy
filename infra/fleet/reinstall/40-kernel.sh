@@ -1,7 +1,7 @@
 #!/bin/sh
 # Kernel policy: Arch stable `linux` (7.3.x) stays installed and default (GRUB fallback); 7.4-rc is a second entry, tried once.
 # 7.4-rc source: CachyOS repo package `linux-cachyos-rc` (PKGBUILD tracks 7.4-rc2, CachyOS/linux-cachyos, read 2026-11-14).
-# If the repo lacks it, pass a locally built pacman package (ay linux build, flavor rc-v3 of infra/linux/kernels.toml; built on fr1/CI only).
+# If the repo lacks it, pass a locally built pacman package (ay linux build, flavor rc-v3 of infra/os/linux/kernels.toml; built on fr1/CI only).
 # Usage on target: sh 40-kernel.sh [pkg.tar.zst ...]
 . "$(dirname "$0")/lib.sh"; need_root
 if [ $# -gt 0 ]; then pacman -U --noconfirm "$@"; else pacman -S --needed --noconfirm linux-cachyos-rc linux-cachyos-rc-headers; fi

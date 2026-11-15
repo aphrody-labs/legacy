@@ -25,8 +25,8 @@ UNITS=$HOME/.config/systemd/user
 mkdir -p "$UNITS"
 UNIT_FILES="$SRC/infra/upstream/systemd/*"
 # Linux layer (docs/native/linux/OWNERSHIP.md): patchset watch on prd, partial kernel mirror on fr1.
-case $STACKS in *linux-cachyos*) LINUX_TIMER=aphrody-linux-watch.timer UNIT_FILES="$UNIT_FILES $SRC/infra/linux/systemd/prd/*" ;; esac
-case $STACKS in *chromium*) LINUX_TIMER=aphrody-linux-mirror.timer UNIT_FILES="$UNIT_FILES $SRC/infra/linux/systemd/fr1/*" ;; esac
+case $STACKS in *linux-cachyos*) LINUX_TIMER=aphrody-linux-watch.timer UNIT_FILES="$UNIT_FILES $SRC/infra/os/linux/systemd/prd/*" ;; esac
+case $STACKS in *chromium*) LINUX_TIMER=aphrody-linux-mirror.timer UNIT_FILES="$UNIT_FILES $SRC/infra/os/linux/systemd/fr1/*" ;; esac
 for f in $UNIT_FILES; do
   sed -e "s|@SRC@|$SRC|g" -e "s|@BUN@|$BUN|g" -e "s|@STACKS@|$STACKS|g" -e "s|@GC@|$GC|g" -e "s|@ENV@|$ENV|g" "$f" > "$UNITS/$(basename "$f")"
 done

@@ -1,4 +1,4 @@
-# Weekly refresh of the partial GKI and ChromiumOS kernel mirror on fr1 (infra/linux/android/mirror.sh,
+# Weekly refresh of the partial GKI and ChromiumOS kernel mirror on fr1 (infra/os/linux/android/mirror.sh,
 # docs/linux/ANDROID-CHROMIUMOS.md). Installed by infra/upstream/install.sh with @SRC@ filled in.
 [Unit]
 Description=Aphrody partial mirror: GKI and ChromiumOS kernels
@@ -8,5 +8,5 @@ After=network-online.target
 Type=oneshot
 Nice=19
 IOSchedulingClass=idle
-ExecStart=/bin/sh @SRC@/infra/linux/android/mirror.sh
+ExecStart=/bin/sh @SRC@/infra/os/linux/android/mirror.sh
 TimeoutStartSec=3h

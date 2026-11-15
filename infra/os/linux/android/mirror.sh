@@ -1,7 +1,7 @@
 #!/bin/sh
 # Partial mirror of the Android GKI and ChromiumOS kernel trees on fr1 (never on the PC, never a full
 # AOSP or ChromiumOS checkout). Blobless bare clones of the branches we follow only, refreshed by fetch.
-#   ssh <fr1> 'sh ~/agents/src/infra/linux/android/mirror.sh'      (or MIRROR=/srv/build/mirror sh mirror.sh)
+#   ssh <fr1> 'sh ~/agents/src/infra/os/linux/android/mirror.sh'      (or MIRROR=/srv/build/mirror sh mirror.sh)
 # Guard: stops when less than MIN_FREE_GB stays free on the mirror filesystem (Chromium factory first).
 set -eu
 MIRROR=${MIRROR:-/srv/build/mirror}

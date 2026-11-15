@@ -1,5 +1,5 @@
 #!/bin/sh
-# Build one kernel flavor of infra/linux/kernels.toml from aphrody-labs/linux-cachyos + our series, in a
+# Build one kernel flavor of infra/os/linux/kernels.toml from aphrody-labs/linux-cachyos + our series, in a
 # CachyOS container. Started by `ay linux build <flavor> --run` (env below), on fr1 or in CI only.
 #   FLAVOR=prd IMAGE=<ref@sha256> KNOBS="_processor_opt=zen4 ..." LLVM_DIR=<dir with bin/> HOST=fr1 sh kernel.sh
 # fr1 is the Chromium/LLVM factory: the build is preemptible. It refuses to start while a Chromium or LLVM
@@ -80,4 +80,4 @@ for f in "$WORK"/out/linux-*.pkg.tar.zst; do
   case $f in *-headers-*|*-dbg-*|*-nvidia*|*-zfs-*) ;; *) pkg=$f; break ;; esac
 done
 [ -n "$pkg" ] || { echo "kernel: no kernel package in $WORK/out" >&2; exit 1; }
-[ "$HOST" = ci ] || sh "$SRC/infra/linux/build/boot.sh" "$pkg" "$WORK/out/boot.log" # CI boots in its own step (linux-kernel.yml)
+[ "$HOST" = ci ] || sh "$SRC/infra/os/linux/build/boot.sh" "$pkg" "$WORK/out/boot.log" # CI boots in its own step (linux-kernel.yml)

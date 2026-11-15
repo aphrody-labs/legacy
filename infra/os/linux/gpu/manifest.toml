@@ -1,6 +1,6 @@
 # GPU and compute download manifest (docs/native/linux/GPU.md). Official vendor and distribution sources only;
 # src redistributes none of these files (NVIDIA driver and CUDA: NVIDIA licences; ROCm: AMD repository).
-# Versions read live on 2026-11-13 and followed by `ay linux status` (infra/linux/patchsets.toml).
+# Versions read live on 2026-11-13 and followed by `ay linux status` (infra/os/linux/patchsets.toml).
 
 [nvidia]
 open_kernel_modules = "620.70.06" # github.com/NVIDIA/open-gpu-kernel-modules release, MIT/GPL-2.0

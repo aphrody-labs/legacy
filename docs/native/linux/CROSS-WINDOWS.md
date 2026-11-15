@@ -1,6 +1,6 @@
 # Cross-compilation Windows depuis Linux (2026-11-13)
 
-Image `ghcr.io/aphrody-labs/base-cross-windows` (`infra/linux/cross-windows/Dockerfile`, CI `linux-images.yml`).
+Image `ghcr.io/aphrody-labs/base-cross-windows` (`infra/os/linux/cross-windows/Dockerfile`, CI `linux-images.yml`).
 
 | Cible                                               | Chaîne                                                     | Origine                                                                                                                                                                        |
 | --------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

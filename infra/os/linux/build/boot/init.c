@@ -1,6 +1,6 @@
 // Kernel boot proof, PID 1 of a one-file initramfs (model: bun-LFS preinit, third_party/lfs/bun/init/preinit.c).
 // Freestanding x86_64 (no libc): mounts the API filesystems, prints the uname of the running kernel and a
-// boot marker on the console, then powers the VM off. infra/linux/build/boot.sh checks both lines.
+// boot marker on the console, then powers the VM off. infra/os/linux/build/boot.sh checks both lines.
 // Build: clang -static -nostdlib -ffreestanding -fno-stack-protector -O2 -fuse-ld=lld -o init init.c
 typedef __INTPTR_TYPE__ sptr;
 typedef __SIZE_TYPE__ usize;

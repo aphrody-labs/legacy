@@ -4,7 +4,7 @@ Pas de checkout complet, ni sur le PC ni sur fr1. Seuls les dépôts nécessaire
 
 ## Miroir partiel (fr1)
 
-Script `infra/linux/android/mirror.sh` (garde : arrêt si moins de 60 Go libres), rafraîchi chaque dimanche par `aphrody-linux-mirror.timer` (`infra/linux/systemd/fr1/`, installé par `infra/upstream/install.sh`). Avant : 96 Go libres sur `/` de fr1 (`df`, usine Chromium sur le même disque). Premier passage le 2026-11-13, `/srv/build/mirror` :
+Script `infra/os/linux/android/mirror.sh` (garde : arrêt si moins de 60 Go libres), rafraîchi chaque dimanche par `aphrody-linux-mirror.timer` (`infra/os/linux/systemd/fr1/`, installé par `infra/upstream/install.sh`). Avant : 96 Go libres sur `/` de fr1 (`df`, usine Chromium sur le même disque). Premier passage le 2026-11-13, `/srv/build/mirror` :
 
 | Dépôt                         | Branches                                                             | Taille |
 | ----------------------------- | -------------------------------------------------------------------- | ------ |
@@ -15,11 +15,11 @@ Script `infra/linux/android/mirror.sh` (garde : arrêt si moins de 60 Go libres)
 | chromiumos/manifest           | main, stable                                                         | 38 Mo  |
 | chromiumos/third_party/kernel | chromeos-6.12                                                        | 1,5 Go |
 
-Après : 92 Go libres. Les versions suivies (branches GKI et ChromeOS les plus récentes, release R) sont dans `infra/linux/patchsets.toml` ; un saut de branche (android19, chromeos-6.18) apparaît dans `ay linux status` et s'ajoute au script.
+Après : 92 Go libres. Les versions suivies (branches GKI et ChromeOS les plus récentes, release R) sont dans `infra/os/linux/patchsets.toml` ; un saut de branche (android19, chromeos-6.18) apparaît dans `ay linux status` et s'ajoute au script.
 
 ## GKI
 
-- Manifeste : `kernel/manifest` branche `common-android18-7.3` (ou `common-android-mainline`) ; local manifest `infra/linux/android/local_manifests/aphrody-gki.xml` (retire l'arbre Pixel `raviole` et le JDK). `repo init --reference=/srv/build/mirror/android` réutilise le miroir.
+- Manifeste : `kernel/manifest` branche `common-android18-7.3` (ou `common-android-mainline`) ; local manifest `infra/os/linux/android/local_manifests/aphrody-gki.xml` (retire l'arbre Pixel `raviole` et le JDK). `repo init --reference=/srv/build/mirror/android` réutilise le miroir.
 - Build : kleaf (Bazel hermétique, `tools/bazel run //common:kernel_x86_64_dist`), avec le clang préconstruit d'AOSP (`prebuilts/clang/host/linux-x86`). Exception documentée à la toolchain partagée : le GKI doit garder l'ABI et le KMI d'AOSP, donc son compilateur.
 - Arbre local : remote `gki` de `third_party/linux` (déjà présent).
 

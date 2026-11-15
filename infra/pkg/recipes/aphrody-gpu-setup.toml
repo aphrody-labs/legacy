@@ -16,17 +16,17 @@ MIT = "LICENSE-MIT"
 "Apache-2.0" = "LICENSE-APACHE"
 
 [[files]]
-src = "infra/linux/gpu/nvidia.sh"
+src = "infra/os/linux/gpu/nvidia.sh"
 dest = "/usr/libexec/aphrody/gpu-nvidia"
 mode = "755"
 
 [[files]]
-src = "infra/linux/gpu/amd.sh"
+src = "infra/os/linux/gpu/amd.sh"
 dest = "/usr/libexec/aphrody/gpu-amd"
 mode = "755"
 
 [[files]]
-src = "infra/linux/gpu/manifest.toml"
+src = "infra/os/linux/gpu/manifest.toml"
 dest = "/usr/share/aphrody/gpu-manifest.toml"
 mode = "644"
 

@@ -1,6 +1,6 @@
 # GPU et compute sous Linux : NVIDIA et AMD (2026-11-13)
 
-Scripts : `infra/linux/gpu/nvidia.sh`, `amd.sh` (POSIX, non interactifs, idempotents, `--dry-run`), installés par le paquet `aphrody-gpu-setup` (`/usr/libexec/aphrody/gpu-nvidia`, `gpu-amd`). Versions : `infra/linux/gpu/manifest.toml`, suivies par `ay linux status --group gpu`. Rien de propriétaire n'est redistribué : uniquement des dépôts officiels (NVIDIA, AMD, distributions).
+Scripts : `infra/os/linux/gpu/nvidia.sh`, `amd.sh` (POSIX, non interactifs, idempotents, `--dry-run`), installés par le paquet `aphrody-gpu-setup` (`/usr/libexec/aphrody/gpu-nvidia`, `gpu-amd`). Versions : `infra/os/linux/gpu/manifest.toml`, suivies par `ay linux status --group gpu`. Rien de propriétaire n'est redistribué : uniquement des dépôts officiels (NVIDIA, AMD, distributions).
 
 Le PC (RTX 4070, Windows) n'est pas concerné : pas de Linux local (skill `windows-machine`).
 
@@ -35,4 +35,4 @@ AMD :
 
 ## Docker
 
-Images de base `ghcr.io/aphrody-labs/base-{arch-v3,alpine,debian,nix}` (`infra/linux/images`), construites par `linux-images.yml` à partir d'images amont épinglées par digest, avec attestation de provenance ; les consommateurs épinglent le digest affiché dans le résumé du job. Les images GPU ne sont pas publiées : le runtime NVIDIA vient de l'hôte (container toolkit), CUDA reste sous licence NVIDIA.
+Images de base `ghcr.io/aphrody-labs/base-{arch-v3,alpine,debian,nix}` (`infra/os/linux/images`), construites par `linux-images.yml` à partir d'images amont épinglées par digest, avec attestation de provenance ; les consommateurs épinglent le digest affiché dans le résumé du job. Les images GPU ne sont pas publiées : le runtime NVIDIA vient de l'hôte (container toolkit), CUDA reste sous licence NVIDIA.
