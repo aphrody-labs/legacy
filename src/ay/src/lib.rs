@@ -13,6 +13,7 @@ pub mod bump;
 pub mod bun;
 pub mod chromium;
 pub mod code;
+pub mod electron;
 mod exec;
 pub mod low;
 pub mod self_update;
@@ -38,6 +39,7 @@ Areas:
   design     design (DESIGN.md lint/export/spec via aphrody-ui; stitch/push via ai-os), jules (ai-os jules), ui (aphrody-ui fusion)
   gaming     gaming (Steam, Proton, Vulkan, DirectX via packages/gaming), steam (Steam data as JSON)
   assets     assets (fetch, optimize, bundle, publish via packages/assets)
+  migrate    electron (analyze, migrate to Tauri or GPUI, optimize, bench)
 
 Every command takes --help; machine output is --json where offered.
 Plan: docs/ay/MIGRATION.md; command table: docs/ay/NAMING.md";
@@ -191,6 +193,8 @@ pub enum Cmd {
     Bump(bump::BumpArgs),
     /// Parser-backed refactoring and staging: refs <path>, mv <from> <to> [--dry-run], stage <file> --match <text>
     Code(code::CodeArgs),
+    /// Electron apps: analyze (JSON manifest), migrate --to tauri|gpui, optimize a generated project, bench against the original (aphrody-electron-migrate)
+    Electron(electron::ElectronArgs),
     /// Inference providers behind LiteLLM (infra/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up
     Ai(ai::AiArgs),
     #[command(flatten)]
@@ -244,6 +248,7 @@ pub enum Route {
     Bun(bun::BunArgs),
     Bump(bump::BumpArgs),
     Code(code::CodeArgs),
+    Electron(electron::ElectronArgs),
     Ai(ai::AiArgs),
     Low(low::LowCmd),
 }
@@ -342,6 +347,7 @@ pub fn route(cmd: Cmd) -> Route {
         Cmd::Bun(a) => Route::Bun(a),
         Cmd::Bump(a) => Route::Bump(a),
         Cmd::Code(a) => Route::Code(a),
+        Cmd::Electron(a) => Route::Electron(a),
         Cmd::Ai(a) => Route::Ai(a),
         Cmd::Low(c) => Route::Low(c),
     }
@@ -389,6 +395,7 @@ fn run_route(route: Route) -> i32 {
         Route::Bun(args) => bun::run(args),
         Route::Bump(args) => bump::run(args),
         Route::Code(a) => code::run(a),
+        Route::Electron(a) => electron::run(a),
         Route::Ai(args) => ai::run(args),
         Route::Low(c) => low::run(c),
     }
@@ -660,6 +667,20 @@ mod tests {
     #[test]
     fn release_runs_the_release_package() {
         assert_eq!(parse("release dry-run --only crates"), Route::Package("release", v(&["dry-run", "--only", "crates"])));
+    }
+
+    #[test]
+    fn electron_subcommands() {
+        let Route::Electron(a) = parse("electron analyze app.asar --out m.json --node-modules") else { panic!("not electron") };
+        assert_eq!(a.cmd, electron::ElectronCmd::Analyze { input: PathBuf::from("app.asar"), out: Some(PathBuf::from("m.json")), node_modules: true });
+        let Route::Electron(a) = parse("electron migrate --to gpui in --out out --no-sidecar-app") else { panic!("not electron") };
+        assert_eq!(a.cmd, electron::ElectronCmd::Migrate { to: electron::To::Gpui, input: PathBuf::from("in"), out: PathBuf::from("out"), no_sidecar_app: true, json: false });
+        let Route::Electron(a) = parse("electron optimize proj --build --opt-level z") else { panic!("not electron") };
+        assert_eq!(a.cmd, electron::ElectronCmd::Optimize { project: PathBuf::from("proj"), opt_level: Some("z".into()), build: true, json: false });
+        assert!(matches!(parse("electron bench --electron a.exe --migrated b.exe --runs 3"), Route::Electron(_)));
+        assert_eq!(run(&v(&["electron", "migrate", "--to", "nope", "x", "--out", "y"])), 2, "unknown target is a usage error");
+        assert_eq!(run(&v(&["electron", "analyze", "/no/such/app"])), 1);
+        assert_eq!(run(&v(&["electron", "bench"])), 1, "needs an executable");
     }
 
     #[test]

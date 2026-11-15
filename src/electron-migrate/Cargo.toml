@@ -1,0 +1,39 @@
+[package]
+publish = false
+name = "aphrody-electron-migrate"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Electron app analysis, migration to Tauri (aphrody-labs fork) or GPUI, release optimisation and benchmarking (ay electron)"
+
+[lib]
+name = "electron_migrate"
+path = "src/lib.rs"
+doctest = false
+
+[dependencies]
+aphrody-re.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sysinfo.workspace = true
+thiserror.workspace = true
+toml_edit.workspace = true
+# Parser-backed scan of the main/preload/renderer JavaScript (same grammar crate as `ay code`).
+tree-sitter.workspace = true
+tree-sitter-javascript.workspace = true
+# CDP client of `bench` (Chromium DevTools over a plain WebSocket, blocking).
+tungstenite = { version = "0.30.0", default-features = false, features = ["handshake"] }
+ureq.workspace = true
+walkdir.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+toml.workspace = true
+tree-sitter-rust.workspace = true
+
+[lints.rust]
+unsafe_code = "forbid"

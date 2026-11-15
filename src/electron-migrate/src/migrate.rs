@@ -1,0 +1,396 @@
+//! `ay electron migrate --to tauri|gpui <input> --out <dir>`.
+//!
+//! The output holds: the target project, `frontend/` (renderer files from the bundle), `shim/` (renderer
+//! compat layer and the original preload scripts), `sidecar/` (Bun project that runs the original main
+//! process under an `electron` shim), `manifest.json`, `MAPPING.md` and `coverage.json`.
+
+use crate::analyze::{self, Options};
+use crate::manifest::Manifest;
+use crate::map::{self, Coverage, Row, Target};
+use crate::source::Source;
+use crate::{Result, gpui, io_err, tauri, write_file};
+use serde::Serialize;
+use std::path::{Path, PathBuf};
+
+#[derive(Debug, Clone)]
+pub struct MigrateOptions {
+    pub target: Target,
+    pub out: PathBuf,
+    /// Copy the original main-process files into `sidecar/app/` (needed for the sidecar to run them).
+    pub copy_main: bool,
+    pub analyze: Options,
+}
+
+#[derive(Debug, Serialize)]
+pub struct MigrateReport {
+    pub target: Target,
+    pub out: String,
+    pub files_written: usize,
+    pub frontend_files: usize,
+    pub sidecar_app_files: usize,
+    pub coverage: Coverage,
+}
+
+fn is_renderer_asset(path: &str) -> bool {
+    matches!(
+        path.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase()).as_deref(),
+        Some("html" | "css" | "js" | "mjs" | "svg" | "png" | "jpg" | "jpeg" | "gif" | "webp" | "ico" | "woff" | "woff2" | "ttf" | "otf" | "json" | "wasm" | "mp3" | "ogg" | "wav" | "mp4" | "webm")
+    )
+}
+
+fn under(path: &str, dir: &str) -> bool {
+    dir.is_empty() || path.strip_prefix(dir).is_some_and(|r| r.starts_with('/'))
+}
+
+fn main_like(m: &Manifest, path: &str) -> bool {
+    m.files.iter().any(|f| f.path == path)
+}
+
+fn project_files(m: &Manifest, target: Target) -> Vec<(String, String)> {
+    let mut files: Vec<(String, String)> = Vec::new();
+    match target {
+        Target::Tauri => {
+            files.push(("src-tauri/Cargo.toml".into(), tauri::cargo_toml(m)));
+            files.push(("src-tauri/build.rs".into(), tauri::build_rs().into()));
+            files.push(("src-tauri/tauri.conf.json".into(), serde_json::to_string_pretty(&tauri::tauri_conf(m)).unwrap_or_default() + "\n"));
+            files.push(("src-tauri/capabilities/default.json".into(), serde_json::to_string_pretty(&tauri::capabilities(m)).unwrap_or_default() + "\n"));
+            files.push(("src-tauri/src/main.rs".into(), tauri::main_rs(m)));
+            files.push(("src-tauri/src/sidecar.rs".into(), tauri::sidecar_rs(m)));
+            if let Some(menu) = tauri::menu_rs(m) {
+                files.push(("src-tauri/src/menu.rs".into(), menu));
+            }
+            files.push(("src-tauri/shim/.gitkeep".into(), String::new()));
+            files.push(("src-tauri/binaries/.gitkeep".into(), String::new()));
+            files.push(("shim/electron-compat.ts".into(), tauri::shim_ts(m)));
+            files.push(("package.json".into(), tauri::package_json(m)));
+            if m.renderer.entries.is_empty() {
+                files.push(("scripts/placeholder-frontend.ts".into(), tauri::placeholder_frontend_ts().into()));
+            }
+        }
+        Target::Gpui => {
+            files.push(("Cargo.toml".into(), gpui::cargo_toml(m)));
+            files.push(("src/main.rs".into(), gpui::main_rs(m)));
+            files.push(("src/sidecar.rs".into(), gpui::SIDECAR_RS.into()));
+            files.push(("src/webview.rs".into(), gpui::WEBVIEW_RS.into()));
+            files.push(("package.json".into(), gpui_package_json(m)));
+        }
+    }
+    files.push(("scripts/build-sidecar.ts".into(), build_sidecar_script(target, false)));
+    files.push(("sidecar/main.ts".into(), sidecar_main_ts(m)));
+    files.push(("sidecar/shims/electron.ts".into(), SIDECAR_ELECTRON_TS.into()));
+    files.push(("sidecar/tsconfig.json".into(), SIDECAR_TSCONFIG.into()));
+    files.push((".gitignore".into(), "target/\nnode_modules/\ndist/\nsrc-tauri/binaries/electron-main-*\nsrc-tauri/shim/electron-compat.js\nbin/\n".into()));
+    files
+}
+
+fn gpui_package_json(m: &Manifest) -> String {
+    let name = tauri::slug(m.app.product_name.as_deref().or(m.app.name.as_deref()).unwrap_or("app"));
+    let v = serde_json::json!({
+        "name": format!("{name}-gpui"),
+        "private": true,
+        "type": "module",
+        "scripts": { "build:sidecar": "bun run scripts/build-sidecar.ts", "build": "bun run build:sidecar && cargo build --release" },
+        "devDependencies": { "@types/bun": "latest" },
+    });
+    serde_json::to_string_pretty(&v).unwrap_or_default() + "\n"
+}
+
+/// `scripts/build-sidecar.ts`. `optimized` adds the flags `ay electron optimize` verified against Bun 1.4.5 (`bun build --help`).
+pub fn build_sidecar_script(target: Target, optimized: bool) -> String {
+    let flags = if optimized { "--compile --minify --bytecode" } else { "--compile" };
+    let out = match target {
+        Target::Tauri => "`src-tauri/binaries/electron-main-${host}${ext}`",
+        Target::Gpui => "`bin/electron-main${ext}`",
+    };
+    format!(
+        "// Generated by `ay electron migrate`{}. Compiles sidecar/main.ts into one executable.\nimport {{ $ }} from \"bun\";\nimport {{ mkdir }} from \"node:fs/promises\";\n\nconst host = (await $`rustc -vV`.text()).match(/host: (\\S+)/)?.[1];\nif (!host) throw new Error(\"rustc -vV did not report a host triple\");\nconst ext = host.includes(\"windows\") ? \".exe\" : \"\";\nconst out = {out};\nawait mkdir(out.slice(0, out.lastIndexOf(\"/\")), {{ recursive: true }});\nawait $`bun build sidecar/main.ts {flags} --outfile ${{out}}`;\nconsole.log(`built ${{out}}`);\n",
+        if optimized { " and tuned by `ay electron optimize`" } else { "" }
+    )
+}
+
+const SIDECAR_TSCONFIG: &str = r#"{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["bun"],
+    "paths": { "electron": ["./shims/electron.ts"] }
+  },
+  "include": ["main.ts", "shims/**/*.ts"]
+}
+"#;
+
+fn sidecar_main_ts(m: &Manifest) -> String {
+    let main = m.app.main.clone().unwrap_or_else(|| "index.js".into());
+    let main = main.trim_start_matches("./").to_string();
+    SIDECAR_MAIN_TS.replace("@MAIN@", &main)
+}
+
+const SIDECAR_MAIN_TS: &str = r#"// Generated by `ay electron migrate`. Runs the original Electron main process under Bun.
+// `electron` resolves to ./shims/electron.ts (tsconfig paths); stdout carries the JSON protocol only.
+import { dispatch, hostResult, fire } from "./shims/electron";
+
+console.log = console.info = console.debug = (...a: unknown[]) => console.error(...a);
+process.on("uncaughtException", (e) => console.error("uncaughtException", e));
+process.on("unhandledRejection", (e) => console.error("unhandledRejection", e));
+
+try {
+  await import("./app/@MAIN@");
+} catch (e) {
+  console.error("original main failed to load; the sidecar still serves registered handlers", e);
+}
+fire("ready");
+
+const decoder = new TextDecoder();
+let buf = "";
+for await (const chunk of Bun.stdin.stream()) {
+  buf += decoder.decode(chunk, { stream: true });
+  let i: number;
+  while ((i = buf.indexOf("\n")) >= 0) {
+    const line = buf.slice(0, i).trim();
+    buf = buf.slice(i + 1);
+    if (!line) continue;
+    try {
+      const msg = JSON.parse(line);
+      if (msg.t === "hostresult") hostResult(msg);
+      else void dispatch(msg);
+    } catch (e) {
+      console.error("bad request", line, e);
+    }
+  }
+}
+"#;
+
+const SIDECAR_ELECTRON_TS: &str = r##"// Generated by `ay electron migrate`. Minimal Electron main-process shim for the Bun sidecar.
+// Real: ipcMain, app (paths/version from the host), webContents.send. Everything else is a logged no-op stub.
+type Handler = (event: any, ...args: any[]) => unknown;
+
+const handlers = new Map<string, Handler>();
+const listeners = new Map<string, Handler[]>();
+const appListeners = new Map<string, Array<(...a: any[]) => void>>();
+const warned = new Set<string>();
+
+export function write(msg: unknown) {
+  process.stdout.write(JSON.stringify(msg) + "\n");
+}
+
+let hostSeq = 0;
+const hostPending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
+export function host(api: string, ...args: unknown[]): Promise<unknown> {
+  const id = ++hostSeq;
+  return new Promise((resolve, reject) => {
+    hostPending.set(id, { resolve, reject });
+    write({ t: "host", id, api, args });
+  });
+}
+export function hostResult(msg: { id: number; ok: boolean; value?: unknown; error?: string }) {
+  const p = hostPending.get(msg.id);
+  if (!p) return;
+  hostPending.delete(msg.id);
+  if (msg.ok) p.resolve(msg.value);
+  else p.reject(new Error(msg.error ?? "host error"));
+}
+
+const sender = {
+  id: 1,
+  send: (channel: string, ...args: unknown[]) => write({ t: "emit", channel, args }),
+  postMessage: (channel: string, ...args: unknown[]) => write({ t: "emit", channel, args }),
+};
+
+export async function dispatch(msg: { t: string; id?: number; channel: string; args?: unknown[] }) {
+  const args = msg.args ?? [];
+  const event = { sender, reply: sender.send, returnValue: undefined as unknown };
+  if (msg.t === "invoke") {
+    // Built-in round-trip probe used by `ay electron bench`.
+    if (msg.channel === "__ay_ping__") return write({ t: "result", id: msg.id, ok: true, value: "pong" });
+    const h = handlers.get(msg.channel);
+    if (!h) return write({ t: "result", id: msg.id, ok: false, error: `No handler registered for '${msg.channel}'` });
+    try {
+      write({ t: "result", id: msg.id, ok: true, value: (await h(event, ...args)) ?? null });
+    } catch (e) {
+      write({ t: "result", id: msg.id, ok: false, error: e instanceof Error ? e.message : String(e) });
+    }
+  } else if (msg.t === "send") {
+    for (const l of listeners.get(msg.channel) ?? []) {
+      try { await l(event, ...args); } catch (e) { console.error(`listener ${msg.channel}`, e); }
+    }
+  }
+}
+
+export function fire(event: string, ...args: unknown[]) {
+  for (const l of appListeners.get(event) ?? []) {
+    try { l(...args); } catch (e) { console.error(`app.on('${event}')`, e); }
+  }
+}
+
+function stub(name: string): any {
+  const fn = function () {};
+  return new Proxy(fn, {
+    get(_t, key) {
+      if (key === "then" || typeof key === "symbol") return undefined;
+      return stub(`${name}.${String(key)}`);
+    },
+    apply() {
+      if (!warned.has(name)) { warned.add(name); console.error(`[electron shim] ${name}() is not implemented in the sidecar`); }
+      return undefined;
+    },
+    construct() { return stub(`new ${name}`); },
+  });
+}
+
+function withFallback<T extends object>(base: T, name: string): T {
+  return new Proxy(base, {
+    get(t, key, r) {
+      if (key in t || typeof key === "symbol" || key === "then") return Reflect.get(t, key, r);
+      return stub(`${name}.${String(key)}`);
+    },
+  });
+}
+
+const paths: Record<string, string | null> = JSON.parse(process.env.AY_APP_PATHS ?? "{}");
+
+export const ipcMain = withFallback({
+  handle(channel: string, h: Handler) { handlers.set(channel, h); },
+  handleOnce(channel: string, h: Handler) { handlers.set(channel, async (e, ...a) => { handlers.delete(channel); return h(e, ...a); }); },
+  removeHandler(channel: string) { handlers.delete(channel); },
+  on(channel: string, l: Handler) { listeners.set(channel, [...(listeners.get(channel) ?? []), l]); return ipcMain; },
+  addListener(channel: string, l: Handler) { return ipcMain.on(channel, l); },
+  once(channel: string, l: Handler) { const w: Handler = (e, ...a) => { ipcMain.removeListener(channel, w); return l(e, ...a); }; return ipcMain.on(channel, w); },
+  removeListener(channel: string, l: Handler) { listeners.set(channel, (listeners.get(channel) ?? []).filter((x) => x !== l)); return ipcMain; },
+  off(channel: string, l: Handler) { return ipcMain.removeListener(channel, l); },
+  removeAllListeners(channel?: string) { if (channel) listeners.delete(channel); else listeners.clear(); return ipcMain; },
+}, "ipcMain");
+
+export const app = withFallback({
+  getVersion: () => process.env.AY_APP_VERSION ?? "0.0.0",
+  getName: () => process.env.AY_APP_NAME ?? "app",
+  getPath: (name: string) => paths[name] ?? paths.userData ?? process.cwd(),
+  getAppPath: () => process.cwd(),
+  isPackaged: true,
+  isReady: () => true,
+  whenReady: () => Promise.resolve(),
+  getLocale: () => Intl.DateTimeFormat().resolvedOptions().locale,
+  requestSingleInstanceLock: () => true,
+  hasSingleInstanceLock: () => true,
+  setAppUserModelId() {},
+  setName() {},
+  on(event: string, l: (...a: any[]) => void) { appListeners.set(event, [...(appListeners.get(event) ?? []), l]); return app; },
+  once(event: string, l: (...a: any[]) => void) { return app.on(event, l); },
+  addListener(event: string, l: (...a: any[]) => void) { return app.on(event, l); },
+  removeListener() { return app; },
+  quit: () => { void host("app.quit"); },
+  exit: () => { void host("app.exit"); },
+  focus() {},
+}, "app");
+
+const webContents = { ...sender, on() {}, once() {}, openDevTools() {}, setWindowOpenHandler() {}, executeJavaScript: async () => undefined, loadURL: async () => {}, getURL: () => "" };
+export class BrowserWindow {
+  static getAllWindows() { return []; }
+  static getFocusedWindow() { return null; }
+  webContents = webContents;
+  constructor(_opts?: unknown) { return withFallback(this, "BrowserWindow") as BrowserWindow; }
+  on() { return this; }
+  once() { return this; }
+  loadURL() { return Promise.resolve(); }
+  loadFile() { return Promise.resolve(); }
+  isDestroyed() { return false; }
+}
+
+export const shell = withFallback({ openExternal: (url: string) => host("shell.openExternal", url), openPath: (p: string) => host("shell.openPath", p) }, "shell");
+export const dialog = withFallback({ showOpenDialog: (...a: unknown[]) => host("dialog.showOpenDialog", ...a), showSaveDialog: (...a: unknown[]) => host("dialog.showSaveDialog", ...a), showMessageBox: (...a: unknown[]) => host("dialog.showMessageBox", ...a), showErrorBox() {} }, "dialog");
+export const nativeTheme = withFallback({ shouldUseDarkColors: false, themeSource: "system", on() {} }, "nativeTheme");
+export const Menu = withFallback(class { static buildFromTemplate(t: unknown) { return { items: t }; } static setApplicationMenu() {} static getApplicationMenu() { return null; } }, "Menu");
+export const MenuItem = stub("MenuItem");
+export const Tray = stub("Tray");
+export const Notification = stub("Notification");
+export const clipboard = stub("clipboard");
+export const screen = stub("screen");
+export const session = stub("session");
+export const protocol = stub("protocol");
+export const globalShortcut = stub("globalShortcut");
+export const powerMonitor = stub("powerMonitor");
+export const powerSaveBlocker = stub("powerSaveBlocker");
+export const safeStorage = stub("safeStorage");
+export const systemPreferences = stub("systemPreferences");
+export const autoUpdater = stub("autoUpdater");
+export const net = stub("net");
+export const netLog = stub("netLog");
+export const crashReporter = stub("crashReporter");
+export const desktopCapturer = stub("desktopCapturer");
+export const utilityProcess = stub("utilityProcess");
+export const contentTracing = stub("contentTracing");
+export const inAppPurchase = stub("inAppPurchase");
+export const nativeImage = stub("nativeImage");
+export const BrowserView = stub("BrowserView");
+export const WebContentsView = stub("WebContentsView");
+export const BaseWindow = stub("BaseWindow");
+export const MessageChannelMain = stub("MessageChannelMain");
+export const TouchBar = stub("TouchBar");
+export const webContentsAll = stub("webContents");
+export { webContentsAll as webContents };
+
+const electron = { ipcMain, app, BrowserWindow, shell, dialog, nativeTheme, Menu, MenuItem, Tray, Notification, clipboard, screen, session, protocol, globalShortcut, powerMonitor, powerSaveBlocker, safeStorage, systemPreferences, autoUpdater, net, netLog, crashReporter, desktopCapturer, utilityProcess, contentTracing, inAppPurchase, nativeImage, BrowserView, WebContentsView, BaseWindow, MessageChannelMain, TouchBar, webContents: webContentsAll };
+export default electron;
+"##;
+
+const README: &str = "# Migrated project\n\nGenerated by `ay electron migrate`. Read MAPPING.md first: every construct is listed as 1:1, stubbed or unsupported.\n\n1. `bun install`\n2. `bun run build` (shim, frontend, Bun sidecar)\n3. Tauri: `bun run tauri build` (needs the aphrody-labs/tauri fork pin in src-tauri/Cargo.toml). GPUI: `cargo build --release`.\n4. `ay electron optimize <this dir>` for release profiles, PGO and Bun compile flags.\n";
+
+pub fn migrate(input: &Path, opts: &MigrateOptions) -> Result<MigrateReport> {
+    let (manifest, source) = analyze::analyze_path(input, &opts.analyze)?;
+    generate(&manifest, &source, opts)
+}
+
+pub fn generate(manifest: &Manifest, source: &Source, opts: &MigrateOptions) -> Result<MigrateReport> {
+    let out = &opts.out;
+    std::fs::create_dir_all(out).map_err(io_err(out))?;
+    let rows: Vec<Row> = map::map_manifest(manifest, opts.target);
+    let cov = map::coverage(&rows, opts.target);
+    let mut written = 0;
+    for (rel, content) in project_files(manifest, opts.target) {
+        write_file(out, &rel, content)?;
+        written += 1;
+    }
+    write_file(out, "manifest.json", analyze::to_json(manifest))?;
+    write_file(out, "MAPPING.md", map::markdown(manifest, opts.target, &rows, &cov))?;
+    write_file(out, "coverage.json", serde_json::to_string_pretty(&cov)? + "\n")?;
+    write_file(out, "README.md", README)?;
+    written += 4;
+
+    // frontend/: renderer assets below the deepest directory that holds every HTML entry (that
+    // directory is stripped). Main-process and preload scripts, package.json and node_modules stay out.
+    let root = tauri::renderer_root(manifest);
+    let mut frontend = 0;
+    if !manifest.renderer.entries.is_empty() {
+        for f in source.files() {
+            if !under(&f.path, &root) || f.path.contains("node_modules/") || f.path == "package.json" || main_like(manifest, &f.path) || !is_renderer_asset(&f.path) {
+                continue;
+            }
+            write_file(out, &format!("frontend/{}", tauri::frontend_path(manifest, &f.path)), source.read(f)?)?;
+            frontend += 1;
+        }
+    }
+
+    // shim/original/: preload scripts as written, for manual porting.
+    for p in &manifest.preloads {
+        if let Some(f) = source.find(&p.path) {
+            write_file(out, &format!("shim/original/{}", p.path), source.read(f)?)?;
+            written += 1;
+        }
+    }
+
+    // sidecar/app/: the original bundle (renderer files included: main code may read pages next to it), minus source maps.
+    let mut app_files = 0;
+    if opts.copy_main {
+        for f in source.files() {
+            if f.path.ends_with(".map") {
+                continue;
+            }
+            write_file(out, &format!("sidecar/app/{}", f.path), source.read(f)?)?;
+            app_files += 1;
+        }
+    }
+    Ok(MigrateReport { target: opts.target, out: out.display().to_string(), files_written: written + frontend + app_files, frontend_files: frontend, sidecar_app_files: app_files, coverage: cov })
+}

@@ -458,6 +458,7 @@ version = "0.4.0"
 dependencies = [
  "aphrody-conformance",
  "aphrody-docs",
+ "aphrody-electron-migrate",
  "aphrody-machine",
  "aphrody-omarchy",
  "aphrody-re",
@@ -631,6 +632,27 @@ dependencies = [
  "serde_json",
  "tempfile",
  "ureq",
+]
+
+[[package]]
+name = "aphrody-electron-migrate"
+version = "0.4.0"
+dependencies = [
+ "aphrody-re",
+ "regex",
+ "serde",
+ "serde_json",
+ "sysinfo",
+ "tempfile",
+ "thiserror 2.0.21",
+ "toml 1.2.1+spec-1.1.0",
+ "toml_edit",
+ "tree-sitter",
+ "tree-sitter-javascript",
+ "tree-sitter-rust",
+ "tungstenite 0.30.0",
+ "ureq",
+ "walkdir",
 ]
 
 [[package]]

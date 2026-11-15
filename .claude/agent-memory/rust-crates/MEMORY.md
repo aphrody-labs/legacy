@@ -1,0 +1,2 @@
+- [fr1 build traps](fr1-build-traps.md) — cargo lock stampede on loaded fr1, remote script upload, sd multiline, stale manifests, commit.ts
+- [electron-migrate facts](electron-migrate-facts.md) — Tauri v3/gpui fork pins, bun flags, fr1 scratch-build traps for src/electron-migrate
