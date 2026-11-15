@@ -472,7 +472,7 @@ pub fn run(args: &[String]) -> i32 {
 }
 
 /// Repository root: `$SRC_ROOT`, else the nearest ancestor of the current directory that holds
-/// `identity.toml` (or `src.lock.json`), else the fleet's read-only checkout (`FLEET_CHECKOUT`)
+/// `src.lock.json`, else the fleet's read-only checkout (`FLEET_CHECKOUT`)
 /// (infra/fleet `src-checkout-update`, on fr1, fr2 and prd), else the current directory.
 pub fn repo_root() -> PathBuf {
     if let Some(root) = std::env::var_os("SRC_ROOT").filter(|v| !v.is_empty()) {
@@ -480,11 +480,11 @@ pub fn repo_root() -> PathBuf {
     }
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     cwd.ancestors()
-        .find(|dir| dir.join("identity.toml").is_file() || dir.join("src.lock.json").is_file())
+        .find(|dir| dir.join("src.lock.json").is_file())
         .map(PathBuf::from)
         .or_else(|| {
             let fleet = PathBuf::from(FLEET_CHECKOUT);
-            (cfg!(unix) && fleet.join("identity.toml").is_file()).then_some(fleet)
+            (cfg!(unix) && fleet.join("src.lock.json").is_file()).then_some(fleet)
         })
         .unwrap_or(cwd)
 }

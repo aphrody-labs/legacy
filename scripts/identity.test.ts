@@ -35,7 +35,8 @@ function repo(scope: string, org: string, aiDeps: Record<string, string>) {
     mkdirSync(join(r, f, ".."), { recursive: true });
     writeFileSync(join(r, f), s);
   };
-  w("identity.toml", identity(scope, org));
+  w("src.lock.json", "{}");
+  w("tools/identity.toml", identity(scope, org));
   w(
     "Cargo.toml",
     `[workspace.package]\nauthors = [\n  "old-org", # owner\n]\nrepository = "https://github.com/old-org/src" # repo\nhomepage = "https://labs.x.org"\n`,

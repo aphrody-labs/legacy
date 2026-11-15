@@ -1,7 +1,7 @@
 # Single source of the product identity. Renaming = edit this file, `just identity apply`, `just check`.
 # Gate: `just identity check` (in `just check` and CI). Readers: scripts/identity.ts (apply/check of the manifests),
-# src/xtask (DEPS vars), packages via `import identity from "<root>/identity.toml"` (Bun TOML import).
-# This file also marks the repository root (nearest ancestor holding identity.toml, else $SRC_ROOT).
+# src/xtask (DEPS vars), packages via `import identity from "<root>/tools/identity.toml"` (Bun TOML import).
+# The repository root is the nearest ancestor holding src.lock.json, else $SRC_ROOT.
 
 [product]
 name = "aphrody"

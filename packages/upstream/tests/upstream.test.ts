@@ -196,7 +196,7 @@ function repo(): {
     join(root, "infra", "upstream", "stacks.toml"),
     `[stack.t]\nmodel = "branch"\nupstream = "x/up"\nupstream_url = "${up.replace(/\\/g, "/")}"\nref = "main"\nfork = "x/fork"\nbranch = "main"\ncheckout = "co"\nforge = "github"\nrules = "bun"\nrunner = "pc"\n`,
   );
-  writeFileSync(join(root, "identity.toml"), "");
+  writeFileSync(join(root, "src.lock.json"), "");
   const s: StackConfig = {
     name: "t",
     model: "branch",

@@ -16,9 +16,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// `[orgs].main` from identity.toml (single identity source); empty when absent.
+/// `[orgs].main` from tools/identity.toml (single identity source); empty when absent.
 pub fn main_org(root: &Path) -> String {
-    fs::read_to_string(root.join("identity.toml"))
+    fs::read_to_string(root.join("tools/identity.toml"))
         .map(|t| toml_value(&t, "orgs", "main"))
         .unwrap_or_default()
 }

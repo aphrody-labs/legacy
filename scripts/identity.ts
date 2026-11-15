@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-// identity: identity.toml is the single source of the product identity; this script checks and
+// identity: tools/identity.toml is the single source of the product identity; this script checks and
 // rewrites every manifest that copies it (docs/core/ARCHITECTURE-ROOT.md invariant 5).
 //
 //   bun scripts/identity.ts check [--root DIR]   exit 1 on drift (gate in `just check` and CI)
-//   bun scripts/identity.ts apply [--root DIR]   rewrite the derived fields from identity.toml
+//   bun scripts/identity.ts apply [--root DIR]   rewrite the derived fields from tools/identity.toml
 //   bun scripts/identity.ts get <dotted.key>     print one value (recipes, CI)
 //
 // Derived fields:
@@ -35,20 +35,20 @@ export type Identity = {
   products?: Record<string, { binary: string; path: string }>;
 };
 
-/** Nearest ancestor of `from` holding identity.toml, else $SRC_ROOT. */
+/** Nearest ancestor of `from` holding src.lock.json, else $SRC_ROOT. */
 export function findRoot(from = process.cwd()): string {
   for (let d = resolve(from); ; d = dirname(d)) {
-    if (existsSync(join(d, "identity.toml"))) return d;
+    if (existsSync(join(d, "src.lock.json"))) return d;
     if (dirname(d) === d) break;
   }
   if (process.env.SRC_ROOT) return process.env.SRC_ROOT;
   throw new Error(
-    "identity.toml not found above the working directory and SRC_ROOT unset",
+    "src.lock.json not found above the working directory and SRC_ROOT unset",
   );
 }
 
 export const loadIdentity = (root: string) =>
-  Bun.TOML.parse(readFileSync(join(root, "identity.toml"), "utf8")) as Identity;
+  Bun.TOML.parse(readFileSync(join(root, "tools/identity.toml"), "utf8")) as Identity;
 
 export const repoUrl = (id: Identity) =>
   `https://github.com/${id.orgs[id.product.repo_org ?? "main"]}/${id.product.repo}`;
@@ -381,7 +381,7 @@ function main(argv: string[]) {
   if (cmd === "check") {
     for (const e of edits)
       console.error(`identity: ${e.file} ${e.what}: ${e.have} != ${e.want}`);
-    if (!edits.length) console.log("identity: manifests match identity.toml");
+    if (!edits.length) console.log("identity: manifests match tools/identity.toml");
     return (edits.length ? 1 : 0) | piiGate(root);
   }
   if (cmd === "apply") {

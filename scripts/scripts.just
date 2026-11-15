@@ -20,7 +20,7 @@ personal-data:
 test-guard *args:
     bun "{{root}}/scripts/test-leak-guard.ts" {{args}}
 
-# identity.toml gate / rewrite / lookup (check | apply | get <key>)
+# tools/identity.toml gate / rewrite / lookup (check | apply | get <key>)
 [group('gates')]
 identity cmd="check" *args:
     bun "{{root}}/scripts/identity.ts" {{cmd}} {{args}} --root "{{root}}"

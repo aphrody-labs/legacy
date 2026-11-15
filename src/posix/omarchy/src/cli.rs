@@ -333,7 +333,7 @@ pub fn repo_root() -> PathBuf {
     }
     let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
     cwd.ancestors()
-        .find(|d| d.join("identity.toml").is_file() || d.join("src.lock.json").is_file())
+        .find(|d| d.join("src.lock.json").is_file())
         .map(PathBuf::from)
         .unwrap_or(cwd)
 }

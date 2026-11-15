@@ -86,7 +86,7 @@ pub struct SearchArgs {
 fn config(root: Option<PathBuf>) -> Config {
     let repo = root.or_else(|| {
         let r = crate::repo_root();
-        (r.join("identity.toml").is_file() || r.join("src.lock.json").is_file()).then_some(r)
+        r.join("src.lock.json").is_file().then_some(r)
     });
     Config::new(repo)
 }

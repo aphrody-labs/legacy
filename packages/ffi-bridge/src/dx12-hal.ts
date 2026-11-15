@@ -44,12 +44,12 @@ const symbols = {
 
 type HalLib = ReturnType<typeof dlopen<typeof symbols>>;
 
-/** Monorepo root: $SRC_ROOT, else the first parent of this file or of the cwd holding identity.toml. */
+/** Monorepo root: $SRC_ROOT, else the first parent of this file or of the cwd holding src.lock.json. */
 export function srcRoot(): string {
   if (process.env.SRC_ROOT) return process.env.SRC_ROOT;
   for (const start of [import.meta.dir, process.cwd()]) {
     for (let d = start; ; d = dirname(d)) {
-      if (existsSync(join(d, "identity.toml"))) return d;
+      if (existsSync(join(d, "src.lock.json"))) return d;
       if (dirname(d) === d) break;
     }
   }

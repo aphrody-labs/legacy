@@ -58,7 +58,6 @@ export function repoRoot(): string {
   let dir = process.cwd();
   for (;;) {
     if (
-      existsSync(join(dir, "identity.toml")) ||
       existsSync(join(dir, "src.lock.json"))
     )
       return dir;
