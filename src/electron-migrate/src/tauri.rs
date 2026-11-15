@@ -156,10 +156,11 @@ pub fn renderer_dir(entry: &str) -> String {
     entry.rsplit_once('/').map(|(d, _)| d.to_string()).unwrap_or_default()
 }
 
-/// Deepest directory containing every HTML entry (`""` when they share none): the `frontend/` root.
+/// Deepest directory containing every HTML entry and every bundle file the pages reference from outside
+/// their directory (`renderer.outside_refs`); `""` when they share none: the `frontend/` root.
 pub fn renderer_root(m: &Manifest) -> String {
     let mut common: Option<Vec<String>> = None;
-    for e in &m.renderer.entries {
+    for e in m.renderer.entries.iter().chain(&m.renderer.outside_refs) {
         let parts: Vec<String> = renderer_dir(e).split('/').filter(|p| !p.is_empty()).map(String::from).collect();
         common = Some(match common {
             None => parts,

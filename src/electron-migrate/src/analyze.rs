@@ -36,6 +36,55 @@ fn in_node_modules(path: &str) -> bool {
     path.starts_with("node_modules/") || path.contains("/node_modules/")
 }
 
+/// `rel` resolved against the bundle directory `dir`; `None` when it climbs above the bundle root.
+fn resolve_rel(dir: &str, rel: &str) -> Option<String> {
+    let mut parts: Vec<&str> = dir.split('/').filter(|p| !p.is_empty()).collect();
+    for p in rel.split('/') {
+        match p {
+            "" | "." => {}
+            ".." => {
+                parts.pop()?;
+            }
+            p => parts.push(p),
+        }
+    }
+    Some(parts.join("/"))
+}
+
+/// Bundle files outside the entries' common directory that the pages and the CSS they link reference with relative
+/// paths (`../../assets/spark.svg`); `tauri::renderer_root` widens `frontend/` to keep them.
+fn outside_refs(source: &Source, entries: &[String], all_paths: &[&str]) -> Vec<String> {
+    let Ok(re) = Regex::new(r#"(?i)(?:\b(?:src|href)\s*=\s*["']([^"']+)["']|url\(\s*["']?([^"')\s]+))"#) else { return Vec::new() };
+    let mut probe = Manifest::default();
+    probe.renderer.entries = entries.to_vec();
+    let common = crate::tauri::renderer_root(&probe);
+    let mut seen: BTreeSet<String> = entries.iter().cloned().collect();
+    let mut work: Vec<String> = entries.to_vec();
+    let mut outside = BTreeSet::new();
+    while let Some(file) = work.pop() {
+        let Some(text) = source.read_text(&file) else { continue };
+        let dir = file.rsplit_once('/').map_or("", |(d, _)| d);
+        for c in re.captures_iter(&text) {
+            let raw = c.get(1).or_else(|| c.get(2)).map_or("", |m| m.as_str());
+            let raw = raw.split(['#', '?']).next().unwrap_or("");
+            if raw.is_empty() || raw.starts_with('/') || raw.contains(':') {
+                continue;
+            }
+            let Some(target) = resolve_rel(dir, raw) else { continue };
+            if !all_paths.contains(&target.as_str()) {
+                continue;
+            }
+            if !common.is_empty() && !target.strip_prefix(common.as_str()).is_some_and(|r| r.starts_with('/')) {
+                outside.insert(target.clone());
+            }
+            if (target.ends_with(".css") || target.ends_with(".html")) && seen.insert(target.clone()) {
+                work.push(target);
+            }
+        }
+    }
+    outside.into_iter().collect()
+}
+
 fn string_map(v: Option<&Value>) -> BTreeMap<String, String> {
     v.and_then(Value::as_object)
         .map(|o| o.iter().filter_map(|(k, v)| v.as_str().map(|s| (k.clone(), s.to_string()))).collect())
@@ -246,7 +295,9 @@ pub fn analyze_source(source: &Source, opts: &Options) -> Manifest {
             }
         }
     }
-    m.renderer = Renderer { entries: entries.into_iter().collect(), remote_urls: remote.into_iter().collect() };
+    let entries: Vec<String> = entries.into_iter().collect();
+    let outside_refs = outside_refs(source, &entries, &all_paths);
+    m.renderer = Renderer { entries, remote_urls: remote.into_iter().collect(), outside_refs };
 
     // file roles
     for (file, (main, pre, _)) in &facts.file_flags {

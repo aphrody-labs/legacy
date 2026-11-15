@@ -454,3 +454,32 @@ fn renderer_root_is_the_common_directory_and_windows_get_their_own_page() {
     assert_eq!(conf["app"]["windows"][0]["url"], "a/a.html");
     assert_eq!(conf["app"]["windows"][1]["url"], "b/b.html");
 }
+
+#[test]
+fn pages_referencing_files_outside_their_directory_widen_the_frontend_root() {
+    // Gemini layout: pages in src/<page>/, shared assets at the bundle root (`../../assets/...`), a font reached through CSS url().
+    let tmp = tempfile::tempdir().unwrap();
+    let app = tmp.path().join("app");
+    let put = |rel: &str, body: &str| {
+        let p = app.join(rel);
+        std::fs::create_dir_all(p.parent().unwrap()).unwrap();
+        std::fs::write(p, body).unwrap();
+    };
+    put("package.json", r#"{"name":"widen","version":"1.0.0","main":"src/main.js"}"#);
+    put("src/main.js", "const { app, BrowserWindow } = require('electron');\nconst path = require('node:path');\napp.whenReady().then(() => { const w = new BrowserWindow({}); w.loadFile(path.join(__dirname, 'top_bar', 'top_bar.html')); });\n");
+    put("src/top_bar/top_bar.html", r#"<link rel="stylesheet" href="../../assets/style.css"><img src="../../assets/spark.svg"><a href="https://example.com/x.css">x</a>"#);
+    put("assets/style.css", "@font-face { src: url('fonts/f.woff2'); }");
+    put("assets/fonts/f.woff2", "font");
+    put("assets/spark.svg", "<svg/>");
+    let (m, _) = analyze::analyze_path(&app, &Options::default()).unwrap();
+    assert_eq!(m.renderer.entries, vec!["src/top_bar/top_bar.html"]);
+    assert_eq!(m.renderer.outside_refs, vec!["assets/fonts/f.woff2", "assets/spark.svg", "assets/style.css"]);
+    assert_eq!(tauri::renderer_root(&m), "", "root widened to the bundle root");
+    let out = tmp.path().join("out");
+    migrate::migrate(&app, &MigrateOptions { target: Target::Tauri, out: out.clone(), copy_main: false, analyze: Options::default() }).unwrap();
+    for f in ["frontend/src/top_bar/top_bar.html", "frontend/assets/spark.svg", "frontend/assets/style.css", "frontend/assets/fonts/f.woff2"] {
+        assert!(out.join(f).is_file(), "missing {f}");
+    }
+    let conf: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(out.join("src-tauri/tauri.conf.json")).unwrap()).unwrap();
+    assert_eq!(conf["app"]["windows"][0]["url"], "src/top_bar/top_bar.html");
+}

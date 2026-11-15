@@ -237,6 +237,10 @@ pub struct Renderer {
     /// HTML entry points present in the bundle that the main process loads (or that look like entries).
     pub entries: Vec<String>,
     pub remote_urls: Vec<String>,
+    /// Bundle files outside the entries' common directory that the pages (and the CSS they link) reference with
+    /// relative paths (`../../assets/spark.svg`); the `frontend/` root is widened to keep them.
+    #[serde(default)]
+    pub outside_refs: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
