@@ -1,13 +1,13 @@
 # Aphrody Multi-Google Cloud (`gcloud`) 3-Principal Sharing & IAM Architecture
 
-Canonical multi-account Google Cloud identity and IAM sharing reference for GCP project `aphrody` (`#468000409790`).
+Canonical multi-account Google Cloud identity and IAM sharing reference for GCP project `aphrody` (`#<gcp-project-numbers>`).
 
-## 1. Three-Principal + Automation Matrix (`aphrody` `#468000409790`)
+## 1. Three-Principal + Automation Matrix (`aphrody` `#<gcp-project-numbers>`)
 
 | Alias   | Principal Email                                   | `gcloud` Config | Regions (`compute` / `ai`)     | Scope & IAM Roles                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | :------ | :------------------------------------------------ | :-------------- | :----------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ai`    | `<ai-google>`                                     | `ai-agent`      | `europe-west1` / `us-central1` | Dedicated autonomous AI account for `ai-os`, `triad`, `pi-opencode`, Gemini, Spark, Hermes, OpenClaw, Google Drive (`rclone` remote `gdrive-ai`), NotebookLM, Vertex AI, and Cloud Build sandboxes. Bound to `roles/aiplatform.user`, `roles/serviceusage.serviceUsageConsumer`, `roles/artifactregistry.writer`, `roles/cloudbuild.builds.editor`, `roles/developerconnect.user`, `roles/storage.objectAdmin`, `roles/logging.logWriter`. |
-| `owner` | `<owner-google>`                                  | `owner`         | `europe-west1`                 | Personal developer and root owner of GCP project `aphrody` (`#468000409790`). Bound to `roles/owner`.                                                                                                                                                                                                                                                                                                                                      |
+| `owner` | `<owner-google>`                                  | `owner`         | `europe-west1`                 | Personal developer and root owner of GCP project `aphrody` (`#<gcp-project-numbers>`). Bound to `roles/owner`.                                                                                                                                                                                                                                                                                                                                      |
 | `org`   | `contact@aphrody.com`                             | `org-contact`   | `europe-west1`                 | Organization and production infrastructure master identity across Google Workspace, Cloudflare, GitHub (`aphrody-dev`), GitLab (`aphrody-dev` / `git.aphrody.com`), OVH (`fr1`, `fr2`), Hostinger (`usa`), Vercel, Supabase, and `mail.aphrody.com`. Bound to `roles/editor`, `roles/run.admin`, `roles/dns.admin`, `roles/secretmanager.admin`.                                                                                           |
 | `sa`    | `yolo-automation@aphrody.iam.gserviceaccount.com` | `sa-automation` | `europe-west1`                 | Headless NHITL CI/CD service account in GCP project `aphrody`. Bound to `roles/editor`, `roles/developerconnect.admin`, `roles/artifactregistry.admin`.                                                                                                                                                                                                                                                                                    |
 
@@ -56,7 +56,7 @@ Run as root owner (`<owner-google>` via `--configuration=owner`):
 # Dry-run preview of all API enablements and IAM bindings:
 bash infra/gcloud/share-aphrody-project-iam.sh --dry-run
 
-# Live execution against project aphrody (#468000409790):
+# Live execution against project aphrody (#<gcp-project-numbers>):
 bash infra/gcloud/share-aphrody-project-iam.sh
 ```
 

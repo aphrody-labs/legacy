@@ -10,14 +10,14 @@ Zero-dependency cross-language environment loader, secret redaction guard, and u
 
 ## CLI Usage (`env-kit`)
 
-Installed at `C:\Users\aphro\.local\bin\env-kit.exe` (`env-kit.cmd` shim):
+Installed at `~\.local\bin\env-kit.exe` (`env-kit.cmd` shim):
 
 ```powershell
 env-kit doctor                       # Masked audit of all credentials, NTFS ACLs, and editors
 env-kit accounts status [--json]     # 3-principal gcloud configs, rclone, and 10 org provider surfaces
 env-kit accounts init-gcloud         # Idempotently configure ai-agent, owner, org-contact, sa-automation
 env-kit accounts switch <principal>  # Switch active gcloud config (<ai|owner|org|sa>)
-env-kit accounts iam-bindings        # Print idempotent IAM policy bindings for project aphrody (#468000409790)
+env-kit accounts iam-bindings        # Print idempotent IAM policy bindings for project aphrody (#<gcp-project-numbers>)
 env-kit set <KEY> <VALUE>            # Propagate secret to C:\src\.env + Windows User Env + OpenCode/Zed/Pi
 env-kit nuget-set-key <API_KEY>      # Set NUGET_API_KEY across .env and Windows User Env
 env-kit sync-editors                 # Sync OpenCode, Zed, and Pi provider & MCP configs

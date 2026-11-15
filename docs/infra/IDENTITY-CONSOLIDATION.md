@@ -76,16 +76,16 @@ Un seul compte visible (`ca22c1a5…`, contact@aphrody.com), donc pas de fusion 
 
 ## gcloud
 
-- Projets : aphrody (468000409790), rgfr-8927d (Rose Griffon, produit distinct : **non fusionné**), rpbey-483614, rpb-482d5, propane-tranquility-hmhkk, inagle, deux `studio-*` Firebase, gen-lang-client-0567398758, fc-ayoub.
+- Projets : aphrody (<gcp-project-numbers>), <gcp-projects-2> (Rose Griffon, produit distinct : **non fusionné**), rpbey-483614, rpb-482d5, propane-tranquility-hmhkk, inagle, deux `studio-*` Firebase, <gcp-projects>, fc-ayoub.
 - Comptes de service d'automatisation qui se recouvrent dans `aphrody` : `aphrody-bot` (1 clé), `bun-google-automation` (0 clé), `yolo-automation` (1 clé, configuration `sa-automation`). Dernières authentifications relevées entre le 2026-09-01 et le 2026-11-05 : aucun n'est prouvé mort.
-- 524 API activées dans `aphrody`, 141 dans `rgfr-8927d`.
+- 524 API activées dans `aphrody`, 141 dans `<gcp-projects-2>`.
 - Vérification sur 30 jours (2026-10-14 : journaux d'audit (`entries:list`, principal ou ressource) et Policy Intelligence `serviceAccountLastAuthentication`. `yolo-automation` : GenerateAccessToken, Secret Manager ; `aphrody-bot` : CreateServiceAccountKey et SetIamPolicy ; `bun-google-automation` : aucune entrée, dernière authentificati, seule clé SYSTEM_MANAGED, aucune référence dans src.
 - Fait : `bun-google-automation@aphrody.iam.gserviceaccount.com` **désactivé** (réversible : `gcloud iam service-accounts enable`). `yolo-automation` et `aphrody-bot` restent actifs (utilisés). API : désactiver seulement celles sans requête sur 30 jours (`serviceruntime.googleapis.com/api/request_count`), relevé non fait.
 
 ## Autres
 
 - Vercel : utilisateur et équipe `aphrody-dev`, projets `rg-api`, `rg-website`, `rg-discord` (2026-10-17), sans doublon ; migration déjà suivie dans `MIGRATION-VERCEL-CF.md`.
-- Hostinger : VPS `srv2116886.hstgr.cloud` KVM 8 (prd), abonnement domaine .TECH ; sans doublon.
+- Hostinger : VPS `<prd-hostname>.hstgr.cloud` KVM 8 (prd), abonnement domaine .TECH ; sans doublon.
 - GHCR : `images.yml` pousse vers `ghcr.io/${{ github.repository_owner }}`, donc désormais `ghcr.io/aphrody-labs/*` ; le cache partagé `ghcr.io/aphrody-labs/cache:rust` n'existe pas encore (premier build). Les hôtes qui tirent `ghcr.io/aphrody-dev/*` gardent les anciennes images ; bascule à faire avec la prochaine publication réussie. Inventaire des paquets impossible : le jeton `gh` n'a pas `read:packages` (`gh auth refresh -s read:packages`, clic du propriétaire).
 - OVH, Docker Hub : aucun dépôt Docker Hub référencé dans src ; OVH hors du périmètre des doublons (hôtes décrits dans `FLEET.md`).
 

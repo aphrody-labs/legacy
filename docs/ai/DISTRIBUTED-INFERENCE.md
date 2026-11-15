@@ -25,14 +25,14 @@ llama.cpp RPC. C'est le seul projet qui réunit Windows et CUDA (moteur principa
 
 ```
 PC (Windows, RTX 4070)                       WireGuard uniquement
-  llama-server coordinateur 127.0.0.1:8090 ── --rpc ──> fr1 10.200.77.1:50052   (si aucun build)
-  CUDA0 : l'essentiel des couches            ── --rpc ──> prd 10.200.78.1:50052   (lien direct /30, plafonné)
+  llama-server coordinateur 127.0.0.1:8090 ── --rpc ──> fr1 <fr1-mesh-ip>:50052   (si aucun build)
+  CUDA0 : l'essentiel des couches            ── --rpc ──> prd <prd-link-ip>:50052   (lien direct /30, plafonné)
   ai-os llm_models : fabric/<alias>          ── --rpc ──> gpu2 <wg>:50052         (dès qu'il répond)
                                                          fr2 (désactivé : proxy prioritaire, 11 Go)
 ```
 
 - **Coordinateur** : `llama-server` CUDA sur le PC, lié à `127.0.0.1:8090`. Les logits restent sur le PC : avec `-ngl 999`, la tête de sortie est sur CUDA0, et seul l'état caché traverse le réseau, soit `n_embd × 4` octets (f32) par jeton et par frontière : 6 Kio pour gemma-4-E2B, 4 Kio pour Qwen3-0.6B. Les `n_embd` sont lus dans les métadonnées GGUF des fichiers servis : `gemma4.embedding_length = 1536` et `qwen3.embedding_length = 1024`. Pour un modèle à `n_embd = 5120`, comme Qwen3-14B, ce serait 20 Kio ; cette valeur vient de la fiche du modèle et n'a pas été relevée ici.
-- **Nœuds Linux** (`node.sh`) : `ggml-rpc-server` officiel `b12340` (sha256 vérifié) dans l'unité transitoire `aphrody-rpc`, avec `CPUQuota`, `MemoryMax`, `MemorySwapMax=0`, `Nice=19`, `IOSchedulingClass=idle`, `CPUWeight=10` et `OOMScoreAdjust=900`. Le serveur écoute uniquement sur l'adresse WireGuard (`-H`, jamais `0.0.0.0`). Une table nft `inet aphrody_rpc` rejette toute source autre que le coordinateur (`10.200.77.2`, `10.200.78.2`) et le nœud lui-même. Aucun port public, aucun passage par Cloudflare.
+- **Nœuds Linux** (`node.sh`) : `ggml-rpc-server` officiel `b12340` (sha256 vérifié) dans l'unité transitoire `aphrody-rpc`, avec `CPUQuota`, `MemoryMax`, `MemorySwapMax=0`, `Nice=19`, `IOSchedulingClass=idle`, `CPUWeight=10` et `OOMScoreAdjust=900`. Le serveur écoute uniquement sur l'adresse WireGuard (`-H`, jamais `0.0.0.0`). Une table nft `inet aphrody_rpc` rejette toute source autre que le coordinateur (`<pc-mesh-ip>`, `<pc-extra-mesh-ip>`) et le nœud lui-même. Aucun port public, aucun passage par Cloudflare.
 - **Admission et retrait** : la condition est vérifiée avant le démarrage, puis toutes les `watch_s` secondes par le chien de garde de l'unité. Quand elle tombe, le rpc-server s'arrête et la raison est écrite dans `/run/aphrody-rpc.state`.
   - fr1 (`no-build`) : aucun processus `ninja|siso|reproxy|clang|rustc|ld.lld`, et charge inférieure à nproc/2.
   - prd (`prd`) : charge inférieure à nproc/2 (en cours d'exécution, on ignore nos propres fils, plafonnés par CPUQuota), `shenron-chat-v2` (`127.0.0.1:8799/health`) à 200, MemAvailable ≥ MemoryMax + 2 Gio, et `flock -n /var/lock/aphrody-heavy.lock` pris pendant toute la vie de l'unité. Le tissu compte donc comme l'unique travail lourd de prd et n'attend jamais le verrou.
@@ -45,7 +45,7 @@ PC (Windows, RTX 4070)                       WireGuard uniquement
 - **Pas de montage réseau pour les poids.** Le lien montant du PC a été mesuré entre 30 et 160 Ko/s : 145 Kio/s par ssh public, 30 à 54 Kio/s par WireGuard pendant qu'un autre transfert tournait, et 158 Ko/s effectifs pour le chargement RPC vers fr1 (51,5 Mo en 326 s). Un `mmap` à travers SMB, NFS, SSHFS ou `rclone mount` lirait les pages à ce débit. La donnée doit descendre vers le PC (8,4 Mo/s mesurés depuis Hugging Face : 3 106 738 272 octets en 370 s), jamais en monter.
 - **Cache dédupliqué par contenu** : un GGUF est identifié par son sha256 (oid LFS de Hugging Face, ou digest de blob Ollama). Sur le PC, `~/.local/share/ay/ai/` tient des liens durs vers les blobs d'Ollama (`ay ai`, `{ollama_gguf:}`) : aucune seconde copie. Sur chaque nœud, `node.sh warm` tire le GGUF depuis `url` dans `/var/cache/aphrody-models` au débit du centre de données, le vérifie, puis le charge une fois sur la boucle locale. Le cache de tenseurs de rpc-server (`/var/cache/aphrody-rpc`, SSD) se remplit ainsi, et au chargement suivant le coordinateur n'envoie que les empreintes des tenseurs de plus de 10 Mio. Les tenseurs plus petits passent toujours par le réseau : sur un petit modèle (gemma-4-E2B, couches de 4 à 9 Mio), le gain est partiel. Calcul, non mesuré : un tenseur FFN de Qwen3-14B (5120 × 17408, Q4_K à 4,5 bits) pèse environ 48 Mio, donc plus que le seuil. Le chargement d'un tel modèle devrait ne transporter que des empreintes pour l'essentiel de ses poids.
 - **Swap et zram** : refusés pour l'inférence (`MemorySwapMax=0`). Le 2026-11-13, le swap de prd est plein (16/16 Gio). Faire échanger des poids ou un cache KV ne ferait que retarder l'OOM tout en ralentissant shenron.
-- **Tunnels** : WireGuard existant (hub fr1 `wg1`, lien direct PC↔prd `prod` 10.200.78.0/30). Les tunnels Cloudflare (`docs/infra/CLOUDFLARE-ONE.md`) servent aux interfaces d'administration. Ils ne transportent pas le RPC, dont le protocole n'a pas d'authentification.
+- **Tunnels** : WireGuard existant (hub fr1 `wg1`, lien direct PC↔prd `prod` <mesh-cidr>). Les tunnels Cloudflare (`docs/infra/CLOUDFLARE-ONE.md`) servent aux interfaces d'administration. Ils ne transportent pas le RPC, dont le protocole n'a pas d'authentification.
 
 ## 3. Mémoire disponible et choix de modèles
 
@@ -65,10 +65,10 @@ PC (Windows, RTX 4070)                       WireGuard uniquement
 
 Il est absent de `infra/deploy.toml`, `infra/agents/fleet.toml`, `docs/infra/*`, `~/.ssh/config`, et des pairs WireGuard documentés (fr1 `wg1`, prd `prod`). Il n'est donc pas joignable. Le nœud `gpu2` de `fabric.toml` est prêt (`reach = ""`). Pour l'intégrer :
 
-1. Pair WireGuard : une adresse dans 10.200.77.0/24 (par exemple `.6`) sur le hub fr1 (`wg1`), à déclarer dans `docs/infra/FLEET.md` et `deploy.toml`.
+1. Pair WireGuard : une adresse dans <mesh-cidrs> (par exemple `.6`) sur le hub fr1 (`wg1`), à déclarer dans `docs/infra/FLEET.md` et `deploy.toml`.
 2. Pilote NVIDIA avec CUDA UMD ≥ 13.5 (`nvidia-smi`) et bun. Le binaire `win-cuda-13.5-x64` est récupéré et vérifié par `ai-os fabric node gpu2`.
 3. Dans `fabric.toml`, renseigner `bind` et `reach` avec l'adresse WireGuard, et `share` selon la VRAM.
-4. Démarrer `ai-os fabric node gpu2` au boot (tâche planifiée, comme les services de `ay ai service`), puis ouvrir le port 50052 dans le pare-feu Windows. Si gpu2 est un pair du hub fr1 (`wg1`), le coordinateur arrive depuis 10.200.77.2, qui sera la seule source autorisée. S'il a un lien direct avec le PC, il faut autoriser l'adresse du PC sur ce lien.
+4. Démarrer `ai-os fabric node gpu2` au boot (tâche planifiée, comme les services de `ay ai service`), puis ouvrir le port 50052 dans le pare-feu Windows. Si gpu2 est un pair du hub fr1 (`wg1`), le coordinateur arrive depuis <pc-mesh-ip>, qui sera la seule source autorisée. S'il a un lien direct avec le PC, il faut autoriser l'adresse du PC sur ce lien.
 5. Au `ay ai fabric up` suivant, le nœud est admis dès que son port répond. Il sort de la liste s'il ne répond plus.
 
 ## 5. Utilisation
@@ -94,9 +94,9 @@ Les binaires sont les officiels `b12340`, avec des sha256 identiques aux digests
 
 RTT mesurés depuis le PC :
 
-- vers fr1 : `ping 10.200.77.1`, 49 à 74 ms, moyenne 61 ms ; `ss -ti` côté fr1 sur la connexion RPC, `minrtt` 25 ms et `rtt` 28 ms ;
-- vers fr2 : 149 ms (`ping 10.200.77.3`, par le hub) ;
-- vers prd : 169 ms par le hub, et 74 à 136 ms par le lien direct `10.200.78.1`.
+- vers fr1 : `ping <fr1-mesh-ip>`, 49 à 74 ms, moyenne 61 ms ; `ss -ti` côté fr1 sur la connexion RPC, `minrtt` 25 ms et `rtt` 28 ms ;
+- vers fr2 : 149 ms (`ping <fr2-mesh-ip>`, par le hub) ;
+- vers prd : 169 ms par le hub, et 74 à 136 ms par le lien direct `<prd-link-ip>`.
 
 Échantillons : 3 ou 4 requêtes par configuration, ce qui est peu. Pilote 621.14 (CUDA UMD 13.5). Requête : `ai-os fabric bench` (température 0, `ignore_eos`), débits lus dans `timings` de llama-server.
 

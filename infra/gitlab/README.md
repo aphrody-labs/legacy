@@ -9,7 +9,7 @@ Every repository in `C:\src` (root `src` + 25 submodules = 26 repositories) main
 - `origin` (**GitHub**): `https://github.com/aphrody-dev/<repo>.git`
 - `gitlab` (**GitLab SaaS**): `https://gitlab.com/aphrody-dev/<repo>.git`
 - `gitlab-self` (**GitLab CE on OVH `fr2`**): `https://git.aphrody.com/aphrody/<repo>.git` (owner `contact@aphrody.com`, SSH `:2224`, OCI Registry `registry.aphrody.com`)
-- `google` (**Google Cloud Git — GCP `aphrody` `#468000409790`**): `https://source.developers.google.com/p/aphrody/r/<repo>` + Developer Connect (`projects/aphrody/locations/europe-west1/connections/aphrody-triforge`)
+- `google` (**Google Cloud Git — GCP `aphrody` `#<gcp-project-numbers>`**): `https://source.developers.google.com/p/aphrody/r/<repo>` + Developer Connect (`projects/aphrody/locations/europe-west1/connections/aphrody-triforge`)
 - `all` (**Multi-Forge Push Fanout**): pushes simultaneously to `origin`, `gitlab`, and `google`.
 
 ## 2. Directory Layout

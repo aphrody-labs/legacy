@@ -251,8 +251,8 @@ Sources prêtes à intégrer au déploiement global : migrations `024_courrier_u
 Voir `MAILBOX.md` pour les contrats, variables serveur et preuves de tests. Aucune identité juridique fictive
 n'est créée pour ouvrir la messagerie personnelle sans entreprise.
 
-Configuration requise : `AUTO_COURRIER_PROPRIETAIRE=yohanpierre15@gmail.com` et
-`AUTO_SUPER_ADMIN_EMAILS=yohanpierre15@gmail.com,aphrody-coode@outlook.com`. Gmail est vérifié en base ; Outlook
+Configuration requise : `AUTO_COURRIER_PROPRIETAIRE=<emails>` et
+`AUTO_SUPER_ADMIN_EMAILS=<emails>,<emails-2>`. Gmail est vérifié en base ; Outlook
 ne l'est pas au dernier contrôle. La promotion globale exige la vérification : ne pas forcer le champ Outlook.
 Le script `scripts/administration-provisionner.ts` crée deux clés agents nominatives, hachées en base et
 écrites dans un fichier privé hors dépôt, après migration et configuration du super-administrateur.

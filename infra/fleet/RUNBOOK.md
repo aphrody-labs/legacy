@@ -21,7 +21,7 @@ ssh: keys only on all three nodes (`PasswordAuthentication no`, root `prohibit-p
 
 ## WireGuard
 
-- Topology: fr1 hub `wg1` <mesh-cidr> (port 51821). fr2 (45667) and prd (`vps`, 52245) have a direct peer between them, and `fleet-wg-failover@` (30 s timer) removes the direct route when the handshake is older than 150 s: the hub then takes over. The PC goes through the hub, plus a direct link with prd (`prod`, 10.200.78.0/30).
+- Topology: fr1 hub `wg1` <mesh-cidr> (port 51821). fr2 (45667) and prd (`vps`, 52245) have a direct peer between them, and `fleet-wg-failover@` (30 s timer) removes the direct route when the handshake is older than 150 s: the hub then takes over. The PC goes through the hub, plus a direct link with prd (`prod`, <mesh-cidr>).
 - Known issue (2026-11-12): UDP from OVH (fr1 and fr2) to prd is intermittently filtered upstream after large volumes, for about 15 to 20 min. ICMP still passes. Large transfers to prd therefore go over TCP: NativeLink via `fleet-tunnel-nativelink` (ssh -L), rsync via `ssh root@<prd-public-ip>`.
 - Configs: `/etc/wireguard/*.conf` (0600), backed up every day to `r2:aphrody-archive/fleet/<host>/` (tar of `/etc`).
 - Rotation of the PC key: `wg/rotate-wg-win.sh`.

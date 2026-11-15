@@ -54,8 +54,8 @@ an agent requires the session of a human super administrator.
 Non-secret configuration required on the VPS, besides the existing SMTP/Resend/OAuth secrets:
 
 ```dotenv
-AUTO_COURRIER_PROPRIETAIRE=yohanpierre15@gmail.com
-AUTO_SUPER_ADMIN_EMAILS=yohanpierre15@gmail.com,aphrody-coode@outlook.com
+AUTO_COURRIER_PROPRIETAIRE=<emails>
+AUTO_SUPER_ADMIN_EMAILS=<emails>,<emails-2>
 ```
 
 At the last production check, Gmail is verified and Outlook is not marked verified in Auto. Do not force that

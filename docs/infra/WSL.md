@@ -91,8 +91,8 @@ gpuSupport=true
 localhostForwarding=true
 vmIdleTimeout=-1
 kernelBootTimeout=60000
-# kernel=C:\\Users\\aphro\\.local\\share\\wsl\\bzImage-cachyos-rc
-# kernelModules=C:\\Users\\aphro\\.local\\share\\wsl\\modules.vhdx
+# kernel=~\\.local\\share\\wsl\\bzImage-cachyos-rc
+# kernelModules=~\\.local\\share\\wsl\\modules.vhdx
 # loadKernelModules=kvm_intel,vhost_net
 # kernelCommandLine=transparent_hugepage=madvise
 

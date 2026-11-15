@@ -160,14 +160,14 @@ Critère « AI first » : un agent obtient seul un jeton à portée minimale et 
 | `ay auth login [cli…]` : connexion device-first des seules CLI en échec ; codex ajouté aux contrôles                                                                                                                                                                                                                      | `packages/env-kit/src/auth.ts`                   | `ay auth status --only cli`                                                                                                                        |
 | `ay auth oidc` : pool WIF `github`, fournisseur `aphrody-dev` (condition `assertion.repository_owner=='aphrody-labs'` depuis le transfert du dépôt), `roles/iam.workloadIdentityUser` du dépôt `aphrody-labs/src` sur `yolo-automation@aphrody.iam.gserviceaccount.com` ; inventaire `[auth.oidc]` de `infra/deploy.toml` | `auth.ts`, `infra/deploy.toml`                   | créé puis relancé : 3/3 ok (idempotent)                                                                                                            |
 | `ay auth status --only oidc` signale les secrets longue durée qu'OIDC rend inutiles (`[auth.oidc.replaces]`)                                                                                                                                                                                                              | `auth.ts`                                        | `CARGO_REGISTRY_TOKEN` signalé (org aphrody-labs)                                                                                                  |
-| `ay auth mint cloudflare --perm "<groupes>" [--ttl s] -- cmd` : jeton de compte expirant, supprimé à la sortie ; `ay auth mint gcp [--sa] -- cmd` : impersonation sans clé                                                                                                                                                | `auth.ts`                                        | mint Cloudflare : `tokens/verify` actif, 0 jeton `ay-mint-*` restant ; mint GCP : `gcloud projects describe aphrody` répond 468000409790           |
+| `ay auth mint cloudflare --perm "<groupes>" [--ttl s] -- cmd` : jeton de compte expirant, supprimé à la sortie ; `ay auth mint gcp [--sa] -- cmd` : impersonation sans clé                                                                                                                                                | `auth.ts`                                        | mint Cloudflare : `tokens/verify` actif, 0 jeton `ay-mint-*` restant ; mint GCP : `gcloud projects describe aphrody` répond <gcp-project-numbers>           |
 
 Utilisation en CI (étape à ajouter dans un workflow, avec `permissions: id-token: write`) :
 
 ```yaml
 - uses: google-github-actions/auth@v3
   with:
-    workload_identity_provider: projects/468000409790/locations/global/workloadIdentityPools/github/providers/aphrody-dev
+    workload_identity_provider: projects/<gcp-project-numbers>/locations/global/workloadIdentityPools/github/providers/aphrody-dev
     service_account: yolo-automation@aphrody.iam.gserviceaccount.com
 ```
 

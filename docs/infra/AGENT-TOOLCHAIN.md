@@ -6,7 +6,7 @@ Date: 2026-11-13. Source of truth: `infra/agents/toolchain.toml`. Applier: `pack
 
 - Claude Code loads `.agents/skills` (42 skills at the time) only for a session launched at the repository root. Launched elsewhere (a neutral folder, fleet runners), it only saw the 12 folders of `~/.claude/skills`, placed by hand.
 - Plugins, marketplaces and MCPs were installed by hand, without a manifest: nothing reproduced them on another machine.
-- The former `nt` home folder (`~/nt`) is an empty leftover (an empty `C` subfolder). What still points to it: the `projects` entry of `~/.claude.json`, the memory folder `~/.claude/projects/C--Users-aphro-nt` and two comments (`packages/machine/shell.dsc.winget`, `packages/machine/matrix/src/cases.ts`, real target: `apps/nt/docs/research/shell-replacement.md`).
+- The former `nt` home folder (`~/nt`) is an empty leftover (an empty `C` subfolder). What still points to it: the `projects` entry of `~/.claude.json`, the memory folder `~/.claude/projects/C--Users-<user>-nt` and two comments (`packages/machine/shell.dsc.winget`, `packages/machine/matrix/src/cases.ts`, real target: `apps/nt/docs/research/shell-replacement.md`).
 
 ## Mechanism (no link, no copy in the repository)
 
@@ -46,7 +46,7 @@ The `hosts` field is pc, prd, fr1 or fr2 (absent: all). On Linux, the host is re
 
 | Host | User  | Claude (active plugins, MCP)                                                    | Codex          | agy                                     |
 | ---- | ----- | ------------------------------------------------------------------------------- | -------------- | --------------------------------------- |
-| pc   | aphro | 21 plugins, 14 MCP; neutral `claude -p`: 207 skills including 69 aphrody-skills | aphrody-skills | aphrody-skills 69, web-quality-skills 6 |
+| pc   | <user> | 21 plugins, 14 MCP; neutral `claude -p`: 207 skills including 69 aphrody-skills | aphrody-skills | aphrody-skills 69, web-quality-skills 6 |
 | prd  | root  | 17, 7                                                                           | aphrody-skills | aphrody-skills 69, web-quality-skills 6 |
 | prd  | agent | 17, 7; `claude -p` in /tmp: 197 skills including 69 aphrody-skills              | aphrody-skills | absent                                  |
 | fr1  | root  | 17, 7 (Claude moved from 2.1.96 to 2.1.323, agy to 1.5.8)                       | absent         | aphrody-skills 69, web-quality-skills 6 |

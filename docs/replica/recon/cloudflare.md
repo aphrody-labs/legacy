@@ -1,6 +1,6 @@
 # Recon Cloudflare — compte aphrody (lecture seule)
 
-Relevé du 2026-11-13, compte `ca22c1a51a145f919b54afa18d936516`, plan Free sur les 5 zones.
+Relevé du 2026-11-13, compte `<cloudflare-account-ids>`, plan Free sur les 5 zones.
 Sources : API v4 via `cf` 1.0.0-beta.31 (connexion OAuth `cf auth login`, toutes portées) et `infra/cloudflare/recon.ts`
 (GET seulement, `CF_AUTH=oauth bun infra/cloudflare/recon.ts <dir>`), `bun infra/cloudflare/cf.ts plan` (aucune dérive :
 `no changes`), captures du dashboard par Chrome via Claude in Chrome (session existante), dépôts GitHub via `gh api`.
@@ -136,7 +136,7 @@ prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphr
 
 | Nom             | Type  | Cible DNS    | Proxy | Service (edge) | Origine          |
 | --------------- | ----- | ------------ | ----- | -------------- | ---------------- |
-| 3dland.tech     | A     | 72.60.186.43 | oui   | proxy CDN      | prd 72.60.186.43 |
+| 3dland.tech     | A     | <prd-public-ip> | oui   | proxy CDN      | prd <prd-public-ip> |
 | www.3dland.tech | CNAME | 3dland.tech  | oui   | proxy CDN      | 3dland.tech      |
 
 ### aphrody.app (60 enregistrements, zone active)
@@ -192,7 +192,7 @@ prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphr
 | git.aphrody.app                   | CNAME | tunnel mig-prd                                   | oui   | Worker aphrody-deploy (route _.aphrody.app/_)                                      | http_status:404 (LB cluster, réplicas fr1/fr2/prd) |
 | gridcraft.aphrody.app             | AAAA  | 100::                                            | oui   | Worker aphrody-webos (custom domain)                                               | placeholder (Worker seul)                          |
 | lightcraft.aphrody.app            | AAAA  | 100::                                            | oui   | Worker aphrody-webos (custom domain)                                               | placeholder (Worker seul)                          |
-| nie.aphrody.app                   | A     | 51.255.162.6                                     | oui   | Worker aphrody-deploy (route _.aphrody.app/_)                                      | fr2 51.255.162.6                                   |
+| nie.aphrody.app                   | A     | <fr2-public-ip>                                     | oui   | Worker aphrody-deploy (route _.aphrody.app/_)                                      | fr2 <fr2-public-ip>                                   |
 | pdfcraft.aphrody.app              | AAAA  | 100::                                            | oui   | Worker aphrody-webos (custom domain)                                               | placeholder (Worker seul)                          |
 | photocraft.aphrody.app            | AAAA  | 100::                                            | oui   | Worker aphrody-webos (custom domain)                                               | placeholder (Worker seul)                          |
 | play.aphrody.app                  | CNAME | tunnel mig-prd                                   | oui   | Worker aphrody-webos (route play.aphrody.app/, racine seule)                       | http_status:404 (LB cluster, réplicas fr1/fr2/prd) |
@@ -236,8 +236,8 @@ prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphr
 | console.aphrody.com                         | CNAME | tunnel mig-prd                                           | oui   | Worker aphrody-webos (route console.aphrody.com/*)                       | http://127.0.0.1:19300 (LB cluster, réplicas fr1/fr2/prd) |
 | control.aphrody.com                         | CNAME | tunnel mig-prd                                           | oui   | Tunnel                                                                   | http://127.0.0.1:19300 (LB cluster, réplicas fr1/fr2/prd) |
 | creator.aphrody.com                         | AAAA  | 100::                                                    | oui   | Worker creator-aphrody-com (custom domain)                               | placeholder (Worker seul)                                 |
-| dbfr.aphrody.com                            | A     | 51.255.162.6                                             | oui   | proxy CDN                                                                | fr2 51.255.162.6                                          |
-| dbfr.aphrody.com                            | AAAA  | 2001:41d0:305:2100::a461                                 | oui   | proxy CDN                                                                | fr2 2001:41d0:305:2100::a461                              |
+| dbfr.aphrody.com                            | A     | <fr2-public-ip>                                             | oui   | proxy CDN                                                                | fr2 <fr2-public-ip>                                          |
+| dbfr.aphrody.com                            | AAAA  | <fr2-public-ipv6>                                 | oui   | proxy CDN                                                                | fr2 <fr2-public-ipv6>                              |
 | design.aphrody.com                          | CNAME | tunnel mig-prd                                           | oui   | Worker aphrody-webos (route design.aphrody.com/*)                        | http://127.0.0.1:19300 (LB cluster, réplicas fr1/fr2/prd) |
 | docs.aphrody.com                            | CNAME | tunnel mig-prd                                           | oui   | Worker aphrody-webos (route docs.aphrody.com/*)                          | http://127.0.0.1:19300 (LB cluster, réplicas fr1/fr2/prd) |
 | downloads.aphrody.com                       | AAAA  | 100::                                                    | oui   | Worker downloads-aphrody-com (custom domain)                             | placeholder (Worker seul)                                 |
@@ -277,8 +277,8 @@ prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphr
 | store.aphrody.com                           | CNAME | tunnel mig-prd                                           | oui   | Tunnel                                                                   | http://127.0.0.1:19300 (LB cluster, réplicas fr1/fr2/prd) |
 | translate.aphrody.com                       | CNAME | tunnel mig-prd                                           | oui   | Tunnel                                                                   | http://127.0.0.1:19300 (LB cluster, réplicas fr1/fr2/prd) |
 | video.aphrody.com                           | CNAME | public.r2.dev                                            | oui   | R2 aphrody-video + Worker bun-video-showcase (route video.aphrody.com/*) | R2                                                        |
-| vps.aphrody.com                             | A     | 51.77.147.152                                            | non   | DNS seul                                                                 | fr1 51.77.147.152                                         |
-| vps.aphrody.com                             | AAAA  | 2001:41d0:404:200::4d8e                                  | non   | DNS seul                                                                 | fr1 2001:41d0:404:200::4d8e                               |
+| vps.aphrody.com                             | A     | <fr1-public-ip>                                            | non   | DNS seul                                                                 | fr1 <fr1-public-ip>                                         |
+| vps.aphrody.com                             | AAAA  | <fr1-public-ipv6>                                  | non   | DNS seul                                                                 | fr1 <fr1-public-ipv6>                               |
 | www.aphrody.com                             | AAAA  | 100::                                                    | oui   | Worker aphrody (custom domain)                                           | placeholder (Worker seul)                                 |
 | yolo.aphrody.com                            | AAAA  | 100::                                                    | oui   | Worker yolo-aphrody-com (custom domain)                                  | placeholder (Worker seul)                                 |
 
@@ -287,9 +287,9 @@ prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphr
 | Nom                         | Type  | Cible DNS                                        | Proxy | Service (edge)                                    | Origine          |
 | --------------------------- | ----- | ------------------------------------------------ | ----- | ------------------------------------------------- | ---------------- |
 | _dmarc.dragonballfr.com     | TXT   | (DMARC)                                          | non   | —                                                 |                  |
-| bot.dragonballfr.com        | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
-| cdn.dragonballfr.com        | A     | 72.60.186.43                                     | oui   | Worker shenron-cdn (route cdn.dragonballfr.com/*) | prd 72.60.186.43 |
-| dragonballfr.com            | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
+| bot.dragonballfr.com        | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
+| cdn.dragonballfr.com        | A     | <prd-public-ip>                                     | oui   | Worker shenron-cdn (route cdn.dragonballfr.com/*) | prd <prd-public-ip> |
+| dragonballfr.com            | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
 | dragonballfr.com            | CAA   | 0 issuewild "pki.goog; cansignhttpexchanges=yes" | non   | CAA                                               |                  |
 | dragonballfr.com            | CAA   | 0 issue "pki.goog; cansignhttpexchanges=yes"     | non   | CAA                                               |                  |
 | dragonballfr.com            | CAA   | 0 issuewild "letsencrypt.org"                    | non   | CAA                                               |                  |
@@ -298,13 +298,13 @@ prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphr
 | dragonballfr.com            | MX    | 5 mx2.mail.ovh.net                               | non   | mail entrant                                      | mx2.mail.ovh.net |
 | dragonballfr.com            | MX    | 1 mx1.mail.ovh.net                               | non   | mail entrant                                      | mx1.mail.ovh.net |
 | dragonballfr.com            | TXT   | (SPF)                                            | non   | —                                                 |                  |
-| files.dragonballfr.com      | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
+| files.dragonballfr.com      | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
 | ftp.dragonballfr.com        | CNAME | dragonballfr.com                                 | non   | DNS seul                                          | dragonballfr.com |
-| game-api.dragonballfr.com   | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
-| mcp.dragonballfr.com        | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
-| origin-cdn.dragonballfr.com | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
-| play.dragonballfr.com       | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
-| www.dragonballfr.com        | A     | 72.60.186.43                                     | oui   | proxy CDN                                         | prd 72.60.186.43 |
+| game-api.dragonballfr.com   | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
+| mcp.dragonballfr.com        | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
+| origin-cdn.dragonballfr.com | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
+| play.dragonballfr.com       | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
+| www.dragonballfr.com        | A     | <prd-public-ip>                                     | oui   | proxy CDN                                         | prd <prd-public-ip> |
 
 ### rosegriffon.fr (35 enregistrements, zone active)
 
@@ -319,32 +319,32 @@ prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphr
 | _vercel.rosegriffon.fr                              | TXT   | (vérification de domaine)                                      | non   | —                  |                                                                |
 | _vercel.rosegriffon.fr                              | TXT   | (vérification de domaine)                                      | non   | —                  |                                                                |
 | _vercel.rosegriffon.fr                              | TXT   | (vérification de domaine)                                      | non   | —                  |                                                                |
-| achillea.rosegriffon.fr                             | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
-| api.rosegriffon.fr                                  | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
+| achillea.rosegriffon.fr                             | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
+| api.rosegriffon.fr                                  | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
 | autoconfig.rosegriffon.fr                           | CNAME | mailconfig.ovh.net                                             | non   | DNS seul           | mailconfig.ovh.net                                             |
 | autodiscover.rosegriffon.fr                         | CNAME | mailconfig.ovh.net                                             | non   | DNS seul           | mailconfig.ovh.net                                             |
-| azalee.rosegriffon.fr                               | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
-| bot.rosegriffon.fr                                  | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
-| cdn.rosegriffon.fr                                  | A     | 51.255.162.6                                                   | oui   | proxy CDN          | fr2 51.255.162.6                                               |
-| db.rosegriffon.fr                                   | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
+| azalee.rosegriffon.fr                               | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
+| bot.rosegriffon.fr                                  | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
+| cdn.rosegriffon.fr                                  | A     | <fr2-public-ip>                                                   | oui   | proxy CDN          | fr2 <fr2-public-ip>                                               |
+| db.rosegriffon.fr                                   | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
 | ftp.rosegriffon.fr                                  | CNAME | rosegriffon.fr                                                 | non   | DNS seul           | rosegriffon.fr                                                 |
 | google._domainkey.rosegriffon.fr                    | TXT   | (DKIM)                                                         | non   | —                  |                                                                |
 | imap.rosegriffon.fr                                 | CNAME | ssl0.ovh.net                                                   | non   | DNS seul           | ssl0.ovh.net                                                   |
 | mail.rosegriffon.fr                                 | CNAME | ssl0.ovh.net                                                   | non   | DNS seul           | ssl0.ovh.net                                                   |
-| mcp.rosegriffon.fr                                  | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
+| mcp.rosegriffon.fr                                  | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
 | ovhmo5380100-selector1._domainkey.rosegriffon.fr    | CNAME | ovhmo5380100-selector1._domainkey.4076964.oh.dkim.mail.ovh.net | non   | DNS seul           | ovhmo5380100-selector1._domainkey.4076964.oh.dkim.mail.ovh.net |
 | ovhmo5380100-selector2._domainkey.rosegriffon.fr    | CNAME | ovhmo5380100-selector2._domainkey.4076963.oh.dkim.mail.ovh.net | non   | DNS seul           | ovhmo5380100-selector2._domainkey.4076963.oh.dkim.mail.ovh.net |
 | pop3.rosegriffon.fr                                 | CNAME | ssl0.ovh.net                                                   | non   | DNS seul           | ssl0.ovh.net                                                   |
 | r2.rosegriffon.fr                                   | CNAME | public.r2.dev                                                  | oui   | R2 rosegriffon-cdn | R2                                                             |
-| ranked.rosegriffon.fr                               | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
-| rosegriffon.fr                                      | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
+| ranked.rosegriffon.fr                               | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
+| rosegriffon.fr                                      | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
 | rosegriffon.fr                                      | MX    | 1 ssl0.ovh.net                                                 | non   | mail entrant       | ssl0.ovh.net                                                   |
 | rosegriffon.fr                                      | TXT   | (vérification de domaine)                                      | non   | —                  |                                                                |
 | rosegriffon.fr                                      | TXT   | (vérification de domaine)                                      | non   | —                  |                                                                |
 | rosegriffon.fr                                      | TXT   | (SPF)                                                          | non   | —                  |                                                                |
-| shop.rosegriffon.fr                                 | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
+| shop.rosegriffon.fr                                 | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
 | smtp.rosegriffon.fr                                 | CNAME | ssl0.ovh.net                                                   | non   | DNS seul           | ssl0.ovh.net                                                   |
-| www.rosegriffon.fr                                  | A     | 72.60.186.43                                                   | oui   | proxy CDN          | prd 72.60.186.43                                               |
+| www.rosegriffon.fr                                  | A     | <prd-public-ip>                                                   | oui   | proxy CDN          | prd <prd-public-ip>                                               |
 
 ## 8. Dépôts github.com/cloudflare utiles au web
 

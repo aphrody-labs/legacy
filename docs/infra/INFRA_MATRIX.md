@@ -14,9 +14,9 @@ Agents run as user `agent` on every host (sudo NOPASSWD, docker, linger); heavy 
 
 | Node        | SSH                                          | Provider             | Public IP        | Mesh IP     | Role                                                                                                                                                                        | Source                                             |
 | ----------- | -------------------------------------------- | -------------------- | ---------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| `usa`       | `ssh prd` (root, key `hostinger_us_ed25519`) | Hostinger VPS        | 72.60.186.43     | 10.200.77.5 | **production backends only**: compose `core`, products, no compilers                                                                                                        | `infra/deploy.toml` `[nodes.usa]`, `~/.ssh/config` |
-| `fr1`       | `ssh vps` (ubuntu)                           | OVHcloud VPS         | 51.77.147.152    | 10.200.77.1 | **factory**: Chromium/LLVM, image builds (buildx `aphrody`), CI runner `fr1`, training, heavy agents                                                                        | `[nodes.fr1]`                                      |
-| `fr2`       | `ssh cdn` (ubuntu)                           | OVHcloud VPS         | 51.255.162.6     | 10.200.77.3 | **edge only**: nginx/HAProxy cache shard, cloudflared, self-host edge containers                                                                                            | `[nodes.fr2]`                                      |
+| `usa`       | `ssh prd` (root, key `hostinger_us_ed25519`) | Hostinger VPS        | <prd-public-ip>     | <prd-mesh-ip> | **production backends only**: compose `core`, products, no compilers                                                                                                        | `infra/deploy.toml` `[nodes.usa]`, `~/.ssh/config` |
+| `fr1`       | `ssh vps` (ubuntu)                           | OVHcloud VPS         | <fr1-public-ip>    | <fr1-mesh-ip> | **factory**: Chromium/LLVM, image builds (buildx `aphrody`), CI runner `fr1`, training, heavy agents                                                                        | `[nodes.fr1]`                                      |
+| `fr2`       | `ssh cdn` (ubuntu)                           | OVHcloud VPS         | <fr2-public-ip>     | <fr2-mesh-ip> | **edge only**: nginx/HAProxy cache shard, cloudflared, self-host edge containers                                                                                            | `[nodes.fr2]`                                      |
 | workstation | local                                        | ASUS ROG Strix G35CA | LAN 192.168.0.24 | -           | development; i7-13700F (8P+8E, 24T, x86-64-v3), 32 GiB DDR5-5800, RTX 4070 12 GiB, Micron 2400 NVMe 1 TB, Windows 11 Pro 26H1 build 28120, UEFI + Secure Boot, Hyper-V root | `ay sys`                                           |
 
 Hardware and software of the three VPS, surveyed read-only over SSH on 2026-11-12. Running `ay sys`
@@ -28,7 +28,7 @@ on each node will add CPU, DIMM and firmware detail.
 | `fr1` | OVH OpenStack instance | 12 vCPU Intel Haswell | 45 GiB                               | 290 GB `/` (76-77%) + 805 GB `/home` (85%) | Ubuntu 26.10, kernel 7.3.0 | Docker: 14 running of 17 defined. Compose projects `aphrody`, `komodo`, `nie-sre-service`                                                                        | Waydroid (Android 17 session); load average 52 during the survey; build cache 30.8 GB (18 GB reclaimable); 25 volumes, 18.2 GB (18 GB unused); mounts fr2 `/srv/yolo_build_cache` over sshfs |
 | `fr2` | OVH OpenStack instance | 6 vCPU Intel Haswell  | 11 GiB (+1 GB swapfile, 2.8 GB zram) | 96 GB `/` (89-90%)                         | Ubuntu 26.10, kernel 7.3.0 | Docker installed, no daemon running                                                                                                                              | exports `/srv/yolo_build_cache` to fr1 over sshfs (user `yolo-build`). `nfs-server` is installed but there is no `/etc/exports`. `/home/ubuntu` holds 59 GB, mostly duplicate clones         |
 
-Mesh: WireGuard + MASQUE overlay `10.200.77.0/24`, config generated in `infra/mesh-vn/generated`.
+Mesh: WireGuard + MASQUE overlay `<mesh-cidrs>`, config generated in `infra/mesh-vn/generated`.
 
 ## 2. Services (target: all on `usa`, blue/green ports)
 
@@ -70,7 +70,7 @@ masked.
 Account notes (2026-11-12):
 
 - OVH: the API keys in `~/.ovh.conf` are identical on the workstation, fr1 and fr2. They belong to
-  account `ka1038251-ovh`, which owns only the domain `rosegriffon.fr` and no VPS. fr1 and fr2
+  account `<ovh-account>-ovh`, which owns only the domain `rosegriffon.fr` and no VPS. fr1 and fr2
   belong to other OVH accounts, whose API keys are not configured yet. Until they are, the OVH API
   cannot manage either VPS.
 - Cloudflare: `CLOUDFLARE_API_TOKEN` is set and verified active. It reads the DNS of all five

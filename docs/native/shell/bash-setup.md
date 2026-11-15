@@ -39,7 +39,7 @@ Les quatre fichiers déployés sont des stubs d'une ligne vers le dépôt (sauf 
 | inputrc : `input-meta output-meta convert-meta enable-bracketed-paste bell-style completion-ignore-case completion-map-case show-all-if-ambiguous colored-stats colored-completion-prefix mark-symlinked-directories skip-completed-text` ; flèches = `history-search-*`, Ctrl+flèches = `forward-word`/`backward-word`                                            | `bind -v` et `bind -l` dans Git Bash 5.3.15 et niubash 1.5.0 : toutes présentes ; brush (reedline) n'en lit aucune                                                                                                                                                           |
 
 Limites connues : `bun.bash` amont émet « invalid regular expression » sous Git Bash hors projet (motif vide, ligne 59) ;
-brush ignore `HISTCONTROL`/`HISTIGNORE` ; `\w` affiche `/c/Users/aphro` (niubash) ou `~` (brush) car `HOME`
+brush ignore `HISTCONTROL`/`HISTIGNORE` ; `\w` affiche `/c/Users/<user>` (niubash) ou `~` (brush) car `HOME`
 n'a pas la même forme que `PWD`.
 
 ## Démarrage (hyperfine 2.0.0 -N, 20 runs, ce PC, 2026-11-13)
