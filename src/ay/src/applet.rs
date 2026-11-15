@@ -228,10 +228,12 @@ mod tests {
     #[cfg(windows)]
     #[test]
     fn every_winux_applet_of_the_table_is_in_the_library_registry() {
-        let registry = winux_registry();
+        // The WinuxCmd library (Windows) and the portable ports (every host) together are the `winux` provider.
+        let mut registry = winux_registry();
+        registry.extend(winux_extra::registry().into_iter().map(|(n, _)| n));
         for (name, p) in providers() {
             if p == Provider::Winux {
-                assert!(registry.contains(&name.as_str()), "{name} is provided by winux but the registry lacks it");
+                assert!(registry.contains(&name.as_str()), "{name} is provided by winux but no registry has it");
             }
         }
     }
