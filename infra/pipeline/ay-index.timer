@@ -1,0 +1,11 @@
+[Unit]
+Description=ay index every 5 minutes (the checkout is fast-forwarded by src-checkout-update)
+
+[Timer]
+OnBootSec=2min
+OnUnitInactiveSec=5min
+RandomizedDelaySec=20
+Persistent=true
+
+[Install]
+WantedBy=timers.target

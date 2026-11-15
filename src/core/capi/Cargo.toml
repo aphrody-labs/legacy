@@ -16,8 +16,10 @@ crate-type = ["cdylib", "rlib"]
 
 
 [features]
-default = ["core", "ai-os"]
+default = ["core", "ai-os", "pipeline"]
 core = ["dep:aphrody-core"]
+# core_pipeline_* : the in-process index pipeline (tree-sitter and document stages) over the same SQLite file as `ay index`.
+pipeline = ["core", "aphrody-core/pipeline"]
 ai-os = ["dep:agent-context", "dep:rusqlite"]
 aysys-link = []
 

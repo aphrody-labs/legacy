@@ -23,6 +23,8 @@ game = ["dep:memmap2"]
 pipeline = ["dep:tempfile", "dep:process-wrap"]
 decompile = ["dep:ghidra-decompiler"]
 magika = ["dep:magika"]
+# Binary stages of the monorepo index pipeline (triage, ghidra, magika detector) over aphrody-core.
+index = ["dep:aphrody-core"]
 leveldb = ["dep:rusty-leveldb", "dep:tempfile"]
 yara = ["dep:yara-x"]
 # Compat alias for consumers expecting yolo-re-core/shenron-re wasm gating
@@ -46,6 +48,7 @@ walkdir.workspace = true
 flate2.workspace = true
 getrandom.workspace = true
 anyhow.workspace = true
+aphrody-core = { workspace = true, features = ["pipeline"], optional = true }
 
 # Standard crates.io RE libraries merged from rosegriffon (yolo-re-core, aphrody-nie-pe) & shenron (shenron-re)
 aes = "0.9.3"

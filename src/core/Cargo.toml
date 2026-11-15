@@ -14,7 +14,15 @@ description = "Common lib: tree-sitter parsing, symbol/ref index, content hashin
 name = "aphrody_core"
 
 
+[features]
+default = []
+# One content-addressed stage graph over the monorepo: detect -> parse/triage -> deep -> SQLite
+# (WAL, FTS5), with a Valkey cache/queue shared by the fleet (src/core/src/pipeline, docs/native/PIPELINE.md).
+pipeline = ["dep:rusqlite", "dep:zstd"]
+
 [dependencies]
+rusqlite = { workspace = true, features = ["bundled"], optional = true }
+zstd = { workspace = true, optional = true }
 blake3.workspace = true
 ignore.workspace = true
 rayon.workspace = true

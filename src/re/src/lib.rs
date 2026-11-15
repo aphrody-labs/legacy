@@ -23,6 +23,8 @@ pub mod ghidra;
 pub mod golang;
 pub mod google;
 pub mod headers;
+#[cfg(feature = "index")]
+pub mod index;
 #[cfg(feature = "leveldb")]
 pub mod leveldb;
 pub mod lua;

@@ -152,6 +152,46 @@ export function searchSymbols(
   query: string,
   limit = 50,
 ): SymbolMatch[] {
+  // The pipeline (ay index) keeps a trigram FTS5 index of symbol names once a substring search has built
+  // it (meta fts_ready = 1): no full scan for 3+ chars. Otherwise the LIKE scan below answers.
+  if (
+    query.length >= 3 &&
+    (
+      db.query("SELECT value FROM meta WHERE key = 'fts_ready'").get() as {
+        value: string;
+      } | null
+    )?.value === "1"
+  ) {
+    const order =
+      "ORDER BY CASE WHEN s.name = ?2 THEN 0 WHEN s.name LIKE ?3 THEN 1 ELSE 2 END, s.path, s.line LIMIT ?4";
+    const hits = db
+      .query(
+        `SELECT s.path, s.name, s.kind, s.line, s.scope, s.signature
+         FROM sym_name_fts f JOIN symbols s ON s.rowid = f.rowid
+         WHERE sym_name_fts MATCH ?1 ${order}`,
+      )
+      .all(
+        `"${query.replaceAll('"', '""')}"`,
+        query,
+        `${query}%`,
+        limit,
+      ) as SymbolMatch[];
+    if (hits.length < limit) {
+      // Paths live in `files` (small): scan those, then join their symbols.
+      const seen = new Set(hits.map((h) => `${h.path}:${h.line}:${h.name}`));
+      const byPath = db
+        .query(
+          `SELECT s.path, s.name, s.kind, s.line, s.scope, s.signature
+           FROM files f CROSS JOIN symbols s ON s.path = f.path
+           WHERE f.path LIKE ?1 ${order}`,
+        )
+        .all(`%${query}%`, query, `${query}%`, limit) as SymbolMatch[];
+      for (const h of byPath)
+        if (hits.length < limit && !seen.has(`${h.path}:${h.line}:${h.name}`))
+          hits.push(h);
+    }
+    return hits;
+  }
   const like = `%${query}%`;
   return db
     .query(

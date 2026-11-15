@@ -182,10 +182,97 @@ mod core_exports {
     const _KEEP_ABI_VERSION: u32 = cabi::APHRODY_ABI_VERSION;
 }
 
+/// The index pipeline over the same SQLite file as `ay index` (docs/native/PIPELINE.md): incremental,
+/// BLAKE3-addressed, no per-file JSON. Only the tree-sitter and document stages live here (this
+/// crate is L2 and cannot link `aphrody-re`); binary and deep stages run in `ay index`.
+#[cfg(feature = "pipeline")]
+mod pipeline_exports {
+    use crate::cabi::{c_str, json_err, json_ok};
+    use aphrody_core::pipeline::{Engine, Options, Shared, Store};
+    use std::ffi::c_char;
+    use std::path::{Path, PathBuf};
+
+    /// Descend into gitignored trees (third_party clones).
+    pub const CORE_PIPELINE_ALL: u32 = 1;
+    /// Re-run every stage even when size, mtime and hash match.
+    pub const CORE_PIPELINE_FORCE: u32 = 2;
+    /// Use the fleet Valkey cache when `AY_VALKEY_URL` / `~/.config/ay/valkey.url` is set.
+    pub const CORE_PIPELINE_SHARED: u32 = 4;
+
+    /// Index `root` (restricted to `includes`, `;`-separated, may be empty) into the SQLite file `db`.
+    /// Returns the `Report` JSON (files seen, changed, touched, removed, cache hits, totals, timings).
+    #[unsafe(no_mangle)]
+    pub extern "C" fn core_pipeline_run_json(
+        root: *const c_char,
+        includes: *const c_char,
+        db: *const c_char,
+        flags: u32,
+    ) -> *mut c_char {
+        // SAFETY: caller passes NUL-terminated strings valid for the call.
+        let (root, includes, db) = unsafe { (c_str(root), c_str(includes), c_str(db)) };
+        let mut o = Options::new(root, db);
+        o.include = includes.split([';', '\n']).filter(|p| !p.is_empty()).map(PathBuf::from).collect();
+        o.all = flags & CORE_PIPELINE_ALL != 0;
+        o.force = flags & CORE_PIPELINE_FORCE != 0;
+        let mut shared = if flags & CORE_PIPELINE_SHARED != 0 { Shared::from_env() } else { None };
+        o.cache_write = shared.is_some();
+        match Engine::new().index(&o, shared.as_mut()) {
+            Ok(rep) => json_ok(&rep),
+            Err(e) => json_err(e),
+        }
+    }
+
+    /// Symbol search over the SQLite file `db`: exact name when `exact != 0`, else trigram substring.
+    /// Returns a JSON array of `{path, name, kind, line, scope, signature}`.
+    #[unsafe(no_mangle)]
+    pub extern "C" fn core_pipeline_query_json(db: *const c_char, q: *const c_char, limit: u32, exact: i32) -> *mut c_char {
+        // SAFETY: caller passes NUL-terminated strings valid for the call.
+        let (db, q) = unsafe { (c_str(db), c_str(q)) };
+        let hits = Store::open(Path::new(db)).and_then(|s| {
+            if exact != 0 { s.lookup(q, limit as usize) } else { s.search(q, limit as usize) }
+        });
+        match hits {
+            Ok(h) => json_ok(&h),
+            Err(e) => json_err(e),
+        }
+    }
+}
+
 #[cfg(feature = "core")]
 pub use core_exports::*;
+#[cfg(feature = "pipeline")]
+pub use pipeline_exports::*;
 #[cfg(feature = "ai-os")]
 pub use ai_os::*;
+
+#[cfg(all(test, feature = "pipeline"))]
+mod pipeline_tests {
+    use super::*;
+    use std::ffi::{CStr, CString};
+
+    fn take(p: *mut std::ffi::c_char) -> String {
+        assert!(!p.is_null());
+        let s = unsafe { CStr::from_ptr(p) }.to_str().unwrap().to_owned();
+        core_free(p);
+        s
+    }
+
+    #[test]
+    fn run_then_query_through_the_c_abi() {
+        let root = CString::new(env!("CARGO_MANIFEST_DIR")).unwrap();
+        let inc = CString::new("src").unwrap();
+        let db = std::env::temp_dir().join(format!("ay-capi-{}.db", std::process::id()));
+        let dbc = CString::new(db.to_str().unwrap()).unwrap();
+        let rep = take(core_pipeline_run_json(root.as_ptr(), inc.as_ptr(), dbc.as_ptr(), 0));
+        assert!(rep.contains("\"changed\":"), "{rep}");
+        let again = take(core_pipeline_run_json(root.as_ptr(), inc.as_ptr(), dbc.as_ptr(), 0));
+        assert!(again.contains("\"changed\":0"), "second run is a no-op: {again}");
+        let q = CString::new("core_pipeline_run_json").unwrap();
+        let hits = take(core_pipeline_query_json(dbc.as_ptr(), q.as_ptr(), 5, 1));
+        assert!(hits.contains("core_pipeline_run_json"), "{hits}");
+        let _ = std::fs::remove_file(db);
+    }
+}
 
 #[cfg(all(test, feature = "core"))]
 mod tests {
@@ -242,7 +329,9 @@ mod tests {
         let root = CString::new(env!("CARGO_MANIFEST_DIR")).unwrap();
         let inc = CString::new("src").unwrap();
         let stats = take(core_index_each(root.as_ptr(), inc.as_ptr(), 1, Some(count)));
-        assert!(stats.contains("\"parsed\":2"), "{stats}");
-        assert_eq!(SEEN.load(Ordering::Relaxed), 2);
+        // Every source file of this crate (it grows: cabi, lib, sys, ai_os, ...), not a fixed count.
+        let n = SEEN.load(Ordering::Relaxed);
+        assert!(n >= 2, "{stats}");
+        assert!(stats.contains(&format!("\"parsed\":{n}")), "{stats}");
     }
 }

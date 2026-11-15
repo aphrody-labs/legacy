@@ -4,9 +4,18 @@
 //! `@definition.*`, `@reference.*`).
 
 use crate::symbols::{AstCall, AstFileSummary, AstSymbol, Span, SymbolKind};
+use std::cell::RefCell;
+use std::collections::HashMap;
 use std::path::Path;
+use std::rc::Rc;
 use streaming_iterator::StreamingIterator;
 use tree_sitter::{Language, Parser, Query, QueryCursor};
+
+type CachedGrammar = (Parser, Option<Rc<Query>>);
+
+thread_local! {
+    static REGISTRY_CACHE: RefCell<HashMap<&'static str, CachedGrammar>> = RefCell::new(HashMap::new());
+}
 
 pub struct Grammar {
     pub name: &'static str,
@@ -39,10 +48,25 @@ impl Grammar {
 
     /// Parse and extract definitions/references through `tags.scm` (structure-only when absent).
     pub fn extract(&self, path: &str, content: &str) -> Result<AstFileSummary, String> {
-        let lang = self.language();
-        let mut parser = Parser::new();
-        parser.set_language(&lang).map_err(|e| format!("{}: {e}", self.name))?;
-        let tree = parser.parse(content, None).ok_or("parse cancelled")?;
+        // Parser and compiled tags query are built once per grammar and thread, not per file.
+        let (tree, query) = REGISTRY_CACHE.with(|cell| -> Result<_, String> {
+            let mut map = cell.borrow_mut();
+            if !map.contains_key(self.name) {
+                let lang = self.language();
+                let mut parser = Parser::new();
+                parser.set_language(&lang).map_err(|e| format!("{}: {e}", self.name))?;
+                let query = match self.tags {
+                    Some(tags) => Some(Rc::new(
+                        Query::new(&lang, tags).map_err(|e| format!("{} tags.scm: {e}", self.name))?,
+                    )),
+                    None => None,
+                };
+                map.insert(self.name, (parser, query));
+            }
+            let (parser, query) = map.get_mut(self.name).expect("inserted above");
+            let tree = parser.parse(content, None).ok_or("parse cancelled")?;
+            Ok((tree, query.clone()))
+        })?;
         let root = tree.root_node();
         let mut summary = AstFileSummary {
             path: path.to_string(),
@@ -54,8 +78,7 @@ impl Grammar {
             line_count: content.lines().count(),
             byte_count: content.len(),
         };
-        let Some(tags) = self.tags else { return Ok(summary) };
-        let query = Query::new(&lang, tags).map_err(|e| format!("{} tags.scm: {e}", self.name))?;
+        let Some(query) = query else { return Ok(summary) };
         let names = query.capture_names();
         let mut cursor = QueryCursor::new();
         let mut it = cursor.matches(&query, root, content.as_bytes());

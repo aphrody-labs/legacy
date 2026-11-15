@@ -1,9 +1,32 @@
-use tree_sitter::{Node, Parser};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use tree_sitter::{Node, Parser, Tree};
 
 use crate::languages::SupportedLanguage;
 use crate::symbols::{
     AstCall, AstFileSummary, AstImport, AstSymbol, Span, SymbolKind,
 };
+
+thread_local! {
+    /// One configured parser per language and thread: `Parser::new` + `set_language` per file
+    /// was a measurable share of the index time (docs/native/PIPELINE.md).
+    static PARSERS: RefCell<HashMap<SupportedLanguage, Parser>> = RefCell::new(HashMap::new());
+}
+
+fn parse_cached(lang: SupportedLanguage, source: &str, path_str: &str) -> Result<Tree, String> {
+    PARSERS.with(|cell| {
+        let mut map = cell.borrow_mut();
+        if let std::collections::hash_map::Entry::Vacant(v) = map.entry(lang) {
+            let mut parser = Parser::new();
+            parser
+                .set_language(&lang.tree_sitter_language())
+                .map_err(|e| format!("Failed to set language for {}: {:?}", lang.name(), e))?;
+            v.insert(parser);
+        }
+        let parser = map.get_mut(&lang).expect("inserted above");
+        parser.parse(source, None).ok_or_else(|| format!("Failed to parse {path_str}"))
+    })
+}
 
 pub struct AstExtractor;
 
@@ -13,15 +36,7 @@ impl AstExtractor {
         path_str: &str,
         source: &str,
     ) -> Result<AstFileSummary, String> {
-        let ts_lang = lang.tree_sitter_language();
-        let mut parser = Parser::new();
-        parser
-            .set_language(&ts_lang)
-            .map_err(|e| format!("Failed to set language for {}: {:?}", lang.name(), e))?;
-
-        let tree = parser
-            .parse(source, None)
-            .ok_or_else(|| format!("Failed to parse {}", path_str))?;
+        let tree = parse_cached(lang, source, path_str)?;
 
         let root = tree.root_node();
         let bytes = source.as_bytes();

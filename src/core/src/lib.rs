@@ -3,6 +3,8 @@ pub mod grammars;
 pub mod hash;
 pub mod index;
 pub mod languages;
+#[cfg(feature = "pipeline")]
+pub mod pipeline;
 pub mod query;
 pub mod rope;
 pub mod symbols;

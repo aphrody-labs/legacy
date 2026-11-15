@@ -22,6 +22,10 @@ path = "src/lib.rs"
 # No doctests in ay; rustdoc does not see the build-script rlib of aphrody-docs (fr1, 2026-11-13).
 doctest = false
 
+[features]
+# Magika (ONNX Runtime) as the detector of `ay index --sniff` for files that extension and magic bytes cannot place.
+magika = ["aphrody-re/magika"]
+
 [dependencies]
 archguard.workspace = true
 aphrody-conformance = { version = "0.4.0", path = "../../test/conformance" }

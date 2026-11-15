@@ -60,6 +60,63 @@ export const CORE_TOOLS: Tool[] = [
     },
   },
   {
+    name: "core_pipeline",
+    description:
+      "Incrementally index a tree into the shared SQLite (WAL, FTS5; same file as `ay index`): unchanged files cost one stat, results are BLAKE3-addressed. Returns the run report.",
+    inputSchema: s.object(
+      {
+        root: s.string("Root directory path"),
+        db: s.string("SQLite path (default <root>/var/index/core.db)"),
+        includes: s.array(s.string("Sub-path of root"), {
+          description: "Optional sub-paths",
+        }),
+        all: s.boolean("Also descend into gitignored trees (third_party)"),
+      },
+      ["db", "includes", "all"],
+    ),
+    readOnly: false,
+    run: async (a) => {
+      const { pipelineRun } = await import("@aphrody/core");
+      const root = String(a.root);
+      return pipelineRun(
+        root,
+        a.db ? String(a.db) : `${root}/var/index/core.db`,
+        {
+          includes: Array.isArray(a.includes)
+            ? a.includes.map(String)
+            : undefined,
+          followIgnore: a.all !== true,
+          shared: true,
+        },
+      );
+    },
+  },
+  {
+    name: "core_symbols",
+    description:
+      "Look up symbols in the shared index SQLite (trigram FTS5 substring or exact name), no re-parse.",
+    inputSchema: s.object(
+      {
+        db: s.string("SQLite path (default var/index/core.db under SRC_ROOT)"),
+        query: s.string("Symbol name or substring"),
+        exact: s.boolean("Exact name instead of substring"),
+        limit: s.number("Maximum hits (default 20)"),
+      },
+      ["db", "exact", "limit"],
+    ),
+    readOnly: true,
+    run: async (a) => {
+      const { pipelineQuery } = await import("@aphrody/core");
+      const root = process.env.SRC_ROOT ?? process.cwd();
+      return pipelineQuery(
+        a.db ? String(a.db) : `${root}/var/index/core.db`,
+        String(a.query),
+        typeof a.limit === "number" ? a.limit : 20,
+        a.exact === true,
+      );
+    },
+  },
+  {
     name: "core_re_audit",
     description:
       "Inspect PE/ELF/Mach-O headers, sections, exports, disassembly, or Lua 5.2 bytecode via Aphrody core RE engine.",

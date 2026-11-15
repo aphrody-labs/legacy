@@ -232,6 +232,117 @@ export function index(root: string, opts: IndexOptions = {}): CoreIndex {
   );
 }
 
+const pipelineSymbols = {
+  core_pipeline_run_json: {
+    args: [FFIType.ptr, FFIType.ptr, FFIType.ptr, FFIType.u32],
+    returns: FFIType.ptr,
+  },
+  core_pipeline_query_json: {
+    args: [FFIType.ptr, FFIType.ptr, FFIType.u32, FFIType.i32],
+    returns: FFIType.ptr,
+  },
+} as const;
+
+export const PIPELINE_ALL = 1;
+export const PIPELINE_FORCE = 2;
+export const PIPELINE_SHARED = 4;
+
+let pipelineLib:
+  ReturnType<typeof dlopen<typeof pipelineSymbols>> | null | undefined;
+
+/** The index pipeline symbols of the same library; null on a build without feature `pipeline`. */
+export function loadPipeline() {
+  if (pipelineLib !== undefined) return pipelineLib;
+  pipelineLib = null;
+  const core = loadCore();
+  if (core) {
+    try {
+      pipelineLib = dlopen(core.path, pipelineSymbols);
+    } catch {
+      // Older library without core_pipeline_*: callers fall back to indexEach.
+    }
+  }
+  return pipelineLib;
+}
+
+export interface PipelineReport {
+  root: string;
+  db: string;
+  seen: number;
+  changed: number;
+  touched: number;
+  removed: number;
+  cache_hits: number;
+  cache_misses: number;
+  queued: number;
+  walk_ms: number;
+  total_ms: number;
+  totals: {
+    files: number;
+    parsed: number;
+    symbols: number;
+    calls: number;
+    imports: number;
+    lines: number;
+    binaries: number;
+    funcs: number;
+    xrefs: number;
+    pending: number;
+  };
+}
+
+/** Incremental index of `root` into the SQLite file `db`, in process (no per-file JSON). */
+export function pipelineRun(
+  root: string,
+  db: string,
+  opts: IndexOptions & { force?: boolean; shared?: boolean } = {},
+): PipelineReport {
+  const core = need();
+  const pl = loadPipeline();
+  if (!pl) throw new CoreUnavailableError();
+  const flags =
+    (opts.followIgnore === false ? PIPELINE_ALL : 0) |
+    (opts.force ? PIPELINE_FORCE : 0) |
+    (opts.shared ? PIPELINE_SHARED : 0);
+  return json(
+    core,
+    pl.symbols.core_pipeline_run_json(
+      ptr(cstr(root)),
+      ptr(cstr((opts.includes ?? []).join(";"))),
+      ptr(cstr(db)),
+      flags,
+    ),
+  );
+}
+
+/** Symbol search in the pipeline database: exact name or trigram substring. */
+export function pipelineQuery(
+  db: string,
+  q: string,
+  limit = 20,
+  exact = false,
+): {
+  path: string;
+  name: string;
+  kind: string;
+  line: number;
+  scope: string | null;
+  signature: string | null;
+}[] {
+  const core = need();
+  const pl = loadPipeline();
+  if (!pl) throw new CoreUnavailableError();
+  return json(
+    core,
+    pl.symbols.core_pipeline_query_json(
+      ptr(cstr(db)),
+      ptr(cstr(q)),
+      limit,
+      exact ? 1 : 0,
+    ),
+  );
+}
+
 /** Streams each indexed file through a JSCallback (same thread), returns the stats. */
 export function indexEach(
   root: string,

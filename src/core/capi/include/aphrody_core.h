@@ -109,6 +109,17 @@ char *core_index_each(const char *root,
                       int32_t follow_ignore,
                       struct Option_CoreFileCallback cb);
 
+/* --- Index pipeline (feature `pipeline`): same SQLite file as `ay index`, incremental, BLAKE3-addressed --- */
+#define CORE_PIPELINE_ALL 1u    /* descend into gitignored trees */
+#define CORE_PIPELINE_FORCE 2u  /* re-run every stage */
+#define CORE_PIPELINE_SHARED 4u /* use the fleet Valkey cache when configured */
+
+/* Index `root` into the SQLite file `db`; returns the Report JSON. `includes` is `;`-separated (may be empty). */
+char *core_pipeline_run_json(const char *root, const char *includes, const char *db, uint32_t flags);
+
+/* Symbol search in `db`: exact name when `exact` != 0, else trigram substring. JSON array of hits. */
+char *core_pipeline_query_json(const char *db, const char *q, uint32_t limit, int32_t exact);
+
 /* --- Unified AI OS C ABI (ai_os_*: Unix/GNU Agent OS, LLM, RAG, World Model, System 1) --- */
 uint32_t ai_os_abi_version(void);
 void ai_os_free(char *p);

@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 // ay-index: recursive tree-sitter index of src (+ third_party/vendor clones) into sqlite + JSON,
 // then skill/doc generation and symbol/doc search from it.
-//   bun packages/core/src/cli.ts index [root] [--all] [--include a,b] [--db path] [--json path]
+//   bun packages/core/src/cli.ts index [root] [--all] [--include a,b] [--db path] [--json path] [--legacy] [--no-shared]
+//   (index runs the in-process pipeline of src/core when the library has it; `ay index` is the same engine, in Rust)
 //   bun packages/core/src/cli.ts gen [root] [--db path]
 //   bun packages/core/src/cli.ts gen-docs [root] [--scan] [--only readme,plan,llvm,mwg,reference] [--db path]
 //   bun packages/core/src/cli.ts search <query> [--limit 20] [--db path]
@@ -9,7 +10,7 @@
 import { mkdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { indexEach, loadCore } from "./ffi.ts";
+import { indexEach, loadCore, loadPipeline, pipelineRun } from "./ffi.ts";
 import { generate, generateDocs } from "./generate.ts";
 import { liveScanToStore } from "./scanner.ts";
 import { searchCodebase } from "./search.ts";
@@ -27,6 +28,8 @@ const { values, positionals } = parseArgs({
   options: {
     help: { type: "boolean", short: "h", default: false },
     all: { type: "boolean", default: false },
+    legacy: { type: "boolean", default: false },
+    "no-shared": { type: "boolean", default: false },
     scan: { type: "boolean", default: false },
     include: { type: "string" },
     only: { type: "string" },
@@ -61,6 +64,17 @@ if (cmd === "index") {
       "aphrody_core_capi introuvable : cargo build -p aphrody-core-capi --release (sur fr1)",
     );
     process.exit(2);
+  }
+  // Preferred: the in-process pipeline (incremental, BLAKE3-addressed, FTS5), same file as `ay index`.
+  // `--legacy` keeps the per-file JSON path below.
+  if (!values.legacy && loadPipeline()) {
+    const rep = pipelineRun(root, dbPath, {
+      includes: values.include?.split(","),
+      followIgnore: !values.all,
+      shared: !values["no-shared"],
+    });
+    console.log(JSON.stringify({ ...rep, db: dbPath }));
+    process.exit(0);
   }
   const t0 = performance.now();
   const batch: Parameters<typeof writeFiles>[1] extends Iterable<infer T>
