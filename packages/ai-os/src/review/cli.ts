@@ -86,10 +86,10 @@ export async function main(argv: string[]): Promise<number> {
   if (values.summary)
     appendFileSync(
       values.summary,
-      `## ai-os review : ${r.status}, ${r.score ?? "?"}/20 (seuil ${r.threshold})\n\n${r.voices.map((v) => `- ${v.voice} : ${v.score ?? "?"}/20 (${v.provider ?? "aucun moteur"})`).join("\n")}\n\n${r.verdict}\n`,
+      `## ai-os review: ${r.status}, ${r.score ?? "?"}/20 (threshold ${r.threshold})\n\n${r.voices.map((v) => `- ${v.voice}: ${v.score ?? "?"}/20 (${v.provider ?? "no engine"})`).join("\n")}\n\n${r.verdict}\n`,
     );
   if (values["dry-run"]) return 0;
-  return r.status === "sans moteur" ? 2 : r.ok ? 0 : 1;
+  return r.status === "no-engine" ? 2 : r.ok ? 0 : 1;
 }
 
 // Launched directly or by the src/cli.ts dispatcher; imported by tests without running (bun test: NODE_ENV=test).

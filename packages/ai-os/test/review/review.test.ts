@@ -200,7 +200,7 @@ test("tribunal : voix en parallèle, juge avec plaidoiries, repli, verdicts, IND
     const n = p === "g" ? 12 : p === "c" ? 14 : 13;
     return {
       ok: true,
-      text: `Note : ${n}/20\n## Défauts\n| # | fichier:ligne | gravité | défaut | correction | source |\n|---|---|---|---|---|---|\n| 1 | src/a.ts:1 | moyenne | constante | nommer | s1 |\n`,
+      text: `Score: ${n}/20\n## Defects\n| # | file:line | severity | defect | fix | source |\n|---|---|---|---|---|---|\n| 1 | src/a.ts:1 | moyenne | constante | nommer | s1 |\n`,
       ms: 5,
     };
   };
@@ -218,12 +218,12 @@ test("tribunal : voix en parallèle, juge avec plaidoiries, repli, verdicts, IND
     slug: "t",
   });
   expect(peak).toBe(2); // gemini et claude ensemble, juge ensuite
-  expect(prompts.j).toContain("Plaidoirie de la voix Gemini");
-  expect(prompts.j).toContain("Plaidoirie de la voix Claude");
+  expect(prompts.j).toContain("Plea of the Gemini voice");
+  expect(prompts.j).toContain("Plea of the Claude voice");
   expect(prompts.g).toContain("Object.hasOwn"); // section bun-ts de CHECKLISTS.md injectée
   expect(prompts.g).toContain("Keep CLs small");
   expect(r.score).toBe(13);
-  expect(r.status).toBe("à corriger");
+  expect(r.status).toBe("needs-fix");
   expect(r.voices.find((v) => v.voice === "gemini")!.provider).toBe("g");
   const judge = readFileSync(
     join(d, "docs", "reviews", "judge-2026-11-13-t.md"),
@@ -233,13 +233,13 @@ test("tribunal : voix en parallèle, juge avec plaidoiries, repli, verdicts, IND
   expect(judge).toContain("eng-practices");
   expect(
     readFileSync(join(d, "docs", "reviews", "gemini-2026-11-13-t.md"), "utf8"),
-  ).toContain("broken échec (quota");
+  ).toContain("broken failed (quota");
   const idx = readFileSync(join(d, "docs", "reviews", "INDEX.md"), "utf8");
   expect(idx).toContain("](judge-2026-11-13-t.md)");
   expect(idx).toContain("| x | 7/20 | y | corrigé |");
   expect(recorded.every((v) => v.status === "fixed")).toBe(true);
 
-  // Plus aucun moteur : violation NHITL ouverte, statut « sans moteur ».
+  // Plus aucun moteur : violation NHITL ouverte, status "no-engine".
   recorded.length = 0;
   const none = await review({
     root: d,
@@ -251,7 +251,7 @@ test("tribunal : voix en parallèle, juge avec plaidoiries, repli, verdicts, IND
     nhitl: { record: (v) => recorded.push(v) },
     write: false,
   });
-  expect(none.status).toBe("sans moteur");
+  expect(none.status).toBe("no-engine");
   expect(
     recorded.filter(
       (v) => v.status === "open" && v.category === "engine_missing",
@@ -259,7 +259,7 @@ test("tribunal : voix en parallèle, juge avec plaidoiries, repli, verdicts, IND
   ).toHaveLength(3);
 });
 
-test("boucle de correction : gel après deux tours sans progrès, conforme dès le seuil", async () => {
+test("boucle de correction : freeze after two rounds without progress, compliant at the threshold", async () => {
   const { d } = repo();
   let round = 0;
   const scores = [10, 12, 12, 11, 15];
@@ -289,14 +289,14 @@ test("boucle de correction : gel après deux tours sans progrès, conforme dès 
   };
   const r = await review(base);
   expect(r.history).toEqual([10, 12, 12, 11]);
-  expect(r.status).toBe("gelé");
+  expect(r.status).toBe("frozen");
   expect(fixes).toEqual([1, 2, 3]);
 
   round = 0;
   scores.splice(0, scores.length, 14, 17);
   fixes.length = 0;
   const ok = await review(base);
-  expect(ok.status).toBe("conforme");
+  expect(ok.status).toBe("compliant");
   expect(ok.history).toEqual([14, 17]);
   expect(fixes).toEqual([1]);
 });
@@ -363,7 +363,7 @@ test("orchestrateur : le cycle software passe par le tribunal, consigne agy long
   rmSync(dirname(file), { recursive: true, force: true });
 });
 
-test("garde-fous : slug confiné, secrets écartés et expurgés, tableau des défauts seul, revue tronquée jamais conforme", async () => {
+test("guardrails: confined slug, secrets dropped and redacted, defects table only (legacy French heading), truncated review never compliant", async () => {
   const { d, g } = repo();
   writeFileSync(join(d, ".env"), "TOKEN=x\n");
   writeFileSync(
