@@ -27,7 +27,7 @@ Cross-platform sandboxed Unix/GNU-like OS distribution for autonomous agents. Wo
 | Brain, Research, Review, NHITL | `src/brain`, `src/research`, `src/review`, `src/nhitl`                                          | Memory sync/zstd archive, Context7 v2 + fact-check, multi-voice tribunal, NHITL scanner                                                                                |
 | Google Cloud Agents            | `src/google/{jules,stitch}`                                                                     | Absorbed Jules API and Stitch MCP clients                                                                                                                              |
 
-> Purged modules (delegated to host CLIs `agy`, Claude Code, OpenCode, or upstream tools): `src/tui`, `src/core/pm.ts`, `src/core/hub.ts`, `src/core/scheduler.ts`, `src/core/lattice.ts`, `src/relay/portless.ts`, `native/fx`, and fake `crates/ring3-agent`. See [../../../docs/research/fx-vs-rust-c-agent-os.md](../../../docs/research/fx-vs-rust-c-agent-os.md).
+> Purged modules (delegated to host CLIs `agy`, Claude Code, OpenCode, or upstream tools): `src/tui`, `src/core/pm.ts`, `src/core/hub.ts`, `src/core/scheduler.ts`, `src/core/lattice.ts`, `src/relay/portless.ts`, `native/fx`, and fake `crates/ring3-agent`.
 
 ## Context (Multi-Head Retrieval)
 

@@ -1,6 +1,6 @@
 // Chaîne unixwin de src : épinglage des clones, build de niu (niubash + rubash) depuis les forks aphrody-labs, sur prd
 // (cargo xwin pour Windows, nice -n 19, 4 tâches) ou par la CI du fork (.github/workflows/aphrody-build.yml),
-// puis installation du binaire sur le poste. Décisions : docs/native/unixwin/DEDUP.md, procédure : docs/native/unixwin/BUILD.md.
+// puis installation du binaire sur le poste.
 // Usage (racine du dépôt) :
 //   bun infra/unixwin/unixwin.ts status                     écarts forks / amont, pins, niu installé
 //   bun infra/unixwin/unixwin.ts lock                       épingle les clones unixwin dans src.lock.json

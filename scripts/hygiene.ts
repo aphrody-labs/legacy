@@ -119,7 +119,7 @@ export function scan(root: string, opts: { rules?: string[]; paths?: string[] } 
 
 // dead-ref: repo-relative paths and relative markdown links that point to nothing (fiction and moved targets).
 const TOP = "(?:docs|scripts|infra|packages|apps|third_party|src|tools|plugins|conformance|assets|\\.github|\\.agents)";
-const REF = new RegExp("(?<![\\w./-])(" + TOP + "/[A-Za-z0-9_@.+\\-/]+)", "g");
+const REF = new RegExp("(?<![\\w./$-])(" + TOP + "/[A-Za-z0-9_@.+\\-/]+)", "g");
 const LINK = /\]\((?!https?:|#|mailto:)([^)\s#]+)/g;
 // MCP and JSON-RPC method names that look like paths.
 // Optional inputs that are absent by design: owner-written, read when present (the readers handle the absence).

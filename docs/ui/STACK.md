@@ -75,7 +75,7 @@ Risque : Material Web est en maintenance. Mitigation : nous ne dépendons que de
 | Docs              | https://developers.google.com/style (guide de style de documentation), docs par produit sous developers.google.com | `cloudflare/cloudflare-docs` (branche `production`, HEAD `dc696ce1fe`), Astro 7.4.5 + Starlight, 114 sections produit sous `src/content/docs`, guide https://developers.cloudflare.com/style-guide/ (style-and-grammar, documentation-content-strategy, api-content-strategy) |
 | Organisation      | marques produit sous un holding, docs et design partagés                                                           | un catalogue de produits plat, une page d'entrée par produit, même gabarit partout                                                                                                                                                                                            |
 
-Ce que nous reprenons : un seul système de tokens généré (Google), une synchronisation code vers Figma vérifiée par un test de dérive (Cloudflare `kumo-figma`, chez nous `src/figma.ts` + `tests/tokens.test.ts`), un gabarit de doc unique par produit (Cloudflare). Ce que nous ne reprenons pas : React/Base UI de Kumo (règle web = Material Web), Astro (bun sert les docs).
+Ce que nous reprenons : un seul système de tokens généré (Google), une synchronisation code vers Figma vérifiée par un test de dérive (Cloudflare `kumo-figma`, chez nous `packages/design/src/figma.ts` + `tests/tokens.test.ts`), un gabarit de doc unique par produit (Cloudflare). Ce que nous ne reprenons pas : React/Base UI de Kumo (règle web = Material Web), Astro (bun sert les docs).
 
 ## 6. Matrice des cibles
 
@@ -91,7 +91,7 @@ Ce que nous reprenons : un seul système de tokens généré (Google), une synch
 
 ## 7. Garde-fous de `packages/design`
 
-- `src/build.ts` échoue si l'extraction SCSS de Material Web ne donne pas 15 styles typographiques x 5 propriétés, 7 coins, 16 durées, 6 élévations, 4 opacités d'état.
+- `packages/design/src/build.ts` échoue si l'extraction SCSS de Material Web ne donne pas 15 styles typographiques x 5 propriétés, 7 coins, 16 durées, 6 élévations, 4 opacités d'état.
 - `tests/tokens.test.ts` : source = `brand.toml`, 6 modes aux mêmes 49 rôles, contraste de toutes les paires `on-X`/`X` (4,5:1, 7:1 en contraste élevé), `inverse-on-surface`, `outline`/`surface` >= 3:1, absence de dérive des sorties.
 - `tests/figma.test.ts` : `tokens/figma-mockup.json` cible `2xsZi5wLPAYLGNCLZ2ZJUv`, 3 pages, 6 `ComponentSet` AutoLayout liés aux variables Figma sans hex littéral.
 - `tokens.css` met les durées à 0 ms sous `prefers-reduced-motion: reduce`.

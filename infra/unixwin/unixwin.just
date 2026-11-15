@@ -1,5 +1,4 @@
 # Chaîne unixwin (importé par le justfile racine) : forks aphrody-labs -> build prd ou CI du fork -> poste.
-# Voir docs/unixwin/BUILD.md.
 
 # Écarts forks / amont unixwin, pins src.lock.json, niu installé
 [group('unixwin')]
