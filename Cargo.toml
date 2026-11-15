@@ -245,6 +245,8 @@ repository = "https://github.com/aphrody-labs/aphrody"
 homepage = "https://labs.aphrody.com"
 
 [workspace.dependencies]
+# Common C ABI primitives (aphrody-labs/open crates/c-abi; one copy, pinned by Cargo.lock)
+c-abi = { git = "https://github.com/aphrody-labs/open", branch = "main" }
 # First-party crates
 archguard = { version = "0.1.0", path = "src/archguard" }
 corelib = { version = "0.4.0", package = "aphrody-corelib", path = "src/corelib", default-features = false }

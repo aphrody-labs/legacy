@@ -25,6 +25,7 @@ aysys-link = []
 
 [dependencies]
 agent-context = { workspace = true, optional = true }
+c-abi.workspace = true
 aphrody-core = { workspace = true, optional = true }
 rusqlite = { workspace = true, features = ["bundled"], optional = true }
 serde.workspace = true

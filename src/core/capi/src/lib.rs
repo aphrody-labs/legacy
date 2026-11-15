@@ -6,26 +6,13 @@
 //! - Errors come back as `{"error": "..."}` JSON; null only when the output holds a NUL byte.
 //! - Build with the shared LLVM toolchain (docs/llvm/UNIFIED-TOOLCHAIN.md) for cross-language LTO.
 
-pub mod cabi;
+/// Common C ABI primitives, one copy in aphrody-labs/open `crates/c-abi`; it also exports
+/// `aphrody_abi_version` and `aphrody_free`.
+pub use c_abi as cabi;
+pub use c_abi::{aphrody_abi_version, aphrody_free};
 pub mod sys;
 #[cfg(feature = "ai-os")]
 pub mod ai_os;
-
-/// Unified Aphrody C ABI version.
-#[unsafe(no_mangle)]
-pub extern "C" fn aphrody_abi_version() -> u32 {
-    cabi::APHRODY_ABI_VERSION
-}
-
-/// Release a string returned by any C ABI function in this library. Null is a no-op.
-///
-/// # Safety
-/// `p` must be null or a C string allocated by an Aphrody C ABI function.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn aphrody_free(p: *mut std::ffi::c_char) {
-    // SAFETY: `p` is null or was produced by `into_c_string` in an Aphrody C ABI library.
-    unsafe { cabi::free_c_string(p) };
-}
 
 #[cfg(feature = "core")]
 mod core_exports {
