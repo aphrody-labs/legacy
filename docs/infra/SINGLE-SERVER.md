@@ -77,7 +77,11 @@ Registered in `cluster.toml` (`fleet-registry endpoint valkey` = <fr2-mesh-ip>:6
 | 4 | Reconcile live `open-origin` ingress into cloudflare.toml | done, `cf.ts plan`: no changes |
 | 5 | NFS export of the fr1 XFS and automount client on fr2 | measured then removed: unusable for trees (table above); re-enable only for artifacts |
 | 6 | Free the fr1 btrfs pool, LVM over sdb+sdc, one XFS at /srv/xbuild | NOT started: owner order changed to rescue first (no source tree or git repo deleted); inventory running on fr1 (`/srv/xbuild/rescue/inventory.json`) |
-| 7 | prd XFS (xfsprogs missing, root btrfs never repartitioned), Valkey sccache wiring (password installed on fr1 and fr2, `fleet-run` exports SCCACHE_REDIS_*), NativeLink worker on fr2 | pending; prd waits for the owner window |
+| 7 | Valkey password rotated (`fleet-valkey-rotate.sh`: vault, CONFIG SET live, clients fr1 and fr2 updated, ay-index-worker restarted; old AUTH: WRONGPASS, new: PONG). Clients found: ay-index-worker on fr1 and fr2 (valkey.url); prd has its own Redis (shenron), not this Valkey | done |
+| 8 | sccache on Valkey across hosts: same rustc on both (toolchain chromium-157, rustc 1.100.0-nightly 1edd55dcf, binary b3sum equal), same crate path and target dir, `fleet-run` env. fr1 first: 1 miss (stored); fr2 then: 1 hit of 1 (100 %), `Cache location redis ... prefix /sccache/` | proven |
+| 9 | NativeLink worker on fr2 (2 jobs, 5 GB cache) registered to the fr1 scheduler; `proof.sh`: 24 remote actions, 7 ran on fr2 (hostname written by the action), 17 on fr1 | proven |
+| 10 | fr2 backup to the shared XFS (`fleet-fr2-backup.sh`: Valkey, dbfr, relay, edge; sha256 per archive) | running at 1 MB/s through the workstation, see log |
+| 11 | Pool freed, LVM over sdb+sdc, one XFS, NFS export of cold data to fr2 and prd | waits for the rescue agent (inventory still walking the pool after 1 h, nothing pushed or copied yet) and for the owner window on prd |
 
 Log (UTC, 2026-11-15):
 
