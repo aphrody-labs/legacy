@@ -437,8 +437,8 @@ Host * !github.com
     #[test]
     fn glob_rules() {
         assert!(glob_match("*.google.com", "a.google.com"));
-        assert!(glob_match("10.200.77.?", "192.0.2.5"));
-        assert!(!glob_match("10.200.77.?", "192.0.2.15"));
+        assert!(glob_match("192.0.2.?", "192.0.2.5"));
+        assert!(!glob_match("192.0.2.?", "192.0.2.15"));
         assert!(patterns_match(&["*", "!bad"], "good"));
         assert!(!patterns_match(&["*", "!bad"], "bad"));
     }

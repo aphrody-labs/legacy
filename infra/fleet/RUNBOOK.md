@@ -15,7 +15,7 @@ ssh: keys only on all three nodes (`PasswordAuthentication no`, root `prohibit-p
 1. Check what starts at boot: `systemctl is-enabled ssh.socket wg-quick@wg1 fleet-firewall fleet-mesh-forward fail2ban` (fr1). Never enable ufw or nftables.service: filtering goes through fleet-firewall, firewalld and netavark.
 2. `GRUB_DEFAULT=saved`, default = proven kernel (`grub-set-default '<submenu>><entry>'`), new kernel as a one-shot: `grub-reboot '<submenu>><new entry>'`.
 3. `systemd-run --on-active=5 systemctl reboot`, then wait for ssh (`until ssh ...`).
-4. Checks: `uname -r`, ping 10.200.77.{1,3,5}, `fleet-health.sh`, NativeLink (:50051/:50061, 3 workers on :50061), `aphrody-factory doctor`.
+4. Checks: `uname -r`, ping every `<role>.mesh`, `fleet-health.sh`, NativeLink (:50051/:50061, 3 workers on :50061), `aphrody-factory doctor`.
 5. Make it permanent only if everything is green: `grub-set-default '<submenu>><new entry>'`. Keep the old kernel as `apt-mark manual`.
 6. If there is no ssh after about 5 min: reboot from the Manager. GRUB falls back to the proven default, since `next_entry` applies only once. If that is not enough, go to rescue (table above).
 
