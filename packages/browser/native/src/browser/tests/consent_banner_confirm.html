@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -23,11 +23,9 @@
           "<p>Share your data with all 437 partners?</p>" +
           '<button id="back">Go back</button>' +
           '<button id="confirm">Yes, accept them</button>';
-        document
-          .getElementById("confirm")
-          .addEventListener("click", function () {
-            banner.remove();
-          });
+        document.getElementById("confirm").addEventListener("click", function () {
+          banner.remove();
+        });
       });
       document.getElementById("reject").addEventListener("click", function () {
         banner.remove();

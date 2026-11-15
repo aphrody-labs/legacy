@@ -1,4 +1,5 @@
-<!doctype html>
+<!DOCTYPE html>
+<meta charset="UTF-8">
 <head>
   <script src="../testing.js"></script>
 </head>
@@ -15,71 +16,51 @@
 <style>
   /* Named layer block — inner rules join the cascade. */
   @layer utilities {
-    #hidden-by-layer {
-      display: none;
-    }
+    #hidden-by-layer { display: none; }
   }
   /* Anonymous layer block. */
   @layer {
-    #hidden-by-anon-layer {
-      display: none;
-    }
+    #hidden-by-anon-layer { display: none; }
   }
   /* Dotted sub-layer name in the prelude. */
   @layer theme.dark {
-    #hidden-by-dotted-layer {
-      display: none;
-    }
+    #hidden-by-dotted-layer { display: none; }
   }
   /* Statement form: declares layer order, carries no block. It must be
      inert AND must not abort parsing of the rest of the sheet. */
   @layer theme, base, components, utilities;
-  #hidden-after-statement {
-    display: none;
-  }
+  #hidden-after-statement { display: none; }
   /* Matching @media nested inside @layer — applies. */
   @layer responsive {
     @media (min-width: 600px) {
-      #hidden-media-in-layer {
-        display: none;
-      }
+      #hidden-media-in-layer { display: none; }
     }
   }
   /* Non-matching @media nested inside @layer — dropped. */
   @layer responsive {
     @media print {
-      #not-hidden-print-in-layer {
-        display: none;
-      }
+      #not-hidden-print-in-layer { display: none; }
     }
   }
   /* @layer nested inside @media. */
   @media screen {
     @layer inner {
-      #hidden-layer-in-media {
-        display: none;
-      }
+      #hidden-layer-in-media { display: none; }
     }
   }
   /* @layer nested inside @layer. */
   @layer outer {
     @layer inner {
-      #hidden-nested-layer {
-        display: none;
-      }
+      #hidden-nested-layer { display: none; }
     }
   }
   /* Utility-style !important declaration inside a layer. */
   @layer utilities {
-    #hidden-important {
-      display: none !important;
-    }
+    #hidden-important { display: none !important; }
   }
   /* visibility:hidden inside a layer. */
   @layer utilities {
-    #layer-visibility-hidden {
-      visibility: hidden;
-    }
+    #layer-visibility-hidden { visibility: hidden; }
   }
 </style>
 
@@ -102,128 +83,122 @@
   <style id="deep-nest-style"></style>
 </body>
 
-<script id="layer_named_block_hides">
-  {
-    testing.expectFalse($("#hidden-by-layer").checkVisibility());
-    // getComputedStyle consumes the same cascade.
-    testing.expectEqual(
-      "none",
-      getComputedStyle($("#hidden-by-layer")).display,
-    );
-  }
+<script id=layer_named_block_hides>
+{
+  testing.expectFalse($('#hidden-by-layer').checkVisibility());
+  // getComputedStyle consumes the same cascade.
+  testing.expectEqual('none', getComputedStyle($('#hidden-by-layer')).display);
+}
 </script>
 
-<script id="layer_anonymous_block_hides">
-  {
-    testing.expectFalse($("#hidden-by-anon-layer").checkVisibility());
-  }
+<script id=layer_anonymous_block_hides>
+{
+  testing.expectFalse($('#hidden-by-anon-layer').checkVisibility());
+}
 </script>
 
-<script id="layer_dotted_name_hides">
-  {
-    testing.expectFalse($("#hidden-by-dotted-layer").checkVisibility());
-  }
+<script id=layer_dotted_name_hides>
+{
+  testing.expectFalse($('#hidden-by-dotted-layer').checkVisibility());
+}
 </script>
 
-<script id="layer_statement_is_inert">
-  {
-    // The statement form has nothing to apply, and rules after it still parse.
-    testing.expectFalse($("#hidden-after-statement").checkVisibility());
-  }
+<script id=layer_statement_is_inert>
+{
+  // The statement form has nothing to apply, and rules after it still parse.
+  testing.expectFalse($('#hidden-after-statement').checkVisibility());
+}
 </script>
 
-<script id="layer_media_in_layer">
-  {
-    // Matching query inside a layer applies; non-matching is dropped.
-    testing.expectFalse($("#hidden-media-in-layer").checkVisibility());
-    testing.expectTrue($("#not-hidden-print-in-layer").checkVisibility());
-  }
+<script id=layer_media_in_layer>
+{
+  // Matching query inside a layer applies; non-matching is dropped.
+  testing.expectFalse($('#hidden-media-in-layer').checkVisibility());
+  testing.expectTrue($('#not-hidden-print-in-layer').checkVisibility());
+}
 </script>
 
-<script id="layer_in_media">
-  {
-    testing.expectFalse($("#hidden-layer-in-media").checkVisibility());
-  }
+<script id=layer_in_media>
+{
+  testing.expectFalse($('#hidden-layer-in-media').checkVisibility());
+}
 </script>
 
-<script id="layer_nested_layers">
-  {
-    testing.expectFalse($("#hidden-nested-layer").checkVisibility());
-  }
+<script id=layer_nested_layers>
+{
+  testing.expectFalse($('#hidden-nested-layer').checkVisibility());
+}
 </script>
 
-<script id="layer_important_declaration">
-  {
-    testing.expectFalse($("#hidden-important").checkVisibility());
-  }
+<script id=layer_important_declaration>
+{
+  testing.expectFalse($('#hidden-important').checkVisibility());
+}
 </script>
 
-<script id="layer_visibility_hidden">
-  {
-    // checkVisibility() defaults to display-only; visibilityProperty opts in.
-    testing.expectTrue($("#layer-visibility-hidden").checkVisibility());
-    testing.expectFalse(
-      $("#layer-visibility-hidden").checkVisibility({
-        visibilityProperty: true,
-      }),
-    );
-  }
+<script id=layer_visibility_hidden>
+{
+  // checkVisibility() defaults to display-only; visibilityProperty opts in.
+  testing.expectTrue($('#layer-visibility-hidden').checkVisibility());
+  testing.expectFalse(
+    $('#layer-visibility-hidden').checkVisibility({ visibilityProperty: true })
+  );
+}
 </script>
 
-<script id="layer_dynamic_insertRule">
-  {
-    // The cssRules path (insertRule) must recurse into @layer too.
-    const sheet = $("#dyn").sheet;
-    const index = sheet.insertRule(
-      "@layer utilities { #dyn-target { display: none; } }",
-      0,
-    );
-    testing.expectEqual(0, index);
-    testing.expectFalse($("#dyn-target").checkVisibility());
-  }
+<script id=layer_dynamic_insertRule>
+{
+  // The cssRules path (insertRule) must recurse into @layer too.
+  const sheet = $('#dyn').sheet;
+  const index = sheet.insertRule(
+    '@layer utilities { #dyn-target { display: none; } }', 0
+  );
+  testing.expectEqual(0, index);
+  testing.expectFalse($('#dyn-target').checkVisibility());
+}
 </script>
 
-<script id="layer_cssRules_surface">
-  {
-    // @layer rules postdate the legacy numeric CSSRule type constants, so
-    // `type` is 0 (CSSOM §6.4.1) — same as Chrome's CSSLayerBlockRule.
-    const sheet = $("#dyn").sheet;
-    const rule = sheet.cssRules[0];
-    testing.expectEqual(0, rule.type);
-  }
+<script id=layer_cssRules_surface>
+{
+  // @layer rules postdate the legacy numeric CSSRule type constants, so
+  // `type` is 0 (CSSOM §6.4.1) — same as Chrome's CSSLayerBlockRule.
+  const sheet = $('#dyn').sheet;
+  const rule = sheet.cssRules[0];
+  testing.expectEqual(0, rule.type);
+}
 </script>
 
-<script id="layer_statement_insertRule">
-  {
-    // Statement form through insertRule: surfaced via cssRules, applies nothing.
-    const sheet = $("#dyn").sheet;
-    const index = sheet.insertRule("@layer theme, base;", 0);
-    testing.expectEqual(0, index);
-    testing.expectEqual(0, sheet.cssRules[0].type);
-  }
+<script id=layer_statement_insertRule>
+{
+  // Statement form through insertRule: surfaced via cssRules, applies nothing.
+  const sheet = $('#dyn').sheet;
+  const index = sheet.insertRule('@layer theme, base;', 0);
+  testing.expectEqual(0, index);
+  testing.expectEqual(0, sheet.cssRules[0].type);
+}
 </script>
 
-<script id="layer_replaceSync">
-  {
-    // A layer added through the cssRules path reaches the cascade.
-    $("#dyn2").sheet.insertRule(
-      "@layer utilities { #dyn2-target { display: none; } }",
-    );
-    testing.expectFalse($("#dyn2-target").checkVisibility());
-  }
+<script id=layer_replaceSync>
+{
+  // A layer added through the cssRules path reaches the cascade.
+  $('#dyn2').sheet.insertRule(
+    '@layer utilities { #dyn2-target { display: none; } }'
+  );
+  testing.expectFalse($('#dyn2-target').checkVisibility());
+}
 </script>
 
-<script id="layer_deep_nesting_capped">
-  {
-    // 50 levels of `@layer a { ... }` around a `display:none` rule. The depth
-    // guard (MAX_AT_RULE_NESTING in StyleManager.zig) must short-circuit
-    // before the Zig stack is exhausted — and the inner rule sits beyond the
-    // cap, so the element stays visible.
-    let css = "";
-    for (let i = 0; i < 50; i++) css += "@layer a { ";
-    css += "#deep-nest-target { display: none; }";
-    for (let i = 0; i < 50; i++) css += " }";
-    $("#deep-nest-style").sheet.insertRule(css);
-    testing.expectTrue($("#deep-nest-target").checkVisibility());
-  }
+<script id=layer_deep_nesting_capped>
+{
+  // 50 levels of `@layer a { ... }` around a `display:none` rule. The depth
+  // guard (MAX_AT_RULE_NESTING in StyleManager.zig) must short-circuit
+  // before the Zig stack is exhausted — and the inner rule sits beyond the
+  // cap, so the element stays visible.
+  let css = '';
+  for (let i = 0; i < 50; i++) css += '@layer a { ';
+  css += '#deep-nest-target { display: none; }';
+  for (let i = 0; i < 50; i++) css += ' }';
+  $('#deep-nest-style').sheet.insertRule(css);
+  testing.expectTrue($('#deep-nest-target').checkVisibility());
+}
 </script>

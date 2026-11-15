@@ -1,9 +1,9 @@
-<!doctype html>
-<meta charset="UTF-8" />
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
-<script id="basic">
+<script id=basic>
   {
     // Test that VTTCue constructor exists
     testing.expectEqual("function", typeof VTTCue);
@@ -30,7 +30,7 @@
   }
 </script>
 
-<script id="defaults">
+<script id=defaults>
   {
     // Test default values
     const cue = new VTTCue(0, 1, "test");
@@ -44,7 +44,7 @@
   }
 </script>
 
-<script id="properties">
+<script id=properties>
   {
     // Test setting various properties
     const cue = new VTTCue(0, 5, "test");
@@ -72,14 +72,12 @@
   }
 </script>
 
-<script id="enums">
+<script id=enums>
   {
     const cue = new VTTCue(0, 1, "test");
 
     // invalid enum values are ignored
-    testing.beginBrowserLog(
-      "Chrome warns on invalid AlignSetting/DirectionSetting values",
-    );
+    testing.beginBrowserLog("Chrome warns on invalid AlignSetting/DirectionSetting values");
     for (const invalid of ["start\u0000", "centre", "middle", "auto"]) {
       cue.align = invalid;
       cue.vertical = invalid;
@@ -96,7 +94,7 @@
 </script>
 
 <!-- lineAlign and positionAlign are in the spec, WPT and Firefox; Chrome doesn't have them. -->
-<script id="line_and_position_align">
+<script id=line_and_position_align>
   testing.diverges("Chrome has no VTTCue.lineAlign/positionAlign", () => {
     testing.expectEqual(true, "lineAlign" in VTTCue.prototype);
     testing.expectEqual(true, "positionAlign" in VTTCue.prototype);
@@ -120,18 +118,12 @@
   }
 </script>
 
-<script id="ranges">
+<script id=ranges>
   {
     const cue = new VTTCue(0, 1, "test");
-    testing.expectError("IndexSizeError", () => {
-      cue.position = 101;
-    });
-    testing.expectError("IndexSizeError", () => {
-      cue.size = -1;
-    });
-    testing.expectError("TypeError", () => {
-      cue.line = "middle";
-    });
+    testing.expectError("IndexSizeError", () => { cue.position = 101; });
+    testing.expectError("IndexSizeError", () => { cue.size = -1; });
+    testing.expectError("TypeError", () => { cue.line = "middle"; });
     testing.expectEqual("auto", cue.position);
     testing.expectEqual(100, cue.size);
     testing.expectEqual("auto", cue.line);
@@ -144,22 +136,20 @@
     testing.expectError("TypeError", () => new VTTCue(NaN, 1, "x"));
     testing.expectError("TypeError", () => new VTTCue(0, NaN, "x"));
     testing.expectError("TypeError", () => new VTTCue(0, -Infinity, "x"));
-    testing.expectError("TypeError", () => {
-      cue.startTime = Infinity;
-    });
+    testing.expectError("TypeError", () => { cue.startTime = Infinity; });
   }
 </script>
 
 <!-- endTime is an unrestricted double, so +Infinity is allowed (spec, WPT
      VTTCue/constructor.html, Firefox). Chrome still treats it as a double and throws. -->
-<script id="infinite_end_time">
+<script id=infinite_end_time>
   {
     testing.expectEqual(Infinity, new VTTCue(0, Infinity, "x").endTime);
   }
 </script>
 
 <!-- Regions are in the spec, WPT and Firefox; Chrome doesn't expose them. -->
-<script id="region">
+<script id=region>
   testing.diverges("Chrome has no VTTCue.region or VTTRegion", () => {
     const cue = new VTTCue(0, 1, "test");
     testing.expectEqual(null, cue.region);
@@ -168,41 +158,19 @@
     testing.expectEqual(region, cue.region);
     cue.region = null;
     testing.expectEqual(null, cue.region);
-    testing.expectError("TypeError", () => {
-      cue.region = {};
-    });
+    testing.expectError("TypeError", () => { cue.region = {}; });
   });
 </script>
 
-<script id="getCueAsHTML">
+<script id=getCueAsHTML>
   {
-    const cue = new VTTCue(
-      0,
-      1,
-      "<c></c><c.a.b></c><i></i><b></b><u></u><ruby>x<rt></rt></ruby><v></v><v a b></v><v Foo&amp;Bar>text</v><1:00:00.500>&lt;&notit;&#x20;<lang.k en>x</lang><rt>y",
-    );
+    const cue = new VTTCue(0, 1, '<c></c><c.a.b></c><i></i><b></b><u></u><ruby>x<rt></rt></ruby><v></v><v a b></v><v Foo&amp;Bar>text</v><1:00:00.500>&lt;&notit;&#x20;<lang.k en>x</lang><rt>y');
     const frag = cue.getCueAsHTML();
     testing.expectEqual(true, frag instanceof DocumentFragment);
 
     const nodes = Array.from(frag.childNodes);
-    testing.expectEqual(
-      [
-        "SPAN",
-        "SPAN",
-        "I",
-        "B",
-        "U",
-        "RUBY",
-        "SPAN",
-        "SPAN",
-        "SPAN",
-        "timestamp",
-        "#text",
-        "SPAN",
-        "#text",
-      ],
-      nodes.map((n) => n.nodeName),
-    );
+    testing.expectEqual(["SPAN", "SPAN", "I", "B", "U", "RUBY", "SPAN", "SPAN", "SPAN", "timestamp", "#text", "SPAN", "#text"],
+      nodes.map(n => n.nodeName));
 
     testing.expectEqual(0, nodes[0].attributes.length);
     testing.expectEqual("a b", nodes[1].getAttribute("class"));
@@ -222,7 +190,7 @@
 
 <!-- The cue text tokenizer collapses whitespace in a start tag's annotation
      (spec, Firefox); Chrome keeps it as-is. -->
-<script id="annotation_whitespace">
+<script id=annotation_whitespace>
   testing.diverges("Chrome keeps whitespace in a cue tag annotation", () => {
     const frag = new VTTCue(0, 1, "<v  a \t b >x</v>").getCueAsHTML();
     testing.expectEqual("a b", frag.firstChild.getAttribute("title"));

@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
 <body>
@@ -15,7 +15,7 @@
   </div>
 </body>
 
-<script id="node_iterator_basic">
+<script id=node_iterator_basic>
   {
     const root = document.getElementById("root");
     const iterator = document.createNodeIterator(root);
@@ -24,12 +24,12 @@
     testing.expectEqual(root, iterator.root);
     testing.expectEqual(root, iterator.referenceNode);
     testing.expectEqual(true, iterator.pointerBeforeReferenceNode);
-    testing.expectEqual(0xffffffff, iterator.whatToShow);
+    testing.expectEqual(0xFFFFFFFF, iterator.whatToShow);
     testing.expectEqual(null, iterator.filter);
   }
 </script>
 
-<script id="node_iterator_pointer_state_forward">
+<script id=node_iterator_pointer_state_forward>
   {
     const container = document.createElement("div");
     const a = document.createElement("div");
@@ -39,10 +39,7 @@
     container.appendChild(a);
     container.appendChild(b);
 
-    const iterator = document.createNodeIterator(
-      container,
-      NodeFilter.SHOW_ELEMENT,
-    );
+    const iterator = document.createNodeIterator(container, NodeFilter.SHOW_ELEMENT);
 
     testing.expectEqual(true, iterator.pointerBeforeReferenceNode);
     testing.expectEqual(container, iterator.referenceNode);
@@ -64,7 +61,7 @@
   }
 </script>
 
-<script id="node_iterator_pointer_state_backward">
+<script id=node_iterator_pointer_state_backward>
   {
     const container = document.createElement("div");
     const a = document.createElement("div");
@@ -74,10 +71,7 @@
     container.appendChild(a);
     container.appendChild(b);
 
-    const iterator = document.createNodeIterator(
-      container,
-      NodeFilter.SHOW_ELEMENT,
-    );
+    const iterator = document.createNodeIterator(container, NodeFilter.SHOW_ELEMENT);
 
     iterator.nextNode();
     iterator.nextNode();
@@ -92,7 +86,7 @@
   }
 </script>
 
-<script id="node_iterator_pointer_state_zigzag">
+<script id=node_iterator_pointer_state_zigzag>
   {
     const container = document.createElement("div");
     const a = document.createElement("div");
@@ -105,10 +99,7 @@
     container.appendChild(b);
     container.appendChild(c);
 
-    const iterator = document.createNodeIterator(
-      container,
-      NodeFilter.SHOW_ELEMENT,
-    );
+    const iterator = document.createNodeIterator(container, NodeFilter.SHOW_ELEMENT);
 
     iterator.nextNode();
     iterator.nextNode();
@@ -129,7 +120,7 @@
   }
 </script>
 
-<script id="node_iterator_skip_vs_reject">
+<script id=node_iterator_skip_vs_reject>
   {
     const container = document.createElement("div");
     container.innerHTML = `
@@ -144,7 +135,7 @@
     const iterator = document.createNodeIterator(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.id === "skip-me") {
           return NodeFilter.FILTER_SKIP;
         }
@@ -152,7 +143,7 @@
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_ACCEPT;
-      },
+      }
     );
 
     const root = iterator.nextNode();
@@ -166,7 +157,7 @@
   }
 </script>
 
-<script id="node_iterator_nested_comments_in_skipped">
+<script id=node_iterator_nested_comments_in_skipped>
   {
     const container = document.createElement("div");
     const skipped = document.createElement("div");
@@ -178,12 +169,12 @@
     const iterator = document.createNodeIterator(
       container,
       NodeFilter.SHOW_COMMENT,
-      function (node) {
+      function(node) {
         if (node.nodeType === 1 && node.id === "skipped") {
           return NodeFilter.FILTER_SKIP;
         }
         return NodeFilter.FILTER_ACCEPT;
-      },
+      }
     );
 
     const found = iterator.nextNode();
@@ -192,7 +183,7 @@
   }
 </script>
 
-<script id="node_iterator_nested_in_rejected">
+<script id=node_iterator_nested_in_rejected>
   {
     const container = document.createElement("div");
     const rejected = document.createElement("div");
@@ -204,12 +195,12 @@
     const iterator = document.createNodeIterator(
       container,
       NodeFilter.SHOW_TEXT,
-      function (node) {
+      function(node) {
         if (node.nodeType === 1 && node.id === "rejected") {
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_ACCEPT;
-      },
+      }
     );
 
     const text1 = iterator.nextNode();
@@ -220,7 +211,7 @@
   }
 </script>
 
-<script id="node_iterator_deep_nesting">
+<script id=node_iterator_deep_nesting>
   {
     const container = document.createElement("div");
     container.innerHTML = `
@@ -236,12 +227,12 @@
     const iterator = document.createNodeIterator(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.id && node.id.includes("accept")) {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     );
 
     const first = iterator.nextNode();
@@ -255,7 +246,7 @@
   }
 </script>
 
-<script id="node_iterator_previousNode_with_filter">
+<script id=node_iterator_previousNode_with_filter>
   {
     const container = document.createElement("div");
     container.innerHTML = `
@@ -269,12 +260,12 @@
     const iterator = document.createNodeIterator(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.classList.contains("accept")) {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     );
 
     iterator.nextNode();
@@ -288,7 +279,7 @@
   }
 </script>
 
-<script id="node_iterator_pointer_consistency_with_skipped">
+<script id=node_iterator_pointer_consistency_with_skipped>
   {
     const container = document.createElement("div");
     const a = document.createElement("div");
@@ -304,12 +295,12 @@
     const iterator = document.createNodeIterator(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.id && node.id.includes("accept")) {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     );
 
     const first = iterator.nextNode();
@@ -326,19 +317,19 @@
   }
 </script>
 
-<script id="node_iterator_function_filter">
+<script id=node_iterator_function_filter>
   {
     const root = document.getElementById("root");
 
     const iterator = document.createNodeIterator(
       root,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.id && node.id.startsWith("child")) {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     );
 
     testing.expectEqual("child1", iterator.nextNode().id);
@@ -348,23 +339,23 @@
   }
 </script>
 
-<script id="node_iterator_object_filter">
+<script id=node_iterator_object_filter>
   {
     const root = document.getElementById("root");
 
     const filter = {
-      acceptNode: function (node) {
+      acceptNode: function(node) {
         if (node.tagName === "SPAN") {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     };
 
     const iterator = document.createNodeIterator(
       root,
       NodeFilter.SHOW_ELEMENT,
-      filter,
+      filter
     );
 
     testing.expectEqual("grandchild1", iterator.nextNode().id);
@@ -374,17 +365,14 @@
   }
 </script>
 
-<script id="node_iterator_text_nodes">
+<script id=node_iterator_text_nodes>
   {
     const container = document.createElement("div");
     container.appendChild(document.createTextNode("text1"));
     container.appendChild(document.createTextNode("text2"));
     container.appendChild(document.createTextNode("text3"));
 
-    const iterator = document.createNodeIterator(
-      container,
-      NodeFilter.SHOW_TEXT,
-    );
+    const iterator = document.createNodeIterator(container, NodeFilter.SHOW_TEXT);
 
     const text1 = iterator.nextNode();
     testing.expectEqual("#text", text1.nodeName);
@@ -400,7 +388,7 @@
   }
 </script>
 
-<script id="node_iterator_all_node_types">
+<script id=node_iterator_all_node_types>
   {
     const container = document.createElement("div");
     container.appendChild(document.createTextNode("text"));
@@ -409,10 +397,7 @@
     span.textContent = "element";
     container.appendChild(span);
 
-    const allIterator = document.createNodeIterator(
-      container,
-      NodeFilter.SHOW_ALL,
-    );
+    const allIterator = document.createNodeIterator(container, NodeFilter.SHOW_ALL);
     testing.expectEqual(1, allIterator.nextNode().nodeType);
     testing.expectEqual(3, allIterator.nextNode().nodeType);
     testing.expectEqual(8, allIterator.nextNode().nodeType);
@@ -421,7 +406,7 @@
   }
 </script>
 
-<script id="node_iterator_boundary_at_root">
+<script id=node_iterator_boundary_at_root>
   {
     const root = document.getElementById("root");
     const iterator = document.createNodeIterator(root, NodeFilter.SHOW_ELEMENT);
@@ -431,17 +416,14 @@
   }
 </script>
 
-<script id="node_iterator_pointer_after_reaching_end">
+<script id=node_iterator_pointer_after_reaching_end>
   {
     const container = document.createElement("div");
     const a = document.createElement("div");
     a.id = "a";
     container.appendChild(a);
 
-    const iterator = document.createNodeIterator(
-      container,
-      NodeFilter.SHOW_ELEMENT,
-    );
+    const iterator = document.createNodeIterator(container, NodeFilter.SHOW_ELEMENT);
 
     iterator.nextNode();
     iterator.nextNode();
@@ -452,7 +434,7 @@
   }
 </script>
 
-<script id="node_iterator_complex_filter_pointer_tracking">
+<script id=node_iterator_complex_filter_pointer_tracking>
   {
     const container = document.createElement("div");
     for (let i = 0; i < 5; i++) {
@@ -465,12 +447,12 @@
     const iterator = document.createNodeIterator(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.classList.contains("even")) {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     );
 
     testing.expectEqual("0", iterator.nextNode().textContent);

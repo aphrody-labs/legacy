@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <table>
@@ -11,13 +11,13 @@
 
 <script id="colSpan">
   {
-    const td1 = document.getElementById("td1");
+    const td1 = document.getElementById('td1');
     testing.expectEqual(3, td1.colSpan);
 
     td1.colSpan = 5;
     testing.expectEqual(5, td1.colSpan);
 
-    const td2 = document.getElementById("td2");
+    const td2 = document.getElementById('td2');
     testing.expectEqual(1, td2.colSpan);
 
     // colSpan 0 clamps to 1
@@ -32,13 +32,13 @@
 
 <script id="rowSpan">
   {
-    const td1 = document.getElementById("td1");
+    const td1 = document.getElementById('td1');
     testing.expectEqual(2, td1.rowSpan);
 
     td1.rowSpan = 4;
     testing.expectEqual(4, td1.rowSpan);
 
-    const td2 = document.getElementById("td2");
+    const td2 = document.getElementById('td2');
     testing.expectEqual(1, td2.rowSpan);
 
     // rowSpan 0 is valid per spec (span remaining rows)

@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <select>
@@ -13,13 +13,13 @@
 
 <script id="disabled">
   {
-    const og1 = document.getElementById("og1");
+    const og1 = document.getElementById('og1');
     testing.expectEqual(true, og1.disabled);
 
     og1.disabled = false;
     testing.expectEqual(false, og1.disabled);
 
-    const og2 = document.getElementById("og2");
+    const og2 = document.getElementById('og2');
     testing.expectEqual(false, og2.disabled);
 
     og2.disabled = true;
@@ -29,13 +29,13 @@
 
 <script id="label">
   {
-    const og1 = document.getElementById("og1");
-    testing.expectEqual("Group 1", og1.label);
+    const og1 = document.getElementById('og1');
+    testing.expectEqual('Group 1', og1.label);
 
-    og1.label = "Updated";
-    testing.expectEqual("Updated", og1.label);
+    og1.label = 'Updated';
+    testing.expectEqual('Updated', og1.label);
 
-    const og = document.createElement("optgroup");
-    testing.expectEqual("", og.label);
+    const og = document.createElement('optgroup');
+    testing.expectEqual('', og.label);
   }
 </script>

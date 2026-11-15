@@ -1,10 +1,7 @@
-<!doctype html>
+<!DOCTYPE html>
 <script>
-  window.parent.postMessage(
-    {
-      url: location.toString(),
-      document_is_undefined: window.parent.document === undefined,
-    },
-    "*",
-  );
+  window.parent.postMessage({
+    url: location.toString(),
+    document_is_undefined: window.parent.document === undefined,
+  }, '*')
 </script>

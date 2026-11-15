@@ -1,11 +1,11 @@
-<!doctype html>
+<!DOCTYPE html>
 <script src="../testing.js"></script>
 
 <!-- add.wasm exports add(i32, i32) -> i32. -->
 
-<script id="instantiate_streaming" type="module">
+<script id=instantiate_streaming type=module>
   const state = await testing.async();
-  const result = await WebAssembly.instantiateStreaming(fetch("add.wasm"), {});
+  const result = await WebAssembly.instantiateStreaming(fetch('add.wasm'), {});
   state.resolve(result);
   await state.done((result) => {
     testing.expectEqual(true, result.module instanceof WebAssembly.Module);
@@ -14,27 +14,24 @@
   });
 </script>
 
-<script id="compile_streaming" type="module">
+<script id=compile_streaming type=module>
   const state = await testing.async();
-  const mod = await WebAssembly.compileStreaming(fetch("add.wasm"));
+  const mod = await WebAssembly.compileStreaming(fetch('add.wasm'));
   const instance = await WebAssembly.instantiate(mod);
   state.resolve({ mod, instance });
   await state.done(({ mod, instance }) => {
-    testing.expectEqual(
-      ["add"],
-      WebAssembly.Module.exports(mod).map((e) => e.name),
-    );
+    testing.expectEqual(['add'], WebAssembly.Module.exports(mod).map((e) => e.name));
     testing.expectEqual(3, instance.exports.add(1, 2));
   });
 </script>
 
-<script id="response_argument" type="module">
+<script id=response_argument type=module>
   // A Response rather than a promise, built in-page, with MIME type
   // parameters and mixed case: only the essence has to match.
   const state = await testing.async();
-  const bytes = await (await fetch("add.wasm")).arrayBuffer();
+  const bytes = await (await fetch('add.wasm')).arrayBuffer();
   const response = new Response(bytes, {
-    headers: { "Content-Type": "Application/WASM; charset=binary" },
+    headers: { 'Content-Type': 'Application/WASM; charset=binary' },
   });
   const { instance } = await WebAssembly.instantiateStreaming(response);
   state.resolve(instance);
@@ -43,40 +40,29 @@
   });
 </script>
 
-<script id="rejections" type="module">
+<script id=rejections type=module>
   const state = await testing.async();
   const errors = {};
   const attempt = async (name, source) => {
     try {
       await WebAssembly.compileStreaming(source);
-      errors[name] = "resolved";
+      errors[name] = 'resolved';
     } catch (e) {
       errors[name] = e;
     }
   };
 
-  const wasmHeaders = { "Content-Type": "application/wasm" };
-  const bytes = await (await fetch("add.wasm")).arrayBuffer();
-  const used = await fetch("add.wasm");
+  const wasmHeaders = { 'Content-Type': 'application/wasm' };
+  const bytes = await (await fetch('add.wasm')).arrayBuffer();
+  const used = await fetch('add.wasm');
   await used.arrayBuffer();
 
-  await attempt("not_a_response", Promise.resolve({}));
-  await attempt(
-    "wrong_mime",
-    new Response(bytes, {
-      headers: { "Content-Type": "application/octet-stream" },
-    }),
-  );
-  await attempt(
-    "not_ok",
-    new Response(bytes, { status: 404, headers: wasmHeaders }),
-  );
-  await attempt("body_used", used);
-  await attempt("rejected_source", Promise.reject(new RangeError("boom")));
-  await attempt(
-    "invalid_module",
-    new Response("not wasm", { headers: wasmHeaders }),
-  );
+  await attempt('not_a_response', Promise.resolve({}));
+  await attempt('wrong_mime', new Response(bytes, { headers: { 'Content-Type': 'application/octet-stream' } }));
+  await attempt('not_ok', new Response(bytes, { status: 404, headers: wasmHeaders }));
+  await attempt('body_used', used);
+  await attempt('rejected_source', Promise.reject(new RangeError('boom')));
+  await attempt('invalid_module', new Response('not wasm', { headers: wasmHeaders }));
 
   state.resolve(errors);
   await state.done((errors) => {
@@ -85,10 +71,7 @@
     testing.expectEqual(true, errors.not_ok instanceof TypeError);
     testing.expectEqual(true, errors.body_used instanceof TypeError);
     testing.expectEqual(true, errors.rejected_source instanceof RangeError);
-    testing.expectEqual("boom", errors.rejected_source.message);
-    testing.expectEqual(
-      true,
-      errors.invalid_module instanceof WebAssembly.CompileError,
-    );
+    testing.expectEqual('boom', errors.rejected_source.message);
+    testing.expectEqual(true, errors.invalid_module instanceof WebAssembly.CompileError);
   });
 </script>

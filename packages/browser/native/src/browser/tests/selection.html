@@ -1,5 +1,5 @@
-<!doctype html>
-<meta charset="UTF-8" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
 <script src="./testing.js"></script>
 
 <div id="test-content">
@@ -11,11 +11,11 @@
   </div>
 </div>
 
-<script id="basic">
+<script id=basic>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
-
+    
     testing.expectEqual(0, sel.rangeCount);
     testing.expectEqual("None", sel.type);
     testing.expectEqual(true, sel.isCollapsed);
@@ -27,16 +27,16 @@
   }
 </script>
 
-<script id="collapse">
+<script id=collapse>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
-
+    
     // Collapse to a position
     sel.collapse(textNode, 4);
-
+    
     testing.expectEqual(1, sel.rangeCount);
     testing.expectEqual("Caret", sel.type);
     testing.expectEqual(true, sel.isCollapsed);
@@ -45,7 +45,7 @@
     testing.expectEqual(4, sel.anchorOffset);
     testing.expectEqual(4, sel.focusOffset);
     testing.expectEqual("none", sel.direction);
-
+    
     // Collapse to null removes all ranges
     sel.collapse(null);
     testing.expectEqual(0, sel.rangeCount);
@@ -53,54 +53,54 @@
   }
 </script>
 
-<script id="setPosition">
+<script id=setPosition>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
     const p2 = document.getElementById("p2");
     const textNode = p2.firstChild;
-
+    
     // setPosition is an alias for collapse
     sel.setPosition(textNode, 10);
-
+    
     testing.expectEqual(1, sel.rangeCount);
     testing.expectEqual("Caret", sel.type);
     testing.expectEqual(textNode, sel.anchorNode);
     testing.expectEqual(10, sel.anchorOffset);
-
+    
     // Test default offset
     sel.setPosition(textNode);
     testing.expectEqual(0, sel.anchorOffset);
-
+    
     // Test null
     sel.setPosition(null);
     testing.expectEqual(0, sel.rangeCount);
   }
 </script>
 
-<script id="addRange">
+<script id=addRange>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
-
+    
     const range1 = document.createRange();
     const p1 = document.getElementById("p1");
     range1.selectNodeContents(p1);
-
+    
     sel.addRange(range1);
     testing.expectEqual(1, sel.rangeCount);
     testing.expectEqual("Range", sel.type);
     testing.expectEqual(false, sel.isCollapsed);
-
+    
     // Adding same range again should do nothing
     sel.addRange(range1);
     testing.expectEqual(1, sel.rangeCount);
-
+    
     // Adding different range
     const range2 = document.createRange();
     const p2 = document.getElementById("p2");
     range2.selectNodeContents(p2);
-
+    
     sel.addRange(range2);
 
     // Firefox does support multiple ranges so it will be 2 here instead of 1.
@@ -109,111 +109,109 @@
   }
 </script>
 
-<script id="getRangeAt">
+<script id=getRangeAt>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
-
+    
     const range = document.createRange();
     const p1 = document.getElementById("p1");
     range.selectNodeContents(p1);
     sel.addRange(range);
-
+    
     const retrieved = sel.getRangeAt(0);
     testing.expectEqual(range, retrieved);
   }
 </script>
 
-<script id="removeRange">
+<script id=removeRange>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
-
+    
     const range1 = document.createRange();
     const range2 = document.createRange();
     const p1 = document.getElementById("p1");
     const p2 = document.getElementById("p2");
-
+    
     range1.selectNodeContents(p1);
     range2.selectNodeContents(p2);
-
+    
     sel.addRange(range1);
     sel.addRange(range2);
 
     // Firefox does support multiple ranges so it will be 2 here instead of 1.
     // Chrome and Safari don't so we don't either.
     testing.expectEqual(1, sel.rangeCount);
-
+    
     // Chrome doesn't throw an error here even though the spec defines it:
     // https://w3c.github.io/selection-api/#dom-selection-removerange
-    testing.expectError("NotFoundError", () => {
-      sel.removeRange(range2);
-    });
+    testing.expectError('NotFoundError', () => { sel.removeRange(range2); });
 
     testing.expectEqual(1, sel.rangeCount);
     testing.expectEqual(range1, sel.getRangeAt(0));
   }
 </script>
 
-<script id="removeAllRanges">
+<script id=removeAllRanges>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
 
     const range1 = document.createRange();
     const range2 = document.createRange();
-
+    
     range1.selectNodeContents(document.getElementById("p1"));
     range2.selectNodeContents(document.getElementById("p2"));
-
+    
     sel.addRange(range1);
     sel.addRange(range2);
 
     // Firefox does support multiple ranges so it will be 2 here instead of 1.
     // Chrome and Safari don't so we don't either.
     testing.expectEqual(1, sel.rangeCount);
-
+    
     sel.removeAllRanges();
     testing.expectEqual(0, sel.rangeCount);
     testing.expectEqual("none", sel.direction);
   }
 </script>
 
-<script id="empty">
+<script id=empty>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
     const range = document.createRange();
     range.selectNodeContents(document.getElementById("p1"));
-
+    
     sel.addRange(range);
     testing.expectEqual(1, sel.rangeCount);
-
+    
     // empty() is an alias for removeAllRanges()
     sel.empty();
     testing.expectEqual(0, sel.rangeCount);
   }
 </script>
 
-<script id="collapseToStart">
+<script id=collapseToStart>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
-
+    
     const range = document.createRange();
     range.setStart(textNode, 4);
     range.setEnd(textNode, 15);
-
+    
     sel.removeAllRanges();
     sel.addRange(range);
-
+    
     testing.expectEqual(false, sel.isCollapsed);
     testing.expectEqual(4, sel.anchorOffset);
     testing.expectEqual(15, sel.focusOffset);
-
+    
     sel.collapseToStart();
-
+    
     testing.expectEqual(true, sel.isCollapsed);
     testing.expectEqual(1, sel.rangeCount);
     testing.expectEqual(textNode, sel.anchorNode);
@@ -223,23 +221,23 @@
   }
 </script>
 
-<script id="collapseToEnd">
+<script id=collapseToEnd>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
-
+    
     const range = document.createRange();
     range.setStart(textNode, 4);
     range.setEnd(textNode, 15);
-
+    
     sel.removeAllRanges();
     sel.addRange(range);
-
+    
     testing.expectEqual(false, sel.isCollapsed);
-
+    
     sel.collapseToEnd();
-
+    
     testing.expectEqual(true, sel.isCollapsed);
     testing.expectEqual(1, sel.rangeCount);
     testing.expectEqual(textNode, sel.anchorNode);
@@ -249,32 +247,32 @@
   }
 </script>
 
-<script id="extend">
+<script id=extend>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
-
+    
     // Start with collapsed selection
     sel.collapse(textNode, 10);
     testing.expectEqual(true, sel.isCollapsed);
     testing.expectEqual(10, sel.anchorOffset);
     testing.expectEqual("none", sel.direction);
-
+    
     // Extend forward
     sel.extend(textNode, 15);
     testing.expectEqual(false, sel.isCollapsed);
     testing.expectEqual(10, sel.anchorOffset);
     testing.expectEqual(15, sel.focusOffset);
     testing.expectEqual("forward", sel.direction);
-
+    
     // Extend backward from anchor
     sel.extend(textNode, 5);
     testing.expectEqual(false, sel.isCollapsed);
     testing.expectEqual(10, sel.anchorOffset);
     testing.expectEqual(5, sel.focusOffset);
     testing.expectEqual("backward", sel.direction);
-
+    
     // Extend to same position as anchor
     sel.extend(textNode, 10);
     testing.expectEqual(true, sel.isCollapsed);
@@ -284,42 +282,42 @@
   }
 </script>
 
-<script id="direction">
+<script id=direction>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
-
+    
     // Forward selection
     sel.collapse(textNode, 5);
     sel.extend(textNode, 10);
     testing.expectEqual("forward", sel.direction);
     testing.expectEqual(5, sel.anchorOffset);
     testing.expectEqual(10, sel.focusOffset);
-
+    
     // Backward selection
     sel.collapse(textNode, 10);
     sel.extend(textNode, 5);
     testing.expectEqual("backward", sel.direction);
     testing.expectEqual(10, sel.anchorOffset);
     testing.expectEqual(5, sel.focusOffset);
-
+    
     // None (collapsed)
     sel.collapse(textNode, 7);
     testing.expectEqual("none", sel.direction);
   }
 </script>
 
-<script id="containsNode">
+<script id=containsNode>
   {
     const sel = window.getSelection();
     const nested = document.getElementById("nested");
     const s1 = document.getElementById("s1");
     const s2 = document.getElementById("s2");
-
+    
     const range = document.createRange();
     range.selectNodeContents(nested);
-
+    
     sel.removeAllRanges();
     sel.addRange(range);
 
@@ -327,7 +325,7 @@
     testing.expectEqual(true, sel.containsNode(s1, true));
     testing.expectEqual(true, sel.containsNode(s2, true));
     testing.expectEqual(true, sel.containsNode(nested, true));
-
+    
     // Node outside selection
     const p1 = document.getElementById("p1");
     testing.expectEqual(false, sel.containsNode(p1, false));
@@ -335,57 +333,58 @@
   }
 </script>
 
-<script id="deleteFromDocument">
+
+<script id=deleteFromDocument>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
-
+    
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
     const originalText = textNode.textContent;
-
+    
     const range = document.createRange();
     range.setStart(textNode, 4);
     range.setEnd(textNode, 15);
-
+    
     sel.removeAllRanges();
     sel.addRange(range);
-
+    
     sel.deleteFromDocument();
-
+    
     // Text should be deleted
     const expectedText = originalText.slice(0, 4) + originalText.slice(15);
     testing.expectEqual(expectedText, textNode.textContent);
-
+    
     // Selection should be collapsed at deletion point
     testing.expectEqual(true, sel.isCollapsed);
-
+    
     // Restore original text for other tests
     textNode.textContent = originalText;
   }
 </script>
 
-<script id="typeProperty">
+<script id=typeProperty>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
-
+    
     // None type
     sel.removeAllRanges();
     testing.expectEqual("None", sel.type);
-
+    
     // Caret type (collapsed)
     sel.collapse(textNode, 5);
     testing.expectEqual("Caret", sel.type);
-
+    
     // Range type (not collapsed)
     sel.extend(textNode, 10);
     testing.expectEqual("Range", sel.type);
   }
 </script>
 
-<script id="selectAllChildren">
+<script id=selectAllChildren>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
@@ -431,7 +430,7 @@
   }
 </script>
 
-<script id="selectAllChildrenEmpty">
+<script id=selectAllChildrenEmpty>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
@@ -455,7 +454,7 @@
   }
 </script>
 
-<script id="selectAllChildrenReplacesSelection">
+<script id=selectAllChildrenReplacesSelection>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
@@ -481,7 +480,7 @@
   }
 </script>
 
-<script id="setBaseAndExtent">
+<script id=setBaseAndExtent>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
@@ -543,7 +542,7 @@
   }
 </script>
 
-<script id="selectionChangeEvent">
+<script id=selectionChangeEvent>
   {
     const sel = window.getSelection();
     sel.removeAllRanges();
@@ -554,7 +553,7 @@
       eventCount++;
       lastEvent = e;
     };
-    document.addEventListener("selectionchange", listener);
+    document.addEventListener('selectionchange', listener);
 
     const p1 = document.getElementById("p1");
     const textNode = p1.firstChild;
@@ -580,12 +579,12 @@
     sel.extend(textNode, 10);
     sel.deleteFromDocument();
 
-    document.removeEventListener("selectionchange", listener);
+    document.removeEventListener('selectionchange', listener);
     textNode.textContent = "The quick brown fox";
 
     testing.onload(() => {
       testing.expectEqual(14, eventCount);
-      testing.expectEqual("selectionchange", lastEvent.type);
+      testing.expectEqual('selectionchange', lastEvent.type);
       testing.expectEqual(document, lastEvent.target);
       testing.expectEqual(false, lastEvent.bubbles);
       testing.expectEqual(false, lastEvent.cancelable);
@@ -593,7 +592,7 @@
   }
 </script>
 
-<script id="modifyCharacterForward">
+<script id=modifyCharacterForward>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
@@ -615,7 +614,7 @@
   }
 </script>
 
-<script id="modifyWordForward">
+<script id=modifyWordForward>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
@@ -635,7 +634,7 @@
   }
 </script>
 
-<script id="modifyCharacterBackward">
+<script id=modifyCharacterBackward>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
@@ -657,7 +656,7 @@
   }
 </script>
 
-<script id="modifyWordBackward">
+<script id=modifyWordBackward>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
@@ -677,7 +676,7 @@
   }
 </script>
 
-<script id="modifyCharacterForwardFromElementNode">
+<script id=modifyCharacterForwardFromElementNode>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
@@ -694,7 +693,7 @@
   }
 </script>
 
-<script id="modifyCharacterForwardFromElementNodeMidChildren">
+<script id=modifyCharacterForwardFromElementNodeMidChildren>
   {
     const sel = window.getSelection();
     const nested = document.getElementById("nested");
@@ -712,7 +711,7 @@
   }
 </script>
 
-<script id="modifyWordForwardFromElementNode">
+<script id=modifyWordForwardFromElementNode>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");
@@ -727,7 +726,7 @@
   }
 </script>
 
-<script id="modifyCharacterForwardNewNodeOffsetNotElement">
+<script id=modifyCharacterForwardNewNodeOffsetNotElement>
   {
     const sel = window.getSelection();
     const p1 = document.getElementById("p1");

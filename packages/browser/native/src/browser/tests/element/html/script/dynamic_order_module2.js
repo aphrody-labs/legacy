@@ -1,1 +1,1 @@
-moduleOrderedList += "2";
+moduleOrderedList += '2';

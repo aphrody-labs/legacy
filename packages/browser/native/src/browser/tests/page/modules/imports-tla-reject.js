@@ -1,1 +1,1 @@
-import "./tla-reject.js?dependency";
+import './tla-reject.js?dependency';

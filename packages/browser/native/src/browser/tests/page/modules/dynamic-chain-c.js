@@ -1,1 +1,1 @@
-export const finalValue = "chain-end";
+export const finalValue = 'chain-end';

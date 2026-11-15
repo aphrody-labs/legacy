@@ -1,1 +1,1 @@
-const c = await import("./self_async.js");
+const c = await import('./self_async.js');

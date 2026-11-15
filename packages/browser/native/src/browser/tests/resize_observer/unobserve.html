@@ -1,19 +1,17 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 <div id="anchor">anchor</div>
 
-<script id="unobserve_before_delivery" type="module">
+<script id="unobserve_before_delivery" type=module>
   {
     const state = await testing.async();
-    const t = document.createElement("div");
-    t.style.width = "100px";
+    const t = document.createElement('div');
+    t.style.width = '100px';
     document.body.appendChild(t);
 
     let count = 0;
-    const observer = new ResizeObserver(() => {
-      count += 1;
-    });
+    const observer = new ResizeObserver(() => { count += 1; });
     observer.observe(t);
     observer.unobserve(t);
     // unobserving a target we never observed is a no-op
@@ -23,49 +21,45 @@
 
     state.resolve();
     await state.done(() => {
-      testing.expectEqual(0, count);
+        testing.expectEqual(0, count);
     });
   }
 </script>
 
-<script id="disconnect_stops_notifications" type="module">
+<script id="disconnect_stops_notifications" type=module>
   {
     const state = await testing.async();
-    const t1 = document.createElement("div");
-    const t2 = document.createElement("div");
-    t1.style.width = "100px";
-    t2.style.width = "100px";
+    const t1 = document.createElement('div');
+    const t2 = document.createElement('div');
+    t1.style.width = '100px';
+    t2.style.width = '100px';
     document.body.appendChild(t1);
     document.body.appendChild(t2);
 
     let count = 0;
-    const observer = new ResizeObserver(() => {
-      count += 1;
-    });
+    const observer = new ResizeObserver(() => { count += 1; });
     observer.observe(t1);
     observer.observe(t2);
     observer.disconnect();
-    t1.style.width = "30px";
+    t1.style.width = '30px';
     await testing.nextFrame();
 
     state.resolve();
     await state.done(() => {
-      testing.expectEqual(0, count);
+        testing.expectEqual(0, count);
     });
   }
 </script>
 
-<script id="observe_twice_is_one" type="module">
+<script id="observe_twice_is_one" type=module>
   {
     const state = await testing.async();
-    const t = document.createElement("div");
-    t.style.width = "100px";
+    const t = document.createElement('div');
+    t.style.width = '100px';
     document.body.appendChild(t);
 
     let entryCount = 0;
-    const observer = new ResizeObserver((entries) => {
-      entryCount += entries.length;
-    });
+    const observer = new ResizeObserver((entries) => { entryCount += entries.length; });
     observer.observe(t);
     observer.observe(t);
     await testing.nextFrame();
@@ -73,8 +67,8 @@
 
     state.resolve();
     await state.done(() => {
-      // observing the same target twice still yields a single entry
-      testing.expectEqual(1, entryCount);
+        // observing the same target twice still yields a single entry
+        testing.expectEqual(1, entryCount);
     });
   }
 </script>

@@ -1,16 +1,9 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <body>
-    <form
-      id="f"
-      onsubmit="
-        window.submitted = true;
-        window.submittedValue = document.getElementById('q').value;
-        event.preventDefault();
-      "
-    >
-      <input id="q" type="text" name="q" />
-      <input type="submit" value="Go" />
+<body>
+    <form id="f" onsubmit="window.submitted = true; window.submittedValue = document.getElementById('q').value; event.preventDefault();">
+        <input id="q" type="text" name="q">
+        <input type="submit" value="Go">
     </form>
-  </body>
+</body>
 </html>

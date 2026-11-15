@@ -1,1 +1,1 @@
-postMessage({ present: "caches" in self, constructor: typeof CacheStorage });
+postMessage({ present: 'caches' in self, constructor: typeof CacheStorage });

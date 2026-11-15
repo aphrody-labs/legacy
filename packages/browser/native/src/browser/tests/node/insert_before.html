@@ -1,10 +1,10 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
-<div id="d1"></div>
-<div id="d2"></div>
+<div id=d1></div>
+<div id=d2></div>
 
-<script id="insertBefore">
+<script id=insertBefore>
   function assertChildren(expected, parent) {
     const actual = Array.from(parent.childNodes);
     testing.expectEqual(expected, actual);
@@ -14,24 +14,21 @@
     }
   }
 
-  const d1 = $("#d1");
-  const d2 = $("#d2");
+  const d1 = $('#d1');
+  const d2 = $('#d2');
 
-  testing.withError(
-    (err) => {
-      testing.expectEqual(8, err.code);
-      testing.expectEqual("NotFoundError", err.name);
-    },
-    () => d1.insertBefore(document.createElement("div"), d2),
-  );
+  testing.withError((err) => {
+    testing.expectEqual(8, err.code);
+    testing.expectEqual("NotFoundError", err.name);
+  }, () => d1.insertBefore(document.createElement('div'), d2));
 
-  let c1 = document.createElement("div");
-  c1.id = "c1";
+  let c1 = document.createElement('div');
+  c1.id = 'c1';
   d1.insertBefore(c1, null);
   assertChildren([c1], d1);
 
-  let c2 = document.createElement("div");
-  c2.id = "c2";
+  let c2 = document.createElement('div');
+  c2.id = 'c2';
   d1.insertBefore(c2, c1);
   assertChildren([c2, c1], d1);
 
@@ -44,12 +41,12 @@
   assertChildren([c1, c2], d2);
 </script>
 
-<div id="d3"></div>
-<div id="d3_stash"></div>
-<script id="insertBefore_disconnect_callback_observes_post_move">
+<div id=d3></div>
+<div id=d3_stash></div>
+<script id=insertBefore_disconnect_callback_observes_post_move>
   // disconnectedCallback fires after insertBefore completes, so the
   // callback observes the element already placed in its new parent.
-  const d3 = $("#d3");
+  const d3 = $('#d3');
 
   let parentSeenAtDisconnect = undefined;
   class IBObserveOnDisconnect extends HTMLElement {
@@ -57,14 +54,14 @@
       parentSeenAtDisconnect = this.parentNode;
     }
   }
-  customElements.define("ib-reparent-on-disconnect", IBObserveOnDisconnect);
+  customElements.define('ib-reparent-on-disconnect', IBObserveOnDisconnect);
 
-  const moving = document.createElement("ib-reparent-on-disconnect");
-  moving.id = "ib_moving";
+  const moving = document.createElement('ib-reparent-on-disconnect');
+  moving.id = 'ib_moving';
   d3.appendChild(moving);
 
-  const detached = document.createElement("div");
-  const ref = document.createElement("span");
+  const detached = document.createElement('div');
+  const ref = document.createElement('span');
   detached.appendChild(ref);
 
   detached.insertBefore(moving, ref);

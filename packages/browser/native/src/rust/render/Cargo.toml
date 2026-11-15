@@ -15,6 +15,4 @@ tiny-skia = "0.12"
 png = "0.18"
 # Only to select `logging`: without it icu_provider prints missing-data notes
 # (e.g. no CJK line-break model) to stderr in debug builds.
-icu_provider = { version = "2", default-features = false, features = [
-  "logging",
-] }
+icu_provider = { version = "2", default-features = false, features = ["logging"] }

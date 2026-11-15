@@ -1,5 +1,6 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <!-- HTMLSummaryElement activation behavior (HTML §4.11.1.2 "The summary element"):
@@ -28,31 +29,31 @@
 
 <script id="closed_details_opens_on_summary_click">
   {
-    const d = $("#d_closed");
+    const d = $('#d_closed');
     testing.expectEqual(false, d.open);
-    $("#s_closed").click();
+    $('#s_closed').click();
     testing.expectEqual(true, d.open);
   }
 </script>
 
 <script id="open_details_closes_on_summary_click">
   {
-    const d = $("#d_open");
+    const d = $('#d_open');
     testing.expectEqual(true, d.open);
-    $("#s_open").click();
+    $('#s_open').click();
     testing.expectEqual(false, d.open);
   }
 </script>
 
 <script id="only_first_summary_toggles">
   {
-    const d = $("#d_two");
+    const d = $('#d_two');
     testing.expectEqual(false, d.open);
 
-    $("#s_second").click();
-    testing.expectEqual(false, d.open, "non-first summary must not toggle");
+    $('#s_second').click();
+    testing.expectEqual(false, d.open, 'non-first summary must not toggle');
 
-    $("#s_first").click();
+    $('#s_first').click();
     testing.expectEqual(true, d.open);
   }
 </script>
@@ -60,7 +61,7 @@
 <script id="summary_outside_details_no_op">
   {
     // No exception, no side-effect.
-    $("#s_orphan").click();
+    $('#s_orphan').click();
     testing.expectEqual(true, true);
   }
 </script>

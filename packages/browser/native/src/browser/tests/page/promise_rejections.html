@@ -1,18 +1,16 @@
-<!doctype html>
+<!DOCTYPE html>
 <body></body>
-<meta name="lp-mode" content="test" />
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
-<script id="promise-rejects-page-exceptions" type="module">
+<script id=promise-rejects-page-exceptions type=module>
   // An operation that returns a promise never throws (WebIDL): an exception
   // the page's own code throws while it runs, a getter or a toString during
   // its arguments' conversion, rejects the promise with that exception.
   const state = await testing.async();
   const subtle = crypto.subtle;
   const boom = new RangeError("boom");
-  const fail = () => {
-    throw boom;
-  };
+  const fail = () => { throw boom; };
   const outcome = async (fn) => {
     let promise;
     try {
@@ -27,54 +25,15 @@
       return err === boom ? "rejected with it" : `rejected with ${err.name}`;
     }
   };
-  const key = await subtle.generateKey(
-    { name: "AES-GCM", length: 128 },
-    false,
-    ["encrypt"],
-  );
+  const key = await subtle.generateKey({ name: "AES-GCM", length: 128 }, false, ["encrypt"]);
 
   const results = {
-    digestNameGetter: await outcome(() =>
-      subtle.digest(
-        {
-          get name() {
-            fail();
-          },
-        },
-        new Uint8Array(1),
-      ),
-    ),
-    encryptNameGetter: await outcome(() =>
-      subtle.encrypt(
-        {
-          get name() {
-            fail();
-          },
-        },
-        key,
-        new Uint8Array(1),
-      ),
-    ),
-    importKeyFormatToString: await outcome(() =>
-      subtle.importKey(
-        { toString: fail },
-        new Uint8Array(16),
-        "AES-GCM",
-        false,
-        ["encrypt"],
-      ),
-    ),
-    fetchInitGetter: await outcome(() =>
-      fetch("data:,x", {
-        get method() {
-          fail();
-        },
-      }),
-    ),
+    digestNameGetter: await outcome(() => subtle.digest({ get name() { fail(); } }, new Uint8Array(1))),
+    encryptNameGetter: await outcome(() => subtle.encrypt({ get name() { fail(); } }, key, new Uint8Array(1))),
+    importKeyFormatToString: await outcome(() => subtle.importKey({ toString: fail }, new Uint8Array(16), "AES-GCM", false, ["encrypt"])),
+    fetchInitGetter: await outcome(() => fetch("data:,x", { get method() { fail(); } })),
     // A Zig error still rejects as before, and a call that succeeds resolves.
-    digestBadAlgorithm: await outcome(() =>
-      subtle.digest("SHA-999", new Uint8Array(1)),
-    ),
+    digestBadAlgorithm: await outcome(() => subtle.digest("SHA-999", new Uint8Array(1))),
     digestOk: await outcome(() => subtle.digest("SHA-256", new Uint8Array(1))),
   };
   // An operation that doesn't return a promise still throws.
@@ -91,10 +50,7 @@
     testing.expectEqual("rejected with it", results.encryptNameGetter);
     testing.expectEqual("rejected with it", results.importKeyFormatToString);
     testing.expectEqual("rejected with it", results.fetchInitGetter);
-    testing.expectEqual(
-      "rejected with NotSupportedError",
-      results.digestBadAlgorithm,
-    );
+    testing.expectEqual("rejected with NotSupportedError", results.digestBadAlgorithm);
     testing.expectEqual("resolved", results.digestOk);
     testing.expectEqual("threw it", createElement);
   });

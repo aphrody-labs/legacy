@@ -1,1 +1,1 @@
-order.push("defer:" + document.readyState);
+order.push('defer:' + document.readyState);

@@ -1,12 +1,9 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
-<div id="d1">
-  <p id="p1"></p>
-  <p id="p2"></p>
-</div>
-<div id="empty"></div>
-<div id="one"><p id="p10"></p></div>
+<div id=d1><p id=p1></p><p id=p2></p></div>
+<div id=empty></div>
+<div id=one><p id=p10></p></div>
 
 <!--<script id=childNodes>
   const div = $('#d1');
@@ -71,8 +68,8 @@
   testing.expectEqual([], Array.from(empty));
 </script> -->
 
-<script id="one">
-  const one = $("#one").childNodes;
+<script id=one>
+  const one = $('#one').childNodes;
   // const p10 = $('#p10');
   // testing.expectEqual(1, one.length);
   // testing.expectEqual(p10, one[0]);

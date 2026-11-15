@@ -1,1 +1,1 @@
-await Promise.reject("s");
+await Promise.reject('s');

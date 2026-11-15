@@ -1,1 +1,1 @@
-mixedList += (mixedList ? "," : "") + "async";
+mixedList += (mixedList ? ',' : '') + 'async';

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <script>
   // Post a message back to the opener, then close ourselves from inside the
   // popup's own running script. This exercises the deferred-close path:
@@ -6,7 +6,7 @@
   // parser is still on the stack. A synchronous teardown here would destroy
   // the context and crash the eval's deferred load-event dispatch.
   if (window.opener) {
-    window.opener.postMessage({ from: "popup_self_close" }, "*");
+    window.opener.postMessage({ from: 'popup_self_close' }, '*');
   }
   window.close();
 </script>

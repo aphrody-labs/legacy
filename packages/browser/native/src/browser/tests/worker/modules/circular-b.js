@@ -1,6 +1,6 @@
-import { aValue } from "./circular-a.js";
+import { aValue } from './circular-a.js';
 
-export const bValue = "b";
+export const bValue = 'b';
 
 export function getBValue() {
   return bValue;

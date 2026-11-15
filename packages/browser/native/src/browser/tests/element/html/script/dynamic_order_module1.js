@@ -1,2 +1,1 @@
-window.domLoadedBeforeModule1 = domLoaded;
-moduleOrderedList += "1";
+window.domLoadedBeforeModule1 = domLoaded; moduleOrderedList += '1';

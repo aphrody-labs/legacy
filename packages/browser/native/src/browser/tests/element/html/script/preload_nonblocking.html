@@ -1,5 +1,6 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name=lp-mode content=test>
 <script src="../../../testing.js"></script>
 
 <!--
@@ -21,21 +22,11 @@
   rewritten into a .frame defer script (PreloadedScript.doneCallback delegates
   to Script.doneCallback).
 -->
-<link
-  rel="preload"
-  as="script"
-  href="/serve-count/defer.js"
-  onload="window.link_defer_load = true"
-/>
+<link rel="preload" as="script" href="/serve-count/defer.js" onload="window.link_defer_load = true">
 <script defer src="/serve-count/defer.js"></script>
 
 <!-- Same, adopted by an async script. -->
-<link
-  rel="preload"
-  as="script"
-  href="/serve-count/async.js"
-  onload="window.link_async_load = true"
-/>
+<link rel="preload" as="script" href="/serve-count/async.js" onload="window.link_async_load = true">
 <script async src="/serve-count/async.js"></script>
 
 <!--
@@ -44,16 +35,11 @@
   may be done (done-adoption: queued straight onto ready_scripts) or still in
   flight (loading-adoption) — both must produce the same result.
 -->
-<link
-  rel="preload"
-  as="script"
-  href="/serve-count/dynamic.js"
-  onload="window.link_dynamic_load = true"
-/>
+<link rel="preload" as="script" href="/serve-count/dynamic.js" onload="window.link_dynamic_load = true">
 <script src="empty.js"></script>
 <script>
-  const s = document.createElement("script");
-  s.src = "/serve-count/dynamic.js";
+  const s = document.createElement('script');
+  s.src = '/serve-count/dynamic.js';
   document.head.appendChild(s);
 </script>
 

@@ -1,16 +1,11 @@
-<!doctype html>
-<meta charset="UTF-8" />
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
 <script src="./testing.js"></script>
 
-<script id="basic" type="module">
+<script id=basic type=module>
   const state = await testing.async();
 
-  const parts1 = [
-    "\r\nthe quick brown\rfo\rx\r",
-    "\njumps over\r\nthe\nlazy\r",
-    "\ndog",
-  ];
+  const parts1 = ["\r\nthe quick brown\rfo\rx\r", "\njumps over\r\nthe\nlazy\r", "\ndog"];
   // "transparent" ending should not modify the final buffer.
   const blob1 = new Blob(parts1, { type: "text/html" });
   const expected1 = parts1.join("");
@@ -34,7 +29,7 @@
 </script>
 
 <!-- Firefox and Safari only -->
-<script id="bytes" type="module">
+<script id=bytes type=module>
   const state = await testing.async();
 
   const parts1 = ["light ", "panda ", "rocks ", "!"];
@@ -46,41 +41,45 @@
     "\rThe opened package\r\nof potato\nchi\rps",
     "held the\r\nanswer to the\r mystery. Both det\rectives looke\r\rd\r",
     "\rat it but failed to realize\nit was\r\nthe\rkey\r\n",
-    "\r\nto solve the \rcrime.\r",
+    "\r\nto solve the \rcrime.\r"
   ];
   const blob2 = new Blob(parts2, { type: "text/html", endings: "native" });
   const result2 = await blob2.bytes();
 
   state.resolve();
   await state.done(() => {
-    const expected1 = new Uint8Array([
-      108, 105, 103, 104, 116, 32, 112, 97, 110, 100, 97, 32, 114, 111, 99, 107,
-      115, 32, 33,
-    ]);
+    const expected1 = new Uint8Array([108, 105, 103, 104, 116, 32, 112, 97,
+                                      110, 100, 97, 32, 114, 111, 99, 107, 115,
+                                      32, 33]);
     testing.expectEqual(true, result1 instanceof Uint8Array);
     testing.expectEqual(expected1, result1);
 
     testing.expectEqual(161, blob2.size);
     testing.expectEqual("text/html", blob2.type);
-    const expected2 = new Uint8Array([
-      10, 84, 104, 101, 32, 111, 112, 101, 110, 101, 100, 32, 112, 97, 99, 107,
-      97, 103, 101, 10, 111, 102, 32, 112, 111, 116, 97, 116, 111, 10, 99, 104,
-      105, 10, 112, 115, 104, 101, 108, 100, 32, 116, 104, 101, 10, 97, 110,
-      115, 119, 101, 114, 32, 116, 111, 32, 116, 104, 101, 10, 32, 109, 121,
-      115, 116, 101, 114, 121, 46, 32, 66, 111, 116, 104, 32, 100, 101, 116, 10,
-      101, 99, 116, 105, 118, 101, 115, 32, 108, 111, 111, 107, 101, 10, 10,
-      100, 10, 10, 97, 116, 32, 105, 116, 32, 98, 117, 116, 32, 102, 97, 105,
-      108, 101, 100, 32, 116, 111, 32, 114, 101, 97, 108, 105, 122, 101, 10,
-      105, 116, 32, 119, 97, 115, 10, 116, 104, 101, 10, 107, 101, 121, 10, 10,
-      116, 111, 32, 115, 111, 108, 118, 101, 32, 116, 104, 101, 32, 10, 99, 114,
-      105, 109, 101, 46, 10,
-    ]);
+    const expected2 = new Uint8Array([10, 84, 104, 101, 32, 111, 112, 101, 110,
+                                      101, 100, 32, 112, 97, 99, 107, 97, 103,
+                                      101, 10, 111, 102, 32, 112, 111, 116, 97,
+                                      116, 111, 10, 99, 104, 105, 10, 112, 115,
+                                      104, 101, 108, 100, 32, 116, 104, 101, 10,
+                                      97, 110, 115, 119, 101, 114, 32, 116, 111,
+                                      32, 116, 104, 101, 10, 32, 109, 121, 115,
+                                      116, 101, 114, 121, 46, 32, 66, 111, 116,
+                                      104, 32, 100, 101, 116, 10, 101, 99, 116,
+                                      105, 118, 101, 115, 32, 108, 111, 111, 107,
+                                      101, 10, 10, 100, 10, 10, 97, 116, 32, 105,
+                                      116, 32, 98, 117, 116, 32, 102, 97, 105, 108,
+                                      101, 100, 32, 116, 111, 32, 114, 101, 97,
+                                      108, 105, 122, 101, 10, 105, 116, 32, 119, 97,
+                                      115, 10, 116, 104, 101, 10, 107, 101, 121,
+                                      10, 10, 116, 111, 32, 115, 111, 108, 118, 101,
+                                      32, 116, 104, 101, 32, 10, 99, 114, 105, 109,
+                                      101, 46, 10]);
     testing.expectEqual(true, result2 instanceof Uint8Array);
     testing.expectEqual(expected2, result2);
   });
 </script>
 
-<script id="parts" type="module">
+<script id=parts type=module>
   const state = await testing.async();
 
   // Blob as a blob part - contents are copied in, not stringified.
@@ -160,7 +159,7 @@
   });
 </script>
 
-<script id="stream" type="module">
+<script id=stream type=module>
   const state = await testing.async();
 
   const parts = ["may", "thy", "knife", "chip", "and", "shatter"];
@@ -170,17 +169,17 @@
 
   state.resolve();
   await state.done(() => {
-    const expected = new Uint8Array([
-      109, 97, 121, 116, 104, 121, 107, 110, 105, 102, 101, 99, 104, 105, 112,
-      97, 110, 100, 115, 104, 97, 116, 116, 101, 114,
-    ]);
+    const expected = new Uint8Array([109, 97, 121, 116, 104, 121, 107, 110,
+                                     105, 102, 101, 99, 104, 105, 112, 97,
+                                     110, 100, 115, 104, 97, 116, 116, 101,
+                                     114]);
     testing.expectEqual(false, done);
     testing.expectEqual(true, value instanceof Uint8Array);
     testing.expectEqual(expected, value);
   });
 </script>
 
-<script id="mime_parsing">
+<script id=mime_parsing>
   // MIME types are lowercased
   {
     const blob = new Blob([], { type: "TEXT/HTML" });
@@ -239,7 +238,7 @@
   }
 </script>
 
-<script id="slice" type="module">
+<script id=slice type=module>
   const state = await testing.async();
 
   const parts = ["la", "symphonie", "des", "éclairs"];

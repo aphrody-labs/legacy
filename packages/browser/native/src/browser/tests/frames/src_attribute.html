@@ -1,36 +1,30 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
-<script id="reflects_set_attribute">
+<script id=reflects_set_attribute>
   {
-    const f = document.createElement("iframe");
-    f.setAttribute("src", "support/page.html");
-    testing.expectEqual(
-      new URL("support/page.html", document.baseURI).href,
-      f.src,
-    );
+    const f = document.createElement('iframe');
+    f.setAttribute('src', 'support/page.html');
+    testing.expectEqual(new URL('support/page.html', document.baseURI).href, f.src);
 
-    f.removeAttribute("src");
-    testing.expectEqual("", f.src);
+    f.removeAttribute('src');
+    testing.expectEqual('', f.src);
   }
 </script>
 
-<script id="set_attribute_navigates" type="module">
+<script id=set_attribute_navigates type=module>
   {
     const state = await testing.async();
 
-    const f = document.createElement("iframe");
-    f.setAttribute("src", "support/page.html");
+    const f = document.createElement('iframe');
+    f.setAttribute('src', 'support/page.html');
     let loads = 0;
     f.onload = () => {
       loads += 1;
       if (loads === 1) {
-        testing.expectEqual(
-          "a-page",
-          f.contentDocument.body.textContent.trim(),
-        );
-        f.setAttribute("src", "support/sub2.html");
+        testing.expectEqual('a-page', f.contentDocument.body.textContent.trim());
+        f.setAttribute('src', 'support/sub2.html');
         return;
       }
       state.resolve(f);
@@ -38,25 +32,22 @@
     document.body.appendChild(f);
 
     await state.done((f) => {
-      testing.expectEqual(
-        "sub2 div1",
-        f.contentDocument.getElementById("div-1").textContent,
-      );
+      testing.expectEqual('sub2 div1', f.contentDocument.getElementById('div-1').textContent);
     });
   }
 </script>
 
-<script id="remove_attribute_blanks" type="module">
+<script id=remove_attribute_blanks type=module>
   {
     const state = await testing.async();
 
-    const f = document.createElement("iframe");
-    f.src = "support/page.html";
+    const f = document.createElement('iframe');
+    f.src = 'support/page.html';
     let loads = 0;
     f.onload = () => {
       loads += 1;
       if (loads === 1) {
-        f.removeAttribute("src");
+        f.removeAttribute('src');
         return;
       }
       state.resolve(f);
@@ -64,17 +55,17 @@
     document.body.appendChild(f);
 
     await state.done((f) => {
-      testing.expectEqual("about:blank", f.contentWindow.location.href);
+      testing.expectEqual('about:blank', f.contentWindow.location.href);
     });
   }
 </script>
 
-<script id="same_src_reloads" type="module">
+<script id=same_src_reloads type=module>
   {
     const state = await testing.async();
 
-    const f = document.createElement("iframe");
-    f.src = "support/page.html";
+    const f = document.createElement('iframe');
+    f.src = 'support/page.html';
     let loads = 0;
     f.onload = () => {
       loads += 1;
@@ -92,16 +83,13 @@
   }
 </script>
 
-<script id="frameless_document_does_not_load">
+<script id=frameless_document_does_not_load>
   {
     const before = window.length;
-    const doc = new DOMParser().parseFromString(
-      "<iframe></iframe>",
-      "text/html",
-    );
-    const f = doc.querySelector("iframe");
-    f.setAttribute("src", "support/page.html");
-    f.srcdoc = "x";
+    const doc = new DOMParser().parseFromString('<iframe></iframe>', 'text/html');
+    const f = doc.querySelector('iframe');
+    f.setAttribute('src', 'support/page.html');
+    f.srcdoc = 'x';
     testing.expectEqual(before, window.length);
     testing.expectEqual(null, f.contentWindow);
   }

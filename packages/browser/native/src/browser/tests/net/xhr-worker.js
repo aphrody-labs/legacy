@@ -1,9 +1,9 @@
 // Exercises XMLHttpRequest inside a worker. Receives a command from the page,
 // performs the XHR, and posts the results back.
-self.onmessage = function (e) {
+self.onmessage = function(e) {
   const cmd = e.data;
   try {
-    if (cmd.kind === "basic") {
+    if (cmd.kind === 'basic') {
       const req = new XMLHttpRequest();
       const states = [];
       req.onreadystatechange = () => states.push(req.readyState);
@@ -14,20 +14,19 @@ self.onmessage = function (e) {
           status_text: req.statusText,
           response_url: req.responseURL,
           response_text_length: req.responseText.length,
-          content_type: req.getResponseHeader("Content-Type"),
+          content_type: req.getResponseHeader('Content-Type'),
           states,
         });
       };
-      req.onerror = () =>
-        postMessage({ ok: false, err: "xhr error", status: req.status });
-      req.open("GET", "http://127.0.0.1:9582/xhr");
+      req.onerror = () => postMessage({ ok: false, err: 'xhr error', status: req.status });
+      req.open('GET', 'http://127.0.0.1:9582/xhr');
       req.send();
       return;
     }
 
-    if (cmd.kind === "arraybuffer") {
+    if (cmd.kind === 'arraybuffer') {
       const req = new XMLHttpRequest();
-      req.responseType = "arraybuffer";
+      req.responseType = 'arraybuffer';
       req.onload = () => {
         const view = new Uint8Array(req.response);
         postMessage({
@@ -40,36 +39,32 @@ self.onmessage = function (e) {
           response_type: req.responseType,
         });
       };
-      req.onerror = () =>
-        postMessage({ ok: false, err: "xhr error", status: req.status });
-      req.open("GET", "http://127.0.0.1:9582/xhr/binary");
+      req.onerror = () => postMessage({ ok: false, err: 'xhr error', status: req.status });
+      req.open('GET', 'http://127.0.0.1:9582/xhr/binary');
       req.send();
       return;
     }
 
-    if (cmd.kind === "document_ignored") {
+    if (cmd.kind === 'document_ignored') {
       const req = new XMLHttpRequest();
       // Workers have no DOM: setting "document" is ignored.
-      req.responseType = "document";
+      req.responseType = 'document';
       const response_type = req.responseType;
       req.onload = () => {
         postMessage({
           ok: true,
           status: req.status,
           response_type,
-          is_text:
-            typeof req.response === "string" &&
-            req.response === req.responseText,
+          is_text: typeof req.response === 'string' && req.response === req.responseText,
         });
       };
-      req.onerror = () =>
-        postMessage({ ok: false, err: "xhr error", status: req.status });
-      req.open("GET", "http://127.0.0.1:9582/xhr");
+      req.onerror = () => postMessage({ ok: false, err: 'xhr error', status: req.status });
+      req.open('GET', 'http://127.0.0.1:9582/xhr');
       req.send();
       return;
     }
 
-    postMessage({ ok: false, err: "unknown command" });
+    postMessage({ ok: false, err: 'unknown command' });
   } catch (err) {
     postMessage({ ok: false, err: String(err), stack: err.stack });
   }

@@ -1,31 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
-<script id="meta">
-  testing.expectEqual("HTMLDocument", document.constructor.name);
-  testing.expectEqual("Document", new Document().constructor.name);
-  testing.expectEqual("[object Document]", new Document().toString());
-  testing.expectEqual("Window", window.constructor.name);
+<script id=meta>
+  testing.expectEqual('HTMLDocument', document.constructor.name);
+  testing.expectEqual('Document', new Document().constructor.name);
+  testing.expectEqual('[object Document]', new Document().toString());
+  testing.expectEqual('Window', window.constructor.name);
 
   // Important test. new Document() returns a Node, but getElementById
   // exists on the Document. So this is a simple way to make sure that
   // the returned Zig type is associated with the correct JS class.
-  testing.expectEqual(null, new Document().getElementById("x"));
+  testing.expectEqual(null, new Document().getElementById('x'));
 
   // HTMLDocument (global document) should have HTML-specific properties
-  testing.expectEqual("object", typeof document.head);
-  testing.expectEqual("object", typeof document.body);
-  testing.expectEqual("string", typeof document.title);
-  testing.expectEqual("object", typeof document.images);
-  testing.expectEqual("object", typeof document.scripts);
-  testing.expectEqual("object", typeof document.links);
-  testing.expectEqual("object", typeof document.forms);
-  testing.expectEqual("object", typeof document.location);
+  testing.expectEqual('object', typeof document.head);
+  testing.expectEqual('object', typeof document.body);
+  testing.expectEqual('string', typeof document.title);
+  testing.expectEqual('object', typeof document.images);
+  testing.expectEqual('object', typeof document.scripts);
+  testing.expectEqual('object', typeof document.links);
+  testing.expectEqual('object', typeof document.forms);
+  testing.expectEqual('object', typeof document.location);
 
   // The HTML members live on Document, so a plain Document has them too.
   const plainDoc = new Document();
   testing.expectEqual(null, plainDoc.head);
   testing.expectEqual(null, plainDoc.body);
-  testing.expectEqual("", plainDoc.title);
+  testing.expectEqual('', plainDoc.title);
   testing.expectEqual(0, plainDoc.images.length);
   testing.expectEqual(0, plainDoc.scripts.length);
   testing.expectEqual(0, plainDoc.links.length);
@@ -34,15 +35,12 @@
   testing.expectEqual(null, plainDoc.location);
 
   // Both should have common Document properties
-  testing.expectEqual("string", typeof document.URL);
-  testing.expectEqual("string", typeof plainDoc.URL);
-  testing.expectEqual("string", typeof document.readyState);
-  testing.expectEqual("string", typeof plainDoc.readyState);
+  testing.expectEqual('string', typeof document.URL);
+  testing.expectEqual('string', typeof plainDoc.URL);
+  testing.expectEqual('string', typeof document.readyState);
+  testing.expectEqual('string', typeof plainDoc.readyState);
 
-  testing.expectEqual(
-    "[object Intl.DateTimeFormat]",
-    new Intl.DateTimeFormat().toString(),
-  );
+  testing.expectEqual("[object Intl.DateTimeFormat]", new Intl.DateTimeFormat().toString());
 </script>
 
 <!-- Leave it, it used to crash -->
@@ -56,16 +54,10 @@
   404 status, so the regression where we eval'd 4xx bodies would flip
   __404_body_executed to true.
 -->
-<script>
-  window.__bad404 = { error: false, load: false };
-</script>
-<script
-  src="404.js"
-  onerror="window.__bad404.error = true"
-  onload="window.__bad404.load = true"
-></script>
+<script>window.__bad404 = { error: false, load: false };</script>
+<script src="404.js" onerror="window.__bad404.error = true" onload="window.__bad404.load = true"></script>
 <script>
   testing.expectEqual(true, window.__bad404.error);
   testing.expectEqual(false, window.__bad404.load);
-  testing.expectEqual("undefined", typeof window.__404_body_executed);
+  testing.expectEqual('undefined', typeof window.__404_body_executed);
 </script>

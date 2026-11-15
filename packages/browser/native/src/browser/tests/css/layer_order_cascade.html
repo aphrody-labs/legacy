@@ -1,4 +1,5 @@
-<!doctype html>
+<!DOCTYPE html>
+<meta charset="UTF-8">
 <head>
   <script src="../testing.js"></script>
 </head>
@@ -17,147 +18,60 @@
 
 <style>
   /* Unlayered beats layered regardless of specificity. */
-  @layer any {
-    #unlayered-wins {
-      display: none;
-    }
-  }
-  .unlayered-wins {
-    display: block;
-  }
+  @layer any { #unlayered-wins { display: none; } }
+  .unlayered-wins { display: block; }
 
   /* Later-declared layer beats an earlier one regardless of specificity. */
-  @layer early {
-    #later-layer-wins {
-      display: none;
-    }
-  }
-  @layer late {
-    .later-layer-wins {
-      display: block;
-    }
-  }
+  @layer early { #later-layer-wins { display: none; } }
+  @layer late { .later-layer-wins { display: block; } }
 
   /* The statement form fixes the order up front: `late2` is declared last,
      so it outranks `early2` even though its block appears first. */
   @layer early2, late2;
-  @layer late2 {
-    .statement-order {
-      display: block;
-    }
-  }
-  @layer early2 {
-    #statement-order {
-      display: none;
-    }
-  }
+  @layer late2 { .statement-order { display: block; } }
+  @layer early2 { #statement-order { display: none; } }
 
   /* A re-opened layer keeps its first-declaration rank. */
-  @layer one {
-  }
-  @layer two {
-    .reopened {
-      display: block;
-    }
-  }
-  @layer one {
-    #reopened {
-      display: none;
-    }
-  }
+  @layer one { }
+  @layer two { .reopened { display: block; } }
+  @layer one { #reopened { display: none; } }
 
   /* A parent's direct styles beat its sub-layers'. */
   @layer parent {
-    @layer child {
-      #parent-direct {
-        display: none;
-      }
-    }
-    .parent-direct {
-      display: block;
-    }
+    @layer child { #parent-direct { display: none; } }
+    .parent-direct { display: block; }
   }
 
   /* A dotted name addresses a sub-layer of an existing layer, not a new
      top-level layer that happens to contain a dot. */
-  @layer m {
-  }
-  @layer m.n {
-    #dotted-sublayer {
-      display: none;
-    }
-  }
-  @layer m {
-    .dotted-sublayer {
-      display: block;
-    }
-  }
+  @layer m { }
+  @layer m.n { #dotted-sublayer { display: none; } }
+  @layer m { .dotted-sublayer { display: block; } }
 
   /* Interleaved sub-layer creation: i1.y is declared AFTER i2, but it lives
      under i1, which was declared (via i1.x) BEFORE i2 — so i1.y still ranks
      below i2. This is why ranks can't be assigned on first sight. */
-  @layer i1.x {
-  }
-  @layer i2 {
-    .interleaved {
-      display: block;
-    }
-  }
-  @layer i1.y {
-    #interleaved {
-      display: none;
-    }
-  }
+  @layer i1.x { }
+  @layer i2 { .interleaved { display: block; } }
+  @layer i1.y { #interleaved { display: none; } }
 
   /* Two anonymous blocks are distinct layers, ordered by declaration. */
-  @layer {
-    #anon-order {
-      display: none;
-    }
-  }
-  @layer {
-    .anon-order {
-      display: block;
-    }
-  }
+  @layer { #anon-order { display: none; } }
+  @layer { .anon-order { display: block; } }
 
   /* Rules inside @media keep the enclosing layer's rank. */
-  @layer med {
-    @media screen {
-      #media-in-layer-rank {
-        display: none;
-      }
-    }
-  }
-  .media-in-layer-rank {
-    display: block;
-  }
+  @layer med { @media screen { #media-in-layer-rank { display: none; } } }
+  .media-in-layer-rank { display: block; }
 
   /* A @layer statement inside a non-matching @media must not register:
      without it, flip1/flip2 order by their blocks and flip2 wins. */
-  @media print {
-    @layer flip2, flip1;
-  }
-  @layer flip1 {
-    .flip {
-      display: block;
-    }
-  }
-  @layer flip2 {
-    #flip {
-      display: none;
-    }
-  }
+  @media print { @layer flip2, flip1; }
+  @layer flip1 { .flip { display: block; } }
+  @layer flip2 { #flip { display: none; } }
 
   /* visibility follows the same layer ordering. */
-  @layer vis {
-    #vis-unlayered {
-      visibility: hidden;
-    }
-  }
-  .vis-unlayered {
-    visibility: visible;
-  }
+  @layer vis { #vis-unlayered { visibility: hidden; } }
+  .vis-unlayered { visibility: visible; }
 </style>
 
 <body>
@@ -178,94 +92,91 @@
   <style id="dyn2"></style>
 </body>
 
-<script id="layer_unlayered_beats_layered">
-  {
-    testing.expectTrue($("#unlayered-wins").checkVisibility());
-    // getComputedStyle consumes the same cascade.
-    testing.expectEqual(
-      "block",
-      getComputedStyle($("#unlayered-wins")).display,
-    );
-  }
+<script id=layer_unlayered_beats_layered>
+{
+  testing.expectTrue($('#unlayered-wins').checkVisibility());
+  // getComputedStyle consumes the same cascade.
+  testing.expectEqual('block', getComputedStyle($('#unlayered-wins')).display);
+}
 </script>
 
-<script id="layer_later_beats_earlier">
-  {
-    testing.expectTrue($("#later-layer-wins").checkVisibility());
-  }
+<script id=layer_later_beats_earlier>
+{
+  testing.expectTrue($('#later-layer-wins').checkVisibility());
+}
 </script>
 
-<script id="layer_statement_fixes_order">
-  {
-    testing.expectTrue($("#statement-order").checkVisibility());
-  }
+<script id=layer_statement_fixes_order>
+{
+  testing.expectTrue($('#statement-order').checkVisibility());
+}
 </script>
 
-<script id="layer_reopened_keeps_rank">
-  {
-    testing.expectTrue($("#reopened").checkVisibility());
-  }
+<script id=layer_reopened_keeps_rank>
+{
+  testing.expectTrue($('#reopened').checkVisibility());
+}
 </script>
 
-<script id="layer_parent_direct_beats_sublayer">
-  {
-    testing.expectTrue($("#parent-direct").checkVisibility());
-  }
+<script id=layer_parent_direct_beats_sublayer>
+{
+  testing.expectTrue($('#parent-direct').checkVisibility());
+}
 </script>
 
-<script id="layer_dotted_is_sublayer">
-  {
-    testing.expectTrue($("#dotted-sublayer").checkVisibility());
-  }
+<script id=layer_dotted_is_sublayer>
+{
+  testing.expectTrue($('#dotted-sublayer').checkVisibility());
+}
 </script>
 
-<script id="layer_interleaved_sublayer_creation">
-  {
-    testing.expectTrue($("#interleaved").checkVisibility());
-  }
+<script id=layer_interleaved_sublayer_creation>
+{
+  testing.expectTrue($('#interleaved').checkVisibility());
+}
 </script>
 
-<script id="layer_anonymous_are_distinct">
-  {
-    testing.expectTrue($("#anon-order").checkVisibility());
-  }
+<script id=layer_anonymous_are_distinct>
+{
+  testing.expectTrue($('#anon-order').checkVisibility());
+}
 </script>
 
-<script id="layer_media_keeps_layer_rank">
-  {
-    testing.expectTrue($("#media-in-layer-rank").checkVisibility());
-  }
+<script id=layer_media_keeps_layer_rank>
+{
+  testing.expectTrue($('#media-in-layer-rank').checkVisibility());
+}
 </script>
 
-<script id="layer_statement_in_false_media_ignored">
-  {
-    testing.expectFalse($("#flip").checkVisibility());
-  }
+<script id=layer_statement_in_false_media_ignored>
+{
+  testing.expectFalse($('#flip').checkVisibility());
+}
 </script>
 
-<script id="layer_visibility_ordering">
-  {
-    testing.expectTrue(
-      $("#vis-unlayered").checkVisibility({ visibilityProperty: true }),
-    );
-  }
+<script id=layer_visibility_ordering>
+{
+  testing.expectTrue(
+    $('#vis-unlayered').checkVisibility({ visibilityProperty: true })
+  );
+}
 </script>
 
-<script id="layer_order_insertRule">
-  {
-    // The cssRules path (insertRule) participates in the same layer order.
-    const sheet = $("#dyn").sheet;
-    sheet.insertRule("@layer d1 { #dyn-order { display: none; } }", 0);
-    sheet.insertRule(".dyn-order { display: block; }", 1);
-    testing.expectTrue($("#dyn-order").checkVisibility());
-  }
+<script id=layer_order_insertRule>
+{
+  // The cssRules path (insertRule) participates in the same layer order.
+  const sheet = $('#dyn').sheet;
+  sheet.insertRule('@layer d1 { #dyn-order { display: none; } }', 0);
+  sheet.insertRule('.dyn-order { display: block; }', 1);
+  testing.expectTrue($('#dyn-order').checkVisibility());
+}
 </script>
 
-<script id="layer_order_replaceSync">
-  {
-    const sheet = $("#dyn2").sheet;
-    sheet.insertRule("@layer a { #dyn2-order { display: none; } }", 0);
-    sheet.insertRule("@layer b { .dyn2-order { display: block; } }", 1);
-    testing.expectTrue($("#dyn2-order").checkVisibility());
-  }
+<script id=layer_order_replaceSync>
+{
+  const sheet = $('#dyn2').sheet;
+  sheet.insertRule('@layer a { #dyn2-order { display: none; } }', 0);
+  sheet.insertRule('@layer b { .dyn2-order { display: block; } }', 1);
+  testing.expectTrue($('#dyn2-order').checkVisibility());
+}
 </script>

@@ -1,6 +1,6 @@
-<!doctype html>
+<!DOCTYPE html>
 <head></head>
-<meta name="lp-mode" content="test" />
+<meta name=lp-mode content=test>
 <script src="../../../testing.js"></script>
 
 <!--
@@ -16,22 +16,22 @@
   script ran, so a second script here would hide the regression.
 -->
 
-<script id="listener_from_timer">
+<script id=listener_from_timer>
   testing.async().then((state) => {
     window.load_fired = 0;
     window.error_fired = 0;
 
     setTimeout(() => {
-      const s = document.createElement("script");
-      s.addEventListener("load", () => {
+      const s = document.createElement('script');
+      s.addEventListener('load', () => {
         window.load_fired += 1;
         state.resolve();
       });
-      s.addEventListener("error", () => {
+      s.addEventListener('error', () => {
         window.error_fired += 1;
         state.resolve();
       });
-      s.src = "empty.js";
+      s.src = 'empty.js';
       document.head.appendChild(s);
     }, 20);
 

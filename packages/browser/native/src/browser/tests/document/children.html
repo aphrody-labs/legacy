@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
 <head>
@@ -9,17 +9,17 @@
   <div id="test">Content</div>
 </body>
 
-<script id="document_children_basic">
+<script id=document_children_basic>
   {
     const children = document.children;
-    testing.expectEqual("HTMLCollection", children.constructor.name);
+    testing.expectEqual('HTMLCollection', children.constructor.name);
     testing.expectEqual(1, children.length);
-    testing.expectEqual("HTML", children[0].tagName);
+    testing.expectEqual('HTML', children[0].tagName);
     testing.expectEqual(document.documentElement, children[0]);
   }
 </script>
 
-<script id="document_children_live">
+<script id=document_children_live>
   {
     const children = document.children;
     const initialLength = children.length;

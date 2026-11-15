@@ -1,8 +1,9 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
-<script id="data_url_navigation" type="module">
+<script id=data_url_navigation type=module>
   // data: navigation flows through the HTTP client's synthetic-scheme path
   // (resource_type=.document -> serveSynthetic), like any URL. The data:
   // document is cross-origin (opaque origin), so we can't read its
@@ -11,15 +12,14 @@
   // parsed + ran.
   {
     const state = await testing.async();
-    window.addEventListener("message", (e) => state.resolve(e.data));
+    window.addEventListener('message', (e) => state.resolve(e.data));
 
-    const f = document.createElement("iframe");
-    f.src =
-      "data:text/html,<p>hello</p><script>parent.postMessage(document.querySelector('p').textContent, '*')<\/script>";
+    const f = document.createElement('iframe');
+    f.src = "data:text/html,<p>hello</p><script>parent.postMessage(document.querySelector('p').textContent, '*')<\/script>";
     document.documentElement.appendChild(f);
 
     await state.done((data) => {
-      testing.expectEqual("hello", data);
+      testing.expectEqual('hello', data);
     });
   }
 </script>

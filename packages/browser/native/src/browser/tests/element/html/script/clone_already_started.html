@@ -1,7 +1,7 @@
-<!doctype html>
+<!DOCTYPE html>
 <head></head>
 <body></body>
-<meta name="lp-mode" content="test" />
+<meta name=lp-mode content=test>
 <script src="../../../testing.js"></script>
 
 <!--
@@ -11,10 +11,10 @@ when inserted into a document. This guards a regression where cloneNode lost
 the flag and re-ran every cloned <script> on each insertion.
 -->
 
-<script id="cloned_inline_does_not_rerun">
+<script id=cloned_inline_does_not_rerun>
   window.cloned_inline_count = 0;
-  const c1_original = document.createElement("script");
-  c1_original.textContent = "window.cloned_inline_count++;";
+  const c1_original = document.createElement('script');
+  c1_original.textContent = 'window.cloned_inline_count++;';
   document.head.appendChild(c1_original);
   testing.expectEqual(1, window.cloned_inline_count);
 
@@ -24,7 +24,7 @@ the flag and re-ran every cloned <script> on each insertion.
   testing.expectEqual(1, window.cloned_inline_count);
 
   // A deep clone of a wrapper containing the script must keep the flag too.
-  const c1_wrapper = document.createElement("div");
+  const c1_wrapper = document.createElement('div');
   c1_wrapper.appendChild(c1_original.cloneNode(true));
   document.body.appendChild(c1_wrapper);
   testing.expectEqual(1, window.cloned_inline_count);

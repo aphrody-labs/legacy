@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -23,12 +23,10 @@
 
     <p id="status">waiting</p>
     <script>
-      document
-        .getElementById("signin")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
-          document.getElementById("status").textContent = "submitted";
-        });
+      document.getElementById("signin").addEventListener("submit", function (event) {
+        event.preventDefault();
+        document.getElementById("status").textContent = "submitted";
+      });
     </script>
   </body>
 </html>

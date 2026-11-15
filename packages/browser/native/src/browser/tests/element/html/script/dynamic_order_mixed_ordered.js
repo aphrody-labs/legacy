@@ -1,1 +1,1 @@
-mixedList += (mixedList ? "," : "") + "ordered";
+mixedList += (mixedList ? ',' : '') + 'ordered';

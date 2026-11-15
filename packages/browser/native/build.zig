@@ -147,6 +147,22 @@ pub fn build(b: *Build) !void {
     });
     check.dependOn(&check_lib.step);
 
+    {
+        // Aphrody C ABI (packages/browser/src/index.ts dlopens it): standalone, std only.
+        const capi = b.addLibrary(.{
+            .name = "browser_capi",
+            .linkage = .dynamic,
+            .root_module = b.createModule(.{
+                .root_source_file = b.path("src/capi_main.zig"),
+                .target = target,
+                .optimize = optimize,
+                .link_libc = true,
+            }),
+        });
+        b.step("capi", "Build libbrowser_capi (Aphrody C ABI)").dependOn(&b.addInstallArtifact(capi, .{}).step);
+        b.installArtifact(capi);
+    }
+
     // Extras (snapshot_creator) are off the default install to
     // avoid paying for three exe compiles on every edit. Build explicitly
     // with `zig build extras`.
@@ -314,28 +330,43 @@ fn devFastGlibcVersion(b: *Build) std.SemanticVersion {
 /// path is keyed on the zig-v8 release tag, read from the install action so
 /// it cannot drift from CI (the Makefile reads the same source of truth).
 fn findPrebuiltV8(b: *Build, target: Build.ResolvedTarget, dev_fast: bool) ?[]const u8 {
-    _ = dev_fast;
     const io = b.graph.io;
-    if (b.graph.env_map.get("APHRODY_V8_LIB")) |env_path| {
-        std.Io.Dir.cwd().access(io, env_path, .{}) catch {};
-        return env_path;
+    const action_path = ".github/actions/install/action.yml";
+    b.dependOnFileContents(b.path(action_path));
+    const action = std.Io.Dir.cwd().readFileAlloc(
+        io,
+        rootPath(b, action_path),
+        b.allocator,
+        .limited(64 * 1024),
+    ) catch return null;
+
+    const tag = actionDefault(action, "zig-v8:") orelse return null;
+    if (tag.len == 0) {
+        return null;
     }
-    const is_win = target.result.os.tag == .windows;
-    const candidates: []const []const u8 = if (is_win) &.{
-        "../../../third_party/rusty_v8/target/release/rusty_v8.lib",
-        "../../../third_party/chromium/v8/out/release/obj/v8_monolith.lib",
-        ".lp-cache/prebuilt-v8/libc_v8.lib",
-    } else &.{
-        "../../../third_party/rusty_v8/target/release/librusty_v8.a",
-        "../../../third_party/chromium/v8/out/release/obj/libv8_monolith.a",
-        ".lp-cache/prebuilt-v8/libc_v8.so",
-        ".lp-cache/prebuilt-v8/libc_v8.a",
+
+    const cache_dir = ".lp-cache";
+    // The .so must keep the name the exe's DT_NEEDED records; the archive
+    // name encodes V8 version, os and arch.
+    const path = if (dev_fast)
+        b.pathJoin(&.{ cache_dir, "prebuilt-v8", tag, "libc_v8.so" })
+    else blk: {
+        const version = actionDefault(action, "v8:") orelse return null;
+        break :blk b.pathJoin(&.{ cache_dir, "prebuilt-v8", tag, b.fmt("libc_v8_{s}_{s}_{s}.a", .{
+            version,
+            @tagName(target.result.os.tag),
+            @tagName(target.result.cpu.arch),
+        }) });
     };
-    for (candidates) |cand| {
-        std.Io.Dir.cwd().access(io, rootPath(b, cand), .{}) catch continue;
-        return cand;
-    }
-    return null;
+    std.Io.Dir.cwd().access(io, rootPath(b, path), .{}) catch {
+        // Zig can't track a missing file as a configure dependency; the
+        // source-build path poisons the configure cache instead.
+        std.debug.print("No prebuilt V8 at {s}; using the V8 source-build path. `make download-v8` fetches the prebuilt.\n", .{path});
+        return null;
+    };
+    b.dependOnFileMetadata(b.path(path));
+    std.debug.print("Using prebuilt V8: {s}\n", .{path});
+    return path;
 }
 
 fn rootPath(b: *Build, sub_path: []const u8) []const u8 {
@@ -449,11 +480,7 @@ fn linkRust(b: *Build, mod: *Build.Module, deps: Deps, prebuilt_rust_path: ?[]co
     const rust_step = b.step("rust", "Build the Rust staticlib (requires cargo)");
     rust_step.dependOn(&exec_cargo.step);
 
-    const rust_lib_name = if (deps.target.result.os.tag == .windows and deps.target.result.abi == .msvc)
-        "lightpanda_ffi.lib"
-    else
-        "liblightpanda_ffi.a";
-    const obj = out_dir.path(b, out_subdir).path(b, rust_lib_name);
+    const obj = out_dir.path(b, out_subdir).path(b, "liblightpanda_ffi.a");
     mod.addObjectFile(obj);
 }
 

@@ -1,12 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <script src="../../testing.js"></script>
 
 <div id="own-true" contenteditable="true">own true</div>
 <div id="own-empty" contenteditable="">own empty</div>
 <div id="own-false" contenteditable="false">own false</div>
-<div id="own-plaintext" contenteditable="plaintext-only">
-  own plaintext-only
-</div>
+<div id="own-plaintext" contenteditable="plaintext-only">own plaintext-only</div>
 
 <div id="ancestor-true" contenteditable="true">
   <span id="child-of-true">child</span>
@@ -22,46 +20,16 @@
 
 <script id="is-content-editable">
   {
-    testing.expectEqual(
-      true,
-      document.getElementById("own-true").isContentEditable,
-    );
-    testing.expectEqual(
-      true,
-      document.getElementById("own-empty").isContentEditable,
-    );
-    testing.expectEqual(
-      false,
-      document.getElementById("own-false").isContentEditable,
-    );
-    testing.expectEqual(
-      true,
-      document.getElementById("own-plaintext").isContentEditable,
-    );
-    testing.expectEqual(
-      true,
-      document.getElementById("ancestor-true").isContentEditable,
-    );
-    testing.expectEqual(
-      true,
-      document.getElementById("child-of-true").isContentEditable,
-    );
-    testing.expectEqual(
-      false,
-      document.getElementById("ancestor-false").isContentEditable,
-    );
-    testing.expectEqual(
-      true,
-      document.getElementById("grandchild-rehosted").isContentEditable,
-    );
-    testing.expectEqual(
-      false,
-      document.getElementById("plain").isContentEditable,
-    );
-    testing.expectEqual(
-      false,
-      document.getElementById("child-of-plain").isContentEditable,
-    );
+    testing.expectEqual(true, document.getElementById('own-true').isContentEditable);
+    testing.expectEqual(true, document.getElementById('own-empty').isContentEditable);
+    testing.expectEqual(false, document.getElementById('own-false').isContentEditable);
+    testing.expectEqual(true, document.getElementById('own-plaintext').isContentEditable);
+    testing.expectEqual(true, document.getElementById('ancestor-true').isContentEditable);
+    testing.expectEqual(true, document.getElementById('child-of-true').isContentEditable);
+    testing.expectEqual(false, document.getElementById('ancestor-false').isContentEditable);
+    testing.expectEqual(true, document.getElementById('grandchild-rehosted').isContentEditable);
+    testing.expectEqual(false, document.getElementById('plain').isContentEditable);
+    testing.expectEqual(false, document.getElementById('child-of-plain').isContentEditable);
     testing.expectEqual(false, document.body.isContentEditable);
     testing.expectEqual(false, document.documentElement.isContentEditable);
   }
@@ -69,25 +37,25 @@
 
 <script id="dynamic-attribute">
   {
-    const el = document.createElement("div");
+    const el = document.createElement('div');
     document.body.appendChild(el);
     testing.expectEqual(false, el.isContentEditable);
 
-    el.setAttribute("contenteditable", "true");
+    el.setAttribute('contenteditable', 'true');
     testing.expectEqual(true, el.isContentEditable);
 
-    el.setAttribute("contenteditable", "false");
+    el.setAttribute('contenteditable', 'false');
     testing.expectEqual(false, el.isContentEditable);
 
-    el.removeAttribute("contenteditable");
+    el.removeAttribute('contenteditable');
     testing.expectEqual(false, el.isContentEditable);
 
-    const child = document.createElement("span");
+    const child = document.createElement('span');
     el.appendChild(child);
     testing.expectEqual(false, child.isContentEditable);
-    el.setAttribute("contenteditable", "plaintext-only");
+    el.setAttribute('contenteditable', 'plaintext-only');
     testing.expectEqual(true, child.isContentEditable);
-    child.setAttribute("contenteditable", "false");
+    child.setAttribute('contenteditable', 'false');
     testing.expectEqual(false, child.isContentEditable);
     el.remove();
   }
@@ -98,75 +66,42 @@
   <div id="invalid-in-true" contenteditable="bogus">invalid inherits true</div>
 </div>
 <div contenteditable="false">
-  <div id="invalid-in-false" contenteditable="bogus">
-    invalid inherits false
-  </div>
+  <div id="invalid-in-false" contenteditable="bogus">invalid inherits false</div>
 </div>
 
-<svg contenteditable="true">
-  <foreignObject><div id="in-svg">in svg</div></foreignObject>
-</svg>
+<svg contenteditable="true"><foreignObject><div id="in-svg">in svg</div></foreignObject></svg>
 
 <script id="invalid-value-inherits">
   {
-    const alone = document.getElementById("invalid-alone");
-    testing.expectEqual("inherit", alone.contentEditable);
+    const alone = document.getElementById('invalid-alone');
+    testing.expectEqual('inherit', alone.contentEditable);
     testing.expectEqual(false, alone.isContentEditable);
-    testing.expectEqual(
-      true,
-      document.getElementById("invalid-in-true").isContentEditable,
-    );
-    testing.expectEqual(
-      false,
-      document.getElementById("invalid-in-false").isContentEditable,
-    );
+    testing.expectEqual(true, document.getElementById('invalid-in-true').isContentEditable);
+    testing.expectEqual(false, document.getElementById('invalid-in-false').isContentEditable);
   }
 </script>
 
 <script id="svg-attribute-ignored">
   {
-    testing.expectEqual(
-      false,
-      document.getElementById("in-svg").isContentEditable,
-    );
+    testing.expectEqual(false, document.getElementById('in-svg').isContentEditable);
   }
 </script>
 
 <script id="reflected-attribute">
   {
-    testing.expectEqual(
-      "true",
-      document.getElementById("own-true").contentEditable,
-    );
-    testing.expectEqual(
-      "true",
-      document.getElementById("own-empty").contentEditable,
-    );
-    testing.expectEqual(
-      "false",
-      document.getElementById("own-false").contentEditable,
-    );
-    testing.expectEqual(
-      "plaintext-only",
-      document.getElementById("own-plaintext").contentEditable,
-    );
-    testing.expectEqual(
-      "inherit",
-      document.getElementById("plain").contentEditable,
-    );
-    testing.expectEqual(
-      "inherit",
-      document.getElementById("child-of-true").contentEditable,
-    );
+    testing.expectEqual('true', document.getElementById('own-true').contentEditable);
+    testing.expectEqual('true', document.getElementById('own-empty').contentEditable);
+    testing.expectEqual('false', document.getElementById('own-false').contentEditable);
+    testing.expectEqual('plaintext-only', document.getElementById('own-plaintext').contentEditable);
+    testing.expectEqual('inherit', document.getElementById('plain').contentEditable);
+    testing.expectEqual('inherit', document.getElementById('child-of-true').contentEditable);
 
-    const el = document.getElementById("plain");
-    el.contentEditable = "TRUE";
-    testing.expectEqual("true", el.getAttribute("contenteditable"));
+    const el = document.getElementById('plain');
+    el.contentEditable = 'TRUE';
+    testing.expectEqual('true', el.getAttribute('contenteditable'));
     testing.expectEqual(true, el.isContentEditable);
-    el.contentEditable = "inherit";
-    testing.expectEqual(false, el.hasAttribute("contenteditable"));
-    testing.expectError("SyntaxError", () => {
-      el.contentEditable = "maybe";
-    });
+    el.contentEditable = 'inherit';
+    testing.expectEqual(false, el.hasAttribute('contenteditable'));
+    testing.expectError('SyntaxError', () => { el.contentEditable = 'maybe'; });
   }
 </script>

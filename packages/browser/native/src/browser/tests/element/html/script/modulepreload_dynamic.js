@@ -1,1 +1,1 @@
-export const dval = "dynamic-preloaded";
+export const dval = 'dynamic-preloaded';

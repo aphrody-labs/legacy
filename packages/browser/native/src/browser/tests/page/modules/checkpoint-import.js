@@ -1,2 +1,2 @@
 // cache hit: the import is resolved synchronously
-import("./tla.js?import");
+import('./tla.js?import');

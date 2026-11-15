@@ -1,1 +1,1 @@
-throw new Error("dynamic-throw");
+throw new Error('dynamic-throw');

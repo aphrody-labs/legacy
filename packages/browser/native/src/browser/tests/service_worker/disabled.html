@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <body></body>
 <script src="../testing.js"></script>
 
@@ -8,15 +8,12 @@
   // `'serviceWorker' in navigator` is the standard feature check, and Firefox
   // with dom.serviceWorkers.enabled=false makes it undefined for the same reason.
   {
-    testing.expectFalse("serviceWorker" in navigator);
+    testing.expectFalse('serviceWorker' in navigator);
     testing.expectEqual(undefined, navigator.serviceWorker);
-    testing.expectEqual(
-      undefined,
-      Object.getOwnPropertyDescriptor(Navigator.prototype, "serviceWorker"),
-    );
+    testing.expectEqual(undefined, Object.getOwnPropertyDescriptor(Navigator.prototype, 'serviceWorker'));
     // Only the way in is removed. The interfaces are in the snapshot and stay on
     // the global, which is what keeps this a one-property delete.
-    testing.expectTrue(typeof ServiceWorkerContainer === "function");
-    testing.expectTrue(typeof ServiceWorkerRegistration === "function");
+    testing.expectTrue(typeof ServiceWorkerContainer === 'function');
+    testing.expectTrue(typeof ServiceWorkerRegistration === 'function');
   }
 </script>

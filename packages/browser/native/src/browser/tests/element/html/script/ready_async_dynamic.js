@@ -1,1 +1,1 @@
-readyAsyncOrder.push("dynamic");
+readyAsyncOrder.push('dynamic');

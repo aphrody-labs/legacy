@@ -1,2 +1,2 @@
-list += "a";
-testing.expectEqual("a", list);
+list += 'a';
+testing.expectEqual('a', list);

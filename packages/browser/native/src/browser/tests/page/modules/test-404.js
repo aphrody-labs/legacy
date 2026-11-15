@@ -1,2 +1,2 @@
-import { something } from "./nonexistent.js";
+import { something } from './nonexistent.js';
 export { something };

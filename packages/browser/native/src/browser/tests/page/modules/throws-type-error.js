@@ -1,1 +1,1 @@
-throw new TypeError("boom");
+throw new TypeError('boom');

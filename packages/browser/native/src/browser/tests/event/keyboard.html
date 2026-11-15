@@ -1,8 +1,8 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
-<script id="default">
+<script id=default>
   let event = new KeyboardEvent("test", { key: "a" });
   testing.expectEqual(true, event instanceof KeyboardEvent);
   testing.expectEqual(true, event instanceof Event);
@@ -20,7 +20,7 @@
   testing.expectEqual(false, event.altKey);
 </script>
 
-<script id="getModifierState">
+<script id=getModifierState>
   event = new KeyboardEvent("test", {
     altKey: true,
     shiftKey: true,
@@ -37,7 +37,7 @@
   testing.expectEqual(true, event.getModifierState("Accel"));
 </script>
 
-<script id="keyDownListener">
+<script id=keyDownListener>
   event = new KeyboardEvent("keydown", { key: "z" });
   let isKeyDown = false;
 
@@ -55,7 +55,7 @@
   testing.expectEqual(true, isKeyDown);
 </script>
 
-<script id="keyUpListener">
+<script id=keyUpListener>
   event = new KeyboardEvent("keyup", { key: "x" });
   let isKeyUp = false;
 
@@ -73,7 +73,7 @@
   testing.expectEqual(true, isKeyUp);
 </script>
 
-<script id="keyPressListener">
+<script id=keyPressListener>
   event = new KeyboardEvent("keypress", { key: "w" });
   let isKeyPress = false;
 
@@ -91,42 +91,42 @@
   testing.expectEqual(true, isKeyPress);
 </script>
 
-<script id="isTrusted">
+<script id=isTrusted>
   // Test isTrusted on KeyboardEvent
-  let keyEvent = new KeyboardEvent("keydown", { key: "a" });
+  let keyEvent = new KeyboardEvent('keydown', {key: 'a'});
   testing.expectEqual(false, keyEvent.isTrusted);
 
   // Test isTrusted on dispatched KeyboardEvent
   let keyIsTrusted = null;
-  document.addEventListener("keytest", (e) => {
+  document.addEventListener('keytest', (e) => {
     keyIsTrusted = e.isTrusted;
     testing.expectEqual(true, e instanceof KeyboardEvent);
   });
-  document.dispatchEvent(new KeyboardEvent("keytest", { key: "b" }));
+  document.dispatchEvent(new KeyboardEvent('keytest', {key: 'b'}));
   testing.expectEqual(false, keyIsTrusted);
 </script>
 
-<script id="non_keyboard_keydown">
+<script id=non_keyboard_keydown>
   // this used to crash
   {
     let called = false;
-    const div = document.createElement("div");
-    div.addEventListener("keydown", () => {
+    const div = document.createElement('div')
+    div.addEventListener('keydown', () => {
       called = true;
     });
-    div.dispatchEvent(new Event("keydown"));
+    div.dispatchEvent(new Event('keydown'));
     testing.expectEqual(true, called);
   }
 </script>
 
-<script id="domKeyLocationConstants">
+<script id=domKeyLocationConstants>
   {
     testing.expectEqual(0, KeyboardEvent.DOM_KEY_LOCATION_STANDARD);
     testing.expectEqual(1, KeyboardEvent.DOM_KEY_LOCATION_LEFT);
     testing.expectEqual(2, KeyboardEvent.DOM_KEY_LOCATION_RIGHT);
     testing.expectEqual(3, KeyboardEvent.DOM_KEY_LOCATION_NUMPAD);
 
-    let evt = new KeyboardEvent("keydown", { key: "a" });
+    let evt = new KeyboardEvent('keydown', {key: 'a'});
     testing.expectEqual(0, evt.DOM_KEY_LOCATION_STANDARD);
     testing.expectEqual(1, evt.DOM_KEY_LOCATION_LEFT);
     testing.expectEqual(2, evt.DOM_KEY_LOCATION_RIGHT);
@@ -134,7 +134,7 @@
   }
 </script>
 
-<script id="keyCodeAndCharCodeAreZeroForSyntheticEvents">
+<script id=keyCodeAndCharCodeAreZeroForSyntheticEvents>
   {
     // Per Chrome behavior, both legacy `keyCode` and `charCode` return 0 for
     // events constructed via `new KeyboardEvent(...)` because such events
@@ -144,58 +144,35 @@
     // `webapi/event/KeyboardEvent.zig`.
 
     // Letters
-    testing.expectEqual(0, new KeyboardEvent("keydown", { key: "a" }).keyCode);
-    testing.expectEqual(0, new KeyboardEvent("keydown", { key: "Z" }).keyCode);
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: 'a'}).keyCode);
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: 'Z'}).keyCode);
     // Digits
-    testing.expectEqual(0, new KeyboardEvent("keydown", { key: "5" }).keyCode);
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: '5'}).keyCode);
     // Space
-    testing.expectEqual(0, new KeyboardEvent("keydown", { key: " " }).keyCode);
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: ' '}).keyCode);
     // Named keys
-    testing.expectEqual(
-      0,
-      new KeyboardEvent("keydown", { key: "Enter" }).keyCode,
-    );
-    testing.expectEqual(0, new KeyboardEvent("keydown", { key: "F1" }).keyCode);
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: 'Enter'}).keyCode);
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: 'F1'}).keyCode);
     // Unknown key
-    testing.expectEqual(
-      0,
-      new KeyboardEvent("keydown", { key: "Dead" }).keyCode,
-    );
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: 'Dead'}).keyCode);
 
     // charCode follows the same rule across event types.
-    testing.expectEqual(
-      0,
-      new KeyboardEvent("keypress", { key: "a" }).charCode,
-    );
-    testing.expectEqual(
-      0,
-      new KeyboardEvent("keypress", { key: "Enter" }).charCode,
-    );
-    testing.expectEqual(0, new KeyboardEvent("keydown", { key: "a" }).charCode);
-    testing.expectEqual(0, new KeyboardEvent("keyup", { key: "a" }).charCode);
+    testing.expectEqual(0, new KeyboardEvent('keypress', {key: 'a'}).charCode);
+    testing.expectEqual(0, new KeyboardEvent('keypress', {key: 'Enter'}).charCode);
+    testing.expectEqual(0, new KeyboardEvent('keydown', {key: 'a'}).charCode);
+    testing.expectEqual(0, new KeyboardEvent('keyup', {key: 'a'}).charCode);
   }
 </script>
 
-<script id="initKeyboardEvent">
+<script id=initKeyboardEvent>
   {
-    let evt = new KeyboardEvent("keydown", { key: "a" });
-    evt.initKeyboardEvent(
-      "keyup",
-      true,
-      true,
-      window,
-      "q",
-      1,
-      true,
-      false,
-      true,
-      false,
-    );
-    testing.expectEqual("keyup", evt.type);
+    let evt = new KeyboardEvent('keydown', {key: 'a'});
+    evt.initKeyboardEvent('keyup', true, true, window, 'q', 1, true, false, true, false);
+    testing.expectEqual('keyup', evt.type);
     testing.expectEqual(true, evt.bubbles);
     testing.expectEqual(true, evt.cancelable);
-    testing.diverges("Chrome ignores the key argument", () => {
-      testing.expectEqual("q", evt.key);
+    testing.diverges('Chrome ignores the key argument', () => {
+      testing.expectEqual('q', evt.key);
     });
     testing.expectEqual(1, evt.location);
     testing.expectEqual(true, evt.ctrlKey);
@@ -205,15 +182,15 @@
   }
 </script>
 
-<script id="initKeyboardEventOptional">
+<script id=initKeyboardEventOptional>
   {
-    let evt = new KeyboardEvent("keydown", { key: "x" });
-    evt.initKeyboardEvent("foo");
-    testing.expectEqual("foo", evt.type);
+    let evt = new KeyboardEvent('keydown', {key: 'x'});
+    evt.initKeyboardEvent('foo');
+    testing.expectEqual('foo', evt.type);
     testing.expectEqual(false, evt.bubbles);
     testing.expectEqual(false, evt.cancelable);
-    testing.diverges("Chrome ignores the key argument", () => {
-      testing.expectEqual("", evt.key);
+    testing.diverges('Chrome ignores the key argument', () => {
+      testing.expectEqual('', evt.key);
     });
     testing.expectEqual(0, evt.location);
   }

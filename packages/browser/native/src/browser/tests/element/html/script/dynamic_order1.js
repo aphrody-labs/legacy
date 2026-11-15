@@ -1,2 +1,1 @@
-window.domLoadedBefore1 = domLoaded;
-orderedList += "1";
+window.domLoadedBefore1 = domLoaded; orderedList += '1';

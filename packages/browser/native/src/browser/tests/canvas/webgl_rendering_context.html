@@ -1,15 +1,15 @@
-<!doctype html>
+<!DOCTYPE html>
 <script src="../testing.js"></script>
 
-<script id="WebGLRenderingContext#getSupportedExtensions">
-  {
-    const element = document.createElement("canvas");
-    const ctx = element.getContext("webgl");
-    testing.expectEqual(true, ctx instanceof WebGLRenderingContext);
+<script id=WebGLRenderingContext#getSupportedExtensions>
+{
+  const element = document.createElement("canvas");
+  const ctx = element.getContext("webgl");
+  testing.expectEqual(true, ctx instanceof WebGLRenderingContext);
 
-    const supportedExtensions = ctx.getSupportedExtensions();
-    // The order Chrome prefer.
-    const expectedExtensions = [
+  const supportedExtensions = ctx.getSupportedExtensions();
+  // The order Chrome prefer.
+  const expectedExtensions = [
       "ANGLE_instanced_arrays",
       "EXT_blend_minmax",
       "EXT_clip_control",
@@ -48,53 +48,50 @@
       "WEBGL_draw_buffers",
       "WEBGL_lose_context",
       "WEBGL_multi_draw",
-      "WEBGL_polygon_mode",
-    ];
+      "WEBGL_polygon_mode"
+  ];
 
-    testing.expectEqual(expectedExtensions.length, supportedExtensions.length);
-    for (let i = 0; i < expectedExtensions.length; i++) {
-      testing.expectEqual(expectedExtensions[i], supportedExtensions[i]);
-    }
+  testing.expectEqual(expectedExtensions.length, supportedExtensions.length);
+  for (let i = 0; i < expectedExtensions.length; i++) {
+    testing.expectEqual(expectedExtensions[i], supportedExtensions[i]);
   }
+}
 </script>
 
-<script id="WebGLRenderingCanvas#getExtension">
-  // WEBGL_debug_renderer_info
-  {
-    const element = document.createElement("canvas");
-    const ctx = element.getContext("webgl");
-    const rendererInfo = ctx.getExtension("WEBGL_debug_renderer_info");
-    testing.expectEqual(
-      true,
-      rendererInfo instanceof WEBGL_debug_renderer_info,
-    );
+<script id=WebGLRenderingCanvas#getExtension>
+// WEBGL_debug_renderer_info
+{
+  const element = document.createElement("canvas");
+  const ctx = element.getContext("webgl");
+  const rendererInfo = ctx.getExtension("WEBGL_debug_renderer_info");
+  testing.expectEqual(true, rendererInfo instanceof WEBGL_debug_renderer_info);
 
-    const { UNMASKED_VENDOR_WEBGL, UNMASKED_RENDERER_WEBGL } = rendererInfo;
-    testing.expectEqual(UNMASKED_VENDOR_WEBGL, 0x9245);
-    testing.expectEqual(UNMASKED_RENDERER_WEBGL, 0x9246);
+  const { UNMASKED_VENDOR_WEBGL, UNMASKED_RENDERER_WEBGL } = rendererInfo;
+  testing.expectEqual(UNMASKED_VENDOR_WEBGL, 0x9245);
+  testing.expectEqual(UNMASKED_RENDERER_WEBGL, 0x9246);
 
-    testing.expectEqual("", ctx.getParameter(UNMASKED_VENDOR_WEBGL));
-    testing.expectEqual("", ctx.getParameter(UNMASKED_RENDERER_WEBGL));
-  }
+  testing.expectEqual("", ctx.getParameter(UNMASKED_VENDOR_WEBGL));
+  testing.expectEqual("", ctx.getParameter(UNMASKED_RENDERER_WEBGL));
+}
 
-  // WEBGL_lose_context
-  {
-    const element = document.createElement("canvas");
-    const ctx = element.getContext("webgl");
-    const loseContext = ctx.getExtension("WEBGL_lose_context");
-    testing.expectEqual(true, loseContext instanceof WEBGL_lose_context);
+// WEBGL_lose_context
+{
+  const element = document.createElement("canvas");
+  const ctx = element.getContext("webgl");
+  const loseContext = ctx.getExtension("WEBGL_lose_context");
+  testing.expectEqual(true, loseContext instanceof WEBGL_lose_context);
 
-    loseContext.loseContext();
-    loseContext.restoreContext();
-  }
+  loseContext.loseContext();
+  loseContext.restoreContext();
+}
 </script>
 
-<script id="identity">
-  {
-    const element = document.createElement("canvas");
-    const ctx = element.getContext("webgl");
+<script id=identity>
+{
+  const element = document.createElement('canvas');
+  const ctx = element.getContext('webgl');
 
-    testing.expectTrue(ctx === element.getContext("webgl"));
-    testing.expectEqual(null, element.getContext("2d"));
-  }
+  testing.expectTrue(ctx === element.getContext('webgl'));
+  testing.expectEqual(null, element.getContext('2d'));
+}
 </script>

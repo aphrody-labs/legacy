@@ -1,8 +1,8 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
-<script id="throwingObserverDoesNotStopOthers" type="module">
+<script id="throwingObserverDoesNotStopOthers" type=module>
   const state = await testing.async();
 
   let calledSecond = false;
@@ -11,11 +11,11 @@
     errors.push(e.error);
     e.preventDefault();
   };
-  window.addEventListener("error", onError);
+  window.addEventListener('error', onError);
 
   const first = new PerformanceObserver(() => {
     first.disconnect();
-    throw new Error("boom");
+    throw new Error('boom');
   });
   first.observe({ type: "mark" });
 
@@ -29,12 +29,12 @@
     performance.mark("throwMark");
   });
 
-  window.removeEventListener("error", onError);
+  window.removeEventListener('error', onError);
 
   state.resolve();
   await state.done(() => {
     testing.expectEqual(true, calledSecond);
     testing.expectEqual(1, errors.length);
-    testing.expectEqual("boom", errors[0].message);
+    testing.expectEqual('boom', errors[0].message);
   });
 </script>

@@ -1,1 +1,1 @@
-readyAsyncOrder.push("module");
+readyAsyncOrder.push('module');

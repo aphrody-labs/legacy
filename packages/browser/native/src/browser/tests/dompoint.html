@@ -1,13 +1,14 @@
-<!doctype html>
+<!DOCTYPE html>
 <head>
   <title>DOMPoint Test</title>
   <script src="testing.js"></script>
-  <meta name="lp-mode" content="test" />
+  <meta name=lp-mode content=test>
 </head>
 
-<body></body>
+<body>
+</body>
 
-<script id="default_construct">
+<script id=default_construct>
   {
     const p = new DOMPoint();
     testing.expectEqual(0, p.x);
@@ -17,7 +18,7 @@
   }
 </script>
 
-<script id="construct_with_args">
+<script id=construct_with_args>
   {
     const p = new DOMPoint(1, 2, 3, 4);
     testing.expectEqual(1, p.x);
@@ -27,7 +28,7 @@
   }
 </script>
 
-<script id="readonly_default">
+<script id=readonly_default>
   {
     const p = new DOMPointReadOnly(5, 6);
     testing.expectEqual(5, p.x);
@@ -37,7 +38,7 @@
   }
 </script>
 
-<script id="mutable_setters">
+<script id=mutable_setters>
   {
     const p = new DOMPoint(1, 1, 1, 1);
     p.x = 10;
@@ -51,7 +52,7 @@
   }
 </script>
 
-<script id="readonly_is_not_writable">
+<script id=readonly_is_not_writable>
   {
     const p = new DOMPointReadOnly(1, 2, 3, 4);
     // Non-strict assignment to an accessor without a setter is a silent no-op.
@@ -60,7 +61,7 @@
   }
 </script>
 
-<script id="prototype_chain">
+<script id=prototype_chain>
   {
     const p = new DOMPoint(1, 2, 3, 4);
     testing.expectTrue(p instanceof DOMPoint);
@@ -72,7 +73,7 @@
   }
 </script>
 
-<script id="from_point">
+<script id=from_point>
   {
     const p = DOMPoint.fromPoint({ x: 7, y: 8, z: 9 });
     testing.expectTrue(p instanceof DOMPoint);
@@ -89,7 +90,7 @@
   }
 </script>
 
-<script id="from_point_empty">
+<script id=from_point_empty>
   {
     const p = DOMPoint.fromPoint();
     testing.expectEqual(0, p.x);
@@ -97,7 +98,7 @@
   }
 </script>
 
-<script id="to_json">
+<script id=to_json>
   {
     const p = new DOMPoint(1, 2, 3, 4);
     const j = p.toJSON();
@@ -108,7 +109,7 @@
   }
 </script>
 
-<script id="matrix_transform_translate">
+<script id=matrix_transform_translate>
   {
     const p = new DOMPoint(1, 2, 0, 1);
     const t = p.matrixTransform(new DOMMatrix().translate(10, 20));
@@ -123,7 +124,7 @@
   }
 </script>
 
-<script id="matrix_transform_scale">
+<script id=matrix_transform_scale>
   {
     const p = new DOMPointReadOnly(2, 3, 4, 1);
     const t = p.matrixTransform(new DOMMatrix().scale(2, 3));
@@ -132,7 +133,7 @@
   }
 </script>
 
-<script id="matrix_transform_dict">
+<script id=matrix_transform_dict>
   {
     const p = new DOMPoint(1, 0, 0, 1);
     // matrix(a,b,c,d,e,f) = scaleX 2, translateX 5
@@ -141,7 +142,7 @@
   }
 </script>
 
-<script id="structured_clone_readonly">
+<script id=structured_clone_readonly>
   {
     const p = new DOMPointReadOnly(1.5, 2.5, 3.5, 4.5);
     const c = structuredClone(p);
@@ -155,7 +156,7 @@
   }
 </script>
 
-<script id="structured_clone_mutable">
+<script id=structured_clone_mutable>
   {
     const p = new DOMPoint(-1, -2, -3, -4);
     const c = structuredClone(p);

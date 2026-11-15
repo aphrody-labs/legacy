@@ -1,8 +1,8 @@
 // Dynamic import() in a classic worker — before the ScriptManagerBase
 // split, this path crashed on a null script_manager unwrap.
-(async function () {
+(async function() {
   try {
-    const mod = await import("./import-module.js");
+    const mod = await import('./import-module.js');
     postMessage({
       ok: true,
       message: mod.message,

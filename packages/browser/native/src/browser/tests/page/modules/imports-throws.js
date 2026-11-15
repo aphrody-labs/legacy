@@ -1,1 +1,1 @@
-import "./throws-type-error.js?dependency";
+import './throws-type-error.js?dependency';

@@ -1,1 +1,1 @@
-export const sharedValue = "diamond-shared";
+export const sharedValue = 'diamond-shared';

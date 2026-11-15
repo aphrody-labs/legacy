@@ -1,1 +1,1 @@
-postMessage("importScripts-2");
+postMessage('importScripts-2');

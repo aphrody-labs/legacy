@@ -1,2 +1,2 @@
-export { baseValue } from "./base.js";
-export { importedValue, localValue } from "./importer.js";
+export { baseValue } from './base.js';
+export { importedValue, localValue } from './importer.js';

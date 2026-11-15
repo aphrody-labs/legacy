@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
 <!--
@@ -9,17 +9,17 @@
 -->
 <script>
   function newAnimation(duration = 50) {
-    return document.createElement("div").animate(null, { duration });
+    return document.createElement('div').animate(null, { duration });
   }
 </script>
 
-<script id="animation" type="module">
+<script id=animation type=module>
   {
     const state = await testing.async();
 
     // animate() plays the animation.
     let a1 = newAnimation();
-    testing.expectEqual("running", a1.playState);
+    testing.expectEqual('running', a1.playState);
 
     let cb = [];
     a1.finished.then((x) => {
@@ -29,12 +29,12 @@
     });
 
     await state.done(() => {
-      testing.expectEqual(["finished", true], cb);
+      testing.expectEqual(['finished', true], cb);
     });
   }
 </script>
 
-<script id="startTime">
+<script id=startTime>
   let a2 = newAnimation();
   a2.cancel();
   // startTime is null once cancelled
@@ -47,7 +47,7 @@
   testing.expectEqual(null, a2.startTime);
 </script>
 
-<script id="onfinish" type="module">
+<script id=onfinish type=module>
   {
     const state = await testing.async();
     let a3 = newAnimation();
@@ -55,51 +55,51 @@
     testing.expectEqual(null, a3.onfinish);
 
     let calls = [];
-    a3.onfinish = function () {
-      calls.push("finish");
+    a3.onfinish = function() {
+      calls.push('finish');
       state.resolve();
     };
 
     await state.done(() => {
-      testing.expectEqual(["finish"], calls);
+      testing.expectEqual(['finish'], calls);
     });
   }
 </script>
 
-<script id="pause" type="module">
+<script id=pause type=module>
   {
     const state = await testing.async();
 
     let a4 = newAnimation(1000);
     let cb4 = [];
     a4.finished.then(() => {
-      cb4.push("finished");
+      cb4.push('finished');
       state.resolve();
     });
 
     a4.ready.then(() => {
-      cb4.push(a4.playState);
+      cb4.push(a4.playState)
       a4.pause();
-      cb4.push(a4.playState);
+      cb4.push(a4.playState)
       // should not resolve finished! Let's wait a bit to see
       setTimeout(() => {
         state.resolve();
-      }, 30);
+      }, 30)
     });
     await state.done(() => {
-      testing.expectEqual(["running", "paused"], cb4);
+      testing.expectEqual(['running', 'paused'], cb4);
     });
   }
 </script>
 
-<script id="finish" type="module">
+<script id=finish type=module>
   {
     const state = await testing.async();
     let a5 = newAnimation(1000);
 
     let cb5 = [];
     a5.finished.then(() => {
-      cb5.push(a5.playState);
+      cb5.push(a5.playState)
       state.resolve();
     });
 
@@ -107,65 +107,54 @@
     cb5.push(a5.playState);
 
     await state.done(() => {
-      testing.expectEqual(["finished", "finished"], cb5);
+      testing.expectEqual(['finished', 'finished'], cb5)
     });
   }
 </script>
 
-<script id="event_target">
+<script id=event_target>
   {
     const a = newAnimation();
     testing.expectEqual(true, a instanceof EventTarget);
-    testing.expectEqual("function", typeof a.addEventListener);
-    testing.expectEqual("function", typeof a.removeEventListener);
-    testing.expectEqual(
-      "[object Animation]",
-      Object.prototype.toString.call(a),
-    );
+    testing.expectEqual('function', typeof a.addEventListener);
+    testing.expectEqual('function', typeof a.removeEventListener);
+    testing.expectEqual('[object Animation]', Object.prototype.toString.call(a));
     testing.expectEqual(null, a.oncancel);
   }
 </script>
 
-<script id="finish_event" type="module">
+<script id=finish_event type=module>
   {
     const state = await testing.async();
     const a = newAnimation();
 
     let calls = [];
-    const removed = () => calls.push("removed");
-    a.addEventListener("finish", removed);
-    a.removeEventListener("finish", removed);
-    a.onfinish = function (e) {
-      calls.push(["onfinish", this === a, e.type]);
+    const removed = () => calls.push('removed');
+    a.addEventListener('finish', removed);
+    a.removeEventListener('finish', removed);
+    a.onfinish = function(e) {
+      calls.push(['onfinish', this === a, e.type]);
     };
-    a.addEventListener("finish", (e) => {
-      calls.push([
-        "listener",
-        e.target === a,
-        e instanceof AnimationPlaybackEvent,
-        e.isTrusted,
-      ]);
+    a.addEventListener('finish', (e) => {
+      calls.push(['listener', e.target === a, e instanceof AnimationPlaybackEvent, e.isTrusted]);
       state.resolve();
     });
 
     await state.done(() => {
-      testing.expectEqual(
-        [
-          ["onfinish", true, "finish"],
-          ["listener", true, true, true],
-        ],
-        calls,
-      );
+      testing.expectEqual([
+        ['onfinish', true, 'finish'],
+        ['listener', true, true, true],
+      ], calls);
     });
   }
 </script>
 
-<script id="finish_method_event" type="module">
+<script id=finish_method_event type=module>
   {
     const state = await testing.async();
     const a = newAnimation(1000);
     let calls = [];
-    a.addEventListener("finish", (e) => {
+    a.addEventListener('finish', (e) => {
       calls.push(e.type);
       setTimeout(() => state.resolve(), 30);
     });
@@ -175,65 +164,59 @@
     testing.expectEqual([], calls);
 
     await state.done(() => {
-      testing.expectEqual(["finish"], calls);
+      testing.expectEqual(['finish'], calls);
     });
   }
 </script>
 
-<script id="cancel_event" type="module">
+<script id=cancel_event type=module>
   {
     const state = await testing.async();
     const a = newAnimation(1000);
     let calls = [];
-    a.oncancel = (e) => calls.push("oncancel:" + e.type);
-    a.addEventListener("cancel", (e) => {
-      calls.push("listener:" + e.type);
+    a.oncancel = (e) => calls.push('oncancel:' + e.type);
+    a.addEventListener('cancel', (e) => {
+      calls.push('listener:' + e.type);
       // cancelling an idle animation doesn't queue another event
       a.cancel();
       setTimeout(() => state.resolve(), 30);
     });
 
     const first = a.finished;
-    first.catch((e) => calls.push("rejected:" + e.name));
+    first.catch((e) => calls.push('rejected:' + e.name));
 
     a.cancel();
-    testing.expectEqual("idle", a.playState);
+    testing.expectEqual('idle', a.playState);
     // queued, not dispatched inline
     testing.expectEqual([], calls);
     // the rejected promise is replaced
     testing.expectEqual(false, first === a.finished);
 
     await state.done(() => {
-      testing.expectEqual(
-        ["rejected:AbortError", "oncancel:cancel", "listener:cancel"],
-        calls,
-      );
+      testing.expectEqual(['rejected:AbortError', 'oncancel:cancel', 'listener:cancel'], calls);
     });
   }
 </script>
 
-<script id="dispatch_event">
+<script id=dispatch_event>
   {
     const a = newAnimation();
     let calls = [];
     a.onfinish = (e) => calls.push(e.isTrusted);
-    a.dispatchEvent(new AnimationPlaybackEvent("finish"));
+    a.dispatchEvent(new AnimationPlaybackEvent('finish'));
     testing.expectEqual([false], calls);
   }
 </script>
 
-<script id="playback_event">
+<script id=playback_event>
   {
-    const e = new AnimationPlaybackEvent("finish", {
-      currentTime: 100,
-      timelineTime: 250.5,
-    });
-    testing.expectEqual("finish", e.type);
+    const e = new AnimationPlaybackEvent('finish', { currentTime: 100, timelineTime: 250.5 });
+    testing.expectEqual('finish', e.type);
     testing.expectEqual(100, e.currentTime);
     testing.expectEqual(250.5, e.timelineTime);
     testing.expectEqual(true, e instanceof Event);
 
-    const d = new AnimationPlaybackEvent("cancel");
+    const d = new AnimationPlaybackEvent('cancel');
     testing.expectEqual(null, d.currentTime);
     testing.expectEqual(null, d.timelineTime);
   }

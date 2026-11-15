@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <!-- Details elements -->
@@ -14,51 +14,51 @@
 
 <script id="instanceof">
   {
-    const details = document.createElement("details");
-    testing.expectTrue(details instanceof HTMLDetailsElement);
+    const details = document.createElement('details')
+    testing.expectTrue(details instanceof HTMLDetailsElement)
   }
 </script>
 
 <script id="open_initial">
-  testing.expectEqual(false, $("#details1").open);
-  testing.expectEqual(true, $("#details2").open);
+  testing.expectEqual(false, $('#details1').open)
+  testing.expectEqual(true, $('#details2').open)
 </script>
 
 <script id="open_set">
   {
-    $("#details1").open = true;
-    testing.expectEqual(true, $("#details1").open);
+    $('#details1').open = true
+    testing.expectEqual(true, $('#details1').open)
 
-    $("#details2").open = false;
-    testing.expectEqual(false, $("#details2").open);
+    $('#details2').open = false
+    testing.expectEqual(false, $('#details2').open)
   }
 </script>
 
 <script id="open_reflects_attribute">
   {
-    const details = document.createElement("details");
-    testing.expectEqual(null, details.getAttribute("open"));
+    const details = document.createElement('details')
+    testing.expectEqual(null, details.getAttribute('open'))
 
-    details.open = true;
-    testing.expectEqual("", details.getAttribute("open"));
+    details.open = true
+    testing.expectEqual('', details.getAttribute('open'))
 
-    details.open = false;
-    testing.expectEqual(null, details.getAttribute("open"));
+    details.open = false
+    testing.expectEqual(null, details.getAttribute('open'))
   }
 </script>
 
 <script id="name_initial">
   {
-    const details = document.createElement("details");
-    testing.expectEqual("", details.name);
+    const details = document.createElement('details')
+    testing.expectEqual('', details.name)
   }
 </script>
 
 <script id="name_set">
   {
-    const details = document.createElement("details");
-    details.name = "group1";
-    testing.expectEqual("group1", details.name);
-    testing.expectEqual("group1", details.getAttribute("name"));
+    const details = document.createElement('details')
+    details.name = 'group1'
+    testing.expectEqual('group1', details.name)
+    testing.expectEqual('group1', details.getAttribute('name'))
   }
 </script>

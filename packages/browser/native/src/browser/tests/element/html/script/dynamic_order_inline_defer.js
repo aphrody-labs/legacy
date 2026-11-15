@@ -1,1 +1,1 @@
-window.inlineModuleList += "defer,";
+window.inlineModuleList += 'defer,';

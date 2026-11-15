@@ -1,1 +1,1 @@
-export const val = "preloaded-module";
+export const val = 'preloaded-module';

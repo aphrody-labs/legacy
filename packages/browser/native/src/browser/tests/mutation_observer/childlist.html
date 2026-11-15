@@ -1,22 +1,18 @@
-<!doctype html>
+<!DOCTYPE html>
 
-<meta name="lp-mode" content="test" />
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
 <div id="parent"><div id="child1">Child 1</div></div>
 <div id="empty-parent"></div>
 <div id="remove-parent"><div id="only-child">Only</div></div>
 <div id="text-parent"></div>
-<div id="middle-parent">
-  <div id="first">First</div>
-  <div id="middle">Middle</div>
-  <div id="last">Last</div>
-</div>
+<div id="middle-parent"><div id="first">First</div><div id="middle">Middle</div><div id="last">Last</div></div>
 
-<script id="childlist" type="module">
+<script id="childlist" type=module>
   const state = await testing.async();
-  const parent = document.getElementById("parent");
-  const child1 = document.getElementById("child1");
+  const parent = document.getElementById('parent');
+  const child1 = document.getElementById('child1');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -24,13 +20,13 @@
   });
   observer.observe(parent, { childList: true });
 
-  const child2 = document.createElement("div");
-  child2.textContent = "Child 2";
+  const child2 = document.createElement('div');
+  child2.textContent = 'Child 2';
   parent.appendChild(child2);
 
   await state.done((mutations) => {
     testing.expectEqual(1, mutations.length);
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(parent, mutations[0].target);
     testing.expectEqual(1, mutations[0].addedNodes.length);
     testing.expectEqual(child2, mutations[0].addedNodes[0]);
@@ -40,9 +36,9 @@
   });
 </script>
 
-<script id="childlist_empty_parent" type="module">
+<script id="childlist_empty_parent" type=module>
   const state = await testing.async();
-  const emptyParent = document.getElementById("empty-parent");
+  const emptyParent = document.getElementById('empty-parent');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -50,13 +46,13 @@
   });
   observer.observe(emptyParent, { childList: true });
 
-  const firstChild = document.createElement("div");
-  firstChild.textContent = "First child";
+  const firstChild = document.createElement('div');
+  firstChild.textContent = 'First child';
   emptyParent.appendChild(firstChild);
 
   await state.done((mutations) => {
     testing.expectEqual(1, mutations.length);
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(emptyParent, mutations[0].target);
     testing.expectEqual(1, mutations[0].addedNodes.length);
     testing.expectEqual(firstChild, mutations[0].addedNodes[0]);
@@ -66,10 +62,10 @@
   });
 </script>
 
-<script id="childlist_remove_last" type="module">
+<script id="childlist_remove_last" type=module>
   const state = await testing.async();
-  const removeParent = document.getElementById("remove-parent");
-  const onlyChild = document.getElementById("only-child");
+  const removeParent = document.getElementById('remove-parent');
+  const onlyChild = document.getElementById('only-child');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -81,7 +77,7 @@
 
   await state.done((mutations) => {
     testing.expectEqual(1, mutations.length);
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(removeParent, mutations[0].target);
     testing.expectEqual(0, mutations[0].addedNodes.length);
     testing.expectEqual(1, mutations[0].removedNodes.length);
@@ -91,9 +87,9 @@
   });
 </script>
 
-<script id="childlist_text_node" type="module">
+<script id="childlist_text_node" type=module>
   const state = await testing.async();
-  const textParent = document.getElementById("text-parent");
+  const textParent = document.getElementById('text-parent');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -101,12 +97,12 @@
   });
   observer.observe(textParent, { childList: true });
 
-  const textNode = document.createTextNode("Hello world");
+  const textNode = document.createTextNode('Hello world');
   textParent.appendChild(textNode);
 
   await state.done((mutations) => {
     testing.expectEqual(1, mutations.length);
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(textParent, mutations[0].target);
     testing.expectEqual(1, mutations[0].addedNodes.length);
     testing.expectEqual(textNode, mutations[0].addedNodes[0]);
@@ -115,12 +111,12 @@
   });
 </script>
 
-<script id="childlist_remove_middle" type="module">
+<script id="childlist_remove_middle" type=module>
   const state = await testing.async();
-  const middleParent = document.getElementById("middle-parent");
-  const first = document.getElementById("first");
-  const middle = document.getElementById("middle");
-  const last = document.getElementById("last");
+  const middleParent = document.getElementById('middle-parent');
+  const first = document.getElementById('first');
+  const middle = document.getElementById('middle');
+  const last = document.getElementById('last');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -132,7 +128,7 @@
 
   await state.done((mutations) => {
     testing.expectEqual(1, mutations.length);
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(middleParent, mutations[0].target);
     testing.expectEqual(0, mutations[0].addedNodes.length);
     testing.expectEqual(1, mutations[0].removedNodes.length);
@@ -142,16 +138,13 @@
   });
 </script>
 
-<div id="insert-parent">
-  <div id="insert-first">First</div>
-  <div id="insert-last">Last</div>
-</div>
+<div id="insert-parent"><div id="insert-first">First</div><div id="insert-last">Last</div></div>
 
-<script id="childlist_insert_before" type="module">
+<script id="childlist_insert_before" type=module>
   const state = await testing.async();
-  const insertParent = document.getElementById("insert-parent");
-  const insertFirst = document.getElementById("insert-first");
-  const insertLast = document.getElementById("insert-last");
+  const insertParent = document.getElementById('insert-parent');
+  const insertFirst = document.getElementById('insert-first');
+  const insertLast = document.getElementById('insert-last');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -159,13 +152,13 @@
   });
   observer.observe(insertParent, { childList: true });
 
-  const insertMiddle = document.createElement("div");
-  insertMiddle.textContent = "Middle";
+  const insertMiddle = document.createElement('div');
+  insertMiddle.textContent = 'Middle';
   insertParent.insertBefore(insertMiddle, insertLast);
 
   await state.done((mutations) => {
     testing.expectEqual(1, mutations.length);
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(insertParent, mutations[0].target);
     testing.expectEqual(1, mutations[0].addedNodes.length);
     testing.expectEqual(insertMiddle, mutations[0].addedNodes[0]);
@@ -177,10 +170,10 @@
 
 <div id="replace-parent"><div id="replace-old">Old</div></div>
 
-<script id="childlist_replace_child" type="module">
+<script id="childlist_replace_child" type=module>
   const state = await testing.async();
-  const replaceParent = document.getElementById("replace-parent");
-  const replaceOld = document.getElementById("replace-old");
+  const replaceParent = document.getElementById('replace-parent');
+  const replaceOld = document.getElementById('replace-old');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -188,8 +181,8 @@
   });
   observer.observe(replaceParent, { childList: true });
 
-  const replaceNew = document.createElement("div");
-  replaceNew.textContent = "New";
+  const replaceNew = document.createElement('div');
+  replaceNew.textContent = 'New';
   replaceParent.replaceChild(replaceNew, replaceOld);
 
   await state.done((mutations) => {
@@ -197,7 +190,7 @@
     // mutation record with both the added and the removed node.
     testing.expectEqual(1, mutations.length);
 
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(replaceParent, mutations[0].target);
     testing.expectEqual(1, mutations[0].addedNodes.length);
     testing.expectEqual(replaceNew, mutations[0].addedNodes[0]);
@@ -210,14 +203,14 @@
 
 <div id="replace-frag-parent"><div id="replace-frag-old">Old</div></div>
 
-<script id="childlist_replace_child_fragment" type="module">
+<script id="childlist_replace_child_fragment" type=module>
   const state = await testing.async();
-  const parent = document.getElementById("replace-frag-parent");
-  const oldChild = document.getElementById("replace-frag-old");
+  const parent = document.getElementById('replace-frag-parent');
+  const oldChild = document.getElementById('replace-frag-old');
 
   const fragment = document.createDocumentFragment();
-  const frag1 = document.createElement("div");
-  const frag2 = document.createElement("div");
+  const frag1 = document.createElement('div');
+  const frag2 = document.createElement('div');
   fragment.append(frag1, frag2);
 
   const observer = new MutationObserver((records) => {
@@ -236,7 +229,7 @@
     // suppressObservers"), followed by the parent's combined record.
     testing.expectEqual(2, mutations.length);
 
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(fragment, mutations[0].target);
     testing.expectEqual(0, mutations[0].addedNodes.length);
     testing.expectEqual(2, mutations[0].removedNodes.length);
@@ -245,7 +238,7 @@
     testing.expectEqual(null, mutations[0].previousSibling);
     testing.expectEqual(null, mutations[0].nextSibling);
 
-    testing.expectEqual("childList", mutations[1].type);
+    testing.expectEqual('childList', mutations[1].type);
     testing.expectEqual(parent, mutations[1].target);
     testing.expectEqual(2, mutations[1].addedNodes.length);
     testing.expectEqual(frag1, mutations[1].addedNodes[0]);
@@ -257,20 +250,15 @@
   });
 </script>
 
-<div id="replace-adjacent-parent">
-  <div id="replace-adjacent-a">A</div>
-  <div id="replace-adjacent-new">New</div>
-  <div id="replace-adjacent-old">Old</div>
-  <div id="replace-adjacent-b">B</div>
-</div>
+<div id="replace-adjacent-parent"><div id="replace-adjacent-a">A</div><div id="replace-adjacent-new">New</div><div id="replace-adjacent-old">Old</div><div id="replace-adjacent-b">B</div></div>
 
-<script id="childlist_replace_child_adjacent" type="module">
+<script id="childlist_replace_child_adjacent" type=module>
   const state = await testing.async();
-  const parent = document.getElementById("replace-adjacent-parent");
-  const a = document.getElementById("replace-adjacent-a");
-  const newChild = document.getElementById("replace-adjacent-new");
-  const oldChild = document.getElementById("replace-adjacent-old");
-  const b = document.getElementById("replace-adjacent-b");
+  const parent = document.getElementById('replace-adjacent-parent');
+  const a = document.getElementById('replace-adjacent-a');
+  const newChild = document.getElementById('replace-adjacent-new');
+  const oldChild = document.getElementById('replace-adjacent-old');
+  const b = document.getElementById('replace-adjacent-b');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -287,7 +275,7 @@
   await state.done((mutations) => {
     testing.expectEqual(2, mutations.length);
 
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(parent, mutations[0].target);
     testing.expectEqual(0, mutations[0].addedNodes.length);
     testing.expectEqual(1, mutations[0].removedNodes.length);
@@ -295,27 +283,24 @@
     testing.expectEqual(a, mutations[0].previousSibling);
     testing.expectEqual(oldChild, mutations[0].nextSibling);
 
-    testing.expectEqual("childList", mutations[1].type);
+    testing.expectEqual('childList', mutations[1].type);
     testing.expectEqual(parent, mutations[1].target);
     testing.expectEqual(1, mutations[1].addedNodes.length);
     testing.expectEqual(newChild, mutations[1].addedNodes[0]);
     testing.expectEqual(1, mutations[1].removedNodes.length);
     testing.expectEqual(oldChild, mutations[1].removedNodes[0]);
-    testing.diverges(
-      "Chrome removes newChild before capturing previousSibling",
-      () => {
-        testing.expectEqual(newChild, mutations[1].previousSibling);
-      },
-    );
+    testing.diverges("Chrome removes newChild before capturing previousSibling", () => {
+      testing.expectEqual(newChild, mutations[1].previousSibling);
+    });
     testing.expectEqual(b, mutations[1].nextSibling);
   });
 </script>
 
 <div id="multiple-parent"></div>
 
-<script id="childlist_multiple_mutations" type="module">
+<script id="childlist_multiple_mutations" type=module>
   const state = await testing.async();
-  const multipleParent = document.getElementById("multiple-parent");
+  const multipleParent = document.getElementById('multiple-parent');
 
   const observer = new MutationObserver((records) => {
     observer.disconnect();
@@ -323,47 +308,43 @@
   });
   observer.observe(multipleParent, { childList: true });
 
-  const child1 = document.createElement("div");
-  child1.textContent = "Child 1";
+  const child1 = document.createElement('div');
+  child1.textContent = 'Child 1';
   multipleParent.appendChild(child1);
 
-  const child2 = document.createElement("div");
-  child2.textContent = "Child 2";
+  const child2 = document.createElement('div');
+  child2.textContent = 'Child 2';
   multipleParent.appendChild(child2);
 
-  const child3 = document.createElement("div");
-  child3.textContent = "Child 3";
+  const child3 = document.createElement('div');
+  child3.textContent = 'Child 3';
   multipleParent.appendChild(child3);
 
   await state.done((mutations) => {
     testing.expectEqual(3, mutations.length);
 
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(child1, mutations[0].addedNodes[0]);
     testing.expectEqual(null, mutations[0].previousSibling);
     testing.expectEqual(null, mutations[0].nextSibling);
 
-    testing.expectEqual("childList", mutations[1].type);
+    testing.expectEqual('childList', mutations[1].type);
     testing.expectEqual(child2, mutations[1].addedNodes[0]);
     testing.expectEqual(child1, mutations[1].previousSibling);
     testing.expectEqual(null, mutations[1].nextSibling);
 
-    testing.expectEqual("childList", mutations[2].type);
+    testing.expectEqual('childList', mutations[2].type);
     testing.expectEqual(child3, mutations[2].addedNodes[0]);
     testing.expectEqual(child2, mutations[2].previousSibling);
     testing.expectEqual(null, mutations[2].nextSibling);
   });
 </script>
 
-<div id="inner-html-parent">
-  <div>Old 1</div>
-  <div>Old 2</div>
-  <div>Old 3</div>
-</div>
+<div id="inner-html-parent"><div>Old 1</div><div>Old 2</div><div>Old 3</div></div>
 
-<script id="childlist_inner_html" type="module">
+<script id="childlist_inner_html" type=module>
   const state = await testing.async();
-  const innerHtmlParent = document.getElementById("inner-html-parent");
+  const innerHtmlParent = document.getElementById('inner-html-parent');
   const oldChildren = Array.from(innerHtmlParent.children);
 
   const observer = new MutationObserver((records) => {
@@ -373,22 +354,21 @@
   observer.observe(innerHtmlParent, { childList: true });
 
   // No whitespace between tags to avoid text node mutations
-  innerHtmlParent.innerHTML =
-    "<span>New 1</span><span>New 2</span><span>New 3</span>";
+  innerHtmlParent.innerHTML = '<span>New 1</span><span>New 2</span><span>New 3</span>';
 
   await state.done((mutations) => {
     // Per the "replace all" algorithm, innerHTML queues a single mutation
     // record combining all removed and added nodes.
     testing.expectEqual(1, mutations.length);
 
-    testing.expectEqual("childList", mutations[0].type);
+    testing.expectEqual('childList', mutations[0].type);
     testing.expectEqual(3, mutations[0].removedNodes.length);
     testing.expectEqual(oldChildren[0], mutations[0].removedNodes[0]);
     testing.expectEqual(oldChildren[1], mutations[0].removedNodes[1]);
     testing.expectEqual(oldChildren[2], mutations[0].removedNodes[2]);
     testing.expectEqual(3, mutations[0].addedNodes.length);
-    testing.expectEqual("SPAN", mutations[0].addedNodes[0].nodeName);
-    testing.expectEqual("SPAN", mutations[0].addedNodes[1].nodeName);
-    testing.expectEqual("SPAN", mutations[0].addedNodes[2].nodeName);
+    testing.expectEqual('SPAN', mutations[0].addedNodes[0].nodeName);
+    testing.expectEqual('SPAN', mutations[0].addedNodes[1].nodeName);
+    testing.expectEqual('SPAN', mutations[0].addedNodes[2].nodeName);
   });
 </script>

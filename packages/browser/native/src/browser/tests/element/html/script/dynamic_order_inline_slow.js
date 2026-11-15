@@ -1,1 +1,1 @@
-window.inlineModuleList += "slow,";
+window.inlineModuleList += 'slow,';

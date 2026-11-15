@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
 <!-- The Location href setter, assign() and replace() parse the URL relative
@@ -13,98 +13,95 @@
 <script>
   function loadFrame(name) {
     return new Promise((resolve) => {
-      const frame = document.createElement("iframe");
+      const frame = document.createElement('iframe');
       frame.name = name;
       frame.onload = () => {
         // Skip the load of the initial about:blank document.
-        if (
-          !frame.contentWindow.location.pathname.endsWith("/nested/start.html")
-        )
-          return;
+        if (!frame.contentWindow.location.pathname.endsWith('/nested/start.html')) return;
         frame.onload = null;
         resolve(frame);
       };
-      frame.src = "support/nested/start.html";
+      frame.src = 'support/nested/start.html';
       document.body.appendChild(frame);
     });
   }
 
   async function navigateFrame(name, navigate) {
     const frame = await loadFrame(name);
-    const loaded = new Promise((resolve) => (frame.onload = resolve));
+    const loaded = new Promise((resolve) => frame.onload = resolve);
     navigate(frame);
     await loaded;
     return frame.contentDocument.body.textContent.trim();
   }
 </script>
 
-<script id="href_setter" type="module">
+<script id=href_setter type=module>
   const state = await testing.async();
-  const text = await navigateFrame("href_frame", (frame) => {
-    frame.contentWindow.location.href = "support/page.html";
+  const text = await navigateFrame('href_frame', (frame) => {
+    frame.contentWindow.location.href = 'support/page.html';
   });
   state.resolve();
   await state.done(() => {
-    testing.expectEqual("a-page", text);
+    testing.expectEqual('a-page', text);
   });
 </script>
 
-<script id="assign" type="module">
+<script id=assign type=module>
   const state = await testing.async();
-  const text = await navigateFrame("assign_frame", (frame) => {
-    frame.contentWindow.location.assign("support/page.html");
+  const text = await navigateFrame('assign_frame', (frame) => {
+    frame.contentWindow.location.assign('support/page.html');
   });
   state.resolve();
   await state.done(() => {
-    testing.expectEqual("a-page", text);
+    testing.expectEqual('a-page', text);
   });
 </script>
 
-<script id="replace" type="module">
+<script id=replace type=module>
   const state = await testing.async();
-  const text = await navigateFrame("replace_frame", (frame) => {
-    frame.contentWindow.location.replace("support/page.html");
+  const text = await navigateFrame('replace_frame', (frame) => {
+    frame.contentWindow.location.replace('support/page.html');
   });
   state.resolve();
   await state.done(() => {
-    testing.expectEqual("a-page", text);
+    testing.expectEqual('a-page', text);
   });
 </script>
 
-<script id="window_location_setter" type="module">
+<script id=window_location_setter type=module>
   const state = await testing.async();
-  const text = await navigateFrame("window_frame", (frame) => {
-    frame.contentWindow.location = "support/page.html";
+  const text = await navigateFrame('window_frame', (frame) => {
+    frame.contentWindow.location = 'support/page.html';
   });
   state.resolve();
   await state.done(() => {
-    testing.expectEqual("a-page", text);
+    testing.expectEqual('a-page', text);
   });
 </script>
 
-<script id="foreign_realm_method" type="module">
+<script id=foreign_realm_method type=module>
   // This realm's assign() called on the frame's Location: the navigation
   // targets the Location's own window, not the realm the method came from.
   const state = await testing.async();
-  const text = await navigateFrame("foreign_frame", (frame) => {
-    location.assign.call(frame.contentWindow.location, "support/page.html");
+  const text = await navigateFrame('foreign_frame', (frame) => {
+    location.assign.call(frame.contentWindow.location, 'support/page.html');
   });
   state.resolve();
   await state.done(() => {
-    testing.expectEqual("a-page", text);
+    testing.expectEqual('a-page', text);
   });
 </script>
 
-<script id="own_script" type="module">
+<script id=own_script type=module>
   // The frame's own script is the entry: its document's base applies.
   const state = await testing.async();
-  const text = await navigateFrame("own_frame", (frame) => {
-    const script = frame.contentDocument.createElement("script");
+  const text = await navigateFrame('own_frame', (frame) => {
+    const script = frame.contentDocument.createElement('script');
     script.textContent = "location.href = 'support/page.html'";
     frame.contentDocument.body.appendChild(script);
   });
   state.resolve();
   await state.done(() => {
-    testing.expectEqual("nested-page", text);
+    testing.expectEqual('nested-page', text);
   });
 </script>

@@ -40,7 +40,7 @@ below), with no change in run duration.
   (Chromium hardcodes it), so all of V8's function sections are named `.text`
   and the script cannot address them. `mark_hot_sections.zig` (run
   automatically by `build.zig` when an orderfile is set) rewrites the archive,
-  renaming just the _hot_ sections to `.text.hot.<symbol>` /
+  renaming just the *hot* sections to `.text.hot.<symbol>` /
   `.rodata.hot.<symbol>` so the script gathers all of V8 with one
   `.text.hot.*` glob (which keeps the link at ~2s instead of ~26s). The
   browser's own hot Zig/Rust/C sections are matched by explicit per-file
@@ -82,7 +82,7 @@ Whether the new profile is any good is not measured here; the e2e bench's
 `MAX_VmHWM` gate is, on the next push to `main`.
 
 The profile is a list of resident pages, so every function sharing a 4KB page
-with a hot one is counted as hot. Profiling the _unordered_ binary keeps that
+with a hot one is counted as hot. Profiling the *unordered* binary keeps that
 over-inclusion random: a profile of the ordered binary would re-include every
 function that went cold but still sits in `.text.hot` next to a hot one, and
 the hot set would only ever grow. Over-inclusion is the cheap side of the

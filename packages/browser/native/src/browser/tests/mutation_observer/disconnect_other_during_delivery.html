@@ -1,11 +1,11 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
-<script id="disconnectAndCollectLaterObserver">
+<script id=disconnectAndCollectLaterObserver>
   var calledB = false;
   {
-    const target = document.createElement("div");
+    const target = document.createElement('div');
     let b = null;
 
     const a = new MutationObserver(() => {
@@ -14,22 +14,20 @@
       const keep = [];
       for (let round = 0; round < 4; round++) {
         const junk = [];
-        for (let i = 0; i < 300000; i++) junk.push({ i, s: "x" + i });
+        for (let i = 0; i < 300000; i++) junk.push({ i, s: 'x' + i });
         keep.push(junk);
       }
     });
     a.observe(target, { attributes: true });
 
-    b = new MutationObserver(() => {
-      calledB = true;
-    });
+    b = new MutationObserver(() => { calledB = true; });
     b.observe(target, { attributes: true });
 
-    for (let i = 0; i < 8; i++) target.setAttribute("x" + i, "1");
-    testing.expectEqual("1", target.getAttribute("x0"));
+    for (let i = 0; i < 8; i++) target.setAttribute('x' + i, '1');
+    testing.expectEqual('1', target.getAttribute('x0'));
   }
 </script>
 
-<script id="laterObserverNotCalled">
+<script id=laterObserverNotCalled>
   testing.expectEqual(false, calledB);
 </script>

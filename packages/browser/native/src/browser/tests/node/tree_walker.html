@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
 <body>
@@ -15,7 +15,7 @@
   </div>
 </body>
 
-<script id="tree_walker_basic">
+<script id=tree_walker_basic>
   {
     const root = document.getElementById("root");
     const walker = document.createTreeWalker(root);
@@ -23,12 +23,12 @@
     testing.expectEqual("TreeWalker", walker.constructor.name);
     testing.expectEqual(root, walker.root);
     testing.expectEqual(root, walker.currentNode);
-    testing.expectEqual(0xffffffff, walker.whatToShow);
+    testing.expectEqual(0xFFFFFFFF, walker.whatToShow);
     testing.expectEqual(null, walker.filter);
   }
 </script>
 
-<script id="tree_walker_element_filter">
+<script id=tree_walker_element_filter>
   {
     const root = document.getElementById("root");
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
@@ -48,7 +48,7 @@
   }
 </script>
 
-<script id="tree_walker_text_filter">
+<script id=tree_walker_text_filter>
   {
     const container = document.createElement("div");
     container.appendChild(document.createTextNode("text1"));
@@ -71,7 +71,7 @@
   }
 </script>
 
-<script id="tree_walker_skip_vs_reject">
+<script id=tree_walker_skip_vs_reject>
   {
     const container = document.createElement("div");
     container.innerHTML = `
@@ -86,7 +86,7 @@
     const walker = document.createTreeWalker(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.id === "skip-me") {
           return NodeFilter.FILTER_SKIP;
         }
@@ -94,7 +94,7 @@
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_ACCEPT;
-      },
+      }
     );
 
     const first = walker.nextNode();
@@ -105,7 +105,7 @@
   }
 </script>
 
-<script id="tree_walker_nested_comments_in_skipped">
+<script id=tree_walker_nested_comments_in_skipped>
   {
     const container = document.createElement("div");
     const skipped = document.createElement("div");
@@ -117,12 +117,12 @@
     const walker = document.createTreeWalker(
       container,
       NodeFilter.SHOW_COMMENT,
-      function (node) {
+      function(node) {
         if (node.nodeType === 1 && node.id === "skipped") {
           return NodeFilter.FILTER_SKIP;
         }
         return NodeFilter.FILTER_ACCEPT;
-      },
+      }
     );
 
     const found = walker.nextNode();
@@ -131,7 +131,7 @@
   }
 </script>
 
-<script id="tree_walker_nested_text_in_rejected">
+<script id=tree_walker_nested_text_in_rejected>
   {
     const container = document.createElement("div");
     const rejected = document.createElement("div");
@@ -143,12 +143,12 @@
     const walker = document.createTreeWalker(
       container,
       NodeFilter.SHOW_TEXT,
-      function (node) {
+      function(node) {
         if (node.nodeType === 1 && node.id === "rejected") {
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_ACCEPT;
-      },
+      }
     );
 
     const hidden = walker.nextNode();
@@ -162,7 +162,7 @@
   }
 </script>
 
-<script id="tree_walker_deep_nesting_with_mixed_filters">
+<script id=tree_walker_deep_nesting_with_mixed_filters>
   {
     const container = document.createElement("div");
     container.innerHTML = `
@@ -178,12 +178,12 @@
     const walker = document.createTreeWalker(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.id && node.id.includes("skip")) {
           return NodeFilter.FILTER_SKIP;
         }
         return NodeFilter.FILTER_ACCEPT;
-      },
+      }
     );
 
     const first = walker.nextNode();
@@ -197,19 +197,19 @@
   }
 </script>
 
-<script id="tree_walker_function_filter">
+<script id=tree_walker_function_filter>
   {
     const root = document.getElementById("root");
 
     const walker = document.createTreeWalker(
       root,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.id && node.id.startsWith("child")) {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     );
 
     const child1 = walker.firstChild();
@@ -226,23 +226,23 @@
   }
 </script>
 
-<script id="tree_walker_object_filter">
+<script id=tree_walker_object_filter>
   {
     const root = document.getElementById("root");
 
     const filter = {
-      acceptNode: function (node) {
+      acceptNode: function(node) {
         if (node.tagName === "SPAN") {
           return NodeFilter.FILTER_ACCEPT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     };
 
     const walker = document.createTreeWalker(
       root,
       NodeFilter.SHOW_ELEMENT,
-      filter,
+      filter
     );
 
     const span1 = walker.nextNode();
@@ -259,7 +259,7 @@
   }
 </script>
 
-<script id="tree_walker_navigation">
+<script id=tree_walker_navigation>
   {
     const root = document.getElementById("root");
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
@@ -274,7 +274,7 @@
   }
 </script>
 
-<script id="tree_walker_current_node_setter">
+<script id=tree_walker_current_node_setter>
   {
     const root = document.getElementById("root");
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
@@ -288,7 +288,7 @@
   }
 </script>
 
-<script id="tree_walker_previousNode_complex">
+<script id=tree_walker_previousNode_complex>
   {
     const container = document.createElement("div");
     container.innerHTML = `
@@ -301,10 +301,7 @@
       <div id="e"></div>
     `;
 
-    const walker = document.createTreeWalker(
-      container,
-      NodeFilter.SHOW_ELEMENT,
-    );
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
 
     walker.currentNode = container.querySelector("#e");
     testing.expectEqual("d", walker.previousNode().id);
@@ -316,7 +313,7 @@
   }
 </script>
 
-<script id="tree_walker_nextNode_with_filter">
+<script id=tree_walker_nextNode_with_filter>
   {
     const container = document.createElement("div");
     container.innerHTML = `
@@ -333,7 +330,7 @@
     const walker = document.createTreeWalker(
       container,
       NodeFilter.SHOW_ELEMENT,
-      function (node) {
+      function(node) {
         if (node.classList.contains("accept")) {
           return NodeFilter.FILTER_ACCEPT;
         }
@@ -341,7 +338,7 @@
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_SKIP;
-      },
+      }
     );
 
     testing.expectEqual("A", walker.nextNode().textContent);
@@ -351,7 +348,7 @@
   }
 </script>
 
-<script id="tree_walker_all_node_types">
+<script id=tree_walker_all_node_types>
   {
     const container = document.createElement("div");
     container.appendChild(document.createTextNode("text"));
@@ -360,30 +357,21 @@
     span.textContent = "element";
     container.appendChild(span);
 
-    const textWalker = document.createTreeWalker(
-      container,
-      NodeFilter.SHOW_TEXT,
-    );
+    const textWalker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
     testing.expectEqual("text", textWalker.nextNode().textContent);
     testing.expectEqual("element", textWalker.nextNode().textContent);
 
-    const commentWalker = document.createTreeWalker(
-      container,
-      NodeFilter.SHOW_COMMENT,
-    );
+    const commentWalker = document.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
     const comment = commentWalker.nextNode();
     testing.expectEqual(8, comment.nodeType);
     testing.expectEqual("comment", comment.data);
 
-    const elementWalker = document.createTreeWalker(
-      container,
-      NodeFilter.SHOW_ELEMENT,
-    );
+    const elementWalker = document.createTreeWalker(container, NodeFilter.SHOW_ELEMENT);
     testing.expectEqual("SPAN", elementWalker.nextNode().tagName);
   }
 </script>
 
-<script id="tree_walker_boundary_conditions">
+<script id=tree_walker_boundary_conditions>
   {
     const root = document.getElementById("root");
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);

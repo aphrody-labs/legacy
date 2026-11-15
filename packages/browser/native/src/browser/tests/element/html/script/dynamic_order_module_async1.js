@@ -1,1 +1,1 @@
-moduleAsyncList += "1";
+moduleAsyncList += '1';

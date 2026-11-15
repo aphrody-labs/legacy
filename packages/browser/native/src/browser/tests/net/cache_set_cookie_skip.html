@@ -1,13 +1,10 @@
-<!doctype html>
-<meta
-  name="lp-mode"
-  content="skipped: needs an HTTP cache without the privatecache feature; Chrome's cache is private and serves the cached response"
-/>
+<!DOCTYPE html>
+<meta name=lp-mode content="skipped: needs an HTTP cache without the privatecache feature; Chrome's cache is private and serves the cached response">
 <script src="../testing.js"></script>
 
 <!-- Run with an HTTP cache without the privatecache experimental feature, see HttpClient.zig -->
-<script id="cache_set_cookie_skip" type="module">
-  import { fetchTwice } from "./cache_set_cookie.js";
+<script id=cache_set_cookie_skip type=module>
+  import { fetchTwice } from './cache_set_cookie.js';
   {
     const state = await testing.async();
     state.resolve(await fetchTwice());

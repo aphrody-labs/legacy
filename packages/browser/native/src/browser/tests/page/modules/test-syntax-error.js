@@ -1,2 +1,2 @@
-import { value } from "./syntax-error.js";
+import { value } from './syntax-error.js';
 export { value };

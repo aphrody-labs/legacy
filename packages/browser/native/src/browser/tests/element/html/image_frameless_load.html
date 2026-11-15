@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 <body></body>
 
@@ -9,11 +9,11 @@
 -->
 <script id="frameless-doc-img-adopted-fires-load">
   // jQuery.parseHTML builds nodes in a createHTMLDocument document.
-  const doc = document.implementation.createHTMLDocument("");
-  const img = doc.createElement("img");
-  img.src = "/images/small.png";
+  const doc = document.implementation.createHTMLDocument('');
+  const img = doc.createElement('img');
+  img.src = '/images/small.png';
   let fired = false;
-  img.addEventListener("load", () => (fired = true));
+  img.addEventListener('load', () => fired = true);
   document.body.appendChild(img);
   testing.onload(() => testing.expectEqual(true, fired));
 </script>

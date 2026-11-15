@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -15,21 +15,19 @@
 
     <p id="status">waiting</p>
     <script>
-      document
-        .getElementById("signin")
-        .addEventListener("submit", function (event) {
-          event.preventDefault();
-          var status = document.getElementById("status");
-          if (document.getElementById("pass")) {
-            status.textContent = "submitted";
-            return;
-          }
-          document.getElementById("step").innerHTML =
-            '<label for="pass">Password</label>' +
-            '<input id="pass" name="password" type="password" />' +
-            '<button id="signin-submit" type="submit">Sign in</button>';
-          status.textContent = "password step";
-        });
+      document.getElementById("signin").addEventListener("submit", function (event) {
+        event.preventDefault();
+        var status = document.getElementById("status");
+        if (document.getElementById("pass")) {
+          status.textContent = "submitted";
+          return;
+        }
+        document.getElementById("step").innerHTML =
+          '<label for="pass">Password</label>' +
+          '<input id="pass" name="password" type="password" />' +
+          '<button id="signin-submit" type="submit">Sign in</button>';
+        status.textContent = "password step";
+      });
     </script>
   </body>
 </html>

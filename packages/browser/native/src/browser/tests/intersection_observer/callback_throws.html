@@ -1,18 +1,18 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 <div id="target">Target Element</div>
 
-<script id="expectReportedErrors">
+<script id=expectReportedErrors>
   let reported = 0;
-  window.addEventListener("error", (e) => {
+  window.addEventListener('error', (e) => {
     reported += 1;
     e.preventDefault();
   });
   testing.expectEqual(0, reported);
 </script>
 
-<script id="callbackThrowsDOMException" type="module">
+<script id=callbackThrowsDOMException type=module>
   {
     // Reporting reads the exception's message through a native accessor. The
     // delivered entries must survive that call.
@@ -20,9 +20,9 @@
     let calls = 0;
     const io = new IntersectionObserver(() => {
       calls += 1;
-      throw new DOMException("nope", "SyntaxError");
+      throw new DOMException('nope', 'SyntaxError');
     });
-    io.observe(document.getElementById("target"));
+    io.observe(document.getElementById('target'));
     await testing.nextFrame();
     io.disconnect();
 

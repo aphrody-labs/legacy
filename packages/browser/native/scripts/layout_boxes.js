@@ -15,23 +15,14 @@
 // rewritten. Hover a box for its tag and numbers; data-lp-box holds them too.
 (() => {
   const SHOW_TEXT = true;
-  const COLORS = [
-    "#e6194b",
-    "#3cb44b",
-    "#4363d8",
-    "#f58231",
-    "#911eb4",
-    "#42d4f4",
-    "#f032e6",
-    "#000000",
-  ];
+  const COLORS = ['#e6194b', '#3cb44b', '#4363d8', '#f58231', '#911eb4', '#42d4f4', '#f032e6', '#000000'];
 
   const root = document.documentElement;
   if (!root) return false;
 
   const sx = window.scrollX;
   const sy = window.scrollY;
-  const elements = [root, ...root.querySelectorAll("*")];
+  const elements = [root, ...root.querySelectorAll('*')];
 
   // Read everything first, in document coordinates.
   const boxes = new Map();
@@ -42,13 +33,11 @@
       left: r.left + sx,
       width: r.width,
       height: r.height,
-      hidden: getComputedStyle(el).display === "none",
+      hidden: getComputedStyle(el).display === 'none',
     });
   }
 
-  for (const el of root.querySelectorAll(
-    'script, style, link[rel~="stylesheet"]',
-  )) {
+  for (const el of root.querySelectorAll('script, style, link[rel~="stylesheet"]')) {
     el.remove();
   }
 
@@ -63,57 +52,48 @@
   for (const [el, box] of boxes) {
     if (!el.isConnected) continue;
 
+
     // Every box is positioned, so each one is the containing block of its
     // children: offsets are relative to the parent's box.
     const parent = el.parentElement && boxes.get(el.parentElement);
     const top = box.top - (parent ? parent.top : 0);
     const left = box.left - (parent ? parent.left : 0);
 
-    const name =
-      el.localName +
-      (el.id ? "#" + el.id : "") +
-      (typeof el.className === "string" && el.className.trim()
-        ? "." + el.className.trim().split(/\s+/).join(".")
-        : "");
+    const name = el.localName
+      + (el.id ? '#' + el.id : '')
+      + (typeof el.className === 'string' && el.className.trim() ? '.' + el.className.trim().split(/\s+/).join('.') : '');
     const numbers = `${r1(box.left)},${r1(box.top)} ${r1(box.width)}x${r1(box.height)}`;
 
-    for (const attr of ["src", "srcset"]) el.removeAttribute(attr);
-    el.setAttribute("title", `${name} ${numbers}`);
-    el.setAttribute("data-lp-box", numbers);
+    for (const attr of ['src', 'srcset']) el.removeAttribute(attr);
+    el.setAttribute('title', `${name} ${numbers}`);
+    el.setAttribute('data-lp-box', numbers);
 
     // Outline instead of border: it doesn't move the children.
-    var color = "#fff";
+    var color = '#fff';
     const tag = el.tagName;
-    if (tag == "HTML") {
-      color = "#fff";
-    } else if (tag == "BODY") {
-      color = "#fff";
+    if (tag == 'HTML') {
+      color = '#fff';
+    } else if (tag == 'BODY') {
+      color = '#fff';
     } else {
       color = COLORS[depthOf(el) % COLORS.length];
     }
-    el.setAttribute(
-      "style",
-      [
-        box.hidden ? "display:none" : "",
-        "position:absolute",
-        "box-sizing:border-box",
-        "margin:0",
-        "border:0",
-        "overflow:visible",
-        `top:${r1(top)}px`,
-        `left:${r1(left)}px`,
-        `width:${r1(box.width)}px`,
-        `height:${r1(box.height)}px`,
-        `outline:1px solid ${color}`,
-        "outline-offset:-1px",
-        "background:transparent",
-        SHOW_TEXT
-          ? "font:10px/1.2 monospace;color:#888"
-          : "font-size:0;color:transparent",
-      ]
-        .filter(Boolean)
-        .join(";"),
-    );
+    el.setAttribute('style', [
+      box.hidden ? 'display:none' : '',
+      'position:absolute',
+      'box-sizing:border-box',
+      'margin:0',
+      'border:0',
+      'overflow:visible',
+      `top:${r1(top)}px`,
+      `left:${r1(left)}px`,
+      `width:${r1(box.width)}px`,
+      `height:${r1(box.height)}px`,
+      `outline:1px solid ${color}`,
+      'outline-offset:-1px',
+      'background:transparent',
+      SHOW_TEXT ? 'font:10px/1.2 monospace;color:#888' : 'font-size:0;color:transparent',
+    ].filter(Boolean).join(';'));
   }
 
   return true;

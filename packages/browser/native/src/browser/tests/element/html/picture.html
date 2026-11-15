@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <!-- <script id="createElement">
@@ -20,23 +20,23 @@
 </script> -->
 
 <picture id="inline-picture">
-  <source media="(min-width: 800px)" srcset="large.jpg" />
-  <source media="(min-width: 400px)" srcset="medium.jpg" />
-  <img src="small.jpg" alt="Test image" />
+  <source media="(min-width: 800px)" srcset="large.jpg">
+  <source media="(min-width: 400px)" srcset="medium.jpg">
+  <img src="small.jpg" alt="Test image">
 </picture>
 
 <script id="inline_picture">
-  {
-    const picture = document.getElementById("inline-picture");
-    testing.expectEqual("PICTURE", picture.tagName);
+{
+    const picture = document.getElementById('inline-picture');
+    testing.expectEqual('PICTURE', picture.tagName);
     testing.expectEqual(3, picture.children.length);
 
-    const sources = picture.querySelectorAll("source");
+    const sources = picture.querySelectorAll('source');
     testing.expectEqual(2, sources.length);
 
     // const img = picture.querySelector('img');
     // testing.expectEqual('IMG', img.tagName);
-  }
+}
 </script>
 
 <!-- <script id="appendChild">

@@ -1,11 +1,8 @@
-<!doctype html>
-<meta
-  name="lp-mode"
-  content="skipped: Chrome only streams request bodies over HTTP/2, the test server is HTTP/1.1 (ERR_ALPN_NEGOTIATION_FAILED)"
-/>
+<!DOCTYPE html>
+<meta name=lp-mode content="skipped: Chrome only streams request bodies over HTTP/2, the test server is HTTP/1.1 (ERR_ALPN_NEGOTIATION_FAILED)">
 <script src="../testing.js"></script>
 
-<script id="fetch_readablestream_body" type="module">
+<script id=fetch_readablestream_body type=module>
   {
     const state = await testing.async();
     const payload = "name=Streamed&count=9";
@@ -34,7 +31,7 @@
   }
 </script>
 
-<script id="fetch_readablestream_body_reject" type="module">
+<script id=fetch_readablestream_body_reject type=module>
   {
     const state = await testing.async();
     const url = "http://127.0.0.1:9582/echo_body";
@@ -43,9 +40,7 @@
     let openRejected = false;
     try {
       const open = new ReadableStream({
-        start(c) {
-          c.enqueue(new TextEncoder().encode("x"));
-        },
+        start(c) { c.enqueue(new TextEncoder().encode("x")); },
       });
       await fetch(url, { ...opts, body: open });
     } catch (e) {

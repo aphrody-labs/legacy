@@ -1,2 +1,2 @@
-order += "a";
-testing.expectEqual("a", order);
+order += 'a';
+testing.expectEqual('a', order);

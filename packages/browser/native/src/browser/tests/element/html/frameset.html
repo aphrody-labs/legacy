@@ -1,5 +1,6 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <script id="frameset_constructor">
@@ -12,11 +13,11 @@
   // to the "in frameset" insertion mode on a top-level <frameset>, after which
   // all <script> tokens are ignored — so we exercise the element via
   // createElement instead.
-  testing.expectEqual("function", typeof HTMLFrameSetElement);
+  testing.expectEqual("function", typeof HTMLFrameSetElement)
 
-  const fs = document.createElement("frameset");
-  testing.expectEqual("[object HTMLFrameSetElement]", fs.toString());
-  testing.expectEqual("FRAMESET", fs.tagName);
-  testing.expectEqual(true, fs instanceof HTMLFrameSetElement);
-  testing.expectEqual(true, fs instanceof HTMLElement);
+  const fs = document.createElement('frameset')
+  testing.expectEqual("[object HTMLFrameSetElement]", fs.toString())
+  testing.expectEqual("FRAMESET", fs.tagName)
+  testing.expectEqual(true, fs instanceof HTMLFrameSetElement)
+  testing.expectEqual(true, fs instanceof HTMLElement)
 </script>

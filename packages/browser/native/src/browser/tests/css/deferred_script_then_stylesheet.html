@@ -1,22 +1,23 @@
-<!doctype html>
+<!DOCTYPE html>
+<meta charset="UTF-8">
 <head>
-  <meta name="lp-mode" content="test" />
+  <meta name=lp-mode content=test>
   <script src="../testing.js"></script>
-  <script id="deferred_script_drains_after_sync_stylesheet">
+  <script id=deferred_script_drains_after_sync_stylesheet>
     // Runs during parsing, before the body's deferred script + stylesheet.
     // Crucially this is the LAST blocking <script> in the document: nothing
     // blocking follows the <link rel=stylesheet> below, so the only thing
     // that can flush the deferred script's completion is the stylesheet
     // fetch itself (the regression). A blocking <script> after the <link>
     // would call flushFrame on its own and hide the bug.
-    testing.expectEqual("loading", document.readyState);
+    testing.expectEqual('loading', document.readyState);
     testing.expectEqual(undefined, window.__deferRan);
 
     testing.onload(() => {
       // Reaching load means the deferred-script queue drained: the deferred
       // script ran and the document advanced out of "loading".
       testing.expectEqual(true, window.__deferRan);
-      testing.expectEqual("complete", document.readyState);
+      testing.expectEqual('complete', document.readyState);
     });
   </script>
 </head>
@@ -35,5 +36,5 @@
     DOMContentLoaded / the load event / readyState -> "complete" never fire.
   -->
   <script defer src="/defer-marker.js"></script>
-  <link rel="stylesheet" href="/styles/visibility.css" />
+  <link rel="stylesheet" href="/styles/visibility.css">
 </body>

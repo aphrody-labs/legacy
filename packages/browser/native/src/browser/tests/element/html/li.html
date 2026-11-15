@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <ol>
@@ -9,13 +9,13 @@
 
 <script id="value">
   {
-    const li1 = document.getElementById("li1");
+    const li1 = document.getElementById('li1');
     testing.expectEqual(5, li1.value);
 
     li1.value = 10;
     testing.expectEqual(10, li1.value);
 
-    const li2 = document.getElementById("li2");
+    const li2 = document.getElementById('li2');
     testing.expectEqual(0, li2.value);
 
     li2.value = -3;

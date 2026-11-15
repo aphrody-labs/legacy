@@ -2,4 +2,4 @@
 // flag trips the assertion in modulepreload.html (and this fail() fires
 // directly).
 window.modulepreload_unused_ran = true;
-testing.fail("an unconsumed <link rel=modulepreload> must not evaluate");
+testing.fail('an unconsumed <link rel=modulepreload> must not evaluate');

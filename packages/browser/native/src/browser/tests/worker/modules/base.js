@@ -1,1 +1,1 @@
-export const baseValue = "from-base";
+export const baseValue = 'from-base';

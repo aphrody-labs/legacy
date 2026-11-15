@@ -2,10 +2,10 @@
 // handler is wired so the page knows it can send a command without racing
 // worker startup. Receives the command, runs the crypto operation, and
 // posts the result back.
-self.onmessage = async function (e) {
+self.onmessage = async function(e) {
   const cmd = e.data;
   try {
-    if (cmd.kind === "getRandomValues") {
+    if (cmd.kind === 'getRandomValues') {
       const ta = new Uint8Array(32);
       const same = crypto.getRandomValues(ta) === ta;
       const uniq = new Set(Array.from(ta));
@@ -13,49 +13,34 @@ self.onmessage = async function (e) {
       return;
     }
 
-    if (cmd.kind === "randomUUID") {
+    if (cmd.kind === 'randomUUID') {
       const uuid = crypto.randomUUID();
-      const regex =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-      postMessage({
-        ok: true,
-        type: typeof uuid,
-        length: uuid.length,
-        valid: regex.test(uuid),
-      });
+      const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      postMessage({ ok: true, type: typeof uuid, length: uuid.length, valid: regex.test(uuid) });
       return;
     }
 
-    if (cmd.kind === "digest") {
-      const buffer = await crypto.subtle.digest(
-        "sha-256",
-        new TextEncoder().encode("over 9000"),
-      );
-      const hex = [...new Uint8Array(buffer)]
-        .map((x) => x.toString(16).padStart(2, "0"))
-        .join("");
+    if (cmd.kind === 'digest') {
+      const buffer = await crypto.subtle.digest('sha-256', new TextEncoder().encode('over 9000'));
+      const hex = [...new Uint8Array(buffer)].map(x => x.toString(16).padStart(2, '0')).join('');
       postMessage({ ok: true, hex });
       return;
     }
 
-    if (cmd.kind === "hmac") {
+    if (cmd.kind === 'hmac') {
       const key = await crypto.subtle.generateKey(
-        { name: "HMAC", hash: { name: "SHA-512" } },
+        { name: 'HMAC', hash: { name: 'SHA-512' } },
         true,
-        ["sign", "verify"],
+        ['sign', 'verify'],
       );
-      const raw = await crypto.subtle.exportKey("raw", key);
+      const raw = await crypto.subtle.exportKey('raw', key);
       const encoder = new TextEncoder();
-      const signature = await crypto.subtle.sign(
-        "HMAC",
-        key,
-        encoder.encode("Hello, world!"),
-      );
+      const signature = await crypto.subtle.sign('HMAC', key, encoder.encode('Hello, world!'));
       const verified = await crypto.subtle.verify(
-        { name: "HMAC" },
+        { name: 'HMAC' },
         key,
         signature,
-        encoder.encode("Hello, world!"),
+        encoder.encode('Hello, world!'),
       );
       postMessage({
         ok: true,
@@ -67,14 +52,14 @@ self.onmessage = async function (e) {
       return;
     }
 
-    if (cmd.kind === "x25519") {
+    if (cmd.kind === 'x25519') {
       const { privateKey, publicKey } = await crypto.subtle.generateKey(
-        { name: "X25519" },
+        { name: 'X25519' },
         true,
-        ["deriveBits"],
+        ['deriveBits'],
       );
       const sharedKey = await crypto.subtle.deriveBits(
-        { name: "X25519", public: publicKey },
+        { name: 'X25519', public: publicKey },
         privateKey,
         128,
       );
@@ -87,18 +72,10 @@ self.onmessage = async function (e) {
       return;
     }
 
-    if (cmd.kind === "posted-keys") {
-      const es256 = { name: "ECDSA", hash: "SHA-256" };
-      const signature = await crypto.subtle.sign(
-        es256,
-        cmd.privateKey,
-        cmd.data,
-      );
-      const pair = await crypto.subtle.generateKey(
-        { name: "ECDSA", namedCurve: "P-256" },
-        false,
-        ["sign", "verify"],
-      );
+    if (cmd.kind === 'posted-keys') {
+      const es256 = { name: 'ECDSA', hash: 'SHA-256' };
+      const signature = await crypto.subtle.sign(es256, cmd.privateKey, cmd.data);
+      const pair = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign', 'verify']);
       const theirs = await crypto.subtle.sign(es256, pair.privateKey, cmd.data);
       postMessage({
         ok: true,
@@ -111,14 +88,10 @@ self.onmessage = async function (e) {
       return;
     }
 
-    if (cmd.kind === "generateKey-rejection") {
+    if (cmd.kind === 'generateKey-rejection') {
       let err_name = null;
       try {
-        await crypto.subtle.generateKey(
-          { name: "AES-CBC", length: 128 },
-          true,
-          ["sign"],
-        );
+        await crypto.subtle.generateKey({ name: 'AES-CBC', length: 128 }, true, ['sign']);
       } catch (err) {
         err_name = err.name;
       }
@@ -126,7 +99,7 @@ self.onmessage = async function (e) {
       return;
     }
 
-    postMessage({ ok: false, err: "unknown command" });
+    postMessage({ ok: false, err: 'unknown command' });
   } catch (err) {
     postMessage({ ok: false, err: String(err), stack: err.stack });
   }

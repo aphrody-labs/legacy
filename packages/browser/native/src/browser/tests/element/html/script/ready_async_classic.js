@@ -1,1 +1,1 @@
-readyAsyncOrder.push("classic");
+readyAsyncOrder.push('classic');

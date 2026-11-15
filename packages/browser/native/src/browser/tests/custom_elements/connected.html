@@ -1,94 +1,94 @@
-<!doctype html>
+<!DOCTYPE html>
 <body>
-  <script src="../testing.js"></script>
-  <script id="connected">
-    {
-      let connectedCount = 0;
+<script src="../testing.js"></script>
+<script id="connected">
+{
+    let connectedCount = 0;
 
-      class MyElement extends HTMLElement {
+    class MyElement extends HTMLElement {
         connectedCallback() {
-          connectedCount++;
+            connectedCount++;
         }
-      }
-
-      customElements.define("my-element", MyElement);
-
-      const el = document.createElement("my-element");
-      testing.expectEqual(0, connectedCount);
-
-      document.body.appendChild(el);
-      testing.expectEqual(1, connectedCount);
     }
 
-    {
-      let order = [];
+    customElements.define('my-element', MyElement);
 
-      class ParentElement extends HTMLElement {
+    const el = document.createElement('my-element');
+    testing.expectEqual(0, connectedCount);
+
+    document.body.appendChild(el);
+    testing.expectEqual(1, connectedCount);
+}
+
+{
+    let order = [];
+
+    class ParentElement extends HTMLElement {
         connectedCallback() {
-          order.push("parent");
+            order.push('parent');
         }
-      }
-
-      class ChildElement extends HTMLElement {
-        connectedCallback() {
-          order.push("child");
-        }
-      }
-
-      customElements.define("parent-element", ParentElement);
-      customElements.define("child-element", ChildElement);
-
-      const parent = document.createElement("parent-element");
-      const child = document.createElement("child-element");
-      parent.appendChild(child);
-
-      testing.expectEqual(0, order.length);
-
-      document.body.appendChild(parent);
-      testing.expectEqual(2, order.length);
-      testing.expectEqual("parent", order[0]);
-      testing.expectEqual("child", order[1]);
     }
 
-    {
-      let connectedCount = 0;
-
-      class MoveElement extends HTMLElement {
+    class ChildElement extends HTMLElement {
         connectedCallback() {
-          connectedCount++;
+            order.push('child');
         }
-      }
-
-      customElements.define("move-element", MoveElement);
-
-      const el = document.createElement("move-element");
-      document.body.appendChild(el);
-      testing.expectEqual(1, connectedCount);
-
-      const div = document.createElement("div");
-      document.body.appendChild(div);
-      div.appendChild(el);
-      testing.expectEqual(1, connectedCount);
     }
 
-    {
-      let connectedCount = 0;
+    customElements.define('parent-element', ParentElement);
+    customElements.define('child-element', ChildElement);
 
-      class DetachedElement extends HTMLElement {
+    const parent = document.createElement('parent-element');
+    const child = document.createElement('child-element');
+    parent.appendChild(child);
+
+    testing.expectEqual(0, order.length);
+
+    document.body.appendChild(parent);
+    testing.expectEqual(2, order.length);
+    testing.expectEqual('parent', order[0]);
+    testing.expectEqual('child', order[1]);
+}
+
+{
+    let connectedCount = 0;
+
+    class MoveElement extends HTMLElement {
         connectedCallback() {
-          connectedCount++;
+            connectedCount++;
         }
-      }
-
-      customElements.define("detached-element", DetachedElement);
-
-      const container = document.createElement("div");
-      const el = document.createElement("detached-element");
-      container.appendChild(el);
-      testing.expectEqual(0, connectedCount);
-
-      document.body.appendChild(container);
-      testing.expectEqual(1, connectedCount);
     }
-  </script>
-</body>
+
+    customElements.define('move-element', MoveElement);
+
+    const el = document.createElement('move-element');
+    document.body.appendChild(el);
+    testing.expectEqual(1, connectedCount);
+
+    const div = document.createElement('div');
+    document.body.appendChild(div);
+    div.appendChild(el);
+    testing.expectEqual(1, connectedCount);
+}
+
+{
+    let connectedCount = 0;
+
+    class DetachedElement extends HTMLElement {
+        connectedCallback() {
+            connectedCount++;
+        }
+    }
+
+    customElements.define('detached-element', DetachedElement);
+
+    const container = document.createElement('div');
+    const el = document.createElement('detached-element');
+    container.appendChild(el);
+    testing.expectEqual(0, connectedCount);
+
+    document.body.appendChild(container);
+    testing.expectEqual(1, connectedCount);
+}
+</script>
+

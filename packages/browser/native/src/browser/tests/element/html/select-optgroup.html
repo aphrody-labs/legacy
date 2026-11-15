@@ -1,5 +1,6 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<meta name=lp-mode content=test>
 <script src="../../testing.js"></script>
 
 <!--
@@ -23,80 +24,80 @@
 
 <script id="grouped_options_collection">
   {
-    const select = $("#grouped");
+    const select = $('#grouped')
 
     // Options inside optgroups are part of the list, in tree order.
-    testing.expectEqual(4, select.options.length);
-    testing.expectEqual(4, select.length);
-    testing.expectEqual("", select.options[0].value);
-    testing.expectEqual("a", select.options[1].value);
-    testing.expectEqual("b", select.options[2].value);
-    testing.expectEqual("c", select.options[3].value);
-    testing.expectEqual(undefined, select.options[4]);
+    testing.expectEqual(4, select.options.length)
+    testing.expectEqual(4, select.length)
+    testing.expectEqual('', select.options[0].value)
+    testing.expectEqual('a', select.options[1].value)
+    testing.expectEqual('b', select.options[2].value)
+    testing.expectEqual('c', select.options[3].value)
+    testing.expectEqual(undefined, select.options[4])
   }
 </script>
 
 <script id="grouped_value_setter">
   {
-    const select = $("#grouped");
+    const select = $('#grouped')
 
-    select.value = "b";
-    testing.expectEqual("b", select.value);
-    testing.expectEqual(2, select.selectedIndex);
-    testing.expectEqual(1, select.selectedOptions.length);
-    testing.expectEqual("b", select.selectedOptions[0].value);
+    select.value = 'b'
+    testing.expectEqual('b', select.value)
+    testing.expectEqual(2, select.selectedIndex)
+    testing.expectEqual(1, select.selectedOptions.length)
+    testing.expectEqual('b', select.selectedOptions[0].value)
 
     // Setting the value deselects every other option, grouped or not.
-    testing.expectFalse(select.options[0].selected);
-    testing.expectTrue(select.options[2].selected);
-    testing.expectFalse(select.options[3].selected);
+    testing.expectFalse(select.options[0].selected)
+    testing.expectTrue(select.options[2].selected)
+    testing.expectFalse(select.options[3].selected)
   }
 </script>
 
 <script id="grouped_option_selected_property">
   {
-    const select = $("#grouped");
+    const select = $('#grouped')
 
     // Selecting through the option's own property, which the select has to
     // see through the optgroup as well.
-    select.options[2].selected = false;
-    select.options[3].selected = true;
-    testing.expectEqual("c", select.value);
-    testing.expectEqual(3, select.selectedIndex);
+    select.options[2].selected = false
+    select.options[3].selected = true
+    testing.expectEqual('c', select.value)
+    testing.expectEqual(3, select.selectedIndex)
   }
 </script>
 
 <script id="grouped_selected_index_setter">
   {
-    const select = $("#grouped");
+    const select = $('#grouped')
 
-    select.selectedIndex = 1;
-    testing.expectEqual("a", select.value);
-    testing.expectEqual("a", select.selectedOptions[0].value);
+    select.selectedIndex = 1
+    testing.expectEqual('a', select.value)
+    testing.expectEqual('a', select.selectedOptions[0].value)
 
-    select.selectedIndex = -1;
-    testing.expectEqual("", select.value);
-    testing.expectEqual(-1, select.selectedIndex);
-    testing.expectEqual(0, select.selectedOptions.length);
+    select.selectedIndex = -1
+    testing.expectEqual('', select.value)
+    testing.expectEqual(-1, select.selectedIndex)
+    testing.expectEqual(0, select.selectedOptions.length)
   }
 </script>
 
 <script id="grouped_form_submission">
   {
-    const select = $("#grouped");
-    select.value = "c";
+    const select = $('#grouped')
+    select.value = 'c'
 
-    testing.expectEqual("c", new FormData($("#grouped_form")).get("s"));
+    testing.expectEqual('c', new FormData($('#grouped_form')).get('s'))
   }
 </script>
 
 <script id="grouped_iteration">
   {
-    const values = [];
-    for (const option of $("#grouped").options) {
-      values.push(option.value);
+    const values = []
+    for (const option of $('#grouped').options) {
+      values.push(option.value)
     }
-    testing.expectEqual(["", "a", "b", "c"], values);
+    testing.expectEqual(['', 'a', 'b', 'c'], values)
   }
 </script>
 
@@ -108,12 +109,12 @@
 </select>
 <script id="grouped_selected_attribute_wins">
   {
-    const select = $("#grouped_selected_attribute");
+    const select = $('#grouped_selected_attribute')
 
     // The explicitly selected option wins over the implicit first one, even
     // from inside an optgroup.
-    testing.expectEqual("y", select.value);
-    testing.expectEqual(1, select.selectedIndex);
+    testing.expectEqual('y', select.value)
+    testing.expectEqual(1, select.selectedIndex)
   }
 </script>
 
@@ -130,7 +131,7 @@
     // With nothing explicitly selected, the fallback is the first option that
     // is not disabled — an option in a disabled optgroup is itself disabled
     // (HTML "concept-option-disabled").
-    testing.expectEqual("taken", $("#grouped_disabled").value);
+    testing.expectEqual('taken', $('#grouped_disabled').value)
   }
 </script>
 
@@ -142,16 +143,16 @@
 </select>
 <script id="grouped_add_before_index">
   {
-    const select = $("#grouped_add");
-    const option = document.createElement("option");
-    option.value = "inserted";
+    const select = $('#grouped_add')
+    const option = document.createElement('option')
+    option.value = 'inserted'
 
     // Index 1 is inside the optgroup, so that is where the option lands.
-    select.add(option, 1);
-    testing.expectEqual(3, select.options.length);
-    testing.expectEqual("inserted", select.options[1].value);
-    testing.expectEqual("two", select.options[2].value);
-    testing.expectEqual("OPTGROUP", option.parentElement.tagName);
+    select.add(option, 1)
+    testing.expectEqual(3, select.options.length)
+    testing.expectEqual('inserted', select.options[1].value)
+    testing.expectEqual('two', select.options[2].value)
+    testing.expectEqual('OPTGROUP', option.parentElement.tagName)
   }
 </script>
 
@@ -164,62 +165,47 @@
 <script id="options_are_descendants">
   {
     // The parser keeps the <div>, and its option is in the list.
-    const select = $("#nested_too_deep");
-    testing.expectEqual("DIV", select.children[1].tagName);
-    testing.expectEqual(
-      ["direct", "buried"],
-      Array.from(select.options, (o) => o.value),
-    );
+    const select = $('#nested_too_deep')
+    testing.expectEqual('DIV', select.children[1].tagName)
+    testing.expectEqual(['direct', 'buried'], Array.from(select.options, (o) => o.value))
   }
 </script>
 
 <select id="wrapped">
-  <span
-    ><div>
-      <optgroup><option value="deep"></option></optgroup></div
-  ></span>
+  <span><div><optgroup><option value="deep"></option></optgroup></div></span>
   <button><option value="in_button"></option></button>
   <datalist><option value="in_datalist"></option></datalist>
   <option value="last"></option>
 </select>
 <script id="options_skip_datalist">
   {
-    const select = $("#wrapped");
-    testing.expectEqual(
-      ["deep", "in_button", "last"],
-      Array.from(select.options, (o) => o.value),
-    );
-    testing.expectEqual(
-      select,
-      select.options[0].parentNode.parentNode.parentNode.parentNode,
-    );
+    const select = $('#wrapped')
+    testing.expectEqual(['deep', 'in_button', 'last'], Array.from(select.options, (o) => o.value))
+    testing.expectEqual(select, select.options[0].parentNode.parentNode.parentNode.parentNode)
   }
 </script>
 
 <script id="options_skip_closing_elements">
   {
     // The parser builds none of these, so build them by hand.
-    const select = document.createElement("select");
+    const select = document.createElement('select')
     const option = (value) => {
-      const o = document.createElement("option");
-      o.value = value;
-      return o;
-    };
+      const o = document.createElement('option')
+      o.value = value
+      return o
+    }
 
-    const outer = option("outer");
-    outer.appendChild(option("in_option"));
-    const hr = document.createElement("hr");
-    hr.appendChild(option("in_hr"));
-    const inner = document.createElement("select");
-    inner.appendChild(option("in_select"));
-    select.append(outer, hr, inner, option("last"));
+    const outer = option('outer')
+    outer.appendChild(option('in_option'))
+    const hr = document.createElement('hr')
+    hr.appendChild(option('in_hr'))
+    const inner = document.createElement('select')
+    inner.appendChild(option('in_select'))
+    select.append(outer, hr, inner, option('last'))
 
-    testing.expectEqual(
-      ["outer", "last"],
-      Array.from(select.options, (o) => o.value),
-    );
-    testing.expectEqual(1, inner.options.length);
-    testing.expectEqual(0, select.selectedIndex);
+    testing.expectEqual(['outer', 'last'], Array.from(select.options, (o) => o.value))
+    testing.expectEqual(1, inner.options.length)
+    testing.expectEqual(0, select.selectedIndex)
   }
 </script>
 
@@ -227,25 +213,25 @@
   {
     // A selected option arriving or leaving inside a wrapper updates the
     // select's selection like a bare one.
-    const select = document.createElement("select");
-    select.innerHTML = "<option value=a></option><option value=b></option>";
-    testing.expectEqual("a", select.value);
+    const select = document.createElement('select')
+    select.innerHTML = '<option value=a></option><option value=b></option>'
+    testing.expectEqual('a', select.value)
 
-    const div = document.createElement("div");
-    div.innerHTML = "<span><option value=c selected></option></span>";
-    select.appendChild(div);
-    testing.expectEqual("c", select.value);
-    testing.expectEqual(2, select.selectedIndex);
+    const div = document.createElement('div')
+    div.innerHTML = '<span><option value=c selected></option></span>'
+    select.appendChild(div)
+    testing.expectEqual('c', select.value)
+    testing.expectEqual(2, select.selectedIndex)
 
-    div.remove();
-    testing.expectEqual("a", select.value);
-    testing.expectEqual(2, select.length);
+    div.remove()
+    testing.expectEqual('a', select.value)
+    testing.expectEqual(2, select.length)
 
     // innerHTML on a wrapper already in the select
-    const span = document.createElement("span");
-    select.appendChild(span);
-    span.innerHTML = "<option value=d selected></option>";
-    testing.expectEqual("d", select.value);
+    const span = document.createElement('span')
+    select.appendChild(span)
+    span.innerHTML = '<option value=d selected></option>'
+    testing.expectEqual('d', select.value)
   }
 </script>
 
@@ -253,36 +239,36 @@
   {
     // The parser never nests optgroups, so build the tree by hand: an optgroup
     // inside an optgroup is not walked into, its options are out of the list.
-    const select = document.createElement("select");
-    const outer = document.createElement("optgroup");
-    const inner = document.createElement("optgroup");
+    const select = document.createElement('select')
+    const outer = document.createElement('optgroup')
+    const inner = document.createElement('optgroup')
 
     const option = (value) => {
-      const o = document.createElement("option");
-      o.value = value;
-      return o;
-    };
+      const o = document.createElement('option')
+      o.value = value
+      return o
+    }
 
-    inner.appendChild(option("buried"));
-    outer.appendChild(option("grouped"));
-    outer.appendChild(inner);
-    outer.appendChild(option("after"));
-    select.appendChild(option("before"));
-    select.appendChild(outer);
-    select.appendChild(option("last"));
-    document.body.appendChild(select);
+    inner.appendChild(option('buried'))
+    outer.appendChild(option('grouped'))
+    outer.appendChild(inner)
+    outer.appendChild(option('after'))
+    select.appendChild(option('before'))
+    select.appendChild(outer)
+    select.appendChild(option('last'))
+    document.body.appendChild(select)
 
-    testing.expectEqual(4, select.length);
-    testing.expectEqual(4, select.options.length);
-    testing.expectEqual("before", select.options[0].value);
-    testing.expectEqual("grouped", select.options[1].value);
-    testing.expectEqual("after", select.options[2].value);
-    testing.expectEqual("last", select.options[3].value);
+    testing.expectEqual(4, select.length)
+    testing.expectEqual(4, select.options.length)
+    testing.expectEqual('before', select.options[0].value)
+    testing.expectEqual('grouped', select.options[1].value)
+    testing.expectEqual('after', select.options[2].value)
+    testing.expectEqual('last', select.options[3].value)
 
     // The iterator resumes after the optgroup, so indexes stay in tree order.
-    select.selectedIndex = 3;
-    testing.expectEqual("last", select.value);
-    select.value = "after";
-    testing.expectEqual(2, select.selectedIndex);
+    select.selectedIndex = 3
+    testing.expectEqual('last', select.value)
+    select.value = 'after'
+    testing.expectEqual(2, select.selectedIndex)
   }
 </script>

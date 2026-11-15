@@ -1,1 +1,1 @@
-export const val = "evaluated";
+export const val = 'evaluated';

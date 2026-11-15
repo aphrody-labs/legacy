@@ -1,1 +1,1 @@
-export { sharedValue as aShared } from "./diamond-shared.js";
+export { sharedValue as aShared } from './diamond-shared.js';

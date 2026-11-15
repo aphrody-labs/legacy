@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../testing.js"></script>
 
 <!-- Test 1: Basic single element replacement -->
@@ -10,21 +10,21 @@
 </div>
 
 <script id="test1-basic-replacement">
-  const old1 = $("#old1");
-  const parent1 = $("#parent1");
+  const old1 = $('#old1');
+  const parent1 = $('#parent1');
 
   testing.expectEqual(1, parent1.childElementCount);
-  testing.expectEqual(old1, document.getElementById("old1"));
+  testing.expectEqual(old1, document.getElementById('old1'));
 
-  const new1 = document.createElement("div");
-  new1.id = "new1";
-  new1.textContent = "New Content";
+  const new1 = document.createElement('div');
+  new1.id = 'new1';
+  new1.textContent = 'New Content';
 
   old1.replaceWith(new1);
 
   testing.expectEqual(1, parent1.childElementCount);
-  testing.expectEqual(null, document.getElementById("old1"));
-  testing.expectEqual(new1, document.getElementById("new1"));
+  testing.expectEqual(null, document.getElementById('old1'));
+  testing.expectEqual(new1, document.getElementById('new1'));
   testing.expectEqual(parent1, new1.parentElement);
 </script>
 
@@ -36,25 +36,25 @@
 </div>
 
 <script id="test2-multiple-elements">
-  const old2 = $("#old2");
-  const parent2 = $("#parent2");
+  const old2 = $('#old2');
+  const parent2 = $('#parent2');
 
   testing.expectEqual(1, parent2.childElementCount);
 
-  const new2a = document.createElement("div");
-  new2a.id = "new2a";
-  const new2b = document.createElement("div");
-  new2b.id = "new2b";
-  const new2c = document.createElement("div");
-  new2c.id = "new2c";
+  const new2a = document.createElement('div');
+  new2a.id = 'new2a';
+  const new2b = document.createElement('div');
+  new2b.id = 'new2b';
+  const new2c = document.createElement('div');
+  new2c.id = 'new2c';
 
   old2.replaceWith(new2a, new2b, new2c);
 
   testing.expectEqual(3, parent2.childElementCount);
-  testing.expectEqual(null, document.getElementById("old2"));
-  testing.expectEqual(new2a, document.getElementById("new2a"));
-  testing.expectEqual(new2b, document.getElementById("new2b"));
-  testing.expectEqual(new2c, document.getElementById("new2c"));
+  testing.expectEqual(null, document.getElementById('old2'));
+  testing.expectEqual(new2a, document.getElementById('new2a'));
+  testing.expectEqual(new2b, document.getElementById('new2b'));
+  testing.expectEqual(new2c, document.getElementById('new2c'));
 
   // Check order
   testing.expectEqual(new2a, parent2.children[0]);
@@ -68,13 +68,13 @@
 </div>
 
 <script id="test3-text-nodes">
-  const old3 = $("#old3");
-  const parent3 = $("#parent3");
+  const old3 = $('#old3');
+  const parent3 = $('#parent3');
 
-  old3.replaceWith("Text1", " ", "Text2");
+  old3.replaceWith('Text1', ' ', 'Text2');
 
-  testing.expectEqual(null, document.getElementById("old3"));
-  testing.expectEqual("Text1 Text2", parent3.textContent);
+  testing.expectEqual(null, document.getElementById('old3'));
+  testing.expectEqual('Text1 Text2', parent3.textContent);
 </script>
 
 <!-- Test 4: Replace with mix of elements and text -->
@@ -83,34 +83,34 @@
 </div>
 
 <script id="test4-mixed">
-  const old4 = $("#old4");
-  const parent4 = $("#parent4");
+  const old4 = $('#old4');
+  const parent4 = $('#parent4');
 
-  const new4 = document.createElement("span");
-  new4.id = "new4";
-  new4.textContent = "Element";
+  const new4 = document.createElement('span');
+  new4.id = 'new4';
+  new4.textContent = 'Element';
 
-  old4.replaceWith("Before ", new4, " After");
+  old4.replaceWith('Before ', new4, ' After');
 
-  testing.expectEqual(null, document.getElementById("old4"));
-  testing.expectEqual(new4, document.getElementById("new4"));
-  testing.expectEqual("Before Element After", parent4.textContent);
+  testing.expectEqual(null, document.getElementById('old4'));
+  testing.expectEqual(new4, document.getElementById('new4'));
+  testing.expectEqual('Before Element After', parent4.textContent);
 </script>
 
 <!-- Test 5: Replace element not connected to document -->
 <script id="test5-not-connected">
-  const disconnected = document.createElement("div");
-  disconnected.id = "disconnected5";
+  const disconnected = document.createElement('div');
+  disconnected.id = 'disconnected5';
 
-  const replacement = document.createElement("div");
-  replacement.id = "replacement5";
+  const replacement = document.createElement('div');
+  replacement.id = 'replacement5';
 
   // Should do nothing since element has no parent
   disconnected.replaceWith(replacement);
 
   // Neither should be in the document
-  testing.expectEqual(null, document.getElementById("disconnected5"));
-  testing.expectEqual(null, document.getElementById("replacement5"));
+  testing.expectEqual(null, document.getElementById('disconnected5'));
+  testing.expectEqual(null, document.getElementById('replacement5'));
 </script>
 
 <!-- Test 6: Replace with nodes that already have a parent -->
@@ -125,11 +125,11 @@
 </div>
 
 <script id="test6-moving-nodes">
-  const old6 = $("#old6");
-  const parent6a = $("#parent6a");
-  const parent6b = $("#parent6b");
-  const moving6a = $("#moving6a");
-  const moving6b = $("#moving6b");
+  const old6 = $('#old6');
+  const parent6a = $('#parent6a');
+  const parent6b = $('#parent6b');
+  const moving6a = $('#moving6a');
+  const moving6b = $('#moving6b');
 
   testing.expectEqual(1, parent6a.childElementCount);
   testing.expectEqual(2, parent6b.childElementCount);
@@ -138,7 +138,7 @@
   old6.replaceWith(moving6a, moving6b);
 
   // old6 should be gone
-  testing.expectEqual(null, document.getElementById("old6"));
+  testing.expectEqual(null, document.getElementById('old6'));
 
   // parent6a should now have the moved elements
   testing.expectEqual(2, parent6a.childElementCount);
@@ -149,8 +149,8 @@
   testing.expectEqual(0, parent6b.childElementCount);
 
   // getElementById should still work
-  testing.expectEqual(moving6a, document.getElementById("moving6a"));
-  testing.expectEqual(moving6b, document.getElementById("moving6b"));
+  testing.expectEqual(moving6a, document.getElementById('moving6a'));
+  testing.expectEqual(moving6b, document.getElementById('moving6b'));
   testing.expectEqual(parent6a, moving6a.parentElement);
   testing.expectEqual(parent6a, moving6b.parentElement);
 </script>
@@ -163,26 +163,26 @@
 </div>
 
 <script id="test7-nested">
-  const old7 = $("#old7");
-  const parent7 = $("#parent7");
+  const old7 = $('#old7');
+  const parent7 = $('#parent7');
 
-  const new7 = document.createElement("div");
-  new7.id = "new7";
+  const new7 = document.createElement('div');
+  new7.id = 'new7';
 
-  const child7a = document.createElement("div");
-  child7a.id = "child7a";
-  const child7b = document.createElement("div");
-  child7b.id = "child7b";
+  const child7a = document.createElement('div');
+  child7a.id = 'child7a';
+  const child7b = document.createElement('div');
+  child7b.id = 'child7b';
 
   new7.appendChild(child7a);
   new7.appendChild(child7b);
 
   old7.replaceWith(new7);
 
-  testing.expectEqual(null, document.getElementById("old7"));
-  testing.expectEqual(new7, document.getElementById("new7"));
-  testing.expectEqual(child7a, document.getElementById("child7a"));
-  testing.expectEqual(child7b, document.getElementById("child7b"));
+  testing.expectEqual(null, document.getElementById('old7'));
+  testing.expectEqual(new7, document.getElementById('new7'));
+  testing.expectEqual(child7a, document.getElementById('child7a'));
+  testing.expectEqual(child7b, document.getElementById('child7b'));
   testing.expectEqual(2, new7.childElementCount);
 </script>
 
@@ -196,15 +196,15 @@
 </div>
 
 <script id="test8-sibling-order">
-  const old8 = $("#old8");
-  const parent8 = $("#parent8");
-  const before8 = $("#before8");
-  const after8 = $("#after8");
+  const old8 = $('#old8');
+  const parent8 = $('#parent8');
+  const before8 = $('#before8');
+  const after8 = $('#after8');
 
   testing.expectEqual(3, parent8.childElementCount);
 
-  const new8 = document.createElement("div");
-  new8.id = "new8";
+  const new8 = document.createElement('div');
+  new8.id = 'new8';
 
   old8.replaceWith(new8);
 
@@ -223,15 +223,15 @@
 </div>
 
 <script id="test9-first-child">
-  const first9 = $("#first9");
-  const parent9 = $("#parent9");
+  const first9 = $('#first9');
+  const parent9 = $('#parent9');
 
-  const new9 = document.createElement("div");
-  new9.id = "new9";
+  const new9 = document.createElement('div');
+  new9.id = 'new9';
 
   first9.replaceWith(new9);
 
-  testing.expectEqual(null, document.getElementById("first9"));
+  testing.expectEqual(null, document.getElementById('first9'));
   testing.expectEqual(new9, parent9.firstElementChild);
   testing.expectEqual(new9, parent9.children[0]);
 </script>
@@ -245,15 +245,15 @@
 </div>
 
 <script id="test10-last-child">
-  const last10 = $("#last10");
-  const parent10 = $("#parent10");
+  const last10 = $('#last10');
+  const parent10 = $('#parent10');
 
-  const new10 = document.createElement("div");
-  new10.id = "new10";
+  const new10 = document.createElement('div');
+  new10.id = 'new10';
 
   last10.replaceWith(new10);
 
-  testing.expectEqual(null, document.getElementById("last10"));
+  testing.expectEqual(null, document.getElementById('last10'));
   testing.expectEqual(new10, parent10.lastElementChild);
   testing.expectEqual(new10, parent10.children[1]);
 </script>
@@ -266,8 +266,8 @@
 </div>
 
 <script id="test11-empty">
-  const old11 = $("#old11");
-  const parent11 = $("#parent11");
+  const old11 = $('#old11');
+  const parent11 = $('#parent11');
 
   testing.expectEqual(1, parent11.childElementCount);
 
@@ -276,7 +276,7 @@
 
   // Element should be removed, leaving parent empty
   testing.expectEqual(0, parent11.childElementCount);
-  testing.expectEqual(null, document.getElementById("old11"));
+  testing.expectEqual(null, document.getElementById('old11'));
   testing.expectEqual(null, old11.parentElement);
 </script>
 
@@ -290,21 +290,21 @@
 </div>
 
 <script id="test12-child-count">
-  const b12 = $("#b12");
-  const parent12 = $("#parent12");
+  const b12 = $('#b12');
+  const parent12 = $('#parent12');
 
   testing.expectEqual(3, parent12.childElementCount);
 
   // Replace with 2 elements
-  const new12a = document.createElement("div");
-  new12a.id = "new12a";
-  const new12b = document.createElement("div");
-  new12b.id = "new12b";
+  const new12a = document.createElement('div');
+  new12a.id = 'new12a';
+  const new12b = document.createElement('div');
+  new12b.id = 'new12b';
 
   b12.replaceWith(new12a, new12b);
 
   testing.expectEqual(4, parent12.childElementCount);
-  testing.expectEqual(null, document.getElementById("b12"));
+  testing.expectEqual(null, document.getElementById('b12'));
 </script>
 
 <!-- Test 13: Replace deeply nested element -->
@@ -321,21 +321,21 @@
 </div>
 
 <script id="test13-deeply-nested">
-  const old13 = $("#old13");
-  const l4 = $("#l4");
+  const old13 = $('#old13');
+  const l4 = $('#l4');
 
-  const new13 = document.createElement("div");
-  new13.id = "new13";
+  const new13 = document.createElement('div');
+  new13.id = 'new13';
 
   old13.replaceWith(new13);
 
-  testing.expectEqual(null, document.getElementById("old13"));
-  testing.expectEqual(new13, document.getElementById("new13"));
+  testing.expectEqual(null, document.getElementById('old13'));
+  testing.expectEqual(new13, document.getElementById('new13'));
   testing.expectEqual(l4, new13.parentElement);
 </script>
 
 <!-- Test 14: Callback removes ref_node during replaceWith -->
-<script id="test14-callback-removes-ref-node">
+<script id=test14-callback-removes-ref-node>
   // Custom element whose connectedCallback removes the ref_node
   // This tests that replaceWith handles mid-operation DOM mutations
   class RefRemover extends HTMLElement {
@@ -347,14 +347,14 @@
       }
     }
   }
-  customElements.define("ref-remover", RefRemover);
+  customElements.define('ref-remover', RefRemover);
 
-  const parent14 = document.createElement("div");
-  const oldChild14 = document.createElement("div");
+  const parent14 = document.createElement('div');
+  const oldChild14 = document.createElement('div');
   parent14.appendChild(oldChild14);
   document.body.appendChild(parent14);
 
-  const newChild14 = document.createElement("ref-remover");
+  const newChild14 = document.createElement('ref-remover');
 
   // replaceWith inserts newChild14 before oldChild14, then connectedCallback
   // fires and removes oldChild14. replaceWith should not crash when it
@@ -370,21 +370,21 @@
   <div id="parent15"><div id="old15">Old</div></div>
 </div>
 
-<script id="test15-document-fragment">
-  const old15 = $("#old15");
-  const parent15 = $("#parent15");
+<script id=test15-document-fragment>
+  const old15 = $('#old15');
+  const parent15 = $('#parent15');
 
   const frag15 = document.createDocumentFragment();
-  const a15 = document.createElement("div");
-  a15.id = "a15";
-  const b15 = document.createElement("div");
-  b15.id = "b15";
+  const a15 = document.createElement('div');
+  a15.id = 'a15';
+  const b15 = document.createElement('div');
+  b15.id = 'b15';
   frag15.append(a15, b15);
 
   old15.replaceWith(frag15);
 
   // The fragment's children must be inserted, not the fragment node itself.
-  testing.expectEqual(null, document.getElementById("old15"));
+  testing.expectEqual(null, document.getElementById('old15'));
   testing.expectEqual(2, parent15.childElementCount);
   testing.expectEqual(a15, parent15.children[0]);
   testing.expectEqual(b15, parent15.children[1]);
@@ -399,7 +399,7 @@
 </script>
 
 <!-- Test 16: connectedCallback during fragment replaceWith sees a real element parent -->
-<script id="test16-fragment-upgrade-parent">
+<script id=test16-fragment-upgrade-parent>
   let seenParentNodeType16 = null;
   let seenParentElement16 = null;
   class FragChild extends HTMLElement {
@@ -408,15 +408,15 @@
       seenParentElement16 = this.parentElement;
     }
   }
-  customElements.define("frag-child", FragChild);
+  customElements.define('frag-child', FragChild);
 
-  const parent16 = document.createElement("div");
-  const placeholder16 = document.createElement("div");
+  const parent16 = document.createElement('div');
+  const placeholder16 = document.createElement('div');
   parent16.appendChild(placeholder16);
   document.body.appendChild(parent16);
 
   const frag16 = document.createDocumentFragment();
-  const child16 = document.createElement("frag-child");
+  const child16 = document.createElement('frag-child');
   frag16.appendChild(child16);
 
   placeholder16.replaceWith(frag16);
@@ -428,16 +428,16 @@
 </script>
 
 <!-- Test 17: Nodes from another document are adopted, as insertBefore does -->
-<script id="test17-adopts">
-  const other17 = document.implementation.createHTMLDocument("other");
-  const node17 = other17.createElement("div");
-  const nested17 = other17.createElement("span");
+<script id=test17-adopts>
+  const other17 = document.implementation.createHTMLDocument('other');
+  const node17 = other17.createElement('div');
+  const nested17 = other17.createElement('span');
   node17.appendChild(nested17);
-  const moved17 = other17.createElement("div");
+  const moved17 = other17.createElement('div');
   other17.body.appendChild(moved17);
 
-  const parent17 = document.createElement("div");
-  const old17 = document.createElement("div");
+  const parent17 = document.createElement('div');
+  const old17 = document.createElement('div');
   parent17.appendChild(old17);
   document.body.appendChild(parent17);
 
@@ -453,67 +453,56 @@
 </script>
 
 <!-- Test 18: Replacing with an ancestor throws instead of creating a cycle -->
-<script id="test18-ancestor">
-  const outer18 = document.createElement("div");
-  const inner18 = document.createElement("div");
-  const leaf18 = document.createElement("span");
+<script id=test18-ancestor>
+  const outer18 = document.createElement('div');
+  const inner18 = document.createElement('div');
+  const leaf18 = document.createElement('span');
   outer18.appendChild(inner18);
   inner18.appendChild(leaf18);
 
-  testing.expectError("HierarchyRequestError", () =>
-    leaf18.replaceWith(outer18),
-  );
-  testing.expectError("HierarchyRequestError", () =>
-    leaf18.replaceWith(inner18),
-  );
+  testing.expectError('HierarchyRequestError', () => leaf18.replaceWith(outer18));
+  testing.expectError('HierarchyRequestError', () => leaf18.replaceWith(inner18));
   testing.expectEqual(inner18, leaf18.parentNode);
   testing.expectEqual(outer18, inner18.parentNode);
   testing.expectEqual(null, outer18.parentNode);
 </script>
 
 <!-- Test 19: A Document or DocumentType can't replace an element -->
-<script id="test19-invalid-node-types">
-  const parent19 = document.createElement("div");
-  const old19 = document.createElement("div");
+<script id=test19-invalid-node-types>
+  const parent19 = document.createElement('div');
+  const old19 = document.createElement('div');
   parent19.appendChild(old19);
 
-  const other19 = document.implementation.createHTMLDocument("other");
-  testing.expectError("HierarchyRequestError", () =>
-    old19.replaceWith(other19),
-  );
-  testing.expectError("HierarchyRequestError", () =>
-    old19.replaceWith(other19.doctype),
-  );
+  const other19 = document.implementation.createHTMLDocument('other');
+  testing.expectError('HierarchyRequestError', () => old19.replaceWith(other19));
+  testing.expectError('HierarchyRequestError', () => old19.replaceWith(other19.doctype));
   testing.expectEqual(parent19, old19.parentNode);
   testing.expectEqual(1, parent19.childNodes.length);
 </script>
 
 <!-- Test 20: Several nodes are one insertion: a single childList record -->
-<script id="test20-single-record">
-  const parent20 = document.createElement("div");
-  const old20 = document.createElement("div");
-  const a20 = document.createElement("b");
-  const b20 = document.createElement("i");
+<script id=test20-single-record>
+  const parent20 = document.createElement('div');
+  const old20 = document.createElement('div');
+  const a20 = document.createElement('b');
+  const b20 = document.createElement('i');
   parent20.appendChild(old20);
 
   const observer20 = new MutationObserver(() => {});
   observer20.observe(parent20, { childList: true });
-  old20.replaceWith(a20, "text", b20);
+  old20.replaceWith(a20, 'text', b20);
   const records20 = observer20.takeRecords();
 
   testing.expectEqual(1, records20.length);
   testing.expectEqual(3, records20[0].addedNodes.length);
   testing.expectEqual(old20, records20[0].removedNodes[0]);
-  testing.expectEqual(
-    "B,#text,I",
-    [...parent20.childNodes].map((n) => n.nodeName).join(","),
-  );
+  testing.expectEqual('B,#text,I', [...parent20.childNodes].map(n => n.nodeName).join(','));
 </script>
 
 <!-- Test 21: No arguments removes the element -->
-<script id="test21-empty">
-  const parent21 = document.createElement("div");
-  const old21 = document.createElement("div");
+<script id=test21-empty>
+  const parent21 = document.createElement('div');
+  const old21 = document.createElement('div');
   parent21.appendChild(old21);
   old21.replaceWith();
   testing.expectEqual(null, old21.parentNode);

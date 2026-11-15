@@ -31,10 +31,10 @@ Not a Chromium fork. Not a WebKit patch. A new browser, written in Zig.</strong>
 Requesting 933 real web pages over the network on a AWS EC2 m5.large instance.
 See [benchmark details](https://github.com/lightpanda-io/demo/blob/main/BENCHMARKS.md#crawler-benchmark).
 
-| Metric                     | Lightpanda | Headless Chrome | Difference |
-| :------------------------- | :--------- | :-------------- | :--------- |
-| Memory (peak, 100 pages)   | 123MB      | 2GB             | ~16x less  |
-| Execution time (100 pages) | 5s         | 46s             | ~9x faster |
+| Metric | Lightpanda | Headless Chrome | Difference |
+| :---- | :---- | :---- | :---- |
+| Memory (peak, 100 pages) | 123MB | 2GB | ~16x less |
+| Execution time (100 pages) | 5s | 46s | ~9x faster |
 
 ## Quick start
 
@@ -43,13 +43,11 @@ See [benchmark details](https://github.com/lightpanda-io/demo/blob/main/BENCHMAR
 **Package Managers**
 
 Latest nightly from Homebrew:
-
 ```console
 brew install lightpanda-io/browser/lightpanda
 ```
 
 Latest nightly from Arch Linux User Repository:
-
 ```console
 yay -S lightpanda-nightly-bin
 ```
@@ -60,15 +58,13 @@ You can download the last binary from the [nightly
 builds](https://github.com/lightpanda-io/browser/releases/tag/nightly) for
 Linux and MacOS for both x86_64 and aarch64.
 
-_For Linux_
-
+*For Linux*
 ```console
 curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
 chmod a+x ./lightpanda
 ```
 
 Verify the binary before running anything:
-
 ```console
 ./lightpanda version
 ```
@@ -76,13 +72,11 @@ Verify the binary before running anything:
 [Linux aarch64 is also available](https://github.com/lightpanda-io/browser/releases/tag/nightly)
 
 If you use [**Nix**](https://nixos.org/download/), you can run Lightpanda directly from the flake without downloading a binary:
-
 ```console
 nix run github:lightpanda-io/browser -- --help
 ```
 
 Or pin it as an input in your own flake:
-
 ```nix
 {
   inputs.lightpanda.url = "github:lightpanda-io/browser";
@@ -93,8 +87,7 @@ Or pin it as an input in your own flake:
 >
 > **Android / Termux:** there is no native Android build. The Linux aarch64 binary needs the glibc loader (`/lib/ld-linux-aarch64.so.1`), which Android's Bionic libc does not provide, so it fails with the same `cannot execute: required file not found` error.
 
-_For MacOS_
-
+*For MacOS*
 ```console
 curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos && \
 chmod a+x ./lightpanda
@@ -102,7 +95,7 @@ chmod a+x ./lightpanda
 
 [MacOS x86_64 is also available](https://github.com/lightpanda-io/browser/releases/tag/nightly)
 
-_For Windows + WSL2_
+*For Windows + WSL2*
 
 Lightpanda has no native Windows binary. Install it inside WSL following the Linux steps above.
 
@@ -117,7 +110,6 @@ Lightpanda provides [official Docker
 images](https://hub.docker.com/r/lightpanda/browser) for both Linux amd64 and
 arm64 architectures.
 The following command fetches the Docker image and starts a new container exposing Lightpanda's CDP server on port `9222`.
-
 ```console
 docker run -d --name lightpanda -p 127.0.0.1:9222:9222 lightpanda/browser:latest
 ```
@@ -154,7 +146,7 @@ Once the CDP server started, you can run a Puppeteer script by configuring the
 <summary>Example Puppeteer script</summary>
 
 ```js
-import puppeteer from "puppeteer-core";
+import puppeteer from 'puppeteer-core';
 
 // use browserWSEndpoint to pass the Lightpanda's CDP server address.
 const browser = await puppeteer.connect({
@@ -166,13 +158,11 @@ const context = await browser.createBrowserContext();
 const frame = await context.newPage();
 
 // Dump all the links from the frame.
-await frame.goto("https://demo-browser.lightpanda.io/amiibo/", {
-  waitUntil: "networkidle0",
-});
+await frame.goto('https://demo-browser.lightpanda.io/amiibo/', {waitUntil: "networkidle0"});
 
 const links = await frame.evaluate(() => {
-  return Array.from(document.querySelectorAll("a")).map((row) => {
-    return row.getAttribute("href");
+  return Array.from(document.querySelectorAll('a')).map(row => {
+    return row.getAttribute('href');
   });
 });
 
@@ -182,7 +172,6 @@ await frame.close();
 await context.close();
 await browser.disconnect();
 ```
-
 </details>
 
 #### Start a webdriver Bidi server
@@ -243,7 +232,6 @@ OPENAI_BASE_URL=https://my-gateway/v1 OPENAI_API_KEY=... ./lightpanda agent     
 The MCP server communicates via MCP JSON-RPC 2.0 over stdio.
 
 Add to your MCP configuration:
-
 ```json
 {
   "mcpServers": {
@@ -359,19 +347,16 @@ sudo apt install xz-utils ca-certificates \
     pkg-config libglib2.0-dev \
     clang make curl git
 ```
-
 `pkg-config` and `libglib2.0-dev` are only needed to build V8 from source (see
 below).
 You also need to [install Rust](https://rust-lang.org/tools/install/).
 
 For systems with [**Nix**](https://nixos.org/download/), you can use the devShell.
-
 ```
 nix develop
 ```
 
 For **MacOS**, you need cmake and [Rust](https://rust-lang.org/tools/install/).
-
 ```
 brew install cmake
 ```
@@ -396,13 +381,11 @@ Lightpanda uses a v8 snapshot. `make build` builds and embeds it. With a plain
 following commands:
 
 Generate the snapshot.
-
 ```
 zig build snapshot_creator -- src/snapshot.bin
 ```
 
 Build using the snapshot binary.
-
 ```
 zig build -Dsnapshot_path=../../snapshot.bin
 ```
@@ -456,7 +439,6 @@ To run the test, you must clone the repository, configure the custom hosts and g
 `MANIFEST.json` file.
 
 Clone the repository with the `fork` branch.
-
 ```
 git clone -b fork --depth=1 git@github.com:lightpanda-io/wpt.git
 ```
@@ -464,17 +446,14 @@ git clone -b fork --depth=1 git@github.com:lightpanda-io/wpt.git
 Enter into the `wpt/` dir.
 
 Install custom domains in your `/etc/hosts`
-
 ```
 ./wpt make-hosts-file | sudo tee -a /etc/hosts
 ```
 
 Generate `MANIFEST.json`
-
 ```
 ./wpt manifest
 ```
-
 Use the [WPT's setup
 guide](https://web-platform-tests.org/running-tests/from-local-system.html) for
 details.
@@ -487,7 +466,6 @@ repository, located into `wptrunner/` dir.
 You need to clone the project first.
 
 First start the WPT's HTTP server from your `wpt/` clone dir.
-
 ```
 ./wpt serve
 ```
@@ -505,7 +483,6 @@ zig build -Dwpt_extensions run -- serve \
 ```
 
 Then you can start the wptrunner from the demo's clone dir:
-
 ```
 cd wptrunner && go run .
 ```
@@ -544,7 +521,6 @@ zig build -Dwpt_extensions -Doptimize=fast run -- serve ...
 
 See [CONTRIBUTING.md](https://github.com/lightpanda-io/browser/blob/main/CONTRIBUTING.md) for guidelines.
 You must sign our [CLA](CLA.md) during the pull request process.
-
 - [Discord](https://discord.gg/K63XeymfB5)
 
 ## Why Lightpanda?

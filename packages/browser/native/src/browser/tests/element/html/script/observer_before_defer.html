@@ -1,5 +1,5 @@
-<!doctype html>
-<meta name="lp-mode" content="test" />
+<!DOCTYPE html>
+<meta name=lp-mode content=test>
 <script src="../../../testing.js"></script>
 
 <!--
@@ -8,7 +8,7 @@ Those are delivered before the defer script runs (the end of parsing spins the
 event loop), even though no script runs in between to drain them.
 -->
 
-<script id="records_delivered_before_defer">
+<script id=records_delivered_before_defer>
   window.seen = [];
   new MutationObserver((records) => {
     for (const record of records) {
@@ -19,10 +19,8 @@ event loop), even though no script runs in between to drain them.
       }
     }
   }).observe(document.documentElement, { childList: true, subtree: true });
-  testing.onload(() =>
-    testing.expectEqual(["after_defer"], window.seen_by_defer),
-  );
+  testing.onload(() => testing.expectEqual(['after_defer'], window.seen_by_defer));
 </script>
 
 <script defer src="observer_before_defer.js"></script>
-<div id="after_defer"></div>
+<div id=after_defer></div>

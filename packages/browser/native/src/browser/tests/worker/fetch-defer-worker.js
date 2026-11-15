@@ -8,9 +8,9 @@
 // event-loop pump between them, so the fetch is in-flight (not yet completed)
 // when importScripts begins pumping ticks — its done lands while the worker's
 // frame still has a blocking request, which is exactly what triggers deferral.
-self.onmessage = async function () {
-  const pending = fetch("http://127.0.0.1:9582/xhr");
-  importScripts("defer-noop.js");
+self.onmessage = async function() {
+  const pending = fetch('http://127.0.0.1:9582/xhr');
+  importScripts('defer-noop.js');
   try {
     const response = await pending;
     postMessage({ ok: true, status: response.status });
