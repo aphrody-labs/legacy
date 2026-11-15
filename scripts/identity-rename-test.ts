@@ -190,6 +190,15 @@ if (!flag("--no-cargo")) {
   }
 }
 
+// 5. relocation of the checkout folder (sandbox: folder move and identity check only), twice: the second run is a no-op
+const moved = join(base, OTHER.name);
+const reloc = join(root, "scripts/identity-relocate.ts");
+run(["bun", reloc, "--sandbox", "--from", copy, "--to", moved], base, "relocate: move the copy to the identity name");
+const again = run(["bun", reloc, "--sandbox", "--from", copy, "--to", moved], base, "relocate: second run is idempotent");
+steps.push({ name: "relocate: second run skips the move", ok: again.out.includes("already moved"), detail: again.out.split("\n").find((l) => l.startsWith("move")) ?? "" });
+console.log(`${again.out.includes("already moved") ? "PASS" : "FAIL"} relocate: second run skips the move`);
+run(["bun", join(moved, "scripts/identity.ts"), "get", "cli.binary"], moved, "relocate: root found at the new path");
+
 const ok = steps.every((s) => s.ok);
 writeFileSync(
   join(root, "tools/identity-rename-test.last.json"),
