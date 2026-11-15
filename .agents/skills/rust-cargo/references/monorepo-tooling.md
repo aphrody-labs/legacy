@@ -1,6 +1,6 @@
 # VCS, task runner and Cargo acceleration tooling
 
-Tools below were found installed on the PC (jj, gix, just, sccache, xwin, cargo-nextest, cargo-binstall).
+Tools expected on the PC (jj, gix, just, sccache, xwin, cargo-nextest, cargo-binstall).
 
 ## Jujutsu (`jj`)
 
@@ -18,7 +18,7 @@ Deterministic command recipes in `justfile` (`just --list`, recipes take paramet
 
 ## Cargo acceleration
 
-- `sccache`: `rustc-wrapper = "sccache"` in `~/.cargo/config.toml`; `sccache --show-stats` to verify hits. If `just install-ay` fails with rustc exit `0xfffffffe`, retry with `RUSTC_WRAPPER=""`.
+- `sccache`: `rustc-wrapper = "sccache"` in `~/.cargo/config.toml`, overridden to `""` for this repo by `.cargo/config.toml`; `sccache --show-stats` to verify hits. If `just install-ay` fails with rustc exit `0xfffffffe`, retry with `RUSTC_WRAPPER=""`.
 - `cargo nextest` (alias `cargo nt` -> `nextest run`), `cargo binstall --no-confirm <crate>` for prebuilt binaries, `xwin` to fetch the MSVC CRT and Windows SDK for cross-compiling Windows targets.
 - `cargo xtask`: workspace task crate at `src/xtask`.
 - Heavy workspace builds run on `fr1` or CI, not on the PC.

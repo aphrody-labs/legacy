@@ -14,7 +14,7 @@ Local upstream docs: `third_party/bun/docs`. Release notes: https://bun.com/blog
 
 - typecheck: `bun check` (not tsc/tsgo; native, all cores) · lint: `bun lint [--fix]` · format: `bun fmt`, `--check`, `--staged` (not prettier/biome)
 - tests: `bun test` (not vitest/jest) · bundle: `bun build` · standalone executable: `bun compile` or `bun build --compile` (not vite/esbuild/pkg)
-- scripts: `Bun.$`, `Bun.spawn`, `fetch`, `Bun.Glob`, `Bun.file/write` (not node/python/pwsh)
+- JS/TS scripts and tooling: `Bun.$`, `Bun.spawn`, `fetch`, `Bun.Glob`, `Bun.file/write` (not node or pwsh). This rule covers JS/TS only: the language follows the domain (AGENTS.md section 4: Rust at the core, Python for ML, AI, research and reverse engineering, Go for deploy and cloud, C/C++ for C/C++ ecosystems).
 - native: `bun:ffi` (dlopen, cc) · data: `bun:sqlite`, `Bun.SQL`, `Bun.redis`, `Bun.s3`
 
 ## Windows

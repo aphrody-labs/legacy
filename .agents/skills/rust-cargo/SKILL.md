@@ -5,7 +5,7 @@ description: Rust and Cargo reference for src, grounded in upstream rust-lang/ca
 
 # Rust Cargo (2026)
 
-Fork: `aphrody-labs/cargo` (parent: `rust-lang/cargo`, default branch: `master`, registered in `third_party/forks.txt`).
+Fork: `aphrody-labs/cargo` (parent: `rust-lang/cargo`, default branch: `master`, pinned in `src.lock.json` as `third_party/cargo`; the clone is not checked out here).
 Upstream docs: `https://doc.rust-lang.org/cargo/reference/`.
 
 ## Edition 2024 and Resolver v3

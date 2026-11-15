@@ -66,6 +66,6 @@ DNS, cache key, trigger domain, and prefill rules: [`references/lancache.md`](re
 - `src/steam/UPSTREAM.md`, `src/steam/src/depot/`
 - https://partner.steamgames.com/doc/sdk/uploading
 - https://partner.steamgames.com/doc/store/application/depots
-- https://partner.steamgames.com/doc/features/cloud (fetched 2026-11-12)
+- https://partner.steamgames.com/doc/features/cloud
 - https://partner.steamgames.com/doc/features/workshop
-- https://lancache.net/docs/ (fetched 2026-11-12)
+- https://lancache.net/docs/

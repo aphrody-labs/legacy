@@ -10,7 +10,7 @@ Map of the org (`docs/native/UNIXWIN.md` has one row per repo, with target, dedu
 | Need | Where | Command |
 | --- | --- | --- |
 | Bash 5.3 engine (Rust) | `src/rubash` | `ay sh -c 'echo hi'`, `ay sh script.sh`; no bash is spawned |
-| The `niu` shell, `niu skill install`, `niu doctor` | `src/niubash` (+ `src/ruline` line editor) | `cargo build -p niubash` (fr2/fr1), `niu --help` |
+| The `niu` shell, `niu skill install`, `niu doctor` | `src/niubash` (+ `src/ruline` line editor) | `cargo build -p niubash` (fleet), `niu --help` |
 | Unix applets in one multicall | `src/winux/{core,regex,cmds}` + uutils | `ay applet --list`, `ay applet <name> args` |
 | wpm packages | `infra/up/tools.d/wpm.toml` (generated), `infra/up/tools.toml` | `ay up --list`, `ay up <tool>`; regenerate with `bun scripts/wpm-import.ts --write` |
 | oh-my-niu plugins, validator, packager | `packages/omniu` | `bun packages/omniu/src/cli.ts validate | package | new-pack | plugins` |
@@ -20,7 +20,7 @@ Map of the org (`docs/native/UNIXWIN.md` has one row per repo, with target, dedu
 | Site `unixwin.dev`, GUI `wpm-gui` | `apps/open` (aphrody-labs/open) | not built in src |
 
 Rules that bite:
-- Rust builds and tests run on fr2, never on the PC. rubash tests: `RUST_TEST_THREADS=1 cargo test -p rubash --lib` (the suite mutates the process environment). `ay` builds with `--no-default-features` where onnxruntime is absent.
+- Rust builds and tests run on the fleet (fr1 or CI; fr2 for tests), never on the PC. rubash tests: `RUST_TEST_THREADS=1 cargo test -p rubash --lib` (the suite mutates the process environment). `ay` builds with `--no-default-features` where onnxruntime is absent.
 - The WinuxCmd library (`src/winux`) is Win32 code: it is checked with `cargo check -Zbuild-std --target x86_64-pc-windows-msvc`, and `ay` links it on Windows only; elsewhere the `winux` applets run through uutils.
 - `src/rubash`, `src/ruline`, `src/niubash`, `src/winux` carry the imported upstream commit in `UPSTREAM_REV`; the pins in `src.lock.json` (`third_party/<repo>`) stay the re-import source. Local fixes to rubash are listed in `docs/native/UNIXWIN.md`.
 - The niu skill bundle that `niu skill install` ships is `.agents/skills/niubash/` (the single source; `src/niubash/src/skill.rs` embeds it).

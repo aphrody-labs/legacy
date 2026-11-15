@@ -41,6 +41,6 @@ description: GitHub upstream developer workflow reference covering gh CLI, git h
 ## Git Conventions
 
 - Commit subject: `<area>: <what changed>` or a Conventional Commits type (`feat:`, `fix:`, `docs:`, `perf:`, `refactor:`, `test:`, `chore:`); see `git log --oneline`.
-- Work directly on `main` (no branches, no worktrees); never stash on the shared tree. Sync with the remote: `git fetch aphrody main --no-tags` then `git merge --no-edit aphrody/main`; push with a bare `git push`.
+- Work directly on `main` (no branches, no worktrees); never stash on the shared tree. Sync with the remote: `git fetch aphrody main --no-tags` then `git merge --no-edit aphrody/main`; commit and push through `bun scripts/commit.ts -m "<msg>" --push <paths>` (CLAUDE.md), never a plain `git commit` of the shared index.
 - `gh api ... --jq` with quotes breaks under the Windows shell: pipe the output to `jaq`.
 - Container Registry: `ghcr.io/<owner>/<image>:<tag>` authenticated via `gh auth token | docker login ghcr.io -u <username> --password-stdin`.

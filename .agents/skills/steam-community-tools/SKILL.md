@@ -65,4 +65,4 @@ ArchiSteamFarm describes itself as an application "with primary purpose of farmi
 - https://developer.valvesoftware.com/wiki/SteamCMD
 - https://store.steampowered.com/subscriber_agreement/ (sections 4.C, 4.D)
 - https://github.com/SteamGridDB/steam-rom-manager, https://github.com/SteamDeckHomebrew/decky-loader, https://github.com/Matoking/protontricks, https://github.com/dmadisetti/steam-tui
-- https://www.protondb.com (URL pattern checked from vps, 2026-11-12)
+- https://www.protondb.com (URL pattern checked from a VPS)

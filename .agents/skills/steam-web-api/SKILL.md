@@ -19,7 +19,7 @@ https://api.steampowered.com/<Interface>/<Method>/v<N>/?<params>   (key in the x
 - Partner host and publisher key rules: [`../steam-auth/references/keys.md`](../steam-auth/references/keys.md).
 - Always use HTTPS when a key is attached. How a key is passed is in [`../steam-auth/references/keys.md`](../steam-auth/references/keys.md).
 - For `*Service` interfaces (IPlayerService, IStoreService, IPublishedFileService, IUserReviewsService), parameters can go into a URL-encoded JSON blob in `input_json`. Keep `format` as a separate parameter; the key goes in the header ([`../steam-auth/references/keys.md`](../steam-auth/references/keys.md)). Source: https://partner.steamgames.com/doc/webapi_overview
-- `format` accepts `json` (default), `xml` and `vdf`. The overview does not list the values; verified with keyless calls to `ISteamWebAPIUtil/GetServerInfo/v1/?format=vdf` and `?format=xml` on 2026-11-12.
+- `format` accepts `json` (default), `xml` and `vdf`. The overview does not list the values; verified with keyless calls to `ISteamWebAPIUtil/GetServerInfo/v1/?format=vdf` and `?format=xml`; re-run to confirm.
 - Array parameters use indexed names such as `publishedfileids[0]` and `name[0]`. Source: https://partner.steamgames.com/doc/webapi/ISteamRemoteStorage
 
 ## Keys and limits

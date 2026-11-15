@@ -13,7 +13,7 @@ Endpoints below were checked against the Hostinger OpenAPI spec (no local copy i
   `/etc/aphrody/hostinger.env` on vps/cdn/prd, GitHub Actions secret, gcloud
   Secret Manager `hostinger-api-token`, Cloudflare Secrets Store
   `default-secrets-store`.
-- Never put the value on a command line (no `curl -H`, no `xh -a`): call the API from Bun code (below), which reads it from the environment.
+- Never put the value on a command line (no `curl -H`, no `xh -a`): call the API from code that reads it from the environment (Bun example below; any language works: Go, Python, Rust).
 
 ## Calling the API
 

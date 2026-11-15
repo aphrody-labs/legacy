@@ -46,7 +46,7 @@ Normalise `SteamPath` before comparing paths.
 
 ## 4. Per-user data
 
-Key paths below were checked by grepping key names only in the local files (2026-11-12).
+Key paths below were checked by grepping key names only in the local files; re-check on the install in use.
 
 - `userdata/<accountid>/config/localconfig.vdf`: root `UserLocalConfigStore`; per-app data under `Software/Valve/Steam/apps/<appid>` (`LastPlayed`, `Playtime`, `Playtime2wks`, `PlaytimeDisconnected`). No `LaunchOptions` key exists in that file on this host, where no launch options are set; the bare string `LaunchOptions` does appear in `steamclient64.dll`.
 - `userdata/<accountid>/7/remote/sharedconfig.vdf`: cloud-synced client config (app 7 is the Steam client), root `UserRoamingConfigStore/Software/Valve/Steam`.
@@ -86,5 +86,5 @@ Text VDF, binary KeyValues type bytes, `appinfo.vdf` and `packageinfo.vdf` layou
 ## Sources
 
 - Local install `C:/Program Files (x86)/Steam` (directory listing, `bin/cef/`, `steamapps/libraryfolders.vdf`, `steamapps/appmanifest_2799860.acf`, `logs/`, key names in `localconfig.vdf` and `sharedconfig.vdf`, strings in `steamclient64.dll`), `C:/Program Files (x86)/Common Files/Steam`, `reg query` of `HKCU\Software\Valve\Steam`, `HKCU\Software\Valve\Steam\ActiveProcess`, `HKLM\SOFTWARE\WOW6432Node\Valve\Steam` (read 2026-11-12).
-- https://web.archive.org/web/20251230201815/https://developer.valvesoftware.com/wiki/Command_line_options_(Steam) (accessed 2026-11-12; the live page is behind an Anubis bot check).
+- https://web.archive.org/web/20251230201815/https://developer.valvesoftware.com/wiki/Command_line_options_(Steam) (the live page is behind an Anubis bot check).
 - `src/steam/src/vdf.rs`, `src/steam/src/install.rs`, `src/steam/src/launch.rs`.
