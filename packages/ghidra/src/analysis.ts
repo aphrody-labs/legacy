@@ -33,23 +33,26 @@ export const str = async (o: JObject | null | undefined): Promise<string | null>
 export async function decompile(program: JObject, fn: JObject, timeoutSec = 60, ifc?: JObject): Promise<string | null> {
   const s = jvm();
   const own = !ifc;
-  ifc ??= await s.newObject("ghidra.app.decompiler.DecompInterface");
-  if (own) {
-    await ifc.openProgram(program);
-  }
+  const d: JObject = ifc ?? (await s.newObject("ghidra.app.decompiler.DecompInterface"));
   try {
-    const res = await ifc.decompileFunction(fn, timeoutSec, await taskMonitor());
+    if (own) await d.openProgram(program);
+    const res = await d.decompileFunction(fn, timeoutSec, await taskMonitor());
     const df = await res.getDecompiledFunction();
     return df === null ? null : String(await df.getC());
   } finally {
-    if (own) await ifc.dispose();
+    if (own) await d.dispose();
   }
 }
 
 /** Open one DecompInterface for many functions. */
 export async function decompiler(program: JObject): Promise<JObject> {
   const ifc = await jvm().newObject("ghidra.app.decompiler.DecompInterface");
-  await ifc.openProgram(program);
+  try {
+    await ifc.openProgram(program);
+  } catch (e) {
+    await ifc.dispose().catch(() => {});
+    throw e;
+  }
   return ifc;
 }
 
@@ -58,9 +61,11 @@ export async function listFunctions(program: JObject, opts: { max?: number; deco
   const it = await fm.getFunctions(true);
   const fns = await it.$list();
   const out: FunctionInfo[] = [];
-  const ifc = opts.decompile ? await decompiler(program) : undefined;
+  const limit = Math.max(0, Number.isFinite(opts.max) ? Math.trunc(opts.max!) : fns.length);
+  const slice = fns.slice(0, limit);
+  const ifc = opts.decompile && slice.length > 0 ? await decompiler(program) : undefined;
   try {
-    for (const f of fns.slice(0, opts.max ?? fns.length)) {
+    for (const f of slice) {
       const info: FunctionInfo = {
         name: String(await f.getName()),
         entry: String(await (await f.getEntryPoint()).toString()),
@@ -92,6 +97,7 @@ export async function summarize(program: JObject, opts: { max?: number; decompil
     });
   }
   const st = await program.getSymbolTable();
+  const fm = await program.getFunctionManager();
   return {
     name: String(await program.getName()),
     language: String(await (await program.getLanguageID()).toString()),
@@ -100,7 +106,7 @@ export async function summarize(program: JObject, opts: { max?: number; decompil
     imageBase: String(await (await program.getImageBase()).toString()),
     minAddress: await str(await program.getMinAddress()),
     maxAddress: await str(await program.getMaxAddress()),
-    functionCount: Number(await (await program.getFunctionManager()).getFunctionCount()),
+    functionCount: Number(await fm.getFunctionCount()),
     symbolCount: Number(await st.getNumSymbols()),
     blocks,
     functions: await listFunctions(program, opts),

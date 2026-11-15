@@ -21,7 +21,7 @@ function bind(c: ReturnType<typeof getContext>) {
   currentHighlight = c?.currentHighlight;
   monitor = c?.monitor;
   state = c?.state;
-  sourceFile = c?.scriptName;
+  sourceFile = c?.sourceFile ?? c?.scriptName;
 }
 onContext(bind);
 bind(getContext());

@@ -3,7 +3,8 @@
 // onBeforeParse (native) only exists in Bun.build: see nativeGhidraPlugin().
 import type { BunPlugin } from "bun";
 import { existsSync } from "node:fs";
-import { dirname, isAbsolute, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { openProgram, started, stop } from "./api.ts";
 import { summarize, type ProgramSummary } from "./analysis.ts";
 
@@ -25,11 +26,31 @@ export interface GhidraPluginOptions {
 const QUERY = /\?ghidra(=[a-z]+)?(&.*)?$/;
 
 export function parseSpecifier(spec: string): { file: string; backend?: "jvm" | "native" } | null {
-  if (spec.startsWith("ghidra:")) return { file: spec.slice("ghidra:".length) };
-  const m = spec.match(QUERY);
-  if (!m) return null;
+  let rest = spec;
+  const ns = spec.startsWith("ghidra:");
+  if (ns) rest = spec.slice("ghidra:".length);
+  const m = rest.match(QUERY);
+  if (!m) return ns ? { file: rest } : null;
   const b = m[1]?.slice(1);
-  return { file: spec.slice(0, m.index), backend: b === "native" || b === "jvm" ? b : undefined };
+  if (b !== undefined && b !== "native" && b !== "jvm") throw new Error(`ghidra: unknown backend "${b}" (expected jvm or native)`);
+  return { file: rest.slice(0, m.index), backend: b };
+}
+
+/** BinarySreReport (aphrody-re) -> the ProgramSummary shape of the JVM backend. */
+function normalizeNative(rep: any): Record<string, any> {
+  if (rep === null || typeof rep !== "object" || Array.isArray(rep)) throw new Error("ghidra: analysis result is not an object");
+  const fns = (rep.decompiled_functions ?? []).map((f: any) => ({
+    name: f.name, entry: typeof f.entry_va === "number" ? "0x" + f.entry_va.toString(16) : f.entry, size: f.size_bytes ?? f.size,
+    signature: f.signature ?? "", callingConvention: null, isThunk: false, isExternal: false, c: f.pseudo_c ?? f.c,
+  }));
+  return {
+    ...rep,
+    name: rep.binary_path ? basename(String(rep.binary_path)) : rep.name,
+    language: rep.language ?? rep.format ?? null,
+    blocks: rep.sections ?? rep.blocks ?? [],
+    functions: fns,
+    functionCount: fns.length,
+  };
 }
 
 export function renderModule(s: ProgramSummary | Record<string, any>): string {
@@ -47,17 +68,21 @@ export const functionCount = analysis.functionCount ?? functions.length;
 const cache = new Map<string, Promise<string>>();
 
 async function analyzeToModule(file: string, backend: "jvm" | "native", o: GhidraPluginOptions): Promise<string> {
-  const key = `${backend}:${file}:${o.decompile}:${o.maxFunctions}`;
+  const key = `${backend}:${file}:${o.decompile}:${o.maxFunctions}:${o.projectLocation}:${o.nativeAddon}`;
   let p = cache.get(key);
   if (!p) {
     p = (async () => {
       if (backend === "native") {
         const addon = o.nativeAddon ?? process.env.GHIDRA_BUN_NATIVE;
         if (!addon) throw new Error("backend native needs nativeAddon or GHIDRA_BUN_NATIVE");
-        const mod = require(addon) as { analyze(path: string, max?: number): string };
-        return renderModule(JSON.parse(mod.analyze(file, o.maxFunctions ?? 64)));
+        const mod = require(isAbsolute(addon) ? addon : resolve(process.cwd(), addon)) as { analyze(path: string, max?: number): string };
+        return renderModule(normalizeNative(JSON.parse(mod.analyze(file, o.maxFunctions))));
       }
-      const h = await openProgram(file, { projectLocation: o.projectLocation ?? `${process.env.TMPDIR ?? "/tmp"}/bun-ghidra-projects` });
+      // project name carries a hash of the absolute path: /a/foo.exe and /b/foo.exe must not share a program
+      const h = await openProgram(file, {
+        projectLocation: o.projectLocation ?? join(tmpdir(), "bun-ghidra-projects"),
+        projectName: `${basename(file)}_${Bun.hash(resolve(file)).toString(16)}`,
+      });
       try {
         return renderModule(await summarize(h.program, { max: o.maxFunctions, decompile: o.decompile }));
       } finally {
@@ -65,27 +90,36 @@ async function analyzeToModule(file: string, backend: "jvm" | "native", o: Ghidr
       }
     })();
     cache.set(key, p);
+    p.catch(() => cache.delete(key)); // never keep a rejected analysis
   }
   return p;
 }
+
+let hooked = false;
 
 export function ghidraPlugin(o: GhidraPluginOptions = {}): BunPlugin {
   return {
     name: "aphrody-ghidra",
     setup(build) {
       build.onStart(() => { cache.clear(); });
+      if (!hooked) {
+        hooked = true;
+        process.once("beforeExit", () => { if (!o.keepAlive) void shutdown(); });
+      }
       build.onResolve({ filter: /\?ghidra(=[a-z]+)?(&.*)?$|^ghidra:/ }, (args) => {
         const spec = parseSpecifier(args.path);
         if (!spec) return undefined;
         const base = args.importer ? dirname(args.importer) : process.cwd();
         const abs = isAbsolute(spec.file) ? spec.file : resolve(base, spec.file);
         if (!existsSync(abs)) throw new Error(`ghidra: no such file ${abs}`);
-        return { path: abs + (spec.backend ? `#${spec.backend}` : ""), namespace: "ghidra" };
+        return { path: abs + "#" + (spec.backend ?? ""), namespace: "ghidra" }; // always suffixed: a path containing `#` stays intact
       });
       build.onLoad({ filter: /.*/, namespace: "ghidra" }, async (args: any) => {
         if (o.deferAnalysis && typeof args.defer === "function") await args.defer();
-        const [file, tag] = args.path.split("#");
-        const backend = (tag as "jvm" | "native" | undefined) ?? o.backend ?? "jvm";
+        const hash = args.path.lastIndexOf("#");
+        const file = hash >= 0 ? args.path.slice(0, hash) : args.path;
+        const tag = hash >= 0 ? args.path.slice(hash + 1) : undefined;
+        const backend = (tag ? (tag as "jvm" | "native") : undefined) ?? o.backend ?? "jvm";
         return { contents: await analyzeToModule(file, backend, o), loader: "js" };
       });
     },

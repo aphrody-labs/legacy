@@ -3,6 +3,8 @@
 //! * `ghidra_on_before_parse` (C ABI, `Bun.build` `onBeforeParse` with `napiModule`/`symbol`): for a stub
 //!   file `<name>.ghidra.js` it analyses the binary named by the stub text (or `<name>` itself when the
 //!   stub is empty) with `aphrody-re` and emits an ES module with the analysis report.
+//! * The `onBeforeParse` stub module exports `default functions sections imports exports_ strings entry`;
+//!   the `?ghidra` Bun plugin (`packages/ghidra/src/plugin.ts`) exports a different, JVM-backed set.
 //! * NAPI functions `analyze(path, maxFunctions)` and `version()` for direct fast-path use from Bun.
 #![allow(clippy::missing_safety_doc)]
 
@@ -22,19 +24,30 @@ fn max_functions() -> usize {
 
 /// Analyse `path` and return the report as JSON (plus full-decompiler C when feature `decompile`).
 pub fn analyze_json(path: &Path, max_fns: usize) -> Result<String, String> {
-    let opts = SreAnalyzeOptions { max_functions: max_fns.max(1), ..SreAnalyzeOptions::default() };
+    let opts = SreAnalyzeOptions { max_functions: max_fns, ..SreAnalyzeOptions::default() };
     let rep = analyze_binary_file(path, &opts)?;
     #[allow(unused_mut)]
     let mut v = serde_json::to_value(&rep).map_err(|e| e.to_string())?;
     #[cfg(feature = "decompile")]
     {
+        // keyed by `name@address` (same-name overloads must not collapse); failures are reported, not dropped
         let mut native = serde_json::Map::new();
-        for f in &rep.decompiled_functions {
-            if let Ok(c) = aphrody_re::decompile::decompile(path, f.entry_va) {
-                native.insert(f.name.clone(), serde_json::Value::String(c));
+        let mut errors = serde_json::Map::new();
+        let addrs: Vec<u64> = rep.decompiled_functions.iter().map(|f| f.entry_va).collect();
+        let results = aphrody_re::decompile::decompile_many(path, &addrs);
+        for (f, (_, r)) in rep.decompiled_functions.iter().zip(results) {
+            let key = format!("{}@{:#x}", f.name, f.entry_va);
+            match r {
+                Ok(c) => {
+                    native.insert(key, serde_json::Value::String(c));
+                }
+                Err(e) => {
+                    errors.insert(key, serde_json::Value::String(e.to_string()));
+                }
             }
         }
         v["ghidra_decompiler_c"] = serde_json::Value::Object(native);
+        v["ghidra_decompiler_errors"] = serde_json::Value::Object(errors);
     }
     serde_json::to_string(&v).map_err(|e| e.to_string())
 }
@@ -64,6 +77,14 @@ pub extern "C" fn ghidra_on_before_parse(
     args: *mut bun_native_plugin::sys::OnBeforeParseArguments,
     result: *mut bun_native_plugin::sys::OnBeforeParseResult,
 ) {
+    // a panic must not unwind across the C boundary
+    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| on_before_parse(args, result)));
+}
+
+fn on_before_parse(
+    args: *mut bun_native_plugin::sys::OnBeforeParseArguments,
+    result: *mut bun_native_plugin::sys::OnBeforeParseResult,
+) {
     let Ok(mut handle) = OnBeforeParse::from_raw(args, result) else { return };
     let Ok(path) = handle.path().map(|p| p.into_owned()) else {
         handle.log_error("ghidra: cannot read path");
@@ -71,7 +92,10 @@ pub extern "C" fn ghidra_on_before_parse(
     };
     let text = match handle.input_source_code() {
         Ok(s) => s.into_owned(),
-        Err(_) => String::new(),
+        Err(e) => {
+            handle.log_error(&format!("ghidra: cannot read stub source: {e}"));
+            return;
+        }
     };
     let target = target_for(Path::new(&path), &text);
     match analyze_json(&target, max_functions()) {
@@ -82,10 +106,13 @@ pub extern "C" fn ghidra_on_before_parse(
 
 #[napi]
 pub fn analyze(path: String, max_functions: Option<u32>) -> napi::Result<String> {
-    analyze_json(Path::new(&path), max_functions.unwrap_or(64) as usize).map_err(napi::Error::from_reason)
+    let n = max_functions.map(|n| n as usize).unwrap_or_else(self::max_functions);
+    std::panic::catch_unwind(|| analyze_json(Path::new(&path), n))
+        .map_err(|_| napi::Error::from_reason("ghidra: analysis panicked".to_string()))?
+        .map_err(napi::Error::from_reason)
 }
 
 #[napi]
 pub fn version() -> String {
-    format!("aphrody-ghidra-bun {} decompile={}", env!("CARGO_PKG_VERSION"), cfg!(feature = "decompile"))
+    format!("{} {} decompile={}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"), cfg!(feature = "decompile"))
 }

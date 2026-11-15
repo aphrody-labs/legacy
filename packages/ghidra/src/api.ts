@@ -3,6 +3,7 @@
 // callbacks (`withX(..., fn)`) and `await using` (Symbol.asyncDispose).
 import { mkdirSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { Session, type JObject, type StartOptions } from "./rpc.ts";
 import { createFlat, type Flat } from "./flat.ts";
 import { setContext, clearContext, getContext, type ScriptContext } from "./context.ts";
@@ -40,10 +41,14 @@ export abstract class PyGhidraLauncher {
   protected abstract initGhidra(s: Session): Promise<void>;
   /** Concurrent callers share one JVM; the session is published only after initGhidra succeeds. */
   start(): Promise<Session> {
-    if (started()) return Promise.resolve(session!);
+    if (started()) {
+      if (this.extraClasspath.length || this.extraVmargs.length)
+        process.stderr.write("ghidra: JVM already started; classpath/vmargs of this launcher are ignored\n");
+      return Promise.resolve(session!);
+    }
     if (!starting) {
       starting = (async () => {
-        const s = await Session.start({ ...this.opts, jvmArgs: [...this.extraVmargs, ...(this.opts.jvmArgs ?? [])] });
+        const s = await Session.start({ ...this.opts, jvmArgs: [...this.extraVmargs, ...(this.opts.jvmArgs ?? [])], classpath: [...this.extraClasspath, ...(this.opts.classpath ?? [])] });
         try {
           await this.initGhidra(s);
         } catch (e) {
@@ -68,7 +73,13 @@ export class HeadlessPyGhidraLauncher extends PyGhidraLauncher {
 }
 
 /** Starts the JVM but defers Ghidra initialization (classpath/vmargs can be adjusted before start()). */
-export class DeferredPyGhidraLauncher extends HeadlessPyGhidraLauncher {}
+export class DeferredPyGhidraLauncher extends HeadlessPyGhidraLauncher {
+  /** Ghidra initialization is deferred: call `initializeGhidra()` after adjusting classpath/vmargs. */
+  protected override async initGhidra(): Promise<void> {}
+  async initializeGhidra(): Promise<void> {
+    await super.initGhidra(await this.start());
+  }
+}
 
 export class GuiPyGhidraLauncher extends PyGhidraLauncher {
   protected async initGhidra(): Promise<void> {
@@ -88,6 +99,7 @@ async function ensureStarted(): Promise<Session> {
 }
 
 export async function stop(): Promise<void> {
+  headlessInterpreter = undefined;
   if (session) await session.close();
   session = undefined;
   launcher = undefined;
@@ -290,6 +302,7 @@ export async function openProgram(binaryPath: string | null, o: OpenProgramOptio
   const bp = binaryPath === null ? null : resolve(binaryPath);
   const programName = o.programName ?? (bp ? basename(bp) : undefined);
   const projectName = o.projectName || `${basename(bp ?? "program")}_ghidra`;
+  if (bp === null && !o.projectLocation) throw new Error("openProgram(null) requires projectLocation");
   let loc = o.projectLocation ? resolve(o.projectLocation) : dirname(bp!);
   if (o.nestedProjectLocation ?? true) loc = join(loc, projectName);
   const GP = s.cls("ghidra.base.project.GhidraProject");
@@ -328,6 +341,7 @@ export async function openProgram(binaryPath: string | null, o: OpenProgramOptio
     }
     await project.saveAs(program, "/", programName, true);
   }
+  if (program === null) throw new Error(programName === undefined ? "no program to open" : `program '${programName}' not found in project ${projectName}`);
   await Util.acquireBundleHostReference();
   acquired++;
   const flat = await s.newObject("ghidra.program.flatapi.FlatProgramAPI", program);
@@ -345,9 +359,9 @@ export async function openProgram(binaryPath: string | null, o: OpenProgramOptio
   const close = async () => {
     if (closed) return;
     closed = true;
-    await Util.releaseBundleHostReference();
-    await project.save(program);
-    await project.close();
+    try { await Util.releaseBundleHostReference(); } finally {
+      try { await project.save(program); } finally { await project.close(); }
+    }
   };
   const script = createFlat({ callFlat: (m, a) => (flat as any)[m](...a) }, { scriptName: "bun-ghidra" });
   return { flat, program: program!, project, close, script, [Symbol.asyncDispose]: close };
@@ -391,8 +405,8 @@ export async function runScript(
     const currentAddress = (await mem.isEmpty()) ? null : await mem.getMinAddress();
     const scriptName = basename(scriptPath);
     const flat = createFlat({ callFlat: (m, a) => (h.flat as any)[m](...a) }, { scriptName, scriptArgs: o.scriptArgs ?? [] });
-    setContext({ session: jvm(), project: h.project, currentProgram: program, currentAddress, currentLocation: null, currentSelection: null, currentHighlight: null, state: null, monitor: await taskMonitor(), flat, scriptArgs: o.scriptArgs ?? [], scriptName, javaFlat: h.flat });
-    await import(resolve(scriptPath) + "?run=" + Date.now());
+    setContext({ session: jvm(), project: h.project, currentProgram: program, currentAddress, currentLocation: null, currentSelection: null, currentHighlight: null, state: null, monitor: await taskMonitor(), flat, scriptArgs: o.scriptArgs ?? [], scriptName, sourceFile: resolve(scriptPath), javaFlat: h.flat });
+    await import(pathToFileURL(resolve(scriptPath)).href + "?run=" + Date.now());
   } finally {
     clearContext();
     await h.close();
@@ -411,10 +425,13 @@ export class ApplicationInfo {
   ) {}
   static fromFile(file: string): ApplicationInfo {
     const kv: Record<string, string> = {};
-    for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
-      const m = line.match(/^application\.(\S+?)=(.*)$/);
-      if (m) kv[m[1]!.replace(/[.-]/g, "_")] = m[2]!;
+    for (const raw of readFileSync(file, "utf8").split(/\r?\n/)) {
+      const line = raw.trim();
+      if (line.startsWith("#") || line.startsWith("!")) continue;
+      const m = line.match(/^application\.(\S+?)\s*=\s*(.*)$/);
+      if (m) kv[m[1]!.replace(/[.-]/g, "_")] = m[2]!.trim();
     }
+    for (const req of ["name", "version", "release_name"]) if (kv[req] === undefined) throw new Error(`${file}: missing application.${req.replace(/_/g, ".")}`);
     return new ApplicationInfo(kv.name!, kv.version!, kv.release_name!, kv.revision_ghidra, kv.build_date, kv.build_date_short,
       kv.layout_version, kv.gradle_min, kv.java_min, kv.java_max, kv.java_compiler, kv.gradle_max);
   }
@@ -425,15 +442,17 @@ export class ExtensionDetails {
     public createdOn = String(new Date()), public version: string | null = null, public plugin_version = "0.0.1") {}
   static fromFile(file: string): ExtensionDetails {
     const kv: Record<string, string> = {};
-    for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
+    for (const raw of readFileSync(file, "utf8").split(/\r?\n/)) {
+      const line = raw.trim();
+      if (line.startsWith("#") || line.startsWith("!")) continue;
       const i = line.indexOf("=");
-      if (i >= 0) kv[line.slice(0, i)] = line.slice(i + 1);
+      if (i >= 0) kv[line.slice(0, i).trim()] = line.slice(i + 1).trim();
     }
+    for (const req of ["name", "description", "author"]) if (kv[req] === undefined) throw new Error(`${file}: missing ${req}`);
     return new ExtensionDetails(kv.name!, kv.description!, kv.author!, kv.createdOn, kv.version ?? null, kv.plugin_version);
   }
   toString() {
-    return Object.entries(this).map(([k, v]) => `${k}=${v}`).join("\n");
+    return Object.entries(this).filter(([, v]) => v !== null && v !== undefined).map(([k, v]) => `${k}=${v}`).join("\n");
   }
 }
 
-export { Session, setContext, clearContext };

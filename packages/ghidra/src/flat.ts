@@ -70,7 +70,7 @@ export type Flat = { readonly [K in FlatMethodName]: (...args: any[]) => Promise
 /** Cancelled ask*() in a headless context without a preset answer (mirrors CancelledException). */
 export class CancelledError extends Error {
   constructor(what: string) {
-    super(`Cancelled: ${what} (no preset answer; set GHIDRA_ASK_<NAME> or script args)`);
+    super(`Cancelled: ${what} (no preset answer; set GHIDRA_ASK_<NAME>)`);
     this.name = "CancelledException";
   }
 }
@@ -79,6 +79,8 @@ export interface FlatBackend {
   /** Invoke `method` on the Java FlatProgramAPI/GhidraScript-like object. */
   callFlat(method: string, args: unknown[]): Promise<unknown>;
 }
+
+const FLAT_RESERVED = new Set(["then", "toJSON", "valueOf", "toString", "constructor", "inspect"]);
 
 /** Build the `Flat` proxy: local methods run here, everything else goes to the backend. */
 export function createFlat(
@@ -124,35 +126,46 @@ export function createFlat(
   }
   return new Proxy({} as Flat, {
     get(_t, prop) {
-      if (typeof prop !== "string" || prop === "then") return undefined;
+      if (typeof prop !== "string" || FLAT_RESERVED.has(prop)) return undefined;
       if (LOCAL_METHODS.has(prop) && local[prop]) return local[prop];
       return (...args: unknown[]) => backend.callFlat(prop, args);
     },
   });
 }
 
-/** Minimal Java-style printf (%s %d %x %f %n %%, flags - 0 +) for GhidraScript.printf. */
+/** Minimal Java-style printf (%s %d %x %X %o %c %b %e %f %n %%, flags - 0 +, precision on %s %f %e) for GhidraScript.printf. */
 export function sprintf(fmt: string, args: unknown[]): string {
   let i = 0;
-  return fmt.replace(/%([-0+]*)(\d*)(?:\.(\d+))?([sdxXfn%])/g, (_m, fl: string, w: string, p: string | undefined, c: string) => {
+  return fmt.replace(/%([-0+]*)(\d*)(?:\.(\d+))?([sSdxXofeEcbBn%])/g, (_m, fl: string, w: string, p: string | undefined, c: string) => {
     if (c === "%") return "%";
     if (c === "n") return "\n";
     const a = args[i++];
     let s: string;
-    const hex = (v: unknown) => {
+    const bits = (v: unknown, radix: number) => {
       const b = typeof v === "bigint" ? v : BigInt(Math.trunc(Number(v)));
       // Java prints negative values as two's complement: int width when it fits, else long
-      return b < 0n ? BigInt.asUintN(b >= -(2n ** 31n) ? 32 : 64, b).toString(16) : b.toString(16);
+      return b < 0n ? BigInt.asUintN(b >= -(2n ** 31n) ? 32 : 64, b).toString(radix) : b.toString(radix);
     };
     if (c === "d") s = typeof a === "bigint" ? a.toString() : String(Math.trunc(Number(a)));
-    else if (c === "x") s = hex(a);
-    else if (c === "X") s = hex(a).toUpperCase();
+    else if (c === "x") s = bits(a, 16);
+    else if (c === "X") s = bits(a, 16).toUpperCase();
+    else if (c === "o") s = bits(a, 8);
     else if (c === "f") s = Number(a).toFixed(p === undefined ? 6 : Number(p));
-    else s = String(a);
-    if (fl.includes("+") && "dfxX".includes(c) && !s.startsWith("-")) s = "+" + s;
+    else if (c === "e" || c === "E") {
+      s = Number(a).toExponential(p === undefined ? 6 : Number(p)).replace(/e([+-])(\d)$/, "e$10$2");
+      if (c === "E") s = s.toUpperCase();
+    } else if (c === "c") s = typeof a === "number" ? String.fromCodePoint(a) : String(a).slice(0, 1);
+    else if (c === "b" || c === "B") s = String(a !== null && a !== undefined && a !== false);
+    else {
+      s = String(a);
+      if (p !== undefined) s = s.slice(0, Number(p));
+    }
+    if (c === "S" || c === "B") s = s.toUpperCase();
+    const numeric = "dfxXoeE".includes(c);
+    if (fl.includes("+") && numeric && !s.startsWith("-")) s = "+" + s;
     const width = Number(w || 0);
     if (fl.includes("-")) return s.padEnd(width);
-    if (fl.includes("0") && "dfxX".includes(c)) {
+    if (fl.includes("0") && numeric) {
       const sign = /^[-+]/.test(s) ? s[0] : "";
       return sign + s.slice(sign.length).padStart(width - sign.length, "0");
     }

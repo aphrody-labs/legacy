@@ -18,15 +18,19 @@ export interface ScriptContext {
   javaFlat?: JObject;
   scriptArgs?: string[];
   scriptName?: string;
+  /** path of the running script (GhidraScript.getSourceFile); defaults to scriptName */
+  sourceFile?: string;
 }
 
-let ctx: ScriptContext | undefined;
+/** nested runScript()/setContext() calls form a stack: clearContext() restores the parent context */
+const stack: ScriptContext[] = [];
 const listeners = new Set<(c: ScriptContext | undefined) => void>();
 
-export function setContext(c: ScriptContext) { ctx = c; for (const l of listeners) l(c); }
-export function clearContext() { ctx = undefined; for (const l of listeners) l(undefined); }
-export function getContext(): ScriptContext | undefined { return ctx; }
+export function setContext(c: ScriptContext) { stack.push(c); for (const l of listeners) l(c); }
+export function clearContext() { stack.pop(); const top = stack[stack.length - 1]; for (const l of listeners) l(top); }
+export function getContext(): ScriptContext | undefined { return stack[stack.length - 1]; }
 export function requireContext(): ScriptContext {
+  const ctx = getContext();
   if (!ctx) throw new Error("no Ghidra script context: use runScript() or setContext() first");
   return ctx;
 }

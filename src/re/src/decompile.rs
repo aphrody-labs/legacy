@@ -33,3 +33,17 @@ pub fn decompile_named(path: &Path, name: &str) -> Result<Option<String>> {
     };
     program.decompile(function.address).map(Some)
 }
+
+/// Decompiles several addresses with a single `Program::open` (per-address errors are kept).
+pub fn decompile_many(path: &Path, addresses: &[u64]) -> Vec<(u64, Result<String>)> {
+    match Program::open(path, None) {
+        Ok(mut program) => addresses.iter().map(|a| (*a, program.decompile(*a))).collect(),
+        Err(e) => {
+            let msg = e.to_string();
+            addresses
+                .iter()
+                .map(|a| (*a, Err(ghidra_decompiler::error::Error::from(std::io::Error::other(msg.clone())))))
+                .collect()
+        }
+    }
+}

@@ -140,3 +140,47 @@ describe("rpc release refcount", () => {
     await s.close();
   });
 });
+
+describe("rpc encode and lifecycle fixes", () => {
+  test("plain objects are rejected, class proxies are encoded, errors surface stderr-free exit", async () => {
+    const s = mock();
+    expect(() => s.encode({ a: 1 })).toThrow(TypeError);
+    expect(s.encode(s.cls("java.lang.Math"))).toEqual({ $class: "java.lang.Math" });
+    expect(s.encode({ $class: "x", other: 1 })).toEqual({ $class: "x", other: 1 }); // a user object is not hijacked
+    await s.close();
+  });
+});
+
+describe("plugin, context and flat review fixes", () => {
+  test("parseSpecifier: unknown backend throws, ghidra: namespace keeps query, # in paths", () => {
+    expect(() => parseSpecifier("./x.exe?ghidra=bogus")).toThrow();
+    expect(parseSpecifier("ghidra:./x.exe?ghidra=native")).toEqual({ file: "./x.exe", backend: "native" });
+    expect(parseSpecifier("./a#b/x.exe?ghidra")).toEqual({ file: "./a#b/x.exe", backend: undefined });
+  });
+  test("sprintf %c %o %s precision and %b", () => {
+    expect(sprintf("%c|%o|%.2s|%b", [65, 8, "abcdef", true])).toBe("A|10|ab|true");
+  });
+  test("context stack restores the parent on clear", () => {
+    const { setContext, clearContext, getContext } = require("../src/context.ts");
+    const mk = (n: string) => ({ session: {} as any, flat: {} as any, scriptName: n });
+    setContext(mk("outer"));
+    setContext(mk("inner"));
+    expect(getContext().scriptName).toBe("inner");
+    clearContext();
+    expect(getContext().scriptName).toBe("outer");
+    clearContext();
+    expect(getContext()).toBeUndefined();
+  });
+  test("flat proxy ignores toJSON/valueOf/toString", () => {
+    const f: any = createFlat({ callFlat: async () => { throw new Error("must not be called"); } }, { out: () => {} });
+    expect(f.toJSON).toBeUndefined();
+    expect(JSON.stringify({ f })).toBe("{\"f\":{}}");
+  });
+  test("ApplicationInfo skips comments and validates required keys", async () => {
+    const p = `${process.env.TEMP ?? "/tmp"}/app2-${Date.now()}.properties`;
+    await Bun.write(p, "# application.name=bad\napplication.name=Ghidra\napplication.version=12.2\napplication.release.name=PUBLIC\n");
+    expect(ApplicationInfo.fromFile(p).name).toBe("Ghidra");
+    await Bun.write(p, "application.name=Ghidra\n");
+    expect(() => ApplicationInfo.fromFile(p)).toThrow();
+  });
+});

@@ -2,6 +2,7 @@
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { Subprocess } from "bun";
 
 export class JavaError extends Error {
@@ -11,6 +12,8 @@ export class JavaError extends Error {
   }
 }
 
+/** brand of class proxies (a user object with a `$class` key must never be mistaken for one) */
+const JCLASS = Symbol.for("aphrody.ghidra.jclass");
 const RESERVED = new Set(["then", "toJSON", "constructor", "valueOf", "inspect"]);
 
 export interface JObject {
@@ -24,6 +27,8 @@ export interface JObject {
   $setField(name: string, v: unknown): Promise<void>;
   $instanceOf(cls: string): Promise<boolean>;
   $release(): Promise<void>;
+  /** java.lang.Object.toString() (async, unlike JS `toString`) */
+  toString(): any;
   [method: string]: any;
 }
 
@@ -44,10 +49,13 @@ export interface StartOptions {
   /** directory with compiled Bridge.class (default: cache, compiled on demand with javac) */
   bridgeClasses?: string;
   verbose?: boolean;
+  /** extra classpath entries appended to `-cp` */
+  classpath?: string[];
 }
 
 export class Session {
-  #proc: Subprocess<"pipe", "pipe", "inherit"> | undefined;
+  #proc: Subprocess<"pipe", "pipe", any> | undefined;
+  #errTail = "";
   #next = 1;
   #pending = new Map<number, { res: (v: any) => void; rej: (e: Error) => void }>();
   #buf = "";
@@ -79,10 +87,11 @@ export class Session {
     const args = [
       java, ...vmargs, `-Xmx${opts.maxMemory ?? "2g"}`, "-Djava.awt.headless=true",
       `-Dghidra.install.dir=${install}`, ...(opts.jvmArgs ?? []),
-      "-cp", `${utility}${sep}${classes}`, "ghidra.Ghidra", "GhidraBridge",
+      "-cp", [utility, classes, ...(opts.classpath ?? [])].join(sep), "ghidra.Ghidra", "GhidraBridge",
     ];
     const s = new Session();
-    s.#proc = Bun.spawn(args, { stdin: "pipe", stdout: "pipe", stderr: opts.verbose ? "inherit" : "inherit" });
+    s.#proc = Bun.spawn(args, { stdin: "pipe", stdout: "pipe", stderr: opts.verbose ? "inherit" : "pipe" });
+    if (!opts.verbose) void s.#drainStderr();
     s.#pump();
     await s.ping();
     return s;
@@ -94,6 +103,14 @@ export class Session {
     s.#proc = Bun.spawn(cmd, { stdin: "pipe", stdout: "pipe", stderr: "inherit" });
     s.#pump();
     return s;
+  }
+
+  /** keep the last 4 KB of the JVM stderr so a dead bridge reports why */
+  async #drainStderr() {
+    const dec = new TextDecoder();
+    try {
+      for await (const chunk of this.#proc!.stderr as ReadableStream<Uint8Array>) this.#errTail = (this.#errTail + dec.decode(chunk, { stream: true })).slice(-4096);
+    } catch { /* process gone */ }
   }
 
   async #pump() {
@@ -110,14 +127,26 @@ export class Session {
         if (line) this.#onLine(line);
       }
     }
+    this.#buf += dec.decode();
+    if (this.#buf.trim()) this.#onLine(this.#buf.trim()); // final fragment without a newline
+    this.#buf = "";
+    this.#failAll(new Error("bridge exited" + (this.#errTail ? `: ${this.#errTail.trim()}` : "")));
+  }
+
+  #failAll(e: Error) {
     this.closed = true;
-    for (const [, p] of this.#pending) p.rej(new Error("bridge exited"));
+    for (const [, p] of this.#pending) p.rej(e);
     this.#pending.clear();
   }
 
   #onLine(line: string) {
     let m: any;
-    try { m = JSON.parse(line); } catch { return; }
+    try { m = JSON.parse(line); } catch {
+      // protocol corruption: nothing pending can be matched reliably any more
+      process.stderr.write(`ghidra bridge: unparseable line: ${line.slice(0, 200)}\n`);
+      this.#failAll(new Error("bridge protocol error: unparseable response"));
+      return;
+    }
     const p = this.#pending.get(m.id);
     if (!p) return;
     this.#pending.delete(m.id);
@@ -131,8 +160,13 @@ export class Session {
     const line = JSON.stringify({ id, ...req }) + "\n";
     return new Promise((res, rej) => {
       this.#pending.set(id, { res, rej });
-      this.#proc!.stdin.write(line);
-      this.#proc!.stdin.flush();
+      try {
+        this.#proc!.stdin.write(line);
+        this.#proc!.stdin.flush();
+      } catch (e) {
+        this.#pending.delete(id);
+        rej(e as Error);
+      }
     });
   }
 
@@ -150,8 +184,10 @@ export class Session {
     if (Array.isArray(v)) return v.map((x) => this.encode(x));
     if (typeof v === "object") {
       if (typeof v.$h === "number") return { $h: v.$h };
-      if (typeof v.$class === "string" && Object.keys(v).length <= 3) return { $class: v.$class };
+      if (v[JCLASS] === true && typeof v.$class === "string") return { $class: v.$class };
       if (v.$arr) return { $arr: v.$arr, v: (v.v as unknown[]).map((x) => this.encode(x)) };
+      if (Object.getPrototypeOf(v) === Object.prototype && !Object.keys(v).some((k) => k.startsWith("$")))
+        throw new TypeError("cannot pass a plain object to Java: use Session.array(), a Java Map handle, or a primitive");
     }
     return v;
   }
@@ -219,6 +255,7 @@ export class Session {
     const self = this;
     const meta: Record<string, unknown> = {
       $class: name,
+      [JCLASS]: true,
       new_: (...args: unknown[]) => self.#send({ op: "new", c: name, a: args.map((x) => self.encode(x)) }),
       $field: (f: string) => self.#send({ op: "field", c: name, f }),
       $setField: (f: string, v: unknown) => self.#send({ op: "setfield", c: name, f, a: [self.encode(v)] }),
@@ -268,13 +305,13 @@ export function findInstall(): string | undefined {
 }
 
 async function compileBridge(java: string, utility: string): Promise<string> {
-  const src = join(dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..", "bridge", "Bridge.java");
+  const src = join(dirname(fileURLToPath(import.meta.url)), "..", "bridge", "Bridge.java");
   const gsrc = join(dirname(src), "GhidraBridge.java");
   const stamp = new Bun.CryptoHasher("sha1").update(readFileSync(src)).update(readFileSync(gsrc)).digest("hex").slice(0, 12);
   const out = join(process.env.XDG_CACHE_HOME ?? join(homedir() || tmpdir(), ".cache"), "aphrody-ghidra", `bridge-${stamp}`);
   if (existsSync(join(out, "GhidraBridge.class"))) return out;
   mkdirSync(out, { recursive: true });
-  const javac = java.endsWith("java") ? java.slice(0, -4) + "javac" : "javac";
+  const javac = /java(\.exe)?$/i.test(java) ? java.replace(/java(\.exe)?$/i, (m) => "javac" + m.slice(4)) : "javac";
   const r = Bun.spawnSync([javac, "-nowarn", "-cp", utility, "-d", out, src, gsrc]);
   if (r.exitCode !== 0) throw new Error("javac failed: " + r.stderr.toString());
   return out;
