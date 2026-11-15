@@ -1,9 +1,0 @@
-{
-  "ignorePatterns": [
-    "vendor/**",
-    "node_modules/**",
-    ".venv/**",
-    "target/**",
-    "apps/gemini_voice_app/**"
-  ]
-}
