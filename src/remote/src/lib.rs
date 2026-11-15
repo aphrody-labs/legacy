@@ -5,6 +5,7 @@
 
 pub mod cli;
 pub mod config;
+pub mod discover;
 pub mod fleet;
 pub mod known_hosts;
 pub mod session;

@@ -18,7 +18,7 @@ public_ip = "@@hosts.fr1.public_ip@@"
 mesh_ip = "@@hosts.fr1.mesh_ip@@"
 region = "eu-fr"
 role = "build"
-ssh_alias = "vps"
+ssh_alias = "fr1"
 ssh_user = "ubuntu"
 
 [nodes.fr2]
@@ -27,7 +27,7 @@ public_ip = "@@hosts.fr2.public_ip@@"
 mesh_ip = "@@hosts.fr2.mesh_ip@@"
 region = "eu-fr"
 role = "cdn-edge-and-test"
-ssh_alias = "cdn"
+ssh_alias = "fr2"
 ssh_user = "ubuntu"
 
 [nodes.usa]

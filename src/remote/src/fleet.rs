@@ -57,7 +57,11 @@ pub fn parse_nodes(text: &str) -> Result<Vec<Node>> {
 pub fn load_nodes(root: &Path) -> Result<Vec<Node>> {
     let path = root.join("infra").join("deploy.toml");
     match std::fs::read_to_string(&path) {
-        Ok(text) => parse_nodes(&text).with_context(|| path.display().to_string()),
+        Ok(text) => {
+            // @@hosts.<role>.<key>@@ tokens are answered from ~/.ssh/config (discover.rs)
+            let text = crate::discover::expand(&text, &crate::config::SshConfig::load_default());
+            parse_nodes(&text).with_context(|| path.display().to_string())
+        }
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
         Err(e) => Err(e).with_context(|| path.display().to_string()),
     }
@@ -124,11 +128,11 @@ name = "x"
 
 [nodes.fr1]
 public_ip = "198.51.100.1"
-ssh_alias = "vps"
+ssh_alias = "fr1"
 ssh_user = "ubuntu"
 
 [nodes.fr2]
-ssh_alias = "cdn"
+ssh_alias = "fr2"
 
 [nodes.usa]
 ssh_alias = "prd"
@@ -155,14 +159,14 @@ role = "production"
         let n = nodes();
         assert_eq!(
             aliases(&resolve_targets("all", &n).unwrap()),
-            ["prd", "vps", "cdn"]
+            ["prd", "fr1", "fr2"]
         );
-        assert_eq!(aliases(&resolve_targets("fr1", &n).unwrap()), ["vps"]);
-        let t = resolve_targets("cdn", &n).unwrap();
-        assert_eq!((t[0].label.as_str(), t[0].alias.as_str()), ("fr2", "cdn"));
+        assert_eq!(aliases(&resolve_targets("fr1", &n).unwrap()), ["fr1"]);
+        let t = resolve_targets("fr2", &n).unwrap();
+        assert_eq!((t[0].label.as_str(), t[0].alias.as_str()), ("fr2", "fr2"));
         assert_eq!(
             aliases(&resolve_targets("fr2,usa,prd", &n).unwrap()),
-            ["cdn", "prd"]
+            ["fr2", "prd"]
         );
         let t = resolve_targets("github.com", &n).unwrap();
         assert_eq!(
