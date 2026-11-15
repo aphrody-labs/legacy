@@ -9,6 +9,7 @@
     ".claude/agents/coherence-fixer.md",
     "packages/ai-os/test/relay/sessions.test.ts"
   ],
+  "stub": ["scripts/hygiene.ts"],
   "ai-filler": [
     ".agents/skills/gemini-omni-flash-api/SKILL.md",
     ".agents/skills/stitch-design-md/examples/DESIGN.md",
