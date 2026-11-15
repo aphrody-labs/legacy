@@ -57,6 +57,14 @@ linux:
 	$(CC) $(CFLAGS_BASE) -fPIC -flto=thin -fuse-ld=lld -shared \
 		$(C_SRCS) $(ASM_X86_64) -o $(OUT_DIR)/libaysys.so
 
+# AI router client ABI (include/ay/router.h): libayrouter + ay-router CLI, hosted libc (sockets), not in the wasm core.
+router:
+	mkdir -p $(OUT_DIR)
+	$(CC) -std=c11 -D_POSIX_C_SOURCE=200809L -O2 -Wall -Wextra -Werror -fPIC -flto=thin -fuse-ld=lld -shared \
+		router/router.c -o $(OUT_DIR)/libayrouter.so
+	$(CC) -std=c11 -D_POSIX_C_SOURCE=200809L -O2 -Wall -Wextra -Werror -fuse-ld=lld router/ay-router.c \
+		-L$(OUT_DIR) -layrouter -Wl,-rpath,'$$ORIGIN' -o $(OUT_DIR)/ay-router
+
 windows:
 	mkdir -p $(OUT_DIR)
 	$(CC) $(CFLAGS_BASE) --target=x86_64-pc-windows-msvc -flto=thin -fuse-ld=lld \
