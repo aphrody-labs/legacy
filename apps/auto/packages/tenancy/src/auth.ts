@@ -31,11 +31,14 @@ import { cleMaitre } from "./chiffrement";
 import { ac, roles } from "./droits";
 import { DialecteBunSql } from "./kysely-bun";
 import { reprendreDeuxFacteurs } from "./legacy";
+import { traducteur } from "./i18n";
 import { envoyerMail } from "./mail";
 import { synchroniserOperateurs } from "./operateurs";
 
 export const SESSION_JOURS = 30;
 export const INVITATION_JOURS = 7;
+/** Validity of a magic sign-in link. */
+const MAGIC_MINUTES = 10;
 export const CHEMIN_AUTH = "/api/auth";
 
 /** Piste d'audit du tenant (sans email : l'audit est immuable). */
@@ -134,24 +137,28 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
         hash: (mdp) => Bun.password.hash(mdp),
         verify: ({ hash, password }) => Bun.password.verify(password, hash).catch(() => false),
       },
-      sendResetPassword: async ({ user, url }) =>
-        envoyerMail({
+      sendResetPassword: async ({ user, url }, request) => {
+        const t = traducteur(request);
+        return envoyerMail({
           a: user.email,
-          sujet: "Réinitialiser votre mot de passe auto",
-          texte: `Pour choisir un nouveau mot de passe, ouvrez ce lien (valable 1 heure) :\n${url}`,
+          sujet: t.t("auth.mail.reset.subject"),
+          texte: t.t("auth.mail.reset.text", { hours: 1, url }),
           modele: "reinitialisation",
           donnees: { lien: url },
-        }),
+        });
+      },
     },
     emailVerification: {
-      sendVerificationEmail: async ({ user, url }) =>
-        envoyerMail({
+      sendVerificationEmail: async ({ user, url }, request) => {
+        const t = traducteur(request);
+        return envoyerMail({
           a: user.email,
-          sujet: "Confirmez votre adresse sur auto",
-          texte: `Pour confirmer votre adresse, ouvrez ce lien :\n${url}`,
+          sujet: t.t("auth.mail.verify.subject"),
+          texte: t.t("auth.mail.verify.text", { url }),
           modele: "verification",
           donnees: { lien: url },
-        }),
+        });
+      },
     },
     socialProviders: sociaux(env),
     rateLimit: {
@@ -209,12 +216,13 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
         cancelPendingInvitationsOnReInvite: true,
         // Les entreprises se créent par l'inscription (SIRET contrôlé) : /v1/auth/inscription.
         allowUserToCreateOrganization: true,
-        sendInvitationEmail: async ({ id, email, role, organization: org }) => {
+        sendInvitationEmail: async ({ id, email, role, organization: org }, request) => {
           const lien = `${app}/invitation?id=${id}`;
+          const t = traducteur(request);
           await envoyerMail({
             a: email,
-            sujet: `Invitation à rejoindre ${org.name} sur auto`,
-            texte: `Vous êtes invité à rejoindre ${org.name} (rôle ${role}).\nLien valable ${INVITATION_JOURS} jours, à usage unique :\n${lien}`,
+            sujet: t.t("auth.mail.invite.subject", { organization: org.name }),
+            texte: t.t("auth.mail.invite.text", { organization: org.name, role, days: INVITATION_JOURS, url: lien }),
             modele: "invitation",
             donnees: { entreprise: org.name, role, lien, jeton: id },
           });
@@ -276,16 +284,18 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
       bearer(),
       admin({ defaultRole: "user", adminRoles: ["admin"], impersonationSessionDuration: 3600 }),
       magicLink({
-        expiresIn: 600,
+        expiresIn: MAGIC_MINUTES * 60,
         disableSignUp: true,
-        sendMagicLink: async ({ email, url }) =>
-          envoyerMail({
+        sendMagicLink: async ({ email, url }, ctx) => {
+          const t = traducteur(ctx?.request);
+          return envoyerMail({
             a: email,
-            sujet: "Votre lien de connexion à auto",
-            texte: `Pour vous connecter, ouvrez ce lien (valable 10 minutes, à usage unique) :\n${url}`,
+            sujet: t.t("auth.mail.magic.subject"),
+            texte: t.t("auth.mail.magic.text", { minutes: MAGIC_MINUTES, url }),
             modele: "lien-magique",
             donnees: { lien: url },
-          }),
+          });
+        },
       }),
       openAPI({ disableDefaultReference: true }),
       jwt(),

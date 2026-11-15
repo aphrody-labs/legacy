@@ -1,0 +1,10 @@
+{
+  "auth.mail.invite.subject": "Invitation à rejoindre {$organization} sur auto",
+  "auth.mail.invite.text": ".input {$days :number}\n.match $days\none {{Vous êtes invité à rejoindre {$organization} (rôle {$role}).\nLien valable {$days} jour, à usage unique :\n{$url}}}\n* {{Vous êtes invité à rejoindre {$organization} (rôle {$role}).\nLien valable {$days} jours, à usage unique :\n{$url}}}",
+  "auth.mail.magic.subject": "Votre lien de connexion à auto",
+  "auth.mail.magic.text": ".input {$minutes :number}\n.match $minutes\none {{Pour vous connecter, ouvrez ce lien (valable {$minutes} minute, à usage unique) :\n{$url}}}\n* {{Pour vous connecter, ouvrez ce lien (valable {$minutes} minutes, à usage unique) :\n{$url}}}",
+  "auth.mail.reset.subject": "Réinitialiser votre mot de passe auto",
+  "auth.mail.reset.text": ".input {$hours :number}\n.match $hours\none {{Pour choisir un nouveau mot de passe, ouvrez ce lien (valable {$hours} heure) :\n{$url}}}\n* {{Pour choisir un nouveau mot de passe, ouvrez ce lien (valable {$hours} heures) :\n{$url}}}",
+  "auth.mail.verify.subject": "Confirmez votre adresse sur auto",
+  "auth.mail.verify.text": "Pour confirmer votre adresse, ouvrez ce lien :\n{$url}"
+}

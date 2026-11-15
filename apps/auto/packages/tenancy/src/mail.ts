@@ -1,33 +1,33 @@
-// Mails de la couche comptes (invitation, lien magique, réinitialisation, vérification d'adresse).
-// L'envoi est injecté : par défaut les messages sont journalisés ; l'API branche l'envoi SMTP réel.
+// Mails of the accounts layer (invitation, magic link, password reset, address verification).
+// Sending is injected: by default messages are logged; the API plugs in real SMTP sending.
 
-/** Adresse de contact de l'opérateur, expéditeur par défaut. */
+/** Operator contact address, default sender. */
 export const EXPEDITEUR = "contact@aphrody.com";
 
 export type ModeleMail = "invitation" | "lien-magique" | "reinitialisation" | "verification" | "code";
 
 export interface MessageMail {
-  /** Expéditeur : `AUTO_MAIL_EXPEDITEUR`, par défaut l'adresse de contact de l'opérateur. */
+  /** Sender: `AUTO_MAIL_EXPEDITEUR`, defaulting to the operator contact address. */
   de: string;
   a: string;
   sujet: string;
   texte: string;
-  /** Gabarit et variables, pour un envoyeur qui met en forme. */
+  /** Template and variables, for a sender that formats the message. */
   modele: ModeleMail;
   donnees: Record<string, string>;
 }
 
 export type EnvoyeurMail = (m: MessageMail) => Promise<void>;
 
-/** Envoyeur par défaut (dev) : journalise le sujet sans lien ni jeton, sans rien envoyer. */
+/** Default sender (dev): logs the subject without link or token, sends nothing. */
 export const envoyeurJournal: EnvoyeurMail = async (m) => {
-  if (Bun.env.NODE_ENV === "production") throw new Error("Envoyeur des mails d'authentification non configuré");
-  console.info(`[mail non envoyé] à ${m.a} : ${m.sujet}`);
+  if (Bun.env.NODE_ENV === "production") throw new Error("Authentication mail sender not configured");
+  console.info(`[mail not sent] to ${m.a}: ${m.sujet}`);
 };
 
 let courant: EnvoyeurMail = envoyeurJournal;
 
-/** Branche l'envoi réel (SMTP de l'opérateur) ; les tests y branchent une boîte en mémoire. */
+/** Plugs in real sending (operator SMTP); tests plug in an in-memory mailbox. */
 export function brancherEnvoyeur(e: EnvoyeurMail) {
   courant = e;
 }
