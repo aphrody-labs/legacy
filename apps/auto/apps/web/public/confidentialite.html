@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#056b5b" />
-    <!-- Application installable : liens ajoutés au chargement (servis par le serveur, pas par le bundler). -->
+    <!-- Installable app: links added at load time (served by the server, not by the bundler). -->
     <script>
       for (const [rel, href] of [
         ["manifest", "/manifest.webmanifest"],
@@ -13,35 +13,32 @@
       ])
         document.head.append(Object.assign(document.createElement("link"), { rel, href }));
     </script>
-    <!-- Thème imposé appliqué avant le premier rendu (pas de flash) ; le reste de la logique est chargé ensuite. -->
+    <!-- Stored theme applied before first render (no flash); the rest of the logic loads afterwards. -->
     <script>
       try {
         const t = localStorage.getItem("auto-theme");
         if (t === "clair" || t === "sombre") document.documentElement.dataset.theme = t;
       } catch {}
     </script>
-    <meta
-      name="description"
-      content="Politique de confidentialité d’auto : données traitées, finalités et durées de conservation, destinataires, sécurité, cookies et exercice de vos droits RGPD."
-    />
-    <title>Politique de confidentialité · auto</title>
+    <meta name="description" content="%%privacy.meta.description%%" />
+    <title>%%privacy.meta.title%%</title>
     <link rel="canonical" href="https://auto.aphrody.com/confidentialite" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="auto" />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale" content="%%og:locale%%" />
     <meta property="og:url" content="https://auto.aphrody.com/confidentialite" />
-    <meta property="og:title" content="Politique de confidentialité · auto" />
+    <meta property="og:title" content="%%privacy.meta.title%%" />
     <meta property="og:image" content="https://auto.aphrody.com/img/og-auto.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="629" />
-    <meta property="og:image:alt" content="Le dossier d’un chantier dans auto : ventes, achats et suivi." />
+    <meta property="og:image:alt" content="%%home.meta.og_alt%%" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="../src/styles/site.css" />
   </head>
   <body>
-    <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+    <a class="lien-evitement" href="#contenu">%%site.skip%%</a>
     <header class="site-entete">
-      <nav aria-label="Navigation du site">
+      <nav aria-label="%%site.nav.label%%">
         <a class="marque" href="/">
           <span class="marque-logo" aria-hidden="true">
             <svg class="icone" viewBox="0 -960 960 960" fill="currentColor">
@@ -53,116 +50,91 @@
           auto
         </a>
         <div class="liens">
-          <a href="/tarifs">Tarifs</a>
-          <a href="/app/connexion">Se connecter</a>
-          <a class="bouton bouton-primaire" href="/app/inscription">Essayer gratuitement</a>
+          <a href="/tarifs">%%site.nav.pricing%%</a>
+          <a href="/app/connexion">%%site.nav.signin%%</a>
+          <a class="bouton bouton-primaire" href="/app/inscription">%%site.nav.try%%</a>
         </div>
       </nav>
     </header>
 
     <main id="contenu" class="conteneur section texte-long">
-      <h1>Politique de confidentialité</h1>
-      <p>Version du 22 octobre 2026.</p>
+      <h1>%%privacy.title%%</h1>
+      <p>%%privacy.version%%</p>
 
-      <h2>Qui traite vos données ?</h2>
-      <p>
-        Aphrody, éditeur du service auto. Contact et exercice des droits :
-        <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>.
-      </p>
-      <p>
-        Pour les utilisateurs du service (comptes, sécurité, abonnement), nous sommes responsable de traitement. Pour
-        les clients et salariés des entreprises qui utilisent auto, l'entreprise est responsable de traitement et nous
-        sommes son sous-traitant : adressez vos demandes à cette entreprise, nous l'aidons à y répondre.
-      </p>
+      <h2>%%privacy.controller.title%%</h2>
+      <p>%%html:privacy.controller.who%%</p>
+      <p>%%privacy.controller.roles%%</p>
 
-      <h2>Quelles données, pourquoi, combien de temps ?</h2>
+      <h2>%%privacy.data.title%%</h2>
       <div class="tableau-conteneur">
         <table class="tableau">
           <thead>
             <tr>
-              <th scope="col">Finalité</th>
-              <th scope="col">Données</th>
-              <th scope="col">Base légale</th>
-              <th scope="col">Durée</th>
+              <th scope="col">%%privacy.col.purpose%%</th>
+              <th scope="col">%%privacy.col.data%%</th>
+              <th scope="col">%%privacy.col.basis%%</th>
+              <th scope="col">%%privacy.col.retention%%</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td data-libelle="Finalité">Compte et connexion</td>
-              <td data-libelle="Données">Email, mot de passe haché, rôle, double authentification (secret chiffré)</td>
-              <td data-libelle="Base légale">Contrat</td>
-              <td data-libelle="Durée">Durée du compte</td>
+              <td data-libelle="%%privacy.col.purpose%%">%%privacy.row1.purpose%%</td>
+              <td data-libelle="%%privacy.col.data%%">%%privacy.row1.data%%</td>
+              <td data-libelle="%%privacy.col.basis%%">%%privacy.basis.contract%%</td>
+              <td data-libelle="%%privacy.col.retention%%">%%privacy.row1.retention%%</td>
             </tr>
             <tr>
-              <td data-libelle="Finalité">Invitations</td>
-              <td data-libelle="Données">Email invité, rôle</td>
-              <td data-libelle="Base légale">Contrat</td>
-              <td data-libelle="Durée">7 jours, puis trace dans le journal d'audit</td>
+              <td data-libelle="%%privacy.col.purpose%%">%%privacy.row2.purpose%%</td>
+              <td data-libelle="%%privacy.col.data%%">%%privacy.row2.data%%</td>
+              <td data-libelle="%%privacy.col.basis%%">%%privacy.basis.contract%%</td>
+              <td data-libelle="%%privacy.col.retention%%">%%privacy.row2.retention%%</td>
             </tr>
             <tr>
-              <td data-libelle="Finalité">Abonnement et facturation</td>
-              <td data-libelle="Données">Entreprise, contact, paiements</td>
-              <td data-libelle="Base légale">Contrat, obligation légale</td>
-              <td data-libelle="Durée">Contrat, puis 10 ans pour les pièces comptables</td>
+              <td data-libelle="%%privacy.col.purpose%%">%%privacy.row3.purpose%%</td>
+              <td data-libelle="%%privacy.col.data%%">%%privacy.row3.data%%</td>
+              <td data-libelle="%%privacy.col.basis%%">%%privacy.row3.basis%%</td>
+              <td data-libelle="%%privacy.col.retention%%">%%privacy.row3.retention%%</td>
             </tr>
             <tr>
-              <td data-libelle="Finalité">Sécurité et supervision</td>
-              <td data-libelle="Données">Journaux techniques, sans adresse IP ni email</td>
-              <td data-libelle="Base légale">Intérêt légitime</td>
-              <td data-libelle="Durée">12 mois au plus</td>
+              <td data-libelle="%%privacy.col.purpose%%">%%privacy.row4.purpose%%</td>
+              <td data-libelle="%%privacy.col.data%%">%%privacy.row4.data%%</td>
+              <td data-libelle="%%privacy.col.basis%%">%%privacy.row4.basis%%</td>
+              <td data-libelle="%%privacy.col.retention%%">%%privacy.row4.retention%%</td>
             </tr>
             <tr>
-              <td data-libelle="Finalité">Préremplissage de l'entreprise</td>
-              <td data-libelle="Données">SIREN et données publiques Sirene</td>
-              <td data-libelle="Base légale">Contrat</td>
-              <td data-libelle="Durée">Durée du compte</td>
+              <td data-libelle="%%privacy.col.purpose%%">%%privacy.row5.purpose%%</td>
+              <td data-libelle="%%privacy.col.data%%">%%privacy.row5.data%%</td>
+              <td data-libelle="%%privacy.col.basis%%">%%privacy.basis.contract%%</td>
+              <td data-libelle="%%privacy.col.retention%%">%%privacy.row1.retention%%</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p>
-        Nous ne vendons pas vos données, ne faisons pas de publicité ciblée et n'utilisons pas vos données pour
-        entraîner des modèles d'intelligence artificielle tiers.
-      </p>
+      <p>%%privacy.no_sale%%</p>
 
-      <h2>Extension Chrome « auto : factures fournisseurs »</h2>
-      <p>
-        L'extension conserve sur votre appareil, et nulle part ailleurs, l'adresse de votre instance auto et votre jeton
-        API. Quand vous choisissez « Envoyer la facture à auto » sur un lien, elle télécharge ce fichier (PDF ou XML) et
-        l'envoie à votre instance auto, et à elle seule. Toutes les 15 minutes, elle demande à votre instance le nombre
-        de factures à vérifier pour l'afficher sur son icône. Elle ne lit pas les pages que vous visitez, n'enregistre
-        pas votre historique et ne transmet rien à un tiers. La désinstaller efface ses réglages.
-      </p>
+      <h2>%%privacy.extension.title%%</h2>
+      <p>%%privacy.extension.text%%</p>
 
-      <h2>Destinataires</h2>
-      <p>Le personnel habilité et nos sous-traitants techniques, hébergés dans l'Union européenne.</p>
+      <h2>%%privacy.recipients.title%%</h2>
+      <p>%%privacy.recipients.text%%</p>
 
-      <h2>Sécurité</h2>
-      <p>
-        Isolation des données par entreprise, chiffrement en transit et des secrets au repos, mots de passe hachés,
-        double authentification, sauvegardes chiffrées, documents émis immuables et piste d'audit.
-      </p>
+      <h2>%%privacy.security.title%%</h2>
+      <p>%%privacy.security.text%%</p>
 
-      <h2>Cookies</h2>
-      <p>Un seul cookie, <code>auto_session</code>, nécessaire à la connexion (30 jours).</p>
+      <h2>%%privacy.cookies.title%%</h2>
+      <p>%%html:privacy.cookies.text%%</p>
 
-      <h2>Vos droits</h2>
-      <p>
-        Accès, rectification, effacement, limitation, opposition, portabilité et directives post-mortem :
-        <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>, réponse sous un mois. L'export complet des données
-        d'une entreprise est disponible dans le service. Le droit à l'effacement ne s'applique pas aux factures que la
-        loi impose de conserver 10 ans (article 17.3.b du RGPD) : elles sont détachées de tout compte, puis effacées au
-        terme du délai. Vous pouvez saisir la CNIL (www.cnil.fr, 3 place de Fontenoy, 75007 Paris).
-      </p>
+      <h2>%%privacy.rights.title%%</h2>
+      <p>%%html:privacy.rights.text%%</p>
     </main>
 
     <footer class="site-pied">
       <div class="conteneur">
-        <span>auto, facturation et gestion pour indépendants et TPE</span>
+        <span>%%site.footer.tagline%%</span>
         <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>
-        <a href="/tarifs">Tarifs</a>
-        <a href="/mentions-legales">Mentions légales</a>
-        <a href="/confidentialite" aria-current="page">Confidentialité</a>
+        <a href="/tarifs">%%site.nav.pricing%%</a>
+        <a href="/mentions-legales">%%site.footer.legal%%</a>
+        <a href="/confidentialite" aria-current="page">%%site.footer.privacy%%</a>
       </div>
     </footer>
     <script type="module" src="../src/site/site.ts"></script>

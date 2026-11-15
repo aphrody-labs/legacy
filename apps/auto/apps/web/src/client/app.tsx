@@ -20,13 +20,13 @@ import {
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, ErreurApi, type Moi } from "@auto/client";
 import { grouperSiret } from "@auto/ui/format";
-import { accesSegment, pagePermise, LIBELLES_SEGMENTS, segmentsDe } from "@auto/tenancy/segments";
+import { accesSegment, pagePermise, segmentsDe } from "@auto/tenancy/segments";
 import { useSession } from "./session";
 import { Connexion, retourSur } from "./ecrans/connexion";
 import { Marque } from "./ecrans/marque";
 import { authClient } from "./auth";
 
-// Écrans chargés à la demande (découpage du bundle) : seule la connexion fait partie du premier chargement.
+// Screens loaded on demand (bundle splitting): only sign-in is part of the first load.
 const Absences = lazy(() => import("./ecrans/absences").then((m) => ({ default: m.Absences })));
 const EditeurAutomatisation = lazy(() =>
   import("./ecrans/automatisations/editeur").then((m) => ({ default: m.EditeurAutomatisation })),
@@ -82,6 +82,7 @@ import {
   useTitrePage,
   type Etat,
 } from "@auto/ui/react";
+import { t } from "./i18n";
 
 const PUBLIQUES = ["/app/connexion", "/app/inscription", "/app/invitation"];
 
@@ -95,46 +96,46 @@ function Navigation({ moi, ouverte, fermer }: { moi: Moi; ouverte: boolean; ferm
       </Lien>
     ) : null;
   return (
-    <nav className="navigation" id="navigation" aria-label="Navigation principale" data-ouverte={ouverte}>
+    <nav className="navigation" id="navigation" aria-label={t("app.nav.label")} data-ouverte={ouverte}>
       <Marque />
-      {lien("/app", LayoutDashboard, "Tableau de bord")}
-      {lien("/app/courrier", Inbox, "Ma boîte unifiée")}
-      {accesSegment(moi, "clients") && <p className="nav-titre">Ventes</p>}
-      {lien("/app/devis", FileText, "Devis")}
-      {lien("/app/factures", ReceiptText, "Factures")}
-      {lien("/app/avoirs", Undo2, "Avoirs")}
-      {lien("/app/clients", Users, "Clients")}
-      {lien("/app/produits", Package, "Produits")}
-      {accesSegment(moi, "fournisseurs") && <p className="nav-titre">Achats</p>}
-      {lien("/app/achats", Inbox, "Factures reçues")}
-      {lien("/app/fournisseurs", Users, "Fournisseurs")}
-      {lien("/app/devis-recus", FileInput, "Devis reçus")}
+      {lien("/app", LayoutDashboard, t("app.nav.dashboard"))}
+      {lien("/app/courrier", Inbox, t("app.nav.mailbox"))}
+      {accesSegment(moi, "clients") && <p className="nav-titre">{t("app.nav.sales")}</p>}
+      {lien("/app/devis", FileText, t("app.nav.quotes"))}
+      {lien("/app/factures", ReceiptText, t("app.nav.invoices"))}
+      {lien("/app/avoirs", Undo2, t("app.nav.credit_notes"))}
+      {lien("/app/clients", Users, t("app.nav.customers"))}
+      {lien("/app/produits", Package, t("app.nav.products"))}
+      {accesSegment(moi, "fournisseurs") && <p className="nav-titre">{t("app.nav.purchases")}</p>}
+      {lien("/app/achats", Inbox, t("app.nav.received_invoices"))}
+      {lien("/app/fournisseurs", Users, t("app.nav.suppliers"))}
+      {lien("/app/devis-recus", FileInput, t("app.nav.received_quotes"))}
       {["chantiers", "livraisons", "commandes"].some((s) =>
         segmentsDe(moi).includes(s as "chantiers" | "livraisons" | "commandes"),
-      ) && <p className="nav-titre">Chantiers</p>}
-      {lien("/app/chantiers", Package, "Chantiers et analytique")}
-      {lien("/app/livraisons", FileInput, "Bons de livraison")}
-      {lien("/app/commandes", FileText, "Confirmations de commande")}
+      ) && <p className="nav-titre">{t("app.nav.sites_section")}</p>}
+      {lien("/app/chantiers", Package, t("app.nav.sites"))}
+      {lien("/app/livraisons", FileInput, t("app.nav.delivery_notes"))}
+      {lien("/app/commandes", FileText, t("app.nav.order_confirmations"))}
       {rh && (
         <>
-          <p className="nav-titre">Équipe</p>
-          {lien("/app/employes", UserRound, "Employés")}
-          {lien("/app/absences", CalendarDays, "Absences")}
+          <p className="nav-titre">{t("app.nav.team")}</p>
+          {lien("/app/employes", UserRound, t("app.nav.employees"))}
+          {lien("/app/absences", CalendarDays, t("app.nav.absences"))}
         </>
       )}
-      <p className="nav-titre">Données</p>
-      {lien("/app/recherche", Search, "Rechercher un document")}
-      {lien("/app/atelier", FileText, "Word, Excel et PDF")}
-      {lien("/app/fichiers", FileInput, "Fichiers et dossiers")}
-      {lien("/app/sources-fichiers", Settings, "Serveur de fichiers")}
-      {lien("/app/imports", FileInput, "Imports")}
-      {lien("/app/exports", ArrowLeftRight, "Exports")}
-      {lien("/app/automatisations", Workflow, "Automatisations")}
+      <p className="nav-titre">{t("app.nav.data")}</p>
+      {lien("/app/recherche", Search, t("app.nav.search"))}
+      {lien("/app/atelier", FileText, t("app.nav.workshop"))}
+      {lien("/app/fichiers", FileInput, t("app.nav.files"))}
+      {lien("/app/sources-fichiers", Settings, t("app.nav.file_server"))}
+      {lien("/app/imports", FileInput, t("app.nav.imports"))}
+      {lien("/app/exports", ArrowLeftRight, t("app.nav.exports"))}
+      {lien("/app/automatisations", Workflow, t("app.nav.automations"))}
       <div className="nav-pied">
         <div className="nav-entreprise">
           {moi.entreprises.length > 1 ? (
             <label>
-              <span className="visuellement-cache">Entreprise active</span>
+              <span className="visuellement-cache">{t("app.nav.active_company")}</span>
               <select
                 value={moi.tenantId}
                 onChange={async (e) => {
@@ -154,7 +155,7 @@ function Navigation({ moi, ouverte, fermer }: { moi: Moi; ouverte: boolean; ferm
           )}
           <span className="attenue chiffres">SIRET {grouperSiret(moi.entreprise.siret)}</span>
         </div>
-        {lien("/app/parametres", Settings, "Paramètres")}
+        {lien("/app/parametres", Settings, t("app.nav.settings"))}
         <BasculeTheme avecLibelle />
         <Bouton
           variante="fantome"
@@ -164,7 +165,7 @@ function Navigation({ moi, ouverte, fermer }: { moi: Moi; ouverte: boolean; ferm
             location.assign("/app/connexion");
           }}
         >
-          Se déconnecter
+          {t("app.nav.sign_out")}
         </Bouton>
       </div>
     </nav>
@@ -172,13 +173,13 @@ function Navigation({ moi, ouverte, fermer }: { moi: Moi; ouverte: boolean; ferm
 }
 
 function PageIntrouvable() {
-  useTitrePage("Page introuvable");
+  useTitrePage(t("app.not_found"));
   return (
     <div className="page">
-      <h1 className="visuellement-cache">Page introuvable</h1>
-      <EtatVide titre="Page introuvable">
+      <h1 className="visuellement-cache">{t("app.not_found")}</h1>
+      <EtatVide titre={t("app.not_found")}>
         <Lien className="bouton" href="/app">
-          Retour au tableau de bord
+          {t("app.back_dashboard")}
         </Lien>
       </EtatVide>
     </div>
@@ -191,17 +192,17 @@ function Routes({ chemin }: { chemin: string }) {
   if (!pagePermise(moi, p))
     return (
       <div className="page">
-        <h1>Accès restreint</h1>
-        <EtatVide titre="Ce segment ne vous est pas attribué">
-          <Lien href="/app">Ouvrir mon espace</Lien>
+        <h1>{t("app.restricted")}</h1>
+        <EtatVide titre={t("app.segment_unassigned")}>
+          <Lien href="/app">{t("app.open_workspace")}</Lien>
         </EtatVide>
       </div>
     );
   if ((p === "/app" || p === "/app/") && !accesSegment(moi, "clients"))
     return (
       <div className="page pile">
-        <h1>Mon espace de travail</h1>
-        <p>Vos segments accessibles.</p>
+        <h1>{t("app.workspace.title")}</h1>
+        <p>{t("app.workspace.segments")}</p>
         {segmentsDe(moi).map((s) => (
           <Lien
             key={s}
@@ -216,7 +217,7 @@ function Routes({ chemin }: { chemin: string }) {
               }[s]
             }
           >
-            {LIBELLES_SEGMENTS[s]}
+            {t(`app.segment.${s}`)}
           </Lien>
         ))}
       </div>
@@ -302,13 +303,13 @@ function Coque({ moi, children }: { moi: Moi; children: ReactNode }) {
   return (
     <div className="coque">
       <a className="lien-evitement" href="#contenu">
-        Aller au contenu
+        {t("site.skip")}
       </a>
       <header className="barre-haut">
         <Bouton
           variante="fantome"
           icone={ouverte ? X : Menu}
-          aria-label={ouverte ? "Fermer le menu" : "Ouvrir le menu"}
+          aria-label={ouverte ? t("app.menu.close") : t("app.menu.open")}
           aria-expanded={ouverte}
           aria-controls="navigation"
           onClick={() => setOuverte(!ouverte)}
@@ -317,15 +318,15 @@ function Coque({ moi, children }: { moi: Moi; children: ReactNode }) {
       </header>
       <Navigation moi={moi} ouverte={ouverte} fermer={() => setOuverte(false)} />
       <main className="principal" id="contenu" tabIndex={-1} inert={ouverte}>
-        <Suspense fallback={<EtatChargement libelle="Chargement de l’écran" />}>{children}</Suspense>
+        <Suspense fallback={<EtatChargement libelle={t("app.loading_screen")} />}>{children}</Suspense>
       </main>
     </div>
   );
 }
 
 /**
- * Session courante (`/v1/moi`) : `recharger` attend la nouvelle réponse, pour qu'une navigation qui suit une
- * connexion ou une inscription ne parte jamais d'une session périmée.
+ * Current session (`/v1/moi`): `recharger` waits for the new response, so a navigation that follows a sign-in or a
+ * sign-up never starts from a stale session.
  */
 function useSessionApi() {
   const [etat, setEtat] = useState<Etat<Moi | null>>({ etat: "chargement" });
@@ -333,9 +334,9 @@ function useSessionApi() {
   const lecture = useRef(0);
   const recharger = useCallback(async () => {
     const numero = ++lecture.current;
-    // Cet appel public reçoit les Set-Cookie officiels de renouvellement, avant la lecture métier.
+    // This public call receives the official renewal Set-Cookie headers, before the business read.
     const courante = await authClient.getSession().catch(() => null);
-    // Aucune session Better Auth (réponse 200 sans données) : pas de lecture /v1/moi vouée au 401.
+    // No Better Auth session (200 response without data): no /v1/moi read doomed to a 401.
     if (courante && !courante.error && !courante.data) {
       if (numero !== lecture.current) return;
       setSansEntreprise(false);
@@ -350,7 +351,7 @@ function useSessionApi() {
     } catch (e) {
       if (numero !== lecture.current) return;
       if (e instanceof ErreurApi && e.status === 401) {
-        // Session ouverte (lien magique, Google…) mais aucune entreprise : inscription de l'entreprise.
+        // Session open (magic link, Google…) but no company: company sign-up.
         setSansEntreprise(!!courante?.data);
         setEtat({ etat: "ok", donnees: null });
       } else setEtat({ etat: "erreur", erreur: (e as Error).message });
@@ -420,7 +421,7 @@ export function App() {
     contenu = (
       <div className="auth">
         <div className="auth-carte">
-          <EtatChargement libelle="Ouverture de la session" />
+          <EtatChargement libelle={t("app.opening_session")} />
         </div>
       </div>
     );
@@ -446,7 +447,7 @@ export function App() {
         fallback={
           <div className="auth">
             <div className="auth-carte">
-              <EtatChargement libelle="Chargement" />
+              <EtatChargement libelle={t("app.loading")} />
             </div>
           </div>
         }

@@ -5,10 +5,11 @@ import { aujourdhui } from "@auto/ui/format";
 import { Bandeau, ChampTexte, useTitrePage } from "@auto/ui/react";
 import { useSession } from "../session";
 import { accesSegment } from "@auto/tenancy/segments";
+import { t } from "../i18n";
 
 export function Exports() {
   const { moi } = useSession();
-  useTitrePage("Exports");
+  useTitrePage(t("exports.title"));
   const jour = aujourdhui();
   const [du, setDu] = useState(`${jour.slice(0, 4)}-01-01`);
   const [au, setAu] = useState(`${jour.slice(0, 4)}-12-31`);
@@ -31,58 +32,54 @@ export function Exports() {
   return (
     <div className="page">
       <div className="page-entete">
-        <h1>Exports comptables</h1>
+        <h1>{t("exports.heading")}</h1>
       </div>
 
       {accesSegment(moi, "clients") && (
         <>
           <section className="carte grille" aria-labelledby="sec-periode">
-            <h2 id="sec-periode">Journal des ventes et FEC</h2>
+            <h2 id="sec-periode">{t("exports.sales.title")}</h2>
             <div className="grille grille-2">
-              <ChampTexte libelle="Du" type="date" value={du} onChange={(e) => setDu(e.target.value)} />
+              <ChampTexte libelle={t("exports.from")} type="date" value={du} onChange={(e) => setDu(e.target.value)} />
               <ChampTexte
-                libelle="Au"
+                libelle={t("exports.to")}
                 type="date"
                 value={au}
-                erreur={invalide ? "La fin de période doit suivre le début." : null}
+                erreur={invalide ? t("exports.period_error") : null}
                 onChange={(e) => setAu(e.target.value)}
               />
             </div>
             <div className="rangee">
-              {lien(api.urlExport("ventes.xlsx", { du, au }), FileSpreadsheet, "Journal des ventes (xlsx)", invalide)}
-              {lien(api.urlExport("fec", { du, au }), Landmark, "Fichier des écritures comptables (FEC)", invalide)}
+              {lien(api.urlExport("ventes.xlsx", { du, au }), FileSpreadsheet, t("exports.sales_xlsx"), invalide)}
+              {lien(api.urlExport("fec", { du, au }), Landmark, t("exports.fec"), invalide)}
             </div>
-            <p className="attenue petit">
-              FEC conforme à l'article A47 A-1 du LPF : encodage ISO 8859-15, écritures équilibrées contrôlées avant
-              export.
-            </p>
+            <p className="attenue petit">{t("exports.fec_note")}</p>
           </section>
 
           <section className="carte grille" aria-labelledby="sec-creances">
-            <h2 id="sec-creances">Créances clients</h2>
-            <ChampTexte libelle="Arrêtées au" type="date" value={arrete} onChange={(e) => setArrete(e.target.value)} />
-            <div>{lien(api.urlExport("creances.xlsx", { au: arrete }), FileDown, "Créances (xlsx)")}</div>
+            <h2 id="sec-creances">{t("exports.receivables.title")}</h2>
+            <ChampTexte
+              libelle={t("exports.as_of")}
+              type="date"
+              value={arrete}
+              onChange={(e) => setArrete(e.target.value)}
+            />
+            <div>{lien(api.urlExport("creances.xlsx", { au: arrete }), FileDown, t("exports.receivables_xlsx"))}</div>
           </section>
         </>
       )}
       <section className="carte grille" aria-labelledby="sec-gestion">
-        <h2 id="sec-gestion">Les cinq espaces de gestion</h2>
-        <p>
-          Un classeur avec les onglets autorisés : comptabilité fournisseurs, comptabilité clients, analytique
-          chantiers, bons de livraison et confirmations de commande.
-        </p>
+        <h2 id="sec-gestion">{t("exports.spaces.title")}</h2>
+        <p>{t("exports.spaces.text")}</p>
         <div className="rangee">
-          {lien(api.url("/v1/exports/gestion.xlsx"), FileSpreadsheet, "Classeur complet (Excel)")}
-          {lien(api.url("/v1/exports/gestion.pdf"), FileDown, "Rapport des données (PDF)")}
+          {lien(api.url("/v1/exports/gestion.xlsx"), FileSpreadsheet, t("exports.workbook"))}
+          {lien(api.url("/v1/exports/gestion.pdf"), FileDown, t("exports.report"))}
         </div>
-        <p className="attenue petit">
-          Toutes les données enregistrées sont reprises, archives comprises ; brouillons et statuts sont indiqués. Le
-          PDF est un rapport des données, sans reproduire la mise en page d’un classeur Excel existant.
-        </p>
+        <p className="attenue petit">{t("exports.spaces.note")}</p>
       </section>
 
       <Bandeau>
-        <p>Les fichiers sont produits à la demande à partir des documents émis ; les brouillons n'y figurent jamais.</p>
+        <p>{t("exports.banner")}</p>
       </Bandeau>
     </div>
   );

@@ -1,6 +1,7 @@
-// Page publique d'un devis (/devis/<jeton>) : consultation, PDF et réponse du client, sans compte.
-// Tout le contenu est inséré en texte (aucun HTML venu de l'API).
+// Public page of a quote (/devis/<token>): view, PDF and customer answer, no account needed.
+// All content is inserted as text (no HTML coming from the API).
 import "./site";
+import { date, monnaie, nombre, t } from "../client/i18n";
 
 interface Vue {
   numero: string;
@@ -17,24 +18,31 @@ interface Vue {
 const jeton = decodeURIComponent(location.pathname.split("/").filter(Boolean).at(-1) ?? "");
 const base = `/v1/public/devis/${encodeURIComponent(jeton)}`;
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const eur = (c: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
-const dateFr = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", { dateStyle: "long" });
+const eur = (c: number) => monnaie(c / 100, "EUR");
+const dateLongue = (iso: string) => date(`${iso}T12:00:00`, { dateStyle: "long" });
+// Statuses are API data; each maps to a catalog message.
 const REPONSES: Record<string, string> = {
-  accepte: "Devis accepté. L'émetteur est prévenu et vous enverra la suite.",
-  refuse: "Devis refusé. L'émetteur est prévenu.",
+  accepte: "quote.answer.accepted",
+  refuse: "quote.answer.refused",
 };
 
 function afficher(v: Vue) {
-  document.title = `Devis ${v.numero} · ${v.emetteur}`;
-  $("titre-devis").textContent = `Devis ${v.numero}`;
-  const validite = v.validiteJours ? `, valable ${v.validiteJours} jours` : "";
-  $("parties").textContent = `De ${v.emetteur} pour ${v.client}, émis le ${dateFr(v.date)}${validite}.`;
+  document.title = t("quote.doc_title", { number: v.numero, issuer: v.emetteur });
+  $("titre-devis").textContent = t("quote.title", { number: v.numero });
+  $("parties").textContent = v.validiteJours
+    ? t("quote.parties_valid", {
+        issuer: v.emetteur,
+        client: v.client,
+        date: dateLongue(v.date),
+        days: v.validiteJours,
+      })
+    : t("quote.parties", { issuer: v.emetteur, client: v.client, date: dateLongue(v.date) });
   $("lignes").replaceChildren(
     ...v.lignes.map((l) => {
       const tr = document.createElement("tr");
       for (const [texte, num] of [
         [l.designation, false],
-        [new Intl.NumberFormat("fr-FR").format(l.quantite), true],
+        [nombre(l.quantite), true],
         [eur(l.prixUnitaireHtCents), true],
       ] as const) {
         const td = document.createElement("td");
@@ -52,7 +60,7 @@ function afficher(v: Vue) {
   $("decision").hidden = !v.decidable;
   const reponse = $("reponse");
   reponse.hidden = v.decidable;
-  reponse.textContent = REPONSES[v.statut] ?? "Ce devis n'attend plus de réponse.";
+  reponse.textContent = t(REPONSES[v.statut] ?? "quote.answer.closed");
   $("etat").hidden = true;
   $("devis").hidden = false;
 }
@@ -60,10 +68,7 @@ function afficher(v: Vue) {
 async function charger() {
   const r = await fetch(base, { headers: { accept: "application/json" } }).catch(() => null);
   if (!r?.ok) {
-    $("etat").textContent =
-      r?.status === 404
-        ? "Ce lien est invalide ou a expiré. Demandez un nouveau lien à l'émetteur du devis."
-        : "Le devis ne peut pas être chargé pour le moment. Réessayez dans quelques minutes.";
+    $("etat").textContent = t(r?.status === 404 ? "quote.error.invalid_link" : "quote.error.load");
     return;
   }
   afficher((await r.json()) as Vue);
@@ -76,7 +81,7 @@ $<HTMLFormElement>("decision").addEventListener("submit", async (e) => {
   const erreur = $("erreur");
   const nom = champ.value.trim();
   if (!nom) {
-    erreur.textContent = "Indiquez votre nom et votre fonction.";
+    erreur.textContent = t("quote.error.name_required");
     erreur.hidden = false;
     champ.setAttribute("aria-invalid", "true");
     champ.focus();
@@ -96,10 +101,7 @@ $<HTMLFormElement>("decision").addEventListener("submit", async (e) => {
     return;
   }
   for (const b of $("decision").querySelectorAll("button")) b.disabled = false;
-  erreur.textContent =
-    r?.status === 409
-      ? "Ce devis a déjà reçu une réponse."
-      : "La réponse n'a pas pu être enregistrée. Réessayez dans quelques minutes.";
+  erreur.textContent = t(r?.status === 409 ? "quote.error.already_answered" : "quote.error.save");
   erreur.hidden = false;
 });
 

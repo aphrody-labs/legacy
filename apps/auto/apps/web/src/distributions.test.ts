@@ -1,7 +1,7 @@
 import { expect, spyOn, test } from "bun:test";
 import { baseDistributions, catalogue, comparerVersions, routesDistributions } from "./distributions";
 
-test("mises à jour : comparaison numérique stricte, aucune régression ni préversion implicite", () => {
+test("updates: strict numeric comparison, no regression and no implicit prerelease", () => {
   expect(comparerVersions("0.10.0", "0.2.0")).toBe(1);
   expect(comparerVersions("0.2.0", "0.2.0")).toBe(0);
   expect(comparerVersions("0.2.0", "1.0.0")).toBe(-1);
@@ -9,7 +9,7 @@ test("mises à jour : comparaison numérique stricte, aucune régression ni pré
   expect(comparerVersions("01.2.0", "0.1.0")).toBeNull();
 });
 
-test("stockage objet : manifeste validé, téléchargement autorisé et taille contrôlée", async () => {
+test("object storage: validated manifest, download allowed and size checked", async () => {
   const ancienne = Bun.env.AUTO_DISTRIBUTIONS_OBJETS_URL;
   Bun.env.AUTO_DISTRIBUTIONS_OBJETS_URL = "https://storage.example/auto/releases";
   const manifest = {
@@ -37,7 +37,7 @@ test("stockage objet : manifeste validé, téléchargement autorisé et taille c
       if (url.endsWith("/manifest.json")) return Response.json(manifest);
       if (url.endsWith("/auto.tar.gz") && init?.method === "HEAD")
         return new Response(null, { headers: { "content-length": taille } });
-      throw new Error(`requête inattendue : ${url}`);
+      throw new Error(`unexpected request: ${url}`);
     },
     { preconnect: fetch.preconnect },
   );
@@ -65,14 +65,14 @@ test("stockage objet : manifeste validé, téléchargement autorisé et taille c
   }
 });
 
-test("catalogue : refuse chemins sortants et installeurs sans signature", async () => {
+test("catalog: refuses escaping paths and installers without a signature", async () => {
   const dir = `${Bun.env.TEMP ?? "/tmp"}/auto-catalogue-${crypto.randomUUID()}`;
   const chemin = `${dir}/manifest.json`;
   const c = {
     schema: 1,
     version: "0.2.0",
     date: new Date().toISOString(),
-    notes: "Contrôle",
+    notes: "Check",
     fichiers: [
       {
         id: "windows",

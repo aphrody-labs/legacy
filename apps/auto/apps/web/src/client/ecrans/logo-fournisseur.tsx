@@ -1,6 +1,6 @@
 import { ReceiptText } from "@auto/ui/symboles";
 
-/** Assets officiels servis localement ; le libellé visible voisin donne le nom accessible. */
+/** Official assets served locally; the neighbouring visible label gives the accessible name. */
 export function LogoFournisseur({ fournisseur }: { fournisseur: string }) {
   return fournisseur === "google" || fournisseur === "microsoft" ? (
     <img

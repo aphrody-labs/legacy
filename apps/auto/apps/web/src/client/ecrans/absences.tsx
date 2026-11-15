@@ -1,7 +1,6 @@
 import { CalendarDays } from "@auto/ui/symboles";
 import { useState } from "react";
 import { api, ErreurApi, type Absence } from "@auto/client";
-import { LIBELLE_STATUT_ABSENCE } from "@auto/ui/format";
 import { peut, useSession } from "../session";
 import {
   Bandeau,
@@ -14,12 +13,13 @@ import {
   useToast,
 } from "@auto/ui/react";
 import { TableauAbsences } from "./employes";
+import { t } from "../i18n";
 
 type Filtre = Absence["statut"] | "toutes";
 const FILTRES: Filtre[] = ["demandee", "validee", "refusee", "annulee", "toutes"];
 
 export function Absences() {
-  useTitrePage("Absences");
+  useTitrePage(t("absences.title"));
   const { moi } = useSession();
   const toast = useToast();
   const [filtre, setFiltre] = useState<Filtre>("demandee");
@@ -37,9 +37,9 @@ export function Absences() {
   if (!rh)
     return (
       <div className="page">
-        <h1>Absences</h1>
-        <Bandeau ton="avertissement" titre="Accès réservé">
-          <p>La validation des absences est réservée aux propriétaires et administrateurs.</p>
+        <h1>{t("absences.title")}</h1>
+        <Bandeau ton="avertissement" titre={t("absences.restricted")}>
+          <p>{t("absences.restricted_text")}</p>
         </Bandeau>
       </div>
     );
@@ -48,7 +48,7 @@ export function Absences() {
     setErreur(null);
     try {
       await api.deciderAbsence(id, statut);
-      toast(`Absence ${LIBELLE_STATUT_ABSENCE[statut]!.toLowerCase()}`);
+      toast(t(`absences.toast.${statut}`));
       d.recharger();
     } catch (x) {
       setErreur(x as ErreurApi);
@@ -60,8 +60,8 @@ export function Absences() {
   else if (d.etat === "erreur") corps = <EtatErreur message={d.erreur} onReessayer={d.recharger} />;
   else if (d.donnees.absences.length === 0)
     corps = (
-      <EtatVide icone={CalendarDays} titre={filtre === "demandee" ? "Aucune demande en attente" : "Aucune absence"}>
-        <p>Les demandes se font depuis la fiche de chaque employé.</p>
+      <EtatVide icone={CalendarDays} titre={filtre === "demandee" ? t("absences.empty_pending") : t("absences.empty")}>
+        <p>{t("absences.empty_text")}</p>
       </EtatVide>
     );
   else corps = <TableauAbsences absences={d.donnees.absences} noms={d.donnees.noms} decider={decider} />;
@@ -69,13 +69,13 @@ export function Absences() {
   return (
     <div className="page">
       <div className="page-entete">
-        <h1>Absences</h1>
+        <h1>{t("absences.title")}</h1>
       </div>
       <ResumeErreurs erreur={erreur} />
-      <div className="onglets" role="group" aria-label="Filtrer par statut">
+      <div className="onglets" role="group" aria-label={t("absences.filter_label")}>
         {FILTRES.map((f) => (
           <button key={f} type="button" className="onglet" aria-pressed={filtre === f} onClick={() => setFiltre(f)}>
-            {f === "toutes" ? "Toutes" : f === "demandee" ? "À valider" : `${LIBELLE_STATUT_ABSENCE[f]}s`}
+            {t(`absences.filter.${f}`)}
           </button>
         ))}
       </div>

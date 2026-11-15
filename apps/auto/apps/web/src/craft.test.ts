@@ -24,7 +24,7 @@ beforeAll(async () => {
               gzip: "module.wasm.gz",
             },
             "index.html": { sha256: "a".repeat(64), taille: 33 },
-            "fuite.wasm": { sha256: "b".repeat(64), taille: 1, gzip: "../../secret" },
+            "leak.wasm": { sha256: "b".repeat(64), taille: 1, gzip: "../../secret" },
           },
         },
       },
@@ -37,7 +37,7 @@ afterAll(async () => {
   const r = dossier && relative(resolve(tmpdir()), resolve(dossier));
   if (r && r.startsWith("auto-craft-web-") && !r.includes("..")) await rm(dossier, { recursive: true, force: true });
 });
-test("ressources Craft : version immuable, WASM compressé et repli non compressé", async () => {
+test("Craft resources: immutable version, compressed WASM and uncompressed fallback", async () => {
   const r = await fetch(new URL(`/craft/grid/${version}/module.wasm`, server.url), {
     headers: { "accept-encoding": "gzip" },
   });
@@ -55,7 +55,7 @@ test("ressources Craft : version immuable, WASM compressé et repli non compress
   for (const chemin of [
     `/craft/grid/incorrect/module.wasm`,
     `/craft/grid/${version}/%2e%2e/secret`,
-    `/craft/grid/${version}/fuite.wasm`,
+    `/craft/grid/${version}/leak.wasm`,
     `/craft/grid/${version}/__proto__`,
     `/craft/grid/${version}/a%2fmodule.wasm`,
   ])

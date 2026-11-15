@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { PLANS } from "@auto/billing";
 import { LOCALES, SOURCE_LOCALE, createTranslator } from "@auto/i18n";
 import { palettes } from "@auto/ui";
+import { LANGUES, traducteur } from "./i18n";
 import { demarrerWeb } from "./serveur";
 import { PAGES_PUBLIQUES, empreintesScripts, empreintesStyles, routeRapportCsp } from "./securite";
 import { IMAGES } from "./site/images.gen";
@@ -40,19 +41,44 @@ const page = async (chemin: string) => {
   return { status: r.status, type: r.headers.get("content-type") ?? "", texte: await r.text() };
 };
 
-test("pages publiques : tarifs et mentions, contact dans le pied de page", async () => {
+test("public pages: pricing and legal notice, contact in the footer, source locale by default", async () => {
   for (const c of ["/tarifs", "/mentions-legales"]) {
     const p = await page(c);
     expect(p.status).toBe(200);
     expect(p.type).toContain("text/html");
-    expect(p.texte).toContain('lang="fr"');
+    expect(p.texte).toContain(`lang="${SOURCE_LOCALE}"`);
+    expect(p.texte).not.toContain("%%");
     expect(p.texte).toContain("mailto:contact@aphrody.com");
     expect(p.texte).toContain('href="#contenu"');
   }
 });
 
+// Every page is localized once per shipped locale from the apps/web and shared catalogs.
+test("public pages: localized per locale (?lang= and Accept-Language), no token left", async () => {
+  for (const l of LANGUES) {
+    const t = traducteur(l);
+    for (const c of ["/tarifs", "/mentions-legales", "/confidentialite", "/telechargements", "/devis/abc"]) {
+      for (const r of [
+        await fetch(new URL(c, web.url), { headers: { "accept-language": l } }),
+        await fetch(new URL(`${c}?lang=${l}`, web.url)),
+      ]) {
+        const texte = await r.text();
+        expect(r.headers.get("vary")).toBe("Accept-Language");
+        expect(texte).toContain(`lang="${l}"`);
+        expect(texte).not.toContain("%%");
+        expect(texte).toContain(t.t("site.skip"));
+      }
+    }
+    const m = (await (await fetch(new URL(`/manifest.webmanifest?lang=${l}`, web.url))).json()) as {
+      lang: string;
+      name: string;
+    };
+    expect(m).toMatchObject({ lang: l, name: t.t("manifest.name") });
+  }
+});
+
 // Every shipped catalog gets its own prerendered landing page, chosen by ?lang= or Accept-Language.
-test("accueil : une page prérendue par langue livrée, négociée", async () => {
+test("landing page: one prerendered page per shipped locale, negotiated", async () => {
   for (const l of LOCALES) {
     const t = createTranslator(l);
     for (const r of [
@@ -68,8 +94,8 @@ test("accueil : une page prérendue par langue livrée, négociée", async () =>
   }
 });
 
-// Le premier appel de "/" compile la vitrine React : délai élargi sous charge.
-test("accueil : contenu prérendu (h1 avant JavaScript), CSS en ligne, script à empreinte servi", async () => {
+// The first call of "/" compiles the React showcase: wider timeout under load.
+test("landing page: prerendered content (h1 before JavaScript), inline CSS, hashed script served", async () => {
   const p = await page("/");
   expect(p.status).toBe(200);
   expect(p.type).toContain("text/html");
@@ -85,14 +111,14 @@ test("accueil : contenu prérendu (h1 avant JavaScript), CSS en ligne, script à
   const r = await fetch(new URL(script!, web.url));
   expect(r.status).toBe(200);
   expect(r.headers.get("content-type")).toContain("javascript");
-  // Page prérendue : seuls les îlots (thème, onglets, film) partent au navigateur, pas React.
+  // Prerendered page: only the islands (theme, tabs, film) ship to the browser, not React.
   expect((await r.clone().text()).length).toBeLessThan(20_000);
   expect(p.texte).toContain('role="tablist"');
   expect(p.texte).toContain('<template id="modele-film">');
   expect(r.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
-  // Images et affiche du film : variantes à empreinte (l'original ne reste qu'en lien « Agrandir »).
+  // Images and film poster: hashed variants (the original only remains as an "Enlarge" link).
   expect(p.texte).not.toMatch(/(src|poster)="\/img\/btp-analytique\.webp"/);
-  // Film : ni affiche ni source avant le clic ; l'affiche est une <picture> paresseuse (variantes de la capture).
+  // Film: neither poster nor source before the click; the poster is a lazy <picture> (variants of the capture).
   const film = /<template id="modele-film">([\s\S]*?)<\/template>/.exec(p.texte)![1]!;
   expect(film).not.toContain("poster=");
   expect(film).not.toContain("lancement-btp.mp4");
@@ -100,13 +126,13 @@ test("accueil : contenu prérendu (h1 avant JavaScript), CSS en ligne, script à
   expect(film).toContain("btp-heros-film-affiche");
 }, 30_000);
 
-test("téléchargements : places réservées aux cartes du catalogue et aux notes (pas de décalage)", async () => {
+test("downloads: places reserved for the catalog cards and the notes (no layout shift)", async () => {
   const html = (await page("/telechargements")).texte;
   expect(html.match(/distribution-attente/g)?.length).toBe(4);
   expect(html).toContain('id="notes-distributions"');
 });
 
-test("application : CSS en ligne, écrans découpés en morceaux chargés à la demande", async () => {
+test("application: inline CSS, screens split into chunks loaded on demand", async () => {
   const html = (await page("/app")).texte;
   expect(html).not.toContain('<link rel="stylesheet"');
   expect(html).toContain("<style>");
@@ -120,7 +146,7 @@ test("application : CSS en ligne, écrans découpés en morceaux chargés à la 
   for (const m of morceaux.slice(0, 3)) expect((await fetch(new URL(m, base))).status).toBe(200);
 }, 30_000);
 
-/** CSS d'une page : feuille liée, ou `<style>` en ligne pour l'accueil. */
+/** CSS of a page: linked stylesheet, or inline `<style>` for the landing page. */
 async function cssPage(html: string) {
   const lien = /<link rel="stylesheet"[^>]*href="([^"]+)"/.exec(html)?.[1];
   if (!lien) return /<style>([\s\S]*?)<\/style>/.exec(html)![1]!;
@@ -129,8 +155,8 @@ async function cssPage(html: string) {
   return r.text();
 }
 
-// Polices hors de la CSS bloquante (audit AU-1) : WOFF2 à empreinte, cache immuable, préchargement cohérent.
-test("polices : CSS sans base64, fichiers /polices à empreinte en cache immuable, préchargements servis", async () => {
+// Fonts out of the blocking CSS (audit AU-1): hashed WOFF2, immutable cache, consistent preloads.
+test("fonts: CSS without base64, hashed /polices files with an immutable cache, preloads served", async () => {
   for (const chemin of ["/", "/app"]) {
     const html = (await page(chemin)).texte;
     const texte = await cssPage(html);
@@ -142,7 +168,7 @@ test("polices : CSS sans base64, fichiers /polices à empreinte en cache immuabl
     expect(texte).toContain("font-display:swap");
     expect(texte).toContain("unicode-range");
     const precharges = [...html.matchAll(/<link\s+rel="preload"\s+as="font"[^>]*href="([^"]+)"/g)].map((m) => m[1]!);
-    // L'accueil n'utilise plus la police d'icônes (SVG en ligne) ; l'application la garde (icônes dynamiques).
+    // The landing page no longer uses the icon font (inline SVG); the application keeps it (dynamic icons).
     expect(texte.includes("material-symbols-rounded")).toBe(chemin === "/app");
     expect(precharges.length).toBeGreaterThanOrEqual(1);
     expect(precharges.length).toBeLessThanOrEqual(2);
@@ -165,7 +191,7 @@ test("polices : CSS sans base64, fichiers /polices à empreinte en cache immuabl
   expect(accueil).toContain("plus-jakarta-sans-latin-700-normal-");
 }, 30_000);
 
-test("héros : fond préchargé en AVIF (fetchpriority=high), variantes à empreinte en cache immuable", async () => {
+test("hero: background preloaded as AVIF (fetchpriority=high), hashed variants with an immutable cache", async () => {
   const html = (await page("/")).texte;
   const pre = /<link\s+rel="preload"\s+as="image"[^>]*>/.exec(html)?.[0] ?? "";
   expect(pre).toContain('fetchpriority="high"');
@@ -184,7 +210,7 @@ test("héros : fond préchargé en AVIF (fetchpriority=high), variantes à empre
   expect(og.headers.get("content-type")).toBe("image/jpeg");
 });
 
-test("référencement : plan du site, robots.txt, security.txt, canonique et Open Graph des pages publiques", async () => {
+test("SEO: sitemap, robots.txt, security.txt, canonical and Open Graph of the public pages", async () => {
   const plan = await fetch(new URL("/sitemap.xml", web.url));
   expect(plan.status).toBe(200);
   expect(plan.headers.get("content-type")).toContain("application/xml");
@@ -207,7 +233,7 @@ test("référencement : plan du site, robots.txt, security.txt, canonique et Ope
   expect(expire.getTime()).toBeLessThan(Date.now() + 366 * 86_400_000);
 });
 
-test("pages HTML : CSP appliquée (default-src, scripts par empreinte), rapports, cadre interdit, politiques", async () => {
+test("HTML pages: CSP enforced (default-src, scripts by hash), reports, frame denied, policies", async () => {
   for (const chemin of ["/", "/tarifs", "/app", "/app/factures", "/devis/abc"]) {
     const r = await fetch(new URL(chemin, web.url));
     expect(r.status).toBe(200);
@@ -241,7 +267,7 @@ test("pages HTML : CSP appliquée (default-src, scripts par empreinte), rapports
   }
 });
 
-test("rapports CSP : une ligne réduite par violation, sans données personnelles, débit limité", async () => {
+test("CSP reports: one reduced line per violation, no personal data, rate limited", async () => {
   const lignes: string[] = [];
   const route = routeRapportCsp(2, (l) => lignes.push(l));
   const rapport = (n: number) =>
@@ -251,10 +277,10 @@ test("rapports CSP : une ligne réduite par violation, sans données personnelle
       body: JSON.stringify(
         Array.from({ length: n }, () => ({
           type: "csp-violation",
-          url: "https://auto.aphrody.com/app/clients?email=jean@exemple.fr",
+          url: "https://auto.aphrody.com/app/clients?email=jean@example.fr",
           body: {
-            documentURL: "https://auto.aphrody.com/app/clients?email=jean@exemple.fr",
-            blockedURL: "https://traceur.exemple/pixel?id=42",
+            documentURL: "https://auto.aphrody.com/app/clients?email=jean@example.fr",
+            blockedURL: "https://tracker.example/pixel?id=42",
             effectiveDirective: "img-src",
             disposition: "report",
           },
@@ -263,8 +289,8 @@ test("rapports CSP : une ligne réduite par violation, sans données personnelle
     });
   expect((await route.POST(rapport(3))).status).toBe(204);
   expect(lignes).toEqual([
-    "csp violation directive=img-src bloque=https://traceur.exemple document=/app/clients mode=report",
-    "csp violation directive=img-src bloque=https://traceur.exemple document=/app/clients mode=report",
+    "csp violation directive=img-src blocked=https://tracker.example document=/app/clients mode=report",
+    "csp violation directive=img-src blocked=https://tracker.example document=/app/clients mode=report",
   ]);
   expect(lignes.join()).not.toContain("jean@");
   const legacy = await route.POST(
@@ -272,7 +298,7 @@ test("rapports CSP : une ligne réduite par violation, sans données personnelle
   );
   expect(legacy.status).toBe(204);
   expect(lignes.length).toBe(2);
-  expect((await route.POST(new Request("http://x", { method: "POST", body: "pas du json" }))).status).toBe(400);
+  expect((await route.POST(new Request("http://x", { method: "POST", body: "not json" }))).status).toBe(400);
   const r = await fetch(new URL("/csp-rapport", web.url), {
     method: "POST",
     headers: { "content-type": "application/csp-report" },
@@ -281,7 +307,7 @@ test("rapports CSP : une ligne réduite par violation, sans données personnelle
   expect(r.status).toBe(204);
 });
 
-test("captures de la vitrine : /img/*.webp servi en image, autres chemins refusés", async () => {
+test("showcase captures: /img/*.webp served as an image, other paths refused", async () => {
   const noms = [...new Bun.Glob("*.webp").scanSync({ cwd: fileURLToPath(new URL("../public/img", import.meta.url)) })];
   expect(noms.length).toBeGreaterThanOrEqual(10);
   const r = await fetch(new URL(`/img/${noms[0]}`, web.url));
@@ -294,17 +320,21 @@ test("captures de la vitrine : /img/*.webp servi en image, autres chemins refus�
   expect(s.headers.get("content-type")).toBe("image/svg+xml");
 });
 
-test("page tarifs alignée sur les plans de @auto/billing", async () => {
-  const p = (await page("/tarifs")).texte;
-  for (const plan of Object.values(PLANS)) {
-    expect(p).toContain(`data-plan="${plan.id}"`);
-    expect(p).toContain(`data-prix="${plan.prixHtCents.mensuel / 100}"`);
-    if (plan.prixHtCents.annuel) expect(p).toContain(`${plan.prixHtCents.annuel / 100} € HT par an`);
+test("pricing page aligned with the plans of @auto/billing", async () => {
+  for (const l of LANGUES) {
+    const t = traducteur(l);
+    const p = (await page(`/tarifs?lang=${l}`)).texte;
+    const prix = (euros: number) => t.currency(euros, "EUR", { maximumFractionDigits: 0 });
+    for (const plan of Object.values(PLANS)) {
+      expect(p).toContain(`data-plan="${plan.id}"`);
+      expect(p).toContain(`data-prix="${plan.prixHtCents.mensuel / 100}"`);
+      if (plan.prixHtCents.annuel) expect(p).toContain(prix(plan.prixHtCents.annuel / 100));
+    }
+    expect(t.t("pricing.pro.badge")).toContain(String(PLANS.pro.essaiJours));
   }
-  expect(p).toContain(`${PLANS.pro.essaiJours} jours d'essai`);
 });
 
-test("application : toutes les routes /app servent la coque HTML (liens profonds)", async () => {
+test("application: every /app route serves the HTML shell (deep links)", async () => {
   for (const c of ["/app", "/app/factures", "/app/documents/123", "/app/inscription"]) {
     const p = await page(c);
     expect(p.status).toBe(200);
@@ -313,7 +343,7 @@ test("application : toutes les routes /app servent la coque HTML (liens profonds
   expect((await page("/inconnue")).status).toBe(404);
 });
 
-test("proxy /v1 : même origine, méthode, corps, cookie et Content-Type transmis, en-têtes de saut retirés", async () => {
+test("/v1 proxy: same origin, method, body, cookie and Content-Type forwarded, hop headers removed", async () => {
   const r = await fetch(new URL("/v1/documents?type=devis", web.url), {
     method: "POST",
     headers: { "content-type": "application/json", cookie: "auto_session=xyz" },
@@ -331,7 +361,7 @@ test("proxy /v1 : même origine, méthode, corps, cookie et Content-Type transmi
   expect(moi.status).toBe(401);
 });
 
-test("proxy : API injoignable → 502 JSON", async () => {
+test("proxy: unreachable API gives a JSON 502", async () => {
   const w = demarrerWeb({ api: "http://127.0.0.1:9" });
   try {
     const r = await fetch(new URL("/v1/moi", w.url));
@@ -342,7 +372,7 @@ test("proxy : API injoignable → 502 JSON", async () => {
   }
 });
 
-test("vidéo hébergée dans le cloud : redirection HTTPS et refus d'une URL invalide", async () => {
+test("video hosted in the cloud: HTTPS redirect and refusal of an invalid URL", async () => {
   const ancienne = Bun.env.AUTO_MEDIA_URL;
   try {
     Bun.env.AUTO_MEDIA_URL = "https://storage.example/media/lancement-btp.mp4";
@@ -357,7 +387,7 @@ test("vidéo hébergée dans le cloud : redirection HTTPS et refus d'une URL inv
   }
 });
 
-test("application installable : manifeste, icônes et couleur de thème alignée sur les jetons", async () => {
+test("installable application: manifest, icons and theme color aligned with the tokens", async () => {
   const m = await fetch(new URL("/manifest.webmanifest", web.url));
   expect(m.headers.get("content-type")).toContain("application/manifest+json");
   const manifeste = (await m.json()) as { start_url: string; display: string; icons: { src: string }[] };

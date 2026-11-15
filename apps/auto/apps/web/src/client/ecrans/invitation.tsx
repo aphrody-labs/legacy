@@ -1,15 +1,17 @@
-// Acceptation d'une invitation : lien Better Auth (`/app/invitation?id=…`) ou ancien lien (`#jeton`).
-// Connecté avec la bonne adresse : acceptation directe. Sinon : mot de passe du compte existant, ou du
-// compte à créer (12 caractères minimum) ; la 2FA du compte s'applique ensuite à la connexion.
+// Invitation acceptance: Better Auth link (`/app/invitation?id=…`) or old link (`#token`).
+// Signed in with the right address: direct acceptance. Otherwise: password of the existing account, or of the
+// account to create (12 characters minimum); the account's 2FA then applies at sign-in.
 import { Check, LogIn } from "@auto/ui/symboles";
 import { useState, type FormEvent } from "react";
 import { api, ErreurApi } from "@auto/client";
 import { Bandeau, Bouton, ChampTexte, Lien, ResumeErreurs, naviguer, parametre, useTitrePage } from "@auto/ui/react";
 import { authClient, messageAuth } from "../auth";
 import { Marque } from "./marque";
+import { t } from "../i18n";
+import { rich } from "../rich";
 
 export function Invitation({ onSession }: { onSession: () => Promise<void> | void }) {
-  useTitrePage("Invitation");
+  useTitrePage(t("invite.title"));
   const id = parametre("id");
   const jeton = location.hash.slice(1) || null;
   const session = authClient.useSession();
@@ -54,26 +56,21 @@ export function Invitation({ onSession }: { onSession: () => Promise<void> | voi
       <div className="fond-motif pattern-dots-md" aria-hidden="true" />
       <div className="auth-carte carte">
         <Marque />
-        <h1>Rejoindre une entreprise</h1>
+        <h1>{t("invite.heading")}</h1>
         {!id && !jeton ? (
-          <Bandeau ton="erreur" titre="Lien incomplet">
-            <p>Ouvrez le lien reçu par e-mail tel quel.</p>
+          <Bandeau ton="erreur" titre={t("invite.incomplete")}>
+            <p>{t("invite.incomplete_text")}</p>
           </Bandeau>
         ) : deuxFacteurs ? (
-          <Bandeau ton="succes" titre="Invitation acceptée">
-            <p>
-              Votre compte est protégé par la double authentification :{" "}
-              <Lien href="/app/connexion">connectez-vous</Lien> pour continuer.
-            </p>
+          <Bandeau ton="succes" titre={t("invite.accepted")}>
+            <p>{rich("invite.two_factor", { link: <Lien href="/app/connexion">{t("invite.sign_in_link")}</Lien> })}</p>
           </Bandeau>
         ) : session.data && id ? (
           <div className="grille">
             <ResumeErreurs erreur={erreur} />
-            <p>
-              Connecté en tant que <strong>{session.data.user.email}</strong>.
-            </p>
+            <p>{rich("invite.signed_in_as", { email: <strong>{session.data.user.email}</strong> })}</p>
             <Bouton variante="primaire" icone={Check} chargement={envoi} plein onClick={accepterConnecte}>
-              Accepter l'invitation
+              {t("invite.accept")}
             </Bouton>
             <Bouton
               variante="fantome"
@@ -86,24 +83,21 @@ export function Invitation({ onSession }: { onSession: () => Promise<void> | voi
                   if (error) return setErreur(new ErreurApi(messageAuth(error), error.status ?? 400));
                   await onSession();
                 } catch {
-                  setErreur(new ErreurApi("Impossible de changer de compte. Réessayez.", 0));
+                  setErreur(new ErreurApi(t("invite.switch_failed"), 0));
                 } finally {
                   setEnvoi(false);
                 }
               }}
             >
-              Utiliser un autre compte
+              {t("invite.other_account")}
             </Bouton>
           </div>
         ) : (
           <form className="grille" noValidate onSubmit={accepter}>
             <ResumeErreurs erreur={erreur} />
-            <p className="attenue">
-              Saisissez le mot de passe de votre compte auto, ou choisissez-en un (12 caractères minimum) si vous n'avez
-              pas encore de compte.
-            </p>
+            <p className="attenue">{t("invite.password_help")}</p>
             <ChampTexte
-              libelle="Mot de passe"
+              libelle={t("common.password")}
               type="password"
               autoComplete="current-password"
               requis
@@ -111,7 +105,7 @@ export function Invitation({ onSession }: { onSession: () => Promise<void> | voi
               onChange={(e) => setMotDePasse(e.target.value)}
             />
             <Bouton type="submit" variante="primaire" icone={LogIn} chargement={envoi} plein>
-              Rejoindre
+              {t("invite.join")}
             </Bouton>
           </form>
         )}

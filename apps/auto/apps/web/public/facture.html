@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#056b5b" />
-    <!-- Application installable : liens ajoutés au chargement (servis par le serveur, pas par le bundler). -->
+    <!-- Installable app: links added at load time (served by the server, not by the bundler). -->
     <script>
       for (const [rel, href] of [
         ["manifest", "/manifest.webmanifest"],
@@ -13,21 +13,21 @@
       ])
         document.head.append(Object.assign(document.createElement("link"), { rel, href }));
     </script>
-    <!-- Thème imposé appliqué avant le premier rendu (pas de flash) ; le reste de la logique est chargé ensuite. -->
+    <!-- Stored theme applied before first render (no flash); the rest of the logic loads afterwards. -->
     <script>
       try {
         const t = localStorage.getItem("auto-theme");
         if (t === "clair" || t === "sombre") document.documentElement.dataset.theme = t;
       } catch {}
     </script>
-    <title>Facture · auto</title>
+    <title>%%invoice.meta.title%%</title>
     <meta name="robots" content="noindex" />
     <link rel="stylesheet" href="../src/styles/site.css" />
   </head>
   <body>
-    <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+    <a class="lien-evitement" href="#contenu">%%site.skip%%</a>
     <header class="site-entete">
-      <nav aria-label="Navigation du site">
+      <nav aria-label="%%site.nav.label%%">
         <a class="marque" href="/">
           <span class="marque-logo" aria-hidden="true">
             <svg class="icone" viewBox="0 -960 960 960" fill="currentColor">
@@ -39,47 +39,47 @@
           auto
         </a>
         <div class="liens">
-          <a href="/tarifs">Tarifs</a>
-          <a href="/app/connexion">Se connecter</a>
-          <a class="bouton bouton-primaire" href="/app/inscription">Essayer gratuitement</a>
+          <a href="/tarifs">%%site.nav.pricing%%</a>
+          <a href="/app/connexion">%%site.nav.signin%%</a>
+          <a class="bouton bouton-primaire" href="/app/inscription">%%site.nav.try%%</a>
         </div>
       </nav>
     </header>
 
     <main id="contenu" class="conteneur devis-public">
-      <p id="etat" role="status">Chargement de la facture…</p>
+      <p id="etat" role="status">%%invoice.loading%%</p>
       <article id="facture" aria-labelledby="titre-facture" hidden>
         <h1 id="titre-facture"></h1>
         <p id="parties" class="devis-parties"></p>
         <div class="tableau-conteneur">
           <table class="tableau devis-lignes">
             <caption class="visuellement-cache">
-              Montants de la facture
+              %%invoice.caption%%
             </caption>
             <tbody>
               <tr>
-                <th scope="row">Total HT</th>
+                <th scope="row">%%doc.total_ht%%</th>
                 <td class="num" id="total-ht"></td>
               </tr>
               <tr>
-                <th scope="row">TVA</th>
+                <th scope="row">%%doc.vat%%</th>
                 <td class="num" id="total-tva"></td>
               </tr>
               <tr>
-                <th scope="row">Total TTC</th>
+                <th scope="row">%%doc.total_ttc%%</th>
                 <td class="num" id="total-ttc"></td>
               </tr>
               <tr class="devis-total">
-                <th scope="row">Reste à payer</th>
+                <th scope="row">%%invoice.remaining%%</th>
                 <td class="num" id="reste"></td>
               </tr>
             </tbody>
           </table>
         </div>
-        <p><a id="pdf" class="bouton" target="_blank" rel="noopener">Télécharger la facture (Factur-X)</a></p>
+        <p><a id="pdf" class="bouton" target="_blank" rel="noopener">%%invoice.pdf%%</a></p>
         <div id="paiement" class="devis-decision" hidden>
-          <h2>Payer en ligne</h2>
-          <p>Paiement par carte sécurisé par Stripe, sur le compte de l'émetteur.</p>
+          <h2>%%invoice.pay_online%%</h2>
+          <p>%%invoice.pay_help%%</p>
           <p id="erreur" class="erreur" role="alert" hidden></p>
           <div class="rangee">
             <button type="button" id="payer" class="bouton bouton-primaire"></button>
@@ -90,11 +90,11 @@
     </main>
     <footer class="site-pied">
       <div class="conteneur">
-        <span>auto, facturation et gestion pour indépendants et TPE</span>
+        <span>%%site.footer.tagline%%</span>
         <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>
-        <a href="/tarifs">Tarifs</a>
-        <a href="/mentions-legales">Mentions légales</a>
-        <a href="/confidentialite" aria-current="page">Confidentialité</a>
+        <a href="/tarifs">%%site.nav.pricing%%</a>
+        <a href="/mentions-legales">%%site.footer.legal%%</a>
+        <a href="/confidentialite" aria-current="page">%%site.footer.privacy%%</a>
       </div>
     </footer>
     <script type="module" src="../src/site/facture.ts"></script>

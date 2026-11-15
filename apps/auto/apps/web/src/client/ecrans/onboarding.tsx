@@ -1,4 +1,4 @@
-// Onboarding en 3 étapes : compte, entreprise (préremplie depuis le SIREN), connexions facultatives.
+// Onboarding in 3 steps: account, company (prefilled from the SIREN), optional connections.
 import { sirenValide, siretValide } from "@auto/domain";
 import { ArrowLeft, ArrowRight, Building2, Inbox, PlugZap, Search } from "@auto/ui/symboles";
 import { useState, type FormEvent } from "react";
@@ -6,12 +6,14 @@ import { api, ErreurApi } from "@auto/client";
 import { chiffres, emailValide, grouperSiret } from "@auto/ui/format";
 import { Bandeau, Bouton, ChampTexte, ChampZone, Lien, ResumeErreurs, naviguer, useTitrePage } from "@auto/ui/react";
 import { Marque } from "./marque";
+import { t } from "../i18n";
+import { rich } from "../rich";
 
-const ETAPES = ["Votre compte", "Votre entreprise", "Connexions"] as const;
+const ETAPES = ["account", "company", "connections"] as const;
 
 function Etapes({ courante }: { courante: number }) {
   return (
-    <ol className="etapes" aria-label="Étapes de l'inscription">
+    <ol className="etapes" aria-label={t("signup.steps_label")}>
       {ETAPES.map((e, i) => (
         <li
           key={e}
@@ -19,9 +21,9 @@ function Etapes({ courante }: { courante: number }) {
           aria-current={i === courante ? "step" : undefined}
         >
           <span>
-            <span className="visuellement-cache">Étape {i + 1} sur 3 : </span>
-            {e}
-            {i < courante && <span className="visuellement-cache"> (terminée)</span>}
+            <span className="visuellement-cache">{t("signup.step_of", { n: i + 1 })} </span>
+            {t(`signup.step.${e}`)}
+            {i < courante && <span className="visuellement-cache"> {t("signup.step_done")}</span>}
           </span>
         </li>
       ))}
@@ -30,8 +32,8 @@ function Etapes({ courante }: { courante: number }) {
 }
 
 /**
- * `connecte` : compte déjà ouvert (lien magique, Google, Microsoft) sans entreprise ; l'inscription commence à
- * l'étape entreprise et crée seulement l'entreprise.
+ * `connecte`: account already open (magic link, Google, Microsoft) without a company; sign-up starts at the
+ * company step and only creates the company.
  */
 export function Onboarding({
   onSession,
@@ -41,7 +43,7 @@ export function Onboarding({
   connecte?: boolean;
 }) {
   const [etape, setEtape] = useState(connecte ? 1 : 0);
-  useTitrePage(`Inscription, ${ETAPES[etape]}`);
+  useTitrePage(t("signup.title", { step: t(`signup.step.${ETAPES[etape]}`) }));
   const [compte, setCompte] = useState({ email: "", motDePasse: "" });
   const [ent, setEnt] = useState({ siren: "", nom: "", siret: "", adresse: "", franchiseTva: false });
   const [erreurs, setErreurs] = useState<Record<string, string | undefined>>({});
@@ -52,8 +54,8 @@ export function Onboarding({
   function validerCompte(e: FormEvent) {
     e.preventDefault();
     const err = {
-      email: emailValide(compte.email) ? undefined : "Saisissez une adresse e-mail valide, par exemple nom@exemple.fr.",
-      motDePasse: compte.motDePasse.length >= 12 ? undefined : "12 caractères au minimum.",
+      email: emailValide(compte.email) ? undefined : t("login.email_invalid"),
+      motDePasse: compte.motDePasse.length >= 12 ? undefined : t("signup.password_min"),
     };
     setErreurs(err);
     if (!err.email && !err.motDePasse) setEtape(1);
@@ -62,7 +64,7 @@ export function Onboarding({
   async function chercherSiren() {
     const s = chiffres(ent.siren);
     if (!sirenValide(s)) {
-      setErreurs({ siren: "SIREN invalide : 9 chiffres, clé de contrôle vérifiée." });
+      setErreurs({ siren: t("signup.siren_invalid") });
       return;
     }
     setErreurs({});
@@ -79,9 +81,9 @@ export function Onboarding({
   async function creer(e: FormEvent) {
     e.preventDefault();
     const err = {
-      nom: ent.nom.trim() ? undefined : "Raison sociale obligatoire.",
-      siret: siretValide(chiffres(ent.siret)) ? undefined : "SIRET invalide : 14 chiffres, clé de contrôle vérifiée.",
-      adresse: ent.adresse.trim() ? undefined : "Adresse obligatoire (figure sur vos factures).",
+      nom: ent.nom.trim() ? undefined : t("signup.err.name"),
+      siret: siretValide(chiffres(ent.siret)) ? undefined : t("customers.err.siret"),
+      adresse: ent.adresse.trim() ? undefined : t("signup.err.address"),
     };
     setErreurs(err);
     if (err.nom || err.siret || err.adresse) return;
@@ -109,13 +111,13 @@ export function Onboarding({
       <div className="fond-motif pattern-dots-md" aria-hidden="true" />
       <div className="auth-carte carte">
         <Marque />
-        <h1>Créer votre compte</h1>
+        <h1>{t("signup.heading")}</h1>
         <Etapes courante={etape} />
 
         {etape === 0 && (
           <form className="grille" noValidate onSubmit={validerCompte}>
             <ChampTexte
-              libelle="E-mail professionnel"
+              libelle={t("signup.work_email")}
               type="email"
               autoComplete="email"
               requis
@@ -124,20 +126,20 @@ export function Onboarding({
               onChange={(e) => setCompte({ ...compte, email: e.target.value })}
             />
             <ChampTexte
-              libelle="Mot de passe"
+              libelle={t("common.password")}
               type="password"
               autoComplete="new-password"
               requis
-              aide="12 caractères au minimum. Une phrase de passe est plus simple à retenir."
+              aide={t("signup.password_help")}
               value={compte.motDePasse}
               erreur={erreurs.motDePasse}
               onChange={(e) => setCompte({ ...compte, motDePasse: e.target.value })}
             />
             <Bouton type="submit" variante="primaire" icone={ArrowRight} plein>
-              Continuer
+              {t("signup.continue")}
             </Bouton>
             <p className="attenue">
-              Déjà inscrit ? <Lien href="/app/connexion">Se connecter</Lien>
+              {rich("signup.already", { link: <Lien href="/app/connexion">{t("login.heading")}</Lien> })}
             </p>
           </form>
         )}
@@ -151,29 +153,29 @@ export function Onboarding({
                 libelle="SIREN"
                 inputMode="numeric"
                 autoComplete="off"
-                aide="Préremplit la raison sociale, le SIRET du siège et l'adresse depuis l'annuaire des entreprises."
+                aide={t("signup.siren_help")}
                 value={ent.siren}
                 erreur={erreurs.siren}
                 onChange={(e) => setEnt({ ...ent, siren: e.target.value })}
               />
               <Bouton icone={Search} chargement={recherche === "cours"} onClick={chercherSiren}>
-                Rechercher
+                {t("signup.search")}
               </Bouton>
             </div>
             <div aria-live="polite">
               {recherche === "trouve" && (
-                <Bandeau ton="succes" titre="Entreprise trouvée">
-                  <p>Vérifiez les informations ci-dessous avant de continuer.</p>
+                <Bandeau ton="succes" titre={t("signup.found")}>
+                  <p>{t("signup.found_text")}</p>
                 </Bandeau>
               )}
               {recherche === "absent" && (
-                <Bandeau ton="avertissement" titre="Annuaire indisponible ou SIREN inconnu">
-                  <p>Saisissez les informations à la main.</p>
+                <Bandeau ton="avertissement" titre={t("signup.absent")}>
+                  <p>{t("signup.absent_text")}</p>
                 </Bandeau>
               )}
             </div>
             <ChampTexte
-              libelle="Raison sociale"
+              libelle={t("signup.company_name")}
               autoComplete="organization"
               requis
               value={ent.nom}
@@ -190,7 +192,7 @@ export function Onboarding({
               onBlur={() => setEnt((x) => ({ ...x, siret: grouperSiret(x.siret) }))}
             />
             <ChampZone
-              libelle="Adresse"
+              libelle={t("common.address")}
               autoComplete="street-address"
               rows={2}
               requis
@@ -204,15 +206,15 @@ export function Onboarding({
                 checked={ent.franchiseTva}
                 onChange={(e) => setEnt({ ...ent, franchiseTva: e.target.checked })}
               />
-              Franchise en base de TVA (art. 293 B du CGI) : mes factures sont sans TVA
+              {t("signup.franchise")}
             </label>
             <div className="rangee">
               <Bouton icone={ArrowLeft} onClick={() => setEtape(0)}>
-                Retour
+                {t("common.back")}
               </Bouton>
               <span className="espace" />
               <Bouton type="submit" variante="primaire" icone={Building2} chargement={envoi}>
-                Créer mon entreprise
+                {t("signup.create_company")}
               </Bouton>
             </div>
           </form>
@@ -220,43 +222,41 @@ export function Onboarding({
 
         {etape === 2 && (
           <div className="grille">
-            <Bandeau ton="succes" titre="Compte créé">
-              <p>Votre entreprise est prête. Ces connexions se font plus tard, depuis les paramètres.</p>
+            <Bandeau ton="succes" titre={t("signup.created")}>
+              <p>{t("signup.created_text")}</p>
             </Bandeau>
             <ul className="liste-connexions">
               <li className="carte">
                 <PlugZap className="icone" aria-hidden="true" />
                 <div>
-                  <strong>Plateforme agréée (PA)</strong>
-                  <p className="attenue">
-                    Configurer un compte B2Brouter existant. Le raccordement reste à qualifier avec votre plateforme.
-                  </p>
+                  <strong>{t("signup.pa")}</strong>
+                  <p className="attenue">{t("signup.pa_text")}</p>
                   <Bouton
                     onClick={async () => {
                       await onSession();
                       naviguer("/app/parametres", true);
                     }}
                   >
-                    Configurer
+                    {t("signup.configure")}
                   </Bouton>
                 </div>
-                <span className="pastille-etat">À connecter</span>
+                <span className="pastille-etat">{t("signup.to_connect")}</span>
               </li>
               <li className="carte">
                 <Inbox className="icone" aria-hidden="true" />
                 <div>
-                  <strong>Boîte mail</strong>
-                  <p className="attenue">Connectez un compte depuis votre boîte unifiée.</p>
+                  <strong>{t("signup.mailbox")}</strong>
+                  <p className="attenue">{t("signup.mailbox_text")}</p>
                   <Bouton
                     onClick={async () => {
                       await onSession();
                       naviguer("/app/courrier", true);
                     }}
                   >
-                    Ouvrir la boîte unifiée
+                    {t("signup.open_inbox")}
                   </Bouton>
                 </div>
-                <span className="pastille-etat">À connecter</span>
+                <span className="pastille-etat">{t("signup.to_connect")}</span>
               </li>
             </ul>
             <Bouton
@@ -268,7 +268,7 @@ export function Onboarding({
                 naviguer("/app", true);
               }}
             >
-              Accéder au tableau de bord
+              {t("signup.to_dashboard")}
             </Bouton>
           </div>
         )}

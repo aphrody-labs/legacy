@@ -1,6 +1,6 @@
-// Connexion par Better Auth : mot de passe (puis second facteur), lien magique par mail, passkey, et
-// fournisseurs Google ou Microsoft quand l'opérateur les a configurés. Lancée par un client OAuth (MCP),
-// la connexion reprend ensuite l'autorisation (requête signée relayée par le client Better Auth).
+// Better Auth sign-in: password (then second factor), magic link by email, passkey, and Google or Microsoft
+// providers when the operator has configured them. Started by an OAuth client (MCP), the sign-in then resumes
+// the authorization (signed request relayed by the Better Auth client).
 import { KeyRound, LogIn, Send, ShieldCheck } from "@auto/ui/symboles";
 import { useEffect, useState, type FormEvent } from "react";
 import { ErreurApi } from "@auto/client";
@@ -10,8 +10,10 @@ import { authClient, messageAuth, suivreRedirection } from "../auth";
 import { Marque } from "./marque";
 import { ConnexionAppareil, dansApplicationNative } from "./appareil";
 import { LogoFournisseur } from "./logo-fournisseur";
+import { t } from "../i18n";
+import { rich } from "../rich";
 
-/** Destination après connexion : seulement un chemin interne de l'application (pas de redirection ouverte). */
+/** Destination after sign-in: only an internal application path (no open redirect). */
 export const retourSur = (r: string | null) => (r && r.startsWith("/app") && !r.startsWith("//") ? r : "/app");
 
 const NOMS: Record<string, string> = { google: "Google", microsoft: "Microsoft" };
@@ -19,7 +21,7 @@ const NOMS: Record<string, string> = { google: "Google", microsoft: "Microsoft" 
 type Etape = "identifiants" | "deuxFacteurs" | "lienEnvoye";
 
 export function Connexion({ onSession }: { onSession: () => Promise<void> | void }) {
-  useTitrePage("Connexion");
+  useTitrePage(t("login.title"));
   const [etape, setEtape] = useState<Etape>("identifiants");
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
@@ -29,7 +31,7 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
   const [erreurs, setErreurs] = useState<{ email?: string; motDePasse?: string; code?: string }>({});
   const [erreur, setErreur] = useState<ErreurApi | null>(null);
   const [envoi, setEnvoi] = useState<string | null>(null);
-  // null tant que /v1/auth/methodes n'a pas répondu : places réservées pour les boutons (pas de décalage).
+  // null until /v1/auth/methodes has answered: reserved places for the buttons (no layout shift).
   const [sociaux, setSociaux] = useState<string[] | null>(null);
   const [appareilActif, setAppareilActif] = useState(false);
 
@@ -58,8 +60,8 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
   async function motDePasseSoumis(e: FormEvent) {
     e.preventDefault();
     const err = {
-      email: emailValide(email) ? undefined : "Saisissez une adresse e-mail valide, par exemple nom@exemple.fr.",
-      motDePasse: motDePasse ? undefined : "Saisissez votre mot de passe.",
+      email: emailValide(email) ? undefined : t("login.email_invalid"),
+      motDePasse: motDePasse ? undefined : t("login.password_required"),
     };
     setErreurs(err);
     if (err.email || err.motDePasse) return;
@@ -85,7 +87,7 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
   async function codeSoumis(e: FormEvent) {
     e.preventDefault();
     const c = code.trim();
-    if (!c) return setErreurs({ code: "Saisissez le code à 6 chiffres ou un code de secours." });
+    if (!c) return setErreurs({ code: t("login.code_required") });
     setErreurs({});
     setEnvoi("code");
     setErreur(null);
@@ -101,7 +103,7 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
   }
 
   async function lienMagique() {
-    if (!emailValide(email)) return setErreurs({ email: "Saisissez d'abord votre adresse e-mail." });
+    if (!emailValide(email)) return setErreurs({ email: t("login.email_first") });
     setErreurs({});
     setEnvoi("lien");
     setErreur(null);
@@ -133,11 +135,11 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
         <Marque />
         {etape === "identifiants" && (
           <>
-            <h1>Se connecter</h1>
+            <h1>{t("login.heading")}</h1>
             <form className="grille" noValidate onSubmit={motDePasseSoumis}>
               <ResumeErreurs erreur={erreur} />
               <ChampTexte
-                libelle="E-mail"
+                libelle={t("common.email")}
                 type="email"
                 autoComplete="username webauthn"
                 requis
@@ -146,7 +148,7 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
                 onChange={(e) => setEmail(e.target.value)}
               />
               <ChampTexte
-                libelle="Mot de passe"
+                libelle={t("common.password")}
                 type="password"
                 autoComplete="current-password webauthn"
                 requis
@@ -156,17 +158,17 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
               />
               <label className="rangee permission-option">
                 <input type="checkbox" checked={resterConnecte} onChange={(e) => setResterConnecte(e.target.checked)} />
-                Rester connecté sur cet appareil
+                {t("login.remember")}
               </label>
               <Bouton type="submit" variante="primaire" icone={LogIn} chargement={envoi === "mdp"} plein>
-                Se connecter
+                {t("login.heading")}
               </Bouton>
               <div className="grille grille-2">
                 <Bouton icone={Send} chargement={envoi === "lien"} onClick={lienMagique}>
-                  Recevoir un lien par e-mail
+                  {t("login.magic_link")}
                 </Bouton>
                 <Bouton icone={KeyRound} chargement={envoi === "passkey"} onClick={passkey}>
-                  Clé d'accès (passkey)
+                  {t("login.passkey")}
                 </Bouton>
               </div>
               {sociaux === null &&
@@ -179,7 +181,7 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
                     aria-hidden
                     tabIndex={-1}
                   >
-                    Continuer
+                    {t("login.continue")}
                   </Bouton>
                 ))}
               {(sociaux ?? []).map((p) => (
@@ -190,26 +192,24 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
                   onClick={() => authClient.signIn.social({ provider: p as "google", callbackURL: retour })}
                 >
                   <LogoFournisseur fournisseur={p} />
-                  Continuer avec {NOMS[p] ?? p}
+                  {t("login.continue_with", { provider: NOMS[p] ?? p })}
                 </Bouton>
               ))}
               {appareilActif && dansApplicationNative() && <ConnexionAppareil onSession={onSession} retour={retour} />}
               <p className="attenue">
-                Pas encore de compte ? <Lien href="/app/inscription">Créer un compte gratuit</Lien>
+                {rich("login.no_account", { link: <Lien href="/app/inscription">{t("login.create_account")}</Lien> })}
               </p>
             </form>
           </>
         )}
         {etape === "deuxFacteurs" && (
           <>
-            <h1>Double authentification</h1>
+            <h1>{t("login.two_factor.title")}</h1>
             <form className="grille" noValidate onSubmit={codeSoumis}>
               <ResumeErreurs erreur={erreur} />
-              <p className="attenue">
-                Saisissez le code de votre application d'authentification, ou l'un de vos codes de secours.
-              </p>
+              <p className="attenue">{t("login.two_factor.help")}</p>
               <ChampTexte
-                libelle="Code"
+                libelle={t("common.code")}
                 inputMode="text"
                 autoComplete="one-time-code"
                 requis
@@ -219,23 +219,21 @@ export function Connexion({ onSession }: { onSession: () => Promise<void> | void
               />
               <label className="rangee">
                 <input type="checkbox" checked={confiance} onChange={(e) => setConfiance(e.target.checked)} />
-                Faire confiance à cet appareil pendant 30 jours
+                {t("login.two_factor.trust")}
               </label>
               <Bouton type="submit" variante="primaire" icone={ShieldCheck} chargement={envoi === "code"} plein>
-                Valider
+                {t("login.two_factor.submit")}
               </Bouton>
             </form>
           </>
         )}
         {etape === "lienEnvoye" && (
           <>
-            <h1>Vérifiez votre boîte mail</h1>
-            <Bandeau ton="succes" titre="Lien envoyé">
-              <p>
-                Si un compte existe pour {email.trim()}, un lien de connexion valable 10 minutes vient d'y être envoyé.
-              </p>
+            <h1>{t("login.link_sent.title")}</h1>
+            <Bandeau ton="succes" titre={t("login.link_sent.banner")}>
+              <p>{t("login.link_sent.text", { email: email.trim() })}</p>
             </Bandeau>
-            <Bouton onClick={() => setEtape("identifiants")}>Retour</Bouton>
+            <Bouton onClick={() => setEtape("identifiants")}>{t("common.back")}</Bouton>
           </>
         )}
       </div>

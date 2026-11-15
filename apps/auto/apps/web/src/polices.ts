@@ -1,20 +1,20 @@
-// Polices autohébergées (Fontsource) servies en fichiers séparés, nommés par empreinte de contenu, au lieu d'être
-// incrustées en base64 dans la CSS bloquante (le bundler de Bun incruste tout `url()` de moins de 128 Kio).
-// Le greffon du bundler (bunfig `[serve.static]`) réécrit chaque `url(.../@fontsource/<famille>/files/<f>.woff2)`
-// en `/polices/<f>-<empreinte>.woff2`, laissé externe ; `routePolice` sert ces fichiers en cache immuable.
-// Les @font-face de Fontsource gardent `font-display: swap` et leurs sous-ensembles `unicode-range`.
+// Self-hosted fonts (Fontsource) served as separate files named by content hash, instead of being inlined as base64
+// in the blocking CSS (Bun's bundler inlines every `url()` under 128 KiB).
+// The bundler plugin (bunfig `[serve.static]`) rewrites each `url(.../@fontsource/<family>/files/<f>.woff2)`
+// to `/polices/<f>-<hash>.woff2`, left external; `routePolice` serves those files with an immutable cache.
+// Fontsource @font-face rules keep `font-display: swap` and their `unicode-range` subsets.
 import type { BunPlugin } from "bun";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 export const PREFIXE_POLICES = "/polices/";
-/** Familles servies : les seules dont un `url()` peut être réécrit et dont un fichier peut être lu. */
+/** Families served: the only ones whose `url()` may be rewritten and whose file may be read. */
 const FAMILLES = ["inter", "plus-jakarta-sans", "material-symbols-rounded"] as const;
 const FICHIER_FONTSOURCE = /[\\/]@fontsource[\\/]([a-z0-9-]+)[\\/]files[\\/]([a-z0-9-]+\.woff2?)$/;
 const NOM_PUBLIE = /^([a-z0-9-]+)-([a-f0-9]{10})\.(woff2?)$/;
 
 const empreintes = new Map<string, string>();
-/** Empreinte SHA-256 (10 caractères hexadécimaux) du contenu d'un fichier de police. */
+/** SHA-256 hash (10 hexadecimal characters) of the content of a font file. */
 function empreinte(chemin: string): string {
   let e = empreintes.get(chemin);
   if (!e) {
@@ -25,7 +25,7 @@ function empreinte(chemin: string): string {
   return e;
 }
 
-/** URL publique d'un fichier Fontsource (chemin absolu), ou `undefined` s'il n'est pas d'une famille servie. */
+/** Public URL of a Fontsource file (absolute path), or `undefined` if it is not of a served family. */
 export function urlPolice(chemin: string): string | undefined {
   const m = FICHIER_FONTSOURCE.exec(chemin);
   if (!m || !(FAMILLES as readonly string[]).includes(m[1]!)) return undefined;
@@ -34,7 +34,7 @@ export function urlPolice(chemin: string): string | undefined {
   return `${PREFIXE_POLICES}${fichier!.slice(0, point)}-${empreinte(chemin)}${fichier!.slice(point)}`;
 }
 
-/** Dossier `files/` d'une famille, résolu depuis apps/web (où les paquets sont déclarés). */
+/** `files/` folder of a family, resolved from apps/web (where the packages are declared). */
 const dossiers = new Map<string, string>();
 function dossierFamille(famille: string): string {
   let d = dossiers.get(famille);
@@ -45,7 +45,7 @@ function dossierFamille(famille: string): string {
   return d;
 }
 
-/** Chemin du fichier servi sous `/polices/<nom>`, seulement si l'empreinte correspond au contenu actuel. */
+/** Path of the file served under `/polices/<name>`, only if the hash matches the current content. */
 export function cheminPolice(nom: string): string | undefined {
   const m = NOM_PUBLIE.exec(nom);
   if (!m) return undefined;
@@ -57,10 +57,10 @@ export function cheminPolice(nom: string): string | undefined {
   return empreinte(chemin) === attendue ? chemin : undefined;
 }
 
-/** `GET /polices/:fichier` : WOFF2/WOFF à empreinte, cache d'un an immuable (l'URL change avec le contenu). */
+/** `GET /polices/:fichier`: hashed WOFF2/WOFF, immutable one-year cache (the URL changes with the content). */
 export function routePolice(req: Request & { params: { fichier: string } }): Response {
   const chemin = cheminPolice(req.params.fichier);
-  if (!chemin) return new Response("Police introuvable", { status: 404, headers: { "cache-control": "no-store" } });
+  if (!chemin) return new Response("Font not found", { status: 404, headers: { "cache-control": "no-store" } });
   const ext = chemin.endsWith(".woff2") ? "woff2" : "woff";
   return new Response(Bun.file(chemin), {
     headers: {
@@ -72,14 +72,14 @@ export function routePolice(req: Request & { params: { fichier: string } }): Res
   });
 }
 
-/** Chemin servi par le front (`/polices/...` préchargé, `/img/...` de `routeImage`), que `Bun.serve` peut avoir
- * préfixé par la racine du projet : à laisser externe, jamais à incruster. */
+/** Path served by the front (preloaded `/polices/...`, `/img/...` of `routeImage`), which `Bun.serve` may have
+ * prefixed with the project root: to leave external, never to inline. */
 const CHEMIN_SERVI = /(?:^|[\\/])(polices[\\/][a-z0-9-]+-[a-f0-9]{10}\.woff2?|img[\\/][a-z0-9-]+\.webp)$/;
 
 /**
- * Greffon du bundler : `url()` Fontsource → `/polices/...` externe ; les chemins servis `/polices/...`
- * (préchargement) et `/img/...` restent tels quels. Les `url()` des feuilles Fontsource non compilées par
- * Tailwind arrivent relatifs (`./files/...`) : le chemin absolu est reconstruit depuis `resolveDir`.
+ * Bundler plugin: Fontsource `url()` to external `/polices/...`; the served `/polices/...` paths (preload) and
+ * `/img/...` stay as they are. The `url()` of Fontsource stylesheets not compiled by Tailwind arrive relative
+ * (`./files/...`): the absolute path is rebuilt from `resolveDir`.
  */
 export const greffonPolices: BunPlugin = {
   name: "auto-polices",

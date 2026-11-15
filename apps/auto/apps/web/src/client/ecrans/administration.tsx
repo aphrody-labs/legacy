@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bouton, Lien, useTitrePage } from "@auto/ui/react";
+import { date, t } from "../i18n";
 interface Agent {
   id: string;
   nom: string;
@@ -15,11 +16,11 @@ async function api<T>(path: string, method = "GET", body?: unknown): Promise<T> 
   });
   if (r.status === 204) return null as T;
   const data = await r.json();
-  if (!r.ok) throw Error(data.erreur ?? "Accès refusé");
+  if (!r.ok) throw Error(data.erreur ?? t("admin.denied"));
   return data;
 }
 export function Administration() {
-  useTitrePage("Administration Auto");
+  useTitrePage(t("admin.title"));
   const [agents, setAgents] = useState<Agent[]>([]),
     [erreur, setErreur] = useState(""),
     [token, setToken] = useState(""),
@@ -55,18 +56,15 @@ export function Administration() {
     <main className="courrier-app">
       <header className="courrier-entete">
         <div>
-          <Lien href="/app/courrier">← Ma boîte unifiée</Lien>
-          <h1>Administration Auto</h1>
-          <p>Compte super-administrateur et accès nominatifs des agents.</p>
+          <Lien href="/app/courrier">{t("admin.back")}</Lien>
+          <h1>{t("admin.title")}</h1>
+          <p>{t("admin.intro")}</p>
         </div>
       </header>
       {erreur && <p role="alert">{erreur}</p>}
       <section className="courrier-lecture">
-        <h2>Agents administrateurs</h2>
-        <p>
-          Chaque clé admin est révocable séparément, expire au bout d’un an et ne donne pas accès aux boîtes mail
-          privées.
-        </p>
+        <h2>{t("admin.agents.title")}</h2>
+        <p>{t("admin.agents.text")}</p>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -78,17 +76,17 @@ export function Administration() {
           }}
         >
           <label>
-            Nom de l’agent
+            {t("admin.agent_name")}
             <input value={nom} onChange={(e) => setNom(e.target.value)} required maxLength={100} />
           </label>
           <Bouton type="submit" disabled={occupe || !nom.trim()}>
-            Créer une clé agent
+            {t("admin.create_key")}
           </Bouton>
         </form>
         {token && (
           <div role="status">
             <label>
-              Clé affichée une seule fois
+              {t("admin.key_once")}
               <input
                 readOnly
                 value={token}
@@ -97,17 +95,17 @@ export function Administration() {
                 spellCheck={false}
               />
             </label>
-            <Bouton onClick={() => setToken("")}>Masquer la clé</Bouton>
+            <Bouton onClick={() => setToken("")}>{t("admin.hide_key")}</Bouton>
           </div>
         )}
         <ul>
           {agents.map((a) => (
             <li key={a.id}>
-              <strong>{a.nom}</strong> · {a.actif ? "Actif" : "Révoqué"} · Expire le{" "}
-              {new Date(a.expire_at).toLocaleDateString("fr-FR")}{" "}
+              <strong>{a.nom}</strong> · {a.actif ? t("admin.active") : t("admin.revoked")} ·{" "}
+              {t("admin.expires", { date: date(a.expire_at, { dateStyle: "short" }) })}{" "}
               {a.actif && (
                 <Bouton disabled={occupe} onClick={() => agir(() => api(`/agents/${a.id}`, "DELETE"))}>
-                  Révoquer
+                  {t("admin.revoke")}
                 </Bouton>
               )}
             </li>

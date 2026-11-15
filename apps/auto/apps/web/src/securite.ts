@@ -1,9 +1,9 @@
-// En-têtes de sécurité des pages HTML (CSP avec point de rapport), plan du site, robots.txt et security.txt.
-// La CSP autorise les scripts du site ('self') et les scripts en ligne par leur empreinte SHA-256, calculée sur le
-// HTML réellement servi (construction.tsx en production). Les violations sont reçues par /csp-rapport.
+// Security headers of the HTML pages (CSP with a report endpoint), sitemap, robots.txt and security.txt.
+// The CSP allows the site scripts ('self') and inline scripts by their SHA-256 hash, computed on the HTML actually
+// served (construction.tsx in production). Violations are received on /csp-rapport.
 
 export const ORIGINE = "https://auto.aphrody.com";
-/** Pages publiques indexables (les autres sont `noindex` : application, devis et factures partagés). */
+/** Indexable public pages (the others are `noindex`: application, shared quotes and invoices). */
 export const PAGES_PUBLIQUES = ["/", "/tarifs", "/telechargements", "/mentions-legales", "/confidentialite"] as const;
 
 export const PLAN_DU_SITE = `<?xml version="1.0" encoding="UTF-8"?>
@@ -18,7 +18,7 @@ Allow: /
 Sitemap: ${ORIGINE}/sitemap.xml
 `;
 
-/** RFC 9116 : expiration glissante de 180 jours à partir du démarrage (le fichier ne périme pas entre deux livraisons). */
+/** RFC 9116: rolling 180-day expiry from startup (the file does not go stale between two deliveries). */
 export function securityTxt(maintenant = new Date()): string {
   const expire = new Date(maintenant.getTime() + 180 * 86_400_000);
   expire.setUTCHours(0, 0, 0, 0);
@@ -43,7 +43,7 @@ export function routesReferencement() {
   };
 }
 
-/** Empreintes `'sha256-…'` des éléments en ligne `<script>` (sans `src`) ou `<style>` d'une page. */
+/** `'sha256-…'` hashes of the inline `<script>` (without `src`) or `<style>` elements of a page. */
 const BALISES = {
   script: /<script\b([^>]*)>([\s\S]*?)<\/script>/gi,
   style: /<style\b([^>]*)>([\s\S]*?)<\/style>/gi,
@@ -62,9 +62,9 @@ export const empreintesStyles = (html: string) => empreintes(html, "style");
 export const POINT_RAPPORT = "/csp-rapport";
 
 /**
- * En-têtes de sécurité d'une page HTML. Politique appliquée : `default-src 'self'`, scripts par empreinte, styles
- * en ligne tolérés (attributs `style` et éléments injectés par les composants). Politique observée (`Report-Only`) :
- * styles par empreinte uniquement et `form-action 'self'`, pour mesurer avant de durcir.
+ * Security headers of an HTML page. Enforced policy: `default-src 'self'`, scripts by hash, inline styles tolerated
+ * (`style` attributes and elements injected by components). Observed policy (`Report-Only`): styles by hash only and
+ * `form-action 'self'`, to measure before hardening.
  */
 export function entetesSecurite(html: string): Record<string, string> {
   const scripts = ["'self'", ...empreintesScripts(html)].join(" ");
@@ -93,7 +93,7 @@ export function entetesSecurite(html: string): Record<string, string> {
     ].join("; "),
     "reporting-endpoints": `csp="${POINT_RAPPORT}"`,
     "x-frame-options": "DENY",
-    // Aucune fenêtre surgissante (connexions Google/Microsoft et Stripe par redirection) : isolement complet.
+    // No popup window (Google/Microsoft and Stripe sign-ins use redirects): full isolation.
     "cross-origin-opener-policy": "same-origin",
     "cross-origin-resource-policy": "same-origin",
     "x-content-type-options": "nosniff",
@@ -102,7 +102,7 @@ export function entetesSecurite(html: string): Record<string, string> {
   };
 }
 
-/** Page HTML servie depuis la mémoire, avec ETag et en-têtes de sécurité. */
+/** HTML page served from memory, with ETag and security headers. */
 export function reponsePage(req: Request, corps: string): Response {
   const etag = `"${new Bun.CryptoHasher("sha256").update(corps).digest("hex").slice(0, 16)}"`;
   const entetes = { ...entetesSecurite(corps), etag, "cache-control": "no-cache" };
@@ -111,9 +111,9 @@ export function reponsePage(req: Request, corps: string): Response {
 }
 
 /**
- * `POST /csp-rapport` : rapports CSP (`application/reports+json` de Reporting API ou `application/csp-report`).
- * Journalise une ligne par violation (directive, origine bloquée, chemin du document sans requête), sans adresse
- * IP, en-têtes ni contenu ; rien n'est stocké. Débit limité à `limite` lignes par minute pour tout le serveur.
+ * `POST /csp-rapport`: CSP reports (`application/reports+json` of the Reporting API or `application/csp-report`).
+ * Logs one line per violation (directive, blocked origin, document path without query), without IP address,
+ * headers or content; nothing is stored. Rate limited to `limite` lines per minute for the whole server.
  */
 export function routeRapportCsp(limite = 30, journal: (ligne: string) => void = console.warn) {
   let fenetre = 0;
@@ -159,9 +159,9 @@ export function routeRapportCsp(limite = 30, journal: (ligne: string) => void = 
         if (!c || compte >= limite) continue;
         compte++;
         journal(
-          `csp ${r?.type === "csp-violation" || r?.["csp-report"] ? "violation" : "rapport"} ` +
+          `csp ${r?.type === "csp-violation" || r?.["csp-report"] ? "violation" : "report"} ` +
             `directive=${String(c.effectiveDirective ?? c["effective-directive"] ?? c["violated-directive"] ?? "").slice(0, 40)} ` +
-            `bloque=${reduire(c.blockedURL ?? c["blocked-uri"])} ` +
+            `blocked=${reduire(c.blockedURL ?? c["blocked-uri"])} ` +
             `document=${chemin(c.documentURL ?? c["document-uri"])} ` +
             `mode=${String(c.disposition ?? "").slice(0, 12)}`,
         );

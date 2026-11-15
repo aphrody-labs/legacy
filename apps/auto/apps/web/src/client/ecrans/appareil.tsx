@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Bouton, Lien, naviguer, useTitrePage } from "@auto/ui/react";
 import { authClient } from "../auth";
+import { t } from "../i18n";
+import { rich } from "../rich";
 
 interface Demande {
   device_code: string;
@@ -24,7 +26,7 @@ async function requete(path: string, body: unknown, signal?: AbortSignal) {
 export const dansApplicationNative = () =>
   typeof window !== "undefined" && (window as Window & { __AUTO_NATIVE__?: boolean }).__AUTO_NATIVE__ === true;
 
-/** RFC8628 : le secret appareil reste en mémoire ; le serveur pose le cookie HttpOnly après validation. */
+/** RFC 8628: the device secret stays in memory; the server sets the HttpOnly cookie after validation. */
 export function ConnexionAppareil({ onSession, retour }: { onSession: () => Promise<void> | void; retour: string }) {
   const [demande, setDemande] = useState<Demande | null>(null),
     [erreur, setErreur] = useState(""),
@@ -39,7 +41,7 @@ export function ConnexionAppareil({ onSession, retour }: { onSession: () => Prom
     const poll = async () => {
       if (!actif) return;
       if (Date.now() >= demande.expire) {
-        setMessage("Code expiré. Lancez une nouvelle connexion.");
+        setMessage(t("device.code_expired"));
         setDemande(null);
         return;
       }
@@ -64,17 +66,13 @@ export function ConnexionAppareil({ onSession, retour }: { onSession: () => Prom
         const b = (await r.json()) as { error?: string };
         if (b.error === "slow_down") intervalle += 5000;
         else if (b.error !== "authorization_pending") {
-          setErreur(
-            b.error === "access_denied"
-              ? "Connexion refusée dans le navigateur."
-              : "Ce code n’est plus utilisable. Relancez la connexion.",
-          );
+          setErreur(b.error === "access_denied" ? t("device.denied") : t("device.unusable"));
           setDemande(null);
           return;
         }
       } catch {
         if (!actif) return;
-        setMessage("Connexion au serveur interrompue, nouvel essai en cours.");
+        setMessage(t("device.retrying"));
       }
       if (actif) timer = setTimeout(poll, intervalle);
     };
@@ -91,7 +89,7 @@ export function ConnexionAppareil({ onSession, retour }: { onSession: () => Prom
     setMessage("");
     try {
       const r = await requete("/code", { client_id: "auto-native" });
-      if (!r.ok) throw Error("Impossible de préparer la connexion.");
+      if (!r.ok) throw Error(t("device.prepare_failed"));
       const b = (await r.json()) as Omit<Demande, "expire">;
       const u = new URL(b.verification_uri_complete);
       if (
@@ -103,9 +101,9 @@ export function ConnexionAppareil({ onSession, retour }: { onSession: () => Prom
         b.expires_in <= 0 ||
         !Number.isFinite(b.interval)
       )
-        throw Error("Adresse de validation invalide.");
+        throw Error(t("device.invalid_url"));
       setDemande({ ...b, expire: Date.now() + Math.min(600, b.expires_in) * 1000 });
-      setMessage("Validez le même code dans votre navigateur. Cette fenêtre attend votre accord.");
+      setMessage(t("device.validate_here"));
     } catch (e) {
       setErreur((e as Error).message);
     } finally {
@@ -113,28 +111,28 @@ export function ConnexionAppareil({ onSession, retour }: { onSession: () => Prom
     }
   }
   return (
-    <section className="grille" aria-label="Connexion avec le navigateur">
+    <section className="grille" aria-label={t("device.browser_signin")}>
       {erreur && <p role="alert">{erreur}</p>}
       {message && <p role="status">{message}</p>}
       {demande ? (
         <>
           <p>
-            Votre code : <strong className="chiffres">{formatCode(demande.user_code)}</strong>
+            {rich("device.your_code", { code: <strong className="chiffres">{formatCode(demande.user_code)}</strong> })}
           </p>
-          <Bouton onClick={() => location.assign(demande.verification_uri_complete)}>Ouvrir le navigateur</Bouton>
+          <Bouton onClick={() => location.assign(demande.verification_uri_complete)}>{t("device.open_browser")}</Bouton>
           <Bouton
             variante="fantome"
             onClick={() => {
               setDemande(null);
-              setMessage("Connexion annulée sur cet appareil.");
+              setMessage(t("device.cancelled"));
             }}
           >
-            Annuler cette connexion
+            {t("device.cancel")}
           </Bouton>
         </>
       ) : (
         <Bouton disabled={chargement} onClick={commencer}>
-          Se connecter avec le navigateur
+          {t("device.signin_button")}
         </Bouton>
       )}
     </section>
@@ -142,7 +140,7 @@ export function ConnexionAppareil({ onSession, retour }: { onSession: () => Prom
 }
 
 export function VerificationAppareil() {
-  useTitrePage("Valider un appareil");
+  useTitrePage(t("device.verify_title"));
   const code = new URLSearchParams(location.search).get("user_code") ?? "";
   const [email, setEmail] = useState(""),
     [etat, setEtat] = useState("chargement"),
@@ -151,7 +149,7 @@ export function VerificationAppareil() {
   useEffect(() => {
     let actif = true;
     if (!/^[a-z0-9-]{4,32}$/i.test(code)) {
-      setErreur("Code d’appareil invalide.");
+      setErreur(t("device.bad_code"));
       setEtat("erreur");
       return;
     }
@@ -161,10 +159,10 @@ export function VerificationAppareil() {
     ])
       .then(async ([s, r]) => {
         if (!actif) return;
-        if (!s.data) throw Error("Connectez-vous avant de valider cet appareil.");
-        if (!r.ok) throw Error("Code inconnu ou expiré.");
+        if (!s.data) throw Error(t("device.sign_in_first"));
+        if (!r.ok) throw Error(t("device.unknown_code"));
         const b = (await r.json()) as { client_id?: string; status?: string };
-        if (b.client_id !== "auto-native") throw Error("Application non reconnue.");
+        if (b.client_id !== "auto-native") throw Error(t("device.unknown_app"));
         setEmail(s.data.user.email);
         setEtat(b.status ?? "pending");
       })
@@ -183,7 +181,7 @@ export function VerificationAppareil() {
     setErreur("");
     try {
       const r = await requete(accord ? "/approve" : "/deny", { userCode: code });
-      if (!r.ok) throw Error("La validation a échoué. Vérifiez le code et réessayez.");
+      if (!r.ok) throw Error(t("device.validation_failed"));
       setEtat(accord ? "approved" : "denied");
     } catch (e) {
       setErreur((e as Error).message);
@@ -194,34 +192,32 @@ export function VerificationAppareil() {
   return (
     <main className="courrier-app">
       <Lien href="/app/courrier">auto · Aphrody</Lien>
-      <h1>Connexion à Auto sur un appareil</h1>
+      <h1>{t("device.heading")}</h1>
       {erreur && <p role="alert">{erreur}</p>}
       {etat === "chargement" ? (
-        <p>Vérification du code…</p>
+        <p>{t("device.checking")}</p>
       ) : etat === "pending" ? (
         <section className="courrier-lecture">
-          <h2>Auto natif · Windows / Android</h2>
-          <p>
-            Compte : <strong>{email}</strong>
-          </p>
-          <p>Confirmez que ce code est affiché dans votre application Auto :</p>
+          <h2>{t("device.native")}</h2>
+          <p>{rich("device.account", { email: <strong>{email}</strong> })}</p>
+          <p>{t("device.confirm")}</p>
           <p className="chiffres">
             <strong>{formatCode(code)}</strong>
           </p>
-          <p>Votre accord ouvre une session sur cet appareil.</p>
+          <p>{t("device.consent")}</p>
           <div className="courrier-actions">
             <Bouton disabled={occupe} onClick={() => decider(true)}>
-              Autoriser cet appareil
+              {t("device.authorize")}
             </Bouton>
             <Bouton disabled={occupe} variante="fantome" onClick={() => decider(false)}>
-              Refuser
+              {t("device.refuse")}
             </Bouton>
           </div>
         </section>
       ) : etat === "approved" ? (
-        <p role="status">Appareil autorisé. Vous pouvez revenir dans l’application Auto.</p>
+        <p role="status">{t("device.approved")}</p>
       ) : etat === "denied" ? (
-        <p role="status">Connexion refusée.</p>
+        <p role="status">{t("device.refused")}</p>
       ) : null}
     </main>
   );

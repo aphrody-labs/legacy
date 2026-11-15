@@ -1,11 +1,12 @@
-// Construction de production du front, en mémoire au démarrage du serveur : `Bun.build` des pages HTML avec
-// découpage du code (`splitting`, impossible avec les imports HTML de `Bun.serve`), puis pour l'accueil :
-// prérendu React au build (contenu et <h1> avant JavaScript ; seul le script des îlots part au navigateur) et CSS incorporée
-// (pas de feuille bloquante à télécharger). En développement, serveur.ts garde les imports HTML et le HMR.
+// Production build of the front, in memory at server start: `Bun.build` of the HTML pages with code splitting
+// (impossible with the HTML imports of `Bun.serve`), then for the landing page: build-time React prerender (content and
+// <h1> before JavaScript; only the islands script ships to the browser) and inlined CSS (no blocking stylesheet).
+// Every page is then localized once per shipped locale. In development, serveur.ts keeps the HTML imports and HMR.
 import type { BunPlugin } from "bun";
 import { renderToString } from "react-dom/server";
 import { greffonPolices } from "./polices";
-import { LOCALES, SOURCE_LOCALE, createTranslator } from "@auto/i18n";
+import { SOURCE_LOCALE } from "@auto/i18n";
+import { LANGUES, traducteur } from "./i18n";
 import { Accueil } from "./site/accueil";
 
 export const PAGES = {
@@ -25,46 +26,60 @@ export interface Ressource {
   type: string;
 }
 export interface Site {
+  /** Pages in the source locale. */
   pages: Record<NomPage, string>;
   /** Prerendered landing page per shipped locale (one catalog = one entry); `pages.accueil` is the source-locale one. */
   accueil: Record<string, string>;
-  /** Fichiers à empreinte (`/chunk-….js`, `/chunk-….css`…), servis en cache immuable. */
+  /** Every other page per shipped locale: `localisees[locale][page]`. */
+  localisees: Record<string, Record<NomPage, string>>;
+  /** Hashed files (`/chunk-….js`, `/chunk-….css`…), served with an immutable cache. */
   ressources: Map<string, Ressource>;
 }
 
 const RACINE = /<div id="racine">[\s\S]*?<\/div>/;
 const SCRIPT_MODULE = /<script type="module"[^>]*src="\/[^"]+\.js"[^>]*><\/script>/;
 
+const echapper = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
 /**
- * Accueil : contenu React prérendu dans #racine, CSS en ligne (aucune feuille bloquante) et, à la place du bundle
- * React, le seul script des îlots (`script`, chemin à empreinte).
+ * Replace the `%%key%%` tokens of a page template with the catalog text of the locale (HTML-escaped), `%%html:key%%`
+ * with the catalog markup as is (authored text only), and set the `lang` attribute of the document.
  */
-/** Replace the `%%key%%` tokens of a page template with the catalog text (HTML-escaped) of the locale. */
 export function localiserTete(html: string, locale: string): string {
-  const t = createTranslator(locale);
-  const echapper = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-  return html.replace(/%%([\w.:]+)%%/g, (_, cle: string) =>
-    cle === "og:locale" ? new Intl.Locale(t.locale).maximize().toString().replace("-", "_") : echapper(t.t(cle)),
-  );
+  const t = traducteur(locale);
+  return html
+    .replace(/%%(html:)?([\w.:]+)%%/g, (_, brut: string | undefined, cle: string) =>
+      cle === "og:locale"
+        ? new Intl.Locale(t.locale).maximize().toString().replace("-", "_")
+        : brut
+          ? t.t(cle)
+          : echapper(t.t(cle)),
+    )
+    .replace(/<html lang="[^"]*"/, () => `<html lang="${t.locale}"`);
 }
 
+/**
+ * Landing page: React content prerendered in #racine, CSS inlined (no blocking stylesheet) and, instead of the React
+ * bundle, only the islands script (`script`, hashed path).
+ */
 export function finaliserAccueil(
   html: string,
   ressources: Map<string, Ressource>,
   script: string,
   locale?: string,
 ): string {
-  if (!RACINE.test(html)) throw new Error("index.html : #racine introuvable");
-  if (!SCRIPT_MODULE.test(html)) throw new Error("index.html : script de la vitrine introuvable");
+  if (!RACINE.test(html)) throw new Error("index.html: #racine not found");
+  if (!SCRIPT_MODULE.test(html)) throw new Error("index.html: showcase script not found");
   const contenu = renderToString(<Accueil locale={locale} />);
-  let sortie = (
-    locale ? localiserTete(html, locale).replace(/<html lang="[^"]*"/, () => `<html lang="${locale}"`) : html
-  ).replace(RACINE, () => `<div id="racine" data-prerendu>${contenu}</div>`);
+  let sortie = (locale ? localiserTete(html, locale) : html).replace(
+    RACINE,
+    () => `<div id="racine" data-prerendu>${contenu}</div>`,
+  );
   sortie = sortie.replace(SCRIPT_MODULE, () => `<script type="module" crossorigin src="${script}"></script>`);
   return incorporerCss(sortie, ressources);
 }
 
-/** Feuilles du site remplacées par leur contenu en `<style>` : rien ne bloque le premier rendu. */
+/** Site stylesheets replaced by their content in a `<style>`: nothing blocks the first render. */
 export function incorporerCss(html: string, ressources: Map<string, Ressource>): string {
   return html.replace(/<link rel="stylesheet"[^>]*href="(\/[^"]+\.css)"[^>]*>/g, (lien, href: string) => {
     const css = ressources.get(href);
@@ -76,7 +91,7 @@ export function incorporerCss(html: string, ressources: Map<string, Ressource>):
 
 export async function construireSite(): Promise<Site> {
   const dossier = Bun.fileURLToPath(new URL("../public/", import.meta.url));
-  // Même greffon que bunfig `[serve.static]` ; chargé dynamiquement pour que `bun check` ne vérifie pas ses sources.
+  // Same plugin as bunfig `[serve.static]`; loaded dynamically so `bun check` does not typecheck its sources.
   const paquet = "@aphrody/bun-plugin-tailwind";
   const tailwind = ((await import(paquet)) as { default: BunPlugin }).default;
   const options: Omit<Bun.BuildConfig, "entrypoints"> = {
@@ -87,8 +102,8 @@ export async function construireSite(): Promise<Site> {
     plugins: [tailwind, greffonPolices],
     define: { "process.env.NODE_ENV": JSON.stringify("production") },
   };
-  // Une construction par page : l'accueil ne reçoit pas le morceau partagé avec l'application (React plus le code
-  // commun de toutes les pages), seulement ce qu'il importe. Les noms à empreinte de contenu ne se chevauchent pas.
+  // One build per page: the landing page does not get the chunk shared with the application (React plus the common
+  // code of every page), only what it imports. Content-hashed names do not overlap.
   const [ilots, ...resultats] = await Promise.all([
     Bun.build({
       ...options,
@@ -101,7 +116,7 @@ export async function construireSite(): Promise<Site> {
   const html = new Map<string, string>();
   let scriptIlots = "";
   for (const resultat of [ilots!, ...resultats]) {
-    if (!resultat.success) throw new AggregateError(resultat.logs, "Construction du front en échec");
+    if (!resultat.success) throw new AggregateError(resultat.logs, "Front build failed");
     for (const sortie of resultat.outputs) {
       const nom = sortie.path.replace(/^.*[\\/]/, "");
       if (nom.endsWith(".html")) html.set(nom, await sortie.text());
@@ -109,21 +124,28 @@ export async function construireSite(): Promise<Site> {
       if (resultat === ilots && sortie.kind === "entry-point") scriptIlots = `/${nom}`;
     }
   }
-  if (!scriptIlots) throw new Error("Script des îlots absent de la construction");
-  const pages = {} as Record<NomPage, string>;
+  if (!scriptIlots) throw new Error("Islands script missing from the build");
+  const modele = {} as Record<NomPage, string>;
   for (const [nom, fichier] of Object.entries(PAGES) as [NomPage, string][]) {
     const page = html.get(fichier);
-    if (!page) throw new Error(`Page absente de la construction : ${fichier}`);
-    // Accueil prérendu ; application (connexion comprise) avec sa CSS en ligne : aucune feuille bloquante.
-    pages[nom] =
-      nom === "accueil"
-        ? finaliserAccueil(page, ressources, scriptIlots, SOURCE_LOCALE)
-        : nom === "app"
-          ? incorporerCss(page, ressources)
-          : page;
+    if (!page) throw new Error(`Page missing from the build: ${fichier}`);
+    // Application (sign-in included) with its CSS inlined: no blocking stylesheet.
+    modele[nom] = nom === "app" ? incorporerCss(page, ressources) : page;
   }
-  const accueil = Object.fromEntries(
-    LOCALES.map((l) => [l, finaliserAccueil(html.get(PAGES.accueil)!, ressources, scriptIlots, l)]),
-  );
-  return { pages, accueil, ressources };
+  const localiser = (locale: string) =>
+    Object.fromEntries(
+      (Object.keys(PAGES) as NomPage[]).map((nom) => [
+        nom,
+        nom === "accueil"
+          ? finaliserAccueil(modele.accueil, ressources, scriptIlots, locale)
+          : localiserTete(modele[nom], locale),
+      ]),
+    ) as Record<NomPage, string>;
+  const localisees = Object.fromEntries(LANGUES.map((l) => [l, localiser(l)]));
+  return {
+    pages: localisees[SOURCE_LOCALE] ?? localiser(SOURCE_LOCALE),
+    accueil: Object.fromEntries(LANGUES.map((l) => [l, localisees[l]!.accueil])),
+    localisees,
+    ressources,
+  };
 }

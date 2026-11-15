@@ -5,6 +5,7 @@ import { aujourdhui, dateFr, eur, indicateurs, moisFr, nombre } from "@auto/ui/f
 import { useSession } from "../session";
 import { EtatChargement, EtatErreur, EtatVide, Lien, useDonnees, useTitrePage } from "@auto/ui/react";
 import { TableauDocuments } from "./liste";
+import { t } from "../i18n";
 
 function Kpi({
   icone: Icone,
@@ -30,7 +31,7 @@ function Kpi({
 }
 
 export function TableauDeBord() {
-  useTitrePage("Tableau de bord");
+  useTitrePage(t("dashboard.title"));
   const { moi } = useSession();
   const jour = aujourdhui();
   const d = useDonnees(async () => {
@@ -43,16 +44,14 @@ export function TableauDeBord() {
   else if (d.etat === "erreur") corps = <EtatErreur message={d.erreur} onReessayer={d.recharger} />;
   else if (d.donnees.docs.length === 0)
     corps = (
-      <EtatVide icone={ReceiptText} titre="Créez votre premier devis">
-        <p>
-          Un devis accepté se transforme en facture en un clic ; les indicateurs apparaissent dès la première émission.
-        </p>
+      <EtatVide icone={ReceiptText} titre={t("dashboard.first_quote")}>
+        <p>{t("dashboard.first_quote_text")}</p>
         <div className="rangee">
           <Lien className="bouton bouton-primaire" href="/app/documents/nouveau?type=devis">
-            Créer un devis
+            {t("dashboard.create_quote")}
           </Lien>
           <Lien className="bouton" href="/app/documents/nouveau?type=facture">
-            Créer une facture
+            {t("dashboard.create_invoice")}
           </Lien>
         </div>
       </EtatVide>
@@ -71,64 +70,64 @@ export function TableauDeBord() {
         <div className="kpis">
           <Kpi
             icone={BadgeEuro}
-            libelle={`Chiffre d'affaires HT, ${moisFr(jour)}`}
+            libelle={t("dashboard.kpi.revenue", { month: moisFr(jour) })}
             valeur={eur(k.caMoisHtCents)}
-            detail="Factures et acomptes émis, avoirs déduits"
+            detail={t("dashboard.kpi.revenue_detail")}
           />
           <Kpi
             icone={Landmark}
-            libelle="Impayés"
+            libelle={t("dashboard.kpi.unpaid")}
             valeur={eur(k.impayesCents)}
-            detail={`${nombre(k.impayes)} ${k.impayes > 1 ? "factures" : "facture"} à encaisser`}
+            detail={t("dashboard.kpi.unpaid_detail", { count: k.impayes })}
           />
           <Kpi
             icone={ClockAlert}
-            libelle="En retard"
+            libelle={t("dashboard.kpi.late")}
             valeur={eur(k.enRetardCents)}
-            detail={`${nombre(k.enRetard)} ${k.enRetard > 1 ? "factures échues" : "facture échue"}`}
+            detail={t("dashboard.kpi.late_detail", { count: k.enRetard })}
           />
           <Kpi
             icone={Percent}
-            libelle={`TVA collectée, ${moisFr(jour)}`}
+            libelle={t("dashboard.kpi.vat", { month: moisFr(jour) })}
             valeur={eur(k.tvaMoisCents)}
-            detail={moi.entreprise.franchiseTva ? "Franchise en base de TVA" : "Avoirs déduits"}
+            detail={moi.entreprise.franchiseTva ? t("dashboard.kpi.vat_franchise") : t("dashboard.kpi.vat_detail")}
           />
         </div>
 
         <section className="carte pile-serree" aria-labelledby="a-relancer">
-          <h2 id="a-relancer">À relancer</h2>
+          <h2 id="a-relancer">{t("dashboard.reminders")}</h2>
           {relances.length === 0 ? (
-            <p className="attenue">Aucune facture échue à relancer aujourd'hui.</p>
+            <p className="attenue">{t("dashboard.reminders_none")}</p>
           ) : (
             <div className="tableau-conteneur">
               <table className="tableau">
                 <thead>
                   <tr>
-                    <th scope="col">Numéro</th>
-                    <th scope="col">Client</th>
-                    <th scope="col">Échéance</th>
+                    <th scope="col">{t("col.number")}</th>
+                    <th scope="col">{t("col.customer")}</th>
+                    <th scope="col">{t("col.due")}</th>
                     <th scope="col" className="num">
-                      Retard
+                      {t("dashboard.col.delay")}
                     </th>
                     <th scope="col" className="num">
-                      Reste dû
+                      {t("dashboard.col.balance")}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {relances.map((r) => (
                     <tr key={r.documentId}>
-                      <td data-libelle="Numéro">
+                      <td data-libelle={t("col.number")}>
                         <Lien href={`/app/documents/${r.documentId}`}>{r.numero}</Lien>
                       </td>
-                      <td data-libelle="Client">{r.client.nom}</td>
-                      <td data-libelle="Échéance" className="num">
+                      <td data-libelle={t("col.customer")}>{r.client.nom}</td>
+                      <td data-libelle={t("col.due")} className="num">
                         {dateFr(r.echeance)}
                       </td>
-                      <td data-libelle="Retard" className="num">
-                        {nombre(r.joursRetard)} j, palier {r.niveau}
+                      <td data-libelle={t("dashboard.col.delay")} className="num">
+                        {t("dashboard.late_days", { days: r.joursRetard, level: r.niveau })}
                       </td>
-                      <td data-libelle="Reste dû" className="num">
+                      <td data-libelle={t("dashboard.col.balance")} className="num">
                         {eur(r.resteCents)}
                       </td>
                     </tr>
@@ -141,7 +140,7 @@ export function TableauDeBord() {
 
         {brouillons.length > 0 && (
           <section className="pile-serree" aria-labelledby="brouillons">
-            <h2 id="brouillons">Brouillons à terminer</h2>
+            <h2 id="brouillons">{t("dashboard.drafts")}</h2>
             <TableauDocuments docs={brouillons} jour={jour} />
           </section>
         )}
@@ -152,10 +151,10 @@ export function TableauDeBord() {
   return (
     <div className="page">
       <div className="page-entete">
-        <h1>Tableau de bord</h1>
+        <h1>{t("dashboard.title")}</h1>
         <Lien className="bouton bouton-primaire" href="/app/documents/nouveau?type=facture">
           <FilePlus2 className="icone" aria-hidden="true" />
-          Nouvelle facture
+          {t("dashboard.new_invoice")}
         </Lien>
       </div>
       {corps}

@@ -1,4 +1,5 @@
 import { resolve } from "node:path";
+import { langueDemandee, texte, traducteur } from "./i18n";
 export interface ManifesteCraft {
   schema: number;
   version: string;
@@ -29,18 +30,15 @@ export function ressourcesCraft(publicDir?: string) {
       .json()
       .catch(() => null));
   return {
-    "/craft/manifest.json": async () => {
+    "/craft/manifest.json": async (req: Request) => {
       const m = await lire();
       return m
         ? Response.json(m, { headers: { "cache-control": "no-cache" } })
-        : Response.json(
-            { erreur: "Les éditeurs Craft ne sont pas installés dans cette distribution." },
-            { status: 503 },
-          );
+        : Response.json({ erreur: traducteur(langueDemandee(req)).t("server.craft_unavailable") }, { status: 503 });
     },
     "/craft/*": async (req: Request) => {
       const m = await lire();
-      if (!m) return new Response("Éditeurs Craft non installés", { status: 503 });
+      if (!m) return texte(req, "server.craft_unavailable", 503);
       let parties: string[];
       try {
         parties = new URL(req.url).pathname.slice("/craft/".length).split("/").map(decodeURIComponent);

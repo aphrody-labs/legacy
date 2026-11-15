@@ -16,29 +16,19 @@ import {
   useTitrePage,
   useToast,
 } from "@auto/ui/react";
+import { t } from "../i18n";
 
 type Filtre = Recue["statut"] | "toutes";
 const FILTRES: Filtre[] = ["a_verifier", "validee", "rejetee", "toutes"];
-const LIBELLE_FILTRE: Record<Filtre, string> = {
-  a_verifier: "À vérifier",
-  validee: "Validées",
-  rejetee: "Rejetées",
-  toutes: "Toutes",
-};
-const STATUT: Record<Recue["statut"], { visuel: StatutVisuel; libelle: string }> = {
-  a_verifier: { visuel: "envoye", libelle: "À vérifier" },
-  validee: { visuel: "accepte", libelle: "Validée" },
-  rejetee: { visuel: "refuse", libelle: "Rejetée" },
-};
-const CANAL: Record<Recue["canal"], string> = {
-  api: "Extension",
-  mail: "E-mail",
-  pa: "Plateforme",
+const STATUT: Record<Recue["statut"], StatutVisuel> = {
+  a_verifier: "envoye",
+  validee: "accepte",
+  rejetee: "refuse",
 };
 
-/** Factures fournisseurs reçues (extension Chrome, e-mail, plateforme) : vérification puis validation ou rejet. */
+/** Received supplier invoices (Chrome extension, email, platform): check, then approve or reject. */
 export function FacturesRecues() {
-  useTitrePage("Factures reçues");
+  useTitrePage(t("received.title"));
   const { moi } = useSession();
   const toast = useToast();
   const [filtre, setFiltre] = useState<Filtre>("a_verifier");
@@ -51,7 +41,7 @@ export function FacturesRecues() {
     setErreur(null);
     try {
       await api.deciderRecue(r.id, statut);
-      toast(`Facture ${r.numero ?? ""} ${statut === "validee" ? "validée" : "rejetée"}`.replace("  ", " "));
+      toast(r.numero ? t(`received.toast.${statut}`, { number: r.numero }) : t(`received.toast.${statut}_anon`));
       d.recharger();
     } catch (x) {
       setErreur(x as ErreurApi);
@@ -63,11 +53,8 @@ export function FacturesRecues() {
   else if (d.etat === "erreur") corps = <EtatErreur message={d.erreur} onReessayer={d.recharger} />;
   else if (d.donnees.length === 0)
     corps = (
-      <EtatVide icone={Inbox} titre={filtre === "a_verifier" ? "Aucune facture à vérifier" : "Aucune facture reçue"}>
-        <p>
-          Envoyez une facture fournisseur depuis l'extension Chrome (clic droit sur le lien) ou transférez-la à votre
-          boîte connectée.
-        </p>
+      <EtatVide icone={Inbox} titre={filtre === "a_verifier" ? t("received.empty_check") : t("received.empty")}>
+        <p>{t("received.empty_text")}</p>
       </EtatVide>
     );
   else
@@ -76,59 +63,58 @@ export function FacturesRecues() {
         <table className="tableau">
           <thead>
             <tr>
-              <th scope="col">Fournisseur</th>
-              <th scope="col">Numéro</th>
-              <th scope="col">Date</th>
-              <th scope="col">Échéance</th>
+              <th scope="col">{t("received.col.supplier")}</th>
+              <th scope="col">{t("col.number")}</th>
+              <th scope="col">{t("col.date")}</th>
+              <th scope="col">{t("col.due")}</th>
               <th scope="col" className="num">
-                TTC
+                {t("col.ttc")}
               </th>
-              <th scope="col">Reçue par</th>
-              <th scope="col">Statut</th>
+              <th scope="col">{t("received.col.received_by")}</th>
+              <th scope="col">{t("col.status")}</th>
               <th scope="col">
-                <span className="visuellement-cache">Actions</span>
+                <span className="visuellement-cache">{t("common.actions")}</span>
               </th>
             </tr>
           </thead>
           <tbody>
             {d.donnees.map((r) => (
               <tr key={r.id}>
-                <td data-libelle="Fournisseur" className="col-texte">
-                  {r.fournisseur ?? "Fournisseur non lu"}
+                <td data-libelle={t("received.col.supplier")} className="col-texte">
+                  {r.fournisseur ?? t("received.supplier_unread")}
                   {r.anomalies.length > 0 && (
                     <span className="aide">
                       <br />
-                      {r.anomalies.length === 1 ? "1 anomalie" : `${r.anomalies.length} anomalies`} :{" "}
-                      {r.anomalies.join(", ")}
+                      {t("received.anomalies", { count: r.anomalies.length })} : {r.anomalies.join(", ")}
                     </span>
                   )}
                 </td>
-                <td data-libelle="Numéro" className="chiffres">
+                <td data-libelle={t("col.number")} className="chiffres">
                   <a href={api.urlFichierRecu(r.id)} target="_blank" rel="noopener">
-                    {r.numero ?? "Ouvrir le fichier"}
+                    {r.numero ?? t("received.open_file")}
                   </a>
                 </td>
-                <td data-libelle="Date" className="num">
+                <td data-libelle={t("col.date")} className="num">
                   {dateFr(r.date) || "—"}
                 </td>
-                <td data-libelle="Échéance" className="num">
+                <td data-libelle={t("col.due")} className="num">
                   {dateFr(r.echeance) || "—"}
                 </td>
-                <td data-libelle="TTC" className="num">
+                <td data-libelle={t("col.ttc")} className="num">
                   {r.ttcCents === null ? "—" : eur(r.ttcCents)}
                 </td>
-                <td data-libelle="Reçue par">{CANAL[r.canal]}</td>
-                <td data-libelle="Statut">
-                  <BadgeStatut statut={STATUT[r.statut].visuel} libelle={STATUT[r.statut].libelle} />
+                <td data-libelle={t("received.col.received_by")}>{t(`received.channel.${r.canal}`)}</td>
+                <td data-libelle={t("col.status")}>
+                  <BadgeStatut statut={STATUT[r.statut]} libelle={t(`received.status.${r.statut}`)} />
                 </td>
-                <td data-libelle="Actions">
-                  {ecrire && <Bouton onClick={() => setClassement(r.id)}>Classer</Bouton>}
+                <td data-libelle={t("common.actions")}>
+                  {ecrire && <Bouton onClick={() => setClassement(r.id)}>{t("received.classify")}</Bouton>}
                   {ecrire && r.statut === "a_verifier" && (
                     <div className="rangee actions-ligne">
                       <Bouton variante="primaire" onClick={() => decider(r, "validee")}>
-                        Valider
+                        {t("received.approve")}
                       </Bouton>
-                      <Bouton onClick={() => decider(r, "rejetee")}>Rejeter</Bouton>
+                      <Bouton onClick={() => decider(r, "rejetee")}>{t("received.reject")}</Bouton>
                     </div>
                   )}
                 </td>
@@ -142,13 +128,13 @@ export function FacturesRecues() {
   return (
     <div className="page">
       <div className="page-entete">
-        <h1>Factures reçues</h1>
+        <h1>{t("received.title")}</h1>
       </div>
       <ResumeErreurs erreur={erreur} />
-      <div className="onglets" role="group" aria-label="Filtrer par statut">
+      <div className="onglets" role="group" aria-label={t("list.filter_label")}>
         {FILTRES.map((f) => (
           <button key={f} type="button" className="onglet" aria-pressed={filtre === f} onClick={() => setFiltre(f)}>
-            {LIBELLE_FILTRE[f]}
+            {t(`received.filter.${f}`)}
           </button>
         ))}
       </div>

@@ -1,9 +1,9 @@
-// Icônes SVG en ligne et images responsives (AVIF puis WebP, fichiers à empreinte en cache immuable) de la vitrine.
+// Inline SVG icons and responsive images (AVIF then WebP, hashed files with an immutable cache) of the showcase.
 import type { ImgHTMLAttributes } from "react";
 import { ICONES } from "./icones.gen";
 import { IMAGES } from "./images.gen";
 
-/** Icône décorative : boîte `.btp-icone` dimensionnée par la CSS (taille du glyphe = font-size), tracé en 1em. */
+/** Decorative icon: `.btp-icone` box sized by the CSS (glyph size = font-size), drawn at 1em. */
 export function Icone({ nom }: { nom: keyof typeof ICONES }) {
   return (
     <span className="btp-icone" aria-hidden="true">
@@ -17,10 +17,10 @@ export function Icone({ nom }: { nom: keyof typeof ICONES }) {
 const srcset = (variantes: readonly (readonly [string, number])[]) =>
   variantes.map(([u, l]) => `${u} ${l}w`).join(", ");
 
-/** `srcset` AVIF d'une image (aussi utilisé par le préchargement de index.html, vérifié par serveur.test.ts). */
+/** AVIF `srcset` of an image (also used by the index.html preload, checked by serveur.test.ts). */
 export const srcsetAvif = (nom: keyof typeof IMAGES) => srcset(IMAGES[nom].avif);
 
-/** `<picture>` AVIF/WebP aux dimensions intrinsèques de l'original (pas de décalage de mise en page). */
+/** `<picture>` AVIF/WebP at the intrinsic dimensions of the original (no layout shift). */
 export function Image({
   nom,
   sizes,

@@ -1,4 +1,5 @@
 import "./site";
+import { date, nombre, t } from "../client/i18n";
 import type { Catalogue, Distribution } from "../distributions";
 
 const liste = document.getElementById("distributions")!;
@@ -9,6 +10,13 @@ function texte<K extends keyof HTMLElementTagNameMap>(tag: K, contenu: string) {
   e.textContent = contenu;
   return e;
 }
+// Distribution types are manifest data (published by the release scripts); each maps to a catalog message.
+const DESCRIPTIONS: Record<Distribution["type"], string> = {
+  autonome: "downloads.type.standalone",
+  apk: "downloads.type.apk",
+  portable: "downloads.type.portable",
+  installateur: "downloads.type.installer",
+};
 function carte(a: Distribution) {
   const article = document.createElement("article");
   article.className = "distribution";
@@ -21,46 +29,32 @@ function carte(a: Distribution) {
   use.setAttribute("height", "24");
   use.setAttribute("href", "/icones/symboles.svg#FileDown");
   icon.append(use);
-  article.append(
-    icon,
-    texte("h3", a.nom),
-    texte(
-      "p",
-      `${a.architecture} · ${(a.octets / 1024 / 1024).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo`,
-    ),
-  );
-  const description =
-    a.type === "autonome"
-      ? "Serveur autonome : PostgreSQL et configuration nécessaires."
-      : a.type === "apk"
-        ? "APK Android : installation manuelle avec confirmation système."
-        : a.type === "portable"
-          ? "Version portable : décompressez le dossier complet avant le lancement."
-          : "Installateur de l’application connectée à votre instance Auto.";
-  article.append(texte("p", description));
-  const lien = texte("a", `Télécharger ${a.nom}`);
+  const taille = nombre(a.octets / 1024 / 1024, { style: "unit", unit: "megabyte", maximumFractionDigits: 1 });
+  article.append(icon, texte("h3", a.nom), texte("p", `${a.architecture} · ${taille}`));
+  article.append(texte("p", t(DESCRIPTIONS[a.type])));
+  const lien = texte("a", t("downloads.download", { name: a.nom }));
   lien.className = "bouton bouton-primaire";
   lien.href = `/downloads/${encodeURIComponent(a.fichier)}`;
   lien.download = a.fichier;
   article.append(lien);
   const details = document.createElement("details");
-  details.append(texte("summary", "Empreinte SHA-256"), texte("code", a.sha256));
+  details.append(texte("summary", t("downloads.fingerprint")), texte("code", a.sha256));
   article.append(details);
   return article;
 }
 try {
   const r = await fetch("/api/distributions", { cache: "no-cache" });
-  if (!r.ok) throw Error("catalogue");
+  if (!r.ok) throw Error("catalog");
   const c = (await r.json()) as Catalogue;
   if (!c.fichiers?.length) {
     liste.replaceChildren();
-    etat.textContent = "Les paquets sont en cours de publication. Auto reste disponible dans votre navigateur.";
+    etat.textContent = t("downloads.publishing");
   } else {
-    etat.textContent = `Version ${c.version} · publiée le ${new Date(c.date).toLocaleDateString("fr-FR")}`;
+    etat.textContent = t("downloads.version", { version: c.version, date: date(c.date) });
     liste.replaceChildren(...c.fichiers.map(carte));
     notes.textContent = c.notes ?? "";
   }
 } catch {
   liste.replaceChildren();
-  etat.textContent = "Le catalogue est momentanément indisponible. Vous pouvez utiliser Auto dans votre navigateur.";
+  etat.textContent = t("downloads.unavailable");
 }

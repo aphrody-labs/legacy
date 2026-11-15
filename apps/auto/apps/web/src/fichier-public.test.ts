@@ -1,7 +1,7 @@
 import { test, expect } from "bun:test";
 import { fichierPublic } from "./fichier-public";
 
-test("vidéo et téléchargements : HEAD, plages, suffixes, reprise et refus des plages multiples", async () => {
+test("video and downloads: HEAD, ranges, suffixes, resume and refusal of multiple ranges", async () => {
   const path = `${Bun.env.TEMP ?? "/tmp"}/auto-range-${crypto.randomUUID()}`;
   await Bun.write(path, "0123456789");
   try {
@@ -22,7 +22,7 @@ test("vidéo et téléchargements : HEAD, plages, suffixes, reprise et refus des
     expect((await lire({ range: "bytes=10-" })).status).toBe(416);
     expect((await lire({ range: "bytes=0-1,4-5" })).status).toBe(416);
     expect((await lire({ "if-none-match": '"abc"' })).status).toBe(304);
-    expect(await (await lire({ range: "bytes=2-5", "if-range": '"ancien"' })).text()).toBe("0123456789");
+    expect(await (await lire({ range: "bytes=2-5", "if-range": '"old"' })).text()).toBe("0123456789");
   } finally {
     await Bun.file(path).delete();
   }

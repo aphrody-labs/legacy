@@ -1,60 +1,51 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <meta
-      name="description"
-      content="Télécharger Auto pour ordinateur et Android, consulter les versions et vérifier les empreintes des fichiers."
-    />
-    <title>Téléchargements et mises à jour · auto</title>
+    <meta name="description" content="%%downloads.meta.description%%" />
+    <title>%%downloads.meta.title%%</title>
     <link rel="canonical" href="https://auto.aphrody.com/telechargements" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="auto" />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale" content="%%og:locale%%" />
     <meta property="og:url" content="https://auto.aphrody.com/telechargements" />
-    <meta property="og:title" content="Téléchargements et mises à jour · auto" />
+    <meta property="og:title" content="%%downloads.meta.title%%" />
     <meta property="og:image" content="https://auto.aphrody.com/img/og-auto.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="629" />
-    <meta property="og:image:alt" content="Le dossier d’un chantier dans auto : ventes, achats et suivi." />
+    <meta property="og:image:alt" content="%%home.meta.og_alt%%" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="../src/styles/site.css" />
     <link rel="stylesheet" href="../src/styles/telechargements.css" />
     <script type="module" src="../src/site/telechargements.ts"></script>
   </head>
   <body>
-    <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+    <a class="lien-evitement" href="#contenu">%%site.skip%%</a>
     <header class="site-entete">
-      <nav aria-label="Navigation du site">
+      <nav aria-label="%%site.nav.label%%">
         <a class="marque" href="/">auto</a>
         <div class="liens">
-          <a href="/tarifs">Tarifs</a><a href="/telechargements" aria-current="page">Téléchargements</a
-          ><a href="/app/connexion">Se connecter</a>
+          <a href="/tarifs">%%site.nav.pricing%%</a><a href="/telechargements" aria-current="page">%%site.nav.downloads%%</a
+          ><a href="/app/connexion">%%site.nav.signin%%</a>
         </div>
       </nav>
     </header>
     <main id="contenu" class="conteneur section telechargements">
-      <p class="surtitre">Votre entreprise, sur tous vos écrans</p>
-      <h1>Emportez Auto avec vous.</h1>
-      <p class="introduction">
-        Au bureau et sur le chantier, retrouvez les mêmes dossiers et votre équipe. Choisissez votre application ou
-        ouvrez Auto dans votre navigateur.
-      </p>
+      <p class="surtitre">%%downloads.kicker%%</p>
+      <h1>%%downloads.title%%</h1>
+      <p class="introduction">%%downloads.intro%%</p>
       <article class="telechargement-web">
         <div>
-          <h2>Commencer tout de suite</h2>
-          <p>
-            La version web fonctionne sur ordinateur, tablette et mobile. Les améliorations sont disponibles au prochain
-            chargement.
-          </p>
+          <h2>%%downloads.web.title%%</h2>
+          <p>%%downloads.web.text%%</p>
         </div>
-        <a class="bouton bouton-primaire" href="/app">Ouvrir Auto</a>
+        <a class="bouton bouton-primaire" href="/app">%%downloads.web.cta%%</a>
       </article>
-      <h2>Applications et paquets</h2>
-      <p id="version-disponible" role="status">Chargement des versions disponibles…</p>
-      <!-- Places réservées (hauteur d'une carte) remplacées par le catalogue : pas de décalage au chargement. -->
+      <h2>%%downloads.packages%%</h2>
+      <p id="version-disponible" role="status">%%downloads.loading%%</p>
+      <!-- Reserved places (one card high) replaced by the catalog: no layout shift on load. -->
       <div id="distributions" class="distributions">
         <div class="distribution distribution-attente" aria-hidden="true"></div>
         <div class="distribution distribution-attente" aria-hidden="true"></div>
@@ -63,41 +54,26 @@
       </div>
       <p id="notes-distributions" class="distributions-notes"></p>
       <noscript
-        ><p>
-          Consultez <a href="/api/distributions">le catalogue des fichiers et leurs empreintes</a>, ou utilisez la
-          version web.
-        </p></noscript
+        ><p>%%html:downloads.noscript%%</p></noscript
       >
       <section class="telechargement-aide" aria-labelledby="maj">
-        <h2 id="maj">Garder Auto à jour</h2>
-        <p>
-          Les données de votre entreprise restent sur votre instance Auto. Un téléchargement ne contient aucun accès à
-          votre compte : connectez-vous avec votre adresse personnelle d’équipe.
-        </p>
+        <h2 id="maj">%%downloads.update.title%%</h2>
+        <p>%%downloads.update.text%%</p>
         <ul>
-          <li>
-            <strong>Windows :</strong> les mises à jour natives utilisent un installateur dont la signature est
-            contrôlée par l’application. La vérification dépend de la version installée.
-          </li>
-          <li>
-            <strong>Android :</strong> l’installation d’un APK demande votre accord dans Android. Une mise à jour doit
-            être signée avec la même clé que l’application installée.
-          </li>
-          <li>
-            <strong>Paquets autonomes :</strong> destinés à l’hébergement de votre instance, ils nécessitent PostgreSQL
-            et la configuration des services. Ils se distinguent des applications connectées à Auto.
-          </li>
+          <li>%%html:downloads.update.windows%%</li>
+          <li>%%html:downloads.update.android%%</li>
+          <li>%%html:downloads.update.standalone%%</li>
         </ul>
         <details>
-          <summary>Vérifier un téléchargement</summary>
-          <p>Comparez le SHA-256 affiché avec celui du fichier reçu.</p>
-          <p>Windows PowerShell : <code>Get-FileHash .\nom-du-fichier -Algorithm SHA256</code></p>
-          <p>Linux : <code>sha256sum nom-du-fichier</code></p>
-          <p>macOS : <code>shasum -a 256 nom-du-fichier</code></p>
+          <summary>%%downloads.verify.title%%</summary>
+          <p>%%downloads.verify.text%%</p>
+          <p>%%downloads.verify.windows%% <code>Get-FileHash .\%%downloads.verify.filename%% -Algorithm SHA256</code></p>
+          <p>%%downloads.verify.linux%% <code>sha256sum %%downloads.verify.filename%%</code></p>
+          <p>%%downloads.verify.macos%% <code>shasum -a 256 %%downloads.verify.filename%%</code></p>
         </details>
         <p>
-          <a href="/api/distributions">Catalogue JSON et empreintes</a> ·
-          <a href="/confidentialite">Confidentialité</a> · <a href="/mentions-legales">Mentions légales</a>
+          <a href="/api/distributions">%%downloads.catalog_link%%</a> ·
+          <a href="/confidentialite">%%site.footer.privacy%%</a> · <a href="/mentions-legales">%%site.footer.legal%%</a>
         </p>
       </section>
     </main>

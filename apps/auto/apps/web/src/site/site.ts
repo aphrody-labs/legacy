@@ -1,5 +1,5 @@
-// Pages publiques : le thème enregistré est appliqué avant le premier rendu par le script en ligne de chaque page ;
-// ici, on suit les changements faits dans un autre onglet (application ou paramètres).
+// Public pages: the stored theme is applied before first render by each page's inline script;
+// here, changes made in another tab (application or settings) are followed.
 window.addEventListener("storage", (e: StorageEvent) => {
   if (e.key !== "auto-theme" && e.key !== null) return;
   const t = e.key === null ? null : e.newValue;
@@ -10,3 +10,7 @@ window.addEventListener("storage", (e: StorageEvent) => {
     r.classList.add(t === "sombre" ? "dark" : "light");
   } else delete r.dataset.theme;
 });
+
+// Development only: the HTML imports of `Bun.serve` are not localized by the server, so the `%%key%%` tokens left in
+// the page are replaced on demand (dev-tokens.ts; production pages never load this chunk).
+if (document.documentElement.outerHTML.includes("%%")) await import("./dev-tokens");

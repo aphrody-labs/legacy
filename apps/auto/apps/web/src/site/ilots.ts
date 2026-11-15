@@ -1,5 +1,5 @@
-// Comportements de la vitrine sur le HTML prérendu, sans React dans le navigateur : onglets ARIA (clic, flèches,
-// Début/Fin) et film du héros (remplace la capture si /media/lancement-btp.mp4 répond en vidéo).
+// Showcase behaviours on the prerendered HTML, without React in the browser: ARIA tabs (click, arrows,
+// Home/End) and hero film (replaces the capture if /media/lancement-btp.mp4 answers with a video).
 
 function onglets(racine: ParentNode) {
   for (const liste of racine.querySelectorAll<HTMLElement>('[role="tablist"]')) {
@@ -36,14 +36,14 @@ function film(racine: ParentNode) {
   void fetch("/media/lancement-btp.mp4", { method: "HEAD", signal: AbortSignal.timeout(5000) })
     .then((reponse) => {
       if (!reponse.ok || !reponse.headers.get("content-type")?.startsWith("video/mp4")) return;
-      // Prérendu : contenu inerte du <template> ; rendu React en développement : enfants directs.
+      // Prerendered: inert content of the <template>; React render in development: direct children.
       const source = modele.content.firstElementChild ?? modele.firstElementChild;
       if (!source) return;
       const figure = source.cloneNode(true) as HTMLElement;
       const video = figure.querySelector("video")!;
       const voile = figure.querySelector<HTMLElement>(".btp-heros-film-voile");
       const affiche = figure.querySelector<HTMLElement>(".btp-heros-film-affiche");
-      // La source n'est posée qu'au lancement : avant, ni vidéo ni affiche ne sont téléchargées.
+      // The source is set only at launch: before that, neither video nor poster is downloaded.
       const lancer = () => {
         voile?.remove();
         affiche?.remove();

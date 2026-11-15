@@ -1,4 +1,6 @@
-/** Flux borné, HEAD et plages HTTP pour les gros téléchargements et la lecture vidéo. */
+import { texte } from "./i18n";
+
+/** Bounded stream, HEAD and HTTP ranges for large downloads and video playback. */
 export async function fichierPublic(
   req: Request,
   chemin: string,
@@ -12,8 +14,7 @@ export async function fichierPublic(
   if (!["GET", "HEAD"].includes(req.method))
     return new Response(null, { status: 405, headers: { allow: "GET, HEAD" } });
   const fichier = Bun.file(chemin);
-  if (!(await fichier.exists()))
-    return new Response("Fichier indisponible", { status: 404, headers: { "cache-control": "no-store" } });
+  if (!(await fichier.exists())) return texte(req, "server.file_unavailable", 404, { "cache-control": "no-store" });
   const taille = fichier.size;
   const etag = options.empreinte ? `"${options.empreinte}"` : `"${taille}-${fichier.lastModified}"`;
   const headers = new Headers({

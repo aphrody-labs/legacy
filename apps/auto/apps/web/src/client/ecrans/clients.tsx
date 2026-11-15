@@ -17,17 +17,18 @@ import {
   useTitrePage,
   useToast,
 } from "@auto/ui/react";
+import { t } from "../i18n";
 
 const vide: Partie = { nom: "", siret: "", adresse: "", email: "", tvaIntracom: "" };
 
-/** Erreurs du formulaire client, par champ. */
+/** Customer form errors, by field. */
 export function erreursClient(p: Partie): Record<string, string | undefined> {
   const s = chiffres(p.siret);
   return {
-    nom: p.nom.trim() ? undefined : "Nom ou raison sociale obligatoire.",
-    adresse: p.adresse.trim() ? undefined : "Adresse obligatoire.",
-    siret: !s || siretValide(s) ? undefined : "SIRET invalide : 14 chiffres, clé de contrôle vérifiée.",
-    email: !p.email || emailValide(p.email) ? undefined : "Adresse e-mail invalide.",
+    nom: p.nom.trim() ? undefined : t("customers.err.name"),
+    adresse: p.adresse.trim() ? undefined : t("customers.err.address"),
+    siret: !s || siretValide(s) ? undefined : t("customers.err.siret"),
+    email: !p.email || emailValide(p.email) ? undefined : t("customers.err.email"),
   };
 }
 
@@ -42,7 +43,7 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
   async function prefill() {
     const s = chiffres(p.siret).slice(0, 9);
     if (!sirenValide(s)) {
-      setErr({ ...err, siret: "Saisissez un SIREN (9 chiffres) ou un SIRET valide pour rechercher." });
+      setErr({ ...err, siret: t("customers.err.siren") });
       return;
     }
     setCherche(true);
@@ -51,7 +52,7 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
       setP({ ...p, nom: p.nom || r.nom, siret: grouperSiret(r.siretSiege), adresse: p.adresse || r.adresse });
       setErr({});
     } catch {
-      setErr({ ...err, siret: "Entreprise introuvable dans l'annuaire : saisissez les informations à la main." });
+      setErr({ ...err, siret: t("customers.err.not_found") });
     } finally {
       setCherche(false);
     }
@@ -74,7 +75,7 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
     try {
       if (client) await api.modifierClient(client.id, corps);
       else await api.creerClient(corps);
-      toast(client ? "Client modifié" : "Client ajouté");
+      toast(client ? t("customers.updated") : t("customers.added"));
       onFin(true);
     } catch (x) {
       setErreur(x as ErreurApi);
@@ -91,18 +92,18 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
           className="espace"
           libelle="SIRET"
           inputMode="numeric"
-          aide="Facultatif pour un particulier."
+          aide={t("customers.siret_help")}
           value={p.siret}
           erreur={err.siret}
           onChange={(e) => setP({ ...p, siret: e.target.value })}
           onBlur={() => setP((x) => ({ ...x, siret: grouperSiret(x.siret) }))}
         />
         <Bouton icone={Search} chargement={cherche} onClick={prefill}>
-          Préremplir
+          {t("customers.prefill")}
         </Bouton>
       </div>
       <ChampTexte
-        libelle="Nom ou raison sociale"
+        libelle={t("customers.company_name")}
         requis
         autoComplete="organization"
         value={p.nom}
@@ -110,7 +111,7 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
         onChange={(e) => setP({ ...p, nom: e.target.value })}
       />
       <ChampZone
-        libelle="Adresse"
+        libelle={t("common.address")}
         requis
         rows={2}
         autoComplete="street-address"
@@ -120,7 +121,7 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
       />
       <div className="grille grille-2">
         <ChampTexte
-          libelle="E-mail"
+          libelle={t("common.email")}
           type="email"
           autoComplete="email"
           value={p.email ?? ""}
@@ -128,16 +129,16 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
           onChange={(e) => setP({ ...p, email: e.target.value })}
         />
         <ChampTexte
-          libelle="TVA intracommunautaire"
+          libelle={t("customers.vat_number")}
           value={p.tvaIntracom ?? ""}
           onChange={(e) => setP({ ...p, tvaIntracom: e.target.value })}
         />
       </div>
       <div className="rangee">
         <span className="espace" />
-        <Bouton onClick={() => onFin(false)}>Annuler</Bouton>
+        <Bouton onClick={() => onFin(false)}>{t("common.cancel")}</Bouton>
         <Bouton type="submit" variante="primaire" chargement={envoi}>
-          Enregistrer
+          {t("common.save")}
         </Bouton>
       </div>
     </form>
@@ -145,7 +146,7 @@ function FormulaireClient({ client, onFin }: { client: Client | null; onFin: (ok
 }
 
 export function Clients() {
-  useTitrePage("Clients");
+  useTitrePage(t("customers.title"));
   const { moi } = useSession();
   const ecrire = peut(moi.role, "ecrire");
   const [q, setQ] = useState("");
@@ -157,8 +158,8 @@ export function Clients() {
   else if (d.etat === "erreur") corps = <EtatErreur message={d.erreur} onReessayer={d.recharger} />;
   else if (d.donnees.length === 0)
     corps = (
-      <EtatVide icone={Users} titre={q ? "Aucun client ne correspond" : "Aucun client enregistré"}>
-        {!q && <p>Ajoutez un client ou importez votre fichier depuis Imports.</p>}
+      <EtatVide icone={Users} titre={q ? t("customers.empty_match") : t("customers.empty")}>
+        {!q && <p>{t("customers.empty_text")}</p>}
       </EtatVide>
     );
   else
@@ -167,13 +168,13 @@ export function Clients() {
         <table className="tableau">
           <thead>
             <tr>
-              <th scope="col">Nom</th>
+              <th scope="col">{t("common.name")}</th>
               <th scope="col">SIRET</th>
-              <th scope="col">Adresse</th>
-              <th scope="col">E-mail</th>
+              <th scope="col">{t("common.address")}</th>
+              <th scope="col">{t("common.email")}</th>
               {ecrire && (
                 <th scope="col">
-                  <span className="visuellement-cache">Actions</span>
+                  <span className="visuellement-cache">{t("common.actions")}</span>
                 </th>
               )}
             </tr>
@@ -181,18 +182,18 @@ export function Clients() {
           <tbody>
             {d.donnees.map((c) => (
               <tr key={c.id}>
-                <td data-libelle="Nom">{c.nom}</td>
+                <td data-libelle={t("common.name")}>{c.nom}</td>
                 <td data-libelle="SIRET" className="chiffres">
                   {c.siret ? grouperSiret(c.siret) : "—"}
                 </td>
-                <td data-libelle="Adresse">{c.adresse}</td>
-                <td data-libelle="E-mail">{c.email ?? "—"}</td>
+                <td data-libelle={t("common.address")}>{c.adresse}</td>
+                <td data-libelle={t("common.email")}>{c.email ?? "—"}</td>
                 {ecrire && (
-                  <td data-libelle="Actions">
+                  <td data-libelle={t("common.actions")}>
                     <Bouton
                       variante="fantome"
                       icone={Pencil}
-                      aria-label={`Modifier ${c.nom}`}
+                      aria-label={t("common.edit_named", { name: c.nom })}
                       onClick={() => setEdition(c)}
                     />
                   </td>
@@ -207,24 +208,24 @@ export function Clients() {
   return (
     <div className="page">
       <div className="page-entete">
-        <h1>Clients</h1>
+        <h1>{t("customers.title")}</h1>
         {ecrire && (
           <Bouton variante="primaire" icone={UserPlus} onClick={() => setEdition(null)}>
-            Ajouter un client
+            {t("customers.add")}
           </Bouton>
         )}
       </div>
       <ChampTexte
-        libelle="Rechercher un client"
+        libelle={t("customers.search")}
         type="search"
-        placeholder="Nom, SIRET ou e-mail"
+        placeholder={t("customers.search_placeholder")}
         value={q}
         onChange={(e) => setQ(e.target.value)}
       />
       {corps}
       <Modale
         ouverte={edition !== undefined}
-        titre={edition ? "Modifier le client" : "Ajouter un client"}
+        titre={edition ? t("customers.edit") : t("customers.add")}
         onFermer={() => setEdition(undefined)}
       >
         {edition !== undefined && (

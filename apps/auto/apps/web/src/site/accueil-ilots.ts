@@ -1,5 +1,5 @@
-// Point d'entrée navigateur de la vitrine en production : la page est prérendue au build (construction.tsx),
-// seuls le suivi du thème et les îlots (onglets, film) s'exécutent ; React n'est pas téléchargé.
+// Browser entry point of the showcase in production: the page is prerendered at build time (construction.tsx),
+// only theme tracking and the islands (tabs, film) run; React is not downloaded.
 import { activerIlots } from "./ilots";
 import "./site";
 

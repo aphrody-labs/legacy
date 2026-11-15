@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { messageCraft } from "./craft-bridge";
-test("Craft : fenêtre et origine exactes, charge binaire validée et copie indépendante", () => {
+test("Craft: exact window and origin, validated binary payload and independent copy", () => {
   const fenetre = {} as Window,
     origine = "https://auto.exemple.fr";
   const evenement = (source: Window = fenetre, origin = origine, data: unknown = { type: "gridcraft:ready" }) => ({

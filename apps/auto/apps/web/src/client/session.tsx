@@ -15,7 +15,7 @@ export function useSession(): Session {
   return s;
 }
 
-/** Droits par rôle, partagés avec l'API (`@auto/tenancy/droits`) ; l'API reste seule juge. */
+/** Rights per role, shared with the API (`@auto/tenancy/droits`); the API alone has the final say. */
 export const peut = peutRole;
 
 export const LIBELLE_ROLE = LIBELLES;

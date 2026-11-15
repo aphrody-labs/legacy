@@ -17,6 +17,7 @@ import {
   useTitrePage,
   useToast,
 } from "@auto/ui/react";
+import { t } from "../i18n";
 
 function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
   const { moi } = useSession();
@@ -33,8 +34,8 @@ function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
     e.preventDefault();
     const c = versCentimes(prix);
     const x = {
-      designation: designation.trim() ? undefined : "Désignation obligatoire.",
-      prix: c === null ? "Montant en euros, par exemple 120,50." : undefined,
+      designation: designation.trim() ? undefined : t("common.designation_required"),
+      prix: c === null ? t("common.amount_example") : undefined,
     };
     setErr(x);
     if (x.designation || x.prix) return;
@@ -47,7 +48,7 @@ function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
         tva,
         ...(unite.trim() ? { unite: unite.trim() } : {}),
       });
-      toast("Produit ajouté");
+      toast(t("products.added"));
       onFin(true);
     } catch (y) {
       setErreur(y as ErreurApi);
@@ -60,7 +61,7 @@ function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
     <form className="grille" noValidate onSubmit={soumettre}>
       <ResumeErreurs erreur={erreur} />
       <ChampTexte
-        libelle="Désignation"
+        libelle={t("common.designation")}
         requis
         value={designation}
         erreur={err.designation}
@@ -68,7 +69,7 @@ function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
       />
       <div className="grille grille-3">
         <ChampTexte
-          libelle="Prix unitaire HT (€)"
+          libelle={t("products.unit_price")}
           inputMode="decimal"
           requis
           value={prix}
@@ -76,7 +77,7 @@ function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
           onChange={(e) => setPrix(e.target.value)}
         />
         <ChampListe
-          libelle="TVA"
+          libelle={t("common.vat")}
           value={tva}
           disabled={moi.entreprise.franchiseTva}
           onChange={(e) => setTva(Number(e.target.value) as Tva)}
@@ -88,17 +89,17 @@ function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
           ))}
         </ChampListe>
         <ChampTexte
-          libelle="Unité"
-          placeholder="h, jour, pièce"
+          libelle={t("common.unit")}
+          placeholder={t("products.unit_placeholder")}
           value={unite}
           onChange={(e) => setUnite(e.target.value)}
         />
       </div>
       <div className="rangee">
         <span className="espace" />
-        <Bouton onClick={() => onFin(false)}>Annuler</Bouton>
+        <Bouton onClick={() => onFin(false)}>{t("common.cancel")}</Bouton>
         <Bouton type="submit" variante="primaire" chargement={envoi}>
-          Enregistrer
+          {t("common.save")}
         </Bouton>
       </div>
     </form>
@@ -106,7 +107,7 @@ function FormulaireProduit({ onFin }: { onFin: (ok: boolean) => void }) {
 }
 
 export function Produits() {
-  useTitrePage("Produits");
+  useTitrePage(t("products.title"));
   const { moi } = useSession();
   const ecrire = peut(moi.role, "ecrire");
   const [ouvert, setOuvert] = useState(false);
@@ -117,8 +118,8 @@ export function Produits() {
   else if (d.etat === "erreur") corps = <EtatErreur message={d.erreur} onReessayer={d.recharger} />;
   else if (d.donnees.length === 0)
     corps = (
-      <EtatVide icone={Package} titre="Catalogue vide">
-        <p>Les produits et prestations enregistrés s'ajoutent aux devis et factures en un clic.</p>
+      <EtatVide icone={Package} titre={t("products.empty")}>
+        <p>{t("products.empty_text")}</p>
       </EtatVide>
     );
   else
@@ -127,25 +128,25 @@ export function Produits() {
         <table className="tableau">
           <thead>
             <tr>
-              <th scope="col">Désignation</th>
-              <th scope="col">Unité</th>
+              <th scope="col">{t("common.designation")}</th>
+              <th scope="col">{t("common.unit")}</th>
               <th scope="col" className="num">
-                Prix HT
+                {t("products.col.price")}
               </th>
               <th scope="col" className="num">
-                TVA
+                {t("common.vat")}
               </th>
             </tr>
           </thead>
           <tbody>
             {d.donnees.map((p) => (
               <tr key={p.id}>
-                <td data-libelle="Désignation">{p.designation}</td>
-                <td data-libelle="Unité">{p.unite ?? "—"}</td>
-                <td data-libelle="Prix HT" className="num">
+                <td data-libelle={t("common.designation")}>{p.designation}</td>
+                <td data-libelle={t("common.unit")}>{p.unite ?? "—"}</td>
+                <td data-libelle={t("products.col.price")} className="num">
                   {eur(p.prixUnitaireHtCents)}
                 </td>
-                <td data-libelle="TVA" className="num">
+                <td data-libelle={t("common.vat")} className="num">
                   {tauxTva(p.tva)}
                 </td>
               </tr>
@@ -158,15 +159,15 @@ export function Produits() {
   return (
     <div className="page">
       <div className="page-entete">
-        <h1>Produits et prestations</h1>
+        <h1>{t("products.heading")}</h1>
         {ecrire && (
           <Bouton variante="primaire" icone={PackagePlus} onClick={() => setOuvert(true)}>
-            Ajouter un produit
+            {t("products.add")}
           </Bouton>
         )}
       </div>
       {corps}
-      <Modale ouverte={ouvert} titre="Ajouter un produit" onFermer={() => setOuvert(false)}>
+      <Modale ouverte={ouvert} titre={t("products.add")} onFermer={() => setOuvert(false)}>
         <FormulaireProduit
           onFin={(ok) => {
             setOuvert(false);

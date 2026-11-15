@@ -1,22 +1,19 @@
-// Consentement OAuth d'un client MCP (Claude Code, Claude Desktop…) : nom du client, accès demandés, choix de
-// l'entreprise à laquelle le jeton sera lié, puis accord ou refus. La requête signée de /oauth2/authorize est
-// relayée par le client Better Auth (oauthProviderClient).
+// OAuth consent of an MCP client (Claude Code, Claude Desktop…): client name, requested access, choice of the
+// company the token will be bound to, then grant or refusal. The signed /oauth2/authorize request is relayed
+// by the Better Auth client (oauthProviderClient).
 import { Check, ShieldCheck, X } from "@auto/ui/symboles";
 import { useEffect, useState } from "react";
 import { api, ErreurApi, type Moi } from "@auto/client";
 import { Bandeau, Bouton, ChampListe, EtatChargement, ResumeErreurs, parametre, useTitrePage } from "@auto/ui/react";
 import { authClient, messageAuth, suivreRedirection } from "../auth";
 import { Marque } from "./marque";
+import { t } from "../i18n";
 
-const PORTEES: Record<string, string> = {
-  openid: "Vous identifier",
-  profile: "Lire votre nom",
-  email: "Lire votre adresse e-mail",
-  offline_access: "Rester connecté (jeton de rafraîchissement)",
-};
+// Scopes are OAuth data; each known one maps to a catalog message.
+const PORTEES = ["openid", "profile", "email", "offline_access"];
 
 export function Autorisation() {
-  useTitrePage("Autoriser une application");
+  useTitrePage(t("oauth.title"));
   const clientId = parametre("client_id") ?? "";
   const portees = (parametre("scope") ?? "").split(" ").filter(Boolean);
   const [client, setClient] = useState<{ client_name?: string; client_uri?: string } | null>(null);
@@ -46,11 +43,11 @@ export function Autorisation() {
       if (accept && moi && tenant !== moi.tenantId) await authClient.organization.setActive({ organizationId: tenant });
       const consent = await authClient.$fetch("/oauth2/consent", { method: "POST", body: { accept } });
       if (!consent.error && suivreRedirection(consent.data)) return;
-      // Étape « après connexion » (entreprise choisie) : reprise de l'autorisation.
+      // "After sign-in" step (company chosen): the authorization resumes.
       const suite = await authClient.$fetch("/oauth2/continue", { method: "POST", body: { postLogin: true } });
       if (!suite.error && suivreRedirection(suite.data)) return;
       const e = (consent.error ?? suite.error) as { code?: string; message?: string; status?: number } | null;
-      setErreur(new ErreurApi(messageAuth(e) || "Autorisation impossible.", e?.status ?? 400));
+      setErreur(new ErreurApi(messageAuth(e) || t("oauth.failed"), e?.status ?? 400));
     } finally {
       setEnvoi(null);
     }
@@ -62,30 +59,27 @@ export function Autorisation() {
       <div className="fond-motif pattern-dots-md" aria-hidden="true" />
       <div className="auth-carte carte">
         <Marque />
-        <h1>Autoriser {nom}</h1>
+        <h1>{t("oauth.heading", { name: nom })}</h1>
         {!client || !moi ? (
           erreur ? (
             <ResumeErreurs erreur={erreur} />
           ) : (
-            <EtatChargement libelle="Lecture de la demande" />
+            <EtatChargement libelle={t("oauth.reading")} />
           )
         ) : (
           <div className="grille">
             <ResumeErreurs erreur={erreur} />
-            <Bandeau ton="info" titre="Accès aux outils d'auto (MCP)">
-              <p>
-                {nom} pourra utiliser les outils d'auto (devis, factures, paiements, relances, absences…) avec vos
-                droits dans l'entreprise choisie, comme vous le feriez depuis l'application.
-              </p>
+            <Bandeau ton="info" titre={t("oauth.banner")}>
+              <p>{t("oauth.banner_text", { name: nom })}</p>
             </Bandeau>
             {portees.length > 0 && (
               <ul>
                 {portees.map((p) => (
-                  <li key={p}>{PORTEES[p] ?? p}</li>
+                  <li key={p}>{PORTEES.includes(p) ? t(`oauth.scope.${p}`) : p}</li>
                 ))}
               </ul>
             )}
-            <ChampListe libelle="Entreprise" value={tenant} onChange={(e) => setTenant(e.target.value)}>
+            <ChampListe libelle={t("oauth.company")} value={tenant} onChange={(e) => setTenant(e.target.value)}>
               {moi.entreprises.map((e) => (
                 <option key={e.id} value={e.id} disabled={e.suspendue}>
                   {e.nom} ({e.role})
@@ -94,14 +88,14 @@ export function Autorisation() {
             </ChampListe>
             <div className="grille grille-2">
               <Bouton icone={X} chargement={envoi === "non"} onClick={() => repondre(false)}>
-                Refuser
+                {t("oauth.refuse")}
               </Bouton>
               <Bouton variante="primaire" icone={Check} chargement={envoi === "oui"} onClick={() => repondre(true)}>
-                Autoriser
+                {t("oauth.allow")}
               </Bouton>
             </div>
             <p className="attenue petit">
-              <ShieldCheck className="icone" aria-hidden="true" /> Révocable à tout moment dans Paramètres, Sécurité.
+              <ShieldCheck className="icone" aria-hidden="true" /> {t("oauth.revocable")}
             </p>
           </div>
         )}

@@ -2,24 +2,26 @@ import { useDeferredValue, useState } from "react";
 import { api } from "@auto/client";
 import { ChampTexte, EtatChargement, EtatErreur, EtatVide, Lien, useDonnees, useTitrePage } from "@auto/ui/react";
 import { Search } from "@auto/ui/symboles";
-const LIBELLES: Record<string, string> = {
-  devis: "Devis",
-  facture: "Facture client",
-  acompte: "Acompte",
-  avoir: "Avoir",
-  achat: "Facture fournisseur",
-  bon_livraison: "Bon de livraison",
-  confirmation_commande: "Confirmation de commande",
-  chantier: "Chantier",
-  devis_recu: "Devis reçu",
-  fichier_clients: "Fichier clients",
-  fichier_fournisseurs: "Fichier fournisseurs",
-  fichier_chantiers: "Fichier chantier",
-  fichier_livraisons: "Fichier livraison",
-  fichier_commandes: "Fichier commande",
-};
+import { t } from "../i18n";
+// Document kinds (segments) have catalog labels `kind.<segment>`.
+const TYPES = new Set([
+  "devis",
+  "facture",
+  "acompte",
+  "avoir",
+  "achat",
+  "bon_livraison",
+  "confirmation_commande",
+  "chantier",
+  "devis_recu",
+  "fichier_clients",
+  "fichier_fournisseurs",
+  "fichier_chantiers",
+  "fichier_livraisons",
+  "fichier_commandes",
+]);
 export function RechercheGestion() {
-  useTitrePage("Rechercher un document");
+  useTitrePage(t("search.title"));
   const [q, setQ] = useState("");
   const recherche = useDeferredValue(q.trim());
   const d = useDonnees(
@@ -30,46 +32,44 @@ export function RechercheGestion() {
     <div className="page pile">
       <div className="page-entete">
         <div>
-          <h1>Rechercher un document</h1>
-          <p className="attenue">
-            Retrouvez vos pièces par référence, tiers, chantier ou contenu extrait, archives comprises.
-          </p>
+          <h1>{t("search.title")}</h1>
+          <p className="attenue">{t("search.intro")}</p>
         </div>
       </div>
       <ChampTexte
-        libelle="Votre recherche"
+        libelle={t("search.query")}
         type="search"
         value={q}
         minLength={2}
         maxLength={200}
-        placeholder="Ex. Moreau, ciment, BL-042…"
+        placeholder={t("search.placeholder")}
         onChange={(e) => setQ(e.target.value)}
       />
       {recherche.length < 2 ? (
-        <EtatVide icone={Search} titre="Que recherchez-vous ?">
-          <p>Saisissez au moins deux caractères. La recherche porte sur les documents connus d’auto.</p>
+        <EtatVide icone={Search} titre={t("search.prompt")}>
+          <p>{t("search.prompt_text")}</p>
         </EtatVide>
       ) : d.etat === "chargement" ? (
         <EtatChargement />
       ) : d.etat === "erreur" ? (
         <EtatErreur message={d.erreur} onReessayer={d.recharger} />
       ) : !d.donnees.resultats.length ? (
-        <EtatVide titre="Aucune pièce trouvée">
-          <p>Essayez un nom de client, un fournisseur ou une désignation de ligne.</p>
+        <EtatVide titre={t("search.none")}>
+          <p>{t("search.none_text")}</p>
         </EtatVide>
       ) : (
         <>
           <p className="attenue">
-            {d.donnees.total} résultat(s)
-            {d.donnees.total > 100 ? " · Les 100 premiers sont affichés. Affinez votre recherche." : ""}
+            {t("search.count", { count: d.donnees.total })}
+            {d.donnees.total > 100 ? ` · ${t("search.limit")}` : ""}
           </p>
-          <div className="tableau-conteneur" tabIndex={0} role="region" aria-label="Résultats de recherche">
+          <div className="tableau-conteneur" tabIndex={0} role="region" aria-label={t("search.results_label")}>
             <table className="tableau">
               <thead>
                 <tr>
-                  {["Référence", "Espace", "Tiers", "Chantier", "Archive"].map((l) => (
+                  {["reference", "space", "third_party", "site", "archive"].map((l) => (
                     <th scope="col" key={l}>
-                      {l}
+                      {t(`search.col.${l}`)}
                     </th>
                   ))}
                 </tr>
@@ -77,7 +77,7 @@ export function RechercheGestion() {
               <tbody>
                 {d.donnees.resultats.map((r) => (
                   <tr key={r.segment + r.id}>
-                    <td data-libelle="Référence">
+                    <td data-libelle={t("search.col.reference")}>
                       {r.url.startsWith("/v1/") ? (
                         <a href={r.url} target="_blank" rel="noopener">
                           {r.reference}
@@ -86,10 +86,12 @@ export function RechercheGestion() {
                         <Lien href={r.url}>{r.reference}</Lien>
                       )}
                     </td>
-                    <td data-libelle="Espace">{LIBELLES[r.segment] || r.segment}</td>
-                    <td data-libelle="Tiers">{r.tiers || "—"}</td>
-                    <td data-libelle="Chantier">{r.chantier || "—"}</td>
-                    <td data-libelle="Archive">{r.archive ? "Archivé" : "—"}</td>
+                    <td data-libelle={t("search.col.space")}>
+                      {TYPES.has(r.segment) ? t(`kind.${r.segment}`) : r.segment}
+                    </td>
+                    <td data-libelle={t("search.col.third_party")}>{r.tiers || "—"}</td>
+                    <td data-libelle={t("search.col.site")}>{r.chantier || "—"}</td>
+                    <td data-libelle={t("search.col.archive")}>{r.archive ? t("search.archived") : "—"}</td>
                   </tr>
                 ))}
               </tbody>

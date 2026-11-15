@@ -1,4 +1,5 @@
 import { fichierPublic } from "./fichier-public";
+import { texte } from "./i18n";
 
 export interface Distribution {
   id: string;
@@ -22,7 +23,7 @@ export interface Catalogue {
 const VERSION = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const NOM = /^[a-zA-Z0-9][a-zA-Z0-9._-]{0,180}$/;
 
-/** Origine d'objets publics configurée par l'opérateur, jamais issue d'une requête. */
+/** Public objects origin configured by the operator, never taken from a request. */
 export function baseDistributions(valeur = Bun.env.AUTO_DISTRIBUTIONS_OBJETS_URL): URL | null {
   if (!valeur) return null;
   try {
@@ -35,7 +36,7 @@ export function baseDistributions(valeur = Bun.env.AUTO_DISTRIBUTIONS_OBJETS_URL
   }
 }
 
-/** Le manifeste est publié atomiquement après les fichiers ; aucune entrée arbitraire du système de fichiers. */
+/** The manifest is published atomically after the files; no arbitrary file system entry. */
 export async function catalogue(
   dossier = Bun.env.AUTO_DISTRIBUTIONS_DIR,
   base = baseDistributions(),
@@ -122,22 +123,22 @@ export function routesDistributions() {
         return new Response(null, { status: 405, headers: { allow: "GET, HEAD" } });
       const c = await catalogue();
       const a = c?.fichiers.find((f) => f.fichier === req.params.fichier);
-      if (!a) return new Response("Téléchargement indisponible", { status: 404 });
+      if (!a) return texte(req, "server.download_unavailable", 404);
       const base = baseDistributions();
       if (base) {
-        // La publication du manifeste est la dernière étape ; vérifier la taille avant de déléguer le flux.
+        // Publishing the manifest is the last step; check the size before delegating the stream.
         try {
           const cible = new URL(a.fichier, base);
           const r = await fetch(cible, { method: "HEAD", redirect: "error", signal: AbortSignal.timeout(10_000) });
           if (!r.ok || Number(r.headers.get("content-length")) !== a.octets)
-            return new Response("Téléchargement en maintenance", { status: 503 });
+            return texte(req, "server.download_maintenance", 503);
           return new Response(null, { status: 302, headers: { location: cible.href, "cache-control": "no-store" } });
         } catch {
-          return new Response("Téléchargement en maintenance", { status: 503 });
+          return texte(req, "server.download_maintenance", 503);
         }
       }
       const chemin = `${Bun.env.AUTO_DISTRIBUTIONS_DIR}/${a.fichier}`;
-      if (Bun.file(chemin).size !== a.octets) return new Response("Téléchargement en maintenance", { status: 503 });
+      if (Bun.file(chemin).size !== a.octets) return texte(req, "server.download_maintenance", 503);
       return fichierPublic(req, chemin, {
         type: "application/octet-stream",
         nom: a.fichier,
@@ -149,7 +150,7 @@ export function routesDistributions() {
       req: Request & { params: { target: string; arch: string; version: string } },
     ) => {
       const c = await catalogue();
-      if (!VERSION.test(req.params.version)) return new Response("Version invalide", { status: 400 });
+      if (!VERSION.test(req.params.version)) return texte(req, "server.invalid_version", 400);
       const a = c?.fichiers.find((f) => f.cibleUpdater === `${req.params.target}-${req.params.arch}`);
       if (!c || !a || comparerVersions(c.version, req.params.version) !== 1)
         return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });

@@ -19,7 +19,7 @@ function faux(reponse: (a: Appel) => Response) {
 
 const entetes = (a: Appel) => a.init.headers as Record<string, string>;
 
-test("mutations en application/json (anti-CSRF), lectures sans corps, cookie même origine", async () => {
+test("mutations in application/json (anti-CSRF), reads without a body, same-origin cookie", async () => {
   const { appels, f } = faux(() => Response.json({ id: "d1" }, { status: 201 }));
   const api = clientApi({ fetch: f });
   await api.creerDocument({ type: "devis", date: "2026-10-22", lignes: [] });
@@ -38,7 +38,7 @@ test("mutations en application/json (anti-CSRF), lectures sans corps, cookie mê
   expect(entetes(del!)["content-type"]).toBe("application/json");
 });
 
-test("jeton Bearer et base d'URL", async () => {
+test("Bearer token and URL base", async () => {
   const { appels, f } = faux(() => Response.json({}));
   const api = clientApi({ fetch: f, base: "http://api.test", jeton: "tok" });
   await api.moi();
@@ -47,7 +47,7 @@ test("jeton Bearer et base d'URL", async () => {
   expect(api.url("/v1/documents/1/pdf")).toBe("http://api.test/v1/documents/1/pdf");
 });
 
-test("erreurs : message et détails de l'API, réseau coupé, réponse non JSON", async () => {
+test("errors: API message and details, network down, non-JSON response", async () => {
   const api = clientApi({
     fetch: faux(() =>
       Response.json({ erreur: "mentions manquantes", details: ["siret client invalide"] }, { status: 422 }),
@@ -57,7 +57,7 @@ test("erreurs : message et détails de l'API, réseau coupé, réponse non JSON"
   expect(e).toBeInstanceOf(ErreurApi);
   expect(e).toMatchObject({ message: "mentions manquantes", status: 422, details: ["siret client invalide"] });
 
-  const coupe = clientApi({ fetch: (async () => Promise.reject(new TypeError("réseau"))) as unknown as typeof fetch });
+  const coupe = clientApi({ fetch: (async () => Promise.reject(new TypeError("network"))) as unknown as typeof fetch });
   expect(await coupe.moi().catch((x) => x)).toMatchObject({ status: 0 });
 
   const html = clientApi({ fetch: faux(() => new Response("<html>", { status: 502 })).f });
@@ -67,7 +67,7 @@ test("erreurs : message et détails de l'API, réseau coupé, réponse non JSON"
   expect(await vide.relancer("d", 1, "mail")).toBeNull();
 });
 
-test("requêtes : paramètres vides omis, exports, gabarit", async () => {
+test("requests: empty parameters omitted, exports, template", async () => {
   const { appels, f } = faux(() => Response.json([]));
   const api = clientApi({ fetch: f });
   await api.clients("");
@@ -92,18 +92,18 @@ test("requêtes : paramètres vides omis, exports, gabarit", async () => {
   expect(api.urlExport("fec")).toBe("/v1/exports/fec");
 });
 
-test("retour après connexion : chemins internes seulement", () => {
+test("return after sign-in: internal paths only", () => {
   expect(retourSur("/app/factures")).toBe("/app/factures");
   expect(retourSur("https://exemple.fr")).toBe("/app");
   expect(retourSur("//exemple.fr/app")).toBe("/app");
   expect(retourSur(null)).toBe("/app");
 });
 
-test("automatisations : routes du contrat, essai sans enregistrement, erreurs 422 détaillées", async () => {
+test("automations: contract routes, dry run without saving, detailed 422 errors", async () => {
   const { appels, f } = faux((a) =>
     a.url === "/v1/automatisations/essai"
       ? Response.json(
-          { erreur: "définition invalide", details: ["un et un seul déclencheur par workflow"] },
+          { erreur: "invalid definition", details: ["one and only one trigger per workflow"] },
           { status: 422 },
         )
       : Response.json({ id: "w1" }),
@@ -157,6 +157,6 @@ test("automatisations : routes du contrat, essai sans enregistrement, erreurs 42
   expect(JSON.parse(appels[10]!.init.body as string)).toEqual({ nom: "slack", valeur: "https://hooks" });
   const e = await api.essaiAutomatisation(definition).catch((x: unknown) => x);
   expect(e).toBeInstanceOf(ErreurApi);
-  expect(e).toMatchObject({ status: 422, details: ["un et un seul déclencheur par workflow"] });
+  expect(e).toMatchObject({ status: 422, details: ["one and only one trigger per workflow"] });
   expect(JSON.parse(appels.at(-1)!.init.body as string)).toEqual({ definition });
 });

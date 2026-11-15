@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#056b5b" />
-    <!-- Application installable : liens ajoutés au chargement (servis par le serveur, pas par le bundler). -->
+    <!-- Installable app: links added at load time (served by the server, not by the bundler). -->
     <script>
       for (const [rel, href] of [
         ["manifest", "/manifest.webmanifest"],
@@ -13,35 +13,32 @@
       ])
         document.head.append(Object.assign(document.createElement("link"), { rel, href }));
     </script>
-    <!-- Thème imposé appliqué avant le premier rendu (pas de flash) ; le reste de la logique est chargé ensuite. -->
+    <!-- Stored theme applied before first render (no flash); the rest of the logic loads afterwards. -->
     <script>
       try {
         const t = localStorage.getItem("auto-theme");
         if (t === "clair" || t === "sombre") document.documentElement.dataset.theme = t;
       } catch {}
     </script>
-    <meta
-      name="description"
-      content="Mentions légales d’auto : éditeur du service, hébergeur, données personnelles hébergées dans l’Union européenne et cookies."
-    />
-    <title>Mentions légales · auto</title>
+    <meta name="description" content="%%legal.meta.description%%" />
+    <title>%%legal.meta.title%%</title>
     <link rel="canonical" href="https://auto.aphrody.com/mentions-legales" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="auto" />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale" content="%%og:locale%%" />
     <meta property="og:url" content="https://auto.aphrody.com/mentions-legales" />
-    <meta property="og:title" content="Mentions légales · auto" />
+    <meta property="og:title" content="%%legal.meta.title%%" />
     <meta property="og:image" content="https://auto.aphrody.com/img/og-auto.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="629" />
-    <meta property="og:image:alt" content="Le dossier d’un chantier dans auto : ventes, achats et suivi." />
+    <meta property="og:image:alt" content="%%home.meta.og_alt%%" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="stylesheet" href="../src/styles/site.css" />
   </head>
   <body>
-    <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+    <a class="lien-evitement" href="#contenu">%%site.skip%%</a>
     <header class="site-entete">
-      <nav aria-label="Navigation du site">
+      <nav aria-label="%%site.nav.label%%">
         <a class="marque" href="/">
           <span class="marque-logo" aria-hidden="true">
             <svg class="icone" viewBox="0 -960 960 960" fill="currentColor">
@@ -53,42 +50,32 @@
           auto
         </a>
         <div class="liens">
-          <a href="/tarifs">Tarifs</a>
-          <a href="/app/connexion">Se connecter</a>
-          <a class="bouton bouton-primaire" href="/app/inscription">Essayer gratuitement</a>
+          <a href="/tarifs">%%site.nav.pricing%%</a>
+          <a href="/app/connexion">%%site.nav.signin%%</a>
+          <a class="bouton bouton-primaire" href="/app/inscription">%%site.nav.try%%</a>
         </div>
       </nav>
     </header>
 
     <main id="contenu" class="conteneur section texte-long">
-      <h1>Mentions légales</h1>
-      <h2>Éditeur</h2>
-      <p>auto est édité par Aphrody. Contact : <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>.</p>
-      <h2>Hébergeur</h2>
-      <p>
-        OVH SAS, 2 rue Kellermann, 59100 Roubaix, France (ovhcloud.com). Réseau et acheminement : Cloudflare, Inc., 101
-        Townsend Street, San Francisco, CA 94107, États-Unis.
-      </p>
-      <h2>Données personnelles</h2>
-      <p>
-        Les données de facturation sont isolées par entreprise et hébergées dans l'Union européenne. Les polices sont
-        auto-hébergées : aucune ressource tierce n'est chargée par ce site. Pour exercer vos droits d'accès, de
-        rectification ou de suppression, écrivez à <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>.
-      </p>
-      <h2>Cookies</h2>
-      <p>
-        Un seul cookie, strictement nécessaire : la session de connexion (<code>auto_session</code>), HttpOnly et
-        Secure. Aucun cookie de mesure d'audience ni de publicité.
-      </p>
+      <h1>%%legal.title%%</h1>
+      <h2>%%legal.publisher.title%%</h2>
+      <p>%%html:legal.publisher.text%%</p>
+      <h2>%%legal.host.title%%</h2>
+      <p>%%legal.host.text%%</p>
+      <h2>%%legal.data.title%%</h2>
+      <p>%%html:legal.data.text%%</p>
+      <h2>%%legal.cookies.title%%</h2>
+      <p>%%html:legal.cookies.text%%</p>
     </main>
 
     <footer class="site-pied">
       <div class="conteneur">
-        <span>auto, facturation et gestion pour indépendants et TPE</span>
+        <span>%%site.footer.tagline%%</span>
         <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>
-        <a href="/tarifs">Tarifs</a>
-        <a href="/mentions-legales" aria-current="page">Mentions légales</a>
-        <a href="/confidentialite">Confidentialité</a>
+        <a href="/tarifs">%%site.nav.pricing%%</a>
+        <a href="/mentions-legales" aria-current="page">%%site.footer.legal%%</a>
+        <a href="/confidentialite">%%site.footer.privacy%%</a>
       </div>
     </footer>
     <script type="module" src="../src/site/site.ts"></script>

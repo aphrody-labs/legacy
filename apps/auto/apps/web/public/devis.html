@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#056b5b" />
-    <!-- Application installable : liens ajoutés au chargement (servis par le serveur, pas par le bundler). -->
+    <!-- Installable app: links added at load time (served by the server, not by the bundler). -->
     <script>
       for (const [rel, href] of [
         ["manifest", "/manifest.webmanifest"],
@@ -13,21 +13,21 @@
       ])
         document.head.append(Object.assign(document.createElement("link"), { rel, href }));
     </script>
-    <!-- Thème imposé appliqué avant le premier rendu (pas de flash) ; le reste de la logique est chargé ensuite. -->
+    <!-- Stored theme applied before first render (no flash); the rest of the logic loads afterwards. -->
     <script>
       try {
         const t = localStorage.getItem("auto-theme");
         if (t === "clair" || t === "sombre") document.documentElement.dataset.theme = t;
       } catch {}
     </script>
-    <title>Devis · auto</title>
+    <title>%%quote.meta.title%%</title>
     <meta name="robots" content="noindex" />
     <link rel="stylesheet" href="../src/styles/site.css" />
   </head>
   <body>
-    <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+    <a class="lien-evitement" href="#contenu">%%site.skip%%</a>
     <header class="site-entete">
-      <nav aria-label="Navigation du site">
+      <nav aria-label="%%site.nav.label%%">
         <a class="marque" href="/">
           <span class="marque-logo" aria-hidden="true">
             <svg class="icone" viewBox="0 -960 960 960" fill="currentColor">
@@ -39,60 +39,60 @@
           auto
         </a>
         <div class="liens">
-          <a href="/tarifs">Tarifs</a>
-          <a href="/app/connexion">Se connecter</a>
-          <a class="bouton bouton-primaire" href="/app/inscription">Essayer gratuitement</a>
+          <a href="/tarifs">%%site.nav.pricing%%</a>
+          <a href="/app/connexion">%%site.nav.signin%%</a>
+          <a class="bouton bouton-primaire" href="/app/inscription">%%site.nav.try%%</a>
         </div>
       </nav>
     </header>
 
     <main id="contenu" class="conteneur devis-public">
-      <p id="etat" role="status">Chargement du devis…</p>
+      <p id="etat" role="status">%%quote.loading%%</p>
       <article id="devis" aria-labelledby="titre-devis" hidden>
         <h1 id="titre-devis"></h1>
         <p id="parties" class="devis-parties"></p>
         <div class="tableau-conteneur">
           <table class="tableau devis-lignes">
             <caption class="visuellement-cache">
-              Lignes du devis
+              %%quote.caption%%
             </caption>
             <thead>
               <tr>
-                <th scope="col">Désignation</th>
-                <th scope="col" class="num">Qté</th>
-                <th scope="col" class="num">Prix unitaire HT</th>
+                <th scope="col">%%quote.col.description%%</th>
+                <th scope="col" class="num">%%quote.col.qty%%</th>
+                <th scope="col" class="num">%%quote.col.unit_price%%</th>
               </tr>
             </thead>
             <tbody id="lignes"></tbody>
             <tfoot>
               <tr>
-                <th scope="row" colspan="2">Total HT</th>
+                <th scope="row" colspan="2">%%doc.total_ht%%</th>
                 <td class="num" id="total-ht"></td>
               </tr>
               <tr>
-                <th scope="row" colspan="2">TVA</th>
+                <th scope="row" colspan="2">%%doc.vat%%</th>
                 <td class="num" id="total-tva"></td>
               </tr>
               <tr class="devis-total">
-                <th scope="row" colspan="2">Total TTC</th>
+                <th scope="row" colspan="2">%%doc.total_ttc%%</th>
                 <td class="num" id="total-ttc"></td>
               </tr>
             </tfoot>
           </table>
         </div>
-        <p><a id="pdf" class="bouton" target="_blank" rel="noopener">Télécharger le PDF</a></p>
+        <p><a id="pdf" class="bouton" target="_blank" rel="noopener">%%quote.pdf%%</a></p>
 
         <form id="decision" class="devis-decision" novalidate hidden>
-          <h2>Votre réponse</h2>
+          <h2>%%quote.reply.title%%</h2>
           <div class="champ">
-            <label for="nom">Nom et fonction</label>
+            <label for="nom">%%quote.reply.name%%</label>
             <input id="nom" name="nom" autocomplete="name" required aria-describedby="aide-nom" />
-            <p class="aide" id="aide-nom">Enregistré avec votre réponse et transmis à l'émetteur.</p>
+            <p class="aide" id="aide-nom">%%quote.reply.help%%</p>
           </div>
           <p id="erreur" class="erreur" role="alert" hidden></p>
           <div class="rangee">
-            <button type="submit" class="bouton bouton-primaire" value="accepte">Accepter le devis</button>
-            <button type="submit" class="bouton" value="refuse">Refuser le devis</button>
+            <button type="submit" class="bouton bouton-primaire" value="accepte">%%quote.reply.accept%%</button>
+            <button type="submit" class="bouton" value="refuse">%%quote.reply.refuse%%</button>
           </div>
         </form>
         <p id="reponse" class="devis-reponse" role="status" tabindex="-1" hidden></p>
@@ -100,11 +100,11 @@
     </main>
     <footer class="site-pied">
       <div class="conteneur">
-        <span>auto, facturation et gestion pour indépendants et TPE</span>
+        <span>%%site.footer.tagline%%</span>
         <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>
-        <a href="/tarifs">Tarifs</a>
-        <a href="/mentions-legales">Mentions légales</a>
-        <a href="/confidentialite" aria-current="page">Confidentialité</a>
+        <a href="/tarifs">%%site.nav.pricing%%</a>
+        <a href="/mentions-legales">%%site.footer.legal%%</a>
+        <a href="/confidentialite" aria-current="page">%%site.footer.privacy%%</a>
       </div>
     </footer>
     <script type="module" src="../src/site/devis.ts"></script>

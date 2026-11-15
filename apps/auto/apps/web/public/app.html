@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#056b5b" />
-    <!-- Application installable : liens ajoutés au chargement (servis par le serveur, pas par le bundler). -->
+    <!-- Installable app: links added at load time (served by the server, not by the bundler). -->
     <script>
       for (const [rel, href] of [
         ["manifest", "/manifest.webmanifest"],
@@ -13,7 +13,7 @@
       ])
         document.head.append(Object.assign(document.createElement("link"), { rel, href }));
     </script>
-    <!-- Thème imposé appliqué avant le premier rendu (pas de flash) ; le reste de la logique est chargé ensuite. -->
+    <!-- Stored theme applied before first render (no flash); the rest of the logic loads afterwards. -->
     <script>
       try {
         const t = localStorage.getItem("auto-theme");
@@ -24,7 +24,7 @@
     <title>auto</title>
     <link rel="stylesheet" href="../src/styles/app.css" />
     <link rel="stylesheet" href="../src/styles/responsive.css" />
-    <!-- Corps de texte (Inter 400, latin) : URL à empreinte vérifiée par serveur.test.ts. -->
+    <!-- Body text (Inter 400, latin): hashed URL checked by serveur.test.ts. -->
     <link
       rel="preload"
       as="font"
@@ -35,7 +35,7 @@
   </head>
   <body>
     <div id="racine"></div>
-    <noscript>L'application auto nécessite JavaScript.</noscript>
+    <noscript>%%app.noscript%%</noscript>
     <script type="module" src="../src/client/main.tsx"></script>
   </body>
 </html>
