@@ -1,7 +1,7 @@
 //! Archive handling: `.zip`, `.tar.gz` / `.tgz`, `.tar.xz`, `.tar.zst`, or a bare executable.
 
 use std::io::{Cursor, Read};
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Kind {
@@ -36,14 +36,21 @@ pub struct Entry {
     pub mode: Option<u32>,
 }
 
-/// Reject absolute paths and `..` so an archive cannot write outside its destination.
+/// Reject absolute paths, `..`, drive and UNC prefixes so an archive cannot write outside its destination.
+///
+/// An archive is written by any producer, not by the host that unpacks it: a tar entry named `..\x` or `C:\x` is one harmless file name on
+/// Linux and an escape on Windows. Both separators are therefore always separators here, whatever the host.
 fn safe_relative(path: &Path) -> Option<PathBuf> {
+    let text = path.to_string_lossy().replace('\\', "/");
     let mut out = PathBuf::new();
-    for c in path.components() {
-        match c {
-            Component::Normal(p) => out.push(p),
-            Component::CurDir => {}
-            _ => return None,
+    for (i, part) in text.split('/').enumerate() {
+        match part {
+            "" if i == 0 => return None, // rooted, or a UNC prefix (`//server/share`)
+            "" | "." => {}
+            ".." => return None,
+            p if p.len() >= 2 && p.as_bytes()[1] == b':' && p.as_bytes()[0].is_ascii_alphabetic() => return None, // drive prefix
+            p if p.contains('\0') => return None,
+            p => out.push(p),
         }
     }
     (!out.as_os_str().is_empty()).then_some(out)
@@ -222,6 +229,16 @@ mod tests {
             safe_relative(Path::new("./a/b")),
             Some(PathBuf::from("a").join("b"))
         );
+    }
+
+    #[test]
+    fn rejects_windows_shaped_escapes_on_every_host() {
+        // Harmless names on Linux, escapes on Windows: the producer of the archive decides, not the unpacking host.
+        for bad in ["..\\x", "a\\..\\..\\x", "C:\\x", "c:/x", "\\\\server\\share\\f", "//server/share/f", "a/../../b", "a\0b"] {
+            assert_eq!(safe_relative(Path::new(bad)), None, "{bad:?}");
+        }
+        assert_eq!(safe_relative(Path::new("a\\b/c")), Some(PathBuf::from("a").join("b").join("c")));
+        assert_eq!(safe_relative(Path::new("dir:name/f")), Some(PathBuf::from("dir:name").join("f")));
     }
 
     #[test]

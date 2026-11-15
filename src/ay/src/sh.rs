@@ -56,7 +56,7 @@ pub fn run_named(args: &[String], shell_name: &str) -> i32 {
     let argv0 = match &source {
         Source::Command { .. } => inv.command_name.clone().unwrap_or_else(|| shell_name.to_string()),
         Source::File { path } => path.clone(),
-        Source::Stdin => "ay-sh".to_string(),
+        Source::Stdin => shell_name.to_string(),
     };
     let mut builder = Session::builder().argv0(argv0).process_exit_role(true);
     // bash sets BASH_EXECUTION_STRING for -c; `$-` renders its `c` from it.
@@ -84,7 +84,8 @@ pub fn run_named(args: &[String], shell_name: &str) -> i32 {
             session.set_command_string_mode(false);
             outcome
         }
-        Source::File { path } => match std::fs::read_to_string(&path) {
+        Source::File { path } => match std::fs::read(&path).map(|b| String::from_utf8_lossy(&b).into_owned()) {
+            // A script is bytes: invalid UTF-8 (a Latin-1 comment) becomes U+FFFD instead of refusing to run.
             Ok(text) => {
                 let mut opts = RunOptions::new();
                 opts.source_name = Some(path);
@@ -127,6 +128,18 @@ mod tests {
         assert_eq!(inv.positional_params, v(&["a", "b"]));
         assert!(parse(&v(&["-c"])).is_err());
         assert!(parse(&v(&["-i"])).is_err());
+    }
+
+    #[test]
+    fn a_script_with_invalid_utf8_still_runs_and_stdin_names_the_shell() {
+        let dir = std::env::temp_dir().join(format!("ay-sh-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let script = dir.join("latin1.sh");
+        std::fs::write(&script, b"# caf\xe9\nexit 5\n").unwrap();
+        assert_eq!(run(&[script.to_string_lossy().into_owned()]), 5);
+        let _ = std::fs::remove_dir_all(&dir);
+        // `$0` of a command read from stdin is the shell name the caller gave, as for `-c`.
+        assert_eq!(run_named(&v(&["-c", "[ \"$0\" = custom ] && exit 0; exit 1"]), "custom"), 0);
     }
 
     #[test]

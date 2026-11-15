@@ -8,16 +8,22 @@ on:
     paths:
       - "src/winux/**"
       - "src/ay/**"
+      - "src/up/**"
       - "infra/os/unixwin/**"
       - "scripts/unixwin-applets.ts"
+      - "Cargo.toml"
+      - "Cargo.lock"
       - ".github/workflows/unixwin.yml"
   workflow_dispatch:
 concurrency:
   group: unixwin-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 permissions: { contents: read }
 env:
   CARGO_TERM_COLOR: never
+  # Python reads and writes the corpus bytes as UTF-8 whatever the Windows code page is.
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: utf-8
 jobs:
   oracle:
     name: GNU results on Linux
@@ -87,8 +93,9 @@ jobs:
       - name: Provider table and an applet in process
         shell: bash
         run: |
-          target/release/ay applet --list | head -5
-          target/release/ay applet basename /a/b.txt .txt | tee out.txt
+          target/release/ay applet --list > list.txt
+          grep -q "^basename.winux$" list.txt
+          target/release/ay applet basename /a/b.txt .txt > out.txt
           test "$(tr -d '\r' < out.txt)" = "b"
       - name: WinuxCmd corpus through ay applet (argv0 winuxcmd)
         shell: bash
@@ -97,10 +104,17 @@ jobs:
           python winuxcmd/tests/differential/master-oracle.py --winuxcmd ./winuxcmd.exe --compare gnu-results.json --cases winuxcmd/tests/differential/master-cases.json | tee winux-compare.txt
       - name: uutils multicall for Windows
         run: cargo install coreutils --locked --root uutils --features windows
+      # uutils is not the product under test here: its differences from GNU are data, reported in the job summary, not a gate.
+      # The step itself must run (a missing binary or a crash of the harness stays red); only the differences are tolerated.
       - name: uutils against the same GNU results
         shell: bash
         run: |
-          python winuxcmd/tests/differential/master-oracle.py --winuxcmd ./uutils/bin/coreutils.exe --compare gnu-results.json --cases winuxcmd/tests/differential/master-cases.json | tee uutils-compare.txt || true
+          set +e
+          python winuxcmd/tests/differential/master-oracle.py --winuxcmd ./uutils/bin/coreutils.exe --compare gnu-results.json --cases winuxcmd/tests/differential/master-cases.json | tee uutils-compare.txt
+          code=${PIPESTATUS[0]}
+          # exit 1 = differences found; anything else (2 = harness error, missing binary) is a failure of the step.
+          { echo "### uutils on Windows against GNU"; tail -n 1 uutils-compare.txt; } >> "$GITHUB_STEP_SUMMARY"
+          test "$code" = 0 -o "$code" = 1
       - uses: actions/upload-artifact@v7
         if: always()
         with: { name: windows-compare, path: "*-compare.txt" }

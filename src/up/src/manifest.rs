@@ -162,7 +162,7 @@ impl Tool {
     /// Bare command name of the primary executable (`bin/gcloud` -> `gcloud`).
     pub fn probe_name(&self) -> &str {
         let first = self.bin.first().map(String::as_str).unwrap_or(&self.name);
-        first.rsplit('/').next().unwrap_or(first)
+        first.rsplit(['/', '\\']).next().unwrap_or(first)
     }
 
     pub fn tag(&self) -> String {
@@ -191,8 +191,10 @@ impl Tool {
     }
 
     pub fn supports(&self, platform: &str) -> bool {
-        matches!(self.source, SourceKind::Bun | SourceKind::Ubi)
-            || self.assets.contains_key(platform)
+        // `unsupported`: platforms upstream publishes no build for, whatever the source kind says.
+        !self.unsupported.iter().any(|u| u == platform)
+            && (matches!(self.source, SourceKind::Bun | SourceKind::Ubi)
+                || self.assets.contains_key(platform))
     }
 }
 
@@ -385,6 +387,26 @@ bin = ["wrangler"]
 source = "bun"
 package = "wrangler"
 "#;
+
+    #[test]
+    fn probe_name_handles_both_separators_and_unsupported_platforms_are_skipped() {
+        let m = Manifest::parse(
+            r#"
+[[tool]]
+name = "g"
+version = "1"
+bin = ["bin\\gcloud"]
+source = "bun"
+package = "g"
+unsupported = ["linux-aarch64"]
+"#,
+        )
+        .unwrap();
+        let t = &m.tools[0];
+        assert_eq!(t.probe_name(), "gcloud");
+        assert!(t.supports("linux-x86_64"));
+        assert!(!t.supports("linux-aarch64"));
+    }
 
     #[test]
     fn overlay_adds_missing_tools_and_never_replaces() {

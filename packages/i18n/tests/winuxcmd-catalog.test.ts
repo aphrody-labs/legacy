@@ -14,6 +14,25 @@ describe("winuxcmd-i18n catalogs in the stack", () => {
     expect(convert({ locale: "x", messages: { b: "{n}", a: "z" } })).toEqual({ locale: "x", messages: { a: "z", b: "{$n}" } });
   });
 
+  test("MF2 syntax characters in the source text become literals", () => {
+    const adapter = getAdapter("mf2");
+    const cases: [string, string][] = [
+      [".leading dot", ".leading dot"],
+      ["{{a}} and {b,c} and }", "{a} and {b,c} and }"],
+      ["back\\slash {name}", "back\\slash N"],
+      ["{} {} {0}", "A B A"],
+    ];
+    for (const [src, shown] of cases) {
+      expect(adapter.compile(toMf2(src), "en").format({ name: "N", arg0: "A", arg1: "B" })).toBe(shown);
+    }
+  });
+
+  test("a bad command line is refused", async () => {
+    const run = (args: string[]) => Bun.spawn([process.execPath, join(import.meta.dir, "..", "..", "..", "scripts", "winuxcmd-i18n-import.ts"), ...args], { stdout: "pipe", stderr: "pipe" });
+    expect(await run(["--bogus"]).exited).toBe(2);
+    expect(await run(["--src"]).exited).toBe(2);
+  });
+
   test("every imported message compiles with the stack's MF2 adapter and keeps its placeholders", async () => {
     const adapter = getAdapter("mf2");
     const messages = (await Bun.file(join(dir, "zh-CN.json")).json()) as Record<string, string>;

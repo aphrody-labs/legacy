@@ -58,9 +58,9 @@ Fork state (resolved with `gh api repos/<o>/<r>/commits/<branch>` on 2026-11-15)
 ## Step 5: WinuxCmd base, one multicall
 
 - Source of the matrix: `scripts/unixwin-applets.ts` (WinuxCmd `DOCS/2.0-inventory.tsv`, differential `baseline.json`, the niubash completion catalog; uutils clap definitions scanned from the coreutils, findutils and diffutils checkouts; `src/gnu/coreutils/PROOF.md` for the GNU suite failures). It writes the table below and `infra/os/unixwin/applets.toml`, the provider table that `ay applet` embeds.
-- Decision rule: an applet WinuxCmd has stays WinuxCmd's. uutils fills what WinuxCmd lacks and what the multicall cannot carry (C++ applets: `ay` links Rust only). The WinuxCmd library is Win32-only (console, handles, ACLs): `ay` links it on Windows; elsewhere a `winux` applet runs through the uutils multicall. No second coreutils is linked or built.
+- Decision rule: an applet WinuxCmd has stays WinuxCmd's. Provider `winux` means the Rust library registers it (`src/winux/cmds` `registry()` or `src/winux/extra`): the inventory state label alone never decides. uutils fills what WinuxCmd lacks and what the multicall cannot carry (C++ applets: `ay` links Rust only). Each `uutils` row names its own executable and calling shape in `infra/os/unixwin/applets.toml` (`bin`, `multicall`): `coreutils`, `procps`, `util-linux`, `acl`, `bsdutils`, `diffutils` and `shadow-rs` take the applet name first, `grep`, `sed`, `awk`, `hostname`, `tarapp` and the findutils programs are run directly. A crate of uutils without a binary (coreutils `checksum_common`) is a library, not an applet. The WinuxCmd library is Win32-only (console, handles, ACLs): `ay` links it on Windows; elsewhere a `winux` applet runs through the uutils executable of the same applet when there is one and fails with a clear message when there is none. No second coreutils is linked or built.
 - Evidence is per side, not a shared run: the WinuxCmd differential corpus (GNU oracle, pass/total) and the GNU test suite on uutils (fr1 run, `src/gnu/coreutils/PROOF.md`: 598 of 637 executed tests). Option columns count long options (W: completion catalog, U: clap scan); they are a coverage signal, not a parity proof. Running the WinuxCmd corpus against uutils on one oracle is not done.
-- The 60 C++-only applets (2026-11-15): the matrix now also scans uutils procps, util-linux, acl, bsdutils, hostname, shadow, tar, grep, sed and awk; 15 of the 60 exist there (free, pgrep, pidof, pkill, ps, top, vmstat, w, watch, cal, hexdump, renice, getfacl, grep, sed) and their provider is `uutils`. Seven were ported to portable Rust in `src/winux/extra` (dos2unix, unix2dos, d2u, u2d, envsubst, look, strings): they run in process on every host and are compared with the gettext, util-linux and binutils originals by `test/winux-extra`. 38 stay `winux-cxx` (Win32-specific or large: cygpath, regtool, mkpasswd, mkgroup, tic, infocmp, toe, tput, less, cpio, diff3, patch, tree...). The C++ sources are not deleted: they live in the WinuxCmd fork at the pin, whose Windows build is the product, and none of the 7 Rust applets has passed the WinuxCmd corpus yet (that corpus needs a Windows run with a GNU oracle; the `unixwin` workflow covers its master subset).
+- The 60 C++-only applets (2026-11-15): the matrix now also scans uutils procps, util-linux, acl, bsdutils, hostname, shadow, tar, grep, sed and awk; 13 of the 60 exist there (free, pgrep, pidof, pkill, ps, top, vmstat, w, watch, cal, hexdump, renice, getfacl) and their provider is `uutils`; grep and sed are registered by the Rust library (provider `winux`). Seven were ported to portable Rust in `src/winux/extra` (dos2unix, unix2dos, d2u, u2d, envsubst, look, strings): they run in process on every host and are compared with the gettext, util-linux and binutils originals by `test/winux-extra`. 38 stay `winux-cxx` (the table counts 94 `winux`, 105 `uutils`, 38 `winux-cxx`) (Win32-specific or large: cygpath, regtool, mkpasswd, mkgroup, tic, infocmp, toe, tput, less, cpio, diff3, patch, tree...). The C++ sources are not deleted: they live in the WinuxCmd fork at the pin, whose Windows build is the product, and none of the 7 Rust applets has passed the WinuxCmd corpus yet (that corpus needs a Windows run with a GNU oracle; the `unixwin` workflow covers its master subset).
 - Built: `src/winux/{core,regex,cmds}` pass `cargo check -Zbuild-std --target x86_64-pc-windows-msvc` on fr2; `ay applet` unit tests pass on fr2 (Linux, provider table); the in-process dispatch is checked on the Windows target only (compiles, not executed).
 
 ## Linux, unix, posix and nt in the core: inventory (partly merged)
@@ -78,7 +78,7 @@ Owner update (2026-11-15): merge third-party and first-party linux, unix, posix 
 Done (one commit per subsystem, references rewritten, `aphrody-omarchy` tests green on fr2): `infra/unixwin` is now `infra/os/unixwin`, `infra/wsl-distro` is `infra/os/wsl`, `infra/linux` is `infra/os/linux` (the layout of `docs/ARCHITECTURE.md` 9.3). Not done: absorbing kernel, glibc or wine sources (they stay pins, by size and because `src/` holds the Linux-style C core, not upstream trees), folding `third_party/kernel-patches` into `infra/os/linux/patchsets.toml`, the NT personality and `packages/machine` shell matrix entries. Docs that other sessions were editing still name the old `infra/linux` and `infra/wsl-distro` paths (`docs/ARCHITECTURE.md`, `docs/native/COMPAT-WINDOWS-LINUX.md`, `docs/native/UNIX.md`, `docs/native/linux/PATCHSETS.md`, `docs/infra/WSL.md`, `docs/native/shell/MATRIX.md`, `packages/machine/src/forks.ts`).
 
 <!-- applets:begin -->
-Applets: 238 (WinuxCmd 176, uutils 191; in both 129, WinuxCmd only 47, uutils only 62). Providers in the multicall: winux 90, uutils 110, winux-cxx 38.
+Applets: 237 (WinuxCmd 176, uutils 190; in both 129, WinuxCmd only 47, uutils only 61). Providers in the multicall: winux 94, uutils 105, winux-cxx 38.
 
 | applet | WinuxCmd state | differential pass | options W | uutils | options U | W only | U only | uutils on Windows | GNU suite failures (uutils) | provider |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -98,7 +98,6 @@ Applets: 238 (WinuxCmd 176, uutils 191; in both 129, WinuxCmd only 47, uutils on
 | chattr | c++-only (c++-1.x) | - | 5 | - | - | - | - | - | - | winux-cxx |
 | chcon | rust-ready (rust2-ready) | - | 13 | coreutils | 12 | 1 | 0 | yes | 0 | winux |
 | chcpu | - | - | - | util-linux | 6 | - | - | yes | 0 | uutils |
-| checksum_common | - | - | - | coreutils | 16 | - | - | yes | 0 | uutils |
 | chfn | - | - | - | shadow | 7 | - | - | yes | 0 | uutils |
 | chgpasswd | - | - | - | shadow | 6 | - | - | yes | 0 | uutils |
 | chgrp | rust-ready (rust2-ready) | - | 13 | coreutils | 0 | 13 | 0 | no | 0 | winux |
@@ -140,7 +139,7 @@ Applets: 238 (WinuxCmd 176, uutils 191; in both 129, WinuxCmd only 47, uutils on
 | factor | rust-ready (rust2-ready) | 1/1 | 3 | coreutils | 2 | 1 | 0 | yes | 1 | winux |
 | false | wired (rust2) | 2/2 | 2 | coreutils | 2 | 0 | 0 | yes | 0 | winux |
 | file | c++-only (c++-1.x) | 2/2 | 13 | - | - | - | - | - | - | winux-cxx |
-| find | c++-only (rust2-inflight) | 7/8 | 3 | findutils | 0 | 3 | 0 | yes | 0 | uutils |
+| find | c++-only (rust2-inflight) | 7/8 | 3 | findutils | 0 | 3 | 0 | yes | 0 | winux |
 | fmt | wired (rust2) | 3/3 | 14 | coreutils | 13 | 2 | 1 | yes | 0 | winux |
 | fold | wired (rust2) | 4/4 | 6 | coreutils | 4 | 2 | 0 | yes | 0 | winux |
 | free | c++-only (c++-1.x) | - | 22 | procps | 0 | 22 | 0 | yes | 0 | uutils |
@@ -149,7 +148,7 @@ Applets: 238 (WinuxCmd 176, uutils 191; in both 129, WinuxCmd only 47, uutils on
 | getfacl | c++-only (c++-1.x) | - | 10 | acl | 12 | 2 | 4 | yes | 0 | uutils |
 | getopt | c++-only (c++-1.x) | 2/2 | 11 | - | - | - | - | - | - | winux-cxx |
 | gpasswd | - | - | - | shadow | 8 | - | - | yes | 0 | uutils |
-| grep | c++-only (rust2-inflight) | 16/16 | 49 | grep | 46 | 3 | 0 | yes | 0 | uutils |
+| grep | c++-only (rust2-inflight) | 16/16 | 49 | grep | 46 | 3 | 0 | yes | 0 | winux |
 | groupadd | - | - | - | shadow | 9 | - | - | yes | 0 | uutils |
 | groupdel | - | - | - | shadow | 3 | - | - | yes | 0 | uutils |
 | groupmod | - | - | - | shadow | 8 | - | - | yes | 0 | uutils |
@@ -242,11 +241,11 @@ Applets: 238 (WinuxCmd 176, uutils 191; in both 129, WinuxCmd only 47, uutils on
 | renice | c++-only (c++-1.x) | 2/2 | 6 | util-linux | 0 | 6 | 0 | yes | 0 | uutils |
 | reset | c++-only (c++-1.x) | - | 2 | - | - | - | - | - | - | winux-cxx |
 | rev | wired (rust2) | 5/5 | 3 | util-linux | 1 | 2 | 0 | yes | 0 | winux |
-| rm | c++-only (c++-1.x) | 3/3 | 10 | coreutils | 10 | 2 | 2 | yes | 0 | uutils |
+| rm | c++-only (c++-1.x) | 3/3 | 10 | coreutils | 10 | 2 | 2 | yes | 0 | winux |
 | rmdir | wired (rust2) | 3/3 | 5 | coreutils | 3 | 2 | 0 | yes | 0 | winux |
 | runcon | rust-ready (rust2-ready) | - | 7 | coreutils | 5 | 2 | 0 | yes | 0 | winux |
 | sdiff | c++-only (c++-1.x) | 30/30 | 3 | - | - | - | - | - | - | winux-cxx |
-| sed | c++-only (rust2-inflight) | 5/8 | 18 | sed | 7 | 14 | 3 | yes | 0 | uutils |
+| sed | c++-only (rust2-inflight) | 5/8 | 18 | sed | 7 | 14 | 3 | yes | 0 | winux |
 | seq | wired (rust2) | 10/10 | 6 | coreutils | 4 | 2 | 0 | yes | 0 | winux |
 | setfacl | - | - | - | acl | 12 | - | - | yes | 0 | uutils |
 | setpgid | - | - | - | util-linux | 1 | - | - | yes | 0 | uutils |

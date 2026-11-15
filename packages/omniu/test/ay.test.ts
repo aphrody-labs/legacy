@@ -36,6 +36,14 @@ describe("ay plugin plumbing (stand-in binary)", () => {
     expect((await ay.sh("exit 3")).code).toBe(3);
   });
 
+  test("per-call options add to the plugin defaults instead of replacing them", async () => {
+    const plugin = ayPlugin({ ...fake, env: { FAKE_A: "1" } });
+    let mod: any;
+    plugin.setup({ module: (_n: string, cb: () => any) => (mod = cb().exports) } as any);
+    const r = await mod.run(["env"], { env: { FAKE_B: "2" } });
+    expect(JSON.parse(r.stdout)).toEqual({ a: "1", b: "2" });
+  });
+
   test("the host finds the ay plugin by its plugin.toml and its [bun] entry", async () => {
     const ay = discover(ROOT).find((p) => p.name === "ay")!;
     expect(ay.bun).toEqual({ entry: "ay.plugin.ts", module: "ay" });

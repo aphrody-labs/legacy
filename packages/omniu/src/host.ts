@@ -3,6 +3,7 @@
 // so one directory serves both hosts.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { plugin as register } from "bun";
 import type { BunPlugin } from "bun";
 
@@ -41,7 +42,8 @@ export async function loadBunPlugins(root: string = bundleRoot(), only?: string[
   const loaded: string[] = [];
   for (const p of discover(root)) {
     if (!p.bun || (only && !only.includes(p.name))) continue;
-    const mod = await import(join(p.dir, p.bun.entry));
+    // A file URL: a bare Windows path (`C:\\...`) is not a valid module specifier.
+    const mod = await import(pathToFileURL(join(p.dir, p.bun.entry)).href);
     const exported = mod.default as BunPlugin | ((plugin: HostedPlugin) => BunPlugin) | undefined;
     if (!exported) throw new Error(`${p.name}: ${p.bun.entry} has no default export`);
     register(typeof exported === "function" ? exported(p) : exported);

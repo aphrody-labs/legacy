@@ -50,7 +50,18 @@ export function convert(catalog: { locale: string; messages: Record<string, stri
 
 if (import.meta.main) {
   const args = Bun.argv.slice(2);
-  const src = args.includes("--src") ? args[args.indexOf("--src") + 1]! : join(ROOT, "third_party/winuxcmd-i18n/catalogs");
+  const known = new Set(["--src", "--write"]);
+  const unknown = args.filter((a, i) => a.startsWith("-") ? !known.has(a) : args[i - 1] !== "--src");
+  if (unknown.length) {
+    console.error(`unknown argument: ${unknown.join(" ")}\nusage: bun scripts/winuxcmd-i18n-import.ts [--src DIR] [--write]`);
+    process.exit(2);
+  }
+  const srcAt = args.indexOf("--src");
+  if (srcAt >= 0 && (!args[srcAt + 1] || args[srcAt + 1]!.startsWith("-"))) {
+    console.error("--src needs a directory");
+    process.exit(2);
+  }
+  const src = srcAt >= 0 ? args[srcAt + 1]! : join(ROOT, "third_party/winuxcmd-i18n/catalogs");
   const out = join(ROOT, "packages/i18n/catalogs/winuxcmd");
   let n = 0;
   for (const loc of existsSync(src) ? readdirSync(src) : []) {

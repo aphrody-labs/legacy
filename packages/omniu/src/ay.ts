@@ -71,7 +71,8 @@ export async function commands(opts: AyOptions = {}): Promise<string[]> {
 
 /** The Bun plugin: registers the virtual module "ay". */
 export function ayPlugin(defaults: AyOptions = {}): BunPlugin {
-  const merge = (o: AyOptions = {}): AyOptions => ({ ...defaults, ...o });
+  // Per-call options win, but the environment is merged: a call that adds one variable keeps the defaults of the plugin.
+  const merge = (o: AyOptions = {}): AyOptions => ({ ...defaults, ...o, env: { ...defaults.env, ...o.env } });
   return {
     name: "ay",
     setup(build) {

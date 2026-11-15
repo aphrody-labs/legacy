@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { clapLongs, decide, failureApplets, literalLongs, parseInventory, strConsts, tomlLongs, unixOnly } from "./unixwin-applets.ts";
+import { clapLongs, decide, portedApplets, uutilsBinary, failureApplets, literalLongs, parseInventory, strConsts, tomlLongs, unixOnly } from "./unixwin-applets.ts";
 
 test("inventory rows are keyed by applet", () => {
   const m = parseInventory("applet\tloc\tstate\tengine\toracle_status\nls\t9\tc++-only\tc++-1.x\taudited:clean\ncat\t3\twired\trust2\tunreviewed\n");
@@ -32,10 +32,27 @@ test("GNU suite failures group by applet", () => {
 
 test("WinuxCmd is the base: Rust applets stay, C++ ones fall back to uutils only when uutils has them", () => {
   const w = (state: string) => ({ state, engine: "", oracle: "", pass: 0, knownDiff: 0, skip: 0, longs: new Set<string>() });
-  const u = { source: "coreutils", longs: new Set<string>(), unixOnly: false, gnuFailures: [] };
-  expect(decide(w("wired"), u).provider).toBe("winux");
-  expect(decide(w("rust-ready"), undefined).provider).toBe("winux");
+  const u = { source: "coreutils", longs: new Set<string>(), unixOnly: false, gnuFailures: [], bin: "coreutils", multicall: true };
+  const native = new Set(["cat"]);
+  expect(decide(w("wired"), u, native, "cat").provider).toBe("winux");
+  // A state label without a registry entry is not enough (the applet would be missing at run time).
+  expect(decide(w("wired"), u, native, "ls").provider).toBe("uutils");
+  expect(decide(w("rust-ready"), undefined, native, "ls").provider).toBe("winux-cxx");
   expect(decide(w("c++-only"), u).provider).toBe("uutils");
   expect(decide(w("c++-only"), undefined).provider).toBe("winux-cxx");
   expect(decide(undefined, u).provider).toBe("uutils");
+});
+
+test("each uutils repository maps to its own executable, never to coreutils", () => {
+  expect(uutilsBinary("coreutils", "ls")).toEqual({ bin: "coreutils", multicall: true });
+  expect(uutilsBinary("procps", "ps")).toEqual({ bin: "procps", multicall: true });
+  expect(uutilsBinary("util-linux", "cal")).toEqual({ bin: "util-linux", multicall: true });
+  expect(uutilsBinary("shadow", "useradd")).toEqual({ bin: "shadow-rs", multicall: true });
+  expect(uutilsBinary("grep", "grep")).toEqual({ bin: "grep", multicall: false });
+  expect(uutilsBinary("findutils", "xargs")).toEqual({ bin: "xargs", multicall: false });
+});
+
+test("registry names come from the registry function only", () => {
+  const lib = 'pub fn registry() -> Vec<(&str, F)> {\n    vec![\n        ("a", x::a),\n        ("[", x::b),\n    ]\n}\n\nfn other() { let _ = ("zzz", 1); }\n';
+  expect([...portedApplets(lib)].sort()).toEqual(["[", "a"]);
 });

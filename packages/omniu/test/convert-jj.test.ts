@@ -34,3 +34,31 @@ test("flags, subcommands and value lists are extracted", () => {
   // `new` has no opts branch: skipped, as in the Python converter.
   expect(toml).not.toContain('name = "new"');
 });
+
+test("backslashes in flag names and values cannot break the TOML", () => {
+  const src = [
+    "    case \"${prev}\" in",
+    "        --mode)",
+    "            COMPREPLY=($(compgen -W \"a\\\\b c\" -- \"${cur}\"))",
+    "            ;;",
+    "    esac",
+    "        jj,x)",
+    "            cmd=\"jj__subcmd__x\"",
+    "            ;;",
+    "    esac",
+    "    case \"${cmd}\" in",
+    "        jj)",
+    "        opts=\"--mode --we\\\\ird\"",
+    "            ;;",
+    "        jj__subcmd__x)",
+    "        opts=\"-q\"",
+    "            ;;",
+    "",
+  ].join("\n");
+  const doc = Bun.TOML.parse(convertJjCompletions(src)) as any;
+  expect(doc.command).toBe("jj");
+  const mode = doc.flags.find((f: any) => f.long === "--mode");
+  expect(mode.values).toEqual(["a\\\\b", "c"]);
+  expect(doc.flags.map((f: any) => f.long)).toContain("--we\\\\ird");
+  expect(doc.subcommands[0].name).toBe("x");
+});

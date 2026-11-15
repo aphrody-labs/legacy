@@ -64,7 +64,7 @@ describe.skipIf(!AY || !Bun.which("strings"))("strings against binutils", () => 
   bytes.set(new TextEncoder().encode("abc"), 300);
   bytes.set(new TextEncoder().encode("tab\there"), 500);
   writeFileSync(file, bytes);
-  const cases = [[file], ["-n", "3", file], ["-n", "8", file], ["-t", "x", file], ["-t", "d", file], ["-t", "o", file], ["-f", file]];
+  const cases = [[file], ["-n3", file], ["--bytes=5", file], ["-tx", file], ["--radix=d", file], ["-6", file], ["-n", "3", file], ["-n", "8", file], ["-t", "x", file], ["-t", "d", file], ["-t", "o", file], ["-f", file]];
   for (const args of cases) {
     test(`strings ${args.slice(0, -1).join(" ")}`, async () => {
       const a = await ours("strings", args);
@@ -100,6 +100,8 @@ describe.skipIf(!AY)("dos2unix and unix2dos", () => {
       expect((await ours("dos2unix", ["-q", "-f", bin])).code).toBe(0);
       expect([...readFileSync(bin)]).toEqual([97, 10, 0, 98]);
       expect((await ours("dos2unix", [join(dir, "missing")])).code).toBe(1);
+      // No scratch file is left behind next to the converted one.
+      expect(require("node:fs").readdirSync(dir).filter((n: string) => n.endsWith(".winux-new"))).toEqual([]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

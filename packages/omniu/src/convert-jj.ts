@@ -20,9 +20,9 @@ export function convertJjCompletions(src: string): string {
     "",
   ];
   const flagBlock = (flag: string, sub: boolean) => {
-    const lines = [sub ? "[[subcommands.flags]]" : "[[flags]]", `${flag.startsWith("--") ? "long" : "short"} = "${flag}"`];
+    const lines = [sub ? "[[subcommands.flags]]" : "[[flags]]", `${flag.startsWith("--") ? "long" : "short"} = ${JSON.stringify(flag)}`];
     const v = values.get(flag);
-    if (v?.length) lines.push(`values = [${v.map((x) => `"${x}"`).join(", ")}]`);
+    if (v?.length) lines.push(`values = [${v.map((x) => JSON.stringify(x)).join(", ")}]`);
     lines.push("");
     return lines;
   };
@@ -31,7 +31,7 @@ export function convertJjCompletions(src: string): string {
   for (const name of level1) {
     const tokens = branches.get(`jj__subcmd__${name}`);
     if (!tokens) continue;
-    out.push("[[subcommands]]", `name = "${name}"`, "");
+    out.push("[[subcommands]]", `name = ${JSON.stringify(name)}`, "");
     for (const flag of flagsOf(tokens)) out.push(...flagBlock(flag, true));
   }
   return out.join("\n");

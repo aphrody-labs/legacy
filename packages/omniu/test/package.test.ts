@@ -62,3 +62,9 @@ test("the bundle packages: every release file is in the zip, bytes unchanged, sa
     rmSync(out, { recursive: true, force: true });
   }
 });
+
+test("zip refuses what plain zip cannot hold instead of writing a corrupt archive", () => {
+  const many = Array.from({ length: 0x10000 }, (_, i) => ({ name: `f${i}`, data: new Uint8Array(0) }));
+  expect(() => zip(many)).toThrow("65535");
+  expect(zip(many.slice(0, 0xffff)).length).toBeGreaterThan(0);
+});

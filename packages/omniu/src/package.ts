@@ -36,6 +36,9 @@ export function releasePaths(root: string): string[] {
 
 /** A zip archive (deflate, fixed dates, mode 0644) of `entries`. */
 export function zip(entries: { name: string; data: Uint8Array }[]): Uint8Array {
+  // Plain ZIP only: 16-bit entry counts and 32-bit sizes and offsets. Past those limits the archive would be silently corrupt, so refuse.
+  if (entries.length > 0xffff) throw new Error(`zip: ${entries.length} entries exceed the 65535 of a non-zip64 archive`);
+  if (entries.some((e) => e.data.length >= 0xffffffff)) throw new Error("zip: an entry of 4 GiB or more needs zip64");
   const parts: Uint8Array[] = [];
   const central: Uint8Array[] = [];
   let offset = 0;

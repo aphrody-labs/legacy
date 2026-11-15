@@ -7,11 +7,11 @@ import { join } from "node:path";
 import { manifest, sh, type AyOptions } from "../../../omniu/src/ay.ts";
 import { validateAll } from "../../../omniu/src/validate.ts";
 
-type Rpc = { jsonrpc: "2.0"; id?: number | string; method?: string; params?: any };
+type Rpc = { jsonrpc?: string; id?: number | string | null; method?: string; params?: any };
+type Reply = { jsonrpc: "2.0"; id: number | string | null; result?: unknown; error?: { code: number; message: string } };
 
-const send = (m: unknown): void => void process.stdout.write(`${JSON.stringify(m)}\n`);
-const ok = (id: Rpc["id"], result: unknown) => send({ jsonrpc: "2.0", id, result });
-const fail = (id: Rpc["id"], code: number, message: string) => send({ jsonrpc: "2.0", id, error: { code, message } });
+const ok = (id: Reply["id"], result: unknown): Reply => ({ jsonrpc: "2.0", id, result });
+const fail = (id: Reply["id"], code: number, message: string): Reply => ({ jsonrpc: "2.0", id, error: { code, message } });
 
 const SRC = join(import.meta.dir, "..", "..", "..", "..");
 
@@ -66,31 +66,51 @@ export function unixwinTools(ay: AyOptions = {}, root: string = SRC) {
   ];
 }
 
-export async function handle(m: Rpc, tools = unixwinTools()): Promise<void> {
-  if (m.id === undefined) return;
-  switch (m.method) {
-    case "initialize":
-      return ok(m.id, { protocolVersion: m.params?.protocolVersion ?? "2025-11-25", capabilities: { tools: {} }, serverInfo: { name: "aphrody-unixwin", version: "0.1.0" } });
-    case "ping":
-      return ok(m.id, {});
-    case "tools/list":
-      return ok(m.id, { tools: tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema, annotations: { readOnlyHint: t.readOnly } })) });
-    case "tools/call": {
-      const t = tools.find((x) => x.name === m.params?.name);
-      if (!t) return fail(m.id, -32602, `unknown tool ${m.params?.name}`);
-      try {
-        const r = await t.run(m.params?.arguments ?? {});
-        return ok(m.id, { content: [{ type: "text", text: JSON.stringify(r) }] });
-      } catch (e) {
-        return ok(m.id, { isError: true, content: [{ type: "text", text: String(e) }] });
+/**
+ * One JSON-RPC 2.0 message to its reply; `undefined` for a notification (no `id`), which never gets one.
+ * Malformed input is a reply (-32700 parse error, -32600 invalid request), never an exception.
+ */
+export async function respond(line: string, tools = unixwinTools()): Promise<Reply | undefined> {
+  let m: Rpc;
+  try {
+    m = JSON.parse(line) as Rpc;
+  } catch {
+    return fail(null, -32700, "parse error");
+  }
+  if (typeof m !== "object" || m === null || Array.isArray(m) || typeof m.method !== "string") return fail(null, -32600, "invalid request");
+  if (m.id === undefined) return undefined;
+  const id = m.id;
+  try {
+    switch (m.method) {
+      case "initialize":
+        return ok(id, { protocolVersion: m.params?.protocolVersion ?? "2025-11-25", capabilities: { tools: {} }, serverInfo: { name: "aphrody-unixwin", version: "0.1.0" } });
+      case "ping":
+        return ok(id, {});
+      case "tools/list":
+        return ok(id, { tools: tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema, annotations: { readOnlyHint: t.readOnly } })) });
+      case "tools/call": {
+        if (typeof m.params?.name !== "string") return fail(id, -32602, "params.name (string) required");
+        const t = tools.find((x) => x.name === m.params.name);
+        if (!t) return fail(id, -32602, `unknown tool ${m.params.name}`);
+        try {
+          const r = await t.run(m.params.arguments ?? {});
+          return ok(id, { content: [{ type: "text", text: JSON.stringify(r) }] });
+        } catch (e) {
+          return ok(id, { isError: true, content: [{ type: "text", text: String(e) }] });
+        }
       }
+      default:
+        return fail(id, -32601, `method not found: ${m.method}`);
     }
-    default:
-      return fail(m.id, -32601, `method not found: ${m.method}`);
+  } catch (e) {
+    return fail(id, -32603, String(e));
   }
 }
 
 if (import.meta.main) {
+  // Replies are written one at a time, each awaited: a slow reader of stdout applies backpressure instead of growing a queue.
+  let out: Promise<unknown> = Promise.resolve();
+  const send = (r: Reply) => (out = out.then(() => Bun.write(Bun.stdout, `${JSON.stringify(r)}\n`)));
   let buf = "";
   for await (const c of Bun.stdin.stream()) {
     buf += Buffer.from(c).toString("utf8");
@@ -98,7 +118,10 @@ if (import.meta.main) {
     while ((i = buf.indexOf("\n")) >= 0) {
       const line = buf.slice(0, i).trim();
       buf = buf.slice(i + 1);
-      if (line) await handle(JSON.parse(line) as Rpc);
+      if (!line) continue;
+      const r = await respond(line);
+      if (r) await send(r);
     }
   }
+  await out;
 }

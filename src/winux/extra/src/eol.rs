@@ -109,7 +109,7 @@ fn convert(prog: &str, args: &[OsString], io: &mut Io, ctx: &Ctx, f: fn(&[u8]) -
             continue;
         }
         let out_path = winux_core::abs_path(ctx, std::path::Path::new(&output));
-        if let Err(e) = std::fs::write(&out_path, f(&data)) {
+        if let Err(e) = write_replacing(&out_path, &f(&data)) {
             crate::diag(io, prog, &format!("{}: {}", output.to_string_lossy(), crate::err_text(&e)));
             status = 1;
             continue;
@@ -119,6 +119,21 @@ fn convert(prog: &str, args: &[OsString], io: &mut Io, ctx: &Ctx, f: fn(&[u8]) -
         }
     }
     Ok(status)
+}
+
+/// Write through a scratch file and rename it over `path`: a crash or a full disk never leaves a half-converted file, and the
+/// permissions of an existing file are kept.
+fn write_replacing(path: &std::path::Path, data: &[u8]) -> std::io::Result<()> {
+    let mut name = path.file_name().map(|n| n.to_os_string()).unwrap_or_default();
+    name.push(".winux-new");
+    let tmp = path.with_file_name(name);
+    std::fs::write(&tmp, data)?;
+    if let Ok(meta) = std::fs::metadata(path) {
+        let _ = std::fs::set_permissions(&tmp, meta.permissions());
+    }
+    std::fs::rename(&tmp, path).inspect_err(|_| {
+        let _ = std::fs::remove_file(&tmp);
+    })
 }
 
 pub fn dos2unix_cmd(args: &[OsString], io: &mut Io, ctx: &Ctx) -> CmdResult {

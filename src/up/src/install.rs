@@ -40,8 +40,38 @@ fn exe_name(name: &str) -> String {
     format!("{name}{}", std::env::consts::EXE_SUFFIX)
 }
 
+/// `root` joined with a relative archive path, refusing anything that is not plain components below `root`.
+pub fn contained(root: &Path, rel: &Path) -> Result<PathBuf, String> {
+    let text = rel.to_string_lossy().replace('\\', "/");
+    let bad = text.starts_with('/')
+        || text.split('/').any(|c| c == ".." || (c.len() >= 2 && c.as_bytes()[1] == b':' && c.as_bytes()[0].is_ascii_alphabetic()));
+    if bad || rel.is_absolute() || text.contains('\0') {
+        return Err(format!("archive path escapes the install directory: {}", rel.display()));
+    }
+    Ok(root.join(rel))
+}
+
+/// `dest` with `.suffix` appended to the whole file name. `with_extension` would replace the last dotted part (`tool.1.2` -> `tool.1.ay-new`),
+/// so two files differing in their extension would share one scratch name.
+pub fn sidecar(dest: &Path, suffix: &str) -> PathBuf {
+    let mut name = dest.file_name().map(|n| n.to_os_string()).unwrap_or_default();
+    name.push(".");
+    name.push(suffix);
+    dest.with_file_name(name)
+}
+
+/// A name for the file moved aside, unique per attempt: on Windows the previous `.ay-old` is still a running image (it cannot be deleted
+/// or overwritten) when the tool is updated a second time.
+fn aside_name(dest: &Path) -> PathBuf {
+    let nanos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos())
+        .unwrap_or(0);
+    sidecar(dest, &format!("ay-old-{}-{nanos}", std::process::id()))
+}
+
 /// Write `data` to `dest` atomically enough for a running executable: the current file is
-/// renamed to `.old` first (Windows cannot overwrite a running binary).
+/// renamed aside first (Windows cannot overwrite a running binary).
 pub fn place_file(dest: &Path, data: &[u8], executable: bool) -> Result<(), String> {
     if is_system_dir(dest) {
         return Err(format!(
@@ -52,7 +82,7 @@ pub fn place_file(dest: &Path, data: &[u8], executable: bool) -> Result<(), Stri
     if let Some(parent) = dest.parent() {
         std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
     }
-    let tmp = dest.with_extension("ay-new");
+    let tmp = sidecar(dest, "ay-new");
     std::fs::write(&tmp, data).map_err(|e| format!("{}: {e}", tmp.display()))?;
     #[cfg(unix)]
     if executable {
@@ -63,8 +93,7 @@ pub fn place_file(dest: &Path, data: &[u8], executable: bool) -> Result<(), Stri
     #[cfg(not(unix))]
     let _ = executable;
     if dest.exists() {
-        let old = dest.with_extension("ay-old");
-        let _ = std::fs::remove_file(&old);
+        let old = aside_name(dest);
         std::fs::rename(dest, &old).map_err(|e| format!("move aside {}: {e}", dest.display()))?;
         let _ = std::fs::remove_file(&old);
     }
@@ -187,7 +216,9 @@ fn install_archive(
             }
             for e in &entries {
                 let exec = e.mode.is_some_and(|m| m & 0o111 != 0);
-                place_file(&root.join(&e.path), &e.data, exec)?;
+                // `archive::entries` already refuses rooted, `..` and drive paths; the destination is checked again here.
+                let dest = contained(&root, &e.path)?;
+                place_file(&dest, &e.data, exec)?;
             }
             for bin in &tool.bin {
                 let target = tree_bin(&root, bin)
@@ -358,6 +389,46 @@ pub fn install(
 
 #[cfg(test)]
 mod tests {
+    use super::{contained, place_file, sidecar};
+    use std::path::{Path, PathBuf};
+
+    #[test]
+    fn contained_refuses_every_escape_and_keeps_plain_paths() {
+        let root = Path::new("root");
+        for bad in ["../x", "a/../../x", "..\\x", "/abs", "\\\\srv\\sh\\f", "C:\\x", "d:/x", "a\0b"] {
+            assert!(contained(root, Path::new(bad)).is_err(), "{bad:?}");
+        }
+        assert_eq!(contained(root, Path::new("a/b")).unwrap(), PathBuf::from("root").join("a/b"));
+        assert_eq!(contained(root, Path::new("dir:name/c")).unwrap(), PathBuf::from("root").join("dir:name/c"));
+        // `a:b` is drive-relative on Windows.
+        assert!(contained(root, Path::new("a:b")).is_err());
+    }
+
+    #[test]
+    fn sidecar_appends_to_the_whole_file_name() {
+        assert_eq!(sidecar(Path::new("d/tool.1.2"), "ay-new"), PathBuf::from("d/tool.1.2.ay-new"));
+        assert_eq!(sidecar(Path::new("d/tool.exe"), "ay-new"), PathBuf::from("d/tool.exe.ay-new"));
+        assert_ne!(sidecar(Path::new("d/a.b"), "ay-new"), sidecar(Path::new("d/a.c"), "ay-new"));
+    }
+
+    #[test]
+    fn place_file_replaces_repeatedly_keeps_dotted_siblings_and_ignores_stale_aside_files() {
+        let dir = std::env::temp_dir().join(format!("ay-place-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let (a, b) = (dir.join("tool.1"), dir.join("tool.2"));
+        place_file(&a, b"a1", false).unwrap();
+        place_file(&b, b"b1", false).unwrap();
+        // A stale moved-aside file that cannot be removed (a running image on Windows) must not block the next update.
+        std::fs::write(sidecar(&a, "ay-old"), b"stale").unwrap();
+        place_file(&a, b"a2", false).unwrap();
+        place_file(&a, b"a3", false).unwrap();
+        assert_eq!(std::fs::read(&a).unwrap(), b"a3");
+        assert_eq!(std::fs::read(&b).unwrap(), b"b1");
+        assert!(!sidecar(&a, "ay-new").exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
     use super::*;
 
     #[test]

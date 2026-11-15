@@ -50,16 +50,28 @@ pub fn strings_cmd(args: &[OsString], io: &mut Io, ctx: &Ctx) -> CmdResult {
             }
             "-a" | "--all" => {}
             "-f" | "--print-file-name" => with_name = true,
+            // `-n N`, `-nN`, `--bytes N`, `--bytes=N`
             "-n" | "--bytes" => {
                 i += 1;
-                match args.get(i).and_then(|a| a.to_string_lossy().parse().ok()) {
-                    Some(n) => min = n,
-                    None => {
+                match args.get(i).and_then(|a| a.to_string_lossy().parse::<usize>().ok()) {
+                    Some(n) if n > 0 => min = n,
+                    _ => {
                         crate::diag(io, "strings", "invalid minimum string length");
                         return Ok(1);
                     }
                 }
             }
+            _ if s.starts_with("--bytes=") || (s.starts_with("-n") && s.len() > 2) => {
+                let v = s.strip_prefix("--bytes=").unwrap_or(&s[2..]);
+                match v.parse::<usize>() {
+                    Ok(n) if n > 0 => min = n,
+                    _ => {
+                        crate::diag(io, "strings", "invalid minimum string length");
+                        return Ok(1);
+                    }
+                }
+            }
+            // `-t R`, `-tR`, `--radix R`, `--radix=R`
             "-t" | "--radix" => {
                 i += 1;
                 radix = args.get(i).and_then(|a| a.to_string_lossy().chars().next());
@@ -68,7 +80,14 @@ pub fn strings_cmd(args: &[OsString], io: &mut Io, ctx: &Ctx) -> CmdResult {
                     return Ok(1);
                 }
             }
-            _ if s.starts_with('-') && s.len() > 1 && s[1..].bytes().all(|b| b.is_ascii_digit()) => min = s[1..].parse().unwrap_or(4),
+            _ if s.starts_with("--radix=") || (s.starts_with("-t") && s.len() > 2) => {
+                radix = s.strip_prefix("--radix=").unwrap_or(&s[2..]).chars().next();
+                if !matches!(radix, Some('o' | 'd' | 'x')) {
+                    crate::diag(io, "strings", "invalid radix");
+                    return Ok(1);
+                }
+            }
+            _ if s.starts_with('-') && s.len() > 1 && s[1..].bytes().all(|b| b.is_ascii_digit()) => min = s[1..].parse().ok().filter(|n| *n > 0).unwrap_or(4),
             _ if s.starts_with('-') && s.len() > 1 => {
                 crate::diag(io, "strings", &format!("invalid option -- '{}'", &s[1..]));
                 return Ok(1);

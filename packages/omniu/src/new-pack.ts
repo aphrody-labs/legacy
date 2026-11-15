@@ -19,20 +19,29 @@ export interface AddOptions {
 
 interface Fields {
   name: string;
+  /** Shell identifier derived from the name (`modern-cli` -> `modern_cli`). */
+  fn: string;
+  /** TOML basic strings, already quoted and escaped. */
   summary: string;
   category: string;
   required: string;
   completions: string;
   processPerm: string;
+  /** The summary as one comment line. */
+  summaryText: string;
 }
+
+const KNOWN_CATEGORIES = ["devtools", "environment", "workflow", "hints", "ux"];
+/** A TOML basic string: JSON string syntax is a subset of it. */
+const q = (s: string) => JSON.stringify(s);
 
 const packManifest = (f: Fields) => `name = "${f.name}"
 bundle = "oh-my-niu"
 version = "1.0.0"
 kind = "source"
 api = "niubash:plugin@0.1.0"
-category = "${f.category}"
-summary = "${f.summary}"
+category = ${f.category}
+summary = ${f.summary}
 default = false
 permissions = ["shell:source", "cwd:read"${f.processPerm}]
 required_binaries = [${f.required}]
@@ -54,7 +63,7 @@ const packInit = (f: Fields) => `# oh-my-niu ${f.name} plugin
 # Scaffolded by omniu new-pack; replace the placeholder with real
 # behavior. Aliases and completions live in bundle assets.
 
-${f.name}_hello() {
+${f.fn}_hello() {
   echo "${f.name} pack is wired"
 }
 `;
@@ -63,13 +72,13 @@ const pluginManifest = (f: Fields) => `name = "${f.name}"
 version = "1.0.0"
 kind = "source"
 entry = "${f.name}.plugin.niu"
-summary = "${f.summary}"
+summary = ${f.summary}
 permissions = ["shell:source", "cwd:read"${f.processPerm}]
 required_binaries = [${f.required}]
 
 [exports]
 aliases = false
-functions = ["${f.name}_hello"]
+functions = ["${f.fn}_hello"]
 completions = [${f.completions}]
 `;
 
@@ -77,14 +86,14 @@ const pluginBody = (f: Fields) => `# Oh My Niu ${f.name} plugin.
 
 # Scaffolded by omniu new-pack; the framework loader sources this file
 # when the pack is enabled. Keep it aligned with packs/${f.name}/init.niu.
-${f.name}_hello() {
+${f.fn}_hello() {
   echo "${f.name} pack is wired"
 }
 `;
 
 const completionsStub = (f: Fields) => `# ${f.name} completions for niubash / oh-my-niu.
 command = "${f.name}"
-description = "${f.summary}"
+description = ${f.summary}
 
 [[flags]]
 short = "-h"
@@ -121,13 +130,20 @@ function removeFromList(path: string, name: string) {
 export function addPack(root: string, name: string, opts: AddOptions = {}): string[] {
   if (!NAME_RE.test(name)) throw new Error(`invalid pack name '${name}': lowercase letters, digits, dashes`);
   if (existsSync(join(root, "packs", name)) || existsSync(join(root, "plugins", name))) throw new Error(`pack '${name}' already exists`);
+  const summary = opts.summary ?? "TODO: one-line summary";
+  if (/[\r\n]/.test(summary)) throw new Error("summary must be a single line");
+  const category = opts.category ?? "devtools";
+  if (!KNOWN_CATEGORIES.includes(category)) throw new Error(`unknown category '${category}': ${KNOWN_CATEGORIES.join(", ")}`);
+  if (opts.requiredBinary !== undefined && !/^[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(opts.requiredBinary)) throw new Error(`invalid required binary '${opts.requiredBinary}'`);
   const f: Fields = {
     name,
-    summary: opts.summary ?? "TODO: one-line summary",
-    category: opts.category ?? "devtools",
-    required: opts.requiredBinary ? `"${opts.requiredBinary}"` : "",
-    completions: opts.withCompletions ? `"${name}"` : "",
-    processPerm: opts.requiredBinary ? `, "process:run:${opts.requiredBinary}"` : "",
+    fn: name.replaceAll("-", "_"),
+    summary: q(summary),
+    summaryText: summary,
+    category: q(category),
+    required: opts.requiredBinary ? q(opts.requiredBinary) : "",
+    completions: opts.withCompletions ? q(name) : "",
+    processPerm: opts.requiredBinary ? `, ${q(`process:run:${opts.requiredBinary}`)}` : "",
   };
   const log = [`scaffolding pack '${name}':`];
   write(root, join(root, "packs", name, "plugin.toml"), packManifest(f), log);
@@ -140,7 +156,7 @@ export function addPack(root: string, name: string, opts: AddOptions = {}): stri
   let text = readFileSync(index, "utf8");
   if (!text.includes('[[packs]]\nname = "git"')) throw new Error(`anchor drifted in ${index}: '[[packs]] name = "git"' not found`);
   if (!text.endsWith("\n")) text += "\n";
-  writeFileSync(index, `${text}\n[[packs]]\nname = "${name}"\nversion = "1.0.0"\napi = "niubash:plugin@0.1.0"\nkind = "source"\ncategory = "${f.category}"\nsummary = "${f.summary}"\ndefault = false\npermissions = ["shell:source", "cwd:read"${f.processPerm}]\nrequired_binaries = [${f.required}]\n`);
+  writeFileSync(index, `${text}\n[[packs]]\nname = "${name}"\nversion = "1.0.0"\napi = "niubash:plugin@0.1.0"\nkind = "source"\ncategory = ${f.category}\nsummary = ${f.summary}\ndefault = false\npermissions = ["shell:source", "cwd:read"${f.processPerm}]\nrequired_binaries = [${f.required}]\n`);
   log.push("  registered index.toml");
   appendToList(join(root, "bundle.toml"), "available", name);
   log.push("  registered bundle.toml");

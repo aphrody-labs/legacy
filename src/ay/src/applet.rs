@@ -41,20 +41,37 @@ impl Provider {
     }
 }
 
+/// One applet of the provider table: who runs it and, for uutils, through which executable.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Entry {
+    pub provider: Provider,
+    /// uutils: the repository's executable (`coreutils`, `procps`, `util-linux`, `grep`...).
+    pub bin: Option<String>,
+    /// uutils: `<bin> <applet> args` (multicall) or `<bin> args`.
+    pub multicall: bool,
+}
+
 /// The provider table, sorted by applet name.
-pub fn providers() -> BTreeMap<String, Provider> {
+pub fn table() -> BTreeMap<String, Entry> {
     let doc: toml::Table = TABLE.parse().expect("infra/os/unixwin/applets.toml is valid TOML");
     doc.into_iter()
         .filter_map(|(name, v)| {
-            let p = match v.get("provider")?.as_str()? {
+            let provider = match v.get("provider")?.as_str()? {
                 "winux" => Provider::Winux,
                 "uutils" => Provider::Uutils,
                 "winux-cxx" => Provider::WinuxCxx,
                 _ => return None,
             };
-            Some((name, p))
+            let bin = v.get("bin").and_then(|b| b.as_str()).map(str::to_string);
+            let multicall = v.get("multicall").and_then(|m| m.as_bool()).unwrap_or(false);
+            Some((name, Entry { provider, bin, multicall }))
         })
         .collect()
+}
+
+/// The provider of every applet.
+pub fn providers() -> BTreeMap<String, Provider> {
+    table().into_iter().map(|(n, e)| (n, e.provider)).collect()
 }
 
 /// Run an applet from the in-process WinuxCmd library with the process's stdio, cwd and environment.
@@ -104,11 +121,37 @@ pub fn winux_registry() -> Vec<&'static str> {
     Vec::new()
 }
 
-fn run_external(program: &str, applet: &str, args: &[OsString]) -> i32 {
-    let mut cmd = std::process::Command::new(program);
-    cmd.arg(applet).args(args);
+/// The exit status of a child: its code, or 128 + the signal that ended it (the shell convention).
+pub fn exit_code(status: std::process::ExitStatus) -> i32 {
+    if let Some(code) = status.code() {
+        return code;
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::ExitStatusExt;
+        if let Some(sig) = status.signal() {
+            return 128 + sig;
+        }
+    }
+    1
+}
+
+/// The command line of an external provider: `<bin> <applet> args` for a multicall binary, `<bin> args` otherwise.
+pub fn external_argv(bin: &str, multicall: bool, applet: &str, args: &[OsString]) -> Vec<OsString> {
+    let mut v = vec![OsString::from(bin)];
+    if multicall {
+        v.push(OsString::from(applet));
+    }
+    v.extend(args.iter().cloned());
+    v
+}
+
+fn run_external(program: &str, multicall: bool, applet: &str, args: &[OsString]) -> i32 {
+    let argv = external_argv(program, multicall, applet, args);
+    let mut cmd = std::process::Command::new(&argv[0]);
+    cmd.args(&argv[1..]);
     match cmd.status() {
-        Ok(s) => s.code().unwrap_or(1),
+        Ok(s) => exit_code(s),
         Err(e) => {
             eprintln!("ay applet: {applet}: needs `{program}` on PATH (`ay up`): {e}");
             127
@@ -118,7 +161,7 @@ fn run_external(program: &str, applet: &str, args: &[OsString]) -> i32 {
 
 /// `ay applet ...`; `args` excludes `applet`. Returns the exit status.
 pub fn run(args: &[String]) -> i32 {
-    let table = providers();
+    let table = table();
     match args.first().map(String::as_str) {
         None | Some("-h" | "--help") => {
             eprintln!("usage: ay applet --list [--json] | ay applet NAME [ARGS...]");
@@ -126,11 +169,11 @@ pub fn run(args: &[String]) -> i32 {
         }
         Some("--list") => {
             if args.iter().any(|a| a == "--json") {
-                let map: BTreeMap<&str, &str> = table.iter().map(|(n, p)| (n.as_str(), p.name())).collect();
+                let map: BTreeMap<&str, &str> = table.iter().map(|(n, e)| (n.as_str(), e.provider.name())).collect();
                 println!("{}", serde_json::to_string_pretty(&map).unwrap_or_default());
             } else {
-                for (n, p) in &table {
-                    println!("{n}\t{}", p.name());
+                for (n, e) in &table {
+                    println!("{n}\t{}", e.provider.name());
                 }
             }
             0
@@ -142,14 +185,20 @@ pub fn run(args: &[String]) -> i32 {
             }
             match table.get(name) {
                 #[cfg(windows)]
-                Some(Provider::Winux) => run_winux(name, &rest).unwrap_or_else(|| {
+                Some(Entry { provider: Provider::Winux, .. }) => run_winux(name, &rest).unwrap_or_else(|| {
                     eprintln!("ay applet: {name}: listed as winux but not in the library registry");
                     127
                 }),
+                // The WinuxCmd library is Win32 code: elsewhere the uutils executable of the same applet runs it.
                 #[cfg(not(windows))]
-                Some(Provider::Winux) => run_external("coreutils", name, &rest),
-                Some(Provider::Uutils) => run_external("coreutils", name, &rest),
-                Some(Provider::WinuxCxx) => run_external("winuxcmd", name, &rest),
+                Some(Entry { provider: Provider::Winux, bin: Some(bin), multicall, .. }) => run_external(bin, *multicall, name, &rest),
+                #[cfg(not(windows))]
+                Some(Entry { provider: Provider::Winux, bin: None, .. }) => {
+                    eprintln!("ay applet: {name}: implemented by the WinuxCmd Windows library only, no uutils applet on this host");
+                    127
+                }
+                Some(Entry { provider: Provider::Uutils, bin, multicall, .. }) => run_external(bin.as_deref().unwrap_or(name), *multicall, name, &rest),
+                Some(Entry { provider: Provider::WinuxCxx, .. }) => run_external("winuxcmd", true, name, &rest),
                 None => {
                     eprintln!("ay applet: {name}: unknown applet (`ay applet --list`)");
                     127
@@ -185,6 +234,32 @@ mod tests {
                 assert!(registry.contains(&name.as_str()), "{name} is provided by winux but the registry lacks it");
             }
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_child_killed_by_a_signal_exits_128_plus_the_signal() {
+        let status = std::process::Command::new("sh").args(["-c", "kill -TERM $$"]).status().unwrap();
+        assert_eq!(exit_code(status), 128 + 15);
+    }
+
+    #[test]
+    fn external_command_lines() {
+        let a = os(&["-x"]);
+        assert_eq!(external_argv("procps", true, "ps", &a), os(&["procps", "ps", "-x"]));
+        assert_eq!(external_argv("grep", false, "grep", &a), os(&["grep", "-x"]));
+    }
+
+    #[test]
+    fn uutils_applets_name_their_own_executable_and_libraries_are_not_applets() {
+        let t = table();
+        assert_eq!(t["ps"].bin.as_deref(), Some("procps"));
+        assert!(t["ps"].multicall);
+        assert_eq!(t["cal"].bin.as_deref(), Some("util-linux"));
+        assert_eq!(t["grep"].bin.as_deref(), Some("grep"));
+        assert!(!t["grep"].multicall);
+        assert!(t.values().filter(|e| e.provider == Provider::Uutils).all(|e| e.bin.is_some()));
+        assert!(!t.contains_key("checksum_common"));
     }
 
     #[test]
