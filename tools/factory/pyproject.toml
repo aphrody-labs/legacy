@@ -1,0 +1,9 @@
+[project]
+name = "aphrody-factory"
+version = "0.1.0"
+description = "Dataset builder of the LLM factory (tree-sitter parsed code samples)"
+requires-python = ">=3.11"
+dependencies = ["tree-sitter-language-pack"]
+
+[tool.uv]
+package = false

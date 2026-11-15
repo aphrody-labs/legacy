@@ -1,0 +1,9 @@
+[project]
+name = "aphrody-machine-matrix-scripts"
+version = "0.1.0"
+description = "Standard-library helper scripts of the shell matrix"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.uv]
+package = false

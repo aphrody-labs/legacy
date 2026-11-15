@@ -70,6 +70,7 @@ graphify-out/
 !/bunfig.toml
 !/pyproject.toml
 !/uv.lock
+!/go.work
 !/src.lock.json
 !/dist-workspace.toml
 
