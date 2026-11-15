@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Google Boq (`batchexecute`) wire protocol. The C ABI over it lives in `src/core/capi` (`aphrody_*`); the adblock glue moved to `src/adblock-capi`.
+//! Google Boq (`batchexecute`) wire protocol. The C ABI over it lives in `src/core/capi` (`aphrody_*`); the adblock glue lives in aphrody-labs/open (`crates/adblock-capi`).
 //!
 //! Consolidates `crates/aphrody-boq` from `yolo-rs/yolo-web`.
 

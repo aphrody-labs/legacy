@@ -47,7 +47,6 @@ members = [
   "src/core/jni",
   "src/core/py",
   "src/corelib",
-  "src/adblock-capi",
   "src/craft",
   "src/crash_handler",
   "src/csrf",

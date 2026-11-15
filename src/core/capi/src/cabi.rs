@@ -1,4 +1,4 @@
-//! Shared C ABI primitives for Aphrody native libraries (`core-capi`, `ffi`, `adblock-capi`).
+//! Shared C ABI primitives for Aphrody native libraries (`core-capi`; `adblock-capi` in aphrody-labs/open consumes them by git).
 //!
 //! Conventions:
 //! - `aphrody_abi_version()` / `<ns>_abi_version()` returns [`APHRODY_ABI_VERSION`].
