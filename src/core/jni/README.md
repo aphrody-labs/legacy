@@ -1,8 +1,6 @@
 # aphrody-core-jni
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Native JNI (Java 25+) core bridge exposing aphrody-core (Tree-sitter, BLAKE3, index) and aphrody-re (RE triage, disasm, Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2)
 
 | Type | Path |

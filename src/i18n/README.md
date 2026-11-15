@@ -1,8 +1,6 @@
 # aphrody-i18n
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Shared i18n catalogs (packages/i18n/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs.
 
 | Type | Path |

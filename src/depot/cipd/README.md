@@ -1,8 +1,6 @@
 # depot-cipd
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > CIPD client in Rust: `cipd ensure` with the luci-go site root layout, instances cached in depot-cas (`ay cipd ensure`)
 
 | Type | Path |

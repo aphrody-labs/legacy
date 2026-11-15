@@ -1,8 +1,6 @@
 # game
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Open-world vertical slice on Bevy: streamed procedural terrain, third-person controller, day/night, procedural audio
 
 | Type | Path |

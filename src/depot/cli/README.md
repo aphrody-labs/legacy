@@ -1,8 +1,6 @@
 # depot-cli
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > depot command set (VCS, depot_tools, ingest, code graph) behind `ay git`, `ay ingest` and `ay graph`
 
 | Type | Path |

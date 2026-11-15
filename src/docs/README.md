@@ -1,8 +1,6 @@
 # aphrody-docs
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > `ay docs`: imports Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) into a SQLite FTS5 index and serves search for people and agents
 
 | Type | Path |

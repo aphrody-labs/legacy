@@ -1,8 +1,6 @@
 # depot-vpython
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > `ay vpy`: run Chromium vpython specs (vpython.toml + .uv.lock, PEP 723) on uv
 
 | Type | Path |

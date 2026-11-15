@@ -1,8 +1,6 @@
 # aphrody-factory
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Chromium factory (F4): sync, gn gen, siso build over NativeLink REAPI, R2 publish, doctor, toolchain. Library first; `ay factory` later.
 
 | Type | Path |

@@ -1,8 +1,6 @@
 # aphrody-env
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/src/.env
 
 | Type | Path |
