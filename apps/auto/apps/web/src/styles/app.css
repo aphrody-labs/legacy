@@ -457,8 +457,11 @@
   cursor: pointer;
 }
 .apercu-logo {
-  max-height: 48px;
+  /* Uploaded logo of unknown size: a fixed height reserves the row before the file loads (no layout shift). */
+  height: 48px;
+  width: auto;
   max-width: 160px;
+  object-fit: contain;
   border-radius: var(--auto-rayon-sm);
 }
 .apercu-gabarit {
