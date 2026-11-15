@@ -1,6 +1,6 @@
-// Outils communs de la suite unixwin : binaires réels du poste (niubash installé, WinuxCmd embarqué, bash et
-// coreutils de référence), lancés par Bun.spawn (octets bruts) ou par Bun Shell ($). Aucun binaire n'est simulé :
-// un binaire absent rend le test « skip » avec la raison.
+// Common tools of the unixwin suite: real binaries of the workstation (installed niubash, embedded WinuxCmd, reference bash and
+// coreutils), launched by Bun.spawn (raw bytes) or by Bun Shell ($). No binary is simulated:
+// a missing binary makes the test "skip" with the reason.
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -20,19 +20,19 @@ export const WINUXCMD = first(
   win ? join(niuRoot, "winuxcmd", "usr", "bin", "winuxcmd.exe") : null,
   Bun.which("winuxcmd"),
 );
-// Oracle bash : GNU bash 5.3 (Git for Windows sous Windows, bash du système ailleurs).
+// Bash oracle: GNU bash 5.3 (Git for Windows on Windows, system bash elsewhere).
 export const BASH_REF = first(
   process.env.BASH_REF,
   win ? "C:\\Program Files\\Git\\bin\\bash.exe" : "/bin/bash",
 );
-// Coreutils de référence : uutils (Coreutils for Windows de Microsoft, binaire multicall).
+// Reference coreutils: uutils (Microsoft's Coreutils for Windows, multicall binary).
 export const UUTILS = first(process.env.UUTILS, Bun.which("coreutils"));
 
 export type Run = { out: string; err: string; code: number; bytes: Uint8Array };
 
 const decode = (b: Uint8Array) => new TextDecoder().decode(b);
 
-// Environnement neutre et identique pour l'implémentation et l'oracle : locale UTF-8, pas de rc, pas de repli.
+// Neutral environment, identical for the implementation and the oracle: UTF-8 locale, no rc, no fallback.
 export const baseEnv = (extra: Record<string, string> = {}) => {
   const env: Record<string, string> = {};
   for (const [k, v] of Object.entries(process.env))

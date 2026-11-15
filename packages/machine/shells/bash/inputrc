@@ -1,5 +1,5 @@
 # packages/machine/shells/bash/inputrc — readline (Git Bash ; niubash lit aussi $INPUTRC / ~/.inputrc). brush (reedline) l'ignore.
-# Variables vérifiées par `bind -v` (GNU readline 8.3 de Git Bash 5.3.15, et niubash 1.5.0) : docs/shell/bash-setup.md.
+# Variables verified by `bind -v` (GNU readline 8.3 of Git Bash 5.3.15, and niubash 1.5.0): docs/shell/bash-setup.md.
 set input-meta on
 set output-meta on
 set convert-meta off
@@ -12,7 +12,7 @@ set colored-stats on
 set colored-completion-prefix on
 set mark-symlinked-directories on
 set skip-completed-text on
-# Flèches haut/bas : recherche dans l'historique par préfixe ; Ctrl+flèches : mot par mot.
+# Up/down arrows: prefix history search; Ctrl+arrows: word by word.
 "\e[A": history-search-backward
 "\e[B": history-search-forward
 "\e[1;5C": forward-word

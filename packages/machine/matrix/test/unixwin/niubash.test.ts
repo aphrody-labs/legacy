@@ -1,5 +1,5 @@
-// niubash de bout en bout : lancement par Bun.spawn et Bun Shell, parité octet pour octet avec GNU bash 5.3
-// (stdout, code de sortie) sur une matrice de scripts, redirections, pipelines, encodage, stdin.
+// niubash end to end: launch by Bun.spawn and Bun Shell, byte-for-byte parity with GNU bash 5.3
+// (stdout, exit code) over a matrix of scripts, redirections, pipelines, encoding, stdin.
 // Lancer : bun test ./packages/machine/matrix/test/unixwin
 import { $ } from "bun";
 import { describe, expect, test } from "bun:test";
@@ -17,7 +17,7 @@ describe("lancement", () => {
     expect(r.out).toMatch(/winuxcmd\s+WinuxCmd \d/);
   });
 
-  t("Bun Shell : $`niu -c` avec interpolation échappée", async () => {
+  t("Bun Shell: $`niu -c` with escaped interpolation", async () => {
     const arg = "a b 'c' $HOME;";
     const out = await $`${NIU!} -c ${'printf "%s|" "$@"'} _ ${arg} x`
       .env(baseEnv())
@@ -39,13 +39,13 @@ describe("lancement", () => {
     expect([...r.bytes]).toEqual([...all]);
   });
 
-  t("aucun CR ajouté sur stdout", async () => {
+  t("no CR added on stdout", async () => {
     const r = await niu("printf 'a\\nb\\n'; echo c");
     expect([...r.bytes]).toEqual([...new TextEncoder().encode("a\nb\nc\n")]);
   });
 });
 
-// Matrice : [identifiant, script]. Chaque script doit donner les mêmes octets et le même code que GNU bash.
+// Matrix: [id, script]. Each script must give the same bytes and the same code as GNU bash.
 const MATRIX: [string, string][] = [
   // codes de sortie
   ["exit-7", "exit 7"],
@@ -132,13 +132,13 @@ const MATRIX: [string, string][] = [
     "msys-cygpath",
     "cygpath -w /c/Windows; cygpath -m /c/Windows; cygpath -u 'C:\\Windows'",
   ],
-  // glob avec un préfixe Windows venu d’une expansion (variables d’environnement Windows)
+  // glob with a Windows prefix coming from an expansion (Windows environment variables)
   ["glob-backslash-prefix", "d='C:\\Windows'; echo \"$d\"/win*.ini"],
   [
     "glob-env-prefix",
     'echo "$LOCALAPPDATA"/Microsoft/Windows/*.dat | head -c 0; echo "$LOCALAPPDATA"/Temp/../Temp',
   ],
-  // noms Windows en majuscules comme sous Git for Windows (SystemRoot -> SYSTEMROOT, windir -> WINDIR)
+  // uppercase Windows names as under Git for Windows (SystemRoot -> SYSTEMROOT, windir -> WINDIR)
   ["win-env-upper", 'echo "$SYSTEMROOT|$WINDIR|$COMSPEC|$SYSTEMDRIVE"'],
   // encodage
   ["utf8-echo", "echo 'é€日本𝄞'"],
@@ -148,7 +148,7 @@ const MATRIX: [string, string][] = [
   ["utf8-tr", "echo 'abc' | tr a-c x-z"],
 ];
 
-describe("parité GNU bash 5.3 (stdout + code)", () => {
+describe("GNU bash 5.3 parity (stdout + code)", () => {
   for (const [id, script] of MATRIX) {
     parity(id, async () => {
       const [a, b] = await Promise.all([niu(script), bashRef(script)]);

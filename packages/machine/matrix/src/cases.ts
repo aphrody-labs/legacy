@@ -1,4 +1,4 @@
-// Cas de conformité sh/bash. Chaque cas : un script, la sortie attendue (stdout exact, fins de ligne normalisées).
+// sh/bash conformance cases. Each case: a script, the expected output (exact stdout, normalized line endings).
 // Groupes : `claude` = ce que Claude Code exige (preuve : binaire claude.exe 2.1.318, voir
 // apps/nt/docs/research/shell-replacement.md), `posix`, `bash`, `windows`.
 export type Case = {
@@ -10,7 +10,7 @@ export type Case = {
 };
 
 export const cases: Case[] = [
-  // Invocation exacte de Claude Code pour l'instantané : spawn(shell, ["-c", "-l", script]).
+  // Exact Claude Code invocation for the snapshot: spawn(shell, ["-c", "-l", script]).
   {
     id: "claude-c-l",
     group: "claude",
@@ -206,7 +206,7 @@ export const cases: Case[] = [
     script: "command -v cmd >/dev/null && echo cmd-found",
     expect: "cmd-found",
   },
-  // `cmd //c` est un idiome MSYS ; MSYS_NO_PATHCONV=1 rend `/c` neutre sous Git Bash et n'a pas d'effet ailleurs.
+  // `cmd //c` is an MSYS idiom; MSYS_NO_PATHCONV=1 makes `/c` neutral under Git Bash and has no effect elsewhere.
   {
     id: "win-run-native",
     group: "windows",

@@ -1,6 +1,6 @@
-// Translation des chemins par niubash (rubash) : dialectes MSYS (/c/...), WSL (/mnt/c/...), Cygwin (/cygdrive/c/...)
-// et Windows (C:\, C:/), argv d'un enfant natif (bun lui-même), $PWD, et repli /src (NIU_ROOT_FALLBACK, fork
-// aphrody-labs : un premier composant absent sous NIU_ROOT mais présent à la racine du lecteur système).
+// Path translation by niubash (rubash): MSYS (/c/...), WSL (/mnt/c/...), Cygwin (/cygdrive/c/...) dialects
+// and Windows (C:\, C:/), argv of a native child (bun itself), $PWD, and /src fallback (NIU_ROOT_FALLBACK, fork
+// aphrody-labs: a first component missing under NIU_ROOT but present at the root of the system drive).
 import { describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -11,7 +11,7 @@ const win = process.platform === "win32" && NIU !== null;
 const t = win ? test : test.skip;
 const drive = (process.env.SystemDrive ?? "C:").slice(0, 1).toLowerCase();
 const D = drive.toUpperCase();
-// Enfant natif qui affiche son argv tel que reçu ; chemin de bun en POSIX pour le shell.
+// Native child that prints its argv as received; bun path in POSIX form for the shell.
 const echoArgv = `"${process.execPath.replace(/\\/g, "/")}" -e 'console.log(JSON.stringify(process.argv.slice(1)))'`;
 
 describe("dialectes de chemins", () => {
@@ -32,7 +32,7 @@ describe("dialectes de chemins", () => {
     });
   }
 
-  t("cygdrive : opérande d'une commande externe", async () => {
+  t("cygdrive: operand of an external command", async () => {
     const r = await niu(
       `ls -d /cygdrive/${drive}/Windows >/dev/null && echo yes`,
     );
@@ -46,7 +46,7 @@ describe("dialectes de chemins", () => {
     expect(arg!.replace(/\//g, "\\").toLowerCase()).toBe(`${drive}:\\windows`);
   });
 
-  t("argv d'un enfant natif : données non-chemin intactes", async () => {
+  t("argv of a native child: non-path data intact", async () => {
     const r = await niu(`${echoArgv} 'a/b' '--opt=/x' 's/a/b/g' 'http://h/p'`);
     expect(JSON.parse(r.out)).toEqual([
       "a/b",
@@ -63,20 +63,20 @@ describe("dialectes de chemins", () => {
     expect(r.out).toBe("ok\n");
   });
 
-  t("uname et OSTYPE de la persona", async () => {
+  t("persona uname and OSTYPE", async () => {
     const r = await niu('echo "$OSTYPE"; uname -s');
     expect(r.out).toMatch(/^msys\nMSYS_NT-/);
   });
 });
 
 describe("repli /src (NIU_ROOT_FALLBACK)", () => {
-  // Dossier réel à la racine du lecteur système, absent sous NIU_ROOT : C:\src s'il existe, sinon Windows.
+  // Real folder at the root of the system drive, missing under NIU_ROOT: C:\src if it exists, otherwise Windows.
   const top = existsSync(`${D}:\\src`) ? "src" : "Windows";
-  // Écritures sous le profil (X:\Users\<moi>\AppData\Local\Temp), atteint par /Users/... grâce au repli.
+  // Writes under the profile (X:\Users\<me>\AppData\Local\Temp), reached through /Users/... thanks to the fallback.
   const tmp = tmpdir();
   const viaRoot = (w: string) => `/${w.slice(3).replace(/\\/g, "/")}`;
 
-  t("sans repli : /<top> n'atteint pas le lecteur", async () => {
+  t("without fallback: /<top> does not reach the drive", async () => {
     const r = await niu(
       `cd /${top} 2>/dev/null && echo reached || echo blocked`,
     );
@@ -84,7 +84,7 @@ describe("repli /src (NIU_ROOT_FALLBACK)", () => {
   });
 
   t(
-    "avec repli : cd /<top>, lecture, redirection et argv atteignent le lecteur",
+    "with fallback: cd /<top>, read, redirection and argv reach the drive",
     async () => {
       const env = baseEnv({ NIU_ROOT_FALLBACK: "1" });
       const dir = mkdtempSync(join(tmp, "unixwin-e2e-"));
@@ -96,7 +96,7 @@ describe("repli /src (NIU_ROOT_FALLBACK)", () => {
           { env },
         );
         const lines = r.out.split("\n");
-        // $PWD logique (comme /mnt/c/... : pwd -P seul canonise), pwd -P sur le lecteur.
+        // Logical $PWD (like /mnt/c/...: only pwd -P canonicalizes), pwd -P on the drive.
         expect(lines.slice(0, 2)).toEqual([`/${top}`, `/${drive}/${top}`]);
         lines.splice(0, 1);
         expect(lines[1]).toBe("fallback");
@@ -112,7 +112,7 @@ describe("repli /src (NIU_ROOT_FALLBACK)", () => {
   );
 
   t(
-    "avec repli : membres réservés (/tmp, /usr, /bin) restent dans l'arbre du shell",
+    "with fallback: reserved members (/tmp, /usr, /bin) stay in the shell tree",
     async () => {
       const env = baseEnv({ NIU_ROOT_FALLBACK: "1" });
       const r = await niu('cd /usr && echo "$PWD"; cd /tmp && echo "$PWD"', {
@@ -122,7 +122,7 @@ describe("repli /src (NIU_ROOT_FALLBACK)", () => {
     },
   );
 
-  t("repli désactivé par 0", async () => {
+  t("fallback disabled by 0", async () => {
     const env = baseEnv({ NIU_ROOT_FALLBACK: "0" });
     const r = await niu(
       `cd /${top} 2>/dev/null && echo reached || echo blocked`,
@@ -132,9 +132,9 @@ describe("repli /src (NIU_ROOT_FALLBACK)", () => {
   });
 });
 
-// Fichier de travail hors dépôt pour les tests d'encodage de noms.
+// Working file outside the repository for the name-encoding tests.
 describe("noms de fichiers", () => {
-  t("nom UTF-8 et espaces : création par niu, lecture par Bun", async () => {
+  t("UTF-8 name and spaces: created by niu, read by Bun", async () => {
     const dir = mkdtempSync(join(tmpdir(), "unixwin-"));
     try {
       const posix = dir.replace(/\\/g, "/");
@@ -146,7 +146,7 @@ describe("noms de fichiers", () => {
     }
   });
 
-  t("CRLF dans un fichier : préservé par cat", async () => {
+  t("CRLF in a file: preserved by cat", async () => {
     const dir = mkdtempSync(join(tmpdir(), "unixwin-"));
     try {
       writeFileSync(join(dir, "crlf.txt"), "a\r\nb\r\n");

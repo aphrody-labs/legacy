@@ -1,7 +1,7 @@
-// Applique (idempotent) la configuration utilisateur : shell niubash, Coreutils Microsoft,
-// Claude Code sans Git Bash ni PowerShell, MCP de pilotage du bureau et du navigateur,
-// Microsoft Intelligent Terminal (fallback Windows Terminal) avec themes @aphrody/design et agentProfiles.
-// Usage (racine du depot) : bun packages/machine/src/apply-user.ts [--check]
+// Applies (idempotent) the user configuration: niubash shell, Microsoft Coreutils,
+// Claude Code without Git Bash or PowerShell, desktop and browser control MCP,
+// Microsoft Intelligent Terminal (Windows Terminal fallback) with @aphrody/design themes and agentProfiles.
+// Usage (repository root): bun packages/machine/src/apply-user.ts [--check]
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { shells } from "./shells.ts";
@@ -29,7 +29,7 @@ const run = (argv: string[]) => {
   };
 };
 
-// 1. Claude Code : settings.json env (aucun fichier .bak)
+// 1. Claude Code: settings.json env (no .bak file)
 const settingsPath = `${HOME}\\.claude\\settings.json`;
 if (existsSync(settingsPath)) {
   const settings = await Bun.file(settingsPath).json();
@@ -68,7 +68,7 @@ for (const [name, cmd] of Object.entries(mcp)) {
     run(["claude", "mcp", "add", "--scope", "user", name, "--", ...cmd]);
 }
 
-// 3. PATH utilisateur : niubash/winuxcmd present, Git Bash absent
+// 3. User PATH: niubash/winuxcmd present, Git Bash absent
 const q = run(["reg", "query", "HKCU\\Environment", "/v", "Path"]).out;
 const line = q.split(/\r?\n/).find((l) => /\bPath\b/.test(l)) ?? "";
 const userPath = line.replace(/^\s*Path\s+REG_(EXPAND_)?SZ\s+/, "").trim();
@@ -264,7 +264,7 @@ for (const target of activeTargets) {
   }
 }
 
-// 5. Shells : env.toml -> env.{sh,ps1,nu,fish}, completions ay, configs du manifeste, lock, HKCU (shells.ts).
+// 5. Shells: env.toml -> env.{sh,ps1,nu,fish}, ay completions, manifest configs, lock, HKCU (shells.ts).
 results.push(...shells({ check }));
 
 // 5b. Outillage agent : infra/agents/toolchain.toml (marketplaces, plugins, MCP, skills epinglees), voir toolchain.ts.
@@ -289,7 +289,7 @@ const cpba = run([
   "ConsentPromptBehaviorAdmin",
 ]).out.match(/0x(\d+)/)?.[1];
 results.push(
-  `info UAC ConsentPromptBehaviorAdmin=${cpba ?? "?"} (0 = elevation admin sans invite)`,
+  `info UAC ConsentPromptBehaviorAdmin=${cpba ?? "?"} (0 = admin elevation without prompt)`,
 );
 const high = /S-1-16-12288/.test(
   run([

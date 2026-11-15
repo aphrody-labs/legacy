@@ -1,8 +1,8 @@
-// Installe Gemini Desktop sans interaction depuis l'installeur officiel (défaut : var/GeminiSetup.exe, hors dépôt).
-// GeminiSetup.exe est le méta-installeur Chromium Updater (chrome/updater, « Google Installer (x86) ») : charge utile
-// compressée en ressource PE B7/UPDATER, étiquette Omaha (appguid, appname=Gemini, needsadmin=false) dans le
-// certificat factice de la signature. Relevé le 2026-11-14 sur 159.0.8140.0 : `--silent` installe par utilisateur
-// dans %LOCALAPPDATA%\Google\Gemini, code 0, sans élévation. Refuse tout fichier non signé « Google LLC ».
+// Installs Gemini Desktop non-interactively from the official installer (default: var/GeminiSetup.exe, outside the repository).
+// GeminiSetup.exe is the Chromium Updater meta-installer (chrome/updater, "Google Installer (x86)"): payload
+// compressed in the PE resource B7/UPDATER, Omaha tag (appguid, appname=Gemini, needsadmin=false) in the
+// signature's dummy certificate. Surveyed on 2026-11-14 on 159.0.8140.0: `--silent` installs per user
+// in %LOCALAPPDATA%\Google\Gemini, code 0, no elevation. Refuses any file not signed "Google LLC".
 // Usage : bun packages/machine/src/gemini-setup.ts [chemin] [--check]   (just gemini-setup)
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -20,7 +20,7 @@ const ps = (script: string) => {
   );
   return r.stdout.toString().trim();
 };
-/** Version installée (clé de désinstallation par utilisateur), sinon chaîne vide. */
+/** Installed version (per-user uninstall key), otherwise empty string. */
 const installed = () =>
   ps(
     "(Get-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*' -EA 0 | ? { $_.DisplayName -eq 'Gemini' -and $_.Publisher -match 'Google' } | select -First 1).DisplayVersion",
@@ -30,16 +30,16 @@ if (process.platform !== "win32")
   throw new Error("gemini-setup : Windows seulement");
 const before = installed();
 if (check) {
-  console.log(before ? `ok   Gemini ${before}` : "DIFF Gemini absent");
+  console.log(before ? `ok   Gemini ${before}` : "DIFF Gemini missing");
   process.exitCode = before ? 0 : 1;
 } else if (before) {
   console.log(
-    `ok   Gemini ${before} déjà installé (mises à jour par Google Updater)`,
+    `ok   Gemini ${before} already installed (updates by Google Updater)`,
   );
 } else {
   if (!existsSync(exe))
     throw new Error(
-      `installeur absent : ${exe} (https://gemini.google/desktop/)`,
+      `installer missing: ${exe} (https://gemini.google/desktop/)`,
     );
   const sig = ps(
     `$s = Get-AuthenticodeSignature -LiteralPath '${exe.replaceAll("'", "''")}'; "$($s.Status)|$($s.SignerCertificate.Subject)"`,

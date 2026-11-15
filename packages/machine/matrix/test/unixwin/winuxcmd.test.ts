@@ -1,6 +1,6 @@
-// WinuxCmd de bout en bout : binaire multicall embarqué par niubash, comparé à uutils coreutils (Coreutils for
-// Windows de Microsoft) sur une matrice d'applets avec la même entrée ; inventaire, codes de sortie, et applets
-// appelés depuis niubash (liens de WinuxCmd dans le PATH du shell).
+// WinuxCmd end to end: multicall binary embedded by niubash, compared with uutils coreutils (Microsoft's Coreutils for
+// Windows) over a matrix of applets with the same input; inventory, exit codes, and applets
+// called from niubash (WinuxCmd links in the shell's PATH).
 import { describe, expect, test } from "bun:test";
 import { NIU, UUTILS, WINUXCMD, niu, spawn } from "./lib";
 
@@ -27,14 +27,14 @@ describe("inventaire", () => {
       expect(names).toContain(c);
   });
 
-  t("applet inconnu : code non nul", async () => {
+  t("unknown applet: non-zero code", async () => {
     const r = await spawn([WINUXCMD!, "zz-no-such-applet"]);
     expect(r.code).not.toBe(0);
   });
 });
 
 const INPUT = "pear 3\napple 10\nfig 2\napple 10\nkiwi 7\n";
-// [applet et arguments, entrée] : mêmes octets et même code attendus de WinuxCmd et de uutils.
+// [applet and arguments, input]: same bytes and same code expected from WinuxCmd and uutils.
 const MATRIX: [string[], string][] = [
   [["sort"], INPUT],
   [["sort", "-k2", "-n"], INPUT],
@@ -73,7 +73,7 @@ const MATRIX: [string[], string][] = [
   [["wc", "-m"], "é€日\n"],
 ];
 
-describe("parité uutils coreutils (stdout + code)", () => {
+describe("uutils coreutils parity (stdout + code)", () => {
   for (const [argv, input] of MATRIX) {
     parity(argv.join(" "), async () => {
       const [w, u] = await Promise.all([
@@ -88,15 +88,15 @@ describe("parité uutils coreutils (stdout + code)", () => {
   }
 });
 
-// Applets sans équivalent uutils, ou où uutils diverge (docs/unixwin/LEARNINGS.md) : valeur GNU attendue.
+// Applets without a uutils equivalent, or where uutils diverges (docs/unixwin/LEARNINGS.md): expected GNU value.
 describe("valeurs GNU attendues", () => {
-  t("rev (absent de uutils)", async () => {
+  t("rev (missing from uutils)", async () => {
     expect((await spawn([WINUXCMD!, "rev"], { stdin: "abc\n" })).out).toBe(
       "cba\n",
     );
   });
-  t("expr 6 * 7 : argv non re-globbé", async () => {
-    // uutils coreutils.exe (multicall) développe lui-même * sous Windows : « unexpected argument ».
+  t("expr 6 * 7: argv not re-globbed", async () => {
+    // uutils coreutils.exe (multicall) expands * itself on Windows: "unexpected argument".
     const r = await spawn([WINUXCMD!, "expr", "6", "*", "7"]);
     expect({ out: r.out, code: r.code }).toEqual({ out: "42\n", code: 0 });
   });
@@ -104,14 +104,14 @@ describe("valeurs GNU attendues", () => {
 
 describe("depuis niubash", () => {
   const tn = WINUXCMD && NIU ? test : test.skip;
-  tn("grep -P, sed -E, awk, find dans un pipeline", async () => {
+  tn("grep -P, sed -E, awk, find in a pipeline", async () => {
     const r = await niu(
       "printf 'a1\\nb22\\nc333\\n' | grep -P '\\d{2,}' | sed -E 's/([a-z])/<\\1>/' | awk '{print length($0)}'",
     );
     expect(r.out).toBe("5\n6\n");
   });
 
-  tn("xargs et find sur un arbre temporaire", async () => {
+  tn("xargs and find on a temporary tree", async () => {
     const r = await niu(
       'd=$(mktemp -d) && mkdir -p "$d/x/y" && touch "$d/x/y/f1" "$d/x/f2" && (cd "$d" && find . -type f | sort | xargs -n1 basename) ; rm -rf "$d"',
     );

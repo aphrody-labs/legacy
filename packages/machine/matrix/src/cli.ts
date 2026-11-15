@@ -1,6 +1,6 @@
-// shell-matrix : exécute les cas de conformité sur chaque shell candidat et produit une matrice.
+// shell-matrix: runs the conformance cases on each candidate shell and produces a matrix.
 // Usage : bun packages/machine/matrix/src/cli.ts [--json out.json] [--md out.md] <nom=commande-ou-chemin>...
-// Sans argument : lit les candidats de shells.json (noms de commandes résolus dans le PATH par Bun.which).
+// With no argument: reads the candidates from shells.json (command names resolved in PATH by Bun.which).
 import { dirname, join } from "node:path";
 import { type Case, cases } from "./cases.ts";
 
@@ -73,7 +73,7 @@ for (const [name, cmd] of Object.entries(shells)) {
       id: c.id,
       group: c.group,
       pass: false,
-      got: `introuvable dans le PATH : ${cmd}`,
+      got: `not found in PATH: ${cmd}`,
       ms: 0,
     }));
     continue;
@@ -88,7 +88,7 @@ const score = (rs: Result[], g?: string) => {
   return `${sel.filter((r) => r.pass).length}/${sel.length}`;
 };
 const lines = [
-  `| shell | total | ${groups.join(" | ")} | ms médian |`,
+  `| shell | total | ${groups.join(" | ")} | median ms |`,
   `|---|---:|${groups.map(() => "---:").join("|")}|---:|`,
   ...Object.entries(matrix).map(([n, rs]) => {
     const ms =
@@ -96,7 +96,7 @@ const lines = [
     return `| ${n} | ${score(rs)} | ${groups.map((g) => score(rs, g)).join(" | ")} | ${ms.toFixed(1)} |`;
   }),
   "",
-  "Échecs :",
+  "Failures:",
   ...Object.entries(matrix).flatMap(([n, rs]) =>
     rs
       .filter((r) => !r.pass)

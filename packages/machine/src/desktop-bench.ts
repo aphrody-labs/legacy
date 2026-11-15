@@ -1,6 +1,6 @@
-// Mesure agent-desktop : latence et taille des snapshots UIA par fenêtre et variante.
+// agent-desktop measurement: latency and size of UIA snapshots per window and variant.
 // bun packages/machine/src/desktop-bench.ts <window-id>[=label] ... [--runs N] [--timeout-ms MS]
-// Sortie : une ligne JSON par mesure (stdout), à reporter dans docs/.
+// Output: one JSON line per measurement (stdout), to be reported in docs/.
 const argv = Bun.argv.slice(2);
 const opt = (k: string, d: number) => {
   const i = argv.indexOf(k);

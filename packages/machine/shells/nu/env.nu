@@ -1,3 +1,3 @@
-# nushell 0.117 — env.nu du dépôt (stub : $nu.env-path -> ce fichier, manifest.toml).
-# Environnement commun à tous les shells : ../env.nu, généré depuis ../env.toml.
+# nushell 0.117 — repository env.nu (stub: $nu.env-path -> this file, manifest.toml).
+# Environment common to all shells: ../env.nu, generated from ../env.toml.
 source ../env.nu

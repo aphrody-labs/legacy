@@ -1,8 +1,8 @@
-# Lock des shells (style Nix : version + source + empreintes). Contrôlé par
-# `bun packages/machine/src/shells.ts --check` (chemin, `--version`, b3sum du binaire installé).
-# sha256.* = digest de l'asset amont (gh api releases, 2026-11-13) ; b3sum.* = binaire installé tel quel.
-# L'installation reste celle de l'outil indiqué par `install` (tools.toml / winget DSC / pacman) :
-# ce lock fige et vérifie, il ne réimplémente pas d'installeur. Même schéma que tools.toml.
+# Shell lock (Nix style: version + source + fingerprints). Checked by
+# `bun packages/machine/src/shells.ts --check` (path, `--version`, b3sum of the installed binary).
+# sha256.* = digest of the upstream asset (gh api releases, 2026-11-13); b3sum.* = installed binary as is.
+# Installation stays that of the tool named by `install` (tools.toml / winget DSC / pacman):
+# this lock pins and verifies, it does not reimplement an installer. Same schema as tools.toml.
 # hosts : pc (Windows 11), prd (Arch), fr2 = cdn (Ubuntu 26.10), fr1 = vps (Ubuntu 26.10).
 
 [shell.niubash]
@@ -10,7 +10,7 @@ version = "1.5.0"
 expect = "5.3.20"
 source = "https://github.com/unixwin/niubash/releases/tag/v1.5.0"
 install = "ay up (tools.toml niubash) ; winget configure shell.dsc.winget ; binaire en service : just unixwin-install"
-# b3sum.* = niu.exe de la chaîne des forks une fois installé.
+# b3sum.* = niu.exe of the fork chain once installed.
 hosts = ["pc"]
 verify = ["--version"]
 path.windows-x86_64 = "{localappdata}/Programs/Niubash/winuxcmd/bin/bash.exe"
@@ -32,8 +32,8 @@ sha256.windows-x86_64 = "4961a4a8cc778d8b6e00a5819e5fe4d078b754555aff7aedc2d77a5
 b3sum.windows-x86_64 = "f3d9929aa7b558359e1a0de5561025aa1da5fb47142d9f04a939d7a189462494"
 
 [shell.brush]
-# Pas d'asset Windows amont : 0.4.0 via cargo install ; brush main (fork aphrody-labs, cargo-xwin sur prd)
-# dans ~/.local/share/brush-main.
+# No upstream Windows asset: 0.4.0 via cargo install; brush main (aphrody-labs fork, cargo-xwin on prd)
+# in ~/.local/share/brush-main.
 version = "0.4.0"
 source = "https://github.com/reubeno/brush/releases/tag/brush-shell-v0.4.0"
 install = "windows: cargo install brush-shell@0.4.0 --locked ; prd: pacman"
@@ -77,7 +77,7 @@ b3sum.prd = "0011ff27f88641e49cbb7226c36adde617286e74b24b4320379d4b434bf5efcd"
 b3sum.fr1 = "547b123078b0a5b7dec9ce351a6adae232f8a05b4f0479d7955f626ccf5a3672"
 
 [shell.fish]
-# Pas de build Windows natif amont (README 4.9.3 : WSL, Cygwin, MSYS2 ; #4212/#10155 fermées) :
+# No upstream native Windows build (README 4.9.3: WSL, Cygwin, MSYS2; #4212/#10155 closed):
 # fish = flotte Linux uniquement.
 version = "4.9.3"
 source = "https://github.com/fish-shell/fish-shell/releases/tag/4.9.3"
@@ -100,7 +100,7 @@ verify = ["--version"]
 path.linux-x86_64 = "/usr/bin/bash"
 b3sum.prd = "c14c8f498f3be96f076ceb07d65dba584a86dca3c86b5dce65ed0f6cae73358d"
 
-# Moteur de complétion partagé (spec ay.yaml + git/cargo/bun/just) pour bash, pwsh, nu.
+# Shared completion engine (ay.yaml spec + git/cargo/bun/just) for bash, pwsh, nu.
 [shell.carapace]
 version = "1.8.2"
 source = "https://github.com/carapace-sh/carapace-bin/releases/tag/v1.8.2"
@@ -114,11 +114,11 @@ b3sum.windows-x86_64 = "ee371ded547f4d6105507a8e1e88cd7d68ed05850662c80fdafcdca3
 url.linux-x86_64 = "https://github.com/carapace-sh/carapace-bin/releases/download/v1.8.2/carapace-bin_1.8.2_linux_amd64.tar.gz"
 sha256.linux-x86_64 = "1b3dc4cab51361d3443400aefa4314ad8d44d8414bf4b1d18f41a6fe71b1b0e4"
 
-# Doublons à retirer (shells.ts sans --check exécute `run` si `path` existe ; --check => DIFF).
+# Duplicates to remove (shells.ts without --check runs `run` if `path` exists; --check => DIFF).
 [[duplicate]]
 path = "~/.cargo/bin/nu.exe"
 why = "copie (b3sum identique) du MSI nushell 0.117.0 de %LOCALAPPDATA%\\Programs\\nu ; le MSI reste (fragment Windows Terminal)"
 run = ["cargo", "uninstall", "nu"]
 
-# bun winget (Oven-sh.Bun, 1.4.4) : désinstallation refusée par winget le 2026-11-13 ; retiré de
-# machine.export.dsc.winget et masqué par la tête du PATH utilisateur (~/.bun/bin avant WinGet\Links).
+# bun winget (Oven-sh.Bun, 1.4.4): uninstall refused by winget on 2026-11-13; removed from
+# machine.export.dsc.winget and masked by the head of the user PATH (~/.bun/bin before WinGet\Links).

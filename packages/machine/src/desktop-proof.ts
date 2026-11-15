@@ -1,6 +1,6 @@
-// Preuve agent-desktop sur Chrome réel (UIA, mode sémantique headless) : naviguer, lire, cliquer.
+// agent-desktop proof on a real Chrome (UIA, headless semantic mode): navigate, read, click.
 // bun packages/machine/src/desktop-proof.ts <window-id> <url>... ; une ligne JSON par site.
-// Ne clique que des liens au nom unique, hors connexion/inscription/contact.
+// Only clicks links with a unique name, outside sign-in/sign-up/contact.
 const [win, ...urls] = Bun.argv.slice(2);
 const AVOID =
   /log ?in|sign|connexion|inscri|account|compte|contact|demo|sales|cookie|accept|refuser|reject|tout/i;
@@ -44,14 +44,14 @@ const clock = () => {
 for (const url of urls) {
   const rec: Record<string, unknown> = { url };
   let t = clock();
-  // omnibox = le textfield de la barre d'outils du navigateur (pas un champ de la page)
+  // omnibox = the browser toolbar's textfield (not a page field)
   const omni = (
     ad("find", "--window-id", win, "--role", "textfield").data?.matches ?? []
   ).find((m: { path: string[] }) => m.path.includes("toolbar"))?.ref_id;
   const before = title();
-  // espace final : l'omnibox ne complète pas en ligne une saisie terminée par un blanc
+  // trailing space: the omnibox does not inline-complete an input ending with a blank
   const sv = ad("set-value", omni, `${url} `);
-  // Chrome reformate l'URL affichée : la relecture diffère, l'action a quand même eu lieu
+  // Chrome reformats the displayed URL: reading it back differs, the action still took place
   rec.set_value = sv.ok
     ? sv.data?.disposition?.delivery
     : `${sv.error?.code}/${sv.error?.details?.kind ?? ""}`;
@@ -59,7 +59,7 @@ for (const url of urls) {
     ?.delivery;
   rec.title = await waitTitle(before);
   rec.nav_ms = t();
-  await Bun.sleep(1500); // rendu et settle UIA de la nouvelle page
+  await Bun.sleep(1500); // rendering and UIA settle of the new page
   t = clock();
   const snap = ad(
     "snapshot",
