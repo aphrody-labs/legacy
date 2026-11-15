@@ -156,12 +156,51 @@ impl Default for Doctor {
     }
 }
 
+/// Fills `@@hosts.<role>.<key>@@` tokens (the tracked config names roles, never addresses) from `ssh -G <role>`:
+/// `address`, `mesh_ip` and `public_ip` are the HostName the role's Host alias resolves to (a 10.x address is the mesh one).
+/// A token nothing answers stays as written.
+pub fn expand_tokens(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(i) = rest.find("@@") {
+        out.push_str(&rest[..i]);
+        let after = &rest[i + 2..];
+        let Some(j) = after.find("@@") else { break };
+        let key = &after[..j];
+        match token_value(key) {
+            Some(v) => out.push_str(&v),
+            None => out.push_str(&rest[i..i + 4 + j]),
+        }
+        rest = &after[j + 2..];
+    }
+    out.push_str(rest);
+    out
+}
+
+fn token_value(key: &str) -> Option<String> {
+    let mut it = key.splitn(3, '.');
+    let (Some("hosts"), Some(role), Some(field)) = (it.next(), it.next(), it.next()) else { return None };
+    let o = std::process::Command::new("ssh").args(["-G", role]).output().ok()?;
+    let text = String::from_utf8_lossy(&o.stdout);
+    let get = |k: &str| text.lines().find_map(|l| l.strip_prefix(k)?.strip_prefix(' ')).map(str::to_string);
+    let host = get("hostname")?;
+    let private = host.starts_with("10.");
+    match field {
+        "address" => Some(host),
+        "mesh_ip" if private => Some(host),
+        "public_ip" if !private => Some(host),
+        "user" => get("user"),
+        "port" => get("port"),
+        _ => None,
+    }
+}
+
 impl Config {
     /// Defaults, then `path` if it exists.
     pub fn load(path: Option<&Path>) -> Result<Self, String> {
         let Some(p) = path else { return Ok(Self::default()) };
         match std::fs::read_to_string(p) {
-            Ok(s) => Self::parse(&s).map_err(|e| format!("{}: {e}", p.display())),
+            Ok(s) => Self::parse(&expand_tokens(&s)).map_err(|e| format!("{}: {e}", p.display())),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(Self::default()),
             Err(e) => Err(format!("{}: {e}", p.display())),
         }
@@ -196,6 +235,11 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn expand_leaves_unknown_tokens() {
+        assert_eq!(expand_tokens("a=@@nope.x@@ b=@@ c"), "a=@@nope.x@@ b=@@ c");
+    }
 
     #[test]
     fn defaults_and_override() {
