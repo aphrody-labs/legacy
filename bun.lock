@@ -113,6 +113,9 @@
     "packages/env-kit": {
       "name": "@aphrody/env-kit",
       "version": "1.0.0",
+      "dependencies": {
+        "@aphrody/vault": "workspace:*",
+      },
     },
     "packages/ffi-bridge": {
       "name": "@aphrody/ffi-bridge",

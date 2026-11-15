@@ -1,6 +1,6 @@
 # Authentication and network access of the fleet
 
-State recorded on 2026-11-13 (UTC) on the PC, fr2 (`ssh cdn`) and prd (`ssh prd`) with `ay auth status`. fr1 is read only (`repair = false`). Inventory: `infra/deploy.toml` (`[nodes.*]`, `[auth.*]`). Code: `packages/env-kit/src/{auth,secret-store}.ts`, routed by `ay auth` and `ay secret` (`src/ay/src/exec.rs`).
+State recorded on 2026-11-13 (UTC) on the PC, fr2 (`ssh cdn`) and prd (`ssh prd`) with `ay auth status`. fr1 is read only (`repair = false`). Inventory: `infra/deploy.toml` (`[nodes.*]`, `[auth.*]`). Code: `packages/env-kit/src/auth.ts, packages/vault/src/sync-store.ts`, routed by `ay auth` and `ay secret` (`src/ay/src/exec.rs`).
 
 ## Mechanism
 
@@ -30,7 +30,7 @@ Rules: no value in argv or on stdout (no `secret get`: output captured by an age
 | Linux, root | `systemd-creds` (host key, TPM2 if present)                               | `/etc/credstore.encrypted/<NAME>`, read natively by `LoadCredentialEncrypted=<NAME>` |
 | Linux, user | `systemd-creds --user` (systemd ≥ 256; fr2 261, prd 262)                  | `~/.config/credstore.encrypted/<NAME>`                                               |
 
-Resolution order: store, then `.env` (NTFS ACL, `env-kit doctor`). `env-kit set` and `env-kit sync-gh` also write to the store. TypeScript API: `secretSet/secretGet/resolveSecret` (`packages/env-kit/src/secret-store.ts`), to be reused as is by the AI provider tooling.
+Resolution order: store, then `.env` (NTFS ACL, `env-kit doctor`). `env-kit set` and `env-kit sync-gh` also write to the store. TypeScript API: `secretSet/secretGet/resolveSecret` (`packages/vault/src/sync-store.ts`), to be reused as is by the AI provider tooling.
 
 ## State per authentication type (2026-11-13)
 

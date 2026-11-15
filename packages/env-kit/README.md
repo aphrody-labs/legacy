@@ -29,7 +29,7 @@ env-kit exec -- <command> [args...]  # Run any binary with C:\src\.env injected
 
 ## OS Secret Store (`env-kit secret`, `ay secret`)
 
-Encrypted by the OS, one file per secret named after its environment variable (`src/secret-store.ts`):
+Encrypted by the OS, one file per secret named after its environment variable (`packages/vault/src/sync-store.ts`, `@aphrody/vault/sync`):
 
 | Host       | Backend                                                                  | Directory                                                                    |
 | :--------- | :----------------------------------------------------------------------- | :--------------------------------------------------------------------------- |

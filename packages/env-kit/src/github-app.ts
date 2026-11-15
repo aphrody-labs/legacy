@@ -22,7 +22,7 @@
 
 import { spawnSync } from "node:child_process";
 import { createPrivateKey, randomBytes, sign } from "node:crypto";
-import { secretDelete, secretGet, secretHas, secretSet } from "./secret-store";
+import { secretDelete, secretGet, secretHas, secretSet } from "@aphrody/vault/sync";
 
 export const APP = {
   /** Name and slug: "aphrody" is reserved by the GitHub account @aphrody (third party), the App is named aphrody-labs. */

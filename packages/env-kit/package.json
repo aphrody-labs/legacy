@@ -13,7 +13,9 @@
     "doctor": "bun run src/cli.ts doctor",
     "accounts": "bun run src/cli.ts accounts status"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@aphrody/vault": "workspace:*"
+  },
   "devDependencies": {},
   "license": "MIT OR Apache-2.0",
   "repository": {
@@ -27,7 +29,6 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./github-app": "./src/github-app.ts",
-    "./secret-store": "./src/secret-store.ts"
+    "./github-app": "./src/github-app.ts"
   }
 }

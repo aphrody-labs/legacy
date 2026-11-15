@@ -114,7 +114,7 @@ describe.skipIf(process.platform !== "win32")("DPAPI format v2", () => {
       ),
     ).toBe("CryptUnprotectData failed");
     // env-kit (sync API) reads both and writes v2.
-    const ek = await import("../../env-kit/src/secret-store.ts");
+    const ek = await import("../src/sync-store.ts");
     expect(ek.secretGet("VAULT_V2_A")).toBe(FACTICE);
     expect(ek.secretGet("VAULT_V1_B")).toBe(FACTICE);
     ek.secretSet("VAULT_V1_B", FACTICE);

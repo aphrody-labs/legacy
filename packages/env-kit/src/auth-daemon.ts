@@ -28,7 +28,7 @@ import {
   type Manifest,
   runAuth,
 } from "./auth";
-import { secretGet, secretList } from "./secret-store";
+import { secretGet, secretList } from "@aphrody/vault/sync";
 
 const DAY = 86_400_000;
 

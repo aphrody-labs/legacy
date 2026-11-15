@@ -15,7 +15,7 @@ Canonical reference for repository identity, zero-PAT GitHub App authentication,
 
 Every Git and GitHub API operation runs without Personal Access Tokens (PATs) and without interactive browser logins via the `aphrody-labs` GitHub App (`App ID: 5738700`, `Client ID: Iv23lijoWSPaWmQVMB8e`, `Installation: 181463765`):
 
-- **Secret Vault**: `APHRODY_APP_KEY` and `APHRODY_APP_CLIENT_ID` are stored encrypted at rest via Windows DPAPI ([secret-store.ts](file:///C:/src/packages/env-kit/src/secret-store.ts)) on workstations and `systemd-creds --user` on Linux fleet hosts (`fr1`, `fr2`, `prd`).
+- **Secret Vault**: `APHRODY_APP_KEY` and `APHRODY_APP_CLIENT_ID` are stored encrypted at rest via Windows DPAPI ([secret-store.ts](file:///C:/src/packages/vault/src/sync-store.ts)) on workstations and `systemd-creds --user` on Linux fleet hosts (`fr1`, `fr2`, `prd`).
 - **Token Minter & Cache**: [gh-token.ts](file:///C:/src/infra/agents/gh-token.ts) signs a short-lived RS256 App JWT, exchanges it for a 1-hour installation token (`var/agents/state/gh-token.json`, `0600`), refreshes 10 minutes before expiry, and refuses to print raw tokens to a TTY.
 - **Transparent Wiring**:
   - **Git HTTPS**: `git config --global credential.https://github.com.helper "!bun C:/src/infra/agents/gh-token.ts git"`

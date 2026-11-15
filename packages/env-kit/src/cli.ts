@@ -17,7 +17,7 @@ import {
   secretList,
   secretSet,
   storeInfo,
-} from "./secret-store";
+} from "@aphrody/vault/sync";
 import {
   buildAphrodyIamBindingsPlan,
   formatAccountsStatusReport,

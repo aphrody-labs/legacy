@@ -90,7 +90,7 @@ describe("secret store", () => {
       process.env.ENV_KIT_SECRET_DIR = dir;
       try {
         const { secretSet, secretGet, secretList, secretDelete } =
-          await import("../src/secret-store");
+          await import("@aphrody/vault/sync");
         secretSet("ENVKIT_TEST_TOKEN", "value-under-test");
         expect(secretList()).toEqual(["ENVKIT_TEST_TOKEN"]);
         expect(secretGet("ENVKIT_TEST_TOKEN")).toBe("value-under-test");

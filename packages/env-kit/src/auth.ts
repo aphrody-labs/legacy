@@ -6,7 +6,7 @@
  *
  * The inventory (hosts, tunnels, WireGuard interfaces, renewal units, GitHub secrets) is the
  * `[nodes.*]` and `[auth.*]` tables of infra/deploy.toml. Secret values come from the OS store
- * (secret-store.ts), then from `.env`; they are never printed. Browser logins (gcloud, npm, vercel,
+ * (@aphrody/vault/sync), then from `.env`; they are never printed. Browser logins (gcloud, npm, vercel,
  * wrangler) only start with `--browser`: they open the default Chrome profile, where the owner
  * clicks the sign-in and consent screens himself.
  */
@@ -23,7 +23,7 @@ import {
   secretList,
   secretSet,
   storeInfo,
-} from "./secret-store";
+} from "@aphrody/vault/sync";
 import { whoami } from "./whoami";
 
 export type Status = "ok" | "fixed" | "invalid" | "missing" | "action" | "skip";
