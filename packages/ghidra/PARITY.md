@@ -41,7 +41,7 @@ Values are compared as JSON after normalisation (sorted sets, str() of Java obje
 - `walk_programs`
 - `walk_project`
 
-Name mapping: snake_case becomes camelCase (`open_program` -> `openProgram`), classes keep their names. Context managers become callbacks/`await using`, all calls are async (separate JVM process).
+Name mapping: snake_case becomes camelCase (`open_program` -> `openProgram`), classes keep their names. Context managers become callbacks/`await using`, calls crossing the JVM bridge are async (separate JVM process), local helpers such as `ApplicationInfo.fromFile` are synchronous.
 
 ## Entries
 
@@ -132,5 +132,7 @@ Name mapping: snake_case becomes camelCase (`open_program` -> `openProgram`), cl
 ## Scope and limits
 
 - One x86-64 ELF (4 functions) plus one zip; not a corpus. Both runs use the same Ghidra install, so identity shows the bridge does not alter results, not that analysis is correct.
+- `api.launchers` compares class names only (`DeferredPyGhidraLauncher` behaves like the headless launcher, `GuiPyGhidraLauncher` always throws).
+- Error entries map JS errors to Python names by hand in `parity.ts` (`ValueError`, `TypeError`): the mapping is part of the harness, not of the runtimes.
 - Time-dependent values (analysis log) are normalised to shape (api.analyze.log_nonempty).
 - The two runtimes ran sequentially in separate processes with separate projects created from the same binary.

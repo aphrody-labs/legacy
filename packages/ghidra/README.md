@@ -1,4 +1,4 @@
-# @aphrody/ghidra (`bun ghidra`)
+# @aphrody/ghidra (`bun-ghidra`)
 
 Ghidra for Bun: the pyghidra API surface, a Bun plugin (`?ghidra`, `ghidra:`), a script context for translated GhidraScripts, and a native `onBeforeParse` plugin (Rust, `src/ghidra-bun`). Bun only, no npm dependency.
 
@@ -15,11 +15,12 @@ await ghidra.start();                                    // pyghidra.start()
 await using h = await ghidra.openProgram("./a.exe", { analyze: true });  // open_program (with)
 const fm = await h.program.getFunctionManager();
 for (const f of await (await fm.getFunctions(true)).$list()) console.log(await f.getName());
-const c = await ghidra.decompile(h.program, await h.flat.getFunctionAt(await h.flat.toAddr(0x401000)));
+const addr = await h.flat.toAddr(0x401000);
+const c = await ghidra.decompile(h.program, await h.flat.getFunctionAt(addr));
 await ghidra.transaction(h.program, "edit", async () => { await h.flat.setEOLComment(addr, "x"); });
 ```
 
-Exports of `@aphrody/ghidra`: `start started stop openProgram withProgram openProject openFilesystem consumeProgram programContext analyze ghidraScript transaction analysisProperties programInfo programLoader taskMonitor walkProject walkPrograms runScript getCurrentInterpreter debugCallback ApplicationInfo ExtensionDetails ProgramTypeError HeadlessPyGhidraLauncher DeferredPyGhidraLauncher GuiPyGhidraLauncher jvm Session`, plus helpers `summarize listFunctions decompile decompiler`.
+Main exports of `@aphrody/ghidra` (the index also re-exports `createFlat`, `sprintf`, `getContext`, ... from `flat.ts` and `context.ts`): `start started stop openProgram withProgram openProject openFilesystem consumeProgram programContext analyze ghidraScript transaction analysisProperties programInfo programLoader taskMonitor walkProject walkPrograms runScript getCurrentInterpreter debugCallback ApplicationInfo ExtensionDetails ProgramTypeError HeadlessPyGhidraLauncher DeferredPyGhidraLauncher GuiPyGhidraLauncher jvm Session`, plus helpers `summarize listFunctions decompile decompiler`.
 
 Java objects are `JObject` proxies: `await obj.method(args)` calls the Java method; `$str() $list() $field(n) $setField(n,v) $instanceOf(c) $release()`; `await obj.toString()` is Java `toString`. Classes: `jvm().cls("ghidra.program.model.listing.Program")` for statics (`await C.$field("ANALYSIS_PROPERTIES")`, `await C.new_(...)` for constructors, or `jvm().newObject(cls, ...args)`). Java arrays/Iterables: `await x.$list()`. `bigint` is sent as long, `Uint8Array` as `byte[]`, `Session.array("java.lang.String", [...])` for typed arrays.
 
@@ -37,7 +38,7 @@ const f = await getFunctionAt(currentAddress);
 await println(`${await currentProgram.getName()} ${await f?.getName()}`);
 ```
 
-- Fields (`currentProgram currentAddress currentLocation currentSelection currentHighlight monitor state sourceFile`) are live bindings, set by `runScript(binary, script)`, `setContext(ctx)` or the CLI `bun-ghidra script <bin> <script.ts>`.
+- Fields (`currentProgram currentAddress currentLocation currentSelection currentHighlight monitor state sourceFile`) are live bindings, set by `runScript(binary, script)`, `setContext(ctx)` or the CLI `bun-ghidra script <bin> <script.ts>`. `runScript` fills `currentLocation`, `currentSelection`, `currentHighlight` and `state` with `null` (headless: no GUI selection) and `sourceFile` with the script path.
 - Every function is async (Promise); translated code must `await` them. `println/print/printerr/printf/popup` run locally; `ask*` take answers from `GHIDRA_ASK_<NAME>` (e.g. `GHIDRA_ASK_STRING`) or reject with `CancelledException` (headless semantics); `askYesNo` defaults to true; `isRunningHeadless()` is true.
 - `getScriptArgs()` returns `runScript(..., { scriptArgs })`.
 
@@ -58,7 +59,7 @@ import x from "ghidra:./a.exe";                              // namespace form
 
 ## Native plugin (`src/ghidra-bun`)
 
-Crate `aphrody-ghidra-bun` (cdylib, `bun-native-plugin` 0.2.0 + `napi` 3.16.2). Standalone workspace; root `Cargo.toml` member line: `"src/ghidra-bun",`. Build on fr1: `cargo build --release` in `src/ghidra-bun` (feature `decompile` adds ghidra-decompiler C output). Copy `libaphrody_ghidra_bun.so` to `aphrody_ghidra_bun.node`.
+Crate `aphrody-ghidra-bun` (cdylib, `bun-native-plugin` 0.2.0 + `napi` 3.16.2). Standalone workspace; root `Cargo.toml` member line: `"src/ghidra-bun",`. Build on fr1: `cargo build --release` in `src/ghidra-bun` (feature `decompile` adds ghidra-decompiler C output). Copy the cdylib (`libaphrody_ghidra_bun.so`, `libaphrody_ghidra_bun.dylib` or `aphrody_ghidra_bun.dll`) to `aphrody_ghidra_bun.node`. The crate stays on edition 2021 until it is promoted to the root workspace (edition 2024).
 
 ```ts
 import { nativeGhidraPlugin } from "@aphrody/ghidra/plugin";

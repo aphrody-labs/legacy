@@ -3,7 +3,7 @@
 Python 3 to Bun TypeScript transpiler, built for Ghidra (PyGhidra) scripts.
 
 - Rust crate: `src/py2bun` (standalone workspace, parser `ruff_python_parser` 0.0.22 from crates.io).
-- PyO3 module (abi3, `py2bun._py2bun`): `py2bun.transpile(source) -> str`, `py2bun.transpile_with_diagnostics(source) -> (ts, [(line, col, severity, message)])`.
+- PyO3 module (abi3, `py2bun._py2bun`): `py2bun.transpile(source, mode="auto") -> str` (raises `SyntaxError` with all diagnostics), `py2bun.transpile_with_diagnostics(source, mode="auto") -> (ts, [(line, col, severity, message)])`.
 - Bun runtime: `@aphrody/py2bun/runtime` (builtins, operators, `str`/`list`/`dict` methods), plus `runtime/{math,json,os,sys,re,time,string,struct,random}`.
 - Bun wrapper: `import { transpile } from "@aphrody/py2bun"` shells to the Rust CLI `py2bun-rs`.
 
@@ -47,7 +47,7 @@ Exit status 1 when the input does not parse or an error diagnostic exists (the `
 
 ## Diagnostics
 
-Errors (unsupported): `match`, `except*`, decorators other than `staticmethod`/`classmethod`/`property`/`setter`, class decorators, multiple inheritance, metaclasses, complex literals, star imports of unmapped modules, unmapped modules, `**` in dict comprehension. Matrix multiplication (`@`) emits `__py.unsupported` with an error diagnostic. Calls to `os.path` and the ignored modules in `IGNORED_MODULES` (`src/py2bun/src/names.rs`) are mapped or dropped without a diagnostic. Flags: `py2bun-rs` implements `--json --strict --async --sync`; `src/cli.ts` and `cli.py` only `-o`.
+Errors (unsupported): `match`, `except*`, decorators other than `staticmethod`/`classmethod`/`property`/`setter`, class decorators, multiple inheritance, metaclasses, complex literals, star imports of unmapped modules, unmapped modules, `**` in dict comprehension. Matrix multiplication (`@`) emits `__py.unsupported` with an error diagnostic. Calls to `os.path` and the ignored modules in `IGNORED_MODULES` (`src/py2bun/src/names.rs`) are mapped or dropped without a diagnostic. Flags: `py2bun-rs` implements `-o/--output --json --strict --async --sync -h`; `src/cli.ts` implements `-o/--output --async --sync --strict`; `cli.py` implements `-o/--output --strict --async --sync --json`. Exit status: 0 ok, 1 diagnostics (errors, or any with `--strict`, or a syntax error), 2 usage or I/O error. `__str__`/`__repr__` are emitted as `toString` (a class defining both keeps `__repr__` under its own name). `ignored modules`: `__future__ typing __main__ exceptions`; `jarray` is an error.
 Warnings: unresolved names, class attributes emitted as `static`, eager generator expressions, keyword arguments to unresolved callees, Python 2 rewrites.
 
 ## Conversion rate on aphrody-labs/ghidra (aa800ba9, all 146 `*.py` of the repo)

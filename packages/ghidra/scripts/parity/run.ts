@@ -97,7 +97,7 @@ ${reuse ? "" : `| wall time pyghidra / bun-ghidra (JVM start + analysis + all en
 
 ${all.map((n) => `- \`${n}\``).join("\n")}
 
-Name mapping: snake_case becomes camelCase (\`open_program\` -> \`openProgram\`), classes keep their names. Context managers become callbacks/\`await using\`, all calls are async (separate JVM process).
+Name mapping: snake_case becomes camelCase (\`open_program\` -> \`openProgram\`), classes keep their names. Context managers become callbacks/\`await using\`, calls crossing the JVM bridge are async (separate JVM process), local helpers such as \`ApplicationInfo.fromFile\` are synchronous.
 
 ## Entries
 
@@ -108,7 +108,7 @@ ${keys.map((k) => `| \`${k}\` | ${same.includes(k) ? (bothErr.includes(k) ? "BOT
 if (bothErr.length) {
   md += "\n## Identical errors (not a functional proof)\n\n" + bothErr.map((k) => `- \`${k}\`: ${JSON.stringify(A[k])} in both runtimes (${EA[k] || "no message"})`).join("\n") + "\n";
 }
-md += `\n## Scope and limits\n\n- One x86-64 ELF (4 functions) plus one zip; not a corpus. Both runs use the same Ghidra install, so identity shows the bridge does not alter results, not that analysis is correct.\n- Time-dependent values (analysis log) are normalised to shape (api.analyze.log_nonempty).\n- The two runtimes ran sequentially in separate processes with separate projects created from the same binary.\n`;
+md += `\n## Scope and limits\n\n- One x86-64 ELF (4 functions) plus one zip; not a corpus. Both runs use the same Ghidra install, so identity shows the bridge does not alter results, not that analysis is correct.\n- `api.launchers` compares class names only (`DeferredPyGhidraLauncher` behaves like the headless launcher, `GuiPyGhidraLauncher` always throws).\n- Error entries map JS errors to Python names by hand in `parity.ts` (`ValueError`, `TypeError`): the mapping is part of the harness, not of the runtimes.\n- Time-dependent values (analysis log) are normalised to shape (api.analyze.log_nonempty).\n- The two runtimes ran sequentially in separate processes with separate projects created from the same binary.\n`;
 if (diff.length) {
   md += "\n## Differences (pyghidra vs bun-ghidra)\n\n" + diff.map((d) => `- \`${d.k}\`\n  - pyghidra: \`${clip(d.py)}\`\n  - bun-ghidra: \`${clip(d.bun)}\``).join("\n") + "\n";
 }
