@@ -163,9 +163,16 @@ if (import.meta.main) {
   if (a.includes("--publish")) {
     const bucket = Bun.env.SKILLS_ARCHIVE_BUCKET ?? "aphrody-skills-archive";
     const files = readdirSync(r.out);
+    // Cloudflare REST: PUT /accounts/<id>/r2/buckets/<bucket>/objects/<key> (token from the vault, account id from infra/cloudflare/cloudflare.toml).
+    const acct = Bun.env.CLOUDFLARE_ACCOUNT_ID ?? (Bun.TOML.parse(await Bun.file(join(ROOT, "infra", "cloudflare", "cloudflare.toml")).text()) as any).account;
+    if (!Bun.env.CLOUDFLARE_API_TOKEN) throw new Error("CLOUDFLARE_API_TOKEN missing");
     for (const f of files) {
-      const p = Bun.spawnSync(["cf", "r2", "objects", "put", "--bucket-name", bucket, "--key", f, "--file", join(r.out, f)], { stdout: "ignore", stderr: "pipe" });
-      if (p.exitCode !== 0) throw new Error(`r2 put ${f}: ${p.stderr.toString().slice(0, 200)}`);
+      const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${acct}/r2/buckets/${bucket}/objects/${encodeURIComponent(f)}`, {
+        method: "PUT",
+        headers: { authorization: `Bearer ${Bun.env.CLOUDFLARE_API_TOKEN}`, "content-type": f.endsWith(".json") ? "application/json" : "text/markdown; charset=utf-8" },
+        body: Bun.file(join(r.out, f)),
+      });
+      if (!res.ok) throw new Error(`r2 put ${f}: HTTP ${res.status} ${(await res.text()).slice(0, 160)}`);
     }
     console.log(`published ${files.length} objects to r2://${bucket}`);
   }
