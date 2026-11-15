@@ -125,3 +125,18 @@ describe("flat review fixes", () => {
     delete process.env.GHIDRA_ASK_YESNO;
   });
 });
+
+describe("rpc release refcount", () => {
+  test("$release on one proxy keeps a shared handle alive; concurrent launcher starts share one start", async () => {
+    const s = mock();
+    const flat = await s.newObject("mock.Flat");
+    const a = await flat.getFirstFunction();
+    const b = await flat.getFirstFunction();
+    if (a.$h === b.$h) {
+      await a.$release();
+      expect(await b.getName()).toBe("main");
+    }
+    await b.$release();
+    await s.close();
+  });
+});

@@ -16,6 +16,7 @@ export class ProgramTypeError extends TypeError {
 
 let session: Session | undefined;
 let launcher: PyGhidraLauncher | undefined;
+let starting: Promise<Session> | undefined;
 
 /** The live bridge session (throws before `start()`). */
 export function jvm(): Session {
@@ -37,13 +38,24 @@ export abstract class PyGhidraLauncher {
   /** pyghidra add_vmargs */
   addVmargs(...args: string[]) { this.extraVmargs.push(...args); }
   protected abstract initGhidra(s: Session): Promise<void>;
-  async start(): Promise<Session> {
-    if (started()) return session!;
-    const s = await Session.start({ ...this.opts, jvmArgs: [...this.extraVmargs, ...(this.opts.jvmArgs ?? [])] });
-    session = s;
-    launcher = this;
-    await this.initGhidra(s);
-    return s;
+  /** Concurrent callers share one JVM; the session is published only after initGhidra succeeds. */
+  start(): Promise<Session> {
+    if (started()) return Promise.resolve(session!);
+    if (!starting) {
+      starting = (async () => {
+        const s = await Session.start({ ...this.opts, jvmArgs: [...this.extraVmargs, ...(this.opts.jvmArgs ?? [])] });
+        try {
+          await this.initGhidra(s);
+        } catch (e) {
+          await s.close().catch(() => {});
+          throw e;
+        }
+        session = s;
+        launcher = this;
+        return s;
+      })().finally(() => { starting = undefined; });
+    }
+    return starting;
   }
 }
 
@@ -292,7 +304,10 @@ export async function openProgram(binaryPath: string | null, o: OpenProgramOptio
     if (!(await iface.isAssignableFrom(loaderCls))) throw new TypeError(`${o.loader} does not implement ghidra.app.util.opinion.Loader`);
   }
   const locator = await s.newObject("ghidra.framework.model.ProjectLocator", loc, projectName);
-  let project: JObject;
+  const Util = s.cls("ghidra.app.script.GhidraScriptUtil");
+  let acquired = 0;
+  let project!: JObject;
+  try {
   if (await locator.exists()) project = await GP.openProject(loc, projectName, true);
   else {
     mkdirSync(loc, { recursive: true });
@@ -313,8 +328,8 @@ export async function openProgram(binaryPath: string | null, o: OpenProgramOptio
     }
     await project.saveAs(program, "/", programName, true);
   }
-  const Util = s.cls("ghidra.app.script.GhidraScriptUtil");
   await Util.acquireBundleHostReference();
+  acquired++;
   const flat = await s.newObject("ghidra.program.flatapi.FlatProgramAPI", program);
   if (o.analyze ?? true) {
     const PU = s.cls("ghidra.program.util.GhidraProgramUtilities");
@@ -336,6 +351,12 @@ export async function openProgram(binaryPath: string | null, o: OpenProgramOptio
   };
   const script = createFlat({ callFlat: (m, a) => (flat as any)[m](...a) }, { scriptName: "bun-ghidra" });
   return { flat, program: program!, project, close, script, [Symbol.asyncDispose]: close };
+  } catch (e) {
+    // do not leak the bundle-host reference or the open project when open/import/analysis fails
+    for (; acquired > 0; acquired--) await Util.releaseBundleHostReference().catch(() => {});
+    await project?.close().catch(() => {});
+    throw e;
+  }
 }
 
 /** Python `with open_program(...) as flat_api:` equivalent. */
@@ -368,7 +389,9 @@ export async function runScript(
     const program = h.program;
     const mem = await (await program.getMemory()).getLoadedAndInitializedAddressSet();
     const currentAddress = (await mem.isEmpty()) ? null : await mem.getMinAddress();
-    setContext({ session: jvm(), project: h.project, currentProgram: program, currentAddress, monitor: await taskMonitor(), flat: h.script, scriptArgs: o.scriptArgs ?? [], scriptName: basename(scriptPath), javaFlat: h.flat });
+    const scriptName = basename(scriptPath);
+    const flat = createFlat({ callFlat: (m, a) => (h.flat as any)[m](...a) }, { scriptName, scriptArgs: o.scriptArgs ?? [] });
+    setContext({ session: jvm(), project: h.project, currentProgram: program, currentAddress, currentLocation: null, currentSelection: null, currentHighlight: null, state: null, monitor: await taskMonitor(), flat, scriptArgs: o.scriptArgs ?? [], scriptName, javaFlat: h.flat });
     await import(resolve(scriptPath) + "?run=" + Date.now());
   } finally {
     clearContext();

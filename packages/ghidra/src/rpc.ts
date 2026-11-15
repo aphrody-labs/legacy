@@ -172,6 +172,8 @@ export class Session {
 
   #wrap(h: number, c: string): JObject {
     const self = this;
+    let released = false;
+    let proxy: object;
     const meta: Record<string, unknown> = {
       $h: h,
       $c: c,
@@ -180,23 +182,35 @@ export class Session {
       $field: (f: string) => self.#send({ op: "field", h, f }),
       $setField: (f: string, v: unknown) => self.#send({ op: "setfield", h, f, a: [self.encode(v)] }),
       $instanceOf: (cls: string) => self.#send({ op: "instanceof", h, c: cls }),
-      $release: () => self.#send({ op: "release", hs: [h] }).then(() => undefined),
+      /** drops this proxy's reference; the Java handle is released only when no other proxy shares it */
+      $release: async () => {
+        if (released) return;
+        released = true;
+        self.#registry.unregister(proxy);
+        const n = (self.#refs.get(h) ?? 1) - 1;
+        if (n > 0) {
+          self.#refs.set(h, n);
+          return;
+        }
+        self.#refs.delete(h);
+        await self.#send({ op: "release", hs: [h] });
+      },
       /** java.lang.Object.toString() (async); string coercion yields a debug tag */
       toString: () => self.#send({ op: "str", h }),
       [Symbol.toPrimitive]: () => `[java ${c}#${h}]`,
       [Symbol.for("nodejs.util.inspect.custom")]: () => `[java ${c}#${h}]`,
     };
-    const p = new Proxy(meta, {
+    const p = (proxy = new Proxy(meta, {
       get(t, name) {
         if (typeof name === "symbol" || name in t) return t[name as string];
         if (RESERVED.has(name)) return undefined;
         return (...args: unknown[]) => self.#send({ op: "call", h, m: name, a: args.map((x) => self.encode(x)) });
       },
-    });
+    }));
     this.#refs.set(h, (this.#refs.get(h) ?? 0) + 1);
     const pend = this.#release.indexOf(h);
     if (pend >= 0) this.#release.splice(pend, 1); // re-referenced before the release was sent
-    this.#registry.register(p, h);
+    this.#registry.register(p, h, p);
     return p as unknown as JObject;
   }
 
