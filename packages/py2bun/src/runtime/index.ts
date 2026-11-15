@@ -41,6 +41,7 @@ export class OSError extends Exception {}
 export { OSError as IOError };
 export class FileNotFoundError extends OSError {}
 export class PermissionError extends OSError {}
+export class FileExistsError extends OSError {}
 export class TimeoutError extends OSError {}
 
 export function unsupported(what: string): never {

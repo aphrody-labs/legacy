@@ -254,3 +254,99 @@ describe("runtime review fixes 4", () => {
     expect(String(new py.BaseException(1, 2).message)).toBe("(1, 2)");
   });
 });
+
+describe("os math random sys time review fixes", () => {
+  test("os.path semantics", async () => {
+    const os = await import("../src/runtime/os");
+    expect(os.path.join("a", "../b")).toBe("a" + os.sep + "../b");
+    expect(os.path.join("a", "")).toBe("a" + os.sep);
+    expect(os.path.splitext("...")).toEqual(["...", ""]);
+    expect(os.path.splitext("a/.bashrc")).toEqual(["a/.bashrc", ""]);
+    expect(os.path.splitext("a/b.tar.gz")).toEqual(["a/b.tar", ".gz"]);
+    expect(os.path.dirname("foo")).toBe("");
+    expect(os.path.split("a/b/")).toEqual(["a/b", ""]);
+    expect(os.path.expanduser("~user")).toBe("~user");
+    expect(() => os.listdir("/definitely/not/here")).toThrow();
+  });
+  test("math domain and bigint", async () => {
+    const m = await import("../src/runtime/math");
+    expect(() => m.log(0)).toThrow();
+    expect(() => m.asin(2)).toThrow();
+    expect(m.floor(5n)).toBe(5n);
+    expect(() => m.factorial(-3)).toThrow();
+    expect(m.isqrt(4503599761588224n)).toBe(67108864);
+    expect(() => m.fmod(1, 0)).toThrow();
+    expect(m.gcd(12, 18)).toBe(6);
+  });
+  test("random ranges, sys, time", async () => {
+    const r = await import("../src/runtime/random");
+    expect(() => r.randrange(5, 1)).toThrow();
+    expect([0, 3, 6, 9]).toContain(r.randrange(0, 10, 3));
+    const sys = await import("../src/runtime/sys");
+    expect(sys.byteorder).toBe("little");
+    const t = await import("../src/runtime/time");
+    expect(() => t.sleep(-1)).toThrow();
+    expect(t.ctime(0)).toMatch(/^\w{3} \w{3} [ \d]\d \d\d:\d\d:\d\d \d{4}$/);
+  });
+});
+
+describe("format and json review fixes", () => {
+  test("format spec: alt prefix, general, grouping, errors", async () => {
+    const f = await import("../src/runtime/format");
+    expect(f.format(255, "#06x")).toBe("0x00ff");
+    expect(f.format(999999.9, ".6g")).toBe("1e+06");
+    expect(f.format(0.00009999999, ".6g")).toBe("0.0001");
+    expect(f.format(0xdeadbeef, "_x")).toBe("dead_beef");
+    expect(() => f.format(255, ",x")).toThrow();
+    expect(f.format(1.5, "#.3g")).toBe("1.50");
+    expect(f.percent("%X|% d|%#x", [255, 5, 255])).toBe("FF| 5|0xff");
+    expect(() => f.percent("%y", [1])).toThrow();
+    expect(() => f.percent("%d", ["1"])).toThrow();
+    expect(f.percent("%-*d|", [5, 3])).toBe("3    |");
+    expect(f.percent("%*d", [-4, 3])).toBe("3   ");
+    expect(() => f.strFormat("{} {0}", [1], {})).toThrow();
+    expect(() => f.strFormat("{", [1], {})).toThrow();
+    expect(() => f.strFormat("}", [1], {})).toThrow();
+    expect(() => f.strFormat("{}{}", [1], {})).toThrow();
+    expect(f.strFormat("{!a}", ["é"], {})).toBe("'\\xe9'");
+  });
+  test("json: bigint, NaN, strings", async () => {
+    const j = await import("../src/runtime/json");
+    expect(j.dumps(12345678901234567890n)).toBe("12345678901234567890");
+    expect(j.dumps(NaN)).toBe("NaN");
+    expect(j.loads("12345678901234567890")).toBe(12345678901234567890n);
+    expect(j.loads("[1, NaN]")[1]).toBeNaN();
+    expect(j.loads('"123456789012345678901"')).toBe("123456789012345678901");
+    expect(j.dumps(new Map([["a,b", "x:1"]]))).toBe('{"a,b": "x:1"}');
+  });
+});
+
+describe("re struct async review fixes", () => {
+  test("re anchors, flags, spans, sub templates", async () => {
+    const re = await import("../src/runtime/re");
+    expect(re.search("\\Aab\\Z", "ab")?.group(0)).toBe("ab");
+    expect(re.search("\\Aab\\Z", "x\nab")).toBeNull();
+    expect(re.search("(?i)AB", "xab")?.span()).toEqual([1, 3]);
+    expect(re.search("(?P<w>b)", "abc")?.start("w")).toBe(1);
+    expect(re.sub("(a)(?P<x>b)", "\\2\\g<x>\\1\\\\", "ab")).toBe("bba\\");
+    expect(re.findall("(a)|(b)", "ab")).toEqual([["a", ""], ["", "b"]]);
+    expect(re.search("a b # note\n c", "abc", re.X)?.group(0)).toBe("abc");
+  });
+  test("struct alignment, errors and sizes", async () => {
+    const st = await import("../src/runtime/struct");
+    expect(st.calcsize("BI")).toBe(8);
+    expect(st.calcsize("<BI")).toBe(5);
+    expect(st.calcsize("<l")).toBe(4);
+    expect(st.calcsize("l")).toBe(8);
+    expect(() => st.pack("<I", 1, 2)).toThrow();
+    expect(() => st.unpack("<I", new Uint8Array(3))).toThrow();
+    expect(() => st.calcsize("<I$")).toThrow();
+    expect(st.unpack("<c", st.pack("<c", new Uint8Array([65])))[0]).toEqual(new Uint8Array([65]));
+  });
+  test("async min/sorted with async keys and zip strict", async () => {
+    const a = await import("../src/runtime/async");
+    expect(await a.a_min([3, 1, 2], py.kw({ key: async (x: number) => -x }))).toBe(3);
+    expect(await a.a_sorted([3, 1, 2], py.kw({ key: async (x: number) => x }))).toEqual([1, 2, 3]);
+    await expect((async () => { for await (const _ of a.a_zip([1], [1, 2], py.kw({ strict: true }))) void _; })()).rejects.toThrow();
+  });
+});

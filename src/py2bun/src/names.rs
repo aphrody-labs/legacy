@@ -21,7 +21,7 @@ pub const EXCEPTIONS: &[&str] = &[
     "StopIteration", "OSError", "IOError", "ZeroDivisionError", "AttributeError", "AssertionError",
     "NotImplementedError", "NameError", "OverflowError", "KeyboardInterrupt", "SystemExit",
     "LookupError", "ArithmeticError", "UnicodeDecodeError", "UnicodeEncodeError", "ImportError",
-    "FileNotFoundError", "PermissionError", "TimeoutError", "EOFError",
+    "FileNotFoundError", "FileExistsError", "PermissionError", "TimeoutError", "EOFError", "GeneratorExit",
 ];
 
 /// Methods rewritten to `__py.m.NAME(recv, ...args)`. The runtime falls back to the native

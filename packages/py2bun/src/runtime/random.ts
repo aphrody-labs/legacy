@@ -1,9 +1,15 @@
 // Python `random` subset (non-reproducible vs CPython).
-import { IndexError, iter } from "./index";
+import { IndexError, ValueError, iter } from "./index";
 export const seed = (_: any) => {};
 export const random = () => Math.random();
-export const randint = (a: number, b: number) => a + Math.floor(Math.random() * (b - a + 1));
-export const randrange = (a: number, b?: number) => (b === undefined ? Math.floor(Math.random() * a) : a + Math.floor(Math.random() * (b - a)));
+export const randint = (a: number, b: number) => randrange(a, b + 1);
+export function randrange(a: number, b?: number, step = 1): number {
+  const [start, stop] = b === undefined ? [0, a] : [a, b];
+  if (step === 0) throw new ValueError("zero step for randrange()");
+  const n = step > 0 ? Math.ceil((stop - start) / step) : Math.ceil((start - stop) / -step);
+  if (n <= 0) throw new ValueError("empty range for randrange()");
+  return start + step * Math.floor(Math.random() * n);
+}
 export const uniform = (a: number, b: number) => a + Math.random() * (b - a);
 export function choice(s: any) {
   const a = Array.from(iter(s));

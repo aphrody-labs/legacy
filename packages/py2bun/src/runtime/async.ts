@@ -28,7 +28,6 @@ export async function* aiter(x: any): AsyncGenerator<any> {
 export async function a_str(x: any): Promise<string> {
   x = await x;
   if (isJ(x) && typeof x.$str === "function") return await x.$str();
-  if (x != null && typeof x === "object" && typeof x.toString === "function" && !Array.isArray(x) && x.constructor === Object) return py.str(x);
   return py.str(x);
 }
 
@@ -39,16 +38,34 @@ export const a_list = async (x?: any) => py.list(x === undefined ? undefined : a
 export const a_tuple = a_list;
 export const a_set = async (x?: any) => py.set(x === undefined ? undefined : await materialize(x));
 export const a_frozenset = a_set;
+const kwOf = (a: any[]): [any[], Record<string, any>] => (a[a.length - 1] instanceof py.Kw ? [a.slice(0, -1), a[a.length - 1].o] : [a, {}]);
+/** keys may be async (Java proxy calls): resolve them before ordering */
+async function keyed(items: any[], key: any): Promise<[any, any][]> {
+  return Promise.all(items.map(async (v) => [key ? await key(v) : v, v] as [any, any]));
+}
 export async function a_sorted(it: any, ...rest: any[]) {
-  return py.sorted(await materialize(it), ...rest);
+  const [, k] = kwOf(rest);
+  const items = await materialize(it);
+  if (!k.key) return py.sorted(items, ...rest);
+  const ks = await keyed(items, k.key);
+  const dir = py.truth(k.reverse) ? -1 : 1;
+  return ks.map((x, i) => [x[0], x[1], i] as const).sort((x, y) => dir * (py.cmp(x[0], y[0]) || 0) || x[2] - y[2]).map((x) => x[1]);
 }
-export const a_sum = async (it: any, start?: any) => py.sum(await materialize(it), start);
-export async function a_min(...a: any[]) {
-  return py.min(...(await Promise.all(a.map((x, i) => (i === 0 && a.length === 1 ? materialize(x) : x)))));
+export const a_sum = async (it: any, ...a: any[]) => py.sum(await materialize(it), ...a);
+async function a_minmax(sign: number, a: any[]) {
+  const [pos, k] = kwOf(a);
+  const items = pos.length === 1 ? await materialize(pos[0]) : await Promise.all(pos.map((x) => x));
+  if (!items.length) {
+    if ("default" in k) return k.default;
+    throw new py.ValueError(`${sign > 0 ? "max" : "min"}() arg is an empty sequence`);
+  }
+  const ks = await keyed(items, k.key);
+  let best = ks[0]!;
+  for (const x of ks.slice(1)) if (py.cmp(x[0], best[0]) * sign > 0) best = x;
+  return best[1];
 }
-export async function a_max(...a: any[]) {
-  return py.max(...(await Promise.all(a.map((x, i) => (i === 0 && a.length === 1 ? materialize(x) : x)))));
-}
+export const a_min = (...a: any[]) => a_minmax(-1, a);
+export const a_max = (...a: any[]) => a_minmax(1, a);
 export const a_any = async (it: any) => py.any(await materialize(it));
 export const a_all = async (it: any) => py.all(await materialize(it));
 export const a_reversed = async (it: any) => py.reversed(await materialize(it));
@@ -62,7 +79,9 @@ export async function* a_enumerate(it: any, ...a: any[]) {
   for await (const v of aiter(it)) yield [i++, v];
 }
 export async function* a_zip(...its: any[]) {
-  const arrs = await Promise.all(its.filter((x) => !(x instanceof py.Kw)).map(materialize));
+  const [pos, k] = kwOf(its);
+  const arrs = await Promise.all(pos.map(materialize));
+  if (py.truth(k.strict) && arrs.some((x) => x.length !== arrs[0].length)) throw new py.ValueError("zip() argument lengths differ");
   yield* py.zip(...arrs);
 }
 export async function* a_map(f: any, ...its: any[]) {
@@ -93,6 +112,7 @@ export async function a_eq(a: any, b: any): Promise<boolean> {
   a = await a;
   b = await b;
   if (isJ(a) && typeof a.equals === "function") return !!(await a.equals(b));
+  if (isJ(b) && typeof b.equals === "function") return !!(await b.equals(a));
   return py.eq(a, b);
 }
 
