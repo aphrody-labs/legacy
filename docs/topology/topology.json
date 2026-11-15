@@ -2003,7 +2003,7 @@
       "name": "aphrody-electron-migrate",
       "kind": "module",
       "language": "rust",
-      "loc": 5296,
+      "loc": 5297,
       "file": "src/electron-migrate"
      },
      {
@@ -2135,6 +2135,16 @@
      {
       "id": "just",
       "name": "justfile",
+      "kind": "job"
+     },
+     {
+      "id": "ci",
+      "name": "GitHub workflows",
+      "kind": "job"
+     },
+     {
+      "id": "uv",
+      "name": "uv workspace",
       "kind": "job"
      }
     ]
@@ -9288,10 +9298,196 @@
    "source": "src/ay",
    "target": "src/ui/kit",
    "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/deploy",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/assets",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/upstream",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/gnu",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/release",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/i18n",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/ai-os",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/agent/context",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/agent/py",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "bench",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/assets",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "test/assets",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/tv/ffmpeg",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/craft",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/archguard",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/design",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "apps/nt",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/deploy",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/game",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/gaming",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/wayland/gamescope/core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/wayland/gamescope/web-wasm",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/wayland/gamescope/wgsl",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/drivers/gpu/dx12",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/posix/wslg",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/wayland/smithay",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/ffi-bridge",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/machine",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/release",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/env-kit",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/upstream",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "packages/chromium-bun",
+   "kind": "dispatch"
+  },
+  {
+   "source": "ci",
+   "target": "src/posix/omarchy",
+   "kind": "dispatch"
+  },
+  {
+   "source": "uv",
+   "target": "tools/lore",
+   "kind": "dispatch"
+  },
+  {
+   "source": "uv",
+   "target": "packages/core-py",
+   "kind": "dispatch"
+  },
+  {
+   "source": "uv",
+   "target": "packages/ai-os/python/agent_core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "uv",
+   "target": "packages/ai-os/python/hermes_agent_memory",
+   "kind": "dispatch"
   }
  ],
  "entryPoints": [
   "apps/nt",
+  "ci",
   "infra/cloudflare/workers/github-app",
   "infra/gcp/billing-agent/cap-function",
   "infra/mesh-vn",
@@ -9355,13 +9551,14 @@
   "test/conformance",
   "test/lore",
   "tools/build-model",
-  "tools/site-mirror"
+  "tools/site-mirror",
+  "uv"
  ],
  "deadEnds": [],
  "observations": [
   "Most depended-on units (single points of failure): bun_core (107), bun_alloc (58), bun_collections (44), bun_sys (43), bun_ast (34).",
   "0 units have no inbound edge, no binary and are never named elsewhere: unwired candidates for wiring into ay or deletion.",
-  "5 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
+  "2 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
   "135 of 227 Rust units are absorbed Bun crates (bun_*).",
   "Data stores by writer count: SQLite 13, Valkey / Redis 8, R2 / S3 8, Postgres 3 (detected from client APIs and SQL keywords, not runtime).",
   "No dependency cycle (checkdeps).",

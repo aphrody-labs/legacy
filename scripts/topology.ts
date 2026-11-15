@@ -120,14 +120,37 @@ for (const m of justText.matchAll(/((?:src|packages|apps|bench|test|scripts|infr
   const t = ownerOf(m[1]!);
   if (t) addEdge(JUST, t, "dispatch");
 }
-// ay External routes resolve to the unit owning that binary.
+// ay External routes resolve to the unit owning that binary; Package routes run packages/<name>/src/cli.ts.
 const unresolved: string[] = [];
 const ayLib = join(root, "src/ay/src/lib.rs");
-if (existsSync(ayLib))
-  for (const m of readFileSync(ayLib, "utf8").matchAll(/Route::External\("([^"]+)"/g)) {
+if (existsSync(ayLib)) {
+  const ayText = readFileSync(ayLib, "utf8");
+  for (const m of ayText.matchAll(/Route::External\("([^"]+)"/g)) {
     const t = binOwner.get(m[1]!);
     if (t) addEdge("src/ay", t, "dispatch");
     else if (!["just"].includes(m[1]!)) unresolved.push(m[1]!);
+  }
+  for (const m of ayText.matchAll(/Route::Package\("([\w-]+)"/g)) {
+    const t = ownerOf(`packages/${m[1]}`);
+    if (t) addEdge("src/ay", t, "dispatch");
+  }
+}
+// CI workflows run units by path (`bun packages/deploy/src/cli.ts`, `cargo test -p`), and the root uv
+// workspace lists its Python members: both are outer invokers.
+const CI = "ci";
+const UV = "uv";
+const wfDir = join(root, ".github/workflows");
+if (existsSync(wfDir))
+  for (const f of readdirSync(wfDir).filter((f) => /\.ya?ml$/.test(f)))
+    for (const m of readFileSync(join(wfDir, f), "utf8").matchAll(/((?:src|packages|apps|bench|test|scripts|infra|tools)\/[\w./-]+)/g)) {
+      const t = ownerOf(m[1]!);
+      if (t) addEdge(CI, t, "dispatch");
+    }
+const rootPy = join(root, "pyproject.toml");
+if (existsSync(rootPy))
+  for (const mem of ((Bun.TOML.parse(readFileSync(rootPy, "utf8")) as any).tool?.uv?.workspace?.members ?? []) as string[]) {
+    const t = ownerOf(mem);
+    if (t) addEdge(UV, t, "dispatch");
   }
 
 // --- Tree grouped by DEPS.rules layer.
@@ -149,11 +172,13 @@ const tree = {
   kind: "system",
   children: [
     ...domains.filter((d) => d.children.length),
-    { id: "dom:entry", name: "Entry points", kind: "domain", children: [{ id: JUST, name: "justfile", kind: "job" }] },
+    { id: "dom:entry", name: "Entry points", kind: "domain", children: [{ id: JUST, name: "justfile", kind: "job" }, { id: CI, name: "GitHub workflows", kind: "job" }, { id: UV, name: "uv workspace", kind: "job" }] },
     { id: "dom:data", name: "Data stores", kind: "domain", children: usedStores.map((s) => ({ id: s.id, name: s.name, kind: "datastore" })) },
   ],
 };
 entries.add(JUST);
+entries.add(CI);
+entries.add(UV);
 
 const edgeList = [...edges.keys()].map((k) => {
   const [source, target, kind] = k.split("|");
@@ -167,6 +192,7 @@ const deadEnds = units
   .map((u) => u.dir)
   .sort();
 const named = units.filter((u) => !inbound.get(u.dir) && !entries.has(u.dir) && mentions.get(u.dir)?.size).map((u) => u.dir);
+if (named.length) console.log(`named only: ${named.join(", ")}`);
 
 // --- Observations.
 const top = [...inbound].filter(([k]) => byDir.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 5);
@@ -184,7 +210,7 @@ const observations = [
 ];
 
 // --- Persona flows: built from ids that exist; a step without nodes is dropped.
-const has = (id: string) => byDir.has(id) || id === JUST || id.startsWith("ds:");
+const has = (id: string) => byDir.has(id) || id === JUST || id === CI || id === UV || id.startsWith("ds:");
 const step = (label: string, ids: string[]) => ({ label, nodes: ids.filter(has) });
 const flow = (name: string, persona: string, description: string, steps: ReturnType<typeof step>[]) => ({ name, persona, description, steps: steps.filter((s) => s.nodes.length) });
 const flows = [
