@@ -1,6 +1,6 @@
 # Preuve : ed 1.22.6
 
-Généré par `just gnu-check ed` le 2026-11-15T00:30:23Z. Build : fr1 (vps-203bea89), tests : fr2 (bunos), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/ed/ed-1.22.6.tar.*, sha256 3f33b22135219c39c3c695f7b7171c2567d3e2a17c798c0a90607320cbb268f2 (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-ed` (src/gnu/ed).
+Généré par `just gnu-check ed` le 2026-11-15T00:30:23Z. Build : fr1 (<fr1-hostname>), tests : fr2 (<fr2-hostname>), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/ed/ed-1.22.6.tar.*, sha256 3f33b22135219c39c3c695f7b7171c2567d3e2a17c798c0a90607320cbb268f2 (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-ed` (src/gnu/ed).
 
 | Mesure | GNU 1.22.6 | Aphrody |
 | --- | --- | --- |

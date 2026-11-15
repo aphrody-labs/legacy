@@ -1,6 +1,6 @@
 # Preuve : m4 1.4.21
 
-Généré par `just gnu-check m4` le 2026-11-15T00:21:12Z. Build : fr1 (vps-203bea89), tests : fr2 (bunos), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/m4/m4-1.4.21.tar.*, sha256 f25c6ab51548a73a75558742fb031e0625d6485fe5f9155949d6486a2408ab66 (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-m4` (src/gnu/m4).
+Généré par `just gnu-check m4` le 2026-11-15T00:21:12Z. Build : fr1 (<fr1-hostname>), tests : fr2 (<fr2-hostname>), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/m4/m4-1.4.21.tar.*, sha256 f25c6ab51548a73a75558742fb031e0625d6485fe5f9155949d6486a2408ab66 (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-m4` (src/gnu/m4).
 
 | Mesure | GNU 1.4.21 | Aphrody |
 | --- | --- | --- |

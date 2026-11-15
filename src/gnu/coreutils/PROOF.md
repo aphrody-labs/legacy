@@ -1,6 +1,6 @@
 # Preuve : coreutils 9.12 (uutils/coreutils)
 
-Mesuré le 2026-11-14 sur fr1 (vps-203bea89, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/coreutils, fork `aphrody-labs/coreutils` à e05486ec1a91e5c7c6fb76ef62706cd6c9fb0a25, build release.
+Mesuré le 2026-11-14 sur fr1 (<fr1-hostname>, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/coreutils, fork `aphrody-labs/coreutils` à e05486ec1a91e5c7c6fb76ef62706cd6c9fb0a25, build release.
 
 | Mesure | Valeur |
 | --- | --- |

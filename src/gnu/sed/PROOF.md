@@ -1,6 +1,6 @@
 # Preuve : sed 4.10 (uutils/sed)
 
-Mesuré le 2026-11-14 sur fr1 (vps-203bea89, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/sed, fork `aphrody-labs/sed` à 70960fcf16f228a2cbb828543656e92f37a06024, build release.
+Mesuré le 2026-11-14 sur fr1 (<fr1-hostname>, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/sed, fork `aphrody-labs/sed` à 70960fcf16f228a2cbb828543656e92f37a06024, build release.
 
 | Mesure | Valeur |
 | --- | --- |

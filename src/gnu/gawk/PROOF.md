@@ -1,6 +1,6 @@
 # Preuve : gawk 5.4.1 (uutils/awk)
 
-Mesuré le 2026-11-14 sur fr1 (vps-203bea89, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/awk, fork `aphrody-labs/awk` à 1634d71d6fd2e1c30c0927732e48d10f03026da3, build release.
+Mesuré le 2026-11-14 sur fr1 (<fr1-hostname>, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/awk, fork `aphrody-labs/awk` à 1634d71d6fd2e1c30c0927732e48d10f03026da3, build release.
 
 | Mesure | Valeur |
 | --- | --- |

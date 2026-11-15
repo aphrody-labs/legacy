@@ -27,8 +27,8 @@ written during the migration. The versioned sources are in `infra/fleet/`.
 
 Values replaced: `<fr1-public-ip>` → `<fr2-public-ip>` and `<fr1-public-ipv6>` → `<fr2-public-ipv6>`. The Cloudflare proxy stays in the same state as before.
 
-- zone aphrody.com `963461271f885bc3f3c2bfd586f2b7ba`: `aphrody.com` A (`30ddf6bf…`), `api` A (`1900939c…`), `api` AAAA (`cbaa3d9d…`), `os` A (`a274bd16…`). All CNAMEs to `aphrody.com` follow (cdn, creator, downloads, omar, www…). `vps.aphrody.com` stays on fr1.
-- zone aphrody.app `f4dab237b9811435da6fee0b5b3438d4`: 21 A records (api, app-*, auth, craft, deploy, git, play, source).
+- zone aphrody.com `<cloudflare-zone-ids>`: `aphrody.com` A (`30ddf6bf…`), `api` A (`1900939c…`), `api` AAAA (`cbaa3d9d…`), `os` A (`a274bd16…`). All CNAMEs to `aphrody.com` follow (cdn, creator, downloads, omar, www…). `vps.aphrody.com` stays on fr1.
+- zone aphrody.app `<cloudflare-zone-ids-2>`: 21 A records (api, app-*, auth, craft, deploy, git, play, source).
 - **rollback**: put `content` back to the old value (PATCH `/zones/<zone>/dns_records/<id>`). fr1's vhosts are intact, the rollback is immediate.
 - to do: rpbey.fr (DNS at OVH, not at Cloudflare) stays served by fr1 until we have access to the OVH API or the Manager. Then move its certificate to webroot on fr2.
 - dragonballfr.com already points to prd: nothing to do.

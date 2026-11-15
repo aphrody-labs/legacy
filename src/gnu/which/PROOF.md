@@ -1,6 +1,6 @@
 # Preuve : which 2.25
 
-Généré par `just gnu-check which` le 2026-11-14T23:36:03Z. Build : fr1 (vps-203bea89), tests : fr2 (bunos), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/which/which-2.25.tar.*, sha256 1cb83e4f702e60b8211ab5ec4c2afbab1b1dec80209456a7d2faf7584ed225ea (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-which` (src/gnu/which).
+Généré par `just gnu-check which` le 2026-11-14T23:36:03Z. Build : fr1 (<fr1-hostname>), tests : fr2 (<fr2-hostname>), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/which/which-2.25.tar.*, sha256 1cb83e4f702e60b8211ab5ec4c2afbab1b1dec80209456a7d2faf7584ed225ea (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-which` (src/gnu/which).
 
 | Mesure | GNU 2.25 | Aphrody |
 | --- | --- | --- |

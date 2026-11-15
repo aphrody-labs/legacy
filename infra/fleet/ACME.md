@@ -2,7 +2,7 @@
 
 A single ACME client for the fleet: **certbot** on fr2 (`/usr/bin/certbot`, timer `certbot.timer` active).
 
-- Pinned Let's Encrypt account: `account = 5d88992863b82d549899a769e692edbb` in `/etc/letsencrypt/cli.ini`.
+- Pinned Let's Encrypt account: `account = <acme-account-ids>` in `/etc/letsencrypt/cli.ini`.
 - Cloudflare zones (aphrody.com, aphrody.app, dragonballfr.com, rosegriffon.fr…): DNS-01, credentials `/etc/letsencrypt/cloudflare.ini` (0600).
 - Zones outside Cloudflare (e.g. rpbey.fr, OVH DNS): HTTP-01 webroot `/var/www/letsencrypt` once the DNS points to fr2.
 - Deploy hook: `/etc/letsencrypt/renewal-hooks/deploy/50-nginx-reload` (`nginx -t && systemctl reload nginx`).

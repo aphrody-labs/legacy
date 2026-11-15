@@ -1,6 +1,6 @@
 # Preuve : grep 3.12 (uutils/grep)
 
-Mesuré le 2026-11-14 sur fr1 (vps-203bea89, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/grep, fork `aphrody-labs/grep` à e123c36994124e7690c2d12e784e234f486183dd, build release.
+Mesuré le 2026-11-14 sur fr1 (<fr1-hostname>, Ubuntu 26.10, Rust 1.99.1) : ces passes ont précédé la règle « tests sur fr2 » ; `just gnu-check` couvre les ports first-party, les forks gardent le harnais de leur amont. Amont Rust : uutils/grep, fork `aphrody-labs/grep` à e123c36994124e7690c2d12e784e234f486183dd, build release.
 
 | Mesure | Valeur |
 | --- | --- |

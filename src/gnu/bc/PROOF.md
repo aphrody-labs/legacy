@@ -1,6 +1,6 @@
 # Preuve : bc 1.08.2
 
-Généré par `just gnu-check bc` le 2026-11-14T23:39:02Z. Build : fr1 (vps-203bea89), tests : fr2 (bunos), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/bc/bc-1.08.2.tar.*, sha256 79e31e022a84b31dd809815063d4b8ea590b409637a52c50ec9f42c2bf332711 (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-bc` (src/gnu/bc).
+Généré par `just gnu-check bc` le 2026-11-14T23:39:02Z. Build : fr1 (<fr1-hostname>), tests : fr2 (<fr2-hostname>), bac à sable : bwrap --unshare-net + systemd-run scope (MemoryMax=10G TasksMax=4096). Source GNU : ftp.gnu.org/gnu/bc/bc-1.08.2.tar.*, sha256 79e31e022a84b31dd809815063d4b8ea590b409637a52c50ec9f42c2bf332711 (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : `aphrody-gnu-bc` (src/gnu/bc).
 
 | Mesure | GNU 1.08.2 | Aphrody |
 | --- | --- | --- |
