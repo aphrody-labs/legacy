@@ -41,16 +41,16 @@ const HTML = (feed: Feed) => `<!doctype html>
 <h1>GNU upstream, in real time</h1>
 <div class="dim"><span id="generated">${feed.generated.slice(0, 19).replace("T", " ")} UTC</span> | <a href="feed.json">feed.json</a> | <a href="feed.atom">feed.atom</a> | <a href="events.json">events.json</a></div>
 <div id="stats"></div>
-<nav aria-label="Sections"><button data-tab="packages" aria-selected="true">Packages</button><button data-tab="kernel-tab" aria-selected="false">Linux kernel</button><button data-tab="changes" aria-selected="false">Changes</button><button data-tab="about" aria-selected="false">Feeds</button></nav>
+<nav aria-label="Sections" role="tablist"><button role="tab" id="t-packages" aria-controls="packages" data-tab="packages" aria-selected="true">Packages</button><button role="tab" id="t-kernel" aria-controls="kernel-tab" data-tab="kernel-tab" aria-selected="false" tabindex="-1">Linux kernel</button><button role="tab" id="t-changes" aria-controls="changes" data-tab="changes" aria-selected="false" tabindex="-1">Changes</button><button role="tab" id="t-about" aria-controls="about" data-tab="about" aria-selected="false" tabindex="-1">Feeds</button></nav>
 </header>
 <main>
-<section id="packages">
-<div class="bar"><input id="q" type="search" placeholder="Search packages, descriptions, Rust equivalents" aria-label="Search"><select id="f" aria-label="Filter"><option value="all">All</option><option value="rust">With Rust equivalent</option><option value="drop-in">Rust drop-in</option><option value="norust">No Rust equivalent</option><option value="drift">GSRC behind upstream</option><option value="verified">Signature verified</option><option value="proven">Proof present</option><option value="mirrored">Mirrored to R2</option></select><span id="count" class="dim"></span></div>
+<section id="packages" role="tabpanel" aria-labelledby="t-packages">
+<div class="bar"><input id="q" type="search" placeholder="Search packages, descriptions, Rust equivalents" aria-label="Search"><select id="f" aria-label="Filter"><option value="all">All</option><option value="rust">With Rust equivalent</option><option value="drop-in">Rust drop-in</option><option value="norust">No Rust equivalent</option><option value="drift">GSRC behind upstream</option><option value="verified">Signature verified</option><option value="proven">Proof present</option><option value="mirrored">Mirrored to R2</option></select><span id="count" class="dim" role="status"></span></div>
 <table><thead><tr><th data-sort="id">Package</th><th data-sort="date">Upstream</th><th data-sort="sig">Signature</th><th>GSRC</th><th data-sort="rust">Rust equivalent</th><th>Proof</th><th>Links</th></tr></thead><tbody id="rows"></tbody></table>
 </section>
-<section id="kernel-tab" hidden><div id="kernel"></div></section>
-<section id="changes" hidden><h2>Recent changes</h2><ul id="events"></ul></section>
-<section id="about" hidden>
+<section id="kernel-tab" role="tabpanel" aria-labelledby="t-kernel" hidden><div id="kernel"></div></section>
+<section id="changes" role="tabpanel" aria-labelledby="t-changes" hidden><h2>Recent changes</h2><ul id="events"></ul></section>
+<section id="about" role="tabpanel" aria-labelledby="t-about" hidden>
 <h2>Feeds</h2>
 <ul><li><a href="feed.json">feed.json</a>: one entry per package, plus the kernel section.</li><li><a href="feed.atom">feed.atom</a>: Atom 1.0, newest upstream release first.</li><li><a href="events.json">events.json</a>: detected changes (release, Rust, announce, kernel).</li></ul>
 <p class="dim">Sources: ftp.gnu.org ls-lrRt, info-gnu archive, Savannah git, GSRC, GitHub releases, crates.io, kernel.org, Android GKI and ChromeOS gitiles. Polled every 10 minutes on fr2; tarballs and signatures mirrored to R2.</p>

@@ -48,7 +48,8 @@ async function detectWebGpu() {
 
 async function boot() {
   const canvas = document.getElementById("m3-canvas");
-  const telemetry = document.getElementById("m3-telemetry");
+  // The <code> node of app.html is reused; each frame only swaps its text (no HTML parse or subtree rebuild per frame).
+  const telemetry = document.querySelector("#m3-telemetry code");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
 
@@ -175,7 +176,7 @@ async function boot() {
     ctx.fill();
 
     if (telemetry) {
-      telemetry.innerHTML = `<code>${gpuLabel} | ABI v${exp.ay_sys_abi_version()} | spring=${sp.value.toFixed(3)} (ζ=${sp.damping.toFixed(1)}, k=${sp.stiffness.toFixed(0)}) | shell cols=${cols} rail=${railW}px</code>`;
+      telemetry.textContent = `${gpuLabel} | ABI v${exp.ay_sys_abi_version()} | spring=${sp.value.toFixed(3)} (ζ=${sp.damping.toFixed(1)}, k=${sp.stiffness.toFixed(0)}) | shell cols=${cols} rail=${railW}px`;
     }
 
     if (settled === 0) {

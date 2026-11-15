@@ -10,6 +10,17 @@ const esc = (s: unknown) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!,
   );
 const ago = (iso: string | null) => (iso ? iso.slice(0, 10) : "");
+/** Feed URLs come from upstream (GitHub, kernel.org, ftp): only http(s) or same-origin paths reach an href. */
+const url = (u: unknown) => {
+  try {
+    const p = new URL(String(u ?? ""), location.href);
+    return p.protocol === "https:" || p.protocol === "http:" ? esc(p.href) : "#";
+  } catch {
+    return "#";
+  }
+};
+/** Class token from feed data: anything outside [a-z0-9-] is dropped so it cannot leave the attribute. */
+const cls = (s: string) => s.toLowerCase().replace(/[^a-z0-9-]/g, "");
 const RANK: Record<string, number> = {
   none: 0,
   lib: 1,
@@ -28,15 +39,15 @@ let feed: Feed;
 let sortKey: SortKey = "date";
 let sortDir = -1;
 
-const badge = (cls: string, text: string) =>
-  `<span class="b ${cls}">${esc(text)}</span>`;
+const badge = (c: string, text: string) =>
+  `<span class="b ${cls(c)}">${esc(text)}</span>`;
 
 function rustCell(e: Entry) {
   if (!e.rust.length) return `<span class="dim">none</span>`;
   return e.rust
     .map((r) => {
       const v = r.version ?? r.crate_version;
-      return `<div>${badge(`k-${r.kind}`, r.kind)} <a href="${esc(r.url)}">${esc(r.name)}</a> ${v ? esc(v) : '<span class="dim">no release</span>'}${r.coverage ? ` <span class="dim" title="${esc(r.coverage)}">${esc(r.coverage.match(/\d+[.,]\d+ ?%/)?.[0] ?? "")}</span>` : ""}</div>`;
+      return `<div>${badge(`k-${r.kind}`, r.kind)} <a href="${url(r.url)}">${esc(r.name)}</a> ${v ? esc(v) : '<span class="dim">no release</span>'}${r.coverage ? ` <span class="dim" title="${esc(r.coverage)}">${esc(r.coverage.match(/\d+[.,]\d+ ?%/)?.[0] ?? "")}</span>` : ""}</div>`;
     })
     .join("");
 }
@@ -45,13 +56,13 @@ function row(e: Entry) {
   const u = e.upstream;
   const sig = u.signature.status;
   return `<tr data-id="${esc(e.id)}">
-  <td><a class="id" href="${esc(e.homepage ?? "#")}">${esc(e.id)}</a><div class="dim">${esc(e.description ?? "")}</div></td>
+  <td><a class="id" href="${url(e.homepage)}">${esc(e.id)}</a><div class="dim">${esc(e.description ?? "")}</div></td>
   <td>${u.version ? `<b>${esc(u.version)}</b>` : '<span class="dim">-</span>'}<div class="dim">${ago(u.date)}${e.drift.gsrc ? " " + badge("warn", "GSRC behind") : ""}</div></td>
   <td>${badge(`s-${sig}`, sig)}</td>
   <td>${e.gsrc ? esc(e.gsrc.version) : '<span class="dim">-</span>'}</td>
   <td>${rustCell(e)}</td>
   <td>${e.proof.status === "present" ? badge("s-verified", e.proof.rate ?? "proof") : '<span class="dim">none</span>'}</td>
-  <td class="links">${u.url ? `<a href="${esc(u.url)}">tar</a>` : ""} ${u.sig_url ? `<a href="${esc(u.sig_url)}">sig</a>` : ""} ${e.announce ? `<a href="${esc(e.announce.url)}" title="${esc(e.announce.subject)}">info-gnu</a>` : ""}</td>
+  <td class="links">${u.url ? `<a href="${url(u.url)}">tar</a>` : ""} ${u.sig_url ? `<a href="${url(u.sig_url)}">sig</a>` : ""} ${e.announce ? `<a href="${url(e.announce.url)}" title="${esc(e.announce.subject)}">info-gnu</a>` : ""}</td>
 </tr>`;
 }
 
@@ -115,7 +126,7 @@ function kernel() {
   const rel = k.releases
     .map(
       (r) =>
-        `<tr><td>${badge(`m-${r.moniker}`, r.moniker)}</td><td><b>${esc(r.version)}</b>${r.eol ? " " + badge("warn", "EOL") : ""}</td><td>${ago(r.date)}</td><td>${badge(`s-${r.signature.status}`, r.signature.status)}</td><td>${r.rust_in_tree === null ? '<span class="dim">?</span>' : r.rust_in_tree ? "yes" : "no"}</td><td class="mono">${esc(r.sha256?.slice(0, 16) ?? "")}</td><td><a href="${esc(r.url)}">src</a> ${r.sign_url ? `<a href="${esc(r.sign_url)}">sign</a>` : ""} ${r.mirror ? badge("s-verified", "R2") : ""}</td></tr>`,
+        `<tr><td>${badge(`m-${r.moniker}`, r.moniker)}</td><td><b>${esc(r.version)}</b>${r.eol ? " " + badge("warn", "EOL") : ""}</td><td>${ago(r.date)}</td><td>${badge(`s-${r.signature.status}`, r.signature.status)}</td><td>${r.rust_in_tree === null ? '<span class="dim">?</span>' : r.rust_in_tree ? "yes" : "no"}</td><td class="mono">${esc(r.sha256?.slice(0, 16) ?? "")}</td><td><a href="${url(r.url)}">src</a> ${r.sign_url ? `<a href="${url(r.sign_url)}">sign</a>` : ""} ${r.mirror ? badge("s-verified", "R2") : ""}</td></tr>`,
     )
     .join("");
   const br = (l: { name: string; head: string }[]) =>
@@ -137,9 +148,9 @@ function kernel() {
   <h2>Kernel releases (kernel.org)</h2>
   <table id="ktable"><thead><tr><th>Branch</th><th>Version</th><th>Date</th><th>Signature</th><th>Rust in tree</th><th>sha256</th><th>Links</th></tr></thead><tbody>${rel}</tbody></table>
   <div class="cols">
-    <section><h3>Trees</h3><ul>${k.trees.map((t) => `<li><a href="${esc(t.url)}">${esc(t.name)}</a> <span class="dim mono">${esc(t.head?.slice(0, 10) ?? "")}</span></li>`).join("")}</ul>
-      <h3>Rust for Linux</h3><ul><li><a href="${esc(k.rust.docs)}">docs.kernel.org/rust</a> ${k.rust.docs_ok ? badge("s-verified", "up") : ""}</li><li>in tree since ${esc(k.rust.in_tree_since ?? "?")}</li><li><a href="${esc(k.rust.rust_for_linux.url)}">${esc(k.rust.rust_for_linux.name)}</a> <span class="dim mono">${esc(k.rust.rust_for_linux.head?.slice(0, 10) ?? "")}</span></li></ul>
-      <h3>Research</h3><ul><li><a href="${esc(k.research.url)}">${esc(k.research.repo)}</a> <span class="dim">pushed ${ago(k.research.pushed)}</span></li></ul></section>
+    <section><h3>Trees</h3><ul>${k.trees.map((t) => `<li><a href="${url(t.url)}">${esc(t.name)}</a> <span class="dim mono">${esc(t.head?.slice(0, 10) ?? "")}</span></li>`).join("")}</ul>
+      <h3>Rust for Linux</h3><ul><li><a href="${url(k.rust.docs)}">docs.kernel.org/rust</a> ${k.rust.docs_ok ? badge("s-verified", "up") : ""}</li><li>in tree since ${esc(k.rust.in_tree_since ?? "?")}</li><li><a href="${url(k.rust.rust_for_linux.url)}">${esc(k.rust.rust_for_linux.name)}</a> <span class="dim mono">${esc(k.rust.rust_for_linux.head?.slice(0, 10) ?? "")}</span></li></ul>
+      <h3>Research</h3><ul><li><a href="${url(k.research.url)}">${esc(k.research.repo)}</a> <span class="dim">pushed ${ago(k.research.pushed)}</span></li></ul></section>
     <section><h3>Android GKI</h3><ul>${br(k.gki)}</ul></section>
     <section><h3>ChromeOS</h3><ul>${br(k.chromeos.slice(0, 12))}</ul></section>
   </div>`;
@@ -161,13 +172,27 @@ function events(list: GnuEvent[]) {
 function tabs() {
   for (const b of document.querySelectorAll<HTMLButtonElement>("nav button")) {
     b.addEventListener("click", () => {
-      for (const x of document.querySelectorAll("nav button"))
+      for (const x of document.querySelectorAll("nav button")) {
         x.setAttribute("aria-selected", String(x === b));
+        x.setAttribute("tabindex", x === b ? "0" : "-1");
+      }
       for (const s of document.querySelectorAll<HTMLElement>("main > section"))
         s.hidden = s.id !== b.dataset.tab;
       history.replaceState(null, "", `#${b.dataset.tab}`);
     });
   }
+  // Roving tabindex: arrow keys, Home and End move between tabs (WAI-ARIA tabs pattern).
+  const list = [...document.querySelectorAll<HTMLButtonElement>("nav button")];
+  document.querySelector("nav")?.addEventListener("keydown", (ev) => {
+    const i = list.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    const k = (ev as KeyboardEvent).key;
+    const j = k === "ArrowRight" ? (i + 1) % list.length : k === "ArrowLeft" ? (i - 1 + list.length) % list.length : k === "Home" ? 0 : k === "End" ? list.length - 1 : -1;
+    if (j < 0) return;
+    ev.preventDefault();
+    list[j]!.focus();
+    list[j]!.click();
+  });
   const start = location.hash.slice(1);
   document
     .querySelector<HTMLButtonElement>(`nav button[data-tab="${start}"]`)
@@ -195,7 +220,12 @@ async function main() {
   ].join("");
   $("generated").textContent =
     `feed ${f.generated.slice(0, 19).replace("T", " ")} UTC`;
-  $<HTMLInputElement>("q").addEventListener("input", render);
+  // One render per pause in typing: each render rebuilds up to 600 rows, too heavy for every keystroke (INP).
+  let typing: ReturnType<typeof setTimeout> | undefined;
+  $<HTMLInputElement>("q").addEventListener("input", () => {
+    clearTimeout(typing);
+    typing = setTimeout(render, 150);
+  });
   $<HTMLSelectElement>("f").addEventListener("change", render);
   for (const th of document.querySelectorAll<HTMLElement>("th[data-sort]")) {
     th.addEventListener("click", () => {
