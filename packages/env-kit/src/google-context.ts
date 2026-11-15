@@ -12,7 +12,6 @@
  * catch-all default last.
  */
 
-import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
 
@@ -74,14 +73,11 @@ function gitRoot(from: string): string | null {
 
 function gitRemote(root: string): string {
   try {
-    return execFileSync(
-      "git",
-      ["-C", root, "config", "--get", "remote.origin.url"],
-      {
-        encoding: "utf8",
-        stdio: ["ignore", "pipe", "ignore"],
-      },
-    ).trim();
+    const r = Bun.spawnSync(
+      ["git", "-C", root, "config", "--get", "remote.origin.url"],
+      { stdin: "ignore", stderr: "ignore" },
+    );
+    return r.exitCode === 0 ? r.stdout.toString("utf8").trim() : "";
   } catch {
     return "";
   }

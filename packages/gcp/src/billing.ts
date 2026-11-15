@@ -1,7 +1,7 @@
 // `env-kit billing status|plan|apply|relink`: Google Cloud billing managed by agents (docs/infra/GCP-BILLING.md).
 // Keyless token: impersonation of billing-agent@aphrody (owner's roles/iam.serviceAccountTokenCreator),
 // or GitHub OIDC (pool `github`) in CI through CLOUDSDK_AUTH_ACCESS_TOKEN. No spending: budgets, reads, linking.
-import { spawnSync } from "node:child_process";
+import { spawnSync } from "@aphrody/env-kit/spawn";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { personalAccount } from "./accounts";

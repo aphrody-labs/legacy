@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { fileURLToPath } from "node:url";
 import { PLANS } from "@auto/billing";
 import { LOCALES, SOURCE_LOCALE, createTranslator } from "@auto/i18n";
 import { palettes } from "@auto/ui";
@@ -308,7 +307,7 @@ test("CSP reports: one reduced line per violation, no personal data, rate limite
 });
 
 test("showcase captures: /img/*.webp served as an image, other paths refused", async () => {
-  const noms = [...new Bun.Glob("*.webp").scanSync({ cwd: fileURLToPath(new URL("../public/img", import.meta.url)) })];
+  const noms = [...new Bun.Glob("*.webp").scanSync({ cwd: `${import.meta.dir}/../public/img` })];
   expect(noms.length).toBeGreaterThanOrEqual(10);
   const r = await fetch(new URL(`/img/${noms[0]}`, web.url));
   expect(r.status).toBe(200);

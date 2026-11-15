@@ -366,7 +366,7 @@ export function benchmarkMonorepoBuildArena(
 
   // Measure Node baseline executing an equivalent workspace inspection + JSON manifest script
   const nodeEvalScript =
-    "const fs=require('fs'),crypto=require('crypto');const p=fs.readdirSync('.');crypto.createHash('sha256').update(JSON.stringify(p)).digest('hex');";
+    "const fs=require('fs'),crypto=require('crypto');const p=fs.readdirSync('.');crypto.createHash('sha256').update(JSON.stringify(p)).digest('hex');"; // hygiene-ok: script executed by Node as the baseline of the comparison
   let nodeBaselineScriptAvgMs = 45;
   if (nodePath && existsSync(nodePath)) {
     const nodeBytes = statSync(nodePath).size;

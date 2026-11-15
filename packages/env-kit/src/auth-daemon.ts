@@ -11,7 +11,7 @@
  *   `ay auth daemon --ack <target>`: a single sign-in is then launched for that target.
  * Files: <state>/auth-state.json (last probe), <state>/auth-prompts.json (last reports).
  */
-import { spawnSync } from "node:child_process";
+import { spawnSync } from "./spawn.ts";
 import {
   existsSync,
   mkdirSync,

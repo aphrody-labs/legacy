@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { srcRoot } from "./dx12-hal";
@@ -31,29 +30,25 @@ if (!existsSync(stackBenchExe)) {
   console.log(
     "\nBuilding stack-bench.exe with fat LTO, codegen-units=1, panic=abort...",
   );
-  const buildRes = spawnSync(
-    "cargo",
-    ["build", "--release", "--target-dir", join(benchCrateDir, "target")],
-    {
-      stdio: "inherit",
-      cwd: benchCrateDir,
-    },
+  const buildRes = Bun.spawnSync(
+    ["cargo", "build", "--release", "--target-dir", join(benchCrateDir, "target")],
+    { stdio: ["inherit", "inherit", "inherit"], cwd: benchCrateDir },
   );
-  if (buildRes.status !== 0) {
+  if (buildRes.exitCode !== 0) {
     console.error("Cargo release build failed");
     process.exit(1);
   }
 }
 
 console.log("\n[Tier 5] Executing Bun + WASM Kernel...");
-spawnSync("bun", ["run", tier5Script], {
-  stdio: "inherit",
+Bun.spawnSync(["bun", "run", tier5Script], {
+  stdio: ["inherit", "inherit", "inherit"],
   cwd: benchCrateDir,
 });
 
 console.log("\n[All Tiers] Executing stack-bench.exe report...");
-spawnSync(stackBenchExe, ["report"], {
-  stdio: "inherit",
+Bun.spawnSync([stackBenchExe, "report"], {
+  stdio: ["inherit", "inherit", "inherit"],
   cwd: benchCrateDir,
 });
 
@@ -74,8 +69,8 @@ console.log(
 
 for (const w of workloads) {
   console.log(`\n>>> Evaluating Workload: ${w}`);
-  spawnSync(stackBenchExe, ["pick", "--workload", w], {
-    stdio: "inherit",
+  Bun.spawnSync([stackBenchExe, "pick", "--workload", w], {
+    stdio: ["inherit", "inherit", "inherit"],
     cwd: benchCrateDir,
   });
 }

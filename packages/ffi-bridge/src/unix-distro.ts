@@ -1,7 +1,6 @@
 // omarchy status: kernel config fragment, omarchy probe (src/posix/omarchy) and the GPU seen by
 // the shared D3D12 layer (src/drivers/gpu/dx12 via ./dx12-hal.ts). The former native_nt_gpu.dll and .NET WinUI
 // host of infra/winnt-sdk are gone (ticket nt-001): the WinUI 3 shell is apps/nt.
-import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -82,15 +81,16 @@ export function verifyLinuxKernelConfig(): {
 
 export function probeDistroHardware(): DistroHardwareProbe {
   const exe = process.platform === "win32" ? "omarchy.exe" : "omarchy";
-  const res = spawnSync(join(TARGET_DIR, "release", exe), ["probe", "--json"], {
-    encoding: "utf-8",
-  });
-  if (res.status !== 0) {
-    throw new Error(
-      `Failed to execute omarchy probe: ${res.stderr ?? res.error}`,
-    );
+  let res: ReturnType<typeof Bun.spawnSync>;
+  try {
+    res = Bun.spawnSync([join(TARGET_DIR, "release", exe), "probe", "--json"]);
+  } catch (e) {
+    throw new Error(`Failed to execute omarchy probe: ${(e as Error).message}`);
   }
-  return JSON.parse(res.stdout);
+  if (res.exitCode !== 0) {
+    throw new Error(`Failed to execute omarchy probe: ${res.stderr.toString("utf8")}`);
+  }
+  return JSON.parse(res.stdout.toString("utf8"));
 }
 
 export function checkDistroFullStatus(): DistroStatus {

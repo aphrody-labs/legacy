@@ -1,6 +1,6 @@
 // Brand icon of auto, drawn in code (no binary image versioned): extension, installable web app, native shells.
 // RGBA PNG encoded here, without dependency.
-import { deflateSync } from "node:zlib";
+import { deflateSync } from "node:zlib"; // hygiene-ok: Bun.deflateSync emits raw deflate (first byte 0x63 with level and windowBits), PNG IDAT needs the zlib header
 import { palettes } from "./tokens";
 
 /** Non-interlaced RGBA PNG (filter 0 per row), zlib-compressed. */

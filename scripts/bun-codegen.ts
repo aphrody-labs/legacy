@@ -4,7 +4,6 @@
 // the AOT generators belong to oven-sh/WebKit (Source/JavaScriptCore/aot), a sparse clone pinned by the fork's
 // WEBKIT_VERSION. Run on fr1 (Linux): `bun scripts/bun-codegen.ts`, then `cargo check --workspace`.
 // docs/ARCHITECTURE.md section 9.
-import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
@@ -14,10 +13,10 @@ const webkit = resolve(root, process.argv[3] ?? "third_party/bun/vendor/WebKit")
 
 const run = (cmd: string[], cwd: string, env: Record<string, string> = {}) => {
   console.log(`$ ${cmd.join(" ")}  (${cwd})`);
-  const r = spawnSync(cmd[0]!, cmd.slice(1), { cwd, stdio: "inherit", env: { ...process.env, ...env } });
-  if (r.status !== 0) throw new Error(`${cmd.join(" ")} exited ${r.status}`);
+  const r = Bun.spawnSync(cmd, { cwd, stdio: ["inherit", "inherit", "inherit"], env: { ...process.env, ...env } });
+  if (r.exitCode !== 0) throw new Error(`${cmd.join(" ")} exited ${r.exitCode}`);
 };
-const out = (cmd: string[], cwd: string) => spawnSync(cmd[0]!, cmd.slice(1), { cwd, encoding: "utf8" }).stdout.trim();
+const out = (cmd: string[], cwd: string) => Bun.spawnSync(cmd, { cwd }).stdout.toString("utf8").trim();
 
 const lock = JSON.parse(readFileSync(resolve(root, "src.lock.json"), "utf8"));
 const pin: string = findPin(lock);

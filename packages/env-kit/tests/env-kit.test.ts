@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { spawnSync } from "node:child_process";
+import { spawnSync } from "../src/spawn.ts";
 import {
   existsSync,
   mkdtempSync,

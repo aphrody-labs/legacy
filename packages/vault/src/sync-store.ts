@@ -8,7 +8,6 @@
  * memory and stdin only: never argv.
  */
 
-import { spawnSync } from "node:child_process";
 import {
   existsSync,
   mkdirSync,
@@ -51,13 +50,18 @@ function locate(info: SecretStoreInfo, name: string): string | undefined {
 
 function creds(info: SecretStoreInfo, args: string[], input?: Uint8Array): Uint8Array {
   const user = info.backend === "systemd-creds-user" ? ["--user"] : [];
-  const r = spawnSync("systemd-creds", [...user, ...args], {
-    input: input ? Buffer.from(input) : undefined,
-    maxBuffer: 16 << 20,
-  });
-  if (r.status !== 0) {
+  let r: ReturnType<typeof Bun.spawnSync>;
+  try {
+    r = Bun.spawnSync(["systemd-creds", ...user, ...args], {
+      stdin: input ?? "ignore",
+      maxBuffer: 16 << 20,
+    });
+  } catch (e) {
+    throw new Error(`systemd-creds ${args[0]} failed: ${(e as Error).message}`);
+  }
+  if (r.exitCode !== 0) {
     // stderr of systemd-creds never contains the payload.
-    throw new Error(`systemd-creds ${args[0]} failed: ${String(r.stderr ?? r.error ?? "").trim()}`);
+    throw new Error(`systemd-creds ${args[0]} failed: ${r.stderr.toString("utf8").trim()}`);
   }
   return new Uint8Array(r.stdout);
 }

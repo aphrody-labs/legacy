@@ -11,7 +11,7 @@
  * clicks the sign-in and consent screens himself.
  */
 
-import { spawnSync } from "node:child_process";
+import { spawnSync } from "./spawn.ts";
 import { createHmac, randomBytes } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";

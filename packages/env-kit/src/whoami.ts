@@ -5,7 +5,7 @@
  * never printed. A provider whose credential is missing reports `unset`, a rejected one `invalid`.
  */
 
-import { spawnSync } from "node:child_process";
+import { spawnSync } from "./spawn.ts";
 
 export interface Identity {
   provider: string;

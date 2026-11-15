@@ -2,7 +2,6 @@
 // Cross-platform: Windows DPAPI (`packages/vault/src/sync-store.ts`) + Linux `systemd-creds --user`.
 // Caches installation tokens in `<AGENTS_HOME>/state/gh-token.json` (0600) and refreshes 10 min before expiry.
 // Never prints raw tokens to a TTY.
-import { spawnSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
@@ -54,12 +53,11 @@ function cred(name: string): string | undefined {
       name,
     );
     if (existsSync(f)) {
-      const r = spawnSync(
-        "systemd-creds",
-        ["--user", `--name=${name}`, "decrypt", f, "-"],
-        { encoding: "utf8" },
+      const r = Bun.spawnSync(
+        ["systemd-creds", "--user", `--name=${name}`, "decrypt", f, "-"],
+        { stdin: "ignore" },
       );
-      if (r.status === 0) return r.stdout.trim();
+      if (r.exitCode === 0) return r.stdout.toString("utf8").trim();
     }
   }
   return undefined;
@@ -150,12 +148,14 @@ if (import.meta.main) {
       console.error("gh-token: failed to mint GitHub App installation token");
       process.exit(1);
     }
-    const r = spawnSync(argv[0]!, argv.slice(1), {
-      stdio: "inherit",
+    // Node's shell:true on Windows is cmd.exe /d /s /c with the arguments joined verbatim.
+    const win = process.platform === "win32";
+    const r = Bun.spawnSync(win ? ["cmd.exe", "/d", "/s", "/c", `"${argv.join(" ")}"`] : argv, {
+      stdio: ["inherit", "inherit", "inherit"],
       env: { ...process.env, GH_TOKEN: t, GITHUB_TOKEN: t },
-      shell: process.platform === "win32",
+      windowsVerbatimArguments: win,
     });
-    process.exit(r.status ?? 1);
+    process.exit(r.signalCode ? 1 : r.exitCode);
   }
   if (cmd === "status") {
     const t = await token();

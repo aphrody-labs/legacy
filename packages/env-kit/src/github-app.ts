@@ -20,7 +20,7 @@
  * CI: org secret APHRODY_APP_KEY and org variable APHRODY_APP_CLIENT_ID on aphrody-labs and yolo-rs.
  */
 
-import { spawnSync } from "node:child_process";
+import { spawnSync } from "./spawn.ts";
 import { createPrivateKey, randomBytes, sign } from "node:crypto";
 import { secretDelete, secretGet, secretHas, secretSet } from "@aphrody/vault/sync";
 

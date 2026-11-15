@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { deflateSync } from "node:zlib";
+import { deflateSync } from "node:zlib"; // hygiene-ok: Bun.deflateSync emits raw deflate, PNG IDAT needs the zlib header
 import { testDb, type Sql } from "@auto/store";
 import { verifierPdfA } from "@auto/native";
 import { creerApp } from "./app";

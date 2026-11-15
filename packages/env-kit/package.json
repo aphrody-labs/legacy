@@ -29,6 +29,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./github-app": "./src/github-app.ts"
+    "./github-app": "./src/github-app.ts",
+    "./spawn": "./src/spawn.ts"
   }
 }
