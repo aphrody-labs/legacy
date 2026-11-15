@@ -8,7 +8,7 @@ import { existsSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { $ } from "bun";
-import { expandSync } from "../../packages/env-kit/src/site.ts";
+import { expandSync } from "../../packages/env-kit/src/discover.ts";
 
 type Cache = { name: string; path: string; cap_mb?: number; gc?: "bun" | "rm" };
 type Host = { ssh: string; caches: Cache[] };

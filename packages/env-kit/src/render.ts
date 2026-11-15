@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // usage: bun render.ts <template> [out]    replaces @@a.b.c@@ tokens with discovered values (discover.ts).
 import { writeFileSync } from "node:fs";
-import { readExpanded } from "./site.ts";
+import { readExpanded } from "./discover.ts";
 
 const [src, out] = Bun.argv.slice(2);
 if (!src) {

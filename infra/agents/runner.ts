@@ -27,7 +27,7 @@ import {
 import { homedir, hostname } from "node:os";
 import { join, resolve } from "node:path";
 import { resolveExe } from "@aphrody/ai-os/llm/agents";
-import { expandSync } from "../../packages/env-kit/src/site.ts";
+import { expandSync } from "../../packages/env-kit/src/discover.ts";
 
 type Role = { timeout_s: number; budget_usd: number; heavy?: boolean };
 type Host = { roles: string[]; src: string; ssh?: string[] };

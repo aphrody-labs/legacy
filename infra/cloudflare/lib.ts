@@ -1,6 +1,6 @@
 // Shared helpers for infra/cloudflare: config, auth, API client. No secret is ever printed.
 import { join } from "node:path";
-import { expandSync } from "../../packages/env-kit/src/site.ts";
+import { expandSync } from "../../packages/env-kit/src/discover.ts";
 
 export type Ingress = { hostname?: string; service: string; path?: string };
 export type Tunnel = { id: string; host: string; ingress: Ingress[] };

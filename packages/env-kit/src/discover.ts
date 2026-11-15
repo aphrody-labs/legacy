@@ -7,7 +7,7 @@
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { homedir, hostname as osHostname, userInfo } from "node:os";
+import { homedir, hostname as osHostname, networkInterfaces, userInfo } from "node:os";
 import { dirname, join } from "node:path";
 import { connect } from "node:tls";
 
@@ -30,7 +30,7 @@ export interface Resolved {
 }
 
 export interface Run {
-  (cmd: string[], timeoutMs?: number): Promise<{ code: number; out: string }>;
+  (cmd: string[], timeoutMs?: number, env?: Record<string, string | undefined>): Promise<{ code: number; out: string }>;
 }
 export interface Dns {
   lookup(name: string): Promise<{ address: string; family: number }[]>;
@@ -46,9 +46,9 @@ export interface Deps {
   env: Record<string, string | undefined>;
 }
 
-export const realRun: Run = async (cmd, timeoutMs = 20_000) => {
+export const realRun: Run = async (cmd, timeoutMs = 20_000, env) => {
   try {
-    const p = Bun.spawn(cmd, { stdin: "ignore", stdout: "pipe", stderr: "pipe", timeout: timeoutMs });
+    const p = Bun.spawn(cmd, { stdin: "ignore", stdout: "pipe", stderr: "pipe", timeout: timeoutMs, ...(env ? { env: env as Record<string, string> } : {}) });
     const out = await new Response(p.stdout).text();
     return { code: await p.exited, out };
   } catch {
@@ -159,6 +159,7 @@ async function cached<T>(d: Deps, key: string, compute: () => Promise<T | undefi
 export async function resolve(role: string, opts: { remote?: boolean } = { remote: true }, d?: Deps): Promise<Resolved> {
   d ??= await defaultDeps();
   const dd = d;
+  if (role === "pc") return localHost();
   const base = await cached<Resolved>(dd, `role:${role}`, async () => {
     const g = await dd.run(["ssh", "-G", role], 10_000);
     if (g.code !== 0) return undefined;
@@ -171,6 +172,13 @@ export async function resolve(role: string, opts: { remote?: boolean } = { remot
   });
   if (!base) throw new Error(`cannot resolve role "${role}": add a Host ${role} entry to ~/.ssh/config`);
   return base;
+}
+
+/** The workstation itself: no ssh, its own interfaces (private 10.x addresses are the mesh tunnels). */
+export function localHost(): Resolved {
+  const mesh: string[] = [];
+  for (const list of Object.values(networkInterfaces())) for (const a of list ?? []) if (a.family === "IPv4" && a.address.startsWith("10.")) mesh.push(a.address);
+  return { role: "pc", ssh: "pc", address: "localhost", user: userInfo().username, port: 22, hostname: osHostname(), mesh: mesh[0], meshAll: mesh };
 }
 
 /** SRV records of `_<service>._tcp.<zone>` as `host:port`, best priority first. */
@@ -217,6 +225,8 @@ export async function wellKnown(base: string, timeoutMs = 8000): Promise<Record<
 }
 
 export interface Accounts {
+  /** OVH /me: account id without the -ovh suffix, first and last name, e-mail */
+  ovh?: { account: string; firstName?: string; lastName?: string; email?: string };
   cloudflareAccounts: string[];
   /** zone name -> zone id */
   zones: Record<string, string>;
@@ -258,8 +268,10 @@ export async function identity(d?: Deps): Promise<Identity> {
   d ??= await defaultDeps();
   const dd = d;
   const v = await cached<Identity>(dd, "identity", async () => {
+    // gh answers for the logged-in user only without an app installation token in the environment
+    const userEnv = Object.fromEntries(Object.entries(dd.env).filter(([k]) => !/^(GH|GITHUB)_TOKEN$/.test(k)));
     const one = async (cmd: string[]) => {
-      const r = await dd.run(cmd, 15_000);
+      const r = await dd.run(cmd, 15_000, cmd[0] === "gh" ? userEnv : undefined);
       return r.code === 0 ? r.out.trim() || undefined : undefined;
     };
     const name = await one(["git", "config", "--global", "user.name"]);
@@ -272,7 +284,8 @@ export async function identity(d?: Deps): Promise<Identity> {
       name,
       firstName: name?.split(/\s+/)[0],
       email: await one(["git", "config", "--global", "user.email"]),
-      github: gh,
+      // an installation token cannot read /user: the git handle (user.name without spaces) stands in
+      github: gh ?? (name && !/\s/.test(name) ? name : undefined),
       orgs,
       windows: { user: env.USERNAME ?? env.USER ?? userInfo().username, home: env.USERPROFILE ?? env.HOME ?? homedir(), machine: env.COMPUTERNAME ?? osHostname() },
       gcpProject: gcp,
@@ -297,12 +310,23 @@ export async function accounts(d?: Deps): Promise<Accounts> {
       out.cloudflareAccounts = (await get("/accounts")).map((a) => a.id);
       for (const z of await get("/zones?per_page=50")) out.zones[z.name] = z.id;
     }
+    // the CLI refuses to mix its own login with OVH_* application variables of the environment
+    const noOvhEnv = Object.fromEntries(Object.entries(dd.env).filter(([k]) => !k.startsWith("OVH_")));
+    const me = await dd.run(["ovhcloud", "account", "get", "-o", "json"], 20_000, noOvhEnv);
+    if (me.code === 0) {
+      try {
+        const j = JSON.parse(me.out);
+        if (j.nichandle) out.ovh = { account: String(j.nichandle).replace(/-ovh$/, ""), firstName: j.firstname || undefined, lastName: j.name || undefined, email: j.email || undefined };
+      } catch {
+        /* not logged in */
+      }
+    }
     const id = await identity(dd);
     for (const p of [id.gcpProject, ...(id.gcpProjects ?? [])].filter(Boolean) as string[]) {
       const r = await dd.run(["gcloud", "projects", "describe", p, "--format=value(projectNumber)"], 20_000);
       if (r.code === 0 && r.out.trim()) out.gcpProjectNumbers[p] = r.out.trim();
     }
-    return Object.keys(out.zones).length || out.cloudflareAccounts.length ? out : undefined;
+    return Object.keys(out.zones).length || out.cloudflareAccounts.length || out.ovh ? out : undefined;
   });
   return v ?? { cloudflareAccounts: [], zones: {}, gcpProjectNumbers: {} };
 }
@@ -332,6 +356,7 @@ export async function discoverGet(path: string, d?: Deps): Promise<string | unde
     if (!f) return undefined;
     return f(await resolve(a, { remote: true }, d));
   }
+  if (sec === "accounts" && a === "ovh_account") return (await accounts(d)).ovh?.account;
   if (sec === "zones" && a) {
     const ac = await accounts(d);
     return ac.zones[path.slice("zones.".length)];
@@ -348,7 +373,7 @@ export async function discoverGet(path: string, d?: Deps): Promise<string | unde
   }
   if (sec === "windows") return ({ user: id.windows.user, home: id.windows.home, machine: id.windows.machine } as Record<string, string | undefined>)[a ?? ""];
   if (sec === "accounts" && a === "gcp_project") return id.gcpProject;
-  if (sec === "accounts" && a === "gcp_project_number") return (await accounts(d)).gcpProjectNumbers[id.gcpProject ?? ""];
+  if (sec === "accounts" && a === "gcp_project_number") return (await accounts(d)).gcpProjectNumbers[id.gcpProject ?? ""] ?? (d?.env ?? process.env).APHRODY_GCP_PROJECT_NUMBER;
   return undefined;
 }
 
@@ -362,9 +387,10 @@ export function getCached(path: string, cachePath = defaultCachePath()): string 
   }
   const [sec, a, b] = path.split(".");
   if (sec === "hosts" && a && b) {
-    const r = c["role:" + a]?.value as Resolved | undefined;
+    const r = a === "pc" ? localHost() : (c["role:" + a]?.value as Resolved | undefined);
     return r ? HOST_KEYS[b]?.(r) : undefined;
   }
+  if (sec === "accounts" && a === "ovh_account") return (c.accounts?.value as Accounts | undefined)?.ovh?.account;
   if (sec === "zones" && a) return (c.accounts?.value as Accounts | undefined)?.zones[path.slice(6)];
   if (sec === "accounts" && a === "cloudflare_account_id") return (c.accounts?.value as Accounts | undefined)?.cloudflareAccounts[0];
   if (sec === "network" && a === "mesh_cidr") {
@@ -375,7 +401,7 @@ export function getCached(path: string, cachePath = defaultCachePath()): string 
   if (sec === "identity") return ({ name: id?.name, first_name: id?.firstName, email: id?.email, github_user: id?.github } as Record<string, string | undefined>)[a ?? ""];
   if (sec === "windows") return ({ user: id?.windows?.user, home: id?.windows?.home, machine: id?.windows?.machine } as Record<string, string | undefined>)[a ?? ""];
   if (sec === "accounts" && a === "gcp_project") return id?.gcpProject;
-  if (sec === "accounts" && a === "gcp_project_number") return (c.accounts?.value as Accounts | undefined)?.gcpProjectNumbers[id?.gcpProject ?? ""];
+  if (sec === "accounts" && a === "gcp_project_number") return (c.accounts?.value as Accounts | undefined)?.gcpProjectNumbers[id?.gcpProject ?? ""] ?? process.env.APHRODY_GCP_PROJECT_NUMBER;
   return undefined;
 }
 
@@ -400,7 +426,50 @@ export function sensitiveValues(cachePath = defaultCachePath()): { values: strin
   }
   // public handles and brand words (the project, the org, the noreply address) are not personal
   const brand = /^aphrody|users\.noreply\.github\.com$/i;
+  const ac = c.accounts?.value as Accounts | undefined;
+  for (const s of [ac?.ovh?.account, ac?.ovh?.firstName, ac?.ovh?.lastName, ac?.ovh?.email, ...(ac?.cloudflareAccounts ?? []), ...Object.values(ac?.zones ?? {}), ...Object.values(ac?.gcpProjectNumbers ?? {})]) if (s) out.add(s);
   return { values: [...out].filter((s) => s.length >= 5 && !brand.test(s)), machine: id?.windows?.machine };
+}
+
+const TOKEN = /@@([A-Za-z0-9_.-]+)@@/g;
+
+/** One value of the dotted vocabulary from the discovery cache, discovering nothing; `siteGet("hosts.fr1.mesh_ip")`. */
+export function siteGet(path: string): string | undefined {
+  return getCached(path);
+}
+
+/** Replaces every `@@a.b.c@@` token by its discovered value; throws on a value nothing answers. */
+export async function expand(text: string): Promise<string> {
+  if (!text.includes("@@")) return text;
+  const vals = new Map<string, string>();
+  for (const m of text.matchAll(TOKEN)) {
+    const p = m[1]!;
+    if (vals.has(p)) continue;
+    const v = await discoverGet(p);
+    if (v === undefined) throw new Error(`nothing answers for ${p} (ssh config, interfaces, DNS, gh, gcloud, OVH and Cloudflare APIs)`);
+    vals.set(p, v);
+  }
+  return text.replace(TOKEN, (_, p: string) => vals.get(p)!);
+}
+
+/** Text of a tracked config that carries tokens (deploy.toml, cluster.toml, ...), expanded. */
+export async function readExpanded(path: string): Promise<string> {
+  return expand(readFileSync(path, "utf8"));
+}
+
+/**
+ * Synchronous expansion for config loaders that cannot await: values come from the discovery cache; when a token is
+ * missing, one `discover.ts warm` run fills the cache and the lookup is retried. A token nothing answers stays as written.
+ */
+export function expandSync(text: string): string {
+  if (!text.includes("@@")) return text;
+  const fill = (s: string) => s.replace(TOKEN, (m, p: string) => getCached(p) ?? m);
+  let out = fill(text);
+  if (/@@[A-Za-z0-9_.-]+@@/.test(out)) {
+    Bun.spawnSync([process.execPath, import.meta.path, "warm"], { stdout: "ignore", stderr: "ignore", timeout: 120_000 });
+    out = fill(out);
+  }
+  return out;
 }
 
 // CLI: bun discover.ts resolve <role> | get <path> | warm [role...] | srv <service> <zone> | info <role> | endpoint <service> <zone>

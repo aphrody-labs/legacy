@@ -98,3 +98,22 @@ test("wellKnown reads the host document", async () => {
   expect(await wellKnown(`http://127.0.0.1:${s.port}`)).toEqual({ role: "fr9" });
   s.stop(true);
 });
+
+test("OVH /me and Cloudflare answer the account keys, the local machine answers pc", async () => {
+  const base = deps();
+  const d = deps({
+    cachePath: base.cachePath,
+    env: { ...base.env, CLOUDFLARE_API_TOKEN: "" },
+    run: async (cmd) => (cmd[0] === "ovhcloud" ? { code: 0, out: JSON.stringify({ nichandle: "xx0000000-ovh", firstname: "Jane", name: "Doe", email: "jane@example.com" }) } : base.run(cmd)),
+  });
+  expect(await discoverGet("accounts.ovh_account", d)).toBe("xx0000000");
+  const s = sensitiveValues(d.cachePath);
+  expect(s.values).toContain("xx0000000");
+  expect(s.values).toContain("jane@example.com");
+  expect((await resolve("pc", { remote: false }, d)).role).toBe("pc");
+});
+
+test("no tracked source reads a site file or names the old loader", () => {
+  const out = Bun.spawnSync(["git", "-C", join(import.meta.dir, "..", "..", ".."), "grep", "-lE", "site\\.toml|APHRODY_SITE|loadOverride|loadSite|env-kit/src/site\\.ts", "--", "packages", "infra", "scripts", ":!packages/env-kit/tests/discover.test.ts"]).stdout.toString();
+  expect(out.trim()).toBe("");
+});

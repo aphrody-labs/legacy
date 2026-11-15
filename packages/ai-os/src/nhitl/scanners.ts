@@ -12,7 +12,7 @@ import {
   type Status,
   type Violation,
 } from "./index";
-import { expandSync } from "../../../env-kit/src/site.ts";
+import { expandSync } from "../../../env-kit/src/discover.ts";
 
 const HOME = homedir();
 const claudeDir = () => Bun.env.CLAUDE_CONFIG_DIR ?? join(HOME, ".claude");

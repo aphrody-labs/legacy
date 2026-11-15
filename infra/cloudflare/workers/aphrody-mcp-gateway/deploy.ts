@@ -4,7 +4,7 @@
 // Secrets set when present in the env: OWNER_GOOGLE_ACCOUNT (from APHRODY_OWNER_GOOGLE_ACCOUNT), GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
 // RELAY_TOKEN is read from fr2 (/etc/aphrody/relay.env) over ssh, OAUTH_SECRET is generated on first deploy.
 import { join } from "node:path";
-import { expandSync } from "../../../../packages/env-kit/src/site.ts";
+import { expandSync } from "../../../../packages/env-kit/src/discover.ts";
 
 const NAME = "aphrody-mcp-gateway";
 const HOST = "mcp.aphrody.com";

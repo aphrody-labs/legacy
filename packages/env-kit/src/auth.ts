@@ -25,7 +25,7 @@ import {
   storeInfo,
 } from "@aphrody/vault/sync";
 import { whoami } from "./whoami";
-import { expandSync } from "./site.ts";
+import { expandSync } from "./discover.ts";
 
 export type Status = "ok" | "fixed" | "invalid" | "missing" | "action" | "skip";
 

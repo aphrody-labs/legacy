@@ -24,7 +24,7 @@ export function personalAccount(
 }
 
 export const APHRODY_GCP_PROJECT_ID = "aphrody";
-export const APHRODY_GCP_PROJECT_NUMBER = process.env.APHRODY_GCP_PROJECT_NUMBER ?? siteGet("accounts.gcp_project_numbers.0") ?? "";
+export const APHRODY_GCP_PROJECT_NUMBER = process.env.APHRODY_GCP_PROJECT_NUMBER ?? siteGet("accounts.gcp_project_number") ?? "";
 export const APHRODY_PRIMARY_REGION = "europe-west1";
 export const APHRODY_AI_REGION = "us-central1";
 

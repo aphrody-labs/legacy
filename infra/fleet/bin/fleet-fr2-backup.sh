@@ -1,6 +1,6 @@
 #!/bin/bash
 # Back up what only fr2 holds before its disk is reinstalled as XFS (docs/infra/SINGLE-SERVER.md section 4), host to host over the mesh.
-#   fleet-fr2-backup.sh                      run from the workstation; aliases and the fr2 mesh address come from site.toml (site.sh)
+#   fleet-fr2-backup.sh                      run from the workstation; roles are ssh Host aliases and the fr2 mesh address is discovered (discover.sh)
 # 1 fr1 gets fleet-recv (forced command: write stdin to /srv/xbuild/backup/fr2/<name>, print its sha256)  2 fr2 gets its own key
 # ~/.ssh/fleet_xfer, authorised on fr1 only with restrict,from=<fr2 mesh address>,command=fleet-recv  3 fr2 streams
 # tar | zstd | ssh fr1, computing the sha256 on its side while fr1 computes it on the stored bytes; they must match.

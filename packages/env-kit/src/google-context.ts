@@ -14,10 +14,10 @@
 
 import { existsSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
-import { siteGet } from "./site.ts";
+import { siteGet } from "./discover.ts";
 
-/** GCP project id of the Rose Griffon context: the private site config (accounts.gcp_projects.1), else a neutral name. */
-export const ROSEGRIFFON_PROJECT = siteGet("accounts.gcp_projects.1") ?? "rosegriffon";
+/** GCP project id of the Rose Griffon context: GOOGLE_CLOUD_PROJECT_RGFR (vault or .env), else a neutral name. */
+export const ROSEGRIFFON_PROJECT = process.env.GOOGLE_CLOUD_PROJECT_RGFR ?? "rosegriffon";
 
 export interface GcloudContext {
   /** Short id, also the gcloud configuration name. */
@@ -45,7 +45,7 @@ export const GCLOUD_CONTEXTS: readonly GcloudContext[] = [
     ],
     pathMatches: [`${sep}apps${sep}rosegriffon`, `${sep}apps${sep}shenron`],
     project: ROSEGRIFFON_PROJECT,
-    projectNumber: siteGet("accounts.gcp_project_numbers.1") ?? "",
+    projectNumber: process.env.GOOGLE_CLOUD_PROJECT_NUMBER_RGFR ?? "",
     account: `admin-sa@${ROSEGRIFFON_PROJECT}.iam.gserviceaccount.com`,
     credentialsEnv: "GOOGLE_APPLICATION_CREDENTIALS_RGFR",
     region: "europe-west1",
@@ -55,7 +55,7 @@ export const GCLOUD_CONTEXTS: readonly GcloudContext[] = [
     remoteMatches: ["aphrody-dev/", "aphrody-labs/"],
     pathMatches: [sep],
     project: "aphrody",
-    projectNumber: siteGet("accounts.gcp_project_numbers.0") ?? "",
+    projectNumber: process.env.APHRODY_GCP_PROJECT_NUMBER ?? siteGet("accounts.gcp_project_number") ?? "",
     account: "yolo-automation@aphrody.iam.gserviceaccount.com",
     credentialsEnv: "GOOGLE_APPLICATION_CREDENTIALS_APHRODY",
     region: "europe-west1",

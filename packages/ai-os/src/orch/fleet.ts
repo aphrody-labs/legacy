@@ -5,7 +5,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { constants, hostname, setPriority } from "node:os";
 import { dirname, join, resolve } from "node:path";
-import { expandSync } from "../../../env-kit/src/site.ts";
+import { expandSync } from "../../../env-kit/src/discover.ts";
 
 export type Host = {
   id: string; // nom de fleet.toml : pc, prd, fr2

@@ -18,7 +18,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { selfId, shq, srcRoot } from "../orch/fleet";
 import { Health } from "../orch/health";
-import { expandSync } from "../../../env-kit/src/site.ts";
+import { expandSync } from "../../../env-kit/src/discover.ts";
 
 export type Asset = { asset: string; sha256: string };
 export type FabricNode = {

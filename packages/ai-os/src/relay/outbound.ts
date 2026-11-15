@@ -16,7 +16,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { connect } from "node:net";
 import { dirname, join } from "node:path";
 import { relayHome } from "./cdp.ts";
-import { expandSync } from "../../../env-kit/src/site.ts";
+import { expandSync } from "../../../env-kit/src/discover.ts";
 
 export type OutboundInit = RequestInit & {
   /** Response deemed deterministic (read, embeddings, tools/call of a readOnly tool). */

@@ -553,4 +553,4 @@ export function planEnvMerge(
   return plan;
 }
 
-export * from "./site.ts";
+export { expand, expandSync, readExpanded, siteGet } from "./discover.ts";
