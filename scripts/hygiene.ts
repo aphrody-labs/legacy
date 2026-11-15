@@ -12,6 +12,7 @@
 //   statements that rot (https://developers.google.com/style/timeless-documentation).
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { loadSite } from "../packages/env-kit/src/site.ts";
 import { isNonSourceProse, sourceLanguage } from "../packages/i18n/src/detect.ts";
 
 export type Hit = { rule: string; file: string; line: number; text: string };
@@ -71,7 +72,39 @@ const BANNED_LIST =
 const SOVEREIGN = /(?<![\w\/.-])sovereign(?![\w\/.-])/i; // Antigravity is a real product (agy CLI), not slop
 const STUB =
   /\b(TODO: implement|not implemented yet|lorem ipsum|placeholder implementation|stub implementation|fake output|demo only)\b/i;
-const ABS_USER = /(Users[\\/]aphro|[A-Za-z]:[\\/]labs\b)/;
+const ABS_USER = /([A-Za-z]:[\\/]labs\b)/;
+// personal-data: values of the private site config (never committed) plus generic personal patterns.
+const SITE_KEYS = new Set(["email", "first_name", "name", "ovh_account", "cloudflare_account_ids", "gcp_projects", "user", "home", "machine_names", "domain_user", "public_ip", "mesh_ip", "extra_mesh_ip", "hostname", "mesh_cidrs"]);
+const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\const ABS_USER = /(Users[\\/]aphro|[A-Za-z]:[\\/]labs\b)/;");
+let siteRe: RegExp | null | undefined;
+function sitePattern(): RegExp | null {
+  if (siteRe !== undefined) return siteRe;
+  const site = loadSite();
+  if (!site) return (siteRe = null);
+  const vals = new Set<string>();
+  for (const sec of Object.values(site) as Record<string, unknown>[]) {
+    const tables = sec && typeof sec === "object" && Object.values(sec).every((v) => v && typeof v === "object" && !Array.isArray(v)) ? Object.values(sec) : [sec];
+    for (const tb of tables as Record<string, unknown>[])
+      for (const [k, v] of Object.entries(tb ?? {}))
+        if (SITE_KEYS.has(k)) for (const s of ([] as unknown[]).concat(v)) if (typeof s === "string" && s.length >= 5 && !/^(ubuntu|root)$/.test(s)) vals.add(s);
+  }
+  return (siteRe = vals.size ? new RegExp("(?<![A-Za-z0-9])(" + [...vals].map(escRe).join("|") + ")(?![A-Za-z0-9])", "i") : null);
+}
+const PD_USERPATH = /(?:[A-Za-z]:[\\/]Users[\\/]|\/home\/|\/Users\/)(?!Public\b|Default\b|user\b|name\b|you\b|me\b|runner\b|\$|%|<|\{|\*|\.\.\.|[Xx]{2,}|node\b|ubuntu\b|builder\b|vscode\b|app\b|nobody\b|Shared\b|linuxbrew\b|git\b|bun\b|aphrody\b|[A-Za-z]*\\?\w*example)[A-Za-z][\w.-]*/;
+const PD_IPV4 = /(?<![\w.])(?!(?:0|127|255)\.|192\.0\.2\.|198\.51\.100\.|203\.0\.113\.|169\.254\.)(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3}(?![\w.]*\w)(?!\.\d)/;
+const PD_EMAIL = /[\w.+-]+@(?!example\.|users\.noreply\.github\.com|aphrody\.|localhost)[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b/;
+// Lines where a dotted quad is a version, an OID or a user agent, and where an e-mail credits an upstream author.
+const PD_VERSIONISH = /version|chrom(e|ium)|mozilla|user.?agent|rustc|\bv8\b|\boid\b|cargo|\bbun\b|\bnode\b|\b\d+\.\d+\.\d+\.\d+\s*(release|build|nightly)|"ua"|"EN-|"[A-Z]+_?VERSION/i;
+const PD_CREDIT = /copyright|\(c\)|author|signed-off|co-authored|maintainer|contact|mailto:/i;
+export function personalData(l: string): boolean {
+  const re = sitePattern();
+  return (
+    (re?.test(l) ?? false) ||
+    PD_USERPATH.test(l) ||
+    (PD_IPV4.test(l) && !PD_VERSIONISH.test(l)) ||
+    (PD_EMAIL.test(l) && !PD_CREDIT.test(l))
+  );
+}
 const ABS_SRC = /\b[A-Za-z]:[\\/]src\b|\/srv\/src\b/; // the checkout location: fine in prose and fleet host config, not in code
 const MAGIC_DATE = /\b20[2-3]\d-[01]\d-[0-3]\d\b/;
 const DATED_PROSE =
@@ -246,6 +279,12 @@ export const RULES: Rule[] = [
     line: (l, f) =>
       ABS_USER.test(l) ||
       (CODE.test(f) && !/^(infra|scripts\/bench)\//.test(f) && ABS_SRC.test(l)),
+  },
+  {
+    id: "personal-data",
+    why: "Personal or site-specific value (identity, account, host, address, user path); read it from the private site config (~/.config/aphrody/site.toml, packages/env-kit/src/site.ts) and name roles in prose. The rule also flags every value of that private file; it skips that part when the file is absent",
+    files: (f) => !MANIFEST.test(f) && !/(^|\/)site\.example\.toml$/.test(f) && !/\.test\.|(^|\/)(tests?|e2e|fixtures?)\/|cloudflare|^src\/|^docs\/proofs\//i.test(f) && !/\.(png|jpg|svg|wasm|woff2?|ico|pdf|lock)$/.test(f),
+    line: (l) => personalData(l),
   },
   {
     id: "pinned-version",

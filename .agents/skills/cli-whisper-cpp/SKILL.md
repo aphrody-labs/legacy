@@ -11,7 +11,7 @@ Generated from the tool manual; do not edit. Regenerate with `just cli-skills`.
 ## `whisper-cli --help`
 
 ```text
-usage: C:\Users\aphro\.local\share\ay\tools\whisper.cpp\5454\whisper-cli.exe [options] file0 file1 ...
+usage: ~\.local\share\ay\tools\whisper.cpp\5454\whisper-cli.exe [options] file0 file1 ...
 supported audio formats: flac, mp3, ogg, wav
 
 options:

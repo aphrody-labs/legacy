@@ -26,7 +26,7 @@ Available Commands:
 
 Flags:
   -a, --all                  show system files and directories (TUI-mode only)
-      --config string        config file (default C:\Users\aphro\AppData\Local\glow\Config\glow.yml)
+      --config string        config file (default ~\AppData\Local\glow\Config\glow.yml)
   -h, --help                 help for glow
   -l, --line-numbers         show line numbers (TUI-mode only)
   -p, --pager                display with pager

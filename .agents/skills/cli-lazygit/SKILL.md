@@ -13,10 +13,10 @@ Subcommands: `completion`. Details: `lazygit <subcommand> --help`.
 ## `lazygit --help`
 
 ```text
-C:\Users\aphro\.local\bin\lazygit.exe
+~\.local\bin\lazygit.exe
 
   Usage:
-    C:\Users\aphro\.local\bin\lazygit.exe [git-arg]
+    ~\.local\bin\lazygit.exe [git-arg]
 
   Positional Variables:
     git-arg   Panel to focus upon opening lazygit. Accepted values (based on git terminology): status, bran...

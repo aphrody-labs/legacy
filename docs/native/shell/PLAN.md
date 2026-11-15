@@ -38,7 +38,7 @@
 | awk / grep    | goawk v1.32.0 ; `rg` + `busybox grep` (busybox-w32 frippery.org, hash pinné)                                                                                                           |
 | multicall     | hardlinks NTFS `coreutils.exe` → `ls.exe`, `cat.exe`… dans `~/.local/share/brush/bin`, régénérés par `just shell-links`                                                                |
 | bash.exe      | hardlink `~/.local/share/brush/bash.exe` → `brush.exe` (+ `sh.exe`)                                                                                                                    |
-| Claude        | `CLAUDE_CODE_GIT_BASH_PATH=C:\Users\aphro\.local\share\brush\bash.exe` dans `settings.json` `env` ; vérifier `claude --debug`                                                          |
+| Claude        | `CLAUDE_CODE_GIT_BASH_PATH=~\.local\share\brush\bash.exe` dans `settings.json` `env` ; vérifier `claude --debug`                                                          |
 
 ## 4. Plan de test
 

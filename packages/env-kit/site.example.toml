@@ -1,0 +1,58 @@
+# Private site configuration template.
+#
+# Copy to ~/.config/aphrody/site.toml (or point APHRODY_SITE at another path) and fill it in.
+# The real file is never committed. Keys, tokens and passwords do not belong here: they stay in the vault.
+# Loaders: packages/env-kit/src/site.ts (TS), packages/env-kit/loaders/shell/site.sh (shell).
+# scripts/hygiene.ts rule `personal-data` flags any value of the real file found in a tracked file.
+
+[identity]
+name = "Jane Doe"
+first_name = "Jane"
+email = "jane@example.com"
+github_user = "example-user"
+github_orgs = ["example-org"]
+
+[accounts]
+ovh_account = "xx0000000"
+cloudflare_account_ids = ["00000000000000000000000000000000"]
+gcp_projects = ["example-project"]
+
+[windows]
+user = "user"
+home = "C:/Users/user"
+machine_names = ["DESKTOP-EXAMPLE"]
+domain_user = "EXAMPLE\\user"
+
+[network]
+mesh_cidrs = ["10.0.0.0/24"]
+
+# One table per role. `ssh` is the alias in ~/.ssh/config; `aliases` are the other names it answers to.
+[hosts.fr1]
+ssh = "fr1"
+aliases = ["fr1-alias"]
+hostname = "fr1-host"
+public_ip = "198.51.100.1"
+mesh_ip = "10.0.0.1"
+user = "deploy"
+src_root = "/srv/src"
+
+[hosts.fr2]
+ssh = "fr2"
+aliases = ["fr2-alias"]
+hostname = "fr2-host"
+public_ip = "198.51.100.2"
+mesh_ip = "10.0.0.3"
+user = "deploy"
+src_root = "/srv/src"
+
+[hosts.prd]
+ssh = "prd"
+aliases = ["prd-alias"]
+hostname = "prd-host"
+public_ip = "203.0.113.5"
+mesh_ip = "10.0.0.5"
+user = "root"
+src_root = "/srv/src"
+
+[hosts.pc]
+mesh_ip = "10.0.0.2"

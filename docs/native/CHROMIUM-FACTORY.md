@@ -10,7 +10,7 @@
 | ay gclient (depot-gclient)                                              | src crates                          | DEPS/.gclient eval, revinfo, getdep/setdep, **sync sur gitoxide** (`--apply`, `-j`, `--populate-cache`), hooks/runhooks, GCS ; CIPD délégué | Rust                        |
 | depot-cipd, depot-vpython (`ay vpy`), depot-cas (FastCDC, d'après Lore) | src crates                          | client CIPD, specs vpython sur uv, store content-addressed                                                                                  | Rust                        |
 | Builder                                                                 | fr1                                 | **siso v1.6.5** (Go) en local exec seulement ; 12 cœurs ; sccache/ccache présents mais non branchés                                         | Go                          |
-| Machines                                                                | mesh WireGuard 10.200.77.0/24       | fr1 12c/45G, prd 8c/31G/340G libres, fr2 6c/11G/33G                                                                                         | —                           |
+| Machines                                                                | mesh WireGuard <mesh-cidr>       | fr1 12c/45G, prd 8c/31G/340G libres, fr2 6c/11G/33G                                                                                         | —                           |
 
 Mesure : labs_agent Stable 157 = 41 164 actions, ~28 400 faites en 2 h 22 sur fr1 seul (build froid calculé p = 12 : [4,49 ; 4,63] h + link final, voir « Modèle et bornes »).
 
@@ -101,7 +101,7 @@ Corrections
 - args (`infra/chromium-factory/args/labs_agent.gn`, chaque arg vérifié par `gn args --list`) : `dawn_enable_vulkan_validation_layers = false` (dépendance data seule de headless_shell d'après `gn path`, défaut true sur Linux, dawn_features.gni:177). Le reste est conservé : official/ThinLTO/CFI/PGO sont le produit ; le profil PGO arrive au sync, pas au build. `enable_nacl` et `use_jumbo_build` n'existent plus en 157. printing/pdf/vr/screen_ai/on_device_translation pèsent moins de 70 cœur·s chacun. trace_processor vient de base → libperfetto (export JSON du tracing CDP), conservé.
 - `use_siso`/`use_remoteexec` ne sont plus dans le fichier : `aphrody-factory gen` les ajoute selon le mode. `use_remoteexec` ne bascule que le remoting des règles siso (build/config/siso/main.star:39) et un assert (clang.gni:100) ; les lignes de commande ne changent pas, donc les ~31 000 sorties locales restent valides (à confirmer avec siso_explain au premier run).
 - out/ stable `out/labs_agent` (le dossier versionné est renommé une fois par `gen`) : le cache ThinLTO (`thin_lto_enable_cache` vaut true par défaut, `$root_out_dir/thinlto-cache`, build/config/compiler/BUILD.gn:784-789) et l'état siso survivent aux montées de version.
-- siso (flags de `siso ninja -help` v1.6.5) : `-reapi_address=10.200.77.1:50051 -reapi_instance=main -reapi_insecure -project=aphrody -re_cache_enable_write -local_jobs=4 -remote_jobs=26`. Hors ligne : `--offline -local_cache_enable -local_jobs=<nproc>`.
+- siso (flags de `siso ninja -help` v1.6.5) : `-reapi_address=<fr1-mesh-ip>:50051 -reapi_instance=main -reapi_insecure -project=aphrody -re_cache_enable_write -local_jobs=4 -remote_jobs=26`. Hors ligne : `--offline -local_cache_enable -local_jobs=<nproc>`.
 - NativeLink : bytestream au format tableau (`[{ instance_name: "main", cas_store: "CAS" }]`, NativeLink 1.8.5 `ServicesConfig.bytestream: Vec<WithInstanceName<ByteStreamConfig>>`). Workers dimensionnés sur la RAM (`deploy.sh worker <ip> <cache> [jobs]`, défaut MemAvailable / 2,5 GiB plafonné à nproc) : fr1 10, prd 4, fr2 3, soit 17 slots distants.
 - Sérialisation : unités systemd avec `ExecCondition` croisées (chromium-factory vs cros-factory), verrou pid dans `aphrody-factory`, et `doctor` en FAIL si siso, ninja, cros_sdk, repo, emerge ou gclient tournent déjà.
 - Publication : on ajoute `icudtl.dat`, `vk_swiftshader_icd.json` et `hyphen-data/` (le script bash ne les prenait pas), plus un manifeste JSON (sha256, blake3) publié à côté du tar.zst.
@@ -190,7 +190,7 @@ Déploiement sur fr1 (pas fait : rien n'est activé tant que le build est arrêt
 
 1. prd : `cargo build --release -p aphrody-factory`, copie vers `fr1:/srv/chromium/factory/bin/aphrody-factory` (même glibc 2.44).
 2. fr1 : `infra/chromium-factory/{factory.toml,args/,systemd/}` et `third_party/{chrome-channels.toml,toolchain-157.toml}` dans `/srv/chromium/factory/`.
-3. Redéployer le server (bytestream) : `deploy.sh server`. Worker fr1 : `deploy.sh worker 10.200.77.1 100000000000 10`. Workers prd et fr2 : `deploy.sh worker 10.200.77.1 <cache> 4` ou `3`.
+3. Redéployer le server (bytestream) : `deploy.sh server`. Worker fr1 : `deploy.sh worker <fr1-mesh-ip> 100000000000 10`. Workers prd et fr2 : `deploy.sh worker <fr1-mesh-ip> <cache> 4` ou `3`.
 4. `aphrody-factory doctor`, puis `aphrody-factory all`, ou l'unité `chromium-factory.service` avec son timer.
 
 Validation : `cargo test -p aphrody-factory` sur prd, 21 tests OK, clippy sans avertissement sur la crate. `doctor` lancé en lecture seule sur fr1 : disque, RAM, outils, NativeLink et toolchain 157 OK ; prd et fr2 connectés ; fr1 sans worker (attendu).

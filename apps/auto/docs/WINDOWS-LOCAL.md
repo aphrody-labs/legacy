@@ -43,7 +43,7 @@ Les fichiers `.xlsx` sont lus et modifiés avec Gridcraft/Rust, puis conservés 
 
 ## Vérifications réelles
 
-- Session Windows `APHRODY\aphro` (CloudAP), coffre Windows et tâche planifiée opérationnels.
+- Session Windows `<domain>\<user>` (CloudAP), coffre Windows et tâche planifiée opérationnels.
 - Connexion locale : `/v1/admin/moi` répond 200 avec `super_admin` ; rejeu du lien refusé ; faux en-têtes IP et utilisateur Windows sans session refusés 403.
 - Compte et entreprise **QA Windows local** isolés : un XLSX déposé dans le dossier Windows a été relevé, copié dans Craft, modifié au clavier à 42 et sauvegardé en révision 2. Le fichier source est intact.
 - Recette : `bun apps/web/e2e/windows-local-reel.ts`. Captures et preuves dans `.cache/windows-*.png` et `.cache/windows-*.log` ; secrets de recette dans le coffre Windows.

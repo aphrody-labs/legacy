@@ -21,7 +21,7 @@ Date : 2026-11-12. Légende : **[V]** vérifié sur la source citée ce jour ; *
 | Sandboxing non supporté sous Windows natif                                                                                                                                                                           | V                                         | setup, tools-reference                                                    |
 | Sortie lue : `BASH_MAX_OUTPUT_LENGTH` défaut 30000, max 150000                                                                                                                                                       | V                                         | env-vars                                                                  |
 
-Conséquence : brush peut être déclaré via `CLAUDE_CODE_GIT_BASH_PATH` à condition que le fichier s'appelle `bash.exe`/`sh.exe` (cas actuel : lien `C:\Users\aphro\.local\share\brush\bash.exe`). Claude présume un bash « Git Bash-like » (syntaxe POSIX, `/dev/null`, chemins `/c/...` acceptés) [NV pour les détails de traduction de chemin].
+Conséquence : brush peut être déclaré via `CLAUDE_CODE_GIT_BASH_PATH` à condition que le fichier s'appelle `bash.exe`/`sh.exe` (cas actuel : lien `~\.local\share\brush\bash.exe`). Claude présume un bash « Git Bash-like » (syntaxe POSIX, `/dev/null`, chemins `/c/...` acceptés) [NV pour les détails de traduction de chemin].
 
 ## 2. cmd.exe
 

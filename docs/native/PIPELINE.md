@@ -43,7 +43,7 @@ Recursive over the whole monorepo; `third_party` is opt-in (`--all`, which also 
 
 ## Fleet
 
-Valkey 9.1 on fr2 (`valkey-server.service`, bound to `10.200.77.3` and loopback, password, AOF `everysec`,
+Valkey 9.1 on fr2 (`valkey-server.service`, bound to `<fr2-mesh-ip>` and loopback, password, AOF `everysec`,
 `maxmemory 3gb` `volatile-lru`, ordered after `wg-quick@wg1`). Client: a 250-line RESP2 client in
 `pipeline/resp.rs` (pipelining, no runtime, no dependency). The URL is `AY_VALKEY_URL` or `~/.config/ay/valkey.url`
 (mode 600, never printed); with neither, every shared feature is off and the pipeline is purely local.

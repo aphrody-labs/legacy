@@ -55,7 +55,7 @@ The name `auto.aphrody.com` (zone `aphrody.com`) points through a proxied CNAME 
 open: the `cloudflared` connector opens the outbound connection.
 
 Production (since 2026-10-22): OVH server `vps` (Ubuntu, Docker), reached through the private WireGuard tunnel
-(`ssh vps`). The stack is isolated from the other services of the server: Docker network `auto-prod`, no port
+(`ssh <fr1>`). The stack is isolated from the other services of the server: Docker network `auto-prod`, no port
 published on the host, the `cloudflared` connector is the only entry point.
 
 Database (since 2026-11-03): **Neon**, project `auto` (`small-forest-38471112`) of organization

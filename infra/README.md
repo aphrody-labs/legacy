@@ -12,8 +12,8 @@ brique → outil, versions et commits sources : [docs/infra/UPSTREAM-STACK.md](.
 | `fleet/`      | bootstrap idempotent des hôtes (`just fleet-bootstrap <fr1, prd ou fr2>`), unités systemd, nginx fr2 | systemd, nginx, WireGuard, cloudflared                                        |
 | `agents/`     | runner d'agents de la flotte                                                                         | systemd                                                                       |
 
-Rôles : fr1 (`ssh vps`) = usine (builds, CI, training, agents lourds) ; prd (`ssh prd`) = backends de prod sans
-compilateur ; fr2 (`ssh cdn`) = edge. Procédure de déploiement et retour arrière : [docs/infra/DEPLOY.md](../docs/infra/DEPLOY.md).
+Rôles : fr1 (`ssh <fr1>`) = usine (builds, CI, training, agents lourds) ; prd (`ssh prd`) = backends de prod sans
+compilateur ; fr2 (`ssh <fr2>`) = edge. Procédure de déploiement et retour arrière : [docs/infra/DEPLOY.md](../docs/infra/DEPLOY.md).
 
 ```sh
 just docker-build            # images amd64+arm64 -> ghcr.io/aphrody-labs (CI images.yml)

@@ -6,17 +6,17 @@ written during the migration. The versioned sources are in `infra/fleet/`.
 
 | Node                     | Mesh                     | Public                                 | Provider                                          | Role                                   |
 | ------------------------ | ------------------------ | -------------------------------------- | ------------------------------------------------- | -------------------------------------- |
-| fr1 (`vps-203bea89`)     | 10.200.77.1 (hub wg1)    | 51.77.147.152, 2001:41d0:404:200::4d8e | OVH VPS (KVM)                                     | Google, Chromium and LLVM only         |
-| fr2 (`bunos`, alias cdn) | 10.200.77.3              | 51.255.162.6, 2001:41d0:305:2100::a461 | OVH Public Cloud (DMI `OpenStack Nova`, OVH IPv6) | vhosts, reverse proxy, CDN, sync, ACME |
-| prd (`srv2116886`, USA)  | 10.200.77.5              | 72.60.186.43                           | Hostinger                                         | application backends                   |
-| Windows PC               | 10.200.77.2, 10.200.78.2 | –                                      | –                                                 | workstation                            |
+| fr1 (`<fr1-hostname>`)     | <fr1-mesh-ip> (hub wg1)    | <fr1-public-ip>, <fr1-public-ipv6> | OVH VPS (KVM)                                     | Google, Chromium and LLVM only         |
+| fr2 (`<fr2-hostname>`, alias cdn) | <fr2-mesh-ip>              | <fr2-public-ip>, <fr2-public-ipv6> | OVH Public Cloud (DMI `OpenStack Nova`, OVH IPv6) | vhosts, reverse proxy, CDN, sync, ACME |
+| prd (`<prd-hostname>`, USA)  | <prd-mesh-ip>              | <prd-public-ip>                           | Hostinger                                         | application backends                   |
+| Windows PC               | <pc-mesh-ip>, <pc-mesh-ip-2> | –                                      | –                                                 | workstation                            |
 
 ## Done
 
 ### aphrody web frontend: fr1 → fr2
 
 - vhosts: `/etc/nginx/sites/{aphrody.com,api.aphrody.com,cdn.aphrody.com,creator.aphrody.com,downloads.aphrody.com,rpbey.fr,omar.aphrody.com}.conf`. Source: `infra/fleet/fr2/nginx/`. The originals of fr1 and fr2 are kept in `infra/fleet/fr1-orig/` and `fr2-orig/`.
-- backends: the `127.0.0.1:<port>` become `10.200.77.5:<port>` (prd). omar stays on `127.0.0.1:8793` on fr2: it is a relay to an `ssh -R` tunnel, the client must now target fr2 (`ssh -R 8793:… root@51.255.162.6`).
+- backends: the `127.0.0.1:<port>` become `<prd-mesh-ip>:<port>` (prd). omar stays on `127.0.0.1:8793` on fr2: it is a relay to an `ssh -R` tunnel, the client must now target fr2 (`ssh -R 8793:… root@<fr2-public-ip>`).
 - a catch-all `*.aphrody.com` → prd:3000 and `*.aphrody.app` → prd:3010 reproduces fr1's default server.
 - static content copied to `/srv/www/`: creator (132M), downloads/files, aphrody-api, aphrody-status, rpbey.fr.
 - fr2's `conf.d/fleet-api.conf`: `api.aphrody.com` is removed from its `server_name`. The rest (dbfr, mcp/db.rosegriffon.fr) was not touched. Backup: `/root/fleet-api.conf.bak-20261112`.
@@ -25,7 +25,7 @@ written during the migration. The versioned sources are in `infra/fleet/`.
 
 ### DNS switch (Cloudflare, 2026-11-12 ~18:12 UTC)
 
-Values replaced: `51.77.147.152` → `51.255.162.6` and `2001:41d0:404:200::4d8e` → `2001:41d0:305:2100::a461`. The Cloudflare proxy stays in the same state as before.
+Values replaced: `<fr1-public-ip>` → `<fr2-public-ip>` and `<fr1-public-ipv6>` → `<fr2-public-ipv6>`. The Cloudflare proxy stays in the same state as before.
 
 - zone aphrody.com `963461271f885bc3f3c2bfd586f2b7ba`: `aphrody.com` A (`30ddf6bf…`), `api` A (`1900939c…`), `api` AAAA (`cbaa3d9d…`), `os` A (`a274bd16…`). All CNAMEs to `aphrody.com` follow (cdn, creator, downloads, omar, www…). `vps.aphrody.com` stays on fr1.
 - zone aphrody.app `f4dab237b9811435da6fee0b5b3438d4`: 21 A records (api, app-*, auth, craft, deploy, git, play, source).
@@ -49,14 +49,14 @@ See `infra/fleet/ACME.md`: a single certbot on fr2, Cloudflare DNS-01, conventio
 - cuttlefish Android VM stopped, config in `~/fr1-archive/cuttlefish/`.
 - cron `yolo-clean` disabled.
 - nie-sre stack purged: its archive is in `r2:aphrody-archive/fr1/configs/nie-sre-service.tgz` (md5 `43217c59c735dac774906fca9664b95d`, sha256 `20161bbb…ba61`), and the docker image was deleted.
-- docker swarm dissolved: it had no service, and the `bunos` worker was Down.
+- docker swarm dissolved: it had no service, and the `<fr2-hostname>` worker was Down.
 - R2 archive in progress: `r2:aphrody-archive/fr1/<folder>` (`~/fr1-r2.sh`, log `~/fr1-r2.log`), at about 5 MB/s in ionice idle. For 274G, expect around 15 h. No deletion before a `CHECK <folder> rc=0` line.
 
 ### ssh hardening
 
 - prd accepted `PermitRootLogin yes` and `PasswordAuthentication yes`. Added `/etc/ssh/sshd_config.d/00-fleet.conf` (keys only, root as `prohibit-password`), checked with `sshd -t`, reload, then tested a new connection: OK.
 - fr1 and fr2 were already keys only (`sshd -T`).
-- inventory of authorized keys: fr1 root (1), fr1 ubuntu (11 distinct, including `aphrody-owner-pc`, `prod-to-vps`, `root@srv2116886`, `bunos-worker`, `achillea-docs-deploy`, `aphrody-cloud`, plus a key without comment `u13O5I5n…`); prd root (6, including `omara@hostinger…` and `yolo-prod@aphrody`).
+- inventory of authorized keys: fr1 root (1), fr1 ubuntu (11 distinct, including `aphrody-owner-pc`, `prod-to-vps`, `root@<prd-hostname>`, `<fr2-hostname>-worker`, `achillea-docs-deploy`, `aphrody-cloud`, plus a key without comment `u13O5I5n…`); prd root (6, including `omara@hostinger…` and `yolo-prod@aphrody`).
 - proposed rotation: delete the key without comment and the duplicates, then replace `aphrody-owner-pc-unrestricted` (same fingerprint as `aphrody-owner-pc`) with one key per use.
 
 ### INCIDENT 2026-11-12 18:19 UTC: partial overwrite of prd:~/.aphrody
@@ -71,20 +71,20 @@ See `infra/fleet/ACME.md`: a single certbot on fr2, Cloudflare DNS-01, conventio
 
 Details and checksums in `FR1-CHROMIUM-HOST.md`.
 
-- commons-relay: `/srv/commons-relay`, on 10.200.77.5:8766.
-- aphrody-gpu-depot: `/srv/aphrody-gpu-depot`, on 10.200.77.5:8182.
+- commons-relay: `/srv/commons-relay`, on <prd-mesh-ip>:8766.
+- aphrody-gpu-depot: `/srv/aphrody-gpu-depot`, on <prd-mesh-ip>:8182.
 - agent-relay-broker: on 127.0.0.1:3889.
 - all three run in `fleet-apps.slice` (CPUWeight 50, MemoryMax 8G, oomd).
-- compatibility: `fleet-fwd-{commons,gpu-depot}.socket` on fr1 (systemd-socket-proxyd). `10.200.77.1:8766` and `:8182` remain valid until clients target 10.200.77.5.
+- compatibility: `fleet-fwd-{commons,gpu-depot}.socket` on fr1 (systemd-socket-proxyd). `<fr1-mesh-ip>:8766` and `:8182` remain valid until clients target <prd-mesh-ip>.
 - GitHub runner: not reinstalled (prd load ~10 for 8 cores). It is stopped on fr1, its config is in R2.
 
 ### Network INCIDENT 2026-11-12: OVH → prd UDP filtered upstream
 
-- finding: from 18:19:24, the prd↔fr1 WireGuard handshake fails. fr1 does send its replies (seen in tcpdump), but an nft counter placed at the head of prd's input stays at 0 UDP packets from 51.77.147.152. ICMP still passes. Same thing afterwards from fr2. PC→prd (non-OVH) works.
+- finding: from 18:19:24, the prd↔fr1 WireGuard handshake fails. fr1 does send its replies (seen in tcpdump), but an nft counter placed at the head of prd's input stays at 0 UDP packets from <fr1-public-ip>. ICMP still passes. Same thing afterwards from fr2. PC→prd (non-OVH) works.
 - likely trigger: the large incoming UDP volumes (rsync at 40 MB/s, then NativeLink CAS, ~3 GB from fr1 and 1.6 GB from fr2). The block lifts after ~15–20 min. The Hostinger API firewall is empty (`firewall_group_id: null`): the filtering is therefore probably the provider's anti-DDoS. To be confirmed with a Hostinger ticket.
 - consequence: this is the cause of the 000 on rosegriffon.fr via fr2. fr2 could no longer reach prd:18080 (upstream `rg_prod_stack`). The fr2 edge itself was healthy: from prd via the public IP, 200 over IPv4 and IPv6 with `--resolve`.
 - fixes:
-  1. full fr1/fr2/prd mesh: prd has a direct fr2 peer (`10.200.77.3/32`) in addition to the fr1 hub (`/24`), and fr2 a direct prd peer (`10.200.77.5/32`).
+  1. full fr1/fr2/prd mesh: prd has a direct fr2 peer (`<fr2-mesh-ip>/32`) in addition to the fr1 hub (`/24`), and fr2 a direct prd peer (`<prd-mesh-ip>/32`).
   2. `fleet-wg-failover@` (30 s timer, on prd and fr2): when the direct handshake is older than 150 s, the direct route is removed and traffic goes back through the hub. Backups: `*.conf.bak-20261112-{rot,hub,mesh}`.
   3. NativeLink prd → `fleet-tunnel-nativelink`: ssh `-L` over TCP to fr1's public IP, `NL_SCHED=127.0.0.1`, `BindsTo`.
   4. rule: transfers to prd over TCP (ssh on the public IP) at 10 MB/s maximum, never in bulk over the mesh.
@@ -118,5 +118,5 @@ Details and checksums in `FR1-CHROMIUM-HOST.md`.
 - One checkout per host: `/srv/src`, full tree of `aphrody-labs/src` (`aphrody-dev/src`), `main` only, owned by `ubuntu` (`root` on prd). `src-checkout-update.timer` (every 5 min, `infra/fleet/bin/src-checkout-update.sh`) fast-forwards it; it skips a dirty tracked tree or a non-main HEAD, rolls back a restarted unit that fails, writes `/var/lib/src-sync/status.json` and journald tag `src-checkout`; on fr1 it then runs `ay manifests --check`. prd and fr2 use it as read-only source of deploy config: no compiler there, images come from `ghcr.io/aphrody-labs`.
 - `third_party/*` forks (src.lock.json, shallow blobless at the pinned commit) exist on fr1 only (`third-party-sync.sh`, result in `~/.cache/src-sync/third-party.tsv`). Excluded: Chromium (gclient tree `/srv/chromium`), Linux, LLVM, WebKit, AOSP manifest, Unreal; fetch on demand with `ay git`. `third_party/bun` is cloned shallow and blobless.
 - fr1 CI runners: six instances (`actions.runner.aphrody-dev-src.fr1`, `actions.runner.aphrody-labs-src.fr1-{2..6}`), labels `self-hosted, Linux, X64, fr1, build`, `Restart=always`. `aphrody-heavy` has three slots (`HEAVY_SLOTS`) and a load gate. Shared cargo target dirs live in `/home/ubuntu/build/*-target`.
-- Setup of a host, idempotent: `just fleet-bootstrap <role>` (toolchains from tools.toml) then `just fleet-setup <role>`; runners need a registration token on stdin (`gh api -X POST repos/aphrody-labs/src/actions/runners/registration-token --jq .token | ssh vps gh-runners.sh 6`).
+- Setup of a host, idempotent: `just fleet-bootstrap <role>` (toolchains from tools.toml) then `just fleet-setup <role>`; runners need a registration token on stdin (`gh api -X POST repos/aphrody-labs/src/actions/runners/registration-token --jq .token | ssh <fr1> gh-runners.sh 6`).
 - `just build-all` (fr1, `infra/fleet/bin/build-all.sh`): images to ghcr (packages are private), ay, game wasm, site, artifacts in `/srv/artifacts/builds/<sha>` and `r2:aphrody-dist/builds/<sha>`; then `just deploy-images <prd|fr2> <sha> <profile> <services>` (pull on fr1, stream to the target, `compose up --wait`, no registry credential on prd or fr2). Rollback: same command with the previous tag (`SRC_REGISTRY=ghcr.io/aphrody-dev SRC_TAG=smoke` for the pre-2026-11-13 images). `just ci-local` and `just ci-lint` mirror the workflows.

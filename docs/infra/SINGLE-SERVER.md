@@ -1,6 +1,6 @@
 # Single logical server (fr1 + fr2 + prd)
 
-Owner order 2026-11-15: turn the three hosts into one logical server, progressively: fr2 first, then fr1, prd last with zero service interruption. fr1 = `ssh vps` (factory), prd = `ssh prd` (US production, never down), fr2 = `ssh cdn` (test, research, edge). Single source: `infra/fleet/cluster.toml`. Every step is a repo file plus an apply step (`just fleet-offload apply fr1|fr2`), idempotent, reversible, logged at the end of this file.
+Owner order 2026-11-15: turn the three hosts into one logical server, progressively: fr2 first, then fr1, prd last with zero service interruption. fr1 = `ssh <fr1>` (factory), prd = `ssh prd` (US production, never down), fr2 = `ssh <fr2>` (test, research, edge). Single source: `infra/fleet/cluster.toml`. Every step is a repo file plus an apply step (`just fleet-offload apply fr1|fr2`), idempotent, reversible, logged at the end of this file.
 
 ## 1. State found (2026-11-15 06:35 UTC, read from the hosts)
 
@@ -8,9 +8,9 @@ Owner order 2026-11-15: turn the three hosts into one logical server, progressiv
 | --- | --- | --- | --- |
 | Cores / RAM | 12 / 45 GB | 6 / 11 GB | 8 / 31 GB |
 | Disks | `sda` 300 GB SSD ext4 root (83 GB free); `sdb` 500 GB + `sdc` 305 GB rotational, one btrfs `/home` (647 GB used, another agent is purging it) | `sda` 100 GB, one ext4 root, no spare device | `sda3` 400 GB btrfs root (177 GB free), no xfsprogs |
-| Mesh | wg1 10.200.77.1 (hub) | wg1 10.200.77.3 | wg `vps` 10.200.77.5 |
+| Mesh | wg1 <fr1-mesh-ip> (hub) | wg1 <fr2-mesh-ip> | wg `vps` <prd-mesh-ip> |
 | Tunnel connectors | `cloudflared-mig-prd` | `cloudflared-mig-prd`, `cloudflared-fr2` | `cloudflared-mig-prd`, `cloudflared-prod` |
-| Shared services | NativeLink 10.200.77.1:50051 scheduler, :50061 CAS and workers | Valkey 10.200.77.3:6379 (mesh + loopback, `NOAUTH`: AUTH required) | loopback Valkey and Postgres (production data, not shared) |
+| Shared services | NativeLink <fr1-mesh-ip>:50051 scheduler, :50061 CAS and workers | Valkey <fr2-mesh-ip>:6379 (mesh + loopback, `NOAUTH`: AUTH required) | loopback Valkey and Postgres (production data, not shared) |
 
 Cloudflare (`cf tunnels list`, live): `mig-prd` healthy with 12 connections from fr1, fr2 and prd (the unified tunnel already exists, `docs/infra/CLUSTER.md`), plus `fr2` (4), `prod` (4), `auto-usa` (4), `shenron-dbfr` (8, community site, not an Aphrody product, left alone). `cf.ts plan tunnels` shows one drift: live `mig-prd` has `open-origin.aphrody.com -> 127.0.0.1:29403` that `infra/cloudflare/cloudflare.toml` lacks (added by another session; not touched here).
 
@@ -39,7 +39,7 @@ Network FS cost, measured on fr2: one warm `git status` of that tree issues 52 1
 | Ceph | `gh api releases/latest` returned no release object | Rejected: needs dedicated OSD disks and 3+ monitors, hosts have one disk each (fr2, prd) |
 | Plain XFS per host + NFS over the mesh | measurements above | NFS only for cold, read-mostly trees if ever needed |
 
-Choice: the shared namespace is not a POSIX mount. It is (a) the same local path on every host, `/srv/xbuild/{target,cache,ci,cas,clones}`, on a local XFS volume, and (b) content-addressed sharing over the existing services: NativeLink CAS 10.200.77.1:50061 for REAPI builds and R2 for artifacts (`infra/fleet/cache.toml`). A pinned `CARGO_TARGET_DIR` under the same path on all hosts is also the precondition for sccache hits (`FLEET-OFFLOAD.md` section 3: the target path is part of the key; 3 hits in 2614 compiles before).
+Choice: the shared namespace is not a POSIX mount. It is (a) the same local path on every host, `/srv/xbuild/{target,cache,ci,cas,clones}`, on a local XFS volume, and (b) content-addressed sharing over the existing services: NativeLink CAS <fr1-mesh-ip>:50061 for REAPI builds and R2 for artifacts (`infra/fleet/cache.toml`). A pinned `CARGO_TARGET_DIR` under the same path on all hosts is also the precondition for sccache hits (`FLEET-OFFLOAD.md` section 3: the target path is part of the key; 3 hits in 2614 compiles before).
 
 ### Scheduler: extend fleet-run, no Nomad/k3s
 
@@ -51,7 +51,7 @@ Already live with replicas on all three hosts (4 connections each). Remaining pe
 
 ### Valkey and NativeLink over the mesh
 
-Registered in `cluster.toml` (`fleet-registry endpoint valkey` = 10.200.77.3:6379, NativeLink scheduler 10.200.77.1:50051, CAS :50061). Both listen on mesh addresses only; Valkey demands AUTH, so no consumer is added without the secret in `/etc/aphrody/secrets.env`. prd Valkey stays loopback (production data).
+Registered in `cluster.toml` (`fleet-registry endpoint valkey` = <fr2-mesh-ip>:6379, NativeLink scheduler <fr1-mesh-ip>:50051, CAS :50061). Both listen on mesh addresses only; Valkey demands AUTH, so no consumer is added without the secret in `/etc/aphrody/secrets.env`. prd Valkey stays loopback (production data).
 
 ## 3. Stages and log
 
@@ -70,7 +70,7 @@ Log (UTC, 2026-11-15):
 - 07:05 commit 60a78cc451 (`fleet-xfs.sh`, `fleet-registry.sh`, `cluster.toml`, fleet-run changes). fr2 `/srv/src` could not fast-forward (local uncommitted `Cargo.toml`/`Cargo.lock` of another job), so the tree was shipped with `git archive 60a78cc451 infra/fleet` to `/tmp/fs` and applied with `fleet-offload.sh apply fr2`; no file of the dirty checkout was touched.
 - 07:08 fr2: `fleet-xfs.sh apply`: `/var/lib/fleet/xbuild.img` 4 GB sparse, `mkfs.xfs -d agcount=6`, fstab `loop,noatime,nofail`, `/srv/xbuild` mounted, reflink smoke test ok (`xfs_info`: `agcount=6 reflink=1`). Root cost 0.5 GB (XFS metadata).
 - 07:20 benchmark above (4c352b5298). Temporary trees removed by the script's trap.
-- 07:30 `fleet-run -n -c test` on fr2: peers from the registry (fr1 only, prd absent). `fleet-registry status` reports prd unreachable from fr2 (no mesh ssh key for `ubuntu@10.200.77.5` from fr2; the status view is complete from the PC and from fr1 only if keys exist, to fix in stage 5).
+- 07:30 `fleet-run -n -c test` on fr2: peers from the registry (fr1 only, prd absent). `fleet-registry status` reports prd unreachable from fr2 (no mesh ssh key for `ubuntu@<prd-mesh-ip>` from fr2; the status view is complete from the PC and from fr1 only if keys exist, to fix in stage 5).
 - fr1 and prd: no change made.
 
 Rollback fr2: `sudo fleet-xfs down --purge` (umount, fstab line removed, image deleted); `rm /etc/fleet/cluster.toml` returns fleet-run to `run.conf` PEERS.

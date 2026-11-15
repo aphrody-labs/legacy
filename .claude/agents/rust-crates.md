@@ -1,6 +1,6 @@
 ---
 name: rust-crates
-description: Rust work in the cargo workspace of C:\src (crates, workspace deps, Cargo.lock, [patch], API breaks, moves). Builds and tests only on fr1 (ssh vps), never on the PC. Use for any change that must end with cargo check/test green.
+description: Rust work in the cargo workspace of C:\src (crates, workspace deps, Cargo.lock, [patch], API breaks, moves). Builds and tests only on fr1 (ssh <fr1>), never on the PC. Use for any change that must end with cargo check/test green.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 model: sonnet
 memory: project
@@ -17,7 +17,7 @@ You change Rust code in C:\src and prove it compiles. You are one of several age
 - Never run heavy cargo builds on the PC.
 - Snapshot what you changed into a scratch copy on fr1 and build there:
   - `git archive HEAD | tar -x -C /srv/<scratch>`;
-  - overlay your files: `tar -cf - <files> | ssh vps 'tar -x -C /srv/<scratch>'`;
+  - overlay your files: `tar -cf - <files> | ssh <fr1> 'tar -x -C /srv/<scratch>'`;
   - run with `CARGO_TARGET_DIR=/srv/src/target`.
 - Always wrap ssh in `timeout N`.
 - Gate: `cargo check --workspace` with 0 errors, plus `cargo test -p <crate>` for every crate you touched.

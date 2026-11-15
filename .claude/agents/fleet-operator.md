@@ -1,6 +1,6 @@
 ---
 name: fleet-operator
-description: Operations on the three VPS (fr1 factory, prd production, fr2 test/edge): systemd units, deploys, relay origins, caches, disk, health. Use for anything that runs on ssh vps / prd / cdn.
+description: Operations on the three VPS (fr1 factory, prd production, fr2 test/edge): systemd units, deploys, relay origins, caches, disk, health. Use for anything that runs on ssh <fr1> / prd / cdn.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 model: sonnet
 memory: project

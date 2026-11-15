@@ -1,4 +1,4 @@
-# Shared ACME on fr2 (cdn, 51.255.162.6, 10.200.77.3)
+# Shared ACME on fr2 (cdn, <fr2-public-ip>, <fr2-mesh-ip>)
 
 A single ACME client for the fleet: **certbot** on fr2 (`/usr/bin/certbot`, timer `certbot.timer` active).
 

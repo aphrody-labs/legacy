@@ -30,7 +30,7 @@ const res = await fetch(
 
 ## Host mapping
 
-Only `prd` (72.60.186.43, `srv2116886.hstgr.cloud`) is a Hostinger VM: id `2116886`
+Only `prd` (<prd-public-ip>, `<prd-hostname>.hstgr.cloud`) is a Hostinger VM: id `2116886`
 (`hostinger_id` in `apps/rosegriffon/infra/hosts.toml`). `vps` and `cdn` are not on Hostinger.
 
 ## VPS

@@ -1,6 +1,6 @@
 # Écosystème compat Windows (Wine / Proton / ReactOS / LiberNT) — 2026-11-12
 
-Sources : dépôts locaux `C:\src\third_party\*` (commit + date), `src.lock.json`, contrôles ssh fr2 (`cdn`) et prd. [NV] = non vérifié dans la session.
+Sources : dépôts locaux `C:\src\third_party\*` (commit + date), `src.lock.json`, contrôles ssh fr2 (`<fr2>`) et prd. [NV] = non vérifié dans la session.
 
 ## Déjà présent dans C:\src (à réutiliser, sans recloner)
 
@@ -76,6 +76,6 @@ Originaux laissés en place ; ici seulement ce qui n'était pas déjà ci-dessus
 | Git (fork)                       | third_party/git = fork aphrody-labs de microsoft/git (a6974a1, 2026-11-09) ; third_party/niu-git = git natif MSVC sans MSYS2 (06bc343, 2026-10-28)                                                                    | git remote, src.lock.json                                           |
 | GCC                              | third_party/gcc : clone sparse/shallow (11 fichiers, 3c632b9 2026-11-12), épinglé dans src.lock.json ; contraire à PLAN.md (aucun GCC)                                                                                | src.lock.json l.1463                                                |
 | Orchestration                    | crate C:\src\crates\unix-cachyos : détection matériel, pacman/makepkg, runtime Proton/Wine/EAC                                                                                                                        | docs/MONOREPO_ATLAS.md l.89 (removed, see git history)                                  |
-| Legacy bunos                     | Wine/Proton/DXVK/VKD3D non compilés : binaires Kron4ek Wine-Builds, Valve Proton, dépôts CachyOS, via `buncc wine`/`buncc proton` (abandonné, remplacé par PLAN.md)                                                   | var/dedup-quarantine/2026-11-12/…/skills/wine-proton-stack/SKILL.md |
-| Legacy MSYS2                     | bench MSYS2 `clang64` vs buncc desktop : prefix GTK4+Qt en 57 s (180 Mo) côté MSYS2, plus rapide ; « plus optimisé que MSYS2 » non prouvé                                                                             | C:\src\var\legacy\bunos\docs\BUNCC-DESKTOP.md l.64-86               |
+| Legacy <fr2-hostname>                     | Wine/Proton/DXVK/VKD3D non compilés : binaires Kron4ek Wine-Builds, Valve Proton, dépôts CachyOS, via `buncc wine`/`buncc proton` (abandonné, remplacé par PLAN.md)                                                   | var/dedup-quarantine/2026-11-12/…/skills/wine-proton-stack/SKILL.md |
+| Legacy MSYS2                     | bench MSYS2 `clang64` vs buncc desktop : prefix GTK4+Qt en 57 s (180 Mo) côté MSYS2, plus rapide ; « plus optimisé que MSYS2 » non prouvé                                                                             | C:\src\var\legacy\<fr2-hostname>\docs\BUNCC-DESKTOP.md l.64-86               |
 | Fork RE mingw                    | n2b/forks/mingw-w64-rea : commit propre 474c482 (intrinsics REA, CRT PE64 hook) au-dessus de d19ea2d ; pas un doublon de third_party/mingw-w64                                                                        | git log local                                                       |

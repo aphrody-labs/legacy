@@ -47,7 +47,7 @@ valeurs secrètes ne figurent nulle part ici : seulement les noms de variables.
 - fr1 : conteneurs `auto-*`, images `auto-app:*`, `auto-web:*`, `cloudflare/cloudflared:latest`, réseau `auto-prod`,
   cron `sauvegarde.sh`, `auto-ia-tunnel.service`, `~/apps/auto` et le lien `~/auto` supprimés. L'ancienne pile
   Aphrody (fin de la section 4) n'a pas été touchée.
-- Exploitation : `bun run prod etat|deployer` vise `prd` (usa par IP publique ; le maillage 10.200.77.5 ne répondait
+- Exploitation : `bun run prod etat|deployer` vise `prd` (usa par IP publique ; le maillage <prd-mesh-ip> ne répondait
   pas depuis le poste ni depuis fr1 pendant la bascule).
 - Retour arrière : plus de fr1 ; restaurer depuis `/srv/auto/sauvegardes` avec l'image `auto-sauvegarde`
   (`bun scripts/restauration.ts <fichier> <base>`, `AUTO_PG_LOCAL=1`).
@@ -64,7 +64,7 @@ valeurs secrètes ne figurent nulle part ici : seulement les noms de variables.
 
 ## 1. Ce qui tourne sur fr1 aujourd'hui
 
-Hôte `fr1` (`ssh vps`, ubuntu), répertoire `/home/ubuntu/auto` (aussi `~/apps/auto`), 4,0 Go, pas un dépôt git.
+Hôte `fr1` (`ssh <fr1>`, ubuntu), répertoire `/home/ubuntu/auto` (aussi `~/apps/auto`), 4,0 Go, pas un dépôt git.
 Conteneurs lancés par `docker run` (`scripts/prod.ts`, `scripts/release-vps.ts`), sans compose.
 
 | Conteneur     | Image                                | Taille  | Commande                       | Réseau      | Montages                                                                                        | Santé                       |
@@ -105,7 +105,7 @@ Fichiers d'environnement (valeurs non lues) :
 - 12 copies `prod.env.avant-*` / `prod.env.before-*` et `pg.env.avant-*` : historiques, à ne pas recopier.
 
 Tâches : cron utilisateur `15 3 * * * ~/auto/sauvegarde.sh` (pg_dump chiffré dans `~/auto/sauvegardes`, 14
-gardés, 1,6 Go, puis `rsync` vers `offsite` = usa `10.200.77.5:/srv/offsite/vps/auto-sauvegardes`). Unité
+gardés, 1,6 Go, puis `rsync` vers `offsite` = usa `<prd-mesh-ip>:/srv/offsite/vps/auto-sauvegardes`). Unité
 systemd `auto-ia-tunnel.service` (inactive). Livraisons : `~/auto/releases` (19 versions, 1,6 Go).
 
 usa et fr2 : aucun conteneur, unité ni répertoire auto (seules les sauvegardes copiées sur usa).
@@ -143,7 +143,7 @@ Prérequis : section 0 levée, image de l'étape 2 construite sur usa.
 6. Arrêter sur fr1 `auto-tunnel`, `auto-worker`, `auto-web`, `auto-api` (dans cet ordre), puis démarrer
    `auto-worker` sur usa : un seul worker à la fois, sinon les tâches planifiées partent en double.
 7. DNS : rien à changer tant que le tunnel est réutilisé. Pour suivre la décision « tout le DNS vers usa » :
-   enregistrement proxifié `auto.aphrody.com` -> `72.60.186.43`, Caddy sur usa vers `auto-web:3001`, puis
+   enregistrement proxifié `auto.aphrody.com` -> `<prd-public-ip>`, Caddy sur usa vers `auto-web:3001`, puis
    suppression de l'entrée du tunnel dans Cloudflare.
 8. Sauvegarde : installer `sauvegarde.sh` et le cron sur usa (destination locale `/srv/auto/sauvegardes`, copie
    hors site vers fr1 `/srv/build` ou R2) ; retirer le cron de fr1.
@@ -170,13 +170,13 @@ Ancienne pile Aphrody (relevé du jour, à confirmer service par service) :
   8788-8797, 8810, 29030 : aucun n'écoute, seul 3100 répond), `cdn.aphrody.com.conf`, `creator.aphrody.com.conf`,
   `downloads.aphrody.com.conf`, `fleet-api.conf`, `sites-enabled/omar.aphrody.com` ; les vhosts rosegriffon
   (`rosegriffon.fr`, `achillea`, `azalee`, `rg-core`, `rpbey.fr`) relèvent de rosegriffon, pas de cette liste ;
-- unités utilisateur : `bunos-auto-*` (coordinator, deliver, guard, health, status, nightly, deps-*, en échec),
-  `bunos-native-publish`, `bunos-sync`, `bun-os-*`, `aphrody-gpu-depot`, `aphrody-vnc`, `commons-relay`,
+- unités utilisateur : `<fr2-hostname>-auto-*` (coordinator, deliver, guard, health, status, nightly, deps-*, en échec),
+  `<fr2-hostname>-native-publish`, `<fr2-hostname>-sync`, `bun-os-*`, `aphrody-gpu-depot`, `aphrody-vnc`, `commons-relay`,
   `yolo-worker`, `yolo-lightpanda`, `yolo-git-sync`, `yolo-cluster.target`, `vps-health`, `sync-checkouts` ;
   unité système `rg-cdn-sync` (rosegriffon, à arbitrer) ;
 - conteneurs du projet compose `nie-sre-service` (`nie-bridge-service`, `nie-lua-pipeline`, `nie-cfg-pipeline`) ;
-- répertoires `~/apps/` : `aphrody`, `api-releases`, `bunos-status`, `bun-video`, `cdn`, `chat`, `control`,
+- répertoires `~/apps/` : `aphrody`, `api-releases`, `<fr2-hostname>-status`, `bun-video`, `cdn`, `chat`, `control`,
   `craft-web`, `creator`, `downloads`, `komodo`, `nie`, `redis`, `remote-desktop`, `store`, `webos`,
-  `compose.yaml` et `compose.yaml.bunos-auto-backup` (`rg` = rosegriffon, à garder jusqu'à sa propre bascule).
+  `compose.yaml` et `compose.yaml.<fr2-hostname>-auto-backup` (`rg` = rosegriffon, à garder jusqu'à sa propre bascule).
 
 Les rôles de build de fr1 (Chromium, AOSP, noyau, `/opt/*` sysroots et SDK, `/srv/build`) restent en place.

@@ -4,9 +4,9 @@
 
 | Node                             | Provider                          | Console / rescue                                                                                                                                                                                                                                                                            |
 | -------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| fr1 `vps-203bea89` 51.77.147.152 | OVH VPS (KVM)                     | OVH Manager > Bare Metal Cloud > VPS > `vps-203bea89.vps.ovh.net` > "Reboot in rescue mode" (credentials sent by e-mail), or web KVM console (serial `ttyS0` and `tty1` active in the cmdline). In rescue: `mount /dev/sda1 /mnt` (ext4 root); `/home` = btrfs `sdb1+sdc1`, subvol `@home`. |
-| fr2 `bunos` 51.255.162.6         | OVH Public Cloud (OpenStack Nova) | OVH Manager > Public Cloud > Instances > "VNC console" or "Rescue" (rescue-pro image). API: `openstack server rescue`.                                                                                                                                                                      |
-| prd `srv2116886` 72.60.186.43    | Hostinger VPS (id 2116886)        | hPanel > VPS > Browser console / Recovery mode. API: `https://developers.hostinger.com/api/vps/v1/virtual-machines/2116886` (`HOSTINGER_API_TOKEN` on the PC): `POST .../recovery`, `POST .../restart`.                                                                                     |
+| fr1 `<fr1-hostname>` <fr1-public-ip> | OVH VPS (KVM)                     | OVH Manager > Bare Metal Cloud > VPS > `<fr1-hostname>.vps.ovh.net` > "Reboot in rescue mode" (credentials sent by e-mail), or web KVM console (serial `ttyS0` and `tty1` active in the cmdline). In rescue: `mount /dev/sda1 /mnt` (ext4 root); `/home` = btrfs `sdb1+sdc1`, subvol `@home`. |
+| fr2 `<fr2-hostname>` <fr2-public-ip>         | OVH Public Cloud (OpenStack Nova) | OVH Manager > Public Cloud > Instances > "VNC console" or "Rescue" (rescue-pro image). API: `openstack server rescue`.                                                                                                                                                                      |
+| prd `<prd-hostname>` <prd-public-ip>    | Hostinger VPS (id 2116886)        | hPanel > VPS > Browser console / Recovery mode. API: `https://developers.hostinger.com/api/vps/v1/virtual-machines/2116886` (`HOSTINGER_API_TOKEN` on the PC): `POST .../recovery`, `POST .../restart`.                                                                                     |
 
 ssh: keys only on all three nodes (`PasswordAuthentication no`, root `prohibit-password`). The PC goes through the public IPs (`~/.ssh/config`), never through the mesh. Cutting the mesh therefore does not cut access.
 
@@ -21,8 +21,8 @@ ssh: keys only on all three nodes (`PasswordAuthentication no`, root `prohibit-p
 
 ## WireGuard
 
-- Topology: fr1 hub `wg1` 10.200.77.0/24 (port 51821). fr2 (45667) and prd (`vps`, 52245) have a direct peer between them, and `fleet-wg-failover@` (30 s timer) removes the direct route when the handshake is older than 150 s: the hub then takes over. The PC goes through the hub, plus a direct link with prd (`prod`, 10.200.78.0/30).
-- Known issue (2026-11-12): UDP from OVH (fr1 and fr2) to prd is intermittently filtered upstream after large volumes, for about 15 to 20 min. ICMP still passes. Large transfers to prd therefore go over TCP: NativeLink via `fleet-tunnel-nativelink` (ssh -L), rsync via `ssh root@72.60.186.43`.
+- Topology: fr1 hub `wg1` <mesh-cidr> (port 51821). fr2 (45667) and prd (`vps`, 52245) have a direct peer between them, and `fleet-wg-failover@` (30 s timer) removes the direct route when the handshake is older than 150 s: the hub then takes over. The PC goes through the hub, plus a direct link with prd (`prod`, 10.200.78.0/30).
+- Known issue (2026-11-12): UDP from OVH (fr1 and fr2) to prd is intermittently filtered upstream after large volumes, for about 15 to 20 min. ICMP still passes. Large transfers to prd therefore go over TCP: NativeLink via `fleet-tunnel-nativelink` (ssh -L), rsync via `ssh root@<prd-public-ip>`.
 - Configs: `/etc/wireguard/*.conf` (0600), backed up every day to `r2:aphrody-archive/fleet/<host>/` (tar of `/etc`).
 - Rotation of the PC key: `wg/rotate-wg-win.sh`.
 
@@ -61,7 +61,7 @@ ssh: keys only on all three nodes (`PasswordAuthentication no`, root `prohibit-p
    - restore of the latest R2 archive, fetched by a peer and decrypted on the PC. Kept from the fresh image: machine-id, ssh host keys, fstab, grub and network. SQLite databases are put back in place;
    - `just fleet-resilience apply`, `just cluster-deploy`, `just agents-install`;
    - finally check, fleet-health, backup and restore test.
-3. fr1 only: `infra/fleet/fr1/sysctl` and `limits`, `install-build-deps.py --no-prompt --unsupported --no-syms --no-arm --no-chromeos-fonts`, NativeLink `deploy.sh server` then `deploy.sh worker 10.200.77.1 100000000000 10` (cache on the btrfs subvol `/home/nativelink-worker`).
+3. fr1 only: `infra/fleet/fr1/sysctl` and `limits`, `install-build-deps.py --no-prompt --unsupported --no-syms --no-arm --no-chromeos-fonts`, NativeLink `deploy.sh server` then `deploy.sh worker <fr1-mesh-ip> 100000000000 10` (cache on the btrfs subvol `/home/nativelink-worker`).
 
 ## Load limits
 

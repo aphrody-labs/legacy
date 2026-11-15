@@ -1,6 +1,6 @@
 # Filesystems for build and monorepo workloads: XFS vs ext4 vs btrfs
 
-Measured 2026-11-15 on fr1 (`ssh vps`, kernel 7.3.0-10-generic, 12 cores, 45 GB RAM). Raw logs and scripts: `scripts/bench/fs-bench.sh`, `fs-chain.sh`.
+Measured 2026-11-15 on fr1 (`ssh <fr1>`, kernel 7.3.0-10-generic, 12 cores, 45 GB RAM). Raw logs and scripts: `scripts/bench/fs-bench.sh`, `fs-chain.sh`.
 
 ## Verdict
 

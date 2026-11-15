@@ -1,6 +1,6 @@
 # Proof: monorepo on Android x86_64 (x86_64-linux-android)
 
-Run 2026-11-15 on fr1 (`ssh vps`, 12 cores, /dev/kvm) with `bun scripts/android-x64.ts` (recipe `just android-x64`); full log in `target/android-x64/proof.txt` on fr1. Nothing was compiled on the PC.
+Run 2026-11-15 on fr1 (`ssh <fr1>`, 12 cores, /dev/kvm) with `bun scripts/android-x64.ts` (recipe `just android-x64`); full log in `target/android-x64/proof.txt` on fr1. Nothing was compiled on the PC.
 
 ## Toolchain (fr1, profile ci, from `infra/android/android.toml`)
 

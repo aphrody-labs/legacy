@@ -16,17 +16,17 @@ Production-ready mail infrastructure for `aphrody.com` powered by **Stalwart Mai
 
 Outbound deliverability to Gmail, Outlook, and corporate MX relays requires matching forward (`A`) and reverse (`PTR`) DNS records on OVHcloud:
 
-1. **OVH `fr1` (`51.77.147.152`)**:
-   - Forward DNS (Cloudflare, unproxied DNS-only): `mail.aphrody.com. IN A 51.77.147.152`
-   - OVH Manager / API Reverse PTR: Set reverse DNS of `51.77.147.152` (and its IPv6 `/128` host address) to `mail.aphrody.com.`
+1. **OVH `fr1` (`<fr1-public-ip>`)**:
+   - Forward DNS (Cloudflare, unproxied DNS-only): `mail.aphrody.com. IN A <fr1-public-ip>`
+   - OVH Manager / API Reverse PTR: Set reverse DNS of `<fr1-public-ip>` (and its IPv6 `/128` host address) to `mail.aphrody.com.`
    - Verify outbound TCP port `25` is unblocked in OVHcloud Anti-Spam / Edge Firewall.
-2. **OVH `fr2` (`51.255.162.6`)**:
-   - Forward DNS (Cloudflare, unproxied DNS-only): `mx2.aphrody.com. IN A 51.255.162.6`
-   - OVH Manager / API Reverse PTR: Set reverse DNS of `51.255.162.6` to `mx2.aphrody.com.`
+2. **OVH `fr2` (`<fr2-public-ip>`)**:
+   - Forward DNS (Cloudflare, unproxied DNS-only): `mx2.aphrody.com. IN A <fr2-public-ip>`
+   - OVH Manager / API Reverse PTR: Set reverse DNS of `<fr2-public-ip>` to `mx2.aphrody.com.`
 
 ## 3. Dual DKIM Key Generation & Stalwart Deployment
 
-On `fr1` (`51.77.147.152`):
+On `fr1` (`<fr1-public-ip>`):
 
 ```bash
 # 1. Generate Ed25519 primary key + RSA-2048 compatibility key inside restricted volume:
@@ -64,10 +64,10 @@ BIMI (`default._bimi.aphrody.com`) references `https://aphrody.com/assets/brand/
 To allow `contact@aphrody.com` to work with both Google Workspace (Calendar, Meet, Docs, Google Cloud Org Identity) and Stalwart JMAP/IMAP:
 
 1. **Google Workspace Admin Console (`admin.google.com` -> Apps -> Google Workspace -> Gmail -> Routing)**:
-   - Add `mail.aphrody.com` (`51.77.147.152`) to **Inbound Gateway** IPs so forwarded messages preserve original SPF alignment.
+   - Add `mail.aphrody.com` (`<fr1-public-ip>`) to **Inbound Gateway** IPs so forwarded messages preserve original SPF alignment.
    - Configure **Split Delivery** rule routing non-Workspace mailboxes (`noreply@`, `dmarc@`, `ai@`, programmatic JMAP mailboxes) to `mail.aphrody.com:25` over mandatory TLS, or keep `mail.aphrody.com` as priority `10` MX forwarding a copy of `contact@aphrody.com` (`workspace-copy@aphrody.com`) via the `google-workspace-split` route in `config/stalwart.toml`.
 2. **Unified SPF**:
-   - `v=spf1 mx a:mail.aphrody.com ip4:51.77.147.152 ip4:51.255.162.6 include:_spf.google.com ~all` authorizes both OVH Stalwart nodes and Google Workspace outbound relays.
+   - `v=spf1 mx a:mail.aphrody.com ip4:<fr1-public-ip> ip4:<fr2-public-ip> include:_spf.google.com ~all` authorizes both OVH Stalwart nodes and Google Workspace outbound relays.
 
 ## 6. Transactional & Org Provider SMTP / JMAP Wiring (`contact@aphrody.com`)
 
