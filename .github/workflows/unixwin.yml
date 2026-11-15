@@ -97,6 +97,12 @@ jobs:
           grep -q "^basename.winux$" list.txt
           target/release/ay applet basename /a/b.txt .txt > out.txt
           test "$(tr -d '\r' < out.txt)" = "b"
+      # The proof of the Windows applets: each one runs for real and its output is compared with the expected bytes; the lines are the evidence.
+      - name: Proof run (applets and ay sh against expected output)
+        shell: bash
+        run: |
+          bun scripts/unixwin-proof.ts target/release/ay.exe --md proof-windows.md | tee proof-windows.txt
+          cat proof-windows.md >> "$GITHUB_STEP_SUMMARY"
       - name: WinuxCmd corpus through ay applet (argv0 winuxcmd)
         shell: bash
         run: |
@@ -118,3 +124,9 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with: { name: windows-compare, path: "*-compare.txt" }
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with: { name: windows-proof, path: "proof-windows.*" }
+      # The binary the proof ran, for installing on the workstation (ay and niu run there; see docs/proofs).
+      - uses: actions/upload-artifact@v7
+        with: { name: ay-windows-x86_64, path: target/release/ay.exe, if-no-files-found: error }
