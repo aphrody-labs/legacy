@@ -1,8 +1,6 @@
 # tv-core
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Types communs du domaine média tv : rationnels, temps, flux, médias, erreurs.
 
 | Type | Path |

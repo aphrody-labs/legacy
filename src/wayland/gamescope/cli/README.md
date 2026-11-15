@@ -1,8 +1,6 @@
 # gamescope-cli
 
 <!-- catalog:begin unit -->
-<img src="../../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Gamescope CLI micro-compositor runtime, benchmarker, and window presenter
 
 | Type | Path |

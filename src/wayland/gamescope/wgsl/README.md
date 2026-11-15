@@ -1,8 +1,6 @@
 # gamescope-wgsl
 
 <!-- catalog:begin unit -->
-<img src="../../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Gamescope WGSL compute shaders (FSR 1.0 EASU, RCAS, HDR Compositor) and wgpu pipeline runner
 
 | Type | Path |

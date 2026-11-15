@@ -1,8 +1,6 @@
 # gamescope-web-wasm
 
 <!-- catalog:begin unit -->
-<img src="../../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Gamescope WebAssembly / WebGPU client for Chromium
 
 | Type | Path |

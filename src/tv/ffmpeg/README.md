@@ -1,8 +1,6 @@
 # tv-ffmpeg
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Wrapper sûr au-dessus de ffmpeg-next (libav* 9.x) qui produit les types tv-core.
 
 | Type | Path |

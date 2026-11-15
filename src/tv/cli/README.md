@@ -1,8 +1,6 @@
 # tv-cli
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Interface en ligne de commande du domaine média tv.
 
 | Type | Path |

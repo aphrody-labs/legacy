@@ -1,8 +1,6 @@
 # gamescope-core
 
 <!-- catalog:begin unit -->
-<img src="../../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Gamescope core micro-compositor frame pacing, scaling math, layer composition, and HDR color science
 
 | Type | Path |
