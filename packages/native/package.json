@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Global Zig native desktop SDK core (vercel-labs/native) and bun:ffi bindings",
+  "description": "bun:ffi bindings for the Zig native desktop SDK (third_party/native, vercel-labs/native)",
   "exports": {
     ".": "./src/index.ts"
   },

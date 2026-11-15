@@ -1,4 +1,4 @@
-// bun:ffi bindings for the Zig Native SDK C ABI (native/src/embed/c_api.zig).
+// bun:ffi bindings for the Zig Native SDK C ABI (third_party/native/src/embed/c_api.zig).
 // Exposes lifecycle, viewport, and GPU frame state entrypoints from `native_sdk_app_*`.
 
 import { dlopen, FFIType, type Pointer, suffix } from "bun:ffi";
@@ -57,14 +57,14 @@ export const NATIVE_SYMBOLS = {
 
 export type NativeLib = ReturnType<typeof dlopen<typeof NATIVE_SYMBOLS>>;
 
-/** Search order: $APHRODY_NATIVE_LIB, ~/.local/bin, packages/native/native/zig-out/lib, packages/native/native/zig-out/bin. */
+/** Search order: $APHRODY_NATIVE_LIB, ~/.local/bin, third_party/native/zig-out/lib, third_party/native/zig-out/bin. */
 export function nativeLibCandidates(): string[] {
-  const pkgRoot = join(import.meta.dir, "..");
+  const upstream = join(import.meta.dir, "..", "..", "..", "third_party", "native");
   return [
     process.env.APHRODY_NATIVE_LIB,
     join(homedir(), ".local", "bin", NATIVE_LIB_FILE),
-    join(pkgRoot, "native", "zig-out", "lib", NATIVE_LIB_FILE),
-    join(pkgRoot, "native", "zig-out", "bin", NATIVE_LIB_FILE),
+    join(upstream, "zig-out", "lib", NATIVE_LIB_FILE),
+    join(upstream, "zig-out", "bin", NATIVE_LIB_FILE),
   ].filter((p): p is string => Boolean(p));
 }
 

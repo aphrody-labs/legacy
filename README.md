@@ -17,7 +17,7 @@ Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md)
 - **Agent OS (`@aphrody/ai-os`)**: cross-platform sandboxed Unix/GNU-like OS distribution for agents unifying FHS VFS (`/etc/ai-os`, `/var/lib/ai-os`, `/proc/agent`, `/dev/{llm,rag,world,sys1}`), LLM, RAG, World Model, and System 1 decision under one C ABI (`aphrody_core_capi`).
 - **Bun Runtime**: pure Bun TypeScript packages with zero third-party npm dependencies (`bun:ffi`, `bun:sqlite`, `Bun.Glob`, `Bun.serve`).
 - **Rust 2024 Workspace**: 215 crates in `src/*` (edition 2024, rust-version 1.85, 419 workspace dependencies), 130 of them absorbed from Bun.
-- **Zig Native Cores**: `packages/native/native` and browser cores exporting stable C ABI symbols via `aphrody_zig.h`.
+- **Zig Native Cores**: `third_party/native` (vercel-labs/native, bound by `packages/native`) and browser cores exporting stable C ABI symbols via `aphrody_zig.h`.
 - **Modern Web Guidance (`@aphrody/wck`)**: pure Bun + `mwg_capi` (`packages/wck/native`) hybrid RAG search, Baseline gates, and MCP tools. See [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx).
 - **`ay` Multicall CLI**: unified repository interface (`ay arch check --strict`, `ay manifests`, `ay gaming`, `ay steam`).
 

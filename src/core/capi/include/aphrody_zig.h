@@ -2,7 +2,7 @@
 #define APHRODY_ZIG_H
 
 /* Canonical C23/C11/C++23 ABI header for the monorepo Zig cores:
- * - packages/native/native (`libnative_sdk` / `native_sdk_app_*`)
+ * - third_party/native (`libnative_sdk` / `native_sdk_app_*`)
  * - packages/browser of aphrody-labs/open (`browser_capi`)
  * Consumed by C, C++23, Rust (`src/ffi`), and Bun (`bun:ffi`).
  */
