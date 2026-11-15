@@ -1,8 +1,8 @@
-# Serveur d'extraction compatible OpenAI pour auto (AUTO_LLM_URL) : llama.cpp compilé sur Alpine.
-# Pas d'image officielle llama.cpp ici (base Ubuntu, exclue par la politique conteneurs).
+# OpenAI-compatible extraction server for auto (AUTO_LLM_URL): llama.cpp built on Alpine.
+# No official llama.cpp image here (Ubuntu base, excluded by the container policy).
 #
 #   docker build -f docker/llm.Dockerfile -t auto-llm:<tag> docker
-#   docker run -v /srv/auto/llm:/models:ro auto-llm:<tag>   (modèle : /models/model.gguf)
+#   docker run -v /srv/auto/llm:/models:ro auto-llm:<tag>   (model: /models/model.gguf)
 
 FROM alpine:3.23 AS build
 ARG LLAMA_TAG=v0.9.0

@@ -2,21 +2,24 @@
 
 ## Image
 
-`docker/app.Dockerfile` builds a single image for the API and the worker:
+`docker/app.Dockerfile` builds every production image on Alpine from the repository root; the Rust suite is vendored
+in `vendor/suite`. Stages (`--target`):
 
-1. `natif` stage: `cargo build --release -p auto-ffi` (Linux);
-2. final stage: Debian trixie, Aphrody runtime taken from the `aphrody-labs/bun` GitHub release (`BUN_TAG`,
-   default `bun-v1.4.5`) and verified with `SHA256SUMS.txt`, production dependencies, `libauto_ffi.so`.
+- `precompiled`: API and worker, native library already built (`native/`), copied from
+  `ay build -t linux-musl --release --dylib -- -p auto-ffi`;
+- `application`: reference build, native library compiled in the image (`natif` stage, `rust:1.99-alpine`);
+- `web`: front end, without Chromium, OCR or native library;
+- `sauvegarde`: encrypted `pg_dump` (host cron).
+
+The runtime is the official Bun Alpine image (`BUN_IMAGE`, default `oven/bun:1.4.4-alpine`). `Bun.Video` belongs to
+the Aphrody fork and is absent there: the video nodes fail with a clear message.
 
 ```sh
-docker build -f docker/app.Dockerfile -t auto-app .
+docker build --target precompiled -t auto-app:<version> .
 ```
 
-The image runs as user `auto` (uid 10001), listens on `PORT` (3000) and exposes `/health`.
-The worker uses the same image: `docker run … auto-app bun apps/worker/src/index.ts`.
-
-The `https://aphrody.app/install(.sh)` scripts currently return an HTML page, so the image downloads the
-release archive directly.
+The image runs as uid 10001 (`auto`), listens on `PORT` (3000 for the API, 3001 for the web image) and exposes
+`/health`. The worker uses the same image: `docker run … auto-app bun apps/worker/src/index.ts`.
 
 ## Variables
 

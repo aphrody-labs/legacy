@@ -1,0 +1,29 @@
+name: Feature
+description: Propose a change
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Need
+      description: The user's problem, not the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Acceptance criteria
+      description: How to check that it is done.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Invoicing, Factur-X / PA, Mail, Office files, Video, Employees, Agents / RAG, API, Other]
+    validations:
+      required: true

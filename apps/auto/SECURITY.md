@@ -1,5 +1,5 @@
-# Sécurité
+# Security
 
-Signalez toute vulnérabilité en privé via [un avis de sécurité GitHub](https://github.com/aphrody-labs/auto/security/advisories/new), jamais dans une issue. Réponse sous 72 heures ouvrées.
+Report any vulnerability privately through [a GitHub security advisory](https://github.com/aphrody-labs/auto/security/advisories/new), never in an issue. Answer within 72 working hours.
 
-Périmètre prioritaire : isolation entre tenants (RLS), authentification et rôles, intégrité de la numérotation et de l'audit chaîné, Factur-X, données personnelles (RGPD).
+Priority scope: isolation between tenants (RLS), authentication and roles, integrity of numbering and of the chained audit, Factur-X, personal data (GDPR).

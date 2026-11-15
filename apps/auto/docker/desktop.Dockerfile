@@ -1,5 +1,5 @@
-# Compilation de la coque de bureau Tauri (apps/desktop) sans MSVC : Linux natif (WebKitGTK) et Windows par
-# compilation croisée MinGW (cible x86_64-pc-windows-gnu, WebView2).
+# Build of the Tauri desktop shell (apps/desktop) without MSVC: native Linux (WebKitGTK) and Windows through MinGW
+# cross-compilation (target x86_64-pc-windows-gnu, WebView2).
 FROM rust:1.99
 RUN rustup target add x86_64-pc-windows-gnu && rustup component add rustfmt clippy \
  && apt-get update -qq \

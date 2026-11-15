@@ -1,7 +1,7 @@
 [project]
 name = "auto-video-voice"
 version = "0.1.0"
-description = "Voix locale en français pour la vidéo de présentation Auto"
+description = "Local French voice for the Auto presentation video"
 requires-python = ">=3.12,<3.13"
 dependencies = ["chatterbox-tts==0.1.7", "torch==2.6.0", "torchaudio==2.6.0"]
 

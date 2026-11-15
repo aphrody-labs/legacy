@@ -1,4 +1,4 @@
-"""Synthèse locale Chatterbox Multilingual V3 à partir d'une voix consentie."""
+"""Local Chatterbox Multilingual V3 synthesis from a consented voice."""
 
 import argparse
 import json
@@ -13,23 +13,23 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--textes", type=Path, required=True)
 parser.add_argument("--reference", type=Path, required=True)
 parser.add_argument("--destination", type=Path, required=True)
-parser.add_argument("--limit", type=int, default=0, help="Nombre de premières scènes à synthétiser pour qualifier la voix")
-parser.add_argument("--scene", help="Synthétiser uniquement cette scène")
+parser.add_argument("--limit", type=int, default=0, help="Number of first scenes to synthesize to qualify the voice")
+parser.add_argument("--scene", help="Synthesize only this scene")
 args = parser.parse_args()
 
 if not torch.cuda.is_available():
-    raise RuntimeError("CUDA indisponible ; la synthèse vidéo doit être vérifiée sur le GPU prévu")
+    raise RuntimeError("CUDA unavailable; the video synthesis must be checked on the intended GPU")
 
 args.destination.mkdir(parents=True, exist_ok=True)
-# La version PyPI 0.1.7 fournie par `chatterbox-tts` expose le checkpoint V2
-# et ne possède pas encore le paramètre `t3_model` documenté sur la branche main.
+# The PyPI version 0.1.7 provided by `chatterbox-tts` exposes the V2 checkpoint
+# and does not yet have the `t3_model` parameter documented on the main branch.
 model = ChatterboxMultilingualTTS.from_pretrained(device="cuda")
 model.prepare_conditionals(str(args.reference.resolve()), exaggeration=0.5)
 scenes = json.loads(args.textes.read_text(encoding="utf-8-sig"))
 if args.scene:
     selected = [scene for scene in scenes if scene["id"] == args.scene]
     if not selected:
-        raise ValueError(f"Scène inconnue : {args.scene}")
+        raise ValueError(f"Unknown scene: {args.scene}")
 else:
     selected = scenes[: args.limit] if args.limit > 0 else scenes
 for index, scene in enumerate(selected, 1):

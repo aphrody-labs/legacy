@@ -1,31 +1,31 @@
 name: Bug
-description: Un comportement incorrect
+description: Incorrect behavior
 labels: [bug]
 body:
   - type: textarea
-    id: constat
+    id: finding
     attributes:
-      label: Constat
-      description: Ce qui se passe, avec le message d'erreur exact.
+      label: Finding
+      description: What happens, with the exact error message.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
       label: Reproduction
-      description: Étapes minimales, données anonymisées.
+      description: Minimal steps, anonymized data.
     validations:
       required: true
   - type: textarea
-    id: attendu
+    id: expected
     attributes:
-      label: Attendu
+      label: Expected
     validations:
       required: true
   - type: dropdown
-    id: domaine
+    id: area
     attributes:
-      label: Domaine
-      options: [Facturation, Factur-X / PA, Mail, Bureautique, Vidéo, Employés, Agents / RAG, API, Autre]
+      label: Area
+      options: [Invoicing, Factur-X / PA, Mail, Office files, Video, Employees, Agents / RAG, API, Other]
     validations:
       required: true
