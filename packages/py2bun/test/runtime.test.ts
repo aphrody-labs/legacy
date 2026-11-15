@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import * as py from "../src/runtime/index";
+import { findBinary } from "../src/index";
 import * as math from "../src/runtime/math";
 import * as json from "../src/runtime/json";
 import * as struct from "../src/runtime/struct";
@@ -141,5 +142,21 @@ describe("stdlib", () => {
     expect(json.dumps(py.dict(py.kw({ a: [1, 2] })))).toBe('{"a": [1, 2]}');
     expect(py.getitem(json.loads('{"a": 1}'), "a")).toBe(1);
     expect(struct.unpack("<IH", struct.pack("<IH", 0xdeadbeef, 513))).toEqual([0xdeadbeef, 513]);
+  });
+});
+
+describe("review fixes", () => {
+  test("json.dumps leaves separators inside strings untouched", () => {
+    expect(json.dumps(new Map([["a,b", "x:1,2"]]))).toBe('{"a,b": "x:1,2"}');
+    expect(json.dumps([1, 2])).toBe("[1, 2]");
+  });
+  (findBinary() ? test : test.skip)("cli accepts a script without -o", () => {
+    const { writeFileSync, mkdtempSync } = require("node:fs");
+    const { tmpdir } = require("node:os");
+    const d = mkdtempSync(tmpdir() + "/p2b-");
+    writeFileSync(d + "/s.py", "print(1)\n");
+    const r = Bun.spawnSync([process.execPath, import.meta.dir + "/../src/cli.ts", d + "/s.py"], { stdout: "pipe", stderr: "pipe" });
+    expect(r.exitCode).toBe(0);
+    expect(r.stdout.toString()).toContain("print");
   });
 });

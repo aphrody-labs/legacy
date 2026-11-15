@@ -7,6 +7,16 @@
 - Verdict counts (rows, sub-claims counted separately): 309 confirmed, 81 partial, 17 refuted.
 - Verification caveats: a Gemini defect is "partial" when the observation is real but the stated cause, severity or example is wrong. Verifier rows written in French come from the French Gemini plans. Gemini artefact plans (not archived here) were read from `~/.gemini/antigravity-cli/brain/`.
 
+## Fixed (2026-11-15, regression tests added)
+
+- [x] emit.rs destructuring/for targets with subscript or non-final `*x`: `store_unpack` binds a temporary then `store()`s each element; test `destructuring_subscript_and_mid_star_have_no_unsupported_lhs`.
+- [x] emit.rs `+=` native operators: `simple_rhs` shortcut removed, augmented add routes to `__py.iadd`; test `augmented_assign_uses_iadd_not_native_plus_equals`.
+- [x] emit.rs comprehension first iterable evaluated outside the comprehension scope (TDZ); test `comprehension_first_iterable_evaluated_outside_scope`.
+- [x] Bridge.java `isRawList` always true: `InlineList` marker class; string request id encoded by `idJson`; `Long.MIN_VALUE` range check. Test in `packages/ghidra/test/ghidra.test.ts`.
+- [x] json.ts `dumps` string corruption; `cli.ts` `py2bun script.py` without `-o`: tests in `packages/py2bun/test/runtime.test.ts`.
+- [x] GHIDRA.md:7 Chromium clang (24.0.0git) documented; provision-fr2.sh installs JDK 25 with `set -euo pipefail`, `apt-get update`, optional SHA256.
+- Not fixed yet: chained comparison short-circuit, `not x` double emission, float `inf`, `def f(x=x)` default evaluation, and the remaining 300+ rows below.
+
 ## Highest-impact confirmed defects (details and fixes in the tables)
 
 1. `emit.rs:754,771,781,824,1695`: destructuring or `for` targets with a subscript, attribute or non-final `*x` place `__py.unsupported(...)` inside a JS left-hand side: the whole emitted file fails to parse. Fix: bind temporaries, then `store()` after.

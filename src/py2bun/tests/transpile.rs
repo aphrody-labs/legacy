@@ -88,3 +88,24 @@ fn undefined_name_is_warned() {
     let o = transpile("print(zzz)\n");
     assert!(o.diagnostics.iter().any(|d| d.severity == Severity::Warning && d.message.contains("zzz")));
 }
+
+#[test]
+fn destructuring_subscript_and_mid_star_have_no_unsupported_lhs() {
+    let o = ts("a = [0, 0]\nd = {}\na[0], d['k'] = 1, 2\nfirst, *mid, last = [1, 2, 3, 4]\nfor a[1], d['z'] in [(1, 2)]:\n    pass\n");
+    assert!(!o.contains("__py.unsupported"), "{o}");
+    assert!(o.contains("__py.setitem"), "{o}");
+    assert!(o.contains(".slice("), "{o}");
+}
+
+#[test]
+fn augmented_assign_uses_iadd_not_native_plus_equals() {
+    let o = ts("x = []\nx += 'ab'\ny = 1\ny += 2\n");
+    assert!(o.contains("__py.iadd(x"), "{o}");
+    assert!(!o.contains(" += "), "{o}");
+}
+
+#[test]
+fn comprehension_first_iterable_evaluated_outside_scope() {
+    let o = ts("x = [1, 2]\nr = [x for x in x]\n");
+    assert!(o.contains("(__i0) =>") && o.contains(")(x)"), "{o}");
+}

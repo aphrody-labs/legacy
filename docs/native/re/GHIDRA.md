@@ -4,7 +4,7 @@ Fork of NationalSecurityAgency/ghidra, level with upstream master when forked (c
 
 ## LLVM native build
 
-- Decompiler and sleigh C++ (`Ghidra/Features/Decompiler/src/decompile/cpp`): `make LLVM=1 ghidra_opt sleigh_opt` = `clang++ -O3 -flto=full -fuse-ld=lld` (full LTO, not thin). Toolchain measured: Ubuntu clang 23.1.6 on fr1; no Chromium clang tree found under `/srv/chromium`.
+- Decompiler and sleigh C++ (`Ghidra/Features/Decompiler/src/decompile/cpp`): `make LLVM=1 ghidra_opt sleigh_opt` = `clang++ -O3 -flto=full -fuse-ld=lld` (full LTO, not thin). Toolchain measured: Ubuntu clang 23.1.6 (`/usr/local/bin/clang++`). A Chromium clang (24.0.0git, 2026-11-12) exists at `/srv/chromium/src/third_party/llvm-build/Release+Asserts/bin/clang++` on fr1 and was not used for the numbers below (commit 1c3e0c59c0).
 - `buildNatives.gradle` Clang branch moved to the same flags. Known limit: with Gradle 9.8.2 the Gcc toolchain is still selected first on Linux even when only `clang(Clang)` is registered, so the Gradle path stays on g++; use the Makefile for LLVM builds.
 - Measured on fr2 (hyperfine, 5 runs, x86-64.slaspec compile): gcc -O2 992 ms, clang -O3 full LTO 913 ms (1.09x); output `.sla` byte-identical.
 

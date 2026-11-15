@@ -751,9 +751,45 @@ impl<'s> Emitter<'s> {
                 let (o, k) = (self.expr(&s.value), self.subscript_key(&s.slice));
                 format!("__py.setitem({o}, {k}, {val})")
             }
-            Expr::Tuple(_) | Expr::List(_) => format!("{} = {}", self.pattern(target), val),
+            Expr::Tuple(_) | Expr::List(_) if self.simple_pattern(target) => format!("{} = {}", self.pattern(target), val),
+            Expr::Tuple(t) => self.store_unpack(&t.elts, val),
+            Expr::List(t) => self.store_unpack(&t.elts, val),
             _ => self.unsupported(target.range(), "assignment target"),
         }
+    }
+
+    /// True when the target maps onto a JS destructuring pattern (no subscript, `*x` only last).
+    fn simple_pattern(&self, e: &Expr) -> bool {
+        match e {
+            Expr::Name(_) | Expr::Attribute(_) => true,
+            Expr::Starred(s) => self.simple_pattern(&s.value),
+            Expr::Tuple(t) => self.simple_list(&t.elts),
+            Expr::List(t) => self.simple_list(&t.elts),
+            _ => false,
+        }
+    }
+
+    fn simple_list(&self, v: &[Expr]) -> bool {
+        let n = v.len();
+        v.iter().enumerate().all(|(i, e)| (!matches!(e, Expr::Starred(_)) || i + 1 == n) && self.simple_pattern(e))
+    }
+
+    /// General unpacking: bind a temporary array, then `store()` each element (subscripts, mid `*x`).
+    fn store_unpack(&mut self, elts: &[Expr], val: &str) -> String {
+        let t = self.fresh("u");
+        let n = elts.len();
+        let star = elts.iter().position(|e| matches!(e, Expr::Starred(_)));
+        let mut parts = vec![format!("const {t} = [...__py.iter({val})];")];
+        for (i, e) in elts.iter().enumerate() {
+            let (inner, v) = match (star, e) {
+                (Some(s), Expr::Starred(st)) if s == i => (&*st.value, format!("{t}.slice({i}, {t}.length - {})", n - i - 1)),
+                (Some(s), _) if i > s => (e, format!("{t}[{t}.length - {}]", n - i)),
+                _ => (e, format!("{t}[{i}]")),
+            };
+            let st = self.store(inner, &v);
+            parts.push(format!("{st};"));
+        }
+        format!("{{ {} }}", parts.join(" "))
     }
 
     fn target_name(&mut self, n: &str) -> String {
@@ -788,21 +824,9 @@ impl<'s> Emitter<'s> {
 
     fn aug_assign(&mut self, a: &StmtAugAssign) {
         let v = self.expr(&a.value);
-        let simple_rhs = matches!(&*a.value, Expr::NumberLiteral(_) | Expr::StringLiteral(_));
         if let Expr::Name(n) = &*a.target {
             let t = ident(n.id.as_str());
-            let line = match a.op {
-                Operator::Add | Operator::Sub | Operator::Mult | Operator::Div | Operator::Pow if simple_rhs && !matches!(a.op, Operator::Mult) => {
-                    let op = match a.op {
-                        Operator::Add => "+=",
-                        Operator::Sub => "-=",
-                        Operator::Div => "/=",
-                        _ => "**=",
-                    };
-                    format!("{t} {op} {v};")
-                }
-                _ => format!("{t} = {};", self.binop_str(a.op, &t, &v, true)),
-            };
+            let line = format!("{t} = {};", self.binop_str(a.op, &t, &v, true));
             self.line(&line);
             return;
         }
@@ -821,7 +845,13 @@ impl<'s> Emitter<'s> {
             self.line(&format!("let {fl} = true;"));
         }
         let it = self.expr(&f.iter);
-        let pat = self.pattern(&f.target);
+        let (pat, pre) = if self.simple_pattern(&f.target) {
+            (self.pattern(&f.target), None)
+        } else {
+            let t = self.fresh("e");
+            let st = self.store(&f.target, &t);
+            (format!("const {t}"), Some(st))
+        };
         let use_async = self.asyncs && self.no_await == 0;
         let aw = if f.is_async || use_async { " await" } else { "" };
         let iter = if f.is_async {
@@ -832,6 +862,11 @@ impl<'s> Emitter<'s> {
             format!("__py.iter({it})")
         };
         self.line(&format!("for{aw} ({pat} of {iter}) {{"));
+        if let Some(st) = pre {
+            self.ind += 1;
+            self.line(&format!("{st};"));
+            self.ind -= 1;
+        }
         self.loops.push(flag.clone());
         self.block(&f.body);
         self.loops.pop();
@@ -1569,6 +1604,7 @@ impl<'s> Emitter<'s> {
 
     fn binop_str(&mut self, op: Operator, l: &str, r: &str, _aug: bool) -> String {
         match op {
+            Operator::Add if _aug => format!("__py.iadd({l}, {r})"),
             Operator::Add => format!("__py.add({l}, {r})"),
             Operator::Sub => format!("({l} - {r})"),
             Operator::Mult => format!("__py.mul({l}, {r})"),
@@ -1639,19 +1675,27 @@ impl<'s> Emitter<'s> {
             names.extend(c.assigned.into_iter());
             collect_names(&g.target, &mut names);
         }
+        // the first iterable is evaluated in the enclosing scope (`[x for x in x]`, no TDZ)
+        let it0 = self.expr(&gens[0].iter);
         self.scopes.push(names);
         let acc = "__r";
         let aw = gens.iter().any(|g| g.is_async) || (self.asyncs && self.no_await == 0);
-        let mut s = format!("({}() => {{ const {acc} = ", if aw { "async " } else { "" });
+        let mut s = format!("({}(__i0) => {{ const {acc} = ", if aw { "async " } else { "" });
         s.push_str(match out {
             CompOut::List(_) => "[];",
             CompOut::Set(_) => "new Set();",
             CompOut::Dict(..) => "new Map();",
         });
         let mut close = String::new();
-        for g in gens {
-            let it = self.expr(&g.iter);
-            let pat = self.decl_pattern(&g.target);
+        for (gi, g) in gens.iter().enumerate() {
+            let it = if gi == 0 { "__i0".to_string() } else { self.expr(&g.iter) };
+            let (pat, pre) = if self.simple_pattern(&g.target) && !matches!(&g.target, Expr::Attribute(_)) && !self.has_attr(&g.target) {
+                (self.decl_pattern(&g.target), None)
+            } else {
+                let t = self.fresh("e");
+                let st = self.store(&g.target, &t);
+                (t, Some(st))
+            };
             if g.is_async {
                 s.push_str(&format!(" for await (const {pat} of {it}) {{"));
             } else if aw {
@@ -1660,6 +1704,9 @@ impl<'s> Emitter<'s> {
                 s.push_str(&format!(" for (const {pat} of __py.iter({it})) {{"));
             }
             close.push('}');
+            if let Some(st) = pre {
+                s.push_str(&format!(" {st};"));
+            }
             for cnd in &g.ifs {
                 let c = self.cond(cnd);
                 s.push_str(&format!(" if ({c}) {{"));
@@ -1681,12 +1728,22 @@ impl<'s> Emitter<'s> {
             }
         }
         s.push_str(&close);
-        s.push_str(&format!(" return {acc}; }})()"));
+        s.push_str(&format!(" return {acc}; }})({it0})"));
         self.scopes.pop();
         if aw {
             format!("(await {s})")
         } else {
             s
+        }
+    }
+
+    fn has_attr(&self, e: &Expr) -> bool {
+        match e {
+            Expr::Attribute(_) => true,
+            Expr::Starred(s) => self.has_attr(&s.value),
+            Expr::Tuple(t) => t.elts.iter().any(|x| self.has_attr(x)),
+            Expr::List(t) => t.elts.iter().any(|x| self.has_attr(x)),
+            _ => false,
         }
     }
 

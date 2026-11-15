@@ -100,3 +100,13 @@ describe("plugin + api helpers", () => {
     expect(new ProgramTypeError("x")).toBeInstanceOf(TypeError);
   });
 });
+
+describe("bridge review fixes", () => {
+  test("Bridge.java inlines only InlineList and encodes string ids", async () => {
+    const src = await Bun.file(import.meta.dir + "/../bridge/Bridge.java").text();
+    expect(src).not.toContain("isRawList");
+    expect(src).toContain("v instanceof InlineList");
+    expect(src).toContain("static String idJson");
+    expect(src).not.toContain("Math.abs(l)");
+  });
+});

@@ -17,7 +17,8 @@ export function dumps(o: any, ...a: any[]): string {
   const k = a.find((x) => x instanceof Kw)?.o ?? {};
   const ind = k.indent ?? undefined;
   let s = JSON.stringify(plain(o), null, ind);
-  if (ind === undefined) s = s.replace(/([,:])(?=["\[{\d\-tfn])/g, "$1 ");
+  // skip string literals so "," and ":" inside them are untouched
+  if (ind === undefined) s = s.replace(/"(?:[^"\\]|\\.)*"|([,:])/g, (m, p) => (p ? p + " " : m));
   return s;
 }
 export function loads(s: string): any {

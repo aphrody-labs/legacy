@@ -38,13 +38,19 @@ public final class Bridge {
     }
   }
 
+  static String idJson(Object id) {
+    if (id == null) return "null";
+    if (id instanceof Number) return id.toString();
+    return Json.str(String.valueOf(id));
+  }
+
   static String err(Object id, Throwable t) {
     while (t instanceof InvocationTargetException && t.getCause() != null) t = t.getCause();
     StringWriter sw = new StringWriter();
     t.printStackTrace(new PrintWriter(sw));
     String tr = sw.toString();
     if (tr.length() > 4000) tr = tr.substring(0, 4000);
-    return "{\"id\":" + (id == null ? "null" : Json.str(String.valueOf(id)).replace("\"", "")) + ",\"error\":{\"type\":"
+    return "{\"id\":" + idJson(id) + ",\"error\":{\"type\":"
         + Json.str(t.getClass().getName()) + ",\"message\":" + Json.str(String.valueOf(t.getMessage())) + ",\"trace\":"
         + Json.str(tr) + "}}";
   }
@@ -53,11 +59,11 @@ public final class Bridge {
     Object id = r.get("id");
     try {
       StringBuilder sb = new StringBuilder();
-      sb.append("{\"id\":").append(id == null ? "null" : id).append(",\"result\":");
+      sb.append("{\"id\":").append(idJson(id)).append(",\"result\":");
       enc(exec(r), sb);
       return sb.append('}').toString();
     } catch (Throwable t) {
-      return err(id, t).replaceFirst("^\\{\"id\":[^,]*", "{\"id\":" + (id == null ? "null" : id));
+      return err(id, t);
     }
   }
 
@@ -68,7 +74,7 @@ public final class Bridge {
     switch (op) {
       case "ping": return "pong";
       case "batch": {
-        List<Object> out = new ArrayList<>();
+        List<Object> out = new InlineList();
         for (Object o : (List<Object>) r.get("reqs")) {
           try { out.add(new Raw(handle2((Map<String, Object>) o))); } catch (Throwable t) { out.add(new Raw(err(null, t))); }
         }
@@ -138,7 +144,7 @@ public final class Bridge {
   }
 
   static List<Object> listOf(Object o) {
-    List<Object> out = new ArrayList<>();
+    List<Object> out = new InlineList();
     if (o == null) return out;
     if (o.getClass().isArray()) { for (int i = 0, n = Array.getLength(o); i < n; i++) out.add(Array.get(o, i)); }
     else if (o instanceof Map) { out.addAll(((Map<?, ?>) o).entrySet()); }
@@ -324,12 +330,12 @@ public final class Bridge {
     }
     if (v instanceof Long) {
       long l = (Long) v;
-      if (Math.abs(l) < (1L << 53)) sb.append(l); else sb.append("{\"$long\":\"").append(l).append("\"}");
+      if ((l > -(1L << 53) && l < (1L << 53))) sb.append(l); else sb.append("{\"$long\":\"").append(l).append("\"}");
       return;
     }
     if (v instanceof Number && (v instanceof Integer || v instanceof Short || v instanceof Byte)) { sb.append(((Number) v).longValue()); return; }
     if (v instanceof byte[]) { sb.append("{\"$bytes\":\"").append(Base64.getEncoder().encodeToString((byte[]) v)).append("\"}"); return; }
-    if (v instanceof List && v.getClass().getName().equals("java.util.ArrayList") && isRawList((List<?>) v)) {
+    if (v instanceof InlineList) {
       sb.append('[');
       boolean first = true;
       for (Object o : (List<?>) v) { if (!first) sb.append(','); first = false; enc(o, sb); }
@@ -341,8 +347,8 @@ public final class Bridge {
     sb.append("{\"$h\":").append(id).append(",\"c\":").append(Json.str(v.getClass().getName())).append('}');
   }
 
-  /** only lists produced by op list/batch are inlined (marker: ArrayList created here) */
-  static boolean isRawList(List<?> l) { return true; }
+  /** only InlineList (op list/batch results) is inlined by value; any other list becomes a handle */
+  static final class InlineList extends ArrayList<Object> {}
 
   /** Minimal JSON reader/writer helper. */
   static final class Json {
