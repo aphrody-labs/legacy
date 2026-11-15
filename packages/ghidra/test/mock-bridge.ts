@@ -1,14 +1,19 @@
 // Minimal protocol-compatible mock of bridge/Bridge.java for local tests (no JVM needed).
 import { createInterface } from "node:readline";
 const objs = new Map<number, any>();
+const idOf = new Map<any, number>(); // identity map, like Bridge.java's IdentityHashMap
 let n = 1;
 const enc = (v: any): any => {
   if (v === null || typeof v === "string" || typeof v === "boolean") return v;
   if (typeof v === "number") return v;
   if (typeof v === "bigint") return { $long: v.toString() };
   if (Array.isArray(v)) return v.map(enc);
-  const id = n++;
-  objs.set(id, v);
+  let id = idOf.get(v);
+  if (id === undefined) {
+    id = n++;
+    idOf.set(v, id);
+    objs.set(id, v);
+  }
   return { $h: id, c: v.constructor?.name ?? "Object" };
 };
 const dec = (v: any): any => (v && typeof v === "object" && "$h" in v ? objs.get(v.$h) : v && typeof v === "object" && "$long" in v ? BigInt(v.$long) : v);
@@ -24,29 +29,25 @@ class FlatMock {
   boom() { throw Object.assign(new Error("kaboom"), { type: "java.lang.IllegalStateException" }); }
 }
 const classes: Record<string, any> = { "mock.Flat": FlatMock, "java.lang.Math": { max: Math.max } };
-const run = (r: any): any => {
+const dispatch = (r: any): any => {
   const a = (r.a ?? []).map(dec);
-  if (r.op === "ping") return "pong";
-  if (r.op === "static") return enc(classes[r.c][r.m](...a));
-  throw new Error("op " + r.op);
+  switch (r.op) {
+    case "ping": return "pong";
+    case "batch": return r.reqs.map((q: any) => { try { return { id: q.id, result: dispatch(q) }; } catch (e: any) { return { id: q.id, error: { type: e.type ?? "Error", message: e.message, trace: "" } }; } });
+    case "new": return enc(new classes[r.c](...a));
+    case "static": return enc(classes[r.c][r.m](...a));
+    case "call": return enc(objs.get(r.h)[r.m](...a));
+    case "list": return objs.get(r.h).map(enc);
+    case "str": return String(objs.get(r.h));
+    case "release": for (const h of r.hs) { idOf.delete(objs.get(h)); objs.delete(h); } return null;
+    default: throw new Error("op " + r.op);
+  }
 };
 const rl = createInterface({ input: process.stdin });
 for await (const line of rl) {
   const r = JSON.parse(line);
-  const out = (res: any) => console.log(JSON.stringify({ id: r.id, result: res }));
   try {
-    const a = (r.a ?? []).map(dec);
-    switch (r.op) {
-      case "ping": out("pong"); break;
-      case "batch": out(r.reqs.map((q: any) => { try { return { id: q.id, result: run(q) }; } catch (e: any) { return { id: q.id, error: { type: "Error", message: e.message, trace: "" } }; } })); break;
-      case "new": out(enc(new classes[r.c](...a))); break;
-      case "static": out(enc(classes[r.c][r.m](...a))); break;
-      case "call": out(enc(objs.get(r.h)[r.m](...a))); break;
-      case "list": out(objs.get(r.h).map(enc)); break;
-      case "str": out(String(objs.get(r.h))); break;
-      case "release": for (const h of r.hs) objs.delete(h); out(null); break;
-      default: throw new Error("op " + r.op);
-    }
+    console.log(JSON.stringify({ id: r.id, result: dispatch(r) }));
   } catch (e: any) {
     console.log(JSON.stringify({ id: r.id, error: { type: e.type ?? "Error", message: e.message, trace: "" } }));
   }

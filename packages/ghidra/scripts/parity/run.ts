@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 const install = process.env.GHIDRA_INSTALL_DIR ?? "/srv/ghidra-release/ghidra_12.2_PUBLIC";
 const venvPy = process.env.PYGHIDRA_PYTHON ?? "/srv/ghidra-release/venv/bin/python";
 const work = process.env.PARITY_WORK ?? "/tmp/ghidra-parity";
-const here = new URL(".", import.meta.url).pathname;
+const here = import.meta.dir;
 const pkg = resolve(here, "../..");
 if (process.env.PARITY_REUSE !== "1") rmSync(work, { recursive: true, force: true });
 mkdirSync(work, { recursive: true });
@@ -29,7 +29,8 @@ void _start(void) {
 let r = sh(["gcc", "-O0", "-fno-pie", "-no-pie", "-fno-stack-protector", "-fno-asynchronous-unwind-tables", "-nostdlib", "-static", "-o", join(work, "tiny"), join(work, "tiny.c")]);
 if (r.code !== 0) throw new Error("gcc: " + r.err);
 writeFileSync(join(work, "plain.txt"), "not an archive\n");
-sh(["zip", "-q", join(work, "tiny.zip"), join(work, "plain.txt")]);
+r = sh(["zip", "-q", join(work, "tiny.zip"), join(work, "plain.txt")]);
+if (r.code !== 0) throw new Error("zip: " + r.err);
 writeFileSync(join(work, "Hello.java"), `//@category Test
 import ghidra.app.script.GhidraScript;
 public class Hello extends GhidraScript {
@@ -40,7 +41,7 @@ public class Hello extends GhidraScript {
 `);
 writeFileSync(join(work, "extension.properties"), "name=Parity\ndescription=desc\nauthor=me\nversion=12.2\nplugin_version=0.0.2\n");
 writeFileSync(join(work, "run_script.py"), "print(currentProgram.getName(), len(list(currentProgram.getFunctionManager().getFunctions(True))))\n");
-writeFileSync(join(work, "run_script.ts"), `import { currentProgram, println } from "${join(pkg, "src/script.ts")}";
+writeFileSync(join(work, "run_script.ts"), `import { currentProgram, println } from ${JSON.stringify(join(pkg, "src/script.ts"))};
 const fm = await currentProgram!.getFunctionManager();
 const n = (await (await fm.getFunctions(true)).$list()).length;
 await println(\`\${await currentProgram!.getName()} \${n}\`);
@@ -51,11 +52,13 @@ console.log("== pyghidra");
 const t0 = performance.now();
 const py = reuse ? { out: "reused", code: 0, err: "" } : sh([venvPy, join(here, "parity_py.py"), work, join(work, "py.json")]);
 console.log(py.out.split("\n").slice(-3).join("\n"), py.code === 0 ? "" : py.err.slice(-2000));
+if (py.code !== 0) throw new Error("pyghidra run failed (code " + py.code + ")");
 const tPy = performance.now() - t0;
 console.log("== bun-ghidra");
 const t1 = performance.now();
 const bn = reuse ? { out: "reused", code: 0, err: "" } : sh(["bun", join(here, "parity.ts"), work, join(work, "bun.json")]);
 console.log(bn.out.split("\n").slice(-3).join("\n"), bn.code === 0 ? "" : bn.err.slice(-2000));
+if (bn.code !== 0) throw new Error("bun-ghidra run failed (code " + bn.code + ")");
 const tBun = performance.now() - t1;
 
 const A = JSON.parse(readFileSync(join(work, "py.json"), "utf8")) as Record<string, unknown>;
@@ -100,7 +103,7 @@ Name mapping: snake_case becomes camelCase (\`open_program\` -> \`openProgram\`)
 
 | id | status |
 |---|---|
-${keys.map((k) => `| \`${k}\` | ${same.includes(k) ? "identical" : "DIFFERS"} |`).join("\n")}
+${keys.map((k) => `| \`${k}\` | ${same.includes(k) ? (bothErr.includes(k) ? "BOTH_ERROR" : "identical") : "DIFFERS"} |`).join("\n")}
 `;
 if (bothErr.length) {
   md += "\n## Identical errors (not a functional proof)\n\n" + bothErr.map((k) => `- \`${k}\`: ${JSON.stringify(A[k])} in both runtimes (${EA[k] || "no message"})`).join("\n") + "\n";

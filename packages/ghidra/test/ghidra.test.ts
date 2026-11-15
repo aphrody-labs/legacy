@@ -132,10 +132,9 @@ describe("rpc release refcount", () => {
     const flat = await s.newObject("mock.Flat");
     const a = await flat.getFirstFunction();
     const b = await flat.getFirstFunction();
-    if (a.$h === b.$h) {
-      await a.$release();
-      expect(await b.getName()).toBe("main");
-    }
+    expect(a.$h).toBe(b.$h); // identity-mapped handles
+    await a.$release();
+    expect(await b.getName()).toBe("main"); // still alive: another proxy shares the handle
     await b.$release();
     await s.close();
   });
@@ -182,5 +181,22 @@ describe("plugin, context and flat review fixes", () => {
     expect(ApplicationInfo.fromFile(p).name).toBe("Ghidra");
     await Bun.write(p, "application.name=Ghidra\n");
     expect(() => ApplicationInfo.fromFile(p)).toThrow();
+  });
+});
+
+describe("analysis helpers with fake Java objects", () => {
+  const fake = (o: Record<string, any>): any => o;
+  const fn = (name: string) => fake({
+    getName: async () => name, getEntryPoint: async () => fake({ toString: async () => "00401000" }),
+    getBody: async () => fake({ getNumAddresses: async () => 4 }), getSignature: async () => fake({ getPrototypeString: async () => `void ${name}(void)` }),
+    getCallingConventionName: async () => null, isThunk: async () => false, isExternal: async () => false,
+  });
+  const program = fake({ getFunctionManager: async () => fake({ getFunctions: async () => fake({ $list: async () => [fn("a"), fn("b")] }), getFunctionCount: async () => 2 }) });
+  test("listFunctions honours max=0, NaN and large limits without a decompiler", async () => {
+    const { listFunctions } = await import("../src/analysis.ts");
+    expect((await listFunctions(program, { max: 0 })).length).toBe(0);
+    expect((await listFunctions(program, { max: Number.NaN })).length).toBe(2);
+    expect((await listFunctions(program, { max: 1 })).map((f) => f.name)).toEqual(["a"]);
+    expect((await listFunctions(program, { max: 0, decompile: true })).length).toBe(0); // no JVM needed
   });
 });

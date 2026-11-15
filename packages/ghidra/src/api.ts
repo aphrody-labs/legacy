@@ -128,16 +128,16 @@ export async function openFilesystem(path: string): Promise<JObject> {
 
 export async function consumeProgram(project: JObject, path: string, consumer?: JObject): Promise<[JObject, JObject]> {
   const s = jvm();
-  consumer ??= await s.newObject("java.lang.Object");
+  const consumer_: JObject = consumer ?? (await s.newObject("java.lang.Object"));
   const pd = await project.getProjectData();
   const df = await pd.getFile(path);
   if (df === null) throw Object.assign(new Error(`"${path}" does not exist in the Project`), { name: "FileNotFoundError" });
-  const dobj = await df.getDomainObject(consumer, true, false, await taskMonitor());
+  const dobj = await df.getDomainObject(consumer_, true, false, await taskMonitor());
   if (!(await dobj.$instanceOf("ghidra.program.model.listing.Program"))) {
-    await dobj.release(consumer);
+    await dobj.release(consumer_);
     throw new ProgramTypeError(`"${path}" exists but is not a Program`);
   }
-  return [dobj, consumer];
+  return [dobj, consumer_];
 }
 
 export async function programContext<T>(project: JObject, path: string, fn: (program: JObject) => Promise<T> | T): Promise<T> {

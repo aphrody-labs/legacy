@@ -5,7 +5,8 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import * as G from "../../src/index.ts";
 import type { JObject } from "../../src/rpc.ts";
 
-const [work, out] = process.argv.slice(2) as [string, string];
+const [work, out] = process.argv.slice(2);
+if (!work || !out) throw new Error("usage: bun parity.ts <workdir> <out.json>");
 const install = process.env.GHIDRA_INSTALL_DIR!;
 const R: Record<string, unknown> = {};
 const E: Record<string, string> = {};
@@ -112,26 +113,35 @@ const projloc = join(work, "proj_ts");
   await entry("ops.decompile.compute", async () => {
     const d = await jvmNew("ghidra.app.decompiler.DecompInterface");
     await d.openProgram(program);
-    const r = await d.decompileFunction(compute, 60, mon);
-    const c = String(await (await r.getDecompiledFunction()).getC());
-    await d.dispose();
-    return c;
+    try {
+      const r = await d.decompileFunction(compute, 60, mon);
+      const df = await r.getDecompiledFunction();
+      return df === null ? null : String(await df.getC());
+    } finally {
+      await d.dispose();
+    }
   });
   await entry("ops.decompile.all", async () => {
     const d = await jvmNew("ghidra.app.decompiler.DecompInterface");
     await d.openProgram(program);
-    let n = 0;
-    for (const f of fns) if (await (await d.decompileFunction(f, 60, mon)).decompileCompleted()) n++;
-    await d.dispose();
-    return n;
+    try {
+      let n = 0;
+      for (const f of fns) if (await (await d.decompileFunction(f, 60, mon)).decompileCompleted()) n++;
+      return n;
+    } finally {
+      await d.dispose();
+    }
   });
   await entry("ops.pcode.high", async () => {
     const d = await jvmNew("ghidra.app.decompiler.DecompInterface");
     await d.openProgram(program);
-    const hf = await (await d.decompileFunction(compute, 60, mon)).getHighFunction();
-    const ops = await Promise.all((await L(await hf.getPcodeOps())).map(async (o) => S(await o.getMnemonic())));
-    await d.dispose();
-    return ops;
+    try {
+      const hf = await (await d.decompileFunction(compute, 60, mon)).getHighFunction();
+      if (hf === null) return null;
+      return await Promise.all((await L(await hf.getPcodeOps())).map(async (o) => S(await o.getMnemonic())));
+    } finally {
+      await d.dispose();
+    }
   });
   await entry("ops.pcode.raw", async () => {
     const i = await flat.getInstructionAt(cEntry);
@@ -203,7 +213,11 @@ await entry("api.walk_programs", async () => {
 });
 await entry("api.open_filesystem", async () => {
   const fs = await G.openFilesystem(join(work, "tiny.zip"));
-  return [await S(await fs.getType()), N(await fs.getFileCount())];
+  try {
+    return [await S(await fs.getType()), N(await fs.getFileCount())];
+  } finally {
+    await fs.close();
+  }
 });
 await entry("api.open_filesystem.unsupported", async () => {
   try { await G.openFilesystem(join(work, "plain.txt")); return "opened"; } catch { return "ValueError"; }
