@@ -1,5 +1,5 @@
 // Paths, persistent state and inventory loading.
-import { existsSync, mkdirSync, renameSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { type KernelState, emptyKernel } from "./kernel.ts";
 import type { CrateCache, RustCache } from "./rust.ts";
@@ -22,7 +22,6 @@ export const paths = (h = home()) => ({
 export type State = {
   ftp: { etag?: string; mtime?: string; checked: number };
   gsrc: { revno: number | null; checked: number };
-  guix: { head: string | null; checked: number };
   announce: Record<string, { etag?: string; items: Announce[] }>;
   heads: Record<string, { head: string; changed_at: string; checked: number }>;
   github: RustCache;
@@ -45,7 +44,6 @@ export type State = {
 export const emptyState = (): State => ({
   ftp: { checked: 0 },
   gsrc: { revno: null, checked: 0 },
-  guix: { head: null, checked: 0 },
   announce: {},
   heads: {},
   github: {},
@@ -99,21 +97,31 @@ export async function readEvents(p = paths()): Promise<GnuEvent[]> {
     .map((l) => JSON.parse(l) as GnuEvent);
 }
 
+export type GsrcPkg = {
+  label: string | null;
+  tarball: string | null;
+  version: string | null;
+  description: string | null;
+  home: string | null;
+  subdir: string | null;
+  sha256: Record<string, string>;
+  builddeps: string[];
+  libdeps: string[];
+};
+/** docs/research/gsrc-gnu.json, written by scripts/gsrc-gnu.ts. */
+export type GsrcFile = {
+  source: string;
+  revno: number | null;
+  count: number;
+  packages: Record<string, GsrcPkg>;
+};
+
+/** Read docs/research/gsrc-gnu.json under `root`; throws when it is absent or malformed. */
+export const loadGsrc = (root = repoRoot()): GsrcFile =>
+  JSON.parse(readFileSync(join(root, "docs", "research", "gsrc-gnu.json"), "utf8"));
+
 export type Inventory = {
-  gsrc: Record<
-    string,
-    {
-      label: string | null;
-      tarball: string | null;
-      version: string | null;
-      description: string | null;
-      home: string | null;
-      subdir: string | null;
-      sha256: Record<string, string>;
-      builddeps: string[];
-      libdeps: string[];
-    }
-  >;
+  gsrc: Record<string, GsrcPkg>;
   gsrcRevno: number | null;
   pkgs: Record<
     string,
@@ -127,14 +135,16 @@ export type Inventory = {
       status: string | null;
     }
   >;
-  guix: Record<string, string>; // GSRC id or guix_name -> version
-  guixHead: string | null;
 };
 
-/** Load the repository inventory: GSRC, Guix and gnu-packages.json (docs/research, docs/native/gnu). */
+/** Load the repository inventory: GSRC and gnu-packages.json (docs/research, docs/native/gnu). */
 export async function loadInventory(root = repoRoot()): Promise<Inventory> {
-  const research = join(root, "docs", "research");
-  const g = await readJson<{ source?: string; packages?: Inventory["gsrc"] }>(join(research, "gsrc-gnu.json"), {});
+  let g: Partial<GsrcFile> = {};
+  try {
+    g = loadGsrc(root);
+  } catch {
+    // no GSRC snapshot: empty inventory
+  }
   const inv = await readJson<{
     packages?: {
       name: string;
@@ -148,7 +158,7 @@ export async function loadInventory(root = repoRoot()): Promise<Inventory> {
   }>(join(root, "docs", "native", "gnu", "gnu-packages.json"), {});
   return {
     gsrc: g.packages ?? {},
-    gsrcRevno: Number(/revno (\d+)/.exec(g.source ?? "")?.[1]) || null,
+    gsrcRevno: g.revno ?? null,
     pkgs: Object.fromEntries(
       (inv.packages ?? []).map((p) => [
         p.name,
@@ -163,8 +173,6 @@ export async function loadInventory(root = repoRoot()): Promise<Inventory> {
         },
       ]),
     ),
-    guix: {},
-    guixHead: null,
   };
 }
 

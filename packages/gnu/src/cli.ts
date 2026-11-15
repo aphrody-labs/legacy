@@ -50,7 +50,7 @@ async function main(): Promise<number> {
       if (flag("json")) return (json(s), 0);
       const c = s.counts;
       console.log(
-        `feed ${s.generated} (${s.age_minutes} min${s.stale ? ", STALE" : ""}) gsrc r${s.sources.gsrc_revno ?? "?"} guix ${s.sources.guix_head?.slice(0, 10) ?? "?"}`,
+        `feed ${s.generated} (${s.age_minutes} min${s.stale ? ", STALE" : ""}) gsrc r${s.sources.gsrc_revno ?? "?"}`,
       );
       console.log(
         `${c.packages} packages, ${c.with_release} released, ${c.verified} verified, ${c.rust_any} rust (${c.rust_drop_in} drop-in), ${c.drift_gsrc} gsrc behind, ${c.proven} proven, ${c.mirrored} mirrored`,

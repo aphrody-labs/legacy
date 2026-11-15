@@ -1,18 +1,21 @@
-// Merge the 2026-11-14 research into docs/native/gnu/gnu-packages.json (and re-render PACKAGES.md):
-//   - `purpose` (null) <- first sentence of the official blurb, full text in `blurb` (docs/research/gnu-blurbs-2026-11-14.json)
-//   - ftp.gnu.org/gnu/ dirs missing from the inventory, added from their live directory listing
+// Merge research into docs/native/gnu/gnu-packages.json (and re-render PACKAGES.md):
+//   - `purpose` (null) <- first sentence of the official blurb, full text in `blurb` (docs/research/gnu-blurbs-2026-11-14.json, a fixed snapshot)
+//   - MISSING ftp.gnu.org/gnu/ dirs absent from the inventory, added with their newest tarball from the mirror listing
 //   - `latest_release` <- GSRC when GSRC is newer (docs/research/gsrc-gnu.json); `gsrc` carries id, version, sha256, deps
-// Idempotent. Usage: bun tools/gnu-index/merge.ts [--offline]   (offline: skip the ftp listings, keep already added rows)
+// Idempotent: `generated` only moves when the merged content changes; sources.gsrc and sources.ftp_dirs name the revno and the rows present.
+// Usage: bun tools/gnu-index/merge.ts [--offline]   (offline: skip the ftp listings, keep already added rows)
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { loadGsrc } from "../../packages/gnu/src/store.ts";
 import { cmpVer, gsrcId } from "./ids.ts";
 
 const root = join(import.meta.dir, "../..");
 const J = join(root, "docs/native/gnu/gnu-packages.json");
 const data = JSON.parse(readFileSync(J, "utf8"));
 const blurbs: Record<string, string> = JSON.parse(readFileSync(join(root, "docs/research/gnu-blurbs-2026-11-14.json"), "utf8")).blurbs;
-const gsrcFile = JSON.parse(readFileSync(join(root, "docs/research/gsrc-gnu.json"), "utf8"));
+const gsrcFile = loadGsrc(root);
 const gsrc: Record<string, any> = gsrcFile.packages;
+const before = JSON.stringify(data);
 const offline = process.argv.includes("--offline");
 
 const gid = gsrcId;
@@ -108,18 +111,19 @@ for (const p of data.packages) {
   }
 }
 
-data.generated = new Date().toISOString().slice(0, 10);
 data.sources.blurbs = "https://www.gnu.org/manual/blurbs.html (docs/research/gnu-blurbs-2026-11-14.json)";
 data.sources.gsrc = `${gsrcFile.source} (docs/research/gsrc-gnu.json)`;
-data.sources.ftp_dirs = "https://ftp.gnu.org/gnu/ directory listings (2026-11-14): guile-debbugs micron sauce speedx cfengine flex git aspell-dict-*";
+data.sources.ftp_dirs = `https://ftp.gnu.org/gnu/ directory listings: ${MISSING.filter((m) => byName.has(m.name)).map((m) => m.name).join(" ")}`;
 data.counts = data.packages.reduce((a: any, r: any) => ((a[r.category] = (a[r.category] ?? 0) + 1), a), {});
+// One date for the whole file: it moves only when this merge changed something (same inputs, same output).
+if (JSON.stringify(data) !== before) data.generated = new Date().toISOString().slice(0, 10);
 writeFileSync(J, JSON.stringify(data, null, 1) + "\n");
 
 // PACKAGES.md: same rendering as build.ts
 const rows = data.packages;
 const cats = [...new Set<string>(rows.map((r: any) => r.category))].sort();
 const esc = (s: any) => String(s ?? "").replace(/\|/g, "\\|");
-let md = `# Paquets GNU : table classée (${rows.length} entrées, 2026-11-14)\n\nSource de vérité : [gnu-packages.json](gnu-packages.json), généré à partir des sources listées dans [INDEX.md](INDEX.md), puis complété par \`tools/gnu-index/merge.ts\` (blurbs officiels, GSRC, répertoires ftp manquants). Colonnes : version et date = dernière archive dans ftp.gnu.org/gnu/<nom>/ (ls-lrRt.txt, trié par date), ou GSRC quand il est plus récent ; « commit » = âge du dernier commit dans l'index cgit Savannah (vide si le dépôt est ailleurs ou absent) ; licence = curée, sinon \`%LICENSE%\` du paquet Arch ; « — » = inconnu, [NV].\n\n`;
+let md = `# Paquets GNU : table classée (${rows.length} entrées, ${data.generated})\n\nSource de vérité : [gnu-packages.json](gnu-packages.json), généré à partir des sources listées dans [INDEX.md](INDEX.md), puis complété par \`tools/gnu-index/merge.ts\` (blurbs officiels, GSRC, répertoires ftp manquants). Colonnes : version et date = dernière archive dans ftp.gnu.org/gnu/<nom>/ (ls-lrRt.txt, trié par date), ou GSRC quand il est plus récent ; « commit » = âge du dernier commit dans l'index cgit Savannah (vide si le dépôt est ailleurs ou absent) ; licence = curée, sinon \`%LICENSE%\` du paquet Arch ; « — » = inconnu, [NV].\n\n`;
 for (const cat of cats) {
   const rs = rows.filter((r: any) => r.category === cat);
   md += `## ${cat} (${rs.length})\n\n| Paquet | Rôle | Lang. | Licence | Statut | Dernière version (ftp) | Dépôt / commit | Verdict |\n|---|---|---|---|---|---|---|---|\n`;

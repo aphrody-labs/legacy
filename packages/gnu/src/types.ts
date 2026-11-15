@@ -73,9 +73,8 @@ export type Entry = {
     source: "ftp" | "gsrc" | "none";
   };
   gsrc: { version: string; deps: string[] } | null;
-  guix: { version: string } | null;
-  /** True when the ftp release is newer than the GSRC or Guix pin. */
-  drift: { gsrc: boolean; guix: boolean };
+  /** True when the ftp release is newer than the GSRC pin. */
+  drift: { gsrc: boolean };
   announce: Announce | null;
   savannah: { repo: string; head: string; changed_at: string } | null;
   rust: RustRelease[];
@@ -90,7 +89,6 @@ export type Feed = {
   generator: string;
   sources: {
     gsrc_revno: number | null;
-    guix_head: string | null;
     ftp_listing_mtime: string | null;
     info_gnu_latest: string | null;
   };

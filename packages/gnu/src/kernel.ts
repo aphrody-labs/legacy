@@ -2,7 +2,8 @@
 // Android GKI and ChromeOS branches (gitiles), Rust for Linux and google/kernel-research.
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { parseInfoRefs, UA, versionCmp } from "./upstream.ts";
+import { unquote, vars } from "./mk.ts";
+import { get as httpGet, parseInfoRefs, pool, versionCmp } from "./upstream.ts";
 import { sha256File, sqvDetached, sqvPath } from "./verify.ts";
 import type { SigStatus, Signature } from "./types.ts";
 
@@ -21,27 +22,25 @@ export type KernelRelease = {
   mirror: { key: string; sign_key: string | null; at: string } | null;
 };
 
-/** Per-branch analysis of a GKI branch read from gitiles (parseAndroid); fields that need a clone (patch classes, Rust file count) stay empty. */
+/** Per-branch analysis of a GKI branch read from gitiles (parseAndroid). */
 export type AndroidTrack = {
   branch: string;
   fetched: string;
   head: { commit: string; date: string; subject: string };
   kernel: string | null;
   upstream_base: string | null;
-  commits_since_base: number | null;
-  patch_classes: Record<string, number>;
   kmi: {
     phase: string | null;
     enforced: boolean | null;
     abi_definition: boolean | null;
-    symbol_lists: number | null;
   };
+  /** Which of CONSTANTS_PROBES carried the toolchain pins on this branch. */
+  constants_path: string | null;
   clang: string | null;
   rustc: string | null;
   kmi_generation: string | null;
   rust_binder: string | null;
   rust_config: string | null;
-  rust_files: number | null;
 };
 
 export type KernelBranch = { name: string; head: string };
@@ -132,9 +131,11 @@ const CHROMEOS_URL =
   "https://chromium.googlesource.com/chromiumos/third_party/kernel/+refs/heads?format=JSON";
 const RFL = "https://github.com/Rust-for-Linux/linux.git";
 
+const stripXssi = (body: string) => body.replace(/^\)\]\}'\n/, "");
+
 /** Gitiles JSON starts with the anti-XSSI prefix `)]}'`. Returns branch -> sha. */
 export function parseGitiles(body: string): Record<string, string> {
-  const j = JSON.parse(body.replace(/^\)\]\}'\n/, "")) as Record<
+  const j = JSON.parse(stripXssi(body)) as Record<
     string,
     { value?: string }
   >;
@@ -149,10 +150,11 @@ export const isGki = (b: string) =>
   /^android-mainline$|^android\d+-\d+\.\d+(?:-\d+)?$/.test(b);
 export const isChromeos = (b: string) => /^chromeos-\d+\.\d+$/.test(b);
 
-const branchKey = (n: string) =>
-  n === "android-mainline" ? "999" : n.replace(/^\D+/, "");
+const isMainline = (n: string) => n === "android-mainline";
+/** Mainline first, then the newest kernel series (`android15-6.6` -> `15-6.6`, `chromeos-6.12` -> `6.12`). */
 const byBranchDesc = (a: KernelBranch, b: KernelBranch) =>
-  versionCmp(branchKey(b.name), branchKey(a.name));
+  Number(isMainline(b.name)) - Number(isMainline(a.name)) ||
+  versionCmp(b.name.replace(/^\D+/, ""), a.name.replace(/^\D+/, ""));
 export const pickBranches = (
   all: Record<string, string>,
   pred: (b: string) => boolean,
@@ -177,10 +179,7 @@ export const sumsUrl = (v: string) =>
   `https://cdn.kernel.org/pub/linux/kernel/v${v.split(".")[0]}.x/sha256sums.asc`;
 
 const get = (url: string, headers: Record<string, string> = {}, ms = 30_000) =>
-  fetch(url, {
-    headers: { "user-agent": UA, ...headers },
-    signal: AbortSignal.timeout(ms),
-  });
+  httpGet(url, headers, ms);
 
 export async function pollKernel(
   ks: KernelState,
@@ -305,27 +304,43 @@ export async function pollKernel(
   ks.checked = Date.now();
 }
 
-/** Gitiles file as text (`?format=TEXT` is base64); null when the ref has no such file. */
-async function gitilesFile(ref: string, path: string): Promise<string | null> {
-  try {
-    const r = await get(`${GKI_REPO}/+/${ref}/${path}?format=TEXT`);
-    return r.ok ? Buffer.from(await r.text(), "base64").toString() : null;
-  } catch {
-    return null;
-  }
+/** Gitiles GET: body, or null on 404 (absent); any other failure throws so the caller retries next cycle. */
+async function gitilesGet(url: string): Promise<string | null> {
+  const r = await get(url);
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+  return r.text();
 }
+
+/** Gitiles JSON document (anti-XSSI prefix stripped); null when absent. */
+async function gitilesJson<T>(url: string): Promise<T | null> {
+  const body = await gitilesGet(url);
+  return body === null ? null : (JSON.parse(stripXssi(body)) as T);
+}
+
+/** Gitiles file as text (`?format=TEXT` is base64); "" when the ref has no such file. */
+async function gitilesFile(ref: string, path: string): Promise<string> {
+  const body = await gitilesGet(`${GKI_REPO}/+/${ref}/${path}?format=TEXT`);
+  return body === null ? "" : Buffer.from(body, "base64").toString();
+}
+
+/** Files that can carry the toolchain pins, in order of preference (the newer Bazel layout first). */
+export const CONSTANTS_PROBES = ["bazel/constants.scl", "build.config.constants"];
 
 /** Per-branch analysis from the gitiles reads of one GKI branch head; pure so tests feed it fixtures. */
 export function parseAndroid(
   branch: string,
   head: { commit?: string; message?: string; committer?: { time?: string } },
-  files: { makefile: string; constants: string; bazel: string; defconfig: string },
+  files: { makefile: string; constants: string; constantsPath?: string | null; bazel: string; defconfig: string },
   fetched = new Date().toISOString(),
 ): AndroidTrack | null {
   if (!head.commit) return null;
-  const mk = (k: string) => new RegExp(`^${k}[ \\t]*=[ \\t]*(.*)$`, "m").exec(files.makefile)?.[1]?.trim() ?? "";
-  const pin = (k: string) => new RegExp(`^${k}[ \\t]*=[ \\t]*"?([^"\\n]*)"?`, "m").exec(files.constants)?.[1] ?? null;
-  const cfg = (k: string) => new RegExp(`^CONFIG_${k}=(.*)$`, "m").exec(files.defconfig)?.[1] ?? null;
+  const mkv = vars(files.makefile);
+  const pins = vars(files.constants);
+  const cfgs = vars(files.defconfig);
+  const mk = (k: string) => mkv[k] ?? "";
+  const pin = (k: string) => unquote(pins[k]);
+  const cfg = (k: string) => cfgs[`CONFIG_${k}`] ?? null;
   const enforced = /^\s*kmi_enforced = True/m.test(files.bazel);
   const t = head.committer?.time ? Date.parse(head.committer.time) : NaN;
   const known = mk("VERSION") !== "";
@@ -339,47 +354,48 @@ export function parseAndroid(
     },
     kernel: known ? `${mk("VERSION")}.${mk("PATCHLEVEL")}.${mk("SUBLEVEL")}${mk("EXTRAVERSION")}` : null,
     upstream_base: known ? `v${mk("VERSION")}.${mk("PATCHLEVEL")}` : null,
-    commits_since_base: null,
-    patch_classes: {},
     kmi: {
       phase: files.bazel ? (enforced ? "kmi-tracking-or-frozen" : "development") : null,
       enforced: files.bazel ? enforced : null,
       abi_definition: files.bazel ? /^\s*abi_definition_stg = "/m.test(files.bazel) : null,
-      symbol_lists: null,
     },
+    constants_path: files.constantsPath ?? null,
     clang: pin("CLANG_VERSION"),
     rustc: pin("RUSTC_VERSION"),
     kmi_generation: pin("KMI_GENERATION"),
     rust_binder: cfg("ANDROID_BINDER_IPC_RUST"),
     rust_config: cfg("RUST"),
-    rust_files: null,
   };
 }
 
-/** Analyse every GKI branch whose head moved since the last cycle (pins sit in bazel/constants.scl or build.config.constants). */
+/** Analyse every GKI branch whose head moved since the last cycle (4 branches at a time; pins sit in CONSTANTS_PROBES). */
 export async function pollAndroid(ks: KernelState) {
-  for (const [branch, sha] of Object.entries(ks.gki)) {
-    if (ks.android[branch]?.head.commit === sha) continue;
+  const todo = Object.entries(ks.gki).filter(
+    ([branch, sha]) => ks.android[branch]?.head.commit !== sha,
+  );
+  await pool(todo, 4, async ([branch, sha]) => {
     try {
-      const r = await get(`${GKI_REPO}/+/${sha}?format=JSON`);
-      if (!r.ok) continue;
-      const head = JSON.parse((await r.text()).replace(/^\)\]\}'\n/, ""));
-      const [makefile, scl, legacy, bazel, defconfig] = await Promise.all(
-        ["Makefile", "bazel/constants.scl", "build.config.constants", "BUILD.bazel", "arch/arm64/configs/gki_defconfig"].map(
-          (p) => gitilesFile(sha, p),
-        ),
-      );
+      const [head, makefile, bazel, defconfig, ...probed] = await Promise.all([
+        gitilesJson<Parameters<typeof parseAndroid>[1]>(`${GKI_REPO}/+/${sha}?format=JSON`),
+        gitilesFile(sha, "Makefile"),
+        gitilesFile(sha, "BUILD.bazel"),
+        gitilesFile(sha, "arch/arm64/configs/gki_defconfig"),
+        ...CONSTANTS_PROBES.map((p) => gitilesFile(sha, p)),
+      ]);
+      if (!head) return;
+      const hit = probed.findIndex((s) => s !== "");
       const t = parseAndroid(branch, head, {
-        makefile: makefile ?? "",
-        constants: `${scl ?? ""}\n${legacy ?? ""}`,
-        bazel: bazel ?? "",
-        defconfig: defconfig ?? "",
+        makefile,
+        constants: hit < 0 ? "" : probed[hit]!,
+        constantsPath: hit < 0 ? null : CONSTANTS_PROBES[hit]!,
+        bazel,
+        defconfig,
       });
       if (t) ks.android[branch] = t;
     } catch {
-      // retry next cycle
+      // retry next cycle: the record is not saved
     }
-  }
+  });
   for (const b of Object.keys(ks.android)) if (!ks.gki[b]) delete ks.android[b];
 }
 

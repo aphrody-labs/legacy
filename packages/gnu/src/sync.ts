@@ -23,13 +23,14 @@ import {
   GNU_KEYRING,
   GSRC_REVNO,
   INFO_GNU,
-  UA,
+  get,
   mirrorUrl,
   parseInfoGnu,
   parseInfoRefs,
   parseListing,
   parseRevno,
   pollMonths,
+  pool,
   savannahGitUrl,
 } from "./upstream.ts";
 import { gsrcKeyring, sha256File, verifySignature } from "./verify.ts";
@@ -52,21 +53,6 @@ export type SyncOpts = {
   maxBytes?: number;
   log?: (s: string) => void;
 };
-
-const get = (url: string, headers: Record<string, string> = {}, ms = 60_000) =>
-  fetch(url, {
-    headers: { "user-agent": UA, ...headers },
-    signal: AbortSignal.timeout(ms),
-  });
-
-async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>) {
-  const q = [...items];
-  await Promise.all(
-    Array.from({ length: n }, async () => {
-      for (let x = q.shift(); x !== undefined; x = q.shift()) await fn(x);
-    }),
-  );
-}
 
 async function fetchListing(st: State, dir: string): Promise<FtpListing> {
   const cache = join(dir, "ls-lrRt.txt.gz");
@@ -158,23 +144,6 @@ async function fetchHeads(
       // next cycle
     }
   });
-}
-
-async function fetchGuixHead(st: State) {
-  try {
-    const r = await get(
-      "https://git.savannah.gnu.org/git/guix.git/info/refs?service=git-upload-pack",
-      {},
-      20_000,
-    );
-    if (r.ok)
-      st.guix = {
-        head: parseInfoRefs(await r.text()).head,
-        checked: Date.now(),
-      };
-  } catch {
-    // keep
-  }
 }
 
 async function fetchRevno(st: State) {
@@ -390,7 +359,7 @@ export async function sync(opts: SyncOpts = {}): Promise<Feed> {
   const prev = await readJson<Feed | null>(p.feed, null);
   const listing = await fetchListing(st, p.home);
   log(`ftp: ${listing.size} dirs`);
-  await Promise.all([fetchAnnounce(st), fetchRevno(st), fetchGuixHead(st)]);
+  await Promise.all([fetchAnnounce(st), fetchRevno(st)]);
   if (opts.rust !== false) {
     const token = await githubToken();
     await pollGithub(

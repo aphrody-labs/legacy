@@ -382,8 +382,6 @@ const inv = {
       status: "active",
     },
   },
-  guix: { coreutils: "9.11" },
-  guixHead: null,
 };
 
 describe("feed", () => {
@@ -413,7 +411,7 @@ describe("feed", () => {
     const c = pkg(f, "coreutils")!;
     expect(c.upstream.version).toBe("9.12");
     expect(c.upstream.source).toBe("ftp");
-    expect(c.drift).toEqual({ gsrc: true, guix: true });
+    expect(c.drift).toEqual({ gsrc: true });
     expect(c.upstream.sha256).toBeNull(); // 9.12 is not the GSRC file: only a mirror download can fill it
     expect(c.rust_status).toBe("drop-in");
     expect(c.rust[0]!.version).toBe("0.12.0");

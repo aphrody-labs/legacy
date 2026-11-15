@@ -100,7 +100,6 @@ export async function buildFeed(
         ? mir.sha256
         : null;
     const gv = g?.version ?? null;
-    const guixV = inv.guix[id] ?? inv.guix[g?.tarball ?? ""] ?? null;
     const head = st.heads[id];
     const rust = resolveRust(id, st.github, st.crates);
     const repo = p?.repo ?? null;
@@ -140,14 +139,11 @@ export async function buildFeed(
               deps: [...g.builddeps.filter((d) => d !== "#"), ...g.libdeps],
             }
           : null,
-      guix: guixV ? { version: guixV } : null,
       drift: {
         gsrc:
           !!rel &&
           /^\d/.test(gv ?? "") &&
           versionCmp(rel.version, bareVersion(gv)) > 0,
-        guix:
-          !!rel && !!guixV && versionCmp(rel.version, bareVersion(guixV)) > 0,
       },
       announce: announces.get(id) ?? null,
       savannah:
@@ -175,7 +171,6 @@ export async function buildFeed(
     generator: "@aphrody/gnu",
     sources: {
       gsrc_revno: st.gsrc.revno ?? inv.gsrcRevno,
-      guix_head: st.guix.head,
       ftp_listing_mtime: st.ftp.mtime ?? null,
       info_gnu_latest: all[0]?.date ?? null,
     },
@@ -246,7 +241,7 @@ export function buildAtom(
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>tag:gnu.aphrody.com,2026:feed</id>
   <title>GNU upstream releases and Rust equivalents</title>
-  <subtitle>ftp.gnu.org, info-gnu, GSRC, Guix and the Rust replacements, one entry per package</subtitle>
+  <subtitle>ftp.gnu.org, info-gnu, GSRC and the Rust replacements, one entry per package</subtitle>
   <updated>${feed.generated}</updated>
   <link rel="self" href="${base}/feed.atom"/>
   <link rel="alternate" href="${base}/"/>

@@ -2,15 +2,14 @@
 // Get the tree without history on any host with uv:  uvx --from breezy brz export <dir> https://bzr.savannah.gnu.org/r/gsrc/trunk
 // Usage: bun scripts/gsrc-gnu.ts <gsrc-root> > docs/research/gsrc-gnu.json   (revno read live from the branch)
 import { Glob } from "bun";
-import { GSRC_REVNO } from "../packages/gnu/src/upstream.ts";
+import { vars } from "../packages/gnu/src/mk.ts";
+import { GSRC_REVNO, get, parseRevno } from "../packages/gnu/src/upstream.ts";
 const root = process.argv[2];
 if (!root) throw new Error("usage: bun scripts/gsrc-gnu.ts <gsrc-root>");
-const revno = (await (await fetch(GSRC_REVNO)).text()).trim().split(/\s+/)[0];
-const vars = (mk: string) => {
-  const out: Record<string, string> = {};
-  for (const m of mk.replace(/\\\n/g, " ").matchAll(/^([A-Z_]+)\s*[?:]?=[ \t]*(.*)$/gm)) out[m[1]] ??= m[2].trim();
-  return out;
-};
+const r = await get(GSRC_REVNO, {}, 20_000);
+if (!r.ok) throw new Error(`${GSRC_REVNO}: HTTP ${r.status}`);
+const revno = parseRevno(await r.text());
+if (revno === null) throw new Error(`${GSRC_REVNO}: no revno`);
 const list = (s?: string) => (s ?? "").split(/\s+/).filter(Boolean);
 const packages: Record<string, unknown> = {};
 for await (const rel of new Glob("pkg/gnu/*/Makefile").scan(root)) {
@@ -34,4 +33,4 @@ for await (const rel of new Glob("pkg/gnu/*/Makefile").scan(root)) {
   };
 }
 const sorted = Object.fromEntries(Object.entries(packages).sort(([a], [b]) => a.localeCompare(b)));
-console.log(JSON.stringify({ source: `bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno ${revno}`, count: Object.keys(sorted).length, packages: sorted }, null, 1));
+console.log(JSON.stringify({ source: `bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno ${revno}`, revno, count: Object.keys(sorted).length, packages: sorted }, null, 1));

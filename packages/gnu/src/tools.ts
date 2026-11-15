@@ -198,7 +198,7 @@ export const GNU_TOOLS: GnuTool[] = [
   {
     name: "gnu_status",
     description:
-      "State of the GNU upstream tracker: feed age, package counts (releases, verified signatures, Rust equivalents, drift against GSRC, R2 mirror), GSRC revno, Guix head, latest releases, Linux kernel versions.",
+      "State of the GNU upstream tracker: feed age, package counts (releases, verified signatures, Rust equivalents, drift against GSRC, R2 mirror), GSRC revno, latest releases, Linux kernel versions.",
     inputSchema: obj({}),
     readOnly: true,
     run: async () => status(await loadFeed()),
@@ -225,7 +225,7 @@ export const GNU_TOOLS: GnuTool[] = [
   {
     name: "gnu_package",
     description:
-      "Full feed entry of one GNU package (GSRC id such as coreutils, gcc16): upstream version, date, tarball URL, sha256, signature status, GSRC and Guix pins, Rust equivalents with versions and coverage, proof, mirror key, deps.",
+      "Full feed entry of one GNU package (GSRC id such as coreutils, gcc16): upstream version, date, tarball URL, sha256, signature status, GSRC pin, Rust equivalents with versions and coverage, proof, mirror key, deps.",
     inputSchema: obj({ id: str("Package id or ftp directory") }, ["id"]),
     readOnly: true,
     run: async (a) =>

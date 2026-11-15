@@ -6,11 +6,12 @@
 //           c = C source of the GSRC tarball built by our LLVM toolchain; upstream = taken from the distro or not carried.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { loadGsrc } from "../packages/gnu/src/store.ts";
 import { cmpVer, gsrcId, inventoryName } from "../tools/gnu-index/ids.ts";
 
 const root = join(import.meta.dir, "..");
 const OUT = join(root, "src/gnu/packages.toml");
-const gsrcFile = JSON.parse(readFileSync(join(root, "docs/research/gsrc-gnu.json"), "utf8"));
+const gsrcFile = loadGsrc(root);
 const gsrc: Record<string, any> = gsrcFile.packages;
 const inv: any[] = JSON.parse(readFileSync(join(root, "docs/native/gnu/gnu-packages.json"), "utf8")).packages;
 const invBy = new Map(inv.map((p) => [p.name, p]));

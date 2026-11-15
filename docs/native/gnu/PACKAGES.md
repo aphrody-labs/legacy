@@ -1,4 +1,4 @@
-# Paquets GNU : table classée (472 entrées, 2026-11-14)
+# Paquets GNU : table classée (472 entrées, 2026-11-15)
 
 Source de vérité : [gnu-packages.json](gnu-packages.json), généré à partir des sources listées dans [INDEX.md](INDEX.md), puis complété par `tools/gnu-index/merge.ts` (blurbs officiels, GSRC, répertoires ftp manquants). Colonnes : version et date = dernière archive dans ftp.gnu.org/gnu/<nom>/ (ls-lrRt.txt, trié par date), ou GSRC quand il est plus récent ; « commit » = âge du dernier commit dans l'index cgit Savannah (vide si le dépôt est ailleurs ou absent) ; licence = curée, sinon `%LICENSE%` du paquet Arch ; « — » = inconnu, [NV].
 

@@ -2,6 +2,17 @@
 import type { Announce, FtpFile, FtpListing, Release } from "./types.ts";
 
 export const UA = "aphrody-gnu-tracker/0.1 (+https://gnu.aphrody.com)";
+/** GET with the tracker User-Agent and a timeout (callers check `r.ok`). */
+export const get = (
+  url: string,
+  headers: Record<string, string> = {},
+  ms = 60_000,
+) =>
+  fetch(url, {
+    headers: { "user-agent": UA, ...headers },
+    signal: AbortSignal.timeout(ms),
+  });
+
 /** Tarballs and signatures are downloaded through the mirror redirector: ftp.gnu.org rate-limits (blocked fr2 on 2026-11-14). */
 export const mirrorUrl = (u: string) =>
   u.replace("https://ftp.gnu.org/gnu/", "https://ftpmirror.gnu.org/gnu/");
@@ -45,7 +56,17 @@ export function versionCmp(a: string, b: string): number {
   return 0;
 }
 
-export const isPrerelease = (v: string) =>
+/** Run `fn` over `items` with at most `n` in flight. */
+export async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>) {
+  const q = [...items];
+  await Promise.all(
+    Array.from({ length: n }, async () => {
+      for (let x = q.shift(); x !== undefined; x = q.shift()) await fn(x);
+    }),
+  );
+}
+
+export const isPrerelease =(v: string) =>
   /(alpha|beta|rc\d*|pre\d*|snap|test|dev|git|nightly)/i.test(v);
 
 /** Parse `ls -lRt` output (as ftp.gnu.org/ls-lrRt.txt.gz): returns dirs under /home/ftp/gnu. Times are UTC. */

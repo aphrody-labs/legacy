@@ -53,7 +53,7 @@ const HTML = (feed: Feed) => `<!doctype html>
 <section id="about" hidden>
 <h2>Feeds</h2>
 <ul><li><a href="feed.json">feed.json</a>: one entry per package, plus the kernel section.</li><li><a href="feed.atom">feed.atom</a>: Atom 1.0, newest upstream release first.</li><li><a href="events.json">events.json</a>: detected changes (release, Rust, announce, kernel).</li></ul>
-<p class="dim">Sources: ftp.gnu.org ls-lrRt, info-gnu archive, Savannah git, GSRC, Guix, GitHub releases, crates.io, kernel.org, Android GKI and ChromeOS gitiles. Polled every 10 minutes on fr2; tarballs and signatures mirrored to R2.</p>
+<p class="dim">Sources: ftp.gnu.org ls-lrRt, info-gnu archive, Savannah git, GSRC, GitHub releases, crates.io, kernel.org, Android GKI and ChromeOS gitiles. Polled every 10 minutes on fr2; tarballs and signatures mirrored to R2.</p>
 </section>
 </main>
 <script type="module" src="app.js"></script>
