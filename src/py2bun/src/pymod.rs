@@ -1,5 +1,5 @@
-//! PyO3 module `py2bun._py2bun` (abi3): `transpile(source) -> str`.
-use pyo3::exceptions::PyValueError;
+//! PyO3 module `py2bun._py2bun` (abi3): `transpile(source, mode="auto") -> str`.
+use pyo3::exceptions::{PySyntaxError, PyValueError};
 use pyo3::prelude::*;
 
 fn parse_mode(m: &str) -> PyResult<crate::AsyncMode> {
@@ -11,7 +11,7 @@ fn parse_mode(m: &str) -> PyResult<crate::AsyncMode> {
     }
 }
 
-/// Transpile Python 3 source to Bun TypeScript. Raises ValueError on a syntax error;
+/// Transpile Python 3 source to Bun TypeScript. Raises SyntaxError (all diagnostics joined) on a syntax error;
 /// other diagnostics are embedded as `// py2bun ...` header comments (see
 /// `transpile_with_diagnostics`). `mode`: "auto" (async when the script uses Ghidra), "async", "sync".
 #[pyfunction]
@@ -19,8 +19,8 @@ fn parse_mode(m: &str) -> PyResult<crate::AsyncMode> {
 fn transpile(source: &str, mode: &str) -> PyResult<String> {
     let o = crate::transpile_with(source, parse_mode(mode)?);
     if o.ts.is_empty() {
-        let m = o.diagnostics.first().map(|d| d.to_string()).unwrap_or_default();
-        return Err(PyValueError::new_err(m));
+        let m = o.diagnostics.iter().map(|d| d.to_string()).collect::<Vec<_>>().join("\n");
+        return Err(PySyntaxError::new_err(m));
     }
     Ok(o.ts)
 }

@@ -37,3 +37,25 @@ fn except_tuple_with_comma_name_rewritten() {
     let o = transpile("try:\n    pass\nexcept (ValueError, KeyError), e:\n    print e\n");
     assert!(!o.ts.is_empty(), "{:?}", o.diagnostics);
 }
+
+#[test]
+fn docstring_is_not_rewritten_and_comment_paren_order() {
+    let o = transpile("def f():\n    \"\"\"\n    print foo\n    \"\"\"\n    print \"a\", \\\n        \"b\"  # c\n");
+    assert!(!o.ts.is_empty(), "{:?}", o.diagnostics);
+    assert!(!o.ts.contains("print(foo"), "{}", o.ts);
+    let lines: Vec<usize> = o.diagnostics.iter().filter(|d| d.message.contains("Python 2")).map(|d| d.line).collect();
+    assert!(lines.contains(&5) && lines.contains(&6), "{lines:?}");
+}
+
+#[test]
+fn header_colon_inside_string_is_ignored() {
+    let o = transpile("d = {\"a\": \"x: print y\"}\nif d:  print d\n");
+    assert!(!o.ts.is_empty(), "{:?}", o.diagnostics);
+    assert!(o.ts.contains("x: print y"), "{}", o.ts);
+}
+
+#[test]
+fn except_with_three_names_is_not_rewritten_as_python2() {
+    let o = transpile("try:\n    pass\nexcept A, B, C:\n    print \"x\"\n");
+    assert!(o.diagnostics.iter().all(|d| !d.message.contains("`except A, e` read")), "{:?}", o.diagnostics);
+}

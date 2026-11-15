@@ -27,14 +27,22 @@ export function findBinary(): string | null {
   if (onPath) return onPath;
   const here = dirname(fileURLToPath(import.meta.url));
   const crate = join(here, "..", "..", "..", "src", "py2bun");
-  for (const p of [join(crate, "target", "release", `py2bun-rs${exe}`), join(crate, "target", "debug", `py2bun-rs${exe}`)]) if (existsSync(p)) return p;
+  const targets = [process.env.CARGO_TARGET_DIR, join(crate, "target")].filter((t): t is string => !!t);
+  for (const t of targets) for (const prof of ["release", "debug"]) {
+    const p = join(t, prof, `py2bun-rs${exe}`);
+    if (existsSync(p)) return p;
+  }
   return null;
 }
 
 /** Transpile Python source to Bun TypeScript. */
-export function transpile(source: string, bin: string | null = findBinary()): TranspileResult {
+export function transpile(source: string, bin: string | null = findBinary(), mode: "auto" | "async" | "sync" = "auto"): TranspileResult {
   if (!bin) throw new Error("py2bun-rs not found: set PY2BUN_BIN or build src/py2bun (cargo build --release)");
-  const p = Bun.spawnSync([bin, "-", "--json"], { stdin: new TextEncoder().encode(source), stdout: "pipe", stderr: "pipe" });
+  const args = [bin, "-", "--json", ...(mode === "async" ? ["--async"] : mode === "sync" ? ["--sync"] : [])];
+  const p = Bun.spawnSync(args, { stdin: new TextEncoder().encode(source), stdout: "pipe", stderr: "pipe" });
+  if (p.exitCode === 2 || p.exitCode === null || p.signalCode) {
+    throw new Error(`py2bun-rs failed (exit ${p.exitCode}${p.signalCode ? `, signal ${p.signalCode}` : ""}): ${p.stderr.toString().trim()}`);
+  }
   const diagnostics: Diagnostic[] = [];
   for (const l of p.stderr.toString().split("\n")) {
     if (!l.startsWith("{")) continue;
@@ -49,8 +57,8 @@ export function transpile(source: string, bin: string | null = findBinary()): Tr
 }
 
 /** Transpile a .py file; writes `out` when given. */
-export async function transpileFile(path: string, out?: string, bin?: string | null): Promise<TranspileResult> {
-  const r = transpile(await Bun.file(path).text(), bin ?? findBinary());
+export async function transpileFile(path: string, out?: string, bin?: string | null, mode: "auto" | "async" | "sync" = "auto"): Promise<TranspileResult> {
+  const r = transpile(await Bun.file(path).text(), bin ?? findBinary(), mode);
   if (out && r.ts) await Bun.write(out, r.ts);
   return r;
 }

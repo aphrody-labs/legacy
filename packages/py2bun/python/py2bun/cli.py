@@ -1,6 +1,7 @@
 """CLI: py2bun file.py -o file.ts"""
 
 import argparse
+import json
 import sys
 
 from ._py2bun import transpile_with_diagnostics
@@ -11,11 +12,28 @@ def main(argv=None) -> int:
     ap.add_argument("file", nargs="?", default="-", help="Python source ('-' = stdin)")
     ap.add_argument("-o", "--output", help="output .ts path (default: stdout)")
     ap.add_argument("--strict", action="store_true", help="exit 1 on any diagnostic, warnings included")
+    ap.add_argument("--json", action="store_true", help="print diagnostics as JSON lines on stderr")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--async", dest="mode", action="store_const", const="async", help="force async output")
+    mode.add_argument("--sync", dest="mode", action="store_const", const="sync", help="force sync output")
+    ap.set_defaults(mode="auto")
     ns = ap.parse_args(argv)
-    src = sys.stdin.read() if ns.file == "-" else open(ns.file, encoding="utf-8").read()
-    ts, diags = transpile_with_diagnostics(src)
+    label = "<stdin>" if ns.file == "-" else ns.file
+    try:
+        if ns.file == "-":
+            src = sys.stdin.read()
+        else:
+            with open(ns.file, encoding="utf-8") as f:
+                src = f.read()
+    except (OSError, UnicodeDecodeError) as e:
+        print(f"py2bun: {label}: {e}", file=sys.stderr)
+        return 2
+    ts, diags = transpile_with_diagnostics(src, ns.mode)
     for line, col, sev, msg in diags:
-        print(f"{ns.file}:{line}:{col}: {sev}: {msg}", file=sys.stderr)
+        if ns.json:
+            print(json.dumps({"line": line, "col": col, "severity": sev, "message": msg}), file=sys.stderr)
+        else:
+            print(f"{label}:{line}:{col}: {sev}: {msg}", file=sys.stderr)
     if ts:
         if ns.output:
             with open(ns.output, "w", encoding="utf-8", newline="\n") as f:

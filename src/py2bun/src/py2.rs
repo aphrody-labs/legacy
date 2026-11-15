@@ -48,7 +48,79 @@ fn first_comma(s: &str) -> Option<usize> {
     None
 }
 
-const COMPOUND: &[&str] = &["if ", "elif ", "else", "for ", "while ", "try", "except", "with ", "finally"];
+const COMPOUND: &[&str] = &["if ", "elif ", "else:", "for ", "while ", "try:", "except ", "except:", "with ", "finally:"];
+
+/// Index of the header colon (top level, outside strings) after which a `print` statement follows.
+fn print_colon(code: &str) -> Option<usize> {
+    let (mut q, mut esc, mut depth) = (None::<char>, false, 0i32);
+    for (i, c) in code.char_indices() {
+        if let Some(qc) = q {
+            if esc {
+                esc = false;
+            } else if c == '\\' {
+                esc = true;
+            } else if c == qc {
+                q = None;
+            }
+        } else {
+            match c {
+                '"' | '\'' => q = Some(c),
+                '(' | '[' | '{' => depth += 1,
+                ')' | ']' | '}' => depth -= 1,
+                ':' if depth == 0 => {
+                    let after = code[i + 1..].trim_start();
+                    if after.starts_with("print") && after[5..].starts_with([' ', '\t']) {
+                        return Some(i);
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+    None
+}
+
+/// Updates the triple-quoted-string state after `line` (`Some(quote)` while inside one).
+fn triple_state(line: &str, mut st: Option<&'static str>) -> Option<&'static str> {
+    let b = line.as_bytes();
+    let mut i = 0;
+    let mut q: Option<u8> = None;
+    while i < b.len() {
+        if let Some(t) = st {
+            if line[i..].starts_with(t) {
+                st = None;
+                i += 3;
+                continue;
+            }
+            i += 1;
+            continue;
+        }
+        let c = b[i];
+        if let Some(qc) = q {
+            if c == b'\\' {
+                i += 2;
+                continue;
+            }
+            if c == qc {
+                q = None;
+            }
+        } else if line[i..].starts_with("\"\"\"") {
+            st = Some("\"\"\"");
+            i += 3;
+            continue;
+        } else if line[i..].starts_with("'''") {
+            st = Some("'''");
+            i += 3;
+            continue;
+        } else if c == b'"' || c == b'\'' {
+            q = Some(c);
+        } else if c == b'#' {
+            break;
+        }
+        i += 1;
+    }
+    st
+}
 
 fn fix_line(line: &str) -> Option<String> {
     let indent_len = line.len() - line.trim_start().len();
@@ -57,8 +129,8 @@ fn fix_line(line: &str) -> Option<String> {
     if !body.starts_with("print") && COMPOUND.iter().any(|k| body.starts_with(k)) {
         let cut = comment_start(body);
         let code = &body[..cut];
-        if let Some(p) = code.find(": print") {
-            let tail = &code[p + 2..];
+        if let Some(p) = print_colon(code) {
+            let tail = code[p + 1..].trim_start();
             let head = &code[..p + 1];
             if let Some(f) = fix_line(tail) {
                 let c = if cut < body.len() { format!("  {}", &body[cut..]) } else { String::new() };
@@ -140,6 +212,9 @@ fn fix_line(line: &str) -> Option<String> {
         }
         let i = first_comma(inner)?;
         let (ty, name) = (inner[..i].trim(), inner[i + 1..].trim());
+        if name.is_empty() || !name.chars().all(|c| c.is_alphanumeric() || c == '_') {
+            return None; // `except A, B, C:` is not the Python 2 `except A, name:` form
+        }
         let c = if comment.is_empty() { String::new() } else { format!("  {comment}") };
         return Some(format!("{indent}except {ty} as {name}:{c}"));
     }
@@ -182,7 +257,11 @@ fn fix_continued(lines: &[(&str, &str)], i: usize) -> Option<(Vec<String>, usize
         }
     }
     let last = parts.len() - 1;
-    let mut tail = parts[last].trim_end().to_string();
+    let full_tail = parts[last].trim_end().to_string();
+    // the closing `)` goes before a trailing `# comment`
+    let cut = comment_start(&full_tail);
+    let mut tail = full_tail[..cut].trim_end().to_string();
+    let comment = if cut < full_tail.len() { format!("  {}", &full_tail[cut..]) } else { String::new() };
     let mut extra = String::new();
     if tail.ends_with(',') {
         tail.pop();
@@ -192,7 +271,7 @@ fn fix_continued(lines: &[(&str, &str)], i: usize) -> Option<(Vec<String>, usize
     for (k, p) in parts.iter().enumerate() {
         let mut s = if k == 0 { format!("{indent}print({p}") } else { p.clone() };
         if k == last {
-            s = if k == 0 { format!("{indent}print({tail}{extra})") } else { format!("{tail}{extra})") };
+            s = if k == 0 { format!("{indent}print({tail}{extra}){comment}") } else { format!("{tail}{extra}){comment}") };
         }
         out.push(s);
     }
@@ -205,10 +284,19 @@ pub fn fix(src: &str) -> (String, Vec<usize>) {
     let mut out = String::with_capacity(src.len());
     let mut changed = vec![];
     let mut i = 0;
+    let mut triple: Option<&'static str> = None;
     while i < lines.len() {
         let (line, nl) = lines[i];
+        if triple.is_some() {
+            // inside a triple-quoted string (docstring): never rewrite
+            triple = triple_state(line, triple);
+            out.push_str(line);
+            out.push_str(nl);
+            i += 1;
+            continue;
+        }
         if let Some((rep, j)) = fix_continued(&lines, i) {
-            changed.push(i + 1);
+            changed.extend(i + 1..=j + 1);
             for (k, r) in rep.iter().enumerate() {
                 out.push_str(r);
                 out.push_str(lines[i + k].1);
@@ -223,6 +311,7 @@ pub fn fix(src: &str) -> (String, Vec<usize>) {
             }
             None => out.push_str(line),
         }
+        triple = triple_state(line, triple);
         out.push_str(nl);
         i += 1;
     }

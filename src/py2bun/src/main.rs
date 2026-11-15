@@ -1,7 +1,7 @@
 use std::io::{Read, Write};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: py2bun [FILE|-] [-o OUT] [--json] [--strict]\n  FILE  Python source ('-' or absent: stdin); -o: output path (default stdout)\n  --json    print diagnostics as JSON lines on stderr\n  --strict  exit 1 if any diagnostic (warnings included)\n  --async / --sync  force async (await every call) or sync output; default: async when the script uses Ghidra\nexit: 0 ok, 1 diagnostics (errors; or any with --strict), 2 usage/io";
+const USAGE: &str = "usage: py2bun-rs [FILE|-] [-o|--output OUT] [--json] [--strict]\n  FILE  Python source ('-' or absent: stdin); -o: output path (default stdout)\n  --json    print diagnostics as JSON lines on stderr\n  --strict  exit 1 if any diagnostic (warnings included)\n  --async / --sync  force async (await every call) or sync output; default: async when the script uses Ghidra\nexit: 0 ok, 1 diagnostics (errors; or any with --strict), 2 usage/io";
 
 fn main() -> ExitCode {
     let mut input: Option<String> = None;
@@ -11,7 +11,13 @@ fn main() -> ExitCode {
     let mut it = std::env::args().skip(1);
     while let Some(a) = it.next() {
         match a.as_str() {
-            "-o" | "--output" => out = it.next(),
+            "-o" | "--output" => match it.next() {
+                Some(v) => out = Some(v),
+                None => {
+                    eprintln!("py2bun: {a} needs a value\n{USAGE}");
+                    return ExitCode::from(2);
+                }
+            },
             "--json" => json = true,
             "--strict" => strict = true,
             "--async" => mode = py2bun::AsyncMode::On,
@@ -20,7 +26,17 @@ fn main() -> ExitCode {
                 println!("{USAGE}");
                 return ExitCode::SUCCESS;
             }
-            _ => input = Some(a),
+            f if f.starts_with('-') && f != "-" => {
+                eprintln!("py2bun: unknown option {f}\n{USAGE}");
+                return ExitCode::from(2);
+            }
+            _ => {
+                if input.is_some() {
+                    eprintln!("py2bun: more than one input file\n{USAGE}");
+                    return ExitCode::from(2);
+                }
+                input = Some(a)
+            }
         }
     }
     let mut src = String::new();
@@ -32,7 +48,13 @@ fn main() -> ExitCode {
             }
         }
         Some(p) => match std::fs::read(p) {
-            Ok(b) => src = String::from_utf8_lossy(&b).into_owned(),
+            Ok(b) => match String::from_utf8(b) {
+                Ok(t) => src = t,
+                Err(e) => {
+                    eprintln!("py2bun: {p}: not valid UTF-8 ({e})");
+                    return ExitCode::from(2);
+                }
+            },
             Err(e) => {
                 eprintln!("py2bun: {p}: {e}");
                 return ExitCode::from(2);
@@ -63,7 +85,12 @@ fn main() -> ExitCode {
                 }
             }
             None => {
-                let _ = std::io::stdout().write_all(res.ts.as_bytes());
+                if let Err(e) = std::io::stdout().write_all(res.ts.as_bytes()) {
+                    if e.kind() != std::io::ErrorKind::BrokenPipe {
+                        eprintln!("py2bun: cannot write stdout: {e}");
+                        return ExitCode::from(2);
+                    }
+                }
             }
         }
     }
