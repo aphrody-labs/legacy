@@ -122,7 +122,7 @@ pub const EVOLVING_GOOGLE_YELLOW: u32 = 0xFFF4_B400;
 /// Google's evolved 4-color gradient stop 4: Google Green (`#34A853`).
 pub const EVOLVING_GOOGLE_GREEN: u32 = 0xFF34_A853;
 
-/// Aphrody's signature 4-color gradient stop 1: brand primary (`#1242FF`, M3 vibrant from `#3355FF`, `packages/design/brand`).
+/// Aphrody's signature 4-color gradient stop 1: brand primary (`#1242FF`, M3 vibrant from `#3355FF`, `packages/design/design.toml`).
 pub const APHRODY_SIGNATURE_NAVY: u32 = 0xFF12_42FF;
 /// Aphrody's signature 4-color gradient stop 2: Electric Violet (`#7C5CFF`).
 pub const APHRODY_SIGNATURE_VIOLET: u32 = 0xFF7C_5CFF;

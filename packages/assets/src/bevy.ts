@@ -1,5 +1,5 @@
 // Official Bevy Asset Management conventions (https://bevy.org/assets/ & bevy_asset 0.20):
-//   - Canonical `assets/` directory layout (brand/, icons/, textures/, models/, audio/, ui/, fonts/, themes/)
+//   - Canonical `assets/` directory layout (icons/, textures/, models/, audio/, ui/, fonts/, themes/)
 //   - RON `.meta` sidecar format (AssetMeta v1.0) paired 1:1 with assets
 //   - Web deployment guard: missing `*.meta` requests MUST NOT be masked by 200 OK SPA fallbacks
 import {

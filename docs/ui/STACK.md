@@ -102,5 +102,5 @@ Ce que nous reprenons : un seul système de tokens généré (Google), une synch
 ## 8. Ce qui est remplacé
 
 - `packages/google-design` (studio « gds », port maison de HCT, serveur miroir, Stitch simulé) : supprimé, remplacé par `packages/design` qui appelle le Material Color Utilities officiel.
-- Moteur HCT Rust et émetteurs multi-cibles (`aphrody-design-*`) : supprimés, la génération est dans `packages/design`. `aphrody-brand` (`src/ui/kit`) reste le producteur des assets graphiques et doit lire `packages/design/tokens/tokens.json` au lieu de recalculer le schéma (même résultat vérifié : primary `#1242FF`, dark primary `#BAC3FF`).
+- Moteur HCT Rust et émetteurs multi-cibles (`aphrody-design-*`) : supprimés, la génération est dans `packages/design`.
 - Tailwind, shadcn, Base UI et CSS de couleurs maison dans les apps : retirés au fil des migrations.

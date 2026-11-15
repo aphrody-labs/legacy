@@ -9,7 +9,7 @@
  *   - Dart / Flutter (`dart:ffi`), Rust (`src/core/capi`, `aphrody-ui`, `taffy`, `egui`, `iced`,
  *     `libcosmic`, `bevy`, `leptos`, `dioxus`, `tauri`), Pure Bun (`bun:ffi`), React, and WinUI 3.
  *
- * Color roles match `packages/design/tokens/tokens.json` (`packages/design/brand/brand.toml` seed #135B82,
+ * Color roles match `packages/design/tokens/tokens.json` (`packages/design/design.toml` seed #135B82,
  * Material Color Utilities 0.4.0 vibrant scheme).
  */
 #ifndef _UAPI_AY_UI_H

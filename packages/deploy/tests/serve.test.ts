@@ -39,7 +39,7 @@ const req = (path: string, h: Record<string, string> = {}) =>
 
 describe("serveStatic", () => {
   const b = bucket({
-    "brand/v2/mark.svg": "<svg/>",
+    "assets/v2/logo.svg": "<svg/>",
     "_static/app-abc123.js": "x",
     "index.html": "<p>home</p>",
     "docs/index.html": "<p>docs</p>",
@@ -50,8 +50,8 @@ describe("serveStatic", () => {
     "site/index.html": "<p>spa</p>",
   });
 
-  test("brand/v<N> and _static are immutable, brand is cross-origin", async () => {
-    const r = await serveStatic(b, req("/brand/v2/mark.svg"), { prefix: "" });
+  test("assets/v<N> and _static are immutable, assets/v<N> is cross-origin", async () => {
+    const r = await serveStatic(b, req("/assets/v2/logo.svg"), { prefix: "" });
     expect(r.status).toBe(200);
     expect(r.headers.get("cache-control")).toBe(
       "public, max-age=31536000, immutable",
@@ -115,7 +115,7 @@ describe("serveStatic", () => {
     const nf = await serveStatic(b, req("/missing"), { prefix: "" });
     expect(nf.status).toBe(404);
     expect(nf.headers.get("cache-control")).toBe("public, max-age=60");
-    const raw = await serveStatic(b, req("/brand/v2/nope.svg"), {
+    const raw = await serveStatic(b, req("/assets/v2/nope.svg"), {
       prefix: "site",
     });
     expect(raw.status).toBe(404);

@@ -8,7 +8,7 @@ metadata:
 
 # ui-ux-pro-max
 
-Advice, never authority: `ui-system` (M3 tokens, Angular Material, GPUI, WebUI, Zig) wins in case of conflict. No color, font or Tailwind class from the results is copied; a style or palette suggestion is translated into an M3 variant (`brand.toml`) or a composition, not into homemade CSS.
+Advice, never authority: `ui-system` (M3 tokens, Angular Material, GPUI, WebUI, Zig) wins in case of conflict. No color, font or Tailwind class from the results is copied; a style or palette suggestion is translated into an M3 variant (`design.toml`) or a composition, not into homemade CSS.
 
 ## Search
 
@@ -27,7 +27,7 @@ Domains: `ux` (UX/a11y rules, default), `web` (app and native interface: safe ar
 
 | Upstream result                     | src translation                                                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Palette, hex color, "Primary"       | M3 role `--md-sys-color-*`; brand hue = `packages/design/brand/brand.toml`                                             |
+| Palette, hex color, "Primary"       | M3 role `--md-sys-color-*`; brand hue = `packages/design/design.toml`                                             |
 | Font pair, Tailwind config          | Google Sans Flex (brand); `google-fonts --ofl` only for a secondary family, shipped as woff2 from an OFL fork |
 | Icons (Lucide, Heroicons, Phosphor) | Material Symbols Rounded (`<mat-icon>`)                                                                        |
 | React/Next/shadcn/Tailwind code     | Angular Material (`mat-*`), GPUI or WebUI; keep the rule, rewrite the example                      |

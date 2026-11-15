@@ -1,10 +1,17 @@
-// Theme set generated from the brand seed and named seeds (Material Color Utilities, same roles as build.ts).
+// Theme set generated from the seed of design.toml and named seeds (Material Color Utilities, same roles as build.ts).
 // Seeds are plain hex values chosen by us; see docs/design/REFERENCES.md for the moods they refer to.
 import {
   hexFromArgb,
   MaterialDynamicColors,
 } from "@material/material-color-utilities";
+import { readFileSync } from "node:fs";
 import { dynamicScheme } from "./schemes.ts";
+
+const design = (
+  Bun.TOML.parse(
+    readFileSync(new URL("../design.toml", import.meta.url), "utf8"),
+  ) as { design: { seed: string; variant: string } }
+).design;
 
 export type ThemeDef = {
   name: string;
@@ -17,10 +24,10 @@ export type ThemeDef = {
 export const THEMES: ThemeDef[] = [
   {
     name: "aphrody",
-    seed: "#135B82",
-    variant: "vibrant",
+    seed: design.seed,
+    variant: design.variant,
     default: "light",
-    note: "Byron Love Zeus sapphire seed from brand.toml / zukan",
+    note: "seed and variant of design.toml",
   },
   {
     name: "m3",

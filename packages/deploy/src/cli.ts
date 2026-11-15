@@ -6,7 +6,7 @@
 //   ay deploy rollback <project> [sha]           production back to sha, or to the previous production
 //   ay deploy promote <project> <sha>            production to sha
 //   ay deploy ci [--before sha] [--after sha] [--project p]...   CI entry: registry, affected projects, deploy
-//   ay deploy registry                           upload the registry (projects, inventory, labs, brand)
+//   ay deploy registry                           upload the registry (projects, inventory, labs, design tokens)
 //   ay deploy observe [project]...               p75 LCP/INP/CLS against the budgets (exit 1 when over)
 // Container deploys stay under `ay deploy up|build|smoke|ps|shell|run|products` (just docker-*).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";

@@ -5,13 +5,13 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-export interface Brand {
+export interface SiteLogo {
   name: string;
   mark: string;
 }
 
 /** Brand name and mark from packages/design/brand (brand.toml, src/mark.svg). */
-export function readBrand(root: string): Brand {
+export function readLogo(root: string): SiteLogo {
   const toml = join(root, "packages", "design", "brand", "brand.toml");
   const svg = join(root, "packages", "design", "brand", "src", "mark.svg");
   const b = existsSync(toml)

@@ -16,7 +16,7 @@
 
 [project.aphrody]
 path = "apps/aphrody"
-build = "bun -e \"\""
+build = "bun apps/aphrody/build.ts"
 out = "public"
 domains = ["aphrody.com", "www.aphrody.com", "aphrody.app", "www.aphrody.app"]
 worker = "aphrody"
@@ -27,6 +27,7 @@ watch = [
   "packages/deploy/src/m3.ts",
   "packages/design/tokens/**",
   "packages/design/**",
+  "packages/i18n/catalogs/site/**",
   "packages/wck/**",
   "packages/design/brand/**",
 ]

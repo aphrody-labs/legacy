@@ -1,4 +1,4 @@
-// Generates every token output of @aphrody/design from packages/design/brand/brand.toml.
+// Generates every token output of @aphrody/design from packages/design/design.toml.
 // Color: official @material/material-color-utilities (DynamicScheme, MaterialDynamicColors).
 // Type scale, shape, elevation, state: docs/design/specs/tokens/material-3.json ; motion: Angular Material M3 tokens.
 // `bun run src/build.ts` writes tokens/ and DESIGN.md ; `--check` fails if anything would change.
@@ -19,7 +19,7 @@ const root = join(pkg, "..", "..");
 const out = join(pkg, "tokens");
 const check = process.argv.includes("--check");
 
-type Brand = {
+type Design = {
   name: string;
   seed: string;
   variant: string;
@@ -27,15 +27,15 @@ type Brand = {
   font: string;
   font_fallback: string[];
 };
-// Source : packages/design/brand/brand.toml (agent marque) ; à défaut (checkout CI sans packages/design/brand), la copie
-// gardée dans tokens/tokens.json (source.brand), pour que --check et les tests restent reproductibles.
-const brandFile = Bun.file(join(root, "packages/design/brand/brand.toml"));
-const brand: Brand = (await brandFile.exists())
-  ? (Bun.TOML.parse(await brandFile.text()) as { brand: Brand }).brand
-  : (await Bun.file(join(out, "tokens.json")).json()).source.brand;
-if (!brand?.seed)
+// Source : packages/design/design.toml ; à défaut (checkout CI sans ce fichier), la copie gardée dans
+// tokens/tokens.json (source.design), pour que --check et les tests restent reproductibles.
+const designFile = Bun.file(join(root, "packages/design/design.toml"));
+const cfg: Design = (await designFile.exists())
+  ? (Bun.TOML.parse(await designFile.text()) as { design: Design }).design
+  : (await Bun.file(join(out, "tokens.json")).json()).source.design;
+if (!cfg?.seed)
   throw new Error(
-    "graine de marque introuvable (packages/design/brand/brand.toml ou tokens/tokens.json source.brand)",
+    "graine introuvable (packages/design/design.toml ou tokens/tokens.json source.design)",
   );
 const mcuVersion = (
   await Bun.file(
@@ -46,9 +46,9 @@ const angularMaterialVersion = (
   await Bun.file(join(moduleDir("@angular/material"), "package.json")).json()
 ).version;
 
-const Scheme = SCHEMES[brand.variant as Variant];
+const Scheme = SCHEMES[cfg.variant as Variant];
 if (!Scheme)
-  throw new Error(`variant inconnue dans brand.toml : ${brand.variant}`);
+  throw new Error(`variant inconnue dans design.toml : ${cfg.variant}`);
 
 // Modes: M3 defines standard (0), medium (0.5) and high (1) contrast, light and dark.
 const MODES = [
@@ -65,7 +65,7 @@ const kebab = (s: string) =>
     .replace(/_/g, "-")
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
     .toLowerCase();
-const seed = Hct.fromInt(argbFromHex(brand.seed));
+const seed = Hct.fromInt(argbFromHex(cfg.seed));
 const roles = new MaterialDynamicColors().allColors.filter(
   (c) => !c.name.endsWith("_palette_key_color"),
 );
@@ -129,7 +129,7 @@ if (motion["easing-emphasized"]) {
   delete motion["easing-emphasized"];
   motion["easing-emphasized"] = v;
 }
-const fontStack = [brand.font, ...brand.font_fallback]
+const fontStack = [cfg.font, ...cfg.font_fallback]
   .map((f) => (f.includes(" ") ? `"${f}"` : f))
   .join(", ");
 const typescale: Record<string, Record<string, string>> = {};
@@ -183,21 +183,21 @@ expect("opacités d'état", Object.keys(state).length, 5); // hover, focus, pres
 const tokens = {
   $schema: "aphrody-design/1",
   source: {
-    brand: {
-      name: brand.name,
-      seed: brand.seed,
-      variant: brand.variant,
-      accent: brand.accent,
-      font: brand.font,
-      font_fallback: brand.font_fallback,
+    design: {
+      name: cfg.name,
+      seed: cfg.seed,
+      variant: cfg.variant,
+      accent: cfg.accent,
+      font: cfg.font,
+      font_fallback: cfg.font_fallback,
     },
-    seed: brand.seed.toUpperCase(),
-    variant: brand.variant,
+    seed: cfg.seed.toUpperCase(),
+    variant: cfg.variant,
     "material-color-utilities": mcuVersion,
     "angular-material": angularMaterialVersion,
   },
   color,
-  custom: { bolt: brand.accent.toUpperCase() },
+  custom: { bolt: cfg.accent.toUpperCase() },
   palettes,
   typeface: {
     brand: fontStack,
@@ -214,7 +214,7 @@ const tokens = {
 // --- emitters ---
 const files: Record<string, string> = {};
 const header = (c: string) =>
-  `${c} Généré par packages/design/src/build.ts depuis packages/design/brand/brand.toml (seed ${tokens.source.seed}, ${brand.variant}, MCU ${mcuVersion}). Ne pas éditer.\n`;
+  `${c} Généré par packages/design/src/build.ts depuis packages/design/design.toml (seed ${tokens.source.seed}, ${cfg.variant}, MCU ${mcuVersion}). Ne pas éditer.\n`;
 files["tokens.json"] = JSON.stringify(tokens, null, 2) + "\n";
 
 const cssVars = (m: Record<string, string>) =>
@@ -297,7 +297,7 @@ const matShape = Object.keys(shape)
 const matState = Object.keys(state)
   .map((k) => `    ${k}: var(--md-sys-state-${k}),`)
   .join("\n");
-const families = [brand.font, ...brand.font_fallback]
+const families = [cfg.font, ...cfg.font_fallback]
   .map((x) =>
     /^[a-z-]+$/i.test(x) && !/^(Inter)$/.test(x) ? x : `"${sassStr(x)}"`,
   )
@@ -361,7 +361,7 @@ ${MODES.map(
       .join(", ")}];\n    }`,
 ).join("\n")}
     pub const BOLT: u32 = ${rgba(tokens.custom.bolt)};
-    pub const FONT_BRAND: &str = ${JSON.stringify(brand.font)};
+    pub const FONT_BRAND: &str = ${JSON.stringify(cfg.font)};
     /// Ton 10 de la palette neutre (encre de l'organisation Dev).
     pub const INK: u32 = ${rgba(palettes.neutral["10"])};
     /// Palettes HCT de Material Color Utilities par teinte entière (0..360) : tuiles produit (chroma 56,
@@ -446,11 +446,11 @@ ${MODES.map(
       .join("\n")}\n};`,
 ).join("\n")}
 pub const bolt: u32 = ${rgba(tokens.custom.bolt)};
-pub const font_brand = ${JSON.stringify(brand.font)};
+pub const font_brand = ${JSON.stringify(cfg.font)};
 `;
 
 const symbolsJsonFile = Bun.file(
-  join(root, "packages/design/brand/gen/symbols/symbols.json"),
+  join(root, "packages/design/symbols/symbols.json"),
 );
 if (await symbolsJsonFile.exists()) {
   const { renderRustIconsModule } =
@@ -523,10 +523,10 @@ const ansi = {
   ),
   "windows-terminal": [
     {
-      name: `${brand.name} M3 Light`,
+      name: `${cfg.name} M3 Light`,
       ...ansiScheme(color.light, false, palettes),
     },
-    { name: `${brand.name} M3 Dark`, ...ansiScheme(color.dark, true, darkPal) },
+    { name: `${cfg.name} M3 Dark`, ...ansiScheme(color.dark, true, darkPal) },
   ],
 };
 files["ansi.json"] = JSON.stringify(ansi, null, 2) + "\n";
@@ -611,12 +611,12 @@ const yamlColors = Object.entries(L)
   );
 const yamlType = Object.entries(typescale).map(
   ([n, p]) =>
-    `  ${n}:\n    fontFamily: ${brand.font}\n    fontSize: ${p.size}\n    fontWeight: ${p.weight}\n    lineHeight: ${p["line-height"]}\n    letterSpacing: ${p.tracking}`,
+    `  ${n}:\n    fontFamily: ${cfg.font}\n    fontSize: ${p.size}\n    fontWeight: ${p.weight}\n    lineHeight: ${p["line-height"]}\n    letterSpacing: ${p.tracking}`,
 );
 const designMd = `---
 version: alpha
-name: ${brand.name}
-description: Material 3 ${brand.variant} depuis ${tokens.source.seed}, généré par Material Color Utilities ${mcuVersion} (packages/design). Source unique de tous les UI du monorepo.
+name: ${cfg.name}
+description: Material 3 ${cfg.variant} depuis ${tokens.source.seed}, généré par Material Color Utilities ${mcuVersion} (packages/design). Source unique de tous les UI du monorepo.
 colors:
 ${yamlColors.join("\n")}
 typography:
@@ -672,7 +672,7 @@ components:
 
 ## Overview
 
-Système unique \`@aphrody/design\` : Material 3 strict (m3.material.io), schéma ${brand.variant} depuis la couleur de marque ${tokens.source.seed} de \`packages/design/brand/brand.toml\`. Sobre, dense, technique. Aucune couleur hors rôles M3, aucune police hors ${brand.font}.
+Système unique \`@aphrody/design\` : Material 3 strict (m3.material.io), schéma ${cfg.variant} depuis la graine ${tokens.source.seed} de \`packages/design/design.toml\`. Sobre, dense, technique. Aucune couleur hors rôles M3, aucune police hors ${cfg.font}.
 
 ## Colors
 
@@ -680,7 +680,7 @@ Rôles M3 générés par Material Color Utilities (\`DynamicScheme\`), six modes
 
 ## Typography
 
-Échelle M3 officielle : display, headline, title, body, label en large/medium/small, police ${brand.font}, code en Google Sans Code.
+Échelle M3 officielle : display, headline, title, body, label en large/medium/small, police ${cfg.font}, code en Google Sans Code.
 
 ## Layout
 
@@ -696,12 +696,12 @@ Coins M3 : none 0, extra-small 4, small 8, medium 12, large 16, extra-large 28, 
 
 ## Components
 
-Web : Angular Material (\`@angular/material\`) uniquement, thème M3 via \`@aphrody/design/angular\` (\`tokens/angular-material.css\`, \`tokens/angular-theme.scss\`). Icônes : SVG 2 statiques (\`packages/design/brand/gen/symbols/sprite.svg\`, \`svg/*.svg\`) et structs Rust typées à la compilation (\`tokens/symbols.rs\` \`IconData\` / \`lucide-dioxus\` / \`lucide-leptos\` / \`dioxus-icons\` / \`icondata_core\`, tree-shakées par LLVM/wasm-opt sans chargement \`.woff2\` runtime). Desktop natif GPU : enum \`Symbol::codepoint()\` (\`tokens/symbols.rs\`, compatible \`egui_material_icons\` / \`iced_lucide\` / \`cosmic-text\`) avec \`tokens.rs\`. TUI : \`ansi.json\`.
+Web : Angular Material (\`@angular/material\`) uniquement, thème M3 via \`@aphrody/design/angular\` (\`tokens/angular-material.css\`, \`tokens/angular-theme.scss\`). Icônes : SVG 2 statiques (\`packages/design/symbols/sprite.svg\`, \`svg/*.svg\`) et structs Rust typées à la compilation (\`tokens/symbols.rs\` \`IconData\` / \`lucide-dioxus\` / \`lucide-leptos\` / \`dioxus-icons\` / \`icondata_core\`, tree-shakées par LLVM/wasm-opt sans chargement \`.woff2\` runtime). Desktop natif GPU : enum \`Symbol::codepoint()\` (\`tokens/symbols.rs\`, compatible \`egui_material_icons\` / \`iced_lucide\` / \`cosmic-text\`) avec \`tokens.rs\`. TUI : \`ansi.json\`.
 
 ## Do's and Don'ts
 
 - Faire : consommer \`tokens.css\`, \`tokens.json\` ou les constantes typées \`tokens/symbols.rs\` (\`Symbol::Settings\`), jamais recopier une valeur hexadécimale ni une chaîne d'icône non typée côté Rust.
-- Faire : régénérer par \`bun run --cwd packages/design build\` après tout changement de \`brand.toml\`.
+- Faire : régénérer par \`bun run --cwd packages/design build\` après tout changement de \`design.toml\`.
 - Ne pas faire : Tailwind, shadcn, palettes maison, dégradés décoratifs, emoji dans l'UI.
 - Ne pas faire : une seconde bibliothèque d'icônes runtime (\`.woff2\`) là où SVG 2 statique ou \`Symbol\` typé compile-time s'applique.
 `;

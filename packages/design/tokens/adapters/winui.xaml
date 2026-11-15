@@ -1,4 +1,4 @@
-<!-- Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer. Usage : fusionner ms-appx:///aphrody/winui.xaml dans Application.Resources (MergedDictionaries). -->
+<!-- Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/design.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer. Usage : fusionner ms-appx:///aphrody/winui.xaml dans Application.Resources (MergedDictionaries). -->
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">

@@ -5,7 +5,7 @@
 # the remote exists). Heavy steps go through aphrody-heavy (slot + load gate). Deploy afterwards:
 #   SRC_TAG=<sha> just deploy core prd ; SRC_TAG=<sha> just deploy edge fr2     (docs/infra/DEPLOY.md)
 #   build-all.sh [--no-sync] [--steps images,ay,wasm,site]    env: TARGETS=default, PLATFORMS=linux/amd64, ARTIFACTS=/srv/artifacts
-# yolo is not in the default set: its build needs packages/design/brand/gen (generated, outside the Docker context).
+# yolo is not in the default set: its build needs generated files outside the Docker context.
 # Windows-only products (apps/nt, unixwin, l2l) and the Craft Apps captures are out of scope here (nt.yml, game.yml, assets.yml).
 set -euo pipefail
 SRC=${SRC_CHECKOUT:-/srv/src}; ART=${ARTIFACTS:-/srv/artifacts}; STEPS=images,ay,wasm,site; SYNC=1

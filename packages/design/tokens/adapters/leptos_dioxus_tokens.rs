@@ -1,4 +1,4 @@
-// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/design.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 // Zero-dependency Rust CSS token constants (&'static str) shared identically across Leptos, Dioxus, Tauri WebView, React SSR, and Pure Bun.
 // Usage : include!(concat!(env!("CARGO_MANIFEST_DIR"), "/<chemin relatif>/packages/design/tokens/adapters/leptos_dioxus_tokens.rs"));
 

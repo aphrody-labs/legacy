@@ -1,4 +1,4 @@
-/* Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer. */
+/* Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/design.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer. */
 #ifndef AY_DESIGN_TOKENS_H
 #define AY_DESIGN_TOKENS_H
 

@@ -8,15 +8,14 @@
 //   bun scripts/catalog.ts profile <id> [--out <file>] [--check]
 //                                          a GitHub profile README ranked live from the GitHub API (scripts/catalog.config.json)
 //
-// Types come from `[[type]]` of packages/design/brand/brand.toml (one icon each, docs/icons): Rust workspace members of
-// Cargo.toml (crate), Bun workspaces of package.json (package), apps/* (app), infra/* (infra), the pins of src.lock.json
-// (third-party) and .agents/skills/* (skill). Outputs:
+// Types come from `types` of scripts/catalog.config.json: Rust workspace members of Cargo.toml (crate), Bun workspaces of
+// package.json (package), apps/* (app), infra/* (infra), the pins of src.lock.json (third-party) and .agents/skills/*
+// (skill). The logo is docs/logo/aphrody.png (the avatar of the aphrody-labs organisation). Outputs:
 //   - README.md: the `header` and `types` blocks between `<!-- catalog:begin NAME -->` and `<!-- catalog:end -->`;
 //   - one README per crate, package and own app: a `unit` block from its manifest; any hand-written text around the
 //     markers stays, a README without markers gets the block after its first heading;
 //   - docs/reference/catalog/<type>.md, one index per type;
-//   - apps/aphrody/public/catalog.json and catalog/index.html (the site page, tokens from packages/design), with the type
-//     icons copied to apps/aphrody/public/brand/icons.
+//   - apps/aphrody/public/catalog.json, read by apps/aphrody/build.ts (the site pages).
 // Nothing is typed here: no version, count or date goes into a text, the text comes from the i18n catalogs
 // (packages/i18n/catalogs/catalog/<locale>.json, same format and fallback chain as @aphrody/i18n; this file has no
 // dependency so a profile repository can run it from a sparse checkout).
@@ -69,14 +68,12 @@ interface Entry {
 interface Kind {
   id: string;
   name: string;
-  symbol: string;
   description: string;
 }
 
-const brand = toml("packages/design/brand/brand.toml");
-const kinds: Kind[] = brand.type ?? [];
-const kindOf = (id: string) => kinds.find((k) => k.id === id) ?? { id, name: id, symbol: "", description: "" };
-const projectName: string = brand.brand.name;
+const config = JSON.parse(read("scripts/catalog.config.json")) as { name: string; types: Kind[] };
+const kinds: Kind[] = config.types;
+const projectName: string = config.name;
 const slug = (() => {
   const url: string = JSON.parse(read("package.json")).repository?.url ?? "";
   const m = url.match(/github\.com[/:]([^/]+\/[^/.]+)/);
@@ -190,7 +187,7 @@ const catalog = (): Record<string, Entry[]> => Object.fromEntries(kinds.filter((
 // ---------------------------------------------------------------------------------------------
 // Rendering
 
-const iconPath = (id: string) => `docs/icons/${id}.svg`;
+const LOGO = "docs/logo/aphrody.png";
 const relLink = (from: string, to: string) => posix.relative(posix.dirname(from), to) || ".";
 const BEGIN = (n: string) => `<!-- catalog:begin ${n} -->`;
 const END = "<!-- catalog:end -->";
@@ -210,10 +207,7 @@ function merge(existing: string | null, name: string, body: string, opts: { titl
 
 function unitBlock(kind: Kind, e: Entry): string {
   const from = e.readme!;
-  const icon = relLink(from, iconPath(kind.id));
   const lines = [
-    `<img src="${icon}" alt="${kind.name}" width="40" height="40" align="right">`,
-    "",
     ...(e.extra?.source === "readme" ? [] : [e.description ? `> ${e.description}` : `> ${t("no_description")}`, ""]),
     `| ${t("type")} | ${t("path")} |`,
     "| :-- | :-- |",
@@ -233,66 +227,16 @@ const indexTable = (kind: Kind, entries: Entry[], from: string): string => {
   return [`| ${t("name")} | ${t("description")} |`, "| :-- | :-- |", ...rows].join("\n");
 };
 
-const logoBlock = (from: string, org: string) =>
-  [
-    "<picture>",
-    `  <source media="(prefers-color-scheme: dark)" srcset="${relLink(from, `docs/logo/${org}-wordmark-dark.svg`)}">`,
-    `  <img alt="${projectName}" src="${relLink(from, `docs/logo/${org}-wordmark-light.svg`)}" height="56">`,
-    "</picture>",
-  ].join("\n");
+const logoBlock = (from: string) => `<img alt="${projectName}" src="${relLink(from, LOGO)}" width="96" height="96">`;
 
 function rootBlocks(data: Record<string, Entry[]>): { header: string; types: string } {
-  const primary = (brand.org ?? []).find((o: any) => o.primary) ?? (brand.org ?? [])[0];
-  const badges = (brand.badge ?? []).map((b: any) => `<img alt="${b.label}" src="docs/badges/${b.id}.svg">`).join(" ");
-  const header = [logoBlock("README.md", primary.id), "", badges].join("\n");
+  const header = logoBlock("README.md");
   const rows = kinds.filter((k) => data[k.id]).map((k) => {
     const where = k.id === "third-party" ? "third_party" : k.id === "skill" ? ".agents/skills" : k.id === "crate" ? "src" : k.id === "package" ? "packages" : k.id === "app" ? "apps" : "infra";
-    return `| <img src="${iconPath(k.id)}" alt="" width="24" height="24"> [${k.name}](docs/reference/catalog/${k.id}.md) | \`${where}/\` | ${k.description} |`;
+    return `| [${k.name}](docs/reference/catalog/${k.id}.md) | \`${where}/\` | ${k.description} |`;
   });
   const types = [`## ${t("catalog")}`, "", t("catalog_intro"), "", `| ${t("type")} | ${t("path")} | ${t("description")} |`, "| :-- | :-- | :-- |", ...rows].join("\n");
   return { header, types };
-}
-
-function siteHtml(data: Record<string, Entry[]>): string {
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  const repo = `https://github.com/${slug}/tree/main`;
-  const sections = kinds.filter((k) => data[k.id]).map((k) => {
-    const items = data[k.id]!.map((e) => `<li><a href="${repo}/${esc(e.path)}">${esc(e.name)}</a>${e.description ? `<span>${esc(short(e.description).replaceAll("\\|", "|").replaceAll("`", ""))}</span>` : ""}</li>`).join("\n");
-    return `<section id="${k.id}"><h2><img src="/brand/icons/${k.id}.svg" alt="" width="32" height="32">${esc(k.name)}</h2><p>${esc(k.description)}</p><details><summary>${esc(t("entries"))}</summary><ul>\n${items}\n</ul></details></section>`;
-  });
-  return `<!doctype html>
-<html lang="${locale}">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${esc(t("catalog"))} - ${esc(projectName)}</title>
-<meta name="description" content="${esc(t("catalog_intro"))}">
-<link rel="canonical" href="https://aphrody.com/catalog/">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/tokens.css">
-<style>
-body{margin:0;background:var(--md-sys-color-surface);color:var(--md-sys-color-on-surface);font:var(--md-sys-typescale-body-large-size)/1.5 var(--md-ref-typeface-plain)}
-main{max-width:72ch;margin:0 auto;padding:2rem 1rem}
-h1{font-size:var(--md-sys-typescale-headline-large-size);margin:0 0 .5rem}
-h2{display:flex;gap:.75rem;align-items:center;font-size:var(--md-sys-typescale-title-large-size);margin:2rem 0 .25rem}
-p{color:var(--md-sys-color-on-surface-variant);margin:.25rem 0 1rem}
-summary{cursor:pointer;padding:.75rem 0;min-height:48px;box-sizing:border-box}
-ul{list-style:none;margin:0;padding:0}
-li{display:flex;flex-direction:column;padding:.5rem 0;border-top:1px solid var(--md-sys-color-outline-variant)}
-li span{color:var(--md-sys-color-on-surface-variant);font-size:var(--md-sys-typescale-body-medium-size)}
-a{color:var(--md-sys-color-primary)}
-a:focus-visible,summary:focus-visible{outline:3px solid var(--md-sys-color-secondary);outline-offset:2px}
-</style>
-</head>
-<body>
-<main>
-<h1>${esc(t("catalog"))}</h1>
-<p>${esc(t("catalog_intro"))}</p>
-${sections.join("\n")}
-</main>
-</body>
-</html>
-`;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -316,14 +260,12 @@ function outputs(): Map<string, string> {
   for (const k of kinds.filter((k) => data[k.id])) {
     const entries = data[k.id]!;
     const page = `docs/reference/catalog/${k.id}.md`;
-    out.set(page, `<img src="${relLink(page, iconPath(k.id))}" alt="" width="48" height="48">\n\n# ${k.name}\n\n${k.description}\n\n${indexTable(k, entries, page)}\n`);
+    out.set(page, `# ${k.name}\n\n${k.description}\n\n${indexTable(k, entries, page)}\n`);
     for (const e of entries.filter((e) => e.readme)) out.set(e.readme!, merge(keep(e.readme!), "unit", unitBlock(k, e), { title: e.name }));
   }
 
   const site = "apps/aphrody/public";
-  out.set(`${site}/catalog.json`, JSON.stringify({ locale, types: kinds.filter((k) => data[k.id]).map((k) => ({ id: k.id, name: k.name, description: k.description, icon: `/brand/icons/${k.id}.svg`, entries: data[k.id]!.map(({ name, description, path }) => ({ name, description, path })) })) }, null, 2) + "\n");
-  out.set(`${site}/catalog/index.html`, siteHtml(data));
-  for (const k of kinds.filter((k) => data[k.id])) if (exists(iconPath(k.id))) out.set(`${site}/brand/icons/${k.id}.svg`, read(iconPath(k.id)));
+  out.set(`${site}/catalog.json`, JSON.stringify({ locale, types: kinds.filter((k) => data[k.id]).map((k) => ({ id: k.id, name: k.name, description: k.description, entries: data[k.id]!.map(({ name, description, path }) => ({ name, description, path })) })) }, null, 2) + "\n");
   return out;
 }
 
@@ -351,8 +293,6 @@ function apply(files: Map<string, string>, check: boolean): number {
 interface Profile {
   id: string;
   kind: "org" | "user";
-  /** brand.toml organisation whose wordmark heads the page. */
-  org: string;
   /** Repository that holds the README and its path inside it (informational; --out says where to write). */
   repo: string;
   file: string;
@@ -423,26 +363,26 @@ async function profile(id: string): Promise<string> {
   );
   const top = scored.sort((a, b) => b.score - a.score || Date.parse(b.repo.pushed_at) - Date.parse(a.repo.pushed_at)).slice(0, p.top);
 
-  const org = (brand.org ?? []).find((o: any) => o.id === p.org);
-  if (!org) throw new Error(`profile ${id}: organisation ${p.org} not in brand.toml`);
+  // The logo is the live avatar of the organisation that owns this repository; the title and the text come from the profile itself.
+  const logoUrl = (await gh<{ avatar_url: string }>(`/orgs/${slug.split("/")[0]}`))?.avatar_url;
+  if (!logoUrl) throw new Error(`profile ${id}: no avatar for ${slug.split("/")[0]}`);
+  const self = await gh<{ name?: string; login: string; description?: string; bio?: string }>(`/${p.kind === "org" ? "orgs" : "users"}/${p.sources[0]}`);
+  if (!self) throw new Error(`profile ${id}: ${p.sources[0]} not found`);
   const meta = await gh<{ default_branch: string }>(`/repos/${slug}`);
-  const raw = `https://raw.githubusercontent.com/${slug}/${meta?.default_branch ?? "main"}`;
   const tree = `https://github.com/${slug}/blob/${meta?.default_branch ?? "main"}`;
-  const wordmark = (theme: string) => `${raw}/docs/logo/${org.id}-wordmark-${theme}.svg`;
   const rows = top.map(({ repo, status }) => {
     const badge = status.workflow ? `<a href="${repo.html_url}/actions/workflows/${status.workflow}"><img alt="${t("ci")}" src="${repo.html_url}/actions/workflows/${status.workflow}/badge.svg?branch=${repo.default_branch}"></a>` : "-";
     return `| [${repo.name}](${repo.html_url}) | ${oneLine(repo.description).replaceAll("|", "\\|") || "-"} | ${repo.language ?? "-"} | ${repo.stargazers_count} | ${badge} |`;
   });
-  const typeRows = kinds.filter((k) => sources[k.id]).map((k) => `<a href="${tree}/docs/reference/catalog/${k.id}.md"><img src="${raw}/docs/icons/${k.id}.svg" alt="${k.name}" width="40" height="40" title="${k.name}"></a>`);
+  const typeRows = kinds.filter((k) => sources[k.id]).map((k) => `[${k.name}](${tree}/docs/reference/catalog/${k.id}.md)`);
   const body = [
     '<p align="center">',
-    "<picture>",
-    `  <source media="(prefers-color-scheme: dark)" srcset="${wordmark("dark")}">`,
-    `  <img alt="${org.name} ${org.suffix}" src="${wordmark("light")}" height="64">`,
-    "</picture>",
+    `  <img alt="${projectName}" src="${logoUrl}${logoUrl.includes("?") ? "&" : "?"}s=200" width="100" height="100">`,
     "</p>",
     "",
-    `<p align="center">${org.tagline}</p>`,
+    `<h1 align="center">${self.name || self.login}</h1>`,
+    "",
+    ...((self.description || self.bio) ? [`<p align="center">${oneLine(self.description || self.bio)}</p>`, ""] : []),
     "",
     `## ${t("projects")}`,
     "",
@@ -452,7 +392,7 @@ async function profile(id: string): Promise<string> {
     "",
     `## ${t("catalog")}`,
     "",
-    `<p>${typeRows.join(" ")}</p>`,
+    typeRows.join(" | "),
     "",
     t("profile_source", { url: `https://github.com/${slug}` }),
   ].join("\n");

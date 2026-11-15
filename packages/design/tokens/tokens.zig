@@ -1,4 +1,4 @@
-// Généré par packages/design/src/build.ts depuis packages/design/brand/brand.toml (seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+// Généré par packages/design/src/build.ts depuis packages/design/design.toml (seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 // Couleurs en RGBA u32 (0xRRGGBBFF).
 pub const light = struct {
     pub const background: u32 = 0xF6FAFFFF;

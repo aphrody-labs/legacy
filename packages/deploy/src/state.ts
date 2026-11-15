@@ -1,6 +1,6 @@
 // Data model of aphrody.app, shared by the Workers (platform, apps/aphrody edge) and the CLI.
 // Everything lives in one R2 bucket under "deploys/":
-//   deploys/_registry.json                 projects.toml + monorepo inventory + brand + labs, uploaded by CI
+//   deploys/_registry.json                 projects.toml + monorepo inventory + logo + labs, uploaded by CI
 //   deploys/<project>/_state.json          production pointer, history, recent deployments
 //   deploys/<project>/<sha>.json           one deployment record
 //   deploys/<project>/<sha>.log            build log (authenticated read)
@@ -78,7 +78,7 @@ export interface Registry {
   projects: Project[];
   inventory: InventoryItem[];
   labs: LabCard[];
-  css: string; // Material 3 tokens from the brand seed
+  css: string; // Material 3 tokens from the design seed
   mark: string; // brand mark SVG
 }
 

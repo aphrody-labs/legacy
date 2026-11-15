@@ -3,7 +3,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { firstPath, parseAlphabet, plain, section } from "./alphabet.ts";
-import { readBrand, tokensCss } from "./m3.ts";
+import { readLogo, tokensCss } from "./m3.ts";
 import { themeBlocks } from "./ui.ts";
 import {
   NAME,
@@ -170,7 +170,7 @@ export async function buildRegistry(
   root = SRC_ROOT,
 ): Promise<Registry> {
   const projects = loadProjects(root);
-  const brand = readBrand(root);
+  const logo = readLogo(root);
   return {
     generatedAt: new Date().toISOString(),
     commit,
@@ -178,7 +178,7 @@ export async function buildRegistry(
     inventory: inventory(projects, root),
     labs: await labs(root),
     css: tokensCss(root) + themeBlocks(root).replace(/\s+/g, " "),
-    mark: brand.mark,
+    mark: logo.mark,
   };
 }
 

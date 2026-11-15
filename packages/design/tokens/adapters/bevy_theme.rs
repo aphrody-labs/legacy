@@ -1,4 +1,4 @@
-// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/design.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 // Rust Bevy Engine Material 3 adapter (bevy_color::Srgba + bevy_ui::Val::Px radii & spacing).
 // Usage : include!(concat!(env!("CARGO_MANIFEST_DIR"), "/<chemin relatif>/packages/design/tokens/adapters/bevy_theme.rs"));
 

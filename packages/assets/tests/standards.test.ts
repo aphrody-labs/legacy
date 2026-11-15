@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { checkBevyMeta, renderBevyMeta } from "../src/bevy.ts";
 import {
@@ -8,7 +7,6 @@ import {
   validateMaterialSymbolSvg,
 } from "../src/material-symbols.ts";
 import { optimizeSvg2, validateSvg2 } from "../src/svg2.ts";
-import { extractImageColors, parseZukanListHtml } from "../src/zukan.ts";
 
 const root = join(import.meta.dir, "..", "..", "..");
 
@@ -87,46 +85,5 @@ describe("Material Symbols Rounded conventions", () => {
     expect(rs).toContain("pub const SETTINGS: IconData");
     expect(rs).toContain("pub enum Symbol");
     expect(rs).toContain("Self::Settings => '\\u{e8b8}'");
-  });
-});
-
-describe("Rose Griffon Zukan parser & MCU+OKLCH color extractor", () => {
-  test("parses tbody character rows matching zukan.inazuma.jp structure", () => {
-    const sampleHtml = `<table><tbody><tr>
-      <td rowspan="2"><input type="checkbox" class="my-team-checkbox" data-chara-id="k/d/y/dykb3jbxeis" data-chara-name="Byron Love" data-nickname="Aphrody" /></td>
-      <td rowspan="2">185</td>
-      <td rowspan="2"><picture><img src="https://dxi4wb638ujep.cloudfront.net/1/k/d/y/dykb3jbxeis.png" /></picture><a href="/en/chara_param/?q=abc">Byron Love</a></td>
-      <td rowspan="2">Aphrody</td>
-      <td colspan="9">Inazuma Eleven</td>
-      <td rowspan="2">Male</td>
-      <td rowspan="2">Forest</td>
-      <td rowspan="2">MF</td>
-      <td rowspan="2">Player</td>
-    </tr></tbody></table>`;
-    const parsed = parseZukanListHtml(sampleHtml);
-    expect(parsed.entries.length).toBe(1);
-    expect(parsed.entries[0]?.id).toBe("185");
-    expect(parsed.entries[0]?.series).toBe("IE1");
-    expect(parsed.entries[0]?.name).toBe("Byron Love");
-    expect(parsed.entries[0]?.nickname).toBe("Aphrody");
-    expect(parsed.entries[0]?.element).toBe("Forest");
-    expect(parsed.entries[0]?.position).toBe("MF");
-  });
-
-  test("extracts MCU Celebi seeds + Rose Griffon OKLCH roles from local portrait", () => {
-    const ie1Png = join(
-      root,
-      "assets",
-      "brand",
-      "gen",
-      "zukan",
-      "raw",
-      "byron-ie1.png",
-    );
-    if (!existsSync(ie1Png)) return;
-    const analysis = extractImageColors(ie1Png, 4);
-    expect(analysis.seeds.length).toBeGreaterThan(0);
-    expect(analysis.oklchLight.primary).toMatch(/^#[0-9a-f]{6}$/i);
-    expect(analysis.oklchDark.surface).toMatch(/^#[0-9a-f]{6}$/i);
   });
 });

@@ -33,7 +33,7 @@ pub struct Rest {
 /// Commands by area, after the alphabetical table (`ay --help`).
 const OVERVIEW: &str = "\
 Areas:
-  repo       arch, lock, manifests, git, ingest, graph, conformance, brand
+  repo       arch, lock, manifests, git, ingest, graph, conformance
   toolchain  up, doctor, sys, build, self-update, rt
   bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in src/bun-flat), hash, time
   chromium   chromium (fr1 build chain), gclient, fetch, gn, ninja, cipd, cl, vpy, engines (V8, JSC, Dawn, wgpu)
@@ -126,9 +126,6 @@ pub enum Cmd {
     /// Pure-Rust SSH (russh): exec <host|all|a,b> -- cmd, cp, hosts, check
     #[command(disable_help_flag = true)]
     Ssh(Rest),
-    /// Brand assets (packages/design/brand): build [--deploy], banner <id>, check-ico (runs `aphrody-brand`)
-    #[command(disable_help_flag = true)]
-    Brand(Rest),
     /// Runtimes: Python engines (uv, RustPython), Bun versions, package managers, PyTorch
     #[command(disable_help_flag = true)]
     Rt(Rest),
@@ -342,7 +339,6 @@ pub fn route(cmd: Cmd) -> Route {
         }
         Cmd::Ssh(r) => Route::Ssh(r.args),
         Cmd::Conformance(r) => Route::Conformance(r.args),
-        Cmd::Brand(r) => Route::External("aphrody-brand", r.args),
         Cmd::Rt(r) => Route::Rt(r.args),
         Cmd::Sh(r) => Route::Sh(r.args),
         Cmd::Applet(r) => Route::Applet(r.args),
@@ -667,11 +663,6 @@ mod tests {
     #[test]
     fn assets_runs_the_bun_package() {
         assert_eq!(parse("assets optimize --kind=texture"), Route::Package("assets", v(&["optimize", "--kind=texture"])));
-    }
-
-    #[test]
-    fn brand_runs_the_brand_binary() {
-        assert_eq!(parse("brand build --deploy"), Route::External("aphrody-brand", v(&["build", "--deploy"])));
     }
 
     #[test]

@@ -2,7 +2,7 @@
 // Worker for previews and production aliases (serveDeployment), by the apps/aphrody edge Worker for
 // aphrody.com and by apps/r2-site (cdn, downloads, creator, shell). Supports the `_headers` file (Cloudflare
 // Pages syntax, `*` wildcard, later rules win), directory indexes, SPA fallback, `404.html`, ranges and ETags.
-// /_static/* and /brand/v<N>/* are immutable; a 404 is never cached beyond 60 s.
+// /_static/* and /assets/v<N>/* are immutable; a 404 is never cached beyond 60 s.
 import { keys, type ProjectState } from "./state.ts";
 
 export interface R2Like {
@@ -147,8 +147,8 @@ export interface StaticOptions {
 }
 
 /** Content-addressed or versioned segments: the bytes behind such a URL never change. */
-export const IMMUTABLE = /^\/(?:_static\/|brand\/v\d+\/)/;
-export const BRAND = /^\/brand\/v\d+\//;
+export const IMMUTABLE = /^\/(?:_static\/|assets\/v\d+\/)/;
+export const VERSIONED = /^\/assets\/v\d+\//;
 export const IMMUTABLE_CC = "public, max-age=31536000, immutable";
 export const CROSS_ORIGIN: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -226,7 +226,7 @@ export async function serveStatic(
   if (status === 200 && IMMUTABLE.test(url.pathname))
     h.set("cache-control", IMMUTABLE_CC);
   for (const [k, v] of Object.entries(
-    o.crossOrigin || BRAND.test(url.pathname) ? CROSS_ORIGIN : {},
+    o.crossOrigin || VERSIONED.test(url.pathname) ? CROSS_ORIGIN : {},
   ))
     h.set(k, v);
   const etag = obj.httpEtag ?? obj.etag;

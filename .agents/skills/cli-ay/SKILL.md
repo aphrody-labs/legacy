@@ -8,7 +8,7 @@ description: Use `ay` (ay 0.2.0): Aphrody monorepo CLI
 Binary: `ay`. Declared in `tools.toml`; install or update with `ay up ay`.
 Generated from the tool manual; do not edit. Regenerate with `just cli-skills`.
 
-Subcommands: `arch`, `doctor`, `lock`, `manifests`, `git`, `ingest`, `graph`, `deploy`, `bench`, `scope`, `gaming`, `upstream`, `linux`, `pkg`, `lfs`, `ssh`, `brand`, `rt`, `gclient`, `fetch`, `vpy`, `cl`, `cipd`, `ninja`. Details: `ay <subcommand> --help`.
+Subcommands: `arch`, `doctor`, `lock`, `manifests`, `git`, `ingest`, `graph`, `deploy`, `bench`, `scope`, `gaming`, `upstream`, `linux`, `pkg`, `lfs`, `ssh`, `rt`, `gclient`, `fetch`, `vpy`, `cl`, `cipd`, `ninja`. Details: `ay <subcommand> --help`.
 
 ## `ay --help`
 
@@ -34,7 +34,6 @@ Commands:
   pkg          Package recipes for every distro: list, matrix, gen, build, check (packages/linux, infra/pkg)
   lfs          bun-LFS (third_party/lfs/bun, GitHub CI): build, logs, wsl (runs `just lfs-<sub>`)
   ssh          Pure-Rust SSH (russh): exec <host|all|a,b> -- cmd, cp, hosts, check
-  brand        Brand assets (packages/design/brand): build [--deploy], banner <id>, check-ico (runs `aphrody-brand`)
   rt           Runtimes: Python engines (uv, RustPython), Bun versions, package managers, PyTorch
   gclient      gclient in Rust: revinfo, getdep, setdep, sync (gitoxide), hooks, root
   fetch        Write .gclient for a depot_tools fetch config (chromium, v8, webrtc, ...) and sync it
@@ -67,7 +66,7 @@ Options:
   -V, --version  Print version
 
 Areas:
-  repo       arch, lock, manifests, git, ingest, graph, conformance, brand
+  repo       arch, lock, manifests, git, ingest, graph, conformance
   toolchain  up, doctor, sys, build, self-update, rt
   bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in crates/bun-flat), hash, time
   chromium   chromium (fr1 build chain), gclient, fetch, gn, ninja, cipd, cl, vpy, engines (V8, JSC, Dawn, ...

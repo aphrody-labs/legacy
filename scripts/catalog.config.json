@@ -1,9 +1,17 @@
 {
+  "name": "Aphrody",
+  "types": [
+    { "id": "crate", "name": "Rust crate", "description": "A member of the Cargo workspace (src/*)" },
+    { "id": "package", "name": "Bun package", "description": "A Bun workspace package (@aphrody/*)" },
+    { "id": "app", "name": "App", "description": "An application or site (apps/*)" },
+    { "id": "infra", "name": "Infrastructure", "description": "Fleet, deploy and CI configuration (infra/*)" },
+    { "id": "third-party", "name": "Upstream", "description": "An upstream checkout or fork pinned in src.lock.json (third_party/*)" },
+    { "id": "skill", "name": "Agent skill", "description": "A skill of .agents/skills" }
+  ],
   "profiles": [
     {
       "id": "aphrody-labs",
       "kind": "org",
-      "org": "aphrody-labs",
       "repo": "aphrody-labs/.github",
       "file": "profile/README.md",
       "sources": ["aphrody-labs"],
@@ -12,7 +20,6 @@
     {
       "id": "aphrody-dev",
       "kind": "user",
-      "org": "aphrody-dev",
       "repo": "aphrody-dev/aphrody-dev",
       "file": "README.md",
       "sources": ["aphrody-dev", "aphrody-labs"],

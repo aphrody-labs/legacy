@@ -1,9 +1,7 @@
 # @aphrody/design
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
-> Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis packages/design/brand/brand.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; composants Angular Material (thème M3 généré) ; Material Symbols (SVG et police : sous-ensemble d ay brand build ; material-symbols ne sert qu au catalogue des noms).
+> Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis packages/design/design.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; composants Angular Material (thème M3 généré) ; Material Symbols (SVG et police : packages/design/symbols ; material-symbols ne sert qu au catalogue des noms).
 
 | Type | Path |
 | :-- | :-- |

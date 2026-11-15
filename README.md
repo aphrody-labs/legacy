@@ -1,15 +1,10 @@
 <!-- catalog:begin header -->
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/aphrody-labs-wordmark-dark.svg">
-  <img alt="Aphrody" src="docs/logo/aphrody-labs-wordmark-light.svg" height="56">
-</picture>
-
-<img alt="license" src="docs/badges/license.svg"> <img alt="rust" src="docs/badges/rust.svg"> <img alt="runtime" src="docs/badges/bun.svg"> <img alt="workflow" src="docs/badges/main-only.svg">
+<img alt="Aphrody" src="docs/logo/aphrody.png" width="96" height="96">
 <!-- catalog:end -->
 
 # src
 
-Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Master plan: [docs/PLAN.mdx](docs/PLAN.mdx). Brand sources and design tokens: [packages/design](packages/design/DESIGN.md) and [packages/design/brand](packages/design/brand); generated logos and icons: [docs/logo](docs/logo) and [docs/icons](docs/icons) (`ay brand build`).
+Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Master plan: [docs/PLAN.mdx](docs/PLAN.mdx). Design tokens: [packages/design](packages/design/DESIGN.md). Logo: [docs/logo/aphrody.png](docs/logo/aphrody.png).
 
 ## Stack Overview
 
@@ -28,12 +23,12 @@ The global types of the monorepo, listed from its manifests.
 
 | Type | Path | Description |
 | :-- | :-- | :-- |
-| <img src="docs/icons/crate.svg" alt="" width="24" height="24"> [Rust crate](docs/reference/catalog/crate.md) | `src/` | A member of the Cargo workspace (src/*) |
-| <img src="docs/icons/package.svg" alt="" width="24" height="24"> [Bun package](docs/reference/catalog/package.md) | `packages/` | A Bun workspace package (@aphrody/*) |
-| <img src="docs/icons/app.svg" alt="" width="24" height="24"> [App](docs/reference/catalog/app.md) | `apps/` | An application or site (apps/*) |
-| <img src="docs/icons/infra.svg" alt="" width="24" height="24"> [Infrastructure](docs/reference/catalog/infra.md) | `infra/` | Fleet, deploy and CI configuration (infra/*) |
-| <img src="docs/icons/third-party.svg" alt="" width="24" height="24"> [Upstream](docs/reference/catalog/third-party.md) | `third_party/` | An upstream checkout or fork pinned in src.lock.json (third_party/*) |
-| <img src="docs/icons/skill.svg" alt="" width="24" height="24"> [Agent skill](docs/reference/catalog/skill.md) | `.agents/skills/` | A skill of .agents/skills |
+| [Rust crate](docs/reference/catalog/crate.md) | `src/` | A member of the Cargo workspace (src/*) |
+| [Bun package](docs/reference/catalog/package.md) | `packages/` | A Bun workspace package (@aphrody/*) |
+| [App](docs/reference/catalog/app.md) | `apps/` | An application or site (apps/*) |
+| [Infrastructure](docs/reference/catalog/infra.md) | `infra/` | Fleet, deploy and CI configuration (infra/*) |
+| [Upstream](docs/reference/catalog/third-party.md) | `third_party/` | An upstream checkout or fork pinned in src.lock.json (third_party/*) |
+| [Agent skill](docs/reference/catalog/skill.md) | `.agents/skills/` | A skill of .agents/skills |
 <!-- catalog:end -->
 
 ## Commands

@@ -7,7 +7,7 @@
 //! 4. [`yolo_apple`] (`0xFF00_7AFF` — Apple macOS Tahoe Liquid Glass & iOS Cupertino HIG)
 //! 5. [`yolo_omarchy`] (`0xFF7A_A2F7` — Omacom Omarchy `Tokyo Night` + 23 official `OmarchySubTheme`s)
 //! 6. [`yolo_hyprland`] (`0xFF33_CCFF` — Hyprwm / Hyprland Wayland Compositor `#33ccff` -> `#00ff99` 45deg border + kawase blur)
-//! 7. [`yolo_aphrody`] (`0xFF33_55FF` — Aphrody brand of `packages/design/brand`, Material 3 vibrant)
+//! 7. [`yolo_aphrody`] (`0xFF33_55FF` — Aphrody seed of `packages/design/design.toml`, Material 3 vibrant)
 
 use crate::color::scheme::{DynamicScheme, Variant};
 use crate::color::theme::ThemeRequest;
@@ -34,7 +34,7 @@ pub const OMARCHY_SEED: u32 = 0xFF7A_A2F7;
 /// Canonical opaque ARGB seed for `YoloThemePreset::Hyprland` (`#33CCFF` Hyprland electric cyan).
 pub const HYPRLAND_SEED: u32 = 0xFF33_CCFF;
 
-/// Canonical opaque ARGB seed for `YoloThemePreset::Aphrody` (`#3355FF`, `packages/design/brand/brand.toml`).
+/// Canonical opaque ARGB seed for `YoloThemePreset::Aphrody` (`#3355FF`, `packages/design/design.toml`).
 pub const APHRODY_SEED: u32 = 0xFF33_55FF;
 
 /// Canonical opaque ARGB seed for `YoloThemePreset::Chromium` (`#1A73E8` Chrome blue).

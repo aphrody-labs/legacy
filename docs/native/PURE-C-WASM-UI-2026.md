@@ -12,7 +12,7 @@ All upstream repositories, package registries, and platform specifications below
 
 1. **Google Design Principles (`https://design.google/?home`)**:
    - **Scalable Expressiveness**: interfaces dial emotional energy up for hero surfaces or back for dense developer tools without changing semantic structure or accessibility guarantees.
-   - **Typography-Driven Hierarchy**: variable fonts (`Google Sans Flex` for UI/display, `Google Sans Code` for monospace, both SIL OFL 1.1 in [brand.toml](file:///C:/src/packages/design/brand/brand.toml)) establish scannable contrast before decorative chrome.
+   - **Typography-Driven Hierarchy**: variable fonts (`Google Sans Flex` for UI/display, `Google Sans Code` for monospace, both SIL OFL 1.1 in [design.toml](file:///C:/src/packages/design/design.toml)) establish scannable contrast before decorative chrome.
    - **Adaptive Canonical Layouts**: five viewport size classes (`compact`, `medium`, `expanded`, `large`, `extra-large`) govern navigation (`NavigationBar` vs `NavigationRail`), column count, and pane splitting across phone, foldable, desktop, XR, and web.
 
 2. **Material 3 Expressive & Compose-First Architecture (`https://m3.material.io/blog/material-is-compose-first`)**:
@@ -60,13 +60,13 @@ All upstream repositories, package registries, and platform specifications below
 
 ---
 
-## 2. Single-Source Token Pipeline (`brand.toml` -> C, CSS, Rust, Mobile, Desktop)
+## 2. Single-Source Token Pipeline (`design.toml` -> C, CSS, Rust, Mobile, Desktop)
 
-Every visual token in the monorepo originates from [brand.toml](file:///C:/src/packages/design/brand/brand.toml) (seed `#135B82`, Material Color Utilities `0.4.0` `vibrant` DynamicScheme, custom accent `bolt = #D1D293`). Neither C, Rust, Kotlin, Dart, nor TypeScript recalculates HCT palettes at run time.
+Every visual token in the monorepo originates from [design.toml](file:///C:/src/packages/design/design.toml) (seed `#135B82`, Material Color Utilities `0.4.0` `vibrant` DynamicScheme, custom accent `bolt = #D1D293`). Neither C, Rust, Kotlin, Dart, nor TypeScript recalculates HCT palettes at run time.
 
 ```mermaid
 flowchart LR
-  Brand["packages/design/brand/brand.toml (#135B82 vibrant)"] --> Build["packages/design/src/build.ts (MCU 0.4.0)"]
+  Brand["packages/design/design.toml (#135B82 vibrant)"] --> Build["packages/design/src/build.ts (MCU 0.4.0)"]
   Build --> JSON["tokens/tokens.json (6 modes x 49 roles)"]
   JSON --> CSS["tokens/tokens.css (--md-sys-*)"]
   JSON --> CHeader["adapters/tokens.h + ndk_theme.h + src/include/uapi/ay/ui.h"]
@@ -232,7 +232,7 @@ ABI invariants enforced across all FFI consumers:
 
 ## 5. 18-Target Interoperability Matrix
 
-Every target below consumes the exact same seed (`#135B82` in [brand.toml](file:///C:/src/packages/design/brand/brand.toml)) and/or links the [sys.h](file:///C:/src/src/include/ay/sys.h) C ABI without re-implementing HCT math or spring physics:
+Every target below consumes the exact same seed (`#135B82` in [design.toml](file:///C:/src/packages/design/design.toml)) and/or links the [sys.h](file:///C:/src/src/include/ay/sys.h) C ABI without re-implementing HCT math or spring physics:
 
 | #      | Target                                | Verified 2026 Baseline                                                       | Token Artifact                                                                                                                                              | C ABI / Runtime Binding                                                                                                     | Component & A11y Model                                                                                                                 |
 | :----- | :------------------------------------ | :--------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |

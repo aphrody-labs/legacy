@@ -1,4 +1,4 @@
-// @aphrody/design: Material 3 tokens generated from packages/design/brand/brand.toml (see src/build.ts).
+// @aphrody/design: Material 3 tokens generated from packages/design/design.toml (see src/build.ts).
 import tokens from "../tokens/tokens.json";
 
 export { tokens };

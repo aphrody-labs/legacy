@@ -21,8 +21,8 @@ description: Android NDK Pure C11/JNI/ANativeWindow/AChoreographer and Jetpack C
 
 ## Architecture in `src`: Shared Tokens + Pure C ABI (`libaysys.so`)
 
-1. **Single Token Source (`brand.toml` -> `Theme.kt` + `tokens.h` + `ndk_theme.h` + `ui.h`)**:
-   - `packages/design/tokens/adapters/Theme.kt` (`package com.aphrody.design`, `object AphrodyTheme`) and `packages/design/tokens/adapters/ndk_theme.h` (`AY_NDK_ROLE_*`, 48 roles aligned 1:1 with `Theme.kt`, plus `AY_NDK_*_CLEAR_RGBA8888` and `ay_ndk_clear_color_t` for `VkClearColorValue` / `glClearColor`) are generated from `packages/design/brand/brand.toml` (seed `#135B82`, Material Color Utilities `0.4.0` vibrant) by `packages/design/src/adapters.ts`, alongside `packages/design/tokens/adapters/tokens.h`.
+1. **Single Token Source (`design.toml` -> `Theme.kt` + `tokens.h` + `ndk_theme.h` + `ui.h`)**:
+   - `packages/design/tokens/adapters/Theme.kt` (`package com.aphrody.design`, `object AphrodyTheme`) and `packages/design/tokens/adapters/ndk_theme.h` (`AY_NDK_ROLE_*`, 48 roles aligned 1:1 with `Theme.kt`, plus `AY_NDK_*_CLEAR_RGBA8888` and `ay_ndk_clear_color_t` for `VkClearColorValue` / `glClearColor`) are generated from `packages/design/design.toml` (seed `#135B82`, Material Color Utilities `0.4.0` vibrant) by `packages/design/src/adapters.ts`, alongside `packages/design/tokens/adapters/tokens.h`.
    - `src/include/uapi/ay/ui.h` and `src/ui/m3.c` expose the exact same color roles (`ay_ui_color_argb`, `ay_ui_argb_to_abgr`, `ay_ui_state_blend_argb`), M3 Expressive springs (`ay_ui_spring_init`, `ay_ui_spring_step`), and adaptive window classes (`ay_ui_window_class`, `ay_ui_compute_shell`) over the C ABI (`src/include/ay/sys.h`).
 
 2. **Pure Native Path (`ANativeActivity` + `ANativeWindow` + `AChoreographer`)**:

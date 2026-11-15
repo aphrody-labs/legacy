@@ -113,7 +113,6 @@
     "docs/native/llvm/ECOSYSTEM.md",
     "docs/native/llvm/PURE-C-LLVM.mdx",
     "docs/native/llvm/ROADMAP.md",
-    "docs/native/profile/cv.ts",
     "docs/native/shell/CLAUDE-NT.md",
     "docs/native/shell/PLAN.md",
     "docs/native/shell/bash-setup.md",

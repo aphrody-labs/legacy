@@ -15,7 +15,7 @@
       "seed": "#135B82",
       "variant": "vibrant",
       "default": "light",
-      "note": "Byron Love Zeus sapphire seed from brand.toml / zukan",
+      "note": "seed and variant of design.toml",
       "light": {
         "background": "#F6FAFF",
         "on-background": "#141D23",

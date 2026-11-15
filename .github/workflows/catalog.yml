@@ -13,9 +13,7 @@ on:
       - "packages/*/package.json"
       - "apps/*/package.json"
       - ".agents/skills/*/SKILL.md"
-      - "packages/design/brand/brand.toml"
       - "packages/i18n/catalogs/catalog/**"
-      - "docs/icons/**"
       - "docs/logo/**"
       - "scripts/catalog.*"
   pull_request:
@@ -27,9 +25,7 @@ on:
       - "packages/*/package.json"
       - "apps/*/package.json"
       - ".agents/skills/*/SKILL.md"
-      - "packages/design/brand/brand.toml"
       - "packages/i18n/catalogs/catalog/**"
-      - "docs/icons/**"
       - "docs/logo/**"
       - "scripts/catalog.*"
   workflow_dispatch:

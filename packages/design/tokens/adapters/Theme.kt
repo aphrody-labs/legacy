@@ -1,4 +1,4 @@
-// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/design.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 // Usage : MaterialTheme(colorScheme = AphrodyTheme.light, shapes = AphrodyTheme.shapes, typography = AphrodyTheme.typography) { ... }
 // Police : charger Google Sans Flex (OFL) dans l'app et la passer à TextStyle(fontFamily = ...).
 package com.aphrody.design

@@ -1305,42 +1305,42 @@ version = "12.3"
 source = "distro"
 package = "libharfbuzz-bin"
 hosts = ["fr1"]
-why = "hb-subset/hb-shape: Latin and Material Symbols font subsets (ay brand build)"
+why = "hb-subset/hb-shape: Latin and Material Symbols font subsets"
 
 [toolchain."woff2"]
 version = "1.0.2"
 source = "distro"
 package = "woff2"
 hosts = ["fr1"]
-why = "woff2_compress (ay brand build)"
+why = "woff2_compress"
 
 [toolchain."libavif"]
 version = "1.4"
 source = "distro"
 package = "libavif-bin"
 hosts = ["fr1"]
-why = "avifenc (ay brand build)"
+why = "avifenc"
 
 [toolchain."libwebp"]
 version = "1.6"
 source = "distro"
 package = "webp"
 hosts = ["fr1"]
-why = "cwebp (ay brand build)"
+why = "cwebp"
 
 [toolchain."ffmpeg-cli"]
 version = "8.1"
 source = "distro"
 package = "ffmpeg"
 hosts = ["fr1"]
-why = "SVT-AV1 and VP9 video, still scaling (ay brand build)"
+why = "SVT-AV1 and VP9 video, still scaling"
 
 [toolchain."binaryen"]
 version = "133"
 source = "github"
 repo = "WebAssembly/binaryen"
 hosts = ["pc", "fr1"]
-why = "wasm-opt -O4 SIMD128 optimizer for src/Makefile (aysys.wasm, wayland.wasm) and ay brand build"
+why = "wasm-opt -O4 SIMD128 optimizer for src/Makefile (aysys.wasm, wayland.wasm)"
 
 [toolchain."wabt"]
 version = "1.0.42"
@@ -1361,7 +1361,7 @@ version = "4.4.2"
 source = "github"
 repo = "KhronosGroup/KTX-Software"
 hosts = ["fr1"]
-why = "ktx create: KTX2 UASTC/zstd textures and HDR environment (ay brand build)"
+why = "ktx create: KTX2 UASTC/zstd textures and HDR environment"
 linux-x86_64 = { url = "https://github.com/KhronosGroup/KTX-Software/releases/download/v4.4.2/KTX-Software-4.4.2-Linux-x86_64.deb", sha256 = "ca635ed489d8bf54fac8d7687056c651193de0740830a7738cc034adc63e3027" }
 
 [toolchain."gltf-transform"]
@@ -1369,7 +1369,7 @@ version = "4.5.1"
 source = "npm"
 package = "@gltf-transform/cli"
 hosts = ["fr1"]
-why = "glTF validation of gen/model/*.glb (`ay brand check`; 3D assets of `ay assets test`)"
+why = "glTF validation (3D assets of `ay assets test`)"
 note = "npm @gltf-transform/cli@4.5.1 integrity sha512-TNPU20U7caqUpyXdbqobQueUjWmrdEhsZeno77MGJJCyiV1EyrC5yOE+aFrpxPli45VSk6aNT0FHAed8LE7ecg=="
 
 [toolchain."nginx"]

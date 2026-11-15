@@ -208,7 +208,7 @@ export function renderMaterialSymbolsCss(count: number): string {
 `;
 }
 
-/** Rebuilds `symbols.json`, SVG 2 `sprite.svg` (using `<symbol>`), and `symbols.css` from `packages/design/brand/gen/symbols/svg/`. */
+/** Rebuilds `symbols.json`, SVG 2 `sprite.svg` (using `<symbol>`), and `symbols.css` from `packages/design/symbols/svg/`. */
 export function syncMaterialSymbolsDir(symbolsDir: string): {
   count: number;
   errors: string[];

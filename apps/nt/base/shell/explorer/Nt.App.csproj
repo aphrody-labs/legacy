@@ -51,8 +51,8 @@
     <PackageCertificatePassword Condition="'$(NT_CERT)' != ''">$(NT_CERT_PASSWORD)</PackageCertificatePassword>
   </PropertyGroup>
   <ItemGroup Condition="'$(NtPackage)' == 'msix'">
-    <!-- MSIX logos from `ay brand build` (packages/design/brand/gen/icons/nt/msix/), linked into Assets\ of the package. -->
-    <Content Include="$(MSBuildThisFileDirectory)..\..\..\..\..\assets\brand\gen\icons\nt\msix\*.png" Link="Assets\%(Filename)%(Extension)" />
+    <!-- Package logos required by Package.appxmanifest: docs/logo/aphrody.png scaled to 150, 50 and 44 px. -->
+    <Content Include="Assets\*.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" />

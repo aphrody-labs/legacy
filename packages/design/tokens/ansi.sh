@@ -1,4 +1,4 @@
-# Généré par packages/design/src/build.ts depuis packages/design/brand/brand.toml (seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+# Généré par packages/design/src/build.ts depuis packages/design/design.toml (seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 # Source : . packages/design/tokens/ansi.sh ; printf '%s' "$MD_PRIMARY_FG" texte "$MD_RESET"
 MD_BACKGROUND_FG=$'\e[38;2;12;20;27m'; MD_BACKGROUND_BG=$'\e[48;2;12;20;27m'
 MD_ON_BACKGROUND_FG=$'\e[38;2;219;227;237m'; MD_ON_BACKGROUND_BG=$'\e[48;2;219;227;237m'

@@ -85,7 +85,7 @@ Légende « notre équivalent » : chemin dans src, ou « absent ».
 | Fonctionnalité                                                 | Source                        | Notre équivalent                                                                                                                              |
 | -------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `next/font` (auto-hébergement, subset, `size-adjust`, preload) | next.js `components/font.mdx` | partiel : woff2 auto-hébergé préchargé (`apps/aphrody/build.ts`, `/atkinson-next.woff2`) ; pas de subset ni de fallback métrique automatiques |
-| Geist (OFL)                                                    | vercel/geist-font             | absent (marque : `packages/design/brand`)                                                                                                              |
+| Geist (OFL)                                                    | vercel/geist-font             | absent (typographie : `packages/design/design.toml`)                                                                                                              |
 
 ### Edge / compute
 
@@ -158,7 +158,7 @@ Légende « notre équivalent » : chemin dans src, ou « absent ».
 ## 3. Écarts prioritaires (ordre proposé pour replica-architect)
 
 1. Rendu : pas de SSR/streaming ni d'ISR par tag ; la plateforme sert du statique immuable plus un Worker. Option vinext pour un projet React futur ; pour les sites actuels, ISR minimal = régénération d'une page dans R2 sous la clé du sha courant.
-2. OG dynamique (satori/`ImageResponse`) : absent ; à rattacher à `ay brand build` (agent assets) plutôt qu'au runtime.
+2. OG dynamique (satori/`ImageResponse`) : absent ; hors périmètre.
 3. Fonts : subset et fallback métrique automatiques à ajouter au build (équivalent `next/font`).
 4. Observabilité : tableau par route et alertes absents ; les données existent (Workers Logs, Insights).
 5. Previews : protection optionnelle par Access et commentaires/toolbar absents.

@@ -76,7 +76,7 @@ Tailwind et shadcn restent interdits dans les apps neuves (`.agents/skills/ui-sy
 
 ## 4. Adaptateurs livrés (`packages/design`)
 
-Chaîne unique : `packages/design/brand/brand.toml` -> `packages/design/src/build.ts` (MCU) -> `tokens/tokens.json` -> `packages/design/src/adapters.ts` -> `tokens/adapters/*`. Table de variantes MCU partagée : `packages/design/src/schemes.ts`. Tests : `tests/adapters.test.ts` (dérive, valeurs exactes par mode, rampe Fluent monotone, contraste des états gpui-kit, équilibre XAML).
+Chaîne unique : `packages/design/design.toml` -> `packages/design/src/build.ts` (MCU) -> `tokens/tokens.json` -> `packages/design/src/adapters.ts` -> `tokens/adapters/*`. Table de variantes MCU partagée : `packages/design/src/schemes.ts`. Tests : `tests/adapters.test.ts` (dérive, valeurs exactes par mode, rampe Fluent monotone, contraste des états gpui-kit, équilibre XAML).
 
 | Cible                               | Fichier                                                                  | Validation                                                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------- |

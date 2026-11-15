@@ -1,4 +1,4 @@
-// Adaptateurs de @aphrody/design : projette tokens/tokens.json (lui-même issu de packages/design/brand/brand.toml) vers les
+// Adaptateurs de @aphrody/design : projette tokens/tokens.json (lui-même issu de packages/design/design.toml) vers les
 // formats de thème des cibles retenues par docs/ui/ECOSYSTEM-AUDIT.md. Aucun composant copié : uniquement des tokens.
 // `bun run src/adapters.ts` écrit tokens/adapters/ ; `--check` échoue si une sortie dériverait.
 // Formats vérifiés en amont le 2026-11-13 (commits dans ECOSYSTEM-AUDIT.md) :
@@ -26,7 +26,7 @@ const MODES = Object.keys(t.color) as Mode[];
 const C = (mode: Mode) => t.color[mode] as Record<string, string>;
 const src = t.source;
 const header = (c: string, end = "") =>
-  `${c} Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed ${src.seed}, ${src.variant}, MCU ${src["material-color-utilities"]}). Ne pas éditer.${end}\n`;
+  `${c} Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/design.toml, seed ${src.seed}, ${src.variant}, MCU ${src["material-color-utilities"]}). Ne pas éditer.${end}\n`;
 
 // --- utilitaires de couleur ---
 const rgb = (hex: string) =>
@@ -1220,7 +1220,7 @@ pub mod aphrody_web_tokens {
 
     pub const SEED_HEX: &str = ${JSON.stringify(src.seed)};
     pub const VARIANT: &str = ${JSON.stringify(src.variant)};
-    pub const FONT_BRAND: &str = ${JSON.stringify(src.brand.font)};
+    pub const FONT_BRAND: &str = ${JSON.stringify(src.design.font)};
     pub const BOLT_VAR: &str = "var(--aphrody-bolt)";
 
     /// CSS custom property names (--md-sys-color-*) and var(--md-sys-color-*) expressions.

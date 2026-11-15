@@ -8,18 +8,13 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends and the brand renderer."
+description = "Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends."
 
 [lints.rust]
 unsafe_code = "forbid"
 
 [lints.clippy]
 all = "warn"
-
-[[bin]]
-name = "aphrody-brand"
-path = "src/bin/aphrody-brand.rs"
-required-features = ["brand"]
 
 [features]
 # color, components and shared are always built; the heavy modules are opt-out features so a renderer
@@ -30,7 +25,6 @@ default = [
   "layout",
   "react",
   "next",
-  "brand",
   "fusion",
   "anyrender",
   "dioxus",
@@ -66,12 +60,6 @@ react = [
   "dep:oxc_span",
 ]
 next = ["react", "dep:sha2", "dep:walkdir", "dep:toml"]
-brand = [
-  "dep:resvg",
-  "dep:toml",
-  "dep:sha2",
-  "dep:meshopt",
-]
 # Allocating helpers (CSS export, presets) of the color module.
 std = []
 # PNG/JPEG decode for `color::image`.
@@ -128,7 +116,6 @@ oxc_span = { workspace = true, optional = true }
 sha2 = { workspace = true, optional = true }
 toml = { workspace = true, optional = true }
 walkdir = { workspace = true, optional = true }
-resvg = { version = "0.50.0", default-features = false, features = ["text"], optional = true }
 # Fusion fullstack UI ecosystem (Dioxus 0.8, AnyRender + Vello, Ratatui, Ropey, Anstyle)
 anyrender = { workspace = true, optional = true }
 vello = { workspace = true, optional = true }
@@ -143,8 +130,6 @@ ratatui-crossterm = { workspace = true, optional = true }
 crossterm = { workspace = true, optional = true }
 anstyle = { workspace = true, optional = true }
 ropey = { workspace = true, optional = true }
-# brand::model: meshoptimizer codecs (glTF EXT_meshopt_compression).
-meshopt = { version = "0.7.0", optional = true }
 
 [dev-dependencies]
 sha2 = { workspace = true }

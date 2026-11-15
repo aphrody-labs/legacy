@@ -24,7 +24,7 @@ has_version "$(lock_get just version)" just --version || install_archive_bin jus
 has_version "$(lock_get cargo-zigbuild version)" cargo-zigbuild --version || install_archive_bin cargo-zigbuild cargo-zigbuild
 has_version "$(lock_get cargo-nextest version)" cargo-nextest nextest --version || install_archive_bin cargo-nextest cargo-nextest
 has_version "$(lock_get b3sum version)" b3sum --version || install_archive_bin b3sum b3sum_linux_x64_bin b3sum
-# Brand asset pipeline (ay brand build; apt above: hb-subset, woff2, avifenc, cwebp, ffmpeg, wasm-opt):
+# Media tools (apt above: hb-subset, woff2, avifenc, cwebp, ffmpeg, wasm-opt):
 # KTX-Software from its pinned release .deb, gltf-transform from npm through bun.
 if ! has_version "$(lock_get ktx-software version)" ktx --version; then
   tmp=$(mktemp -d); fetch ktx-software "$tmp/ktx.deb"; $SUDO apt-get install -y "$tmp/ktx.deb" >/dev/null; rm -rf "$tmp"

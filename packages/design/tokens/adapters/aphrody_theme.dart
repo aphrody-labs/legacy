@@ -1,4 +1,4 @@
-// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/design.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 // Usage : MaterialApp(theme: aphrodyTheme(aphrodyLight), darkTheme: aphrodyTheme(aphrodyDark), highContrastTheme: aphrodyTheme(aphrodyLightHighContrast), ...)
 // Police : déclarer Google Sans Flex (OFL) dans pubspec.yaml sous ce nom de famille.
 import 'package:flutter/material.dart';

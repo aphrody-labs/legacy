@@ -1,0 +1,10 @@
+# Single source of the design tokens (read by src/build.ts): seed color, Material 3 variant and typeface.
+[design]
+name = "Aphrody"
+seed = "#135B82"
+variant = "vibrant"
+# The bolt accent: an M3 custom color that keeps the same hue in every theme.
+accent = "#D1D293"
+# Typeface: Google Sans Flex (SIL OFL 1.1, no Reserved Font Name; google/fonts ofl/googlesansflex).
+font = "Google Sans Flex"
+font_fallback = ["Roboto Flex", "Inter", "system-ui", "sans-serif"]
