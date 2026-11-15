@@ -69,7 +69,7 @@ aliases = ["vpython3"]
 `build.rs` du driver génère dans `OUT_DIR` :
 
 - `tools.rs` : table `&[ToolEntry { name, aliases, about, main: fn }]` + `match` de dispatch, gardée par `#[cfg(feature)]` ;
-- `help.txt` (liste `ay --help`) et `docs/ay/TOOLS.md` régénéré par `ay manifests` (vérifié en CI, jamais édité à la main).
+- `help.txt` (liste `ay --help`) régénéré par `ay manifests` (vérifié en CI, jamais édité à la main).
 
 Options d'un outil : chaque lib garde son parser clap (équivalent des `*Opts.td` par outil) ; la spec ne décrit que la surface driver. Garde de stabilité : `ay lit` capture `--help` de chaque outil en golden ; supprimer une option sans `alias` fait échouer le test.
 

@@ -44,7 +44,7 @@ mode = "copy"
 # --- bash family (agent A) ---
 # niubash 1.5.0 (bash.exe = niu.exe) : login -> ~/.bash_profile ; interactif -> ~/.niubashrc seul.
 # Git Bash 5.3 et brush 0.4 : login -> ~/.bash_profile ; interactif -> ~/.bashrc (brush : puis ~/.brushrc).
-# Claude Code source aussi ~/.bashrc pour son instantané. Détails : docs/shell/bash-setup.md.
+# Claude Code source aussi ~/.bashrc pour son instantané. Détails : docs/native/shell/bash-setup.md.
 [[link]]
 shell = "bash"
 src = "bash/bashrc"
@@ -73,7 +73,7 @@ mode = "copy"
 # --- pwsh (agent B) ---
 # Profil canonique unique pour pwsh 7.7 (Store) et Windows PowerShell 5.1 (code compatible 5.1, sections 7+ gardées).
 # mode "copy" : le bloc Coreutils for Windows (« DO NOT MODIFY … 60b36fc6 ») est inclus dans le profil ; son marqueur
-# présent dans $PROFILE empêche l'installeur Coreutils de le réécrire. Réglages et sources : docs/shell/pwsh-setup.md.
+# présent dans $PROFILE empêche l'installeur Coreutils de le réécrire. Réglages et sources : docs/native/shell/pwsh-setup.md.
 [[link]]
 shell = "pwsh"
 src = "pwsh/profile.ps1"

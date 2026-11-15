@@ -220,7 +220,7 @@ assets.macos-x86_64 = "cargo-dist-x86_64-apple-darwin.tar.xz"
 assets.macos-aarch64 = "cargo-dist-aarch64-apple-darwin.tar.xz"
 
 # ---------------------------------------------------------------------------------------------
-# CLI tools from docs/WORKSTATION_INVENTORY.md 5.2 and the install.ps1 / install.sh tool list.
+# CLI tools of the workstation and the install.ps1 / install.sh tool list.
 # Every tool is a pinned GitHub release asset verified by sha256 (GitHub release digest, or measured
 # when the release predates digests); no `source = "ubi"` left (docs/native/deps/POLICY.md rule 5).
 # Pins match what is installed on the workstation so `ay up` adds no second copy.
@@ -719,7 +719,7 @@ source = "github"
 repo = "GitoxideLabs/gitoxide"
 
 # ---------------------------------------------------------------------------------------------
-# Local AI runtimes (docs/AY_RUNTIMES.md). Vulkan builds run on NVIDIA, AMD and Intel GPUs
+# Local AI runtimes. Vulkan builds run on NVIDIA, AMD and Intel GPUs
 # without a separate CUDA runtime; CUDA builds of llama.cpp and whisper.cpp come from source on
 # fr1 (`ay build`). PyTorch and CUDA wheels come from uv (`ay rt torch`).
 # ---------------------------------------------------------------------------------------------
@@ -890,9 +890,9 @@ package = "apify-cli"
 # Shell : niubash remplace Git Bash et pwsh (bash 5.3 natif Rust, git MSVC, sans MSYS).
 # Installation de référence : configuration/shell.dsc.winget (winget configure) ; cette entrée
 # épingle la même version et vérifie le binaire sur le PATH. Preuves : dépôt nt,
-# docs/research/shell-replacement.md (test Claude Code de bout en bout, imports PE).
+# apps/nt/docs/research/shell-replacement.md (test Claude Code de bout en bout, imports PE).
 # Première installation seulement : le niu.exe en service vient des forks aphrody-labs (niubash + rubash)
-# construits par prd ou par la CI du fork, puis `just unixwin-install` (docs/native/unixwin/BUILD.md, DEDUP.md).
+# construits par prd ou par la CI du fork, puis `just unixwin-install`.
 # `bin` n'est pas un gabarit {version} : à mettre à jour avec `version`.
 [[tool]]
 name = "niubash"
@@ -1124,7 +1124,7 @@ version = "0.13.7"
 source = "github"
 repo = "astral-sh/uv"
 hosts = ["pc", "prd", "fr1"]
-why = "apps/unixwin, packages/ai-os/python, src/agent/py (pyproject + uv.lock)"
+why = "packages/ai-os/python, src/agent/py (pyproject + uv.lock)"
 windows-x86_64 = { url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-x86_64-pc-windows-msvc.zip", sha256 = "0cdc5b38fe5a8168ed6a25814f5ba43c21d313dd3187314fccb37b7cec46e021" }
 linux-x86_64 = { url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-x86_64-unknown-linux-musl.tar.gz", sha256 = "287491da03f2a785c70fa75b13e1f849918c2f2b5415fe84876b8214eeb792f9" }
 linux-aarch64 = { url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-aarch64-unknown-linux-musl.tar.gz", sha256 = "2d3ec076a0c4c0e8250bb6418c44080828b544f1a3be0b6e46adf9fb6923de45" }

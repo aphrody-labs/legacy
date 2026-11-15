@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Generates packages/machine/toolchains.lock.toml: every toolchain src needs, pinned (version + source + checksum),
+// Generates the toolchains block of tools.toml: every toolchain src needs, pinned (version + source + checksum),
 // with the hosts that install it. Checksums come from the upstream itself: GitHub release asset digests (gh api),
 // published .sha256 files, go.dev and .NET release metadata, the npm registry and the crates.io index.
 //   bun packages/machine/src/toolchains-lock.ts            regenerate the lock (needs gh auth)

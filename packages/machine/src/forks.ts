@@ -127,9 +127,9 @@ const FORKS: Fork[] = [
     name: "wayland-c",
     upstream: "https://gitlab.freedesktop.org/wayland/wayland.git",
   },
-  // Pile terminal centrale (2026-11-13) : intelligent-terminal et ses dépendances (tools/wta/Cargo.toml,
+  // Pile terminal centrale (2026-11-13) : intelligent-terminal et ses dépendances (tools/wta,
   // vcpkg.json, dep/nuget/packages.config), dépôts Rust/Zig/terminal/UI des orgs anomalyco, vercel-labs et
-  // de la liste Microsoft du propriétaire. Voir docs/terminal/ARCHITECTURE.md.
+  // de la liste Microsoft du propriétaire. Voir docs/native/terminal/ARCHITECTURE.md.
   ...[
     "agentclientprotocol/agent-client-protocol",
     "ratatui/ratatui",
@@ -213,7 +213,7 @@ const FORKS: Fork[] = [
       "Source/cmake",
     ],
   },
-  // Écosystème unixwin (2026-11-13) : tous les dépôts de l'org, décisions dans docs/unixwin/DEDUP.md. Code et
+  // Écosystème unixwin (2026-11-13) : tous les dépôts de l'org. Code et
   // données dans third_party/<nom> ; site et GUI dans apps/unixwin/upstream/<nom> ; build et installation par
   // scripts/unixwin (just unixwin-*). unixwin/codex n'est pas un clone : remote `unixwin` de third_party/codex.
   ...[
@@ -231,7 +231,7 @@ const FORKS: Fork[] = [
     "winuxsh-profiles",
   ].map((n) => ({ name: n, upstream: gh(`unixwin/${n}`) })),
   { name: "unixwin-github", upstream: gh("unixwin/.github") }, // profil de l'org ; « .github » réservé côté aphrody-labs
-  // Archive APT signée : hors chaîne (docs/deps/POLICY.md : jamais apt) ; scripts et métadonnées, sans paquets.
+  // Archive APT signée : hors chaîne (docs/native/deps/POLICY.md : jamais apt) ; scripts et métadonnées, sans paquets.
   {
     name: "unixwin-apt",
     upstream: gh("unixwin/apt"),

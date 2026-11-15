@@ -9,8 +9,8 @@
 version = "1.5.0"
 expect = "5.3.20"
 source = "https://github.com/unixwin/niubash/releases/tag/v1.5.0"
-install = "ay up (tools.toml niubash) ; winget configure shell.dsc.winget ; binaire en service : just unixwin-install (docs/unixwin/BUILD.md)"
-# Décisions de déduplication : docs/unixwin/DEDUP.md. b3sum.* = niu.exe de la chaîne des forks une fois installé.
+install = "ay up (tools.toml niubash) ; winget configure shell.dsc.winget ; binaire en service : just unixwin-install"
+# b3sum.* = niu.exe de la chaîne des forks une fois installé.
 hosts = ["pc"]
 verify = ["--version"]
 path.windows-x86_64 = "{localappdata}/Programs/Niubash/winuxcmd/bin/bash.exe"

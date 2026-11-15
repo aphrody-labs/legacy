@@ -41,7 +41,7 @@ Owner directive (2026-11-15): "prends exemple sur tout CachyOS".
 | CachyOS practice | src application | Owner of the work |
 | --- | --- | --- |
 | -O3, -march x86-64-v3, ThinLTO, AutoFDO/Propeller | release profiles for ay, libaysys and the C core; PGO+BOLT/Propeller on fr1 | build-science agent (docs/native/BUILD-SCIENCE.md) |
-| zstd -T0 -9 for packages | artifact and R2 compression defaults | compression study (docs/infra/COMPRESSION.md) |
+| zstd -T0 -9 for packages | artifact and R2 compression defaults | compression study |
 | zram zstd, swappiness 100, dirty ratios, IO schedulers, writeback limits, THP defer+madvise | fr1 and fr2 build/test hosts, measured with hyperfine before and after; prd untouched | build-science agent |
 | scheduler variants (bore, eevdf, sched-ext) | candidate kernels for fr1 builds, never on prd | research only until measured |
 | modprobed-db trimming | `infra/os` kernel configs | infra/os |
