@@ -1,18 +1,18 @@
-// Catalogue des types de nœuds. Chaque type décrit ses paramètres en Zod (validation à l'enregistrement,
-// formulaire de l'éditeur par JSON Schema) et s'exécute par élément ou par lot. Les accès au monde extérieur
-// (réseau, mail, API d'auto) passent par les services du contexte : le moteur reste testable sans réseau et
-// la garde SSRF appartient à l'appelant.
+// Catalogue of the node types. Each type describes its parameters in Zod (validated at registration, editor form
+// from JSON Schema) and runs per item or per batch. Access to the outside world (network, mail, auto API) goes
+// through the context services: the engine stays testable without a network and the SSRF guard belongs to the
+// caller.
 import { z } from "zod";
 import { ErreurExpression, ecrire, lire } from "./expressions";
 import type { Element } from "./schema";
 
 export interface Services {
-  /** `fetch` gardé : refuse les adresses internes en production. */
+  /** Guarded `fetch`: refuses internal addresses in production. */
   fetch(url: string, init: RequestInit): Promise<Response>;
   envoyerMail?(m: { a: string; sujet: string; texte: string; pieces?: Fichier[] }): Promise<void>;
-  /** Exécute un autre workflow de l'entreprise et rend ses éléments de sortie (100 au plus). */
+  /** Runs another workflow of the company and returns its output items (100 at most). */
   sousWorkflow?(id: string, entree: Element[], signal: AbortSignal): Promise<Element[]>;
-  /** Tableurs par la bibliothèque native (crate auto-sheets). */
+  /** Spreadsheets through the native library (crate auto-sheets). */
   tableur?: {
     ecrire(feuille: {
       nom: string;
@@ -21,14 +21,14 @@ export interface Services {
     }): Uint8Array;
     lire(octets: Uint8Array): { feuilles: { nom: string; lignes: (string | number | boolean | null)[][] }[] };
   };
-  /** PDF par la bibliothèque native (crate auto-fichiers, pdfcraft) ; pages numérotées à partir de 1. */
+  /** PDF through the native library (crate auto-fichiers, pdfcraft); pages numbered from 1. */
   pdf?: {
     fusionner(pdfs: { nom: string; octets: Uint8Array }[]): Uint8Array;
     pages(pdf: Uint8Array, pages: number[]): Uint8Array;
     nombrePages(pdf: Uint8Array): number;
     texte(pdf: Uint8Array): string[];
   };
-  /** Caviardage, signature PAdES et présentations par la bibliothèque native (crate auto-fichiers). */
+  /** Redaction, PAdES signature and presentations through the native library (crate auto-fichiers). */
   documents?: {
     caviarder(
       pdf: Uint8Array,
@@ -61,7 +61,7 @@ export interface Services {
     }): Uint8Array;
     presentationEnPdf(pptx: Uint8Array): Uint8Array;
   };
-  /** Documents Word par la bibliothèque native (crate auto-fichiers, wordcraft). */
+  /** Word documents through the native library (crate auto-fichiers, wordcraft). */
   word?: {
     creer(d: {
       titre?: string;
@@ -70,10 +70,10 @@ export interface Services {
     champs(docx: Uint8Array): string[];
     remplir(docx: Uint8Array, valeurs: Record<string, string>): Uint8Array;
     enPdf(docx: Uint8Array): Uint8Array;
-    /** Texte du corps, un paragraphe par ligne. */
+    /** Body text, one paragraph per line. */
     texte?(docx: Uint8Array): string;
   };
-  /** Images par Bun.Image (transformation et encodage natifs). */
+  /** Images through Bun.Image (native transformation and encoding). */
   image?(
     octets: Uint8Array,
     o: OperationsImage,
@@ -84,24 +84,24 @@ export interface Services {
     hauteur: number;
     source: { largeur: number; hauteur: number; format: string };
   }>;
-  /** Vidéos par Bun.Video (fournisseur natif FilmCraft). */
+  /** Videos through Bun.Video (native FilmCraft provider). */
   video?: {
     metadonnees(octets: Uint8Array): Promise<Record<string, unknown>>;
     image(octets: Uint8Array, secondes: number, largeur?: number): Promise<Uint8Array>;
     gif(octets: Uint8Array, debut: number, duree: number, largeur: number): Promise<Uint8Array>;
   };
-  /** Page web rendue par Bun.WebView (JavaScript exécuté, comme dans un navigateur). */
+  /** Web page rendered by Bun.WebView (JavaScript executed, as in a browser). */
   navigateur?(
     url: string,
     o: { largeur: number; hauteur: number; attendreMs: number; texte: boolean; capture: boolean },
   ): Promise<{ titre: string; texte: string | null; capture: Uint8Array | null }>;
-  /** Appel de l'API d'auto au nom de l'entreprise du workflow. */
+  /** Call of the auto API on behalf of the company of the workflow. */
   appelerAuto?(methode: string, chemin: string, corps?: unknown): Promise<{ statut: number; corps: unknown }>;
-  /** JavaScript de l'utilisateur dans un bac à sable (sans réseau, ni fichiers, ni Bun), temps et mémoire bornés. */
+  /** User JavaScript in a sandbox (no network, no files, no Bun), bounded time and memory. */
   script?(code: string, donnees: DonneesScript): Promise<{ resultat: unknown; journal: string[] }>;
-  /** Mémoire du workflow conservée d'une exécution à l'autre (clé par nœud). */
+  /** Workflow memory kept from one run to the next (key per node). */
   memoire?: { lire(cle: string): Promise<unknown>; ecrire(cle: string, valeur: unknown): Promise<void> };
-  /** Base de connaissances de l'entreprise (RAG) : découpage et recherche natifs, embeddings par l'API donnée. */
+  /** Knowledge base of the company (RAG): native chunking and search, embeddings through the given API. */
   connaissance?: {
     indexer(
       o: { base: string; source: string; texte: string; taille?: number; embeddings: ApiEmbeddings },
@@ -114,7 +114,7 @@ export interface Services {
   };
 }
 
-/** API d'embeddings compatible OpenAI (`POST <url>/embeddings`) : aphrody-llama-server, Ollama, OpenAI… */
+/** OpenAI-compatible embeddings API (`POST <url>/embeddings`): aphrody-llama-server, Ollama, OpenAI... */
 export interface ApiEmbeddings {
   url: string;
   modele: string;
@@ -130,14 +130,14 @@ export interface MorceauTrouve {
 
 export interface DonneesScript {
   elements: Record<string, unknown>[];
-  /** Élément courant (mode par élément). */
+  /** Current item (per-item mode). */
   json: Record<string, unknown> | null;
   noeuds: Record<string, Record<string, unknown>>;
   execution: { id: string };
   workflow: { id: string; nom: string };
 }
 
-/** Résultat d'un script → éléments : liste d'objets ou de `{ json }`, un objet seul, ou rien. */
+/** Result of a script → items: list of objects or of `{ json }`, a single object, or nothing. */
 export function elementsDe(r: unknown): Element[] {
   const liste = r == null ? [] : Array.isArray(r) ? r : [r];
   return liste.map((x) => {
@@ -151,7 +151,7 @@ export function elementsDe(r: unknown): Element[] {
   });
 }
 
-/** Fichier transporté dans un élément (pièce jointe, tableur, PDF ou document généré). */
+/** File carried in an item (attachment, spreadsheet, PDF or generated document). */
 export interface Fichier {
   nom: string;
   type: string;
@@ -179,9 +179,9 @@ export interface OperationsImage {
 export interface Contexte {
   services: Services;
   signal: AbortSignal;
-  /** Identifiant du nœud en cours. */
+  /** Identifier of the node being run. */
   noeud: string;
-  /** Sorties des nœuds déjà exécutés (premier élément), exécution et workflow : pour le nœud Code. */
+  /** Outputs of the nodes already run (first item), run and workflow: for the Code node. */
   vus: Record<string, Record<string, unknown>>;
   execution: { id: string };
   workflow: { id: string; nom: string };
@@ -189,7 +189,7 @@ export interface Contexte {
 
 export type Categorie = "declencheur" | "logique" | "donnees" | "reseau" | "communication" | "ia" | "auto";
 
-/** Sorties d'un nœud : un tableau d'éléments par sortie. */
+/** Outputs of a node: one array of items per output. */
 export type Sorties = Element[][];
 
 export interface TypeNoeud<P extends z.ZodType = z.ZodType> {
@@ -200,11 +200,11 @@ export interface TypeNoeud<P extends z.ZodType = z.ZodType> {
   /** Nom Material Symbols. */
   icone: string;
   parametres: P;
-  /** Libellés des sorties (une seule par défaut), éventuellement selon les paramètres. */
+  /** Labels of the outputs (a single one by default), possibly depending on the parameters. */
   sorties?: string[] | ((p: z.output<P>) => string[]);
-  /** Exécution pour chaque élément, paramètres résolus sur cet élément. */
+  /** Run for each item, parameters resolved on that item. */
   element?: (p: z.output<P>, el: Element, ctx: Contexte) => Promise<Sorties>;
-  /** Exécution une fois pour tous les éléments, paramètres résolus sur le premier. */
+  /** Run once for all items, parameters resolved on the first. */
   lot?: (p: z.output<P>, els: Element[], ctx: Contexte) => Promise<Sorties>;
 }
 
@@ -268,7 +268,7 @@ export function tester(c: z.output<typeof Condition>): boolean {
       return !(g === true || g === "true" || g === 1);
     case "correspond": {
       const motif = t(d);
-      if (motif.length > 200) throw new ErreurExpression("motif trop long (200 caractères au plus)");
+      if (motif.length > 200) throw new ErreurExpression("pattern too long (200 characters at most)");
       return new RegExp(motif, "u").test(t(g));
     }
   }
@@ -277,24 +277,24 @@ export function tester(c: z.output<typeof Condition>): boolean {
 const verifier = (p: z.output<typeof Conditions>) =>
   p.combinaison === "et" ? p.conditions.every(tester) : p.conditions.some(tester);
 
-// ── Réseau ─────────────────────────────────────────────────────────────────
+// ── Network ────────────────────────────────────────────────────────────────
 
 const Paire = z.object({ nom: z.string().min(1), valeur: z.unknown() });
 
 async function lireReponse(r: Response, format: "json" | "texte" | "auto") {
   const type = r.headers.get("content-type") ?? "";
   const brut = await r.text();
-  if (brut.length > 5_000_000) throw new Error("réponse trop volumineuse (5 Mo au plus)");
+  if (brut.length > 5_000_000) throw new Error("response too large (5 MB at most)");
   if (format === "texte" || (format === "auto" && !type.includes("json"))) return brut;
   try {
     return brut ? JSON.parse(brut) : null;
   } catch {
-    if (format === "json") throw new Error("réponse JSON invalide");
+    if (format === "json") throw new Error("invalid JSON response");
     return brut;
   }
 }
 
-/** Requête JSON (corps sérialisé ; une chaîne ou des octets partent tels quels) ; erreur HTTP explicite. */
+/** JSON request (serialized body; a string or bytes go as they are); explicit HTTP error. */
 async function appeler(
   ctx: Contexte,
   methode: string,
@@ -317,27 +317,27 @@ async function appeler(
 const poster = (ctx: Contexte, url: string, corps: unknown, entetes: Record<string, string> = {}) =>
   appeler(ctx, "POST", url, corps, entetes);
 
-/** Empreinte FNV-1a 32 bits (JS pur : le moteur tourne aussi dans le navigateur). */
+/** 32-bit FNV-1a fingerprint (pure JS: the engine also runs in the browser). */
 function empreinte(texte: string) {
   let h = 0x811c9dc5;
   for (let i = 0; i < texte.length; i++) h = Math.imul(h ^ texte.charCodeAt(i), 0x01000193);
   return (h >>> 0).toString(36);
 }
 
-/** Clé stable par exécution, nœud et élément : un nouvel essai ne double pas l'envoi. */
+/** Stable key per run, node and item: a retry does not double the send. */
 const cleUnique = (ctx: Contexte, el: Element) =>
   `auto-${ctx.execution.id}-${ctx.noeud}-${empreinte(JSON.stringify(el.json))}`;
 
-/** URL de base d'un service auto-hébergé, sans barre finale. */
+/** Base URL of a self-hosted service, without trailing slash. */
 const base = (url: string) => url.replace(/\/+$/, "");
 const porteur = (jeton: string) => ({ authorization: `Bearer ${jeton}` });
 
 const une = (els: Element[]): Sorties => [els];
 const avec = (el: Element, champs: Record<string, unknown>): Element => ({ json: { ...el.json, ...champs } });
 
-// ── Fichiers PDF et Word ───────────────────────────────────────────────────
+// ── PDF and Word files ─────────────────────────────────────────────────────
 
-/** Fichier d'entrée : `{ nom, type, base64 }` (sortie d'un autre nœud) ou URL téléchargée. */
+/** Input file: `{ nom, type, base64 }` (output of another node) or downloaded URL. */
 const SourceFichier = z.object({
   fichier: z.union([Fichier, z.literal(""), z.null()]).default(null),
   url: z.string().default(""),
@@ -347,7 +347,7 @@ const OCTETS_MAX = 20_000_000;
 
 async function source(p: { fichier: Fichier | "" | null; url: string }, ctx: Contexte) {
   if (p.fichier) return { nom: p.fichier.nom, octets: Uint8Array.fromBase64(p.fichier.base64) };
-  if (!p.url) throw new Error("fichier ou URL requis");
+  if (!p.url) throw new Error("file or URL required");
   const r = await ctx.services.fetch(p.url, { signal: ctx.signal });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const octets = await r.bytes();
@@ -357,14 +357,14 @@ async function source(p: { fichier: Fichier | "" | null; url: string }, ctx: Con
 
 function natif(ctx: Contexte) {
   const { pdf, word } = ctx.services;
-  if (!pdf || !word) throw new Error("bibliothèque native indisponible");
+  if (!pdf || !word) throw new Error("native library unavailable");
   return { pdf, word };
 }
 
 function octetsPdf(f: Fichier) {
   const o = Uint8Array.fromBase64(f.base64);
   if (!new TextDecoder().decode(o.subarray(0, 1024)).includes("%PDF-"))
-    throw new Error(`« ${f.nom} » n'est pas un PDF`);
+    throw new Error(`"${f.nom}" is not a PDF`);
   return o;
 }
 
@@ -376,7 +376,7 @@ const fichierPdf = (nom: string, octets: Uint8Array): Fichier => ({
   base64: octets.toBase64(),
 });
 
-/** « 1-3, 5, 8- » → [1, 2, 3, 5, 8, …, total] ; pages numérotées à partir de 1. */
+/** "1-3, 5, 8-" → [1, 2, 3, 5, 8, …, total]; pages numbered from 1. */
 export function plagesPages(spec: string, total: number): number[] {
   const pages: number[] = [];
   for (const morceau of spec
@@ -388,7 +388,7 @@ export function plagesPages(spec: string, total: number): number[] {
     const debut = Number(m[1] ?? 1);
     const fin = m[2] ? Number(m[3] ?? total) : debut;
     if (debut < 1 || fin > total || debut > fin)
-      throw new Error(`pages hors du document (${total} page${total > 1 ? "s" : ""}) : « ${morceau} »`);
+      throw new Error(`pages outside the document (${total} page${total > 1 ? "s" : ""}): "${morceau}"`);
     for (let i = debut; i <= fin; i++) pages.push(i);
   }
   if (pages.length > 5000) throw new Error("5 000 pages au plus");
@@ -397,14 +397,14 @@ export function plagesPages(spec: string, total: number): number[] {
 
 // ── Base de connaissances ──────────────────────────────────────────────────
 
-/** API compatible OpenAI par défaut des nœuds IA : `AUTO_IA_URL` du serveur (Ollama de l'Aphrody Box), sinon local. */
+/** Default OpenAI-compatible API of the AI nodes: `AUTO_IA_URL` of the server (Ollama of the Aphrody Box), else local. */
 const IA_URL =
   (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.AUTO_IA_URL ||
   "http://localhost:11434/v1";
 
 const BASE_CONNAISSANCE = /^[a-z0-9_-]{1,60}$/;
 
-/** API d'embeddings compatible OpenAI ; clé par `{{ $secret.nom }}`. */
+/** OpenAI-compatible embeddings API; key through `{{ $secret.nom }}`. */
 const ParametresEmbeddings = {
   api: z.string().default(IA_URL),
   modele: z.string().min(1).max(200).default("nomic-embed-text"),
@@ -422,26 +422,26 @@ function connaissance(ctx: Contexte) {
   return ctx.services.connaissance;
 }
 
-/** Texte d'un document : PDF (couche texte) et Word par la bibliothèque native, sinon UTF-8. */
+/** Text of a document: PDF (text layer) and Word through the native library, else UTF-8. */
 function texteDocument(nom: string, octets: Uint8Array, ctx: Contexte): string {
   const debut = new TextDecoder().decode(octets.subarray(0, 1024));
   if (debut.includes("%PDF-")) return natif(ctx).pdf.texte(octets).join("\n\n");
   if (debut.startsWith("PK") && /\.docx$/i.test(nom)) {
     const texte = ctx.services.word?.texte;
-    if (!texte) throw new Error("bibliothèque native indisponible");
+    if (!texte) throw new Error("native library unavailable");
     return texte(octets);
   }
   return new TextDecoder().decode(octets);
 }
 
-// ── Caviardage, signature, présentations ───────────────────────────────────
+// ── Redaction, signature, presentations ────────────────────────────────────
 
 export const MOTIFS_CAVIARDAGE = ["iban", "email", "telephone", "carte", "date"] as const;
 export type MotifCaviardage = (typeof MOTIFS_CAVIARDAGE)[number];
 
 function documents(ctx: Contexte) {
   const d = ctx.services.documents;
-  if (!d) throw new Error("bibliothèque native indisponible");
+  if (!d) throw new Error("native library unavailable");
   return d;
 }
 
@@ -459,9 +459,9 @@ const Diapositive = z.object({
   notes: z.string().max(20_000).default(""),
 });
 
-// ── Web : HTMLRewriter (extraction) et Bun.XML (flux) ──────────────────────
+// ── Web: HTMLRewriter (extraction) and Bun.XML (feeds) ─────────────────────
 
-/** Valeurs des sélecteurs CSS d'une page, par le parseur HTML en flux de Bun. */
+/** Values of the CSS selectors of a page, through the streaming HTML parser of Bun. */
 export function extraireHtml(
   html: string,
   champs: { nom: string; selecteur: string; attribut: string; tous: boolean }[],
@@ -497,7 +497,7 @@ const enListe = (v: unknown): unknown[] => (v == null ? [] : Array.isArray(v) ? 
 const enTexte = (v: unknown): string =>
   v == null ? "" : typeof v === "object" ? t((v as Record<string, unknown>)["#text"] ?? "") : t(v);
 
-/** Articles d'un flux RSS 2.0 ou Atom, par le parseur XML natif de Bun. */
+/** Items of an RSS 2.0 or Atom feed, through the native XML parser of Bun. */
 export function lireFlux(xml: string): Record<string, unknown>[] {
   const doc = Bun.XML.parse(xml) as Record<string, Record<string, unknown>>;
   if (doc.rss) {
@@ -526,7 +526,7 @@ export function lireFlux(xml: string): Record<string, unknown>[] {
         id: enTexte(i.id),
       };
     });
-  throw new Error("ni RSS ni Atom");
+  throw new Error("neither RSS nor Atom");
 }
 
 // ── Catalogue ──────────────────────────────────────────────────────────────
@@ -534,16 +534,16 @@ export function lireFlux(xml: string): Record<string, unknown>[] {
 export const TYPES: TypeNoeud[] = [
   def({
     type: "declencheur.manuel",
-    libelle: "Lancement manuel",
-    description: "Démarre le workflow depuis l'éditeur, l'API ou le CLI, avec des données d'essai.",
+    libelle: "Manual start",
+    description: "Starts the workflow from the editor, the API or the CLI, with test data.",
     categorie: "declencheur",
     icone: "play_circle",
     parametres: z.object({ donnees: z.record(z.string(), z.unknown()).default({}) }),
   }),
   def({
     type: "declencheur.evenement",
-    libelle: "Événement auto",
-    description: "Démarre à chaque événement de l'entreprise : facture émise, paiement reçu, absence…",
+    libelle: "auto event",
+    description: "Starts on each event of the company: invoice issued, payment received, absence...",
     categorie: "declencheur",
     icone: "bolt",
     parametres: z.object({
@@ -555,8 +555,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "declencheur.planifie",
-    libelle: "Planification",
-    description: "Démarre selon une expression cron (minute heure jour mois jour-de-semaine).",
+    libelle: "Schedule",
+    description: "Starts on a cron expression (minute hour day month day-of-week).",
     categorie: "declencheur",
     icone: "schedule",
     parametres: z.object({
@@ -573,8 +573,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "declencheur.webhook",
-    libelle: "Webhook entrant",
-    description: "Démarre à chaque requête reçue sur l'URL secrète du workflow.",
+    libelle: "Incoming webhook",
+    description: "Starts on each request received at the secret URL of the workflow.",
     categorie: "declencheur",
     icone: "webhook",
     parametres: z.object({
@@ -584,8 +584,8 @@ export const TYPES: TypeNoeud[] = [
 
   def({
     type: "logique.si",
-    libelle: "Si",
-    description: "Oriente chaque élément vers « vrai » ou « faux » selon des conditions.",
+    libelle: "If",
+    description: "Routes each item to \"vrai\" (true) or \"faux\" (false) depending on conditions.",
     categorie: "logique",
     icone: "call_split",
     parametres: Conditions,
@@ -594,8 +594,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "logique.aiguillage",
-    libelle: "Aiguillage",
-    description: "Oriente chaque élément vers la sortie dont la valeur correspond.",
+    libelle: "Switch",
+    description: "Routes each item to the output whose value matches.",
     categorie: "logique",
     icone: "alt_route",
     parametres: z.object({ valeur: z.unknown(), cas: z.array(z.string()).min(1).max(10) }),
@@ -609,15 +609,15 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "logique.attendre",
-    libelle: "Attendre",
-    description: "Marque une pause (60 secondes au plus) avant de continuer.",
+    libelle: "Wait",
+    description: "Pauses (60 seconds at most) before continuing.",
     categorie: "logique",
     icone: "hourglass",
     parametres: z.object({ secondes: z.number().min(0).max(60) }),
     lot: async (p, els, ctx) => {
       await new Promise<void>((ok, ko) => {
         const h = setTimeout(ok, p.secondes * 1000);
-        ctx.signal.addEventListener("abort", () => (clearTimeout(h), ko(new Error("exécution interrompue"))), {
+        ctx.signal.addEventListener("abort", () => (clearTimeout(h), ko(new Error("execution interrupted"))), {
           once: true,
         });
       });
@@ -626,8 +626,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "logique.passer",
-    libelle: "Laisser passer",
-    description: "Transmet les éléments sans les modifier : point de jonction, ou emplacement d'un nœud à remplacer.",
+    libelle: "Pass through",
+    description: "Passes the items on unchanged: a junction point, or the place of a node to replace.",
     categorie: "logique",
     icone: "arrow_forward",
     parametres: z.object({}),
@@ -635,8 +635,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "logique.arreter",
-    libelle: "Arrêter en erreur",
-    description: "Interrompt l'exécution avec un message d'erreur.",
+    libelle: "Stop with an error",
+    description: "Stops the run with an error message.",
     categorie: "logique",
     icone: "block",
     parametres: z.object({ message: z.string().min(1).max(500) }),
@@ -647,8 +647,8 @@ export const TYPES: TypeNoeud[] = [
 
   def({
     type: "donnees.definir",
-    libelle: "Définir des champs",
-    description: "Ajoute ou remplace des champs, valeurs fixes ou expressions.",
+    libelle: "Set fields",
+    description: "Adds or replaces fields, fixed values or expressions.",
     categorie: "donnees",
     icone: "edit_note",
     parametres: z.object({
@@ -663,8 +663,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "donnees.filtrer",
-    libelle: "Filtrer",
-    description: "Ne garde que les éléments qui remplissent les conditions.",
+    libelle: "Filter",
+    description: "Keeps only the items that meet the conditions.",
     categorie: "donnees",
     icone: "filter_alt",
     parametres: Conditions,
@@ -674,7 +674,7 @@ export const TYPES: TypeNoeud[] = [
     type: "donnees.code",
     libelle: "Code",
     description:
-      'JavaScript libre dans un bac à sable : $input.all(), items, $json, $("nœud").first().json ; renvoie une liste d\'objets.',
+      'Free JavaScript in a sandbox: $input.all(), items, $json, $("node").first().json; returns a list of objects.',
     categorie: "donnees",
     icone: "code",
     parametres: z.object({
@@ -682,7 +682,7 @@ export const TYPES: TypeNoeud[] = [
       mode: z.enum(["lot", "element"]).default("lot"),
     }),
     async lot(p, els, ctx) {
-      if (!ctx.services.script) throw new Error("bac à sable JavaScript indisponible");
+      if (!ctx.services.script) throw new Error("JavaScript sandbox unavailable");
       const base = { noeuds: ctx.vus, execution: ctx.execution, workflow: ctx.workflow };
       if (p.mode === "lot") {
         const r = await ctx.services.script(p.code, {
@@ -702,8 +702,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "donnees.trier",
-    libelle: "Trier",
-    description: "Trie les éléments selon un champ.",
+    libelle: "Sort",
+    description: "Sorts the items by a field.",
     categorie: "donnees",
     icone: "sort",
     parametres: z.object({
@@ -724,8 +724,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "donnees.limiter",
-    libelle: "Limiter",
-    description: "Ne garde que les N premiers éléments.",
+    libelle: "Limit",
+    description: "Keeps only the first N items.",
     categorie: "donnees",
     icone: "low_priority",
     parametres: z.object({ max: z.number().int().min(1).max(5000) }),
@@ -733,8 +733,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "donnees.dedoublonner",
-    libelle: "Dédoublonner",
-    description: "Retire les éléments dont le champ a déjà été vu.",
+    libelle: "Deduplicate",
+    description: "Removes the items whose field was already seen.",
     categorie: "donnees",
     icone: "filter_none",
     parametres: z.object({ champ: z.string().min(1) }),
@@ -745,14 +745,14 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "donnees.nouveaux",
-    libelle: "Seulement les nouveaux",
-    description: "Ne laisse passer que les éléments jamais vus lors des exécutions précédentes (veille, flux, API).",
+    libelle: "Only new ones",
+    description: "Lets through only the items never seen in previous runs (monitoring, feeds, APIs).",
     categorie: "donnees",
     icone: "fiber_new",
     parametres: z.object({ champ: z.string().min(1), memoire: z.number().int().min(10).max(10_000).default(1000) }),
     lot: async (p, els, ctx) => {
       const m = ctx.services.memoire;
-      if (!m) throw new Error("mémoire du workflow indisponible");
+      if (!m) throw new Error("workflow memory unavailable");
       const cle = `vus:${ctx.noeud}`;
       const deja = (await m.lire(cle)) as string[] | undefined;
       const vus = new Set(Array.isArray(deja) ? deja : []);
@@ -768,13 +768,13 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "donnees.agreger",
-    libelle: "Regrouper",
-    description: "Réunit tous les éléments en un seul, sous forme de liste.",
+    libelle: "Group",
+    description: "Gathers all items into one, as a list.",
     categorie: "donnees",
     icone: "stacks",
     parametres: z.object({
       champ: z.string().min(1).default("elements"),
-      /** Ne garder que ce champ de chaque élément (liste de valeurs). */
+      /** Keep only this field of each item (list of values). */
       valeur: z.string().default(""),
     }),
     lot: async (p, els) =>
@@ -782,14 +782,14 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "donnees.separer",
-    libelle: "Éclater une liste",
-    description: "Produit un élément par entrée d'une liste.",
+    libelle: "Split a list",
+    description: "Produces one item per entry of a list.",
     categorie: "donnees",
     icone: "call_split",
     parametres: z.object({ champ: z.string().min(1) }),
     element: async (p, el) => {
       const liste = lire(el.json, p.champ);
-      if (!Array.isArray(liste)) throw new Error(`« ${p.champ} » n'est pas une liste`);
+      if (!Array.isArray(liste)) throw new Error(`"${p.champ}" is not a list`);
       return une(
         liste.map((v) => ({ json: v && typeof v === "object" && !Array.isArray(v) ? { ...v } : { valeur: v } })),
       );
@@ -798,8 +798,8 @@ export const TYPES: TypeNoeud[] = [
 
   def({
     type: "fichier.tableur",
-    libelle: "Créer un tableur",
-    description: "Réunit les éléments dans un classeur Excel (une ligne par élément), prêt à joindre à un mail.",
+    libelle: "Create a spreadsheet",
+    description: "Gathers the items into an Excel workbook (one row per item), ready to attach to a mail.",
     categorie: "donnees",
     icone: "table_view",
     parametres: z.object({
@@ -810,7 +810,7 @@ export const TYPES: TypeNoeud[] = [
         .max(100),
     }),
     lot: async (p, els, ctx) => {
-      if (!ctx.services.tableur) throw new Error("bibliothèque native indisponible");
+      if (!ctx.services.tableur) throw new Error("native library unavailable");
       const lignes = els.map((e) =>
         p.colonnes.map((c) => {
           const v = lire(e.json, c.champ);
@@ -828,14 +828,14 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.lire_tableur",
-    libelle: "Lire un tableur",
+    libelle: "Read a spreadsheet",
     description:
-      "Télécharge un classeur (xlsx, ods, csv) et produit un élément par ligne, la première servant d'en-tête.",
+      "Downloads a workbook (xlsx, ods, csv) and produces one item per row, the first serving as header.",
     categorie: "donnees",
     icone: "grid_on",
     parametres: z.object({ url: z.string().min(1), feuille: z.string().default("") }),
     element: async (p, _el, ctx) => {
-      if (!ctx.services.tableur) throw new Error("bibliothèque native indisponible");
+      if (!ctx.services.tableur) throw new Error("native library unavailable");
       const r = await ctx.services.fetch(p.url, { signal: ctx.signal });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const octets = await r.bytes();
@@ -852,13 +852,13 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.pdf_fusionner",
-    libelle: "Fusionner des PDF",
+    libelle: "Merge PDFs",
     description:
-      "Réunit les PDF des éléments (ou une liste de fichiers) en un seul, dans l'ordre, un signet par fichier.",
+      "Merges the PDFs of the items (or a list of files) into one, in order, one bookmark per file.",
     categorie: "donnees",
     icone: "picture_as_pdf",
     parametres: z.object({
-      /** Liste explicite, par exemple `{{ $json.pieces }}` ; vide : le champ `champ` de chaque élément. */
+      /** Explicit list, for example `{{ $json.pieces }}`; empty: the `champ` field of each item. */
       fichiers: z.array(Fichier).max(50).default([]),
       champ: z.string().min(1).default("fichier"),
       nom: z.string().min(1).max(120).default("fusion"),
@@ -871,7 +871,7 @@ export const TYPES: TypeNoeud[] = [
             const v = lire(e.json, p.champ);
             return (Array.isArray(v) ? v : [v]).filter((f) => f != null && f !== "").map((f) => Fichier.parse(f));
           });
-      if (!fichiers.length) throw new Error(`aucun fichier dans « ${p.champ} »`);
+      if (!fichiers.length) throw new Error(`no file in "${p.champ}"`);
       if (fichiers.length > 50) throw new Error("50 PDF au plus");
       const octets = pdf.fusionner(fichiers.map((f) => ({ nom: f.nom, octets: octetsPdf(f) })));
       return une([{ json: { fichier: fichierPdf(p.nom, octets), fichiers: fichiers.length } }]);
@@ -879,8 +879,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.pdf_pages",
-    libelle: "Extraire des pages d'un PDF",
-    description: "Garde les pages choisies d'un PDF (« 1-3, 5, 8- »), dans l'ordre indiqué.",
+    libelle: "Extract pages from a PDF",
+    description: "Keeps the chosen pages of a PDF (\"1-3, 5, 8-\"), in the order given.",
     categorie: "donnees",
     icone: "auto_stories",
     parametres: SourceFichier.extend({
@@ -897,9 +897,9 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.pdf_texte",
-    libelle: "Lire le texte d'un PDF",
+    libelle: "Read the text of a PDF",
     description:
-      "Extrait le texte d'un PDF dans l'ordre de lecture (par exemple avant un nœud IA). Un scan sans couche texte donne un texte vide.",
+      "Extracts the text of a PDF in reading order (for example before an AI node). A scan without a text layer gives an empty text.",
     categorie: "donnees",
     icone: "text_snippet",
     parametres: SourceFichier.extend({ champ: z.string().min(1).default("texte") }),
@@ -912,18 +912,18 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.pdf_caviarder",
-    libelle: "Caviarder un PDF",
+    libelle: "Redact a PDF",
     description:
-      "Supprime définitivement les textes choisis et les IBAN, e-mails, téléphones, cartes ou dates d'un PDF (contenu effacé sous un pavé noir, vérifié) et compte les occurrences.",
+      "Permanently removes the chosen texts and the IBANs, e-mails, phone numbers, cards or dates of a PDF (content erased under a black box, verified) and counts the occurrences.",
     categorie: "donnees",
     icone: "ink_eraser",
     parametres: SourceFichier.extend({
-      /** Textes ou expressions : une liste (`{{ $json.noms }}`) ou un par ligne. */
+      /** Texts or expressions: a list (`{{ $json.noms }}`) or one per line. */
       textes: z.union([z.array(z.string().max(256)).max(1000), z.string().max(256_000)]).default([]),
       motifs: z.array(z.enum(MOTIFS_CAVIARDAGE)).max(5).default([]),
       casse: z.boolean().default(false),
       motsEntiers: z.boolean().default(false),
-      /** Texte écrit sur chaque pavé (Helvetica, caractères latins). */
+      /** Text written on each box (Helvetica, Latin characters). */
       texteSuperpose: z.string().max(200).default(""),
       nom: z.string().max(120).default(""),
     }),
@@ -932,7 +932,7 @@ export const TYPES: TypeNoeud[] = [
       const textes = (typeof p.textes === "string" ? p.textes.split("\n") : p.textes)
         .map((x) => x.trim())
         .filter(Boolean);
-      if (!textes.length && !p.motifs.length) throw new Error("textes ou motifs requis");
+      if (!textes.length && !p.motifs.length) throw new Error("texts or patterns required");
       const { pdf, rapport } = documents(ctx).caviarder(octets, {
         textes,
         motifs: p.motifs,
@@ -953,13 +953,13 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.pdf_signer",
-    libelle: "Signer un PDF",
+    libelle: "Sign a PDF",
     description:
-      "Signature électronique PAdES (B-B) avec un certificat PKCS #12 (.p12, .pfx) gardé en secret ; visible ou invisible, éventuellement certifiante.",
+      "PAdES (B-B) electronic signature with a PKCS #12 certificate (.p12, .pfx) kept secret; visible or invisible, optionally certifying.",
     categorie: "donnees",
     icone: "signature",
     parametres: SourceFichier.extend({
-      /** Certificat PKCS #12 en base64, par exemple `{{ $secret.certificat }}`, ou fichier. */
+      /** PKCS #12 certificate in base64, for example `{{ $secret.certificat }}`, or file. */
       certificat: z.union([Fichier, z.string().min(1).max(1_000_000)]),
       /** Par exemple `{{ $secret.certificat_mot_de_passe }}`. */
       motDePasse: z.string().max(1000).default(""),
@@ -968,7 +968,7 @@ export const TYPES: TypeNoeud[] = [
       contact: z.string().max(200).default(""),
       visible: z.boolean().default(false),
       page: z.number().int().min(1).default(1),
-      /** `[x0, y0, x1, y1]` en points depuis le coin bas gauche ; par défaut 200 × 60 en bas à gauche. */
+      /** `[x0, y0, x1, y1]` in points from the bottom left corner; default 200 × 60 at the bottom left. */
       rectangle: z.array(z.number()).length(4).nullable().default(null),
       certifier: z.enum(["non", "aucune_modification", "formulaires", "commentaires"]).default("non"),
       nom: z.string().max(120).default(""),
@@ -993,13 +993,13 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.pdf_verifier_signature",
-    libelle: "Vérifier les signatures d'un PDF",
+    libelle: "Verify the signatures of a PDF",
     description:
-      "Liste et vérifie les signatures électroniques d'un PDF : intégrité, signataire, modifications après signature, confiance dans le certificat.",
+      "Lists and verifies the electronic signatures of a PDF: integrity, signer, changes after signing, trust in the certificate.",
     categorie: "donnees",
     icone: "verified",
     parametres: SourceFichier.extend({
-      /** Certificats de confiance (PEM) ; sans eux, une signature intacte a une identité « inconnue ». */
+      /** Trusted certificates (PEM); without them, an intact signature has an "unknown" identity. */
       confiance: z.string().max(1_000_000).default(""),
     }),
     element: async (p, el, ctx) => {
@@ -1017,15 +1017,15 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.presentation",
-    libelle: "Créer une présentation",
+    libelle: "Create a presentation",
     description:
-      "Présentation PowerPoint (PPTX 16:9) : une diapositive de titre puis une diapositive titre et puces par élément (ou par entrée de la liste) ; en PPTX, en PDF ou les deux.",
+      "PowerPoint presentation (PPTX 16:9): a title slide then a title-and-bullets slide per item (or per entry of the list); as PPTX, as PDF or both.",
     categorie: "donnees",
     icone: "slideshow",
     parametres: z.object({
       titre: z.string().max(500).default(""),
       sousTitre: z.string().max(2000).default(""),
-      /** Liste explicite ; vide : une diapositive par élément, lue dans les champs ci-dessous. */
+      /** Explicit list; empty: one slide per item, read from the fields below. */
       diapositives: z.array(Diapositive).max(500).default([]),
       champTitre: z.string().min(1).default("titre"),
       champPuces: z.string().min(1).default("puces"),
@@ -1057,7 +1057,7 @@ export const TYPES: TypeNoeud[] = [
         .map((x) => ({ ...x, puces: x.puces.filter((y) => (typeof y === "string" ? y : y.texte).trim()) }))
         .filter((x) => x.titre || x.puces.length);
       if (diapositives.length > 500) throw new Error("500 diapositives au plus");
-      if (!p.titre && !diapositives.length) throw new Error("titre ou diapositives requis");
+      if (!p.titre && !diapositives.length) throw new Error("title or slides required");
       const pptx = d.presentation({ titre: p.titre, sous_titre: p.sousTitre, diapositives });
       const fichierPptx: Fichier = {
         nom: `${nomFichier(p.nom)}.pptx`,
@@ -1075,16 +1075,16 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "fichier.document",
-    libelle: "Créer un document Word",
+    libelle: "Create a Word document",
     description:
-      "Remplit les champs {{ nom }} d'un gabarit DOCX (fichier ou URL), ou compose un document simple (titre et paragraphes) ; en DOCX, en PDF ou les deux.",
+      "Fills the {{ nom }} fields of a DOCX template (file or URL), or composes a simple document (title and paragraphs); as DOCX, as PDF or both.",
     categorie: "donnees",
     icone: "description",
     parametres: z.object({
-      /** Gabarit, par exemple `{{ $json.fichier }}` ; sinon `url` ; sinon document composé. */
+      /** Template, for example `{{ $json.fichier }}`; else `url`; else composed document. */
       gabarit: z.union([Fichier, z.literal(""), z.null()]).default(null),
       url: z.string().default(""),
-      /** Valeurs des champs du gabarit ; un champ absent est cherché dans l'élément (`{{ client.nom }}`). */
+      /** Values of the template fields; a missing field is looked up in the item (`{{ client.nom }}`). */
       champs: z.array(Paire).max(200).default([]),
       titre: z.string().max(500).default(""),
       paragraphes: z
@@ -1115,7 +1115,7 @@ export const TYPES: TypeNoeud[] = [
         }
         docx = word.remplir(gabarit, valeurs);
       } else {
-        if (!p.titre && !p.paragraphes.length) throw new Error("gabarit, URL, titre ou paragraphes requis");
+        if (!p.titre && !p.paragraphes.length) throw new Error("template, URL, title or paragraphs required");
         docx = word.creer({
           titre: p.titre,
           paragraphes: p.paragraphes.map((x) => ({
@@ -1141,8 +1141,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "media.image",
-    libelle: "Transformer une image",
-    description: "Redimensionne, recadre, pivote, convertit (JPEG, PNG, WebP) et allège une image.",
+    libelle: "Transform an image",
+    description: "Resizes, crops, rotates, converts (JPEG, PNG, WebP) and compresses an image.",
     categorie: "donnees",
     icone: "image",
     parametres: z.object({
@@ -1182,8 +1182,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "media.video",
-    libelle: "Vidéo",
-    description: "Lit les métadonnées d'une vidéo, en extrait une image ou un GIF animé.",
+    libelle: "Video",
+    description: "Reads the metadata of a video, extracts a frame or an animated GIF from it.",
     categorie: "donnees",
     icone: "movie",
     parametres: z.object({
@@ -1195,7 +1195,7 @@ export const TYPES: TypeNoeud[] = [
       largeur: z.number().int().min(16).max(640).default(480),
     }),
     element: async (p, el, ctx) => {
-      if (!ctx.services.video) throw new Error("traitement vidéo indisponible");
+      if (!ctx.services.video) throw new Error("video processing unavailable");
       const { nom, octets } = await source(p, ctx);
       const base = nomFichier(nom.replace(/\.[^.]+$/, ""));
       const video = await ctx.services.video.metadonnees(octets);
@@ -1212,9 +1212,9 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "reseau.navigateur",
-    libelle: "Ouvrir dans un navigateur",
+    libelle: "Open in a browser",
     description:
-      "Charge une page comme un vrai navigateur (JavaScript compris) : titre, texte visible et capture d'écran.",
+      "Loads a page like a real browser (JavaScript included): title, visible text and screenshot.",
     categorie: "reseau",
     icone: "travel_explore",
     parametres: z.object({
@@ -1236,8 +1236,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "reseau.http",
-    libelle: "Requête HTTP",
-    description: "Appelle n'importe quelle API web (GET, POST…) et récupère sa réponse.",
+    libelle: "HTTP request",
+    description: "Calls any web API (GET, POST...) and gets its response.",
     categorie: "reseau",
     icone: "language",
     parametres: z.object({
@@ -1273,8 +1273,8 @@ export const TYPES: TypeNoeud[] = [
 
   def({
     type: "reseau.extraire",
-    libelle: "Extraire d'une page web",
-    description: "Lit une page HTML et en extrait des valeurs par sélecteur CSS (texte ou attribut).",
+    libelle: "Extract from a web page",
+    description: "Reads an HTML page and extracts values by CSS selector (text or attribute).",
     categorie: "reseau",
     icone: "travel_explore",
     parametres: z.object({
@@ -1301,8 +1301,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "reseau.flux",
-    libelle: "Lire un flux RSS",
-    description: "Lit un flux RSS ou Atom et produit un élément par article (titre, lien, date, résumé).",
+    libelle: "Read an RSS feed",
+    description: "Reads an RSS or Atom feed and produces one item per article (title, link, date, summary).",
     categorie: "reseau",
     icone: "rss_feed",
     parametres: z.object({ url: z.string().min(1), max: z.number().int().min(1).max(500).default(50) }),
@@ -1319,27 +1319,27 @@ export const TYPES: TypeNoeud[] = [
 
   def({
     type: "communication.mail",
-    libelle: "Envoyer un mail",
-    description: "Envoie un mail depuis la boîte de l'entreprise.",
+    libelle: "Send an e-mail",
+    description: "Sends an e-mail from the mailbox of the company.",
     categorie: "communication",
     icone: "mail",
     parametres: z.object({
       a: z.email(),
       sujet: z.string().min(1).max(200),
       texte: z.string().min(1).max(50_000),
-      /** Pièce jointe, par exemple `{{ $json.fichier }}` produit par « Créer un tableur ». */
+      /** Attachment, for example `{{ $json.fichier }}` produced by "Create a spreadsheet". */
       piece: z.union([Fichier, z.literal(""), z.null()]).default(null),
     }),
     element: async (p, el, ctx) => {
-      if (!ctx.services.envoyerMail) throw new Error("aucune boîte mail configurée pour l'entreprise");
+      if (!ctx.services.envoyerMail) throw new Error("no mailbox configured for the company");
       await ctx.services.envoyerMail({ a: p.a, sujet: p.sujet, texte: p.texte, pieces: p.piece ? [p.piece] : [] });
       return une([avec(el, { mail: { a: p.a, sujet: p.sujet, envoye: true } })]);
     },
   }),
   def({
     type: "communication.slack",
-    libelle: "Message Slack",
-    description: "Publie un message dans un canal par son webhook entrant.",
+    libelle: "Slack message",
+    description: "Posts a message to a channel through its incoming webhook.",
     categorie: "communication",
     icone: "forum",
     parametres: z.object({ webhook: z.url(), texte: z.string().min(1).max(40_000) }),
@@ -1350,8 +1350,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "communication.discord",
-    libelle: "Message Discord",
-    description: "Publie un message dans un salon par son webhook.",
+    libelle: "Discord message",
+    description: "Posts a message to a channel through its webhook.",
     categorie: "communication",
     icone: "chat",
     parametres: z.object({ webhook: z.url(), texte: z.string().min(1).max(2000) }),
@@ -1362,8 +1362,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "communication.telegram",
-    libelle: "Message Telegram",
-    description: "Envoie un message par un bot Telegram.",
+    libelle: "Telegram message",
+    description: "Sends a message through a Telegram bot.",
     categorie: "communication",
     icone: "send",
     parametres: z.object({ jeton: z.string().min(10), chat: z.string().min(1), texte: z.string().min(1).max(4096) }),
@@ -1376,16 +1376,16 @@ export const TYPES: TypeNoeud[] = [
     },
   }),
 
-  // Services libres auto-hébergeables : API HTTP documentées, jetons par `{{ $secret.nom }}`.
+  // Free self-hostable services: documented HTTP APIs, tokens through `{{ $secret.nom }}`.
   def({
     type: "communication.ntfy",
-    libelle: "Notification ntfy",
-    description: "Pousse une notification sur un sujet ntfy (ntfy.sh ou votre serveur), reçue sur téléphone et bureau.",
+    libelle: "ntfy notification",
+    description: "Pushes a notification to an ntfy topic (ntfy.sh or your server), received on phone and desktop.",
     categorie: "communication",
     icone: "notifications_active",
     parametres: z.object({
       serveur: z.url().default("https://ntfy.sh"),
-      sujet: z.string().regex(/^[\w-]{1,64}$/, "lettres, chiffres, - et _"),
+      sujet: z.string().regex(/^[\w-]{1,64}$/, "letters, digits, - and _"),
       texte: z.string().min(1).max(4096),
       titre: z.string().max(250).default(""),
       priorite: z.number().int().min(1).max(5).default(3),
@@ -1407,8 +1407,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "communication.gotify",
-    libelle: "Notification Gotify",
-    description: "Envoie un message à votre serveur Gotify avec le jeton d'une application.",
+    libelle: "Gotify notification",
+    description: "Sends a message to your Gotify server with an application token.",
     categorie: "communication",
     icone: "campaign",
     parametres: z.object({
@@ -1430,9 +1430,9 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "communication.matrix",
-    libelle: "Message Matrix",
+    libelle: "Matrix message",
     description:
-      "Publie un message dans un salon Matrix (Element, Synapse, Conduit…) avec le jeton d'accès d'un compte.",
+      "Posts a message to a Matrix room (Element, Synapse, Conduit...) with the access token of an account.",
     categorie: "communication",
     icone: "tag",
     parametres: z.object({
@@ -1455,8 +1455,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "communication.mastodon",
-    libelle: "Publication Mastodon",
-    description: "Publie un statut sur une instance Mastodon (ou compatible) avec un jeton d'application.",
+    libelle: "Mastodon post",
+    description: "Posts a status to a Mastodon instance (or compatible) with an application token.",
     categorie: "communication",
     icone: "public",
     parametres: z.object({
@@ -1482,7 +1482,7 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "reseau.home_assistant",
     libelle: "Home Assistant",
-    description: "Appelle un service de votre maison (allumer, ouvrir, notifier…) ou lit l'état d'une entité.",
+    description: "Calls a service of your home (turn on, open, notify...) or reads the state of an entity.",
     categorie: "reseau",
     icone: "home_iot_device",
     parametres: z.object({
@@ -1513,8 +1513,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "reseau.nextcloud",
-    libelle: "Déposer dans Nextcloud",
-    description: "Dépose un fichier dans votre Nextcloud par WebDAV, avec un mot de passe d'application.",
+    libelle: "Upload to Nextcloud",
+    description: "Uploads a file to your Nextcloud through WebDAV, with an application password.",
     categorie: "reseau",
     icone: "cloud_upload",
     parametres: z.object({
@@ -1542,8 +1542,8 @@ export const TYPES: TypeNoeud[] = [
 
   def({
     type: "ia.texte",
-    libelle: "Modèle de langage",
-    description: "Génère ou analyse un texte avec un modèle compatible OpenAI : Ollama, Mistral, OpenAI…",
+    libelle: "Language model",
+    description: "Generates or analyzes a text with an OpenAI-compatible model: Ollama, Mistral, OpenAI...",
     categorie: "ia",
     icone: "auto_awesome",
     parametres: z.object({
@@ -1577,7 +1577,7 @@ export const TYPES: TypeNoeud[] = [
         try {
           reponse = JSON.parse(contenu);
         } catch {
-          throw new Error("le modèle n'a pas renvoyé de JSON valide");
+          throw new Error("the model did not return valid JSON");
         }
       }
       return une([avec(el, { reponse, usage: r.usage ?? null })]);
@@ -1586,9 +1586,9 @@ export const TYPES: TypeNoeud[] = [
 
   def({
     type: "ia.ocr",
-    libelle: "Lire une image (OCR)",
+    libelle: "Read an image (OCR)",
     description:
-      "Lit le texte d'une image (scan, photo de ticket, capture) avec un modèle de vision : aphrody-llama-server, Ollama, OpenAI…",
+      "Reads the text of an image (scan, receipt photo, screenshot) with a vision model: aphrody-llama-server, Ollama, OpenAI...",
     categorie: "ia",
     icone: "document_scanner",
     parametres: z.object({
@@ -1600,13 +1600,13 @@ export const TYPES: TypeNoeud[] = [
       consigne: z
         .string()
         .max(20_000)
-        .default("Transcris fidèlement tout le texte de l'image, ligne par ligne, sans commentaire."),
+        .default("Transcribe all the text of the image faithfully, line by line, without comment."),
       json: z.boolean().default(false),
       largeurMax: z.number().int().min(256).max(4096).default(1600),
     }),
     element: async (p, el, ctx) => {
       const { nom, octets } = await source(p, ctx);
-      // Image réduite et réencodée par Bun.Image : requête plus légère, formats exotiques normalisés.
+      // Image downscaled and re-encoded by Bun.Image: lighter request, exotic formats normalized.
       let image: { octets: Uint8Array; type: string } = { octets, type: "image/png" };
       if (ctx.services.image) {
         const r = await ctx.services.image(octets, {
@@ -1644,7 +1644,7 @@ export const TYPES: TypeNoeud[] = [
         try {
           texte = JSON.parse(contenu);
         } catch {
-          throw new Error("le modèle n'a pas renvoyé de JSON valide");
+          throw new Error("the model did not return valid JSON");
         }
       }
       return une([avec(el, { source: nom, texte, usage: r.usage ?? null })]);
@@ -1652,16 +1652,16 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "ia.indexer",
-    libelle: "Indexer dans la base de connaissances",
+    libelle: "Index into the knowledge base",
     description:
-      "Découpe un texte ou un document (PDF, Word, Markdown, texte) en morceaux, calcule leurs embeddings et les range dans une base de connaissances de l'entreprise ; une source déjà indexée est remplacée.",
+      "Splits a text or a document (PDF, Word, Markdown, text) into chunks, computes their embeddings and stores them in a knowledge base of the company; a source already indexed is replaced.",
     categorie: "ia",
     icone: "library_add",
     parametres: SourceFichier.extend({
-      base: z.string().regex(BASE_CONNAISSANCE, "base : minuscules, chiffres, - ou _").default("documents"),
-      /** Nom de la source (remplacée si elle existe) ; vide : nom du fichier. */
+      base: z.string().regex(BASE_CONNAISSANCE, "base: lowercase letters, digits, - or _").default("documents"),
+      /** Name of the source (replaced if it exists); empty: file name. */
       source: z.string().max(300).default(""),
-      /** Texte à indexer ; vide : le fichier ou l'URL. */
+      /** Text to index; empty: the file or URL. */
       texte: z.string().max(5_000_000).default(""),
       ...ParametresEmbeddings,
       taille: z.number().int().min(200).max(8000).default(1400),
@@ -1676,7 +1676,7 @@ export const TYPES: TypeNoeud[] = [
       }
       nom ||= "texte";
       if (!texte.trim())
-        throw new Error("aucun texte à indexer (un scan sans couche texte passe d'abord par « Lire une image (OCR) »)");
+        throw new Error("no text to index (a scan without a text layer goes through \"Read an image (OCR)\" first)");
       const r = await connaissance(ctx).indexer(
         { base: p.base, source: nom, texte, taille: p.taille, embeddings: embeddingsDe(p) },
         ctx.signal,
@@ -1686,18 +1686,18 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "ia.rechercher",
-    libelle: "Rechercher dans la base de connaissances",
+    libelle: "Search the knowledge base",
     description:
-      "Trouve les morceaux de documents les plus proches d'une question (similarité des embeddings) et prépare un « contexte » à donner au modèle de langage.",
+      "Finds the document chunks closest to a question (embedding similarity) and prepares a \"context\" to give to the language model.",
     categorie: "ia",
     icone: "manage_search",
     parametres: z.object({
-      base: z.string().regex(BASE_CONNAISSANCE, "base : minuscules, chiffres, - ou _").default("documents"),
+      base: z.string().regex(BASE_CONNAISSANCE, "base: lowercase letters, digits, - or _").default("documents"),
       question: z.string().min(1).max(10_000),
       k: z.number().int().min(1).max(20).default(4),
-      /** Similarité cosinus minimale (0 à 1) d'un morceau retenu. */
+      /** Minimum cosine similarity (0 to 1) of a retained chunk. */
       scoreMin: z.number().min(0).max(1).default(0),
-      /** Diversité (λ de MMR) : 1 = pertinence seule, plus bas = moins de redites ; vide : sans. */
+      /** Diversity (MMR lambda): 1 = relevance only, lower = fewer repeats; empty: none. */
       diversite: z.number().min(0).max(1).optional(),
       ...ParametresEmbeddings,
     }),
@@ -1719,18 +1719,18 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "auto.workflow",
-    libelle: "Exécuter un workflow",
+    libelle: "Run a workflow",
     description:
-      "Lance un autre workflow de l'entreprise avec ces éléments et continue avec ce qu'il produit (3 niveaux au plus).",
+      "Runs another workflow of the company with these items and continues with what it produces (3 levels at most).",
     categorie: "auto",
     icone: "account_tree",
     parametres: z.object({
-      workflow: z.string().regex(/^[0-9a-f-]{36}$/i, "identifiant d'un workflow (UUID)"),
+      workflow: z.string().regex(/^[0-9a-f-]{36}$/i, "workflow identifier (UUID)"),
       mode: z.enum(["ensemble", "par_element"]).default("ensemble"),
     }),
     lot: async (p, els, ctx) => {
       const lancer = ctx.services.sousWorkflow;
-      if (!lancer) throw new Error("sous-workflows indisponibles ici");
+      if (!lancer) throw new Error("sub-workflows unavailable here");
       if (p.mode === "ensemble") return une(await lancer(p.workflow, els, ctx.signal));
       const sortie: Element[] = [];
       for (const el of els) sortie.push(...(await lancer(p.workflow, [el], ctx.signal)));
@@ -1739,8 +1739,8 @@ export const TYPES: TypeNoeud[] = [
   }),
   def({
     type: "auto.requete",
-    libelle: "Action auto",
-    description: "Lit ou modifie les données de l'entreprise : clients, documents, produits, absences…",
+    libelle: "auto action",
+    description: "Reads or changes the data of the company: customers, documents, products, absences...",
     categorie: "auto",
     icone: "deployed_code",
     parametres: z.object({
@@ -1752,7 +1752,7 @@ export const TYPES: TypeNoeud[] = [
     element: async (p, el, ctx) => {
       if (!ctx.services.appelerAuto) throw new Error("API d'auto indisponible");
       if (/^\/v1\/(auth|jetons|membres|automatisations|crochets)/.test(p.chemin))
-        throw new Error("chemin réservé : comptes, jetons et automatisations ne sont pas accessibles");
+        throw new Error("reserved path: accounts, tokens and automations are not accessible");
       const r = await ctx.services.appelerAuto(p.methode, p.chemin, p.methode === "GET" ? undefined : p.corps);
       if (r.statut >= 400) throw new Error(`auto ${r.statut} : ${t(r.corps).slice(0, 300)}`);
       if (p.eclater && Array.isArray(r.corps))
@@ -1769,7 +1769,7 @@ export const TYPES: TypeNoeud[] = [
 
 export const CATALOGUE = new Map(TYPES.map((x) => [x.type, x]));
 
-/** Libellés des sorties d'un nœud selon ses paramètres validés. */
+/** Labels of the outputs of a node according to its validated parameters. */
 export function sortiesDe(type: TypeNoeud, p: unknown): string[] {
   const s = type.sorties;
   if (!s) return ["principale"];
@@ -1778,7 +1778,7 @@ export function sortiesDe(type: TypeNoeud, p: unknown): string[] {
   return r.success ? s(r.data) : ["principale"];
 }
 
-/** Catalogue publiable (éditeur, MCP, OpenAPI) : paramètres en JSON Schema. */
+/** Publishable catalogue (editor, MCP, OpenAPI): parameters as JSON Schema. */
 export function catalogueJson() {
   return TYPES.map((x) => ({
     type: x.type,

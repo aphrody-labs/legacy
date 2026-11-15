@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { estN8n, importerN8n, valider } from "./index";
 
-// Forme d'un export n8n 1.x (Fichier > Download).
+// Shape of an n8n 1.x export (File > Download).
 const workflow = {
   name: "Leads vers Slack",
   nodes: [
@@ -59,7 +59,7 @@ const workflow = {
   },
 };
 
-test("import n8n : nœuds, expressions, connexions et avertissements", () => {
+test("n8n import: nodes, expressions, connections and warnings", () => {
   expect(estN8n(workflow)).toBe(true);
   expect(estN8n({ noeuds: [] })).toBe(false);
   const r = importerN8n(workflow as never);
@@ -86,9 +86,9 @@ test("import n8n : nœuds, expressions, connexions et avertissements", () => {
     { de: "preparer", sortie: 0, vers: "enrichir" },
   ]);
   expect(r.avertissements).toEqual([
-    "« Résumé IA » : nœud @n8n/n8n-nodes-langchain.agent non pris en charge, laissé en « Laisser passer » à remplacer",
-    "1 nœuds sans déclencheur reconnu : lancement manuel ajouté",
-    "2 déclencheurs : importé en 2 workflows",
+    "\"Résumé IA\": node @n8n/n8n-nodes-langchain.agent not supported, left as \"Pass through\" to replace",
+    "1 nodes without a recognized trigger: manual start added",
+    "2 triggers: imported as 2 workflows",
   ]);
   expect(r.autres).toHaveLength(1);
   expect(r.autres[0]!.definition.noeuds.map((n) => n.id)).toEqual(["code", "declencheur"]);
@@ -98,7 +98,7 @@ test("import n8n : nœuds, expressions, connexions et avertissements", () => {
   });
 });
 
-test("import n8n : planification et déclencheur ajouté", () => {
+test("n8n import: schedule and added trigger", () => {
   const cron = importerN8n({
     nodes: [
       {
@@ -115,10 +115,10 @@ test("import n8n : planification et déclencheur ajouté", () => {
     connections: {},
   });
   expect(() => valider(sans.definition)).not.toThrow();
-  expect(sans.avertissements).toContain("aucun déclencheur reconnu : lancement manuel ajouté");
+  expect(sans.avertissements).toContain("no recognized trigger: manual start added");
 });
 
-test("import n8n : plusieurs déclencheurs, notes ignorées, graphe conservé à travers un nœud non pris en charge", async () => {
+test("n8n import: several triggers, notes ignored, graph kept across an unsupported node", async () => {
   const j = await Bun.file(
     new URL(
       "../../../docs/modeles/automatisation-factures/workflow/Workflow_n8n_Factures_Fournisseurs.json",
@@ -128,7 +128,7 @@ test("import n8n : plusieurs déclencheurs, notes ignorées, graphe conservé à
   const r = importerN8n(j);
   for (const w of [r, ...r.autres]) expect(() => valider(w.definition)).not.toThrow();
   expect(r.avertissements.some((a) => a.includes("stickyNote"))).toBe(false);
-  // Planification → Excel (à remplacer) → récapitulatif (à remplacer) → mail : chaîne intacte.
+  // Schedule → Excel (to replace) → summary (to replace) → mail: chain intact.
   expect(r.definition.noeuds[0]!.type).toBe("declencheur.planifie");
   expect(r.definition.connexions).toHaveLength(r.definition.noeuds.length - 1);
   expect(r.autres).toHaveLength(1);

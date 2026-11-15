@@ -1,5 +1,5 @@
-// Nouveaux essais par nœud (« Retry On Fail » de n8n) : reprise d'un service momentanément en échec, attente doublée,
-// abandon après le dernier essai, aucune reprise d'une erreur de paramètres.
+// Per-node retries (n8n "Retry On Fail"): a service that fails for a moment is retried, wait doubled,
+// give up after the last attempt, no retry of a parameter error.
 import { expect, test } from "bun:test";
 import { executer, importerN8n, valider, type Services } from "./index";
 
@@ -31,7 +31,7 @@ const definition = (tentatives: number, parametres: Record<string, unknown> = { 
 const lancer = (def: ReturnType<typeof definition>, s: Services) =>
   executer(def, [], { services: s, workflow: { id: "w", nom: "W" }, executionId: "e" });
 
-test("un service en échec deux fois réussit au troisième essai, attente doublée", async () => {
+test("a service failing twice succeeds on the third attempt, wait doubled", async () => {
   const { s, appels } = services(2);
   const r = await lancer(definition(2), s);
   expect(r.statut).toBe("succes");
@@ -40,7 +40,7 @@ test("un service en échec deux fois réussit au troisième essai, attente doubl
   expect(appels[2]! - appels[1]!).toBeGreaterThanOrEqual(38);
 });
 
-test("après le dernier essai, l'erreur du service arrête l'exécution", async () => {
+test("after the last attempt, the service error stops the run", async () => {
   const { s, appels } = services(10);
   const r = await lancer(definition(1), s);
   expect(r.statut).toBe("erreur");
@@ -48,20 +48,20 @@ test("après le dernier essai, l'erreur du service arrête l'exécution", async 
   expect(appels).toHaveLength(2);
 });
 
-test("sans nouvel essai, un seul appel", async () => {
+test("without retries, a single call", async () => {
   const { s, appels } = services(1);
   expect((await lancer(definition(0), s)).statut).toBe("erreur");
   expect(appels).toHaveLength(1);
 });
 
-test("une erreur de paramètres n'est jamais réessayée", async () => {
+test("a parameter error is never retried", async () => {
   const { s, appels } = services(0);
   const r = await lancer(definition(5, { url: "{{ $json.absent }}" }), s);
   expect(r.statut).toBe("erreur");
   expect(appels).toHaveLength(0);
 });
 
-test("import n8n : Retry On Fail devient des nouveaux essais", () => {
+test("n8n import: Retry On Fail becomes retries", () => {
   const { definition: d } = importerN8n({
     nodes: [
       { name: "Début", type: "n8n-nodes-base.manualTrigger", parameters: {}, position: [0, 0] },

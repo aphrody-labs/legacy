@@ -1,11 +1,11 @@
-// Expressions `{{ … }}` dans les paramètres des nœuds. Aucun `eval` : un chemin dans les données suivi de
-// filtres, par exemple `{{ $json.client.email }}`, `{{ $noeud.facture.json.total | euros }}`,
-// `{{ $json.nom | majuscules | defaut:"inconnu" }}`. Une valeur réduite à une seule expression garde son
-// type (nombre, objet) ; mêlée à du texte, elle est convertie en texte.
+// `{{ … }}` expressions in the node parameters. No `eval`: a path in the data followed by filters, for example
+// `{{ $json.client.email }}`, `{{ $noeud.facture.json.total | euros }}`,
+// `{{ $json.nom | majuscules | defaut:"inconnu" }}`. A value reduced to a single expression keeps its type
+// (number, object); mixed with text, it is converted to text. Filter names are part of the stored syntax.
 
 export interface Portee {
   json: Record<string, unknown>;
-  /** Premier élément de sortie de chaque nœud déjà exécuté, par identifiant. */
+  /** First output item of each node already run, by identifier. */
   noeuds: Record<string, Record<string, unknown>>;
   secrets: Record<string, string>;
   execution: { id: string };
@@ -19,7 +19,7 @@ export class ErreurExpression extends Error {}
 const EXPR = /\{\{\s*([\s\S]+?)\s*\}\}/g;
 const SEULE = /^\{\{\s*([\s\S]+?)\s*\}\}$/;
 
-/** Découpe sur `|` hors des chaînes entre guillemets. */
+/** Splits on `|` outside quoted strings. */
 function decouper(source: string, sep: string): string[] {
   const parts: string[] = [];
   let cour = "";
@@ -53,7 +53,7 @@ const SEGMENT = /^\.([\p{L}_$][\p{L}\p{N}_$-]*)|^\[\s*(?:(\d+)|"([^"]*)"|'([^']*
 
 function chemin(source: string, p: Portee): unknown {
   const tete = /^\$([a-z]+)/i.exec(source);
-  if (!tete) throw new ErreurExpression(`expression invalide : ${source}`);
+  if (!tete) throw new ErreurExpression(`invalid expression: ${source}`);
   const racines: Record<string, unknown> = {
     json: p.json,
     noeud: Object.fromEntries(Object.entries(p.noeuds).map(([k, v]) => [k, { json: v }])),
@@ -65,12 +65,12 @@ function chemin(source: string, p: Portee): unknown {
     maintenant: (p.maintenant ?? new Date()).toISOString(),
     aujourdhui: (p.maintenant ?? new Date()).toISOString().slice(0, 10),
   };
-  if (!(tete[1]! in racines)) throw new ErreurExpression(`variable inconnue : $${tete[1]}`);
+  if (!(tete[1]! in racines)) throw new ErreurExpression(`unknown variable: $${tete[1]}`);
   let v: unknown = racines[tete[1]!];
   let reste = source.slice(tete[0].length).trim();
   while (reste) {
     const m = SEGMENT.exec(reste);
-    if (!m) throw new ErreurExpression(`chemin invalide : ${source}`);
+    if (!m) throw new ErreurExpression(`invalid path: ${source}`);
     const cle = m[1] ?? m[3] ?? m[4] ?? Number(m[2]);
     v = v != null && typeof v === "object" ? (v as Record<string | number, unknown>)[cle] : undefined;
     reste = reste.slice(m[0].length).trim();
@@ -90,7 +90,7 @@ const nombre = (v: unknown): number => {
             .replace(/\s/g, "")
             .replace(",", "."),
         );
-  if (!Number.isFinite(n)) throw new ErreurExpression(`nombre attendu : ${texte(v)}`);
+  if (!Number.isFinite(n)) throw new ErreurExpression(`number expected: ${texte(v)}`);
   return n;
 };
 
@@ -108,7 +108,7 @@ export const FILTRES: Record<string, Filtre> = {
     return Math.round(nombre(v) * f) / f;
   },
   euros: (v) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(nombre(v)),
-  /** Montant en centimes (convention d'auto) affiché en euros. */
+  /** Amount in cents (auto convention) shown in euros. */
   centimes: (v) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(nombre(v) / 100),
   longueur: (v) => (Array.isArray(v) ? v.length : texte(v).length),
   premier: (v) => (Array.isArray(v) ? v[0] : v),
@@ -117,7 +117,7 @@ export const FILTRES: Record<string, Filtre> = {
   defaut: (v, a) => (v == null || v === "" ? a : v),
   date: (v, a) => {
     const d = new Date(texte(v) || Date.now());
-    if (Number.isNaN(d.getTime())) throw new ErreurExpression(`date invalide : ${texte(v)}`);
+    if (Number.isNaN(d.getTime())) throw new ErreurExpression(`invalid date: ${texte(v)}`);
     if (a === "iso") return d.toISOString();
     if (a === "jour") return d.toISOString().slice(0, 10);
     return new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" }).format(d);
@@ -137,7 +137,7 @@ function evaluer(source: string, p: Portee): unknown {
     const i = f.indexOf(":");
     const nom = (i < 0 ? f : f.slice(0, i)).trim();
     const fn = FILTRES[nom];
-    if (!fn) throw new ErreurExpression(`filtre inconnu : ${nom}`);
+    if (!fn) throw new ErreurExpression(`unknown filter: ${nom}`);
     let arg: unknown;
     if (i >= 0) {
       const brut = f.slice(i + 1).trim();
@@ -149,7 +149,7 @@ function evaluer(source: string, p: Portee): unknown {
   return v;
 }
 
-/** Résout les expressions d'une valeur de paramètre (chaînes, tableaux et objets, récursivement). */
+/** Resolves the expressions of a parameter value (strings, arrays and objects, recursively). */
 export function resoudre(valeur: unknown, p: Portee): unknown {
   if (typeof valeur === "string") {
     if (!valeur.includes("{{")) return valeur;
@@ -163,29 +163,29 @@ export function resoudre(valeur: unknown, p: Portee): unknown {
   return valeur;
 }
 
-/** Noms des secrets référencés (`$secret.nom`) : l'API refuse un workflow qui cite un secret inexistant. */
+/** Names of the referenced secrets (`$secret.nom`): the API refuses a workflow that cites a missing secret. */
 export function secretsCites(valeur: unknown): string[] {
   const s = JSON.stringify(valeur ?? null);
   return [...new Set([...s.matchAll(/\$secret\.([\p{L}\p{N}_-]+)/gu)].map((m) => m[1]!))];
 }
 
-/** Lecture d'un champ à chemin pointé (`client.adresse.ville`). */
+/** Reads a field by dotted path (`client.adresse.ville`). */
 export function lire(o: unknown, champ: string): unknown {
   return champ
     .split(".")
     .reduce<unknown>((v, k) => (v != null && typeof v === "object" ? (v as Record<string, unknown>)[k] : undefined), o);
 }
 
-/** Écriture d'un champ à chemin pointé, en créant les objets intermédiaires. */
+/** Writes a field by dotted path, creating the intermediate objects. */
 export function ecrire(o: Record<string, unknown>, champ: string, valeur: unknown): void {
   const cles = champ.split(".");
   let cour = o;
   for (const k of cles.slice(0, -1)) {
-    if (k === "__proto__" || k === "constructor" || k === "prototype") throw new ErreurExpression("champ interdit");
+    if (k === "__proto__" || k === "constructor" || k === "prototype") throw new ErreurExpression("forbidden field");
     if (cour[k] == null || typeof cour[k] !== "object") cour[k] = {};
     cour = cour[k] as Record<string, unknown>;
   }
   const fin = cles.at(-1)!;
-  if (fin === "__proto__" || fin === "constructor" || fin === "prototype") throw new ErreurExpression("champ interdit");
+  if (fin === "__proto__" || fin === "constructor" || fin === "prototype") throw new ErreurExpression("forbidden field");
   cour[fin] = valeur;
 }

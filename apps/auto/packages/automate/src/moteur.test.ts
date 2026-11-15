@@ -45,7 +45,7 @@ describe("expressions", () => {
     workflow: { id: "w", nom: "W" },
     index: 0,
   };
-  test("valeur seule typée, texte mêlé, filtres", () => {
+  test("single typed value, mixed text, filters", () => {
     expect(resoudre("{{ $json.a.b }}", p)).toEqual([1, 2]);
     expect(resoudre("n={{ $json.a.b[1] }}", p)).toBe("n=2");
     expect(resoudre("{{ $json.nom | rogner | majuscules }}", p)).toBe("ZOÉ");
@@ -53,15 +53,15 @@ describe("expressions", () => {
     expect(resoudre("{{ $json.absent | defaut:'?' }}", p)).toBe("?");
     expect(resoudre("{{ 1234 | centimes }}", p)).toMatch(/12,34\s€/);
     expect(() => resoudre("{{ process.env }}", p)).toThrow();
-    expect(() => resoudre("{{ $json.a | inconnu }}", p)).toThrow("filtre inconnu");
+    expect(() => resoudre("{{ $json.a | inconnu }}", p)).toThrow("unknown filter");
   });
 });
 
 describe("validation", () => {
-  test("tous les modèles sont valides", () => {
+  test("all templates are valid", () => {
     for (const m of MODELES) expect(() => valider(m.definition)).not.toThrow();
   });
-  test("cycle, déclencheur manquant, type inconnu", () => {
+  test("cycle, missing trigger, unknown type", () => {
     const n = (id: string, type = "donnees.limiter") => ({
       id,
       type,
@@ -88,8 +88,8 @@ describe("validation", () => {
   });
 });
 
-describe("exécution", () => {
-  test("facture émise → Slack, branche faux ignorée", async () => {
+describe("execution", () => {
+  test("issued invoice → Slack, false branch ignored", async () => {
     const s = services();
     const evt = {
       id: "1",
@@ -111,7 +111,7 @@ describe("exécution", () => {
     );
     expect(devis.etapes.map((e) => e.noeud)).toEqual(["declencheur", "facture"]);
   });
-  test("récapitulatif : éclater, trier, regrouper, mail", async () => {
+  test("summary: split, sort, group, mail", async () => {
     const s = services();
     const r = await executer(valider(MODELES[2]!.definition), [], opts(s, { mail_gerant: "g@ex.fr" }));
     expect(r.statut).toBe("succes");
@@ -120,7 +120,7 @@ describe("exécution", () => {
     expect(mail.sujet).toBe("2 factures en retard");
     expect(mail.texte.split("\n")[0]).toStartWith("F-2");
   });
-  test("erreur arrête, continuerSurErreur poursuit", async () => {
+  test("error stops, continuerSurErreur continues", async () => {
     const d = {
       noeuds: [
         { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
@@ -135,7 +135,7 @@ describe("exécution", () => {
     expect(r2.statut).toBe("succes");
     expect(r2.sortie[0]!.json).toEqual({ a: 1, erreur: "stop" });
   });
-  test("aiguillage IA : sortie selon la catégorie", async () => {
+  test("AI switch: output by category", async () => {
     const s = services({
       "http://localhost:11434/v1/chat/completions": {
         choices: [{ message: { content: '{"categorie":"support","resume":"panne"}' } }],
@@ -149,7 +149,7 @@ describe("exécution", () => {
     expect(r.statut).toBe("succes");
     expect(r.etapes.map((e) => e.noeud)).toEqual(["declencheur", "ia", "aiguillage", "support"]);
   });
-  test("durée maximale", async () => {
+  test("maximum duration", async () => {
     const d = valider({
       noeuds: [
         { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
@@ -163,7 +163,7 @@ describe("exécution", () => {
 });
 
 describe("web natif", () => {
-  test("extraction HTML par sélecteur et flux RSS/Atom", async () => {
+  test("HTML extraction by selector and RSS/Atom feeds", async () => {
     const { extraireHtml, lireFlux } = await import("./noeuds");
     const html = `<html><h1> Prix
    <b>du</b>  jour </h1><a class="p" href="/a">A</a><a class="p" href="/b">B</a></html>`;
@@ -184,18 +184,18 @@ describe("web natif", () => {
   });
 });
 
-describe("fichiers PDF et Word", () => {
+describe("PDF and Word files", () => {
   test("plages de pages", async () => {
     const { plagesPages } = await import("./noeuds");
     expect(plagesPages("1-3, 5; 8-", 9)).toEqual([1, 2, 3, 5, 8, 9]);
     expect(plagesPages("-2,4", 4)).toEqual([1, 2, 4]);
     expect(plagesPages("3,1", 3)).toEqual([3, 1]);
-    expect(() => plagesPages("0", 3)).toThrow(/hors du document/);
-    expect(() => plagesPages("2-5", 3)).toThrow(/hors du document/);
+    expect(() => plagesPages("0", 3)).toThrow(/outside the document/);
+    expect(() => plagesPages("2-5", 3)).toThrow(/outside the document/);
     expect(() => plagesPages("a", 3)).toThrow(/invalides/);
   });
 
-  test("nœuds par services injectés : fusion, pages, texte, gabarit", async () => {
+  test("nodes through injected services: merge, pages, text, template", async () => {
     const enc = (s: string) => new TextEncoder().encode(s);
     const dec = (o: Uint8Array) => new TextDecoder().decode(o);
     const b64 = (s: string) => enc(s).toBase64();
@@ -253,8 +253,8 @@ describe("fichiers PDF et Word", () => {
   });
 });
 
-describe("caviardage, signature, présentation", () => {
-  test("nœuds par services injectés", async () => {
+describe("redaction, signature, presentation", () => {
+  test("nodes through injected services", async () => {
     const enc = (s: string) => new TextEncoder().encode(s);
     const dec = (o: Uint8Array) => new TextDecoder().decode(o);
     const appels: unknown[] = [];
@@ -377,8 +377,8 @@ describe("caviardage, signature, présentation", () => {
   });
 });
 
-describe("base de connaissances", () => {
-  test("indexer un PDF, un texte, rechercher et préparer le contexte", async () => {
+describe("knowledge base", () => {
+  test("index a PDF, a text, search and prepare the context", async () => {
     const enc = (s: string) => new TextEncoder().encode(s);
     const indexes: unknown[] = [];
     const recherches: unknown[] = [];
@@ -466,7 +466,7 @@ describe("base de connaissances", () => {
       ],
       connexions: [{ de: "t", vers: "i" }],
     });
-    expect((await executer(vide, [{ json: {} }], opts(s))).erreur?.message).toMatch(/aucun texte/);
+    expect((await executer(vide, [{ json: {} }], opts(s))).erreur?.message).toMatch(/no text to index/);
     expect(() =>
       valider({
         noeuds: [

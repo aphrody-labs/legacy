@@ -1,5 +1,5 @@
-// Nœuds des services libres auto-hébergeables (ntfy, Gotify, Matrix, Mastodon, Home Assistant, Nextcloud) contre un
-// serveur local qui joue chaque API et enregistre les requêtes reçues.
+// Nodes of the free self-hostable services (ntfy, Gotify, Matrix, Mastodon, Home Assistant, Nextcloud) against a
+// local server that plays each API and records the requests received.
 import { afterAll, describe, expect, test } from "bun:test";
 import { executer, valider, type Services } from "./index";
 
@@ -57,8 +57,8 @@ async function lancer(type: string, parametres: Record<string, unknown>, entree 
   });
 }
 
-describe("services libres auto-hébergés", () => {
-  test("ntfy : texte brut, en-têtes de titre, priorité, étiquettes et jeton", async () => {
+describe("free self-hosted services", () => {
+  test("ntfy: plain text, title headers, priority, tags and token", async () => {
     const r = await lancer("communication.ntfy", {
       serveur: URL_,
       sujet: "alertes",
@@ -74,11 +74,11 @@ describe("services libres auto-hébergés", () => {
     expect(q.entetes).toMatchObject({ title: "auto", priority: "4", tags: "money", authorization: "Bearer s3cret" });
   });
 
-  test("ntfy : sujet invalide refusé à la validation", async () => {
+  test("ntfy: invalid topic rejected at validation", async () => {
     await expect(lancer("communication.ntfy", { serveur: URL_, sujet: "a/b", texte: "x" })).rejects.toThrow();
   });
 
-  test("Gotify : message JSON et clé d'application", async () => {
+  test("Gotify: JSON message and application key", async () => {
     const r = await lancer("communication.gotify", { serveur: URL_, jeton: "app", texte: "Salut", titre: "T" });
     expect(r.statut).toBe("succes");
     expect(recues[0]!.chemin).toBe("/message");
@@ -86,7 +86,7 @@ describe("services libres auto-hébergés", () => {
     expect(JSON.parse(recues[0]!.corps)).toEqual({ message: "Salut", priority: 5, title: "T" });
   });
 
-  test("Matrix : PUT idempotent, même transaction pour le même élément", async () => {
+  test("Matrix: idempotent PUT, same transaction for the same item", async () => {
     const p = { serveur: URL_, jeton: "tok", salon: "!abc:matrix.test", texte: "Bonjour" };
     await lancer("communication.matrix", p);
     const premiere = recues[0]!;
@@ -98,7 +98,7 @@ describe("services libres auto-hébergés", () => {
     expect(premiere.entetes.authorization).toBe("Bearer tok");
   });
 
-  test("Mastodon : statut, visibilité et clé d'idempotence ; identifiant et URL en sortie", async () => {
+  test("Mastodon: status, visibility and idempotency key; id and URL in output", async () => {
     const r = await lancer("communication.mastodon", { instance: URL_, jeton: "tok", texte: "Nouveau billet" });
     expect(r.statut).toBe("succes");
     expect(JSON.parse(recues[0]!.corps)).toEqual({ status: "Nouveau billet", visibility: "unlisted" });
@@ -106,7 +106,7 @@ describe("services libres auto-hébergés", () => {
     expect(r.sortie[0]!.json.mastodon).toEqual({ id: "42", url: "https://masto.test/@moi/42" });
   });
 
-  test("Home Assistant : appel de service et lecture d'état", async () => {
+  test("Home Assistant: service call and state read", async () => {
     const s = await lancer("reseau.home_assistant", {
       url: URL_,
       jeton: "tok",
@@ -128,7 +128,7 @@ describe("services libres auto-hébergés", () => {
     expect(e.sortie[0]!.json.home_assistant).toEqual({ entity_id: "light.salon", state: "on" });
   });
 
-  test("Nextcloud : dépôt WebDAV du fichier, authentification de base", async () => {
+  test("Nextcloud: WebDAV upload of the file, basic authentication", async () => {
     const r = await lancer("reseau.nextcloud", {
       fichier: { nom: "note.txt", type: "text/plain", base64: Buffer.from("bonjour").toString("base64") },
       serveur: URL_,
@@ -147,7 +147,7 @@ describe("services libres auto-hébergés", () => {
     expect(r.sortie[0]!.json.nextcloud).toEqual({ chemin: "/Documents/auto/note.txt", octets: 7 });
   });
 
-  test("une erreur HTTP du service arrête l'exécution avec son statut", async () => {
+  test("an HTTP error of the service stops the run with its status", async () => {
     const r = await lancer("communication.gotify", { serveur: `${URL_}/refus#`, jeton: "x", texte: "y" });
     expect(r.statut).toBe("erreur");
     expect(r.erreur?.message).toContain("HTTP");

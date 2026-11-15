@@ -1,7 +1,7 @@
-// Import d'un workflow exporté de n8n (JSON « nodes » + « connections ») vers une définition auto. Les nœuds
-// courants sont convertis (déclencheurs, HTTP, Si, Définir, Filtrer, Trier, Limiter, Attendre, RSS, HTML,
-// Discord, Telegram, mail…) ; les expressions n8n réduites à des chemins (`$json.x`, `$('Nœud').item.json.x`)
-// sont traduites. Le reste est signalé dans les avertissements, jamais deviné.
+// Import of a workflow exported from n8n (JSON "nodes" + "connections") into an auto definition. Common nodes
+// are converted (triggers, HTTP, If, Set, Filter, Sort, Limit, Wait, RSS, HTML, Discord, Telegram, mail...); n8n
+// expressions reduced to paths (`$json.x`, `$('Node').item.json.x`) are translated. The rest is reported in
+// the warnings, never guessed.
 import type { Connexion, Definition, Noeud } from "./schema";
 
 interface NoeudN8n {
@@ -13,12 +13,12 @@ interface NoeudN8n {
   continueOnFail?: boolean;
   onError?: string;
   retryOnFail?: boolean;
-  /** Essais au total (n8n : 3 par défaut). */
+  /** Total attempts (n8n: 3 by default). */
   maxTries?: number;
   waitBetweenTries?: number;
 }
 
-/** « Retry On Fail » de n8n : essais au total → nouveaux essais d'auto (5 au plus), attente reprise. */
+/** n8n "Retry On Fail": total attempts → auto retries (5 at most), wait carried over. */
 const essais = (n: NoeudN8n) =>
   n.retryOnFail
     ? {
@@ -37,7 +37,7 @@ export interface ImportN8n {
   nom: string;
   definition: Definition;
   avertissements: string[];
-  /** n8n admet plusieurs déclencheurs par workflow : chaque déclencheur supplémentaire donne un workflow. */
+  /** n8n allows several triggers per workflow: each additional trigger yields a workflow. */
   autres: { nom: string; definition: Definition }[];
 }
 
@@ -95,7 +95,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
   const ids = new Map<string, string>();
   for (const n of w.nodes) ids.set(n.name, slug(n.name, pris));
 
-  /** Expression n8n → expression auto ; les expressions JavaScript non réductibles sont signalées. */
+  /** n8n expression → auto expression; JavaScript expressions that cannot be reduced are reported. */
   const expr = (v: unknown, ou: string): unknown => {
     if (typeof v !== "string" || !v.startsWith("=")) return v;
     const s = v
@@ -108,7 +108,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
       .replace(/\$today\b/g, "$aujourdhui");
     for (const m of s.matchAll(/\{\{([\s\S]+?)\}\}/g))
       if (!/^\s*\$[a-z]+(\.[\p{L}\p{N}_$-]+|\[\d+\]|\["[^"]*"\])*\s*$/iu.test(m[1]!))
-        avertissements.push(`${ou} : expression à revoir ({{${m[1]}}}), seuls les chemins sont pris en charge`);
+        avertissements.push(`${ou}: expression to review ({{${m[1]}}}), only paths are supported`);
     return s;
   };
   const tout = (o: unknown, ou: string): unknown =>
@@ -122,10 +122,10 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
     const c = (p.conditions ?? {}) as { conditions?: Record<string, unknown>[]; combinator?: string };
     const liste = (c.conditions ?? []).map((x) => {
       const op = (x.operator as { operation?: string } | undefined)?.operation ?? "equals";
-      if (!OPERATIONS[op]) avertissements.push(`${ou} : opérateur ${op} remplacé par « égal »`);
+      if (!OPERATIONS[op]) avertissements.push(`${ou}: operator ${op} replaced by "egal" (equal)`);
       return { gauche: expr(x.leftValue, ou), operateur: OPERATIONS[op] ?? "egal", droite: expr(x.rightValue, ou) };
     });
-    if (!liste.length) avertissements.push(`${ou} : conditions de l'ancien format à ressaisir`);
+    if (!liste.length) avertissements.push(`${ou}: conditions in the old format, to re-enter`);
     return {
       conditions: liste.length ? liste : [{ gauche: "", operateur: "non_vide" }],
       combinaison: c.combinator === "or" ? "ou" : "et",
@@ -134,7 +134,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
 
   const noeuds: Noeud[] = [];
   for (const n of w.nodes) {
-    const ou = `« ${n.name} »`;
+    const ou = `"${n.name}"`;
     const p = (n.parameters ?? {}) as Record<string, unknown>;
     const court = n.type.replace(/^n8n-nodes-base\./, "");
     let type: string | null = null;
@@ -158,7 +158,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         if (!cron && typeof i.field === "string" && INTERVALLES[i.field])
           cron = INTERVALLES[i.field]!(Number(i[`${i.field}Interval`] ?? 1));
         if (cron && cron.trim().split(/\s+/).length === 6) cron = cron.trim().split(/\s+/).slice(1).join(" ");
-        if (!cron) avertissements.push(`${ou} : planification non reconnue, toutes les heures par défaut`);
+        if (!cron) avertissements.push(`${ou}: schedule not recognized, every hour by default`);
         parametres = { cron: cron ?? "0 * * * *", fuseau: "Europe/Paris" };
         break;
       }
@@ -188,7 +188,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
           ...(corps === undefined ? {} : { corps }),
         };
         if (p.authentication && p.authentication !== "none")
-          avertissements.push(`${ou} : authentification n8n à remplacer par un en-tête utilisant {{ $secret.nom }}`);
+          avertissements.push(`${ou}: n8n authentication to replace with a header using {{ $secret.nom }}`);
         break;
       }
       case "if":
@@ -206,7 +206,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
           champs: a.map((x) => ({ nom: x.name, valeur: expr(x.value, ou) })),
           conserver: Boolean(p.includeOtherFields ?? false),
         };
-        if (!a.length) avertissements.push(`${ou} : champs de l'ancien format à ressaisir`);
+        if (!a.length) avertissements.push(`${ou}: fields in the old format, to re-enter`);
         if (!a.length) parametres.champs = [{ nom: "champ", valeur: "" }];
         break;
       }
@@ -214,7 +214,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         type = "logique.attendre";
         parametres = { secondes: Math.min(60, Number(p.amount ?? 1) * (p.unit === "minutes" ? 60 : 1)) };
         if (Number(p.amount ?? 1) * (p.unit === "minutes" ? 60 : 1) > 60)
-          avertissements.push(`${ou} : attente ramenée à 60 secondes`);
+          avertissements.push(`${ou}: wait capped at 60 seconds`);
         break;
       case "limit":
         type = "donnees.limiter";
@@ -249,17 +249,17 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         break;
       case "stopAndError":
         type = "logique.arreter";
-        parametres = { message: String(expr(p.errorMessage, ou) ?? "erreur") || "erreur" };
+        parametres = { message: String(expr(p.errorMessage, ou) ?? "error") || "error" };
         break;
       case "discord":
         type = "communication.discord";
         parametres = { webhook: "{{ $secret.discord }}", texte: expr(p.content ?? p.text, ou) };
-        avertissements.push(`${ou} : webhook Discord à fournir dans le secret « discord »`);
+        avertissements.push(`${ou}: Discord webhook to provide in the "discord" secret`);
         break;
       case "telegram":
         type = "communication.telegram";
         parametres = { jeton: "{{ $secret.telegram_bot }}", chat: expr(p.chatId, ou), texte: expr(p.text, ou) };
-        avertissements.push(`${ou} : jeton du bot à fournir dans le secret « telegram_bot »`);
+        avertissements.push(`${ou}: bot token to provide in the "telegram_bot" secret`);
         break;
       case "emailSend":
         type = "communication.mail";
@@ -268,7 +268,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
       case "slack":
         type = "communication.slack";
         parametres = { webhook: "{{ $secret.slack }}", texte: expr(p.text, ou) };
-        avertissements.push(`${ou} : message envoyé par webhook entrant (secret « slack »), canal fixé par ce webhook`);
+        avertissements.push(`${ou}: message sent through an incoming webhook ("slack" secret), channel set by that webhook`);
         break;
       case "noOp":
         type = "logique.passer";
@@ -285,13 +285,13 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         if (p.language && p.language !== "javaScript") {
           type = "logique.passer";
           parametres = {};
-          note = `À remplacer : code ${String(p.language)} non pris en charge`;
-          avertissements.push(`${ou} : code ${String(p.language)} non pris en charge, laissé en « Laisser passer »`);
+          note = `To replace: ${String(p.language)} code not supported`;
+          avertissements.push(`${ou}: ${String(p.language)} code not supported, left as "Pass through"`);
         } else if (/this\.helpers|\$binary|\brequire\(|\$env|\$vars|\bfetch\(/.test(js))
           avertissements.push(
-            `${ou} : le code utilise des fonctions de n8n absentes du bac à sable (helpers, binaire, require, réseau) : à adapter`,
+            `${ou}: the code uses n8n functions missing from the sandbox (helpers, binary, require, network): to adapt`,
           );
-        // Le code JavaScript ne passe pas par les expressions {{ }}.
+        // JavaScript code does not go through the {{ }} expressions.
         noeuds.push({
           id: ids.get(n.name)!,
           type,
@@ -306,13 +306,13 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         continue;
       }
       case "stickyNote":
-        // Note d'annotation du canevas : sans effet sur l'exécution.
+        // Canvas annotation note: no effect on execution.
         break;
       default:
-        // Emplacement gardé dans le graphe (connexions intactes), à remplacer dans l'éditeur.
+        // Slot kept in the graph (connections intact), to replace in the editor.
         type = "logique.passer";
-        note = `À remplacer : nœud n8n ${n.type}`;
-        avertissements.push(`${ou} : nœud ${n.type} non pris en charge, laissé en « Laisser passer » à remplacer`);
+        note = `To replace: n8n node ${n.type}`;
+        avertissements.push(`${ou}: node ${n.type} not supported, left as "Pass through" to replace`);
     }
     if (!type) continue;
     noeuds.push({
@@ -338,8 +338,8 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         if (de && vers && presents.has(de) && presents.has(vers)) connexions.push({ de, sortie, vers });
       }
 
-  // Un graphe par déclencheur (nœuds atteignables) ; les nœuds atteints par aucun déclencheur reconnu
-  // reçoivent un lancement manuel.
+  // One graph per trigger (reachable nodes); nodes reached by no recognized trigger
+  // get a manual start.
   const suivants = new Map<string, string[]>();
   for (const c of connexions) suivants.set(c.de, [...(suivants.get(c.de) ?? []), c.vers]);
   const atteints = (depart: string) => {
@@ -356,7 +356,7 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
     noeuds: noeuds.filter((n) => ids.has(n.id)),
     connexions: connexions.filter((c) => ids.has(c.de) && ids.has(c.vers)),
   });
-  const nom = (w.name ?? "Workflow importé de n8n").slice(0, 100);
+  const nom = (w.name ?? "Workflow imported from n8n").slice(0, 100);
   const declencheurs = noeuds.filter((n) => n.type.startsWith("declencheur."));
   const parties = declencheurs.map((d) => ({
     nom: declencheurs.length > 1 ? `${nom} : ${d.nom}` : nom,
@@ -382,15 +382,15 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
     for (const r of orphelins.filter((n) => !cibles.has(n.id)))
       connexions.push({ de: manuel.id, sortie: 0, vers: r.id });
     ids.add(manuel.id);
-    parties.push({ nom: parties.length ? `${nom} : lancement manuel` : nom, ids });
+    parties.push({ nom: parties.length ? `${nom}: manual start` : nom, ids });
     avertissements.push(
       parties.length > 1
-        ? `${orphelins.length} nœuds sans déclencheur reconnu : lancement manuel ajouté`
-        : "aucun déclencheur reconnu : lancement manuel ajouté",
+        ? `${orphelins.length} nodes without a recognized trigger: manual start added`
+        : "no recognized trigger: manual start added",
     );
   }
   if (parties.length > 1)
-    avertissements.push(`${parties.length} déclencheurs : importé en ${parties.length} workflows`);
+    avertissements.push(`${parties.length} triggers: imported as ${parties.length} workflows`);
   const [premier, ...autres] = parties.map((p) => ({ nom: p.nom.slice(0, 120), definition: graphe(p.ids) }));
   return { ...premier!, avertissements, autres };
 }

@@ -1,6 +1,6 @@
-// Moteur d'exécution : parcourt le graphe depuis le déclencheur, résout les expressions de chaque nœud
-// sur ses éléments, applique ses sorties aux connexions et consigne chaque étape. Bornes : nombre d'étapes,
-// d'éléments par nœud et durée totale, pour qu'un workflow d'une entreprise ne monopolise pas le worker.
+// Execution engine: walks the graph from the trigger, resolves the expressions of each node on its items,
+// applies its outputs to the connections and records each step. Bounds: number of steps, items per node and total
+// duration, so that one company's workflow does not monopolize the worker.
 import { ErreurExpression, resoudre, type Portee } from "./expressions";
 import { CATALOGUE, sortiesDe, type Contexte, type Services, type Sorties, type TypeNoeud } from "./noeuds";
 import { Definition, estDeclencheur, type Element, type Noeud } from "./schema";
@@ -12,9 +12,9 @@ export interface Etape {
   debut: string;
   dureeMs: number;
   entree: number;
-  /** Nombre d'éléments par sortie. */
+  /** Number of items per output. */
   sorties: number[];
-  /** Aperçu des premiers éléments produits (tronqué). */
+  /** Preview of the first items produced (truncated). */
   apercu: Element[];
   erreur?: string;
 }
@@ -23,7 +23,7 @@ export interface Resultat {
   statut: "succes" | "erreur";
   etapes: Etape[];
   erreur?: { noeud: string; message: string };
-  /** Éléments produits par les derniers nœuds atteints. */
+  /** Items produced by the last nodes reached. */
   sortie: Element[];
 }
 
@@ -47,42 +47,42 @@ export class ErreurDefinition extends Error {
   }
 }
 
-/** Validation complète : schéma, types connus, paramètres, connexions, un déclencheur, aucun cycle. */
+/** Full validation: schema, known types, parameters, connections, one trigger, no cycle. */
 export function valider(brute: unknown): Definition {
   const r = Definition.safeParse(brute);
   if (!r.success)
     throw new ErreurDefinition(
-      "définition invalide",
-      r.error.issues.map((i) => `${i.path.join(".")} : ${i.message}`),
+      "invalid definition",
+      r.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`),
     );
   const d = r.data;
   const details: string[] = [];
   const ids = new Set<string>();
   for (const n of d.noeuds) {
-    if (ids.has(n.id)) details.push(`nœud ${n.id} : identifiant en double`);
+    if (ids.has(n.id)) details.push(`node ${n.id}: duplicate identifier`);
     ids.add(n.id);
     const type = CATALOGUE.get(n.type);
     if (!type) {
-      details.push(`nœud ${n.id} : type inconnu ${n.type}`);
+      details.push(`node ${n.id}: unknown type ${n.type}`);
       continue;
     }
-    // Les expressions ne sont connues qu'à l'exécution : seuls les paramètres sans expression sont vérifiés ici.
+    // Expressions are only known at run time: only parameters without an expression are checked here.
     if (!JSON.stringify(n.parametres).includes("{{")) {
       const p = type.parametres.safeParse(n.parametres);
       if (!p.success)
         for (const i of p.error.issues)
-          details.push(`nœud ${n.id} : ${i.path.join(".") || "paramètres"} : ${i.message}`);
+          details.push(`node ${n.id}: ${i.path.join(".") || "parameters"}: ${i.message}`);
     }
   }
   const declencheurs = d.noeuds.filter((n) => estDeclencheur(n.type));
-  if (declencheurs.length !== 1) details.push("un et un seul déclencheur par workflow");
+  if (declencheurs.length !== 1) details.push("exactly one trigger per workflow");
   for (const c of d.connexions) {
-    if (!ids.has(c.de) || !ids.has(c.vers)) details.push(`connexion ${c.de} → ${c.vers} : nœud absent`);
+    if (!ids.has(c.de) || !ids.has(c.vers)) details.push(`connection ${c.de} → ${c.vers}: missing node`);
     else if (estDeclencheur(d.noeuds.find((n) => n.id === c.vers)!.type))
-      details.push(`connexion ${c.de} → ${c.vers} : un déclencheur n'a pas d'entrée`);
+      details.push(`connection ${c.de} → ${c.vers}: a trigger has no input`);
   }
   if (!details.length && aUnCycle(d)) details.push("le graphe contient un cycle");
-  if (details.length) throw new ErreurDefinition("définition invalide", details);
+  if (details.length) throw new ErreurDefinition("invalid definition", details);
   return d;
 }
 
@@ -113,8 +113,8 @@ function apercu(els: Element[]): Element[] {
 }
 
 /**
- * Appel d'un nœud avec ses nouveaux essais (`tentatives`, attente `delaiEssaiMs` doublée à chaque fois). Une erreur
- * de paramètres ou d'expression ne se répare pas en réessayant : elle n'est pas reprise.
+ * Call of a node with its retries (`tentatives`, wait `delaiEssaiMs` doubled each time). A parameter or expression
+ * error cannot be fixed by retrying: it is not retried.
  */
 export async function essayer<T>(noeud: Noeud, signal: AbortSignal, appel: () => Promise<T>): Promise<T> {
   for (let essai = 0; ; essai++) {
@@ -142,7 +142,7 @@ async function lancerNoeud(
     const p = type.parametres.safeParse(resolus);
     if (!p.success)
       throw new ErreurExpression(
-        p.error.issues.map((x) => `${x.path.join(".") || "paramètres"} : ${x.message}`).join(" ; "),
+        p.error.issues.map((x) => `${x.path.join(".") || "parameters"}: ${x.message}`).join("; "),
       );
     return p.data;
   };
@@ -153,7 +153,7 @@ async function lancerNoeud(
   const nb = sortiesDe(type, noeud.parametres).length;
   const sorties: Sorties = [];
   for (const [i, el] of els.entries()) {
-    if (ctx.signal.aborted) throw new Error("exécution interrompue (durée maximale atteinte)");
+    if (ctx.signal.aborted) throw new Error("execution interrupted (maximum duration reached)");
     let r: Sorties;
     try {
       const p = parametres(el, i);
@@ -168,7 +168,7 @@ async function lancerNoeud(
   return sorties;
 }
 
-/** Exécute un workflow validé avec les éléments du déclencheur. */
+/** Runs a validated workflow with the items of the trigger. */
 export async function executer(def: Definition, entree: Element[], o: OptionsExecution): Promise<Resultat> {
   const { maxEtapes = 500, maxElements = 5000, dureeMaxMs = 5 * 60_000 } = o;
   const signal = AbortSignal.any([AbortSignal.timeout(dureeMaxMs), ...(o.signal ? [o.signal] : [])]);
@@ -205,12 +205,12 @@ export async function executer(def: Definition, entree: Element[], o: OptionsExe
     const noeud = parId.get(id)!;
     const type = CATALOGUE.get(noeud.type)!;
     if (etapes.length >= maxEtapes)
-      return { statut: "erreur", etapes, erreur: { noeud: id, message: `plus de ${maxEtapes} étapes` }, sortie: [] };
+      return { statut: "erreur", etapes, erreur: { noeud: id, message: `more than ${maxEtapes} steps` }, sortie: [] };
     const debut = new Date();
     let sorties: Sorties;
     try {
-      if (signal.aborted) throw new Error("exécution interrompue (durée maximale atteinte)");
-      if (els.length > maxElements) throw new Error(`plus de ${maxElements} éléments en entrée`);
+      if (signal.aborted) throw new Error("execution interrupted (maximum duration reached)");
+      if (els.length > maxElements) throw new Error(`more than ${maxElements} input items`);
       sorties =
         estDeclencheur(noeud.type) || noeud.desactive
           ? [els]
