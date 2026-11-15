@@ -1,5 +1,5 @@
-// Variantes DynamicScheme de Material Color Utilities, partagées par les générateurs (adapters.ts ; build.ts et runtime.ts
-// peuvent l'importer au lieu de redéclarer la table).
+// DynamicScheme variants of Material Color Utilities, shared by the generators (adapters.ts; build.ts and runtime.ts
+// can import it instead of redeclaring the table).
 import {
   argbFromHex,
   Hct,
@@ -35,7 +35,7 @@ export const SCHEMES: Record<
   neutral: SchemeNeutral,
 };
 
-/** DynamicScheme d'une graine hex pour une variante, un mode et un contraste (0, 0.5, 1). */
+/** DynamicScheme of a hex seed for a variant, a mode and a contrast (0, 0.5, 1). */
 export function dynamicScheme(
   seed: string,
   variant: string,

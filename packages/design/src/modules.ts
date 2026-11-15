@@ -1,4 +1,4 @@
-// Dossier d'un paquet npm installé (linker hoisted à la racine du monorepo, ou node_modules local).
+// Folder of an installed npm package (hoisted linker at the monorepo root, or local node_modules).
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 

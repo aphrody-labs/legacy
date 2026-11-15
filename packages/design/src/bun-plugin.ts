@@ -1,7 +1,7 @@
-// Plugin bun : `import svg from "m3:icon/rounded/<nom>?size=24&fill=1"` renvoie le SVG Material Symbols
-// Rounded (Apache-2.0) en chaîne, colorié par currentColor. Source unique : la sortie de `ay brand build`
-// (assets/brand/gen/symbols/svg/, sous-ensemble [symbols] de brand.toml, optimisé par usvg) ; un nom
-// absent de brand.toml est une erreur de build, pas un téléchargement.
+// Bun plugin: `import svg from "m3:icon/rounded/<name>?size=24&fill=1"` returns the Material Symbols
+// Rounded (Apache-2.0) SVG as a string, colored by currentColor. Single source: the output of `ay brand build`
+// (assets/brand/gen/symbols/svg/, [symbols] subset of brand.toml, optimized by usvg); a name
+// missing from brand.toml is a build error, not a download.
 import type { BunPlugin } from "bun";
 import { join } from "node:path";
 
@@ -25,12 +25,12 @@ export async function symbolSvg(
 ): Promise<string> {
   if (style !== "rounded" || !/^[a-z0-9_]+$/.test(name))
     throw new Error(
-      `symbole invalide : ${style}/${name} (seul rounded est généré)`,
+      `invalid symbol: ${style}/${name} (only rounded is generated)`,
     );
   const file = Bun.file(join(ROOT, `${name}${fill ? "-fill" : ""}.svg`));
   if (!(await file.exists()))
     throw new Error(
-      `symbole absent de assets/brand/gen/symbols : ${name} (ajouter à [symbols] de brand.toml, puis ay brand build)`,
+      `symbol missing from assets/brand/gen/symbols: ${name} (add it to [symbols] in brand.toml, then ay brand build)`,
     );
   const svg = await file.text();
   return svg.replace(
@@ -39,7 +39,7 @@ export async function symbolSvg(
   );
 }
 
-/** Noms des symboles générés (sous-ensemble [symbols] de brand.toml), triés. */
+/** Names of the generated symbols ([symbols] subset of brand.toml), sorted. */
 export async function generatedSymbols(): Promise<string[]> {
   const json = (await Bun.file(
     join(ROOT, "..", "symbols.json"),

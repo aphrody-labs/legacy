@@ -1,5 +1,5 @@
-// Génération M3 à l'exécution (graine dynamique, ex. thème par requête) et recherche de Material Symbols.
-// Les sites à graine fixe consomment tokens/tokens.css ; ce module sert les cas où la graine varie.
+// Runtime M3 generation (dynamic seed, e.g. per-request theme) and Material Symbols search.
+// Fixed-seed sites consume tokens/tokens.css; this module serves the cases where the seed varies.
 import {
   hexFromArgb,
   MaterialDynamicColors,
@@ -18,7 +18,7 @@ const roles = new MaterialDynamicColors().allColors.filter(
   (c) => !c.name.endsWith("_palette_key_color"),
 );
 
-/** Rôles M3 d'une graine (hex #RRGGBB) pour un mode. */
+/** M3 roles of a seed (hex #RRGGBB) for a mode. */
 export function scheme(
   seed: string,
   dark = false,
@@ -33,7 +33,7 @@ export function scheme(
   );
 }
 
-/** CSS `--md-sys-color-*` clair + sombre (prefers-color-scheme) pour une graine. */
+/** `--md-sys-color-*` light + dark CSS (prefers-color-scheme) for a seed. */
 export function schemeCss(
   seed: string,
   variant: Variant = "tonal-spot",
@@ -47,7 +47,7 @@ export function schemeCss(
 }
 
 let names: string[] | undefined;
-/** Noms de Material Symbols (type MaterialSymbol du paquet material-symbols). */
+/** Material Symbols names (MaterialSymbol type of the material-symbols package). */
 export async function symbolNames(): Promise<string[]> {
   if (names) return names;
   const dts = await Bun.file(
@@ -57,7 +57,7 @@ export async function symbolNames(): Promise<string[]> {
   return names;
 }
 
-/** Recherche par sous-chaîne, résultats exacts d'abord. */
+/** Substring search, exact matches first. */
 export async function searchSymbols(q: string, limit = 24): Promise<string[]> {
   const n = q
     .trim()

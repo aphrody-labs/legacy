@@ -1,6 +1,6 @@
-// Seule bibliothèque de composants web du monorepo : Angular Material (@angular/material), thémée par
-// tokens.css + angular-theme.scss. Composants standalone d'Angular, compilés par le builder Angular de l'app.
-// Importer 'APHRODY_MATERIAL' dans le tableau 'imports' d'un composant standalone.
+// The monorepo's only web component library: Angular Material (@angular/material), themed by
+// tokens.css + angular-theme.scss. Angular standalone components, compiled by the app's Angular builder.
+// Import 'APHRODY_MATERIAL' into the 'imports' array of a standalone component.
 export { MatButtonModule } from "@angular/material/button";
 export { MatButtonToggleModule } from "@angular/material/button-toggle";
 export { MatCardModule } from "@angular/material/card";

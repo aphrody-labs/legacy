@@ -1,15 +1,15 @@
-// @aphrody/design : tokens Material 3 générés depuis assets/brand/brand.toml (voir src/build.ts).
+// @aphrody/design: Material 3 tokens generated from assets/brand/brand.toml (see src/build.ts).
 import tokens from "../tokens/tokens.json";
 
 export { tokens };
 export type Mode = keyof typeof tokens.color;
 export type Role = keyof typeof tokens.color.light;
 
-/** Hex d'un rôle M3 (ex. role("primary", "dark")). */
+/** Hex of an M3 role (e.g. role("primary", "dark")). */
 export const role = (name: Role, mode: Mode = "light"): string =>
   tokens.color[mode][name];
 
-/** Séquence SGR 24 bits pour un rôle (TUI), avant-plan ou fond. */
+/** 24-bit SGR sequence for a role (TUI), foreground or background. */
 export function ansi(name: Role, mode: Mode = "dark", bg = false): string {
   const h = role(name, mode);
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
