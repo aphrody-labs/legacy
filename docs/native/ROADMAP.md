@@ -1,32 +1,34 @@
-# Aphrody Native + WebAssembly Engineering Roadmap (`docs/native/ROADMAP.md`)
+# Aphrody roadmap and specification
 
-Generalist, tool-verified roadmap centered on [src](file:///C:/src/src) (Pure C `-std=gnu11` + Assembler + WebAssembly 3.0) and shared LLVM toolchains.
+Single plan for src. Versions are never written here: they come from `src.lock.json`, `Cargo.lock`, `bun.lock`, `tools.toml` and the upstream trackers. `just hygiene` fails on any version, date or path pinned in this file.
 
-```mermaid
-flowchart LR
-  P1["Phase 1 (Done): Central src/ C+ASM+Wasm Core"] --> P2["Phase 2: WASI 0.3 & Component Model"]
-  P2 --> P3["Phase 3: WebGPU + Emscripten 7.0 Media/Engine"]
-  P3 --> P4["Phase 4: Multi-Million-LoC OS Subsystems (DRM/Wayland/NT/Wine)"]
-```
+## Definition of done (every item)
 
-## Phase 1 — Central `src/` Core & Toolchain Validation (Completed 2026-11-14)
+An item ships only when all of these hold, in one pass, before it is reported:
 
-- Establish [src](file:///C:/src/src) (`arch/`, `kernel/`, `drivers/gpu/drm/`, `wayland/`, `nt/`, `wine/`, `wasm/`, `include/uapi/ay/`) as the central Layer-0 code tree.
-- Fork and register 18 upstream `WebAssembly/*` and `emscripten-core/*` repositories in [forks.txt](file:///C:/src/third_party/forks.txt).
-- Install and pin Binaryen `version_133`, WABT `1.0.42`, and WASI-SDK `34.0` alongside LLVM `clang` + `lld` + `wasm-ld`.
-- Compile and validate `aysys.dll` (`7.6 KB`), `aysys.wasm` (`6.7 KB`, `v128` SIMD128), `ay-wasm-inspect.wasm` (`34.1 KB`, WASI-SDK 34), and `wayland.wasm` (`10.2 KB`) with `wasm-validate --enable-all` and [sys.test.ts](file:///C:/src/packages/core/test/sys.test.ts).
-- Consolidate native specifications into [docs/native](file:///C:/src/docs/native) and purge 25+ redundant verbose docs.
+1. **Latest upstream**: canary, nightly or rc of every dependency, resolved live (see `deps-always-latest`). No downgrade. When a newer release breaks the build, the breakage is fixed, not avoided by pinning back.
+2. **Built and tested**: built on fr2 (fr1 when the build needs its cache), with targeted tests green. The tests fail when the code breaks.
+3. **Running**: deployed on its target (fr1, fr2 or prd), and the proof is a real interaction, not an HTTP status (`proof-not-http-200`).
+4. **Delivered**: a skill in `.agents/skills/<name>/SKILL.md`, an MCP tool behind the relay hub, and a `just` recipe or `ay` subcommand.
+5. **Clean**: `just hygiene` is green, with no hardcoded value and no slop. A Gemini review is archived in `docs/reviews`, and every confirmed defect is fixed.
 
-## Phase 2 — WASI 0.3, `wasi-webgpu` & ThinLTO Build Acceleration
+A report never says "not verified" or "not run". If a step cannot complete, the cause is fixed in the same pass, or the item stays open on this page.
 
-- Bind `WebAssembly/wasi-webgpu` WIT interfaces to [src/drivers/gpu/drm](file:///C:/src/src/drivers/gpu/drm) so identical C/WGSL compute & render passes run on Linux DRM/Mesa, Windows D3D12, and browser WebGPU.
-- Migrate heavy utility logic out of slow procedural-macro Rust crates into `src/` C objects linked via LLVM ThinLTO (`-flto=thin`), shrinking cold CI compile times on `fr1`.
+## Workstreams
 
-## Phase 3 — Emscripten 7.0.0 & Media/Creative Engine Pipeline
+| # | Workstream | Ship target | State |
+| --- | --- | --- | --- |
+| 1 | GNU in Rust (`src/gnu`, uutils) | every GNU program passes the GNU test suite, as `ay gnu` | which, time 100 %; bc, m4, ed partial |
+| 2 | GNU distribution (`packages/gnu`) | live feed of GNU, Rust and kernel upstream at gnu.aphrody.com, MCP `gnu__*` | running on fr2 |
+| 3 | Android/AOSP toolchain (`infra/android`) | reproducible SDK, NDK, JDK and Kotlin setup, plus `apps/android-shell` on the emulator | running |
+| 4 | Ghidra fork, bun-ghidra, py2bun | converted Ghidra scripts run under bun-ghidra, with an LLVM LTO and AOT build | parity proven; Java exports open |
+| 5 | Gemini web MCP gateway (mcp.aphrody.com) | Gemini web uses the relay tools through OAuth | needs owner consent |
+| 6 | Index pipeline (`ay index`) | shared SQLite and Valkey index across hosts | skill `ay-index` |
+| 7 | Electron migrator (`ay electron`) | an Electron app migrated to Tauri or GPUI and benchmarked | skill `electron-migrate` |
+| 8 | Build science (`docs/native/BUILD-SCIENCE.md`) | each measured gain is adopted in `just` | sccache adopted |
+| 9 | Fleet offload (`docs/infra/FLEET-OFFLOAD.md`) | fr1 PSI below saturation, no yolo legacy, clean file systems | slices and `fleet-run` live |
+| 10 | Hygiene purge | `just hygiene` green on the whole tree | running |
 
-- Compile FFmpeg (`crates/tv-*` C codecs) and Wayland/WebGPU viewport clients with Emscripten `7.0.0` + JSPI (`WebAssembly/js-promise-integration`) + Shared-Everything Threads.
-- Expose zero-copy linear-memory ringbuffers between `wayland.wasm`, WebGPU `OffscreenCanvas` workers, and native desktop hosts.
+## Order
 
-## Phase 4 — OS Compatibility Scaling (`src/{wayland,nt,wine}`)
-
-- Expand `src/wayland/` (`wl_*`, `xcb_*`, `xwm_*`) and `src/nt/` + `src/wine/` (`nt_*`, `wine_*`) directly against upstream `wayland 1.26`, `xwayland 26.0.99`, and `wine` patches without language-wrapper overhead.
+Items 10 and 9 come first, because they unblock everything else. Next come 4, 1 and 2, which are the closest to shipping. Then 6, 7, 3 and 5. Each item ships under the definition of done before the next one starts.
