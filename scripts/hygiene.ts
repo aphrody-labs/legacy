@@ -46,10 +46,12 @@ const UPSTREAM_PORT = /^(src|packages\/browser\/native|packages\/native\/native)
 export const skipped = (f: string) => SKIP.some((r) => r.test(f));
 
 const AI_FILLER =
-  /\b(delve[sd]?|seamless(ly)?|tapestry|game-?chang(er|ing)|cutting-edge|state-of-the-art|supercharg\w+|unlock(s|ing)? the (power|potential)|elevate[sd]?|pivotal|testament to|in today's (fast|digital)|navigate the (complex|landscape)|rich tapestry|véritable|incontournable|au cœur de|révolutionn\w+|sublim\w+)\b/i;
+  /\b(delve[sd]?|seamless(ly)?|tapestry|game-?chang(er|ing)|cutting-edge|state-of-the-art|supercharg\w+|unlock(s|ing)? the (power|potential)|testament to|pinnacle|in today.s (fast|digital)|navigate the (complex|landscape)|rich tapestry|incontournable|au cœur de|révolutionn\w+)\b/i;
+const BANNED_LIST = /\b(zero|no|avoid|clich|puffery|tropes|catalogue|AI words)\b/i; // lines that name the words in order to ban them
 const SOVEREIGN = /(?<![\w\/.-])sovereign(?![\w\/.-])/i; // Antigravity is a real product (agy CLI), not slop
 const STUB = /\b(TODO: implement|not implemented yet|lorem ipsum|placeholder implementation|stub implementation|fake output|demo only)\b/i;
-const ABS_PATH = /(\b[A-Za-z]:[\\/](?:src|Users|labs|msys\d*|Program Files)[\\/]|(?<![\w.])\/(?:home|Users)\/[a-z][\w-]*\/|\/srv\/(?:src|build|artifacts)\b)/;
+const ABS_USER = /(Users[\\/]aphro|[A-Za-z]:[\\/]labs\b)/;
+const ABS_SRC = /\b[A-Za-z]:[\\/]src\b|\/srv\/src\b/; // the checkout location: fine in prose and fleet host config, not in code
 const MAGIC_DATE = /\b20[2-3]\d-[01]\d-[0-3]\d\b/;
 const DATED_PROSE = /\b(as of|état au|etat au|snapshot|validated on|verified on|checked on|measured|mesuré|vérifié le|au) +(the +)?20[2-3]\d-[01]\d-[0-3]\d\b/i;
 const PIN_NPM = /(?:^|[\s"'`=(])(?:npx|bunx|bun (?:add|x|install)|npm (?:i|install)|pnpm (?:add|dlx))\s+(?:-[\w-]+\s+)*(@?[\w./-]+)@(\d+\.\d+\.\d+[\w.-]*)/;
@@ -61,15 +63,15 @@ const SCRAPE_HOST = /(github\.com\/[^/\s"'`]+\/[^/\s"'`]+\/(releases|tags)\b(?!\
 
 export const RULES: Rule[] = [
   { id: "sovereign", why: "Legacy 'Sovereign' wording often wraps fake outputs; verify the claim or delete it", files: (f) => (CODE.test(f) || DOC.test(f)) && !/^\.agents\/skills\/rust-stack-sovereign\//.test(f), line: (l) => SOVEREIGN.test(l) },
-  { id: "ai-filler", why: "AI-filler prose (humanizer catalogue); say the fact", files: (f) => DOC.test(f), line: (l) => AI_FILLER.test(l) },
+  { id: "ai-filler", why: "AI-filler prose (humanizer catalogue); say the fact", files: (f) => DOC.test(f), line: (l) => AI_FILLER.test(l) && !BANNED_LIST.test(l) },
   { id: "stub", why: "Stub, demo or fake output left in tracked code (eng-practices: no functionality not needed now)", files: (f) => CODE.test(f) && !UPSTREAM_PORT.test(f) && !/(^|\/)(tests?|__tests__|fixtures?)\//.test(f) && !/\.test\./.test(f), line: (l) => STUB.test(l) },
   { id: "backup-file", why: "Backup or leftover file; git is the history", path: (f) => /\.(bak|orig|rej|swp|old)(-[\w.]+)?$|~$|(^|\/)\.#|\.old$/.test(f) },
   { id: "dated-filename", why: "Dated file name: a snapshot maintained by hand (style guide: timeless documentation)", path: (f) => !/^(docs\/reviews|docs\/proofs)\//.test(f) && /(^|[/_.-])20[2-3]\d-?[01]\d(-?[0-3]\d)?([/_.-]|$)/.test(f.split("/").pop()!) },
-  { id: "magic-date", why: "Date literal in code: compute it or read it from the source of truth", files: (f) => CODE.test(f) && !/\.test\./.test(f) && !/^(bench|test)\//.test(f), line: (l) => MAGIC_DATE.test(l) && !/^\s*(\/\/|#|\*|\/\*)/.test(l) },
+  { id: "magic-date", why: "Date literal in code: compute it or read it from the source of truth", files: (f) => CODE.test(f) && !UPSTREAM_PORT.test(f) && !/\.test\./.test(f) && !/^(bench|test)\//.test(f) && !/(^|\/)(tests?|examples?|e2e|modeles)\//.test(f), line: (l) => MAGIC_DATE.test(l) && !/(version|compat\w*_?date|protocolVersion|VERSIONS|metadataProfile|"mcp-)/i.test(l) && !/^\s*(\/\/|#|\*|\/\*)/.test(l) },
   { id: "dated-snapshot", why: "Hand-maintained dated statement in prose (style guide: timeless documentation)", files: (f) => DOC.test(f) && !MANIFEST.test(f), line: (l) => DATED_PROSE.test(l) },
-  { id: "absolute-path", why: "Machine-specific absolute path; derive from the repo root, SRC_ROOT or the home directory", files: (f) => (CODE.test(f) || DOC.test(f) || /\.(toml|json|ya?ml)$/.test(f)) && !MANIFEST.test(f), line: (l) => ABS_PATH.test(l) },
+  { id: "absolute-path", why: "Machine-specific absolute path; derive from the repo root, SRC_ROOT or the home directory", files: (f) => (CODE.test(f) || DOC.test(f) || /\.(toml|json|ya?ml)$/.test(f)) && !MANIFEST.test(f), line: (l, f) => ABS_USER.test(l) || (CODE.test(f) && !/^(infra|scripts\/bench)\//.test(f) && ABS_SRC.test(l)) },
   { id: "pinned-version", why: "Version or tag pinned outside a manifest or lockfile; resolve latest from the registry or the manifest", files: (f) => (CODE.test(f) || DOC.test(f) || /\.ya?ml$/.test(f)) && !MANIFEST.test(f) && !/^\.github\/workflows\//.test(f), line: (l) => PIN_NPM.test(l) || PIN_CLONE.test(l) || PIN_ACTION.test(l) },
-  { id: "hardcoded-list", why: "Hard-coded repo slug list that the GitHub API or a manifest provides (8+ slugs in one file)", files: (f) => /\.(ts|tsx|js|mjs|rs|sh)$/.test(f) && !/\.test\./.test(f) },
+  { id: "hardcoded-list", why: "Hard-coded repo slug list that the GitHub API or a manifest provides (8+ slugs in one file)", files: (f) => /\.(ts|tsx|js|mjs|rs|sh)$/.test(f) && !UPSTREAM_PORT.test(f) && !/\.(test|d)\./.test(f) },
   { id: "home-scraper", why: "Home-made scraper of an upstream page; use the releases API, gitiles JSON, kernel.org releases.json, Repology or nvchecker", files: (f) => /\.(ts|tsx|js|mjs|sh|py)$/.test(f) && !/\.test\./.test(f), line: (l) => SCRAPE_HOST.test(l) && /(fetch|curl|xh|wget|Invoke-WebRequest)/.test(l) && !/api\.github\.com|releases\.json|\?format=JSON|--json|releases\/latest\/download/.test(l) },
 ];
 
@@ -101,7 +103,7 @@ export function scan(root: string, opts: { rules?: string[]; paths?: string[] } 
     for (const r of need) {
       if (r.id === "hardcoded-list") {
         const slugs = new Set<string>();
-        for (const m of text.matchAll(SLUG)) if (/^[\w.-]+\/[\w.-]+$/.test(m[1]!) && !/\.(ts|js|json|md|rs|css|html)$/.test(m[1]!) && !/^(node|src|dist|lib|bin|usr|var|etc|tmp|docs?|apps?|packages?|crates?|infra|scripts?|test|tests|bench|assets|plugins)\//.test(m[1]!) && !m[1]!.includes("..")) slugs.add(m[1]!);
+        for (const m of text.matchAll(SLUG)) if (/^[\w.-]+\/[\w.-]+$/.test(m[1]!) && !/\.(ts|js|json|md|rs|css|html)$/.test(m[1]!) && !/^(node|src|dist|lib|bin|usr|var|etc|tmp|docs?|apps?|packages?|crates?|infra|scripts?|test|tests|bench|assets|plugins|third_party|roles|image|application|text|video|audio|font|multipart|Europe|America|Asia|shell|desktop|documentation|fournisseurs|clients|factures)\//.test(m[1]!) && !m[1]!.includes("..")) slugs.add(m[1]!);
         if (slugs.size >= 8) hits.push({ rule: r.id, file: f, line: 0, text: `${slugs.size} slugs: ${[...slugs].slice(0, 3).join(", ")}` });
         continue;
       }

@@ -11,7 +11,7 @@ This skill guides development, reverse-engineering, AST analysis, and runtime em
 
 ## 1. Lua 5.2 Language Architecture & Core Differences
 
-Lua 5.2 represents the pinnacle of clean, register-based VM design with several pivotal advancements over Lua 5.1:
+Lua 5.2 is a register-based VM with these changes over Lua 5.1:
 
 ### 1.1 `_ENV` Lexical Scoping (Replaced `setfenv`/`getfenv`)
 

@@ -102,7 +102,7 @@ Developed by Martin von Zweigbergk at Google (`jj-vcs/jj`), Jujutsu is a Git-com
 - **Working Copy as a Commit**: The working directory is always an automatic commit (`@`). No staging index is needed.
 - **Anonymous Branching**: Commits exist without named branches; branch pointers ("bookmarks") are updated smoothly.
 - **Conflict-Free Operations**: Merge conflicts are first-class commit states that can be committed, pushed, and resolved later without interrupting rebases.
-- **Depot Integration**: `depot_tools/jj/scm.py` provides Google's experimental bridge, while `depot` integrates seamlessly with `.jj` repositories.
+- **Depot Integration**: `depot_tools/jj/scm.py` provides Google's experimental bridge, while `depot` works with `.jj` repositories.
 
 ### 4.2 Blake3 Content Addressing
 

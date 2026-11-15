@@ -1,4 +1,4 @@
-// Eval set from the src docs index: each markdown section (## or ###) of C:\src\docs is an entry (heading removed
+// Eval set from the src docs index: each markdown section (## or ###) of docs/ is an entry (heading removed
 // from the text); its heading is the query. src is private, so the generated set stays local (never committed):
 // bench/.cache/srcdocs.json. Combined with the research pack (30 queries) by retrieval.ts --eval.
 import { mkdirSync } from "node:fs";

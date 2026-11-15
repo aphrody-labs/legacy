@@ -24,7 +24,7 @@ First-party deployment platform of the monorepo (the role Vercel plays for its u
 
 ## Operations
 
-- Worker: `wrangler.toml` (name `aphrody-deploy`); `bunx wrangler@4.161.0 deploy --dry-run` first. The token comes from `ay auth mint cloudflare --perm "Workers Scripts Write,Workers R2 Storage Write" -- ...`.
+- Worker: `wrangler.toml` (name `aphrody-deploy`); `bunx wrangler deploy --dry-run` first. The token comes from `ay auth mint cloudflare --perm "Workers Scripts Write,Workers R2 Storage Write" -- ...`.
 - Proof: `env-kit exec -- bun infra/cloudflare/proof.ts` (section 10: aphrody.com holding page, aphrody.app pages, Access on the dashboard, last push deployed with a live preview, rollback drill on `yolo`).
 - Rollback of the platform itself: `wrangler rollback` on `aphrody-deploy`; of the apex move: re-attach `aphrody.app` and `www.aphrody.app` to the Worker `aphrody-app-site` (the former desktop shell, now on `shell.aphrody.app`).
 

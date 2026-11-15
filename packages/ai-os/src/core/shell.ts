@@ -1,6 +1,6 @@
 // Native shell resolution, ported from the windows-native patches of our forks
 // (OpenClaw OPENCLAW_EXEC_SHELL/OPENCLAW_BASH, Hermes HERMES_BASH + niubash candidate; see
-// C:\src\docs\agents\WINDOWS-NATIVE-PORT.md @16eea3d). Never picks the System32 WSL bash stub.
+// docs/agents/WINDOWS-NATIVE-PORT.md). Never picks the System32 WSL bash stub.
 // Sandboxed bash execution uses the extracted Vercel core (`../vercel/sandbox`).
 import { existsSync } from "node:fs";
 import { join } from "node:path";

@@ -1,4 +1,4 @@
-// Deep-research pipeline. Generalizes C:\src\var\data\ai_foundations_to_agi:
+// Deep-research pipeline. Generalizes var/data/ai_foundations_to_agi:
 // outline.yaml (topic, execution.batch_size, items[]) + fields.yaml (required_fields with types) ->
 // one subagent per item (batch_size in parallel) -> results/<item>.json -> validated -> fed to agent memory.
 // validate() is a port of validate_json.py (kept in python/research_ref as the uv reference).

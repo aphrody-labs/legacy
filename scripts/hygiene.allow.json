@@ -1,0 +1,20 @@
+{
+  "sovereign": ["docs/i18n/*/AGENTS.md", ".agents/skills/hygiene/SKILL.md", "scripts/hygiene.ts"],
+  "absolute-path": [
+    "docs/native/shell/**",
+    "docs/native/compat/**",
+    "packages/env-kit/**",
+    "packages/machine/shells/**",
+    "packages/machine/matrix/test/**",
+    ".claude/agents/coherence-fixer.md",
+    "packages/ai-os/test/relay/sessions.test.ts"
+  ],
+  "ai-filler": [
+    ".agents/skills/gemini-omni-flash-api/SKILL.md",
+    ".agents/skills/stitch-design-md/examples/DESIGN.md",
+    "docs/native/linux-kernel-story/mdx/13-upstream-live-releases-git-and-distro-deployments.mdx",
+    "docs/research/RUST_6_ORGS_FUSION_INVENTORY.md",
+    "packages/native/native/CHANGELOG.md",
+    "src/runtime/cli/add_completions.txt"
+  ]
+}

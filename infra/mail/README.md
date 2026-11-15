@@ -61,7 +61,7 @@ BIMI (`default._bimi.aphrody.com`) references `https://aphrody.com/assets/brand/
 
 ## 5. Google Workspace Split-Delivery Compatibility (`contact@aphrody.com`)
 
-To allow `contact@aphrody.com` to operate seamlessly across both Google Workspace (Calendar, Meet, Docs, Google Cloud Org Identity) and Stalwart JMAP/IMAP:
+To allow `contact@aphrody.com` to work with both Google Workspace (Calendar, Meet, Docs, Google Cloud Org Identity) and Stalwart JMAP/IMAP:
 
 1. **Google Workspace Admin Console (`admin.google.com` -> Apps -> Google Workspace -> Gmail -> Routing)**:
    - Add `mail.aphrody.com` (`51.77.147.152`) to **Inbound Gateway** IPs so forwarded messages preserve original SPF alignment.

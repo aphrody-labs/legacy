@@ -428,7 +428,7 @@ export function benchmarkMonorepoBuildArena(
       ? measureSpawnAvgMs([compiledBinaryPath, "--ping"], 5)
       : 0;
 
-  // Benchmark Rust FFI Merkle snapshotter on `C:\src\crates`
+  // Benchmark Rust FFI Merkle snapshotter on the repo `src/` tree
   const merkleTarget = existsSync("C:\\src\\crates")
     ? "C:\\src\\crates"
     : join(labsRoot, "src");

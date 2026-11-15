@@ -1,6 +1,6 @@
 # aphrody fleet: roles, state, procedures
 
-State as of 2026-11-12, written during the migration. The versioned sources are in `C:\src-merge\infra\fleet\` (branch merge/labs).
+State as of 2026-11-12, written during the migration. The versioned sources are in `infra/fleet/`.
 
 ## Roles
 

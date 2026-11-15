@@ -18,7 +18,7 @@ Two paths, only one per surface:
 
 ## Rules
 
-1. bun only: `bun add three` in the package, page served by `Bun.serve` (imported HTML, bun's bundler). glTF tools: `bun x @gltf-transform/cli@4.5.1 inspect|validate|optimize` (pinned version, npm registry of 2026-11-13, including in the references).
+1. bun only: `bun add three` in the package, page served by `Bun.serve` (imported HTML, bun's bundler). glTF tools: `bun x @gltf-transform/cli inspect|validate|optimize` (pinned version, npm registry of 2026-11-13, including in the references).
 2. Version: check `gh api repos/mrdoob/three.js/releases/latest` before citing an API; the references below target r186, reread the r187 release notes before writing code that depends on a recent API.
 3. Renderer: `new WebGPURenderer({ antialias: true })`, `await renderer.init()` before the first render, `renderer.setAnimationLoop`. Node materials (`MeshStandardNodeMaterial`, TSL) rather than GLSL `ShaderMaterial`.
 4. Scene colors, backgrounds and HUD: M3 roles from `packages/design/tokens/tokens.json` (never a copied hex); HUD in Material Web on top of the canvas.
