@@ -100,3 +100,10 @@ apps/.lst-*
 /docs/*/graph/graph.html
 /docs/*/graph/graph.graphml
 /docs/*/graph/cypher.txt
+
+# Upstream tracking snapshots written by `bun packages/upstream/src/upstream-scan.ts <fork>`: live data, regenerated on demand.
+/docs/*/BLOG.md
+/docs/*/COMMITS.md
+/docs/*/PRS.md
+/docs/*/RELEASES.md
+/docs/*/data/prs.json
