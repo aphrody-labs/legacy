@@ -1,0 +1,118 @@
+flowchart TD
+    file_Cargo_toml["Cargo.toml"]
+    file_deny_toml["deny.toml"]
+    file_examples_Cargo_toml["Cargo.toml"]
+    file_guides_building_a_middleware_from_scratch_md["building-a-middleware-from-scratch.md"]
+    file_guides_README_md["README.md"]
+    file_LICENSE["LICENSE"]
+    file_netlify_toml["netlify.toml"]
+    file_README_md["README.md"]
+    file_tower_Cargo_toml["Cargo.toml"]
+    file_tower_CHANGELOG_md["CHANGELOG.md"]
+    file_tower_examples_tower_balance_rs["tower-balance.rs"]
+    struct_tower_examples_tower_balance_rs_Summary["Summary"]
+    function_tower_examples_tower_balance_rs_main["main"]
+    method_tower_examples_tower_balance_rs_new["new"]
+    method_tower_examples_tower_balance_rs_poll_next["poll_next"]
+    function_tower_examples_tower_balance_rs_gen_disco["gen_disco"]
+    function_tower_examples_tower_balance_rs_run["run"]
+    function_tower_examples_tower_balance_rs_compute_histo["compute_histo"]
+    method_tower_examples_tower_balance_rs_count["count"]
+    method_tower_examples_tower_balance_rs_report["report"]
+    struct_tower_examples_tower_balance_rs_Req["Req"]
+    struct_tower_examples_tower_balance_rs_Rsp["Rsp"]
+    mod_futures_core["futures_core"]
+    mod_futures_util["futures_util"]
+    mod_hdrhistogram["hdrhistogram"]
+    mod_pin_project_lite["pin_project_lite"]
+    mod_std["std"]
+    mod_tokio["tokio"]
+    mod_tower["tower"]
+    mod_tower_service["tower_service"]
+    fn_Duration__from_millis["Duration::from_millis"]
+    fn_tracing__subscriber__set_global_default_tracing_subscriber__FmtSubscriber__default____unwrap["tracing::subscriber::set_global_defaulttracing_subscriber::FmtSubscriber::default.unwrap"]
+    fn_tracing__subscriber__set_global_default["tracing::subscriber::set_global_default"]
+    fn_tracing_subscriber__FmtSubscriber__default["tracing_subscriber::FmtSubscriber::default"]
+    fn_max_as_secs["max.as_secs"]
+    fn_u64__from["u64::from"]
+    fn_max_subsec_millis["max.subsec_millis"]
+    fn_Duration__from_secs["Duration::from_secs"]
+    fn_lb__p2c__Balance__new["lb::p2c::Balance::new"]
+    fn_load__PeakEwmaDiscover__new["load::PeakEwmaDiscover::new"]
+    fn_load__CompleteOnResponse__default["load::CompleteOnResponse::default"]
+    fn_load__PendingRequestsDiscover__new["load::PendingRequestsDiscover::new"]
+    fn_self_project___services_pop["self.project.services.pop"]
+    fn_self_project["self.project"]
+    fn_Poll__Ready["Poll::Ready"]
+    fn_Some["Some"]
+    fn_Ok["Ok"]
+    fn_Change__Insert["Change::Insert"]
+    fn_Disco__new["Disco::new"]
+    fn_MAX_ENDPOINT_LATENCIES______________iter________________enumerate________________map___instance__latency_____________________let_svc___tower__service_fn_move___________________________let_start___Instant__now_________________________let_maxms___u64__from_latency_subsec_millis_____________________________saturating_add_latency_as_secs___saturating_mul_1_000________________________let_latency___Duration__from_millis_rand__random_range_0__maxms_________________________async_move___________________________time__sleep_until_start___latency__await__________________________let_latency___start_elapsed____________________________Ok_Rsp___latency__instance________________________________________________________________instance__ConcurrencyLimit__new_svc__ENDPOINT_CAPACITY_______________________________collect["MAX_ENDPOINT_LATENCIES
+            .iter
+            .enumerate
+            .map|instance, latency| {
+                let svc = tower::service_fnmove |_| {
+                    let start = Instant::now;
+
+                    let maxms = u64::fromlatency.subsec_millis
+                        .saturating_addlatency.as_secs.saturating_mul1_000;
+                    let latency = Duration::from_millisrand::random_range0..maxms;
+
+                    async move {
+                        time::sleep_untilstart + latency.await;
+                        let latency = start.elapsed;
+                        OkRsp { latency, instance }
+                    }
+                };
+
+                instance, ConcurrencyLimit::newsvc, ENDPOINT_CAPACITY
+            }
+            .collect"]
+    file_tower_examples_tower_balance_rs -->|defines| struct_tower_examples_tower_balance_rs_Summary
+    file_tower_examples_tower_balance_rs -->|defines| function_tower_examples_tower_balance_rs_main
+    file_tower_examples_tower_balance_rs -->|defines| method_tower_examples_tower_balance_rs_new
+    file_tower_examples_tower_balance_rs -->|defines| method_tower_examples_tower_balance_rs_poll_next
+    file_tower_examples_tower_balance_rs -->|defines| function_tower_examples_tower_balance_rs_gen_disco
+    file_tower_examples_tower_balance_rs -->|defines| function_tower_examples_tower_balance_rs_run
+    file_tower_examples_tower_balance_rs -->|defines| function_tower_examples_tower_balance_rs_compute_histo
+    file_tower_examples_tower_balance_rs -->|defines| method_tower_examples_tower_balance_rs_count
+    file_tower_examples_tower_balance_rs -->|defines| method_tower_examples_tower_balance_rs_report
+    file_tower_examples_tower_balance_rs -->|defines| struct_tower_examples_tower_balance_rs_Req
+    file_tower_examples_tower_balance_rs -->|defines| struct_tower_examples_tower_balance_rs_Rsp
+    file_tower_examples_tower_balance_rs -->|imports| mod_futures_core
+    file_tower_examples_tower_balance_rs -->|imports| mod_futures_util
+    file_tower_examples_tower_balance_rs -->|imports| mod_hdrhistogram
+    file_tower_examples_tower_balance_rs -->|imports| mod_pin_project_lite
+    file_tower_examples_tower_balance_rs -->|imports| mod_std
+    file_tower_examples_tower_balance_rs -->|imports| mod_tokio
+    file_tower_examples_tower_balance_rs -->|imports| mod_tower
+    file_tower_examples_tower_balance_rs -->|imports| mod_tower_service
+    file_tower_examples_tower_balance_rs -->|calls| fn_Duration__from_millis
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_tracing__subscriber__set_global_default_tracing_subscriber__FmtSubscriber__default____unwrap
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_tracing__subscriber__set_global_default
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_tracing_subscriber__FmtSubscriber__default
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_max_as_secs
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_u64__from
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_max_subsec_millis
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_Duration__from_secs
+    function_tower_examples_tower_balance_rs_main -->|calls| function_tower_examples_tower_balance_rs_gen_disco
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_lb__p2c__Balance__new
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_load__PeakEwmaDiscover__new
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_load__CompleteOnResponse__default
+    function_tower_examples_tower_balance_rs_main -->|calls| function_tower_examples_tower_balance_rs_run
+    function_tower_examples_tower_balance_rs_main -->|calls| fn_load__PendingRequestsDiscover__new
+    method_tower_examples_tower_balance_rs_poll_next -->|calls| fn_self_project___services_pop
+    method_tower_examples_tower_balance_rs_poll_next -->|calls| fn_self_project
+    method_tower_examples_tower_balance_rs_poll_next -->|calls| fn_Poll__Ready
+    method_tower_examples_tower_balance_rs_poll_next -->|calls| fn_Some
+    method_tower_examples_tower_balance_rs_poll_next -->|calls| fn_Ok
+    method_tower_examples_tower_balance_rs_poll_next -->|calls| fn_Change__Insert
+    function_tower_examples_tower_balance_rs_gen_disco -->|calls| fn_Disco__new
+    function_tower_examples_tower_balance_rs_gen_disco -->|calls| fn_MAX_ENDPOINT_LATENCIES______________iter________________enumerate________________map___instance__latency_____________________let_svc___tower__service_fn_move___________________________let_start___Instant__now_________________________let_maxms___u64__from_latency_subsec_millis_____________________________saturating_add_latency_as_secs___saturating_mul_1_000________________________let_latency___Duration__from_millis_rand__random_range_0__maxms_________________________async_move___________________________time__sleep_until_start___latency__await__________________________let_latency___start_elapsed____________________________Ok_Rsp___latency__instance________________________________________________________________instance__ConcurrencyLimit__new_svc__ENDPOINT_CAPACITY_______________________________collect
+    function_tower_examples_tower_balance_rs_gen_disco -->|calls| fn_u64__from
+    function_tower_examples_tower_balance_rs_gen_disco -->|calls| fn_Duration__from_millis
+    function_tower_examples_tower_balance_rs_gen_disco -->|calls| fn_Ok
+    function_tower_examples_tower_balance_rs_run -->|calls| function_tower_examples_tower_balance_rs_compute_histo
+    function_tower_examples_tower_balance_rs_compute_histo -->|calls| fn_Ok
+    method_tower_examples_tower_balance_rs_count -->|calls| fn_u64__from

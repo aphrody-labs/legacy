@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "organization": "Aphrody",
+  "abstract": "Axum 0.8 and tower-http 0.7 rules for AI agents writing or porting HTTP services in Rust, read from the aphrody-labs forks (axum 2449f160, tower-http 8569ec8b, tower df06d70d). 13 rules across 8 categories, each with an incorrect and a correct example and the source file it was checked against. Used by the Shenron TypeScript to Rust migration (crates/shenron-api).",
+  "references": [
+    "https://github.com/aphrody-labs/axum",
+    "https://github.com/aphrody-labs/tower-http",
+    "https://github.com/aphrody-labs/tower",
+    "https://docs.rs/axum/0.8.9/axum/",
+    "https://docs.rs/tower-http/0.7.1/tower_http/"
+  ]
+}
