@@ -1,4 +1,4 @@
-// Chemins des artefacts Nt.Interop (produits par `just interop`, en CI) et type minimal des liaisons générées.
+// Paths of the Nt.Interop artifacts (produced by `just interop`, in CI) and minimal type of the generated bindings.
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -37,7 +37,7 @@ export const paths = {
   ),
   bindings: join(root, "target", "dotnet-ffi", "Nt.Interop.js"),
 };
-/** Chemin hébergé : assemblage IL + liaisons ; chemin natif : en plus le binaire NativeAOT. */
+/** Hosted path: IL assembly + bindings; native path: also the NativeAOT binary. */
 export const builtHosted = existsSync(paths.il) && existsSync(paths.bindings);
 export const built = builtHosted && existsSync(paths.native);
 

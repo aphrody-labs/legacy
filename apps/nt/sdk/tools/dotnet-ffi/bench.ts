@@ -151,7 +151,7 @@ if (modeArg >= 0) {
           .join(" | ")} |`,
     ),
     "",
-    `aot : ${results.aot?.framework} ; coreclr : ${results.coreclr?.framework} ; c : ${results.c?.label}`,
+    `aot: ${results.aot?.framework}; coreclr: ${results.coreclr?.framework}; c: ${results.c?.label}`,
   ].join("\n");
   console.log(md);
   if (process.env.GITHUB_STEP_SUMMARY)

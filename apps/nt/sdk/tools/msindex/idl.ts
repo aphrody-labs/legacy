@@ -1,6 +1,6 @@
-// Code source du Windows App SDK relié à sa surface livrée : dépôts microsoft/WindowsAppSDK (composants dev/*, fonctionnalités
-// TerminalVelocity dev/Common, specs/, test/) et microsoft/microsoft-ui-xaml (contrôles controls/dev/*, cœur dxaml/xcp/dxaml/idl).
-// Analyse lexicale des IDL MIDL3 : espaces de noms imbriqués (macros #define résolues), déclarations, attributs feature().
+// Windows App SDK source linked to its shipped surface: microsoft/WindowsAppSDK repositories (dev/* components, TerminalVelocity
+// dev/Common features, specs/, test/) and microsoft/microsoft-ui-xaml (controls/dev/* controls, dxaml/xcp/dxaml/idl core).
+// Lexical analysis of MIDL3 IDL: nested namespaces (#define macros resolved), declarations, feature() attributes.
 import { basename, join, relative } from "node:path";
 import { dirs, files, slash } from "./fsx.ts";
 import type { Graph } from "./graph.ts";
@@ -135,7 +135,7 @@ export async function indexSources(
   const specs = dirs(join(wasdk, "specs"));
   const tests = dirs(join(wasdk, "test"));
   for (const c of dirs(join(wasdk, "dev"))) {
-    if (c === "Templates") continue; // gabarits de projets, pas d'API
+    if (c === "Templates") continue; // project templates, not an API
     const all = files(join(wasdk, "dev", c), /.*/);
     const ext = Object.entries(
       Object.groupBy(all, (f) =>

@@ -1,7 +1,7 @@
-// Vectorisation SVG de tout le bureau Windows : chaque fenêtre de premier niveau et chacun de ses éléments UI
-// Automation (rôle, nom, rectangle) deviennent des nœuds SVG — rendu vectoriel fidèle, interrogeable, sans capture.
-// Source : agent-desktop (UIA, `snapshot --include-bounds`), installé dans ~/.local/bin (MCP du poste).
-// Usage : bun src/host/desktop-svg.ts [sortie.svg]   ou   GET /desktop.svg (server.ts)
+// SVG vectorization of the whole Windows desktop: every top-level window and each of its UI
+// Automation elements (role, name, rectangle) become SVG nodes — faithful, queryable vector rendering, no capture.
+// Source: agent-desktop (UIA, `snapshot --include-bounds`), installed in ~/.local/bin (the machine's MCP).
+// Usage: bun src/host/desktop-svg.ts [output.svg]   or   GET /desktop.svg (server.ts)
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -38,7 +38,7 @@ async function ad(...args: string[]) {
   const out = await new Response(p.stdout).text();
   await p.exited;
   const j = JSON.parse(out) as { ok: boolean; data: unknown };
-  if (!j.ok) throw new Error(`agent-desktop ${args[0]} a échoué`);
+  if (!j.ok) throw new Error(`agent-desktop ${args[0]} failed`);
   return j.data;
 }
 
@@ -96,7 +96,7 @@ function emit(n: Node, out: string[], depth: number, stats: { nodes: number }) {
   if (b && b.width > 0 && b.height > 0) out.push("</g>");
 }
 
-/** SVG du bureau entier (écrans, fenêtres visibles dans l'ordre Z, barre des tâches). */
+/** SVG of the whole desktop (screens, visible windows in Z order, taskbar). */
 export async function desktopSvg(maxDepth = 14) {
   const t0 = performance.now();
   const displays = (await ad("list-displays")) as {
@@ -134,7 +134,7 @@ export async function desktopSvg(maxDepth = 14) {
     "--max-depth",
     "6",
   ).catch(() => null);
-  // list-windows renvoie l'ordre Z du haut vers le bas : on dessine du bas vers le haut.
+  // list-windows returns the Z order from top to bottom: draw from bottom to top.
   for (const { w, tree } of trees.reverse()) {
     stats.windows++;
     body.push(
@@ -150,7 +150,7 @@ export async function desktopSvg(maxDepth = 14) {
   if (taskbar) emit((taskbar as { tree: Node }).tree, body, 0, stats);
   const svg = [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${maxX - minX} ${maxY - minY}" width="${maxX - minX}" height="${maxY - minY}" font-family="Segoe UI Variable, Segoe UI, sans-serif">`,
-    `<title>Bureau Windows vectorisé (UI Automation) — ${new Date().toISOString()}</title>`,
+    `<title>Windows desktop vectorized (UI Automation) — ${new Date().toISOString()}</title>`,
     `<style>text{fill:#dfe7f2;pointer-events:none} g:hover>rect{stroke:#ffd166;stroke-width:2}</style>`,
     `<rect x="${minX}" y="${minY}" width="${maxX - minX}" height="${maxY - minY}" fill="#05070b"/>`,
     ...displays.map(

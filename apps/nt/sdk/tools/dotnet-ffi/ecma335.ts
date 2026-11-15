@@ -1,9 +1,9 @@
-// Lecteur ECMA-335 (métadonnées CLI) en TypeScript pur : aucun .NET requis à la génération.
-// ECMA-335 6e éd., partition II : §24.3.3 (CLI header = répertoire PE 14), §24.2 (racine, flux #~ #Strings #US #GUID #Blob),
-// §22 (tables), §24.2.6 (index codés), §23.2 (signatures), §23.3 (blobs d'attributs).
+// ECMA-335 (CLI metadata) reader in pure TypeScript: no .NET required at generation time.
+// ECMA-335 6th ed., partition II: §24.3.3 (CLI header = PE directory 14), §24.2 (root, streams #~ #Strings #US #GUID #Blob),
+// §22 (tables), §24.2.6 (coded indexes), §23.2 (signatures), §23.3 (attribute blobs).
 import { parsePe } from "../host/pe.ts";
 
-/** Numéros de table (§22). */
+/** Table numbers (§22). */
 export const T = {
   Module: 0x00,
   TypeRef: 0x01,
@@ -52,7 +52,7 @@ export const T = {
   GenericParamConstraint: 0x2c,
 } as const;
 
-/** Index codés (§24.2.6) : bits d'étiquette, tables (-1 = inutilisée). */
+/** Coded indexes (§24.2.6): tag bits, tables (-1 = unused). */
 const CODED = {
   TypeDefOrRef: [2, [T.TypeDef, T.TypeRef, T.TypeSpec]],
   HasConstant: [2, [T.Field, T.Param, T.Property]],
@@ -99,11 +99,11 @@ const CODED = {
 } as const satisfies Record<string, readonly [number, readonly number[]]>;
 type Coded = keyof typeof CODED;
 
-/** Colonne : entier fixe (2/4 octets), index de tas, index de table (numéro) ou index codé. */
+/** Column: fixed integer (2/4 bytes), heap index, table index (number) or coded index. */
 type Col = 2 | 4 | "str" | "guid" | "blob" | { t: number } | Coded;
 const t = (n: number) => ({ t: n });
 
-/** Schéma des 45 tables (§22.2-22.39), dans l'ordre des numéros. */
+/** Schema of the 45 tables (§22.2-22.39), in table number order. */
 const SCHEMA: Record<number, [string, Col][]> = {
   [T.Module]: [
     ["Generation", 2],
@@ -155,7 +155,7 @@ const SCHEMA: Record<number, [string, Col][]> = {
     ["Name", "str"],
     ["Signature", "blob"],
   ],
-  // Type : 1 octet + 1 octet de remplissage (§22.9).
+  // Type: 1 byte + 1 padding byte (§22.9).
   [T.Constant]: [
     ["Type", 2],
     ["Parent", "HasConstant"],
@@ -308,7 +308,7 @@ const SCHEMA: Record<number, [string, Col][]> = {
   ],
 };
 
-/** Référence décodée d'un index codé ou d'un jeton : table + ligne (1-based, 0 = nulle). */
+/** Decoded reference of a coded index or token: table + row (1-based, 0 = null). */
 export type Ref = { table: number; row: number };
 
 type Table = {
@@ -321,7 +321,7 @@ type Table = {
 const utf8 = new TextDecoder("utf-8");
 const utf16 = new TextDecoder("utf-16le");
 
-/** Métadonnées brutes : tables + tas. Lignes 1-based comme dans la spécification. */
+/** Raw metadata: tables + heaps. Rows are 1-based as in the specification. */
 export class Metadata {
   readonly version: string;
   readonly tables: Table[] = [];
@@ -356,7 +356,7 @@ export class Metadata {
         off: root + off,
         size,
       });
-      p += 8 + ((e - (p + 8) + 4) & ~3); // nom + NUL, aligné sur 4 octets
+      p += 8 + ((e - (p + 8) + 4) & ~3); // name + NUL, aligned to 4 bytes
     }
     const tilde = streams.get("#~") ?? streams.get("#-");
     if (!tilde) throw new Error("flux de tables #~ absent");
@@ -378,7 +378,7 @@ export class Metadata {
         q += 4;
       }
     }
-    // Bit 0x40 des tailles de tas : 4 octets supplémentaires après les compteurs (flux #- d'EnC).
+    // Heap sizes bit 0x40: 4 extra bytes after the counts (EnC #- stream).
     if (heap & 0x40) q += 4;
     for (const ptr of [
       T.FieldPtr,
@@ -389,7 +389,7 @@ export class Metadata {
     ]) {
       if (rows[ptr])
         throw new Error(
-          "tables d'indirection (#- non optimisé) non prises en charge",
+          "indirection tables (non-optimized #-) not supported",
         );
     }
     const strW = heap & 0x01 ? 4 : 2;
@@ -422,23 +422,23 @@ export class Metadata {
     return this.tables[table]?.rows ?? 0;
   }
 
-  /** Valeur brute d'une colonne (ligne 1-based). */
+  /** Raw value of a column (1-based row). */
   raw(table: number, row: number, col: string): number {
     const tb = this.tables[table];
     const c = tb?.cols.get(col);
     if (!tb || !c || row < 1 || row > tb.rows)
-      throw new Error(`table ${table} ligne ${row} colonne ${col} invalide`);
+      throw new Error(`table ${table} row ${row} column ${col} invalid`);
     const o = tb.base + (row - 1) * tb.size + c.off;
     return c.size === 2 ? this.b.getUint16(o, true) : this.b.getUint32(o, true);
   }
 
-  /** Index codé ou index de table décodé. */
+  /** Decoded coded index or table index. */
   ref(table: number, row: number, col: string): Ref {
     const c = this.tables[table]?.cols.get(col)?.col;
     const v = this.raw(table, row, col);
     if (typeof c === "object") return { table: c.t, row: v };
     if (typeof c !== "string" || !(c in CODED))
-      throw new Error(`colonne ${col} non indexée`);
+      throw new Error(`column ${col} not an index`);
     const [bits, tabs] = CODED[c as Coded];
     return { table: tabs[v & ((1 << bits) - 1)] ?? -1, row: v >>> bits };
   }
@@ -469,7 +469,7 @@ export class Metadata {
     return this.bytes.subarray(r.pos, r.pos + n);
   }
 
-  /** Littéral utilisateur (#US) : UTF-16LE + octet final (§24.2.4). */
+  /** User literal (#US): UTF-16LE + final byte (§24.2.4). */
   userString(idx: number): string {
     const r = new Reader(this.bytes, this.us + idx);
     const n = r.compressed();
@@ -491,7 +491,7 @@ export class Metadata {
     return `${le(0, 4)}-${le(4, 2)}-${le(6, 2)}-${h.slice(8, 10).join("")}-${h.slice(10).join("")}`;
   }
 
-  /** Fin (exclusive) d'une liste de lignes (FieldList, MethodList, ParamList) : début de la ligne suivante. */
+  /** End (exclusive) of a row list (FieldList, MethodList, ParamList): start of the next row. */
   listEnd(table: number, row: number, col: string, target: number): number {
     return row < this.rows(table)
       ? this.raw(table, row + 1, col)
@@ -499,7 +499,7 @@ export class Metadata {
   }
 }
 
-/** Lecture séquentielle d'un blob (entiers compressés §23.2). */
+/** Sequential blob reader (compressed integers §23.2). */
 export class Reader {
   constructor(
     readonly bytes: Uint8Array,
@@ -510,7 +510,7 @@ export class Reader {
     return this.pos >= this.end;
   }
   u8(): number {
-    if (this.pos >= this.end) throw new Error("blob tronqué");
+    if (this.pos >= this.end) throw new Error("truncated blob");
     return this.bytes[this.pos++]!;
   }
   peek(): number {
@@ -529,7 +529,7 @@ export class Reader {
     );
   }
   view(n: number): DataView {
-    if (this.pos + n > this.end) throw new Error("blob tronqué");
+    if (this.pos + n > this.end) throw new Error("truncated blob");
     const v = new DataView(
       this.bytes.buffer,
       this.bytes.byteOffset + this.pos,
@@ -538,7 +538,7 @@ export class Reader {
     this.pos += n;
     return v;
   }
-  /** SerString (§23.3) : longueur compressée, 0xFF = null, UTF-8. */
+  /** SerString (§23.3): compressed length, 0xFF = null, UTF-8. */
   serString(): string | null {
     if (this.peek() === 0xff) {
       this.pos++;
@@ -551,7 +551,7 @@ export class Reader {
   }
 }
 
-/** Types d'éléments (§23.1.16). */
+/** Element types (§23.1.16). */
 export const E = {
   END: 0x00,
   VOID: 0x01,
@@ -594,7 +594,7 @@ export const E = {
   ENUM: 0x55,
 } as const;
 
-/** Conventions d'appel (§23.2.1, §23.2.3 ; 0x09 = « unmanaged » étendu, C# `delegate* unmanaged`). */
+/** Calling conventions (§23.2.1, §23.2.3; 0x09 = extended "unmanaged", C# `delegate* unmanaged`). */
 export const CallConv = {
   DEFAULT: 0,
   C: 1,
@@ -635,7 +635,7 @@ function typeToken(r: Reader): Ref {
   };
 }
 
-/** Modificateurs (modreq/modopt) en tête de type : retournés à part. */
+/** Modifiers (modreq/modopt) at the head of a type: returned separately. */
 function mods(r: Reader): Ref[] {
   const out: Ref[] = [];
   while (r.peek() === E.CMOD_OPT || r.peek() === E.CMOD_REQD) {
@@ -732,7 +732,7 @@ export type Attribute = {
   error?: string;
 };
 
-/** Assemblage lu : noms, types, méthodes, attributs. */
+/** Assembly read: names, types, methods, attributes. */
 export class Assembly {
   readonly md: Metadata;
   readonly name: string;
@@ -797,7 +797,7 @@ export class Assembly {
     }
   }
 
-  /** Nom complet d'un TypeDef/TypeRef/TypeSpec (types imbriqués séparés par « + », comme Type.GetType). */
+  /** Full name of a TypeDef/TypeRef/TypeSpec (nested types separated by "+", like Type.GetType). */
   typeName(ref: Ref): string {
     const md = this.md;
     if (ref.table === T.TypeDef) {
@@ -820,13 +820,13 @@ export class Assembly {
     return `?${ref.table}:${ref.row}`;
   }
 
-  /** TypeDef de base (Extends) en nom complet, ou "". */
+  /** Base TypeDef (Extends) as a full name, or "". */
   baseName(td: number): string {
     const e = this.md.ref(T.TypeDef, td, "Extends");
     return e.row ? this.typeName(e) : "";
   }
 
-  /** TypeDef local d'un nom complet (pour suivre un TypeRef vers ce même assemblage, cas rare). */
+  /** Local TypeDef of a full name (to follow a TypeRef to this same assembly, rare case). */
   findTypeDef(full: string): number {
     if (!this.byName) {
       this.byName = new Map();
@@ -853,7 +853,7 @@ export class Assembly {
     return this.fieldOffsets.get(f);
   }
 
-  /** Valeur de la table Constant pour un champ/paramètre/propriété. */
+  /** Value of the Constant table for a field/parameter/property. */
   constant(parent: Ref): AttrValue | undefined {
     const i = this.constants.get(`${parent.table}:${parent.row}`);
     if (!i) return undefined;
@@ -864,7 +864,7 @@ export class Assembly {
     return readPrim(new Reader(blob), type);
   }
 
-  /** Attributs personnalisés d'un élément (Parent = HasCustomAttribute), décodés. */
+  /** Custom attributes of an element (Parent = HasCustomAttribute), decoded. */
   attributes(parent: Ref): Attribute[] {
     const md = this.md;
     return (this.attrs.get(`${parent.table}:${parent.row}`) ?? []).map((i) => {
@@ -897,7 +897,7 @@ export class Assembly {
     });
   }
 
-  /** Blob d'attribut (§23.3) : prologue 0x0001, arguments fixes, arguments nommés. */
+  /** Attribute blob (§23.3): prologue 0x0001, fixed arguments, named arguments. */
   private decodeAttribute(
     blob: Uint8Array,
     ctor: MethodSig,
@@ -912,7 +912,7 @@ export class Assembly {
     if (r.end - r.pos < 2) return { fixed, named };
     const n = r.view(2).getUint16(0, true);
     for (let i = 0; i < n; i++) {
-      r.u8(); // FIELD (0x53) ou PROPERTY (0x54)
+      r.u8(); // FIELD (0x53) or PROPERTY (0x54)
       const ft = readFieldOrPropType(r);
       const name = r.serString() ?? "";
       named[name] = this.readElem(r, ft);
@@ -942,7 +942,7 @@ export class Assembly {
 
   private readonly enumByName = new Map<string, number>();
 
-  /** Élément d'argument nommé ou d'object encadré (§23.3). */
+  /** Named argument element or boxed object (§23.3). */
   private readElem(r: Reader, ft: FieldOrProp): AttrValue {
     switch (ft.e) {
       case E.STRING:
@@ -951,7 +951,7 @@ export class Assembly {
       case E.BOXED:
         return this.readElem(r, readFieldOrPropType(r));
       case E.ENUM: {
-        // Énumération : type sous-jacent résolu si elle est définie ici, sinon Int32 (énumérations d'interop externes).
+        // Enumeration: underlying type resolved if defined here, otherwise Int32 (external interop enumerations).
         const name = (ft.enumType ?? "").split(",")[0]!.trim();
         let e = this.enumByName.get(name);
         if (e === undefined) {
@@ -975,7 +975,7 @@ export class Assembly {
     }
   }
 
-  /** Type sous-jacent d'une énumération locale (champ d'instance value__) ; undefined si externe. */
+  /** Underlying type of a local enumeration (instance field value__); undefined if external. */
   enumUnderlying(ref: Ref): number | undefined {
     if (ref.table !== T.TypeDef) return undefined;
     const md = this.md;
@@ -990,7 +990,7 @@ export class Assembly {
   }
 }
 
-/** FieldOrPropType (§23.3) : code + précisions éventuelles. */
+/** FieldOrPropType (§23.3): code + optional details. */
 type FieldOrProp = { e: number; of?: FieldOrProp; enumType?: string };
 function readFieldOrPropType(r: Reader): FieldOrProp {
   const e = r.u8();
@@ -1025,18 +1025,18 @@ function readPrim(r: Reader, e: number): number | bigint | boolean {
     case E.R8:
       return r.view(8).getFloat64(0, true);
     default:
-      throw new Error(`élément 0x${e.toString(16)} non primitif`);
+      throw new Error(`element 0x${e.toString(16)} not primitive`);
   }
 }
 
-/** Ouvre un assemblage IL (PE + en-tête CLI). Un binaire NativeAOT n'a pas de métadonnées : erreur explicite. */
+/** Opens an IL assembly (PE + CLI header). A NativeAOT binary has no metadata: explicit error. */
 export function readAssembly(buf: ArrayBuffer): Assembly {
   const pe = parsePe(buf);
-  if (!pe) throw new Error("pas un fichier PE");
+  if (!pe) throw new Error("not a PE file");
   const cli = pe.dir(14);
   if (!cli.rva)
     throw new Error(
-      "pas d'en-tête CLI (répertoire 14) : binaire natif (NativeAOT ?) et non assemblage IL",
+      "no CLI header (directory 14): native binary (NativeAOT?) and not an IL assembly",
     );
   const o = pe.off(cli.rva);
   const mdRva = pe.view.getUint32(o + 8, true);

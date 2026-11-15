@@ -1,4 +1,4 @@
-// CoreCLR hébergé dans bun par hostfxr (assemblage IL + .runtimeconfig.json). Processus distinct du test NativeAOT.
+// CoreCLR hosted in bun by hostfxr (IL assembly + .runtimeconfig.json). Separate process from the NativeAOT test.
 import { beforeAll, describe, expect, test } from "bun:test";
 import { sharedChecks } from "./checks.ts";
 import { hostDotnet, openHosted } from "./hostfxr.ts";
@@ -17,9 +17,9 @@ describe.skipIf(!builtHosted)("Nt.Interop CoreCLR (hostfxr)", () => {
     ctx = { b, api: openHosted(b, paths.il) };
   });
 
-  test("méthode sans EntryPoint joignable, code dynamique actif", () => {
+  test("method without EntryPoint reachable, dynamic code active", () => {
     expect(ctx.api.dynamicCode?.()).toBe(1);
-    expect(hostDotnet("").init).toBeGreaterThanOrEqual(0); // même hôte : pas de réinitialisation
+    expect(hostDotnet("").init).toBeGreaterThanOrEqual(0); // same host: no reinitialization
   });
 
   sharedChecks("CoreCLR", () => ctx, false);

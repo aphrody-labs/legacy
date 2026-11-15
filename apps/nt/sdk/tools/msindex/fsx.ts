@@ -1,4 +1,4 @@
-// Parcours de fichiers triés (ordre déterministe), empreintes SHA-256 et état git des dépôts sources.
+// Walk of sorted files (deterministic order), SHA-256 digests and git state of the source repositories.
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 

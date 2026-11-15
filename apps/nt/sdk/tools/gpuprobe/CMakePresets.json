@@ -2,9 +2,9 @@
   "version": 10,
   "cmakeMinimumRequired": { "major": 4, "minor": 5, "patch": 0 },
   "$comment": [
-    "`import std` : stable depuis CMake 4.5, générateurs Ninja uniquement (Help/release/4.5.rst, cmake-cxxmodules(7)).",
-    "Lancer dans l'environnement VS : `bun ../vsdev.ts cmake --workflow --preset windows` (just probe) ;",
-    "vsdev.ts fournit cl, VCPKG_ROOT, VSCMD_ARG_TGT_ARCH (x64 | arm64) et CMake 4.5.0 / Ninja 1.13.2 épinglés (sdk/tools/fetch-tools.ts)."
+    "`import std`: stable since CMake 4.5, Ninja generators only (Help/release/4.5.rst, cmake-cxxmodules(7)).",
+    "Run in the VS environment: `bun ../vsdev.ts cmake --workflow --preset windows` (just probe);",
+    "vsdev.ts provides cl, VCPKG_ROOT, VSCMD_ARG_TGT_ARCH (x64 | arm64) and the pinned CMake 4.5.0 / Ninja 1.13.2 (sdk/tools/fetch-tools.ts)."
   ],
   "configurePresets": [
     {

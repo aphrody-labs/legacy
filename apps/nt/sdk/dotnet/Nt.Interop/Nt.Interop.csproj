@@ -1,22 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Nt.Interop : faits réels de l'hôte exposés en ABI C, consommés par bun:ffi sans node-api-dotnet.
-       Deux sorties du même code (docs/bun/dotnet-native.md) :
-       - dotnet publish -r <rid> : bibliothèque NativeAOT (exports [UnmanagedCallersOnly(EntryPoint)]) ; Learn « Building native libraries » ;
-       - dotnet build : assemblage IL + .runtimeconfig.json (EnableDynamicLoading) pour l'hôte CoreCLR via hostfxr.
-       L'assemblage IL est aussi l'entrée du générateur sdk/tools/dotnet-ffi/gen.ts (métadonnées ECMA-335).
-       Compilé en CI uniquement. -->
+  <!-- Nt.Interop: real host facts exposed as a C ABI, consumed by bun:ffi without node-api-dotnet.
+       Two outputs of the same code (docs/bun/dotnet-native.md):
+       - dotnet publish -r <rid>: NativeAOT library (exports [UnmanagedCallersOnly(EntryPoint)]); Learn "Building native libraries";
+       - dotnet build: IL assembly + .runtimeconfig.json (EnableDynamicLoading) for the CoreCLR host via hostfxr.
+       The IL assembly is also the input of the generator sdk/tools/dotnet-ffi/gen.ts (ECMA-335 metadata).
+       Built in CI only. -->
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <!-- PublishAot seulement pour la publication native (-r <rid>) : sinon le SDK écrit les commutateurs AOT dans le
-         .runtimeconfig.json du build IL (EnableConsumingManagedCodeFromNativeHosting=false, IsDynamicCodeSupported=false)
-         et hostfxr refuse le composant (HostFeatureDisabled, 0x800080a7). Constaté avec le SDK 11.0.100 le 2026-11-12. -->
+    <!-- PublishAot only for native publishing (-r <rid>): otherwise the SDK writes the AOT switches into the
+         .runtimeconfig.json of the IL build (EnableConsumingManagedCodeFromNativeHosting=false, IsDynamicCodeSupported=false)
+         and hostfxr rejects the component (HostFeatureDisabled, 0x800080a7). Observed with SDK 11.0.100 on 2026-11-12. -->
     <PublishAot Condition="'$(RuntimeIdentifier)' != ''">true</PublishAot>
     <IsAotCompatible>true</IsAotCompatible>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <!-- CA1031 : aucune exception ne doit traverser une frontière UnmanagedCallersOnly (échec immédiat du processus) ;
-         CA1051/CA1815 : structures d'interop blittables à champs publics, sans égalité. -->
+    <!-- CA1031: no exception may cross an UnmanagedCallersOnly boundary (immediate process failure);
+         CA1051/CA1815: blittable interop structs with public fields, without equality. -->
     <NoWarn>$(NoWarn);CA1031;CA1051;CA1815</NoWarn>
   </PropertyGroup>
 </Project>

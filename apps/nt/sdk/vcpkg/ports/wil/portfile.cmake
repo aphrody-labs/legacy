@@ -1,5 +1,5 @@
-# Port aphrody-labs : portfile de microsoft/vcpkg@177e8175 (ports/wil) sans cpp14.patch (nt compile en C++23),
-# source = fork épinglé par commit ; WIL_BUILD_PACKAGING=OFF (évite le téléchargement de nuget.exe à la configuration).
+# aphrody-labs port: portfile of microsoft/vcpkg@177e8175 (ports/wil) without cpp14.patch (nt builds as C++23),
+# source = fork pinned by commit; WIL_BUILD_PACKAGING=OFF (avoids downloading nuget.exe at configuration).
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO aphrody-labs/wil
@@ -8,7 +8,7 @@ vcpkg_from_github(
     HEAD_REF master
 )
 
-# En-têtes seulement : une seule configuration suffit.
+# Headers only: a single configuration is enough.
 set(VCPKG_BUILD_TYPE release)
 
 vcpkg_cmake_configure(

@@ -1,4 +1,4 @@
-// NativeAOT : dlopen du binaire publié + modèle lu dans l'assemblage IL. Ignoré sans artefacts (`just interop`, CI).
+// NativeAOT: dlopen of the published binary + model read from the IL assembly. Skipped without artifacts (`just interop`, CI).
 import { beforeAll, describe, expect, test } from "bun:test";
 import { sharedChecks } from "./checks.ts";
 import { readAssembly } from "./ecma335.ts";
@@ -12,7 +12,7 @@ describe.skipIf(!built)("Nt.Interop NativeAOT", () => {
     ctx = { b, api: b.openNative(paths.native) };
   });
 
-  test("modèle ECMA-335 : exports, disposition, énumérations", async () => {
+  test("ECMA-335 model: exports, layout, enumerations", async () => {
     const m = buildModel(readAssembly(await Bun.file(paths.il).arrayBuffer()));
     expect(m.rejected).toEqual([]);
     const byEntry = new Map(m.exports.map((x) => [x.entryPoint, x]));
@@ -44,7 +44,7 @@ describe.skipIf(!built)("Nt.Interop NativeAOT", () => {
     ).toMatchObject({ Fixed: 3, Ram: 6 });
   });
 
-  test("API native : méthode sans EntryPoint absente", () => {
+  test("native API: method without EntryPoint absent", () => {
     expect(ctx.api.dynamicCode).toBeUndefined();
     expect(ctx.b.methods.filter((x) => x.entryPoint).length).toBe(
       Object.keys(ctx.api).length,

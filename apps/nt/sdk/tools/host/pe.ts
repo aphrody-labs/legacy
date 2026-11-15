@@ -1,5 +1,5 @@
-// Lecture PE/COFF (Learn « PE Format ») : en-têtes, sections, répertoires de données, exports, imports, ressources.
-// Partagé par pe-icon.ts (icônes) et ntmap.ts (carte du Windows NT de ce poste).
+// PE/COFF reading (Learn "PE Format"): headers, sections, data directories, exports, imports, resources.
+// Shared by pe-icon.ts (icons) and ntmap.ts (Windows NT map of this machine).
 
 export type Pe = {
   view: DataView;
@@ -62,7 +62,7 @@ export function parsePe(buf: ArrayBuffer): Pe | null {
   };
 }
 
-/** Noms exportés (IMAGE_EXPORT_DIRECTORY, répertoire 0). */
+/** Exported names (IMAGE_EXPORT_DIRECTORY, directory 0). */
 export function exportsOf(p: Pe): string[] {
   const d = p.dir(0);
   const o = d.rva ? p.off(d.rva) : -1;
@@ -83,7 +83,7 @@ export type ExportEntry = {
   forwarder?: string;
 };
 
-/** Table d'exports complète : nom, ordinal, RVA ; une RVA dans le répertoire d'exports est une redirection (« dll.nom »). */
+/** Complete export table: name, ordinal, RVA; an RVA inside the export directory is a forwarder ("dll.name"). */
 export function exportTable(p: Pe): ExportEntry[] {
   const d = p.dir(0);
   const o = d.rva ? p.off(d.rva) : -1;
@@ -108,7 +108,7 @@ export function exportTable(p: Pe): ExportEntry[] {
   });
 }
 
-/** Fonctions importées par DLL (thunks par nom ; « #n » pour un import par ordinal), PE32 et PE32+. */
+/** Functions imported per DLL (thunks by name; "#n" for an import by ordinal), PE32 and PE32+. */
 export function importFunctions(p: Pe): { dll: string; name: string }[] {
   const d = p.dir(1);
   let o = d.rva ? p.off(d.rva) : -1;
@@ -138,7 +138,7 @@ export function importFunctions(p: Pe): { dll: string; name: string }[] {
   return out;
 }
 
-/** DLL importées (IMAGE_IMPORT_DESCRIPTOR, répertoire 1, 20 octets par entrée, terminées par une entrée nulle). */
+/** Imported DLLs (IMAGE_IMPORT_DESCRIPTOR, directory 1, 20 bytes per entry, ended by a null entry). */
 export function importsOf(p: Pe): string[] {
   const d = p.dir(1);
   let o = d.rva ? p.off(d.rva) : -1;
@@ -152,7 +152,7 @@ export function importsOf(p: Pe): string[] {
   return out;
 }
 
-/** Entrées d'un IMAGE_RESOURCE_DIRECTORY (répertoire 2) : id ou nom, décalage (bit 31 = sous-répertoire). */
+/** Entries of an IMAGE_RESOURCE_DIRECTORY (directory 2): id or name, offset (bit 31 = subdirectory). */
 export function resourceEntries(p: Pe, dirOff: number) {
   const b = p.view;
   const n = b.getUint16(dirOff + 12, true) + b.getUint16(dirOff + 14, true);

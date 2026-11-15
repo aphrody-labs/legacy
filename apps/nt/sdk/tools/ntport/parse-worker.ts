@@ -1,6 +1,6 @@
-// Worker d'analyse syntaxique (tree-sitter C/C++, grammaires wasm) : un fichier source -> fonctions, état d'implémentation,
-// appels, types, inclusions. L'arbre est concret et tolérant aux erreurs : les macros non développées (WINAPI, NTAPI…)
-// produisent des nœuds ERROR locaux sans empêcher l'extraction des définitions.
+// Syntax analysis worker (tree-sitter C/C++, wasm grammars): one source file -> functions, implementation state,
+// calls, types, includes. The tree is concrete and error tolerant: unexpanded macros (WINAPI, NTAPI…)
+// produce local ERROR nodes without preventing the extraction of definitions.
 import { Language, type Node, Parser } from "web-tree-sitter";
 
 declare const self: Worker;
@@ -133,7 +133,7 @@ function analyze(file: string, text: string): FileInfo {
         const fn = c?.childForFieldName("function");
         if (!fn) continue;
         if (fn.type === "identifier") calls.add(fn.text);
-        // Wine : FIXME("… stub …") marque une fonction non implémentée.
+        // Wine: FIXME("… stub …") marks an unimplemented function.
         if (
           fn.text === "FIXME" &&
           /stub/i.test(c!.childForFieldName("arguments")?.text ?? "")

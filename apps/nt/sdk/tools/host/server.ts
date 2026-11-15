@@ -1,11 +1,11 @@
-// Serveur bun de nt : modèle 3D du noyau Windows en direct (rendu GPU pur), index NTFS de %SystemRoot%, icônes réelles
-// des PE, bureau vectorisé en SVG.
-//   /                noyau NT en 3D (WebGPU, aucun texte DOM)   WebSocket /kernel : échantillons ntdll (ntsys.ts)
-//   /api/icon?path=  icône réelle d'un PE (.ico)                /api/index/{stats,tree,search} : SQLite (winindex.ts)
-//   /desktop.svg     bureau entier (UI Automation)              /stats : mesures d'affichage (?report=1)
-//   /api/msindex/{stats,search,node/:id} : pile Microsoft indexée et prouvée (sdk/tools/msindex)
-//   /api/gpu         adaptateurs DXGI et périphérique D3D12 réels (src/drivers/gpu/dx12 via @aphrody/ffi-bridge)
-// Usage : bun src/host/server.ts   [PORT=8787] [NT_HZ=15]
+// nt bun server: live 3D model of the Windows kernel (pure GPU rendering), NTFS index of %SystemRoot%, real icons
+// of the PE files, desktop vectorized as SVG.
+//   /                3D NT kernel (WebGPU, no DOM text)         WebSocket /kernel: ntdll samples (ntsys.ts)
+//   /api/icon?path=  real icon of a PE (.ico)                   /api/index/{stats,tree,search}: SQLite (winindex.ts)
+//   /desktop.svg     whole desktop (UI Automation)              /stats: display measurements (?report=1)
+//   /api/msindex/{stats,search,node/:id}: indexed and proven Microsoft stack (sdk/tools/msindex)
+//   /api/gpu         real DXGI adapters and D3D12 device (src/drivers/gpu/dx12 via @aphrody/ffi-bridge)
+// Usage: bun src/host/server.ts   [PORT=8787] [NT_HZ=15]
 import {
   dx12Adapters,
   dx12Device,
@@ -49,13 +49,13 @@ let svgCache: { at: number; svg: string } | null = null;
 const json = (v: unknown) =>
   Response.json(v, { headers: { "cache-control": "no-store" } });
 const noIndex = () =>
-  new Response("index absent : just index", { status: 404 });
+  new Response("index missing: just index", { status: 404 });
 const msindexPath = new URL("target/index/msindex.sqlite", root);
 const msindex = (await Bun.file(msindexPath).exists())
   ? new Database(Bun.fileURLToPath(msindexPath), { readonly: true })
   : null;
 const noMsindex = () =>
-  new Response("msindex absent : just msindex <src>", { status: 404 });
+  new Response("msindex missing: just msindex <src>", { status: 404 });
 
 const server = Bun.serve({
   port,
@@ -97,7 +97,7 @@ const server = Bun.serve({
     "/api/gpu": () => {
       if (!loadDx12Hal())
         return new Response(
-          "dx12_hal.dll absent : cargo build -p dx12-hal --release (src)",
+          "dx12_hal.dll missing: cargo build -p dx12-hal --release (src)",
           { status: 404 },
         );
       try {
@@ -139,7 +139,7 @@ const server = Bun.serve({
       const children = index.query(
         "SELECT id, name, path, files, bytes FROM dirs WHERE parent = ? ORDER BY bytes DESC LIMIT ?",
       );
-      // Exécutable le plus volumineux de chaque dossier de premier niveau : son icône réelle représente le dossier.
+      // Largest executable of each top-level folder: its real icon represents the folder.
       const exe = index.query(
         "SELECT d.path || '\\' || f.name p FROM files f JOIN dirs d ON d.id = f.dir WHERE f.ext = 'exe' AND (d.path = ?1 OR d.path LIKE ?1 || '\\%') ORDER BY f.size DESC LIMIT 1",
       );
@@ -174,11 +174,11 @@ const server = Bun.serve({
           .all(`"${q.replace(/"/g, '""')}"`),
       );
     },
-    // Pile Microsoft indexée et prouvée (sdk/tools/msindex, just msindex <src>) : bilan, recherche, nœud avec enfants et preuves.
+    // Indexed and proven Microsoft stack (sdk/tools/msindex, just msindex <src>): summary, search, node with children and proofs.
     "/api/msindex/stats": async () => {
       const lock = Bun.file(new URL("docs/msindex/lock.json", root));
       if (!(await lock.exists()))
-        return new Response("msindex absent : just msindex <src>", {
+        return new Response("msindex missing: just msindex <src>", {
           status: 404,
         });
       const l = await lock.json();
@@ -239,7 +239,7 @@ const server = Bun.serve({
         ws.send(
           JSON.stringify({
             type: "error",
-            message: "échantillonneur NT disponible sous Windows uniquement",
+            message: "NT sampler available on Windows only",
           }),
         );
         return;
@@ -261,7 +261,7 @@ if (sampler) {
   setInterval(() => {
     if (server.subscriberCount("kernel") === 0) return;
     const frame = sampler.fast();
-    // Nouveaux pid : chemin Win32 réel de l'image (QueryFullProcessImageNameW), une fois par pid.
+    // New pids: real Win32 image path (QueryFullProcessImageNameW), once per pid.
     const u = new Uint32Array(frame);
     const base = 8 + 16 + u[1]! * 8;
     const fresh: number[] = [];

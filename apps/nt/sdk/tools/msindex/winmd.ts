@@ -1,6 +1,6 @@
-// Lecture générique d'un fichier de métadonnées ECMA-335 (winmd WinRT, Windows.Win32.winmd, assemblage de référence .NET)
-// vers le graphe : espace de noms > type > membre, signatures, attributs WinRT/Win32, documentation XML voisine.
-// Fonctions Win32 : table ImplMap (DLL et point d'entrée), relevées pour la preuve par le chargeur.
+// Generic reading of an ECMA-335 metadata file (WinRT winmd, Windows.Win32.winmd, .NET reference assembly)
+// into the graph: namespace > type > member, signatures, WinRT/Win32 attributes, neighbouring XML documentation.
+// Win32 functions: ImplMap table (DLL and entry point), recorded for the loader proof.
 import {
   type Assembly,
   E,
@@ -24,7 +24,7 @@ export type WinmdResult = {
   documented: number;
 };
 
-/** Documentation XML (fichier .xml voisin) : « T:/M:/P:/E:/F:nom » (paramètres retirés) -> résumé. */
+/** XML documentation (neighbouring .xml file): "T:/M:/P:/E:/F:name" (parameters removed) -> summary. */
 export async function readDocs(file: string): Promise<Map<string, string>> {
   const m = new Map<string, string>();
   const f = Bun.file(file.replace(/\.(winmd|dll)$/i, ".xml"));
@@ -142,7 +142,7 @@ const kindOf = (a: Assembly, td: number) => {
   return "class";
 };
 
-/** Indexe un fichier de métadonnées sous `parent`. `publicOnly` : types et membres non publics ignorés (assemblages .NET). */
+/** Indexes a metadata file under `parent`. `publicOnly`: non-public types and members ignored (.NET assemblies). */
 export async function indexWinmd(
   g: Graph,
   parent: number,
@@ -157,7 +157,7 @@ export async function indexWinmd(
   let members = 0;
   let documented = 0;
 
-  // Tables d'association précalculées (une passe chacune).
+  // Precomputed association tables (one pass each).
   const genericParams = new Map<number, string[]>();
   for (let i = 1; i <= md.rows(T.GenericParam); i++) {
     const o = md.ref(T.GenericParam, i, "Owner");
@@ -202,7 +202,7 @@ export async function indexWinmd(
   for (let td = 2; td <= md.rows(T.TypeDef); td++) {
     const flags = md.raw(T.TypeDef, td, "Flags");
     const vis = flags & 0x7;
-    if (publicOnly && vis !== 1 && vis !== 2) continue; // Public ou NestedPublic
+    if (publicOnly && vis !== 1 && vis !== 2) continue; // Public or NestedPublic
     const full = a.typeName({ table: T.TypeDef, row: td });
     const ns =
       md.str(T.TypeDef, td, "TypeNamespace") ||
@@ -277,7 +277,7 @@ export async function indexWinmd(
     ) {
       const mf = md.raw(T.MethodDef, m, "Flags");
       const name = md.str(T.MethodDef, m, "Name");
-      if (mf & 0x800 && name !== ".ctor") continue; // accesseurs : couverts par propriétés et événements
+      if (mf & 0x800 && name !== ".ctor") continue; // accessors: covered by properties and events
       if (publicOnly && (mf & 0x7) !== 6 && (mf & 0x7) !== 4) continue;
       const s = readMethodSig(new Reader(md.blob(T.MethodDef, m, "Signature")));
       const pn: string[] = [];
@@ -338,7 +338,7 @@ export async function indexWinmd(
   return { asm: a, types, imports, members, documented };
 }
 
-/** Types exposés par un assemblage d'implémentation : TypeDef publics et redirections ExportedType (type forwarding). */
+/** Types exposed by an implementation assembly: public TypeDefs and ExportedType forwarders (type forwarding). */
 export function exposedTypes(a: Assembly): Map<string, string> {
   const md = a.md;
   const out = new Map<string, string>();

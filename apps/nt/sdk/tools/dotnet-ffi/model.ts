@@ -1,8 +1,8 @@
-// Modèle d'interop extrait des métadonnées : méthodes [UnmanagedCallersOnly], structures blittables, énumérations.
-// Conventions (attributs marqueurs lus par nom simple, sans effet à l'exécution .NET) :
-//   [Utf8] byte* / [Utf16] char*            paramètre chaîne d'entrée (JS string)
-//   [Utf8Buffer] byte* / [Utf16Buffer] char* suivi d'un int capacité, retour int = longueur -> la liaison renvoie une string
-//   [Utf8] / [Utf16] sur un tampon fixe      champ chaîne d'une structure
+// Interop model extracted from the metadata: [UnmanagedCallersOnly] methods, blittable structs, enums.
+// Conventions (marker attributes read by simple name, no effect at .NET run time):
+//   [Utf8] byte* / [Utf16] char*            input string parameter (JS string)
+//   [Utf8Buffer] byte* / [Utf16Buffer] char* followed by an int capacity, int return = length -> the binding returns a string
+//   [Utf8] / [Utf16] on a fixed buffer      string field of a struct
 import {
   type Assembly,
   E,
@@ -18,7 +18,7 @@ import {
 const UCO = "System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute";
 const FIXED = "System.Runtime.CompilerServices.FixedBufferAttribute";
 
-/** Type d'interop : primitif bun:ffi, pointeur, rappel, structure (par pointeur) ou énumération. */
+/** Interop type: bun:ffi primitive, pointer, callback, struct (by pointer) or enum. */
 export type Ty =
   | { k: "prim"; ffi: Ffi; size: number }
   | { k: "ptr"; to?: string; elem?: Ffi }
@@ -96,7 +96,7 @@ const PRIM: Record<number, [Ffi, number]> = {
   [E.U8]: ["u64", 8],
   [E.R4]: ["f32", 4],
   [E.R8]: ["f64", 8],
-  // nint/nuint : poignées et pointeurs (bun:ffi ne cible que des processus 64 bits : x64, arm64).
+  // nint/nuint: handles and pointers (bun:ffi only targets 64-bit processes: x64, arm64).
   [E.I]: ["ptr", 8],
   [E.U]: ["ptr", 8],
 };
@@ -150,19 +150,19 @@ export function buildModel(asm: Assembly): Model {
       const full = asm.typeName(s.ref);
       if (!td)
         throw new Error(
-          `${where} : structure externe ${full} (définir les structures d'interop dans l'assemblage)`,
+          `${where}: external struct ${full} (define the interop structs in the assembly)`,
         );
       if (asm.baseName(td) === "System.Enum") return enumOf(td);
       const st = structOf(td);
       return { k: "struct", name: st.name, full: st.full };
     }
     throw new Error(
-      `${where} : ${s.k} non blittable (UnmanagedCallersOnly exige des types blittables)`,
+      `${where}: ${s.k} not blittable (UnmanagedCallersOnly requires blittable types)`,
     );
   };
 
   const fnSig = (m: MethodSig, where: string): FnSig => {
-    if (m.generic) throw new Error(`${where} : méthode générique`);
+    if (m.generic) throw new Error(`${where}: generic method`);
     const conv =
       m.conv === 9
         ? m.retMods
@@ -175,7 +175,7 @@ export function buildModel(asm: Assembly): Model {
     return {
       conv,
       ret: ty(m.ret, `${where} retour`),
-      params: m.params.map((p, i) => ty(p, `${where} paramètre ${i}`)),
+      params: m.params.map((p, i) => ty(p, `${where} parameter ${i}`)),
     };
   };
 
@@ -207,7 +207,7 @@ export function buildModel(asm: Assembly): Model {
     return { k: "enum", name: en.name, ffi: p[0], size: p[1] };
   };
 
-  /** Disposition (§II.10.1.2, ClassLayout/FieldLayout) : séquentielle (Pack, ClassSize) ou explicite ; 64 bits. */
+  /** Layout (§II.10.1.2, ClassLayout/FieldLayout): sequential (Pack, ClassSize) or explicit; 64-bit. */
   const structOf = (td: number): Struct => {
     const cached = structs.get(td);
     if (cached) return cached;
@@ -306,11 +306,11 @@ export function buildModel(asm: Assembly): Model {
     const where = `${type}.${method}`;
     try {
       if (!(md.raw(T.MethodDef, m, "Flags") & 0x10))
-        throw new Error("méthode d'instance");
+        throw new Error("instance method");
       const sig = readMethodSig(
         new Reader(md.blob(T.MethodDef, m, "Signature")),
       );
-      if (sig.generic) throw new Error("méthode générique");
+      if (sig.generic) throw new Error("generic method");
       const names: string[] = [];
       const markers: (Marker | undefined)[] = [];
       let retMarker: Marker | undefined;
@@ -329,11 +329,11 @@ export function buildModel(asm: Assembly): Model {
       }
       if (retMarker)
         throw new Error(
-          `marqueur ${retMarker} sur le retour (utiliser un paramètre ${retMarker}Buffer)`,
+          `marker ${retMarker} on the return (use a ${retMarker}Buffer parameter)`,
         );
       const params = sig.params.map((s, i) => ({
         name: names[i] || `arg${i}`,
-        ty: ty(s, `${where} paramètre ${i}`),
+        ty: ty(s, `${where} parameter ${i}`),
         marker: markers[i],
       }));
       for (const [i, p] of params.entries()) {
@@ -347,7 +347,7 @@ export function buildModel(asm: Assembly): Model {
           const cap = params[i + 1];
           if (!cap || cap.ty.k !== "prim" || cap.ty.ffi !== "i32")
             throw new Error(
-              `${p.name} : [${p.marker}] doit être suivi d'un int capacité`,
+              `${p.name}: [${p.marker}] must be followed by an int capacity`,
             );
         }
       }
@@ -357,7 +357,7 @@ export function buildModel(asm: Assembly): Model {
         !(ret.k === "prim" && ret.ffi === "i32")
       ) {
         throw new Error(
-          "tampon de chaîne : le retour doit être un int (longueur)",
+          "string buffer: the return must be an int (length)",
         );
       }
       const callConvs = Array.isArray(uco.named.CallConvs)
@@ -380,7 +380,7 @@ export function buildModel(asm: Assembly): Model {
       rejected.push({ method: where, reason: (e as Error).message });
     }
   }
-  // Collisions de noms JS (même méthode dans deux types, surcharges) : préfixe du type, puis point d'entrée.
+  // JS name collisions (same method in two types, overloads): type prefix, then entry point.
   const count = (k: (x: Export) => string) =>
     exports.reduce(
       (m, x) => m.set(k(x), (m.get(k(x)) ?? 0) + 1),

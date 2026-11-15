@@ -1,16 +1,16 @@
-// Évaluation statique des CMakeLists.txt de LiberNT : modules (add_library / add_executable), sources, type de module
-// (set_module_type), exports (spec2def), dépendances (add_importlibs, add_delay_importlibs, target_link_libraries).
-// Langage CMake (cmake-language(7)) : commandes « nom(arguments) », arguments entre guillemets, crochets ou nus, ${VAR}.
-// Conditions : if/elseif/else évalués pour la configuration cible (ARCH, définitions connues) ; une condition inconnue est
-// considérée vraie et le module est marqué « conditional ».
+// Static evaluation of the LiberNT CMakeLists.txt: modules (add_library / add_executable), sources, module type
+// (set_module_type), exports (spec2def), dependencies (add_importlibs, add_delay_importlibs, target_link_libraries).
+// CMake language (cmake-language(7)): commands "name(arguments)", arguments quoted, bracketed or bare, ${VAR}.
+// Conditions: if/elseif/else evaluated for the target configuration (ARCH, known definitions); an unknown condition is
+// considered true and the module is marked "conditional".
 import { join, relative } from "node:path";
 import { slash } from "../msindex/fsx.ts";
 
 export type Module = {
   name: string;
   kind: "library" | "executable";
-  dir: string; // relatif à la racine LiberNT
-  sources: string[]; // relatifs à la racine LiberNT
+  dir: string; // relative to the LiberNT root
+  sources: string[]; // relative to the LiberNT root
   type?: string; // win32dll, kernelmodedriver, nativecui…
   spec?: string;
   imports: string[];
@@ -165,7 +165,7 @@ export async function evaluate(root: string, defs: Record<string, string>) {
     if (!(await f.exists())) return;
     files.push(slash(relative(root, file)));
     const cmds = tokenize(await f.text());
-    // Pile des conditions : [actif, déjà pris, inconnu].
+    // Condition stack: [active, already taken, unknown].
     const stack: { on: boolean; taken: boolean; unknown: boolean }[] = [];
     const active = () => stack.every((s) => s.on);
     const unknown = () => stack.some((s) => s.unknown);
@@ -292,7 +292,7 @@ export async function evaluate(root: string, defs: Record<string, string>) {
           break;
         }
         case "spec2def": {
-          // spec2def(<module>.dll <fichier>.spec …) : le module porte le nom du binaire sans extension.
+          // spec2def(<module>.dll <file>.spec …): the module takes the name of the binary without extension.
           const bin = expand(a[0] ?? "", local);
           const spec = slash(
             relative(root, join(dir, expand(a[1] ?? "", local))),
@@ -330,7 +330,7 @@ export async function evaluate(root: string, defs: Record<string, string>) {
     }
   };
   await run(root, new Map());
-  // Nom de module -> spec : spec2def appelé avant add_library est rattaché ici.
+  // Module name -> spec: spec2def called before add_library is attached here.
   return {
     modules: [...modules.values()].sort((x, y) =>
       x.dir + x.name < y.dir + y.name ? -1 : 1,

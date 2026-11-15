@@ -1,8 +1,8 @@
-// Échantillonneur du noyau Windows NT en direct (bun:ffi -> ntdll). Aucune compilation : appels natifs depuis bun.
-// Structures et classes d'information : winsiderss/phnt @53fbbdc5 (2026-03-26), ntexapi.h / ntkeapi.h / ntldr.h /
-// ntobapi.h ; décalages x64 recalculés depuis ces définitions (tailles connues : SYSTEM_PROCESS_INFORMATION 0x100,
+// Live Windows NT kernel sampler (bun:ffi -> ntdll). No compilation: native calls from bun.
+// Structures and information classes: winsiderss/phnt @53fbbdc5 (2026-03-26), ntexapi.h / ntkeapi.h / ntldr.h /
+// ntobapi.h; x64 offsets recomputed from these definitions (known sizes: SYSTEM_PROCESS_INFORMATION 0x100,
 // SYSTEM_THREAD_INFORMATION 0x50, RTL_PROCESS_MODULE_INFORMATION 0x128).
-// Trame binaire « rapide » (processeurs, compteurs, processus, threads) + objet « lent » (pilotes, pool, espace de noms).
+// "Fast" binary frame (processors, counters, processes, threads) + "slow" object (drivers, pool, namespace).
 import { dlopen, ptr } from "bun:ffi";
 export {
   FRAME,
@@ -43,7 +43,7 @@ const Class = {
 const retLen = new Uint32Array(1);
 const bufs = new Map<number, Uint8Array>();
 
-/** NtQuerySystemInformation avec tampon réutilisé (agrandi si STATUS_INFO_LENGTH_MISMATCH). */
+/** NtQuerySystemInformation with a reused buffer (grown on STATUS_INFO_LENGTH_MISMATCH). */
 function query(cls: number, initial: number): DataView {
   let b = bufs.get(cls) ?? new Uint8Array(initial);
   for (let i = 0; i < 8; i++) {
@@ -67,7 +67,7 @@ function query(cls: number, initial: number): DataView {
 }
 
 const utf16 = new TextDecoder("utf-16le");
-/** UNICODE_STRING dont le tampon pointe dans `view` (le noyau recopie les chaînes dans le tampon de sortie). */
+/** UNICODE_STRING whose buffer points into `view` (the kernel copies the strings into the output buffer). */
 function ustr(view: DataView, at: number, base: number): string {
   const len = view.getUint16(at, true);
   const p = Number(view.getBigUint64(at + 8, true));
@@ -118,7 +118,7 @@ export function createSampler() {
     const perf = query(Class.Performance, 512);
     const pv = query(Class.Process, 1 << 22);
 
-    // Processus et threads : premier passage pour compter.
+    // Processes and threads: first pass to count.
     let nproc = 0;
     let nthread = 0;
     for (let off = 0; ;) {
@@ -201,7 +201,7 @@ export function createSampler() {
       syscalls: perf.getUint32(308, true),
     };
     const cur = [P.syscalls, P.ctx, P.faults, P.ioRead, P.ioWrite, P.ioOps];
-    // Compteurs ULONG : rebouclage à 2^32 corrigé ; compteurs 64 bits (octets d'E/S) : différence directe.
+    // ULONG counters: wraparound at 2^32 corrected; 64-bit counters (I/O bytes): direct difference.
     const rate = (k: number) => {
       if (!dt || !prevPerf.length) return 0;
       const delta = cur[k]! - prevPerf[k]!;
@@ -307,7 +307,7 @@ export function createSampler() {
     return out.slice(0, bytes);
   }
 
-  // --- Lent : pilotes, pool, espace de noms du gestionnaire d'objets ---------------------------------------
+  // --- Slow: drivers, pool, object manager namespace ---------------------------------------
   let prevPool = new Map<string, number>();
   let prevPoolT = 0;
   function slow(): Slow {
@@ -387,8 +387,8 @@ export function createSampler() {
   };
 }
 
-/** Types d'objets du noyau (NtQueryObject(NULL, ObjectTypesInformation = 3)) : OBJECT_TYPE_INFORMATION x64 = 104 octets,
- * nom à la suite, entrées alignées sur 8 ; première entrée à 8 (phnt ntobapi.h). */
+/** Kernel object types (NtQueryObject(NULL, ObjectTypesInformation = 3)): OBJECT_TYPE_INFORMATION x64 = 104 bytes,
+ * name follows, entries aligned on 8; first entry at 8 (phnt ntobapi.h). */
 let typesBuf = new Uint8Array(1 << 16);
 export function objectTypes(): Slow["objectTypes"] {
   const len = new Uint32Array(1);
@@ -426,7 +426,7 @@ export function objectTypes(): Slow["objectTypes"] {
   return out.sort((a, b) => b.objects - a.objects);
 }
 
-/** Contenu d'un répertoire du gestionnaire d'objets (NtOpenDirectoryObject + NtQueryDirectoryObject). */
+/** Contents of an object manager directory (NtOpenDirectoryObject + NtQueryDirectoryObject). */
 export function listDirectory(path: string): { name: string; type: string }[] {
   const name = new Uint8Array(Buffer.from(path, "utf16le"));
   const us = new DataView(new ArrayBuffer(16));

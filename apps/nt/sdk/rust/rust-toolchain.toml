@@ -1,4 +1,4 @@
-# Nightly épinglée (static.rust-lang.org/dist/2026-11-11 : rustc 1.102.0-nightly 9c5648833) ; windows-reactor exige rust 1.95+.
+# Pinned nightly (static.rust-lang.org/dist/2026-11-11: rustc 1.102.0-nightly 9c5648833); windows-reactor requires rust 1.95+.
 [toolchain]
 channel = "nightly-2026-11-11"
 components = ["rustfmt", "clippy"]

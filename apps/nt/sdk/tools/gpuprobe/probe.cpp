@@ -1,6 +1,6 @@
-// nt-gpu-probe — capacités D3D12 réelles du GPU. C++23 `import std;` (CMake 4.5, MSVC), WIL, DirectX-Headers (vcpkg).
-// Aucun en-tête de la bibliothèque standard C++ à côté de `import std` (Learn « Standard library named module considerations ») :
-// WIL sans exceptions (WIL_SUPPRESS_EXCEPTIONS => WIL_USE_STL 0, wil/common.h) n'inclut ni <tuple>, ni <iterator>, ni <new>.
+// nt-gpu-probe — real D3D12 capabilities of the GPU. C++23 `import std;` (CMake 4.5, MSVC), WIL, DirectX-Headers (vcpkg).
+// No C++ standard library header next to `import std` (Learn "Standard library named module considerations"):
+// WIL without exceptions (WIL_SUPPRESS_EXCEPTIONS => WIL_USE_STL 0, wil/common.h) includes neither <tuple>, nor <iterator>, nor <new>.
 #define NOMINMAX
 #define WIL_SUPPRESS_EXCEPTIONS
 #include <windows.h>
@@ -9,7 +9,7 @@
 #include <wil/com.h>
 import std;
 
-// Agility SDK 1.620 (Learn « D3D12SDKVersion symbol ») ; D3D12Core.dll copié dans .\D3D12\ par CMake (POST_BUILD).
+// Agility SDK 1.620 (Learn "D3D12SDKVersion symbol"); D3D12Core.dll copied to .\D3D12\ by CMake (POST_BUILD).
 extern "C" { __declspec(dllexport) extern const UINT D3D12SDKVersion = 620; }
 extern "C" { __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\"; }
 

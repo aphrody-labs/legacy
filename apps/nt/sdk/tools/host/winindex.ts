@@ -1,8 +1,8 @@
-// Index complet d'une arborescence Windows (défaut : %SystemRoot%) dans SQLite (bun:sqlite, FTS5 trigramme).
-// Énumération : FindFirstFileExW(FindExInfoBasic, FIND_FIRST_EX_LARGE_FETCH) / FindNextFileW via bun:ffi — une seule
-// passe, tailles et dates sans stat supplémentaire (WIN32_FIND_DATAW, Learn minwinbase.h). Points d'analyse
-// (jonctions, liens) enregistrés sans être suivis. En-têtes PE (exe, dll, sys…) : machine, sous-système, horodatage.
-// Usage : bun src/host/winindex.ts [racine] [--pe]      -> target/index/windows.sqlite
+// Full index of a Windows tree (default: %SystemRoot%) in SQLite (bun:sqlite, FTS5 trigram).
+// Enumeration: FindFirstFileExW(FindExInfoBasic, FIND_FIRST_EX_LARGE_FETCH) / FindNextFileW via bun:ffi — a single
+// pass, sizes and dates without extra stat (WIN32_FIND_DATAW, Learn minwinbase.h). Reparse points
+// (junctions, links) recorded without being followed. PE headers (exe, dll, sys…): machine, subsystem, timestamp.
+// Usage: bun src/host/winindex.ts [root] [--pe]      -> target/index/windows.sqlite
 import { Database } from "bun:sqlite";
 import { dlopen } from "bun:ffi";
 import { mkdirSync } from "node:fs";
@@ -39,7 +39,7 @@ export function openIndex(path = DB_PATH, create = false) {
   return db;
 }
 
-/** Indexe `root` (récursif). Renvoie les compteurs. */
+/** Indexes `root` (recursive). Returns the counters. */
 export function build(root: string, dbPath = DB_PATH) {
   const db = openIndex(dbPath, true);
   db.run("PRAGMA synchronous = OFF");
@@ -123,7 +123,7 @@ export function build(root: string, dbPath = DB_PATH) {
     }
   })();
 
-  // Agrégats récursifs par dossier (fichiers et octets), du plus profond au moins profond.
+  // Recursive aggregates per folder (files and bytes), from the deepest to the shallowest.
   db.run("CREATE INDEX files_dir ON files(dir)");
   db.run("CREATE INDEX files_ext ON files(ext)");
   db.run("CREATE INDEX dirs_parent ON dirs(parent)");
@@ -154,7 +154,7 @@ export function build(root: string, dbPath = DB_PATH) {
   return stats;
 }
 
-/** En-têtes PE (MZ -> PE\0\0 -> IMAGE_FILE_HEADER + champs optionnels) des binaires indexés. */
+/** PE headers (MZ -> PE\0\0 -> IMAGE_FILE_HEADER + optional fields) of the indexed binaries. */
 export async function peHeaders(dbPath = DB_PATH) {
   const db = openIndex(dbPath);
   const rows = db
@@ -189,7 +189,7 @@ export async function peHeaders(dbPath = DB_PATH) {
           r.id,
         ]);
       } catch {
-        // fichier verrouillé ou refusé : ignoré
+        // locked or denied file: ignored
       }
     }
   };

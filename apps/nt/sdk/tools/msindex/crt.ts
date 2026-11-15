@@ -1,8 +1,8 @@
-// Bibliothèques C/C++ de base de Microsoft :
-//   - UCRT : déclarations _ACRTIMP/_DCRTIMP des en-têtes Windows Kits\10\Include\<sdk>\ucrt, reliées aux exports de ucrtbase.dll ;
-//   - CRT/STL MSVC livrés dans System32 (vcruntime140*, msvcp140*, concrt140, vccorlib140) : exports, noms C++ dédécorés
-//     par UnDecorateSymbolName (dbghelp), regroupés par portée (std::, Concurrency::…) ;
-//   - module `import std` : déclarations marquées _EXPORT_STD dans les en-têtes MSVC (ce que std.ixx exporte).
+// Base Microsoft C/C++ libraries:
+//   - UCRT: _ACRTIMP/_DCRTIMP declarations of the Windows Kits\10\Include\<sdk>\ucrt headers, linked to the ucrtbase.dll exports;
+//   - MSVC CRT/STL shipped in System32 (vcruntime140*, msvcp140*, concrt140, vccorlib140): exports, C++ names undecorated
+//     by UnDecorateSymbolName (dbghelp), grouped by scope (std::, Concurrency::…);
+//   - `import std` module: declarations marked _EXPORT_STD in the MSVC headers (what std.ixx exports).
 import { basename, join } from "node:path";
 import { exportsOf, parsePe } from "../host/pe.ts";
 import { files, slash } from "./fsx.ts";
@@ -30,7 +30,7 @@ export async function indexCrt(
   system32: string,
   msvc: string,
 ) {
-  const exports = new Map<string, number>(); // nom exporté (ucrtbase) -> nœud
+  const exports = new Map<string, number>(); // exported name (ucrtbase) -> node
   const dllNodes = new Map<string, number>();
   for (const dll of CRT_DLLS) {
     const p = join(system32, dll);
@@ -52,7 +52,7 @@ export async function indexCrt(
     const scopes = new Map<string, number>();
     for (const n of names) {
       const u = und.get(n);
-      // Portée : « std::vector<…>::push_back » -> std ; nom C : préfixe jusqu'au premier « _ » significatif, sinon « (C) ».
+      // Scope: "std::vector<…>::push_back" -> std; C name: prefix up to the first significant "_", otherwise "(C)".
       const scope = u
         ? (/(?:\s|^)((?:[A-Za-z_]\w*::)+)/.exec(u)?.[1]?.split("::")[0] ??
           "(global)")
@@ -67,7 +67,7 @@ export async function indexCrt(
     }
   }
 
-  // En-têtes UCRT.
+  // UCRT headers.
   const hdr = g.add(parent, "headers", "ucrt", slash(ucrtInclude));
   let declared = 0;
   let linked = 0;
@@ -97,12 +97,12 @@ export async function indexCrt(
         Boolean(e),
         e
           ? ""
-          : "absent des exports de ucrtbase.dll (inline, macro ou bibliothèque statique)",
+          : "absent from the ucrtbase.dll exports (inline, macro or static library)",
       );
     }
   }
 
-  // Module `import std` : déclarations _EXPORT_STD des en-têtes MSVC.
+  // `import std` module: _EXPORT_STD declarations of the MSVC headers.
   const inc = join(msvc, "include");
   const mod = g.add(
     parent,

@@ -1,7 +1,7 @@
-// Icônes réelles des binaires Windows : ressource RT_GROUP_ICON (14) + RT_ICON (3) d'un PE (exe, dll, cpl…),
-// réassemblées en fichier .ico (une image, la plus proche de 48 px) que le navigateur décode en ImageBitmap (GPU).
-// Format : PE/COFF (Learn « PE Format » : répertoire de ressources = entrée de données 2), GRPICONDIR / ICONDIR.
-// Chemins de processus : OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) + QueryFullProcessImageNameW (kernel32).
+// Real icons of Windows binaries: RT_GROUP_ICON (14) + RT_ICON (3) resource of a PE (exe, dll, cpl…),
+// reassembled into an .ico file (one image, the closest to 48 px) that the browser decodes into an ImageBitmap (GPU).
+// Format: PE/COFF (Learn "PE Format": resource directory = data entry 2), GRPICONDIR / ICONDIR.
+// Process paths: OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION) + QueryFullProcessImageNameW (kernel32).
 import { dlopen } from "bun:ffi";
 import { parsePe, resourceEntries } from "./pe.ts";
 
@@ -26,7 +26,7 @@ const wide = (s: string) => new Uint8Array(Buffer.from(`${s}\0`, "utf16le"));
 
 const pathBuf = new Uint8Array(2 * 1024);
 const pathLen = new Uint32Array(1);
-/** Chemin Win32 complet de l'image d'un processus (vide si refusé : processus protégés, Idle, System). */
+/** Full Win32 path of a process image (empty if denied: protected processes, Idle, System). */
 export function processPath(pid: number): string {
   if (pid <= 4) return "";
   const h = k32.symbols.OpenProcess(0x1000, 0, pid);
@@ -41,7 +41,7 @@ export function processPath(pid: number): string {
   }
 }
 
-/** FSCTL_GET_NTFS_VOLUME_DATA (0x90064) : géométrie réelle du volume NTFS et de sa MFT (Learn winioctl.h). */
+/** FSCTL_GET_NTFS_VOLUME_DATA (0x90064): real geometry of the NTFS volume and its MFT (Learn winioctl.h). */
 export function ntfsVolume(
   letter = (process.env.SystemDrive ?? "C:").slice(0, 1),
 ) {
@@ -98,7 +98,7 @@ export function ntfsVolume(
   }
 }
 
-/** Extrait l'icône (la plus proche de `want` px, profondeur maximale) d'un PE et la renvoie au format .ico. */
+/** Extracts the icon (closest to `want` px, maximum depth) of a PE and returns it in .ico format. */
 export async function iconOf(
   path: string,
   want = 48,
@@ -115,7 +115,7 @@ export async function iconOf(
   if (!pe || res < 0) return null;
   const b = pe.view;
   const sub = (off: number) => res + (off & 0x7fffffff);
-  // Descend jusqu'à la première feuille (nom -> langue -> IMAGE_RESOURCE_DATA_ENTRY).
+  // Descend to the first leaf (name -> language -> IMAGE_RESOURCE_DATA_ENTRY).
   const leaf = (dirOff: number): { at: number; size: number } | null => {
     let e = resourceEntries(pe, dirOff)[0];
     while (e && e.off & 0x80000000) e = resourceEntries(pe, sub(e.off))[0];
@@ -151,7 +151,7 @@ export async function iconOf(
   const v = new DataView(ico.buffer);
   v.setUint16(2, 1, true);
   v.setUint16(4, 1, true);
-  ico.set(new Uint8Array(buf, best, 8), 6); // largeur, hauteur, couleurs, réservé, plans, bits
+  ico.set(new Uint8Array(buf, best, 8), 6); // width, height, colors, reserved, planes, bits
   v.setUint32(14, img.size, true);
   v.setUint32(18, 22, true);
   ico.set(new Uint8Array(buf, img.at, img.size), 22);
@@ -169,9 +169,9 @@ if (import.meta.main) {
     console.log(
       p,
       ico
-        ? `${ico.byteLength} octets, ${ico[6] || 256}px ${ico[12]}bpp`
-        : "aucune icône",
+        ? `${ico.byteLength} bytes, ${ico[6] || 256}px ${ico[12]}bpp`
+        : "no icon",
     );
   }
-  console.log("pid courant :", processPath(process.pid));
+  console.log("current pid:", processPath(process.pid));
 }

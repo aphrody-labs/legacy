@@ -1,4 +1,4 @@
-# Conventions des échantillons windows-rs (crates/samples/reactor/*) : version 0.0.0, édition 2024, non publié.
+# windows-rs sample conventions (crates/samples/reactor/*): version 0.0.0, edition 2024, unpublished.
 [package]
 name = "reactor-winui-hello"
 version = "0.0.0"

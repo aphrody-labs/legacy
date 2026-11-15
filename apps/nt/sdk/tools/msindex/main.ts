@@ -1,16 +1,16 @@
-// msindex : index récursif de bout en bout de la pile Microsoft présente sur ce poste, prouvé sur le système en marche.
-//   Win32 + WDK (win32metadata / wdkmetadata, ECMA-335)  WinRT du système (Windows.winmd)  Windows App SDK + WinUI 3
-//   (winmd NuGet + sources WindowsAppSDK / microsoft-ui-xaml)  .NET 10 et 11 (packs de référence + runtime partagé)
-//   windows-rs (monorepo nt : crates, fonctionnalités, liens vers les espaces de noms)  UCRT, CRT/STL MSVC, `import std`.
-// Méthode :
-//   - lecture des métadonnées par le format normalisé ECMA-335 (Partition II) que produisent MIDL, win32metadata et Roslyn ;
-//   - preuves par les mécanismes de Windows (system.ts) : API Sets du PEB, chargeur (LoadLibraryExW + GetProcAddress),
-//     registre WinRT + RoGetActivationFactory, exports PE, redirections de types .NET (ExportedType) ;
-//   - reproductibilité : chaque entrée est verrouillée (SHA-256 par fichier ; arbres de fichiers : SHA-256 de la liste triée
-//     « chemin SHA-256 », à la manière d'un arbre git ; dépôts : commit ; NuGet : SHA-512 du paquet vérifié contre le
-//     catalogue nuget.org) ; parcours triés et identifiants séquentiels ; empreinte SHA-256 du graphe canonique.
-// Sorties : target/index/msindex.sqlite (node, edge, proof, fts), docs/msindex/lock.json (entrées + empreintes), README.md.
-// Usage : bun sdk/tools/msindex/main.ts --src <racine src> [--verify] [--no-activate]
+// msindex: end-to-end recursive index of the Microsoft stack present on this machine, proven on the running system.
+//   Win32 + WDK (win32metadata / wdkmetadata, ECMA-335)  system WinRT (Windows.winmd)  Windows App SDK + WinUI 3
+//   (NuGet winmd + WindowsAppSDK / microsoft-ui-xaml sources)  .NET 10 and 11 (reference packs + shared runtime)
+//   windows-rs (nt monorepo: crates, features, links to namespaces)  UCRT, MSVC CRT/STL, `import std`.
+// Method:
+//   - metadata read through the standard ECMA-335 format (Partition II) produced by MIDL, win32metadata and Roslyn;
+//   - proofs through Windows mechanisms (system.ts): PEB API Sets, loader (LoadLibraryExW + GetProcAddress),
+//     WinRT registry + RoGetActivationFactory, PE exports, .NET type forwarders (ExportedType);
+//   - reproducibility: every input is locked (SHA-256 per file; file trees: SHA-256 of the sorted list
+//     "path SHA-256", like a git tree; repositories: commit; NuGet: SHA-512 of the package checked against the
+//     nuget.org catalog); sorted walks and sequential identifiers; SHA-256 fingerprint of the canonical graph.
+// Outputs: target/index/msindex.sqlite (node, edge, proof, fts), docs/msindex/lock.json (entries + fingerprints), README.md.
+// Usage: bun sdk/tools/msindex/main.ts --src <src root> [--verify] [--no-activate]
 import { readFileSync, realpathSync } from "node:fs";
 import { homedir } from "node:os";
 import { basename, dirname, join, relative, resolve } from "node:path";
@@ -31,7 +31,7 @@ import { exposedTypes, type Import, indexWinmd } from "./winmd.ts";
 
 if (process.platform !== "win32")
   throw new Error(
-    "msindex : Windows uniquement (preuves sur le système en marche)",
+    "msindex: Windows only (proofs on the running system)",
   );
 const arg = (n: string) => {
   const i = process.argv.indexOf(n);
@@ -40,9 +40,9 @@ const arg = (n: string) => {
 const srcArg = arg("--src");
 if (!srcArg)
   throw new Error(
-    "usage : bun sdk/tools/msindex/main.ts --src <racine src> [--verify] [--no-activate]",
+    "usage: bun sdk/tools/msindex/main.ts --src <src root> [--verify] [--no-activate]",
   );
-// Chemin POSIX d'un shell Windows (/c/src, niubash ou msys) -> chemin Windows.
+// POSIX path of a Windows shell (/c/src, niubash or msys) -> Windows path.
 const src = resolve(
   srcArg.replace(
     /^\/([a-z])(?=\/|$)/i,
@@ -53,21 +53,21 @@ const verify = process.argv.includes("--verify");
 const activateClasses = !process.argv.includes("--no-activate");
 const nt = join(import.meta.dir, "..", "..", "..");
 const METHOD: Record<string, string> = {
-  "apiset-host": "PEB->ApiSetMap : le contrat a une DLL hôte",
+  "apiset-host": "PEB->ApiSetMap: the contract has a host DLL",
   "pe-export":
-    "contrat API Set résolu, nom présent dans la table d'exports PE de l'hôte",
+    "API Set contract resolved, name present in the PE export table of the host",
   loader:
     "LoadLibraryExW(DONT_RESOLVE_DLL_REFERENCES) + GetProcAddress (processus enfant)",
   "winrt-registered":
     "HKLM\\SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId",
   "activation-export": "DllPath exporte DllGetActivationFactory",
   RoGetActivationFactory:
-    "fabrique obtenue (IID_IActivationFactory), classes en processus",
+    "factory obtained (IID_IActivationFactory), in-process classes",
   "wasdk-activation":
-    "appxfragment du paquet -> DLL du paquet exportant DllGetActivationFactory",
+    "appxfragment of the package -> DLL of the package exporting DllGetActivationFactory",
   "dotnet-impl":
-    "type de référence défini (TypeDef) par le runtime partagé, redirections ExportedType suivies",
-  "ucrtbase-export": "déclaration _ACRTIMP exportée par ucrtbase.dll",
+    "reference type defined (TypeDef) by the shared runtime, ExportedType forwarders followed",
+  "ucrtbase-export": "_ACRTIMP declaration exported by ucrtbase.dll",
 };
 const t0 = performance.now();
 const log = (s: string) =>
@@ -75,12 +75,12 @@ const log = (s: string) =>
     `[msindex ${((performance.now() - t0) / 1000).toFixed(1)}s] ${s}`,
   );
 
-// ---------------------------------------------------------------- racines (aucun chemin en dur : environnement, registre, outils)
+// ---------------------------------------------------------------- roots (no hard-coded path: environment, registry, tools)
 const system32 = join(process.env.SystemRoot!, "System32");
 const nuget =
   process.env.NUGET_PACKAGES ?? join(homedir(), ".nuget", "packages");
 const dotnetExe = Bun.which("dotnet");
-if (!dotnetExe) throw new Error("dotnet absent du PATH");
+if (!dotnetExe) throw new Error("dotnet not in PATH");
 const dotnet = dirname(realpathSync(dotnetExe));
 const kits = hklmString(
   "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
@@ -127,7 +127,7 @@ const roots: Record<string, string> = {
   nt,
 };
 
-// ---------------------------------------------------------------- verrou des entrées
+// ---------------------------------------------------------------- input lock
 type Input = { root: string; path: string; size: number; sha256: string };
 const inputs: Input[] = [];
 const rel = (p: string) => {
@@ -139,7 +139,7 @@ const rel = (p: string) => {
       p.toLowerCase().startsWith(r.toLowerCase() + "/")
     )
       return { root: k, path: slash(p.slice(r.length + 1)) };
-  throw new Error(`entrée hors racines : ${p}`);
+  throw new Error(`entry outside the roots: ${p}`);
 };
 const lock = async (p: string) => {
   const f = Bun.file(p);
@@ -156,7 +156,7 @@ const lockTree = async (dir: string, re: RegExp) => {
   inputs.push({ ...rel(dir), size, sha256: `tree:${h.digest("hex")}` });
 };
 
-// Métadonnées WDK (NuGet Microsoft.Windows.WDK.Win32Metadata) : dernière version du flux, SHA-512 vérifié contre le catalogue.
+// WDK metadata (NuGet Microsoft.Windows.WDK.Win32Metadata): latest version of the feed, SHA-512 checked against the catalog.
 const wdkId = "microsoft.windows.wdk.win32metadata";
 const prev = (await Bun.file(join(nt, "docs", "msindex", "lock.json")).exists())
   ? await Bun.file(join(nt, "docs", "msindex", "lock.json")).json()
@@ -203,7 +203,7 @@ if (!isDir(wdkDir)) {
 }
 const wdkWinmd = files(wdkDir, /\.winmd$/i)[0]!;
 log(
-  `racines : dotnet ${dotnet} ; MSVC ${msvcVer} ; UCRT ${ucrtVer} ; WDK metadata ${wdkVersion}`,
+  `roots: dotnet ${dotnet}; MSVC ${msvcVer}; UCRT ${ucrtVer}; WDK metadata ${wdkVersion}`,
 );
 
 // ---------------------------------------------------------------- graphe
@@ -212,7 +212,7 @@ const root = g.add(0, "index", "msindex", "Microsoft end to end", {});
 const shippedTypes = new Map<string, number>();
 const allImports: Import[] = [];
 
-// 1. Win32, WDK, WinRT du système (windows-rs : crates/libs/default) — même métadonnées que la génération des crates.
+// 1. Win32, WDK, system WinRT (windows-rs: crates/libs/default) — same metadata as the crate generation.
 const meta = g.add(root, "source", "metadata", "Windows metadata (ECMA-335)");
 const rsDefault = join(repos["windows-rs"], "crates", "libs", "default");
 for (const f of [
@@ -235,11 +235,11 @@ for (const f of [
     imports: r.imports.length,
   });
   log(
-    `${basename(f)} : ${r.types.size} types, ${r.members} membres, ${r.imports.length} fonctions importées`,
+    `${basename(f)}: ${r.types.size} types, ${r.members} members, ${r.imports.length} imported functions`,
   );
 }
 
-// 2. Windows App SDK (paquets NuGet de la version épinglée) + sources.
+// 2. Windows App SDK (NuGet packages of the pinned version) + sources.
 const wasdk = g.add(
   root,
   "source",
@@ -318,10 +318,10 @@ const srcLinks = await indexSources(
   shippedTypes,
 );
 log(
-  `Windows App SDK ${wasdkVersion} : ${fragments.length} enregistrements d'activation ; ${srcLinks.sourceTypes.size} types IDL ; ${srcLinks.features.size} fonctionnalités`,
+  `Windows App SDK ${wasdkVersion}: ${fragments.length} activation registrations; ${srcLinks.sourceTypes.size} IDL types; ${srcLinks.features.size} features`,
 );
 
-// 3. .NET 10 et 11 : packs de référence Microsoft.NETCore.App.Ref (API publique) et runtime partagé (implémentation).
+// 3. .NET 10 and 11: Microsoft.NETCore.App.Ref reference packs (public API) and shared runtime (implementation).
 const net = g.add(root, "source", ".NET", "Microsoft.NETCore.App");
 const netProofs: { ref: Map<string, number>; impl: string }[] = [];
 for (const ver of dirs(
@@ -370,14 +370,14 @@ for (const ver of dirs(
   log(`.NET ${ver} : ${types.size} types publics`);
 }
 
-// 4. windows-rs (monorepo nt) : crates du workspace (cargo metadata), fonctionnalités, dépendances internes.
+// 4. windows-rs (nt monorepo): workspace crates (cargo metadata), features, internal dependencies.
 const rs = repoState(repos["windows-rs"]);
 const rsNode = g.add(root, "source", "windows-rs", rs.remote, rs);
 const cm = Bun.spawnSync(
   ["cargo", "metadata", "--no-deps", "--format-version", "1", "--offline"],
   { cwd: repos["windows-rs"] },
 );
-if (cm.exitCode !== 0) throw new Error(`cargo metadata : ${cm.stderr}`);
+if (cm.exitCode !== 0) throw new Error(`cargo metadata: ${cm.stderr}`);
 type Pkg = {
   name: string;
   version: string;
@@ -394,8 +394,8 @@ const nsByName = new Map<string, number>();
 for (const n of g.nodes)
   if (n.kind === "namespace" && !nsByName.has(n.full))
     nsByName.set(n.full, n.id);
-// Métadonnées sources de windows-rs (metadata/{win32,wdk}/*.rdl, produites par crates/tools/win32 à partir des en-têtes du SDK) :
-// un fichier par en-tête ; déclarations de premier niveau du module Win32 reliées aux types et fonctions de Windows.Win32.winmd.
+// Source metadata of windows-rs (metadata/{win32,wdk}/*.rdl, produced by crates/tools/win32 from the SDK headers):
+// one file per header; top-level declarations of the Win32 module linked to the types and functions of Windows.Win32.winmd.
 const rdlRoot = join(repos["windows-rs"], "metadata");
 const headerNode = new Map<string, number>();
 const rdl = g.add(rsNode, "rdl", "metadata", "metadata/{win32,wdk}");
@@ -450,7 +450,7 @@ for (const p of pkgs) {
     const fn = g.add(c, "cargo-feature", f, `${p.name}/${f}`, {
       enables: act.length ? act : undefined,
     });
-    // windows / windows-sys : fonctionnalité = espace de noms WinRT (AI_Actions) ou en-tête Win32 (aclapi).
+    // windows / windows-sys: feature = WinRT namespace (AI_Actions) or Win32 header (aclapi).
     if (/^windows(-sys)?$/.test(p.name))
       g.edge(
         fn,
@@ -468,7 +468,7 @@ for (const p of pkgs)
       crateNode.get(d.name) ?? 0,
       d.kind ? `dep-${d.kind}` : "dep",
     );
-log(`windows-rs : ${pkgs.length} crates`);
+log(`windows-rs: ${pkgs.length} crates`);
 
 // 5. UCRT, CRT/STL MSVC, `import std`.
 const crtNode = g.add(
@@ -488,10 +488,10 @@ const crt = await indexCrt(
   msvc,
 );
 log(
-  `CRT : ${crt.dlls} DLL ; UCRT ${crt.declared} déclarations (${crt.linked} exportées) ; import std ${crt.exported}`,
+  `CRT: ${crt.dlls} DLLs; UCRT ${crt.declared} declarations (${crt.linked} exported); import std ${crt.exported}`,
 );
 
-// ---------------------------------------------------------------- preuves sur le système en marche
+// ---------------------------------------------------------------- proofs on the running system
 const os = {
   caption: hklmString(
     "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
@@ -523,11 +523,11 @@ for (const s of schema.sets) {
     n,
     "apiset-host",
     s.hosts.some((h) => h.host),
-    s.hosts.length ? "" : "contrat sans hôte sur cette édition",
+    s.hosts.length ? "" : "contract without host on this edition",
   );
 }
 
-// Exports PE (statique) des hôtes : DLL utilisateur dans System32, images noyau dans System32 ou System32\drivers.
+// PE exports (static) of the hosts: user DLLs in System32, kernel images in System32 or System32\drivers.
 const peExports = new Map<string, Set<string> | null>();
 const exportsFor = async (file: string) => {
   const k = file.toLowerCase();
@@ -551,7 +551,7 @@ for (const im of allImports) {
     "pe-export",
     Boolean(ex?.has(im.entry)),
     !host
-      ? `contrat ${r.set} sans hôte`
+      ? `contract ${r.set} without host`
       : !ex
         ? `${host} absent`
         : ex.has(im.entry)
@@ -566,10 +566,10 @@ for (const im of allImports) {
       userNodes.push(im.node));
 }
 log(
-  `exports PE : ${allImports.length} fonctions ; chargeur : ${userItems.length}`,
+  `PE exports: ${allImports.length} functions; loader: ${userItems.length}`,
 );
-// Un élément qui fait tomber le processus de preuve ne doit pas invalider les autres : lots coupés en deux en cas d'échec du
-// processus jusqu'à isoler le groupe fautif (preuve en échec avec la cause).
+// An item that crashes the proof process must not invalidate the others: batches split in two when the
+// process fails until the faulty group is isolated (failed proof with the cause).
 async function proveIsolated<T>(
   check: string,
   groups: T[][],
@@ -585,9 +585,9 @@ async function proveIsolated<T>(
       );
     } catch (e) {
       if (gs.length === 1) {
-        const why = `processus de preuve interrompu : ${/panic\([^)]*\): [^\n]*|code \d+/.exec((e as Error).message)?.[0] ?? "échec"}`;
+        const why = `proof process interrupted: ${/panic\([^)]*\): [^\n]*|code \d+/.exec((e as Error).message)?.[0] ?? "failure"}`;
         for (const x of items) g.prove(nodeOf(x), check, false, why);
-        log(`${check} : groupe isolé en échec (${items.length} éléments)`);
+        log(`${check}: group isolated as failed (${items.length} items)`);
         return;
       }
       await go(gs.slice(0, gs.length >> 1));
@@ -616,7 +616,7 @@ await proveIsolated(
   64,
 );
 
-// WinRT du système : registre, DLL, export DllGetActivationFactory, activation de la fabrique (classes en processus).
+// System WinRT: registry, DLL, DllGetActivationFactory export, factory activation (in-process classes).
 const reg = winrtRegistry();
 const toActivate: string[] = [];
 const activateNodes: number[] = [];
@@ -629,7 +629,7 @@ for (const n of g.walk(winrtMeta.id)) {
     "winrt-registered",
     Boolean(r),
     r
-      ? `${basename(r.dll) || "(sans DllPath)"} type ${r.type}`
+      ? `${basename(r.dll) || "(no DllPath)"} type ${r.type}`
       : "absent de ActivatableClassId",
   );
   if (r?.dll) {
@@ -644,7 +644,7 @@ for (const n of g.walk(winrtMeta.id)) {
   if (r && r.type === 0 && activateClasses)
     (toActivate.push(n.full), activateNodes.push(n.id));
 }
-// Activation regroupée par DLL hôte : une fabrique qui fait tomber le processus est isolée avec sa DLL.
+// Activation grouped by host DLL: a factory that crashes the process is isolated with its DLL.
 const byHost = new Map<string, { cls: string; node: number }[]>();
 toActivate.forEach((cls, i) => {
   const k = reg.get(cls)!.dll.toLowerCase();
@@ -661,12 +661,12 @@ await proveIsolated(
   32,
 );
 log(
-  `WinRT : ${reg.size} classes enregistrées ; ${toActivate.length} fabriques activées`,
+  `WinRT: ${reg.size} classes registered; ${toActivate.length} factories activated`,
 );
 
-// Windows App SDK : enregistrement d'activation (appxfragment) -> DLL du paquet -> export DllGetActivationFactory.
+// Windows App SDK: activation registration (appxfragment) -> package DLL -> DllGetActivationFactory export.
 const arch = process.arch === "arm64" ? "win-arm64" : "win-x64";
-// DLL natives de tous les paquets du SDK (un enregistrement peut viser la DLL d'un paquet voisin, ex. WinUI -> dcompi.dll).
+// Native DLLs of all SDK packages (a registration can target the DLL of a neighbouring package, e.g. WinUI -> dcompi.dll).
 const wasdkDlls = new Map<string, string>();
 for (const fr of new Set(fragments.map((f) => f.dir)))
   for (const d of ["runtimes-framework", "runtimes"])
@@ -704,14 +704,14 @@ for (const fr of fragments) {
           "wasdk-activation",
           ok,
           p
-            ? `${slash(relative(nuget, p))}${ok ? "" : " sans DllGetActivationFactory"}`
-            : `${dll} absent des paquets ${wasdkVersion}`,
+            ? `${slash(relative(nuget, p))}${ok ? "" : " without DllGetActivationFactory"}`
+            : `${dll} absent from the ${wasdkVersion} packages`,
         );
     }
   }
 }
 
-// .NET : chaque type public de référence est exposé par l'assemblage d'implémentation (TypeDef ou redirection résolue).
+// .NET: every public reference type is exposed by the implementation assembly (TypeDef or resolved forwarder).
 for (const { ref, impl } of netProofs) {
   if (!isDir(impl)) continue;
   const cache = new Map<string, Map<string, string>>();
@@ -727,7 +727,7 @@ for (const { ref, impl } of netProofs) {
     }
     return cache.get(asm)!;
   };
-  // Redirections : suivies par le type englobant (les types imbriqués suivent leur englobant, ECMA-335 II.22.14).
+  // Forwarders: followed by the enclosing type (nested types follow their enclosing type, ECMA-335 II.22.14).
   const locate = (asm0: string, type: string) => {
     const outer = type.split("+")[0]!;
     let asm = asm0;
@@ -748,7 +748,7 @@ for (const { ref, impl } of netProofs) {
     );
   }
 }
-log(`preuves : ${g.proofs.length}`);
+log(`proofs: ${g.proofs.length}`);
 
 // ---------------------------------------------------------------- sorties
 const graphDigest = g.digest("graph");
@@ -807,7 +807,7 @@ const lockData = {
 };
 
 if (verify) {
-  if (!prev) throw new Error("--verify : docs/msindex/lock.json absent");
+  if (!prev) throw new Error("--verify: docs/msindex/lock.json missing");
   const before = new Map(
     (prev.inputs as Input[]).map((i) => [`${i.root}:${i.path}`, i.sha256]),
   );
@@ -822,9 +822,9 @@ if (verify) {
     JSON.stringify({
       inputsDrift: drift,
       inputsMissing: missing,
-      graph: same ? "identique" : `${prev.digests.graph} -> ${graphDigest}`,
+      graph: same ? "identical" : `${prev.digests.graph} -> ${graphDigest}`,
       proofs:
-        prev.digests.proofs === proofDigest ? "identiques" : "différentes",
+        prev.digests.proofs === proofDigest ? "identical" : "different",
     }),
   );
   if (drift.length || missing.length || !same) process.exit(1);
@@ -835,36 +835,36 @@ if (verify) {
     `${JSON.stringify(lockData, null, 1)}\n`,
   );
   const L = [
-    "# msindex : pile Microsoft indexée et prouvée sur ce poste",
+    "# msindex: Microsoft stack indexed and proven on this machine",
     "",
-    `Généré le ${lockData.date} par \`sdk/tools/msindex\` (\`just msindex <src>\`), vérifiable par \`just msindex-verify <src>\`.`,
-    `Machine : Windows ${os.caption} build ${os.build} (${os.lab}). Index : \`target/index/msindex.sqlite\` (tables node, edge, proof, fts).`,
+    `Generated on ${lockData.date} by \`sdk/tools/msindex\` (\`just msindex <src>\`), verifiable with \`just msindex-verify <src>\`.`,
+    `Machine: Windows ${os.caption} build ${os.build} (${os.lab}). Index: \`target/index/msindex.sqlite\` (tables node, edge, proof, fts).`,
     "",
-    `Empreinte du graphe : \`${graphDigest}\` ; des preuves : \`${proofDigest}\`.`,
+    `Graph fingerprint: \`${graphDigest}\`; proofs: \`${proofDigest}\`.`,
     "",
     "## Sources",
     "",
-    `- Win32 + WDK + WinRT : Windows.Win32.winmd et Windows.winmd de windows-rs (${rs.commit.slice(0, 10)}), Windows.Wdk.winmd (NuGet ${wdkId} ${wdkVersion}, SHA-512 vérifié).`,
-    `- Windows App SDK ${wasdkVersion} : ${g.kids(wasdk).filter((n) => n.kind === "package").length} paquets NuGet ; sources WindowsAppSDK et microsoft-ui-xaml (${srcLinks.sourceTypes.size} types IDL, ${srcLinks.features.size} fonctionnalités).`,
-    `- .NET : ${g
+    `- Win32 + WDK + WinRT: Windows.Win32.winmd and Windows.winmd of windows-rs (${rs.commit.slice(0, 10)}), Windows.Wdk.winmd (NuGet ${wdkId} ${wdkVersion}, SHA-512 verified).`,
+    `- Windows App SDK ${wasdkVersion}: ${g.kids(wasdk).filter((n) => n.kind === "package").length} NuGet packages; WindowsAppSDK and microsoft-ui-xaml sources (${srcLinks.sourceTypes.size} IDL types, ${srcLinks.features.size} features).`,
+    `- .NET: ${g
       .kids(net)
       .map((n) => n.name)
-      .join(", ")} (packs de référence et runtime partagé).`,
-    `- windows-rs : ${pkgs.length} crates du monorepo nt.`,
-    `- C/C++ : UCRT ${ucrtVer} (${crt.declared} déclarations, ${crt.linked} exportées par ucrtbase.dll), ${crt.dlls} DLL CRT/STL, \`import std\` MSVC ${msvcVer} (${crt.exported} noms).`,
-    `- API Sets : schéma v${schema.version} du système, ${schema.count} contrats.`,
+      .join(", ")} (reference packs and shared runtime).`,
+    `- windows-rs: ${pkgs.length} crates of the nt monorepo.`,
+    `- C/C++: UCRT ${ucrtVer} (${crt.declared} declarations, ${crt.linked} exported by ucrtbase.dll), ${crt.dlls} CRT/STL DLLs, MSVC \`import std\` ${msvcVer} (${crt.exported} names).`,
+    `- API Sets: system schema v${schema.version}, ${schema.count} contracts.`,
     "",
-    "## Preuves",
+    "## Proofs",
     "",
-    "| contrôle | réussis | total | méthode |",
+    "| check | passed | total | method |",
     "|---|---|---|---|",
     ...[...summary]
       .sort()
       .map(([k, v]) => `| ${k} | ${v.ok} | ${v.total} | ${METHOD[k] ?? ""} |`),
     "",
-    "## Nœuds par type",
+    "## Nodes by kind",
     "",
-    ...Object.entries(kinds).map(([k, v]) => `- ${k} : ${v}`),
+    ...Object.entries(kinds).map(([k, v]) => `- ${k}: ${v}`),
     "",
   ];
   await Bun.write(join(nt, "docs", "msindex", "README.md"), L.join("\n"));
@@ -878,4 +878,4 @@ if (verify) {
     }),
   );
 }
-log("terminé");
+log("done");

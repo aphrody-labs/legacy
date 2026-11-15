@@ -1,11 +1,11 @@
-// Récupère les binaires épinglés (docs/plan/01-stack.md), selon l'OS hôte :
+// Fetches the pinned binaries (docs/plan/01-stack.md), per host OS:
 //   DXC 1.9.2609 (release GitHub microsoft/DirectXShaderCompiler) -> tools/dxc/<windows|linux>/
 //   Agility SDK 1.620.2 (NuGet Microsoft.Direct3D.D3D12)          -> tools/dxc/microsoft.direct3d.d3d12/
-//   niubash 1.5.0 (Windows : shell des recettes just, SHA256SUMS)  -> tools/niubash/ (ajouté à GITHUB_PATH en CI)
-//   CMake 4.5.0 (Windows : `import std` stable, cmake.org SHA-256)  -> tools/cmake/   (pris par sdk/tools/vsdev.ts)
-//   Ninja 1.13.2 (Windows : générateur requis par `import std`)     -> tools/ninja/   (idem)
-// Usage : bun tools/fetch-tools.ts
-// Extraction : bsdtar de Windows (System32\tar.exe, lit les zip) ; unzip/tar sous Unix.
+//   niubash 1.5.0 (Windows: shell of the just recipes, SHA256SUMS)  -> tools/niubash/ (added to GITHUB_PATH in CI)
+//   CMake 4.5.0 (Windows: stable `import std`, cmake.org SHA-256)   -> tools/cmake/   (picked up by sdk/tools/vsdev.ts)
+//   Ninja 1.13.2 (Windows: generator required by `import std`)      -> tools/ninja/   (same)
+// Usage: bun tools/fetch-tools.ts
+// Extraction: Windows bsdtar (System32\tar.exe, reads zip); unzip/tar on Unix.
 import { appendFile, mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { $ } from "bun";
@@ -61,7 +61,7 @@ if (win) {
   const arch = process.arch === "arm64" ? "arm64" : "x64";
   const asset = `niubash-v${NIUBASH}-win-${arch}.zip`;
   const sha: Record<string, string> = {
-    x64: "bb2e142ec617e91cb48bde8c0fa2b9cce2dc95bfc00857c82cef6a7ad4e12bcc", // SHA256SUMS de la release v1.5.0
+    x64: "bb2e142ec617e91cb48bde8c0fa2b9cce2dc95bfc00857c82cef6a7ad4e12bcc", // SHA256SUMS of the v1.5.0 release
     arm64: "f4b0fab55bd2f3e894bd2aea2f2bf8e02b6661d3d67aa15483ed5cc865d49bb3",
   };
   const nbDir = join(root, "sdk", "tools", "niubash");
@@ -73,15 +73,15 @@ if (win) {
       .update(await Bun.file(join(nbDir, asset)).bytes())
       .digest("hex");
     if (got !== sha[arch])
-      throw new Error(`niubash : SHA256 ${got} != ${sha[arch]}`);
+      throw new Error(`niubash: SHA256 ${got} != ${sha[arch]}`);
     await extract(join(nbDir, asset), nbDir);
   }
   if (process.env.GITHUB_PATH)
     await appendFile(process.env.GITHUB_PATH, `${bin}\n`);
   shell = `, niubash ${NIUBASH} -> ${bin}`;
 
-  // CMake 4.5.0 (cmake.org/files/v4.5/cmake-4.5.0-SHA-256.txt) et Ninja 1.13.2 (digest de la release GitHub) : la sonde
-  // C++23 `import std` exige CMake >= 4.5 et Ninja (cmake-cxxmodules(7)) ; winget et le runner n'ont que CMake 4.4.
+  // CMake 4.5.0 (cmake.org/files/v4.5/cmake-4.5.0-SHA-256.txt) and Ninja 1.13.2 (GitHub release digest): the
+  // C++23 `import std` probe requires CMake >= 4.5 and Ninja (cmake-cxxmodules(7)); winget and the runner only have CMake 4.4.
   const sha256 = async (file: string, want: string) => {
     const got = new Bun.CryptoHasher("sha256")
       .update(await Bun.file(file).bytes())
@@ -133,5 +133,5 @@ if (win) {
   shell += `, CMake ${CMAKE}, Ninja ${NINJA}`;
 }
 console.log(
-  `outils prêts : DXC ${DXC_TAG} (${dxc.os}), Agility SDK ${AGILITY}${shell}`,
+  `tools ready: DXC ${DXC_TAG} (${dxc.os}), Agility SDK ${AGILITY}${shell}`,
 );

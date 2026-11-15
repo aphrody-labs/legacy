@@ -1,6 +1,6 @@
-// Graphe de l'index : nœuds arborescents (parent), arêtes typées, preuves machine. Identifiants séquentiels dans l'ordre de
-// parcours ; tous les parcours sont triés, donc deux exécutions sur les mêmes entrées donnent les mêmes identifiants.
-// Empreinte : SHA-256 de la sérialisation canonique (une ligne JSON par nœud, arête, preuve), indépendante du fichier SQLite.
+// Index graph: tree nodes (parent), typed edges, machine proofs. Sequential identifiers in walk order;
+// all walks are sorted, so two runs on the same inputs give the same identifiers.
+// Fingerprint: SHA-256 of the canonical serialization (one JSON line per node, edge, proof), independent of the SQLite file.
 import { Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
@@ -55,7 +55,7 @@ export class Graph {
   prove(node: number, check: string, ok: boolean, detail = "") {
     this.proofs.push({ node, check, ok, detail });
   }
-  /** Descendants (récursif) d'un nœud, lui compris. */
+  /** Descendants (recursive) of a node, itself included. */
   *walk(id: number): Generator<Node> {
     yield this.node(id);
     for (const c of this.children.get(id) ?? []) yield* this.walk(c);

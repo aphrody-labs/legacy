@@ -1,17 +1,17 @@
-// Héberge CoreCLR dans le processus bun via hostfxr, par bun:ffi seul (ni nethost ni node-api-dotnet).
-// Contrat : dotnet/runtime release/11.0 @ 426561366bbf (2026-11-11), src/native/corehost/hostfxr.h et coreclr_delegates.h ;
-// docs/design/features/native-hosting.md. char_t = UTF-16 sous Windows, UTF-8 ailleurs. Un seul runtime par processus.
+// Hosts CoreCLR in the bun process via hostfxr, with bun:ffi alone (neither nethost nor node-api-dotnet).
+// Contract: dotnet/runtime release/11.0 @ 426561366bbf (2026-11-11), src/native/corehost/hostfxr.h and coreclr_delegates.h;
+// docs/design/features/native-hosting.md. char_t = UTF-16 on Windows, UTF-8 elsewhere. One runtime per process.
 import { CFunction, dlopen, type Pointer } from "bun:ffi";
 import { readdirSync, realpathSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 const win = process.platform === "win32";
-/** hostfxr_delegate_type::hdt_load_assembly_and_get_function_pointer (6e valeur de l'énumération). */
+/** hostfxr_delegate_type::hdt_load_assembly_and_get_function_pointer (6th value of the enumeration). */
 const HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER = 5;
 /** UNMANAGEDCALLERSONLY_METHOD = (const char_t*)-1. */
 const UNMANAGEDCALLERSONLY_METHOD = -1;
 
-/** Chaîne char_t terminée par NUL. */
+/** NUL-terminated char_t string. */
 export const charT = (s: string) =>
   Buffer.from(`${s}\0`, win ? "utf16le" : "utf8");
 
@@ -33,11 +33,11 @@ const newer = (a: string, b: string) => {
     const d = (x.n[i] ?? 0) - (y.n[i] ?? 0);
     if (d) return d > 0;
   }
-  if (!x.pre !== !y.pre) return !x.pre; // une version stable l'emporte sur sa préversion
+  if (!x.pre !== !y.pre) return !x.pre; // a stable version wins over its prerelease
   return (x.pre ?? "") > (y.pre ?? "");
 };
 
-/** Racines .NET candidates, sans chemin en dur : DOTNET_ROOT, puis dossier réel de `dotnet` trouvé dans le PATH. */
+/** Candidate .NET roots, no hard-coded path: DOTNET_ROOT, then the real folder of `dotnet` found in the PATH. */
 export function dotnetRoots(): string[] {
   const roots: string[] = [];
   if (process.env.DOTNET_ROOT) roots.push(process.env.DOTNET_ROOT);
@@ -46,7 +46,7 @@ export function dotnetRoots(): string[] {
   return [...new Set(roots)];
 }
 
-/** Chemin de hostfxr : host/fxr/<version la plus récente>/ de la première racine qui en contient un. */
+/** Path of hostfxr: host/fxr/<latest version>/ of the first root that contains one. */
 export function findHostfxr(): string {
   for (const root of dotnetRoots()) {
     let best = "";
@@ -59,7 +59,7 @@ export function findHostfxr(): string {
     if (best) return join(root, "host", "fxr", best, fxrName);
   }
   throw new Error(
-    `hostfxr introuvable (racines : ${dotnetRoots().join(", ")}) ; définir DOTNET_ROOT`,
+    `hostfxr not found (roots: ${dotnetRoots().join(", ")}); set DOTNET_ROOT`,
   );
 }
 
@@ -67,17 +67,17 @@ const hex = (rc: number) => `0x${(rc >>> 0).toString(16).padStart(8, "0")}`;
 
 export type Host = {
   hostfxr: string;
-  /** Code de hostfxr_initialize_for_runtime_config : 0 premier contexte, 1 runtime déjà initialisé (contexte secondaire). */
+  /** Code of hostfxr_initialize_for_runtime_config: 0 first context, 1 runtime already initialized (secondary context). */
   init: number;
-  /** load_assembly_and_get_function_pointer(assembly, "Type, Assemblage", méthode, UNMANAGEDCALLERSONLY_METHOD). */
+  /** load_assembly_and_get_function_pointer(assembly, "Type, Assembly", method, UNMANAGEDCALLERSONLY_METHOD). */
   functionPointer(assembly: string, typeName: string, method: string): Pointer;
 };
 
 let current: Host | undefined;
 
 /**
- * Initialise le runtime depuis un .runtimeconfig.json (composant dépendant du framework, EnableDynamicLoading) et renvoie
- * le délégué de chargement. Appels suivants : même hôte (le runtime ne se décharge pas).
+ * Initializes the runtime from a .runtimeconfig.json (framework-dependent component, EnableDynamicLoading) and returns
+ * the load delegate. Later calls: same host (the runtime does not unload).
  */
 export function hostDotnet(
   runtimeConfig: string,
@@ -111,8 +111,8 @@ export function hostDotnet(
     HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER,
     out,
   );
-  fxr.hostfxr_close(handle); // le délégué reste valide : le runtime est chargé pour la vie du processus
-  if (rc !== 0) throw new Error(`hostfxr_get_runtime_delegate : ${hex(rc)}`);
+  fxr.hostfxr_close(handle); // the delegate stays valid: the runtime is loaded for the life of the process
+  if (rc !== 0) throw new Error(`hostfxr_get_runtime_delegate: ${hex(rc)}`);
   const load = CFunction({
     ptr: Number(out[0]) as Pointer,
     args: ["ptr", "ptr", "ptr", "ptr", "ptr", "ptr"],
@@ -146,7 +146,7 @@ type Bindings<A> = {
   bindPointers(resolve: (m: { type: string; method: string }) => Pointer): A;
 };
 
-/** Liaisons générées (gen.ts) branchées sur CoreCLR : assemblage IL + .runtimeconfig.json voisin. */
+/** Generated bindings (gen.ts) wired to CoreCLR: IL assembly + neighbouring .runtimeconfig.json. */
 export function openHosted<A>(
   bindings: Bindings<A>,
   assemblyPath: string,

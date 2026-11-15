@@ -1,12 +1,12 @@
-// Preuves sur le système en marche (Windows, bun:ffi), par les mécanismes mêmes de Windows :
-//   - schéma API Set lu dans PEB->ApiSetMap (API_SET_NAMESPACE v6, winsiderss/phnt@53fbbdc5 ntpebteb.h), résolution
-//     contrat -> DLL hôte comme le chargeur (comparaison sur HashedLength, valeur par défaut) ;
-//   - présence des points d'entrée par le chargeur : LoadLibraryExW(DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_SYSTEM32)
-//     puis GetProcAddress (résout API Sets et redirections d'exports) ;
-//   - classes WinRT du système : HKLM\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId (DllPath, ActivationType), puis
-//     RoGetActivationFactory(IID_IActivationFactory) pour les classes en processus ;
-//   - noms C++ décorés : UnDecorateSymbolName (dbghelp).
-// Mode enfant : `bun system.ts <requête.json> <réponse.json>` (chargement de DLL et activation isolés dans un processus jetable).
+// Proofs on the running system (Windows, bun:ffi), through the mechanisms of Windows itself:
+//   - API Set schema read from PEB->ApiSetMap (API_SET_NAMESPACE v6, winsiderss/phnt@53fbbdc5 ntpebteb.h), resolution
+//     contract -> host DLL like the loader (comparison on HashedLength, default value);
+//   - presence of entry points through the loader: LoadLibraryExW(DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_SEARCH_SYSTEM32)
+//     then GetProcAddress (resolves API Sets and export forwarders);
+//   - system WinRT classes: HKLM\SOFTWARE\Microsoft\WindowsRuntime\ActivatableClassId (DllPath, ActivationType), then
+//     RoGetActivationFactory(IID_IActivationFactory) for in-process classes;
+//   - decorated C++ names: UnDecorateSymbolName (dbghelp).
+// Child mode: `bun system.ts <request.json> <response.json>` (DLL loading and activation isolated in a throwaway process).
 import { CFunction, dlopen, ptr, read, toArrayBuffer } from "bun:ffi";
 
 const w = (s: string) => Buffer.from(`${s}\0`, "utf16le");
@@ -30,13 +30,13 @@ export type ApiSet = {
   sealed: boolean;
 };
 
-/** Schéma API Set du processus courant (copie du schéma chargé par le noyau au démarrage). */
+/** API Set schema of the current process (copy of the schema loaded by the kernel at boot). */
 export function apiSetSchema(): {
   version: number;
   count: number;
   sets: ApiSet[];
 } {
-  const pbi = new BigUint64Array(6); // PROCESS_BASIC_INFORMATION (48 octets) : PebBaseAddress à +8
+  const pbi = new BigUint64Array(6); // PROCESS_BASIC_INFORMATION (48 bytes): PebBaseAddress at +8
   const st = nt.symbols.NtQueryInformationProcess(
     -1 as never,
     0,
@@ -82,7 +82,7 @@ export function apiSetSchema(): {
   return { version, count, sets };
 }
 
-/** Résolution d'un nom de DLL : contrat API Set -> hôte par défaut (chaîne vide = contrat sans hôte sur cette édition). */
+/** Resolution of a DLL name: API Set contract -> default host (empty string = contract without host on this edition). */
 export function apiSetResolver(sets: ApiSet[]) {
   const byHash = new Map(sets.map((s) => [s.hashed.toLowerCase(), s]));
   return (dll: string): { set?: string; host: string } => {
@@ -184,7 +184,7 @@ function undecorate(names: string[]): string[] {
   });
 }
 
-/** Exécute une requête dans un processus enfant (isolement des DllMain et fabriques) ; résultat JSON. */
+/** Runs a request in a child process (isolates DllMain and factories); JSON result. */
 export async function child<R>(req: LoaderReq): Promise<R> {
   const dir = `${process.env.TEMP ?? "."}`;
   const id = `${process.pid}-${Math.random().toString(36).slice(2)}`;
@@ -222,7 +222,7 @@ if (import.meta.main) {
   await Bun.write(qo!, JSON.stringify(res));
 }
 
-/** Valeur REG_SZ de HKLM (chaîne vide si absente). */
+/** REG_SZ value of HKLM (empty string if absent). */
 export function hklmString(path: string, value: string): string {
   const adv = dlopen("advapi32.dll", {
     RegGetValueW: {
@@ -244,7 +244,7 @@ export function hklmString(path: string, value: string): string {
   return st === 0 ? data.toString("utf16le", 0, Math.max(0, len[0]! - 2)) : "";
 }
 
-/** Registre WinRT du système : classe -> { DllPath, ActivationType (0 = en processus, 1 = hors processus) }. */
+/** System WinRT registry: class -> { DllPath, ActivationType (0 = in process, 1 = out of process) }. */
 export function winrtRegistry(): Map<string, { dll: string; type: number }> {
   const adv = dlopen("advapi32.dll", {
     RegOpenKeyExW: {
@@ -306,7 +306,7 @@ export function winrtRegistry(): Map<string, { dll: string; type: number }> {
         null,
         ptr(data),
         ptr(dlen),
-      ) === 0; // RRF_RT_REG_SZ (REG_EXPAND_SZ développé)
+      ) === 0; // RRF_RT_REG_SZ (REG_EXPAND_SZ expanded)
     dlen[0] = 4;
     adv.symbols.RegGetValueW(
       key as never,

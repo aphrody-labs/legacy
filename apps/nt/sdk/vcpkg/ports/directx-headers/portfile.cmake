@@ -1,4 +1,4 @@
-# Port aphrody-labs : portfile de microsoft/vcpkg@177e8175 (ports/directx-headers), source = fork épinglé par commit.
+# aphrody-labs port: portfile of microsoft/vcpkg@177e8175 (ports/directx-headers), source = fork pinned by commit.
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO aphrody-labs/DirectX-Headers

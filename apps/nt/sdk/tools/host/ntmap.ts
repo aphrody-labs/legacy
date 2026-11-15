@@ -1,7 +1,7 @@
-// Carte du Windows NT de CE poste, relevée sur les binaires installés et le système en marche (aucune donnée
-// inventée) : exports de ntoskrnl / hal / ntdll groupés par composant (préfixe NT), couches Win32 (imports),
-// win32k, chaîne de démarrage, pilotes chargés, processus système. Sortie : docs/research/windows-nt-map.json.
-// Usage : bun sdk/tools/host/ntmap.ts   (Windows uniquement)
+// Map of THIS machine's Windows NT, read from the installed binaries and the running system (no invented
+// data): exports of ntoskrnl / hal / ntdll grouped by component (NT prefix), Win32 layers (imports),
+// win32k, boot chain, loaded drivers, system processes. Output: docs/research/windows-nt-map.json.
+// Usage: bun sdk/tools/host/ntmap.ts   (Windows only)
 import { join } from "node:path";
 import { createSampler } from "./ntsys.ts";
 import { exportsOf, importsOf, parsePe } from "./pe.ts";
@@ -18,7 +18,7 @@ const pe = async (p: string) => {
   }
 };
 
-/** Préfixes de composants NT (le plus long d'abord). */
+/** NT component prefixes (longest first). */
 const PREFIXES = [
   "Alpc",
   "Cc",
@@ -132,7 +132,7 @@ const SYSTEM = [
 const map = {
   date: new Date().toISOString(),
   source:
-    "binaires de %SystemRoot% et système en marche (ntdll via bun:ffi), relevé par sdk/tools/host/ntmap.ts",
+    "binaries of %SystemRoot% and running system (ntdll via bun:ffi), read by sdk/tools/host/ntmap.ts",
   boot: await Promise.all(
     [
       join(sys, "Boot", "EFI", "bootmgfw.efi"),
@@ -197,7 +197,7 @@ const out = join(
   "research",
   "windows-nt-map.json",
 );
-// Les composants : résumé compact (pas d'échantillons pour les binaires win32, trop volumineux).
+// Components: compact summary (no samples for the win32 binaries, too large).
 await Bun.write(
   out,
   JSON.stringify(
