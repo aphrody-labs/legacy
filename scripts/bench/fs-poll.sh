@@ -1,3 +1,3 @@
 uptime
-ps -eo pcpu,comm --sort=-pcpu | head -8
-tail -n 2 /tmp/fsbench/*.log
+grep -vE 'Range|Benchmark|^ +=|^(naming|data|log|realtime|meta)' /tmp/fsbench/xfs-c2.log | tail -n 12
+losetup -a

@@ -1,2 +1,3 @@
-while [ ! -f /tmp/fsbench/status ]; do sleep 20; done
-tail -n 3 /tmp/fsbench/*.log
+grep -A4 'W8b' /tmp/fsbench/xfs-c2.log
+losetup -a
+mount | grep fsb

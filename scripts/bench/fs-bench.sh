@@ -19,7 +19,7 @@ HEADSHA=$(git -C /srv/ghidra-rust rev-parse HEAD)
 OLDSHA=$(git -C /srv/ghidra-rust rev-parse HEAD~300)
 
 for V in "$@"; do
-  L=$OUT/$V.log
+  L=$OUT/$V$SUF.log
   : > $L
   echo "=== $V $(date -u +%FT%TZ)" >> $L
   rm -f $IMG_DIR/$V.img
@@ -40,6 +40,7 @@ for V in "$@"; do
   [ $T = xfs ] && xfs_info $M >> $L
   hf() { echo "load: $(uptime | sed 's/.*load average: //')" >> $L; hyperfine --style basic "$@" 2>&1 | grep -E 'Benchmark|Time \(mean|Range' >> $L; }
 
+  if [ -z "$ONLY" ]; then
   echo "--- W1 git clone --local --no-hardlinks (cold)" >> $L
   hf -w 0 -r 5 --prepare "rm -rf $M/ghidra; $DROP" "git clone -q --local --no-hardlinks /srv/ghidra-rust $M/ghidra"
   [ -d $M/ghidra ] || git clone -q --local --no-hardlinks /srv/ghidra-rust $M/ghidra
@@ -58,14 +59,15 @@ for V in "$@"; do
     fio --name=sm --directory=$M/fio --numjobs=4 --nrfiles=5000 --filesize=4k --rw=write --bs=4k --end_fsync=1 --group_reporting 2>&1 | grep -E 'WRITE:|write:' >> $L
   done
   rm -rf $M/fio $M/untar
+  fi
 
   echo "--- W6 cargo check -p tauri full (cold target, rustc, deps from tmpfs CARGO_HOME)" >> $L
   rm -rf $M/t $M/target
   git clone -q --local --no-hardlinks /srv/upabs/tauri $M/t
   export CARGO_TARGET_DIR=$M/target
-  hf -w 0 -r 3 --prepare "rm -rf $M/target; $DROP" "cd $M/t && cargo check -p tauri --offline -q"
+  hf -w 0 -r 3 --prepare "rm -rf $M/target; $DROP" "cd $M/t && timeout 900 cargo check -p tauri-utils --offline -q"
   echo "--- W7 cargo check -p tauri incremental after touching lib.rs (warm)" >> $L
-  hf -w 1 -r 5 --prepare "touch $M/t/crates/tauri/src/lib.rs" "cd $M/t && cargo check -p tauri --offline -q"
+  hf -w 1 -r 5 --prepare "touch $M/t/crates/tauri-utils/src/lib.rs" "cd $M/t && timeout 900 cargo check -p tauri-utils --offline -q"
   echo "target_files $(find $M/target -type f | wc -l) target_MB $(du -sm $M/target | cut -f1)" >> $L
 
   echo "--- W8 clone of target dir: cp -a (plain)" >> $L
