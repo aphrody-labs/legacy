@@ -58,14 +58,14 @@ Rust builds run in CI or on fr1, never on the workstation.
 
 Exists, with the commit that added it:
 
-- Vertical slice `src/game` (Bevy, streamed procedural terrain, third-person controller, day/night, procedural audio), served by `/play` in `apps/aphrody`: `f2c17b18`, `f21e7927`.
+- Vertical slice `src/game` (Bevy, streamed procedural terrain, third-person controller, day/night, procedural audio), served by `/play` in `apps/web`: `f2c17b18`, `f21e7927`.
 - Format layer `src/craft` (craft-libs `a9949872`, one winit): `62debc12`. Asset validators `test/assets`: `f71400f7`.
 - Asset library and pipeline `packages/assets`, `assets/library`, procedural wallpapers `assets/generated`: `03eba945`, `45f937ba`, `093a2f97`; `assets verify` also reads `assets/generated/manifest.toml` and `ay assets gen` routes to the generator: `eb824acd`.
 - Themes (7, light and dark; `workshop` and `frost` now use `fidelity` seeds): `b20c410d`, `eb824acd`. i18n layer `packages/i18n` and `src/i18n`: `2cf0fc9b`, `d158d27a`.
 - `ay flat` per fork: `6fbba4e3`. Feature matrix and platform equivalence: `31506186`. Craft Apps captures and FFmpeg `.bc`: `e13ccbc6`.
 - LGPL FFmpeg built on fr1 with the Chromium 157 clang (LLVM 24) into `/opt/ffmpeg-lgpl`; `asset-test` builds and `gen` runs against it: `e410f398`.
 - `Cargo.lock` regenerated on fr1 for the root workspace: `b2d86ae0`.
-- Browser OS route `/os` in `apps/aphrody` (launcher on the WebGPU stage, windows, OPFS library, v86 Linux, Ruffle, EmulatorJS, game frame, store, gamescope WGSL pipeline): `62a80d2c`, `e807aaf7`; details and gaps in `docs/games/BROWSER-OS.md`. Production headers and routing for `/os` are not deployed yet.
+- Browser OS route `/os` in `apps/web` (launcher on the WebGPU stage, windows, OPFS library, v86 Linux, Ruffle, EmulatorJS, game frame, store, gamescope WGSL pipeline): `62a80d2c`, `e807aaf7`; details and gaps in `docs/games/BROWSER-OS.md`. Production headers and routing for `/os` are not deployed yet.
 
 Not done:
 
@@ -75,7 +75,7 @@ Not done:
 
 ## 6. Target set by the owner on 2026-11-13 (recorded; the vertical slice in section 5 is a first step, the merge has not started)
 
-- Three apps only, one per domain: `shenron`, `rosegriffon`, and one Aphrody app merging `apps/aphrody` (aphrody.com) and `apps/aphrody-app` (aphrody.app). Every other app, package and crate is flattened into shared code; code of `shenron` and `rosegriffon` that is not specific to their product moves to shared crates and packages and is reused.
+- Three apps only, one per domain: `shenron`, `rosegriffon`, and one Aphrody app merging `apps/web` (aphrody.com) and `apps/aphrody-app` (aphrody.app). Every other app, package and crate is flattened into shared code; code of `shenron` and `rosegriffon` that is not specific to their product moves to shared crates and packages and is reused.
 - The merged Aphrody app hosts and deploys the Craft Apps, ArtCraft and the game: full-screen WebAssembly and WebGPU in the browser, open-world multiplayer, 120 fps at 1080p, gamepad (Xbox, PlayStation), keyboard and mouse, audio and video, built on Bevy with a feature matrix against Unreal Engine.
 - Upstreams the owner named, to check with `gh api` before any use: `vercel-labs/ui`, `vercel-labs/native`, `niri-wm/niri`, `niri-wm/awesome-niri`, the DioxusLabs organisation, `longbridge` (GPUI components, `nsh`), `cloudflare/vinext`, `vercel/next.js`, `vercel/vercel`, `vercel/ai`, `vercel/turborepo`, `mui/base-ui`, shadcn, `tailwindlabs/tailwindcss`, Microsoft WebUI, iced and COSMIC.
 - Cleanup: remove vendored and nested third-party copies inside apps, packages and crates; one version per dependency; smaller binaries.

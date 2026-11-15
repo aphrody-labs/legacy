@@ -15,7 +15,7 @@
 //   - one README per crate, package and own app: a `unit` block from its manifest; any hand-written text around the
 //     markers stays, a README without markers gets the block after its first heading;
 //   - docs/reference/catalog/<type>.md, one index per type;
-//   - apps/aphrody/public/catalog.json, read by apps/aphrody/build.ts (the site pages).
+//   - apps/web/public/catalog.json, read by apps/web/build.ts (the site pages).
 // Nothing is typed here: no version, count or date goes into a text, the text comes from the i18n catalogs
 // (packages/i18n/catalogs/catalog/<locale>.json, same format and fallback chain as @aphrody/i18n; this file has no
 // dependency so a profile repository can run it from a sparse checkout).
@@ -264,7 +264,7 @@ function outputs(): Map<string, string> {
     for (const e of entries.filter((e) => e.readme)) out.set(e.readme!, merge(keep(e.readme!), "unit", unitBlock(k, e), { title: e.name }));
   }
 
-  const site = "apps/aphrody/public";
+  const site = "apps/web/public";
   out.set(`${site}/catalog.json`, JSON.stringify({ locale, types: kinds.filter((k) => data[k.id]).map((k) => ({ id: k.id, name: k.name, description: k.description, entries: data[k.id]!.map(({ name, description, path }) => ({ name, description, path })) })) }, null, 2) + "\n");
   return out;
 }

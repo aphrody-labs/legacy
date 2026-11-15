@@ -8,7 +8,7 @@ Manifeste des installations : `infra/agents/toolchain.toml` (applier `packages/m
 
 - MCP : relay (127.0.0.1:8790 : gemini_ask, gemini_cli_ask, gemini_review, gcloud_accounts, agy_ask, workspace_api/workspace_ask, stitch__*, skills_list, claude_ask, fleet_status), github (plugin officiel, api.githubcopilot.com), microsoft-learn, context7, cloudflare, resend, figma, agent-browser, agent-desktop, hostinger (désactivé ici), claude-in-chrome.
 - Plugins : vercel (vercel/vercel-plugin), microsoft-docs, github, skill-creator, frontend-design, plugin-dev, LSP (clangd, rust-analyzer, typescript, gopls).
-- Skills projet (C:\src\.agents\skills) : gcloud, google-cloud-recipe-*, retrieving-developer-knowledge, agent-platform-*, google-skills-index (google/skills), gemini-api-*, gemini-live-api-dev (gemini-skills), chrome-devtools*, a11y-debugging, cookie-debugging, debug-optimize-lcp, inspect-in-devtools, memory-leak-debugging, chrome-troubleshooting (chrome-devtools-mcp), google-labs-stitch-jules-design (adoptés par `bun scripts/skills-adopt.ts`) ; catalogues vendorisés dans third_party (google-skills, gemini-skills, android-skills, anthropics-skills, microsoft-skills, chrome-devtools-mcp, lighthouse, stitch-skills, jules-skills, googleworkspace-cli, gemini-cli).
+- Skills projet (C:\aphrody\.agents\skills) : gcloud, google-cloud-recipe-*, retrieving-developer-knowledge, agent-platform-*, google-skills-index (google/skills), gemini-api-*, gemini-live-api-dev (gemini-skills), chrome-devtools*, a11y-debugging, cookie-debugging, debug-optimize-lcp, inspect-in-devtools, memory-leak-debugging, chrome-troubleshooting (chrome-devtools-mcp), google-labs-stitch-jules-design (adoptés par `bun scripts/skills-adopt.ts`) ; catalogues vendorisés dans third_party (google-skills, gemini-skills, android-skills, anthropics-skills, microsoft-skills, chrome-devtools-mcp, lighthouse, stitch-skills, jules-skills, googleworkspace-cli, gemini-cli).
 - CLI : gcloud 593.0.0, firebase 15.36.0 (bun), agy 1.5.7 ; gemini CLI absent (couvert par le relais).
 
 ## Tableau
@@ -53,4 +53,4 @@ Aucun : rien à patcher (npx contourné par des serveurs MCP `bun x` déclarés 
 
 - Skills du plugin chrome-devtools-mcp (8) et du plugin firebase (14) non chargées : ces plugins lancent npx ; il faudrait un fork patché (`bun x`) sur une branche dédiée, interdit (main seul) et en conflit avec la synchro upstream.
 - Le serveur developer-knowledge lit `DEVELOPERKNOWLEDGE_API_KEY` dans l'env utilisateur : actif dans les sessions Claude ouvertes après le 2026-11-13 04:30.
-- Résidu npm de l'essai du plugin : `~/.claude/plugins/data/chrome-devtools-mcp-aphrody` (suppression refusée par le hook NHITL hors C:\src).
+- Résidu npm de l'essai du plugin : `~/.claude/plugins/data/chrome-devtools-mcp-aphrody` (suppression refusée par le hook NHITL hors C:\aphrody).

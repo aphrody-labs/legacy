@@ -21,7 +21,7 @@ pub struct DepotToolsInfo {
 pub struct DepotTools;
 
 /// The monorepo root: `$SRC_ROOT`, else the nearest ancestor of the working directory holding
-/// src.lock.json. Same on Windows and Linux (no hardcoded `C:\src`).
+/// src.lock.json. Same on Windows and Linux (no hardcoded `C:\aphrody`).
 pub fn src_root() -> Option<PathBuf> {
     std::env::var_os("SRC_ROOT")
         .filter(|v| !v.is_empty())

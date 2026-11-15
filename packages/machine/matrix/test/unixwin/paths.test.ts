@@ -70,7 +70,7 @@ describe("dialectes de chemins", () => {
 });
 
 describe("repli /src (NIU_ROOT_FALLBACK)", () => {
-  // Real folder at the root of the system drive, missing under NIU_ROOT: C:\src if it exists, otherwise Windows.
+  // Real folder at the root of the system drive, missing under NIU_ROOT: C:\aphrody if it exists, otherwise Windows.
   const top = existsSync(`${D}:\\src`) ? "src" : "Windows";
   // Writes under the profile (X:\Users\<me>\AppData\Local\Temp), reached through /Users/... thanks to the fallback.
   const tmp = tmpdir();

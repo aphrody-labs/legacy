@@ -293,7 +293,7 @@
         },
         {
           "name": "aphrody-env",
-          "description": "Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/src/.env",
+          "description": "Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/aphrody/.env",
           "path": "src/env"
         },
         {
@@ -1066,7 +1066,7 @@
         {
           "name": "@aphrody/site-ng",
           "description": "Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT).",
-          "path": "apps/aphrody/web"
+          "path": "apps/web/web"
         },
         {
           "name": "@aphrody/nt",
@@ -1205,7 +1205,7 @@
         },
         {
           "name": "@aphrody/env-kit",
-          "description": "Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/src",
+          "description": "Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/aphrody",
           "path": "packages/env-kit"
         },
         {
@@ -1413,7 +1413,7 @@
         {
           "name": "aphrody",
           "description": "Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`.",
-          "path": "apps/aphrody"
+          "path": "apps/web"
         },
         {
           "name": "aphrody-app",
@@ -1549,7 +1549,7 @@
         },
         {
           "name": "gitlab",
-          "description": "Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Google Cloud Git** across all 26 `C:\\src` repositories.",
+          "description": "Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Google Cloud Git** across all 26 `C:\\aphrody` repositories.",
           "path": "infra/gitlab"
         },
         {

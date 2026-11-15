@@ -1,6 +1,6 @@
 # MDN browser-compat-data (`@mdn/browser-compat-data`)
 
-Local clone: C:\src\third_party\web\mdn_browser-compat-data. Top dirs: api, css, html, http, javascript, mathml, svg, webassembly, webdriver, webextensions, manifests, mediatypes, browsers. The key path mirrors the file path: `css/properties/anchor-name.json` -> `css.properties["anchor-name"].__compat`; sub-features are nested keys.
+Local clone: C:\aphrody\third_party\web\mdn_browser-compat-data. Top dirs: api, css, html, http, javascript, mathml, svg, webassembly, webdriver, webextensions, manifests, mediatypes, browsers. The key path mirrors the file path: `css/properties/anchor-name.json` -> `css.properties["anchor-name"].__compat`; sub-features are nested keys.
 
 `__compat`: `support.<browser>` is one statement or an array (first = current), with `version_added` (version string, `"preview"`, `false`, or ranged `≤N`), `version_removed`, `partial_implementation`, `flags`, `prefix`/`alternative_name`, `notes`. Also `status{experimental, standard_track, deprecated}`, `tags: ["web-features:<id>"]`, `spec_url`, `mdn_url`.
 

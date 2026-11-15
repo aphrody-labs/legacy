@@ -64,8 +64,8 @@
         "description": "Regenerate src.lock.json, DEPS, .repo manifest and MAINTAINERS",
         "flags":
           {
-            "--root=": "target root directory (defaults to C:\\src)",
-            "--out=": "output lockfile path (defaults to C:\\src\\src.lock.json)",
+            "--root=": "target root directory (defaults to C:\\aphrody)",
+            "--out=": "output lockfile path (defaults to C:\\aphrody\\src.lock.json)",
             "--lock-only": "skip emitting DEPS, .repo/manifests/default.xml, and",
             "--help": "display usage information",
           },
@@ -75,7 +75,7 @@
         "description": "Generate governance manifests; `ay manifests verify` checks them",
         "flags":
           {
-            "--root=": "target root directory (defaults to C:\\src)",
+            "--root=": "target root directory (defaults to C:\\aphrody)",
             "--help": "display usage information",
           },
       },
@@ -403,7 +403,7 @@
               "description": "Lookup Linux Kernel style MAINTAINERS ownership for any",
               "flags":
                 {
-                  "-r, --root": "monorepo root path (default: C:\\src)",
+                  "-r, --root": "monorepo root path (default: C:\\aphrody)",
                   "--help": "display usage information",
                 },
             },

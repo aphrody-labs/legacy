@@ -1,6 +1,6 @@
-# Browser OS (apps/aphrody, route /os)
+# Browser OS (apps/web, route /os)
 
-State 2026-11-13. Code: `apps/aphrody/src/os/` (page.ts, build.ts, server.ts, vendor.ts, client/*). Texts: `packages/i18n` keys `os.*` (en, fr, zh-CN, ja, es). Pages: `/os` (en), `/os/fr`, `/os/zh-CN`, `/os/ja`, `/os/es`.
+State 2026-11-13. Code: `apps/web/src/os/` (page.ts, build.ts, server.ts, vendor.ts, client/*). Texts: `packages/i18n` keys `os.*` (en, fr, zh-CN, ja, es). Pages: `/os` (en), `/os/fr`, `/os/zh-CN`, `/os/ja`, `/os/es`.
 
 ## What runs (verified in Chrome 157, workstation, local server)
 
@@ -22,7 +22,7 @@ Frames are read from the source canvas through `captureStream()` (a WebGL canvas
 
 ## Components and licenses
 
-Pinned by SHA-256 in `src/os/vendor.lock.json`, downloaded at build into `apps/aphrody/var/os-vendor` (gitignored), copied to `dist/os/vendor`, skipped by the WCK gate (`vendor/` directories). Nothing below is committed.
+Pinned by SHA-256 in `src/os/vendor.lock.json`, downloaded at build into `apps/web/var/os-vendor` (gitignored), copied to `dist/os/vendor`, skipped by the WCK gate (`vendor/` directories). Nothing below is committed.
 
 | Component                   | Source                                                                                    | License                                                        |
 | --------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
@@ -57,7 +57,7 @@ Kept in the Worker (unchanged, nothing lost): host routing of the Craft studios 
 
 ## Production check (aphrody.com, 2026-11-13)
 
-`aphrody.com` serves `dist/` from R2 through `apps/aphrody/edge/worker.ts`; headers come from `dist/_headers`, and only paths the Worker lists as dynamic reach the Bun origin. Found on the live site: `/os` and the vendor files were served, but the CSP was the site-wide one (it blocks the font and would block wasm), and `/os/catalog.json` returned the HTML 404 page because it was not routed to the origin. Fixed in the repo: `_headers` rules for `/os` and `/os/*` (same CSP as `server.ts`), and `/os/catalog.json`, `/os/api/*`, `/os/vm/*` added to the Worker's dynamic paths. Not yet verified on prod: it needs the next `ay deploy aphrody` and the Worker deploy, and the prd origin image must contain the new routes.
+`aphrody.com` serves `dist/` from R2 through `apps/web/edge/worker.ts`; headers come from `dist/_headers`, and only paths the Worker lists as dynamic reach the Bun origin. Found on the live site: `/os` and the vendor files were served, but the CSP was the site-wide one (it blocks the font and would block wasm), and `/os/catalog.json` returned the HTML 404 page because it was not routed to the origin. Fixed in the repo: `_headers` rules for `/os` and `/os/*` (same CSP as `server.ts`), and `/os/catalog.json`, `/os/api/*`, `/os/vm/*` added to the Worker's dynamic paths. Not yet verified on prod: it needs the next `ay deploy aphrody` and the Worker deploy, and the prd origin image must contain the new routes.
 
 ## 64-bit distro in a tab: container2wasm test (fr1, headless Chrome 157, not integrated)
 

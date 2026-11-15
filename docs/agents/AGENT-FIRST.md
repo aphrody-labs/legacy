@@ -52,7 +52,7 @@ context7, GitHub MCP and Microsoft Learn were unreachable (ENOTFOUND): versions 
 Pitfalls found:
 
 - Claude Code refuses `bypassPermissions` as root, and this safeguard is not bypassed: no runner runs as root (`runner.ts work` refuses uid 0, so does `install.sh`). On prd, the runner runs under the dedicated user `agent` (no sudo), created by `bootstrap-user.sh`. `install.sh` marks the checkout as trusted (`hasTrustDialogAccepted`) in `~/.claude.json`.
-- Bun automatically loads the `.env` of the current directory: `C:\src\.env` contains an `ANTHROPIC_API_KEY` key not attached to a workspace, which took precedence over the claude.ai login (error 400). The runner, its units and the scheduled task run with `bun --no-env-file`, and the `ANTHROPIC_*`, `CLAUDECODE`, `CLAUDE_CODE_*` variables of the parent session are removed from the children's environment (`AGENTS_KEEP_ENV=1` to keep them).
+- Bun automatically loads the `.env` of the current directory: `C:\aphrody\.env` contains an `ANTHROPIC_API_KEY` key not attached to a workspace, which took precedence over the claude.ai login (error 400). The runner, its units and the scheduled task run with `bun --no-env-file`, and the `ANTHROPIC_*`, `CLAUDECODE`, `CLAUDE_CODE_*` variables of the parent session are removed from the children's environment (`AGENTS_KEEP_ENV=1` to keep them).
 - No shell between the runner and a CLI: on Windows, `.cmd` shims are resolved to their `.exe` by `resolveExe` (`packages/ai-os/src/llm/agents.ts`) and launched directly; an unresolvable shim is refused (the PC's `codex.cmd`, whose target cannot be found). Test: `bun test infra/agents` (prompt with `& | ^ % " < >`).
 - psmux breaks double quotes in the window command: unquoted paths on Windows when they have no space.
 - `~/.local/bin/codex` on fr2 was a link to another binary: the install checks `~/.bun/bin/<cli>`, and the runner puts `~/.bun/bin` at the front of PATH.
@@ -70,7 +70,7 @@ var/agents/state/{health.json,heartbeat-<role>,cooldown-<provider>,schedule-<nam
 var/agents/log.jsonl                expédié vers prd:/var/lib/aphrody-agents/logs/<hôte>.jsonl
 ```
 
-Checkouts: prd `/home/agent/agents/src` (user `agent`), fr1 and fr2 `/home/ubuntu/agents/src`, PC `C:/src`.
+Checkouts: prd `/home/agent/agents/src` (user `agent`), fr1 and fr2 `/home/ubuntu/agents/src`, PC `C:/aphrody`.
 
 ```json
 {

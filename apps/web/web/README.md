@@ -5,13 +5,13 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `apps/aphrody/web` |
+| Bun package | `apps/web/web` |
 
 **Commands**
 
 ```sh
-bun run --cwd apps/aphrody/web build
-bun run --cwd apps/aphrody/web start
+bun run --cwd apps/web/web build
+bun run --cwd apps/web/web start
 ```
 
 Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).

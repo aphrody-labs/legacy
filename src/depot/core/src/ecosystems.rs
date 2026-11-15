@@ -237,7 +237,7 @@ impl EcosystemManifests {
             .collect()
     }
 
-    /// Inspect full 4-pillar governance status at `root` (`C:\src`)
+    /// Inspect full 4-pillar governance status at `root` (`C:\aphrody`)
     pub fn inspect_root(root: &Path) -> EcosystemGovernanceStatus {
         let deps_pin_count = fs::read_to_string(root.join("DEPS"))
             .map(|c| Self::parse_chromium_deps(&c).len())

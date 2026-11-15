@@ -185,7 +185,7 @@ for (const target of activeTargets) {
       guid: NIUBASH_GUID,
       name: "Niubash",
       commandline: `${NB}\\niu.exe`,
-      startingDirectory: "C:\\src",
+      startingDirectory: "C:\\aphrody",
       elevate: true,
       colorScheme: "Aphrody M3 Dark",
     };

@@ -38,7 +38,7 @@ describe("pi-opencode: Rust Native FFI & Torvalds Userspace Guard", () => {
     expect(isSafeWorkspacePath("C:\\Windows\\System32\\cmd.exe")).toBe(false);
     expect(isSafeWorkspacePath("C:\\Program Files\\Vendor\\x.exe")).toBe(false);
     expect(
-      isSafeWorkspacePath("C:\\src\\packages\\pi-opencode\\src\\cli.ts"),
+      isSafeWorkspacePath("C:\\aphrody\\packages\\pi-opencode\\src\\cli.ts"),
     ).toBe(true);
   });
 

@@ -164,7 +164,7 @@ External effects are refused by default: publication, sending a message, spendin
       {
         "effect": "external",
         "step": "publish-aphrody-blog",
-        "command": "bun run --cwd apps/aphrody publish-blog",
+        "command": "bun run --cwd apps/web publish-blog",
         "granted": "YYYY-MM-DD",
         "note": "…"
       }

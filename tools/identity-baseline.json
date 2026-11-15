@@ -598,13 +598,13 @@
   "c-prefix": 5,
   "binary-call": 3
  },
- "apps/aphrody/DESIGN.md": {
+ "apps/web/DESIGN.md": {
   "npm-scope": 1
  },
- "apps/aphrody/build.ts": {
+ "apps/web/build.ts": {
   "npm-scope": 1
  },
- "apps/aphrody/public/catalog.json": {
+ "apps/web/public/catalog.json": {
   "checkout-path": 3,
   "product-name": 3,
   "npm-scope": 72,
@@ -612,7 +612,7 @@
   "c-prefix": 2,
   "binary-call": 25
  },
- "apps/aphrody/public/catalog/index.html": {
+ "apps/web/public/catalog/index.html": {
   "checkout-path": 1,
   "product-name": 3,
   "npm-scope": 66,
@@ -620,7 +620,7 @@
   "c-prefix": 2,
   "binary-call": 3
  },
- "apps/aphrody/public/fr/catalog/index.html": {
+ "apps/web/public/fr/catalog/index.html": {
   "checkout-path": 1,
   "product-name": 3,
   "npm-scope": 66,
@@ -628,35 +628,35 @@
   "c-prefix": 2,
   "binary-call": 3
  },
- "apps/aphrody/public/llms-full.txt": {
+ "apps/web/public/llms-full.txt": {
   "crate-prefix": 1
  },
- "apps/aphrody/public/m3/index.html": {
+ "apps/web/public/m3/index.html": {
   "crate-prefix": 1
  },
- "apps/aphrody/public/m3/main.js": {
+ "apps/web/public/m3/main.js": {
   "c-prefix": 1
  },
- "apps/aphrody/public/m3/styles.css": {
+ "apps/web/public/m3/styles.css": {
   "crate-prefix": 1
  },
- "apps/aphrody/public/tokens.css": {
+ "apps/web/public/tokens.css": {
   "crate-prefix": 1
  },
- "apps/aphrody/web/README.md": {
+ "apps/web/web/README.md": {
   "npm-scope": 2
  },
- "apps/aphrody/web/angular.json": {
+ "apps/web/web/angular.json": {
   "npm-scope": 1,
   "crate-prefix": 3
  },
- "apps/aphrody/web/package.json": {
+ "apps/web/web/package.json": {
   "npm-scope": 3
  },
- "apps/aphrody/web/src/app/app.ts": {
+ "apps/web/web/src/app/app.ts": {
   "c-prefix": 1
  },
- "apps/aphrody/web/src/styles.scss": {
+ "apps/web/web/src/styles.scss": {
   "npm-scope": 1
  },
  "apps/auto/AY_FIELD_TEST.md": {

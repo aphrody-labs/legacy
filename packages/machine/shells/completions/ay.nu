@@ -39,14 +39,14 @@ export extern "ay doctor" [
   ...args: string
 ]
 export extern "ay lock" [
-  --root: string  # target root directory (defaults to C:\src)
-  --out: string  # output lockfile path (defaults to C:\src\src.lock.json)
+  --root: string  # target root directory (defaults to C:\aphrody)
+  --out: string  # output lockfile path (defaults to C:\aphrody\src.lock.json)
   --lock-only  # skip emitting DEPS, .repo/manifests/default.xml, and
   --help  # display usage information
   ...args: string
 ]
 export extern "ay manifests" [
-  --root: string  # target root directory (defaults to C:\src)
+  --root: string  # target root directory (defaults to C:\aphrody)
   --help  # display usage information
   ...args: string
 ]
@@ -241,7 +241,7 @@ export extern "ay git manifests" [
   ...args: string
 ]
 export extern "ay git maintainer" [
-  --root(-r)  # monorepo root path (default: C:\src)
+  --root(-r)  # monorepo root path (default: C:\aphrody)
   --help  # display usage information
   ...args: string
 ]

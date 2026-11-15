@@ -4,7 +4,7 @@ A Bun workspace package (@aphrody/*)
 
 | Name | Description |
 | :-- | :-- |
-| [@aphrody/site-ng](../../../apps/aphrody/web) | Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT). |
+| [@aphrody/site-ng](../../../apps/web/web) | Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT). |
 | [@aphrody/nt](../../../apps/nt) | - |
 | [@aphrody/web](../../../apps/nt/modules/web) | - |
 | [@aphrody/github-app](../../../infra/cloudflare/workers/github-app) | - |
@@ -32,7 +32,7 @@ A Bun workspace package (@aphrody/*)
 | [@aphrody/design](../../../packages/design) | Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis packages/design/design.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; c... |
 | [@aphrody/doc-ai](../../../packages/doc-ai) | AI-first documentation and automatic translation system |
 | [@aphrody/drive-client](../../../packages/drive-client) | Type-safe TypeScript client for Spacedrive daemon |
-| [@aphrody/env-kit](../../../packages/env-kit) | Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/src |
+| [@aphrody/env-kit](../../../packages/env-kit) | Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/aphrody |
 | [@aphrody/ffi-bridge](../../../packages/ffi-bridge) | bun:ffi bindings and tests of the Rust cdylibs (dx12-hal, unix-distro probes) |
 | [@aphrody/forge](../../../packages/forge) | Sovereign Rust + TypeScript Tri-Forge (GitHub + GitLab + Google Git + Arch Upstreams) CLI (frg) |
 | [@aphrody/gaming](../../../packages/gaming) | Gaming stack of the monorepo: Steam (web API, SteamID, local paths over `ay steam`), Proton, Vulkan layers, DirectX, steamcmd and Proton wrappers; `ay gaming` |

@@ -206,7 +206,7 @@ pub fn is_secret_key(key: &str, value: &str) -> bool {
         .any(|needle| upper.contains(needle))
 }
 
-/// Walks upward from `start_dir` looking for `.env`, falling back to `C:\src\.env`.
+/// Walks upward from `start_dir` looking for `.env`, falling back to `C:\aphrody\.env`.
 #[must_use]
 pub fn resolve_monorepo_env_path(start_dir: Option<&Path>) -> PathBuf {
     let base = start_dir

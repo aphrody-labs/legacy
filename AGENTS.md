@@ -1,16 +1,16 @@
-# src: agent operating contract (`AGENTS.md`)
+# Aphrody: agent operating contract (`AGENTS.md`)
 
 Read by every agent CLI (Claude Code, Codex, Antigravity, OpenCode, Pi, Zed). The direction and work order are in [`docs/games/PLAN.md`](docs/games/PLAN.md).
 
-## 1. What src is
+## 1. What Aphrody is
 
-src is the public monorepo of Aphrody: a game engine and creative suite built in the open (Bevy, the Craft Apps and ArtCraft, `src/tv` and FFmpeg for media, Unreal Engine by interop only), on top of the platform work (Bun and Rust tooling, deploy, Linux and Windows layers, the C and WebAssembly core in `src/`). Say what is built and what is not.
+Aphrody (`aphrody-labs/aphrody`, checkout folder named after `tools/identity.toml`) is a public monorepo: a game engine and creative suite built in the open (Bevy, the Craft Apps and ArtCraft, `src/tv` and FFmpeg for media, Unreal Engine by interop only), on top of the platform work (Bun and Rust tooling, deploy, Linux and Windows layers, the C and WebAssembly core in `src/`). Say what is built and what is not.
 
 ## 2. Layout (check with `fd -d 1`; the lists are examples)
 
-- [`apps/`](apps): `aphrody` (static site and Wayland WASM), `auto` and `nt` (in tree), `open` (separate clone, `aphrody-labs/open`, not tracked here), `rosegriffon` and `shenron` (git submodules, community sites Aphrody maintains, not Aphrody products).
+- [`apps/`](apps): `web` (aphrody.com and aphrody.app: static site, Angular app in `web/web`, Wayland WASM), `auto` and `nt` (in tree), `open` (separate clone, `aphrody-labs/open`, not tracked here), `rosegriffon` and `shenron` (git submodules, community sites Aphrody maintains, not Aphrody products).
 - [`packages/`](packages): Bun `@aphrody/*` packages (`ai-os`, `assets`, `core`, `deploy`, `design`, `env-kit`, `ffi-bridge`, `gaming`, `machine` (includes the shell matrix), `native`, `wck`, ...).
-- [`src/`](src): Rust 2024 crates (Bun upstream layout, members in the root `Cargo.toml`: `ay`, `archguard`, `tv`, `steam`, `ui`, ...) next to the C core and assembly (`arch/`, `kernel/`, `wayland/`, `nt/`, `wine/`, `wasm/`, `include/ay/sys.h`), built by Clang and LLD (`src/Makefile`); specs in [`docs/native/`](docs/native).
+- [`src/`](src): Rust 2024 crates (Bun upstream layout, members in the root `Cargo.toml`: `ay`, `tv`, `steam`, `ui`, ...) next to the C core and assembly (`arch/`, `kernel/`, `wayland/`, `nt/`, `wine/`, `wasm/`, `include/ay/sys.h`), built by Clang and LLD (`src/Makefile`); specs in [`docs/native/`](docs/native).
 - [`infra/`](infra): fleet and deploy configuration assembled from upstream tools (`docs/infra/UPSTREAM-STACK.md`).
 - [`third_party/`](third_party): upstream checkouts and aphrody-labs forks, pinned in `src.lock.json`, listed in `third_party/forks.txt`.
 
@@ -40,7 +40,7 @@ src is the public monorepo of Aphrody: a game engine and creative suite built in
 - Licenses never decide an architecture choice, and no project license has been chosen by the owner. Agents do not gate, skip, replace or rewrite anything for license or trademark reasons (`docs/legal/LICENSE-QUEUE.md`).
 - `C:\Windows\System32` is not modified; userland binaries go to `~/.local/bin`.
 - No emoji and no AI attribution in code, documents, UI text or commits. Upstream contributions follow the upstream policy (`docs/upstream/STRATEGY.md`).
-- Language by domain, no fanaticism: Rust at the core; Python for ML, AI, big data, research and reverse engineering; Go for containers, self-hosting, deploy and cloud tooling; C/C++ for C/C++ ecosystems (FFmpeg, Blender, VLC, Hyprland, LLVM, WebAssembly); TypeScript only where justified (web UI, Bun-native tooling). Each package declares its language through its own manifest (Cargo.toml, pyproject.toml, go.mod, package.json, CMake/meson); `ay arch check --strict` checks that manifests match the code; upstream code stays in `third_party/`.
+- Language by domain, no fanaticism: Rust at the core; Python for ML, AI, big data, research and reverse engineering; Go for containers, self-hosting, deploy and cloud tooling; C/C++ for C/C++ ecosystems (FFmpeg, Blender, VLC, Hyprland, LLVM, WebAssembly); TypeScript only where justified (web UI, Bun-native tooling). Each package declares its language through its own manifest (Cargo.toml, pyproject.toml, go.mod, package.json, CMake/meson); upstream code stays in `third_party/`.
 
 ## 5. Gaming and Steam
 

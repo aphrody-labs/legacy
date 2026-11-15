@@ -1,4 +1,4 @@
-# Root Workspace Secret Guard (C:\src)
+# Root Workspace Secret Guard (C:\aphrody)
 .env
 .env.*
 !.env.example
@@ -94,7 +94,7 @@ packages/machine/matrix/bin/
 # Large binary design sources (Figma exports, >100 MB): reproducible, not in git
 assets/*.fig
 assets/*.zip
-apps/aphrody/NUL
+apps/web/NUL
 apps/.lst-*
 # ay graph build outputs over 100 MB stay local (regenerate: ay graph build -o docs/nextjs/graph third_party/next.js)
 /docs/*/graph/graph.json

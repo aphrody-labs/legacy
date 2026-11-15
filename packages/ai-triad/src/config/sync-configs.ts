@@ -7,7 +7,7 @@ export interface SyncConfigReport {
 
 /**
  * Compatibility shim: AI-Triad & MCP configuration ownership now lives exclusively in
- * `@aphrody/ai-os` (`C:/src/packages/ai-os/src/triad/index.ts`), wiring `ai-os` as the
+ * `@aphrody/ai-os` (`C:/aphrody/packages/ai-os/src/triad/index.ts`), wiring `ai-os` as the
  * single unified context-optimized MCP across all agent homes.
  */
 export function syncAllTriadConfigs(options?: {

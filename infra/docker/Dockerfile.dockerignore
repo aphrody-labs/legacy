@@ -12,7 +12,7 @@
 !bunfig.toml
 !packages/
 !infra/cloudflare/workers/api-gateway/
-!apps/aphrody/
+!apps/web/
 !apps/yolo/
 !apps/r2-site/
 !docs/ALPHABET.md

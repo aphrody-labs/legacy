@@ -1,6 +1,6 @@
 # Modern Web, UI/UX Pro & Visual Verification Guidelines
 
-Canonical engineering contract for all web platforms, applications, and graphical interfaces across `C:\src` (`aphrody.com`, `dragonballfr.com`, `rosegriffon.fr`, `yolo`, and desktop apps).
+Canonical engineering contract for all web platforms, applications, and graphical interfaces across `C:\aphrody` (`aphrody.com`, `dragonballfr.com`, `rosegriffon.fr`, `yolo`, and desktop apps).
 
 ---
 

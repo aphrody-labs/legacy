@@ -21,7 +21,7 @@ export class GoogleDrive20TbSyncEngine {
 
   private registerSampleCatalog(): void {
     this.syncRegistry.set("chromium-source", {
-      localPath: "C:/src/google-bun/third_party/chromium",
+      localPath: "C:/aphrody/google-bun/third_party/chromium",
       remoteId: "gdrive-chromium-tarball-id",
       sizeBytes: 45 * 1024 * 1024 * 1024, // 45 GB
       sha256:
@@ -31,7 +31,7 @@ export class GoogleDrive20TbSyncEngine {
     });
 
     this.syncRegistry.set("aosp-repo-mirror", {
-      localPath: "C:/src/google-bun/third_party/aosp",
+      localPath: "C:/aphrody/google-bun/third_party/aosp",
       remoteId: "gdrive-aosp-mirror-id",
       sizeBytes: 180 * 1024 * 1024 * 1024, // 180 GB
       sha256:
@@ -41,7 +41,7 @@ export class GoogleDrive20TbSyncEngine {
     });
 
     this.syncRegistry.set("gemma-4-open-weights", {
-      localPath: "C:/src/google-bun/third_party/models/gemma-4-27b",
+      localPath: "C:/aphrody/google-bun/third_party/models/gemma-4-27b",
       remoteId: "gdrive-gemma4-weights-id",
       sizeBytes: 54 * 1024 * 1024 * 1024, // 54 GB
       sha256:

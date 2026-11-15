@@ -23,12 +23,12 @@ export const SOVEREIGN_CORE_SERVICES: ReadonlyArray<{
   workspacePath: string;
   preferredPort?: number;
 }> = [
-  { service: "aphrody", workspacePath: "C:\\src\\aphrody" },
-  { service: "shenron", workspacePath: "C:\\src\\shenron" },
-  { service: "rosegriffon", workspacePath: "C:\\src\\rosegriffon" },
-  { service: "pi-opencode", workspacePath: "C:\\src\\pi-opencode" },
-  { service: "ring3", workspacePath: "C:\\src\\ring3-agent" },
-  { service: "design", workspacePath: "C:\\src\\google-design" },
+  { service: "aphrody", workspacePath: "C:\\aphrody\\aphrody" },
+  { service: "shenron", workspacePath: "C:\\aphrody\\shenron" },
+  { service: "rosegriffon", workspacePath: "C:\\aphrody\\rosegriffon" },
+  { service: "pi-opencode", workspacePath: "C:\\aphrody\\pi-opencode" },
+  { service: "ring3", workspacePath: "C:\\aphrody\\ring3-agent" },
+  { service: "design", workspacePath: "C:\\aphrody\\google-design" },
 ] as const;
 
 const PORT_RANGE_START = 4000;
@@ -238,10 +238,10 @@ export async function benchmarkPortlessRouter(
 ): Promise<PortlessRouterBenchmarkResult> {
   const registry = new PortlessRouterRegistry(true);
   // Also register worktree subdomains (`symphony-1.pi-opencode.localhost`, `ralph-verify.aphrody.localhost`)
-  registry.registerService("pi-opencode", "C:\\src\\pi-opencode", {
+  registry.registerService("pi-opencode", "C:\\aphrody\\pi-opencode", {
     worktreePrefix: "symphony-1",
   });
-  registry.registerService("aphrody", "C:\\src\\aphrody", {
+  registry.registerService("aphrody", "C:\\aphrody\\aphrody", {
     worktreePrefix: "ralph-verify",
   });
 
@@ -294,7 +294,7 @@ export async function benchmarkPortlessRouter(
   });
 
   const liveRegistry = new PortlessRouterRegistry(false);
-  liveRegistry.registerService("aphrody", "C:\\src\\aphrody", {
+  liveRegistry.registerService("aphrody", "C:\\aphrody\\aphrody", {
     explicitPort: upstream.port,
   });
   for (const svc of SOVEREIGN_CORE_SERVICES.slice(1)) {

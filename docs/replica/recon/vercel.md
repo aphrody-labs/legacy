@@ -50,11 +50,11 @@ Légende « notre équivalent » : chemin dans src, ou « absent ».
 
 | Fonctionnalité                                                                           | Source                                                       | Notre équivalent                                                                |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| Routage fichiers App Router (`page`, `layout`, `template`, `route`, groupes, dynamiques) | next.js `docs/01-app/03-api-reference/03-file-conventions/*` | absent (pages générées par `apps/aphrody/build.ts`, pas de convention fichiers) |
+| Routage fichiers App Router (`page`, `layout`, `template`, `route`, groupes, dynamiques) | next.js `docs/01-app/03-api-reference/03-file-conventions/*` | absent (pages générées par `apps/web/build.ts`, pas de convention fichiers) |
 | Routes parallèles et interceptées                                                        | next.js `parallel-routes.mdx`, `intercepting-routes.mdx`     | absent                                                                          |
-| `proxy` / middleware                                                                     | next.js `proxy.mdx`, `middleware.mdx` ; vinext README        | `apps/aphrody/edge/worker.ts`, `packages/deploy/src/worker.ts`                  |
+| `proxy` / middleware                                                                     | next.js `proxy.mdx`, `middleware.mdx` ; vinext README        | `apps/web/edge/worker.ts`, `packages/deploy/src/worker.ts`                  |
 | Redirects / rewrites / headers déclaratifs                                               | next.js `redirecting.mdx` ; vercel.com/docs/cdn              | `_redirects` / `_headers` lus par `packages/deploy/src/serve.ts`                |
-| `not-found`, `forbidden`, `unauthorized`, `error`                                        | next.js file conventions                                     | 404 holding (`apps/aphrody/src/holding`) ; reste absent                         |
+| `not-found`, `forbidden`, `unauthorized`, `error`                                        | next.js file conventions                                     | 404 holding (`apps/web/src/holding`) ; reste absent                         |
 | Multi-zones / microfrontends                                                             | next.js `multi-zones.mdx` ; vercel.com/docs/microfrontends   | partiel : `/api/*`, `/g/*` routés vers prd par le Worker aphrody                |
 | Multi-tenant (domaines par client)                                                       | next.js `multi-tenant.mdx` ; vercel/platforms                | partiel : `projects.toml` domaines par projet, wildcard `*.aphrody.app`         |
 
@@ -64,12 +64,12 @@ Légende « notre équivalent » : chemin dans src, ou « absent ».
 | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------- |
 | React Server Components, Server Actions                              | next.js `server-actions.mdx` ; vinext README                                 | absent (pas de React dans src web public)                      |
 | Streaming SSR                                                        | next.js `streaming.mdx` ; vercel.com/fluid                                   | absent côté pages ; `Bun.serve` streame les API                |
-| SSG / `generateStaticParams` / export statique                       | next.js `static-exports.mdx`                                                 | `apps/aphrody/build.ts` (tout est pré-rendu, déployé immuable) |
+| SSG / `generateStaticParams` / export statique                       | next.js `static-exports.mdx`                                                 | `apps/web/build.ts` (tout est pré-rendu, déployé immuable) |
 | ISR, revalidation par tag (`cacheTag`, `cacheLife`, `revalidateTag`) | next.js `incremental-static-regeneration*.mdx`, `how-revalidation-works.mdx` | absent (redéploiement complet par sha)                         |
 | Cache Components / PPR / shell statique                              | next.js `migrating-to-cache-components.mdx`, `ppr-platform-guide.mdx`        | absent                                                         |
 | `after()` (tâches post-réponse)                                      | next.js `functions/after.mdx` ; vercel.com/fluid                             | `ctx.waitUntil` dans `packages/deploy/src/runtime.ts`          |
 | Draft mode                                                           | next.js `draft-mode.mdx`                                                     | absent                                                         |
-| View Transitions                                                     | next.js `view-transitions.mdx`                                               | `apps/aphrody` (View Transitions CSS, commit 7f09620e)         |
+| View Transitions                                                     | next.js `view-transitions.mdx`                                               | `apps/web` (View Transitions CSS, commit 7f09620e)         |
 
 ### Images
 
@@ -77,25 +77,25 @@ Légende « notre équivalent » : chemin dans src, ou « absent ».
 | ----------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
 | `next/image` (srcset, tailles, lazy, AVIF/WebP) | next.js `components/image.mdx`                                      | `GET /_aphrody/image?url=&w=&q=` (`packages/deploy/src/runtime.ts`, binding Images, largeurs 64..3840 identiques à Next) |
 | Optimiseur à la requête sur l'edge              | vercel.com/docs/image-optimization ; vinext README                  | idem, cache par sha dans `deploy-cache.aphrody.app/_img/`                                                                |
-| `ImageResponse` / `opengraph-image` (satori)    | next.js `image-response.mdx`, `opengraph-image.mdx` ; vercel/satori | absent en dynamique ; OG statique `apps/aphrody/src/og-image.png` (pipeline `ay brand build`, autre agent)               |
+| `ImageResponse` / `opengraph-image` (satori)    | next.js `image-response.mdx`, `opengraph-image.mdx` ; vercel/satori | absent en dynamique ; OG statique `apps/web/src/og-image.png` (pipeline `ay brand build`, autre agent)               |
 | Icônes / manifest générés                       | next.js `app-icons.mdx`, `manifest.mdx`                             | statiques : `favicon.svg`, `icon-*.png`, `site.webmanifest`                                                              |
 
 ### Fonts
 
 | Fonctionnalité                                                 | Source                        | Notre équivalent                                                                                                                              |
 | -------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `next/font` (auto-hébergement, subset, `size-adjust`, preload) | next.js `components/font.mdx` | partiel : woff2 auto-hébergé préchargé (`apps/aphrody/build.ts`, `/atkinson-next.woff2`) ; pas de subset ni de fallback métrique automatiques |
+| `next/font` (auto-hébergement, subset, `size-adjust`, preload) | next.js `components/font.mdx` | partiel : woff2 auto-hébergé préchargé (`apps/web/build.ts`, `/atkinson-next.woff2`) ; pas de subset ni de fallback métrique automatiques |
 | Geist (OFL)                                                    | vercel/geist-font             | absent (typographie : `packages/design/design.toml`)                                                                                                              |
 
 ### Edge / compute
 
 | Fonctionnalité                                                              | Source                                      | Notre équivalent                                                                             |
 | --------------------------------------------------------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Edge runtime (API Web)                                                      | vercel/edge-runtime ; next.js `runtime.mdx` | Workers Cloudflare (`apps/aphrody/edge/worker.ts`)                                           |
+| Edge runtime (API Web)                                                      | vercel/edge-runtime ; next.js `runtime.mdx` | Workers Cloudflare (`apps/web/edge/worker.ts`)                                           |
 | Fluid compute (concurrence intra-instance, préchauffage, failover régional) | vercel.com/fluid                            | Workers (isolats) + backend Bun sur prd via tunnel `mig-prd`                                 |
 | `preferredRegion`, `maxDuration`                                            | next.js route segment config                | absent (vinext les ignore aussi)                                                             |
 | Adaptateurs multi-cibles                                                    | next.js `deploying-to-platforms.mdx`        | `packages/runtime-adapter` (`bun.ts`, `cf.ts`) ; `apps/r2-site/src/entry.{cf,vercel,vps}.ts` |
-| Binaire unique                                                              | vinext (`bun build --compile`)              | `apps/aphrody` `build:aot` (`bun build --compile`)                                           |
+| Binaire unique                                                              | vinext (`bun build --compile`)              | `apps/web` `build:aot` (`bun build --compile`)                                           |
 
 ### Cache / CDN
 
@@ -131,7 +131,7 @@ Légende « notre équivalent » : chemin dans src, ou « absent ».
 
 | Fonctionnalité                                     | Source                                              | Notre équivalent                                                                  |
 | -------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Logs runtime recherchables                         | vercel.com/products/observability                   | `[observability] enabled = true` (Workers Logs) dans `apps/aphrody/wrangler.toml` |
+| Logs runtime recherchables                         | vercel.com/products/observability                   | `[observability] enabled = true` (Workers Logs) dans `apps/web/wrangler.toml` |
 | Requêtes / métriques par route, alertes d'anomalie | vercel.com/products/observability                   | absent (pas de tableau par route ni d'alerte)                                     |
 | Logs de build                                      | vercel.com/docs/deployments                         | `deploys/<p>/<sha>.log`, `ay deploy logs`                                         |
 | OpenTelemetry / `instrumentation.ts`               | next.js `open-telemetry.mdx`, `instrumentation.mdx` | absent                                                                            |

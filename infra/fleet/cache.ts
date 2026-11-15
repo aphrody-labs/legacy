@@ -204,7 +204,7 @@ async function gc(): Promise<number> {
       if (c.gc === "bun") await $`bun pm cache rm`.quiet();
       else if (
         c.gc === "rm" &&
-        p.replaceAll("\\", "/").toLowerCase().startsWith("c:/src/")
+        p.replaceAll("\\", "/").toLowerCase().startsWith("c:/aphrody/")
       )
         rmSync(p, { recursive: true, force: true });
     }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs the ssh 22 closing-criteria probe on one fleet host (run from C:\src, Git Bash):
+# Installs the ssh 22 closing-criteria probe on one fleet host (run from C:\aphrody, Git Bash):
 #   sh infra/fleet/bin/ssh22-probe-install.sh fr2 root@ssh-prd.aphrody.com root@<prd-mesh-ip> prd
 #   sh infra/fleet/bin/ssh22-probe-install.sh prd ubuntu@ssh-fr2.aphrody.com ubuntu@<fr2-mesh-ip> fr2
 #   sh infra/fleet/bin/ssh22-probe-install.sh vps "" ubuntu@<fr2-mesh-ip> fr2     (fr1: mesh only, no Access token)

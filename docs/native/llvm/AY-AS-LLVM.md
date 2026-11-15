@@ -1,6 +1,6 @@
 # `ay` façon LLVM — conception (2026-11-12)
 
-Contraintes : noms de package conservés (seuls les dossiers changent), `identity.toml` seule source des noms (ARCHITECTURE.md §Identité), dossiers plats `crates/<couche>-<nom>`, zéro duplication, rien compilé sur le PC. Ne pas toucher `C:\src` tant que nt-03 restructure.
+Contraintes : noms de package conservés (seuls les dossiers changent), `identity.toml` seule source des noms (ARCHITECTURE.md §Identité), dossiers plats `crates/<couche>-<nom>`, zéro duplication, rien compilé sur le PC. Ne pas toucher `C:\aphrody` tant que nt-03 restructure.
 
 ## 1. Driver multicall
 

@@ -65,4 +65,4 @@ Findings: a floor of about 10 ms even for `desktop_version`, which does nothing,
 
 ## 6. Low-level state (nt-03, 2026-11-12)
 
-Claude Code runs as admin (integrity S-1-16-12288); Sudo for Windows Inline, ConsentPromptBehaviorAdmin=0 (elevation without prompt); WT Niubash profile elevate=true by default. Reproducible via C:\src\configuration (README, shell.dsc.winget, machine.export.dsc.winget 161 packages, apply-user.ts --check, forks-aphrody-labs.sh). Windows MCP surface / agentic features: not enabled, owner decision.
+Claude Code runs as admin (integrity S-1-16-12288); Sudo for Windows Inline, ConsentPromptBehaviorAdmin=0 (elevation without prompt); WT Niubash profile elevate=true by default. Reproducible via C:\aphrody\configuration (README, shell.dsc.winget, machine.export.dsc.winget 161 packages, apply-user.ts --check, forks-aphrody-labs.sh). Windows MCP surface / agentic features: not enabled, owner decision.

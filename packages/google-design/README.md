@@ -53,7 +53,7 @@ Built with 100% pure **Bun v1.4.4 Full Rust Architecture** with strictly **zero 
    - Validates WCAG 2.2 contrast ratios and tone delta mathematically.
 
 4. **Automated MDX Generator for Bun Docs (`gds mdx`)**:
-   - Compiles full documentation directly into `C:\src\third_party\bun\docs\design\`.
+   - Compiles full documentation directly into `C:\aphrody\third_party\bun\docs\design\`.
    - Formatted natively via `bun fmt`.
 
 5. **Full-Recon Local Mirror Web Server (`server.ts`)**:
@@ -73,8 +73,8 @@ gds help
 gds serve --port 3030
 
 # Run UI Gate verification on any target directory
-gds verify C:\src\packages\google-design
-gds verify C:\src\apps\aphrody
+gds verify C:\aphrody\packages\google-design
+gds verify C:\aphrody\apps\web
 
 # Analyze any color in CAM16 / HCT perceptual space
 gds hct 4285F4

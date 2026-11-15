@@ -2,7 +2,7 @@
 
 ## Overview
 
-This specification details the architectural blueprint for natively integrating the missing Chromium Web Platform APIs directly into the Full-Rust Bun engine (`C:\src\third_party\bun`), moving from preload polyfills to zero-overhead native Rust built-ins.
+This specification details the architectural blueprint for natively integrating the missing Chromium Web Platform APIs directly into the Full-Rust Bun engine (`C:\aphrody\third_party\bun`), moving from preload polyfills to zero-overhead native Rust built-ins.
 
 ---
 

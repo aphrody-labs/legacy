@@ -61,7 +61,7 @@ A member of the Cargo workspace (src/*)
 | [aphrody-docs](../../../src/docs) | `ay docs`: imports Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) into a SQLite FTS5 index and serves search for people and agents |
 | [bun_dotenv](../../../src/dotenv) | - |
 | [dx12-hal](../../../src/drivers/gpu/dx12) | dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo |
-| [aphrody-env](../../../src/env) | Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/src/.env |
+| [aphrody-env](../../../src/env) | Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/aphrody/.env |
 | [bun_errno](../../../src/errno) | - |
 | [bun_event_loop](../../../src/event_loop) | - |
 | [bun_exe_format](../../../src/exe_format) | - |

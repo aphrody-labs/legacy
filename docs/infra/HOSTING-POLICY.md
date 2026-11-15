@@ -30,7 +30,7 @@ Source conflict: the `cloudflare.config.ts` docs name the Worker field `bindings
 
 | App / service                                            | Placement                                                                                             | Reason (limit)                                                     | Commercial                                        |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- |
-| aphrody.com (`apps/aphrody`)                             | CF Worker `aphrody` (Static Assets) + `/api /g /search` -> prd origin (`ORIGIN_URL`)                  | assets free/unlimited; Bun search origin > 10 ms CPU               | **yes** (ads.txt, sellers.json): Vercel forbidden |
+| aphrody.com (`apps/web`)                             | CF Worker `aphrody` (Static Assets) + `/api /g /search` -> prd origin (`ORIGIN_URL`)                  | assets free/unlimited; Bun search origin > 10 ms CPU               | **yes** (ads.txt, sellers.json): Vercel forbidden |
 | aphrody.app (`apps/aphrody-app`)                         | CF Static Assets (wrangler)                                                                           | static WebGPU shell                                                | yes (product)                                     |
 | downloads.aphrody.com                                    | CF `r2-site` + R2 `aphrody-dist`                                                                      | large files, R2 egress free, 10 M Class B/month                    | no                                                |
 | cdn.aphrody.com                                          | CF `r2-site` + R2 `aphrody-assets`                                                                    | same                                                               | no                                                |
@@ -74,5 +74,5 @@ Source conflict: the `cloudflare.config.ts` docs name the Worker field `bindings
 
 ## Note for the 502 agent (coordination through files)
 
-- `aphrody.com`/`www` now point to Worker `aphrody` (wrangler, `apps/aphrody`). When prd:3000 is back, set `ORIGIN_URL` (Worker var) to the public origin; `aphrody-com` (r2-site) is no longer used, delete it once the backend is validated.
+- `aphrody.com`/`www` now point to Worker `aphrody` (wrangler, `apps/web`). When prd:3000 is back, set `ORIGIN_URL` (Worker var) to the public origin; `aphrody-com` (r2-site) is no longer used, delete it once the backend is validated.
 - Do not touch `downloads-aphrody-com` or `downloads-portable`: the cutover to the portable app is just moving the custom domain, after your validation.

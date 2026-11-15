@@ -469,7 +469,7 @@ export function createSampleDashboardSpec(): JsonRenderSpec {
     elements: {
       "page-root": {
         type: "Page",
-        props: { title: "C:\\src Telemetry Console" },
+        props: { title: "C:\\aphrody Telemetry Console" },
         children: ["badge-live", "grid-kpis", "card-actions"],
       },
       "badge-live": {

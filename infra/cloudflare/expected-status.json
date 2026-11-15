@@ -87,6 +87,6 @@
   },
   "www.aphrody.com": {
     "status": 301,
-    "why": "redirection vers l'apex aphrody.com (Worker aphrody, apps/aphrody/edge)"
+    "why": "redirection vers l'apex aphrody.com (Worker aphrody, apps/web/edge)"
   }
 }

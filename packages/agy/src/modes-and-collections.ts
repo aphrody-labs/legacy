@@ -25,7 +25,7 @@ export interface AgyModeState {
   updatedAt: string;
 }
 
-export const DEFAULT_AGY_MODE_STATE_PATH = "C:/src/var/agy-mode-state.json";
+export const DEFAULT_AGY_MODE_STATE_PATH = "C:/aphrody/var/agy-mode-state.json";
 
 /**
  * Quasi-empty (<100 tokens) system prompt for Mode 1 (`minimal` / `pi-sudo`):

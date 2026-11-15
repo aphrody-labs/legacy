@@ -1,4 +1,4 @@
-# `contact@aphrody.com` Mailing Infrastructure (`C:\src\infra\mail`)
+# `contact@aphrody.com` Mailing Infrastructure (`C:\aphrody\infra\mail`)
 
 Production-ready mail infrastructure for `aphrody.com` powered by **Stalwart Mail Server** (`stalwartlabs/mail-server:latest`) — a 100% pure-Rust all-in-one JMAP, IMAP4rev2, SMTP, ManageSieve, and built-in SPF/DKIM/DMARC/ARC/MTA-STS/TLS-RPT/ACME engine with zero Java, PHP, or Python runtime bloat.
 
@@ -49,13 +49,13 @@ Generate deterministic BIND `.zone` and JSON records (or push live via Cloudflar
 
 ```powershell
 # Dry-run export (writes cloudflare-mail-records.json and cloudflare-mail-records.zone):
-bun run C:\src\infra\mesh-vn\src\cloudflare-mail-dns.ts
+bun run C:\aphrody\infra\mesh-vn\src\cloudflare-mail-dns.ts
 
 # Live Cloudflare DNS upsert via env-kit:
-env-kit exec -- bun run C:\src\infra\mesh-vn\src\cloudflare-mail-dns.ts --apply
+env-kit exec -- bun run C:\aphrody\infra\mesh-vn\src\cloudflare-mail-dns.ts --apply
 ```
 
-Serve `C:\src\infra\mail\mta-sts.txt` at `https://mta-sts.aphrody.com/.well-known/mta-sts.txt` with `Content-Type: text/plain; charset=utf-8` (enforces TLS 1.2/1.3 MX transport across `mail.aphrody.com` and `*.google.com`).
+Serve `C:\aphrody\infra\mail\mta-sts.txt` at `https://mta-sts.aphrody.com/.well-known/mta-sts.txt` with `Content-Type: text/plain; charset=utf-8` (enforces TLS 1.2/1.3 MX transport across `mail.aphrody.com` and `*.google.com`).
 
 BIMI (`default._bimi.aphrody.com`) references `https://aphrody.com/packages/design/brand/aphrody-monogram-bimi.svg`.
 
@@ -78,7 +78,7 @@ Use these exact coordinates across external org platforms:
 | **SMTP Host**                | `mail.aphrody.com`                                                        |
 | **SMTP Port (Implicit TLS)** | `465` (recommended) or `587` (STARTTLS)                                   |
 | **SMTP Username**            | `contact@aphrody.com` (or dedicated app credential `noreply@aphrody.com`) |
-| **SMTP Password**            | Stored exclusively in `C:\src\.env` (`SMTP_PASSWORD`)                     |
+| **SMTP Password**            | Stored exclusively in `C:\aphrody\.env` (`SMTP_PASSWORD`)                     |
 | **JMAP Endpoint**            | `https://mail.aphrody.com/jmap` (`Authorization: Bearer $JMAP_API_TOKEN`) |
 
 - **Supabase (`Authentication -> Emails -> SMTP Settings`)**: Enable Custom SMTP -> Sender email `noreply@aphrody.com`, Sender name `Aphrody`, Host `mail.aphrody.com`, Port `465`, Username `noreply@aphrody.com`, Password `$SMTP_PASSWORD`.

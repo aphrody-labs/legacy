@@ -264,7 +264,7 @@ mod tests {
         assert!(!is_safe_workspace_path(Path::new(r"C:\Windows\System32\cmd.exe")));
         assert!(!is_safe_workspace_path(Path::new("C:/Windows/System32")));
         assert!(!is_safe_workspace_path(Path::new("/usr/bin/bash")));
-        assert!(is_safe_workspace_path(Path::new(r"C:\src\packages\pi-opencode\src\cli.ts")));
+        assert!(is_safe_workspace_path(Path::new(r"C:\aphrody\packages\pi-opencode\src\cli.ts")));
     }
 
     #[test]

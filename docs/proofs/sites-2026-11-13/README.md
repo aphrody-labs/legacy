@@ -35,7 +35,7 @@ Contenu public réécrit sans aucune mention technique (ordre du propriétaire) 
 
 - Figma : fichier « Aphrody sites - M3 (aphrody.com, aphrody.app) », https://www.figma.com/design/HCD0QhzvkvMIjnffaxg7T8
   (aphrody.com en français à 768 px, nœud 1:2 ; en anglais à 1280 px, nœud 2:2), capturés depuis le build local
-  `apps/aphrody/dist` par le script de capture Figma.
+  `apps/web/dist` par le script de capture Figma.
 - Stitch : projet 15555120843463058326 avec le système de design « Aphrody M3 » (graine #3355FF, variante
   vibrante, tertiaire #FFB300, Google Sans Flex, coins 12). Les deux générations d'écran (aphrody.com bureau,
   aphrody.app mobile) ont expiré côté relais sans produire d'écran.

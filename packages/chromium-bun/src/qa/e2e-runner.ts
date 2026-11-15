@@ -3,7 +3,7 @@
  * Automated Real-Condition Local & Production E2E Verification Suite
  * Drives real Headless Chromium CDP, agent-browser.exe accessibility snapshots,
  * and Google Lighthouse CLI against:
- *   1. Local @aphrody/web (apps/aphrody) production server
+ *   1. Local @aphrody/web (apps/web) production server
  *   2. Local @aphrody/yolo (apps/yolo) fullstack framework server
  *   3. Live Production https://aphrody.com/
  */
@@ -65,7 +65,7 @@ export async function runFullE2eRealConditionSuite(options?: {
   const yoloPort = 39102;
 
   const aphrodyProc = Bun.spawn(["bun", "run", "server.ts"], {
-    cwd: join(root, "apps", "aphrody"),
+    cwd: join(root, "apps", "web"),
     env: { ...process.env, PORT: String(aphrodyPort) },
     stdout: "ignore",
     stderr: "ignore",
@@ -90,13 +90,13 @@ export async function runFullE2eRealConditionSuite(options?: {
     ]);
 
     if (!aphrodyReady) {
-      throw new Error(`apps/aphrody failed to start on ${aphrodyUrl}`);
+      throw new Error(`apps/web failed to start on ${aphrodyUrl}`);
     }
     if (!yoloReady) {
       throw new Error(`apps/yolo failed to start on ${yoloUrl}`);
     }
 
-    // 1. Audit Local apps/aphrody
+    // 1. Audit Local apps/web
     const aphrodySearchRes = await fetch(`${aphrodyUrl}api/search?q=aphrody`);
     const aphrodyDocxRes = await fetch(`${aphrodyUrl}api/office/docx`, {
       method: "POST",
@@ -119,7 +119,7 @@ export async function runFullE2eRealConditionSuite(options?: {
       : null;
 
     targets.push({
-      name: "local:apps/aphrody",
+      name: "local:apps/web",
       url: aphrodyUrl,
       cdp: aphrodyCdp,
       agentBrowser: aphrodyAb,

@@ -42,7 +42,7 @@ pub use pages::CanonicalPage;
 pub use targets::{RenderTarget, RenderedFrame, render_canonical_page};
 pub use theme_bridge::{FusionThemePreset, ResolvedFusionTheme, ThemePresetSpec};
 
-/// Provenance entry for an upstream repository absorbed/aligned under `aphrody-labs` and `C:\src`.
+/// Provenance entry for an upstream repository absorbed/aligned under `aphrody-labs` and `C:\aphrody`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 pub struct UpstreamBrickRecord {
     pub brick: &'static str,

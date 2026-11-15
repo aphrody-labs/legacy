@@ -63,7 +63,7 @@ Rust 构建在 CI 或 fr1 上运行，不在工作站上运行。
 
 ## 6. 所有者 2026-11-13 设定的目标（仅记录，尚未开始）
 
-- 只保留三个应用，每个领域一个：`shenron`、`rosegriffon`，以及一个合并 `apps/aphrody`（aphrody.com）与 `apps/aphrody-app`（aphrody.app）的 Aphrody 应用。其余所有应用、包与 crate 都扁平化为共享代码；`shenron` 与 `rosegriffon` 中不属于其产品特有的代码迁入共享 crate 与包并复用。
+- 只保留三个应用，每个领域一个：`shenron`、`rosegriffon`，以及一个合并 `apps/web`（aphrody.com）与 `apps/aphrody-app`（aphrody.app）的 Aphrody 应用。其余所有应用、包与 crate 都扁平化为共享代码；`shenron` 与 `rosegriffon` 中不属于其产品特有的代码迁入共享 crate 与包并复用。
 - 合并后的 Aphrody 应用承载并部署 Craft Apps、ArtCraft 与游戏：浏览器中的全屏 WebAssembly 与 WebGPU，开放世界多人，1080p 下 120 fps，手柄（Xbox、PlayStation）、键鼠、音频与视频，基于 Bevy 构建，并与 Unreal Engine 建立特性对照表。
 - 所有者点名的上游，使用前须以 `gh api` 核实：`vercel-labs/ui`、`vercel-labs/native`、`niri-wm/niri`、`niri-wm/awesome-niri`、DioxusLabs 组织、`longbridge`（GPUI 组件，`nsh`）、`cloudflare/vinext`、`vercel/next.js`、`vercel/vercel`、`vercel/ai`、`vercel/turborepo`、`mui/base-ui`、shadcn、`tailwindlabs/tailwindcss`、Microsoft WebUI、iced 与 COSMIC。
 - 清理：移除 apps、packages 与 crates 内嵌的第三方副本；每个依赖只保留一个版本；缩小二进制体积。

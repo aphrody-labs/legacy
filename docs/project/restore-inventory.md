@@ -236,7 +236,7 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | /srv/pipe-src |  |  | present-older | bunfig.toml(1), rust-toolchain.toml(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (6/15 source files shared (40%)) |
 | /srv/pipe-src/.agents |  |  | present-identical | .agents/skills(825), .agents/.claude-plugin(1) | content already in the tree (830/858 source files shared (97%)) |
 | /srv/pipe-src/.claude |  |  | present-older | .claude/agents(2), .claude/agent-memory(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (4/16 source files shared (25%)) |
-| /srv/pipe-src/apps |  |  | present-older | apps/auto(1026), apps/aphrody(15) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (1052/1425 source files shared (74%)) |
+| /srv/pipe-src/apps |  |  | present-older | apps/auto(1026), apps/web(15) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (1052/1425 source files shared (74%)) |
 | /srv/pipe-src/assets |  |  | present-older | packages/design(3) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (3/7 source files shared (43%)) |
 | /srv/pipe-src/bench |  |  | present-identical | bench/src(13), bench/results(1) | content already in the tree (20/20 source files shared (100%)) |
 | /srv/pipe-src/docs |  |  | present-older | docs/lore(215), docs/native(68) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (446/567 source files shared (79%)) |
@@ -307,7 +307,7 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 
 | item | language | updated | status | monorepo path | decision |
 |---|---|---|---|---|---|
-| apps/aphrody |  | 2026-11-14 | present-identical | apps/aphrody-web (files absent from apps/aphrody) | restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/aphrody); restoring commit ac067b73c (178 files (134 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| apps/web |  | 2026-11-14 | present-identical | apps/aphrody-web (files absent from apps/web) | restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/web); restoring commit ac067b73c (178 files (134 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | apps/aphrody-app |  | 2026-11-14 | present-identical | apps/aphrody-app | restored from 5d771bb74^ into apps/aphrody-app; restoring commit ac067b73c (46 files (31 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | apps/r2-site |  | 2026-11-14 | present-identical | apps/r2-site | restored from 5d771bb74^ into apps/r2-site; restoring commit ac067b73c (11 files (10 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | apps/r2b |  | 2026-11-14 | present-identical | apps/r2b (Python RE bridge and rea-ghidra uv script only, own pyproject.toml and tests; the rest lives in aphrody-labs/r2b) | restored from 36bb44ca2^ into apps/r2b (Python RE bridge and rea-ghidra uv script only, own pyproject.toml and tests; the rest lives in aphrody-labs/r2b); restoring commit ac067b73c (7768 files (7429 code), deleted in 36bb44ca2 on 2026-11-14 (see git show 36bb44ca2)) |
@@ -459,16 +459,16 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 | dbfr-backups |  | 2026-10-12 | present-identical |  | artifact bucket; data, not source |
 | rosegriffon-cdn |  | 2026-11-12 | present-identical |  | artifact bucket; data, not source |
 | shenron-cdn |  | 2026-10-11 | present-identical |  | artifact bucket; data, not source |
-| aphrody |  | 2026-11-13 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-app |  | 2026-10-23 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-app-site |  | 2026-11-12 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-com |  | 2026-11-12 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-deploy |  | 2026-11-14 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-email-worker |  | 2026-11-07 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-github |  | 2026-11-13 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-mcp-gateway |  | 2026-11-14 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| aphrody-webos |  | 2026-11-14 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
-| api-aphrody-com |  | 2026-11-12 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source |
+| aphrody |  | 2026-11-13 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-app |  | 2026-10-23 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-app-site |  | 2026-11-12 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-com |  | 2026-11-12 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-deploy |  | 2026-11-14 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-email-worker |  | 2026-11-07 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-github |  | 2026-11-13 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-mcp-gateway |  | 2026-11-14 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| aphrody-webos |  | 2026-11-14 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
+| api-aphrody-com |  | 2026-11-12 | present-identical |  | deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source |
 | ~/.gemini/antigravity*/brain\|scratch\|mcp (code files) |  |  | unique-commits |  | 23 conversation folders with 193 code files (0 identical to tree files); scratch tests and probes written by agents, not packages: left in place, no copy (193 files not in the tree) |
 | %USERPROFILE%/ComfyUI |  |  | present-identical |  | upstream clone or scratch; nothing to restore |
 | %USERPROFILE%/lfs-git |  |  | present-identical |  | upstream clone or scratch; nothing to restore |

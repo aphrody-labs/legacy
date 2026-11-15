@@ -1,7 +1,7 @@
 /**
  * Figma REST API v1 + Figma Variables + Code Connect + Material Design Icons Bridge
  * 100% Pure Bun v1.4.4 - Zero External Dependencies
- * Links live Figma API (`FIGMA_ACCESS_TOKEN` / `C:\src\.env`) with `C:\src\packages\google-design\upstream\material-design-icons`.
+ * Links live Figma API (`FIGMA_ACCESS_TOKEN` / `C:\aphrody\.env`) with `C:\aphrody\packages\google-design\upstream\material-design-icons`.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -39,9 +39,9 @@ export interface FigmaMaterialIconSyncItem {
 }
 
 /**
- * Resolves `FIGMA_ACCESS_TOKEN` or `FIGMA_TOKEN` from `process.env` or `C:\src\.env` without leaking secrets.
+ * Resolves `FIGMA_ACCESS_TOKEN` or `FIGMA_TOKEN` from `process.env` or `C:\aphrody\.env` without leaking secrets.
  */
-export function resolveFigmaToken(envFilePath = "C:/src/.env"): string | null {
+export function resolveFigmaToken(envFilePath = "C:/aphrody/.env"): string | null {
   const fromEnv = process.env.FIGMA_ACCESS_TOKEN || process.env.FIGMA_TOKEN;
   if (fromEnv && fromEnv.trim().length > 0) {
     return fromEnv.trim();
@@ -75,7 +75,7 @@ export async function fetchFigmaCurrentUser(
   const resolved = token ?? resolveFigmaToken();
   if (!resolved) {
     throw new Error(
-      "Missing FIGMA_ACCESS_TOKEN in process.env or C:\\src\\.env",
+      "Missing FIGMA_ACCESS_TOKEN in process.env or C:\\aphrody\\.env",
     );
   }
   const res = await fetch("https://api.figma.com/v1/me", {
@@ -89,7 +89,7 @@ export async function fetchFigmaCurrentUser(
 
 /**
  * Builds a deterministic Figma Code Connect + Icon Component manifest directly from
- * `C:\src\packages\google-design\upstream\material-design-icons`.
+ * `C:\aphrody\packages\google-design\upstream\material-design-icons`.
  */
 export function buildMaterialIconsFigmaManifest(
   figmaFileUrl = "https://www.figma.com/community/plugin/740272380439725040/material-design-icons",

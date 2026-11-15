@@ -1,5 +1,5 @@
 ; BIND Zone Export for aphrody.com â€” Sovereign Mail & Google Workspace Suite
-; Generated deterministically by C:/src/infra/mesh-vn/src/cloudflare-mail-dns.ts
+; Generated deterministically by C:/aphrody/infra/mesh-vn/src/cloudflare-mail-dns.ts
 $ORIGIN aphrody.com.
 $TTL 3600
 

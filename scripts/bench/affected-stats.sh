@@ -1,6 +1,6 @@
 #!/bin/sh
 # Local: affected-target selection stats over recent commits (no compilation).
-R=C:/src
+R=C:/aphrody
 tot=$(bun $R/scripts/checkdeps.ts --root $R --affected HEAD 2>/dev/null | rg -c '^cargo')
 echo "ref cargo_affected files_changed (HEAD itself: $tot)"
 for n in 1 2 3 5 8 13; do

@@ -428,7 +428,7 @@ mod tests {
     fn remote_spec_vs_windows_paths() {
         assert_eq!(split_remote("prd:/tmp/x"), Some(("prd", "/tmp/x")));
         assert_eq!(split_remote("fr1,fr2:/tmp/"), Some(("fr1,fr2", "/tmp/")));
-        assert_eq!(split_remote(r"C:\src\file"), None);
+        assert_eq!(split_remote(r"C:\aphrody\file"), None);
         assert_eq!(split_remote("./a:b"), None);
         assert_eq!(split_remote("plain"), None);
     }

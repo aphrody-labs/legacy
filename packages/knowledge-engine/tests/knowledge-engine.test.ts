@@ -96,7 +96,7 @@ describe("@aphrody/knowledge-engine core verification", () => {
 
   test("Deterministic fact-checker verifies real paths and flags nonexistent files", async () => {
     const okVerdict = await runFactCheck(
-      "C:\\src\\AGENTS.md defines the canonical architecture with Bun v1.4.4.",
+      "C:\\aphrody\\AGENTS.md defines the canonical architecture with Bun v1.4.4.",
       { skipNetwork: true },
     );
     expect(okVerdict.totals.contradicted).toBe(0);
@@ -106,7 +106,7 @@ describe("@aphrody/knowledge-engine core verification", () => {
       const badDoc = join(tmp, "claim.md");
       writeFileSync(
         badDoc,
-        "File `C:\\src\\nonexistent_fake_path_999.ts` exists.",
+        "File `C:\\aphrody\\nonexistent_fake_path_999.ts` exists.",
         "utf8",
       );
       const badVerdict = await runFactCheck(badDoc, { skipNetwork: true });

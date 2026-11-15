@@ -15,13 +15,13 @@
 # the ready deployment that produced it (no build, no upload). CI keeps deploys/<p>/_cache/<key>.json.
 
 [project.aphrody]
-path = "apps/aphrody"
-build = "bun apps/aphrody/build.ts"
+path = "apps/web"
+build = "bun apps/web/build.ts"
 out = "public"
 domains = ["aphrody.com", "www.aphrody.com", "aphrody.app", "www.aphrody.app"]
 worker = "aphrody"
 watch = [
-  "apps/aphrody/**",
+  "apps/web/**",
   "docs/ALPHABET.md",
   "packages/deploy/src/alphabet.ts",
   "packages/deploy/src/m3.ts",

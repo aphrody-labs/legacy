@@ -27,7 +27,7 @@ async function build() {
 
   // 1. Generate & format Bun docs MDX suite
   console.log(
-    "1/3 Generating MDX docs in C:\\src\\third_party\\bun\\docs\\design\\...",
+    "1/3 Generating MDX docs in C:\\aphrody\\third_party\\bun\\docs\\design\\...",
   );
   const mdxResult = await generateBunDesignDocs();
   console.log(`    Generated ${mdxResult.generatedFiles.length} MDX files.`);

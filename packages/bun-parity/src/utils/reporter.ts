@@ -134,18 +134,18 @@ export function generateMarkdownReport(matrix: ParityMatrix): string {
   );
   lines.push("```bash");
   lines.push(
-    "bun --preload C:/src/packages/bun-parity/dist/chromium-parity-preload.ts your-script.ts",
+    "bun --preload C:/aphrody/packages/bun-parity/dist/chromium-parity-preload.ts your-script.ts",
   );
   lines.push("```");
   lines.push("Or in code:");
   lines.push("```ts");
   lines.push(
-    'import "C:/src/packages/bun-parity/dist/chromium-parity-preload.ts";',
+    'import "C:/aphrody/packages/bun-parity/dist/chromium-parity-preload.ts";',
   );
   lines.push("```");
   lines.push("");
   lines.push(
-    "### Artifact 2: Rust Crate Patch Queue for C:\\src\\third_party\\bun",
+    "### Artifact 2: Rust Crate Patch Queue for C:\\aphrody\\third_party\\bun",
   );
   lines.push("Clean unified git patches ready for upstream compilation:");
   lines.push(
@@ -161,7 +161,7 @@ export function generateMarkdownReport(matrix: ParityMatrix): string {
   lines.push("Verification command:");
   lines.push("```bash");
   lines.push(
-    "git -C C:\\src\\third_party\\bun apply --check C:\\src\\packages\\bun-parity\\patches\\0001-mime-chromium-types.patch",
+    "git -C C:\\aphrody\\third_party\\bun apply --check C:\\aphrody\\packages\\bun-parity\\patches\\0001-mime-chromium-types.patch",
   );
   lines.push("```");
 

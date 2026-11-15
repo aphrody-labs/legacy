@@ -1,4 +1,4 @@
-// Package envkit provides zero-dependency loading and secret redaction for C:\src\.env.
+// Package envkit provides zero-dependency loading and secret redaction for C:\aphrody\.env.
 package envkit
 
 import (
@@ -14,7 +14,7 @@ import (
 // DefaultMonorepoEnvPath returns the canonical root .env path.
 func DefaultMonorepoEnvPath() string {
 	if runtime.GOOS == "windows" {
-		return `C:\src\.env`
+		return `C:\aphrody\.env`
 	}
 	return "/src/.env"
 }
@@ -114,7 +114,7 @@ func MaskValue(key, value string) string {
 	return value
 }
 
-// ResolveMonorepoEnvPath walks upward from startDir looking for .env, falling back to C:\src\.env.
+// ResolveMonorepoEnvPath walks upward from startDir looking for .env, falling back to C:\aphrody\.env.
 func ResolveMonorepoEnvPath(startDir string) string {
 	dir := startDir
 	if dir == "" {
@@ -230,7 +230,7 @@ func isValidIdent(s string) bool {
 	return true
 }
 
-// Load discovers C:\src\.env (or nearest .env) and injects missing keys into os.Environ.
+// Load discovers C:\aphrody\.env (or nearest .env) and injects missing keys into os.Environ.
 func Load() (*Env, error) {
 	return LoadWithOptions(Options{InjectProcessEnv: true})
 }

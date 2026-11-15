@@ -1,6 +1,6 @@
 // `bun packages/ai-os/src/brain/memory-sync.ts [--home <dir>] [--dry-run]`: two-way memory sync Claude <-> ai-os store
 // (the store Gemini reaches through the MCP tools memory_search / memory_add).
-//  push: each Claude memory file (~/.claude/projects/C--src/memory/*.md) is upserted as entry `claude-mem:<file>`,
+//  push: each Claude memory file (~/.claude/projects/C--aphrody/memory/*.md) is upserted as entry `claude-mem:<file>`,
 //        scope "claude", so memory_search finds it; the Claude file is the source of truth and always wins.
 //  pull: entries with scope "gemini" or "gemini:*" (written by Gemini via memory_add) are appended, never edited in place,
 //        to memory/gemini-inbox.md as `- <iso> [source=gemini id=<id> scope=<scope>] <text>`; a state file records
@@ -17,7 +17,7 @@ const INBOX = "gemini-inbox.md";
 
 export async function memorySync(o: { home?: string; memDir?: string; dry?: boolean } = {}) {
   const home = o.home ?? Bun.env.AGENT_HOME ?? join(homedir(), ".agent");
-  const memDir = o.memDir ?? join(homedir(), ".claude", "projects", "C--src", "memory");
+  const memDir = o.memDir ?? join(homedir(), ".claude", "projects", "C--aphrody", "memory");
   const m = new Memory(join(home, "memory.sqlite"));
   const state = join(home, "memory-sync.json");
   const done = new Set<string>(existsSync(state) ? JSON.parse(readFileSync(state, "utf8")).exported ?? [] : []);

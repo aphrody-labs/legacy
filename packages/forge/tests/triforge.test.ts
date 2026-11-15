@@ -155,7 +155,7 @@ describe("Sovereign GitLab Infra, .gitlab-ci.yml & cloudbuild.yaml Validation", 
     expect(pkgRaw.includes("bunx")).toBe(false);
   });
 
-  test("validates C:\\src\\infra\\gitlab sovereign artifacts exist and obey zero-bunx", () => {
+  test("validates C:\\aphrody\\infra\\gitlab sovereign artifacts exist and obey zero-bunx", () => {
     const files = [
       srcPath("infra", "gitlab", "docker-compose.gitlab.yml"),
       srcPath("infra", "gitlab", "gitlab.rb"),

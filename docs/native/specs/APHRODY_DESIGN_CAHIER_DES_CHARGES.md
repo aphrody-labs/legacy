@@ -1,7 +1,7 @@
 # Cahier des Charges (PRD) & Architecture Maquette — `aphrody.com` & Studio d'Actifs Ouverts
 
 **Date de révision** : 2026-11-11  
-**Périmètre** : [`C:\src\apps\aphrody`](file:///C:/src/apps/aphrody) (`aphrody.com`) + [`C:\src\packages\google-design`](file:///C:/src/packages/google-design) (`@aphrody/google-design`)  
+**Périmètre** : [`C:\aphrody\apps\web`](file:///C:/aphrody/apps/web) (`aphrody.com`) + [`C:\aphrody\packages\google-design`](file:///C:/aphrody/packages/google-design) (`@aphrody/google-design`)  
 **Statut** : Validé en mode Plan avant implémentation  
 **Conformité** : Modern Web Guidelines, Lighthouse / `wck` 100/100, Google Material Design 3, Microsoft Fluent UI 2, `ui-ux-pro-max`, `3d-pro-max`, `impeccable`, `humanizer`, `DESIGN.md`.
 
@@ -10,8 +10,8 @@
 ## 1. Positionnement Produit & Propriété IA Stricte
 
 1. **Séparation stricte de propriété** :
-   - [`C:\src\packages\ai-os`](file:///C:/src/packages/ai-os) (`@aphrody/ai-os`) est notre **unique produit IA public et propriétaire IA interne**.
-   - `aphrody.com` (`C:\src\apps\aphrody`) et `aphrody.app` (`C:\src\apps\aphrody-app`) sont des **plateformes généralistes de recherche web, d'ingénierie système, de distribution Linux/WSL2 et de création graphique**, alignées sur les principes d'ingénierie de **Linus Torvalds** (structures de données sobres, intégrité système, zéro surcouche inutile), **Jarred Sumner** (Bun v1.4.4 Full-Rust, zéro dépendance npm externe, AOT/LTO, copie zéro) et **Larry Page** (clarté immédiate sous 100 ms, simplicité d'accueil masquant une infrastructure profonde).
+   - [`C:\aphrody\packages\ai-os`](file:///C:/aphrody/packages/ai-os) (`@aphrody/ai-os`) est notre **unique produit IA public et propriétaire IA interne**.
+   - `aphrody.com` (`C:\aphrody\apps\web`) et `aphrody.app` (`C:\aphrody\apps\aphrody-app`) sont des **plateformes généralistes de recherche web, d'ingénierie système, de distribution Linux/WSL2 et de création graphique**, alignées sur les principes d'ingénierie de **Linus Torvalds** (structures de données sobres, intégrité système, zéro surcouche inutile), **Jarred Sumner** (Bun v1.4.4 Full-Rust, zéro dépendance npm externe, AOT/LTO, copie zéro) et **Larry Page** (clarté immédiate sous 100 ms, simplicité d'accueil masquant une infrastructure profonde).
 2. **Exécution 100 % autonome en interne, zéro AI-slop en façade** :
    - Toute la chaîne de conception, génération d'actifs, compilation, test et déploiement s'exécute sans intervention humaine (NHITL).
    - En façade, aucun slogan creux ("AI-powered next-gen", dégradés violets génériques, émojis, hyperboles marketing) n'est toléré. Chaque texte passe le filtre `humanizer` et la grille critique `impeccable`.
@@ -88,7 +88,7 @@ _(Note de continuité SEO : le point d'accès technique `/api/gemini/search` et 
 
 ## 4. Critères d'Acceptation & Budgets de Qualité (`wck` + `gds`)
 
-1. **Zéro dépendance npm externe** dans `apps/aphrody/package.json` (`dependencies: {}`, `devDependencies: {}`).
+1. **Zéro dépendance npm externe** dans `apps/web/package.json` (`dependencies: {}`, `devDependencies: {}`).
 2. **Score `wck` 100/100** sur les 7 spécifications (HTML5 sémantique, méta robots, JSON-LD `@graph`, budget CSS/JS compressé, accessibilité ARIA + cibles >= 48 px, sécurité CSP/HSTS, zéro CLS).
 3. **Audit anti-AI-slop `gds`** : `0` émoji, `0` cliché IA détecté par `humanizer`, contraste WCAG AA/AAA vérifié sur les thèmes clair et sombre.
 4. **Actifs réels & téléchargeables** servis depuis `dist/assets/` avec pré-compression `.gz`/`.br` pour les formats textuels et `ETag` fort BLAKE3/SHA-256 pour tous les formats binaires (`.gif`, `.png`, `.glb`, `.wav`).

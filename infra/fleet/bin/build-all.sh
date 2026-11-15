@@ -55,8 +55,8 @@ if step site; then
   log "aphrody site"
   bun install --frozen-lockfile >/dev/null
   [ -d "$OUT/game-web" ] && { mkdir -p target/game-web; cp -a "$OUT/game-web/." target/game-web/; }
-  GAME_WEB_DIR=$PWD/target/game-web bun run --cwd apps/aphrody build.ts
-  tar -C apps/aphrody -cf - dist | zstd -q -T4 -o "$OUT/aphrody-dist.tar.zst"
+  GAME_WEB_DIR=$PWD/target/game-web bun run --cwd apps/web build.ts
+  tar -C apps/web -cf - dist | zstd -q -T4 -o "$OUT/aphrody-dist.tar.zst"
 fi
 
 ( cd "$OUT" && find . -type f ! -name MANIFEST.b3 -print0 | sort -z | xargs -0 b3sum > MANIFEST.b3 2>/dev/null || find . -type f ! -name MANIFEST.b3 -print0 | xargs -0 sha256sum > MANIFEST.sha256 )

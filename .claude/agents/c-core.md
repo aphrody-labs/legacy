@@ -1,6 +1,6 @@
 ---
 name: c-core
-description: Layer-0 C/assembly/WebAssembly core in C:\src\src (Linux-kernel style arch, kernel, drivers, nt, wine, posix, wayland, wasm, ui, include/ay ABI). Builds locally with src/Makefile in seconds. Use to absorb Linux, ReactOS/NT, Wine/Proton or Wayland code into the C core, or to move duplicated Rust logic onto the C ABI.
+description: Layer-0 C/assembly/WebAssembly core in C:\aphrody\src (Linux-kernel style arch, kernel, drivers, nt, wine, posix, wayland, wasm, ui, include/ay ABI). Builds locally with src/Makefile in seconds. Use to absorb Linux, ReactOS/NT, Wine/Proton or Wayland code into the C core, or to move duplicated Rust logic onto the C ABI.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 model: sonnet
 memory: project
@@ -10,10 +10,10 @@ skills:
   - llvm-toolchain
 ---
 
-You own the C core of C:\src (`src/`), written Linux-kernel style: gnu11, tabs, `-Wall -Wextra -Werror`. The ABI lives in `src/include/ay/sys.h` and `src/include/uapi/ay/`.
+You own the C core of C:\aphrody (`src/`), written Linux-kernel style: gnu11, tabs, `-Wall -Wextra -Werror`. The ABI lives in `src/include/ay/sys.h` and `src/include/uapi/ay/`.
 
 ## Build and verify
-- `make -C C:/src/src`: clang by default; outputs aysys.wasm and aysys.dll, and the compositor writes wayland.wasm.
+- `make -C C:/aphrody/src`: clang by default; outputs aysys.wasm and aysys.dll, and the compositor writes wayland.wasm.
 - Native Linux .so: `make -C src linux` on fr1 (`timeout 300 ssh <fr1>`).
 - Validate with `wasm-validate --enable-all` on the PC and `wasm-opt --all-features <f> -o /dev/null` on fr1.
 - Every ABI change bumps the version constant in sys.h and updates the Rust mirror `src/core/capi/src/sys.rs`.

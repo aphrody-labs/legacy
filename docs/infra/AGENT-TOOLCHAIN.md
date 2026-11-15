@@ -10,7 +10,7 @@ Date: 2026-11-13. Source of truth: `infra/agents/toolchain.toml`. Applier: `pack
 
 ## Mechanism (no link, no copy in the repository)
 
-- Root marketplace `aphrody`: `.claude-plugin/marketplace.json`, at the root of src. It replaces `plugins/.claude-plugin/marketplace.json` (`claude plugin marketplace add C:\src` repoints it without uninstalling its plugins). Codex reads the same file (`.claude-plugin/marketplace.json` is one of the paths of `codex-rs/core-plugins/src/marketplace.rs`, openai/codex@aa5f492031f7).
+- Root marketplace `aphrody`: `.claude-plugin/marketplace.json`, at the root of src. It replaces `plugins/.claude-plugin/marketplace.json` (`claude plugin marketplace add C:\aphrody` repoints it without uninstalling its plugins). Codex reads the same file (`.claude-plugin/marketplace.json` is one of the paths of `codex-rs/core-plugins/src/marketplace.rs`, openai/codex@aa5f492031f7).
 - Plugin `aphrody-skills`: its root is `.agents` (manifest `.agents/.claude-plugin/plugin.json`, Gemini extension `.agents/gemini-extension.json`). Its skills are `.agents/skills`, the single source. Each CLI keeps a copy in its own cache: Claude in `~/.claude/plugins/cache/aphrody/aphrody-skills/<sha>`, Codex in `~/.codex/plugins/cache`, agy in `~/.gemini/config/plugins`. The applier copies again as soon as the HEAD of src changes (`refresh = true`, state in `~/.cache/aphrody/agents-sync.json`).
 - The 9 generic skills of `~/.claude/skills` are now in `.agents/skills`: bun, fleet, gh-fork, learn, llvm-toolchain, microsoft, r2, tree-sitter. Three remain specific to the PC (`[[skill.private]]`, outside the public repository): windows-machine, chrome, shell.
 - aphrody-labs forks pinned by sha in the marketplace: `vercel-agent-skills` (vercel-labs/agent-skills@1a2c79d4e6c4), `web-quality-skills` (addyosmani/web-quality-skills@afa8da942115: Lighthouse, Core Web Vitals). The Stitch skills are provided by `.agents/skills/stitch-*`, the `web-design-guidelines` copy by vercel-agent-skills: the duplicates are removed.
@@ -31,7 +31,7 @@ The `hosts` field is pc, prd, fr1 or fr2 (absent: all). On Linux, the host is re
 
 ## Measurements of 2026-11-13 (PC)
 
-- `claude -p` session launched from a neutral folder: 207 skills, including 69 aphrody-skills (before: 12 user skills, and no src skill outside `C:\src`), 21 plugins, 13 MCPs (hostinger-api connected via env-kit).
+- `claude -p` session launched from a neutral folder: 207 skills, including 69 aphrody-skills (before: 12 user skills, and no src skill outside `C:\aphrody`), 21 plugins, 13 MCPs (hostinger-api connected via env-kit).
 - agy: aphrody-skills (69 skills) and web-quality-skills (6). Codex: aphrody-skills installed and enabled (69 skills).
 - `just agents-sync --check`: no gap.
 

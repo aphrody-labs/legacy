@@ -35,7 +35,7 @@ Décision du propriétaire : src est le holding, comme Alphabet (https://abc.xyz
 | Linux            | `docs/native/linux`, `infra/pkg`                                               | CachyOS en tier 1, recettes multi-distro, GPU compute  | paquets construits par distro       |
 | rosegriffon      | `apps/rosegriffon` (sous-module)                                        | produit Steam et contenus                              | santé 200, synchro CDN              |
 | shenron          | `apps/shenron` (sous-module)                                            | moteur et paquets média                                | publications npm                    |
-| Produits Aphrody | `apps/aphrody`, `packages/deploy`         | sites et apps publics                                  | disponibilité, Core Web Vitals      |
+| Produits Aphrody | `apps/web`, `packages/deploy`         | sites et apps publics                                  | disponibilité, Core Web Vitals      |
 | Marque           | `packages/design/brand`, `docs/native/profile`                                          | identité unique de tous les binaires, sites et profils | assets générés par `ay brand build` |
 
 

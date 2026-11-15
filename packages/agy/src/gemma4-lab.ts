@@ -168,7 +168,7 @@ export function discoverLocalGgufModels(): Array<{
   const searchDirs = [
     "%USERPROFILE%/.cache/llama.cpp",
     "%USERPROFILE%/.lmstudio/models",
-    "C:/src/var/models",
+    "C:/aphrody/var/models",
   ];
   const found: Array<{ name: string; path: string }> = [];
   for (const dir of searchDirs) {
@@ -207,7 +207,7 @@ export function generateGemma4TrainingPipeline(
   sourceCode: string;
 } {
   const modelId = options?.modelId ?? "google/gemma-4-12b-it";
-  const outDir = options?.outDir ?? "C:/src/var/agy-gemma4-lab";
+  const outDir = options?.outDir ?? "C:/aphrody/var/agy-gemma4-lab";
   const loraRank = options?.loraRank ?? 16;
   const lr = options?.learningRate ?? 2e-4;
   mkdirSync(outDir, { recursive: true });

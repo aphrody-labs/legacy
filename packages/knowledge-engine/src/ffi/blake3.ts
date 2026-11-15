@@ -24,7 +24,7 @@ function resolveCandidateDllPaths(): string[] {
   const candidates: Array<string | undefined> = [
     process.env.RUST_STACK_FFI_DLL,
     "%USERPROFILE%\\.local\\bin\\rust_stack_ffi.dll",
-    "C:\\src\\crates\\rust-stack\\target\\release\\rust_stack_ffi.dll",
+    "C:\\aphrody\\crates\\rust-stack\\target\\release\\rust_stack_ffi.dll",
     process.env.CARGO_TARGET_DIR
       ? join(process.env.CARGO_TARGET_DIR, "release", "rust_stack_ffi.dll")
       : undefined,

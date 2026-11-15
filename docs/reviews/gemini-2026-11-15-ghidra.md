@@ -204,7 +204,7 @@ The `score` row is Gemini's justification claims (type-check failures, parity in
 | 22 | CONFIRMED | `parity.ts:8-9` utilise `as [string, string]` et `!` sans aucune validation. | Lever une erreur d'usage si un élément manque. |
 | 23.1 | CONFIRMED | `parity.ts`, entrées decompile/pcode : `dispose` n'est pas dans un finally, et `getDecompiledFunction()`/`getHighFunction()` sont utilisés sans test de null. | try/finally et test de null. |
 | 23.2 | CONFIRMED | `parity.ts`, entrée `api.open_filesystem` : `fs` n'est jamais fermé. | try/finally avec `await fs.close()` |
-| 24 | CONFIRMED | `packages/ghidra` n'a pas de `tsconfig.json`, et il est absent des références de `C:/src/tsconfig.json:3-18`. `tsc --strict` donne `api.ts(116,17)` TS2322. | Ajouter un `tsconfig.json`, une référence dans le tsconfig racine, et `const c = consumer ?? await s.newObject(...)`. |
+| 24 | CONFIRMED | `packages/ghidra` n'a pas de `tsconfig.json`, et il est absent des références de `C:/aphrody/tsconfig.json:3-18`. `tsc --strict` donne `api.ts(116,17)` TS2322. | Ajouter un `tsconfig.json`, une référence dans le tsconfig racine, et `const c = consumer ?? await s.newObject(...)`. |
 
 ## 4a. src/py2bun/src/emit.rs lines 1-860: Gemini 11/20
 

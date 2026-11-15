@@ -15,7 +15,7 @@ Ce document établit la frontière stricte entre les 5 couches distinctes de l'�
 | Couche            | Nom du Composant                       | Dépôt Local / Scope                     | Audience Cible          | Authentification & Données                  | Rôle Strict                                                    |
 | :---------------- | :------------------------------------- | :-------------------------------------- | :---------------------- | :------------------------------------------ | :------------------------------------------------------------- |
 | **Infra Privée**  | `@google-bun/google-unified-fabric`    | `packages/google-unified-fabric`        | Admin / Système         | Clés WireGuard, SSH Ed25519, SQLite WAL VPS | Orchestration nœuds, tunnels Cloudflare/GCP, disques RAM       |
-| **Infra Privée**  | `yolo-vps` & `yolo-backend`            | `C:/src/yolo-vps`, `yolo-backend`       | Système / Daemons       | Tokens internes, TLS mTLS                   | Services système de fond, stockage local WAL                   |
+| **Infra Privée**  | `yolo-vps` & `yolo-backend`            | `C:/aphrody/yolo-vps`, `yolo-backend`       | Système / Daemons       | Tokens internes, TLS mTLS                   | Services système de fond, stockage local WAL                   |
 | **Protocole MCP** | `aphrody-mcp` & `gemini-app-runtime`   | `%USERPROFILE%/.aphrody`, port `:8789` | Modèles d'IA / Agents   | JSON-RPC 2.0 local `127.0.0.1`              | Exposition des outils d'automatisation, DevTools, Win32        |
 | **Protocole MCP** | `@google-bun/free-context7`            | `packages/free-context7`                | Agents & CLI            | Base SQLite WAL locale                      | Résolution de documentation AST sans appel externe             |
 | **Dev Platform**  | `@google-bun/google-benchmark-sandbox` | `packages/google-benchmark-sandbox`     | Ingénieurs / CI         | Sandbox gVisor / GTS                        | Exécution isolée de code non sécurisé, compilation TS7         |
@@ -45,6 +45,6 @@ Ce document établit la frontière stricte entre les 5 couches distinctes de l'�
 
 ## 3. Matrice d'Ownership par Dépôt
 
-- **`google-bun`** (`C:/src/google-bun`) : Monorepo central Google consolidé comprenant l'infrastructure de développement, la suite d'outils souverains, le CLI unifié (`google.exe`), `packages/gcloud-learn` (`docs/gcloud-learn`), `packages/google-dream` (`docs/google-dream`), `packages/carbon`, et `third_party/gvisor`.
+- **`google-bun`** (`C:/aphrody/google-bun`) : Monorepo central Google consolidé comprenant l'infrastructure de développement, la suite d'outils souverains, le CLI unifié (`google.exe`), `packages/gcloud-learn` (`docs/gcloud-learn`), `packages/google-dream` (`docs/google-dream`), `packages/carbon`, et `third_party/gvisor`.
 - **`yolo-web` / `yolo-backend`** : Moteurs de navigation headless (Obscura, Servo) et services réseau sous-jacents.
 - **`yolo-vps`** : Déploiement et administration bare-metal (systemd, disques NVMe, routage réseau).

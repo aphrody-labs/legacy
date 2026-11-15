@@ -63,7 +63,7 @@ T:	git https://github.com/aphrody-dev/aphrody.git
 T:	git https://github.com/aphrody-dev/aphrody-app.git
 T:	git https://github.com/aphrody-dev/google-design.git
 T:	git https://github.com/aphrody-dev/wck.git
-F:	apps/aphrody/
+F:	apps/web/
 F:	packages/native/
 F:	packages/wck/
 

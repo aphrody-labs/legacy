@@ -120,9 +120,9 @@ function benchmarkPiOpenCodeRustFfi(
 ): MerkleSnapshotComparison {
   const localBin = join(homedir(), ".local", "bin");
   const dllPath = resolveExistingPath([
-    "C:\\src\\pi-opencode\\native\\pi_opencode_native.dll",
+    "C:\\aphrody\\pi-opencode\\native\\pi_opencode_native.dll",
     join(localBin, "pi_opencode_native.dll"),
-    "C:\\src\\pi-opencode\\rust-core\\target\\release\\pi_opencode_native.dll",
+    "C:\\aphrody\\pi-opencode\\rust-core\\target\\release\\pi_opencode_native.dll",
   ]);
 
   let rustFfiLoaded = false;
@@ -295,11 +295,11 @@ export function benchmarkMonorepoBuildArena(
 
   const depotPath = resolveExistingPath([
     join(localBin, "depot.exe"),
-    "C:\\src\\depot\\target\\release\\depot.exe",
+    "C:\\aphrody\\depot\\target\\release\\depot.exe",
   ]);
   const r3dPath = resolveExistingPath([
     join(localBin, "r3d.exe"),
-    "C:\\src\\ring3-agent\\target\\release\\r3d.exe",
+    "C:\\aphrody\\ring3-agent\\target\\release\\r3d.exe",
   ]);
   const wckPath = resolveExistingPath([join(localBin, "wck.exe")]);
   const nodePath = resolveExistingPath([
@@ -428,8 +428,8 @@ export function benchmarkMonorepoBuildArena(
       : 0;
 
   // Benchmark Rust FFI Merkle snapshotter on the repo `src/` tree
-  const merkleTarget = existsSync("C:\\src\\crates")
-    ? "C:\\src\\crates"
+  const merkleTarget = existsSync("C:\\aphrody\\crates")
+    ? "C:\\aphrody\\crates"
     : join(labsRoot, "src");
   const merkleSnapshot = benchmarkPiOpenCodeRustFfi(merkleTarget, 40);
 
@@ -469,7 +469,7 @@ export function renderBenchmarkReportMarkdown(
   skillsReport: SkillsDiscoveryReport,
 ): string {
   const lines: string[] = [
-    "# `C:\\src\\labs` Empirical Benchmark & Interoperability Report",
+    "# `C:\\aphrody\\labs` Empirical Benchmark & Interoperability Report",
     "",
     `- **Generated At**: \`${result.generatedAt}\``,
     `- **Runtime**: \`Bun v${result.runtime.bunVersion}\` (\`${result.runtime.platform}/${result.runtime.arch}\`, \`${result.runtime.hardwareThreads}\` logical threads)`,
@@ -479,7 +479,7 @@ export function renderBenchmarkReportMarkdown(
     "",
     "## 1. Executive Head-to-Head Summary",
     "",
-    "| Arena | Upstream Open Standard | `C:\\src` Engine | Metric | Baseline Metric | Advantage |",
+    "| Arena | Upstream Open Standard | `C:\\aphrody` Engine | Metric | Baseline Metric | Advantage |",
     "| :--- | :--- | :--- | ---: | ---: | ---: |",
     `| **1. Agent Skills Parser** | \`vercel-labs/skills\` + \`agent-skills\` (\`SKILL.md\`) | Single-Pass \`indexOf\` Scanner | \`${result.skillsParser.sovereignOpsPerSec.toLocaleString("en-US")} ops/s\` (\`${result.skillsParser.sovereignSinglePassMs}ms\`) | \`${result.skillsParser.baselineOpsPerSec.toLocaleString("en-US")} ops/s\` (\`${result.skillsParser.baselineRegexYamlMs}ms\`) | **${result.skillsParser.speedupFactor}x faster** |`,
     `| **2. Generative UI SSR** | \`vercel-labs/json-render\` (\`Spec\` + \`$state\`) | \`aphrody\` + \`google-design\` M3/Fluent 2 SSR | \`${result.jsonRender.sovereignSsrOpsPerSec.toLocaleString("en-US")} ops/s\` / \`${result.jsonRender.sovereignGzipBytes} B\` gz (\`CLS = ${result.jsonRender.clsScore}\`) | \`${result.jsonRender.baselineVdomOpsPerSec.toLocaleString("en-US")} ops/s\` / \`~182.4 KB\` runtime | **${result.jsonRender.speedupFactor}x faster / ${result.jsonRender.payloadReductionFactor}x smaller** |`,

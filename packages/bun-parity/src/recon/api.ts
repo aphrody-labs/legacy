@@ -28,7 +28,7 @@ export async function scanApiDomain(
   options: ScanOptions,
 ): Promise<DomainReport> {
   const chromiumPath =
-    options.chromiumPath ?? "C:/src/third_party/chromium/src";
+    options.chromiumPath ?? "C:/aphrody/third_party/chromium/src";
   const coreDir = join(chromiumPath, "third_party/blink/renderer/core");
   const modDir = join(chromiumPath, "third_party/blink/renderer/modules");
 

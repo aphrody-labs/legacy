@@ -42,7 +42,7 @@ if (!srcArg)
   throw new Error(
     "usage: bun sdk/tools/msindex/main.ts --src <src root> [--verify] [--no-activate]",
   );
-// POSIX path of a Windows shell (/c/src, niubash or msys) -> Windows path.
+// POSIX path of a Windows shell (/c/aphrody, niubash or msys) -> Windows path.
 const src = resolve(
   srcArg.replace(
     /^\/([a-z])(?=\/|$)/i,

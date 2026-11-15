@@ -29,11 +29,11 @@ Ours: `src/lore/*` (storage, fuse, revision, server, client, capi; upstream mirr
 
 | Spacedrive part | Replaces or extends | Owner |
 |---|---|---|
-| VDFS library, volumes, devices, ops, cqrs, sync | Extends: no first-party file-library or multi-device index exists; lore is a VCS, not a library. Both hash with blake3, so lore-storage and `src/depot/cas` become the content store under the Spacedrive library | C:\src |
-| fs-watcher, task-system, store, supervisor, archive, sidecar-path | Extends the indexing and job layer; candidates to replace the ad hoc watchers and job runners in `src/depot` and `packages/*` after an inventory | C:\src |
+| VDFS library, volumes, devices, ops, cqrs, sync | Extends: no first-party file-library or multi-device index exists; lore is a VCS, not a library. Both hash with blake3, so lore-storage and `src/depot/cas` become the content store under the Spacedrive library | C:\aphrody |
+| fs-watcher, task-system, store, supervisor, archive, sidecar-path | Extends the indexing and job layer; candidates to replace the ad hoc watchers and job runners in `src/depot` and `packages/*` after an inventory | C:\aphrody |
 | images, imageio, ffmpeg, media-metadata, photos | Media pipeline for the creative suite | aphrody-labs/craft |
 | tauri, mobile, native, web, GPUI front ends, extension-ui | File manager UI and shells | open |
-| specta, zed-spacedrive (GPUI fork) | Typed bindings; the GPUI rev is a patch stack on top of zed, to rebase on `third_party/zed` | C:\src (pins), open (use) |
+| specta, zed-spacedrive (GPUI fork) | Typed bindings; the GPUI rev is a patch stack on top of zed, to rebase on `third_party/zed` | C:\aphrody (pins), open (use) |
 
 Merge steps:
 1. Add `third_party/spacedrive`, `specta`, `zed-spacedrive` as `[patch]` sources of one cargo workspace and run `cargo check -p sd-core` on fr1 (fr1 only; heavy build).
@@ -48,8 +48,8 @@ Ours (audit rows): `src/wayland/smithay` (crate `smithay-wayland-wire`, first-pa
 
 | COSMIC part | Replaces or extends | Owner |
 |---|---|---|
-| cosmic-comp, cosmic-protocols, cosmic-settings-daemon (config crates), cosmic-randr, cosmic-idle, cosmic-osd, xdg-desktop-portal-cosmic | Replaces `cosmic-compat` and the compositor logic of `smithay-wayland-wire`; keeps tiler as an alternative layout engine | C:\src |
-| cosmic-session, cosmic-greeter, cosmic-initial-setup, cosmic-bg, cosmic-notifications, cosmic-panel, cosmic-workspaces-epoch, cosmic-launcher, pop-launcher, cosmic-app-library, cosmic-applets, cosmic-settings, cosmic-screenshot, cosmic-osk | Desktop session and shell; extends (nothing equivalent in src) | C:\src (session, system daemons), open (shell UI) |
+| cosmic-comp, cosmic-protocols, cosmic-settings-daemon (config crates), cosmic-randr, cosmic-idle, cosmic-osd, xdg-desktop-portal-cosmic | Replaces `cosmic-compat` and the compositor logic of `smithay-wayland-wire`; keeps tiler as an alternative layout engine | C:\aphrody |
+| cosmic-session, cosmic-greeter, cosmic-initial-setup, cosmic-bg, cosmic-notifications, cosmic-panel, cosmic-workspaces-epoch, cosmic-launcher, pop-launcher, cosmic-app-library, cosmic-applets, cosmic-settings, cosmic-screenshot, cosmic-osk | Desktop session and shell; extends (nothing equivalent in src) | C:\aphrody (session, system daemons), open (shell UI) |
 | libcosmic + iced fork, cosmic-text | UI toolkit and text layout; overlaps open's Material 3 stack, so it enters as one adapter in open's registry, not a pick | open |
 | cosmic-files, cosmic-term, cosmic-edit, cosmic-store, cosmic-player, cosmic-viewer, cosmic-monitor | Reference desktop apps; cosmic-files is the model for the Spacedrive file manager front end | open |
 | cosmic-icons, cosmic-wallpapers, cosmic-sound-theme | Assets | open |
@@ -70,7 +70,7 @@ Ours: `packages/ai-os` (relay, router, llm, providers, orch, nhitl, brain, term)
 | Locally Uncensored part | Replaces or extends | Owner |
 |---|---|---|
 | Local model discovery, provider adapters, ComfyUI image/video flow | Extends open's inference registry (rows, not hardcoded picks); not added to `packages/ai-os/src/router` | open |
-| Coding agent, agent mode, computer control, voice | Compare with `ai-os` orch/nhitl and open's agent surfaces; keep the better, delete the duplicate after audit | open (surface), C:\src (orch, nhitl) |
+| Coding agent, agent mode, computer control, voice | Compare with `ai-os` orch/nhitl and open's agent surfaces; keep the better, delete the duplicate after audit | open (surface), C:\aphrody (orch, nhitl) |
 | Tauri shell, React UI | Reference UI; open rebuilds it on Material 3 | open |
 | Image/video generation pipeline | Feed for the creative suite | aphrody-labs/craft |
 

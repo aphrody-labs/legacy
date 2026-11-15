@@ -4,7 +4,7 @@ Inputs: `recon.md`, `features.csv` (commit 765af380), the code already in the tr
 
 ## Owner decisions folded in
 
-- aphrody.com is a showcase only: it links to the app. `/gamescope` on aphrody.com (today built by `apps/aphrody/src/gamescope`) stays a demo page and points to aphrody.app.
+- aphrody.com is a showcase only: it links to the app. `/gamescope` on aphrody.com (today built by `apps/web/src/gamescope`) stays a demo page and points to aphrody.app.
 - `apps/aphrody-app` (aphrody.app) is the home of the launcher: full-Rust apps suite plus the fullscreen shell, shipped native (Windows 11 DX12, Linux Vulkan), as the Chromium WebGPU wasm build served at aphrody.app, and with a mobile layout (Android and iOS from the same Rust core).
 - One shell, three layout variants driven by tokens: `Ps` (tab bar, scale-up rows), `Switch` (status bar, tile row, round menu row, hints) and `Tv` (Android TV language, new).
 
@@ -23,7 +23,7 @@ Inputs: `recon.md`, `features.csv` (commit 765af380), the code already in the tr
 | `src/ui/kit`                 | tokens bridge, `bevy`, `web` (bevy + webgpu) and `egui` features, brand, color, components, layout                                                                                                                                                                                                                                                                   |
 | `src/game`                       | Bevy demo: published at cdn.aphrody.com/game/ (game.js, game_bg.wasm), fps harness `packages/gaming/src/game-fps.ts`                                                                                                                                                                                                                                                             |
 | `apps/aphrody-app`                  | separate Cargo workspace (own Cargo.lock): `aphrody-core` (layout, wire, store, WAL, webmcp), `aphrody-wasm` (WebGPU mica, OPFS), `aphrody-host` (CLI, TUI, COOP/COEP server), `aphrody-android` (NDK cdylib); packaging alpine, arch, nix, wayland                                                                                                                  |
-| `apps/aphrody/src/gamescope`        | page and build of the /gamescope demo                                                                                                                                                                                                                                                                                                                                |
+| `apps/web/src/gamescope`        | page and build of the /gamescope demo                                                                                                                                                                                                                                                                                                                                |
 | `packages/design`                   | `tokens/themes.json`: 7 themes (aphrody, dawn, ember, frost, mono, night, workshop), light and dark, Material 3 roles; `tokens.rs` for Rust                                                                                                                                                                                                                          |
 | `packages/i18n`                     | locales fr, en, zh-CN, ja, es                                                                                                                                                                                                                                                                                                                                        |
 | `packages/assets/data/games.sqlite` | table `games(store, ext_id, name, url, cover, platforms, genres, free, developer, release, desc, synced)` + FTS5                                                                                                                                                                                                                                                     |
@@ -79,7 +79,7 @@ New (8), created only when the extraction is needed by a milestone and after the
 
 Home and packaging: `apps/aphrody-app` hosts the launcher binary target (`aphrody-host` gains a `launcher` subcommand) and the web entry `web/index.html`; the shell crates live in the root workspace under `crates/` (purity rule) and are consumed by `apps/aphrody-app` by path. Root dir whitelist is untouched (no new root dirs). A perf harness lives in `bench` (`ay bench`).
 
-Ownership while the agents work: `console.rs`, `ui.rs`, `console.wgsl`, `web-wasm/console.rs` and `apps/aphrody/src/gamescope` belong to agents ac4ec7fee313141f4 and a0b8b5bd7f9097423 until committed. This plan adds no edits there; extraction follows their commit.
+Ownership while the agents work: `console.rs`, `ui.rs`, `console.wgsl`, `web-wasm/console.rs` and `apps/web/src/gamescope` belong to agents ac4ec7fee313141f4 and a0b8b5bd7f9097423 until committed. This plan adds no edits there; extraction follows their commit.
 
 ## Layout variants and the Android TV language
 

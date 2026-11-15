@@ -39,7 +39,7 @@ describe("Electron & CEF Chromium Workflows", () => {
 
     const merged = mergeEvmConfigs(
       { args: ["--flag-b"], out: "Release" },
-      { args: ["--flag-a"], out: "Testing", root: "C:/src/chromium" },
+      { args: ["--flag-a"], out: "Testing", root: "C:/aphrody/chromium" },
     );
     expect(merged.args).toEqual(["--flag-b", "--flag-a"]);
     expect(merged.out).toBe("Release");
@@ -72,7 +72,7 @@ describe("Electron & CEF Chromium Workflows", () => {
   });
 
   test("builds fast-index git-import-patches plan and upstream-head ref", () => {
-    const ref = computeWorktreeUpstreamHeadRef("C:/src/chromium/src/electron/script/lib");
+    const ref = computeWorktreeUpstreamHeadRef("C:/aphrody/chromium/src/electron/script/lib");
     expect(ref.startsWith("refs/patches/upstream-head-")).toBe(true);
 
     const plan = buildGitImportPatchesPlan({

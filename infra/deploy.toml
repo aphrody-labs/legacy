@@ -10,7 +10,7 @@
 [mesh]
 network_cidr = "@@network.mesh_cidr@@"
 tunnel_protocol = "MASQUE+WireGuard"
-config_dir = "C:/src/infra/mesh-vn/generated"
+config_dir = "C:/aphrody/infra/mesh-vn/generated"
 
 [nodes.fr1]
 provider = "ovhcloud"
@@ -47,7 +47,7 @@ gcloud_region = "europe-west1"
 ollama_models = ["qwen3-coder", "deepseek-r1", "gemma4"]
 
 [services.aphrody]
-path = "C:/src/apps/aphrody"
+path = "C:/aphrody/apps/web"
 runtime = "bun-fullstack"
 region = "eu-fr"
 nodes = ["usa"]
@@ -56,10 +56,10 @@ port = 3000
 blue_port = 13000
 green_port = 23000
 r2_bucket = "aphrody-assets"
-verify_gate = "wck check C:/src/apps/aphrody"
+verify_gate = "wck check C:/aphrody/apps/web"
 
 [services.shenron]
-path = "C:/src/apps/shenron"
+path = "C:/aphrody/apps/shenron"
 runtime = "bun-fullstack"
 region = "eu-fr"
 nodes = ["usa"]
@@ -70,7 +70,7 @@ green_port = 23100
 r2_bucket = "shenron-cdn"
 
 [services.rosegriffon]
-path = "C:/src/apps/rosegriffon"
+path = "C:/aphrody/apps/rosegriffon"
 runtime = "bun-fullstack"
 region = "eu-fr"
 nodes = ["usa"]
@@ -102,7 +102,7 @@ blue_port = 14200
 green_port = 24200
 
 [services.ring3-agent]
-path = "C:/src/crates/ring3-agent"
+path = "C:/aphrody/crates/ring3-agent"
 runtime = "rust-daemon"
 region = "eu-fr"
 nodes = ["usa"]
@@ -112,7 +112,7 @@ blue_port = 18080
 green_port = 28080
 
 [services.yolo]
-path = "C:/src/apps/yolo"
+path = "C:/aphrody/apps/yolo"
 runtime = "bun-fullstack"
 region = "eu-fr"
 nodes = ["usa"]
@@ -120,7 +120,7 @@ domains = ["yolo.aphrody.com", "yolo.aphrody.app"]
 port = 3092
 blue_port = 13092
 green_port = 23092
-verify_gate = "wck check C:/src/apps/yolo"
+verify_gate = "wck check C:/aphrody/apps/yolo"
 
 # -----------------------------------------------------------------------------
 # Live test targets (owner directive 2026-11-12). Tests tagged e2e:auth drive the
@@ -159,7 +159,7 @@ service = "aphrody"
 target = "cf"
 commercial = true # ads.txt + sellers.json (AdSense)
 cf_tool = "wrangler"
-cf_config = "apps/aphrody/wrangler.toml"
+cf_config = "apps/web/wrangler.toml"
 vps_exec = "bun run server.ts"
 origin_path = ["/api/*", "/g/*", "/search"]
 
@@ -169,11 +169,11 @@ commercial = true
 cf_tool = "wrangler"
 cf_config = "apps/aphrody-app/wrangler.toml"
 domains = ["aphrody.app"]
-path = "C:/src/apps/aphrody-app"
+path = "C:/aphrody/apps/aphrody-app"
 port = 3010
 
 [hosting.downloads]
-path = "C:/src/apps/r2-site"
+path = "C:/aphrody/apps/r2-site"
 target = "cf"
 commercial = false
 domains = ["downloads.aphrody.com"]
@@ -187,7 +187,7 @@ vercel = { STORAGE = "s3", S3_BUCKET = "aphrody-dist" }
 vars = { PREFIX = "aphrody", SERVICE = "aphrody-downloads", SPA = "0" }
 
 [hosting.cdn]
-path = "C:/src/apps/r2-site"
+path = "C:/aphrody/apps/r2-site"
 target = "cf"
 commercial = false
 domains = ["cdn.aphrody.com"]

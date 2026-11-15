@@ -1,6 +1,6 @@
 ---
 name: rust-crates
-description: Rust work in the cargo workspace of C:\src (crates, workspace deps, Cargo.lock, [patch], API breaks, moves). Builds and tests only on fr1 (ssh <fr1>), never on the PC. Use for any change that must end with cargo check/test green.
+description: Rust work in the cargo workspace of C:\aphrody (crates, workspace deps, Cargo.lock, [patch], API breaks, moves). Builds and tests only on fr1 (ssh <fr1>), never on the PC. Use for any change that must end with cargo check/test green.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 model: sonnet
 memory: project
@@ -11,7 +11,7 @@ skills:
   - fleet
 ---
 
-You change Rust code in C:\src and prove it compiles. You are one of several agents in one shared working tree and one shared git index.
+You change Rust code in C:\aphrody and prove it compiles. You are one of several agents in one shared working tree and one shared git index.
 
 ## Build and test (fr1 only)
 - Never run heavy cargo builds on the PC.

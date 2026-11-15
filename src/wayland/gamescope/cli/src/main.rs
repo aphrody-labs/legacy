@@ -485,7 +485,7 @@ fn cmd_serve_web(args: &[String]) {
     let workspace_root = PathBuf::from(env!("SRC_ROOT"));
     let unit_root = workspace_root.join("src/wayland/gamescope");
     let web_dir = unit_root.join("web");
-    // The unit builds inside the C:/src root workspace, so the wasm artifact lands in
+    // The unit builds inside the C:/aphrody root workspace, so the wasm artifact lands in
     // the root target dir (or $CARGO_TARGET_DIR). Fall back to the unit-local target dir.
     let wasm_rel = PathBuf::from("wasm32-unknown-unknown").join("release");
     let wasm_dir = std::env::var_os("CARGO_TARGET_DIR")

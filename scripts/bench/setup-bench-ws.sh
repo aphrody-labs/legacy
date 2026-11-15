@@ -1,6 +1,6 @@
 #!/bin/sh
 # On fr1: build /srv/bench/src, a trimmed copy of the workspace (depot crates) from a tar on stdin.
-# Usage: git -C C:/src archive HEAD <paths> | ssh <fr1> 'sh /srv/bench/setup-bench-ws.sh'  (tar read from stdin)
+# Usage: git -C C:/aphrody archive HEAD <paths> | ssh <fr1> 'sh /srv/bench/setup-bench-ws.sh'  (tar read from stdin)
 set -e
 D=/srv/bench/src
 rm -rf "$D"

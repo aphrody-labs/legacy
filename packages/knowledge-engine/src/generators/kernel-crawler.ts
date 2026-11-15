@@ -268,7 +268,7 @@ export async function syncKernelStoryMdx(options?: {
     dbPath: options?.dbPath,
   });
   const mdxOutput = generateLiveUpstreamMdx(feed);
-  const targetDir = options?.targetDir ?? "C:/src/docs/linux-kernel-story/mdx";
+  const targetDir = options?.targetDir ?? "C:/aphrody/docs/linux-kernel-story/mdx";
   if (!existsSync(targetDir)) {
     mkdirSync(targetDir, { recursive: true });
   }

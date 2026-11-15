@@ -286,7 +286,7 @@ async function main() {
       console.log("Generating Bun Docs Design MDX suite...");
       const res = await generateBunDesignDocs();
       console.log(
-        `Generated ${res.generatedFiles.length} MDX documents in C:\\src\\third_party\\bun\\docs\\design\\`,
+        `Generated ${res.generatedFiles.length} MDX documents in C:\\aphrody\\third_party\\bun\\docs\\design\\`,
       );
       for (const f of res.generatedFiles) {
         console.log(`  + ${f}`);

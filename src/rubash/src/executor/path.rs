@@ -4902,7 +4902,7 @@ fn root_fallback_system_drive(env_vars: &HashMap<String, String>) -> String {
 /// Opt-in drive-root fallback for a configured shell root (nt fix): an
 /// absolute POSIX path whose FIRST component is missing below the shell
 /// root but exists at the system drive root resolves against the drive —
-/// `cd /src` reaches `C:\src` when `<root>\src` does not exist. The probe
+/// `cd /src` reaches `C:\aphrody` when `<root>\src` does not exist. The probe
 /// is per first component, so `mkdir /src/new` and `> /src/new.txt` reach
 /// the same directory as `cd /src`. Reserved shell-tree components
 /// ([`ROOT_FALLBACK_RESERVED`]), drive forms and the bare `/` never fall
@@ -5477,7 +5477,7 @@ mod tests {
     #[test]
     fn windows_root_fallback_resolves_missing_root_children_on_system_drive() {
         // `Windows` exists at every system drive root and never below a
-        // fresh shell root, so it stands in for `C:\src`.
+        // fresh shell root, so it stands in for `C:\aphrody`.
         let root = std::env::temp_dir().join("rubash-root-fallback");
         let _ = fs::remove_dir_all(&root);
         fs::create_dir_all(root.join("etc")).unwrap();

@@ -27,7 +27,7 @@ export function generateCrossProviderArchitectureDoc(): string {
 
 ## 1. Executive Topology
 
-\`@aphrody/ai-triad\` (\`C:\\src\\packages\\ai-triad\`) unifies **OpenAI Codex (\`codex\`)**, **Google Antigravity (\`agy\` + \`gemini\`)**, and **Anthropic Claude Code (\`claude\`)** alongside **OpenCode**, **Pi**, **Zed**, and local **Sovereign AI-OS / Ring-3 CUDA (\`sm_89\`)** daemons using strictly documented, standard protocols:
+\`@aphrody/ai-triad\` (\`C:\\aphrody\\packages\\ai-triad\`) unifies **OpenAI Codex (\`codex\`)**, **Google Antigravity (\`agy\` + \`gemini\`)**, and **Anthropic Claude Code (\`claude\`)** alongside **OpenCode**, **Pi**, **Zed**, and local **Sovereign AI-OS / Ring-3 CUDA (\`sm_89\`)** daemons using strictly documented, standard protocols:
 
 - **MCP \`2025-03-26\` (Stdio & Streamable HTTP)**: Bidirectional cross-agent tool invocation (\`triad mcp-stdio\` and \`POST http://127.0.0.1:4319/mcp\`).
 - **ACP v1 (Agent Client Protocol)**: Native JSON-RPC stdio session orchestration across \`agy acp\`, \`gemini --acp\`, and Zed external agents.
@@ -78,14 +78,14 @@ flowchart LR
 
 | Host Environment | Inbound Config File | How It Calls Peer Agents | Outbound Headless Invocation |
 | :--- | :--- | :--- | :--- |
-| **Claude Code (\`claude\`)** | \`~/.claude.json\`, \`~/.claude/mcp_sovereign.json\`, \`C:\\src\\CLAUDE.md\` | Calls \`triad_ask_codex\`, \`triad_ask_agy\`, \`triad_council_review\` via \`ai-triad\` MCP | \`claude -p "<prompt>" --output-format json --mcp-config ...\` |
+| **Claude Code (\`claude\`)** | \`~/.claude.json\`, \`~/.claude/mcp_sovereign.json\`, \`C:\\aphrody\\CLAUDE.md\` | Calls \`triad_ask_codex\`, \`triad_ask_agy\`, \`triad_council_review\` via \`ai-triad\` MCP | \`claude -p "<prompt>" --output-format json --mcp-config ...\` |
 | **OpenAI Codex (\`codex\`)** | \`~/.codex/config.toml\`, \`~/.codex/local.config.toml\`, \`~/.codex/triad.config.toml\`, \`~/.codex/AGENTS.md\` | Calls \`triad_ask_claude\`, \`triad_ask_agy\`, \`triad_council_review\` via \`ai_triad\` MCP or \`-p triad\` (\`/v1/responses\`) | \`codex exec "<prompt>" --json --skip-git-repo-check\` or \`codex exec review\` |
-| **Google Antigravity (\`agy\`)** | \`~/.gemini/antigravity-cli/mcp_config.json\`, \`settings.json\`, \`C:\\src\\GEMINI.md\` | Calls \`triad_ask_claude\`, \`triad_ask_codex\`, \`triad_council_review\` via \`ai-triad\` MCP | \`agy -p "<prompt>" --output-format json --mode accept-edits\` or \`agy acp\` |
+| **Google Antigravity (\`agy\`)** | \`~/.gemini/antigravity-cli/mcp_config.json\`, \`settings.json\`, \`C:\\aphrody\\GEMINI.md\` | Calls \`triad_ask_claude\`, \`triad_ask_codex\`, \`triad_council_review\` via \`ai-triad\` MCP | \`agy -p "<prompt>" --output-format json --mode accept-edits\` or \`agy acp\` |
 | **Google Gemini CLI (\`gemini\`)** | \`~/.gemini/settings.json\`, \`~/.gemini/projects.json\` | MCP + ACP (\`gemini --acp\`) | \`gemini -p "<prompt>" -o json\` |
 | **OpenCode & Pi** | \`~/.config/opencode/opencode.jsonc\` | \`providers.ai_triad\` (\`:4319/v1\`) + \`mcp.ai_triad\` | \`pi-opencode\` + Ring-3 local fallback (\`:8787/v1\`) |
 | **Zed Editor** | \`%APPDATA%\\Zed\\settings.json\` | \`language_models.openai_compatible.ai_triad\` + \`context_servers.ai-triad\` | Consumes \`triad/auto\` and \`triad/council\` models |
 
-## 3. Reference Ecosystem Integration (\`C:\\src\\third_party\\ai-ecosystem\`)
+## 3. Reference Ecosystem Integration (\`C:\\aphrody\\third_party\\ai-ecosystem\`)
 
 1. **\`openai/codex\`**: Rust workspace (\`codex-rs\`) implementing \`WireApi::Responses\` (\`/v1/responses\`), Profile V2 (\`$CODEX_HOME/<name>.config.toml\`), MCP client/server, and Device Code / OAuthkeyring auth.
 2. **\`anthropics/claude-code\`**: Reference plugins, hooks, \`CLAUDE.md\` conventions, and headless \`--output-format stream-json|json\` automation patterns.
@@ -111,12 +111,12 @@ export function captureAllCliHelpDocs(options?: {
   const docsDir =
     options?.docsDir ??
     (process.platform === "win32"
-      ? "C:\\src\\packages\\ai-triad\\docs"
+      ? "C:\\aphrody\\packages\\ai-triad\\docs"
       : "/src/packages/ai-triad/docs");
   const ecosystemRoot =
     options?.ecosystemRoot ??
     (process.platform === "win32"
-      ? "C:\\src\\third_party\\ai-ecosystem"
+      ? "C:\\aphrody\\third_party\\ai-ecosystem"
       : "/src/third_party/ai-ecosystem");
 
   mkdirSync(docsDir, { recursive: true });

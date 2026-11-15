@@ -1,6 +1,6 @@
 # Recreating the Full Google.com Stack From Scratch (`@google-bun/google-stack`)
 
-This document specifies the architecture of the sovereign **Google.com Full-Stack Engine** implemented in `C:\src\google-bun` and designed to be developed inside **Zed (GPUI)** and **Antigravity IDE 2.0**.
+This document specifies the architecture of the sovereign **Google.com Full-Stack Engine** implemented in `C:\aphrody\google-bun` and designed to be developed inside **Zed (GPUI)** and **Antigravity IDE 2.0**.
 
 ---
 
@@ -19,7 +19,7 @@ This document specifies the architecture of the sovereign **Google.com Full-Stac
 
 ## 2. Coding in Zed & Antigravity IDE 2.0
 
-Open `C:\src\google-bun` in Zed or Antigravity IDE:
+Open `C:\aphrody\google-bun` in Zed or Antigravity IDE:
 
 - `.zed/settings.json` configures `Google Sans Mono`, 2-space Google indentation, `bun fmt` on save, `oxc-zed` (`type_aware: true`), and `rust-analyzer`.
 - `.zed/tasks.json` provides one-keystroke tasks for:

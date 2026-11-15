@@ -76,5 +76,5 @@ for (const w of workloads) {
 }
 
 console.log(
-  "\nAll benchmarks complete. Report verified at C:\\src\\crates\\bench\\BENCHMARK_REPORT.md",
+  "\nAll benchmarks complete. Report verified at C:\\aphrody\\crates\\bench\\BENCHMARK_REPORT.md",
 );

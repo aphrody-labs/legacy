@@ -2,7 +2,7 @@
 
 Measured on 2026-11-12 on the PC (Windows 11 Insider 28120, no WSL, no MSYS runtime for the agent's tools). The unified package packages/ai-os (merge of aphrody-labs/agent) carries this list forward.
 
-Forks: aphrody-labs/openclaw and aphrody-labs/hermes-agent, branch `windows-native`, cloned in C:\src\third_party\ (ignored by src). Each fork has a CI job `windows-native.yml` on windows-latest.
+Forks: aphrody-labs/openclaw and aphrody-labs/hermes-agent, branch `windows-native`, cloned in C:\aphrody\third_party\ (ignored by src). Each fork has a CI job `windows-native.yml` on windows-latest.
 
 ## Starting point
 

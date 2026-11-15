@@ -5,7 +5,7 @@
 //
 // Idempotent: every phase prints `plan`, `done` or `skip`; a second run finds nothing left to do.
 //   1. discover   services, scheduled tasks and user environment variables that name the old root; processes running from it;
-//                 the Claude Code project folders keyed by the path (`C:\src` -> `C--src`, `C--src-apps`, ...)
+//                 the Claude Code project folders keyed by the path (`C:\aphrody` -> `C--aphrody`, `C--aphrody-apps`, ...)
 //   2. stop       those services and tasks (the processes of the old root must be gone, else abort unless --force)
 //   3. move       the folder (--to, default <parent>/<product.name>)
 //   4. rewrite    service ImagePath and Environment, task actions, user environment variables
@@ -119,7 +119,8 @@ else if (existsSync(from) && existsSync(to)) {
   if (!dry) process.exit(1);
 } else if (dry) log("move", "plan", `rename ${from} -> ${to}`);
 else {
-  mkdirSync(dirname(to), { recursive: true });
+  // mkdir on a drive root (C:\) fails with EPERM even with recursive: only create a missing parent.
+  if (!existsSync(dirname(to))) mkdirSync(dirname(to), { recursive: true });
   renameSync(from, to);
   log("move", "done", `${from} -> ${to}`);
 }

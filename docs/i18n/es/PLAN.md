@@ -62,7 +62,7 @@ Las compilaciones de Rust se ejecutan en CI o en fr1.
 
 ## 6. Objetivo fijado por el propietario el 2026-11-13 (nada iniciado)
 
-- Tres apps, una por dominio: `shenron`, `rosegriffon` y una app Aphrody que fusiona `apps/aphrody` y `apps/aphrody-app`. Todo lo demás se aplana en código compartido.
+- Tres apps, una por dominio: `shenron`, `rosegriffon` y una app Aphrody que fusiona `apps/web` y `apps/aphrody-app`. Todo lo demás se aplana en código compartido.
 - La app fusionada aloja las Craft Apps, ArtCraft y el juego: WebAssembly y WebGPU a pantalla completa, multijugador de mundo abierto, 120 fps a 1080p, mando, teclado y ratón, audio y vídeo, sobre Bevy y con matriz de funciones frente a Unreal Engine.
 - Upstreams a comprobar con `gh api` antes de usarlos: `vercel-labs/ui`, `niri-wm/niri`, DioxusLabs, `longbridge`, `cloudflare/vinext`, `vercel/next.js`, `vercel/ai`, `mui/base-ui`, shadcn, `tailwindlabs/tailwindcss`, Microsoft WebUI, iced y COSMIC.
 - Limpieza: eliminar copias de terceros incrustadas; una versión por dependencia; binarios más pequeños.

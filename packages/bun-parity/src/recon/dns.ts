@@ -11,7 +11,7 @@ export async function scanDnsDomain(
   options: ScanOptions,
 ): Promise<DomainReport> {
   const chromiumPath =
-    options.chromiumPath ?? "C:/src/third_party/chromium/src";
+    options.chromiumPath ?? "C:/aphrody/third_party/chromium/src";
   const dohFile = join(chromiumPath, "net/dns/public/doh_provider_entry.cc");
 
   let dohProviderCount = 0;

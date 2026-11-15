@@ -33,7 +33,7 @@ Reproducible through `just agents-sync` (`infra/agents/toolchain.toml`, applier 
 
 ## Effect on a fresh session
 
-Measured with `claude -p "Reply with the single word: ok" --output-format json` in `C:\\src` (Claude Code 2.1.325), tokens = input + cache creation + cache read of the single turn.
+Measured with `claude -p "Reply with the single word: ok" --output-format json` in `C:\\aphrody` (Claude Code 2.1.325), tokens = input + cache creation + cache read of the single turn.
 
 | Configuration | Baseline context | Turn latency |
 |---|---|---|

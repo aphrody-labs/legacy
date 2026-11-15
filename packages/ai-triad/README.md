@@ -44,7 +44,7 @@ triad serve --port 4319
 triad mcp-stdio
 
 # Generate GitHub Actions, Sovereign Forge, PowerShell, and POSIX CI pipelines
-triad ci-gen --out C:/src/packages/ai-triad
+triad ci-gen --out C:/aphrody/packages/ai-triad
 
 # Regenerate live CLI --help corpus
 triad capture-help

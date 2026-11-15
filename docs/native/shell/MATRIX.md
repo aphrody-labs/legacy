@@ -80,7 +80,7 @@ Critère éliminatoire : un exécutable nommé `bash.exe`/`sh.exe` qui source le
 |                                                     | brush 0.4.0                                | niubash 1.5.0                   | Git Bash (réf.) |
 | --------------------------------------------------- | ------------------------------------------ | ------------------------------- | --------------- |
 | `-c exit` (hyperfine -N, 30 runs)                   | 8,4 ± 0,5 ms                               | 16,3 ± 0,5 ms                   | 19,2 ± 0,6 ms   |
-| shell-matrix (34 cas, C:\src\packages\machine\matrix) | 30/34 (claude-c-l, procsub, cd /c, cd C:/) | 34/34                           | 34/34           |
+| shell-matrix (34 cas, C:\aphrody\packages\machine\matrix) | 30/34 (claude-c-l, procsub, cd /c, cd C:/) | 34/34                           | 34/34           |
 | dépendance msys/cygwin (dumpbin)                    | non                                        | non                             | oui             |
 | taille                                              | —                                          | niu.exe 14,5 Mo, install 103 Mo | —               |
 
@@ -90,7 +90,7 @@ Doublons de forks à trancher par le propriétaire : coreutils-2/uutils-coreutil
 
 ## Vérification reproductible (2026-11-12, cette session)
 
-- `bun C:\src\packages\machine\src\apply-user.ts --check` : tout est ok. Points contrôlés : CLAUDE_CODE_GIT_BASH_PATH, CLAUDE_CODE_USE_POWERSHELL_TOOL=0, MCP agent-desktop et agent-browser, PATH (niubash présent, Git Bash absent), profil par défaut de WT = niubash élevé.
+- `bun C:\aphrody\packages\machine\src\apply-user.ts --check` : tout est ok. Points contrôlés : CLAUDE_CODE_GIT_BASH_PATH, CLAUDE_CODE_USE_POWERSHELL_TOOL=0, MCP agent-desktop et agent-browser, PATH (niubash présent, Git Bash absent), profil par défaut de WT = niubash élevé.
 - `niubash -c -l` (invocation de Claude) : BASH_VERSION 5.3.20, 59 options `shopt -p`, git et rg venant de niubash (sans MSYS).
 - Limite : cette session tourne encore sous l'ancien Git Bash (5.3.15, /usr/bin/bash), lancé avant la bascule. Le contrôle de bout en bout (Bash tool sous niubash, avec context7, GitHub MCP et Microsoft Learn MCP) se fait dans une **nouvelle session** Claude Code : `echo $BASH_VERSION` doit afficher 5.3.20, puis on appelle un outil de chacun des trois MCP.
 - pwsh : remplacé pour Claude, puisque l'outil PowerShell est désactivé et que niubash prend la place. Les usages restants (CIM, registre, Authenticode) passent par windows-rs ou les binaires Rust de src.

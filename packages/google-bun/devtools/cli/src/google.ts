@@ -82,11 +82,11 @@ export class GoogleOmniPlatform {
         latencyMs: 0.3,
         details: {
           aiPillar:
-            "C:/src/yolo-ai (carbon, gcloud-learn, benchmark-ml-engine)",
+            "C:/aphrody/yolo-ai (carbon, gcloud-learn, benchmark-ml-engine)",
           webPillar:
-            "C:/src/yolo-web (google-crawler, google-indexer, modern-web-humanizer)",
+            "C:/aphrody/yolo-web (google-crawler, google-indexer, modern-web-humanizer)",
           runtimePillar:
-            "C:/src/yolo-bun (yolo-bun:lighthouse, yolo-bun:googleapis, yolo-bun:google-stack)",
+            "C:/aphrody/yolo-bun (yolo-bun:lighthouse, yolo-bun:googleapis, yolo-bun:google-stack)",
         },
       },
     ];
@@ -111,8 +111,8 @@ export class GoogleOmniPlatform {
       modernWebGuidance:
         "https://github.com/GoogleChrome/modern-web-guidance-src",
       googleOrgRepos: "https://github.com/orgs/google/repositories",
-      localDepotTools: "C:/src/depot_tools",
-      localChromiumSrc: "C:/src/chromium/src",
+      localDepotTools: "C:/aphrody/depot_tools",
+      localChromiumSrc: "C:/aphrody/chromium/src",
       downstreamWorkflows: [
         "Helium (quilt series)",
         "Brave (chromium_src + Shields)",

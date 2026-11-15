@@ -62,7 +62,7 @@ Rust のビルドは CI か fr1 で行い、ワークステーションでは行
 
 ## 6. 2026-11-13 にオーナーが設定した目標(記録のみ、未着手)
 
-- アプリは 3 つだけ、領域ごとに 1 つ: `shenron`、`rosegriffon`、そして `apps/aphrody`(aphrody.com)と `apps/aphrody-app`(aphrody.app)を統合した Aphrody アプリ。それ以外のアプリ、パッケージ、クレートは共有コードにフラット化する。`shenron` と `rosegriffon` のうち製品固有でないコードは共有クレートとパッケージへ移し、再利用する。
+- アプリは 3 つだけ、領域ごとに 1 つ: `shenron`、`rosegriffon`、そして `apps/web`(aphrody.com)と `apps/aphrody-app`(aphrody.app)を統合した Aphrody アプリ。それ以外のアプリ、パッケージ、クレートは共有コードにフラット化する。`shenron` と `rosegriffon` のうち製品固有でないコードは共有クレートとパッケージへ移し、再利用する。
 - 統合した Aphrody アプリが Craft Apps、ArtCraft、ゲームをホストしデプロイする。ブラウザでのフルスクリーン WebAssembly と WebGPU、オープンワールドのマルチプレイヤー、1080p で 120 fps、ゲームパッド(Xbox、PlayStation)、キーボードとマウス、音声と映像。Bevy 上に構築し、Unreal Engine との機能マトリクスを作る。
 - オーナーが挙げたアップストリームは、使用前に `gh api` で確認する: `vercel-labs/ui`、`vercel-labs/native`、`niri-wm/niri`、`niri-wm/awesome-niri`、DioxusLabs 組織、`longbridge`(GPUI コンポーネント、`nsh`)、`cloudflare/vinext`、`vercel/next.js`、`vercel/vercel`、`vercel/ai`、`vercel/turborepo`、`mui/base-ui`、shadcn、`tailwindlabs/tailwindcss`、Microsoft WebUI、iced、COSMIC。
 - クリーンアップ: アプリ、パッケージ、クレート内のベンダリングされた third-party コピーとネストしたコピーを削除する。依存関係は 1 つにつき 1 バージョン。バイナリを小さくする。

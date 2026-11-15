@@ -1878,7 +1878,7 @@ mod tests {
 
     #[test]
     fn real_fixture_when_present() {
-        let root = Path::new("C:/src/yolo-stack/apps/next-fixture");
+        let root = Path::new("C:/aphrody/yolo-stack/apps/next-fixture");
         if !root.exists() {
             return;
         }

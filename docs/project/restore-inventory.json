@@ -142,7 +142,7 @@
    "kind": "worker",
    "updated": "2026-11-13T06:13:17.978633Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -150,7 +150,7 @@
    "kind": "worker",
    "updated": "2026-10-23T13:35:08.178802Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -158,7 +158,7 @@
    "kind": "worker",
    "updated": "2026-11-12T19:10:48.663965Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -166,7 +166,7 @@
    "kind": "worker",
    "updated": "2026-11-12T19:10:46.042969Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -174,7 +174,7 @@
    "kind": "worker",
    "updated": "2026-11-14T09:46:06.002822Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -182,7 +182,7 @@
    "kind": "worker",
    "updated": "2026-11-07T03:12:48.538002Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -190,7 +190,7 @@
    "kind": "worker",
    "updated": "2026-11-13T04:00:06.05891Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -198,7 +198,7 @@
    "kind": "worker",
    "updated": "2026-11-14T23:46:02.085422Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -206,7 +206,7 @@
    "kind": "worker",
    "updated": "2026-11-14T09:22:40.117947Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "cloudflare:worker",
@@ -214,7 +214,7 @@
    "kind": "worker",
    "updated": "2026-11-12T19:10:57.137424Z",
    "status": "present-identical",
-   "decision": "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source"
+   "decision": "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source"
   },
   {
    "source": "crates.io",
@@ -15263,12 +15263,12 @@
   },
   {
    "source": "history",
-   "id": "apps/aphrody",
+   "id": "apps/web",
    "kind": "deleted-dir",
    "updated": "2026-11-14",
    "status": "present-identical",
-   "monorepoPath": "apps/aphrody-web (files absent from apps/aphrody)",
-   "decision": "restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/aphrody); restoring commit ac067b73c",
+   "monorepoPath": "apps/aphrody-web (files absent from apps/web)",
+   "decision": "restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/web); restoring commit ac067b73c",
    "note": "178 files (134 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -31070,7 +31070,7 @@
    "id": "/srv/pipe-src/apps",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": "apps/auto(1026), apps/aphrody(15)",
+   "monorepoPath": "apps/auto(1026), apps/web(15)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
    "note": "1052/1425 source files shared (74%)"
   },

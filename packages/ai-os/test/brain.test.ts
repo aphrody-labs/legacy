@@ -13,7 +13,7 @@ function run(home: string, ...args: string[]) {
 
 function fixture() {
   const h = mkdtempSync(join(tmpdir(), "brain-"));
-  const proj = join(h, ".claude", "projects", "C--src");
+  const proj = join(h, ".claude", "projects", "C--aphrody");
   mkdirSync(join(proj, "memory"), { recursive: true });
   mkdirSync(join(h, ".agent"), { recursive: true });
   mkdirSync(join(h, ".gemini", "antigravity-cli"), { recursive: true });
@@ -41,7 +41,7 @@ test("packs cold files, keeps memory, restores bytes and mtime", async () => {
   expect(existsSync(f)).toBe(false);
   expect(existsSync(join(proj, "memory", "m.md"))).toBe(true);
   expect(
-    run(h, "restore", join(".claude", "projects", "C--src", "s.jsonl"))
+    run(h, "restore", join(".claude", "projects", "C--aphrody", "s.jsonl"))
       .exitCode,
   ).toBe(0);
   expect(await Bun.file(f).text()).toBe(body);

@@ -487,10 +487,10 @@ mod tests {
             "short values are not scrubbed"
         );
         assert_eq!(s.get("HOSTINGER_API_TOKEN_NOT_SET_ANYWHERE"), None);
-        let paths = Secrets::from_pairs(&[("SRC_HOME", "C:/src/apps")]);
+        let paths = Secrets::from_pairs(&[("SRC_HOME", "C:/aphrody/apps")]);
         assert_eq!(
-            paths.scrub("wrote C:/src/apps/x"),
-            "wrote C:/src/apps/x",
+            paths.scrub("wrote C:/aphrody/apps/x"),
+            "wrote C:/aphrody/apps/x",
             "short non-secret values stay"
         );
         assert!(

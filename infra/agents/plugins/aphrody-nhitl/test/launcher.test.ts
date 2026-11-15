@@ -78,7 +78,7 @@ test("sandbox: settings fail closed and hide secrets", () => {
 });
 
 test("sandbox: Windows paths map to /mnt, UNC refused", () => {
-  expect(toWslPath("C:\\src\\packages")).toBe("/mnt/c/src/packages");
+  expect(toWslPath("C:\\aphrody\\packages")).toBe("/mnt/c/src/packages");
   expect(toWslPath("D:/x")).toBe("/mnt/d/x");
   expect(toWslPath("/home/a")).toBe("/home/a");
   expect(() => toWslPath("\\\\srv\\share")).toThrow();
@@ -87,7 +87,7 @@ test("sandbox: Windows paths map to /mnt, UNC refused", () => {
 test("sandbox: wsl argv runs claude via --exec, no shell string", () => {
   const a = wslArgv({
     distro: "Arch",
-    cwd: "C:\\src",
+    cwd: "C:\\aphrody",
     env: { NHITL_RUN: "1" },
     claudeArgs: ["claude", "-p", "a b; rm -rf ~"],
   });

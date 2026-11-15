@@ -35,8 +35,8 @@ async function main() {
     case "scan": {
       const isJson = args.includes("--json");
       const matrix = await runFullParityScan({
-        chromiumPath: "C:/src/third_party/chromium/src",
-        bunPath: "C:/src/third_party/bun",
+        chromiumPath: "C:/aphrody/third_party/chromium/src",
+        bunPath: "C:/aphrody/third_party/bun",
       });
 
       if (isJson) {
@@ -68,13 +68,13 @@ async function main() {
         console.log(`[Artifact 2] Generated Git/Rust Patch: ${p}`);
       }
       console.log(
-        "[Verification] git -C C:\\src\\third_party\\bun apply --check PASSED cleanly.",
+        "[Verification] git -C C:\\aphrody\\third_party\\bun apply --check PASSED cleanly.",
       );
 
       // Run post-patch scan to update reports
       const matrix = await runFullParityScan({
-        chromiumPath: "C:/src/third_party/chromium/src",
-        bunPath: "C:/src/third_party/bun",
+        chromiumPath: "C:/aphrody/third_party/chromium/src",
+        bunPath: "C:/aphrody/third_party/bun",
       });
       const mdPath = join(rootDir, "PARITY_REPORT.md");
       const jsonPath = join(rootDir, "parity-matrix.json");
@@ -86,8 +86,8 @@ async function main() {
 
     case "report": {
       const matrix = await runFullParityScan({
-        chromiumPath: "C:/src/third_party/chromium/src",
-        bunPath: "C:/src/third_party/bun",
+        chromiumPath: "C:/aphrody/third_party/chromium/src",
+        bunPath: "C:/aphrody/third_party/bun",
       });
       const mdPath = join(rootDir, "PARITY_REPORT.md");
       const jsonPath = join(rootDir, "parity-matrix.json");
@@ -132,8 +132,8 @@ USAGE:
   bpt [command] [options]
 
 COMMANDS:
-  scan         Scan real Chromium upstream (C:\\src\\third_party\\chromium\\src) vs Bun across 10 domains
-  patch        Synthesize runtime preload patch and Rust patch queue for C:\\src\\third_party\\bun
+  scan         Scan real Chromium upstream (C:\\aphrody\\third_party\\chromium\\src) vs Bun across 10 domains
+  patch        Synthesize runtime preload patch and Rust patch queue for C:\\aphrody\\third_party\\bun
   report       Generate full PARITY_REPORT.md and parity-matrix.json
   test         Execute test suite for all polyfilled and patched web APIs
   compare      bun stable, canary and fork side by side (docs/bun/COMPARISON.md): name=/path/to/bun ...

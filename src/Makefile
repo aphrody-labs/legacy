@@ -114,14 +114,14 @@ compositor:
 		wasm/compositor.c -o $(OUT_DIR)/wayland.raw.wasm
 	$(WASM_OPT) -O4 --enable-simd --enable-bulk-memory --enable-multivalue \
 		--enable-nontrapping-float-to-int --enable-sign-ext --strip-debug \
-		$(OUT_DIR)/wayland.raw.wasm -o ../apps/aphrody/public/wayland.wasm
+		$(OUT_DIR)/wayland.raw.wasm -o ../apps/web/public/wayland.wasm
 	rm -f $(OUT_DIR)/wayland.raw.wasm
 
 verify:
 	$(WASM_VAL) --enable-all $(OUT_DIR)/aysys.wasm
 	$(WASM_VAL) --enable-all $(OUT_DIR)/ay-wasm-inspect.wasm
 	$(WASM_VAL) --enable-all $(OUT_DIR)/ay-m3-site.wasm
-	$(WASM_VAL) --enable-all ../apps/aphrody/public/wayland.wasm
+	$(WASM_VAL) --enable-all ../apps/web/public/wayland.wasm
 
 clean:
 	rm -rf $(OUT_DIR)

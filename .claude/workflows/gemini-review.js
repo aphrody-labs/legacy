@@ -3,7 +3,7 @@ export const meta = {
   description:
     "Submit src deliverables to Gemini via the relay, verify each defect, archive the verdicts",
   whenToUse:
-    'Mandatory Gemini review of src deliverables (args: { files: ["path", ...] } relative to C:\\src)',
+    'Mandatory Gemini review of src deliverables (args: { files: ["path", ...] } relative to C:\\aphrody)',
   phases: [
     { title: "Review", detail: "relay gemini_review (MCP relay) per file" },
     {

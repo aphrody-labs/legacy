@@ -193,11 +193,11 @@ mod tests {
 
     #[test]
     fn task_definition() {
-        let args = s(&["bun", "watch", "--checkout", "C:\\src\\third_party\\bun"]);
-        let xml = task_xml("PC\\me", "S4U", "C:\\Users\\me\\.local\\bin\\ay.exe", &args, "C:\\src", 6);
+        let args = s(&["bun", "watch", "--checkout", "C:\\aphrody\\third_party\\bun"]);
+        let xml = task_xml("PC\\me", "S4U", "C:\\Users\\me\\.local\\bin\\ay.exe", &args, "C:\\aphrody", 6);
         assert!(xml.contains("<Interval>PT6H</Interval>"));
         assert!(xml.contains("<LogonType>S4U</LogonType>"));
-        assert!(xml.contains("<Arguments>bun watch --checkout C:\\src\\third_party\\bun</Arguments>"));
+        assert!(xml.contains("<Arguments>bun watch --checkout C:\\aphrody\\third_party\\bun</Arguments>"));
         assert!(xml.contains("<UserId>PC\\me</UserId>"));
         assert!(xml.contains("<Hidden>true</Hidden>"));
     }

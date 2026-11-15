@@ -121,10 +121,10 @@ function checkSafetyInvariants(
   if (leaks.length === 0) {
     diags.push({
       category: "safety_secret_hygiene",
-      claim: "Zero raw secret values from C:\\src\\.env or bearer tokens",
+      claim: "Zero raw secret values from C:\\aphrody\\.env or bearer tokens",
       status: "VERIFIED",
       line: 1,
-      citation: `file:///${(envPath ?? "C:/src/.env").replace(/\\/g, "/")}`,
+      citation: `file:///${(envPath ?? "C:/aphrody/.env").replace(/\\/g, "/")}`,
       detail:
         "Verified 0 raw secret literals or unredacted API tokens present.",
     });
@@ -167,7 +167,7 @@ function checkSafetyInvariants(
       claim: "Sacred C:\\Windows\\System32 userspace non-mutation",
       status: "VERIFIED",
       line: 1,
-      citation: "file:///C:/src/.agents/scripts/pre-tool-guard.ts",
+      citation: "file:///C:/aphrody/.agents/scripts/pre-tool-guard.ts",
       detail: "Zero destructive mutations targeting C:\\Windows\\System32.",
     });
   }
@@ -236,8 +236,8 @@ function checkFilesystemAndBinaryClaims(
     m = fileUrlRegex.exec(text);
   }
 
-  // 2. Direct C:\src\... paths
-  const winSrcRegex = /\b(C:\\src\\[A-Za-z0-9_.\-\\/]+)\b/g;
+  // 2. Direct C:\aphrody\... paths
+  const winSrcRegex = /\b(C:\\aphrody\\[A-Za-z0-9_.\-\\/]+)\b/g;
   m = winSrcRegex.exec(text);
   while (m !== null) {
     const rawCandidate = m[1]!.replace(/[/]+/g, "\\").replace(/[.,;:]+$/, "");
@@ -582,7 +582,7 @@ export async function runFactCheck(
 ): Promise<FactCheckVerdict> {
   const t0 = Bun.nanoseconds();
   const srcRoot =
-    options.srcRoot ?? (process.platform === "win32" ? "C:\\src" : "/src");
+    options.srcRoot ?? (process.platform === "win32" ? "C:\\aphrody" : "/src");
   const localBinDir = options.localBinDir ?? join(homedir(), ".local", "bin");
 
   const resolvedFile = normalizeTargetFileCandidate(claimOrFile);

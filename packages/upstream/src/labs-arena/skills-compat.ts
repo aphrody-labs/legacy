@@ -421,8 +421,8 @@ export function getDefaultSkillRoots(
       dir: join(thirdPartyRoot, "agent-browser", "skills"),
     },
     { label: "user/.gemini/skills", dir: join(home, ".gemini", "skills") },
-    { label: "workspace/.agents/skills", dir: "C:\\src\\.agents\\skills" },
-    { label: "workspace/ralph/skills", dir: "C:\\src\\ralph\\skills" },
+    { label: "workspace/.agents/skills", dir: "C:\\aphrody\\.agents\\skills" },
+    { label: "workspace/ralph/skills", dir: "C:\\aphrody\\ralph\\skills" },
   ];
   return candidates.filter((c) => existsSync(c.dir));
 }

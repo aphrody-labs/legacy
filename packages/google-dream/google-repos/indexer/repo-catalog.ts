@@ -13,35 +13,35 @@ export const GOOGLE_OFFICIAL_REPOS: GoogleOfficialRepo[] = [
   {
     name: "gvisor",
     url: "https://github.com/google/gvisor.git",
-    localPath: "C:/src/google/gvisor",
+    localPath: "C:/aphrody/google/gvisor",
     category: "os",
     description: "Container runtime sandbox with system call virtualization in Go."
   },
   {
     name: "abseil-cpp",
     url: "https://github.com/abseil/abseil-cpp.git",
-    localPath: "C:/src/google/abseil-cpp",
+    localPath: "C:/aphrody/google/abseil-cpp",
     category: "compiler",
     description: "C++ common libraries code designed to augment the C++ standard library."
   },
   {
     name: "googletest",
     url: "https://github.com/google/googletest.git",
-    localPath: "C:/src/google/googletest",
+    localPath: "C:/aphrody/google/googletest",
     category: "compiler",
     description: "Google Testing and Mocking Framework."
   },
   {
     name: "flatbuffers",
     url: "https://github.com/google/flatbuffers.git",
-    localPath: "C:/src/google/flatbuffers",
+    localPath: "C:/aphrody/google/flatbuffers",
     category: "compiler",
     description: "Memory-efficient cross-platform serialization library."
   },
   {
     name: "jax",
     url: "https://github.com/google/jax.git",
-    localPath: "C:/src/google/jax",
+    localPath: "C:/aphrody/google/jax",
     category: "ai",
     description: "Composable transformations of Python+NumPy programs: differentiate, vectorize, JIT to GPU/TPU."
   }

@@ -5,7 +5,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 
-const VAULT = process.env.BRAIN_VAULT ?? "C:/src/var/brain";
+const VAULT = process.env.BRAIN_VAULT ?? "C:/aphrody/var/brain";
 const REMOTE = process.env.BRAIN_RCLONE_REMOTE ?? "gdrive-yoyo";
 const REMOTE_DIR = process.env.BRAIN_REMOTE_DIR ?? "aphrody-brain";
 const HOME = process.env.USERPROFILE ?? "";
@@ -18,8 +18,8 @@ const run = (cmd: string, args: string[], cwd?: string) =>
 
 function envSecrets(): string[] {
   const out: string[] = [];
-  if (!existsSync("C:/src/.env")) return out;
-  for (const l of readFileSync("C:/src/.env", "utf8").split(/\r?\n/)) {
+  if (!existsSync("C:/aphrody/.env")) return out;
+  for (const l of readFileSync("C:/aphrody/.env", "utf8").split(/\r?\n/)) {
     const m = l.match(/^\s*([A-Z0-9_]+)\s*=\s*(.+?)\s*$/);
     const v = m?.[2]?.replace(/^['"]|['"]$/g, "") ?? "";
     if (
@@ -79,9 +79,9 @@ function main() {
       );
     case "graph": {
       for (const d of ["packages", "crates", "apps", "infra"])
-        run("graphify", ["update", `C:/src/${d}`]);
+        run("graphify", ["update", `C:/aphrody/${d}`]);
       const graphs = ["packages", "crates", "apps", "infra"]
-        .map((d) => `C:/src/${d}/graphify-out/graph.json`)
+        .map((d) => `C:/aphrody/${d}/graphify-out/graph.json`)
         .filter(existsSync);
       if (graphs.length > 1)
         run("graphify", [

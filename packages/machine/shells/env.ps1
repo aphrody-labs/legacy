@@ -5,7 +5,7 @@
 $_ayW = $env:OS -eq 'Windows_NT'
 if ($_ayW) { $_ayH = $env:USERPROFILE } else { $_ayH = $env:HOME }
 if ($_ayW) {
-  $env:SRC_ROOT = 'C:\src'
+  $env:SRC_ROOT = 'C:\aphrody'
   $env:AY_SHELL_CACHE = $_ayH + '\.cache\shell'
   $env:LANG = 'C.UTF-8'
   $env:PYTHONUTF8 = '1'

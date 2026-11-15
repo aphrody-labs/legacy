@@ -1,9 +1,9 @@
-# Aphrody (`apps/aphrody`)
+# Aphrody (`apps/web`)
 
 <!-- catalog:begin unit -->
 | Type | Path |
 | :-- | :-- |
-| App | `apps/aphrody` |
+| App | `apps/web` |
 
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->

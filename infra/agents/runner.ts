@@ -557,7 +557,7 @@ function claim(role: string): { t: Task; path: string } | null {
 }
 
 // Runner-owned checkout (<home>/agents/src): the runner may undo task leftovers. The PC works in
-// C:/src, shared with other agents: there nothing is undone, only in-scope files are committed.
+// C:/aphrody, shared with other agents: there nothing is undone, only in-scope files are committed.
 const OWNED = /[\\/]agents[\\/]src$/.test(SRC);
 
 // Roles whose output is text only may use relay models; every other role edits the checkout.

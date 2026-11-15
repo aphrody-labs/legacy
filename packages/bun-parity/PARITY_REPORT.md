@@ -5,8 +5,8 @@
 ## Executive Summary
 
 - **Bun Version**: `v1.4.4`
-- **Chromium Upstream Source**: `C:/src/third_party/chromium/src`
-- **Bun Upstream Source**: `C:/src/third_party/bun`
+- **Chromium Upstream Source**: `C:/aphrody/third_party/chromium/src`
+- **Bun Upstream Source**: `C:/aphrody/third_party/bun`
 - **Native Compliance Score**: **71%** (41 / 58 features)
 - **Effective Compliance Score (After Auto-Patch)**: **100%** (58 / 58 features)
 
@@ -154,16 +154,16 @@ _Summary_: CacheStorage is augmented with an ultra-fast bun:sqlite zero-copy sto
 To execute any Bun application or script with 100% Chromium Web Platform parity:
 
 ```bash
-bun --preload C:/src/packages/bun-parity/dist/chromium-parity-preload.ts your-script.ts
+bun --preload C:/aphrody/packages/bun-parity/dist/chromium-parity-preload.ts your-script.ts
 ```
 
 Or in code:
 
 ```ts
-import "C:/src/packages/bun-parity/dist/chromium-parity-preload.ts";
+import "C:/aphrody/packages/bun-parity/dist/chromium-parity-preload.ts";
 ```
 
-### Artifact 2: Rust Crate Patch Queue for C:\src\third_party\bun
+### Artifact 2: Rust Crate Patch Queue for C:\aphrody\third_party\bun
 
 Clean unified git patches ready for upstream compilation:
 
@@ -174,5 +174,5 @@ Clean unified git patches ready for upstream compilation:
 Verification command:
 
 ```bash
-git -C C:\src\third_party\bun apply --check C:\src\packages\bun-parity\patches\0001-mime-chromium-types.patch
+git -C C:\aphrody\third_party\bun apply --check C:\aphrody\packages\bun-parity\patches\0001-mime-chromium-types.patch
 ```

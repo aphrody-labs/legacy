@@ -26,10 +26,10 @@ afterAll(() => {
 });
 
 test("SessionStart hook registers and names the session", () => {
-  const o = runHook("start", { session_id: "aaaa1111", cwd: "C:/src" });
+  const o = runHook("start", { session_id: "aaaa1111", cwd: "C:/aphrody" });
   expect(o.hookSpecificOutput.hookEventName).toBe("SessionStart");
   expect(o.hookSpecificOutput.additionalContext).toContain('this session is "claude-code-src-aaaa11"');
-  runHook("start", { session_id: "bbbb2222", cwd: "C:/src" });
+  runHook("start", { session_id: "bbbb2222", cwd: "C:/aphrody" });
   S.resetStore();
   expect(S.list().map((s) => s.name).sort()).toEqual(["claude-code-src-aaaa11", "claude-code-src-bbbb22"]);
 });

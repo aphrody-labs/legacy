@@ -1,7 +1,7 @@
 # Classement CLI et libs, novembre 2026
 
 Date : 2026-11-14. Versions et dates lues via `gh api repos/<repo>/releases/latest` le jour meme. Mesures : `hyperfine 2.0.0 -N -w 2 -r 10`, PC i7-13700F, Windows 11.
-Declaration : `C:\src\tools.toml` (`ay up --list`). Politique : bun remplace tout outil JS qu'il couvre ; rg, fd, jaq, b3sum prioritaires.
+Declaration : `C:\aphrody\tools.toml` (`ay up --list`). Politique : bun remplace tout outil JS qu'il couvre ; rg, fd, jaq, b3sum prioritaires.
 
 ## Gagnants par categorie
 

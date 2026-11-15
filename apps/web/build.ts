@@ -2,8 +2,8 @@
 // Content is read, never typed here: texts from the i18n catalogs, counts and entries from public/catalog.json (written by
 // scripts/catalog.ts), colors and type from packages/design/tokens/tokens.css, the logo is public/favicon.png.
 //
-//   bun apps/aphrody/build.ts            write public/index.html, public/<locale>/index.html, public/catalog/..., public/tokens.css
-//   bun apps/aphrody/build.ts --check    exit 1 listing the outputs that differ
+//   bun apps/web/build.ts            write public/index.html, public/<locale>/index.html, public/catalog/..., public/tokens.css
+//   bun apps/web/build.ts --check    exit 1 listing the outputs that differ
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -144,7 +144,7 @@ const logo = new Uint8Array(readFileSync(join(root, "docs/logo/aphrody.png")));
 const favicon = join(pub, "favicon.png");
 if (!existsSync(favicon) || Buffer.compare(readFileSync(favicon), logo) !== 0) {
   stale++;
-  console.log(`${check ? "differs" : "written"}: apps/aphrody/public/favicon.png`);
+  console.log(`${check ? "differs" : "written"}: apps/web/public/favicon.png`);
   if (!check) writeFileSync(favicon, logo);
 }
 for (const [rel, body] of out) {
@@ -152,7 +152,7 @@ for (const [rel, body] of out) {
   const cur = existsSync(file) ? readFileSync(file, "utf8").replace(/\r\n/g, "\n") : null;
   if (cur === body) continue;
   stale++;
-  console.log(`${check ? "differs" : "written"}: apps/aphrody/public/${rel}`);
+  console.log(`${check ? "differs" : "written"}: apps/web/public/${rel}`);
   if (!check) {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, body);

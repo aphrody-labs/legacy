@@ -3,11 +3,11 @@
 # Choices, versions and sources: docs/shell/bash-setup.md. Startup: zero forks except the first launch (caches).
 
 # --- Shared environment (all modes, including Claude Code `bash -c -l`) ---
-_ay_d=${BASH_SOURCE[0]:-C:/src/packages/machine/shells/bash/bashrc}
+_ay_d=${BASH_SOURCE[0]:-C:/aphrody/packages/machine/shells/bash/bashrc}
 _ay_d=${_ay_d%[/\\]*}
 [[ -r $_ay_d/../env.sh ]] && . "$_ay_d/../env.sh"
 unset _ay_d
-: "${SRC_ROOT:=C:/src}" "${AY_SHELL_CACHE:=$HOME/.cache/shell}"
+: "${SRC_ROOT:=C:/aphrody}" "${AY_SHELL_CACHE:=$HOME/.cache/shell}"
 [[ -n ${LANG-} ]] || export LANG=C.UTF-8
 
 # Git Bash (MSYS2 runtime): converts /v, /f, /c... to V:/, F:/, C:/ for native exes. niubash does not do it

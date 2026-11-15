@@ -12,7 +12,7 @@ export async function scanDataAssetsDomain(
   options: ScanOptions,
 ): Promise<DomainReport> {
   const chromiumPath =
-    options.chromiumPath ?? "C:/src/third_party/chromium/src";
+    options.chromiumPath ?? "C:/aphrody/third_party/chromium/src";
   const mimeFile = join(chromiumPath, "net/base/mime_util.cc");
 
   let chromiumMimeCount = 0;

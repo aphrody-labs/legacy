@@ -3,7 +3,7 @@
 do --env {
   let h = $nu.home-dir
   let dirs = if $nu.os-info.name == "windows" {
-    $env.SRC_ROOT = 'C:\src'
+    $env.SRC_ROOT = 'C:\aphrody'
     $env.AY_SHELL_CACHE = ([$h '\.cache\shell'] | str join)
     $env.LANG = 'C.UTF-8'
     $env.PYTHONUTF8 = '1'

@@ -1,7 +1,7 @@
 // @aphrody/design/web : inputs of web pages from the design system. tokens.css (Material Color Utilities from
 // packages/design/design.toml), the Angular Material M3 theme (--mat-sys-* on those tokens), the Angular Material
 // module map, and the M3 typescale as CSS. Angular components are compiled by the Angular builder of the consuming
-// app (apps/aphrody/web), never bundled here.
+// app (apps/web/web), never bundled here.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 

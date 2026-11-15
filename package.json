@@ -10,7 +10,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "apps/aphrody/web",
+      "apps/web/web",
       "apps/nt",
       "apps/nt/modules/web",
       "infra/cloudflare/workers/*"

@@ -11,7 +11,7 @@ export async function scanTlsDomain(
   options: ScanOptions,
 ): Promise<DomainReport> {
   const chromiumPath =
-    options.chromiumPath ?? "C:/src/third_party/chromium/src";
+    options.chromiumPath ?? "C:/aphrody/third_party/chromium/src";
   const bsslH = join(
     chromiumPath,
     "third_party/boringssl/src/include/openssl/ssl.h",

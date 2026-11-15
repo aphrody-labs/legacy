@@ -13,14 +13,14 @@ Inventory of the forks the owner maintains (GitHub `aphrody-labs` org and `aphro
 | Proposed: archive (no push since 2026-06 or parent archived) | 81 |
 | Proposed: delete or resync (ahead 0, more than 50 behind) | 52 |
 | Proposed: keep synced | 679 |
-| crates.io (user aphrody-dev) | 370 crates published 2026-10-03 to 2026-11-13; 309 have no matching package in C:\src |
+| crates.io (user aphrody-dev) | 370 crates published 2026-10-03 to 2026-11-13; 309 have no matching package in C:\aphrody |
 | npm | 15 of 25 local `@aphrody/*` packages published (1.4.7) |
 | VPSes | fr1: 6 aphrody-labs clones (src, ghidra x3, bun, WebKit) and 2 src copies under /home/ubuntu; prd and fr2: /srv/src (fr2 also /srv/corp ghidra) |
-| This PC | 6 repositories outside C:\src; only C:\msys is first-party (clean); no unpushed commits |
+| This PC | 6 repositories outside C:\aphrody; only C:\msys is first-party (clean); no unpushed commits |
 
 ## Forks with our own commits
 
-| Fork | Parent | Ahead | Behind | Last push | Pinned in C:\src |
+| Fork | Parent | Ahead | Behind | Last push | Pinned in C:\aphrody |
 |---|---|---:|---:|---|---|
 | `aphrody-labs/gamescope` | `ValveSoftware/gamescope` | 2831 | 13 | 2026-11-14 | yes |
 | `aphrody-labs/yolo-ui-dup-labs` | `DioxusLabs/dioxus` | 101 | 2 | 2026-11-07 | no |
@@ -52,4 +52,4 @@ Inventory of the forks the owner maintains (GitHub `aphrody-labs` org and `aphro
 
 Notable unmerged work found in those commits: gamescope (Wayland touch frames, client size hints; merge into src/wayland and packages/gaming, then rebase), windows-rs (nt/wasm merge), lfs (Bun stages, uutils musl, preinit as init), bun (order file, trace-order CI, gnu linking: rebase, stays the pin), rubash (CI, completion tests), ghidra (clang full LTO natives, AOT cache), better-auth (bun:test), next.js (Bun built-ins instead of ESLint/Prettier/jest/Playwright), russh (sntrup761x25519 key exchange: upstream PR candidate), rclone (IEVR CPK VFS backend: merge into the nie-studio crates).
 
-Open points: the compare API returned 404 for 3 forks (UnrealEngine and two eve templates); 309 published crates have no source in C:\src (source of truth to recover); npm packages that exist only on the npm account are not covered (registry search returned nothing for the scope).
+Open points: the compare API returned 404 for 3 forks (UnrealEngine and two eve templates); 309 published crates have no source in C:\aphrody (source of truth to recover); npm packages that exist only on the npm account are not covered (registry search returned nothing for the scope).

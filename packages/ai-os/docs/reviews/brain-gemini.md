@@ -6,7 +6,7 @@ Fixed: --days validated (NaN would pack and delete everything), blob committed i
 
 Kept by owner policy: sync sets the no-human-in-the-loop posture (bypassPermissions, always-proceed) without a flag; no .bak files.
 
-Open: zstd level 19 on whole files in RAM, MEMORY.md path hard-coded to C--src, no unit tests, module-level side effects.
+Open: zstd level 19 on whole files in RAM, MEMORY.md path hard-coded to C--aphrody, no unit tests, module-level side effects.
 
 ## Second pass
 

@@ -53,7 +53,7 @@ struct DoctorCmd {
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
-/// run byte-level Git and Scalar optimization across all C:\src repos
+/// run byte-level Git and Scalar optimization across all C:\aphrody repos
 #[argh(subcommand, name = "slim-all")]
 struct SlimAllCmd {
     /// repository root (default: $SRC_ROOT, else the nearest ancestor holding src.lock.json)

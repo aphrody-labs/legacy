@@ -170,7 +170,7 @@ export async function stitchCli(argv: string[]): Promise<number> {
     return !write && d.length ? 1 : 0;
   }
   if (cmd === "design-layout") {
-    const file = a ?? "apps/aphrody/DESIGN.md";
+    const file = a ?? "apps/web/DESIGN.md";
     const width = b ?? "1440";
     const height = cArg ?? "900";
     const r = Bun.spawnSync(["ay", "design", "layout", file, width, height], {

@@ -10,7 +10,7 @@ import { join, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dir, "../../../..");
 const SKILLS = join(ROOT, ".agents", "skills");
-const MEMDIR = join(homedir(), ".claude", "projects", "C--src", "memory");
+const MEMDIR = join(homedir(), ".claude", "projects", "C--aphrody", "memory");
 
 const SECRET =
   /(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|github_pat_\w{40,}|sk-[A-Za-z0-9_-]{32,}|AIza[0-9A-Za-z_-]{35}|-----BEGIN [A-Z ]*PRIVATE KEY-----|xox[abp]-[0-9A-Za-z-]{20,})/;

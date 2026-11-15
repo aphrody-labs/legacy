@@ -99,11 +99,11 @@ mod tests {
 
     #[test]
     fn task_definitions() {
-        let argv = sync_argv(Path::new("C:/Users/a b/ay.exe"), Some(Path::new("C:/src")));
-        assert_eq!(argv[1..], ["docs", "sync", "--quiet", "--root", "C:/src"]);
+        let argv = sync_argv(Path::new("C:/Users/a b/ay.exe"), Some(Path::new("C:/aphrody")));
+        assert_eq!(argv[1..], ["docs", "sync", "--quiet", "--root", "C:/aphrody"]);
         let a = schtasks_create(&argv, 6);
         assert_eq!(a[..8], ["/Create", "/F", "/SC", "HOURLY", "/MO", "6", "/TN", TASK]);
-        assert_eq!(a[9], "conhost.exe --headless \"C:/Users/a b/ay.exe\" docs sync --quiet --root C:/src");
+        assert_eq!(a[9], "conhost.exe --headless \"C:/Users/a b/ay.exe\" docs sync --quiet --root C:/aphrody");
         let (svc, timer) = systemd_units(&sync_argv(Path::new("/home/u/.local/bin/ay"), None), 12);
         assert!(svc.contains("ExecStart=/home/u/.local/bin/ay docs sync --quiet\n"));
         assert!(timer.contains("OnUnitActiveSec=12h"));

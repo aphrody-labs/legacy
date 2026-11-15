@@ -2,7 +2,7 @@
 
 **Target Languages**: Rust, Bun / TypeScript, C / C++, Python (`uv`), Go  
 **Ecosystem**: Upstream Bun v1.4.4+, Cargo/Rust 2024, Chromium patterns, Autonomous NHITL Agent fleet  
-**Host Root**: `C:\src`
+**Host Root**: `C:\aphrody`
 
 ---
 
@@ -30,10 +30,10 @@ Operating a multi-agent autonomous fleet across large polyglot monorepos require
 
 ## 3. Git Worktree Layout Standard
 
-To prevent workspace clutter and preserve root configuration visibility, all repositories under `C:\src` adhere to the **Embedded Worktree Sandbox** pattern:
+To prevent workspace clutter and preserve root configuration visibility, all repositories under `C:\aphrody` adhere to the **Embedded Worktree Sandbox** pattern:
 
 ```text
-C:\src\<repo-name>/
+C:\aphrody\<repo-name>/
 ├── .git/                  # Shared object store & ref storage
 ├── .worktrees/            # Dedicated, git-ignored worktree directory
 │   ├── agent-alpha/       # Autonomous Subagent A workspace

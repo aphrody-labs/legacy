@@ -1,4 +1,4 @@
-//! Secure in-memory `.env` and environment vault loader (`C:\src\.env`).
+//! Secure in-memory `.env` and environment vault loader (`C:\aphrody\.env`).
 //!
 //! Reads tokens dynamically at runtime without ever logging or persisting raw credentials.
 

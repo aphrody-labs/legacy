@@ -7,7 +7,7 @@ import { dirname, join } from "node:path";
 export const gamesDb = (root: string) =>
   join(root, "packages", "assets", "data", "games.sqlite");
 export const gamesJson = (root: string) =>
-  join(root, "apps", "aphrody", "src", "data", "games.json");
+  join(root, "apps", "web", "src", "data", "games.json");
 
 const LANGS: [string, string][] = [
   ["en", "english"],

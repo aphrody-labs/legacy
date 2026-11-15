@@ -540,7 +540,7 @@ export function renderVerifyPage(reportHtml = ""): string {
     <div class="card" style="margin-bottom:24px;">
       <h3>Audit Directory</h3>
       <form method="GET" action="/verify" style="display:flex; gap:12px; margin-top:12px;">
-        <input type="text" name="target" value="C:\\src\\apps\\aphrody" style="flex:1; padding:8px 16px; border-radius:8px; border:1px solid var(--md-sys-color-outline); font-family:monospace;">
+        <input type="text" name="target" value="C:\\aphrody\\apps\\web" style="flex:1; padding:8px 16px; border-radius:8px; border:1px solid var(--md-sys-color-outline); font-family:monospace;">
         <button type="submit" class="btn btn-filled">Run Audit</button>
       </form>
     </div>

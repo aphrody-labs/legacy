@@ -62,7 +62,7 @@ Les builds Rust tournent en CI ou sur fr1, jamais sur le poste.
 
 ## 6. Cible fixée par le propriétaire le 2026-11-13 (enregistrée, rien démarré)
 
-- Trois apps seulement, une par domaine : `shenron`, `rosegriffon`, et une app Aphrody fusionnant `apps/aphrody` (aphrody.com) et `apps/aphrody-app` (aphrody.app). Tout autre app, paquet et crate est mis à plat dans du code partagé ; le code de `shenron` et `rosegriffon` non spécifique à leur produit passe dans des crates et paquets partagés.
+- Trois apps seulement, une par domaine : `shenron`, `rosegriffon`, et une app Aphrody fusionnant `apps/web` (aphrody.com) et `apps/aphrody-app` (aphrody.app). Tout autre app, paquet et crate est mis à plat dans du code partagé ; le code de `shenron` et `rosegriffon` non spécifique à leur produit passe dans des crates et paquets partagés.
 - L'app Aphrody fusionnée héberge et déploie les Craft Apps, ArtCraft et le jeu : WebAssembly et WebGPU plein écran dans le navigateur, monde ouvert multijoueur, 120 fps en 1080p, manette (Xbox, PlayStation), clavier et souris, audio et vidéo, construite sur Bevy avec une matrice de fonctionnalités face à Unreal Engine.
 - Upstreams nommés par le propriétaire, à vérifier avec `gh api` avant tout usage : `vercel-labs/ui`, `vercel-labs/native`, `niri-wm/niri`, `niri-wm/awesome-niri`, l'organisation DioxusLabs, `longbridge` (composants GPUI, `nsh`), `cloudflare/vinext`, `vercel/next.js`, `vercel/vercel`, `vercel/ai`, `vercel/turborepo`, `mui/base-ui`, shadcn, `tailwindlabs/tailwindcss`, Microsoft WebUI, iced et COSMIC.
 - Nettoyage : retirer les copies tierces vendues et imbriquées dans apps, packages et crates ; une version par dépendance ; binaires plus petits.

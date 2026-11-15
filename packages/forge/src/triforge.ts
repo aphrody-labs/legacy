@@ -64,7 +64,7 @@ export function getDefaultTriForgeConfig(
 }
 
 /**
- * Canonical 6-repository inventory for C:\src (root `src` + 5 submodules). Everything else lives in the root repo.
+ * Canonical 6-repository inventory for C:\aphrody (root `src` + 5 submodules). Everything else lives in the root repo.
  * All repositories use clean unprefixed names under `aphrody-dev/<name>`.
  */
 export const CANONICAL_MONOREPO_SUBMODULES: ReadonlyArray<{

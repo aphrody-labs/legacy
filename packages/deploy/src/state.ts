@@ -1,4 +1,4 @@
-// Data model of aphrody.app, shared by the Workers (platform, apps/aphrody edge) and the CLI.
+// Data model of aphrody.app, shared by the Workers (platform, apps/web edge) and the CLI.
 // Everything lives in one R2 bucket under "deploys/":
 //   deploys/_registry.json                 projects.toml + monorepo inventory + logo + labs, uploaded by CI
 //   deploys/<project>/_state.json          production pointer, history, recent deployments

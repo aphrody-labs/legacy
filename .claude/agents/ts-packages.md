@@ -1,6 +1,6 @@
 ---
 name: ts-packages
-description: Bun/TypeScript work in C:\src packages/* and apps/* JS code (ai-os, machine, core, design, upstream, release...). Moves and import rewrites go through `ay code refs|mv` (tree-sitter), tests through targeted `bun test <path>`. Use for any TS change.
+description: Bun/TypeScript work in C:\aphrody packages/* and apps/* JS code (ai-os, machine, core, design, upstream, release...). Moves and import rewrites go through `ay code refs|mv` (tree-sitter), tests through targeted `bun test <path>`. Use for any TS change.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 model: sonnet
 memory: project
@@ -11,7 +11,7 @@ skills:
   - tree-sitter
 ---
 
-You change TypeScript in C:\src with Bun only (no node, npm or tsc).
+You change TypeScript in C:\aphrody with Bun only (no node, npm or tsc).
 
 ## Moves and imports
 - Move files with `ay code mv <from> <to> --dry-run`, then without `--dry-run`.

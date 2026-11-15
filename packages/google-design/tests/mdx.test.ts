@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { generateBunDesignDocs } from "../src/mdx/bun-docs-generator.ts";
 
-const BUN_DOCS_DESIGN_DIR = "C:\\src\\third_party\\bun\\docs\\design";
+const BUN_DOCS_DESIGN_DIR = "C:\\aphrody\\third_party\\bun\\docs\\design";
 
 describe("Bun Docs Design MDX Suite", () => {
   test("generates all 6 MDX files with frontmatter and components", async () => {

@@ -1,4 +1,4 @@
-# Canonical PowerShell profile (pwsh 7.7 + Windows PowerShell 5.1). Source: C:\src\packages\machine\shells\pwsh\profile.ps1.
+# Canonical PowerShell profile (pwsh 7.7 + Windows PowerShell 5.1). Source: C:\aphrody\packages\machine\shells\pwsh\profile.ps1.
 # Deployed as a copy by packages/machine (shells/manifest.toml) to $PROFILE.CurrentUserCurrentHost of both editions.
 # Settings, versions and sources: docs/native/shell/pwsh-setup.md. 5.1-compatible code (no ??, no ternary, no &&).
 # No network, no module imported at startup; everything interactive is deferred until after the first prompt.
@@ -8,7 +8,7 @@
 
 # 1. Shared environment (generated: bun packages/machine/src/shells.ts --gen; $env:* only, zero subprocesses).
 $global:__ay_src = $env:AY_SRC
-if (-not $global:__ay_src) { $global:__ay_src = 'C:\src' }
+if (-not $global:__ay_src) { $global:__ay_src = 'C:\aphrody' }
 if ([IO.File]::Exists("$global:__ay_src\packages\machine\shells\env.ps1")) { . "$global:__ay_src\packages\machine\shells\env.ps1" }
 
 # 2. UTF-8 without BOM for the console and native programs (about_Character_Encoding).

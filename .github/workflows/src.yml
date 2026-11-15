@@ -24,7 +24,7 @@ jobs:
         run: make -C src wasm compositor linux OUT_DIR="$RUNNER_TEMP/sys"
       - name: Validate modules
         run: |
-          for f in "$RUNNER_TEMP/sys/aysys.wasm" apps/aphrody/public/wayland.wasm; do
+          for f in "$RUNNER_TEMP/sys/aysys.wasm" apps/web/public/wayland.wasm; do
             wasm-opt --all-features "$f" -o /dev/null
           done
           test -s "$RUNNER_TEMP/sys/libaysys.so"

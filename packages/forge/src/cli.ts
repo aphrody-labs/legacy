@@ -53,7 +53,7 @@ USAGE:
   frg <command> [arguments]
 
 COMMANDS:
-  status [repo] [--all]      Inspect all canonical C:\\src repositories (or --all incl. third_party)
+  status [repo] [--all]      Inspect all canonical C:\\aphrody repositories (or --all incl. third_party)
   pillars [--json]           Audit 4-pillar VCS governance (Git + Chromium DEPS + Kernel MAINTAINERS + AOSP repo)
   remotes [--apply] [--json] Audit or idempotently apply origin/gitlab/google remotes on all 26 repos
   gitlab-init [--dry-run]    Provision aphrody-dev GitLab group/projects, protections & Pacman/OCI registries
@@ -186,7 +186,7 @@ async function main() {
           );
         });
       } else {
-        console.log("Scanning C:\\src monorepo repositories...\n");
+        console.log("Scanning C:\\aphrody monorepo repositories...\n");
         const repos = scanMonorepoRepos(SRC_ROOT, { includeThirdParty });
         console.log(
           "REPO                      BRANCH             HEAD         STATUS         ENGINE",

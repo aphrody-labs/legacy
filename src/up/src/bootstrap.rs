@@ -399,9 +399,9 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         std::fs::create_dir_all(dir.path().join("apps/present")).unwrap();
         let lock = r#"{"repositories": {
-            "apps/present": {"url": "https://google.com/a.git", "path": "C:\\src\\apps\\present"},
-            "apps/absent": {"url": "https://google.com/b.git", "path": "C:\\src\\apps\\absent"},
-            "local": {"url": "C:/somewhere", "path": "C:\\src\\local"}
+            "apps/present": {"url": "https://google.com/a.git", "path": "C:\\aphrody\\apps\\present"},
+            "apps/absent": {"url": "https://google.com/b.git", "path": "C:\\aphrody\\apps\\absent"},
+            "local": {"url": "C:/somewhere", "path": "C:\\aphrody\\local"}
         }}"#;
         let missing = missing_repos(lock, dir.path());
         assert_eq!(missing.len(), 1);

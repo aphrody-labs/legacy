@@ -1,10 +1,10 @@
 # GitLab & Tri-Forge Infrastructure (`infra/gitlab`)
 
-Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Google Cloud Git** across all 26 `C:\src` repositories.
+Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Google Cloud Git** across all 26 `C:\aphrody` repositories.
 
 ## 1. Tri-Forge Topology
 
-Every repository in `C:\src` (root `src` + 25 submodules = 26 repositories) maintains synchronized Git remotes managed via `@aphrody/forge` (`frg`):
+Every repository in `C:\aphrody` (root `src` + 25 submodules = 26 repositories) maintains synchronized Git remotes managed via `@aphrody/forge` (`frg`):
 
 - `origin` (**GitHub**): `https://github.com/aphrody-dev/<repo>.git`
 - `gitlab` (**GitLab SaaS**): `https://gitlab.com/aphrody-dev/<repo>.git`
@@ -22,7 +22,7 @@ Every repository in `C:\src` (root `src` + 25 submodules = 26 repositories) main
 ## 3. CLI Operations (`frg`)
 
 ```powershell
-# Audit or apply remotes across all 26 C:\src repositories
+# Audit or apply remotes across all 26 C:\aphrody repositories
 frg remotes
 frg remotes --apply
 

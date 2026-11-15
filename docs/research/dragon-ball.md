@@ -35,11 +35,11 @@
    - ### Dragons & Wishes Source: https://github.com/dragonminez/dragonminez/wiki/Dragons-and-Wishes DMZ has **two wish-granting dragons**. You summon one by gathering that world's **seven Dragon Balls**, then choosing from its list of wishes. After the wish, the balls scatter across the world again. > Dragons, ball sets and wishes are fully **data-driven** — you can add custom dragons, balls and wishes. To edit them see [[Custom Wishes|Custom-Wishes]]. All wishes below are the **
 4. **[[Context7 /dragonminez/dragonminez] World bosses, tournaments, Dragon Balls & minigames](https://github.com/dragonminez/dragonminez/wiki/Commands)** (`context7`, blake3=`ae88fc6b2a04`)
    - ### World bosses, tournaments, Dragon Balls & minigames Source: https://github.com/dragonminez/dragonminez/wiki/Commands | **`/dmzdragonballs`** | `status [set]` — per set: balls placed, balls pending (generated once their chunk loads) and dragons waiting for a wish; with a set, every ball's coordinates (click to teleport) · `regenerate <set>` — tops a set back up to its configured number of copies (balls held by players aren't counted). Sets: `earth`, `namek`, plus any addon
-5. **[Local Workspace Manifest: apps\shenron\Cargo.toml](file:///C:/src/apps/shenron/Cargo.toml)** (`local_monorepo`, blake3=`e8a1aa64296d`)
+5. **[Local Workspace Manifest: apps\shenron\Cargo.toml](file:///C:/aphrody/apps/shenron/Cargo.toml)** (`local_monorepo`, blake3=`e8a1aa64296d`)
    - homepage = "https://dragonballfr.com"
-6. **[Local Workspace Manifest: apps\shenron\package.json](file:///C:/src/apps/shenron/package.json)** (`local_monorepo`, blake3=`d02b58ff964e`)
+6. **[Local Workspace Manifest: apps\shenron\package.json](file:///C:/aphrody/apps/shenron/package.json)** (`local_monorepo`, blake3=`d02b58ff964e`)
    - "description": "Shenron (dragonballfr.com): Dragon Ball site, Discord bot, editorial pipeline, Koharu manga translation and the Shenron agent tooling, built on published Aphrody packages.",
-7. **[Local Workspace Manifest: apps\shenron\README.md](file:///C:/src/apps/shenron/README.md)** (`local_monorepo`, blake3=`30ccd22cef88`)
+7. **[Local Workspace Manifest: apps\shenron\README.md](file:///C:/aphrody/apps/shenron/README.md)** (`local_monorepo`, blake3=`30ccd22cef88`)
    - # Shenron: Dragon Ball Universe Studio & Platform
 
 ### Tier 2: Upstream GitHub/GitLab Repo (5)
@@ -76,9 +76,9 @@
 | 2   | Tier 1 | `context7`       | [[Context7 /dragonminez/dragonminez] Dragon Balls, Radar & Wishes (datapack-driven rework)](https://context7.com/dragonminez/dragonminez)                                               | `c6a8b78ede02e4da` |
 | 3   | Tier 1 | `context7`       | [[Context7 /dragonminez/dragonminez] Dragons & Wishes](https://github.com/dragonminez/dragonminez/wiki/Dragons-and-Wishes)                                                              | `fc60f141485657b6` |
 | 4   | Tier 1 | `context7`       | [[Context7 /dragonminez/dragonminez] World bosses, tournaments, Dragon Balls & minigames](https://github.com/dragonminez/dragonminez/wiki/Commands)                                     | `ae88fc6b2a0422e0` |
-| 5   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\Cargo.toml](file:///C:/src/apps/shenron/Cargo.toml)                                                                                             | `e8a1aa64296dbf18` |
-| 6   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\package.json](file:///C:/src/apps/shenron/package.json)                                                                                         | `d02b58ff964ee5d6` |
-| 7   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\README.md](file:///C:/src/apps/shenron/README.md)                                                                                               | `30ccd22cef886123` |
+| 5   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\Cargo.toml](file:///C:/aphrody/apps/shenron/Cargo.toml)                                                                                             | `e8a1aa64296dbf18` |
+| 6   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\package.json](file:///C:/aphrody/apps/shenron/package.json)                                                                                         | `d02b58ff964ee5d6` |
+| 7   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\README.md](file:///C:/aphrody/apps/shenron/README.md)                                                                                               | `30ccd22cef886123` |
 | 8   | Tier 2 | `github`         | [GitHub: Aerthas/UNITY-Arc-system-Works-Shader](https://github.com/Aerthas/UNITY-Arc-system-Works-Shader)                                                                               | `0720fea22f8c8fc2` |
 | 9   | Tier 2 | `github`         | [GitHub: novapowers0/DBZ-Budokai-3-HD-Collection](https://github.com/novapowers0/DBZ-Budokai-3-HD-Collection)                                                                           | `b2198fa5a385567b` |
 | 10  | Tier 2 | `github`         | [GitHub: pxvr-official/1](https://github.com/pxvr-official/1)                                                                                                                           | `ff25ae58eabf1542` |

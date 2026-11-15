@@ -61,11 +61,11 @@ Bun has no `src.lock.json` or `dist-workspace.toml`. `src.lock.json` is the repo
 
 | Path | Role | Status |
 | --- | --- | --- |
-| `docs/logo/aphrody.png` | the logo: the 256 px avatar of the aphrody-labs organisation, downloaded once from its `avatar_url`; READMEs and the site favicon (`apps/aphrody/public/favicon.png`) use this file, profile READMEs embed the avatar URL | done |
+| `docs/logo/aphrody.png` | the logo: the 256 px avatar of the aphrody-labs organisation, downloaded once from its `avatar_url`; READMEs and the site favicon (`apps/web/public/favicon.png`) use this file, profile READMEs embed the avatar URL | done |
 | `packages/design/design.toml` | seed, variant and typeface of the design tokens | done |
 | `packages/design/symbols/` | Material Symbols subset (sprite, SVGs, font) | done |
 
-`bun scripts/catalog.ts` renders the READMEs and `docs/reference/catalog`, `bun apps/aphrody/build.ts` the aphrody.com pages, and `bun scripts/catalog.ts profile <id>` the GitHub profile READMEs (`scripts/catalog.config.json`).
+`bun scripts/catalog.ts` renders the READMEs and `docs/reference/catalog`, `bun apps/web/build.ts` the aphrody.com pages, and `bun scripts/catalog.ts profile <id>` the GitHub profile READMEs (`scripts/catalog.config.json`).
 
 ## Checks per move
 

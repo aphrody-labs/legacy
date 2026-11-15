@@ -1,5 +1,5 @@
 // The only static server of the repo (serveStatic): an R2 prefix served as a site. Used by the platform
-// Worker for previews and production aliases (serveDeployment), by the apps/aphrody edge Worker for
+// Worker for previews and production aliases (serveDeployment), by the apps/web edge Worker for
 // aphrody.com and by apps/r2-site (cdn, downloads, creator, shell). Supports the `_headers` file (Cloudflare
 // Pages syntax, `*` wildcard, later rules win), directory indexes, SPA fallback, `404.html`, ranges and ETags.
 // /_static/* and /assets/v<N>/* are immutable; a 404 is never cached beyond 60 s.

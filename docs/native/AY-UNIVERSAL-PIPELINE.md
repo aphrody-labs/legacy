@@ -1,6 +1,6 @@
 # `ay` Universal Compiler, Lifter & Monorepo Pipeline (`docs/native/AY-UNIVERSAL-PIPELINE.md`)
 
-Architectural evaluation and blueprint for evolving [`ay`](file:///C:/src/src/ay) and [`src/`](file:///C:/src/src) into a universal polyglot parser, linter, formatter, minifier, cross-compiler, binary lifter/decompiler, language/OS converter, packager, deployer, and publisher built on **Tree-sitter**, **LLVM ThinLTO + MLIR**, and **WebAssembly Component / Bindgen descriptors**.
+Architectural evaluation and blueprint for evolving [`ay`](file:///C:/aphrody/src/ay) and [`src/`](file:///C:/aphrody/src) into a universal polyglot parser, linter, formatter, minifier, cross-compiler, binary lifter/decompiler, language/OS converter, packager, deployer, and publisher built on **Tree-sitter**, **LLVM ThinLTO + MLIR**, and **WebAssembly Component / Bindgen descriptors**.
 
 All upstream references below were verified live via GitHub REST API and LLVM documentation on **2026-11-14**.
 
@@ -21,7 +21,7 @@ All upstream references below were verified live via GitHub REST API and LLVM do
 
 A single representation **cannot** simultaneously preserve whitespace/comments for formatting, incremental syntax recovery on broken files, C++/Rust static semantics, cross-module register/inline heuristics, and stripped machine-code control flow.
 
-The clean engineering design for `ay` is **not** to force Tree-sitter to become a code generator, nor to force LLVM IR to format source code. Instead, `ay` unifies **five specialized IR tiers** connected by one content-addressed store ([`src/depot/cas`](file:///C:/src/src/depot/cas), FastCDC + BLAKE3) and one symbol GUID namespace:
+The clean engineering design for `ay` is **not** to force Tree-sitter to become a code generator, nor to force LLVM IR to format source code. Instead, `ay` unifies **five specialized IR tiers** connected by one content-addressed store ([`src/depot/cas`](file:///C:/aphrody/src/depot/cas), FastCDC + BLAKE3) and one symbol GUID namespace:
 
 ```mermaid
 flowchart TD
@@ -99,7 +99,7 @@ Upstream `wasm-bindgen` (`0.2.130`) works by emitting a binary interface descrip
 - **Single Source of Truth**: An interface is declared once as either a freestanding C11 header (`src/include/uapi/ay/*.h` parsed via Clang `CIR`/AST) or a `.wit` world.
 - **Dual Emission**:
   1. **Zero-Copy Native ABI**: Generates `sys.h` (C11/C++23), `src/core/capi` (`extern "C"` Rust), `packages/core/src/sys.ts` (`bun:ffi`), `ndk_theme.h` (Android JNI/NDK), `.NET 11 [LibraryImport]`, and `dart:ffi`.
-  2. **WebAssembly 3.0 & Component Model**: Emits a custom interface section into `.wasm`, runs `walrus` / `wasm-tools component new` + Binaryen `wasm-opt -O4`, and generates tiny zero-dep JS/WebGPU hosts (< 5 KB, like [`m3-host.js`](file:///C:/src/apps/aphrody/public/m3/m3-host.js)) and TypeScript `.d.ts` definitions (`ts-gen` pattern).
+  2. **WebAssembly 3.0 & Component Model**: Emits a custom interface section into `.wasm`, runs `walrus` / `wasm-tools component new` + Binaryen `wasm-opt -O4`, and generates tiny zero-dep JS/WebGPU hosts (< 5 KB, like [`m3-host.js`](file:///C:/aphrody/apps/web/public/m3/m3-host.js)) and TypeScript `.d.ts` definitions (`ts-gen` pattern).
 
 ### 3.3 Honest Matrix: Compile, Decompile, Convert & Execute Across Languages and OSes
 
@@ -119,24 +119,24 @@ Every operation `ay` exposes must declare its **soundness class** explicitly —
 
 ---
 
-## 4. Mapping to Existing `C:\src` Modules (Zero Duplication)
+## 4. Mapping to Existing `C:\aphrody` Modules (Zero Duplication)
 
-Nearly 70% of the foundational bricks already exist in `C:\src`; the remaining work is **wiring unified CLI verbs and ThinLTO/WIT descriptors** rather than rewriting compilers from scratch:
+Nearly 70% of the foundational bricks already exist in `C:\aphrody`; the remaining work is **wiring unified CLI verbs and ThinLTO/WIT descriptors** rather than rewriting compilers from scratch:
 
 1. **Tier 1 (CST, Query, Rope Codemods)**:
-   - Exists: [`src/core`](file:///C:/src/src/core) (`TreeSitterEngine`, `AstExtractor`, `GRAMMARS` registry, `ropey`), [`src/core/capi`](file:///C:/src/src/core/capi), [`src/depot/migrate`](file:///C:/src/src/depot/migrate).
+   - Exists: [`src/core`](file:///C:/aphrody/src/core) (`TreeSitterEngine`, `AstExtractor`, `GRAMMARS` registry, `ropey`), [`src/core/capi`](file:///C:/aphrody/src/core/capi), [`src/depot/migrate`](file:///C:/aphrody/src/depot/migrate).
    - Next step: Add per-symbol BLAKE3 semantic-body hashing (`ast_body_hash` ignoring comments/trivia) to `AstSymbol` in `src/core/src/symbols.rs`.
 2. **Tier 2 (`ay bindgen` — C11 + Wasm + FFI Generator)**:
-   - Exists: Manual mirror across [`sys.h`](file:///C:/src/src/include/ay/sys.h), [`sys.rs`](file:///C:/src/src/core/capi/src/sys.rs), [`sys.ts`](file:///C:/src/packages/core/src/sys.ts), [`ndk_theme.h`](file:///C:/src/packages/design/tokens/adapters/ndk_theme.h).
-   - Next step: Parse `src/include/uapi/ay/*.h` once with Tree-sitter C / `libclang` to auto-emit `sys.rs`, `sys.ts`, `.d.ts`, `.wit`, JNI C shims, and `.NET [LibraryImport]` with `--check` CI gate (same deterministic pattern as [`adapters.ts`](file:///C:/src/packages/design/src/adapters.ts)).
+   - Exists: Manual mirror across [`sys.h`](file:///C:/aphrody/src/include/ay/sys.h), [`sys.rs`](file:///C:/aphrody/src/core/capi/src/sys.rs), [`sys.ts`](file:///C:/aphrody/packages/core/src/sys.ts), [`ndk_theme.h`](file:///C:/aphrody/packages/design/tokens/adapters/ndk_theme.h).
+   - Next step: Parse `src/include/uapi/ay/*.h` once with Tree-sitter C / `libclang` to auto-emit `sys.rs`, `sys.ts`, `.d.ts`, `.wit`, JNI C shims, and `.NET [LibraryImport]` with `--check` CI gate (same deterministic pattern as [`adapters.ts`](file:///C:/aphrody/packages/design/src/adapters.ts)).
 3. **Tier 3 (LLVM 24 ThinLTO + Wasm 3.0 + Sysroots)**:
-   - Exists: [`src/Makefile`](file:///C:/src/src/Makefile) (`clang -flto=thin`, `lld-link`, `wasm-ld`, `wasi-sdk 34`, `wasm-opt -O4`), [`UNIFIED-TOOLCHAIN.md`](file:///C:/src/docs/native/llvm/UNIFIED-TOOLCHAIN.md) (`toolchain-157.toml` on R2), [`src/ay/src/build.rs`](file:///C:/src/src/ay/src/build.rs).
+   - Exists: [`src/Makefile`](file:///C:/aphrody/src/Makefile) (`clang -flto=thin`, `lld-link`, `wasm-ld`, `wasi-sdk 34`, `wasm-opt -O4`), [`UNIFIED-TOOLCHAIN.md`](file:///C:/aphrody/docs/native/llvm/UNIFIED-TOOLCHAIN.md) (`toolchain-157.toml` on R2), [`src/ay/src/build.rs`](file:///C:/aphrody/src/ay/src/build.rs).
    - Next step: Expose `ay compile <path> --target <triple>` driving the shared LLVM 24 + `wasi-sdk` + `xwin`/NDK sysroots and indexing `.thinlto.bc` summaries in `depot-cas`.
 4. **Tier 4 (Binary Lifter, Decompiler & Migration)**:
-   - Exists: [`crates/depot-re`](file:///C:/src/crates/depot-re) (`goblin`, `iced-x86`, ABI classifier, Ghidra P-Code, MinGW-REA, Lua 5.2 disassembler), [`src/depot/migrate`](file:///C:/src/src/depot/migrate) (polyglot AST migrator, LLVM/CoreCLR), [`apps/unixwin`](file:///C:/src/apps/unixwin) (REA + Replica + POSIX/Win runtime), [`src/nt`](file:///C:/src/src/nt) + [`src/wine`](file:///C:/src/src/wine).
+   - Exists: [`crates/depot-re`](file:///C:/aphrody/crates/depot-re) (`goblin`, `iced-x86`, ABI classifier, Ghidra P-Code, MinGW-REA, Lua 5.2 disassembler), [`src/depot/migrate`](file:///C:/aphrody/src/depot/migrate) (polyglot AST migrator, LLVM/CoreCLR), [`apps/unixwin`](file:///C:/aphrody/apps/unixwin) (REA + Replica + POSIX/Win runtime), [`src/nt`](file:///C:/aphrody/src/nt) + [`src/wine`](file:///C:/aphrody/src/wine).
    - Next step: Route `ay decompile <binary>` (`depot-re` P-Code/Pseudo-C + `apps/unixwin/rea`) and `ay convert <src> --to <target>` (`wasm2c`, `naga`, `c2rust`, `depot-migrate` + conformance harness).
 5. **Tier 5 (Package, Deploy, Publish)**:
-   - Exists: `ay pkg` (`src/posix/omarchy` + `infra/pkg`), `ay deploy` ([`packages/deploy`](file:///C:/src/packages/deploy)), `ay release` ([`packages/release`](file:///C:/src/packages/release)), `ay git` / `just vcs` ([`scripts/vcs.ts`](file:///C:/src/scripts/vcs.ts)).
+   - Exists: `ay pkg` (`src/posix/omarchy` + `infra/pkg`), `ay deploy` ([`packages/deploy`](file:///C:/aphrody/packages/deploy)), `ay release` ([`packages/release`](file:///C:/aphrody/packages/release)), `ay git` / `just vcs` ([`scripts/vcs.ts`](file:///C:/aphrody/scripts/vcs.ts)).
 
 ---
 

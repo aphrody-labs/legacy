@@ -24,7 +24,7 @@ function pad(str: string, width: number): string {
 
 export function listClonedEcosystemRepos(
   ecosystemRoot = process.platform === "win32"
-    ? "C:\\src\\third_party\\ai-ecosystem"
+    ? "C:\\aphrody\\third_party\\ai-ecosystem"
     : "/src/third_party/ai-ecosystem",
 ): Array<{ name: string; path: string; hasGit: boolean }> {
   if (!existsSync(ecosystemRoot)) return [];

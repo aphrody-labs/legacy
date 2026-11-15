@@ -13,7 +13,7 @@ export const GOOGLE_OFFICIAL_REPOS: GoogleOfficialRepo[] = [
   {
     name: "gvisor",
     url: "https://github.com/google/gvisor.git",
-    localPath: "C:/src/google-bun/third_party/gvisor",
+    localPath: "C:/aphrody/google-bun/third_party/gvisor",
     category: "os",
     description:
       "Container runtime sandbox with system call virtualization in Go (Sentry + Gofer LISAFS).",
@@ -21,7 +21,7 @@ export const GOOGLE_OFFICIAL_REPOS: GoogleOfficialRepo[] = [
   {
     name: "abseil-cpp",
     url: "https://github.com/abseil/abseil-cpp.git",
-    localPath: "C:/src/google-bun/third_party/abseil-cpp",
+    localPath: "C:/aphrody/google-bun/third_party/abseil-cpp",
     category: "compiler",
     description:
       "C++ common libraries code designed to augment the C++ standard library.",
@@ -29,14 +29,14 @@ export const GOOGLE_OFFICIAL_REPOS: GoogleOfficialRepo[] = [
   {
     name: "googletest",
     url: "https://github.com/google/googletest.git",
-    localPath: "C:/src/google-bun/third_party/googletest",
+    localPath: "C:/aphrody/google-bun/third_party/googletest",
     category: "compiler",
     description: "Google Testing and Mocking Framework.",
   },
   {
     name: "flatbuffers",
     url: "https://github.com/google/flatbuffers.git",
-    localPath: "C:/src/google-bun/third_party/flatbuffers",
+    localPath: "C:/aphrody/google-bun/third_party/flatbuffers",
     category: "compiler",
     description:
       "Memory-efficient zero-copy cross-platform serialization library.",
@@ -44,7 +44,7 @@ export const GOOGLE_OFFICIAL_REPOS: GoogleOfficialRepo[] = [
   {
     name: "jax",
     url: "https://github.com/google/jax.git",
-    localPath: "C:/src/google-bun/third_party/jax",
+    localPath: "C:/aphrody/google-bun/third_party/jax",
     category: "ai",
     description:
       "Composable transformations of Python+NumPy programs: differentiate, vectorize, JIT to GPU/TPU.",

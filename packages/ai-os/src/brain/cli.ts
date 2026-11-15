@@ -255,9 +255,9 @@ async function readJson(p: string): Promise<any> {
 
 async function sync() {
   const global = await Bun.file(join(CLAUDE, "CLAUDE.md")).text();
-  const idx = join(CLAUDE, "projects", "C--src", "memory", "MEMORY.md");
+  const idx = join(CLAUDE, "projects", "C--aphrody", "memory", "MEMORY.md");
   const mem = existsSync(idx) ? await Bun.file(idx).text() : "";
-  const block = `${BEGIN}\n# Shared directives (from ~/.claude/CLAUDE.md, synced by ai-os brain)\n\n${global.trim()}\n\n## Memory index (~/.claude/projects/C--src/memory)\n\n${mem.trim()}\n${END}`;
+  const block = `${BEGIN}\n# Shared directives (from ~/.claude/CLAUDE.md, synced by ai-os brain)\n\n${global.trim()}\n\n## Memory index (~/.claude/projects/C--aphrody/memory)\n\n${mem.trim()}\n${END}`;
   // One managed block per agent prompt file: agy, Codex, OpenCode, Pi. Text outside the block is the agent-specific
   // header, written only when the file is absent or empty.
   const ROOT = resolve(import.meta.dir, "../../../..");

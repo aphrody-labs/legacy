@@ -352,7 +352,7 @@ export function mergeEvmConfigs<T extends Record<string, unknown>>(
  */
 export function createEvmConfigProfile(
   profileType: EvmProfileType,
-  rootDir = "C:/src/chromium",
+  rootDir = "C:/aphrody/chromium",
 ): EvmConfigProfile {
   const gnImportMap: Record<EvmProfileType, string> = {
     main: 'import("//electron/build/args/testing.gn")',
@@ -711,7 +711,7 @@ export function executeElectronBuildToolsCommand(
   } = {},
 ): Record<string, unknown> {
   const profileType = options.profile ?? "testing";
-  const rootDir = options.rootDir ?? "C:/src/chromium";
+  const rootDir = options.rootDir ?? "C:/aphrody/chromium";
   const evmProfile = createEvmConfigProfile(profileType, rootDir);
 
   switch (subcommand) {

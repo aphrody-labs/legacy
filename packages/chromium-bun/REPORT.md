@@ -269,8 +269,8 @@ Total Audited: **22** | **PURGE_FOR_BUN**: **11** | **KEEP_CHROMIUM_NATIVE**: **
 | Contestant                                                     | Metric Value | Raw Duration (ms) | Notes                                                                                           |
 | -------------------------------------------------------------- | ------------ | ----------------- | ----------------------------------------------------------------------------------------------- |
 | **Chromium Siso (Go/Rust Next-Gen Ninja)**                     | **N/A**      | -                 | `{"status":"Active in depot_tools","role":"Remote build execution & cache"}`                    |
-| Google GN Metaninja (v2614 (ed7fee04cb30))                     | N/A          | -                 | `{"path":"C:\\src\\third_party\\chromium\\src\\buildtools\\win\\gn.exe","version":"2614 (ed7fe` |
-| Kitware Ninja Jobserver (v1.13.2.git.kitware.jobserver-pipe-1) | N/A          | -                 | `{"path":"C:\\src\\third_party\\depot_tools\\ninja.bat","version":"1.13.2.git.kitware.jobserve` |
+| Google GN Metaninja (v2614 (ed7fee04cb30))                     | N/A          | -                 | `{"path":"C:\\aphrody\\third_party\\chromium\\src\\buildtools\\win\\gn.exe","version":"2614 (ed7fe` |
+| Kitware Ninja Jobserver (v1.13.2.git.kitware.jobserver-pipe-1) | N/A          | -                 | `{"path":"C:\\aphrody\\third_party\\depot_tools\\ninja.bat","version":"1.13.2.git.kitware.jobserve` |
 
 ### In-Process Compression Throughput (2MB Multi-Module Payload)
 

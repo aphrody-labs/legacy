@@ -2,9 +2,22 @@
 <img alt="Aphrody" src="docs/logo/aphrody.png" width="96" height="96">
 <!-- catalog:end -->
 
-# src
+# Aphrody
 
-Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Master plan: [docs/PLAN.mdx](docs/PLAN.mdx). Design tokens: [packages/design](packages/design/DESIGN.md). Logo: [docs/logo/aphrody.png](docs/logo/aphrody.png).
+Open-source game engine and creative suite built in the open: Bevy, the Craft Apps, `src/tv` and FFmpeg for media, Unreal Engine by interop, on a Bun, Rust, C and WebAssembly platform. Direction and work order: [docs/games/PLAN.md](docs/games/PLAN.md). Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Design tokens: [packages/design](packages/design/DESIGN.md). Logo: [docs/logo/aphrody.png](docs/logo/aphrody.png).
+
+## Layout
+
+| Path | Content |
+| :-- | :-- |
+| [`apps/web`](apps/web) | aphrody.com and aphrody.app: static site, Angular Material app (`apps/web/web`), Wayland WASM surface |
+| [`apps/`](apps) | `auto`, `nt` (in tree), `open` (separate clone), `rosegriffon` and `shenron` (submodules) |
+| [`packages/`](packages) | Bun `@aphrody/*` packages |
+| [`src/`](src) | Rust 2024 crates, the C and WebAssembly core |
+| [`infra/`](infra) | fleet, deploy and CI configuration |
+| [`third_party/`](third_party) | upstream checkouts and forks pinned in `src.lock.json` |
+
+The checkout folder, repo, binary and package names come from [`tools/identity.toml`](tools/identity.toml); `bun scripts/identity-relocate.ts` moves the checkout and rewires services, tasks, variables and agent tooling.
 
 ## Stack Overview
 
@@ -14,7 +27,7 @@ Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md)
 - **Rust Workspace**: first-party crates and crates absorbed from Bun in `src/*`, members listed in [`Cargo.toml`](Cargo.toml).
 - **Zig Native Cores**: `third_party/native` (vercel-labs/native, bound by `packages/native`) and browser cores exporting stable C ABI symbols via `aphrody_zig.h`.
 - **Modern Web Guidance (`@aphrody/wck`)**: pure Bun + `mwg_capi` (`packages/wck/native`) hybrid RAG search, Baseline gates, and MCP tools. See [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx).
-- **`ay` Multicall CLI**: unified repository interface (`ay arch check --strict`, `ay manifests`, `ay gaming`, `ay steam`).
+- **`ay` Multicall CLI**: unified repository interface (`ay manifests`, `ay gaming`, `ay steam`).
 
 <!-- catalog:begin types -->
 ## Catalog
@@ -37,7 +50,6 @@ Rust compiles in CI or on the build host (`fr1`), never on the workstation.
 
 ```sh
 just doctor                            # toolchain doctor
-just arch-check                        # architecture gate (ay arch check --strict)
 bun scripts/checkdeps.ts               # Chromium-style DEPS.rules layer gate
 bun scripts/catalog.ts                 # regenerate the READMEs, docs/reference/catalog and the site catalog from the manifests
 bun scripts/catalog.ts --check         # the same as a CI gate

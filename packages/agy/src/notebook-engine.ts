@@ -11,8 +11,8 @@ import {
 import { buildGitingestDigest } from "./depot-orgs.ts";
 
 export const DEFAULT_NOTEBOOKLM_DB_PATH =
-  "C:/src/var/agy-notebooklm.sqlite";
-export const DEFAULT_NOTEBOOKS_DIR = "C:/src/var/agy-notebooks";
+  "C:/aphrody/var/agy-notebooklm.sqlite";
+export const DEFAULT_NOTEBOOKS_DIR = "C:/aphrody/var/agy-notebooks";
 
 export interface JupyterCell {
   cell_type: "markdown" | "code";

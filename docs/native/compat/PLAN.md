@@ -1,10 +1,10 @@
 # Plan : purge du legacy, stack LLVM 2026
 
-Aligné sur docs/native/llvm/UNIFIED-TOOLCHAIN.md et TOOLCHAIN-FORKS.md : une seule révision LLVM (CLANG_REVISION de Chromium), lld, ThinLTO, et `*-windows-gnullvm` quand l'ABI MinGW est requise. Aucun GCC. C:\src est en lecture seule : les purges se font par patchs dans nos forks aphrody-labs ou dans labs/forks.
+Aligné sur docs/native/llvm/UNIFIED-TOOLCHAIN.md et TOOLCHAIN-FORKS.md : une seule révision LLVM (CLANG_REVISION de Chromium), lld, ThinLTO, et `*-windows-gnullvm` quand l'ABI MinGW est requise. Aucun GCC. C:\aphrody est en lecture seule : les purges se font par patchs dans nos forks aphrody-labs ou dans labs/forks.
 
 ## Purge (14 éléments)
 
-| #   | Legacy                                                    | Fichier (C:\src\third_party\…)                                         | Remplacement                                                                    |
+| #   | Legacy                                                    | Fichier (C:\aphrody\third_party\…)                                         | Remplacement                                                                    |
 | --- | --------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 1   | `mingw-w64-gcc` (makedepends)                             | CachyOS-PKGBUILDS/wine-cachyos/PKGBUILD:75                             | llvm-mingw construit sur notre LLVM, `--with-mingw=llvm-mingw`                  |
 | 2   | idem                                                      | CachyOS-PKGBUILDS/wine-cachyos-opt/PKGBUILD:75                         | idem                                                                            |
@@ -19,7 +19,7 @@ Aligné sur docs/native/llvm/UNIFIED-TOOLCHAIN.md et TOOLCHAIN-FORKS.md : une se
 | 11  | RosBE GCC (`--gcc`)                                       | LiberNT/configure.sh:410-487, toolchain-gcc.cmake, sdk/cmake/gcc.cmake | `--clang` avec notre LLVM ; à terme toolchain-msvc.cmake en clang-cl + lld-link |
 | 12  | bootstrap RosBE par `curl … \| sh`                        | LiberNT/configure.sh:42-45                                             | toolchain épinglée `ay toolchain` (R2, b3sum)                                   |
 | 13  | GCC MinGW (fork RE)                                       | n2b/forks/mingw-w64-rea, n2b/crates/n2b-mingw-rea                      | rebuild llvm-mingw ; owner r2b, hors compat, simplement signalé                 |
-| 14  | `x86_64-pc-windows-gnu` (Rust)                            | déjà remplacé, cf. C:\src\docs\WINDOWS_UNIX_TOOLCHAIN.md:15            | `*-windows-gnullvm`, rien à faire                                               |
+| 14  | `x86_64-pc-windows-gnu` (Rust)                            | déjà remplacé, cf. C:\aphrody\docs\WINDOWS_UNIX_TOOLCHAIN.md:15            | `*-windows-gnullvm`, rien à faire                                               |
 
 À garder : third_party/mingw-w64. Ce ne sont que des en-têtes et une CRT, utilisés à la fois par llvm-mingw et par le PE de Wine.
 

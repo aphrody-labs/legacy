@@ -21,13 +21,13 @@ The design system is framework-neutral: one token set, one adapter per target. P
 | C / Zig        | `adapters/tokens.h`, `tokens/tokens.zig`                                                                              |
 | TUI            | `tokens/ansi.json`, `tokens/ansi.sh`, `tokens/tokens.rs` (24-bit SGR)                                                 |
 
-Defaults already in the repo: the web app `apps/aphrody/web` is an Angular app on Angular Material; `docs/ui/STACK.md` lists the sources and the dated version checks for each target. For a new surface, choose from the adapters above and record the choice in `docs/ui/STACK.md`.
+Defaults already in the repo: the web app `apps/web/web` is an Angular app on Angular Material; `docs/ui/STACK.md` lists the sources and the dated version checks for each target. For a new surface, choose from the adapters above and record the choice in `docs/ui/STACK.md`.
 
 ## Rules
 
 1. No color, radius, duration or font value copied: consume `tokens.css` (`var(--md-sys-color-primary)`), `tokens.json`, `tokens.rs` (`include!`), `tokens.zig` or `ansi.json`, or the adapter of the framework in use.
 2. Brand color change: edit `packages/design/design.toml` (owned by the brand agent), then `bun run --cwd packages/design build`; `bun test --cwd packages/design` checks drift and AA contrast.
-3. Angular web components: `import { APHRODY_MATERIAL } from "@aphrody/design/components"` in the `imports` of a standalone Angular component, then `<a matButton="filled">`, `<mat-card>`, `matInput`, etc. Theme: `@use "@aphrody/design/tokens/angular-theme"` (`--mat-sys-*` variables set on the `--md-sys-*` tokens). Icons: `@aphrody/design/symbols.css`, `<mat-icon fontSet="material-symbols-rounded">name</mat-icon>`. Build: `bunx --bun ng build` in `apps/aphrody/web`. Server-rendered pages without Angular use native HTML `.btn` on the same tokens.
+3. Angular web components: `import { APHRODY_MATERIAL } from "@aphrody/design/components"` in the `imports` of a standalone Angular component, then `<a matButton="filled">`, `<mat-card>`, `matInput`, etc. Theme: `@use "@aphrody/design/tokens/angular-theme"` (`--mat-sys-*` variables set on the `--md-sys-*` tokens). Icons: `@aphrody/design/symbols.css`, `<mat-icon fontSet="material-symbols-rounded">name</mat-icon>`. Build: `bunx --bun ng build` in `apps/web/web`. Server-rendered pages without Angular use native HTML `.btn` on the same tokens.
 4. Typography: Google Sans Flex (design.toml), M3 scale `--md-sys-typescale-*`. Shapes `--md-sys-shape-corner-*`. Motion `--md-sys-motion-*`.
 5. bun only for JS/TS. Rust with windows-rs. No compilation on the PC: CI or fr1 under `nice -n 19`.
 6. Commits: directly on main, limited to your paths, no AI attribution or emoji.

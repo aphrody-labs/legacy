@@ -25,7 +25,7 @@ First-party deployment platform of the monorepo (the role Vercel plays for its u
 - `projects.toml`: one entry per deployable project (path, bun build command, output, domains, watched paths, vault variable names).
 - A deployment is immutable: `deploys/<project>/<sha>/` in R2 bucket `aphrody-dist`, with its record (`<sha>.json`) and build log (`<sha>.log`).
 - Production is a pointer (`deploys/<project>/_state.json`). Promote and rollback move it; nothing is rebuilt or redeployed. The history of moves is kept.
-- Previews: `https://<project>-<sha7>.aphrody.app` (route `*.aphrody.app/*`, wildcard DNS). Production: the project domains. `aphrody.com` is served by the `apps/aphrody` Worker from the same pointer; `/api/*`, `/g/*`, `/search` still go to the Bun backend on prd.
+- Previews: `https://<project>-<sha7>.aphrody.app` (route `*.aphrody.app/*`, wildcard DNS). Production: the project domains. `aphrody.com` is served by the `apps/web` Worker from the same pointer; `/api/*`, `/g/*`, `/search` still go to the Bun backend on prd.
 
 ## Flow
 

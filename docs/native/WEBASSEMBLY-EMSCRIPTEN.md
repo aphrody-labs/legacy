@@ -4,9 +4,9 @@ Grounded live via GitHub REST API (`orgs/WebAssembly/repos` = 130 total / 89 act
 
 ## 1. Forked & Registered Repositories (`aphrody-labs` + `third_party/forks.txt`)
 
-All 18 essential repositories from `WebAssembly` and `emscripten-core` are forked under `aphrody-labs/*` and registered in [forks.txt](file:///C:/src/third_party/forks.txt):
+All 18 essential repositories from `WebAssembly` and `emscripten-core` are forked under `aphrody-labs/*` and registered in [forks.txt](file:///C:/aphrody/third_party/forks.txt):
 
-| Upstream Repository                     | Fork (`aphrody-labs/*`)                  | Verified Version / HEAD (`2026-11-14`)                                           | Role in `C:\src`                                                                    |
+| Upstream Repository                     | Fork (`aphrody-labs/*`)                  | Verified Version / HEAD (`2026-11-14`)                                           | Role in `C:\aphrody`                                                                    |
 | :-------------------------------------- | :--------------------------------------- | :------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- |
 | `WebAssembly/binaryen`                  | `aphrody-labs/binaryen`                  | `version_133` (`wasm-opt` installed in `~/.local/bin`)                           | Wasm-to-Wasm IR optimizer (`-O4`, SIMD128, bulk-memory, dead-argument elimination)  |
 | `WebAssembly/wabt`                      | `aphrody-labs/wabt`                      | `1.0.42` (`wasm-validate`, `wasm-objdump`, `wasm2wat`, `wat2wasm` installed)     | Formal binary validator, disassembler (`v128` SIMD verifier), and WAT assembler     |
@@ -30,10 +30,10 @@ All 18 essential repositories from `WebAssembly` and `emscripten-core` are forke
 ## 2. Three-Tier WebAssembly Compilation Strategy
 
 1. **Tier 0 — Freestanding Kernel/Wire Modules (`wasm32-unknown-unknown -nostdlib`)**:
-   - Used by [Makefile](file:///C:/src/src/Makefile) (`aysys.wasm`, `wayland.wasm`).
+   - Used by [Makefile](file:///C:/aphrody/src/Makefile) (`aysys.wasm`, `wayland.wasm`).
    - Zero libc, zero WASI imports, deterministic linear memory, 6–10 KB binaries, instant `WebAssembly.instantiateStreaming` in browsers, Cloudflare Workers, and Bun.
 2. **Tier 1 — Portable Sandboxed System Tools (`wasm32-wasip1` / `wasm32-wasip2` via `wasi-sdk 34.0`)**:
-   - Used by [wasi_cli.c](file:///C:/src/src/wasm/wasi_cli.c) (`ay-wasm-inspect.wasm`, 34 KB).
+   - Used by [wasi_cli.c](file:///C:/aphrody/src/wasm/wasi_cli.c) (`ay-wasm-inspect.wasm`, 34 KB).
    - Capability-secured filesystem/stdio via `wasi-libc` with zero host OS coupling.
 3. **Tier 2 — Full Multimedia, Game Engine & Desktop Porting (`emscripten 7.0.0`)**:
    - Used when porting multi-million-LoC C/C++ engines (FFmpeg, Mesa/WebGPU, SDL3/Wayland clients, Craft/Bevy C plugins) requiring POSIX pthreads (`SharedArrayBuffer` + COOP/COEP), JSPI async I/O, and direct `<canvas>` WebGPU surfaces.

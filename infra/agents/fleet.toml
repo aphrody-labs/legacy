@@ -97,7 +97,7 @@ ssh = ["agent@fr2-mesh", "agent@fr2", "agent@@@hosts.fr2.mesh_ip@@", "agent@@@ho
 [hosts.pc]
 # No heavy builds on the PC.
 roles = ["reviewer", "designer", "growth"]
-src = "C:/src"
+src = "C:/aphrody"
 
 [schedule]
 # template (infra/agents/tasks/<name>.json) = period in hours; enqueued by the ship host (prd).

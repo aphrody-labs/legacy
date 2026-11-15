@@ -1,7 +1,7 @@
 # aphrody-env
 
 <!-- catalog:begin unit -->
-> Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/src/.env
+> Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/aphrody/.env
 
 | Type | Path |
 | :-- | :-- |

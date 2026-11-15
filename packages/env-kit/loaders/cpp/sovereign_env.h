@@ -1,5 +1,5 @@
 /*
- * sovereign_env.h — Header-only C11 loader for C:\src\.env
+ * sovereign_env.h — Header-only C11 loader for C:\aphrody\.env
  * Uses `_putenv_s` on Windows NT and `setenv` on POSIX without external dependencies.
  */
 #ifndef SOVEREIGN_ENV_H
@@ -15,7 +15,7 @@ extern "C" {
 #endif
 
 #if defined(_WIN32)
-#define SOVEREIGN_DEFAULT_ENV_PATH "C:\\src\\.env"
+#define SOVEREIGN_DEFAULT_ENV_PATH "C:\\aphrody\\.env"
 #else
 #define SOVEREIGN_DEFAULT_ENV_PATH "/src/.env"
 #endif

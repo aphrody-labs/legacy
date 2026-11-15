@@ -8,7 +8,7 @@
         "@types/bun": "catalog:",
       },
     },
-    "apps/aphrody/web": {
+    "apps/web/web": {
       "name": "@aphrody/site-ng",
       "version": "0.1.0",
       "dependencies": {
@@ -305,7 +305,7 @@
 
     "@aphrody/release": ["@aphrody/release@workspace:packages/release"],
 
-    "@aphrody/site-ng": ["@aphrody/site-ng@workspace:apps/aphrody/web"],
+    "@aphrody/site-ng": ["@aphrody/site-ng@workspace:apps/web/web"],
 
     "@aphrody/upstream": ["@aphrody/upstream@workspace:packages/upstream"],
 

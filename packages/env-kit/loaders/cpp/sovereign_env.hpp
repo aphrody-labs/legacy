@@ -1,5 +1,5 @@
 /*
- * sovereign_env.hpp — Header-only C++23 loader & redacted SecretString for C:\src\.env
+ * sovereign_env.hpp — Header-only C++23 loader & redacted SecretString for C:\aphrody\.env
  */
 #ifndef SOVEREIGN_ENV_HPP
 #define SOVEREIGN_ENV_HPP

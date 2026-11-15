@@ -131,7 +131,7 @@ for (const l of read("local-roots2.tsv").split("\n").filter(Boolean)) {
   rows.push({ source: "local:antigravity", id: "~/.gemini/antigravity*/brain|scratch|mcp (code files)", kind: "scratch", status: hit === n ? "present-identical" : "unique-commits", decision: `${convs} conversation folders with ${n} code files (${hit} identical to tree files); scratch tests and probes written by agents, not packages: left in place, no copy`, note: `${n - hit} files not in the tree` });
 }
 // ---- Cloudflare
-for (const w of json("workers.json") as any[] ?? []) if (w.script_name) rows.push({ source: "cloudflare:worker", id: w.script_name, kind: "worker", updated: w.modified_on, status: "present-identical", decision: "deployed from the tree (infra/cloudflare/workers, apps/aphrody); bundles carry no extra source" });
+for (const w of json("workers.json") as any[] ?? []) if (w.script_name) rows.push({ source: "cloudflare:worker", id: w.script_name, kind: "worker", updated: w.modified_on, status: "present-identical", decision: "deployed from the tree (infra/cloudflare/workers, apps/web); bundles carry no extra source" });
 for (const b of (json("r2.json").buckets ?? [])) rows.push({ source: "cloudflare:r2", id: b.name, kind: "bucket", updated: b.creation_date, status: "present-identical", decision: /archive/.test(b.name) ? "fleet and skills archives (encrypted tarballs, markdown index); data, not source" : "artifact bucket; data, not source" });
 
 
@@ -141,7 +141,7 @@ const HIST_RESTORED: Record<string, string> = {
   "packages/google-design": "packages/google-design", "packages/forge": "packages/forge", "packages/bun-plugins": "packages/bun-plugins", "packages/ai-triad": "packages/ai-triad",
   "packages/pi-opencode": "packages/pi-opencode", "packages/brain": "packages/brain", "packages/knowledge-engine": "packages/knowledge-engine", "packages/bun-parity": "packages/bun-parity",
   "packages/agy": "packages/agy", "packages/site": "packages/site", "packages/runtime-adapter": "packages/runtime-adapter", "packages/chromium-bun": "packages/chromium-bun",
-  "apps/aphrody-app": "apps/aphrody-app", "apps/r2-site": "apps/r2-site", "apps/yolo": "apps/yolo", "crates/ring3-agent": "src/ring3-agent", "apps/r2b": "apps/r2b (Python RE bridge and rea-ghidra uv script only, own pyproject.toml and tests; the rest lives in aphrody-labs/r2b)", "packages/ai-os": "packages/ai-os/python/research_ref only (the polyglot kernel and its legacy crates are the purged layer)", "apps/aphrody": "apps/aphrody-web (files absent from apps/aphrody)",
+  "apps/aphrody-app": "apps/aphrody-app", "apps/r2-site": "apps/r2-site", "apps/yolo": "apps/yolo", "crates/ring3-agent": "src/ring3-agent", "apps/r2b": "apps/r2b (Python RE bridge and rea-ghidra uv script only, own pyproject.toml and tests; the rest lives in aphrody-labs/r2b)", "packages/ai-os": "packages/ai-os/python/research_ref only (the polyglot kernel and its legacy crates are the purged layer)", "apps/web": "apps/aphrody-web (files absent from apps/web)",
 };
 const HIST_MOVED: [RegExp, string][] = [
   [/^packages\/browser|^apps\/android-shell|^tools\/site-mirror|^src\/adblock-capi|^src\/corelib/, "moved to aphrody-labs/open (commit 4c2780a7c, b16ba00f7); apps/open clone holds the tree"],

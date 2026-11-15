@@ -736,7 +736,7 @@
                 "width": 365,
                 "height": 88
               },
-              "snippet": "<a id=\"item\" role=\"listitem\" tabindex=\"0\" class=\"list-item   \" href=\"https://github.com/aphrody-labs/src/tree/main/apps/aphrody\">",
+              "snippet": "<a id=\"item\" role=\"listitem\" tabindex=\"0\" class=\"list-item   \" href=\"https://github.com/aphrody-labs/src/tree/main/apps/web\">",
               "nodeLabel": "a#item",
               "explanation": "Fix any of the following:\n  ARIA role listitem is not allowed for given element"
             }
@@ -1223,7 +1223,7 @@
                 "width": 365,
                 "height": 88
               },
-              "snippet": "<a id=\"item\" role=\"listitem\" tabindex=\"0\" class=\"list-item   \" href=\"https://github.com/aphrody-labs/src/tree/main/apps/aphrody\">",
+              "snippet": "<a id=\"item\" role=\"listitem\" tabindex=\"0\" class=\"list-item   \" href=\"https://github.com/aphrody-labs/src/tree/main/apps/web\">",
               "nodeLabel": "a#item",
               "explanation": "Fix any of the following:\n  Required ARIA parent role not present: list"
             }

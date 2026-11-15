@@ -176,7 +176,7 @@ if (import.meta.main) {
       mobile: false,
     });
     await cdp.send("Page.navigate", { url });
-    // The page sets window.__play = { gpu, started } (apps/aphrody/src/client/play.ts).
+    // The page sets window.__play = { gpu, started } (apps/web/src/client/play.ts).
     let state: { gpu: boolean; started: boolean; error?: string } | null = null;
     for (let i = 0; i < 120; i++) {
       await Bun.sleep(500);

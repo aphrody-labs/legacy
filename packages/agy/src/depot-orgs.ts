@@ -154,8 +154,8 @@ export const GOOGLE_AI_ECOSYSTEM_SURFACES: readonly GoogleAiSurfaceDescriptor[] 
     },
   ];
 
-export const DEFAULT_PROBE_CACHE_PATH = "C:/src/var/google-orgs-probe.json";
-export const DEFAULT_AGY_DEPOT_ROOT = "C:/src/var/agy-depot";
+export const DEFAULT_PROBE_CACHE_PATH = "C:/aphrody/var/google-orgs-probe.json";
+export const DEFAULT_AGY_DEPOT_ROOT = "C:/aphrody/var/agy-depot";
 
 function decodeUtfTextSafe(filePath: string): string {
   const buf = readFileSync(filePath);
@@ -373,15 +373,15 @@ export function syncDepotRepoKeyless(
 
   // Check if already checked out in third_party/google-ecosystem first
   const existingMap: Record<string, string> = {
-    "google/skills": "C:/src/third_party/google-skills",
+    "google/skills": "C:/aphrody/third_party/google-skills",
     "google-gemini/gemini-skills":
-      "C:/src/third_party/gemini-skills",
+      "C:/aphrody/third_party/gemini-skills",
     "google-labs-code/stitch-skills":
-      "C:/src/third_party/stitch-skills",
+      "C:/aphrody/third_party/stitch-skills",
     "google-labs-code/jules-skills":
-      "C:/src/third_party/jules-skills",
+      "C:/aphrody/third_party/jules-skills",
     "google-labs-code/design-md":
-      "C:/src/third_party/design-md",
+      "C:/aphrody/third_party/design-md",
   };
   if (existingMap[fullName] && existsSync(existingMap[fullName]!)) {
     return {

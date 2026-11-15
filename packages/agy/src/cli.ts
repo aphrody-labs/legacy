@@ -121,7 +121,7 @@ export async function runAgyCli(argv = process.argv.slice(2)): Promise<void> {
   }
 
   if (cmd === "ingest") {
-    const target = argv[1] ?? "C:/src/packages/agy";
+    const target = argv[1] ?? "C:/aphrody/packages/agy";
     const res = buildGitingestDigest(target, {
       preferExternalBinary: hasFlag(argv, "--external"),
     });
@@ -214,7 +214,7 @@ export async function runAgyCli(argv = process.argv.slice(2)): Promise<void> {
     const sub = argv[1] ?? "ask";
     const notebookId = parseFlag(argv, "--id") ?? "default";
     if (sub === "ingest") {
-      const target = argv[2] ?? "C:/src/AGENTS.md";
+      const target = argv[2] ?? "C:/aphrody/AGENTS.md";
       const title = parseFlag(argv, "--title") ?? target;
       console.log(
         JSON.stringify(
@@ -316,7 +316,7 @@ export async function runAgyCli(argv = process.argv.slice(2)): Promise<void> {
       return;
     }
     if (sub === "scaffold") {
-      const dir = argv[2] ?? "C:/src/var/agy-scaffold-demo";
+      const dir = argv[2] ?? "C:/aphrody/var/agy-scaffold-demo";
       console.log(
         JSON.stringify(generateFullstackCloudflareVercelConfig(dir), null, 2),
       );

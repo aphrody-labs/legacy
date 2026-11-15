@@ -15,19 +15,19 @@ Mesures hyperfine 2.x, `-N`, 10 runs, machine en charge (agents actifs). Le hype
 
 ## Git
 - Global : `core.fsmonitor=true` (etait `false` au niveau utilisateur), untrackedCache, manyFiles, index.version 4, writeCommitGraph (fetch, gc), pack.threads=0, longpaths, credential helper gh-token.
-- `git maintenance start` sur C:\src (strategie incremental, 3 taches planifiees) ; 62 depots enregistres dans `maintenance.repo`.
+- `git maintenance start` sur C:\aphrody (strategie incremental, 3 taches planifiees) ; 62 depots enregistres dans `maintenance.repo`.
 - Hooks : plus de husky ni de `core.hooksPath` ; les hooks `.git/hooks` (git-lfs) s'executent (`git hook run post-commit` rc 0) ; commit normal sans `-c core.hooksPath=/dev/null`.
 
 ## RAM, CPU, disque
 - Plan d'alimentation : Performances optimales (deja actif). Compression memoire : desactivee, laissee ainsi (32 Go, 11-14 Go libres). Pagefile 31,8 Go systeme (inchange).
 - Taches desactivees : ASUS Optimization, ASUS Update Checker 2.0, AsusSystemAnalysis, AsusSystemDiagnosis_DriverQuality, XblGameSaveTask. Autostarts gardes : Chrome, SecurityHealth, Realtek audio, Everything.
-- Windows Search : C:\src n'est pas dans les regles d'indexation (seuls Users et Menu Demarrer) ; rien a exclure.
-- Defender : exclusions deja presentes pour C:\src, .cargo, .rustup, .bun, LLVM, VS BuildTools, Windows Kits, sccache ; Defender reste actif.
+- Windows Search : C:\aphrody n'est pas dans les regles d'indexation (seuls Users et Menu Demarrer) ; rien a exclure.
+- Defender : exclusions deja presentes pour C:\aphrody, .cargo, .rustup, .bun, LLVM, VS BuildTools, Windows Kits, sccache ; Defender reste actif.
 
 ## Avant / apres
 | Mesure | Avant | Apres |
 |---|---|---|
-| `git status` (C:\src) | 132,7 ms | 115,4 ms (fsmonitor global) |
+| `git status` (C:\aphrody) | 132,7 ms | 115,4 ms (fsmonitor global) |
 | niubash `-lc exit` | 43,8 ms | 43,8 ms |
 | niubash `-lic exit` | 284 ms | 246-257 ms (init starship mis en cache complet) |
 | pwsh `-NoProfile` / avec profil | 148 / 207 ms | inchange |

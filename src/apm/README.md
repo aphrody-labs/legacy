@@ -18,7 +18,7 @@ Rust builds run on the build host or in CI, not on a workstation.
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 
-Rust port of Microsoft APM (Agent Package Manager). Upstream: `C:\src\third_party\ai\microsoft_apm`, commit `1a6c1df` (Apache-2.0, apm-cli 0.35.1). It ships a library (`aphrody_apm`) and an `apm` binary.
+Rust port of Microsoft APM (Agent Package Manager). Upstream: `C:\aphrody\third_party\ai\microsoft_apm`, commit `1a6c1df` (Apache-2.0, apm-cli 0.35.1). It ships a library (`aphrody_apm`) and an `apm` binary.
 
 ## Covered
 

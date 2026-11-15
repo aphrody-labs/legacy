@@ -310,7 +310,7 @@ the C/C++ extension options. You can use it to remap arbitrary paths and
 help the DevTools locate sources.
 
 For example, if the project on your host machine is under a path
-`C:\src\my_project`, but was built inside a Docker container where
+`C:\aphrody\my_project`, but was built inside a Docker container where
 that path was represented as `/mnt/c/src/my_project`, you can remap
 it back during debugging by specifying those paths as prefixes:
 

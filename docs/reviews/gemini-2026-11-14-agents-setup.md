@@ -16,7 +16,7 @@
 | 3 | OpenCode and Pi lose skills they do not get from a plugin; cleanup could delete a manifest-managed skill | Confirmed | Their dirs removed from `link_dirs`; cleanup limited to skill directories not named in `[[claude.skill]]` or `[[skill.private]]`. |
 | 4.1 | First sync overwrites a hand-written prompt file | Confirmed | Existing content kept, block appended; header only for an absent or empty file. |
 | 4.2 | Pi prompt file missing | Confirmed | `~/.pi/agent/AGENTS.md` added. |
-| 4.3 | Hard-coded `C:\src` in the header | Confirmed | Repo root computed. |
+| 4.3 | Hard-coded `C:\aphrody` in the header | Confirmed | Repo root computed. |
 | 4.4 | First run on a host without `~/.gemini` needs two passes | Confirmed, not fixed | Minor; second pass converges. |
 | 5.1 | `/mcp/core` lists own tools only but still calls aggregated tools | Confirmed | `tools/call` refused with -32602, test added. |
 | 5.2 | `in BUILTIN` | Confirmed | `Object.hasOwn`. |

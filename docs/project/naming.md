@@ -66,7 +66,7 @@ Names breaking the scheme: 121 rows below (a name can appear in two tables). Syn
 
 | Name | Path | Target | Files referencing |
 |---|---|---|---|
-| @aphrody/site-ng | apps/aphrody/web/package.json | @aphrody/web | 7 |
+| @aphrody/site-ng | apps/web/web/package.json | @aphrody/web | 7 |
 | billing-cap | infra/gcp/billing-agent/cap-function/package.json | @aphrody/cap-function | 5 |
 
 ## CLI synonyms (one concept, one name)

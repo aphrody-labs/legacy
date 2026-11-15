@@ -4,7 +4,7 @@ import { dirname, resolve } from "node:path";
 
 export const DEFAULT_KNOWLEDGE_DB_PATH =
   process.platform === "win32"
-    ? "C:\\src\\var\\knowledge.sqlite"
+    ? "C:\\aphrody\\var\\knowledge.sqlite"
     : "/src/var/knowledge.sqlite";
 
 const dbPool = new Map<string, Database>();

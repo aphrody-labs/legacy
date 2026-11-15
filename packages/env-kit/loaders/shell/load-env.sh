@@ -1,15 +1,15 @@
 #!/usr/bin/env sh
-# POSIX / Bash / Zsh sourceable loader for C:/src/.env or /src/.env
-# Usage: . C:/src/packages/env-kit/loaders/shell/load-env.sh
+# POSIX / Bash / Zsh sourceable loader for C:/aphrody/.env or /src/.env
+# Usage: . C:/aphrody/packages/env-kit/loaders/shell/load-env.sh
 # Never echoes secret values. Preserves already-set non-empty environment variables unless ENV_KIT_OVERRIDE=1.
 
 _env_kit_load() {
   _ek_file="${1:-}"
   if [ -z "$_ek_file" ]; then
-    if [ -f "C:/src/.env" ]; then
-      _ek_file="C:/src/.env"
-    elif [ -f "/c/src/.env" ]; then
-      _ek_file="/c/src/.env"
+    if [ -f "C:/aphrody/.env" ]; then
+      _ek_file="C:/aphrody/.env"
+    elif [ -f "/c/aphrody/.env" ]; then
+      _ek_file="/c/aphrody/.env"
     else
       _ek_file="/src/.env"
     fi

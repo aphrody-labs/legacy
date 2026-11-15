@@ -63,7 +63,7 @@ SQLite is the local source of truth: a result is written locally first; Valkey o
 | ---- | -------------------------------------------------------------------------------------------- |
 | fr2  | `valkey-server`, `ay-index-worker`, `ay-index.timer` (5 min), `ay-index-bench.timer` (daily) |
 | fr1  | `ay-index-worker` (heavy stages: Ghidra, LLVM), `ay-index.timer` (5 min)                     |
-| PC   | scheduled task `AyIndexWatch` (every minute, no-op while running): `ay index watch C:\src`   |
+| PC   | scheduled task `AyIndexWatch` (every minute, no-op while running): `ay index watch C:\aphrody`   |
 
 Install: `infra/pipeline/valkey-install.sh` (fr2), `infra/pipeline/install.sh fr1|fr2`, `bun infra/pipeline/pc-install.ts`.
 

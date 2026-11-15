@@ -29,7 +29,7 @@ _ay_pp() {
   PATH="$d${PATH:+$_ay_s$PATH}"
 }
 if [ "$_ay_os" = w ]; then
-  export SRC_ROOT='C:\src'
+  export SRC_ROOT='C:\aphrody'
   export AY_SHELL_CACHE="$_ay_h"'\.cache\shell'
   export LANG='C.UTF-8'
   export PYTHONUTF8='1'

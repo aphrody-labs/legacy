@@ -721,7 +721,7 @@ function renderResearchDossierMarkdown(params: {
 
 /**
  * Multi-hop parallel Deep Research engine fanning out across Context7 v2, Exa Neural Search,
- * GitHub Live API, Kernel.org/Freedesktop GitLab, and local `C:\src` manifests.
+ * GitHub Live API, Kernel.org/Freedesktop GitLab, and local `C:\aphrody` manifests.
  */
 export async function runDeepResearch(
   query: string,
@@ -729,7 +729,7 @@ export async function runDeepResearch(
 ): Promise<DeepResearchResult> {
   const t0 = Bun.nanoseconds();
   const srcRoot =
-    options.srcRoot ?? (process.platform === "win32" ? "C:\\src" : "/src");
+    options.srcRoot ?? (process.platform === "win32" ? "C:\\aphrody" : "/src");
   const outDir = options.outDir ?? join(srcRoot, "docs", "research");
   const saveReport = options.saveReport ?? true;
   const fetchFn = options.fetchImpl ?? fetch;

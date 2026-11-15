@@ -234,7 +234,7 @@ function renderHtmlDashboard(): string {
     </div>
   </div>
 
-  <div class="section-title">Monorepo Active Repositories (C:\\src)</div>
+  <div class="section-title">Monorepo Active Repositories (C:\\aphrody)</div>
   <table id="repos-table">
     <thead>
       <tr>

@@ -121,7 +121,7 @@ pub(crate) fn resolve_logical_shell_path(value: &str, tmp_base: &Path) -> Option
 /// Engine twin of rubash `root_fallback_path` (`NIU_ROOT_FALLBACK=1`): a
 /// root-relative `rest` whose first component is missing below `root` but
 /// present at the `SystemDrive` root resolves on the drive, so completion
-/// and highlighting agree with `cd /src` reaching `C:\src`.
+/// and highlighting agree with `cd /src` reaching `C:\aphrody`.
 pub(crate) fn root_fallback_path(rest: &str, root: &Path) -> Option<PathBuf> {
     if !cfg!(windows) || !root_fallback_enabled() {
         return None;

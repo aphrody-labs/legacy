@@ -8,7 +8,7 @@ import {
 import { discoverAndValidateSkills } from "./skills-compat.ts";
 
 function printHelp(): void {
-  console.log(`labs: C:\\src Standards & Empirical Benchmark Harness (Bun v${Bun.version})
+  console.log(`labs: C:\\aphrody Standards & Empirical Benchmark Harness (Bun v${Bun.version})
 
 Usage:
   just labs <command> [options]

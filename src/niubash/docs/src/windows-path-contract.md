@@ -182,12 +182,12 @@ your rc.
 
 ### Drive-root fallback (opt-in)
 
-`/` names `NIU_ROOT`, so a host directory such as `C:\src` is reachable only
-as `/c/src`. Set `NIU_ROOT_FALLBACK=1` (environment or `export` in
+`/` names `NIU_ROOT`, so a host directory such as `C:\aphrody` is reachable only
+as `/c/aphrody`. Set `NIU_ROOT_FALLBACK=1` (environment or `export` in
 `~/.niubashrc`; Rubash also reads `RUBASH_ROOT_FALLBACK`) to let an absolute
 POSIX path whose first component does not exist below `NIU_ROOT` resolve
 against the `SystemDrive` root instead: `cd /src`, `ls /src`, `[ -d /src ]`
-and redirects then reach `C:\src`. The rules (Rubash `root_fallback_path`):
+and redirects then reach `C:\aphrody`. The rules (Rubash `root_fallback_path`):
 
 - the bare `/` and the shell-tree members `bin`, `cygdrive`, `dev`, `etc`,
   `home`, `lib`, `lib64`, `mnt`, `opt`, `proc`, `sbin`, `tmp`, `usr`, `var`

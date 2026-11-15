@@ -62,7 +62,7 @@ Hors périmètre, volontairement : réécrire gn, siso ou chromite en Rust (aucu
 
 ## F3 résultats (2026-11-12)
 
-Checkout 157 sur fr1 (`/srv/chromium`, `src@4b3d0dab`, `custom_vars checkout_pgo_profiles`). `ay` 0.2.0 compilé sur prd (cargo 1.99.1, `-p aphrody --bin ay`, arbre de travail C:\src incluant le `sync.rs` modifié non commité, 188 s), copié en `fr1:~/bin/ay` (sha256 `8f34cad7…`). Mesures en `nice -n 19` pendant un build Chromium (load ~16), sorties dans `fr1:~/f3/`.
+Checkout 157 sur fr1 (`/srv/chromium`, `src@4b3d0dab`, `custom_vars checkout_pgo_profiles`). `ay` 0.2.0 compilé sur prd (cargo 1.99.1, `-p aphrody --bin ay`, arbre de travail C:\aphrody incluant le `sync.rs` modifié non commité, 188 s), copié en `fr1:~/bin/ay` (sha256 `8f34cad7…`). Mesures en `nice -n 19` pendant un build Chromium (load ~16), sorties dans `fr1:~/f3/`.
 
 | Commande                             | Python gclient | `ay gclient` | Diff                                                              |
 | ------------------------------------ | -------------- | ------------ | ----------------------------------------------------------------- |

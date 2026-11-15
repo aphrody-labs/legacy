@@ -9,7 +9,7 @@ default:
 
 # Ingest monorepo targets
 ingest target="depot" format="json":
-    depot ingest C:\\src\\\${target} --format \${format}
+    depot ingest C:\\aphrody\\\${target} --format \${format}
 
 # Slim git repositories
 slim:
@@ -32,7 +32,7 @@ slim:
   });
 
   test("generateJustModule produces valid JS module syntax", () => {
-    const code = generateJustModule("C:\\src\\justfile", sampleJustfile);
+    const code = generateJustModule("C:\\aphrody\\justfile", sampleJustfile);
     expect(code).toContain("export const recipes =");
     expect(code).toContain("async function ingest");
     expect(code).toContain("export { ingest }");

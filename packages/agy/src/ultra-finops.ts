@@ -2,7 +2,7 @@ import { Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
-export const DEFAULT_FINOPS_DB_PATH = "C:/src/var/agy-finops.sqlite";
+export const DEFAULT_FINOPS_DB_PATH = "C:/aphrody/var/agy-finops.sqlite";
 
 export interface GoogleAiSubscriptionPlan {
   id: "google-ai-ultra" | "google-ai-pro" | "payg-api-only";

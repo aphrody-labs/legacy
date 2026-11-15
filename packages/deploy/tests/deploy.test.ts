@@ -355,7 +355,7 @@ describe("sources", () => {
     const p = loadProjects(root);
     expect(p.map((x) => x.name)).toContain("aphrody");
     expect(
-      affected(p, ["apps/aphrody/public/robots.txt"]).map((x) => x.name),
+      affected(p, ["apps/web/public/robots.txt"]).map((x) => x.name),
     ).toEqual(["aphrody"]);
     expect(affected(p, ["docs/ALPHABET.md"]).map((x) => x.name)).toEqual([
       "aphrody",

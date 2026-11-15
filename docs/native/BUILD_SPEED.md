@@ -1,6 +1,6 @@
 # Build speed of the root Cargo workspace
 
-Goal: the shortest edit-compile loop for `cargo build --workspace` at `C:\src`,
+Goal: the shortest edit-compile loop for `cargo build --workspace` at `C:\aphrody`,
 without touching the fat-LTO release profile and without breaking Linux builds.
 Applied settings live in `.cargo/config.toml` and in the `[profile.dev*]` tables
 of the root `Cargo.toml`.
@@ -25,7 +25,7 @@ of the root `Cargo.toml`.
   depot-graph, depot-ingest, four depot-cli binaries and the depot-ffi cdylib).
 - Touch variants (`mtime` only) were also measured; they behave like the edits.
 - All runs used an isolated git worktree of `4a2e127` so that concurrent edits
-  in `C:\src` did not leak in, one target dir per variant, and variants were
+  in `C:\aphrody` did not leak in, one target dir per variant, and variants were
   interleaved run by run (A, B, A, B, ...).
 - The machine was shared with other release builds during the whole session, so
   wall-clock numbers are noisy. The tables report the minimum of 6 to 8 runs

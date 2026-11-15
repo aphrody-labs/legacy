@@ -1,7 +1,7 @@
 /**
  * Automated MDX Documentation Generator for Bun Docs
  * 100% Pure Bun v1.4.4 - Zero External Dependencies
- * Compiles rich MDX design guides directly inside C:\src\third_party\bun\docs\design\
+ * Compiles rich MDX design guides directly inside C:\aphrody\third_party\bun\docs\design\
  */
 
 import { writeFileSync, mkdirSync, existsSync, readFileSync } from "node:fs";
@@ -327,7 +327,7 @@ Google Design surfaces must enforce strict performance standards:
 Audit any directory with the 3-letter CLI:
 
 \`\`\`bash terminal icon="terminal"
-gds verify C:\\src\\apps\\aphrody
+gds verify C:\\aphrody\\apps\\web
 \`\`\`
 
 The gate checks:

@@ -2,7 +2,7 @@
 
 Single map of everything the monorepo runs on. Sources of truth are cited per section; this file
 summarizes them and must be updated in the same change when they move. Secrets are referenced by
-environment variable name only (values live in `C:\src\.env`, managed by `packages/env-kit`).
+environment variable name only (values live in `C:\aphrody\.env`, managed by `packages/env-kit`).
 
 Owner decision 2026-11-13: **usa (prd) = production backends only, minimal, no compilers. fr1 = the
 factory (builds, CI runner, training, heavy agents). fr2 = edge only, minimal.** Upstream tool per
@@ -75,7 +75,7 @@ Account notes (2026-11-12):
   cannot manage either VPS.
 - Cloudflare: `CLOUDFLARE_API_TOKEN` is set and verified active. It reads the DNS of all five
   zones.
-- Host credentials from usa, fr1 and fr2 were merged into `C:\src\.env` with `env-kit merge`. When
+- Host credentials from usa, fr1 and fr2 were merged into `C:\aphrody\.env` with `env-kit merge`. When
   hosts had different values for a key, each was stored as `KEY__USA`, `KEY__FR1` or `KEY__FR2`.
   Today that covers `GH_TOKEN__{USA,FR1,FR2}` and `GOOGLE_APPLICATION_CREDENTIALS__FR1`.
 
@@ -101,6 +101,6 @@ Account notes (2026-11-12):
 
 ## 6. Products
 
-Aphrody products: aphrody.com (`apps/aphrody`), `packages/ai-os`.
+Aphrody products: aphrody.com (`apps/web`), `packages/ai-os`.
 Community products maintained by Aphrody (not Aphrody products): dragonballfr.com (`apps/shenron`),
 rosegriffon.fr (`apps/rosegriffon`). Aphrody Labs (labs.aphrody.com) is merged into this repository since 2026-11-12 (README, section Labs).

@@ -1,7 +1,7 @@
 #!/bin/sh
-# Local: tar results from a node into C:/src/target/bench-res/<node> (node = fr2|vps) and print summary rows.
+# Local: tar results from a node into C:/aphrody/target/bench-res/<node> (node = fr2|vps) and print summary rows.
 N=$1
-D=C:/src/target/bench-res/$N
+D=C:/aphrody/target/bench-res/$N
 mkdir -p $D
 timeout 60 ssh $N 'tar -C /srv/bench/res -cf - .' | tar -C $D -xf -
 for f in $D/*.json; do

@@ -21,7 +21,7 @@ Guidance for Claude Code (`claude.ai/code`). Canonical contract: [`AGENTS.md`](.
   - `reviewer`: Gemini Carbon review, verdict archived.
   - `researcher`: Context7 and live source, read-only.
   - `fleet-operator`: the three VPS.
-  - `web-ui`: apps/aphrody and the design system.
+  - `web-ui`: apps/web and the design system.
   - `re-analyst`: REA and `ay re`.
   - `Explore` / `Plan` for read-only research.
 - Commits in the shared tree go through `bun scripts/commit.ts -m "<msg>" --push <paths>...`.
@@ -33,7 +33,7 @@ Guidance for Claude Code (`claude.ai/code`). Canonical contract: [`AGENTS.md`](.
 ## Essential Commands
 
 ```sh
-wasm-validate --enable-all target/sys/aysys.wasm apps/aphrody/public/wayland.wasm
+wasm-validate --enable-all target/sys/aysys.wasm apps/web/public/wayland.wasm
 bun test packages/core/test/sys.test.ts
 bun scripts/checkdeps.ts
 bun fmt && bun check
