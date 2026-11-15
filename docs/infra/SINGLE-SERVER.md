@@ -16,7 +16,7 @@ Cloudflare (`cf tunnels list`, live): `mig-prd` healthy with 12 connections from
 
 ## 2. Research and decisions
 
-### Storage: XFS per host, no distributed FS
+### Storage: one XFS volume on fr1 shared over NFS was measured (decision below replaces the earlier unmeasured one)
 
 Measured on fr2 (`scripts/bench/fs-fr2.sh`, 18 309 files, 524 MB working tree, load 3, hyperfine):
 
@@ -39,7 +39,19 @@ Network FS cost, measured on fr2: one warm `git status` of that tree issues 52 1
 | Ceph | `gh api releases/latest` returned no release object | Rejected: needs dedicated OSD disks and 3+ monitors, hosts have one disk each (fr2, prd) |
 | Plain XFS per host + NFS over the mesh | measurements above | NFS only for cold, read-mostly trees if ever needed |
 
-Choice: the shared namespace is not a POSIX mount. It is (a) the same local path on every host, `/srv/xbuild/{target,cache,ci,cas,clones}`, on a local XFS volume, and (b) content-addressed sharing over the existing services: NativeLink CAS <fr1-mesh-ip>:50061 for REAPI builds and R2 for artifacts (`infra/fleet/cache.toml`). A pinned `CARGO_TARGET_DIR` under the same path on all hosts is also the precondition for sccache hits (`FLEET-OFFLOAD.md` section 3: the target path is part of the key; 3 hits in 2614 compiles before).
+**Measured 2026-11-15, NFSv4.2 from fr2 to the XFS on fr1** (`fleet-nfs.sh`, export to the mesh peer only, `vers=4.2,nconnect=8`, RTT fr2-fr1 10.7 ms; `scripts/bench/fs-nfs.sh`; same 2 000-file tree of a git repo plus a dependency-free crate on each location; hyperfine, fr1 load 20 so its figures are pessimistic):
+
+| Workload | fr2 ext4 | fr1 local XFS (loop on SSD) | NFS from fr2 to fr1 XFS |
+| --- | --- | --- | --- |
+| untar 2 000 files | 1.29 s | n/a | 128 s (98x) |
+| `git status` (warm) | 18.7 ms ± 5.0 | 12.6 ms ± 0.8 | 758 ms ± 1604 (first run cold) |
+| `checkout HEAD~1` and back | 267.9 ms ± 48.9 | 179.6 ms ± 8.8 | 41.7 s ± 1.7 (155x) |
+| `cp -a` of the tree (target clone) | 385.8 ms ± 31.4 | 336.5 ms ± 11.9 | 432 s, one run (1 120x) |
+| `cargo check` cold target, 18 000 fns, no deps | 2.56 s ± 0.19 | 2.05 s ± 0.11 | 4.35 s ± 2.02 (1.7x) |
+
+An earlier attempt with the 18 309-file tree had to be aborted: untar over NFS took about 15 minutes (8.6 s on ext4), `git add -A` was still running after 21 minutes. Reading: every file operation is one or more 10.7 ms round trips; CPU-bound work (cargo on a few large files) loses 1.7x, file-heavy work (git, clone, untar, node_modules, a cargo target with thousands of rlibs and incremental files) loses two to three orders of magnitude. FS-Cache (`fsc`, cachefilesd) was not measured: it caches file data of repeated reads and cannot remove the per-file metadata round trips that dominate here. The export and the client were removed after the run (`fleet-nfs.sh down`); prd was never mounted.
+
+**Decision (numbers decide):** one XFS volume owned by fr1 is the single storage pool (LVM over sdb+sdc once the pool is freed). Over NFS it is shared only for what is read as large files or written rarely: artifacts, cold datasets, release outputs, the NativeLink CAS stays on its own service. Anything that creates or stats many files (git work trees, `CARGO_TARGET_DIR`, `node_modules`, CI workspaces, clones) stays host-local, on the same `/srv/xbuild` path on every host (the fr2 loop XFS until its root is reinstalled), and is shared across hosts by content (sccache on Valkey, NativeLink CAS, R2), not by a POSIX mount.
 
 ### Scheduler: extend fleet-run, no Nomad/k3s
 
@@ -63,7 +75,9 @@ Registered in `cluster.toml` (`fleet-registry endpoint valkey` = <fr2-mesh-ip>:6
 | 2b | Mesh ssh key (`fleet-mesh-key.sh`: key generated on each host, restricted to the read-only `fleet-probe` from the mesh subnet, subnet from `FLEET_MESH_FROM`, nothing in the repo) | live: `fleet-registry status` shows all three hosts from fr1 and fr2 |
 | 3 | Tunnels into `mig-prd`: fr2 (ssh-fr2, mcp-origin, gnu) and prod (desktop.aphrody.app) done, hostname by hostname; old connectors stopped. `auto-usa` NOT merged: its origin is the docker name auto-web:3001 on the auto-prod network, unreachable from the host HAProxy and from fr1/fr2 replicas; needs the compose to publish a loopback port (recreate of auto-web = downtime without blue/green) | fr2 and prod done, auto-usa pending |
 | 4 | Reconcile live `open-origin` ingress into cloudflare.toml | done, `cf.ts plan`: no changes |
-| 5 | prd XFS (xfsprogs missing, root btrfs never repartitioned), consumers on the registry (Valkey AUTH, NativeLink worker on fr2) | pending |
+| 5 | NFS export of the fr1 XFS and automount client on fr2 | measured then removed: unusable for trees (table above); re-enable only for artifacts |
+| 6 | Free the fr1 btrfs pool, LVM over sdb+sdc, one XFS at /srv/xbuild | NOT started: owner order changed to rescue first (no source tree or git repo deleted); inventory running on fr1 (`/srv/xbuild/rescue/inventory.json`) |
+| 7 | prd XFS (xfsprogs missing, root btrfs never repartitioned), Valkey sccache wiring (password installed on fr1 and fr2, `fleet-run` exports SCCACHE_REDIS_*), NativeLink worker on fr2 | pending; prd waits for the owner window |
 
 Log (UTC, 2026-11-15):
 
