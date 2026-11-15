@@ -1,17 +1,19 @@
 #!/bin/bash
 # Mesh ssh key for fleet-registry status (docs/infra/SINGLE-SERVER.md stage 2). Run from the workstation, idempotent:
-#   fleet-mesh-key.sh apply|check [ssh-alias ...]      default aliases: vps cdn prd (from infra/fleet/cluster.toml `ssh =`)
+#   fleet-mesh-key.sh apply|check [role ...]      default roles: the `[host.*]` of infra/fleet/cluster.toml
 # Each host generates its own ed25519 key ~/.ssh/fleet_mesh (the private key never leaves it, nothing is written to the repo).
 # Every other host gets the public key in authorized_keys with `restrict,from=<mesh subnet>,command="fleet-probe"`:
 # the key can only run the read-only probe, from the mesh. fleet-probe is installed to /usr/local/bin on each host.
-# The mesh subnet comes from FLEET_MESH_FROM (set by the site loader, ~/.config/aphrody/site.toml); no address is committed here.
+# The mesh subnet is discovered from the WireGuard interface of fr1 (discover.sh network.mesh_cidr), or taken from FLEET_MESH_FROM; no address is committed here.
 # Rollback: delete the lines tagged `fleet-mesh` from authorized_keys and ~/.ssh/fleet_mesh*.
 set -eu
 mode=${1:-check}; shift || true
 here=$(cd "$(dirname "$0")" && pwd)
 aliases=$*
-[ -n "$aliases" ] || aliases=$(awk -F' *= *' '/^ssh *=/{gsub(/"/,"",$2);print $2}' "$here/../cluster.toml")
-: "${FLEET_MESH_FROM:?set FLEET_MESH_FROM (mesh subnet) from the site loader}"
+[ -n "$aliases" ] || aliases=$(awk '/^\[host\./{gsub(/[\[\]]|host\./,""); print}' "$here/../cluster.toml")
+. "$here/../../../packages/env-kit/loaders/shell/site.sh"
+FLEET_MESH_FROM=${FLEET_MESH_FROM:-$(site_get network.mesh_cidr)}
+: "${FLEET_MESH_FROM:?no mesh subnet discovered (is fr1 reachable over ssh?)}"
 declare -A pub
 for h in $aliases; do
   if [ "$mode" = apply ]; then
