@@ -25,6 +25,7 @@ import {
   storeInfo,
 } from "@aphrody/vault/sync";
 import { whoami } from "./whoami";
+import { expandSync } from "./site.ts";
 
 export type Status = "ok" | "fixed" | "invalid" | "missing" | "action" | "skip";
 
@@ -142,7 +143,7 @@ function clean(s: string, max = 140): string {
 }
 
 export function loadManifest(root: string): Manifest {
-  const raw = readFileSync(join(root, "infra", "deploy.toml"), "utf8");
+  const raw = expandSync(readFileSync(join(root, "infra", "deploy.toml"), "utf8"));
   const m = Bun.TOML.parse(raw) as unknown as Manifest;
   m.auth ??= {};
   return m;

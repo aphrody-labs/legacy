@@ -9,7 +9,21 @@ const run = (args: string[], home: string, stdin = "") =>
     {
       stdin: Buffer.from(stdin),
       stdout: "pipe",
-      env: { PATH: process.env.PATH ?? "", HOME: home, AGENTS_HOME: home },
+      // the vault (APHRODY_VAULT_DIR, ENV_KIT_SECRET_DIR) and every home-relative dir point at the temp dir: no real secret is reachable
+      env: {
+        PATH: process.env.PATH ?? "",
+        SystemRoot: process.env.SystemRoot ?? "",
+        HOME: home,
+        USERPROFILE: home,
+        LOCALAPPDATA: home,
+        APPDATA: home,
+        XDG_DATA_HOME: home,
+        XDG_STATE_HOME: home,
+        XDG_CONFIG_HOME: home,
+        APHRODY_VAULT_DIR: home,
+        ENV_KIT_SECRET_DIR: home,
+        AGENTS_HOME: home,
+      },
     },
   );
 
@@ -54,6 +68,7 @@ test("cache close to expiry and no key: no token", () => {
     }),
   );
   const r = run([], home);
-  expect(r.stdout.toString()).toBe("");
+  // boolean assertions: a failing toBe would print the received token
+  expect(r.stdout.toString() === "").toBe(true);
   expect(r.exitCode).toBe(1);
 });

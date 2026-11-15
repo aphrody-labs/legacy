@@ -8,6 +8,7 @@ import { existsSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { isAbsolute, join } from "node:path";
 import { $ } from "bun";
+import { expandSync } from "../../packages/env-kit/src/site.ts";
 
 type Cache = { name: string; path: string; cap_mb?: number; gc?: "bun" | "rm" };
 type Host = { ssh: string; caches: Cache[] };
@@ -23,7 +24,7 @@ type Sync = {
 };
 const root = join(import.meta.dir, "..", "..");
 const conf = Bun.TOML.parse(
-  await Bun.file(join(root, "infra/fleet/cache.toml")).text(),
+  expandSync(await Bun.file(join(root, "infra/fleet/cache.toml")).text()),
 ) as { host: Record<string, Host>; sync: Sync };
 const [cmd = "status", ...rest] = Bun.argv.slice(2);
 const flags = new Set(rest.filter((a) => a.startsWith("--")));

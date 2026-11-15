@@ -27,6 +27,7 @@ import {
 import { homedir, hostname } from "node:os";
 import { join, resolve } from "node:path";
 import { resolveExe } from "@aphrody/ai-os/llm/agents";
+import { expandSync } from "../../packages/env-kit/src/site.ts";
 
 type Role = { timeout_s: number; budget_usd: number; heavy?: boolean };
 type Host = { roles: string[]; src: string; ssh?: string[] };
@@ -66,7 +67,7 @@ type Attempt = {
 
 const HERE = import.meta.dir;
 const FLEET: Fleet = Bun.TOML.parse(
-  readFileSync(join(HERE, "fleet.toml"), "utf8"),
+  expandSync(readFileSync(join(HERE, "fleet.toml"), "utf8")),
 ) as Fleet;
 const WIN = process.platform === "win32";
 // Same PATH whether started by systemd, ssh or tmux: user-level CLI dirs first.

@@ -54,3 +54,21 @@ export async function expand(text: string): Promise<string> {
 export async function readExpanded(path: string): Promise<string> {
   return expand(readFileSync(path, "utf8"));
 }
+
+/**
+ * Synchronous expansion for readers that cannot await (config loaders): values come from the discovery cache; when a
+ * token is missing, one `discover.ts warm` run fills the cache and the lookup is retried. A token nothing answers stays as written.
+ */
+export function expandSync(text: string): string {
+  if (!text.includes("@@")) return text;
+  const fill = () =>
+    text.replace(TOKEN, (m, p: string) => overrideGet(p, loadOverride()) ?? getCached(p) ?? m);
+  let out = fill();
+  if (out.includes("@@") && TOKEN.test(out)) {
+    TOKEN.lastIndex = 0;
+    Bun.spawnSync([process.execPath, join(import.meta.dir, "discover.ts"), "warm"], { stdout: "ignore", stderr: "ignore", timeout: 120_000 });
+    out = fill();
+  }
+  TOKEN.lastIndex = 0;
+  return out;
+}

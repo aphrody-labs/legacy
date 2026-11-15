@@ -16,6 +16,7 @@ import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { connect } from "node:net";
 import { dirname, join } from "node:path";
 import { relayHome } from "./cdp.ts";
+import { expandSync } from "../../../env-kit/src/site.ts";
 
 export type OutboundInit = RequestInit & {
   /** Response deemed deterministic (read, embeddings, tools/call of a readOnly tool). */
@@ -104,7 +105,7 @@ export function loadMesh(text?: string): Mesh {
         join(import.meta.dir, "..", "..", "..", "..", "infra", "deploy.toml"),
       ].find((f) => f && existsSync(f));
       if (!file) return { routes, lbPorts };
-      text = readFileSync(file, "utf8");
+      text = expandSync(readFileSync(file, "utf8"));
     }
     d = Bun.TOML.parse(text);
   } catch {

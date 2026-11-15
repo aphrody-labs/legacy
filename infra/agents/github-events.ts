@@ -13,6 +13,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
+import { expandSync } from "../../packages/env-kit/src/site.ts";
 
 export type GithubEvent = {
   v: 1;
@@ -202,7 +203,7 @@ function accountId(src: string): string {
   if (process.env.CLOUDFLARE_ACCOUNT_ID)
     return process.env.CLOUDFLARE_ACCOUNT_ID;
   const t = Bun.TOML.parse(
-    readFileSync(join(src, "infra", "deploy.toml"), "utf8"),
+    expandSync(readFileSync(join(src, "infra", "deploy.toml"), "utf8")),
   ) as any;
   const id = t.cloud?.cloudflare_account_id;
   if (!id) throw new Error("cloudflare_account_id missing from infra/deploy.toml");

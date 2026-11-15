@@ -37,7 +37,7 @@ jobs:
       - name: Personal-data gate (generic patterns; the discovery cache is absent in CI)
         run: bun scripts/hygiene.ts --rule personal-data
       - name: Test output holds no secret (env-kit suite)
-        run: bun scripts/test-leak-guard.ts packages/env-kit
+        run: bun scripts/test-leak-guard.ts packages/env-kit infra/agents
       - name: Identity gate
         env:
           APHRODY_PII_TERMS: ${{ secrets.APHRODY_PII_TERMS }}

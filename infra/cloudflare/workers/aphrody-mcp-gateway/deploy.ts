@@ -4,13 +4,14 @@
 // Secrets set when present in the env: OWNER_GOOGLE_ACCOUNT (from APHRODY_OWNER_GOOGLE_ACCOUNT), GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
 // RELAY_TOKEN is read from fr2 (/etc/aphrody/relay.env) over ssh, OAUTH_SECRET is generated on first deploy.
 import { join } from "node:path";
+import { expandSync } from "../../../../packages/env-kit/src/site.ts";
 
 const NAME = "aphrody-mcp-gateway";
 const HOST = "mcp.aphrody.com";
 const BUCKET = "aphrody-skills-archive";
 const ORIGIN = "https://mcp-origin.aphrody.com";
 const dir = import.meta.dir;
-const toml = Bun.TOML.parse(await Bun.file(join(dir, "../../cloudflare.toml")).text()) as any;
+const toml = Bun.TOML.parse(expandSync(await Bun.file(join(dir, "../../cloudflare.toml")).text())) as any;
 const A: string = toml.account;
 const Z: string = toml.zones["aphrody.com"];
 const tok = Bun.env.CLOUDFLARE_API_TOKEN;

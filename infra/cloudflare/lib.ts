@@ -1,5 +1,6 @@
 // Shared helpers for infra/cloudflare: config, auth, API client. No secret is ever printed.
 import { join } from "node:path";
+import { expandSync } from "../../packages/env-kit/src/site.ts";
 
 export type Ingress = { hostname?: string; service: string; path?: string };
 export type Tunnel = { id: string; host: string; ingress: Ingress[] };
@@ -45,7 +46,7 @@ export type Cfg = {
 
 export const cfgPath = join(import.meta.dir, "cloudflare.toml");
 export const cfg = Bun.TOML.parse(
-  await Bun.file(cfgPath).text(),
+  expandSync(await Bun.file(cfgPath).text()),
 ) as unknown as Cfg;
 
 // Token: CLOUDFLARE_API_TOKEN (from the vault: env-kit secret exec CLOUDFLARE_API_TOKEN -- ...). An invalid token fails

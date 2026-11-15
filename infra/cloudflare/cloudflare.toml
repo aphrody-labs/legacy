@@ -63,6 +63,13 @@ ingress = [
 ]
 
 # DNS: name -> desired single record. rollback = the record before migration (one line, also in the doc).
+# Service discovery (cf.ts apply srv): targets are <role>.mesh names, resolved on each host from its WireGuard peers.
+# packages/env-kit/src/discover.ts srv(<service>, <zone>) reads them; ports mirror infra/fleet/cluster.toml.
+[srv."aphrody.com"]
+"_valkey._tcp.aphrody.com" = { target = "fr2.mesh", port = 6379 }
+"_nativelink-scheduler._tcp.aphrody.com" = { target = "fr1.mesh", port = 50051 }
+"_nativelink-cas._tcp.aphrody.com" = { target = "fr1.mesh", port = 50061 }
+
 [dns."aphrody.com"]
 "aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
 "ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "delete" }

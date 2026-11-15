@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Declarative Cloudflare edge: plan (default, read-only diff) or apply one section of cloudflare.toml.
-//   bun infra/cloudflare/cf.ts plan [dns|tunnels|rules|access|email]
-//   bun infra/cloudflare/cf.ts apply <dns|tunnels|rules|access|email> [--only <name>]
+//   bun infra/cloudflare/cf.ts plan [dns|srv|tunnels|rules|access|email]
+//   bun infra/cloudflare/cf.ts apply <dns|srv|tunnels|rules|access|email> [--only <name>]
 // --only restricts dns/tunnels to one record or tunnel (service-by-service migration).
 import { api, cfg, expand, tunnelId, type Rec } from "./lib.ts";
 
@@ -11,7 +11,7 @@ const only = oi >= 0 ? (rest[oi + 1] ?? "") : "";
 const apply = cmd === "apply";
 if (!["plan", "apply"].includes(cmd) || (apply && !section)) {
   console.error(
-    "usage: cf.ts plan [section] | apply <dns|tunnels|rules|access|email> [--only name]",
+    "usage: cf.ts plan [section] | apply <dns|srv|tunnels|rules|access|email> [--only name]",
   );
   process.exit(2);
 }
@@ -79,6 +79,28 @@ if (want("tunnels")) {
         `/accounts/${cfg.account}/cfd_tunnel/${id}/configurations`,
         { config: { ...cur.config, ingress: t.ingress } },
       );
+  }
+}
+
+// ---------------------------------------------------------------- srv
+// Service discovery records _<svc>._tcp.<zone>. Targets are <role>.mesh names that each host resolves locally
+// (fleet-mesh-hosts.sh writes them into /etc/hosts): public DNS carries a service name and a port, never an address.
+if (want("srv")) {
+  for (const [zone, recs] of Object.entries((cfg as any).srv ?? {})) {
+    const zid = cfg.zones[zone];
+    const live = await api<any[]>("GET", `/zones/${zid}/dns_records?type=SRV&per_page=5000`);
+    for (const [name, r] of Object.entries(recs as Record<string, any>)) {
+      if (only && only !== name) continue;
+      const [, service, proto] = /^(_[^.]+)\.(_[^.]+)\./.exec(name) ?? [];
+      const data = { service, proto, name: zone, priority: r.priority ?? 10, weight: r.weight ?? 10, port: r.port, target: r.target };
+      const same = live.find((x) => x.name === name && x.data?.target === r.target && x.data?.port === r.port);
+      if (same && same.data?.priority === data.priority && same.data?.weight === data.weight) continue;
+      say(same ? "update" : "create", `${name} SRV ${data.priority} ${data.weight} ${r.port} ${r.target}`);
+      if (!apply) continue;
+      const body = { type: "SRV", name, data, ttl: 300, comment: "managed: infra/cloudflare/cloudflare.toml" };
+      if (same) await api("PUT", `/zones/${zid}/dns_records/${same.id}`, body);
+      else await api("POST", `/zones/${zid}/dns_records`, body);
+    }
   }
 }
 

@@ -5,6 +5,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { constants, hostname, setPriority } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { expandSync } from "../../../env-kit/src/site.ts";
 
 export type Host = {
   id: string; // nom de fleet.toml : pc, prd, fr2
@@ -38,7 +39,7 @@ export function srcRoot(): string {
 }
 
 const toml = (p: string): any =>
-  existsSync(p) ? Bun.TOML.parse(readFileSync(p, "utf8")) : {};
+  existsSync(p) ? Bun.TOML.parse(expandSync(readFileSync(p, "utf8"))) : {};
 
 const WIN = process.platform === "win32";
 /** fleet.toml id of the current machine (AGENTS_HOST takes precedence). */

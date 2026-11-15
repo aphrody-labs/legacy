@@ -18,6 +18,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { selfId, shq, srcRoot } from "../orch/fleet";
 import { Health } from "../orch/health";
+import { expandSync } from "../../../env-kit/src/site.ts";
 
 export type Asset = { asset: string; sha256: string };
 export type FabricNode = {
@@ -73,7 +74,7 @@ const statePath = () => join(dataDir(), "fabric.json");
 
 export function loadFabric(root = srcRoot()): Fabric {
   const p = Bun.env.AI_FABRIC_CONFIG ?? join(root, "infra/ai/fabric.toml");
-  const f = Bun.TOML.parse(readFileSync(p, "utf8")) as any;
+  const f = Bun.TOML.parse(expandSync(readFileSync(p, "utf8"))) as any;
   f.coordinator.mesh ??= [];
   f.node ??= [];
   return f as Fabric;

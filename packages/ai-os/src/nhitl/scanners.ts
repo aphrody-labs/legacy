@@ -12,6 +12,7 @@ import {
   type Status,
   type Violation,
 } from "./index";
+import { expandSync } from "../../../env-kit/src/site.ts";
 
 const HOME = homedir();
 const claudeDir = () => Bun.env.CLAUDE_CONFIG_DIR ?? join(HOME, ".claude");
@@ -620,7 +621,7 @@ type Target = { host: string; ssh?: string[]; local?: string; dir?: string };
 export function queueTargets(root = srcRoot()): Target[] {
   const fleet: any = existsSync(join(root, "infra/agents/fleet.toml"))
     ? Bun.TOML.parse(
-        readFileSync(join(root, "infra/agents/fleet.toml"), "utf8"),
+        expandSync(readFileSync(join(root, "infra/agents/fleet.toml"), "utf8")),
       )
     : {};
   const out: Target[] = [];
