@@ -1,65 +1,69 @@
-# Plan de test et rapports de bugs, apps/web et packages/ui
+# Test plan and bug reports, apps/web and packages/ui
 
-Build : main @ 774fce9 + correctifs de ce lot. Chrome headless, 375 et 1440 px, thèmes clair et sombre.
-Automatisé : `apps/web/e2e/*.test.ts` (base Postgres jetable via `testDb()`, API `creerApp`, web `demarrerWeb`).
+Build: main @ 774fce9 + the fixes of this batch. Headless Chrome, 375 and 1440 px, light and dark themes.
+Automated: `apps/web/e2e/*.test.ts` (throwaway Postgres database through `testDb()`, API `creerApp`, web
+`demarrerWeb`).
 
 ## Plan
 
-| Flux                         | Cas                                                                                                                               | Automatisation                                   |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| F01 Inscription              | H1 parcours SIREN, entreprise, compte créé. E1 e-mail invalide. E2 SIREN inconnu. N1 e-mail déjà pris.                            | H1, E1 : parcours.test.ts. E2, N1 : à vérifier   |
-| F02 Devis, facture, émission | H1 devis, émission, conversion en facture, totaux remise/TVA. E1 champs vides. E2 emoji et accents. E3 double clic.               | H1 : parcours.test.ts. E1 à E3 : à vérifier      |
-| F03 Paiement                 | H1 paiement partiel puis solde. N1 montant vide ou texte. N2 montant > reste dû. E1 facture soldée : formulaire retiré.           | paiement-relance.test.ts                         |
-| F04 Relance                  | H1 palier et canal, relance consignée. E1 facture soldée : pas de relance.                                                        | paiement-relance.test.ts (H1)                    |
-| F05 Factures reçues          | H1 liste filtrée, anomalie, validation.                                                                                           | recues.test.ts                                   |
-| F06 Employés et congés       | H1 ajout employé, demande de congé, validation.                                                                                   | parcours.test.ts                                 |
-| F07 Imports et exports       | H1 aperçu, correspondance, import, erreurs de ligne.                                                                              | parcours.test.ts (import) ; exports : à vérifier |
-| F08 Paramètres et thème      | H1 couleur de marque. H2 bascule clair/sombre, mémorisation, avant JS.                                                            | parcours.test.ts, accessibilite.test.ts          |
-| F09 Connexion                | N1 mauvais mot de passe. N2 champs vides. N3 retour `//evil` ignoré. N4 session expirée. E1 focus clavier.                        | publiques.test.ts                                |
-| F10 Isolation                | N1 document d'un autre compte : 404, aucune fuite.                                                                                | paiement-relance.test.ts                         |
-| F11 Pages publiques          | H1 accueil, tarifs, mentions, confidentialité, connexion, inscription : contraste, noms, libellés, cibles 24 px, débordement, h1. | publiques.test.ts                                |
-| F12 États vides et erreurs   | N1 route inconnue. N2 document introuvable.                                                                                       | publiques.test.ts                                |
-| Transverse                   | Écrans connectés en 4 combinaisons largeur/thème.                                                                                 | accessibilite.test.ts                            |
+| Flow                         | Cases                                                                                                                                | Automation                                       |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| F01 Sign-up                  | H1 SIREN journey, company, account created. E1 invalid e-mail. E2 unknown SIREN. N1 e-mail already taken.                            | H1, E1: parcours.test.ts. E2, N1: to check      |
+| F02 Quote, invoice, issuing  | H1 quote, issuing, conversion to invoice, discount/VAT totals. E1 empty fields. E2 emoji and accents. E3 double click.               | H1: parcours.test.ts. E1 to E3: to check        |
+| F03 Payment                  | H1 partial payment then balance. N1 empty or text amount. N2 amount > amount due. E1 settled invoice: form removed.                  | paiement-relance.test.ts                         |
+| F04 Reminder                 | H1 level and channel, reminder logged. E1 settled invoice: no reminder.                                                              | paiement-relance.test.ts (H1)                    |
+| F05 Received invoices        | H1 filtered list, anomaly, validation.                                                                                               | recues.test.ts                                   |
+| F06 Employees and leave      | H1 add employee, leave request, approval.                                                                                            | parcours.test.ts                                 |
+| F07 Imports and exports      | H1 preview, mapping, import, line errors.                                                                                            | parcours.test.ts (import); exports: to check    |
+| F08 Settings and theme       | H1 brand color. H2 light/dark toggle, memorization, before JS.                                                                       | parcours.test.ts, accessibilite.test.ts          |
+| F09 Sign-in                  | N1 wrong password. N2 empty fields. N3 `//evil` return ignored. N4 expired session. E1 keyboard focus.                               | publiques.test.ts                                |
+| F10 Isolation                | N1 document of another account: 404, no leak.                                                                                        | paiement-relance.test.ts                         |
+| F11 Public pages             | H1 home, pricing, legal notice, privacy, sign-in, sign-up: contrast, names, labels, 24 px targets, overflow, h1.                     | publiques.test.ts                                |
+| F12 Empty states and errors  | N1 unknown route. N2 document not found.                                                                                             | publiques.test.ts                                |
+| Cross-cutting                | Signed-in screens in 4 width/theme combinations.                                                                                     | accessibilite.test.ts                            |
 
-À vérifier (non automatisé) : réseau lent ou hors ligne, deux onglets, fuseaux horaires et changement d'heure, lecteur d'écran réel, envoi réel des e-mails de relance.
+To check (not automated): slow or offline network, two tabs, time zones and daylight saving changes, real screen
+reader, real sending of the reminder e-mails.
 
 ## Bugs
 
-### BUG-001 : le reste dû et la liste des paiements ne se rafraîchissent pas après un paiement partiel
+### BUG-001: the amount due and the payment list do not refresh after a partial payment
 
 - Severity: S2
 - Flow / case: F03 / F03-H1
-- Screen: fiche document (`/app/documents/:id`)
-- Build: 774fce9 Browser / device: Chromium headless, 1280 px
+- Screen: document sheet (`/app/documents/:id`)
+- Build: 774fce9 Browser / device: headless Chromium, 1280 px
 
 Steps
 
-1. Émettre une facture de 1 200 EUR TTC, ouvrir sa fiche.
-2. Saisir 500 dans « Montant (€) », cliquer « Enregistrer le paiement ».
+1. Issue an invoice of EUR 1,200 incl. VAT, open its sheet.
+2. Enter 500 in "Amount (EUR)", click "Record the payment".
 
-Expected: « Reste dû : 700,00 € » et la ligne du paiement apparaissent.
-Actual: l'API répond 201, mais la fiche affiche toujours « Reste dû : 1 200,00 € » et « Aucun paiement enregistré » jusqu'au rechargement (le chargement des paiements ne dépendait que de l'id et du statut, inchangé tant que la facture n'est pas soldée).
-Evidence: paiement-relance.test.ts « paiement : montant invalide refusé, partiel puis solde ».
-Suspected cause: `useDonnees(..., [doc.id, doc.statut])` sans rechargement explicite.
-Status: fixed (apps/web/src/client/ecrans/detail.tsx, `p.recharger()` dans `payer`)
+Expected: "Amount due: EUR 700.00" and the payment line appear.
+Actual: the API answers 201, but the sheet still shows "Amount due: EUR 1,200.00" and "No payment recorded" until
+reload (the payment loading depended only on the id and the status, unchanged as long as the invoice is not
+settled).
+Evidence: paiement-relance.test.ts "payment: invalid amount refused, partial then balance".
+Suspected cause: `useDonnees(..., [doc.id, doc.statut])` without explicit reload.
+Status: fixed (apps/web/src/client/ecrans/detail.tsx, `p.recharger()` in `payer`)
 
-### BUG-002 : l'écran « Page introuvable » n'a pas de titre h1
+### BUG-002: the "Page not found" screen has no h1 heading
 
 - Severity: S3
 - Flow / case: F12 / F12-N1
-- Screen: `/app/*` inconnu
+- Screen: unknown `/app/*`
 - Build: 774fce9 Browser / device: Chromium, 375 px
 
 Steps
 
-1. Connecté, ouvrir `/app/inconnu`.
+1. Signed in, open `/app/inconnu`.
 
-Expected: un h1 (repère de navigation, titre d'onglet cohérent).
-Actual: seulement un h2 dans l'état vide, titre d'onglet inchangé.
-Evidence: audit « aucun titre h1 ». Test publiques.test.ts « écrans introuvables ».
-Status: fixed (apps/web/src/client/app.tsx, `PageIntrouvable` : h1 visuellement caché + `useTitrePage`)
+Expected: an h1 (navigation landmark, consistent tab title).
+Actual: only an h2 in the empty state, tab title unchanged.
+Evidence: audit "no h1 heading". Test publiques.test.ts "screens not found".
+Status: fixed (apps/web/src/client/app.tsx, `PageIntrouvable`: visually hidden h1 + `useTitrePage`)
 
-### BUG-003 : document introuvable présenté comme une erreur de chargement avec « Réessayer »
+### BUG-003: a document not found is shown as a loading error with "Retry"
 
 - Severity: S3
 - Flow / case: F12 / F12-N2, F10-N1
@@ -68,13 +72,15 @@ Status: fixed (apps/web/src/client/app.tsx, `PageIntrouvable` : h1 visuellement 
 
 Steps
 
-1. Ouvrir `/app/documents/<id inexistant ou d'un autre compte>`.
+1. Open `/app/documents/<id that does not exist or belongs to another account>`.
 
-Expected: état « introuvable » explicite, retour à la liste.
-Actual: « Chargement impossible / introuvable » avec un bouton « Réessayer » qui ne peut jamais réussir.
-Status: fixed (apps/web/src/client/ecrans/detail.tsx, état vide « Document introuvable » + lien « Retour aux factures »)
+Expected: an explicit "not found" state, back to the list.
+Actual: "Unable to load / not found" with a "Retry" button that can never succeed.
+Status: fixed (apps/web/src/client/ecrans/detail.tsx, empty state "Document not found" + link "Back to invoices")
 
-### À vérifier
+### To check
 
-- Les réponses 404 hors `/app` (`/nope`) sont du texte brut « Page introuvable » sans page habillée (serveur, hors périmètre de ce lot).
-- Aucune anomalie de contraste, de nom, de libellé, de cible 24 px ou de débordement sur les écrans connectés et pages publiques, 375/1440 px, clair/sombre (audit automatisé vert).
+- The 404 responses outside `/app` (`/nope`) are plain text "Page not found" without a styled page (server, out of
+  scope of this batch).
+- No anomaly of contrast, name, label, 24 px target or overflow on the signed-in screens and public pages, 375/1440
+  px, light/dark (automated audit green).

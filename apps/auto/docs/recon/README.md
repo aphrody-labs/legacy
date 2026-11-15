@@ -1,19 +1,22 @@
-# Recon : référence UX facturation (Pennylane principal, Abby secondaire)
+# Recon: invoicing UX reference (Pennylane primary, Abby secondary)
 
-Méthode clean-room : fonctionnalités et schémas d'usage uniquement, sources publiques, aucune capture ni code réutilisé. Rien du contenu, des marques ou des visuels de Pennylane/Abby n'est repris.
+Clean-room method: features and usage patterns only, public sources, no capture or code reused. Nothing of the
+content, brands or visuals of Pennylane/Abby is taken.
 
-Fichiers : `recon.md` (écrans, flux, composants, modèle inféré vs `@auto/domain`), `features.csv` (matrice must/should/could).
+Files: `recon.md` (screens, flows, components, inferred model vs `@auto/domain`), `features.csv` (must/should/could
+matrix).
 
-## Sources (consultées le 2026-10-22)
+## Sources (consulted on 2026-10-22)
 
-| Source                                    | URL                                                                                                                                                                     | Apport                                                                                   | Fiabilité      |
+| Source                                    | URL                                                                                                                                                                     | Contribution                                                                             | Reliability    |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- | -------------- |
-| Pennylane, blog nouveautés devis/factures | https://www.pennylane.com/fr/blog/contenu-dirigeants/nouveautes-devis-factures                                                                                          | modèles de documents, limites par plan                                                   | éditeur (2024) |
-| Pennylane, blog automatisation des ventes | https://www.pennylane.com/fr/blog/produit/automatisez-gestion-ventes                                                                                                    | vues À traiter / À venir / En retard / Encaissées, relances                              | éditeur        |
-| Pennylane, fiche relances                 | https://www.pennylane.com/fr/fiches-pratiques/facturation/relances-factures-quelle-est-la-procedure-a-suivre                                                            | séquences de relance                                                                     | éditeur        |
-| Pennylane, abonnements                    | https://www.pennylane.com/fr/blog/produit/gestion-abonnements-factures-recurrentes                                                                                      | factures récurrentes                                                                     | éditeur        |
-| Synthèses tierces                         | https://digitiz.fr/pennylane-facturation-electronique/ , https://www.glitter.io/guides/comment-creer-une-facture-sur-pennylane , https://independant.io/avis/pennylane/ | devis, facture, avoir, proforma ; conversion ; avoir seule voie de correction ; Factur-X | secondaire     |
-| Abby, accueil                             | https://abby.fr/                                                                                                                                                        | fonctions, plans Basique 0 / Start 9 / Pro 15 / Business 33 EUR HT par mois              | marketing      |
-| Abby, auto-entrepreneur / indépendant     | https://abby.fr/auto-entreprise , https://abby.fr/pour-qui/independant                                                                                                  | URSSAF, seuils TVA, signature, paiement carte                                            | marketing      |
+| Pennylane, quotes/invoices news blog      | https://www.pennylane.com/fr/blog/contenu-dirigeants/nouveautes-devis-factures                                                                                          | document templates, limits per plan                                                      | vendor (2024)  |
+| Pennylane, sales automation blog          | https://www.pennylane.com/fr/blog/produit/automatisez-gestion-ventes                                                                                                    | To process / Upcoming / Overdue / Collected views, reminders                             | vendor         |
+| Pennylane, reminders sheet                | https://www.pennylane.com/fr/fiches-pratiques/facturation/relances-factures-quelle-est-la-procedure-a-suivre                                                            | reminder sequences                                                                       | vendor         |
+| Pennylane, subscriptions                  | https://www.pennylane.com/fr/blog/produit/gestion-abonnements-factures-recurrentes                                                                                      | recurring invoices                                                                       | vendor         |
+| Third-party summaries                     | https://digitiz.fr/pennylane-facturation-electronique/ , https://www.glitter.io/guides/comment-creer-une-facture-sur-pennylane , https://independant.io/avis/pennylane/ | quote, invoice, credit note, proforma; conversion; credit note is the only correction path; Factur-X | secondary |
+| Abby, home                                | https://abby.fr/                                                                                                                                                        | features, plans Basique 0 / Start 9 / Pro 15 / Business 33 EUR excl. VAT per month       | marketing      |
+| Abby, sole trader / freelancer            | https://abby.fr/auto-entreprise , https://abby.fr/pour-qui/independant                                                                                                  | URSSAF, VAT thresholds, signature, card payment                                          | marketing      |
 
-Limites : le centre d'aide Pennylane n'a pas été trouvé par la recherche (définitions officielles de « brouillon » et de « en retard » non confirmées) ; aucune fiche App Store/Play lue ; aucune capture. À compléter avec le compte de l'utilisateur si souhaité.
+Limits: the Pennylane help center was not found by the search (official definitions of "draft" and "overdue" not
+confirmed); no App Store/Play listing read; no capture. To complete with the user's account if wanted.

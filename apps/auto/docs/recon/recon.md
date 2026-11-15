@@ -1,73 +1,81 @@
-# Carte de recon
+# Recon map
 
-Périmètre : cœur de boucle = devis -> facture (Factur-X) -> envoi -> relance -> encaissement ; avoir pour corriger. Web d'abord (mobile = responsive). Cible : indépendants et TPE françaises.
-Hors périmètre v1 : comptabilité/bancaire, paie, télédéclaration URSSAF, gestion de projet.
+Scope: core loop = quote -> invoice (Factur-X) -> send -> reminder -> collection; credit note to correct. Web first
+(mobile = responsive). Target: French freelancers and very small businesses.
+Out of scope for v1: accounting/banking, payroll, URSSAF online filing, project management.
 
-## 1. Inventaire des écrans
+## 1. Screen inventory
 
-États : V vide, C chargement, R rempli, E erreur, P permission refusée.
+States: V empty, C loading, R filled, E error, P permission denied.
 
-| ID  | Écran                        | Accès                    | Objet                                                   | Composants clés                                         | États                              |
+| ID  | Screen                       | Access                   | Purpose                                                 | Key components                                          | States                             |
 | --- | ---------------------------- | ------------------------ | ------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------- |
-| S01 | Inscription / connexion      | /connexion               | créer un compte                                         | formulaire, recherche SIREN                             | E                                  |
-| S02 | Onboarding entreprise        | après S01                | identité légale (SIRET, TVA, franchise, IBAN, mentions) | stepper, SIRET validé                                   | E                                  |
-| S03 | Tableau de bord              | /                        | encours, en retard, encaissé, à faire                   | cartes KPI, liste « à traiter », graphique mensuel      | V, C, R                            |
-| S04 | Liste des factures           | /factures                | filtrer, trier, actions                                 | tableau, filtres statut, recherche, badge               | V, C, R, E                         |
-| S05 | Liste des devis              | /devis                   | idem + conversion                                       | tableau, badge                                          | V, C, R                            |
-| S06 | Éditeur de document          | /documents/nouveau, /:id | lignes, TVA, mentions, aperçu                           | éditeur de lignes, totaux, aperçu PDF, sélecteur client | brouillon, émis (lecture seule), E |
-| S07 | Détail document              | /documents/:id           | timeline, PDF, paiements, actions                       | en-tête statut, historique, boutons contextuels         | R, P                               |
-| S08 | Envoi                        | modale depuis S07        | e-mail + pièce jointe Factur-X                          | formulaire, aperçu                                      | E                                  |
-| S09 | Avoir                        | depuis S07               | avoir total/partiel                                     | éditeur pré-rempli                                      | E                                  |
-| S10 | Clients                      | /clients                 | répertoire                                              | tableau, recherche                                      | V, R                               |
-| S11 | Fiche client                 | /clients/:id             | coordonnées, historique, encours                        | formulaire, liste de documents                          | R                                  |
-| S12 | Catalogue                    | /catalogue               | articles réutilisables                                  | tableau, formulaire                                     | V, R                               |
-| S13 | Paramètres facturation       | /parametres/facturation  | modèles, numérotation, mentions, relances               | formulaires, aperçu                                     | R                                  |
-| S14 | Équipe et rôles              | /parametres/equipe       | membres, rôles                                          | tableau, invitation                                     | P                                  |
-| S15 | Journal d'audit              | /parametres/audit        | vérification de la chaîne                               | liste, bouton vérifier                                  | R                                  |
-| S16 | Page publique devis/paiement | lien client              | accepter, refuser, signer, payer                        | aperçu, boutons                                         | C, E                               |
-| S17 | Jetons API                   | /parametres/api          | clés                                                    | tableau, création                                       | V, R                               |
+| S01 | Sign-up / sign-in            | /connexion               | create an account                                       | form, SIREN lookup                                      | E                                  |
+| S02 | Company onboarding           | after S01                | legal identity (SIRET, VAT, exemption, IBAN, mentions)  | stepper, validated SIRET                                | E                                  |
+| S03 | Dashboard                    | /                        | outstanding, overdue, collected, to do                  | KPI cards, "to process" list, monthly chart             | V, C, R                            |
+| S04 | Invoice list                 | /factures                | filter, sort, actions                                   | table, status filters, search, badge                    | V, C, R, E                         |
+| S05 | Quote list                   | /devis                   | same + conversion                                       | table, badge                                            | V, C, R                            |
+| S06 | Document editor              | /documents/nouveau, /:id | lines, VAT, mentions, preview                           | line editor, totals, PDF preview, customer picker       | draft, issued (read-only), E       |
+| S07 | Document detail              | /documents/:id           | timeline, PDF, payments, actions                        | status header, history, contextual buttons              | R, P                               |
+| S08 | Send                         | modal from S07           | e-mail + Factur-X attachment                            | form, preview                                           | E                                  |
+| S09 | Credit note                  | from S07                 | full/partial credit note                                | prefilled editor                                        | E                                  |
+| S10 | Customers                    | /clients                 | directory                                               | table, search                                           | V, R                               |
+| S11 | Customer record              | /clients/:id             | contact details, history, outstanding                   | form, document list                                     | R                                  |
+| S12 | Catalog                      | /catalogue               | reusable items                                          | table, form                                             | V, R                               |
+| S13 | Invoicing settings           | /parametres/facturation  | templates, numbering, mentions, reminders               | forms, preview                                          | R                                  |
+| S14 | Team and roles               | /parametres/equipe       | members, roles                                          | table, invitation                                       | P                                  |
+| S15 | Audit log                    | /parametres/audit        | chain verification                                      | list, verify button                                     | R                                  |
+| S16 | Public quote/payment page    | customer link            | accept, refuse, sign, pay                               | preview, buttons                                        | C, E                               |
+| S17 | API tokens                   | /parametres/api          | keys                                                    | table, creation                                         | V, R                               |
 
-## 2. Flux
+## 2. Flows
 
-- F01 Première facture : S01 -> S02 -> S06 -> S07 -> S08. Cible : 6 clics avec client existant.
-- F02 Devis vers facture : S05 -> S07 (accepté) -> Convertir -> S06 pré-rempli -> émettre. 3 clics. Bords : devis expiré ou refusé.
-- F03 Acompte puis solde : devis accepté -> acompte (386) -> facture de solde avec déduction.
-- F04 Correction : facture émise -> S09 avoir -> nouvelle facture. Aucune modification d'une facture émise.
-- F05 Relance : facture échue -> relance auto/manuelle -> paiement -> payé.
-- F06 Paiement manuel : S07 -> Marquer payée (date, moyen).
-- F07 Signature client d'un devis : S16 -> accepté -> notification.
-- F08 Vérification d'intégrité : S15 -> /v1/audit/verification.
-- F09 Intégration : S17 -> jeton -> /v1/documents.
+- F01 First invoice: S01 -> S02 -> S06 -> S07 -> S08. Target: 6 clicks with an existing customer.
+- F02 Quote to invoice: S05 -> S07 (accepted) -> Convert -> S06 prefilled -> issue. 3 clicks. Edges: expired or
+  refused quote.
+- F03 Down payment then balance: accepted quote -> down payment (386) -> balance invoice with deduction.
+- F04 Correction: issued invoice -> S09 credit note -> new invoice. No change to an issued invoice.
+- F05 Reminder: overdue invoice -> automatic/manual reminder -> payment -> paid.
+- F06 Manual payment: S07 -> Mark as paid (date, method).
+- F07 Customer signature of a quote: S16 -> accepted -> notification.
+- F08 Integrity check: S15 -> /v1/audit/verification.
+- F09 Integration: S17 -> token -> /v1/documents.
 
-## 3. Composants
+## 3. Components
 
-Bouton (primaire, secondaire, danger, fantôme ; repos, survol, focus, actif, désactivé, chargement) ; champ texte/montant (erreur, aide) ; combobox client ; sélecteur de date ; tableau (tri, sélection, vide, squelette) ; badge de statut ; éditeur de lignes ; carte KPI ; modale ; toast ; stepper ; onglets ; timeline ; aperçu PDF ; barre de filtres ; pagination ; menu d'actions ; bandeau d'avertissement (franchise TVA, mentions manquantes).
+Button (primary, secondary, danger, ghost; rest, hover, focus, active, disabled, loading); text/amount field
+(error, help); customer combobox; date picker; table (sort, selection, empty, skeleton); status badge; line
+editor; KPI card; modal; toast; stepper; tabs; timeline; PDF preview; filter bar; pagination; action menu; warning
+banner (VAT exemption, missing mentions).
 
-## 4. Modèle inféré confronté à `@auto/domain`
+## 4. Inferred model against `@auto/domain`
 
-| Entité observée                                                      | Équivalent auto                                                                   | Écart / action                                                                                              | Confiance |
-| -------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------- |
-| Devis, facture, avoir, proforma                                      | `Type` : devis, facture, acompte, avoir                                           | proforma absent (could)                                                                                     | haute     |
-| Vues À traiter / À venir / En retard / Encaissées                    | `Statut` : brouillon, emis, envoye, accepte, refuse, depose, rejete, paye, annule | « en retard » doit être dérivé (échéance dépassée et non payé), pas stocké ; ajouter « partiellement payé » | haute     |
-| Lignes                                                               | `Ligne`                                                                           | remise par ligne/globale absente (should)                                                                   | haute     |
-| Client / émetteur                                                    | `Partie`                                                                          | pas d'identité persistante : table `client` à prévoir                                                       | haute     |
-| Catalogue                                                            | absent                                                                            | entité `article` (should)                                                                                   | moyenne   |
-| Modèles de document (logo, couleur, langue, délais, compte bancaire) | absent                                                                            | `modele` par tenant                                                                                         | haute     |
-| Conditions, pénalités, indemnité 40 EUR                              | `conditionsPaiement`, `penalitesRetard`, `INDEMNITE_RECOUVREMENT_CENTS`           | couvert                                                                                                     | haute     |
-| Franchise TVA                                                        | `franchiseTva`, `MENTION_FRANCHISE`                                               | couvert                                                                                                     | haute     |
-| Devis -> facture, avoir lié                                          | `origine`, `devisVersFacture`, `avoirTotal`                                       | avoir partiel absent (must)                                                                                 | haute     |
-| Paiement                                                             | absent                                                                            | entité `paiement` (must)                                                                                    | haute     |
-| Relances                                                             | absent                                                                            | `regle_relance`, `relance_envoyee` (should)                                                                 | moyenne   |
-| Récurrence                                                           | absent                                                                            | could                                                                                                       | moyenne   |
-| Signature de devis                                                   | `accepte` seul                                                                    | preuve (horodatage, empreinte) à ajouter (should)                                                           | moyenne   |
-| Audit chaîné, numérotation sans trou, RLS                            | présents (store, tenancy)                                                         | différenciant : à exposer en S15                                                                            | haute     |
+| Entity observed                                                      | auto equivalent                                                                   | Gap / action                                                                                                | Confidence |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------- |
+| Quote, invoice, credit note, proforma                                | `Type`: devis, facture, acompte, avoir                                            | proforma absent (could)                                                                                     | high       |
+| Views To process / Upcoming / Overdue / Collected                    | `Statut`: brouillon, emis, envoye, accepte, refuse, depose, rejete, paye, annule  | "overdue" must be derived (past due and unpaid), not stored; add "partially paid"                           | high       |
+| Lines                                                                | `Ligne`                                                                           | per-line/global discount absent (should)                                                                    | high       |
+| Customer / issuer                                                    | `Partie`                                                                          | no persistent identity: a `client` table is needed                                                          | high       |
+| Catalog                                                              | absent                                                                            | `article` entity (should)                                                                                   | medium     |
+| Document templates (logo, color, language, deadlines, bank account)  | absent                                                                            | `modele` per tenant                                                                                         | high       |
+| Terms, penalties, EUR 40 indemnity                                   | `conditionsPaiement`, `penalitesRetard`, `INDEMNITE_RECOUVREMENT_CENTS`           | covered                                                                                                     | high       |
+| VAT exemption                                                        | `franchiseTva`, `MENTION_FRANCHISE`                                               | covered                                                                                                     | high       |
+| Quote -> invoice, linked credit note                                 | `origine`, `devisVersFacture`, `avoirTotal`                                       | partial credit note absent (must)                                                                           | high       |
+| Payment                                                              | absent                                                                            | `paiement` entity (must)                                                                                    | high       |
+| Reminders                                                            | absent                                                                            | `regle_relance`, `relance_envoyee` (should)                                                                 | medium     |
+| Recurrence                                                           | absent                                                                            | could                                                                                                       | medium     |
+| Quote signature                                                      | `accepte` only                                                                    | proof (timestamp, fingerprint) to add (should)                                                              | medium     |
+| Chained audit, gapless numbering, RLS                                | present (store, tenancy)                                                          | differentiator: expose in S15                                                                               | high       |
 
-## 5. Non clonable
+## 5. Not cloneable
 
-Agrément plateforme agréée (immatriculation DGFiP, e-reporting) : raccordement à une PA partenaire ; agrégation bancaire (DSP2) ; télédéclaration URSSAF ; signature électronique qualifiée ; marques et visuels des concurrents.
+Approved platform accreditation (DGFiP registration, e-reporting): connection to a partner PA; bank aggregation
+(PSD2); URSSAF online filing; qualified electronic signature; competitors' brands and visuals.
 
-## 6. Dimensionnement
+## 6. Sizing
 
-17 écrans, 9 flux, 6 nouvelles entités (client, article, modele, paiement, regle_relance, relance_envoyee). Taille : L pour la v1 complète, M pour la tranche F01 + F02 + F04.
-Parties dures : 1) éditeur de lignes à totaux exacts en centimes (domaine déjà prêt) ; 2) envoi Factur-X + raccordement PA ; 3) relances planifiées et rapprochement des paiements.
-Suite : `replica-architect` sur la tranche F01/F02/F04.
+17 screens, 9 flows, 6 new entities (client, article, modele, paiement, regle_relance, relance_envoyee). Size: L
+for the complete v1, M for the F01 + F02 + F04 slice.
+Hard parts: 1) line editor with totals exact to the cent (domain already ready); 2) Factur-X sending + PA
+connection; 3) scheduled reminders and payment matching.
+Next: `replica-architect` on the F01/F02/F04 slice.
