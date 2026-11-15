@@ -66,3 +66,22 @@ describe.skipIf(!Bun.env.RUBASH || process.platform === "win32")("rubash against
     expect(s.fresh.filter((id) => !ORACLE_DEPENDENT.has(id))).toEqual([]);
   }, 600_000);
 });
+
+// The embedded engine through the multicall: `AY_BIN=<target>/debug/ay bun test test/diffcorpus` on a POSIX host. The shell is a symlink
+// named differently from `ay`, so `exec -a NAME` and the engine's own respawn (`<exe> -c BODY`) reach `ay -c` as bash would be reached.
+describe.skipIf(!Bun.env.AY_BIN || process.platform === "win32")("ay sh against the GNU oracle", () => {
+  test("the whole corpus: only the oracle-dependent cases and the known-stable one differ", async () => {
+    const { mkdtempSync, symlinkSync, rmSync } = await import("node:fs");
+    const dir = mkdtempSync(join(tmpdir(), "dc-ay-"));
+    const link = join(dir, "aylink");
+    symlinkSync(Bun.env.AY_BIN!, link);
+    try {
+      const oracle = [Bun.env.GNU_BASH ?? Bun.which("bash")!];
+      const s = summary(await runCorpus(loadCases(false), oracle, [link], 6));
+      expect(s.fresh.filter((id) => !ORACLE_DEPENDENT.has(id))).toEqual([]);
+      expect(s.known).toEqual(["ms10"]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 600_000);
+});

@@ -52,7 +52,7 @@ Fork state (resolved with `gh api repos/<o>/<r>/commits/<branch>` on 2026-11-15)
 ## Step 2 measurements (fr2, 2026-11-15)
 
 - `cargo check -p rubash -p reedline -p readline-abi -p niubash-runtime -p niubash` and `cargo build -p aphrody -p niubash --no-default-features` pass (the default `magika` feature needs a native onnxruntime that fr2 lacks; unrelated to this fusion).
-- diffcorpus (306 cases against the distro GNU bash 5.3.9 as oracle): `rubash` 304 pass; `ay sh` 298 pass. Failures outside the oracle build: en01, lc01 (`$-` lacks `c` on one route), so03 (`exec -a` name). en02 (compiled-in default PATH), en04 (BASH_VERSINFO patch level) and ps06 (`wait -n` race) depend on the oracle.
+- diffcorpus (306 cases against the distro GNU bash 5.3.9 as oracle): `rubash` 304 pass; `ay` (through the multicall symlink) 302 pass. Failures outside the oracle build: none after `BASH_EXECUTION_STRING` and argv0 handling (302/306, run through a symlink to ay; ms10 is the known-stable one). en02 (compiled-in default PATH), en04 (BASH_VERSINFO patch level) and ps06 (`wait -n` race) depend on the oracle.
 - `ay -c BODY` (the engine's respawn of itself for process substitution, coprocs and background jobs) routes to `ay sh -c BODY`.
 
 ## Step 5: WinuxCmd base, one multicall

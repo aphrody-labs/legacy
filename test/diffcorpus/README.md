@@ -4,7 +4,7 @@ Differential corpus (306 cases in `cases/`, 6 GNU pilot cases in `cases-gnu/`, f
 
 ```sh
 bun test/diffcorpus/runner.ts --shell "target/debug/rubash"          # the engine of src/rubash
-bun test/diffcorpus/runner.ts --shell "target/debug/ay sh"           # the engine embedded in ay
+bun test/diffcorpus/runner.ts --shell /path/to/symlink-to-ay    # the engine embedded in ay (a symlink named differently from ay: exec -a and the engine respawn reach `ay -c`)
 bun test/diffcorpus/runner.ts --target niubash --only trap
 ```
 

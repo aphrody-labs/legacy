@@ -456,7 +456,8 @@ pub fn run(args: &[String]) -> i32 {
     // The embedded engine respawns itself for process substitution, coprocs and background jobs as `<current exe> -c BODY`:
     // for the ay binary that is `ay -c BODY`, so a leading `-c` is the engine respawn and runs as `ay sh -c BODY`.
     if args.first().map(String::as_str) == Some("-c") {
-        return sh::run(args);
+        let name = std::env::args().next().unwrap_or_else(|| "ay".to_string());
+        return sh::run_named(args, &name);
     }
     let argv = std::iter::once("ay".to_string()).chain(args.iter().cloned());
     let cli = match Cli::try_parse_from(argv) {

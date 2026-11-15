@@ -39,6 +39,12 @@ pub fn parse(args: &[String]) -> Result<(ShellInvocation, Source), String> {
 
 /// Run the embedded engine; the return value is the shell's exit status.
 pub fn run(args: &[String]) -> i32 {
+    run_named(args, "ay-sh")
+}
+
+/// `run` with the shell name `$0` takes under `-c` when no NAME operand is given: bash uses its own argv[0], so the
+/// multicall route (`ay -c BODY`, the engine's respawn, or `exec -a NAME ay -c BODY`) passes the real argv[0].
+pub fn run_named(args: &[String], shell_name: &str) -> i32 {
     let (inv, source) = match parse(args) {
         Ok(p) => p,
         Err(msg) => {
@@ -48,11 +54,16 @@ pub fn run(args: &[String]) -> i32 {
     };
     // `$0`: the NAME operand of -c, the script path, else the shell name; diagnostics read `<$0>: -c: line N:` as in bash.
     let argv0 = match &source {
-        Source::Command { .. } => inv.command_name.clone().unwrap_or_else(|| "ay-sh".to_string()),
+        Source::Command { .. } => inv.command_name.clone().unwrap_or_else(|| shell_name.to_string()),
         Source::File { path } => path.clone(),
         Source::Stdin => "ay-sh".to_string(),
     };
-    let mut session = match Session::builder().argv0(argv0).process_exit_role(true).build() {
+    let mut builder = Session::builder().argv0(argv0).process_exit_role(true);
+    // bash sets BASH_EXECUTION_STRING for -c; `$-` renders its `c` from it.
+    if let Source::Command { text } = &source {
+        builder = builder.env("BASH_EXECUTION_STRING", text.clone());
+    }
+    let mut session = match builder.build() {
         Ok(s) => s,
         Err(e) => {
             eprintln!("ay sh: cannot start the engine: {e:?}");
