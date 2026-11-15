@@ -1,4 +1,4 @@
-// Digest du journal d'apprentissage + inventaire mémoire. --done : vide le journal traité. --count : nb d'entrées.
+// Digest of the learning journal + memory inventory. --done: empties the processed journal. --count: number of entries.
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 const H = process.env.USERPROFILE ?? process.env.HOME!;
 const J = `${H}/.claude/learning/journal.jsonl`;
@@ -20,7 +20,7 @@ if (process.argv.includes("--count")) {
 }
 if (process.argv.includes("--done")) {
   writeFileSync(J, "");
-  console.log(`journal vidé (${recs.length})`);
+  console.log(`journal emptied (${recs.length})`);
   process.exit(0);
 }
 const by = new Map<string, any[]>();
@@ -36,7 +36,7 @@ const top = (xs: string[], n = 10) =>
     .sort((a, b) => b[1] - a[1])
     .slice(0, n);
 for (const [cwd, rs] of by) {
-  console.log(`## ${cwd} (${rs.length} entrées)`);
+  console.log(`## ${cwd} (${rs.length} entries)`);
   for (const k of ["fixes", "errors", "recovered"]) {
     const t = top(
       rs.flatMap((r) => r[k] ?? []).map((s: string) => s.slice(0, 140)),
@@ -45,7 +45,7 @@ for (const [cwd, rs] of by) {
       console.log(`${k}:\n` + t.map(([s, n]) => `  ${n}x ${s}`).join("\n"));
   }
 }
-console.log("## mémoires");
+console.log("## memories");
 const P = `${H}/.claude/projects`;
 for (const p of readdirSync(P)) {
   const m = `${P}/${p}/memory`;
