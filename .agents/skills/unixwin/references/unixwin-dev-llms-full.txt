@@ -1,0 +1,240 @@
+# UNIXWIN
+
+> AI-native bash family — real bash syntax, real Unix commands, native Windows/Linux/macOS. No WSL, no MSYS.
+
+This is the full-text companion of https://unixwin.dev/llms.txt (same data sources as the website; versions refresh from GitHub Releases at build time, last fetch 2026-11-03).
+
+Updates: fast-moving project — performance & compatibility improve daily. For the latest, see the Changelog (https://unixwin.dev/changelog/) and GitHub Releases (https://github.com/unixwin/niubash/releases).
+
+## Quick Start
+
+```
+winget install --id Unixwin.Niubash --source winget
+# or: irm https://unixwin.dev/install.ps1 | iex
+# verify:
+niu --version
+echo "SHELL=$SHELL"; uname -s
+```
+
+## Family facts (measured)
+
+- GNU Bash upstream test suites: 83/83 passing, 82 套逐字节一致
+- Unix commands bundled: 176+ (1,924 options)
+- git startup (niu-git, Windows, same-machine): ~14 ms vs Git Bash 45–103 ms
+- One-shot execution `niu -c true`: 19.8 ms (was 105.6 ms) — measured on Windows
+- One-shot execution `niu -c 'true'` (Linux caliber, re-measured 2026-10-28): 4.14 ms (bare run p50 3.71 ms; GNU bash 5.3.20 2.67 / 2.60 ms — Linux same-machine, release builds)
+- Installed family size: ≈16 MB, zero DLL dependencies
+- Native platform builds: 5 (released: Windows x64/arm64, Linux x86_64/aarch64 glibc, macOS aarch64/x86_64, Android .zip; musl is built + smoke-tested but not released, OpenHarmony is a CI compile check only)
+- Unit tests: rubash lib 1031 通过 / 0 失败（1.5.0 冻结树，2026-11-03）· niubash 1026 通过 / 0 失败（1.4.x 口径，2026-10-19）
+- AI agents wired: 24 (15 work out of the box)
+
+## Products
+
+### niubash
+
+AI-native real bash: real syntax, real Unix commands, native on Windows/Linux/macOS.
+- Repo: https://github.com/unixwin/niubash
+- Docs: https://unixwin.dev/en/products/niubash/
+- Latest release: v1.5.0 (fetched 2026-11-03)
+- Command: `niu`
+- Install (Windows, winget): `winget install --id Unixwin.Niubash --source winget`
+- Install (Windows, script): `irm https://unixwin.dev/install.ps1 | iex`
+- Compatibility: GNU Bash upstream test suites 83/83 passing, 82 套逐字节一致.
+- Agent flags: `niu --encoded-command <base64>` (quote-free channel), `niu --cwd-state <file>` (cwd memory across one-shot calls).
+
+### WinuxCmd
+
+Native-Windows Unix command set, single ~3 MB executable.
+- Repo: https://github.com/unixwin/WinuxCmd
+- Docs: https://unixwin.dev/en/products/winuxcmd/
+- Latest release: — (fetched 2026-11-03)
+- Command: `winuxcmd`
+
+### rubash
+
+Embeddable GNU Bash 5.3-compatible engine.
+- Repo: https://github.com/unixwin/rubash
+- Docs: https://unixwin.dev/en/products/rubash/
+- Latest release: v1.5.0 (fetched 2026-11-03)
+- Command: `rubash`
+
+### niu-git
+
+Native Windows Git without MSYS; git starts in ~14 ms (Windows, same-machine measurement).
+- Repo: https://github.com/unixwin/niu-git
+- Docs: https://unixwin.dev/en/products/niu-git/
+- Latest release: v2.56.0.3 (fetched 2026-11-03)
+- Command: `git`
+
+### wpm
+
+WinuxCmd's built-in package manager with a 282-package official index.
+- Repo: https://github.com/unixwin/wpm-source
+- Docs: https://unixwin.dev/en/products/wpm/
+- Latest release: — (fetched 2026-11-03)
+- Command: `wpm`
+- Bundled with WinuxCmd: `wpm` prints help, `wpm list` browses the 282-package official index, `wpm install <pkg>` installs.
+
+### oh-my-niu
+
+Oh-My-style framework: 40+ themes and plugins.
+- Repo: https://github.com/unixwin/oh-my-niu
+- Docs: https://unixwin.dev/en/products/oh-my-niu/
+- Latest release: v2.1.0 (fetched 2026-11-03)
+- Command: `omn`
+
+## For AI agents
+
+- [AI portal](https://unixwin.dev/ai/): paste-ready install prompt, official skill, wpm quick start, machine-readable entries.
+- [agents.md](https://unixwin.dev/agents.md): markdown edition of the AI portal.
+- [Agent directory](https://unixwin.dev/agents/): per-agent switch scripts with verify & rollback (24 agents).
+- [Universal wiring guide](https://unixwin.dev/agents/universal/): the four shell-detection mechanisms and known traps.
+
+### Per-agent notes
+
+- [opencode](https://unixwin.dev/en/agents/opencode/): Zero-config support: launch it from a niu session and it just works; a persisted SHELL covers every launch method. (ready out of the box; mechanism: $SHELL 环境变量)
+- [Claude Code](https://unixwin.dev/en/agents/claude-code/): Works with no config by default: the installer drops a bash launcher right on the probe path; an env var can pin it explicitly. (ready out of the box; mechanism: Git 探针 / CLAUDE_CODE_GIT_BASH_PATH)
+- [Codex（unixwin fork）](https://unixwin.dev/en/agents/codex/): The unixwin-maintained Codex fork ships ShellType::Niu built in — selected automatically once installed. (ready out of the box; mechanism: 原生 Niu 探测（unixwin fork）)
+- [VS Code（Copilot agent）](https://unixwin.dev/en/agents/vs-code/): The family anchor: the GitHub Copilot agent runs commands through the editor's automation terminal and hits the family-shared probe by default — no configuration needed. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Windsurf](https://unixwin.dev/en/agents/windsurf/): A Code OSS lineage fork: the automation terminal inherits the family-shared probe — it hits the launcher once niubash is installed, no configuration needed. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Trae](https://unixwin.dev/en/agents/trae/): A VS Code lineage fork: the automation terminal inherits the family-shared probe — it hits the launcher once niubash is installed, no configuration needed. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Kiro](https://unixwin.dev/en/agents/kiro/): AWS's agentic IDE (Code OSS lineage): wired per the family-shared probe on an inferred basis — agents.md marks it inferred, not machine-tested; it should hit the launcher once niubash is installed. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [ZCode](https://unixwin.dev/en/agents/zcode/): The family's only machine-verified member: the probe sequence in agents.md was read out of a ZCode app.asar (verified locally) — hits by default, no configuration. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Cline](https://unixwin.dev/en/agents/cline/): An editor extension, not a standalone IDE: it never picks a shell itself — commands run through the host editor's terminal or automation profile and inherit the family probe. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Roo Code](https://unixwin.dev/en/agents/roo-code/): A Cline-lineage editor extension: it never picks a shell itself — commands run through the host editor's terminal or automation profile and inherit the family probe. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Kilo Code](https://unixwin.dev/en/agents/kilo-code/): An editor extension (Cline/Roo lineage): it never picks a shell itself — commands run through the host editor's terminal or automation profile and inherit the family probe. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Continue](https://unixwin.dev/en/agents/continue/): An editor extension: it never picks a shell itself — commands run through the host editor's terminal or automation profile and inherit the family probe. (ready out of the box; mechanism: VS Code 家族探针 / automationProfile)
+- [Zed](https://unixwin.dev/en/agents/zed/): A single setting: point terminal.shell.program at niu.exe, and the agent shares that terminal. (ready out of the box; mechanism: 显式配置 terminal.shell.program)
+- [Goose](https://unixwin.dev/en/agents/goose/): One env var: on Windows the shell tool spawns GOOSE_SHELL and passes -c to any name that is not cmd/PowerShell — point it at niu.exe and done. (ready out of the box; mechanism: GOOSE_SHELL 环境变量)
+- [DSH（DeepSeek Harness）](https://unixwin.dev/en/agents/dsh/): One command installs the plugin bundle: enables niu-sandbox and tool-bash, and disables the PowerShell row. (ready out of the box; mechanism: 插件 profile)
+- [Cursor](https://unixwin.dev/en/agents/cursor/): The IDE side has a workaround (Legacy Terminal Tool); the Agent CLI currently hard-codes PowerShell and cannot be configured. (partial; mechanism: 探测链当前对 bash 不友好)
+- [Devin](https://unixwin.dev/en/agents/devin/): Investigation: the Devin CLI has no native niubash integration; it launches from a niu session, but devin setup and other Win32 console TUIs white-screen today — niubash#455 is open. (partial; mechanism: 无原生集成（TUI 受 niubash#455 阻塞）)
+- [Qwen Code](https://unixwin.dev/en/agents/qwen-code/): After forking gemini-cli it grew its own MSYSTEM/TERM sniffing and Git Bash lookup — set MSYSTEM=MINGW64 (experimental) to hit the installer-placed bash launcher. (partial; mechanism: MSYSTEM/TERM 嗅探 → Git Bash 查找)
+- [Gemini CLI](https://unixwin.dev/en/agents/gemini-cli/): The shipped code returns PowerShell on Windows outright — no bash branch; two upstream proposals track this. (blocked; mechanism: 无条件 PowerShell)
+- [Aider](https://unixwin.dev/en/agents/aider/): /run always uses PowerShell or cmd; launching from inside niu does not change its choice. (blocked; mechanism: 无 shell 选项)
+- [Amazon Q Developer CLI](https://unixwin.dev/en/agents/amazon-q/): Not verified yet: no local test or code read. Wire it via the universal four-mechanism guide and report back. (unverified; mechanism: 未核验)
+- [Amp](https://unixwin.dev/en/agents/amp/): Not verified yet: no local test or code read (a Sourcegraph product, mostly closed source). Wire it via the universal guide. (unverified; mechanism: 未核验)
+- [OpenHands](https://unixwin.dev/en/agents/openhands/): Not verified yet: command execution usually happens inside a container/sandbox — where the host shell plugs in is still unverified. (unverified; mechanism: 未核验)
+- [Junie（JetBrains）](https://unixwin.dev/en/agents/junie/): Not verified yet: runs inside JetBrains IDEs; whether the host terminal's shell setting reaches its command execution is unverified. (unverified; mechanism: 未核验)
+
+## FAQ
+
+### How is niubash different from Git Bash / WSL?
+
+niubash is a native Windows program written in Rust: no bundled MSYS emulation layer, no WSL VM. Git Bash heuristically rewrites path-looking arguments before spawn (the reason the MSYS_NO_PATHCONV incantation exists); niu passes argv through byte-for-byte. The installed family is ≈16 MB versus Git Bash's ~440 MB.
+
+### Do I need WSL or MSYS to use niubash?
+
+No. Bash semantics run directly on the Rust engine (rubash), Unix commands come from WinuxCmd (176+ commands), and Git from niu-git — all native binaries with zero DLL dependencies and zero telemetry in the shell.
+
+### What does "83/83 GNU suites" mean?
+
+All 83 upstream GNU Bash test suites pass on real hardware Windows, with 82 suites byte-identical to GNU Bash 5.3 output; the single residual line (nameref) is proven byte-by-byte to be GNU's own coproc reap race. Compatibility is measured, not claimed: a nightly patrol additionally sweeps 2,686 real-world ecosystem repos / 9,701 assets.
+
+### How do I switch an agent's shell (Claude Code / Cursor etc.) to niubash, and how do I roll back?
+
+Open the agent directory (/agents/): each of 24 mainstream agents has its own page with a copy-paste switch script, a real verify command (echo "SHELL=$SHELL"; uname -s) and rollback steps. AI users can also paste the install prompt from /ai/ and let the agent install and wire itself.
+
+### Is it free? Which platforms are supported?
+
+Everything is open source and free. niubash itself officially releases on four platforms: Windows x64 / arm64 (winget: Unixwin.Niubash), Linux x86_64 / aarch64, macOS x86_64 / aarch64, and Android (a .zip release artifact since v1.4.3). musl is build + smoke only and OpenHarmony is a CI compile check only — neither counts as an official release.
+
+### How is the performance?
+
+One-shot execution (niu -c true) is 19.8 ms after dedicated optimization (measured on Windows); re-measured under the Linux caliber (2026-10-28, release builds, 50-sample interleaved, Linux same-machine): niu -c 'true' 4.14 ms (bare run p50 3.71 ms), GNU bash 5.3.20 at 2.67 / 2.60 ms; niu-git starts in ~14 ms (measured on Windows, same machine; Git Bash on the same machine: 45–103 ms); command-substitution and subshell workloads run 13–62x faster than GNU bash. Every figure is labeled by platform and ships with its measurement method and reproducible artifacts — see Benchmarks (/benchmarks/).
+
+### What is the relation between niu and niubash?
+
+niu is the executable name of niubash (after winget install the command is niu). The family splits as: rubash (the embeddable Bash 5.3-compatible engine), WinuxCmd (Unix commands), niu-git (Git), wpm (package manager) and oh-my-niu (theme framework).
+
+### What is the relation between rubash and niubash?
+
+rubash is the language engine of niubash — it is what executes the bash syntax. It also stands alone: published on crates.io (1.5.0, cargo add rubash) as an embeddable GNU Bash 5.3-compatible engine.
+
+### How do I embed rubash in my own program?
+
+cargo add rubash (1.5.0) and use it as a library. The public Session contract (rubash::api — Session, completion and capability traits) shipped in rubash 1.5.0, so hosts consume the engine through the public surface; the four-tier workspace split and the move of 846 env-IPC sites to typed bridges remain follow-up work (design doc: rubash PR #814), and niubash is migrating its host wiring to the new API in the 1.5.1 cycle (niubash#863).
+
+### How many builtins does rubash cover?
+
+All 61 builtins of GNU Bash 5.3 plus the env extension (62); 12 high-frequency file commands execute inline with a pipeline inline arm — an echo | cat pipeline creates zero processes end to end.
+
+### How does WinuxCmd differ from the Unix commands bundled with Git Bash?
+
+WinuxCmd is a single native Win32 executable carrying 176 commands / 1,924 options (3.79 MB, zero DLLs). Git Bash provides similar commands through a ~440 MB MSYS emulation layer that rewrites path-looking arguments before spawn — WinuxCmd’s argv arrives byte-for-byte.
+
+### How fast is WinuxCmd?
+
+About 19 ms cold start (measured on Windows); with PGO builds sort is 18% faster and nl 17% (measured, per the README).
+
+### What does "GNU differential" mean?
+
+Every PR automatically runs a 178-case differential against GNU coreutils 9.7 (131 corpus cases over 67 commands + 47 regressions): 93% pass, with all 13 tracked platform differences named in the ledger — command behavior is measured, not claimed.
+
+### How do wpm and WinuxCmd relate?
+
+wpm is compiled straight into winuxcmd.exe (run as winuxcmd wpm) — zero runtime dependencies, no separate install step.
+
+### How is niu-git different from Git for Windows?
+
+The same git-for-windows C sources built natively with MSVC: no MSYS layer, no OpenSSL (TLS via schannel + the Windows cert store), no bundled shell/perl — launcher quoting follows the Win32 documentation with zero heuristics.
+
+### Why is niu-git fast?
+
+git starts in about 14 ms (Windows, same-machine measurement; Git Bash measures 45–103 ms) — no DLL loading or MSYS init chain, the process starts directly.
+
+### How do I install niu-git?
+
+It is preinstalled with niubash (x64 / arm64): git --version works out of the box, and POSIX-shaped /d/... arguments are accepted.
+
+### How do I install wpm?
+
+Nothing to install — it is compiled into winuxcmd.exe, so having WinuxCmd/niubash means having wpm: wpm prints help, wpm list browses the index, wpm install <pkg> installs.
+
+### How many packages does wpm have? Is it safe?
+
+The official index carries 282 packages, each with a sha256/size/urls triple; the cache key <pkg>-<version>-<sha8> double-checks, and the index tooling refuses to write entries for archives missing files.
+
+### Is wpm fast to download from China?
+
+Four mirror sources with gh.caomengxuan666.com accelerating China; sha256 remains the source of truth — mirrors accelerate, never substitute.
+
+### Does wpm have a GUI?
+
+A wpm-gui experiment was evaluated and archived due to CLI contract drift (wpm-gui#1) — the focus is a stable CLI, with --json output for scripts and agents.
+
+### How do I enable oh-my-niu?
+
+oh-my-niu is an independent repo and does not ship with niubash: clone it to ~/.niubash/oh-my-niu first (or unpack a release zip there). Then point NIUBASH at that directory in ~/.niubashrc and enable it with three lines: NIU_PLUGINS=(prompt-core git …) picks plugins, NIU_THEME=… picks the theme, source "$NIUBASH/oh-my-niu.niu" loads the framework. The entry is re-entrant (sourcing twice is a no-op, --reload forces a full reload).
+
+### How do I change themes in oh-my-niu?
+
+Edit NIU_THEME and reopen the terminal; the current session can hot-reload with source "$NIUBASH/oh-my-niu.niu" --reload. Each of the 27 themes is an ordinary plugin directory — there is no special "theme system".
+
+### Can I run oh-my-bash themes and plugins?
+
+Yes — niu plugin add oh-my-bash (the catalog points at the official upstream repo) runs upstream assets unmodified; oh-my-niu and external sources do not interfere and can coexist.
+
+### How do I update oh-my-niu?
+
+Updates are manual: git pull in the clone, or download a newer release zip from the oh-my-niu repo's GitHub Releases and unpack it over the old tree. It does not ship with niubash and does not advance via niu self-update. It is not a niu plugin source — niu plugin update oh-my-niu fails with "unknown source" (measured on niubash 1.4.4); the spec+lockfile mechanism governs external third-party sources.
+
+## Docs
+
+- [Docs home](https://unixwin.dev/docs/): niubash vs bash overview.
+- [Paths & MSYS](https://unixwin.dev/docs/paths-and-msys/): four path dialects, argv verbatim contract.
+- [Execution model](https://unixwin.dev/docs/execution-model/): zero-fork subshells, inline coreutils.
+- [Compatibility](https://unixwin.dev/docs/compatibility/): what 83/83 GNU suites means, true-baseline method.
+- [Performance model](https://unixwin.dev/docs/performance-model/): where the speed comes from.
+- [CLI reference](https://unixwin.dev/docs/cli/): full `niu` CLI surface + GNU bash compatibility flags.
+- [Full manual](https://unixwin.github.io/niubash/): official niubash documentation site.
+
+## Benchmarks & changelog
+
+- [Benchmarks](https://unixwin.dev/benchmarks/): measured numbers vs Git Bash / WSL / GNU bash, with provenance anchors.
+- [Changelog](https://unixwin.dev/changelog/): aggregated release timeline across the family (latest versions per product; full history at https://unixwin.dev/changelog/all/).
+
+## Optional
+
+- [wpm index](https://github.com/unixwin/wpm-source): the 282-package official index consumed by `wpm`.
+- [Privacy](https://unixwin.dev/privacy/): zero-collection policy — the shell phones no server home.

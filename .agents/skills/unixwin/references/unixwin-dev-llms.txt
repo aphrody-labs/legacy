@@ -1,0 +1,40 @@
+# UNIXWIN
+
+> AI-native bash family — real bash syntax, real Unix commands, native Windows/Linux/macOS.
+
+Updates: fast-moving project — performance & compatibility improve daily; for the latest, see the Changelog (https://unixwin.dev/changelog/) and GitHub Releases (https://github.com/unixwin/niubash/releases).
+
+## Quick Start
+
+```
+winget install --id Unixwin.Niubash --source winget
+# or: irm https://unixwin.dev/install.ps1 | iex
+```
+
+## Products
+
+- [niubash](https://unixwin.dev/#niubash): AI-native real bash: real syntax, real Unix commands, native on Windows/Linux/macOS.
+- [WinuxCmd](https://unixwin.dev/#winuxcmd): Native-Windows Unix command set, single ~3 MB executable.
+- [rubash](https://unixwin.dev/#rubash): Embeddable GNU Bash 5.3-compatible engine.
+- [niu-git](https://unixwin.dev/#niu-git): Native Windows Git without MSYS; git starts in ~14 ms (Windows, same-machine measurement).
+- [wpm](https://unixwin.dev/#wpm): WinuxCmd's built-in package manager with a 282-package official index.
+- [oh-my-niu](https://unixwin.dev/#oh-my-niu): Oh-My-style framework: 40+ themes and plugins.
+
+## For AI Agents
+
+- [AI portal](https://unixwin.dev/ai/): paste-ready install prompt, official skill, machine entry points.
+- [agents.md](https://unixwin.dev/agents.md): markdown version of the AI portal.
+- [Agent directory](https://unixwin.dev/agents/): per-agent switch scripts with verify & rollback.
+- [Universal agent wiring guide](https://unixwin.dev/agents/universal/): the four shell-detection mechanisms.
+
+## Docs
+
+- [niubash vs bash: differences](https://unixwin.dev/docs/): compatibility overview, paths & MSYS, zero-fork execution model, performance.
+- [niubash documentation](https://unixwin.github.io/niubash/): manuals, guides and CLI reference.
+
+## Optional
+
+- [Benchmarks](https://unixwin.dev/benchmarks/): measured numbers vs Git Bash / WSL / GNU bash.
+- [wpm](https://github.com/unixwin/wpm-source): the package manager built into WinuxCmd — `wpm` prints help, `wpm list` browses packages, `wpm install ripgrep fd jq gawk` installs them (niugit is preinstalled on Windows).
+- [Changelog](https://unixwin.dev/changelog/): aggregated release timeline across the family.
+- [llms-full.txt](https://unixwin.dev/llms-full.txt): full-text edition of this guide — products, per-agent notes, FAQ, docs map in one file.
