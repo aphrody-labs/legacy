@@ -31,6 +31,7 @@ src is the public monorepo of Aphrody: a game engine and creative suite built in
 - Showcase sites speak to users, not developers: no jargon ("sovereign", "C ABI", "full Rust WebGPU"), no generic SVG icons. Pages have real background imagery, motion and real content: screenshots and renders of what exists, with links.
 - Docs are short and formatted, with a generated index, screenshots and links, and follow the GitHub templates (`.github` issue and PR templates, README layout). No long hand-written markdown.
 - Scripts and infra are short and declarative, built on upstream tools; no long hand-written scripts.
+- Proof: an HTTP status from curl, xh or a web fetch never shows that a test passed, that prod is alive or that a UI is good. Proof is a screenshot of the rendered page, a real API call whose response content is checked, or a real UI test (agent-browser, Playwright or CDP interaction), and it is archived with the report.
 
 ## 4. Limits that stay
 
