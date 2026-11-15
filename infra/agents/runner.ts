@@ -165,6 +165,8 @@ const CRED_NAMES = [
   "CLAUDE_CODE_OAUTH_TOKEN",
   "GH_TOKEN",
   "CF_QUEUES_TOKEN",
+  // Context7 key of the relay hub (infra/agents/toolchain.toml [[hub.mcp]] context7): lifts the anonymous monthly quota.
+  "CTX7_API_KEY",
   "APHRODY_APP_KEY",
   "APHRODY_APP_CLIENT_ID",
 ];

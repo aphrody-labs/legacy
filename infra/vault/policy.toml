@@ -13,6 +13,8 @@ profile = ["pc"]
 VAULT_PROOF_TOKEN = ["pc", "prd", "fr2"]
 # Same value the agents login flow (packages/ai-os/src/nhitl/login.ts) installs on the runners.
 CLAUDE_CODE_OAUTH_TOKEN = ["pc", "prd", "fr2"]
+# Context7 API key (relay hub `context7` server, headers CONTEXT7_API_KEY in infra/agents/toolchain.toml): every host's hub.
+CTX7_API_KEY = ["pc", "prd", "fr2", "fr1"]
 
 # Never synced whatever the scope says (enforced in packages/vault/src/hosts.ts).
 [never]
