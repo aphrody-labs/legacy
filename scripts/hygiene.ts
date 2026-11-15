@@ -121,20 +121,60 @@ export function scan(root: string, opts: { rules?: string[]; paths?: string[] } 
 const TOP = "(?:docs|scripts|infra|packages|apps|third_party|src|tools|plugins|conformance|assets|\\.github|\\.agents)";
 const REF = new RegExp("(?<![\\w./-])(" + TOP + "/[A-Za-z0-9_@.+\\-/]+)", "g");
 const LINK = /\]\((?!https?:|#|mailto:)([^)\s#]+)/g;
+// MCP and JSON-RPC method names that look like paths.
+// Optional inputs that are absent by design: owner-written, read when present (the readers handle the absence).
+// Trees of other projects that docs cite by path: Chromium (tools/clang, tools/rust, tools/build), Bun (scripts/build), Linux (scripts/kconfig, tools/testing).
+const UPSTREAM_PREFIX = /^(tools\/(clang|rust|build|python|run_tests\.py|bazel|testing)\b|scripts\/(build(\.ts|\/)|get_maintainer|kconfig\/|run-clang-format)|docs\/(project|runtime)\/)/;
+// Build outputs and generated trees: not tracked, produced by a script.
+const BUILD_OUTPUT = /(^|\/)(gen|gen-cache|generated|zig-out|dist|target|node_modules|out)(\/|$)|(^|\/)\.next[^/]*(\/|$)/;
+// A sentence that says the target is gone, ignored or upstream's cites a path that is correct as written (rule 4 and history prose).
+const GONE_OR_UPSTREAM = /\b(removed|deleted|purged|absent|dropped|legacy|orphan\w*|gitignored|ignored|replaces|replaced|former|formerly|no longer|does not exist|not (?:in|present)|upstream|supprim\w+|retir\w+|remplace\w*|amont|ignoré\w*|n'existe|ex-\w+)\b|\bno \`/i;
+const NOT_PATHS = /^docs\/reviews\/|^(tools\/(list|call)|\.agents\/owner-rules\.json)$/;
+// Skills name the user's project tree (src/components, src/pages) and licence folders copy upstream texts: neither points into this repo.
+// Skills are adopted from upstream (their paths name the user's project), licence folders copy upstream texts, and test files
+// carry fixture paths (packages/a/x.ts): none of these points into this repo.
+const UPSTREAM_TEXT = /^docs\/compiler\/|^apps\/nt\/(docs\/(bun|interop)|sdk\/tools)\/|(^|\/)licenses\/|^\.agents\/skills\/|\.test\.[jt]sx?$|(^|\/)(tests?|__tests__|fixtures?)\//;
+// A reference is live when it resolves from the repo root or from any directory above the file: sub-projects
+// (apps/auto, packages/*) write paths relative to their own root.
+// third_party/<name> is also live when src.lock.json declares the clone (checkouts are not all present on every machine)
+// or when it is a directory of the Chromium checkout's own third_party (Chromium prose, not this repo).
+let lockText: string | undefined;
+function liveFrom(root: string, file: string, p: string): boolean {
+  if (existsSync(join(root, p))) return true;
+  if (p.startsWith("third_party/")) {
+    lockText ??= existsSync(join(root, "src.lock.json")) ? readFileSync(join(root, "src.lock.json"), "utf8") : "";
+    if (lockText.includes('"' + p + '"') || existsSync(join(root, "third_party/chromium/src", p))) return true;
+  }
+  // src/<dir>/... with no such src/<dir> anywhere above the file names a tree of an upstream project (rustc, Windows Terminal,
+  // node-api-dotnet...), not a moved path of this repo: rule 4, left as is.
+  if (/^src\/[^/]+\//.test(p) && !existsSync(join(root, p.split("/").slice(0, 2).join("/")))) return true;
+  const parts = file.split("/").slice(0, -1);
+  for (let n = parts.length; n > 0; n--) if (existsSync(join(root, ...parts.slice(0, n), p))) return true;
+  return false;
+}
 export function deadRefs(root: string, paths?: string[]): Hit[] {
   const hits: Hit[] = [];
   for (const f of listFiles(root, paths)) {
-    if (!/\.(md|mdx|ts|just|ya?ml|toml|sh|json)$|justfile$/.test(f) || allowed("dead-ref", f)) continue;
+    if (!/\.(md|mdx|ts|just|ya?ml|toml|sh|json)$|justfile$/.test(f) || allowed("dead-ref", f) || UPSTREAM_TEXT.test(f) || UPSTREAM_PORT.test(f)) continue;
     let text: string;
     try { if (statSync(join(root, f)).size > 512_000) continue; text = readFileSync(join(root, f), "utf8"); } catch { continue; }
     const seen = new Set<string>();
     const add = (p: string, shown: string) => { if (!seen.has(p)) { seen.add(p); hits.push({ rule: "dead-ref", file: f, line: text.slice(0, text.indexOf(shown) < 0 ? 0 : text.indexOf(shown)).split("\n").length, text: shown }); } };
     for (const m of text.matchAll(REF)) {
+      if (/[\w.-]+\/[\w.-]+:$/.test(text.slice(Math.max(0, m.index! - 80), m.index!))) continue; // explicit upstream path: oven-sh/bun:src/...
       const p = m[1]!.replace(/[.,:;)`'"]+$/, "").replace(/\/+$/, "");
       if (/[*{}<>$]/.test(p) || p.includes("...") || (p.startsWith("third_party/") && p.split("/").length > 2)) continue;
-      if (!existsSync(join(root, p))) add(p, p);
+      const ls0 = text.lastIndexOf("\n", m.index!) + 1;
+      const le0 = text.indexOf("\n", m.index!);
+      if (GONE_OR_UPSTREAM.test(text.slice(ls0, le0 < 0 ? undefined : le0))) continue;
+      if (NOT_PATHS.test(p) || /[-_]$/.test(p) || UPSTREAM_PREFIX.test(p) || BUILD_OUTPUT.test(p)) continue;
+      // a script run from its own package or container directory: `bun src/cli.ts`, `bun run --cwd pkg src/cli.ts`, `bun build ... src/x.ts`
+      const lineStart = text.lastIndexOf("\n", m.index!) + 1;
+      if (/\b(bun|bunx|node|bash|sh)\b[^\n]*$/.test(text.slice(lineStart, m.index!)) && p.startsWith("src/")) continue; // a name prefix of a glob (third_party/tree-sitter-<lang>)
+      if (!liveFrom(root, f, p)) add(p, p);
     }
     if (/\.mdx?$/.test(f)) for (const m of text.matchAll(LINK)) {
+      if (m[1]!.startsWith("/") || /(^|\/)crates\/?$/.test(m[1]!)) continue; // crates/ is being renamed repo-wide by another session // site route of a documentation site, not a file
       const p = join(root, f, "..", decodeURI(m[1]!));
       if (!existsSync(p)) add("link:" + m[1], m[1]!);
     }

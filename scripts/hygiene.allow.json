@@ -1,5 +1,9 @@
 {
-  "sovereign": ["docs/i18n/*/AGENTS.md", ".agents/skills/hygiene/SKILL.md", "scripts/hygiene.ts"],
+  "sovereign": [
+    "docs/i18n/*/AGENTS.md",
+    ".agents/skills/hygiene/SKILL.md",
+    "scripts/hygiene.ts"
+  ],
   "absolute-path": [
     "docs/native/shell/**",
     "docs/native/compat/**",
@@ -9,7 +13,9 @@
     ".claude/agents/coherence-fixer.md",
     "packages/ai-os/test/relay/sessions.test.ts"
   ],
-  "stub": ["scripts/hygiene.ts"],
+  "stub": [
+    "scripts/hygiene.ts"
+  ],
   "ai-filler": [
     ".agents/skills/gemini-omni-flash-api/SKILL.md",
     ".agents/skills/stitch-design-md/examples/DESIGN.md",
@@ -17,5 +23,21 @@
     "docs/research/RUST_6_ORGS_FUSION_INVENTORY.md",
     "packages/native/native/CHANGELOG.md",
     "src/runtime/cli/add_completions.txt"
+  ],
+  "hardcoded-list": [
+    "scripts/skills-adopt.ts",
+    "tools/gnu-index/curated.ts",
+    "packages/chromium-bun/src/engines/registry.ts",
+    "packages/machine/src/toolchains-lock.ts",
+    "packages/machine/src/forks.ts",
+    "packages/bunify/src/rust.ts",
+    "scripts/gnu-packages.ts"
+  ],
+  "home-scraper": [
+    "scripts/gnu-proof.sh"
+  ],
+  "dead-ref": [
+    ".claude/agents/coherence-fixer.md",
+    ".claude/agent-memory/**"
   ]
 }
