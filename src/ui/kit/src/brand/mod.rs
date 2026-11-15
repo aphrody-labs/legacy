@@ -27,6 +27,7 @@
 include!(concat!(env!("SRC_ROOT"), "/packages/design/tokens/tokens.rs"));
 
 pub mod check;
+pub mod gpu;
 mod model;
 mod pet;
 mod web;

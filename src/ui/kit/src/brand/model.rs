@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! `gen/model/<id>.glb`: the brand tile of `aphrody-brand-gpu` as a self-contained glTF 2.0 binary.
+//! `gen/model/<id>.glb`: the brand tile of `brand::gpu` as a self-contained glTF 2.0 binary.
 //!
 //! - Geometry: EXT_meshopt_compression (vertex codec v0, index codec v1, the versions the glTF
 //!   extension specifies), with the uncompressed size declared by a fallback buffer.
@@ -9,7 +9,7 @@
 //! Light it with `gen/env/*.ktx2` (CC0 studio HDRI).
 
 use super::{Ctx, Error, Manifest, Result, full_bleed};
-use aphrody_brand_gpu::{INDEX_COUNT, STRIDE, VERTEX_COUNT, bounds, tile};
+use super::gpu::{INDEX_COUNT, STRIDE, VERTEX_COUNT, bounds, tile};
 use std::{ffi::OsStr, fs, path::Path, process::Command};
 
 fn pad4(v: &mut Vec<u8>, byte: u8) {

@@ -71,7 +71,6 @@ brand = [
   "dep:toml",
   "dep:sha2",
   "dep:meshopt",
-  "dep:aphrody-brand-gpu",
 ]
 # Allocating helpers (CSS export, presets) of the color module.
 std = []
@@ -144,8 +143,7 @@ ratatui-crossterm = { workspace = true, optional = true }
 crossterm = { workspace = true, optional = true }
 anstyle = { workspace = true, optional = true }
 ropey = { workspace = true, optional = true }
-# brand::model: tile geometry shared with the wasm renderer, meshoptimizer codecs (glTF EXT_meshopt_compression).
-aphrody-brand-gpu = { path = "../brand-gpu", optional = true }
+# brand::model: meshoptimizer codecs (glTF EXT_meshopt_compression).
 meshopt = { version = "0.7.0", optional = true }
 
 [dev-dependencies]

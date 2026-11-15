@@ -198,7 +198,6 @@ members = [
   "src/tv/core",
   "src/tv/ffmpeg",
   "src/tv/i18n",
-  "src/ui/brand-gpu",
   "src/ui/kit",
   "src/up",
   "src/url",

@@ -149,7 +149,7 @@ Le C reste propriétaire des protocoles filaires et de la portabilité (AGENTS.m
 | `depot-*` | `src/depot/<suffixe>` |
 | `lore`, `lore-*` | `src/lore`, `src/lore/<suffixe>` |
 | `tv-*` | `src/tv/<suffixe>` |
-| `aphrody-{ui,i18n,env,vault,brand-gpu}` | `src/{ui/kit,i18n,env,vault,ui/brand-gpu}` |
+| `aphrody-{ui,i18n,env,vault}` | `src/{ui/kit,i18n,env,vault}` |
 | `agent-context`, `agent-py` | `src/agent/{context,py}` |
 | `factory`, `steam-depot`, `craft-formats`, `adblock-capi`, `rust-stack` | `src/chromium/factory`, `src/steam`, `src/craft`, `src/corelib/adblock-capi`, `src/rust-stack` |
 | `bench` | `bench/` |

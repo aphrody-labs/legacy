@@ -9,7 +9,7 @@
 //! 192 px cells, one row per state) described by `pet/sprites.json`.
 
 use super::{Ctx, Manifest, Result, fill, hex, read, strip_comments, write};
-use aphrody_brand_gpu::sin;
+use super::gpu::sin;
 use resvg::tiny_skia::{Pixmap, PixmapPaint, Transform};
 use std::{f32::consts::TAU, fmt::Write as _, path::Path, process::Command};
 

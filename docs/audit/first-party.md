@@ -37,7 +37,6 @@ Generated from `docs/audit/first-party.jsonl` (one object per unit: provenance, 
 | `src/rt` | first-party (22fe3e13); thin layer over astral-sh/uv | ay rt: Python engines and versions on uv (CPython, free-threaded, PyPy, GraalPy), Node/Deno/Bun versions, PyTorch backend | merge into aphrody-up as a module (one crate, ay rt stays a route) | S | low |
 | `src/tv/cli` | first-party (22fe3e13); description in French | Command line of the tv media domain | merge as ay tv route (keep crate as lib) | S | low |
 | `src/tv/i18n` | first-party (22fe3e13); fluent-templates | Fluent localisation of tv: 16 languages, CLDR plurals, writing direction | merge into src/i18n (aphrody-i18n catalogs) to have one i18n system | M | low |
-| `src/ui/brand-gpu` | first-party (22fe3e13); no deps | Geometry of the brand tile (rounded slab, UV-mapped face) and animation matrices shared by glTF mesh and renderers | merge into src/ui/kit/src/brand (only consumer) | S | low |
 | `src/wayland/cosmic` | first-party (22fe3e13); name from pop-os/cosmic-comp (pushed 2026-11-13, no release) but no shared code | COSMIC compatibility layer (theme from omarchy registry, tiler/wire glue) | merge into src/posix/wslg (single consumer) | S | low |
 
 ## move to open (4)

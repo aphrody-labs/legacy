@@ -94,8 +94,7 @@ pub struct Environment {
 
 #[derive(Debug, Deserialize)]
 pub struct Gpu {
-    #[serde(rename = "crate")]
-    pub krate: String,
+    /// bun entry that draws the wasm mesh, relative to assets/brand.
     pub loader: String,
 }
 
@@ -609,20 +608,29 @@ const GPU_DEMO: &str = r#"<!doctype html>
 
 fn gpu(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
     let Some(g) = &m.gpu else { return Ok(()) };
-    let target_dir = std::env::var_os("CARGO_TARGET_DIR").map_or_else(|| st.root.join("target"), PathBuf::from);
+    // gpu_wasm.rs has no dependencies and no crate of its own: -Zbuild-std=core needs a manifest, so a throwaway
+    // package (its own workspace, own target dir under tmp) points at the file. No panic locations, sources
+    // remapped: the wasm bytes do not depend on the checkout path.
+    let dir = st.tmp("gpu-wasm");
+    let source = st.root.join("src").join("ui").join("kit").join("src").join("brand").join("gpu_wasm.rs");
+    let manifest_path = dir.join("Cargo.toml");
+    let manifest = format!(
+        "[package]\nname = \"brand-gpu\"\nversion = \"0.0.0\"\nedition = \"2024\"\npublish = false\n\n[lib]\ncrate-type = [\"cdylib\"]\npath = {:?}\n\n[workspace]\n\n[profile.release]\nopt-level = \"z\"\npanic = \"abort\"\nlto = true\ncodegen-units = 1\n",
+        source.display().to_string()
+    );
+    fs::create_dir_all(&dir).map_err(|e| Error::Io(dir.clone(), e))?;
+    fs::write(&manifest_path, manifest).map_err(|e| Error::Io(manifest_path.clone(), e))?;
     let root = st.root.display().to_string();
     let mut c = cmd("cargo", [
-        "build".to_string(), "--quiet".into(), "--locked".into(), "-p".into(), g.krate.clone(), "--lib".into(), "--release".into(),
-        "--target".into(), "wasm32-unknown-unknown".into(),
-        "--config".into(), format!("profile.release.package.{}.opt-level=\"z\"", g.krate),
-        // core from rust-src (-Zbuild-std): the pinned toolchain needs no prebuilt wasm32 std; no panic
-        // locations, sources remapped: the wasm bytes do not depend on the checkout path.
+        "build".to_string(), "--quiet".into(), "--manifest-path".into(), manifest_path.display().to_string(),
+        "--lib".into(), "--release".into(), "--target".into(), "wasm32-unknown-unknown".into(),
         "-Zbuild-std=core".into(),
         "--config".into(), format!("target.wasm32-unknown-unknown.rustflags=[\"--remap-path-prefix={root}=/src\", \"-Zlocation-detail=none\"]"),
     ]);
-    c.current_dir(&st.root).env("CARGO_TARGET_DIR", &target_dir);
+    // cwd = the repo: rustup picks the pinned nightly of rust-toolchain.toml.
+    c.current_dir(&st.root).env("CARGO_TARGET_DIR", dir.join("target"));
     exec(c)?;
-    let built = target_dir.join("wasm32-unknown-unknown").join("release").join(format!("{}.wasm", g.krate.replace('-', "_")));
+    let built = dir.join("target").join("wasm32-unknown-unknown").join("release").join("brand_gpu.wasm");
     let wasm = st.tmp("brand-gpu.wasm");
     exec(cmd("wasm-opt", [OsStr::new("-Oz"), OsStr::new("--strip-debug"), OsStr::new("--strip-producers"), built.as_os_str(), OsStr::new("-o"), wasm.as_os_str()]))?;
     cx.put("gpu/brand-gpu.wasm", bytes(&wasm)?)?;
