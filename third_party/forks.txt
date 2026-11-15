@@ -132,3 +132,4 @@ remorses/gpuix Rust
 zed-industries/awesome-gpui Python
 zed-industries/create-gpui-app Rust
 tauri-apps/tauri Rust
+lightpanda-io/browser zig

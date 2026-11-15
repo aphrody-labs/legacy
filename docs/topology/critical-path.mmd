@@ -1,0 +1,9 @@
+flowchart TD
+  s0["1. Types the command<br/>src/ay"]
+  s1["2. ay dispatches to a Bun facade<br/>packages/chromium-bun, packages/machine"]
+  s2["3. Core indexes and graphs the code<br/>src/core, packages/core"]
+  s3["4. Results cached<br/>ds:sqlite"]
+  s0 --> s1
+  s1 --> s2
+  s2 --> s3
+  %% no telemetry wired: wall-clock not annotated

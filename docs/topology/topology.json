@@ -1,0 +1,9458 @@
+{
+ "system": "src monorepo",
+ "root": {
+  "id": "sys",
+  "name": "src",
+  "kind": "system",
+  "children": [
+   {
+    "id": "dom:L0",
+    "name": "L0 toolchain",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "src/analytics",
+      "name": "bun_analytics",
+      "kind": "module",
+      "language": "rust",
+      "loc": 574,
+      "file": "src/analytics"
+     },
+     {
+      "id": "src/aot",
+      "name": "bun_aot",
+      "kind": "module",
+      "language": "rust",
+      "loc": 269564,
+      "file": "src/aot"
+     },
+     {
+      "id": "src/aot/absent",
+      "name": "bun_aot_absent",
+      "kind": "module",
+      "language": "rust",
+      "loc": 50,
+      "file": "src/aot/absent"
+     },
+     {
+      "id": "src/aot/builtins",
+      "name": "bun_aot_builtins",
+      "kind": "module",
+      "language": "rust",
+      "loc": 20820,
+      "file": "src/aot/builtins"
+     },
+     {
+      "id": "src/aot/interface",
+      "name": "bun_aot_interface",
+      "kind": "module",
+      "language": "rust",
+      "loc": 335,
+      "file": "src/aot/interface"
+     },
+     {
+      "id": "src/archive",
+      "name": "bun_archive",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1291,
+      "file": "src/archive"
+     },
+     {
+      "id": "src/ast",
+      "name": "bun_ast",
+      "kind": "module",
+      "language": "rust",
+      "loc": 18017,
+      "file": "src/ast"
+     },
+     {
+      "id": "src/ast_jsc",
+      "name": "bun_ast_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 38,
+      "file": "src/ast_jsc"
+     },
+     {
+      "id": "src/base64",
+      "name": "bun_base64",
+      "kind": "module",
+      "language": "rust",
+      "loc": 994,
+      "file": "src/base64"
+     },
+     {
+      "id": "src/boringssl",
+      "name": "bun_boringssl",
+      "kind": "module",
+      "language": "rust",
+      "loc": 852,
+      "file": "src/boringssl"
+     },
+     {
+      "id": "src/boringssl_sys",
+      "name": "bun_boringssl_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1264,
+      "file": "src/boringssl_sys"
+     },
+     {
+      "id": "src/brotli",
+      "name": "bun_brotli",
+      "kind": "module",
+      "language": "rust",
+      "loc": 314,
+      "file": "src/brotli"
+     },
+     {
+      "id": "src/brotli_sys",
+      "name": "bun_brotli_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 281,
+      "file": "src/brotli_sys"
+     },
+     {
+      "id": "src/builtin_sources",
+      "name": "bun_builtin_sources",
+      "kind": "module",
+      "language": "rust",
+      "loc": 629,
+      "file": "src/builtin_sources"
+     },
+     {
+      "id": "src/bundler",
+      "name": "bun_bundler",
+      "kind": "module",
+      "language": "rust",
+      "loc": 62321,
+      "file": "src/bundler"
+     },
+     {
+      "id": "src/bundler_jsc",
+      "name": "bun_bundler_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 948,
+      "file": "src/bundler_jsc"
+     },
+     {
+      "id": "src/bunfig",
+      "name": "bun_bunfig",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2442,
+      "file": "src/bunfig"
+     },
+     {
+      "id": "src/bun_alloc",
+      "name": "bun_alloc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 4962,
+      "file": "src/bun_alloc"
+     },
+     {
+      "id": "src/bun_core",
+      "name": "bun_core",
+      "kind": "module",
+      "language": "rust",
+      "loc": 33413,
+      "file": "src/bun_core"
+     },
+     {
+      "id": "src/bun_core_macros",
+      "name": "bun_core_macros",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1340,
+      "file": "src/bun_core_macros"
+     },
+     {
+      "id": "src/bun_output_tags",
+      "name": "bun_output_tags",
+      "kind": "module",
+      "language": "rust",
+      "loc": 97,
+      "file": "src/bun_output_tags"
+     },
+     {
+      "id": "src/cares_sys",
+      "name": "bun_cares_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1964,
+      "file": "src/cares_sys"
+     },
+     {
+      "id": "src/clap",
+      "name": "bun_clap",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3113,
+      "file": "src/clap"
+     },
+     {
+      "id": "src/clap_macros",
+      "name": "bun_clap_macros",
+      "kind": "module",
+      "language": "rust",
+      "loc": 489,
+      "file": "src/clap_macros"
+     },
+     {
+      "id": "src/collections",
+      "name": "bun_collections",
+      "kind": "module",
+      "language": "rust",
+      "loc": 10783,
+      "file": "src/collections"
+     },
+     {
+      "id": "src/crash_handler",
+      "name": "bun_crash_handler",
+      "kind": "module",
+      "language": "rust",
+      "loc": 4966,
+      "file": "src/crash_handler"
+     },
+     {
+      "id": "src/csrf",
+      "name": "bun_csrf",
+      "kind": "module",
+      "language": "rust",
+      "loc": 256,
+      "file": "src/csrf"
+     },
+     {
+      "id": "src/css",
+      "name": "bun_css",
+      "kind": "module",
+      "language": "rust",
+      "loc": 60637,
+      "file": "src/css"
+     },
+     {
+      "id": "src/css_derive",
+      "name": "bun_css_derive",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1201,
+      "file": "src/css_derive"
+     },
+     {
+      "id": "src/css_jsc",
+      "name": "bun_css_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 917,
+      "file": "src/css_jsc"
+     },
+     {
+      "id": "src/dispatch",
+      "name": "bun_dispatch",
+      "kind": "module",
+      "language": "rust",
+      "loc": 444,
+      "file": "src/dispatch"
+     },
+     {
+      "id": "src/dns",
+      "name": "bun_dns",
+      "kind": "module",
+      "language": "rust",
+      "loc": 527,
+      "file": "src/dns"
+     },
+     {
+      "id": "src/dotenv",
+      "name": "bun_dotenv",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1782,
+      "file": "src/dotenv"
+     },
+     {
+      "id": "src/errno",
+      "name": "bun_errno",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2006,
+      "file": "src/errno"
+     },
+     {
+      "id": "src/event_loop",
+      "name": "bun_event_loop",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2437,
+      "file": "src/event_loop"
+     },
+     {
+      "id": "src/executable",
+      "name": "bun_executable",
+      "kind": "module",
+      "language": "rust",
+      "loc": 6,
+      "file": "src/executable"
+     },
+     {
+      "id": "src/exe_format",
+      "name": "bun_exe_format",
+      "kind": "module",
+      "language": "rust",
+      "loc": 18194,
+      "file": "src/exe_format"
+     },
+     {
+      "id": "src/format",
+      "name": "bun_format",
+      "kind": "module",
+      "language": "rust",
+      "loc": 116031,
+      "file": "src/format"
+     },
+     {
+      "id": "src/format/conformance",
+      "name": "bun_format_conformance",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1087,
+      "file": "src/format/conformance"
+     },
+     {
+      "id": "src/glob",
+      "name": "bun_glob",
+      "kind": "module",
+      "language": "rust",
+      "loc": 8962,
+      "file": "src/glob"
+     },
+     {
+      "id": "src/hash",
+      "name": "bun_hash",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1041,
+      "file": "src/hash"
+     },
+     {
+      "id": "src/highway",
+      "name": "bun_highway",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1416,
+      "file": "src/highway"
+     },
+     {
+      "id": "src/histogram",
+      "name": "bun_histogram",
+      "kind": "module",
+      "language": "rust",
+      "loc": 347,
+      "file": "src/histogram"
+     },
+     {
+      "id": "src/http",
+      "name": "bun_http",
+      "kind": "module",
+      "language": "rust",
+      "loc": 18767,
+      "file": "src/http"
+     },
+     {
+      "id": "src/http_jsc",
+      "name": "bun_http_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 6419,
+      "file": "src/http_jsc"
+     },
+     {
+      "id": "src/http_types",
+      "name": "bun_http_types",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3739,
+      "file": "src/http_types"
+     },
+     {
+      "id": "src/ini",
+      "name": "bun_ini",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1663,
+      "file": "src/ini"
+     },
+     {
+      "id": "src/install",
+      "name": "bun_install",
+      "kind": "module",
+      "language": "rust",
+      "loc": 103513,
+      "file": "src/install"
+     },
+     {
+      "id": "src/install/windows-shim",
+      "name": "bun_shim_impl",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2666,
+      "file": "src/install/windows-shim"
+     },
+     {
+      "id": "src/install_jsc",
+      "name": "bun_install_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 562,
+      "file": "src/install_jsc"
+     },
+     {
+      "id": "src/install_types",
+      "name": "bun_install_types",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1827,
+      "file": "src/install_types"
+     },
+     {
+      "id": "src/io",
+      "name": "bun_io",
+      "kind": "module",
+      "language": "rust",
+      "loc": 11830,
+      "file": "src/io"
+     },
+     {
+      "id": "src/jsc",
+      "name": "bun_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 383977,
+      "file": "src/jsc"
+     },
+     {
+      "id": "src/jsc_macros",
+      "name": "bun_jsc_macros",
+      "kind": "module",
+      "language": "rust",
+      "loc": 325,
+      "file": "src/jsc_macros"
+     },
+     {
+      "id": "src/js_parser",
+      "name": "bun_js_parser",
+      "kind": "module",
+      "language": "rust",
+      "loc": 52311,
+      "file": "src/js_parser"
+     },
+     {
+      "id": "src/js_parser_jsc",
+      "name": "bun_js_parser_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1548,
+      "file": "src/js_parser_jsc"
+     },
+     {
+      "id": "src/js_printer",
+      "name": "bun_js_printer",
+      "kind": "module",
+      "language": "rust",
+      "loc": 9643,
+      "file": "src/js_printer"
+     },
+     {
+      "id": "src/libdeflate_sys",
+      "name": "bun_libdeflate_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 540,
+      "file": "src/libdeflate_sys"
+     },
+     {
+      "id": "src/libuv_sys",
+      "name": "bun_libuv_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3451,
+      "file": "src/libuv_sys"
+     },
+     {
+      "id": "src/lint",
+      "name": "bun_lint",
+      "kind": "module",
+      "language": "rust",
+      "loc": 111715,
+      "file": "src/lint"
+     },
+     {
+      "id": "src/lint/conformance",
+      "name": "bun_lint_conformance",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1233,
+      "file": "src/lint/conformance"
+     },
+     {
+      "id": "src/lint/driver",
+      "name": "bun_lint_driver",
+      "kind": "module",
+      "language": "rust",
+      "loc": 29707,
+      "file": "src/lint/driver"
+     },
+     {
+      "id": "src/lint/eslint",
+      "name": "bun_lint_eslint",
+      "kind": "module",
+      "language": "rust",
+      "loc": 42267,
+      "file": "src/lint/eslint"
+     },
+     {
+      "id": "src/lint/graph",
+      "name": "bun_lint_graph",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1487,
+      "file": "src/lint/graph"
+     },
+     {
+      "id": "src/lint/jest",
+      "name": "bun_lint_jest",
+      "kind": "module",
+      "language": "rust",
+      "loc": 12126,
+      "file": "src/lint/jest"
+     },
+     {
+      "id": "src/lint/json",
+      "name": "bun_lint_json",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1023,
+      "file": "src/lint/json"
+     },
+     {
+      "id": "src/lint/markdown",
+      "name": "bun_lint_markdown",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3546,
+      "file": "src/lint/markdown"
+     },
+     {
+      "id": "src/lint/oxlint",
+      "name": "bun_lint_oxlint",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2771,
+      "file": "src/lint/oxlint"
+     },
+     {
+      "id": "src/lint/plugins",
+      "name": "bun_lint_plugins",
+      "kind": "module",
+      "language": "rust",
+      "loc": 29186,
+      "file": "src/lint/plugins"
+     },
+     {
+      "id": "src/lint/react",
+      "name": "bun_lint_react",
+      "kind": "module",
+      "language": "rust",
+      "loc": 34833,
+      "file": "src/lint/react"
+     },
+     {
+      "id": "src/lint/react_compiler",
+      "name": "bun_lint_react_compiler",
+      "kind": "module",
+      "language": "rust",
+      "loc": 5582,
+      "file": "src/lint/react_compiler"
+     },
+     {
+      "id": "src/lint/typescript",
+      "name": "bun_lint_typescript",
+      "kind": "module",
+      "language": "rust",
+      "loc": 40811,
+      "file": "src/lint/typescript"
+     },
+     {
+      "id": "src/lint/unicorn",
+      "name": "bun_lint_unicorn",
+      "kind": "module",
+      "language": "rust",
+      "loc": 16943,
+      "file": "src/lint/unicorn"
+     },
+     {
+      "id": "src/lsquic_sys",
+      "name": "bun_lsquic_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 788,
+      "file": "src/lsquic_sys"
+     },
+     {
+      "id": "src/md",
+      "name": "bun_md",
+      "kind": "module",
+      "language": "rust",
+      "loc": 12702,
+      "file": "src/md"
+     },
+     {
+      "id": "src/mimalloc_sys",
+      "name": "bun_mimalloc_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 239,
+      "file": "src/mimalloc_sys"
+     },
+     {
+      "id": "src/node-fallbacks",
+      "name": "fallbacks",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 5256,
+      "file": "src/node-fallbacks"
+     },
+     {
+      "id": "src/node_path",
+      "name": "bun_node_path",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2890,
+      "file": "src/node_path"
+     },
+     {
+      "id": "src/opaque",
+      "name": "bun_opaque",
+      "kind": "module",
+      "language": "rust",
+      "loc": 389,
+      "file": "src/opaque"
+     },
+     {
+      "id": "src/options_types",
+      "name": "bun_options_types",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3325,
+      "file": "src/options_types"
+     },
+     {
+      "id": "src/output",
+      "name": "bun_output",
+      "kind": "module",
+      "language": "rust",
+      "loc": 51,
+      "file": "src/output"
+     },
+     {
+      "id": "src/parsers",
+      "name": "bun_parsers",
+      "kind": "module",
+      "language": "rust",
+      "loc": 19617,
+      "file": "src/parsers"
+     },
+     {
+      "id": "src/patch",
+      "name": "bun_patch",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1766,
+      "file": "src/patch"
+     },
+     {
+      "id": "src/patch_jsc",
+      "name": "bun_patch_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 169,
+      "file": "src/patch_jsc"
+     },
+     {
+      "id": "src/paths",
+      "name": "bun_paths",
+      "kind": "module",
+      "language": "rust",
+      "loc": 7284,
+      "file": "src/paths"
+     },
+     {
+      "id": "src/perf",
+      "name": "bun_perf",
+      "kind": "module",
+      "language": "rust",
+      "loc": 340,
+      "file": "src/perf"
+     },
+     {
+      "id": "src/picohttp",
+      "name": "bun_picohttp",
+      "kind": "module",
+      "language": "rust",
+      "loc": 565,
+      "file": "src/picohttp"
+     },
+     {
+      "id": "src/platform",
+      "name": "bun_platform",
+      "kind": "module",
+      "language": "rust",
+      "loc": 106,
+      "file": "src/platform"
+     },
+     {
+      "id": "src/png",
+      "name": "bun_png",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1238,
+      "file": "src/png"
+     },
+     {
+      "id": "src/pod",
+      "name": "bun_pod",
+      "kind": "module",
+      "language": "rust",
+      "loc": 616,
+      "file": "src/pod"
+     },
+     {
+      "id": "src/ptr",
+      "name": "bun_ptr",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3259,
+      "file": "src/ptr"
+     },
+     {
+      "id": "src/py2bun",
+      "name": "py2bun",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3245,
+      "file": "src/py2bun"
+     },
+     {
+      "id": "src/react_compiler",
+      "name": "bun_react_compiler",
+      "kind": "module",
+      "language": "rust",
+      "loc": 61114,
+      "file": "src/react_compiler"
+     },
+     {
+      "id": "src/resolver",
+      "name": "bun_resolver",
+      "kind": "module",
+      "language": "rust",
+      "loc": 19919,
+      "file": "src/resolver"
+     },
+     {
+      "id": "src/resolve_builtins",
+      "name": "bun_resolve_builtins",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1113,
+      "file": "src/resolve_builtins"
+     },
+     {
+      "id": "src/runtime",
+      "name": "bun_runtime",
+      "kind": "module",
+      "language": "rust",
+      "loc": 387086,
+      "file": "src/runtime"
+     },
+     {
+      "id": "src/s3_signing",
+      "name": "bun_s3_signing",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1627,
+      "file": "src/s3_signing"
+     },
+     {
+      "id": "src/safety",
+      "name": "bun_safety",
+      "kind": "module",
+      "language": "rust",
+      "loc": 8,
+      "file": "src/safety"
+     },
+     {
+      "id": "src/sema",
+      "name": "bun_sema",
+      "kind": "module",
+      "language": "rust",
+      "loc": 330788,
+      "file": "src/sema"
+     },
+     {
+      "id": "src/sema/baselines",
+      "name": "bun_sema_baselines",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2601,
+      "file": "src/sema/baselines"
+     },
+     {
+      "id": "src/sema/driver",
+      "name": "bun_sema_driver",
+      "kind": "module",
+      "language": "rust",
+      "loc": 26840,
+      "file": "src/sema/driver"
+     },
+     {
+      "id": "src/sema/parser",
+      "name": "bun_sema_parser",
+      "kind": "module",
+      "language": "rust",
+      "loc": 33864,
+      "file": "src/sema/parser"
+     },
+     {
+      "id": "src/sema/standalone",
+      "name": "bun_sema_standalone",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3506,
+      "file": "src/sema/standalone"
+     },
+     {
+      "id": "src/semver",
+      "name": "bun_semver",
+      "kind": "module",
+      "language": "rust",
+      "loc": 4216,
+      "file": "src/semver"
+     },
+     {
+      "id": "src/semver_jsc",
+      "name": "bun_semver_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 142,
+      "file": "src/semver_jsc"
+     },
+     {
+      "id": "src/sha_hmac",
+      "name": "bun_sha_hmac",
+      "kind": "module",
+      "language": "rust",
+      "loc": 328,
+      "file": "src/sha_hmac"
+     },
+     {
+      "id": "src/shell_parser",
+      "name": "bun_shell_parser",
+      "kind": "module",
+      "language": "rust",
+      "loc": 5878,
+      "file": "src/shell_parser"
+     },
+     {
+      "id": "src/simdutf_sys",
+      "name": "bun_simdutf_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 470,
+      "file": "src/simdutf_sys"
+     },
+     {
+      "id": "src/sort_by_number",
+      "name": "bun_sort_by_number",
+      "kind": "module",
+      "language": "rust",
+      "loc": 262,
+      "file": "src/sort_by_number"
+     },
+     {
+      "id": "src/sourcemap",
+      "name": "bun_sourcemap",
+      "kind": "module",
+      "language": "rust",
+      "loc": 4719,
+      "file": "src/sourcemap"
+     },
+     {
+      "id": "src/sourcemap_jsc",
+      "name": "bun_sourcemap_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1638,
+      "file": "src/sourcemap_jsc"
+     },
+     {
+      "id": "src/spawn",
+      "name": "bun_spawn",
+      "kind": "module",
+      "language": "rust",
+      "loc": 4358,
+      "file": "src/spawn"
+     },
+     {
+      "id": "src/spawn_sys",
+      "name": "bun_spawn_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2005,
+      "file": "src/spawn_sys"
+     },
+     {
+      "id": "src/sql",
+      "name": "bun_sql",
+      "kind": "module",
+      "language": "rust",
+      "loc": 5067,
+      "file": "src/sql"
+     },
+     {
+      "id": "src/sql_jsc",
+      "name": "bun_sql_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 12973,
+      "file": "src/sql_jsc"
+     },
+     {
+      "id": "src/standalone_graph",
+      "name": "bun_standalone_graph",
+      "kind": "module",
+      "language": "rust",
+      "loc": 9214,
+      "file": "src/standalone_graph"
+     },
+     {
+      "id": "src/sys",
+      "name": "bun_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 17735,
+      "file": "src/sys"
+     },
+     {
+      "id": "src/sys_jsc",
+      "name": "bun_sys_jsc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 430,
+      "file": "src/sys_jsc"
+     },
+     {
+      "id": "src/taffy",
+      "name": "taffy",
+      "kind": "module",
+      "language": "rust",
+      "loc": 39833,
+      "file": "src/taffy"
+     },
+     {
+      "id": "src/tar",
+      "name": "bun_tar",
+      "kind": "module",
+      "language": "rust",
+      "loc": 5040,
+      "file": "src/tar"
+     },
+     {
+      "id": "src/tcc_sys",
+      "name": "bun_tcc_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 416,
+      "file": "src/tcc_sys"
+     },
+     {
+      "id": "src/text_diff",
+      "name": "bun_text_diff",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2305,
+      "file": "src/text_diff"
+     },
+     {
+      "id": "src/threading",
+      "name": "bun_threading",
+      "kind": "module",
+      "language": "rust",
+      "loc": 5391,
+      "file": "src/threading"
+     },
+     {
+      "id": "src/transpiler",
+      "name": "bun_transpiler",
+      "kind": "module",
+      "language": "rust",
+      "loc": 9,
+      "file": "src/transpiler"
+     },
+     {
+      "id": "src/trim",
+      "name": "bun_trim",
+      "kind": "module",
+      "language": "rust",
+      "loc": 10937,
+      "file": "src/trim"
+     },
+     {
+      "id": "src/trim/removable_features",
+      "name": "bun_removable_features",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1577,
+      "file": "src/trim/removable_features"
+     },
+     {
+      "id": "src/url",
+      "name": "bun_url",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2001,
+      "file": "src/url"
+     },
+     {
+      "id": "src/uws",
+      "name": "bun_uws",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1702,
+      "file": "src/uws"
+     },
+     {
+      "id": "src/uws_sys",
+      "name": "bun_uws_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 12717,
+      "file": "src/uws_sys"
+     },
+     {
+      "id": "src/valkey",
+      "name": "bun_valkey",
+      "kind": "module",
+      "language": "rust",
+      "loc": 842,
+      "file": "src/valkey"
+     },
+     {
+      "id": "src/watcher",
+      "name": "bun_watcher",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2571,
+      "file": "src/watcher"
+     },
+     {
+      "id": "src/which",
+      "name": "bun_which",
+      "kind": "module",
+      "language": "rust",
+      "loc": 518,
+      "file": "src/which"
+     },
+     {
+      "id": "src/windows_sys",
+      "name": "bun_windows_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1898,
+      "file": "src/windows_sys"
+     },
+     {
+      "id": "src/wyhash",
+      "name": "bun_wyhash",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1153,
+      "file": "src/wyhash"
+     },
+     {
+      "id": "src/yarr",
+      "name": "bun_yarr",
+      "kind": "module",
+      "language": "rust",
+      "loc": 331,
+      "file": "src/yarr"
+     },
+     {
+      "id": "src/zlib",
+      "name": "bun_zlib",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1231,
+      "file": "src/zlib"
+     },
+     {
+      "id": "src/zlib_sys",
+      "name": "bun_zlib_sys",
+      "kind": "module",
+      "language": "rust",
+      "loc": 144,
+      "file": "src/zlib_sys"
+     },
+     {
+      "id": "src/zstd",
+      "name": "bun_zstd",
+      "kind": "module",
+      "language": "rust",
+      "loc": 861,
+      "file": "src/zstd"
+     },
+     {
+      "id": "tools/build-model",
+      "name": "build-model",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1063,
+      "file": "tools/build-model"
+     },
+     {
+      "id": "tools/lore",
+      "name": "urc",
+      "kind": "module",
+      "language": "python",
+      "loc": 99130,
+      "file": "tools/lore"
+     },
+     {
+      "id": "tools/site-mirror",
+      "name": "@aphrody/site-mirror",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 148,
+      "file": "tools/site-mirror"
+     }
+    ]
+   },
+   {
+    "id": "dom:L1",
+    "name": "L1 base",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "src/core",
+      "name": "aphrody-core",
+      "kind": "module",
+      "language": "rust",
+      "loc": 4196,
+      "file": "src/core"
+     },
+     {
+      "id": "src/depot/cas",
+      "name": "depot-cas",
+      "kind": "module",
+      "language": "rust",
+      "loc": 373,
+      "file": "src/depot/cas"
+     },
+     {
+      "id": "src/depot/core",
+      "name": "depot-core",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3323,
+      "file": "src/depot/core"
+     },
+     {
+      "id": "src/i18n",
+      "name": "aphrody-i18n",
+      "kind": "module",
+      "language": "rust",
+      "loc": 528,
+      "file": "src/i18n"
+     },
+     {
+      "id": "src/lore/base",
+      "name": "aphrody-lore-base",
+      "kind": "module",
+      "language": "rust",
+      "loc": 14759,
+      "file": "src/lore/base"
+     },
+     {
+      "id": "src/lore/error-set",
+      "name": "aphrody-lore-error-set",
+      "kind": "module",
+      "language": "rust",
+      "loc": 6178,
+      "file": "src/lore/error-set"
+     },
+     {
+      "id": "src/lore/error-set-macro",
+      "name": "aphrody-lore-error-set-macro",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1043,
+      "file": "src/lore/error-set-macro"
+     },
+     {
+      "id": "src/lore/io",
+      "name": "aphrody-lore-io",
+      "kind": "module",
+      "language": "rust",
+      "loc": 17686,
+      "file": "src/lore/io"
+     },
+     {
+      "id": "src/lore/macro",
+      "name": "aphrody-lore-macro",
+      "kind": "module",
+      "language": "rust",
+      "loc": 462,
+      "file": "src/lore/macro"
+     },
+     {
+      "id": "src/tv/core",
+      "name": "tv-core",
+      "kind": "module",
+      "language": "rust",
+      "loc": 324,
+      "file": "src/tv/core"
+     },
+     {
+      "id": "src/tv/i18n",
+      "name": "tv-i18n",
+      "kind": "module",
+      "language": "rust",
+      "loc": 166,
+      "file": "src/tv/i18n"
+     },
+     {
+      "id": "src/wayland/gamescope/core",
+      "name": "gamescope-core",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2734,
+      "file": "src/wayland/gamescope/core"
+     },
+     {
+      "id": "packages/net",
+      "name": "@aphrody/net",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 231,
+      "file": "packages/net"
+     }
+    ]
+   },
+   {
+    "id": "dom:L2",
+    "name": "L2 platform",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "src/core/capi",
+      "name": "aphrody-core-capi",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1993,
+      "file": "src/core/capi"
+     },
+     {
+      "id": "src/drivers/gpu/dx12",
+      "name": "dx12-hal",
+      "kind": "module",
+      "language": "rust",
+      "loc": 808,
+      "file": "src/drivers/gpu/dx12"
+     },
+     {
+      "id": "src/gnu/bc",
+      "name": "aphrody-gnu-bc",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1330,
+      "file": "src/gnu/bc"
+     },
+     {
+      "id": "src/gnu/ed",
+      "name": "aphrody-gnu-ed",
+      "kind": "module",
+      "language": "rust",
+      "loc": 998,
+      "file": "src/gnu/ed"
+     },
+     {
+      "id": "src/gnu/m4",
+      "name": "aphrody-gnu-m4",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1086,
+      "file": "src/gnu/m4"
+     },
+     {
+      "id": "src/gnu/posix-re",
+      "name": "aphrody-gnu-posix-re",
+      "kind": "module",
+      "language": "rust",
+      "loc": 209,
+      "file": "src/gnu/posix-re"
+     },
+     {
+      "id": "src/gnu/rt",
+      "name": "aphrody-gnu-rt",
+      "kind": "module",
+      "language": "rust",
+      "loc": 45,
+      "file": "src/gnu/rt"
+     },
+     {
+      "id": "src/gnu/time",
+      "name": "aphrody-gnu-time",
+      "kind": "module",
+      "language": "rust",
+      "loc": 392,
+      "file": "src/gnu/time"
+     },
+     {
+      "id": "src/gnu/which",
+      "name": "aphrody-gnu-which",
+      "kind": "module",
+      "language": "rust",
+      "loc": 266,
+      "file": "src/gnu/which"
+     },
+     {
+      "id": "src/lore/credential",
+      "name": "aphrody-lore-credential",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3293,
+      "file": "src/lore/credential"
+     },
+     {
+      "id": "src/lore/fuse",
+      "name": "aphrody-lore-fuse",
+      "kind": "module",
+      "language": "rust",
+      "loc": 12780,
+      "file": "src/lore/fuse"
+     },
+     {
+      "id": "src/lore/fuse/fuzz",
+      "name": "lore-fuse-fuzz",
+      "kind": "module",
+      "language": "rust",
+      "loc": 9,
+      "file": "src/lore/fuse/fuzz"
+     },
+     {
+      "id": "src/machine",
+      "name": "aphrody-machine",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2126,
+      "file": "src/machine"
+     },
+     {
+      "id": "src/net",
+      "name": "aphrody-net",
+      "kind": "module",
+      "language": "rust",
+      "loc": 535,
+      "file": "src/net"
+     },
+     {
+      "id": "src/posix/omarchy",
+      "name": "aphrody-omarchy",
+      "kind": "module",
+      "language": "rust",
+      "loc": 8234,
+      "file": "src/posix/omarchy"
+     },
+     {
+      "id": "src/remote",
+      "name": "aphrody-remote",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1942,
+      "file": "src/remote"
+     },
+     {
+      "id": "src/steam",
+      "name": "steam-depot",
+      "kind": "module",
+      "language": "rust",
+      "loc": 8555,
+      "file": "src/steam"
+     },
+     {
+      "id": "src/tv/ffmpeg",
+      "name": "tv-ffmpeg",
+      "kind": "module",
+      "language": "rust",
+      "loc": 365,
+      "file": "src/tv/ffmpeg"
+     },
+     {
+      "id": "src/wayland/cosmic",
+      "name": "cosmic-compat",
+      "kind": "module",
+      "language": "rust",
+      "loc": 669,
+      "file": "src/wayland/cosmic"
+     },
+     {
+      "id": "src/wayland/gamescope/wgsl",
+      "name": "gamescope-wgsl",
+      "kind": "module",
+      "language": "rust",
+      "loc": 710,
+      "file": "src/wayland/gamescope/wgsl"
+     },
+     {
+      "id": "src/wayland/smithay",
+      "name": "smithay-wayland-wire",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1230,
+      "file": "src/wayland/smithay"
+     },
+     {
+      "id": "src/wayland/tiler",
+      "name": "hypr-tiler",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1168,
+      "file": "src/wayland/tiler"
+     },
+     {
+      "id": "packages/ffi-bridge",
+      "name": "@aphrody/ffi-bridge",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 726,
+      "file": "packages/ffi-bridge"
+     },
+     {
+      "id": "packages/machine",
+      "name": "@aphrody/machine",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 7000,
+      "file": "packages/machine"
+     },
+     {
+      "id": "infra/cloudflare/workers/github-app",
+      "name": "@aphrody/github-app",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 389,
+      "file": "infra/cloudflare/workers/github-app"
+     },
+     {
+      "id": "infra/gcp/billing-agent/cap-function",
+      "name": "billing-cap",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 81,
+      "file": "infra/gcp/billing-agent/cap-function"
+     },
+     {
+      "id": "infra/mesh-vn",
+      "name": "@aphrody/mesh-vn",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 1889,
+      "file": "infra/mesh-vn"
+     }
+    ]
+   },
+   {
+    "id": "dom:L3",
+    "name": "L3 services",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "src/apm",
+      "name": "aphrody-apm",
+      "kind": "module",
+      "language": "rust",
+      "loc": 5437,
+      "file": "src/apm"
+     },
+     {
+      "id": "src/archguard",
+      "name": "archguard",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3555,
+      "file": "src/archguard"
+     },
+     {
+      "id": "src/chromium/factory",
+      "name": "aphrody-factory",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1929,
+      "file": "src/chromium/factory"
+     },
+     {
+      "id": "src/core/jni",
+      "name": "aphrody-core-jni",
+      "kind": "module",
+      "language": "rust",
+      "loc": 278,
+      "file": "src/core/jni"
+     },
+     {
+      "id": "src/core/py",
+      "name": "aphrody-core-py",
+      "kind": "module",
+      "language": "rust",
+      "loc": 143,
+      "file": "src/core/py"
+     },
+     {
+      "id": "src/corelib",
+      "name": "aphrody-corelib",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1626,
+      "file": "src/corelib"
+     },
+     {
+      "id": "src/corelib/adblock-capi",
+      "name": "aphrody-adblock-capi",
+      "kind": "module",
+      "language": "rust",
+      "loc": 322,
+      "file": "src/corelib/adblock-capi"
+     },
+     {
+      "id": "src/craft",
+      "name": "craft-formats",
+      "kind": "module",
+      "language": "rust",
+      "loc": 143,
+      "file": "src/craft"
+     },
+     {
+      "id": "src/depot/cipd",
+      "name": "depot-cipd",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2418,
+      "file": "src/depot/cipd"
+     },
+     {
+      "id": "src/depot/forge",
+      "name": "depot-forge",
+      "kind": "module",
+      "language": "rust",
+      "loc": 758,
+      "file": "src/depot/forge"
+     },
+     {
+      "id": "src/depot/gclient",
+      "name": "depot-gclient",
+      "kind": "module",
+      "language": "rust",
+      "loc": 6157,
+      "file": "src/depot/gclient"
+     },
+     {
+      "id": "src/depot/graph",
+      "name": "depot-graph",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1576,
+      "file": "src/depot/graph"
+     },
+     {
+      "id": "src/depot/ingest",
+      "name": "depot-ingest",
+      "kind": "module",
+      "language": "rust",
+      "loc": 667,
+      "file": "src/depot/ingest"
+     },
+     {
+      "id": "src/depot/migrate",
+      "name": "depot-migrate",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1751,
+      "file": "src/depot/migrate"
+     },
+     {
+      "id": "src/depot/vpython",
+      "name": "depot-vpython",
+      "kind": "module",
+      "language": "rust",
+      "loc": 313,
+      "file": "src/depot/vpython"
+     },
+     {
+      "id": "src/diffutils-flat",
+      "name": "aphrody-diffutils-flat",
+      "kind": "module",
+      "language": "rust",
+      "loc": 371,
+      "file": "src/diffutils-flat"
+     },
+     {
+      "id": "src/docs",
+      "name": "aphrody-docs",
+      "kind": "module",
+      "language": "rust",
+      "loc": 808,
+      "file": "src/docs"
+     },
+     {
+      "id": "src/env",
+      "name": "aphrody-env",
+      "kind": "module",
+      "language": "rust",
+      "loc": 429,
+      "file": "src/env"
+     },
+     {
+      "id": "src/ffi",
+      "name": "aphrody-ffi",
+      "kind": "module",
+      "language": "rust",
+      "loc": 823,
+      "file": "src/ffi"
+     },
+     {
+      "id": "src/game",
+      "name": "game",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1290,
+      "file": "src/game"
+     },
+     {
+      "id": "src/ghidra-bun",
+      "name": "aphrody-ghidra-bun",
+      "kind": "module",
+      "language": "rust",
+      "loc": 123,
+      "file": "src/ghidra-bun"
+     },
+     {
+      "id": "src/lore",
+      "name": "aphrody-lore",
+      "kind": "module",
+      "language": "rust",
+      "loc": 60127,
+      "file": "src/lore"
+     },
+     {
+      "id": "src/lore/aws",
+      "name": "aphrody-lore-aws",
+      "kind": "module",
+      "language": "rust",
+      "loc": 14019,
+      "file": "src/lore/aws"
+     },
+     {
+      "id": "src/lore/capi",
+      "name": "aphrody-lore-capi",
+      "kind": "module",
+      "language": "rust",
+      "loc": 13831,
+      "file": "src/lore/capi"
+     },
+     {
+      "id": "src/lore/hashicorp",
+      "name": "aphrody-lore-hashicorp",
+      "kind": "module",
+      "language": "rust",
+      "loc": 553,
+      "file": "src/lore/hashicorp"
+     },
+     {
+      "id": "src/lore/notification",
+      "name": "aphrody-lore-notification",
+      "kind": "module",
+      "language": "rust",
+      "loc": 390,
+      "file": "src/lore/notification"
+     },
+     {
+      "id": "src/lore/proto",
+      "name": "aphrody-lore-proto",
+      "kind": "module",
+      "language": "rust",
+      "loc": 16050,
+      "file": "src/lore/proto"
+     },
+     {
+      "id": "src/lore/revision",
+      "name": "aphrody-lore-revision",
+      "kind": "module",
+      "language": "rust",
+      "loc": 442497,
+      "file": "src/lore/revision"
+     },
+     {
+      "id": "src/lore/server",
+      "name": "aphrody-lore-server",
+      "kind": "module",
+      "language": "rust",
+      "loc": 122472,
+      "file": "src/lore/server"
+     },
+     {
+      "id": "src/lore/storage",
+      "name": "aphrody-lore-storage",
+      "kind": "module",
+      "language": "rust",
+      "loc": 80136,
+      "file": "src/lore/storage"
+     },
+     {
+      "id": "src/lore/telemetry",
+      "name": "aphrody-lore-telemetry",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2127,
+      "file": "src/lore/telemetry"
+     },
+     {
+      "id": "src/lore/transport",
+      "name": "aphrody-lore-transport",
+      "kind": "module",
+      "language": "rust",
+      "loc": 35179,
+      "file": "src/lore/transport"
+     },
+     {
+      "id": "src/re",
+      "name": "aphrody-re",
+      "kind": "module",
+      "language": "rust",
+      "loc": 50968,
+      "file": "src/re"
+     },
+     {
+      "id": "src/rt",
+      "name": "aphrody-rt",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1421,
+      "file": "src/rt"
+     },
+     {
+      "id": "src/rust-stack",
+      "name": "rust-stack",
+      "kind": "module",
+      "language": "rust",
+      "loc": 4650,
+      "file": "src/rust-stack"
+     },
+     {
+      "id": "src/ui/brand-gpu",
+      "name": "aphrody-brand-gpu",
+      "kind": "module",
+      "language": "rust",
+      "loc": 293,
+      "file": "src/ui/brand-gpu"
+     },
+     {
+      "id": "src/ui/kit",
+      "name": "aphrody-ui",
+      "kind": "module",
+      "language": "rust",
+      "loc": 55707,
+      "file": "src/ui/kit"
+     },
+     {
+      "id": "src/up",
+      "name": "aphrody-up",
+      "kind": "module",
+      "language": "rust",
+      "loc": 3407,
+      "file": "src/up"
+     },
+     {
+      "id": "src/vault",
+      "name": "aphrody-vault",
+      "kind": "module",
+      "language": "rust",
+      "loc": 638,
+      "file": "src/vault"
+     },
+     {
+      "id": "src/xtask",
+      "name": "xtk",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2528,
+      "file": "src/xtask"
+     },
+     {
+      "id": "bench",
+      "name": "stack-bench",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1909,
+      "file": "bench"
+     },
+     {
+      "id": "test/conformance",
+      "name": "aphrody-conformance",
+      "kind": "module",
+      "language": "rust",
+      "loc": 573,
+      "file": "test/conformance"
+     },
+     {
+      "id": "packages/assets",
+      "name": "@aphrody/assets",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 5381,
+      "file": "packages/assets"
+     },
+     {
+      "id": "packages/browser",
+      "name": "@aphrody/browser",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 320803,
+      "file": "packages/browser"
+     },
+     {
+      "id": "packages/bun-types",
+      "name": "bun-types",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 32495,
+      "file": "packages/bun-types"
+     },
+     {
+      "id": "packages/bunify",
+      "name": "@aphrody/bunify",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 1677,
+      "file": "packages/bunify"
+     },
+     {
+      "id": "packages/chromium-bun",
+      "name": "@aphrody/chromium-bun",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 11943,
+      "file": "packages/chromium-bun"
+     },
+     {
+      "id": "packages/core",
+      "name": "@aphrody/core",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 5754,
+      "file": "packages/core"
+     },
+     {
+      "id": "packages/core-py",
+      "name": "aphrody-core",
+      "kind": "module",
+      "language": "python",
+      "loc": 461,
+      "file": "packages/core-py"
+     },
+     {
+      "id": "packages/deploy",
+      "name": "@aphrody/deploy",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 4247,
+      "file": "packages/deploy"
+     },
+     {
+      "id": "packages/design",
+      "name": "@aphrody/design",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 8764,
+      "file": "packages/design"
+     },
+     {
+      "id": "packages/env-kit",
+      "name": "@aphrody/env-kit",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 8681,
+      "file": "packages/env-kit"
+     },
+     {
+      "id": "packages/gaming",
+      "name": "@aphrody/gaming",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 2059,
+      "file": "packages/gaming"
+     },
+     {
+      "id": "packages/ghidra",
+      "name": "@aphrody/ghidra",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 2729,
+      "file": "packages/ghidra"
+     },
+     {
+      "id": "packages/gnu",
+      "name": "@aphrody/gnu",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 3638,
+      "file": "packages/gnu"
+     },
+     {
+      "id": "packages/i18n",
+      "name": "@aphrody/i18n",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 687,
+      "file": "packages/i18n"
+     },
+     {
+      "id": "packages/native",
+      "name": "@aphrody/native",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 415606,
+      "file": "packages/native"
+     },
+     {
+      "id": "packages/py2bun",
+      "name": "@aphrody/py2bun",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 3068,
+      "file": "packages/py2bun"
+     },
+     {
+      "id": "packages/release",
+      "name": "@aphrody/release",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 1872,
+      "file": "packages/release"
+     },
+     {
+      "id": "packages/upstream",
+      "name": "@aphrody/upstream",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 5506,
+      "file": "packages/upstream"
+     },
+     {
+      "id": "packages/vault",
+      "name": "@aphrody/vault",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 3731,
+      "file": "packages/vault"
+     },
+     {
+      "id": "packages/wck",
+      "name": "@aphrody/wck",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 4641,
+      "file": "packages/wck"
+     }
+    ]
+   },
+   {
+    "id": "dom:L4",
+    "name": "L4 agent",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "src/agent/context",
+      "name": "agent-context",
+      "kind": "module",
+      "language": "rust",
+      "loc": 182,
+      "file": "src/agent/context"
+     },
+     {
+      "id": "src/agent/py",
+      "name": "agent-py",
+      "kind": "module",
+      "language": "rust",
+      "loc": 69,
+      "file": "src/agent/py"
+     },
+     {
+      "id": "src/electron-migrate",
+      "name": "aphrody-electron-migrate",
+      "kind": "module",
+      "language": "rust",
+      "loc": 5296,
+      "file": "src/electron-migrate"
+     },
+     {
+      "id": "packages/ai-os",
+      "name": "@aphrody/ai-os",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 48874,
+      "file": "packages/ai-os"
+     },
+     {
+      "id": "packages/ai-os/python/agent_core",
+      "name": "agent-core",
+      "kind": "module",
+      "language": "python",
+      "loc": 0,
+      "file": "packages/ai-os/python/agent_core"
+     },
+     {
+      "id": "packages/ai-os/python/hermes_agent_memory",
+      "name": "hermes-agent-memory",
+      "kind": "module",
+      "language": "python",
+      "loc": 129,
+      "file": "packages/ai-os/python/hermes_agent_memory"
+     }
+    ]
+   },
+   {
+    "id": "dom:L5",
+    "name": "L5 surfaces",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "src/ay",
+      "name": "aphrody",
+      "kind": "module",
+      "language": "rust",
+      "loc": 9537,
+      "file": "src/ay"
+     },
+     {
+      "id": "src/depot/cli",
+      "name": "depot-cli",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1812,
+      "file": "src/depot/cli"
+     },
+     {
+      "id": "src/lore/chaos-client",
+      "name": "aphrody-lore-chaos-client",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1659,
+      "file": "src/lore/chaos-client"
+     },
+     {
+      "id": "src/lore/client",
+      "name": "aphrody-lore-client",
+      "kind": "module",
+      "language": "rust",
+      "loc": 15184,
+      "file": "src/lore/client"
+     },
+     {
+      "id": "src/posix/wslg",
+      "name": "wslg-cli",
+      "kind": "module",
+      "language": "rust",
+      "loc": 596,
+      "file": "src/posix/wslg"
+     },
+     {
+      "id": "src/tv/cli",
+      "name": "tv-cli",
+      "kind": "module",
+      "language": "rust",
+      "loc": 205,
+      "file": "src/tv/cli"
+     },
+     {
+      "id": "src/wayland/gamescope/cli",
+      "name": "gamescope-cli",
+      "kind": "module",
+      "language": "rust",
+      "loc": 568,
+      "file": "src/wayland/gamescope/cli"
+     },
+     {
+      "id": "src/wayland/gamescope/web-wasm",
+      "name": "gamescope-web-wasm",
+      "kind": "module",
+      "language": "rust",
+      "loc": 536,
+      "file": "src/wayland/gamescope/web-wasm"
+     },
+     {
+      "id": "test/assets",
+      "name": "asset-test",
+      "kind": "module",
+      "language": "rust",
+      "loc": 304,
+      "file": "test/assets"
+     },
+     {
+      "id": "test/lore",
+      "name": "aphrody-lore-integration-tests",
+      "kind": "module",
+      "language": "rust",
+      "loc": 37342,
+      "file": "test/lore"
+     },
+     {
+      "id": "apps/nt",
+      "name": "@aphrody/nt",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 10436,
+      "file": "apps/nt"
+     }
+    ]
+   },
+   {
+    "id": "dom:entry",
+    "name": "Entry points",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "just",
+      "name": "justfile",
+      "kind": "job"
+     }
+    ]
+   },
+   {
+    "id": "dom:data",
+    "name": "Data stores",
+    "kind": "domain",
+    "children": [
+     {
+      "id": "ds:sqlite",
+      "name": "SQLite",
+      "kind": "datastore"
+     },
+     {
+      "id": "ds:valkey",
+      "name": "Valkey / Redis",
+      "kind": "datastore"
+     },
+     {
+      "id": "ds:r2",
+      "name": "R2 / S3",
+      "kind": "datastore"
+     },
+     {
+      "id": "ds:postgres",
+      "name": "Postgres",
+      "kind": "datastore"
+     }
+    ]
+   }
+  ]
+ },
+ "edges": [
+  {
+   "source": "src/agent/context",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/agent/context",
+   "target": "packages/ai-os",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/agent/context",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "src/analytics",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/aot",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/archguard",
+   "target": "infra/mesh-vn",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/archguard",
+   "target": "packages/ai-os",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/archguard",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/archguard",
+   "target": "src/posix/omarchy",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/archguard",
+   "target": "packages/core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ast",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/env-kit",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/ai-os",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/machine",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/chromium-bun",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/diffutils-flat",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/semver",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "packages/gaming",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_alloc",
+   "target": "src/js_parser",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/http",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/js_printer",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/io",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/md",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/runtime",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/which",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/chromium/factory",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "src/core",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/core",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "src/core",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/core",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "src/ffi",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "packages/core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/corelib",
+   "target": "src/ffi",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/depot/migrate",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/docs",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/docs",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "src/drivers/gpu/dx12",
+   "target": "packages/ffi-bridge",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/corelib/adblock-capi",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ffi",
+   "target": "packages/ffi-bridge",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/rust-stack",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ffi",
+   "target": "packages/wck",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/format",
+   "target": "src/sema/parser",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ghidra-bun",
+   "target": "packages/ghidra",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/hash",
+   "target": "src/runtime",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/hash",
+   "target": "src/jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/i18n",
+   "target": "packages/i18n",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/install",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "src/install",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/install",
+   "target": "src/jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/jsc",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/jsc",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/jsc",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "src/jsc",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "src/jsc",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/runtime",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/jsc",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "src/jsc",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "src/options_types",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "src/parsers",
+   "target": "bench",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/py2bun",
+   "target": "packages/ghidra",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/lint/react_compiler",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/js_parser",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/bundler",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/resolve_builtins",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/rt",
+   "target": "packages/chromium-bun",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/runtime",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "src/runtime",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/runtime",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/aot",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/runtime",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "src/runtime",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "src/runtime",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/rust-stack",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/rust-stack",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "src/sema",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/spawn_sys",
+   "target": "src/spawn",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/spawn_sys",
+   "target": "src/runtime",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/sql",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "src/taffy",
+   "target": "packages/design",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/trim",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "src/trim",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/ui/kit",
+   "target": "packages/design",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ui/kit",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "src/ui/kit",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "src/up",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/runtime",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/http",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/valkey",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/vault",
+   "target": "packages/vault",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/xtask",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "src/xtask",
+   "target": "packages/chromium-bun",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/xtask",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "bench",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "test/lore",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "packages/ai-os",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "packages/ai-os",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "packages/assets",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "packages/assets",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "packages/assets",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "packages/assets",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "packages/assets",
+   "target": "src/game",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/browser",
+   "target": "src/core/capi",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "packages/bun-types",
+   "target": "ds:postgres",
+   "kind": "write"
+  },
+  {
+   "source": "packages/chromium-bun",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "packages/chromium-bun",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "packages/chromium-bun",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "packages/chromium-bun",
+   "target": "src/corelib",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/chromium-bun",
+   "target": "packages/browser",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/chromium-bun",
+   "target": "packages/design",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/chromium-bun",
+   "target": "ds:postgres",
+   "kind": "write"
+  },
+  {
+   "source": "packages/core",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "packages/core",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "packages/core",
+   "target": "ds:postgres",
+   "kind": "write"
+  },
+  {
+   "source": "packages/core",
+   "target": "packages/wck",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/core",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "packages/core",
+   "target": "packages/native",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/core",
+   "target": "packages/ai-os",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/deploy",
+   "target": "packages/design",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/deploy",
+   "target": "packages/wck",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/deploy",
+   "target": "apps/nt",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/deploy",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "packages/env-kit",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "packages/env-kit",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "packages/ghidra",
+   "target": "src/ghidra-bun",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/ghidra",
+   "target": "src/re",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/gnu",
+   "target": "ds:r2",
+   "kind": "write"
+  },
+  {
+   "source": "packages/gnu",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "packages/machine",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "packages/machine",
+   "target": "packages/assets",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/machine",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "packages/machine",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "packages/machine",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "packages/machine",
+   "target": "packages/core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/machine",
+   "target": "packages/ai-os",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/machine",
+   "target": "packages/env-kit",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/machine",
+   "target": "apps/nt",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/machine",
+   "target": "src/tv/ffmpeg",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/native",
+   "target": "packages/core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/native",
+   "target": "src/runtime",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/native",
+   "target": "src/platform",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/release",
+   "target": "src/agent/py",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/release",
+   "target": "src/core/capi",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/release",
+   "target": "packages/env-kit",
+   "kind": "dispatch"
+  },
+  {
+   "source": "packages/vault",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "packages/vault",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "apps/nt",
+   "target": "packages/design",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/runtime",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/tcc_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "packages/bun-types",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/sql",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/sql_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/http",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/http_types",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/http_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/uws",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/uws_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/picohttp",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/dns",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/cares_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/lsquic_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/boringssl",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/boringssl_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/shell_parser",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/spawn",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/spawn_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/install",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/install_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/install_types",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/semver",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/semver_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/patch",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/patch_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/tar",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/archive",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/bundler",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/bundler_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/css",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/css_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/css_derive",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/sourcemap",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/sourcemap_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/standalone_graph",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/transpiler",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/js_parser",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/js_parser_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/js_printer",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/ast",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/ast_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/resolver",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/resolve_builtins",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/react_compiler",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/parsers",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/lint",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/format",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/sema",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/aot",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/executable",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/exe_format",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/node_path",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/valkey",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/s3_signing",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/png",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/jsc_macros",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/yarr",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/event_loop",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/io",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/threading",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/sys_jsc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/libuv_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/windows_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/platform",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/watcher",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/clap",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/clap_macros",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/bunfig",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/bun_core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/bun_core_macros",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/bun_alloc",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/collections",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/ptr",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/safety",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/mimalloc_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/simdutf_sys",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/highway",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/errno",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/paths",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/opaque",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/pod",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/trim",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "ds:sqlite",
+   "kind": "read"
+  },
+  {
+   "source": "apps/nt",
+   "target": "ds:valkey",
+   "kind": "write"
+  },
+  {
+   "source": "apps/nt",
+   "target": "ds:valkey",
+   "kind": "read"
+  },
+  {
+   "source": "apps/nt",
+   "target": "ds:r2",
+   "kind": "read"
+  },
+  {
+   "source": "apps/nt",
+   "target": "ds:postgres",
+   "kind": "read"
+  },
+  {
+   "source": "apps/nt",
+   "target": "ds:sqlite",
+   "kind": "write"
+  },
+  {
+   "source": "tools/lore",
+   "target": "src/core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/agent/py",
+   "target": "src/agent/context",
+   "kind": "call"
+  },
+  {
+   "source": "src/analytics",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/analytics",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/aot/builtins",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/aot/interface",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/builtin_sources",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/react_compiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/resolve_builtins",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/sema/parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/sort_by_number",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/trim",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/absent",
+   "target": "src/aot/interface",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/absent",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/absent",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/absent",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/absent",
+   "target": "src/trim",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "src/sort_by_number",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/builtins",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/react_compiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/aot/interface",
+   "target": "src/trim",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/libdeflate_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/tar",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/archive",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/dispatch",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/perf",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast_jsc",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/ast_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "bench",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/archguard",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/depot/cipd",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/depot/cli",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/depot/gclient",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/depot/vpython",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/docs",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/electron-migrate",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/posix/omarchy",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/re",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/remote",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/rt",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/steam",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/ui/kit",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/up",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/xtask",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "test/conformance",
+   "kind": "call"
+  },
+  {
+   "source": "src/base64",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/base64",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/base64",
+   "target": "src/simdutf_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/base64",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/boringssl",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/boringssl",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/boringssl",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/boringssl",
+   "target": "src/cares_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/boringssl",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/boringssl_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/boringssl_sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/brotli",
+   "target": "src/brotli_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/brotli",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/brotli",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/brotli_sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/builtin_sources",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/builtin_sources",
+   "target": "src/exe_format",
+   "kind": "call"
+  },
+  {
+   "source": "src/builtin_sources",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/aot/interface",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/css",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/dispatch",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/exe_format",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/hash",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/js_printer",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/md",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/perf",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/react_compiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/resolve_builtins",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/sourcemap",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/watcher",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler_jsc",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler_jsc",
+   "target": "src/bundler",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler_jsc",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/bundler_jsc",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/bundler",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/clap",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/install_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/standalone_graph",
+   "kind": "call"
+  },
+  {
+   "source": "src/bunfig",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_alloc",
+   "target": "src/mimalloc_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_alloc",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_alloc",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/bun_core_macros",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/bun_output_tags",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/dispatch",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/hash",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/pod",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/simdutf_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/bun_core_macros",
+   "target": "src/bun_output_tags",
+   "kind": "call"
+  },
+  {
+   "source": "src/cares_sys",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/cares_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/cares_sys",
+   "target": "src/libuv_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/cares_sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/chromium/factory",
+   "target": "test/conformance",
+   "kind": "call"
+  },
+  {
+   "source": "src/clap",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/clap",
+   "target": "src/clap_macros",
+   "kind": "call"
+  },
+  {
+   "source": "src/clap_macros",
+   "target": "src/bun_output_tags",
+   "kind": "call"
+  },
+  {
+   "source": "src/collections",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/collections",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/collections",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/collections",
+   "target": "src/simdutf_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/collections",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "src/agent/context",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/jni",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/jni",
+   "target": "src/re",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/py",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/py",
+   "target": "src/re",
+   "kind": "call"
+  },
+  {
+   "source": "src/corelib/adblock-capi",
+   "target": "src/core/capi",
+   "kind": "call"
+  },
+  {
+   "source": "src/corelib/adblock-capi",
+   "target": "src/corelib",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/which",
+   "kind": "call"
+  },
+  {
+   "source": "src/crash_handler",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/csrf",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/csrf",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/csrf",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/csrf",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/css_derive",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/css",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/css_jsc",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/css_jsc",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/css_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/css_jsc",
+   "target": "src/css",
+   "kind": "call"
+  },
+  {
+   "source": "src/css_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/cipd",
+   "target": "src/depot/cas",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/cli",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/cli",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/cli",
+   "target": "src/depot/forge",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/cli",
+   "target": "src/depot/graph",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/cli",
+   "target": "src/depot/ingest",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/cli",
+   "target": "src/depot/migrate",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/forge",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/gclient",
+   "target": "src/depot/cas",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/gclient",
+   "target": "src/depot/cipd",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/gclient",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/graph",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/graph",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/ingest",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/ingest",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/migrate",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/depot/vpython",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/dns",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/dns",
+   "target": "src/cares_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/dns",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/dns",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/dns",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/docs",
+   "target": "src/sort_by_number",
+   "kind": "call"
+  },
+  {
+   "source": "src/docs",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/dotenv",
+   "target": "src/which",
+   "kind": "call"
+  },
+  {
+   "source": "src/electron-migrate",
+   "target": "src/re",
+   "kind": "call"
+  },
+  {
+   "source": "src/errno",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/errno",
+   "target": "src/libuv_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/errno",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/dispatch",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/event_loop",
+   "target": "src/uws",
+   "kind": "call"
+  },
+  {
+   "source": "src/executable",
+   "target": "src/aot",
+   "kind": "call"
+  },
+  {
+   "source": "src/executable",
+   "target": "src/aot/absent",
+   "kind": "call"
+  },
+  {
+   "source": "src/executable",
+   "target": "src/runtime",
+   "kind": "call"
+  },
+  {
+   "source": "src/exe_format",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/exe_format",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/exe_format",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/core/capi",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/corelib",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/depot/forge",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/depot/graph",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/depot/ingest",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/depot/migrate",
+   "kind": "call"
+  },
+  {
+   "source": "src/ffi",
+   "target": "src/re",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/md",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/format",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/format/conformance",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/format/conformance",
+   "target": "src/format",
+   "kind": "call"
+  },
+  {
+   "source": "src/format/conformance",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/ghidra-bun",
+   "target": "src/re",
+   "kind": "call"
+  },
+  {
+   "source": "src/glob",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/glob",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/glob",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/glob",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/glob",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/gnu/bc",
+   "target": "src/gnu/rt",
+   "kind": "call"
+  },
+  {
+   "source": "src/gnu/ed",
+   "target": "src/gnu/posix-re",
+   "kind": "call"
+  },
+  {
+   "source": "src/gnu/ed",
+   "target": "src/gnu/rt",
+   "kind": "call"
+  },
+  {
+   "source": "src/gnu/m4",
+   "target": "src/gnu/posix-re",
+   "kind": "call"
+  },
+  {
+   "source": "src/gnu/m4",
+   "target": "src/gnu/rt",
+   "kind": "call"
+  },
+  {
+   "source": "src/gnu/time",
+   "target": "src/gnu/rt",
+   "kind": "call"
+  },
+  {
+   "source": "src/gnu/which",
+   "target": "src/gnu/rt",
+   "kind": "call"
+  },
+  {
+   "source": "src/hash",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/brotli",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/dns",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/libdeflate_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/picohttp",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/uws",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/http",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/http",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/libdeflate_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/picohttp",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/uws",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/uws_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_jsc",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_types",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_types",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_types",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/http_types",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/install_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/ini",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/archive",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/bunfig",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/clap",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/crash_handler",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/dns",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/http",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/ini",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/install_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/js_printer",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/libdeflate_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/patch",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/perf",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/picohttp",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/simdutf_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/spawn",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/transpiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/uws",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/which",
+   "kind": "call"
+  },
+  {
+   "source": "src/install",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/install/windows-shim",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/install/windows-shim",
+   "target": "src/pod",
+   "kind": "call"
+  },
+  {
+   "source": "src/install/windows-shim",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/ini",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/install",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/js_parser_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_jsc",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_types",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_types",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_types",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_types",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/install_types",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/dispatch",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/spawn_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/io",
+   "target": "src/uws_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/aot/interface",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/bundler",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/crash_handler",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/exe_format",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/hash",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/http",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/install",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/js_printer",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/jsc_macros",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/libdeflate_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/patch",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/resolve_builtins",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/s3_signing",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/sourcemap",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/spawn",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/uws",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/watcher",
+   "kind": "call"
+  },
+  {
+   "source": "src/jsc",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/crash_handler",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/node_path",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/react_compiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/bundler",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_parser_jsc",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/crash_handler",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/sourcemap",
+   "kind": "call"
+  },
+  {
+   "source": "src/js_printer",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/libdeflate_sys",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/libdeflate_sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/libuv_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/libuv_sys",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/libuv_sys",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/node_path",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/yarr",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/conformance",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/conformance",
+   "target": "src/format/conformance",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/conformance",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/conformance",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/clap",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/format",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/conformance",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/eslint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/graph",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/jest",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/json",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/markdown",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/plugins",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/react",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/typescript",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/lint/unicorn",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/md",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/sema/parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/driver",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/eslint",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/eslint",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/eslint",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/eslint",
+   "target": "src/lint/oxlint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/graph",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/graph",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/graph",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/graph",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/graph",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/graph",
+   "target": "src/sema/parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/graph",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/jest",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/jest",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/jest",
+   "target": "src/lint/oxlint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/json",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/json",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/json",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/json",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/markdown",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/markdown",
+   "target": "src/format",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/markdown",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/oxlint",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/oxlint",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/oxlint",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/plugins",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/plugins",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/plugins",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/plugins",
+   "target": "src/lint/oxlint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/plugins",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/plugins",
+   "target": "src/text_diff",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react",
+   "target": "src/lint/oxlint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react",
+   "target": "src/lint/react_compiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react_compiler",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react_compiler",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react_compiler",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react_compiler",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/react_compiler",
+   "target": "src/react_compiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/typescript",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/typescript",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/typescript",
+   "target": "src/lint/eslint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/unicorn",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/unicorn",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lint/unicorn",
+   "target": "src/lint/oxlint",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/credential",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/notification",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/revision",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/storage",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore",
+   "target": "src/lore/transport",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "src/lore/revision",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "src/lore/storage",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "src/lore/telemetry",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/base",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/base",
+   "target": "src/lore/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/base",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/capi",
+   "target": "src/lore",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/chaos-client",
+   "target": "src/lore",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/client",
+   "target": "src/lore",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/client",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/client",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/credential",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/credential",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/credential",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/error-set",
+   "target": "src/lore/error-set-macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/fuse",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/fuse",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/fuse/fuzz",
+   "target": "src/lore/fuse",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/hashicorp",
+   "target": "src/lore/revision",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/hashicorp",
+   "target": "src/lore/telemetry",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/io",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/notification",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/notification",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/notification",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/notification",
+   "target": "src/lore/proto",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/notification",
+   "target": "src/lore/revision",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/notification",
+   "target": "src/lore/storage",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/notification",
+   "target": "src/lore/transport",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/proto",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/credential",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/fuse",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/proto",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/storage",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/telemetry",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/revision",
+   "target": "src/lore/transport",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/aws",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/hashicorp",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/notification",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/proto",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/revision",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/storage",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/telemetry",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/server",
+   "target": "src/lore/transport",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/storage",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/storage",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/storage",
+   "target": "src/lore/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/storage",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/storage",
+   "target": "src/lore/telemetry",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/storage",
+   "target": "src/lore/transport",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/telemetry",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/transport",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/transport",
+   "target": "src/lore/credential",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/transport",
+   "target": "src/lore/error-set",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/transport",
+   "target": "src/lore/macro",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/transport",
+   "target": "src/lore/proto",
+   "kind": "call"
+  },
+  {
+   "source": "src/lsquic_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/md",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/md",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/md",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/md",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/md",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/md",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/mimalloc_sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/node_path",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/node_path",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/node_path",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/node_path",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/install_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/options_types",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/output",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/parsers",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/parsers",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/parsers",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/parsers",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/parsers",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/parsers",
+   "target": "src/simdutf_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/parsers",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch",
+   "target": "src/spawn",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch",
+   "target": "src/which",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch_jsc",
+   "target": "src/patch",
+   "kind": "call"
+  },
+  {
+   "source": "src/patch_jsc",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/paths",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/paths",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/paths",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/perf",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/perf",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/picohttp",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/png",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/png",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/png",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/png",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/pod",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/posix/omarchy",
+   "target": "src/machine",
+   "kind": "call"
+  },
+  {
+   "source": "src/posix/omarchy",
+   "target": "src/steam",
+   "kind": "call"
+  },
+  {
+   "source": "src/posix/wslg",
+   "target": "src/drivers/gpu/dx12",
+   "kind": "call"
+  },
+  {
+   "source": "src/posix/wslg",
+   "target": "src/wayland/cosmic",
+   "kind": "call"
+  },
+  {
+   "source": "src/posix/wslg",
+   "target": "src/wayland/smithay",
+   "kind": "call"
+  },
+  {
+   "source": "src/posix/wslg",
+   "target": "src/wayland/tiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/ptr",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/ptr",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ptr",
+   "target": "src/bun_core_macros",
+   "kind": "call"
+  },
+  {
+   "source": "src/re",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/react_compiler",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/crash_handler",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/hash",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/install_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/perf",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/resolve_builtins",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/watcher",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolver",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolve_builtins",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolve_builtins",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/resolve_builtins",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/rt",
+   "target": "src/up",
+   "kind": "call"
+  },
+  {
+   "source": "src/rt",
+   "target": "test/conformance",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/aot/interface",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/archive",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/ast_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/brotli",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/bundler",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/bundler_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/bunfig",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/cares_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/clap",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/crash_handler",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/csrf",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/css",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/css_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/dns",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/exe_format",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/format/conformance",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/glob",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/hash",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/histogram",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/http",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/http_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/install",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/install_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/install_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/js_parser_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/js_printer",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/libdeflate_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/libuv_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/lint",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/lint/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/lsquic_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/md",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/node_path",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/output",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/patch_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/picohttp",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/platform",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/png",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/resolve_builtins",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/s3_signing",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/safety",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sema/baselines",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/semver_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/shell_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/simdutf_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sourcemap",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sourcemap_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/spawn",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sql_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/standalone_graph",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/sys_jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/tcc_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/text_diff",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/trim",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/uws",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/uws_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/valkey",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/watcher",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/which",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/rust-stack",
+   "target": "src/corelib",
+   "kind": "call"
+  },
+  {
+   "source": "src/rust-stack",
+   "target": "src/taffy",
+   "kind": "call"
+  },
+  {
+   "source": "src/rust-stack",
+   "target": "src/ui/kit",
+   "kind": "call"
+  },
+  {
+   "source": "src/s3_signing",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/s3_signing",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/s3_signing",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/s3_signing",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/s3_signing",
+   "target": "src/picohttp",
+   "kind": "call"
+  },
+  {
+   "source": "src/s3_signing",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/s3_signing",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/safety",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/sort_by_number",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/baselines",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/baselines",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/baselines",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/baselines",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/baselines",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/baselines",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/sema/parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/driver",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/parser",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/parser",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/parser",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/parser",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/parser",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/parser",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/sema",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/sema/baselines",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/sema/driver",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/sema/parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/sema/standalone",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/semver",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/semver",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/semver",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/semver",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/semver_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/semver_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/semver_jsc",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/sha_hmac",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/sha_hmac",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sha_hmac",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/shell_parser",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/shell_parser",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/semver",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/js_parser",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/js_printer",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/sourcemap",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/sourcemap_jsc",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/dispatch",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/output",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/spawn_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn_sys",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn_sys",
+   "target": "src/libuv_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn_sys",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/spawn_sys",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/analytics",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/base64",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/event_loop",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/io",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/sha_hmac",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/sql",
+   "kind": "call"
+  },
+  {
+   "source": "src/sql_jsc",
+   "target": "src/uws",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/aot/interface",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/archive",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/bundler",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/dotenv",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/exe_format",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/highway",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/http",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/parsers",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/perf",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/sourcemap",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/trim",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/standalone_graph",
+   "target": "src/zstd",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/libuv_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys_jsc",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys_jsc",
+   "target": "src/jsc",
+   "kind": "call"
+  },
+  {
+   "source": "src/sys_jsc",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/tar",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/tar",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/tar",
+   "target": "src/zlib",
+   "kind": "call"
+  },
+  {
+   "source": "src/tcc_sys",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/tcc_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/tcc_sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/tcc_sys",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/text_diff",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/text_diff",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/threading",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/threading",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/threading",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/threading",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/threading",
+   "target": "src/safety",
+   "kind": "call"
+  },
+  {
+   "source": "src/threading",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/transpiler",
+   "target": "src/bundler",
+   "kind": "call"
+  },
+  {
+   "source": "src/trim",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/trim",
+   "target": "src/exe_format",
+   "kind": "call"
+  },
+  {
+   "source": "src/trim",
+   "target": "src/options_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/trim",
+   "target": "src/trim/removable_features",
+   "kind": "call"
+  },
+  {
+   "source": "src/tv/cli",
+   "target": "src/tv/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/tv/cli",
+   "target": "src/tv/ffmpeg",
+   "kind": "call"
+  },
+  {
+   "source": "src/tv/cli",
+   "target": "src/tv/i18n",
+   "kind": "call"
+  },
+  {
+   "source": "src/tv/ffmpeg",
+   "target": "src/tv/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/ui/kit",
+   "target": "src/taffy",
+   "kind": "call"
+  },
+  {
+   "source": "src/ui/kit",
+   "target": "src/ui/brand-gpu",
+   "kind": "call"
+  },
+  {
+   "source": "src/url",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/url",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/url",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/url",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/url",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/url",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws",
+   "target": "src/boringssl",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws",
+   "target": "src/jsc_macros",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws",
+   "target": "src/uws_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/boringssl_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/libuv_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/uws_sys",
+   "target": "src/windows_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/valkey",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/threading",
+   "kind": "call"
+  },
+  {
+   "source": "src/watcher",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/cosmic",
+   "target": "src/posix/omarchy",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/cosmic",
+   "target": "src/taffy",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/cosmic",
+   "target": "src/wayland/smithay",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/cosmic",
+   "target": "src/wayland/tiler",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/gamescope/cli",
+   "target": "src/wayland/gamescope/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/gamescope/cli",
+   "target": "src/wayland/gamescope/wgsl",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/gamescope/core",
+   "target": "src/taffy",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/gamescope/web-wasm",
+   "target": "src/taffy",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/gamescope/web-wasm",
+   "target": "src/wayland/gamescope/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/gamescope/web-wasm",
+   "target": "src/wayland/gamescope/wgsl",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/gamescope/wgsl",
+   "target": "src/wayland/gamescope/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/smithay",
+   "target": "src/drivers/gpu/dx12",
+   "kind": "call"
+  },
+  {
+   "source": "src/wayland/tiler",
+   "target": "src/taffy",
+   "kind": "call"
+  },
+  {
+   "source": "src/which",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/which",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/which",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/xtask",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/zlib",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/zlib",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/zlib",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/zlib",
+   "target": "src/zlib_sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/zlib_sys",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/zstd",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/zstd",
+   "target": "src/opaque",
+   "kind": "call"
+  },
+  {
+   "source": "test/assets",
+   "target": "src/tv/ffmpeg",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "src/lore",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "src/lore/aws",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "src/lore/base",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "src/lore/hashicorp",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "src/lore/proto",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "src/lore/revision",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "src/lore/storage",
+   "kind": "call"
+  },
+  {
+   "source": "packages/ai-os",
+   "target": "packages/core",
+   "kind": "call"
+  },
+  {
+   "source": "packages/ai-os",
+   "target": "packages/design",
+   "kind": "call"
+  },
+  {
+   "source": "packages/ai-os/python/hermes_agent_memory",
+   "target": "packages/ai-os/python/agent_core",
+   "kind": "call"
+  },
+  {
+   "source": "packages/core",
+   "target": "src/core/capi",
+   "kind": "call"
+  },
+  {
+   "source": "packages/core",
+   "target": "src/ffi",
+   "kind": "call"
+  },
+  {
+   "source": "packages/core-py",
+   "target": "src/core/capi",
+   "kind": "call"
+  },
+  {
+   "source": "packages/core-py",
+   "target": "src/ffi",
+   "kind": "call"
+  },
+  {
+   "source": "packages/ffi-bridge",
+   "target": "src/drivers/gpu/dx12",
+   "kind": "call"
+  },
+  {
+   "source": "packages/py2bun",
+   "target": "packages/ghidra",
+   "kind": "call"
+  },
+  {
+   "source": "apps/nt",
+   "target": "packages/ffi-bridge",
+   "kind": "call"
+  },
+  {
+   "source": "just",
+   "target": "src/ay",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/ai-os",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/core",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/chromium-bun",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/env-kit",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/gnu",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/machine",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/release",
+   "kind": "dispatch"
+  },
+  {
+   "source": "just",
+   "target": "packages/upstream",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/wayland/gamescope/cli",
+   "kind": "dispatch"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/ui/kit",
+   "kind": "dispatch"
+  }
+ ],
+ "entryPoints": [
+  "apps/nt",
+  "infra/cloudflare/workers/github-app",
+  "infra/gcp/billing-agent/cap-function",
+  "infra/mesh-vn",
+  "just",
+  "packages/ai-os",
+  "packages/ai-os/python/hermes_agent_memory",
+  "packages/assets",
+  "packages/bun-types",
+  "packages/bunify",
+  "packages/chromium-bun",
+  "packages/deploy",
+  "packages/design",
+  "packages/env-kit",
+  "packages/ghidra",
+  "packages/gnu",
+  "packages/i18n",
+  "packages/machine",
+  "packages/net",
+  "packages/py2bun",
+  "packages/vault",
+  "packages/wck",
+  "src/agent/py",
+  "src/apm",
+  "src/ay",
+  "src/chromium/factory",
+  "src/core/capi",
+  "src/core/jni",
+  "src/core/py",
+  "src/corelib/adblock-capi",
+  "src/drivers/gpu/dx12",
+  "src/ffi",
+  "src/game",
+  "src/ghidra-bun",
+  "src/gnu/bc",
+  "src/gnu/ed",
+  "src/gnu/m4",
+  "src/gnu/time",
+  "src/gnu/which",
+  "src/install/windows-shim",
+  "src/lore/base",
+  "src/lore/capi",
+  "src/lore/chaos-client",
+  "src/lore/client",
+  "src/lore/fuse/fuzz",
+  "src/lore/server",
+  "src/net",
+  "src/node-fallbacks",
+  "src/posix/omarchy",
+  "src/posix/wslg",
+  "src/py2bun",
+  "src/rust-stack",
+  "src/sema/standalone",
+  "src/steam",
+  "src/tv/cli",
+  "src/ui/brand-gpu",
+  "src/ui/kit",
+  "src/vault",
+  "src/wayland/gamescope/cli",
+  "src/wayland/gamescope/web-wasm",
+  "test/assets",
+  "test/conformance",
+  "test/lore",
+  "tools/build-model",
+  "tools/site-mirror"
+ ],
+ "deadEnds": [],
+ "observations": [
+  "Most depended-on units (single points of failure): bun_core (107), bun_alloc (58), bun_collections (44), bun_sys (43), bun_ast (34).",
+  "0 units have no inbound edge, no binary and are never named elsewhere: unwired candidates for wiring into ay or deletion.",
+  "5 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
+  "135 of 227 Rust units are absorbed Bun crates (bun_*).",
+  "Data stores by writer count: SQLite 13, Valkey / Redis 8, R2 / S3 8, Postgres 3 (detected from client APIs and SQL keywords, not runtime).",
+  "No dependency cycle (checkdeps).",
+  "Every ay External route resolves to a binary in the tree."
+ ],
+ "flows": [
+  {
+   "name": "A developer runs one command",
+   "persona": "developer",
+   "description": "A developer types `ay <task>` and the single CLI routes it to the right Rust crate or Bun package.",
+   "steps": [
+    {
+     "label": "Types the command",
+     "nodes": [
+      "src/ay"
+     ]
+    },
+    {
+     "label": "ay dispatches to a Bun facade",
+     "nodes": [
+      "packages/chromium-bun",
+      "packages/machine"
+     ]
+    },
+    {
+     "label": "Core indexes and graphs the code",
+     "nodes": [
+      "src/core",
+      "packages/core"
+     ]
+    },
+    {
+     "label": "Results cached",
+     "nodes": [
+      "ds:sqlite"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "An agent session asks another",
+   "persona": "AI agent",
+   "description": "One agent session sends a message to another and gets the answer back through the relay.",
+   "steps": [
+    {
+     "label": "Session registers and sends",
+     "nodes": [
+      "packages/ai-os"
+     ]
+    },
+    {
+     "label": "Relay routes to a model or MCP server",
+     "nodes": [
+      "packages/ai-os",
+      "packages/machine"
+     ]
+    },
+    {
+     "label": "State kept",
+     "nodes": [
+      "ds:sqlite",
+      "ds:valkey"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "A visitor opens the site",
+   "persona": "site visitor",
+   "description": "A visitor loads aphrody.com and sees pages built from the design system and the WebAssembly core.",
+   "steps": [
+    {
+     "label": "Page served",
+     "nodes": [
+      "packages/deploy"
+     ]
+    },
+    {
+     "label": "Design tokens and components",
+     "nodes": [
+      "packages/design"
+     ]
+    },
+    {
+     "label": "Assets from the CDN",
+     "nodes": [
+      "packages/assets",
+      "ds:r2"
+     ]
+    }
+   ]
+  }
+ ]
+}

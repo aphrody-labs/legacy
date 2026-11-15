@@ -5,5 +5,4 @@ members = [
   "tools/lore",
   "packages/ai-os/python/agent_core",
   "packages/ai-os/python/hermes_agent_memory",
-  "packages/ai-os/python/research_ref",
 ]

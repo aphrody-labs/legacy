@@ -17,7 +17,7 @@
 // -> error unless ! rule. Unlayered units -> error. Exit code 1 on any error.
 //
 // Units: Cargo.toml [package], package.json, pyproject.toml [project] (uv; edges from [tool.uv.sources]).
-// Usage: bun scripts/checkdeps.ts [--root DIR] [--json] [--graph] [--affected REF]
+// Usage: bun scripts/checkdeps.ts [--root DIR] [--json] [--graph] [--units] [--affected REF]
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
@@ -376,7 +376,11 @@ if (args.includes("--affected")) {
   process.exit(0);
 }
 const errors = findings.filter((f) => f.level === "error").length;
-if (args.includes("--json")) {
+if (args.includes("--units")) {
+  // Full unit graph (scripts/topology.ts builds the monorepo map from it).
+  const rows = [...units.values()].map((u) => ({ ...u, layer: scopeFor(u.dir).layer ?? null }));
+  console.log(JSON.stringify({ units: rows, findings }, null, 2));
+} else if (args.includes("--json")) {
   console.log(JSON.stringify({ units: units.size, errors, findings }, null, 2));
 } else if (args.includes("--graph")) {
   for (let l = 0; l < LAYER_NAMES.length; l++) {
