@@ -123,7 +123,7 @@ mod tests {
 name = "x"
 
 [nodes.fr1]
-public_ip = "51.77.147.152"
+public_ip = "198.51.100.1"
 ssh_alias = "vps"
 ssh_user = "ubuntu"
 

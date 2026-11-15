@@ -41,7 +41,12 @@ endpoint) ep=$(flat | awk -F'\t' -v s="service.${2:?service}" '$1==s && $2=="end
 status)
   printf '%-4s %-18s %-30s %-30s %-30s\n' host role "psi cpu/io/mem (avg10)" "root free GB / build fs" "tunnel connectors"
   hosts | while read -r n s m u r c; do
-    if [ "$n" = "$self" ]; then out=$(fleet-probe 2>/dev/null); else out=$(timeout 10 ssh -n -i "$HOME/.ssh/fleet_mesh" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=4 -l "$u" "$m" fleet-probe 2>/dev/null); fi
+    if [ "$n" = "$self" ]; then out=$(fleet-probe 2>/dev/null); else
+      # the mesh key is installed in one account per host: the ssh -G user first, then the usual service accounts
+      out=; for uu in "$u" root ubuntu; do
+        out=$(timeout 10 ssh -n -i "$HOME/.ssh/fleet_mesh" -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o BatchMode=yes -o ConnectTimeout=4 -l "$uu" "$m" fleet-probe 2>/dev/null); [ -n "$out" ] && break
+      done
+    fi
     [ -n "$out" ] || { printf '%-4s %-18s unreachable\n' "$n" "$r"; continue; }
     # shellcheck disable=SC2086
     set -- $out; printf '%-4s %-18s %-30s %-30s %-30s\n' "$n" "$r" "${1#avg10=}/${2#avg10=}/${3#avg10=}" "$4 / $5" "${6:-none}"

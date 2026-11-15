@@ -282,7 +282,7 @@ lore-server = { version = "0.13.1-nightly", path = "src/lore/server", package = 
 lore-storage = { version = "0.13.1-nightly", path = "src/lore/storage", package = "aphrody-lore-storage" }
 lore-telemetry = { version = "0.13.1-nightly", path = "src/lore/telemetry", package = "aphrody-lore-telemetry" }
 lore-transport = { version = "0.13.1-nightly", path = "src/lore/transport", package = "aphrody-lore-transport" }
-# Media (merged from C:\Users\aphro\tv)
+# Media (merged from ~\tv)
 tv-core = { version = "0.4.0", path = "src/tv/core" }
 tv-ffmpeg = { version = "0.4.0", path = "src/tv/ffmpeg" }
 tv-i18n = { version = "0.4.0", path = "src/tv/i18n" }
