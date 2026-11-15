@@ -16,7 +16,7 @@ Inventory of the forks the owner maintains (GitHub `aphrody-labs` org and `aphro
 | crates.io (user aphrody-dev) | 370 crates published 2026-10-03 to 2026-11-13; 309 have no matching package in C:\src |
 | npm | 15 of 25 local `@aphrody/*` packages published (1.4.7) |
 | VPSes | fr1: 6 aphrody-labs clones (src, ghidra x3, bun, WebKit) and 2 src copies under /home/ubuntu; prd and fr2: /srv/src (fr2 also /srv/corp ghidra) |
-| This PC | 6 repositories outside C:\src; only C:\\msys is first-party (clean); no unpushed commits |
+| This PC | 6 repositories outside C:\src; only C:\msys is first-party (clean); no unpushed commits |
 
 ## Forks with our own commits
 
