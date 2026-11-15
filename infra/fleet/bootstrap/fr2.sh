@@ -5,9 +5,9 @@
 LOCK=${LOCK:-$(cd "$(dirname "$0")/../../.." && pwd)/infra/up/tools.toml}
 . "$(dirname "$0")/common.sh"
 
-pkgs="docker.io docker-buildx docker-compose-v2 nginx wireguard-tools curl"
+pkgs="docker.io docker-buildx docker-compose-v2 nginx wireguard-tools curl libgstreamer-plugins-bad1.0-0"
 if command -v pacman >/dev/null 2>&1; then  # Arch/CachyOS (after reinstall): same set, Arch package names
-  pkgs="docker docker-buildx docker-compose nginx wireguard-tools curl"
+  pkgs="docker docker-buildx docker-compose nginx wireguard-tools curl gst-plugins-bad-libs"
   missing=$(for p in $pkgs; do pacman -Qq "$p" >/dev/null 2>&1 || echo "$p"; done)
   [ -z "$missing" ] || { log "pacman: $missing"; $SUDO pacman -S --needed --noconfirm $missing >/dev/null; }
 else
