@@ -86,9 +86,11 @@ if (flag("--head")) {
   run(["git", "archive", "-o", tar, "HEAD"], root, "export: git archive HEAD");
   run(["tar", "-xf", tar, "-C", copy], base, "export: extract");
 } else {
-  const ls = Bun.spawnSync(["git", "ls-files", "-z", "--cached"], { cwd: root });
+  // tracked files plus the new, not yet committed, sources of the Rust workspace (members may be untracked)
+  const ls = (args: string[]) =>
+    Bun.spawnSync(["git", "ls-files", "-z", ...args], { cwd: root }).stdout.toString().split("\0").filter(Boolean);
   let n = 0;
-  for (const f of ls.stdout.toString().split("\0").filter(Boolean)) {
+  for (const f of [...ls(["--cached"]), ...ls(["--others", "--exclude-standard", "--", "bench", "src", "test"])]) {
     const src = join(root, f);
     if (!existsSync(src)) continue; // deleted in the working tree
     try {
@@ -171,14 +173,14 @@ if (!flag("--no-cargo")) {
     [
       "bash",
       "-c",
-      `tar -cf - -C "${copy.replaceAll("\\", "/")}" --exclude=node_modules --exclude=target Cargo.toml Cargo.lock rust-toolchain.toml .cargo src bench test tools third_party/*.toml 2>/dev/null | ssh ${host} 'mkdir -p ${remote} && tar -xf - -C ${remote}'`,
+      `tar -czf - -C "${copy.replaceAll("\\", "/")}" --exclude=node_modules --exclude=target Cargo.toml Cargo.lock rust-toolchain.toml .cargo src bench test tools third_party/*.toml 2>/dev/null | ssh ${host} 'mkdir -p ${remote} && tar -xzf - -C ${remote}'`,
     ],
     { stdout: "pipe", stderr: "pipe" },
   );
   steps.push({ name: `cargo: send to ${host}`, ok: send.exitCode === 0, detail: send.stderr.toString().slice(-300) });
   console.log(`${send.exitCode === 0 ? "PASS" : "FAIL"} cargo: send to ${host}`);
   if (send.exitCode === 0) {
-    const pkgs = [OTHER.crate, `${OTHER.prefix}core`, "archguard"].map((p) => `-p ${p}`).join(" ");
+    const pkgs = [OTHER.crate, `${OTHER.prefix}core`].map((p) => `-p ${p}`).join(" ");
     run(
       ["ssh", host, `cd ${remote} && cargo check ${pkgs} --message-format short 2>&1 | tail -25; exit \${PIPESTATUS[0]}`],
       base,

@@ -36,7 +36,7 @@ export const UPSTREAM_NAMESPACES: Record<string, RegExp> = {
 };
 
 const SKIP_DIRS =
-  /^(third_party|apps\/(open|rosegriffon|shenron)|src\/lore|tools\/lore|docs\/(reviews|lore|bun)|var)\//;
+  /^(third_party|apps\/(open|rosegriffon|shenron)|tools\/lore|docs\/(reviews|lore|bun)|var)\//;
 const BINARY_FILE =
   /\.(png|jpe?g|webp|gif|ico|woff2?|ttf|otf|wasm|bin|gz|zst|zip|lock|pdf|mp4|node|dll|exe|der|icns|snap)$/i;
 // The identity sources themselves and this tool hold the names on purpose.
