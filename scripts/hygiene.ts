@@ -100,6 +100,56 @@ export const NODE_REPLACED: [RegExp, string][] = [
   [/from ["']node:readline["']/, "for await (const line of console)"],
 ];
 
+/**
+ * package.json dependencies that Bun replaces natively: name -> [replacement, Bun docs page]. Docs are mirrored in
+ * aphrody-labs/bun (docs/, https://bun.com/docs). A dependency stays only with a measured gain or a missing Bun
+ * feature, written in the manifest's "bunExceptions" map: { "<dep>": "<reason>" }.
+ */
+const DOCS = "https://bun.com/docs/";
+const bunAlt = (what: string, page: string): [string, string] => [what, DOCS + page];
+export const BUN_REPLACED: Record<string, [string, string]> = {};
+for (const [names, what, page] of [
+  ["jest ts-jest @jest/globals vitest mocha chai jasmine ava tap supertest", "bun test (bun:test)", "test"],
+  ["ts-node tsx ts-node-dev babel-node @swc-node/register sucrase", "bun run file.ts", "runtime"],
+  ["esbuild webpack webpack-cli rollup parcel tsup unbuild @swc/core @babel/core @babel/cli @babel/preset-env @babel/preset-typescript", "bun build / Bun.build / Bun.Transpiler", "bundler"],
+  ["nodemon", "bun --watch / bun --hot", "runtime/watch-mode"],
+  ["dotenv dotenv-expand dotenv-cli", ".env is read automatically", "runtime/environment-variables"],
+  ["node-fetch undici axios got ky cross-fetch isomorphic-fetch whatwg-fetch superagent request", "global fetch", "runtime/networking/fetch"],
+  ["ws isomorphic-ws uWebSockets.js", "Bun.serve websocket / global WebSocket", "runtime/http/websockets"],
+  ["express koa fastify restify", "Bun.serve", "runtime/http/server"],
+  ["uuid nanoid", "crypto.randomUUID / Bun.randomUUIDv7", "guides/util/javascript-uuid"],
+  ["glob fast-glob globby tiny-glob micromatch minimatch picomatch", "Bun.Glob", "runtime/glob"],
+  ["better-sqlite3 sqlite3 sqlite sql.js", "bun:sqlite", "runtime/sqlite"],
+  ["pg postgres mysql2 mysql postgres-js", "Bun.SQL", "runtime/sql"],
+  ["redis ioredis @redis/client", "Bun.redis", "runtime/redis"],
+  ["@aws-sdk/client-s3 aws-sdk minio", "Bun.s3", "runtime/s3"],
+  ["bcrypt bcryptjs argon2 @node-rs/argon2 @node-rs/bcrypt", "Bun.password", "runtime/hashing"],
+  ["xxhash xxhash-wasm xxhashjs crc crc-32 murmurhash cityhash", "Bun.hash", "runtime/hashing"],
+  ["yaml js-yaml yamljs", "Bun.YAML / import of .yaml", "runtime/yaml"],
+  ["toml @iarna/toml smol-toml @ltd/j-toml", "Bun.TOML / import of .toml", "runtime/toml"],
+  ["json5", "Bun.JSON5 / import of .json5", "runtime/json5"],
+  ["marked markdown-it", "Bun.markdown", "runtime/markdown"],
+  ["chalk kleur picocolors colorette ansi-colors", "Bun.color / util.styleText", "runtime/color"],
+  ["color tinycolor2 color-convert", "Bun.color", "runtime/color"],
+  ["strip-ansi", "Bun.stripANSI", "runtime/utils"],
+  ["string-width", "Bun.stringWidth", "runtime/utils"],
+  ["escape-html", "Bun.escapeHTML", "runtime/utils"],
+  ["fast-deep-equal dequal lodash.isequal", "Bun.deepEquals", "runtime/utils"],
+  ["which", "Bun.which", "runtime/utils"],
+  ["execa cross-spawn shelljs zx", "Bun.spawn / Bun.$", "runtime/shell"],
+  ["semver", "Bun.semver", "runtime/semver"],
+  ["cookie js-cookie", "Bun.Cookie / Bun.CookieMap", "runtime/cookies"],
+  ["csrf csurf", "Bun.CSRF", "runtime/csrf"],
+  ["node-cron cron node-schedule", "Bun.cron", "runtime/cron"],
+  ["pako fflate zlib-sync", "Bun.gzipSync / Bun.deflateSync / Bun.zstdCompressSync", "runtime/utils"],
+  ["tar tar-stream adm-zip jszip", "Bun.Archive", "runtime/archive"],
+  ["minimist yargs yargs-parser commander mri arg", "util.parseArgs (node:util, fully supported)", "runtime/nodejs-compat"],
+  ["rimraf mkdirp fs-extra del make-dir", "node:fs rm/mkdir with recursive, Bun.write", "runtime/file-io"],
+  ["cross-env", "Bun scripts and Bun.env", "runtime/environment-variables"],
+  ["@types/node", "bun-types (@types/bun)", "typescript"],
+] as [string, string, string][])
+  for (const n of names.split(" ")) BUN_REPLACED[n] = bunAlt(what, page);
+
 /** Locale catalogues are the only place a non-English string may live. */
 const LOCALE_FILE =
   /(^|\/)(locales?|messages|i18n|l10n|translations?)\/|(^|[./])(fr|fr-FR)\.(json|ftl|arb|po|xlf|xliff|properties|ts)$|\/values-fr\/|\.fr\.(md|mdx|html)$|(^|\/)(fr|es|ja|zh-CN|de|it|pt)\//;
@@ -121,6 +171,11 @@ export const RULES: Rule[] = [
       !/^\.agents\/skills\/(vercel-|jules-|stitch-)/.test(f) /* skills mirrored from Vercel and Google keep their upstream code */ &&
       !/\/test\/.*\.test\.ts$/.test(f) /* fixtures quote node: imports as data */,
     line: (l) => NODE_REPLACED.some(([re]) => re.test(l)),
+  },
+  {
+    id: "bun-dependency",
+    why: "A package.json dependency that Bun replaces natively (bun-only stack); an exception needs a measured gain or a missing Bun feature in the manifest's bunExceptions map",
+    files: (f) => /(^|\/)package\.json$/.test(f) && !/(^|\/)(node_modules|fixtures?)\//.test(f) && !UPSTREAM_PORT.test(f) && !/^\.agents\/skills\/(vercel-|jules-|stitch-)/.test(f),
   },
   {
     id: "sovereign",
@@ -242,6 +297,29 @@ const globRe = (g: string) =>
 const allowed = (rule: string, f: string) =>
   (allow[rule] ?? []).some((g) => globRe(g).test(f));
 
+const DEP_SECTIONS = ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
+/** Dependencies of one package.json that Bun replaces and that carry no written exception. */
+export function bunDependencyHits(f: string, text: string): Hit[] {
+  let j: Record<string, any>;
+  try {
+    j = JSON.parse(text);
+  } catch {
+    return [];
+  }
+  const exceptions: Record<string, unknown> = j.bunExceptions ?? {};
+  const lines = text.split("\n");
+  const hits: Hit[] = [];
+  for (const sec of DEP_SECTIONS)
+    for (const name of Object.keys(j[sec] ?? {})) {
+      const alt = BUN_REPLACED[name];
+      const reason = exceptions[name];
+      if (!alt || (typeof reason === "string" && reason.trim().length > 12)) continue;
+      const line = lines.findIndex((l) => l.includes(`"${name}"`) && /:\s*"/.test(l)) + 1;
+      hits.push({ rule: "bun-dependency", file: f, line, text: `${name} (${sec}): use ${alt[0]} (${alt[1]})` });
+    }
+  return hits;
+}
+
 export function listFiles(root: string, paths: string[] = []): string[] {
   const r = Bun.spawnSync([
     "git",
@@ -274,7 +352,7 @@ export function scan(
         hits.push({ rule: r.id, file: f, line: 0, text: "" });
     const need = rules.filter(
       (r) =>
-        (r.line || r.id === "hardcoded-list") &&
+        (r.line || r.id === "hardcoded-list" || r.id === "bun-dependency") &&
         (r.files?.(f) ?? true) &&
         !allowed(r.id, f),
     );
@@ -288,6 +366,10 @@ export function scan(
     }
     const lines = text.split("\n");
     for (const r of need) {
+      if (r.id === "bun-dependency") {
+        hits.push(...bunDependencyHits(f, text));
+        continue;
+      }
       if (r.id === "hardcoded-list") {
         const slugs = new Set<string>();
         for (const m of text.matchAll(SLUG))
