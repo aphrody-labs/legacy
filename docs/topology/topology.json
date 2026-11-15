@@ -1174,7 +1174,7 @@
       "name": "aphrody-i18n",
       "kind": "module",
       "language": "rust",
-      "loc": 528,
+      "loc": 1092,
       "file": "src/i18n"
      },
      {
@@ -1226,28 +1226,12 @@
       "file": "src/tv/core"
      },
      {
-      "id": "src/tv/i18n",
-      "name": "tv-i18n",
-      "kind": "module",
-      "language": "rust",
-      "loc": 166,
-      "file": "src/tv/i18n"
-     },
-     {
       "id": "src/wayland/gamescope/core",
       "name": "gamescope-core",
       "kind": "module",
       "language": "rust",
       "loc": 2734,
       "file": "src/wayland/gamescope/core"
-     },
-     {
-      "id": "packages/net",
-      "name": "@aphrody/net",
-      "kind": "module",
-      "language": "typescript",
-      "loc": 231,
-      "file": "packages/net"
      }
     ]
    },
@@ -1256,14 +1240,6 @@
     "name": "L2 platform",
     "kind": "domain",
     "children": [
-     {
-      "id": "src/core/capi",
-      "name": "aphrody-core-capi",
-      "kind": "module",
-      "language": "rust",
-      "loc": 1993,
-      "file": "src/core/capi"
-     },
      {
       "id": "src/drivers/gpu/dx12",
       "name": "dx12-hal",
@@ -1433,11 +1409,19 @@
       "file": "src/wayland/tiler"
      },
      {
+      "id": "src/wayland/wslg-transport",
+      "name": "wslg-transport",
+      "kind": "module",
+      "language": "rust",
+      "loc": 295,
+      "file": "src/wayland/wslg-transport"
+     },
+     {
       "id": "packages/ffi-bridge",
       "name": "@aphrody/ffi-bridge",
       "kind": "module",
       "language": "typescript",
-      "loc": 726,
+      "loc": 570,
       "file": "packages/ffi-bridge"
      },
      {
@@ -1504,20 +1488,28 @@
       "file": "src/chromium/factory"
      },
      {
+      "id": "src/core/capi",
+      "name": "aphrody-core-capi",
+      "kind": "module",
+      "language": "rust",
+      "loc": 2707,
+      "file": "src/core/capi"
+     },
+     {
+      "id": "src/core/capi/py",
+      "name": "aphrody-core-py",
+      "kind": "module",
+      "language": "rust",
+      "loc": 143,
+      "file": "src/core/capi/py"
+     },
+     {
       "id": "src/core/jni",
       "name": "aphrody-core-jni",
       "kind": "module",
       "language": "rust",
       "loc": 278,
       "file": "src/core/jni"
-     },
-     {
-      "id": "src/core/py",
-      "name": "aphrody-core-py",
-      "kind": "module",
-      "language": "rust",
-      "loc": 143,
-      "file": "src/core/py"
      },
      {
       "id": "src/corelib",
@@ -1622,14 +1614,6 @@
       "language": "rust",
       "loc": 434,
       "file": "src/env"
-     },
-     {
-      "id": "src/ffi",
-      "name": "aphrody-ffi",
-      "kind": "module",
-      "language": "rust",
-      "loc": 823,
-      "file": "src/ffi"
      },
      {
       "id": "src/game",
@@ -1752,27 +1736,11 @@
       "file": "src/rt"
      },
      {
-      "id": "src/rust-stack",
-      "name": "rust-stack",
-      "kind": "module",
-      "language": "rust",
-      "loc": 4650,
-      "file": "src/rust-stack"
-     },
-     {
-      "id": "src/ui/brand-gpu",
-      "name": "aphrody-brand-gpu",
-      "kind": "module",
-      "language": "rust",
-      "loc": 293,
-      "file": "src/ui/brand-gpu"
-     },
-     {
       "id": "src/ui/kit",
       "name": "aphrody-ui",
       "kind": "module",
       "language": "rust",
-      "loc": 55584,
+      "loc": 55892,
       "file": "src/ui/kit"
      },
      {
@@ -1820,16 +1788,8 @@
       "name": "@aphrody/assets",
       "kind": "module",
       "language": "typescript",
-      "loc": 5381,
+      "loc": 5379,
       "file": "packages/assets"
-     },
-     {
-      "id": "packages/bun-types",
-      "name": "bun-types",
-      "kind": "module",
-      "language": "typescript",
-      "loc": 32495,
-      "file": "packages/bun-types"
      },
      {
       "id": "packages/bunify",
@@ -1844,7 +1804,7 @@
       "name": "@aphrody/chromium-bun",
       "kind": "module",
       "language": "typescript",
-      "loc": 11953,
+      "loc": 12168,
       "file": "packages/chromium-bun"
      },
      {
@@ -1868,7 +1828,7 @@
       "name": "@aphrody/deploy",
       "kind": "module",
       "language": "typescript",
-      "loc": 4247,
+      "loc": 4439,
       "file": "packages/deploy"
      },
      {
@@ -1884,7 +1844,7 @@
       "name": "@aphrody/env-kit",
       "kind": "module",
       "language": "typescript",
-      "loc": 8681,
+      "loc": 6635,
       "file": "packages/env-kit"
      },
      {
@@ -1894,6 +1854,14 @@
       "language": "typescript",
       "loc": 2059,
       "file": "packages/gaming"
+     },
+     {
+      "id": "packages/gcp",
+      "name": "@aphrody/gcp",
+      "kind": "module",
+      "language": "typescript",
+      "loc": 1675,
+      "file": "packages/gcp"
      },
      {
       "id": "packages/ghidra",
@@ -1916,7 +1884,7 @@
       "name": "@aphrody/i18n",
       "kind": "module",
       "language": "typescript",
-      "loc": 687,
+      "loc": 1447,
       "file": "packages/i18n"
      },
      {
@@ -1924,7 +1892,7 @@
       "name": "@aphrody/native",
       "kind": "module",
       "language": "typescript",
-      "loc": 415606,
+      "loc": 137,
       "file": "packages/native"
      },
      {
@@ -1932,7 +1900,7 @@
       "name": "@aphrody/py2bun",
       "kind": "module",
       "language": "typescript",
-      "loc": 3068,
+      "loc": 3067,
       "file": "packages/py2bun"
      },
      {
@@ -1948,7 +1916,7 @@
       "name": "@aphrody/upstream",
       "kind": "module",
       "language": "typescript",
-      "loc": 5506,
+      "loc": 5505,
       "file": "packages/upstream"
      },
      {
@@ -1956,7 +1924,7 @@
       "name": "@aphrody/vault",
       "kind": "module",
       "language": "typescript",
-      "loc": 3731,
+      "loc": 3886,
       "file": "packages/vault"
      },
      {
@@ -1964,7 +1932,7 @@
       "name": "@aphrody/wck",
       "kind": "module",
       "language": "typescript",
-      "loc": 4641,
+      "loc": 4639,
       "file": "packages/wck"
      }
     ]
@@ -1979,23 +1947,15 @@
       "name": "agent-context",
       "kind": "module",
       "language": "rust",
-      "loc": 182,
+      "loc": 254,
       "file": "src/agent/context"
-     },
-     {
-      "id": "src/agent/py",
-      "name": "agent-py",
-      "kind": "module",
-      "language": "rust",
-      "loc": 69,
-      "file": "src/agent/py"
      },
      {
       "id": "src/electron-migrate",
       "name": "aphrody-electron-migrate",
       "kind": "module",
       "language": "rust",
-      "loc": 5333,
+      "loc": 5334,
       "file": "src/electron-migrate"
      },
      {
@@ -2003,16 +1963,8 @@
       "name": "@aphrody/ai-os",
       "kind": "module",
       "language": "typescript",
-      "loc": 48874,
+      "loc": 48871,
       "file": "packages/ai-os"
-     },
-     {
-      "id": "packages/ai-os/python/agent_core",
-      "name": "agent-core",
-      "kind": "module",
-      "language": "python",
-      "loc": 0,
-      "file": "packages/ai-os/python/agent_core"
      },
      {
       "id": "packages/ai-os/python/hermes_agent_memory",
@@ -2034,7 +1986,7 @@
       "name": "aphrody",
       "kind": "module",
       "language": "rust",
-      "loc": 9687,
+      "loc": 9631,
       "file": "src/ay"
      },
      {
@@ -2074,7 +2026,7 @@
       "name": "tv-cli",
       "kind": "module",
       "language": "rust",
-      "loc": 205,
+      "loc": 207,
       "file": "src/tv/cli"
      },
      {
@@ -2082,7 +2034,7 @@
       "name": "gamescope-cli",
       "kind": "module",
       "language": "rust",
-      "loc": 568,
+      "loc": 570,
       "file": "src/wayland/gamescope/cli"
      },
      {
@@ -2114,7 +2066,7 @@
       "name": "@aphrody/nt",
       "kind": "module",
       "language": "typescript",
-      "loc": 10436,
+      "loc": 10536,
       "file": "apps/nt"
      }
     ]
@@ -2273,7 +2225,7 @@
   },
   {
    "source": "src/core/capi",
-   "target": "src/ffi",
+   "target": "src/corelib/adblock-capi",
    "kind": "dispatch"
   },
   {
@@ -2282,33 +2234,18 @@
    "kind": "dispatch"
   },
   {
+   "source": "src/core/capi",
+   "target": "packages/wck",
+   "kind": "dispatch"
+  },
+  {
    "source": "src/corelib",
-   "target": "src/ffi",
+   "target": "src/core/capi",
    "kind": "dispatch"
   },
   {
    "source": "src/drivers/gpu/dx12",
    "target": "packages/ffi-bridge",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/corelib/adblock-capi",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/ffi",
-   "target": "packages/ffi-bridge",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/rust-stack",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/ffi",
-   "target": "packages/wck",
    "kind": "dispatch"
   },
   {
@@ -2442,29 +2379,14 @@
    "kind": "dispatch"
   },
   {
-   "source": "packages/bun-types",
-   "target": "ds:s3",
-   "kind": "call"
-  },
-  {
-   "source": "packages/bun-types",
-   "target": "ds:valkey",
-   "kind": "call"
-  },
-  {
-   "source": "packages/bun-types",
+   "source": "packages/chromium-bun",
    "target": "ds:sqlite",
-   "kind": "call"
-  },
-  {
-   "source": "packages/bun-types",
-   "target": "ds:postgres",
    "kind": "call"
   },
   {
    "source": "packages/chromium-bun",
-   "target": "ds:sqlite",
-   "kind": "call"
+   "target": "src/net",
+   "kind": "dispatch"
   },
   {
    "source": "packages/chromium-bun",
@@ -2577,23 +2499,8 @@
    "kind": "dispatch"
   },
   {
-   "source": "packages/native",
-   "target": "packages/core",
-   "kind": "dispatch"
-  },
-  {
-   "source": "packages/native",
-   "target": "src/runtime",
-   "kind": "dispatch"
-  },
-  {
-   "source": "packages/native",
-   "target": "src/platform",
-   "kind": "dispatch"
-  },
-  {
    "source": "packages/release",
-   "target": "src/agent/py",
+   "target": "src/agent/context",
    "kind": "dispatch"
   },
   {
@@ -2629,11 +2536,6 @@
   {
    "source": "apps/nt",
    "target": "src/tcc_sys",
-   "kind": "dispatch"
-  },
-  {
-   "source": "apps/nt",
-   "target": "packages/bun-types",
    "kind": "dispatch"
   },
   {
@@ -3072,11 +2974,6 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/agent/py",
-   "target": "src/agent/context",
-   "kind": "call"
-  },
-  {
    "source": "src/analytics",
    "target": "src/bun_core",
    "kind": "call"
@@ -3453,12 +3350,12 @@
   },
   {
    "source": "src/ay",
-   "target": "src/env",
+   "target": "src/histogram",
    "kind": "call"
   },
   {
    "source": "src/ay",
-   "target": "src/i18n",
+   "target": "src/machine",
    "kind": "call"
   },
   {
@@ -3488,17 +3385,17 @@
   },
   {
    "source": "src/ay",
-   "target": "src/sys",
-   "kind": "call"
-  },
-  {
-   "source": "src/ay",
    "target": "src/ui/kit",
    "kind": "call"
   },
   {
    "source": "src/ay",
    "target": "src/up",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/wyhash",
    "kind": "call"
   },
   {
@@ -4047,22 +3944,57 @@
    "kind": "call"
   },
   {
-   "source": "src/core/jni",
-   "target": "src/core",
+   "source": "src/core/capi",
+   "target": "src/corelib",
    "kind": "call"
   },
   {
-   "source": "src/core/jni",
+   "source": "src/core/capi",
+   "target": "src/depot/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "src/depot/forge",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "src/depot/graph",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "src/depot/ingest",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "src/depot/migrate",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
    "target": "src/re",
    "kind": "call"
   },
   {
-   "source": "src/core/py",
+   "source": "src/core/capi/py",
    "target": "src/core",
    "kind": "call"
   },
   {
-   "source": "src/core/py",
+   "source": "src/core/capi/py",
+   "target": "src/re",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/jni",
+   "target": "src/core",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/jni",
    "target": "src/re",
    "kind": "call"
   },
@@ -4489,51 +4421,6 @@
   {
    "source": "src/exe_format",
    "target": "src/sys",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/core",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/core/capi",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/corelib",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/depot/core",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/depot/forge",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/depot/graph",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/depot/ingest",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/depot/migrate",
-   "kind": "call"
-  },
-  {
-   "source": "src/ffi",
-   "target": "src/re",
    "kind": "call"
   },
   {
@@ -7612,21 +7499,6 @@
    "kind": "call"
   },
   {
-   "source": "src/rust-stack",
-   "target": "src/corelib",
-   "kind": "call"
-  },
-  {
-   "source": "src/rust-stack",
-   "target": "src/taffy",
-   "kind": "call"
-  },
-  {
-   "source": "src/rust-stack",
-   "target": "src/ui/kit",
-   "kind": "call"
-  },
-  {
    "source": "src/s3_signing",
    "target": "src/base64",
    "kind": "call"
@@ -8533,17 +8405,17 @@
   },
   {
    "source": "src/tv/cli",
+   "target": "src/i18n",
+   "kind": "call"
+  },
+  {
+   "source": "src/tv/cli",
    "target": "src/tv/core",
    "kind": "call"
   },
   {
    "source": "src/tv/cli",
    "target": "src/tv/ffmpeg",
-   "kind": "call"
-  },
-  {
-   "source": "src/tv/cli",
-   "target": "src/tv/i18n",
    "kind": "call"
   },
   {
@@ -8554,11 +8426,6 @@
   {
    "source": "src/ui/kit",
    "target": "src/taffy",
-   "kind": "call"
-  },
-  {
-   "source": "src/ui/kit",
-   "target": "src/ui/brand-gpu",
    "kind": "call"
   },
   {
@@ -8772,6 +8639,11 @@
    "kind": "call"
   },
   {
+   "source": "src/wayland/wslg-transport",
+   "target": "src/drivers/gpu/dx12",
+   "kind": "call"
+  },
+  {
    "source": "src/which",
    "target": "src/bun_core",
    "kind": "call"
@@ -8882,18 +8754,8 @@
    "kind": "call"
   },
   {
-   "source": "packages/ai-os/python/hermes_agent_memory",
-   "target": "packages/ai-os/python/agent_core",
-   "kind": "call"
-  },
-  {
    "source": "packages/core",
    "target": "src/core/capi",
-   "kind": "call"
-  },
-  {
-   "source": "packages/core",
-   "target": "src/ffi",
    "kind": "call"
   },
   {
@@ -8902,13 +8764,28 @@
    "kind": "call"
   },
   {
-   "source": "packages/core-py",
-   "target": "src/ffi",
+   "source": "packages/env-kit",
+   "target": "packages/vault",
    "kind": "call"
   },
   {
    "source": "packages/ffi-bridge",
    "target": "src/drivers/gpu/dx12",
+   "kind": "call"
+  },
+  {
+   "source": "packages/gcp",
+   "target": "packages/env-kit",
+   "kind": "call"
+  },
+  {
+   "source": "packages/gcp",
+   "target": "packages/vault",
+   "kind": "call"
+  },
+  {
+   "source": "packages/i18n",
+   "target": "packages/ai-os",
    "kind": "call"
   },
   {
@@ -8944,11 +8821,6 @@
   {
    "source": "src/lore/aws",
    "target": "ds:s3",
-   "kind": "call"
-  },
-  {
-   "source": "src/rust-stack",
-   "target": "ds:sqlite",
    "kind": "call"
   },
   {
@@ -9037,6 +8909,11 @@
    "kind": "dispatch"
   },
   {
+   "source": "src/ay",
+   "target": "packages/i18n",
+   "kind": "dispatch"
+  },
+  {
    "source": "ci",
    "target": "packages/ai-os",
    "kind": "dispatch"
@@ -9044,11 +8921,6 @@
   {
    "source": "ci",
    "target": "src/agent/context",
-   "kind": "dispatch"
-  },
-  {
-   "source": "ci",
-   "target": "src/agent/py",
    "kind": "dispatch"
   },
   {
@@ -9183,7 +9055,7 @@
   },
   {
    "source": "uv",
-   "target": "packages/ai-os/python/agent_core",
+   "target": "src/agent/context",
    "kind": "dispatch"
   },
   {
@@ -9202,30 +9074,28 @@
   "packages/ai-os",
   "packages/ai-os/python/hermes_agent_memory",
   "packages/assets",
-  "packages/bun-types",
   "packages/bunify",
   "packages/chromium-bun",
   "packages/deploy",
   "packages/design",
   "packages/env-kit",
+  "packages/gcp",
   "packages/ghidra",
   "packages/gnu",
   "packages/i18n",
   "packages/machine",
-  "packages/net",
   "packages/py2bun",
   "packages/vault",
   "packages/wck",
-  "src/agent/py",
+  "src/agent/context",
   "src/apm",
   "src/ay",
   "src/chromium/factory",
   "src/core/capi",
+  "src/core/capi/py",
   "src/core/jni",
-  "src/core/py",
   "src/corelib/adblock-capi",
   "src/drivers/gpu/dx12",
-  "src/ffi",
   "src/game",
   "src/ghidra-bun",
   "src/gnu/bc",
@@ -9245,11 +9115,9 @@
   "src/posix/omarchy",
   "src/posix/wslg",
   "src/py2bun",
-  "src/rust-stack",
   "src/sema/standalone",
   "src/steam",
   "src/tv/cli",
-  "src/ui/brand-gpu",
   "src/ui/kit",
   "src/vault",
   "src/wayland/gamescope/cli",
@@ -9260,13 +9128,15 @@
   "tools/build-model",
   "uv"
  ],
- "deadEnds": [],
+ "deadEnds": [
+  "src/wayland/wslg-transport"
+ ],
  "observations": [
-  "Most depended-on units (single points of failure): bun_core (108), bun_alloc (59), bun_collections (45), bun_sys (44), bun_ast (35).",
-  "0 units have no inbound edge, no binary and are never named elsewhere: unwired candidates for wiring into ay or deletion.",
-  "0 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
-  "136 of 228 Rust units are absorbed Bun crates (bun_*).",
-  "Units linking a data-store client (manifest dependency or Bun built-in API; read/write not measured): SQLite 14, S3 / R2 5, Valkey / Redis 3, Postgres 3.",
+  "Most depended-on units (single points of failure): bun_core (108), bun_alloc (59), bun_collections (45), bun_sys (43), bun_ast (35).",
+  "1 units have no inbound edge, no binary and are never named elsewhere: unwired candidates for wiring into ay or deletion.",
+  "1 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
+  "136 of 224 Rust units are absorbed Bun crates (bun_*).",
+  "Units linking a data-store client (manifest dependency or Bun built-in API; read/write not measured): SQLite 12, S3 / R2 4, Valkey / Redis 2, Postgres 2.",
   "No dependency cycle (checkdeps).",
   "Every ay External route resolves to a binary in the tree."
  ],
@@ -9274,7 +9144,7 @@
   {
    "name": "just to SQLite",
    "persona": "maintainer (just recipe)",
-   "description": "Shortest dependency path from the entry point just (reaches 202 units) to the data store SQLite.",
+   "description": "Shortest dependency path from the entry point just (reaches 197 units) to the data store SQLite.",
    "steps": [
     {
      "label": "Entry: just",
@@ -9299,7 +9169,7 @@
   {
    "name": "aphrody to SQLite",
    "persona": "CLI or library user",
-   "description": "Shortest dependency path from the entry point aphrody (reaches 201 units) to the data store SQLite.",
+   "description": "Shortest dependency path from the entry point aphrody (reaches 196 units) to the data store SQLite.",
    "steps": [
     {
      "label": "Entry: aphrody",
@@ -9324,7 +9194,7 @@
   {
    "name": "ci to SQLite",
    "persona": "CI (GitHub workflow)",
-   "description": "Shortest dependency path from the entry point ci (reaches 190 units) to the data store SQLite.",
+   "description": "Shortest dependency path from the entry point ci (reaches 186 units) to the data store SQLite.",
    "steps": [
     {
      "label": "Entry: ci",

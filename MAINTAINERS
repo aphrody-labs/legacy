@@ -198,9 +198,7 @@ L:	contact@aphrody.com
 S:	Supported
 W:	https://about.aphrody.com
 T:	git https://github.com/aphrody-dev/bench.git
-T:	git https://github.com/aphrody-dev/rust-stack.git
 F:	bench/
-F:	src/rust-stack/
 
 SOVEREIGN AI CONTROL PLANE & KNOWLEDGE ENGINE
 M:	Aphrody Engineering <contact@aphrody.com>
@@ -226,7 +224,6 @@ F:	src/depot/cas/
 F:	src/lore/base/
 F:	src/lore/io/
 F:	packages/core/
-F:	packages/net/
 
 LAYER L2 PLATFORM ABSTRACTION (Windows, Linux, Cloudflare, Vercel, C ABI)
 M:	skill:microsoft skill:windows-machine agent:claude <contact@aphrody.com>
@@ -240,7 +237,6 @@ LAYER L4 AGENT
 M:	agent:claude skill:claude-api <contact@aphrody.com>
 S:	Supported
 F:	src/agent/context/
-F:	src/agent/py/
 F:	infra/fleet/prd/systemd/aphrody-relay.service
 F:	packages/ai-os/
 

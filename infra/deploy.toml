@@ -90,16 +90,6 @@ port = 4000
 blue_port = 14000
 green_port = 24000
 
-[services.rust-stack]
-path = "C:/src/src/depot/cli"
-runtime = "rust-daemon"
-region = "eu-fr"
-nodes = ["usa"]
-domains = ["depot.internal.aphrody.com"]
-port = 4100
-blue_port = 14100
-green_port = 24100
-
 [services.ai-triad]
 path = "packages/ai-os"
 runtime = "bun-fullstack"
@@ -135,7 +125,7 @@ verify_gate = "wck check C:/src/apps/yolo"
 # -----------------------------------------------------------------------------
 # Live test targets (owner directive 2026-11-12). Tests tagged e2e:auth drive the
 # owner's logged-in Chrome over CDP (APHRODY_CDP_URL, profile dir in
-# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: packages/net/targets.json.
+# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: packages/chromium-bun/test/targets.json.
 # Pure unit fixtures (URL parsing, rewriting) keep RFC 2606 example.* hosts: they must not touch the network.
 # -----------------------------------------------------------------------------
 [test_targets.gemini]
@@ -225,7 +215,7 @@ vps_exec = "bun run server.ts"
 # GitHub Actions secrets pushed by `ay auth gh-secrets` (`gh secret set --body -`, value on stdin).
 # AI provider keys (ANTHROPIC_API_KEY...) are synced by the AI provider tooling, not listed here.
 [auth.github.repo_secrets]
-"aphrody-labs/src" = [
+"aphrody-labs/aphrody" = [
   "CLOUDFLARE_API_TOKEN",
   "CLOUDFLARE_ACCOUNT_ID",
   "HOSTINGER_API_TOKEN",
@@ -268,7 +258,7 @@ provider = "aphrody-dev"
 issuer = "https://token.actions.githubusercontent.com"
 condition = "assertion.repository_owner=='aphrody-labs'"
 service_account = "yolo-automation@aphrody.iam.gserviceaccount.com"
-repos = ["aphrody-labs/src"]
+repos = ["aphrody-labs/aphrody"]
 # caller account: APHRODY_OWNER_GOOGLE_ACCOUNT (vault), never written here
 
 [auth.oidc.replaces]
@@ -294,7 +284,6 @@ platforms = ["linux/amd64", "linux/arm64"]
 ai-os = { target = "ai-os", services = ["ai-os-relay", "ai-os-gateway"], host_ports = [28790, 24000], profile = "core", nodes = ["usa"] }
 aphrody = { target = "aphrody", services = ["aphrody"], host_ports = [23000], profile = "core", nodes = ["usa"] }
 yolo = { target = "yolo", services = ["yolo"], host_ports = [23092], profile = "core", nodes = ["usa"] }
-rust-stack = { target = "rust-stack", services = ["rust-stack"], host_ports = [24100], profile = "core", nodes = ["usa"] }
 r3d = { target = "r3d", services = ["r3d"], host_ports = [28080], profile = "core", nodes = ["usa"] }
 loreserver = { target = "loreserver", services = ["loreserver"], host_ports = [31339], profile = "core", nodes = ["usa"] }
 r2-site = { target = "r2-site", services = ["downloads", "cdn"], host_ports = [28797, 28796], profile = "edge", nodes = ["fr2", "usa"] }

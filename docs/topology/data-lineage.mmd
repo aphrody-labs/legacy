@@ -4,11 +4,10 @@ graph LR
   s3[("S3 / R2")]
   postgres[("Postgres")]
   L4 -- "2 units link the client" --> sqlite
-  L3 -- "8 units link the client" --> sqlite
-  L3 -- "3 units link the client" --> s3
-  L3 -- "1 units link the client" --> valkey
-  L3 -- "2 units link the client" --> postgres
-  L2 -- "2 units link the client" --> sqlite
+  L3 -- "7 units link the client" --> sqlite
+  L3 -- "2 units link the client" --> s3
+  L3 -- "1 units link the client" --> postgres
+  L2 -- "1 units link the client" --> sqlite
   L2 -- "1 units link the client" --> valkey
   L5 -- "1 units link the client" --> sqlite
   L5 -- "1 units link the client" --> valkey

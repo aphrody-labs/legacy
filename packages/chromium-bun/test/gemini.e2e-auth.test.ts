@@ -2,20 +2,37 @@
 // e.g. http://127.0.0.1:9222 for a Chrome started with --remote-debugging-port and
 // --user-data-dir=$APHRODY_CHROME_PROFILE). Skipped cleanly otherwise. Run on the PC.
 import { describe, expect, test } from "bun:test";
-import targets from "../targets.json";
-import { fromResponse, openPage } from "../src/cdp";
-import { probe } from "../src/probe";
+import { probe } from "../src/net/probe.ts";
+import {
+  ChromiumBunCdpClient,
+  networkTimingFromResponse,
+} from "../src/browser/cdp-client.ts";
+import targets from "./targets.json";
 
 const CDP = process.env.APHRODY_CDP_URL;
 const T = targets.gemini;
 
 describe.skipIf(!CDP)("e2e:auth gemini", () => {
   test("authenticated load, prompt, streamed model response, h2/h3 + TLS 1.3", async () => {
-    const page = await openPage(CDP!, "about:blank");
+    const cdp = await ChromiumBunCdpClient.connect({ endpoint: CDP! });
+    const events: { method: string; params: Record<string, any> }[] = [];
+    const targetId = await cdp.createTarget("about:blank");
     try {
-      await page.send("Network.enable");
-      await page.send("Page.enable");
-      await page.send("Page.navigate", { url: T.url });
+      await cdp.attachToTarget(targetId);
+      for (const method of [
+        "Network.responseReceived",
+        "Network.webSocketCreated",
+        "Network.dataReceived",
+      ])
+        cdp.on(method, (params) => events.push({ method, params }));
+      await cdp.send("Network.enable");
+      await cdp.send("Page.enable");
+      await cdp.send("Page.navigate", { url: T.url });
+      const page = {
+        evaluate: (expr: string) => cdp.evaluate(expr),
+        events,
+        send: (m: string, p?: Record<string, unknown>) => cdp.send(m, p),
+      };
       const until = async (expr: string, ms = 30_000) => {
         const end = Date.now() + ms;
         while (Date.now() < end) {
@@ -34,7 +51,7 @@ describe.skipIf(!CDP)("e2e:auth gemini", () => {
           e.method === "Network.responseReceived" &&
           e.params.type === "Document",
       );
-      const chrome = fromResponse(doc!.params);
+      const chrome = networkTimingFromResponse(doc!.params);
       expect(["h2", "h3"]).toContain(chrome.protocol);
       expect(chrome.tls).toBe("TLS 1.3");
 
@@ -72,7 +89,8 @@ describe.skipIf(!CDP)("e2e:auth gemini", () => {
         console.log(JSON.stringify({ chrome, ours }, null, 2));
       }
     } finally {
-      await page.close();
+      await cdp.closeTarget(targetId).catch(() => false);
+      await cdp.close();
     }
   }, 180_000);
 });

@@ -31,7 +31,6 @@ const CANONICAL_NPM_KEEP = new Set([
   "@aphrody/ffi-bridge",
   "@aphrody/gaming",
   "@aphrody/machine",
-  "@aphrody/net",
   "@aphrody/release",
   "@aphrody/shell-matrix",
   "@aphrody/upstream",

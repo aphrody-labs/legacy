@@ -35,7 +35,7 @@ let lib: ReturnType<typeof open> | undefined;
 function open() {
   const path =
     process.env.APHRODY_NET_LIB ??
-    join(import.meta.dir, "../../../target/release", libName);
+    join(import.meta.dir, "../../../../target/release", libName);
   return dlopen(path, {
     aphrody_net_probe_json: {
       args: [FFIType.cstring, FFIType.cstring],

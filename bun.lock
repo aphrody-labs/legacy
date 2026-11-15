@@ -172,10 +172,6 @@
       "name": "@aphrody/native",
       "version": "0.1.0",
     },
-    "packages/net": {
-      "name": "@aphrody/net",
-      "version": "0.2.0",
-    },
     "packages/py2bun": {
       "name": "@aphrody/py2bun",
       "version": "0.1.0",
@@ -303,8 +299,6 @@
     "@aphrody/machine": ["@aphrody/machine@workspace:packages/machine"],
 
     "@aphrody/native": ["@aphrody/native@workspace:packages/native"],
-
-    "@aphrody/net": ["@aphrody/net@workspace:packages/net"],
 
     "@aphrody/nt": ["@aphrody/nt@workspace:apps/nt"],
 
