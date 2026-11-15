@@ -231,6 +231,13 @@ name = "context7"
 url = "https://mcp.context7.com/mcp"
 headers = { CONTEXT7_API_KEY = "CTX7_API_KEY" }
 
+# Package registries, read live (crates.io v1 API, docs.rs links, registry.npmjs.org): versions, dist-tags, MSRV, features,
+# yanked releases, search. hub_call registry__crates_search | registry__crate_info | registry__crate_readme |
+# registry__npm_search | registry__npm_info. Library docs come from context7; every host runs it with its own bun.
+[[hub.mcp]]
+name = "registry"
+command = ["bun", "{src}/packages/ai-os/src/relay/registry-mcp.ts"]
+
 # GNU upstream tracker (packages/gnu feed: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix, Rust equivalents, Linux kernel).
 # hub_call gnu__gnu_status | gnu__gnu_search | gnu__gnu_package | gnu__gnu_feed | gnu__gnu_kernel; feed from GNU_FEED, GNU_HOME or https://gnu.aphrody.com/feed.json.
 [[hub.mcp]]
