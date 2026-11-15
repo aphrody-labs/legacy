@@ -1579,6 +1579,440 @@
       },
       "sparse_paths": null
     },
+    "third_party/cosmic-app-library": {
+      "path": "third_party/cosmic-app-library",
+      "url": "https://github.com/aphrody-labs/cosmic-app-library.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-app-library.git",
+      "commit": "90c399d882e7ea7f03e344e88caac5034e4ea94c",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-app-library.git",
+        "upstream": "https://github.com/pop-os/cosmic-app-library.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-applets": {
+      "path": "third_party/cosmic-applets",
+      "url": "https://github.com/aphrody-labs/cosmic-applets.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-applets.git",
+      "commit": "ecb6b61986f90130a8f7bef8b3d414de0fb91916",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-applets.git",
+        "upstream": "https://github.com/pop-os/cosmic-applets.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-bg": {
+      "path": "third_party/cosmic-bg",
+      "url": "https://github.com/aphrody-labs/cosmic-bg.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-bg.git",
+      "commit": "243990320904ac1f80f8888babd34e864f974bd0",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-bg.git",
+        "upstream": "https://github.com/pop-os/cosmic-bg.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-comp": {
+      "path": "third_party/cosmic-comp",
+      "url": "https://github.com/aphrody-labs/cosmic-comp.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-comp.git",
+      "commit": "f2beba6eccb7ae4d66c962dfb933fcaa2450166b",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-comp.git",
+        "upstream": "https://github.com/pop-os/cosmic-comp.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-edit": {
+      "path": "third_party/cosmic-edit",
+      "url": "https://github.com/aphrody-labs/cosmic-edit.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-edit.git",
+      "commit": "e14ce78d5add0cc33681ce4e55f5d947def2e6b2",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-edit.git",
+        "upstream": "https://github.com/pop-os/cosmic-edit.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-epoch": {
+      "path": "third_party/cosmic-epoch",
+      "url": "https://github.com/aphrody-labs/cosmic-epoch.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-epoch.git",
+      "commit": "e98f8289a22f9e612feee7d4c6ba197782db154b",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-epoch.git",
+        "upstream": "https://github.com/pop-os/cosmic-epoch.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-files": {
+      "path": "third_party/cosmic-files",
+      "url": "https://github.com/aphrody-labs/cosmic-files.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-files.git",
+      "commit": "2c20e74a0bd01c5d24ffe730290b152a46d983be",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-files.git",
+        "upstream": "https://github.com/pop-os/cosmic-files.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-greeter": {
+      "path": "third_party/cosmic-greeter",
+      "url": "https://github.com/aphrody-labs/cosmic-greeter.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-greeter.git",
+      "commit": "20af0633580052f9a6877b9934670c9d77149496",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-greeter.git",
+        "upstream": "https://github.com/pop-os/cosmic-greeter.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-icons": {
+      "path": "third_party/cosmic-icons",
+      "url": "https://github.com/aphrody-labs/cosmic-icons.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-icons.git",
+      "commit": "f1a282a0822aed1f0083dd2ab2e6c65bd5b401eb",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-icons.git",
+        "upstream": "https://github.com/pop-os/cosmic-icons.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-idle": {
+      "path": "third_party/cosmic-idle",
+      "url": "https://github.com/aphrody-labs/cosmic-idle.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-idle.git",
+      "commit": "6d6f07af60bb307882cdcbd0bda0a6fc76bd0df3",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-idle.git",
+        "upstream": "https://github.com/pop-os/cosmic-idle.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-initial-setup": {
+      "path": "third_party/cosmic-initial-setup",
+      "url": "https://github.com/aphrody-labs/cosmic-initial-setup.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-initial-setup.git",
+      "commit": "58d0e4c837ddca0d525db0ca8c298776e3648e49",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-initial-setup.git",
+        "upstream": "https://github.com/pop-os/cosmic-initial-setup.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-launcher": {
+      "path": "third_party/cosmic-launcher",
+      "url": "https://github.com/aphrody-labs/cosmic-launcher.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-launcher.git",
+      "commit": "29c1bac5e8f9f83b9e2cef03bb0259a04ffd7f2a",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-launcher.git",
+        "upstream": "https://github.com/pop-os/cosmic-launcher.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-monitor": {
+      "path": "third_party/cosmic-monitor",
+      "url": "https://github.com/aphrody-labs/cosmic-monitor.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-monitor.git",
+      "commit": "2f5aa4d6a8c8333659f3c95388a1a6db450af327",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-monitor.git",
+        "upstream": "https://github.com/pop-os/cosmic-monitor.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-notifications": {
+      "path": "third_party/cosmic-notifications",
+      "url": "https://github.com/aphrody-labs/cosmic-notifications.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-notifications.git",
+      "commit": "6131f80143b9da28083ffe8946bfe3a6b29a4c97",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-notifications.git",
+        "upstream": "https://github.com/pop-os/cosmic-notifications.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-osd": {
+      "path": "third_party/cosmic-osd",
+      "url": "https://github.com/aphrody-labs/cosmic-osd.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-osd.git",
+      "commit": "552753febb27baa2f54c6098033d4bd60a7473ed",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-osd.git",
+        "upstream": "https://github.com/pop-os/cosmic-osd.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-osk": {
+      "path": "third_party/cosmic-osk",
+      "url": "https://github.com/aphrody-labs/cosmic-osk.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-osk.git",
+      "commit": "6b146a2b0a23d88ae84223ad06c6813bda5a9386",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-osk.git",
+        "upstream": "https://github.com/pop-os/cosmic-osk.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-panel": {
+      "path": "third_party/cosmic-panel",
+      "url": "https://github.com/aphrody-labs/cosmic-panel.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-panel.git",
+      "commit": "160a951c8c050a327bb04a7ca22d62e573338c90",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-panel.git",
+        "upstream": "https://github.com/pop-os/cosmic-panel.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-player": {
+      "path": "third_party/cosmic-player",
+      "url": "https://github.com/aphrody-labs/cosmic-player.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-player.git",
+      "commit": "34a41f247a37eb681dd5c27c832e2d1f3c1dc1e4",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-player.git",
+        "upstream": "https://github.com/pop-os/cosmic-player.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-protocols": {
+      "path": "third_party/cosmic-protocols",
+      "url": "https://github.com/aphrody-labs/cosmic-protocols.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-protocols.git",
+      "commit": "815b2c5df84a4a82eb8fb505343f8ebde6aefc38",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-protocols.git",
+        "upstream": "https://github.com/pop-os/cosmic-protocols.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-randr": {
+      "path": "third_party/cosmic-randr",
+      "url": "https://github.com/aphrody-labs/cosmic-randr.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-randr.git",
+      "commit": "f1a97655c97e8799bf4a37a8f5103a8ab5e5068d",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-randr.git",
+        "upstream": "https://github.com/pop-os/cosmic-randr.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-screenshot": {
+      "path": "third_party/cosmic-screenshot",
+      "url": "https://github.com/aphrody-labs/cosmic-screenshot.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-screenshot.git",
+      "commit": "45549f7e940d495ecee9268f58824668814e970c",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-screenshot.git",
+        "upstream": "https://github.com/pop-os/cosmic-screenshot.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-session": {
+      "path": "third_party/cosmic-session",
+      "url": "https://github.com/aphrody-labs/cosmic-session.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-session.git",
+      "commit": "3fe5d42eda0c3121e67a62b1f67d06f67ecbb09d",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-session.git",
+        "upstream": "https://github.com/pop-os/cosmic-session.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-settings": {
+      "path": "third_party/cosmic-settings",
+      "url": "https://github.com/aphrody-labs/cosmic-settings.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-settings.git",
+      "commit": "6aaf30d69ec3ed64eeb1d441ef5fe0a2017b3fe6",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-settings.git",
+        "upstream": "https://github.com/pop-os/cosmic-settings.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-settings-daemon": {
+      "path": "third_party/cosmic-settings-daemon",
+      "url": "https://github.com/aphrody-labs/cosmic-settings-daemon.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-settings-daemon.git",
+      "commit": "a8d9d84cd1c13af510a20dc0f4ab1156c5726515",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-settings-daemon.git",
+        "upstream": "https://github.com/pop-os/cosmic-settings-daemon.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-sound-theme": {
+      "path": "third_party/cosmic-sound-theme",
+      "url": "https://github.com/aphrody-labs/cosmic-sound-theme.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-sound-theme.git",
+      "commit": "bf5335fe1af0cb3bee83e1ad2371410ee434658d",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-sound-theme.git",
+        "upstream": "https://github.com/pop-os/cosmic-sound-theme.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-store": {
+      "path": "third_party/cosmic-store",
+      "url": "https://github.com/aphrody-labs/cosmic-store.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-store.git",
+      "commit": "377ed6b88a91fd86761cd15dccfa70073a1a01be",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-store.git",
+        "upstream": "https://github.com/pop-os/cosmic-store.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-term": {
+      "path": "third_party/cosmic-term",
+      "url": "https://github.com/aphrody-labs/cosmic-term.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-term.git",
+      "commit": "b209f70c3f0a53dc578df4aac01594c3ccc90449",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-term.git",
+        "upstream": "https://github.com/pop-os/cosmic-term.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-text": {
+      "path": "third_party/cosmic-text",
+      "url": "https://github.com/aphrody-labs/cosmic-text.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-text.git",
+      "commit": "b07cb90a872cb9fec7fea1c72d734f81907fe3ad",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-text.git",
+        "upstream": "https://github.com/pop-os/cosmic-text.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-viewer": {
+      "path": "third_party/cosmic-viewer",
+      "url": "https://github.com/aphrody-labs/cosmic-viewer.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-viewer.git",
+      "commit": "300210f1c7d86ba14a43602e40dd5fe1deb16703",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-viewer.git",
+        "upstream": "https://github.com/pop-os/cosmic-viewer.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-wallpapers": {
+      "path": "third_party/cosmic-wallpapers",
+      "url": "https://github.com/aphrody-labs/cosmic-wallpapers.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-wallpapers.git",
+      "commit": "da595bba495cb8fc57f26505621fc25000218349",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-wallpapers.git",
+        "upstream": "https://github.com/pop-os/cosmic-wallpapers.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cosmic-workspaces-epoch": {
+      "path": "third_party/cosmic-workspaces-epoch",
+      "url": "https://github.com/aphrody-labs/cosmic-workspaces-epoch.git",
+      "upstream_url": "https://github.com/pop-os/cosmic-workspaces-epoch.git",
+      "commit": "cb953ea0e6fb45ac8f62f9c52f1347c971388e03",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cosmic-workspaces-epoch.git",
+        "upstream": "https://github.com/pop-os/cosmic-workspaces-epoch.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/cppwinrt": {
       "path": "third_party/cppwinrt",
       "url": "https://github.com/aphrody-labs/cppwinrt.git",
@@ -2832,6 +3266,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/libcosmic": {
+      "path": "third_party/libcosmic",
+      "url": "https://github.com/aphrody-labs/libcosmic.git",
+      "upstream_url": "https://github.com/pop-os/libcosmic.git",
+      "commit": "dfc68d1e1a1ff39ae4fd61bec570e79700a111dd",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/libcosmic.git",
+        "upstream": "https://github.com/pop-os/libcosmic.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/lighthouse": {
       "path": "third_party/lighthouse",
       "url": "https://github.com/GoogleChrome/lighthouse.git",
@@ -3016,13 +3464,15 @@
     },
     "third_party/locally-uncensored": {
       "path": "third_party/locally-uncensored",
-      "url": "https://github.com/PurpleDoubleD/locally-uncensored.git",
-      "commit": "3dff4291f8ad5a86078679e23c7a0a2cd2adf9b3",
+      "url": "https://github.com/aphrody-labs/locally-uncensored.git",
+      "upstream_url": "https://github.com/PurpleDoubleD/locally-uncensored.git",
+      "commit": "dfe45f01912729224ffe6553b9adc31518976ed2",
       "branch": "master",
       "engine": "git",
       "pillar": "git",
       "remotes": {
-        "origin": "https://github.com/PurpleDoubleD/locally-uncensored.git"
+        "origin": "https://github.com/aphrody-labs/locally-uncensored.git",
+        "upstream": "https://github.com/PurpleDoubleD/locally-uncensored.git"
       },
       "sparse_paths": null
     },
@@ -3861,6 +4311,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/pop-launcher": {
+      "path": "third_party/pop-launcher",
+      "url": "https://github.com/aphrody-labs/pop-launcher.git",
+      "upstream_url": "https://github.com/pop-os/launcher.git",
+      "commit": "4111617b7345134abe67332a7baa5ef12538f412",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/pop-launcher.git",
+        "upstream": "https://github.com/pop-os/launcher.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/puppeteer": {
       "path": "third_party/puppeteer",
       "url": "https://github.com/puppeteer/puppeteer.git",
@@ -4301,6 +4765,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/simple-wrapper": {
+      "path": "third_party/simple-wrapper",
+      "url": "https://github.com/aphrody-labs/simple-wrapper.git",
+      "upstream_url": "https://github.com/pop-os/simple-wrapper.git",
+      "commit": "95db0daff42acb879013763b55f31d85ce805642",
+      "branch": "master_jammy",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/simple-wrapper.git",
+        "upstream": "https://github.com/pop-os/simple-wrapper.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/skill-recorder": {
       "path": "third_party/skill-recorder",
       "url": "https://github.com/aphrody-labs/skill-recorder.git",
@@ -4338,6 +4816,34 @@
       "remotes": {
         "origin": "https://github.com/aphrody-labs/sntrup761.git",
         "upstream": "https://github.com/mikelodder7/sntrup761.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/spacedrive": {
+      "path": "third_party/spacedrive",
+      "url": "https://github.com/aphrody-labs/spacedrive.git",
+      "upstream_url": "https://github.com/spacedriveapp/spacedrive.git",
+      "commit": "4a1fa9ed50c49f413c02c6c9300df6acda727910",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/spacedrive.git",
+        "upstream": "https://github.com/spacedriveapp/spacedrive.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/specta": {
+      "path": "third_party/specta",
+      "url": "https://github.com/aphrody-labs/specta.git",
+      "upstream_url": "https://github.com/jamiepine/specta.git",
+      "commit": "9bfc2a4e3ec1a70ddaaffc86cb75281325a18e25",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/specta.git",
+        "upstream": "https://github.com/jamiepine/specta.git"
       },
       "sparse_paths": null
     },
@@ -6916,6 +7422,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/xdg-desktop-portal-cosmic": {
+      "path": "third_party/xdg-desktop-portal-cosmic",
+      "url": "https://github.com/aphrody-labs/xdg-desktop-portal-cosmic.git",
+      "upstream_url": "https://github.com/pop-os/xdg-desktop-portal-cosmic.git",
+      "commit": "2d701019e9c629c6198117c5998456c24ea21d11",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/xdg-desktop-portal-cosmic.git",
+        "upstream": "https://github.com/pop-os/xdg-desktop-portal-cosmic.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/yash-rs": {
       "path": "third_party/yash-rs",
       "url": "https://github.com/aphrody-labs/yash-rs.git",
@@ -6956,6 +7476,20 @@
         "/crates/sum_tree/",
         "/crates/util/"
       ]
+    },
+    "third_party/zed-spacedrive": {
+      "path": "third_party/zed-spacedrive",
+      "url": "https://github.com/aphrody-labs/zed-spacedrive.git",
+      "upstream_url": "https://github.com/spacedriveapp/zed.git",
+      "commit": "e0931d5a9dbf4f781b336fdf448739e74a2ac0b5",
+      "branch": "spacedrive",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/zed-spacedrive.git",
+        "upstream": "https://github.com/spacedriveapp/zed.git"
+      },
+      "sparse_paths": null
     },
     "third_party/zen-browser-desktop": {
       "path": "third_party/zen-browser-desktop",
