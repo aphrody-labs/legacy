@@ -100,6 +100,41 @@ pub fn place_file(dest: &Path, data: &[u8], executable: bool) -> Result<(), Stri
     std::fs::rename(&tmp, dest).map_err(|e| format!("{}: {e}", dest.display()))
 }
 
+/// A symbolic link of a tree archive (`libfoo.so.0 -> libfoo.so.0.9.0`). Only a relative target that stays below `root` is created; Windows
+/// has no portable unprivileged symlink, and those archives carry none that a tool needs.
+pub fn place_link(root: &Path, dest: &Path, target: &Path) -> Result<(), String> {
+    let text = target.to_string_lossy().replace('\\', "/");
+    if text.starts_with('/') || text.contains('\0') {
+        return Err(format!("archive link target is not relative: {}", target.display()));
+    }
+    // Resolve the target lexically from the link's directory: it must not climb above `root`.
+    let mut depth = dest.parent().and_then(|p| p.strip_prefix(root).ok()).map_or(0, |p| p.components().count()) as i64;
+    for part in text.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => depth -= 1,
+            p if p.len() >= 2 && p.as_bytes()[1] == b':' && p.as_bytes()[0].is_ascii_alphabetic() => {
+                return Err(format!("archive link target has a drive prefix: {}", target.display()))
+            }
+            _ => depth += 1,
+        }
+        if depth < 0 {
+            return Err(format!("archive link target escapes the install directory: {}", target.display()));
+        }
+    }
+    #[cfg(unix)]
+    {
+        if let Some(parent) = dest.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("{}: {e}", parent.display()))?;
+        }
+        let _ = std::fs::remove_file(dest);
+        std::os::unix::fs::symlink(target, dest).map_err(|e| format!("link {}: {e}", dest.display()))?;
+    }
+    #[cfg(not(unix))]
+    let _ = dest;
+    Ok(())
+}
+
 /// Download the platform asset and check it against the pinned or published sha256.
 /// Returns the bytes, the asset file name and whether a checksum was verified.
 fn download(tool: &Tool, platform: &str, ctx: &Context) -> Result<(Vec<u8>, String, bool), String> {
@@ -221,9 +256,13 @@ fn install_archive(
                 ));
             }
             for e in &entries {
-                let exec = e.mode.is_some_and(|m| m & 0o111 != 0);
                 // `archive::entries` already refuses rooted, `..` and drive paths; the destination is checked again here.
                 let dest = contained(&root, &e.path)?;
+                if let Some(target) = &e.link {
+                    place_link(&root, &dest, target)?;
+                    continue;
+                }
+                let exec = e.mode.is_some_and(|m| m & 0o111 != 0);
                 place_file(&dest, &e.data, exec)?;
             }
             for bin in &tool.bin {
@@ -395,8 +434,28 @@ pub fn install(
 
 #[cfg(test)]
 mod tests {
-    use super::{contained, place_file, sidecar, tree_bin};
+    use super::{contained, place_file, place_link, sidecar, tree_bin};
     use std::path::{Path, PathBuf};
+
+    #[cfg(unix)]
+    #[test]
+    fn place_link_creates_sibling_links_and_refuses_escapes() {
+        let dir = std::env::temp_dir().join(format!("ay-link-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let lib = dir.join("lib/ollama");
+        std::fs::create_dir_all(&lib).unwrap();
+        std::fs::write(lib.join("libllama-common.so.0.9.0"), b"x").unwrap();
+        let l = lib.join("libllama-common.so.0");
+        place_link(&dir, &l, Path::new("libllama-common.so.0.9.0")).unwrap();
+        place_link(&dir, &l, Path::new("libllama-common.so.0.9.0")).unwrap(); // idempotent
+        assert_eq!(std::fs::read(&l).unwrap(), b"x");
+        place_link(&dir, &lib.join("up"), Path::new("../ollama/libllama-common.so.0.9.0")).unwrap();
+        for bad in ["/etc/passwd", "../../../x", "..\\..\\..\\x", "C:\\x"] {
+            assert!(place_link(&dir, &lib.join("bad"), Path::new(bad)).is_err(), "{bad:?}");
+        }
+        assert!(!lib.join("bad").exists());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn tree_bin_finds_root_bin_dir_and_explicit_paths() {

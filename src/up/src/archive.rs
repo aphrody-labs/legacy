@@ -28,12 +28,14 @@ pub fn kind_of(name: &str) -> Kind {
     }
 }
 
-/// One regular file from an archive: its normalized relative path, bytes and Unix mode.
+/// One regular file or symbolic link from an archive: its normalized relative path, bytes and Unix mode.
+/// A symbolic link has no data and `link` holds its target as written in the archive (checked at placement, see `install::place_link`).
 #[derive(Debug)]
 pub struct Entry {
     pub path: PathBuf,
     pub data: Vec<u8>,
     pub mode: Option<u32>,
+    pub link: Option<PathBuf>,
 }
 
 /// Reject absolute paths, `..`, drive and UNC prefixes so an archive cannot write outside its destination.
@@ -61,7 +63,8 @@ fn tar_entries<R: Read>(reader: R) -> Result<Vec<Entry>, String> {
     let mut out = Vec::new();
     for entry in archive.entries().map_err(|e| format!("tar: {e}"))? {
         let mut entry = entry.map_err(|e| format!("tar: {e}"))?;
-        if !entry.header().entry_type().is_file() {
+        let kind = entry.header().entry_type();
+        if !kind.is_file() && !kind.is_symlink() {
             continue;
         }
         let raw = entry
@@ -71,12 +74,20 @@ fn tar_entries<R: Read>(reader: R) -> Result<Vec<Entry>, String> {
         let Some(path) = safe_relative(&raw) else {
             continue;
         };
+        if kind.is_symlink() {
+            // ollama ships lib/ollama/libllama-common.so.0 -> libllama-common.so.0.9.0: dropping them breaks the dynamic loader.
+            let target = entry.link_name().map_err(|e| format!("tar link: {e}"))?;
+            if let Some(target) = target {
+                out.push(Entry { path, data: Vec::new(), mode: None, link: Some(target.into_owned()) });
+            }
+            continue;
+        }
         let mode = entry.header().mode().ok();
         let mut data = Vec::new();
         entry
             .read_to_end(&mut data)
             .map_err(|e| format!("tar read: {e}"))?;
-        out.push(Entry { path, data, mode });
+        out.push(Entry { path, data, mode, link: None });
     }
     Ok(out)
 }
@@ -104,6 +115,7 @@ pub fn entries(name: &str, data: &[u8]) -> Result<Vec<Entry>, String> {
                     path,
                     data: buf,
                     mode,
+                    link: None,
                 });
             }
             Ok(out)
@@ -119,6 +131,7 @@ pub fn entries(name: &str, data: &[u8]) -> Result<Vec<Entry>, String> {
             path: PathBuf::from(name),
             data: data.to_vec(),
             mode: Some(0o755),
+            link: None,
         }]),
     }
 }
@@ -128,7 +141,8 @@ pub fn find_executable<'a>(entries: &'a [Entry], exe: &str) -> Option<&'a Entry>
     entries
         .iter()
         .filter(|e| {
-            e.path
+            e.link.is_none()
+                && e.path
                 .file_name()
                 .is_some_and(|n| n.to_string_lossy().eq_ignore_ascii_case(exe))
         })
@@ -247,8 +261,31 @@ mod tests {
             path: "rg".into(),
             data: vec![],
             mode: None,
+            link: None,
         }];
         strip_common_root(&mut flat);
         assert_eq!(flat[0].path, PathBuf::from("rg"));
+    }
+
+    #[test]
+    fn tar_symlinks_are_kept_with_their_target_and_never_found_as_executables() {
+        let mut builder = tar::Builder::new(Vec::new());
+        let mut file = tar::Header::new_gnu();
+        file.set_size(3);
+        file.set_mode(0o755);
+        file.set_cksum();
+        builder.append_data(&mut file, "lib/ollama/libllama-common.so.0.9.0", &b"abc"[..]).unwrap();
+        let mut link = tar::Header::new_gnu();
+        link.set_entry_type(tar::EntryType::Symlink);
+        link.set_size(0);
+        link.set_cksum();
+        builder.append_link(&mut link, "lib/ollama/libllama-common.so.0", "libllama-common.so.0.9.0").unwrap();
+        let data = builder.into_inner().unwrap();
+        let got = tar_entries(Cursor::new(data)).unwrap();
+        assert_eq!(got.len(), 2);
+        let l = got.iter().find(|e| e.link.is_some()).unwrap();
+        assert_eq!(l.path, PathBuf::from("lib/ollama/libllama-common.so.0"));
+        assert_eq!(l.link.as_deref(), Some(Path::new("libllama-common.so.0.9.0")));
+        assert!(find_executable(&got, "libllama-common.so.0").is_none());
     }
 }
