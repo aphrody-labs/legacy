@@ -32,6 +32,8 @@ ingress = [
   { hostname = "dbfr.aphrody.com", service = "http://127.0.0.1:29401" },
   { hostname = "nie.aphrody.app", service = "http://127.0.0.1:29402" },
   { hostname = "fleet-failover-test.aphrody.com", service = "http://127.0.0.1:29401" }, # fleet-dns-failover-test.sh only
+  # open monorepo mirror (infra/prd/open): host nginx loopback vhost, rebuilt by the open-sync timer.
+  { hostname = "open-origin.aphrody.com", service = "http://127.0.0.1:29403" },
   # aphrody service: cluster LB pool aphrody (prd:23000, blue/green switched in deploy.toml only).
   { hostname = "aphrody.com", service = "http://127.0.0.1:19300" },
   { hostname = "*.aphrody.com", service = "http://127.0.0.1:19300" },
@@ -58,6 +60,7 @@ ingress = [
 "ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "delete" }
 "ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:fr2", rollback = "delete" }
 "mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:fr2", rollback = "delete" }
+"open-origin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "delete" }
 "os.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
 "admin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "ai.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
