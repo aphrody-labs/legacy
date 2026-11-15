@@ -4,7 +4,7 @@ name = "aphrody-corelib"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets, Boq wire format and adblock glue"
+description = "Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets and Boq wire format"
 authors.workspace = true
 
 [lib]
@@ -30,7 +30,6 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 log = { workspace = true }
-adblock = { workspace = true }
 wgpu = { workspace = true, optional = true }
 pollster = { workspace = true, optional = true }
 bytemuck = { workspace = true, features = ["derive"], optional = true }
