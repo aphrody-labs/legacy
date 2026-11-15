@@ -56,7 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "IFS= read -r -d '' j; c=${j#*\\\"command\\\":\\\"}; c=${c%%\\\",\\\"*}; c=\" ; ${c//[;&|(]/ ; } \"; c=${c//  / }; c=${c//  / }; r=; case \"$c\" in *\"; cat \"*|*\"; grep \"*|*\"; sed \"*|*\"; ls \"*|*\"; find \"*|*\"; du \"*|*\"; curl \"*|*\"; cd \"*) r=\"coreutils: use rg, fd, sd, dua, xh, jaq or Read/Grep/Glob/Edit, absolute paths, no cd\";; esac; case \"$c\" in *\"; git commit \"*) case \"$c\" in *\" -- \"*) ;; *) r=\"plain git commit takes the whole shared index: bun scripts/commit.ts -m <msg> --push <paths>\";; esac;; esac; case \"$c\" in *\"; git add -A\"*|*\"; git add . \"*|*\"; git add --all\"*|*\"; git stash\"*) r=\"shared tree: stage explicit files (bun scripts/commit.ts), never stash\";; esac; case \"$c\" in *\"; git add \"*\".env \"*) r=\"the .env vault is never staged\";; esac; l=${c,,}; case \"$l\" in *\"; cp \"*system32*|*\"; mv \"*system32*|*\"; rm \"*system32*|*\"; del \"*system32*|*\"; copy \"*system32*|*\"; move \"*system32*|*\"; tee \"*system32*|*\">\"*system32*|*set-content*system32*|*out-file*system32*) r=\"C:/Windows/System32 is never modified\";; esac; [ -n \"$r\" ] && printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"%s\"}}' \"$r\"; exit 0",
+            "command": "IFS= read -r -d \"\" j; case \"$j\" in *.env.example*) ;; *\"git add\"*\".env\"*|*\"git commit\"*\".env\"*) printf %s \"{\\\"hookSpecificOutput\\\":{\\\"hookEventName\\\":\\\"PreToolUse\\\",\\\"permissionDecision\\\":\\\"deny\\\",\\\"permissionDecisionReason\\\":\\\"the .env vault is never staged or committed\\\"}}\";; esac; exit 0",
             "timeout": 5
           }
         ]
