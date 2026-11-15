@@ -180,3 +180,43 @@ fn error_column_counts_characters() {
     let r = transpile("s = 'é' +\n");
     assert!(r.ts.is_empty());
 }
+
+#[test]
+fn with_forwards_exceptions_and_async_with_uses_aenter() {
+    let o = ts("with open('f') as f:\n    pass\n");
+    assert!(o.contains("ctxExitErr"), "{o}");
+    let a = transpile("async def g(x):\n    async with x as y:\n        pass\n");
+    assert!(a.ts.contains("ctxAEnter") && a.ts.contains("ctxAExitErr"), "{}", a.ts);
+}
+
+#[test]
+fn except_name_is_unbound_after_handler() {
+    let o = ts("def f():\n    try:\n        pass\n    except ValueError as e:\n        pass\n");
+    assert!(o.contains("e = undefined"), "{o}");
+}
+
+#[test]
+fn sub_div_and_ordering_use_runtime_helpers() {
+    let o = ts("a = b - c\nd = b / c\ne = b < c\nf = b < 3\n");
+    assert!(o.contains("__py.sub(") && o.contains("__py.truediv(") && o.contains("__py.cmp(b, c) < 0") && o.contains("(b < 3)"), "{o}");
+}
+
+#[test]
+fn none_on_the_left_and_aug_target_once() {
+    let o = ts("r = None is x\nd = {}\nd[f()] += 1\n");
+    assert!(o.contains("(x == null)"), "{o}");
+    assert_eq!(o.matches("f()").count(), 1, "{o}");
+}
+
+#[test]
+fn del_tuple_and_name() {
+    let o = ts("a = b = 1\ndel a, b\n");
+    assert!(!o.contains("__py.unsupported"), "{o}");
+}
+
+#[test]
+fn from_import_rebinding_and_relative_dot() {
+    let o = ts("from math import floor\nfloor = 3\nfrom . import sibling\n");
+    assert!(o.contains("floor as __imp_floor") && o.contains("let floor = __imp_floor"), "{o}");
+    assert!(o.contains("from \"./sibling\""), "{o}");
+}

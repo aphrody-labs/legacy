@@ -74,10 +74,19 @@ export async function* a_filter(f: any, it: any) {
 }
 
 /** "fmt" % args with Java objects rendered through `$str()`. */
-export async function a_mod(fmt: string, args: any): Promise<any> {
+export async function a_mod(fmt: any, args: any): Promise<any> {
+  fmt = await fmt;
+  if (typeof fmt !== "string") return py.mod(fmt, await args);
   const conv = async (v: any) => (isJ(await v) ? await a_str(v) : await v);
   if (Array.isArray(args)) return py.mod(fmt, await Promise.all(args.map(conv)));
   return py.mod(fmt, await conv(args));
+}
+
+export async function a_contains(c: any, x: any): Promise<boolean> {
+  c = await c;
+  x = await x;
+  if (isJ(c) && typeof c.contains === "function") return !!(await c.contains(x));
+  return py.contains(c, x);
 }
 
 export async function a_eq(a: any, b: any): Promise<boolean> {

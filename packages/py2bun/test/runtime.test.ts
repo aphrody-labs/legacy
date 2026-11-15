@@ -181,3 +181,19 @@ describe("review fixes 2", () => {
     if (fn) expect(fn("%.4X", 255)).toBe("00FF");
   });
 });
+
+describe("review fixes 3", () => {
+  test("sub/truediv/ctxExitErr", () => {
+    expect(py.sub(5n, 2)).toBe(3);
+    expect(py.sub(new Set([1, 2]), new Set([2]))).toEqual(new Set([1]));
+    expect(() => py.truediv(1, 0)).toThrow();
+    expect(py.truediv(1, 2)).toBe(0.5);
+    expect(py.ctxExitErr({ __exit__: () => true }, new Error("x"))).toBe(true);
+    expect(py.ctxExitErr({ __exit__: () => false }, new Error("x"))).toBe(false);
+  });
+  test("a_contains and a_mod on non-strings", async () => {
+    const a = await import("../src/runtime/async");
+    expect(await a.a_contains([1, 2], 2)).toBe(true);
+    expect(await a.a_mod(7, 4)).toBe(3);
+  });
+});

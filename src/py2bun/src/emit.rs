@@ -324,6 +324,10 @@ struct Emitter<'s> {
     /// while emitting a class body: (class name, attributes assigned so far, scope depth of the body)
     class_attr: Option<(String, HashSet<String>, usize)>,
     class_has_str: bool,
+    /// every name bound at module level (assigned, defined, imported)
+    module_names: HashSet<String>,
+    /// names assigned somewhere at module level: an ES import binding is immutable, so these are re-bound with `let`
+    module_assigned: HashSet<String>,
 }
 
 fn is_const(e: &Expr) -> bool {
@@ -377,6 +381,8 @@ impl<'s> Emitter<'s> {
             class_stack: vec![],
             class_attr: None,
             class_has_str: false,
+            module_names: HashSet::new(),
+            module_assigned: HashSet::new(),
             star_pkgs: vec![],
             star_names: BTreeSet::new(),
             asyncs: false,
@@ -429,7 +435,7 @@ impl<'s> Emitter<'s> {
         }
         if !self.star_names.is_empty() {
             let paths: Vec<String> = self.star_pkgs.iter().map(|p| js_str(p)).collect();
-            for n in &self.star_names {
+            for n in self.star_names.iter().filter(|n| !self.module_names.contains(*n)) {
                 head.push_str(&format!("const {} = await __py.starPick([{}], {});\n", ident(n), paths.join(", "), js_str(n)));
             }
         }
@@ -461,6 +467,8 @@ impl<'s> Emitter<'s> {
             }
         }
         self.user_classes.extend(deep.classes.iter().cloned());
+        self.module_names = names.clone();
+        self.module_assigned = shallow.assigned.iter().cloned().collect();
         for imp in &deep.imports {
             self.handle_import(imp);
         }
@@ -512,6 +520,10 @@ impl<'s> Emitter<'s> {
                         self.ghidra_seen = true;
                         self.imports.push(format!("import * as {} from \"@aphrody/ghidra\";", ident(&bind)));
                         self.pyghidra_names.insert(bind);
+                    } else if full == "os.path" && a.asname.is_some() {
+                        // `import os.path as osp` binds the submodule, not `os`
+                        let bind = a.asname.as_ref().unwrap().as_str();
+                        self.imports.push(format!("import {{ path as {} }} from \"@aphrody/py2bun/runtime/os\";", ident(bind)));
                     } else if STDLIB.contains(&root) && (!full.contains('.') || full == "os.path") {
                         let bind = a.asname.as_ref().map(|x| x.as_str()).unwrap_or(root);
                         self.imports.push(format!(
@@ -520,6 +532,9 @@ impl<'s> Emitter<'s> {
                             root
                         ));
                     } else if IGNORED_MODULES.contains(&root) {
+                        if root == "jarray" {
+                            self.diag(a.range(), Severity::Warning, "import jarray ignored: use Session.array(type, values) for typed Java arrays");
+                        }
                     } else {
                         self.diag(a.range(), Severity::Error, format!("unsupported import: module `{full}` has no Bun mapping"));
                     }
@@ -528,14 +543,24 @@ impl<'s> Emitter<'s> {
             Stmt::ImportFrom(i) => {
                 let module = i.module.as_ref().map(|m| m.as_str()).unwrap_or("");
                 let root = module.split('.').next().unwrap();
+                let mut rebinds: Vec<String> = vec![];
                 let names: Vec<String> = i
                     .names
                     .iter()
-                    .map(|a| match &a.asname {
-                        Some(x) => format!("{} as {}", a.name.as_str(), ident(x.as_str())),
-                        None => ident_import(a.name.as_str()),
+                    .map(|a| {
+                        let bind = a.asname.as_ref().unwrap_or(&a.name).as_str();
+                        if bind != "*" && self.module_assigned.contains(bind) {
+                            // ES import bindings are immutable: import under a private name, then re-bind with `let`
+                            rebinds.push(format!("let {} = __imp_{bind};", ident(bind)));
+                            return format!("{} as __imp_{bind}", a.name.as_str());
+                        }
+                        match &a.asname {
+                            Some(x) => format!("{} as {}", a.name.as_str(), ident(x.as_str())),
+                            None => ident_import(a.name.as_str()),
+                        }
                     })
                     .collect();
+                let rebinds = rebinds;
                 let star = i.names.iter().any(|a| a.name.as_str() == "*");
                 if star {
                     let path = if i.level == 0 && JAVA_ROOTS.contains(&root) {
@@ -558,14 +583,23 @@ impl<'s> Emitter<'s> {
                         .iter()
                         .map(|a| match &a.asname {
                             Some(x) => format!("{}: {}", a.name.as_str(), ident(x.as_str())),
-                            None => ident(a.name.as_str()),
+                            None if ident(a.name.as_str()) != a.name.as_str() => format!("{}: {}", a.name.as_str(), ident(a.name.as_str())),
+                            None => a.name.as_str().to_string(),
                         })
                         .collect();
                     self.imports.push("import { path as __ospath } from \"@aphrody/py2bun/runtime/os\";".into());
                     self.imports.push(format!("const {{ {} }} = __ospath;", parts.join(", ")));
+                } else if i.level > 0 && module.is_empty() {
+                    // `from . import a, b`: each name is a sibling module
+                    let pre = if i.level == 1 { "./".to_string() } else { "../".repeat(i.level as usize - 1) };
+                    for a in &i.names {
+                        let bind = a.asname.as_ref().unwrap_or(&a.name).as_str();
+                        self.imports.push(format!("import * as {} from \"{pre}{}\";", ident(bind), a.name.as_str()));
+                    }
                 } else if i.level > 0 {
                     let p = format!("{}{}", if i.level == 1 { "./".to_string() } else { "../".repeat(i.level as usize - 1) }, module.replace('.', "/"));
                     self.imports.push(format!("import {{ {} }} from \"{}\";", names.join(", "), p));
+                    self.imports.extend(rebinds.iter().cloned());
                 } else if JAVA_ROOTS.contains(&root) {
                     for a in &i.names {
                         let b = a.asname.as_ref().unwrap_or(&a.name).as_str();
@@ -576,6 +610,7 @@ impl<'s> Emitter<'s> {
                         names.join(", "),
                         module.replace('.', "/")
                     ));
+                    self.imports.extend(rebinds.iter().cloned());
                 } else if module == "pyghidra" || module.starts_with("pyghidra.") {
                     self.ghidra_seen = true;
                     let nm: Vec<String> = i
@@ -594,7 +629,11 @@ impl<'s> Emitter<'s> {
                         names.join(", "),
                         module
                     ));
+                    self.imports.extend(rebinds.iter().cloned());
                 } else if IGNORED_MODULES.contains(&root) {
+                    if root == "jarray" {
+                        self.diag(i.range(), Severity::Warning, "from jarray import ... ignored: use Session.array(type, values) for typed Java arrays");
+                    }
                 } else {
                     self.diag(i.range(), Severity::Error, format!("unsupported import: module `{module}` has no Bun mapping"));
                 }
@@ -632,8 +671,24 @@ impl<'s> Emitter<'s> {
                 None => self.line("return;"),
             },
             Stmt::Delete(d) => {
+                let mut targets: Vec<&Expr> = vec![];
+                fn flat<'e>(e: &'e Expr, out: &mut Vec<&'e Expr>) {
+                    match e {
+                        Expr::Tuple(t) => t.elts.iter().for_each(|x| flat(x, out)),
+                        Expr::List(t) => t.elts.iter().for_each(|x| flat(x, out)),
+                        other => out.push(other),
+                    }
+                }
                 for t in &d.targets {
+                    flat(t, &mut targets);
+                }
+                for t in targets {
                     match t {
+                        Expr::Name(n) => {
+                            self.diag(t.range(), Severity::Warning, "del of a name sets it to undefined (JS cannot unbind a variable)");
+                            let id = self.target_name(n.id.as_str());
+                            self.line(&format!("{id} = undefined;"));
+                        }
                         Expr::Subscript(sub) => {
                             let (o, k) = (self.expr(&sub.value), self.subscript_key(&sub.slice));
                             self.line(&format!("__py.delitem({o}, {k});"));
@@ -887,13 +942,30 @@ impl<'s> Emitter<'s> {
             self.line(&line);
             return;
         }
-        if !is_pure(&a.target) {
-            self.diag(a.range(), Severity::Warning, "augmented assignment target with side effects is evaluated twice");
+        match &*a.target {
+            Expr::Subscript(sub) if !is_pure(&a.target) => {
+                // object and key are evaluated once
+                let (ot, kt) = (self.fresh("o"), self.fresh("k"));
+                let (o, k) = (self.expr(&sub.value), self.subscript_key(&sub.slice));
+                self.line(&format!("const {ot} = {o}, {kt} = {k};"));
+                let newv = self.binop_str(a.op, &format!("__py.getitem({ot}, {kt})"), &v, true);
+                self.line(&format!("__py.setitem({ot}, {kt}, {newv});"));
+            }
+            Expr::Attribute(at) if !is_pure(&a.target) => {
+                let ot = self.fresh("o");
+                let o = self.expr(&at.value);
+                self.line(&format!("const {ot} = {o};"));
+                let cur = format!("{ot}.{}", at.attr.as_str());
+                let newv = self.binop_str(a.op, &cur, &v, true);
+                self.line(&format!("{cur} = {newv};"));
+            }
+            _ => {
+                let cur = self.expr(&a.target);
+                let newv = self.binop_str(a.op, &cur, &v, true);
+                let l = self.store(&a.target, &newv);
+                self.line(&format!("{l};"));
+            }
         }
-        let cur = self.expr(&a.target);
-        let newv = self.binop_str(a.op, &cur, &v, true);
-        let l = self.store(&a.target, &newv);
-        self.line(&format!("{l};"));
     }
 
     fn for_stmt(&mut self, f: &StmtFor) {
@@ -945,7 +1017,8 @@ impl<'s> Emitter<'s> {
             let e = self.expr(&item.context_expr);
             let aw = if w.is_async || (self.asyncs && self.no_await == 0) { "await " } else { "" };
             self.line(&format!("const {cm} = {e};"));
-            let enter = format!("{aw}__py.ctxEnter({cm})");
+            let a = if w.is_async { "A" } else { "" };
+            let enter = format!("{aw}__py.ctx{a}Enter({cm})");
             match &item.optional_vars {
                 Some(v) => {
                     let l = self.store(v, &enter);
@@ -953,16 +1026,26 @@ impl<'s> Emitter<'s> {
                 }
                 None => self.line(&format!("{enter};")),
             }
+            // flag: the exception path already ran __exit__(type, exc, tb); `finally` only runs the normal exit
+            let thrown = self.fresh("x");
+            self.line(&format!("let {thrown} = false;"));
             self.line("try {");
             self.ind += 1;
-            closers.push((cm, aw));
+            closers.push((cm, aw, thrown, a));
         }
         self.stmts(&w.body);
-        for (cm, aw) in closers.into_iter().rev() {
+        for (cm, aw, thrown, a) in closers.into_iter().rev() {
+            let ev = self.fresh("e");
+            self.ind -= 1;
+            self.line(&format!("}} catch ({ev}) {{"));
+            self.ind += 1;
+            self.line(&format!("{thrown} = true;"));
+            // a truthy __exit__ result suppresses the exception
+            self.line(&format!("if (!({aw}__py.ctx{a}ExitErr({cm}, {ev}))) throw {ev};"));
             self.ind -= 1;
             self.line("} finally {");
             self.ind += 1;
-            self.line(&format!("{aw}__py.ctxExit({cm});"));
+            self.line(&format!("if (!{thrown}) {aw}__py.ctx{a}Exit({cm});"));
             self.ind -= 1;
             self.line("}");
         }
@@ -1002,6 +1085,11 @@ impl<'s> Emitter<'s> {
             self.line(&format!("}} catch ({ev}) {{"));
             self.ind += 1;
             self.exc_stack.push(ev.clone());
+            let named: Vec<String> = t.handlers.iter().filter_map(|h| { let ExceptHandler::ExceptHandler(h) = h; h.name.as_ref().map(|n| ident(n.as_str())) }).collect();
+            if !named.is_empty() {
+                self.line("try {");
+                self.ind += 1;
+            }
             let mut first = true;
             let mut closed = false;
             for h in &t.handlers {
@@ -1068,6 +1156,16 @@ impl<'s> Emitter<'s> {
                 self.ind -= 1;
             }
             self.line("}");
+            if !named.is_empty() {
+                self.ind -= 1;
+                self.line("} finally {");
+                self.ind += 1;
+                for n in &named {
+                    self.line(&format!("{n} = undefined;"));
+                }
+                self.ind -= 1;
+                self.line("}");
+            }
             self.exc_stack.pop();
             self.ind -= 1;
             self.line("}");
@@ -1604,7 +1702,7 @@ impl<'s> Emitter<'s> {
                 if matches!(b.op, Operator::Add) && num(&b.left) && num(&b.right) {
                     return format!("({l} + {r})");
                 }
-                if matches!(b.op, Operator::Mod) && self.asyncs && self.no_await == 0 && matches!(&*b.left, Expr::StringLiteral(_)) {
+                if matches!(b.op, Operator::Mod) && self.asyncs && self.no_await == 0 {
                     return format!("(await __py.a_mod({l}, {r}))");
                 }
                 self.binop_str(b.op, &l, &r, false)
@@ -1628,6 +1726,12 @@ impl<'s> Emitter<'s> {
                 if let Some(p) = &l.parameters {
                     for pd in p.posonlyargs.iter().chain(p.args.iter()).chain(p.kwonlyargs.iter()) {
                         names.insert(pd.parameter.name.as_str().to_string());
+                    }
+                    if let Some(v) = &p.vararg {
+                        names.insert(v.name.as_str().to_string());
+                    }
+                    if let Some(k) = &p.kwarg {
+                        names.insert(k.name.as_str().to_string());
                     }
                     // defaults use the enclosing scope (`lambda x=x: x`)
                     let mut defs: Vec<Option<String>> =
@@ -1739,9 +1843,9 @@ impl<'s> Emitter<'s> {
         match op {
             Operator::Add if _aug => format!("__py.iadd({l}, {r})"),
             Operator::Add => format!("__py.add({l}, {r})"),
-            Operator::Sub => format!("({l} - {r})"),
+            Operator::Sub => format!("__py.sub({l}, {r})"),
             Operator::Mult => format!("__py.mul({l}, {r})"),
-            Operator::Div => format!("({l} / {r})"),
+            Operator::Div => format!("__py.truediv({l}, {r})"),
             Operator::FloorDiv => format!("__py.floordiv({l}, {r})"),
             Operator::Mod => format!("__py.mod({l}, {r})"),
             Operator::Pow => format!("__py.pow({l}, {r})"),
@@ -1763,7 +1867,7 @@ impl<'s> Emitter<'s> {
         let tmps: Vec<String> = (0..n).map(|_| self.fresh("c")).collect();
         let vals: Vec<String> = c.operands.iter().map(|e| self.expr(e)).collect();
         self.no_await += 1; // the comparison runs inside plain arrow functions
-        let cmps: Vec<String> = c.ops.iter().enumerate().map(|(i, op)| self.cmp_strs(*op, &tmps[i], &tmps[i + 1], None, None)).collect();
+        let cmps: Vec<String> = c.ops.iter().enumerate().map(|(i, op)| self.cmp_strs(*op, &tmps[i], &tmps[i + 1], Some(&c.operands[i]), Some(&c.operands[i + 1]))).collect();
         self.no_await -= 1;
         let mut inner = String::new();
         for i in (0..n - 1).rev() {
@@ -1788,6 +1892,8 @@ impl<'s> Emitter<'s> {
         match op {
             CmpOp::Is | CmpOp::Eq if none(re) => format!("({l} == null)"),
             CmpOp::IsNot | CmpOp::NotEq if none(re) => format!("({l} != null)"),
+            CmpOp::Is | CmpOp::Eq if none(le) => format!("({r} == null)"),
+            CmpOp::IsNot | CmpOp::NotEq if none(le) => format!("({r} != null)"),
             CmpOp::Is => format!("({l} === {r})"),
             CmpOp::IsNot => format!("({l} !== {r})"),
             CmpOp::Eq if konst(le) || konst(re) => format!("({l} === {r})"),
@@ -1796,10 +1902,17 @@ impl<'s> Emitter<'s> {
             CmpOp::NotEq if self.asyncs && self.no_await == 0 => format!("!(await __py.a_eq({l}, {r}))"),
             CmpOp::Eq => format!("__py.eq({l}, {r})"),
             CmpOp::NotEq => format!("!__py.eq({l}, {r})"),
-            CmpOp::Lt => format!("({l} < {r})"),
-            CmpOp::LtE => format!("({l} <= {r})"),
-            CmpOp::Gt => format!("({l} > {r})"),
-            CmpOp::GtE => format!("({l} >= {r})"),
+            // native operators only against a literal; otherwise the runtime orders lists/tuples/bigints
+            CmpOp::Lt if konst(le) || konst(re) => format!("({l} < {r})"),
+            CmpOp::LtE if konst(le) || konst(re) => format!("({l} <= {r})"),
+            CmpOp::Gt if konst(le) || konst(re) => format!("({l} > {r})"),
+            CmpOp::GtE if konst(le) || konst(re) => format!("({l} >= {r})"),
+            CmpOp::Lt => format!("(__py.cmp({l}, {r}) < 0)"),
+            CmpOp::LtE => format!("(__py.cmp({l}, {r}) <= 0)"),
+            CmpOp::Gt => format!("(__py.cmp({l}, {r}) > 0)"),
+            CmpOp::GtE => format!("(__py.cmp({l}, {r}) >= 0)"),
+            CmpOp::In if self.asyncs && self.no_await == 0 => format!("(await __py.a_contains({r}, {l}))"),
+            CmpOp::NotIn if self.asyncs && self.no_await == 0 => format!("!(await __py.a_contains({r}, {l}))"),
             CmpOp::In => format!("__py.contains({r}, {l})"),
             CmpOp::NotIn => format!("!__py.contains({r}, {l})"),
         }
@@ -2158,5 +2271,6 @@ fn camel(s: &str) -> String {
 }
 
 fn ident_import(n: &str) -> String {
-    n.to_string()
+    let id = ident(n);
+    if id == n { n.to_string() } else { format!("{n} as {id}") }
 }

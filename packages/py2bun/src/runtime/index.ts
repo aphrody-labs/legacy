@@ -204,6 +204,15 @@ export function mul(a: any, b: any): any {
   if (isBig(a) || isBig(b)) return norm(bi(a) * bi(b));
   return a * b;
 }
+export function sub(a: any, b: any): any {
+  if (a instanceof Set && b instanceof Set) return new Set([...a].filter((x) => !b.has(x)));
+  if (isBig(a) || isBig(b)) return norm(bi(a) - bi(b));
+  return a - b;
+}
+export function truediv(a: any, b: any): number {
+  if (b === 0 || b === 0n || b === false) throw new ZeroDivisionError("division by zero");
+  return Number(a) / Number(b);
+}
 export function floordiv(a: any, b: any): any {
   if (isBig(a) || isBig(b)) {
     const [x, y] = [bi(a), bi(b)];
@@ -879,6 +888,26 @@ export function open(path: string, mode: any = "r", ...rest: any[]) {
 export function ctxEnter(cm: any) {
   if (cm && typeof cm.__enter__ === "function") return cm.__enter__();
   return cm;
+}
+/** `__exit__(type, exc, tb)` on the exception path: true means the exception is suppressed. */
+export function ctxExitErr(cm: any, e: any): boolean {
+  if (cm && typeof cm.__exit__ === "function") return !!cm.__exit__(e?.constructor ?? null, e, null);
+  ctxExit(cm);
+  return false;
+}
+export async function ctxAEnter(cm: any) {
+  if (cm && typeof cm.__aenter__ === "function") return await cm.__aenter__();
+  return ctxEnter(cm);
+}
+export async function ctxAExit(cm: any) {
+  if (cm && typeof cm.__aexit__ === "function") return await cm.__aexit__(null, null, null);
+  if (cm && typeof (cm as any)[Symbol.asyncDispose] === "function") return await (cm as any)[Symbol.asyncDispose]();
+  return ctxExit(cm);
+}
+export async function ctxAExitErr(cm: any, e: any): Promise<boolean> {
+  if (cm && typeof cm.__aexit__ === "function") return !!(await cm.__aexit__(e?.constructor ?? null, e, null));
+  await ctxAExit(cm);
+  return false;
 }
 export function ctxExit(cm: any) {
   if (cm && typeof cm.__exit__ === "function") return cm.__exit__(null, null, null);
