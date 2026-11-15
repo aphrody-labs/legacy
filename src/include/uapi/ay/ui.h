@@ -111,4 +111,15 @@ struct ay_ui_adaptive_shell {
 	__u32 content_h;
 };
 
+/* Dynamic scheme variants (material-color-utilities Variant, 2021 palettes) - ay_m3_scheme */
+#define AY_M3_VARIANT_MONOCHROME  0u
+#define AY_M3_VARIANT_NEUTRAL     1u
+#define AY_M3_VARIANT_TONAL_SPOT  2u
+#define AY_M3_VARIANT_VIBRANT     3u
+#define AY_M3_VARIANT_EXPRESSIVE  4u
+#define AY_M3_VARIANT_FIDELITY    5u
+#define AY_M3_VARIANT_CONTENT     6u
+#define AY_M3_VARIANT_RAINBOW     7u
+#define AY_M3_VARIANT_FRUIT_SALAD 8u
+
 #endif /* _UAPI_AY_UI_H */

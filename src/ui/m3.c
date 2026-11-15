@@ -3,8 +3,8 @@
  * src/ui/m3.c - Freestanding Pure C (`-std=gnu11`) Material 3 Expressive Engine
  *
  * Implements:
- *   1. Exact Aphrody M3 ColorScheme lookup (Light + Dark, seed #135B82, MCU 0.4.0 vibrant)
- *      matching `packages/design/tokens/tokens.json`, `Theme.kt`, `aphrody_theme.dart`, and `tokens.rs`.
+ *   1. Aphrody M3 ColorScheme (Light + Dark, seed #135B82, vibrant) computed by ui/hct.c, byte-identical
+ *      to `packages/design/tokens/tokens.json` (golden check: ui/hct_test.c).
  *   2. Material 3 Expressive Spring Physics (`androidx` Compose Material3 v0_14_0 spatial & effects
  *      springs: semi-implicit Euler + analytical harmonic damping, 120Hz/240Hz frame-rate independent).
  *   3. Adaptive Window Size Classes (`compact`, `medium`, `expanded`, `large`, `extra-large`) and
@@ -15,61 +15,12 @@
 
 #include "../include/ay/sys.h"
 
-static const __u32 g_m3_light_argb[AY_UI_ROLE_COUNT] = {
-	0xFFF6FAFFu, /* SURFACE                   */
-	0xFFFFFFFFu, /* SURFACE_CONTAINER_LOWEST  */
-	0xFFECF5FEu, /* SURFACE_CONTAINER_LOW     */
-	0xFFE6EFF8u, /* SURFACE_CONTAINER         */
-	0xFFE1E9F3u, /* SURFACE_CONTAINER_HIGH    */
-	0xFFDBE3EDu, /* SURFACE_CONTAINER_HIGHEST */
-	0xFF141D23u, /* ON_SURFACE                */
-	0xFF3D4851u, /* ON_SURFACE_VARIANT        */
-	0xFF006492u, /* PRIMARY                   */
-	0xFFFFFFFFu, /* ON_PRIMARY                */
-	0xFFC9E6FFu, /* PRIMARY_CONTAINER         */
-	0xFF004B6Fu, /* ON_PRIMARY_CONTAINER      */
-	0xFF4D5F7Cu, /* SECONDARY                 */
-	0xFFFFFFFFu, /* ON_SECONDARY              */
-	0xFFD5E3FFu, /* SECONDARY_CONTAINER       */
-	0xFF354763u, /* ON_SECONDARY_CONTAINER    */
-	0xFF525C8Bu, /* TERTIARY                  */
-	0xFFFFFFFFu, /* ON_TERTIARY               */
-	0xFFDDE1FFu, /* TERTIARY_CONTAINER        */
-	0xFF3A4472u, /* ON_TERTIARY_CONTAINER     */
-	0xFFBA1A1Au, /* ERROR                     */
-	0xFFFFFFFFu, /* ON_ERROR                  */
-	0xFF6D7883u, /* OUTLINE                   */
-	0xFFBCC8D3u, /* OUTLINE_VARIANT           */
-	0xFFD1D293u, /* BOLT                      */
-};
+/* Aphrody brand (assets/brand/brand.toml): seed, variant and accent; roles are computed by ui/hct.c. */
+#define AY_BRAND_SEED_ARGB   0xFF135B82u
+#define AY_BRAND_ACCENT_ARGB 0xFFD1D293u
 
-static const __u32 g_m3_dark_argb[AY_UI_ROLE_COUNT] = {
-	0xFF0C141Bu, /* SURFACE                   */
-	0xFF070F15u, /* SURFACE_CONTAINER_LOWEST  */
-	0xFF141D23u, /* SURFACE_CONTAINER_LOW     */
-	0xFF182127u, /* SURFACE_CONTAINER         */
-	0xFF232B32u, /* SURFACE_CONTAINER_HIGH    */
-	0xFF2D363Du, /* SURFACE_CONTAINER_HIGHEST */
-	0xFFDBE3EDu, /* ON_SURFACE                */
-	0xFFBCC8D3u, /* ON_SURFACE_VARIANT        */
-	0xFF8BCEFFu, /* PRIMARY                   */
-	0xFF00344Eu, /* ON_PRIMARY                */
-	0xFF004B6Fu, /* PRIMARY_CONTAINER         */
-	0xFFC9E6FFu, /* ON_PRIMARY_CONTAINER      */
-	0xFFB4C7E9u, /* SECONDARY                 */
-	0xFF1E314Cu, /* ON_SECONDARY              */
-	0xFF354763u, /* SECONDARY_CONTAINER       */
-	0xFFD5E3FFu, /* ON_SECONDARY_CONTAINER    */
-	0xFFBAC4FAu, /* TERTIARY                  */
-	0xFF232D5Au, /* ON_TERTIARY               */
-	0xFF3A4472u, /* TERTIARY_CONTAINER        */
-	0xFFDDE1FFu, /* ON_TERTIARY_CONTAINER     */
-	0xFFFFB4ABu, /* ERROR                     */
-	0xFF690005u, /* ON_ERROR                  */
-	0xFF87929Du, /* OUTLINE                   */
-	0xFF3D4851u, /* OUTLINE_VARIANT           */
-	0xFFD1D293u, /* BOLT                      */
-};
+static __u32 g_m3_roles[2][AY_UI_ROLE_COUNT];
+static int g_m3_ready;
 
 /* Expressive spring table: { damping_ratio, stiffness } from ExpressiveMotionTokens.kt */
 static const float g_m3_expressive_springs[6][2] = {
@@ -98,9 +49,12 @@ AY_API __u32 ay_ui_color_argb(__u32 theme_mode, __u32 role_id)
 {
 	if (role_id >= AY_UI_ROLE_COUNT)
 		return 0u;
-	return (theme_mode == AY_UI_THEME_DARK)
-		? g_m3_dark_argb[role_id]
-		: g_m3_light_argb[role_id];
+	if (!g_m3_ready) {
+		ay_m3_scheme(AY_BRAND_SEED_ARGB, AY_M3_VARIANT_VIBRANT, AY_UI_THEME_LIGHT, AY_BRAND_ACCENT_ARGB, g_m3_roles[0]);
+		ay_m3_scheme(AY_BRAND_SEED_ARGB, AY_M3_VARIANT_VIBRANT, AY_UI_THEME_DARK, AY_BRAND_ACCENT_ARGB, g_m3_roles[1]);
+		g_m3_ready = 1;
+	}
+	return g_m3_roles[theme_mode == AY_UI_THEME_DARK ? 1 : 0][role_id];
 }
 
 /* Convert 0xAARRGGBB -> 0xAABBGGRR little-endian ABGR word for WebGPU / Canvas / ANativeWindow RGBA8888 */
