@@ -84,7 +84,11 @@ export default {
     if (!authorized(req, env)) return json({ error: { message: "Authorization: Bearer <key> required" } }, 401);
     if (pathname === "/v1/models" && req.method === "GET")
       return json({ object: "list", data: [{ id: "auto:free", object: "model", owned_by: "aphrody" }, ...(await offers(env)).map((o) => ({ id: o.id, object: "model", owned_by: o.provider }))] });
-    if (pathname === "/v1/chat/completions" && req.method === "POST") return chat(env, await req.json());
+    if (pathname === "/v1/chat/completions" && req.method === "POST") {
+      const body = await req.json().catch(() => null);
+      if (!body || !Array.isArray(body.messages)) return json({ error: { message: "body must be JSON with a messages array" } }, 400);
+      return chat(env, body);
+    }
     return json({ error: { message: "not found" } }, 404);
   },
 };
