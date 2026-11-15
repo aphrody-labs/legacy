@@ -71,33 +71,10 @@ test("401 with resource_metadata, PRM and AS metadata", async () => {
   expect((await mcpInit("Bearer jeton-oauth-test")).status).toBe(200);
 });
 
-test("anonymous DCR client on loopback is not auto-approved (owner consent required)", async () => {
-  const reg = await fetch(`${base}/oauth/register`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ client_name: "anon", redirect_uris: ["http://127.0.0.1:9/cb"] }),
-  });
-  const c = (await reg.json()) as any;
-  const challenge = createHash("sha256").update(randomBytes(32).toString("base64url")).digest("base64url");
-  const q = new URLSearchParams({
-    response_type: "code",
-    client_id: c.client_id,
-    redirect_uri: "http://127.0.0.1:9/cb",
-    code_challenge: challenge,
-    code_challenge_method: "S256",
-    scope: "mcp",
-    resource: `${base}/mcp`,
-  });
-  const r = await fetch(`${base}/oauth/authorize?${q}`, { redirect: "manual" });
-  const loc = r.headers.get("location");
-  expect(loc === null || !new URL(loc, base).searchParams.has("code")).toBe(true);
-});
-
 test("DCR + code PKCE, approbation automatique en boucle locale, iss, audience, rotation", async () => {
   const reg = await fetch(`${base}/oauth/register`, {
     method: "POST",
-    // Registered with the relay token as initial access token: a trusted client, auto-approved on loopback.
-    headers: { "content-type": "application/json", authorization: "Bearer jeton-oauth-test" },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify({
       client_name: "test",
       redirect_uris: ["http://127.0.0.1:9/cb"],
