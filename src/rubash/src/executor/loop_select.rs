@@ -1,0 +1,535 @@
+use super::*;
+
+impl Executor {
+    pub(in crate::executor) fn execute_for_command(
+        &mut self,
+        for_command: &ForCommand,
+    ) -> Result<(), ExecuteError> {
+        // TODO(parse.y/execute_cmd.c): Bash `execute_for_command` applies the
+        // full expansion pipeline, loop-control state, traps, and redirections.
+        // This covers common `for name [in words]; do compound_list; done` forms.
+        if let Some(arithmetic) = &for_command.arithmetic {
+            return self.execute_arithmetic_for_command(arithmetic, &for_command.body);
+        }
+
+        if !is_shell_name(&for_command.variable) {
+            // GNU execute_cmd.c reports via builtin_error with no command
+            // segment: "./errors.tests: line 37: `1': not a valid identifier".
+            eprintln!(
+                "{}`{}': not a valid identifier",
+                self.diagnostic_prefix(),
+                for_command.variable
+            );
+            self.exit_code = if self.posix_mode_enabled() { 2 } else { 1 };
+            if self.posix_mode_enabled() {
+                return Err(ExecuteError::ExitCode(2));
+            }
+            return Ok(());
+        }
+
+        // GNU execute_cmd.c execute_for_command expands the word list
+        // with expand_words: a nounset unbound variable (or another
+        // fatal expansion error) in a list word raises the same
+        // FORCE_EOF class as in a simple command's words — the loop
+        // never runs and the noninteractive shell exits (rubash#1130).
+        // The simple-command pre-scan never sees these words, so scan
+        // them here (raw text when the lexer kept it).
+        if !for_command.default_positional {
+            for (index, word) in for_command.words.iter().enumerate() {
+                let scan_text = for_command
+                    .word_metadata
+                    .get(index)
+                    .map(|metadata| metadata.raw.as_str())
+                    .filter(|raw| !raw.is_empty())
+                    .unwrap_or(word.as_str());
+                if let Some(error) = self.parameter_expansion_error_in_word_isolated(scan_text) {
+                    return self.raise_word_expansion_error(error);
+                }
+            }
+        }
+
+        let values = if for_command.default_positional {
+            if self.shell_state.positional_window().is_empty() {
+                Vec::new()
+            } else {
+                self.shell_state.positional_window_cloned()
+            }
+        } else {
+            let mut values = Vec::new();
+            for (index, word) in for_command.words.iter().enumerate() {
+                let raw = for_command
+                    .word_metadata
+                    .get(index)
+                    .map(|metadata| metadata.raw.as_str());
+                let metadata = for_command.word_metadata.get(index);
+                match self.expand_for_word_values_result(word, raw, metadata) {
+                    Ok(expanded) => {
+                        // GNU execute_cmd.c execute_for_command expands
+                        // the whole word list (expand_word_list) before
+                        // the first iteration: an arithmetic evalerror in
+                        // ANY word fails the entire expansion (expr.c
+                        // evalerror -> jump_to_top_level DISCARD) — no
+                        // iteration runs, the for returns 1, the rest of
+                        // its source line is discarded and the next line
+                        // runs (rubash#1241). The word expander records
+                        // the failure in the arithmetic error flags and
+                        // returns a hollowed value; convert it here via
+                        // the compound-expansion consumer (which clears
+                        // both flags and yields the class status), or
+                        // the stale flags silently poison the NEXT
+                        // command — its expansion is hollowed out and
+                        // even its diagnostic is suppressed by the
+                        // report-once latch.
+                        if self.shell_state.arithmetic_fatal_error.get()
+                            || self.shell_state.arithmetic_nounset_error.get()
+                        {
+                            self.raise_evalerror_abort();
+                            self.abandon_on_arithmetic_expansion_error()?;
+                        }
+                        values.extend(expanded);
+                    }
+                    Err(pattern) => {
+                        self.report_failglob(&pattern);
+                        // failglob is a fatal word-expansion error (GNU):
+                        // the for command fails with status 1 and the next
+                        // line runs; ExpansionFailure(1) rides the same
+                        // top-level command-list-abandon machinery.
+                        // rubash#753: arm the reader-level abandon too — the
+                        // Err is swallowed by any compound that carries the
+                        // for (`{ for i in /no/such/*.zzz; do :; done; };
+                        // echo after` must not print `after`), and the class
+                        // flag lets the eval/source boundary contain a
+                        // discard raised inside their text.
+                        self.raise_evalerror_abort();
+                        self.evalerror_failglob_pending.set(true);
+                        return Err(ExecuteError::ExpansionFailure(1));
+                    }
+                }
+            }
+            values
+        };
+        // GNU print_cmd.c:602 print_for_command_head prints `for %s in ` plus
+        // the raw map_list; the implicit `for i; do` form's map_list is the
+        // literal `"$@"` word, so the DEBUG trap text is `for i in "$@"`.
+        let for_text = if for_command.default_positional {
+            format!("for {} in \"$@\"", for_command.variable)
+        } else {
+            format!(
+                "for {} in {}",
+                for_command.variable,
+                crate::executor::command_text::command_words_source_text(
+                    &for_command.words,
+                    &for_command.word_metadata,
+                )
+            )
+        };
+        let for_xtrace_text = for_text.clone();
+        let mut ran_body = false;
+        // GNU execute_cmd.c:3039 sets line_number = for_command->line at the
+        // top of each iteration, BEFORE both the head trace (3059
+        // xtrace_print_for_command_head) and the debug fire; without the
+        // reset each inherits the last body command's line
+        // (dbg-support.tests:146-148 nested for loops report the for head's
+        // line on every iteration; rubash#275: iteration-2 head printed the
+        // body line under PS4='$LINENO'). The ambient line is the for
+        // command's own line (execute_for_command_with_redirects pins it
+        // via with_ambient_line); fall back to the reader's current line
+        // when no compound frame is open.
+        // wt34/perf2: the captured line is the parsed number (GNU's C int);
+        // the per-value restore is one equality-gated write through the
+        // single CURRENT_LINE author instead of a key+value allocation pair
+        // per iteration (GNU execute_cmd.c:3062's line reset is an int
+        // store).
+        let for_line = self.ambient_line.get().or_else(|| {
+            self.shell_state
+                .env_vars
+                .get("__RUBASH_CURRENT_LINE")
+                .and_then(|line| line.parse::<usize>().ok())
+        });
+        for value in values {
+            if let Some(line) = for_line {
+                self.set_current_line_value(line);
+            }
+            // GNU execute_cmd.c:3062-3063 (eval_arith... execute_for_command
+            // iteration loop): `set -x` traces the for head once per
+            // iteration, before the loop variable is assigned.
+            if self.xtrace_enabled() {
+                let prefix = self.xtrace_prefix();
+                self.xtrace_write(format!("{prefix}{for_xtrace_text}\n").as_bytes());
+            }
+            // Bash fires the DEBUG trap for the `for` command once per
+            // iteration (execute_cmd.c execute_for_command), but only where
+            // the trap is in scope (functions without functrace do not
+            // inherit it, execute_cmd.c:5270). execute_cmd.c:3053-3059: a
+            // non-zero trap status under debugging_mode runs `continue` —
+            // this iteration's body is skipped, the loop proceeds to the
+            // next word (probe m3: `B1` skipped, `B2` still ran), and a skip
+            // on the final iteration leaves the for command's status at the
+            // trap's status (probe k1: `FOR=1`).
+            if self.debug_trap_in_scope() {
+                // rubash#2969: GNU's loop_level is already 1 when the
+                // head trap fires (execute_cmd.c increments it at
+                // execute_for_command entry; the fire is :3053), so a
+                // break/continue in the head's trap action validates
+                // against this loop and defers to its pending flag.
+                // This port raises loop_depth only around the body walk
+                // below; raise it across the fire too — otherwise the
+                // action's break saw depth 0, misreported "only
+                // meaningful", and the loop ran on (issue #2969 face A).
+                self.shell_state.loop_depth += 1;
+                let fire = self.run_debug_trap(crate::debugger::SeamKind::ForHead, &for_text);
+                self.shell_state.loop_depth -= 1;
+                if let Some(skip_status) = fire? {
+                    self.exit_code = skip_status;
+                    ran_body = true;
+                    continue;
+                }
+            }
+            ran_body = true;
+            // GNU execute_cmd.c:3066-3079: the loop variable is resolved with
+            // find_variable_last_nameref; when it is a nameref the iteration
+            // word is validated with valid_nameref_value (invalid word ->
+            // sh_invalidid and the for command fails; readonly ->
+            // err_readonly) and bound with bind_variable_value(v, word,
+            // ASS_NAMEREF), which writes the nameref CELL — retargeting the
+            // reference rather than writing through to the target
+            // (nameref5.sub: `typeset -n v=v1; for v in v1 v2` prints
+            // "v1: 1" "v2: 2"). A non-nameref loop variable uses plain
+            // bind_variable semantics.
+            let bound_name = if is_marked_var(
+                &self.shell_state.env_vars,
+                NAMEREF_VARS,
+                &for_command.variable,
+            ) {
+                let value_valid = is_shell_name(&value) || parse_array_subscript(&value).is_some();
+                if !value_valid {
+                    eprintln!(
+                        "{}`{}': not a valid identifier",
+                        self.diagnostic_prefix(),
+                        value
+                    );
+                    self.exit_code = 1;
+                    return Ok(());
+                }
+                if is_marked_var(
+                    &self.shell_state.env_vars,
+                    READONLY_VARS,
+                    &for_command.variable,
+                ) {
+                    eprintln!(
+                        "{}{}: readonly variable",
+                        self.error_prefix(),
+                        for_command.variable
+                    );
+                    // POSIX-mode notes item 37: assigning to a readonly
+                    // loop variable exits the non-interactive POSIX shell;
+                    // the default mode fails the `for` command
+                    // with status 1 and keeps running. GNU execute_cmd.c:3085-3089
+                    // (execute_for_command) sets last_command_exit_value =
+                    // EXECUTION_FAILURE and jumps FORCE_EOF; the status is
+                    // context-owned — shell.c:1471-1472 run_one_command
+                    // remaps FORCE_EOF to 127 under -c, eval.c:104-109
+                    // keeps 1 for scripts, execute_cmd.c:1811 contains it
+                    // at 1 inside subshell children.
+                    self.exit_code = 1;
+                    if self.posix_assignment_failure_is_fatal() {
+                        let code = self.expansion_fatal_status();
+                        self.exit_code = code;
+                        return Err(ExecuteError::ExitCode(code));
+                    }
+                    return Ok(());
+                }
+                self.shell_state
+                    .env_vars
+                    .insert(for_command.variable.clone(), value.clone());
+                // rubash#3060: this arm performs the store itself (the
+                // nameref-cell write bypasses apply_shell_assignment),
+                // so the bind's sv_locale note lives here — GNU
+                // execute_cmd.c:3097-3100 runs
+                // stupidly_hack_special_variables(identifier) for the
+                // ASS_NAMEREF cell bind too.
+                self.note_locale_assignment(&for_command.variable);
+                for_command.variable.clone()
+            } else {
+                // GNU execute_cmd.c:3081-3095: an att_noassign loop
+                // variable fails the bind check (ASSIGN_DISALLOWED)
+                // before the body ever runs — EXECUTION_FAILURE, no
+                // diagnostic (bind_variable_internal prints only for
+                // readonly), and no POSIX FORCE_EOF (that jump is
+                // gated on readonly_p). The funnel swallows the same
+                // bind silently, so the verdict is taken here
+                // (rubash#2369).
+                if self.assignment_target_is_noassign(&for_command.variable) {
+                    self.exit_code = 1;
+                    return Ok(());
+                }
+                // POSIX-mode notes item 37: a failed loop-variable bind
+                // (readonly violation) exits the non-interactive POSIX shell
+                // (GNU execute_cmd.c:3085-3089 jumps FORCE_EOF — the
+                // context-owned status maps to 127 under -c via
+                // shell.c:1471-1472 and stays 1 for scripts and contained
+                // subshells); default mode fails the command only.
+                if !self.apply_shell_assignment(&for_command.variable, value.clone(), None) {
+                    self.exit_code = 1;
+                    if self.posix_assignment_failure_is_fatal() {
+                        let code = self.expansion_fatal_status();
+                        self.exit_code = code;
+                        return Err(ExecuteError::ExitCode(code));
+                    }
+                    return Ok(());
+                }
+                match self.nameref_resolution(&for_command.variable) {
+                    NamerefResolution::Target(target) => target,
+                    _ => for_command.variable.clone(),
+                }
+            };
+            // Keep the typed scalar in sync: function assignments can create a
+            // typed entry for the loop variable, which otherwise masks the
+            // current iteration value during later word expansion.
+            if let Some(variable) = self.shell_state.variables.get_mut(&bound_name) {
+                if let crate::shell::ShellValue::Scalar(current) = &mut variable.value {
+                    *current = value.clone();
+                }
+            }
+            // GNU execute_cmd.c:3201+ binds the loop variable through the
+            // ordinary assignment machinery — the process-environment
+            // mirror only tracks exported (or host-special) names, the
+            // same rule sync_shell_assignment_process_env enforces.
+            sync_shell_assignment_process_env(
+                &self.shell_state.env_vars,
+                &for_command.variable,
+                &value,
+            );
+            // rubash#3060: no locale note at this level — a bind is
+            // noted exactly once, by the code that performs the store.
+            // The plain arm delegates the store to
+            // apply_shell_assignment, whose tail notes it
+            // (temporary_assignments.rs, rubash#1692); the nameref-cell
+            // arm above stores directly and notes at its insert. The
+            // unconditional note that stood here fired sv_locale a
+            // second time for every plain-arm iteration.
+
+            // GNU execute_for_command (execute_cmd.c:3201+) runs the body by
+            // POINTER — the COMMAND list make_cmd.c allocated once at parse
+            // is re-walked per iteration, never copied. The Vec wrapper this
+            // port used deep-cloned every body command on EVERY iteration;
+            // execute_ast_inner walks the stored slice.
+            self.shell_state.loop_depth += 1;
+            let result = self.execute_ast_inner(&for_command.body);
+            self.shell_state.loop_depth -= 1;
+            // GNU execute_cmd.c:3105 REAP(): dead background jobs are
+            // silently reaped after every `for` body in a non-interactive
+            // or non-job-control shell.
+            self.reap_dead_jobs_after_loop_body();
+            match result {
+                Ok(()) => {}
+                Err(ExecuteError::Break(level)) if level <= 1 => {
+                    self.exit_code = self.take_break_failure_status().unwrap_or(0);
+                    break;
+                }
+                Err(ExecuteError::Break(level)) => return Err(ExecuteError::Break(level - 1)),
+                Err(ExecuteError::Continue(level)) if level <= 1 => {
+                    self.exit_code = 0;
+                    continue;
+                }
+                Err(ExecuteError::Continue(level)) => {
+                    return Err(ExecuteError::Continue(level - 1));
+                }
+                Err(error) => {
+                    // rubash#2969: the unwind abandons this frame; flags
+                    // banked against it must not survive into the
+                    // enclosing list (no driver remains to consume them).
+                    self.clear_pending_loop_control();
+                    return Err(error);
+                }
+            }
+            // rubash#2969: GNU execute_cmd.c:3108-3118 — consume one
+            // pending DEBUG-trap flag level after the body: a break
+            // ends the loop; a continue advances, or — with levels
+            // remaining for an outer loop — ends this loop with the
+            // flag still standing for that driver. Runs before the
+            // stopped check below: in GNU the stop banks into the same
+            // `breaking` global this check reads.
+            match self.consume_pending_loop_control() {
+                LoopControlFlow::BreakLoop => break,
+                LoopControlFlow::NextIteration => continue,
+                LoopControlFlow::None => {}
+            }
+            // rubash#2838: GNU execute_cmd.c:3108-3111
+            // execute_for_command — a SIGTSTP stop in the body set
+            // `breaking`; consume one level and abandon the loop. The
+            // body's status (148 for the stopped job) stays in
+            // exit_code: GNU returns the body status.
+            if self.consume_stopped_loop_breaking() {
+                break;
+            }
+        }
+
+        if !ran_body {
+            self.exit_code = 0;
+        }
+        Ok(())
+    }
+
+    pub(in crate::executor) fn execute_for_command_with_redirects(
+        &mut self,
+        for_command: &ForCommand,
+        cmd: &CommandNode,
+    ) -> Result<(), ExecuteError> {
+        // RESTRICTED_SHELL (#804): refuse before any splice or creation.
+        if compound_command_has_redirects(cmd) {
+            if let Some(message) = self.restricted_compound_redirect_error(cmd)? {
+                self.write_default_stderr(&message)?;
+                self.exit_code = 1;
+                return Ok(());
+            }
+        }
+        // rubash#3454: same `set -u` unbound-target gate as `if` —
+        // `for ... done > $nope` aborts in GNU's compound
+        // do_redirections before any expansion side effect.
+        if self.compound_redirect_nounset_fatal(cmd)? {
+            return Err(ExecuteError::ExitCode(1));
+        }
+        // rubash#2246: same borrow conversion as the if wrapper — the
+        // cmd + for_command deep clones existed only for the procsub
+        // materialization (gated on a `>(` mirror target) and the
+        // per-leaf body splice, which prepare_compound_output_redirects
+        // replaces with the entry side effects alone.
+        let mut redirect_owned;
+        let group_outputs;
+        let redirect_cmd: &CommandNode =
+            if super::pipeline_exec::compound_redirect_needs_procsub_rewrite(cmd) {
+                redirect_owned = cmd.clone();
+                group_outputs =
+                    self.materialize_compound_output_process_substitutions(&mut redirect_owned)?;
+                &redirect_owned
+            } else {
+                group_outputs = Vec::new();
+                cmd
+            };
+        let result = self.prepare_compound_output_redirects(redirect_cmd);
+        let status = self.exit_code;
+        if let Err(error) = result {
+            // rubash#846 (GNU execute_cmd.c:854-883): the for's OWN
+            // redirect failure — mark it for the `!` flip sites.
+            if matches!(error, ExecuteError::IoError(_)) {
+                self.note_compound_redirect_failure();
+            }
+            let finish_result = self.finish_compound_output_process_substitutions(group_outputs);
+            self.exit_code = status;
+            finish_result?;
+            return Err(error);
+        }
+
+        // GNU execute_cmd.c:3001 `line_number = for_command->line`: the
+        // `for` keyword's line is the ambient line_number in force while
+        // the body executes — inner while/if/group diagnostics report it.
+        let for_line = cmd.line;
+        let result = self.with_loop_fd_heredocs(cmd, |executor| {
+            executor.with_command_input_redirects(cmd, |executor| {
+                executor.with_ambient_line(for_line, |executor| {
+                    executor.execute_for_command(for_command)
+                })
+            })
+        });
+        let status = self.exit_code;
+        let finish_result = self.finish_compound_output_process_substitutions(group_outputs);
+        self.exit_code = status;
+        result?;
+        finish_result?;
+        self.exit_code = status;
+        Ok(())
+    }
+
+    pub(in crate::executor) fn loop_redirect_input(&mut self, cmd: &CommandNode) -> Option<String> {
+        let redirect = cmd.redirect_in.as_deref()?;
+        if redirect.fd.unwrap_or(0) != 0 {
+            return None;
+        }
+        if is_closed_redirect_target(&self.expand_redirect_target(redirect)) {
+            return None;
+        }
+        // rubash#2024: recorded-span admission — only a span the parser saw
+        // unquoted is a real substitution; a QUOTED `"<(echo hi)"` loop
+        // input target is a literal filename (GNU parse.y records the span
+        // only for an unquoted `<(`; redir.c:916 redir_open then fails it
+        // ENOENT and the compound is abandoned by the literal-target error
+        // channel, compound_stdin_open_failure, before this staging runs).
+        if redirect.target.starts_with("<(")
+            && redirect.target.ends_with(')')
+            && super::external_setup::redirect_target_span_is_recorded(redirect)
+        {
+            if let Some(source) = redirect
+                .target
+                .strip_prefix("<(")
+                .and_then(|target| target.strip_suffix(')'))
+            {
+                return self.process_substitution_output(source);
+            }
+        }
+
+        let target = self.expand_redirect_target(redirect);
+        // GNU redir.c: a SPELLED `< /dev/fd/N` is r_input -> redir_open
+        // (redir.c:725) — a plain open(2) of the path. On a HAVE_DEV_FD
+        // build the kernel resolves the magic link, so a regular-file
+        // endpoint is served FRESH (its own offset) and the donor fd
+        // does not move; only the dup SPELLING (`<&N`,
+        // r_duplicating_input, redir.c:1193) shares the description.
+        // An endpoint that re-opens fresh (the fd_alias_reopen_path
+        // rule, rubash#2256) is therefore served from its origin file
+        // here; endpoints that cannot re-open (pipes, staged text)
+        // keep the shared serve below (niubash#118: `< /dev/stdin`
+        // resolves through the fd layer, never the console path).
+        if let Some(fd) = dev_stdio_redirect_fd(&target) {
+            if let Some(path) = self.fd_alias_reopen_path(fd) {
+                if let Ok(bytes) = fs::read(&path) {
+                    return Some(bytes_to_shell_text(&bytes));
+                }
+            }
+            return match self.fd_table.read_endpoint(fd) {
+                Some(FdReadEndpoint::File(_)) => self
+                    .fd_table
+                    .read_all_bytes(fd)
+                    .map(|bytes| bytes_to_shell_text(&bytes)),
+                Some(FdReadEndpoint::Text(_)) | Some(FdReadEndpoint::ProcessSubstitution(_)) => {
+                    // Same drain-on-serve as the `<&N` path in
+                    // stdin_string_for_command: the loop's stdin owns the
+                    // shared offset now (redir.c dup2 semantics).
+                    let input = self.virtual_fd_stdin_remaining(fd);
+                    if input.is_some() {
+                        self.fd_table.drain_input_to_eof(fd);
+                    }
+                    input
+                }
+                _ => None,
+            };
+        }
+        let path = self.session_path(self.redirect_target_filesystem_path(&target));
+        if redirect.append {
+            let _ = OpenOptions::new()
+                .create(true)
+                .read(true)
+                .write(true)
+                .open(&path);
+        }
+        // Q11 /proc P1 (docs/proc-vfs-plan.md hook B): loop stdin redirect
+        // reads synthetic /proc files before the filesystem.
+        if let Some(bytes) = crate::special_paths::synthetic_proc_content(&target) {
+            return Some(bytes_to_shell_text(&bytes));
+        }
+        // rubash#1903: a WinuxCmd fifo marker slurped through the plain
+        // read below would yield the 7 marker bytes and never create
+        // the rendezvous the writer is waiting for. The staging
+        // slurp's one open of a marker is the read side of the
+        // named-pipe rendezvous (same rule as the text channel in
+        // stdin_string_for_command).
+        #[cfg(windows)]
+        if let Some(result) =
+            crate::winuxcmd_fifo::slurp_marker_bytes(&path, &self.shell_state.env_vars)
+        {
+            let buf = result.ok()?;
+            return Some(bytes_to_shell_text(&buf));
+        }
+        fs::read_to_string(path).ok()
+    }
+}

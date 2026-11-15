@@ -57,6 +57,8 @@ sys = { version = "0.4.0", path = "../machine", package = "aphrody-machine" }
 xtk.workspace = true
 up = { version = "0.4.0", package = "aphrody-up", path = "../up" }
 rt = { version = "0.4.0", package = "aphrody-rt", path = "../rt" }
+# `ay sh`: the embedded Bash 5.3 engine (src/rubash), linked through its Session API.
+rubash = { version = "1.5.0", path = "../rubash" }
 # `ay docs` (Bun docs index) and `ay flat` / `ay hash` / `ay time` (bun fork crates, flattened).
 aphrody-docs = { version = "0.4.0", path = "../docs" }
 aphrody-omarchy = { version = "0.4.0", path = "../posix/omarchy" }

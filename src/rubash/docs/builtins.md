@@ -1,0 +1,304 @@
+# Rubash Builtin 与 Fast-Path 命令清单（单一事实来源）
+
+> 最后核对日期：2026-09-08
+> 核对方法：静态审计 `src/executor/builtin_names.rs`（`is_shell_builtin_name`
+> 白名单）、`src/executor/command_dispatch_primary.rs`、
+> `src/executor/command_dispatch_late.rs`，并与 GNU Bash 5.2（61 个 builtin）
+> 以及 winuxcmd（`unixwin-winuxcmd`，176 个外部命令）做重叠比对。
+> 与 GNU Bash 的**行为兼容性状态**见 rubash README「Compatibility at a Glance」台账（快照归档见 issue #477）；本文件
+> 只回答"哪些命令是 builtin、哪些是 fast-path、为什么"。
+>
+> 本文件由 `src/executor/builtin_names.rs` 内的文档同步测试守护：
+> builtin 白名单或 fast-path 分支变更而没有更新本文档时，`cargo test` 会失败。
+> 维护规则：**改代码时同步改下面的机器可读清单块，反之亦然。**
+
+## 一、三层分发结构
+
+rubash 对一个命令词按优先级做三层处理：
+
+1. **真 builtin**：在 `is_shell_builtin_name` 白名单内，由
+   `command_dispatch_primary.rs` / `command_dispatch_late.rs` 的 match 分支
+   直接在进程内执行，不创建子进程。
+2. **Fast-path builtin（隐藏）**：**不在**白名单内，仅在参数形态简单时进程内
+   快速执行；复杂参数回退到外部命令（由 winuxcmd 提供）。这是 Windows 下
+   减少进程创建开销的优化。introspection 口径（#2036 S2 裁定）：它们不是
+   builtin，`compgen -b` / `enable` 的名单不含它们（与 GNU 的 builtin 表
+   一致）；但 describe 面（`type`、`command -v`）必须如实披露进程内
+   接管——接管生效时 `type X` 报告 `X is a shell emulation of <path>`、
+   `type -t X` 报告 `emulation`；接管因名字不可解析而 stand-down 时，
+   如实回落文件 / 未找到答案。**#2514 裁定（2026-11-02）**：上述披露
+   仅限 Windows 产品面（解析落点可能是产品自家 applet 文件）；非
+   Windows 上 describe 严格按 GNU `describe_command`
+   （builtins/type.def:211）作答——可解析即报告 PATH 文件本身
+   （`command -v` 给全路径、`type -t` 给 `file`），不可解析即未找到，
+   与执行面是否接管无关。**#2642（2026-11-12）**：`env` 这一唯一的
+   扩展 builtin 同样适用——非 Windows 上 `type env` / `command -v env`
+   报告 PATH 文件；执行面与 `enable` / `compgen -b` 仍走统一投影。
+3. **外部命令**：沿 PATH 查找，由 winuxcmd 提供。
+
+## 二、真 builtin 清单（62 项）
+
+GNU Bash 5.3 的 61 个 builtin **全部覆盖，无缺失**；唯一加粗的扩展是 `env`
+（rubash#759 item 4 起不再携带 zsh 兼容别名）。`env` 的 describe 面例外：
+非 Windows 上 `type env` / `command -v env` 按 GNU 报告 PATH 文件（#2642），
+仅 Windows 产品面报告为 builtin。另有 Windows 专属 `sudo`
+作为**隐藏 host builtin** 不计入 62（见第三节说明）。
+
+<!-- builtins-list
+.
+:
+[
+alias
+bg
+bind
+break
+builtin
+caller
+cd
+command
+compgen
+complete
+compopt
+continue
+declare
+dirs
+disown
+echo
+enable
+env
+eval
+exec
+exit
+export
+false
+fc
+fg
+getopts
+hash
+help
+history
+jobs
+kill
+let
+local
+logout
+mapfile
+popd
+printf
+pushd
+pwd
+read
+readarray
+readonly
+return
+set
+shift
+shopt
+source
+suspend
+test
+times
+trap
+true
+type
+typeset
+ulimit
+umask
+unalias
+unset
+wait
+-->
+
+| 类别 | 命令 |
+|---|---|
+| Bash 61 个 builtin（全部对齐） | `.` `:` `[` `alias` `bg` `bind` `break` `builtin` `caller` `cd` `command` `compgen` `complete` `compopt` `continue` `declare` `dirs` `disown` `echo` `enable` `eval` `exec` `exit` `export` `false` `fc` `fg` `getopts` `hash` `help` `history` `jobs` `kill` `let` `local` `logout` `mapfile` `popd` `printf` `pushd` `pwd` `read` `readarray` `readonly` `return` `set` `shift` `shopt` `source` `suspend` `test` `times` `trap` `true` `type` `typeset` `ulimit` `umask` `unalias` `unset` `wait` |
+| **扩展：进程内 env** | `env`（`executor/external_inner.rs`，按 coreutils 语义实现：排序输出、`-0` 等；bash 中为外部命令） |
+| Windows 专属（隐藏 host builtin） | `sudo`（不在白名单内；introspection 报告外部命令，仅当嵌入宿主注册了 elevation handler 时才在执行层拦截） |
+
+说明：
+
+- `declare` 与 `typeset` 同名同实现；`source` 与 `.` 同名同实现；`[` 由
+  `src/builtins/test.rs` 实现并校验闭合 `]`。
+- `time`、`[[`、`((` 是**保留字/语法结构**，不是 builtin（bash 同），见
+  `is_shell_keyword` 与 late dispatch 对应分支。`time` 支持 `TIMEFORMAT`。
+
+## 三、Fast-Path（隐藏 builtin）清单
+
+以下命令在参数形态简单时进程内执行，否则回退外部 winuxcmd 命令
+（sleep 自 #3488 起在 unix 上例外：可解析形态全面退让真 spawn，见表内备注）。
+**有意不进 `is_shell_builtin_name` 白名单**：它们不是 builtin，白名单外
+的身份保证 builtin 表类内省面（`compgen -b`、`enable`）与 GNU 一致；
+describe 面自 #2036 S2 起如实披露接管（`type` 报 emulation 形态），
+不再假装是外部文件。
+
+<!-- fastpath-list
+sleep
+dirname
+basename
+uname
+arch
+stty
+-->
+
+| 命令 | fast-path 实现位置 | 回退行为 | 备注 |
+|---|---|---|---|
+| `sleep` | `builtins/sleep.rs`（`can_execute_fast_path`） | `execute_external` | 支持小数秒（f64）；stand_down=Yield 为已裁——用户 2026-11-14 裁定（#3488 (a)）：unix 上可解析形态全面退让真 spawn（进程内仿真无进程同一性、进程树 watchdog 杀不到，#2995），仿真仅余非 unix 面 |
+| `dirname` | `executor/printf_path_builtins.rs` | `execute_external`（winuxcmd `dirname`） | 非平凡路径回退 |
+| `basename` | `executor/printf_path_builtins.rs` | `execute_external`（winuxcmd `basename`） | 同上 |
+| `uname` | `builtins/uname.rs`（身份人设字段取自 `executor/identity.rs`） | 无（内置完整选项解析） | rubash#154：身份不外包给 PATH |
+| `arch` | `builtins/uname.rs`（`uname -m` 语义） | 无 | 同上 |
+| `stty` | `builtins/stty.rs`（`execute_console_mode_tool`） | `execute_external`（stand-down 时） | 控制台模式工具，与 uname/arch 同族（#154）；stand_down=Replace 为已裁保持——用户 2026-10-29 确认 stty 暂用内建、不翻 Yield，评估格就此关闭，有实测问题再重评 |
+
+`env` 是唯一的混合形态：它在白名单内（属第二节真 builtin，Windows 上
+`type env` 报告为 builtin；非 Windows 上 describe 按 GNU 报告 PATH 文件，
+#2642），但实现是进程内执行 coreutils 语义、**没有外部回退路径**。它不进
+本清单，因为白名单归属与 fast-path 判定互斥，文档同步测试会拒绝两边都出现
+的名字。
+
+另有两类仅用于测试兼容的复刻 builtin（bash 官方测试套件 `tests/builtins/` 自带
+同名辅助 builtin，正式发行版不包含）：`recho`、`zecho`（late dispatch）。
+它们不属于 fast-path，也不在白名单内。
+
+### 3.1 管线级 arm
+
+除上面的隐藏 fast-path builtin 外，还有一组**不进 introspection 的进程内
+fast-path arm**，它匹配的是命令在管线中的出现位置，而不是
+命令词本身。这一组此前从未记录在本文件里；2026-10-17 的全量差分审计
+（[`docs/audit/fast-path-differential.md`](audit/fast-path-differential.md)）
+清点了完整清单、每条 arm 接受的形态、decline 时的回退去向，以及已确认的
+逐 arm 分歧（带字节级证据）。下面的机器块与该审计 §2 的代码清单一一对应，
+并由 `src/executor/builtin_names.rs` 的文档同步测试守护：arm 增删或改名而
+未同步本文件时，`cargo test --lib builtin_names` 会失败。
+
+**管线阶段 arm**（`src/executor/pipeline_exec.rs` 的 `match name`）：管线中
+除函数与真 builtin 外的每个阶段命令词命中下表时在进程内执行——这些命令
+在管道上以进程内 arm 运行，直到 arm 遇到它拒绝的形态，才回退到外部
+winuxcmd 二进制。`true`/`:`/`false` 全形态接受；`echo`/`printf`/`trap`
+同样无 decline（`trap` 没有外部对应物）。其余六条各自声明 decline 条件
+（`head` 拒绝 `-c`/`--bytes` 与文件操作数、`grep` 拒绝 regex 元字符、
+`tr` 拒绝 `-` 形词等），decline 与外部回退的语义必须一致；`wc`/`tr` 的
+carrier 字节分歧、`head` 的 flag silently-default 分支、`dirname`/`basename`
+边缘分歧全部记录在审计 §3，逐例追踪状态见其 §8。
+
+<!-- pipeline-fastpath-list
+true
+:
+false
+echo
+printf
+trap
+head
+cat
+sed
+grep
+wc
+tr
+-->
+
+## 四、与 winuxcmd 的重叠
+
+### 4.1 外部文件命令的进程内模拟（external_file_builtins.rs）
+
+除下述 13 个重叠命令外，还有一层**只在本进程内模拟、默认不回退外部命令**
+的文件命令：`cp` `rm` `rmdir` `mkdir` `touch` `chmod` `cat` `sed`（简单参数）
+`mkfifo` `tty` `tput`（仅 Windows）。它们由 `executor/external_file_builtins.rs` 实现，
+`external_file_builtins_enabled` 默认开启（init.rs），宿主经
+`Executor::set_external_file_builtins_enabled` 调节；全仓实际调用面只有测试会关闭。
+
+关键事实：
+
+- **introspection 披露（#2036 S2，#2514 裁定后限 Windows 面）**：该层
+  启用且名字可解析时，Windows 上 `type X` 报告
+  `X is a shell emulation of <path>`、`type -t X` 报告 `emulation`、
+  `command -v X` 报告裸名；非 Windows 上 describe 按 GNU
+  `describe_command` 报告 PATH 文件本身（#2514）；该层被宿主关闭或
+  名字不可解析（stand-down）时回落文件 / 未找到答案。第三节
+  fast-path 同口径。
+
+- **宿主契约（#2045 收口，2026-10-29 按代码复核）**：裸跑 rubash.exe
+  （83 套件 harness 即如此）与产品 niubash **都保持该层开启**——旧版此节
+  称「产品 niubash 会关闭该层」与代码不符，已按代码对齐。niubash 的现行
+  态是刻意留开：niubash-runtime/src/shell.rs 的 "P1 spawn takeover"
+  注释在案——曾在此关闭时，POSIX PATH（=/usr/bin:/bin）下脚本套件的
+  spawn 被宿主 command-not-found 处理器吞成 127，故裁定不关。开关两态
+  的行为账：开启 = 名字可解析时由进程内模拟作答（让路规则见注册表
+  stand_down 两轴）；关闭 = 简单命令面与管线 stage 臂（#2066 起同门）
+  全部落真实 spawn，comsub 面不由此门管辖。差分覆盖：S5 三方语料钉
+  默认开态，关态由 issue2066 / issue2036_s4 两组钉钉住。
+- 模拟实现必须对齐 GNU coreutils 的 stdout/rc（ledger 只计 stdout），错误
+  措辞按子进程 stderr 形式输出（无 shell 前缀、走缓冲 stderr 通道，
+  `2>/dev/null` 可捕获）。2026-09-10 已按 GNU 差分探针根治：cp `/dev/null`
+  读写两向语义、cat 多操作数遇缺继续、rm `-r/-f/-v` 组合与目录语义、
+  mkdir `-p/-m/File exists`、touch/rmdir missing operand、chmod
+  `cannot access`、mkfifo `File exists`。
+- **拼写契约分层**（2026-09-10 队长裁定）：POSIX 设备拼写（`/dev/null` 等）
+  是 **shell（rubash）边界的翻译职责**——spawn 外部命令时统一翻成 Windows
+  形态（`NUL`）；winuxcmd 作为 coreutils 移植只讲 Windows 拼写，不认
+  `/dev/null` 不是缺陷（可选支持 `NUL`，需绕过 CRT stat 对设备名的 EINVAL，
+  用 CreateFile 路径）。
+- **decline 策略**（同 sed fast-path 设计）：cp/cat 带任何标志（`-` 开头
+  且非裸 `-`）即返回未处理、交真实外部命令（产品=winuxcmd、harness=宿主
+  coreutils，两者均为 GNU 形态）；无标志简单形态走进程内模拟。三方差分
+  （GNU 5.3.0 / winuxcmd / rubash，probe9-11）在此策略下 stdout+stderr
+  全对齐。winuxcmd 侧已知措辞缺口：chmod 报错缺 strerror 后缀；mkfifo 为
+  登记在案的 Windows limitation。
+- 宿主环境注入的 shell 函数（如 WorkBuddy 的 safe-bin `rm`）会合法遮蔽
+  这些命令——这是宿主层产物，不是 rubash 缺陷。
+
+### 4.2 重叠命令
+
+winuxcmd（176 个外部命令）与 rubash 内置/保留字重叠的命令共 13 个：
+
+`echo` `env` `kill` `printf` `pwd` `test` `[` `true` `false`（真 builtin）、
+`sleep` `dirname` `basename`（fast-path）、`time`（保留字 ↔ winuxcmd `time`）。
+
+重叠遵循 bash 语义：脚本内调用被 builtin/保留字遮蔽；`command env`、
+`/usr/bin/env` 等显式形式仍走 winuxcmd 外部版本。2026-09-08 已对重叠命令的
+行为（选项、转义、格式化、信号、jobspec、TIMEFORMAT）完成逐项比对，结论：
+对齐。详细判定见工作区审计报告。
+
+### 4.3 斜杠形逃逸契约（echo/printf/pwd 的 RedirectToBuiltin 组）
+
+审计 §3.2-e 遗留格，S6 实测 + 裁定（2026-10-29，Linux 同机、GNU bash
+5.3.20 + coreutils 9.4 对照，探针账见 S6 报告）：
+
+- **认领面只有六个精确拼写**：`/bin/echo`、`/usr/bin/echo`、`/bin/printf`、
+  `/usr/bin/printf`、`/bin/pwd`、`/usr/bin/pwd`。任何其他斜杠拼写（相对
+  路径、其他目录、伪造路径）一律按字面 exec 该文件，与 GNU 无分歧
+  （探针：自备脚本 `/tmp/.../echo` 双边都真跑）。
+- **被认领的拼写默认以内建语义作答，但带存在性门（#2093，2026-10-29 落地）**：
+  拼写经 shell 路径层翻译（`shell_path_to_windows` → 字面探测
+  `literal_executable_file`，即 find_user_command 斜杠分支的第一跳，不含
+  Windows 的 basename-PATH 兜底）指向**存在且可执行**的字面文件时，改道面
+  落回真实 exec、由该文件作答（`--help`/`--version` 整页横幅、echo 不认
+  shell 选项、pwd 答物理路径）——与 GNU findcmd.c:383-385 对含斜杠词逐字
+  execve 的语义一致；字面文件缺席（Windows 无 /bin 的常态）时维持改道。
+  存在但不可执行的文件也维持改道（按 #2093 两 clause 门裁定）。
+- **保留理由（裁定保持）**：Windows 宿主上这些拼写通常没有字面文件，改道层
+  仍是 `/bin/echo` 形脚本能跑起来的前提（与 find_user_command 对
+  `/bin/X` 的 basename 命名空间处理同层）；存在性门只在字面文件真实
+  存在时才改写解析语义（shell-root 树内捆绑同名工具时，文件赢——同
+  #2093 门语义，实测矩阵见该单 REPORT）。
+- **门控不对称（如实登记）**：printf/pwd 两形走 external_file_builtins
+  宿主旗（关则落真实 spawn）；echo 形走 external_inner 捷径面，不受该旗
+  管辖。存在性门叠加在两族的各自门控之上（echo 门不受宿主旗影响）。
+
+**命令替换内的 builtin 遮蔽（防回归不变量）**：`$(builtin …)` 的外部命令
+解析在 PATH 查找**之前**先按名字判 `is_shell_builtin_name`，并尊重
+`enable -n`（禁用后才落到同名 .exe）。该守卫在
+`src/executor/command_substitution_values.rs`（`run_external_command_substitution`
+内的名字前置检查）与 `pipeline_exec.rs` / `pipeline_stages.rs` 的各 pipeline
+stage 入口；是**基于名字而非 PATH 顺序**的判定，PATH 前置 system32 也无法
+绕过。2026-09 期审计确认：Windows PATH 上与 builtin 同名真 .exe 共 11 个
+（fc/echo/printf/true/false/test/[/env/pwd/kill/help，含 system32 的
+fc.exe/help.exe），全部经 `$(...)` 实测走 builtin；回归覆盖
+`tests/c_stub_regressions.rs`。
+
+## 五、维护清单（改这里之前先看）
+
+新增/修改 builtin 或 fast-path 时：
+
+1. 改 `src/executor/builtin_names.rs`（白名单或新分支）。
+2. 同步更新本文件的 `builtins-list` / `fastpath-list` 机器块；改管线级
+   arm（§3.1）时同步 `pipeline-fastpath-list`。
+3. 跑 `cargo test --lib builtin_names`，文档同步测试必须绿。

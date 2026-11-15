@@ -1,0 +1,380 @@
+use super::*;
+
+impl Executor {
+    pub(in crate::executor) fn execute_export(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<i32, ExecuteError> {
+        if export_args_request_functions(&cmd.words[1..]) {
+            let mut stdout = Vec::new();
+            let mut stderr = Vec::new();
+            let status =
+                self.execute_export_functions(&cmd.words[1..], &mut stdout, &mut stderr)?;
+            self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+            // rubash#2117: the -f face's invalid option returns
+            // EX_USAGE (GNU setattr.def via declare.def's function
+            // face), which execute_cmd.c:4886-4888 marks
+            // special_builtin_failed; this path's status vocabulary
+            // has 2 only for that face.
+            if status == crate::builtins::setattr::EX_USAGE {
+                self.special_builtin_failed.set(true);
+            }
+            return Ok(status);
+        }
+        // GNU export.def shares declare.def's operand handling: an
+        // `export name[sub]=value` subscript resolves under the same
+        // ExpandedOnce (W_ASSIGNMENT -> ASS_NOEXPAND) rules.
+        let args = match self.rewrite_declare_operand_subscripts(
+            &cmd.words[1..],
+            &cmd.word_metadata,
+            "export",
+        ) {
+            Ok(args) => args,
+            Err(()) => return Ok(1),
+        };
+        // Same GNU variables.c:2920-2937 make_variable_value rule as the
+        // readonly path: an operand whose target is integer-attributed
+        // evaluates the RHS arithmetic (`export i=3+4` binds 7). An evalexp
+        // failure follows variables.c:2938-2944: print `export: <evalerror>`,
+        // drop the failing operand and its successors, arm the DISCARD
+        // abort, and fail the command.
+        let (args, arith_eval_failure) = self.evaluate_integer_attribute_assignment_args(&args);
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        if let Some(message) = &arith_eval_failure {
+            if !message.is_empty() {
+                writeln!(stderr, "{}export: {message}", self.error_prefix())?;
+            }
+            self.raise_evalerror_abort();
+        }
+        // rubash#2424: DIRSTACK operands route through the stack
+        // setter door, exactly as in execute_declare — setattr.def
+        // shares declare.def's operand handling and GNU's bind lands
+        // in variables.c:1612 assign_dirstack, while the pure builtin
+        // below would write the list into the mirror as a private
+        // cell the stack never sees. Skipped in -p listing mode
+        // (assignments are inert there), while a plain local/tempenv
+        // shadow owns the name, and while the variable is readonly
+        // (the builtin's own gates own that refusal).
+        let mut dirstack_failed = false;
+        let args = if !args.iter().any(|arg| arg == "-p")
+            && !self.dirstack_shadowed()
+            && !is_marked_var(&self.shell_state.env_vars, READONLY_VARS, "DIRSTACK")
+        {
+            let (kept, _routed, failed, diagnostics) =
+                self.route_declare_dirstack_operands(&args, &cmd.words[1..], "export", false);
+            for line in &diagnostics {
+                write!(stderr, "{line}")?;
+            }
+            dirstack_failed = failed;
+            kept
+        } else {
+            args
+        };
+        // Named-access materialization, as in execute_declare: the
+        // builtin's bare-name handling reads the synced mirror/cell.
+        if super::declare_local::declare_words_name_dirstack(&cmd.words[1..])
+            && !self.dirstack_shadowed()
+        {
+            self.sync_dirstack_cell();
+        }
+        let mut oob_word = None;
+        let mut traced_assignments = Vec::new();
+        // rubash#2973: GNU's export resolves name-only operands
+        // through find_variable, which materializes a dynamic
+        // variable's cell — `export RANDOM` alone makes a later
+        // listing render a drawn value.
+        if !args.iter().any(|arg| arg == "-p") {
+            self.fire_dynamic_operand_lookups(&args);
+        }
+        // rubash#1569: the -p listing renders the bindings underneath
+        // this command's own tempenv frame, never the tempvars.
+        let underlay = self.tempenv_listing_underlay();
+        let status = crate::builtins::setattr::export_with_io(
+            args.iter().map(String::as_str),
+            &mut self.shell_state.env_vars,
+            &mut stdout,
+            &mut stderr,
+            &mut oob_word,
+            Some(&mut traced_assignments),
+            &underlay,
+        )?;
+        // GNU subst.c:3580: each performed assignment operand traced its
+        // own line as export performed it (rubash#1340).
+        self.xtrace_setattr_assignments(&traced_assignments);
+        // rubash#616 (1a): `export -a name=(...)` rewrites the array mirror
+        // inside the pure builtin (setattr/apply.rs `env_vars.insert`), so
+        // refresh the structured cell for assignment operands — a previously
+        // typed array must not shadow the new storage (GNU keeps one owner,
+        // bind_variable variables.c:3286). The mark-aware dispatch also
+        // covers `export -A A=(...)` / `export -A A+=(...)`: the assoc render
+        // would otherwise leave ShellValue::AssociativeArray stale (the
+        // indexed sync drops no assoc cell), which the command-boundary
+        // verify_typed_cells net catches.
+        for arg in &args {
+            if let Some((raw, _)) = arg.split_once('=') {
+                let base = raw.trim_end_matches('+');
+                let base = base.split('[').next().unwrap_or(base);
+                if base.is_empty() {
+                    continue;
+                }
+                // Borrow the mirror (no clone): both sync helpers take
+                // `&str`, and the attr probe below only reads the table.
+                // The clone here cost one String alloc per assignment
+                // operand on every loop iteration.
+                if let Some(mirror) = self.shell_state.env_vars.get(base) {
+                    if is_marked_var(&self.shell_state.env_vars, ASSOC_VARS, base) {
+                        sync_typed_assoc_storage(&mut self.shell_state.variables, base, mirror);
+                    } else {
+                        sync_typed_indexed_storage(&mut self.shell_state.variables, base, mirror);
+                    }
+                }
+            }
+        }
+        // GNU err_badarraysub + any_failed (arrayfunc.c:804-809,
+        // rubash#635): the nested declare_builtin reports the bare
+        // `<word>: bad array subscript` (report_error, no `export:`
+        // segment) and DISCARDs the command list (subst.c:11169
+        // bash_variable_assignment_error). Partial store already
+        // installed by the assign path; the early return skips the
+        // status-0 gates below, exactly like execute_declare.
+        if let Some(word) = oob_word {
+            writeln!(
+                stderr,
+                "{}{}: bad array subscript",
+                self.diagnostic_prefix(),
+                word
+            )?;
+            self.exit_code = 1;
+            // Bad-subscript class for the eval boundary (rubash#637
+            // primitive, reused): eval absorbs it and continues.
+            self.evalerror_subscript_pending.set(true);
+            self.raise_evalerror_abort();
+            // Flush here: this early return skips the normal
+            // buffered-output flush below, which would swallow the
+            // diagnostic (rubash#635).
+            self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+            return Ok(1);
+        }
+        let status = if arith_eval_failure.is_some() || dirstack_failed {
+            status.max(1)
+        } else {
+            status
+        };
+        // rubash#2117: GNU setattr.def's invalid-option return is
+        // EX_USAGE (258 > EX_SHERRBASE), which execute_cmd.c:4886-4888
+        // marks special_builtin_failed; the dispatch gate then exits a
+        // non-interactive POSIX shell (execute_cmd.c:1004-1017).
+        // setattr's layer returns the converted EX_BADUSAGE (2), and
+        // within export's status vocabulary 2 is only ever this face
+        // (operand failures are EXECUTION_FAILURE), so key the mark on
+        // it — the convention execute_set/execute_shift already use.
+        if status == crate::builtins::setattr::EX_USAGE {
+            self.special_builtin_failed.set(true);
+        }
+        // GNU execute_cmd.c:1004-1017 with the sh_invalidid/err_readonly
+        // assignment class: in POSIX mode a non-interactive shell exits when
+        // the special builtin export fails on an ASSIGNMENT (`export 9bad=1`,
+        // `export ro=2` with ro readonly — oracle g40 probes both exit rc=1),
+        // while `export -f nofn` ("not a function") only fails the builtin.
+        // The flag rides the same dispatch gate set/unset/trap use.
+        if status != 0 && self.special_assignment_operand_failure(&args) {
+            self.special_builtin_failed.set(true);
+        }
+        if status == 0 {
+            self.sync_setattr_typed_assignments(cmd.words[1..].iter().map(String::as_str));
+            // Check for locale environment changes (LC_ALL, LC_CTYPE,
+            // LC_COLLATE, LANG)
+            for word in &cmd.words[1..] {
+                if word.starts_with("LC_ALL=")
+                    || word.starts_with("LC_CTYPE=")
+                    || word.starts_with("LC_COLLATE=")
+                    || word.starts_with("LANG=")
+                {
+                    // rubash#1692: the setlocale warning itself is
+                    // emitted at the bind site (builtins/setattr) —
+                    // GNU's sv_locale fires inside bind_variable, not
+                    // after the builtin returns.
+                    // GNU variables.c sv_lang/sv_lc* call setlocale on the
+                    // assignment; sync the process env so the dynamic
+                    // locale readers (locale::is_utf8 - the dollar-quote
+                    // backslash-u locale gate, rubash#353) see the change.
+                    crate::locale::sync_process_locale(&self.shell_state.env_vars);
+                    break;
+                }
+            }
+        }
+        // PIPESTATUS cell-shape transitions for export's operands
+        // (rubash#1363/#1364): a bare `export PIPESTATUS` before the
+        // array materializes leaves a valueless cell; -p prints only.
+        let print_requested = args.iter().any(|arg| {
+            arg.len() > 1
+                && arg.starts_with('-')
+                && arg[1..].chars().all(|c| c.is_ascii_alphabetic())
+                && arg[1..].contains('p')
+        });
+        if status == 0 {
+            self.note_pipestatus_attribute_operands(&args, print_requested);
+        }
+        // A live exported PIPESTATUS array prints in array form under
+        // `export -p`, not the table's valueless line (rubash#1363).
+        self.substitute_pipestatus_print_line(&mut stdout);
+        self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+        Ok(status)
+    }
+
+    /// Whether any export/readonly operand is an assignment-class failure the
+    /// POSIX fatality rule (posix-mode notes item 40) keys on: an invalid
+    /// identifier (`sh_invalidid`) or an assignment to a readonly variable
+    /// (`err_readonly`). Mirrors setattr/apply.rs's per-operand checks — the
+    /// shared setattr status alone cannot distinguish them from `export -f`
+    /// failures ("not a function" / "cannot export"), which GNU does NOT
+    /// treat as fatal. Only consulted when the builtin actually failed, so
+    /// the nameref-cell quirk (`export ref` on an invalid cell reports
+    /// SUCCESS) stays non-fatal like GNU.
+    pub(in crate::executor) fn special_assignment_operand_failure(&self, args: &[String]) -> bool {
+        for arg in args {
+            if arg.starts_with('-') && arg != "-" {
+                continue;
+            }
+            if arg == "--" {
+                continue;
+            }
+            let (name, _append, value) = crate::builtins::setattr::value::split_assignment(arg);
+            let base = name.split('[').next().unwrap_or(name);
+            if !crate::builtins::setattr::value::valid_identifier(base) {
+                return true;
+            }
+            if value.is_some() && is_marked_var(&self.shell_state.env_vars, READONLY_VARS, base) {
+                return true;
+            }
+        }
+        false
+    }
+
+    /// export/readonly mutate only the legacy env_vars map, but parameter
+    /// expansion reads the typed shell_state.variables owner first, so a
+    /// scalar that already exists there (e.g. HOME seeded at startup) keeps a
+    /// stale value after an export NAME=value assignment. Mirror the assigned
+    /// values into the typed owner for plain scalar names; arrays/assocs/
+    /// namerefs are synced by their own paths. One attr_of probe covers the
+    /// three shape flags; a missing typed cell skips the mirror entirely
+    /// (expansion falls back to env_vars).
+    pub(in crate::executor) fn sync_setattr_typed_assignments<'a>(
+        &mut self,
+        args: impl Iterator<Item = &'a str>,
+    ) {
+        for arg in args {
+            if arg == "--" {
+                continue;
+            }
+            if (arg.starts_with('-') || arg.starts_with('+')) && arg != "-" && arg != "+" {
+                continue;
+            }
+            if !arg.contains('=') {
+                continue;
+            }
+            let (raw_name, _) = arg.split_once('=').unwrap_or((arg, ""));
+            let name = raw_name.strip_suffix('+').unwrap_or(raw_name);
+            let (base, _) = assignment_name_and_append(name);
+            let attrs = self.shell_state.env_vars.attr_of(base);
+            if attrs.array || attrs.assoc || attrs.nameref {
+                continue;
+            }
+            if self.shell_state.variables.get(base).is_none() {
+                continue;
+            }
+            if let Some(value) = self.shell_state.env_vars.get(base).cloned() {
+                if let Some(variable) = self.shell_state.variables.get_mut(base) {
+                    variable.value = crate::shell::ShellValue::Scalar(value);
+                }
+            } else {
+                self.shell_state.variables.remove(base);
+            }
+        }
+    }
+
+    pub(in crate::executor) fn execute_export_functions<W, E>(
+        &mut self,
+        args: &[String],
+        stdout: &mut W,
+        stderr: &mut E,
+    ) -> io::Result<i32>
+    where
+        W: Write,
+        E: Write,
+    {
+        // The -f face speaks through the export row (Stage-2 ④
+        // Phase 4): the invalid-option diagnostic + usage come from
+        // the Diag, and the flush runs before the buffered stderr is
+        // read by the caller.
+        let row = crate::executor::builtin_table::builtin_table_row("export").expect("export row");
+        let mut diag = crate::executor::builtin_diag::Diag::new(row, stderr);
+        let mut unset = false;
+        let mut print = false;
+        let operands: Vec<&str> = {
+            let mut opt =
+                crate::executor::builtin_opt::BuiltinOpt::new(row, args, &mut diag, false);
+            loop {
+                match opt.next() {
+                    crate::executor::builtin_opt::OptEvent::Help => {
+                        crate::builtins::help::print_builtin_help(row.name, stdout)?;
+                        return Ok(2);
+                    }
+                    crate::executor::builtin_opt::OptEvent::End => break,
+                    crate::executor::builtin_opt::OptEvent::Opt(c) => match c {
+                        b'f' => {}
+                        b'n' => unset = true,
+                        b'p' => print = true,
+                        _ => {}
+                    },
+                    crate::executor::builtin_opt::OptEvent::OptArg(_, _) => {}
+                }
+            }
+            let operands: Vec<&str> = opt.operands().iter().map(String::as_str).collect();
+            drop(opt);
+            if diag.status() != 0 {
+                diag.usage();
+                diag.flush_with(|| self.diagnostic_prolog());
+                return Ok(diag.status());
+            }
+            operands
+        };
+
+        if print && operands.is_empty() {
+            let mut names = marked_env_names(&self.shell_state.env_vars, EXPORTED_FUNCTIONS);
+            names.sort();
+            for name in names {
+                if let Some(body) = self.shell_state.functions.get(&name) {
+                    self.write_function_definition(&name, &body.commands, true, stdout)?;
+                }
+            }
+            return Ok(0);
+        }
+
+        let mut status = 0;
+        for name in operands.iter().copied() {
+            // Whole-word function lookup (setattr.def:184): the
+            // operand is looked up as written — `export -f f=x`
+            // reports `f=x: not a function`, never a split name.
+            if !self.shell_state.functions.contains_key(name) {
+                diag.free(format_args!("{name}: not a function"));
+                status = 1;
+                continue;
+            }
+            if !unset && !is_exportable_function_name(name) {
+                diag.free(format_args!("{name}: cannot export"));
+                status = 1;
+                continue;
+            }
+            if unset {
+                unmark_env_name(&mut self.shell_state.env_vars, EXPORTED_FUNCTIONS, name);
+            } else {
+                mark_env_name(&mut self.shell_state.env_vars, EXPORTED_FUNCTIONS, name);
+            }
+        }
+        diag.flush_with(|| self.diagnostic_prolog());
+
+        Ok(status)
+    }
+}

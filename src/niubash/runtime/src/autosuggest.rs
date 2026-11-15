@@ -1,0 +1,333 @@
+//! Native Niubash history autosuggestions.
+
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
+use nu_ansi_term::{Color, Style};
+use reedline::{Hinter, History, SearchQuery};
+
+use crate::config::AutosuggestConfig;
+
+/// Reedline hinter that suggests the latest history entry matching the prefix.
+pub struct HistoryAutosuggestHinter {
+    style: Style,
+    current_hint: String,
+    buffer_max_size: Option<usize>,
+    /// Shared with the completion menu: true while a grid is on screen.
+    /// The hinter stands down instead of painting a ghost over the same
+    /// word the menu is showing candidates for (fish parity).
+    menu_open: Arc<AtomicBool>,
+}
+
+impl HistoryAutosuggestHinter {
+    pub fn new(config: &AutosuggestConfig, menu_open: Arc<AtomicBool>) -> Self {
+        Self {
+            style: parse_highlight_style(&config.highlight_style),
+            current_hint: String::new(),
+            buffer_max_size: config.buffer_max_size,
+            menu_open,
+        }
+    }
+}
+
+impl Hinter for HistoryAutosuggestHinter {
+    fn handle(
+        &mut self,
+        line: &str,
+        _pos: usize,
+        history: &dyn History,
+        use_ansi_coloring: bool,
+        _cwd: &str,
+    ) -> String {
+        self.current_hint.clear();
+
+        if self.menu_open.load(Ordering::Relaxed) {
+            return String::new();
+        }
+
+        if line.is_empty() || buffer_too_large(line, self.buffer_max_size) {
+            return String::new();
+        }
+
+        if let Ok(entries) = history.search(SearchQuery::last_with_prefix(
+            line.to_string(),
+            history.session(),
+        )) {
+            if let Some(entry) = entries.first() {
+                let suffix = entry.command_line.get(line.len()..).unwrap_or_default();
+                // niubash#673: a hint never spans a line the user has
+                // not typed. When the matching history entry is a
+                // multi-line command, its remainder paints ghost text
+                // across the continuation the user is still writing —
+                // visually indistinguishable from typed input — and
+                // the accept key would splice those untyped lines into
+                // the submission wholesale. Offer the entry only once
+                // its remainder fits the current line, i.e. the typed
+                // prefix already covers the entry's earlier lines.
+                if !suffix.contains('\n') {
+                    self.current_hint = suffix.to_string();
+                }
+            }
+        }
+
+        if use_ansi_coloring && !self.current_hint.is_empty() {
+            self.style.paint(&self.current_hint).to_string()
+        } else {
+            self.current_hint.clone()
+        }
+    }
+
+    fn complete_hint(&self) -> String {
+        self.current_hint.clone()
+    }
+
+    fn next_hint_token(&self) -> String {
+        first_hint_token(&self.current_hint)
+    }
+}
+
+fn buffer_too_large(line: &str, max_size: Option<usize>) -> bool {
+    max_size
+        .map(|max| line.chars().count() > max)
+        .unwrap_or(false)
+}
+
+fn first_hint_token(hint: &str) -> String {
+    let mut reached_content = false;
+    let mut end = 0;
+
+    for (idx, ch) in hint.char_indices() {
+        if reached_content && ch.is_whitespace() {
+            break;
+        }
+        if !ch.is_whitespace() {
+            reached_content = true;
+        }
+        end = idx + ch.len_utf8();
+    }
+
+    hint.get(..end).unwrap_or_default().to_string()
+}
+
+pub fn parse_highlight_style(value: &str) -> Style {
+    parse_style(value, Style::new().fg(Color::Fixed(8)))
+}
+
+pub fn parse_style(value: &str, default_style: Style) -> Style {
+    let value = value.trim();
+    if value.eq_ignore_ascii_case("none") {
+        return Style::new();
+    }
+
+    let mut style = default_style;
+
+    for part in value
+        .split(',')
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+    {
+        if let Some(color) = part.strip_prefix("fg=").and_then(parse_color) {
+            style = style.fg(color);
+        } else if let Some(color) = part.strip_prefix("bg=").and_then(parse_color) {
+            style = style.on(color);
+        } else {
+            style = match part {
+                "bold" => style.bold(),
+                "underline" => style.underline(),
+                "italic" => style.italic(),
+                "standout" | "reverse" => style.reverse(),
+                _ => style,
+            };
+        }
+    }
+
+    style
+}
+
+fn parse_color(value: &str) -> Option<Color> {
+    let value = value.trim().to_ascii_lowercase();
+
+    if let Some(hex) = value.strip_prefix('#') {
+        return parse_hex_color(hex);
+    }
+
+    if let Ok(number) = value.parse::<u8>() {
+        return Some(Color::Fixed(number));
+    }
+
+    match value.as_str() {
+        "black" => Some(Color::Black),
+        "red" => Some(Color::Red),
+        "green" => Some(Color::Green),
+        "yellow" => Some(Color::Yellow),
+        "blue" => Some(Color::Blue),
+        "purple" => Some(Color::Purple),
+        "magenta" => Some(Color::Magenta),
+        "cyan" => Some(Color::Cyan),
+        "white" => Some(Color::White),
+        "grey" | "gray" | "darkgray" | "darkgrey" => Some(Color::DarkGray),
+        "lightgray" | "lightgrey" => Some(Color::LightGray),
+        "default" => Some(Color::Default),
+        _ => None,
+    }
+}
+
+fn parse_hex_color(hex: &str) -> Option<Color> {
+    if hex.len() != 6 {
+        return None;
+    }
+    let r = u8::from_str_radix(&hex[0..2], 16).ok()?;
+    let g = u8::from_str_radix(&hex[2..4], 16).ok()?;
+    let b = u8::from_str_radix(&hex[4..6], 16).ok()?;
+    Some(Color::Rgb(r, g, b))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::history::LiveFileBackedHistory;
+    use reedline::{FileBackedHistory, HistoryItem};
+
+    #[test]
+    fn returns_history_suffix_for_prefix() {
+        let mut history = FileBackedHistory::default();
+        history
+            .save(HistoryItem::from_command_line("git status --short"))
+            .unwrap();
+
+        let config = AutosuggestConfig::default();
+        let mut hinter = HistoryAutosuggestHinter::new(&config, Arc::new(AtomicBool::new(false)));
+
+        assert_eq!(
+            hinter.handle("git", 3, &history, false, ""),
+            " status --short"
+        );
+        assert_eq!(hinter.complete_hint(), " status --short");
+        assert_eq!(hinter.next_hint_token(), " status");
+    }
+
+    #[test]
+    fn issue673_multiline_entry_remainder_is_not_offered_across_lines() {
+        let mut history = FileBackedHistory::default();
+        history
+            .save(HistoryItem::from_command_line(
+                "for i in 1 2\ndo\necho $i\ndone",
+            ))
+            .unwrap();
+
+        let config = AutosuggestConfig::default();
+        let mut hinter = HistoryAutosuggestHinter::new(&config, Arc::new(AtomicBool::new(false)));
+
+        // Mid-continuation (the audit shape): the typed prefix covers
+        // only the loop header, so the entry's remainder spans three
+        // untyped lines — no ghost may be painted or accepted.
+        assert_eq!(hinter.handle("for i in 1 2", 10, &history, false, ""), "");
+        assert_eq!(hinter.complete_hint(), "");
+        assert_eq!(hinter.handle("for i in 1 2\n", 11, &history, false, ""), "");
+        assert_eq!(hinter.complete_hint(), "");
+
+        // Once the typed prefix covers the entry's earlier lines, the
+        // single-line remainder completes the current line as usual.
+        assert_eq!(
+            hinter.handle("for i in 1 2\ndo\necho $i\n", 22, &history, false, ""),
+            "done"
+        );
+        assert_eq!(hinter.complete_hint(), "done");
+    }
+
+    #[test]
+    fn suppresses_large_buffers() {
+        let mut history = FileBackedHistory::default();
+        history
+            .save(HistoryItem::from_command_line("git status --short"))
+            .unwrap();
+
+        let config = AutosuggestConfig {
+            buffer_max_size: Some(2),
+            ..Default::default()
+        };
+        let mut hinter = HistoryAutosuggestHinter::new(&config, Arc::new(AtomicBool::new(false)));
+
+        assert_eq!(hinter.handle("git", 3, &history, false, ""), "");
+        assert_eq!(hinter.complete_hint(), "");
+    }
+
+    #[test]
+    fn parses_highlight_style_subset() {
+        let style = parse_highlight_style("fg=#ff00ff,bg=cyan,bold,underline");
+
+        assert_eq!(style.foreground, Some(Color::Rgb(255, 0, 255)));
+        assert_eq!(style.background, Some(Color::Cyan));
+        assert!(style.is_bold);
+        assert!(style.is_underline);
+    }
+
+    #[test]
+    fn none_style_returns_plain_style() {
+        assert!(parse_style("none", Style::new().fg(Color::Red)).is_plain());
+    }
+
+    #[test]
+    fn autosuggest_sees_history_from_a_finished_session_only() {
+        // niubash#773 (was autosuggest_sees_history_saved_by_another_
+        // session, the live-refresh pin): a concurrent session's
+        // history is NOT suggested from — GNU sessions are isolated,
+        // and one Up press (or one ghost-text lookup) must never
+        // surface a command another terminal just typed. Once that
+        // session has ended and its lines are in the file, a fresh
+        // reader suggests them.
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("history");
+        let mut writer = LiveFileBackedHistory::with_file(100, path.clone());
+        let reader = LiveFileBackedHistory::with_file(100, path.clone());
+
+        writer
+            .save(HistoryItem::from_command_line("cd D:/projects"))
+            .unwrap();
+
+        let mut hinter = HistoryAutosuggestHinter::new(
+            &AutosuggestConfig::default(),
+            Arc::new(AtomicBool::new(false)),
+        );
+        assert_eq!(hinter.handle("cd", 2, &reader, false, ""), "");
+
+        writer.flush_at_session_end();
+        let fresh_reader = LiveFileBackedHistory::with_file(100, path);
+        assert_eq!(
+            hinter.handle("cd", 2, &fresh_reader, false, ""),
+            " D:/projects"
+        );
+    }
+
+    #[test]
+    fn stands_down_while_completion_menu_open() {
+        // Ghost + grid must never paint over the same word: while the
+        // completion menu reports itself visible, the hinter yields no
+        // suggestion (fish parity). The flag clears with the menu and the
+        // hint comes back on the same line.
+        let mut history = FileBackedHistory::default();
+        history
+            .save(HistoryItem::from_command_line("git status --short"))
+            .unwrap();
+
+        let config = AutosuggestConfig::default();
+        let menu_open = Arc::new(AtomicBool::new(false));
+        let mut hinter = HistoryAutosuggestHinter::new(&config, menu_open.clone());
+        assert_eq!(
+            hinter.handle("git", 3, &history, false, ""),
+            " status --short"
+        );
+
+        menu_open.store(true, Ordering::Relaxed);
+        assert_eq!(hinter.handle("git", 3, &history, false, ""), "");
+        assert_eq!(hinter.complete_hint(), "");
+
+        menu_open.store(false, Ordering::Relaxed);
+        assert_eq!(
+            hinter.handle("git", 3, &history, false, ""),
+            " status --short"
+        );
+    }
+}

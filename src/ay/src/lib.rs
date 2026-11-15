@@ -18,6 +18,7 @@ mod exec;
 pub mod index;
 pub mod low;
 pub mod self_update;
+pub mod sh;
 pub mod ui;
 
 /// Arguments forwarded verbatim to the command's own parser (including `--help`).
@@ -129,6 +130,9 @@ pub enum Cmd {
     /// Runtimes: Python engines (uv, RustPython), Bun versions, package managers, PyTorch
     #[command(disable_help_flag = true)]
     Rt(Rest),
+    /// Embedded Bash 5.3 engine (rubash): `-c CMD`, a script file, or stdin; no external bash needed
+    #[command(disable_help_flag = true)]
+    Sh(Rest),
     /// gclient in Rust: revinfo, getdep, setdep, sync (gitoxide), hooks, root
     #[command(disable_help_flag = true)]
     Gclient(Rest),
@@ -244,6 +248,7 @@ pub enum Route {
     /// In-process index pipeline ([`index`]); `gen`, `gen-docs`, `search`, `users` still go to packages/core.
     Index(Vec<String>),
     Rt(Vec<String>),
+    Sh(Vec<String>),
     Chromium(chromium::Tool, Vec<String>),
     Build(build::BuildArgs),
     Sys(SysArgs),
@@ -329,6 +334,7 @@ pub fn route(cmd: Cmd) -> Route {
         Cmd::Conformance(r) => Route::Conformance(r.args),
         Cmd::Brand(r) => Route::External("aphrody-brand", r.args),
         Cmd::Rt(r) => Route::Rt(r.args),
+        Cmd::Sh(r) => Route::Sh(r.args),
         Cmd::Gclient(r) => Route::Chromium(chromium::Tool::Gclient, r.args),
         Cmd::Fetch(r) => Route::Chromium(chromium::Tool::Fetch, r.args),
         Cmd::Vpy(r) => Route::Chromium(chromium::Tool::Vpy, r.args),
@@ -392,6 +398,7 @@ fn run_route(route: Route) -> i32 {
         Route::Re(args) => aphrody_re::cli::run(&args),
         Route::Index(args) => index::run(&args),
         Route::Rt(args) => rt::run("ay rt", &args),
+        Route::Sh(args) => sh::run(&args),
         Route::Chromium(tool, args) => chromium::run(tool, &args),
         Route::Build(args) => build::run(args),
         Route::Sys(args) => run_sys(args),
@@ -432,6 +439,11 @@ fn run_bench(_args: &[String]) -> i32 {
 
 /// Entry point: `args` excludes argv[0]. Returns the process exit code.
 pub fn run(args: &[String]) -> i32 {
+    // The embedded engine respawns itself for process substitution, coprocs and background jobs as `<current exe> -c BODY`:
+    // for the ay binary that is `ay -c BODY`, so a leading `-c` is the engine respawn and runs as `ay sh -c BODY`.
+    if args.first().map(String::as_str) == Some("-c") {
+        return sh::run(args);
+    }
     let argv = std::iter::once("ay".to_string()).chain(args.iter().cloned());
     let cli = match Cli::try_parse_from(argv) {
         Ok(cli) => cli,

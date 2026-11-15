@@ -1,0 +1,1863 @@
+use crate::lexer::TokenKind;
+
+/// Typed carrier for stdin body that may be pre-expanded.
+/// Replaces the in-band PREEXPANDED_STDIN_BODY (\u{5}) sentinel with a
+/// structured enum field, eliminating M-class collision risk from user 0x05
+/// bytes at heredoc body start.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum StdinBody {
+    /// Body was already expanded once; return verbatim.
+    Preexpanded(String),
+    /// Body needs expansion (default case).
+    NeedsExpansion(String),
+}
+
+impl StdinBody {
+    /// Returns the string content for storage in the legacy body field.
+    pub fn to_string(&self) -> String {
+        match self {
+            StdinBody::Preexpanded(s) => s.clone(),
+            StdinBody::NeedsExpansion(s) => s.clone(),
+        }
+    }
+}
+
+/// Represents a redirect specification
+#[derive(Debug, Clone, PartialEq)]
+pub struct Redirect {
+    pub fd: Option<u32>,
+    pub fd_var: Option<String>,
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub kind: RedirectKind,
+    pub target: String,
+    pub target_metadata: Box<WordMetadata>,
+    pub append: bool,
+    pub clobber: bool,
+}
+
+impl Redirect {
+    /// Input-side kinds (GNU redir.c r_input_direction /
+    /// r_duplicating_input / r_close_this-on-read family): they occupy a
+    /// read descriptor slot, not an output one.
+    pub fn is_input_side(&self) -> bool {
+        matches!(
+            self.kind,
+            RedirectKind::Input
+                | RedirectKind::ReadWrite
+                | RedirectKind::DuplicateInput
+                | RedirectKind::CloseInput
+                | RedirectKind::HereDoc
+                | RedirectKind::HereString
+        )
+    }
+
+    /// Output-side kinds (r_output_direction / r_appending_to /
+    /// r_duplicating_output / r_err_and_out family).
+    pub fn is_output_side(&self) -> bool {
+        !self.is_input_side() && !matches!(self.kind, RedirectKind::Unknown)
+    }
+
+    /// The stdio mirror fields (`redirect_in`/`redirect_out`/`append`/
+    /// `redirect_err`/`redirect_err_append`) only carry descriptors 0-2;
+    /// a numbered fd outside that set or a `{var}` dynamic fd lives solely
+    /// in the ordered `redirects` list. Probes that ask "does this command
+    /// have redirects" must scan the list or they miss these.
+    pub fn is_list_only_redirect(&self) -> bool {
+        self.fd.is_some_and(|fd| fd > 2) || self.fd_var.is_some()
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RedirectKind {
+    Input,
+    Output,
+    Append,
+    ReadWrite,
+    DuplicateInput,
+    DuplicateOutput,
+    CloseInput,
+    CloseOutput,
+    ClobberOutput,
+    CombinedOutput,
+    CombinedAppend,
+    HereString,
+    HereDoc,
+    Unknown,
+}
+
+/// Represents a here-document redirection.
+#[derive(Debug, Clone, PartialEq)]
+pub struct HereDocRedirect {
+    pub fd: Option<u32>,
+    pub fd_var: Option<String>,
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub delimiter: String,
+    pub delimiter_metadata: Box<WordMetadata>,
+    pub strip_tabs: bool,
+    pub quoted_delimiter: bool,
+    pub here_string: bool,
+    pub body: Option<String>,
+    /// Typed carrier for body preexpanded state (replaces PREEXPANDED_STDIN_BODY
+    /// sentinel). Commands share the heredoc body between `heredoc` and
+    /// `heredoc_redirects`; both need the typed carrier to avoid the in-band
+    /// sentinel.
+    pub body_carrier: Option<StdinBody>,
+    /// Physical line where this heredoc's body scan began — the `line_number`
+    /// GNU passes to make_here_document from gather_here_documents
+    /// (parse.y:3130): the line on which the logical command line ended, plus
+    /// body lines already consumed by earlier heredocs of the same command.
+    pub gather_line: Option<usize>,
+}
+
+/// Represents a narrow `for` compound command.
+#[derive(Debug, Clone)]
+pub struct ForCommand {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    pub variable: String,
+    pub variable_metadata: Box<WordMetadata>,
+    pub in_keyword: Option<String>,
+    pub in_keyword_metadata: Option<Box<WordMetadata>>,
+    pub words: Vec<String>,
+    pub word_metadata: Vec<WordMetadata>,
+    pub default_positional: bool,
+    pub list_terminator: Option<String>,
+    pub list_terminator_metadata: Option<Box<WordMetadata>>,
+    pub arithmetic: Option<ArithmeticForCommand>,
+    pub body_kind: CommandBodyKind,
+    pub body_open_delimiter: Option<String>,
+    pub body_open_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub body_close_delimiter: Option<String>,
+    pub body_close_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub do_keyword: Option<String>,
+    pub do_keyword_metadata: Option<Box<WordMetadata>>,
+    pub end_keyword: Option<String>,
+    pub end_keyword_metadata: Option<Box<WordMetadata>>,
+    pub body: Vec<CommandNode>,
+}
+
+/// Represents a `(( expression ))` arithmetic command.
+#[derive(Debug, Clone)]
+pub struct ArithmeticCommand {
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub expression: String,
+    /// Verbatim source text between the delimiters, recovered from token
+    /// leading whitespace plus raw token text. GNU bash captures this raw
+    /// slice in parse.y::parse_arith_cmd (via parse_matched_pair) and both
+    /// echoes it in arithmetic diagnostics and derives the error token from
+    /// it, so trailing blanks before `))` survive into messages.
+    pub raw_expression: Option<String>,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub operators: Vec<ArithmeticOperator>,
+    pub variables: Vec<String>,
+    pub has_assignment: bool,
+    pub has_comparison: bool,
+    pub has_logical: bool,
+    pub has_update: bool,
+}
+
+/// Structured metadata for an arithmetic expression position.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArithmeticExpressionMetadata {
+    pub expression: String,
+    pub operators: Vec<ArithmeticOperator>,
+    pub variables: Vec<String>,
+    pub has_assignment: bool,
+    pub has_comparison: bool,
+    pub has_logical: bool,
+    pub has_update: bool,
+}
+
+impl ArithmeticExpressionMetadata {
+    pub fn new(expression: String) -> Self {
+        let operators = super::arithmetic_operators(&expression);
+        Self {
+            variables: super::arithmetic_variables(&expression),
+            has_assignment: operators
+                .iter()
+                .any(|operator| super::is_arithmetic_assignment_operator(&operator.text)),
+            has_comparison: operators
+                .iter()
+                .any(|operator| super::is_arithmetic_comparison_operator(&operator.text)),
+            has_logical: operators
+                .iter()
+                .any(|operator| matches!(operator.text.as_str(), "&&" | "||" | "!")),
+            has_update: operators
+                .iter()
+                .any(|operator| matches!(operator.text.as_str(), "++" | "--")),
+            operators,
+            expression,
+        }
+    }
+}
+
+/// Represents a narrow `for (( init; test; update ))` compound command.
+#[derive(Debug, Clone)]
+pub struct ArithmeticForCommand {
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub init: String,
+    pub init_metadata: ArithmeticExpressionMetadata,
+    pub separators: Vec<String>,
+    pub separator_metadata: Vec<WordMetadata>,
+    pub test: String,
+    pub test_metadata: ArithmeticExpressionMetadata,
+    pub update: String,
+    pub update_metadata: ArithmeticExpressionMetadata,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArithmeticOperator {
+    pub text: String,
+    pub index: usize,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandBodyKind {
+    DoDone,
+    BraceGroup,
+}
+
+/// Represents an `if condition; then ... [elif ...] [else ...] fi` command.
+#[derive(Debug, Clone)]
+pub struct IfCommand {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    pub condition: Vec<CommandNode>,
+    pub condition_terminator: Option<String>,
+    pub condition_terminator_metadata: Option<Box<WordMetadata>>,
+    pub then_keyword: String,
+    pub then_keyword_metadata: Box<WordMetadata>,
+    pub then_body: Vec<CommandNode>,
+    pub elif_branches: Vec<ElifBranch>,
+    pub else_keyword: Option<String>,
+    pub else_keyword_metadata: Option<Box<WordMetadata>>,
+    pub else_body: Option<Vec<CommandNode>>,
+    pub end_keyword: String,
+    pub end_keyword_metadata: Box<WordMetadata>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ElifBranch {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    pub condition: Vec<CommandNode>,
+    pub condition_terminator: Option<String>,
+    pub condition_terminator_metadata: Option<Box<WordMetadata>>,
+    pub then_keyword: String,
+    pub then_keyword_metadata: Box<WordMetadata>,
+    pub body: Vec<CommandNode>,
+}
+
+/// Represents `while condition; do body; done` or `until condition; do body; done`.
+#[derive(Debug, Clone)]
+pub struct LoopCommand {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    pub condition: Vec<CommandNode>,
+    pub condition_terminator: Option<String>,
+    pub condition_terminator_metadata: Option<Box<WordMetadata>>,
+    pub do_keyword: String,
+    pub do_keyword_metadata: Box<WordMetadata>,
+    pub body_open_delimiter: String,
+    pub body_open_delimiter_metadata: Box<WordMetadata>,
+    pub body_close_delimiter: String,
+    pub body_close_delimiter_metadata: Box<WordMetadata>,
+    pub body: Vec<CommandNode>,
+    pub end_keyword: String,
+    pub end_keyword_metadata: Box<WordMetadata>,
+    pub kind: LoopKind,
+    pub until: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LoopKind {
+    While,
+    Until,
+}
+
+/// Represents a `[[ expression ]]` conditional command.
+#[derive(Debug, Clone)]
+pub struct ConditionalCommand {
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub args: Vec<String>,
+    pub arg_metadata: Vec<WordMetadata>,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub expression: ConditionalExpression,
+}
+
+/// Represents the parsed expression inside `[[ ... ]]`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConditionalExpression {
+    pub kind: ConditionalExpressionKind,
+    pub open_delimiter: Option<String>,
+    pub open_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub operator: Option<String>,
+    pub operands: Vec<String>,
+    pub pattern_operand: Option<ConditionalPatternOperand>,
+    pub children: Vec<ConditionalExpression>,
+    pub close_delimiter: Option<String>,
+    pub close_delimiter_metadata: Option<Box<WordMetadata>>,
+}
+
+/// Represents a pattern-like right-hand operand in `[[ lhs == pat ]]` or
+/// `[[ lhs =~ regex ]]`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ConditionalPatternOperand {
+    pub text: String,
+    pub kind: ConditionalPatternKind,
+    pub operators: Vec<String>,
+    pub extglob_patterns: Vec<ExtglobPattern>,
+    // The brace / parameter / arithmetic operand records are removed
+    // (redundancy R4): empty on every instance, zero readers in
+    // either repo — the executor re-derives them from the text.
+    pub has_glob: bool,
+    pub has_extglob: bool,
+}
+
+impl ConditionalPatternOperand {
+    pub fn new(text: String, kind: ConditionalPatternKind) -> Self {
+        Self::new_with_raw(text.clone(), text, kind)
+    }
+
+    pub fn new_with_raw(text: String, raw_text: String, kind: ConditionalPatternKind) -> Self {
+        let operators = if kind == ConditionalPatternKind::Glob {
+            case_pattern_operators(&raw_text)
+        } else {
+            Vec::new()
+        };
+        let extglob_patterns = if kind == ConditionalPatternKind::Glob {
+            super::extglob_patterns_in_word_with_raw(&text, &raw_text)
+        } else {
+            Vec::new()
+        };
+        Self {
+            has_glob: case_pattern_has_glob(&operators),
+            has_extglob: case_pattern_has_extglob(&operators),
+            extglob_patterns,
+            text,
+            kind,
+            operators,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConditionalPatternKind {
+    Glob,
+    Regex,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ConditionalExpressionKind {
+    Empty,
+    Word,
+    Unary,
+    Binary,
+    Logical,
+    Negation,
+    Group,
+    Unknown,
+}
+
+/// Represents a `( compound_list )` subshell command.
+#[derive(Debug, Clone)]
+pub struct SubshellCommand {
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub body: Vec<CommandNode>,
+}
+
+/// Represents a `{ compound_list; }` brace group command.
+#[derive(Debug, Clone)]
+pub struct BraceGroupCommand {
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub body: Vec<CommandNode>,
+}
+
+/// Represents a `command | command` pipeline.
+#[derive(Debug, Clone)]
+pub struct PipelineCommand {
+    pub stages: Vec<CommandNode>,
+    pub operators: Vec<String>,
+    pub operator_metadata: Vec<WordMetadata>,
+}
+
+/// Represents commands connected by `&&` and `||`.
+#[derive(Debug, Clone)]
+pub struct AndOrListCommand {
+    pub commands: Vec<CommandNode>,
+    pub connectors: Vec<bool>,
+    pub operators: Vec<String>,
+    pub operator_metadata: Vec<WordMetadata>,
+}
+
+/// Represents `time [-p] [!] command`.
+#[derive(Debug, Clone)]
+pub struct TimeCommand {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    pub prefix_words: Vec<String>,
+    pub prefix_word_metadata: Vec<WordMetadata>,
+    pub command: Box<CommandNode>,
+    pub posix_format: bool,
+    pub inverted: bool,
+    /// rubash#1520: the parse-time-frozen #1218 verdict — true when the
+    /// `time` head was NOT the reserved word for this node (POSIX mode
+    /// in effect for the reader unit and a dash word followed, GNU
+    /// parse.y:3286 `time_command_acceptable`). Parser folds only build
+    /// a TimeCommand from a recorded keyword head, so they set false;
+    /// the executor-side alias reparse, whose parse moment is the
+    /// execution moment, records the then-live verdict instead. The
+    /// executor must never re-derive this from the live mode: a `set`
+    /// earlier in the same unit may have flipped it after parsing.
+    pub keyword_was_plain_word: bool,
+}
+
+/// Represents `command &`.
+#[derive(Debug, Clone)]
+pub struct BackgroundCommand {
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub command: Box<CommandNode>,
+}
+
+/// Represents `! command`.
+#[derive(Debug, Clone)]
+pub struct InvertedCommand {
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub command: Box<CommandNode>,
+}
+
+/// Represents a parsed `name=(...)` or `name+=(...)` compound assignment word.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CompoundAssignment {
+    pub name: String,
+    pub name_metadata: Box<WordMetadata>,
+    pub value: String,
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub append: bool,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub word_index: Option<usize>,
+    pub elements: Vec<CompoundAssignmentElement>,
+}
+
+/// Represents one element inside a `name=(...)` compound assignment.
+///
+/// The per-element expansion/quote record vectors are gone
+/// (redundancy R4): the brace/parameter/arithmetic/tilde records were
+/// empty on every instance and the extglob/pathname/word-quote scans
+/// were written per element with zero readers in either repo — the
+/// executor re-derives everything from the element text, as it does
+/// for words (see WordMetadata::new).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CompoundAssignmentElement {
+    pub subscript: Option<String>,
+    pub value: String,
+    pub operator: Option<String>,
+    pub append: bool,
+    pub element_index: usize,
+}
+
+/// Represents a parsed `name[subscript]=value` or `name[subscript]+=value` word.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArrayElementAssignment {
+    pub name: String,
+    pub name_metadata: Box<WordMetadata>,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub subscript: String,
+    pub subscript_metadata: Box<WordMetadata>,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub value: String,
+    /// The value exactly as written (before quote removal), so the executor
+    /// can expand the assignment RHS independently of the subscript --
+    /// general.c:480 splits the SYNTACTIC word, and the subscript may expand
+    /// to a `]` or an `=` that would misplace the `=` in the expanded word.
+    pub raw_value: String,
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub append: bool,
+    pub word_index: Option<usize>,
+    // The always-empty expansion record vectors and the per-element
+    // extglob/pathname scans are removed (redundancy R4, zero readers
+    // in either repo). word_quotes STAYS: it is written by a real scan
+    // and read by the executor's compound-list shape check
+    // (array_assignment_exec) — a live record, not a dead one.
+    pub word_quotes: Vec<WordQuote>,
+}
+
+/// Represents a parsed `<(...)` or `>(...)` process substitution.
+#[derive(Debug, Clone)]
+pub struct ProcessSubstitution {
+    pub target: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub source: String,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub commands: Vec<CommandNode>,
+    pub output: bool,
+    pub word_index: Option<usize>,
+    pub redirect_fd: Option<u32>,
+}
+
+impl PartialEq for ProcessSubstitution {
+    fn eq(&self, other: &Self) -> bool {
+        self.target == other.target
+            && self.open_delimiter == other.open_delimiter
+            && self.operator == other.operator
+            && self.operator_metadata == other.operator_metadata
+            && self.source == other.source
+            && self.close_delimiter == other.close_delimiter
+            && self.output == other.output
+            && self.word_index == other.word_index
+            && self.redirect_fd == other.redirect_fd
+    }
+}
+
+impl Eq for ProcessSubstitution {}
+
+/// Represents a parsed `$()` or backtick command substitution inside a word.
+#[derive(Debug, Clone)]
+pub struct CommandSubstitutionNode {
+    pub text: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub operator: String,
+    pub operator_metadata: Box<WordMetadata>,
+    pub source: String,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub commands: Vec<CommandNode>,
+    pub backtick: bool,
+    pub current_shell: bool,
+    pub pipe_output: bool,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+}
+
+impl PartialEq for CommandSubstitutionNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.text == other.text
+            && self.open_delimiter == other.open_delimiter
+            && self.operator == other.operator
+            && self.operator_metadata == other.operator_metadata
+            && self.source == other.source
+            && self.close_delimiter == other.close_delimiter
+            && self.backtick == other.backtick
+            && self.current_shell == other.current_shell
+            && self.pipe_output == other.pipe_output
+            && self.word_index == other.word_index
+            && self.assignment_name == other.assignment_name
+    }
+}
+
+impl Eq for CommandSubstitutionNode {}
+
+/// Represents a parsed `$(( expression ))` arithmetic expansion inside a word.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ArithmeticExpansion {
+    pub text: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub expression: String,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub operators: Vec<ArithmeticOperator>,
+    pub variables: Vec<String>,
+    pub has_assignment: bool,
+    pub has_comparison: bool,
+    pub has_logical: bool,
+    pub has_update: bool,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+}
+
+/// Represents a parsed `$name`, `$?`, or `${...}` parameter expansion.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParameterExpansion {
+    pub text: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub parameter: String,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub name: String,
+    pub operator: Option<String>,
+    pub operator_prefix: bool,
+    pub word: Option<String>,
+    pub braced: bool,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+}
+
+/// Represents a parsed brace expansion such as `{a,b}` or `{1..3}`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BraceExpansion {
+    pub text: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub body: String,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub operators: Vec<String>,
+    pub operator_metadata: Vec<WordMetadata>,
+    pub range: bool,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+}
+
+/// Represents a parsed extglob pattern such as `@(a|b)` or `!(tmp)`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExtglobPattern {
+    pub text: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub operator: char,
+    pub operator_metadata: Box<WordMetadata>,
+    pub pattern: String,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub operators: Vec<String>,
+    pub alternative_operator_metadata: Vec<WordMetadata>,
+    pub alternatives: Vec<String>,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+    /// rubash#3224: whether the lexer pass that produced this pattern's
+    /// word consumed the group as pattern text — i.e. the extglob gate
+    /// was OPEN at read time (GNU parse.y:5466 `read_token_word`
+    /// consults the read-time `extended_glob`). Stamped by the parser's
+    /// word intakes from `Token::extglob_gate`; `false` when the
+    /// producing pass is unknown, which keeps the executor's gate-off
+    /// diagnostic armed for such patterns. A pattern read under the
+    /// open gate is a legally formed word: at execution its operators
+    /// simply go inert under a live-off gate (pathexp.h
+    /// `FNMATCH_EXTFLAG` is evaluated with the live global), so it
+    /// must never be vetoed by the execution-time state.
+    pub read_gate_on: bool,
+}
+
+/// Represents a parsed tilde prefix such as `~`, `~/x`, `~+`, or `~user`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TildeExpansion {
+    pub text: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub prefix: String,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub suffix: String,
+    pub after_colon: bool,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+}
+
+/// Represents a parsed pathname expansion pattern such as `*.rs` or `src/[ab]?`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PathnamePattern {
+    pub text: String,
+    pub operators: Vec<String>,
+    pub operator_metadata: Vec<WordMetadata>,
+    pub has_star: bool,
+    pub has_question: bool,
+    pub has_bracket: bool,
+    pub globstar: bool,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum QuoteKind {
+    Single,
+    Double,
+    AnsiC,
+    Locale,
+    /// A top-level `\x` escape quoting its character (GNU CTLESC). Nested
+    /// `$(...)`/`${...}`/`` `...` `` bodies have their own quote state, so
+    /// escapes inside them are never recorded here.
+    Backslash,
+}
+
+/// Represents a quoted segment in a shell word before quote removal.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WordQuote {
+    pub text: String,
+    pub open_delimiter: String,
+    pub open_delimiter_metadata: Box<WordMetadata>,
+    pub body: String,
+    pub kind: QuoteKind,
+    pub close_delimiter: String,
+    pub close_delimiter_metadata: Box<WordMetadata>,
+    pub word_index: Option<usize>,
+    pub assignment_name: Option<String>,
+}
+
+/// Structured metadata for words stored outside a simple command word list.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct WordMetadata {
+    pub word_index: usize,
+    pub value: String,
+    pub raw: String,
+    // brace / command-substitution / parameter / arithmetic / tilde
+    // expansion records used to be stored here; wt44/parse4 stopped
+    // every scan that fed them (the executor re-derives all of them
+    // from the word text at consumption time), so the vectors were
+    // empty on every instance — their storage is removed (perf F4
+    // node diet). Only the two record kinds with live consumers
+    // remain, plus word_quotes below. The per-word extglob record
+    // went the same way (redundancy R4): no production reader in
+    // either repo — the live store is the CommandNode aggregate,
+    // which push_command_word fills from WordScans directly.
+    // The word-quote record followed in the 1.5.0 migration: it
+    // was always empty (the executor re-derives quoting from the
+    // raw word at consumption time) and its last reader —
+    // niubash-runtime's drive-letter admission — dropped the
+    // read, so the storage is removed like the kinds above.
+    // (ArrayElementAssignment::word_quotes is a different, live
+    // field and stays.)
+    pub process_substitutions: Vec<ProcessSubstitution>,
+    pub pathname_patterns: Vec<PathnamePattern>,
+    /// The locale name under which this word's dollar-quoted backslash-u /
+    /// backslash-U escapes were decoded at lex time - Some only for words
+    /// whose raw carries such an escape (the one lex product whose value is
+    /// locale-dependent, lib/sh/strtrans.c ansicstr). The rubash#353
+    /// re-derivation compares it with the word's source line's read-time
+    /// locale.
+    pub lex_locale: Option<String>,
+}
+
+impl WordMetadata {
+    pub fn literal(word_index: usize, value: String, raw: String) -> Self {
+        Self {
+            word_index,
+            value,
+            raw,
+            process_substitutions: Vec::new(),
+            pathname_patterns: Vec::new(),
+            lex_locale: None,
+        }
+    }
+
+    pub fn new(word_index: usize, value: String, raw: String) -> Self {
+        let process_substitutions = super::process_substitutions_in_word_with_raw(&value, &raw)
+            .into_iter()
+            .map(|mut substitution| {
+                substitution.word_index = Some(word_index);
+                substitution
+            })
+            .collect();
+
+        Self {
+            word_index,
+            // wt44/parse4: parameter / arithmetic / brace / tilde expansion
+            // records and command-substitution records
+            // stay empty — GNU runs no per-word expansion analyses at parse
+            // time (parse.y:5305 read_token_word builds the word once;
+            // subst.c analyzes at execution); this port's executor
+            // re-derives all of them from the word text at their
+            // consumption points (comsub execution parses the body itself,
+            // pretty-print rendering re-scans the word, the conditional
+            // `=~` check re-scans the raw).
+            process_substitutions,
+            pathname_patterns: super::pathname_patterns_in_word(&value, &raw),
+            lex_locale: if crate::lexer::raw_has_ansi_u_escape(&raw) {
+                Some(crate::locale::locale_name())
+            } else {
+                None
+            },
+            value,
+            raw,
+        }
+    }
+
+    /// Build metadata from scans the CALLER already ran. GNU parse.y
+    /// read_token_word (parse.y:5305) assembles a word in ONE pass and
+    /// make_cmd.c make_simple_command stores the WORD_DESC once — the
+    /// parser must not re-run the per-word expansion scans that the
+    /// word intake already performed (the duplicated scans also
+    /// re-parsed every `$(...)` body a second time). The tagging applied
+    /// here is exactly `WordMetadata::new`'s: command and process
+    /// substitutions carry `word_index`; every other kind stays untagged,
+    /// byte-identical to `new`'s output for the same word.
+    pub fn from_scans(
+        word_index: usize,
+        value: String,
+        raw: String,
+        process_substitutions: Vec<ProcessSubstitution>,
+        pathname_patterns: Vec<PathnamePattern>,
+    ) -> Self {
+        let process_substitutions = process_substitutions
+            .into_iter()
+            .map(|mut substitution| {
+                substitution.word_index = Some(word_index);
+                substitution
+            })
+            .collect();
+        Self {
+            word_index,
+            // See `new` for why the non-live kinds stay empty (wt44/parse4).
+            process_substitutions,
+            pathname_patterns,
+            lex_locale: if crate::lexer::raw_has_ansi_u_escape(&raw) {
+                Some(crate::locale::locale_name())
+            } else {
+                None
+            },
+            value,
+            raw,
+        }
+    }
+}
+
+/// Represents a narrow `case` compound command.
+#[derive(Debug, Clone)]
+pub struct CaseCommand {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    pub word: String,
+    pub word_metadata: WordMetadata,
+    pub in_keyword: String,
+    pub in_keyword_metadata: Box<WordMetadata>,
+    pub clauses: Vec<CaseClause>,
+    pub end_keyword: String,
+    pub end_keyword_metadata: Box<WordMetadata>,
+}
+
+#[derive(Debug, Clone)]
+pub struct CaseClause {
+    pub pattern_open_delimiter: Option<String>,
+    pub pattern_open_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub patterns: Vec<String>,
+    pub pattern_separators: Vec<String>,
+    pub pattern_separator_metadata: Vec<WordMetadata>,
+    pub pattern_close_delimiter: String,
+    pub pattern_close_delimiter_metadata: Box<WordMetadata>,
+    pub pattern_nodes: Vec<CasePattern>,
+    pub body: Vec<CommandNode>,
+    pub terminator: CaseTerminator,
+    pub terminator_text: Option<String>,
+    pub terminator_metadata: Option<Box<WordMetadata>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CasePattern {
+    pub text: String,
+    pub raw_text: String,
+    pub operators: Vec<String>,
+    pub operator_metadata: Vec<WordMetadata>,
+    pub extglob_patterns: Vec<ExtglobPattern>,
+    // The brace / parameter / arithmetic records are removed
+    // (redundancy R4): empty on every instance, zero readers in
+    // either repo.
+    pub clause_index: usize,
+    pub pattern_index: usize,
+    pub has_glob: bool,
+    pub has_extglob: bool,
+    pub negated_extglob: bool,
+}
+
+impl CasePattern {
+    pub fn new(text: String, clause_index: usize, pattern_index: usize) -> Self {
+        Self::new_with_raw(text.clone(), text, clause_index, pattern_index)
+    }
+
+    pub fn new_with_raw(
+        text: String,
+        raw_text: String,
+        clause_index: usize,
+        pattern_index: usize,
+    ) -> Self {
+        let operators = case_pattern_operators(&raw_text);
+        let operator_metadata = operators
+            .iter()
+            .map(|operator| WordMetadata::literal(0, operator.to_string(), operator.to_string()))
+            .collect();
+        Self {
+            has_glob: case_pattern_has_glob(&operators),
+            has_extglob: case_pattern_has_extglob(&operators),
+            negated_extglob: operators.iter().any(|operator| operator == "!("),
+            operators,
+            operator_metadata,
+            extglob_patterns: super::extglob_patterns_in_word_with_raw(&text, &raw_text),
+            raw_text,
+            text,
+            clause_index,
+            pattern_index,
+        }
+    }
+}
+
+fn case_pattern_has_glob(operators: &[String]) -> bool {
+    operators
+        .iter()
+        .any(|operator| operator == "*" || operator == "?" || operator.starts_with('['))
+}
+
+fn case_pattern_has_extglob(operators: &[String]) -> bool {
+    operators
+        .iter()
+        .any(|operator| matches!(operator.as_str(), "@(" | "*(" | "+(" | "?(" | "!("))
+}
+
+fn case_pattern_operators(raw_pattern: &str) -> Vec<String> {
+    let chars = raw_pattern.chars().collect::<Vec<_>>();
+    let mut operators = Vec::new();
+    let mut index = 0usize;
+    while index < chars.len() {
+        if chars[index] == '$' && chars.get(index + 1) == Some(&'\'') {
+            if let Some(next_index) = skip_case_pattern_quoted(&chars, index + 2, '\'') {
+                index = next_index;
+                continue;
+            }
+        }
+
+        if chars[index] == '$' && chars.get(index + 1) == Some(&'"') {
+            if let Some(next_index) = skip_case_pattern_quoted(&chars, index + 2, '"') {
+                index = next_index;
+                continue;
+            }
+        }
+
+        if chars[index] == '\'' {
+            if let Some(next_index) = skip_case_pattern_quoted(&chars, index + 1, '\'') {
+                index = next_index;
+                continue;
+            }
+        }
+
+        if chars[index] == '"' {
+            if let Some(next_index) = skip_case_pattern_quoted(&chars, index + 1, '"') {
+                index = next_index;
+                continue;
+            }
+        }
+
+        match chars[index] {
+            '@' | '!' | '+' | '?' | '*' if chars.get(index + 1) == Some(&'(') => {
+                operators.push(chars[index..=index + 1].iter().collect());
+                index += 2;
+                continue;
+            }
+            '*' if chars.get(index + 1) == Some(&'*') => {
+                operators.push("**".to_string());
+                index += 2;
+                continue;
+            }
+            '*' => operators.push("*".to_string()),
+            '?' => operators.push("?".to_string()),
+            '[' => {
+                let mut end = index + 1;
+                while end < chars.len() && chars[end] != ']' {
+                    if chars[end] == '\\' {
+                        end += 1;
+                    }
+                    end += 1;
+                }
+                if end < chars.len() {
+                    operators.push(chars[index..=end].iter().collect());
+                    index = end + 1;
+                    continue;
+                }
+            }
+            '|' => operators.push("|".to_string()),
+            '\\' => {
+                index += 2;
+                continue;
+            }
+            _ => {}
+        }
+        index += 1;
+    }
+    operators
+}
+
+fn skip_case_pattern_quoted(chars: &[char], start: usize, delimiter: char) -> Option<usize> {
+    let mut index = start;
+    let mut escaped = false;
+    while index < chars.len() {
+        let ch = chars[index];
+        if escaped {
+            escaped = false;
+            index += 1;
+            continue;
+        }
+        if delimiter == '"' && ch == '\\' {
+            escaped = true;
+            index += 1;
+            continue;
+        }
+        if ch == delimiter {
+            return Some(index + 1);
+        }
+        index += 1;
+    }
+    None
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CaseTerminator {
+    Break,
+    FallThrough,
+    TestNext,
+}
+
+/// Represents a `select name [in words ...]; do ...; done` compound command.
+#[derive(Debug, Clone)]
+pub struct SelectCommand {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    pub variable: String,
+    pub variable_metadata: Box<WordMetadata>,
+    pub in_keyword: Option<String>,
+    pub in_keyword_metadata: Option<Box<WordMetadata>>,
+    pub words: Vec<String>,
+    pub word_metadata: Vec<WordMetadata>,
+    pub default_positional: bool,
+    pub list_terminator: Option<String>,
+    pub list_terminator_metadata: Option<Box<WordMetadata>>,
+    pub body_kind: CommandBodyKind,
+    pub body_open_delimiter: Option<String>,
+    pub body_open_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub body_close_delimiter: Option<String>,
+    pub body_close_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub do_keyword: Option<String>,
+    pub do_keyword_metadata: Option<Box<WordMetadata>>,
+    pub end_keyword: Option<String>,
+    pub end_keyword_metadata: Option<Box<WordMetadata>>,
+    pub body: Vec<CommandNode>,
+}
+
+/// Represents a narrow `name() { ...; }` shell function definition.
+#[derive(Debug, Clone)]
+pub struct FunctionCommand {
+    pub name: String,
+    pub name_metadata: WordMetadata,
+    pub body: Vec<CommandNode>,
+    pub keyword: bool,
+    pub keyword_text: Option<String>,
+    pub keyword_metadata: Option<Box<WordMetadata>>,
+    pub has_parentheses: bool,
+    pub open_paren: Option<String>,
+    pub open_paren_metadata: Option<Box<WordMetadata>>,
+    pub close_paren: Option<String>,
+    pub close_paren_metadata: Option<Box<WordMetadata>>,
+    pub body_kind: FunctionBodyKind,
+    pub body_open_delimiter: Option<String>,
+    pub body_open_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub body_close_delimiter: Option<String>,
+    pub body_close_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub body_start: Option<usize>,
+    pub body_end: Option<usize>,
+    /// Line of the token that closes the function body (the `}` of a brace
+    /// group, or the `)` of a parenthesized body). GNU reports function-name
+    /// validation errors at this "last parsed line" (execute_cmd.c
+    /// execute_intern_function via line_number), so the executor uses it for
+    /// err_invalidid / special-builtin diagnostics.
+    pub body_end_line: Option<usize>,
+    /// Line of the token that opens the function body (the `{` of a brace
+    /// group, the `(` of a parenthesized body). GNU execute_cmd.c:5351 sets
+    /// line_number = function_line_number = tc->line (the body command's
+    /// line) before the function-entry DEBUG fire, so a functraced function
+    /// reports the body-open line (trap.tests: "func2[43] debug").
+    pub body_open_line: Option<usize>,
+    /// The verbatim brace-group body text plus its absolute starting line,
+    /// kept ONLY when the alias-blind body parse produced a parse-error
+    /// node. GNU expands aliases in the reader (parse.y:3249
+    /// alias_expand_token) — an alias supplying a compound opener
+    /// (`alias forever='while :;'`) parses structurally, which a token-level
+    /// body parse cannot see. The executor retries this source through the
+    /// alias stream at definition time before the diagnostic stands.
+    pub unparsed_body_source: Option<(String, usize)>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FunctionBodyKind {
+    BraceGroup,
+    Subshell,
+    CommandSequence,
+    CompoundCommand,
+}
+
+/// Represents `coproc [NAME] command [args...]` or `coproc [NAME] { body; }`
+#[derive(Debug, Clone)]
+pub struct CoprocCommand {
+    pub keyword: String,
+    pub keyword_metadata: Box<WordMetadata>,
+    /// Optional name (defaults to COPROC)
+    pub name: Option<String>,
+    pub name_metadata: Option<Box<WordMetadata>>,
+    /// The command words (for simple commands)
+    pub words: Vec<String>,
+    pub word_metadata: Vec<WordMetadata>,
+    pub body_kind: CoprocBodyKind,
+    pub body_open_delimiter: Option<String>,
+    pub body_open_delimiter_metadata: Option<Box<WordMetadata>>,
+    pub body_close_delimiter: Option<String>,
+    pub body_close_delimiter_metadata: Option<Box<WordMetadata>>,
+    /// Brace group body (for compound commands)
+    pub body: Option<Vec<CommandNode>>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CoprocBodyKind {
+    SimpleCommand,
+    BraceGroup,
+    Subshell,
+    CommandSequence,
+    CompoundCommand,
+}
+
+/// Represents a parsed command
+#[derive(Debug, Clone)]
+pub struct CommandNode {
+    /// The command words (first is the command name)
+    pub words: Vec<String>,
+    pub word_metadata: Vec<WordMetadata>,
+    /// Lexer kind for each command word, used for quote-sensitive expansion
+    /// decisions while the parser still stores words as strings.
+    pub word_kinds: Vec<TokenKind>,
+    /// rubash#1520: parse-time-frozen #1218 verdict for a `time` head —
+    /// true when the first word was recorded as a plain word (quoted, or
+    /// reclassified by the lexer under a POSIX pass because a dash word
+    /// followed, GNU parse.y:3286 `time_command_acceptable`), i.e. the
+    /// command is an ordinary external command named `time`. Stamped by
+    /// the parser when the head word is recorded; carried on the node
+    /// itself because execution-time word expansion rebuilds `words` and
+    /// clears `word_kinds`. Never re-derived from the live mode: a `set`
+    /// earlier in the same reader unit may have flipped it after parsing.
+    pub time_head_plain_word: bool,
+    /// Variable assignments
+    pub assignments: Vec<(String, String)>,
+    /// Raw (source-text) RHS of each assignment, index-aligned with
+    /// `assignments` when populated by the parser. GNU parse.y keeps each
+    /// assignment token's full word text (quotes ride in word->word until
+    /// expansion), and print_cmd.c print_simple_command prints that text
+    /// verbatim — `declare -f` shows `X=""`, not a re-quoted `X=''`
+    /// (rubash#202). Entries may be empty (synthetic / error-marker
+    /// assignments), in which case printers fall back to value rendering.
+    pub assignment_raws: Vec<String>,
+    /// Structured compound array assignment words parsed from `name=(...)`.
+    pub compound_assignments: Vec<CompoundAssignment>,
+    /// Structured array element assignment words parsed from `name[index]=value`.
+    pub array_element_assignments: Vec<ArrayElementAssignment>,
+    /// Structured process substitutions parsed from `<(...)` and `>(...)`.
+    pub process_substitutions: Vec<ProcessSubstitution>,
+    // The per-node command / arithmetic / parameter / brace / tilde
+    // expansion record vectors and the word-quote record vector that used
+    // to live here were removed (perf F4): the wt44/parse4 pruning had
+    // already stopped every scan that fed them, so all six were empty on
+    // every node ever built — 144 bytes of dead weight on the hottest
+    // struct in the crate. The executor re-derives those analyses from
+    // the word text at their consumption points, exactly as before.
+    /// Structured extglob patterns parsed from `@(a|b)`, `!(x)`, etc.
+    pub extglob_patterns: Vec<ExtglobPattern>,
+    /// Structured pathname expansion patterns parsed from glob words.
+    pub pathname_patterns: Vec<PathnamePattern>,
+    /// Redirections in parse order.
+    pub redirects: Vec<Redirect>,
+    /// Input redirect (boxed: a Redirect is ~104 bytes; the five mirror
+    /// slots are None on the overwhelming majority of commands, and every
+    /// Vec<CommandNode> in the system paid their inline size).
+    pub redirect_in: Option<Box<Redirect>>,
+    /// Output redirect
+    pub redirect_out: Option<Box<Redirect>>,
+    /// Append redirect
+    pub append: Option<Box<Redirect>>,
+    /// Stderr redirect
+    pub redirect_err: Option<Box<Redirect>>,
+    /// Stderr append redirect
+    pub redirect_err_append: Option<Box<Redirect>>,
+    /// Here-document stdin body
+    pub heredoc: Option<String>,
+    /// Here-document stdin body with preexpanded flag (typed carrier for
+    /// PREEXPANDED_STDIN_BODY sentinel). Replaces the in-band \u{5} prefix
+    /// with a structured enum field, eliminating M-class collision risk.
+    pub heredoc_body: Option<StdinBody>,
+    /// Here-document delimiter word, used when reprinting functions.
+    pub heredoc_delimiter: Option<String>,
+    /// All here-document redirections in parse order.
+    pub heredoc_redirects: Vec<HereDocRedirect>,
+    /// Here-string stdin word
+    pub here_string: Option<String>,
+    /// Typed carrier for here-string preexpanded state (replaces PREEXPANDED_STDIN_BODY
+    /// sentinel). Here-strings are stored in the word field; the carrier captures
+    /// whether expansion was already performed.
+    pub here_string_carrier: Option<StdinBody>,
+    /// Pipe to next command
+    pub pipe: Option<usize>,
+    /// Background execution (&)
+    pub background: bool,
+    /// Connector to the next command: Some(true) for &&, Some(false) for ||.
+    pub and_or: Option<bool>,
+    /// Return status is inverted by the reserved word `!`.
+    pub inverted: bool,
+    /// Pipeline of commands connected by `|`.
+    pub pipeline_command: Option<PipelineCommand>,
+    /// Commands connected by `&&` and `||`.
+    pub and_or_list: Option<AndOrListCommand>,
+    /// `time [-p] [!] command`.
+    pub time_command: Option<TimeCommand>,
+    /// `command &`.
+    pub background_command: Option<BackgroundCommand>,
+    /// `! command`.
+    pub inverted_command: Option<InvertedCommand>,
+    /// Command is executed inside a subshell grouping `( ... )`.
+    pub subshell: bool,
+    /// This command closes the current subshell grouping.
+    pub subshell_end: bool,
+    /// `for name in words; do ...; done`
+    pub for_command: Option<Box<ForCommand>>,
+    /// `(( expression ))` (boxed like the other compound payloads: the
+    /// inline form charged every simple command ~168 bytes for a payload
+    /// it never carries — perf F4 node diet).
+    pub arithmetic_command: Option<Box<ArithmeticCommand>>,
+    /// `if condition; then body; fi`
+    pub if_command: Option<Box<IfCommand>>,
+    /// `while/until condition; do body; done`
+    pub loop_command: Option<Box<LoopCommand>>,
+    /// `[[ expression ]]`
+    pub conditional_command: Option<Box<ConditionalCommand>>,
+    /// `( compound_list )`
+    pub subshell_command: Option<Box<SubshellCommand>>,
+    /// `case word in pattern) ... ;; esac`
+    pub case_command: Option<Box<CaseCommand>>,
+    /// `select name [in words ...]; do ...; done`
+    pub select_command: Option<Box<SelectCommand>>,
+    /// `name() { compound_list; }`
+    pub function_command: Option<Box<FunctionCommand>>,
+    /// `{ compound_list; }`
+    pub brace_group: Option<Box<BraceGroupCommand>>,
+    pub coproc_command: Option<Box<CoprocCommand>>,
+    /// Script line number where this command starts, when known.
+    pub line: Option<usize>,
+    /// rubash#3028: physical line where this command's FIRST element
+    /// (first word, first assignment word, or first redirection
+    /// including its target) finished being read — GNU's
+    /// `simplecmd_lineno`, captured by read_token_word when a
+    /// command-position word completes (parse.y:5849-5851; the
+    /// redirection arm captures it at the element's reduction,
+    /// parse.y:811) and stored as `Simple->line` (command.h:339).
+    /// Execution stamps it into `line_number` (execute_cmd.c:936), so
+    /// it — not `line` — is what a simple command's diagnostics and its
+    /// own `$LINENO` report. A first element split by backslash-newline
+    /// continuations finishes on a later physical line than it starts;
+    /// the lexer carries that end line on the token
+    /// (`Token::end_position`) and the parser records it here (see
+    /// `note_command_line` and the redirect-target corrections).
+    /// None for synthetic commands and for nodes the parser built
+    /// without token provenance; the executor then falls back to
+    /// counting literal newlines in the first word's text.
+    pub first_word_end_line: Option<usize>,
+    /// rubash#3209: this node's first element was a redirection,
+    /// proven at the moment that redirection's target was consumed
+    /// while it was still the node's only element (see
+    /// `correct_first_word_end_for_redirect_target`). GNU plants
+    /// `simplecmd_lineno` with the function name's line when a bare
+    /// `name()` definition is read (parse.y:5849-5851), and the
+    /// redirection element captures the stamp only when it is still
+    /// unset (parse.y:810-811) — so a redirection-first first command
+    /// of a function body reports the DEFINITION line, which the
+    /// function parser restamps from this flag
+    /// (`restamp_function_body_first_command`). A plain bool, not a
+    /// line: the flag is a parse-order fact the node does not
+    /// otherwise record (element order is not stored).
+    pub first_element_redirect: bool,
+    /// rubash#3053: while a node's recorded elements are exactly a
+    /// foldable `time` prefix chain (one or more `time` heads plus
+    /// their operand windows), the end line of the first element
+    /// AFTER the chain — the timed command's first word, assignment
+    /// word, or redirection target — recorded at that element's
+    /// intake. The provisional stamp cannot be corrected in place
+    /// while the head word occupies the node (`push_command_word`
+    /// restamps only when no element has been recorded yet), so the
+    /// fold that strips the prefix applies this candidate as the
+    /// node's `first_word_end_line` (`time_prefix_from_command`).
+    /// Zero means unset (physical lines start at 1); a plain usize
+    /// because this struct is size-budgeted (see the budget tests
+    /// below) and an Option would cost a second word.
+    pub time_prefix_first_element_end_line: usize,
+    /// The LOGICAL line this command starts on (the reader's command-list
+    /// boundary — commands joined onto the previous line by a
+    /// backslash-newline continuation share its logical line while their
+    /// physical `line` differs). GNU's DISCARD-family aborts (eval.c:111,
+    /// subst.c:11181 posix_variable_assignment_error) abandon the rest of
+    /// the current command LIST, so the executor's skip loops compare this
+    /// instead of `line` (rubash#411). None for synthetic commands; the
+    /// consumers fall back to `line`.
+    pub logical_line: Option<usize>,
+    /// Script line number where this command's parse ENDED (the line of
+    /// its last token — closing keyword or trailing redirect target).
+    /// GNU tracks `line_number` at the point each top-level command
+    /// finishes parsing, so a compound command's diagnostics — while,
+    /// until, if, `{ }` — report the `done`/`fi`/`}` line, not the
+    /// keyword line (redir.c do_redirections runs under that ambient
+    /// `line_number` before the command's own ->line assignment).
+    pub end_line: Option<usize>,
+    /// Physical line where the primary `<<` heredoc's body scan began
+    /// (mirrors the gather_line of the last fd-less heredoc redirect).
+    /// GNU reports "here-document at line N" against this gather line, not
+    /// the command start line (make_cmd.c:626-627, parse.y:3130).
+    pub heredoc_gather_line: Option<usize>,
+    /// Physical line where the primary `<<` heredoc's body scan ended: the
+    /// closing-delimiter line when terminated, the last body line when EOF
+    /// terminated the gather (the lexer's `heredoc_end_line`, mirroring GNU's
+    /// `line_number` at internal_warning time in make_cmd.c:626). An
+    /// unquoted delimiter joins `\<newline>` pairs while collecting
+    /// (parse.y read_a_line), so the stored body can hold fewer newlines
+    /// than the physical lines consumed — the warning prefix must use this
+    /// line, not `gather_line + body.lines().count()` (rubash#1028).
+    pub heredoc_end_line: Option<usize>,
+    /// The list separator that terminated this command was a NEWLINE, not
+    /// `;` — stamped at the separator flush (token_actions.rs Semicolon
+    /// arm, the flush point every command list shares). GNU keeps the
+    /// connector char on the connection node built by the list grammar
+    /// (parse.y:1264-1290 `list: list ';' newline_list list1`; make_cmd.c
+    /// builds cm_connection with `connector = ';'` or `'\n'`), and
+    /// make_command_string_internal reprints it (print_cmd.c:288-320): in
+    /// comsub mode the connector char itself is printed (`s[0] =
+    /// printing_comsub ? c : ';'`), so `$(a\nb)` reprints with the newline
+    /// while `$(a; b)` reprints with `; `. Outside comsubs both print
+    /// `;`. Only the AST-reprint paths (exportstr / declare -f,
+    /// rubash#2500) read this flag.
+    pub separator_newline: bool,
+}
+
+impl CommandNode {
+    /// Assignments keep source order and duplicates (GNU applies prefix
+    /// assignments left-to-right, each expansion seeing the previous one).
+    pub fn insert_assignment(&mut self, name: String, value: String) {
+        self.assignments.push((name, value));
+    }
+    /// Insert an assignment keeping its raw source RHS (print_cmd.c prints
+    /// the word text verbatim; see `assignment_raws`).
+    pub fn insert_assignment_with_raw(&mut self, name: String, value: String, raw_rhs: String) {
+        self.assignment_raws.push(raw_rhs);
+        self.assignments.push((name, value));
+    }
+    pub fn get_assignment(&self, name: &str) -> Option<&String> {
+        self.assignments
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, v)| v)
+    }
+    pub fn has_assignment(&self, name: &str) -> bool {
+        self.assignments.iter().any(|(n, _)| n == name)
+    }
+    /// Whether the node carries a parse error in ANY of the marker
+    /// encodings (message / near / conditional / EOF / compound-EOF).
+    /// Error-attribution consumers must consult every encoding: a
+    /// check that sees only the message marker treats an
+    /// already-failed compound as clean and lets a later token's
+    /// diagnostic replace the first error (rubash#2750: a word after
+    /// an errored `[[ ]]` discarded the conditional's own report).
+    pub fn has_parse_error_marker(&self) -> bool {
+        self.has_assignment("__RUBASH_PARSE_ERROR__")
+            || self.has_assignment("__RUBASH_PARSE_ERROR_NEAR__")
+            || self.has_assignment("__RUBASH_PARSE_ERROR_COND__")
+            || self.has_assignment("__RUBASH_PARSE_ERROR_EOF__")
+            || self.has_assignment("__RUBASH_PARSE_ERROR_EOF_COMPOUND__")
+    }
+    pub fn assignment_values(&self) -> impl Iterator<Item = &String> {
+        self.assignments.iter().map(|(_, v)| v)
+    }
+    pub fn assignment_keys(&self) -> impl Iterator<Item = &String> {
+        self.assignments.iter().map(|(n, _)| n)
+    }
+}
+impl CommandNode {
+    pub fn new() -> Self {
+        Self {
+            words: Vec::new(),
+            word_metadata: Vec::new(),
+            word_kinds: Vec::new(),
+            time_head_plain_word: false,
+            assignments: Vec::new(),
+            assignment_raws: Vec::new(),
+            compound_assignments: Vec::new(),
+            array_element_assignments: Vec::new(),
+            process_substitutions: Vec::new(),
+            extglob_patterns: Vec::new(),
+            pathname_patterns: Vec::new(),
+            redirects: Vec::new(),
+            redirect_in: None,
+            redirect_out: None,
+            append: None,
+            redirect_err: None,
+            redirect_err_append: None,
+            heredoc: None,
+            heredoc_body: None,
+            heredoc_delimiter: None,
+            heredoc_redirects: Vec::new(),
+            here_string: None,
+            here_string_carrier: None,
+            pipe: None,
+            background: false,
+            and_or: None,
+            inverted: false,
+            pipeline_command: None,
+            and_or_list: None,
+            time_command: None,
+            background_command: None,
+            inverted_command: None,
+            subshell: false,
+            subshell_end: false,
+            for_command: None,
+            arithmetic_command: None,
+            if_command: None,
+            loop_command: None,
+            conditional_command: None,
+            subshell_command: None,
+            case_command: None,
+            select_command: None,
+            function_command: None,
+            brace_group: None,
+            coproc_command: None,
+            line: None,
+            first_word_end_line: None,
+            first_element_redirect: false,
+            time_prefix_first_element_end_line: 0,
+            logical_line: None,
+            end_line: None,
+            heredoc_gather_line: None,
+            heredoc_end_line: None,
+            separator_newline: false,
+        }
+    }
+
+    /// Returns Some(true) for &&, Some(false) for ||, None otherwise
+    pub fn and_or(&self) -> Option<bool> {
+        self.and_or
+    }
+}
+
+impl Default for CommandNode {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Represents a parsed AST
+#[derive(Debug, Clone)]
+pub struct Ast {
+    /// List of commands
+    pub commands: Vec<CommandNode>,
+}
+
+/// rubash#2202: one command node's source lines (start line, parse-end
+/// line, logical line), recorded for every node of a transported
+/// function body. GNU's fork copies the parsed COMMAND tree verbatim,
+/// so each body command keeps the line make_cmd.c stamped at parse
+/// (make_cmd.c:196 `temp->line = lineno`) and reports it when it runs
+/// (execute_cmd.c:936 SET_LINE_NUMBER from the executing node's
+/// ->line; variables.c:1861 binds $LINENO to that line_number via
+/// get_lineno). A respawned `rubash -c` child instead re-parses the
+/// prelude's re-rendered body text, whose original line structure
+/// collapsed (bash_command_sequence_text), so the parent records
+/// these spans in the respawn stamp (__RUBASH_FORK_FN_SPANS) and the
+/// child's definition path re-seeds them onto the re-parsed body.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CommandLineSpan {
+    pub line: Option<usize>,
+    pub end_line: Option<usize>,
+    pub logical_line: Option<usize>,
+    /// rubash#3054: the node's first-element end line (#3028's
+    /// `first_word_end_line`). The #2202 span originally carried only
+    /// the three reader lines, so a respawned child re-derived this
+    /// stamp from its own re-parse of the collapsed body text — where
+    /// a first element split across lines lands its end on the wrong
+    /// line and the `stamped >= start` guard in
+    /// `simple_command_first_word_end_line` degrades the report to
+    /// the element's START line. Transport it with the other three;
+    /// the parent's value is authoritative exactly like theirs.
+    pub first_word_end_line: Option<usize>,
+}
+
+/// Append the line span of every node in `commands` to `out`, in the
+/// canonical traversal order shared with `apply_command_line_spans`:
+/// a node precedes its children; children are visited as
+/// process-substitution bodies first, then the node's compound
+/// payload's command lists in field order.
+pub fn collect_command_line_spans(commands: &[CommandNode], out: &mut Vec<CommandLineSpan>) {
+    for node in commands {
+        out.push(CommandLineSpan {
+            line: node.line,
+            end_line: node.end_line,
+            logical_line: node.logical_line,
+            first_word_end_line: node.first_word_end_line,
+        });
+        let mut lists = Vec::new();
+        command_child_lists(node, &mut lists);
+        for list in lists {
+            collect_command_line_spans(list, out);
+        }
+    }
+}
+
+/// Re-seed the spans recorded by `collect_command_line_spans` onto a
+/// re-parse of the same body. Returns false — leaving `commands`
+/// untouched — when the traversal counts differ: the text round-trip
+/// was not shape-faithful for this body, so the child keeps the lines
+/// its own parse produced rather than a misaligned span.
+pub fn apply_command_line_spans(commands: &mut [CommandNode], spans: &[CommandLineSpan]) -> bool {
+    let mut current = Vec::new();
+    collect_command_line_spans(commands, &mut current);
+    if current.len() != spans.len() {
+        return false;
+    }
+    let mut iter = spans.iter();
+    apply_command_line_spans_inner(commands, &mut iter);
+    true
+}
+
+fn apply_command_line_spans_inner(
+    commands: &mut [CommandNode],
+    iter: &mut std::slice::Iter<'_, CommandLineSpan>,
+) {
+    for node in commands.iter_mut() {
+        let span = iter
+            .next()
+            .expect("span count pre-checked by apply_command_line_spans");
+        node.line = span.line;
+        node.end_line = span.end_line;
+        node.logical_line = span.logical_line;
+        node.first_word_end_line = span.first_word_end_line;
+        let mut lists = Vec::new();
+        command_child_lists_mut(node, &mut lists);
+        for list in lists {
+            apply_command_line_spans_inner(list, iter);
+        }
+    }
+}
+
+/// rubash#3209: GNU plants `simplecmd_lineno` with the function
+/// name's line when a bare `name()` definition is read — the name is
+/// a word at command position (parse.y:5849-5851) — and the plant
+/// survives until the first simple command of the body COMPLETES
+/// (the reset is `clean_simple_command`, parse.y:838). A
+/// redirection element captures the stamp only when it is still
+/// unset (parse.y:810-811), so when the body's first simple command
+/// is redirection-first its stamp IS the definition line, not the
+/// line its first element finished on. Wrapper commands in between
+/// (groups, subshells, pipelines, if/loop conditions, `time`, `!`,
+/// background) consume nothing; a completed `[[ ]]` or `(( ))`
+/// consumes nothing either, because those commands never capture or
+/// reset the stamp; a nested function definition consumes it (its
+/// own name plants a fresh stamp and its completion resets), and a
+/// case command's clause stamps come from the pattern tokens — a
+/// distinct mechanism this walk deliberately does not enter.
+///
+/// Walk `commands` in parse order to the first simple command; when
+/// it is redirection-first (`first_element_redirect`), restamp both
+/// its `line` and its `first_word_end_line` to `definition_line`
+/// (the executor's report reads the latter, guarded by the former —
+/// `simple_command_first_word_end_line`). Called by the function
+/// parser for bare-name definitions, and by the executor where a
+/// definition's body is re-parsed at definition time (the
+/// alias-aware retry), with the definition node's own line.
+pub fn restamp_function_body_first_command(commands: &mut [CommandNode], definition_line: usize) {
+    enum StampWalk {
+        /// The walk is over: a simple command consumed the plant, or
+        /// a nested definition / case command blocks it.
+        Stop,
+        /// No simple command in this subtree; keep looking.
+        Continue,
+    }
+
+    fn search(commands: &mut [CommandNode], definition_line: usize) -> bool {
+        for node in commands {
+            match descend(node, definition_line) {
+                StampWalk::Stop => return true,
+                StampWalk::Continue => {}
+            }
+        }
+        false
+    }
+
+    fn descend(node: &mut CommandNode, definition_line: usize) -> StampWalk {
+        if node.function_command.is_some() || node.case_command.is_some() {
+            return StampWalk::Stop;
+        }
+        if node.arithmetic_command.is_some() || node.conditional_command.is_some() {
+            return StampWalk::Continue;
+        }
+        if let Some(pipeline) = &mut node.pipeline_command {
+            return if search(&mut pipeline.stages, definition_line) {
+                StampWalk::Stop
+            } else {
+                StampWalk::Continue
+            };
+        }
+        if let Some(list) = &mut node.and_or_list {
+            return if search(&mut list.commands, definition_line) {
+                StampWalk::Stop
+            } else {
+                StampWalk::Continue
+            };
+        }
+        if let Some(background) = &mut node.background_command {
+            return descend(&mut background.command, definition_line);
+        }
+        if let Some(time) = &mut node.time_command {
+            return descend(&mut time.command, definition_line);
+        }
+        if let Some(inverted) = &mut node.inverted_command {
+            return descend(&mut inverted.command, definition_line);
+        }
+        if let Some(subshell) = &mut node.subshell_command {
+            return if search(&mut subshell.body, definition_line) {
+                StampWalk::Stop
+            } else {
+                StampWalk::Continue
+            };
+        }
+        if let Some(group) = &mut node.brace_group {
+            return if search(&mut group.body, definition_line) {
+                StampWalk::Stop
+            } else {
+                StampWalk::Continue
+            };
+        }
+        if let Some(if_command) = &mut node.if_command {
+            if search(&mut if_command.condition, definition_line)
+                || search(&mut if_command.then_body, definition_line)
+            {
+                return StampWalk::Stop;
+            }
+            for branch in &mut if_command.elif_branches {
+                if search(&mut branch.condition, definition_line)
+                    || search(&mut branch.body, definition_line)
+                {
+                    return StampWalk::Stop;
+                }
+            }
+            if let Some(else_body) = &mut if_command.else_body {
+                if search(else_body, definition_line) {
+                    return StampWalk::Stop;
+                }
+            }
+            return StampWalk::Continue;
+        }
+        if let Some(loop_command) = &mut node.loop_command {
+            return if search(&mut loop_command.condition, definition_line)
+                || search(&mut loop_command.body, definition_line)
+            {
+                StampWalk::Stop
+            } else {
+                StampWalk::Continue
+            };
+        }
+        if let Some(for_command) = &mut node.for_command {
+            return if search(&mut for_command.body, definition_line) {
+                StampWalk::Stop
+            } else {
+                StampWalk::Continue
+            };
+        }
+        if let Some(select_command) = &mut node.select_command {
+            return if search(&mut select_command.body, definition_line) {
+                StampWalk::Stop
+            } else {
+                StampWalk::Continue
+            };
+        }
+        if let Some(coproc) = &mut node.coproc_command {
+            if let Some(body) = &mut coproc.body {
+                return if search(body, definition_line) {
+                    StampWalk::Stop
+                } else {
+                    StampWalk::Continue
+                };
+            }
+            // A simple-form coproc carries its command on this node
+            // itself (CoprocCommand::words), so the node is the leaf.
+        }
+        if node.first_element_redirect {
+            node.line = Some(definition_line);
+            node.first_word_end_line = Some(definition_line);
+        }
+        StampWalk::Stop
+    }
+
+    search(commands, definition_line);
+}
+
+/// The sub-command lists of `node`, in the canonical traversal order
+/// of `collect_command_line_spans`. A node carries at most one
+/// compound payload; process substitutions (whose bodies are parsed
+/// commands too) ride simple commands and come first.
+fn command_child_lists<'a>(node: &'a CommandNode, out: &mut Vec<&'a [CommandNode]>) {
+    for substitution in &node.process_substitutions {
+        out.push(&substitution.commands);
+    }
+    if let Some(pipeline) = &node.pipeline_command {
+        out.push(&pipeline.stages);
+    }
+    if let Some(list) = &node.and_or_list {
+        out.push(&list.commands);
+    }
+    if let Some(background) = &node.background_command {
+        out.push(std::slice::from_ref(&*background.command));
+    }
+    if let Some(time) = &node.time_command {
+        out.push(std::slice::from_ref(&*time.command));
+    }
+    if let Some(inverted) = &node.inverted_command {
+        out.push(std::slice::from_ref(&*inverted.command));
+    }
+    if let Some(subshell) = &node.subshell_command {
+        out.push(&subshell.body);
+    }
+    if let Some(group) = &node.brace_group {
+        out.push(&group.body);
+    }
+    if let Some(if_command) = &node.if_command {
+        out.push(&if_command.condition);
+        out.push(&if_command.then_body);
+        for branch in &if_command.elif_branches {
+            out.push(&branch.condition);
+            out.push(&branch.body);
+        }
+        if let Some(else_body) = &if_command.else_body {
+            out.push(else_body);
+        }
+    }
+    if let Some(loop_command) = &node.loop_command {
+        out.push(&loop_command.condition);
+        out.push(&loop_command.body);
+    }
+    if let Some(for_command) = &node.for_command {
+        out.push(&for_command.body);
+    }
+    if let Some(select_command) = &node.select_command {
+        out.push(&select_command.body);
+    }
+    if let Some(case_command) = &node.case_command {
+        for clause in &case_command.clauses {
+            out.push(&clause.body);
+        }
+    }
+    if let Some(function) = &node.function_command {
+        out.push(&function.body);
+    }
+    if let Some(coproc) = &node.coproc_command {
+        if let Some(body) = &coproc.body {
+            out.push(body);
+        }
+    }
+}
+
+/// Mutable twin of `command_child_lists` (same order, disjoint field
+/// borrows).
+fn command_child_lists_mut<'a>(node: &'a mut CommandNode, out: &mut Vec<&'a mut [CommandNode]>) {
+    for substitution in &mut node.process_substitutions {
+        out.push(&mut substitution.commands);
+    }
+    if let Some(pipeline) = &mut node.pipeline_command {
+        out.push(&mut pipeline.stages);
+    }
+    if let Some(list) = &mut node.and_or_list {
+        out.push(&mut list.commands);
+    }
+    if let Some(background) = &mut node.background_command {
+        out.push(std::slice::from_mut(&mut *background.command));
+    }
+    if let Some(time) = &mut node.time_command {
+        out.push(std::slice::from_mut(&mut *time.command));
+    }
+    if let Some(inverted) = &mut node.inverted_command {
+        out.push(std::slice::from_mut(&mut *inverted.command));
+    }
+    if let Some(subshell) = &mut node.subshell_command {
+        out.push(&mut subshell.body);
+    }
+    if let Some(group) = &mut node.brace_group {
+        out.push(&mut group.body);
+    }
+    if let Some(if_command) = &mut node.if_command {
+        out.push(&mut if_command.condition);
+        out.push(&mut if_command.then_body);
+        for branch in &mut if_command.elif_branches {
+            out.push(&mut branch.condition);
+            out.push(&mut branch.body);
+        }
+        if let Some(else_body) = &mut if_command.else_body {
+            out.push(else_body);
+        }
+    }
+    if let Some(loop_command) = &mut node.loop_command {
+        out.push(&mut loop_command.condition);
+        out.push(&mut loop_command.body);
+    }
+    if let Some(for_command) = &mut node.for_command {
+        out.push(&mut for_command.body);
+    }
+    if let Some(select_command) = &mut node.select_command {
+        out.push(&mut select_command.body);
+    }
+    if let Some(case_command) = &mut node.case_command {
+        for clause in &mut case_command.clauses {
+            out.push(&mut clause.body);
+        }
+    }
+    if let Some(function) = &mut node.function_command {
+        out.push(&mut function.body);
+    }
+    if let Some(coproc) = &mut node.coproc_command {
+        if let Some(body) = &mut coproc.body {
+            out.push(body);
+        }
+    }
+}
+
+#[cfg(test)]
+mod node_size_budget_tests {
+    // Perf F4 (parse throughput): every Vec<CommandNode> in the system —
+    // the top-level Ast, function/if/loop/case bodies, pipeline stages —
+    // pays growth churn and memcpy proportional to sizeof(CommandNode),
+    // and word_metadata vectors pay sizeof(WordMetadata) per word. The
+    // 2026-10-28 node diet (dead wt44/parse4 record vectors removed,
+    // Redirect mirror slots and the if/loop/arithmetic payloads boxed)
+    // took CommandNode 2272 -> 1000 bytes and WordMetadata 296 -> 176.
+    // These budgets keep the fat from silently growing back: a new
+    // payload belongs behind a Box, and a new record vector needs a
+    // live consumer (see the wt44/parse4 note in WordMetadata::new).
+    #[test]
+    fn command_node_size_budget() {
+        assert!(
+            std::mem::size_of::<super::CommandNode>() <= 1088,
+            "CommandNode grew to {} bytes (budget 1088)",
+            std::mem::size_of::<super::CommandNode>()
+        );
+    }
+
+    #[test]
+    fn word_metadata_size_budget() {
+        assert!(
+            std::mem::size_of::<super::WordMetadata>() <= 176,
+            "WordMetadata grew to {} bytes (budget 176)",
+            std::mem::size_of::<super::WordMetadata>()
+        );
+    }
+}

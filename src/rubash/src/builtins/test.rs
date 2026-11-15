@@ -1,0 +1,1498 @@
+//! `test` and `[` builtins.
+//!
+//! GNU Bash source ownership:
+//! - builtins/test.def (`test_builtin`)
+//! - test.c
+//! - test.h
+
+#[cfg(test)]
+#[path = "test_tests.rs"]
+mod tests;
+mod variable;
+
+pub(crate) use variable::variable_is_set;
+
+use crate::builtins::diagnostic::diagnostic_prefix;
+use crate::executor::markers::DATA_DOLLAR;
+use std::fs;
+#[cfg(windows)]
+use std::fs::File;
+use std::io::{self, IsTerminal, Write};
+
+const EXECUTION_SUCCESS: i32 = 0;
+const EXECUTION_FAILURE: i32 = 1;
+const EX_BADUSAGE: i32 = 2;
+
+const NAMEREF_VARS: &str = "__RUBASH_NAMEREF_VARS";
+
+/// Execute `test` or `[` with arguments after the command name.
+pub fn execute(
+    args: &[String],
+    bracket: bool,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> io::Result<i32> {
+    let mut stderr = io::stderr().lock();
+    // Single borrow-only view for the non-hot direct entry; the hot
+    // `execute_test_words` path passes its already-merged `&[&str]` straight
+    // through so this layer adds no third `Vec` collect (GNU `test.c`
+    // `test_command` works on `argv` in place, no copy).
+    let borrowed: Vec<&str> = args.iter().map(String::as_str).collect();
+    execute_with_stderr(&borrowed, bracket, env_vars, &mut stderr)
+}
+
+pub(crate) fn execute_with_stderr<W>(
+    args: &[&str],
+    bracket: bool,
+    env_vars: &crate::shell::var_table::VarTable,
+    stderr: &mut W,
+) -> io::Result<i32>
+where
+    W: Write,
+{
+    // Borrow-only bracket trim (no `Vec` pop-alloc): GNU `test.c`
+    // `test_command` just requires `argv[argc-1] == "]"` for `[`.
+    let args: &[&str] = if bracket {
+        match args.last() {
+            Some(&"]") => &args[..args.len() - 1],
+            _ => {
+                writeln!(stderr, "{}[: missing `]'", diagnostic_prefix(env_vars))?;
+                return Ok(EX_BADUSAGE);
+            }
+        }
+    } else {
+        args
+    };
+
+    if args.is_empty() {
+        return Ok(EXECUTION_FAILURE);
+    }
+
+    match eval_expr_with_bracket(&args, bracket, env_vars) {
+        Ok(true) => Ok(EXECUTION_SUCCESS),
+        Ok(false) => Ok(EXECUTION_FAILURE),
+        Err(message) => {
+            writeln!(
+                stderr,
+                "{}{}: {}",
+                diagnostic_prefix(env_vars),
+                if bracket { "[" } else { "test" },
+                message
+            )?;
+            Ok(EX_BADUSAGE)
+        }
+    }
+}
+
+/// Faithful port of GNU bash-5.2 `test.c` (`posixtest`/`two_arguments`/
+/// `three_arguments`/`term`/`expr`/`or`/`and` plus the leftover-argument
+/// checks in `test_command`). The baseline is WSL GNU bash 5.2.21, whose
+/// parser differs from bash-5.3 (5.2: term parens always re-enter expr();
+/// posixtest 0/1/2/(..) cases discard leftovers via pos=argc; `-t` with a
+/// non-numeric operand is FALSE; `!` in two_arguments does not advance
+/// pos). Malformed expressions report GNU's specific diagnostics
+/// (`unary operator expected`, ``syntax error: `-ne' unexpected``,
+/// `too many arguments`, ```)' expected``, ...) instead of a generic
+/// `syntax error`.
+struct TestParser<'a> {
+    args: &'a [&'a str],
+    pos: usize,
+    bracket: bool,
+    env_vars: &'a crate::shell::var_table::VarTable,
+}
+
+impl TestParser<'_> {
+    /// 5.2 test.c counts `argc` including the command word (`test`/`[`), and
+    /// `pos` starts at 1 (past it), so argc = args.len() + 1 and argv[argc]
+    /// is one past the end (NULL in C).
+    fn argc(&self) -> usize {
+        self.args.len() + 1
+    }
+
+    /// argv[i] in 5.2 terms: argv[0] is the command word, argv[i] = args[i-1].
+    fn argv(&self, i: usize) -> Option<&str> {
+        if i == 0 {
+            Some("test")
+        } else if i - 1 < self.args.len() {
+            Some(self.args[i - 1])
+        } else {
+            None
+        }
+    }
+
+    /// The current token (argv[pos]); only valid while pos < argc.
+    fn cur(&self) -> &str {
+        self.args[self.pos - 1]
+    }
+
+    /// GNU `advance(f)`: `++pos`; if `f` and we moved past the end, report
+    /// `argument expected`.
+    fn advance(&mut self, check: bool) -> Result<(), String> {
+        self.pos += 1;
+        if check && self.pos >= self.argc() {
+            return Err("argument expected".to_string());
+        }
+        Ok(())
+    }
+
+    /// 5.2 `posixtest()`: dispatch on the number of real arguments
+    /// (`argc - 1`); the 0/1/2 and `(...)` cases discard any leftovers by
+    /// setting pos = argc.
+    fn posixtest(&mut self) -> Result<bool, String> {
+        match self.argc() - 1 {
+            0 => {
+                self.pos = self.argc();
+                Ok(false)
+            }
+            1 => {
+                let value = !self.argv(1).unwrap_or("").is_empty();
+                self.pos = self.argc();
+                Ok(value)
+            }
+            2 => {
+                let value = self.two_arguments()?;
+                self.pos = self.argc();
+                Ok(value)
+            }
+            3 => self.three_arguments(),
+            4 => {
+                if self.cur() == "!" {
+                    self.advance(true)?;
+                    let value = self.three_arguments()?;
+                    Ok(!value)
+                } else if self.cur() == "(" && self.argv(self.argc() - 1) == Some(")") {
+                    self.advance(true)?;
+                    let value = self.two_arguments()?;
+                    self.pos = self.argc();
+                    Ok(value)
+                } else {
+                    self.expr()
+                }
+            }
+            _ => self.expr(),
+        }
+    }
+
+    /// 5.3 `posixtest(nargs)` called from `term()` for parenthesized
+    /// sub-expressions with ≤4 arguments (test.c:287-296,
+    /// `shell_compatibility_level > 52`).  Unlike the top-level
+    /// `posixtest()`, this dispatches on `nargs` and adjusts `pos` to
+    /// point at the closing `)` after evaluation, so the caller can
+    /// verify and consume it.
+    fn posixtest_nargs(&mut self, nargs: usize) -> Result<bool, String> {
+        let close_pos = self.pos + nargs;
+        match nargs {
+            0 => Ok(false),
+            1 => {
+                let value = !self.cur().is_empty();
+                self.pos = close_pos;
+                Ok(value)
+            }
+            2 => {
+                let value = self.two_arguments()?;
+                self.pos = close_pos;
+                Ok(value)
+            }
+            3 => {
+                let value = self.three_arguments()?;
+                self.pos = close_pos;
+                Ok(value)
+            }
+            4 => {
+                if self.cur() == "!" {
+                    self.advance(true)?;
+                    let value = self.three_arguments()?;
+                    self.pos = close_pos;
+                    Ok(!value)
+                } else if self.cur() == "(" && self.argv(self.pos + 3) == Some(")") {
+                    self.advance(true)?;
+                    let value = self.two_arguments()?;
+                    self.pos = close_pos;
+                    Ok(value)
+                } else {
+                    self.expr()
+                }
+            }
+            _ => self.expr(),
+        }
+    }
+
+    /// 5.2 `two_arguments()`: the `!` form reads its operand but does not
+    /// advance pos (the callers set pos = argc to discard leftovers).
+    fn two_arguments(&mut self) -> Result<bool, String> {
+        if self.cur() == "!" {
+            return Ok(self.argv(self.pos + 1).unwrap_or("").is_empty());
+        }
+        let first = self.cur();
+        // Single-letter `-X` form: a valid unary runs it; anything else
+        // (including `-A` and long options like `-eq`) is `unary operator
+        // expected` on that token.
+        if first.starts_with('-') && first.len() == 2 {
+            if is_unary_operator(first) {
+                return self.unary_operator();
+            }
+            return Err(format!("{}: unary operator expected", first));
+        }
+        Err(format!("{}: unary operator expected", first))
+    }
+
+    /// 5.2 `three_arguments()`.
+    fn three_arguments(&mut self) -> Result<bool, String> {
+        let middle = self.argv(self.pos + 1).unwrap_or("");
+        if is_binary_operator(middle) {
+            let value = self.binary_operator()?;
+            self.pos = self.argc();
+            return Ok(value);
+        }
+        if middle == "-a" || middle == "-o" {
+            let left = !self.cur().is_empty();
+            let right = !self.argv(self.pos + 2).unwrap_or("").is_empty();
+            let value = if middle == "-a" {
+                left && right
+            } else {
+                left || right
+            };
+            self.pos = self.argc();
+            return Ok(value);
+        }
+        if self.cur() == "!" {
+            self.advance(true)?;
+            let value = self.two_arguments()?;
+            self.pos = self.argc();
+            return Ok(!value);
+        }
+        if self.cur() == "(" && self.argv(self.pos + 2) == Some(")") {
+            let value = !self.argv(self.pos + 1).unwrap_or("").is_empty();
+            self.pos = self.argc();
+            return Ok(value);
+        }
+        Err(format!("{}: binary operator expected", middle))
+    }
+
+    /// 5.3 `unary_operator()` (test.c:499-535): `-t` may or may not take an
+    /// argument.  When it does and the argument is not a valid number, GNU
+    /// 5.3 calls `integer_expected_error` (exit 2) — unless the argument is
+    /// `-a`/`-o` AND there are enough args, in which case `-t` defaults to fd
+    /// 1.  Without an argument `-t` tests fd 1.
+    fn unary_operator(&mut self) -> Result<bool, String> {
+        let op = self.cur();
+        if op == "-t" {
+            self.advance(false)?;
+            if self.pos < self.argc() {
+                if let Some(r) = valid_number(self.cur()) {
+                    let _ = r;
+                    let operand = self.cur().to_string();
+                    self.advance(false)?;
+                    return eval_unary("-t", &operand, self.env_vars);
+                }
+                // test.c:519 — ANDOR fallback: `-t -a ...` / `-t -o ...`
+                // with argc >= 5 defaults to fd 1.
+                if self.argc() >= 5 && is_andor(self.cur()) {
+                    return eval_unary("-t", "1", self.env_vars);
+                }
+                // test.c:522 — non-numeric operand is a syntax error.
+                return Err(format!("{}: integer expected", self.cur()));
+            }
+            return eval_unary("-t", "1", self.env_vars);
+        }
+        if self.pos + 1 >= self.argc() {
+            return Err("argument expected".to_string());
+        }
+        let operand = self.argv(self.pos + 1).unwrap_or("");
+        let value = eval_unary(op, operand, self.env_vars)?;
+        self.pos += 2;
+        Ok(value)
+    }
+
+    /// 5.2 `binary_operator()`.
+    fn binary_operator(&mut self) -> Result<bool, String> {
+        let left = self.cur();
+        let op = self.argv(self.pos + 1).unwrap_or("");
+        let right = self.argv(self.pos + 2).unwrap_or("");
+        let value = eval_binary(left, op, right, self.env_vars)?;
+        self.pos += 3;
+        Ok(value)
+    }
+
+    /// 5.2 `expr()` -> `or()` -> `and()` -> `term()`.
+    fn expr(&mut self) -> Result<bool, String> {
+        if self.pos >= self.argc() {
+            return Err("argument expected".to_string());
+        }
+        self.or()
+    }
+
+    fn or(&mut self) -> Result<bool, String> {
+        let mut value = self.and()?;
+        while self.pos < self.argc() && self.cur() == "-o" {
+            self.advance(false)?;
+            // 5.2 always parses the right operand (errors propagate) even
+            // when the left value would short-circuit the boolean result.
+            let v2 = self.or()?;
+            value = value || v2;
+        }
+        Ok(value)
+    }
+
+    fn and(&mut self) -> Result<bool, String> {
+        let mut value = self.term()?;
+        while self.pos < self.argc() && self.cur() == "-a" {
+            self.advance(false)?;
+            let v2 = self.and()?;
+            value = value && v2;
+        }
+        Ok(value)
+    }
+
+    fn term(&mut self) -> Result<bool, String> {
+        if self.pos >= self.argc() {
+            return Err("argument expected".to_string());
+        }
+        // Leading `!`s toggle the result of the following term.
+        if self.cur() == "!" {
+            let mut negate = false;
+            while self.pos < self.argc() && self.cur() == "!" {
+                self.advance(true)?;
+                negate = !negate;
+            }
+            let inner = self.term()?;
+            return Ok(if negate { !inner } else { inner });
+        }
+        // Parenthesized expression: 5.3 `term()` (test.c:268-296) scans
+        // forward to find the matching `)`.  If the sub-expression has
+        // ≤4 arguments, `posixtest(nargs)` is used instead of `expr()`,
+        // which properly bounds the parse and prevents the inner
+        // expression from consuming the closing `)`.
+        if self.cur() == "(" {
+            self.advance(true)?;
+            // Scan forward to find the matching `)` and count nargs.
+            let mut nargs = 1usize;
+            let mut count = 1i32;
+            while self.pos + nargs < self.argc() {
+                match self.argv(self.pos + nargs) {
+                    Some(")") => count -= 1,
+                    Some("(") => count += 1,
+                    _ => {}
+                }
+                if count == 0 {
+                    break;
+                }
+                nargs += 1;
+            }
+            let found_close = count == 0 && self.pos + nargs < self.argc();
+            let value = if found_close && nargs <= 4 {
+                self.posixtest_nargs(nargs)?
+            } else {
+                self.expr()?
+            };
+            // After the sub-expression the closing token must be a `)`. For
+            // `[ ... ]` the already-consumed `]` is reported as the offender.
+            if self.pos >= self.argc() {
+                if self.bracket {
+                    return Err("`)' expected, found ]".to_string());
+                }
+                return Err("`)' expected".to_string());
+            }
+            if self.cur() != ")" {
+                return Err(format!("`)' expected, found {}", self.cur()));
+            }
+            self.advance(false)?;
+            return Ok(value);
+        }
+        // Binary, then unary, then a plain string term.
+        if self.pos + 3 <= self.argc() && is_binary_operator(self.argv(self.pos + 1).unwrap_or(""))
+        {
+            return self.binary_operator();
+        }
+        if self.pos + 2 <= self.argc() && is_unary_operator(self.cur()) {
+            return self.unary_operator();
+        }
+        let value = !self.cur().is_empty();
+        self.advance(false)?;
+        Ok(value)
+    }
+}
+
+fn eval_expr_with_bracket(
+    args: &[&str],
+    bracket: bool,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Result<bool, String> {
+    // Hot-path whitelist for `[ <int> -op <int> ]` / `test <int> -op <int>`
+    // with canonical pure-decimal operands and a `-eq/-ne/-lt/-le/-gt/-ge`
+    // operator: compares integers directly, skipping both the TestParser
+    // skeleton (GNU test.c `three_arguments` -> `binary_operator` ->
+    // `arithcomp`, test.c:805-836/444) and the double `valid_number`
+    // re-parse (`trim` + `String` collect + generic-radix `from_str_radix`,
+    // once per side). Any non-canonical operand — empty, whitespace,
+    // `+` sign, leading zeros (`007`), non-digits, or >=19 digits that
+    // could overflow i64 — returns `None` and falls through to the parser,
+    // so the full GNU `strtoimax`-base-10 semantics (general.c:248-281)
+    // stay exact, including `integer expected` diagnostics.
+    if args.len() == 3 {
+        if let Some(value) = fast_arith_three(args[0], args[1], args[2]) {
+            return Ok(value);
+        }
+    }
+    let mut parser = TestParser {
+        args,
+        pos: 1,
+        bracket,
+        env_vars,
+    };
+    let value = parser.posixtest()?;
+    // 5.2 test_command: any arguments not consumed by the parse are
+    // reported as `syntax error: `X' unexpected` (option-like) or
+    // `too many arguments`.
+    if parser.pos != parser.argc() {
+        if parser.pos < parser.argc() && parser.cur().starts_with('-') {
+            return Err(format!("syntax error: `{}' unexpected", parser.cur()));
+        }
+        return Err("too many arguments".to_string());
+    }
+    Ok(value)
+}
+
+fn is_unary_operator(op: &str) -> bool {
+    matches!(
+        op,
+        "-a" | "-b"
+            | "-c"
+            | "-d"
+            | "-e"
+            | "-f"
+            | "-g"
+            | "-h"
+            | "-L"
+            | "-k"
+            | "-p"
+            | "-r"
+            | "-s"
+            | "-S"
+            | "-t"
+            | "-u"
+            | "-w"
+            | "-x"
+            | "-z"
+            | "-n"
+            | "-o"
+            | "-v"
+            | "-R"
+            | "-O"
+            | "-G"
+            | "-N"
+    )
+}
+
+fn eval_unary(
+    op: &str,
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Result<bool, String> {
+    // rubash#1902: the executor mirrors the fd table before this runs, so
+    // an fd-alias operand answers the bound fd's facts here.
+    if let Some(result) = fd_alias_fact_test(op, operand, env_vars) {
+        return Ok(result);
+    }
+    if let Some(result) = virtual_device_test(op, operand) {
+        return Ok(result);
+    }
+    if let Some(result) = fd_pipe_test(op, operand, env_vars) {
+        return Ok(result);
+    }
+    if let Some(result) = fd_file_test(op, operand, env_vars) {
+        return Ok(result);
+    }
+    if let Some(result) = proc_unary_test(op, operand) {
+        return Ok(result);
+    }
+
+    match op {
+        "-z" => Ok(operand.is_empty()),
+        "-n" => Ok(!operand.is_empty()),
+        "-o" => Ok(crate::builtins::set::is_shell_option(operand)
+            && crate::builtins::set::shell_option_enabled(env_vars, operand)),
+        "-v" => Ok(variable_is_set(operand, env_vars)),
+        "-R" => {
+            let namerefs = marked_vars(env_vars, NAMEREF_VARS);
+            Ok(namerefs.iter().any(|name| name == operand))
+        }
+        "-a" | "-e" => Ok(test_path(operand, env_vars).exists()),
+        "-d" => Ok(test_path(operand, env_vars).is_dir()),
+        "-f" => Ok(test_path(operand, env_vars).is_file()),
+        "-h" | "-L" => Ok(fs::symlink_metadata(test_path(operand, env_vars))
+            .map(|metadata| metadata.file_type().is_symlink())
+            .unwrap_or(false)),
+        "-s" => Ok(fs::metadata(test_path(operand, env_vars))
+            .map(|metadata| metadata.len() > 0)
+            .unwrap_or(false)),
+        "-r" | "-w" | "-x" => {
+            // bash test.c:553/556/559 routes -r/-w/-x through sh_eaccess
+            // (lib/sh/eaccess.c:194 sh_eaccess), which on Linux glibc is
+            // faccessat(AT_FDCWD, path, mode, AT_EACCESS) — an effective-uid
+            // access() check against the REAL mode bits. The emulated-store
+            // path below is the Windows port (no POSIX mode bits there).
+            #[cfg(unix)]
+            {
+                let flag = match op {
+                    "-r" => libc::R_OK,
+                    "-w" => libc::W_OK,
+                    _ => libc::X_OK,
+                };
+                Ok(test_unix_eaccess(operand, env_vars, flag))
+            }
+            #[cfg(not(unix))]
+            {
+                let bit = match op {
+                    "-r" => 0o400,
+                    "-w" => 0o200,
+                    _ => 0o100,
+                };
+                match emulated_file_mode(operand, env_vars) {
+                    Some(mode) => Ok(mode & bit != 0),
+                    None => Ok(test_path(operand, env_vars).exists()),
+                }
+            }
+        }
+        "-O" => Ok(file_owned_by_effective_user(operand, env_vars)),
+        "-G" => Ok(file_owned_by_effective_group(operand, env_vars)),
+        "-N" => Ok(modified_since_last_read(operand, env_vars)),
+        "-b" => Ok(file_type_matches(
+            operand,
+            env_vars,
+            UnixFileKind::BlockDevice,
+        )),
+        "-c" => Ok(file_type_matches(
+            operand,
+            env_vars,
+            UnixFileKind::CharDevice,
+        )),
+        "-p" => Ok(file_type_matches(operand, env_vars, UnixFileKind::Fifo)),
+        "-S" => Ok(file_type_matches(operand, env_vars, UnixFileKind::Socket)),
+        "-u" => Ok(file_mode_has_bit(operand, env_vars, 0o4000)),
+        "-g" => Ok(file_mode_has_bit(operand, env_vars, 0o2000)),
+        "-k" => Ok(file_mode_has_bit(operand, env_vars, 0o1000)),
+        "-t" => Ok(fd_is_terminal(operand, env_vars)),
+        _ => Err(format!("{}: unary operator expected", op)),
+    }
+}
+
+fn virtual_device_test(op: &str, operand: &str) -> Option<bool> {
+    // GNU test.c:561-568: -O/-G compare the file's st_uid/st_gid with
+    // the process's effective uid/gid — a stat fact about the concrete
+    // file, never a device-class constant. On Unix the operands below
+    // stat like any other path (/dev/null is owned by uid 0;
+    // /dev/stdin resolves through /proc/self/fd to the real descriptor
+    // target), so the hardcoded tables must not answer ownership
+    // questions there (rubash#1708). They only stand where the device
+    // names have no stat-able filesystem node (Windows).
+    if cfg!(unix) && matches!(op, "-O" | "-G") {
+        return None;
+    }
+    // rubash#1898: /dev/zero and /dev/full carry the null device's
+    // exact truth table in GNU (measured against the 5.3.20 oracle:
+    // -e -r -w -c true; -x -s -b -f false) — they are the same class
+    // of always-present character device, so one arm serves all
+    // three spellings, judged by the registry. The entropy devices
+    // joined the same arm with niubash#758 (crw-rw-rw- on GNU,
+    // the identical table).
+    if crate::executor::path::is_shell_null_device(operand)
+        || crate::special_paths::is_zero_device(operand)
+        || crate::special_paths::is_full_device(operand)
+        || crate::special_paths::is_random_device(operand)
+    {
+        return Some(match op {
+            "-a" | "-e" | "-r" | "-w" | "-c" => true,
+            "-x" | "-s" | "-b" | "-p" | "-S" | "-u" | "-g" | "-k" | "-h" | "-L" | "-O" | "-G"
+            | "-N" => false,
+            _ => return None,
+        });
+    }
+
+    // niubash#519 family: /dev/tty is the controlling-terminal device.
+    // GNU's node always exists and is a readable+writable character
+    // device — stat(2)/access(2) succeed even without a controlling
+    // terminal (only open() would fail ENXIO), so the truth table is
+    // /dev/null's plus no existence probing. Windows metadata("CON")
+    // fails on device names, so this must answer before the filesystem.
+    if operand == "/dev/tty" {
+        return Some(match op {
+            "-a" | "-e" | "-r" | "-w" | "-c" => true,
+            "-d" | "-f" | "-x" | "-s" | "-b" | "-p" | "-S" | "-u" | "-g" | "-k" | "-h" | "-L"
+            | "-O" | "-G" | "-N" => false,
+            _ => return None,
+        });
+    }
+
+    // UN-SYNCED FALLBACK (rubash#1902): reached only where no executor ran
+    // the fd-alias fact sync (source/upstream harness bridges, direct
+    // execute() embedders). Every real [ ]/[[ ]] evaluation carries the
+    // __RUBASH_FD_TARGET_<fd>/__RUBASH_FD_ACCESS_<fd> marks and is answered
+    // by fd_alias_fact_test before this point, so these tables never
+    // shadow a live fd fact. The spelling judgment is the registry's
+    // (issue rubash#1973): `fd_alias_target == Some(0)` accepts exactly
+    // the canonical spellings the literal table carried — GNU rejects the
+    // leading-zero family on every face, so `test -e /dev/fd/00` falls
+    // through to the filesystem and fails there, like the oracle.
+    if crate::special_paths::fd_alias_target(operand) == Some(0) {
+        return Some(match op {
+            "-a" | "-e" | "-r" | "-c" => true,
+            "-w" | "-x" | "-s" | "-b" | "-p" | "-S" | "-u" | "-g" | "-k" | "-h" | "-L" | "-O"
+            | "-G" | "-N" => false,
+            _ => return None,
+        });
+    }
+
+    // Same fallback for the fd 1 / fd 2 spellings.
+    if matches!(
+        crate::special_paths::fd_alias_target(operand),
+        Some(1) | Some(2)
+    ) {
+        return Some(match op {
+            "-a" | "-e" | "-w" => true,
+            "-r" | "-x" | "-s" | "-b" | "-c" | "-p" | "-S" | "-u" | "-g" | "-k" | "-h" | "-L"
+            | "-O" | "-G" | "-N" => false,
+            _ => return None,
+        });
+    }
+
+    None
+}
+
+/// rubash#1902: an fd-alias operand (`/dev/stdin`, `/dev/stdout`,
+/// `/dev/stderr`, `/dev/fd/N`, `/proc/self/fd/N`, the own-pid spelling)
+/// answers from the fd FACT. GNU never special-cases these names in
+/// test.c — unary_test (test.c:544) hands the word to sh_stat/sh_eaccess,
+/// and sh_eaccess routes path_is_devfd operands (eaccess.c:63-77) through
+/// sh_stataccess (eaccess.c:116): stat the CURRENTLY BOUND descriptor and
+/// check the mode bits of what it found. The executor mirrors the binding
+/// into __RUBASH_FD_TARGET_<fd> / __RUBASH_FD_ACCESS_<fd> (and an empty
+/// tombstone for entries it closed) right before this evaluator runs.
+fn fd_alias_fact_test(
+    op: &str,
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<bool> {
+    // GNU switches on op (test.c:544 unary_test): only the file cases hand
+    // the word to sh_stat/sh_eaccess. The string/option/variable cases
+    // (-z -n -o -v -R -t) judge the LITERAL word — never resolve it.
+    if matches!(op, "-z" | "-n" | "-o" | "-v" | "-R" | "-t") {
+        return None;
+    }
+    let fd = crate::special_paths::fd_alias_target(operand)?;
+    let access = env_vars.get(&format!("__RUBASH_FD_ACCESS_{fd}"));
+    if let Some(target) = env_vars.get(&format!("__RUBASH_FD_TARGET_{fd}")) {
+        // -h/-L lstat the NODE (test.c:594-604): on the oracle platform
+        // /dev/fd/N and /dev/std* are procfs symlinks, so a live fd is
+        // always a symlink — the same probe-verified verdict the pipe
+        // faces carry (rubash#545/#1467).
+        if op == "-h" || op == "-L" {
+            return Some(true);
+        }
+        // The other file predicates stat THROUGH the link: answer from the
+        // referent by re-entering the evaluator on the bound target — a
+        // chain (an fd bound to another alias) follows one more hop, like
+        // the kernel resolving /proc/self/fd/N. Cycle-guarded: a path that
+        // still names an alias after 8 hops falls through.
+        ALIAS_CHAIN_DEPTH.with(|depth| depth.set(depth.get() + 1));
+        let result = if ALIAS_CHAIN_DEPTH.with(|depth| depth.get()) > 8 {
+            None
+        } else {
+            eval_unary(op, target, env_vars).ok()
+        };
+        ALIAS_CHAIN_DEPTH.with(|depth| depth.set(depth.get() - 1));
+        return result;
+    }
+    // No target: the access mark is either the closed tombstone (empty —
+    // /proc/self/fd/N is gone, every predicate fails ENOENT) or the
+    // endpoint's device class plus mode bits.
+    let bits = access?;
+    if bits.is_empty() {
+        return Some(false);
+    }
+    // procfs symlink node, same verdict as the target-marked faces above.
+    if op == "-h" || op == "-L" {
+        return Some(true);
+    }
+    // `bits` is an engine-minted ASCII access mark (device-class letter
+    // plus rwx flag chars), so byte 0 is always ASCII (< 0x80) and can
+    // never be a UTF-8 continuation byte.
+    let class = char::from(bits.as_bytes()[0]);
+    let granted = |flag: char| bits.chars().skip(1).any(|bit| bit == flag);
+    Some(match class {
+        // fifo prw-r--r--; the probe-verified live-pipe matrix
+        // (rubash#545/#1467).
+        'p' => match op {
+            "-a" | "-e" | "-p" | "-r" | "-w" | "-O" | "-G" => true,
+            "-f" | "-d" | "-x" | "-s" | "-S" | "-b" | "-c" | "-u" | "-g" | "-k" | "-N" => false,
+            _ => return None,
+        },
+        // pts crw--w---- owned by this user: r+w, character device.
+        'c' => match op {
+            "-a" | "-e" | "-r" | "-w" | "-c" | "-O" | "-G" => true,
+            "-f" | "-d" | "-x" | "-s" | "-p" | "-S" | "-b" | "-u" | "-g" | "-k" | "-N" => false,
+            _ => return None,
+        },
+        // The synthetic 755 directory bind (rubash#1937).
+        'd' => match op {
+            "-a" | "-e" | "-d" | "-r" | "-w" | "-x" | "-O" | "-G" => true,
+            "-f" | "-s" | "-p" | "-S" | "-b" | "-c" | "-u" | "-g" | "-k" | "-N" => false,
+            _ => return None,
+        },
+        // A socket inode (rubash#2132: an inherited socketpair end
+        // classified by its handle). Socket mode bits are the
+        // creation-mode 0777 class, so r/w answer from the granted
+        // letters exactly like the generic-file class; -S is the one
+        // verdict that is the class's own.
+        's' => match op {
+            "-a" | "-e" | "-S" | "-O" | "-G" => true,
+            "-r" => granted('r'),
+            "-w" => granted('w'),
+            "-f" | "-d" | "-x" | "-s" | "-p" | "-b" | "-c" | "-u" | "-g" | "-k" | "-N" => false,
+            _ => return None,
+        },
+        // The null-device inode crw-rw-rw- (rubash#1898's symbolic bind).
+        'n' => match op {
+            "-a" | "-e" | "-r" | "-w" | "-c" => true,
+            "-f" | "-d" | "-x" | "-s" | "-p" | "-S" | "-b" | "-u" | "-g" | "-k" | "-N" => false,
+            _ => return None,
+        },
+        // Generic file inode, default 0644-ish; the mode-answerable ops
+        // consult the granted letters.
+        'f' => match op {
+            "-a" | "-e" | "-f" | "-O" | "-G" => true,
+            "-r" => granted('r'),
+            "-w" => granted('w'),
+            "-x" => granted('x'),
+            "-d" | "-s" | "-p" | "-S" | "-b" | "-c" | "-u" | "-g" | "-k" | "-N" => false,
+            _ => return None,
+        },
+        _ => return None,
+    })
+}
+
+thread_local! {
+    /// Cycle guard for the target-chain re-entry in fd_alias_fact_test.
+    static ALIAS_CHAIN_DEPTH: std::cell::Cell<u8> = const { std::cell::Cell::new(0) };
+}
+
+/// rubash#1467: `/dev/fd/N` and `/proc/self/fd/N` operands naming a
+/// pipe-like descriptor in the executor's fd table (process
+/// substitution, coproc, text feeds). The executor mirrors those
+/// descriptors into __RUBASH_FD_PIPE_<fd> before the builtin runs
+/// Synthetic /proc paths (rubash#1900): the facts come from the
+/// registry tables plus pid liveness in `proc_vfs::proc_unary_facts` —
+/// this face previously fell to `virtual_device_test`'s constant table
+/// (rubash#1902) or to a filesystem that has no such names. Only the
+/// ops whose truth the facts determine are answered here; the rest
+/// fall through to the filesystem faces.
+fn proc_unary_test(op: &str, operand: &str) -> Option<bool> {
+    let facts = crate::proc_vfs::proc_unary_facts(operand)?;
+    Some(match op {
+        "-e" | "-a" => true,
+        "-d" => facts.is_dir || (facts.is_link && facts.link_target_is_dir),
+        "-f" => facts.is_file || (facts.is_link && !facts.link_target_is_dir),
+        "-h" | "-L" => facts.is_link,
+        "-r" => true,
+        // rubash#1936: -w/-x are mode questions the facts now carry
+        // (procfs modes are definitional — see ProcUnaryFacts); they
+        // previously fell through to the filesystem, which has no
+        // such names on Windows and answered false for every entry,
+        // including the writable per-pid files and the executable
+        // exe link.
+        "-w" => facts.writable,
+        "-x" => facts.executable,
+        "-s" => facts.is_file || (facts.is_link && !facts.link_target_is_dir),
+        _ => return None,
+    })
+}
+
+/// (sync_fd_pipe_marks), because the paths are virtual here and stat()
+/// on them would interrogate the host process's unrelated fd N. The
+/// verdict matrix is the probe-verified one the [[ ]] path uses
+/// (conditional.rs, rubash#545): a LIVE pipe fd answers true for
+/// -a -e -p -r -w -L -h -O -G and false for the remaining file tests.
+/// Without a mark the operand falls through to the filesystem, where a
+/// closed or foreign fd correctly fails its tests.
+fn fd_pipe_test(
+    op: &str,
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<bool> {
+    // The spelling judgment is the registry's (redundancy audit R3/D4):
+    // the local strip+parse also accepted `/dev/fd/+3`, which GNU
+    // rejects on every face (redir.c's special-filename handling never
+    // parses a sign; on the oracle platform the literal open fails
+    // ENOENT in procfs).
+    let fd: u32 = crate::special_paths::fd_alias_target(operand)?;
+    if env_vars
+        .get(&format!("__RUBASH_FD_PIPE_{fd}"))
+        .map(String::as_str)
+        != Some("1")
+    {
+        return None;
+    }
+    Some(match op {
+        "-a" | "-e" | "-p" | "-r" | "-w" | "-L" | "-h" | "-O" | "-G" => true,
+        "-f" | "-d" | "-x" | "-s" | "-S" | "-b" | "-c" | "-u" | "-g" | "-k" | "-N" => false,
+        _ => return None,
+    })
+}
+
+/// rubash#2042: the file-backed sibling of [`fd_pipe_test`]. A
+/// file-backed descriptor (`exec 4</dev/null`, `exec 6>>f`) is a live
+/// fd magic link too, and GNU answers `test -r` TRUE for it
+/// regardless of the fd's open mode: sh_eaccess (test.c:553 ->
+/// lib/sh/eaccess.c:194) on real procfs answers yes for `lr-x`
+/// read-only, `l-wx` write-only append, and `lr-x` /dev/null links
+/// alike (bash 5.3.20, uid 1 — the class question is the link's
+/// liveness, not the open mode). Only -r is answered here: the rest
+/// of the unary matrix for file links falls through to the faces it
+/// always used, and the pipe class stays on fd_pipe_test's matrix.
+fn fd_file_test(
+    op: &str,
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<bool> {
+    let fd: u32 = crate::special_paths::fd_alias_target(operand)?;
+    if env_vars
+        .get(&format!("{}{fd}", crate::executor::types::FD_FILE_PREFIX))
+        .map(String::as_str)
+        != Some("1")
+    {
+        return None;
+    }
+    match op {
+        "-r" => Some(true),
+        _ => None,
+    }
+}
+
+fn test_path(operand: &str, env_vars: &crate::shell::var_table::VarTable) -> std::path::PathBuf {
+    // rubash#2071: GNU hands the operand string to the syscall verbatim —
+    // test.c:549-550 `sh_stat (arg, &stat_buf)` for -a/-e, test.c:552-559
+    // `sh_eaccess (arg, R_OK|W_OK|X_OK)` for -r/-w/-x, lstat likewise for
+    // -h/-L — so an empty operand fails ENOENT and every path unary is
+    // false. The $PWD anchoring below would instead join "" onto the cwd
+    // and stat the cwd itself (exists, directory, readable/writable/
+    // executable, owned, setgid…), silently answering true. Keep the
+    // empty operand empty so every downstream stat/access fails exactly
+    // like the syscall does.
+    if operand.is_empty() {
+        return std::path::PathBuf::new();
+    }
+    // The operand is the pathname the syscalls see: fold a stored
+    // E400 pair to the raw char (rubash#3076). This funnel serves
+    // every file unary and binary in both `[ ]` and `[[ ]]`.
+    let folded_operand = crate::executor::substitution_metadata::fold_literal_char_escapes(operand);
+    let operand = folded_operand.as_str();
+    let path = crate::executor::path::shell_path_to_windows_for_lookup(operand, env_vars);
+    if path.is_absolute() {
+        return path;
+    }
+    // G-02: relative operands anchor at the session cwd, whose logical
+    // display form is $PWD (the cd family keeps the variable and the
+    // ShellState.cwd field in sync; before G-02 the process cwd resolved
+    // them). The one documented exception is call_function_owned's
+    // field-only cwd restore, where $PWD keeps the function's value.
+    match env_vars.get("PWD") {
+        Some(pwd) => {
+            crate::executor::path::shell_path_to_windows_for_lookup(pwd, env_vars).join(path)
+        }
+        None => path,
+    }
+}
+
+fn marked_vars(env_vars: &crate::shell::var_table::VarTable, key: &str) -> Vec<String> {
+    // Rendered from the structured flags, not the serialized string
+    // (writers no longer maintain it per mark; #916).
+    env_vars.marked_names(key)
+}
+
+fn is_binary_operator(op: &str) -> bool {
+    matches!(
+        op,
+        "=" | "=="
+            | "!="
+            | "<"
+            | ">"
+            | "-eq"
+            | "-ne"
+            | "-lt"
+            | "-le"
+            | "-gt"
+            | "-ge"
+            | "-nt"
+            | "-ot"
+            | "-ef"
+    )
+}
+
+fn eval_binary(
+    left: &str,
+    op: &str,
+    right: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Result<bool, String> {
+    match op {
+        "=" | "==" => Ok(left == right),
+        "!=" => Ok(left != right),
+        "<" => Ok(left < right),
+        ">" => Ok(left > right),
+        "-eq" | "-ne" | "-lt" | "-le" | "-gt" | "-ge" => {
+            // Same whitelist as the `eval_expr_with_bracket` 3-arg fast
+            // path, applied at the operator level so longer expressions
+            // (`-a`/`-o` chains, `!`, parens via `term`) skip the double
+            // `valid_number` re-parse too. Falls back to `parse_int` for
+            // any non-canonical side (GNU semantics unchanged).
+            if let (Some(l), Some(r)) = (fast_decimal(left), fast_decimal(right)) {
+                return Ok(apply_arith_op(op, l, r));
+            }
+            let l = parse_int(left)?;
+            let r = parse_int(right)?;
+            Ok(apply_arith_op(op, l, r))
+        }
+        "-nt" => Ok(modified(left, env_vars) > modified(right, env_vars)),
+        "-ot" => Ok(modified(left, env_vars) < modified(right, env_vars)),
+        "-ef" => Ok(same_file(left, right, env_vars)),
+        _ => Err(format!("{}: binary operator expected", op)),
+    }
+}
+
+fn parse_int(value: &str) -> Result<i64, String> {
+    valid_number(value).ok_or_else(|| format!("{}: integer expected", value))
+}
+
+/// Whitelist fast path for pure-decimal integer operands (GNU test.c
+/// `arithcomp`, test.c:340-396, via `valid_number`, general.c:248-281).
+///
+/// Accepts only the canonical form: an optional `-` followed by 1..=18
+/// ASCII digits with no leading zero (a lone `0`/`-0` is allowed).
+/// Everything else — empty, whitespace, `+`, leading zeros (`007`),
+/// non-digits, or >=19-digit strings that could overflow i64 — returns
+/// `None` so the caller falls back to `valid_number`, which implements
+/// the full GNU `strtoimax`-base-10 semantics. Allocation-free single
+/// byte pass: skips the `trim` + `String` collect + generic-radix
+/// `from_str_radix` that `valid_number` pays twice per comparison.
+/// All `Some` results agree with `valid_number` (<=18 digits always fit
+/// i64: max 999999999999999999 < 9223372036854775807), and `-0` maps to
+/// `0`, equal under every comparison.
+///
+/// `pub(crate)` so the `[ $VAR -op N ]` expansion fast path
+/// (`command_prepare.rs`) can gate on the same canonical shape instead
+/// of a second copy (a `$VAR` operand that is not canonical keeps the
+/// slow pipeline, where `valid_number` owns the diagnostics).
+pub(crate) fn fast_decimal(s: &str) -> Option<i64> {
+    let bytes = s.as_bytes();
+    if bytes.is_empty() {
+        return None;
+    }
+    let (negative, digits) = match bytes[0] {
+        b'-' => (true, &bytes[1..]),
+        b'0'..=b'9' => (false, &bytes[..]),
+        _ => return None,
+    };
+    if digits.is_empty() || digits.len() > 18 {
+        return None;
+    }
+    if digits.len() > 1 && digits[0] == b'0' {
+        return None;
+    }
+    let mut value: i64 = 0;
+    for &b in digits {
+        if !b.is_ascii_digit() {
+            return None;
+        }
+        value = value * 10 + i64::from(b - b'0');
+    }
+    Some(if negative { -value } else { value })
+}
+
+/// Integer comparison for the six arithmetic test operators (GNU test.c
+/// `arithcomp` switch, test.c:384-393).
+fn apply_arith_op(op: &str, left: i64, right: i64) -> bool {
+    match op {
+        "-eq" => left == right,
+        "-ne" => left != right,
+        "-lt" => left < right,
+        "-le" => left <= right,
+        "-gt" => left > right,
+        // Callers only pass the six whitelisted operators; the remainder
+        // is `-ge`.
+        _ => left >= right,
+    }
+}
+
+/// Three-argument arithmetic fast path used by `eval_expr_with_bracket`:
+/// `Some` only when `op` is an integer comparison and both sides are
+/// canonical pure decimals; `None` (unknown op or non-canonical side)
+/// falls through to the full parser with identical semantics.
+fn fast_arith_three(left: &str, op: &str, right: &str) -> Option<bool> {
+    if !matches!(op, "-eq" | "-ne" | "-lt" | "-le" | "-gt" | "-ge") {
+        return None;
+    }
+    Some(apply_arith_op(
+        op,
+        fast_decimal(left)?,
+        fast_decimal(right)?,
+    ))
+}
+
+/// GNU `valid_number()` (general.c:248-281): base-10 `strtoimax` with
+/// leading whitespace skipped by strtoimax, trailing whitespace skipped
+/// manually, and the entire input must be consumed.  Rejects overflow,
+/// underflow, and strings with no digits.
+pub(crate) fn valid_number(s: &str) -> Option<i64> {
+    let trimmed = s.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    // strtoimax base 10: optional sign, then digits only.
+    let mut chars = trimmed.chars().peekable();
+    match chars.peek() {
+        Some('+') => {
+            chars.next();
+        }
+        Some('-') => {
+            chars.next();
+        }
+        _ => {}
+    }
+    let digits: String = chars.collect();
+    if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    // Rust's i64::from_str_radix matches strtoimax base 10 for valid digit
+    // strings; it rejects overflow the same way.
+    i64::from_str_radix(trimmed, 10).ok()
+}
+
+/// GNU `ANDOR(s)` (test.c:75): true when `s` is `-a` or `-o`.
+fn is_andor(s: &str) -> bool {
+    s == "-a" || s == "-o"
+}
+
+/// rubash#3432: the (dev, inode, mtime) of an fd-alias operand,
+/// from the `__RUBASH_FD_STAT_<fd>` mark the executor mints by
+/// fstat(2) on the fd-table entry's kernel handle (unix only). GNU
+/// never special-cases these names in test.c — sh_stat
+/// (lib/sh/eaccess.c:80) stats the descriptor the process holds,
+/// and in GNU the shell's OS fd N IS user fd N, so a plain stat()
+/// of /proc/self/fd/N lands on the bound file. Rubash's fd table
+/// is virtual: the shell permanently holds its cwd anchor at OS fd
+/// 3, so user fd 3's file lands on the next free OS fd and every
+/// higher user fd cascades — a plain stat() of /proc/self/fd/N
+/// reads OS fd N, the PREVIOUS user fd's file (the anchor directory
+/// for N=3). Only the fstat of the entry's handle names the same
+/// file, and only it answers for pipes, sockets, devices, and
+/// deleted files, which have no re-stat-able path.
+#[cfg(unix)]
+fn fd_alias_stat(
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<(u64, u64, std::time::SystemTime)> {
+    let fd = crate::special_paths::fd_alias_target(operand)?;
+    let mark = env_vars.get(&format!("{}{fd}", crate::executor::types::FD_STAT_PREFIX))?;
+    let mut parts = mark.split_ascii_whitespace();
+    let dev: u64 = parts.next()?.parse().ok()?;
+    let ino: u64 = parts.next()?.parse().ok()?;
+    let sec: i64 = parts.next()?.parse().ok()?;
+    let nsec: i64 = parts.next()?.parse().ok()?;
+    Some((dev, ino, stat_mark_time(sec, nsec)))
+}
+
+/// rubash#3432: rebuild a SystemTime from a timespec's (sec, nsec)
+/// pair. The nanosecond part counts forward from the whole second
+/// even before the epoch, so a negative sec subtracts the whole
+/// seconds and adds the nanoseconds back.
+#[cfg(unix)]
+fn stat_mark_time(sec: i64, nsec: i64) -> std::time::SystemTime {
+    let nsec = nsec.clamp(0, 999_999_999) as u32;
+    if sec >= 0 {
+        std::time::SystemTime::UNIX_EPOCH + std::time::Duration::new(sec as u64, nsec)
+    } else {
+        std::time::SystemTime::UNIX_EPOCH - std::time::Duration::new(sec.unsigned_abs(), 0)
+            + std::time::Duration::new(0, nsec)
+    }
+}
+
+/// rubash#3432: the bound target path of an fd-alias operand, from
+/// the `__RUBASH_FD_TARGET_<fd>` mark — the re-stat-able face of a
+/// file-backed fd, and the rung the binary operators fall back to
+/// where no STAT mark is minted (Windows).
+fn fd_alias_target_path(
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<String> {
+    let fd = crate::special_paths::fd_alias_target(operand)?;
+    env_vars
+        .get(&format!("{}{fd}", crate::executor::types::FD_TARGET_PREFIX))
+        .cloned()
+}
+
+/// Normalize the platform `file_identity` to (u64, u64): unix
+/// already is, Windows widens the u32 volume serial.
+#[cfg(unix)]
+fn identity_u64(identity: (u64, u64)) -> (u64, u64) {
+    identity
+}
+
+#[cfg(not(unix))]
+fn identity_u64(identity: (u32, u64)) -> (u64, u64) {
+    (u64::from(identity.0), identity.1)
+}
+
+/// rubash#3432: the (dev, inode) identity of a binary-op operand,
+/// resolved through the shell's fd table when the operand names an
+/// fd alias. Resolution ladder, most exact first: (1) the STAT
+/// mark — fstat of the bound descriptor, exact for pipes, sockets,
+/// devices and deleted files too; (2) the TARGET mark's path,
+/// re-statted (the Windows rung, where no STAT mark is minted);
+/// (3) the literal path — the pre-#3432 behaviour, kept for plain
+/// paths and for unsynced embedders.
+fn operand_identity(
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<(u64, u64)> {
+    #[cfg(unix)]
+    if let Some((dev, ino, _)) = fd_alias_stat(operand, env_vars) {
+        return Some((dev, ino));
+    }
+    if let Some(target) = fd_alias_target_path(operand, env_vars) {
+        return file_identity(&test_path(&target, env_vars)).map(identity_u64);
+    }
+    file_identity(&test_path(operand, env_vars)).map(identity_u64)
+}
+
+fn modified(
+    path: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<std::time::SystemTime> {
+    // rubash#3432: the same ladder as operand_identity — the STAT
+    // mark names the bound descriptor's mtime; the TARGET mark's
+    // path is the Windows rung; the literal path is the pre-#3432
+    // behaviour.
+    #[cfg(unix)]
+    if let Some((_, _, mtime)) = fd_alias_stat(path, env_vars) {
+        return Some(mtime);
+    }
+    if let Some(target) = fd_alias_target_path(path, env_vars) {
+        return fs::metadata(test_path(&target, env_vars))
+            .and_then(|metadata| metadata.modified())
+            .ok();
+    }
+    fs::metadata(test_path(path, env_vars))
+        .and_then(|metadata| metadata.modified())
+        .ok()
+}
+
+fn modified_since_last_read(path: &str, env_vars: &crate::shell::var_table::VarTable) -> bool {
+    // GNU test.c:569-574 (`-N`): stat must succeed, then mtime > atime —
+    // strictly newer, so a just-touched file (atime == mtime) is false.
+    let Ok(metadata) = fs::metadata(test_path(path, env_vars)) else {
+        return false;
+    };
+    let Ok(modified) = metadata.modified() else {
+        return true;
+    };
+    let Ok(accessed) = metadata.accessed() else {
+        return true;
+    };
+    modified > accessed
+}
+
+fn fd_is_terminal(operand: &str, env_vars: &crate::shell::var_table::VarTable) -> bool {
+    let Ok(fd) = operand.parse::<i32>() else {
+        return false;
+    };
+    // GNU test.c → isatty(fd): the answer tracks the descriptor's CURRENT
+    // target, not the process std handle — `t -t 0 < /dev/tty` is true
+    // even when the host stdin is a pipe. The executor mirrors its fd
+    // table into __RUBASH_FD_TERMINAL_<fd> before dispatching the builtin.
+    if let Some(mark) = env_vars.get(&format!("__RUBASH_FD_TERMINAL_{fd}")) {
+        return mark == "1";
+    }
+    match fd {
+        0 => io::stdin().is_terminal(),
+        1 => io::stdout().is_terminal(),
+        2 => io::stderr().is_terminal(),
+        _ => false,
+    }
+}
+
+#[derive(Clone, Copy)]
+enum UnixFileKind {
+    BlockDevice,
+    CharDevice,
+    Fifo,
+    Socket,
+}
+
+#[cfg(unix)]
+fn file_type_matches(
+    path: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+    kind: UnixFileKind,
+) -> bool {
+    use std::os::unix::fs::FileTypeExt;
+
+    let Ok(metadata) = fs::metadata(test_path(path, env_vars)) else {
+        return false;
+    };
+    let file_type = metadata.file_type();
+    match kind {
+        UnixFileKind::BlockDevice => file_type.is_block_device(),
+        UnixFileKind::CharDevice => file_type.is_char_device(),
+        UnixFileKind::Fifo => file_type.is_fifo(),
+        UnixFileKind::Socket => file_type.is_socket(),
+    }
+}
+
+#[cfg(windows)]
+fn file_type_matches(
+    path: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+    kind: UnixFileKind,
+) -> bool {
+    // S_ISCHR port: the only character devices the path map can resolve
+    // are the console (CON via /dev/tty, CONIN$/CONOUT$ via /dev/std*)
+    // and NUL. Open and ask GetFileType rather than probing metadata —
+    // device names have no filesystem metadata.
+    use std::os::windows::io::AsRawHandle;
+    if !matches!(kind, UnixFileKind::CharDevice) {
+        return false;
+    }
+    File::open(test_path(path, env_vars))
+        .map(|file| crate::fd::is_char_device_handle(file.as_raw_handle() as _))
+        .unwrap_or(false)
+}
+
+#[cfg(not(any(unix, windows)))]
+fn file_type_matches(
+    _path: &str,
+    _env_vars: &crate::shell::var_table::VarTable,
+    _kind: UnixFileKind,
+) -> bool {
+    false
+}
+
+#[cfg(unix)]
+fn file_mode_has_bit(path: &str, env_vars: &crate::shell::var_table::VarTable, bit: u32) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+
+    let Ok(metadata) = fs::metadata(test_path(path, env_vars)) else {
+        return false;
+    };
+    metadata.permissions().mode() & bit != 0
+}
+
+/// test -r/-w/-x backend on unix: sh_eaccess (lib/sh/eaccess.c:194) is
+/// faccessat(AT_FDCWD, path, mode, AT_EACCESS) on Linux glibc builds —
+/// the effective-uid access check, so `test -x /etc/hostname` is false
+/// for the 644 file even when running as root (kernel X_OK rule).
+///
+/// Android/bionic: the 4-arg faccessat returns EINVAL for EVERY nonzero
+/// flag (the faccessat2 syscall is seccomp-filtered on Android), and the
+/// platform linux/fcntl.h resolves AT_EACCESS to 0 — so the GNU build
+/// for this platform (Termux bash config.h: HAVE_FACCESSAT=1) compiles
+/// the same eaccess.c:203 call but ends up running faccessat(..., 0), a
+/// plain real-ids access(2). Real and effective ids are always equal
+/// for app processes (no setuid), so access() IS the effective-id check
+/// GNU lands on; when the ids ever differ, do the stat-based check GNU
+/// itself falls back to (eaccess.c:223-233 -> sh_stataccess).
+#[cfg(unix)]
+fn test_unix_eaccess(
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+    mode: std::os::raw::c_int,
+) -> bool {
+    let path = test_path(operand, env_vars);
+    let Ok(cpath) = std::ffi::CString::new(path.as_os_str().as_encoded_bytes()) else {
+        return false;
+    };
+    #[cfg(target_os = "android")]
+    {
+        if unsafe { libc::getuid() == libc::geteuid() && libc::getgid() == libc::getegid() } {
+            unsafe { libc::access(cpath.as_ptr(), mode) == 0 }
+        } else {
+            sh_stataccess(&path, mode)
+        }
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        unsafe { libc::faccessat(libc::AT_FDCWD, cpath.as_ptr(), mode, libc::AT_EACCESS) == 0 }
+    }
+}
+
+/// Port of GNU sh_stataccess (lib/sh/eaccess.c:136-165): what access(2)
+/// does, but checked against the EFFECTIVE uid and gid — and without
+/// telling root that every file is executable. Reached on Android only
+/// when real != effective ids, the same corner where GNU uses it.
+#[cfg(target_os = "android")]
+fn sh_stataccess(path: &std::path::Path, mode: std::os::raw::c_int) -> bool {
+    use std::os::unix::fs::{MetadataExt, PermissionsExt};
+
+    let Ok(metadata) = fs::metadata(path) else {
+        return false;
+    };
+    let euid = unsafe { libc::geteuid() };
+    if euid == 0 {
+        // Root can read or write any file, and execute any file that has
+        // any one of the execute bits set.
+        if mode & libc::X_OK == 0 {
+            return true;
+        }
+        if metadata.permissions().mode() & 0o111 != 0 {
+            return true;
+        }
+    }
+
+    let mut shifted = mode;
+    if metadata.uid() == euid {
+        shifted <<= 6;
+    } else if group_member(metadata.gid()) {
+        shifted <<= 3;
+    }
+    metadata.permissions().mode() & shifted as u32 != 0
+}
+
+/// Port of GNU group_member (general.c:1334): is `gid` the real gid, the
+/// effective gid, or one of the supplementary groups.
+#[cfg(target_os = "android")]
+fn group_member(gid: libc::gid_t) -> bool {
+    if gid == unsafe { libc::getgid() } || gid == unsafe { libc::getegid() } {
+        return true;
+    }
+    let count = unsafe { libc::getgroups(0, std::ptr::null_mut()) };
+    if count <= 0 {
+        return false;
+    }
+    let mut groups = vec![0 as libc::gid_t; count as usize];
+    let filled = unsafe { libc::getgroups(count, groups.as_mut_ptr()) };
+    filled > 0 && groups[..filled as usize].contains(&gid)
+}
+
+#[cfg(not(unix))]
+fn file_mode_has_bit(
+    _path: &str,
+    _env_vars: &crate::shell::var_table::VarTable,
+    _bit: u32,
+) -> bool {
+    false
+}
+
+#[cfg(unix)]
+fn file_owned_by_effective_user(path: &str, env_vars: &crate::shell::var_table::VarTable) -> bool {
+    use std::os::unix::fs::MetadataExt;
+
+    let Ok(metadata) = fs::metadata(test_path(path, env_vars)) else {
+        return false;
+    };
+    metadata.uid() == unsafe { libc::geteuid() }
+}
+
+#[cfg(not(unix))]
+fn file_owned_by_effective_user(path: &str, env_vars: &crate::shell::var_table::VarTable) -> bool {
+    test_path(path, env_vars).exists()
+}
+
+#[cfg(unix)]
+fn file_owned_by_effective_group(path: &str, env_vars: &crate::shell::var_table::VarTable) -> bool {
+    use std::os::unix::fs::MetadataExt;
+
+    let Ok(metadata) = fs::metadata(test_path(path, env_vars)) else {
+        return false;
+    };
+    metadata.gid() == unsafe { libc::getegid() }
+}
+
+#[cfg(not(unix))]
+fn file_owned_by_effective_group(path: &str, env_vars: &crate::shell::var_table::VarTable) -> bool {
+    test_path(path, env_vars).exists()
+}
+
+fn same_file(left: &str, right: &str, env_vars: &crate::shell::var_table::VarTable) -> bool {
+    // GNU general.c:652-670 same_file: stat both operands and compare
+    // (st_dev, st_ino) — hardlinks are distinct paths sharing one inode,
+    // so a canonical-path comparison misses them. On Windows the
+    // equivalent identity is (volume serial, file index).
+    // rubash#3432: an fd-alias operand resolves through the fd table
+    // (operand_identity), never through the raw OS fd namespace — the
+    // shell's OS fd N is the previous user fd's file, so a plain
+    // stat() of /proc/self/fd/N answers for the wrong file.
+    match (
+        operand_identity(left, env_vars),
+        operand_identity(right, env_vars),
+    ) {
+        (Some(left), Some(right)) => left == right,
+        _ => false,
+    }
+}
+
+#[cfg(windows)]
+fn file_identity(path: &std::path::Path) -> Option<(u32, u64)> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::Storage::FileSystem::{
+        CreateFileW, GetFileInformationByHandle, BY_HANDLE_FILE_INFORMATION,
+        FILE_FLAG_BACKUP_SEMANTICS, FILE_SHARE_DELETE, FILE_SHARE_READ, FILE_SHARE_WRITE,
+        OPEN_EXISTING,
+    };
+    let wide: Vec<u16> = path.as_os_str().encode_wide().chain(Some(0)).collect();
+    // DesiredAccess 0 queries metadata without requiring data access;
+    // FILE_FLAG_BACKUP_SEMANTICS lets directories resolve an identity too.
+    let handle = unsafe {
+        CreateFileW(
+            wide.as_ptr(),
+            0,
+            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+            std::ptr::null(),
+            OPEN_EXISTING,
+            FILE_FLAG_BACKUP_SEMANTICS,
+            std::ptr::null_mut(),
+        )
+    };
+    if handle == INVALID_HANDLE_VALUE {
+        return None;
+    }
+    let mut info: BY_HANDLE_FILE_INFORMATION = unsafe { std::mem::zeroed() };
+    let ok = unsafe { GetFileInformationByHandle(handle, &mut info) };
+    unsafe {
+        CloseHandle(handle);
+    }
+    (ok != 0).then(|| {
+        (
+            info.dwVolumeSerialNumber,
+            ((info.nFileIndexHigh as u64) << 32) | u64::from(info.nFileIndexLow),
+        )
+    })
+}
+
+#[cfg(unix)]
+fn file_identity(path: &std::path::Path) -> Option<(u64, u64)> {
+    use std::os::unix::fs::MetadataExt;
+    fs::metadata(path)
+        .ok()
+        .map(|metadata| (metadata.dev(), metadata.ino()))
+}
+
+pub(crate) const EMULATED_FILE_MODES: &str = "__RUBASH_FILE_MODES";
+
+/// The mode recorded by the emulated chmod for this path, if any. Entries are
+/// stored as windows-path=octal pairs separated by the unit separator.
+/// Windows-port-only layer: unix reads the real inode mode (faccessat /
+/// PermissionsExt) and never consults this store.
+#[cfg_attr(unix, allow(dead_code))]
+pub(crate) fn emulated_file_mode(
+    operand: &str,
+    env_vars: &crate::shell::var_table::VarTable,
+) -> Option<u32> {
+    let windows = test_path(operand, env_vars).to_string_lossy().to_string();
+    let entries = env_vars.get(EMULATED_FILE_MODES)?;
+    for entry in entries.split(DATA_DOLLAR) {
+        let (path, mode) = entry.rsplit_once('=')?;
+        if path == windows {
+            return u32::from_str_radix(mode, 8).ok();
+        }
+    }
+    None
+}

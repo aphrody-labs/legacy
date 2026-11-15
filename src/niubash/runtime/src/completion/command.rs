@@ -1,0 +1,676 @@
+// Command completion for WinSH
+// Provides Tab completion for executable commands
+
+use std::env;
+use std::sync::Mutex;
+
+use crate::completion::{CompletionContext, CompletionResult};
+use anyhow::Result;
+
+/// Fingerprint of the process environment the PATH caches below are
+/// scanned under: PATH + PATHEXT, joined the way
+/// `syntax_highlighting::process_env_fingerprint` builds it. The
+/// completer's PATH universe is read from the process env, which the
+/// host keeps synced with the executor's PATH, so a PATH assignment
+/// retires the caches by key mismatch. Filesystem-only changes under
+/// an unchanged PATH (a package install into an existing PATH dir)
+/// are invisible to the fingerprint; those retire explicitly through
+/// [`CommandCompleter::invalidate_command_caches`], the same hook the
+/// #574 command probe uses after `hash` / `wpm` lines.
+fn path_cache_fingerprint() -> String {
+    let mut fingerprint = String::new();
+    for key in ["PATH", "PATHEXT"] {
+        if let Ok(value) = env::var(key) {
+            fingerprint.push_str(&value);
+        }
+        fingerprint.push('\u{1e}');
+    }
+    fingerprint
+}
+
+/// PATH command scan, cached under the env fingerprint (audit item
+/// C1). The previous shape scanned once and cached forever — a PATH
+/// assignment mid-session never reached command completion — and its
+/// tuple's second element was never read at all.
+static PATH_CMD_CACHE: Mutex<Option<(String, Vec<String>)>> = Mutex::new(None);
+
+/// The merged all-commands list (builtins + common + PATH, sorted and
+/// deduped), cached under the same fingerprint (audit item C1): the
+/// merge inputs other than the PATH scan are process-constant, so the
+/// fingerprint fully determines the result. Callers used to re-run
+/// the whole clone + sort + dedup on every TAB (and on every
+/// highlighter repaint, which builds its command set from this list).
+static ALL_COMMANDS_CACHE: Mutex<Option<(String, Vec<String>)>> = Mutex::new(None);
+
+/// Command completer
+pub struct CommandCompleter;
+
+impl CommandCompleter {
+    /// Get all available commands (built-in + common + PATH)
+    pub fn get_all_commands() -> Vec<String> {
+        // niubash#833: the command caches recover from lock poison
+        // (unwrap_or_else(into_inner)) instead of degrading to a
+        // full rescan on every call for the rest of the session.
+        let fingerprint = path_cache_fingerprint();
+        {
+            let cache = ALL_COMMANDS_CACHE.lock().unwrap_or_else(|e| e.into_inner());
+            if let Some((cached_fingerprint, commands)) = &*cache {
+                if *cached_fingerprint == fingerprint {
+                    return commands.clone();
+                }
+            }
+        }
+        let mut commands = Self::get_builtin_commands();
+        commands.extend(Self::get_common_commands());
+        commands.extend(Self::get_path_commands_cached());
+        commands.sort();
+        commands.dedup();
+        *ALL_COMMANDS_CACHE.lock().unwrap_or_else(|e| e.into_inner()) =
+            Some((fingerprint, commands.clone()));
+        commands
+    }
+
+    /// Forget both PATH caches (audit item C1): called after submitted
+    /// lines that can change command resolution without moving the env
+    /// fingerprint — `hash` mutations and `wpm` install/remove — next
+    /// to the #574 command probe's explicit clear, which exists for
+    /// exactly the same blind spot.
+    pub(crate) fn invalidate_command_caches() {
+        // niubash#833: poison recovery, as in `get_all_commands` —
+        // a skipped invalidation would serve a stale command list.
+        *PATH_CMD_CACHE.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        *ALL_COMMANDS_CACHE.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    }
+
+    /// Get shell builtins owned by rubash.
+    ///
+    /// Reads the canonical builtin list straight from rubash
+    /// (`Executor::builtin_command_names`) instead of keeping a hardcoded copy
+    /// here, so the two never drift when builtins are added or removed
+    /// upstream.
+    pub fn get_builtin_commands() -> Vec<String> {
+        rubash::executor::Executor::builtin_command_names()
+            .iter()
+            .map(|s| s.to_string())
+            .collect()
+    }
+
+    /// Get commonly-used commands (shown on empty Tab). Windows edition.
+    #[cfg(not(unix))]
+    pub fn get_common_commands() -> Vec<String> {
+        vec![
+            "ls".to_string(),
+            "cd".to_string(),
+            "pwd".to_string(),
+            "echo".to_string(),
+            "exit".to_string(),
+            "clear".to_string(),
+            "cat".to_string(),
+            "grep".to_string(),
+            "find".to_string(),
+            "cp".to_string(),
+            "mv".to_string(),
+            "rm".to_string(),
+            "mkdir".to_string(),
+            "jobs".to_string(),
+            "fg".to_string(),
+            "bg".to_string(),
+            "set".to_string(),
+            // rubash#759 item 4 dropped the zsh setopt/unsetopt aliases;
+            // option management is the bash-aligned `shopt` builtin now.
+            "shopt".to_string(),
+            "unset".to_string(),
+            "export".to_string(),
+            "env".to_string(),
+            "help".to_string(),
+            "history".to_string(),
+            "alias".to_string(),
+            "unalias".to_string(),
+            "source".to_string(),
+            "array".to_string(),
+            "plugin".to_string(),
+            "git".to_string(),
+            "code".to_string(),
+            "code-insiders".to_string(),
+            "explorer".to_string(),
+            "start".to_string(),
+            "wt".to_string(),
+            "codex".to_string(),
+            "pwsh".to_string(),
+            "powershell".to_string(),
+            "cmd".to_string(),
+            "where".to_string(),
+            "which".to_string(),
+            "touch".to_string(),
+            "head".to_string(),
+            "tail".to_string(),
+            "sort".to_string(),
+            "uniq".to_string(),
+            "wc".to_string(),
+            "tee".to_string(),
+            "diff".to_string(),
+            "less".to_string(),
+            "more".to_string(),
+            "xargs".to_string(),
+            "basename".to_string(),
+            "dirname".to_string(),
+            "realpath".to_string(),
+            "sleep".to_string(),
+            "timeout".to_string(),
+            "watch".to_string(),
+            "nano".to_string(),
+            "vim".to_string(),
+            "nvim".to_string(),
+            "node".to_string(),
+            "npm".to_string(),
+            "npx".to_string(),
+            "python".to_string(),
+            "pip".to_string(),
+            "cargo".to_string(),
+            "rustc".to_string(),
+            "rustup".to_string(),
+            "gh".to_string(),
+            "docker".to_string(),
+            "docker-compose".to_string(),
+            "make".to_string(),
+            "cmake".to_string(),
+            "ninja".to_string(),
+            "ssh".to_string(),
+            "scp".to_string(),
+            "curl".to_string(),
+            "wget".to_string(),
+            "ping".to_string(),
+            "ipconfig".to_string(),
+            "netstat".to_string(),
+            "nslookup".to_string(),
+            "tracert".to_string(),
+            "choco".to_string(),
+            "scoop".to_string(),
+            "winget".to_string(),
+            "reg".to_string(),
+            "tasklist".to_string(),
+            "taskkill".to_string(),
+            "systeminfo".to_string(),
+        ]
+    }
+
+    /// Get commonly-used commands (shown on empty Tab). Unix edition: real
+    /// cross-platform CLI staples instead of the Windows-only management
+    /// tools (scoop/winget/reg/tasklist/...). PATH executables are picked up
+    /// separately by `get_path_commands`.
+    #[cfg(unix)]
+    pub fn get_common_commands() -> Vec<String> {
+        vec![
+            // Shell basics
+            "ls".to_string(),
+            "cd".to_string(),
+            "pwd".to_string(),
+            "echo".to_string(),
+            "exit".to_string(),
+            "clear".to_string(),
+            "cat".to_string(),
+            "grep".to_string(),
+            "find".to_string(),
+            "cp".to_string(),
+            "mv".to_string(),
+            "rm".to_string(),
+            "mkdir".to_string(),
+            "ln".to_string(),
+            "jobs".to_string(),
+            "fg".to_string(),
+            "bg".to_string(),
+            "set".to_string(),
+            // rubash#759 item 4 dropped the zsh setopt/unsetopt aliases;
+            // option management is the bash-aligned `shopt` builtin now.
+            "shopt".to_string(),
+            "unset".to_string(),
+            "export".to_string(),
+            "env".to_string(),
+            "help".to_string(),
+            "history".to_string(),
+            "alias".to_string(),
+            "unalias".to_string(),
+            "source".to_string(),
+            // Niubash UI
+            "array".to_string(),
+            "plugin".to_string(),
+            // Text and file tools
+            "sed".to_string(),
+            "awk".to_string(),
+            "touch".to_string(),
+            "head".to_string(),
+            "tail".to_string(),
+            "sort".to_string(),
+            "uniq".to_string(),
+            "wc".to_string(),
+            "tee".to_string(),
+            "diff".to_string(),
+            "less".to_string(),
+            "more".to_string(),
+            "xargs".to_string(),
+            "basename".to_string(),
+            "dirname".to_string(),
+            "realpath".to_string(),
+            "stat".to_string(),
+            "file".to_string(),
+            "date".to_string(),
+            "man".to_string(),
+            "which".to_string(),
+            // Archives
+            "tar".to_string(),
+            "gzip".to_string(),
+            "gunzip".to_string(),
+            "zip".to_string(),
+            "unzip".to_string(),
+            // Process and system
+            "ps".to_string(),
+            "top".to_string(),
+            "htop".to_string(),
+            "kill".to_string(),
+            "killall".to_string(),
+            "df".to_string(),
+            "du".to_string(),
+            "free".to_string(),
+            "uname".to_string(),
+            "chmod".to_string(),
+            "chown".to_string(),
+            "sleep".to_string(),
+            "timeout".to_string(),
+            "watch".to_string(),
+            // Editors
+            "nano".to_string(),
+            "vim".to_string(),
+            "nvim".to_string(),
+            // Network
+            "ssh".to_string(),
+            "scp".to_string(),
+            "ssh-keygen".to_string(),
+            "curl".to_string(),
+            "wget".to_string(),
+            "ping".to_string(),
+            "dig".to_string(),
+            // Dev tools
+            "git".to_string(),
+            "code".to_string(),
+            "code-insiders".to_string(),
+            "codex".to_string(),
+            "node".to_string(),
+            "npm".to_string(),
+            "npx".to_string(),
+            "python".to_string(),
+            "python3".to_string(),
+            "pip".to_string(),
+            "pip3".to_string(),
+            "cargo".to_string(),
+            "rustc".to_string(),
+            "rustup".to_string(),
+            "go".to_string(),
+            "gh".to_string(),
+            "docker".to_string(),
+            "docker-compose".to_string(),
+            "make".to_string(),
+            "cmake".to_string(),
+            "ninja".to_string(),
+        ]
+    }
+
+    /// Get cached PATH commands (one scan per env fingerprint)
+    fn get_path_commands_cached() -> Vec<String> {
+        // niubash#833: poison recovery, as in `get_all_commands`.
+        let fingerprint = path_cache_fingerprint();
+        {
+            let cache = PATH_CMD_CACHE.lock().unwrap_or_else(|e| e.into_inner());
+            if let Some((cached_fingerprint, commands)) = &*cache {
+                if *cached_fingerprint == fingerprint {
+                    return commands.clone();
+                }
+            }
+        }
+        let cmds = Self::get_path_commands();
+        *PATH_CMD_CACHE.lock().unwrap_or_else(|e| e.into_inner()) =
+            Some((fingerprint, cmds.clone()));
+        cmds
+    }
+
+    /// Get commands from PATH environment variable
+    pub fn get_path_commands() -> Vec<String> {
+        let mut commands = Vec::new();
+
+        if let Ok(path_env) = env::var("PATH") {
+            for path in env::split_paths(&path_env) {
+                if let Ok(entries) = std::fs::read_dir(path) {
+                    for entry in entries.flatten() {
+                        if let Some(name) = executable_command_name(&entry) {
+                            commands.push(name);
+                        }
+                    }
+                }
+            }
+        }
+
+        commands
+    }
+
+    /// Complete a command name
+    pub fn complete(context: &CompletionContext) -> Result<Option<CompletionResult>> {
+        if !context.is_command_position() {
+            return Ok(None);
+        }
+
+        let word = context.get_current_word().unwrap_or_default();
+
+        // Empty input at command position → show common commands
+        if word.is_empty() {
+            let common = Self::get_common_commands();
+            let mut matches: Vec<String> = common
+                .into_iter()
+                .filter(|cmd| context.behavior.matches(cmd, ""))
+                .collect();
+            if let Some(limit) = context.behavior.max_command_results {
+                matches.truncate(limit);
+            }
+            if matches.is_empty() {
+                return Ok(None);
+            }
+            return Ok(Some(CompletionResult::new(matches)));
+        }
+
+        // Normal prefix matching: built-in + cached PATH commands
+        let all_commands = Self::get_all_commands();
+
+        let mut matches: Vec<String> = all_commands
+            .into_iter()
+            .filter(|cmd| context.behavior.matches(cmd, &word))
+            .collect();
+        if let Some(limit) = context.behavior.max_command_results {
+            matches.truncate(limit);
+        }
+
+        if matches.is_empty() {
+            Ok(None)
+        } else {
+            Ok(Some(CompletionResult::new(matches)))
+        }
+    }
+
+    /// Check if a command exists in PATH
+    pub fn command_exists(command: &str) -> bool {
+        Self::get_builtin_commands().contains(&command.to_string())
+            || Self::get_path_commands().contains(&command.to_string())
+    }
+}
+
+/// Completion name for one PATH directory entry, or `None` when the entry is
+/// not an executable command on this platform. Windows edition.
+#[cfg(not(unix))]
+fn executable_command_name(entry: &std::fs::DirEntry) -> Option<String> {
+    let file_type = entry.file_type().ok()?;
+    if !file_type.is_file() {
+        return None;
+    }
+
+    let file_name = entry.file_name().to_string_lossy().to_string();
+
+    // Recognise Windows executables and shell scripts.
+    // Extensionless files in PATH are skipped because
+    // Windows PATH dirs commonly contain LICENSE, README,
+    // etc. Extensionless tools like dsh are covered by
+    // the common-commands list.
+    let is_executable = file_name.ends_with(".exe")
+        || file_name.ends_with(".bat")
+        || file_name.ends_with(".cmd")
+        || file_name.ends_with(".ps1")
+        || file_name.ends_with(".sh")
+        || file_name.ends_with(".bash")
+        || file_name.ends_with(".zsh")
+        || file_name.ends_with(".niubash");
+
+    if !is_executable {
+        return None;
+    }
+
+    // Remove extension for cleaner completion
+    let name_without_ext = if let Some(pos) = file_name.rfind('.') {
+        file_name[..pos].to_string()
+    } else {
+        file_name
+    };
+    Some(name_without_ext)
+}
+
+/// Completion name for one PATH directory entry, or `None` when the entry is
+/// not an executable command on this platform. Unix edition: executables are
+/// extensionless, so admit regular files carrying any executable bit
+/// (`mode & 0o111`), following symlinks the way a shell PATH search does,
+/// and keep the file name as-is — no extension stripping.
+#[cfg(unix)]
+fn executable_command_name(entry: &std::fs::DirEntry) -> Option<String> {
+    use std::os::unix::fs::PermissionsExt;
+
+    let metadata = std::fs::metadata(entry.path()).ok()?;
+    if !metadata.is_file() {
+        return None;
+    }
+    if metadata.permissions().mode() & 0o111 == 0 {
+        return None;
+    }
+
+    Some(entry.file_name().to_string_lossy().to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_builtin_commands() {
+        let commands = CommandCompleter::get_builtin_commands();
+        assert!(commands.contains(&"cd".to_string()));
+        // The inventory is delegated live from rubash, whose #759 item 4
+        // dropped the zsh setopt/unsetopt aliases; option management is
+        // served by the bash-aligned shopt builtin.
+        assert!(commands.contains(&"shopt".to_string()));
+        assert!(!commands.contains(&"setopt".to_string()));
+        assert!(!commands.contains(&"unsetopt".to_string()));
+        assert!(!commands.contains(&"ls".to_string()));
+        assert!(!commands.contains(&"cp".to_string()));
+        assert!(!commands.contains(&"self-update".to_string()));
+        assert!(!commands.contains(&"update-niubash".to_string()));
+    }
+
+    #[test]
+    fn issue833_poisoned_command_caches_still_serve() {
+        // niubash#833: poison both command caches the way a panic in
+        // a writer would. Before the fix every later lookup degraded
+        // to a full rescan and `invalidate_command_caches` silently
+        // stopped clearing, so a stale list could be served forever.
+        fn poison<T: Send>(mutex: &'static Mutex<T>) {
+            std::thread::scope(|scope| {
+                let handle = scope.spawn(move || {
+                    let _guard = mutex.lock().unwrap();
+                    panic!("issue833: deliberate command-cache poison");
+                });
+                assert!(handle.join().is_err());
+            });
+            assert!(mutex.lock().is_err());
+        }
+        poison(&ALL_COMMANDS_CACHE);
+        poison(&PATH_CMD_CACHE);
+
+        let commands = CommandCompleter::get_all_commands();
+        assert!(commands.contains(&"echo".to_string()));
+        CommandCompleter::invalidate_command_caches();
+        let commands = CommandCompleter::get_all_commands();
+        assert!(commands.contains(&"echo".to_string()));
+    }
+
+    #[test]
+    fn test_command_exists() {
+        // Serialized with the C1 cache test below: it reassigns the
+        // process PATH under this lock, and the sample-then-reprobe
+        // shape here must not straddle that mutation (the sampled name
+        // can belong to a PATH dir that exists only mid-mutation).
+        let _process_lock = crate::test_support::PROCESS_STATE_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        assert!(CommandCompleter::command_exists("cd"));
+        assert!(!CommandCompleter::command_exists(
+            "__niubash_missing_command_for_completion_test__"
+        ));
+
+        // Verify PATH command lookup without hardcoding platform-specific binaries.
+        if let Some(any_path_cmd) = CommandCompleter::get_path_commands().first() {
+            assert!(CommandCompleter::command_exists(any_path_cmd));
+        }
+    }
+
+    struct PathEnvGuard {
+        previous: Option<std::ffi::OsString>,
+    }
+
+    impl PathEnvGuard {
+        /// Prepend `dir` to the process PATH (the real PATH stays
+        /// reachable, so concurrent tests keep resolving real tools).
+        fn prepend(dir: &std::path::Path) -> Self {
+            let previous = std::env::var_os("PATH");
+            let mut paths = vec![dir.to_path_buf()];
+            if let Some(old) = &previous {
+                paths.extend(std::env::split_paths(old));
+            }
+            std::env::set_var("PATH", std::env::join_paths(paths).unwrap());
+            Self { previous }
+        }
+    }
+
+    impl Drop for PathEnvGuard {
+        fn drop(&mut self) {
+            match &self.previous {
+                Some(value) => std::env::set_var("PATH", value),
+                None => std::env::remove_var("PATH"),
+            }
+        }
+    }
+
+    fn fake_executable(dir: &std::path::Path, base: &str) {
+        // Unix admits the extensionless name; Windows admits the .exe
+        // twin and strips the extension to the same completion name.
+        for name in [base.to_string(), format!("{base}.exe")] {
+            let path = dir.join(name);
+            std::fs::write(&path, "#!/bin/sh\n").unwrap();
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+            }
+        }
+    }
+
+    #[test]
+    fn path_command_cache_retires_on_path_change_and_explicit_invalidation() {
+        // Audit item C1: a PATH assignment mid-session must reach
+        // command completion (the old cache scanned once and served
+        // forever), and a filesystem change under an unchanged PATH
+        // must land after the explicit invalidation the shell runs on
+        // `hash` / `wpm` lines.
+        let _process_lock = crate::test_support::PROCESS_STATE_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let dir_a = tempfile::tempdir().unwrap();
+        let dir_b = tempfile::tempdir().unwrap();
+        fake_executable(dir_a.path(), "niu-c1-probe-alpha");
+        fake_executable(dir_b.path(), "niu-c1-probe-beta");
+
+        let path_a = PathEnvGuard::prepend(dir_a.path());
+        let commands = CommandCompleter::get_all_commands();
+        assert!(commands.contains(&"niu-c1-probe-alpha".to_string()));
+        assert!(!commands.contains(&"niu-c1-probe-beta".to_string()));
+        drop(path_a);
+
+        // Reassigning PATH moves the fingerprint: beta's universe
+        // replaces alpha's without any explicit invalidation.
+        let _path_b = PathEnvGuard::prepend(dir_b.path());
+        let commands = CommandCompleter::get_all_commands();
+        assert!(commands.contains(&"niu-c1-probe-beta".to_string()));
+        assert!(!commands.contains(&"niu-c1-probe-alpha".to_string()));
+
+        // A new file in an already-listed PATH dir does not move the
+        // fingerprint, so the cache keeps serving the scanned universe
+        // until the shell's explicit invalidation runs.
+        fake_executable(dir_b.path(), "niu-c1-probe-gamma");
+        let commands = CommandCompleter::get_all_commands();
+        assert!(!commands.contains(&"niu-c1-probe-gamma".to_string()));
+        CommandCompleter::invalidate_command_caches();
+        let commands = CommandCompleter::get_all_commands();
+        assert!(commands.contains(&"niu-c1-probe-gamma".to_string()));
+    }
+
+    #[test]
+    fn command_completion_uses_substring_matching_when_configured() {
+        let ctx = CompletionContext::with_behavior(
+            std::path::PathBuf::from("."),
+            "ep".to_string(),
+            2,
+            crate::completion::CompletionBehavior {
+                match_mode: crate::completion::CompletionMatchMode::Substring,
+                ..crate::completion::CompletionBehavior::default()
+            },
+        );
+        let result = CommandCompleter::complete(&ctx).unwrap().unwrap();
+        assert!(result.completions.contains(&"grep".to_string()));
+    }
+
+    #[test]
+    fn command_completion_includes_common_commands_for_partial_input() {
+        // pwsh is in the Windows common-command table; the Unix edition shows
+        // cross-platform staples instead (see get_common_commands).
+        #[cfg(windows)]
+        let (prefix, expected) = ("pw", "pwsh");
+        #[cfg(unix)]
+        let (prefix, expected) = ("gr", "grep");
+        let ctx = CompletionContext::new(
+            std::path::PathBuf::from("."),
+            prefix.to_string(),
+            prefix.len(),
+        );
+        let result = CommandCompleter::complete(&ctx).unwrap().unwrap();
+        assert!(result.completions.contains(&expected.to_string()));
+        // The retired oh-my-niu command must not complete any more (#145);
+        // with no other "oh-" candidate the completer yields nothing.
+        let ctx = CompletionContext::new(std::path::PathBuf::from("."), "oh-".to_string(), 3);
+        let retired = CommandCompleter::complete(&ctx).unwrap();
+        assert!(!retired
+            .map(|r| r.completions.contains(&"oh-my-niu".to_string()))
+            .unwrap_or(false));
+    }
+
+    #[test]
+    fn command_completion_respects_case_sensitivity_and_result_cap() {
+        let ctx = CompletionContext::with_behavior(
+            std::path::PathBuf::from("."),
+            "GRE".to_string(),
+            3,
+            crate::completion::CompletionBehavior {
+                case_sensitive: true,
+                max_command_results: Some(1),
+                ..crate::completion::CompletionBehavior::default()
+            },
+        );
+        let completions = CommandCompleter::complete(&ctx)
+            .unwrap()
+            .map(|result| result.completions)
+            .unwrap_or_default();
+        assert!(!completions.contains(&"grep".to_string()));
+
+        let limited = CompletionContext::with_behavior(
+            std::path::PathBuf::from("."),
+            "".to_string(),
+            0,
+            crate::completion::CompletionBehavior {
+                max_command_results: Some(1),
+                ..crate::completion::CompletionBehavior::default()
+            },
+        );
+        let result = CommandCompleter::complete(&limited).unwrap().unwrap();
+        assert_eq!(result.completions.len(), 1);
+    }
+}

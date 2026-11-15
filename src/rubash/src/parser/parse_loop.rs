@@ -1,0 +1,4145 @@
+use crate::lexer::{Token, TokenKind};
+
+use super::*;
+use crate::executor::markers::{DATA_DOLLAR, PARSE_ERROR_FIELD_SEP};
+use std::rc::Rc;
+
+#[derive(Default)]
+pub struct ParseLoopOptions {
+    /// Treat a ")" or ";;" at command position as a syntax error that aborts
+    /// the remaining input (GNU YYABORT). Enabled for eval reparse.
+    pub stray_close_is_error: bool,
+    /// The ORIGINAL text being parsed, when the caller has it (eval reparse).
+    /// GNU echoes the offending input line verbatim; token reconstruction
+    /// cannot recover the original spacing, so the guard slices this text.
+    /// Shared by reference count: compound-body re-parses thread the SAME
+    /// buffer (nvm.sh -n re-parses ~1500 nested bodies; cloning the String
+    /// per body copied 259.5MB and dominated the parse phase — GNU keeps
+    /// ONE input string for the whole parse, parse.y shell_input_line).
+    pub source_text: Option<Rc<str>>,
+    /// Pre-alias-expansion text for the same parse, when the caller spliced
+    /// aliases into `source_text` first (grouped driver). GNU's y.error echoes
+    /// the input line as read — `math1)`, not its expansion
+    /// `echo $( date ))` — so diagnostics slice this text when present.
+    /// Lines align with `source_text` because group splices preserve line
+    /// structure.
+    pub diagnostic_text: Option<Rc<str>>,
+    /// How much the caller shifted token positions by before parsing, so the
+    /// guard can map a token position back to the source-text byte offset.
+    pub source_line_offset: usize,
+}
+
+pub(super) struct ParseState {
+    pub(super) ast: Ast,
+    pub(super) current_cmd: CommandNode,
+    pub(super) in_subshell: bool,
+    /// ParseLoopOptions::stray_close_is_error, carried so the extracted
+    /// command loop (run_command_loop) reads it without the options bag.
+    pub(super) stray_close_is_error: bool,
+    /// Inline section parsing (GNU single-pass model): while Some, the
+    /// command loop stops at the enclosing compound's closer keyword
+    /// instead of treating it as an error/unexpected token. See
+    /// run_inline_section.
+    pub(super) section_stop: SectionStop,
+    /// The compound-boundary stack over the tokens the loop iterates on
+    /// while a section is open. A successfully parsed nested compound is
+    /// skipped wholesale (next_i jump), and its keyword frames are net
+    /// balanced, so the stack only stays non-empty for the pathological
+    /// not-consumed-compound shapes the slice scanner also shields.
+    pub(super) section_stack: Vec<&'static str>,
+    /// First token index of the open section (0 for whole parses): bounds
+    /// the backward error-helper walks so an error inside a section reads
+    /// the same tokens the old body slice contained.
+    pub(super) section_token_start: usize,
+    /// Unclosed `$(` depth contributed by word tokens seen so far. The
+    /// lexer does not fold every multi-line substitution (comsub-posix
+    /// tests), so the matching `)` legitimately arrives later as a
+    /// top-level token; while this is > 0 a `)` is consumed as that
+    /// closer instead of being reported as a stray.
+    pub(super) pending_comsub: usize,
+    /// Parsed command lists held by enclosing compound frames that are
+    /// not yet reachable from `ast`/`current_cmd` — an if/elif condition
+    /// list while the following body section is parsed inline. GNU
+    /// gathers heredoc bodies at the newline into redirect nodes the
+    /// single yyparse run already built (parse.y:3648-3654
+    /// gather_here_documents; make_cmd.c make_here_document); rubash's
+    /// body token is emitted after the header line's last token — past
+    /// `then` — so the HereDocBody token action must be able to claim
+    /// pending slots in these frames too, in push (stream) order
+    /// (rubash#2682).
+    pub(super) heredoc_frames: Vec<Vec<CommandNode>>,
+    /// Caller command state parked by `run_inline_section` while a
+    /// section runs (rubash#2682): commands read BEFORE the compound
+    /// whose section is executing — e.g. a command sharing the header
+    /// line, whose heredoc bodies are gathered inside the section.
+    /// Searched before `heredoc_frames`: a parked caller's `<<`
+    /// operators precede the section compound's own in stream order.
+    pub(super) heredoc_caller_frames: Vec<Vec<CommandNode>>,
+    /// Original input text (options.diagnostic_text falling back to
+    /// source_text) so a `syntax error near unexpected token 'X'` node can
+    /// echo the physical offending line the way parse.y y.error does —
+    /// token reconstruction cannot recover the original whitespace.
+    /// Rc<str> (see ParseLoopOptions::source_text): the nested compound
+    /// parsers share this handle instead of cloning the text per body.
+    pub(super) diagnostic_text: Option<Rc<str>>,
+    /// options.source_line_offset: how far token positions were shifted,
+    /// so a diagnostic computed from `diagnostic_text` line counts maps
+    /// back to absolute script lines.
+    pub(super) source_line_offset: usize,
+}
+
+/// Parse tokens into an AST
+pub fn parse(tokens: &[Token]) -> Ast {
+    parse_with_options(tokens, ParseLoopOptions::default())
+}
+
+/// Options for the parse loop. The stray-close guard reports a top-level
+/// ")" that does not close a pending `$(` — a multi-line substitution the
+/// lexer did not fold leaves its closer as a top-level token
+/// (comsub-posix.tests), and `pending_comsub` lets the guard distinguish
+/// that case from a real syntax error such as `echo x)`.
+pub fn parse_with_options(tokens: &[Token], options: ParseLoopOptions) -> Ast {
+    let mut state = ParseState {
+        ast: Ast {
+            commands: Vec::new(),
+        },
+        current_cmd: CommandNode::new(),
+        in_subshell: false,
+        stray_close_is_error: options.stray_close_is_error,
+        section_stop: SectionStop::None,
+        section_stack: Vec::new(),
+        section_token_start: 0,
+        pending_comsub: 0,
+        heredoc_frames: Vec::new(),
+        heredoc_caller_frames: Vec::new(),
+        diagnostic_text: options
+            .diagnostic_text
+            .clone()
+            .or_else(|| options.source_text.clone()),
+        source_line_offset: options.source_line_offset,
+    };
+
+    run_command_loop(tokens, &mut state, 0);
+
+    if !command_is_empty(&state.current_cmd) {
+        state.ast.commands.push(state.current_cmd);
+    }
+    state.ast.commands = fold_command_list(state.ast.commands);
+    mark_parse_time_extglob_errors(&mut state.ast, tokens);
+    state.ast
+}
+
+/// The command-list loop shared by whole parses and inline sections (GNU
+/// parse.y:1264 list grammar): walks `tokens` from `start`, pushing
+/// completed commands into `state.ast.commands`. Returns the index it
+/// stopped at — tokens.len() when the input ran out, or the closer token
+/// that ended an open section (state.section_stop). GNU anchor: GNU's
+/// parser consumes a compound body's tokens with the SAME yyparse run
+/// (parse.y:1037-1054 if_command: the body is a compound_list shifted
+/// from the live token stream) — this runner is that shared pass; the
+/// old model re-walked every body once to find its closer and again to
+/// parse it, which multiplied token work by the nesting depth.
+pub(super) fn run_command_loop(tokens: &[Token], state: &mut ParseState, start: usize) -> usize {
+    // rubash#1801: nested sections re-enter this loop once per nesting
+    // level, so this is the parser's recursion hub — grow the host
+    // thread's stack on demand instead of overflowing it
+    // (src/stack_growth.rs).
+    crate::stack_growth::ensure_stack(|| run_command_loop_walk(tokens, state, start))
+}
+
+fn run_command_loop_walk(tokens: &[Token], state: &mut ParseState, start: usize) -> usize {
+    state.section_token_start = start;
+    let mut i = start;
+    while i < tokens.len() {
+        let section_stack_before = state.section_stack.len();
+        // Inline-section closer check (GNU grammar position): the slice
+        // scanner this replaces (parse_if_section & siblings) stopped at
+        // exactly the tokens matching `stack.is_empty() &&
+        // boundary-allowed keyword in stop set`; the loop only iterates
+        // section-level tokens (nested compounds are skipped via next_i
+        // jumps and their keyword frames are net balanced — see the
+        // truncate after try_parse_compound_start), so this predicate
+        // fires on the same token the scanner chose.
+        if state.section_stop != SectionStop::None && section_stop_hit(tokens, i, state) {
+            return i;
+        }
+        if state.section_stop != SectionStop::None {
+            update_compound_boundary_stack(tokens, i, &mut state.section_stack);
+        }
+        // A word token whose text ends inside an unclosed `$(` leaves its
+        // `)` closer to arrive as a later top-level token.
+        if matches!(
+            tokens[i].kind,
+            TokenKind::Word | TokenKind::CommandSubst | TokenKind::Assignment
+        ) {
+            // Gate the residual on the corrected balancer (skip.rs): it knows
+            // the `case WORD in' chain (GNU special_case_tokens,
+            // parse.y:3369-3386 + 3433-3441 — `case W in esac' is the empty
+            // case whose `)` closes the substitution), while
+            // unclosed_command_substitution_depth (continuation.rs) does not
+            // and reports a false residual of 1 for a folded token like
+            // `v=$(case x in esac)' (rubash#284). That phantom residual made
+            // the guard below swallow the line's real `;;'/`)' tokens as
+            // closers and run `... echo hi;; esac)` instead of GNU's
+            // `syntax error near unexpected token `;;''.
+            // Admission: every `return false` arm of
+            // command_substitutions_balanced (skip.rs) opens with an
+            // unquoted `$` (unterminated `${`, unterminated `$(`) or a
+            // backtick — a token raw with neither byte provably balances,
+            // so the scan is skipped (GNU anchor: parse.y:3557 read_token
+            // derives comsub state from the token text itself; this gate
+            // only skips scans whose answer is provably "balanced").
+            let balanced = if tokens[i].raw.contains('$') || tokens[i].raw.contains('`') {
+                crate::lexer::command_substitutions_balanced(&tokens[i].raw)
+            } else {
+                true
+            };
+            if !balanced {
+                state.pending_comsub +=
+                    crate::lexer::unclosed_command_substitution_depth(&tokens[i].raw);
+            }
+        }
+        if state.pending_comsub > 0
+            && [")", ";;", ";&", ";;;&"]
+                .iter()
+                .any(|op| super::is_unquoted_operator(&tokens[i], op))
+        {
+            // Still inside an unfolded `$(` body: `)` is its closer and
+            // case terminators belong to the body's own case syntax —
+            // neither is a top-level stray. A quoted `')'` is word text
+            // (rubash#128), never a closer.
+            if super::is_unquoted_operator(&tokens[i], ")") {
+                state.pending_comsub -= 1;
+            }
+            i += 1;
+            continue;
+        }
+        // GNU parse.y: a ')' or a case clause terminator at command position
+        // is a syntax error that aborts the remaining input ("case x in
+        // esac)" -- the empty case list closes at esac and the ')' is
+        // unexpected). The parser used to drop the token silently and run
+        // the rest of the line as a simple command.
+        // A `)` at top level is always stray: subshell and case-pattern
+        // closers are consumed inside their own constructs (in_subshell is
+        // set while a `( ... )` body is open), so any `)` reaching the main
+        // loop — at command start or mid-command (`echo x)`) — is GNU's
+        // `syntax error near unexpected token `)''. Case terminators
+        // (`;;', `;&', `;;;&') are likewise consumed by
+        // parse_case_command inside a case body, so ANY one reaching the
+        // main loop is stray — at command start (`f() { ;; }') or
+        // mid-command (`echo ;;'), where GNU's grammar also rejects it.
+        if (matches!(tokens[i].raw.as_str(), ";;" | ";&" | ";;;&"))
+            || (state.stray_close_is_error
+                && super::is_unquoted_operator(&tokens[i], ")")
+                && !state.in_subshell)
+        {
+            // An already-failed command owns the report (GNU yyerror
+            // fired at the FIRST offending token): a stray terminator
+            // after an errored compound — `[[ a == ]];;' — must not
+            // replace the compound's diagnostic with its own
+            // (rubash#2750).
+            if state
+                .ast
+                .commands
+                .last()
+                .is_some_and(|command| command.has_parse_error_marker())
+            {
+                // Fall through to normal token handling; the error
+                // node suppresses the whole unit at execution.
+            } else {
+                push_unexpected_token_error(state, tokens, i);
+                break;
+            }
+        }
+
+        // GNU parse.y:1264-1290 (list grammar): every `;' (and `&')
+        // separator must follow a COMPLETED list1 immediately —
+        // `list1 ';' newline_list list1', with list0's terminal form
+        // `list1 ';' newline_list' allowing only newlines after the final
+        // separator. A `;' at list start (`; :'), after another separator
+        // (`: ; ;'), or after a newline (`:' NEWLINE `;': the newline
+        // already terminated the list1, and no production admits a `;'
+        // there) is `syntax error near unexpected token `;''. Newline
+        // separator tokens (line_break) are the linebreak production and
+        // remain legal wherever they appear. `&' follows the same rules
+        // (parse.y:1281-1285). A redirection operator still expecting its
+        // word operand also cannot precede a separator (`echo > ;').
+        if matches!(tokens[i].kind, TokenKind::Semicolon | TokenKind::Background)
+            && !tokens[i].line_break
+            && separator_lacks_preceding_command(tokens, i, state.section_token_start)
+        {
+            push_unexpected_token_error(state, tokens, i);
+            break;
+        }
+
+        if let Some(next_i) = try_parse_compound_start(tokens, i, state) {
+            // GNU parse.y: a complete compound command (including its
+            // trailing redirections) must be followed by a command
+            // connector — ';', '&', a newline, '|', '&&' or '||'. A token
+            // that would start the next command without one is a syntax
+            // error: `{ a; } { b; }', `x() { :; } > f { ...; }' and
+            // `if ...; fi echo' all report "syntax error near unexpected
+            // token `X'".
+            let separated = next_i > 0
+                && matches!(
+                    tokens[next_i - 1].kind,
+                    TokenKind::Semicolon
+                        | TokenKind::Pipe
+                        | TokenKind::PipeErr
+                        | TokenKind::And
+                        | TokenKind::Or
+                        | TokenKind::Background
+                );
+            let already_error = state
+                .ast
+                .commands
+                .last()
+                .is_some_and(|command| command.has_parse_error_marker());
+            // rubash#305: a redirection OPERATOR the compound's own
+            // trailing-redirect collector stopped at is not "the next
+            // command" — in GNU it starts another redirection of the
+            // compound (parse.y:672+ `command: ... redirection`), so the
+            // grammar error is the missing WORD operand, diagnosed by the
+            // shared dangling-operand rules (`done <<EOF>#c` gathers the
+            // body at the NEWLINE and reports `newline' on the
+            // post-gathering line; `done << ;` reports `;', ...). Only
+            // when an operand exists (collector break for another reason)
+            // does the unexpected-token fallback keep its old reading.
+            if !separated
+                && !already_error
+                && command_is_empty(&state.current_cmd)
+                && tokens.get(next_i).is_some_and(|next| {
+                    matches!(
+                        next.kind,
+                        TokenKind::RedirectIn
+                            | TokenKind::RedirectOut
+                            | TokenKind::Append
+                            | TokenKind::RedirectErr
+                            | TokenKind::RedirectErrAppend
+                            | TokenKind::HereDoc
+                            | TokenKind::HereString
+                    )
+                })
+            {
+                if let Some(error) = super::token_actions::missing_redirect_target_node(
+                    tokens,
+                    next_i,
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                ) {
+                    let pop_line = tokens[next_i].position;
+                    while state
+                        .ast
+                        .commands
+                        .last()
+                        .is_some_and(|command| command.line == Some(pop_line))
+                    {
+                        state.ast.commands.pop();
+                    }
+                    state.current_cmd = error;
+                    break;
+                }
+            }
+            // rubash#460: a reserved word DIRECTLY after a closed `[[ ]]` /
+            // `(( ))` (or any compound-closer token in
+            // reserved_word_acceptable's set) is grammatical without a `;'
+            // terminator: compound_list's `newline_list list1' production
+            // (parse.y:1262) accepts a single pipeline_command with no
+            // terminator, and reserved_word_acceptable (parse.y:5899-5940,
+            // ARITH_CMD and COND_END in the predecessor set) recognizes the
+            // reserved word there — `if [[ $x == y ]] then' inside a
+            // function body (cond.tests:230,
+            // shell_function_n_shortcuts/.shortcut). After a plain WORD the
+            // word is still an argument (`if true then' stays rejected), and
+            // after `]]' any non-reserved word keeps the old error.
+            //
+            // rubash#2646: the exemption is not `then'/`do'-only. GNU's
+            // CHECK_FOR_RESERVED_WORD (parse.y:3168) treats EVERY reserved
+            // word alike at a command boundary — the grammar level that
+            // owns the current section then decides whether that word is
+            // legal there (an if-body's `fi'/`elif'/`else' closes or
+            // continues the clause; a stray one errors at that level).
+            // The #460 value set only covered the CONDITION position, so
+            // a body-level compound (`if ((1)) then ((2)) fi',
+            // arith.tests:351; `if true; then (echo s) fi') still died
+            // here before the section stop could accept its closer.
+            // `command_boundary_keyword_allowed' is the predecessor half
+            // of reserved_word_acceptable; this guard is the word half.
+            let reserved_follows_compound = tokens.get(next_i).is_some_and(|next| {
+                next.kind == TokenKind::Keyword
+                    && crate::lexer::is_keyword(&next.value)
+                    && super::command_boundary_keyword_allowed(tokens, next_i)
+            });
+            if !separated
+                && !already_error
+                && !reserved_follows_compound
+                && command_is_empty(&state.current_cmd)
+                && tokens.get(next_i).is_some_and(|next| {
+                    !matches!(
+                        next.kind,
+                        TokenKind::Semicolon
+                            | TokenKind::Pipe
+                            | TokenKind::PipeErr
+                            | TokenKind::And
+                            | TokenKind::Or
+                            | TokenKind::Background
+                            | TokenKind::HereDocBody
+                            | TokenKind::Eof
+                    )
+                })
+            {
+                push_unexpected_token_error(state, tokens, next_i);
+                break;
+            }
+            // A folded compound whose body carries a parse-error node fails
+            // the whole logical line: GNU yyparse reads the complete command
+            // list before executing any of it, so nothing earlier on the
+            // compound's own script lines runs either (`echo one; { :; } }'
+            // prints nothing — rubash#285 side-fix). Hoist the inner error
+            // node to the top level, drop the commands parsed from the
+            // compound's lines, and stop reading the input like yyerror's
+            // jump to top level.
+            if let Some(error) = state
+                .ast
+                .commands
+                .last()
+                .and_then(compound_body_parse_error)
+                .cloned()
+            {
+                let compound_line = tokens.get(i).map(|token| token.position);
+                match compound_line {
+                    Some(line) => {
+                        while state
+                            .ast
+                            .commands
+                            .last()
+                            .is_some_and(|command| command.line.is_some_and(|l| l >= line))
+                        {
+                            state.ast.commands.pop();
+                        }
+                    }
+                    None => {
+                        state.ast.commands.pop();
+                    }
+                }
+                // rubash#1093: an extglob-gate `(' error is not a settled
+                // parse failure — a runtime `shopt -s extglob` on an
+                // earlier line can make the command valid by the time it
+                // executes, and the executor reparses it then. Keep
+                // reading the remaining commands so they exist in the
+                // AST; if the flip never comes, the executor's diagnostic
+                // still aborts with status 2 before any of them runs,
+                // which is GNU's net outcome for a real syntax error.
+                let gate_error = error
+                    .get_assignment("__RUBASH_PARSE_ERROR_NEAR__")
+                    .is_some_and(|spec| {
+                        spec.split(PARSE_ERROR_FIELD_SEP)
+                            .next()
+                            .is_some_and(|token| token == "(")
+                    });
+                state.ast.commands.push(error);
+                if gate_error {
+                    i = next_i;
+                    continue;
+                }
+                break;
+            }
+            // A successfully parsed compound's keyword frames are net
+            // balanced (`if..fi`, `case..esac`, `{..}`), exactly like the
+            // slice scanner's stack after walking the same region, so the
+            // frames this iteration's opener pushed are discarded instead
+            // of being left open (which would suppress every later stop).
+            state.section_stack.truncate(section_stack_before);
+            i = next_i;
+            continue;
+        }
+        match handle_token(tokens, &mut i, state) {
+            TokenAction::Advance => i += 1,
+            TokenAction::Continue => continue,
+            TokenAction::Break => break,
+        }
+    }
+
+    i
+}
+
+/// The post-loop fold passes over one command list (whole parse or inline
+/// section body): gated exactly as when they lived inline in
+/// parse_with_options.
+pub(super) fn fold_command_list(commands: Vec<CommandNode>) -> Vec<CommandNode> {
+    // Fast-exit admissions: each fold below is a whole-list pass whose map
+    // is the identity for commands lacking its trigger field, so a list
+    // with no trigger anywhere returns unchanged — skipping the
+    // per-command rebuild. (GNU anchor: the folds model grammar
+    // productions the token stream already proved absent; a list with no
+    // pipe connector has no pipeline production to fold — parse.y:1337ff
+    // — and so on for `time'/`!'/`&&'/`&'. nvm.sh -n runs 1578
+    // parse_with_options calls for nested bodies whose commands carry no
+    // trigger at all; the six unconditional passes cost 468ms of its
+    // 848ms parse phase.)
+
+    let has_pipeline = commands.iter().any(|command| command.pipe.is_some());
+    let c = if has_pipeline {
+        fold_pipeline_commands(commands)
+    } else {
+        commands
+    };
+    // time_prefix_from_command fires only when a command's first word is
+    // the literal `time'; fold_time_pipeline_commands looks through
+    // pipeline_command stages' first words, fold_time_simple_commands at
+    // the command's own words — the gate covers both.
+    let has_time_prefix = c.iter().any(|command| {
+        command.words.first().is_some_and(|word| word == "time")
+            || command
+                .pipeline_command
+                .as_ref()
+                .and_then(|pipeline| pipeline.stages.first())
+                .and_then(|stage| stage.words.first())
+                .is_some_and(|word| word == "time")
+    });
+    let c = if has_time_prefix {
+        fold_time_pipeline_commands(c)
+    } else {
+        c
+    };
+    let c = if has_time_prefix {
+        fold_time_simple_commands(c)
+    } else {
+        c
+    };
+    let has_inverted = c.iter().any(|command| command.inverted);
+    let c = if has_inverted {
+        fold_inverted_commands(c)
+    } else {
+        c
+    };
+    let has_and_or = c.iter().any(|command| command.and_or.is_some());
+    let c = if has_and_or {
+        fold_and_or_list_commands(c)
+    } else {
+        c
+    };
+    let has_background = c.iter().any(|command| command.background);
+    if has_background {
+        fold_background_commands(c)
+    } else {
+        c
+    }
+}
+
+/// The innermost `__RUBASH_PARSE_ERROR__`-marked command inside a folded
+/// compound's body (brace group, function body, case clause bodies), or the
+/// command itself when it is the error node. The main loop uses this to fail
+/// the whole logical line the way GNU's yyparse does.
+/// Which closer set an inline section stops at. Mirrors the stop sets of
+/// the slice scanners this replaces (find_if_then / parse_if_section).
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(super) enum SectionStop {
+    None,
+    /// An `if`/`elif` condition: stops at the `then` keyword.
+    IfCondition,
+    /// A `then`/`elif`/`else` body: stops at `fi`/`done`/`esac` (value
+    /// match) or `elif`/`else` (keyword match); `then` marks the
+    /// construct-invalid abort the scanner reported as None.
+    IfBody,
+}
+
+/// Whether `tokens[index]` is the closer the open section stops at. The
+/// predicate is the slice scanner's own stop test (stack empty +
+/// command_boundary_keyword_allowed + stop set), evaluated on the loop's
+/// iteration points — the same tokens the scanner walked.
+fn section_stop_hit(tokens: &[Token], index: usize, state: &ParseState) -> bool {
+    if !state.section_stack.is_empty() {
+        return false;
+    }
+    if !super::command_boundary_keyword_allowed(tokens, index) {
+        return false;
+    }
+    let token = &tokens[index];
+    match state.section_stop {
+        SectionStop::None => false,
+        // A `then' only closes the condition when the condition list is
+        // complete: while a `&&'/`||'/`|' still awaits its right-hand
+        // command, `then' sits at a command position and is the token
+        // yyerror names (parse.y:6727) — the token loop's reserved-word
+        // arm reports it there. Treating it as the closer let the
+        // fold's dangling-list EOF node win the report instead
+        // (rubash#2741 face: `if a && then ...').
+        SectionStop::IfCondition => {
+            is_keyword(tokens, index, "then") && !section_list_dangles(state)
+        }
+        SectionStop::IfBody => {
+            matches!(token.value.as_str(), "fi" | "done" | "esac")
+                || is_keyword(tokens, index, "elif")
+                || is_keyword(tokens, index, "else")
+                || is_keyword(tokens, index, "then")
+        }
+    }
+}
+
+/// Whether the section's command list is mid-connector: the last
+/// completed command (or the in-progress one) carries a `&&'/`||'/`|'
+/// linkage whose right-hand command has not arrived.
+fn section_list_dangles(state: &ParseState) -> bool {
+    state.current_cmd.and_or.is_some()
+        || state.current_cmd.pipe.is_some()
+        || state
+            .ast
+            .commands
+            .last()
+            .is_some_and(|command| command.and_or.is_some() || command.pipe.is_some())
+}
+
+/// How an inline section ended.
+pub(super) enum SectionOutcome {
+    /// Stopped at the closer token; `index` IS the closer (not consumed).
+    Ended {
+        body: Vec<CommandNode>,
+        index: usize,
+    },
+    /// Input ran out before any closer (the scanner's None-by-EOF).
+    Eof { body: Vec<CommandNode> },
+    /// The loop broke on a parse error before the closer; the body's last
+    /// command carries the error node (the scanner still knew the real
+    /// boundary — callers recover it with the cold scanner when needed).
+    Errored { body: Vec<CommandNode> },
+    /// `then` arrived where a body was expected (parse_if_section's
+    /// return-None abort).
+    AbortedThen {
+        body: Vec<CommandNode>,
+        index: usize,
+    },
+}
+
+/// Parse one compound-body section inline in the caller's parse state
+/// (GNU parse.y: the body of `if COND; then BODY; fi` is a compound_list
+/// consumed by the SAME yyparse run — parse.y:1037-1054 — not a re-scan
+/// plus a re-parse of a sliced copy). Swaps in a fresh command list (and
+/// the per-body balancer state the old fresh ParseState started with:
+/// pending_comsub 0, in_subshell false, stray-close leniency), runs the
+/// shared command loop until the closer predicate fires, restores the
+/// caller's state, and applies the same fold/extglob tail the slice
+/// parse ran over its body slice.
+pub(super) fn run_inline_section(
+    tokens: &[Token],
+    state: &mut ParseState,
+    start: usize,
+    stop: SectionStop,
+) -> SectionOutcome {
+    let saved_commands = std::mem::take(&mut state.ast.commands);
+    let saved_current = std::mem::take(&mut state.current_cmd);
+    let saved_pending_comsub = state.pending_comsub;
+    let saved_in_subshell = state.in_subshell;
+    let saved_stray = state.stray_close_is_error;
+    let saved_stop = state.section_stop;
+    let saved_stack = std::mem::take(&mut state.section_stack);
+    let saved_start = state.section_token_start;
+
+    state.pending_comsub = 0;
+    state.in_subshell = false;
+    state.stray_close_is_error = false;
+    state.section_stop = stop;
+
+    // rubash#2682: park the caller's completed/in-progress commands as
+    // heredoc frames for the section's duration. Heredoc bodies are
+    // gathered at a logical line's end, so a body token inside this
+    // section can pair with a `<<` read BEFORE the section on the same
+    // line (a command sharing the compound's header line) — those
+    // owners live in the swapped-out caller state and would otherwise
+    // be invisible to the section's HereDocBody actions. The frames are
+    // popped back into place at restore below, fills included.
+    state.heredoc_caller_frames.push(saved_commands);
+    state.heredoc_caller_frames.push(vec![saved_current]);
+
+    let i = run_command_loop(tokens, state, start);
+
+    // Classify with the SECTION state still armed (the restored caller
+    // state below must not influence the closer predicate).
+    let at_eof = i >= tokens.len();
+    let aborted_then = !at_eof
+        && stop == SectionStop::IfBody
+        && state.section_stack.is_empty()
+        && super::command_boundary_keyword_allowed(tokens, i)
+        && is_keyword(tokens, i, "then");
+    let ended = !at_eof
+        && !aborted_then
+        && state.section_stack.is_empty()
+        && super::command_boundary_keyword_allowed(tokens, i)
+        && match stop {
+            SectionStop::None => false,
+            SectionStop::IfCondition => is_keyword(tokens, i, "then"),
+            SectionStop::IfBody => {
+                matches!(tokens[i].value.as_str(), "fi" | "done" | "esac")
+                    || is_keyword(tokens, i, "elif")
+                    || is_keyword(tokens, i, "else")
+            }
+        };
+
+    let mut body = std::mem::take(&mut state.ast.commands);
+    if !command_is_empty(&state.current_cmd) {
+        body.push(std::mem::take(&mut state.current_cmd));
+    }
+    // The stopped-at closer token (when present) is exactly the slice
+    // boundary the scanner produced, so this sub-slice equals the old
+    // body slice for both the fold gates and the extglob marker.
+    let body_tokens = &tokens[start..i.min(tokens.len())];
+    body = fold_command_list(body);
+    let mut body_ast = Ast { commands: body };
+    mark_parse_time_extglob_errors(&mut body_ast, body_tokens);
+    let body = body_ast.commands;
+
+    // Unpark the caller's commands (with any heredoc fills the section
+    // claimed into them) and restore the caller's state.
+    let mut parked_current = state.heredoc_caller_frames.pop().unwrap_or_default();
+    state.current_cmd = parked_current.pop().unwrap_or_default();
+    state.ast.commands = state.heredoc_caller_frames.pop().unwrap_or_default();
+    state.pending_comsub = saved_pending_comsub;
+    state.in_subshell = saved_in_subshell;
+    state.stray_close_is_error = saved_stray;
+    state.section_stop = saved_stop;
+    state.section_stack = saved_stack;
+    state.section_token_start = saved_start;
+
+    if at_eof {
+        return SectionOutcome::Eof { body };
+    }
+    if aborted_then {
+        return SectionOutcome::AbortedThen { body, index: i };
+    }
+    if ended {
+        return SectionOutcome::Ended { body, index: i };
+    }
+    SectionOutcome::Errored { body }
+}
+
+pub(super) fn compound_body_parse_error(cmd: &CommandNode) -> Option<&CommandNode> {
+    if cmd.has_assignment("__RUBASH_PARSE_ERROR__")
+        || cmd.has_assignment("__RUBASH_PARSE_ERROR_NEAR__")
+    {
+        return Some(cmd);
+    }
+    if let Some(group) = &cmd.brace_group {
+        for body in &group.body {
+            if let Some(error) = compound_body_parse_error(body) {
+                return Some(error);
+            }
+        }
+    }
+    if let Some(function) = &cmd.function_command {
+        for body in &function.body {
+            if let Some(error) = compound_body_parse_error(body) {
+                return Some(error);
+            }
+        }
+    }
+    if let Some(case_cmd) = &cmd.case_command {
+        for clause in &case_cmd.clauses {
+            for body in &clause.body {
+                if let Some(error) = compound_body_parse_error(body) {
+                    return Some(error);
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Extglob is enabled while Bash parses a command unit, not after the unit
+/// has already been read.  Therefore `shopt -s extglob; echo @(x)` is a
+/// syntax error even though a later input line can use the pattern.
+fn mark_parse_time_extglob_errors(ast: &mut Ast, tokens: &[Token]) {
+    let mut saw_shopt = false;
+    let mut saw_enable = false;
+    let mut extglob_enabled_in_unit = false;
+    // rubash#3205: the shopt that arms this marker must itself have
+    // been read under the OFF gate. Every token carries the gate of
+    // the pass that lexed it (`Token::extglob_gate`); if the gate
+    // was already on when this unit started — an earlier unit's
+    // shopt executed, or the invocation state — the pattern words
+    // later in the unit were read legitimately under that state,
+    // and a same-line `shopt -s` merely re-asserts it: GNU decides
+    // pattern validity at read time from the unit-start state
+    // (parse.y:5466), so there is no error to mark.
+    let mut shopt_read_with_gate_off = false;
+
+    for token in tokens {
+        if token.kind == TokenKind::Semicolon && !token.line_break {
+            if saw_shopt && saw_enable && shopt_read_with_gate_off {
+                extglob_enabled_in_unit = true;
+            }
+            saw_shopt = false;
+            saw_enable = false;
+            shopt_read_with_gate_off = false;
+            continue;
+        }
+        if token.value == "shopt" {
+            saw_shopt = true;
+            shopt_read_with_gate_off = !token.extglob_gate;
+            continue;
+        }
+        if saw_shopt && token.value == "-s" {
+            saw_enable = true;
+            continue;
+        }
+        if saw_enable && token.value == "extglob" {
+            continue;
+        }
+        if extglob_enabled_in_unit && is_unquoted_extglob_word(token) {
+            for command in &mut ast.commands {
+                if command.words.iter().any(|word| word == &token.value) {
+                    command.insert_assignment(
+                        "__RUBASH_PARSE_ERROR__".to_string(),
+                        "unexpected token `('".to_string(),
+                    );
+                    break;
+                }
+            }
+        }
+        if token.kind != TokenKind::Semicolon {
+            saw_shopt = false;
+            saw_enable = false;
+            shopt_read_with_gate_off = false;
+        }
+    }
+}
+
+fn is_unquoted_extglob_word(token: &Token) -> bool {
+    if token.raw != token.value {
+        return false;
+    }
+    // Only an extglob operator at the TOP level of the word gates the
+    // parse: a `+(`/`@(`/... group inside a `${...}` expansion is
+    // pattern text whose extglob validity GNU decides at expansion
+    // time, never at read time — `shopt -s extglob; echo ${v%%+(b)*}`
+    // on one line is legal in GNU even though the same-line `echo @(x)`
+    // and case-pattern forms are read-time errors (rubash#1281). Scan
+    // with ${ } nesting depth (backslash escapes the next byte); `$(`
+    // does not open the brace depth, so a plain word inside a command
+    // substitution still counts, as GNU's own parse of the body would.
+    let bytes = token.value.as_bytes();
+    let mut depth = 0usize;
+    let mut index = 0usize;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\\' => index += 2,
+            b'$' if bytes.get(index + 1) == Some(&b'{') => {
+                depth += 1;
+                index += 2;
+            }
+            b'}' if depth > 0 => {
+                depth -= 1;
+                index += 1;
+            }
+            b'@' | b'!' | b'+' | b'?' | b'*' if depth == 0 => {
+                if bytes.get(index + 1) == Some(&b'(') {
+                    return true;
+                }
+                index += 1;
+            }
+            _ => index += 1,
+        }
+    }
+    false
+}
+
+fn fold_inverted_commands(commands: Vec<CommandNode>) -> Vec<CommandNode> {
+    commands
+        .into_iter()
+        .map(|mut command| {
+            if !command.inverted {
+                return command;
+            }
+
+            command.inverted = false;
+            let line = command.line;
+            let and_or = command.and_or.take();
+            let background_flag = command.background;
+            command.background = false;
+            let mut inverted = CommandNode::new();
+            inverted.line = line;
+            inverted.logical_line = command.logical_line;
+            inverted.and_or = and_or;
+            inverted.background = background_flag;
+            inverted.inverted_command = Some(InvertedCommand {
+                operator: "!".to_string(),
+                operator_metadata: operator_metadata("!"),
+                command: Box::new(command),
+            });
+            inverted
+        })
+        .collect()
+}
+
+fn fold_background_commands(commands: Vec<CommandNode>) -> Vec<CommandNode> {
+    commands
+        .into_iter()
+        .map(|mut command| {
+            if !command.background {
+                return command;
+            }
+
+            command.background = false;
+            let line = command.line;
+            let mut background = CommandNode::new();
+            background.line = line;
+            background.logical_line = command.logical_line;
+            background.background_command = Some(BackgroundCommand {
+                operator: "&".to_string(),
+                operator_metadata: operator_metadata("&"),
+                command: Box::new(command),
+            });
+            background
+        })
+        .collect()
+}
+
+fn operator_metadata(operator: &str) -> Box<WordMetadata> {
+    Box::new(build_word_metadata(0, operator, operator))
+}
+
+fn fold_and_or_list_commands(commands: Vec<CommandNode>) -> Vec<CommandNode> {
+    let mut commands = commands;
+    let mut folded = Vec::new();
+    let mut index = 0;
+    while index < commands.len() {
+        // GNU parse.y's list reduction (parse.y:1264 `list: list ';' list1`)
+        // links the ALREADY-BUILT command into the list — make_cmd.c never
+        // copies a COMMAND. The index below only ever advances, so moving
+        // the element out (the empty replacement is never re-read: every
+        // later access is `commands.get(j)` with j > the taken slot)
+        // reproduces the old deep-clone result without copying it.
+        let command = std::mem::replace(&mut commands[index], CommandNode::new());
+        if command.and_or.is_none() {
+            folded.push(command);
+            index += 1;
+            continue;
+        }
+
+        let mut list_commands = vec![command];
+        let mut connectors = Vec::new();
+        let mut operators = Vec::new();
+        index += 1;
+        while let Some(connector) = list_commands.last().and_then(|command| command.and_or) {
+            connectors.push(connector);
+            operators.push(if connector { "&&" } else { "||" }.to_string());
+            while commands.get(index).is_some_and(command_is_empty) {
+                index += 1;
+            }
+            if index >= commands.len() {
+                break;
+            }
+            let next = std::mem::replace(&mut commands[index], CommandNode::new());
+            list_commands.push(next);
+            index += 1;
+        }
+
+        if connectors.is_empty() || list_commands.len() != connectors.len() + 1 {
+            if !connectors.is_empty() && list_commands.len() == connectors.len() {
+                // GNU parse.y yyerror: a `&&`/`||` with no right-hand
+                // command because input ended reports "syntax error:
+                // unexpected end of file" (the EOF form, at the
+                // end-of-input line) and the whole list is discarded —
+                // for a list of ANY length, not just a single command.
+                // Route through the same __RUBASH_PARSE_ERROR_EOF__
+                // marker the dangling-pipeline fold below uses, so the
+                // report sites render the EOF form (deep-audit B6-F1).
+                let mut command = list_commands
+                    .into_iter()
+                    .last()
+                    .expect("and-or list has a command");
+                // rubash#3028: same end-line anchor as the dangling
+                // pipeline fold — the carrier's line must be the last
+                // command's parse-end line (its connector token's
+                // line), not its start line.
+                if let Some(end_line) = command.end_line {
+                    command.line = Some(end_line);
+                }
+                command
+                    .insert_assignment("__RUBASH_PARSE_ERROR_EOF__".to_string(), "1".to_string());
+                folded.push(command);
+                continue;
+            }
+            folded.extend(list_commands);
+            continue;
+        }
+
+        let first = list_commands
+            .first()
+            .expect("and-or list has a first command");
+        let last = list_commands
+            .last()
+            .expect("and-or list has a last command");
+        let mut list = CommandNode::new();
+        list.line = first.line;
+        list.logical_line = first.logical_line;
+        list.background = last.background;
+        list.and_or_list = Some(AndOrListCommand {
+            commands: list_commands,
+            connectors,
+            operator_metadata: operators_metadata(&operators),
+            operators,
+        });
+        folded.push(list);
+    }
+    folded
+}
+
+fn fold_pipeline_commands(commands: Vec<CommandNode>) -> Vec<CommandNode> {
+    let mut commands = commands;
+    let mut folded = Vec::new();
+    let mut index = 0;
+    while index < commands.len() {
+        // Same move-not-clone discipline as fold_and_or_list_commands: GNU's
+        // pipeline production (parse.y:1378 pipeline: pipeline '|' command)
+        // links the parsed stages; the taken slot is never re-read (the
+        // index only advances, and skip_empty_pipeline_separators starts
+        // from the current, untaken index).
+        let command = std::mem::replace(&mut commands[index], CommandNode::new());
+        if command.pipe.is_none() {
+            folded.push(command);
+            index += 1;
+            continue;
+        }
+
+        let mut stages = vec![command];
+        let mut operators = Vec::new();
+        index += 1;
+        skip_empty_pipeline_separators(&commands, &mut index);
+        while index < commands.len() {
+            if let Some(pipe) = stages.last().and_then(|stage| stage.pipe) {
+                operators.push(if pipe == 2 { "|&" } else { "|" }.to_string());
+            }
+            let command = std::mem::replace(&mut commands[index], CommandNode::new());
+            let pipe_done = command.pipe.is_none();
+            stages.push(command);
+            index += 1;
+            if pipe_done {
+                break;
+            }
+            skip_empty_pipeline_separators(&commands, &mut index);
+        }
+
+        if stages.len() == 1
+            || stages.last().is_some_and(|command| command.pipe.is_some())
+            || looks_like_case_pattern_alternate(&stages)
+        {
+            if stages.len() == 1 || stages.last().is_some_and(|command| command.pipe.is_some()) {
+                // GNU parse.y yyerror: a `|`/`|&` with no right-hand stage
+                // because input ended reports "syntax error: unexpected
+                // end of file" — not `near unexpected token `|'' (that
+                // wording belongs to `|` mid-list). The EOF renderer
+                // reports the carrier's line + 1 as the end-of-input
+                // line, so the carrier must carry the LAST stage's line:
+                // anchoring on the first stage under-reported every
+                // multi-line pipeline by its span (rubash#2754:
+                // `echo a |'/`echo b |' reported line 2, GNU line 3).
+                // rubash#3028: anchor on the last stage's parse-END
+                // line when the connector stamp recorded one — a stage
+                // whose `|`/`|&` token was reached through a
+                // continuation (`foo \` + `|&`) ends on the later
+                // physical line, and the EOF renderer reports carrier
+                // line + 1 (t0065: stage starts line 1, its `|&` sits
+                // on line 2, GNU reports line 3).
+                let last_line = stages
+                    .last()
+                    .and_then(|stage| stage.end_line.or(stage.line));
+                let mut command = stages
+                    .into_iter()
+                    .next()
+                    .expect("pipeline has a first stage");
+                if let Some(line) = last_line {
+                    command.line = Some(line);
+                }
+                command
+                    .insert_assignment("__RUBASH_PARSE_ERROR_EOF__".to_string(), "1".to_string());
+                folded.push(command);
+                continue;
+            }
+            folded.extend(stages);
+            continue;
+        }
+
+        demote_pipeline_middle_time_heads(&mut stages);
+
+        let first = stages.first().expect("pipeline has a first stage");
+        let last = stages.last().expect("pipeline has a last stage");
+        let mut pipeline = CommandNode::new();
+        pipeline.line = first.line;
+        pipeline.logical_line = first.logical_line;
+        pipeline.inverted = first.inverted;
+        pipeline.background = last.background;
+        pipeline.and_or = last.and_or;
+        if let Some(first_stage) = stages.first_mut() {
+            first_stage.inverted = false;
+        }
+        pipeline.pipeline_command = Some(PipelineCommand {
+            stages,
+            operator_metadata: operators_metadata(&operators),
+            operators,
+        });
+        folded.push(pipeline);
+    }
+    folded
+}
+
+fn skip_empty_pipeline_separators(commands: &[CommandNode], index: &mut usize) {
+    while commands.get(*index).is_some_and(command_is_empty) {
+        *index += 1;
+    }
+}
+
+fn operators_metadata(operators: &[String]) -> Vec<WordMetadata> {
+    operators
+        .iter()
+        .enumerate()
+        .map(|(index, operator)| build_word_metadata(index, operator, operator))
+        .collect()
+}
+
+fn looks_like_case_pattern_alternate(stages: &[CommandNode]) -> bool {
+    let Some(first) = stages.first() else {
+        return false;
+    };
+    if first.words.get(2).map(String::as_str) != Some("in") {
+        return false;
+    }
+    first.words.len() >= 4 && stages.len() >= 2
+}
+
+/// rubash#1785: GNU admits the timespec production only at the head
+/// of a pipeline_command (parse.y:1416 `timespec pipeline_command`);
+/// a pipeline's later elements derive from `command` alone (the
+/// `pipeline: pipeline '|' pipeline` recursion bottoms out in
+/// `command`), and `time_command_acceptable` (parse.y:3286) has no
+/// `|' case — after a pipe connector `time` is an ordinary WORD: a
+/// command name resolved through PATH (127 when no external `time`
+/// exists, the external program when one does). Freeze that verdict
+/// onto every stage after the first, in the same recorded form the
+/// rubash#1520 POSIX freeze uses: `time_head_plain_word` is set and
+/// the head word's recorded kind becomes Word, so the time folds'
+/// admission and the executor's `time` name dispatch both honour the
+/// head as an ordinary command name with no further special cases.
+fn demote_pipeline_middle_time_heads(stages: &mut [CommandNode]) {
+    for stage in stages.iter_mut().skip(1) {
+        if stage.words.first().map(String::as_str) != Some("time") || stage.time_head_plain_word {
+            continue;
+        }
+        stage.time_head_plain_word = true;
+        if stage.word_kinds.len() == stage.words.len()
+            && stage.word_kinds.first() == Some(&TokenKind::Keyword)
+        {
+            stage.word_kinds[0] = TokenKind::Word;
+        }
+    }
+}
+
+fn fold_time_pipeline_commands(commands: Vec<CommandNode>) -> Vec<CommandNode> {
+    commands
+        .into_iter()
+        .map(|mut command| {
+            // parse.y: the timespec production is recursive
+            // (pipeline_command: timespec pipeline_command), so strip
+            // EVERY recorded timespec head off the pipeline's first
+            // stage — innermost head first — and wrap one TimeCommand
+            // frame per head (rubash#1805: `time time cmd | …`).
+            let mut prefixes = Vec::new();
+            loop {
+                let Some(pipeline) = command.pipeline_command.as_mut() else {
+                    break;
+                };
+                let Some(prefix) = time_prefix_from_pipeline(pipeline) else {
+                    break;
+                };
+                prefixes.push(prefix);
+            }
+            if prefixes.is_empty() {
+                return command;
+            }
+
+            let line = command.line;
+            let inverted = command.inverted;
+            let and_or = command.and_or.take();
+            let background = command.background;
+            let logical_line = command.logical_line;
+            command.inverted = false;
+            command.background = false;
+            command.and_or = None;
+            // The pipeline node's own modifiers belong to the whole
+            // unit, so they land on the OUTERMOST frame (built last);
+            // each frame's TimeCommand.inverted is its own head's
+            // window verdict.
+            let mut timed = command;
+            for prefix in prefixes.into_iter().rev() {
+                let mut frame = CommandNode::new();
+                frame.line = line;
+                frame.logical_line = logical_line;
+                frame.time_command = Some(TimeCommand {
+                    keyword: prefix.keyword,
+                    keyword_metadata: prefix.keyword_metadata,
+                    prefix_words: prefix.prefix_words,
+                    prefix_word_metadata: prefix.prefix_word_metadata,
+                    command: Box::new(timed),
+                    posix_format: prefix.posix_format,
+                    inverted: prefix.inverted,
+                    keyword_was_plain_word: false,
+                });
+                timed = frame;
+            }
+            timed.inverted = inverted;
+            timed.and_or = and_or;
+            timed.background = background;
+            timed
+        })
+        .collect()
+}
+
+/// rubash#1548: the outcome of scanning the operand tokens/words that
+/// follow a `time` head. `next` is the index of the first word of the
+/// timed command (relative to the same slice the caller scanned).
+pub(crate) struct TimePrefixScan {
+    pub next: usize,
+    pub posix_format: bool,
+    pub inverted: bool,
+}
+
+/// GNU decides which words after `time` are its OWN operands in the
+/// lexer, not at execution time (parse.y `special_case_tokens`):
+/// `-p` is returned as TIMEOPT only when the immediately preceding
+/// token was TIME, and `--` as TIMEIGN only when the preceding token
+/// was TIME or TIMEOPT; the grammar (timespec) admits at most one of
+/// each, in that order, and TIMEIGN also selects the POSIX report
+/// format (TIME TIMEIGN -> CMD_TIME_POSIX). The comparison is against
+/// the token's RAW spelling, so a quoted or escaped spelling ('-p',
+/// "-p", \-p, -'p') never matches: it is an ordinary word — the timed
+/// command's name. `!` is not part of the timespec at all (it is the
+/// pipeline's BANG); the crate folds it into the prefix, but once a
+/// `!` — or any non-option word — intervenes, the option window is
+/// closed for good: in `time ! -p x` and `time -p ! -p x` the second
+/// `-p` is the command name (oracle-verified, GNU 5.3.20).
+struct TimePrefixWindow {
+    seen_opt: bool,
+    seen_ign: bool,
+    options_open: bool,
+    posix_format: bool,
+    inverted: bool,
+}
+
+impl TimePrefixWindow {
+    fn new() -> Self {
+        Self {
+            seen_opt: false,
+            seen_ign: false,
+            options_open: true,
+            posix_format: false,
+            inverted: false,
+        }
+    }
+
+    /// Consume one PLAIN-spelled word (see the raw-spelling gate at the
+    /// call sites). Returns true when the word belongs to the prefix.
+    fn step(&mut self, text: &str) -> bool {
+        match text {
+            "-p" if self.options_open && !self.seen_opt && !self.seen_ign => {
+                self.seen_opt = true;
+                self.posix_format = true;
+                true
+            }
+            "--" if self.options_open && !self.seen_ign => {
+                self.seen_ign = true;
+                self.posix_format = true;
+                true
+            }
+            "!" => {
+                self.inverted = !self.inverted;
+                self.options_open = false;
+                true
+            }
+            _ => false,
+        }
+    }
+}
+
+/// The plain spelling of a token: its value when the raw source text
+/// is exactly the value (an unquoted token), or when no raw text was
+/// recorded (synthetic tokens keep the legacy value-based reading). A
+/// quoted/escaped token's raw text carries the quote characters, so it
+/// never reports a plain spelling for the option words.
+fn token_plain_text(token: &Token) -> Option<&str> {
+    if token.raw.is_empty() || token.raw == token.value {
+        Some(token.value.as_str())
+    } else {
+        None
+    }
+}
+
+/// Scan the tokens following the `time` token at `start`.
+pub(crate) fn scan_time_prefix_tokens(tokens: &[Token], start: usize) -> TimePrefixScan {
+    let mut window = TimePrefixWindow::new();
+    let mut next = start + 1;
+    while let Some(token) = tokens.get(next) {
+        match token_plain_text(token) {
+            Some(text) if window.step(text) => next += 1,
+            _ => break,
+        }
+    }
+    TimePrefixScan {
+        next,
+        posix_format: window.posix_format,
+        inverted: window.inverted,
+    }
+}
+
+/// Scan the words following the `time` head word of a parsed command.
+/// `metadata`, when aligned with `words`, supplies each word's raw
+/// source spelling for the same raw gate the token scanner applies;
+/// without it (synthesized words) the reading is value-based.
+pub(crate) fn scan_time_prefix_words(
+    words: &[String],
+    metadata: Option<&[WordMetadata]>,
+) -> TimePrefixScan {
+    let aligned = metadata.filter(|entries| entries.len() == words.len());
+    let mut window = TimePrefixWindow::new();
+    let mut next = 1;
+    while let Some(word) = words.get(next) {
+        let plain = match aligned {
+            Some(entries) => {
+                let raw = &entries[next].raw;
+                if raw.is_empty() || raw == word {
+                    Some(word.as_str())
+                } else {
+                    None
+                }
+            }
+            None => Some(word.as_str()),
+        };
+        match plain {
+            Some(text) if window.step(text) => next += 1,
+            _ => break,
+        }
+    }
+    TimePrefixScan {
+        next,
+        posix_format: window.posix_format,
+        inverted: window.inverted,
+    }
+}
+
+struct TimePipelinePrefix {
+    keyword: String,
+    keyword_metadata: Box<WordMetadata>,
+    prefix_words: Vec<String>,
+    prefix_word_metadata: Vec<WordMetadata>,
+    posix_format: bool,
+    inverted: bool,
+}
+
+fn time_prefix_from_pipeline(pipeline: &mut PipelineCommand) -> Option<TimePipelinePrefix> {
+    let first = pipeline.stages.first_mut()?;
+    time_prefix_from_command(first)
+}
+
+fn fold_time_simple_commands(commands: Vec<CommandNode>) -> Vec<CommandNode> {
+    commands
+        .into_iter()
+        .map(|mut command| {
+            if !command_is_time_simple_candidate(&command) {
+                return command;
+            }
+            // parse.y: the timespec production is recursive
+            // (pipeline_command: timespec pipeline_command), so strip
+            // EVERY recorded timespec head — innermost head first —
+            // and wrap one TimeCommand frame per head (rubash#1805:
+            // `time time x=1` applies the assignment, as GNU does).
+            let mut prefixes = Vec::new();
+            while let Some(prefix) = time_prefix_from_command(&mut command) {
+                prefixes.push(prefix);
+            }
+            if prefixes.is_empty() {
+                return command;
+            }
+
+            let line = command.line;
+            let inverted = command.inverted;
+            let and_or = command.and_or.take();
+            let background = command.background;
+            let logical_line = command.logical_line;
+            command.inverted = false;
+            command.background = false;
+            // The command's own modifiers belong to the whole unit,
+            // so they land on the OUTERMOST frame (built last); each
+            // frame's TimeCommand.inverted is its own head's window
+            // verdict.
+            let mut timed = command;
+            for prefix in prefixes.into_iter().rev() {
+                let mut frame = CommandNode::new();
+                frame.line = line;
+                frame.logical_line = logical_line;
+                frame.time_command = Some(TimeCommand {
+                    keyword: prefix.keyword,
+                    keyword_metadata: prefix.keyword_metadata,
+                    prefix_words: prefix.prefix_words,
+                    prefix_word_metadata: prefix.prefix_word_metadata,
+                    command: Box::new(timed),
+                    posix_format: prefix.posix_format,
+                    inverted: prefix.inverted,
+                    keyword_was_plain_word: false,
+                });
+                timed = frame;
+            }
+            timed.inverted = inverted;
+            timed.and_or = and_or;
+            timed.background = background;
+            timed
+        })
+        .collect()
+}
+
+fn command_is_time_simple_candidate(command: &CommandNode) -> bool {
+    command.pipeline_command.is_none()
+        && command.and_or_list.is_none()
+        && command.time_command.is_none()
+        && command.background_command.is_none()
+        && command.inverted_command.is_none()
+        && command.for_command.is_none()
+        && command.arithmetic_command.is_none()
+        && command.if_command.is_none()
+        && command.loop_command.is_none()
+        && command.conditional_command.is_none()
+        && command.subshell_command.is_none()
+        && command.case_command.is_none()
+        && command.select_command.is_none()
+        && command.function_command.is_none()
+        && command.brace_group.is_none()
+        && command.coproc_command.is_none()
+}
+
+fn time_prefix_from_command(command: &mut CommandNode) -> Option<TimePipelinePrefix> {
+    if command.words.first().map(String::as_str) != Some("time") {
+        return None;
+    }
+    // rubash#1355: GNU parse.y — an assignment word is a prefix of a
+    // SIMPLE command only; after `A=1` the word `time` is the command
+    // NAME (an ordinary word, PATH-resolved, 127 when absent), never
+    // the TIME reserved word. A node carrying assignment prefixes
+    // therefore never folds into a TimeCommand.
+    if !command.assignments.is_empty()
+        || !command.compound_assignments.is_empty()
+        || !command.array_element_assignments.is_empty()
+    {
+        return None;
+    }
+    // rubash#1520: only a head the parser recorded as the reserved word
+    // folds into a TimeCommand. A plain-word head — quoted in the
+    // source, or reclassified by the lexer under a POSIX pass because a
+    // dash word followed (parse.y:3286 time_command_acceptable) — is an
+    // ordinary command name and stays a simple command. Nodes whose
+    // word_kinds were not recorded keep the legacy fold.
+    if command.time_head_plain_word
+        || (command.word_kinds.len() == command.words.len()
+            && command.word_kinds.first() != Some(&TokenKind::Keyword))
+    {
+        return None;
+    }
+
+    // rubash#1548: the operand window follows parse.y
+    // special_case_tokens (see scan_time_prefix_words): `-p`/`--` are
+    // time's own operands only in the opening window and only when
+    // spelled plainly — a quoted '-p' is the timed command's name.
+    let aligned_metadata = if command.word_metadata.len() == command.words.len() {
+        Some(command.word_metadata.as_slice())
+    } else {
+        None
+    };
+    let scan = scan_time_prefix_words(&command.words, aligned_metadata);
+    let index = scan.next;
+    let posix_format = scan.posix_format;
+    let inverted = scan.inverted;
+    let mut prefix_words = Vec::new();
+    let mut prefix_word_metadata = Vec::new();
+    for word_index in 1..index {
+        let word = &command.words[word_index];
+        let raw =
+            aligned_metadata.map_or(word.as_str(), |entries| entries[word_index].raw.as_str());
+        prefix_word_metadata.push(build_word_metadata(prefix_words.len(), word, raw));
+        prefix_words.push(word.clone());
+    }
+    let keyword = command.words[0].clone();
+    let keyword_metadata = Box::new(build_word_metadata(0, &keyword, &keyword));
+    let old_word_len = command.words.len();
+    command.words = command.words[index..].to_vec();
+    if command.word_kinds.len() == old_word_len {
+        command.word_kinds = command.word_kinds[index..].to_vec();
+    }
+    // rubash#2237: word_metadata entries address words by
+    // WordMetadata::word_index and the vector is sparse (a
+    // process-substitution word carries no entry), so drop the folded
+    // prefix's entries and shift the survivors' keys — slicing by
+    // count covers only the dense case and left stale keys on the
+    // inner command, so `time [ -r <( ) ]` materialized nothing.
+    command.word_metadata = command
+        .word_metadata
+        .iter()
+        .filter_map(|metadata| {
+            metadata.word_index.checked_sub(index).map(|shifted| {
+                let mut metadata = metadata.clone();
+                metadata.word_index = shifted;
+                metadata
+            })
+        })
+        .collect();
+    // rubash#3053: the strip above is the moment the timed command's
+    // first element becomes the node's first element — apply the
+    // candidate its intake recorded (the end line of the first word,
+    // assignment word, or redirection target after the prefix
+    // chain). A candidate exists only when every recorded element
+    // was the chain plus that one element, so applying it here —
+    // inside the fold, under the fold's own admission — leaves
+    // every non-folded node byte-identical.
+    if command.time_prefix_first_element_end_line != 0 {
+        command.first_word_end_line = Some(command.time_prefix_first_element_end_line);
+        command.time_prefix_first_element_end_line = 0;
+    }
+    reclassify_leading_assignment_words(command);
+    Some(TimePipelinePrefix {
+        keyword,
+        keyword_metadata,
+        prefix_words,
+        prefix_word_metadata,
+        posix_format,
+        inverted,
+    })
+}
+
+/// rubash#1661: restore the parse-time assignment classification of a
+/// timed command's inner words.
+///
+/// GNU's grammar gives the timed pipeline its own simple command
+/// (parse.y: the `time` production's pipeline is built from command ->
+/// simple_command, whose leading assignment words the grammar itself
+/// separates; execute_cmd.c execute_simple_command then applies them
+/// as prefix assignments, or as the command's whole effect when no
+/// command name follows). rubash instead lexes `time` as the simple
+/// command's name word and folds the keyword away afterwards (here,
+/// and again in the executor's `time` name-dispatch). While `time`
+/// occupied the name slot, handle_token saw a non-empty word list, so
+/// every following assignment token stayed a plain command word; the
+/// stripped inner command then dispatched its first assignment word
+/// (`x=1`) as a command name — 127 "command not found" — and never
+/// applied the assignment at all.
+///
+/// Re-run exactly the classification handle_token applies to a
+/// standalone simple command: leading assignment words become prefix
+/// assignments, in source order, with the same name/value/raw-RHS
+/// split token_actions performs (extglob LHS patterns recorded the
+/// same way).
+///
+/// The classification gate has TWO recorded forms, because the first
+/// restore attempt (kind-only) never fired: the lexer DOES flag the
+/// token TokenKind::Assignment (word.rs finish_word_token, via
+/// general.c:480 assignment() on the raw token), but handle_token's
+/// Assignment arm — seeing a non-empty word list, with `time` in the
+/// name slot — records the word with word_kinds = TokenKind::Word
+/// (token_actions.rs, the pushed-word arm): in command-word position
+/// the word IS a command word, so the kind record is rewritten and
+/// the Assignment flag is lost before any fold runs (on every entry
+/// path, file and -c alike). What survives is the word's recorded
+/// RAW spelling in word_metadata, so the gate re-applies the lexer's
+/// own predicate — crate::lexer::is_assignment, the same function
+/// finish_word_token classified with — to that raw text. This is
+/// parse-time classification on the source spelling, quotes intact:
+/// a quoted 'x=1' and a quote-carrying a''=b fail the predicate exactly as
+/// the lexer judged them and stay command names. It is NOT the
+/// execution-time re-derivation from de-quoted, expanded values the
+/// executor's assignment_dispatch forbids — by the time a value is
+/// expanded the quote evidence is gone; here it is not.
+///
+/// One word family deliberately stays in the word list:
+/// - Array-element words (`name[sub]=v`): push_command_word records
+///   them through a separate channel and the executor consumes the
+///   leading run itself (strip_invalid_env_assignment_prefixes /
+///   execute_assignment_or_comment_command) — `time arr[0]=x` already
+///   behaves per GNU untouched.
+///
+/// Compound values (values carrying COMPOUND_ASSIGNMENT_MARKER) DO
+/// restore: the marker word embeds the whole verbatim compound text,
+/// which is everything the Assignment-token path records for the
+/// atomic form (an assignment whose value carries the marker — the
+/// executor's assignment application interprets it as a compound
+/// assignment). The split form additionally recorded a
+/// compound_assignments entry through token spans; such nodes are
+/// refused by the gate above before this loop runs, as before.
+pub(crate) fn reclassify_leading_assignment_words(command: &mut CommandNode) {
+    if !command.assignments.is_empty()
+        || !command.compound_assignments.is_empty()
+        || !command.array_element_assignments.is_empty()
+    {
+        return;
+    }
+    // Legacy nodes without a recorded token kind per word carry no
+    // classification to restore.
+    if command.word_kinds.len() != command.words.len() {
+        return;
+    }
+    let metadata_aligned = command.word_metadata.len() == command.words.len();
+    let mut consumed = 0usize;
+    while consumed < command.words.len()
+        && (command.word_kinds[consumed] == TokenKind::Assignment
+            || (metadata_aligned
+                && crate::lexer::is_assignment(&command.word_metadata[consumed].raw)))
+    {
+        let (name, value, raw_rhs) = {
+            let word = &command.words[consumed];
+            let Some((name, value)) = word.split_once('=') else {
+                break;
+            };
+            if name.contains('[') {
+                break;
+            }
+            let raw_rhs = if metadata_aligned {
+                command.word_metadata[consumed]
+                    .raw
+                    .split_once('=')
+                    .map_or_else(|| value.to_string(), |(_, raw)| raw.to_string())
+            } else {
+                value.to_string()
+            };
+            (name.to_string(), value.to_string(), raw_rhs)
+        };
+        let pattern_name = name.strip_suffix('+').unwrap_or(&name).to_string();
+        // rubash#3224: this reclassification has no token at hand; the
+        // word's patterns were already recorded (and gate-stamped) by
+        // the word intake under their word index, so inherit the stamp
+        // from that record — unstamped words stay unstamped.
+        let read_gate_on = command
+            .extglob_patterns
+            .iter()
+            .filter(|pattern| pattern.word_index == Some(consumed))
+            .any(|pattern| pattern.read_gate_on);
+        record_extglob_patterns_for_assignment(
+            command,
+            &pattern_name,
+            &value,
+            &raw_rhs,
+            None,
+            read_gate_on,
+        );
+        command.insert_assignment_with_raw(name, value, raw_rhs);
+        consumed += 1;
+    }
+    if consumed > 0 {
+        command.words.drain(..consumed);
+        command.word_kinds.drain(..consumed);
+        if metadata_aligned {
+            command.word_metadata.drain(..consumed);
+        }
+    }
+}
+
+fn try_parse_compound_start(tokens: &[Token], i: usize, state: &mut ParseState) -> Option<usize> {
+    let token = &tokens[i];
+
+    if token.kind == TokenKind::Keyword
+        && token.value == "time"
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((time_cmd, next_i)) = parse_time_prefixed_compound_command(tokens, i) {
+            push_compound_command(state, time_cmd);
+            return Some(next_i);
+        }
+    }
+
+    if token.kind == TokenKind::Keyword
+        && token.value == "if"
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((if_cmd, next_i)) = parse_if_command(tokens, i, state) {
+            push_compound_command(state, if_cmd);
+            return Some(next_i);
+        }
+
+        // GNU parse.y if-compound grammar: the offender is the first
+        // keyword the grammar rejects at its position (`if then; fi` →
+        // `then`, `if x; fi` → `fi`, `if x; then y; done` → `done`); absent
+        // that, input ended inside the command ("from `if' command on
+        // line N").
+        let mut command = match if_frame_offender(&tokens[i + 1..]) {
+            Some(rel) => mismatched_closer_node(
+                tokens,
+                i + 1 + rel,
+                state.diagnostic_text.as_deref(),
+                state.source_line_offset,
+            ),
+            None => unclosed_keyword_eof_node(
+                tokens,
+                i,
+                "if",
+                state.diagnostic_text.as_deref(),
+                state.source_line_offset,
+            ),
+        };
+        // GNU parse.y: line_number at EOF is PHYSICAL — every newline
+        // read advances it, including comment-only and blank trailing
+        // lines that produce no tokens (rubash#135: `if {[catch {` plus
+        // comment lines reports the last physical line + 1, not the last
+        // token line + 1). GNU reads a final newline even when the input
+        // lacks one (an EOL-less `if {` still reports line 2), so the
+        // EOF line is newline-count + 1 unconditionally.
+        if let Some(text) = state.diagnostic_text.as_deref() {
+            let physical_eof = state.source_line_offset
+                + text.chars().filter(|c| *c == '\n').count()
+                + usize::from(!text.ends_with('\n'))
+                + 1;
+            for (name, value) in command.assignments.iter_mut() {
+                if name == "__RUBASH_PARSE_ERROR_EOF_COMPOUND__" {
+                    let mut fields = value.split(PARSE_ERROR_FIELD_SEP);
+                    let compound = fields.next().unwrap_or("if").to_string();
+                    let open_line = fields.next().unwrap_or("1").to_string();
+                    *value = format!(
+                        "{compound}{PARSE_ERROR_FIELD_SEP}{open_line}{PARSE_ERROR_FIELD_SEP}{physical_eof}"
+                    );
+                }
+            }
+        }
+        // Keep the original token stream available to the executor.  Bash
+        // expands aliases while parsing, so an alias such as `f=fi` can
+        // close this compound command even though the first parse did not
+        // see `fi`. The parse-error node still makes genuinely malformed
+        // input fail after the alias reparse misses.
+        command.insert_assignment(
+            "__RUBASH_PARSE_SOURCE_SPAN__".to_string(),
+            tokens[i..]
+                .iter()
+                .map(|token| token.raw.as_str())
+                .collect::<Vec<_>>()
+                .join(" "),
+        );
+        state.current_cmd = command;
+        state
+            .ast
+            .commands
+            .push(std::mem::take(&mut state.current_cmd));
+        return Some(tokens.len());
+    }
+
+    if token.kind == TokenKind::Keyword
+        && matches!(token.value.as_str(), "while" | "until")
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((loop_cmd, next_i, unclaimed)) = parse_loop_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            // rubash#2682: heredoc bodies the loop handed back pair with
+            // commands read before the loop on the same logical line —
+            // claim them against the live state before the loop node is
+            // installed (GNU gathered them at the header line's newline,
+            // parse.y:3648-3654).
+            for body in unclaimed {
+                assign_heredoc_body(
+                    &mut state.current_cmd,
+                    &mut state.ast,
+                    &mut state.heredoc_caller_frames,
+                    &mut state.heredoc_frames,
+                    body.body,
+                    body.gather_line,
+                    body.end_line,
+                );
+            }
+            push_compound_command(state, loop_cmd);
+            return Some(next_i);
+        }
+
+        let opener: &'static str = if token.value == "while" {
+            "while"
+        } else {
+            "until"
+        };
+        // No `done` anywhere in the remaining stream: input either ended
+        // inside the loop ("from `while' command on line N") or a foreign
+        // closer aborted it ("near unexpected token `X'").
+        if !tokens[i + 1..]
+            .iter()
+            .any(|t| t.kind == TokenKind::Keyword && t.value == "done")
+        {
+            let command = match first_mismatched_closer(&tokens[i + 1..], opener) {
+                None => unclosed_keyword_eof_node(
+                    tokens,
+                    i,
+                    opener,
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                ),
+                Some(rel) => mismatched_closer_node(
+                    tokens,
+                    i + 1 + rel,
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                ),
+            };
+            state.current_cmd = command;
+            state
+                .ast
+                .commands
+                .push(std::mem::take(&mut state.current_cmd));
+            return Some(tokens.len());
+        }
+
+        // GNU parse.y:867-877 (`WHILE compound_list DO compound_list
+        // DONE` / UNTIL twin): the condition list runs until `do` at a
+        // command position, so the syntax-error token is the first token
+        // that cannot continue it — a closer owned by another frame, or
+        // the `done` that arrived where `do` was expected (rubash#2087:
+        // `while true\ndone` blames `done`, never the missing `do`;
+        // `while true; fi; done` blames `fi`). A stream whose only
+        // `done`s sit inside nested constructs never left the condition
+        // — that is the EOF shape, not a near-token error.
+        let offender = loop_head_offender(tokens, i, opener);
+        let command = match offender {
+            Some(bad_index) => mismatched_closer_node(
+                tokens,
+                bad_index,
+                state.diagnostic_text.as_deref(),
+                state.source_line_offset,
+            ),
+            None => unclosed_keyword_eof_node(
+                tokens,
+                i,
+                opener,
+                state.diagnostic_text.as_deref(),
+                state.source_line_offset,
+            ),
+        };
+        state.current_cmd = command;
+        state
+            .ast
+            .commands
+            .push(std::mem::take(&mut state.current_cmd));
+        if offender.is_none() {
+            return Some(tokens.len());
+        }
+        let mut next_i = i + 1;
+        while tokens.get(next_i).is_some() {
+            let is_done = is_keyword(tokens, next_i, "done");
+            next_i += 1;
+            if is_done {
+                break;
+            }
+        }
+        return Some(next_i);
+    }
+
+    if token.kind == TokenKind::Keyword
+        && token.value == "for"
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((for_cmd, next_i)) = parse_for_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            push_compound_command(state, for_cmd);
+            return Some(next_i);
+        }
+        let arithmetic_for_marker = tokens.get(i + 1).is_some_and(|next| next.value == "((")
+            || (tokens.get(i + 1).is_some_and(|next| next.value == "(")
+                && tokens.get(i + 2).is_some_and(|next| next.value == "("));
+        if arithmetic_for_marker {
+            let open = i + if tokens.get(i + 1).is_some_and(|t| t.value == "((") {
+                2
+            } else {
+                3
+            };
+            let mut semicolons = 0u32;
+            let mut depth = 0i32;
+            let mut close = open;
+            let mut close_span = 0usize;
+            let mut header_closed = false;
+            let mut single_paren_close = false;
+            for j in open..tokens.len() {
+                let t = &tokens[j];
+                let op = |v: &str| super::is_unquoted_operator(t, v);
+                let next_op = |v: &str| {
+                    tokens
+                        .get(j + 1)
+                        .is_some_and(|n| super::is_unquoted_operator(n, v))
+                };
+                if op("((") || (op("(") && next_op("(")) {
+                    depth += 1;
+                } else if op("))") || (op(")") && next_op(")")) {
+                    if depth == 0 {
+                        close = j;
+                        close_span = if op("))") { 1 } else { 2 };
+                        header_closed = true;
+                        break;
+                    }
+                    depth -= 1;
+                } else if op("(") {
+                    // A lone `(' inside the header is one nesting
+                    // level of the same matched pair (parse_matched_pair
+                    // counts single parens, parse.y:3877).
+                    depth += 1;
+                } else if op(")") {
+                    if depth == 0 {
+                        // The matched pair closed at a SINGLE `)':
+                        // parse_arith_cmd (parse.y:4957) then reads one
+                        // more character, finds it is not the second
+                        // `)', and parse_dparen's FOR arm fails the read
+                        // (parse.y:4900s) — a read-time syntax error,
+                        // reported by report_syntax_error's
+                        // error_token_from_text fallback (parse.y:6772),
+                        // whatever the header's sections or the
+                        // following text look like (rubash#2781: the
+                        // shape used to route to the EOF form when the
+                        // sections were incomplete — `for ((i=0;)' —
+                        // and to header validation when they were
+                        // complete; GNU gives the short from-text form
+                        // for both). The EOF form below is only for a
+                        // header no `)' ever reaches.
+                        close = j;
+                        close_span = 1;
+                        single_paren_close = true;
+                        break;
+                    }
+                    depth -= 1;
+                } else if depth == 0 && t.kind == TokenKind::Semicolon {
+                    // Section count for the closed-header validation
+                    // below (its `;' unexpected vs arithmetic-required
+                    // choice); the single-paren arm above does not
+                    // consult it — GNU's from-text report is the same
+                    // whatever the sections look like.
+                    semicolons += 1;
+                }
+            }
+            if single_paren_close {
+                // report_syntax_error's from-text fallback (parse.y:6874-
+                // 6885): the stored message is the backticked token
+                // itself, which the shared renderer prints after
+                // `syntax error near ' — NOT the `unexpected token'
+                // wording, which belongs to the grammar-token branch
+                // (parse.y:6856). The same-line pop mirrors
+                // push_unexpected_token_error_named: yyerror aborts the
+                // whole input line.
+                let near = arith_for_single_paren_near(state, tokens, close);
+                let error_line = tokens[close].position;
+                while state
+                    .ast
+                    .commands
+                    .last()
+                    .is_some_and(|command| command.line == Some(error_line))
+                {
+                    state.ast.commands.pop();
+                }
+                state.current_cmd.line = Some(error_line);
+                state
+                    .current_cmd
+                    .insert_assignment("__RUBASH_PARSE_ERROR__".to_string(), format!("`{near}'"));
+                state.current_cmd.insert_assignment(
+                    "__RUBASH_PARSE_SOURCE__".to_string(),
+                    offending_line_text(
+                        tokens,
+                        close,
+                        state.diagnostic_text.as_deref(),
+                        state.source_line_offset,
+                    ),
+                );
+                state
+                    .ast
+                    .commands
+                    .push(std::mem::take(&mut state.current_cmd));
+                return Some(tokens.len());
+            }
+            if !header_closed {
+                // GNU parse_matched_pair (parse.y:3877) scans the header
+                // for its closing `)' and hits end of input: the report
+                // is "unexpected EOF while looking for matching `)'" at
+                // the line the scan started (parse.y:3908-3915,
+                // start_lineno) — never the header-validation error the
+                // old fallback manufactured here (rubash#2749 face a:
+                // `for ((i=0;i<3;i++' named the header's own text).
+                let opener_start = if open >= 2 && tokens[open - 2].value == "(" {
+                    open - 2
+                } else {
+                    open - 1
+                };
+                state.current_cmd.line = tokens.get(opener_start).map(|token| token.position);
+                state.current_cmd.logical_line =
+                    tokens.get(opener_start).map(|token| token.logical_line);
+                state.current_cmd.insert_assignment(
+                    "__RUBASH_PARSE_ERROR__".to_string(),
+                    "unexpected EOF while looking for matching `)'".to_string(),
+                );
+                state
+                    .ast
+                    .commands
+                    .push(std::mem::take(&mut state.current_cmd));
+                return Some(tokens.len());
+            }
+            // The header closed. GNU validates the header text only when
+            // the for_command REDUCES (at DONE), so what follows the
+            // header decides the report (rubash#2749 faces b/c): a token
+            // that cannot continue the construct is the yyerror token
+            // even when the header itself is malformed (`for
+            // ((i=0;i<3)) extra' names `extra'); end of input before
+            // DONE is the compound-EOF report; only a construct that
+            // completes through DONE earns the header-validation error
+            // below.
+            let after_header = close + close_span;
+            match arith_for_continuation(tokens, after_header) {
+                ArithForContinuation::Offender(index) => {
+                    push_unexpected_token_error(state, tokens, index);
+                    return Some(index + 1);
+                }
+                ArithForContinuation::EndOfInput => {
+                    let command = unclosed_keyword_eof_node(
+                        tokens,
+                        i,
+                        "for",
+                        state.diagnostic_text.as_deref(),
+                        state.source_line_offset,
+                    );
+                    state.current_cmd = command;
+                    state
+                        .ast
+                        .commands
+                        .push(std::mem::take(&mut state.current_cmd));
+                    return Some(tokens.len());
+                }
+                ArithForContinuation::Complete => {}
+            }
+            // GNU parse.y report_syntax_error echoes the offending text
+            // VERBATIM (`((i=0; i<3))', arith_for_command error path) — no
+            // space normalization, no trim (issue #522). Rebuild from the
+            // token stream: each token's leading_ws is the whitespace that
+            // preceded it in the source, so leading_ws+raw walks reproduce
+            // the original characters between `((` and `))` byte-for-byte.
+            let opener_start = if open >= 2 && tokens[open - 2].value == "(" {
+                open - 2
+            } else {
+                open - 1
+            };
+            let mut source = String::new();
+            if let Some(opener) = tokens.get(opener_start) {
+                source.push_str(&opener.raw);
+            }
+            // The closer may be one `))` token or two `)` tokens
+            // (make_cmd.c accepts both spellings); the verbatim echo ends at
+            // the second paren either way.
+            let source_end = if tokens.get(close).is_some_and(|t| t.value == ")") {
+                close + 1
+            } else {
+                close
+            };
+            for token in tokens.iter().take(source_end + 1).skip(opener_start + 1) {
+                source.push_str(&token.leading_ws);
+                source.push_str(&token.raw);
+            }
+            let error_msg = if semicolons < 2 {
+                "syntax error: arithmetic expression required".to_string()
+            } else {
+                "syntax error: `;' unexpected".to_string()
+            };
+            // GNU error.c:300-316 parser_error cites the offending line; the
+            // error node's line drives the `line N:` prefix at the report
+            // site (report_command_parse_error).
+            state.current_cmd.line = Some(tokens[i].position);
+            state.current_cmd.logical_line = Some(tokens[i].logical_line);
+            state
+                .current_cmd
+                .insert_assignment("__RUBASH_PARSE_ERROR__".to_string(), error_msg);
+            state
+                .current_cmd
+                .insert_assignment("__RUBASH_PARSE_SOURCE__".to_string(), source);
+            state
+                .ast
+                .commands
+                .push(std::mem::take(&mut state.current_cmd));
+            return Some(i + 1);
+        }
+
+        // GNU parse.y: the `for' grammar has no single-paren production
+        // after the reserved word (the arith-for opener needs `((' and is
+        // handled above), so `for()' and `for (' shift-fail at the `(':
+        // `syntax error near unexpected token `('` + source echo at that
+        // token (issue #516) — never an unterminated-`for' EOF report.
+        if tokens
+            .get(i + 1)
+            .is_some_and(|next| next.kind == TokenKind::Keyword && next.value == "(")
+        {
+            push_unexpected_token_error(state, tokens, i + 1);
+            return Some(i + 2);
+        }
+
+        // No `done` in the remaining stream: input either ended inside
+        // the `for` body ("from `for' command on line N") or a foreign
+        // closer aborted it ("near unexpected token `X'").
+        if !tokens[i + 1..]
+            .iter()
+            .any(|t| t.kind == TokenKind::Keyword && t.value == "done")
+        {
+            let command = match first_mismatched_closer(&tokens[i + 1..], "for") {
+                None => unclosed_keyword_eof_node(
+                    tokens,
+                    i,
+                    "for",
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                ),
+                Some(rel) => mismatched_closer_node(
+                    tokens,
+                    i + 1 + rel,
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                ),
+            };
+            state.current_cmd = command;
+            state
+                .ast
+                .commands
+                .push(std::mem::take(&mut state.current_cmd));
+            return Some(tokens.len());
+        }
+    }
+
+    if ((token.kind == TokenKind::Word)
+        // rubash#462: GNU's lexer folds an unquoted expansion into the
+        // function-name WORD, and a word that IS only an expansion still
+        // lexes as its own token kind (`$x' -> Variable, `$( ... )' ->
+        // CommandSubst). function_def: WORD '(' ')' admits those, with the
+        // expanded name rejected at definition time (valid_function_word).
+        || (token.kind == TokenKind::Variable)
+        || (token.kind == TokenKind::CommandSubst)
+        || (token.kind == TokenKind::Keyword && token.value == "function")
+        || (token.kind == TokenKind::RedirectIn && matches!(token.value.as_str(), "<" | ">"))
+        || (token.kind == TokenKind::Keyword && token.value == "!"))
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((function_cmd, next_i)) = parse_function_command_with_diagnostic(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            push_compound_command(state, function_cmd);
+            return Some(next_i);
+        }
+    }
+
+    if token.kind == TokenKind::Keyword
+        && token.value == "case"
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((case_cmd, next_i)) = parse_case_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            push_compound_command(state, case_cmd);
+            return Some(next_i);
+        }
+        // GNU parse.y case grammar: when `esac` never arrives the failure
+        // splits by WHERE the token stream stopped. Input ending inside a
+        // clause list (`case x in a) q;;`, or the empty list `case x in`)
+        // reports "unexpected end of file from `case' command on line N".
+        // A word that starts a pattern but is followed by something that
+        // is not `)` reports that token (`case x in a b` -> `b`), or
+        // `newline` when the line ends inside the pattern (`case x in a`).
+        let rest = &tokens[i + 1..];
+        let esac_absent = !rest
+            .iter()
+            .any(|t| t.kind == TokenKind::Keyword && t.value == "esac");
+        if esac_absent {
+            let tail_start = rest
+                .iter()
+                .position(|t| t.value == "in")
+                .map(|p| p + 1)
+                .unwrap_or(0);
+            // A line break after `in` is legal case syntax (GNU's
+            // linebreak production) — the lexer emits it as a Semicolon,
+            // which is not a clause-position error.
+            let semicolons = rest[tail_start..]
+                .iter()
+                .take_while(|t| t.kind == TokenKind::Semicolon)
+                .count();
+            let tail_start = tail_start + semicolons;
+            let tail = &rest[tail_start..];
+            let clause_prefix = tail
+                .iter()
+                .any(|t| matches!(t.value.as_str(), ")" | ";;" | ";&" | ";;&"));
+            let command = match tail.first() {
+                // `case x in` + EOF: the empty clause list is legal - only
+                // `esac` is missing.
+                None => Some(unclosed_keyword_eof_node(
+                    tokens,
+                    i,
+                    "case",
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                )),
+                Some(first) if first.kind == TokenKind::Word && !clause_prefix => {
+                    match tail.get(1) {
+                        // `case x in a` EOF - GNU blames the virtual
+                        // `newline` token where `)` was expected.
+                        None => {
+                            let mut command = CommandNode::new();
+                            command.line = Some(first.position);
+                            command.insert_assignment(
+                                "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+                                format!("newline{PARSE_ERROR_FIELD_SEP}{}", first.position),
+                            );
+                            command.insert_assignment(
+                                "__RUBASH_PARSE_SOURCE__".to_string(),
+                                offending_line_text(
+                                    tokens,
+                                    i + 1 + tail_start,
+                                    state.diagnostic_text.as_deref(),
+                                    state.source_line_offset,
+                                ),
+                            );
+                            Some(command)
+                        }
+                        // `a |` continues the pattern - still inside the
+                        // clause list at EOF.
+                        Some(next) if next.value == "|" => Some(unclosed_keyword_eof_node(
+                            tokens,
+                            i,
+                            "case",
+                            state.diagnostic_text.as_deref(),
+                            state.source_line_offset,
+                        )),
+                        Some(_) => Some(mismatched_closer_node(
+                            tokens,
+                            i + 1 + tail_start + 1,
+                            state.diagnostic_text.as_deref(),
+                            state.source_line_offset,
+                        )),
+                    }
+                }
+                Some(_) if clause_prefix => Some(match first_mismatched_closer(rest, "case") {
+                    None => unclosed_keyword_eof_node(
+                        tokens,
+                        i,
+                        "case",
+                        state.diagnostic_text.as_deref(),
+                        state.source_line_offset,
+                    ),
+                    Some(rel) => mismatched_closer_node(
+                        tokens,
+                        i + 1 + rel,
+                        state.diagnostic_text.as_deref(),
+                        state.source_line_offset,
+                    ),
+                }),
+                _ => None,
+            };
+            if let Some(command) = command {
+                state.current_cmd = command;
+                state
+                    .ast
+                    .commands
+                    .push(std::mem::take(&mut state.current_cmd));
+                return Some(tokens.len());
+            }
+        }
+        return Some(push_parse_error_until(
+            state,
+            tokens,
+            i,
+            "esac",
+            case_parse_error_message(tokens, i),
+        ));
+    }
+
+    if token.kind == TokenKind::Keyword
+        && token.value == "select"
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((select_cmd, next_i)) = parse_select_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            push_compound_command(state, select_cmd);
+            return Some(next_i);
+        }
+
+        // Same unclosed-at-EOF rule as `for`: no `done` remaining means
+        // input ended inside the `select` body or a foreign closer ended it.
+        if !tokens[i + 1..]
+            .iter()
+            .any(|t| t.kind == TokenKind::Keyword && t.value == "done")
+        {
+            let command = match first_mismatched_closer(&tokens[i + 1..], "select") {
+                None => unclosed_keyword_eof_node(
+                    tokens,
+                    i,
+                    "select",
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                ),
+                Some(rel) => mismatched_closer_node(
+                    tokens,
+                    i + 1 + rel,
+                    state.diagnostic_text.as_deref(),
+                    state.source_line_offset,
+                ),
+            };
+            state.current_cmd = command;
+            state
+                .ast
+                .commands
+                .push(std::mem::take(&mut state.current_cmd));
+            return Some(tokens.len());
+        }
+    }
+
+    if token.kind == TokenKind::Keyword
+        && token.value == "coproc"
+        && command_allows_compound_start(&state.current_cmd)
+    {
+        if let Some((coproc_cmd, next_i)) = parse_coproc_command(tokens, i) {
+            push_compound_command(state, coproc_cmd);
+            return Some(next_i);
+        }
+    }
+
+    if command_allows_compound_start(&state.current_cmd)
+        && ((token.kind == TokenKind::Keyword && token.value == "(")
+            || token.value.starts_with("(("))
+    {
+        if let Some((arith_cmd, next_i)) = parse_arithmetic_command(tokens, i) {
+            push_compound_command(state, arith_cmd);
+            return Some(next_i);
+        }
+    }
+
+    if command_allows_compound_start(&state.current_cmd) && token.value == "[[" {
+        if let Some((conditional_cmd, next_i)) = parse_conditional_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            push_compound_command(state, conditional_cmd);
+            return Some(next_i);
+        }
+        // Unclosed `[[`: GNU's cond parser (parse.y cond_term/cond_error)
+        // consumes the remaining tokens and reports the first offending
+        // token or the `unexpected EOF while looking for `]]'' diagnostic.
+        let (command, next_i) = conditional_eof_error_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        );
+        state.current_cmd = command;
+        state
+            .ast
+            .commands
+            .push(std::mem::take(&mut state.current_cmd));
+        return Some(next_i);
+    }
+
+    if command_allows_compound_start(&state.current_cmd)
+        && token.kind == TokenKind::Keyword
+        && token.value == "("
+    {
+        if let Some((subshell_cmd, next_i)) = parse_subshell_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            push_compound_command(state, subshell_cmd);
+            return Some(next_i);
+        }
+        return Some(push_unclosed_paren_error(state, tokens, i));
+    }
+
+    if command_accepts_embedded_arithmetic_command(&state.current_cmd)
+        && ((token.kind == TokenKind::Keyword && token.value == "(")
+            || token.value.starts_with("(("))
+    {
+        if let Some((arith_cmd, next_i)) = parse_arithmetic_command(tokens, i) {
+            note_command_line(&mut state.current_cmd, token);
+            state.current_cmd.words.extend(arith_cmd.words);
+            state.current_cmd.and_or = arith_cmd.and_or;
+            state
+                .ast
+                .commands
+                .push(std::mem::take(&mut state.current_cmd));
+            return Some(next_i);
+        }
+    }
+
+    if command_allows_compound_start(&state.current_cmd) {
+        if let Some((brace_cmd, next_i)) = parse_brace_group_command(
+            tokens,
+            i,
+            state.diagnostic_text.as_ref(),
+            state.source_line_offset,
+        ) {
+            push_compound_command(state, brace_cmd);
+            return Some(next_i);
+        }
+        if token.value == "{"
+            || (token.value.starts_with('{')
+                && token.value.contains(';')
+                && !token.value.contains('}'))
+        {
+            return Some(push_parse_error_until(
+                state,
+                tokens,
+                i,
+                "}",
+                "unexpected end of file",
+            ));
+        }
+    }
+
+    None
+}
+
+fn command_allows_compound_start(command: &CommandNode) -> bool {
+    command_is_empty(command) || command_is_pending_inversion(command)
+}
+
+/// GNU parse.y: an assignment word is a prefix of a SIMPLE command only
+/// (simple_command: cmd_prefix_element* — assignments and redirects —
+/// followed by cmd_name/cmd_word), never of a compound command. After
+/// `A=1`, a following `if`/`for`/`case`/`while`/`((`/`{`/`(` is an
+/// ordinary word or a syntax error, never a compound start: GNU 5.3.20
+/// rejects `A=1 (echo)`, `A=1 if …`, `A=1 for …`, `A=1 case …`,
+/// `A=1 ((…))` and `A=1 { …; }` alike (rc 2, rubash#1354). The extglob
+/// spelling `x=plugin::@(disable|enable|load)` is not a counterexample:
+/// with extglob on, `@(…)` is part of the assignment WORD at lex time
+/// (one token, no subshell); with extglob off it errors like the rest.
+/// (An earlier reading of audit #452 generalized that lexer fact into
+/// a parser admission — that is what this fixes.)
+
+/// Compound-body re-parse that keeps the enclosing parse's diagnostic
+/// context. Body token slices carry absolute script-line positions, and
+/// GNU yyerror echoes the whole physical input line (parse.y:6813-6824
+/// print_offending_line over shell_input_line), so a syntax error raised
+/// inside a compound body must slice the ORIGINAL source text, not join
+/// the body fragment (`{ :; ; }' is echoed in full, not as `: ; ;').
+/// Callers without source context (alias/coproc reparses) pass None/0
+/// and keep the fragment-join fallback.
+pub(super) fn parse_body_with_diagnostics(
+    tokens: &[Token],
+    source: Option<&Rc<str>>,
+    source_line_offset: usize,
+) -> Vec<CommandNode> {
+    parse_with_options(
+        tokens,
+        ParseLoopOptions {
+            // Rc clone: refcount bump, not a text copy (see
+            // ParseLoopOptions::diagnostic_text docs).
+            diagnostic_text: source.cloned(),
+            source_line_offset,
+            ..ParseLoopOptions::default()
+        },
+    )
+    .commands
+}
+
+/// True when the separator at `index` (a `;'/`&' token with
+/// `line_break == false`) has no completed command immediately before it:
+/// list start (`index == 0`, also the start of any compound-body token
+/// slice), or the previous token is itself a separator/connector, or a
+/// redirection operator still expecting its word operand. Mirrors the
+/// GNU list grammar (parse.y:1264-1290), where a separator is only
+/// grammatical directly after a completed `list1`.
+fn separator_lacks_preceding_command(tokens: &[Token], index: usize, floor: usize) -> bool {
+    if index <= floor {
+        return true;
+    }
+    match index.checked_sub(1) {
+        None => true,
+        Some(prev) => matches!(
+            tokens[prev].kind,
+            TokenKind::Semicolon
+                | TokenKind::Background
+                | TokenKind::Pipe
+                | TokenKind::PipeErr
+                | TokenKind::And
+                | TokenKind::Or
+                | TokenKind::RedirectIn
+                | TokenKind::RedirectOut
+                | TokenKind::RedirectErr
+                | TokenKind::RedirectErrAppend
+                | TokenKind::Append
+                | TokenKind::HereDoc
+                | TokenKind::HereString
+        ),
+    }
+}
+
+/// GNU parse.y reports `syntax error near unexpected token `X'' on the
+/// offending token and echoes only that input line (yyerror + the current
+/// input line), aborting the rest of the input.
+pub(super) fn push_unexpected_token_error(state: &mut ParseState, tokens: &[Token], i: usize) {
+    push_unexpected_token_error_named(state, tokens, i, None);
+}
+
+/// Core of `push_unexpected_token_error`, reading the diagnostic context
+/// from `ParseState` (`diagnostic_text`/`source_line_offset` are copied
+/// from `ParseLoopOptions` at state init and never mutated), with an
+/// explicit display name for the offending token — GNU names the virtual
+/// `newline' token where its grammar expected `)' right after a shifted
+/// function-head `(' (parse.y:1054 `WORD '(' ')'; `echo (' at end of input
+/// reports `newline', not `(').
+pub(super) fn push_unexpected_token_error_named(
+    state: &mut ParseState,
+    tokens: &[Token],
+    i: usize,
+    name_override: Option<&str>,
+) {
+    // GNU reports the yacc token: the lexer keeps a whole `{ ...; }' brace
+    // group in one token, but the grammar token is just `{'.
+    let token_text = name_override.unwrap_or_else(|| {
+        if tokens[i].value.starts_with('{') {
+            "{"
+        } else if tokens[i].kind == TokenKind::Keyword
+            && tokens[i].value.starts_with("((")
+            && tokens[i].value.ends_with("))")
+        {
+            // GNU's ARITH_CMD token string IS the arithmetic body:
+            // parse_arith_cmd (parse.y:4963) stores the matched-pair
+            // content as the token's word, so the error names the body —
+            // `((1)) (( 2 + 3 ))' names ` 2 + 3 ', `((1)) ((x=1))' names
+            // `x=1' — never the scanner's whole folded `((…))' text
+            // (rubash#3204). The parse_dparen fold branch is the only
+            // producer of a Keyword token with this value shape.
+            &tokens[i].value[2..tokens[i].value.len() - 2]
+        } else {
+            tokens[i].value.as_str()
+        }
+    });
+    state.current_cmd.insert_assignment(
+        "__RUBASH_PARSE_ERROR__".to_string(),
+        format!("unexpected token `{token_text}'"),
+    );
+    // GNU's parser aborts the input line at the error, so commands already
+    // parsed from the same line never run (`{ a; } { b; }' does not run
+    // `a').  Drop the trailing commands parsed from the offending line.
+    // rubash#1481: "the same line" is the same PARSE UNIT — a compound
+    // command spanning several physical lines is one command of the unit
+    // whose terminator the offending token failed to be, so a command
+    // whose span ENDS on the error line (a multi-line `if' whose `fi'
+    // shares the line with the trailing word) is discarded too, even
+    // though its start line is earlier. GNU parse.y shifts the whole
+    // compound before yyerror, so its body never executes.
+    let error_line = tokens[i].position;
+    while state.ast.commands.last().is_some_and(|command| {
+        command.line == Some(error_line)
+            || command.line.is_some_and(|start| {
+                start < error_line && command.end_line.is_some_and(|end| end >= error_line)
+            })
+            // rubash#385: the failed command may SPAN lines — the pipeline
+            // whose first stage opened on an earlier line (`case x in\n
+            // esac|y) ...`: yyerror discards the whole in-progress command,
+            // so a stage still awaiting its continuation (pipe/and_or
+            // linkage flag set) belongs to the discarded command whatever
+            // its line. The flag is only ever set on a NON-final stage
+            // (the stage after `|'/`&&' has not arrived), so completed
+            // pipelines and and-or lists are never popped by this arm.
+            || command.pipe.is_some()
+            || command.and_or.is_some()
+    }) {
+        state.ast.commands.pop();
+    }
+    // GNU echoes only the offending input line, from its first
+    // token, not the rest of the file (parse.y:6813-6824
+    // print_offending_line prints the current `shell_input_line').
+    // With the original text available (script driver, eval reparse)
+    // echo that line verbatim; token reconstruction cannot recover the
+    // original spacing. Token positions are absolute script LINES and
+    // `source_line_offset` is the line shift the caller applied
+    // (script_driver.rs `token.position += line_offset`), so the line
+    // within the text is `position - offset`, 1-based — never a byte
+    // offset (rubash#204: the old byte-offset read reported line N's
+    // number with line 1's text).
+    let verbatim = state.diagnostic_text.as_ref().and_then(|text| {
+        let line_in_text = tokens[i].position.checked_sub(state.source_line_offset)?;
+        source_line_by_number(text, line_in_text)
+    });
+    let source = verbatim.unwrap_or_else(|| {
+        let line_number = tokens[i].position;
+        let mut line_start = i;
+        while line_start > state.section_token_start
+            && tokens[line_start - 1].position == line_number
+        {
+            line_start -= 1;
+        }
+        let mut joined = tokens[line_start].raw.clone();
+        for token in tokens[line_start + 1..].iter() {
+            if token.position != line_number {
+                break;
+            }
+            joined.push(' ');
+            joined.push_str(&token.raw);
+        }
+        joined
+    });
+    state
+        .current_cmd
+        .insert_assignment("__RUBASH_PARSE_SOURCE__".to_string(), source);
+    state.current_cmd.line = Some(error_line);
+    state
+        .ast
+        .commands
+        .push(std::mem::take(&mut state.current_cmd));
+}
+
+fn push_parse_error_until(
+    state: &mut ParseState,
+    tokens: &[Token],
+    start: usize,
+    terminator: &str,
+    message: &str,
+) -> usize {
+    state
+        .current_cmd
+        .insert_assignment("__RUBASH_PARSE_ERROR__".to_string(), message.to_string());
+    let mut next_i = start + 1;
+    while tokens.get(next_i).is_some() {
+        let is_terminator = is_keyword(tokens, next_i, terminator);
+        next_i += 1;
+        if is_terminator {
+            break;
+        }
+    }
+    state
+        .ast
+        .commands
+        .push(std::mem::take(&mut state.current_cmd));
+    next_i
+}
+
+/// GNU parse.y:6890-6901: reaching EOF inside an unclosed `(` compound
+/// command reports "unexpected end of file from `(' command on line N" from
+/// the compoundcmd_lineno stack, not the generic near-EOF message.  Heredocs
+/// still pending inside the failed region already issued their
+/// "delimited by end-of-file" warnings during the parse (make_cmd.c:626), so
+/// the details are carried to the executor on the error node.
+fn push_unclosed_paren_error(state: &mut ParseState, tokens: &[Token], start: usize) -> usize {
+    // A `(` entered with a live prefix — assignments (`x=1 (a`) or a
+    // redirection — is NOT a command-position compound: GNU's yacc shift
+    // fails at the `(' itself when the group never closes (`syntax error
+    // near unexpected token `('` + source echo, q-series probes, issue
+    // #516), while a command-position `(` keeps the EOF report below.
+    if !command_is_empty(&state.current_cmd) {
+        push_unexpected_token_error(state, tokens, start);
+        return start + 1;
+    }
+    let paren_line = tokens.get(start).map(|token| token.position).unwrap_or(1);
+    // rubash#413: GNU's parser dies at the FIRST offending event inside the
+    // unclosed `(`, not at EOF. Two such events precede the pure-EOF report
+    // of parse.y:6892-6901 ("unexpected end of file from `(' command"):
+    //
+    //   (a) a word whose compound-assignment list never closed —
+    //       parse_compound_assignment's clean-EOF arm (parse.y:7140-7152)
+    //       reports `unexpected EOF while looking for matching `)'' at the
+    //       list's open line and exits 1 (`(x=([)]`, `(( x=([))] ))`);
+    //   (b) a command word directly after a nested subshell's closing `)` —
+    //       the grammar's compound_list requires a separator between
+    //       commands (parse.y:1097 subshell → parse.y:1252-1279
+    //       compound_list), so the parser rejects the word:
+    //       "syntax error near unexpected token `X'" plus the offending
+    //       line echo (`((X=([a]))]`, `( (echo hi) x`).
+    //
+    // Scan left to right; the earliest event owns the diagnostic.
+    // rubash#3405: a dangling redirection inside the unclosed `(` is the
+    // same token-level verdict the keyword-EOF arms already report via
+    // `dangling_redirect_in_region` (parse.y:532 `redirection: '>' WORD`
+    // + parse.y:6833 report_syntax_error): the operator's successor —
+    // `newline' at end of input, a closer, ... — is the first offending
+    // token, and it preempts the pure-EOF report exactly when it precedes
+    // every #413 event below. The scan returns whichever event its token
+    // position reaches first, so the dangling candidate is consulted at
+    // the top of each iteration by absolute token index.
+    let (dangling_at, mut dangling_node) = match dangling_redirect_in_region(
+        &tokens[start + 1..],
+        state.diagnostic_text.as_deref(),
+        state.source_line_offset,
+    ) {
+        Some((offending, node)) => (Some(start + 1 + offending), Some(node)),
+        None => (None, None),
+    };
+    {
+        let mut depth = 1usize;
+        let mut scan = start + 1;
+        while scan < tokens.len() {
+            if dangling_at == Some(scan) {
+                state.ast.commands.push(
+                    dangling_node
+                        .take()
+                        .expect("dangling node travels with its index"),
+                );
+                return tokens.len();
+            }
+            let token = &tokens[scan];
+            if token.compound_unclosed {
+                state.current_cmd.line = Some(token.position);
+                state.current_cmd.insert_assignment(
+                    "__RUBASH_PARSE_ERROR_EOF_PAREN__".to_string(),
+                    "unexpected EOF while looking for matching `)'".to_string(),
+                );
+                state
+                    .ast
+                    .commands
+                    .push(std::mem::take(&mut state.current_cmd));
+                return tokens.len();
+            }
+            if token.kind == TokenKind::Keyword && token.value == "(" {
+                depth += 1;
+            } else if token.kind == TokenKind::Keyword && token.value == ")" {
+                if depth > 1 {
+                    depth -= 1;
+                    if let Some(next) = tokens.get(scan + 1) {
+                        if matches!(next.kind, TokenKind::Word | TokenKind::Assignment) {
+                            let mut command = CommandNode::new();
+                            command.line = Some(next.position);
+                            command.insert_assignment(
+                                "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+                                format!(
+                                    "{raw}{PARSE_ERROR_FIELD_SEP}{}",
+                                    next.position,
+                                    raw = next.raw
+                                ),
+                            );
+                            command.insert_assignment(
+                                "__RUBASH_PARSE_SOURCE__".to_string(),
+                                offending_line_text(
+                                    tokens,
+                                    scan + 1,
+                                    state.diagnostic_text.as_deref(),
+                                    state.source_line_offset,
+                                ),
+                            );
+                            state.current_cmd = command;
+                            state
+                                .ast
+                                .commands
+                                .push(std::mem::take(&mut state.current_cmd));
+                            return tokens.len();
+                        }
+                    }
+                } else {
+                    depth = depth.saturating_sub(1);
+                }
+            }
+            scan += 1;
+        }
+    }
+    // Pair each HereDocBody token with its `<<` delimiter word in emission
+    // order: each `<<` pushes the following word and each body pops it.
+    // The queue is fed from the whole token stream so a `<<` seen before
+    // the `(` (e.g. `cat <<EOF && (`) still pairs its deferred body.
+    let mut pending_delimiters: std::collections::VecDeque<String> =
+        std::collections::VecDeque::new();
+    let mut warned: Vec<(String, usize, usize)> = Vec::new();
+    let mut last_line = paren_line;
+    for (index, token) in tokens.iter().enumerate() {
+        if token.kind == TokenKind::HereDoc {
+            let delimiter = tokens
+                .get(index + 1)
+                .map(|next| next.value.clone())
+                .unwrap_or_default();
+            pending_delimiters.push_back(delimiter);
+            continue;
+        }
+        if token.kind != TokenKind::HereDocBody {
+            if index > start {
+                last_line = last_line.max(token.position);
+            }
+            continue;
+        }
+        let delimiter = pending_delimiters.pop_front().unwrap_or_default();
+        if index <= start {
+            continue;
+        }
+        let gather_line = token.position;
+        let body = token
+            .value
+            .strip_prefix(crate::lexer::QUOTED_HEREDOC_MARKER)
+            .unwrap_or(token.value.as_str());
+        let unterminated = body.starts_with(DATA_DOLLAR);
+        let body = body
+            .strip_prefix(DATA_DOLLAR)
+            .or_else(|| body.strip_prefix(crate::executor::markers::HEREDOC_WARNED_BODY_PREFIX))
+            .unwrap_or(body);
+        let body_lines = body.lines().count();
+        // A terminated or delimiter-prefixed `)` body also consumed the
+        // delimiter line; an unterminated body ended at EOF on its last
+        // body line. Prefer the lexer's physical end line: an unquoted
+        // delimiter joins `\<newline>` pairs while collecting, so stored
+        // newlines can undercount the physical lines consumed (rubash#1028).
+        let consumed_last = token
+            .heredoc_end_line
+            .unwrap_or_else(|| gather_line + body_lines + usize::from(!unterminated));
+        last_line = last_line.max(consumed_last);
+        if unterminated {
+            warned.push((delimiter, gather_line, consumed_last));
+        }
+    }
+    let eof_line = last_line + 1;
+    state.current_cmd.line = state.current_cmd.line.or(Some(paren_line));
+    state.current_cmd.insert_assignment(
+        "__RUBASH_PARSE_ERROR__".to_string(),
+        "unexpected end of file".to_string(),
+    );
+    state.current_cmd.insert_assignment(
+        "__RUBASH_PARSE_ERROR_EOF_SUBSHELL__".to_string(),
+        format!("{paren_line}{PARSE_ERROR_FIELD_SEP}{eof_line}"),
+    );
+    for (warn_index, (delimiter, at_line, warn_line)) in warned.iter().enumerate() {
+        state.current_cmd.insert_assignment(
+            format!("__RUBASH_PARSE_ERROR_HD_WARN_{warn_index}__"),
+            format!(
+                "{delimiter}{PARSE_ERROR_FIELD_SEP}{at_line}{PARSE_ERROR_FIELD_SEP}{warn_line}"
+            ),
+        );
+    }
+    state
+        .ast
+        .commands
+        .push(std::mem::take(&mut state.current_cmd));
+    tokens.len()
+}
+
+/// The innermost still-open compound in `region`, modelling GNU's
+/// compoundcmd_lineno stack (parse.y:344-358): `(` `{` if for while until
+/// select case push; their closers pop only a matching top, so a `)` inside
+/// an unclosed `case` pattern list never pops a subshell.
+fn innermost_unclosed_compound(region: &[Token]) -> Option<(String, usize)> {
+    let mut stack: Vec<(&'static str, usize)> = Vec::new();
+    for token in region {
+        // rubash#1721: structural keywords only (see
+        // Token::structural_keyword) — an argument-position keyword
+        // word (`command -vkb if' in a case clause) is not an open
+        // compound and must not be named as the unclosed one.
+        if !token.structural_keyword() {
+            continue;
+        }
+        let value = token.value.trim_end();
+        // A collapsed `{...}` keyword token is a complete group; a `{`-token
+        // that does not end with `}` swallowed the rest of the input and is
+        // by construction the innermost opener.
+        if value.starts_with('{') {
+            if !value.ends_with('}') {
+                stack.push(("{", token.position));
+            }
+            continue;
+        }
+        match value {
+            "(" => stack.push(("(", token.position)),
+            ")" => {
+                if matches!(stack.last(), Some(("(", _))) {
+                    stack.pop();
+                }
+            }
+            "if" => stack.push(("if", token.position)),
+            "fi" => {
+                if matches!(stack.last(), Some(("if", _))) {
+                    stack.pop();
+                }
+            }
+            "for" | "while" | "until" | "select" => {
+                stack.push((
+                    match value {
+                        "for" => "for",
+                        "while" => "while",
+                        "until" => "until",
+                        _ => "select",
+                    },
+                    token.position,
+                ));
+            }
+            "done" => {
+                if matches!(
+                    stack.last(),
+                    Some(("for" | "while" | "until" | "select", _))
+                ) {
+                    stack.pop();
+                }
+            }
+            "case" => stack.push(("case", token.position)),
+            "esac" => {
+                if matches!(stack.last(), Some(("case", _))) {
+                    stack.pop();
+                }
+            }
+            _ => {}
+        }
+    }
+    stack
+        .last()
+        .map(|(name, line)| ((*name).to_string(), *line))
+}
+
+/// GNU parse.y:6890-6901 EOF reporting for an unclosed `{` group (plain
+/// `{ cmd` or a function body `name() { cmd`): "unexpected end of file from
+/// `X' command on line N" names the INNERMOST unclosed compound, and pending
+/// heredocs already warned during the parse (make_cmd.c:626).
+///
+/// `brace_index` points at either a bare `{` keyword token (body is the
+/// following tokens) or a collapsed `{ ...` keyword token the lexer emitted
+/// when an unclosed group swallowed the rest of the input — the swallowed
+/// text is retokenized so inner compounds and heredocs are still seen.
+pub(super) fn unclosed_brace_eof_node(
+    tokens: &[Token],
+    brace_index: usize,
+    diagnostic_text: Option<&str>,
+    line_offset: usize,
+) -> CommandNode {
+    let brace = &tokens[brace_index];
+    let brace_line = brace.position;
+    let inner_text = brace
+        .value
+        .strip_prefix('{')
+        .filter(|_| brace.value.trim_end() != "{")
+        .unwrap_or("");
+
+    // Region tokens for the innermost-compound and heredoc scans, mapped to
+    // absolute script lines.
+    let region_owned;
+    let region: &[Token] = if inner_text.is_empty() {
+        &tokens[brace_index + 1..]
+    } else {
+        // rubash#1544: folded-body re-lex under the fold pass's posix
+        // mode, locked (see Token::posix_gate).
+        let mut inner = crate::lexer::tokenize_locked_body(inner_text, brace.posix_gate);
+        for token in inner.iter_mut() {
+            token.position = token.position + brace_line - 1;
+            // rubash#3028: the end line shifts in lockstep (it defaults
+            // to the fragment-relative position, like `position`).
+            token.end_position = token.end_position + brace_line - 1;
+        }
+        region_owned = inner;
+        &region_owned
+    };
+
+    // GNU reports the error at line_number once EOF is reached: one past the
+    // last physical line, plus one more when a trailing unquoted backslash
+    // forced a continuation read that hit EOF (eval `X() { (a)>\'`).
+    let last_line = if inner_text.is_empty() {
+        region
+            .iter()
+            .map(|token| token.position)
+            .max()
+            .unwrap_or(brace_line)
+    } else {
+        brace_line + inner_text.matches('\n').count()
+    };
+    let continuation = if inner_text.is_empty() {
+        false
+    } else {
+        inner_text.trim_end_matches([' ', '\t']).ends_with('\\')
+    };
+    // niubash#482: a stray closer inside the never-closed `{` is GNU's
+    // `syntax error near unexpected token `X'' at that token — the same
+    // foreign-closer verdict the if/loop EOF arms already report — not
+    // the end-of-file diagnostic (`{ echo c\n)` names `)', not the EOF).
+    // rubash#3405: a dangling redirection in the region is the same
+    // class of token-level verdict; the earlier offending token wins.
+    if let Some(node) = preempting_token_error_node(region, "{", diagnostic_text, line_offset) {
+        return node;
+    }
+    compound_eof_error_node("{", brace_line, region, last_line, continuation)
+}
+
+/// `name() (` with no closing `)`: the same EOF reporting names the `(`.
+pub(super) fn unclosed_paren_eof_node(
+    tokens: &[Token],
+    paren_index: usize,
+    diagnostic_text: Option<&str>,
+    line_offset: usize,
+) -> CommandNode {
+    let paren_line = tokens[paren_index].position;
+    let region = &tokens[paren_index + 1..];
+    // Same foreign-closer family as the `{` arm: `fi`/`}`/`;;` reaching an
+    // open `(` is a mismatched-closer diagnostic, not EOF (niubash#482);
+    // a dangling redirection preempts by the same token order
+    // (rubash#3405).
+    if let Some(node) = preempting_token_error_node(region, "(", diagnostic_text, line_offset) {
+        return node;
+    }
+    let last_line = region
+        .iter()
+        .map(|token| token.position)
+        .max()
+        .unwrap_or(paren_line);
+    compound_eof_error_node("(", paren_line, region, last_line, false)
+}
+
+fn eof_line_extra(last_line: usize, continuation: bool) -> usize {
+    last_line + 1 + usize::from(continuation)
+}
+
+/// Whether the token region ends with a continuation pending at end of
+/// input: the last token's raw ends in an odd run of backslashes (the
+/// lexer surfaces a dangling `\` as its own token or as a word tail).
+/// Heredoc bodies are literal text — a trailing backslash there is
+/// data the reader never treats as a continuation.
+fn region_ends_with_continuation(region: &[Token]) -> bool {
+    let Some(last) = region.last() else {
+        return false;
+    };
+    if last.kind == TokenKind::HereDocBody {
+        return false;
+    }
+    let trailing = last
+        .raw
+        .bytes()
+        .rev()
+        .take_while(|byte| *byte == b'\\')
+        .count();
+    trailing % 2 == 1
+}
+
+/// GNU error_token_from_text (parse.y:6772-6808): the token
+/// report_syntax_error names when the grammar has no token text for
+/// the failure — computed from the input line and the reader index
+/// (the first character not yet consumed). The walk first steps back
+/// over whitespace, fixes token_end one past the last character the
+/// reader consumed, then walks back over non-break characters
+/// (` \n\t;|&` are the breaks), landing ON the break character that
+/// stops it — which therefore stays in the report when it is not
+/// whitespace (`;' reports as `;', `;i<3)' keeps its leading `;').
+/// One further character past the consumed run — the character AT
+/// the reader index — joins the report through token_end when the
+/// backward walk reaches it (the `(#' of `[[ a == (#i)bar]]').
+pub(super) fn error_token_from_text(line: &str, index: usize) -> String {
+    let t = line.as_bytes();
+    let at = |i: usize| -> u8 { t.get(i).copied().unwrap_or(0) };
+    let mut i = index.min(t.len());
+    if i > 0 && at(i) == 0 {
+        i -= 1;
+    }
+    while i > 0 && matches!(at(i), b' ' | b'\t' | b'\n') {
+        i -= 1;
+    }
+    let token_end = if i > 0 { i + 1 } else { 0 };
+    while i > 0 && !matches!(at(i), b' ' | b'\n' | b'\t' | b';' | b'|' | b'&') {
+        i -= 1;
+    }
+    while i != token_end && matches!(at(i), b' ' | b'\t' | b'\n') {
+        i += 1;
+    }
+    if token_end > 0 {
+        String::from_utf8_lossy(&t[i..token_end]).into_owned()
+    } else if i == 0 && token_end == 0 {
+        // The one-character-token arm (parse.y:6800-6805).
+        String::from_utf8_lossy(&t[..1.min(t.len())]).into_owned()
+    } else {
+        String::new()
+    }
+}
+
+/// The near token GNU names for an arithmetic-`for' header whose
+/// matched pair closed at a single `)' (rubash#2781): the reader
+/// stopped just after that paren, so error_token_from_text runs over
+/// the paren's line with the index one past it. The line text is the
+/// parse's original input line when the caller carried it
+/// (diagnostic_text), else the token reconstruction of that line —
+/// the offset walk (leading_ws + raw per token of the line) must
+/// agree with the chosen text at the paren byte; on disagreement the
+/// reconstruction wins, since it is the text the offset was measured
+/// against.
+fn arith_for_single_paren_near(state: &ParseState, tokens: &[Token], close: usize) -> String {
+    let line_number = tokens[close].position;
+    let mut rebuilt = String::new();
+    let mut reader_index = 0usize;
+    for (j, token) in tokens.iter().enumerate() {
+        if token.position != line_number {
+            continue;
+        }
+        rebuilt.push_str(&token.leading_ws);
+        if j == close {
+            reader_index = rebuilt.len() + token.raw.len();
+        }
+        rebuilt.push_str(&token.raw);
+        if j == close {
+            break;
+        }
+    }
+    let line_text = state
+        .diagnostic_text
+        .as_ref()
+        .and_then(|text| {
+            line_number
+                .checked_sub(state.source_line_offset)
+                .and_then(|in_text| source_line_by_number(text, in_text))
+        })
+        .filter(|verbatim| {
+            // The verbatim line must contain the close paren at the
+            // measured index for the pair (text, index) to be sound.
+            verbatim.as_bytes().get(reader_index.wrapping_sub(1)) == Some(&b')')
+        })
+        .unwrap_or(rebuilt);
+    error_token_from_text(&line_text, reader_index)
+}
+
+/// How the input continues after a closed arithmetic-`for` header —
+/// the discrimination GNU's reduction order imposes on the arith-for
+/// fallback's report (rubash#2749): the header text is validated only
+/// when the for_command reduces at DONE, so a token that cannot
+/// continue the construct is the yyerror token, and end of input
+/// before DONE is the compound-EOF report.
+enum ArithForContinuation {
+    /// Index of the token that cannot continue the construct.
+    Offender(usize),
+    /// The stream ended before the construct completed.
+    EndOfInput,
+    /// `do ... done` completes the construct.
+    Complete,
+}
+
+fn arith_for_continuation(tokens: &[Token], mut index: usize) -> ArithForContinuation {
+    // Between the header and DO the grammar admits a newline_list
+    // (separators only); the first real token must be DO itself (which
+    // may also directly abut the header: `for ((...)) do ...').
+    while tokens
+        .get(index)
+        .is_some_and(|token| token.kind == TokenKind::Semicolon)
+    {
+        index += 1;
+    }
+    let Some(_) = tokens.get(index) else {
+        return ArithForContinuation::EndOfInput;
+    };
+    if !(command_boundary_keyword_allowed(tokens, index) && is_keyword(tokens, index, "do")) {
+        return ArithForContinuation::Offender(index);
+    }
+    // DO found: the construct completes only at its matching DONE —
+    // nested compounds ride the boundary stack, exactly as the loop
+    // body scanner walks them.
+    let mut stack = Vec::new();
+    let mut scan = index + 1;
+    while scan < tokens.len() {
+        if stack.is_empty()
+            && command_boundary_keyword_allowed(tokens, scan)
+            && is_keyword(tokens, scan, "done")
+        {
+            return ArithForContinuation::Complete;
+        }
+        super::update_compound_boundary_stack(tokens, scan, &mut stack);
+        scan += 1;
+    }
+    ArithForContinuation::EndOfInput
+}
+
+/// `if`/`while`/`until`/`for`/`select`/`case` opener whose closer never
+/// arrives before end of input. GNU parse.y (yyerror EOF path,
+/// parse.y:6890-6901) reports the innermost open compound via
+/// compoundcmd_lineno: "unexpected end of file from `X' command on line N".
+/// Callers have already confirmed the matching closer is absent from the
+/// remaining stream, so `opener` is the outermost unclosed frame and
+/// `region` still exposes any deeper nested opener.
+pub(super) fn unclosed_keyword_eof_node(
+    tokens: &[Token],
+    opener_index: usize,
+    opener: &'static str,
+    diagnostic_text: Option<&str>,
+    line_offset: usize,
+) -> CommandNode {
+    let opener_line = tokens[opener_index].position;
+    let region = &tokens[opener_index + 1..];
+    // rubash#3405: a dangling redirection inside the compound is a
+    // token-level verdict GNU's parse dies on before input ends
+    // (`while true; do >' names `newline', not the `while' EOF form).
+    // Foreign closers keep their existing caller-side routing
+    // (first_mismatched_closer / the head-offender scans), so only the
+    // dangling scan is consulted here.
+    if let Some((_, node)) = dangling_redirect_in_region(region, diagnostic_text, line_offset) {
+        return node;
+    }
+    let last_line = region
+        .iter()
+        .map(|token| token.position)
+        .max()
+        .unwrap_or(opener_line);
+    compound_eof_error_node(opener, opener_line, region, last_line, false)
+}
+
+/// GNU parse.y reserved-word grammar: while a keyword compound frame is
+/// open, the only legal closer is that frame's own terminator. A
+/// `fi`/`done`/`esac`/`}`/`)`/`;;`-family token arriving for a different
+/// frame is a `syntax error near unexpected token 'X'` at that token, not
+/// an EOF diagnostic (`if x; then y; done` reports `done`, not a missing
+/// `fi`). Seeded with the opener being reported; returns the first
+/// mismatched closer in `region`, or None when input truly ran out.
+pub(super) fn first_mismatched_closer(region: &[Token], opener: &'static str) -> Option<usize> {
+    let mut stack: Vec<&'static str> = vec![opener];
+    for (region_index, token) in region.iter().enumerate() {
+        // rubash#1721: structural keywords only (see
+        // Token::structural_keyword) — argument-position keyword words
+        // neither open frames nor count as mismatched closers.
+        if !token.structural_keyword() {
+            continue;
+        }
+        let value = token.value.trim_end();
+        // Same collapsed-`{` rule as innermost_unclosed_compound.
+        if value.starts_with('{') {
+            if !value.ends_with('}') {
+                stack.push("{");
+            }
+            continue;
+        }
+        match value {
+            "(" => stack.push("("),
+            "if" => stack.push("if"),
+            "for" | "while" | "until" | "select" => stack.push(match value {
+                "for" => "for",
+                "while" => "while",
+                "until" => "until",
+                _ => "select",
+            }),
+            "case" => stack.push("case"),
+            ")" => {
+                if matches!(stack.last(), Some(&"(")) {
+                    stack.pop();
+                } else if !token.case_pattern_close {
+                    // niubash#482: `)`s that closed a case pattern list
+                    // carry the lexer's case_pattern_close stamp (the
+                    // PST_CASEPAT region); an unflagged `)` is a stray
+                    // close — also inside a `case` BODY (GNU 5.3: `case x
+                    // in\na) e\n)` reports `unexpected token `)'').
+                    return Some(region_index);
+                }
+            }
+            "fi" => {
+                if matches!(stack.last(), Some(&"if")) {
+                    stack.pop();
+                } else {
+                    return Some(region_index);
+                }
+            }
+            "done" => {
+                if matches!(stack.last(), Some(&"for" | &"while" | &"until" | &"select")) {
+                    stack.pop();
+                } else {
+                    return Some(region_index);
+                }
+            }
+            "esac" => {
+                if matches!(stack.last(), Some(&"case")) {
+                    stack.pop();
+                } else {
+                    return Some(region_index);
+                }
+            }
+            "}" => {
+                if matches!(stack.last(), Some(&"{")) {
+                    stack.pop();
+                } else {
+                    return Some(region_index);
+                }
+            }
+            ";;" | ";&" | ";;&" => {
+                if !matches!(stack.last(), Some(&"case")) {
+                    return Some(region_index);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// The syntax-error token of a failed `while`/`until` head (rubash#2087):
+/// the first token that cannot continue the condition compound_list —
+/// either a closer owned by another frame (first_mismatched_closer,
+/// seeded with the loop frame) or the first `done` at compound depth
+/// zero, which arrived where the grammar requires `do` (the walk mirrors
+/// find_loop_do's boundary-stack scan, so `done`s closing nested
+/// constructs in the condition are skipped). None ⇒ every `done` in the
+/// stream is nested and the input truly ended inside the condition.
+fn loop_head_offender(
+    tokens: &[Token],
+    opener_index: usize,
+    opener: &'static str,
+) -> Option<usize> {
+    // GNU parse.y:867-877: the condition is a compound_list, and a list
+    // cannot BEGIN with a reserved word that starts no command — in
+    // `while do done' the loop's own DO cannot double as the
+    // condition's first token, and yyerror names `do' itself, where
+    // the scans below would name the later `done' (rubash#2742).
+    // Leading separators and `!'/`time' prefixes leave the head
+    // position open; the first real token decides. (A first token
+    // that starts a command — a word, a nested opener, a redirect —
+    // ends the check: later `done's are the scans' business.)
+    let mut head = opener_index + 1;
+    loop {
+        match tokens.get(head) {
+            None => break,
+            Some(token) if token.kind == TokenKind::Semicolon => head += 1,
+            Some(token)
+                if token.kind == TokenKind::Keyword
+                    && matches!(token.value.as_str(), "!" | "time") =>
+            {
+                head += 1;
+            }
+            Some(token) => {
+                if token.kind == TokenKind::Keyword
+                    && command_boundary_keyword_allowed(tokens, head)
+                    && matches!(
+                        token.value.trim_end(),
+                        "do" | "done" | "then" | "elif" | "else" | "fi" | "esac" | "}"
+                    )
+                {
+                    return Some(head);
+                }
+                break;
+            }
+        }
+    }
+    let mismatched = first_mismatched_closer(&tokens[opener_index + 1..], opener)
+        .map(|rel| opener_index + 1 + rel);
+    let mut stack = Vec::new();
+    let mut depth_zero_done = None;
+    let mut index = opener_index + 1;
+    while index < tokens.len() {
+        if stack.is_empty()
+            && command_boundary_keyword_allowed(tokens, index)
+            && is_keyword(tokens, index, "done")
+        {
+            depth_zero_done = Some(index);
+            break;
+        }
+        update_compound_boundary_stack(tokens, index, &mut stack);
+        index += 1;
+    }
+    match (mismatched, depth_zero_done) {
+        (Some(a), Some(b)) => Some(a.min(b)),
+        (Some(a), None) => Some(a),
+        (None, done) => done,
+    }
+}
+
+/// GNU parse.y if-compound grammar over a *failed* `if` parse: tracks the
+/// `if` frame's position and returns the region index of the first token
+/// the grammar rejects at its position (`if then; fi` → `then`, `if x; fi`
+/// → `fi`, `if x; then y; done` → `done`), skipping nested compound
+/// interiors. Phase keywords (`then`/`elif`/`else`/`fi`) are legal only
+/// after a `;` separator and only when the current phase already saw a
+/// command — that is exactly the condition GNU's list/term rules require.
+/// None ⇒ input truly ended inside the `if` (an EOF error).
+fn if_frame_offender(region: &[Token]) -> Option<usize> {
+    let mut stack: Vec<&'static str> = vec!["if"];
+    let mut in_condition = true;
+    let mut expect_command = true;
+    let mut phase_has_command = false;
+    for (index, token) in region.iter().enumerate() {
+        if stack.len() == 1 && token.kind == TokenKind::Semicolon {
+            if expect_command {
+                // GNU parse.y linebreak: newline_list folds any run of
+                // newlines between list terms — `if x\n\ny\nthen` is
+                // legal, and a comment-only line contributes nothing but
+                // its newline. Only a literal `;` with no command before
+                // it offends (`if ;`, `if x; ;`).
+                if token.line_break {
+                    continue;
+                }
+                return Some(index); // `if ;`, `if x; ;`, `if x; then ;`
+            }
+            expect_command = true;
+            continue;
+        }
+        if token.kind == TokenKind::Keyword {
+            let value = token.value.trim_end();
+            // A compound command opener at our own frame level starts a
+            // command (`if (x); fi` ⇒ the missing `then` blames `fi`).
+            if stack.len() == 1 {
+                match value {
+                    "(" | "if" | "for" | "while" | "until" | "select" | "case" => {
+                        expect_command = false;
+                        phase_has_command = true;
+                    }
+                    _ => {}
+                }
+            }
+            if value.starts_with('{') {
+                if stack.len() == 1 {
+                    expect_command = false;
+                    phase_has_command = true;
+                }
+                if !value.ends_with('}') {
+                    stack.push("{");
+                }
+                continue;
+            }
+            match value {
+                "(" => {
+                    stack.push("(");
+                    continue;
+                }
+                "if" => {
+                    stack.push("if");
+                    continue;
+                }
+                "for" | "while" | "until" | "select" => {
+                    stack.push(match value {
+                        "for" => "for",
+                        "while" => "while",
+                        "until" => "until",
+                        _ => "select",
+                    });
+                    continue;
+                }
+                "case" => {
+                    stack.push("case");
+                    continue;
+                }
+                _ => {}
+            }
+            // Closers pop matching nested frames; our own `fi` is itself
+            // the offender because this parse already failed (GNU rejects
+            // the `fi` that arrives while the structure is still broken).
+            match value {
+                ")" => {
+                    if matches!(stack.last(), Some(&"(")) {
+                        stack.pop();
+                    } else if !matches!(stack.last(), Some(&"case")) {
+                        return Some(index);
+                    }
+                    continue;
+                }
+                "fi" => {
+                    if stack.len() > 1 && matches!(stack.last(), Some(&"if")) {
+                        stack.pop();
+                    } else {
+                        return Some(index);
+                    }
+                    continue;
+                }
+                "done" => {
+                    if matches!(stack.last(), Some(&"for" | &"while" | &"until" | &"select")) {
+                        stack.pop();
+                    } else {
+                        return Some(index);
+                    }
+                    continue;
+                }
+                "esac" => {
+                    if matches!(stack.last(), Some(&"case")) {
+                        stack.pop();
+                    } else {
+                        return Some(index);
+                    }
+                    continue;
+                }
+                "}" => {
+                    if matches!(stack.last(), Some(&"{")) {
+                        stack.pop();
+                    } else {
+                        return Some(index);
+                    }
+                    continue;
+                }
+                ";;" | ";&" | ";;&" => {
+                    if !matches!(stack.last(), Some(&"case")) {
+                        return Some(index);
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+            if stack.len() != 1 {
+                continue;
+            }
+            // Command-position modifiers GNU accepts before a command word.
+            if matches!(value, "time" | "!") {
+                expect_command = false;
+                phase_has_command = true;
+                continue;
+            }
+            if expect_command {
+                // A phase keyword is legal after `;` only when the phase
+                // already contains a command; every other keyword here is
+                // the offender.
+                let legal = match value {
+                    "then" => in_condition && phase_has_command,
+                    "elif" | "else" => !in_condition && phase_has_command,
+                    _ => false,
+                };
+                if !legal {
+                    return Some(index);
+                }
+            } else {
+                // Argument position: a reserved word carries force only
+                // where a command is expected (GNU parse.y
+                // CHECK_FOR_RESERVED_WORD, parse.y:3168) — after a
+                // command word it is an ordinary argument, so the
+                // condition of `if true then echo hi; fi' is the single
+                // command `true then echo hi' and the failure surfaces
+                // at the `fi' that arrived where THEN was expected
+                // (rubash#2741). The phase state does not change.
+                continue;
+            }
+            match value {
+                "then" => in_condition = false,
+                "elif" => in_condition = true,
+                _ => {}
+            }
+            expect_command = true;
+            phase_has_command = false;
+            continue;
+        }
+        if stack.len() == 1 {
+            expect_command = false;
+            phase_has_command = true;
+        }
+    }
+    None
+}
+
+/// Physical input line containing `tokens[index]` — verbatim from the
+/// original source when available (GNU parse.y y.error echoes the line as
+/// read), else reconstructed from same-line token raws. `line_offset` is
+/// the caller's line shift (`ParseLoopOptions::source_line_offset`), so
+/// the line within `source` is `position - line_offset`.
+pub(super) fn offending_line_text(
+    tokens: &[Token],
+    index: usize,
+    source: Option<&str>,
+    line_offset: usize,
+) -> String {
+    if let Some(text) = source {
+        if let Some(line) = tokens[index]
+            .position
+            .checked_sub(line_offset)
+            .and_then(|line_in_text| source_line_by_number(text, line_in_text))
+        {
+            return line;
+        }
+    }
+    let line = tokens[index].position;
+    let mut start = index;
+    while start > 0 && tokens[start - 1].position == line {
+        start -= 1;
+    }
+    let mut text = tokens[start].raw.clone();
+    let mut prev_end = tokens[start].column + tokens[start].raw.len();
+    for token in &tokens[start + 1..] {
+        if token.position != line {
+            break;
+        }
+        // A line-break Semicolon is the physical NEWLINE (GNU read_token
+        // returns a newline token), never source text on this line — echoing its
+        // synthesized `;' raw appended a stray semicolon to the offending
+        // line (`done;' for a bare `done' line, rubash#327 wording note).
+        if token.kind == TokenKind::Semicolon && token.line_break {
+            break;
+        }
+        if token.column > prev_end {
+            text.push(' ');
+        }
+        text.push_str(&token.raw);
+        prev_end = token.column + token.raw.len();
+    }
+    text
+}
+
+/// `syntax error near unexpected token 'X'` reported AT the line of X
+/// with that physical input line echoed — the shape GNU's yyerror produces
+/// when a closer arrives inside the wrong compound frame (`if x; then y;
+/// done` reports `done` at done's line).
+pub(super) fn mismatched_closer_node(
+    tokens: &[Token],
+    bad_index: usize,
+    diagnostic_text: Option<&str>,
+    line_offset: usize,
+) -> CommandNode {
+    let bad = &tokens[bad_index];
+    let mut command = CommandNode::new();
+    command.line = Some(bad.position);
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+        format!(
+            "{}{}{}",
+            bad.value.trim_end(),
+            PARSE_ERROR_FIELD_SEP,
+            bad.position
+        ),
+    );
+    command.insert_assignment(
+        "__RUBASH_PARSE_SOURCE__".to_string(),
+        offending_line_text(tokens, bad_index, diagnostic_text, line_offset),
+    );
+    command
+}
+
+/// The token-level verdict that preempts an unclosed compound's
+/// end-of-file report, if the region carries one. GNU's
+/// report_syntax_error (parse.y:6833) has two disjoint exits: at a
+/// concrete token (current_token != 0, EOF_Reached == 0,
+/// parse.y:6852-6865) it prints the near-token form, and only when
+/// the parse survives to exhaustion does the EOF branch
+/// (parse.y:6890-6901) report the open compound. A parse therefore
+/// dies on the FIRST token-level error in the stream — between the
+/// region's mismatched closer and its first dangling redirection,
+/// whichever offending token comes earlier wins (rubash#3405).
+pub(super) fn preempting_token_error_node(
+    region: &[Token],
+    opener: &'static str,
+    diagnostic_text: Option<&str>,
+    line_offset: usize,
+) -> Option<CommandNode> {
+    let mismatched = first_mismatched_closer(region, opener);
+    let dangling = dangling_redirect_in_region(region, diagnostic_text, line_offset);
+    match (mismatched, dangling) {
+        (Some(rel), Some((offending, _))) if offending > rel => Some(mismatched_closer_node(
+            region,
+            rel,
+            diagnostic_text,
+            line_offset,
+        )),
+        (_, Some((_, node))) => Some(node),
+        (Some(rel), None) => Some(mismatched_closer_node(
+            region,
+            rel,
+            diagnostic_text,
+            line_offset,
+        )),
+        (None, None) => None,
+    }
+}
+
+/// The first dangling redirection in `region`: a redirect operator
+/// whose WORD operand never arrives (GNU parse.y:532 `redirection:
+/// '>' WORD` and its sibling productions). report_syntax_error
+/// (parse.y:6833) fires at the token that follows the operator — the
+/// newline at end of input, a `;', a closer — DURING the parse, so
+/// when input ends inside an unclosed compound whose region carries
+/// such an operator, the near-token verdict precedes every
+/// end-of-file report for the compound (parse.y:6890-6901 is only
+/// reached when yyparse survives to EOF): `X() { (a)>` reports
+/// `syntax error near unexpected token \`newline'', never the
+/// unclosed-`{' EOF form (rubash#3405).
+///
+/// Returns the region index of the OFFENDING token (the operator's
+/// successor, or the operator itself when it is the region's last
+/// token) alongside the error node, so callers can order the verdict
+/// against a mismatched closer in the same region — GNU's reader
+/// meets whichever comes first in the token stream.
+///
+/// A continuation pending at end of input suppresses a candidate on
+/// the region's last line: the newline that would offend was elided
+/// by the trailing backslash and never reached the grammar
+/// (`X() { (a)>\` at EOF keeps the compound-EOF report, the
+/// rubash#3183-locked exception). A candidate on an earlier line
+/// stands — its newline was real. An operator glued to a following
+/// `(` is a process-substitution introducer, not a redirection
+/// awaiting its operand (`echo <(x)` is a word, `echo > (x)` is the
+/// error), so the glued pair is skipped.
+pub(super) fn dangling_redirect_in_region(
+    region: &[Token],
+    diagnostic_text: Option<&str>,
+    line_offset: usize,
+) -> Option<(usize, CommandNode)> {
+    let continuation = region_ends_with_continuation(region);
+    let last_line = region.iter().map(|token| token.position).max().unwrap_or(0);
+    for (index, token) in region.iter().enumerate() {
+        if !matches!(
+            token.kind,
+            TokenKind::RedirectIn
+                | TokenKind::RedirectOut
+                | TokenKind::Append
+                | TokenKind::RedirectErr
+                | TokenKind::RedirectErrAppend
+                | TokenKind::HereDoc
+                | TokenKind::HereString
+        ) {
+            continue;
+        }
+        if region.get(index + 1).is_some_and(|next| {
+            next.kind == TokenKind::Keyword
+                && next.value == "("
+                && next.column == token.column + token.raw.len()
+        }) {
+            continue;
+        }
+        if continuation && token.position >= last_line {
+            continue;
+        }
+        if let Some(node) = super::token_actions::missing_redirect_target_node(
+            region,
+            index,
+            diagnostic_text,
+            line_offset,
+        ) {
+            let offending = if index + 1 < region.len() {
+                index + 1
+            } else {
+                index
+            };
+            return Some((offending, node));
+        }
+    }
+    None
+}
+
+fn compound_eof_error_node(
+    opener: &str,
+    open_line: usize,
+    region: &[Token],
+    last_line: usize,
+    continuation_hint: bool,
+) -> CommandNode {
+    // GNU's reader counts one more line when input ends with a
+    // continuation pending: shell_getc's string-input exhaustion bumps
+    // line_number before the EOF report (parse.y:2504 region), so EVERY
+    // compound-EOF arm reports last_line + 2 when the final token is a
+    // dangling backslash, not just the collapsed-brace arm that used to
+    // compute this from its swallowed text (rubash#3183: `if true;
+    // then \', `g() { \' and `( \' all gain the line). The brace arm's
+    // text-derived signal survives as the hint; the region's last token
+    // is the general evidence (an odd trailing backslash run — an
+    // escaped `\\' is data, not a continuation).
+    let continuation = continuation_hint || region_ends_with_continuation(region);
+    let eof_line = eof_line_extra(last_line, continuation);
+    let (name, name_line) =
+        innermost_unclosed_compound(region).unwrap_or_else(|| (opener.to_string(), open_line));
+
+    // Heredocs still pending when EOF hit already warned during the GNU
+    // parse: pair `<<` delimiters with body tokens exactly like the subshell
+    // path, and warn for a `<<` whose body read never even produced a token.
+    let mut pending_delimiters: std::collections::VecDeque<(String, usize)> =
+        std::collections::VecDeque::new();
+    let mut warned: Vec<(String, usize, usize)> = Vec::new();
+    for (index, token) in region.iter().enumerate() {
+        if token.kind == TokenKind::HereDoc {
+            let delimiter = region
+                .get(index + 1)
+                .map(|next| next.value.clone())
+                .unwrap_or_default();
+            pending_delimiters.push_back((delimiter, token.position));
+            continue;
+        }
+        if token.kind != TokenKind::HereDocBody {
+            continue;
+        }
+        let (delimiter, _here_line) = pending_delimiters.pop_front().unwrap_or_default();
+        let gather_line = token.position;
+        let body = token
+            .value
+            .strip_prefix(crate::lexer::QUOTED_HEREDOC_MARKER)
+            .unwrap_or(token.value.as_str());
+        let unterminated = body.starts_with(DATA_DOLLAR);
+        let body = body
+            .strip_prefix(DATA_DOLLAR)
+            .or_else(|| body.strip_prefix(crate::executor::markers::HEREDOC_WARNED_BODY_PREFIX))
+            .unwrap_or(body);
+        let body_lines = body.lines().count();
+        // Prefer the lexer's physical end line: an unquoted delimiter joins
+        // `\<newline>` pairs while collecting, so stored newlines can
+        // undercount the physical lines consumed (rubash#1028).
+        let consumed_last = token
+            .heredoc_end_line
+            .unwrap_or_else(|| gather_line + body_lines + usize::from(!unterminated));
+        if unterminated {
+            warned.push((delimiter, gather_line, consumed_last));
+        }
+    }
+    // A `<<` with no body token at all gathered at the last input line and
+    // warned there (GNU make_cmd.c gather at EOF: `f() { cat <<EOF` warns
+    // "at line 4" at prefix line 4).
+    for (delimiter, here_line) in pending_delimiters {
+        warned.push((
+            delimiter,
+            last_line.max(here_line),
+            last_line.max(here_line),
+        ));
+    }
+
+    let mut command = CommandNode::new();
+    command.line = Some(open_line);
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR__".to_string(),
+        "unexpected end of file".to_string(),
+    );
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR_EOF_COMPOUND__".to_string(),
+        format!("{name}{PARSE_ERROR_FIELD_SEP}{name_line}{PARSE_ERROR_FIELD_SEP}{eof_line}"),
+    );
+    for (warn_index, (delimiter, at_line, warn_line)) in warned.iter().enumerate() {
+        command.insert_assignment(
+            format!("__RUBASH_PARSE_ERROR_HD_WARN_{warn_index}__"),
+            format!(
+                "{delimiter}{PARSE_ERROR_FIELD_SEP}{at_line}{PARSE_ERROR_FIELD_SEP}{warn_line}"
+            ),
+        );
+    }
+    command
+}
+
+pub(super) fn command_is_pending_inversion(command: &CommandNode) -> bool {
+    if !command.inverted {
+        return false;
+    }
+    let mut without_inversion = command.clone();
+    without_inversion.inverted = false;
+    command_is_empty(&without_inversion)
+}
+
+fn push_compound_command(state: &mut ParseState, mut command: CommandNode) {
+    let prefix = std::mem::take(&mut state.current_cmd);
+    if command_is_pending_inversion(&prefix) {
+        command.inverted = !command.inverted;
+        command.line = command.line.or(prefix.line);
+    }
+    // No assignment-prefix merge: the compound gates
+    // (command_allows_compound_start) admit only an empty or
+    // inversion-pending prefix, because GNU's grammar attaches
+    // assignment prefixes to simple commands only (rubash#1354).
+    state.ast.commands.push(command);
+    state.current_cmd = CommandNode::new();
+}
+
+/// Whether the command position at `start` was opened by a pipe
+/// connector (`|` or `|&`). GNU parse.y:3286
+/// (time_command_acceptable): for a `;`/`\n` predecessor the rule
+/// consults token_before_that, so newline separators between the
+/// pipe and the head are stepped over — a pipeline continues
+/// across them. Any other token ends the walk: it opened (or
+/// already fills) this command position.
+fn time_head_follows_pipe(tokens: &[Token], start: usize) -> bool {
+    let mut index = start;
+    while let Some(prev) = index.checked_sub(1) {
+        index = prev;
+        let token = &tokens[prev];
+        if token.kind == TokenKind::Semicolon && token.line_break {
+            continue;
+        }
+        return matches!(token.kind, TokenKind::Pipe | TokenKind::PipeErr);
+    }
+    false
+}
+
+pub(super) fn parse_time_prefixed_compound_command(
+    tokens: &[Token],
+    start: usize,
+) -> Option<(CommandNode, usize)> {
+    tokens.get(start)?;
+    // The `time` head must be the reserved word (mirrors the gate in
+    // time_prefixed_shell_command_allows_simple_pipeline): callers that
+    // dispatch on the token VALUE (coproc / function body parsers) must
+    // not fold a plain-word `time` — e.g. one the lexer reclassified
+    // under a POSIX pass (parse.y:3286, rubash#1520).
+    if !is_keyword(tokens, start, "time") {
+        return None;
+    }
+    // GNU parse.y:3286 time_command_acceptable: `|' is not an
+    // acceptable predecessor — the timespec production hangs off
+    // pipeline_command (parse.y:1416), and a pipeline's later
+    // elements derive from `command` alone, so after a pipe
+    // connector the recorded `time` keyword is an ordinary command
+    // NAME and a following compound is argument text, not a timed
+    // command (rubash#1839: `echo hi | time { echo x; }` is GNU's
+    // `syntax error near unexpected token `}'`, rc 2). The check is
+    // on the token that opened this command position: step back
+    // over newline separators (a pipeline continues across them;
+    // GNU's own rule consults token_before_that for exactly the
+    // ';'/'\n' predecessor case) to the connector that began this
+    // unit. Callers on a fresh command position (list head, group
+    // body slice, function body) see no pipe there and admit as
+    // before; the recursive second-head call sees the first head's
+    // own tokens (TIME/TIMEOPT in GNU's table), never a pipe.
+    if time_head_follows_pipe(tokens, start) {
+        return None;
+    }
+    // rubash#1548: operand window per parse.y special_case_tokens —
+    // see scan_time_prefix_tokens. A quoted '-p' is the timed
+    // command's name, never time's option.
+    let scan = scan_time_prefix_tokens(tokens, start);
+    let posix_format = scan.posix_format;
+    let inverted = scan.inverted;
+    let mut prefix_words = Vec::new();
+    let mut prefix_word_metadata = Vec::new();
+    let mut i = start + 1;
+    while i < scan.next {
+        prefix_word_metadata.push(build_word_metadata(
+            prefix_words.len(),
+            &tokens[i].value,
+            &tokens[i].raw,
+        ));
+        prefix_words.push(tokens[i].value.clone());
+        i += 1;
+    }
+
+    let (mut command, next_i) = if is_keyword(tokens, i, "time") {
+        // parse.y: the timespec production is recursive
+        // (pipeline_command: timespec pipeline_command), so a second
+        // recorded `time` head after the first head's operand window
+        // introduces the inner timed command — compound or simple —
+        // exactly as the first did (rubash#1805: `time time if …`,
+        // `time time ((…))`, … all parse in GNU).
+        parse_time_prefixed_compound_command(tokens, i)?
+    } else if is_keyword(tokens, i, "for") {
+        parse_for_command(tokens, i, None, 0)?
+    } else if is_keyword(tokens, i, "if") {
+        parse_if_command_standalone(tokens, i, None, 0)?
+    } else if tokens
+        .get(i)
+        .is_some_and(|token| matches!(token.value.as_str(), "while" | "until"))
+    {
+        parse_loop_command(tokens, i, None, 0).map(|(command, next, _unclaimed)| (command, next))?
+    } else if is_keyword(tokens, i, "case") {
+        parse_case_command(tokens, i, None, 0)?
+    } else if is_keyword(tokens, i, "select") {
+        parse_select_command(tokens, i, None, 0)?
+    } else if is_keyword(tokens, i, "coproc") {
+        parse_coproc_command(tokens, i)?
+    } else if let Some(parsed) = parse_function_command(tokens, i) {
+        parsed
+    } else if tokens.get(i).is_some_and(|token| token.value == "[[") {
+        parse_conditional_command(tokens, i, None, 0)?
+    } else if is_keyword(tokens, i, "{")
+        || tokens.get(i).is_some_and(|token| {
+            token.kind == TokenKind::Keyword
+                && token.value.starts_with('{')
+                && token.value.ends_with('}')
+        })
+    {
+        parse_brace_group_command(tokens, i, None, 0)?
+    } else if let Some(parsed) = parse_arithmetic_command(tokens, i) {
+        parsed
+    } else if is_keyword(tokens, i, "(") {
+        parse_subshell_command(tokens, i, None, 0)?
+    } else {
+        return None;
+    };
+
+    let pipe = command.pipe.take();
+    let and_or = command.and_or.take();
+    let background = command.background;
+    command.background = false;
+    let mut timed = CommandNode::new();
+    timed.line = tokens.get(start).map(|token| token.position);
+    timed.logical_line = tokens.get(start).map(|token| token.logical_line);
+    timed.pipe = pipe;
+    timed.and_or = and_or;
+    timed.background = background;
+    timed.time_command = Some(TimeCommand {
+        keyword: tokens[start].value.clone(),
+        keyword_metadata: Box::new(build_word_metadata(
+            0,
+            &tokens[start].value,
+            &tokens[start].raw,
+        )),
+        prefix_words,
+        prefix_word_metadata,
+        command: Box::new(command),
+        posix_format,
+        inverted,
+        keyword_was_plain_word: false,
+    });
+    Some((timed, next_i))
+}
+
+pub(super) fn parse_time_prefixed_shell_command(
+    tokens: &[Token],
+    start: usize,
+) -> Option<(CommandNode, usize)> {
+    if !time_prefixed_shell_command_allows_simple_pipeline(tokens, start) {
+        return None;
+    }
+
+    let end = time_prefixed_shell_command_end(tokens, start + 1);
+
+    let mut commands = parse(&tokens[start..end]).commands;
+    if commands.len() != 1 {
+        return None;
+    }
+
+    Some((commands.remove(0), end))
+}
+
+/// The 1-based `line` of `text`, verbatim. Token positions are line
+/// numbers (parse.y `line_number`), so diagnostic line echo is a line
+/// lookup, not a byte-offset slice (rubash#204).
+pub(super) fn source_line_by_number(text: &str, line: usize) -> Option<String> {
+    let line = line.checked_sub(1)?;
+    text.lines().nth(line).map(str::to_string)
+}
+
+fn time_prefixed_shell_command_end(tokens: &[Token], mut index: usize) -> usize {
+    let mut stack = Vec::new();
+    let mut paren_depth = 0usize;
+    let mut brace_depth = 0usize;
+
+    while let Some(token) = tokens.get(index) {
+        if stack.is_empty()
+            && paren_depth == 0
+            && brace_depth == 0
+            && token.kind == TokenKind::Semicolon
+            && previous_significant_token_is_pipe(tokens, index)
+        {
+            index += 1;
+            continue;
+        }
+
+        if stack.is_empty()
+            && paren_depth == 0
+            && brace_depth == 0
+            && matches!(
+                token.kind,
+                TokenKind::Semicolon | TokenKind::And | TokenKind::Or | TokenKind::Background
+            )
+        {
+            break;
+        }
+
+        update_compound_boundary_stack(tokens, index, &mut stack);
+        if stack.last().copied() != Some("esac") && command_boundary_keyword_allowed(tokens, index)
+        {
+            if is_keyword(tokens, index, "(") {
+                paren_depth += 1;
+            } else if is_keyword(tokens, index, ")") {
+                paren_depth = paren_depth.saturating_sub(1);
+            } else if is_keyword(tokens, index, "{") {
+                brace_depth += 1;
+            } else if is_keyword(tokens, index, "}") {
+                brace_depth = brace_depth.saturating_sub(1);
+            }
+        }
+
+        index += 1;
+    }
+
+    index
+}
+
+fn previous_significant_token_is_pipe(tokens: &[Token], index: usize) -> bool {
+    let mut previous = index;
+    while let Some(next) = previous.checked_sub(1) {
+        previous = next;
+        let token = &tokens[previous];
+        if token.kind == TokenKind::Semicolon {
+            continue;
+        }
+        return matches!(token.kind, TokenKind::Pipe | TokenKind::PipeErr);
+    }
+    false
+}
+
+pub(super) fn time_prefixed_shell_command_allows_simple_pipeline(
+    tokens: &[Token],
+    start: usize,
+) -> bool {
+    if !is_keyword(tokens, start, "time") {
+        return false;
+    }
+
+    // rubash#1548: skip only the operands GNU's lexer would have
+    // claimed (scan_time_prefix_tokens) — a quoted '-p' already IS the
+    // timed command's head word.
+    let index = scan_time_prefix_tokens(tokens, start).next;
+
+    let Some(token) = tokens.get(index) else {
+        return true;
+    };
+    if matches!(
+        token.kind,
+        TokenKind::Semicolon | TokenKind::And | TokenKind::Or | TokenKind::Background
+    ) {
+        return true;
+    }
+
+    !time_prefixed_shell_command_starts_with_compound(tokens, index)
+}
+
+fn time_prefixed_shell_command_starts_with_compound(tokens: &[Token], index: usize) -> bool {
+    if parse_function_command(tokens, index).is_some() {
+        return true;
+    }
+
+    if tokens.get(index).is_some_and(|token| {
+        matches!(
+            token.value.as_str(),
+            "for" | "case" | "select" | "coproc" | "if" | "while" | "until" | "[[" | "function"
+        ) || token.value.starts_with("((")
+    }) {
+        return true;
+    }
+
+    if is_keyword(tokens, index, "{") || is_keyword(tokens, index, "(") {
+        return true;
+    }
+
+    if tokens.get(index).is_some_and(|token| {
+        token.kind == TokenKind::Keyword
+            && token.value.starts_with('{')
+            && token.value.ends_with('}')
+    }) {
+        return true;
+    }
+
+    tokens.get(index).is_some_and(|token| {
+        token.kind == TokenKind::Word
+            && tokens
+                .get(index + 1)
+                .is_some_and(|next| super::is_unquoted_operator(next, "("))
+            && tokens
+                .get(index + 2)
+                .is_some_and(|next| super::is_unquoted_operator(next, ")"))
+    })
+}
+
+#[cfg(test)]
+mod stray_close_tests {
+    use super::*;
+
+    fn marker_source(ast: &Ast) -> String {
+        ast.commands
+            .iter()
+            .find_map(|command| {
+                command
+                    .get_assignment("__RUBASH_PARSE_SOURCE__")
+                    .map(|value| value.clone())
+            })
+            .unwrap_or_default()
+    }
+
+    #[test]
+    fn eval_style_verbatim_line_echo_preserves_original_spacing() {
+        // The eval string: one line, caller at script line 199 -> offset 198.
+        let source_text = String::from("case esac in esac) ;; *) echo \"x\";; esac");
+        let tokens = crate::lexer::tokenize(&source_text);
+        let mut tokens = tokens;
+        for token in tokens.iter_mut() {
+            token.position += 198;
+        }
+        let ast = parse_with_options(
+            &tokens,
+            ParseLoopOptions {
+                stray_close_is_error: true,
+                source_text: Some(source_text.clone().into()),
+                source_line_offset: 198,
+                ..ParseLoopOptions::default()
+            },
+        );
+        assert_eq!(marker_source(&ast), source_text);
+    }
+
+    #[test]
+    fn without_source_text_falls_back_to_token_join() {
+        let source_text = ") echo never ;; esac";
+        let tokens = crate::lexer::tokenize(source_text);
+        let ast = parse_with_options(
+            &tokens,
+            ParseLoopOptions {
+                stray_close_is_error: true,
+                ..ParseLoopOptions::default()
+            },
+        );
+        assert_eq!(marker_source(&ast), ") echo never ;; esac");
+    }
+}

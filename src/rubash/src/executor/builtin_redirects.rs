@@ -1,0 +1,1012 @@
+use super::*;
+
+impl Executor {
+    /// GNU redir.c do_redirection_internal, r_duplicating_input /
+    /// r_duplicating_output arms (redir.c:1129-1210): the dup2 of the
+    /// source fd happens for builtins too, and a closed source fails with
+    /// EBADF ("N: Bad file descriptor", redirect status 1). fd 0/1/2 have
+    /// no explicit fd-table entry when they hold the process's own stdio —
+    /// those are always open; every other untracked or explicitly-closed
+    /// fd is a bad descriptor (rubash's virtual fd table is the single
+    /// source of truth, replacing the OS handle slot Windows exposes
+    /// nondeterministically).
+    fn validate_builtin_dup_source(
+        &self,
+        cmd: &CommandNode,
+        before: usize,
+        source_fd: u32,
+    ) -> Result<(), ExecuteError> {
+        if source_fd <= 2 {
+            return Ok(());
+        }
+        let open = matches!(
+            self.fd_table.entries.get(&source_fd),
+            Some(entry) if !entry.closed
+        );
+        if open {
+            return Ok(());
+        }
+        // rubash#2562: a binding EARLIER in this command's own list
+        // also opens the source — GNU's one ordered walk
+        // (redir.c:237 do_redirections) has applied it by the time
+        // the dup runs, so `cmd 9<f <&9` and `: 9<f 10>&9` are
+        // legal. in_list_binding resolves the winning entry
+        // positionally, dup chains included; a Closed or unbound
+        // verdict keeps the EBADF.
+        match self.in_list_binding(cmd, before, source_fd) {
+            crate::executor::external_setup::InListBinding::File(_)
+            | crate::executor::external_setup::InListBinding::Other
+            | crate::executor::external_setup::InListBinding::AmbientOf(_) => Ok(()),
+            crate::executor::external_setup::InListBinding::Closed
+            | crate::executor::external_setup::InListBinding::NotBound => {
+                Err(ExecuteError::IoError(std::io::Error::other(format!(
+                    "{source_fd}: Bad file descriptor"
+                ))))
+            }
+        }
+    }
+
+    /// rubash#2562: the position of the list entry a structured
+    /// mirror field (redirect_in / redirect_out) was projected
+    /// from — the parser pushes the entry into cmd.redirects and
+    /// clones it into the field, and the LAST matching entry is
+    /// the projection source (a later assignment to the field
+    /// overwrote it). Falls back to the whole list when no entry
+    /// matches.
+    fn redirect_list_position(
+        &self,
+        cmd: &CommandNode,
+        redirect: &crate::parser::Redirect,
+    ) -> usize {
+        cmd.redirects
+            .iter()
+            .rposition(|entry| {
+                entry.kind == redirect.kind
+                    && entry.fd == redirect.fd
+                    && entry.fd_var == redirect.fd_var
+                    && entry.target_metadata.raw == redirect.target_metadata.raw
+            })
+            .unwrap_or(cmd.redirects.len())
+    }
+
+    /// GNU redir.c do_redirections (redir.c:260 do_redirection_internal)
+    /// runs BEFORE the command body: every redirection in the list is
+    /// opened in order, so a file target is created/truncated even when
+    /// the command itself never writes to that descriptor, and a failed
+    /// open aborts the command with the redirection_error diagnostic
+    /// (redir.c:149-176) and status 1 — the setup is never skipped and
+    /// its failure is never silent (rubash#1593). In-process execution
+    /// funnels that never bind the command's redirects into the fd
+    /// table — `execute_read` and the emulated external file builtins —
+    /// call this walk for the open side effects alone: the command body
+    /// keeps owning its fd 1/2 targets (it re-opens them when it
+    /// actually writes), dup/close entries perform no open (their
+    /// validation is the reject gate's), fd_var entries belong to
+    /// apply_dynamic_fd_var_redirects, injected group redirects are
+    /// already realized by the enclosing compound's bindings, and
+    /// /dev/fd-style aliases resolve through the fd table instead of
+    /// the filesystem. Returns Ok(true) when a failed open was
+    /// diagnosed (routed like redir.c:135) and exit_code set to 1.
+    pub(in crate::executor) fn apply_redirect_setup_side_effects(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<bool, ExecuteError> {
+        self.apply_redirect_setup_side_effects_tracked(cmd, None)
+    }
+
+    fn apply_redirect_setup_side_effects_tracked(
+        &mut self,
+        cmd: &CommandNode,
+        created: Option<&mut Vec<std::path::PathBuf>>,
+    ) -> Result<bool, ExecuteError> {
+        if let Some(error) = self.redirect_setup_open_error(cmd, created)? {
+            let mut line = Vec::new();
+            let _ = writeln!(
+                &mut line,
+                "{}{}",
+                self.diagnostic_prefix(),
+                crate::posix_errors::message(&error)
+            );
+            let _ = self.write_redirect_diagnostic_routed(cmd, &line);
+            self.exit_code = 1;
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    /// rubash#2692: the dispatch funnel's pregate form of the setup
+    /// walk. The funnel runs the walk purely as a GATE — the
+    /// dispatch's own machinery applies the redirects again when the
+    /// builtin runs — so a file the probe CREATED must not survive a
+    /// successful check: the second application would observe state
+    /// GNU's single do_redirections never produces (concretely,
+    /// `set -C > fresh.txt` — the probe created fresh.txt, `set`
+    /// then armed noclobber, and the dispatch's walk refused to
+    /// overwrite the probe's own file; rubash#1020's pin caught it).
+    /// Candidates are the plain-file targets that did not exist
+    /// before the walk; on success each still-empty regular file is
+    /// removed again. On failure nothing is removed: GNU's ordered
+    /// opens leave their creations/truncations behind when a later
+    /// entry fails, and the gate's failure path is exactly that
+    /// state. Truncation of a pre-existing file is likewise left
+    /// standing, as GNU leaves it.
+    pub(in crate::executor) fn pregate_redirect_open_check(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<bool, ExecuteError> {
+        let mut created = Vec::new();
+        let failed = self.apply_redirect_setup_side_effects_tracked(cmd, Some(&mut created))?;
+        if !failed {
+            for path in created {
+                if let Ok(meta) = std::fs::metadata(&path) {
+                    if meta.is_file() && meta.len() == 0 {
+                        let _ = std::fs::remove_file(&path);
+                    }
+                }
+            }
+        }
+        Ok(failed)
+    }
+
+    /// The open walk behind apply_redirect_setup_side_effects, minus the
+    /// diagnostic: returns the first failed open's error (already in the
+    /// `<target>: <strerror>` path_error shape the printing caller
+    /// renders) or None when every plain entry opened. Callers that own
+    /// a different failure channel — the no-output builtin pass, whose
+    /// fd 0/1/2 failures travel as ExecuteError::IoError — use this form
+    /// so an fd>=3 failure stays indistinguishable from a mirror-field
+    /// failure (rubash#1665).
+    fn redirect_setup_open_error(
+        &mut self,
+        cmd: &CommandNode,
+        mut created: Option<&mut Vec<std::path::PathBuf>>,
+    ) -> Result<Option<io::Error>, ExecuteError> {
+        use crate::parser::RedirectKind;
+        for redirect in &cmd.redirects {
+            if redirect.fd_var.is_some()
+                || crate::executor::support_names::is_injected_group_redirect(redirect)
+            {
+                continue;
+            }
+            // rubash#3195: a heredoc / here-string entry names no
+            // path (the filter below skips it), but GNU's walk still
+            // fails its dup2 onto a redirector at/above the
+            // RLIMIT_NOFILE soft limit (here_document_to_fd
+            // materializes the body first, redir.c:1072; the dup2
+            // fails EBADF at redir.c:1120). Gate it here, at its own
+            // list position, without expanding its target word.
+            if matches!(
+                redirect.kind,
+                RedirectKind::HereDoc | RedirectKind::HereString
+            ) {
+                let gate_fd = redirect.fd.unwrap_or(0);
+                if self.redirect_fd_over_limit(gate_fd) {
+                    return Ok(Some(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        format!("{gate_fd}: Bad file descriptor"),
+                    )));
+                }
+                continue;
+            }
+            // Only the open-performing kinds consult a filesystem target
+            // here; heredoc / herestring / dup kinds name no path, so
+            // expanding their target word would be a side effect of its
+            // own (GNU never expands a heredoc delimiter at redirect
+            // time either).
+            match redirect.kind {
+                RedirectKind::Output
+                | RedirectKind::ClobberOutput
+                | RedirectKind::CombinedOutput
+                | RedirectKind::Append
+                | RedirectKind::CombinedAppend
+                | RedirectKind::Input
+                | RedirectKind::ReadWrite => {}
+                _ => continue,
+            }
+            let target = self.expand_redirect_target(redirect);
+            // A plain file target is the only shape this walk opens:
+            // closed forms (`&-`), fd dups (`&N`), /dev/fd aliases, the
+            // null device and process substitutions perform no
+            // filesystem open here.
+            let plain_file_target = !is_closed_redirect_target(&target)
+                && redirect_target_fd(&target).is_none()
+                && crate::executor::execution_misc::dev_stdio_redirect_fd(&target).is_none()
+                && !is_null_device(&target)
+                && !target.starts_with("<(")
+                && !target.starts_with(">(");
+            // rubash#2692 pregate tracking: a creation-kind probe on
+            // a plain file target that does not exist yet will create
+            // it; record the resolved path so the pregate caller can
+            // undo the creation after a successful check (the
+            // application walks for read/no-output builtins pass no
+            // tracker and keep the side effect, which for them IS
+            // the application). Net targets never create (their probe
+            // is resolution-only, rubash#1967).
+            if let Some(tracked) = created.as_deref_mut() {
+                if plain_file_target
+                    && matches!(
+                        redirect.kind,
+                        RedirectKind::Output
+                            | RedirectKind::ClobberOutput
+                            | RedirectKind::CombinedOutput
+                            | RedirectKind::Append
+                            | RedirectKind::CombinedAppend
+                    )
+                    && !crate::special_paths::is_net_redirect_target(&target)
+                {
+                    let path = self.session_path(crate::executor::path::shell_path_to_windows(
+                        &self.redirect_output_path_target(&target),
+                        &self.shell_state.env_vars,
+                    ));
+                    if !path.exists() {
+                        tracked.push(path);
+                    }
+                }
+            }
+            // rubash#2635: the probes below are GNU's redir_open (their
+            // side effects stand); the dup2 onto a redirector at/above
+            // the RLIMIT_NOFILE soft limit then fails EBADF naming the
+            // redirector (redir.c r_output_direction /
+            // r_input_direction). This walk serves the no-output
+            // builtins (true / : / false), whose mirror applier below
+            // keeps no fd >= 3 verdict of its own. The null device
+            // needs no probe (its open trivially succeeds in GNU), so
+            // its gate stands alone here.
+            let gate_fd = match redirect.kind {
+                RedirectKind::Input | RedirectKind::ReadWrite => redirect.fd.unwrap_or(0),
+                _ => redirect.fd.unwrap_or(1),
+            };
+            if is_null_device(&target) {
+                if self.redirect_fd_over_limit(gate_fd) {
+                    return Ok(Some(io::Error::new(
+                        io::ErrorKind::InvalidInput,
+                        format!("{gate_fd}: Bad file descriptor"),
+                    )));
+                }
+                continue;
+            }
+            let opened: Result<(), io::Error> = match redirect.kind {
+                RedirectKind::Output
+                | RedirectKind::ClobberOutput
+                | RedirectKind::CombinedOutput => {
+                    if !plain_file_target {
+                        continue;
+                    }
+                    // On a FIFO the create probe is a no-op whose
+                    // open consumes the bind's rendezvous pairing
+                    // (rubash#1820) — probe_output_redirect carves
+                    // that out.
+                    crate::executor::shell_options::probe_output_redirect(
+                        self,
+                        &target,
+                        redirect.clobber,
+                    )
+                }
+                RedirectKind::Append | RedirectKind::CombinedAppend => {
+                    if !plain_file_target {
+                        continue;
+                    }
+                    crate::executor::shell_options::probe_output_redirect_append(self, &target)
+                }
+                RedirectKind::Input => {
+                    if !plain_file_target {
+                        continue;
+                    }
+                    // probe_input_redirect's errors already carry the
+                    // `<target>: <strerror>` path_error shape.
+                    self.probe_input_redirect(&target).map(|_| ())
+                }
+                RedirectKind::ReadWrite => {
+                    if crate::special_paths::is_net_redirect_target(&target) {
+                        // rubash#1967: the generic probe below opens
+                        // the target as a filesystem path (with the
+                        // create side effect on the mapped
+                        // pseudo-path); a net target's setup question
+                        // is resolution only — the funnel's bind
+                        // (open_net_redirect) performs the one connect
+                        // GNU's do_redirections performs.
+                        self.validate_net_redirect_target(&target)
+                            .map_err(|e| crate::posix_errors::path_error(&target, e))
+                            .map(|_| ())
+                    } else if !plain_file_target {
+                        continue;
+                    } else {
+                        self.probe_input_redirect_readwrite(&target)
+                            .map_err(|e| crate::posix_errors::path_error(&target, e))
+                            .map(|_| ())
+                    }
+                }
+                _ => continue,
+            };
+            if let Err(error) = opened {
+                return Ok(Some(error));
+            }
+            // rubash#2635: see the gate note above — the probe open
+            // succeeded (GNU's redir_open), so an over-limit
+            // redirector now fails its dup2.
+            if self.redirect_fd_over_limit(gate_fd) {
+                return Ok(Some(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    format!("{gate_fd}: Bad file descriptor"),
+                )));
+            }
+        }
+        Ok(None)
+    }
+
+    /// rubash#2124: does the simple-command dispatch bind apply to
+    /// this command — i.e. will it execute in-process (builtin or
+    /// function), so no spawn setup will bind its redirects? `exec`
+    /// is excluded: its own machinery applies its redirects
+    /// (including the net arms in trap_exec.rs) and makes them
+    /// persistent. A `command`/`builtin` prefix routes by its operand
+    /// word. Jobspecs are excluded (rewritten onto the job's own
+    /// context). The class test is the same one the tempenv binding
+    /// decision uses (is_shell_builtin_name / function lookup).
+    fn simple_command_net_bind_applies(&self, cmd: &CommandNode) -> bool {
+        let Some(word) = cmd.words.first() else {
+            // A null command's redirections are performed by the
+            // shell itself (redir.c do_redirections on the node).
+            return true;
+        };
+        if word == "exec" || word.starts_with('%') {
+            return false;
+        }
+        let mut effective: &str = word.as_str();
+        if word == "command" || word == "builtin" {
+            let mut operand: Option<&str> = None;
+            for next in &cmd.words[1..] {
+                if operand.is_none() && matches!(next.as_str(), "-p" | "-v" | "-V" | "--") {
+                    continue;
+                }
+                operand = Some(next.as_str());
+                break;
+            }
+            let Some(operand) = operand else {
+                // Bare `command` / `builtin`: a null command again.
+                return true;
+            };
+            effective = operand;
+        }
+        if crate::builtins::enable::is_disabled(&self.shell_state.env_vars, effective) {
+            return false;
+        }
+        is_shell_builtin_name(effective) || self.function_name_for_command_word(effective).is_some()
+    }
+
+    /// rubash#2124: GNU redir.c do_redirections performs the open of
+    /// EVERY redirection before the command body runs, for every
+    /// command class — for a /dev/tcp|udp target the open IS the
+    /// connect (redir.c redir_open -> netopen). rubash's in-process
+    /// funnels only ever PROBE a winning net input (the #1950
+    /// validate-by-resolution rule: a probe must not connect, the
+    /// bind performs the one open), and the external spawn setup is
+    /// the only bind most faces got — so a builtin's winning net
+    /// input never connected at all: no connection, no data, and a
+    /// refused connect silently rc 0. This is the in-process bind,
+    /// run by the simple-command funnel for builtin/function/null
+    /// routes: the fd-0 winner (fd-0 losers were already settled by
+    /// the reject gate, rubash#2098) and every numbered (fd >= 3)
+    /// net Input entry connect exactly once, in list order, and the
+    /// surviving socket binds on its fd for the body's duration.
+    /// ReadWrite (`<>`) survivors bind the one connected socket on
+    /// both endpoints of their fd (redir.c r_input_output).
+    /// On a connect failure the diagnostic is rendered through the
+    /// command's fd-2 routing (connect_net_stream already emitted
+    /// its pre-line), exit_code is set to 1, and Err(()) tells the
+    /// funnel to skip the dispatch, like a gate rejection.
+    pub(in crate::executor) fn bind_simple_command_net_inputs(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<Vec<(u32, Option<crate::executor::fd_table::FdEntry>)>, ()> {
+        if !self.simple_command_net_bind_applies(cmd) {
+            return Ok(Vec::new());
+        }
+        // (fd, target) connects to perform, in order: numbered
+        // entries first as they appear, then the fd-0 winner — the
+        // per-fd survivor binds; a numbered fd superseded by a
+        // non-net entry drops out (that face's own machinery owns
+        // the fd), exactly like do_redirections' ordered dup2s.
+        // The bool marks a ReadWrite (`<>`) survivor: its socket
+        // binds on both endpoints of the fd (redir.c r_input_output
+        // is one O_RDWR descriptor).
+        let mut numbered: std::collections::HashMap<u32, (std::fs::File, String, bool)> =
+            std::collections::HashMap::new();
+        for redirect in &cmd.redirects {
+            if redirect.fd_var.is_some() {
+                continue;
+            }
+            let Some(fd) = redirect.fd else { continue };
+            if fd < 3 {
+                continue;
+            }
+            match redirect.kind {
+                crate::parser::RedirectKind::Input if !redirect.append => {
+                    let target = self.expand_redirect_target(redirect);
+                    if is_closed_redirect_target(&target) {
+                        numbered.remove(&fd);
+                    } else if crate::special_paths::is_net_redirect_target(&target) {
+                        match self.open_net_redirect(&target) {
+                            Ok(file) => {
+                                numbered.insert(fd, (file, target, false));
+                            }
+                            Err(error) => {
+                                self.net_input_bind_failure(cmd, &error);
+                                return Err(());
+                            }
+                        }
+                    } else {
+                        numbered.remove(&fd);
+                    }
+                }
+                crate::parser::RedirectKind::ReadWrite => {
+                    let target = self.expand_redirect_target(redirect);
+                    if is_closed_redirect_target(&target) {
+                        numbered.remove(&fd);
+                    } else if crate::special_paths::is_net_redirect_target(&target) {
+                        match self.open_net_redirect(&target) {
+                            Ok(file) => {
+                                numbered.insert(fd, (file, target, true));
+                            }
+                            Err(error) => {
+                                self.net_input_bind_failure(cmd, &error);
+                                return Err(());
+                            }
+                        }
+                    } else {
+                        numbered.remove(&fd);
+                    }
+                }
+                crate::parser::RedirectKind::DuplicateInput
+                | crate::parser::RedirectKind::CloseInput => {
+                    numbered.remove(&fd);
+                }
+                _ => {}
+            }
+        }
+        // fd-0 winner, over the gate's candidate order (the ordered
+        // list, then the mirror fields not already present in it).
+        let semantic_key = |redirect: &crate::parser::Redirect| {
+            format!(
+                "{:?}\x1f{}\x1f{:?}\x1f{}",
+                redirect.kind, redirect.operator, redirect.fd, redirect.target
+            )
+        };
+        let mut candidates: Vec<&crate::parser::Redirect> = cmd.redirects.iter().collect();
+        let mut seen_keys: std::collections::HashSet<String> =
+            candidates.iter().map(|r| semantic_key(r)).collect();
+        for redirect in [cmd.redirect_in.as_deref()].into_iter().flatten() {
+            if seen_keys.insert(semantic_key(redirect)) {
+                candidates.push(redirect);
+            }
+        }
+        let winner = candidates.iter().rev().find(|redirect| {
+            redirect.fd.unwrap_or(0) == 0
+                && matches!(
+                    redirect.kind,
+                    crate::parser::RedirectKind::Input
+                        | crate::parser::RedirectKind::DuplicateInput
+                        | crate::parser::RedirectKind::ReadWrite
+                        | crate::parser::RedirectKind::CloseInput
+                        | crate::parser::RedirectKind::HereDoc
+                        | crate::parser::RedirectKind::HereString
+                )
+        });
+        let mut saved: Vec<(u32, Option<crate::executor::fd_table::FdEntry>)> = Vec::new();
+        if let Some(redirect) = winner {
+            // A `<>` winner arrives either as a ReadWrite entry or as
+            // the Input mirror with the append flag set (the two
+            // representations function_call_stdin also distinguishes).
+            let readwrite = redirect.kind == crate::parser::RedirectKind::ReadWrite
+                || (redirect.kind == crate::parser::RedirectKind::Input && redirect.append);
+            let plain_input =
+                redirect.kind == crate::parser::RedirectKind::Input && !redirect.append;
+            if plain_input || readwrite {
+                let target = self.expand_redirect_target(redirect);
+                if crate::special_paths::is_net_redirect_target(&target) {
+                    match self.open_net_redirect(&target) {
+                        Ok(file) => {
+                            self.bind_net_input_fd(&mut saved, 0, &target, file, readwrite);
+                        }
+                        Err(error) => {
+                            self.restore_simple_command_net_inputs(saved);
+                            self.net_input_bind_failure(cmd, &error);
+                            return Err(());
+                        }
+                    }
+                }
+            }
+        }
+        for (fd, (file, target, readwrite)) in numbered {
+            self.bind_net_input_fd(&mut saved, fd, &target, file, readwrite);
+        }
+        Ok(saved)
+    }
+
+    fn bind_net_input_fd(
+        &mut self,
+        saved: &mut Vec<(u32, Option<crate::executor::fd_table::FdEntry>)>,
+        fd: u32,
+        target: &str,
+        file: std::fs::File,
+        readwrite: bool,
+    ) {
+        if !saved.iter().any(|(saved_fd, _)| *saved_fd == fd) {
+            saved.push((fd, self.fd_table.entries.get(&fd).cloned()));
+        }
+        let file_fd = FileFd::from_file(file, target.into());
+        self.fd_table
+            .open_input(fd, FdReadEndpoint::File(file_fd.clone()), false);
+        if readwrite {
+            // redir.c r_input_output: ONE open file description
+            // serves both directions of the slot — the same FileFd
+            // backs the write endpoint too (the shape
+            // set_fd_readwrite_file's net arm installs).
+            self.fd_table
+                .open_output(fd, FdWriteEndpoint::File(file_fd), false);
+        }
+        if !self.dispatch_net_bound_fds.contains(&fd) {
+            self.dispatch_net_bound_fds.push(fd);
+        }
+    }
+
+    fn net_input_bind_failure(&mut self, cmd: &CommandNode, error: &std::io::Error) {
+        let mut line = Vec::new();
+        let _ = writeln!(
+            &mut line,
+            "{}{}",
+            self.error_prefix(),
+            crate::posix_errors::message(error)
+        );
+        let _ = self.write_redirect_diagnostic_routed(cmd, &line);
+        self.exit_code = 1;
+    }
+
+    /// The unwind half of bind_simple_command_net_inputs: put back
+    /// exactly the fd-table entries the bind displaced (GNU
+    /// execute_cmd.c undo_redirections for the in-process classes).
+    pub(in crate::executor) fn restore_simple_command_net_inputs(
+        &mut self,
+        saved: Vec<(u32, Option<crate::executor::fd_table::FdEntry>)>,
+    ) {
+        for (fd, entry) in saved {
+            match entry {
+                Some(entry) => {
+                    self.fd_table.entries.insert(fd, entry);
+                }
+                None => {
+                    self.fd_table.entries.remove(&fd);
+                }
+            }
+            self.dispatch_net_bound_fds.retain(|bound| *bound != fd);
+        }
+    }
+
+    pub(in crate::executor) fn write_builtin_not_found(
+        &mut self,
+        cmd: &CommandNode,
+        name: &str,
+    ) -> Result<(), ExecuteError> {
+        let mut stderr = Vec::new();
+        writeln!(
+            &mut stderr,
+            "{}builtin: {name}: not a shell builtin",
+            self.diagnostic_prefix()
+        )?;
+        self.write_buffered_builtin_output(cmd, &[], &stderr)
+    }
+
+    pub(in crate::executor) fn apply_no_output_builtin_redirects(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<(), ExecuteError> {
+        self.apply_no_output_builtin_redirects_with_status(cmd)
+            .map(|_| ())
+    }
+
+    pub(in crate::executor) fn apply_no_output_builtin_redirects_with_status(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<bool, ExecuteError> {
+        // `{var}` redirects (fd_var) are applied once per command by
+        // Executor::apply_dynamic_fd_var_redirects — for simple commands at
+        // the execute_command dispatch point (GNU redir.c do_redirections →
+        // redir_varassign); the conditional and empty-words paths invoke it
+        // before calling here. This helper only sees commands whose fd_var
+        // redirects are already applied, so it must not re-apply them.
+        //
+        // GNU redir.c do_redirections (redir.c:260
+        // do_redirection_internal) performs every redirect of a simple
+        // command before the body runs, but the mirror fields below only
+        // carry fds 0/1/2 — the fd>=3 entries in cmd.redirects never got
+        // their open (rubash#1665: `true 3>f` created nothing and a bad
+        // target failed silently). Run the same open walk the read /
+        // external-file paths use, FIRST, so list order decides which
+        // failure is fatal: an earlier entry's side effect stands and a
+        // later entry is never opened. The walk's opens of the fd 0/1/2
+        // entries are repeated by the mirror code below; a repeated
+        // truncate/probe is unobservable, and redirect targets are
+        // memoized per command, so no expansion runs twice. The error is
+        // already path_error-shaped, so it joins the IoError channel the
+        // mirror failures use and every caller renders and marks it
+        // exactly like an fd 0/1/2 failure.
+        if let Some(error) = self.redirect_setup_open_error(cmd, None)? {
+            return Err(ExecuteError::IoError(error));
+        }
+        let redirect_failed = false;
+
+        if let Some(redirect) = &cmd.redirect_in {
+            let target = self.expand_redirect_target(redirect);
+            // subst.c:12663-12668 failglob: the diagnostic already
+            // printed at the expansion; the null-command redirect pass
+            // must not open the failed target either.
+            if self.redirect_failglob_aborted() {
+                return Err(ExecuteError::ExpansionFailure(1));
+            }
+            if redirect.fd_var.is_some() {
+            } else if is_closed_redirect_target(&target) {
+            } else if let Some(source_fd) = dup_spelling_source_fd(&target) {
+                // `<&N`, the move form `<&N-` (make_cmd.c:704-718): the
+                // builtin keeps reading its current stdin channel — the
+                // dup is a no-op for the virtual input model, and the
+                // reject_invalid_redirects gate already validated fd N is
+                // open (redir.c:1115 dup2 EBADF). GNU r_duplicating_input
+                // (redir.c:1152-1160) still runs the dup2 and fails EBADF
+                // when fd N is closed, so a closed or untracked source must
+                // fail the builtin with `N: Bad file descriptor' instead of
+                // silently succeeding (modernish BUG_SCLOSEDFD probe
+                // `command : <&8' — rubash#258). An fd-alias PATH spelling
+                // (/dev/fd/N, /dev/stdin, /proc/self/fd/N) is NOT a dup
+                // spelling: GNU opens it (redir_open), so it falls through
+                // to the classified probes below, whose closed-alias answer
+                // is the open's ENOENT (rubash#1963).
+                self.validate_builtin_dup_source(
+                    cmd,
+                    self.redirect_list_position(cmd, redirect),
+                    source_fd,
+                )?;
+            } else if redirect.append {
+                // `<> word` on fd 0: the classified probe performs the
+                // one O_RDWR open — registry classes first (net /
+                // fd alias / synthetic /proc by write class), plain
+                // files through the same raw open as before
+                // (rubash#1935/#1963/#1964) — with the same
+                // path_error shaping.
+                self.probe_input_redirect_readwrite(&target)
+                    .map_err(|e| crate::posix_errors::path_error(&target, e))?;
+            } else {
+                // rubash#2329: positional — a spelling target's
+                // source may be bound by this command's own list.
+                self.probe_input_redirect_positional(cmd, redirect, &target)?;
+            }
+        }
+
+        if let Some(redirect) = &cmd.redirect_out {
+            let target = self.expand_redirect_target(redirect);
+            // subst.c:12663-12668 failglob: the diagnostic already
+            // printed at the expansion; the null-command redirect pass
+            // must not open the failed target either.
+            if self.redirect_failglob_aborted() {
+                return Err(ExecuteError::ExpansionFailure(1));
+            }
+            if redirect.fd_var.is_some() {
+            } else if is_closed_redirect_target(&target) {
+            } else if let Some(source_fd) = dup_spelling_source_fd(&target) {
+                // `>&N` / `>&N-` dup (and move) forms: validated by the
+                // reject_invalid_redirects gate; nothing to open here. GNU
+                // redir.c:1152-1160 dup2 EBADF — closed source fails with
+                // `N: Bad file descriptor' (rubash#258 SCLOSEDFD). An
+                // fd-alias PATH spelling is an open, not a dup: it falls
+                // through to create_redirect_output, whose registry arm
+                // answers a closed alias with the open's ENOENT
+                // (rubash#1963).
+                self.validate_builtin_dup_source(
+                    cmd,
+                    self.redirect_list_position(cmd, redirect),
+                    source_fd,
+                )?;
+            } else if redirect.fd.unwrap_or(1) == 1 && target.starts_with('&') {
+                // GNU redir.c:832-838: >&WORD with a non-numeric WORD and
+                // redirector 1 translates to r_err_and_out (>&file ==
+                // >file 2>&1) - open WORD for output instead of treating
+                // it as an unusable dup source.
+                let path = target.strip_prefix('&').unwrap_or(&target);
+                self.create_redirect_output_for(Some(redirect), path, redirect.clobber)?;
+            } else {
+                self.create_redirect_output_for(Some(redirect), &target, redirect.clobber)?;
+            }
+        }
+
+        if let Some(redirect) = &cmd.append {
+            let target = self.expand_redirect_target(redirect);
+            // subst.c:12663-12668 failglob: the diagnostic already
+            // printed at the expansion; the null-command redirect pass
+            // must not open the failed target either.
+            if self.redirect_failglob_aborted() {
+                return Err(ExecuteError::ExpansionFailure(1));
+            }
+            if redirect.fd_var.is_some() {
+            } else if !is_closed_redirect_target(&target) && redirect_target_fd(&target).is_none() {
+                // GNU redir.c redirection_error (redir.c:149-176) carries the
+                // failed open's target word in the diagnostic
+                // (`$FIX/b: No such file or directory`) — the append open's
+                // error needs the same path_error shaping as the truncating
+                // open, or the renderer's message-only text drops the word
+                // (issue #518 background/append repro). The open itself
+                // classifies through the registry (rubash#1964).
+                self.open_append_target(&target)
+                    .map_err(|e| crate::posix_errors::path_error(&target, e))?;
+            }
+        }
+
+        if let Some(redirect) = &cmd.redirect_err {
+            let target = self.expand_redirect_target(redirect);
+            // subst.c:12663-12668 failglob: the diagnostic already
+            // printed at the expansion; the null-command redirect pass
+            // must not open the failed target either.
+            if self.redirect_failglob_aborted() {
+                return Err(ExecuteError::ExpansionFailure(1));
+            }
+            if redirect.fd_var.is_some() {
+            } else if !is_closed_redirect_target(&target)
+                && !is_null_device(&target)
+                && redirect_target_fd(&target).is_none()
+            {
+                self.create_redirect_output_for(Some(redirect), &target, redirect.clobber)?;
+            }
+        }
+
+        if let Some(redirect) = &cmd.redirect_err_append {
+            let target = self.expand_redirect_target(redirect);
+            // subst.c:12663-12668 failglob: the diagnostic already
+            // printed at the expansion; the null-command redirect pass
+            // must not open the failed target either.
+            if self.redirect_failglob_aborted() {
+                return Err(ExecuteError::ExpansionFailure(1));
+            }
+            if redirect.fd_var.is_some() {
+            } else if !is_closed_redirect_target(&target) && redirect_target_fd(&target).is_none() {
+                // Classified append open (rubash#1964), same
+                // path_error shaping as the fd-1 arm above.
+                self.open_append_target(&target)
+                    .map_err(|e| crate::posix_errors::path_error(&target, e))?;
+            }
+        }
+
+        // rubash#1687: numbered redirects (`3>file`, `3<file`, `3>&1`)
+        // live only in the ordered `cmd.redirects` list — the structured
+        // fields above mirror just fds 0-2 (parser redirect_assign.rs).
+        // GNU performs every redirection on the command node
+        // (redir.c do_redirections), so a no-output builtin must still
+        // create/truncate/validate its numbered targets even though it
+        // writes nothing itself: `builtin 3>f` and `: 3>f` create f, a
+        // bad target fails the builtin with status 1, and a dup from a
+        // closed fd fails EBADF. `{var}` redirects were applied by
+        // apply_dynamic_fd_var_redirects before this helper (see the
+        // note at the top) and are skipped, as are close/heredoc forms
+        // with no open to perform.
+        for (index, redirect) in cmd.redirects.iter().enumerate() {
+            if redirect.fd_var.is_some() {
+                continue;
+            }
+            let Some(fd) = redirect.fd else {
+                continue;
+            };
+            if fd < 3 {
+                continue;
+            }
+            let target = self.expand_redirect_target(redirect);
+            if self.redirect_failglob_aborted() {
+                return Err(ExecuteError::ExpansionFailure(1));
+            }
+            match redirect.kind {
+                crate::parser::RedirectKind::Output
+                | crate::parser::RedirectKind::ClobberOutput
+                | crate::parser::RedirectKind::CombinedOutput
+                | crate::parser::RedirectKind::CombinedAppend => {
+                    if is_closed_redirect_target(&target) {
+                    } else if let Some(source_fd) = dup_spelling_source_fd(&target) {
+                        self.validate_builtin_dup_source(cmd, index, source_fd)?;
+                    } else if !target.starts_with("<(") && !target.starts_with(">(") {
+                        self.create_redirect_output_for(Some(redirect), &target, redirect.clobber)?;
+                    }
+                }
+                crate::parser::RedirectKind::Append => {
+                    if !is_closed_redirect_target(&target)
+                        && redirect_target_fd(&target).is_none()
+                        && !target.starts_with("<(")
+                        && !target.starts_with(">(")
+                    {
+                        // Classified append open (rubash#1964); the
+                        // session_path anchoring the fd-1 arm always
+                        // had applies here too — the previous raw
+                        // fallback opened against the process cwd.
+                        self.open_append_target(&target)
+                            .map_err(|e| crate::posix_errors::path_error(&target, e))?;
+                    }
+                }
+                crate::parser::RedirectKind::Input => {
+                    if is_closed_redirect_target(&target) {
+                    } else if let Some(source_fd) = dup_spelling_source_fd(&target) {
+                        self.validate_builtin_dup_source(cmd, index, source_fd)?;
+                    } else if !target.starts_with("<(") && !target.starts_with(">(") {
+                        // rubash#2329: positional — see
+                        // probe_input_redirect_positional.
+                        self.probe_input_redirect_positional(cmd, redirect, &target)?;
+                    }
+                }
+                crate::parser::RedirectKind::ReadWrite => {
+                    if !is_closed_redirect_target(&target)
+                        && (redirect_target_fd(&target).is_none()
+                            || crate::special_paths::fd_alias_target(&target).is_some())
+                        && !target.starts_with("<(")
+                        && !target.starts_with(">(")
+                    {
+                        // The classified probe performs the one
+                        // O_RDWR open — fd-alias spellings included (a
+                        // closed alias fails ENOENT here instead of
+                        // being skipped silently) and synthetic /proc
+                        // entries by their write class
+                        // (rubash#1935/#1963). `&N` dup spellings stay
+                        // excluded: they name no file to open.
+                        self.probe_input_redirect_readwrite(&target)
+                            .map_err(|e| crate::posix_errors::path_error(&target, e))?;
+                    }
+                }
+                crate::parser::RedirectKind::DuplicateInput
+                | crate::parser::RedirectKind::DuplicateOutput => {
+                    if let Some((source_fd, _)) = redirect_target_fd_and_move(&target) {
+                        self.validate_builtin_dup_source(cmd, index, source_fd)?;
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        Ok(redirect_failed)
+    }
+
+    /// GNU redir.c: execute_cond_command applies the compound command's
+    /// redirections to the real descriptors for the duration of the test
+    /// and restores them afterwards (do_redirections/undo_redirections).
+    /// fd 1 and fd 2 are the only descriptors `[[ ]]` can write; bind
+    /// them in redirect order so `[[ ]] 2>f` captures the command's own
+    /// diagnostics (invalid regex, syntax errors) and `2>&1`/`>&file`
+    /// interact correctly with a following `>file`. File creation and
+    /// validation already ran in apply_no_output_builtin_redirects; here
+    /// each target becomes an fd-table endpoint.
+    pub(in crate::executor) fn bind_conditional_stdio_redirects(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<(), ExecuteError> {
+        use crate::parser::RedirectKind;
+        for redirect in &cmd.redirects {
+            if redirect.fd_var.is_some() {
+                continue;
+            }
+            let fd = redirect.fd.unwrap_or(match redirect.kind {
+                RedirectKind::Input
+                | RedirectKind::ReadWrite
+                | RedirectKind::DuplicateInput
+                | RedirectKind::CloseInput
+                | RedirectKind::HereDoc
+                | RedirectKind::HereString => 0,
+                _ => 1,
+            });
+            if fd != 1 && fd != 2 {
+                continue;
+            }
+            let target = self.expand_redirect_target(redirect);
+            match redirect.kind {
+                RedirectKind::CloseInput | RedirectKind::CloseOutput => {
+                    self.fd_table.close(fd);
+                }
+                RedirectKind::DuplicateInput | RedirectKind::DuplicateOutput => {
+                    if let Some(source) = redirect_target_fd(&target) {
+                        // GNU dup_redirects (redir.c:555-567) copies the
+                        // descriptor wholesale; a closed/bad source was
+                        // already diagnosed and leaves fd unchanged.
+                        let _ = self.fd_table.dup_output(fd, source);
+                    } else if fd == 1 && !is_closed_redirect_target(&target) {
+                        // `>&word`/`&>word`-style dup with a non-numeric
+                        // word on redirector 1 is r_err_and_out
+                        // (redir.c:832-838): open once, bind both fds to
+                        // the same open file description.
+                        let path = target.strip_prefix('&').unwrap_or(&target);
+                        let file = FileFd::open_write(
+                            self.session_path(shell_path_to_windows(
+                                path,
+                                &self.shell_state.env_vars,
+                            )),
+                            redirect.append,
+                            false,
+                        )
+                        .map_err(|e| crate::posix_errors::path_error(path, e))?;
+                        self.fd_table
+                            .open_output(1, FdWriteEndpoint::File(file.clone()), false);
+                        self.fd_table
+                            .open_output(2, FdWriteEndpoint::File(file), false);
+                    }
+                }
+                RedirectKind::Output
+                | RedirectKind::Append
+                | RedirectKind::ClobberOutput
+                | RedirectKind::CombinedOutput
+                | RedirectKind::CombinedAppend => {
+                    if is_closed_redirect_target(&target) {
+                        self.fd_table.close(fd);
+                        continue;
+                    }
+                    if let Some(source) = redirect_target_fd(&target) {
+                        // rubash#2276: a socket endpoint's
+                        // spelling-open fails ENXIO (see
+                        // fd_alias_spelling_open_error) — the dup
+                        // below is the pipe rule, not the socket rule.
+                        if let Some(error) = self.fd_alias_spelling_open_error(source) {
+                            return Err(crate::posix_errors::path_error(&target, error).into());
+                        }
+                        // rubash#2256: a spelling target (`> /dev/fd/N`)
+                        // on a regular-file endpoint binds a FRESH open
+                        // of the target; every other endpoint keeps the
+                        // dup. (A bare-fd target cannot reach this arm —
+                        // that is the Duplicate kinds' shape above.)
+                        if let Some(path) = self.fd_alias_reopen_path(source) {
+                            let append = redirect.append
+                                || matches!(
+                                    redirect.kind,
+                                    RedirectKind::Append | RedirectKind::CombinedAppend
+                                );
+                            if let Ok(fresh) = FileFd::open_write(path, append, false) {
+                                self.fd_table
+                                    .open_output(fd, FdWriteEndpoint::File(fresh), false);
+                                continue;
+                            }
+                        }
+                        // rubash#2385: a pipe read end has no write
+                        // endpoint to dup — the spelling open attaches
+                        // to the pipe's other end, so bind the
+                        // complementary endpoint the resolver mints.
+                        if self.fd_table.output_endpoint(source).is_none() {
+                            if let Some(endpoint) =
+                                self.fd_alias_complementary_write_endpoint(source)
+                            {
+                                self.fd_table.open_output(fd, endpoint, false);
+                                continue;
+                            }
+                        }
+                        let _ = self.fd_table.dup_output(fd, source);
+                        continue;
+                    }
+                    let append = redirect.append
+                        || matches!(
+                            redirect.kind,
+                            RedirectKind::Append | RedirectKind::CombinedAppend
+                        );
+                    let file = FileFd::open_write(
+                        self.session_path(shell_path_to_windows(
+                            &target,
+                            &self.shell_state.env_vars,
+                        )),
+                        append,
+                        false,
+                    )
+                    .map_err(|e| crate::posix_errors::path_error(&target, e))?;
+                    self.fd_table
+                        .open_output(fd, FdWriteEndpoint::File(file.clone()), false);
+                    // `&>file`/`&>>file` (r_err_and_out): one open file
+                    // description shared by fd 1 and fd 2 (redir.c:832-838).
+                    if matches!(
+                        redirect.kind,
+                        RedirectKind::CombinedOutput | RedirectKind::CombinedAppend
+                    ) {
+                        let other = if fd == 1 { 2 } else { 1 };
+                        self.fd_table
+                            .open_output(other, FdWriteEndpoint::File(file), false);
+                    }
+                }
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+}

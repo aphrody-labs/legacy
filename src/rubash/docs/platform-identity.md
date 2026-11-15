@@ -1,0 +1,103 @@
+# Platform Identity & Path Dialect
+
+> Moved from the README on 2026-10-10, when the README was restructured to be
+> evidence-first. The short identity summary lives in the README; the persona
+> disclosure for AI agents lives in [`SKILL.md`](../SKILL.md) (rubash#154).
+> This file keeps the full detail, preserved from the README as of commit
+> `7be6a799`.
+
+## Why native matters (Windows)
+
+Shells billed as "bash on Windows" (Git Bash, MSYS2) ship a ported bash that rides on a POSIX emulation layer (`msys-2.0.dll`), with fork emulation and path translation that leak quirks into every script. Rubash has no such layer — one self-contained binary speaking Win32 directly.
+
+## Paths are first-class, one dialect per child
+
+The MSYS model *guesses* which arguments look like paths and rewrites them — which is why every AI agent and script has to set `MSYS_NO_PATHCONV=1` to stop `/flags` from becoming `C:/Program Files/Git/flags`. Rubash inverts the model with a per-child dialect contract (the same line GNU draws: `shell_execve` hands `execve` the raw word bytes and never rewrites argv). A native Windows program receives real Win32 spellings for classified path-shaped operands (virtual roots, `/mnt/X`, drive forms with components), translated whether or not the target exists yet; the verbatim classes listed below are the boundary of that translation, not gaps in it. Since rubash#592 the same engine-side translation covers the POSIX-aware class (anything resolved out of a WinuxCmd installation, or through the `winuxcmd` dispatcher) for drive-form operands (`/d/...`): the old verbatim-for-applets premise — each tool resolving POSIX forms itself — proved partial in the shipped toolchain (sed/du had no operand resolution, niugit existence-gates it), so the engine owns the path-form translation for every child class, across execution context, argument position and target existence. What stays verbatim: the grammar data primaries of grep/sed/awk/find (pattern/script text and `-name`-family values — the niubash host's `winuxcmd_path_translation_mask` table), the bare `/` and drive-root forms (`/d`, `/d/`) for native children — a lone `/` is also a data operand (`expr 10 / 3`) and a root form is also a switch spelling in native grammars (`cmd /c`, `xcopy /D`), so both cross exactly as typed (#748, #779; to name a drive root for a native program, spell it `/d/.`, `/mnt/d/`, or `D:/`) — attached values (`--opt=/d/x`, `FOO=/d/x`), which are never translated, `/cygdrive/d/...` and `/dev/*` (the child's own layer resolves those, #568 probe), shell-wrapped `#!` children, the env channel, and all non-path-shaped words. For emergency rollback the pre-#592 behavior is available by exporting `__RUBASH_ARGV_DIALECT=legacy`.
+
+## Identity and Compatibility (rubash#154)
+
+The engine presents a **selectable platform identity** instead of outsourcing
+it to whatever `uname.exe` happens to sit on PATH. `uname` and `arch` are
+engine builtins (full option parsing, coreutils/MSYS2 output shapes), and
+`OSTYPE`/`MACHTYPE`/`HOSTTYPE` follow the same persona.
+
+- **Default persona: MSYS2-compatible** (disclosed everywhere — this is a
+  compatibility mask, not a claim of being an MSYS2 port):
+  - `uname -s` → `MSYS_NT-<ver>` — or `MINGW64_NT-` / `UCRT64_NT-` /
+    `CLANG64_NT-` … when `MSYSTEM` is set, mapping the value the same way
+    the MSYS2 runtime does;
+  - `uname -m` / `arch` → `x86_64` / `aarch64` (build arch);
+  - `uname -r` → the Windows version string (`10.0-19044`, same string that
+    finishes `uname -s`);
+  - `uname -o` → `Msys`; `uname -a` → `sysname nodename release version
+    machine Msys` (the Git Bash shape);
+  - `OSTYPE=msys`, `MACHTYPE=<arch>-pc-msys` (bound `set_if_not`-style, as
+    GNU variables.c:723-725 does — an inherited value wins).
+  Ecosystem scripts that branch on `case "$(uname -s)" in MINGW*|MSYS*|
+  CYGWIN*)` or `$OSTYPE` ∈ {msys, cygwin} take their best-tested path.
+- **`RUBASH_IDENTITY=native` switches to the honest-native persona**:
+  `uname -s` → `Windows_NT` (the native `%OS%` value), `uname -o` →
+  `Windows`, `OSTYPE=windows`, `MACHTYPE=<arch>-pc-windows`. Tests and
+  native-first users select this; unset the variable (or set any other
+  value) to return to the default.
+
+**Disclosure surfaces** (the persona must never be silent):
+
+- `rubash --help` prints an Identity section (current persona + how to switch);
+- `rubash --identity` prints the persona and every effective value
+  (`uname -s/-m/-r/-o`, `arch`, `OSTYPE`, `MACHTYPE`);
+- the repo-root [`SKILL.md`](../SKILL.md) persona disclosure section (so AI
+  agents consuming the repo also know the persona semantics).
+
+`uname`/`arch` are *hidden* fast-path builtins (like `sleep`/`dirname`):
+`type`/`enable`/`compgen -b` keep reporting them as external commands, and
+they work even when PATH carries no `uname.exe` at all.
+
+## Known platform divergence: carriage-return handling
+
+On Windows rubash strips carriage returns that immediately precede a newline
+in script and heredoc lines, command-substitution capture, and `read` values;
+on every other platform CR passes through byte-identical. This is an
+established, deliberate platform divergence — not an open gap.
+
+- **GNU's own rule is CR-as-data off MSYS.** Upstream's only CR handling is
+  `#ifdef __MSYS__`-gated: `parse.y:1609 yy_getc()` (MSYS skips `\r`
+  entirely at the input getter), `parse.y:2596` (MSYS drops `\r` while
+  reading a script line) and `subst.c:6788` (MSYS strips a `\r` before a
+  newline in command-substitution accumulation). On non-MSYS GNU bash —
+  including the WSL GNU Bash 5.3.x baseline — a CR is ordinary word data:
+  CRLF scripts fail with `$'getopts\r': command not found`, and
+  `printf 'a\r\n' | read x` leaves `x` as `a\r`.
+- **Why Windows strips: CRLF robustness.** Windows-native text terminates
+  lines with CRLF — `core.autocrlf` checkouts, Notepad-sourced scripts, CRT
+  text-mode pipes — and the shipped oh-my-niu bundle is 100% CRLF. Reading
+  the CR as data would make `getopts\r`-style failures the default
+  experience on the primary platform. Only the CR belonging to a CRLF
+  terminator is stripped: a lone carriage return stays literal word data
+  (niubash#106; rubash#140 records the tolerance as a Windows product
+  decision, niubash#120 family).
+- **Scope.** The stripping is `cfg!(windows)`-gated at every site, so unix
+  and macOS keep GNU behavior byte-for-byte (line numbers at this writing):
+  `src/lexer/mod.rs:908` and `:1174` (heredoc bodies and logical lines),
+  `src/executor/command_subst_helpers.rs:390`/`:403` (`trim_capture_terminator`,
+  command-substitution capture), `src/executor/read_helpers.rs:1103`/`:1113`
+  and `src/executor/pipeline_exec.rs:42` (`read`, `read -t`).
+
+## Platform status narrative (2026-09 state)
+
+**Platform status — cross-platform, Windows-first**: Windows is the primary
+target and the platform with the full stack: one self-contained binary
+solving the classic Windows bash pain points (no POSIX emulation layer, no
+path-conversion heuristics, no `MSYS_NO_PATHCONV`, native Win32 paths as
+the currency, MSYS2-compatible identity for the bash ecosystem). Linux now
+builds and runs natively (`x86_64-unknown-linux-gnu`) with real
+getrlimit/chmod/faccessat/uname(2) semantics and signal delivery — verified
+by running the same GNU suite corpus on the Linux binary inside WSL (19/24
+byte-identical and climbing). macOS
+compiles green in CI with coreutils-correct uname arms. The engine's
+semantic model (in-process subshells, fd-table semantics, process
+boundaries) is deliberately platform-neutral, so the same ledger travels.
+
+Current per-platform status (CI legs, release artifacts, Android check
+targets) is kept in the README Platforms table; open gaps are tracked in
+[`docs/cross-platform-gap-ledger.md`](cross-platform-gap-ledger.md).

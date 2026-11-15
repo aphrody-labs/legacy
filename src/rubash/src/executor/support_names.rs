@@ -1,0 +1,1003 @@
+use super::*;
+use crate::executor::markers::STORAGE_WORD_PREFIX;
+
+pub(in crate::executor) fn is_shell_name(name: &str) -> bool {
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+
+    is_shell_name_start(first) && chars.all(is_shell_name_char)
+}
+
+pub(in crate::executor) fn is_shell_name_start(ch: char) -> bool {
+    ch == '_' || ch.is_ascii_alphabetic()
+}
+
+pub(in crate::executor) fn is_shell_name_char(ch: char) -> bool {
+    ch == '_' || ch.is_ascii_alphanumeric()
+}
+
+pub(in crate::executor) fn is_special_parameter_name(name: &str) -> bool {
+    matches!(name, "#" | "?" | "$" | "!" | "-" | "0")
+}
+
+/// Bash compatibility version advertised through BASH_VERSION / BASH_VERSINFO.
+/// GNU patchlevel.h:28 PATCHLEVEL 20 (vendored tree @9c46586, oracle bash
+/// 5.3.20); $BASH_VERSION is `5.3.20(1)-release`, VERSINFO[2] is 20.
+const BASH_COMPAT_VERSION: &str = "5.3.20";
+
+/// The `$BASH_VERSION` value the executor seeds (`5.3.20(1)-release` — the
+/// `-release` suffix is part of it, version.c's shell_version_string). Pub
+/// so `usage::show_shell_help`/`show_shell_version` fall back to the same
+/// literal when a caller has no executor (the #585 host-half embedders).
+pub fn bash_version_value() -> String {
+    format!("{}(1)-release", BASH_COMPAT_VERSION)
+}
+
+pub(in crate::executor) fn bash_path_value() -> String {
+    std::env::current_exe()
+        .map(|path| shell_display_path(&path.to_string_lossy().replace('\\', "/")))
+        .unwrap_or_else(|_| "rubash".to_string())
+}
+
+pub(in crate::executor) fn shell_path_value() -> String {
+    bash_path_value()
+}
+
+/// GNU variables.c set_shell_var: when SHELL is not in the environment,
+/// it is initialized from the passwd entry for the current uid
+/// (get_current_user_info, shell.c:1877-1915: getpwuid(getuid())->pw_shell)
+/// — never from the shell's own executable path (rubash#1143). Falls back
+/// to the executable path when no passwd entry/shell is available (the
+/// only source on non-unix hosts).
+pub(in crate::executor) fn login_shell_value() -> String {
+    #[cfg(unix)]
+    {
+        let uid = unsafe { libc::getuid() };
+        let entry = unsafe { libc::getpwuid(uid) };
+        if !entry.is_null() {
+            let shell = unsafe { (*entry).pw_shell };
+            if !shell.is_null() {
+                let value = unsafe { std::ffi::CStr::from_ptr(shell) }
+                    .to_string_lossy()
+                    .into_owned();
+                if !value.is_empty() {
+                    return value;
+                }
+            }
+        }
+    }
+    shell_path_value()
+}
+
+pub(in crate::executor) fn bash_versinfo_values() -> Vec<String> {
+    let mut parts = BASH_COMPAT_VERSION.split('.');
+    vec![
+        parts.next().unwrap_or("0").to_string(),
+        parts.next().unwrap_or("0").to_string(),
+        parts.next().unwrap_or("0").to_string(),
+        "1".to_string(),
+        "release".to_string(),
+        machtype_value(),
+    ]
+}
+
+pub(in crate::executor) fn hosttype_value() -> String {
+    std::env::consts::ARCH.to_string()
+}
+
+pub(in crate::executor) fn hostname_value() -> String {
+    let from_env = std::env::var("HOSTNAME")
+        .ok()
+        .filter(|value| !value.is_empty())
+        .or_else(|| {
+            std::env::var("COMPUTERNAME")
+                .ok()
+                .filter(|value| !value.is_empty())
+        });
+    if let Some(value) = from_env {
+        return value;
+    }
+    // GNU variables.c set_machine_vars: HOSTNAME is current_host_name —
+    // the machine's real host name from gethostname/uname(2) (shell.c
+    // get_host_name), not a hardcoded constant (rubash#1139).
+    #[cfg(unix)]
+    {
+        let name = super::identity::nodename();
+        if !name.is_empty() && name != "unknown" {
+            return name;
+        }
+    }
+    "localhost".to_string()
+}
+
+pub(in crate::executor) fn ostype_value() -> String {
+    // Persona-aware (rubash#154): `msys` under the default MSYS-compatible
+    // persona, `windows` under RUBASH_IDENTITY=native. GNU binds the
+    // configure-time constant with set_if_not (variables.c:724); the
+    // persona picks which constant the port was "configured" with.
+    super::identity::ostype()
+}
+
+/// GNU bash's configure-time MACHTYPE host triple. version.c:90
+/// show_shell_version() prints it in the --version banner, variables.c:725
+/// binds the same value to $MACHTYPE / $BASH_VERSINFO[5]. Configure
+/// derives it from the build host (config.guess), so the Rust port
+/// reassembles it from compile-time ARCH/OS: `x86_64-pc-linux-gnu`
+/// (linux), `aarch64-apple-darwin` (macOS). The Windows triple is persona
+/// — owned (rubash#154): the default MSYS-compatible persona reports
+/// `{arch}-pc-msys` (the MSYS2 bash configure triple, keeping the shell
+/// inside the MSYS/Cygwin script ecosystem), while RUBASH_IDENTITY=native
+/// reports the honest-native `{arch}-pc-windows`.
+pub fn machtype_value() -> String {
+    super::identity::machtype()
+}
+
+pub(in crate::executor) fn uid_value() -> String {
+    std::env::var("UID")
+        .ok()
+        .filter(|value| !value.is_empty())
+        // GNU variables.c:984 uidset binds the REAL uid (current_user.uid
+        // = getuid at startup), readonly; an inherited $UID is kept, but
+        // there is no root fallback — the old "0" emulated a dev baseline
+        // that ran as root and lied everywhere else (`\$` prompt decoding
+        // plus $UID/$EUID parity all key off this identity).
+        .unwrap_or_else(|| real_uid().to_string())
+}
+
+pub(in crate::executor) fn euid_value() -> String {
+    // GNU uidset: EUID is the real euid when it differs from uid, else the
+    // uid value. Same inherited-env rule as UID above.
+    std::env::var("EUID")
+        .ok()
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| real_euid().to_string())
+}
+
+/// Real process identities (GNU shell.c current_user uid/euid). libc is
+/// already a dependency on every Unix target in this tree.
+#[cfg(unix)]
+fn real_uid() -> u32 {
+    unsafe { libc::getuid() }
+}
+
+/// Windows has no uid/euid; the persona shell reports 0 there (unchanged).
+#[cfg(windows)]
+fn real_uid() -> u32 {
+    0
+}
+
+/// Real effective uid; same platform split as real_uid.
+#[cfg(unix)]
+fn real_euid() -> u32 {
+    unsafe { libc::geteuid() }
+}
+
+/// Windows has no euid; keep the persona 0 (unchanged).
+#[cfg(windows)]
+fn real_euid() -> u32 {
+    0
+}
+
+pub(in crate::executor) fn ppid_value() -> String {
+    std::env::var("PPID")
+        .ok()
+        .filter(|value| value.chars().all(|ch| ch.is_ascii_digit()))
+        .or_else(|| parent_process_id().map(|pid| pid.to_string()))
+        .unwrap_or_else(|| std::process::id().to_string())
+}
+
+/// Real parent process id. Windows does not export a PPID environment
+/// variable, so walk the process table; Unix uses getppid(2).
+fn parent_process_id() -> Option<u32> {
+    #[cfg(windows)]
+    {
+        windows_parent_process_id()
+    }
+
+    #[cfg(unix)]
+    {
+        u32::try_from(unsafe { libc::getppid() }).ok()
+    }
+
+    #[cfg(not(any(windows, unix)))]
+    {
+        None
+    }
+}
+
+#[cfg(windows)]
+fn windows_parent_process_id() -> Option<u32> {
+    // GNU binds $PPID once at startup via getppid(2) (variables.c:700
+    // initialize_shell_variables: `set_ppid ();`). The previous
+    // implementation walked a CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS)
+    // process-table snapshot — a ~14ms system-wide operation measured on
+    // EVERY shell start (rubash#158: it alone was over a third of the
+    // ~40ms `-c` startup). NtQueryInformationProcess(ProcessBasicInformati
+    // on).InheritedFromUniqueProcessId returns the same recorded creator
+    // PID that the snapshot's th32_parent_process_id field reports (both
+    // come from the kernel's recorded parent), without building the
+    // snapshot. The snapshot walk remains as the fallback if the ntdll
+    // call is unavailable.
+    nt_parent_process_id().or_else(snapshot_parent_process_id)
+}
+
+/// Parent PID via ntdll NtQueryInformationProcess on the current
+/// pseudo-handle. `InheritedFromUniqueProcessId` is the PID recorded at
+/// process creation — the same field CreateToolhelp32Snapshot surfaces as
+/// th32_parent_process_id.
+#[cfg(windows)]
+fn nt_parent_process_id() -> Option<u32> {
+    use std::ffi::c_void;
+
+    #[repr(C)]
+    #[allow(non_snake_case)]
+    struct ProcessBasicInformation {
+        ExitStatus: *mut c_void,
+        PebBaseAddress: *mut c_void,
+        AffinityMask: [*mut c_void; 2],
+        UniqueProcessId: usize,
+        InheritedFromUniqueProcessId: usize,
+    }
+
+    extern "system" {
+        fn GetCurrentProcess() -> *mut c_void;
+        fn NtQueryInformationProcess(
+            process: *mut c_void,
+            process_information_class: u32,
+            process_information: *mut c_void,
+            process_information_length: u32,
+            return_length: *mut u32,
+        ) -> i32;
+    }
+
+    const PROCESS_BASIC_INFORMATION: u32 = 0;
+    let (mut info, mut returned) = unsafe {
+        (
+            std::mem::zeroed::<ProcessBasicInformation>(),
+            std::mem::zeroed::<u32>(),
+        )
+    };
+    let status = unsafe {
+        NtQueryInformationProcess(
+            GetCurrentProcess(),
+            PROCESS_BASIC_INFORMATION,
+            &mut info as *mut _ as *mut c_void,
+            std::mem::size_of::<ProcessBasicInformation>() as u32,
+            &mut returned,
+        )
+    };
+    if status != 0 {
+        return None;
+    }
+    u32::try_from(info.InheritedFromUniqueProcessId)
+        .ok()
+        .filter(|pid| *pid != 0)
+}
+
+#[cfg(windows)]
+fn snapshot_parent_process_id() -> Option<u32> {
+    use std::ffi::c_void;
+
+    const TH32CS_SNAPPROCESS: u32 = 0x0000_0002;
+    const INVALID_HANDLE_VALUE: *mut c_void = -1isize as *mut c_void;
+
+    #[repr(C)]
+    struct PROCESSENTRY32W {
+        dw_size: u32,
+        cnt_usage: u32,
+        th32_process_id: u32,
+        th32_default_heap_id: usize,
+        th32_module_id: u32,
+        cnt_threads: u32,
+        th32_parent_process_id: u32,
+        pc_pri_class_base: i32,
+        dw_flags: u32,
+        sz_exe_file: [u16; 260],
+    }
+
+    extern "system" {
+        fn CreateToolhelp32Snapshot(dw_flags: u32, th32_process_id: u32) -> *mut c_void;
+        fn Process32FirstW(snapshot: *mut c_void, entry: *mut PROCESSENTRY32W) -> i32;
+        fn Process32NextW(snapshot: *mut c_void, entry: *mut PROCESSENTRY32W) -> i32;
+        fn CloseHandle(object: *mut c_void) -> i32;
+    }
+
+    let current = std::process::id();
+    unsafe {
+        let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+        if snapshot == INVALID_HANDLE_VALUE {
+            return None;
+        }
+        let mut entry: PROCESSENTRY32W = std::mem::zeroed();
+        entry.dw_size = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+        let mut parent = None;
+        if Process32FirstW(snapshot, &mut entry) != 0 {
+            loop {
+                if entry.th32_process_id == current {
+                    parent = Some(entry.th32_parent_process_id);
+                    break;
+                }
+                if Process32NextW(snapshot, &mut entry) == 0 {
+                    break;
+                }
+            }
+        }
+        CloseHandle(snapshot);
+        parent
+    }
+}
+
+pub(in crate::executor) fn declare_args_request_integer(args: &[String]) -> bool {
+    // rubash#3338: only the option region carries options. A `-i`
+    // behind the first operand (or behind `--`) is a NAME in GNU
+    // (internal_getopt stops there, builtins/bashgetopt.c:77-84);
+    // the old whole-list scan let it switch the command into
+    // integer pre-evaluation, so `declare x -i y=zz` bound y=0
+    // where GNU binds the literal y=zz.
+    let region = super::builtin_opt::option_region_end(args, true);
+    args[..region].iter().any(|arg| {
+        arg.starts_with('-')
+            && arg != "-"
+            && !arg.starts_with("--")
+            && arg[1..].chars().any(|option| option == 'i')
+    })
+}
+
+pub(in crate::executor) fn is_reserved_word(word: &str) -> bool {
+    matches!(
+        word,
+        "if" | "then"
+            | "else"
+            | "elif"
+            | "fi"
+            | "while"
+            | "do"
+            | "done"
+            | "until"
+            | "for"
+            | "case"
+            | "esac"
+            | "in"
+            | "function"
+            | "select"
+            | "time"
+            | "coproc"
+    )
+}
+
+/// The POSIX special-builtin set, execution side. GNU's table is
+/// name-based: `special_builtins[]` (builtins/mkbuiltins.c:148-154)
+/// lists 16 names — `source` included, as the synonym spelling of
+/// `.` — and the SPECIAL flag is applied by name wherever the name
+/// appears (mkbuiltins.c:819-820). This predicate is the executor's
+/// one classification point for the set (function shadowing,
+/// definition rejection, tempenv fatality, assignment persistence);
+/// it must stay equal to the registry's `SPECIAL_BUILTINS`
+/// (command_registry.rs), which the registry consistency tests pin.
+/// rubash#2036 KD-2: `source` was missing here until S3 — the
+/// introspection faces already reported it as special (S2), and
+/// variable_state carried a `|| command == "source"` workaround for
+/// the gap (removed with this alignment).
+pub(in crate::executor) fn is_posix_special_builtin(name: &str) -> bool {
+    matches!(
+        name,
+        "." | ":"
+            | "break"
+            | "continue"
+            | "eval"
+            | "exec"
+            | "exit"
+            | "export"
+            | "readonly"
+            | "return"
+            | "set"
+            | "shift"
+            | "source"
+            | "times"
+            | "trap"
+            | "unset"
+    )
+}
+
+/// GNU general.c::valid_identifier: `[A-Za-z_][A-Za-z0-9_]*`. The POSIX
+/// function-name restriction it supports is compiled out of the 5.3 baseline
+/// (config-top.h leaves POSIX_RESTRICT_FUNCNAME undefined, so
+/// execute_intern_function never sets pflags&1 and `!! () { ...; }` is a
+/// legal POSIX-mode definition); the helper stays for the documented ifdef.
+#[allow(dead_code)]
+pub(in crate::executor) fn valid_function_identifier(name: &str) -> bool {
+    let mut chars = name.chars();
+    let Some(first) = chars.next() else {
+        return false;
+    };
+    (first == '_' || first.is_ascii_alphabetic())
+        && chars.all(|ch| ch == '_' || ch.is_ascii_alphanumeric())
+}
+
+pub(in crate::executor) fn invert_exit_status(status: i32) -> i32 {
+    i32::from(status == 0)
+}
+
+pub(in crate::executor) fn short_set_flag_option(flag: char) -> Option<&'static str> {
+    // Single truth table moved next to its GNU owner (flags.c shell_flags[]
+    // / set.def o_options) — rubash#358: the executor fast paths and
+    // builtins::set must never carry diverging copies.
+    crate::builtins::set::short_flag_option_name(flag)
+}
+
+/// Marker written into `operator_metadata.raw` on a compound command's
+/// redirect that was cloned into a body command's redirect list. The clone
+/// exists so inner fd-alias redirections (`>&N`, `/dev/stdout`) resolve
+/// against the fd state the GROUP left — GNU opens compound redirects
+/// before the body runs (redir.c do_redirection_internal). It is NOT the
+/// command's own redirect, though: `exec` persists only its own redirect
+/// list (execute_cmd.c exec_builtin), so the persistent-redirect path must
+/// resolve aliases against marked entries without persisting them.
+/// `operator_metadata.raw` is never consulted at execution time, so it is
+/// a safe carrier.
+pub(in crate::executor) const GROUP_REDIRECT_INJECTED_MARK: &str =
+    crate::executor::markers::GROUP_REDIRECT_INJECTED_MARK;
+
+pub(in crate::executor) fn injected_group_redirect(redirect: &Redirect) -> Redirect {
+    let mut cloned = redirect.clone();
+    cloned.operator_metadata.raw = GROUP_REDIRECT_INJECTED_MARK.to_string();
+    cloned
+}
+
+pub(in crate::executor) fn is_injected_group_redirect(redirect: &Redirect) -> bool {
+    redirect.operator_metadata.raw == GROUP_REDIRECT_INJECTED_MARK
+}
+
+/// Redirections that OPEN/APPEND a stdio slot and can therefore be replayed
+/// as an append on the body's leaf commands. A `DuplicateOutput` (`2>&1`,
+/// `1>&2`) is deliberately excluded: it is a positional dup2 whose value
+/// depends on the fd-table state AT THAT POINT in the compound's redirect
+/// list (redir.c:767-955 do_redirection_internal applies the list left to
+/// right). The compound wrapper already replays the ordered list on the real
+/// fd table (open_compound_output_redirects); replaying the dup again in the
+/// leaf's ordered walk resolves it against a LATER fd-1/fd-2 binding — the
+/// rubash#699 `{ ...; } 2>&1 >file` inversion (fd 1 was already `file` when
+/// the second `2>&1` ran, so both streams landed there).
+pub(in crate::executor) fn is_stdout_write_redirect(redirect: &Redirect) -> bool {
+    redirect.fd.unwrap_or(1) == 1
+        && matches!(
+            redirect.kind,
+            crate::parser::RedirectKind::Output
+                | crate::parser::RedirectKind::Append
+                | crate::parser::RedirectKind::ClobberOutput
+                | crate::parser::RedirectKind::CombinedOutput
+                | crate::parser::RedirectKind::CombinedAppend
+        )
+}
+
+/// fd-2 counterpart of `is_stdout_write_redirect` (see its comment).
+pub(in crate::executor) fn is_stderr_write_redirect(redirect: &Redirect) -> bool {
+    redirect.fd.unwrap_or(2) == 2
+        && matches!(
+            redirect.kind,
+            crate::parser::RedirectKind::Output
+                | crate::parser::RedirectKind::Append
+                | crate::parser::RedirectKind::ClobberOutput
+                | crate::parser::RedirectKind::CombinedOutput
+                | crate::parser::RedirectKind::CombinedAppend
+        )
+}
+
+/// Splice admission for an fd-1 output redirect. Only an OPEN/APPEND leg is
+/// replayed on the body's leaves; a `DuplicateOutput` (`2>&1`, `1>&2`) is
+/// NEVER sliced here (rubash#726).
+///
+/// GNU applies a compound command's redirect list once to its real
+/// descriptors before the body runs (redir.c:767-955 do_redirection_internal,
+/// unwound at redir.c:949-955) — `open_compound_output_redirects` does the
+/// same on rubash's fd table, and that binding is authoritative for both
+/// builtins (`apply_ordered_output_redirects` seeds from the fd table) and
+/// spawned children (`plan_external_stdio` seeds its slots from it). Replaying
+/// the dup on every leaf re-resolves its SOURCE at leaf time, which is only
+/// correct while nothing has rebound the source since compound entry. A
+/// later static redirect (`2>&1 >file`) was already excluded by rubash#699;
+/// a body-level `exec` (`{ exec > f; echo x >&2; } 2>&1`) is invisible to
+/// static analysis and replayed the dup against the NEW fd 1, writing x into
+/// f instead of the stdout captured at group entry (rubash#726 R2, the
+/// pre-existing rubash#170 nest4 class). The dup splice was removed
+/// altogether; the fd-table binding alone produces GNU's result.
+pub(in crate::executor) fn is_stdout_splice_redirect(
+    _cmd: &CommandNode,
+    redirect: &Redirect,
+) -> bool {
+    is_stdout_write_redirect(redirect)
+}
+
+/// fd-2 counterpart of `is_stdout_splice_redirect`.
+pub(in crate::executor) fn is_stderr_splice_redirect(
+    _cmd: &CommandNode,
+    redirect: &Redirect,
+) -> bool {
+    is_stderr_write_redirect(redirect)
+}
+
+pub(in crate::executor) fn apply_stdout_append_redirect(
+    commands: &mut [CommandNode],
+    redirect: &Redirect,
+) {
+    for command in commands {
+        // GNU execute_cmd.c execute_function (:5322) applies only the
+        // redirects written in the definition text (`f() { ...; } 2>err`) —
+        // an enclosing compound/source fd-1 binding never becomes part of
+        // the function: `{ f() { echo x; }; } >g` leaves g empty and a later
+        // `f` writes to the caller's stdout (the binding lives on the
+        // caller's fd 1 while executing inside the group, and a definition
+        // emits no output). Injecting the group target here would persist it
+        // via define_function's function_definition_redirects and re-apply
+        // it at EVERY call — including calls inside a command substitution,
+        // where it pulls the function's stdout out of the capture pipe and
+        // into the outer file (rubash#161: `source f > file` made `$(_ff)`
+        // return empty and leak FFOUT into the file).
+        if command.function_command.is_some() {
+            continue;
+        }
+        // GNU redir.c: a compound command's redirects are opened before the
+        // body runs, so an inner `>&N` / `>/dev/fd/N` duplicates fd N as the
+        // GROUP left it. A command whose own stdout redirect is an fd alias
+        // still needs the outer redirect first so the alias resolves to the
+        // group target ({ printf x >>/dev/stdout; } >>so writes to so —
+        // niubash#118).
+        // The stdio mirror fields are fd-blind (a `3>&1` lands in
+        // redirect_out too); only fd-1 entries count as the command's own
+        // stdout redirect — numbered fd redirects propagate through the
+        // redirects list itself.
+        let own_fd1 = |r: &Redirect| r.fd.unwrap_or(1) == 1;
+        let own_output_is_fd_alias = command
+            .redirect_out
+            .iter()
+            .chain(command.append.iter())
+            .filter(|own| own_fd1(own))
+            .any(|own| {
+                let target = own.target.trim_start_matches([
+                    crate::executor::markers::QUOTED_WORD_PREFIX,
+                    STORAGE_WORD_PREFIX,
+                ]);
+                crate::executor::execution_misc::redirect_target_fd(target).is_some()
+                    || crate::executor::execution_misc::dev_stdio_redirect_fd(target).is_some()
+            });
+        // A compound command with its own fd-1 redirect (file or fd alias)
+        // shields its body from the outer redirect entirely: GNU opens the
+        // inner redirect before the body runs, so `{ { echo a; } >n1; } >n2`
+        // sends `a` to n1 and never lets n2 reach the body (niubash#118).
+        let has_own_output_redirect = command.redirect_out.as_deref().is_some_and(|r| own_fd1(r))
+            || command.append.as_deref().is_some_and(|r| own_fd1(r))
+            || command.redirects.iter().any(|existing| {
+                matches!(
+                    existing.kind,
+                    crate::parser::RedirectKind::Output
+                        | crate::parser::RedirectKind::Append
+                        | crate::parser::RedirectKind::ClobberOutput
+                        | crate::parser::RedirectKind::DuplicateOutput
+                        | crate::parser::RedirectKind::CombinedOutput
+                        | crate::parser::RedirectKind::CombinedAppend
+                ) && existing.fd.unwrap_or(1) == 1
+                    && !is_injected_group_redirect(existing)
+            });
+        let no_own_stdout_field = !command.redirect_out.as_deref().is_some_and(|r| own_fd1(r))
+            && !command.append.as_deref().is_some_and(|r| own_fd1(r));
+        if own_output_is_fd_alias {
+            command
+                .redirects
+                .insert(0, injected_group_redirect(&redirect));
+        } else if no_own_stdout_field {
+            command.append = Some(Box::new(injected_group_redirect(redirect)));
+            if command.redirects.iter().any(|existing| {
+                matches!(
+                    existing.kind,
+                    crate::parser::RedirectKind::Output
+                        | crate::parser::RedirectKind::Append
+                        | crate::parser::RedirectKind::ClobberOutput
+                )
+            }) {
+                command.redirects.push(injected_group_redirect(&redirect));
+            } else {
+                command
+                    .redirects
+                    .insert(0, injected_group_redirect(&redirect));
+            }
+        }
+        if has_own_output_redirect {
+            continue;
+        }
+        if let Some(for_command) = &mut command.for_command {
+            apply_stdout_append_redirect(&mut for_command.body, redirect);
+        }
+        if let Some(pipeline_command) = &mut command.pipeline_command {
+            // GNU execute_cmd.c execute_pipeline (2702-2723): every
+            // element's fd 1 is the pipe except the LAST, whose fd 1 stays
+            // the command's — `{ a | b; } >f` sends a down the pipe and
+            // only b's output to f.
+            if let Some(last) = pipeline_command.stages.last_mut() {
+                apply_stdout_append_redirect(std::slice::from_mut(last), redirect);
+            }
+        }
+        if let Some(and_or_list) = &mut command.and_or_list {
+            apply_stdout_append_redirect(&mut and_or_list.commands, redirect);
+        }
+        if let Some(time_command) = &mut command.time_command {
+            apply_stdout_append_redirect(
+                std::slice::from_mut(time_command.command.as_mut()),
+                redirect,
+            );
+        }
+        if let Some(background_command) = &mut command.background_command {
+            apply_stdout_append_redirect(
+                std::slice::from_mut(background_command.command.as_mut()),
+                redirect,
+            );
+        }
+        if let Some(inverted_command) = &mut command.inverted_command {
+            apply_stdout_append_redirect(
+                std::slice::from_mut(inverted_command.command.as_mut()),
+                redirect,
+            );
+        }
+        if let Some(if_command) = &mut command.if_command {
+            apply_stdout_append_redirect(&mut if_command.condition, redirect);
+            apply_stdout_append_redirect(&mut if_command.then_body, redirect);
+            for branch in &mut if_command.elif_branches {
+                apply_stdout_append_redirect(&mut branch.condition, redirect);
+                apply_stdout_append_redirect(&mut branch.body, redirect);
+            }
+            if let Some(body) = &mut if_command.else_body {
+                apply_stdout_append_redirect(body, redirect);
+            }
+        }
+        if let Some(loop_command) = &mut command.loop_command {
+            apply_stdout_append_redirect(&mut loop_command.condition, redirect);
+            apply_stdout_append_redirect(&mut loop_command.body, redirect);
+        }
+        if let Some(case_command) = &mut command.case_command {
+            for clause in &mut case_command.clauses {
+                apply_stdout_append_redirect(&mut clause.body, redirect);
+            }
+        }
+        if let Some(brace_group) = &mut command.brace_group {
+            apply_stdout_append_redirect(&mut brace_group.body, redirect);
+        }
+    }
+}
+
+pub(in crate::executor) fn apply_stderr_append_redirect(
+    commands: &mut [CommandNode],
+    redirect: &Redirect,
+) {
+    let redirect = if matches!(redirect.kind, crate::parser::RedirectKind::DuplicateOutput)
+        && redirect_target_fd(&redirect.target).is_none()
+    {
+        let mut normalized = redirect.clone();
+        normalized.operator = "2>>".to_string();
+        normalized.kind = crate::parser::RedirectKind::Append;
+        normalized.append = true;
+        normalized.clobber = false;
+        normalized
+    } else {
+        redirect.clone()
+    };
+
+    for command in commands {
+        // GNU execute_cmd.c:5322 execute_function applies only the
+        // redirects written in the definition text (`f() { ...; } 2>err`) —
+        // an enclosing compound/source fd-2 binding never becomes part of
+        // the function, exactly as the fd-1 skip above (rubash#161). The
+        // stderr applicator lacked this guard, so
+        // `. ./inner.sh >/dev/null 2>/dev/null` injected a `2>>` into the
+        // definition node; define_function then persisted it through
+        // function_definition_redirects and re-applied it at EVERY call
+        // (the callee's stderr silently went to the captured /dev/null)
+        // and declare -f re-serialized it as `} 2>> /dev/null`
+        // (rubash#202 class 1).
+        if command.function_command.is_some() {
+            continue;
+        }
+        let inherits_stderr =
+            command.redirect_err.is_none() && command.redirect_err_append.is_none();
+        if inherits_stderr {
+            command.redirect_err_append = Some(Box::new(injected_group_redirect(&redirect)));
+            // An INJECTED group stdout append is not the command's own
+            // stdout redirect: GNU applies every compound redirect before
+            // the body runs (redir.c do_redirections at compound entry), so
+            // the stderr half of a group `&>' must bind BEFORE the leaf's
+            // own `>&N' dup -- pushing it after the injected append let the
+            // CombinedOutput leaf arm re-bind fd 1 onto the null device and
+            // swallow the leaf's `echo ... >&3' (rubash#279, ble.sh's
+            // `... 3>&2 ... &>/dev/null' init guard). Only a redirect the
+            // leaf itself wrote keeps the trailing position.
+            let has_stdout_redirect = command.redirects.iter().any(|existing| {
+                matches!(
+                    existing.kind,
+                    crate::parser::RedirectKind::Output
+                        | crate::parser::RedirectKind::Append
+                        | crate::parser::RedirectKind::ClobberOutput
+                ) && existing.fd.unwrap_or(1) == 1
+                    && !is_injected_group_redirect(existing)
+            });
+            if has_stdout_redirect {
+                command.redirects.push(injected_group_redirect(&redirect));
+            } else {
+                command
+                    .redirects
+                    .insert(0, injected_group_redirect(&redirect));
+            }
+            apply_inherited_stderr_to_stdout_fd_copy(command, &redirect);
+        }
+        if let Some(for_command) = &mut command.for_command {
+            apply_stderr_append_redirect(&mut for_command.body, &redirect);
+        }
+        if let Some(pipeline_command) = &mut command.pipeline_command {
+            apply_stderr_append_redirect(&mut pipeline_command.stages, &redirect);
+        }
+        if let Some(and_or_list) = &mut command.and_or_list {
+            apply_stderr_append_redirect(&mut and_or_list.commands, &redirect);
+        }
+        if let Some(time_command) = &mut command.time_command {
+            apply_stderr_append_redirect(
+                std::slice::from_mut(time_command.command.as_mut()),
+                &redirect,
+            );
+        }
+        if let Some(background_command) = &mut command.background_command {
+            apply_stderr_append_redirect(
+                std::slice::from_mut(background_command.command.as_mut()),
+                &redirect,
+            );
+        }
+        if let Some(inverted_command) = &mut command.inverted_command {
+            apply_stderr_append_redirect(
+                std::slice::from_mut(inverted_command.command.as_mut()),
+                &redirect,
+            );
+        }
+        if let Some(if_command) = &mut command.if_command {
+            apply_stderr_append_redirect(&mut if_command.condition, &redirect);
+            apply_stderr_append_redirect(&mut if_command.then_body, &redirect);
+            for branch in &mut if_command.elif_branches {
+                apply_stderr_append_redirect(&mut branch.condition, &redirect);
+                apply_stderr_append_redirect(&mut branch.body, &redirect);
+            }
+            if let Some(body) = &mut if_command.else_body {
+                apply_stderr_append_redirect(body, &redirect);
+            }
+        }
+        if let Some(loop_command) = &mut command.loop_command {
+            apply_stderr_append_redirect(&mut loop_command.condition, &redirect);
+            apply_stderr_append_redirect(&mut loop_command.body, &redirect);
+        }
+        if let Some(case_command) = &mut command.case_command {
+            for clause in &mut case_command.clauses {
+                apply_stderr_append_redirect(&mut clause.body, &redirect);
+            }
+        }
+        if let Some(brace_group) = &mut command.brace_group {
+            apply_stderr_append_redirect(&mut brace_group.body, &redirect);
+        }
+    }
+}
+
+pub(in crate::executor) fn split_shell_path(path: &str) -> Vec<String> {
+    if cfg!(windows) {
+        split_windows_shell_path(path)
+    } else {
+        split_gnu_path(path)
+    }
+}
+
+/// The POSIX PATH walk, ported from GNU findcmd.c/general.c
+/// (rubash#2943):
+///
+/// - `path_value` (findcmd.c:266-281): an empty PATH value normalizes
+///   to `"."` before any iteration.
+/// - `user_command_matches` (findcmd.c:481) iterates
+///   `while (path_list[path_index])` with `extract_colon_unit`
+///   (general.c:1058): each call leaves the index RESTING on a colon;
+///   the next call steps past it, and an empty unit consumes the colon
+///   it rests on as well. A run of adjacent empty elements therefore
+///   yields fewer visits than a naive `split(':')` — the second empty
+///   in a run folds into the previous unit's terminator — while a
+///   naive split visits every element and made `type -a` report the
+///   cwd match once per empty element.
+/// - `get_next_path_element` (findcmd.c:322): an empty unit is ".".
+///
+/// First-match consumers are unaffected (a folded visit could only
+/// return the same candidate again); enumeration (`type -a`) now
+/// matches GNU's counts exactly.
+fn split_gnu_path(path: &str) -> Vec<String> {
+    if path.is_empty() {
+        return vec![".".to_string()];
+    }
+    let bytes = path.as_bytes();
+    let mut entries = Vec::new();
+    let mut index = 0usize;
+    // while (path_list[path_index])
+    while index < bytes.len() {
+        // extract_colon_unit: step past the colon the index rests on
+        // (never at index 0 — a leading colon is a leading empty unit).
+        let mut i = index;
+        if i > 0 && bytes[i] == b':' {
+            i += 1;
+        }
+        let start = i;
+        while i < bytes.len() && bytes[i] != b':' {
+            i += 1;
+        }
+        let mut p_index = i;
+        if i == start && i < bytes.len() {
+            // Empty unit: the index advances past the resting colon.
+            p_index += 1;
+        }
+        let unit = &path[start..i];
+        entries.push(if unit.is_empty() {
+            ".".to_string()
+        } else {
+            unit.to_string()
+        });
+        index = p_index;
+    }
+    entries
+}
+
+fn split_windows_shell_path(path: &str) -> Vec<String> {
+    let mut entries = Vec::new();
+    let bytes = path.as_bytes();
+    let mut entry_start = 0;
+
+    for (index, byte) in bytes.iter().enumerate() {
+        let is_separator = match byte {
+            b';' => true,
+            b':' => !is_windows_drive_colon(bytes, entry_start, index),
+            _ => false,
+        };
+
+        if is_separator {
+            push_path_entry(&mut entries, path, entry_start, index);
+            entry_start = index + 1;
+        }
+    }
+
+    push_path_entry(&mut entries, path, entry_start, path.len());
+    entries
+}
+
+fn push_path_entry(entries: &mut Vec<String>, path: &str, start: usize, end: usize) {
+    if start < end {
+        entries.push(path[start..end].to_string());
+    }
+}
+
+fn is_windows_drive_colon(bytes: &[u8], entry_start: usize, colon: usize) -> bool {
+    colon == entry_start + 1
+        && bytes[entry_start].is_ascii_alphabetic()
+        && bytes
+            .get(colon + 1)
+            .is_some_and(|next| matches!(next, b'\\' | b'/'))
+}
+
+#[cfg(test)]
+mod split_shell_path_tests {
+    use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_splits_bash_style_prefix_before_native_path() {
+        assert_eq!(
+            split_shell_path("/c/tools/cloc:/c/tools/winuxcmd;C:/Windows"),
+            vec![
+                "/c/tools/cloc".to_string(),
+                "/c/tools/winuxcmd".to_string(),
+                "C:/Windows".to_string(),
+            ]
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn windows_preserves_drive_colons_while_accepting_colon_separators() {
+        assert_eq!(
+            split_shell_path("C:/Windows;D:\\Tools:/c/bin"),
+            vec![
+                "C:/Windows".to_string(),
+                "D:\\Tools".to_string(),
+                "/c/bin".to_string(),
+            ]
+        );
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn unix_splits_only_on_colons() {
+        assert_eq!(
+            split_shell_path("/usr/bin:/bin;/literal-semicolon"),
+            vec![
+                "/usr/bin".to_string(),
+                "/bin;/literal-semicolon".to_string()
+            ]
+        );
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn unix_path_walk_matches_extract_colon_unit() {
+        // rubash#2943: the (PATH -> visited elements) table GNU
+        // user_command_matches enumerates — path_value normalizes ""
+        // to "." (findcmd.c:266-281), extract_colon_unit rests the
+        // index on a colon so runs of empty elements fold
+        // (general.c:1058), and empty units render "." here.
+        let cases: &[(&str, &[&str])] = &[
+            ("", &["."]),
+            (":", &["."]),
+            ("::", &[".", "."]),
+            (":::", &[".", "."]),
+            (":/usr/bin:", &[".", "/usr/bin", "."]),
+            ("/usr/bin::", &["/usr/bin", "."]),
+            ("::/usr/bin", &[".", "/usr/bin"]),
+            (":/usr/bin:::/tmp", &[".", "/usr/bin", ".", "/tmp"]),
+            (":::/usr/bin::", &[".", ".", "/usr/bin", "."]),
+            ("/usr/bin:/bin", &["/usr/bin", "/bin"]),
+        ];
+        for (path, expected) in cases {
+            let expected: Vec<String> = expected.iter().map(|e| e.to_string()).collect();
+            assert_eq!(split_shell_path(path), expected, "PATH={path:?}");
+        }
+    }
+}
+
+pub(in crate::executor) fn executable_extensions() -> Vec<String> {
+    std::env::var("PATHEXT")
+        .ok()
+        .map(|value| {
+            value
+                .split(';')
+                .filter_map(|ext| ext.trim().trim_start_matches('.').split_whitespace().next())
+                .filter(|ext| !ext.is_empty())
+                .map(str::to_ascii_lowercase)
+                .collect()
+        })
+        .unwrap_or_else(|| vec!["exe".into(), "com".into(), "bat".into(), "cmd".into()])
+}
+
+/// The `command -v`/`-V` describe-argument parse, shared by the direct
+/// path and the command-substitution shortcut. Reimplemented on the
+/// (table row + `BuiltinOpt` + `Diag`) triple (Stage-2 ④ Phase 2):
+/// the scan is `internal_getopt (list, "pvV")`
+/// (builtins/command.def:74-75); a missing mode, an invalid option, or
+/// `--help` all return `None` (the caller falls through to the
+/// builtin's own scan, which reports them). The `Diag` is a discard
+/// sink where the parse is only a predicate — the full face re-reports
+/// on fall-through — so its status is never read here.
+pub(in crate::executor) fn parse_command_describe_args<'a>(
+    args: &'a [String],
+    diag: &mut super::builtin_diag::Diag<'a>,
+) -> Option<(TypeDescribeMode, bool, usize)> {
+    let row =
+        super::builtin_table::builtin_table_row("command").expect("command row in BUILTIN_TABLE");
+    let mut opt = super::builtin_opt::BuiltinOpt::new(row, args, diag, false);
+    let mut mode = None;
+    let mut use_standard_path = false;
+    loop {
+        match opt.next() {
+            super::builtin_opt::OptEvent::Opt(b'p') => use_standard_path = true,
+            super::builtin_opt::OptEvent::Opt(b'v') => mode = Some(TypeDescribeMode::Reusable),
+            super::builtin_opt::OptEvent::Opt(b'V') => mode = Some(TypeDescribeMode::Verbose),
+            super::builtin_opt::OptEvent::Help => return None,
+            super::builtin_opt::OptEvent::End => break,
+            // The row's spec is `"pvV"`: no other option character
+            // (and no argument-taking option) can ever arrive.
+            super::builtin_opt::OptEvent::Opt(_) | super::builtin_opt::OptEvent::OptArg(_, _) => {
+                unreachable!("command spec is \"pvV\"")
+            }
+        }
+    }
+    let first_name = args.len() - opt.operands().len();
+    drop(opt);
+    if diag.status() != 0 {
+        return None;
+    }
+    mode.map(|mode| (mode, use_standard_path, first_name))
+}

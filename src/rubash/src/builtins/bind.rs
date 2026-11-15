@@ -1,0 +1,3391 @@
+//! bind module — pure parsing and listing formats.
+//!
+//! GNU Bash source ownership:
+//! - builtins/bind.def (option grammar, query_bindings/unbind_command/
+//!   unbind_keyseq)
+//! - bashline.c:4814 isolate_sequence / :4850 bind_keyseq_to_unix_command
+//!   (the `-x` argument grammar)
+//! - bashline.c:4720 print_unix_command + print_unix_command_map (`-X`
+//!   listing format)
+//! - The stateful half lives in the executor (`Executor::execute_bind`,
+//!   the registry in `crate::shell::bind_registry`); hosts mirror the
+//!   registry into their own line-editor keymaps.
+//!
+//! Probe evidence (WSL GNU bash 5.3.0, target/issue-suites/results/
+//! wt100-i185/): `bind -X` prints `"\C-g" "echo bound-c-g"`; `bind -s`
+//! prints `"\C-t": "ins-macro"`; `bind -S` prints `\C-t outputs
+//! ins-macro`; `-q` answers `NAME can be invoked via "seq", ...` (rc 0)
+//! or `NAME is not bound to any keys.` (rc 1) or
+//! ``bind: `NAME': unknown function name`` (rc 1); `-p`/`-P`/`-l`/`-v`
+//! print to stdout; `-x noquotes` errors with `first non-whitespace
+//! character is not '"'`.
+
+use std::io::{self, Write};
+
+const EXECUTION_SUCCESS: i32 = 0;
+const EX_USAGE: i32 = 2;
+
+/// The readline function names, in GNU's funmap order — the order
+/// `bind -l` lists them (rl_list_funmap_names) and the dumpers iterate
+/// them. The table is readline's funmap.c `funmap[]` (153 entries) plus
+/// the defuns bash itself registers in initialize_readline
+/// (bashline.c rl_add_defun calls: shell-*, glob-*, spell-correct-word,
+/// the complete-* family, display-shell-version, ...), 176 names total,
+/// captured from the GNU 5.3.20 oracle's `bind -l` (rubash#2338: the
+/// earlier 57-name reedline subset made `bind -l` omit `complete`,
+/// `history-search-backward` and 117 more names GNU lists, and made
+/// `-q`/`-u` reject them as unknown functions).
+pub const READLINE_FUNCTIONS: &[&str] = &[
+    "abort",
+    "accept-line",
+    "alias-expand-line",
+    "arrow-key-prefix",
+    "backward-byte",
+    "backward-char",
+    "backward-delete-char",
+    "backward-kill-line",
+    "backward-kill-word",
+    "backward-word",
+    "bash-vi-complete",
+    "beginning-of-history",
+    "beginning-of-line",
+    "bracketed-paste-begin",
+    "call-last-kbd-macro",
+    "capitalize-word",
+    "character-search",
+    "character-search-backward",
+    "clear-display",
+    "clear-screen",
+    "complete",
+    "complete-command",
+    "complete-filename",
+    "complete-hostname",
+    "complete-into-braces",
+    "complete-username",
+    "complete-variable",
+    "copy-backward-word",
+    "copy-forward-word",
+    "copy-region-as-kill",
+    "dabbrev-expand",
+    "delete-char",
+    "delete-char-or-list",
+    "delete-horizontal-space",
+    "digit-argument",
+    "display-shell-version",
+    "do-lowercase-version",
+    "downcase-word",
+    "dump-functions",
+    "dump-macros",
+    "dump-variables",
+    "dynamic-complete-history",
+    "edit-and-execute-command",
+    "emacs-editing-mode",
+    "end-kbd-macro",
+    "end-of-history",
+    "end-of-line",
+    "exchange-point-and-mark",
+    "execute-named-command",
+    "export-completions",
+    "fetch-history",
+    "forward-backward-delete-char",
+    "forward-byte",
+    "forward-char",
+    "forward-search-history",
+    "forward-word",
+    "glob-complete-word",
+    "glob-expand-word",
+    "glob-list-expansions",
+    "history-and-alias-expand-line",
+    "history-expand-line",
+    "history-search-backward",
+    "history-search-forward",
+    "history-substring-search-backward",
+    "history-substring-search-forward",
+    "insert-comment",
+    "insert-completions",
+    "insert-last-argument",
+    "kill-line",
+    "kill-region",
+    "kill-whole-line",
+    "kill-word",
+    "magic-space",
+    "menu-complete",
+    "menu-complete-backward",
+    "next-history",
+    "next-screen-line",
+    "non-incremental-forward-search-history",
+    "non-incremental-forward-search-history-again",
+    "non-incremental-reverse-search-history",
+    "non-incremental-reverse-search-history-again",
+    "old-menu-complete",
+    "operate-and-get-next",
+    "overwrite-mode",
+    "possible-command-completions",
+    "possible-completions",
+    "possible-filename-completions",
+    "possible-hostname-completions",
+    "possible-username-completions",
+    "possible-variable-completions",
+    "previous-history",
+    "previous-screen-line",
+    "print-last-kbd-macro",
+    "quoted-insert",
+    "re-read-init-file",
+    "redraw-current-line",
+    "reverse-search-history",
+    "revert-line",
+    "self-insert",
+    "set-mark",
+    "shell-backward-kill-word",
+    "shell-backward-word",
+    "shell-expand-line",
+    "shell-forward-word",
+    "shell-kill-word",
+    "shell-transpose-words",
+    "skip-csi-sequence",
+    "spell-correct-word",
+    "start-kbd-macro",
+    "tab-insert",
+    "tilde-expand",
+    "transpose-chars",
+    "transpose-words",
+    "tty-status",
+    "undo",
+    "universal-argument",
+    "unix-filename-rubout",
+    "unix-line-discard",
+    "unix-word-rubout",
+    "upcase-word",
+    "vi-append-eol",
+    "vi-append-mode",
+    "vi-arg-digit",
+    "vi-bWord",
+    "vi-back-to-indent",
+    "vi-backward-bigword",
+    "vi-backward-word",
+    "vi-bword",
+    "vi-change-case",
+    "vi-change-char",
+    "vi-change-to",
+    "vi-char-search",
+    "vi-column",
+    "vi-complete",
+    "vi-delete",
+    "vi-delete-to",
+    "vi-eWord",
+    "vi-edit-and-execute-command",
+    "vi-editing-mode",
+    "vi-end-bigword",
+    "vi-end-word",
+    "vi-eof-maybe",
+    "vi-eword",
+    "vi-fWord",
+    "vi-fetch-history",
+    "vi-first-print",
+    "vi-forward-bigword",
+    "vi-forward-word",
+    "vi-fword",
+    "vi-goto-mark",
+    "vi-insert-beg",
+    "vi-insertion-mode",
+    "vi-match",
+    "vi-movement-mode",
+    "vi-next-word",
+    "vi-overstrike",
+    "vi-overstrike-delete",
+    "vi-prev-word",
+    "vi-put",
+    "vi-redo",
+    "vi-replace",
+    "vi-rubout",
+    "vi-search",
+    "vi-search-again",
+    "vi-set-mark",
+    "vi-subst",
+    "vi-tilde-expand",
+    "vi-undo",
+    "vi-unix-word-rubout",
+    "vi-yank-arg",
+    "vi-yank-pop",
+    "vi-yank-to",
+    "yank",
+    "yank-last-arg",
+    "yank-nth-arg",
+    "yank-pop",
+];
+
+/// The default emacs keymap's function bindings, in readline's keymap
+/// scan order (rl_invoking_keyseqs_in_map, lib/readline/bind.c: keys in
+/// byte order, submaps recursed in place — the order `bind -q` lists
+/// invoking sequences). Content: the emacs_standard_keymap array
+/// (lib/readline/emacs_keymap.c) with the emacs_meta_keymap and
+/// emacs_ctlx_keymap submaps flattened in under their `\e` / `\C-x`
+/// prefixes, plus the bindings readline's initialization adds —
+/// bind_arrow_keys_internal (lib/readline/readline.c:1400-1418: the
+/// `\e[A`..`\eOF` family and the ctrl/alt-arrow sequences) and the
+/// bracketed-paste prefix (`\e[200~`). Captured row-for-row from the
+/// GNU 5.3.20 oracle's `bind -p` dump (rubash#2338: the earlier 26-row
+/// reedline-flavored table lacked e.g. `\eOD` for backward-char and
+/// every meta/ctlx binding, and its order was not the scan order).
+/// niubash's bind surface mirrors this table (see docs/api-ledger.md).
+pub const DEFAULT_FUNCTION_BINDINGS: &[(&str, &str)] = &[
+    ("\\C-@", "set-mark"),
+    ("\\C-a", "beginning-of-line"),
+    ("\\C-b", "backward-char"),
+    ("\\C-d", "delete-char"),
+    ("\\C-e", "end-of-line"),
+    ("\\C-f", "forward-char"),
+    ("\\C-g", "abort"),
+    ("\\C-h", "backward-delete-char"),
+    ("\\C-i", "complete"),
+    ("\\C-j", "accept-line"),
+    ("\\C-k", "kill-line"),
+    ("\\C-l", "clear-screen"),
+    ("\\C-m", "accept-line"),
+    ("\\C-n", "next-history"),
+    ("\\C-o", "operate-and-get-next"),
+    ("\\C-p", "previous-history"),
+    ("\\C-q", "quoted-insert"),
+    ("\\C-r", "reverse-search-history"),
+    ("\\C-s", "forward-search-history"),
+    ("\\C-t", "transpose-chars"),
+    ("\\C-u", "unix-line-discard"),
+    ("\\C-v", "quoted-insert"),
+    ("\\C-w", "unix-word-rubout"),
+    ("\\C-x\\C-e", "edit-and-execute-command"),
+    ("\\C-x\\C-g", "abort"),
+    ("\\C-x\\C-r", "re-read-init-file"),
+    ("\\C-x\\C-u", "undo"),
+    ("\\C-x\\C-v", "display-shell-version"),
+    ("\\C-x\\C-x", "exchange-point-and-mark"),
+    ("\\C-x!", "possible-command-completions"),
+    ("\\C-x$", "possible-variable-completions"),
+    ("\\C-x(", "start-kbd-macro"),
+    ("\\C-x)", "end-kbd-macro"),
+    ("\\C-x*", "glob-expand-word"),
+    ("\\C-x/", "possible-filename-completions"),
+    ("\\C-x@", "possible-hostname-completions"),
+    ("\\C-xA", "do-lowercase-version"),
+    ("\\C-xB", "do-lowercase-version"),
+    ("\\C-xC", "do-lowercase-version"),
+    ("\\C-xD", "do-lowercase-version"),
+    ("\\C-xE", "do-lowercase-version"),
+    ("\\C-xF", "do-lowercase-version"),
+    ("\\C-xG", "do-lowercase-version"),
+    ("\\C-xH", "do-lowercase-version"),
+    ("\\C-xI", "do-lowercase-version"),
+    ("\\C-xJ", "do-lowercase-version"),
+    ("\\C-xK", "do-lowercase-version"),
+    ("\\C-xL", "do-lowercase-version"),
+    ("\\C-xM", "do-lowercase-version"),
+    ("\\C-xN", "do-lowercase-version"),
+    ("\\C-xO", "do-lowercase-version"),
+    ("\\C-xP", "do-lowercase-version"),
+    ("\\C-xQ", "do-lowercase-version"),
+    ("\\C-xR", "do-lowercase-version"),
+    ("\\C-xS", "do-lowercase-version"),
+    ("\\C-xT", "do-lowercase-version"),
+    ("\\C-xU", "do-lowercase-version"),
+    ("\\C-xV", "do-lowercase-version"),
+    ("\\C-xW", "do-lowercase-version"),
+    ("\\C-xX", "do-lowercase-version"),
+    ("\\C-xY", "do-lowercase-version"),
+    ("\\C-xZ", "do-lowercase-version"),
+    ("\\C-xe", "call-last-kbd-macro"),
+    ("\\C-xg", "glob-list-expansions"),
+    ("\\C-xs", "spell-correct-word"),
+    ("\\C-x~", "possible-username-completions"),
+    ("\\C-x\\C-?", "backward-kill-line"),
+    ("\\C-y", "yank"),
+    ("\\e\\C-b", "shell-backward-word"),
+    ("\\e\\C-d", "shell-kill-word"),
+    ("\\e\\C-e", "shell-expand-line"),
+    ("\\e\\C-f", "shell-forward-word"),
+    ("\\e\\C-g", "abort"),
+    ("\\e\\C-h", "backward-kill-word"),
+    ("\\e\\C-i", "dynamic-complete-history"),
+    ("\\e\\C-l", "clear-display"),
+    ("\\e\\C-r", "revert-line"),
+    ("\\e\\C-t", "shell-transpose-words"),
+    ("\\e\\C-y", "yank-nth-arg"),
+    ("\\e\\e", "complete"),
+    ("\\e\\e[C", "forward-word"),
+    ("\\e\\e[D", "backward-word"),
+    ("\\e\\C-]", "character-search-backward"),
+    ("\\e ", "set-mark"),
+    ("\\e!", "complete-command"),
+    ("\\e#", "insert-comment"),
+    ("\\e$", "complete-variable"),
+    ("\\e&", "tilde-expand"),
+    ("\\e*", "insert-completions"),
+    ("\\e-", "digit-argument"),
+    ("\\e.", "insert-last-argument"),
+    ("\\e.", "yank-last-arg"),
+    ("\\e/", "complete-filename"),
+    ("\\e0", "digit-argument"),
+    ("\\e1", "digit-argument"),
+    ("\\e2", "digit-argument"),
+    ("\\e3", "digit-argument"),
+    ("\\e4", "digit-argument"),
+    ("\\e5", "digit-argument"),
+    ("\\e6", "digit-argument"),
+    ("\\e7", "digit-argument"),
+    ("\\e8", "digit-argument"),
+    ("\\e9", "digit-argument"),
+    ("\\e<", "beginning-of-history"),
+    ("\\e=", "possible-completions"),
+    ("\\e>", "end-of-history"),
+    ("\\e?", "possible-completions"),
+    ("\\e@", "complete-hostname"),
+    ("\\eA", "do-lowercase-version"),
+    ("\\eB", "do-lowercase-version"),
+    ("\\eC", "do-lowercase-version"),
+    ("\\eD", "do-lowercase-version"),
+    ("\\eE", "do-lowercase-version"),
+    ("\\eF", "do-lowercase-version"),
+    ("\\eG", "do-lowercase-version"),
+    ("\\eH", "do-lowercase-version"),
+    ("\\eI", "do-lowercase-version"),
+    ("\\eJ", "do-lowercase-version"),
+    ("\\eK", "do-lowercase-version"),
+    ("\\eL", "do-lowercase-version"),
+    ("\\eM", "do-lowercase-version"),
+    ("\\eN", "do-lowercase-version"),
+    ("\\eOA", "previous-history"),
+    ("\\eOB", "next-history"),
+    ("\\eOC", "forward-char"),
+    ("\\eOD", "backward-char"),
+    ("\\eOF", "end-of-line"),
+    ("\\eOH", "beginning-of-line"),
+    ("\\eP", "do-lowercase-version"),
+    ("\\eQ", "do-lowercase-version"),
+    ("\\eR", "do-lowercase-version"),
+    ("\\eS", "do-lowercase-version"),
+    ("\\eT", "do-lowercase-version"),
+    ("\\eU", "do-lowercase-version"),
+    ("\\eV", "do-lowercase-version"),
+    ("\\eW", "do-lowercase-version"),
+    ("\\eX", "do-lowercase-version"),
+    ("\\eY", "do-lowercase-version"),
+    ("\\eZ", "do-lowercase-version"),
+    ("\\e[1;3C", "forward-word"),
+    ("\\e[1;3D", "backward-word"),
+    ("\\e[1;5C", "forward-word"),
+    ("\\e[1;5D", "backward-word"),
+    ("\\e[1~", "beginning-of-line"),
+    ("\\e[200~", "bracketed-paste-begin"),
+    ("\\e[2~", "quoted-insert"),
+    ("\\e[3;5~", "kill-word"),
+    ("\\e[3~", "delete-char"),
+    ("\\e[4~", "end-of-line"),
+    ("\\e[5C", "forward-word"),
+    ("\\e[5D", "backward-word"),
+    ("\\e[A", "previous-history"),
+    ("\\e[B", "next-history"),
+    ("\\e[C", "forward-char"),
+    ("\\e[D", "backward-char"),
+    ("\\e[F", "end-of-line"),
+    ("\\e[H", "beginning-of-line"),
+    ("\\e\\\\", "delete-horizontal-space"),
+    ("\\e^", "history-expand-line"),
+    ("\\e_", "insert-last-argument"),
+    ("\\e_", "yank-last-arg"),
+    ("\\eb", "backward-word"),
+    ("\\ec", "capitalize-word"),
+    ("\\ed", "kill-word"),
+    ("\\ef", "forward-word"),
+    ("\\eg", "glob-complete-word"),
+    ("\\el", "downcase-word"),
+    ("\\en", "non-incremental-forward-search-history"),
+    ("\\ep", "non-incremental-reverse-search-history"),
+    ("\\er", "revert-line"),
+    ("\\et", "transpose-words"),
+    ("\\eu", "upcase-word"),
+    ("\\ex", "execute-named-command"),
+    ("\\ey", "yank-pop"),
+    ("\\e{", "complete-into-braces"),
+    ("\\e~", "complete-username"),
+    ("\\e\\C-?", "backward-kill-word"),
+    ("\\C-]", "character-search"),
+    ("\\C-_", "undo"),
+    (" ", "self-insert"),
+    ("!", "self-insert"),
+    ("\\\"", "self-insert"),
+    ("#", "self-insert"),
+    ("$", "self-insert"),
+    ("%", "self-insert"),
+    ("&", "self-insert"),
+    ("'", "self-insert"),
+    ("(", "self-insert"),
+    (")", "self-insert"),
+    ("*", "self-insert"),
+    ("+", "self-insert"),
+    (",", "self-insert"),
+    ("-", "self-insert"),
+    (".", "self-insert"),
+    ("/", "self-insert"),
+    ("0", "self-insert"),
+    ("1", "self-insert"),
+    ("2", "self-insert"),
+    ("3", "self-insert"),
+    ("4", "self-insert"),
+    ("5", "self-insert"),
+    ("6", "self-insert"),
+    ("7", "self-insert"),
+    ("8", "self-insert"),
+    ("9", "self-insert"),
+    (":", "self-insert"),
+    (";", "self-insert"),
+    ("<", "self-insert"),
+    ("=", "self-insert"),
+    (">", "self-insert"),
+    ("?", "self-insert"),
+    ("@", "self-insert"),
+    ("A", "self-insert"),
+    ("B", "self-insert"),
+    ("C", "self-insert"),
+    ("D", "self-insert"),
+    ("E", "self-insert"),
+    ("F", "self-insert"),
+    ("G", "self-insert"),
+    ("H", "self-insert"),
+    ("I", "self-insert"),
+    ("J", "self-insert"),
+    ("K", "self-insert"),
+    ("L", "self-insert"),
+    ("M", "self-insert"),
+    ("N", "self-insert"),
+    ("O", "self-insert"),
+    ("P", "self-insert"),
+    ("Q", "self-insert"),
+    ("R", "self-insert"),
+    ("S", "self-insert"),
+    ("T", "self-insert"),
+    ("U", "self-insert"),
+    ("V", "self-insert"),
+    ("W", "self-insert"),
+    ("X", "self-insert"),
+    ("Y", "self-insert"),
+    ("Z", "self-insert"),
+    ("[", "self-insert"),
+    ("\\\\", "self-insert"),
+    ("]", "self-insert"),
+    ("^", "self-insert"),
+    ("_", "self-insert"),
+    ("`", "self-insert"),
+    ("a", "self-insert"),
+    ("b", "self-insert"),
+    ("c", "self-insert"),
+    ("d", "self-insert"),
+    ("e", "self-insert"),
+    ("f", "self-insert"),
+    ("g", "self-insert"),
+    ("h", "self-insert"),
+    ("i", "self-insert"),
+    ("j", "self-insert"),
+    ("k", "self-insert"),
+    ("l", "self-insert"),
+    ("m", "self-insert"),
+    ("n", "self-insert"),
+    ("o", "self-insert"),
+    ("p", "self-insert"),
+    ("q", "self-insert"),
+    ("r", "self-insert"),
+    ("s", "self-insert"),
+    ("t", "self-insert"),
+    ("u", "self-insert"),
+    ("v", "self-insert"),
+    ("w", "self-insert"),
+    ("x", "self-insert"),
+    ("y", "self-insert"),
+    ("z", "self-insert"),
+    ("{", "self-insert"),
+    ("|", "self-insert"),
+    ("}", "self-insert"),
+    ("~", "self-insert"),
+    ("\\C-?", "backward-delete-char"),
+    ("\\200", "self-insert"),
+    ("\\201", "self-insert"),
+    ("\\202", "self-insert"),
+    ("\\203", "self-insert"),
+    ("\\204", "self-insert"),
+    ("\\205", "self-insert"),
+    ("\\206", "self-insert"),
+    ("\\207", "self-insert"),
+    ("\\210", "self-insert"),
+    ("\\211", "self-insert"),
+    ("\\212", "self-insert"),
+    ("\\213", "self-insert"),
+    ("\\214", "self-insert"),
+    ("\\215", "self-insert"),
+    ("\\216", "self-insert"),
+    ("\\217", "self-insert"),
+    ("\\220", "self-insert"),
+    ("\\221", "self-insert"),
+    ("\\222", "self-insert"),
+    ("\\223", "self-insert"),
+    ("\\224", "self-insert"),
+    ("\\225", "self-insert"),
+    ("\\226", "self-insert"),
+    ("\\227", "self-insert"),
+    ("\\230", "self-insert"),
+    ("\\231", "self-insert"),
+    ("\\232", "self-insert"),
+    ("\\233", "self-insert"),
+    ("\\234", "self-insert"),
+    ("\\235", "self-insert"),
+    ("\\236", "self-insert"),
+    ("\\237", "self-insert"),
+    ("\\240", "self-insert"),
+    ("\\241", "self-insert"),
+    ("\\242", "self-insert"),
+    ("\\243", "self-insert"),
+    ("\\244", "self-insert"),
+    ("\\245", "self-insert"),
+    ("\\246", "self-insert"),
+    ("\\247", "self-insert"),
+    ("\\250", "self-insert"),
+    ("\\251", "self-insert"),
+    ("\\252", "self-insert"),
+    ("\\253", "self-insert"),
+    ("\\254", "self-insert"),
+    ("\\255", "self-insert"),
+    ("\\256", "self-insert"),
+    ("\\257", "self-insert"),
+    ("\\260", "self-insert"),
+    ("\\261", "self-insert"),
+    ("\\262", "self-insert"),
+    ("\\263", "self-insert"),
+    ("\\264", "self-insert"),
+    ("\\265", "self-insert"),
+    ("\\266", "self-insert"),
+    ("\\267", "self-insert"),
+    ("\\270", "self-insert"),
+    ("\\271", "self-insert"),
+    ("\\272", "self-insert"),
+    ("\\273", "self-insert"),
+    ("\\274", "self-insert"),
+    ("\\275", "self-insert"),
+    ("\\276", "self-insert"),
+    ("\\277", "self-insert"),
+    ("\\300", "self-insert"),
+    ("\\301", "self-insert"),
+    ("\\302", "self-insert"),
+    ("\\303", "self-insert"),
+    ("\\304", "self-insert"),
+    ("\\305", "self-insert"),
+    ("\\306", "self-insert"),
+    ("\\307", "self-insert"),
+    ("\\310", "self-insert"),
+    ("\\311", "self-insert"),
+    ("\\312", "self-insert"),
+    ("\\313", "self-insert"),
+    ("\\314", "self-insert"),
+    ("\\315", "self-insert"),
+    ("\\316", "self-insert"),
+    ("\\317", "self-insert"),
+    ("\\320", "self-insert"),
+    ("\\321", "self-insert"),
+    ("\\322", "self-insert"),
+    ("\\323", "self-insert"),
+    ("\\324", "self-insert"),
+    ("\\325", "self-insert"),
+    ("\\326", "self-insert"),
+    ("\\327", "self-insert"),
+    ("\\330", "self-insert"),
+    ("\\331", "self-insert"),
+    ("\\332", "self-insert"),
+    ("\\333", "self-insert"),
+    ("\\334", "self-insert"),
+    ("\\335", "self-insert"),
+    ("\\336", "self-insert"),
+    ("\\337", "self-insert"),
+    ("\\340", "self-insert"),
+    ("\\341", "self-insert"),
+    ("\\342", "self-insert"),
+    ("\\343", "self-insert"),
+    ("\\344", "self-insert"),
+    ("\\345", "self-insert"),
+    ("\\346", "self-insert"),
+    ("\\347", "self-insert"),
+    ("\\350", "self-insert"),
+    ("\\351", "self-insert"),
+    ("\\352", "self-insert"),
+    ("\\353", "self-insert"),
+    ("\\354", "self-insert"),
+    ("\\355", "self-insert"),
+    ("\\356", "self-insert"),
+    ("\\357", "self-insert"),
+    ("\\360", "self-insert"),
+    ("\\361", "self-insert"),
+    ("\\362", "self-insert"),
+    ("\\363", "self-insert"),
+    ("\\364", "self-insert"),
+    ("\\365", "self-insert"),
+    ("\\366", "self-insert"),
+    ("\\367", "self-insert"),
+    ("\\370", "self-insert"),
+    ("\\371", "self-insert"),
+    ("\\372", "self-insert"),
+    ("\\373", "self-insert"),
+    ("\\374", "self-insert"),
+    ("\\375", "self-insert"),
+    ("\\376", "self-insert"),
+    ("\\377", "self-insert"),
+];
+
+/// The standalone emacs-meta keymap (the map `bind -m emacs-meta`
+/// queries on its own: sequences WITHOUT the `\e` prefix the full
+/// emacs table carries). emacs_meta_keymap (lib/readline/emacs_keymap.c)
+/// plus readline's initialization, captured from the GNU 5.3.20
+/// oracle's `bind -m emacs-meta -p` (rubash#2338), scan order.
+pub const DEFAULT_BINDINGS_EMACS_META: &[(&str, &str)] = &[
+    ("\\C-b", "shell-backward-word"),
+    ("\\C-d", "shell-kill-word"),
+    ("\\C-e", "shell-expand-line"),
+    ("\\C-f", "shell-forward-word"),
+    ("\\C-g", "abort"),
+    ("\\C-h", "backward-kill-word"),
+    ("\\C-i", "dynamic-complete-history"),
+    ("\\C-l", "clear-display"),
+    ("\\C-r", "revert-line"),
+    ("\\C-t", "shell-transpose-words"),
+    ("\\C-y", "yank-nth-arg"),
+    ("\\e", "complete"),
+    ("\\e[C", "forward-word"),
+    ("\\e[D", "backward-word"),
+    ("\\C-]", "character-search-backward"),
+    (" ", "set-mark"),
+    ("!", "complete-command"),
+    ("#", "insert-comment"),
+    ("$", "complete-variable"),
+    ("&", "tilde-expand"),
+    ("*", "insert-completions"),
+    ("-", "digit-argument"),
+    (".", "insert-last-argument"),
+    (".", "yank-last-arg"),
+    ("/", "complete-filename"),
+    ("0", "digit-argument"),
+    ("1", "digit-argument"),
+    ("2", "digit-argument"),
+    ("3", "digit-argument"),
+    ("4", "digit-argument"),
+    ("5", "digit-argument"),
+    ("6", "digit-argument"),
+    ("7", "digit-argument"),
+    ("8", "digit-argument"),
+    ("9", "digit-argument"),
+    ("<", "beginning-of-history"),
+    ("=", "possible-completions"),
+    (">", "end-of-history"),
+    ("?", "possible-completions"),
+    ("@", "complete-hostname"),
+    ("A", "do-lowercase-version"),
+    ("B", "do-lowercase-version"),
+    ("C", "do-lowercase-version"),
+    ("D", "do-lowercase-version"),
+    ("E", "do-lowercase-version"),
+    ("F", "do-lowercase-version"),
+    ("G", "do-lowercase-version"),
+    ("H", "do-lowercase-version"),
+    ("I", "do-lowercase-version"),
+    ("J", "do-lowercase-version"),
+    ("K", "do-lowercase-version"),
+    ("L", "do-lowercase-version"),
+    ("M", "do-lowercase-version"),
+    ("N", "do-lowercase-version"),
+    ("OA", "previous-history"),
+    ("OB", "next-history"),
+    ("OC", "forward-char"),
+    ("OD", "backward-char"),
+    ("OF", "end-of-line"),
+    ("OH", "beginning-of-line"),
+    ("P", "do-lowercase-version"),
+    ("Q", "do-lowercase-version"),
+    ("R", "do-lowercase-version"),
+    ("S", "do-lowercase-version"),
+    ("T", "do-lowercase-version"),
+    ("U", "do-lowercase-version"),
+    ("V", "do-lowercase-version"),
+    ("W", "do-lowercase-version"),
+    ("X", "do-lowercase-version"),
+    ("Y", "do-lowercase-version"),
+    ("Z", "do-lowercase-version"),
+    ("[1;3C", "forward-word"),
+    ("[1;3D", "backward-word"),
+    ("[1;5C", "forward-word"),
+    ("[1;5D", "backward-word"),
+    ("[1~", "beginning-of-line"),
+    ("[200~", "bracketed-paste-begin"),
+    ("[2~", "quoted-insert"),
+    ("[3;5~", "kill-word"),
+    ("[3~", "delete-char"),
+    ("[4~", "end-of-line"),
+    ("[5C", "forward-word"),
+    ("[5D", "backward-word"),
+    ("[A", "previous-history"),
+    ("[B", "next-history"),
+    ("[C", "forward-char"),
+    ("[D", "backward-char"),
+    ("[F", "end-of-line"),
+    ("[H", "beginning-of-line"),
+    ("\\\\", "delete-horizontal-space"),
+    ("^", "history-expand-line"),
+    ("_", "insert-last-argument"),
+    ("_", "yank-last-arg"),
+    ("b", "backward-word"),
+    ("c", "capitalize-word"),
+    ("d", "kill-word"),
+    ("f", "forward-word"),
+    ("g", "glob-complete-word"),
+    ("l", "downcase-word"),
+    ("n", "non-incremental-forward-search-history"),
+    ("p", "non-incremental-reverse-search-history"),
+    ("r", "revert-line"),
+    ("t", "transpose-words"),
+    ("u", "upcase-word"),
+    ("x", "execute-named-command"),
+    ("y", "yank-pop"),
+    ("{", "complete-into-braces"),
+    ("~", "complete-username"),
+    ("\\C-?", "backward-kill-word"),
+];
+
+/// The standalone emacs-ctlx keymap (`bind -m emacs-ctlx`: sequences
+/// without the `\C-x` prefix). emacs_ctlx_keymap
+/// (lib/readline/emacs_keymap.c), captured from the GNU 5.3.20
+/// oracle's `bind -m emacs-ctlx -p` (rubash#2338), scan order.
+pub const DEFAULT_BINDINGS_EMACS_CTLX: &[(&str, &str)] = &[
+    ("\\C-e", "edit-and-execute-command"),
+    ("\\C-g", "abort"),
+    ("\\C-r", "re-read-init-file"),
+    ("\\C-u", "undo"),
+    ("\\C-v", "display-shell-version"),
+    ("\\C-x", "exchange-point-and-mark"),
+    ("!", "possible-command-completions"),
+    ("$", "possible-variable-completions"),
+    ("(", "start-kbd-macro"),
+    (")", "end-kbd-macro"),
+    ("*", "glob-expand-word"),
+    ("/", "possible-filename-completions"),
+    ("@", "possible-hostname-completions"),
+    ("A", "do-lowercase-version"),
+    ("B", "do-lowercase-version"),
+    ("C", "do-lowercase-version"),
+    ("D", "do-lowercase-version"),
+    ("E", "do-lowercase-version"),
+    ("F", "do-lowercase-version"),
+    ("G", "do-lowercase-version"),
+    ("H", "do-lowercase-version"),
+    ("I", "do-lowercase-version"),
+    ("J", "do-lowercase-version"),
+    ("K", "do-lowercase-version"),
+    ("L", "do-lowercase-version"),
+    ("M", "do-lowercase-version"),
+    ("N", "do-lowercase-version"),
+    ("O", "do-lowercase-version"),
+    ("P", "do-lowercase-version"),
+    ("Q", "do-lowercase-version"),
+    ("R", "do-lowercase-version"),
+    ("S", "do-lowercase-version"),
+    ("T", "do-lowercase-version"),
+    ("U", "do-lowercase-version"),
+    ("V", "do-lowercase-version"),
+    ("W", "do-lowercase-version"),
+    ("X", "do-lowercase-version"),
+    ("Y", "do-lowercase-version"),
+    ("Z", "do-lowercase-version"),
+    ("e", "call-last-kbd-macro"),
+    ("g", "glob-list-expansions"),
+    ("s", "spell-correct-word"),
+    ("~", "possible-username-completions"),
+    ("\\C-?", "backward-kill-line"),
+];
+
+/// The vi-insert keymap's default function bindings
+/// (vi_insertion_keymap, lib/readline/vi_keymap.c, plus the arrow
+/// keys bind_arrow_keys_internal adds to it), captured from the GNU
+/// 5.3.20 oracle's `bind -m vi-insert -p` (rubash#2338), scan order.
+/// The bare `\e` row is vi-movement-mode: in the C map ESC is both
+/// that function (the submap's ANYOTHERKEY slot) and the arrow-key
+/// prefix; the flattened dump form keeps both rows.
+pub const DEFAULT_BINDINGS_VI_INSERT: &[(&str, &str)] = &[
+    ("\\C-a", "self-insert"),
+    ("\\C-b", "self-insert"),
+    ("\\C-c", "self-insert"),
+    ("\\C-d", "vi-eof-maybe"),
+    ("\\C-e", "self-insert"),
+    ("\\C-f", "self-insert"),
+    ("\\C-g", "self-insert"),
+    ("\\C-h", "backward-delete-char"),
+    ("\\C-i", "complete"),
+    ("\\C-j", "accept-line"),
+    ("\\C-k", "self-insert"),
+    ("\\C-l", "self-insert"),
+    ("\\C-m", "accept-line"),
+    ("\\C-n", "menu-complete"),
+    ("\\C-o", "self-insert"),
+    ("\\C-p", "menu-complete-backward"),
+    ("\\C-q", "self-insert"),
+    ("\\C-r", "reverse-search-history"),
+    ("\\C-s", "forward-search-history"),
+    ("\\C-t", "transpose-chars"),
+    ("\\C-u", "unix-line-discard"),
+    ("\\C-v", "quoted-insert"),
+    ("\\C-w", "vi-unix-word-rubout"),
+    ("\\C-x", "self-insert"),
+    ("\\C-y", "yank"),
+    ("\\C-z", "self-insert"),
+    ("\\e", "vi-movement-mode"),
+    ("\\eOA", "previous-history"),
+    ("\\eOB", "next-history"),
+    ("\\eOC", "forward-char"),
+    ("\\eOD", "backward-char"),
+    ("\\eOF", "end-of-line"),
+    ("\\eOH", "beginning-of-line"),
+    ("\\e[1;3C", "forward-word"),
+    ("\\e[1;3D", "backward-word"),
+    ("\\e[1;5C", "forward-word"),
+    ("\\e[1;5D", "backward-word"),
+    ("\\e[200~", "bracketed-paste-begin"),
+    ("\\e[3;5~", "kill-word"),
+    ("\\e[A", "previous-history"),
+    ("\\e[B", "next-history"),
+    ("\\e[C", "forward-char"),
+    ("\\e[D", "backward-char"),
+    ("\\e[F", "end-of-line"),
+    ("\\e[H", "beginning-of-line"),
+    ("\\C-\\\\", "self-insert"),
+    ("\\C-]", "self-insert"),
+    ("\\C-^", "self-insert"),
+    ("\\C-_", "vi-undo"),
+    (" ", "self-insert"),
+    ("!", "self-insert"),
+    ("\\\"", "self-insert"),
+    ("#", "self-insert"),
+    ("$", "self-insert"),
+    ("%", "self-insert"),
+    ("&", "self-insert"),
+    ("'", "self-insert"),
+    ("(", "self-insert"),
+    (")", "self-insert"),
+    ("*", "self-insert"),
+    ("+", "self-insert"),
+    (",", "self-insert"),
+    ("-", "self-insert"),
+    (".", "self-insert"),
+    ("/", "self-insert"),
+    ("0", "self-insert"),
+    ("1", "self-insert"),
+    ("2", "self-insert"),
+    ("3", "self-insert"),
+    ("4", "self-insert"),
+    ("5", "self-insert"),
+    ("6", "self-insert"),
+    ("7", "self-insert"),
+    ("8", "self-insert"),
+    ("9", "self-insert"),
+    (":", "self-insert"),
+    (";", "self-insert"),
+    ("<", "self-insert"),
+    ("=", "self-insert"),
+    (">", "self-insert"),
+    ("?", "self-insert"),
+    ("@", "self-insert"),
+    ("A", "self-insert"),
+    ("B", "self-insert"),
+    ("C", "self-insert"),
+    ("D", "self-insert"),
+    ("E", "self-insert"),
+    ("F", "self-insert"),
+    ("G", "self-insert"),
+    ("H", "self-insert"),
+    ("I", "self-insert"),
+    ("J", "self-insert"),
+    ("K", "self-insert"),
+    ("L", "self-insert"),
+    ("M", "self-insert"),
+    ("N", "self-insert"),
+    ("O", "self-insert"),
+    ("P", "self-insert"),
+    ("Q", "self-insert"),
+    ("R", "self-insert"),
+    ("S", "self-insert"),
+    ("T", "self-insert"),
+    ("U", "self-insert"),
+    ("V", "self-insert"),
+    ("W", "self-insert"),
+    ("X", "self-insert"),
+    ("Y", "self-insert"),
+    ("Z", "self-insert"),
+    ("[", "self-insert"),
+    ("\\\\", "self-insert"),
+    ("]", "self-insert"),
+    ("^", "self-insert"),
+    ("_", "self-insert"),
+    ("`", "self-insert"),
+    ("a", "self-insert"),
+    ("b", "self-insert"),
+    ("c", "self-insert"),
+    ("d", "self-insert"),
+    ("e", "self-insert"),
+    ("f", "self-insert"),
+    ("g", "self-insert"),
+    ("h", "self-insert"),
+    ("i", "self-insert"),
+    ("j", "self-insert"),
+    ("k", "self-insert"),
+    ("l", "self-insert"),
+    ("m", "self-insert"),
+    ("n", "self-insert"),
+    ("o", "self-insert"),
+    ("p", "self-insert"),
+    ("q", "self-insert"),
+    ("r", "self-insert"),
+    ("s", "self-insert"),
+    ("t", "self-insert"),
+    ("u", "self-insert"),
+    ("v", "self-insert"),
+    ("w", "self-insert"),
+    ("x", "self-insert"),
+    ("y", "self-insert"),
+    ("z", "self-insert"),
+    ("{", "self-insert"),
+    ("|", "self-insert"),
+    ("}", "self-insert"),
+    ("~", "self-insert"),
+    ("\\C-?", "backward-delete-char"),
+    ("\\200", "self-insert"),
+    ("\\201", "self-insert"),
+    ("\\202", "self-insert"),
+    ("\\203", "self-insert"),
+    ("\\204", "self-insert"),
+    ("\\205", "self-insert"),
+    ("\\206", "self-insert"),
+    ("\\207", "self-insert"),
+    ("\\210", "self-insert"),
+    ("\\211", "self-insert"),
+    ("\\212", "self-insert"),
+    ("\\213", "self-insert"),
+    ("\\214", "self-insert"),
+    ("\\215", "self-insert"),
+    ("\\216", "self-insert"),
+    ("\\217", "self-insert"),
+    ("\\220", "self-insert"),
+    ("\\221", "self-insert"),
+    ("\\222", "self-insert"),
+    ("\\223", "self-insert"),
+    ("\\224", "self-insert"),
+    ("\\225", "self-insert"),
+    ("\\226", "self-insert"),
+    ("\\227", "self-insert"),
+    ("\\230", "self-insert"),
+    ("\\231", "self-insert"),
+    ("\\232", "self-insert"),
+    ("\\233", "self-insert"),
+    ("\\234", "self-insert"),
+    ("\\235", "self-insert"),
+    ("\\236", "self-insert"),
+    ("\\237", "self-insert"),
+    ("\\240", "self-insert"),
+    ("\\241", "self-insert"),
+    ("\\242", "self-insert"),
+    ("\\243", "self-insert"),
+    ("\\244", "self-insert"),
+    ("\\245", "self-insert"),
+    ("\\246", "self-insert"),
+    ("\\247", "self-insert"),
+    ("\\250", "self-insert"),
+    ("\\251", "self-insert"),
+    ("\\252", "self-insert"),
+    ("\\253", "self-insert"),
+    ("\\254", "self-insert"),
+    ("\\255", "self-insert"),
+    ("\\256", "self-insert"),
+    ("\\257", "self-insert"),
+    ("\\260", "self-insert"),
+    ("\\261", "self-insert"),
+    ("\\262", "self-insert"),
+    ("\\263", "self-insert"),
+    ("\\264", "self-insert"),
+    ("\\265", "self-insert"),
+    ("\\266", "self-insert"),
+    ("\\267", "self-insert"),
+    ("\\270", "self-insert"),
+    ("\\271", "self-insert"),
+    ("\\272", "self-insert"),
+    ("\\273", "self-insert"),
+    ("\\274", "self-insert"),
+    ("\\275", "self-insert"),
+    ("\\276", "self-insert"),
+    ("\\277", "self-insert"),
+    ("\\300", "self-insert"),
+    ("\\301", "self-insert"),
+    ("\\302", "self-insert"),
+    ("\\303", "self-insert"),
+    ("\\304", "self-insert"),
+    ("\\305", "self-insert"),
+    ("\\306", "self-insert"),
+    ("\\307", "self-insert"),
+    ("\\310", "self-insert"),
+    ("\\311", "self-insert"),
+    ("\\312", "self-insert"),
+    ("\\313", "self-insert"),
+    ("\\314", "self-insert"),
+    ("\\315", "self-insert"),
+    ("\\316", "self-insert"),
+    ("\\317", "self-insert"),
+    ("\\320", "self-insert"),
+    ("\\321", "self-insert"),
+    ("\\322", "self-insert"),
+    ("\\323", "self-insert"),
+    ("\\324", "self-insert"),
+    ("\\325", "self-insert"),
+    ("\\326", "self-insert"),
+    ("\\327", "self-insert"),
+    ("\\330", "self-insert"),
+    ("\\331", "self-insert"),
+    ("\\332", "self-insert"),
+    ("\\333", "self-insert"),
+    ("\\334", "self-insert"),
+    ("\\335", "self-insert"),
+    ("\\336", "self-insert"),
+    ("\\337", "self-insert"),
+    ("\\340", "self-insert"),
+    ("\\341", "self-insert"),
+    ("\\342", "self-insert"),
+    ("\\343", "self-insert"),
+    ("\\344", "self-insert"),
+    ("\\345", "self-insert"),
+    ("\\346", "self-insert"),
+    ("\\347", "self-insert"),
+    ("\\350", "self-insert"),
+    ("\\351", "self-insert"),
+    ("\\352", "self-insert"),
+    ("\\353", "self-insert"),
+    ("\\354", "self-insert"),
+    ("\\355", "self-insert"),
+    ("\\356", "self-insert"),
+    ("\\357", "self-insert"),
+    ("\\360", "self-insert"),
+    ("\\361", "self-insert"),
+    ("\\362", "self-insert"),
+    ("\\363", "self-insert"),
+    ("\\364", "self-insert"),
+    ("\\365", "self-insert"),
+    ("\\366", "self-insert"),
+    ("\\367", "self-insert"),
+    ("\\370", "self-insert"),
+    ("\\371", "self-insert"),
+    ("\\372", "self-insert"),
+    ("\\373", "self-insert"),
+    ("\\374", "self-insert"),
+    ("\\375", "self-insert"),
+    ("\\376", "self-insert"),
+    ("\\377", "self-insert"),
+];
+
+/// The vi movement (command) keymap's default function bindings
+/// (vi_movement_keymap, lib/readline/vi_keymap.c, plus arrow keys) —
+/// the map `-m vi`, `-m vi-move` and `-m vi-command` all name.
+/// Captured from the GNU 5.3.20 oracle's `bind -m vi-command -p`
+/// (rubash#2338), scan order.
+pub const DEFAULT_BINDINGS_VI_MOVEMENT: &[(&str, &str)] = &[
+    ("\\C-d", "vi-eof-maybe"),
+    ("\\C-g", "abort"),
+    ("\\C-h", "backward-char"),
+    ("\\C-j", "accept-line"),
+    ("\\C-k", "kill-line"),
+    ("\\C-l", "clear-screen"),
+    ("\\C-m", "accept-line"),
+    ("\\C-n", "next-history"),
+    ("\\C-p", "previous-history"),
+    ("\\C-q", "quoted-insert"),
+    ("\\C-r", "reverse-search-history"),
+    ("\\C-s", "forward-search-history"),
+    ("\\C-t", "transpose-chars"),
+    ("\\C-u", "unix-line-discard"),
+    ("\\C-v", "quoted-insert"),
+    ("\\C-w", "vi-unix-word-rubout"),
+    ("\\C-y", "yank"),
+    ("\\eOA", "previous-history"),
+    ("\\eOB", "next-history"),
+    ("\\eOC", "forward-char"),
+    ("\\eOD", "backward-char"),
+    ("\\eOF", "end-of-line"),
+    ("\\eOH", "beginning-of-line"),
+    ("\\e[1;3C", "forward-word"),
+    ("\\e[1;3D", "backward-word"),
+    ("\\e[1;5C", "forward-word"),
+    ("\\e[1;5D", "backward-word"),
+    ("\\e[3;5~", "kill-word"),
+    ("\\e[A", "previous-history"),
+    ("\\e[B", "next-history"),
+    ("\\e[C", "forward-char"),
+    ("\\e[D", "backward-char"),
+    ("\\e[F", "end-of-line"),
+    ("\\e[H", "beginning-of-line"),
+    ("\\C-_", "vi-undo"),
+    (" ", "forward-char"),
+    ("#", "insert-comment"),
+    ("$", "end-of-line"),
+    ("%", "vi-match"),
+    ("&", "vi-tilde-expand"),
+    ("*", "bash-vi-complete"),
+    ("+", "next-history"),
+    (",", "vi-char-search"),
+    ("-", "previous-history"),
+    (".", "vi-redo"),
+    ("/", "vi-search"),
+    ("0", "beginning-of-line"),
+    ("1", "vi-arg-digit"),
+    ("2", "vi-arg-digit"),
+    ("3", "vi-arg-digit"),
+    ("4", "vi-arg-digit"),
+    ("5", "vi-arg-digit"),
+    ("6", "vi-arg-digit"),
+    ("7", "vi-arg-digit"),
+    ("8", "vi-arg-digit"),
+    ("9", "vi-arg-digit"),
+    (";", "vi-char-search"),
+    ("=", "bash-vi-complete"),
+    ("?", "vi-search"),
+    ("A", "vi-append-eol"),
+    ("B", "vi-prev-word"),
+    ("C", "vi-change-to"),
+    ("D", "vi-delete-to"),
+    ("E", "vi-end-word"),
+    ("F", "vi-char-search"),
+    ("G", "vi-fetch-history"),
+    ("I", "vi-insert-beg"),
+    ("N", "vi-search-again"),
+    ("P", "vi-put"),
+    ("R", "vi-replace"),
+    ("S", "vi-subst"),
+    ("T", "vi-char-search"),
+    ("U", "revert-line"),
+    ("W", "vi-next-word"),
+    ("X", "vi-rubout"),
+    ("Y", "vi-yank-to"),
+    ("\\\\", "bash-vi-complete"),
+    ("^", "vi-first-print"),
+    ("_", "vi-yank-arg"),
+    ("`", "vi-goto-mark"),
+    ("a", "vi-append-mode"),
+    ("b", "vi-prev-word"),
+    ("c", "vi-change-to"),
+    ("d", "vi-delete-to"),
+    ("e", "vi-end-word"),
+    ("f", "vi-char-search"),
+    ("h", "backward-char"),
+    ("i", "vi-insertion-mode"),
+    ("j", "next-history"),
+    ("k", "previous-history"),
+    ("l", "forward-char"),
+    ("m", "vi-set-mark"),
+    ("n", "vi-search-again"),
+    ("p", "vi-put"),
+    ("r", "vi-change-char"),
+    ("s", "vi-subst"),
+    ("t", "vi-char-search"),
+    ("u", "vi-undo"),
+    ("v", "vi-edit-and-execute-command"),
+    ("w", "vi-next-word"),
+    ("x", "vi-delete"),
+    ("y", "vi-yank-to"),
+    ("|", "vi-column"),
+    ("~", "vi-change-case"),
+];
+
+/// The default function-binding table for one keymap name (the `-m`
+/// names of bind.def:37-40, aliases folded by
+/// `crate::shell::bind_registry::normalize_keymap_name`). `None`
+/// selects the emacs-standard table; callers resolving "the current
+/// keymap" (bind.def:205-216 — the no-`-m` case, rubash#2386) pass
+/// the registry's resolved current-keymap name explicitly. Every
+/// name in `crate::shell::bind_registry::KEYMAP_NAMES` resolves
+/// here.
+pub fn default_bindings_for_keymap(
+    keymap: Option<&str>,
+) -> &'static [(&'static str, &'static str)] {
+    match crate::shell::bind_registry::normalize_keymap_name(keymap.unwrap_or("emacs-standard")) {
+        "emacs-meta" => DEFAULT_BINDINGS_EMACS_META,
+        "emacs-ctlx" => DEFAULT_BINDINGS_EMACS_CTLX,
+        "vi-insert" => DEFAULT_BINDINGS_VI_INSERT,
+        "vi-movement" => DEFAULT_BINDINGS_VI_MOVEMENT,
+        _ => DEFAULT_FUNCTION_BINDINGS,
+    }
+}
+
+/// Translate a written key sequence (`\C-b`, `\eOD`, `\e[D`, plain
+/// characters) to the raw bytes it dispatches on — the inverse of
+/// readline's `_rl_get_keyname` rendering, used to order sequences the
+/// way rl_invoking_keyseqs_in_map's byte scan does (lib/readline/bind.c:
+/// keys 0..255, submaps recursed in place, so plain byte order of the
+/// translated sequence IS the listing order). Inputrc spellings the
+/// dumpers never print are accepted too (`\d` for DEL, `\M-x` for the
+/// ESC-prefixed meta form, the C-style letter escapes, `\xHH`), since
+/// user-registered sequences arrive in the user's own spelling.
+pub fn keyseq_bytes(written: &str) -> Vec<u8> {
+    let chars: Vec<char> = written.chars().collect();
+    let mut out = Vec::with_capacity(chars.len());
+    let mut i = 0usize;
+    // The base byte of a \C- or \M- argument: one character, or an
+    // escape pair when the base is itself backslash/quote (\C-\\).
+    let read_base = |chars: &[char], i: &mut usize| -> u32 {
+        match chars.get(*i) {
+            Some('\\') => {
+                let base = match chars.get(*i + 1) {
+                    Some('\\') => 0x5c,
+                    Some('"') => 0x22,
+                    _ => 0x5c,
+                };
+                *i += 2;
+                base
+            }
+            Some(&c) => {
+                *i += 1;
+                c as u32
+            }
+            None => 0,
+        }
+    };
+    while i < chars.len() {
+        let c = chars[i];
+        if c != '\\' {
+            let mut buf = [0u8; 4];
+            out.extend_from_slice(c.encode_utf8(&mut buf).as_bytes());
+            i += 1;
+            continue;
+        }
+        match chars.get(i + 1) {
+            Some('C') if chars.get(i + 2) == Some(&'-') => {
+                i += 3;
+                let base = read_base(&chars, &mut i);
+                out.push(if base == '?' as u32 {
+                    0x7f
+                } else {
+                    (base & 0x1f) as u8
+                });
+            }
+            Some('M') if chars.get(i + 2) == Some(&'-') => {
+                i += 3;
+                let base = read_base(&chars, &mut i);
+                out.push(0x1b);
+                out.push(base as u8);
+            }
+            Some('e') => {
+                out.push(0x1b);
+                i += 2;
+            }
+            Some('d') => {
+                out.push(0x7f);
+                i += 2;
+            }
+            Some('\\') => {
+                out.push(0x5c);
+                i += 2;
+            }
+            Some('a') => {
+                out.push(0x07);
+                i += 2;
+            }
+            Some('b') => {
+                out.push(0x08);
+                i += 2;
+            }
+            Some('f') => {
+                out.push(0x0c);
+                i += 2;
+            }
+            Some('n') => {
+                out.push(0x0a);
+                i += 2;
+            }
+            Some('r') => {
+                out.push(0x0d);
+                i += 2;
+            }
+            Some('t') => {
+                out.push(0x09);
+                i += 2;
+            }
+            Some('v') => {
+                out.push(0x0b);
+                i += 2;
+            }
+            Some('x') => {
+                let hex: String = chars[i + 2..].iter().take(2).collect();
+                match u8::from_str_radix(&hex, 16) {
+                    Ok(byte) if !hex.is_empty() => {
+                        out.push(byte);
+                        i += 2 + hex.len();
+                    }
+                    _ => {
+                        out.push(b'x');
+                        i += 2;
+                    }
+                }
+            }
+            Some(d) if d.is_ascii_digit() => {
+                let digits: String = chars[i + 1..]
+                    .iter()
+                    .take(3)
+                    .take_while(|d| d.is_ascii_digit())
+                    .collect();
+                match u32::from_str_radix(&digits, 8) {
+                    Ok(value) => {
+                        out.push(value as u8);
+                        i += 1 + digits.len();
+                    }
+                    Err(_) => {
+                        out.push(*d as u8);
+                        i += 2;
+                    }
+                }
+            }
+            Some(&other) => {
+                let mut buf = [0u8; 4];
+                out.extend_from_slice(other.encode_utf8(&mut buf).as_bytes());
+                i += 2;
+            }
+            None => {
+                out.push(0x5c);
+                i += 1;
+            }
+        }
+    }
+    out
+}
+
+/// The errno text GNU's `bind -f` failure prints: `strerror(errno)`
+/// (bind.def:274-276). std's io::Error Display appends ` (os error N)`
+/// to that same text; strip the suffix so the diagnostic is GNU's
+/// (rubash#2338 item 4).
+pub fn cannot_read_reason(err: &std::io::Error) -> String {
+    let text = err.to_string();
+    match text.rfind(" (os error ") {
+        Some(pos) if text.ends_with(')') => text[..pos].to_string(),
+        _ => text,
+    }
+}
+
+/// GNU 5.3's readline variable table in `bind -v` output order, with each
+/// variable's default value (WT probe: WSL GNU bash 5.3.0 `bind -v`,
+/// 48 lines). Booleans hold `on`/`off`, numbers decimal integers, strings
+/// verbatim. `editing-mode` and `keymap` are the two variables GNU keeps
+/// cross-consistent: `set editing-mode vi` also switches `keymap` to
+/// `vi-insert` (GNU probe) — [`apply_readline_variable`] maintains that.
+///
+/// Two entries the WT probe recorded as `off` are `on` by the C
+/// defaults — lib/readline/bind.c:1874 binds `bind-tty-special-chars`
+/// to `_rl_bind_stty_chars` and bind.c:1883 binds `convert-meta` to
+/// `_rl_convert_meta_chars_to_ascii`, both initialized to 1 in
+/// lib/readline/readline.c — and the GNU bash 5.3.20 oracle's
+/// `bind -v` (clean env) prints both `on` (rubash#2418).
+pub const READLINE_VARIABLE_DEFAULTS: &[(&str, &str)] = &[
+    ("bind-tty-special-chars", "on"),
+    ("blink-matching-paren", "off"),
+    ("byte-oriented", "off"),
+    ("colored-completion-prefix", "off"),
+    ("colored-stats", "off"),
+    ("completion-ignore-case", "off"),
+    ("completion-map-case", "off"),
+    ("convert-meta", "on"),
+    ("disable-completion", "off"),
+    ("echo-control-characters", "on"),
+    ("enable-active-region", "off"),
+    ("enable-bracketed-paste", "off"),
+    ("enable-keypad", "off"),
+    ("enable-meta-key", "on"),
+    ("expand-tilde", "off"),
+    ("force-meta-prefix", "off"),
+    ("history-preserve-point", "off"),
+    ("horizontal-scroll-mode", "off"),
+    ("input-meta", "on"),
+    ("mark-directories", "on"),
+    ("mark-modified-lines", "off"),
+    ("mark-symlinked-directories", "off"),
+    ("match-hidden-files", "on"),
+    ("menu-complete-display-prefix", "off"),
+    ("meta-flag", "on"),
+    ("output-meta", "on"),
+    ("page-completions", "on"),
+    ("prefer-visible-bell", "on"),
+    ("print-completions-horizontally", "off"),
+    ("revert-all-at-newline", "off"),
+    ("search-ignore-case", "off"),
+    ("show-all-if-ambiguous", "off"),
+    ("show-all-if-unmodified", "off"),
+    ("show-mode-in-prompt", "off"),
+    ("skip-completed-text", "off"),
+    ("visible-stats", "off"),
+    ("bell-style", "audible"),
+    ("comment-begin", "#"),
+    ("completion-display-width", "-1"),
+    ("completion-prefix-display-length", "0"),
+    ("completion-query-items", "100"),
+    ("editing-mode", "emacs"),
+    ("emacs-mode-string", "@"),
+    ("history-size", "-1"),
+    ("keymap", "emacs"),
+    ("keyseq-timeout", "500"),
+    ("vi-cmd-mode-string", "(cmd)"),
+    ("vi-ins-mode-string", "(ins)"),
+];
+
+/// How one `set NAME VALUE` resolved against the readline variable table
+/// (readline bind.c rl_variable_bind):
+/// - [`SetVariableOutcome::Applied`] — stored (booleans normalize
+///   non-`on` values to `off` and numbers non-numeric text to `0`
+///   silently, GNU probes: `set completion-ignore-case maybe` → `off`,
+///   `set keyseq-timeout abc` → `0`).
+/// - [`SetVariableOutcome::UnknownVariable`] — GNU prints
+///   ``readline: NAME: unknown variable name`` (probe) and continues.
+/// - [`SetVariableOutcome::CouldNotSetValue`] — the variables whose
+///   readline setter validates the value reject loudly:
+///   ``readline: NAME: could not set value to `bogus'`` (bind.c:2073),
+///   variable unchanged. Those are `editing-mode` (sv_editmode),
+///   `bell-style` (sv_bell_style, bind.c:2227) and `keymap`
+///   (sv_keymap, bind.c:2185) — rubash#2871.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SetVariableOutcome {
+    Applied,
+    UnknownVariable,
+    CouldNotSetValue,
+}
+
+/// Apply `set NAME VALUE` to a `bind -v` variable table (name → value, in
+/// [`READLINE_VARIABLE_DEFAULTS`] order). Returns the outcome plus the
+/// normalized value/keymap a caller may need to mirror (editing-mode
+/// lowercases and switches `keymap`; GNU probe: `set editing-mode VI`
+/// stores `vi` and `set editing-mode vi` stores `keymap vi-insert`).
+pub fn apply_readline_variable(
+    variables: &mut Vec<(String, String)>,
+    name: &str,
+    value: &str,
+) -> (SetVariableOutcome, Option<(&'static str, &'static str)>) {
+    let Some((canonical, kind)) = variable_kind(name) else {
+        return (SetVariableOutcome::UnknownVariable, None);
+    };
+    match kind {
+        VariableKind::EditingMode => {
+            let lowered = value.to_ascii_lowercase();
+            let mode = match lowered.as_str() {
+                "emacs" => "emacs",
+                "vi" => "vi",
+                _ => {
+                    return (SetVariableOutcome::CouldNotSetValue, None);
+                }
+            };
+            let keymap = if mode == "vi" { "vi-insert" } else { "emacs" };
+            store_variable(variables, canonical, mode);
+            store_variable(variables, "keymap", keymap);
+            (
+                SetVariableOutcome::Applied,
+                Some(("editing-mode", if mode == "vi" { "vi" } else { "emacs" })),
+            )
+        }
+        VariableKind::Keymap => {
+            // sv_keymap (lib/readline/bind.c:2185): the value must
+            // resolve through rl_get_keymap_by_name over the names at
+            // bind.c:2404, matched case-insensitively
+            // (_rl_get_keymap_by_name, bind.c:2424). An unknown name
+            // makes the setter return 1, so rl_variable_bind reports
+            // the value (bind.c:2073) and the current map stays
+            // (rubash#2871). A good name stores the map's canonical
+            // name: the variable reads back as
+            // rl_get_keymap_name(_rl_keymap), the first name
+            // registered for the map (see
+            // [`canonical_keymap_variable_value`]).
+            let lowered = value.to_ascii_lowercase();
+            if !crate::shell::bind_registry::KEYMAP_NAMES.contains(&lowered.as_str()) {
+                return (SetVariableOutcome::CouldNotSetValue, None);
+            }
+            store_variable(
+                variables,
+                canonical,
+                canonical_keymap_variable_value(&lowered),
+            );
+            (SetVariableOutcome::Applied, None)
+        }
+        VariableKind::BellStyle => {
+            // sv_bell_style (lib/readline/bind.c:2227-2240): the value
+            // names a bell preference — none/off, audible/on, visible,
+            // empty resets to audible — matched case-insensitively
+            // (_rl_stricmp). Anything else returns 1 and
+            // rl_variable_bind reports the value (rubash#2871). The
+            // variable reads back as the preference's own name, so
+            // the synonyms collapse (`on` → audible, `off` → none).
+            let canonical_value = if value.is_empty()
+                || value.eq_ignore_ascii_case("audible")
+                || value.eq_ignore_ascii_case("on")
+            {
+                "audible"
+            } else if value.eq_ignore_ascii_case("none") || value.eq_ignore_ascii_case("off") {
+                "none"
+            } else if value.eq_ignore_ascii_case("visible") {
+                "visible"
+            } else {
+                return (SetVariableOutcome::CouldNotSetValue, None);
+            };
+            store_variable(variables, canonical, canonical_value);
+            (SetVariableOutcome::Applied, None)
+        }
+        VariableKind::Boolean => {
+            let normalized = if value.eq_ignore_ascii_case("on") {
+                "on"
+            } else {
+                "off"
+            };
+            store_variable(variables, canonical, normalized);
+            (SetVariableOutcome::Applied, None)
+        }
+        VariableKind::Number => {
+            let normalized = strtol_i64(value);
+            store_variable(variables, canonical, &normalized.to_string());
+            (SetVariableOutcome::Applied, None)
+        }
+        VariableKind::String => {
+            store_variable(variables, canonical, value);
+            (SetVariableOutcome::Applied, None)
+        }
+    }
+}
+
+/// The stored `keymap` variable value for a map: the variable reads
+/// back as `rl_get_keymap_name (_rl_keymap)` (lib/readline/bind.c:
+/// 3018-3023), the FIRST name registered for the map in
+/// builtin_keymap_names (bind.c:2404-2416) — `vi-command` and
+/// `vi-move` read back as `vi`, `emacs-standard` as `emacs` (GNU
+/// probe: `bind 'set keymap vi-command'; bind -v` prints
+/// `set keymap vi`).
+pub fn canonical_keymap_variable_value(value: &str) -> &'static str {
+    match crate::shell::bind_registry::normalize_keymap_name(value) {
+        "emacs-meta" => "emacs-meta",
+        "emacs-ctlx" => "emacs-ctlx",
+        "vi-movement" => "vi",
+        "vi-insert" => "vi-insert",
+        _ => "emacs",
+    }
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum VariableKind {
+    Boolean,
+    Number,
+    String,
+    EditingMode,
+    Keymap,
+    BellStyle,
+}
+
+/// Variable-name resolution (find_boolean_var / find_string_var,
+/// lib/readline/bind.c): the name match is CASE-INSENSITIVE
+/// (_rl_stricmp), so `set BELL-STYLE …` finds `bell-style`; the
+/// caller reports the name as typed but stores under the canonical
+/// table name returned here (rubash#2871).
+fn variable_kind(name: &str) -> Option<(&'static str, VariableKind)> {
+    READLINE_VARIABLE_DEFAULTS
+        .iter()
+        .find(|(candidate, _)| candidate.eq_ignore_ascii_case(name))
+        .map(|(candidate, _)| (*candidate, kind_of(candidate)))
+}
+
+fn kind_of(name: &str) -> VariableKind {
+    match name {
+        "editing-mode" => VariableKind::EditingMode,
+        "keymap" => VariableKind::Keymap,
+        "bell-style" => VariableKind::BellStyle,
+        "comment-begin" | "emacs-mode-string" | "vi-cmd-mode-string" | "vi-ins-mode-string" => {
+            VariableKind::String
+        }
+        "completion-display-width"
+        | "completion-prefix-display-length"
+        | "completion-query-items"
+        | "history-size"
+        | "keyseq-timeout" => VariableKind::Number,
+        _ => VariableKind::Boolean,
+    }
+}
+
+fn store_variable(variables: &mut Vec<(String, String)>, name: &str, value: &str) {
+    match variables
+        .iter_mut()
+        .find(|(candidate, _)| candidate == name)
+    {
+        Some(slot) => slot.1 = value.to_string(),
+        None => variables.push((name.to_string(), value.to_string())),
+    }
+}
+
+/// strtol semantics readline uses for numeric variables: optional
+/// whitespace and sign, leading decimal digits, `500abc` → 500, garbage →
+/// 0 (GNU probe: `set keyseq-timeout abc` stores 0).
+fn strtol_i64(text: &str) -> i64 {
+    let trimmed = text.trim_start();
+    let mut chars = trimmed.chars().peekable();
+    let mut sign = 1i64;
+    match chars.peek() {
+        Some('+') => {
+            chars.next();
+        }
+        Some('-') => {
+            sign = -1;
+            chars.next();
+        }
+        _ => {}
+    }
+    let mut value: i64 = 0;
+    let mut any = false;
+    for ch in chars {
+        match ch.to_digit(10) {
+            Some(digit) => {
+                any = true;
+                value = value.saturating_mul(10).saturating_add(digit as i64);
+            }
+            None => break,
+        }
+    }
+    if any {
+        sign * value
+    } else {
+        0
+    }
+}
+
+/// Grammar failure of a `-x` or inputrc-form binding argument. `message`
+/// is the GNU text without the `bind: ` prefix and without the shell's
+/// `name: line N: ` diagnostic prefix.
+///
+/// The two argument channels report failures differently in GNU:
+/// - `-x` (bind_keyseq_to_unix_command, bashline.c:4850) fails the
+///   builtin with rc 1 under the shell's `bind: ` prefix (GNU probe:
+///   `bind -x '"\C-g'` → `bash: bind: no closing `"' in "\C-g`, rc 1).
+///   That is `message` alone.
+/// - a plain positional goes through rl_parse_and_bind, whose errors
+///   print as `readline: …` WITHOUT the shell prefix and do NOT fail the
+///   builtin — bind.def:304-333 ignores the return value (GNU probes:
+///   `bind '"\C-t'` → ``readline: "\C-t: no closing `"' in key binding``
+///   rc 0; `bind '"\C-t"'` → ``readline: "\C-t": no key sequence
+///   terminator`` rc 0). `readline_message` carries that text; the
+///   caller prints it and leaves the status alone.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BindSpecError {
+    pub message: String,
+    /// The quote character that never closed (no-closing errors).
+    pub delimiter: Option<char>,
+    /// The `readline: …` text for the plain-positional channel, when this
+    /// error class reports there.
+    pub readline_message: Option<String>,
+}
+
+impl BindSpecError {
+    pub fn message(message: impl Into<String>) -> Self {
+        BindSpecError {
+            message: message.into(),
+            delimiter: None,
+            readline_message: None,
+        }
+    }
+}
+
+/// The inputrc-form binding value: an unquoted value names a readline
+/// function, a quoted value is a macro (bind.def SHORT_DOC "keyseq:
+/// readline-function or readline-command"; the wt100 GNU probe shows
+/// `bind '"\C-t": ins-macro'` binds nothing — unknown function name,
+/// silently ignored by rl_parse_and_bind — while the quoted form
+/// `bind '"\C-t": "ins-macro"'` binds a macro `bind -s` lists).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum BindingSpec {
+    Function {
+        name: String,
+    },
+    Macro {
+        text: String,
+    },
+    /// The old-style arm's `prefix-meta` value (lib/readline/
+    /// bind.c:1845): the key is bound to a whole keymap (ISKMAP),
+    /// not to a function. `name` is the target keymap — the C's
+    /// only producer names emacs_meta_keymap.
+    Keymap {
+        name: String,
+    },
+}
+
+/// One parsed plain binding argument.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParsedBinding {
+    pub keyseq: String,
+    pub spec: BindingSpec,
+}
+
+/// Port of bashline.c:4814 isolate_sequence: skip leading whitespace,
+/// require `need_dquote` when told, find the closing unescaped delimiter
+/// (`"`, `'`, or none), return the RAW interior plus the index just past
+/// the closing quote. Callers decide which escape translation applies
+/// (key sequences keep the written `\C-g` form for the host key parser;
+/// macro text and whitespace-separated commands go through
+/// [`unescape_macro_text`], matching rl_macro_bind's translate path at
+/// bashline.c:4893-4896).
+fn isolate_sequence(
+    line: &str,
+    start: usize,
+    need_dquote: bool,
+) -> Result<(String, usize), BindSpecError> {
+    let bytes = line.as_bytes();
+    let mut i = start;
+    while i < bytes.len() && (bytes[i] == b' ' || bytes[i] == b'\t') {
+        i += 1;
+    }
+    if i >= bytes.len() {
+        if need_dquote {
+            return Err(BindSpecError {
+                message: format!("{line}: first non-whitespace character is not `\"'"),
+                delimiter: None,
+                readline_message: None,
+            });
+        }
+        return Err(BindSpecError {
+            message: format!("{line}: missing separator"),
+            delimiter: None,
+            readline_message: None,
+        });
+    }
+    let delim = matches!(bytes[i], b'"' | b'\'').then(|| bytes[i]);
+    if need_dquote && delim != Some(b'"') {
+        return Err(BindSpecError {
+            message: format!("{line}: first non-whitespace character is not `\"'"),
+            delimiter: None,
+            readline_message: None,
+        });
+    }
+    let content_start;
+    if let Some(d) = delim {
+        i += 1;
+        content_start = i;
+        while i < bytes.len() {
+            if bytes[i] == b'\\' {
+                i += 2;
+                continue;
+            }
+            if bytes[i] == d {
+                break;
+            }
+            i += 1;
+        }
+        if i >= bytes.len() || bytes[i] != d {
+            return Err(BindSpecError {
+                message: format!("no closing `{}' in {line}", d as char),
+                delimiter: Some(d as char),
+                readline_message: None,
+            });
+        }
+        Ok((line[content_start..i].to_string(), i + 1))
+    } else {
+        content_start = i;
+        while i < bytes.len() {
+            if bytes[i] == b'\\' {
+                i += 2;
+                continue;
+            }
+            i += 1;
+        }
+        Ok((line[content_start..].to_string(), i))
+    }
+}
+
+/// Resolve only the delimiter escapes a stored KEY SEQUENCE keeps
+/// written: `\\` → `\`, `\"` → `"`; every other sequence (including
+/// `\C-g`, `\e[A`, `\M-x`) stays in written form because the host key
+/// parser (reedline bridge `parse_key_sequence`) reads that form. GNU
+/// translates the sequence to raw bytes for matching and renders it back
+/// in this same backslash form on dump (wt100 probe: `bind -X` prints
+/// `"\C-g" "echo bound-c-g"`).
+pub fn unescape_keyseq(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch != '\\' {
+            out.push(ch);
+            continue;
+        }
+        match chars.peek() {
+            Some('\\') => {
+                out.push('\\');
+                chars.next();
+            }
+            Some('"') => {
+                out.push('"');
+                chars.next();
+            }
+            _ => out.push('\\'),
+        }
+    }
+    out
+}
+
+/// readline's \-escape translation for MACRO text and translated command
+/// values (rl_translate_keyseq): \n \t \r \e \a \b \f \v, `\\` and quote
+/// escapes, \C-x control characters, \M- ESC meta prefixes, and octal
+/// \NNN. Unknown escapes keep the backslash.
+pub fn unescape_macro_text(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(ch) = chars.next() {
+        if ch != '\\' {
+            out.push(ch);
+            continue;
+        }
+        let next = *chars.peek().unwrap_or(&'\\');
+        match next {
+            'n' => {
+                out.push('\n');
+                chars.next();
+            }
+            't' => {
+                out.push('\t');
+                chars.next();
+            }
+            'r' => {
+                out.push('\r');
+                chars.next();
+            }
+            'e' => {
+                out.push('\x1b');
+                chars.next();
+            }
+            'a' => {
+                out.push('\x07');
+                chars.next();
+            }
+            'b' => {
+                out.push('\x08');
+                chars.next();
+            }
+            'f' => {
+                out.push('\x0c');
+                chars.next();
+            }
+            'v' => {
+                out.push('\x0b');
+                chars.next();
+            }
+            '\\' => {
+                out.push('\\');
+                chars.next();
+            }
+            '"' => {
+                out.push('"');
+                chars.next();
+            }
+            '\'' => {
+                out.push('\'');
+                chars.next();
+            }
+            'C' => {
+                // \C-x: control character (rl_translate_keyseq's CTL
+                // handling). \C-? is DEL.
+                chars.next();
+                match chars.next() {
+                    Some('-') => match chars.next() {
+                        Some('?') => out.push('\x7f'),
+                        Some(letter) => {
+                            let upper = letter.to_ascii_uppercase();
+                            out.push((upper as u8 & 0x1f) as char);
+                        }
+                        None => {}
+                    },
+                    other => {
+                        // Not \C-x — keep written form.
+                        out.push_str("\\C");
+                        if let Some(ch) = other {
+                            out.push(ch);
+                        }
+                    }
+                }
+            }
+            'M' => {
+                // \M-x: meta prefix = ESC before x.
+                chars.next();
+                match chars.next() {
+                    Some('-') => {
+                        out.push('\x1b');
+                    }
+                    other => {
+                        out.push_str("\\M");
+                        if let Some(ch) = other {
+                            out.push(ch);
+                        }
+                    }
+                }
+            }
+            '0'..='7' => {
+                // \NNN octal.
+                let mut value: u32 = 0;
+                let mut digits = 0;
+                while digits < 3 {
+                    match chars.peek().and_then(|c| c.to_digit(8)) {
+                        Some(digit) => {
+                            value = value * 8 + digit;
+                            chars.next();
+                            digits += 1;
+                        }
+                        None => break,
+                    }
+                }
+                if let Some(byte) = char::from_u32(value) {
+                    out.push(byte);
+                }
+            }
+            _ => out.push('\\'),
+        }
+    }
+    out
+}
+
+/// The listing form of a stored macro / `bind -x` command value:
+/// _rl_untranslate_macro_value (lib/readline/bind.c:722) with
+/// use_escapes = 0, which is how rl_macro_dumper (bind.c:2842) and
+/// print_unix_command_map (bashline.c:4729, through the same dumper)
+/// print values. Meta bytes become `\M-` + the unmeta'd character,
+/// ESC becomes `\e`, other control characters become `\C-x` (the
+/// lowercased UNCTRL character), DEL becomes `\C-?`, and `\` / `"`
+/// are backslash-escaped — a listing line never carries a raw
+/// control byte and re-parses to the stored value (rubash#2872,
+/// rubash#2874). Stored text is char-oriented in rubash; characters
+/// above U+00FF (only reachable as literal text, never from escape
+/// translation) pass through untouched.
+pub fn untranslate_macro_value(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 8);
+    for ch in text.chars() {
+        let mut c = ch as u32;
+        if c > 0xff {
+            out.push(ch);
+            continue;
+        }
+        // META_CHAR: print \M- and continue with the unmeta'd char.
+        if c & 0x80 != 0 {
+            out.push_str("\\M-");
+            c &= 0x7f;
+        }
+        if c == 0x1b {
+            // ESC prints as \e, ahead of the generic control arm.
+            out.push('\\');
+            c = 'e' as u32;
+        } else if c < 0x20 {
+            // CTRL_CHAR: \C- + _rl_to_lower (UNCTRL (c)).
+            out.push_str("\\C-");
+            c = char::from((c + 0x40) as u8).to_ascii_lowercase() as u32;
+        } else if c == 0x7f {
+            // RUBOUT prints as \C-?.
+            out.push_str("\\C-");
+            c = '?' as u32;
+        }
+        if c == '\\' as u32 || c == '"' as u32 {
+            out.push('\\');
+        }
+        out.push(char::from_u32(c).unwrap_or(ch));
+    }
+    out
+}
+
+/// Parse a `bind -x` argument: `"keyseq"[:|ws]["']command["']`
+/// (bashline.c:4850 bind_keyseq_to_unix_command). The keyseq MUST be
+/// double-quoted; colon or whitespace separates it from the command.
+/// Colon separator stores the command verbatim (rl_generic_bind);
+/// whitespace separator requires the command to be quoted and gets the
+/// readline escape translation (rl_macro_bind path, translate=true at
+/// bashline.c:4893-4896).
+pub fn parse_unix_command_spec(line: &str) -> Result<(String, String), BindSpecError> {
+    let (keyseq_raw, mut i) = isolate_sequence(line, 0, true)?;
+    let keyseq = unescape_keyseq(&keyseq_raw);
+    // Scan forward to the separator: colon or whitespace
+    // (bashline.c:4877-4879).
+    let bytes = line.as_bytes();
+    while i < bytes.len() && bytes[i] != b':' && bytes[i] != b' ' && bytes[i] != b'\t' {
+        i += 1;
+    }
+    if i >= bytes.len() {
+        return Err(BindSpecError {
+            message: format!("{line}: missing separator"),
+            delimiter: None,
+            readline_message: None,
+        });
+    }
+    if bytes[i] == b':' {
+        // Colon separator: the command is stored verbatim
+        // (rl_generic_bind, bashline.c:4898-4900).
+        let (command, _) = isolate_sequence(line, i + 1, false)?;
+        Ok((keyseq, command))
+    } else {
+        // Whitespace separator: command must be quoted and gets the
+        // readline escape translation (rl_macro_bind path,
+        // bashline.c:4893-4896).
+        let (command_raw, _) = isolate_sequence(line, i, true)?;
+        Ok((keyseq, unescape_macro_text(&command_raw)))
+    }
+}
+
+/// Parse a plain inputrc-form binding argument `"keyseq": value`
+/// (rl_parse_and_bind). Quoted value → macro; unquoted value → function
+/// name (GNU: `bind '"\C-t": ins-macro'` binds nothing — an unknown
+/// function name is silently dropped; see wt100 probe). Returns None
+/// when the argument is not this form (non-quote, non-`set` text —
+/// rl_parse_and_bind ignores it silently, GNU probe `bind 'ls -l'` rc 0).
+///
+/// Failures carry `readline_message` (see [`BindSpecError`]): GNU shapes
+/// from the wt100-era probes — ``"\C-t: no closing `"' in key binding``,
+/// `"\C-t": no key sequence terminator`, `` `'ins': missing closing
+/// quote for macro `` — printed after `readline: ` with no effect on
+/// status.
+pub fn parse_binding_line(line: &str) -> Option<Result<ParsedBinding, BindSpecError>> {
+    let trimmed = line.trim_start();
+    if !trimmed.starts_with('"') {
+        return None;
+    }
+    let (keyseq_raw, mut i) = match isolate_sequence(line, 0, true) {
+        Ok(parsed) => parsed,
+        Err(err) => {
+            let readline_message = err
+                .delimiter
+                .map(|delimiter| format!("{line}: no closing `{delimiter}' in key binding"));
+            return Some(Err(BindSpecError {
+                message: err.message,
+                delimiter: err.delimiter,
+                readline_message,
+            }));
+        }
+    };
+    let keyseq = unescape_keyseq(&keyseq_raw);
+    let bytes = line.as_bytes();
+    while i < bytes.len() && (bytes[i] == b' ' || bytes[i] == b'\t') {
+        i += 1;
+    }
+    if i < bytes.len() && bytes[i] == b':' {
+        i += 1;
+    }
+    // Quoted value → macro (rl_parse_and_bind's ISMACR path); anything
+    // else is a function name, taken verbatim to end of line.
+    let mut probe = i;
+    while probe < bytes.len() && (bytes[probe] == b' ' || bytes[probe] == b'\t') {
+        probe += 1;
+    }
+    if probe < bytes.len() && (bytes[probe] == b'"' || bytes[probe] == b'\'') {
+        let macro_text_start = probe;
+        // isolate_sequence auto-detects the quote character (GNU passes
+        // need_dquote=0 here; either quote works as the macro delimiter).
+        let (text_raw, _) = match isolate_sequence(line, i, false) {
+            Ok(parsed) => parsed,
+            Err(err) => {
+                let readline_message = if err.delimiter.is_some() {
+                    // bind.c:1731: `` `%s': missing closing quote for
+                    // macro `` — %s is the function text from its
+                    // opening quote (rubash#2873: the backtick /
+                    // apostrophe frame was missing here).
+                    Some(format!(
+                        "`{}': missing closing quote for macro",
+                        line[macro_text_start..].trim_end()
+                    ))
+                } else {
+                    None
+                };
+                return Some(Err(BindSpecError {
+                    message: err.message,
+                    delimiter: err.delimiter,
+                    readline_message,
+                }));
+            }
+        };
+        Some(Ok(ParsedBinding {
+            keyseq,
+            spec: BindingSpec::Macro {
+                text: unescape_macro_text(&text_raw),
+            },
+        }))
+    } else {
+        let (name, _) = match isolate_sequence(line, i, false) {
+            Ok(parsed) => parsed,
+            Err(err) => {
+                // The keyseq closed but no `: value` followed — GNU
+                // readline: `"\C-t": no key sequence terminator`.
+                let readline_message = (err.message.ends_with("missing separator"))
+                    .then(|| format!("{line}: no key sequence terminator"));
+                return Some(Err(BindSpecError {
+                    message: err.message,
+                    delimiter: None,
+                    readline_message,
+                }));
+            }
+        };
+        Some(Ok(ParsedBinding {
+            keyseq,
+            spec: BindingSpec::Function { name },
+        }))
+    }
+}
+
+/// True when `name` is in the supported function table.
+pub fn is_known_function(name: &str) -> bool {
+    READLINE_FUNCTIONS.contains(&name)
+}
+
+/// `bind` usage text (builtins/bind.def SHORT_DOC).
+pub fn usage_line() -> &'static str {
+    "bind: usage: bind [-lpsvPSVX] [-m keymap] [-f filename] [-q name] [-u name] [-r keyseq] [-x keyseq:shell-command] [keyseq:readline-function or readline-command]"
+}
+
+/// Write the usage line (bind.def default: builtin_usage → EX_USAGE).
+pub fn write_usage<E>(stderr: &mut E) -> io::Result<()>
+where
+    E: Write,
+{
+    writeln!(stderr, "{}", usage_line())
+}
+
+/// `bind -X` line: `"\C-g" "command"` (print_unix_command,
+/// bashline.c:4720-4727, readable form). The command value is
+/// untranslated first — print_unix_command_map prints through
+/// rl_macro_dumper, whose values pass _rl_untranslate_macro_value
+/// (rubash#2874).
+pub fn format_unix_command_readable(keyseq: &str, command: &str) -> String {
+    format!("\"{keyseq}\" \"{}\"", untranslate_macro_value(command))
+}
+
+/// `bind -s` line: `"\C-t": "ins-macro"` (rl_macro_dumper readable;
+/// the value is untranslated, rubash#2872).
+pub fn format_macro_readable(keyseq: &str, text: &str) -> String {
+    format!("\"{keyseq}\": \"{}\"", untranslate_macro_value(text))
+}
+
+/// `bind -S` line: `\C-t outputs ins-macro` (GNU probe; rl_macro_dumper
+/// plain form; the value is untranslated, rubash#2872).
+pub fn format_macro_plain(keyseq: &str, text: &str) -> String {
+    format!("{keyseq} outputs {}", untranslate_macro_value(text))
+}
+
+/// `bind -p` line: `"\C-a": beginning-of-line` (rl_function_dumper(1)).
+pub fn format_function_readable(keyseq: &str, name: &str) -> String {
+    format!("\"{keyseq}\": {name}")
+}
+
+/// `bind -v` line: `set completion-ignore-case on`
+/// (rl_variable_dumper(1) readable form; WSL GNU 5.3 probe).
+pub fn format_variable_readable(name: &str, value: &str) -> String {
+    format!("set {name} {value}")
+}
+
+/// `bind -V` line: ``completion-ignore-case is set to `off'``
+/// (rl_variable_dumper(0) plain form; WSL GNU 5.3 probe).
+pub fn format_variable_plain(name: &str, value: &str) -> String {
+    format!("{name} is set to `{value}'")
+}
+
+/// `bind -P` line (rl_print_keybinding, print_readably = 0): at most
+/// five sequences, `, ...` when truncated, `.` only when the list is
+/// complete: `abort can be found on "\C-g", "\C-x\C-g".`
+pub fn format_function_plain(name: &str, keyseqs: &[String]) -> String {
+    let quoted: Vec<String> = keyseqs
+        .iter()
+        .take(5)
+        .map(|seq| format!("\"{seq}\""))
+        .collect();
+    if keyseqs.len() > 5 {
+        format!("{name} can be found on {}, ...", quoted.join(", "))
+    } else {
+        format!("{name} can be found on {}.", quoted.join(", "))
+    }
+}
+
+/// `bind -P` line for a function with no bindings in the dumped keymap
+/// (rl_print_keybinding, print_readably = 0, no invokers): NO trailing
+/// period, unlike the `-q` form.
+pub fn format_function_plain_unbound(name: &str) -> String {
+    format!("{name} is not bound to any keys")
+}
+
+/// `bind -p` comment line for a function with no bindings in the dumped
+/// keymap (rl_print_keybinding, print_readably = 1, no invokers).
+pub fn format_function_readable_unbound(name: &str) -> String {
+    format!("# {name} (not bound)")
+}
+
+/// `bind -q` positive answer (query_bindings, bind.def:344-367): at most
+/// five key sequences, `...` when truncated.
+pub fn format_query(name: &str, keyseqs: &[String]) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    let shown = keyseqs.len().min(5);
+    for seq in keyseqs.iter().take(shown) {
+        parts.push(format!("\"{seq}\""));
+    }
+    let mut out = format!("{name} can be invoked via ");
+    if keyseqs.len() > shown {
+        out.push_str(&parts.join(", "));
+        out.push_str(", ...");
+    } else {
+        out.push_str(&parts.join(", "));
+        out.push('.');
+    }
+    out
+}
+
+/// `bind -q` negative answer: `NAME is not bound to any keys.`
+pub fn format_query_unbound(name: &str) -> String {
+    format!("{name} is not bound to any keys.")
+}
+
+/// ``bind: `NAME': unknown function name`` (bind.def:351).
+pub fn format_unknown_function(name: &str) -> String {
+    format!("`{name}': unknown function name")
+}
+
+/// ``bind: `NAME': invalid keymap name`` (bind.def:255).
+pub fn format_invalid_keymap(name: &str) -> String {
+    format!("`{name}': invalid keymap name")
+}
+
+/// `bind: FILE: cannot read: ERRNO` (bind.def:274-276).
+pub fn format_cannot_read(file: &str, reason: &str) -> String {
+    format!("{file}: cannot read: {reason}")
+}
+
+/// rl_parse_and_bind's diagnostics for a NON-quoted, non-`set`
+/// positional spec (lib/readline/bind.c:1594): the core text after
+/// `readline: ` when GNU reports the spec instead of silently
+/// dropping it, `None` for the shapes GNU absorbs without a word
+/// (rubash#2873).
+///
+/// GNU scans the spec for a `:`, space or tab separator (bind.c:1632):
+/// - a spec whose first character IS the separator has no key
+///   sequence at all (the scan stops at index 0):
+///   `` `<spec>': invalid key binding: missing key sequence ``
+///   (bind.c:1637);
+/// - a spec with no separator anywhere never reaches a value
+///   (foundsep == 0): `<spec>: no key sequence terminator`
+///   (bind.c:1754).
+///
+/// Anything else — empty text, a `#` comment, or a separator-carrying
+/// old-style spec (`bind 'ls -l'`) — parses on without a diagnostic.
+/// Leading whitespace is skipped before all of this (bind.c:1599),
+/// so the diagnostic names the stripped spec.
+pub fn unquoted_spec_diagnostic(arg: &str) -> Option<String> {
+    let stripped = arg.trim_start();
+    if stripped.is_empty() || stripped.starts_with('#') {
+        return None;
+    }
+    if stripped.starts_with(':') {
+        return Some(format!(
+            "`{stripped}': invalid key binding: missing key sequence"
+        ));
+    }
+    if !stripped.contains([':', ' ', '\t']) {
+        return Some(format!("{stripped}: no key sequence terminator"));
+    }
+    None
+}
+
+/// Parse one positional binding argument. `bind -x` values arrive through
+/// [`parse_unix_command_spec`]; this handles the plain inputrc form.
+pub fn parse_positional_binding(arg: &str) -> Result<ParsedBinding, BindSpecError> {
+    match parse_binding_line(arg) {
+        Some(Ok(parsed)) => Ok(parsed),
+        Some(Err(err)) => Err(err),
+        None => Err(BindSpecError::message(format!("{arg}: missing separator"))),
+    }
+}
+
+/// What rl_parse_and_bind does with one non-quoted, non-`set`
+/// positional spec — the old-style keyname arm (lib/readline/
+/// bind.c:1594). The quoted form is [`parse_binding_line`]'s; this
+/// covers everything else that reaches the arm.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum OldStyleSpec {
+    /// Absorbed without a word: empty text, a `#` comment, or an
+    /// equivalency (`key:=value` — bind.c:1759 returns at once).
+    Silent,
+    /// The core text GNU reports after `readline: `; the builtin
+    /// still succeeds (bind.def:308-312 ignores the return value).
+    Diagnostic(String),
+    /// A binding to register in the current keymap.
+    Bind(ParsedBinding),
+}
+
+/// glean_key_from_name (lib/readline/bind.c:2387): the name_key_alist
+/// names (bind.c:2371) match case-insensitively; anything else
+/// gleans as its first byte (an empty name gleans as NUL).
+fn glean_key_from_name(kname: &str) -> u32 {
+    const NAME_KEY_ALIST: [(&str, u32); 11] = [
+        ("DEL", 0x7f),
+        ("ESC", 0x1b),
+        ("Escape", 0x1b),
+        ("LFD", 0x0a),
+        ("Newline", 0x0a),
+        ("RET", 0x0d),
+        ("Return", 0x0d),
+        ("Rubout", 0x7f),
+        ("SPC", 0x20),
+        ("Space", 0x20),
+        ("Tab", 0x09),
+    ];
+    for (name, value) in NAME_KEY_ALIST {
+        if kname.eq_ignore_ascii_case(name) {
+            return value;
+        }
+    }
+    kname.as_bytes().first().map_or(0, |byte| u32::from(*byte))
+}
+
+/// substring_member_of_array (lib/readline/bind.c:3087): any member
+/// found in the string by _rl_strindex, which compares
+/// case-insensitively (lib/readline/util.c:274).
+fn substring_member_of_array(string: &str, array: &[&str]) -> bool {
+    let haystack = string.to_ascii_lowercase();
+    array
+        .iter()
+        .any(|member| haystack.contains(&member.to_ascii_lowercase()))
+}
+
+/// _rl_skip_to_delim (lib/readline/bind.c:1562): the index of the
+/// delimiter, with backslash quoting the next character; `None`
+/// when the string ends first.
+fn skip_to_delim(bytes: &[u8], start: usize, delim: u8) -> Option<usize> {
+    let mut i = start;
+    let mut passc = false;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if passc {
+            passc = false;
+        } else if c == b'\\' {
+            passc = true;
+        } else if c == delim {
+            return Some(i);
+        }
+        i += 1;
+    }
+    None
+}
+
+/// The stored (written) sequence for one old-style key value.
+/// rl_bind_key (lib/readline/bind.c:140) routes a META key into the
+/// ESC prefix map, so a meta binding's sequence is `\e` plus the
+/// unmeta'd key's spelling; a plain key spells itself. Single-key
+/// spellings follow the default tables' conventions: `\C-t`,
+/// `\C-?` for DEL, `\e` for ESC, `\\` and `\"` escaped.
+fn old_style_keyseq(key: u32) -> String {
+    if key & 0x80 != 0 {
+        let mut seq = String::from("\\e");
+        seq.push_str(&old_style_single_keyseq(key & 0x7f));
+        seq
+    } else {
+        old_style_single_keyseq(key)
+    }
+}
+
+/// The stored (written) sequence for the prefix-meta arm's key.
+/// rl_generic_bind receives the sequence built from the RAW key
+/// byte (bind.c:1850 passes the one-byte string), bypassing
+/// rl_bind_key's ESC-prefix routing of META keys, so a key below
+/// 0x80 spells as usual while a META key keeps its raw byte —
+/// which the dumpers spell in the \ooo form (GNU probe:
+/// `bind 'Meta-t: prefix-meta'` puts the meta map under "\364",
+/// not under "\et").
+fn old_style_keymap_keyseq(key: u32) -> String {
+    if key < 0x80 {
+        old_style_single_keyseq(key)
+    } else {
+        format!("\\{:03o}", key & 0xff)
+    }
+}
+
+fn old_style_single_keyseq(key: u32) -> String {
+    match key {
+        0x1b => "\\e".to_string(),
+        0x00..=0x1f => {
+            // \C- + the UNCTRL character, lowercased — the
+            // untranslate convention of bind.c:722 (rubash#2872).
+            let unctrl = char::from((key + 0x40) as u8).to_ascii_lowercase();
+            format!("\\C-{unctrl}")
+        }
+        0x7f => "\\C-?".to_string(),
+        _ => match char::from_u32(key) {
+            Some('\\') => "\\\\".to_string(),
+            Some('"') => "\\\"".to_string(),
+            Some(ch) => ch.to_string(),
+            None => String::new(),
+        },
+    }
+}
+
+/// rl_parse_and_bind for a non-quoted, non-`set` spec: the
+/// separator scan and value isolation of bind.c:1632-1752, then the
+/// old-style arm of bind.c:1803-1856 (rubash#2914 — this arm was
+/// missing, so `bind 'Control-t: undo'` was silently dropped and
+/// `bind 'backward-char '` never diagnosed). The separator-scan
+/// diagnostics (missing key sequence / no key sequence terminator)
+/// are classified by [`unquoted_spec_diagnostic`]; the `set` arm is
+/// the caller's ([`strip_set_keyword`]).
+pub fn parse_old_style_binding(arg: &str) -> OldStyleSpec {
+    if let Some(diagnostic) = unquoted_spec_diagnostic(arg) {
+        return OldStyleSpec::Diagnostic(diagnostic);
+    }
+    let stripped = arg.trim_start();
+    if stripped.is_empty() || stripped.starts_with('#') || stripped.starts_with('"') {
+        // `"`-leading specs are the new-style branch's
+        // (parse_binding_line); the caller routes them there.
+        return OldStyleSpec::Silent;
+    }
+    let bytes = stripped.as_bytes();
+    // Separator scan (bind.c:1637): guaranteed to stop in bounds —
+    // the diagnostic stage has already reported the specs with no
+    // separator and the ones starting with one.
+    let mut sep = 0;
+    while bytes[sep] != b':' && bytes[sep] != b' ' && bytes[sep] != b'\t' {
+        sep += 1;
+    }
+    let token = &stripped[..sep];
+    let equivalency = bytes[sep] == b':' && bytes.get(sep + 1) == Some(&b'=');
+    let mut i = sep + 1;
+    if equivalency {
+        i += 1;
+    }
+    // Isolate the value (bind.c:1715-1752): skip whitespace; a
+    // quoted value is a macro, skipped to its closing delimiter.
+    while i < bytes.len() && (bytes[i] == b' ' || bytes[i] == b'\t') {
+        i += 1;
+    }
+    let funname_start = i;
+    let quoted_value = matches!(bytes.get(i), Some(b'\'') | Some(b'"'));
+    let funname_end = if quoted_value {
+        match skip_to_delim(bytes, i + 1, bytes[i]) {
+            Some(close) => close + 1,
+            None => {
+                return OldStyleSpec::Diagnostic(format!(
+                    "`{}': missing closing quote for macro",
+                    stripped[funname_start..].trim_end()
+                ));
+            }
+        }
+    } else {
+        let mut end = i;
+        while end < bytes.len() && bytes[end] != b' ' && bytes[end] != b'\t' {
+            end += 1;
+        }
+        end
+    };
+    let funname = &stripped[funname_start..funname_end];
+    if equivalency {
+        return OldStyleSpec::Silent;
+    }
+    // The old-style arm (bind.c:1803-1856): the keyname is the part
+    // of the token after its last `-`.
+    let kname = match token.rfind('-') {
+        Some(at) => &token[at + 1..],
+        None => token,
+    };
+    let mut key = glean_key_from_name(kname);
+    let mut foundmod = false;
+    if substring_member_of_array(token, &["Control-", "C-", "CTRL-"]) {
+        // key = CTRL (_rl_to_upper (key)) — chardefs.h:60.
+        if (b'a' as u32..=b'z' as u32).contains(&key) {
+            key -= 32;
+        }
+        key &= 0x1f;
+        foundmod = true;
+    }
+    if substring_member_of_array(token, &["Meta", "M-"]) {
+        key |= 0x80; // META (key) — chardefs.h:61.
+        foundmod = true;
+    }
+    if !foundmod && kname != token {
+        return OldStyleSpec::Diagnostic(format!("{token}: unknown key modifier"));
+    }
+    let keyseq = old_style_keyseq(key);
+    if quoted_value {
+        // rl_macro_bind (bind.c:1834-1843): strip the delimiters —
+        // the closing one only when it matches the opening — and
+        // translate the text's escapes, as the new-style macro path
+        // stores them.
+        let delim = funname.as_bytes()[0];
+        let mut interior = &funname[1..];
+        if interior.as_bytes().last() == Some(&delim) {
+            interior = &interior[..interior.len() - 1];
+        }
+        return OldStyleSpec::Bind(ParsedBinding {
+            keyseq,
+            spec: BindingSpec::Macro {
+                text: unescape_macro_text(interior),
+            },
+        });
+    }
+    if funname.eq_ignore_ascii_case("prefix-meta") {
+        // PREFIX_META_HACK (bind.c:1845-1855): the one name the C
+        // intercepts before rl_named_function — the key is bound
+        // to the emacs-meta KEYMAP (ISKMAP), with the raw-byte
+        // sequence (old_style_keymap_keyseq), not through
+        // rl_bind_key (rubash#2923).
+        return OldStyleSpec::Bind(ParsedBinding {
+            keyseq: old_style_keymap_keyseq(key),
+            spec: BindingSpec::Keymap {
+                name: "emacs-meta".to_string(),
+            },
+        });
+    }
+    // rl_bind_key (key, rl_named_function (funname)) (bind.c:1856):
+    // an unknown name binds a NULL slot, which the registry
+    // reproduces by storing the name verbatim — it shadows the
+    // key's default binding and is never listed.
+    OldStyleSpec::Bind(ParsedBinding {
+        keyseq,
+        spec: BindingSpec::Function {
+            name: funname.to_string(),
+        },
+    })
+}
+
+/// Strip the `set` keyword of a variable-assignment line; `None` when
+/// the line is not one. rl_parse_and_bind scans the first token up to
+/// a `:`, space or tab (lib/readline/bind.c:1637) and compares it
+/// against `set` case-insensitively (bind.c:1658), so the token may
+/// be terminated by a colon as well as by whitespace —
+/// `set: completion-ignore-case on` is a variable assignment whose
+/// variable is the next word, exactly like the spaced form
+/// (rubash#2915). Returns the text after the separator; a bare `set`
+/// with no separator at all is not an assignment here (the caller
+/// reports its empty variable name itself).
+pub fn strip_set_keyword(line: &str) -> Option<&str> {
+    let trimmed = line.trim_start();
+    let sep = trimmed.find([':', ' ', '\t'])?;
+    if trimmed[..sep].eq_ignore_ascii_case("set") {
+        Some(&trimmed[sep + 1..])
+    } else {
+        None
+    }
+}
+
+/// The environment an inputrc file's conditionals evaluate against:
+/// `$if term=VALUE` compares `$TERM` verbatim (case-sensitively — GNU
+/// probe: `$if term=XTERM` does not match TERM=xterm) and `$if mode=VALUE`
+/// compares the current editing mode (`set editing-mode` lines earlier in
+/// the same file update it for later conditionals — GNU probe: a
+/// `mode=vi` block after `set editing-mode vi` applies). A bare
+/// `$if word` or unknown key is an error whose block never applies
+/// (GNU probe: `readline: ...: equality comparison operator expected,
+/// found `end-of-line'`).
+#[derive(Debug, Clone, Default)]
+pub struct InputrcEnv<'a> {
+    pub term: Option<&'a str>,
+    pub editing_mode: Option<&'a str>,
+}
+
+/// One `readline: ...` diagnostic from parsing. `file` is the file the
+/// line came from ($include files carry their own name), `line` its
+/// 1-based number, and `core` the message body GNU prints after the
+/// `file: line N: ` middle.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InputrcDiagnostic {
+    pub file: String,
+    pub line: usize,
+    pub core: String,
+}
+
+/// Everything one inputrc parse produced, in file order.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct InputrcParsed {
+    /// `"keyseq": value` bindings from active regions.
+    pub bindings: Vec<(String, BindingSpec)>,
+    /// The keymap each `bindings` entry was parsed under, parallel to
+    /// `bindings`: `Some(name)` once the file itself moved the keymap
+    /// (an in-file `set editing-mode` / `set keymap` — sv_editmode,
+    /// lib/readline/bind.c:2092-2110, moves `_rl_keymap` at the moment
+    /// the set line runs, so a later binding belongs to the new map);
+    /// `None` for entries parsed before any in-file move, which belong
+    /// to the keymap current when the file started (the caller's map).
+    pub binding_keymaps: Vec<Option<String>>,
+    /// Validated `set NAME VALUE` lines (value normalized the way
+    /// [`apply_readline_variable`] normalizes; `editing-mode` normalized
+    /// lowercase).
+    pub variables: Vec<(String, String)>,
+    pub diagnostics: Vec<InputrcDiagnostic>,
+}
+
+/// Parse an inputrc body (`bind -f` / the startup ~/.inputrc read):
+/// bindings, `set NAME VALUE` variables, `$include FILE`, and
+/// `$if term=…/mode=…` / `$else` / `$endif` conditionals (nesting
+/// supported; a `$if`-family line is recognized even inside inactive
+/// regions so its `$endif` still matches). `load` fetches `$include`
+/// content — a missing include is silently skipped (GNU probe:
+/// `bind -f` over a file with `$include nope.rc` proceeds, rc 0).
+pub fn parse_inputrc_with_env(
+    text: &str,
+    file: &str,
+    env: &InputrcEnv,
+    load: &mut dyn FnMut(&str) -> Option<String>,
+) -> InputrcParsed {
+    let mut state = InputrcParseState {
+        result: InputrcParsed::default(),
+        env: env.clone(),
+        file: file.to_string(),
+        // GNU/readline caps conditional nesting (INIT_NEST_DEPTH 10 in
+        // readline's encapsulations); deeper `$if`s are ignored.
+        conditionals: Vec::new(),
+        include_depth: 0,
+        keymap: None,
+    };
+    state.parse_text(text, load);
+    state.result
+}
+
+struct InputrcParseState<'a> {
+    result: InputrcParsed,
+    env: InputrcEnv<'a>,
+    file: String,
+    conditionals: Vec<ConditionalRegion>,
+    include_depth: u8,
+    /// The keymap the file itself has selected so far (`set
+    /// editing-mode` / `set keymap`), in `keymap`-variable spelling;
+    /// `None` until the file moves it — bindings parsed before that
+    /// belong to the caller's starting keymap.
+    keymap: Option<String>,
+}
+
+#[derive(Clone, Copy)]
+struct ConditionalRegion {
+    /// Whether lines in this region are active.
+    active: bool,
+    /// Whether any branch of this region has already been active (an
+    /// `$else` is only active when no earlier branch was).
+    taken: bool,
+}
+
+impl<'a> InputrcParseState<'a> {
+    fn active(&self) -> bool {
+        self.conditionals.iter().all(|region| region.active)
+    }
+
+    fn diagnostic(&mut self, line: usize, core: String) {
+        self.result.diagnostics.push(InputrcDiagnostic {
+            file: self.file.clone(),
+            line,
+            core,
+        });
+    }
+
+    fn parse_text(&mut self, text: &str, load: &mut dyn FnMut(&str) -> Option<String>) {
+        for (index, raw_line) in text.lines().enumerate() {
+            let line = raw_line.trim();
+            let number = index + 1;
+            if line.is_empty() || line.starts_with('#') {
+                continue;
+            }
+            if let Some(rest) = line.strip_prefix('$') {
+                self.parse_directive(rest.trim(), number, load);
+                continue;
+            }
+            if !self.active() {
+                continue;
+            }
+            if let Some(rest) = strip_set_keyword(line) {
+                self.parse_set_line(rest, number);
+                continue;
+            }
+            match parse_binding_line(line) {
+                Some(Ok(parsed)) => {
+                    self.result.bindings.push((parsed.keyseq, parsed.spec));
+                    self.result.binding_keymaps.push(self.keymap.clone());
+                }
+                // rl_parse_and_bind errors do not fail the bind builtin
+                // (bind.def:304-333 ignores the return value; GNU probe:
+                // `bind '"\C-t'` prints
+                // `readline: "\C-t: no closing `"' in key binding`, rc 0).
+                Some(Err(_)) => {}
+                // A line the quoted parser does not claim is an
+                // old-style keyname line for rl_parse_and_bind's
+                // other arm (bind.c:1594): _rl_read_init_file feeds
+                // every line to the same parser, so route it through
+                // parse_old_style_binding like the positional `bind`
+                // argument (rubash#2924 — these lines were silently
+                // dropped, bindings and diagnostics alike).
+                None => match parse_old_style_binding(line) {
+                    OldStyleSpec::Bind(parsed) => {
+                        self.result.bindings.push((parsed.keyseq, parsed.spec));
+                        self.result.binding_keymaps.push(self.keymap.clone());
+                    }
+                    OldStyleSpec::Diagnostic(core) => self.diagnostic(number, core),
+                    OldStyleSpec::Silent => {}
+                },
+            }
+        }
+    }
+
+    fn parse_directive(
+        &mut self,
+        rest: &str,
+        number: usize,
+        load: &mut dyn FnMut(&str) -> Option<String>,
+    ) {
+        if let Some(condition) = rest.strip_prefix("if") {
+            let condition = condition.trim();
+            let active = if let Some((key, value)) = condition.split_once('=') {
+                match key.trim() {
+                    // `$if term=…` compares $TERM verbatim (case
+                    // sensitive, GNU probe: XTERM ≠ xterm).
+                    "term" => self.env.term == Some(value),
+                    // `$if mode=…` compares the CURRENT editing mode:
+                    // unset means emacs — readline's default editing
+                    // mode (the variable table's own default, and
+                    // the oracle: a bare `$if mode=emacs` block
+                    // applies with no `set` line at all, rubash#2924).
+                    // A `set editing-mode` earlier in the file
+                    // already updated env.editing_mode (GNU probe:
+                    // the mode=vi block after `set editing-mode vi`
+                    // applies).
+                    "mode" => self.env.editing_mode.unwrap_or("emacs") == value,
+                    _ => false,
+                }
+            } else {
+                self.diagnostic(
+                    number,
+                    "equality comparison operator expected, found `end-of-line'".to_string(),
+                );
+                false
+            };
+            self.conditionals.push(ConditionalRegion {
+                active,
+                taken: active,
+            });
+            return;
+        }
+        if rest == "else" {
+            if let Some(region) = self.conditionals.last_mut() {
+                region.active = !region.taken;
+                region.taken |= region.active;
+            }
+            return;
+        }
+        if rest == "endif" {
+            self.conditionals.pop();
+            return;
+        }
+        if let Some(name) = rest.strip_prefix("include") {
+            let name = name.trim();
+            if self.active() && self.include_depth < 10 {
+                if let Some(content) = load(name) {
+                    let saved_file = std::mem::replace(&mut self.file, name.to_string());
+                    self.include_depth += 1;
+                    self.parse_text(&content, load);
+                    self.include_depth -= 1;
+                    self.file = saved_file;
+                }
+            }
+        }
+    }
+
+    fn parse_set_line(&mut self, rest: &str, number: usize) {
+        let rest = rest.trim_start();
+        let mut parts = rest.splitn(2, char::is_whitespace);
+        let name = parts.next().unwrap_or_default().trim();
+        let value = parts.next().unwrap_or_default().trim();
+        if name.is_empty() {
+            return;
+        }
+        // Validate against the variable table now (the diagnostics carry
+        // the file:line position GNU reports), store the normalized pair.
+        let mut scratch: Vec<(String, String)> = Vec::new();
+        let (outcome, editing_mode) = apply_readline_variable(&mut scratch, name, value);
+        match outcome {
+            SetVariableOutcome::Applied => {
+                for (stored, normalized) in &scratch {
+                    store_variable(&mut self.result.variables, stored, normalized);
+                    if stored == "keymap" {
+                        // The `editing-mode` and `keymap` setters both
+                        // store a `keymap` row, and both move the live
+                        // keymap at this point in the file (sv_editmode
+                        // / the keymap setter, lib/readline/bind.c:
+                        // 2092-2110): later bindings belong to it.
+                        self.keymap = Some(normalized.clone());
+                    }
+                }
+                if let Some((mode_name, mode_value)) = editing_mode {
+                    // Later `mode=` conditionals in this file see the new
+                    // mode (GNU probe).
+                    if mode_name == "editing-mode" {
+                        self.env.editing_mode = Some(mode_value);
+                    }
+                }
+            }
+            SetVariableOutcome::UnknownVariable => {
+                self.diagnostic(number, format!("{name}: unknown variable name"))
+            }
+            SetVariableOutcome::CouldNotSetValue => {
+                self.diagnostic(number, format!("{name}: could not set value to `{value}'"))
+            }
+        }
+    }
+}
+
+/// Parse an inputrc file body (`bind -f`): returns the keyseq bindings
+/// and the `set editing-mode` value. Compatibility wrapper over
+/// [`parse_inputrc_with_env`] with no term and no include loading.
+pub fn parse_inputrc(text: &str) -> (Vec<(String, BindingSpec)>, Option<String>) {
+    let parsed = parse_inputrc_with_env(text, "", &InputrcEnv::default(), &mut |_| None);
+    (
+        parsed.bindings,
+        parsed
+            .variables
+            .iter()
+            .find(|(name, _)| name == "editing-mode")
+            .map(|(_, value)| value.clone()),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn keyseq_bytes_orders_like_the_readline_scan() {
+        // rubash#2338: byte order of the translated sequence is the
+        // rl_invoking_keyseqs_in_map listing order.
+        assert_eq!(keyseq_bytes(r"\C-b"), vec![0x02]);
+        assert_eq!(keyseq_bytes(r"\eOD"), vec![0x1b, b'O', b'D']);
+        assert_eq!(keyseq_bytes(r"\e[D"), vec![0x1b, b'[', b'D']);
+        assert!(keyseq_bytes(r"\C-b") < keyseq_bytes(r"\eOD"));
+        assert!(keyseq_bytes(r"\eOD") < keyseq_bytes(r"\e[D"));
+        assert_eq!(keyseq_bytes(r"\C-@"), vec![0x00]);
+        assert_eq!(keyseq_bytes(r"\C-?"), vec![0x7f]);
+        assert_eq!(keyseq_bytes(r"\C-\\"), vec![0x1c]);
+        assert_eq!(keyseq_bytes(r"\e "), vec![0x1b, b' ']);
+        assert_eq!(keyseq_bytes("\\\\"), vec![0x5c]);
+        assert_eq!(keyseq_bytes("\\\""), vec![0x22]);
+        assert_eq!(keyseq_bytes(r"\200"), vec![0x80]);
+        assert_eq!(keyseq_bytes("h"), vec![b'h']);
+    }
+
+    #[test]
+    fn function_tables_match_gnu_counts() {
+        // GNU 5.3.20 oracle: `bind -l` = 176 names; the per-keymap
+        // dumps carry 403/109/44/273/104 bound rows (rubash#2338).
+        assert_eq!(READLINE_FUNCTIONS.len(), 176);
+        assert_eq!(DEFAULT_FUNCTION_BINDINGS.len(), 403);
+        assert_eq!(DEFAULT_BINDINGS_EMACS_META.len(), 109);
+        assert_eq!(DEFAULT_BINDINGS_EMACS_CTLX.len(), 44);
+        assert_eq!(DEFAULT_BINDINGS_VI_INSERT.len(), 273);
+        assert_eq!(DEFAULT_BINDINGS_VI_MOVEMENT.len(), 104);
+        assert!(is_known_function("complete"));
+        assert!(is_known_function("history-search-backward"));
+    }
+
+    #[test]
+    fn old_style_prefix_meta_binds_the_emacs_meta_keymap() {
+        // rubash#2923 (bind.c:1845-1855): the value names a keymap,
+        // the sequence is the raw key byte, and the name match is
+        // case-insensitive (_rl_stricmp).
+        assert_eq!(
+            parse_old_style_binding("Control-t: prefix-meta"),
+            OldStyleSpec::Bind(ParsedBinding {
+                keyseq: "\\C-t".to_string(),
+                spec: BindingSpec::Keymap {
+                    name: "emacs-meta".to_string(),
+                },
+            })
+        );
+        assert_eq!(
+            parse_old_style_binding("Control-t: PREFIX-META"),
+            OldStyleSpec::Bind(ParsedBinding {
+                keyseq: "\\C-t".to_string(),
+                spec: BindingSpec::Keymap {
+                    name: "emacs-meta".to_string(),
+                },
+            })
+        );
+        // A META key keeps its raw byte (\364), never an ESC prefix.
+        assert_eq!(
+            parse_old_style_binding("Meta-t: prefix-meta"),
+            OldStyleSpec::Bind(ParsedBinding {
+                keyseq: "\\364".to_string(),
+                spec: BindingSpec::Keymap {
+                    name: "emacs-meta".to_string(),
+                },
+            })
+        );
+        // A QUOTED "prefix-meta" value is a macro, not the hack
+        // (the C's quoted arm runs first, bind.c:1834).
+        assert_eq!(
+            parse_old_style_binding("Control-t: \"prefix-meta\""),
+            OldStyleSpec::Bind(ParsedBinding {
+                keyseq: "\\C-t".to_string(),
+                spec: BindingSpec::Macro {
+                    text: "prefix-meta".to_string(),
+                },
+            })
+        );
+    }
+
+    #[test]
+    fn plain_dump_formats_match_rl_print_keybinding() {
+        let seqs: Vec<String> = ["a", "b", "c", "d", "e", "f"]
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+        assert_eq!(
+            format_function_plain("fn", &seqs),
+            "fn can be found on \"a\", \"b\", \"c\", \"d\", \"e\", ..."
+        );
+        assert_eq!(
+            format_function_plain("fn", &seqs[..2]),
+            "fn can be found on \"a\", \"b\"."
+        );
+        // The unbound plain form has NO trailing period (unlike -q's).
+        assert_eq!(
+            format_function_plain_unbound("fn"),
+            "fn is not bound to any keys"
+        );
+        assert_eq!(format_function_readable_unbound("fn"), "# fn (not bound)");
+    }
+
+    #[test]
+    fn parse_unix_command_spec_colon_form() {
+        let (keyseq, command) =
+            parse_unix_command_spec(r#""\C-g": echo bound-c-g"#).expect("parses");
+        assert_eq!(keyseq, "\\C-g");
+        assert_eq!(command, "echo bound-c-g");
+    }
+
+    #[test]
+    fn parse_unix_command_spec_space_form_with_quotes() {
+        let (keyseq, command) =
+            parse_unix_command_spec(r#""\C-r" "fzf --query $READLINE_LINE""#).expect("parses");
+        assert_eq!(keyseq, "\\C-r");
+        assert_eq!(command, "fzf --query $READLINE_LINE");
+    }
+
+    #[test]
+    fn parse_unix_command_spec_keeps_nested_quotes() {
+        let (keyseq, command) =
+            parse_unix_command_spec(r#""\C-g": sh -c "echo inner""#).expect("parses");
+        assert_eq!(command, r#"sh -c "echo inner""#);
+    }
+
+    #[test]
+    fn parse_unix_command_spec_errors_match_gnu() {
+        let err = parse_unix_command_spec("noquotes").expect_err("rejected");
+        assert_eq!(
+            err.message,
+            "noquotes: first non-whitespace character is not `\"'"
+        );
+        let err = parse_unix_command_spec(r#""\C-g"#).expect_err("rejected");
+        assert!(err.message.contains("no closing"));
+    }
+
+    #[test]
+    fn parse_binding_line_macro_and_function() {
+        let parsed = parse_binding_line(r#""\C-t": "ins-macro""#)
+            .expect("this form")
+            .expect("parses");
+        assert_eq!(parsed.keyseq, "\\C-t");
+        assert_eq!(
+            parsed.spec,
+            BindingSpec::Macro {
+                text: "ins-macro".to_string()
+            }
+        );
+        let parsed = parse_binding_line(r#""\C-o": accept-line"#)
+            .expect("this form")
+            .expect("parses");
+        assert_eq!(
+            parsed.spec,
+            BindingSpec::Function {
+                name: "accept-line".to_string()
+            }
+        );
+    }
+
+    #[test]
+    fn formats_match_gnu_probe_shapes() {
+        assert_eq!(
+            format_unix_command_readable("\\C-g", "echo bound-c-g"),
+            "\"\\C-g\" \"echo bound-c-g\""
+        );
+        assert_eq!(
+            format_macro_readable("\\C-t", "ins-macro"),
+            "\"\\C-t\": \"ins-macro\""
+        );
+        assert_eq!(
+            format_macro_plain("\\C-t", "ins-macro"),
+            "\\C-t outputs ins-macro"
+        );
+        assert_eq!(
+            format_function_plain("abort", &["\\C-g".to_string(), "\\C-x\\C-g".to_string()]),
+            "abort can be found on \"\\C-g\", \"\\C-x\\C-g\"."
+        );
+        assert_eq!(
+            format_query("self-insert", &[" ".to_string()]),
+            "self-insert can be invoked via \" \"."
+        );
+        assert_eq!(
+            format_query("self-insert", &[" ".to_string(), "!".to_string()]),
+            "self-insert can be invoked via \" \", \"!\"."
+        );
+        assert_eq!(
+            format_query(
+                "self-insert",
+                &[" ".to_string(), "!".to_string(), "?".to_string()]
+            ),
+            "self-insert can be invoked via \" \", \"!\", \"?\"."
+        );
+        assert_eq!(
+            format_query_unbound("vi-editing-mode"),
+            "vi-editing-mode is not bound to any keys."
+        );
+    }
+
+    #[test]
+    fn untranslate_macro_value_matches_rl_untranslate() {
+        // _rl_untranslate_macro_value (bind.c:722), use_escapes = 0,
+        // byte shapes from the GNU 5.3.20 probes (rubash#2872/#2874).
+        assert_eq!(untranslate_macro_value("echo hi\n"), "echo hi\\C-j");
+        assert_eq!(untranslate_macro_value("a\tb"), "a\\C-ib");
+        assert_eq!(untranslate_macro_value("a\x1bb"), "a\\eb");
+        assert_eq!(untranslate_macro_value("a\x18b"), "a\\C-xb");
+        assert_eq!(untranslate_macro_value("a\x7fb"), "a\\C-?b");
+        assert_eq!(untranslate_macro_value("a\\b\"c"), "a\\\\b\\\"c");
+        assert_eq!(untranslate_macro_value("plain"), "plain");
+        // A meta byte prints \M- plus the unmeta'd character's own
+        // rendering (0x9b = meta + ESC → \M-\e).
+        assert_eq!(untranslate_macro_value("\u{9b}"), "\\M-\\e");
+    }
+
+    #[test]
+    fn query_truncates_at_five_with_ellipsis() {
+        let seqs: Vec<String> = (0..7).map(|i| format!("\\C-{i}")).collect();
+        let out = format_query("self-insert", &seqs);
+        assert!(out.ends_with(", ..."), "got: {out}");
+        assert!(out.contains("\\C-4"));
+        assert!(!out.contains("\\C-5"), "only five shown: {out}");
+    }
+
+    #[test]
+    fn inputrc_parsing_extracts_bindings_and_editing_mode() {
+        let text = "\n# comment\n\"\\C-k\": kill-whole-line\n\"\\C-t\": \"macro text\"\nset editing-mode vi\nset blink-matching-paren off\n$if term=xterm\n\"\\C-x\": beginning-of-line\n$endif\n";
+        let (bindings, mode) = parse_inputrc(text);
+        // `$if term=xterm` with no TERM in the wrapper env: the block is
+        // skipped (GNU probe: term conditions compare $TERM verbatim).
+        assert_eq!(bindings.len(), 2);
+        assert_eq!(bindings[0].0, "\\C-k");
+        assert_eq!(mode, Some("vi".to_string()));
+    }
+
+    #[test]
+    fn inputrc_old_style_lines_bind_and_diagnose() {
+        // rubash#2924: _rl_read_init_file feeds every line to
+        // rl_parse_and_bind, so old-style keyname lines bind (with
+        // the keymap stamp of the file's position) and their
+        // diagnostics surface with file/line position.
+        let text = "Control-t: undo\nset editing-mode vi\nControl-y: \"echo hi\"\nControl-x: prefix-meta\n";
+        let parsed = parse_inputrc_with_env(text, "rc", &InputrcEnv::default(), &mut |_| None);
+        assert_eq!(parsed.bindings.len(), 3);
+        assert_eq!(
+            parsed.bindings[0],
+            (
+                "\\C-t".to_string(),
+                BindingSpec::Function {
+                    name: "undo".to_string()
+                }
+            )
+        );
+        assert_eq!(parsed.binding_keymaps[0], None);
+        assert_eq!(
+            parsed.bindings[1],
+            (
+                "\\C-y".to_string(),
+                BindingSpec::Macro {
+                    text: "echo hi".to_string()
+                }
+            )
+        );
+        assert_eq!(parsed.binding_keymaps[1], Some("vi-insert".to_string()));
+        assert_eq!(
+            parsed.bindings[2].1,
+            BindingSpec::Keymap {
+                name: "emacs-meta".to_string()
+            }
+        );
+        let parsed = parse_inputrc_with_env(
+            "# c\nFoo-t: undo\n",
+            "rc",
+            &InputrcEnv::default(),
+            &mut |_| None,
+        );
+        assert!(parsed.bindings.is_empty());
+        assert_eq!(parsed.diagnostics.len(), 1);
+        assert_eq!(parsed.diagnostics[0].line, 2);
+        assert_eq!(parsed.diagnostics[0].core, "Foo-t: unknown key modifier");
+    }
+
+    #[test]
+    fn inputrc_term_condition_applies_when_term_matches() {
+        let text = "$if term=xterm\n\"\\C-x\": beginning-of-line\n$else\n\"\\C-y\": yank\n$endif\n";
+        let env = InputrcEnv {
+            term: Some("xterm"),
+            editing_mode: None,
+        };
+        let parsed = parse_inputrc_with_env(text, "", &env, &mut |_| None);
+        assert_eq!(parsed.bindings.len(), 1);
+        assert_eq!(parsed.bindings[0].0, "\\C-x");
+        // $else branch when the term does not match (case-sensitive: GNU
+        // probe `term=XTERM` does not match TERM=xterm).
+        let env = InputrcEnv {
+            term: Some("XTERM"),
+            editing_mode: None,
+        };
+        let parsed = parse_inputrc_with_env(text, "", &env, &mut |_| None);
+        assert_eq!(parsed.bindings.len(), 1);
+        assert_eq!(parsed.bindings[0].0, "\\C-y");
+    }
+
+    #[test]
+    fn inputrc_mode_condition_defaults_to_emacs() {
+        // rubash#2924: with no `set editing-mode` anywhere, the
+        // current editing mode is emacs — a bare `$if mode=emacs`
+        // block applies, `$if mode=vi` does not (GNU probe).
+        let text = "$if mode=emacs\n\"\\C-x\": beginning-of-line\n$endif\n$if mode=vi\n\"\\C-y\": yank\n$endif\n";
+        let parsed = parse_inputrc_with_env(text, "", &InputrcEnv::default(), &mut |_| None);
+        assert_eq!(parsed.bindings.len(), 1);
+        assert_eq!(parsed.bindings[0].0, "\\C-x");
+    }
+
+    #[test]
+    fn inputrc_mode_condition_follows_in_file_set() {
+        let text = "set editing-mode vi\n$if mode=vi\n\"\\C-m\": vi-editing-mode\n$endif\n";
+        let parsed = parse_inputrc_with_env(text, "", &InputrcEnv::default(), &mut |_| None);
+        // The `set editing-mode vi` earlier in the file arms the later
+        // mode= conditional (GNU probe).
+        assert_eq!(parsed.bindings.len(), 1);
+        assert_eq!(parsed.variables[0].0, "editing-mode");
+        assert_eq!(parsed.variables[0].1, "vi");
+        assert_eq!(parsed.variables[1].0, "keymap");
+        assert_eq!(parsed.variables[1].1, "vi-insert");
+        // The binding was parsed after the in-file set moved the
+        // keymap, so it carries the vi-insert stamp (rubash#2447).
+        assert_eq!(parsed.binding_keymaps, vec![Some("vi-insert".to_string())]);
+    }
+
+    #[test]
+    fn inputrc_binding_keymap_stamp_follows_in_file_sets() {
+        let text = "\"\\C-g\": abort\nset keymap vi-command\n\"\\C-m\": vi-editing-mode\n";
+        let parsed = parse_inputrc_with_env(text, "", &InputrcEnv::default(), &mut |_| None);
+        assert_eq!(parsed.bindings.len(), 2);
+        // Before the file moves the keymap the stamp stays open: the
+        // binding belongs to the caller's starting keymap.
+        assert_eq!(parsed.binding_keymaps[0], None);
+        // `set keymap vi-command` stores the canonical `vi` keymap row
+        // (rl_get_keymap_name spelling), and the next binding is
+        // stamped with it.
+        assert_eq!(parsed.binding_keymaps[1], Some("vi".to_string()));
+    }
+
+    #[test]
+    fn inputrc_set_variables_validate_and_normalize() {
+        let text = "set completion-ignore-case on\nset completion-ignore-case maybe\nset keyseq-timeout abc\nset no-such-var on\nset editing-mode bogus\nset editing-mode VI\n";
+        let parsed = parse_inputrc_with_env(text, "rc", &InputrcEnv::default(), &mut |_| None);
+        // Non-`on` booleans normalize to `off`, garbage numbers to 0
+        // (GNU probes: silent). `editing-mode VI` lowercases.
+        let value = |name: &str| {
+            parsed
+                .variables
+                .iter()
+                .find(|(candidate, _)| candidate == name)
+                .map(|(_, value)| value.clone())
+                .unwrap_or_default()
+        };
+        assert_eq!(value("completion-ignore-case"), "off");
+        assert_eq!(value("keyseq-timeout"), "0");
+        assert_eq!(value("editing-mode"), "vi");
+        // Diagnostics: the unknown name and the bad editing-mode value
+        // (`readline: rc: line N: …` shaped by the caller).
+        assert_eq!(parsed.diagnostics.len(), 2);
+        assert_eq!(parsed.diagnostics[0].line, 4);
+        assert_eq!(
+            parsed.diagnostics[0].core,
+            "no-such-var: unknown variable name"
+        );
+        assert_eq!(parsed.diagnostics[1].line, 5);
+        assert_eq!(
+            parsed.diagnostics[1].core,
+            "editing-mode: could not set value to `bogus'"
+        );
+    }
+
+    #[test]
+    fn inputrc_include_and_nesting() {
+        let text = "$if term=vt100\n$if term=vt100\n\"\\C-a\": beginning-of-line\n$endif\n$endif\n\"\\C-b\": backward-char\n";
+        let parsed = parse_inputrc_with_env(text, "", &InputrcEnv::default(), &mut |_| None);
+        // Nested $if with no TERM: inactive; the outer binding applies.
+        assert_eq!(
+            parsed
+                .bindings
+                .iter()
+                .map(|(seq, _)| seq.as_str())
+                .collect::<Vec<_>>(),
+            vec!["\\C-b"]
+        );
+    }
+
+    #[test]
+    fn variable_table_defaults_match_gnu_dump() {
+        // `bind -v` order and defaults pinned against WSL GNU bash 5.3.0
+        // (48 lines).
+        assert_eq!(READLINE_VARIABLE_DEFAULTS.len(), 48);
+        // bind.c:1874/1883: both variables sit on C ints initialized
+        // to 1 (readline.c) — the 5.3.20 oracle prints them `on`
+        // (rubash#2418; the WT 5.3.0 probe behind the original table
+        // recorded them off, contradicted by source + oracle).
+        assert_eq!(
+            READLINE_VARIABLE_DEFAULTS[0],
+            ("bind-tty-special-chars", "on")
+        );
+        assert_eq!(READLINE_VARIABLE_DEFAULTS[7], ("convert-meta", "on"));
+        assert_eq!(READLINE_VARIABLE_DEFAULTS[35], ("visible-stats", "off"));
+        assert_eq!(READLINE_VARIABLE_DEFAULTS[36], ("bell-style", "audible"));
+        assert_eq!(
+            READLINE_VARIABLE_DEFAULTS[47],
+            ("vi-ins-mode-string", "(ins)")
+        );
+        let registry = crate::shell::bind_registry::BindRegistry::default();
+        assert_eq!(registry.variable_value("editing-mode"), Some("emacs"));
+        assert_eq!(registry.variable_value("keymap"), Some("emacs"));
+    }
+
+    #[test]
+    fn set_variable_outcomes_match_gnu_probes() {
+        let mut registry = crate::shell::bind_registry::BindRegistry::default();
+        // `bind 'set completion-ignore-case on'` → visible in `bind -v`.
+        assert_eq!(
+            registry.set_readline_variable("completion-ignore-case", "on"),
+            SetVariableOutcome::Applied
+        );
+        assert_eq!(
+            registry.variable_value("completion-ignore-case"),
+            Some("on")
+        );
+        // Unknown name: ``readline: no-such-var: unknown variable name``,
+        // command keeps running.
+        assert_eq!(
+            registry.set_readline_variable("no-such-var", "on"),
+            SetVariableOutcome::UnknownVariable
+        );
+        // Bad editing-mode value: loud, variable unchanged.
+        assert_eq!(
+            registry.set_readline_variable("editing-mode", "bogus"),
+            SetVariableOutcome::CouldNotSetValue
+        );
+        assert_eq!(registry.variable_value("editing-mode"), Some("emacs"));
+        // Valid vi switches editing-mode AND keymap (GNU probe).
+        assert_eq!(
+            registry.set_readline_variable("editing-mode", "vi"),
+            SetVariableOutcome::Applied
+        );
+        assert_eq!(registry.variable_value("editing-mode"), Some("vi"));
+        assert_eq!(registry.variable_value("keymap"), Some("vi-insert"));
+        assert_eq!(registry.editing_mode.as_deref(), Some("vi"));
+        // Bad keymap is rejected loudly (sv_keymap returns 1 →
+        // rl_variable_bind reports it, bind.c:2073), value unchanged
+        // (rubash#2871; the earlier "silent" pin came from a probe
+        // that never captured stderr).
+        assert_eq!(
+            registry.set_readline_variable("keymap", "bogus"),
+            SetVariableOutcome::CouldNotSetValue
+        );
+        assert_eq!(registry.variable_value("keymap"), Some("vi-insert"));
+        // Keymap names match case-insensitively and read back
+        // canonically (bind.c:2424, rl_get_keymap_name).
+        assert_eq!(
+            registry.set_readline_variable("keymap", "VI"),
+            SetVariableOutcome::Applied
+        );
+        assert_eq!(registry.variable_value("keymap"), Some("vi"));
+        // sv_bell_style (bind.c:2227): bogus is rejected loudly, the
+        // synonyms collapse to the preference's name, empty resets
+        // to audible (rubash#2871).
+        assert_eq!(
+            registry.set_readline_variable("bell-style", "bogus"),
+            SetVariableOutcome::CouldNotSetValue
+        );
+        assert_eq!(registry.variable_value("bell-style"), Some("audible"));
+        assert_eq!(
+            registry.set_readline_variable("bell-style", "on"),
+            SetVariableOutcome::Applied
+        );
+        assert_eq!(registry.variable_value("bell-style"), Some("audible"));
+        assert_eq!(
+            registry.set_readline_variable("bell-style", "OFF"),
+            SetVariableOutcome::Applied
+        );
+        assert_eq!(registry.variable_value("bell-style"), Some("none"));
+        // Variable names match case-insensitively (find_string_var's
+        // _rl_stricmp) and store under the canonical name.
+        assert_eq!(
+            registry.set_readline_variable("BELL-STYLE", "visible"),
+            SetVariableOutcome::Applied
+        );
+        assert_eq!(registry.variable_value("bell-style"), Some("visible"));
+    }
+
+    #[test]
+    fn positional_errors_carry_readline_channel() {
+        // Unclosed keyseq quote: `readline: …` text, no status effect.
+        let err = parse_binding_line(r#""\C-t"#)
+            .expect("this form")
+            .expect_err("rejected");
+        assert_eq!(
+            err.readline_message.as_deref(),
+            Some("\"\\C-t: no closing `\"' in key binding")
+        );
+        // Keyseq with no `: value`: no key sequence terminator.
+        let err = parse_binding_line(r#""\C-t""#)
+            .expect("this form")
+            .expect_err("rejected");
+        assert_eq!(
+            err.readline_message.as_deref(),
+            Some("\"\\C-t\": no key sequence terminator")
+        );
+        // Unclosed macro quote: bind.c:1731 frames the function text
+        // in backtick/apostrophe (rubash#2873).
+        let err = parse_binding_line(r#""\C-t": 'ins"#)
+            .expect("this form")
+            .expect_err("rejected");
+        assert_eq!(
+            err.readline_message.as_deref(),
+            Some("`'ins': missing closing quote for macro")
+        );
+        // -x errors stay in the `bind:` channel (rc 1 there).
+        let err = parse_unix_command_spec("noquotes").expect_err("rejected");
+        assert!(err.readline_message.is_none());
+        // Non-quote non-set text: not this form at all.
+        assert!(parse_binding_line("ls -l").is_none());
+    }
+
+    #[test]
+    fn known_function_table_covers_common_names() {
+        for name in [
+            "self-insert",
+            "accept-line",
+            "beginning-of-line",
+            // GNU's incremental search (C-r): funmap.c:131 registers
+            // it as reverse-search-history.
+            "reverse-search-history",
+        ] {
+            assert!(is_known_function(name), "{name} should be known");
+        }
+        assert!(!is_known_function("no-such-fn"));
+        // `history-incremental-search-backward` is a zsh/zle widget
+        // name, not a readline function: funmap.c carries only the
+        // non-incremental-* family (funmap.c:114-117), the name
+        // appears nowhere in the GNU tree, and the 5.3.20 oracle's
+        // own `bind -q history-incremental-search-backward` answers
+        // "unknown function name" (rc 1). Do not re-add it by
+        // symmetry with history-search-backward /
+        // history-substring-search-backward.
+        assert!(!is_known_function("history-incremental-search-backward"));
+    }
+}

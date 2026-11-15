@@ -1,0 +1,235 @@
+use super::token::{Token, TokenKind};
+
+#[derive(Clone)]
+pub(super) struct HereDocDelimiter {
+    pub(super) value: String,
+    pub(super) quoted: bool,
+    pub(super) strip_tabs: bool,
+    pub(super) allow_closing_paren: bool,
+}
+
+pub(super) fn heredoc_delimiters(
+    tokens: &[Token],
+    source: &str,
+    in_comsub: bool,
+) -> Vec<HereDocDelimiter> {
+    tokens
+        .windows(2)
+        .filter(|pair| pair[0].kind == TokenKind::HereDoc)
+        .map(|pair| {
+            // Anchor the scan on the delimiter word inside this logical line
+            // instead of searching for the first `<<` in the source:
+            // arithmetic shifts like `$((x << 2))` or here-strings (`<<<`)
+            // would otherwise be mistaken for heredoc operators.
+            // `value` has already undergone quote removal.  Use the token's
+            // raw spelling for the quoted-delimiter decision: with a
+            // partially quoted delimiter such as `E"OF"`, the normalized
+            // value is just `EOF`, so searching the source for that value can
+            // accidentally find the closing delimiter in the body instead.
+            let context = heredoc_operator_context(source, &pair[1].raw);
+            // GNU parse.y:643-661: `<<-` is the LESS_LESS_MINUS operator
+            // and yields r_deblank_reading_until in ALL THREE grammar
+            // forms — bare, `NUMBER LESS_LESS_MINUS WORD`, and
+            // `REDIR_WORD LESS_LESS_MINUS WORD` — and make_cmd.c:527
+            // make_here_document derives kill_leading from that
+            // instruction alone, never from the fd prefix. The numbered
+            // form's lexer token carries the WHOLE slice (`3<<-`, see
+            // number_redirect.rs finish_number_input_redirect), so an
+            // exact `== "<<-"` comparison silently dropped deblank for
+            // every fd-prefixed `<<-`: the gather then neither stripped
+            // body tabs nor matched a tab-indented terminator line, and
+            // the body ran to end-of-input (rubash#2265).
+            let strip_tabs = pair[0].value.ends_with("<<-");
+            let value = if strip_tabs {
+                pair[1].value.trim_start_matches('\t').to_string()
+            } else {
+                pair[1].value.clone()
+            };
+            // GNU make_cmd.c make_here_document compares body lines with
+            // STREQN against `redir_word` — the DEQUOTED delimiter (the `\`
+            // in `<<\)` only quotes it). The token value keeps CTLESC pairs
+            // for the quoted-delimiter flag; collapse them here so `)` can
+            // match a delimiter spelled `\)`.
+            let value = {
+                let mut dequoted = String::with_capacity(value.len());
+                let mut chars = value.chars();
+                while let Some(ch) = chars.next() {
+                    if ch == crate::executor::markers::CTLESC {
+                        if let Some(next) = chars.next() {
+                            dequoted.push(next);
+                        }
+                    } else {
+                        dequoted.push(ch);
+                    }
+                }
+                dequoted
+            };
+            // rubash#738: an escaped quote travels through the word walker as
+            // its DATA_* carrier (`<<E\'OF` reaches here as `E`+DATA_SQUOTE+
+            // `OF`), so the literal text has to be decoded before the body
+            // compares against it — otherwise the terminator `E'OF` never
+            // matched and the heredoc swallowed the rest of the script.
+            let value = crate::executor::markers::decode_word_position_carriers(&value)
+                // An escaped backslash (`<<a\\b` names `a\b`) travels as
+                // DATA_BACKSLASH; the shared decoder leaves it in place for
+                // the expansion walkers, so restore the literal here.
+                .replace(crate::executor::markers::DATA_BACKSLASH, "\\");
+            // An escaped blank in the delimiter word (`<<E\ OF`) travels
+            // as ANSI_C_IFS_GUARD + the blank: the guard is an
+            // expansion-time field-splitting marker, not delimiter text —
+            // GNU's delimiter is the dequoted bytes (`E OF`), and with the
+            // guard left in place the terminator line never compares
+            // equal, so the heredoc swallows the rest of the script
+            // (audit A1 F13). Strip live guards only: an E400-escaped
+            // pair is user data and keeps its E401.
+            let value = {
+                let mut stripped = String::with_capacity(value.len());
+                let mut prev_escape = false;
+                for ch in value.chars() {
+                    if ch == crate::executor::markers::ANSI_C_IFS_GUARD && !prev_escape {
+                        prev_escape = false;
+                        continue;
+                    }
+                    prev_escape = ch == crate::executor::markers::LITERAL_CHAR_ESCAPE;
+                    stripped.push(ch);
+                }
+                stripped
+            };
+            HereDocDelimiter {
+                value,
+                quoted: context.quoted,
+                strip_tabs,
+                allow_closing_paren: context.in_command_substitution || in_comsub,
+            }
+        })
+        .collect()
+}
+
+struct HereDocOperatorContext {
+    quoted: bool,
+    in_command_substitution: bool,
+}
+
+fn heredoc_operator_context(source: &str, delimiter_raw: &str) -> HereDocOperatorContext {
+    // Find the delimiter word, then the `<<` operator immediately before it.
+    let Some(delimiter_index) = source.rfind(delimiter_raw) else {
+        return HereDocOperatorContext {
+            quoted: false,
+            in_command_substitution: false,
+        };
+    };
+    let Some(operator_index) = source[..delimiter_index].rfind("<<") else {
+        return HereDocOperatorContext {
+            quoted: false,
+            in_command_substitution: false,
+        };
+    };
+    let index = operator_index;
+    let mut chars = source[index + 2..].chars().peekable();
+    if chars.peek() == Some(&'-') {
+        chars.next();
+    }
+    while chars.peek().is_some_and(|ch| ch.is_ascii_whitespace()) {
+        chars.next();
+    }
+    // GNU make_cmd.c: heredoc inside command substitution needs PST_EOFTOKEN
+    // handling for `EOF)` closing. The original depth check via
+    // command_substitution_depth_before could miss `$(` when source is a
+    // truncated logical_line slice (e.g., `cat <<EOF` without the `$(` prefix).
+    // Fall back to a simple `$(` scan when depth is 0.
+    let depth = command_substitution_depth_before(source, index);
+    let in_sub = if depth > 0 {
+        true
+    } else {
+        // Fallback: check if `$(` appears before `<<` in the source, even if
+        // the depth counter missed it due to truncated source or quote handling.
+        let prefix = &source[..index];
+        prefix.contains("$(") || prefix.contains("`")
+    };
+    HereDocOperatorContext {
+        quoted: delimiter_raw
+            .chars()
+            .any(|ch| matches!(ch, '\'' | '"' | '\\'))
+            || heredoc_delimiter_word_is_quoted(chars),
+        in_command_substitution: in_sub,
+    }
+}
+
+fn heredoc_delimiter_word_is_quoted<I>(chars: I) -> bool
+where
+    I: Iterator<Item = char>,
+{
+    let mut chars = chars.peekable();
+    while let Some(ch) = chars.next() {
+        if ch.is_ascii_whitespace() {
+            break;
+        }
+        if matches!(ch, '\'' | '"') {
+            return true;
+        }
+        if ch == '\\' {
+            if chars.peek() == Some(&'\r') {
+                chars.next();
+                if chars.peek() == Some(&'\n') {
+                    chars.next();
+                    continue;
+                }
+                return true;
+            }
+            if chars.peek() == Some(&'\n') {
+                chars.next();
+                continue;
+            }
+            return true;
+        }
+    }
+    false
+}
+
+fn command_substitution_depth_before(source: &str, end: usize) -> usize {
+    let mut depth = 0usize;
+    let mut single = false;
+    let mut double = false;
+    let mut escaped = false;
+    let chars = source[..end].chars().collect::<Vec<_>>();
+    let mut index = 0;
+    while index < chars.len() {
+        let ch = chars[index];
+        if escaped {
+            escaped = false;
+            index += 1;
+            continue;
+        }
+        if ch == '\\' && !single {
+            escaped = true;
+            index += 1;
+            continue;
+        }
+        if ch == '\'' && !double {
+            single = !single;
+            index += 1;
+            continue;
+        }
+        if ch == '"' && !single {
+            double = !double;
+            index += 1;
+            continue;
+        }
+        if single {
+            index += 1;
+            continue;
+        }
+        if ch == '$' && chars.get(index + 1) == Some(&'(') {
+            depth += 1;
+            index += 2;
+            continue;
+        }
+        if depth > 0 && ch == '(' {
+            depth += 1;
+        } else if depth > 0 && ch == ')' {
+            depth = depth.saturating_sub(1);
+        }
+        index += 1;
+    }
+    depth
+}

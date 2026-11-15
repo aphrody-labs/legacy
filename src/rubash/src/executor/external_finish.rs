@@ -1,0 +1,1573 @@
+use super::*;
+use crate::executor::ast_exec::is_closed_output_io_error;
+use crate::executor::markers::DATA_DOLLAR_STR;
+
+/// GNU cat.c: `cat 1>&-` runs with fd 1 closed in the child
+/// (redir.c r_close_this), so the first write fails EBADF and cat
+/// reports it against standard output. The parser mirrors the close
+/// into `redirect_out` with the literal `&-` target; opening that as a
+/// filename would create a bogus file named `&-` (rubash#1594).
+pub(in crate::executor) fn cat_closed_stdout_error() -> ExecuteError {
+    ExecuteError::IoError(std::io::Error::new(
+        std::io::ErrorKind::Other,
+        "cat: standard output: Bad file descriptor",
+    ))
+}
+
+impl Executor {
+    pub(in crate::executor) fn write_cat_output(
+        &mut self,
+        cmd: &CommandNode,
+        output: &[u8],
+    ) -> Result<(), ExecuteError> {
+        // GNU redir.c: ALL `>` redirects are opened in order (each file
+        // created/truncated); only the LAST receives the output (rubash#1392).
+        let mut seen_last = false;
+        for redirect in cmd.redirects.iter().rev() {
+            if !matches!(
+                redirect.kind,
+                crate::parser::RedirectKind::Output | crate::parser::RedirectKind::ClobberOutput
+            ) {
+                continue;
+            }
+            if redirect.fd.unwrap_or(1) != 1 {
+                continue;
+            }
+            if seen_last {
+                let target = self.expand_redirect_target(redirect);
+                if crate::executor::execution_misc::redirect_target_fd(&target).is_none()
+                    && !target.starts_with("<(")
+                    && !target.starts_with(">(")
+                {
+                    let _ =
+                        self.create_redirect_output_for(Some(redirect), &target, redirect.clobber);
+                }
+            } else {
+                seen_last = true;
+            }
+        }
+        if let Some(redirect) = &cmd.redirect_out {
+            let target = self.expand_redirect_target(redirect);
+            if crate::executor::execution_misc::is_closed_redirect_target(&target) {
+                return Err(cat_closed_stdout_error());
+            }
+            // rubash#2329: an fd-alias PATH spelling resolves against
+            // the descriptor bound at the entry's own list position
+            // (redir.c:237 do_redirections) — when this command's list
+            // bound the aliased fd to a plain file, the serve is a
+            // fresh open of THAT file, exactly like the mirror
+            // appliers' positional arm; the ambient resolver below
+            // cannot see an in-list binding and fell through to a
+            // literal open of the spelling (ENOENT).
+            if let Some(opened) = self.open_alias_spelling_fresh_output_positional(
+                cmd,
+                self.output_entry_position(cmd, 1, &target),
+                &target,
+                false,
+                redirect.clobber,
+            ) {
+                let file = opened?;
+                crate::fd::write_file_all(&file, output)?;
+                return Ok(());
+            }
+            // /dev/std*, /dev/fd/N: resolve as a dup of the aliased fd's
+            // current binding (implicit std fds write their default stream)
+            // instead of reopening the alias as a literal Windows path
+            // (write_dev_stdio_redirect_output, rubash#216).
+            if let Some(result) =
+                self.write_dev_stdio_redirect_output(&target, output, false, redirect.clobber)
+            {
+                return result;
+            }
+            let file =
+                self.create_redirect_output_for(Some(redirect), &target, redirect.clobber)?;
+            crate::fd::write_file_all(&file, output)?;
+        } else if let Some(redirect) = &cmd.append {
+            let target = self.expand_redirect_target(redirect);
+            // rubash#2329: append twin of the positional arm above.
+            if let Some(opened) = self.open_alias_spelling_fresh_output_positional(
+                cmd,
+                self.output_entry_position(cmd, 1, &target),
+                &target,
+                true,
+                true,
+            ) {
+                let file = opened?;
+                crate::fd::write_file_all(&file, output)?;
+                return Ok(());
+            }
+            if let Some(result) = self.write_dev_stdio_redirect_output(&target, output, true, true)
+            {
+                return result;
+            }
+            // Classified append open (rubash#1964): the raw mapped
+            // open this replaces could not reach /dev/tcp targets
+            // (their mapped name is not a file).
+            let file = self.open_append_target(&target)?;
+            crate::fd::write_file_all(&file, output)?;
+        } else {
+            self.write_default_stdout(output)?;
+        }
+        Ok(())
+    }
+
+    /// Streaming counterpart of `write_cat_output` for the chunked cat paths
+    /// (`stream_inherited_cat`, `stream_cat_stdin_operand`): a `>`/`>>` target is
+    /// opened ONCE for the whole copy, like GNU cat.c. Calling
+    /// `write_cat_output` per chunk re-created — and therefore truncated — the
+    /// target, so a chunked stdin kept only the last block (niubash#198).
+    /// `None` means the chunk must go through `write_cat_output` per call (no
+    /// redirect, or an fd alias such as `/dev/stdout` whose binding lives in the
+    /// fd table, not on disk).
+    pub(in crate::executor) fn open_cat_output_sink(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<Option<File>, ExecuteError> {
+        let (target, clobber, append) = match (&cmd.redirect_out, &cmd.append) {
+            (Some(redirect), _) => (
+                self.expand_redirect_target(redirect),
+                redirect.clobber,
+                false,
+            ),
+            (None, Some(append)) => (self.expand_redirect_target(append), true, true),
+            (None, None) => return Ok(None),
+        };
+        if crate::executor::execution_misc::is_closed_redirect_target(&target) {
+            return Err(cat_closed_stdout_error());
+        }
+        // fd aliases (`/dev/stdout`, `/dev/fd/N`) resolve through the fd table,
+        // not a reopened path — leave those to the per-chunk path.
+        if crate::executor::execution_misc::redirect_target_fd(&target).is_some() {
+            return Ok(None);
+        }
+        if append {
+            // Classified append open (rubash#1964), the streaming
+            // twin of write_cat_output's append arm.
+            return Ok(Some(self.open_append_target(&target)?));
+        }
+        Ok(Some(self.create_redirect_output(&target, clobber)?))
+    }
+
+    pub(in crate::executor) fn finish_external_error(
+        &mut self,
+        cmd: &CommandNode,
+        stderr: &[u8],
+        status: i32,
+    ) -> Result<(), ExecuteError> {
+        // rubash#3222: the staged diagnostic accompanies an outcome the
+        // caller has already decided; it is never part of the result.
+        // GNU assigns the exit status before printing (execute_cmd.c:6145
+        // shell_execve) and internal_error never observes the fprintf
+        // outcome (error.c:207-218), so a failed diagnostic write (ENOSPC
+        // on /dev/full, a closed descriptor) must not displace `status`:
+        // attempt the write, drop its result, and always record the
+        // status the caller decided.
+        let _ = self.write_buffered_builtin_output(cmd, &[], stderr);
+        self.exit_code = status;
+        Ok(())
+    }
+
+    /// rubash#2345: whether a same-shell script child of THIS
+    /// executor must be a real OS process. True only for the rooted
+    /// executor of a binary that opted in (builtins::exec::
+    /// enable_real_shell_children — rubash's own main): GNU's child
+    /// is a forked process (execute_cmd.c:6139 shell_execve), so its
+    /// pid, signal dispositions, and trap domain are its own
+    /// (variables.c:546). Fork-copy clones (subshells, pipeline
+    /// stages, command substitution) keep the in-process emulation:
+    /// their GNU model is a subshell of this very process, where
+    /// `$$` still names the root shell. Library hosts never opt in,
+    /// so their Session executors keep the emulation wholesale.
+    pub(in crate::executor) fn real_shell_children_apply(&self) -> bool {
+        self.owns_process_image && crate::builtins::exec::real_shell_children_enabled()
+    }
+
+    pub(in crate::executor) fn execute_same_shell_script(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<bool, ExecuteError> {
+        // GNU forks a new shell process here (execute_cmd.c:6139
+        // shell_execve in the forked child) while preserving the
+        // underlying input stream for redirected stdin. Where this
+        // executor may route the child to a real spawn
+        // (real_shell_children_apply), it declines below and the
+        // ordinary disk-command path spawns this binary — except
+        // when the parent is consuming a virtual stdin stream whose
+        // remainder only exists in this process (FUNCTION_STDIN /
+        // fd-0 input offset: the tests/input-line.sh shape, where
+        // launching the wrapper on Windows loses the next stdin line
+        // before `read` can consume it); those keep the in-process
+        // execution.
+        let Some(command_name) = cmd.words.first() else {
+            return Ok(false);
+        };
+        // GNU execute_cmd.c:6139 shell_execve decides same-shell by path
+        // equivalence, not by the command text naming THIS_SH — the word
+        // arrives here already expanded by command materialization, so
+        // `${THIS_SH}` has resolved to the same path, while a literal
+        // `THIS_SHxx` word must not match. The materialized text is used
+        // verbatim: GNU expands a command word exactly once, and running
+        // the expansion engine over the result a second time would walk
+        // expansion DATA that merely looks like syntax (e.g. a trailing
+        // literal `${` produced by $'...' or by plain quoting) as a live
+        // fragment and print a spurious `bad substitution` (rubash#3030).
+        let expanded_command_name = command_name.clone();
+        let expanded_is_this_shell =
+            self.shell_state
+                .env_vars
+                .get("THIS_SH")
+                .is_some_and(|this_sh| {
+                    shell_path_to_windows(this_sh, &self.shell_state.env_vars)
+                        == shell_path_to_windows(&expanded_command_name, &self.shell_state.env_vars)
+                });
+        if !expanded_is_this_shell {
+            if let Some(script_path) =
+                direct_windows_shell_script_path(&expanded_command_name, &self.shell_state.env_vars)
+            {
+                // GNU execute_cmd.c:6139-6233: a file the OS cannot exec
+                // directly is classified by its first bytes before the
+                // shell-script fallback runs; an unresolvable #! interpreter
+                // ("bad interpreter") or a binary first line ("cannot
+                // execute binary file") is refused with exit status 126.
+                if let Some((diagnostic, status)) = self.exec_format_refusal(cmd, &script_path) {
+                    let mut stderr = Vec::new();
+                    let _ = writeln!(&mut stderr, "{diagnostic}");
+                    self.finish_external_error(cmd, &stderr, status)?;
+                    return Ok(true);
+                }
+                // rubash#3415: a `#!` line naming a resolvable NON-shell
+                // interpreter is not a shell script — decline so the
+                // ordinary disk-command path spawns the interpreter (the
+                // MSYS/Git Bash model; GNU execute_shell_script,
+                // execute_cmd.c:6001-6043, re-execs through the NAMED
+                // interpreter). Running it here would parse a node body
+                // as bash (syntax error, rc 2) and let a shebang-only
+                // file exit 0 in silence.
+                if crate::executor::path::foreign_shebang_interpreter(
+                    &script_path,
+                    &self.shell_state.env_vars,
+                )
+                .is_some()
+                {
+                    return Ok(false);
+                }
+                // Exec model, like GNU: a `#!` script is exec'd by the
+                // kernel as a NEW interpreter process, and a shebangless
+                // text file hits execute_cmd.c:6237-6260's ENOEXEC tail,
+                // where the forked child sh_longjmps to subshell_top_level
+                // and restarts through shell.c:429-464 shell_reinitialize —
+                // a FRESH shell in both cases, seeded only from the
+                // exported environment (rubash#363: fork-model in-process
+                // execution leaked the script's variable assignments back
+                // into the caller's typed variable store, and let the
+                // script see the caller's unexported variables).
+                self.execute_direct_shell_script(
+                    cmd,
+                    &expanded_command_name,
+                    &script_path,
+                    true,
+                    true,
+                )?;
+                return Ok(true);
+            }
+        }
+        // A nested same-shell script still needs to run in-process when its
+        // parent is consuming virtual stdin (for example a script supplied
+        // through `< input-line.sh`).  Spawning the wrapper in that case
+        // loses the unread portion of the parent's input stream.  Keep the
+        // recursion guard for ordinary nested scripts, where no virtual
+        // input needs to be transferred.
+        if self
+            .shell_state
+            .env_vars
+            .contains_key("__RUBASH_SCRIPT_NAME")
+            && !self.shell_state.env_vars.contains_key(FUNCTION_STDIN)
+            && self.fd_table.input_offset(0).is_none()
+            && !expanded_is_this_shell
+        {
+            return Ok(false);
+        }
+        let command_name = expanded_command_name;
+        let normalized_command = shell_display_path(&command_name).replace('\\', "/");
+        let normalized_current_exe = env::current_exe()
+            .ok()
+            .map(|path| shell_display_path(&path.to_string_lossy()).replace('\\', "/"));
+        if !expanded_is_this_shell
+            && normalized_current_exe.as_deref() != Some(normalized_command.as_str())
+            && !normalized_command.ends_with("/rubash-wrapper")
+            && normalized_command != "rubash-wrapper"
+        {
+            return Ok(false);
+        }
+
+        let Some(script) = cmd.words.get(1) else {
+            return Ok(false);
+        };
+        // Materialized like the command word above: already expanded
+        // once by the dispatch chain; a second expansion pass over the
+        // result is not GNU's model (rubash#3030).
+        let script = script.clone();
+        let script_path = shell_path_to_windows(&script, &self.shell_state.env_vars);
+        if !script_path.is_file() {
+            return Ok(false);
+        }
+        // rubash#2345: on a rooted, opted-in executor this invocation
+        // is a child shell PROCESS in GNU (execute_cmd.c:6139:
+        // execute_disk_command forks, the child execs this shell on
+        // the script), with its own pid (variables.c:546), signal
+        // dispositions, and trap domain. Decline so the ordinary
+        // disk-command path spawns this binary and waits it out like
+        // any other child — the death notice, the 128+signal status,
+        // and the parent's trap deferral across the wait are then the
+        // real-child machinery's, not the emulation's. The in-process
+        // run remains for the one shape a spawn cannot serve: the
+        // parent is mid-consumption of a virtual stdin stream
+        // (FUNCTION_STDIN set, or fd 0 carries a virtual input
+        // offset) whose unread remainder exists only in this
+        // process's buffers — a spawned child would start from the
+        // raw descriptor and lose or re-read lines (the
+        // tests/input-line.sh shape the TODO above this function
+        // originally recorded).
+        if self.real_shell_children_apply()
+            && !self.shell_state.env_vars.contains_key(FUNCTION_STDIN)
+            && self.fd_table.input_offset(0).is_none()
+        {
+            return Ok(false);
+        }
+        self.execute_direct_shell_script(cmd, &script, &script_path, false, true)?;
+        Ok(true)
+    }
+
+    /// GNU execute_cmd.c:6237-6260 (shell_execve ENOEXEC tail): a text file
+    /// the kernel refuses to exec is run by the forked child as THIS shell,
+    /// in-process — args[0] = shell_name, then `sh_longjmp
+    /// (subshell_top_level, 1)` lands in shell.c:429-464 where main()
+    /// restarts with `shell_reinitialize()`. The script therefore runs as a
+    /// FRESH shell (only the exported environment carries over; unexported
+    /// variables and functions are gone) while kernel-preserved SIG_IGN
+    /// dispositions survive and become SIG_HARD_IGNORE
+    /// (trap.c set_signal). It is not /bin/sh. `used_shell` callers and the
+    /// Windows mailbox keep the find_shell spawn path (runtime cfg!(unix)
+    /// gate at the call site).
+    pub(in crate::executor) fn execute_enoexec_shell_script(
+        &mut self,
+        cmd: &CommandNode,
+        program: &std::path::Path,
+    ) -> Result<(), ExecuteError> {
+        let Some(script) = self.enoexec_script_spelling(cmd, program) else {
+            return Ok(());
+        };
+        self.execute_direct_shell_script(cmd, &script, program, true, false)
+    }
+
+    /// The script name an ENOEXEC child shell is entered with: the
+    /// spelling GNU's re-entry records as the child's script_name
+    /// ($0, shell.c:1613; the BASH_SOURCE push, variables.c:5718 via
+    /// shell.c:1640; the in-script diagnostic prefix). Shared by the
+    /// in-process entry (execute_enoexec_shell_script) and the
+    /// real-spawn route (rubash#2345), which hands this exact string
+    /// to the spawned shell as its script argument so the child's
+    /// own CLI records the identical name.
+    pub(in crate::executor) fn enoexec_script_spelling(
+        &self,
+        cmd: &CommandNode,
+        program: &std::path::Path,
+    ) -> Option<String> {
+        // $0 keeps the invoked spelling (`./trap2.sub`), like
+        // shell.c:720 dollar_vars[0] = shell_script_filename.
+        let command_name = cmd.words.first()?;
+        // The word arrives materialized (already expanded once by the
+        // dispatch chain); shell_execve's ENOEXEC tail classifies that
+        // exact text. Re-expanding it would treat expansion data as
+        // syntax and print a spurious `bad substitution` (rubash#3030).
+        let script = command_name.clone();
+        // rubash#2302: for a slash-less word the invoked spelling is
+        // NOT what GNU's reader sees. execute_disk_command resolves
+        // the word through find_user_command (findcmd.c:247;
+        // find_user_command_in_path returns the PATH-joined full_path,
+        // findcmd.c:623) and shell_execve's ENOEXEC re-exec replaces
+        // the typed word with that resolved name outright
+        // (execute_cmd.c:6237-6260: args[1] = command overwrites the
+        // shifted args[0]), so the fresh shell's script_name — $0
+        // (shell.c:1613), the BASH_SOURCE push (variables.c:5718
+        // push_source via shell.c:1640) and the in-script diagnostic
+        // prefix alike — is the resolved path. `program` here IS that
+        // find_user_command result. A word carrying a slash is never
+        // PATH-searched (findcmd.c:385), so its typed spelling stands.
+        // rubash#2317: the resolved name GNU records is the walk's own
+        // string — the as-written join of the winning PATH element
+        // (find_in_path_element's sh_makepath (xpath, name, 0)) — so for
+        // a relative element it records `./name` / `sub/name`, not the
+        // session-cwd anchor rubash spawns through. Take the join from
+        // the same scoped walk; fall back to the program rendering if
+        // the walk no longer resolves the word.
+        let script = if script.contains('/') {
+            script
+        } else if let Some(as_written) = self.find_scoped_user_command_as_written(&script) {
+            shell_display_path(&as_written)
+        } else {
+            shell_display_path(&program.to_string_lossy())
+        };
+        Some(script)
+    }
+
+    /// rubash#2345: the real-spawn target for an ENOEXEC script
+    /// child on a rooted, opted-in executor: (this binary's path,
+    /// the re-entry spelling). The foreground classification in
+    /// external_inner retargets its shared spawn tail at this
+    /// binary with the spelling as the lead argument — observably
+    /// the explicit `rubash script` invocation, a distinct process
+    /// with its own pid and signal domain, which is where GNU's
+    /// re-entry lives (inside the forked child,
+    /// execute_cmd.c:6237-6260). None when this executor keeps the
+    /// in-process entry (library hosts, fork-copy clones) or the
+    /// target cannot be composed.
+    #[cfg(unix)]
+    pub(in crate::executor) fn enoexec_spawn_target(
+        &self,
+        cmd: &CommandNode,
+        program: &std::path::Path,
+    ) -> Option<(std::path::PathBuf, String)> {
+        if !self.real_shell_children_apply() {
+            return None;
+        }
+        let exe = std::env::current_exe().ok()?;
+        let spelling = self.enoexec_script_spelling(cmd, program)?;
+        Some((exe, spelling))
+    }
+
+    fn execute_direct_shell_script(
+        &mut self,
+        cmd: &CommandNode,
+        script: &str,
+        script_path: &std::path::Path,
+        exec_model_entry: bool,
+        contain_child_signals: bool,
+    ) -> Result<(), ExecuteError> {
+        // rubash#2236: capture the parent's job-notice text for this
+        // command before the child env replaces the parent's — if the
+        // child dies by an untrapped signal, the parent queues the
+        // notice from this text, as the real-child wait path does.
+        // ENOEXEC children (contain_child_signals == false) keep the
+        // historical fork-child model and never read it.
+        let child_notice_text = if contain_child_signals {
+            self.signal_notice_command_text(cmd)
+        } else {
+            String::new()
+        };
+        let source = fs::read_to_string(script_path)?;
+        // bashhist.c pre_process_line: a fresh `bash script` child expands
+        // history per input line, so an in-process THIS_SH child whose
+        // script enables history must run the grouped history driver rather
+        // than one whole-file parse. Gate on the exec-model child only: a
+        // fork-model script child inherits the parent's history list, which
+        // the driver's fresh session would discard.
+        // The startup-liveness arm of script_uses_aliases does not apply
+        // here: this is a fresh `bash script' child (rubash#414 note), and
+        // `set -o posix' in the parent UNBINDS POSIXLY_CORRECT
+        // (set.def:415-416), so the child does not inherit the parent's
+        // posix mode or its expand_aliases state (shell.c:1853: a
+        // non-interactive child starts with expand_aliases = its own
+        // posixly_correct = 0) — only the script's own text can enable it.
+        let uses_history_driver = crate::script_driver::script_uses_history(&source)
+            || crate::script_driver::script_uses_aliases(&source, false);
+        let mut ast = if uses_history_driver {
+            crate::parser::Ast {
+                commands: Vec::new(),
+            }
+        } else {
+            let tokens = crate::lexer::tokenize(&source);
+            // GNU parse.y push_heredoc -> report_syntax_error + exit_shell
+            // (EX_BADUSAGE): more than HEREDOC_MAX (16) here-documents is fatal.
+            // This in-process child path mirrors the same check in
+            // script_driver::run_source_with_line_offset.
+            if let Some(line) = crate::lexer::heredoc_overflow_line() {
+                let mut stderr = Vec::new();
+                // GNU parse.y push_heredoc report_syntax_error gates its
+                // ` line N` segment on gnu_errfmt like every other
+                // parser_error site.
+                let diagnostic = if self.gnu_error_format_enabled() {
+                    format!("{script}:{line}: maximum here-document count exceeded")
+                } else {
+                    format!("{script}: line {line}: maximum here-document count exceeded")
+                };
+                let _ = writeln!(&mut stderr, "{diagnostic}");
+                self.finish_external_error(cmd, &stderr, 2)?;
+                return Ok(());
+            }
+            crate::parser::parse(&tokens)
+        };
+        self.apply_command_output_redirects(cmd, &mut ast)?;
+        // A `${THIS_SH} script 3>&1`-style invocation is a process boundary:
+        // the child's fd table is the parent's copy, so the command's
+        // numbered redirections bind real slots for the child's whole
+        // run (redir.c do_redirection_internal) — and, like GNU's forked
+        // child, they are undone when the child exits: see the restore
+        // calls after the parent restores below. rubash#2279: the input
+        // side of that contract was missing here — only the numbered
+        // OUTPUTS bound, so `./reader.sh 3<seed` ran the script with no
+        // fd 3 at all (and a parent fd 3 unshadowed, so the child read
+        // and consumed the parent's own binding). Bind the numbered
+        // heredocs and inputs first, in the compound binder's order
+        // (with_command_input_redirects: heredocs, numbered inputs,
+        // outputs, fd 0), ahead of the fd-0 install below so a `3<&0`
+        // dup still resolves against the pre-command stdin; fd-0
+        // heredocs stay with the command-input scope (include_stdin
+        // false). A failed later bind unwinds the earlier ones.
+        let saved_numbered_heredocs = self.bind_numbered_heredoc_redirects(cmd, false);
+        // rubash#2310: the numbered inputs bind in segments split
+        // at the command's `{var}` entries, applying each such
+        // entry's dup/close effect at its list position — the
+        // applier resolved those entries against the ambient table
+        // before dispatch, but GNU's one ordered walk
+        // (redir.c:237) services them against the command's own
+        // earlier binds.
+        // rubash#2322: the segmented walk now binds the numbered
+        // outputs inside its segments as well (an output-side
+        // `{var}` entry must observe the command's own earlier
+        // output binds at its position), so its saves ARE the
+        // bound_output_fds the old separate
+        // open_compound_output_redirects pass produced — that pass
+        // no longer runs here.
+        let (saved_numbered_inputs, bound_output_fds) =
+            match self.bind_script_numbered_inputs_and_fd_vars(cmd, &saved_numbered_heredocs) {
+                Ok(saved) => saved,
+                Err(error) => {
+                    self.restore_numbered_heredoc_redirects(saved_numbered_heredocs);
+                    return Err(error);
+                }
+            };
+
+        let saved_env = self.shell_state.env_vars.clone();
+        let this_shell_invocation = cmd.words.first().is_some_and(|command| {
+            self.shell_state
+                .env_vars
+                .get("THIS_SH")
+                .is_some_and(|this_sh| {
+                    shell_path_to_windows(this_sh, &self.shell_state.env_vars)
+                        == shell_path_to_windows(
+                            &self.expand_word(command),
+                            &self.shell_state.env_vars,
+                        )
+                })
+        });
+        // The exec-model child semantics (fresh shell: exported env only,
+        // empty job table, EXIT trap runs at child exit) apply both to
+        // `${THIS_SH} script` invocations and to the ENOEXEC fallback
+        // (execute_enoexec_shell_script). The word shape still differs:
+        // THIS_SH words are [shell, script, params...] while an ENOEXEC
+        // command is [script, params...], so param_start below stays keyed
+        // on this_shell_invocation.
+        let fresh_shell = exec_model_entry || this_shell_invocation;
+        // Save parent state BEFORE the fresh_shell block clears it.
+        let saved_shell_state = fresh_shell.then(|| self.shell_state.clone_for_child_save());
+        // GNU execute_cmd.c:6139-6233 / jobs.c: a script child is a separate
+        // process, so its job table is process-local — a fresh exec child
+        // starts with an empty table, and a fork-model child only inherits a
+        // private copy whose additions die with it. In-process emulation
+        // shares the parent's table, so snapshot it and clear the child's
+        // view (exec model), then restore the parent's entries afterwards
+        // regardless of mode. Without this, jobs started inside
+        // `${THIS_SH} script` children leak into the parent table and later
+        // `wait %N`/`jobs` block on or report them (jobs.tests hang).
+        let saved_coproc_names = self.shell_state.coproc_names.clone();
+        let saved_last_background_pid = self.shell_state.last_background_pid;
+        let saved_functions = self.shell_state.functions.clone();
+        let saved_function_redirects = self.shell_state.function_definition_redirects.clone();
+        let saved_function_def_infos = self.shell_state.function_def_infos.clone();
+        let saved_aliases = self.shell_state.aliases.clone();
+        // A child script is a process boundary: its tempenv stack (POSIX-mode
+        // persistent `var=2 :` bindings included) is process-local in GNU and
+        // must not leak back into the parent's variable context. Save the
+        // parent's tempenv bookkeeping; the exec-mode child starts fresh
+        // (initialize_shell_variables), the fork-mode child inherits a copy.
+        let saved_tempenv_names = self.tempenv_names.clone();
+        let saved_tempenv_marks = self.tempenv_marks.clone();
+        let saved_tempenv_promoted = self.tempenv_promoted_names.clone();
+        let saved_tempenv_previous = self.tempenv_previous.clone();
+        if fresh_shell {
+            self.tempenv_names.clear();
+            self.tempenv_marks.clear();
+            self.tempenv_promoted_names.clear();
+            self.tempenv_previous.clear();
+        }
+        if fresh_shell {
+            // from_values imports child_shell_environment's serialized
+            // EXPORTED_VARS list (and any attribute lists a parent rubash
+            // exported) into the structured map; the fresh-shell
+            // initializer below then maintains both forms.
+            let mut child_env =
+                crate::shell::var_table::VarTable::from_values(self.child_shell_environment());
+            // GNU variables.c:511-526 (initialize_shell_variables): a fresh
+            // shell rebuilds its managed variables (BASH_CMDS/BASH_ALIASES
+            // assoc marks, FUNCNAME/DIRSTACK array marks, BASH_VERSINFO
+            // readonly, UID/EUID/PPID, SHELLOPTS/BASHOPTS replay, SHLVL+1,
+            // IFS default). Without this the in-process child fell back to
+            // indexed-array handling for ${!BASH_CMDS[@]} (assoc audit C1).
+            let child_logical_cwd = Self::initialize_fresh_shell_env_vars(
+                &mut child_env,
+                &self.shell_state.cwd.clone(),
+                // An exec'd shell image is a genuinely new shell:
+                // SHLVL takes the startup increment (rubash#2058's
+                // keep applies only to fork-shaped respawns).
+                false,
+                // An in-process fork copy, not a process birth: the
+                // parent's serialized environment keeps the anti-leak
+                // heuristic (rubash#2212).
+                false,
+            );
+            // The in-process child shares the parent's OS process, so the
+            // child's PPID is the parent shell's pid (a real child would see
+            // getppid() == the parent shell's getpid()).
+            child_env.insert("PPID".to_string(), self.shell_pid.to_string());
+            self.shell_state.env_vars = child_env;
+            // variables.c:907 set_pwd: the fresh child's logical cwd
+            // is the adoption the initializer just performed against
+            // its inherited $PWD (rubash#2799).
+            self.shell_state.logical_cwd = Some(child_logical_cwd);
+            self.shell_state.variables =
+                crate::shell::VariableStore::from_environment(&self.shell_state.env_vars);
+            // GNU variables.c:511-526 (initialize_shell_variables): a fresh
+            // shell invocation inherits only exported variables and exported
+            // functions (via BASH_FUNC_<name>%% env vars). Non-exported
+            // functions, aliases, and shell-local state are NOT inherited.
+            // Clear the parent's functions/aliases and import only the
+            // exported ones from the child environment.
+            let (imported_funcs, imported_def_infos, _failed_imports) =
+                import_exported_functions_from_env(&self.shell_state.env_vars);
+            // Imported functions keep att_exported, as at process
+            // startup (rubash#1275).
+            for name in imported_funcs.keys() {
+                mark_env_name(&mut self.shell_state.env_vars, EXPORTED_FUNCTIONS, name);
+            }
+            // GNU variables.c:397-446: a successfully imported function
+            // becomes a shell function, NOT a variable — strip the
+            // BASH_FUNC_* entries from the child's env map exactly as
+            // Executor::new does at process startup, or they linger as
+            // bogus variables (niubash#102 class). A failed import keeps
+            // its raw entry (GNU bind_invalid_envvar).
+            let imported_fn_env_names: Vec<String> = self
+                .shell_state
+                .env_vars
+                .values_map()
+                .keys()
+                .filter(|env_name| {
+                    imported_function_name(env_name)
+                        .is_some_and(|name| imported_funcs.contains_key(name))
+                })
+                .cloned()
+                .collect();
+            for env_name in imported_fn_env_names {
+                self.shell_state.env_vars.remove(&env_name);
+            }
+            self.shell_state.functions = imported_funcs;
+            self.shell_state.function_definition_redirects = HashMap::new();
+            self.shell_state.function_def_infos = imported_def_infos;
+            self.shell_state.aliases = HashMap::new();
+            // Exec-model child (fresh process): empty job table — the
+            // registry itself is emptied by the mem::take below; here only
+            // the non-registry bookkeeping is reset.
+            self.shell_state.coproc_names.clear();
+            self.shell_state.last_background_pid = None;
+            // A fresh shell invocation entering a script derives
+            // SIG_HARD_IGNORE from the inherited dispositions (trap.c
+            // ignore_signal: "A signal ignored on entry to the shell cannot
+            // be trapped or reset, but no error is reported"). Runtime
+            // ignores of plain subshells stay mutable; only this
+            // shell-entry boundary freezes them.
+            // A spawned rubash child seeds its startup trap table in
+            // Executor::new (init.rs seed_startup_traps): orig-ignored
+            // entries are rebuilt and the WSL-inherited SIGRTMIN ignore is
+            // added, so `trap` in the child lists it. The in-process child
+            // takes the same fresh-shell boundary and must seed identically,
+            // or varenv22's last `trap` loses the SIGRTMIN line.
+            // The parent's runtime SIG_IGN dispositions (empty trap
+            // actions) cross this boundary in GNU — execve preserves
+            // ignored dispositions, and the ENOEXEC fork never restores
+            // them — so transport them the same way the real-spawn path
+            // does (readonly_functions.rs apply_external_environment) and
+            // let seed_startup_traps rebuild the `trap -- '' SIG` entries
+            // (trap1.sub: `trap -p USR2` lists the parent's `trap '' USR2`
+            // and refuses to re-trap it). saved_env is the parent's
+            // pre-swap environment: the parent's '' trap keys are already
+            // gone from env_vars at this point.
+            let inherited_ignores = crate::builtins::trap::transport_inherited_ignores(&saved_env);
+            if !inherited_ignores.is_empty() {
+                self.shell_state.env_vars.insert(
+                    crate::builtins::trap::TRAP_ORIG_IGNORES.to_string(),
+                    inherited_ignores,
+                );
+            }
+            crate::builtins::trap::seed_startup_traps(&mut self.shell_state.env_vars);
+            crate::builtins::trap::mark_startup_ignores(&mut self.shell_state.env_vars);
+        }
+        let saved_pipestatus = self.shell_state.pipestatus.clone();
+        let saved_positional_params = self.shell_state.positional_window_cloned();
+        let saved_bash_source_stack = self.shell_state.bash_source_stack.clone();
+        let saved_bash_source_seed = self.shell_state.bash_source_seed.clone();
+        let saved_bash_lineno_stack = self.shell_state.bash_lineno_stack.clone();
+        let saved_bash_argc_stack = self.shell_state.bash_argc_stack.clone();
+        let saved_bash_argv_stack = self.shell_state.bash_argv_stack.clone();
+        // G-02: the fresh-shell child's cwd boundary is the session field.
+        let saved_cwd = self.shell_state.cwd.clone();
+        // GNU execute_cmd.c:6139-6233: a ${THIS_SH} script invocation is a
+        // fresh shell process, not a subshell. subshell_depth must NOT be
+        // incremented, or run_sigchld_trap_for_reaped_child suppresses
+        // SIGCHLD traps (trap8.sub: four CHLD firings for reaped children).
+        let saved_depth = self.shell_state.subshell_depth.get();
+        // The child is a fresh shell process (shell.c open_shell_script):
+        // it must not inherit the parent's loop/function/compound-condition
+        // depths, or a word-expansion failure inside the child unwinds past
+        // its own top level (ast_exec ExpansionFailure requires
+        // loop_depth==0 to be command-list-local) and kills the child's
+        // remaining commands instead of just skipping the line.
+        let saved_loop_depth = self.shell_state.loop_depth;
+        // rubash#2851: the fresh child is a process boundary like the
+        // loop depth — a stop inside the child script's loop must not
+        // leak banked budget into the parent.
+        let saved_subshell_saved_loop_depth = self.shell_state.subshell_saved_loop_depth;
+        let saved_function_depth = self.shell_state.function_depth;
+        let saved_inside_compound_condition = self.inside_compound_condition.get();
+        self.shell_state.loop_depth = 0;
+        self.shell_state.subshell_saved_loop_depth = 0;
+        self.shell_state.function_depth = 0;
+        self.inside_compound_condition.set(false);
+        // The child is a separate process in GNU: an evalerror/DISCARD
+        // abort pending at child exit dies with it and must not leak back
+        // into the parent's reader (nameref18.sub `ref[foo]=bar` under
+        // ${THIS_SH} discarded the parent's remaining same-line commands).
+        let saved_evalerror_pending = self.evalerror_pending.get();
+        let saved_nounset_force_eof = self.nounset_force_eof.get();
+        let saved_evalerror_subscript = self.evalerror_subscript_pending.get();
+        let saved_evalerror_failglob = self.evalerror_failglob_pending.get();
+        let saved_evalerror_exit_toomany = self.evalerror_exit_toomany_pending.get();
+        let saved_evalerror_line = self.evalerror_line.get();
+        let saved_reader_command_line = self.reader_command_line.get();
+        let saved_parameter_assignment_failure = self.parameter_assignment_failure.get();
+        let saved_parameter_assignment_failure_prev_status =
+            self.parameter_assignment_failure_prev_status.get();
+        // evalerror_exec_depth counts execute_ast_inner nesting: the child
+        // is a fresh reader (its own process in GNU), so a pending abort
+        // inside it discards only same-line commands rather than unwinding
+        // the whole child AST as a nested list.
+        let saved_evalerror_exec_depth = self.evalerror_exec_depth.get();
+        self.evalerror_exec_depth.set(0);
+        self.evalerror_pending.set(false);
+        self.nounset_force_eof.set(false);
+        self.evalerror_subscript_pending.set(false);
+        self.evalerror_failglob_pending.set(false);
+        self.evalerror_exit_toomany_pending.set(false);
+        self.evalerror_line.set(None);
+        self.parameter_assignment_failure.set(false);
+        self.parameter_assignment_failure_prev_status.set(None);
+        // A parse error inside the child dies with it (GNU shell.c: the
+        // child exits 2 and the parent's reader is untouched). The flag
+        // lives on Executor outside shell_state, so save/reset/restore it
+        // here — a stale parent value would otherwise abort the child's
+        // first grouped command, and a child error would leak back into
+        // the parent's next parse check (heredoc3.sub -> heredoc10.sub).
+        let saved_parse_error = self.parse_error_occurred;
+        self.parse_error_occurred = false;
+        // jump_to_top_level unwinding is also per-process: a pending flag
+        // inherited by the child would abort its first grouped command, and
+        // a jump inside the child (comsub6.sub's parse error exits 2) must
+        // not break the parent's next group (comsub7.sub printed nothing).
+        let saved_exit_jump_pending = self.exit_jump_pending.replace(false);
+        let saved_comsub_parse_error = self.last_command_substitution_parse_error.get();
+        self.last_command_substitution_parse_error.set(false);
+        // GNU's this_command_name belongs to the executing command only;
+        // the in-process ${THIS_SH} child is a fresh shell whose own
+        // commands set their own command name, so the parent's word (the
+        // expanded shell path) must not leak into child diagnostics
+        // (nameref8.sub warnings reported `rubash.exe:` prologs).
+        let saved_assignment_command_name = self.assignment_command_name.take();
+
+        // The fd table is a process boundary too: a child's persistent
+        // `exec 2>/dev/null` (redir.c do_redirection_internal without undo)
+        // dies with the real child process, but the in-process emulation
+        // would leak it into the parent's table and silence every later
+        // diagnostic (jobs1.sub's trailing `exec 2>/dev/null` ate all
+        // parent stderr). Restore the parent's table; the child's entries
+        // drop — and close — like a real exit. The snapshot must precede
+        // the file_stdin install below: GNU applies `< file` in the CHILD
+        // (do_redirections after fork), so the parent's fd 0 slot is the
+        // pre-redirect state — restoring it also unwinds our emulation.
+        let saved_fd_table = self.fd_table.clone();
+        // GNU execute_cmd.c redirects before the child runs: `< file` puts
+        // the open file on the child's fd 0, so `exec 3<&0` inside the child
+        // dups the file (shared offset). Install a real File endpoint on
+        // fd 0 for plain file redirects; text sources (heredoc/here-string)
+        // keep the FUNCTION_STDIN channel.
+        let file_stdin = cmd.redirect_in.as_deref().and_then(|redirect| {
+            if redirect.fd.unwrap_or(0) != 0 {
+                return None;
+            }
+            let target = self.expand_redirect_target(redirect);
+            if is_closed_redirect_target(&target)
+                || redirect_target_fd(&target).is_some()
+                || is_null_device(&target)
+                || target.starts_with('<')
+            {
+                return None;
+            }
+            // rubash#2249: anchor the operand with the same ladder
+            // function_call_stdin uses (rubash#2240): map the spelling,
+            // apply the virtual-root .exe resolution, then anchor a
+            // relative result at the SESSION cwd. The bare mapped path
+            // resolved against the STARTUP directory, so after a `cd`
+            // this install missed the child's file — silently served
+            // by the text fallback below when no same-named file
+            // existed at the startup directory, but binding the WRONG
+            // file as a live endpoint when a decoy did. The empty word
+            // stays un-joined (the #2211 empty-operand rule).
+            let path = if target.is_empty() {
+                shell_path_to_windows(&target, &self.shell_state.env_vars)
+            } else {
+                self.session_path(crate::executor::path::windows_operand_file_path(
+                    shell_path_to_windows(&target, &self.shell_state.env_vars),
+                    &self.shell_state.env_vars,
+                ))
+            };
+            // rubash#2261: a `<>` redirect is GNU's r_input_output
+            // (make_cmd.c:682-683 — the redirect's flags are
+            // O_RDWR|O_CREAT; redir.c:725 redir_open performs the
+            // open): ONE descriptor serving both directions, so the
+            // install must bind the read-write pair exactly like the
+            // function-call face does (function_call_stdin,
+            // rubash#2249) — the plain open_read below installed only
+            // the read endpoint, and a child write like `echo x >&0`
+            // failed Bad file descriptor. A failed pair open falls
+            // through to function_call_stdin below, which reports the
+            // failing target (or binds its own pair) as for `<`. Net
+            // targets keep that same fall-through: their ladder result
+            // names no filesystem object, and function_call_stdin's
+            // net arm binds the connected socket in both directions.
+            if redirect.kind == crate::parser::RedirectKind::ReadWrite
+                && !crate::special_paths::is_net_redirect_target(&target)
+            {
+                let (read_file, write_file) = FileFd::open_readwrite_pair(path).ok()?;
+                return Some((read_file, Some((write_file, target))));
+            }
+            FileFd::open_read(path).ok().map(|file| (file, None))
+        });
+        if let Some((file, write_end)) = file_stdin {
+            self.set_fd_input_file(0, file, false);
+            if let Some((write_file, target)) = write_end {
+                // rubash#2261: the write half of the `<>` pair plus
+                // the fd-0 output env bookkeeping set_fd_readwrite_file
+                // keeps (mirrors save_and_apply_fd0_readwrite_env on
+                // the function face). The undo needs no per-binding
+                // record here: saved_fd_table / saved_env above
+                // snapshot the whole table and env before this install
+                // and are restored after the child runs — the same
+                // save/restore contract the function face spells out
+                // per binding (FunctionCallStdinBinding).
+                self.fd_table
+                    .open_output(0, FdWriteEndpoint::File(write_file), false);
+                self.shell_state
+                    .env_vars
+                    .remove(&fd_output_process_substitution_key(0));
+                self.shell_state.env_vars.insert(fd_output_key(0), target);
+            }
+            self.shell_state.env_vars.remove(FUNCTION_STDIN);
+            self.shell_state.env_vars.remove(FUNCTION_STDIN_OFFSET);
+            self.shell_state.env_vars.remove(INHERIT_PROCESS_STDIN);
+        } else if let (Some(input), _, _) = self.function_call_stdin(cmd)? {
+            self.shell_state
+                .env_vars
+                .insert(FUNCTION_STDIN.to_string(), input);
+            self.shell_state
+                .env_vars
+                .insert(FUNCTION_STDIN_OFFSET.to_string(), "0".to_string());
+            self.shell_state.env_vars.remove(INHERIT_PROCESS_STDIN);
+        } else {
+            self.shell_state
+                .env_vars
+                .insert(INHERIT_PROCESS_STDIN.to_string(), "1".to_string());
+        }
+        // Process-side job state, taken only after the last fallible call
+        // above — an early `?` return must not strand the parent's job
+        // handles. The exec-model child gets an empty JobTable; the
+        // fork-model child sees a copy of the parent's (GNU subshell
+        // semantics). background_children holds real Child handles that
+        // cannot be duplicated — parking the map for the duration means the
+        // child cannot try_wait/reap the parent's processes (a GNU child's
+        // wait only covers its own children), and the child's own spawned
+        // processes are orphaned on restore like real grandchildren.
+        let saved_job_table = if fresh_shell {
+            std::mem::take(&mut self.shell_state.job_table)
+        } else {
+            self.shell_state.job_table.clone()
+        };
+        let saved_background_children = std::mem::take(&mut self.background_children);
+        // A ${THIS_SH} child is a process boundary for signal delivery too:
+        // the pending-signal mailbox is keyed by process id, which the
+        // in-process child shares with the parent, so signals queued for
+        // the parent would otherwise be consumed by the child's
+        // run_pending_signal_traps. Park the parent's queue for the run;
+        // signals delivered while the child lives belong to the emulated
+        // child process and are discarded at restore below (GNU: the real
+        // child's pending queue dies with its pid — a signal like
+        // jobs9.sub's `kill -USR1 $$` must never leak into the parent and
+        // kill it at a later command boundary).
+        let saved_pending_signals = if fresh_shell {
+            crate::builtins::kill::take_pending_signals_now(std::process::id()).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        // GNU's queued child-death notifications are process state: the
+        // child's queue dies with it (jobs.c waitchld runs in the child's
+        // own image) and the parent's counter must be exactly what it was.
+        // sigchld_notifications_pending is an Executor cell shared by the
+        // in-process emulation, so a reap that lands while the child runs a
+        // signal-trap action (trap9.sub: the `{ sleep 1; kill -USR1 $$; } &`
+        // job dies during the USR1 trap) would otherwise leave a leftover
+        // count that re-fires the parent's SIGCHLD trap once during the
+        // monitor `wait` (trap.tests: a fourth "caught a child death").
+        let saved_sigchld_notifications = self.sigchld_notifications_pending.replace(0);
+        self.set_env("__RUBASH_SCRIPT_NAME", script);
+        // GNU shell.c:1613-1614 (open_shell_script): dollar_vars[0] =
+        // exec_argv0 ? exec_argv0 : script_name — every script the shell
+        // enters rebinds $0 to the word it was invoked with, never the
+        // parent's. BASH_ARGV0 is rubash's dollar_vars[0] mirror
+        // (variables.c:1520 get_bash_argv0); the parent's values return
+        // with restore_shell_env(saved_env) below. A stale assignment
+        // snapshot from before the boundary dies the same way.
+        self.remove_env("__RUBASH_ARGV0_AFTER_UNSET");
+        // ... except an exported BASH_ARGV0: GNU variables.c:1547-1555
+        // (set_argv0) imports an exported BASH_ARGV0 into the new shell as
+        // dollar_vars[0], so a user's exported assignment outranks the
+        // script word exactly like exec_argv0 outranks script_name at
+        // shell.c:1613.
+        if !is_marked_var(
+            &self.shell_state.env_vars,
+            crate::executor::types::EXPORTED_VARS,
+            "BASH_ARGV0",
+        ) {
+            self.set_env("BASH_ARGV0", script);
+        }
+        // When this_shell_invocation is true, cmd.words[0] is the shell
+        // command (e.g. ${THIS_SH}) and cmd.words[1] is the script path;
+        // positional params start at cmd.words[2]. Otherwise cmd.words[0]
+        // is the script path and params start at cmd.words[1].
+        let param_start = if this_shell_invocation { 2 } else { 1 }; // word shape, not child model
+        self.set_positional_params(cmd.words[param_start..].to_vec());
+        if fresh_shell {
+            // GNU variables.c:initialize_shell_variables sets OPTIND=1 for
+            // every new shell invocation. OPTIND is not exported, so
+            // child_shell_environment doesn't carry it over; set it here
+            // so getopts in the child starts fresh.
+            self.shell_state
+                .env_vars
+                .insert("OPTIND".to_string(), "1".to_string());
+        }
+        if !this_shell_invocation {
+            self.shell_state.subshell_depth.set(saved_depth + 1);
+        }
+
+        // A ${THIS_SH} child is a process boundary, so the process
+        // environment must show the CHILD's env for the whole run:
+        // builtins write shell state through std::env
+        // (builtins/setattr/apply.rs:66,166) and lookups fall back to
+        // env::var (embedded_parameters.rs:421, parameter_errors.rs:900+),
+        // which otherwise lets non-exported parent values (e.g. a readonly
+        // var) leak into the "fresh" child. Any writes the child makes die
+        // with the scope, exactly like a real child's env block dying on
+        // exit.
+        // G-01: the swap + run + restore bracket holds the
+        // process-state lock — while the process env shows the child's
+        // env, a sibling session must not read it as its own fallback
+        // env or land mirror writes that the restore would wipe. The
+        // child's own funnel writes pass through reentrantly on this
+        // thread. (GNU has no such window: the child is a real fork.)
+        let _process_state_guard = if fresh_shell {
+            Some(crate::executor::local_helpers::acquire_process_state())
+        } else {
+            None
+        };
+        let saved_process_env: Option<HashMap<String, String>> = if fresh_shell {
+            let saved: HashMap<String, String> = crate::executor::env_helpers::process_env_pairs()
+                .into_iter()
+                .collect();
+            for (name, _) in crate::executor::env_helpers::process_env_pairs() {
+                env::remove_var(&name);
+            }
+            for (name, value) in self.shell_state.env_vars.values_map() {
+                if crate::executor::local_helpers::is_valid_process_env(name, value) {
+                    env::set_var(name, value);
+                }
+            }
+            Some(saved)
+        } else {
+            None
+        };
+
+        // rubash#1888: the child is a fresh shell process, so its reader
+        // runs must enter execute_ast as FRESH runs. The parent's run is
+        // still active here, so EXECUTION_LOCK_DEPTH is 1 and execute_ast
+        // would take its nested branch, skipping the entry latch resets
+        // the grouped reader relies on (script_driver: "re-enters
+        // execute_ast per group, whose entry clears the pendings"). With
+        // the resets skipped, an evalerror DISCARD armed by one group
+        // (e.g. `history 10 42`'s no_args abort) leaks into the next
+        // group while its too-many companion is consumed by the first
+        // group's tail fold, and the next line observes the plain
+        // DISCARD status 1 instead of EX_BADUSAGE 2. A real child
+        // process starts at depth 0; mirror that for the emulation.
+        // The pendings themselves were already saved/reset at this
+        // boundary above and are restored below, so the fresh-entry
+        // clears can only ever erase this child's own stale latches.
+        let saved_lock_depth = super::EXECUTION_LOCK_DEPTH.with(|depth| depth.get());
+        super::EXECUTION_LOCK_DEPTH.with(|depth| depth.set(0));
+        // rubash#2236: contain the child's self-addressed signals for
+        // the span of its run. GNU's child is a separate process: its
+        // $$ is its own pid and a kill to that pid can only kill the
+        // child. The emulation shares this process, so (a) the child's
+        // shell_pid must read as this process's pid — an adopted
+        // ancestor pid (a respawned subshell adopted the OUTER shell's
+        // pid) would name the outer process, and the child's suicide
+        // escaped into it as a real kill(2); (b) kill deliveries to
+        // that pid route to the ancestor lane (see builtins/kill.rs
+        // DIRECT_CHILD_ROUTE) so the child's own trap table
+        // adjudicates them; (c) a stale adjudicated-death record
+        // from an outer layer is cleared so the exit boundary below
+        // reads only this child's record. The PPID env entry was
+        // already built from the pre-swap pid above, so the child's
+        // view of its parent is unchanged.
+        if contain_child_signals {
+            let _ = crate::builtins::kill::take_adjudicated_signal_death();
+        }
+        // rubash#2346: the termsig-death mark is an Executor transient
+        // outside the saved ShellState, so park the parent's mark for
+        // the span of the run: the child's own dispatches record the
+        // child's verdicts on it, and the exit boundary below drops
+        // the child's mark instead of handing it back — a contained
+        // child's death is simulated through the adjudicated-death
+        // record, and the hosting process must not die by the mark at
+        // the parent's own finish.
+        let saved_termsig_death = if contain_child_signals {
+            self.termsig_death_pending.take()
+        } else {
+            None
+        };
+        // rubash#2352: the trap-entry status captured with the mark
+        // (see Executor::termsig_death_trap_status) parks with it —
+        // same discipline, same reason: the child's own verdicts
+        // record the child's capture, the boundary below drops it,
+        // and the parent's capture is handed back untouched.
+        let saved_termsig_trap_status = if contain_child_signals {
+            self.termsig_death_trap_status.take()
+        } else {
+            None
+        };
+        let saved_shell_pid = self.shell_pid;
+        if contain_child_signals {
+            self.shell_pid = std::process::id();
+            // The child is a fresh shell in GNU, so for the span of
+            // its run this executor presents at subshell depth 0 (the
+            // tail restores saved_depth). A host executor carrying a
+            // layer's depth — a respawned subshell adopted depth 1 —
+            // would otherwise trip the run_pending_signal_traps
+            // flat-layer suppression (depth > 0 at the process's own
+            // pid) for the whole child run and defer the child's
+            // adjudication to this exit drain, letting the child run
+            // commands past its own death. Layers the child itself
+            // opens still count from 0 exactly as in a fresh process.
+            self.shell_state.subshell_depth.set(0);
+        }
+        let _direct_child_route = if contain_child_signals {
+            Some(crate::builtins::kill::arm_direct_child_route())
+        } else {
+            None
+        };
+        // rubash#2279: the caller's `{var}` delivery records
+        // (fd_var_external_undo / fd_var_pending_closes /
+        // fd_var_close_restore, recorded by apply_dynamic_fd_var_
+        // redirects in the simple-command funnel) are single-slot: the
+        // FIRST simple command the child runs re-enters the applier,
+        // which clears all three lists, and the caller's paired undo
+        // (execute_external's undo_child_fd_var_redirects) then replays
+        // nothing — the `{v}` variable assignment and its descriptor
+        // leaked into the parent (an empty script leaked nothing,
+        // because no inner command ever cleared the lists). GNU's
+        // varassign happens in the forked child (redir.c:1133-1166
+        // redir_varassign under do_redirections in the child,
+        // execute_cmd.c:5884) and dies with it; park the records for
+        // the span of the run — the child's own deliveries clear and
+        // consume their own — and hand them back at the restore block
+        // below so the caller's undo still runs against the parent's
+        // pre-command state.
+        let saved_fd_var_external_undo = std::mem::take(&mut self.fd_var_external_undo);
+        let saved_fd_var_pending_closes = std::mem::take(&mut self.fd_var_pending_closes);
+        let saved_fd_var_close_restore = std::mem::take(&mut self.fd_var_close_restore);
+        // GNU shell.c:722 run_startup_files in the fresh process: a
+        // fresh shell runs the startup chain before the script body —
+        // for this non-interactive child that is the env-file step
+        // (shell.c:1214-1220, $BASH_ENV unless invoked as `sh` or in
+        // posix mode). The fresh-shell initialization above rebuilt
+        // the environment but never ran this step, so a ${THIS_SH} /
+        // ENOEXEC child's $BASH_ENV was silently skipped and its
+        // definitions (and its `exit`) never reached the script
+        // (rubash#2393). An `exit` in the env file ends the child
+        // here, before the body; the EXIT-trap arm below still runs,
+        // as exit_shell's would.
+        let startup_exit = if fresh_shell {
+            self.run_fresh_child_startup_env_file(cmd)
+        } else {
+            None
+        };
+        let result = if let Some(status) = startup_exit {
+            self.exit_code = status;
+            Ok(())
+        } else if uses_history_driver && fresh_shell {
+            // bashhist.c pre_process_line / shell.c reader loop: expand and
+            // record history group-by-group so `!!`/`!str` see the entries
+            // the child's earlier lines recorded. The child gets a fresh
+            // session history (exec model); the parent's session is
+            // restored afterwards.
+            let saved_session = self.get_session_history();
+            let code = crate::script_driver::run_script_with_history(self, &source, Some(cmd));
+            self.exit_code = code;
+            self.set_session_history(saved_session);
+            Ok(())
+        } else {
+            self.execute_ast(&ast)
+        };
+        super::EXECUTION_LOCK_DEPTH.with(|depth| depth.set(saved_lock_depth));
+        // rubash#2236: adjudicate a contained self-delivery that
+        // arrived as the child's LAST command — the command-boundary
+        // polls inside the run cannot see it any more once the run has
+        // ended, and letting it reach the parent's boundary poll would
+        // judge it by the PARENT's trap table (the fresh-shell flavor
+        // would even discard it below and report a plain Ok status).
+        // The drain judges as the child itself, at child depth 0: the
+        // run_pending_signal_traps flat-layer suppression keys on
+        // subshell_depth, and a child invoked from inside a parent
+        // subshell layer still owns its own verdict (GNU's child is a
+        // process regardless of the parent's layering).
+        let result = if contain_child_signals && result.is_ok() {
+            let drain_depth = self.shell_state.subshell_depth.get();
+            self.shell_state.subshell_depth.set(0);
+            let drained = self.run_pending_signal_traps();
+            self.shell_state.subshell_depth.set(drain_depth);
+            match drained {
+                Ok(()) => result,
+                Err(error) => Err(error),
+            }
+        } else {
+            result
+        };
+        let mut status = self.exit_code;
+        // GNU shell.c exit_shell -> run_exit_trap: both ${THIS_SH} and
+        // ENOEXEC children are fresh shells (shell.c:429-464
+        // shell_reinitialize; execute_cmd.c:6237-6260), so an EXIT trap the
+        // child script installed fires before the status returns to the
+        // parent (trap9.sub probe: ./p4.sub with its own EXIT trap runs it
+        // at script end). The parent's EXIT trap does not: the fresh-shell
+        // env carries no trap table.
+        if fresh_shell {
+            if let Ok(trap_status) = self.run_exit_trap_for_status(status) {
+                status = trap_status;
+            }
+        }
+        // rubash#2236: collect this child's adjudicated signal death
+        // (set when its trap table judged an untrapped delivery) and
+        // end the shell_pid swap — the EXIT trap above still ran as
+        // the child, so its $$ read the child's pid, as GNU's dying
+        // shell would. The notice is queued only after the parent's
+        // state is restored below, and only if the final status is
+        // still the death status (an EXIT trap that exits with its
+        // own code replaces the death, exactly like a real child).
+        let child_signal_death = if contain_child_signals {
+            crate::builtins::kill::take_adjudicated_signal_death()
+        } else {
+            None
+        };
+        // rubash#2346: drop the contained child's termsig-death mark
+        // (its death is the simulated child_signal_death above) and
+        // hand the parent back its parked mark.
+        if contain_child_signals {
+            self.termsig_death_pending = saved_termsig_death;
+            self.termsig_death_trap_status = saved_termsig_trap_status;
+        }
+        self.shell_pid = saved_shell_pid;
+
+        if let Some(saved) = saved_process_env {
+            for (name, _) in crate::executor::env_helpers::process_env_pairs() {
+                env::remove_var(&name);
+            }
+            for (name, value) in saved {
+                env::set_var(name, value);
+            }
+        }
+
+        self.restore_shell_env(saved_env);
+        if let Some(saved_shell_state) = saved_shell_state {
+            // rubash#1907: this direct-assignment restore bypasses
+            // restore_flat_subshell, so apply its process-umask half
+            // explicitly — the in-process child script ran against
+            // this same process, and a `umask` inside it must die at
+            // this process boundary like GNU's exec'd child.
+            let fork_saved_process_umask = saved_shell_state.fork_saved_process_umask;
+            // rubash#2636: the same bypass applies to the rlimit
+            // half — a `ulimit` inside the child script re-limited
+            // this process and must die at this boundary too.
+            let fork_saved_process_rlimits = saved_shell_state.fork_saved_process_rlimits.clone();
+            // rubash#3387: the same bypass applies to the rusage
+            // half — this direct-assignment restore skips
+            // restore_flat_subshell, so pop the CloneBoundary
+            // baseline the entry clone_for_child_save pushed (same
+            // kind-and-depth condition) explicitly here.
+            crate::executor::read_helpers::pop_times_baseline_if(
+                crate::executor::read_helpers::TimesBaselineKind::CloneBoundary,
+                saved_shell_state.subshell_depth.get(),
+            );
+            self.shell_state = saved_shell_state;
+            if let Some(mask) = fork_saved_process_umask {
+                crate::builtins::umask::apply_process_umask(mask);
+            }
+            if let Some(rlimits) = &fork_saved_process_rlimits {
+                crate::builtins::ulimit::apply_process_rlimits(rlimits);
+            }
+        }
+        self.shell_state.coproc_names = saved_coproc_names;
+        self.shell_state.last_background_pid = saved_last_background_pid;
+        self.shell_state.job_table = saved_job_table;
+        self.background_children = saved_background_children;
+        self.fd_table = saved_fd_table;
+        // GNU execute_cmd.c:5771 execute_disk_command: the command's
+        // redirections are applied in the FORKED CHILD (do_redirections
+        // with RX_ACTIVE at :5884) and die with that process — the parent
+        // never binds them. The in-process emulation bound them on the
+        // shared Executor (open_compound_output_redirects above), and both
+        // saved_env and saved_fd_table snapshotted AFTER the bind, so
+        // their restores re-installed the child's fd-1 output binding
+        // (fd_output_key(1) env channel + fd table entry) into the parent:
+        // after `$SH p3.sh >o.tmp` every later parent write kept landing in
+        // o.tmp (rubash#164). restore_compound_output_redirects replays the
+        // pre-bind state captured at bind time, after the parent restores,
+        // so the emulation matches the child-process boundary.
+        self.restore_compound_output_redirects(bound_output_fds);
+        // rubash#2279: the numbered input/heredoc binds from the entry
+        // above unwind here, after the wholesale restores (their saved
+        // entries name the pre-bind state, so replaying them returns
+        // each shadowed slot — and the env channels the binder touched
+        // — to exactly what the parent held, including a parent fd the
+        // child must never have consumed).
+        self.restore_compound_numbered_input_redirects(saved_numbered_inputs);
+        self.restore_numbered_heredoc_redirects(saved_numbered_heredocs);
+        // rubash#2279: hand the caller's `{var}` delivery records back
+        // (parked above before the run) so execute_external's
+        // undo_child_fd_var_redirects replays them now — closing the
+        // allocated descriptor and restoring the variable's prior
+        // value (or unset) in the parent.
+        self.fd_var_external_undo = saved_fd_var_external_undo;
+        self.fd_var_pending_closes = saved_fd_var_pending_closes;
+        self.fd_var_close_restore = saved_fd_var_close_restore;
+        if fresh_shell {
+            // Discard signals that arrived while the emulated child was
+            // alive — GNU's real child exits with its queue — then hand the
+            // parent's parked queue back so nothing addressed to this
+            // process is lost.
+            let _ = crate::builtins::kill::take_pending_signals_now(std::process::id());
+            crate::builtins::kill::requeue_pending_signals(saved_pending_signals);
+        }
+        // Restore the parent's child-death notification count (the child's
+        // leftover was already zeroed at entry; see
+        // saved_sigchld_notifications above).
+        self.sigchld_notifications_pending
+            .set(saved_sigchld_notifications);
+        self.parse_error_occurred = saved_parse_error;
+        self.exit_jump_pending.set(saved_exit_jump_pending);
+        self.last_command_substitution_parse_error
+            .set(saved_comsub_parse_error);
+        self.shell_state.pipestatus = saved_pipestatus;
+        self.set_positional_params(saved_positional_params);
+        self.shell_state.functions = saved_functions;
+        self.shell_state.function_definition_redirects = saved_function_redirects;
+        self.shell_state.function_def_infos = saved_function_def_infos;
+        self.shell_state.aliases = saved_aliases;
+        self.tempenv_names = saved_tempenv_names;
+        self.tempenv_marks = saved_tempenv_marks;
+        self.tempenv_promoted_names = saved_tempenv_promoted;
+        self.tempenv_previous = saved_tempenv_previous;
+        self.shell_state.bash_source_stack = saved_bash_source_stack;
+        self.shell_state.bash_source_seed = saved_bash_source_seed;
+        self.shell_state.bash_lineno_stack = saved_bash_lineno_stack;
+        self.shell_state.bash_argc_stack = saved_bash_argc_stack;
+        self.shell_state.bash_argv_stack = saved_bash_argv_stack;
+        self.shell_state.subshell_depth.set(saved_depth);
+        self.shell_state.loop_depth = saved_loop_depth;
+        self.shell_state.subshell_saved_loop_depth = saved_subshell_saved_loop_depth;
+        self.shell_state.function_depth = saved_function_depth;
+        self.inside_compound_condition
+            .set(saved_inside_compound_condition);
+        self.evalerror_pending.set(saved_evalerror_pending);
+        self.nounset_force_eof.set(saved_nounset_force_eof);
+        self.evalerror_subscript_pending
+            .set(saved_evalerror_subscript);
+        self.evalerror_failglob_pending
+            .set(saved_evalerror_failglob);
+        self.evalerror_exit_toomany_pending
+            .set(saved_evalerror_exit_toomany);
+        self.evalerror_line.set(saved_evalerror_line);
+        self.reader_command_line.set(saved_reader_command_line);
+        self.parameter_assignment_failure
+            .set(saved_parameter_assignment_failure);
+        self.parameter_assignment_failure_prev_status
+            .set(saved_parameter_assignment_failure_prev_status);
+        self.evalerror_exec_depth.set(saved_evalerror_exec_depth);
+        self.assignment_command_name = saved_assignment_command_name;
+        self.shell_state.cwd = saved_cwd;
+        self.exit_code = status;
+        // rubash#2236: the child died by an untrapped signal and the
+        // death is the final status — queue the parent's job-death
+        // notice, the counterpart of the real-child wait path's
+        // note_child_signal_death call (jobs.c child-death reporting).
+        // The emulated child's pid is this process's pid: that is the
+        // pid the child's $$ named while it ran.
+        if let Some(signal) = child_signal_death {
+            if status == 128 + signal {
+                self.note_child_signal_death(std::process::id(), signal, child_notice_text, true);
+            }
+        }
+
+        // A child script is a process boundary: every fatal error becomes
+        // the child's exit status and can never propagate into the parent's
+        // command list (GNU shell.c/error.c: jump_to_top_level and
+        // exit_shell stay inside the child process). Previously only
+        // ExitCode was converted, so a child's ExpansionFailure escaping
+        // here would abort an enclosing `for`/`while` in the parent.
+        match result {
+            Err(error) => {
+                self.exit_code = self.child_process_exit_status(error)?;
+                Ok(())
+            }
+            Ok(()) => Ok(()),
+        }
+    }
+
+    /// Converts a fatal `ExecuteError` escaping an in-process child script
+    /// into the child's exit status, mirroring how GNU's `exit_shell` /
+    /// `jump_to_top_level` terminate only the child process.
+    /// The fresh-shell child's env-file startup step: GNU
+    /// run_startup_files (shell.c:722) in the exec'd process sources
+    /// $BASH_ENV for a non-interactive shell — gated on the CHILD's
+    /// own modes (shell.c:1216: not when invoked as `sh`, not in
+    /// posix mode), read from the child's rebuilt state: act_like_sh
+    /// from the invocation name as spelled, posix from the option
+    /// state the fresh-shell initialization replayed. The selection
+    /// itself is the shared invocation::startup_env_file the
+    /// standalone binary's run_startup_files uses. Returns
+    /// Some(status) when the env file ended the child with `exit`
+    /// (shell.c exit_shell: the script body never runs).
+    fn run_fresh_child_startup_env_file(&mut self, cmd: &CommandNode) -> Option<i32> {
+        let act_like_sh = cmd.words.first().is_some_and(|word| {
+            let expanded = self.expand_word(word);
+            let base = expanded
+                .rsplit(['/', '\\'])
+                .next()
+                .unwrap_or("")
+                .to_ascii_lowercase();
+            base.strip_prefix('-').unwrap_or(base.as_str()) == "sh"
+        });
+        let file = crate::invocation::startup_env_file(
+            self,
+            false,
+            act_like_sh,
+            crate::builtins::set::shell_option_enabled(&self.shell_state.env_vars, "posix"),
+        )?;
+        let status = self.run_child_startup_file(&file);
+        if self.take_exit_jump_pending() {
+            Some(status)
+        } else {
+            None
+        }
+    }
+
+    /// Source one startup file in the fresh child, with the sourced-
+    /// file context the standalone binary's run_init_file establishes
+    /// (rubash#1161): the file is the input stream for diagnostics, a
+    /// top-level `return` is legal, and a parse error aborts only
+    /// this file (evalstring.c:585-606 — EX_BADUSAGE as an ordinary
+    /// value, consumed here like the `source` builtin's arm) while a
+    /// real `exit` keeps its jump for the caller to observe.
+    fn run_child_startup_file(&mut self, file: &str) -> i32 {
+        let path = self.resolve_shell_path(file);
+        let contents = match crate::script_driver::read_script_bytes(&path) {
+            Ok(contents) => contents,
+            Err(e) => {
+                eprintln!("rubash: {}: {}", file, crate::posix_errors::message(&e));
+                return 1;
+            }
+        };
+        self.set_env("__RUBASH_INTERACTIVE_FLAG_OFF", "1");
+        let old_in_source = self.get_env("__RUBASH_IN_SOURCE").map(str::to_string);
+        let old_script_name = self.get_env("__RUBASH_SCRIPT_NAME").map(str::to_string);
+        self.set_env("__RUBASH_IN_SOURCE", "1");
+        self.set_env("__RUBASH_SCRIPT_NAME", file);
+        let _ = self.take_parse_error();
+        let status = crate::script_driver::run_source(self, &contents, false);
+        if self.take_parse_error() {
+            self.take_exit_jump_pending();
+        }
+        match old_in_source {
+            Some(value) => self.set_env("__RUBASH_IN_SOURCE", &value),
+            None => self.remove_env("__RUBASH_IN_SOURCE"),
+        }
+        match old_script_name {
+            Some(value) => self.set_env("__RUBASH_SCRIPT_NAME", &value),
+            None => self.remove_env("__RUBASH_SCRIPT_NAME"),
+        }
+        self.remove_env("__RUBASH_INTERACTIVE_FLAG_OFF");
+        status
+    }
+
+    fn child_process_exit_status(&self, error: ExecuteError) -> Result<i32, ExecuteError> {
+        match error {
+            // `exit N`, errexit, and the lastpipe variant all terminate the
+            // child with a chosen status.
+            ExecuteError::ExitCode(code)
+            | ExecuteError::LastpipeExit(code)
+            // Expansion failures and fatal function errors carry the status
+            // the child died with (error.c jump_to_top_level -> exit_shell).
+            | ExecuteError::ExpansionFailure(code)
+            | ExecuteError::FatalFunctionError(code)
+            // A `return` that reaches the script top level is just the
+            // child's status; it must not return from a parent function.
+            | ExecuteError::Return(code) => Ok(code),
+            // niubash#345: a broken pipe escaping an in-process child script
+            // is the child's SIGPIPE-shaped status (141).
+            ExecuteError::BrokenPipe => Ok(141),
+            // rubash#1639: a SIGINT line discard inside the child script
+            // ends the child's current unit with the recorded 130 — the
+            // child-process analogue of the reader discard (the parent's
+            // list only ever sees the child's 130 status).
+            ExecuteError::SigintUnwind => Ok(130),
+            // Loop control can never escape a child process.
+            ExecuteError::Break(_) | ExecuteError::Continue(_) => Ok(1),
+            ExecuteError::CommandNotFound(name) => {
+                eprintln!("{name}: command not found");
+                Ok(127)
+            }
+            ExecuteError::FunctionNotFound(name) => {
+                eprintln!("{name}: command not found");
+                Ok(127)
+            }
+            ExecuteError::UnknownBuiltin(name) => {
+                eprintln!("{name}: command not found");
+                Ok(1)
+            }
+            // rubash#440: a dead shared stdout (SIGPIPE analogue) is only a
+            // write failure of the command that hit it — GNU's parent shell
+            // ignores SIGPIPE, reports the failed write with status 1 and
+            // keeps running; it never kills the whole process.
+            ExecuteError::IoError(error) if is_closed_output_io_error(&error) => {
+                eprintln!("{error}");
+                Ok(1)
+            }
+            ExecuteError::IoError(error) => {
+                eprintln!("{error}");
+                Ok(1)
+            }
+        }
+    }
+
+    pub(in crate::executor) fn child_shell_environment(&self) -> HashMap<String, String> {
+        let exported = marked_env_names(&self.shell_state.env_vars, EXPORTED_VARS);
+        let mut child = exported
+            .iter()
+            .filter(|name| is_exportable_env_name(&self.shell_state.env_vars, name))
+            .filter_map(|name| {
+                self.shell_state
+                    .env_vars
+                    .get(name)
+                    .map(|value| (name.clone(), value.clone()))
+            })
+            .collect::<HashMap<_, _>>();
+        // GNU variables.c:511-526 (initialize_shell_variables): a fresh
+        // shell invocation inherits only exported variables from the parent
+        // environment. IFS is not exported by default, so a child shell
+        // starts with the default " \t\n". Copying the parent's IFS into the
+        // child environment would leak non-default IFS values (e.g.
+        // intl.tests sets IFS=$(printf '%b' '\303\251') before running
+        // ${THIS_SH} ./intl1.sub, and the child must not inherit it).
+        // OLDPWD and SHELL are shell-local values maintained for every
+        // shell instance even when not exported to native children.
+        // G-02: the child's PWD is the session cwd it will start in (its
+        // spawn is stamped with the same directory).
+        child.insert(
+            "PWD".to_string(),
+            shell_display_path(&self.shell_state.cwd.to_string_lossy().replace('\\', "/")),
+        );
+        for name in ["OLDPWD", "SHELL"] {
+            if let Some(value) = self.shell_state.env_vars.get(name) {
+                child
+                    .entry(name.to_string())
+                    .or_insert_with(|| value.clone());
+            }
+        }
+        // GNU variables.c make_env_array_from_var_list: exported
+        // functions cross the boundary as BASH_FUNC_<name>%% entries,
+        // exactly as the real spawn path materializes them
+        // (apply_exported_functions_to_child). The fresh-shell import
+        // in execute_direct_shell_script (like Executor::new at process
+        // startup) reads them back into the function table; without
+        // them an in-process script child imported NO functions at all
+        // (rubash#1610).
+        for name in marked_env_names(&self.shell_state.env_vars, EXPORTED_FUNCTIONS) {
+            let Some(body) = self.shell_state.functions.get(&name) else {
+                continue;
+            };
+            let def_redirects = self
+                .shell_state
+                .function_def_infos
+                .get(&name)
+                .map(|info| info.def_redirects.as_slice())
+                .unwrap_or(&[]);
+            child.insert(
+                exported_function_env_name(&name),
+                exported_function_env_value(&body.commands, def_redirects),
+            );
+        }
+        child.insert(EXPORTED_VARS.to_string(), exported.join(DATA_DOLLAR_STR));
+        child
+    }
+}
+
+fn direct_windows_shell_script_path(
+    command_name: &str,
+    env_vars: &std::collections::HashMap<String, String>,
+) -> Option<std::path::PathBuf> {
+    if !cfg!(windows) {
+        return None;
+    }
+
+    if !command_name.contains('/') && !command_name.contains('\\') {
+        return None;
+    }
+
+    let path = shell_path_to_windows(command_name, env_vars);
+    if !path.is_file() {
+        return None;
+    }
+
+    if path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("sh"))
+    {
+        return Some(path);
+    }
+
+    // Bash's execute_cmd.c retries a readable text file with the current
+    // shell after an ENOEXEC result.  Windows cannot produce that errno for
+    // extensionless files because the command resolver may select `sh.exe`
+    // first, so identify the same script shape before spawning an external
+    // interpreter.  Keep binary files on the native process path.
+    if path.extension().is_some() {
+        return None;
+    }
+    let source = std::fs::read(&path).ok()?;
+    (!source.contains(&0)).then_some(path)
+}

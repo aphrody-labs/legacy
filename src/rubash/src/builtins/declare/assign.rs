@@ -1,0 +1,1164 @@
+use std::io;
+
+use super::bare_diag_line;
+use super::marks::{mark_typed, unmark_typed};
+use super::names::valid_nameref_value;
+use super::storage::{
+    append_array_value, append_assoc_scalar_append_value, append_assoc_value,
+    append_baseline_mirror, eval_integer_value, format_assoc_storage, format_indexed_array_storage,
+    indexed_array_entries, is_noassign_bash_array, parse_array_tokens, parse_assoc_words,
+    quote_assoc_storage_value,
+};
+use super::{
+    ARRAY_VARS, ASSOC_128_VARS, ASSOC_VARS, CAPCASE_VARS, COMPOUND_ASSIGNMENT_MARKER,
+    DECLARED_UNSET_VARS, EXECUTION_FAILURE, EXECUTION_SUCCESS, INTEGER_VARS, LOWERCASE_VARS,
+    NAMEREF_VARS, READONLY_VARS, UPPERCASE_VARS,
+};
+use crate::executor::arithmetic::eval_conditional_arith_value;
+use crate::executor::builtin_diag::DiagKind;
+use crate::executor::local_helpers::sync_shell_assignment_process_env;
+use crate::executor::markers::{DATA_DOLLAR, STORAGE_WORD_PREFIX};
+use crate::executor::types::ARRAY_FIELD_SPLIT_MARKER;
+
+/// Per-operand record of the locale-funnel fires this assign pass
+/// itself performs (rubash#3066/#3097). GNU declare runs
+/// stupidly_hack_special_variables after EVERY variable it processes
+/// (builtins/declare.def:1105); declare::execute owes that hack fire
+/// exactly for the operands whose assign-phase fire was not already
+/// playing the hack's role:
+///
+/// * a plain scalar bind fires once here and that fire IS the
+///   declare-side hack (GNU's bind_variable_value does not fire on
+///   its own) — no second fire is owed;
+/// * a compound bind fires here for the pre-declaration assignment
+///   (subst.c:8169's do_assignment hack, which the expanded compound
+///   word runs before the builtin sees it) — the declare hack is
+///   still owed on top;
+/// * operands with no assign-phase fire at all (attribute-only
+///   conversions, element binds) are owed the hack outright.
+///
+/// Keyed by operand INDEX, not name: GNU's loop is per operand, so
+/// two operands naming the same variable are adjudicated separately.
+#[derive(Default)]
+pub(super) struct LocaleFunnelRecord {
+    pub(super) fired: std::collections::HashSet<usize>,
+    pub(super) compound: std::collections::HashSet<usize>,
+}
+
+impl LocaleFunnelRecord {
+    fn note(&mut self, operand_index: usize, compound: bool) {
+        self.fired.insert(operand_index);
+        if compound {
+            self.compound.insert(operand_index);
+        }
+    }
+}
+
+pub(super) fn assign_declare_names(
+    command_name: &str,
+    names: &[&str],
+    variables: &mut crate::shell::var_table::VarTable,
+    frame_locals: &[String],
+    nameref: bool,
+    in_function: bool,
+    array: bool,
+    assoc: bool,
+    integer: bool,
+    mark_unset_declarations: bool,
+    deleted_names: &mut std::collections::HashSet<String>,
+    diag: &mut crate::executor::builtin_diag::Diag<'_>,
+    prolog: &crate::executor::builtin_diag::PrologParts,
+    oob_word: &mut Option<String>,
+    written_hints: &mut super::WrittenOperandHints,
+    locale_funnel: &mut LocaleFunnelRecord,
+) -> io::Result<i32> {
+    let mut status = EXECUTION_SUCCESS;
+    // GNU variables.c:5760 { "BASH_COMPAT", sv_shcompat }: a declare-family
+    // operand rebinding BASH_COMPAT re-syncs the compatNN shopt flags (the
+    // declare path writes VarTable directly, bypassing bind_variable's
+    // hook). The hook runs on every rebinding — even a value-identical one
+    // (verified oracle: repeated `declare BASH_COMPAT=99` re-reports).
+    let binds_bashcompat = names
+        .iter()
+        .any(|name| crate::builtins::shopt::binds_bashcompat_operand(name));
+    let mut operand_index = 0usize;
+    for name in names {
+        // Taken before any `continue` below so every operand keeps its
+        // own index for the LocaleFunnelRecord.
+        let current_index = operand_index;
+        operand_index += 1;
+        let Some((var_name, value)) = name.split_once('=') else {
+            // GNU declare.def: a "name[subscript]" operand without '=' is a
+            // declaration with a size hint; the subscript is discarded and
+            // the variable is recorded under the bare name ("declare -a
+            // b[256]" then prints as "declare -a b"). declare.def:605 sets
+            // making_array_special for ANY subscripted operand and 959-962
+            // converts the variable to an indexed array even without -a, so
+            // "declare -r c[100]" lists as "declare -ar c" (array.tests:62).
+            let stripped = name.strip_suffix('+').unwrap_or(name);
+            let bare = declare_indexed_element(stripped)
+                .map(|(base, _)| base)
+                .unwrap_or(stripped);
+            if bare != stripped && !variables.is_marked(ASSOC_VARS, bare) {
+                mark_typed(variables, ARRAY_VARS, bare);
+            }
+            // GNU declare.def -> get_universal_initial_value / assocconvert:
+            // converting an existing scalar to an associative array moves
+            // the value into element "0" (assoc.tests: assoc=assoc;
+            // declare -A assoc then prints [0]="assoc" and ${assoc[@]}).
+            if variables.is_marked(ASSOC_VARS, bare) {
+                if let Some(current) = variables.get(bare).cloned() {
+                    let is_array_storage = current.starts_with(STORAGE_WORD_PREFIX)
+                        || (current.starts_with('(') && current.ends_with(')'));
+                    if !current.is_empty() && !is_array_storage {
+                        let converted =
+                            super::storage::format_assoc_storage(vec![("0".to_string(), current)]);
+                        variables.insert(bare.to_string(), converted);
+                    }
+                }
+            }
+            // GNU declare.def:810-823: att_invisible is (re)set only when the
+            // create path's bind_variable actually returns a variable. A
+            // visible empty-cell nameref makes that bind return NULL
+            // (variables.c:3061-3069), so the operand is skipped without
+            // touching visibility; only a truly absent name gets marked
+            // declared-unset here.
+            if mark_unset_declarations
+                && !variables.contains_key(bare)
+                && !variables.is_marked(NAMEREF_VARS, bare)
+            {
+                mark_typed(variables, DECLARED_UNSET_VARS, bare);
+            }
+            continue;
+        };
+        let (raw_target, append_elem) = var_name
+            .strip_suffix('+')
+            .map(|base| (base, true))
+            .unwrap_or((var_name, false));
+        // GNU subst.c:13084 expand_declaration_argument performs an unquoted
+        // compound list (parser CA-marked) as a separate assignment before
+        // the builtin sees the operand, and subst.c:3599-3605 rejects a list
+        // to a subscripted member ("cannot assign list to array member");
+        // the word is then truncated to the bare name[sub], so the array is
+        // only declared and no element is assigned (array.tests:
+        // declare -a e[10]=(test) leaves "declare -a e").
+        if value.starts_with(COMPOUND_ASSIGNMENT_MARKER) && raw_target.contains('[') {
+            let (base, _) = declare_indexed_element(raw_target).unwrap_or((raw_target, ""));
+            // GNU expand_compound_array_assignment (arrayfunc.c:557) expands
+            // the list's element words BEFORE the assignment is rejected:
+            // under failglob an unmatched element reports `no match:` and the
+            // operand never reaches the member check, leaving the variable
+            // unset (`declare -a e[10]=(zzz-*)` -> `declare: e: not found`).
+            // Under nullglob the (possibly emptied) list still fails the
+            // member check below.
+            let list = value
+                .strip_prefix(COMPOUND_ASSIGNMENT_MARKER)
+                .unwrap_or(value);
+            let expanded_value = expand_compound_array_value(list, variables);
+            if let Err(pattern) =
+                append_array_value("()", &expanded_value, integer, variables, oob_word)
+            {
+                bare_diag_line(diag, prolog, variables, &format!("no match: {pattern}"));
+                status = EXECUTION_FAILURE;
+                deleted_names.insert(raw_target.to_string());
+                continue;
+            }
+            // GNU err_badarraysub + any_failed (arrayfunc.c:804-809,
+            // rubash#635): an out-of-range subscript stops the whole
+            // declaration; the word travels up for the fatal diagnostic.
+            if oob_word.is_some() {
+                return Ok(EXECUTION_FAILURE);
+            }
+            bare_diag_line(
+                diag,
+                prolog,
+                variables,
+                &format!("{raw_target}: cannot assign list to array member"),
+            );
+            status = EXECUTION_FAILURE;
+            if !assoc && !variables.is_marked(ASSOC_VARS, base) {
+                mark_typed(variables, ARRAY_VARS, base);
+            }
+            if mark_unset_declarations && !variables.contains_key(base) {
+                mark_typed(variables, DECLARED_UNSET_VARS, base);
+            }
+            continue;
+        }
+        if let Some((base, index_expression)) = declare_indexed_element(raw_target) {
+            // GNU declare.def:927/935-948: a parenthesized value on a
+            // subscript operand is a COMPOUND assignment on the whole
+            // variable — the subscript is discarded — only when
+            // creating_array (an -a/-A flag on this command) holds
+            // (`declare -a a[1]='(var)' -> [0]="var"; `declare -A
+            // c[k]='(v1 v2)' -> [v1]="v2"). Otherwise it is a literal
+            // element value; a fresh variable without an array flag also
+            // gets the deprecated-compound warning
+            // (`declare a[1]='(var)' -> [1]="(var)" + warning).
+            let paren_value = !append_elem && value.starts_with('(') && value.ends_with(')');
+            if paren_value && (array || assoc) {
+                let expanded_value = expand_compound_array_value(value, variables);
+                if assoc || variables.is_marked(ASSOC_VARS, base) {
+                    if let Some(bare) = assoc_bare_element(&expanded_value) {
+                        diag.free(format_args!(
+                            "{base}: {bare}: must use subscript when assigning associative array"
+                        ));
+                        status = EXECUTION_FAILURE;
+                        continue;
+                    }
+                    let current = variables
+                        .get(base)
+                        .cloned()
+                        .unwrap_or_else(|| "()".to_string());
+                    let appended =
+                        append_assoc_value(&current, &expanded_value, integer, variables);
+                    variables.insert(base.to_string(), appended);
+                    mark_typed(variables, ASSOC_VARS, base);
+                } else {
+                    match append_array_value("()", &expanded_value, integer, variables, oob_word) {
+                        Ok(storage) => {
+                            variables.insert(base.to_string(), storage);
+                            mark_typed(variables, ARRAY_VARS, base);
+                        }
+                        Err(pattern) => {
+                            bare_diag_line(
+                                diag,
+                                prolog,
+                                variables,
+                                &format!("no match: {pattern}"),
+                            );
+                            status = EXECUTION_FAILURE;
+                            deleted_names.insert(raw_target.to_string());
+                        }
+                    }
+                    if oob_word.is_some() {
+                        return Ok(EXECUTION_FAILURE);
+                    }
+                }
+                unmark_typed(variables, DECLARED_UNSET_VARS, base);
+                continue;
+            }
+            if paren_value
+                && !variables.is_marked(ARRAY_VARS, base)
+                && !variables.is_marked(ASSOC_VARS, base)
+                && !variables.get(base).is_some_and(|v| {
+                    v.starts_with(STORAGE_WORD_PREFIX) || (v.starts_with('(') && v.ends_with(')'))
+                })
+            {
+                bare_diag_line(
+                    diag,
+                    prolog,
+                    variables,
+                    &format!("warning: {name}: quoted compound array assignment deprecated"),
+                );
+            }
+            if assoc || variables.is_marked(ASSOC_VARS, base) {
+                if variables.is_marked(READONLY_VARS, base) {
+                    diag.error(DiagKind::Readonly(base.to_string()));
+                    status = EXECUTION_FAILURE;
+                } else {
+                    let current = variables
+                        .get(base)
+                        .cloned()
+                        .unwrap_or_else(|| "()".to_string());
+                    // The executor pre-resolved the operand under
+                    // ExpandedOnce rules and marker-encoded the key so a
+                    // `]`/`=`/whitespace inside it cannot corrupt this
+                    // re-parse; decode it and re-quote for the compound
+                    // element text.
+                    let key =
+                        crate::executor::arithmetic::decode_arithmetic_assoc_key(index_expression)
+                            .unwrap_or_else(|| index_expression.to_string());
+                    // rubash#1400: the bind converts through the
+                    // variable's own case attribute, set by an earlier
+                    // declare (`declare -uA h; declare h[k]=abc`
+                    // stores ABC) — the attrs.rs pass only converts
+                    // for attributes this command itself sets.
+                    let converted = declare_case_convert(value, variables, base);
+                    let element = format!(
+                        "([{}]={})",
+                        super::storage::quote_assoc_key(&key),
+                        quote_assoc_storage_value(&converted)
+                    );
+                    let appended = append_assoc_value(&current, &element, integer, variables);
+                    variables.insert(base.to_string(), appended);
+                    mark_typed(variables, ASSOC_VARS, base);
+                    unmark_typed(variables, DECLARED_UNSET_VARS, base);
+                }
+                continue;
+            }
+            if !assoc {
+                // GNU declare.def:927: if the operand has a subscript, the
+                // array already exists, and creating_array==0 (no -a/-A
+                // flag), it is a simple_array_assign — the value (even if
+                // parenthesized) is assigned as a STRING to the element,
+                // not parsed as a compound assignment. This is why
+                // `declare foo[1]='(4 5 6)'` stores "(4 5 6)" at index 1
+                // when foo already exists without -a, while `declare -a
+                // e[10]='(test)'` (with -a, creating_array=1) discards the
+                // subscript and stores [0]="test".
+                // GNU arrayfunc.c:464-475 find_or_make_array_variable: an
+                // element assignment that lands on a nameref (declare a=v
+                // where a -> b -> a[1] rewrites the operand to a[1]=v)
+                // removes the attribute with a warning and drops the cell --
+                // it never becomes element 0 (nameref15.sub).
+                if variables.is_marked(NAMEREF_VARS, base) {
+                    bare_diag_line(
+                        diag,
+                        prolog,
+                        variables,
+                        &format!("warning: {base}: removing nameref attribute"),
+                    );
+                    unmark_typed(variables, NAMEREF_VARS, base);
+                    // Removing the cell entirely keeps the scalar-to-array
+                    // conversion below from seeding it at element 0.
+                    variables.remove(base);
+                }
+                // GNU make_new_array_variable creates an indexed array
+                // with no elements; only convert_var_to_array (an existing
+                // scalar promoted by the declare operand) lands the scalar
+                // in [0] (array.tests: m=; declare -a m[10]=v keeps
+                // [0]=""). Parsing "" as one empty word materialized a
+                // phantom [0]="" element in every freshly created array.
+                // The snapshot is taken before the subscript resolves
+                // because GNU assign_array_element (arrayfunc.c:382-390)
+                // wraps a negative subscript against the array's CURRENT
+                // maximum index — the same entries the bind below writes,
+                // including elements bound by earlier operands of this
+                // same command.
+                let mut entries = match variables.get(base).cloned() {
+                    Some(current) if current.starts_with(STORAGE_WORD_PREFIX) => {
+                        indexed_array_entries(&current)
+                    }
+                    Some(current)
+                        if !current.is_empty() || !variables.is_marked(ARRAY_VARS, base) =>
+                    {
+                        indexed_array_entries(&current)
+                    }
+                    _ => Default::default(),
+                };
+                let evaluated_index = if index_expression.trim().is_empty() {
+                    Some(0)
+                } else if index_expression == crate::executor::types::FAILED_SUBSCRIPT_SENTINEL {
+                    // The executor's subscript pass already evaluated this
+                    // subscript and printed the diagnostic (declare.def:
+                    // assign_error after assign_array_element fails).
+                    None
+                } else {
+                    eval_conditional_arith_value(index_expression, variables)
+                };
+                let index = match evaluated_index {
+                    Some(value) if value >= 0 => usize::try_from(value).ok(),
+                    Some(value) => {
+                        // GNU arrayfunc.c:382-390 (assign_array_element):
+                        // ind < 0 wraps with ind = array_max_index + 1 +
+                        // ind; if it is STILL negative, err_badarraysub
+                        // (error.c:440-443) reports the WRITTEN
+                        // name[subscript] and this operand fails while the
+                        // remaining operands still bind. A scalar counts
+                        // as a one-element array (its value sits at index
+                        // 0 in the snapshot above); an empty or unset
+                        // array has no maximum and always fails.
+                        let wrapped = entries.keys().max().and_then(|max| {
+                            usize::try_from(*max as i128 + 1 + i128::from(value)).ok()
+                        });
+                        if wrapped.is_none() {
+                            let word = written_element_word(name, written_hints);
+                            bare_diag_line(
+                                diag,
+                                prolog,
+                                variables,
+                                &format!("{word}: bad array subscript"),
+                            );
+                        }
+                        wrapped
+                    }
+                    None => None,
+                };
+                if let Some(index) = index {
+                    // GNU bind_array_element: appends through a nameref land
+                    // on the referenced element, arithmetically when the
+                    // referenced array carries the integer attribute
+                    // (nameref23.sub: declare -ai a; a[0]=4; declare -n
+                    // b='a[0]'; declare b+=1 bumps a[0] to 5).
+                    let element = if append_elem {
+                        let current_element = entries.get(&index).cloned().unwrap_or_default();
+                        if integer || variables.is_marked(INTEGER_VARS, base) {
+                            let left = eval_conditional_arith_value(&current_element, variables)
+                                .unwrap_or(0);
+                            let right = eval_conditional_arith_value(value, variables).unwrap_or(0);
+                            (left + right).to_string()
+                        } else {
+                            format!("{current_element}{value}")
+                        }
+                    } else {
+                        value.to_string()
+                    };
+                    // rubash#1400: same bind-time case conversion as
+                    // the assoc branch (`declare -u a; declare
+                    // a[0]=abc` stores ABC).
+                    let element = declare_case_convert(&element, variables, base);
+                    entries.insert(index, element);
+                    variables.insert(base.to_string(), format_indexed_array_storage(entries));
+                    mark_typed(variables, ARRAY_VARS, base);
+                    continue;
+                }
+                // GNU declare.def:988-1011: VSETATTR applied the flags and
+                // the operand's `name[subscript]` made the variable an
+                // indexed array (making_array_special, declare.def:605 ->
+                // convert_var_to_array at 961) BEFORE assign_array_element
+                // evaluated the subscript — a bad subscript leaves the
+                // variable bound with its attributes (`declare -i
+                // a[$bad]=42` -> `declare -ai a=()`; an already
+                // declared-but-unset target keeps its null cell ->
+                // `declare -ai a`).
+                if !variables.is_marked(ASSOC_VARS, base) {
+                    mark_typed(variables, ARRAY_VARS, base);
+                    if variables.contains_key(base)
+                        && !variables.is_marked(DECLARED_UNSET_VARS, base)
+                    {
+                        // convert_var_to_array on an existing scalar
+                        // promotes the scalar to element [0] — rewrite
+                        // the mirror in storage form so it carries the
+                        // promoted element; leaving the bare scalar
+                        // string under an ARRAY mark desyncs the typed
+                        // cell (which promotes the same way) from the
+                        // mirror on the executor's post-command sync. A
+                        // declared-but-unset variable has no value to
+                        // promote and stays cell-less, like GNU.
+                        let current = variables.get(base).cloned().unwrap_or_default();
+                        if !current.starts_with(STORAGE_WORD_PREFIX) {
+                            variables
+                                .insert(base.to_string(), format_indexed_array_storage(entries));
+                        }
+                    } else if !variables.is_marked(DECLARED_UNSET_VARS, base) {
+                        variables.insert(
+                            base.to_string(),
+                            format_indexed_array_storage(Default::default()),
+                        );
+                    }
+                }
+                status = EXECUTION_FAILURE;
+                continue;
+            }
+        }
+        let (var_name, append) = var_name
+            .strip_suffix('+')
+            .map(|base| (base, true))
+            .unwrap_or((var_name, false));
+        // GNU declare.def:806-825 -> variables.c bind_variable_internal: a
+        // `name=value` operand naming a nameref with an unresolvable (empty)
+        // cell resolves to NULL through find_variable_nameref, so it takes
+        // the created_var path whose bind_variable(name, NULL, ASS_FORCE)
+        // materializes the variable BEFORE the assignment is attempted. For
+        // an invisible nameref the variables.c:3074-3081 first clause clears
+        // att_invisible (declare.def:821-822 re-sets it only when offset==0),
+        // so a later readonly failure leaves a VISIBLE empty-cell nameref.
+        // For an already-visible nameref the variables.c:3061-3069
+        // global-table clause resolves the chain, finds nothing, returns
+        // NULL, and declare.def:816 silently skips the operand
+        // (nameref17.sub: `typeset foo1=bar` errors but materializes foo1;
+        // a later `typeset foo1=bar2` is a silent no-op).
+        if !append
+            && !var_name.contains('[')
+            && variables.is_marked(NAMEREF_VARS, var_name)
+            && variables.get(var_name).map_or(true, |cell| cell.is_empty())
+        {
+            if variables.is_marked(DECLARED_UNSET_VARS, var_name) {
+                unmark_typed(variables, DECLARED_UNSET_VARS, var_name);
+            } else if !in_function {
+                continue;
+            }
+        }
+        if is_noassign_bash_array(var_name) {
+            continue;
+        }
+        if variables.is_marked(READONLY_VARS, var_name) {
+            // GNU declare.def:881-890: ASSIGN_DISALLOWED assignments fail via
+            // sh_readonly (bare `name: readonly variable`). Scalar operands
+            // fail earlier through the builtin_error path, which keeps the
+            // `declare:` command prefix.
+            if value.starts_with(COMPOUND_ASSIGNMENT_MARKER) {
+                diag.err_readonly(&prolog.build(variables).render(), var_name);
+            } else {
+                diag.error(DiagKind::Readonly(var_name.to_string()));
+            }
+            status = EXECUTION_FAILURE;
+            continue;
+        }
+        // GNU variables.c bind_variable_internal (the invisible-nameref
+        // first clause + the visible-nameref cell validation): an
+        // assignment whose target is a nameref without a usable cell
+        // validates the value as a nameref value; an invalid one reports
+        // sh_invalidid (`` `value': not a valid identifier ``) and leaves
+        // the nameref valueless (nameref12/nameref13.sub:
+        // typeset -n foo; typeset foo=12345). This is the assignment path —
+        // the `invalid variable name for name reference` wording belongs to
+        // declare.def's `-n name=value` declaration-time check only.
+        if variables.is_marked(NAMEREF_VARS, var_name) {
+            let current = variables.get(var_name).cloned().unwrap_or_default();
+            if !append && !valid_nameref_value(&current) {
+                if !valid_nameref_value(value) {
+                    // GNU declare.def:849-854: inside a function,
+                    // declare_transform_name keeps the same-context local
+                    // nameref as VAR (an empty cell fails
+                    // nameref_transform_name's valid_nameref_value check), so
+                    // the invalid value is rejected by the operand-level
+                    // nameref check -- `invalid variable name for name
+                    // reference` -- and the variable survives (nameref13.sub:
+                    // `typeset -n foo; typeset foo=12345` keeps foo).
+                    if frame_locals.iter().any(|local| local == var_name) {
+                        diag.free(format_args!(
+                            "`{value}': invalid variable name for name reference"
+                        ));
+                        status = EXECUTION_FAILURE;
+                        continue;
+                    }
+                    diag.error(DiagKind::InvalidId(value.to_string()));
+                    status = EXECUTION_FAILURE;
+                    // GNU declare.def:1031-1034: when the variable was
+                    // created by THIS declare invocation — an unusable-cell
+                    // nameref reads as not-found to find_variable, so the
+                    // declare path created it fresh (created_var) — a failed
+                    // ASS_NAMEREF bind deletes the variable outright
+                    // (nameref12.sub: `declare -n x; declare x=42` leaves x
+                    // fully gone, not valueless).
+                    variables.remove(var_name);
+                    deleted_names.insert(var_name.to_string());
+                    for marker in [
+                        NAMEREF_VARS,
+                        DECLARED_UNSET_VARS,
+                        INTEGER_VARS,
+                        ARRAY_VARS,
+                        ASSOC_VARS,
+                        ASSOC_128_VARS,
+                        READONLY_VARS,
+                    ] {
+                        unmark_typed(variables, marker, var_name);
+                    }
+                    continue;
+                }
+                variables.insert(var_name.to_string(), value.to_string());
+                // rubash#1531: same bind hook as the scalar path below —
+                // gated names (locale family) must reach the process-env
+                // mirror on a declare bind too.
+                sync_shell_assignment_process_env(variables, var_name, value);
+                // rubash#1692: a declare bind is bind_variable — GNU's
+                // sv_locale watcher fires on it (variables.c:6272).
+                if let Some(warning) = crate::locale::locale_assignment_warning(var_name, variables)
+                {
+                    bare_diag_line(diag, prolog, variables, &format!("warning: {warning}"));
+                }
+                locale_funnel.note(current_index, false);
+                unmark_typed(variables, DECLARED_UNSET_VARS, var_name);
+                continue;
+            }
+        }
+        // GNU subst.c:13084 expand_declaration_argument: a parser-marked
+        // compound list (COMPOUND_ASSIGNMENT_MARKER, the W_COMPASSIGN flag)
+        // is always an array assignment regardless of -a/-A flags; a bare
+        // parenthesized STRING is only an array value when the variable is
+        // (or is being made) an array (nameref20.sub: `declare ref=(X)`
+        // creates `declare -a var`, nameref22.sub: `declare
+        // array='(one two three)'` stays scalar).
+        // rubash#788: GNU records the W_COMPASSIGN shape before the attribute
+        // pass runs. `expand_declaration_argument` marks the operand as an
+        // array assignment and `find_or_make_array_variable`
+        // (arrayfunc.c:454-514) gives the variable att_array, so:
+        //
+        //   * a compound operand with NO -a/-A still becomes an array
+        //     (`declare a=(x y)` -> `declare -a a`, attrs [a]); and
+        //   * an explicit `+a` in the same command cannot undo it — the
+        //     attribute pass sees the array bit and refuses
+        //     (`declare +a a=(x y)` -> "cannot destroy array variables in
+        //     this way", attrs stay [a]).
+        //
+        // rubash wrote the indexed storage word but never set ARRAY_VARS, so
+        // the variable still READ as a scalar holding that raw storage text:
+        // `${a[0]}` returned `([0]="x" [1]="y")`, `${#a[@]}` was 1 and
+        // `${a[1]}` was empty (the golden_fnbody_strict_battery failure).
+        // An associative target keeps -A: the same list binds as key/value
+        // pairs there (`declare -A m; declare m=(x y)` -> `[x]="y"`).
+        let compound_operand = value.starts_with(COMPOUND_ASSIGNMENT_MARKER);
+        let (value, compound_marked) =
+            if let Some(compound) = value.strip_prefix(COMPOUND_ASSIGNMENT_MARKER) {
+                (compound, true)
+            } else {
+                (value, false)
+            };
+        let value = if append {
+            // GNU variables.c: the integer attribute lives on the
+            // VARIABLE (att_integer), not on this command's flags — a
+            // flagless re-declare of an integer variable still appends
+            // arithmetically (make_variable_value, variables.c:2905).
+            // The declare option parse only reports -i spelled on THIS
+            // command, so fold the existing mark in, the same fold the
+            // subscript-element path applies below (rubash#1677).
+            let integer = integer || variables.is_marked(INTEGER_VARS, var_name);
+            let current = variables.get(var_name).cloned().unwrap_or_default();
+            if assoc || variables.is_marked(ASSOC_VARS, var_name) {
+                if value.starts_with('(') && value.ends_with(')') {
+                    if let Some(bare) = assoc_bare_element(value) {
+                        diag.free(format_args!("{var_name}: {bare}: must use subscript when assigning associative array"));
+                        status = EXECUTION_FAILURE;
+                        continue;
+                    }
+                }
+                // GNU assign_assoc_from_kvlist (arrayfunc.c:644-650): a
+                // kvpair word whose expanded key is empty reports `<word>:
+                // bad array subscript` but does NOT set any_failed — the
+                // pair is skipped and the assignment still succeeds.
+                for word in crate::executor::assignment_helpers::assoc_empty_key_words(value) {
+                    bare_diag_line(
+                        diag,
+                        prolog,
+                        variables,
+                        &format!("{word}: bad array subscript"),
+                    );
+                }
+                if value.starts_with('(') && value.ends_with(')') {
+                    append_assoc_value(&current, value, integer, variables)
+                } else {
+                    // A bare scalar word under += is NOT a kvlist
+                    // operand: GNU variables.c:3138-3142 combines it
+                    // with the old value at key "0" (rubash#1677).
+                    append_assoc_scalar_append_value(&current, value, integer, variables)
+                }
+            } else if compound_marked
+                || array
+                || variables.is_marked(ARRAY_VARS, var_name)
+                || current.starts_with(STORAGE_WORD_PREFIX)
+                || current.starts_with('(') && current.ends_with(')')
+            {
+                // GNU arrayfunc.c:710-743 assign_compound_array_list seeds
+                // the append from the live ARRAY object; a declared-but-unset
+                // array is empty, while an existing scalar (even "") is an
+                // implicit array that keeps element 0. The branch condition
+                // above still sees the raw mirror, so the empty-object
+                // baseline is applied only to the element list handed to
+                // append_array_value. An ABSENT variable is the empty object
+                // too, so pass None rather than "". See append_baseline_mirror.
+                let present = variables.contains_key(var_name);
+                let baseline = append_baseline_mirror(
+                    present.then(|| current.as_str()),
+                    variables.is_marked(DECLARED_UNSET_VARS, var_name),
+                );
+                match append_array_value(&baseline, value, integer, variables, oob_word) {
+                    Ok(storage) => storage,
+                    Err(pattern) => {
+                        bare_diag_line(diag, prolog, variables, &format!("no match: {pattern}"));
+                        status = EXECUTION_FAILURE;
+                        deleted_names.insert(var_name.to_string());
+                        continue;
+                    }
+                }
+            } else if integer {
+                (eval_integer_value(&current, variables) + eval_integer_value(value, variables))
+                    .to_string()
+            } else {
+                let mut current = current;
+                current.push_str(value);
+                current
+            }
+        } else if (assoc || variables.is_marked(ASSOC_VARS, var_name))
+            && value.starts_with('(')
+            && value.ends_with(')')
+        {
+            // GNU arrayfunc.c: assoc-ness decides the compound form first; the
+            // integer attribute then only evaluates the element values, so
+            // `declare -Ai chaff=([one]=3+7)` stores an associative 10 rather
+            // than routing the compound through the indexed path.
+            //
+            // GNU Bash (array.c/arrayassign.c): every element of an associative
+            // array compound assignment must use the [key]=value form. A bare
+            // word (no subscript) is rejected with the must-use-subscript error.
+            if let Some(bare) = assoc_bare_element(value) {
+                diag.free(format_args!(
+                    "{var_name}: {bare}: must use subscript when assigning associative array"
+                ));
+                status = EXECUTION_FAILURE;
+                continue;
+            }
+            // GNU assign_assoc_from_kvlist (arrayfunc.c:644-650): same
+            // kvpair empty-key diagnostic as the append path above.
+            for word in crate::executor::assignment_helpers::assoc_empty_key_words(value) {
+                bare_diag_line(
+                    diag,
+                    prolog,
+                    variables,
+                    &format!("{word}: bad array subscript"),
+                );
+            }
+            append_assoc_value("()", value, integer, variables)
+        } else if integer {
+            if value.starts_with('(') && value.ends_with(')') {
+                match append_array_value("()", value, true, variables, oob_word) {
+                    Ok(storage) => storage,
+                    Err(pattern) => {
+                        bare_diag_line(diag, prolog, variables, &format!("no match: {pattern}"));
+                        status = EXECUTION_FAILURE;
+                        deleted_names.insert(var_name.to_string());
+                        continue;
+                    }
+                }
+            } else {
+                let scalar = eval_integer_value(value, variables).to_string();
+                scalar_assign_to_array(var_name, &scalar, variables).unwrap_or(scalar)
+            }
+        } else if value.starts_with('(')
+            && value.ends_with(')')
+            && (compound_marked
+                || array
+                || variables.is_marked(ARRAY_VARS, var_name)
+                || variables.get(var_name).is_some_and(|current| {
+                    current.starts_with(STORAGE_WORD_PREFIX)
+                        || (current.starts_with('(') && current.ends_with(')'))
+                }))
+        {
+            // GNU arrayfunc.c:557 expand_compound_array_assignment:
+            // re-parse and expand the compound value (array.tests:115
+            // declare -a f='("${d[@]}")' expands d into f). A quoted
+            // parenthesized value only becomes an array assignment when the
+            // variable is (or is being made) an array -- otherwise it is a
+            // literal scalar (nameref22.sub: declare array='(one two three)'
+            // prints `declare -- array="(one two three)"`).
+            let expanded_value = expand_compound_array_value(value, variables);
+            match append_array_value("()", &expanded_value, false, variables, oob_word) {
+                Ok(storage) => storage,
+                Err(pattern) => {
+                    bare_diag_line(diag, prolog, variables, &format!("no match: {pattern}"));
+                    status = EXECUTION_FAILURE;
+                    deleted_names.insert(var_name.to_string());
+                    continue;
+                }
+            }
+        } else {
+            // GNU variables.c:3415-3422 assign_in_env (implicitarray): a
+            // scalar `name=value` operand whose target is already an array
+            // binds through bind_array_variable(lhs, 0, rhs) — element/key
+            // "0" is overwritten and every other element survives
+            // (array19.sub: `declare -l foo="$value"` keeps [1]/[2]).
+            if !append && !compound_marked {
+                let current = variables.get(var_name).cloned().unwrap_or_default();
+                if variables.is_marked(ASSOC_VARS, var_name) {
+                    let element = format!("([0]={})", quote_assoc_storage_value(value));
+                    append_assoc_value(&current, &element, integer, variables)
+                } else {
+                    let is_indexed = variables.is_marked(ARRAY_VARS, var_name)
+                        || current.starts_with(STORAGE_WORD_PREFIX)
+                        || (current.starts_with('(') && current.ends_with(')'));
+                    if is_indexed {
+                        let mut entries = indexed_array_entries(&current);
+                        entries.insert(0, value.to_string());
+                        format_indexed_array_storage(entries)
+                    } else {
+                        value.to_string()
+                    }
+                }
+            } else {
+                value.to_string()
+            }
+        };
+        // GNU variables.c:3341-3358 bind_variable_value: an ASS_NAMEREF
+        // assignment runs check_selfref on the RESULTING cell, so
+        // `typeset -n ref=re ref+=f` -- whose operand-level check on "f"
+        // passed (declare.def:562) -- is still rejected once the append
+        // produces "ref". Global scope errors and keeps the old cell;
+        // function scope warns and keeps it (nameref15.sub).
+        if nameref
+            && append
+            && (value == var_name
+                || declare_indexed_element(&value).is_some_and(|(base, _)| base == var_name))
+        {
+            // The two arms differ in shape (declare.def:562-573):
+            // function scope warns through error.c's unqualified
+            // `warning:` voice; global scope errors with the variable
+            // name but no builtin name. Both keep the single trailing
+            // newline the old `write!` carried.
+            let text = if in_function {
+                format!("warning: {var_name}: circular name reference")
+            } else {
+                format!("{var_name}: nameref variable self references not allowed")
+            };
+            bare_diag_line(diag, prolog, variables, &text);
+            status = EXECUTION_FAILURE;
+            continue;
+        }
+        // rubash#1400: whole-variable binds convert through the
+        // variable's own case attribute too (`declare -u s; declare
+        // s=abc` stores ABC; compound values convert per element,
+        // assoc keys never fold — rubash#1398).
+        let value = declare_case_convert_storage(&value, compound_operand, variables, var_name);
+        variables.insert(var_name.to_string(), value.clone());
+        // rubash#3097: the funnel below reads this binding through
+        // locale.rs's stored_scalar_value, which judges array-ness
+        // from the variable's attribute bits — the same bits every
+        // other reader (scalar_parameter_value included) consults.
+        // A compound operand's ARRAY/ASSOC bit, however, was only set
+        // by the attribute pass AFTER this bind (and by the mark that
+        // used to sit below the warning), so the funnel read the raw
+        // storage render (`\x1d([0]="...")`, `(([0]=...))`) instead of
+        // the scalar projection GNU's get_string_value hands
+        // sv_locale (variables.c:2495). Align the bits with the bind
+        // result BEFORE the funnel reads it — the exact state the
+        // attribute pass would leave — and the warning names element
+        // 0 / the "0" key, or takes the silent reset path when an
+        // assoc bind has no "0" key.
+        if compound_operand {
+            if assoc || variables.is_marked(ASSOC_VARS, var_name) {
+                mark_typed(variables, ASSOC_VARS, var_name);
+            } else {
+                mark_typed(variables, ARRAY_VARS, var_name);
+            }
+        } else if array && value.starts_with(STORAGE_WORD_PREFIX) {
+            mark_typed(variables, ARRAY_VARS, var_name);
+        } else if assoc && value.starts_with('(') && value.ends_with(')') {
+            mark_typed(variables, ASSOC_VARS, var_name);
+        }
+        // rubash#1531: this path writes VarTable directly, bypassing
+        // the assignment funnel (the BASH_COMPAT hook above exists for
+        // the same reason), so fire the process-env mirror explicitly:
+        // GNU bind_variable runs sv_locale on a declare bind, and a
+        // plain `declare LC_COLLATE=de_DE.UTF-8` must re-collate at
+        // once. The sync is gated (#916), so ordinary names pay only
+        // the name check.
+        sync_shell_assignment_process_env(variables, var_name, &value);
+        // rubash#1692: same sv_locale bind hook as the nameref path
+        // above (variables.c:6272).
+        if let Some(warning) = crate::locale::locale_assignment_warning(var_name, variables) {
+            bare_diag_line(diag, prolog, variables, &format!("warning: {warning}"));
+        }
+        locale_funnel.note(current_index, compound_operand);
+        unmark_typed(variables, DECLARED_UNSET_VARS, var_name);
+        // GNU err_badarraysub + any_failed (arrayfunc.c:804-809,
+        // rubash#635): an out-of-range subscript stops the whole
+        // declaration here; the partial store above stays, and the
+        // recorded word travels up for the fatal diagnostic.
+        if oob_word.is_some() {
+            return Ok(EXECUTION_FAILURE);
+        }
+    }
+    if binds_bashcompat {
+        // GNU sv_shcompat error shape has no command prefix
+        // (`script: line N: BASH_COMPAT: 99: ...`, verified oracle — even
+        // via `export`/`declare`); the operand itself still binds and the
+        // declare status is unaffected.
+        if let Err(diagnostic) =
+            crate::builtins::shopt::sync_compat_flags_from_bash_compat(variables)
+        {
+            bare_diag_line(diag, prolog, variables, &diagnostic);
+        }
+    }
+    Ok(status)
+}
+
+/// GNU variables.c bind_variable_value: binding a value runs it
+/// through the variable's OWN att_uppercase / att_lowercase /
+/// att_capitalize. A declare operand therefore converts when the
+/// case attribute was set by an earlier command (`declare -uA h`
+/// then `declare h[k]=abc` stores ABC, rubash#1400); attributes set
+/// by THIS command are applied by the attrs.rs pass after the bind,
+/// so they are deliberately not consulted here.
+fn declare_case_convert(
+    value: &str,
+    variables: &crate::shell::var_table::VarTable,
+    name: &str,
+) -> String {
+    if variables.is_marked(UPPERCASE_VARS, name) {
+        value.to_uppercase()
+    } else if variables.is_marked(LOWERCASE_VARS, name) {
+        value.to_lowercase()
+    } else if variables.is_marked(CAPCASE_VARS, name) {
+        let mut chars = value.chars();
+        match chars.next() {
+            Some(first) => {
+                first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase()
+            }
+            None => value.to_string(),
+        }
+    } else {
+        value.to_string()
+    }
+}
+
+fn declare_has_case_marks(variables: &crate::shell::var_table::VarTable, name: &str) -> bool {
+    variables.is_marked(UPPERCASE_VARS, name)
+        || variables.is_marked(LOWERCASE_VARS, name)
+        || variables.is_marked(CAPCASE_VARS, name)
+}
+
+/// Whole-variable form of [`declare_case_convert`]: the chain's
+/// result is a storage string for array/assoc targets, where only
+/// element VALUES convert (assoc keys never fold, rubash#1398), and
+/// a plain scalar for scalar targets.
+fn declare_case_convert_storage(
+    value: &str,
+    compound_operand: bool,
+    variables: &crate::shell::var_table::VarTable,
+    name: &str,
+) -> String {
+    if !declare_has_case_marks(variables, name) {
+        return value.to_string();
+    }
+    if variables.is_marked(ASSOC_VARS, name) {
+        let storage = value.strip_prefix(STORAGE_WORD_PREFIX).unwrap_or(value);
+        if storage.starts_with('(') {
+            let entries = parse_assoc_words(storage)
+                .into_iter()
+                .map(|(key, element)| (key, declare_case_convert(&element, variables, name)))
+                .collect::<Vec<_>>();
+            let rendered = format_assoc_storage(entries);
+            return if value.starts_with(STORAGE_WORD_PREFIX) {
+                format!("{STORAGE_WORD_PREFIX}{rendered}")
+            } else {
+                rendered
+            };
+        }
+        return declare_case_convert(value, variables, name);
+    }
+    if compound_operand
+        || variables.is_marked(ARRAY_VARS, name)
+        || value.starts_with(STORAGE_WORD_PREFIX)
+    {
+        let entries = indexed_array_entries(value);
+        if !entries.is_empty() || value.starts_with('(') {
+            let converted = entries
+                .into_iter()
+                .map(|(index, element)| (index, declare_case_convert(&element, variables, name)))
+                .collect::<std::collections::BTreeMap<_, _>>();
+            return format_indexed_array_storage(converted);
+        }
+    }
+    declare_case_convert(value, variables, name)
+}
+
+/// GNU variables.c:3320 bind_variable -> assign_array_element: a scalar RHS
+/// assigned to an existing array/assoc binds subscript 0 (assoc key "0")
+/// instead of replacing the variable (array19.sub: `declare -l foo="$value"`
+/// on foo=(one two three) yields [0]="abcde" [1]="two" [2]="three"; on an
+/// assoc, `declare A=scalar` stores ["0"]="scalar" keeping existing keys).
+/// Returns None when VAR_NAME is not an existing array/assoc.
+fn scalar_assign_to_array(
+    var_name: &str,
+    scalar: &str,
+    variables: &crate::shell::var_table::VarTable,
+) -> Option<String> {
+    let current = variables.get(var_name)?;
+    if variables.is_marked(ASSOC_VARS, var_name) {
+        let mut entries = parse_assoc_words(current);
+        match entries.iter_mut().find(|(key, _)| key == "0") {
+            Some((_, existing)) => *existing = scalar.to_string(),
+            None => entries.insert(0, ("0".to_string(), scalar.to_string())),
+        }
+        Some(format_assoc_storage(entries))
+    } else if variables.is_marked(ARRAY_VARS, var_name)
+        || current.starts_with('')
+        || (current.starts_with('(') && current.ends_with(')'))
+    {
+        let mut entries = indexed_array_entries(current);
+        entries.insert(0, scalar.to_string());
+        Some(format_indexed_array_storage(entries))
+    } else {
+        None
+    }
+}
+
+/// Return the first bare (non `[key]=value`) element of an associative array
+/// compound assignment value, or `None` if every element uses a subscript.
+fn assoc_bare_element(value: &str) -> Option<String> {
+    let inner = value.strip_prefix('(').and_then(|v| v.strip_suffix(')'))?;
+    // DECLARE-path mode decision (GNU declare.def routes the compound
+    // operand with W_ASSIGNMENT words, unlike the plain-assignment path in
+    // executor/assignment_helpers.rs): a first word that is a COMPLETE
+    // [key]=value token selects the strict form where a bare word is
+    // rejected (assoc-kv3 probe D3: declare -A a=([k]=v a b) reports 'a');
+    // any other first word ([x] -- no '=' -- or a=b) puts the whole list
+    // into alternating literal key/value pairs (probe D1: declare -A
+    // a=([x] one [y] two) stores keys "[x]"/"[y]"; D2: a=(a=b c=d) stores
+    // [a=b]="c=d").
+    let tokens: Vec<String> = parse_array_tokens(inner);
+    let strict_mode = tokens
+        .first()
+        .map(|token| {
+            token.starts_with('[')
+                && token.contains('=')
+                && token
+                    .trim_end_matches(']')
+                    .rfind(']')
+                    .map_or(false, |i| token.find('=').map_or(false, |e| i < e))
+        })
+        .unwrap_or(false);
+    if !strict_mode {
+        return None;
+    }
+    for token in &tokens {
+        let subscript_end = token.trim_end_matches(']').rfind(']');
+        let eq = token.find('=');
+        let is_subscript = token.starts_with('[')
+            && token.contains('=')
+            && subscript_end.map_or(false, |i| eq.map_or(false, |e| i < e));
+        if !is_subscript {
+            return Some(token.clone());
+        }
+    }
+    None
+}
+
+/// Recover the `name[subscript]` word GNU's err_badarraysub prints
+/// (error.c:440-443: the lhs string assign_array_element received — the
+/// operand AS WRITTEN, before the executor's subscript pass replaced the
+/// subscript with its value). `operand` is the rewritten operand the
+/// builtin is failing on; `written_hints` maps its `name[subscript]`
+/// prefix to the written operand (see WrittenOperandHints). Without a
+/// hint — the direct builtin entry, where no rewrite ran — the operand
+/// itself is the written form. Either way the reported word is the
+/// operand's `name[...]` prefix: the append `+` and the `=value` tail
+/// are not part of it (`a[abc]+=x` reports `a[abc]`).
+fn written_element_word(operand: &str, written_hints: &mut super::WrittenOperandHints) -> String {
+    let key = super::element_word_prefix(operand).unwrap_or_else(|| operand.to_string());
+    let written = written_hints
+        .get_mut(&key)
+        .and_then(|queue| queue.pop_front());
+    let text = written.as_deref().unwrap_or(operand);
+    super::element_word_prefix(text).unwrap_or_else(|| {
+        // Defensive fallback for a malformed span: strip the `=value`
+        // tail and an append `+`.
+        let head = text.split('=').next().unwrap_or(text);
+        head.strip_suffix('+').unwrap_or(head).to_string()
+    })
+}
+
+fn declare_indexed_element(name: &str) -> Option<(&str, &str)> {
+    let (base, subscript) = name.split_once('[')?;
+    let subscript = subscript.strip_suffix(']')?;
+    if base.is_empty() || subscript.contains('[') {
+        return None;
+    }
+    Some((base, subscript))
+}
+
+/// GNU arrayfunc.c:557 expand_compound_array_assignment: when declare receives
+/// a parenthesized value like `(${d[@]})`, it re-parses and expands the inner
+/// words. This function handles the common case of `${var[@]}` / `${var[*]}`
+/// in compound array assignment values (array.tests:115).
+fn expand_compound_array_value(
+    value: &str,
+    variables: &crate::shell::var_table::VarTable,
+) -> String {
+    let inner = value
+        .strip_prefix('(')
+        .and_then(|v| v.strip_suffix(')'))
+        .unwrap_or(value);
+
+    let mut result = String::from("(");
+    let mut remaining = &inner[..];
+
+    while let Some(dollar_pos) = remaining.find("${") {
+        // GNU arrayfunc.c:581 parse_string_to_word_list re-parses the
+        // compound value, then expand_words_no_vars (arrayfunc.c:610)
+        // expands each word. "${d[@]}" in double quotes produces multiple
+        // W_QUOTED words (one per element), while "${d[*]}" produces one.
+        // Strip surrounding double quotes when ${d[@]} expands to multiple
+        // elements so append_array_value sees them as separate words.
+        let prefix = &remaining[..dollar_pos];
+        let strip_closing_dq = prefix.ends_with('"');
+
+        let expr_start = dollar_pos;
+
+        // Find the matching closing brace
+        let mut depth = 1;
+        let mut i = expr_start + 2;
+        while i < remaining.len() && depth > 0 {
+            let byte = remaining.as_bytes()[i];
+            if byte == b'{' {
+                depth += 1;
+            } else if byte == b'}' {
+                depth -= 1;
+            }
+            i += 1;
+        }
+
+        let expr = &remaining[expr_start..i.min(remaining.len())];
+        remaining = &remaining[i.min(remaining.len())..];
+
+        // Try to expand as array parameter
+        if let Some(expanded) = expand_array_parameter(expr, variables) {
+            // If the expansion produced \x10-tagged elements (i.e. ${d[@]}),
+            // strip the surrounding double quotes so the elements are
+            // separate words (GNU: "${d[@]}" -> multiple words).
+            if expanded.starts_with(ARRAY_FIELD_SPLIT_MARKER) && strip_closing_dq {
+                result.push_str(&prefix[..prefix.len() - 1]);
+            } else {
+                result.push_str(prefix);
+            }
+            if expanded.starts_with(ARRAY_FIELD_SPLIT_MARKER) && remaining.starts_with('"') {
+                remaining = &remaining[1..];
+            }
+            result.push_str(&expanded);
+        } else {
+            result.push_str(prefix);
+            result.push_str(expr);
+        }
+    }
+
+    // Append the rest
+    result.push_str(remaining);
+    result.push(')');
+
+    // Restore marker characters (array.tests:408 declare -a x=(\$0)
+    // stores \x1f0 literally without this restore).
+    crate::executor::markers::restore_bare_sentinels(
+        &result
+            .replace(DATA_DOLLAR, "$")
+            .replace(crate::executor::markers::DATA_BACKTICK, "`")
+            .replace(crate::executor::markers::DATA_SQUOTE, "'")
+            .replace(crate::executor::markers::DATA_BACKSLASH, "\\"),
+        // Registry-zone sentinels: a typed `$'\uE010'`/`$'\uE011'`
+        // arrives E400-escaped and is user data — only BARE carriers
+        // restore (rubash#840).
+        &[
+            (crate::executor::markers::ANSI_C_QUOTE_MARKER, "'"),
+            (crate::executor::markers::ANSI_C_DQUOTE_MARKER, "\""),
+        ],
+    )
+}
+
+/// Expand `${var[@]}` or `${var[*]}` using the variables HashMap.
+/// For `[@]`, returns \x10-tagged elements (one per array member, matching
+/// GNU's multi-word expansion of "${d[@]}" in double quotes).
+/// For `[*]`, returns a single quoted element (all members joined).
+fn expand_array_parameter(
+    expr: &str,
+    variables: &crate::shell::var_table::VarTable,
+) -> Option<String> {
+    let inner = expr.strip_prefix("${")?.strip_suffix("}")?;
+
+    // Look for [@] or [*] suffix
+    let (name, is_at) = if let Some(at) = inner.rfind("[@]") {
+        (&inner[..at], true)
+    } else if let Some(star) = inner.rfind("[*]") {
+        (&inner[..star], false)
+    } else {
+        return None;
+    };
+
+    // Look up the array variable
+    let array_value = variables.get(name)?;
+
+    // Parse the array elements
+    let entries = indexed_array_entries(array_value);
+
+    // Format the expanded elements. For [@], each element is a separate
+    // word tagged with ARRAY_FIELD_SPLIT_MARKER so append_array_value treats
+    // them as distinct elements (GNU: "${d[@]}" -> N words). For [*], all
+    // elements are joined into one quoted word (GNU: "${d[*]}" -> 1 word).
+    if is_at {
+        let elements: Vec<String> = entries
+            .values()
+            .map(|v| format!("{ARRAY_FIELD_SPLIT_MARKER}'{}'", v.replace('\'', "\\'")))
+            .collect();
+        Some(elements.join(" "))
+    } else {
+        let joined = entries.values().cloned().collect::<Vec<_>>().join(" ");
+        Some(format!("'{}'", joined.replace('\'', "\\'")))
+    }
+}

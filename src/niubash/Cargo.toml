@@ -1,0 +1,70 @@
+[package]
+name = "niubash"
+version = "1.5.0"
+edition = "2021"
+rust-version = "1.95"
+license = "MIT"
+authors = ["unixwin team <arookieofc@gmail.com>"]
+description = "AI-native bash-compatible shell for Windows, built on rubash + winuxcmd"
+readme = "README.md"
+homepage = "https://github.com/unixwin/niubash"
+repository = "https://github.com/unixwin/niubash"
+
+[[bin]]
+name = "niu"
+path = "src/main.rs"
+
+# niubash#464: the forwarding shim is niu's own binary now (it used to be
+# built from the rubash repository and borrowed through the packager).
+# scripts/package-release.ps1 builds it from this tree and stages one
+# canonical copy as winuxcmd\usr\bin\niu-shim.exe; `niu --relink-shells`
+# copies that payload to a bash/sh face wherever a hardlink cannot exist.
+[[bin]]
+name = "bash"
+path = "src/bin/bash.rs"
+
+[dependencies]
+niubash-runtime = { path = "runtime", version = "1.5.0" }
+rubash = { version = "1.5.0", path = "../rubash" }
+# niubash#775 / ruline#8: the full GNU readline 8.x C ABI, implemented by
+# ruline. Linked into niu so `enable -f` loadable builtins resolve `rl_*` /
+# `history_*` against this executable; build.rs anchors every exported symbol
+# in scripts/readline-abi-exports.txt. The lib name is `readline`
+# (readline_abi is the package name).
+readline-abi = { path = "../ruline/readline-abi" }
+anyhow = "1.0"
+env_logger = "0.10"
+log = "0.4"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# niubash#311: self-update verifies the downloaded installer against the
+# release's published .sha256 sidecar before executing it (fail-closed).
+sha2 = "0.10"
+
+[target.'cfg(windows)'.dependencies]
+# Win32_System_Pipes/Win32_Security/Win32_Storage_FileSystem/Win32_System_Console:
+# the niubash#245 piped-stdout pump (CreatePipe/SetStdHandle/GetFileType).
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Networking_WinHttp", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_System_Console", "Win32_System_Pipes", "Win32_Storage_FileSystem", "Win32_Security"] }
+
+# rubash#827: build.rs stamps a `-dirty-<8 hex>` digest of the uncommitted
+# rubash diff into the version banner (#488: a bare HEAD hash does not
+# guarantee content). Same sha2 the crate already carries; build scripts
+# cannot use the runtime dependency.
+[build-dependencies]
+sha2 = "0.10"
+
+[dev-dependencies]
+# Interactive-mode regression harness (tests/interactive.rs): pseudo-terminal
+# driver. Originally evaluated expectrl 0.9 (pexpect port), but its Windows
+# backend (conpty 0.5.1) failed to attach the child to the pseudo console on
+# Windows 10 19044: the child inherited the parent console instead and the
+# pty streams stayed empty (reproduced with a plain `cmd /C echo` control).
+# portable-pty 0.9 drives ConPTY correctly on the same host, so the driver
+# is built on it for every case, on both Windows and Unix.
+portable-pty = "0.9"
+# tests/repl_command.rs reproduces rubash's GNU login-shell fallback
+# (getpwuid(getuid())->pw_shell) when SHELL is missing, so the Unix
+# expectation is the host's passwd shell rather than a hardcoded path or the
+# shell binary itself (rubash#1143).
+libc = "0.2"
+

@@ -1,0 +1,9233 @@
+//! Script drivers shared by the binary entry points and the in-process
+//! `${THIS_SH} ./x.sub` child path (executor/external_finish.rs).
+//!
+//! GNU Bash runs a script through a line-oriented reader that calls
+//! bashhist.c pre_process_line on each syntactically complete group:
+//! history expansion first, then history recording, then parse+execute.
+//! The in-process THIS_SH child must take the same path, or `set -H` /
+//! `set -o histexpand` scripts lose `!!`/`!str`/word-designator expansion
+//! exactly like a spawned rubash.exe would not.
+
+use std::borrow::Cow;
+use std::cell::RefCell;
+use std::fs;
+use std::io;
+use std::rc::Rc;
+
+use crate::executor::{ExecuteError, Executor};
+use crate::history::SessionHistory;
+use crate::history_expand::{HistChars, HistCtx};
+use crate::lexer::{
+    expand_aliases_in_source, tokenize, tokenize_with_initial_posix, AliasLookup, Token, TokenKind,
+};
+use crate::parser::CommandNode;
+
+/// bashhist.c: does this script turn history on? Detects the long-form
+/// option (set -o history / -o histexpand) and the short flag cluster
+/// containing -H, which is how the histexp tests enable expansion.
+///
+/// The scan is a whitelist admission like script_uses_aliases: it may
+/// over-admit (a `set -o history` inside a string takes the grouped
+/// driver too — slower, never wrong), but it must not under-admit.
+/// GNU's reader is incremental, so a `set` in ANY command position —
+/// line start, or after `;`/`&`/`|`/`(` — enables history for every
+/// later line. The old line-initial-only scan missed
+/// `shopt -s histverify; set -o history; set -H` (rubash#1072): the
+/// script fell to the whole-file fast path, which does no history
+/// processing at all, so `!!` stayed literal and histverify was moot.
+pub fn script_uses_history(contents: &str) -> bool {
+    contents.lines().any(line_enables_history)
+}
+
+/// rubash#2960: over-admitting routing scan in the
+/// `script_uses_history` shape — the script may leave `onecmd`
+/// standing (`set -t`, a bundled `-…t…`, `set -o onecmd`), or it
+/// may run a `.`/`source`/`eval` unit whose body sets the flag
+/// where a text scan cannot see it. Such scripts take the grouped
+/// reader, whose per-unit consultation (Executor::onecmd_reader_
+/// stop) adjudicates the live state after every unit; the
+/// whole-file fast path has no unit boundary to consult at. A false
+/// positive only costs the incremental driver; a missed vector
+/// (the flag smuggled through a variable, `set $flags`) leaves the
+/// run on the fast path with the flag unhonored — the same
+/// admitted-miss class as the history scan's.
+pub fn script_may_set_onecmd(contents: &str) -> bool {
+    contents.lines().any(line_may_set_onecmd)
+}
+
+fn line_may_set_onecmd(line: &str) -> bool {
+    // `set -o onecmd` and `set -oonecmd` both carry the option name
+    // verbatim; so does a comment or string mentioning it — the
+    // scan only routes, so the substring is enough.
+    if line.contains("onecmd") {
+        return true;
+    }
+    let bytes = line.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        let boundary = i == 0
+            || matches!(
+                bytes[i - 1],
+                b' ' | b'\t' | b';' | b'&' | b'|' | b'(' | b'{'
+            );
+        if boundary {
+            // A `.` in command position sources a file whose body
+            // can set the flag invisibly to this scan.
+            if bytes[i] == b'.' && dot_is_command_position(bytes, i) {
+                return true;
+            }
+            for word in ["set", "eval", "source"] {
+                let w = word.as_bytes();
+                if bytes.len() - i >= w.len()
+                    && &bytes[i..i + w.len()] == w
+                    && (i + w.len() == bytes.len()
+                        || matches!(bytes[i + w.len()], b' ' | b'\t' | b';' | b'&' | b'|'))
+                {
+                    // An eval/source body can set the flag where the
+                    // scan cannot see it; the reader consultation
+                    // after their unit is what GNU adjudicates.
+                    if word != "set" {
+                        return true;
+                    }
+                    if set_args_may_set_onecmd(&line[i + w.len()..]) {
+                        return true;
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    false
+}
+
+/// The `.` at `i` is a sourcing command (not a path or argument
+/// dot) when, walking back over blanks, it sits at the start of
+/// the line or right behind a command separator.
+fn dot_is_command_position(bytes: &[u8], i: usize) -> bool {
+    if i + 1 < bytes.len() && !matches!(bytes[i + 1], b' ' | b'\t') {
+        return false;
+    }
+    let mut j = i;
+    while j > 0 && matches!(bytes[j - 1], b' ' | b'\t') {
+        j -= 1;
+    }
+    j == 0 || matches!(bytes[j - 1], b';' | b'&' | b'|' | b'(' | b'{')
+}
+
+fn set_args_may_set_onecmd(args: &str) -> bool {
+    for token in args.split(|c: char| c.is_whitespace() || matches!(c, ';' | '&' | '|')) {
+        if token.len() >= 2 && token.starts_with('-') && !token.starts_with("--") {
+            // A flag bundle carrying `t` in any position counts:
+            // GNU's apply loop walks the bundle letter by letter
+            // (builtins/set.def:726-766), and an `o` takes its
+            // option name from the NEXT WORD, never from the bundle
+            // remainder (set.def:737-762) — after listing options
+            // (no next word) or setting the named option it
+            // CONTINUES with the next letter, so `set -ot` sets
+            // onecmd AND lists the option table (verified against
+            // GNU bash 5.3.20: `FLAGS=htBc`, table printed), the
+            // same letter-by-letter rule the verbose scanner
+            // already uses for `set -ov`. The old `split('o')`
+            // truncation assumed the rest was swallowed as the
+            // option name; it is not. A false positive (an `o`
+            // whose next word is an invalid option name aborts
+            // before the `t`, or a bundle the validation pass
+            // rejects) only costs the incremental driver.
+            if token[1..].contains('t') {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// rubash#2773: over-admitting routing scan in the
+/// `script_may_set_onecmd` shape — the text may toggle `verbose`
+/// mid-read (`set -v`/`set +v`, a bundled `-…v…`/`+…v…`,
+/// `set -o/+o verbose`), or it may run a `.`/`source`/`eval` unit
+/// whose body toggles it where a text scan cannot see. GNU's reader
+/// echoes each input line at its read moment under the flag state
+/// THEN in effect (flags.c:284 echo_input_at_read = verbose_flag;
+/// parse.y:2712), so such texts take the grouped reader, whose
+/// per-line read point samples the live state; the whole-file fast
+/// path parses every line before any of them executes and cannot
+/// reproduce a mid-text toggle. A false positive only costs the
+/// incremental driver; the scan never decides semantics itself.
+pub fn script_may_toggle_verbose(contents: &str) -> bool {
+    contents.lines().any(line_may_toggle_verbose)
+}
+
+fn line_may_toggle_verbose(line: &str) -> bool {
+    // `set -o verbose` and `set -overbose` both carry the option
+    // name verbatim; so does a comment or string mentioning it —
+    // the scan only routes, so the substring is enough.
+    if line.contains("verbose") {
+        return true;
+    }
+    let bytes = line.as_bytes();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        let boundary = i == 0
+            || matches!(
+                bytes[i - 1],
+                b' ' | b'\t' | b';' | b'&' | b'|' | b'(' | b'{'
+            );
+        if boundary {
+            // A `.` in command position sources a file whose body
+            // can toggle the flag invisibly to this scan.
+            if bytes[i] == b'.' && dot_is_command_position(bytes, i) {
+                return true;
+            }
+            for word in ["set", "eval", "source"] {
+                let w = word.as_bytes();
+                if bytes.len() - i >= w.len()
+                    && &bytes[i..i + w.len()] == w
+                    && (i + w.len() == bytes.len()
+                        || matches!(bytes[i + w.len()], b' ' | b'\t' | b';' | b'&' | b'|'))
+                {
+                    // An eval/source body can toggle the flag where
+                    // the scan cannot see it; the reader's per-line
+                    // sampling after their unit is what GNU
+                    // adjudicates.
+                    if word != "set" {
+                        return true;
+                    }
+                    if set_args_may_toggle_verbose(&line[i + w.len()..]) {
+                        return true;
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    false
+}
+
+fn set_args_may_toggle_verbose(args: &str) -> bool {
+    for token in args.split(|c: char| c.is_whitespace() || matches!(c, ';' | '&' | '|')) {
+        if token.len() >= 2
+            && (token.starts_with('-') || token.starts_with('+'))
+            && !token.starts_with("--")
+            && !token.starts_with("++")
+        {
+            // A flag bundle carrying `v` in any position counts:
+            // GNU's set parser works the bundle letter by letter,
+            // and an `o` whose remainder is not an option name does
+            // not swallow the rest (verified against GNU bash
+            // 5.3.20: `set -ov` prints the option table AND sets
+            // verbose, `$-` = hvBc). A false positive (the `-ovi`
+            // name form) only costs the incremental driver.
+            if token[1..].contains('v') {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn line_enables_history(line: &str) -> bool {
+    let bytes = line.as_bytes();
+    let mut i = 0usize;
+    while i + 3 <= bytes.len() {
+        if &bytes[i..i + 3] == b"set"
+            && (i == 0
+                || matches!(
+                    bytes[i - 1],
+                    b' ' | b'\t' | b';' | b'&' | b'|' | b'(' | b'{'
+                ))
+            && (i + 3 == bytes.len() || matches!(bytes[i + 3], b' ' | b'\t'))
+        {
+            if set_args_enable_history(&line[i + 3..]) {
+                return true;
+            }
+            i += 3;
+        } else {
+            i += 1;
+        }
+    }
+    false
+}
+
+fn set_args_enable_history(args: &str) -> bool {
+    let mut expecting_option = false;
+    for token in args.split(|c: char| c.is_whitespace() || matches!(c, ';' | '&' | '|')) {
+        if token.is_empty() {
+            continue;
+        }
+        if expecting_option {
+            if token == "history" || token == "histexpand" {
+                return true;
+            }
+            expecting_option = false;
+            continue;
+        }
+        if token == "-o" {
+            expecting_option = true;
+        } else if token.len() >= 2
+            && token.starts_with('-')
+            && !token.starts_with("--")
+            && token[1..].contains('H')
+        {
+            return true;
+        }
+    }
+    false
+}
+
+/// Does this script turn alias expansion on? `shopt -s expand_aliases` is
+/// a runtime command, but its result must be visible to the READER of the
+/// following lines (GNU reads and executes one complete command at a
+/// time), so scripts mentioning the option take the grouped driver where
+/// each group is lexed against the alias table live at that point.
+/// `set -o posix` likewise flips expand_aliases at runtime (general.c
+/// posix_initialize), so it must take the same driver — otherwise
+/// `$(...)` bodies are extracted before the alias table applies
+/// (comsub5.sub).
+///
+/// `alias_live_at_start` covers the same state established BEFORE the
+/// reader starts — CLI `-o posix` / `--posix` (shell.c:1853
+/// init_noninteractive: `expand_aliases = posixly_correct`, so a
+/// non-interactive posix shell expands aliases from the first line) or
+/// `-O expand_aliases`. GNU's reader is always incremental
+/// (evalstring.c parse_and_execute); the whole-file `run_source` parse is
+/// a rubash fast path admissible only while parse-time alias state is
+/// inert for the entire file (rubash#414: `-o posix` + `alias for=echo`
+/// let the fast path miss GNU's parse-time reserved-word decision).
+pub fn script_uses_aliases(contents: &str, alias_live_at_start: bool) -> bool {
+    alias_live_at_start
+        || contents.contains("expand_aliases")
+        || contents.contains("set -o posix")
+        || script_runs_foreign_text(contents)
+}
+
+/// Textual markers for commands that execute FOREIGN text: `. file`,
+/// `source file`, `eval string`. GNU's reader is incremental —
+/// builtins/evalstring.c:359 `while (*(bash_input.location.string) ||
+/// parser_expanding_alias ())` parses one complete command only after the
+/// previous commands EXECUTED — and the alias gate is consulted live on
+/// every token (parse.y:5759 `if (expand_aliases && quoted == 0)`;
+/// `shopt -s expand_aliases` flips it at runtime through
+/// builtins/shopt.def:630 shopt_set_expaliases). So foreign text sourced
+/// or eval'd mid-script can open alias expansion for the LATER commands of
+/// THIS file (rubash#2480: modernish's adj/std.sh:121 runs `shopt -s
+/// expand_aliases` while bin/modernish is being sourced, and the script's
+/// own text never mentions the option). A whole-file upfront parse cannot
+/// reproduce that: it would hand those later commands to the executor's
+/// word-level alias fallback, which flattens alias-introduced reserved
+/// words into plain words — `{ { { _Msh_loop ...` became one simple
+/// command with command name `{` (the modernish LOOP/DO/DONE failure).
+/// Refuse the fast path for every script that can pull in foreign text.
+/// Like the existing text scans this over-admits (a false positive only
+/// costs the grouped driver's speed, never semantics); a dynamically
+/// constructed command name still evades it — the same documented
+/// limitation `script_uses_runtime_parse_gates` carries.
+fn script_runs_foreign_text(contents: &str) -> bool {
+    contents.contains("eval")
+        || contents.contains("source")
+        // `.` as the source builtin: always followed by whitespace before
+        // its operand (`.  file`, `.\tfile`, `.` at end of a CRLF/LF line).
+        || contents.contains(". ")
+        || contents.contains(".\t")
+        || contents.contains(".\n")
+        || contents.contains(".\r")
+}
+
+/// True when the script may flip a parse-time gate at runtime, so the
+/// whole-file `run_source` fast path cannot parse it soundly and it must
+/// take the grouped driver (which lexes each command group only after all
+/// previous groups executed).
+///
+/// GNU shell.c runs a script file through an incremental reader: every
+/// complete command is parsed only after the previous commands EXECUTED
+/// (reader_loop -> parse_and_execute), so a runtime `shopt -s extglob`
+/// — via eval, a function body, or a sourced file — opens the parse-time
+/// extglob gate for every LATER command (builtins/shopt.def
+/// extglob_flag, propagated by reset_parser parse.y:3502; rubash models
+/// the gate as PARSE_EXTENDED_GLOB, lexer/mod.rs). A `-c` string is one
+/// parse_and_execute call and keeps the whole-string upfront parse, as
+/// does eval's own string — only the script-file reader is incremental,
+/// so only that path needs the grouped driver. The gate flips at runtime
+/// solely through the shopt builtin with name == "extglob"
+/// (builtins/shopt.rs set_option); any other shopt use is inert for the
+/// parser, and the textual heuristic only over-admits (slower, never
+/// wrong) — the same whitelist-admission shape as script_uses_aliases
+/// (rubash#414). A dynamically constructed option name
+/// (`shopt -s $x`) evades the text scan; GNU would honor it, this stays a
+/// documented limitation of the fast path.
+/// Verified: `shopt -s extglob` before a `case` with `+(...)` arms parses
+/// under both drivers; `eval 'shopt -s extglob'` followed by such a
+/// `case` parses only under the grouped driver (rubash#1093).
+/// Admission is narrowed to extglob flips: unrelated shopt options
+/// (e.g. failglob) must keep the fast path until grouped-driver
+/// line-abandonment parity lands (rubash#1186).
+pub fn script_uses_runtime_parse_gates(contents: &str) -> bool {
+    contents.contains("shopt") && contents.contains("extglob")
+}
+
+/// GNU parse.y alias_expand_token + push_string, run over the text of one
+/// command group. The lookup yields (value, AL_EXPANDNEXT); alias values
+/// store '$' as DATA_DOLLAR when the word carried it in data position.
+/// The `posix` flag selects read_token_word's reserved-word/alias order
+/// (parse.y:5751-5769): posix keeps reserved words as keywords, default
+/// mode lets an alias replace them (rubash#414).
+pub(crate) fn expand_group_aliases(executor: &Executor, source: &str) -> String {
+    if !executor.alias_expansion_enabled() || executor.shell_state.aliases.is_empty() {
+        return source.to_string();
+    }
+    let posix = executor.get_env("__RUBASH_POSIX_MODE").as_deref() == Some("1");
+    let lookup = move |word: &str| {
+        executor.shell_state.aliases.get(word).map(|alias| {
+            (
+                alias
+                    .value
+                    .replace(crate::executor::markers::DATA_DOLLAR, "$"),
+                alias.expand_next,
+            )
+        })
+    };
+    expand_aliases_in_source(source, &lookup as &AliasLookup<'_>, posix)
+}
+
+/// shell.c run_pending_command style driver for scripts with history on:
+/// gather each syntactically complete group (like the stdin driver), run
+/// history expansion over its lines, record the joined entry, then execute.
+///
+/// `redirect_cmd`, when present, is the invocation command whose output
+/// redirections apply to every executed group (`${THIS_SH} f >out` keeps
+/// the redirect for the child's lifetime, GNU execute_cmd.c:6139-6233);
+/// target files are prepared once by the caller, per-group injection uses
+/// the append form like trap_exec's compound handling.
+pub fn run_script_with_history(
+    executor: &mut Executor,
+    contents: &str,
+    redirect_cmd: Option<&CommandNode>,
+) -> i32 {
+    let session = Rc::new(RefCell::new(SessionHistory::new()));
+    run_script_with_history_in(executor, contents, session, redirect_cmd)
+}
+
+pub fn run_script_with_history_at_line_offset(
+    executor: &mut Executor,
+    contents: &str,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+) -> i32 {
+    run_script_with_history_at_line_offset_tracked(executor, contents, line_offset, redirect_cmd).0
+}
+
+/// Which top-level unwind ended a grouped run, as adjudicated
+/// where the run's stop bool is computed (in
+/// `run_script_grouped_at_line_offset`). The parse-error
+/// interaction is folded in there and only there: a jump riding
+/// a parse error is a reader discard (evalstring.c:585-601),
+/// not an exit, so it never reports as [`GroupedRunStop::ExitJump`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GroupedRunStop {
+    /// A real `exit`/FatalFunctionError jump ended the run —
+    /// the driver's `exit_jump && !parse_error` arm, or the
+    /// DE-06 stop-loop unwind that replaces the run's pending
+    /// classification with its own exit. GNU's parse_and_execute
+    /// catches EXITPROG at its setjmp and re-raises it into the
+    /// reader's top level (evalstring.c:396-403, :618-619).
+    ExitJump,
+    /// The errexit break ended the run: the terminal group's
+    /// status was nonzero with errexit in effect and the
+    /// inversion exemption did not apply — GNU's ERREXIT unwind
+    /// (evalstring.c:387-393, :618-619), which propagates even
+    /// on a failed parse status.
+    ErrexitBreak,
+}
+
+/// The grouped driver's run classification, as values: the
+/// terminal group's flag verdicts and which unwind (if any)
+/// ended the run. Computed in
+/// `run_script_grouped_at_line_offset`, alongside the stop
+/// bool it has always returned — this is the same
+/// classification, not a second derivation of it. The Session
+/// contract (api/session.rs) surfaces it to hosts so they stop
+/// re-deriving the classification from executor pendings
+/// (unixwin/niubash#863 GAP-1).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct GroupedRunClassification {
+    /// `take_parse_error()` at the terminal group: the group
+    /// ended on a parse error (a DISCARD class on its own —
+    /// evalstring.c:585-601 records the failure and breaks
+    /// without a jump).
+    pub parse_error: bool,
+    /// Q6 arm B: a REAL exit jump ended the terminal group —
+    /// `take_exit_jump_pending()` corrected by the executor's
+    /// errexit-unwind mark, so an errexit break (which also arms
+    /// the jump bookkeeping for its long-standing consumers) no
+    /// longer reads as a jump here. It can stand alongside
+    /// `parse_error`, in which case the jump did not count
+    /// (see `stop`).
+    pub exit_jump: bool,
+    /// GAP-2 (unixwin/niubash#863): the terminal group's raw
+    /// jump pending exactly as armed — either unwind class,
+    /// before the errexit correction [`GroupedRunClassification::exit_jump`]
+    /// applies. The raw carrier for consumers whose semantics
+    /// re-raise on ANY armed jump (GNU's reader re-raises both
+    /// EXITPROG and ERREXIT into its top level,
+    /// evalstring.c:396-403, :618-619 — the PROMPT_COMMAND
+    /// reader is the recorded consumer); the adjudicated fields
+    /// above remain the verdicts every other consumer reads.
+    pub exit_jump_raw: bool,
+    /// The terminal group's errexit verdict: status != 0 with
+    /// errexit in effect and `last_command_inverted()` false —
+    /// the `! CMD` exemption of execute_cmd.c:652-656
+    /// (CMD_IGNORE_RETURN) is already applied.
+    pub errexit_stop: bool,
+    /// `last_command_inverted()` at the terminal group (or at
+    /// input exhaustion): the run's last command carried the
+    /// `!` inversion.
+    pub last_inverted: bool,
+    /// Which unwind ended the run, if one did. A host driving
+    /// a live shell stops on `stop.is_some()` with the run's
+    /// returned status — the decomposition the folded stop
+    /// bool cannot express.
+    pub stop: Option<GroupedRunStop>,
+    /// Q6 arm B: the terminal group ended in a signal discard
+    /// (recorded by `run_source_impl` per unit, surfaced here).
+    /// The discard abandons the rest of the line (evalstring.c
+    /// DISCARD arm); it does not by itself decide the session —
+    /// the errexit verdict on the interrupted status does.
+    pub signal_discard: bool,
+    /// rubash#2794: the terminal group ended in an
+    /// expansion-error discard — a FATAL-class word-expansion
+    /// error (`${var:?}`, nounset unbound, bad @-transform) the
+    /// executor adjudicated an interactive DISCARD at its raise
+    /// point (subst.c:10416-10418's error branch) instead of
+    /// the fatal FORCE_EOF branch. Recorded per group like
+    /// `signal_discard`; like it, the discard abandons the
+    /// rest of the line without deciding the session — the
+    /// errexit verdict on status 1 does.
+    pub expansion_error_discard: bool,
+}
+
+/// Same grouped run as [`run_script_with_history_at_line_offset`], also
+/// reporting whether the run ended in a TOP-LEVEL UNWIND a caller driving a
+/// live shell must honor — the classification documented on
+/// [`run_script_with_history_in_tracked`]: a real `exit`/FatalFunctionError
+/// jump or the errexit break, with the parse-abort discard excluded.
+///
+/// niubash's interactive reader route feeds every `;`/`&&`/alias-bearing
+/// submission through this driver (niubash R1). The untracked wrapper drops
+/// the second half of the result, so the REPL saw only a plain status for
+/// `true; exit 3` and kept prompting after the engine had already unwound.
+/// GNU's jump_to_top_level ends reader_loop (evalstring.c:618-619); the host
+/// needs this flag to do the same.
+pub fn run_script_with_history_at_line_offset_tracked(
+    executor: &mut Executor,
+    contents: &str,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+) -> (i32, bool) {
+    let (status, exit_shell, _classification) = run_script_with_history_at_line_offset_classified(
+        executor,
+        contents,
+        line_offset,
+        redirect_cmd,
+    );
+    (status, exit_shell)
+}
+
+/// Same grouped run as
+/// [`run_script_with_history_at_line_offset_tracked`], additionally
+/// reporting the driver's own run classification
+/// ([`GroupedRunClassification`]): the terminal group's flag
+/// verdicts and which unwind ended the run, from the same
+/// computation that produces the stop bool.
+pub fn run_script_with_history_at_line_offset_classified(
+    executor: &mut Executor,
+    contents: &str,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+) -> (i32, bool, GroupedRunClassification) {
+    let session = Rc::new(RefCell::new(SessionHistory::new()));
+    // builtins/history.def operates on the shell's ONE history list. When
+    // the host owns that list through a HistoryProvider (niubash's REPL —
+    // execute_history's provider precedence already encodes it), a
+    // per-read scratch must not be installed over it: the batch's
+    // `history`/`fc` keep resolving to the provider and the list survives
+    // the read (unixwin/niubash#508). Without a provider the scratch
+    // installs like GNU's fresh per-shell list.
+    let install_session = !executor.has_history_provider();
+    run_script_grouped_at_line_offset(
+        executor,
+        contents,
+        session,
+        redirect_cmd,
+        line_offset,
+        install_session,
+    )
+}
+
+/// Same grouped driver with a host-owned session history (data plane).
+/// Hosts embedding rubash (niubash) preload the session from their own
+/// history file so `!!`/`!str` inside scripts expands against — and records
+/// back into — the live session list. Spawned and in-process THIS_SH
+/// children keep run_script_with_history's fresh list: GNU gives each new
+/// shell process an empty history list (`set -o history` in a script does
+/// not read $HISTFILE), so only the embedding host may share its session.
+pub fn run_script_with_history_in(
+    executor: &mut Executor,
+    contents: &str,
+    session: Rc<RefCell<SessionHistory>>,
+    redirect_cmd: Option<&CommandNode>,
+) -> i32 {
+    let (status, _exit_shell) =
+        run_script_with_history_in_tracked(executor, contents, session, redirect_cmd);
+    status
+}
+
+/// Same grouped driver, reporting whether the run ended in a TOP-LEVEL
+/// UNWIND a caller driving a live shell must honor: a real `exit` (the
+/// ExitCode/FatalFunctionError jump, excluding the parse-abort jump the
+/// interactive readers discard) or the errexit break. GNU's
+/// parse_and_execute catches EXITPROG/ERREXIT at its own setjmp
+/// (evalstring.c:396-403, :387-393) and RE-RAISES them after its `out:`
+/// cleanup (evalstring.c:618-619 jump_to_top_level), so the jump continues
+/// through execute_variable_command (y.tab.c:5365) into the reader's top
+/// level — the PROMPT_COMMAND runner re-arms it for exactly that
+/// (rubash#433). A parse error alone is a DISCARD: evalstring.c:585-601
+/// records the failure and breaks WITHOUT a jump (verified WSL GNU 5.3.0
+/// piped-`-i`: PROMPT_COMMAND='echo )' prints the diagnostic and the shell
+/// keeps reading), while the errexit break — including on a failed parse
+/// status, verified PROMPT_COMMAND with `set -e` preset dies rc=1 — is an
+/// ERREXIT unwind and must propagate.
+pub(crate) fn run_script_with_history_in_tracked(
+    executor: &mut Executor,
+    contents: &str,
+    session: Rc<RefCell<SessionHistory>>,
+    redirect_cmd: Option<&CommandNode>,
+) -> (i32, bool) {
+    let (status, exit_shell, _classification) =
+        run_script_grouped_at_line_offset(executor, contents, session, redirect_cmd, 0, true);
+    (status, exit_shell)
+}
+
+/// Fresh-scratch tracked run for engine-internal readers that hold no
+/// session list (the PROMPT_COMMAND runner's empty-session arm). The
+/// scratch installs as the executor's session history only when no host
+/// HistoryProvider owns the interactive list — an installed provider IS
+/// the_history_list (builtins/history.def reads the shell's one list;
+/// execute_history's provider precedence encodes it), so a per-prompt
+/// scratch must neither shadow it nor survive the run as an empty
+/// replacement (unixwin/niubash#508).
+pub(crate) fn run_script_with_fresh_history_in_tracked(
+    executor: &mut Executor,
+    contents: &str,
+    redirect_cmd: Option<&CommandNode>,
+) -> (i32, bool) {
+    let session = Rc::new(RefCell::new(SessionHistory::new()));
+    let install_session = !executor.has_history_provider();
+    let (status, exit_shell, _classification) = run_script_grouped_at_line_offset(
+        executor,
+        contents,
+        session,
+        redirect_cmd,
+        0,
+        install_session,
+    );
+    (status, exit_shell)
+}
+
+fn run_script_grouped_at_line_offset(
+    executor: &mut Executor,
+    contents: &str,
+    session: Rc<RefCell<SessionHistory>>,
+    redirect_cmd: Option<&CommandNode>,
+    line_offset: usize,
+    install_session: bool,
+) -> (i32, bool, GroupedRunClassification) {
+    if install_session {
+        executor.set_session_history(Some(session.clone()));
+    }
+    // rubash#1186 companion: a fresh grouped read starts with no discard
+    // armed — the failglob pending belongs to the read that produced it
+    // (execute_ast clears the same state at its entry for the same
+    // reason), so a previous script's trailing failglob cannot eat this
+    // read's first group.
+    executor.evalerror_failglob_pending.set(false);
+    executor.evalerror_arith_pending.set(false);
+    let raw_lines: Vec<&str> = contents.split_inclusive('\n').collect();
+    let mut index = 0usize;
+    // rubash#1186: the failglob DISCARD span, as the last line of the
+    // group whose execution armed it. GNU expr.c evalerror ->
+    // jump_to_top_level (DISCARD) abandons the rest of the failing
+    // command's LOGICAL line. The whole-file reader sees that inside one
+    // execute_ast_inner walk, but this grouped reader re-enters
+    // execute_ast per group (whose entry clears the pendings), and the
+    // gatherer may split one logical line into several groups (a
+    // compound command followed by `; cmd`), so a same-line discard was
+    // lost across the group boundary: `{ set -- /no/such/*.zzz; echo
+    // in; }; echo rc` printed `rc` in grouped mode only. Track the span
+    // here: groups starting on or before it are not executed (the
+    // first group starting past it clears the span and runs).
+    let mut failglob_discard_until: Option<usize> = None;
+    // Q6 arm B: the most recent group's discard fact, carried to
+    // the input-exhaustion classification when no group stopped
+    // the run (a terminal discard group stops nothing, but the
+    // classification must still report it).
+    let mut terminal_discard = false;
+    // rubash#2794: the same carry for the expansion-error
+    // discard fact.
+    let mut terminal_expansion_discard = false;
+    while index < raw_lines.len() {
+        // One gather implementation for every grouped reader (the `source`
+        // builtin shares it via read_next_source_group). The gather loop
+        // must not re-scan the accumulated pending per physical line: GNU
+        // reads its input token by token (parse.y:3557 read_token) and
+        // never re-tokenizes text it has already consumed; the parked
+        // GroupScanFeeder advances the token-level completeness state per
+        // appended line instead. The alias-live arm feeds the same
+        // machines the streaming expansion's committed output
+        // (rubash#1961). The returned feeder tokens are unused here: this
+        // driver's exec text re-joins the group's line texts (and history
+        // expansion may rewrite them), so run_history_group's parse keeps
+        // its own scan.
+        let Some((pending, start_line, group, mut feeder_tokens, gather_info)) =
+            read_next_source_group(executor, &raw_lines, &mut index)
+        else {
+            break;
+        };
+        if let Some(until) = failglob_discard_until {
+            if start_line <= until {
+                // Same logical line as the failglob failure: GNU's
+                // DISCARD abandons it. (The group is also not recorded;
+                // GNU records read lines before executing them, but the
+                // recording here is fused with execution.)
+                // GAP-1: a skipped group is the terminal group if
+                // the input ends inside the span, and it did not
+                // end in a signal discard — refresh the terminal
+                // discard fact like every executed group does, so
+                // an earlier group's discard is never misreported
+                // as the terminal one (Q6 arm B approximation
+                // (iii), resolved).
+                terminal_discard = false;
+                terminal_expansion_discard = false;
+                continue;
+            }
+            failglob_discard_until = None;
+        }
+        let group_last_line = start_line + group.len().saturating_sub(1);
+        // rubash#1497: in a -c string this grouped reader executes the
+        // string group by group; the group after which only blank or
+        // comment lines remain is the string's final reader unit — the
+        // only unit whose last command may exec-replace the process
+        // (builtins/evalstring.c:126 should_suppress_fork requires the
+        // whole string to be consumed). Outside command-string mode
+        // (script files, stdin, the REPL) the arming stays off.
+        executor.command_string_final_pending.set(
+            executor.command_string_mode()
+                && raw_lines[index..].iter().all(|line| {
+                    let trimmed = line.trim();
+                    trimmed.is_empty() || trimmed.starts_with('#')
+                }),
+        );
+        // WP-8 (debugger design 5.1): name this group for syntax
+        // registration (consumed by run_source_impl at its entry).
+        // The identity is the source stack's top — the same string
+        // this file's stops carry. A command string has no file to
+        // name (its stack seed is $0, not a file), so it sets
+        // nothing and its units never register.
+        executor.debug_syntax_unit_file = if executor.command_string_mode() {
+            None
+        } else {
+            executor.shell_state.bash_source_stack.first().cloned()
+        };
+        // rubash#2849: for an interactive invocation this grouped
+        // run is a reader submission (Session::run_line and the
+        // prompt-command runner funnel here): GNU's table is
+        // current at the read boundary (jobs.c:4036 sigchld_handler
+        // -> waitchld records while the reader blocks), so observe
+        // recorded job state before the group executes. Script
+        // streams (non-interactive invocation) keep the boundary
+        // sweep's waitchld-lag gates untouched.
+        if executor.invocation_interactive() {
+            executor.observe_jobs_at_reader_boundary();
+        }
+        let status = run_history_group(
+            executor,
+            &session,
+            &group,
+            start_line.saturating_add(line_offset),
+            redirect_cmd,
+            false,
+            feeder_tokens.take(),
+            Some(gather_info.entry_extended_glob),
+        );
+        if executor.evalerror_failglob_pending.get() {
+            failglob_discard_until = Some(group_last_line);
+        }
+        let parse_error = executor.take_parse_error();
+        // A group that ended by unwinding (exit builtin, errexit, POSIX
+        // special-builtin failure) stops the reader unconditionally — GNU's
+        // jump_to_top_level cannot be resumed at the next command.
+        let exit_jump_raw = executor.take_exit_jump_pending();
+        // Q6 arm B: decompose the raw jump with the executor's own
+        // record of the unwind kind — an errexit break arms the
+        // jump bookkeeping (its main.rs/source consumers need the
+        // arm) but is not a jump in the classification.
+        let errexit_unwind = executor.take_errexit_unwind_armed();
+        let exit_jump = exit_jump_raw && !errexit_unwind;
+        // Q6 arm B: a group the reader discards for an untrapped
+        // signal discard is reported on the classification but
+        // does NOT preempt the errexit verdict: GNU's DISCARD
+        // abandons the rest of the line (evalstring.c), and the
+        // session's fate is the errexit verdict on the
+        // interrupted status — pty evidence (Q6 harness, GNU
+        // 5.3.20): interactive `set -e` + Ctrl+C on a foreground
+        // job EXITS the shell with 130, while the same delivery
+        // without -e discards and prompts again. The verdict
+        // below is exactly what separates the two.
+        let discarded = executor.take_unit_signal_discard();
+        terminal_discard = discarded;
+        // rubash#2794: the same per-group take for the
+        // expansion-error discard record the raise points noted.
+        let expansion_discarded = executor.take_unit_expansion_error_discard();
+        terminal_expansion_discard = expansion_discarded;
+        // GNU execute_cmd.c:652-656: `! CMD` gains CMD_IGNORE_RETURN under
+        // errexit — the inverted command's status is exempt.
+        let last_inverted = executor.last_command_inverted();
+        let errexit_stop = errexit_break_verdict(executor, status);
+        // rubash#2652: an armed errexit unwind is itself a stop —
+        // the inner gates already made the context-aware decision
+        // (execute_command_internal, execute_cmd.c:624), and the
+        // decomposition above deliberately keeps it out of
+        // `exit_jump`, so the verdict is the only other stop
+        // signal. A verdict suppressed by the stale-terminal
+        // record must not swallow a real unwind (`false || false`:
+        // the last `false` raised, the verdict reads the first
+        // `false`'s exemption).
+        if parse_error || exit_jump || errexit_unwind || errexit_stop {
+            // GAP-1 (unixwin/niubash#863): the run's classification is
+            // adjudicated HERE, from these same verdicts — the
+            // decomposition of the stop bool below, computed once.
+            // A jump that counts (not riding a parse error) is the
+            // run's stop kind even when the errexit verdict also
+            // fires: the return status is the jump's own (rubash#2535
+            // note below), so the stop is the jump.
+            let mut classification = GroupedRunClassification {
+                parse_error,
+                exit_jump,
+                exit_jump_raw,
+                errexit_stop,
+                last_inverted,
+                stop: if exit_jump && !parse_error {
+                    Some(GroupedRunStop::ExitJump)
+                } else if errexit_unwind || errexit_stop {
+                    Some(GroupedRunStop::ErrexitBreak)
+                } else {
+                    None
+                },
+                signal_discard: discarded,
+                expansion_error_discard: expansion_discarded,
+            };
+            // DE-06 (design 9.3; PLAN row 12): a parse error is
+            // ending this run — a selected `parse-error` filter
+            // reports the site and parks the session here, after
+            // the diagnostic and the group's valid prefix, before
+            // the exit path runs. The site's line is the failed
+            // group's first line (the diagnostic itself names the
+            // exact line). A stop-loop unwind from the park (the
+            // user ended the session there) replaces the pending
+            // classification with its own exit.
+            if parse_error {
+                let location = executor.shell_state.bash_source_stack.first().map(|file| {
+                    crate::debugger::SourceLocation::new(
+                        file.clone(),
+                        start_line.saturating_add(line_offset) as u32,
+                    )
+                });
+                if let Err(ExecuteError::ExitCode(code)) = executor.debugger_note_exception_site(
+                    crate::debugger::ExceptionKind::ParseError,
+                    executor.last_exit_code(),
+                    location,
+                ) {
+                    // The stop-loop unwind replaces the pending
+                    // classification with its own exit (see the
+                    // DE-06 note above): the run's stop kind is
+                    // that exit, not the parse discard.
+                    classification.stop = Some(GroupedRunStop::ExitJump);
+                    return (code, true, classification);
+                }
+            }
+            // The parse-abort classification (a reader discard, not an
+            // exit-shell jump) must not read as `exit`; the errexit break
+            // propagates even then (GNU ERREXIT, see above).
+            return (
+                // rubash#2535: an exit jump ends the run with the
+                // JUMP's status — the group status run_source_impl
+                // adjudicated from the ExitCode payload — not the
+                // executor's current $?. Trap machinery the unwind
+                // crossed legitimately restored $? on its way out
+                // (the ERR runner restores the pre-trap status before
+                // propagating an action's `exit`, trap.c:367 model),
+                // so reading $? here let the trapped command's status
+                // overwrite a sourced `exit 9` in the action: the run
+                // stopped (the jump was honored) but exited 1. GNU's
+                // jump_to_top_level (EXITPROG) ends execution with
+                // the exit's own status (execute_cmd.c:5537). The
+                // parse-abort arm keeps last_exit_code: its status is
+                // a reader-discard value, not a jump payload.
+                if exit_jump && !parse_error {
+                    status
+                } else {
+                    executor.last_exit_code()
+                },
+                (exit_jump && !parse_error) || errexit_stop,
+                classification,
+            );
+        }
+        // rubash#2960: GNU eval.c:206-207 — with just_one_command
+        // standing, reader_loop takes EOF after the unit that left
+        // it standing. Break into this driver's own input-exhaustion
+        // tail below: the run ends with the last unit's status and
+        // no exit jump, exactly like natural EOF. Skipped groups
+        // (the failglob span above) never reach this consultation —
+        // they did not execute. The gate on the consultation keeps
+        // it out of parse_and_execute bodies and command strings
+        // (see Executor::onecmd_reader_stop).
+        if executor.onecmd_reader_stop() {
+            break;
+        }
+    }
+    // WP-8 (debugger design 5.1): the reader reached the end of
+    // this input — the same completion note the source builtin
+    // gives, under the same identity rule as the per-group
+    // registration above. The early returns in the loop (parse
+    // aborts, exit jumps) skip it on purpose.
+    if !executor.command_string_mode() {
+        if let Some(file) = executor.shell_state.bash_source_stack.first().cloned() {
+            executor.debugger_note_syntax_complete(&file);
+        }
+    }
+    // Input exhaustion: no group stopped the run, so no unwind was
+    // adjudicated — the per-group takes above consumed only clear
+    // flags. The one live fact left is the last command's
+    // inversion, read at the run's end.
+    (
+        executor.last_exit_code(),
+        false,
+        GroupedRunClassification {
+            last_inverted: executor.last_command_inverted(),
+            signal_discard: terminal_discard,
+            expansion_error_discard: terminal_expansion_discard,
+            ..GroupedRunClassification::default()
+        },
+    )
+}
+
+/// Verdicts the gather reached about the group it just pulled, beyond
+/// the feeder-token channel (rubash#1961).
+pub(crate) struct GroupGatherInfo {
+    /// Alias-live arm only: the expanded group text the gather's
+    /// incremental machines certified complete, present only when the
+    /// group broke complete on the machines' own verdict (never on a
+    /// parked-candidate batch fallback). The source executor applies
+    /// the #1940 Fix A certified skip when its own batch expansion of
+    /// the group is byte-identical to this text.
+    pub certified_expanded: Option<String>,
+    /// rubash#3205: the process-global extglob parse gate captured
+    /// when this group's gather STARTED. A group whose text flips
+    /// the gate leaves the global at the group-END value (the gather
+    /// feeder lands the flip at the group's own unit boundary), so
+    /// a caller that re-lexes the group text must first pin the
+    /// gate back to this entry value: GNU reads the whole unit
+    /// under the gate in effect when the unit started
+    /// (parse.y:5466 read_token_word consults the read-time
+    /// extended_glob per token), never under a state the unit
+    /// itself creates.
+    pub entry_extended_glob: bool,
+    /// The gather loop ran out of input without a complete break: the
+    /// accumulated text is known-incomplete from the collector's own
+    /// incremental state (its machines' last verdict, or a heredoc /
+    /// paren gate that never opened), so a caller's whole-text
+    /// completeness re-derivation over the group can only restate
+    /// this verdict (rubash#1961 R5).
+    pub known_incomplete: bool,
+}
+
+/// Speculative verdict state for one unit-park episode in the
+/// alias-live arm of the gather (rubash#1961). While the streaming
+/// expander is parked on a `$(`/`${` unit, the completeness verdict
+/// over the batch expansion of everything fed is owed at every
+/// candidate line until the unit closes. Recomputing it from
+/// scratch per candidate re-feeds the whole uncommitted tail into
+/// fresh machines — Θ(tail) per candidate, Θ(tail × lines) over a
+/// long-lived unit. The shadow instead holds CLONES of the gather's
+/// own machines, advanced incrementally over the speculative
+/// expansion (a cloned expander's finish()): while the expansion
+/// grows append-only — the normal case, where no alias inside the
+/// truncated body rewrote an earlier splice decision — each
+/// refresh advances the shadow by the new appendix only, and
+/// candidates inside the refresh window reuse the standing
+/// verdict. When
+/// the expansion rewrites its own prefix (an alias splice inside
+/// the body flipped a decision as more text arrived), the caller
+/// rebuilds the shadow from the real machines, which do not move
+/// during an episode: a parked expander commits nothing new, so
+/// the snapshot stays exact.
+struct ParkShadow {
+    scan: crate::lexer::GroupScanFeeder,
+    scans: GroupTextScans,
+    /// The real machines' text lengths when the snapshot was taken;
+    /// a mismatch means the real state moved and the shadow is
+    /// stale (the caller rebuilds).
+    base_pending_len: usize,
+    base_fed_len: usize,
+    /// Byte total the shadow feeder has been given, on the same
+    /// arithmetic the gather's real feeding uses.
+    fed_len: usize,
+    /// Speculative text not yet split into feeder lines: the
+    /// committed tail at snapshot time plus every appendix since,
+    /// minus the completed lines already fed.
+    line_buf: String,
+    /// The speculative expansion (finish() remainder) consumed so
+    /// far; the next remainder must extend it, else rebuild.
+    spec: String,
+    /// The battery mirror text: committed expansion plus the
+    /// speculative expansion consumed so far.
+    mirror: String,
+    /// Raw group-text length at which the speculative verdict is
+    /// next refreshed. Between refreshes the shadow's verdict
+    /// stands: a refresh that answered "complete" breaks the group
+    /// on the spot, so a live shadow's standing verdict is always
+    /// "needs more", and the candidates in between skip the
+    /// finish() re-derivation entirely. The window is small (1KB
+    /// of raw text): an alias invocation that closes the unit is
+    /// judged at the refresh right after its text is fully fed —
+    /// and the episode's first candidate always refreshes, so an
+    /// invocation sitting on the unit's own opening line is judged
+    /// immediately.
+    next_refresh_at: usize,
+}
+
+impl ParkShadow {
+    fn snapshot(
+        scan: &crate::lexer::GroupScanFeeder,
+        scans: &GroupTextScans,
+        expanded_pending: &str,
+        expanded_tail: &str,
+        expanded_fed_len: usize,
+    ) -> Self {
+        Self {
+            scan: scan.clone(),
+            scans: scans.clone(),
+            base_pending_len: expanded_pending.len(),
+            base_fed_len: expanded_fed_len,
+            fed_len: expanded_fed_len,
+            line_buf: expanded_tail.to_string(),
+            spec: String::new(),
+            mirror: expanded_pending.to_string(),
+            next_refresh_at: 0,
+        }
+    }
+
+    /// Whether this shadow still matches the caller's frozen real
+    /// state and the speculative expansion still extends the text
+    /// it has consumed.
+    fn matches(&self, expanded_pending: &str, expanded_fed_len: usize, spec_delta: &str) -> bool {
+        self.base_pending_len == expanded_pending.len()
+            && self.base_fed_len == expanded_fed_len
+            && spec_delta.starts_with(&self.spec)
+    }
+
+    /// Advance the shadow machines over the appendix the new
+    /// speculative expansion added since the last candidate.
+    fn advance(&mut self, spec_delta: &str) {
+        let appendix = &spec_delta[self.spec.len()..];
+        self.mirror.push_str(appendix);
+        self.scans.push_raw_line(appendix);
+        self.line_buf.push_str(appendix);
+        let mut cursor = 0usize;
+        while let Some(rel) = self.line_buf[cursor..].find('\n') {
+            let nl = cursor + rel;
+            self.fed_len += nl + 1 - cursor;
+            self.scan
+                .push_line(&self.line_buf[cursor..nl], self.fed_len);
+            cursor = nl + 1;
+        }
+        self.line_buf.drain(..cursor);
+        self.spec = spec_delta.to_string();
+    }
+
+    /// The gather's usual verdict fusion, over the shadow machines.
+    /// GAP-9 round 2: the terminal channel is consulted FIRST (see
+    /// GroupScanFeeder::token_level_terminal) — a stray close ends
+    /// the group even when the text half still sees an open
+    /// construct around it.
+    fn needs_more(&mut self, group_has_body: bool) -> bool {
+        if self.scan.token_level_terminal() {
+            return false;
+        }
+        let skip_quote_comsub = !group_has_body && self.scan.gates_prove_quotes_comsub_closed();
+        self.scan.token_level_needs_more() || self.scans.needs_more(&self.mirror, skip_quote_comsub)
+    }
+}
+
+/// builtins/evalfile.c source_file -> evalstring.c parse_and_execute: a
+/// sourced file is read and executed INCREMENTALLY, so an `alias` command
+/// takes effect for every group read after it. This pulls the next
+/// syntactically complete command group out of `raw_lines` using the same
+/// completeness test as run_script_with_history_in — heredoc bodies,
+/// procsub paren depth, and the alias-expanded pending text all decide the
+/// boundary. Returns the group's raw text, its 1-based starting line, the
+/// per-physical-line `(text, is_heredoc_body)` pairs the history driver
+/// records per group, the feeder's committed tokens for the group text
+/// (see the perf10 note below), and the gather's own verdicts.
+///
+/// rubash#281 companion: while the alias table cannot influence the text
+/// (expansion disabled or table empty — the expanded pending IS the raw
+/// pending), the token-level half of the completeness test runs on a
+/// parked `GroupScanFeeder` that advances per appended line instead of
+/// re-tokenizing the whole accumulated group (the O(group^2) amplifier
+/// behind `. ./benchmarks/corpus/nvm.sh --no-use` at 200 s+).
+///
+/// rubash#1961: the alias-live arm used to keep the exact fresh scan —
+/// every candidate line re-ran `expand_group_aliases` over the whole
+/// accumulated group AND `stdin_source_needs_more_posix` over its
+/// expansion (a full re-lex), the same O(group^2) disease #1940 removed
+/// from the certified arm (one preset alias + `expand_aliases` made
+/// `source nvm.sh` hang past 120 s while the plain arm took ~1 s). The
+/// arm now feeds a parked `AliasStreamScanner` (lexer/alias_stream.rs):
+/// the expander itself runs incrementally and releases only committed
+/// output — text later input cannot rewrite — and the SAME feeder +
+/// text-scan machines judge that output, so the per-candidate cost is
+/// O(line), not O(group). While the streaming expander is parked
+/// inside a unit, the batch verdict over the truncated text can still
+/// decide differently (an alias value inside a truncated comsub body
+/// closing the unit); those candidates are judged SPECULATIVELY —
+/// a finished clone of the expander yields exactly the batch
+/// expansion of everything fed, and clones of the same machines
+/// (the ParkShadow below) judge it incrementally as it grows.
+///
+/// perf10 token reuse: `tokenize_with_heredocs` IS a fresh
+/// `GroupScanFeeder` plus one `push_line` per physical line plus
+/// `finish()` — the gather's feeder runs the identical code on the
+/// identical line pieces (the group breaks only at a committed state, so
+/// every batch piece within the group's bytes is one of this feeder's
+/// pushes), with the identical initial posix mode (nothing executes
+/// between the gather's mode capture and the caller's parse, so mid-group
+/// `set -o posix` flips replay at the same logical lines in both). GNU
+/// anchor: parse.y:3557 read_token streams the input once and never
+/// re-tokenizes consumed text — the caller's fresh whole-group re-lex was
+/// this port's substitute for that model. The committed token stream is
+/// therefore returned for the caller to reuse instead of re-lexing, under
+/// exactly the conditions that make it byte-identical to the fresh
+/// re-lex:
+///   - the group text the feeder lexed is the caller's exec text: in
+///     the non-alias arm by identity (`expand_group_aliases` is the
+///     identity there, so exec text == pending); in the alias-live arm
+///     by the GroupGatherInfo certification — the group broke complete
+///     on the incremental machines' verdict over the streaming
+///     expansion (parse.y:3249 alias_expand_token fires per token while
+///     READING, which is exactly the stream the feeder consumed), and
+///     the caller applies the tokens only when its own batch expansion
+///     is byte-identical to the certified text. Alias-arm groups that
+///     broke on a parked candidate's speculative verdict return no
+///     tokens, as before;
+///   - the loop broke at a COMPLETE group (an EOF-exhausted incomplete
+///     group takes run_source_with_line_offset's unclosed-diagnostics
+///     re-lex);
+///   - the feeder performed no EFFECTIVE extglob toggle
+///     (`extglob_toggled`): the fresh re-lex of a flipping group is
+///     pinned to the group-ENTRY gate (GroupGatherInfo's
+///     `entry_extended_glob`, captured before the gather ran), so
+///     refusing reuse keeps one well-tested path for flipping
+///     groups instead of depending on the streaming feed and the
+///     re-lex producing byte-identical streams (parse.y:5466 gates
+///     pattern chars per token; tokens snapshot the gate they were
+///     lexed under, `Token::extglob_gate`).
+/// The trailing line-break separator the feeder emits per committed
+/// logical line is left in place; the caller pops it with the same rule
+/// `tokenize_comsub_body_with_origin` applies to the fresh stream.
+
+/// GNU `set -v` (verbose): echo input lines to stderr as they are
+/// READ, never at execution time (flags.c:284
+/// `echo_input_at_read = verbose_flag`; parse.y:2712 prints
+/// `shell_input_line` with `fprintf (stderr, "%s\n", ...)`). Every
+/// read point routes here: the grouped reader's per-line consumption
+/// ([`read_next_source_group`] — script files, `-c` strings and host
+/// submissions on the grouped route, plus the `source` builtin's
+/// groups), the stdin script reader's per-line read
+/// ([`run_stdin_script`]), and the whole-string read units whose
+/// callers hand over their full text at its single read boundary (the
+/// `-c` and Session whole-source routes — reached only when
+/// [`script_may_toggle_verbose`] shows no mid-text toggle, so the
+/// entry state is the state at every line's read — and
+/// parse_and_execute strings via `execute_eval_source`). The verbose
+/// state is sampled at the read
+/// moment: a `set -v` line is not itself echoed (the flag was off when
+/// it was read) and a `set +v` line still is (it was on) — execution
+/// never echoes (rubash#2773).
+pub fn echo_verbose_input_lines(executor: &Executor, text: &str) {
+    if !crate::builtins::set::shell_option_enabled(&executor.shell_state.env_vars, "verbose") {
+        return;
+    }
+    use std::io::Write as _;
+    let stderr = std::io::stderr();
+    let mut lock = stderr.lock();
+    // A blank input line is a line too (GNU echoes it as an empty
+    // line); split_inclusive yields nothing for an empty text.
+    if text.is_empty() {
+        let _ = writeln!(lock);
+        return;
+    }
+    for line in text.split_inclusive('\n') {
+        let _ = writeln!(lock, "{}", line.trim_end_matches('\n'));
+    }
+}
+
+pub(crate) fn read_next_source_group(
+    executor: &Executor,
+    raw_lines: &[&str],
+    index: &mut usize,
+) -> Option<(
+    String,
+    usize,
+    Vec<(String, bool)>,
+    Option<Vec<Token>>,
+    GroupGatherInfo,
+)> {
+    if *index >= raw_lines.len() {
+        return None;
+    }
+    let mut pending = String::new();
+    let mut pending_heredocs: Vec<(String, bool)> = Vec::new();
+    let mut paren_depth: i64 = 0;
+    let mut saw_heredoc = false;
+    let mut heredoc_arith_depth: i64 = 0;
+    let mut group: Vec<(String, bool)> = Vec::new();
+    let start_line = *index + 1;
+    let posix = executor.get_env("__RUBASH_POSIX_MODE").as_deref() == Some("1");
+    // rubash#3205: the extglob parse gate at this group's entry,
+    // captured before the gather's feeder can land any of the
+    // group's own flips at its unit boundaries. Callers that
+    // re-lex the group text pin the gate to this value (see
+    // GroupGatherInfo::entry_extended_glob).
+    let entry_extended_glob = crate::lexer::parse_extended_glob();
+    let aliases_live =
+        executor.alias_expansion_enabled() && !executor.shell_state.aliases.is_empty();
+    // rubash#1961: the feeder now runs in BOTH arms. The alias-live arm
+    // feeds it the streaming expansion's committed output (below), the
+    // non-alias arm the raw lines as before.
+    let mut scan = Some(crate::lexer::GroupScanFeeder::new(posix));
+    // The alias-live arm's streaming expander, with the same lookup
+    // expand_group_aliases builds (the table cannot change mid-gather:
+    // nothing executes between the gather's lines).
+    let alias_lookup = move |word: &str| {
+        executor.shell_state.aliases.get(word).map(|alias| {
+            (
+                alias
+                    .value
+                    .replace(crate::executor::markers::DATA_DOLLAR, "$"),
+                alias.expand_next,
+            )
+        })
+    };
+    let mut alias_scan = if aliases_live {
+        Some(crate::lexer::AliasStreamScanner::new(
+            &alias_lookup as &crate::lexer::AliasLookup<'_>,
+            posix,
+        ))
+    } else {
+        None
+    };
+    // Alias-live arm feed state: the committed expansion text (the
+    // machines' mirror twin), the not-yet-line-split tail of it, and
+    // the byte total the feeder has been given so far.
+    let mut expanded_pending = String::new();
+    let mut expanded_tail = String::new();
+    let mut expanded_fed_len = 0usize;
+    // Speculative-verdict shadow for a unit-park episode (below).
+    let mut park_shadow: Option<ParkShadow> = None;
+    let mut broke_complete = false;
+    // Set when the group broke complete on the incremental machines'
+    // verdict in the alias-live arm (the certification condition).
+    let mut alias_machines_break = false;
+    // perf9 (#292B third wave): the parked text-scan battery over the exact
+    // `pending` mirror. `pending` is append-only inside this loop (only
+    // push_str(raw) ever touches it), so the checkpoints never invalidate:
+    // each candidate line advances every still-undecided machine over its
+    // own tail instead of re-scanning the whole group (GNU parse.y:3557
+    // read_token streams token by token and never re-reads consumed text).
+    // rubash#1961: in the alias-live arm the battery's mirror is the
+    // committed expansion text instead — the same append-only discipline
+    // holds because the streaming expander only ever appends committed
+    // output (it never revises text it already released).
+    let mut text_scans = GroupTextScans::new(posix);
+    text_scans.extglob_seed =
+        crate::builtins::shopt::option_enabled(&executor.shell_state.env_vars, "extglob");
+    // perf21 battery fusion: heredoc-body lines live in the pending mirror
+    // but not in the feeder's logical-line mirror, so a group that saw any
+    // must keep advancing the battery's quotes/comsub machines itself.
+    let mut group_has_body = false;
+    while *index < raw_lines.len() {
+        let raw = raw_lines[*index];
+        let text = raw.trim_end_matches('\n');
+        *index += 1;
+        // rubash#2773: this consumption point IS the read — GNU's
+        // reader echoes the physical line here when verbose is on
+        // (flags.c:284; parse.y:2712). Nothing executes mid-gather, so
+        // the flag sampled now is exactly the state in effect when the
+        // line is read; the previous group's `set -v`/`set +v` has
+        // already landed, this group's own toggles land for the NEXT
+        // group. Heredoc body and delimiter lines pass through this
+        // same point and echo too (make_cmd.c:584 read_secondary_line
+        // echoes secondary lines as they are read).
+        echo_verbose_input_lines(executor, text);
+        let mut is_body = false;
+        // perf21: with the alias table inert, expand_group_aliases is the
+        // identity — skip its per-line String copy and scan the raw text
+        // directly (aliases_live above computed the same predicate).
+        let expanded_owned;
+        let expanded_line: &str = if aliases_live {
+            expanded_owned = expand_group_aliases(executor, text);
+            &expanded_owned
+        } else {
+            text
+        };
+        // perf21: borrow the front delimiter instead of cloning the
+        // (String, bool) per line; the remove happens after the borrow ends.
+        enum Front {
+            None,
+            Matched,
+            Body,
+        }
+        let front = match pending_heredocs.first() {
+            Some((delimiter, strip_tabs)) => {
+                let candidate = if *strip_tabs {
+                    text.trim_start_matches('\t')
+                } else {
+                    text
+                };
+                if candidate == delimiter.as_str() {
+                    Front::Matched
+                } else {
+                    Front::Body
+                }
+            }
+            None => Front::None,
+        };
+        match front {
+            Front::Matched => {
+                pending_heredocs.remove(0);
+            }
+            Front::Body => {
+                is_body = true;
+                group_has_body = true;
+            }
+            Front::None => {
+                let declared =
+                    stdin_heredoc_line_declarations(&expanded_line, &mut heredoc_arith_depth);
+                saw_heredoc = saw_heredoc
+                    || (!declared.is_empty()
+                        && (expanded_line.contains("$(")
+                            || expanded_line.contains("<(")
+                            || expanded_line.contains(">(")));
+                pending_heredocs.extend(declared);
+            }
+        }
+        if !is_body {
+            paren_depth += line_paren_delta(&expanded_line);
+        }
+        group.push((text.to_string(), is_body));
+        pending.push_str(raw);
+        if aliases_live {
+            // rubash#1961: advance the streaming expander by this raw
+            // line and feed whatever output it commits to the same
+            // machines the non-alias arm feeds raw lines to. The
+            // battery mirror and the feeder both take the EXPANDED
+            // text here; `pending` above stays the raw group text.
+            // Committed output is append-only, so the battery's
+            // checkpoints stay valid, exactly as in the raw arm.
+            let scanner = alias_scan.as_mut().expect("alias arm scanner");
+            scanner.push_line(raw);
+            let delta = scanner.take_committed();
+            if !delta.is_empty() {
+                expanded_pending.push_str(&delta);
+                text_scans.push_raw_line(&delta);
+                expanded_tail.push_str(&delta);
+                // Feed each completed line to the feeder. A byte
+                // cursor walks the tail buffer (draining per line
+                // would re-copy the remainder every time — quadratic
+                // on the long spans a parked unit releases at once);
+                // the consumed prefix is drained once, below.
+                let mut cursor = 0usize;
+                while let Some(rel) = expanded_tail[cursor..].find('\n') {
+                    let nl = cursor + rel;
+                    expanded_fed_len += nl + 1 - cursor;
+                    scan.as_mut()
+                        .expect("feeder")
+                        .push_line(&expanded_tail[cursor..nl], expanded_fed_len);
+                    cursor = nl + 1;
+                }
+                expanded_tail.drain(..cursor);
+            }
+            if !scanner.parked() && !expanded_tail.is_empty() {
+                // Unparked committed output ends at a line boundary
+                // (AliasStreamScanner's contract), so a tail here is
+                // the input's final line without its '\n': hand it to
+                // the feeder as the last piece, exactly like the raw
+                // arm's final push_line.
+                expanded_fed_len += expanded_tail.len();
+                let piece = std::mem::take(&mut expanded_tail);
+                scan.as_mut()
+                    .expect("feeder")
+                    .push_line(&piece, expanded_fed_len);
+            }
+        } else {
+            text_scans.push_raw_line(raw);
+            if let Some(scan) = scan.as_mut() {
+                scan.push_line(text, pending.len());
+            }
+        }
+        if pending_heredocs.is_empty() && (!saw_heredoc || paren_depth <= 0) {
+            // rubash#1961 parked-candidate verdicts. While the
+            // streaming expander is parked, the machines have not
+            // seen the parked unit's expansion yet. Two cases:
+            //  - Trivial parks (see AliasStreamScanner::
+            //    park_needs_batch): the park leaves an unterminated
+            //    unit IN the batch expansion itself (an open quote,
+            //    backtick, word, compound assignment or `((` in the
+            //    produced text, an operator or `$` at the end of
+            //    input), where the batch needs-more verdict is
+            //    positive by construction — the group simply stays
+            //    open, with no scan at all.
+            //  - Unit parks (a `$(`/`${` extent the stream cannot
+            //    yet decide, or a poisoned phase): the batch
+            //    expansion of the truncated body CAN close the unit
+            //    early (an alias value contributing the closer), so
+            //    the verdict must judge the full expansion of
+            //    everything fed. It is computed SPECULATIVELY:
+            //    clone the expander and finish the clone (by the
+            //    scanner's contract that is exactly the batch
+            //    expansion of all fed input), then judge that text
+            //    with the gather's own machines — on non-final
+            //    lines via the ParkShadow, whose clones of the
+            //    machines advance incrementally over the
+            //    speculative expansion as it grows; on the final
+            //    line via one-shot clones (finish() semantics are
+            //    end-of-input there by definition, so tail routing
+            //    matches the pre-#1961 batch check, which judged
+            //    the same final expansion). Same machines, same
+            //    text, same fusion as the unparked path — at
+            //    clone + appendix cost instead of a whole-group
+            //    re-expand and re-tokenize (the pre-#1961 per-
+            //    candidate batch check, whose full re-lex of a
+            //    large group costs seconds). A speculative break
+            //    earns no certification: the real feeder never
+            //    lexed the tail.
+            let scanner_parked = alias_scan.as_ref().is_some_and(|scanner| scanner.parked());
+            if scanner_parked
+                && *index < raw_lines.len()
+                && !alias_scan.as_ref().expect("scanner").park_needs_batch()
+            {
+                // Trivial park: batch verdict is "needs more" by
+                // construction — the group simply stays open.
+                park_shadow = None;
+                continue;
+            }
+            if scanner_parked && *index < raw_lines.len() {
+                // Unit park, not the final line: the speculative
+                // verdict, computed over the ParkShadow's
+                // incrementally advanced clones of the machines.
+                // Inside the shadow's refresh window the standing
+                // "needs more" verdict is reused as-is.
+                if let Some(shadow) = &park_shadow {
+                    if shadow.base_pending_len == expanded_pending.len()
+                        && shadow.base_fed_len == expanded_fed_len
+                        && pending.len() < shadow.next_refresh_at
+                    {
+                        continue;
+                    }
+                }
+                let mut spec_scanner = alias_scan.as_ref().expect("scanner").clone();
+                let spec_delta = spec_scanner.finish();
+                if park_shadow
+                    .as_ref()
+                    .is_none_or(|sh| !sh.matches(&expanded_pending, expanded_fed_len, &spec_delta))
+                {
+                    park_shadow = Some(ParkShadow::snapshot(
+                        scan.as_ref().expect("feeder"),
+                        &text_scans,
+                        &expanded_pending,
+                        &expanded_tail,
+                        expanded_fed_len,
+                    ));
+                }
+                let shadow = park_shadow.as_mut().expect("shadow");
+                shadow.advance(&spec_delta);
+                let needs_more = shadow.needs_more(group_has_body);
+                shadow.next_refresh_at = pending.len() + 1024;
+                if !needs_more {
+                    broke_complete = true;
+                    break;
+                }
+                continue;
+            }
+            if scanner_parked {
+                // Final line of the input with the expander still
+                // parked: if a ParkShadow is live and the final
+                // speculative expansion still extends it, finish the
+                // verdict on the shadow (feeding its buffered
+                // partial piece as the final line) instead of
+                // re-feeding the whole tail into fresh clones.
+                let mut spec_scanner = alias_scan.as_ref().expect("scanner").clone();
+                let spec_delta = spec_scanner.finish();
+                if let Some(mut shadow) = park_shadow.take() {
+                    if shadow.base_pending_len == expanded_pending.len()
+                        && shadow.base_fed_len == expanded_fed_len
+                        && spec_delta.starts_with(&shadow.spec)
+                    {
+                        shadow.advance(&spec_delta);
+                        if !shadow.line_buf.is_empty() {
+                            let piece = std::mem::take(&mut shadow.line_buf);
+                            shadow.fed_len += piece.len();
+                            shadow.scan.push_line(&piece, shadow.fed_len);
+                        }
+                        if !shadow.needs_more(group_has_body) {
+                            broke_complete = true;
+                            break;
+                        }
+                        continue;
+                    }
+                }
+                let mut spec_scan = scan.as_ref().expect("feeder").clone();
+                let mut spec_scans = text_scans.clone();
+                // The speculative feeder input is everything the
+                // real feeder has not consumed yet: the committed
+                // tail still waiting for its line boundary, plus
+                // the speculative expansion of the parked unit.
+                let mut spec_text = expanded_tail.clone();
+                spec_text.push_str(&spec_delta);
+                let mut spec_mirror = expanded_pending.clone();
+                spec_mirror.push_str(&spec_delta);
+                spec_scans.push_raw_line(&spec_delta);
+                let mut spec_fed_len = expanded_fed_len;
+                let mut cursor = 0usize;
+                while let Some(rel) = spec_text[cursor..].find('\n') {
+                    let nl = cursor + rel;
+                    spec_fed_len += nl + 1 - cursor;
+                    spec_scan.push_line(&spec_text[cursor..nl], spec_fed_len);
+                    cursor = nl + 1;
+                }
+                if cursor < spec_text.len() {
+                    // Final piece without '\n': finish() gave the
+                    // tail end-of-input semantics, so for the
+                    // speculative feeder it is a complete final
+                    // line, exactly like the input's own last line.
+                    spec_fed_len += spec_text.len() - cursor;
+                    spec_scan.push_line(&spec_text[cursor..], spec_fed_len);
+                }
+                let skip_quote_comsub =
+                    !group_has_body && spec_scan.gates_prove_quotes_comsub_closed();
+                // GAP-9 round 2: terminal channel first (see
+                // GroupScanFeeder::token_level_terminal).
+                let needs_more = !spec_scan.token_level_terminal()
+                    && (spec_scan.token_level_needs_more()
+                        || spec_scans.needs_more(&spec_mirror, skip_quote_comsub));
+                if !needs_more {
+                    broke_complete = true;
+                    break;
+                }
+                continue;
+            }
+            {
+                // Token-level answer FIRST: it is O(1) here (maintained
+                // incrementally by the feeder), while the text-level scans
+                // walk the whole accumulated group. While any `{`/`if`/
+                // `case`... keeps the group open (nvm.sh wraps its entire
+                // body in one brace group), this short-circuits the O(group)
+                // rescans entirely; the text scans then run only at
+                // candidate-complete lines. `||` is commutative, so the
+                // answer is byte-identical to the fresh scan's.
+                //
+                // perf9 (#292B third wave): the text-level half now advances
+                // the parked GroupTextScans machines instead of full-scanning
+                // `pending` through every scanner per candidate line — arm
+                // for arm the same predicates stdin_source_text_needs_more
+                // evaluates, each answered from its checkpoint over the
+                // append-only pending mirror (quotes / comsub residual +
+                // corrected balance / array subscript / matched-pair close
+                // char / function-body delimiters). Per-prefix equivalence
+                // is enforced by the continuation.rs incremental tests.
+                // perf21 battery fusion: when the feeder's own join gates
+                // prove the just-pushed line closed every quote and
+                // substitution over the append-only twin of this pending
+                // text, the battery's duplicate quotes/comsub machines can
+                // take the answer instead of re-advancing (see
+                // GroupScanFeeder::gates_prove_quotes_comsub_closed).
+                let scan = scan.as_ref().expect("feeder");
+                let skip_quote_comsub = !group_has_body && scan.gates_prove_quotes_comsub_closed();
+                // rubash#1961: the battery's mirror is the raw pending
+                // in the non-alias arm and the committed expansion in
+                // the alias-live arm — in both arms the exact text the
+                // feeder just lexed.
+                let mirror: &str = if aliases_live {
+                    &expanded_pending
+                } else {
+                    &pending
+                };
+                // GAP-9 round 2: the terminal channel overrides the
+                // text half (see GroupScanFeeder::token_level_terminal)
+                // — `f() {\n)` ends the gather here exactly as the
+                // batch verdict ends it, so the parked and fresh paths
+                // agree. The O(1) checks still run before the text
+                // scans, so the short-circuit shape above is unchanged.
+                let needs_more = !scan.token_level_terminal()
+                    && (scan.token_level_needs_more()
+                        || text_scans.needs_more(mirror, skip_quote_comsub));
+                if !needs_more {
+                    broke_complete = true;
+                    alias_machines_break = aliases_live;
+                    break;
+                }
+                park_shadow = None;
+            }
+        }
+    }
+    let mut info = GroupGatherInfo {
+        certified_expanded: None,
+        known_incomplete: !broke_complete,
+        entry_extended_glob,
+    };
+    let feeder_tokens = match scan {
+        Some(mut scan)
+            if broke_complete
+                && !scan.extglob_toggled()
+                && (!aliases_live || alias_machines_break) =>
+        {
+            if aliases_live {
+                // The machines' break certifies the committed
+                // expansion: unparked committed output IS the batch
+                // expansion of `pending` (AliasStreamScanner's
+                // contract), so hand it back for the caller's
+                // byte-compare (GroupGatherInfo::certified_expanded).
+                info.certified_expanded = Some(expanded_pending);
+            }
+            Some(scan.finish())
+        }
+        _ => None,
+    };
+    Some((pending, start_line, group, feeder_tokens, info))
+}
+
+/// One parked text-scan checkpoint over the group's `pending` mirror:
+/// the char offset the scan resumes from, and the machine state there.
+/// `None` (in the owning struct) means the next call full-scans from 0.
+#[derive(Clone)]
+struct ScanCheckpoint<S> {
+    resume: usize,
+    snapshot: S,
+}
+
+/// Phase of a function-body delimiter scan
+/// (incremental mirror of stdin_source_has_unclosed_function_delimited_body).
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum FnBodyPhase {
+    /// Still scanning for the first unquoted delimiter.
+    Search,
+    /// Delimiter found: counting its unquoted depth from that fixed point.
+    /// `signature` is the once-computed function-signature answer for the
+    /// text BEFORE the delimiter — that prefix never changes again (the
+    /// group only appends), so the oracle's per-call signature re-check
+    /// collapses to this stored bit.
+    Depth { signature: bool },
+}
+
+/// Incremental state of one function-body delimiter scan
+/// (`stdin_source_has_unclosed_function_delimited_body(source, delim)`).
+///
+/// The oracle, per candidate line: (1) `first_unquoted_function_body_delimiter`
+/// scans for the first unquoted `{` (or `(`), where a `(` followed by
+/// optional whitespace and `)` is a `name ()` signature, not a body opener —
+/// and after such a rejection the search RESTARTS with a fresh
+/// `CommentAwareScan` from just past the rejected `(`; (2) if found at `d`
+/// and `unquoted_delimiter_depth(source[d..]) != 0`, the text before `d`
+/// must look like a function signature. Append-only prefix model: the
+/// search advances monotonically (a found delimiter is fixed forever), the
+/// depth scan is a fresh fold from `d`, and the only forward decision that
+/// can flip on a longer buffer is the `(`-rejection test when only
+/// whitespace remains to the buffer end — that one position parks (the
+/// committed trajectory still accepts the `(` for THIS prefix, exactly like
+/// the oracle's trim_start-at-EOF; the park re-derives from `search_from`
+/// with a fresh scan, exactly like the oracle's next loop iteration).
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct FnBodyResidualState {
+    phase: FnBodyPhase,
+    scan: CommentAwareScan,
+    depth: usize,
+    search_from: usize,
+}
+
+impl Default for FnBodyResidualState {
+    fn default() -> Self {
+        Self {
+            phase: FnBodyPhase::Search,
+            scan: CommentAwareScan::new(),
+            depth: 0,
+            search_from: 0,
+        }
+    }
+}
+
+impl FnBodyResidualState {
+    /// The oracle's answer for the current prefix:
+    /// `stdin_source_has_unclosed_function_delimited_body`.
+    fn is_open(&self) -> bool {
+        matches!(self.phase, FnBodyPhase::Depth { signature: true }) && self.depth != 0
+    }
+}
+
+/// A re-derivation point returned by [`fnbody_residuals_advance`].
+struct FnBodyResidualPark {
+    pos: usize,
+    snapshot: FnBodyResidualState,
+}
+
+/// Advance one function-body delimiter scan over `chars[from..]`. `pending`
+/// is the whole accumulated group text (needed once, at the delimiter-found
+/// transition, for the signature check over the text before the delimiter).
+fn fnbody_residuals_advance(
+    chars: &[char],
+    from: usize,
+    state: &mut FnBodyResidualState,
+    delim: char,
+    pending: &str,
+) -> Option<FnBodyResidualPark> {
+    let close = match delim {
+        '{' => '}',
+        '(' => ')',
+        _ => return None,
+    };
+    let mut index = from.min(chars.len());
+    let mut park: Option<FnBodyResidualPark> = None;
+
+    while index < chars.len() {
+        let ch = chars[index];
+        if let FnBodyPhase::Search = state.phase {
+            let is_active = state.scan.active(ch);
+            if is_active && ch == delim {
+                if delim == '(' {
+                    // The `name ()` rejection test consults unbounded
+                    // forward text (whitespace run, then `)` or not).
+                    let mut look = index + 1;
+                    while look < chars.len() && chars[look].is_whitespace() {
+                        look += 1;
+                    }
+                    if look >= chars.len() {
+                        // Undecided: only whitespace to the buffer end. The
+                        // oracle accepts this `(` for THIS prefix
+                        // (trim_start at EOF leaves no `)`); commit that,
+                        // and park a fresh search iteration at search_from
+                        // so the next line re-derives the rejection.
+                        if park.is_none() {
+                            park = Some(FnBodyResidualPark {
+                                pos: state.search_from,
+                                snapshot: FnBodyResidualState {
+                                    phase: FnBodyPhase::Search,
+                                    scan: CommentAwareScan::new(),
+                                    depth: 0,
+                                    search_from: state.search_from,
+                                },
+                            });
+                        }
+                    } else if chars[look] == ')' {
+                        // Decided rejection (`name ()` signature): restart
+                        // the search FRESH from just past the `(`, exactly
+                        // the oracle's next first_unquoted_char iteration.
+                        state.search_from = index + 1;
+                        state.scan = CommentAwareScan::new();
+                        index += 1;
+                        continue;
+                    }
+                }
+                // Accept: the delimiter is fixed forever; compute the
+                // signature ONCE and start the depth fold fresh AT the
+                // delimiter (the oracle's unquoted_delimiter_depth(source[d..]).
+                let signature = fnbody_signature_before(chars, index, pending);
+                state.phase = FnBodyPhase::Depth { signature };
+                state.scan = CommentAwareScan::new();
+                state.depth = 0;
+            }
+        }
+        if let FnBodyPhase::Depth { .. } = state.phase {
+            if state.scan.active(ch) {
+                if ch == delim {
+                    state.depth += 1;
+                } else if ch == close {
+                    state.depth = state.depth.saturating_sub(1);
+                }
+            }
+            index += 1;
+            continue;
+        }
+        index += 1;
+    }
+    park
+}
+
+/// The signature check the oracle runs over `source[..delimiter].trim_end()`
+/// (stdin_source_has_unclosed_function_delimited_body's tail): the peeled
+/// `name ()` form or the `function NAME` keyword form. `delimiter` is a
+/// CHAR index into the pending mirror; `pending` carries the same text.
+fn fnbody_signature_before(chars: &[char], delimiter: usize, pending: &str) -> bool {
+    let byte = pending
+        .char_indices()
+        .nth(delimiter)
+        .map(|(byte, _)| byte)
+        .unwrap_or(pending.len());
+    let signature = pending[..byte].trim_end();
+    function_body_opener_signature(signature)
+}
+
+/// Signature forms shared by stdin_source_has_unclosed_function_delimited_body
+/// (the oracle) and the incremental FnBody scanner (perf9).
+fn function_body_opener_signature(signature: &str) -> bool {
+    // Word-initial unquoted `#` comment spans never become tokens (the
+    // strip helper below), so a head like `function d # note` still reads
+    // as a signature awaiting its body delimiter (rubash#388).
+    let signature = strip_word_initial_comment_spans(signature);
+    // Same fall-through as stdin_source_is_function_signature: a
+    // `function f()` header peels to `function f`, which is not a single
+    // WORD, so the keyword-form check below must still run
+    // (parse.y:1056 FUNCTION WORD '(' ')' newline_list function_body).
+    if let Some(before_close) = signature.strip_suffix(')') {
+        if let Some(name) = before_close.trim_end().strip_suffix('(') {
+            if is_stdin_function_name(name.trim_end()) {
+                return true;
+            }
+        }
+    }
+
+    signature
+        .strip_prefix("function ")
+        .map(function_keyword_operand_name)
+        .is_some_and(is_stdin_function_keyword_name)
+}
+
+/// The parked text scanners of the group reader's candidate-line
+/// completeness battery (perf9, #292B third wave).
+///
+/// `stdin_source_text_needs_more(pending, posix)` re-ran every text
+/// predicate over the WHOLE accumulated group per candidate line —
+/// measured at 3.56 G chars per arm for GNU bash's configure (`-n` 22.7 s
+/// vs GNU 5.3.0's 37 ms). This struct mirrors `pending` char-for-char
+/// (append-only: only push_raw_line ever extends it) and answers each
+/// predicate from a checkpointed scan machine that advances over the
+/// appended tail, parking wherever a forward decision
+/// (`$(`/`${`/backtick/`[`/`esac)` lookaheads, buffer-tail two-char
+/// lookaheads) is not yet decided by the text read so far. The machines
+/// live next to the #292 family in lexer/continuation.rs; the oracles
+/// (has_unclosed_quotes, has_unclosed_command_substitution +
+/// command_substitutions_balanced, unclosed_array_subscript_line,
+/// unclosed_input_close_char_posix, the function-body checks) stay
+/// authoritative for every other call site, and the per-prefix equivalence
+/// is enforced by the incremental tests there.
+#[derive(Clone)]
+struct GroupTextScans {
+    /// Exact char mirror of the accumulated `pending` group text.
+    chars: Vec<char>,
+    posix: bool,
+    /// rubash#3229: the reader's executed `extended_glob` state when
+    /// this gather started; seeds the extglob-group arm of
+    /// `needs_more` (whose in-text `shopt` mirror cannot see `shopt`
+    /// lines that were earlier, already-executed groups).
+    extglob_seed: bool,
+    quotes: Option<ScanCheckpoint<crate::lexer::QuotesResidualState>>,
+    comsub: Option<ScanCheckpoint<crate::lexer::ComsubResidualState>>,
+    balanced: Option<ScanCheckpoint<crate::lexer::BalancedResidualState>>,
+    subscript: Option<ScanCheckpoint<crate::lexer::SubscriptResidualState>>,
+    close_char: Option<ScanCheckpoint<crate::lexer::CloseCharResidualState>>,
+    fnbody_brace: Option<ScanCheckpoint<FnBodyResidualState>>,
+    fnbody_paren: Option<ScanCheckpoint<FnBodyResidualState>>,
+}
+
+impl GroupTextScans {
+    fn new(posix: bool) -> Self {
+        Self {
+            chars: Vec::new(),
+            posix,
+            extglob_seed: false,
+            quotes: Some(ScanCheckpoint {
+                resume: 0,
+                snapshot: crate::lexer::QuotesResidualState::default(),
+            }),
+            comsub: Some(ScanCheckpoint {
+                resume: 0,
+                snapshot: crate::lexer::ComsubResidualState::default(),
+            }),
+            balanced: Some(ScanCheckpoint {
+                resume: 0,
+                snapshot: crate::lexer::BalancedResidualState::default(),
+            }),
+            subscript: Some(ScanCheckpoint {
+                resume: 0,
+                snapshot: crate::lexer::SubscriptResidualState::default(),
+            }),
+            close_char: Some(ScanCheckpoint {
+                resume: 0,
+                snapshot: crate::lexer::CloseCharResidualState::default(),
+            }),
+            fnbody_brace: Some(ScanCheckpoint {
+                resume: 0,
+                snapshot: FnBodyResidualState::default(),
+            }),
+            fnbody_paren: Some(ScanCheckpoint {
+                resume: 0,
+                snapshot: FnBodyResidualState::default(),
+            }),
+        }
+    }
+
+    /// Extend the mirror with one raw group line (the same `raw` the caller
+    /// pushed into `pending`, newline included).
+    fn push_raw_line(&mut self, raw: &str) {
+        self.chars.extend(raw.chars());
+    }
+
+    /// The parked equivalent of `stdin_source_text_needs_more(pending,
+    /// posix)`: arm for arm the same predicates, each answered from its
+    /// checkpoint. `pending` must be exactly the text whose chars were
+    /// pushed so far (the signature-once check inside the function-body
+    /// scanners reads it).
+    ///
+    /// `skip_quote_comsub` (perf21 battery fusion): the caller's feeder
+    /// proved the just-appended line closed every quote and command
+    /// substitution over the append-only twin of this pending text, with no
+    /// undecided unit parked. The battery then takes that answer for its
+    /// quotes and comsub/balanced arms instead of re-advancing the duplicate
+    /// machines: at a line terminator both machines' states from a closed,
+    /// unparked position are exactly `QuotesResidualState::default()` /
+    /// closed (the '\n' arms only reset `comment_start`, and a closed
+    /// quotes gate means the substitution machine saw no open `$(`/backtick
+    /// unit), so recording that state at the new mirror end reproduces the
+    /// machines' own advance bit for bit. The comsub/balanced checkpoints
+    /// are simply left where they were — a later dirty line re-advances
+    /// them from there, exactly what the full scan would re-derive.
+    fn needs_more(&mut self, pending: &str, skip_quote_comsub: bool) -> bool {
+        // has_unclosed_input_syntax_posix:
+        if skip_quote_comsub {
+            // perf21 battery fusion: record the proven line-boundary state
+            // (see the method doc) instead of advancing the duplicate
+            // quotes machine.
+            self.quotes = Some(ScanCheckpoint {
+                resume: self.chars.len(),
+                snapshot: crate::lexer::QuotesResidualState::default(),
+            });
+        } else if self.advance_quotes() {
+            return true;
+        }
+        if !skip_quote_comsub && self.advance_comsub() && !self.advance_balanced() {
+            return true;
+        }
+        if self.advance_subscript() {
+            return true;
+        }
+        if self.advance_close_char() {
+            return true;
+        }
+        // rubash#3229: an unclosed extglob pattern group
+        // (parse.y:5466-5489) — word-internal, so no parked machine
+        // above can see it (the word tokenizer folds the group into
+        // the word). A fresh probe over the pending text instead; the
+        // scan's operator-byte fast reject keeps it at memchr speed
+        // for the groups that carry no group opener.
+        if crate::lexer::unclosed_extglob_group_line(pending, self.extglob_seed).is_some() {
+            return true;
+        }
+        // parse.y:5379-5384: trailing unquoted backslash keeps the line
+        // open — an O(tail) fresh probe over the group text's end.
+        if crate::lexer::stdin_line_ends_with_continuation(pending) {
+            return true;
+        }
+        // O(tail) fresh probe (fast-reject on the last char / `function `
+        // prefix; the peel only runs on signature-shaped tails).
+        if stdin_source_is_function_signature(pending) {
+            return true;
+        }
+        if self.advance_fnbody('{', pending) {
+            return true;
+        }
+        if self.advance_fnbody('(', pending) {
+            return true;
+        }
+        false
+    }
+
+    fn advance_quotes(&mut self) -> bool {
+        let (resume, snapshot) = match self.quotes.take() {
+            Some(checkpoint) => (checkpoint.resume, checkpoint.snapshot),
+            None => (0, crate::lexer::QuotesResidualState::default()),
+        };
+        let mut state = snapshot;
+        let park = crate::lexer::quotes_residuals_advance(&self.chars, resume, &mut state);
+        let open = state.is_open();
+        self.quotes = Some(match park {
+            Some(park) => ScanCheckpoint {
+                resume: park.pos,
+                snapshot: park.snapshot,
+            },
+            None => ScanCheckpoint {
+                resume: self.chars.len(),
+                snapshot: state,
+            },
+        });
+        open
+    }
+
+    fn advance_comsub(&mut self) -> bool {
+        let (resume, snapshot) = match self.comsub.take() {
+            Some(checkpoint) => (checkpoint.resume, checkpoint.snapshot),
+            None => (0, crate::lexer::ComsubResidualState::default()),
+        };
+        let mut state = snapshot;
+        let park = crate::lexer::comsub_residuals_advance(&self.chars, resume, &mut state);
+        let open = state.is_open();
+        self.comsub = Some(match park {
+            Some(park) => ScanCheckpoint {
+                resume: park.pos,
+                snapshot: park.snapshot,
+            },
+            None => ScanCheckpoint {
+                resume: self.chars.len(),
+                snapshot: state,
+            },
+        });
+        open
+    }
+
+    fn advance_balanced(&mut self) -> bool {
+        let (resume, snapshot) = match self.balanced.take() {
+            Some(checkpoint) => (checkpoint.resume, checkpoint.snapshot),
+            None => (0, crate::lexer::BalancedResidualState::default()),
+        };
+        let mut state = snapshot;
+        let park = crate::lexer::balanced_residuals_advance(&self.chars, resume, &mut state);
+        let balanced = !state.is_unbalanced();
+        self.balanced = Some(match park {
+            Some(park) => ScanCheckpoint {
+                resume: park.pos,
+                snapshot: park.snapshot,
+            },
+            None => ScanCheckpoint {
+                resume: self.chars.len(),
+                snapshot: state,
+            },
+        });
+        balanced
+    }
+
+    fn advance_subscript(&mut self) -> bool {
+        let (resume, snapshot) = match self.subscript.take() {
+            Some(checkpoint) => (checkpoint.resume, checkpoint.snapshot),
+            None => (0, crate::lexer::SubscriptResidualState::default()),
+        };
+        let mut state = snapshot;
+        let park = crate::lexer::subscript_residuals_advance(&self.chars, resume, &mut state);
+        let open = state.is_open();
+        self.subscript = Some(match park {
+            Some(park) => ScanCheckpoint {
+                resume: park.pos,
+                snapshot: park.snapshot,
+            },
+            None => ScanCheckpoint {
+                resume: self.chars.len(),
+                snapshot: state,
+            },
+        });
+        open
+    }
+
+    fn advance_close_char(&mut self) -> bool {
+        let (resume, snapshot) = match self.close_char.take() {
+            Some(checkpoint) => (checkpoint.resume, checkpoint.snapshot),
+            None => (0, crate::lexer::CloseCharResidualState::default()),
+        };
+        let mut state = snapshot;
+        let park =
+            crate::lexer::close_char_residuals_advance(&self.chars, resume, &mut state, self.posix);
+        let open = state.is_open();
+        self.close_char = Some(match park {
+            Some(park) => ScanCheckpoint {
+                resume: park.pos,
+                snapshot: park.snapshot,
+            },
+            None => ScanCheckpoint {
+                resume: self.chars.len(),
+                snapshot: state,
+            },
+        });
+        open
+    }
+
+    fn advance_fnbody(&mut self, delim: char, pending: &str) -> bool {
+        let slot = match delim {
+            '{' => &mut self.fnbody_brace,
+            _ => &mut self.fnbody_paren,
+        };
+        let (resume, snapshot) = match slot.take() {
+            Some(checkpoint) => (checkpoint.resume, checkpoint.snapshot),
+            None => (0, FnBodyResidualState::default()),
+        };
+        let mut state = snapshot;
+        let park = fnbody_residuals_advance(&self.chars, resume, &mut state, delim, pending);
+        let open = state.is_open();
+        *slot = Some(match park {
+            Some(park) => ScanCheckpoint {
+                resume: park.pos,
+                snapshot: park.snapshot,
+            },
+            None => ScanCheckpoint {
+                resume: self.chars.len(),
+                snapshot: state,
+            },
+        });
+        open
+    }
+}
+
+/// Process one syntactically complete group: expand (when history expansion
+/// is on), record the delimited entry, then execute. Lines whose expansion
+/// fails or is print-only do not execute; print-only lines still record.
+fn run_history_group(
+    executor: &mut Executor,
+    session: &Rc<RefCell<SessionHistory>>,
+    group: &[(String, bool)],
+    start_line: usize,
+    redirect_cmd: Option<&CommandNode>,
+    interactive: bool,
+    feeder_tokens: Option<Vec<Token>>,
+    entry_extended_glob: Option<bool>,
+) -> i32 {
+    let history_on = executor.get_env("__RUBASH_SETOPT_history").as_deref() == Some("1");
+    let histexpand_on = executor.get_env("__RUBASH_SETOPT_histexpand").as_deref() == Some("1");
+    // SEVAL_NOHIST contexts (PROMPT_COMMAND runner, eval.c:305 ->
+    // execute_variable_command -> parse_and_execute): the runner text is
+    // not a readline line — GNU neither history-expands nor records it, and
+    // it runs on the CURRENT shell environment, so `history` builtins
+    // inside PROMPT_COMMAND still act on the live session list. Skipping
+    // the record here is what keeps a theme's `history -a` from flushing
+    // the runner itself into $HISTFILE on every prompt.
+    let seval_nohist = executor
+        .get_env(crate::executor::Executor::PROMPT_COMMAND_NOHIST)
+        .as_deref()
+        == Some("1");
+    let history_on = history_on && !seval_nohist;
+    let histexpand_on = histexpand_on && !seval_nohist;
+    // rubash#2072: respawn transport text (a respawned `&`/coproc/procsub
+    // child's serialized `-c` operand) is not a readline line either: the
+    // child is GNU's forked subshell (execute_cmd.c:1576
+    // execute_in_subshell) executing already-parsed commands, and
+    // bashhist.c pre_process_line runs only on lines the interactive
+    // reader reads. The inherited history/histexpand option state stays
+    // VISIBLE in the child (verbatim fork inheritance — `set -o` reads
+    // it), but it must never be APPLIED to the transport text: with an
+    // interactive parent the child otherwise history-expanded its own
+    // function definitions (`!x: event not found` streams and blanked
+    // lines corrupting the parse — the `nvm ls` noise).
+    let respawn_transport =
+        crate::executor::RESPAWNED_CHILD.load(std::sync::atomic::Ordering::Relaxed);
+    let history_on = history_on && !respawn_transport;
+    let histexpand_on = histexpand_on && !respawn_transport;
+    let posix = executor.get_env("__RUBASH_POSIX_MODE").as_deref() == Some("1");
+    let cmdhist = shopt_state_enabled(executor, "cmdhist", true);
+    let lithist = shopt_state_enabled(executor, "lithist", false);
+    let histverify = shopt_state_enabled(executor, "histverify", false);
+    let control = executor
+        .get_env("HISTCONTROL")
+        .unwrap_or_default()
+        .to_string();
+    let ignore = executor
+        .get_env("HISTIGNORE")
+        .unwrap_or_default()
+        .to_string();
+    let histsize = crate::history::SessionHistory::size_limit(executor.get_env("HISTSIZE"));
+    let chars = executor.get_env("histchars").unwrap_or("!^#");
+    let mut chars = chars.chars();
+    let ctx = HistCtx {
+        chars: HistChars {
+            expand: chars.next().unwrap_or('!'),
+            subst: chars.next().unwrap_or('^'),
+            comment: chars.next().unwrap_or('#'),
+        },
+        posix,
+    };
+
+    let mut exec_parts: Vec<String> = Vec::new();
+    let mut record_texts: Vec<Option<String>> = Vec::new();
+    let mut modified_any = false;
+    // Physical line of each group entry: every entry consumes at least one
+    // input line; embedded newlines (quoted strings, heredoc bodies read as
+    // one text) consume more.
+    let mut physical_offset = 0usize;
+    for (text, is_body) in group {
+        let line_no = start_line + physical_offset;
+        physical_offset += text.lines().count().max(1);
+        if *is_body || !history_on || !histexpand_on {
+            exec_parts.push(text.clone());
+            // The recorded entry is only consumed when history is on;
+            // skipping the clone halves this loop's per-line allocations
+            // for history-off scripts (GNU bashhist.c pre_process_line is
+            // itself gated on history being enabled).
+            if history_on {
+                record_texts.push(Some(text.clone()));
+            }
+            continue;
+        }
+        let result = session.borrow_mut().expand(text, ctx);
+        match result.status {
+            -1 => {
+                // bashhist.c pre_process_line: failed history expansion is
+                // an internal_error-class diagnostic reported at the line
+                // being READ (current_command_line_count), so pin the
+                // location to this entry's physical line, not the last
+                // executed command's line.
+                executor.set_current_line_value(line_no);
+                // GNU error.c error_prolog gate: history-expansion failures
+                // are internal_error-class, so the ` line N` segment honors
+                // gnu_errfmt like every other error_prefix site.
+                let gnu_errfmt = executor.gnu_error_format_enabled();
+                let prefix = match (
+                    executor.get_env("__RUBASH_SCRIPT_NAME"),
+                    executor.get_env("__RUBASH_CURRENT_LINE"),
+                ) {
+                    (Some(script), Some(line)) => {
+                        let line: usize = line.parse().unwrap_or(1);
+                        let head = if executor.get_env("__RUBASH_EVAL_CONTEXT").is_some() {
+                            format!("{script}: eval")
+                        } else {
+                            script.to_string()
+                        };
+                        if gnu_errfmt {
+                            format!("{head}:{line}: ")
+                        } else {
+                            format!("{head}: line {line}: ")
+                        }
+                    }
+                    _ => "bash: ".to_string(),
+                };
+                eprintln!("{}{}", prefix, result.text);
+                exec_parts.push(String::new());
+                record_texts.push(None);
+                // A dropped line changes the executed text even when no other
+                // line expanded: the group must run from exec_parts, not the
+                // verbatim text (bash does not execute the failed line).
+                modified_any = true;
+            }
+            2 => {
+                eprintln!("{}", result.text);
+                exec_parts.push(String::new());
+                record_texts.push(Some(result.text));
+                // Print-only (:p) lines are never executed; use exec_parts so
+                // the group text omits them entirely.
+                modified_any = true;
+            }
+            1 if histverify => {
+                // shopt -s histverify (bashhist.c pre_process_line hands
+                // the expanded line back to readline for verification
+                // instead of executing it): a script has no editor to
+                // verify with, so the line is held and discarded — not
+                // echoed, not executed, not recorded (rubash#1072; GNU
+                // runs the script to completion with only the
+                // un-expanded lines producing output).
+                exec_parts.push(String::new());
+                record_texts.push(None);
+                modified_any = true;
+            }
+            status => {
+                if status == 1 {
+                    eprintln!("{}", result.text);
+                    modified_any = true;
+                }
+                exec_parts.push(result.text.clone());
+                record_texts.push(Some(result.text));
+            }
+        }
+    }
+
+    // Record the entry (bashhist.c history_delimiting_chars join).
+    if history_on {
+        if cmdhist {
+            let mut record = build_recorded_entry(&record_texts, group, lithist);
+            // bashhist.c:892-893: heredoc body lines (including the
+            // delimiter) preserve their trailing newlines. The entry
+            // ends with \n after the delimiter, producing a blank line
+            // in the history listing (%5d%c %s\n adds another \n).
+            if group.iter().any(|(_, is_body)| *is_body) && !record.ends_with('\n') {
+                record.push('\n');
+            }
+            let was_recorded = if record.trim().is_empty() {
+                false
+            } else {
+                session
+                    .borrow_mut()
+                    .record(&record, &control, &ignore, histsize)
+            };
+
+            // bashhist.c:961 really_add_history: recording the line resets
+            // hist_last_line_pushed so `history -s` may pop it.
+            {
+                let mut shell = session.borrow_mut();
+                shell.last_line_added = was_recorded;
+                if was_recorded {
+                    shell.last_line_pushed = false;
+                }
+            }
+        } else {
+            for text in record_texts.iter().flatten() {
+                // bashhist.c:643 pre_process_line records only
+                // `*return_value`: a line that expanded to exactly
+                // empty is never recorded (rubash#3329). Whitespace-
+                // only texts pass — GNU records them, subject only to
+                // check_history_control inside record().
+                if text.is_empty() {
+                    continue;
+                }
+                let was_recorded = session
+                    .borrow_mut()
+                    .record(text, &control, &ignore, histsize);
+                let mut shell = session.borrow_mut();
+                shell.last_line_added = was_recorded;
+                if was_recorded {
+                    shell.last_line_pushed = false;
+                }
+            }
+        }
+    } else {
+        session.borrow_mut().last_line_added = false;
+    }
+
+    let exec_text = if modified_any {
+        exec_parts.join("\n")
+    } else {
+        group
+            .iter()
+            .map(|(text, _)| text.as_str())
+            .collect::<Vec<_>>()
+            .join("\n")
+    };
+    let pre_alias_text = exec_text.clone();
+    let exec_text = expand_group_aliases(executor, &exec_text);
+    if exec_text.trim().is_empty() {
+        return executor.last_exit_code();
+    }
+    // rubash#1186: the failglob DISCARD is handled by the grouped
+    // reader loop (run_script_grouped_at_line_offset), which knows the
+    // line span of every group; see failglob_discard_until there.
+    // The group's words are final: executor-level alias expansion would
+    // expand them a second time. Inner re-parses (eval, command
+    // substitution, source, traps) suspend the marker and expand their own
+    // input, matching GNU's per-stream alias handling.
+    executor
+        .shell_state
+        .env_vars
+        .insert("__RUBASH_ALIAS_STREAMED".to_string(), "1".to_string());
+    // perf19 token reuse: when nothing rewrote the group's text (history
+    // expansion off or inert AND alias expansion an identity — the
+    // exec_text == pre_alias_text comparison below already answers the
+    // alias half) the gather feeder's committed tokens are byte-identical
+    // to a fresh re-lex of exec_text (read_next_source_group's perf10
+    // certification: complete break, no extglob toggle, non-alias arm).
+    // GNU parse.y:3557 read_token streams once and never re-tokenizes
+    // consumed text — the same reuse the `.` driver (perf10) applies. The
+    // trailing per-logical-line separator is popped with the exact rule
+    // tokenize_comsub_body_with_origin applies to the fresh stream.
+    let reuse_tokens = if exec_text == pre_alias_text && !modified_any {
+        feeder_tokens.map(|mut tokens| {
+            if tokens
+                .last()
+                .is_some_and(|token| token.kind == TokenKind::Semicolon)
+            {
+                tokens.pop();
+            }
+            tokens
+        })
+    } else {
+        None
+    };
+    let status = match reuse_tokens {
+        Some(tokens) => run_source_pre_lexed_with_line_offset(
+            executor,
+            &exec_text,
+            interactive,
+            start_line.saturating_sub(1),
+            redirect_cmd,
+            None,
+            tokens,
+        ),
+        None => {
+            // rubash#3205: a fresh re-lex of a gathered group must
+            // start from the gate captured at the group's entry, not
+            // the group-end global the gather left behind (the
+            // gather feeder landed the group's own shopt flips at
+            // the group's unit boundaries). Pin the gate for the
+            // duration of the run and restore the caller's value
+            // afterwards: what the gate is after the group is
+            // execution's own business (the shopt builtins that
+            // actually ran set it), exactly as before this pin.
+            // Callers that did not gather through
+            // read_next_source_group pass None — their text was
+            // never pre-scanned, so the live gate already is the
+            // entry state.
+            let saved_extended_glob = entry_extended_glob.map(|entry| {
+                let saved = crate::lexer::parse_extended_glob();
+                crate::lexer::set_parse_extended_glob(entry);
+                saved
+            });
+            let status = run_source_with_line_offset(
+                executor,
+                &exec_text,
+                interactive,
+                start_line.saturating_sub(1),
+                redirect_cmd,
+                if exec_text == pre_alias_text {
+                    None
+                } else {
+                    Some(pre_alias_text.as_str())
+                },
+            );
+            if let Some(saved) = saved_extended_glob {
+                crate::lexer::set_parse_extended_glob(saved);
+            }
+            status
+        }
+    };
+    executor
+        .shell_state
+        .env_vars
+        .remove("__RUBASH_ALIAS_STREAMED");
+    status
+}
+
+/// Join the recorded line texts with GNU history_delimiting_chars rules:
+/// backslash continuation removes the backslash, heredoc bodies keep real
+/// newlines, reserved words and operators join with a space, everything else
+/// with semicolon-space. lithist saves newlines instead of semicolons.
+fn build_recorded_entry(
+    texts: &[Option<String>],
+    group: &[(String, bool)],
+    lithist: bool,
+) -> String {
+    const NO_SEMI: &[&str] = &[
+        "{", "(", ")", "[", ";", "&", "|", "case", "do", "else", "if", "in", "then", "until",
+        "while", "time",
+    ];
+    let mut out = String::new();
+    let mut prev_kept: Option<usize> = None;
+    // parse.y history_delimiting_chars: while a quoted construct opened on
+    // an earlier line is still open (dstack delimiter is ' " or `), lines
+    // join with a real newline, not "; ". Heredoc bodies never feed the
+    // quote scanner (GNU reads them raw, PST_HEREDOC path).
+    let mut quote_state: Option<char> = None;
+    for (index, text) in texts.iter().enumerate() {
+        let Some(text) = text else { continue };
+        if out.is_empty() {
+            out.push_str(text);
+            prev_kept = Some(index);
+            continue;
+        }
+        let prev_text = texts[prev_kept.unwrap_or(index)]
+            .as_deref()
+            .unwrap_or_default();
+        let prev_was_body = index > 0 && group[index - 1].1;
+        if !prev_was_body && index > 0 {
+            quote_state = advance_quote_state(quote_state, &group[index - 1].0);
+        }
+        let cur_is_body = group[index].1;
+        let delim = if quote_state.is_some() {
+            "\n"
+        } else if prev_text.ends_with('\\') {
+            if out.ends_with('\\') {
+                out.pop();
+            }
+            ""
+        } else if prev_was_body || cur_is_body {
+            "\n"
+        } else if lithist {
+            // GNU bashhist.c (lithist): the lines of a multi-line
+            // command are saved with their newlines INSTEAD of the
+            // delimiting characters — every ordinary line boundary,
+            // including the one after a reserved word like `do` where
+            // cmdhist would join with a space (audit B4-F06).
+            "\n"
+        } else if prev_text
+            .split_whitespace()
+            .next_back()
+            .map(|word| NO_SEMI.contains(&word))
+            .unwrap_or(false)
+        {
+            " "
+        } else {
+            "; "
+        };
+        out.push_str(delim);
+        out.push_str(text);
+        prev_kept = Some(index);
+    }
+    out
+}
+
+/// Track the open quote delimiter across lines the way parse.y's dstack
+/// does for history delimiting: returns the still-open ' " or ` delimiter,
+/// or None when the text ends outside quotes. Backslash escapes work
+/// outside single quotes; inside double quotes only the shell-escaped set.
+fn advance_quote_state(state: Option<char>, text: &str) -> Option<char> {
+    let mut state = state;
+    let chars: Vec<char> = text.chars().collect();
+    let mut i = 0usize;
+    while i < chars.len() {
+        let c = chars[i];
+        match state {
+            Some('\'') => {
+                if c == '\'' {
+                    state = None;
+                }
+            }
+            Some('`') => {
+                if c == '\\' && i + 1 < chars.len() {
+                    i += 1;
+                } else if c == '`' {
+                    state = None;
+                }
+            }
+            Some('"') => {
+                if c == '\\'
+                    && i + 1 < chars.len()
+                    && matches!(chars[i + 1], '"' | '\\' | '$' | '`' | '\n')
+                {
+                    i += 1;
+                } else if c == '"' {
+                    state = None;
+                }
+            }
+            _ => match c {
+                '\\' => i += 1,
+                '\'' | '"' | '`' => state = Some(c),
+                '#' if i == 0 || matches!(chars[i - 1], ' ' | '\t' | ';' | '\n') => break,
+                _ => {}
+            },
+        }
+        i += 1;
+    }
+    state
+}
+
+/// builtins/shopt.rs SHOPT_STATE membership with the built-in default.
+fn shopt_state_enabled(executor: &Executor, name: &str, default: bool) -> bool {
+    match executor.get_env("__RUBASH_SHOPT_STATE") {
+        None => default,
+        Some(state) => state.split('\u{1f}').any(|entry| entry == name),
+    }
+}
+
+pub fn stdin_script_errexit_enabled(executor: &Executor) -> bool {
+    executor
+        .get_env("SHELLOPTS")
+        .is_some_and(|options| options.split(':').any(|option| option == "errexit"))
+}
+
+/// Q6 arm B: THE errexit-break verdict — the one derivation of
+/// "this terminal status is an errexit break" (nonzero status,
+/// errexit in effect, the `! CMD` CMD_IGNORE_RETURN exemption of
+/// execute_cmd.c:652-656 applied). The grouped driver loop and
+/// the Session layer's direct-route outcome mapping both read
+/// the verdict from here; arm A carried a copy at each site.
+/// The verdict is about the STATUS; whether a break actually
+/// adjudicated additionally depends on the unwind facts (a real
+/// jump or a signal discard preempts it), which the call sites
+/// combine with this verdict — in the same order everywhere.
+pub fn errexit_break_verdict(executor: &Executor, status: i32) -> bool {
+    status != 0
+        && stdin_script_errexit_enabled(executor)
+        && !executor.last_command_inverted()
+        // rubash#2652: a terminal status produced while errexit was
+        // suppressed (a CMD_IGNORE_RETURN position) is exempt —
+        // GNU's -e decision was already made per command inside
+        // execute_command_internal (execute_cmd.c:624) and the
+        // reader must not re-fire on it.
+        && !executor.errexit_suppressed_terminal()
+}
+
+pub fn stdin_source_needs_more(source: &str) -> bool {
+    stdin_source_needs_more_posix(source, false)
+}
+
+/// The 1-based line (within `text`) on which the OUTERMOST keyword
+/// compound that is still open at the end of `text` began, if any. The
+/// keyword stack mirrors `stdin_source_needs_more_posix`'s discipline
+/// (same push/pop pairs); token positions carry physical lines. Used by
+/// the unclosed-diagnostics route in `run_source_impl` to find where
+/// the FAILED command starts: a matched-pair construct (quote, `$(`,
+/// ...) that dies at EOF inside an unclosed `if`/`while`/`{`/... makes
+/// the whole compound the failed command in GNU's reader (parse.y
+/// read_token fails inside the compound's own token read), so none of
+/// the compound — and nothing else on its opening line — ever runs,
+/// and the compound-EOF diagnostic is never printed (rubash#1589).
+fn unclosed_compound_open_line(text: &str) -> Option<usize> {
+    let tokens = tokenize(text);
+    let mut stack: Vec<(&str, usize)> = Vec::new();
+    for token in &tokens {
+        // rubash#1721: structural keywords only (see
+        // Token::structural_keyword) — an argument-position keyword
+        // word is not an open compound.
+        if !token.structural_keyword() {
+            continue;
+        }
+        match token.value.as_str() {
+            "case" => stack.push(("esac", token.position)),
+            "if" => stack.push(("fi", token.position)),
+            "for" | "select" | "while" | "until" => stack.push(("done", token.position)),
+            "{" => stack.push(("}", token.position)),
+            "(" => stack.push((")", token.position)),
+            ")" => {
+                if stack.last().map(|(closer, _)| *closer) == Some(")") {
+                    stack.pop();
+                }
+            }
+            "esac" | "fi" | "done" | "}" => {
+                if stack.last().map(|(closer, _)| *closer) == Some(token.value.as_str()) {
+                    stack.pop();
+                }
+            }
+            _ => {}
+        }
+    }
+    stack.first().map(|(_, line)| *line)
+}
+
+/// Advance an open `=~` parse_matched_pair scan depth over one token
+/// (see the scan tracking in `stdin_source_needs_more_posix`). Keyword
+/// `(`/`)` are the lexer's split points; an unquoted word's unescaped
+/// parens count too (a `(' glued inside a word still opens the pair,
+/// parse.y:5443); a quoted token's parens are data — the same admission
+/// `merge_pattern_rhs_fragments`' unquoted_paren_delta uses. The depth
+/// saturates at zero: once no pair is open, a `)' is word data.
+fn advance_regexp_scan_depth(depth: isize, token: &crate::lexer::Token) -> isize {
+    if token.kind == TokenKind::Keyword {
+        return match token.value.as_str() {
+            "(" => depth + 1,
+            ")" => depth.saturating_sub(1),
+            _ => depth,
+        };
+    }
+    if token.raw != token.value {
+        return depth;
+    }
+    let mut depth = depth;
+    let mut escaped = false;
+    for ch in token.raw.chars() {
+        if escaped {
+            escaped = false;
+            continue;
+        }
+        match ch {
+            '\\' => escaped = true,
+            '(' => depth += 1,
+            ')' => depth = depth.saturating_sub(1),
+            _ => {}
+        }
+    }
+    depth
+}
+
+/// POSIX-aware variant: `set -o posix` changes `'` scanning inside
+/// `"${...}"` (Interp 221), which decides whether the input is complete.
+pub fn stdin_source_needs_more_posix(source: &str, posix: bool) -> bool {
+    // GAP-9 round 2 (niubash#863; captain adjudication): the
+    // composition has a TERMINAL channel. The token walk's terminal
+    // verdicts (stray `)`, foreign keyword closers, stray
+    // `;;`-family) are GNU's read-time syntax errors — parse.y:6724
+    // yyerror reports the token and resets the parser; the reader
+    // does not read on in hope of a cure — so they override the text
+    // half's continuation verdicts: `f() {\n)` is textually an
+    // unclosed function body, but the stray `)` already ended the
+    // read, and gathering more lines into the dead group only
+    // buries the diagnostic (the niubash#482 wedge). Genuine
+    // continuation signals from either half still yield needs-more
+    // below; the parked-feeder fusion makes the same cut (see
+    // GroupScanFeeder::token_level_terminal), keeping the two paths
+    // in agreement.
+    let verdict = token_walk_verdict(source);
+    if verdict == TokenWalkVerdict::Terminal {
+        return false;
+    }
+    if stdin_source_text_needs_more(source, posix) {
+        return true;
+    }
+    // rubash#1573: an unterminated `[[` holds the group open (the
+    // conditional is one command; see GroupScanFeeder::
+    // token_level_needs_more for the parked-feeder arm of this rule —
+    // both halves of the completeness test ask the scanner's PST_CONDCMD
+    // state so their answers agree).
+    if crate::lexer::source_ends_in_cond_command(source, posix) {
+        return true;
+    }
+    verdict == TokenWalkVerdict::NeedsMore
+}
+
+/// The token-level half of `stdin_source_needs_more_posix` over one
+/// whole text, in the three channels the composition keeps apart:
+/// what the fresh token stream says about the text's completeness.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum TokenWalkVerdict {
+    /// Nothing open, nothing terminal: a complete unit.
+    Complete,
+    /// A construct is still open (keyword stack, `=~` scan,
+    /// trailing connector, unread here-doc body): read on.
+    NeedsMore,
+    /// A token GNU's reader rejects at read time (stray `)`,
+    /// foreign keyword closer, stray `;;`-family): the group is
+    /// finished — as an error — however open the text still looks.
+    Terminal,
+}
+
+fn token_walk_verdict(source: &str) -> TokenWalkVerdict {
+    let tokens = tokenize(source);
+    let mut stack = Vec::new();
+    // parse.y:3119 gather_here_documents: at the newline the reader
+    // drains every queued here-doc's body from the input stream
+    // before the command counts as read (the calls ride the grammar
+    // actions, parse.y:1266/1344/1362/1377), so a body the lexer
+    // stamps unterminated means this read is still inside the body.
+    // Body tokens are data, never grammar: they fold nothing, and
+    // their text must never reach the stray-close arms below.
+    let mut heredoc_pending = false;
+    // parse.y:5443-5461 read_token_word under PST_REGEXP: once an
+    // unquoted `(' opens parse_matched_pair inside a `=~' RHS word, the
+    // reader consumes raw text until the balancing `)' — every following
+    // token (a `]]' the lexer still emits, later lines' keywords, plain
+    // words) is regex data, so the command cannot be complete while the
+    // scan is open (rubash#1290 residual: the stdin group was submitted
+    // after the `[[` line and the EOF diagnostic landed on the group's
+    // own last line instead of the stream's EOF line). The lexer flags
+    // the RHS fragments and counts only keyword parens for its own state
+    // (it resets at a data `]]'), so the scan depth is re-derived here
+    // from the fragment stream and then tracked across whatever follows.
+    let mut regexp_scan_depth = 0isize;
+    for token in &tokens {
+        if token.kind == TokenKind::HereDocBody {
+            if token.is_unterminated_heredoc_body() {
+                heredoc_pending = true;
+            }
+            continue;
+        }
+        if regexp_scan_depth > 0 {
+            regexp_scan_depth = advance_regexp_scan_depth(regexp_scan_depth, token);
+            continue;
+        }
+        // `=~` RHS fragments are word data, never grammar tokens.
+        if token.regexp_rhs_fragment {
+            regexp_scan_depth = advance_regexp_scan_depth(0, token);
+            continue;
+        }
+        // `;;`/`;&`/`;;;&` tokenize as Word: legal only inside a `case` or
+        // an arithmetic `( (` frame; anywhere else GNU's grammar rejects
+        // them at read time — same terminal verdict as the stray `)`.
+        if token.kind == TokenKind::Word
+            && token.raw == token.value
+            && matches!(token.value.as_str(), ";;" | ";&" | ";;&")
+        {
+            if !matches!(stack.last(), Some(&"esac") | Some(&")")) {
+                return TokenWalkVerdict::Terminal;
+            }
+            continue;
+        }
+        // rubash#1721: only structural keywords fold — a keyword-spelled
+        // argument word (`echo if', `command -vkb if' in a case clause)
+        // is not a reserved word to GNU's reader (parse.y:3168
+        // CHECK_FOR_RESERVED_WORD via parse.y:5899
+        // reserved_word_acceptable; PST_CASEPAT parse.y:3177-3186), so
+        // it pushes no phantom frame here either. Mirror of
+        // GroupScanFeeder::fold_token.
+        if !token.structural_keyword() {
+            continue;
+        }
+        match token.value.as_str() {
+            "case" => stack.push("esac"),
+            "if" => stack.push("fi"),
+            "for" | "select" | "while" | "until" => stack.push("done"),
+            // `{` at command position opens a brace group that must see
+            // its `}` — GNU reads until the closing brace (parse.y
+            // brace_group), so a multi-line `{ ... }` keeps the group open.
+            "{" => stack.push("}"),
+            "(" => stack.push(")"),
+            ")" => {
+                if stack.last() == Some(&")") {
+                    stack.pop();
+                } else if !token.case_pattern_close {
+                    // niubash#482: a `)` that closes no `(` and is not a
+                    // case-pattern terminator is GNU's `syntax error near
+                    // unexpected token `)'' at that token — the reader
+                    // abandons the whole group (yyerror), so gathering can
+                    // never produce a legal completion: the group ends here
+                    // and the parser reports the stray close.
+                    return TokenWalkVerdict::Terminal;
+                }
+            }
+            "esac" | "fi" | "done" | "}" => {
+                if stack.last() == Some(&token.value.as_str()) {
+                    stack.pop();
+                } else if matches!(stack.last(), Some(&"fi") | Some(&"done") | Some(&"}")) {
+                    // Same family as the stray `)`: a foreign keyword
+                    // closer under a keyword opener is GNU's read-time
+                    // syntax error, never a future completion. Under
+                    // `(`/case frames `done`/`fi`/`esac` are legal text
+                    // (arithmetic, patterns) — keep gathering
+                    // (niubash#482).
+                    return TokenWalkVerdict::Terminal;
+                }
+            }
+            _ => {}
+        }
+    }
+    if regexp_scan_depth > 0 || !stack.is_empty() || heredoc_pending {
+        return TokenWalkVerdict::NeedsMore;
+    }
+    // GNU parse.y grammar consumes the newline AFTER a binary connector as
+    // part of the same production — `list1: list1 AND_AND newline_list
+    // list1` (parse.y:1286), `... OR_OR newline_list ...` (parse.y:1288),
+    // `pipeline: pipeline '|' newline_list pipeline` (parse.y:1471) and
+    // BAR_AND (parse.y:1473-1474) — so input whose last significant token
+    // is `&&`, `||`, `|`, or `|&` is an INCOMPLETE command: the reader
+    // keeps reading (PS2) instead of submitting the truncated text, whose
+    // parse would die with `syntax error: unexpected end of file`
+    // (rubash#255: ble.sh line 28570, the file's first line-spanning `&&`).
+    // `&` and `;` do NOT continue — they terminate the command
+    // (parse.y:1290 `list1 '&' newline_list list1` completes $1 first).
+    // tokenize emits one Semicolon with line_break=true per physical line,
+    // so skip those trailing separators before inspecting the last token.
+    // HereDocBody tokens are skipped too: the walk above already treats
+    // body tokens as data that folds nothing (they are drained into the
+    // redirection at the newline, parse.y:3120 gather_here_documents),
+    // and a body sitting physically after a header line's trailing
+    // connector (`cat <<EOF &&` + body + delimiter) must not mask that
+    // connector — the AND_AND production is still open at the
+    // delimiter line (rubash#3003). GroupScanFeeder::fold_token skips
+    // body tokens the same way, keeping the two verdicts in agreement.
+    let last_significant = tokens
+        .iter()
+        .rev()
+        .find(|token| {
+            !(token.kind == TokenKind::Semicolon && token.line_break)
+                && token.kind != TokenKind::HereDocBody
+        })
+        .map(|token| token.kind.clone());
+    if matches!(
+        last_significant,
+        Some(TokenKind::And)
+            | Some(TokenKind::Or)
+            | Some(TokenKind::Pipe)
+            | Some(TokenKind::PipeErr)
+    ) {
+        TokenWalkVerdict::NeedsMore
+    } else {
+        TokenWalkVerdict::Complete
+    }
+}
+
+/// The text-level (non-tokenizing) half of `stdin_source_needs_more_posix`:
+/// the completeness signals computable without the token stream. The
+/// incremental group reader pairs this with a parked `GroupScanFeeder`
+/// (src/lexer/mod.rs), which maintains the token-level half's keyword
+/// stack and trailing-connector answer across appended lines.
+pub fn stdin_source_text_needs_more(source: &str, posix: bool) -> bool {
+    if crate::lexer::has_unclosed_input_syntax_posix(source, posix) {
+        return true;
+    }
+    // rubash#3229: an unclosed extglob pattern group keeps the reader
+    // open (parse.y:5466-5489). Seeded closed here — `shopt` lines
+    // inside the text itself open the scan's mirror; the parked
+    // gather (GroupTextScans) seeds it with the executed state.
+    if crate::lexer::unclosed_extglob_group_line(source, false).is_some() {
+        return true;
+    }
+    // parse.y:5379-5384: trailing unquoted backslash keeps the physical line
+    // open (PS2 continuation) -- the joined line is assembled later by the
+    // lexer logical-line loop, which removes the backslash-newline pair.
+    if crate::lexer::stdin_line_ends_with_continuation(source) {
+        return true;
+    }
+    if stdin_source_is_function_signature(source) {
+        return true;
+    }
+    if stdin_source_has_unclosed_function_body(source) {
+        return true;
+    }
+    false
+}
+
+/// Net open-paren count for one command line, ignoring quoted spans and
+/// comments (parse.y:3922: while LEX_INCOMMENT, "don't bother counting
+/// parens" — a `#` at word start runs to EOL). Used by the history driver
+/// to keep a group open across a heredoc declared inside a process
+/// substitution.
+pub fn line_paren_delta(line: &str) -> i64 {
+    // perf21: both counted bytes must be present for a non-zero delta; a
+    // byte-gate admission turns the quote-aware walk into a memcmp-speed
+    // scan for the majority of lines (GNU parse.y:3557 read_token streams
+    // the input once; the walk below is this port's substitute).
+    let bytes = line.as_bytes();
+    if !bytes.contains(&b'(') && !bytes.contains(&b')') {
+        return 0;
+    }
+    let mut scan = CommentAwareScan::new();
+    let mut depth = 0i64;
+    for c in line.chars() {
+        if scan.active(c) {
+            if c == '(' {
+                depth += 1;
+            } else if c == ')' {
+                depth -= 1;
+            }
+        }
+    }
+    depth
+}
+
+/// Net heredoc bodies still unread after processing `text`, which may span
+/// multiple physical lines (an alias value can carry an entire heredoc:
+/// `alias 'heredoc=cat <<EOF\nhello\nworld\nEOF'` — GNU reads the pushed
+/// text on the same input stream, so the body lines inside it satisfy the
+/// declaration and the next SOURCE line is normal input, parse.y:2055
+/// push_string + here_document_to_fd). Lines consumed as body text are
+/// never scanned for `<<` operators.
+pub fn stdin_heredoc_declarations(text: &str) -> Vec<(String, bool)> {
+    let mut pending: Vec<(String, bool)> = Vec::new();
+    let mut arith_depth = 0i64;
+    for line in text.split('\n') {
+        if let Some((delimiter, strip_tabs)) = pending.first().cloned() {
+            let candidate = if strip_tabs {
+                line.trim_start_matches('\t')
+            } else {
+                line
+            };
+            if candidate == delimiter {
+                pending.remove(0);
+            }
+            continue;
+        }
+        pending.extend(scan_heredoc_operators_with_state(line, &mut arith_depth));
+    }
+    pending
+}
+
+/// rubash#351 oracle: the first line of `input` whose heredoc delimiter word
+/// leaves a quote open, with that quote character and the 1-based line.
+pub fn heredoc_delimiter_unclosed_quote(input: &str) -> Option<(char, usize)> {
+    let mut arith_depth = 0i64;
+    for (line_index, line) in input.split('\n').enumerate() {
+        let (_, unclosed) = scan_heredoc_operators_full(line, &mut arith_depth);
+        if let Some(quote) = unclosed {
+            return Some((quote, line_index + 1));
+        }
+    }
+    None
+}
+
+/// One physical line of the driver's heredoc-declaration scan, carrying the
+/// open arithmetic-command paren depth across lines so a multi-line `((`
+/// never leaks its shift operators as heredoc declarations.
+pub fn stdin_heredoc_line_declarations(line: &str, arith_depth: &mut i64) -> Vec<(String, bool)> {
+    scan_heredoc_operators_with_state(line, arith_depth)
+}
+
+/// `<<`/`<<-` operator declarations on one physical line. GNU parse.y
+/// read_token: `<<` inside quotes is word text, not a redirection —
+/// `alias lb='cat <<E2'` declares no heredoc. Unquoted < > | & ; ( ) are
+/// token breaks (`x<<EOF` attaches EOF to x), `#` starts a comment only at
+/// a word boundary, `$(...)`/`<(...)`/backquote bodies are reparsed so a
+/// `<<` inside them is live syntax, and the delimiter is remembered
+/// dequoted (quoting only suppresses body expansion, never the match).
+///
+/// GNU parse.y:3727-3728 read_token hands a `((' to parse_dparen
+/// (parse.y:4895) BEFORE the redirection branch (parse.y:3690-3706) can lex
+/// `<<`: the whole `((...))` body is arithmetic text consumed by
+/// parse_arith_cmd/parse_matched_pair, so `<<`/`<<=` there are the shift
+/// operators, never REDIR_LESSLESS (same class as rubash#181's
+/// inside_arithmetic_command guard in the tokenizer). A `$((...))`
+/// arithmetic expansion in a word gets the same treatment. Without this,
+/// `((__ble_weight<<=1,...))` (ble.sh:6733) declared a phantom heredoc with
+/// delimiter `=1,` that never terminates, so the group driver accumulated
+/// the rest of the file into one pending group — O(n^2) re-scans per line
+/// and a mis-parse of the merged text (rubash#244/#245: ble.sh -n died at
+/// line 28355 after 117 s; GNU parses instantly, rc=0).
+fn scan_heredoc_operators(line: &str) -> Vec<(String, bool)> {
+    let mut arith_depth = 0i64;
+    scan_heredoc_operators_with_state(line, &mut arith_depth)
+}
+
+fn scan_heredoc_operators_with_state(line: &str, arith_depth: &mut i64) -> Vec<(String, bool)> {
+    scan_heredoc_operators_full(line, arith_depth).0
+}
+
+/// scan_heredoc_operators_with_state plus the unterminated-quote signal of
+/// the delimiter word (rubash#351): GNU read_token_word (parse.y:5419-5437)
+/// reads the here-document delimiter as an ordinary WORD, so a quote that
+/// never closes keeps the read open to EOF — no heredoc is declared and the
+/// parser dies with `unexpected EOF while looking for matching `q''.
+fn scan_heredoc_operators_full(
+    line: &str,
+    arith_depth: &mut i64,
+) -> (Vec<(String, bool)>, Option<char>) {
+    // perf21 byte admission: every declaration arm needs a `<` byte, and the
+    // only cross-line state (`arith_depth`) can be opened solely by a `(`
+    // byte (`((` command position or `$((` word expansion — both arms below
+    // read a `(` from the text). With neither byte present and depth already
+    // 0, the walk below cannot declare anything and cannot move the state,
+    // so skip the char materialization entirely (GNU read_token streams the
+    // input once; this walk is the gather's per-line substitute).
+    if *arith_depth == 0 {
+        let bytes = line.as_bytes();
+        if !bytes.contains(&b'<') && !bytes.contains(&b'(') {
+            return (Vec::new(), None);
+        }
+    }
+    // GNU read_token_word (parse.y:5419-5437) reads the heredoc delimiter
+    // as an ordinary WORD: a quote that never closes keeps reading lines
+    // until EOF, where the word read FAILS with `unexpected EOF while
+    // looking for matching `q'' and NO heredoc is ever declared — the
+    // redirection never gathers a body (rubash#351: `cat <<'E` + line `E`
+    // was silently accepted as delimiter E with an EOF warning). An
+    // unterminated quote in the delimiter therefore suppresses the
+    // declaration and is reported for the EOF diagnostic.
+    let mut unclosed_delimiter_quote: Option<char> = None;
+    let chars: Vec<char> = line.chars().collect();
+    let mut declarations = Vec::new();
+    let mut expect_delim: Option<bool> = None;
+    let mut i = 0usize;
+    // Command-position tracking for the `((` dispatch, mirroring GNU
+    // parse_dparen's reserved_word_acceptable gate: a line start, an
+    // operator boundary, or a command keyword puts a following `((` in
+    // command position.
+    let mut at_command = true;
+    while i < chars.len() {
+        if *arith_depth > 0 {
+            // Arithmetic body: parens nest the span; quoted spans are
+            // opaque; `<<` is the shift operator, never a heredoc.
+            match chars[i] {
+                '\\' => i += 2,
+                '\'' | '"' => {
+                    let q = chars[i];
+                    i += 1;
+                    while i < chars.len() && chars[i] != q {
+                        if q == '"' && chars[i] == '\\' && i + 1 < chars.len() {
+                            i += 1;
+                        }
+                        i += 1;
+                    }
+                    i += 1;
+                }
+                '(' => {
+                    *arith_depth += 1;
+                    i += 1;
+                }
+                ')' => {
+                    *arith_depth -= 1;
+                    i += 1;
+                    if *arith_depth == 0 {
+                        at_command = true;
+                    }
+                }
+                _ => i += 1,
+            }
+            continue;
+        }
+        match chars[i] {
+            ' ' | '\t' => i += 1,
+            '#' => break,
+            '$' if chars.get(i + 1) == Some(&'(') && chars.get(i + 2) == Some(&'(') => {
+                // `$((` arithmetic expansion inside a word: the body is
+                // arithmetic text (parse.y read_token_word ->
+                // parse_matched_pair), so `<<` there never declares.
+                *arith_depth = 2;
+                i += 3;
+            }
+            '(' if chars.get(i + 1) == Some(&'(') && at_command => {
+                // Command-position `((` arithmetic command: parse_dparen
+                // consumes the whole body before read_token's redirection
+                // branch ever runs (parse.y:3727-3728).
+                *arith_depth = 2;
+                i += 2;
+            }
+            '<' => {
+                if chars.get(i + 1) == Some(&'<') {
+                    match chars.get(i + 2) {
+                        Some(&'<') => i += 3, // <<< herestring: no body
+                        Some(&'-') => {
+                            expect_delim = Some(true);
+                            i += 3;
+                        }
+                        _ => {
+                            expect_delim = Some(false);
+                            i += 2;
+                        }
+                    }
+                } else {
+                    i += 1;
+                }
+                at_command = false;
+            }
+            '>' | '|' | '&' | ';' | '(' | ')' => {
+                i += 1;
+                at_command = true;
+            }
+            _ => {
+                // One word, honoring quoting; comparison text is dequoted.
+                let mut word = String::new();
+                while i < chars.len() {
+                    match chars[i] {
+                        ' ' | '\t' | '<' | '>' | '|' | '&' | ';' | '(' | ')' => break,
+                        '$' if chars.get(i + 1) == Some(&'(') && chars.get(i + 2) == Some(&'(') => {
+                            // `$((` arithmetic expansion is one atomic word
+                            // piece (read_token_word -> parse_matched_pair):
+                            // consume the whole span into the word so its
+                            // shift operators never lex as `<<` redirections
+                            // (parse.y:3727 keeps the body away from
+                            // read_token's redirection branch). A span still
+                            // open at end of line propagates its depth into
+                            // the carried state so continuation lines keep
+                            // the suppression.
+                            *arith_depth = 2;
+                            word.push('$');
+                            i += 1;
+                            while i < chars.len() && *arith_depth > 0 {
+                                match chars[i] {
+                                    '\\' => {
+                                        word.push(chars[i]);
+                                        i += 1;
+                                        if i < chars.len() {
+                                            word.push(chars[i]);
+                                            i += 1;
+                                        }
+                                    }
+                                    '\'' | '"' => {
+                                        let q = chars[i];
+                                        word.push(chars[i]);
+                                        i += 1;
+                                        while i < chars.len() && chars[i] != q {
+                                            if q == '"' && chars[i] == '\\' && i + 1 < chars.len() {
+                                                word.push(chars[i]);
+                                                i += 1;
+                                            }
+                                            word.push(chars[i]);
+                                            i += 1;
+                                        }
+                                        if i < chars.len() {
+                                            word.push(chars[i]);
+                                            i += 1;
+                                        }
+                                    }
+                                    '(' => {
+                                        *arith_depth += 1;
+                                        word.push(chars[i]);
+                                        i += 1;
+                                    }
+                                    ')' => {
+                                        *arith_depth -= 1;
+                                        word.push(chars[i]);
+                                        i += 1;
+                                    }
+                                    _ => {
+                                        word.push(chars[i]);
+                                        i += 1;
+                                    }
+                                }
+                            }
+                        }
+                        '\\' => {
+                            i += 1;
+                            if i < chars.len() {
+                                word.push(chars[i]);
+                                i += 1;
+                            }
+                        }
+                        '\'' | '"' => {
+                            let q = chars[i];
+                            i += 1;
+                            while i < chars.len() && chars[i] != q {
+                                if q == '"' && chars[i] == '\\' && i + 1 < chars.len() {
+                                    i += 1;
+                                }
+                                word.push(chars[i]);
+                                i += 1;
+                            }
+                            // Only the DELIMITER word (expect_delim still
+                            // pending) carries the heredoc contract; an
+                            // unclosed quote in any other word is the
+                            // generic quote oracle's business (heredoc
+                            // bodies are literal data).
+                            if i >= chars.len() && expect_delim.is_some() {
+                                unclosed_delimiter_quote = Some(q);
+                            }
+                            i += 1;
+                        }
+                        _ => {
+                            word.push(chars[i]);
+                            i += 1;
+                        }
+                    }
+                }
+                // A following `((` is in command position only after these
+                // keywords (GNU reserved_word_acceptable word set).
+                at_command = i >= chars.len()
+                    || matches!(
+                        word.as_str(),
+                        "if" | "then"
+                            | "else"
+                            | "elif"
+                            | "while"
+                            | "until"
+                            | "do"
+                            | "in"
+                            | "case"
+                            | "!"
+                            | "time"
+                            | "coproc"
+                            | "function"
+                    );
+                if let Some(strip_tabs) = expect_delim.take() {
+                    if !word.is_empty() && unclosed_delimiter_quote.is_none() {
+                        declarations.push((word, strip_tabs));
+                    }
+                }
+            }
+        }
+    }
+    (declarations, unclosed_delimiter_quote)
+}
+
+/// Extract the NAME from the operand of a `function` keyword header.
+/// parse.y:1056-1061 `function_def`: `FUNCTION WORD`, `FUNCTION WORD '(' ')'`
+/// — the operand is the WORD plus at most the optional whitespace-separated
+/// parens pair, so `function f()` / `function f ()` are headers awaiting a
+/// body exactly like `function f` (parse.y:1058). Any trailing content
+/// after the name or parens is not part of a bare header.
+fn function_keyword_operand_name(operand: &str) -> &str {
+    let operand = operand.trim();
+    match operand.strip_suffix(')') {
+        Some(before) => before
+            .trim_end()
+            .strip_suffix('(')
+            .map(str::trim_end)
+            .unwrap_or(operand),
+        None => operand,
+    }
+}
+
+/// Strip every word-initial unquoted `#` comment SPAN — from the `#`
+/// through end of line, the newline kept as the line separator — from a
+/// function-head candidate text. GNU read_token's comment rule (the `#`
+/// branch of read_token's fetch loop, parse.y:3631-3644: a `#` read at
+/// token start, `!interactive || interactive_comments`, discards until
+/// EOL) and read_token_word's word-start test (parse.y:3937-3940:
+/// `retind == 0` or the previous word char is a newline or shellblank)
+/// keep `function NAME<TAB># note` a function head awaiting its body —
+/// the comment never becomes a token, so the group-completeness scanners
+/// must not let it defeat the signature predicate (rubash#388).
+///
+/// Word-initial means token-initial: after IFS blanks AND after each
+/// shell metacharacter `; & | ( ) < >` (every one of those is its own
+/// single-character token in read_token's dispatch, so the next `#` is
+/// fetched at token start — verified `f()# c` defines f, and
+/// `echo a;#b` comments, on GNU 5.3.0 script files). A `#` glued into a
+/// word (`d#x`) is name text; quote interiors are inert.
+///
+/// Spans are cut PER LINE, never to end of text: a head line's comment
+/// hides only its own line, so a complete definition whose head carries
+/// a comment still fails the head-only shape once its body lines
+/// follow (cutting to end of text would glue the whole script into one
+/// group — `function d # c\n{ :; }\nread x` must close at `}` so the
+/// trailing `read` consumes the next script line like GNU).
+fn strip_word_initial_comment_spans(text: &str) -> Cow<'_, str> {
+    let bytes = text.as_bytes();
+    let mut single = false;
+    let mut double = false;
+    let mut escaped = false;
+    let mut word_start = true;
+    let mut stripped: Option<String> = None;
+    let mut copy_from = 0usize;
+    let mut index = 0usize;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        if escaped {
+            escaped = false;
+            word_start = false;
+            index += 1;
+            continue;
+        }
+        if single {
+            if byte == b'\'' {
+                single = false;
+            }
+            index += 1;
+            continue;
+        }
+        if double {
+            match byte {
+                b'"' => double = false,
+                b'\\' => escaped = true,
+                _ => {}
+            }
+            index += 1;
+            continue;
+        }
+        match byte {
+            b'\\' => {
+                escaped = true;
+                word_start = false;
+            }
+            b'\'' => {
+                single = true;
+                word_start = false;
+            }
+            b'"' => {
+                double = true;
+                word_start = false;
+            }
+            b' ' | b'\t' | b'\r' | b'\n' | b';' | b'&' | b'|' | b'(' | b')' | b'<' | b'>' => {
+                word_start = true
+            }
+            b'#' if word_start => {
+                let out = stripped.get_or_insert_with(|| String::with_capacity(text.len()));
+                out.push_str(&text[copy_from..index]);
+                // The comment runs through EOL (parse.y:3634
+                // discard_until('\n')); the newline itself stays as the
+                // line separator.
+                let mut end = index + 1;
+                while end < bytes.len() && bytes[end] != b'\n' {
+                    end += 1;
+                }
+                copy_from = end;
+                index = end;
+                continue;
+            }
+            _ => word_start = false,
+        }
+        index += 1;
+    }
+    match stripped {
+        Some(mut out) => {
+            out.push_str(&text[copy_from..]);
+            Cow::Owned(out)
+        }
+        None => Cow::Borrowed(text),
+    }
+}
+
+fn stdin_source_is_function_signature(source: &str) -> bool {
+    let stripped = strip_word_initial_comment_spans(source);
+    let trimmed = stripped.trim();
+    // `name ()` / `name()` signature: peel the trailing parens with
+    // optional whitespace (`'a b c' ( )' is still a signature — GNU's
+    // grammar accepts any WORD; validity is judged at exec time). A
+    // `function f()` header also peels here, but `function f` is not a
+    // single WORD — fall through to the keyword-form check below instead
+    // of returning (parse.y:1056 FUNCTION WORD '(' ')' newline_list
+    // function_body).
+    if let Some(before_close) = trimmed.strip_suffix(')') {
+        if let Some(name) = before_close.trim_end().strip_suffix('(') {
+            if is_stdin_function_name(name.trim_end()) {
+                return true;
+            }
+        }
+    }
+
+    // Keyword form: `function NAME`, `function NAME()`, `function NAME ()`.
+    trimmed
+        .strip_prefix("function ")
+        .map(function_keyword_operand_name)
+        .is_some_and(is_stdin_function_keyword_name)
+}
+
+fn stdin_source_has_unclosed_function_body(source: &str) -> bool {
+    stdin_source_has_unclosed_function_delimited_body(source, '{')
+        || stdin_source_has_unclosed_function_delimited_body(source, '(')
+}
+
+fn stdin_source_has_unclosed_function_delimited_body(source: &str, delimiter: char) -> bool {
+    let Some(open_delimiter) = first_unquoted_function_body_delimiter(source, delimiter) else {
+        return false;
+    };
+    if unquoted_delimiter_depth(&source[open_delimiter..], delimiter) == 0 {
+        return false;
+    }
+
+    let signature = source[..open_delimiter].trim_end();
+    // Shared with the incremental FnBody scanner (perf9): the peeled
+    // `name ()` form or the `function NAME` keyword form.
+    function_body_opener_signature(signature)
+}
+
+/// `name ()` signature form: GNU accepts non-identifier words
+/// (`11111 () { ...; }' is legal non-posix), but an `=`-bearing word is an
+/// assignment-shaped token, not a name (`a=2 ()` is a syntax error).
+/// `<( ... )` is lexed as one WORD in GNU (parse.y scans the
+/// process-substitution shape inside a word), so `<( : ) () { }' is a
+/// function named `<(:)' — allow the spaced form as a signature too;
+/// validity is judged later by the executor.
+fn is_stdin_function_name(name: &str) -> bool {
+    if name == "!!" || (name.starts_with("<(") && name.ends_with(')')) {
+        return true;
+    }
+    // A fully quoted name is one WORD in GNU's grammar (`'a b c' () { }'
+    // parses as a definition and is rejected by the executor).
+    if name.len() > 1
+        && (name.starts_with('\'') && name.ends_with('\'')
+            || name.starts_with('"') && name.ends_with('"'))
+    {
+        return true;
+    }
+    !name.is_empty()
+        && !name.chars().any(|ch| {
+            ch.is_whitespace() || matches!(ch, '(' | ')' | '{' | '}' | ';' | '&' | '|' | '=')
+        })
+}
+
+/// `function WORD` signature form: GNU function_def takes a single WORD
+/// verbatim, so `=` and digit-leading names are legal (`function a=2`,
+/// `function 11111`); only shell metacharacters end the word.
+fn is_stdin_function_keyword_name(name: &str) -> bool {
+    !name.is_empty()
+        && !name
+            .chars()
+            .any(|ch| ch.is_whitespace() || matches!(ch, '(' | ')' | '{' | '}' | ';' | '&' | '|'))
+}
+
+/// Quote/comment-aware character classification for the text-layer
+/// completeness scanners (`first_unquoted_char`,
+/// `unquoted_delimiter_depth`, `line_paren_delta`).
+///
+/// GNU never lets comment text enter quote state: an unquoted `#` at the
+/// start of a word discards the rest of the line (parse.y:3630 shell_getc
+/// comment branch — `#` when `!interactive || interactive_comments` sets
+/// PST_COMMENT and discards until EOL), and read_token_word only enters
+/// LEX_INCOMMENT when the `#` begins a word (`retind == 0` or the previous
+/// word char is a newline or shellblank, parse.y:3937-3940) — while
+/// LEX_INCOMMENT is set, "don't bother counting parens or doing anything
+/// else" (parse.y:3922-3931), so quote characters inside comments are
+/// inert. Scanning raw text without that rule lets an apostrophe inside a
+/// comment (`# DragonflyBSD's ...`, `# it's known`) toggle single-quote
+/// state and corrupt the brace/paren depth — a complete function body is
+/// then misjudged as an unclosed group (rubash#282: modernish _IN/sig).
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct CommentAwareScan {
+    single: bool,
+    double: bool,
+    escaped: bool,
+    in_comment: bool,
+    prev: Option<char>,
+}
+
+impl CommentAwareScan {
+    fn new() -> Self {
+        CommentAwareScan {
+            single: false,
+            double: false,
+            escaped: false,
+            in_comment: false,
+            prev: None,
+        }
+    }
+
+    /// Feed the next character; `true` when it is ACTIVE — unquoted,
+    /// unescaped, and outside comment text — so the scanner may count it
+    /// as a delimiter. Comment state ends at the newline itself, which is
+    /// fed through normally on the next call.
+    fn active(&mut self, ch: char) -> bool {
+        if self.in_comment {
+            if ch == '\n' {
+                self.in_comment = false;
+                self.prev = Some('\n');
+            }
+            return false;
+        }
+        if self.escaped {
+            self.escaped = false;
+            self.prev = Some(ch);
+            return false;
+        }
+        if self.single {
+            if ch == '\'' {
+                self.single = false;
+            }
+            self.prev = Some(ch);
+            return false;
+        }
+        if ch == '\\' {
+            self.escaped = true;
+            self.prev = Some(ch);
+            return false;
+        }
+        // parse.y:3937: `#` opens a comment only at word start.
+        if ch == '#'
+            && !self.double
+            && self
+                .prev
+                .map_or(true, |p| p == '\n' || p == ' ' || p == '\t')
+        {
+            self.in_comment = true;
+            self.prev = Some(ch);
+            return false;
+        }
+        match ch {
+            '\'' if !self.double => self.single = true,
+            '"' if !self.double => self.double = true,
+            '"' => self.double = false,
+            _ => {}
+        }
+        let active = !self.single && !self.double && ch != '\'' && ch != '"';
+        self.prev = Some(ch);
+        active
+    }
+}
+
+fn first_unquoted_char(source: &str, target: char) -> Option<usize> {
+    let mut scan = CommentAwareScan::new();
+    for (index, ch) in source.char_indices() {
+        if scan.active(ch) && ch == target {
+            return Some(index);
+        }
+    }
+    None
+}
+
+fn first_unquoted_function_body_delimiter(source: &str, target: char) -> Option<usize> {
+    let mut search_from = 0usize;
+    while let Some(relative_index) = first_unquoted_char(&source[search_from..], target) {
+        let index = search_from + relative_index;
+        if target == '('
+            && source[index + target.len_utf8()..]
+                .trim_start()
+                .starts_with(')')
+        {
+            search_from = index + target.len_utf8();
+            continue;
+        }
+        return Some(index);
+    }
+    None
+}
+
+fn unquoted_delimiter_depth(source: &str, open: char) -> usize {
+    let close = match open {
+        '{' => '}',
+        '(' => ')',
+        _ => return 0,
+    };
+    let mut scan = CommentAwareScan::new();
+    let mut depth = 0usize;
+    for ch in source.chars() {
+        if scan.active(ch) {
+            if ch == open {
+                depth += 1;
+            } else if ch == close {
+                depth = depth.saturating_sub(1);
+            }
+        }
+    }
+    depth
+}
+
+/// Tier B host hook (PLAN row 11, M-3): note a console Ctrl+C
+/// the host's own handler received, so the engine's in-process
+/// waits see the interrupt. This is the driver-layer face hosts
+/// consume; it delegates to the kill builtin's mailbox plumbing
+/// (`builtins::kill::note_console_ctrl_c`), which is internal
+/// from this row on. On Unix it is a no-op by design: the
+/// kernel backend already receives the process's SIGINT.
+pub fn inject_console_ctrl_c() {
+    crate::builtins::kill::note_console_ctrl_c();
+}
+
+/// Tier B host hook (PLAN row 11, M-3): consume the background
+/// wrapper handshake from a host launcher's argv before the
+/// host's own option parsing sees it — the driver-layer face of
+/// `builtins::kill::consume_background_wrapper_handshake`, which
+/// is internal plumbing from this row on. Rubash's own binary
+/// calls the same internal entry; hosts call this one.
+pub fn consume_background_wrapper_handshake(args: &mut Vec<String>) {
+    crate::builtins::kill::consume_background_wrapper_handshake(args);
+}
+
+pub fn run_source(executor: &mut Executor, input: &str, interactive: bool) -> i32 {
+    run_source_with_line_offset(executor, input, interactive, 0, None, None)
+}
+
+/// perf19 token-reuse entry: identical to [`run_source_with_line_offset`]
+/// except the caller supplies the group's ALREADY-COMMITTED token stream
+/// (the gather feeder's output, perf10 model) instead of re-lexing
+/// `input`. Eligibility is the caller's contract — the same conditions
+/// read_next_source_group documents for its returned feeder tokens
+/// (complete-group break, no effective extglob toggle, non-alias arm so
+/// `input` is byte-identical to the text the feeder scanned, and nothing
+/// rewrote the text in between): GNU parse.y:3557 read_token streams the
+/// input ONCE and never re-tokenizes consumed text; a certified token
+/// stream is that model's stand-in, exactly as the `.` source driver
+/// (builtins/source/execution.rs, perf10) already consumes it.
+pub(crate) fn run_source_pre_lexed_with_line_offset(
+    executor: &mut Executor,
+    input: &str,
+    interactive: bool,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+    diagnostic_text: Option<&str>,
+    pre_lexed: Vec<Token>,
+) -> i32 {
+    run_source_impl(
+        executor,
+        input,
+        interactive,
+        line_offset,
+        redirect_cmd,
+        diagnostic_text,
+        Some(pre_lexed),
+        false,
+    )
+}
+
+/// rubash#372: GNU decides command-position `(' completeness by parsing
+/// (parse.y read_token drives the subshell grammar), so a command-`('
+/// unclosed verdict from the text-level close-char scanner may be
+/// disproved by the real parser: tokenize and parse the whole input
+/// exactly as the normal execution path would and report whether the
+/// resulting AST is free of parse-error nodes. Other verdict shapes
+/// (quotes, `${`, `$(`, array lists, `[` subscripts) are read-time
+/// matched-pair verdicts the tokenizer does not model and are never
+/// overridden here.
+fn command_paren_verdict_disproved_by_parser(input: &str, parse_posix: bool) -> bool {
+    let Some(unclosed) = crate::lexer::unclosed_input_close_char_posix(input, parse_posix) else {
+        return false;
+    };
+    if unclosed.close != ')' {
+        return false;
+    }
+    let command_position = unclosed.command;
+    let open_line = unclosed.open_line;
+    // The router's higher-priority EOF families own the diagnostic before
+    // any parser-marker event: an unclosed `[` subscript (parse.y:5635-5651
+    // -> parse_matched_pair's `]' report, rubash#221/#390 q2) and a `((` whose
+    // P_ARITH group never closes (parse.y:4970 -> `)' at the `((` line,
+    // rubash#390 q1 - parse_dparen consumes the input before any word scan
+    // could report a compound-assignment EOF).
+    if crate::lexer::unclosed_array_subscript_eof(input).is_some() {
+        return false;
+    }
+    if crate::lexer::dparen_arith_group_never_closes(input, open_line) {
+        return false;
+    }
+    let tokens = tokenize_with_initial_posix(input, parse_posix);
+    if crate::lexer::heredoc_overflow_line().is_some() {
+        if std::env::var_os("RUBASH_DBG_543").is_some() {
+            eprintln!("DBG543 consume at script_driver:2056 paren-verdict");
+        }
+        return false;
+    }
+    let ast = crate::parser::parse_with_options(
+        &tokens,
+        crate::parser::ParseLoopOptions {
+            stray_close_is_error: true,
+            source_text: Some(input.into()),
+            diagnostic_text: None,
+            source_line_offset: 0,
+        },
+    );
+    if !command_position {
+        // rubash#1554: a `((` inside a conditional is not a command
+        // paren, so the close-char scanner's verdict says command=false
+        // and the disproof above never applied — the route then printed
+        // its own `unexpected EOF while looking for matching `)'' for
+        // `[[ x && ((a ]]'. But the scanner has no conditional model:
+        // when the real parser's ONLY error event in the whole tree is
+        // the conditional's own marker, GNU's first error event is the
+        // cond_term diagnostic (parse.y:5074-5247, the group frames'
+        // `expected `)'` sequence), so yield the route exactly then.
+        // Any other marker family present (subshell, compound
+        // assignment, ...) keeps the route's diagnostic.
+        return ast.commands.iter().any(command_tree_has_cond_marker)
+            && !ast
+                .commands
+                .iter()
+                .any(command_tree_has_non_cond_parse_error);
+    }
+    if !ast.commands.iter().any(command_tree_has_parse_error) {
+        // rubash#3405: the real parser stays silent when the offending
+        // `(` hides inside a comsub word — the lexer swallows the whole
+        // body into the word token, so no marker is raised — but the
+        // body's own nested yyparse still dies on the token after it
+        // (parse.y:4549-4555 parse_comsub, 6858-6859). A
+        // ComsubBodyTokenError verdict is therefore NOT disproved by the
+        // main parse's silence: let the unclosed route run and print it.
+        // Every other shape keeps the disproof (notably the matched-pair
+        // EOF, whose `$( (` subshell root the #516/q1, `((` and
+        // `for ((` guards already keep out of this class).
+        if matches!(
+            crate::lexer::unclosed_comsub_eof_shape(input, crate::lexer::parse_extended_glob()),
+            Some((
+                crate::lexer::UnclosedComsubShape::ComsubBodyTokenError { .. },
+                _
+            ))
+        ) {
+            return false;
+        }
+        return true;
+    }
+    // rubash#413: GNU's parser reports the FIRST offending event inside the
+    // still-open `(` — a word right after a nested subshell's `)` (grammar
+    // compound_list needs a separator, parse.y:1097/1252-1279) or a
+    // compound-assignment list that never closed (parse.y:7140-7152
+    // parse_compound_assignment clean EOF) — BEFORE the pure-EOF report of
+    // parse.y:6892-6901 ("unexpected end of file from `(' command"). When
+    // the parser carries such a pre-EOF event marker, that marker's
+    // diagnostic is GNU's; let the normal path run and print it.
+    ast.commands
+        .iter()
+        .any(command_tree_has_pre_eof_event_marker)
+}
+
+/// True when this command (or any nested command) carries one of the
+/// pre-EOF event markers the unclosed-`(` parse can raise ahead of the
+/// eof-from-`(` report: `__RUBASH_PARSE_ERROR_NEAR__` (word after a nested
+/// subshell's closer), `__RUBASH_PARSE_ERROR_EOF_PAREN__` (compound
+/// assignment never closed) and `__RUBASH_PARSE_ERROR_COND__` (a
+/// conditional's own diagnostic). The COND marker belongs here because
+/// the text-level close-char verdict has no conditional model: a `(`
+/// pair inside `[[ ... ]]` reads as an unclosed command paren to the
+/// scanner, but GNU's cond_term consumes the stream itself and its
+/// diagnostic is the first error event (parse.y:5074-5247 — e.g.
+/// `[[ a == ((a ]]' reports the operator-slot `(', never an
+/// unclosed-`(' EOF, rubash#1538).
+fn command_tree_has_pre_eof_event_marker(command: &CommandNode) -> bool {
+    if command.assignments.iter().any(|(name, _)| {
+        name == "__RUBASH_PARSE_ERROR_NEAR__"
+            || name == "__RUBASH_PARSE_ERROR_EOF_PAREN__"
+            || name == "__RUBASH_PARSE_ERROR_COND__"
+    }) {
+        return true;
+    }
+    command_tree_walk_nested(command, command_tree_has_pre_eof_event_marker)
+}
+
+/// True when this command (or any nested command) carries the
+/// conditional's own parse-error marker (`__RUBASH_PARSE_ERROR_COND__`).
+fn command_tree_has_cond_marker(command: &CommandNode) -> bool {
+    if command
+        .assignments
+        .iter()
+        .any(|(name, _)| name == "__RUBASH_PARSE_ERROR_COND__")
+    {
+        return true;
+    }
+    command_tree_walk_nested(command, command_tree_has_cond_marker)
+}
+
+/// True when this command (or any nested command) carries a parse-error
+/// marker of any family OTHER than the conditional's own.
+fn command_tree_has_non_cond_parse_error(command: &CommandNode) -> bool {
+    if command.assignments.iter().any(|(name, _)| {
+        name.starts_with("__RUBASH_PARSE_ERROR") && name.as_str() != "__RUBASH_PARSE_ERROR_COND__"
+    }) {
+        return true;
+    }
+    command_tree_walk_nested(command, command_tree_has_non_cond_parse_error)
+}
+
+/// True when this command node, or any command nested inside it (pipeline
+/// stages, and-or lists, compound bodies, clause bodies), carries one of
+/// the parser's error markers. Mirrors the marker set the executor's
+/// diagnostics read (command_execute.rs `__RUBASH_PARSE_ERROR*` arms).
+pub(crate) fn command_tree_has_parse_error(command: &CommandNode) -> bool {
+    if command
+        .assignments
+        .iter()
+        .any(|(name, _)| name.starts_with("__RUBASH_PARSE_ERROR"))
+    {
+        return true;
+    }
+    command_tree_walk_nested(command, command_tree_has_parse_error)
+}
+
+/// True when this command (or any nested command) carries the
+/// near-token parse-error marker — a token the parser rejected at its
+/// position, as opposed to an end-of-input shortfall.
+fn command_tree_has_near_marker(command: &CommandNode) -> bool {
+    if command
+        .assignments
+        .iter()
+        .any(|(name, _)| name == "__RUBASH_PARSE_ERROR_NEAR__")
+    {
+        return true;
+    }
+    command_tree_walk_nested(command, command_tree_has_near_marker)
+}
+
+/// True when this command (or any nested command) carries one of the
+/// end-of-input marker family — the parse only failed for want of
+/// more input, so an interactive reader should keep gathering.
+fn command_tree_has_eof_marker(command: &CommandNode) -> bool {
+    if command.assignments.iter().any(|(name, _)| {
+        matches!(
+            name.as_str(),
+            "__RUBASH_PARSE_ERROR_EOF__"
+                | "__RUBASH_PARSE_ERROR_EOF_COMPOUND__"
+                | "__RUBASH_PARSE_ERROR_EOF_PAREN__"
+                | "__RUBASH_PARSE_ERROR_EOF_SUBSHELL__"
+        )
+    }) {
+        return true;
+    }
+    command_tree_walk_nested(command, command_tree_has_eof_marker)
+}
+
+/// True when this command (or any nested command) carries the generic
+/// parse-error marker with an `unexpected token' diagnostic (the
+/// hard-error value family; the same marker's `unexpected end of
+/// file' values are the incomplete family).
+fn command_tree_has_hard_token_error(command: &CommandNode) -> bool {
+    if command.assignments.iter().any(|(name, value)| {
+        name == "__RUBASH_PARSE_ERROR__" && value.starts_with("unexpected token")
+    }) {
+        return true;
+    }
+    command_tree_walk_nested(command, command_tree_has_hard_token_error)
+}
+
+/// rubash#2725: whether the interactive reader's accumulated text is
+/// already a hard syntax error, judged by the real parser (the same
+/// tokenize/parse options `command_paren_verdict_disproved_by_parser`
+/// uses). Hard = a near-token marker anywhere in the tree, or an
+/// `unexpected token' diagnostic with no end-of-input marker anywhere
+/// (a diagnostic raised inside a still-open compound keeps the group
+/// gathering; GNU reports it when the compound completes). Anything
+/// else — clean parses, pure EOF shortfalls, unterminated quotes or
+/// substitutions (which carry no marker) — is genuinely incomplete.
+fn interactive_pending_is_hard_syntax_error(input: &str, parse_posix: bool) -> bool {
+    let tokens = tokenize_with_initial_posix(input, parse_posix);
+    if crate::lexer::heredoc_overflow_line().is_some() {
+        return false;
+    }
+    let ast = crate::parser::parse_with_options(
+        &tokens,
+        crate::parser::ParseLoopOptions {
+            stray_close_is_error: true,
+            source_text: Some(input.into()),
+            diagnostic_text: None,
+            source_line_offset: 0,
+        },
+    );
+    if ast.commands.iter().any(command_tree_has_near_marker) {
+        return true;
+    }
+    ast.commands.iter().any(command_tree_has_hard_token_error)
+        && !ast.commands.iter().any(command_tree_has_eof_marker)
+}
+
+/// Drives `predicate` over every command nested inside `command`
+// (pipeline stages, and-or lists, compound bodies, clause bodies).
+fn command_tree_walk_nested(command: &CommandNode, predicate: fn(&CommandNode) -> bool) -> bool {
+    let mut nested = |body: &[CommandNode]| body.iter().any(predicate);
+    command
+        .pipeline_command
+        .as_ref()
+        .is_some_and(|pipeline| nested(&pipeline.stages))
+        || command
+            .and_or_list
+            .as_ref()
+            .is_some_and(|list| nested(&list.commands))
+        || command
+            .time_command
+            .as_ref()
+            .is_some_and(|time| predicate(&time.command))
+        || command
+            .background_command
+            .as_ref()
+            .is_some_and(|background| predicate(&background.command))
+        || command
+            .inverted_command
+            .as_ref()
+            .is_some_and(|inverted| predicate(&inverted.command))
+        || command
+            .for_command
+            .as_ref()
+            .is_some_and(|for_command| nested(&for_command.body))
+        || command.if_command.as_ref().is_some_and(|if_command| {
+            nested(&if_command.condition)
+                || nested(&if_command.then_body)
+                || if_command
+                    .elif_branches
+                    .iter()
+                    .any(|branch| nested(&branch.condition) || nested(&branch.body))
+                || if_command
+                    .else_body
+                    .as_ref()
+                    .is_some_and(|else_body| nested(else_body))
+        })
+        || command.loop_command.as_ref().is_some_and(|loop_command| {
+            nested(&loop_command.condition) || nested(&loop_command.body)
+        })
+        || command
+            .subshell_command
+            .as_ref()
+            .is_some_and(|subshell| nested(&subshell.body))
+        || command
+            .case_command
+            .as_ref()
+            .is_some_and(|case| case.clauses.iter().any(|clause| nested(&clause.body)))
+        || command
+            .select_command
+            .as_ref()
+            .is_some_and(|select| nested(&select.body))
+        || command
+            .function_command
+            .as_ref()
+            .is_some_and(|function| nested(&function.body))
+        || command
+            .brace_group
+            .as_ref()
+            .is_some_and(|brace_group| nested(&brace_group.body))
+        || command
+            .coproc_command
+            .as_ref()
+            .is_some_and(|coproc| coproc.body.as_ref().is_some_and(|body| nested(body)))
+}
+
+/// First node in `command`'s tree carrying a `__RUBASH_PARSE_ERROR*`
+/// marker, in the descent order of [`command_tree_walk_nested`] (the
+/// command itself first, then nested bodies). Used to report a parked
+/// syntax error without executing the broken reader unit around it
+/// (rubash#1138).
+pub(crate) fn first_parse_error_node(command: &CommandNode) -> Option<CommandNode> {
+    // The parser propagates a body's error marker up onto the compound
+    // carrier, but executing the carrier would run its valid body
+    // commands before the walker reaches the marked node — the report
+    // must go through the INNERMOST marked node, whose execute_command
+    // marker arm fires before any dispatch. Only a node whose marker
+    // is its own (no marked descendant) reports itself.
+    let mut bodies: Vec<&[CommandNode]> = Vec::new();
+    if let Some(pipeline) = &command.pipeline_command {
+        bodies.push(&pipeline.stages);
+    }
+    if let Some(list) = &command.and_or_list {
+        bodies.push(&list.commands);
+    }
+    if let Some(for_command) = &command.for_command {
+        bodies.push(&for_command.body);
+    }
+    if let Some(select) = &command.select_command {
+        bodies.push(&select.body);
+    }
+    if let Some(if_command) = &command.if_command {
+        bodies.push(&if_command.condition);
+        bodies.push(&if_command.then_body);
+        for branch in &if_command.elif_branches {
+            bodies.push(&branch.condition);
+            bodies.push(&branch.body);
+        }
+        if let Some(else_body) = &if_command.else_body {
+            bodies.push(else_body);
+        }
+    }
+    if let Some(loop_command) = &command.loop_command {
+        bodies.push(&loop_command.condition);
+        bodies.push(&loop_command.body);
+    }
+    if let Some(subshell) = &command.subshell_command {
+        bodies.push(&subshell.body);
+    }
+    if let Some(case_command) = &command.case_command {
+        for clause in &case_command.clauses {
+            bodies.push(&clause.body);
+        }
+    }
+    if let Some(function) = &command.function_command {
+        bodies.push(&function.body);
+    }
+    if let Some(brace_group) = &command.brace_group {
+        bodies.push(&brace_group.body);
+    }
+    for body in bodies {
+        for nested in body {
+            if let Some(found) = first_parse_error_node(nested) {
+                return Some(found);
+            }
+        }
+    }
+    if let Some(time) = &command.time_command {
+        if let Some(found) = first_parse_error_node(&time.command) {
+            return Some(found);
+        }
+    }
+    if let Some(background) = &command.background_command {
+        if let Some(found) = first_parse_error_node(&background.command) {
+            return Some(found);
+        }
+    }
+    if let Some(inverted) = &command.inverted_command {
+        if let Some(found) = first_parse_error_node(&inverted.command) {
+            return Some(found);
+        }
+    }
+    if let Some(coproc) = &command.coproc_command {
+        if let Some(body) = &coproc.body {
+            for nested in body {
+                if let Some(found) = first_parse_error_node(nested) {
+                    return Some(found);
+                }
+            }
+        }
+    }
+    if command
+        .assignments
+        .iter()
+        .any(|(name, _)| name.starts_with("__RUBASH_PARSE_ERROR"))
+    {
+        return Some(command.clone());
+    }
+    None
+}
+
+/// rubash#1138: GNU read_command parses one complete command — a
+/// whole line's list, multi-line compounds included — before executing
+/// any of it, so a syntax error anywhere in that reader unit voids the
+/// ENTIRE unit (`echo hi; [[ a ==]]` runs nothing; in `echo a` /
+/// `echo b; [[ a ==]]` only the first line runs). Rubash's parser
+/// parks the error as a marker node inside the AST and execute_ast
+/// would run the unit's valid prefix first. Rewrite the command list
+/// to the commands from earlier units (starting on earlier lines)
+/// plus the innermost marked node itself: executing that node reports
+/// the diagnostic through execute_command's parse-error arms and
+/// returns ExitCode(2), with none of its unit-mates running. Returns
+/// true when a parse error was found (and the list rewritten).
+pub(crate) fn apply_parse_error_unit_voiding(ast: &mut crate::parser::Ast) -> bool {
+    let Some(err_pos) = ast
+        .commands
+        .iter()
+        .position(|command| command_tree_has_parse_error(command))
+    else {
+        return false;
+    };
+    let error_node = first_parse_error_node(&ast.commands[err_pos])
+        .unwrap_or_else(|| ast.commands[err_pos].clone());
+    // Compound carriers (a brace group) may carry no line of their own;
+    // the marked node's line is the unit's start for grouping purposes.
+    let Some(unit_line) = ast.commands[err_pos].line.or(error_node.line) else {
+        return false;
+    };
+    let cut = ast.commands[..err_pos]
+        .iter()
+        .position(|command| command.line.is_some_and(|line| line >= unit_line))
+        .unwrap_or(err_pos);
+    ast.commands.truncate(cut);
+    ast.commands.push(error_node);
+    true
+}
+
+pub fn run_source_with_line_offset(
+    executor: &mut Executor,
+    input: &str,
+    interactive: bool,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+    diagnostic_text: Option<&str>,
+) -> i32 {
+    run_source_impl(
+        executor,
+        input,
+        interactive,
+        line_offset,
+        redirect_cmd,
+        diagnostic_text,
+        None,
+        false,
+    )
+}
+
+/// Run a complete-command PREFIX whose caller owns the pending
+/// diagnostic: the prefix's own unclosed-EOF route must still refuse
+/// its incomplete tail (and run ITS prefix), but must not print —
+/// GNU's reader reaches EOF once and reports once (rubash#1485: when
+/// later lines keep toggling quote state, the generic route's prefix
+/// itself ends mid-quote, and the recursive report duplicated the
+/// `unexpected EOF` diagnostic once per toggling segment).
+fn run_source_prefix_diagnostic_owned(
+    executor: &mut Executor,
+    input: &str,
+    interactive: bool,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+    diagnostic_text: Option<&str>,
+) -> i32 {
+    run_source_impl(
+        executor,
+        input,
+        interactive,
+        line_offset,
+        redirect_cmd,
+        diagnostic_text,
+        None,
+        true,
+    )
+}
+
+/// GNU parse.y:3105 push_heredoc: the 17th pending here-document in one
+/// parse level is fatal (report_syntax_error -> reset_parser ->
+/// exit_shell(EX_BADUSAGE), status 2). GNU parses and executes one complete
+/// command at a time, so the commands BEFORE the offending line already ran
+/// when the fatal fires: run that prefix first (the same prefix model as
+/// the delimiter-quote arm, rubash#351), then report and return 2. Nothing
+/// at or after the offending line runs.
+fn report_heredoc_overflow_fatal(
+    executor: &mut Executor,
+    input: &str,
+    interactive: bool,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+    diagnostic_text: Option<&str>,
+    parse_posix: bool,
+    line: usize,
+) -> i32 {
+    let source = input.trim_end_matches('\n');
+    let prefix = if line > 1 {
+        source.lines().take(line - 1).collect::<Vec<_>>().join("\n")
+    } else {
+        String::new()
+    };
+    // GNU's reader runs only COMPLETE commands before the fatal. When the
+    // offending here-documents sit inside a still-open construct — a `$(` or
+    // a brace group whose body carries them — the construct's first line
+    // never completed, so the prefix would be that incomplete line and
+    // re-running it standalone only emits a phantom second diagnostic ahead
+    // of the fatal. Skip prefixes that fail the same unclosed-construct gate
+    // the delimiter arm uses (its complements are all complete commands).
+    let prefix_complete = prefix.trim().is_empty()
+        || !crate::lexer::has_unclosed_input_syntax_posix(&prefix, parse_posix);
+    if prefix_complete && !prefix.trim().is_empty() {
+        let _ = run_source_prefix_diagnostic_owned(
+            executor,
+            &prefix,
+            interactive,
+            line_offset,
+            redirect_cmd,
+            diagnostic_text,
+        );
+    }
+    executor.mark_parse_error();
+    eprintln!(
+        "{}maximum here-document count exceeded",
+        executor.parser_error_prefix_for_line(line + line_offset)
+    );
+    executor.record_run_diagnostic(
+        "maximum here-document count exceeded".to_string(),
+        Some(line + line_offset),
+    );
+    2
+}
+
+/// rubash#2332: re-seed one reader unit's node lines from the
+/// respawn root-body span transport (see
+/// docs/design/respawn-root-line-spans.md). The unit's commands are
+/// walked in order: the stamped prelude-definition count is skipped
+/// first (those commands re-seed their bodies through the
+/// __RUBASH_FORK_FN_SPANS path instead), then the root spans apply —
+/// in one count-gated `apply_command_line_spans` call when this unit
+/// holds exactly the remaining body, or per top-level command from
+/// the cursor for a grouped unit. Any structural overrun drops the
+/// transport unapplied from that point on: a re-render that diverged
+/// from the parent's tree keeps the child's own parse lines rather
+/// than misaligned spans, exactly the #2202 safety posture.
+fn apply_respawn_root_line_spans(executor: &mut Executor, commands: &mut [CommandNode]) {
+    let state = &mut executor.shell_state;
+    let Some(spans) = state.respawn_root_line_spans.take() else {
+        return;
+    };
+    let total = spans.len();
+    let mut cursor = state.respawn_root_span_cursor;
+    let mut skip = state.respawn_root_span_skip;
+    let mut idx = 0;
+    while idx < commands.len() && skip > 0 {
+        skip -= 1;
+        idx += 1;
+    }
+    state.respawn_root_span_skip = skip;
+    // Retain the transport for the next reader unit unless it is
+    // fully consumed here or found misaligned.
+    let mut retain = true;
+    if idx < commands.len() && cursor < total {
+        let mut rest_spans = Vec::new();
+        crate::parser::collect_command_line_spans(&commands[idx..], &mut rest_spans);
+        let rest_count = rest_spans.len();
+        if cursor + rest_count == total {
+            // `spans`/`commands` are element slices (span records / AST
+            // nodes) and `cursor` an element index, not a byte/char
+            // offset — split_at states that tail without string-slice
+            // syntax (hygiene gate Check 3 keys on the name `cursor`).
+            let remaining_spans = spans.split_at(cursor).1;
+            if crate::parser::apply_command_line_spans(&mut commands[idx..], remaining_spans) {
+                cursor = total;
+            } else {
+                retain = false;
+            }
+        } else if cursor + rest_count < total {
+            for command in commands[idx..].iter_mut() {
+                let mut own_spans = Vec::new();
+                crate::parser::collect_command_line_spans(
+                    std::slice::from_ref(&*command),
+                    &mut own_spans,
+                );
+                let count = own_spans.len();
+                if cursor + count > total {
+                    retain = false;
+                    break;
+                }
+                let span_window = spans.split_at(cursor).1.split_at(count).0;
+                crate::parser::apply_command_line_spans(std::slice::from_mut(command), span_window);
+                cursor += count;
+            }
+        } else {
+            retain = false;
+        }
+    }
+    state.respawn_root_span_cursor = cursor;
+    if retain && cursor < total {
+        state.respawn_root_line_spans = Some(spans);
+    }
+}
+
+fn run_source_impl(
+    executor: &mut Executor,
+    input: &str,
+    interactive: bool,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+    diagnostic_text: Option<&str>,
+    pre_lexed: Option<Vec<Token>>,
+    suppress_unclosed_diagnostic: bool,
+) -> i32 {
+    // rubash#2332: mark the call active for its whole duration so the
+    // root-span re-seed inside run_source_impl_inner fires only for
+    // the outermost reader unit — nested runs (a sourced file or eval
+    // inside this unit's execution, the unclosed-diagnostics prefix
+    // runs below) must never consume the root transport. The prior
+    // value is restored on exit; this wrapper is the single exit.
+    let source_run_prior = executor.source_run_active.get();
+    // rubash#2652: the suppressed-terminal record lives exactly one
+    // outermost unit — clear it here, where outermost is known.
+    // Nested units must not clear it: a suppressed failure recorded
+    // earlier in the enclosing unit (e.g. the `false` of
+    // `false && eval 'true'`) is still that unit's terminal fact.
+    if !source_run_prior {
+        executor.clear_errexit_suppressed_terminal();
+    }
+    executor.source_run_active.set(true);
+    let status = run_source_impl_inner(
+        executor,
+        input,
+        interactive,
+        line_offset,
+        redirect_cmd,
+        diagnostic_text,
+        pre_lexed,
+        suppress_unclosed_diagnostic,
+        !source_run_prior,
+    );
+    // rubash#2680: a unit that ended in a parse error has that error's
+    // status as its own $? — GNU's reader abandons the unit with the
+    // parse failure's status (parse_and_execute's yyparse failure,
+    // evalstring.c:584-600). The parser's own error path already
+    // records it, but the unclosed-diagnostics route only RETURNS its
+    // status (2, or 1 for the array-list family) without recording
+    // it, so a grouped reader's parse-abort adjudication — which
+    // reads last_exit_code — inherited the PREVIOUS unit's status
+    // and a script whose last group died in the route exited with a
+    // stale code (0 after a successful `shopt`). Record the unit's
+    // status whenever the parse-error latch is still standing.
+    if executor.parse_error_pending() {
+        executor.set_last_exit_code(status);
+    }
+    executor.source_run_active.set(source_run_prior);
+    status
+}
+
+#[allow(clippy::too_many_arguments)]
+/// rubash#2783: park the executing reader unit's source text (and its
+/// line offset) on the executor's shell state for the unit's extent,
+/// restoring the enclosing unit's value afterwards. GNU echoes the
+/// enclosing input line for a command-substitution body's syntax
+/// error (parse.y:6814 print_offending_line over shell_input_line);
+/// rubash parses the body at expansion time, so the body reporter
+/// reads the physical line out of this cell instead. Nested units
+/// (a sourced file inside this one) shadow the cell for their own
+/// extent and hand the enclosing text back on exit. The split into a
+/// wrapper exists because the body returns from many points: every
+/// one of them funnels back through here.
+fn run_source_impl_inner(
+    executor: &mut Executor,
+    input: &str,
+    interactive: bool,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+    diagnostic_text: Option<&str>,
+    pre_lexed: Option<Vec<Token>>,
+    suppress_unclosed_diagnostic: bool,
+    root_span_outermost: bool,
+) -> i32 {
+    let saved_unit_source = executor
+        .shell_state
+        .reader_unit_source
+        .replace(Some((std::rc::Rc::from(input), line_offset)));
+    let result = run_source_impl_inner_body(
+        executor,
+        input,
+        interactive,
+        line_offset,
+        redirect_cmd,
+        diagnostic_text,
+        pre_lexed,
+        suppress_unclosed_diagnostic,
+        root_span_outermost,
+    );
+    executor
+        .shell_state
+        .reader_unit_source
+        .replace(saved_unit_source);
+    result
+}
+
+fn run_source_impl_inner_body(
+    executor: &mut Executor,
+    input: &str,
+    interactive: bool,
+    line_offset: usize,
+    redirect_cmd: Option<&CommandNode>,
+    diagnostic_text: Option<&str>,
+    pre_lexed: Option<Vec<Token>>,
+    suppress_unclosed_diagnostic: bool,
+    root_span_outermost: bool,
+) -> i32 {
+    // WP-8 (debugger design 5.1): take the file identity the
+    // calling group driver set for this unit, if any (see
+    // `Executor::debug_syntax_unit_file`). Taking at entry means a
+    // nested unit — a sourced file inside this one, an eval string —
+    // never inherits the identity: its own driver sets it for its
+    // own units, or it stays unset and the unit registers nothing.
+    let syntax_unit_file = executor.debug_syntax_unit_file.take();
+    // rubash#1485: a prefix run hands diagnostic ownership to its caller
+    // (run_source_prefix_diagnostic_owned); every report inside the
+    // unclosed-diagnostics route below goes through this gate so the
+    // caller's single EOF report is the only one printed.
+    macro_rules! unclosed_report {
+        ($($t:tt)*) => {
+            if !suppress_unclosed_diagnostic {
+                eprintln!($($t)*);
+            }
+        };
+    }
+    // TODO(shell.c/eval.c/parse.y): GNU Bash parses complete command streams,
+    // including pending here-documents, rather than executing script files one
+    // physical line at a time. This keeps batch input whole; interactive mode
+    // still feeds one line at a time from the REPL.
+    // The heredoc collector must see the complete script before command
+    // substitution balance is checked: parentheses in a heredoc body are
+    // literal data, not shell syntax.
+    let parse_posix = executor.get_env("__RUBASH_POSIX_MODE").as_deref() == Some("1");
+    // rubash#351: a `<<` whose delimiter word carries an unterminated quote
+    // fails the WORD read at EOF — GNU read_token_word (parse.y:5419-5437)
+    // reports `unexpected EOF while looking for matching `q'' and gathers
+    // no heredoc. The blanket `!input.contains("<<")` guard on the generic
+    // unclosed route below excludes every heredoc-bearing input, so the
+    // delimiter shape is detected and reported here first (GNU runs the
+    // complete lines before the failing one, like the other unclosed arms).
+    if pre_lexed.is_none() && !interactive {
+        if let Some((quote, open_line)) = heredoc_delimiter_unclosed_quote(input) {
+            let source = input.trim_end_matches('\n');
+            let prefix = if open_line > 1 {
+                source
+                    .lines()
+                    .take(open_line - 1)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            } else {
+                String::new()
+            };
+            if !prefix.trim().is_empty() {
+                let _ = run_source_prefix_diagnostic_owned(
+                    executor,
+                    &prefix,
+                    interactive,
+                    line_offset,
+                    redirect_cmd,
+                    diagnostic_text,
+                );
+            }
+            executor.mark_parse_error();
+            unclosed_report!(
+                "{}unexpected EOF while looking for matching `{quote}'",
+                executor.parser_error_prefix_for_line(open_line + line_offset)
+            );
+            if !suppress_unclosed_diagnostic {
+                executor.record_run_diagnostic(
+                    format!("unexpected EOF while looking for matching `{quote}'"),
+                    Some(open_line + line_offset),
+                );
+            }
+            executor.set_last_exit_code(2);
+            return 2;
+        }
+    }
+    // perf19: a pre-lexed group broke COMPLETE at the gather (the
+    // feeder-token certification) — the same predicate family
+    // (has_unclosed_quotes / comsub / subscript / close-char) already
+    // answered closed over this exact text at the break line, and the
+    // final-newline difference between the pending mirror and `input`
+    // cannot open any construct. GNU never re-reads consumed text
+    // (parse.y:3557 read_token); the fresh whole-group rescan is only the
+    // unclosed-diagnostics route's gate, which a complete group skips.
+    // rubash#372 (rubash#117 move 2 — converge to the real parser): the
+    // unclosed scanners are text-level fast paths for GNU's read-time EOF
+    // diagnostics; their case-word machine has no pattern-region state
+    // (GNU parse.y:3177-3186 CHECK_FOR_RESERVED_WORD is suppressed inside
+    // PST_CASEPAT, parser.h:29), so a compound keyword in PATTERN position
+    // (`case x in (a|case) ...`) counts as a real `case' and the scanner
+    // reports a phantom unclosed command `('. GNU decides `(' completeness
+    // by PARSING (parse.y read_token drives the subshell grammar); when
+    // the real parser produces a clean AST over the whole input, the
+    // command-`(' verdict is disproved and the normal execution path must
+    // run. Only this verdict shape is overridable: quotes, `${`, `$(`,
+    // array lists and `[' subscripts are read_token_word/parse_matched_
+    // pair verdicts (parse.y:5419-5437), where rubash's tokenizer folds
+    // instead of failing and the parser is NOT the authority. The
+    // verification only pays on inputs the scanner flagged (and never on
+    // heredoc inputs, which the gate already excludes).
+    // rubash#3229: an unclosed extglob pattern group is a
+    // read_token_word matched-pair EOF (parse.y:5466-5489 ->
+    // parse.y:3901-3912) that no existing gate arm can see — the `(`
+    // is word-internal, so the close-char scan opens no frame for it,
+    // and the tokenizer folds the group into the word silently (a
+    // pre-lexed group therefore skips the gate below on the perf19
+    // certification even though its text was never pair-scanned). The
+    // dedicated scan is seeded with the EXECUTED gate state: in a
+    // grouped run the `shopt` line is an earlier group, so the group
+    // text alone cannot show the gate live.
+    let extglob_live =
+        crate::builtins::shopt::option_enabled(&executor.shell_state.env_vars, "extglob");
+    let extglob_eof_line = if interactive {
+        None
+    } else {
+        crate::lexer::unclosed_extglob_group_line(input, extglob_live)
+    };
+    let unclosed_route = pre_lexed.is_none()
+        && !interactive
+        && crate::lexer::has_unclosed_input_syntax_posix(input, parse_posix)
+        && !input.contains("<<")
+        && !command_paren_verdict_disproved_by_parser(input, parse_posix);
+    if unclosed_route || (extglob_eof_line.is_some() && !input.contains("<<")) {
+        // GNU parse.y:5635-5643 read_token_word + parse_matched_pair
+        // (parse.y:3906-3912): an unclosed array subscript `[` reports
+        // `unexpected EOF while looking for matching `]'' at the line the
+        // `[` opened and exits 1 — and the scan swallows any later `)`,
+        // so it must be reported ahead of the generic close-char path
+        // (rubash#221: `foo=([)` was silently accepted).
+        // rubash#390 q2: an unterminated quote INSIDE the subscript is the
+        // quote recursion's own EOF (parse.y:4040-4051 + 3901-3912) — the
+        // closer char and report line are the QUOTE's (`a["x]=15` reports
+        // `"' at the `"` line, not `]' at the `[` line).
+        if let Some((open_line, closer, construct_line, inside_compassign)) =
+            crate::lexer::unclosed_array_subscript_eof_seeded(input, extglob_live)
+        {
+            let source = input.trim_end_matches('\n');
+            // The prefix of COMPLETE commands stops at the `[` construct's
+            // line — for a quote that opened on a LATER line than its `[`
+            // (`a[\n"x`), cutting at the report line would re-run the
+            // already-open construct's first line standalone and emit a
+            // phantom second diagnostic.
+            let prefix = if construct_line > 1 {
+                source
+                    .lines()
+                    .take(construct_line - 1)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            } else {
+                String::new()
+            };
+            if !prefix.trim().is_empty() {
+                let _ = run_source_prefix_diagnostic_owned(
+                    executor,
+                    &prefix,
+                    interactive,
+                    line_offset,
+                    redirect_cmd,
+                    diagnostic_text,
+                );
+            }
+            executor.mark_parse_error();
+            unclosed_report!(
+                "{}unexpected EOF while looking for matching `{closer}'",
+                executor.parser_error_prefix_for_line(open_line + line_offset)
+            );
+            if !suppress_unclosed_diagnostic {
+                executor.record_run_diagnostic(
+                    format!("unexpected EOF while looking for matching `{closer}'"),
+                    Some(open_line + line_offset),
+                );
+            }
+            // GNU exits 1 when the subscript opened inside a compound array
+            // assignment (parse_compound_assignment EOF family) and 2 for a
+            // command word (parse.y:3567 read_token error path) — but
+            // error.c:324-327 forces exit status 2 whenever errexit is live
+            // at the parser_error (rubash#306).
+            if inside_compassign && executor.errexit_live_at_diagnostic() {
+                executor.set_last_exit_code(2);
+                return 2;
+            }
+            let status = if inside_compassign { 1 } else { 2 };
+            executor.set_last_exit_code(status);
+            return status;
+        }
+        // rubash#543: an unterminated `$[` legacy-arithmetic construct is the
+        // parse_matched_pair grouping scan opened by read_token_word's
+        // shellexp arm (parse.y:5494-5527 `parse_matched_pair ('[', ']',
+        // P_ARITH)`); EOF reports `unexpected EOF while looking for matching
+        // `X'' at the innermost failed scan's opener (parse.y:3901-3912) and
+        // exits 2. The verdict shapes (WSL GNU 5.2.21/5.3.0 probes,
+        // 2026-10-12): unquoted hunt -> `]'; a quote/backtick recursion
+        // inside names ITSELF (a5: `echo $[\n'q` -> `'` line 2); a hunt
+        // inside a double-quoted span is NOT bounded by the span — the
+        // span's closing quote opens a quote unit inside the hunt whose
+        // EOF names the DQUOTE at the UNIT's line (q2/w1-w4 sit on the
+        // span's line, where the two coincide; rubash#2227 face 2 splits
+        // them: `echo "a $[1+<NL>2"` -> `"'` at line 2); reported ahead of the
+        // generic close-char path because the hunt owns the EOF even when a
+        // `${` is also unclosed (`echo ${x[$[1}` -> `]', not `}').
+        if let Some(eof) = crate::lexer::unclosed_dollar_bracket_eof(input) {
+            let source = input.trim_end_matches('\n');
+            let prefix = if eof.construct_line > 1 {
+                source
+                    .lines()
+                    .take(eof.construct_line - 1)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            } else {
+                String::new()
+            };
+            if !prefix.trim().is_empty() {
+                let _ = run_source_prefix_diagnostic_owned(
+                    executor,
+                    &prefix,
+                    interactive,
+                    line_offset,
+                    redirect_cmd,
+                    diagnostic_text,
+                );
+            }
+            executor.mark_parse_error();
+            unclosed_report!(
+                "{}unexpected EOF while looking for matching `{closure}'",
+                executor.parser_error_prefix_for_line(eof.report_line + line_offset),
+                closure = eof.closer
+            );
+            if !suppress_unclosed_diagnostic {
+                executor.record_run_diagnostic(
+                    format!(
+                        "unexpected EOF while looking for matching `{closure}'",
+                        closure = eof.closer
+                    ),
+                    Some(eof.report_line + line_offset),
+                );
+            }
+            executor.errexit_live_at_diagnostic();
+            executor.set_last_exit_code(2);
+            return 2;
+        }
+        // rubash#3229: an unclosed extglob pattern group — GNU
+        // read_token_word's parse_matched_pair scan (parse.y:5466-5489)
+        // reaches EOF and reports the pair's closer at the line the
+        // group opened (parse.y:3901-3912) with exit status 2. The
+        // word read bails, so nothing on the group's line runs, while
+        // complete commands before it already executed (the prefix
+        // model every arm of this route follows).
+        if let Some(open_line) = extglob_eof_line {
+            let source = input.trim_end_matches('\n');
+            let prefix = if open_line > 1 {
+                source
+                    .lines()
+                    .take(open_line - 1)
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            } else {
+                String::new()
+            };
+            // Same #1589 retreat as the close-char section below: when
+            // the group's line sits inside a keyword compound that is
+            // itself unclosed at EOF (`case ab in` above the pattern
+            // line), GNU's reader died inside the compound — none of
+            // it ran — so the prefix must retreat to the compound's
+            // opening line instead of running the header standalone
+            // (which would print the compound's own EOF diagnostic
+            // ahead of the group's).
+            let prefix = match unclosed_compound_open_line(&prefix) {
+                Some(open) if open > 1 => {
+                    prefix.lines().take(open - 1).collect::<Vec<_>>().join("\n")
+                }
+                Some(_) => String::new(),
+                None => prefix,
+            };
+            if !prefix.trim().is_empty() {
+                let _ = run_source_prefix_diagnostic_owned(
+                    executor,
+                    &prefix,
+                    interactive,
+                    line_offset,
+                    redirect_cmd,
+                    diagnostic_text,
+                );
+            }
+            executor.mark_parse_error();
+            unclosed_report!(
+                "{}unexpected EOF while looking for matching `)'",
+                executor.parser_error_prefix_for_line(open_line + line_offset)
+            );
+            if !suppress_unclosed_diagnostic {
+                executor.record_run_diagnostic(
+                    "unexpected EOF while looking for matching `)'".to_string(),
+                    Some(open_line + line_offset),
+                );
+            }
+            executor.errexit_live_at_diagnostic();
+            executor.set_last_exit_code(2);
+            return 2;
+        }
+        // GNU's incremental reader executes complete input lines before the
+        // line where the unclosed construct opened; that line itself is part
+        // of the failed parse and runs nothing. The cut uses the OUTERMOST
+        // pending construct's line: GNU's failed parse starts there, so a
+        // quote opened INSIDE a `${`-class construct must not split the group
+        // into a phantom second diagnostic (#551 C5 — GNU prints one
+        // diagnostic, the innermost construct's, at the quote's line).
+        let unclosed = crate::lexer::unclosed_input_close_char_posix(input, parse_posix);
+        let cut_line = unclosed.map(|unclosed| unclosed.outermost_line);
+        let source = input.trim_end_matches('\n');
+        let prefix = match cut_line {
+            Some(open) if open > 1 => source.lines().take(open - 1).collect::<Vec<_>>().join("\n"),
+            Some(_) => String::new(),
+            None => source
+                .rsplit_once('\n')
+                .map(|(prefix, _)| prefix.to_string())
+                .unwrap_or_default(),
+        };
+        // rubash#1589: the matched-pair cut above stops at the pair's
+        // own line, but when that line sits inside a keyword compound
+        // that is itself unclosed at EOF (`if true; then` on the line
+        // above an unclosed quote), the prefix still ends mid-compound
+        // — running it standalone makes the prefix's own parse report
+        // the compound's EOF diagnostic ahead of the pair's, while GNU
+        // prints only the pair's (its reader died inside the compound,
+        // so the compound is the failed command and none of it — nor
+        // anything else on its opening line — ever ran). Retreat the
+        // cut to the outermost still-open compound's opening line.
+        let prefix = match unclosed_compound_open_line(&prefix) {
+            Some(open) if open > 1 => prefix.lines().take(open - 1).collect::<Vec<_>>().join("\n"),
+            Some(_) => String::new(),
+            None => prefix,
+        };
+        if !prefix.trim().is_empty() {
+            let _ = run_source_prefix_diagnostic_owned(
+                executor,
+                &prefix,
+                interactive,
+                line_offset,
+                redirect_cmd,
+                diagnostic_text,
+            );
+        }
+        executor.mark_parse_error();
+        // GNU parse.y names the close delimiter of the innermost unclosed
+        // matched-pair construct ("unexpected EOF while looking for
+        // matching `}'"); only an unrecognized residue falls back to the
+        // generic end-of-file diagnostic.
+        match unclosed {
+            Some(unclosed) => {
+                let (close, open_line, eof_line, report_open, command, array_list) = (
+                    unclosed.close,
+                    unclosed.open_line,
+                    unclosed.eof_line,
+                    unclosed.report_open,
+                    unclosed.command,
+                    unclosed.array_list,
+                );
+                // Read-stage scans number lines within the group text; the
+                // diagnostic prefix is global (the file/stdin position), so
+                // shift by the group's base offset (#551 C1: stdin line N
+                // must equal the file-driven number, second group included).
+                // The `input` probes below stay in group-local coordinates.
+                let (global_open, global_eof) = (open_line + line_offset, eof_line + line_offset);
+                // GNU parse.y yyerror (parse.y:6890-6901): an unterminated
+                // command-position `(` names the construct — "unexpected
+                // end of file from `(' command on line N" — while
+                // `$(`/`$((`/array/quote matched pairs keep the "matching
+                // `X'" wording.
+                // rubash#3405: when the shape scan positively identifies
+                // a token-level error inside the comsub body, the
+                // command-position branch must NOT claim the input for
+                // its subshell-EOF fallthrough — the `else if` arm below
+                // renders that verdict (with the matching suffix), and
+                // the MainLevel/dparen arms inside this branch have no
+                // verdict for it. The shape's own guards (#516/q1,
+                // `((` arithmetic root, `for ((` pair) already keep
+                // those families out of the ComsubBodyTokenError class,
+                // so only genuine body token errors defer.
+                if close == ')'
+                    && command
+                    && !matches!(
+                        crate::lexer::unclosed_comsub_eof_shape(
+                            input,
+                            crate::lexer::parse_extended_glob()
+                        ),
+                        Some((
+                            crate::lexer::UnclosedComsubShape::ComsubBodyTokenError { .. },
+                            _
+                        ))
+                    )
+                {
+                    // Issue #516 (F181 class): a `(` that follows word
+                    // text — any second word, a redirect or an assignment
+                    // prefix before it — is a yacc token error at the
+                    // paren itself (`syntax error near unexpected token
+                    // `X'' + the offending source line, exit 2), never a
+                    // command-position compound open that swallows the
+                    // rest of the input to EOF. GNU probes p14/p16/p21 and
+                    // the q-series pin the naming rules the lexer's shape
+                    // scan carries.
+                    if let Some((
+                        crate::lexer::UnclosedComsubShape::MainLevelTokenError { line, token },
+                        _paren_open,
+                    )) = crate::lexer::unclosed_comsub_eof_shape(
+                        input,
+                        crate::lexer::parse_extended_glob(),
+                    ) {
+                        let report = line + line_offset;
+                        let prefix = executor.parser_error_prefix_for_line(report);
+                        unclosed_report!("{prefix}syntax error near unexpected token `{token}'");
+                        if !suppress_unclosed_diagnostic {
+                            executor.record_run_diagnostic(
+                                format!("syntax error near unexpected token `{token}'"),
+                                Some(report),
+                            );
+                        }
+                        // error.c print_offending_line is non-interactive
+                        // only (parse.y:6865) — the same gate the parser's
+                        // source echoes use.
+                        if !executor.invocation_interactive() {
+                            let offending = input
+                                .lines()
+                                .nth(line.saturating_sub(1))
+                                .unwrap_or_default();
+                            unclosed_report!("{prefix}`{offending}'");
+                        }
+                        executor.errexit_live_at_diagnostic();
+                        executor.set_last_exit_code(2);
+                        return 2;
+                    }
+                    // rubash#390 q1: a `((` at command position is NOT a
+                    // plain subshell — read_token hands it to parse_dparen
+                    // (parse.y:3726-3733) → parse_arith_cmd, whose
+                    // parse_matched_pair(`(',`)',P_ARITH) scan (parse.y:4970)
+                    // hitting EOF with the paren count still open reports
+                    // `unexpected EOF while looking for matching `)'' at the
+                    // line the group opened (parse.y:3908-3915, start_lineno)
+                    // with exit 2 (`error yacc_EOF' forces EX_BADUSAGE only
+                    // when the status is still 0 — parse.y:484-490). Probes:
+                    // `((1+2', `((1+(2', `((x=(' all rc 2 at the `((` line.
+                    // A group that CLOSES is the nested-subshell
+                    // reinterpretation (parse.y:4938-4948) and keeps this
+                    // branch's wording.
+                    // (Merge resolution rubash#578: GNU's EOF reports are a
+                    // single `%c' — parse.y:3912 names the matched-pair's
+                    // close char, parse.y:7152 the literal `)' — so the
+                    // dual-char `) [' wording this arm briefly carried has no
+                    // GNU oracle; the #390-pinned `)' report stands, matching
+                    // the pre-merge branch behavior the issue390/issue413
+                    // pins exercise.)
+                    if crate::lexer::dparen_arith_group_never_closes(input, open_line) {
+                        unclosed_report!(
+                            "{}unexpected EOF while looking for matching `)'",
+                            executor.parser_error_prefix_for_line(global_open)
+                        );
+                        if !suppress_unclosed_diagnostic {
+                            executor.record_run_diagnostic(
+                                "unexpected EOF while looking for matching `)'".to_string(),
+                                Some(global_open),
+                            );
+                        }
+                        executor.errexit_live_at_diagnostic();
+                        executor.set_last_exit_code(2);
+                        return 2;
+                    }
+                    // Class B: the group closed but the next char was not
+                    // `)` — the nested-subshell reparse leaves a compound
+                    // assignment open at clean EOF: parse.y:7151-7152's
+                    // `)' report at the compound's line with
+                    // set_exit_status(EXECUTION_FAILURE) (parse.y:7167-7169),
+                    // kept at 1 by the `error yacc_EOF' production
+                    // (parse.y:489-490 only forces 2 on a still-zero
+                    // status). error.c:324-327 forces 2 under live errexit.
+                    if crate::lexer::dparen_subshell_reparse_compound_eof(input, open_line) {
+                        unclosed_report!(
+                            "{}unexpected EOF while looking for matching `)'",
+                            executor.parser_error_prefix_for_line(global_open)
+                        );
+                        if !suppress_unclosed_diagnostic {
+                            executor.record_run_diagnostic(
+                                "unexpected EOF while looking for matching `)'".to_string(),
+                                Some(global_open),
+                            );
+                        }
+                        if executor.errexit_live_at_diagnostic() {
+                            executor.set_last_exit_code(2);
+                            return 2;
+                        }
+                        executor.set_last_exit_code(1);
+                        return 1;
+                    }
+                    unclosed_report!(
+                        "{}syntax error: unexpected end of file from `(' command on line {global_open}",
+                        executor.parser_error_prefix_for_line(global_eof)
+                    );
+                    if !suppress_unclosed_diagnostic {
+                        executor.record_run_diagnostic(
+                            format!(
+                                "syntax error: unexpected end of file from `(' command on line {global_open}"
+                            ),
+                            Some(global_eof),
+                        );
+                    }
+                } else if let Some((
+                    crate::lexer::UnclosedComsubShape::ComsubBodyTokenError { line, token },
+                    _,
+                )) = crate::lexer::unclosed_comsub_eof_shape(
+                    input,
+                    crate::lexer::parse_extended_glob(),
+                ) {
+                    // rubash#3405: a token-level error inside the
+                    // unclosed comsub's body preempts the matched-pair
+                    // EOF report in file mode too — GNU's nested
+                    // yyparse (parse.y:4549-4555) fails on the offending
+                    // token before EOF is reached, and
+                    // report_syntax_error (parse.y:6833-6865) names it
+                    // with the matching suffix plus the offending line.
+                    let report = line + line_offset;
+                    let prefix = executor.parser_error_prefix_for_line(report);
+                    unclosed_report!(
+                        "{prefix}syntax error near unexpected token `{token}' while looking for matching `{close}'"
+                    );
+                    if !suppress_unclosed_diagnostic {
+                        executor.record_run_diagnostic(
+                            format!(
+                                "syntax error near unexpected token `{token}' while looking for matching `{close}'"
+                            ),
+                            Some(report),
+                        );
+                    }
+                    if !executor.invocation_interactive() {
+                        let offending = input
+                            .lines()
+                            .nth(line.saturating_sub(1))
+                            .unwrap_or_default();
+                        unclosed_report!("{prefix}`{offending}'");
+                    }
+                    executor.errexit_live_at_diagnostic();
+                    executor.set_last_exit_code(2);
+                    return 2;
+                } else {
+                    let reported = if report_open { global_open } else { global_eof };
+                    unclosed_report!(
+                        "{}unexpected EOF while looking for matching `{close}'",
+                        executor.parser_error_prefix_for_line(reported)
+                    );
+                    if !suppress_unclosed_diagnostic {
+                        executor.record_run_diagnostic(
+                            format!("unexpected EOF while looking for matching `{close}'"),
+                            Some(reported),
+                        );
+                    }
+                }
+                // GNU exits 1 for an unterminated `name=(` array list —
+                // but error.c:324-327 forces exit status 2 whenever
+                // errexit is live at the parser_error (rubash#306).
+                if array_list && executor.errexit_live_at_diagnostic() {
+                    executor.set_last_exit_code(2);
+                    return 2;
+                }
+                if array_list {
+                    executor.set_last_exit_code(1);
+                    return 1;
+                }
+            }
+            None => {
+                unclosed_report!("rubash: syntax error: unexpected end of file");
+                if !suppress_unclosed_diagnostic {
+                    executor.record_run_diagnostic(
+                        "syntax error: unexpected end of file".to_string(),
+                        None,
+                    );
+                }
+            }
+        }
+        executor.set_last_exit_code(2);
+        return 2;
+    }
+
+    // perf19: pre_lexed is the gather feeder's committed stream for THIS
+    // group (see run_source_pre_lexed_with_line_offset's doc) — tokenizing
+    // `input` again would re-read every byte the feeder already scanned.
+    let mut tokens = match pre_lexed {
+        Some(tokens) => tokens,
+        None => tokenize_with_initial_posix(input, parse_posix),
+    };
+    // A command with more than HEREDOC_MAX (16) here-documents is fatal in
+    // GNU (parse.y push_heredoc -> report_syntax_error + exit_shell with
+    // EX_BADUSAGE). The lexer only returns tokens, so it parks the condition
+    // for us: run the complete commands before the offending line (GNU
+    // parses and executes one complete command at a time, so they already
+    // ran when push_heredoc fired — the same prefix model as the
+    // delimiter-quote arm above), then report with the script-relative line
+    // and exit 2; nothing at or after the offending line runs.
+    if let Some(line) = crate::lexer::heredoc_overflow_line() {
+        return report_heredoc_overflow_fatal(
+            executor,
+            input,
+            interactive,
+            line_offset,
+            redirect_cmd,
+            diagnostic_text,
+            parse_posix,
+            line,
+        );
+    }
+    if line_offset != 0 {
+        for token in &mut tokens {
+            token.position += line_offset;
+            token.column += line_offset;
+            // rubash#1186: logical_line must shift with position — the
+            // DISCARD skip gates compare command.logical_line against
+            // reader-line state seeded in the absolute (offset) space, so
+            // an unshifted logical_line left every interactive line after
+            // the first comparing unequal and the failglob discard died at
+            // compound boundaries (`{ set -- /no/such/*.zzz; }; echo rc`
+            // printed rc in the REPL only).
+            token.logical_line += line_offset;
+        }
+    }
+    // GNU parse.y: a `)` or case-clause terminator at command position is
+    // `syntax error near unexpected token` (yyerror aborts the input). The
+    // lexer folds multi-line `$(...)` bodies, so a top-level `)` token is
+    // genuinely stray (comsub6.sub `math1)` after alias expansion).
+    let mut ast = crate::parser::parse_with_options(
+        &tokens,
+        crate::parser::ParseLoopOptions {
+            stray_close_is_error: true,
+            source_text: Some(input.into()),
+            diagnostic_text: diagnostic_text.map(std::rc::Rc::from),
+            source_line_offset: line_offset,
+        },
+    );
+    // Parse-level parking: a command substitution body is its own parse
+    // level (parse.y:4524 parse_command_substitution resets the pending
+    // counter at entry) and its tokenize parks the same overflow. GNU's
+    // push_heredoc is fatal inside the nested level too, before the body's
+    // own EOF diagnostics could matter — the node builder skipped the doomed
+    // body parse, so report the fatal instead of executing anything.
+    if let Some(line) = crate::lexer::heredoc_overflow_line() {
+        return report_heredoc_overflow_fatal(
+            executor,
+            input,
+            interactive,
+            line_offset,
+            redirect_cmd,
+            diagnostic_text,
+            parse_posix,
+            line,
+        );
+    }
+    // rubash#2789: GNU validates substitution bodies when the
+    // enclosing command is READ (parse.y:4451 parse_comsub), so a
+    // body grammar failure is this unit's first read error and kills
+    // it before anything executes — see
+    // Executor::screen_comsub_bodies_at_read. It runs ahead of the
+    // unit voiding below for the same reason (a top-level marker
+    // later in the unit is an error GNU's reader never reaches).
+    // Interactive readers keep their own per-line error reporting
+    // and discard shape; diagnostic-owned prefix runs
+    // (suppress_unclosed_diagnostic) keep their caller's single
+    // report and unchanged behavior.
+    if !interactive && !suppress_unclosed_diagnostic {
+        if let Some(status) = executor.screen_comsub_bodies_at_read(&ast.commands) {
+            return status;
+        }
+    }
+    if let Some(cmd) = redirect_cmd {
+        if let Err(error) = executor.apply_inherited_command_output_redirects(cmd, &mut ast) {
+            eprintln!("{error}");
+            return 1;
+        }
+    }
+
+    // rubash#1138: a syntax error voids its whole reader unit — see
+    // apply_parse_error_unit_voiding. Interactive readers keep their
+    // own per-line error reporting.
+    if !interactive {
+        apply_parse_error_unit_voiding(&mut ast);
+    }
+
+    // rubash#1497: consume the driver's final-unit arming (see
+    // Executor::command_string_final_pending): only the -c string's
+    // last reader unit raises the exec-replacement frame, and only in
+    // command-string mode. A nested unit (a sourced file inside the
+    // -c string) restores the enclosing frame state untouched after
+    // its run; its own walks never see the frame raised, because the
+    // pending flag was already taken by the outer unit.
+    // WP-8 (debugger design 5.1): a file-backed unit registers its
+    // syntax view with the attached session before it executes,
+    // so the unit's breakpoints are resolvable from its first seam
+    // on. Unset identity (eval strings, -c text, interactive
+    // units): nothing registers.
+    if let Some(file) = &syntax_unit_file {
+        executor.debugger_register_syntax(file, &ast);
+    }
+
+    // rubash#2332: a respawned child running its transported `-c`
+    // text (main.rs arms the run) re-seeds this unit's node lines
+    // from the root-body span transport — the patch point both -c
+    // drivers share. Outermost units only: nested runs inside this
+    // unit's execution keep their own lines.
+    if root_span_outermost && executor.root_line_span_run_armed.get() {
+        apply_respawn_root_line_spans(executor, &mut ast.commands);
+    }
+
+    let saved_final_frame = executor.exec_replace_final_frame.get();
+    let final_unit = executor.command_string_final_pending.take() && executor.command_string_mode();
+    executor.exec_replace_final_frame.set(final_unit);
+    let exec_result = executor.execute_ast(&ast);
+    executor.exec_replace_final_frame.set(saved_final_frame);
+    match exec_result {
+        Ok(()) => executor.last_exit_code(),
+        // ExitCode/FatalFunctionError reached the list top: GNU unwound via
+        // jump_to_top_level (exit, errexit, POSIX special-builtin failure).
+        // The grouped drivers must stop reading — record it before the
+        // status conversion loses the distinction.
+        Err(ExecuteError::ExitCode(code)) => {
+            // rubash#1662: a signal-discard abort (untrapped SIGINT in
+            // an interactive shell) reaches the top as ExitCode too,
+            // but it is not a jump_to_top_level exit — the dispatch
+            // marked it DISCARD, so the reader keeps the session and
+            // prompts again with $? = code.
+            if !executor.take_signal_discard_pending() {
+                executor.exit_jump_pending.set(true);
+                // Q6 arm B: record the unwind kind the gates
+                // reported, and surface the discard fact for the
+                // driver layer (the pending itself ends here).
+                if executor.take_errexit_unwind_pending() {
+                    executor.note_errexit_unwind_armed();
+                }
+            } else {
+                executor.note_unit_signal_discard();
+                // A discard preempts any errexit decision raised
+                // on the way out; drop a stale mark with its unit.
+                let _ = executor.take_errexit_unwind_pending();
+            }
+            code
+        }
+        Err(ExecuteError::FatalFunctionError(code)) => {
+            executor.exit_jump_pending.set(true);
+            // Q6 arm B: a fatal-function jump is never an errexit
+            // break; drop any stale mark with its unit.
+            let _ = executor.take_errexit_unwind_pending();
+            code
+        }
+        // ExpansionFailure is GNU's DISCARD: the command list aborted but
+        // the reader continues with the next complete command. When the
+        // text is a -c string, this catch is shell.c run_one_command's:
+        // its DISCARD arm returns last_command_exit_value = 1
+        // (shell.c:1478-1479) regardless of the pre-set status, where
+        // the script reader_loop preserves it (eval.c:111-118).
+        Err(ExecuteError::ExpansionFailure(code)) => {
+            if executor.command_string_mode() {
+                1
+            } else {
+                code
+            }
+        }
+        // SigintUnwind is the same DISCARD shape with a fixed verdict
+        // (rubash#1639): GNU threw to the top-level reader on the
+        // foreground job's SIGINT death — no diagnostic, the reader
+        // continues, and $? is the 130 the wait recorded. A mid-wait
+        // mailbox drain (observe_signals_while_blocked, niubash#698)
+        // may have attached its discard mark to the same interrupt
+        // before the wait converted it to this spelling; consume the
+        // unit's bookkeeping here so the mark cannot outlive its unit
+        // and misclassify a later unit's genuine exit.
+        Err(ExecuteError::SigintUnwind) => {
+            let _ = executor.take_signal_discard_pending();
+            // Q6 arm B: this spelling IS the discard; record it
+            // for the driver layer like the ExitCode arm does.
+            executor.note_unit_signal_discard();
+            130
+        }
+        // A `return` that unwinds to this unit's top ends the unit with
+        // its status as an ordinary value (builtins/evalfile.c
+        // source_file returns it; no jump_to_top_level). It can only
+        // reach here while a sourced-file context is live — the return
+        // builtin itself rejects top-level use otherwise — e.g. a
+        // startup file run by run_init_file (rubash#1161). Printing it
+        // via the catch-all below leaked a bare `return N` line.
+        Err(ExecuteError::Return(code)) => code,
+        Err(e) => {
+            if interactive {
+                eprintln!("Error: {}", e);
+            } else {
+                eprintln!("{}", e);
+            }
+            1
+        }
+    }
+}
+
+// ===========================================================================
+// Interactive stdin driver (non-tty `bash -i`) — moved from main.rs so
+// product shells (niu) can delegate forced-interactive piped input here
+// instead of driving a terminal REPL that cannot run without a tty.
+// ===========================================================================
+
+/// (rows, cols) of the console attached to `handle`, or None when the
+/// handle is not a console. Only the visible window rectangle is used —
+/// TIOCGWINSZ semantics, not the (usually wider) buffer dwSize.
+#[cfg(windows)]
+fn windows_console_size_of(handle: *mut std::ffi::c_void) -> Option<(i32, i32)> {
+    #[repr(C)]
+    #[derive(Default, Clone, Copy)]
+    struct Coord {
+        x: i16,
+        y: i16,
+    }
+    #[repr(C)]
+    #[derive(Default, Clone, Copy)]
+    struct SmallRect {
+        left: i16,
+        top: i16,
+        right: i16,
+        bottom: i16,
+    }
+    #[repr(C)]
+    #[derive(Default, Clone, Copy)]
+    struct ConsoleScreenBufferInfo {
+        dw_size: Coord,
+        dw_cursor_position: Coord,
+        w_attributes: u16,
+        sr_window: SmallRect,
+        dw_maximum_window_size: Coord,
+    }
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetConsoleScreenBufferInfo(
+            console_output: *mut std::ffi::c_void,
+            console_screen_buffer_info: *mut ConsoleScreenBufferInfo,
+        ) -> i32;
+    }
+    let mut info = ConsoleScreenBufferInfo::default();
+    if unsafe { GetConsoleScreenBufferInfo(handle, &mut info) } == 0 {
+        return None;
+    }
+    let SmallRect {
+        left,
+        top,
+        right,
+        bottom,
+    } = info.sr_window;
+    let rows = i32::from(bottom) - i32::from(top) + 1;
+    let cols = i32::from(right) - i32::from(left) + 1;
+    Some((rows, cols))
+}
+
+#[cfg(not(windows))]
+fn windows_console_size_of(_handle: *mut std::ffi::c_void) -> Option<(i32, i32)> {
+    None
+}
+
+/// Windows analog of the controlling-terminal winsize query
+/// (winsize.c:97 input_tty -> tcgetwinsize): the process console, found via
+/// CONOUT$ so it works even when stdin/stdout/stderr are all redirected,
+/// with the std handles as fallbacks for consoles without a CONOUT$ open.
+#[cfg(windows)]
+pub(crate) fn process_console_size() -> Option<(i32, i32)> {
+    use std::os::windows::io::AsRawHandle;
+    if let Ok(conout) = std::fs::OpenOptions::new()
+        .read(true)
+        .write(true)
+        .open("CONOUT$")
+    {
+        if let Some(size) = windows_console_size_of(conout.as_raw_handle() as *mut _) {
+            return Some(size);
+        }
+    }
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn GetStdHandle(n_std_handle: u32) -> *mut std::ffi::c_void;
+    }
+    // STD_INPUT_HANDLE / STD_OUTPUT_HANDLE / STD_ERROR_HANDLE
+    for std_handle in [-10i32 as u32, -11i32 as u32, -12i32 as u32] {
+        let handle = unsafe { GetStdHandle(std_handle) };
+        if !handle.is_null() {
+            if let Some(size) = windows_console_size_of(handle) {
+                return Some(size);
+            }
+        }
+    }
+    None
+}
+
+#[cfg(not(windows))]
+pub(crate) fn process_console_size() -> Option<(i32, i32)> {
+    None
+}
+
+/// Size of the console on STDIN itself (readline's rl_instream winsize).
+#[cfg(windows)]
+fn stdin_console_size() -> Option<(i32, i32)> {
+    use std::os::windows::io::AsRawHandle;
+    windows_console_size_of(std::io::stdin().as_raw_handle() as *mut _)
+}
+
+#[cfg(not(windows))]
+fn stdin_console_size() -> Option<(i32, i32)> {
+    None
+}
+
+/// variables.c:1039 sh_set_lines_and_columns: bind LINES then COLUMNS as
+/// (non-exported) shell variables. bind_variable does not export, so the
+/// process environment is only updated for names the parent had already
+/// exported (an exported var stays exported across rebinds).
+fn bind_lines_columns(executor: &mut Executor, lines: i32, columns: i32) {
+    executor
+        .shell_state
+        .env_vars
+        .insert("LINES".to_string(), lines.to_string());
+    executor
+        .shell_state
+        .env_vars
+        .insert("COLUMNS".to_string(), columns.to_string());
+    // variables.c:1051/:1054: GNU binds each name with ONE bind_variable
+    // into its single variable table. Rubash splits that table into the
+    // env mirror above and the scalar records (`shell_state.variables`),
+    // and `$name` expansion reads the record FIRST with a mirror
+    // fallthrough (variable_state.rs shell_variable_value) — so a bind
+    // that wrote only the mirror left any pre-existing record (parent
+    // env import at Executor::new, or one user assignment) stuck at its
+    // old value while the child env tracked the resize: shell-internal
+    // and child views diverged (niubash#822). Dual-write like set_env
+    // (public_accessors.rs): update the record's scalar in place so
+    // attributes survive the rebind — the GNU shape is
+    // bind_variable_internal's existing-entry arm (variables.c:3151
+    // assign_value:), which replaces only the value cell
+    // (variables.c:3207 var_setvalue) and, for an exported entry, flags
+    // the environment rebuild (variables.c:3214-3215) so the exported
+    // value tracks too. Absent records stay absent and keep reading
+    // through the mirror fallthrough, matching set_env's sync and GNU's
+    // "a fresh bind does not export" rule.
+    for (name, value) in [("LINES", lines), ("COLUMNS", columns)] {
+        if let Some(variable) = executor.shell_state.variables.get_mut(name) {
+            if let crate::shell::ShellValue::Scalar(current) = &mut variable.value {
+                *current = value.to_string();
+            }
+        }
+    }
+    // G-01: winsize sync writes the process env — serialize it.
+    crate::executor::local_helpers::with_process_state_lock(|| {
+        if std::env::var_os("LINES").is_some() {
+            std::env::set_var("LINES", lines.to_string());
+        }
+        if std::env::var_os("COLUMNS").is_some() {
+            std::env::set_var("COLUMNS", columns.to_string());
+        }
+    });
+}
+
+/// The Session API's terminal-size notification
+/// (`api::Session::notify_terminal_size`): the host reports the
+/// size as (columns, rows) — the order a terminal reports it —
+/// and the session translates to this (lines, columns) bind
+/// order. The values land through the same LINES/COLUMNS
+/// binding the winsize machinery uses.
+pub fn bind_terminal_size(executor: &mut Executor, lines: i32, columns: i32) {
+    bind_lines_columns(executor, lines, columns);
+}
+
+/// jobs.c:2618 get_tty_state -> jobs.c:2647-2648 `if (check_window_size)
+/// get_new_window_size(0, NULL, NULL)` -> winsize.c:98-100: with checkwinsize
+/// on (default, config-top.h:148 CHECKWINSIZE_DEFAULT 1), an interactive
+/// shell binds LINES/COLUMNS from the controlling terminal's winsize
+/// (ws_row > 0 && ws_col > 0). Called from initialize_job_control's mirror
+/// (pre-startup-files, shell.c:1969 -> jobs.c:4871 `if (interactive)
+/// get_tty_state ()`) and again after the startup files (shell.c:816) —
+/// rubash's post-file site is prepare_interactive_history, the port of the
+/// shell.c:799-811 block that precedes it. Verified interactive-only: GNU
+/// never binds COLUMNS/LINES for non-interactive shells
+/// (jobs.c:4871 guard).
+pub fn bind_interactive_console_winsize(executor: &mut Executor) {
+    if !crate::builtins::shopt::option_enabled(&executor.shell_state.env_vars, "checkwinsize") {
+        return;
+    }
+    let Some((rows, cols)) = process_console_size() else {
+        return;
+    };
+    // winsize.c:98: both dimensions must be positive for the bind to fire.
+    if rows > 0 && cols > 0 {
+        bind_lines_columns(executor, rows, cols);
+    }
+}
+
+/// lib/readline/terminal.c:293-374 _rl_get_screen_size — the bind readline
+/// performs when it initializes at the first prompt (bashline.c:524
+/// initialize_readline -> rl_initialize readline.c:1313 ->
+/// _rl_init_terminal_io terminal.c:646 -> _rl_get_screen_size ->
+/// sh_set_lines_and_columns terminal.c:374). Precedence, per the C:
+///   1. winsize of rl_instream (stdin): width=ws_col, height=ws_row —
+///      recomputed unconditionally when stdin itself is a console;
+///   2. otherwise the query runs only when no screen size is set yet
+///      (terminal.c:640-643 application-supplied size wins): positive
+///      LINES/COLUMNS shell values bound by the console path survive;
+///   3. env COLUMNS / env LINES (getenv, not shell vars) when unset;
+///   4. the 80x24 defaults (terminal.c:366-371), with `width <= 1 -> 80`
+///      applied last so a degenerate 1-column console still binds 80.
+/// Windows has no termcap/tgetnum("co"/"li") step; the defaults 80/24
+/// replace it exactly (GNU with tgetent but no winsize also lands on
+/// 80/24, verified: no-ctty WSL GNU binds COLUMNS=80 LINES=24 at the
+/// first prompt while the rcfile still sees them unset).
+pub fn bind_interactive_screen_size(executor: &mut Executor) {
+    // terminal.c:318-319 with a working stdin ioctl: wc/ws_col, wr/ws_row.
+    if let Some((rows, cols)) = stdin_console_size() {
+        let mut width = cols;
+        let mut height = rows;
+        // terminal.c:366-371.
+        if width <= 1 {
+            width = 80;
+        }
+        if height <= 0 {
+            height = 24;
+        }
+        bind_lines_columns(executor, height, width);
+        return;
+    }
+    // terminal.c:640-643: an application-provided size (winsize.c:103
+    // rl_set_screen_size from get_new_window_size, or sv_winsize from a
+    // COLUMNS/LINES assignment) suppresses the query when both sides are
+    // already positive.
+    let columns_bound = executor
+        .get_env("COLUMNS")
+        .and_then(|v| v.parse::<i32>().ok())
+        .is_some_and(|v| v > 0);
+    let lines_bound = executor
+        .get_env("LINES")
+        .and_then(|v| v.parse::<i32>().ok())
+        .is_some_and(|v| v > 0);
+    if columns_bound && lines_bound {
+        return;
+    }
+    let env_positive = |name: &str| {
+        std::env::var_os(name)
+            .and_then(|v| v.to_str()?.parse::<i32>().ok())
+            .filter(|v| *v > 0)
+    };
+    let mut width = env_positive("COLUMNS").unwrap_or(-1);
+    let mut height = env_positive("LINES").unwrap_or(-1);
+    if width <= 1 {
+        width = 80;
+    }
+    if height <= 0 {
+        height = 24;
+    }
+    bind_lines_columns(executor, height, width);
+}
+
+/// GNU shell.c:806-811: interactive shells run bash_initialize_history and
+/// load_history at startup. bashhist.c:320-345 load_history: default
+/// HISTSIZE (500) and HISTFILESIZE (=HISTSIZE), apply sv_histsize to the
+/// file (truncating it to HISTFILESIZE lines), then read HISTFILE into the
+/// list when it exists.
+pub fn initialize_interactive_history(executor: &mut Executor) {
+    // GNU shell.c:1835-1837 init_interactive (shell.c:1866-1867
+    // init_interactive_script for the `-i script` arm this site also
+    // serves): `if (enable_history_list == -1) enable_history_list = 1;`
+    // — the interactive default arms history only when nothing has set
+    // the option yet. This used to force the option ON unconditionally,
+    // which re-armed recording after a startup file had opted out with
+    // `set +o history`: the session recorded and its lines were saved to
+    // $HISTFILE at exit anyway (niubash#660). GNU's post-startup load
+    // site (shell.c:806-811) never touches the option.
+    if executor.get_env("__RUBASH_SETOPT_history").is_none() {
+        executor.set_shell_option("history", true);
+    }
+    // shell.c init_interactive: interactive shells also default histexpand
+    // (set -H) on, so !!/!str expand on each accepted line. This site runs
+    // AFTER the startup files, so the default must be set-if-unset: an
+    // explicit `+H` at invocation or a startup file's `set +H` has already
+    // written the carrier and is the user's word (rubash#2733 — the
+    // unconditional set re-armed H over both).
+    if executor.get_env("__RUBASH_SETOPT_histexpand").is_none() {
+        executor.set_shell_option("histexpand", true);
+    }
+    // The HISTFILE default is NOT this site's business. GNU defaults
+    // HISTFILE once, at shell_initialize (shell.c:580) — variables.c:654-661
+    // `if (remember_on_history) { name = bash_default_histfile();
+    // set_if_not("HISTFILE", name); }` — BEFORE the startup files run
+    // (shell.c:722), and the load site reads whatever HISTFILE then holds
+    // (bashhist.c:336 get_string_value at load time). Re-defaulting here —
+    // AFTER the startup files — resurrected the default after an rcfile
+    // `unset HISTFILE`, so an unset-redirected session still loaded and
+    // saved the default file (niubash#661); an rcfile reassignment was
+    // honored only by luck of set_if_not. rubash main.rs
+    // apply_interactive_history_defaults now owns the default, pre-startup.
+    let Some(session) = executor.get_session_history() else {
+        return;
+    };
+    // GNU shell.c:810-811: the whole load — the HISTSIZE/HISTFILESIZE
+    // defaults inside load_history (bashhist.c:323-328), the
+    // sv_histsize("HISTFILESIZE") file truncation and the read itself —
+    // runs only when the startup files have not already put lines into
+    // the list (`history -s` in an rcfile must not be doubled by the
+    // file load): `if (shell_initialized == 0 && history_lines_this_session
+    // == 0) load_history();`.
+    let lines_this_session = session.borrow().lines_this_session;
+    if lines_this_session != 0 {
+        return;
+    }
+    if executor.get_env("HISTSIZE").is_none() {
+        executor.set_env("HISTSIZE", "500");
+    }
+    if executor.get_env("HISTFILESIZE").is_none() {
+        if let Some(histsize) = executor.get_env("HISTSIZE").map(String::from) {
+            executor.set_env("HISTFILESIZE", &histsize);
+        }
+    }
+    let Some(histfile) = executor.get_env("HISTFILE").map(String::from) else {
+        return;
+    };
+    if histfile.is_empty() {
+        return;
+    }
+    let path = executor.resolve_shell_path(&histfile);
+    let write_ts = executor.get_env("HISTTIMEFORMAT").is_some();
+    // bashhist.c:331-332: sv_histsize("HISTFILESIZE") truncates the file
+    // before it is read.
+    if let Some(max) = SessionHistory::size_limit(executor.get_env("HISTFILESIZE")) {
+        let _ = session
+            .borrow_mut()
+            .truncate_file(&path.to_string_lossy(), max, write_ts);
+    }
+    if path.exists() {
+        let histsize = SessionHistory::size_limit(executor.get_env("HISTSIZE"));
+        let mut shell = session.borrow_mut();
+        shell.histfile_loaded = true;
+        // bashhist.c load_history -> read_history: the startup read takes
+        // the same read-time HISTTIMEFORMAT state as `history -r` — it
+        // arms the comment char (variables.c:6168 sv_histtimefmt) and
+        // gates multi-line regrouping (histfile.c:384, rubash#3393).
+        let _ = shell.load_file_with_arming(&path.to_string_lossy(), histsize, write_ts);
+    }
+}
+
+fn session_entries_len(executor: &Executor) -> usize {
+    executor
+        .get_session_history()
+        .map(|s| s.borrow().entries.len())
+        .unwrap_or(0)
+}
+
+/// history_base: the absolute 1-based history number of entries[0]
+/// (history.c stifle_history advances it as entries drop off the front).
+fn session_history_base(executor: &Executor) -> usize {
+    executor
+        .get_session_history()
+        .map(|s| s.borrow().base)
+        .unwrap_or(1)
+}
+
+/// Incremental reverse-i-search state (readline/isearch.c). `search` is the
+/// accumulated search string; `match_index` is the history entry currently
+/// displayed.
+struct ISearchState {
+    search: String,
+    orig_buffer: String,
+    orig_index: Option<usize>,
+    match_index: Option<usize>,
+}
+
+/// flags.c:294 which_set_flags appends `s` to `$-` while GNU's
+/// `read_from_stdin` (shell.c:301) is set: explicit `-s` at startup
+/// (shell.c:928), a non-interactive shell reading commands from a
+/// piped/redirected stdin (shell.c:780-786), or an interactive shell with
+/// no script operand (shell.c:787-790). This marker is rubash's
+/// process-local equivalent, set by the stdin command drivers; like the C
+/// global it never reaches child processes (the `__RUBASH_` env filter,
+/// compound_exec.rs rubash_spawn_inherited_state, keeps it internal).
+pub const READ_STDIN_MARKER: &str = "__RUBASH_READ_STDIN";
+
+/// rubash#2233: GNU general.c:651 check_dev_tty, called from main
+/// (shell.c:410) before anything else: try /dev/tty; if that fails,
+/// open the stdin terminal BY PATH (ttyname(0)). For a session leader
+/// with no controlling terminal yet, the by-path open is what makes
+/// that terminal its controlling terminal under the kernel's open
+/// rules — and only with a controlling terminal does the kernel
+/// deliver SIGHUP to the foreground process group when the terminal
+/// hangs up (master closed, ssh drop). Without it an interactive
+/// shell spawned on a bare pty slave (setsid + inherited fd, the
+/// hosted-embedding shape) never learns of the hangup at all: its
+/// next read just returns EIO and it folds into a graceful EOF exit.
+/// A process that already has a controlling terminal takes the
+/// /dev/tty arm, a non-leader's by-path open cannot acquire, and a
+/// non-tty stdin has no ttyname — every other shape is a no-op.
+#[cfg(unix)]
+pub fn acquire_controlling_terminal() {
+    // SAFETY: plain open/close of the terminal device; no retained
+    // state. ttyname's static buffer is consumed immediately.
+    unsafe {
+        let dev_tty = b"/dev/tty\0";
+        let fd = libc::open(
+            dev_tty.as_ptr() as *const libc::c_char,
+            libc::O_RDWR | libc::O_NONBLOCK,
+        );
+        if fd >= 0 {
+            libc::close(fd);
+            return;
+        }
+        if !std::io::IsTerminal::is_terminal(&std::io::stdin()) {
+            return;
+        }
+        let name = libc::ttyname(0);
+        if name.is_null() {
+            return;
+        }
+        let fd = libc::open(name, libc::O_RDWR | libc::O_NONBLOCK);
+        if fd >= 0 {
+            libc::close(fd);
+        }
+    }
+}
+
+/// Non-unix hosts have no controlling-terminal/SIGHUP model; the
+/// Windows console hangup face is a separate mechanism.
+#[cfg(not(unix))]
+pub fn acquire_controlling_terminal() {}
+
+/// Whether this process can take a controlling terminal for job
+/// control (GNU jobs.c:4755-4766): stderr is already a terminal, or
+/// /dev/tty opens. GNU reaches for /dev/tty only when
+/// forced_interactive made stderr's shape irrelevant; every caller
+/// of the establishment below is an interactive entry, which is
+/// exactly that population — and the arm is load-bearing there,
+/// since GNU establishes job control when /dev/tty opens while
+/// stdin (and even stderr) is piped. Non-unix hosts have no
+/// /dev/tty: the console on stderr is the whole question (the same
+/// honest port the binary's `-m` arm makes).
+#[cfg(unix)]
+fn controlling_terminal_available() -> bool {
+    if std::io::IsTerminal::is_terminal(&std::io::stderr()) {
+        return true;
+    }
+    // SAFETY: plain open/close of the terminal device; no retained
+    // state.
+    unsafe {
+        let dev_tty = b"/dev/tty\0";
+        let fd = libc::open(
+            dev_tty.as_ptr() as *const libc::c_char,
+            libc::O_RDWR | libc::O_NONBLOCK,
+        );
+        if fd >= 0 {
+            libc::close(fd);
+            return true;
+        }
+    }
+    false
+}
+
+#[cfg(not(unix))]
+fn controlling_terminal_available() -> bool {
+    std::io::IsTerminal::is_terminal(&std::io::stderr())
+}
+
+/// The process-group number GNU's job-control diagnostics print:
+/// jobs.c:4737 `shell_pgrp = getpgid (0)` at initialize_job_control
+/// entry, reported verbatim by jobs.c:4844/4853
+/// `cannot set terminal process group (%d)`. It is the group the
+/// shell BELONGS to, not the shell's pid — the two coincide only for
+/// a session leader, and GNU's number is the group in every other
+/// shape (verified against GNU bash 5.3.20 with pid != pgid: the
+/// diagnostic names the inherited group). Non-unix targets have no
+/// process groups; the pid is the honest stand-in there (the same
+/// port the establishment's non-unix arm makes).
+#[cfg(unix)]
+pub fn shell_process_group_id() -> i32 {
+    // SAFETY: getpgrp takes no arguments and always succeeds.
+    unsafe { libc::getpgrp() }
+}
+
+/// Non-unix form of [`shell_process_group_id`].
+#[cfg(not(unix))]
+pub fn shell_process_group_id() -> i32 {
+    std::process::id() as i32
+}
+
+/// GNU shell.c:1969 -> jobs.c:4731-4869 initialize_job_control, the
+/// interactive establishment: jobs.c:4869 ends with
+/// `change_flag ('m', job_control ? '-' : '+')` — the monitor letter
+/// IS the establishment result, wholesale. An explicit `-m` does not
+/// survive a terminal that cannot be taken (GNU `-i -m -c`, no tty:
+/// the two diagnostics + `hiBHc`), and an explicit `+m` does not
+/// suppress it when the terminal can be taken (GNU `+m -i -c` under
+/// a PTY: `himBHc`). Establishment failure prints jobs.c:4844
+/// "cannot set terminal process group (%d)" and jobs.c:4858
+/// "no job control in this shell".
+///
+/// This is the engine's single establishment funnel (rubash#2948):
+/// the binary's startup (main.rs apply_startup_job_control), the
+/// invocation application (invocation.rs — library one-shot forms),
+/// and the interactive stdin reader's fallback (run_interactive_stdin
+/// below) all land here, so every host gets the same rule. A
+/// respawned child is GNU's forked child: it inherits the parent's
+/// job-control state and never re-runs initialize_job_control
+/// (rubash#234), so it returns untouched.
+pub fn establish_interactive_job_control(executor: &mut Executor) {
+    if crate::executor::RESPAWNED_CHILD.load(std::sync::atomic::Ordering::Relaxed) {
+        return;
+    }
+    let established = controlling_terminal_available();
+    executor.set_shell_option("monitor", established);
+    if !established {
+        let shell_name = executor
+            .get_env("__RUBASH_SHELL_NAME")
+            .or_else(|| executor.get_env("BASH_ARGV0"))
+            .unwrap_or("bash");
+        eprintln!(
+            "{shell_name}: cannot set terminal process group ({}): Inappropriate ioctl for device",
+            shell_process_group_id()
+        );
+        eprintln!("{shell_name}: no job control in this shell");
+    }
+}
+
+/// GNU's interactive command reader for every shape this engine serves:
+/// parse.y:1710-1711 routes an interactive shell's reads through
+/// yy_readline_get -> bashline.c bash_readline -> readline(), whose prompt
+/// stream is stderr (bashline.c:460-461 `rl_outstream = stderr`), whether
+/// stdin is a terminal (raw-mode editing, the engine leaves line editing
+/// to host products' editors) or a pipe (the dumb-terminal echo path):
+/// the prompt is written to stderr, the non-tty input line is echoed, and
+/// editing keystrokes in the stream are honored — C-p/C-n walk the history
+/// list, C-r starts reverse-i-search, and C-o (operate-and-get-next,
+/// readline/misc.c rl_operate_and_get_next) executes the current line and
+/// replaces the buffer with the next history entry.
+pub fn run_interactive_stdin(executor: &mut Executor) -> i32 {
+    // rubash#2233: GNU acquires the controlling terminal in main
+    // (shell.c:410 check_dev_tty); a library host driving THIS entry
+    // is the shell process, so the acquisition belongs here too (see
+    // acquire_controlling_terminal). Idempotent: a host that already
+    // has a controlling terminal takes the /dev/tty no-op arm.
+    acquire_controlling_terminal();
+    // rubash#1662: GNU installs the interactive signal dispositions
+    // before the first prompt is read (sig.c:315-316); the command-
+    // boundary reconcile only runs after a command completes, so
+    // without this call the first prompt would still sit at the SIGINT
+    // kernel default.
+    #[cfg(unix)]
+    crate::builtins::kill::reconcile_kernel_trap_dispositions(&executor.shell_state.env_vars);
+    // rubash#1991: job control must exist for every interactive
+    // session, whoever drives it. GNU establishes it inside
+    // initialize_shell_basics for interactive shells (jobs.c:4869
+    // makes the `m` flag the establishment result); rubash's binary
+    // startup does the equivalent in apply_startup_job_control, but
+    // that step lives in main.rs, so a library host driving THIS
+    // entry (invocation.rs: a library host (niu) drives the stdin
+    // reader) ran interactive sessions with monitor permanently off
+    // and fg/bg refused with "no job control" on a real terminal.
+    // rubash#2948: the establishment is the shared funnel
+    // (establish_interactive_job_control) — monitor tracks whether
+    // a controlling terminal could actually be taken, never the
+    // interactive bit alone. This reader is the FALLBACK funnel: it
+    // fires only when no earlier funnel decided, which the carrier
+    // records exactly — establishment (and the binary's startup)
+    // always writes __RUBASH_SETOPT_monitor, so an absent carrier
+    // means nobody decided yet, while a present one (an explicit
+    // -m/+m or -o/+o monitor transport included) is left untouched.
+    // Applied once per process: a host may re-enter this reader per
+    // line, and a user's later `set +o monitor` must survive those
+    // re-entries.
+    static JOB_CONTROL_DEFAULT_APPLIED: std::sync::atomic::AtomicBool =
+        std::sync::atomic::AtomicBool::new(false);
+    if !JOB_CONTROL_DEFAULT_APPLIED.swap(true, std::sync::atomic::Ordering::Relaxed)
+        && executor.invocation_interactive()
+        && executor.get_env("__RUBASH_SETOPT_monitor").is_none()
+    {
+        establish_interactive_job_control(executor);
+    }
+    // parse.y:1710: the SAME reader serves tty and non-tty stdin; the two
+    // cases differ only in who echoes the accepted line (readline echoes
+    // itself on a tty — the Windows cooked console echoes each typed key —
+    // while the dumb-terminal path echoes through rl_outstream).
+    let stdin_is_tty = std::io::IsTerminal::is_terminal(&std::io::stdin());
+    executor.set_env(READ_STDIN_MARKER, "1");
+    executor.inherit_process_stdin();
+    // readline initialization order (bashline.c:451 initialize_readline,
+    // first invoked from bind.def:131 on a `bind` command or from the
+    // prompt reader, y.tab.c:4024): the inputrc file ($INPUTRC, else
+    // ~/.inputrc) is read ONCE per process — after the rcfile, whose
+    // `bind` commands run first — so its key bindings and
+    // `set NAME VALUE` variables are in force before any prompt-time
+    // code (rubash#431 residual: the inputrc read surface).
+    executor.initialize_readline();
+    // The first primary-prompt read initializes readline
+    // (parse.y:1665 yy_readline_get -> bashline.c:524), which is where GNU
+    // binds LINES/COLUMNS for an interactive shell without a controlling
+    // terminal (terminal.c:374). rubash#300: this driver IS the non-tty
+    // readline port, so the bind belongs at its entry.
+    bind_interactive_screen_size(executor);
+    // variables.c:568-579 (set_if_not PS1/PS2 for interactive shells): GNU
+    // renders the default `\s-\v\$ ` (config-top.h:82 PPROMPT) when no
+    // startup file set PS1 — the clean-env stderr of `bash --rcfile
+    // /dev/null -i </dev/null` shows `bash-5.3# exit`. Bound unexported,
+    // like bind_variable.
+    if executor.get_env("PS1").is_none() {
+        executor
+            .shell_state
+            .env_vars
+            .insert("PS1".to_string(), "\\s-\\v\\$ ".to_string());
+    }
+    if executor.get_env("PS2").is_none() {
+        executor
+            .shell_state
+            .env_vars
+            .insert("PS2".to_string(), "> ".to_string());
+    }
+    let mut pending = String::new();
+    let mut pending_heredocs: Vec<(String, bool)> = Vec::new();
+    let mut group: Vec<(String, bool)> = Vec::new();
+    let mut next_line = 1usize;
+    let mut pending_start_line = 1usize;
+
+    // readline edit state (see [`EditState`]).
+    let mut st = EditState::default();
+    let mut eof = false;
+
+    // rubash#419 readline leg: a real Windows console edits in raw mode
+    // ([`crate::console_readline::RawConsole`]) so the keystrokes reach the
+    // dispatcher below one event at a time — the cooked console handed
+    // editing to conhost, whose line buffer has no knowledge of the shell's
+    // history or bindings. Everywhere else (pipes, redirected files,
+    // winpty/ConPTY bridges that present a pipe) this stays `None` and the
+    // cooked byte-stream path keeps the #434 normalization semantics.
+    let mut console = crate::console_readline::RawConsole::acquire().filter(|_| stdin_is_tty);
+
+    // One accepted readline line -> accumulate into `pending` and run it
+    // once the command is complete (same grouping as run_stdin_script).
+    macro_rules! accept_line {
+        ($line:expr) => {{
+            let line: &str = $line;
+            if pending.is_empty() {
+                pending_start_line = next_line;
+            }
+            next_line += line.matches('\n').count().max(1);
+            pending.push_str(line);
+            if !pending.ends_with('\n') {
+                pending.push('\n');
+            }
+            let phys: Vec<&str> = line.split_inclusive('\n').collect();
+            for phys_line in phys.iter().map(|l| l.trim_end_matches('\n')) {
+                let mut is_body = false;
+                if let Some((delimiter, strip_tabs)) = pending_heredocs.first().cloned() {
+                    let candidate = phys_line.trim_end_matches('\r');
+                    let candidate = if strip_tabs {
+                        candidate.trim_start_matches('\t')
+                    } else {
+                        candidate
+                    };
+                    if candidate == delimiter {
+                        pending_heredocs.remove(0);
+                    } else {
+                        is_body = true;
+                    }
+                } else {
+                    pending_heredocs.extend(stdin_heredoc_declarations(phys_line));
+                }
+                group.push((phys_line.to_string(), is_body));
+            }
+
+            let stdin_posix = executor.get_env("__RUBASH_POSIX_MODE").as_deref() == Some("1");
+            // rubash#2725: GNU's interactive reader parses incrementally
+            // (parse.y read_command): a token that is wrong NOW aborts
+            // the command on that line, while end-of-input in the
+            // middle of a compound just reads another line. The
+            // token-level completeness scan cannot tell an invalid
+            // opener (`if then') from an incomplete one (`if true;
+            // then') — both "need more" — so it grouped the following
+            // lines into the dead command and discarded them all with
+            // its one error. When the scan asks for more input, ask
+            // the real parser whether the accumulated text is already
+            // a hard syntax error; if so the group is finished (the
+            // run below reports the error and the reader moves on).
+            let group_complete = pending_heredocs.is_empty()
+                && (!stdin_source_needs_more_posix(&pending, stdin_posix)
+                    || interactive_pending_is_hard_syntax_error(&pending, stdin_posix));
+            if group_complete {
+                // rubash#2849: a group was just accepted for
+                // execution — the read that produced it has returned,
+                // so any job death that landed while the reader was
+                // blocked (GNU's SIGCHLD handler records it mid-read,
+                // jobs.c:4036) must be claimed before this group's
+                // first consumer runs; the loop-top boundary alone
+                // races the kill (it fires immediately after the
+                // previous line, before the kernel has made the
+                // victim reapable under load).
+                executor.observe_jobs_at_reader_boundary();
+                // rubash#1214: PS0 (bashline.c/readline display of
+                // *ps0_prompt, decode_prompt_string) is expanded and
+                // written to stderr after a complete command has been
+                // READ and before it executes — every accepted command,
+                // including `exit`; an empty command line prints nothing.
+                if !pending.trim().is_empty() {
+                    if let Some(ps0) = executor.get_env("PS0") {
+                        if !ps0.is_empty() {
+                            // rubash#3092 (captain): end the `get_env`
+                            // borrow before the `&mut` prompt render —
+                            // otherwise E0502 at this call site.
+                            let ps0 = ps0.to_string();
+                            let rendered = executor.expand_prompt_string(&ps0);
+                            eprint!("{rendered}");
+                        }
+                    }
+                }
+                // bashhist.c pre_process_line + bash_add_history: each
+                // complete command runs history expansion first (set -H
+                // defaults on for interactive shells), then records, then
+                // executes — the same pipeline as run_script_with_history.
+                let status = if let Some(session) = executor.get_session_history() {
+                    run_history_group(
+                        executor,
+                        &session,
+                        &group,
+                        pending_start_line,
+                        None,
+                        true,
+                        None,
+                        None,
+                    )
+                } else {
+                    run_source_with_line_offset(
+                        executor,
+                        &pending,
+                        true,
+                        pending_start_line.saturating_sub(1),
+                        None,
+                        None,
+                    )
+                };
+                // eval.c:203-207 reader_loop: a parse error sets
+                // EOF_Reached only `if (interactive == 0)` — an interactive
+                // shell reports the diagnostic and keeps reading (verified
+                // WSL GNU 5.3.0 `bash --rcfile /dev/null -i`: `echo )bad`
+                // -> "bash: syntax error near unexpected token `)'" and the
+                // NEXT command still runs, rc 0). The parse abort raised
+                // ExitCode(2) -> exit_jump_pending; this driver is the
+                // interactive reader, so a parse-flagged jump discards the
+                // group only and must not end the session. A real `exit`
+                // builtin (or errexit, which GNU's piped-`-i` also honors)
+                // still terminates below.
+                let parse_error = executor.take_parse_error();
+                pending.clear();
+                group.clear();
+                // GNU eval.c:202-205 (reader_loop): a failing read_command
+                // sets EOF_Reached only `if (interactive == 0)'. An
+                // interactive shell reports the syntax error, discards the
+                // rest of the incomplete command, and PROMPTS AGAIN — the
+                // session survives (verified: `bash -i < c12.sh' prints the
+                // error, then runs `echo DEF-OK' / `c12' -> 127 / `echo
+                // AFTER' -> 0). The ExitCode(2) a parse error raises is the
+                // DISCARD classification run_source_impl records as an exit
+                // jump, not an exit-shell jump — only a real `exit' (or the
+                // interactive errexit clause, verified `set -e; false' under
+                // `bash -i' exits 1) ends the session. The non-interactive
+                // stdin driver (run_stdin_script) keeps its own parse-error
+                // break.
+                let exit_jump = executor.take_exit_jump_pending();
+                if (exit_jump && !parse_error)
+                    || (status != 0
+                        && stdin_script_errexit_enabled(executor)
+                        && !executor.last_command_inverted()
+                        // rubash#2652: terminal status produced in a
+                        // CMD_IGNORE_RETURN position is exempt.
+                        && !executor.errexit_suppressed_terminal())
+                {
+                    eof = true;
+                }
+            }
+        }};
+    }
+
+    while !eof {
+        // rubash#2849: GNU records child deaths while the shell
+        // blocks in the reader (jobs.c:4036 sigchld_handler ->
+        // waitchld; parse.y:2533 read_command -> notify_and_cleanup),
+        // so the table a freshly read line consults is already
+        // current. Observe recorded job state at the top of each
+        // read cycle — before PROMPT_COMMAND and before the line is
+        // read — so a death the previous line's own `kill` dealt
+        // (held one command by the rubash#1604 fresh-fatal window)
+        // is claimed here, and the first `exit` or EOF on the new
+        // line sees the job Completed, not Stopped.
+        executor.observe_jobs_at_reader_boundary();
+        // rubash#2233/#2346: a termsig death recorded by the signal
+        // dispatch (e.g. the prompt poll swallowed the unwind as an
+        // abort) ends the reader here; finish_shell runs the termsig
+        // funnel and the signal death. finish_shell is the mark's
+        // only consumer.
+        if executor.termsig_death_pending().is_some() {
+            eof = true;
+            continue;
+        }
+        // eval.c:336 parse_command runs PROMPT_COMMAND before each primary
+        // prompt read; continuation (PS2) reads do not. `pending` empty
+        // marks the start of a new command, i.e. a primary prompt.
+        if pending.is_empty() {
+            executor.execute_prompt_command();
+            // rubash#433 / evalstring.c:396-403 + :618-619: a top-level
+            // unwind inside PROMPT_COMMAND — `exit`, or the errexit break —
+            // is re-raised out of parse_and_execute into the reader's top
+            // level; reader_loop unwinds and the shell ends with the jump's
+            // status (verified WSL GNU 5.3.0 piped-`-i`: PC='exit' -> rc 0
+            // with no further prompt, PC='exit 5' -> rc 5, and the rest of
+            // the input is never read). A parse error or a plain failing
+            // status does NOT re-raise: the shell prompts again.
+            if executor.take_exit_jump_pending() {
+                // No prompt is rendered and no further line is read — GNU's
+                // jump_to_top_level unwinds reader_loop directly (verified:
+                // GNU's stderr carries exactly ONE prompt before dying).
+                eof = true;
+                continue;
+            }
+        }
+        // readline.c readline(): print the EXPANDED prompt on stderr, then
+        // echo the input line (non-tty input is echoed by readline's
+        // dumb-terminal path). bashline.c:461-462 rl_outstream = stderr;
+        // parse.y:6158-6159 prompt_again passes the prompt through
+        // decode_prompt_string, so raw-byte markers (ESC carriers) must be
+        // rendered as their real bytes — visible ESC noise in the echo was
+        // rubash#297's family symptom. parse.y:6148-6160 prompt_again decodes
+        // *prompt_string_pointer: PS1 for the primary read, PS2 for every
+        // continuation read within one command (read_secondary_line
+        // parse.y:2327 `prompt_string_pointer = &ps2_prompt`); a non-empty
+        // `pending` is exactly an open command/heredoc, so its prompt is the
+        // expanded PS2 (WSL GNU 5.3.0 piped-`-i` renders `> ` for the
+        // `then`/`fi` lines of an open `if`).
+        // rubash#1722: acquire the Unix tty edit mode BEFORE the
+        // prompt is rendered — readline's order (rl_prep_terminal,
+        // then the prompt display, then the read). Acquiring later
+        // leaves a cooked-mode window at every fresh prompt in which
+        // the kernel line discipline echoes typed input ahead of the
+        // dispatcher's own display (a doubled echo). The guard is
+        // consumed by the tty edit branch below; if that branch is
+        // not taken it restores the termios on drop.
+        #[cfg(unix)]
+        let mut tty_guard = if stdin_is_tty && console.is_none() {
+            UnixTtyEditGuard::acquire()
+        } else {
+            None
+        };
+        let prompt_name = if pending.is_empty() { "PS1" } else { "PS2" };
+        let prompt_text = executor
+            .get_env(prompt_name)
+            .unwrap_or_default()
+            .to_string();
+        let rendered = executor.expand_prompt_string(&prompt_text);
+        // readline display.c:437-463 (expand_prompt): the \[ \] prompt
+        // markers (RL_PROMPT_START/END_IGNORE) are width-accounting
+        // delimiters only — the displayed prompt is assembled WITHOUT
+        // them, so the terminal never receives the \x01/\x02 bytes
+        // (byte-verified: WSL GNU bash 5.3.0 piped-`-i` prompt stderr
+        // carries no marker bytes). Leaking them broke strict VT parsers
+        // downstream (a pyte replay swallowed everything after \x01).
+        // rubash#431: the strip now lives at the shared expansion boundary
+        // (prompt_expansion::strip_prompt_ignore_markers), covering every
+        // render channel — this site included.
+        eprint!("{rendered}");
+        // The redraw layer repaints the prompt's LAST line (a multi-line
+        // PS1 keeps its earlier lines on screen, like GNU's display does).
+        let prompt_tail: String = rendered.rsplit('\n').next().unwrap_or("").to_string();
+
+        if let Some(con) = console.as_mut() {
+            // The raw console readline loop (readline.c readline + the
+            // dispatch the cooked path shares): keys arrive one event at a
+            // time, each accepted edit redraws the line, Enter restores the
+            // console to cooked mode before the command runs so children
+            // see a line-discipline console (readline save_tty_state).
+            con.enable();
+            con.write(&crate::console_readline::redraw_line(
+                &prompt_tail,
+                &st.buffer,
+                st.cursor,
+            ));
+            let mut operate_next: Option<Option<usize>> = None;
+            let mut eof_now = false;
+            'console_read: loop {
+                let keys = match con.next_key() {
+                    Ok(Some(keys)) => keys,
+                    Ok(None) | Err(_) => {
+                        eof_now = true;
+                        break;
+                    }
+                };
+                for c in keys {
+                    match apply_edit_char(executor, &mut st, c) {
+                        EditOutcome::None => {
+                            let frame = crate::console_readline::redraw_line(
+                                &prompt_tail,
+                                &st.buffer,
+                                st.cursor,
+                            );
+                            con.write(&frame);
+                        }
+                        EditOutcome::Eof => {
+                            eof_now = true;
+                            break 'console_read;
+                        }
+                        EditOutcome::Accept {
+                            line,
+                            operate_and_get_next,
+                        } => {
+                            con.restore();
+                            // CRLF: raw mode turned the NL translation off,
+                            // so the accept needs both bytes.
+                            con.write("\r\n");
+                            accept_line!(&line);
+                            operate_next = operate_and_get_next;
+                            break 'console_read;
+                        }
+                    }
+                }
+            }
+            if eof_now {
+                con.restore();
+                // C-d on an empty buffer ends the session the same way the
+                // piped path's Ok(0) arm does: the synthesized `exit` (or
+                // `logout`) echoes to stderr first (builtins/exit.def:59-62).
+                if st.buffer.is_empty() && executor.invocation_interactive() {
+                    let login = executor.invocation_login();
+                    eprintln!("{}", if login { "logout" } else { "exit" });
+                }
+                if !st.buffer.is_empty() {
+                    // readline treats EOF on a nonempty buffer as accept-line.
+                    let line = std::mem::take(&mut st.buffer);
+                    st.cursor = 0;
+                    accept_line!(&line);
+                }
+                // rubash#3051: a byte-level ^D on an empty buffer is the
+                // parse.y handle_eof_input_unit EOF — run the same job
+                // check as the piped path's Ok(0) arm. On deferral keep
+                // reading (the next EOF is immediate: the deferral
+                // pinned this/last to Exit). A nonempty buffer is the
+                // accept-line shape, not a true EOF, so it still folds.
+                if st.buffer.is_empty() && executor.invocation_interactive() {
+                    if !executor.defer_interactive_eof_for_jobs() {
+                        eof = true;
+                    }
+                } else {
+                    eof = true;
+                }
+            } else if let Some(src_abs) = operate_next {
+                preload_operate_and_get_next(executor, &mut st, src_abs);
+            }
+            continue;
+        }
+
+        // rubash#1722: on a real Unix terminal the standalone reader
+        // owns the tty while a line is edited — readline's
+        // rl_prep_terminal (lib/readline/terminal.c): ICANON and ECHO
+        // off so the dispatcher, not the kernel line discipline, sees
+        // every keystroke and `bind` keymaps can fire per key; IXON off
+        // so C-s/C-q are keys rather than flow control; VMIN=1/VTIME=0;
+        // ISIG kept, so C-c still raises SIGINT. The saved termios is
+        // restored before the accepted line executes (rl_deprep_terminal)
+        // so children see a line-discipline terminal — the same shape
+        // as the Windows RawConsole branch above. Without this the
+        // kernel line discipline owned editing on Unix ttys: registered
+        // bindings could never fire, and a framework driving the
+        // terminal itself (ble.sh) had its cursor-position-report
+        // replies read back as command text and executed.
+        #[cfg(unix)]
+        if stdin_is_tty && console.is_none() {
+            if let Some(mut guard) = tty_guard.take() {
+                let mut prev_frame: Option<(String, usize)> = None;
+                tty_redraw(&guard, &prompt_tail, &st, &mut prev_frame);
+                // The #1662 pre-dispatch, duplicated for this branch —
+                // INSIDE the raw-mode region: the guard is acquired
+                // before the wait, because a cooked-mode wait would
+                // let the kernel line discipline echo the line's first
+                // bytes before the dispatcher ever sees them (the
+                // doubled-echo shape). A pending delivery aborts the
+                // fresh prompt read exactly as on the cooked path.
+                let aborted = if pending.is_empty() && st.buffer.is_empty() {
+                    matches!(prompt_wait_for_input(executor), PromptWait::Aborted)
+                } else {
+                    executor.run_pending_signal_traps().is_err()
+                };
+                if aborted {
+                    guard.restore();
+                    // rubash#2835: settle the discard mark with the
+                    // aborted read. The prompt-period dispatch above
+                    // marked this empty read DISCARD (trap_exec.rs
+                    // :2280); nobody consumes the mark on this path,
+                    // so it used to survive into the next unit and
+                    // misclassify a genuine `exit` as a discard
+                    // (run_source_impl's ExitCode arm). The mark
+                    // belongs to the aborted read, not to the next
+                    // unit (trap_exec.rs:2673 precedent: a swallowed
+                    // unwind must not leave its mark behind).
+                    let _ = executor.take_signal_discard_pending();
+                    pending.clear();
+                    group.clear();
+                    st = EditState::default();
+                    continue;
+                }
+                let mut operate_next: Option<Option<usize>> = None;
+                let mut eof_now = false;
+                let mut read_dead = false;
+                let mut read_aborted = false;
+                'tty_read: loop {
+                    // rubash#2837: slice the blocking key read like
+                    // prompt_wait_for_input, dispatching pending
+                    // signals between slices. GNU readline frees the
+                    // partial line at delivery time (lib/readline/
+                    // signals.c _rl_handle_signal, SIGINT arm:
+                    // rl_free_line_state()), so a ^C mid-line aborts
+                    // THIS read — the delivery must never sit in the
+                    // mailbox until the next accepted line's first
+                    // command boundary, where it used to ambush the
+                    // whole line. The poll only gates the read: a
+                    // readable fd returns at once, so keystroke
+                    // latency is unchanged.
+                    match guard.wait_readable(50) {
+                        Ok(true) => {}
+                        Ok(false) => {
+                            if executor.run_pending_signal_traps().is_err() {
+                                read_aborted = true;
+                                break 'tty_read;
+                            }
+                            continue;
+                        }
+                        Err(_) => {
+                            read_dead = true;
+                            eof_now = true;
+                            break 'tty_read;
+                        }
+                    }
+                    match guard.next_key() {
+                        Ok(Some(c)) => match apply_edit_char(executor, &mut st, c) {
+                            EditOutcome::None => {
+                                tty_redraw(&guard, &prompt_tail, &st, &mut prev_frame);
+                            }
+                            EditOutcome::Eof => {
+                                eof_now = true;
+                                break 'tty_read;
+                            }
+                            EditOutcome::Accept {
+                                line,
+                                operate_and_get_next,
+                            } => {
+                                guard.restore();
+                                eprint!("\n");
+                                accept_line!(&line);
+                                operate_next = operate_and_get_next;
+                                break 'tty_read;
+                            }
+                        },
+                        Ok(None) => {
+                            read_dead = true;
+                            eof_now = true;
+                            break 'tty_read;
+                        }
+                        Err(_) => {
+                            read_dead = true;
+                            eof_now = true;
+                            break 'tty_read;
+                        }
+                    }
+                }
+                guard.restore();
+                if read_aborted {
+                    // rubash#2837/#2835: the abort discards the
+                    // partial line and settles the discard mark with
+                    // it — the mark belongs to this aborted read, not
+                    // to the next unit (trap_exec.rs:2673 precedent).
+                    // A trap action's exit jump is honored by the
+                    // loop-top check after this cleanup.
+                    let _ = executor.take_signal_discard_pending();
+                    pending.clear();
+                    group.clear();
+                    st = EditState::default();
+                } else if eof_now {
+                    // Whether this EOF is a terminal hangup (pty master
+                    // closed): GNU's termsig settlement preempts the fold,
+                    // so a hangup never consults the job table
+                    // (rubash#2233) — only a genuine ^D defers.
+                    let mut hangup = false;
+                    if read_dead {
+                        // The terminal itself ended the input (pty
+                        // master closed / read error): classify a
+                        // pending untrapped SIGHUP before folding,
+                        // exactly like the cooked path's Ok(0)/Err
+                        // arms (rubash#2233).
+                        hangup = executor.poll_untrapped_hangup()
+                            || (tty_fd_shows_hangup()
+                                && executor.poll_untrapped_hangup_settled(HANGUP_SETTLE_BUDGET));
+                        if !hangup && executor.invocation_interactive() {
+                            let login = executor.invocation_login();
+                            eprintln!("{}", if login { "logout" } else { "exit" });
+                        }
+                    } else if st.buffer.is_empty() && executor.invocation_interactive() {
+                        // C-d on an empty buffer (bashline.c
+                        // bash_readline's synthesized `exit`).
+                        let login = executor.invocation_login();
+                        eprintln!("{}", if login { "logout" } else { "exit" });
+                    }
+                    if !st.buffer.is_empty() {
+                        // readline treats EOF on a nonempty buffer as
+                        // accept-line.
+                        let line = std::mem::take(&mut st.buffer);
+                        st.cursor = 0;
+                        accept_line!(&line);
+                    }
+                    // rubash#3051: a genuine ^D on an empty buffer is
+                    // the parse.y handle_eof_input_unit EOF — same job
+                    // check as the piped path's Ok(0) arm. On
+                    // deferral keep reading (the next EOF is
+                    // immediate: the deferral pinned this/last to
+                    // Exit). A hangup EOF and the accept-line shape
+                    // still fold at once.
+                    if !hangup && st.buffer.is_empty() && executor.invocation_interactive() {
+                        if !executor.defer_interactive_eof_for_jobs() {
+                            eof = true;
+                        }
+                    } else {
+                        eof = true;
+                    }
+                } else if let Some(src_abs) = operate_next {
+                    preload_operate_and_get_next(executor, &mut st, src_abs);
+                }
+                continue;
+            }
+        }
+
+        // rubash#1662: dispatch pending signals before blocking on the
+        // next line, and while waiting for one at a fresh prompt (see
+        // prompt_wait_for_input). A delivery that aborts here discards
+        // the line being edited — GNU's reader leaves the read with
+        // the partial line dropped and $? = 128+sig — instead of the
+        // stale delivery ambushing the next completed line at its
+        // first command boundary. An exit jump recorded by a trap
+        // action is honored by the loop-top check after the cleanup.
+        #[cfg(unix)]
+        if console.is_none() {
+            let aborted = if pending.is_empty() && st.buffer.is_empty() {
+                matches!(prompt_wait_for_input(executor), PromptWait::Aborted)
+            } else {
+                executor.run_pending_signal_traps().is_err()
+            };
+            if aborted {
+                // rubash#2835: settle the discard mark with the
+                // aborted read — same shape as the Unix tty branch
+                // above (trap_exec.rs:2280 set it for this empty
+                // read; run_source_impl's ExitCode arm must never
+                // see it attached to the next unit's `exit`).
+                let _ = executor.take_signal_discard_pending();
+                pending.clear();
+                group.clear();
+                st = EditState::default();
+                continue;
+            }
+        }
+
+        let mut raw = String::new();
+        let line_result = match executor.script_fd0_line(&mut raw) {
+            Some(count) => Ok(count),
+            None => read_unbuffered_line(&mut raw),
+        };
+        if stdin_is_tty && raw.ends_with("\r\n") {
+            // The Windows console delivers cooked lines ending "\r\n".
+            // GNU tty input runs with ICRNL (termios: the Enter key's CR is
+            // translated to NL before bash reads a byte), so the reader
+            // never sees the CR — strip the pair's CR here to keep the
+            // dispatch loop from accepting the line twice (once at '\r'
+            // with the content, once at '\n' with an empty buffer). Piped
+            // input keeps a literal CR, exactly like GNU on a pipe.
+            let newline = raw.pop();
+            debug_assert_eq!(newline, Some('\n'));
+            raw.pop();
+            raw.push('\n');
+        }
+        // rubash#434: a line delivered through a winpty/ConPTY bridge is an
+        // encoding of TYPED TEXT, not a stream of individual keystrokes — a
+        // literal `\1` typed by the user can arrive as the byte 0x01, which
+        // the dispatch below used to honor as console Ctrl-A (and 0x15 as
+        // Ctrl-U, the niubash#451 `hang:source:^U...` family). Normalize the
+        // cooked line BEFORE the edit dispatch: C0 bytes keep only the
+        // semantics that survive a cooked line (accept-line CR/NL, tab,
+        // backspace/DEL, C-c line discard, C-d EOF, C-v quoted-insert, and
+        // the ESC introducer — dropping ESC alone would leak the "[A" tails
+        // of arrow-key sequences into the buffer); cursor-motion and kill
+        // keys (C-a/C-e/C-b/C-f/C-k/C-u, C-r isearch, history C-p/C-n) are
+        // bridge artifacts here and are dropped instead of mutating the edit
+        // buffer. Raw bytes therefore never enter the command-line buffer.
+        let raw = normalize_bridge_line(&raw);
+        match line_result {
+            // bashline.c bash_readline: interactive EOF synthesizes the
+            // `exit` command, whose builtin echoes "exit" (or "logout")
+            // to stderr before exiting (builtins/exit.def:59-62). The
+            // prompt is already on stderr, so the line reads `$ exit`.
+            Ok(0) => {
+                // rubash#2233: an EOF read on the interactive terminal
+                // is not always a genuine ^D: when the terminal hangs
+                // up (pty master closed), the slave read returns EOF
+                // (0 bytes) on Linux rather than EIO, so THIS arm is
+                // where the hangup surfaces — classify a pending
+                // untrapped SIGHUP exactly like the Err arm below
+                // before folding. GNU's termsig settlement preempts
+                // the fold (no `exit` echo, jobs hung up, EXIT trap,
+                // death by SIGHUP in finish_shell); a trapped SIGHUP
+                // is not classified (poll never dispatches), so the
+                // trapped/ignored controls still fold gracefully.
+                // When the fd itself already shows the hangup
+                // (POLLHUP/POLLERR), the delivery is certainly in
+                // flight, so the classification gets the settled
+                // poll: the mailbox queues asynchronously and under
+                // load its lag outlasts the plain poll's 5 ms settle.
+                // A genuine ^D on a live terminal shows neither flag
+                // and never pays the settle.
+                #[cfg(unix)]
+                let hangup = stdin_is_tty
+                    && (executor.poll_untrapped_hangup()
+                        || (tty_fd_shows_hangup()
+                            && executor.poll_untrapped_hangup_settled(HANGUP_SETTLE_BUDGET)));
+                #[cfg(not(unix))]
+                let hangup = false;
+                if !hangup && executor.invocation_interactive() {
+                    let login = executor.invocation_login();
+                    eprintln!("{}", if login { "logout" } else { "exit" });
+                    // parse.y handle_eof_input_unit: the EOF-synthesized
+                    // exit runs the same exit_builtin, so the job check
+                    // can defer it (rubash#2397) — keep reading instead
+                    // of folding; the next EOF is immediate because the
+                    // deferral pinned this_shell_builtin = exit_builtin.
+                    if !executor.defer_interactive_eof_for_jobs() {
+                        eof = true;
+                    }
+                } else {
+                    eof = true;
+                }
+            }
+            Ok(_) => {}
+            Err(err) => {
+                // rubash#2233: a read ERROR on the interactive
+                // terminal (the hangup shape: the master closed and
+                // the blocked read wakes with EIO) reaches the reader
+                // as an end of input — GNU's interactive reader folds
+                // it like EOF (graceful exit, last status, the `exit`
+                // echo below) UNLESS an untrapped SIGHUP is pending,
+                // whose termsig settlement preempts the fold: poll
+                // for the hangup WITHOUT dispatching (a trapped
+                // SIGHUP queued behind the dead terminal must not run
+                // here — GNU's trapped control exits gracefully with
+                // the trap unrun). The poll also covers the delivery
+                // that woke this read with EINTR instead of EIO. The
+                // fatal read-error arm (diagnostic + 128) is the
+                // SCRIPT reader's — see run_stdin_script. An EIO
+                // error is the dead terminal itself, so — like the
+                // EOF arm's POLLHUP gate — it earns the settled poll
+                // for the in-flight delivery.
+                #[cfg(unix)]
+                let hangup = stdin_is_tty
+                    && (executor.poll_untrapped_hangup()
+                        || (err.raw_os_error() == Some(libc::EIO)
+                            && executor.poll_untrapped_hangup_settled(HANGUP_SETTLE_BUDGET)));
+                #[cfg(not(unix))]
+                let hangup = false;
+                if !hangup && executor.invocation_interactive() {
+                    let login = executor.invocation_login();
+                    eprintln!("{}", if login { "logout" } else { "exit" });
+                    // rubash#2397: same EOF job-check deferral as the
+                    // Ok(0) arm above (parse.y handle_eof_input_unit).
+                    if !executor.defer_interactive_eof_for_jobs() {
+                        eof = true;
+                    }
+                } else {
+                    eof = true;
+                }
+            }
+        }
+        // readline's echo of the accepted line: the dumb-terminal
+        // (non-tty) path echoes through rl_outstream because a pipe has no
+        // echo; on a tty readline owns the echo itself (raw mode) — the
+        // Windows cooked console likewise echoes every typed key as it is
+        // pressed, so echoing again would double-print each line.
+        if !stdin_is_tty {
+            eprint!("{raw}");
+        }
+
+        let chars: Vec<char> = raw.chars().collect();
+        for &c in chars.iter() {
+            if eof {
+                break;
+            }
+            match apply_edit_char(executor, &mut st, c) {
+                EditOutcome::None => {}
+                EditOutcome::Eof => {
+                    // rubash#3051: a ^D byte in a cooked line is the
+                    // same parse.y handle_eof_input_unit EOF as the
+                    // tty branches — echo the synthesized `exit`
+                    // (builtins/exit.def:59-62, before the check) and
+                    // run the same job check as the Ok(0) arm. On
+                    // deferral drop the rest of this batched line and
+                    // keep reading; the next EOF is immediate because
+                    // the deferral pinned this/last to Exit.
+                    if executor.invocation_interactive() {
+                        let login = executor.invocation_login();
+                        eprintln!("{}", if login { "logout" } else { "exit" });
+                        if executor.defer_interactive_eof_for_jobs() {
+                            break;
+                        }
+                    }
+                    eof = true;
+                }
+                EditOutcome::Accept {
+                    line,
+                    operate_and_get_next,
+                } => {
+                    accept_line!(&line);
+                    if let Some(src_abs) = operate_and_get_next {
+                        preload_operate_and_get_next(executor, &mut st, src_abs);
+                    }
+                }
+            }
+        }
+
+        if eof && !st.buffer.is_empty() {
+            // readline treats EOF on a nonempty buffer as accept-line.
+            let line = std::mem::take(&mut st.buffer);
+            accept_line!(&line);
+        }
+    }
+
+    if !pending.trim().is_empty() {
+        let status = run_source_with_line_offset(
+            executor,
+            &pending,
+            true,
+            pending_start_line.saturating_sub(1),
+            None,
+            None,
+        );
+        let _ = status;
+        pending.clear();
+    }
+
+    let status = executor.last_exit_code();
+    finish_shell(executor, status, true)
+}
+
+/// The readline edit state of the interactive reader: the line being
+/// edited, the cursor (byte offset), where the buffer came from in the
+/// history list, and the transient modes (reverse-i-search, quoted insert,
+/// the ESC-sequence introducer stages).
+#[derive(Default)]
+struct EditState {
+    buffer: String,
+    cursor: usize,
+    history_index: Option<usize>,
+    saved_line: String,
+    isearch: Option<ISearchState>,
+    quoted_insert: bool,
+    /// 0 = none, 1 = ESC seen, 2 = CSI (\x1b[) or SS3 (\x1bO) introducer
+    /// seen — the next char carries the final byte of the sequence. A
+    /// state machine rather than stream lookahead because the raw console
+    /// path feeds one key event at a time.
+    esc_stage: u8,
+    /// rubash#1722: chars accumulated toward a multi-char key sequence
+    /// registered through `bind` (readline's sub-sequence walk in
+    /// _rl_dispatch, lib/readline/readline.c:873 _rl_dispatch). Empty
+    /// whenever no partial sequence is in flight.
+    pending_keyseq: String,
+    /// rubash#1722: the region mark (readline's rl_mark), set by the
+    /// set-mark function binding; `None` until first set. Byte offset.
+    mark: Option<usize>,
+    /// rubash#1722: decoded bind-registry table for the active keymap
+    /// family, cached against the registry generation
+    /// (Executor::bind_registry_generation) so per-keystroke dispatch
+    /// does not re-decode every written keyseq.
+    bind_cache: Option<(u64, Vec<(Vec<char>, crate::shell::bind_registry::BindKind)>)>,
+}
+
+/// What one edit character did to the [`EditState`] (readline's
+/// dispatch model, factored out of the reader loop so the cooked-stream
+/// path and the raw console path share it).
+enum EditOutcome {
+    /// Editing continued; the caller repaints on the console path.
+    None,
+    /// The line was accepted: `line` is the buffer content (the state was
+    /// reset). `operate_and_get_next` is `Some(target)` for C-o — the
+    /// absolute history number identifying the entry AFTER the accepted
+    /// line, `None` when the accepted line was not a history line.
+    Accept {
+        line: String,
+        operate_and_get_next: Option<Option<usize>>,
+    },
+    /// C-d on an empty buffer: end the session.
+    Eof,
+}
+
+/// rl_operate_and_get_next's post-acceptance preload (readline/misc.c):
+/// put the entry AFTER the accepted line — identified by its absolute
+/// history number (where_history()+history_base+1), so a HISTSIZE stifle
+/// dropping entries during the accepted command's own add_history cannot
+/// shift the target — into the next readline buffer.
+fn preload_operate_and_get_next(executor: &Executor, st: &mut EditState, src_abs: Option<usize>) {
+    match src_abs {
+        Some(abs) => {
+            let base = session_history_base(executor);
+            let idx = abs.saturating_sub(base);
+            let len = session_entries_len(executor);
+            if idx < len {
+                st.history_index = Some(idx);
+                if let Some(session) = executor.get_session_history() {
+                    st.buffer = session.borrow().entries[idx].clone();
+                }
+                st.cursor = st.buffer.len();
+            } else {
+                st.history_index = None;
+                st.buffer.clear();
+            }
+        }
+        None => {
+            st.history_index = None;
+            st.buffer.clear();
+        }
+    }
+}
+
+fn history_step_previous(executor: &Executor, st: &mut EditState) {
+    let len = session_entries_len(executor);
+    if len == 0 {
+        return;
+    }
+    let idx = match st.history_index {
+        None => {
+            st.saved_line = st.buffer.clone();
+            len - 1
+        }
+        Some(i0) => i0.saturating_sub(1),
+    };
+    st.history_index = Some(idx);
+    if let Some(session) = executor.get_session_history() {
+        st.buffer = session.borrow().entries[idx].clone();
+    }
+    st.cursor = st.buffer.len();
+}
+
+fn history_step_next(executor: &Executor, st: &mut EditState) {
+    let len = session_entries_len(executor);
+    if let Some(i0) = st.history_index {
+        if i0 + 1 < len {
+            st.history_index = Some(i0 + 1);
+            if let Some(session) = executor.get_session_history() {
+                st.buffer = session.borrow().entries[i0 + 1].clone();
+            }
+        } else {
+            st.history_index = None;
+            st.buffer = st.saved_line.clone();
+        }
+        st.cursor = st.buffer.len();
+    }
+}
+
+fn delete_char_at(st: &mut EditState) {
+    if st.cursor < st.buffer.len() {
+        let mut end = st.cursor + 1;
+        while !st.buffer.is_char_boundary(end) && end <= st.buffer.len() {
+            end += 1;
+        }
+        st.buffer.drain(st.cursor..end.min(st.buffer.len()));
+    }
+}
+
+fn rubout_previous_char(st: &mut EditState) {
+    if st.cursor > 0 {
+        st.cursor -= 1;
+        while !st.buffer.is_char_boundary(st.cursor) {
+            st.cursor -= 1;
+        }
+        delete_char_at(st);
+    }
+}
+
+/// Apply one edit character to the readline state (the dispatcher the
+/// cooked byte-stream path and the raw console path share — see the
+/// per-arm GNU references inside).
+fn apply_edit_char(executor: &mut Executor, st: &mut EditState, c: char) -> EditOutcome {
+    if st.quoted_insert {
+        st.buffer.insert(st.cursor, c);
+        st.cursor += c.len_utf8();
+        st.quoted_insert = false;
+        return EditOutcome::None;
+    }
+
+    // readline/isearch.c rl_isearch_dispatch: printable bytes extend the
+    // search string; editing keys accept the current match and are then
+    // re-processed in normal mode; C-g (ESC/0x07) aborts.
+    if let Some(mut search) = st.isearch.take() {
+        let entries_len = session_entries_len(executor);
+        match c {
+            '\x07' | '\x1b' => {
+                // abort: restore the pre-search line
+                st.buffer = search.orig_buffer.clone();
+                st.cursor = st.buffer.len();
+                st.history_index = search.orig_index;
+                return EditOutcome::None;
+            }
+            '\x12' => {
+                // repeat search further back
+                let search_str = search.search.clone();
+                if !search_str.is_empty() {
+                    if let Some(session) = executor.get_session_history() {
+                        let shell = session.borrow();
+                        let upper = search.match_index.unwrap_or(entries_len);
+                        if let Some(found) = shell.entries[..upper]
+                            .iter()
+                            .rposition(|e| e.contains(&search_str))
+                        {
+                            search.match_index = Some(found);
+                            st.buffer = shell.entries[found].clone();
+                            st.cursor = st.buffer.len();
+                            st.history_index = Some(found);
+                        }
+                    }
+                }
+                st.isearch = Some(search);
+                return EditOutcome::None;
+            }
+            '\x7f' | '\x08' => {
+                search.search.pop();
+                let search_str = search.search.clone();
+                if let Some(session) = executor.get_session_history() {
+                    let shell = session.borrow();
+                    let upper = search.match_index.map(|m| m + 1).unwrap_or(entries_len);
+                    if let Some(found) = shell.entries[..upper]
+                        .iter()
+                        .rposition(|e| e.contains(&search_str))
+                    {
+                        search.match_index = Some(found);
+                        st.buffer = shell.entries[found].clone();
+                        st.cursor = st.buffer.len();
+                        st.history_index = Some(found);
+                    }
+                }
+                st.isearch = Some(search);
+                return EditOutcome::None;
+            }
+            c if c >= ' '
+                || c == '\n'
+                || c == '\r'
+                || c == '\x0f'
+                || c == '\x10'
+                || c == '\x0e' =>
+            {
+                if c == '\n' || c == '\r' || c == '\x0f' || c == '\x10' || c == '\x0e' {
+                    // Accept the match (if any) and reprocess the
+                    // terminating key in normal mode below.
+                    if let Some(m) = search.match_index {
+                        if let Some(session) = executor.get_session_history() {
+                            if let Some(entry) = session.borrow().entries.get(m).cloned() {
+                                st.buffer = entry;
+                                st.cursor = st.buffer.len();
+                                st.history_index = Some(m);
+                            }
+                        }
+                    }
+                    // fall through to normal dispatch
+                } else {
+                    // extend the search string and re-search
+                    search.search.push(c);
+                    let search_str = search.search.clone();
+                    if let Some(session) = executor.get_session_history() {
+                        let shell = session.borrow();
+                        let upper = search.match_index.map(|m| m + 1).unwrap_or(entries_len);
+                        if let Some(found) = shell.entries[..upper]
+                            .iter()
+                            .rposition(|e| e.contains(&search_str))
+                        {
+                            search.match_index = Some(found);
+                            st.buffer = shell.entries[found].clone();
+                            st.cursor = st.buffer.len();
+                            st.history_index = Some(found);
+                        }
+                    }
+                    st.isearch = Some(search);
+                    return EditOutcome::None;
+                }
+            }
+            _ => {
+                // other control chars end the search and reprocess
+                if let Some(m) = search.match_index {
+                    if let Some(session) = executor.get_session_history() {
+                        if let Some(entry) = session.borrow().entries.get(m).cloned() {
+                            st.buffer = entry;
+                            st.cursor = st.buffer.len();
+                            st.history_index = Some(m);
+                        }
+                    }
+                }
+                // fall through to normal dispatch
+            }
+        }
+    }
+
+    dispatch_edit_key(executor, st, c)
+}
+
+/// rubash#1722: decode one registry keyseq from its written form
+/// (`\C-x\C-f`, `\e[A`, `\M-b`, a literal char run) into the character
+/// sequence the terminal delivers (lib/readline/bind.c
+/// rl_parse_and_bind's keyseq grammar: \C- control, \M- meta as ESC
+/// prefix, \e, \d DEL, \s space, the C escapes, \nnn octal, \xHH hex;
+/// any other escaped char stands for itself).
+fn decode_bind_keyseq(written: &str) -> Vec<char> {
+    fn control_of(c: char) -> char {
+        if c == '?' {
+            return '\x7f';
+        }
+        char::from_u32((c as u32) & 0x1f).unwrap_or(c)
+    }
+    fn one_unit(chars: &[char], i: &mut usize) -> Option<char> {
+        let c = *chars.get(*i)?;
+        *i += 1;
+        if c != '\\' {
+            return Some(c);
+        }
+        let esc = *chars.get(*i)?;
+        *i += 1;
+        match esc {
+            'C' | 'c' if chars.get(*i) == Some(&'-') => {
+                *i += 1;
+                let inner = *chars.get(*i)?;
+                *i += 1;
+                Some(control_of(inner))
+            }
+            'M' | 'm' if chars.get(*i) == Some(&'-') => {
+                // Meta is a prefix, not a unit: decode_bind_keyseq's
+                // caller loop handles it; surface ESC so a nested call
+                // still yields the introducer.
+                Some('\x1b')
+            }
+            'e' => Some('\x1b'),
+            'd' => Some('\x7f'),
+            's' => Some(' '),
+            'a' => Some('\x07'),
+            'b' => Some('\x08'),
+            'f' => Some('\x0c'),
+            'n' => Some('\n'),
+            'r' => Some('\r'),
+            't' => Some('\t'),
+            'v' => Some('\x0b'),
+            '\\' => Some('\\'),
+            'x' => {
+                let mut value: u32 = 0;
+                let mut digits = 0;
+                while digits < 2 {
+                    match chars.get(*i).and_then(|d| d.to_digit(16)) {
+                        Some(d) => {
+                            value = value * 16 + d;
+                            *i += 1;
+                            digits += 1;
+                        }
+                        None => break,
+                    }
+                }
+                char::from_u32(value)
+            }
+            '0'..='7' => {
+                let mut value: u32 = esc as u32 - '0' as u32;
+                let mut digits = 1;
+                while digits < 3 {
+                    match chars.get(*i) {
+                        Some(d @ '0'..='7') => {
+                            value = value * 8 + (*d as u32 - '0' as u32);
+                            *i += 1;
+                            digits += 1;
+                        }
+                        _ => break,
+                    }
+                }
+                char::from_u32(value)
+            }
+            other => Some(other),
+        }
+    }
+    let chars: Vec<char> = written.chars().collect();
+    let mut out = Vec::with_capacity(chars.len());
+    let mut i = 0usize;
+    while i < chars.len() {
+        // \M- is the one prefix form: ESC, then the following unit
+        // decoded in place (which may itself be \C-x).
+        if chars[i] == '\\'
+            && matches!(chars.get(i + 1), Some('M') | Some('m'))
+            && chars.get(i + 2) == Some(&'-')
+        {
+            out.push('\x1b');
+            i += 3;
+            // A nested \C- after \M- decodes through one_unit's control
+            // arm; a plain char passes through.
+            if let Some(unit) = one_unit(&chars, &mut i) {
+                out.push(unit);
+            }
+            continue;
+        }
+        match one_unit(&chars, &mut i) {
+            Some(unit) => out.push(unit),
+            None => break,
+        }
+    }
+    out
+}
+
+/// rubash#1722: the decoded binding table for the editor's active
+/// keymap family, rebuilt when the bind registry's generation moves.
+/// Emacs mode (the default) matches the emacs-standard map plus the
+/// emacs-meta / emacs-ctlx submaps — in GNU those are reached through
+/// the ESC / C-x prefixes, which the flat sequence match subsumes.
+/// `set editing-mode vi` (registry state) switches to the vi-insert
+/// family. Registered entries carry the concrete keymap they were
+/// bound in — the registry resolves a keymap-less registration to
+/// its then-current keymap (rubash#2386) — and match by it; a
+/// keymap-less entry constructed outside the registry still counts
+/// for either family.
+fn bind_table_for<'a>(
+    executor: &Executor,
+    st: &'a mut EditState,
+) -> &'a [(Vec<char>, crate::shell::bind_registry::BindKind)] {
+    use crate::shell::bind_registry::normalize_keymap_name;
+    let generation = executor.bind_registry_generation();
+    let stale = !matches!(&st.bind_cache, Some((gen, _)) if *gen == generation);
+    if stale {
+        let vi = executor.bind_editing_mode().as_deref() == Some("vi");
+        let in_family = |entry: &crate::shell::bind_registry::BindEntry| {
+            let keymap = entry.keymap.as_deref().map(normalize_keymap_name);
+            match (vi, keymap) {
+                (_, None) => true,
+                (false, Some("emacs-standard" | "emacs-meta" | "emacs-ctlx")) => true,
+                (true, Some("vi-insert")) => true,
+                _ => false,
+            }
+        };
+        let snapshot = executor.bind_registry_snapshot();
+        let mut table: Vec<(Vec<char>, crate::shell::bind_registry::BindKind)> = snapshot
+            .iter()
+            .filter(|entry| {
+                in_family(entry)
+                    && !matches!(
+                        entry.kind,
+                        crate::shell::bind_registry::BindKind::Keymap { .. }
+                    )
+            })
+            .map(|entry| (decode_bind_keyseq(&entry.keyseq), entry.kind.clone()))
+            .filter(|(seq, _)| !seq.is_empty())
+            .collect();
+        // A keymap-valued entry (rubash#2923) is a prefix to the
+        // editor: the target map's own session bindings compose
+        // under it, and the target's ANYOTHERKEY fallback fires at
+        // the bare prefix. One level only — this flat dispatch has
+        // no deeper keymap nesting to mirror, and the engine's own
+        // DEFAULT submap rows are the default dispatch's business,
+        // not this table's.
+        let registry = executor.bind_registry();
+        let registry = registry.borrow();
+        for entry in snapshot.iter().filter(|entry| in_family(entry)) {
+            let crate::shell::bind_registry::BindKind::Keymap { name } = &entry.kind else {
+                continue;
+            };
+            let target = normalize_keymap_name(name);
+            let prefix = decode_bind_keyseq(&entry.keyseq);
+            if prefix.is_empty() {
+                continue;
+            }
+            for inner in snapshot.iter().filter(|inner| {
+                !matches!(
+                    inner.kind,
+                    crate::shell::bind_registry::BindKind::Keymap { .. }
+                ) && inner.keymap.as_deref().map(normalize_keymap_name) == Some(target)
+            }) {
+                let mut seq = prefix.clone();
+                seq.extend(decode_bind_keyseq(&inner.keyseq));
+                if !seq.is_empty() {
+                    table.push((seq, inner.kind.clone()));
+                }
+            }
+            if let Some(fallback) = registry.keymap_fallback(target) {
+                table.push((prefix, fallback.clone()));
+            }
+        }
+        st.bind_cache = Some((generation, table));
+    }
+    match &st.bind_cache {
+        Some((_, table)) => table,
+        None => &[],
+    }
+}
+
+/// rubash#1722: readline's keymap dispatch (_rl_dispatch,
+/// lib/readline/readline.c:873 _rl_dispatch, driven per key from
+/// readline.c:690): a key sequence registered through `bind` fires
+/// before the built-in default bindings. An exact match runs its
+/// binding — a `bind -x` shell command through the READLINE_LINE /
+/// READLINE_POINT / READLINE_MARK protocol (bashline.c:4593
+/// bash_execute_unix_command, via Executor::run_bind_x_command), a
+/// readline function, or a macro (whose text re-enters the dispatch as
+/// if typed). A strict prefix of a longer binding parks the char
+/// until the sequence resolves; a sequence that matches nothing
+/// replays its parked chars through the default dispatch (an unbound
+/// ESC [ A still walks history) and re-dispatches the current char.
+fn dispatch_edit_key(executor: &mut Executor, st: &mut EditState, c: char) -> EditOutcome {
+    if st.pending_keyseq.is_empty() && bind_table_for(executor, st).is_empty() {
+        return apply_default_edit_char(executor, st, c);
+    }
+    let mut candidate: Vec<char> = st.pending_keyseq.chars().collect();
+    candidate.push(c);
+    let (exact, is_prefix) = {
+        let table = bind_table_for(executor, st);
+        let exact = table
+            .iter()
+            .find(|(seq, _)| *seq == candidate)
+            .map(|(_, kind)| kind.clone());
+        let is_prefix = table
+            .iter()
+            .any(|(seq, _)| seq.len() > candidate.len() && seq[..candidate.len()] == candidate[..]);
+        (exact, is_prefix)
+    };
+    match exact {
+        Some(kind) if !is_prefix => {
+            st.pending_keyseq.clear();
+            run_bound_kind(executor, st, &kind, c)
+        }
+        Some(_) => {
+            // Bound, but also the prefix of a longer binding: GNU
+            // waits for the disambiguating key.
+            st.pending_keyseq = candidate.iter().collect();
+            EditOutcome::None
+        }
+        None if is_prefix => {
+            st.pending_keyseq = candidate.iter().collect();
+            EditOutcome::None
+        }
+        None => {
+            if st.pending_keyseq.is_empty() {
+                return apply_default_edit_char(executor, st, c);
+            }
+            let parked: Vec<char> = std::mem::take(&mut st.pending_keyseq).chars().collect();
+            for parked_char in parked {
+                let outcome = apply_default_edit_char(executor, st, parked_char);
+                if !matches!(outcome, EditOutcome::None) {
+                    return outcome;
+                }
+            }
+            apply_edit_char(executor, st, c)
+        }
+    }
+}
+
+/// Run one fired binding (see dispatch_edit_key).
+fn run_bound_kind(
+    executor: &mut Executor,
+    st: &mut EditState,
+    kind: &crate::shell::bind_registry::BindKind,
+    key: char,
+) -> EditOutcome {
+    use crate::shell::bind_registry::BindKind;
+    match kind {
+        BindKind::Execute { command } => {
+            // bash_execute_unix_command's protocol, in the engine's
+            // character offsets: the command sees the current buffer
+            // and point, and its READLINE_LINE / READLINE_POINT writes
+            // replace them (Executor::run_bind_x_command owns the
+            // set/run/read-back/unbind cycle).
+            let point = st.buffer[..st.cursor.min(st.buffer.len())].chars().count();
+            let mark = st
+                .mark
+                .map(|m| st.buffer[..m.min(st.buffer.len())].chars().count())
+                .unwrap_or(point);
+            let command = command.clone();
+            let line = st.buffer.clone();
+            let outcome = executor.run_bind_x_command(&command, &line, point, mark);
+            if let Some(new_line) = outcome.line {
+                st.buffer = new_line;
+                st.history_index = None;
+            }
+            let line_chars = st.buffer.chars().count();
+            let point_chars = outcome.point.unwrap_or(line_chars).min(line_chars);
+            st.cursor = st
+                .buffer
+                .char_indices()
+                .nth(point_chars)
+                .map(|(byte, _)| byte)
+                .unwrap_or(st.buffer.len());
+            if let Some(mark_chars) = outcome.mark {
+                let mark_chars = mark_chars.min(line_chars);
+                st.mark = Some(
+                    st.buffer
+                        .char_indices()
+                        .nth(mark_chars)
+                        .map(|(byte, _)| byte)
+                        .unwrap_or(st.buffer.len()),
+                );
+            }
+            EditOutcome::None
+        }
+        BindKind::Function { name } => run_readline_function(executor, st, name, key),
+        BindKind::Keymap { .. } => {
+            // Unreachable: bind_table_for expands keymap-valued
+            // entries into composed rows (and the target's fallback
+            // at the bare prefix) and never emits the kind itself.
+            // A keymap value cannot "fire" — it only prefixes.
+            EditOutcome::None
+        }
+        BindKind::Macro { text } => {
+            // readline feeds macro text back through the dispatch as
+            // if it had been typed (rl_executing_macro).
+            let text = text.clone();
+            let mut outcome = EditOutcome::None;
+            for macro_char in text.chars() {
+                outcome = apply_edit_char(executor, st, macro_char);
+                if !matches!(outcome, EditOutcome::None) {
+                    break;
+                }
+            }
+            outcome
+        }
+    }
+}
+
+/// Word span helpers for the readline function bindings: a word is a
+/// run of alphanumeric-or-underscore chars (readline's rl_backward_word
+/// word definition, misc.c/word boundaries over rl_alphabetic plus the
+/// shell's `_`).
+fn edit_prev_boundary(buffer: &str, mut i: usize) -> usize {
+    i = i.saturating_sub(1).min(buffer.len());
+    while i > 0 && !buffer.is_char_boundary(i) {
+        i -= 1;
+    }
+    i
+}
+
+fn edit_is_word_char(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
+}
+
+/// Start of the word rl_backward_word would move to: skip any non-word
+/// run backwards, then the word run itself.
+fn edit_word_start(buffer: &str, cursor: usize) -> usize {
+    let mut start = cursor.min(buffer.len());
+    while start > 0 {
+        let prev = edit_prev_boundary(buffer, start);
+        let ch = buffer[prev..].chars().next().unwrap_or(' ');
+        if edit_is_word_char(ch) {
+            break;
+        }
+        start = prev;
+    }
+    while start > 0 {
+        let prev = edit_prev_boundary(buffer, start);
+        let ch = buffer[prev..].chars().next().unwrap_or(' ');
+        if !edit_is_word_char(ch) {
+            break;
+        }
+        start = prev;
+    }
+    start
+}
+
+fn edit_word_end(buffer: &str, cursor: usize) -> usize {
+    let mut end = cursor.min(buffer.len());
+    // skip the non-word run, then the word run (rl_forward_word).
+    while end < buffer.len() {
+        let ch = buffer[end..].chars().next().unwrap_or(' ');
+        if ch.is_alphanumeric() || ch == '_' {
+            break;
+        }
+        end += ch.len_utf8();
+    }
+    while end < buffer.len() {
+        let ch = buffer[end..].chars().next().unwrap_or(' ');
+        if ch.is_alphanumeric() || ch == '_' {
+            end += ch.len_utf8();
+        } else {
+            break;
+        }
+    }
+    end
+}
+
+/// The readline function bindings this editor can perform, by name
+/// (bind.c's function table). Functions that only restyle the display
+/// (clear-screen, redraw-current-line) are no-ops here — the console
+/// path repaints after every key regardless, and the cooked path has
+/// no repaint channel, exactly like the default dispatch's treatment.
+/// Functions needing machinery this editor does not own (the kill
+/// ring: yank/yank-pop; undo; completion: complete/menu-complete and
+/// friends) consume the key without acting — the bounded residual,
+/// recorded in the #1722 finisher report.
+fn run_readline_function(
+    executor: &mut Executor,
+    st: &mut EditState,
+    name: &str,
+    key: char,
+) -> EditOutcome {
+    // One-char equivalents reuse the default dispatch arms verbatim.
+    match name {
+        "accept-line" | "newline" => apply_default_edit_char(executor, st, '\n'),
+        "beginning-of-line" => apply_default_edit_char(executor, st, '\x01'),
+        "end-of-line" => apply_default_edit_char(executor, st, '\x05'),
+        "backward-char" => apply_default_edit_char(executor, st, '\x02'),
+        "forward-char" => apply_default_edit_char(executor, st, '\x06'),
+        "delete-char" => apply_default_edit_char(executor, st, '\x04'),
+        "backward-delete-char" | "backward-rubout" => apply_default_edit_char(executor, st, '\x7f'),
+        "kill-line" => apply_default_edit_char(executor, st, '\x0b'),
+        "unix-line-discard" => apply_default_edit_char(executor, st, '\x15'),
+        "previous-history" => apply_default_edit_char(executor, st, '\x10'),
+        "next-history" => apply_default_edit_char(executor, st, '\x0e'),
+        "operate-and-get-next" => apply_default_edit_char(executor, st, '\x0f'),
+        "quoted-insert" => {
+            st.quoted_insert = true;
+            EditOutcome::None
+        }
+        "self-insert-command" | "self-insert" => {
+            st.buffer.insert(st.cursor, key);
+            st.cursor += key.len_utf8();
+            EditOutcome::None
+        }
+        "abort" => {
+            st.pending_keyseq.clear();
+            EditOutcome::None
+        }
+        "backward-word" => {
+            st.cursor = edit_word_start(&st.buffer, st.cursor);
+            EditOutcome::None
+        }
+        "forward-word" => {
+            st.cursor = edit_word_end(&st.buffer, st.cursor);
+            EditOutcome::None
+        }
+        "backward-kill-word" | "unix-word-rubout" => {
+            let start = edit_word_start(&st.buffer, st.cursor);
+            st.buffer.drain(start..st.cursor);
+            st.cursor = start;
+            EditOutcome::None
+        }
+        "kill-word" => {
+            let end = edit_word_end(&st.buffer, st.cursor);
+            st.buffer.drain(st.cursor..end);
+            EditOutcome::None
+        }
+        "transpose-chars" => {
+            // rl_transpose_chars (misc.c): at end of line swap the two
+            // chars before point (point stays); mid-line swap the
+            // chars around point and advance past both.
+            let chars: Vec<(usize, char)> = st.buffer.char_indices().collect();
+            if chars.len() >= 2 {
+                let idx_after = chars
+                    .iter()
+                    .position(|(byte, _)| *byte >= st.cursor)
+                    .unwrap_or(chars.len());
+                let (i, j, new_cursor) = if idx_after >= chars.len() {
+                    (chars.len() - 2, chars.len() - 1, st.cursor)
+                } else if idx_after == 0 {
+                    (0, 1, chars[1].0 + chars[1].1.len_utf8())
+                } else {
+                    (
+                        idx_after - 1,
+                        idx_after,
+                        chars[idx_after].0 + chars[idx_after].1.len_utf8(),
+                    )
+                };
+                let (byte_i, ch_i) = chars[i];
+                let (byte_j, ch_j) = chars[j];
+                let mut rebuilt = String::with_capacity(st.buffer.len());
+                rebuilt.push_str(&st.buffer[..byte_i]);
+                rebuilt.push(ch_j);
+                rebuilt.push_str(&st.buffer[byte_i + ch_i.len_utf8()..byte_j]);
+                rebuilt.push(ch_i);
+                rebuilt.push_str(&st.buffer[byte_j + ch_j.len_utf8()..]);
+                st.buffer = rebuilt;
+                st.cursor = new_cursor.min(st.buffer.len());
+            }
+            EditOutcome::None
+        }
+        "upcase-word" | "downcase-word" | "capitalize-word" => {
+            let end = edit_word_end(&st.buffer, st.cursor);
+            let word = st.buffer[st.cursor..end].to_string();
+            let transformed = match name {
+                "upcase-word" => word.to_uppercase(),
+                "downcase-word" => word.to_lowercase(),
+                _ => {
+                    // rl_capitalize_word: upcase the word's first
+                    // character, downcase the rest.
+                    let mut chars = word.chars();
+                    match chars.next() {
+                        Some(first) => {
+                            let mut out: String = first.to_uppercase().collect();
+                            out.push_str(&chars.as_str().to_lowercase());
+                            out
+                        }
+                        None => word,
+                    }
+                }
+            };
+            st.buffer.replace_range(st.cursor..end, &transformed);
+            st.cursor += transformed.len();
+            EditOutcome::None
+        }
+        "set-mark" => {
+            st.mark = Some(st.cursor);
+            EditOutcome::None
+        }
+        "exchange-point-and-mark" => {
+            if let Some(mark) = st.mark {
+                st.mark = Some(st.cursor);
+                st.cursor = mark.min(st.buffer.len());
+            }
+            EditOutcome::None
+        }
+        "beginning-of-history" => {
+            if session_entries_len(executor) > 0 {
+                if st.history_index.is_none() {
+                    st.saved_line = st.buffer.clone();
+                }
+                st.history_index = Some(0);
+                if let Some(session) = executor.get_session_history() {
+                    st.buffer = session.borrow().entries[0].clone();
+                }
+                st.cursor = st.buffer.len();
+            }
+            EditOutcome::None
+        }
+        "end-of-history" => {
+            if st.history_index.is_some() {
+                st.history_index = None;
+                st.buffer = st.saved_line.clone();
+                st.cursor = st.buffer.len();
+            }
+            EditOutcome::None
+        }
+        "reverse-search-history" => apply_edit_char(executor, st, '\x12'),
+        // Display-only and not-yet-owned machinery: consume the key.
+        _ => EditOutcome::None,
+    }
+}
+
+/// The built-in default dispatch (readline's factory keymap): the
+/// ESC-sequence stages and the control-char edit arms. Registered
+/// bindings are consulted first (dispatch_edit_key); this is the
+/// fallback every unbound or unresolvable key reaches.
+fn apply_default_edit_char(executor: &Executor, st: &mut EditState, c: char) -> EditOutcome {
+    // ESC-sequence stages (see EditState::esc_stage).
+    match st.esc_stage {
+        1 => {
+            st.esc_stage = if c == '[' || c == 'O' { 2 } else { 0 };
+            return EditOutcome::None;
+        }
+        2 => {
+            st.esc_stage = 0;
+            match c {
+                'A' => history_step_previous(executor, st),
+                'B' => history_step_next(executor, st),
+                'C' => st.cursor = (st.cursor + 1).min(st.buffer.len()),
+                'D' => st.cursor = st.cursor.saturating_sub(1),
+                _ => {}
+            }
+            return EditOutcome::None;
+        }
+        _ => {}
+    }
+
+    match c {
+        '\n' | '\r' => {
+            let line = std::mem::take(&mut st.buffer);
+            st.cursor = 0;
+            st.history_index = None;
+            st.saved_line.clear();
+            st.esc_stage = 0;
+            EditOutcome::Accept {
+                line,
+                operate_and_get_next: None,
+            }
+        }
+        '\x12' => {
+            st.isearch = Some(ISearchState {
+                search: String::new(),
+                orig_buffer: st.buffer.clone(),
+                orig_index: st.history_index,
+                match_index: None,
+            });
+            EditOutcome::None
+        }
+        '\x0f' => {
+            // rl_operate_and_get_next (readline/misc.c): accept the line
+            // for execution, then preload the next readline with the entry
+            // AFTER the accepted line (the caller preloads after the
+            // command ran, when the history may have grown).
+            let src_abs = st
+                .history_index
+                .map(|p| session_history_base(executor) + p + 1);
+            let line = std::mem::take(&mut st.buffer);
+            st.cursor = 0;
+            st.esc_stage = 0;
+            EditOutcome::Accept {
+                line,
+                operate_and_get_next: Some(src_abs),
+            }
+        }
+        '\x10' => {
+            // previous-history-line
+            history_step_previous(executor, st);
+            EditOutcome::None
+        }
+        '\x0e' => {
+            // next-history-line
+            history_step_next(executor, st);
+            EditOutcome::None
+        }
+        '\x01' => {
+            st.cursor = 0;
+            EditOutcome::None
+        }
+        '\x05' => {
+            st.cursor = st.buffer.len();
+            EditOutcome::None
+        }
+        '\x02' => {
+            st.cursor = st.cursor.saturating_sub(1);
+            EditOutcome::None
+        }
+        '\x06' => {
+            st.cursor = (st.cursor + 1).min(st.buffer.len());
+            EditOutcome::None
+        }
+        '\x0b' => {
+            st.buffer.truncate(st.cursor);
+            EditOutcome::None
+        }
+        '\x15' => {
+            st.buffer.drain(..st.cursor);
+            st.cursor = 0;
+            EditOutcome::None
+        }
+        '\x7f' | '\x08' => {
+            rubout_previous_char(st);
+            EditOutcome::None
+        }
+        '\x04' => {
+            // C-d: EOF on an empty buffer, delete-char otherwise.
+            if st.buffer.is_empty() && st.history_index.is_none() {
+                EditOutcome::Eof
+            } else {
+                delete_char_at(st);
+                EditOutcome::None
+            }
+        }
+        '\x03' => {
+            // SIGINT-style abort: discard the edit line.
+            st.buffer.clear();
+            st.cursor = 0;
+            st.history_index = None;
+            st.saved_line.clear();
+            EditOutcome::None
+        }
+        '\x16' => {
+            st.quoted_insert = true;
+            EditOutcome::None
+        }
+        '\x1b' => {
+            // Escape sequences: stage the introducer; the final byte is
+            // dispatched when it arrives (only arrows bind here).
+            st.esc_stage = 1;
+            EditOutcome::None
+        }
+        c if c >= ' ' => {
+            st.buffer.insert(st.cursor, c);
+            st.cursor += c.len_utf8();
+            EditOutcome::None
+        }
+        _ => EditOutcome::None,
+    }
+}
+
+/// C0 control bytes that survive normalization of a bridge-delivered
+/// interactive line (see the rubash#434 call site in
+/// [`run_interactive_stdin`]): accept-line (CR/NL), tab, backspace (BS/DEL),
+/// C-c (discard edit line), C-d (EOF), C-v (quoted insert) and ESC (the
+/// introducer of the CSI/SS3 arrow-key sequences the dispatch consumes as a
+/// unit). Everything else in 0x00-0x1F is dropped before it can act on the
+/// command-line buffer.
+const BRIDGE_LINE_KEPT_C0: &[char] = &['\n', '\r', '\t', '\x03', '\x04', '\x08', '\x16', '\x1b'];
+
+/// Drop the C0 control bytes that carry no cooked-line semantics from one
+/// interactive input line (rubash#434). Printable text, DEL (0x7f, already
+/// printable-range for the filter below) and the kept control set above pass
+/// through unchanged, so valid UTF-8 and raw-byte markers are untouched.
+///
+/// The line arrives through `bytes_to_shell_text`, which marker-tags the
+/// carrier bytes (0x0c/0x11/0x13 plus the whole 0x14..=0x1f block — 0x15
+/// among them) as the two-char raw-byte marker pair, so a naive
+/// `char < ' '` filter would let those bytes through and re-materialize
+/// them in every command they reach. The walk below therefore also decodes
+/// the marker pairs and drops the ones whose byte is a bridge artifact.
+fn normalize_bridge_line(raw: &str) -> String {
+    use crate::executor::markers::{
+        RAW_BYTE_MARKER_ESCAPE, RAW_BYTE_MARKER_FIRST, RAW_BYTE_MARKER_LAST,
+    };
+    let chars: Vec<char> = raw.chars().collect();
+    let mut output = String::with_capacity(raw.len());
+    let mut i = 0usize;
+    while i < chars.len() {
+        let c = chars[i];
+        if c as u32 == RAW_BYTE_MARKER_ESCAPE {
+            match chars.get(i + 1) {
+                // doubled introducer: an escaped literal E000 — keep the pair
+                Some(&next) if next as u32 == RAW_BYTE_MARKER_ESCAPE => {
+                    output.push(c);
+                    output.push(next);
+                    i += 2;
+                }
+                // raw-byte marker pair: drop it when the carried byte is a
+                // bridge-artifact C0 byte, keep it otherwise
+                Some(&next)
+                    if (RAW_BYTE_MARKER_FIRST..=RAW_BYTE_MARKER_LAST).contains(&(next as u32)) =>
+                {
+                    let byte = (next as u32 - RAW_BYTE_MARKER_FIRST) as u8;
+                    let ch = char::from_u32(byte as u32).unwrap_or('\u{fffd}');
+                    if ch >= ' ' || BRIDGE_LINE_KEPT_C0.contains(&ch) {
+                        output.push(c);
+                        output.push(next);
+                    }
+                    i += 2;
+                }
+                _ => {
+                    output.push(c);
+                    i += 1;
+                }
+            }
+            continue;
+        }
+        if c >= ' ' || BRIDGE_LINE_KEPT_C0.contains(&c) {
+            output.push(c);
+        }
+        i += 1;
+    }
+    output
+}
+
+/// rubash#2233: how long the interactive reader's hangup
+/// classification waits for an in-flight SIGHUP once the terminal
+/// is KNOWN dead (POLLHUP on the fd, or an EIO read). The mailbox
+/// queues deliveries asynchronously; under load the queueing lag
+/// can outlast the plain poll's 5 ms settle by an order of
+/// magnitude. The budget is only ever spent on a dead terminal —
+/// a live terminal's genuine EOF never reaches the settled poll.
+#[cfg(unix)]
+const HANGUP_SETTLE_BUDGET: std::time::Duration = std::time::Duration::from_millis(100);
+
+/// rubash#2233: whether fd 0's poll face already shows the hangup
+/// (POLLHUP/POLLERR) — the terminal is dead, so a SIGHUP delivery
+/// is a certainty in flight rather than a possibility. A genuine
+/// ^D on a live terminal shows neither flag.
+#[cfg(unix)]
+fn tty_fd_shows_hangup() -> bool {
+    let mut pfd = libc::pollfd {
+        fd: 0,
+        events: libc::POLLIN,
+        revents: 0,
+    };
+    // SAFETY: one pollfd, zero timeout — a pure status query on the
+    // process's own stdin descriptor.
+    let rc = unsafe { libc::poll(&mut pfd, 1, 0) };
+    rc > 0 && (pfd.revents & (libc::POLLHUP | libc::POLLERR)) != 0
+}
+
+/// rubash#1722: readline's terminal ownership for one edited line on
+/// a Unix tty (rl_prep_terminal / rl_deprep_terminal,
+/// lib/readline/terminal.c): the saved termios is restored on
+/// `restore()`/drop, so the mode spans exactly the key-read loop.
+#[cfg(unix)]
+struct UnixTtyEditGuard {
+    saved: libc::termios,
+    raw: bool,
+    /// Bytes of a multi-byte UTF-8 char read so far (fd reads are one
+    /// byte at a time in VMIN=1 mode).
+    pending: Vec<u8>,
+}
+
+#[cfg(unix)]
+impl UnixTtyEditGuard {
+    fn acquire() -> Option<UnixTtyEditGuard> {
+        let mut saved: libc::termios = unsafe { std::mem::zeroed() };
+        if unsafe { libc::tcgetattr(0, &mut saved) } != 0 {
+            return None;
+        }
+        let mut raw_mode = saved;
+        raw_mode.c_lflag &= !(libc::ICANON | libc::ECHO);
+        raw_mode.c_iflag &= !(libc::IXON);
+        raw_mode.c_cc[libc::VMIN] = 1;
+        raw_mode.c_cc[libc::VTIME] = 0;
+        if unsafe { libc::tcsetattr(0, libc::TCSADRAIN, &raw_mode) } != 0 {
+            return None;
+        }
+        Some(UnixTtyEditGuard {
+            saved,
+            raw: true,
+            pending: Vec::new(),
+        })
+    }
+
+    fn restore(&mut self) {
+        if self.raw {
+            unsafe {
+                libc::tcsetattr(0, libc::TCSADRAIN, &self.saved);
+            }
+            self.raw = false;
+        }
+    }
+
+    /// Write one display frame to rl_outstream, which is stderr for
+    /// this reader.
+    fn write_bytes(&self, text: &str) {
+        use std::io::Write;
+        let mut err = std::io::stderr();
+        let _ = err.write_all(text.as_bytes());
+        let _ = err.flush();
+    }
+
+    /// rubash#2837: poll fd 0 for readability with a bounded slice so
+    /// the tty read loop can dispatch pending signals between slices
+    /// (prompt_wait_for_input's shape). Ok(true) = a byte is readable,
+    /// a partial UTF-8 sequence is already buffered (next_key returns
+    /// it without reading), or the fd shows HUP/ERR (next_key reports
+    /// it as EOF); Ok(false) = the slice expired, or a signal
+    /// interrupted the poll — either way the caller re-checks the
+    /// signal queue at once. A real poll error propagates for the
+    /// caller's read-dead path.
+    fn wait_readable(&self, timeout_ms: i32) -> std::io::Result<bool> {
+        if !self.pending.is_empty() {
+            return Ok(true);
+        }
+        let mut pfd = libc::pollfd {
+            fd: 0,
+            events: libc::POLLIN,
+            revents: 0,
+        };
+        // SAFETY: one pollfd, fd 0 is the process's own stdin.
+        let rc = unsafe { libc::poll(&mut pfd, 1, timeout_ms) };
+        if rc > 0 || pfd.revents != 0 {
+            return Ok(true);
+        }
+        if rc == 0 {
+            return Ok(false);
+        }
+        let err = std::io::Error::last_os_error();
+        if err.kind() == std::io::ErrorKind::Interrupted {
+            // A signal arrived mid-poll: the delivery is in the
+            // mailbox, so report a slice expiry and let the caller
+            // dispatch it at once instead of waiting out the slice.
+            return Ok(false);
+        }
+        Err(err)
+    }
+
+    /// Read one key character. `Ok(None)` is fd-0 EOF; a read error
+    /// other than EINTR propagates (EINTR retries — the fd layer's
+    /// design lets the pending-signal queue dispatch at the next
+    /// command boundary).
+    fn next_key(&mut self) -> std::io::Result<Option<char>> {
+        loop {
+            if !self.pending.is_empty() {
+                match std::str::from_utf8(&self.pending) {
+                    Ok(text) => {
+                        let c = text.chars().next().expect("nonempty pending");
+                        self.pending.drain(..c.len_utf8());
+                        return Ok(Some(c));
+                    }
+                    Err(err) if err.error_len().is_some() => {
+                        // Not valid UTF-8: deliver the byte as its own
+                        // char (readline's 8-bit char treatment) and
+                        // resync on the following byte.
+                        let byte = self.pending[0];
+                        self.pending.drain(..1);
+                        return Ok(Some(char::from(byte)));
+                    }
+                    Err(_) => {
+                        // Incomplete sequence prefix: read more bytes.
+                    }
+                }
+            }
+            let mut byte = [0u8; 1];
+            let n = unsafe { libc::read(0, byte.as_mut_ptr() as *mut libc::c_void, 1) };
+            if n == 0 {
+                return Ok(None);
+            }
+            if n < 0 {
+                let err = std::io::Error::last_os_error();
+                if err.kind() == std::io::ErrorKind::Interrupted {
+                    continue;
+                }
+                return Err(err);
+            }
+            self.pending.push(byte[0]);
+        }
+    }
+}
+
+#[cfg(unix)]
+impl Drop for UnixTtyEditGuard {
+    fn drop(&mut self) {
+        self.restore();
+    }
+}
+
+/// rubash#1722: one repaint of the Unix tty edit line, readline's
+/// rl_redisplay shape (lib/readline/display.c): the common case — text
+/// inserted at the point, nothing else changed — emits ONLY the
+/// inserted text (the terminal already shows the rest of the line);
+/// an unchanged line emits nothing; anything else (motion, deletion,
+/// a widget rewrite) takes the full repaint
+/// (console_readline::redraw_line). `prev` carries the last painted
+/// (buffer, cursor) across the keys of one prompt.
+#[cfg(unix)]
+fn tty_redraw(
+    guard: &UnixTtyEditGuard,
+    prompt_tail: &str,
+    st: &EditState,
+    prev: &mut Option<(String, usize)>,
+) {
+    let frame = match prev.as_ref() {
+        Some((prev_buffer, prev_cursor))
+            if *prev_buffer == st.buffer && *prev_cursor == st.cursor =>
+        {
+            String::new()
+        }
+        Some((prev_buffer, prev_cursor)) => {
+            let pc = *prev_cursor;
+            let append_at_point = st.cursor > pc
+                && pc <= st.buffer.len()
+                && st.buffer.is_char_boundary(pc)
+                && st.buffer.is_char_boundary(st.cursor)
+                && st.buffer[..pc] == prev_buffer[..pc]
+                && st.buffer[st.cursor..] == prev_buffer[pc..];
+            if append_at_point {
+                st.buffer[pc..st.cursor].to_string()
+            } else {
+                crate::console_readline::redraw_line(prompt_tail, &st.buffer, st.cursor)
+            }
+        }
+        None => crate::console_readline::redraw_line(prompt_tail, &st.buffer, st.cursor),
+    };
+    *prev = Some((st.buffer.clone(), st.cursor));
+    if !frame.is_empty() {
+        guard.write_bytes(&frame);
+    }
+}
+
+/// Outcome of [`prompt_wait_for_input`].
+#[cfg(unix)]
+enum PromptWait {
+    /// fd 0 is readable (or at EOF): proceed with the line read.
+    Ready,
+    /// The pending-signal dispatch unwound: the current line is
+    /// discarded and the reader re-prompts.
+    Aborted,
+}
+
+/// rubash#1662: wait at a fresh interactive prompt until fd 0 is
+/// readable, dispatching pending signals between poll slices. fd
+/// reads retry on EINTR by design (fd::read_some: "let the
+/// pending-signal queue dispatch at the next command boundary"), but
+/// at a prompt there is no next command yet — an undispatched SIGINT
+/// would sit in the mailbox and abort the next typed line instead of
+/// the empty current one. GNU's reader instead leaves the read at
+/// once: partial line dropped, $? = 128+sig, fresh prompt.
+#[cfg(unix)]
+fn prompt_wait_for_input(executor: &mut Executor) -> PromptWait {
+    loop {
+        if executor.run_pending_signal_traps().is_err() {
+            return PromptWait::Aborted;
+        }
+        let mut pfd = libc::pollfd {
+            fd: 0,
+            events: libc::POLLIN,
+            revents: 0,
+        };
+        let rc = unsafe { libc::poll(&mut pfd, 1, 50) };
+        if rc > 0 || pfd.revents != 0 {
+            return PromptWait::Ready;
+        }
+        // Slice expired or EINTR: loop and re-check the signal queue.
+    }
+}
+
+pub fn read_unbuffered_line(output: &mut String) -> io::Result<usize> {
+    // TODO(input.c): This intentionally avoids BufRead prefetching so a child
+    // shell script can inherit unread bytes from the same redirected stdin.
+    // Accumulate raw bytes and decode once per line: `byte as char` would
+    // Latin-1-encode multibyte script source (e.g. a `中文` literal became
+    // `ä¸­æ–‡`). `bytes_to_shell_text` keeps valid UTF-8 and preserves
+    // undecodable bytes as raw-byte markers. A `b'\n'` can never sit inside
+    // a UTF-8 sequence, so the line split is char-boundary safe.
+    //
+    // The read goes through the raw OS handle, not io::stdin(): the std
+    // stdin owns a process-wide BufReader whose fill_buf would prefetch the
+    // whole stream, and GNU input.c reads fd 0 one byte at a time (zread)
+    // so a forked sibling sharing the descriptor continues at the exact
+    // offset this shell consumed (redir.tests heredoc + `&` children).
+    let mut line: Vec<u8> = Vec::new();
+    let mut read = 0;
+    loop {
+        match crate::executor::read_process_stdin_bytes(1)? {
+            buf if buf.is_empty() => break,
+            buf => {
+                read += buf.len();
+                line.push(buf[0]);
+                if buf[0] == b'\n' {
+                    break;
+                }
+            }
+        }
+    }
+    output.push_str(&crate::executor::bytes_to_shell_text(&line));
+    Ok(read)
+}
+
+/// The non-interactive stdin-script driver — every shape that reads commands
+/// from fd 0 without a script operand or `-c` string (`bash -s < stream`,
+/// `bash < file`, and the host products' `-s` route through the engine's
+/// `ShellInvocation`). This is the canonical implementation; the binary and
+/// every embedding host must run THIS driver rather than re-reading stdin
+/// themselves (rubash#586: a host entry that slurps the stream up front with
+/// `read_to_string`/a BufReader turns every later line the consumers never
+/// saw back into code — `$(exec cat)` returned empty and the data lines
+/// executed as commands).
+///
+/// On-demand read semantics (GNU input.c): the parser is allowed to consume
+/// exactly the bytes of the commands it submits, never more. GNU reads fd 0
+/// through a buffered stream whose capacity is ONE byte whenever the
+/// descriptor is not seekable (input.c:381-397 fd_to_buffered_stream:
+/// `size = fd_is_seekable(fd) ? min(st_size, MAX_INPUT_BUFFER_SIZE) : 1`,
+/// with input.c:192-193 flagging bufsize==1 as B_UNBUFF), so a piped `-s`
+/// script never has read-ahead to hide from anyone; a seekable script file
+/// may buffer up to 8192 bytes but every fork first rewinds the descriptor
+/// to the first unconsumed byte (input.c:552-565 sync_buffered_stream,
+/// called from jobs.c:2298-2302 make_child before `fork` and from
+/// input.c:296-316 check_bash_input for fd-0 redirections). Either way a
+/// command substitution, a `read`, or a top-level `exec` that reads fd 0
+/// observes the stream from the parser's exact position, consumes what it
+/// wants as DATA, and everything it consumed is gone — a later line is code
+/// only if no consumer swallowed it first. This port keeps the same contract
+/// by reading one byte per syscall off the raw OS handle
+/// ([`read_unbuffered_line`]) and leaving the OS file position as the single
+/// shared cursor: child processes inherit the descriptor and continue at the
+/// byte after the last parser-consumed newline.
+pub fn run_stdin_script(executor: &mut Executor) -> i32 {
+    // shell.c:780-786: a non-interactive shell with no script operand reads
+    // commands from stdin (pipe/redirect), so GNU sets read_from_stdin and
+    // `$-` gains `s` (`bash < file`, `bash -s < file`). This driver is the
+    // common path for all such invocations, so set the marker once here.
+    executor.set_env(READ_STDIN_MARKER, "1");
+    // GNU never rebinds $0 for a stdin script (the shell.c:1613 rebind runs
+    // in shell_execscript, the script-FILE path), so $0 stays argv[0] as the
+    // parent invoked it — variables.c initialize_shell_variables binds
+    // dollar_vars[0] = shell_name. Probe 2026-09-27: `printf ... | bash -s
+    // alpha` prints $0=bash (argv[0] verbatim, full path when invoked with
+    // one). Internal respawns carry the parent's name through init.rs, so
+    // only bind when absent.
+    if executor.get_env("__RUBASH_SCRIPT_NAME").is_none() {
+        let argv0 = std::env::args_os()
+            .next()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "bash".to_string());
+        executor.set_env("__RUBASH_SCRIPT_NAME", argv0.as_str());
+    }
+    // TODO(shell.c/input.c): Bash reads commands from redirected stdin without
+    // prompting, while commands launched from that stream inherit the same
+    // input. Keep ordinary input line-oriented, but gather obvious compound
+    // commands until their closing reserved word arrives.
+    executor.inherit_process_stdin();
+    let mut input = String::new();
+    let mut pending = String::new();
+    let mut pending_heredocs: Vec<(String, bool)> = Vec::new();
+    let mut next_line = 1usize;
+    let mut pending_start_line = 1usize;
+
+    loop {
+        input.clear();
+        // GNU input.c bash_input binds the command reader to fd 0, so a
+        // permanent `exec 0<file` (redir.c do_redirections) moves the script
+        // source to the new input; only fall back to the process's real
+        // stdin while fd 0 still designates it (redir1.sub:4-6).
+        let line_result = match executor.script_fd0_line(&mut input) {
+            Some(count) => Ok(count),
+            None => read_unbuffered_line(&mut input),
+        };
+        match line_result {
+            Ok(0) => break,
+            Ok(_) => {}
+            Err(err) => {
+                // rubash#2233: a read ERROR is not EOF in the script
+                // reader. GNU's parser input layer (parse.y
+                // shell_getc, READERR arm, FATAL_READERROR) reports
+                // `script file read error' and exits 128 — the shape
+                // a dead terminal produces (EIO) when the shell reads
+                // commands from a tty without being interactive
+                // (stderr redirected: shell.c:541-547 leaves it a
+                // plain script reader, and its untrapped SIGHUP —
+                // when one is even delivered — is not the verdict
+                // here). An untrapped hangup caught because an EXIT
+                // trap armed the termsig set preempts the arm: poll
+                // for it (without dispatching — a trapped SIGHUP
+                // queued behind the dead terminal does not run; GNU's
+                // measured control exits 128 with the trap unrun),
+                // and let finish_shell settle the signal death.
+                #[cfg(unix)]
+                if !executor.poll_untrapped_hangup() {
+                    let shell_name = executor
+                        .get_env("__RUBASH_SCRIPT_NAME")
+                        .map(str::to_string)
+                        .unwrap_or_else(|| "rubash".to_string());
+                    eprintln!("{shell_name}: line {next_line}: script file read error: {err}");
+                    executor.set_last_exit_code(128);
+                }
+                // GNU's arm exits from the read itself: a partially
+                // gathered group is discarded, not executed.
+                pending.clear();
+                break;
+            }
+        }
+
+        // rubash#2773: this read IS the line's read moment — GNU's
+        // reader echoes it here when verbose is on (flags.c:284
+        // echo_input_at_read = verbose_flag; parse.y:2712). The
+        // previous unit has already executed, so the sampled state
+        // is the live one; heredoc body lines pass through this same
+        // read and echo too (make_cmd.c:584).
+        echo_verbose_input_lines(executor, &input);
+
+        if pending.is_empty() {
+            pending_start_line = next_line;
+        }
+        next_line += input.matches('\n').count().max(1);
+        pending.push_str(&input);
+        if let Some((delimiter, strip_tabs)) = pending_heredocs.first() {
+            let candidate = input.trim_end_matches(['\r', '\n']);
+            let candidate = if *strip_tabs {
+                candidate.trim_start_matches('\t')
+            } else {
+                candidate
+            };
+            if candidate == delimiter {
+                pending_heredocs.remove(0);
+            }
+        } else {
+            pending_heredocs.extend(stdin_heredoc_declarations(&input));
+        }
+
+        let stdin_posix = executor.get_env("__RUBASH_POSIX_MODE").as_deref() == Some("1");
+        if !pending_heredocs.is_empty() || stdin_source_needs_more_posix(&pending, stdin_posix) {
+            continue;
+        }
+
+        // bashhist.c maybe_add_history gates recording on
+        // remember_on_history — the `history' set option, which defaults
+        // OFF for a non-interactive shell. This driver is the
+        // non-interactive stdin path, so input lines enter the history
+        // list only after `set -o history' (or `-o history' at startup)
+        // turns the option on (rubash#1629).
+        record_stdin_group_if_armed(executor, &pending);
+
+        // eval.c:178: one current_command_number increment per command
+        // list read happens in the execute_ast walk; no driver increment
+        // here (`\#` in ${var@P} reads it).
+        let status = run_source_with_line_offset(
+            executor,
+            &pending,
+            false,
+            pending_start_line.saturating_sub(1),
+            None,
+            None,
+        );
+        // GNU evalstring.c parse_and_execute leaves the group's status in
+        // last_command_exit_value for the reader to exit with — the
+        // run_source* conversion returns it, but the read-time parse-error
+        // fast paths (an unclosed `"`/`'`/`${`/`$(` reports
+        // `unexpected EOF while looking for matching ...` and returns 2)
+        // never touch executor state. Committing here keeps that 2 (and
+        // every other group status) observable as the shell's exit status
+        // instead of the stale pre-error status — rubash#508: a stdin
+        // script's syntax error must exit 2 like the identical file-driven
+        // run, whose driver returns the group status directly.
+        executor.set_last_exit_code(status);
+        let parse_error = executor.take_parse_error();
+        // DE-06 (design 9.3; PLAN row 12): a parse error is
+        // ending this stdin run — a selected `parse-error`
+        // filter reports the site and parks the session before
+        // the exit path runs; a stop-loop unwind from the park
+        // replaces the run's status with its own.
+        if parse_error {
+            let location = executor.shell_state.bash_source_stack.first().map(|file| {
+                crate::debugger::SourceLocation::new(file.clone(), pending_start_line as u32)
+            });
+            if let Err(ExecuteError::ExitCode(code)) = executor.debugger_note_exception_site(
+                crate::debugger::ExceptionKind::ParseError,
+                status,
+                location,
+            ) {
+                executor.set_last_exit_code(code);
+            }
+        }
+        pending.clear();
+        if parse_error
+            || executor.take_exit_jump_pending()
+            // rubash#2960: GNU eval.c:206-207 — this stdin reader is
+            // a principal reader, so a standing just_one_command ends
+            // it after the unit that left the flag standing, with
+            // that unit's status (already committed above).
+            || executor.onecmd_reader_stop()
+            || (status != 0
+                && stdin_script_errexit_enabled(executor)
+                // execute_cmd.c:652-656: `! CMD` status is errexit-exempt.
+                && !executor.last_command_inverted()
+                // rubash#2652: terminal status produced in a
+                // CMD_IGNORE_RETURN position is exempt.
+                && !executor.errexit_suppressed_terminal())
+        {
+            break;
+        }
+    }
+
+    if !pending.trim().is_empty() {
+        // Final list gathered at EOF (e.g. no trailing newline) — still
+        // one reader_loop iteration (eval.c:178); the walk increments it.
+        // The final group is read too, so the same read-time recording
+        // applies before it executes (rubash#1668).
+        record_stdin_group_if_armed(executor, &pending);
+        let status = run_source_with_line_offset(
+            executor,
+            &pending,
+            false,
+            pending_start_line.saturating_sub(1),
+            None,
+            None,
+        );
+        // Same group-status commit as the loop body above (rubash#508).
+        executor.set_last_exit_code(status);
+        let parse_error = executor.take_parse_error();
+        // DE-06 (design 9.3; PLAN row 12): the final group's
+        // parse error — same site treatment as the loop arm
+        // above.
+        if parse_error {
+            let location = executor.shell_state.bash_source_stack.first().map(|file| {
+                crate::debugger::SourceLocation::new(file.clone(), pending_start_line as u32)
+            });
+            if let Err(ExecuteError::ExitCode(code)) = executor.debugger_note_exception_site(
+                crate::debugger::ExceptionKind::ParseError,
+                status,
+                location,
+            ) {
+                executor.set_last_exit_code(code);
+            }
+        }
+        if parse_error
+            || executor.take_exit_jump_pending()
+            || (status != 0
+                && stdin_script_errexit_enabled(executor)
+                && !executor.last_command_inverted()
+                // rubash#2652: terminal status produced in a
+                // CMD_IGNORE_RETURN position is exempt.
+                && !executor.errexit_suppressed_terminal())
+        {
+            pending.clear();
+        }
+    }
+
+    let status = executor.last_exit_code();
+    let interactive = executor.invocation_interactive();
+    finish_shell(executor, status, interactive)
+}
+
+/// bashhist.c maybe_add_history gates recording on remember_on_history
+/// — the `history' set option, which defaults OFF for a non-interactive
+/// shell. This driver is the non-interactive stdin path, so an input
+/// group enters the history list only when the option is on at read
+/// time (after `set -o history', or `-o history' at startup). The list
+/// is created on demand under the history builtin's rule: this driver
+/// installs no session up front, so without the on-demand step every
+/// line between `set -o history' and the first `history' builtin was
+/// silently dropped (rubash#1629, #1668).
+fn record_stdin_group_if_armed(executor: &mut Executor, pending: &str) {
+    if executor.get_env("__RUBASH_SETOPT_history").as_deref() != Some("1") {
+        return;
+    }
+    let Some(session) = executor.ensure_session_history() else {
+        return;
+    };
+    let trimmed = pending.trim_end();
+    if trimmed.is_empty() {
+        return;
+    }
+    let control = executor.get_env("HISTCONTROL").unwrap_or_default();
+    let ignore = executor.get_env("HISTIGNORE").unwrap_or_default();
+    let histsize = SessionHistory::size_limit(executor.get_env("HISTSIZE"));
+    session
+        .borrow_mut()
+        .record(trimmed, &control, &ignore, histsize);
+}
+
+/// Whether a finish pass's stream-end duties write the engine
+/// session-history list (GAP-8, niubash#863): the consuming
+/// close defaults to `Run`; a host whose interactive history
+/// lives in its own provider gates the step off so the two
+/// stores never double-write (niu#642).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum FinishHistoryGate {
+    Run,
+    Skip,
+}
+
+/// One session finish as a step-decomposed pass (GAP-8,
+/// niubash#863): the single implementation behind
+/// [`finish_shell`], [`Session::close`] /
+/// [`Session::close_with_report`] and the contract guard
+/// `Session::begin_finish`. The steps are coarse and each is
+/// once-only; calling a later step completes any earlier step
+/// it depends on, in the pass's canonical order, so a caller
+/// can interleave its own duties (a post-trap cwd read, a
+/// host-provider history flush) between steps without ever
+/// re-deriving the order itself.
+///
+/// Canonical order, and the D1 adjudication it encodes: the
+/// PLAIN path follows GNU `exit_shell` (shell.c:985) — the
+/// EXIT trap runs (shell.c:1000-1002) BEFORE the history save
+/// (shell.c:1007-1009), because `maybe_save_shell_history`
+/// (bashhist.c:488) reads HISTFILE/HISTFILESIZE at the write,
+/// so the trap's own edits and additions govern the save. The
+/// TERMSIG path keeps the sig.c:590-667 funnel order exactly
+/// as built (history save first, SIGHUP hangup before the
+/// trap, die-by-signal last): when the duties step runs with a
+/// termsig death pending and the trap step has not run yet, it
+/// writes history BEFORE the trap step; on the plain path it
+/// runs the trap step first. A caller that runs the trap step
+/// standalone owns the interleaving from that point (the
+/// interactive host's shape: trap, then its own post-trap
+/// duties, with the engine history step gated off).
+pub(crate) struct FinishPass<'e> {
+    executor: &'e mut Executor,
+    /// The caller-supplied status the finish was opened with:
+    /// the EXIT trap observes it as its entry `$?` and a plain
+    /// completion resolves to it.
+    pending_status: i32,
+    interactive: bool,
+    trap_step_done: bool,
+    /// `pending_status` until the trap step resolves it.
+    resolved_status: i32,
+    /// Whether the EXIT trap action actually fired during this
+    /// pass (the runner's once-latch transition), as opposed to
+    /// being already consumed, exec-cleared, or never set.
+    trap_ran: bool,
+    marks_taken: bool,
+    termsig_death: Option<i32>,
+    termsig_trap_status: Option<i32>,
+    history_step_done: bool,
+    history_written: bool,
+    duties_done: bool,
+}
+
+impl<'e> FinishPass<'e> {
+    pub(crate) fn new(executor: &'e mut Executor, pending_status: i32, interactive: bool) -> Self {
+        Self {
+            executor,
+            pending_status,
+            interactive,
+            trap_step_done: false,
+            resolved_status: pending_status,
+            trap_ran: false,
+            marks_taken: false,
+            termsig_death: None,
+            termsig_trap_status: None,
+            history_step_done: false,
+            history_written: false,
+            duties_done: false,
+        }
+    }
+
+    pub(crate) fn resolved_status(&self) -> i32 {
+        self.resolved_status
+    }
+
+    pub(crate) fn trap_ran(&self) -> bool {
+        self.trap_ran
+    }
+
+    pub(crate) fn history_written(&self) -> bool {
+        self.history_written
+    }
+
+    pub(crate) fn duties_done(&self) -> bool {
+        self.duties_done
+    }
+
+    /// The session's working directory at this point of the
+    /// pass: read after the trap step, this is the post-trap
+    /// directory (the rubash#668 value).
+    pub(crate) fn final_cwd(&self) -> std::path::PathBuf {
+        self.executor.session_cwd().to_path_buf()
+    }
+
+    /// The trap step: termsig marks, SIGHUP hangup, the
+    /// end-of-stream job-notification flush, and the EXIT trap
+    /// itself, in the order `finish_shell` has always run them.
+    /// Returns the resolved status — the trap's own `exit`
+    /// overrides, plain completion keeps the pending status
+    /// (trap_exec.rs run_exit_trap_action). Once-only: a later
+    /// call returns the resolved status without re-running.
+    pub(crate) fn run_exit_trap(&mut self) -> i32 {
+        if self.trap_step_done {
+            return self.resolved_status;
+        }
+        self.trap_step_done = true;
+        // rubash#2233, generalized by rubash#2346: the
+        // termsig-death funnel's marks are taken here — this
+        // pass is their only consumer — so a stale mark can
+        // never leak into a later session in the same process.
+        // (In the pass as originally composed, the take sat
+        // between the history write and the hangup; see
+        // run_stream_end_duties for how the two orders share
+        // this take.)
+        if !self.marks_taken {
+            self.marks_taken = true;
+            self.termsig_death = self.executor.take_termsig_death_pending();
+            // rubash#2352: the EXIT trap's entry status under a
+            // termsig death — the value captured when the death
+            // was noted (the last command completed before the
+            // signal; trap.c:1036 trap_saved_exit_value =
+            // last_command_exit_value), NOT this finish's
+            // 128+sig unwind status. Taken with the mark; a
+            // death noted without a capture (none should exist)
+            // falls back to the unwind status rather than
+            // inventing one.
+            self.termsig_trap_status = self.executor.take_termsig_death_trap_status();
+        }
+        let termsig_death = self.termsig_death;
+        // sig.c:621-622 gates the job hangup on SIGHUP reaching
+        // an interactive (or comsub/procsub subshell) shell; a
+        // script shell caught by its EXIT trap — and any shell
+        // dying by another terminating signal — dies by the
+        // signal without it.
+        #[cfg(unix)]
+        if termsig_death == Some(libc::SIGHUP as i32) && self.executor.invocation_interactive() {
+            self.executor.hangup_all_jobs();
+        }
+        // rubash#1853: end-of-stream job notifications. The
+        // reader-level flush only fires when a NEXT list is pulled,
+        // so a signal death in the stream's last command would
+        // otherwise leave the shell silently (GNU prints it from the
+        // wait itself — jobs.c:3385 notify_and_cleanup in
+        // wait_for; jobs.c:4723 maybe_print_job_notifications).
+        // rubash#2928: the flush stamps foreground deaths with the
+        // last command's line and background deaths with the EOF
+        // pull's line (one past it); a `-c` run dropped its
+        // background entries before finish_shell (no second pull).
+        // This runs before the EXIT trap below, matching GNU's
+        // order.
+        let _ = self.executor.flush_job_notifications_at_stream_end();
+        // rubash#2352: under a termsig death the trap runs with
+        // the captured pre-signal status; every other finish
+        // keeps the caller's status (a plain exit's status IS
+        // its trap entry status). The late-mark re-take in the
+        // duties step never re-runs the trap — GNU
+        // short-circuits a second terminating signal straight
+        // to kill_shell — so the capture belongs to this first
+        // take alone.
+        let trap_entry_status = match (termsig_death, self.termsig_trap_status) {
+            (Some(_), Some(saved)) => saved,
+            _ => self.pending_status,
+        };
+        let latch_before = self.executor.exit_trap_ran.get();
+        let code = match self.executor.run_exit_trap_with_status(trap_entry_status) {
+            Ok(code) => code,
+            Err(ExecuteError::ExitCode(code)) => code,
+            Err(e) => {
+                if self.interactive {
+                    eprintln!("Error: {}", e);
+                } else {
+                    eprintln!("{}", e);
+                }
+                1
+            }
+        };
+        self.trap_ran = !latch_before && self.executor.exit_trap_ran.get();
+        self.resolved_status = code;
+        code
+    }
+
+    /// The session-history write, verbatim the step
+    /// `finish_shell` has always run (bashhist.c semantics);
+    /// its position relative to the trap step is the caller's
+    /// (see the type's order contract). Once-only; records
+    /// whether a write actually happened for the outcome.
+    fn run_history_write(&mut self) {
+        if self.history_step_done {
+            return;
+        }
+        self.history_step_done = true;
+        // shell.c:1007-1009 exit_shell: if remember_on_history is set,
+        // maybe_save_shell_history() writes the session's history to $HISTFILE
+        // (bashhist.c:488-530): append only this session's lines when the list
+        // was not stifled below them, rewrite the file otherwise, then
+        // sv_histsize("HISTFILESIZE") truncates the file (variables.c:6088).
+        {
+            // shell.c:1008: the save is gated on remember_on_history (the
+            // `history` set option), which `set +o history` clears. It is
+            // NOT gated on interactivity: a non-interactive shell that ran
+            // `set -o history` appends its session lines at exit too
+            // (rubash#1049 — the save used to sit inside `if interactive`).
+            let remember_on_history =
+                self.executor.get_env("__RUBASH_SETOPT_history").as_deref() == Some("1");
+            if remember_on_history {
+                if let Some(session) = self.executor.get_session_history() {
+                    let write_ts = self.executor.get_env("HISTTIMEFORMAT").is_some();
+                    let histfile = self.executor.get_env("HISTFILE").map(String::from);
+                    let histfilesize =
+                        SessionHistory::size_limit(self.executor.get_env("HISTFILESIZE"));
+                    let mut shell = session.borrow_mut();
+                    if shell.lines_this_session > 0 {
+                        if let Some(hf) = histfile.as_deref().filter(|hf| !hf.is_empty()) {
+                            let path = self.executor.resolve_shell_path(hf);
+                            let path_str = path.to_string_lossy().to_string();
+                            if !path.exists() {
+                                let _ = fs::write(&path, "");
+                            }
+                            // bashhist.c:513: force_append_history is the histappend
+                            // shopt; it always appends instead of rewriting.
+                            let force_append = self
+                                .executor
+                                .get_env("__RUBASH_SHOPT_STATE")
+                                .is_some_and(|s| s.split('\u{1f}').any(|e| e == "histappend"));
+                            if force_append || shell.lines_this_session <= shell.entries.len() {
+                                let _ = shell.append_file(&path_str, write_ts);
+                            } else {
+                                let _ = shell.write_file(&path_str, write_ts);
+                            }
+                            self.history_written = true;
+                            shell.lines_this_session = 0;
+                            if let Some(max) = histfilesize {
+                                let _ = shell.truncate_file(&path_str, max, write_ts);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// The stream-end duties: the history write (positioned by
+    /// the pass's order contract, gated per route) plus the
+    /// post-trap duties — debugger exit note, persistent
+    /// output procsub close, huponexit hangup, and the termsig
+    /// funnel's late re-take + die-by-signal. Once-only.
+    pub(crate) fn run_stream_end_duties(&mut self, history_gate: FinishHistoryGate) {
+        if self.duties_done {
+            return;
+        }
+        // D1 order (see the type documentation): the termsig
+        // funnel writes history BEFORE the trap (sig.c:613-618);
+        // the plain exit_shell path runs the trap first
+        // (shell.c:1000-1009). The decision reads the termsig
+        // mark without taking it — the trap step takes it, in
+        // both orders, at the point the built pass always did.
+        if !self.trap_step_done {
+            if self.executor.termsig_death_pending().is_some() {
+                if history_gate == FinishHistoryGate::Run {
+                    self.run_history_write();
+                } else {
+                    self.history_step_done = true;
+                }
+                self.run_exit_trap();
+            } else {
+                self.run_exit_trap();
+                if history_gate == FinishHistoryGate::Run {
+                    self.run_history_write();
+                } else {
+                    self.history_step_done = true;
+                }
+            }
+        } else if history_gate == FinishHistoryGate::Run {
+            self.run_history_write();
+        } else {
+            self.history_step_done = true;
+        }
+        self.duties_done = true;
+        let code = self.resolved_status;
+        // DE-09 (design WP-1 G-13): the driver finish side reports the
+        // final status to the session — never the EXIT funnel itself.
+        // Idempotent with the exit builtin's dispatch-side report: the
+        // first finish point to speak wins.
+        self.executor.debugger_note_exit(code);
+        // After the EXIT trap (whose writes still belong to the streams):
+        // shell exit closes every descriptor, so each still-open persistent
+        // output process substitution sees EOF and finishes — run the
+        // deferred bodies with their accumulated input (rubash#1336:
+        // `exec > >(tee log)` scripts lost the whole log at end-of-script).
+        self.executor
+            .close_all_persistent_output_process_substitutions();
+        // rubash#2233: the huponexit funnel (shell.c:1017-1020
+        // exit_shell) — an interactive LOGIN shell with the shopt set
+        // hangs up its jobs on the normal exit path. GNU's order is trap
+        // then hangup (the exit builtin runs the EXIT trap before
+        // exit_shell), mirrored here: for an `exit`-builtin finish the
+        // EXIT trap was already consumed at dispatch, and for an
+        // end-of-stream finish it ran above; the hangup follows. A
+        // hangup death already hung the jobs up in termsig order (before
+        // the trap) and is not repeated.
+        #[cfg(unix)]
+        if self.termsig_death.is_none()
+            && self.interactive
+            && self.executor.invocation_login()
+            && self
+                .executor
+                .get_env("__RUBASH_SHOPT_STATE")
+                .is_some_and(|s| s.split('\u{1f}').any(|e| e == "huponexit"))
+        {
+            self.executor.hangup_all_jobs();
+        }
+        // rubash#2233, generalized by rubash#2346: the termsig funnel
+        // ends in kill_shell (sig.c:649-667): restore SIG_DFL and
+        // re-raise, so after history, hangup, and the EXIT trap the
+        // process dies BY the signal rather than exiting 128+sig. A
+        // signal that landed while THIS finish was already running — its
+        // delivery drains inside the EXIT trap above and records the
+        // mark there, unwinding the trap with 128+sig — still owes the
+        // signal death, and (as GNU's termsig_sighandler short-circuits
+        // a second terminating signal through kill_shell with the NEW
+        // signal) it supersedes an earlier mark. Jobs get their hangup
+        // at this late point when the late signal is a SIGHUP the
+        // in-order funnel above did not already service.
+        #[cfg(unix)]
+        let termsig_death = match self.executor.take_termsig_death_pending() {
+            Some(late) => {
+                if self.termsig_death.is_none()
+                    && late == libc::SIGHUP as i32
+                    && self.executor.invocation_interactive()
+                {
+                    self.executor.hangup_all_jobs();
+                }
+                Some(late)
+            }
+            None => self.termsig_death,
+        };
+        #[cfg(unix)]
+        if let Some(sig) = termsig_death {
+            die_by_signal(sig);
+        }
+    }
+
+    /// The one-call pass: trap step + duties with the history
+    /// gate at `Run` (the consuming close's default). Returns
+    /// the resolved status.
+    pub(crate) fn finish_all(&mut self) -> i32 {
+        self.run_stream_end_duties(FinishHistoryGate::Run);
+        self.resolved_status
+    }
+}
+
+pub fn finish_shell(executor: &mut Executor, status: i32, interactive: bool) -> i32 {
+    let mut pass = FinishPass::new(executor, status, interactive);
+    pass.finish_all()
+}
+
+/// rubash#2233, generalized by rubash#2346: GNU sig.c:649-667
+/// kill_shell — restore the signal's default disposition and
+/// re-raise it so the process's wait status reports death BY that
+/// signal. The signal is explicitly unblocked first (a delivery
+/// could have been consumed while masked at some layer); the plain
+/// exit is the fallback that in practice is unreachable.
+#[cfg(unix)]
+fn die_by_signal(sig: i32) -> ! {
+    // SAFETY: disposition and mask changes plus a self-directed raise
+    // on the way out of the process; nothing is retained.
+    unsafe {
+        libc::signal(sig, libc::SIG_DFL);
+        let mut set: libc::sigset_t = std::mem::zeroed();
+        libc::sigemptyset(&mut set);
+        libc::sigaddset(&mut set, sig);
+        libc::sigprocmask(libc::SIG_UNBLOCK, &set, std::ptr::null_mut());
+        libc::raise(sig);
+    }
+    std::process::exit(128 + sig);
+}
+
+/// shell.c:1830-1842 init_interactive + bashhist.c:320-345: create the
+/// session history for an interactive (`-i`) shell and load $HISTFILE.
+/// Hosts (niu) call this before run_interactive_stdin when a forced
+/// interactive shell has no terminal to drive their own REPL on.
+pub fn prepare_interactive_history(executor: &mut Executor) {
+    // An installed HistoryProvider IS the shell's one list (same rule the
+    // grouped readers and execute_history follow, unixwin/niubash#508): no
+    // engine session may be created over it.
+    if executor.get_session_history().is_none() && !executor.has_history_provider() {
+        let session = std::rc::Rc::new(std::cell::RefCell::new(
+            crate::history::SessionHistory::new(),
+        ));
+        executor.set_session_history(Some(session));
+    }
+    initialize_interactive_history(executor);
+    // shell.c:816: directly after the interactive history setup, GNU runs
+    // get_tty_state() again — re-binding LINES/COLUMNS from the controlling
+    // terminal after the startup files (rubash#300). This runs before the
+    // -c string / script / interactive reader, so prompt-time code
+    // (PROMPT_COMMAND, PS1 expansions) sees console values under GNU, and
+    // now under rubash too.
+    bind_interactive_console_winsize(executor);
+}
+
+/// Outcome of [`pre_process_interactive_line`] (bashhist.c pre_process_line
+/// applied to one interactive line).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum InteractiveExpansion {
+    /// Execute this text: the expansion when history expansion modified the
+    /// line, otherwise the input verbatim.
+    Execute(String),
+    /// Do not execute the line (expansion error, or the `:p` print-only
+    /// modifier). The diagnostic or the printed expansion has already gone
+    /// to stderr and the history list was fixed the way GNU records it.
+    Discard,
+}
+
+/// bashhist.c:562 pre_process_line (print_changes=1, addit=1) integrated the
+/// way the GNU interactive reader does it (y.tab.c:5020): expand history in
+/// one accepted interactive line before the host parses it, print the
+/// expansion like GNU's `fprintf (stderr, "%s\n", history_value)`, and keep
+/// the history recording the EXPANDED text (maybe_add_history).
+///
+/// For interactive hosts whose line editor owns the accepted line (niubash /
+/// reedline). The event designators resolve against the host-installed
+/// [`crate::history::HistoryProvider`] list — the live interactive list —
+/// falling back to the engine's session history when no provider is set.
+/// A host editor that records the accepted line *before* execution (reedline
+/// does) sees that trailing raw entry hidden from its own expansion, the
+/// same way bashhist.c:576-580 decrements `history_length` to hide the
+/// current line, and sees it rewritten to the expansion afterwards (or
+/// removed when the expansion failed, which GNU never records).
+///
+/// Gating mirrors bashhist.c:574: `set +H` (the histexpand option) disables
+/// expansion; the caller asserts the interactive context by calling this —
+/// y.tab.c:5003 `remember_on_history` corresponds to the host's own
+/// recording being active, so the engine's `set -o history` flag is not
+/// consulted (interactive hosts keep it off deliberately because the host
+/// owns the list). An unset histexpand flag is GNU's interactive
+/// HISTEXPAND_DEFAULT (bashhist.c:288): on. Expansion state (histexpand.c
+/// statics) persists in the shell state across calls.
+pub fn pre_process_interactive_line(executor: &mut Executor, line: &str) -> InteractiveExpansion {
+    let posix = executor.get_env("__RUBASH_POSIX_MODE").as_deref() == Some("1");
+    let chars = executor.get_env("histchars").unwrap_or("!^#");
+    let mut chars = chars.chars();
+    let ctx = HistCtx {
+        chars: HistChars {
+            expand: chars.next().unwrap_or('!'),
+            subst: chars.next().unwrap_or('^'),
+            comment: chars.next().unwrap_or('#'),
+        },
+        posix,
+    };
+
+    // niubash#646: the dispatch of an accepted line is the engine's
+    // observation of the host's save-at-accept add — the moment GNU
+    // stamps the entry (bashhist.c maybe_add_history → really_add_history
+    // → add_history → readline/history.c hist_inittime). Reconciling the
+    // stamp ledger HERE (before the no-expansion early return below —
+    // most lines take it) is what makes an accepted line's stamp its
+    // add time rather than the time of the first later `history` call.
+    // A recording veto (`interactive_history_veto_recording`, set
+    // +o history) drops the entry afterwards and the ledger tail goes
+    // with it.
+    executor.sync_provider_stamp_ledger();
+
+    // bashhist.c:541-550 history_expansion_p: the expansion char or the
+    // quick-substitution char anywhere in the line.
+    let wants_expansion = line.contains(ctx.chars.expand) || line.contains(ctx.chars.subst);
+    // bashhist.c:574 gate on history_expansion; `set +H` writes the flag
+    // off, unset means the interactive default (bashhist.c:288).
+    let histexpand_on = executor.get_env("__RUBASH_SETOPT_histexpand").as_deref() != Some("0");
+    if !wants_expansion || !histexpand_on {
+        return InteractiveExpansion::Execute(line.to_string());
+    }
+
+    // The list events resolve against: the host provider owns the
+    // interactive list; the engine session is the fallback.
+    let mut scratch = SessionHistory::new();
+    let mut raw_preadded = false;
+    if let Some(mut entries) = executor.history_provider_snapshot() {
+        if entries.last().map(String::as_str) == Some(line) {
+            entries.pop();
+            raw_preadded = true;
+        }
+        scratch.entries = entries;
+    } else if let Some(session) = executor.get_session_history() {
+        scratch.entries = session.borrow().entries.clone();
+    }
+
+    // histexpand.c statics persist across expansions; they ride the shell
+    // state so later `!?` repeats and `:s` lhs reuse survive.
+    scratch.engine = std::mem::take(&mut executor.shell_state_mut().interactive_hist_engine);
+    let result = scratch.expand(line, ctx);
+    executor.shell_state_mut().interactive_hist_engine = scratch.engine;
+
+    match result.status {
+        -1 => {
+            // bashhist.c:594 internal_error ("%s", history_value): an
+            // interactive shell prefixes only the shell name (error.c
+            // report_prolog via get_name_for_error).
+            let name = executor
+                .get_env("__RUBASH_SHELL_NAME")
+                .as_deref()
+                .unwrap_or("bash")
+                .to_string();
+            eprintln!("{name}: {}", result.text);
+            // A failed expansion records nothing (GNU returns before
+            // maybe_add_history): undo the raw line the host editor added.
+            if raw_preadded {
+                executor.history_provider_replace_last(line, None);
+            }
+            InteractiveExpansion::Discard
+        }
+        2 => {
+            // expanded == 2: print-only (`:p`). bashhist.c:598-606 prints
+            // the expansion and maybe_add_history records the printed text.
+            eprintln!("{}", result.text);
+            if raw_preadded && !result.text.is_empty() {
+                executor.history_provider_replace_last(line, Some(result.text));
+            }
+            InteractiveExpansion::Discard
+        }
+        1 if shopt_state_enabled(executor, "histverify", false) => {
+            // shopt -s histverify: the expanded line goes back to the
+            // editor for verification instead of executing (bashhist.c
+            // pre_process_line's hist_verify redisplay). The host owns
+            // the edit buffer, so the in-repo contract is: do not execute,
+            // and record the EXPANDED text the way the :p arm records its
+            // printed line (rubash#1072).
+            if raw_preadded {
+                executor.history_provider_replace_last(line, Some(result.text.clone()));
+            }
+            InteractiveExpansion::Discard
+        }
+        1 => {
+            // Expanded (hist_verify off — no verify mode): print the
+            // expansion, then record the EXPANDED line, not the raw text.
+            eprintln!("{}", result.text);
+            if raw_preadded {
+                executor.history_provider_replace_last(line, Some(result.text.clone()));
+            }
+            InteractiveExpansion::Execute(result.text)
+        }
+        _ => InteractiveExpansion::Execute(result.text),
+    }
+}
+
+/// bashhist.c remember_on_history veto for interactive hosts, applied after
+/// a line executed: GNU records a read line only when `set -o history` was
+/// on when the line was read (maybe_add_history under remember_on_history).
+/// The host editor (reedline) records the accepted line *before* execution,
+/// so when the caller observed recording off at read time the entry this
+/// line left in the provider list (the raw line, or the expansion
+/// [`pre_process_interactive_line`] recorded) must be removed again.
+/// Unconditional drop of the last entry: in a single-threaded REPL nothing
+/// else records between read and this call. No-op without a provider.
+pub fn interactive_history_veto_recording(executor: &mut Executor) {
+    executor.history_provider_drop_last();
+}
+
+/// general.c:718-741 check_binary_file: a script whose first line (two when
+/// it starts with a #! interpreter specifier) contains NUL, or an ELF image,
+/// is refused with "cannot execute binary file" and EX_BINARY_FILE (126).
+pub fn check_binary_file(sample: &[u8]) -> bool {
+    if sample.len() >= 4
+        && sample[0] == 0x7f
+        && sample[1] == b'E'
+        && sample[2] == b'L'
+        && sample[3] == b'F'
+    {
+        return true;
+    }
+    if sample.is_empty() {
+        return false;
+    }
+    let mut lines_left = if sample[0] == b'#' && sample.len() >= 2 && sample[1] == b'!' {
+        2
+    } else {
+        1
+    };
+    for &byte in sample {
+        if byte == b'\n' {
+            lines_left -= 1;
+            if lines_left == 0 {
+                return false;
+            }
+        } else if byte == 0 {
+            return true;
+        }
+    }
+    false
+}
+
+/// Script-entry decoding companion to `check_binary_file`: GNU shell.c has
+/// no UTF-8 validity gate on script files, so after the binary-file check
+/// the raw bytes decode with invalid-sequence bytes carried as raw-byte
+/// marker pairs (rubash#132; general.c:718 check_binary_file is the only
+/// rejection). See substitution_metadata::bytes_to_script_text.
+pub fn bytes_to_script_text(bytes: &[u8]) -> String {
+    crate::executor::substitution_metadata::bytes_to_script_text(bytes)
+}
+
+/// `-c` operand entry escaping (rubash#948): literal marker-zone chars in
+/// user-supplied command strings are escaped like script source, while an
+/// existing `E400` + zone-char pair is protocol from a rubash parent and
+/// stays untouched. See substitution_metadata::command_string_entry_text.
+pub fn command_string_entry_text(command: &str) -> String {
+    crate::executor::substitution_metadata::command_string_entry_text(command)
+}
+
+/// Read a script-language file the way GNU shell.c does: raw bytes, then
+/// `check_binary_file`, then script-text decoding. Errors use the io error
+/// message (callers own their diagnostics).
+pub fn read_script_bytes(path: &std::path::Path) -> std::io::Result<String> {
+    let bytes = std::fs::read(path)?;
+    Ok(crate::executor::substitution_metadata::bytes_to_script_text(&bytes))
+}
+
+#[cfg(test)]
+mod group_text_scans_tests {
+    use super::{
+        fnbody_residuals_advance, stdin_source_has_unclosed_function_delimited_body,
+        stdin_source_is_function_signature, stdin_source_text_needs_more, FnBodyResidualState,
+        GroupTextScans,
+    };
+
+    /// Drive one FnBody delimiter scanner exactly like
+    /// GroupTextScans::advance_fnbody (raw line + '\n' per prefix) and
+    /// assert the answer equals the oracle's at EVERY prefix.
+    fn assert_fnbody_matches_full(lines: &[&str], delim: char) {
+        let mut chars: Vec<char> = Vec::new();
+        let mut pending = String::new();
+        let mut resume = 0usize;
+        let mut snapshot = FnBodyResidualState::default();
+        for (line_index, line) in lines.iter().enumerate() {
+            chars.extend(line.chars());
+            chars.push('\n');
+            pending.push_str(line);
+            pending.push('\n');
+            let mut state = snapshot.clone();
+            let park = fnbody_residuals_advance(&chars, resume, &mut state, delim, &pending);
+            assert_eq!(
+                state.is_open(),
+                stdin_source_has_unclosed_function_delimited_body(&pending, delim),
+                "fnbody {delim} answer at prefix {line_index} of {lines:?} ({pending:?})"
+            );
+            match park {
+                Some(park) => {
+                    resume = park.pos;
+                    snapshot = park.snapshot;
+                }
+                None => {
+                    resume = chars.len();
+                    snapshot = state;
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn fnbody_incremental_matches_full_required_shapes() {
+        // Classic function definitions: the body delimiter holds the group
+        // open until its closer arrives.
+        for delim in ['{', '('] {
+            assert_fnbody_matches_full(&["f() {", "  :", "}"], delim);
+            assert_fnbody_matches_full(&["function f {", "  :", "}"], delim);
+            assert_fnbody_matches_full(&["f()", "{", "}"], delim);
+            // Non-signature prefixes: the delimiter is found but the
+            // signature check fails — never open.
+            assert_fnbody_matches_full(&["echo {", "a", "}"], delim);
+            assert_fnbody_matches_full(&["x=(1", "2)", "y"], delim);
+            // Quoted/commented delimiters are not openers.
+            assert_fnbody_matches_full(&["f() '#{'", "x", "y"], delim);
+            // Deeply nested same-delimiter bodies.
+            assert_fnbody_matches_full(&["f() {", "{ {", "} }", "}"], delim);
+            // Subshell in the signature area (rejected `(` for the paren
+            // scanner, plain text for the brace scanner).
+            assert_fnbody_matches_full(&["(a", "b)", "f() {", "}"], delim);
+        }
+    }
+
+    #[test]
+    fn fnbody_incremental_matches_full_park_shapes() {
+        // The paren scanner's undecided `(`-followed-by-whitespace tail:
+        // prefix 1 accepts the `(` as the body delimiter (EOF decides),
+        // prefix 2's `)` flips the rejection and the search restarts fresh
+        // from just past it.
+        assert_fnbody_matches_full(&["f (", ")", "{ :; }"], '(');
+        assert_fnbody_matches_full(&["f (  ", "\t)", "{ :; }"], '(');
+        assert_fnbody_matches_full(&["f (", ") { :; }", ""], '(');
+        assert_fnbody_matches_full(&["a=1 f (", ")"], '(');
+        // The brace scanner has no park (monotone search + depth fold) but
+        // must still agree on every shape that CAN flip: a `{` arriving on
+        // a later line inside a still-open group.
+        assert_fnbody_matches_full(&["f() {", "{", "}"], '{');
+        // CRLF-shaped input: the '\r' before '\n' is word data.
+        assert_fnbody_matches_full(&["f() {\r", "\r}\r"], '{');
+    }
+
+    /// Deterministic LCG so a failure reproduces bit for bit.
+    struct Lcg(u64);
+    impl Lcg {
+        fn next(&mut self) -> u64 {
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
+            self.0 >> 33
+        }
+    }
+
+    /// Seeded fuzz (>=2000 required; 4000 for parity) over both delimiters.
+    #[test]
+    fn fnbody_incremental_matches_full_randomized() {
+        const FRAGMENTS: &[&str] = &[
+            "f() ",
+            "function f ",
+            "{ ",
+            "} ",
+            "( ",
+            ") ",
+            "((",
+            ")) ",
+            "'q'",
+            "\"q",
+            "q\"",
+            "$( ",
+            "$(( ",
+            "` ",
+            "${x}",
+            "#c ",
+            "case ",
+            "esac",
+            " in ",
+            "; ",
+            "&&",
+            "|",
+            " a ",
+            "echo ",
+            "x=( ",
+            "\\ ",
+            "f1 (",
+            ") ",
+            "name ()",
+            " { ",
+            "if ",
+            "then",
+            "fi",
+        ];
+        let mut rng = Lcg(0x292_0000_0005);
+        for case in 0..4000u64 {
+            let fragment_count = 2 + (rng.next() % 6) as usize;
+            let mut fragments = Vec::with_capacity(fragment_count);
+            for _ in 0..fragment_count {
+                fragments.push(FRAGMENTS[(rng.next() as usize) % FRAGMENTS.len()]);
+            }
+            let max_lines = 4.min(fragment_count) as u64;
+            let line_count = (1 + (rng.next() % max_lines)) as usize;
+            let mut lines: Vec<String> = vec![String::new(); line_count];
+            for (i, fragment) in fragments.iter().enumerate() {
+                let target = if line_count == 1 {
+                    0
+                } else {
+                    (i * line_count / fragment_count).min(line_count - 1)
+                };
+                lines[target].push_str(fragment);
+            }
+            let lines: Vec<&str> = lines.iter().map(String::as_str).collect();
+            assert_fnbody_matches_full(&lines, if case % 2 == 0 { '{' } else { '(' });
+        }
+    }
+
+    /// The whole battery: GroupTextScans::needs_more must equal
+    /// stdin_source_text_needs_more (the fresh scan it replaces) at EVERY
+    /// appended-line prefix, for both POSIX modes — covering the quotes and
+    /// comsub machines re-driven over the pending mirror as well as the
+    /// perf9 machines and the fresh-tail probes.
+    fn assert_battery_matches_fresh(lines: &[&str], posix: bool) {
+        let mut scans = GroupTextScans::new(posix);
+        let mut pending = String::new();
+        for (line_index, line) in lines.iter().enumerate() {
+            let raw = format!("{line}\n");
+            pending.push_str(&raw);
+            scans.push_raw_line(&raw);
+            assert_eq!(
+                scans.needs_more(&pending, false),
+                stdin_source_text_needs_more(&pending, posix),
+                "battery at prefix {line_index} of {lines:?} posix={posix} ({pending:?})"
+            );
+        }
+    }
+
+    #[test]
+    fn battery_matches_fresh_required_shapes() {
+        for posix in [false, true] {
+            // Multi-line quotes / comsub / subshell / funsub / subscript.
+            assert_battery_matches_fresh(&["echo 'a", "b' c"], posix);
+            assert_battery_matches_fresh(&["echo $(a", "b) c"], posix);
+            assert_battery_matches_fresh(&["echo ${ a", "; } b"], posix);
+            assert_battery_matches_fresh(&["(a", "b)"], posix);
+            assert_battery_matches_fresh(&["x=(1", "2)"], posix);
+            assert_battery_matches_fresh(&["a[b", "c"], posix);
+            // Function bodies keep the group open (the delimiter scans).
+            assert_battery_matches_fresh(&["f() {", "  :", "}"], posix);
+            assert_battery_matches_fresh(&["f (", ") { :; }", ""], posix);
+            assert_battery_matches_fresh(&["function f {", ":"], posix);
+            // Backslash continuations.
+            assert_battery_matches_fresh(&["echo a \\", "b"], posix);
+            assert_battery_matches_fresh(&["f() { \\", ":"], posix);
+            // The residual-false-positive override family: the corrected
+            // balancer says balanced, the group must NOT stay open on this
+            // arm (whatever the token level does with it).
+            assert_battery_matches_fresh(&["echo $(case a in a) echo x", "esac)"], posix);
+            // POSIX Interp 221: `'` inside `"${...}"` is literal.
+            assert_battery_matches_fresh(&["echo \"${IFS+'bar", "}\" x"], posix);
+            // Closed everything.
+            assert_battery_matches_fresh(&["echo a b", "c d"], posix);
+        }
+    }
+
+    #[test]
+    fn battery_matches_fresh_park_shapes() {
+        for posix in [false, true] {
+            // Every tail-lookahead park, exercised by a second line that
+            // materializes the lookahead.
+            assert_battery_matches_fresh(&["echo ${", " x; } b"], posix);
+            assert_battery_matches_fresh(&["echo $(", "(1+2))"], posix);
+            assert_battery_matches_fresh(&["echo $", "'a'"], posix);
+            assert_battery_matches_fresh(&["echo x=\\", "(1 2)"], posix);
+            assert_battery_matches_fresh(&["a[$", "(b)]"], posix);
+            assert_battery_matches_fresh(&["a[`b", "c`]", "=1"], posix);
+            assert_battery_matches_fresh(&["echo $(case a in x) esac)", ";; )"], posix);
+            // The fnbody paren park flipping on the next line.
+            assert_battery_matches_fresh(&["f (", ")", "{ :; }"], posix);
+        }
+    }
+
+    /// Seeded fuzz (>=2000 required; 4000, both POSIX modes).
+    #[test]
+    fn battery_matches_fresh_randomized() {
+        const FRAGMENTS: &[&str] = &[
+            "$( ",
+            ") ",
+            "$((",
+            ")) ",
+            "` ",
+            "${",
+            "${ ",
+            "${x}",
+            "}",
+            "'a'",
+            "\"q",
+            "q\"",
+            "\\",
+            "#c ",
+            "case ",
+            "esac",
+            "esac)",
+            " in ",
+            "; ",
+            ";; ",
+            "&&",
+            "|",
+            "f() ",
+            "function f ",
+            "{ ",
+            "} ",
+            "( ",
+            "a[",
+            "] ",
+            "x=(",
+            " a ",
+            "echo ",
+            " $' ",
+            "'",
+            "\"",
+            "$(",
+            "`",
+            ")",
+            "${a:-${b",
+            "name ()",
+            "if ",
+            "then",
+            "fi",
+        ];
+        let mut rng = Lcg(0x292_0000_0006);
+        for case in 0..4000u64 {
+            let fragment_count = 2 + (rng.next() % 6) as usize;
+            let mut fragments = Vec::with_capacity(fragment_count);
+            for _ in 0..fragment_count {
+                fragments.push(FRAGMENTS[(rng.next() as usize) % FRAGMENTS.len()]);
+            }
+            let max_lines = 4.min(fragment_count) as u64;
+            let line_count = (1 + (rng.next() % max_lines)) as usize;
+            let mut lines: Vec<String> = vec![String::new(); line_count];
+            for (i, fragment) in fragments.iter().enumerate() {
+                let target = if line_count == 1 {
+                    0
+                } else {
+                    (i * line_count / fragment_count).min(line_count - 1)
+                };
+                lines[target].push_str(fragment);
+            }
+            let lines: Vec<&str> = lines.iter().map(String::as_str).collect();
+            assert_battery_matches_fresh(&lines, case % 2 == 0);
+        }
+    }
+
+    /// The fresh signature probe the battery keeps (fast-reject) must agree
+    /// with the oracle's own shapes at group prefixes.
+    #[test]
+    fn function_signature_probe_shapes() {
+        assert!(stdin_source_is_function_signature("f()\n"));
+        assert!(stdin_source_is_function_signature("function f\n"));
+        assert!(stdin_source_is_function_signature("'a b c' ()\n"));
+        assert!(!stdin_source_is_function_signature("echo hi\n"));
+        assert!(!stdin_source_is_function_signature("a=2 (\n"));
+    }
+}
+
+#[cfg(test)]
+mod issue302_tests {
+    use super::*;
+
+    #[test]
+    fn function_keyword_paren_form_is_a_signature() {
+        // parse.y:1056 FUNCTION WORD '(' ')' newline_list function_body:
+        // `function f()` awaits its body exactly like `f()` (parse.y:1054)
+        // and `function f` (parse.y:1058).
+        assert!(stdin_source_is_function_signature("function f()"));
+        assert!(stdin_source_is_function_signature("function f ()"));
+        assert!(stdin_source_is_function_signature("function f"));
+        assert!(stdin_source_is_function_signature("f()"));
+        assert!(stdin_source_is_function_signature("f ()"));
+        // Complete constructs are not bare signatures.
+        assert!(!stdin_source_is_function_signature("function f() { :; }"));
+        assert!(!stdin_source_is_function_signature("echo function f()"));
+    }
+
+    #[test]
+    fn function_keyword_paren_form_keeps_body_open() {
+        assert!(stdin_source_text_needs_more("function f()\n", false));
+        assert!(stdin_source_text_needs_more("function f()\n{\n", false));
+        assert!(!stdin_source_text_needs_more(
+            "function f()\n{ :; }\n",
+            false
+        ));
+    }
+}
+
+/// perf10 token-reuse differential: the source driver's gather
+/// (read_next_source_group) may hand its committed tokens to the group parse
+/// in place of a fresh whole-text re-lex, under the three certified
+/// conditions (non-alias arm / complete break / no effective extglob
+/// toggle — see read_next_source_group's doc). These tests drive the real
+/// gather over corpus texts and assert, for every group the PRODUCT
+/// actually parses through reuse, that the reused stream (after the
+/// caller's tokenize_comsub_body_with_origin trailing-separator pop) is
+/// byte-identical — every Token field — to a fresh re-lex of the same
+/// group bytes, with the same gather-then-parse interleaving production
+/// uses (so the extglob global's timeline matches too).
+///
+/// Trim-empty groups are outside that contract and skipped by the
+/// comparison, mirroring the consumer exactly: run_source_groups gates
+/// `if exec_text.trim().is_empty() { continue; }` BEFORE the token stage
+/// (builtins/source/execution.rs), and the fresh route short-circuits the
+/// same predicate inside tokenize_comsub_body_with_origin — so a group
+/// whose text is Rust-trim-empty parses NOTHING through either route and
+/// the two representations are never compared or parsed. Their internal
+/// difference is real but product-unreachable and platform-dependent: on
+/// non-Windows a `\r`-only line keeps its CR (push_main_line's
+/// cfg!(windows) strip) and reaches scanner.rs's `'\r'` arm, which lexes
+/// it as a line-break Semicolon (GNU keeps `\r` as word data — a CRLF
+/// script under GNU prints `$'\r': command not found`), while the fresh
+/// route's trim shortcut returns []. The skipped-group assertion below
+/// pins the fresh side of that carve-out so the predicate cannot drift
+/// silently.
+#[cfg(test)]
+mod perf10_token_reuse_tests {
+    use super::*;
+
+    fn assert_reuse_matches_fresh(text: &str) -> usize {
+        crate::lexer::set_parse_extended_glob(false);
+        let mut executor = Executor::new();
+        executor.shell_state.aliases.clear();
+        let raw_lines: Vec<&str> = text.split_inclusive('\n').collect();
+        let mut index = 0usize;
+        let mut reused = 0usize;
+        while let Some((pending, _start_line, _group, feeder_tokens, _info)) =
+            read_next_source_group(&executor, &raw_lines, &mut index)
+        {
+            // run_source_groups' own first gate: a trim-empty group is
+            // skipped before any tokens exist on either route.
+            if pending.trim().is_empty() {
+                assert!(
+                    tokenize_with_initial_posix(&pending, false).is_empty(),
+                    "trim-empty group {:?} must lex to nothing via the fresh route",
+                    &pending[..pending.len().min(80)]
+                );
+                continue;
+            }
+            let Some(mut tokens) = feeder_tokens else {
+                continue;
+            };
+            if tokens
+                .last()
+                .is_some_and(|token| token.kind == TokenKind::Semicolon)
+            {
+                tokens.pop();
+            }
+            let fresh = tokenize_with_initial_posix(&pending, false);
+            let head = &pending[..pending.len().min(160)];
+            assert_eq!(
+                format!("{tokens:?}"),
+                format!("{fresh:?}"),
+                "reused vs fresh token streams differ for group starting {head:?}"
+            );
+            reused += 1;
+        }
+        assert!(
+            reused > 0,
+            "no group exercised token reuse for text starting {:?}",
+            &text[..text.len().min(80)]
+        );
+        reused
+    }
+
+    #[test]
+    fn reuse_matches_fresh_plain_and_function_groups() {
+        assert_reuse_matches_fresh("echo hi\necho there\n");
+        assert_reuse_matches_fresh("nvm_install() {\n  echo a\n  echo b\n}\necho done\n");
+        assert_reuse_matches_fresh("{\n  echo one\n  echo two\n}\nafter\n");
+    }
+
+    #[test]
+    fn reuse_matches_fresh_brace_group_with_noise() {
+        // `}` bytes inside strings, comments, and case patterns while the
+        // outer brace group stays open (the nvm.sh shape).
+        assert_reuse_matches_fresh(
+            "{\n  x='str with } inside'\n  # comment with } brace\n  case $x in\n    a) echo A ;;\n    *) echo B ;;\n  esac\n}\n",
+        );
+    }
+
+    #[test]
+    fn reuse_matches_fresh_heredocs() {
+        assert_reuse_matches_fresh("cat <<EOF\nbody line 1\nbody } line\nEOF\necho after\n");
+        assert_reuse_matches_fresh("cat <<'EOF'\nquoted $body }\nEOF\necho after\n");
+        assert_reuse_matches_fresh("cat <<-EOF\n\tindented body\n\tEOF\necho after\n");
+        assert_reuse_matches_fresh("cat <<EOF && cat <<EOF2\nbody1\nEOF\nbody2\nEOF2\n");
+    }
+
+    #[test]
+    fn reuse_matches_fresh_continuations_and_connectors() {
+        assert_reuse_matches_fresh("echo one \\n  two \\n  three\necho next\n");
+        assert_reuse_matches_fresh("echo one &&\n  echo two ||\n  echo three\n");
+        assert_reuse_matches_fresh("a=b \\n c=d \\n echo $a$c\n");
+    }
+
+    #[test]
+    fn reuse_matches_fresh_comsub_and_param_spans() {
+        assert_reuse_matches_fresh("x=$(echo sub\n  continued)\necho $x\n");
+        assert_reuse_matches_fresh("echo ${var:-\n  default}\n");
+        assert_reuse_matches_fresh("arr=(\n  one\n  two\n)\necho ${arr[1]}\n");
+    }
+
+    #[test]
+    fn reuse_matches_fresh_crlf_and_blank_lines() {
+        assert_reuse_matches_fresh("echo a\r\necho b\r\n\r\necho c\n");
+        assert_reuse_matches_fresh("echo a\n\n\necho b\n");
+        assert_reuse_matches_fresh("echo tail-no-newline");
+    }
+
+    #[test]
+    fn sourced_blank_crlf_line_executes_nothing_on_every_platform() {
+        // Product-level guard for the trim-empty carve-out documented on
+        // assert_reuse_matches_fresh: a line holding ONLY a CR (a blank CRLF
+        // line) must not execute as a command through the source group
+        // driver (where token reuse lands). run_source_groups'
+        // `exec_text.trim().is_empty()` gate skips the group before tokens
+        // exist on either route, and a bare `\r` never forms a word anyway
+        // (scanner.rs's '\r' arm lexes a line-start CR as a line-break
+        // Semicolon — `\r` only becomes word DATA when glued behind a word
+        // character, which is why the commands around the blank line are
+        // LF-terminated here). Observable contract, identical pre- and
+        // post-reuse on every platform: the assignment AFTER the blank line
+        // runs (X == 2) and no stray `$'\r': command not found` leaks into
+        // the sourced status (0).
+        let mut executor = Executor::new();
+        executor.shell_state.aliases.clear();
+        crate::builtins::source::execute_text(&mut executor, "X=1\n\r\nX=2\n")
+            .expect("source of a three-group text with a blank CRLF line");
+        assert_eq!(
+            executor.get_env("X").map(str::to_string),
+            Some("2".to_string()),
+            "the group after the blank CRLF line must run"
+        );
+        assert_eq!(
+            executor.last_exit_code(),
+            0,
+            "blank CRLF group must be skipped, not executed as a command"
+        );
+    }
+
+    /// rubash#1961 alias-arm certification differential: with a live
+    /// alias table the gather feeds the streaming expansion to the same
+    /// feeder the raw arm uses. Whenever it hands back tokens, they
+    /// must be byte-identical (after the caller's trailing-separator
+    /// pop) to a fresh re-lex of the batch expansion of the group, and
+    /// the certified text must BE that batch expansion. Groups that
+    /// break on a parked candidate's batch fallback carry no tokens
+    /// and no certification; EOF-tail groups must report
+    /// known_incomplete and carry neither.
+    fn assert_alias_reuse_matches_fresh(text: &str) -> usize {
+        crate::lexer::set_parse_extended_glob(false);
+        let mut executor = Executor::new();
+        executor.set_env("__RUBASH_SHOPT_STATE", "expand_aliases");
+        executor.shell_state.aliases.insert(
+            "ll".to_string(),
+            crate::builtins::alias::Alias::new("ls -l"),
+        );
+        executor
+            .shell_state
+            .aliases
+            .insert("ec".to_string(), crate::builtins::alias::Alias::new("echo"));
+        let raw_lines: Vec<&str> = text.split_inclusive('\n').collect();
+        let mut index = 0usize;
+        let mut reused = 0usize;
+        while let Some((pending, _start_line, _group, feeder_tokens, info)) =
+            read_next_source_group(&executor, &raw_lines, &mut index)
+        {
+            if info.known_incomplete {
+                assert!(
+                    feeder_tokens.is_none(),
+                    "EOF-tail group must not carry tokens: {pending:?}"
+                );
+                assert!(
+                    info.certified_expanded.is_none(),
+                    "EOF-tail group must not certify: {pending:?}"
+                );
+                continue;
+            }
+            let exec_text = expand_group_aliases(&executor, &pending);
+            if exec_text.trim().is_empty() {
+                continue;
+            }
+            let Some(mut tokens) = feeder_tokens else {
+                continue;
+            };
+            assert_eq!(
+                info.certified_expanded.as_deref(),
+                Some(exec_text.as_str()),
+                "certified text must be the batch expansion for group {pending:?}"
+            );
+            if tokens
+                .last()
+                .is_some_and(|token| token.kind == TokenKind::Semicolon)
+            {
+                tokens.pop();
+            }
+            let fresh = tokenize_with_initial_posix(&exec_text, false);
+            assert_eq!(
+                format!("{tokens:?}"),
+                format!("{fresh:?}"),
+                "alias-arm reused vs fresh token streams differ for group starting {:?}",
+                &pending[..pending.len().min(160)]
+            );
+            reused += 1;
+        }
+        reused
+    }
+
+    #[test]
+    fn alias_arm_reuse_matches_fresh_expansion() {
+        assert!(assert_alias_reuse_matches_fresh("ll /tmp\nec hi\n") >= 1);
+        assert!(
+            assert_alias_reuse_matches_fresh("nvm_install() {\n  ll a\n  ec b\n}\nec done\n") >= 1
+        );
+        assert_alias_reuse_matches_fresh("cat <<EOF\nll in body stays raw\nEOF\nll after\n");
+        assert_alias_reuse_matches_fresh("ec 'one\ntwo'\nll x\n");
+        assert_alias_reuse_matches_fresh("x=$(ec inner)\nll after\n");
+        // EOF tail: an unclosed brace group reports known_incomplete
+        // and reuses nothing.
+        assert_eq!(assert_alias_reuse_matches_fresh("{\n  ll a\n"), 0);
+    }
+
+    #[test]
+    fn reuse_matches_fresh_posix_flip_lines_inside_group() {
+        // `set -o posix` mid-file flips the feeder's internal parse mode per
+        // logical line; both the streaming feed and a fresh re-lex replay
+        // the same flip at the same line, so reuse stays equivalent. (The
+        // EXECUTOR mode only changes at exec time, group by group.)
+        assert_reuse_matches_fresh(
+            "echo before\nset -o posix\necho '\"$x\"' inside\nset +o posix\necho after\n",
+        );
+    }
+
+    #[test]
+    fn extglob_flip_group_refuses_reuse() {
+        crate::lexer::set_parse_extended_glob(false);
+        let mut executor = Executor::new();
+        executor.shell_state.aliases.clear();
+        let text = "echo before-extglob\nshopt -s extglob\ncase x in ?(a)) echo pat ;; esac\n";
+        let raw_lines: Vec<&str> = text.split_inclusive('\n').collect();
+        let mut index = 0usize;
+        let mut refused_seen = false;
+        while let Some((_pending, _start, _group, feeder_tokens, _info)) =
+            read_next_source_group(&executor, &raw_lines, &mut index)
+        {
+            if feeder_tokens.is_none() {
+                refused_seen = true;
+            }
+        }
+        assert!(
+            refused_seen,
+            "a group with an effective shopt extglob toggle must refuse reuse"
+        );
+        crate::lexer::set_parse_extended_glob(false);
+    }
+
+    #[test]
+    fn reuse_matches_fresh_nvm_corpus() {
+        // The vendored nvm.sh v0.40.8 (172906 bytes): the load probe's
+        // exact fixture. Exercises the whole gather over ~4500 lines.
+        let text = std::fs::read_to_string("benchmarks/corpus/nvm.sh")
+            .expect("benchmarks/corpus/nvm.sh vendored in-repo");
+        assert_reuse_matches_fresh(&text);
+    }
+}

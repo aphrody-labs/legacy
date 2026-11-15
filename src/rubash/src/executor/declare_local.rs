@@ -1,0 +1,3109 @@
+use super::*;
+use crate::executor::builtin_diag::{Diag, DiagKind};
+use crate::executor::builtin_opt::{BuiltinOpt, OptEvent};
+use crate::executor::builtin_table::{builtin_table_row, BuiltinRow, OptSpec};
+use crate::executor::markers::STORAGE_WORD_PREFIX;
+
+/// Scan a declare/typeset command line the way GNU's internal getopt
+/// scans it (declare.def DECLARE_OPTS "acfgilnprtuxAFGI"): every
+/// `-`/`+` word contributes its letters in order, up to a `--`
+/// terminator or the first letter outside the option set — getopt
+/// reports that letter and the scan goes no further. Returns the valid
+/// letters seen and the first invalid letter, if any. Substring tests
+/// like `word.contains('f')` mistake operand text for options — the
+/// word `--badflag` contains both `f` and `a`, which routed plain
+/// `declare --badflag` into the function path and reported `-a`
+/// (rubash#1259).
+/// Pair each subscript-rewritten declare operand with its written form
+/// (see WrittenOperandHints in builtins::declare): right after
+/// rewrite_declare_operand_subscripts the two lists are positionally
+/// aligned, so zip them and keep only the operands the rewrite actually
+/// changed, keyed by the rewritten `name[subscript]` prefix.
+fn declare_written_operand_hints(
+    written_args: &[String],
+    rewritten_args: &[String],
+) -> crate::builtins::declare::WrittenOperandHints {
+    let mut hints = crate::builtins::declare::WrittenOperandHints::default();
+    for (written, rewritten) in written_args.iter().zip(rewritten_args.iter()) {
+        if written != rewritten {
+            if let Some(key) = crate::builtins::declare::element_word_prefix(rewritten) {
+                hints.entry(key).or_default().push_back(written.clone());
+            }
+        }
+    }
+    hints
+}
+
+/// The declare-family option letters, derived from the table
+/// row (D1 — the spec IS the table, declare.def:145
+/// `DECLARE_OPTS "+acfgilnprtuxAFGI"`), never a hand-copied
+/// constant: rubash#2582 was three hand-copied tables disagreeing
+/// in both directions. The row's spec string carries its leading
+/// `+` (plus mode); the letters are everything after it.
+pub(in crate::executor) fn declare_option_letters() -> &'static str {
+    match builtin_table_row("declare").expect("declare row").opt_spec {
+        OptSpec::Getopt(spec) => spec.trim_start_matches(['+', '-']),
+        _ => "",
+    }
+}
+
+/// Whether a declare-family invocation carries NAME operands (as
+/// opposed to only option clusters): the walk mirrors
+/// declare_option_scan's stop rules — `--` ends the option run and
+/// every later word is an operand, a lone `-`/`+` is an operand, and
+/// any word that does not open an option cluster is an operand.
+fn declare_invocation_has_operands(args: &[String]) -> bool {
+    let mut options_open = true;
+    for arg in args {
+        if options_open && arg == "--" {
+            options_open = false;
+            continue;
+        }
+        if options_open && (arg.starts_with('-') || arg.starts_with('+')) && arg.len() > 1 {
+            continue;
+        }
+        return true;
+    }
+    false
+}
+
+/// Scan the option region of a declare-family invocation with the
+/// row's own machine: BuiltinOpt stops at the first non-option word
+/// exactly like GNU internal_getopt, so `-f` after an operand is an
+/// operand, never a diversion (the old `scan_declare_options`
+/// skipped operands and kept scanning). Returns the (letter, set?)
+/// pairs seen in the option region, in order, plus the first
+/// invalid letter, if any. The invalid letter is rendered lossy
+/// (U+FFFD for a non-ASCII byte, the codebase's standard rendering
+/// — cf. `builtin_opt::diagnostic_byte`): it comes from user argv
+/// and must never be widened with `as char`. Diagnostics go to a
+/// discard sink: the callers that REPORT an invalid letter (the
+/// function face, the local validator) do so themselves from the
+/// returned value.
+fn declare_option_scan(
+    row: &'static BuiltinRow,
+    args: &[String],
+) -> (Vec<(char, bool)>, Option<String>) {
+    // Fast path: when the row's spec takes no option arguments
+    // (no `:`/`;`/`#` kinds), the machine is a pure byte scan —
+    // every event is a flag letter, `OptArg` cannot occur, and the
+    // scan below reproduces the machine's stop rules exactly
+    // (option-word gate, `--help`, `--`, first invalid byte ends
+    // the scan with that byte as `optopt`). This predicate runs
+    // several times per declare-family call (the function-face
+    // gate, the allexport post-pass, `local`), and constructing
+    // the full machine + a discard Diag for it was a measurable
+    // per-call tax (E4, PR #2968). Specs with argument kinds keep
+    // the machine path.
+    if let OptSpec::Getopt(spec) = row.opt_spec {
+        if let Some(scanned) = scan_flag_only_spec(spec, args) {
+            return scanned;
+        }
+    }
+    let mut sink = Vec::new();
+    let mut diag = Diag::new(row, &mut sink);
+    let mut opt = BuiltinOpt::new(row, args, &mut diag, false);
+    let mut letters = Vec::new();
+    loop {
+        match opt.next() {
+            OptEvent::Opt(c) => letters.push((c as char, opt.opttype() == b'-')),
+            OptEvent::OptArg(_, _) => {}
+            OptEvent::Help | OptEvent::End => break,
+        }
+    }
+    (
+        letters,
+        opt.optopt()
+            .map(|c| String::from_utf8_lossy(&[c]).into_owned()),
+    )
+}
+
+/// The byte-scan form of `declare_option_scan` for a flag-only
+/// spec (see the fast path there): returns the (letter, set?)
+/// pairs in scan order and the first invalid byte rendered lossy,
+/// or `None` when the spec is not flag-only (an argument-kind
+/// marker is present) and the caller must use the machine.
+fn scan_flag_only_spec(
+    spec: &'static str,
+    args: &[String],
+) -> Option<(Vec<(char, bool)>, Option<String>)> {
+    let bytes = spec.as_bytes();
+    let plus = bytes.first() == Some(&b'+');
+    let letter_bytes: &[u8] = if plus { &bytes[1..] } else { bytes };
+    // A `:` in letter position is inert to the parser (fc's
+    // leading one), but any argument-kind marker anywhere means
+    // some letter takes an argument — not flag-only.
+    if letter_bytes.iter().any(|b| matches!(b, b':' | b';' | b'#')) {
+        return None;
+    }
+    let mut letters = Vec::new();
+    let mut optopt = None;
+    'words: for word in args {
+        let word_bytes = word.as_bytes();
+        if !super::builtin_opt::is_option_word(word_bytes, plus) {
+            break;
+        }
+        if word == "--help" || word == "--" {
+            break;
+        }
+        let sign = word_bytes[0];
+        for &c in &word_bytes[1..] {
+            // An option character of ':' is always invalid,
+            // whatever the spec says (bashgetopt.c:99) — the
+            // guard above already excludes it from the set.
+            if c == b':' || !letter_bytes.contains(&c) {
+                optopt = Some(c);
+                break 'words;
+            }
+            letters.push((c as char, sign == b'-'));
+        }
+    }
+    Some((
+        letters,
+        optopt.map(|c| String::from_utf8_lossy(&[c]).into_owned()),
+    ))
+}
+
+/// Whether a declare/typeset/local invocation diverts to the
+/// function face: a MINUS-signed `f`/`F` in the option region.
+/// `+f`/`+F` clear att_function and stay on the variable path
+/// (declare.def: the function branch keys on `flags_on &
+/// att_function`).
+fn declare_has_function_option(args: &[String]) -> bool {
+    let row = builtin_table_row("declare").expect("declare row");
+    let (letters, _) = declare_option_scan(row, args);
+    letters
+        .iter()
+        .any(|(letter, set)| *set && (*letter == 'f' || *letter == 'F'))
+}
+
+/// Whether a declare/typeset/local invocation's -a/-A attribute ends up
+/// SET. The last occurrence wins and `+a`/`+A` unset, so `declare +a s=1`
+/// binds a scalar (and marks under set -a) while `declare -a s=1` binds
+/// an array element (and does not). The scan stops at the first
+/// operand — an `-a` after an operand is a name, not an option.
+fn declare_invocation_sets_array_attribute(args: &[String]) -> bool {
+    let row = builtin_table_row("declare").expect("declare row");
+    let (letters, _) = declare_option_scan(row, args);
+    let mut sets = false;
+    for (letter, set) in letters {
+        if letter == 'a' || letter == 'A' {
+            sets = set;
+        }
+    }
+    sets
+}
+
+impl Executor {
+    pub(in crate::executor) fn execute_declare_functions(
+        &mut self,
+        command_name: &str,
+        args: &[String],
+        stdout: &mut impl Write,
+        stderr: &mut impl Write,
+    ) -> io::Result<i32> {
+        // TODO(builtins/declare.def/execute_cmd.c): Bash prints the stored
+        // function COMMAND tree. Rubash currently stores only parsed command
+        // bodies, so render the simple function form used by builtins6.sub.
+        // GNU declare.def declare_invalid_opts: att_function combined with
+        // att_array/att_assoc/att_integer/att_nameref is a usage error.
+        // The face speaks through the row of the INVOKED name, so
+        // `local -fZ x` reports `local: -Z: invalid option` (Stage-2
+        // ④ Phase 4 — the old code hardcoded `declare:` here).
+        let row = builtin_table_row(command_name).expect("declare-family row");
+        let mut diag = Diag::new(row, stderr);
+        let (option_letters, invalid_letter) = declare_option_scan(row, args);
+        let function_flag_on = option_letters
+            .iter()
+            .any(|(letter, set)| *set && (*letter == 'f' || *letter == 'F'));
+        if function_flag_on {
+            // A getopt-level invalid letter is reported (with usage,
+            // EX_USAGE) before the attribute-combination check below:
+            // `declare -fZ x` names `-Z`, never a combination
+            // (rubash#1259).
+            if let Some(invalid) = invalid_letter {
+                diag.error(DiagKind::InvalidOpt(format!("-{invalid}")));
+                diag.usage();
+                diag.flush_with(|| self.diagnostic_prolog());
+                return Ok(2);
+            }
+            // GNU declare.def declare_invalid_opts checks the conflicting
+            // attributes in a fixed n/i/A/a priority, independent of the
+            // order the letters appear in the command line.
+            let bad_opt: Option<String> = ['n', 'i', 'A', 'a']
+                .iter()
+                .find(|letter| option_letters.iter().any(|(seen, _)| seen == *letter))
+                .map(|letter| format!("-{letter}"));
+            if let Some(opt) = bad_opt {
+                diag.error(DiagKind::InvalidOpt(opt));
+                diag.flush_with(|| self.diagnostic_prolog());
+                return Ok(1);
+            }
+        }
+        // GNU declare.def:465-473: when -f is used with an assignment
+        // (name=value), find_function is called with the full name string
+        // (including '=value'), which never matches a function name, so
+        // "cannot use `-f' to make functions" is always reported.
+        if function_flag_on {
+            for arg in args {
+                if !arg.starts_with('-') && !arg.starts_with('+') && arg.contains('=') {
+                    diag.free(format_args!("cannot use `-f' to make functions"));
+                    diag.flush_with(|| self.diagnostic_prolog());
+                    return Ok(1);
+                }
+            }
+        }
+        // rubash#3338: every letter scan in this face reads the
+        // OPTION REGION only, and the names are the operand tail
+        // behind it (skipping the `--` delimiter when the region
+        // ended there). GNU's scan stops at the first non-option
+        // word (builtins/bashgetopt.c:77-84), so a `-p` behind an
+        // operand is a function NAME to look up — the old whole-list
+        // scans read it as the print flag and `declare -f x -p`
+        // silently succeeded where GNU fails the missing name.
+        let region_end = super::builtin_opt::option_region_end(args, true);
+        let region = &args[..region_end];
+        let operands_start = if args.get(region_end).map(String::as_str) == Some("--") {
+            region_end + 1
+        } else {
+            region_end
+        };
+        let names: Vec<&str> = args[operands_start..].iter().map(String::as_str).collect();
+        // GNU declare.def: the -p flag may arrive inside a cluster
+        // (`declare -pf NAME`), so test for a `p` in any `-` option word,
+        // exactly like the `print` scan below — an exact "-p" match left
+        // `declare -pf NOPE` silent (rubash#1327). Bare `-f`/`-F` without
+        // -p stays silent on both shells.
+        let print_not_found = region
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg.contains('p'));
+        let function_names_only = region
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg.contains('F'));
+        let function_definition_mode = region
+            .iter()
+            .any(|arg| (arg.starts_with('-') || arg.starts_with('+')) && arg.contains('f'));
+        let set_export = region
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg.contains('x'));
+        let clear_export = region
+            .iter()
+            .any(|arg| arg.starts_with('+') && arg.contains('x'));
+        let set_export_attribute = set_export && function_definition_mode;
+        let clear_export_attribute = clear_export && function_definition_mode;
+        let exported_only = set_export;
+        let readonly = region
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg.contains('r'));
+        let clear_readonly = region
+            .iter()
+            .any(|arg| arg.starts_with('+') && arg.contains('r'));
+        // GNU declare.def declares -t on functions: set/clear the trace
+        // attribute (trace_p(var) in execute_cmd.c). A traced function
+        // inherits the DEBUG and RETURN traps even with functrace off.
+        // GNU declare.def:334 parses each option cluster independently, and
+        // the per-name dispatch (declare.def:503-531) tests the CALL-WIDE
+        // flag set: `flags_on == att_function && flags_off == 0' displays,
+        // anything else silently sets/clears attributes. So `-t' may live
+        // in its own cluster (`declare -f -t NAME', rubash#217) — requiring
+        // `f' and `t' in the same cluster made the separated form fall
+        // through to the display branch and print the body.
+        let set_trace = region
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg.contains('t'));
+        let clear_trace = region
+            .iter()
+            .any(|arg| arg.starts_with('+') && arg.contains('t'));
+        let print = region
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg.contains('p'));
+        let exported_functions = marked_env_names(&self.shell_state.env_vars, EXPORTED_FUNCTIONS);
+        let readonly_functions = marked_env_names(&self.shell_state.env_vars, READONLY_FUNCTIONS);
+        let traced_functions = marked_env_names(&self.shell_state.env_vars, FUNC_TRACE_FUNCTIONS);
+        if names.is_empty() {
+            let mut functions: Vec<_> = self.shell_state.functions.iter().collect();
+            functions.sort_by(|(left, _), (right, _)| left.cmp(right));
+            for (name, body) in functions {
+                if exported_only && !exported_functions.iter().any(|exported| *exported == *name) {
+                    continue;
+                }
+                if readonly && !readonly_functions.iter().any(|rn| *rn == *name) {
+                    continue;
+                }
+                if function_names_only {
+                    // GNU setattr.def:415 var_attribute_string emits the
+                    // attribute characters in a fixed order — f, then r,
+                    // then t, then x (a A f i n r t x c l u) — from the
+                    // function's OWN attribute bits, and setattr.def:484
+                    // show_var_attributes with nodefs=1 prints
+                    // `declare -<flags> name' for every listed function,
+                    // so a traced one renders `declare -ft f' and a
+                    // `declare -ftx k' earlier in the session keeps both
+                    // bits in a later plain `declare -F' (rubash#217
+                    // facet 1). The exported_only/readonly call flags
+                    // above only FILTER which functions are listed
+                    // (setattr.def:337 `var->attributes & attribute').
+                    let is_exported = exported_functions.iter().any(|exported| *exported == *name);
+                    let is_readonly = readonly_functions.iter().any(|rn| *rn == *name);
+                    let is_traced = traced_functions.iter().any(|tn| *tn == *name);
+                    let mut flags = String::from("-f");
+                    if is_readonly {
+                        flags.push('r');
+                    }
+                    if is_traced {
+                        flags.push('t');
+                    }
+                    if is_exported {
+                        flags.push('x');
+                    }
+                    writeln!(stdout, "declare {flags} {name}")?;
+                } else {
+                    self.write_function_definition(name, &body.commands, exported_only, stdout)?;
+                }
+            }
+            return Ok(0);
+        }
+        let mut status = 0;
+        for name in names {
+            let Some(body) = self.shell_state.functions.get(name) else {
+                if print_not_found {
+                    writeln!(
+                        stderr,
+                        "{}declare: {name}: not found",
+                        self.diagnostic_prefix()
+                    )?;
+                }
+                status = 1;
+                continue;
+            };
+            let is_exported = exported_functions.iter().any(|exported| exported == name);
+            let is_readonly = readonly_functions.iter().any(|rn| rn == name);
+            // GNU declare.def: clearing readonly on a readonly function is
+            // an error ("readonly function"), not a silent success.
+            if clear_readonly && is_readonly {
+                writeln!(
+                    stderr,
+                    "{}declare: {name}: readonly function",
+                    self.diagnostic_prefix()
+                )?;
+                status = 1;
+                continue;
+            }
+            if exported_only && !is_exported && !set_export_attribute {
+                continue;
+            }
+            // GNU declare.def:503-531: the per-name branch first applies the
+            // WHOLE call-wide flag set (`VSETATTR (var, flags_on); VUNSETATTR
+            // (var, flags_off)'), and only then decides whether to display —
+            // displaying iff `flags_on == att_function && flags_off == 0'.
+            // Applying each attribute with its own early `continue' left
+            // later attributes unset when an earlier one was present
+            // (`declare -ftr m' marked readonly and skipped the trace mark,
+            // rubash#217). A single `attribute_ops' gate restores the
+            // all-then-display order; `-p' keeps the display alive
+            // (declare.def:397 pflag branch).
+            let attribute_ops = clear_export_attribute
+                || set_export_attribute
+                || readonly
+                || set_trace
+                || clear_trace;
+            if clear_export_attribute {
+                unmark_env_name(&mut self.shell_state.env_vars, EXPORTED_FUNCTIONS, name);
+            }
+            if set_export_attribute {
+                mark_env_name(&mut self.shell_state.env_vars, EXPORTED_FUNCTIONS, name);
+            }
+            if readonly {
+                mark_env_name(&mut self.shell_state.env_vars, READONLY_FUNCTIONS, name);
+            }
+            if set_trace {
+                mark_env_name(&mut self.shell_state.env_vars, FUNC_TRACE_FUNCTIONS, name);
+            }
+            if clear_trace {
+                unmark_env_name(&mut self.shell_state.env_vars, FUNC_TRACE_FUNCTIONS, name);
+            }
+            if attribute_ops && !print {
+                continue;
+            }
+            if function_names_only {
+                if print {
+                    // GNU declare.def: `-F' with `-p' goes through
+                    // show_var_attributes (nodefs=1) exactly like the
+                    // no-operand listing above: `declare -<flags> name'
+                    // with the function's own r/t/x bits in f,r,t,x order
+                    // (setattr.def var_attribute_string). Only a bare
+                    // `-F' (no `-p') prints the plain name (rubash#1157).
+                    let is_traced = traced_functions.iter().any(|tn| tn == name);
+                    let mut flags = String::from("-f");
+                    if is_readonly {
+                        flags.push('r');
+                    }
+                    if is_traced {
+                        flags.push('t');
+                    }
+                    if is_exported {
+                        flags.push('x');
+                    }
+                    writeln!(stdout, "declare {flags} {name}")?;
+                } else {
+                    self.write_function_name(name, stdout)?;
+                }
+            } else {
+                self.write_function_definition(
+                    name,
+                    &body.commands,
+                    exported_only && is_exported,
+                    stdout,
+                )?;
+            }
+        }
+        Ok(status)
+    }
+
+    fn write_function_name<W>(&self, name: &str, stdout: &mut W) -> io::Result<()>
+    where
+        W: Write,
+    {
+        if crate::builtins::shopt::option_enabled(&self.shell_state.env_vars, "extdebug") {
+            if let Some(location) = self.shell_state.function_definition_locations.get(name) {
+                return writeln!(stdout, "{} {} {}", name, location.line, location.source);
+            }
+        }
+        writeln!(stdout, "{name}")
+    }
+
+    /// GNU declare.def:429,1004: a `declare name[sub]=value` operand carries
+    /// W_ASSIGNMENT, so with `array_expand_once` the already-expanded
+    /// subscript text is ASS_NOEXPAND verbatim data (a surviving
+    /// `$name`/`$(...)` is expr.c "operand expected", not a second
+    /// execution); without the option assign_array_element re-expands it via
+    /// expand_arith_string. Rewrite each `name[sub](+)=value` operand LHS to
+    /// its final `name[index]` / `name[\x1ekey]` form so the env-only
+    /// builtin consumes resolved data. Err(()) means the operand-expected
+    /// diagnostic + evalerror abort (array_expand_index ->
+    /// jump_to_top_level DISCARD) were already raised; the caller supplies
+    /// status 1.
+    /// GNU general.c:480 assignment() applied to the RAW word token:
+    /// whether the operand carried W_ASSIGNMENT. The name part must be
+    /// legal variable characters — any quote or escape char rejects it — or
+    /// a well-formed `name[subscript]` prefix before `=`/`+=`.
+    pub(in crate::executor) fn raw_word_is_assignment(raw: &str) -> bool {
+        let bytes = raw.as_bytes();
+        match bytes.first() {
+            Some(&c) if is_shell_name_start(c as char) => {}
+            _ => return false,
+        }
+        let mut index = 0usize;
+        while index < bytes.len() {
+            match bytes[index] {
+                b'=' => return index > 0,
+                b'[' => {
+                    let Some((sub_end, _)) =
+                        crate::executor::subscript_expansion::scan_compound_subscript(raw, index)
+                    else {
+                        return false;
+                    };
+                    index = sub_end + 1;
+                    if bytes.get(index) == Some(&b'+') && bytes.get(index + 1) == Some(&b'=') {
+                        return true;
+                    }
+                    return bytes.get(index) == Some(&b'=');
+                }
+                b'+' if bytes.get(index + 1) == Some(&b'=') => return true,
+                c if is_shell_name_char(c as char) => index += 1,
+                _ => return false,
+            }
+        }
+        false
+    }
+
+    pub(in crate::executor) fn rewrite_declare_operand_subscripts(
+        &mut self,
+        args: &[String],
+        word_metadata: &[crate::parser::WordMetadata],
+        command_name: &str,
+    ) -> Result<Vec<String>, ()> {
+        // Whitelist fast path (rubash#117 discipline): a plain operand
+        // list — no option words, no `[` subscript brackets, no `(`
+        // compound parens, no compound-assignment marker — provably
+        // passes every operand through unchanged: the `-a`/`-A` hints
+        // need dash words, the subscript rewrite needs `[` on the LHS,
+        // the compound arm needs `(`/marker/hints (or declare-family
+        // array targets, which need `(` too), and the pending overlay
+        // is only consumed by the compound arm. Any doubtful shape
+        // runs the full rewrite below.
+        let plain = args.iter().all(|arg| {
+            !arg.starts_with('-')
+                && !arg.contains('[')
+                && !arg.contains('(')
+                && !arg.contains(crate::executor::markers::COMPOUND_ASSIGNMENT_MARKER)
+        });
+        if plain {
+            return Ok(args.to_vec());
+        }
+        // Whether the invocation carries `-A`/`-a` (set form) in its
+        // OPTION REGION; an unmarked variable declared with -A takes
+        // the assoc element rules. rubash#3338: the hints read the
+        // region only — behind the first operand (or `--`) the word
+        // is a name in GNU (internal_getopt stops there,
+        // builtins/bashgetopt.c:77-84), and the old whole-list scan
+        // let `declare y='(1 2)' -A` convert the quoted scalar into
+        // an associative bind where GNU keeps the literal string.
+        let region_end = super::builtin_opt::option_region_end(args, true);
+        let assoc_hint = args[..region_end]
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg[1..].contains('A'));
+        let array_hint = args[..region_end]
+            .iter()
+            .any(|arg| arg.starts_with('-') && arg[1..].contains('a'));
+        // GNU declare.def:660+ processes operands SEQUENTIALLY — an earlier
+        // `a=$x` operand is bound before `d='($a)'` expands, so the deferred
+        // compound expansion below must see the assignments of operands
+        // already rewritten. `pending` overlays them on env_vars only for
+        // the duration of each compound-body expansion.
+        let mut pending: Vec<(String, String, bool)> = Vec::new();
+        args.iter()
+            .enumerate()
+            .map(|(index, arg)| {
+                // GNU declare.def:429: assoc_noexpand requires W_ASSIGNMENT
+                // on the operand word, and parse.y:5787 only sets it on an
+                // UNQUOTED assignment-shaped token (general.c:480
+                // assignment() rejects quoted/escaped name parts). A quoted
+                // `declare "a[$x]=v"` operand therefore re-expands its
+                // subscript in both option modes.
+                let raw = word_metadata
+                    .iter()
+                    .find(|m| m.word_index == index + 1)
+                    .map(|m| m.raw.as_str());
+                let w_assignment = match raw {
+                    Some(raw) => Self::raw_word_is_assignment(raw),
+                    None => Self::raw_word_is_assignment(arg),
+                };
+                let Some((lhs, value)) = arg.split_once('=') else {
+                    // `declare name[sub]` without `=` is a size-hint
+                    // declaration; GNU discards the subscript text without
+                    // evaluating it (declare.def:605 making_array_special).
+                    return Ok(arg.clone());
+                };
+                let (lhs, append) = lhs
+                    .strip_suffix('+')
+                    .map(|lhs| (lhs, true))
+                    .unwrap_or((lhs, false));
+                let compound = value
+                    .strip_prefix(COMPOUND_ASSIGNMENT_MARKER)
+                    .unwrap_or(value);
+                let paren_value = compound.starts_with('(') && compound.ends_with(')');
+                // GNU declare.def:935-947 (shell_compatibility_level > 43):
+                // a `(...)` operand binds as a compound assignment only
+                // when the word carried W_COMPASSIGN (unquoted `=(`, the
+                // COMPOUND_ASSIGNMENT_MARKER carrier here), when -a/-A
+                // creates the array, or when the target already is an
+                // array/assoc; a quoted `(x)` on a scalar target stays a
+                // literal string (declare.def:946 simple_array_assign).
+                // For export/readonly GNU setattr.def:240-268 delegates
+                // only the -a/-A form to declare_builtin — the flagless
+                // form calls do_assignment_no_expand (plain scalar bind),
+                // so an existing array target alone does not make the
+                // operand compound there.
+                let w_compassign = value.starts_with(COMPOUND_ASSIGNMENT_MARKER);
+                let array_exists = is_marked_var(&self.shell_state.env_vars, ASSOC_VARS, lhs)
+                    || is_marked_var(&self.shell_state.env_vars, ARRAY_VARS, lhs);
+                let declare_family = !matches!(command_name, "export" | "readonly");
+                // GNU parse.y:5648-5657 token_is_assignment + subst.c:12949
+                // expand_declaration_argument: a `(...)` operand binds as a
+                // compound assignment only when the LHS is a valid identifier
+                // — an invalid name (rubash#3186) takes the plain word path,
+                // so the builtin's InvalidId diagnostic quotes the plain
+                // expanded word instead of the marker/quoted compound
+                // expansion. The `w_compassign` arm needs no extra gate:
+                // the parser only sets the marker for a
+                // valid_compound_assignment_lhs LHS (token_actions.rs), which
+                // after its own tightening is a strict identifier (modulo a
+                // `[sub]` head).
+                let lhs_base = lhs.split('[').next().unwrap_or(lhs);
+                let lhs_base_valid = is_shell_name(lhs_base);
+                let hint_compound =
+                    assoc_hint || array_hint || (declare_family && array_exists);
+                let is_compound =
+                    paren_value && (w_compassign || (lhs_base_valid && hint_compound));
+                // GNU subst.c:12949-13036 expand_declaration_argument: a
+                // W_COMPASSIGN operand of an assignment builtin is bound by
+                // a nested declare_builtin during word expansion, with the
+                // command's -a/-A option letters replayed (omap). Its
+                // diagnostics use the expansion-time this_command_name —
+                // the enclosing function name (builtin_error,
+                // builtins/common.c:83-105) — while the readonly bind
+                // failure is err_readonly -> report_error (error.c:455),
+                // which prints the bare name. A nested failure discards
+                // the whole command at top level (exp_jump_to_top_level
+                // DISCARD) but only skips the bind inside a function body
+                // (W_FORCELOCAL, subst.c:13033), letting the outer builtin
+                // report the same operand again with its own name.
+                if w_compassign {
+                    // Scope of the nested bind: inside a function without
+                    // -g the operand declares/binds a LOCAL variable, so an
+                    // existing GLOBAL indexed cell is untouched and no
+                    // conversion error fires — unless localvar_inherit
+                    // (declare.def / shopt) makes the local inherit the
+                    // global's indexed attribute (varenv14.sub), or the
+                    // local scope already carries the mark.
+                    let local_context =
+                        self.shell_state.function_depth > 0 && !declare_args_force_global(args);
+                    let locally_scoped = local_context
+                        && !self
+                            .shell_state.local_var_scopes
+                            .last()
+                            .is_some_and(|scope| scope.contains_key(lhs))
+                        && !crate::builtins::shopt::option_enabled(
+                            &self.shell_state.env_vars,
+                            "localvar_inherit",
+                        );
+                    let target_indexed = !locally_scoped
+                        && is_marked_var(&self.shell_state.env_vars, ARRAY_VARS, lhs);
+                    let target_assoc = !locally_scoped
+                        && is_marked_var(&self.shell_state.env_vars, ASSOC_VARS, lhs);
+                    let nested_assoc_convert =
+                        assoc_hint && target_indexed && !target_assoc;
+                    let nested_indexed_convert =
+                        array_hint && target_assoc && !target_indexed;
+                    let nested_readonly =
+                        is_marked_var(&self.shell_state.env_vars, READONLY_VARS, lhs);
+                    if nested_assoc_convert || nested_indexed_convert {
+                        let kind = if nested_assoc_convert {
+                            "indexed to associative"
+                        } else {
+                            "associative to indexed"
+                        };
+                        match self.shell_state.function_name_stack.first() {
+                            Some(func) => eprintln!(
+                                "{}{func}: {lhs}: cannot convert {kind} array",
+                                self.diagnostic_prefix()
+                            ),
+                            None => eprintln!(
+                                "{}{lhs}: cannot convert {kind} array",
+                                self.diagnostic_prefix()
+                            ),
+                        }
+                        if self.shell_state.function_depth == 0 {
+                            // rubash#401, GNU subst.c:13033: the nested
+                            // bind failure at top level is
+                            // exp_jump_to_top_level(DISCARD) — it fires during
+                            // word expansion, before the command's own
+                            // redirections exist (`declare -A a=() 2> ERR`
+                            // never creates ERR; the message reaches the
+                            // shell's stderr), discards the rest of the
+                            // command list sharing the failing source line,
+                            // and leaves $? = 1 for the next line (GNU probe
+                            // wt38 p401 run401/k014c: same-line echo skipped,
+                            // next-line $? is 1). The plain Err(()) only
+                            // failed the command, so rubash kept executing
+                            // the same line's successors.
+                            self.raise_evalerror_abort();
+                            return Err(());
+                        }
+                    } else if nested_readonly {
+                        // rubash#2658: two prolog classes split by builtin.
+                        // declare/typeset/local bind the compound operand
+                        // through the nested declare's builtin_error, whose
+                        // this_command_name is the enclosing function name —
+                        // `f() { local r=(4); }` on readonly r prints
+                        // `f: r: readonly variable`, skips the bind, and the
+                        // outer builtin reports the operand a second time
+                        // with its own name. export/readonly (setattr.def
+                        // family) instead report via err_readonly, which
+                        // prints the bare variable name with no
+                        // this_command_name segment — and their operand's
+                        // expansion-time bind failure is a real DISCARD
+                        // (subst.c:13033 exp_jump_to_top_level): inside a
+                        // function the function body is abandoned after the
+                        // single line, before the special builtin runs
+                        // (probe: `f() { readonly r=(4); declare -p r; }`
+                        // prints `r: readonly variable` once, f's tail never
+                        // runs, the caller continues at top level).
+                        if declare_family {
+                            match self.shell_state.function_name_stack.first() {
+                                Some(func) => eprintln!(
+                                    "{}{func}: {lhs}: readonly variable",
+                                    self.diagnostic_prefix()
+                                ),
+                                None => eprintln!(
+                                    "{}{lhs}: readonly variable",
+                                    self.diagnostic_prefix()
+                                ),
+                            }
+                        } else {
+                            eprintln!(
+                                "{}{lhs}: readonly variable",
+                                self.diagnostic_prefix()
+                            );
+                        }
+                        if self.shell_state.function_depth == 0 || !declare_family {
+                            // Same subst.c:13033 DISCARD for the nested
+                            // readonly bind (GNU probe run401/nro.sh:
+                            // `declare ro=() 2> E1; echo same-line` skips the
+                            // echo, next line sees $? 1, E1 never created).
+                            self.raise_evalerror_abort();
+                            return Err(());
+                        }
+                    }
+                }
+                // Sequential operand binding (declare.def:660+): a plain
+                // `name=value`/`name+=value` operand is visible to the
+                // expansion of every LATER operand's compound body.
+                if !lhs.contains('[') && !is_compound && is_shell_name(lhs) {
+                    pending.push((lhs.to_string(), value.to_string(), append));
+                }
+                if lhs.contains('[') {
+                    // GNU subst.c:3599-3605: `name[sub]=(list)` fails
+                    // "cannot assign list to array member" before the
+                    // subscript is ever evaluated — leave it alone.
+                    if is_compound {
+                        return Ok(arg.clone());
+                    }
+                    // GNU builtins/setattr.def: export/readonly NEVER
+                    // treat `name[sub]=value` as an element assignment —
+                    // the operand is rejected as not a valid identifier
+                    // with the subscript text verbatim, evaluated never
+                    // (rubash#1421: `export 'a[i+1]=Q'` must not become
+                    // `a[2]=Q`, and `a[i++]` must not increment i).
+                    // Pass the operand through untouched; setattr's own
+                    // identifier validation reports it.
+                    if !declare_family {
+                        return Ok(arg.clone());
+                    }
+                    // GNU declare.def:592-600 + tokenize_array_reference
+                    // (arrayfunc.c:1288): the operand name's subscript must
+                    // be a complete matched pair — `declare 'm[x[y]=a'`
+                    // expands to `m[x[y]=a`, whose nested `[` leaves the
+                    // subscript unterminated, so GNU reports
+                    // `not a valid identifier`. Pass the operand through
+                    // untouched so valid_declare_name reaches the same
+                    // diagnostic (and later operands still run).
+                    // declare.def:429,439: assoc_noexpand requires BOTH
+                    // array_expand_once and W_ASSIGNMENT on the raw operand
+                    // word; only then does assignment(name, 2) close the
+                    // expanded subscript at the first `]`
+                    // (`declare myarray["foo[bar"]=v` stores key `foo[bar`
+                    // under assoc_expand_once). Otherwise
+                    // tokenize_array_reference requires the matched-pair
+                    // close at the end of the name.
+                    let expand_once = w_assignment
+                        && crate::builtins::shopt::option_enabled(
+                            &self.shell_state.env_vars,
+                            "array_expand_once",
+                        );
+                    let subscript_ok = lhs.find('[').is_some_and(|open| {
+                        if expand_once {
+                            lhs[open + 1..]
+                                .find(']')
+                                .is_some_and(|close| open + 1 + close == lhs.len() - 1)
+                        } else {
+                            crate::executor::subscript_expansion::scan_compound_subscript(lhs, open)
+                                .is_some_and(|(close, _)| close == lhs.len() - 1)
+                        }
+                    });
+                    if !subscript_ok {
+                        return Ok(arg.clone());
+                    }
+                    // GNU declare.def:639-642,953-962: `declare name[sub]=v`
+                    // (no -A flag) binds through the variable declare
+                    // actually creates — at function scope that is a fresh
+                    // LOCAL indexed array (making_array_special ->
+                    // make_local_array_variable), which shadows even a
+                    // global assoc of the same name, so the subscript is
+                    // evaluated arithmetically. Only `-A` or an existing
+                    // same-frame local assoc keeps the assoc path; at
+                    // global scope the existing variable's type rules.
+                    let base = lhs.split('[').next().unwrap_or(lhs);
+                    let operand_assoc = if assoc_hint {
+                        true
+                    } else if self.shell_state.function_depth > 0 {
+                        is_marked_var(&self.shell_state.env_vars, ASSOC_VARS, base)
+                            && self
+                                .shell_state.local_var_scopes
+                                .last()
+                                .is_some_and(|scope| scope.contains_key(base))
+                    } else {
+                        is_marked_var(&self.shell_state.env_vars, ASSOC_VARS, base)
+                    };
+                    let mode = if w_assignment {
+                        OperandSubscriptMode::ExpandedOnce
+                    } else {
+                        OperandSubscriptMode::AlwaysExpand
+                    };
+                    let rewritten = match self.rewrite_operand_subscript_typed(
+                        lhs,
+                        mode,
+                        Some(operand_assoc),
+                        crate::builtins::shopt::option_enabled(
+                            &self.shell_state.env_vars,
+                            "array_expand_once",
+                        ),
+                        false,
+                        // Element stores always encode assoc `@`/`*`
+                        // literally — the AV_ATSTARKEYS/compat split is
+                        // `-v`-only.
+                        true,
+                    ) {
+                        Ok(rewritten) => rewritten,
+                        Err(()) => {
+                            // GNU declare.def:988-1011: the variable was
+                            // created (convert_var_to_array) and the flags
+                            // applied (VSETATTR) BEFORE assign_array_element
+                            // evaluated the subscript, so the operand still
+                            // binds the variable — only the element
+                            // assignment fails. The evaluator already printed
+                            // the diagnostic; the sentinel tells
+                            // assign_declare_names to take the failed-
+                            // subscript path without re-evaluating.
+                            format!(
+                                "{base}[{}]",
+                                crate::executor::types::FAILED_SUBSCRIPT_SENTINEL
+                            )
+                        }
+                    };
+                    return Ok(format!(
+                        "{rewritten}{}={value}",
+                        if append { "+" } else { "" }
+                    ));
+                }
+                if !is_compound {
+                    return Ok(arg.clone());
+                }
+                // `declare [-aA] name=(...)`: element subscripts inside the
+                // stored compound text resolve through
+                // expand_compound_array_assignment +
+                // assign_compound_array_list (arrayfunc.c:557-836) — the
+                // declare argument text was not pre-expanded by assignment
+                // word expansion on this path, so the resolver runs its
+                // non-preexpanded (declare) model.
+                let assoc = assoc_hint || is_marked_var(&self.shell_state.env_vars, ASSOC_VARS, lhs);
+                // GNU arrayfunc.c:557-620 expand_compound_array_assignment ->
+                // expand_words_no_vars: a `(...)` operand value that reached
+                // declare through variable expansion is reparsed and each
+                // element word expanded once — `$(...)` runs and unquoted
+                // products field-split (array19.sub `declare -a e=$y`). A
+                // COMPOUND_ASSIGNMENT_MARKER value already took that pass
+                // during command word expansion; only the deferred
+                // subscript-resolution pass remains for it.
+                let marked = value.starts_with(COMPOUND_ASSIGNMENT_MARKER);
+                // GNU declare.def:704-806 sequential operand processing: a
+                // whole-single-quoted `'(...)'` operand value reaches the
+                // builtin UNEXPANDED and its inner words expand while the
+                // operand binds (array19.sub `e='($a)'` sees the earlier
+                // `a=$x`). The parser-side marker preserved the raw text,
+                // but command word expansion already expanded the inner
+                // `$x` against the pre-command environment — recover the
+                // raw inner and take the deferred-expansion path so the
+                // pending-operand overlay applies. The unquoted `d=($a)`
+                // form stays on the marked path: GNU expands that word's
+                // elements during command word expansion (empty `$a` here).
+                let sq_raw_inner = if marked {
+                    raw.and_then(|raw| raw.split_once('=').map(|(_, rhs)| rhs))
+                        .filter(|rhs| {
+                            rhs.len() >= 3 && rhs.starts_with("'(") && rhs.ends_with(")'")
+                        })
+                        .map(|rhs| &rhs[1..rhs.len() - 1])
+                } else {
+                    None
+                };
+                let expanded_compound;
+                // GNU variables.c bind_variable: a `(...)` value is reparsed
+                // by assign_array_from_string only when the target is (being
+                // made) an array — a scalar `declare d='($a)'` stores the
+                // literal text (array19.sub).
+                let target_is_array = assoc
+                    || array_hint
+                    || is_marked_var(&self.shell_state.env_vars, ARRAY_VARS, lhs)
+                    || self
+                        .shell_state.env_vars
+                        .get(lhs)
+                        .is_some_and(|v| v.starts_with(STORAGE_WORD_PREFIX));
+                if !marked && !target_is_array {
+                    // Scalar target + unmarked parenthesized text: GNU binds
+                    // the literal string (bind_variable_value), never
+                    // reparsing it -- `declare c='(1 2)'` stores `(1 2)`
+                    // verbatim. Skipping the element rewrite also keeps the
+                    //  field tags out of the scalar cell.
+                    return Ok(arg.clone());
+                }
+                let (compound, preexpanded) = if marked && sq_raw_inner.is_none() {
+                    (compound, false)
+                } else if target_is_array {
+                    let body = sq_raw_inner.unwrap_or(compound);
+                    if body.contains('$') || body.contains('`') {
+                        // Overlay the values of operands already bound (GNU
+                        // sequential processing) for the duration of this
+                        // expansion only; expansion side effects ($((i++)))
+                        // persist, the overlay does not.
+                        let mut saved: HashMap<String, Option<String>> = HashMap::new();
+                        for (name, value, append) in &pending {
+                            saved
+                                .entry(name.clone())
+                                .or_insert_with(|| self.shell_state.env_vars.get(name).cloned());
+                            let current =
+                                self.shell_state.env_vars.get(name).cloned().unwrap_or_default();
+                            self.shell_state.env_vars.insert(
+                                name.clone(),
+                                if *append { current + value } else { value.clone() },
+                            );
+                        }
+                        expanded_compound = if assoc {
+                            // GNU expand_compound_array_assignment
+                            // (arrayfunc.c:594-599): the assoc path returns
+                            // the tokenized list BEFORE expand_words_no_vars
+                            // — each word expands individually
+                            // (expand_subscript_string /
+                            // expand_and_quote_kvpair_word, :676-688) and its
+                            // expansion stays ONE element, so `d='($a)'`
+                            // with a='a b' stores key `a b`, never the
+                            // field-split pair `a` -> `b`.
+                            let inner = body
+                                .strip_prefix('(')
+                                .and_then(|v| v.strip_suffix(')'))
+                                .unwrap_or(body);
+                            let words =
+                                crate::executor::assignment_expansion::split_compound_element_words(
+                                    inner,
+                                );
+                            let expanded_words: Vec<String> = words
+                                .into_iter()
+                                .map(|word| {
+                                    let expanded = self.expand_assignment_value(lhs, &word);
+                                    crate::executor::parameter_replace::shell_single_quote_assignment_value(
+                                        &expanded,
+                                    )
+                                })
+                                .collect();
+                            format!("({})", expanded_words.join(" "))
+                        } else {
+                            self.expand_assignment_value(lhs, body)
+                        };
+                        for (name, previous) in saved {
+                            match previous {
+                                Some(value) => self.shell_state.env_vars.insert(name, value),
+                                None => self.shell_state.env_vars.remove(&name),
+                            };
+                        }
+                        (expanded_compound.as_str(), true)
+                    } else {
+                        (body, false)
+                    }
+                } else {
+                    (compound, false)
+                };
+                let rewritten = match self.rewrite_compound_element_subscripts(
+                    lhs, compound, assoc, preexpanded,
+                ) {
+                    Ok(rewritten) => rewritten,
+                    // GNU assign_compound_array_list (arrayfunc.c:765-830)
+                    // breaks on the failing element but keeps every element
+                    // processed before it and materializes the array — an
+                    // empty partial list still binds `lhs=()`
+                    // (declare.def:961-962 convert_var_to_array runs before
+                    // the assignment). That is the bad-subscript contract.
+                    // rubash#753: a failglob element is a different class —
+                    // GNU's expand_words_no_vars reports `no match' and
+                    // jumps DISCARD before any element binds, so the whole
+                    // operand fails: nothing binds and the rest of the
+                    // logical line is abandoned (`declare b=(/no/such/*.zzz);
+                    // echo after` never prints `after` and `declare -p b`
+                    // reports not found — verified GNU 5.3). Propagate the
+                    // hard failure; execute_declare's Err(()) arm returns 1
+                    // with the reader-level discard already armed.
+                    Err(partial) => {
+                        if self.evalerror_failglob_pending.get() {
+                            return Err(());
+                        }
+                        partial
+                    }
+                };
+                let marker = if marked { COMPOUND_ASSIGNMENT_MARKER } else { "" };
+                Ok(format!(
+                    "{lhs}{}={marker}{rewritten}",
+                    if append { "+" } else { "" }
+                ))
+            })
+            .collect()
+    }
+
+    /// rubash#2424: partition a global declare/typeset operand list,
+    /// routing every DIRSTACK assignment operand through the stack
+    /// setter door and returning the operands the builtin still owns.
+    /// Returns (kept, routed_any, failed). GNU ground: declare's
+    /// operand binds run through bind_variable (declare.def:704-806
+    /// sequential processing), and DIRSTACK's bind always lands in
+    /// variables.c:1612 assign_dirstack -> builtins/pushd.def:657
+    /// set_dirstack_element — element 0 ignored, in-bounds elements
+    /// replaced, out-of-range dropped, never cleared or grown. The
+    /// builtin's own array walker instead wrote the list into the
+    /// mirror as a private array cell: `dirs` kept showing the carrier
+    /// while ${DIRSTACK[1]} read the phantom, and the next named
+    /// access panicked on the cell/mirror disagreement.
+    ///
+    /// Whole-variable operands (scalar, compound, append) reuse the
+    /// plain-assignment door (`apply_dirstack_assignment`) whole —
+    /// one setter path for every DIRSTACK write. Subscript operands
+    /// arrive with the subscript already evaluated by the rewrite
+    /// pass; a resolved index routes to set_stack_value (an append
+    /// concatenates onto the live element, GNU bind_array_element's
+    /// ASS_APPEND computation; a negative index counts back from the
+    /// live stack end, and one before the start is the arrayfunc.c
+    /// bad-subscript failure). Unresolvable subscript text (the
+    /// failed-subscript sentinel, assoc-shaped keys) stays with the
+    /// builtin's existing diagnostic paths.
+    ///
+    /// A routed operand leaves its bare name in the kept list: the
+    /// builtin still applies this call's attribute marks (-i/-l/-u/
+    /// -x/-r) to the variable, exactly as GNU's sequential operand
+    /// processing does after the bind. The value transforms those
+    /// attributes imply run HERE, before the setter, because the
+    /// builtin never sees the value: -i evaluates (the door receives
+    /// the verdict and the compound scanner applies it per element;
+    /// a subscript value is evaluated directly), -l/-u case-convert
+    /// (the compound scanner reads the conversion from the variable's
+    /// marks, so the net option state is pre-applied to the marks —
+    /// the builtin's own attribute pass then asserts the same state).
+    /// Option state is tracked per operand: GNU applies the flags in
+    /// effect at each operand's position.
+    /// Resolve a declare-operand DIRSTACK subscript against the live
+    /// stack: a non-negative index passes through (the setter drops
+    /// out-of-range writes), a negative index counts back from the
+    /// stack end (GNU bind_array_element resolves it against the
+    /// array object — here the live stack), and anything else —
+    /// non-numeric text, a negative index before the stack start —
+    /// is None for the caller to adjudicate.
+    fn resolve_declare_dirstack_subscript(&self, inner: &str) -> Option<usize> {
+        let value: i64 = inner.parse().ok()?;
+        if value >= 0 {
+            return usize::try_from(value).ok();
+        }
+        let len =
+            crate::builtins::pushd::load_stack(&self.shell_state.env_vars, &self.shell_state.cwd)
+                .len();
+        let back = usize::try_from(value.checked_neg()?).ok()?;
+        if back <= len {
+            Some(len - back)
+        } else {
+            None
+        }
+    }
+
+    pub(in crate::executor) fn route_declare_dirstack_operands(
+        &mut self,
+        args: &[String],
+        written_args: &[String],
+        command_name: &str,
+        allow_subscripts: bool,
+    ) -> (Vec<String>, bool, bool, Vec<String>) {
+        // While the dynamic variable does not own its name the builtin
+        // keeps every operand: a live shadow binds plainly, and after
+        // `unset DIRSTACK` the name is an ordinary variable for good
+        // (variables.c:1197-1198; rubash#2434) — routing its binds to
+        // the stack setter would write a carrier no read face may use.
+        if self.dirstack_shadowed() {
+            return (args.to_vec(), false, false, Vec::new());
+        }
+        let mut kept: Vec<String> = Vec::new();
+        let mut routed = false;
+        let mut failed = false;
+        // Builtin-phase diagnostics (readonly refusals, a standalone
+        // bad subscript): GNU reports these through the builtin's own
+        // output plumbing, so a `2>` redirect on the declare captures
+        // them — the caller writes them into the buffered stderr.
+        // (The compound door's own bad-subscript/failglob diagnostics
+        // are expansion-class and bypass redirects in GNU too; the
+        // door emits those itself.)
+        let mut diagnostics: Vec<String> = Vec::new();
+        let mut parse_options = true;
+        // Net -i/-l/-u state at the current operand position, seeded
+        // from the variable's existing attribute marks.
+        let mut opt_integer = is_marked_var(&self.shell_state.env_vars, INTEGER_VARS, "DIRSTACK");
+        let mut opt_lower = is_marked_var(&self.shell_state.env_vars, LOWERCASE_VARS, "DIRSTACK");
+        let mut opt_upper = is_marked_var(&self.shell_state.env_vars, UPPERCASE_VARS, "DIRSTACK");
+        for (position, arg) in args.iter().enumerate() {
+            if parse_options && arg == "--" {
+                parse_options = false;
+                kept.push(arg.clone());
+                continue;
+            }
+            if parse_options
+                && (arg.starts_with('-') || arg.starts_with('+'))
+                && arg != "-"
+                && arg != "+"
+            {
+                let enable = arg.starts_with('-');
+                for letter in arg[1..].chars() {
+                    match letter {
+                        'i' => opt_integer = enable,
+                        'l' => {
+                            opt_lower = enable;
+                            if enable {
+                                opt_upper = false;
+                            }
+                        }
+                        'u' => {
+                            opt_upper = enable;
+                            if enable {
+                                opt_lower = false;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                kept.push(arg.clone());
+                continue;
+            }
+            parse_options = false;
+            let Some((lhs, value)) = arg.split_once('=') else {
+                kept.push(arg.clone());
+                continue;
+            };
+            let (lhs, append) = lhs
+                .strip_suffix('+')
+                .map(|lhs| (lhs, true))
+                .unwrap_or((lhs, false));
+            if lhs == "DIRSTACK" {
+                routed = true;
+                // GNU bind_variable refuses a readonly target before
+                // the assign function runs (variables.c). A scalar
+                // bind reports through the builtin's prolog
+                // (`declare: DIRSTACK: readonly variable`); a compound
+                // bind's diagnostic is owned by the expansion/declare
+                // layers that already produce it (at top level they
+                // pre-empt this router entirely), so the compound arm
+                // only records the failure. A refused operand is fully
+                // consumed — declare.def:881 suppresses the call's
+                // attribute application for it, so no bare name is kept
+                // (rubash#2424).
+                if is_marked_var(&self.shell_state.env_vars, READONLY_VARS, "DIRSTACK") {
+                    failed = true;
+                    let compound = value.starts_with(COMPOUND_ASSIGNMENT_MARKER)
+                        || (value.starts_with('(') && value.ends_with(')'));
+                    if compound {
+                        // The compound bind failure is the DISCARD
+                        // class (bash_variable_assignment_error): in
+                        // the paths where this router runs (notably
+                        // declare -g inside a function, which the
+                        // expansion layer does not pre-empt) GNU
+                        // abandons the rest of the command list.
+                        self.raise_evalerror_abort();
+                    } else {
+                        diagnostics.push(format!(
+                            "{}{command_name}: DIRSTACK: readonly variable\n",
+                            self.error_prefix()
+                        ));
+                    }
+                    continue;
+                }
+                // Pre-apply the net case state to the marks: the
+                // compound scanner's ElementCase reads them, and the
+                // builtin's attribute pass (kept bare name below)
+                // asserts the same state afterwards.
+                if opt_lower
+                    != is_marked_var(&self.shell_state.env_vars, LOWERCASE_VARS, "DIRSTACK")
+                {
+                    if opt_lower {
+                        mark_env_name(&mut self.shell_state.env_vars, LOWERCASE_VARS, "DIRSTACK");
+                    } else {
+                        unmark_env_name(&mut self.shell_state.env_vars, LOWERCASE_VARS, "DIRSTACK");
+                    }
+                }
+                if opt_upper
+                    != is_marked_var(&self.shell_state.env_vars, UPPERCASE_VARS, "DIRSTACK")
+                {
+                    if opt_upper {
+                        mark_env_name(&mut self.shell_state.env_vars, UPPERCASE_VARS, "DIRSTACK");
+                    } else {
+                        unmark_env_name(&mut self.shell_state.env_vars, UPPERCASE_VARS, "DIRSTACK");
+                    }
+                }
+                // The door recognizes compound text by the marker the
+                // assignment funnel uses; a `(...)` value that reached
+                // declare unmarked (the -a/-A-hint or existing-array
+                // routes in the rewrite pass) is the same list text.
+                let value = if !value.starts_with(COMPOUND_ASSIGNMENT_MARKER)
+                    && value.starts_with('(')
+                    && value.ends_with(')')
+                {
+                    format!("{COMPOUND_ASSIGNMENT_MARKER}{value}")
+                } else {
+                    value.to_string()
+                };
+                if !self.apply_dirstack_assignment(&value, append, opt_integer) {
+                    failed = true;
+                }
+                kept.push("DIRSTACK".to_string());
+                continue;
+            }
+            if let Some(inner) = lhs
+                .strip_prefix("DIRSTACK[")
+                .and_then(|rest| rest.strip_suffix(']'))
+            {
+                // setattr (export/readonly) has no subscript binds in
+                // GNU: the whole `DIRSTACK[1]' lhs fails its identifier
+                // check in the builtin. Only declare/typeset route
+                // subscripts through the setter (rubash#2424).
+                if !allow_subscripts {
+                    kept.push(arg.clone());
+                    continue;
+                }
+                // A readonly DIRSTACK refuses the bind before the
+                // assign function runs (variables.c), reported through
+                // the builtin's prolog; the operand is fully consumed
+                // (declare.def:881 attribute suppression), so no bare
+                // name is kept for it (rubash#2424).
+                if is_marked_var(&self.shell_state.env_vars, READONLY_VARS, "DIRSTACK") {
+                    routed = true;
+                    failed = true;
+                    diagnostics.push(format!(
+                        "{}{command_name}: DIRSTACK: readonly variable\n",
+                        self.error_prefix()
+                    ));
+                    continue;
+                }
+                let Some(index) = self.resolve_declare_dirstack_subscript(inner) else {
+                    // A negative index before the stack start is the
+                    // arrayfunc.c bad-subscript failure (the elements
+                    // bound by earlier operands stay bound); the empty
+                    // subscript and the ALL_ELEMENT_SUB spellings are
+                    // the same failure at arrayfunc.c:355-360 (checked
+                    // on the expanded operand declare hands over), and
+                    // the builtin's generic path swallows all three for
+                    // DIRSTACK (rubash#2432). Other unresolvable text
+                    // keeps the builtin's paths.
+                    if inner.parse::<i64>().is_ok_and(|v| v < 0) || matches!(inner, "" | "@" | "*")
+                    {
+                        routed = true;
+                        failed = true;
+                        // GNU err_badarraysub (error.c:440-443) is
+                        // always called with the operand text as
+                        // written — assign_array_element's `name`
+                        // (arrayfunc.c:334,431) — never with the
+                        // evaluated index. The rewrite pass resolved
+                        // the subscript in `inner` (`abc` -> `-5`), so
+                        // the spelling is recovered from the
+                        // pre-rewrite operand at this position
+                        // (rubash#2454); the rewrite and the integer
+                        // pass both preserve operand positions, so the
+                        // index is exact, with `inner` as the fallback
+                        // for any shape that does not line up.
+                        let written = written_args
+                            .get(position)
+                            .and_then(|original| {
+                                let (lhs, _) = original.split_once('=')?;
+                                let lhs = lhs.strip_suffix('+').unwrap_or(lhs);
+                                lhs.strip_prefix("DIRSTACK[")?.strip_suffix(']')
+                            })
+                            .unwrap_or(inner);
+                        diagnostics.push(format!(
+                            "{}DIRSTACK[{written}]: bad array subscript\n",
+                            self.error_prefix()
+                        ));
+                        kept.push("DIRSTACK".to_string());
+                    } else {
+                        kept.push(arg.clone());
+                    }
+                    continue;
+                };
+                routed = true;
+                let mut new_value = if append {
+                    let old = crate::builtins::pushd::stack_value(
+                        &self.shell_state.env_vars,
+                        &self.shell_state.cwd,
+                        index,
+                    )
+                    .unwrap_or_default();
+                    format!("{old}{value}")
+                } else {
+                    value.to_string()
+                };
+                // GNU make_variable_value: the integer attribute
+                // preempts the case attributes (variables.c:2920-2986).
+                if opt_integer {
+                    if let Some(message) = self.integer_assignment_eval_failure(&new_value) {
+                        self.emit_assignment_diag(format!("{}{}\n", self.error_prefix(), message));
+                        failed = true;
+                        kept.push("DIRSTACK".to_string());
+                        continue;
+                    }
+                    new_value = self.eval_integer_assignment_value(&new_value).to_string();
+                } else if opt_upper {
+                    new_value = new_value.to_uppercase();
+                } else if opt_lower {
+                    new_value = new_value.to_lowercase();
+                }
+                crate::builtins::pushd::set_stack_value(
+                    &mut self.shell_state.env_vars,
+                    &self.shell_state.cwd,
+                    index,
+                    new_value,
+                );
+                kept.push("DIRSTACK".to_string());
+                continue;
+            }
+            kept.push(arg.clone());
+        }
+        (kept, routed, failed, diagnostics)
+    }
+
+    pub(in crate::executor) fn execute_declare(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<i32, ExecuteError> {
+        self.sync_dynamic_assoc_vars();
+        // GNU materializes the DIRSTACK cell only when the command names
+        // DIRSTACK itself; a bare list-all `declare -a` must keep the cell
+        // empty (variables.c get_dirstack runs on named access only). The
+        // materialization runs just before the builtin call below, not
+        // here: by then the frame-local save has established whether a
+        // plain local/tempenv shadow owns the name, and a shadowed
+        // DIRSTACK must not be re-materialized from the stack
+        // (rubash#2424).
+        let written_args = self.expand_declare_assignment_args(&cmd.words[1..]);
+        let command_name = cmd.words.first().map(String::as_str).unwrap_or("declare");
+        let mut args = match self.rewrite_declare_operand_subscripts(
+            &written_args,
+            &cmd.word_metadata,
+            command_name,
+        ) {
+            Ok(args) => args,
+            // array_expand_index -> evalexp failure: diagnostic + evalerror
+            // abort already raised; GNU discards the rest of the list.
+            Err(()) => return Ok(1),
+        };
+        let mut written_hints = declare_written_operand_hints(&written_args, &args);
+        // GNU variables.c:2920-2944 make_variable_value: an evalexp failure
+        // on an integer assignment (no ASS_NOLONGJMP here — that flag is
+        // only for internal rebinds) prints the evalerror, discards the
+        // failing operand and its successors, and jump_to_top_level(DISCARD)
+        // aborts the rest of the command list. Print mode never assigns, so
+        // `declare -ip x=8+2x` is a plain not-found lookup instead.
+        let mut arith_eval_failure = None;
+        if declare_args_request_integer(&args) && !declare_args_request_print(&args) {
+            let (evaluated, failure) = self.evaluate_declare_integer_assignment_args(&args);
+            args = evaluated;
+            arith_eval_failure = failure;
+        }
+        // rubash#2424: a GLOBAL declare/typeset bind of DIRSTACK routes
+        // through the stack setter door (GNU variables.c:1612
+        // assign_dirstack — declare's bind_variable reaches the same
+        // assign_func as a plain assignment), never through the
+        // builtin's mirror array walker, which wrote a phantom typed
+        // cell the stack never saw (split-brain reads, and a
+        // mirror-disagreement panic on the next named access). Local
+        // binds (function scope without -g) are NOT routed: GNU
+        // make_local_variable creates a plain variable, and the generic
+        // machinery below owns it. A failed door bind (bad subscript /
+        // failglob inside the list) fails the command like the plain
+        // assignment route; operands are routed in order, and on
+        // failure the builtin never runs for the remaining ones.
+        let mut dirstack_routed = false;
+        let mut dirstack_failed = false;
+        let mut dirstack_diagnostics: Vec<String> = Vec::new();
+        if !declare_args_request_print(&args)
+            && (self.shell_state.function_depth == 0 || declare_args_force_global(&args))
+        {
+            let (kept, routed, failed, diagnostics) =
+                self.route_declare_dirstack_operands(&args, &written_args, command_name, true);
+            args = kept;
+            dirstack_routed = routed;
+            dirstack_failed = failed;
+            dirstack_diagnostics = diagnostics;
+        }
+        // GNU variables.c:2651-2665 (make_local_variable): a local may not
+        // shadow a readonly binding at context 0 — "disallow local copies of
+        // readonly global variables ... Readonly copies of calling function
+        // local variables are OK". declare.def:669-673 then drops the whole
+        // operand (any_failed++ + NEXT_VARIABLE): no local and no assignment.
+        let local_blocked: Vec<String> = if self.shell_state.function_depth > 0
+            && !declare_args_force_global(&args)
+            && !declare_args_request_print(&args)
+        {
+            self.global_readonly_local_blocks(&args)
+        } else {
+            Vec::new()
+        };
+        if !local_blocked.is_empty() {
+            args.retain(|arg| {
+                local_assignment_name(arg)
+                    .map_or(true, |name| !local_blocked.iter().any(|b| b == name))
+            });
+        }
+        // GNU variables.c:2654-2665 (make_local_variable): an
+        // att_noassign operand may not be made local either — same
+        // drop + any_failed handling as the readonly block above, with
+        // the "variable may not be assigned value" diagnostic
+        // (rubash#2369).
+        let noassign_blocked: Vec<(String, String)> = if self.shell_state.function_depth > 0
+            && !declare_args_force_global(&args)
+            && !declare_args_request_print(&args)
+        {
+            self.global_noassign_local_blocks(&args)
+        } else {
+            Vec::new()
+        };
+        if !noassign_blocked.is_empty() {
+            args.retain(|arg| {
+                local_assignment_name(arg).map_or(true, |name| {
+                    !noassign_blocked.iter().any(|(b, _)| b == name)
+                })
+            });
+        }
+        // Names that were already local at this frame BEFORE this command's
+        // save_local_names ran -- the `var->context == variable_context` test
+        // in declare.def:655/850. Empty at global scope.
+        let mut frame_locals: Vec<String> = Vec::new();
+        if self.shell_state.function_depth > 0
+            && !declare_args_force_global(&args)
+            && !declare_args_request_print(&args)
+        {
+            let prefix_assignment_names = cmd
+                .assignment_keys()
+                .map(|name| assignment_name_and_append(name).0.to_string())
+                .collect::<Vec<_>>();
+            let scope_keys_before_save: Vec<String> = self
+                .shell_state
+                .local_var_scopes
+                .last()
+                .map(|scope| scope.keys().cloned().collect())
+                .unwrap_or_default();
+            let mut pre_existing: Vec<String> = scope_keys_before_save.clone();
+            // GNU variables.c:3564-3578 assign_in_env + declare.def:659-668:
+            // names bound through `name=value cmd` tempenv assignments are
+            // live at this command's variable context, so `declare -n r`
+            // sees a tempenv `r` as an existing variable (its value becomes
+            // the candidate cell and is validated) rather than resetting a
+            // fresh empty local.
+            pre_existing.extend(self.tempenv_names.iter().cloned());
+            frame_locals.clone_from(&pre_existing);
+            self.save_local_names(&args);
+            self.promote_tempenv_locals(&args, &prefix_assignment_names, &scope_keys_before_save);
+            if !local_args_request_inherit(&args) {
+                self.initialize_non_inherited_locals(
+                    &args,
+                    &prefix_assignment_names,
+                    &pre_existing,
+                );
+            }
+        }
+        let global_local_values = self.begin_global_declare_for_local_names(&args);
+        let posix_function_export_unsets = self.posix_function_declare_unset_export_names(&args);
+        let command_name = cmd.words.first().map(String::as_str).unwrap_or("declare");
+        // GNU builtins/declare.def:704-806: a declare/typeset assignment whose
+        // name is a nameref (and which does not itself carry -n) writes the
+        // referenced variable, not the nameref. Capture the resolved targets
+        // before the builtin runs so the typed owner can mirror them below.
+        let (nameref_flag, _unset_nameref_flag) =
+            crate::builtins::declare::declare_nameref_flags(&args);
+        let nameref_assign_targets = if nameref_flag {
+            // -n keeps the assignment on the nameref cell itself; only +n and
+            // plain declarations follow the chain to the referenced variable.
+            Vec::new()
+        } else {
+            crate::builtins::declare::nameref_assignment_targets(&args, &self.shell_state.env_vars)
+        };
+        // GNU declare.def:623-660 declare_transform_name +
+        // make_local_variable: at function scope an assignment operand that
+        // resolves through a nameref binds a LOCAL variable at the current
+        // context -- `declare r=/` on r->x creates local x and the global x
+        // is restored when the frame returns (nameref20.sub f() cases).
+        if self.shell_state.function_depth > 0 && !declare_args_force_global(&args) {
+            for (_, target) in &nameref_assign_targets {
+                let local_name = target.split('[').next().unwrap_or(target);
+                if !local_name.is_empty() {
+                    self.save_frame_local_name(local_name);
+                }
+            }
+            // Attribute-only operands (`declare -a ref`, bare `declare ref`)
+            // take the same transform: the resolved name is localized before
+            // the attribute pass marks it.
+            if !nameref_flag {
+                for target in crate::builtins::declare::nameref_resolved_operand_names(
+                    &args,
+                    &self.shell_state.env_vars,
+                ) {
+                    let local_name = target.split('[').next().unwrap_or(&target);
+                    if !local_name.is_empty() {
+                        self.save_frame_local_name(local_name);
+                    }
+                }
+            }
+        }
+
+        // The DIRSTACK materialization deferred from the head of this
+        // function (see the note there): the frame-local save above has
+        // settled the shadow state, so sync unless a plain shadow owns
+        // the name — a force-global command addresses the global
+        // variable through the unshadowing above and always syncs.
+        if declare_words_name_dirstack(&cmd.words[1..])
+            && (!self.dirstack_shadowed() || declare_args_force_global(&args))
+        {
+            self.sync_dirstack_cell();
+        }
+        // The router leaves a bare DIRSTACK name in the operand list
+        // for every operand it consumed, so the builtin below always
+        // has the name to apply this call's attribute marks to. The
+        // one exception is a refused operand (readonly bind): it is
+        // fully consumed with no name kept, and if nothing else
+        // remains the builtin would degrade to list mode on the
+        // leftover option words alone — GNU prints nothing there, so
+        // the closure takes the door's status instead.
+        let skip_builtin = dirstack_routed && local_names(&args).is_empty();
+
+        let result = (|| -> Result<i32, ExecuteError> {
+            let mut stdout = Vec::new();
+            let mut stderr = Vec::new();
+            // rubash#2424: the DIRSTACK router's builtin-phase
+            // diagnostics (readonly refusals, a standalone bad
+            // subscript) — written here so the command's redirections
+            // capture them exactly like the builtin's own errors.
+            for line in &dirstack_diagnostics {
+                write!(stderr, "{line}")?;
+            }
+            for name in &local_blocked {
+                writeln!(
+                    stderr,
+                    "{}{command_name}: {name}: readonly variable",
+                    self.diagnostic_prefix()
+                )?;
+            }
+            for (_, display) in &noassign_blocked {
+                writeln!(
+                    stderr,
+                    "{}{command_name}: {display}: variable may not be assigned value",
+                    self.diagnostic_prefix()
+                )?;
+            }
+            // variables.c:2938-2944: the evalerror diagnostic carries the
+            // builtin's command name (`declare: 8+2x: value too great for
+            // base (error token is "2x")`), and the DISCARD abort is armed
+            // so the reader loop drops the rest of this command's line.
+            if let Some(message) = &arith_eval_failure {
+                if !message.is_empty() {
+                    writeln!(stderr, "{}{command_name}: {message}", self.error_prefix())?;
+                }
+                self.raise_evalerror_abort();
+            }
+            // Every operand blocked: GNU skips the operand loop entirely —
+            // no list-mode output even though only option args remain.
+            let status = if skip_builtin {
+                if dirstack_failed {
+                    1
+                } else {
+                    0
+                }
+            } else if (!local_blocked.is_empty() || !noassign_blocked.is_empty())
+                && local_names(&args).is_empty()
+            {
+                1
+            } else {
+                // rubash#183: GNU's FUNCNAME is a real dynamic array
+                // (variables.c) whose cell carries the call stack; declare -p
+                // reads that cell directly, so inside a function
+                // `declare -p FUNCNAME` prints ([0]="f" [1]="main")
+                // (make_funcname_visible flips att_invisible at function
+                // entry, variables.c:1812). rubash models FUNCNAME virtually
+                // (parameter_array_storage), so the builtin's env-map lookup
+                // found no cell and printed a valueless `declare -a
+                // FUNCNAME`. Seed the storage into env_vars for exactly the
+                // named print lookup, then restore — bare list mode stays
+                // untouched (GNU excludes the invisible array there) and
+                // assignments stay blocked (is_noassign_bash_array).
+                // rubash#2770: the named form now renders from the
+                // dynamic view; the seed stays for the subscript
+                // operands (`FUNCNAME[0]` has no view) — but never for
+                // a lifetime-unset cell (variables.c:3839 unbind):
+                // seeding one would fabricate a `declare -a FUNCNAME`
+                // GNU reports as not found.
+                let funcname_print_operand = declare_args_request_print(&args)
+                    && !is_marked_var(
+                        &self.shell_state.env_vars,
+                        crate::executor::UNSET_DYNAMIC_VARS,
+                        "FUNCNAME",
+                    )
+                    && args
+                        .iter()
+                        .any(|arg| arg == "FUNCNAME" || arg.starts_with("FUNCNAME["));
+                let saved_funcname = funcname_print_operand.then(|| {
+                    let storage = self.parameter_array_storage("FUNCNAME").unwrap_or_default();
+                    let saved = self.shell_state.env_vars.get("FUNCNAME").cloned();
+                    self.shell_state
+                        .env_vars
+                        .insert("FUNCNAME".to_string(), storage);
+                    saved
+                });
+                // GNU variables.c:1393-1408 assign_random: RANDOM is
+                // INIT_DYNAMIC_VAR with assign_random, so a declare/typeset
+                // bind reseeds the generator exactly like a plain
+                // `RANDOM=<n>` assignment (rubash#541's declare -p getter
+                // read exposed the missing seed as a shifted exp.tests
+                // ${#RANDOM} sequence). rubash#2720: the dynamic hooks
+                // run only when this declare targets the global cell —
+                // at function depth a declare without -g binds a local.
+                self.apply_declare_dynamic_hooks(&args, self.shell_state.function_depth == 0);
+                // The views are consumed only by -p's dynamic render; a
+                // non-print declare must not draw (RANDOM's getter advances
+                // the generator on every read — GNU declare -p draws once,
+                // a plain declare draws never).
+                let print_requested = declare_args_request_print(&args);
+                // rubash#1569: listing forms render the bindings
+                // underneath this command's own tempenv frame.
+                let underlay = self.tempenv_listing_underlay();
+                let listing = args
+                    .iter()
+                    .all(|arg| arg.starts_with('-') || arg.starts_with('+'));
+                let dynamic_views: Vec<crate::builtins::declare::DynamicDeclarationView> = {
+                    let mut views: Vec<crate::builtins::declare::DynamicDeclarationView> =
+                        Vec::new();
+                    if print_requested {
+                        views.extend(
+                            args.iter()
+                                .filter(|arg| !arg.starts_with('-') && !arg.starts_with('+'))
+                                .filter_map(|arg| {
+                                    let name = arg.split('=').next().unwrap_or(arg);
+                                    self.dynamic_view(name)
+                                }),
+                        );
+                    }
+                    // Listing mode (no operands): GNU's listings
+                    // enumerate the dynamic registry alongside the table
+                    // (rubash#1363 for PIPESTATUS, rubash#2700 for the
+                    // rest). The VISIBLE class (GROUPS and the stack
+                    // arrays) appears in every listing form, bare
+                    // `declare` included; the provider scalars
+                    // appear only in print/filtered forms, matching
+                    // GNU's att_invisible handling in print_var_list.
+                    // Listing views are CELL views (rubash#2973):
+                    // enumeration renders what reads stored into the
+                    // cells and never fires a getter, so building one
+                    // draws nothing. The pre-filter below only skips
+                    // names that cannot pass under any reading of the
+                    // active options (the builtin adjudicates exactly,
+                    // with the gate/any rule of setattr.def).
+                    if listing {
+                        let filtered = ['a', 'A', 'i', 'l', 'n', 'r', 'u', 'x']
+                            .iter()
+                            .any(|&option| declare_args_contain_option(&args, option, true));
+                        let could_pass = |name: &str, integer: bool, array: bool| {
+                            // -A gates on assoc: no dynamic cell is
+                            // associative, so none can pass.
+                            if declare_args_contain_option(&args, 'A', true) {
+                                return false;
+                            }
+                            // -a gates on the array class.
+                            if declare_args_contain_option(&args, 'a', true) && !array {
+                                return false;
+                            }
+                            // -i alone excludes non-integers; combined
+                            // with any other attribute the ANY rule can
+                            // still admit them, so only the pure--i form
+                            // pre-filters here.
+                            if declare_args_contain_option(&args, 'i', true)
+                                && !integer
+                                && !['a', 'l', 'n', 'r', 'u', 'x']
+                                    .iter()
+                                    .any(|&option| declare_args_contain_option(&args, option, true))
+                            {
+                                return false;
+                            }
+                            let _ = name;
+                            true
+                        };
+                        let mut push_registry = |name: &str| {
+                            // rubash#1569: a name bound by this very
+                            // command's prefix renders from the underlay
+                            // snapshot (its pre-frame storage), not the
+                            // dynamic view.
+                            if underlay.contains_key(name)
+                                || views.iter().any(|view| view.name == name)
+                            {
+                                return;
+                            }
+                            let (class_integer, array) = Self::dynamic_declaration_class(name);
+                            // The cell's integer bit for SECONDS is
+                            // state-dependent (earned on first read).
+                            let integer = class_integer
+                                && (name != "SECONDS"
+                                    || self
+                                        .shell_state
+                                        .dynamic_cells
+                                        .borrow()
+                                        .integer_earned
+                                        .contains(name));
+                            if could_pass(name, integer, array) {
+                                if let Some(view) = self.dynamic_cell_view(name) {
+                                    views.push(view);
+                                }
+                            }
+                        };
+                        // rubash#1872: GNU's listing includes the
+                        // BASH_SOURCE/BASH_LINENO arrays with their LIVE
+                        // contents; the env cells for these two only
+                        // refresh at source-frame push/pop and would
+                        // list a returned function's frozen frame.
+                        // rubash#2770: FUNCNAME joins the same VISIBLE
+                        // class — its env mirror is a birth snapshot
+                        // ("", init.rs) that function entry never
+                        // refreshes, so listings rendered the stale
+                        // valueless cell instead of the live stack.
+                        for name in ["GROUPS", "BASH_SOURCE", "BASH_LINENO", "FUNCNAME"] {
+                            push_registry(name);
+                        }
+                        // rubash#1363 + rubash#2973: GNU enumerates a
+                        // materialized PIPESTATUS cell in EVERY
+                        // listing form (its value lives outside the
+                        // variable table); the cell view is None while
+                        // the cell does not exist yet (no pipeline has
+                        // completed), so early listings stay clean.
+                        push_registry("PIPESTATUS");
+                        if print_requested || filtered {
+                            for name in [
+                                "BASHPID",
+                                "HISTCMD",
+                                "RANDOM",
+                                "SRANDOM",
+                                "SECONDS",
+                                "EPOCHSECONDS",
+                                "EPOCHREALTIME",
+                                "BASH_MONOSECONDS",
+                                "LINENO",
+                                "BASH_SUBSHELL",
+                                // BASH_ARGV0 is a table cell (an
+                                // att_invisible one, rendered by the
+                                // builtin's invisible rule); it has no
+                                // dynamic view (rubash#2973).
+                                "BASH_COMMAND",
+                            ] {
+                                push_registry(name);
+                            }
+                        }
+                    }
+                    views
+                };
+                let mut oob_word = None;
+                // rubash#2973: declare/typeset name-only operands
+                // resolve through find_variable like the setattr
+                // pair — `declare SECONDS` materializes the dynamic
+                // cell (and earns SECONDS its integer attribute)
+                // before the builtin applies its own attributes.
+                if !print_requested {
+                    self.fire_dynamic_operand_lookups(&args);
+                }
+                let dynamic_set_views = self.dynamic_set_views();
+                // The Diag's sink is this command's own stderr buffer,
+                // so a readonly diagnostic lands in the command's
+                // redirection, not the shell's (A3-R1, rubash#2707).
+                let row = crate::executor::builtin_table::builtin_table_row(command_name)
+                    .expect("declare-family row");
+                let mut diag = crate::executor::builtin_diag::Diag::new(row, &mut stderr);
+                let prolog = self.diagnostic_prolog_parts();
+                let status = crate::builtins::declare::execute_with_io_named_in_context(
+                    command_name,
+                    &args,
+                    &mut self.shell_state.env_vars,
+                    &mut stdout,
+                    &mut diag,
+                    &prolog,
+                    self.shell_state.function_depth > 0,
+                    &frame_locals,
+                    &dynamic_views,
+                    &dynamic_set_views,
+                    &underlay,
+                    &mut oob_word,
+                    &mut written_hints,
+                )?;
+                diag.flush_with(|| prolog.build(&self.shell_state.env_vars));
+                // GNU err_badarraysub + any_failed (arrayfunc.c:804-809,
+                // rubash#635): report_error carries no `command:` segment
+                // (unlike `declare: x: readonly variable`); abort the list
+                // like the assignment route does. Partial store already
+                // installed by the assign path.
+                if let Some(saved) = saved_funcname {
+                    match saved {
+                        Some(value) => {
+                            self.shell_state
+                                .env_vars
+                                .insert("FUNCNAME".to_string(), value);
+                        }
+                        None => {
+                            self.shell_state.env_vars.remove("FUNCNAME");
+                        }
+                    }
+                }
+                // GNU err_badarraysub + any_failed (arrayfunc.c:804-809,
+                // rubash#635): report_error carries no `command:` segment
+                // (unlike `declare: x: readonly variable`); abort the list
+                // like the assignment route does. Partial store already
+                // installed by the assign path. Placed after the FUNCNAME
+                // restore so frame cleanup always runs.
+                if let Some(word) = oob_word {
+                    writeln!(
+                        stderr,
+                        "{}{}: bad array subscript",
+                        self.error_prefix(),
+                        word
+                    )?;
+                    self.exit_code = 1;
+                    // Bad-subscript class for the eval boundary (rubash#637
+                    // primitive, reused): eval absorbs it and continues.
+                    self.evalerror_subscript_pending.set(true);
+                    self.raise_evalerror_abort();
+                    // The abort above skips the success-gated typed-cell sync
+                    // below, but assign_compound_array_list has already
+                    // installed the PARTIAL store in the mirror (GNU
+                    // arrayfunc.c:913-932 returns NULL only after the elements
+                    // before the bad subscript were bound). GNU has ONE ARRAY
+                    // object, so the structured cell must be re-synced from
+                    // that partial mirror before the command boundary verifier
+                    // and the O(1) `${#a[@]}` read see it (rubash#635).
+                    crate::builtins::declare::sync_typed_assignments(
+                        &args,
+                        &self.shell_state.env_vars,
+                        &mut self.shell_state.variables,
+                    );
+                    // Flush here: this early return skips the normal
+                    // buffered-output flush below, which would swallow the
+                    // diagnostic (rubash#635).
+                    self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+                    return Ok(1);
+                }
+                if local_blocked.is_empty() && noassign_blocked.is_empty() {
+                    status
+                } else {
+                    status.max(1)
+                }
+            };
+            // GNU declare.def:388-404 (pflag loop) -> common.c:188
+            // sh_notfound -> common.c:98 builtin_error vfprintf(stderr):
+            // the `declare -p NAME: not found` diagnostic always reaches
+            // fd 2, including inside a command substitution — the comsub
+            // child inherits fd 2, so it lands on the terminal, and a
+            // body-level `2>&1` dups it onto the capture pipe first. An
+            // earlier guard dropped the buffered stderr whenever
+            // stdout_capture was active (bashdb hardening, no GNU anchor),
+            // which swallowed the diagnostic entirely (rubash#189).
+            self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+            Ok(status)
+        })();
+        // PIPESTATUS cell-shape transitions for this declare's operands
+        // (valueless creation / scalar->array conversion / binds) —
+        // see note_pipestatus_attribute_operands (rubash#1363/#1364).
+        if result.is_ok() {
+            self.note_pipestatus_attribute_operands(&args, declare_args_request_print(&args));
+        }
+        if result.as_ref().is_ok_and(|status| *status == 0) {
+            // Mirror the through-the-nameref assignments into the typed owner:
+            // parameter expansion reads shell_state.variables first, so a
+            // stale typed target would shadow the new value written to
+            // env_vars (probe: typeset +n foo=other then echo $bar).
+            for (_, target) in &nameref_assign_targets {
+                if let Some(value) = self.shell_state.env_vars.get(target).cloned() {
+                    match self.shell_state.variables.get_mut(target) {
+                        Some(variable) => {
+                            variable.value = crate::shell::ShellValue::Scalar(value);
+                        }
+                        None => {
+                            let _ = self.shell_state.variables.set_scalar(target, value);
+                        }
+                    }
+                }
+            }
+            crate::builtins::declare::sync_typed_assignments(
+                &args,
+                &self.shell_state.env_vars,
+                &mut self.shell_state.variables,
+            );
+            crate::builtins::declare::sync_typed_attributes(
+                &args,
+                &self.shell_state.env_vars,
+                &mut self.shell_state.variables,
+            );
+            self.apply_posix_function_declare_unset_export(posix_function_export_unsets);
+            // rubash#2945: an invocation whose -a/-A attribute ends up
+            // set creates its operands through make_new_array_variable /
+            // make_new_assoc_variable (variables.c:2798/2851), which never
+            // apply the mark_modified_vars mark — only scalar binds do.
+            // The allexport emulation below therefore stands down for the
+            // whole invocation (the -a/-A attribute governs every operand,
+            // e.g. `declare -a s=1` stores element 0, unmarked). The
+            // flagless form keeps the #538 behaviour: its valued word
+            // creates the name through bind_variable first, so GNU shows
+            // -ax for `declare arr=(1 2)` and the mark must stay.
+            let array_creation_invocation = declare_invocation_sets_array_attribute(&args);
+            // rubash#2964: inside a function (and without -g) declare
+            // runs in GNU's local context, where a compound operand is
+            // created through the local array machinery and converted
+            // via do_compound_assignment (subst.c:3441, ASS_MKLOCAL) —
+            // neither applies the mark_modified_vars mark, and the
+            // top-level ASS_FORCE creation pre-bind behind the
+            // top-level -ax quirk does not occur. The post-pass below
+            // therefore stands down for compound operands in the local
+            // context (execute_local's post-pass already does);
+            // scalar operands there still bind through
+            // bind_variable_value (variables.c:3366-3367) and mark.
+            let local_context =
+                self.shell_state.function_depth > 0 && !declare_args_force_global(&args);
+            if !array_creation_invocation
+                && crate::builtins::set::shell_option_enabled(
+                    &self.shell_state.env_vars,
+                    "allexport",
+                )
+            {
+                // set -a (allexport): a typeset/declare binding exports the
+                // variable (variables.c:3211 bind_variable marks every
+                // binding att_exported while mark_modified_vars is on), even
+                // when the declare invocation itself carries no -x flag —
+                // including a valueless `declare v` with no assignment word
+                // (rubash#538).
+                for arg in &args {
+                    if arg.starts_with('-') || arg.starts_with('+') {
+                        continue;
+                    }
+                    let (raw_name, has_value) = match arg.split_once('=') {
+                        Some((name, value)) => (name, Some(value)),
+                        None => (arg.as_str(), None),
+                    };
+                    // rubash#2980: a subscript operand binds an ELEMENT
+                    // through assign_array_element, which never applies
+                    // the mark_modified_vars mark — the mark belongs to
+                    // whole-name bindings (variables.c:3211-3212).
+                    // execute_local's post-pass already skips subscript
+                    // operands; this pass derived the base name and
+                    // marked it, printing -ax where GNU prints -a.
+                    if raw_name.contains('[') {
+                        continue;
+                    }
+                    let (base, _) = assignment_name_and_append(raw_name);
+                    let base = base.split('[').next().unwrap_or(base);
+                    if has_value.is_none() && !is_shell_name(base) {
+                        continue;
+                    }
+                    if local_context {
+                        if let Some(value) = has_value {
+                            let compound = value
+                                .strip_prefix(crate::executor::markers::COMPOUND_ASSIGNMENT_MARKER)
+                                .unwrap_or(value);
+                            let paren_value = compound.starts_with('(') && compound.ends_with(')');
+                            // GNU declare.def:935-947: a `(...)`
+                            // operand binds as a compound assignment
+                            // when the word carried W_COMPASSIGN or
+                            // the target already is an array/assoc; a
+                            // quoted `(x)` on a scalar target stays a
+                            // literal string and marks as a scalar
+                            // bind. The marks are read after the bind,
+                            // so a compound-created array also reads
+                            // as an array target here.
+                            if paren_value
+                                && (value.starts_with(
+                                    crate::executor::markers::COMPOUND_ASSIGNMENT_MARKER,
+                                ) || is_marked_var(
+                                    &self.shell_state.env_vars,
+                                    ASSOC_VARS,
+                                    base,
+                                ) || is_marked_var(
+                                    &self.shell_state.env_vars,
+                                    ARRAY_VARS,
+                                    base,
+                                ))
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                    self.mark_exported(base);
+                }
+            }
+        }
+        if result.as_ref().is_ok_and(|status| *status != 0) {
+            // GNU has ONE array object per name: a failed operand does
+            // not roll back the operands that bound around it
+            // (arrayfunc.c:382-390 binds each element as its operand is
+            // processed; any_failed only sets the final status). The
+            // builtin has already installed those partial binds in the
+            // mirror, so the typed cells must re-sync from it even when
+            // the command failed — the same re-sync the oob abort path
+            // performs above (rubash#635). Skipping it leaves the cell
+            // stale against the mirror, and the command-boundary
+            // verifier panics on the next read (rubash#2462: a bad
+            // negative subscript followed by a good bind in one declare).
+            crate::builtins::declare::sync_typed_assignments(
+                &args,
+                &self.shell_state.env_vars,
+                &mut self.shell_state.variables,
+            );
+        }
+        self.finish_global_declare_for_local_names(global_local_values);
+        // The evalerror DISCARD makes the command fail (GNU $? = 1) even
+        // when the surviving prefix operands all bound cleanly.
+        if arith_eval_failure.is_some() {
+            return result.map(|_| 1);
+        }
+        // rubash#2424: a failed DIRSTACK door bind fails the declare
+        // (GNU any_failed) even when the surviving operands bound
+        // cleanly; the door already emitted its diagnostic.
+        if dirstack_failed {
+            return result.map(|status| status.max(1));
+        }
+        result
+    }
+
+    pub(in crate::executor) fn execute_declare_command(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<(), ExecuteError> {
+        // rubash#3344: the -f diversion must not pre-empt the shared
+        // --help gate (builtins/common.h:29-41 CHECK_HELPOPT /
+        // CASE_HELPOPT; declare.def:362 CASE_HELPOPT in the getopt
+        // loop, before any function/variable branch — `-f` only sets
+        // att_function in the flags). The plain path reaches the gate
+        // in execute_prepared_command first, but the `command`
+        // re-dispatch path carries no gate, so `command declare -f
+        // --help` fell into the function face, which treats `--help`
+        // as a function name to look up (rc 1, no help). Consult the
+        // same shared predicate here and fall through to the core,
+        // whose BuiltinOpt scan owns the help emission (EX_USAGE).
+        // This is the gate/diversion ordering, not a `-f` special
+        // case: the decision is the shared gate's, and the core
+        // still renders the help under the invoked name.
+        let command_name = cmd.words.first().map(String::as_str).unwrap_or("declare");
+        let help_requested = builtin_table_row(command_name)
+            .is_some_and(|row| super::builtin_opt::help_opt_requested(row, &cmd.words[1..]));
+        if declare_has_function_option(&cmd.words[1..]) && !help_requested {
+            let mut stdout = Vec::new();
+            let mut stderr = Vec::new();
+            self.exit_code = self.execute_declare_functions(
+                command_name,
+                &cmd.words[1..],
+                &mut stdout,
+                &mut stderr,
+            )?;
+            self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+            return Ok(());
+        }
+        self.exit_code = self.execute_declare(cmd)?;
+        Ok(())
+    }
+
+    pub(in crate::executor) fn execute_local(
+        &mut self,
+        cmd: &CommandNode,
+    ) -> Result<i32, ExecuteError> {
+        let mut stdout = Vec::new();
+        let mut stderr = Vec::new();
+        // rubash#2974: a nameless `local -F` renders the frame's
+        // locals with nodefs set (declare.def's local branch passes
+        // nodefs to show_local_var_attributes); the values are
+        // stripped from the rendered listing at the flush below.
+        // The scan is the row's own machine now (declare_option_scan);
+        // GNU declare.def's `case 'F'` raises nodefs for either sign
+        // (`nodefs++` runs unconditionally, before att_function is
+        // split into flags_on/flags_off), so the letter alone
+        // decides here.
+        let nodefs_listing = declare_option_scan(
+            builtin_table_row("declare").expect("declare row"),
+            &cmd.words[1..],
+        )
+        .0
+        .iter()
+        .any(|(letter, _)| *letter == 'F')
+            && !declare_invocation_has_operands(&cmd.words[1..]);
+        // GNU declare.def local_builtin catches a STRAIGHT `local
+        // --help' (first word) before checking function context, while
+        // `--help` after other options (`local -a --help`) reaches the
+        // context check first — outside a function that reports "can
+        // only be used in a function", inside one the getopt scan
+        // reports Help before any operand processing. The pre-core
+        // local logic below (frame save, -p missing-name reports,
+        // substring option detectors) must not run for either Help
+        // shape, so both route straight to the core, whose BuiltinOpt
+        // emits the Help (and reports an earlier invalid letter, e.g.
+        // `local -97 --help`, in scan order).
+        let straight_help = cmd.words.get(1).is_some_and(|word| word == "--help");
+        let region_help = local_args_request_help(&cmd.words[1..]);
+        let (status, final_args) = if straight_help
+            || (region_help && self.shell_state.function_depth != 0)
+        {
+            // Route straight to the core, whose BuiltinOpt emits the
+            // Help (and reports an earlier invalid letter, e.g.
+            // `local -97 --help` inside a function, in scan order).
+            let row =
+                crate::executor::builtin_table::builtin_table_row("local").expect("local row");
+            let mut diag = crate::executor::builtin_diag::Diag::new(row, &mut stderr);
+            let prolog = self.diagnostic_prolog_parts();
+            let dynamic_set_views = self.dynamic_set_views();
+            let underlay = crate::shell::var_table::TempenvListingUnderlay::new();
+            let mut oob_word = None;
+            let mut written_hints = crate::builtins::declare::WrittenOperandHints::default();
+            let status = crate::builtins::declare::execute_with_io_named_in_context(
+                "local",
+                &cmd.words[1..],
+                &mut self.shell_state.env_vars,
+                &mut stdout,
+                &mut diag,
+                &prolog,
+                true,
+                &[],
+                &[],
+                &dynamic_set_views,
+                &underlay,
+                &mut oob_word,
+                &mut written_hints,
+            )?;
+            diag.flush_with(|| prolog.build(&self.shell_state.env_vars));
+            (status, Vec::new())
+        } else if self.shell_state.function_depth == 0 {
+            writeln!(
+                stderr,
+                "{}local: can only be used in a function",
+                self.diagnostic_prefix()
+            )?;
+            (1, Vec::new())
+        } else if let Err(option) = validate_local_options(&cmd.words[1..]) {
+            writeln!(
+                stderr,
+                "{}local: -{option}: invalid option",
+                self.diagnostic_prefix()
+            )?;
+            writeln!(stderr, "local: usage: local [option] name[=value] ...")?;
+            (2, Vec::new())
+        } else if declare_has_function_option(&cmd.words[1..])
+            && declare_invocation_has_operands(&cmd.words[1..])
+        {
+            // rubash#2582: GNU's local is declare_internal in a local
+            // context (declare.def), so `-f`/`-F` take the SAME
+            // function-listing path as `declare -f` — the route
+            // execute_declare_command takes via this same scan. The
+            // generic variable path below ends in the builtins::declare
+            // scanner, whose letter table has no f/F (it never sees
+            // them on the declare route), so `local -f g` was rejected
+            // there after validate_local_options had accepted it.
+            // rubash#2974: the divert requires NAME operands — GNU's
+            // declare.def checks list_function_p only on the operand
+            // path; a NAMELESS `local -f`/`-F` takes the local-variable
+            // branch (show_local_var_attributes, nodefs for -F) and
+            // prints the frame's locals, never function definitions.
+            let status =
+                self.execute_declare_functions("local", &cmd.words[1..], &mut stdout, &mut stderr)?;
+            (status, Vec::new())
+        } else if declare_args_request_print(&cmd.words[1..])
+            && !local_operands(&cmd.words[1..]).is_empty()
+        {
+            // rubash#3529: `local -p NAME...` is one in-order walk over
+            // the operands (declare.def:389-406 ->
+            // setattr.def:555 show_localname_attributes); see
+            // execute_local_print_operands.
+            let written_args = self.expand_declare_assignment_args(&cmd.words[1..]);
+            let args = match self.rewrite_declare_operand_subscripts(
+                &written_args,
+                &cmd.word_metadata,
+                "local",
+            ) {
+                Ok(args) => args,
+                Err(()) => return Ok(1),
+            };
+            let mut written_hints = declare_written_operand_hints(&written_args, &args);
+            let status = self.execute_local_print_operands(
+                &args,
+                &mut written_hints,
+                &mut stdout,
+                &mut stderr,
+            )?;
+            (status, args)
+        } else {
+            let written_args = self.expand_declare_assignment_args(&cmd.words[1..]);
+            let mut args = match self.rewrite_declare_operand_subscripts(
+                &written_args,
+                &cmd.word_metadata,
+                "local",
+            ) {
+                Ok(args) => args,
+                Err(()) => return Ok(1),
+            };
+            let mut written_hints = declare_written_operand_hints(&written_args, &args);
+            // Same variables.c:2920-2944 rule as execute_declare: an
+            // integer-RHS evalexp failure prints `local: <evalerror>`,
+            // drops the failing operand and its successors, and arms the
+            // DISCARD abort for the rest of the command list.
+            let mut arith_eval_failure = None;
+            if declare_args_request_integer(&args) && !declare_args_request_print(&args) {
+                let (evaluated, failure) = self.evaluate_declare_integer_assignment_args(&args);
+                args = evaluated;
+                arith_eval_failure = failure;
+            }
+            if let Some(message) = &arith_eval_failure {
+                if !message.is_empty() {
+                    writeln!(stderr, "{}local: {message}", self.error_prefix())?;
+                }
+                self.raise_evalerror_abort();
+            }
+            // GNU declare.def:443-455: a bare `-` operand creates a local `-`
+            // variable whose value is the current `set -o` option bitmap;
+            // pop_var_context applies it through set_current_options
+            // (variables.c:5271-5275). Outside -p mode the operand is handled
+            // here and stripped — the declare parser would treat it as a flag
+            // bundle. In -p mode it stays for show_localname_attributes.
+            let mut had_dash_operand = false;
+            if !declare_args_request_print(&args) && args.iter().any(|arg| arg == "-") {
+                had_dash_operand = true;
+                // "no duplicate instances" (declare.def:451): a second
+                // `local -` in the same frame keeps the first snapshot.
+                if self
+                    .shell_state
+                    .local_var_scopes
+                    .last()
+                    .is_none_or(|scope| !scope.contains_key("-"))
+                {
+                    self.save_frame_local_name("-");
+                    let bitmap = self.current_options_bitmap();
+                    self.shell_state
+                        .env_vars
+                        .insert("-".to_string(), bitmap.clone());
+                    let _ = self.shell_state.variables.set_scalar("-", bitmap);
+                }
+                args.retain(|arg| arg != "-");
+            }
+            let mut dash_printed = false;
+            // GNU local / local -p with no name arguments prints ONLY the
+            // variables declared local to the current function frame (sorted,
+            // declare -- form) -- never the whole variable table. Rewrite
+            // the args so the shared declare printer renders just those names.
+            // `local_operands` (not `local_names`): `local -- -p` HAS an
+            // operand (`-p`, an invalid name) and must reach declare's
+            // `not a valid identifier` diagnostic, not the list branch
+            // (rubash#1377).
+            if !had_dash_operand && local_operands(&args).is_empty() {
+                let local_names: Vec<String> = self
+                    .shell_state
+                    .local_var_scopes
+                    .last()
+                    .map(|scope| {
+                        scope
+                            .keys()
+                            .filter(|name| !name.starts_with("__RUBASH_"))
+                            .cloned()
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let local_names = {
+                    let mut names = local_names;
+                    names.sort();
+                    names
+                };
+                if local_names.is_empty() {
+                    // No locals declared in this frame: GNU prints nothing.
+                    self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+                    return Ok(0);
+                }
+                // GNU setattr.def:375-378: the `-` local prints as `local -`,
+                // not a declare-style assignment line.
+                let mut local_names = local_names;
+                if let Some(position) = local_names.iter().position(|name| name == "-") {
+                    local_names.remove(position);
+                    writeln!(stdout, "local -")?;
+                    dash_printed = true;
+                }
+                if !local_names.is_empty() {
+                    args.clear();
+                    args.push("-p".to_string());
+                    args.extend(local_names);
+                } else {
+                    args.clear();
+                }
+            }
+            // GNU variables.c:2651-2665 (make_local_variable): readonly
+            // global bindings reject local creation — drop those operands
+            // before the frame save so neither a local nor an assignment
+            // happens (declare.def:669-673 any_failed + NEXT_VARIABLE).
+            let local_blocked: Vec<String> = if !declare_args_request_print(&args) {
+                self.global_readonly_local_blocks(&args)
+            } else {
+                Vec::new()
+            };
+            if !local_blocked.is_empty() {
+                args.retain(|arg| {
+                    local_assignment_name(arg)
+                        .map_or(true, |name| !local_blocked.iter().any(|b| b == name))
+                });
+            }
+            // GNU variables.c:2654-2665 (make_local_variable): an
+            // att_noassign operand may not be made local — dropped
+            // with the "variable may not be assigned value" diagnostic
+            // and any_failed status, like the readonly block above.
+            // Unlike the readonly twin this IS gated on -g: with -g no
+            // local is made and the global bind is a silent swallow in
+            // GNU, while a readonly -g bind still prints err_readonly
+            // (rubash#2369).
+            let noassign_blocked: Vec<(String, String)> =
+                if !declare_args_request_print(&args) && !declare_args_force_global(&args) {
+                    self.global_noassign_local_blocks(&args)
+                } else {
+                    Vec::new()
+                };
+            if !noassign_blocked.is_empty() {
+                args.retain(|arg| {
+                    local_assignment_name(arg).map_or(true, |name| {
+                        !noassign_blocked.iter().any(|(b, _)| b == name)
+                    })
+                });
+            }
+            // GNU builtins/declare.def (local is declare with
+            // variable_context forced): `-g` suppresses the local creation
+            // and makes the builtin operate on the global variable
+            // (declare.def's -g handling in variable context). rubash#1471:
+            // execute_local used to localize every operand even with -g,
+            // so `local -g V=1` inside a function created a plain local
+            // that vanished at return. Mirror execute_declare: skip the
+            // frame save under -g and bracket the builtin call with the
+            // global-declare unshadow/restore pair so a same-named OUTER
+            // local stays in view for reads while the write lands on the
+            // global cell.
+            let force_global = declare_args_force_global(&args);
+            let mut frame_locals: Vec<String> = Vec::new();
+            if !declare_args_request_print(&args) && !force_global {
+                let prefix_assignment_names = cmd
+                    .assignment_keys()
+                    .map(|name| assignment_name_and_append(name).0.to_string())
+                    .collect::<Vec<_>>();
+                let scope_keys_before_save: Vec<String> = self
+                    .shell_state
+                    .local_var_scopes
+                    .last()
+                    .map(|scope| scope.keys().cloned().collect())
+                    .unwrap_or_default();
+                let mut pre_existing: Vec<String> = scope_keys_before_save.clone();
+                // Same tempenv visibility as the declare path above: names
+                // bound by `name=value cmd` are live at this context.
+                pre_existing.extend(self.tempenv_names.iter().cloned());
+                frame_locals.clone_from(&pre_existing);
+                self.save_local_names(&args);
+                self.promote_tempenv_locals(
+                    &args,
+                    &prefix_assignment_names,
+                    &scope_keys_before_save,
+                );
+                if !local_args_request_inherit(&args) {
+                    self.initialize_non_inherited_locals(
+                        &args,
+                        &prefix_assignment_names,
+                        &pre_existing,
+                    );
+                }
+            }
+            self.write_local_compound_readonly_assignment_errors(&args, &mut stderr)?;
+            // GNU declare.def:565 uses variable_context to decide between the
+            // global-scope self-reference error and the function-scope
+            // circular-reference warning; local always runs in a function, so
+            // `local -n a=$1` with a=$1 warns and continues.
+            for name in &local_blocked {
+                writeln!(
+                    stderr,
+                    "{}local: {name}: readonly variable",
+                    self.diagnostic_prefix()
+                )?;
+            }
+            for (_, display) in &noassign_blocked {
+                writeln!(
+                    stderr,
+                    "{}local: {display}: variable may not be assigned value",
+                    self.diagnostic_prefix()
+                )?;
+            }
+            // rubash#1471: under -g, unshadow same-named outer locals for
+            // the duration of the builtin call (the declare path's
+            // begin/finish pair); a no-op vec when -g is absent.
+            let global_local_values = self.begin_global_declare_for_local_names(&args);
+            let (status, builtin_status) = if local_names(&args).is_empty()
+                && (had_dash_operand
+                    || dash_printed
+                    || !local_blocked.is_empty()
+                    || !noassign_blocked.is_empty())
+            {
+                (
+                    if local_blocked.is_empty() && noassign_blocked.is_empty() {
+                        0
+                    } else {
+                        1
+                    },
+                    0,
+                )
+            } else {
+                // GNU variables.c:1393-1408 assign_random: RANDOM is
+                // INIT_DYNAMIC_VAR with assign_random, so a declare/typeset
+                // bind reseeds the generator exactly like a plain
+                // `RANDOM=<n>` assignment (rubash#541's declare -p getter
+                // read exposed the missing seed as a shifted exp.tests
+                // ${#RANDOM} sequence). rubash#2720: a `local` bind is a
+                // plain cell — the dynamic hooks run only for -g.
+                self.apply_declare_dynamic_hooks(&args, false);
+                // The views are consumed only by -p's dynamic render; a
+                // non-print declare must not draw (RANDOM's getter advances
+                // the generator on every read — GNU declare -p draws once,
+                // a plain declare draws never).
+                let print_requested = declare_args_request_print(&args);
+                let dynamic_views: Vec<crate::builtins::declare::DynamicDeclarationView> =
+                    if print_requested {
+                        args.iter()
+                            .filter(|arg| !arg.starts_with('-') && !arg.starts_with('+'))
+                            .filter_map(|arg| {
+                                let name = arg.split('=').next().unwrap_or(arg);
+                                self.dynamic_view(name)
+                            })
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
+                let mut oob_word = None;
+                // rubash#1569: same listing underlay as declare.
+                let underlay = self.tempenv_listing_underlay();
+                let dynamic_set_views = self.dynamic_set_views();
+                // Same A3-R1 sink binding as the declare route above.
+                let row =
+                    crate::executor::builtin_table::builtin_table_row("local").expect("local row");
+                let mut diag = crate::executor::builtin_diag::Diag::new(row, &mut stderr);
+                let prolog = self.diagnostic_prolog_parts();
+                let builtin_status = crate::builtins::declare::execute_with_io_named_in_context(
+                    "local",
+                    &args,
+                    &mut self.shell_state.env_vars,
+                    &mut stdout,
+                    &mut diag,
+                    &prolog,
+                    true,
+                    &frame_locals,
+                    &dynamic_views,
+                    &dynamic_set_views,
+                    &underlay,
+                    &mut oob_word,
+                    &mut written_hints,
+                )?;
+                diag.flush_with(|| prolog.build(&self.shell_state.env_vars));
+                let status = if local_blocked.is_empty() && noassign_blocked.is_empty() {
+                    builtin_status
+                } else {
+                    builtin_status.max(1)
+                };
+                // The evalerror DISCARD fails the whole local command (GNU
+                // $? = 1) even when the surviving prefix operands bound.
+                let status = if arith_eval_failure.is_some() {
+                    status.max(1)
+                } else {
+                    status
+                };
+                // GNU err_badarraysub + any_failed (arrayfunc.c:804-809,
+                // rubash#635): an out-of-range subscript aborts the whole
+                // local command with the bare report_error diagnostic (no
+                // `local:` segment). Partial store already installed by the
+                // assign path; the `builtin_status == 0` gate below then
+                // skips the scalar-shadow pass, and the pending abort ends
+                // the list like the assignment route does.
+                if let Some(word) = oob_word {
+                    writeln!(
+                        stderr,
+                        "{}{}: bad array subscript",
+                        self.error_prefix(),
+                        word
+                    )?;
+                    self.exit_code = 1;
+                    // Same eval-boundary class as execute_declare (rubash#637).
+                    self.evalerror_subscript_pending.set(true);
+                    self.raise_evalerror_abort();
+                    // The assign path installed the PARTIAL store in the
+                    // mirror (GNU arrayfunc.c:913-932 binds the elements
+                    // before the bad subscript into the one array object),
+                    // so re-sync the typed cell from that mirror before the
+                    // command-boundary verifier runs — the same step
+                    // execute_declare's abort path performs (rubash#1719).
+                    crate::builtins::declare::sync_typed_assignments(
+                        &args,
+                        &self.shell_state.env_vars,
+                        &mut self.shell_state.variables,
+                    );
+                    (1, 1)
+                } else {
+                    (status, builtin_status)
+                }
+            };
+            if builtin_status == 0 {
+                // Plain scalar locals must shadow the outer value in the typed
+                // owner as well: parameter expansion reads shell_state.variables
+                // first, so `local OPTERR=1` inside a function has to replace the
+                // stale global there (getopts5.sub: getop must print OPTERR=1,
+                // and the frame restore in restore_function_locals puts the
+                // saved outer value back).
+                for arg in &args {
+                    let Some((raw_name, _)) = arg.split_once('=') else {
+                        continue;
+                    };
+                    let name = raw_name.strip_suffix('+').unwrap_or(raw_name);
+                    let (base, _) = assignment_name_and_append(name);
+                    if is_marked_var(&self.shell_state.env_vars, ARRAY_VARS, base)
+                        || is_marked_var(&self.shell_state.env_vars, ASSOC_VARS, base)
+                        || is_marked_var(&self.shell_state.env_vars, NAMEREF_VARS, base)
+                    {
+                        continue;
+                    }
+                    match self.shell_state.env_vars.get(base) {
+                        Some(value) => match self.shell_state.variables.get_mut(base) {
+                            Some(variable) => {
+                                variable.value = crate::shell::ShellValue::Scalar(value.clone());
+                            }
+                            None => {
+                                let _ = self.shell_state.variables.set_scalar(base, value.clone());
+                            }
+                        },
+                        None => {
+                            self.shell_state.variables.remove(base);
+                        }
+                    }
+                }
+            }
+            // rubash#1719: the scalar-shadow pass above skips array and
+            // assoc operands outright, and nothing else in execute_local
+            // re-synced their typed cells — the builtin wrote the new
+            // binding into the mirror only, so a cell installed by an
+            // intervening plain assignment (or append / element write)
+            // stayed stale and shadowed the new binding (debug builds
+            // panicked in verify_typed_cells; the oh-my-bash module
+            // loader re-declares `local -a locations=()` per module in
+            // its while loop, after a case-branch plain assignment had
+            // created the cell). GNU has ONE variable object per name:
+            // declare.def:261 declare_internal binds through
+            // variables.c:2579 make_local_variable and variables.c:3225
+            // bind_variable, and every read consults that same object.
+            // The typed/mirror split is ours, so a mirror write must
+            // sync or drop the cell (the storage.rs contract) — perform
+            // the same post-bind sync execute_declare performs.
+            // This must also run when the command FAILED on a sibling
+            // operand (rubash#2462): the builtin installed the partial
+            // binds in the mirror (arrayfunc.c binds per operand;
+            // any_failed only sets the status), and a stale cell
+            // panics the command-boundary verifier on the next read.
+            // The oob branch above already synced once; the call is
+            // idempotent.
+            crate::builtins::declare::sync_typed_assignments(
+                &args,
+                &self.shell_state.env_vars,
+                &mut self.shell_state.variables,
+            );
+            // rubash#2944: the execute_declare allexport post-pass above
+            // has no counterpart for local in GNU terms either — local IS
+            // declare_internal with the context forced (builtins/
+            // declare.def local_builtin), so a valued scalar operand binds
+            // through bind_variable_value (variables.c:3366-3367) and
+            // mark_modified_vars applies exactly as for declare. Mirror
+            // the declare pass with the bind shapes local actually
+            // performs: a VALUE is required (a valueless local is
+            // make_local_variable only — no bind, no mark), an -a/-A
+            // invocation creates through make_new_array_variable /
+            // make_new_assoc_variable (variables.c:2798/2851 — no mark),
+            // a subscript operand binds an element (assign_array_element
+            // — no mark), and a compound value converts through
+            // do_compound_assignment (subst.c:3441 — no mark).
+            if status == 0 {
+                let array_creation_invocation = declare_invocation_sets_array_attribute(&args);
+                if !array_creation_invocation
+                    && crate::builtins::set::shell_option_enabled(
+                        &self.shell_state.env_vars,
+                        "allexport",
+                    )
+                {
+                    for arg in &args {
+                        if arg.starts_with('-') || arg.starts_with('+') {
+                            continue;
+                        }
+                        let Some((raw_name, value)) = arg.split_once('=') else {
+                            continue;
+                        };
+                        if raw_name.contains('[') || value.starts_with(COMPOUND_ASSIGNMENT_MARKER) {
+                            continue;
+                        }
+                        let (base, _) = assignment_name_and_append(raw_name);
+                        if is_shell_name(base) {
+                            self.mark_exported(base);
+                        }
+                    }
+                }
+            }
+            // rubash#1471: restore the outer locals begin unshadowed —
+            // the scope slots now hold the NEW global values (so a later
+            // frame exit restores the globals as declare -g left them),
+            // and the visible cells hold the outer locals again.
+            self.finish_global_declare_for_local_names(global_local_values);
+            (status, args)
+        };
+        // Same PIPESTATUS shape transitions as execute_declare
+        // (rubash#1363/#1364); the -p-rewritten listing form reports
+        // print_requested and stands down.
+        if status == 0 {
+            self.note_pipestatus_attribute_operands(
+                &final_args,
+                declare_args_request_print(&final_args),
+            );
+        }
+        // rubash#2974 (nodefs half): the builtin has no nodefs input
+        // for variables, so a nameless `local -F` listing loses its
+        // values here. Declaration lines are `declare <flags> NAME=…`
+        // — flags and names never contain '=', value-less lines and
+        // the `local -` line have none.
+        if nodefs_listing {
+            let text = String::from_utf8_lossy(&stdout).into_owned();
+            let mut stripped = String::with_capacity(text.len());
+            for line in text.split_inclusive('\n') {
+                let body = line.strip_suffix('\n').unwrap_or(line);
+                if body.starts_with("declare ") {
+                    match body.find('=') {
+                        Some(eq) => {
+                            stripped.push_str(&body[..eq]);
+                            if line.ends_with('\n') {
+                                stripped.push('\n');
+                            }
+                        }
+                        None => stripped.push_str(line),
+                    }
+                } else {
+                    stripped.push_str(line);
+                }
+            }
+            stdout = stripped.into_bytes();
+        }
+        let stderr = local_stderr_from_declare(stderr);
+        self.write_buffered_builtin_output(cmd, &stdout, &stderr)?;
+        Ok(status)
+    }
+
+    /// `local -p NAME...` (rubash#3529): GNU builtins/declare.def:389-406
+    /// walks the operands ONCE, in order, calling setattr.def:555
+    /// show_localname_attributes on each word verbatim. A word naming a
+    /// local of the CURRENT variable context (`local_p (var) &&
+    /// var->context == variable_context`) is printed — `local -` for the
+    /// option-snapshot local — and every other word (a missing or outer
+    /// name, an option-shaped word after the first operand, a valued or
+    /// subscripted word) is reported `not found` and fails the command.
+    /// `-g` does not enter the lookup. Consecutive found names render
+    /// through one declare-printer call, so each stream keeps operand
+    /// order.
+    fn execute_local_print_operands(
+        &mut self,
+        args: &[String],
+        written_hints: &mut crate::builtins::declare::WrittenOperandHints,
+        stdout: &mut Vec<u8>,
+        stderr: &mut Vec<u8>,
+    ) -> Result<i32, ExecuteError> {
+        let operands: Vec<String> = local_operands(args)
+            .into_iter()
+            .map(str::to_string)
+            .collect();
+        // The operands are the suffix after the option region; a `--`
+        // terminator is dropped (the printer only receives names, which
+        // never start with '-').
+        let option_words: Vec<String> = args[..args.len() - operands.len()]
+            .iter()
+            .filter(|word| *word != "--")
+            .cloned()
+            .collect();
+        let found: Vec<bool> = {
+            let innermost = self.shell_state.local_var_scopes.last();
+            operands
+                .iter()
+                .map(|word| innermost.is_some_and(|scope| scope.contains_key(word.as_str())))
+                .collect()
+        };
+        let mut status = 0;
+        let mut run: Vec<String> = Vec::new();
+        for (word, found) in operands.iter().zip(found) {
+            if found && word != "-" {
+                run.push(word.clone());
+                continue;
+            }
+            status = status.max(self.local_print_run(
+                &option_words,
+                &mut run,
+                written_hints,
+                stdout,
+                stderr,
+            )?);
+            if found {
+                writeln!(stdout, "local -")?;
+            } else {
+                writeln!(
+                    stderr,
+                    "{}local: {word}: not found",
+                    self.diagnostic_prefix()
+                )?;
+                status = 1;
+            }
+        }
+        status = status.max(self.local_print_run(
+            &option_words,
+            &mut run,
+            written_hints,
+            stdout,
+            stderr,
+        )?);
+        Ok(status)
+    }
+
+    /// Render one run of frame-local names through the declare printer
+    /// (the same core call the non-print route makes), then clear it.
+    fn local_print_run(
+        &mut self,
+        option_words: &[String],
+        run: &mut Vec<String>,
+        written_hints: &mut crate::builtins::declare::WrittenOperandHints,
+        stdout: &mut Vec<u8>,
+        stderr: &mut Vec<u8>,
+    ) -> Result<i32, ExecuteError> {
+        if run.is_empty() {
+            return Ok(0);
+        }
+        let mut core_args = option_words.to_vec();
+        core_args.append(run);
+        let dynamic_views: Vec<crate::builtins::declare::DynamicDeclarationView> = core_args
+            [option_words.len()..]
+            .iter()
+            .filter_map(|name| self.dynamic_view(name))
+            .collect();
+        let underlay = self.tempenv_listing_underlay();
+        let dynamic_set_views = self.dynamic_set_views();
+        let row = crate::executor::builtin_table::builtin_table_row("local").expect("local row");
+        let mut diag = crate::executor::builtin_diag::Diag::new(row, stderr);
+        let prolog = self.diagnostic_prolog_parts();
+        let mut oob_word = None;
+        let status = crate::builtins::declare::execute_with_io_named_in_context(
+            "local",
+            &core_args,
+            &mut self.shell_state.env_vars,
+            stdout,
+            &mut diag,
+            &prolog,
+            true,
+            &[],
+            &dynamic_views,
+            &dynamic_set_views,
+            &underlay,
+            &mut oob_word,
+            written_hints,
+        )?;
+        diag.flush_with(|| prolog.build(&self.shell_state.env_vars));
+        Ok(status)
+    }
+
+    pub(in crate::executor) fn write_local_compound_readonly_assignment_errors<W>(
+        &self,
+        args: &[String],
+        stderr: &mut W,
+    ) -> io::Result<()>
+    where
+        W: Write,
+    {
+        for arg in args {
+            let Some((name, value)) = split_assignment_word(arg) else {
+                continue;
+            };
+            if !value.starts_with(COMPOUND_ASSIGNMENT_MARKER) {
+                continue;
+            }
+            let (name, _) = assignment_name_and_append(name);
+            if is_marked_var(&self.shell_state.env_vars, READONLY_VARS, name) {
+                writeln!(
+                    stderr,
+                    "{}{}: readonly variable",
+                    self.diagnostic_prefix(),
+                    name
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    /// GNU variables.c:2579-2631 make_local_variable (was_tmpvar path): a
+    /// `declare`/`typeset`/`local` operand whose name is bound by this
+    /// command's own `name=value` prefix finds the tempenv binding
+    /// (find_variable -> tempvar) and promotes it to a frame local in
+    /// place, keeping its value and exported attribute — `z=y typeset z`
+    /// leaves a live exported local z=y for the rest of the frame, and
+    /// `z=y typeset z=w` leaves the local the assignment created. The
+    /// binding is NOT popped with the command's tempenv. For a name that
+    /// was not already a frame local, the frame-restore snapshot must hold
+    /// the value BEFORE the prefix applied (recorded by
+    /// apply_temporary_assignments in tempenv_previous), otherwise the
+    /// tempenv value leaks into the global scope when the frame returns.
+    pub(in crate::executor) fn promote_tempenv_locals(
+        &mut self,
+        args: &[String],
+        prefix_assignment_names: &[String],
+        scope_keys_before_save: &[String],
+    ) {
+        if self.shell_state.function_depth == 0 || prefix_assignment_names.is_empty() {
+            return;
+        }
+        for name in local_names(args) {
+            if !prefix_assignment_names.iter().any(|prefix| prefix == &name) {
+                continue;
+            }
+            // The prefix binding may have been rejected (readonly target) or
+            // routed through a nameref to a different cell; only a binding
+            // that actually landed on this name is promoted.
+            if !self.shell_state.env_vars.contains_key(&name) {
+                continue;
+            }
+            if !self
+                .tempenv_promoted_names
+                .iter()
+                .any(|saved| saved == &name)
+            {
+                self.tempenv_promoted_names.push(name.clone());
+            }
+            // A name that was already a frame local keeps the snapshot its
+            // earlier declaration recorded (the caller's value); only a
+            // first declaration's snapshot gets the pre-prefix value.
+            if scope_keys_before_save.iter().any(|saved| saved == &name) {
+                continue;
+            }
+            if let Some((env_value, typed_value, attrs)) = self.tempenv_previous.get(&name).cloned()
+            {
+                if let Some(scope) = self.shell_state.local_var_scopes.last_mut() {
+                    scope.insert(name.clone(), env_value);
+                }
+                if let Some(typed_scope) = self.shell_state.local_typed_scopes.last_mut() {
+                    typed_scope.insert(name.clone(), typed_value);
+                }
+                if let Some(attr_scope) = self.shell_state.local_attr_scopes.last_mut() {
+                    attr_scope.insert(name.clone(), attrs);
+                }
+                // rubash#1525: a promoted PIPESTATUS local's frame
+                // snapshot must hold the pre-tempenv (shape,
+                // vector) apply_temporary_assignments recorded, so
+                // the frame pop restores them with the cell.
+                if name == "PIPESTATUS" {
+                    if let Some(encoded) = self.tempenv_pipestatus_state.clone() {
+                        if let Some(scope) = self.shell_state.local_var_scopes.last_mut() {
+                            scope
+                                .entry(
+                                    crate::shell::state::PIPESTATUS_STATE_SNAPSHOT_KEY.to_string(),
+                                )
+                                .or_insert(Some(encoded));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pub(in crate::executor) fn initialize_non_inherited_locals(
+        &mut self,
+        args: &[String],
+        preserve_names: &[String],
+        pre_existing: &[String],
+    ) {
+        if crate::builtins::shopt::option_enabled(&self.shell_state.env_vars, "localvar_inherit") {
+            return;
+        }
+        for name in local_names(args) {
+            if preserve_names.iter().any(|preserve| preserve == &name) {
+                continue;
+            }
+            // GNU builtins/declare.def:659-668: re-declaring a variable that
+            // is already local at the SAME variable context keeps it (var =
+            // refvar), so a valueless re-declaration of an existing
+            // same-frame nameref preserves its cell (nameref12/nameref13.sub)
+            // instead of resetting a fresh empty local. pre_existing lists
+            // the frame snapshot BEFORE this command saved its own names, so
+            // a first-time `declare -a a` still resets the fresh local
+            // (assoc.tests: f: declare -a a prints an empty local).
+            if pre_existing.iter().any(|existing| existing == &name) {
+                continue;
+            }
+            let was_exported = is_marked_var(&self.shell_state.env_vars, EXPORTED_VARS, &name);
+            if was_exported {
+                if let Some(value) = self.shell_state.env_vars.get(&name).cloned() {
+                    set_local_export_env_value(&mut self.shell_state.env_vars, &name, value);
+                }
+            }
+            self.shell_state.env_vars.remove(&name);
+            // GNU variables.c:2755 (make_local_variable): a value-less
+            // local carries att_invisible, so no inherited copy may feed
+            // reads either — drop the inherited process-env residue with
+            // the same existence-gated helper #943 used for `unset`
+            // (an inherited name predates the #916 write mirror and would
+            // otherwise resurrect through every table-miss fallback:
+            // exact_case_env_var bare-$NAME reads, nounset boundness —
+            // rubash#970). The shadowed binding's child-env contribution
+            // is preserved by the LOCAL_EXPORT_ENV stash above
+            // (export_environment_candidate, variables.c:4336).
+            crate::executor::local_helpers::unset_process_env(&name);
+            // A fresh local shadows the outer variable in the typed owner too:
+            // parameter expansion reads shell_state.variables first, so a
+            // stale global scalar would keep leaking through (bash: `local X`
+            // makes ${X-unset} report unset until the frame returns).
+            self.shell_state.variables.remove(&name);
+            set_var_attrs(&mut self.shell_state.env_vars, &name, VarAttrs::default());
+            // GNU variables.c:2729 (make_local_variable): a non-inheriting
+            // local still inherits the export attribute — and only that
+            // attribute — from the variable it shadows.
+            if was_exported {
+                mark_env_name(&mut self.shell_state.env_vars, EXPORTED_VARS, &name);
+            }
+        }
+    }
+
+    /// GNU variables.c:2651-2665 (make_local_variable): creating a local for a
+    /// name whose visible binding is readonly at context 0 is rejected — the
+    /// comment calls local copies of readonly globals a security hole, while
+    /// readonly bindings in a caller's frame (context > 0) or the live
+    /// tempenv (context == variable_context) may still be shadowed. Returns
+    /// the operand names to drop; declare.def:669-673 counts each as a
+    /// failure and skips the operand entirely.
+    /// GNU variables.c:2654-2665 (make_local_variable): a variable with
+    /// the noassign attribute may not be made local — builtin_error
+    /// "%s: variable may not be assigned value" and the operand is
+    /// dropped (declare.def:669-673 any_failed + NEXT_VARIABLE). The
+    /// name tested (and printed) is the nameref-transformed one
+    /// (declare.def:667 passes newname), so resolve before testing.
+    /// Returns (written base, display base) pairs: callers drop
+    /// operands by the written name and diagnose by the resolved one
+    /// (rubash#2369).
+    fn global_noassign_local_blocks(&self, args: &[String]) -> Vec<(String, String)> {
+        local_names(args)
+            .into_iter()
+            .filter_map(|name| {
+                let resolved = self
+                    .nameref_target_name(&name)
+                    .unwrap_or_else(|| name.clone());
+                let resolved_base = resolved.split('[').next().unwrap_or(resolved.as_str());
+                is_noassign_bash_array(resolved_base).then(|| (name, resolved_base.to_string()))
+            })
+            .collect()
+    }
+
+    fn global_readonly_local_blocks(&self, args: &[String]) -> Vec<String> {
+        local_names(args)
+            .into_iter()
+            .filter(|name| {
+                let base = name.split('[').next().unwrap_or(name.as_str());
+                let readonly = is_marked_var(&self.shell_state.env_vars, READONLY_VARS, base)
+                    || self
+                        .shell_state
+                        .variables
+                        .get(base)
+                        .is_some_and(|variable| variable.readonly);
+                readonly
+                    && !self.tempenv_names.iter().any(|saved| saved == base)
+                    && !self
+                        .shell_state
+                        .local_var_scopes
+                        .iter()
+                        .any(|scope| scope.contains_key(base))
+            })
+            .collect()
+    }
+}
+
+/// True when a declare/typeset/local command line explicitly names DIRSTACK
+/// (as an operand or assignment target). GNU variables.c get_dirstack runs
+/// the dynamic getter -- materializing the stored array cell -- only on
+/// named access; a bare list-all `declare -a` shows the last materialized
+/// cell, which stays empty when DIRSTACK was never named.
+pub(in crate::executor) fn declare_words_name_dirstack(words: &[String]) -> bool {
+    let mut options_ended = false;
+    for word in words {
+        if !options_ended {
+            if word == "--" {
+                options_ended = true;
+                continue;
+            }
+            if word.starts_with('-') || word.starts_with('+') {
+                continue;
+            }
+        }
+        let base = word.split('=').next().unwrap_or(word);
+        let base = base.split('[').next().unwrap_or(base);
+        // An append operand's base carries its `+` (`DIRSTACK+=(...)`);
+        // it still names the variable (rubash#2424: without the strip
+        // the materialization sync skipped every declare append, and
+        // the builtin's bare-name handling rebuilt the typed cell
+        // from the stale init mirror).
+        let base = base.strip_suffix('+').unwrap_or(base);
+        if base == "DIRSTACK" {
+            return true;
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The machine-driven scan, spelled out the way
+    /// `declare_option_scan`'s slow path performs it — the
+    /// reference the flag-only fast path must agree with.
+    fn machine_scan(
+        row: &'static BuiltinRow,
+        args: &[String],
+    ) -> (Vec<(char, bool)>, Option<String>) {
+        let mut sink = Vec::new();
+        let mut diag = Diag::new(row, &mut sink);
+        let mut opt = BuiltinOpt::new(row, args, &mut diag, false);
+        let mut letters = Vec::new();
+        loop {
+            match opt.next() {
+                OptEvent::Opt(c) => letters.push((c as char, opt.opttype() == b'-')),
+                OptEvent::OptArg(_, _) => {}
+                OptEvent::Help | OptEvent::End => break,
+            }
+        }
+        (
+            letters,
+            opt.optopt()
+                .map(|c| String::from_utf8_lossy(&[c]).into_owned()),
+        )
+    }
+
+    #[test]
+    fn flag_only_fast_scan_agrees_with_machine() {
+        let row = builtin_table_row("declare").expect("declare row");
+        let OptSpec::Getopt(spec) = row.opt_spec else {
+            panic!("declare row must carry a getopt spec");
+        };
+        let shapes: &[&[&str]] = &[
+            &[],
+            &["x=1"],
+            &["-a", "x"],
+            &["-aA", "x=1"],
+            &["+a", "x"],
+            &["-p"],
+            &["--", "-a"],
+            &["--help"],
+            &["-a", "--help", "x"],
+            &["-Z"],
+            &["-aZ", "x"],
+            &["-"],
+            &["+"],
+            &["++"],
+            &["-p", "--", "-f"],
+            &["x", "-a"],
+            &["-ai", "x=1", "-r"],
+            &["-\u{c3}\u{a9}"],
+            &["-fF", "g"],
+            &["-g", "-n", "r=v"],
+        ];
+        for shape in shapes {
+            let args: Vec<String> = shape.iter().map(|s| s.to_string()).collect();
+            let fast = scan_flag_only_spec(spec, &args)
+                .expect("declare spec is flag-only and must take the fast path");
+            assert_eq!(fast, machine_scan(row, &args), "shape {shape:?}");
+            assert_eq!(declare_option_scan(row, &args), fast, "shape {shape:?}");
+        }
+    }
+
+    #[test]
+    fn flag_only_fast_scan_declines_argument_specs() {
+        let args: Vec<String> = vec!["-e".to_string(), "vi".to_string()];
+        assert!(scan_flag_only_spec("e:lnrs", &args).is_none());
+        assert!(scan_flag_only_spec("o;v", &args).is_none());
+        assert!(scan_flag_only_spec("n#", &args).is_none());
+        assert!(scan_flag_only_spec(":e:lnrs", &args).is_none());
+    }
+}

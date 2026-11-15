@@ -1,0 +1,222 @@
+# Getting Started with Niubash
+
+A short walkthrough from zero to a working prompt with git status.
+
+## 1. Build or download
+
+```sh
+git clone https://github.com/unixwin/niubash.git
+cd niubash
+cargo build --release
+```
+
+After building, the binary is at `target\release\niu.exe`. You can run it
+directly, or add `target\release` to your user `PATH` using your normal Windows
+environment settings:
+
+```sh
+target/release/niu.exe
+```
+
+If you are using the release zip, niubash automatically runs the activation
+script on first start when command links are missing:
+
+```bash
+niu winuxcmd/activate-winuxcmd.sh
+```
+
+That creates local command links inside `winuxcmd/`, so `ls`, `cat`, and
+friends resolve normally. Once the links exist, startup skips activation.
+
+## 2. Start the shell
+
+```sh
+niubash
+```
+
+You should see something like:
+
+```text
+user@DESKTOP ~
+$
+```
+
+Type `exit` or press Ctrl+D to quit.
+
+## 3. See the git prompt
+
+`cd` into any git repository:
+
+```sh
+cd C:\Users\you\repo
+# inside a repo, the first prompt row gains a branch segment:
+user@DESKTOP ~/repo (main)
+$
+```
+
+The segment is deliberately small — the Git Bash shape, not a status
+dashboard:
+
+| Shape | Meaning |
+|-------|---------|
+| `(main)` | on branch `main`, working tree clean |
+| `(main*)` | on branch `main`, working tree dirty — the trailing `*` is the only dirty marker: any staged, unstaged, or untracked change sets it, and there are no per-category counts |
+| `(a1b2c3d)` | detached HEAD — the short commit SHA instead of a branch name |
+| *(no segment)* | outside a repository (or git unavailable) — the segment is simply absent |
+
+The branch segment is always cyan; clean versus dirty is told by the `*`,
+not by a colour change. A fresh `git init` repository shows its unborn
+branch name too.
+
+## 4. Try some commands
+
+```bash
+pwd                                  # prints C:/Users/you/repo
+ls -la                               # Unix-style listing
+echo "hello from $USER"
+for i in 1 2 3; do echo $i; done
+if [ -f Cargo.toml ]; then echo "yep"; fi
+cat Cargo.toml | grep name
+grep -n "fn main" src/main.rs
+```
+
+Windows paths work directly:
+
+```bash
+ls C:\Windows\System32\drivers\etc
+ls D:/Projects
+cd "C:\Program Files"
+```
+
+Multiline blocks work naturally:
+
+```bash
+for f in *.toml; do
+  echo "found $f"
+done
+```
+
+## 5. Try git completions
+
+```bash
+git ad<Tab>                # completes to `git add`
+git commit -<Tab>           # shows flags: --message, --all, --amend
+git push --fo<Tab>          # completes to --force
+git branch -<Tab>           # shows -d, -D, -m, -v, -a, -r
+```
+
+## 6. Set up your config
+
+Create `~/.niubashrc` for interactive shell code — environment, aliases,
+functions — plus optional defaults and theme enablement:
+
+```bash
+# Optional floor knobs: they only shape the built-in default prompt and
+# completion UI. An external theme claims PS1 and overrides the floor.
+# NIU_PROMPT_CWD_STYLE='home'      # home | full | basename
+# NIU_COMPLETION_STYLE='column'    # column (default) | gnu | ide | list | inline
+
+if [ -z "${HOME:-}" ] && [ -n "${USERPROFILE:-}" ]; then
+  HOME="$USERPROFILE"
+  export HOME
+fi
+
+export EDITOR=vim
+alias ll='ls -la'
+alias la='ls -a'
+alias gst='git status'
+alias gco='git checkout'
+alias gl='git log --oneline --graph --decorate --all'
+
+hello() {
+  echo "hello from niubash"
+}
+```
+
+`~/.niubashrc` is sourced only for the interactive REPL and the `-C`
+one-shot REPL command path. It does not run for `niu -c ...`, script files,
+or stdin script execution, so agent and CI surfaces stay deterministic.
+
+On Windows, `~/.niubashrc` is the **only** startup file niu reads.
+Login shells on Linux/macOS additionally read the GNU profile chain
+(`/etc/profile`, then the first of `~/.bash_profile` → `~/.bash_login`
+→ `~/.profile`) before it, exactly as GNU bash does. Pre-rename
+legacy rc files and `~/.bashrc` are never sourced directly,
+migrated, or modified — a session that finds no `~/.niubashrc` simply starts
+without one. Plugin enable/disable state, the source registry, and other
+machine state live under `~/.niubash/` and are managed by `niu plugin`, not
+by editing files.
+
+## 6b. Prompts and themes
+
+The built-in prompt is a floor, not an identity: it renders only while
+nothing claims `PS1`. Anything that sets `PS1` — your own line in
+`~/.niubashrc`, an enabled oh-my-bash theme, or `eval "$(starship init bash)"`
+— owns the prompt completely, and disabling it lets the built-in floor
+render again.
+
+The floor itself has one knob, `NIU_PROMPT_CWD_STYLE` (`home` by default;
+also `full` or `basename`), set in `~/.niubashrc`:
+
+```bash
+NIU_PROMPT_CWD_STYLE=full
+```
+
+Themes live in the external ecosystem (see the next section) — enable one
+and its `PS1` takes over the prompt; disable it and the floor comes back.
+
+## 7. Plugins: the external ecosystem
+
+Themes and plugins come from external plugin managers, installed and
+enabled through `niu plugin`. The curated catalog has `oh-my-bash`,
+`bash-it`, and `bash-completion`; any git URL, `owner/repo` shorthand, or
+local path works too. Installing is not activating — nothing a source
+ships runs until you enable it:
+
+```sh
+niu plugin add oh-my-bash     # install from the catalog
+niu plugin enable oh-my-bash  # records the source in the manifest
+niu plugin enable agnoster    # a theme asset -> OSH_THEME in the loader
+niu plugin disable oh-my-bash # manifest updated; the built-in floor returns
+```
+
+Since the niubash#359 rework (v1.4.2), **plugin verbs never write your rc**.
+What `enable`/`disable` update is the manifest — `~/.niubash/plugins.json`
+plus `~/.niubash/sources/registry.json` — and every mutating verb regenerates
+`~/.niubash/generated/plugins.niu`, the derived activation plane the host
+sources *before* `~/.niubashrc` (so your own PS1/alias/function lines always
+win). POSIX-mode interactive shells load it too — after the profile chain
+and before `$ENV` for login shells, before `$ENV` otherwise
+(niubash#603). A failed generation never replaces the last good loader, and
+`NIU_PLUGIN_LOADER=off` disables loading entirely. If your rc still contains
+legacy `# >>> niu source <id>` managed blocks, the loader stays off until
+they are removed — `niu plugin migrate-rc --diff` shows exactly what to take
+out; the removal is always your own edit. Use `niu plugin list` and
+`niu plugin discover` for the current inventory and state.
+
+Executable CLI tools (starship, fzf, eza, bat, fd, ripgrep, zoxide, dust,
+duf, erdtree, direnv, niu-git …) install through your real package
+managers — niu downloads nothing (download retraction, owner ruling
+2026-10-04). `niu plugin add fzf` prints the commands:
+
+```sh
+niu plugin add fzf        # prints: wpm install fzf (Windows, first choice),
+                          #        winget/scoop alternatives, apt/dnf/brew,
+                          #        plus the upstream release URL
+```
+
+Two systems coexist: the Unix command layer (`ls`, `cat`, `grep`, … plus
+the application tools above) is owned by wpm on Windows (`wpm install
+<tool>`, `wpm links rebuild`, `wpm update winuxcmd`) — wpm is the
+first-class tool channel there (owner correction 2026-10-03); on Linux and
+macOS the native package managers (apt/dnf/yum/brew) own that plane.
+`niu plugin` owns the bash-ecosystem extension plane (git sources, themes,
+completions) on every platform.
+
+## What next
+
+- [Plugin System Direction](../planning/plugin-system-direction.md) for the v3 plugin model
+- [Plugin System Roadmap](../planning/plugin-system-roadmap.md) for the execution sequence
+- [Oh My Niubash Ecosystem](../planning/oh-my-niu-ecosystem.md) for the external plugin ecosystem design
+- [Roadmap](niubash-roadmap.md) to see what is planned
+- Source at [github.com/unixwin/niubash](https://github.com/unixwin/niubash)

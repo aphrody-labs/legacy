@@ -1,0 +1,875 @@
+use super::parse_loop::offending_line_text;
+use super::*;
+use crate::lexer::{Token, TokenKind};
+
+/// rubash#2918: a coproc body is re-parsed on a token SLICE (the split
+/// brace body, the subshell body, the command-sequence body) or on a
+/// re-lexed token stream (the folded brace-group token), so a parse
+/// error produced by the inner parse stored its
+/// `__RUBASH_PARSE_SOURCE__` echo from that fragment alone — for
+/// `coproc {;}` the echo was the bare `` `;' ``. GNU's
+/// report_syntax_error (parse.y:6833) echoes the whole physical input
+/// line via print_offending_line (parse.y:6814) over shell_input_line,
+/// and the outer parse still holds every token of that line, so
+/// recompute the stored echo from the outer stream at the blamed
+/// line. Only the echo text changes; the blamed token and line were
+/// already correct.
+fn reattach_coproc_body_error_lines(body: &mut [CommandNode], tokens: &[Token], anchor: usize) {
+    for command in body.iter_mut() {
+        reattach_coproc_error_line(command, tokens, anchor);
+    }
+}
+
+fn reattach_coproc_error_line(command: &mut CommandNode, tokens: &[Token], anchor: usize) {
+    if command.has_parse_error_marker() && command.has_assignment("__RUBASH_PARSE_SOURCE__") {
+        let blamed_line = command
+            .get_assignment("__RUBASH_PARSE_ERROR_NEAR__")
+            .and_then(|spec| {
+                spec.rsplit(crate::executor::markers::PARSE_ERROR_FIELD_SEP)
+                    .next()
+                    .and_then(|field| field.trim().parse::<usize>().ok())
+            })
+            .or(command.line)
+            .unwrap_or_else(|| tokens.get(anchor).map(|token| token.position).unwrap_or(1));
+        // The blamed line's tokens all sit in the outer stream; any one
+        // of them anchors offending_line_text's walk to the line start.
+        // Fall back to the body anchor when the blamed line came from a
+        // re-lexed stream whose line numbers are body-relative.
+        let outer_index = tokens
+            .iter()
+            .position(|token| token.position == blamed_line)
+            .unwrap_or(anchor);
+        let line_text = offending_line_text(tokens, outer_index, None, 0);
+        for (name, value) in command.assignments.iter_mut() {
+            if name == "__RUBASH_PARSE_SOURCE__" {
+                *value = line_text;
+                break;
+            }
+        }
+    }
+    // Descend the compound payloads (the same child lists as
+    // nodes.rs `command_child_lists_mut`, minus process-substitution
+    // bodies: comsub diagnostics travel their own channel — see
+    // report_comsub_body_parse_error — and are not this fix's surface).
+    if let Some(pipeline) = &mut command.pipeline_command {
+        reattach_coproc_body_error_lines(&mut pipeline.stages, tokens, anchor);
+    }
+    if let Some(list) = &mut command.and_or_list {
+        reattach_coproc_body_error_lines(&mut list.commands, tokens, anchor);
+    }
+    if let Some(background) = &mut command.background_command {
+        reattach_coproc_error_line(&mut background.command, tokens, anchor);
+    }
+    if let Some(time) = &mut command.time_command {
+        reattach_coproc_error_line(&mut time.command, tokens, anchor);
+    }
+    if let Some(inverted) = &mut command.inverted_command {
+        reattach_coproc_error_line(&mut inverted.command, tokens, anchor);
+    }
+    if let Some(subshell) = &mut command.subshell_command {
+        reattach_coproc_body_error_lines(&mut subshell.body, tokens, anchor);
+    }
+    if let Some(group) = &mut command.brace_group {
+        reattach_coproc_body_error_lines(&mut group.body, tokens, anchor);
+    }
+    if let Some(if_command) = &mut command.if_command {
+        reattach_coproc_body_error_lines(&mut if_command.condition, tokens, anchor);
+        reattach_coproc_body_error_lines(&mut if_command.then_body, tokens, anchor);
+        for branch in &mut if_command.elif_branches {
+            reattach_coproc_body_error_lines(&mut branch.condition, tokens, anchor);
+            reattach_coproc_body_error_lines(&mut branch.body, tokens, anchor);
+        }
+        if let Some(else_body) = &mut if_command.else_body {
+            reattach_coproc_body_error_lines(else_body, tokens, anchor);
+        }
+    }
+    if let Some(loop_command) = &mut command.loop_command {
+        reattach_coproc_body_error_lines(&mut loop_command.condition, tokens, anchor);
+        reattach_coproc_body_error_lines(&mut loop_command.body, tokens, anchor);
+    }
+    if let Some(for_command) = &mut command.for_command {
+        reattach_coproc_body_error_lines(&mut for_command.body, tokens, anchor);
+    }
+    if let Some(select_command) = &mut command.select_command {
+        reattach_coproc_body_error_lines(&mut select_command.body, tokens, anchor);
+    }
+    if let Some(case_command) = &mut command.case_command {
+        for clause in &mut case_command.clauses {
+            reattach_coproc_body_error_lines(&mut clause.body, tokens, anchor);
+        }
+    }
+    if let Some(function) = &mut command.function_command {
+        reattach_coproc_body_error_lines(&mut function.body, tokens, anchor);
+    }
+    if let Some(coproc) = &mut command.coproc_command {
+        if let Some(body) = &mut coproc.body {
+            reattach_coproc_body_error_lines(body, tokens, anchor);
+        }
+    }
+}
+
+pub(super) fn parse_coproc_command(tokens: &[Token], start: usize) -> Option<(CommandNode, usize)> {
+    // Parse `coproc [NAME] command [args...]` or `coproc [NAME] { body; }` or `coproc [NAME] ( body )`
+    let mut i = start + 1; // skip `coproc`
+
+    // Determine if next token is a name followed by a compound command,
+    // or if the next token is itself the command.
+    let mut name: Option<(String, String)> = None;
+    let lookahead = tokens.get(i);
+    if let Some(lookahead) = lookahead {
+        let is_brace = is_brace_group_token(lookahead) || is_keyword(tokens, i, "{");
+        let is_subshell = is_keyword(tokens, i, "(");
+        let is_compound = is_brace || is_subshell || is_coproc_shell_command_start(tokens, i);
+
+        if !is_compound {
+            // This might be a name. Check if the token *after* it is a brace group or subshell.
+            let next_after = tokens.get(i + 1);
+            let next_is_compound = next_after.is_some_and(|t| is_brace_group_token(t))
+                || is_keyword(tokens, i + 1, "{")
+                || is_keyword(tokens, i + 1, "(")
+                || is_coproc_shell_command_start(tokens, i + 1);
+            // GNU parse.y:1125-1175 coproc grammar: `COPROC WORD
+            // shell_command` — WORD is the coproc NAME only when what
+            // follows is a compound/shell command. Before a SIMPLE
+            // command there is no name production at all: `coproc CP
+            // echo hi` is the unnamed form running the simple command
+            // `CP echo hi` (the child reports `CP: command not found`
+            // and the fds bind as COPROC). A builtin-name allowlist
+            // here stole the first word of the simple command as a
+            // name (rubash#1153).
+            if !lookahead.value.starts_with('-') && !is_keyword(tokens, i, "!") && next_is_compound
+            {
+                name = Some((lookahead.value.clone(), lookahead.raw.clone()));
+                i += 1; // consume the name
+            }
+            // Otherwise: no name, the token is part of the simple command
+        }
+    }
+
+    // rubash#1652: GNU parse.y:1125-1175 coproc grammar is `COPROC
+    // [WORD] shell_command`, and `!` is a pipeline modifier, not a
+    // shell_command — so `coproc ! ...` is a syntax error, never a
+    // name and never a simple-command word. Without this, the `!`
+    // fell into the simple-command word list and the coproc ran
+    // with the negation silently applied inside the child.
+    // Note the name gate above excludes the `!` keyword too:
+    // `coproc ! { ...; }` must hit this error, not the runtime
+    // "not a valid identifier" path (a QUOTED "!" is a real word
+    // and still takes the name path, matching GNU's identifier
+    // error for `coproc "!" { ...; }`).
+    if is_keyword(tokens, i, "!") {
+        return Some(coproc_bang_error(tokens, start, i));
+    }
+
+    // GNU parse.y:1125-1175: the coproc body is a shell_command, and a
+    // function DEFINITION is not one — `coproc f() { ...; }` is a syntax
+    // error at the `)`. The name gate above mistakes the `(` after the
+    // would-be name for a subshell opener, so the `()` spelling reached
+    // the body parse and was silently accepted (audit A1 F06). An empty
+    // subshell body `coproc ( )` is the same error in GNU. This must be
+    // an error NODE, not None: None makes the caller salvage the line
+    // into a simple command the executor re-reads as a coproc.
+    if is_keyword(tokens, i, "(") && is_keyword(tokens, i + 1, ")") {
+        return Some(coproc_funcdef_error(tokens, start, i + 1));
+    }
+
+    // Parse the body
+    if let Some(token) = tokens.get(i) {
+        // Brace group body (single token from lexer)
+        if is_brace_group_token(token) {
+            let mut body = parse_inline_brace_body(token);
+            reattach_coproc_body_error_lines(&mut body, tokens, i);
+            // rubash#2890: an empty brace body is a syntax error (see
+            // the split-token arm below).
+            if body.is_empty() {
+                return Some(coproc_empty_brace_body_error(tokens, start, i));
+            }
+            let mut command = CommandNode::new();
+            command.line = tokens.get(start).map(|t| t.position);
+            command.logical_line = tokens.get(start).map(|t| t.logical_line);
+            command.coproc_command = Some(coproc_command(
+                name,
+                Vec::new(),
+                Vec::new(),
+                CoprocBodyKind::BraceGroup,
+                Some(("{".to_string(), "}".to_string())),
+                Some(body),
+            ));
+            return Some(finish_coproc_command(command, tokens, i + 1));
+        }
+
+        if is_keyword(tokens, i, "{") {
+            let (mut body, close_i) = parse_split_brace_body(tokens, i)?;
+            reattach_coproc_body_error_lines(&mut body, tokens, i);
+            // rubash#2890: GNU's compound_list (parse.y:1262) has no
+            // empty production — the brace body of a coproc must hold
+            // at least one command, so `coproc { }` is a syntax error
+            // blaming the `}' (parse.y:1125 coproc -> shell_command ->
+            // brace group). An empty parse here means the braces held
+            // only separators/newlines.
+            if body.is_empty() {
+                return Some(coproc_empty_brace_body_error(tokens, start, close_i));
+            }
+            let mut command = CommandNode::new();
+            command.line = tokens.get(start).map(|t| t.position);
+            command.logical_line = tokens.get(start).map(|t| t.logical_line);
+            command.coproc_command = Some(coproc_command(
+                name,
+                Vec::new(),
+                Vec::new(),
+                CoprocBodyKind::BraceGroup,
+                Some((tokens[i].value.clone(), tokens[close_i].value.clone())),
+                Some(body),
+            ));
+            return Some(finish_coproc_command(command, tokens, close_i + 1));
+        }
+
+        if let Some((mut body_command, body_end)) = parse_coproc_compound_body(tokens, i) {
+            // The compound sub-parsers slice their inner bodies out of
+            // the full stream, so their error nodes carry fragment
+            // echoes too — reattach them the same way.
+            reattach_coproc_error_line(&mut body_command, tokens, i);
+            let mut command = CommandNode::new();
+            command.line = tokens.get(start).map(|t| t.position);
+            command.logical_line = tokens.get(start).map(|t| t.logical_line);
+            command.coproc_command = Some(coproc_command(
+                name,
+                Vec::new(),
+                Vec::new(),
+                CoprocBodyKind::CompoundCommand,
+                None,
+                Some(vec![body_command]),
+            ));
+            return Some(finish_coproc_command(command, tokens, body_end));
+        }
+
+        if let Some((mut body, body_end)) = parse_coproc_command_sequence_body(tokens, i) {
+            reattach_coproc_body_error_lines(&mut body, tokens, i);
+            let mut command = CommandNode::new();
+            command.line = tokens.get(start).map(|t| t.position);
+            command.logical_line = tokens.get(start).map(|t| t.logical_line);
+            command.coproc_command = Some(coproc_command(
+                name,
+                Vec::new(),
+                Vec::new(),
+                CoprocBodyKind::CommandSequence,
+                None,
+                Some(body),
+            ));
+            return Some(finish_coproc_command(command, tokens, body_end));
+        }
+
+        // Subshell body: ( ... )
+        if is_keyword(tokens, i, "(") {
+            i += 1; // consume `(`
+            let body_start = i;
+            let mut depth = 1usize;
+            let mut case_depth = 0usize;
+            while i < tokens.len() {
+                let boundary = i == body_start || command_boundary_keyword_allowed(tokens, i);
+                if boundary && is_keyword(tokens, i, "case") {
+                    case_depth += 1;
+                } else if (boundary || follows_case_in_keyword(tokens, i))
+                    && is_case_end_keyword(tokens, i)
+                {
+                    // `esac` right after the case's `in` closes the empty
+                    // case (parse.y:3428-3441 special_case_tokens) so
+                    // `coproc ( case x in esac )` ends at its own `)`
+                    // (rubash#336).
+                    case_depth = case_depth.saturating_sub(1);
+                } else if case_depth == 0 && is_keyword(tokens, i, "(") {
+                    depth += 1;
+                } else if case_depth == 0 && is_keyword(tokens, i, ")") {
+                    depth -= 1;
+                    if depth == 0 {
+                        break;
+                    }
+                }
+                i += 1;
+            }
+            if i < tokens.len() {
+                let mut body = parse(&tokens[body_start..i]).commands;
+                reattach_coproc_body_error_lines(&mut body, tokens, body_start);
+                let mut command = CommandNode::new();
+                command.line = tokens.get(start).map(|t| t.position);
+                command.logical_line = tokens.get(start).map(|t| t.logical_line);
+                command.coproc_command = Some(coproc_command(
+                    name,
+                    Vec::new(),
+                    Vec::new(),
+                    CoprocBodyKind::Subshell,
+                    Some(("(".to_string(), tokens[i].value.clone())),
+                    Some(body),
+                ));
+                return Some(finish_coproc_command(command, tokens, i + 1));
+            }
+        }
+    }
+
+    // Simple command: collect remaining tokens as words
+    // (rubash#3267). GNU's simple_command is redirections + words
+    // in any order (parse.y:1125-1175 `COPROC simple_command`,
+    // parse.y:532-575 redirection productions), so a redirect may
+    // LEAD the body (`coproc >x foooo`), sit between words
+    // (`coproc foooo >y bar`), or both. The old loop collected
+    // WORD tokens only and let finish_compound_command eat a
+    // leading redirect, stranding the first word with no separator
+    // — the main loop then blamed it as an unexpected token.
+    // The outer node is built up front so the redirect arm below
+    // can attach leading/intermixed redirections to it with the
+    // same collector the finish path uses; the trailing path is
+    // unchanged (finish still collects what the loop leaves).
+    let mut words = Vec::new();
+    // Explicit element type: the rubash#1983 index-1 check below
+    // reads word_metadata[0].raw before the first push, which
+    // leaves the element type ambiguous to inference (E0282).
+    let mut word_metadata: Vec<WordMetadata> = Vec::new();
+    let mut command = CommandNode::new();
+    command.line = tokens.get(start).map(|t| t.position);
+    command.logical_line = tokens.get(start).map(|t| t.logical_line);
+    let mut saw_redirect = false;
+    while i < tokens.len() {
+        // rubash#1652 (continued): GNU also rejects `!` as the
+        // SECOND word of the coproc's simple command (`coproc a !
+        // ...`, `coproc NAME ! ...`): after COPROC WORD the parser
+        // commits to the named form and demands a shell_command,
+        // so a `!` there is a syntax error — while a `!` after two
+        // or more words is a plain word (`coproc a b ! c` parses).
+        //
+        // rubash#3267 refinement: the rejection fires only while
+        // NO redirection has been consumed yet in this simple
+        // command. Once a redirection precedes the `!` anywhere —
+        // before the first word (`coproc >x foo ! bar`) or between
+        // the first word and the `!` (`coproc foo >y ! bar`) — GNU
+        // takes the `COPROC simple_command` branch and the `!` is
+        // a plain word (both rc 0, `foo: command not found`,
+        // bash 5.3.20 oracle). Without the gate the redirect-first
+        // arm above would strand `!` as a second-word error.
+        // The body-position check above covers index 0; this
+        // covers index 1. (A quoted "!" is a real word and never
+        // reaches this arm: is_keyword only matches the bare
+        // keyword token.)
+        //
+        // rubash#1983: the index-1 rejection does NOT apply when
+        // the one collected word is an assignment word. GNU's
+        // lexer returns an assignment-shaped first word as
+        // ASSIGNMENT_WORD, and parse.y:5899
+        // reserved_word_acceptable has no ASSIGNMENT_WORD in its
+        // accept set, so the following `!` never becomes BANG at
+        // all — it lexes as a plain WORD and lands as the child
+        // command's NAME (`coproc X=1 ! echo hi` runs a child that
+        // reports `!: command not found`, script rc 0; verified
+        // against GNU bash 5.3.20, incl. the `a[1]=x` / `a+=1`
+        // shapes; a non-name first word like `9a=1` or `a-b=1`
+        // stays a WORD and the `!` still errors). The raw spelling
+        // decides: a quoted name (`"X"=1`) is not an assignment
+        // word in GNU either.
+        if words.len() == 1
+            && !saw_redirect
+            && !coproc_word_is_assignment(&word_metadata[0].raw)
+            && is_keyword(tokens, i, "!")
+        {
+            return Some(coproc_bang_error(tokens, start, i));
+        }
+        // The function-definition spelling in the word stream
+        // (`coproc CP f() { ...; }` — the name gate did not commit, so
+        // the words collect here, keyword tokens included): a word
+        // immediately followed by `(` `)` is a definition, which GNU
+        // rejects as a coproc body (A1 F06). Error node, not None —
+        // see the body-position guard above.
+        if !words.is_empty() && is_keyword(tokens, i, "(") && is_keyword(tokens, i + 1, ")") {
+            return Some(coproc_funcdef_error(tokens, start, i + 1));
+        }
+        // A redirection operator here is a simple_command element,
+        // not the end of the body: consume it (and any immediately
+        // following redirects) onto the node with the shared
+        // collector and keep collecting words after it. A redirect
+        // the collector cannot advance past has no target
+        // (`coproc >`, `coproc >x >`) — stop and let the
+        // words.is_empty() arm / finish machinery report the
+        // missing target exactly as before.
+        if matches!(
+            tokens[i].kind,
+            TokenKind::RedirectIn
+                | TokenKind::RedirectOut
+                | TokenKind::Append
+                | TokenKind::RedirectErr
+                | TokenKind::RedirectErrAppend
+                | TokenKind::HereDoc
+                | TokenKind::HereString
+        ) {
+            let before = i;
+            collect_trailing_redirections(tokens, &mut i, &mut command);
+            if i == before {
+                break;
+            }
+            saw_redirect = true;
+            continue;
+        }
+        // After a leading redirect, GNU's read_token reads every
+        // reserved-word spelling as a WORD — the simple_command's
+        // first element is not a reserved-word position once a
+        // redirection precedes it (bash 5.3.20 oracle matrix:
+        // `coproc >x if true; ...` blames `then`, `coproc >x { ...
+        // ; }` blames `}` — i.e. `if`/`{` themselves were words;
+        // `done`, `fi`, `}`, `]]`, `[[`, `function`, `coproc`,
+        // `do`, `esac`, `in`, `then`, `else`, `elif`, `!` all run
+        // as command names `X: command not found`). The only
+        // spellings that still stop collection pre-word are real
+        // operator tokens (`(`, `((`-prefixed arithmetic open —
+        // `coproc >x ( ... )` / `>x ((x))` blame `(`) and folded
+        // brace-group tokens. `time` is GNU's lone keyword
+        // exception (timespec survives), but rubash keeps the
+        // #1653 pinned behavior: collect it as a word and let the
+        // spawn quote decide — anti-GNU residual disclosed there.
+        if words.is_empty()
+            && saw_redirect
+            && (tokens.get(i).is_some_and(is_brace_group_token)
+                || is_keyword(tokens, i, "(")
+                || tokens.get(i).is_some_and(|token| {
+                    token.kind == TokenKind::Keyword && token.value.starts_with("((")
+                }))
+        {
+            break;
+        }
+        if let Some((word, next_i)) = collect_compound_or_keyword_word_value(tokens, i) {
+            // GNU read_token_word (parse.y:5821-5843): a `{varname}`
+            // word immediately followed by a redirection operator is
+            // a REDIR_WORD claimed by the redirect (fd_var), never
+            // a command word — the main loop's token_actions arm
+            // applies the same rule, so `coproc {var}>x foooo`
+            // runs `foooo`, not `{var}`.
+            if next_i == i + 1
+                && tokens.get(next_i).is_some_and(|next| {
+                    matches!(
+                        next.kind,
+                        TokenKind::RedirectIn
+                            | TokenKind::RedirectOut
+                            | TokenKind::Append
+                            | TokenKind::HereDoc
+                            | TokenKind::HereString
+                    )
+                })
+                && redirect_fd_var_prefix(tokens, next_i).is_some()
+            {
+                i = next_i;
+                continue;
+            }
+            let raw = if next_i == i + 1 {
+                tokens[i].raw.as_str()
+            } else {
+                word.as_str()
+            };
+            word_metadata.push(build_word_metadata(words.len(), &word, raw));
+            words.push(word);
+            i = next_i;
+        } else {
+            break;
+        }
+    }
+
+    if words.is_empty() {
+        // rubash#2746: the coproc grammar (parse.y:1125-1175) is `COPROC
+        // [WORD] shell_command` — with no shell_command at all there is
+        // nothing to fall back to: GNU reports a syntax error at the
+        // token that follows (`coproc' alone names `newline', `coproc |
+        // cat' names `|', `coproc && ...' names `&&'). Returning None
+        // degraded `coproc' to an external command name (127, and the
+        // script kept running). The one body that legitimately has no
+        // words is a redirection-only simple command (`coproc > file'),
+        // which GNU accepts — build it and let the finish machinery
+        // attach the redirections.
+        // rubash#3267: `saw_redirect` covers the redirects the
+        // loop already consumed onto the node (`coproc >x foooo`
+        // reaches here with i past `x`); the token check below
+        // covers the redirect the loop could not consume
+        // (`coproc >` — no target, i still on the operator).
+        if saw_redirect
+            || tokens.get(i).is_some_and(|token| {
+                matches!(
+                    token.kind,
+                    TokenKind::RedirectIn
+                        | TokenKind::RedirectOut
+                        | TokenKind::Append
+                        | TokenKind::RedirectErr
+                        | TokenKind::RedirectErrAppend
+                        | TokenKind::HereDoc
+                        | TokenKind::HereString
+                )
+            })
+        {
+            command.coproc_command = Some(coproc_command(
+                name,
+                words,
+                word_metadata,
+                CoprocBodyKind::SimpleCommand,
+                None,
+                None,
+            ));
+            return Some(finish_coproc_command(command, tokens, i));
+        }
+        return Some(coproc_missing_command_error(tokens, start, i));
+    }
+
+    command.coproc_command = Some(coproc_command(
+        name,
+        words,
+        word_metadata,
+        CoprocBodyKind::SimpleCommand,
+        None,
+        None,
+    ));
+    Some(finish_coproc_command(command, tokens, i))
+}
+
+/// The parse-error node for a `coproc' with no shell_command after it
+/// (rubash#2746): GNU blames the following token — a line break or end
+/// of input is `newline', anything else is the token itself. Consumption
+/// mirrors coproc_bang_error (through the next command separator).
+fn coproc_missing_command_error(
+    tokens: &[Token],
+    start: usize,
+    bad: usize,
+) -> (CommandNode, usize) {
+    let (blame, blame_position, source_index) = match tokens.get(bad) {
+        None => ("newline".to_string(), tokens[start].position, start),
+        Some(token) if token.kind == TokenKind::Eof => {
+            ("newline".to_string(), tokens[start].position, start)
+        }
+        Some(token) if token.kind == TokenKind::Semicolon && token.line_break => {
+            ("newline".to_string(), token.position, bad)
+        }
+        Some(token) => (near_blame_text(token), token.position, bad),
+    };
+    let mut command = CommandNode::new();
+    command.line = tokens.get(start).map(|t| t.position);
+    command.logical_line = tokens.get(start).map(|t| t.logical_line);
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+        format!(
+            "{blame}{}{}",
+            crate::executor::markers::PARSE_ERROR_FIELD_SEP,
+            blame_position
+        ),
+    );
+    command.insert_assignment(
+        "__RUBASH_PARSE_SOURCE__".to_string(),
+        offending_line_text(tokens, source_index, None, 0),
+    );
+    let mut end = bad.min(tokens.len());
+    while end < tokens.len() && tokens[end].kind != TokenKind::Semicolon {
+        end += 1;
+    }
+    finish_coproc_command(command, tokens, end)
+}
+
+/// The parse-error node GNU reports for a `!` where the coproc
+/// grammar admits no pipeline modifier (body position, or second
+/// word of the simple command). The executor reports it as
+/// `syntax error near unexpected token `!'` and aborts with
+/// status 2. The rest of the offending construct (up to the next
+/// command boundary) is swallowed so parsing resumes cleanly at
+/// the next command.
+/// A1 F06: the error node for a function definition offered as a coproc
+/// body — same __RUBASH_PARSE_ERROR_NEAR__ plumbing as coproc_bang_error,
+/// blaming the `)` of the `()` pair (GNU's blamed token for the unnamed
+/// spelling).
+fn coproc_funcdef_error(tokens: &[Token], start: usize, paren: usize) -> (CommandNode, usize) {
+    let mut command = CommandNode::new();
+    command.line = tokens.get(start).map(|t| t.position);
+    command.logical_line = tokens.get(start).map(|t| t.logical_line);
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+        format!(
+            "){}{}",
+            crate::executor::markers::PARSE_ERROR_FIELD_SEP,
+            tokens[paren].position,
+        ),
+    );
+    command.insert_assignment(
+        "__RUBASH_PARSE_SOURCE__".to_string(),
+        offending_line_text(tokens, paren, None, 0),
+    );
+    let mut end = paren;
+    while end < tokens.len() && tokens[end].kind != TokenKind::Semicolon {
+        end += 1;
+    }
+    finish_coproc_command(command, tokens, end)
+}
+
+/// rubash#2890: the error node for an EMPTY brace-group coproc body
+/// (`coproc { }`, `coproc NAME { }`). GNU's compound_list (parse.y:1262)
+/// requires a non-empty list, so the parse fails at the closing `}' —
+/// same __RUBASH_PARSE_ERROR_NEAR__ plumbing as coproc_funcdef_error,
+/// blaming the `}' token (for the folded single-token spelling, the
+/// brace-group token itself). Consumption ends just past the `}'.
+fn coproc_empty_brace_body_error(
+    tokens: &[Token],
+    start: usize,
+    close: usize,
+) -> (CommandNode, usize) {
+    let mut command = CommandNode::new();
+    command.line = tokens.get(start).map(|t| t.position);
+    command.logical_line = tokens.get(start).map(|t| t.logical_line);
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+        format!(
+            "}}{}{}",
+            crate::executor::markers::PARSE_ERROR_FIELD_SEP,
+            tokens[close].position,
+        ),
+    );
+    command.insert_assignment(
+        "__RUBASH_PARSE_SOURCE__".to_string(),
+        offending_line_text(tokens, close, None, 0),
+    );
+    finish_coproc_command(command, tokens, close + 1)
+}
+
+fn coproc_bang_error(tokens: &[Token], start: usize, bang: usize) -> (CommandNode, usize) {
+    let mut command = CommandNode::new();
+    command.line = tokens.get(start).map(|t| t.position);
+    command.logical_line = tokens.get(start).map(|t| t.logical_line);
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+        format!(
+            "!{}{}",
+            crate::executor::markers::PARSE_ERROR_FIELD_SEP,
+            tokens[bang].position,
+        ),
+    );
+    command.insert_assignment(
+        "__RUBASH_PARSE_SOURCE__".to_string(),
+        offending_line_text(tokens, bang, None, 0),
+    );
+    let mut end = bang;
+    while end < tokens.len() && tokens[end].kind != TokenKind::Semicolon {
+        end += 1;
+    }
+    finish_coproc_command(command, tokens, end)
+}
+
+fn finish_coproc_command(
+    command: CommandNode,
+    tokens: &[Token],
+    index: usize,
+) -> (CommandNode, usize) {
+    let (command, mut next_i) = finish_compound_command(command, tokens, index);
+    while tokens
+        .get(next_i)
+        .is_some_and(|token| token.kind == TokenKind::Semicolon)
+    {
+        next_i += 1;
+    }
+    (command, next_i)
+}
+
+fn coproc_command(
+    name: Option<(String, String)>,
+    words: Vec<String>,
+    word_metadata: Vec<WordMetadata>,
+    body_kind: CoprocBodyKind,
+    body_delimiters: Option<(String, String)>,
+    body: Option<Vec<CommandNode>>,
+) -> Box<CoprocCommand> {
+    let (body_open_delimiter, body_close_delimiter) = body_delimiters
+        .map(|(open, close)| (Some(open), Some(close)))
+        .unwrap_or((None, None));
+    let body_open_delimiter_metadata = body_open_delimiter
+        .as_deref()
+        .map(synthetic_delimiter_metadata);
+    let body_close_delimiter_metadata = body_close_delimiter
+        .as_deref()
+        .map(synthetic_delimiter_metadata);
+    let (name, name_metadata) = name
+        .map(|(value, raw)| {
+            let metadata = build_word_metadata(0, &value, &raw);
+            (Some(value), Some(Box::new(metadata)))
+        })
+        .unwrap_or((None, None));
+    Box::new(CoprocCommand {
+        keyword: "coproc".to_string(),
+        keyword_metadata: synthetic_delimiter_metadata("coproc"),
+        name,
+        name_metadata,
+        words,
+        word_metadata,
+        body_kind,
+        body_open_delimiter,
+        body_open_delimiter_metadata,
+        body_close_delimiter,
+        body_close_delimiter_metadata,
+        body,
+    })
+}
+
+fn synthetic_delimiter_metadata(delimiter: &str) -> Box<WordMetadata> {
+    Box::new(build_word_metadata(0, delimiter, delimiter))
+}
+
+/// GNU assignment-word shape at the head of a simple command: a name
+/// (`[A-Za-z_][A-Za-z0-9_]*`, optionally with a `[...]` subscript)
+/// followed by `=` or `+=`. This is the shape GNU's lexer returns as
+/// ASSIGNMENT_WORD (parse.y read_token), after which reserved words
+/// stop being recognized (parse.y:5899 reserved_word_acceptable) —
+/// the rubash#1983 exemption for a `!` following the coproc's first
+/// word. (Judgment shape first measured in the #1712 line's
+/// 537e177c; subscript/`+=` arms oracle-verified for #1983.)
+fn coproc_word_is_assignment(word: &str) -> bool {
+    let bytes = word.as_bytes();
+    let mut i = 0;
+    if i >= bytes.len() || !(bytes[i] == b'_' || bytes[i].is_ascii_alphabetic()) {
+        return false;
+    }
+    while i < bytes.len() && (bytes[i] == b'_' || bytes[i].is_ascii_alphanumeric()) {
+        i += 1;
+    }
+    if i < bytes.len() && bytes[i] == b'[' {
+        match word[i..].find(']') {
+            Some(close) => i += close + 1,
+            None => return false,
+        }
+    }
+    if i < bytes.len() && bytes[i] == b'+' {
+        i += 1;
+    }
+    i < bytes.len() && bytes[i] == b'='
+}
+
+fn is_coproc_shell_command_start(tokens: &[Token], index: usize) -> bool {
+    tokens.get(index).is_some_and(|token| {
+        matches!(
+            token.value.as_str(),
+            "for" | "case" | "select" | "coproc" | "if" | "while" | "until" | "[["
+        ) || token.value.starts_with("((")
+        // No function-definition arm: GNU rejects `coproc f() { ...; }`
+        // (and the named/spaced spellings) as a syntax error — a function
+        // definition is never a coproc body (audit A1 F06).
+    })
+}
+
+fn parse_coproc_command_sequence_body(
+    tokens: &[Token],
+    start: usize,
+) -> Option<(Vec<CommandNode>, usize)> {
+    let end = match tokens.get(start)?.value.as_str() {
+        "[[" => matching_coproc_conditional_end(tokens, start)?,
+        "if" => matching_coproc_if_end(tokens, start)?,
+        "while" | "until" => matching_coproc_loop_end(tokens, start)?,
+        _ => return None,
+    };
+    Some((parse(&tokens[start..=end]).commands, end + 1))
+}
+
+fn matching_coproc_conditional_end(tokens: &[Token], start: usize) -> Option<usize> {
+    (start..tokens.len()).find(|&index| tokens[index].raw == "]]")
+}
+
+fn matching_coproc_if_end(tokens: &[Token], start: usize) -> Option<usize> {
+    let mut depth = 0usize;
+    for index in start..tokens.len() {
+        let boundary = index == start || command_boundary_keyword_allowed(tokens, index);
+        if boundary && is_keyword(tokens, index, "if") {
+            depth += 1;
+        } else if boundary && is_keyword(tokens, index, "fi") {
+            depth = depth.checked_sub(1)?;
+            if depth == 0 {
+                return Some(index);
+            }
+        }
+    }
+    None
+}
+
+fn matching_coproc_loop_end(tokens: &[Token], start: usize) -> Option<usize> {
+    let mut depth = 0usize;
+    for index in start..tokens.len() {
+        let boundary = index == start || command_boundary_keyword_allowed(tokens, index);
+        if boundary
+            && (is_keyword(tokens, index, "for")
+                || is_keyword(tokens, index, "while")
+                || is_keyword(tokens, index, "until")
+                || is_keyword(tokens, index, "select"))
+        {
+            depth += 1;
+        } else if boundary && is_keyword(tokens, index, "done") {
+            depth = depth.checked_sub(1)?;
+            if depth == 0 {
+                return Some(index);
+            }
+        }
+    }
+    None
+}
+
+fn parse_coproc_compound_body(tokens: &[Token], start: usize) -> Option<(CommandNode, usize)> {
+    if let Some(parsed) = parse_arithmetic_command(tokens, start) {
+        return Some(parsed);
+    }
+    // No parse_function_command arm: see is_coproc_shell_command_start —
+    // GNU never accepts a function definition as a coproc body (A1 F06).
+
+    // rubash#1653: there is deliberately NO "time" arm here. GNU
+    // parse.y:1125-1175 gives coproc only `COPROC shell_command`,
+    // `COPROC WORD shell_command` and `COPROC simple_command`
+    // (plus redirection variants); `time` is a timespec prefix on
+    // `pipeline_command` (parse.y:1416), not a shell_command starter,
+    // so after `coproc` it is never the time keyword: it is the
+    // coproc NAME when a compound command follows (handled by the
+    // caller's next-token check), and otherwise the first word of
+    // the simple-command body below (`coproc time echo hi` runs a
+    // child that reports `time: command not found`, and
+    // `coproc time echo hi | cat` leaves the `| cat` outside the
+    // coproc, so the coproc lives in the pipeline subshell and the
+    // parent never sees COPROC_PID).
+    match tokens.get(start)?.value.as_str() {
+        "for" => parse_for_command(tokens, start, None, 0),
+        "if" => parse_if_command_standalone(tokens, start, None, 0),
+        "while" | "until" => parse_loop_command(tokens, start, None, 0)
+            .map(|(command, next, _unclaimed)| (command, next)),
+        "case" => parse_case_command(tokens, start, None, 0),
+        "select" => parse_select_command(tokens, start, None, 0),
+        "coproc" => parse_coproc_command(tokens, start),
+        "[[" => parse_conditional_command(tokens, start, None, 0),
+        _ => None,
+    }
+}
+
+fn is_brace_group_token(token: &Token) -> bool {
+    token.kind == TokenKind::BraceExpand
+        || (token.kind == TokenKind::Keyword
+            && token.value.starts_with('{')
+            && token.value.ends_with('}')
+            && token.value.len() > 1)
+}
+
+fn parse_inline_brace_body(token: &Token) -> Vec<CommandNode> {
+    let inner = token
+        .value
+        .trim_start_matches('{')
+        .trim_end_matches('}')
+        .trim();
+    // rubash#1544: folded-body re-lex under the fold pass's posix
+    // mode, locked (see Token::posix_gate).
+    // rubash#2918: the re-lex starts at the brace token's own line —
+    // the line-agnostic form numbers the body from 1, so a parse
+    // error inside a folded body on a later script line reported
+    // line 1 (the parse_loop region scan re-bases the same way,
+    // `token.position + brace_line - 1`).
+    let body_tokens = crate::lexer::tokenize_locked_body_with_initial_posix_and_line(
+        inner,
+        token.posix_gate,
+        token.position,
+    );
+    parse(&body_tokens).commands
+}
+
+fn parse_split_brace_body(tokens: &[Token], start: usize) -> Option<(Vec<CommandNode>, usize)> {
+    if !is_keyword(tokens, start, "{") {
+        return None;
+    }
+
+    let i = matching_brace_group_end(tokens, start)?;
+
+    Some((parse(&tokens[start + 1..i]).commands, i))
+}

@@ -1,0 +1,209 @@
+use super::DIR_STACK;
+use crate::builtins::cd::paths::validated_logical_pwd;
+use crate::executor::path::{shell_path_to_windows, shell_pwd_display_path};
+use crate::shell::var_table::VarTable;
+use std::collections::HashMap;
+use std::path::Path;
+
+const SEP: char = crate::executor::markers::DIR_STACK_FIELD_SEP;
+
+pub(crate) fn load_stack(env_vars: &HashMap<String, String>, cwd: &Path) -> Vec<String> {
+    let carrier = load_stack_carrier(env_vars);
+    if !carrier.is_empty() {
+        // GNU pushd.def:301 pushes the RAW -n operand word (savestring),
+        // so a blank element is a real stack member (`HOME=; pushd -n ~`
+        // yields `<cwd> ""`) and must survive the round trip. Only the
+        // fully-emptied representation (`dirs -c` saving []) falls back
+        // to the live cwd: GNU get_directory_stack
+        // (builtins/pushd.def:669) always appends the working directory
+        // after the pushed entries, so `dirs -c; declare -p DIRSTACK`
+        // prints ([0]="<cwd>") and ${#DIRSTACK[@]} stays 1.
+        return carrier;
+    }
+
+    vec![validated_stack_top(env_vars, cwd)]
+}
+
+/// Element 0 when no stack carrier exists. GNU never stores the current
+/// directory: get_directory_stack (builtins/pushd.def:669) appends
+/// get_working_directory ("dirstack") — the cd.def:610-validated logical
+/// cwd, which honors $PWD only while it still names the working
+/// directory and otherwise reports the physical cwd (the validation
+/// surface `pwd -L` uses, rubash#2143). Reading the raw $PWD variable
+/// here let a forged `PWD=/elsewhere` leak into dirs / ${DIRSTACK[0]} /
+/// ${#DIRSTACK[@]} even though no directory change ever happened
+/// (rubash#2408).
+fn validated_stack_top(env_vars: &HashMap<String, String>, cwd: &Path) -> String {
+    let validated = validated_logical_pwd(env_vars, cwd);
+    shell_pwd_display_path(&validated.to_string_lossy())
+}
+
+/// The stored carrier alone, without the synthesized element 0. GNU's
+/// tilde dirstack lookup (builtins/pushd.def get_dirstack_from_string)
+/// consults pushd_directory_list and $PWD, never the working directory,
+/// so the tilde layer composes from this plus $PWD rather than from
+/// load_stack's validated element 0 (rubash#2408).
+pub(crate) fn load_stack_carrier(env_vars: &HashMap<String, String>) -> Vec<String> {
+    match env_vars.get(DIR_STACK) {
+        Some(value) if !value.is_empty() => value.split(SEP).map(str::to_string).collect(),
+        _ => Vec::new(),
+    }
+}
+
+pub(crate) fn save_stack(env_vars: &mut VarTable, stack: &[String]) {
+    env_vars.insert(DIR_STACK.to_string(), stack.join(&SEP.to_string()));
+    // The carrier is the stack's truth; a materialized DIRSTACK typed
+    // cell is only a cache of it (GNU keeps ONE array object the
+    // stack builtins themselves maintain). Every carrier write —
+    // pushd/popd/cd and the assignment doors all funnel through here —
+    // must invalidate that cache, or cell-trusting reads keep serving
+    // the pre-write stack (rubash#2424: `declare -p DIRSTACK; pushd
+    // /x; echo ${DIRSTACK[0]}` read the old top). The mirror text is
+    // deliberately left stale: GNU materializes it only on the next
+    // named access, and the cell/mirror pair stays mutually coherent.
+    env_vars.note_mirror_write("DIRSTACK");
+}
+
+pub(crate) fn stack_value(
+    env_vars: &HashMap<String, String>,
+    cwd: &Path,
+    index: usize,
+) -> Option<String> {
+    load_stack(env_vars, cwd).get(index).cloned()
+}
+
+pub(crate) fn stack_words(env_vars: &HashMap<String, String>, cwd: &Path) -> String {
+    load_stack(env_vars, cwd).join(" ")
+}
+
+pub(crate) fn set_stack_value(env_vars: &mut VarTable, cwd: &Path, index: usize, value: String) {
+    // GNU builtins/pushd.def:657-665 set_dirstack_element: `if (ind
+    // == 0 || ...) return;` — slot 0 is not stored state, it is the
+    // working directory itself, produced at every read face
+    // (pushd.def:669-682 get_directory_stack appends
+    // get_working_directory). rubash serializes slot 0 inside the
+    // carrier, so the element-assignment door must refuse to rewrite
+    // it: `DIRSTACK[0]=x` is a no-op, or every read face (dirs,
+    // ${DIRSTACK[@]}, ~+0) desyncs from $PWD until the next cd/pushd
+    // refresh re-binds slot 0 (rubash#2407). Every DIRSTACK assignment
+    // door (plain, declare, subscript) inherits the skip from here,
+    // its one shared write path (rubash#2408, rubash#2424).
+    if index == 0 {
+        return;
+    }
+    let mut stack = load_stack(env_vars, cwd);
+    if index < stack.len() {
+        stack[index] = value;
+        save_stack(env_vars, &stack);
+    }
+}
+
+pub(super) fn logical_dir_exists(dir: &str, env_vars: &HashMap<String, String>) -> bool {
+    // The shell keeps POSIX-looking paths in PWD even on Windows.  Resolve
+    // those paths before checking them, while allowing relative operands such
+    // as `pushd .` and `pushd ..` against the process working directory.
+    (!crate::executor::path::shell_root_configured(env_vars)
+        && matches!(dir, "/" | "/bin" | "/etc" | "/tmp" | "/usr"))
+        || shell_path_to_windows(dir, env_vars).is_dir()
+}
+
+/// The failure text for a directory operand `logical_dir_exists` rejected:
+/// GNU pushd.def routes the operand through cd_builtin, whose
+/// change_to_directory (cd.def) reports the chdir errno — a path that
+/// exists but is not a directory fails ENOTDIR ("Not a directory"), a
+/// missing path fails ENOENT ("No such file or directory"). Reporting
+/// ENOENT for both mislabels the regular-file case (rubash#1350).
+pub(super) fn dir_operand_error_text(
+    dir: &str,
+    env_vars: &HashMap<String, String>,
+) -> &'static str {
+    if shell_path_to_windows(dir, env_vars).exists() {
+        "Not a directory"
+    } else {
+        "No such file or directory"
+    }
+}
+
+/// Resolve a directory operand to the logical name stored in the stack.
+///
+/// Relative operands are resolved against the VALIDATED logical cwd:
+/// $PWD only while it still names the working directory, the physical
+/// session cwd otherwise (cd/paths.rs validated_logical_pwd, rubash#2143).
+/// That is the G-02 analogue of GNU's getcwd base: pushd.def:296-302
+/// delegates the Dir operand to cd_builtin, whose change_to_directory
+/// (cd.def:522ff) chdirs the operand as-is, so the kernel resolves a
+/// relative operand against the real cwd, never $PWD (builtins/common.c:592
+/// get_working_directory is getcwd). Joining onto the raw $PWD made
+/// `unset PWD; pushd a` look up `/a` and `PWD=/wrong; pushd a` look up
+/// `/wrong/a` (rubash#3396). This lexical step stays separate from
+/// Windows filesystem mapping so POSIX paths remain visible as POSIX paths.
+pub(super) fn normalize_stack_dir(
+    dir: &str,
+    env_vars: &HashMap<String, String>,
+    cwd: &Path,
+) -> String {
+    let dir = dir.replace('\\', "/");
+    let base = shell_pwd_display_path(&validated_logical_pwd(env_vars, cwd).to_string_lossy());
+    let absolute = dir.starts_with('/') || is_drive_absolute(&dir);
+    let combined = if absolute {
+        dir.clone()
+    } else {
+        format!("{base}/{dir}")
+    };
+    // The exactly-two-slashes evidence is the spelling the path was
+    // built FROM — the operand itself for an absolute operand, the
+    // base $PWD for a relative one — never the joined text, which
+    // manufactures a double slash at the seam (the rule
+    // cd/paths.rs logical_destination_display follows, rubash#2211).
+    let slash_evidence = if absolute {
+        dir.as_str()
+    } else {
+        base.as_str()
+    };
+
+    let (prefix, rest) = if combined.starts_with('/') {
+        ("/", combined.as_str())
+    } else if is_drive_absolute(&combined) {
+        (&combined[..2], &combined[2..])
+    } else {
+        ("", combined.as_str())
+    };
+    let mut parts = Vec::new();
+    for part in rest.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            part => parts.push(part),
+        }
+    }
+
+    let joined = parts.join("/");
+    let result = if prefix == "/" {
+        if joined.is_empty() {
+            "/".to_string()
+        } else {
+            format!("/{joined}")
+        }
+    } else if prefix.is_empty() {
+        joined
+    } else if joined.is_empty() {
+        format!("{prefix}/")
+    } else {
+        format!("{prefix}/{joined}")
+    };
+    // POSIX leaves exactly two leading slashes implementation-defined
+    // and GNU preserves them through canonicalization (change_to_
+    // directory -> sh_canonpath); three or more collapse to one
+    // (rubash#3197). The component walk above cannot represent the
+    // prefix, so re-apply it through cd's own preservation helper.
+    crate::builtins::cd::paths::preserve_leading_double_slash(slash_evidence, &result)
+}
+
+fn is_drive_absolute(path: &str) -> bool {
+    path.len() >= 3
+        && path.as_bytes()[1] == b':'
+        && path.as_bytes()[0].is_ascii_alphabetic()
+        && path.as_bytes()[2] == b'/'
+}

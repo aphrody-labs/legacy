@@ -1,0 +1,442 @@
+use super::*;
+use crate::lexer::{Token, TokenKind};
+
+pub(super) fn parse_select_command(
+    tokens: &[Token],
+    start: usize,
+    source: Option<&std::rc::Rc<str>>,
+    source_line_offset: usize,
+) -> Option<(CommandNode, usize)> {
+    // Parse `select name [in words ...]; do body; done`
+    let variable_token = tokens.get(start + 1)?;
+    if !matches!(
+        variable_token.kind,
+        TokenKind::Word | TokenKind::Variable | TokenKind::Keyword
+    ) {
+        // GNU parse.y:979 (`SELECT WORD newline_list DO ...`): the
+        // name slot admits exactly a WORD — the `for` name slot's twin
+        // (rubash#2108 face A: `select; do ...` blames `;', `select
+        // > f; do ...` blames `>'). Returning None degraded the head
+        // to the word path, which walked on to `do' and blamed IT
+        // instead. End of input and a bare newline keep the None
+        // fall-through, as in parse_for_command: no token to blame /
+        // the dangling-head diagnostic owns the shape.
+        if variable_token.kind == TokenKind::Eof
+            || (variable_token.kind == TokenKind::Semicolon && variable_token.line_break)
+        {
+            return None;
+        }
+        return Some(head_unexpected_token_node(
+            tokens,
+            start,
+            start + 1,
+            source,
+            source_line_offset,
+        ));
+    }
+    // GNU keeps the loop variable name as the raw word text — quote removal
+    // does not apply to the name position (`select f\1 in ...` reports
+    // `f\1': not a valid identifier`, errors.tests line 51). Valid
+    // identifiers never contain escapes, so raw == value for accepted names.
+    let variable = if variable_token.raw.is_empty() {
+        variable_token.value.clone()
+    } else {
+        variable_token.raw.clone()
+    };
+    // rubash#2745: the name slot admits a variable literally named
+    // `in' — GNU's grammar takes the WORD after SELECT as the name
+    // (parse.y:979 `SELECT WORD ... IN word_list'), so `select in; do'
+    // and `select in in a b; do' both work; only `do'/`done' in the
+    // name slot are impossible (they are the body's own keywords).
+    if tokens.get(start + 1)?.kind == TokenKind::Keyword
+        && matches!(tokens.get(start + 1)?.value.as_str(), "do" | "done")
+    {
+        return None;
+    }
+    let mut i = skip_newline_list(tokens, start + 2);
+    let mut words = Vec::new();
+    let mut word_metadata = Vec::new();
+    let mut in_keyword = None;
+    let mut in_keyword_metadata = None;
+    let mut list_terminator = None;
+    let mut list_terminator_metadata = None;
+
+    // Optional `in words...`
+    let default_positional = if is_keyword(tokens, i, "in") {
+        in_keyword = Some(tokens[i].value.clone());
+        in_keyword_metadata = Some(build_keyword_metadata(&tokens[i]));
+        i += 1;
+        while i < tokens.len() {
+            if tokens[i].kind == TokenKind::Semicolon {
+                if list_terminator.is_none() {
+                    list_terminator = Some(tokens[i].value.clone());
+                    list_terminator_metadata = Some(build_keyword_metadata(&tokens[i]));
+                }
+                i += 1;
+                while tokens
+                    .get(i)
+                    .is_some_and(|token| token.kind == TokenKind::Semicolon)
+                {
+                    i += 1;
+                }
+                if is_keyword(tokens, i, "do") {
+                    break;
+                }
+                if select_brace_body_start(tokens, i) {
+                    break;
+                }
+                // GNU parse.y:1007 (`SELECT WORD newline_list IN
+                // word_list list_terminator newline_list DO
+                // compound_list DONE`): after the list terminator and
+                // the newline list, only `do` (or the `{` body form
+                // above) may follow — any other token is the
+                // syntax-error token (rubash#2087: `select x in a b`
+                // + `done` blames `done`). Collecting it as another
+                // list word degrades the recognized head into an
+                // executable simple command.
+                if tokens.get(i).is_some() {
+                    return Some(head_unexpected_token_node(
+                        tokens,
+                        start,
+                        i,
+                        source,
+                        source_line_offset,
+                    ));
+                }
+                continue;
+            }
+            if select_brace_body_start(tokens, i) {
+                return None;
+            }
+            // GNU parse.y:1037-1054 wordlist admits only WORD tokens: a
+            // bare `(' in the list is `syntax error near unexpected token
+            // `(''. read_token_word absorbs the group into the word ONLY
+            // while the extglob shopt is on (parse.y:5466), so with the
+            // gate closed `select x in a @(b|c)' leaves the `(' as its own
+            // token and this position must reject it (rubash#386) exactly
+            // as simple-command position already does; a plain
+            // `select x in a (b)' is the same grammar slot.
+            if tokens[i].kind == TokenKind::Keyword
+                && tokens[i].value == "("
+                && tokens[i].raw == "("
+            {
+                let mut command = CommandNode::new();
+                command.line = tokens.get(start).map(|token| token.position);
+                command.insert_assignment(
+                    "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+                    format!(
+                        "({}{}",
+                        crate::executor::markers::PARSE_ERROR_FIELD_SEP,
+                        tokens[i].position
+                    ),
+                );
+                command.insert_assignment(
+                    "__RUBASH_PARSE_SOURCE__".to_string(),
+                    super::parse_loop::offending_line_text(
+                        tokens,
+                        i,
+                        source.map(|rc| &**rc),
+                        source_line_offset,
+                    ),
+                );
+                return Some(finish_compound_command(command, tokens, tokens.len()));
+            }
+            // GNU's lexer returns SEMI_SEMI for the case-terminator
+            // family (parse.y: the word_list production admits WORD
+            // tokens only), so an unquoted `;;'/`;&'/`;;&' in the list
+            // is the syntax-error token (rubash#2087: `select x in a;;
+            // do ...' blames `;;'). This lexer emits the family as Word
+            // tokens (raw == value is the unquoted operator spelling; a
+            // quoted `';;'' stays a genuine list word), and the collect
+            // below would swallow it as one.
+            if tokens[i].kind == TokenKind::Word
+                && tokens[i].raw == tokens[i].value
+                && matches!(tokens[i].value.as_str(), ";;" | ";&" | ";;&")
+            {
+                return Some(head_unexpected_token_node(
+                    tokens,
+                    start,
+                    i,
+                    source,
+                    source_line_offset,
+                ));
+            }
+            if let Some((word, next_i)) = collect_compound_or_keyword_word_value(tokens, i) {
+                let raw = if next_i == i + 1 {
+                    tokens[i].raw.as_str()
+                } else {
+                    word.as_str()
+                };
+                word_metadata.push(build_word_metadata(words.len(), &word, raw));
+                words.push(word);
+                i = next_i;
+                continue;
+            }
+            // GNU parse.y:526-529 (`word_list: WORD | word_list WORD`)
+            // admits WORD tokens only, so an operator token the collect
+            // above could not take as a word is the syntax-error token
+            // at its own position (parse.y:1007 for the `select`
+            // production; rubash#2108 face B, the `for` twin: `select
+            // s in a b | cat` blames `|'). The loop used to step over
+            // this whole class silently — the operator vanished, its
+            // target was collected as a list word, and a bogus loop
+            // ran. The gate sits AFTER the collect, so word forms that
+            // begin with an operator-shaped token are already taken:
+            // process substitutions (word text in GNU's lexer) and
+            // quoted or escaped operator spellings (Word tokens here,
+            // never operator kinds).
+            if matches!(
+                tokens[i].kind,
+                TokenKind::Pipe
+                    | TokenKind::PipeErr
+                    | TokenKind::And
+                    | TokenKind::Or
+                    | TokenKind::Background
+                    | TokenKind::RedirectIn
+                    | TokenKind::RedirectOut
+                    | TokenKind::Append
+                    | TokenKind::RedirectErr
+                    | TokenKind::RedirectErrAppend
+                    | TokenKind::HereDoc
+                    | TokenKind::HereString
+            ) {
+                return Some(head_unexpected_token_node(
+                    tokens,
+                    start,
+                    i,
+                    source,
+                    source_line_offset,
+                ));
+            }
+            i += 1;
+        }
+        false
+    } else {
+        // Skip optional semicolons before `do`
+        while tokens
+            .get(i)
+            .is_some_and(|token| token.kind == TokenKind::Semicolon)
+        {
+            if list_terminator.is_none() {
+                list_terminator = Some(tokens[i].value.clone());
+                list_terminator_metadata = Some(build_keyword_metadata(&tokens[i]));
+            }
+            i += 1;
+        }
+        // GNU parse.y:979-985: with no `in` list the head is `SELECT WORD
+        // newline_list DO` / `SELECT WORD ';' newline_list DO` — after
+        // the terminator run the next token must be `do` (or the `{`
+        // body form handled below); anything else is the syntax-error
+        // token (rubash#2087: `select x; echo y; do ...` blames `echo`;
+        // `select x` + `done` blames `done`). Returning None here
+        // degrades the recognized head into an executable simple
+        // command.
+        if tokens.get(i).is_some()
+            && !is_keyword(tokens, i, "do")
+            && !select_brace_body_start(tokens, i)
+        {
+            return Some(head_unexpected_token_node(
+                tokens,
+                start,
+                i,
+                source,
+                source_line_offset,
+            ));
+        }
+        true
+    };
+
+    let (
+        body,
+        body_end,
+        body_kind,
+        do_keyword,
+        do_keyword_metadata,
+        end_keyword,
+        end_keyword_metadata,
+    ) = if let Some((body, next_i)) = parse_select_brace_body(tokens, i) {
+        (
+            body,
+            next_i,
+            CommandBodyKind::BraceGroup,
+            None,
+            None,
+            None,
+            None,
+        )
+    } else {
+        if !is_keyword(tokens, i, "do") {
+            return None;
+        }
+        let do_keyword = Some(tokens[i].value.clone());
+        let do_keyword_metadata = Some(build_keyword_metadata(&tokens[i]));
+        i += 1;
+
+        // Find matching `done`
+        let body_start = i;
+        let mut stack = Vec::new();
+        while i < tokens.len() {
+            if stack.is_empty()
+                && command_boundary_keyword_allowed(tokens, i)
+                && is_keyword(tokens, i, "done")
+            {
+                break;
+            }
+            update_compound_boundary_stack(tokens, i, &mut stack);
+            i += 1;
+        }
+
+        if !is_keyword(tokens, i, "done") {
+            return None;
+        }
+        // GNU parse.y:979-1003: `DO compound_list DONE` — the select body
+        // cannot be empty (rubash#221, same rule as while/until/for).
+        if let Some(error) = empty_compound_body_error_node(tokens, body_start, i) {
+            return Some((error, i + 1));
+        }
+        let end_keyword = Some(tokens[i].value.clone());
+        let end_keyword_metadata = Some(build_keyword_metadata(&tokens[i]));
+
+        (
+            parse_select_body_commands(&tokens[body_start..i]),
+            i + 1,
+            CommandBodyKind::DoDone,
+            do_keyword,
+            do_keyword_metadata,
+            end_keyword,
+            end_keyword_metadata,
+        )
+    };
+    let (body_open_delimiter, body_close_delimiter) =
+        command_body_delimiters(body_kind, do_keyword.as_deref(), end_keyword.as_deref());
+    let (body_open_delimiter_metadata, body_close_delimiter_metadata) =
+        command_body_delimiter_metadata(
+            body_kind,
+            do_keyword_metadata.as_ref(),
+            end_keyword_metadata.as_ref(),
+            body_open_delimiter.as_deref(),
+            body_close_delimiter.as_deref(),
+        );
+    let mut command = CommandNode::new();
+    command.line = tokens.get(start).map(|token| token.position);
+    command.logical_line = tokens.get(start).map(|token| token.logical_line);
+    command.select_command = Some(Box::new(SelectCommand {
+        keyword: tokens[start].value.clone(),
+        keyword_metadata: build_keyword_metadata(&tokens[start]),
+        variable: variable.clone(),
+        variable_metadata: Box::new(build_word_metadata(0, &variable, &variable_token.raw)),
+        in_keyword,
+        in_keyword_metadata,
+        words,
+        word_metadata,
+        default_positional,
+        list_terminator,
+        list_terminator_metadata,
+        body_kind,
+        body_open_delimiter,
+        body_open_delimiter_metadata,
+        body_close_delimiter,
+        body_close_delimiter_metadata,
+        do_keyword,
+        do_keyword_metadata,
+        end_keyword,
+        end_keyword_metadata,
+        body,
+    }));
+    Some(finish_compound_command(command, tokens, body_end))
+}
+
+fn parse_select_body_commands(tokens: &[Token]) -> Vec<CommandNode> {
+    parse(tokens)
+        .commands
+        .into_iter()
+        .filter(|command| !command_is_empty(command))
+        .collect()
+}
+
+fn build_keyword_metadata(token: &Token) -> Box<WordMetadata> {
+    Box::new(build_word_metadata(0, &token.value, &token.raw))
+}
+
+/// The `syntax error near unexpected token' node for a token that
+/// breaks the `select` head's grammar at its position (rubash#2087) —
+/// the same `__RUBASH_PARSE_ERROR_NEAR__` encoding as the `(`-in-list
+/// node above: the spec carries the offending token and ITS line, the
+/// source assignment echoes its physical line.
+fn head_unexpected_token_node(
+    tokens: &[Token],
+    start: usize,
+    bad_index: usize,
+    source: Option<&std::rc::Rc<str>>,
+    source_line_offset: usize,
+) -> (CommandNode, usize) {
+    let token = &tokens[bad_index];
+    let mut command = CommandNode::new();
+    command.line = tokens.get(start).map(|token| token.position);
+    command.insert_assignment(
+        "__RUBASH_PARSE_ERROR_NEAR__".to_string(),
+        format!(
+            "{}{}{}",
+            near_blame_text(token),
+            crate::executor::markers::PARSE_ERROR_FIELD_SEP,
+            token.position
+        ),
+    );
+    command.insert_assignment(
+        "__RUBASH_PARSE_SOURCE__".to_string(),
+        super::parse_loop::offending_line_text(
+            tokens,
+            bad_index,
+            source.map(|rc| &**rc),
+            source_line_offset,
+        ),
+    );
+    finish_compound_command(command, tokens, tokens.len())
+}
+
+fn skip_newline_list(tokens: &[Token], mut index: usize) -> usize {
+    while tokens
+        .get(index)
+        .is_some_and(|token| token.kind == TokenKind::Semicolon && token.line_break)
+    {
+        index += 1;
+    }
+    index
+}
+
+fn select_brace_body_start(tokens: &[Token], index: usize) -> bool {
+    tokens.get(index).is_some_and(|token| {
+        (token.kind == TokenKind::Keyword
+            && token.value.starts_with('{')
+            && token.value.ends_with('}')
+            && token.value.len() >= 2)
+            || is_keyword(tokens, index, "{")
+    })
+}
+
+fn parse_select_brace_body(tokens: &[Token], index: usize) -> Option<(Vec<CommandNode>, usize)> {
+    let token = tokens.get(index)?;
+    if token.kind == TokenKind::Keyword
+        && token.value.starts_with('{')
+        && token.value.ends_with('}')
+        && token.value.len() >= 2
+    {
+        let inner = token
+            .value
+            .trim_start_matches('{')
+            .trim_end_matches('}')
+            .trim();
+        // rubash#1544: folded-body re-lex under the fold pass's posix
+        // mode, locked (see Token::posix_gate).
+        let body_tokens = crate::lexer::tokenize_locked_body(inner, token.posix_gate);
+        return Some((parse_select_body_commands(&body_tokens), index + 1));
+    }
+
+    if !is_keyword(tokens, index, "{") {
+        return None;
+    }
+
+    let i = matching_brace_group_end(tokens, index)?;
+
+    Some((parse_select_body_commands(&tokens[index + 1..i]), i + 1))
+}
