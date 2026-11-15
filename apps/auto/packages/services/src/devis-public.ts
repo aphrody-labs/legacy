@@ -1,18 +1,18 @@
-// Lien public d'un devis : le client le consulte, télécharge le PDF et l'accepte ou le refuse sans compte.
-// Jeton sans état : `<charge base64url>.<HMAC-SHA256 base64url>`, clé dérivée (HKDF) de la clé maître avec un
-// usage propre ; la charge porte l'entreprise, le devis et l'expiration. Révoqué de fait dès que le devis quitte
-// les statuts « émis » ou « envoyé » (la décision n'est plus possible).
+// Public link of a quote: the customer views it, downloads the PDF and accepts or refuses it without an account.
+// Stateless token: `<base64url payload>.<base64url HMAC-SHA256>`, key derived (HKDF) from the master key with a
+// dedicated usage; the payload carries the company, the quote and the expiry. Revoked in effect as soon as the quote leaves
+// the "issued" or "sent" statuses (the decision is no longer possible).
 import { cleMaitre } from "@auto/tenancy";
 
-/** Durée de validité d'un lien (au-delà, l'émetteur en génère un nouveau). */
+/** Validity of a link (beyond it, the issuer generates a new one). */
 export const DUREE_LIEN_MS = 30 * 24 * 3600 * 1000;
 
 export interface ChargeLien {
-  /** Entreprise émettrice. */
+  /** Issuing company. */
   t: string;
   /** Devis. */
   d: string;
-  /** Expiration (ms depuis l'époque). */
+  /** Expiry (ms since the epoch). */
   e: number;
 }
 
@@ -40,7 +40,7 @@ export async function signerLien(c: ChargeLien, maitre = cleMaitre()): Promise<s
   return `${charge}.${b64(sig)}`;
 }
 
-/** Charge du jeton si la signature est valide et le lien non expiré, sinon null. */
+/** Token payload if the signature is valid and the link not expired, otherwise null. */
 export async function verifierLien(jeton: string, maitre = cleMaitre(), maintenant = Date.now()) {
   const [charge, sig, ...reste] = jeton.split(".");
   if (!charge || !sig || reste.length) return null;

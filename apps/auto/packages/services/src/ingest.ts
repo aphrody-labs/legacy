@@ -1,4 +1,4 @@
-// Lot ingest : factures fournisseurs reçues (dépôt, liste, fichier, validation manuelle).
+// Ingest batch: received supplier invoices (deposit, list, file, manual validation).
 import { clientOpenAi, configLlmDepuisEnv, ingerer, type ClientLlm, type Ocr, type StatutRecue } from "@auto/ingest";
 import {
   empreinteSha256,
@@ -12,7 +12,7 @@ import {
 } from "@auto/store";
 import { consommer, verifierQuota } from "@auto/billing";
 
-/** Réglages de l'ingestion (remplaçables en test). Le LLM est résolu à chaque appel : aucun état partagé. */
+/** Ingestion settings (replaceable in tests). The LLM is resolved on every call: no shared state. */
 export const reglages: { ocr?: Ocr; llm: () => ClientLlm | null } = {
   llm: () => {
     const c = configLlmDepuisEnv();
@@ -20,7 +20,7 @@ export const reglages: { ocr?: Ocr; llm: () => ClientLlm | null } = {
   },
 };
 
-/** Client LLM compté : quota `appels_llm` vérifié puis consommé avant chaque appel (402 au-delà). */
+/** Counted LLM client: `appels_llm` quota checked then consumed before each call (402 beyond). */
 export function avecQuota(sql: Sql, tenantId: string, c: ClientLlm | null): ClientLlm | null {
   if (!c) return null;
   return {
@@ -38,8 +38,8 @@ export const TAILLE_MAX = 20 * 1024 * 1024;
 export const STATUTS: StatutRecue[] = ["a_verifier", "validee", "rejetee"];
 
 /**
- * Dépôt d'un fichier reçu pour un tenant, quel que soit le canal (API, et demain mail et PA) :
- * dédoublonnage par SHA-256, extraction hors transaction (OCR et LLM peuvent être lents), enregistrement.
+ * Deposit of a received file for a tenant, whatever the channel (API, and tomorrow mail and PA):
+ * SHA-256 deduplication, extraction outside the transaction (OCR and LLM may be slow), saving.
  */
 export async function deposer(
   sql: Sql,
@@ -62,7 +62,7 @@ export async function deposer(
   try {
     return { recue: await withTenant(sql, tenantId, (tx) => enregistrerRecue(tx, actor, e, r)), doublon: false };
   } catch (err) {
-    // Dépôt concurrent du même fichier : on renvoie la facture déjà enregistrée.
+    // Concurrent deposit of the same file: return the already saved invoice.
     const deja = await withTenant(sql, tenantId, (tx) => recueParFichier(tx, empreinte));
     if (deja) return { recue: deja, doublon: true };
     throw err;

@@ -16,7 +16,7 @@ export function cheminImport(v: unknown, nom: string) {
     throw new ErreurMetier("chemin relatif invalide");
   return chemin;
 }
-/** Un seul fichier par requête : le navigateur orchestre la file et la reprise par SHA. */
+/** One file per request: the browser orchestrates the queue and the resume by SHA. */
 export async function importerFichier(
   sql: Sql,
   tenantId: string,

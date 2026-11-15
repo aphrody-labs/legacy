@@ -2,11 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { gardeUrl } from "./automatisations";
 
 describe("gardeUrl en production", () => {
-  test("adresses publiques acceptées", () => {
+  test("public addresses accepted", () => {
     expect(gardeUrl("https://api.example.com/v1", true, "").host).toBe("api.example.com");
   });
 
-  test("adresses internes refusées, y compris les noms de conteneur sans point", () => {
+  test("internal addresses refused, including container names without a dot", () => {
     for (const u of [
       "http://localhost:3000",
       "http://127.0.0.1",
@@ -19,12 +19,12 @@ describe("gardeUrl en production", () => {
       expect(() => gardeUrl(u, true, ""), u).toThrow("adresse interne refusée");
   });
 
-  test("hôtes internes permis par AUTO_HOTES_PERMIS", () => {
+  test("internal hosts allowed by AUTO_HOTES_PERMIS", () => {
     expect(gardeUrl("http://ollama:11434/v1", true, "ollama, mailpit").hostname).toBe("ollama");
     expect(() => gardeUrl("http://auto-api:3000", true, "ollama")).toThrow("adresse interne refusée");
   });
 
-  test("réseau local permis seulement avec AUTO_RESEAU_LOCAL=permis", () => {
+  test("local network allowed only with AUTO_RESEAU_LOCAL=permis", () => {
     const avant = Bun.env.AUTO_RESEAU_LOCAL;
     try {
       Bun.env.AUTO_RESEAU_LOCAL = "permis";

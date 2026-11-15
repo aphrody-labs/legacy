@@ -1,7 +1,7 @@
-// Nœuds média et navigateur des automatisations, sur les API natives du runtime : Bun.Image (transformation et
-// encodage), Bun.Video (métadonnées, image extraite, GIF ; fournisseur Rust FilmCraft) et Bun.WebView (page web
-// rendue, capture, texte). Vérifiés sur le runtime de production (bun 1.4.5 : Bun.Image, Bun.Video.available,
-// Bun.WebView présents). Le navigateur exige Chrome ou Chromium sur la machine : sans lui, le nœud échoue clairement.
+// Media and browser nodes of the automations, on the runtime's native APIs: Bun.Image (transformation and
+// encoding), Bun.Video (metadata, extracted frame, GIF; Rust FilmCraft provider) and Bun.WebView (rendered web
+// page, capture, text). Verified on the production runtime (bun 1.4.5: Bun.Image, Bun.Video.available,
+// Bun.WebView present). The browser requires Chrome or Chromium on the machine: without it, the node fails clearly.
 import type { OperationsImage, Services } from "@auto/automate";
 
 const TYPES = { jpeg: "image/jpeg", png: "image/png", webp: "image/webp" } as const;
@@ -23,7 +23,7 @@ async function transformer(octets: Uint8Array, o: OperationsImage) {
     img = img.resize(o.largeur ?? 0, o.hauteur ?? 0, { fit: o.ajustement, withoutEnlargement: true });
   if (o.niveauxDeGris || o.luminosite !== 1)
     img = img.modulate({ brightness: o.luminosite, saturation: o.niveauxDeGris ? 0 : 1 });
-  // « origine » : format source s'il est encodable ici (jpeg, png, webp), sinon PNG.
+  // "origine": source format if encodable here (jpeg, png, webp), otherwise PNG.
   const format: Encodable =
     o.format !== "origine"
       ? o.format
@@ -40,7 +40,7 @@ async function transformer(octets: Uint8Array, o: OperationsImage) {
   };
 }
 
-/** Une seule page à la fois par processus (le backend Chrome pilote un navigateur par processus). */
+/** One page at a time per process (the Chrome backend drives one browser per process). */
 let file: Promise<unknown> = Promise.resolve();
 
 export function chromeDisponible(): boolean {
@@ -92,7 +92,7 @@ export const servicesMedia = (verifierUrl: (u: string) => URL): Pick<Services, "
       await using vue = new Bun.WebView({
         width: o.largeur,
         height: o.hauteur,
-        // Toujours un Chrome sans interface lancé par le serveur : jamais de rattachement au navigateur d'un poste.
+        // Always a headless Chrome launched by the server: never attached to a workstation's browser.
         backend: {
           type: "chrome",
           url: false,

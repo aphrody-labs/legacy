@@ -1,7 +1,7 @@
-// Automatisations d'une entreprise : validation des définitions, exécution (API pour les essais et les
-// webhooks synchrones, worker pour les événements et les crons), secrets chiffrés et URL de webhook signée.
-// Le moteur (`@auto/automate`) ne fait aucun accès extérieur lui-même : les services ci-dessous les portent,
-// avec la garde réseau, la boîte mail du tenant et l'API d'auto aux droits de l'auteur du workflow.
+// Automations of a company: validation of definitions, execution (API for trials and
+// synchronous webhooks, worker for events and crons), encrypted secrets and signed webhook URL.
+// The engine (`@auto/automate`) makes no outside access itself: the services below carry them,
+// with the network guard, the tenant's mailbox and the auto API under the rights of the workflow's author.
 import {
   declencheurDe,
   ErreurDefinition,
@@ -52,13 +52,13 @@ import { servicesMedia } from "./media";
 import { executerScript } from "./script";
 import { PRIVE } from "./webhooks";
 
-/** Info de dérivation de la clé des secrets d'automatisation : propre au tenant. */
+/** Derivation info of the automation secrets key: specific to the tenant. */
 export const infoSecretAutomatisation = (tenantId: string) => `automatisation:${tenantId}`;
 
 export const chiffrerSecret = (tenantId: string, valeur: string) =>
   chiffrer(infoSecretAutomatisation(tenantId), new TextEncoder().encode(valeur));
 
-/** Corps de création ou de modification, validé et complété par le déclencheur extrait de la définition. */
+/** Body for creation or update, validated and completed by the trigger extracted from the definition. */
 export async function ecriture(
   tx: Tx,
   b: { nom?: unknown; description?: unknown; actif?: unknown; definition?: unknown },
@@ -98,9 +98,9 @@ export async function ecriture(
 }
 
 /**
- * Garde réseau des nœuds HTTP : http(s) seulement, aucun identifiant dans l'URL et, en production, aucune
- * adresse interne (réseau de l'opérateur, métadonnées du cloud). Pas de suivi de redirection automatique : une
- * redirection vers une adresse interne contournerait la garde.
+ * Network guard of the HTTP nodes: http(s) only, no credentials in the URL and, in production, no
+ * internal address (operator network, cloud metadata). No automatic redirect following: a
+ * redirect to an internal address would bypass the guard.
  */
 export function gardeUrl(
   brute: string,
@@ -116,7 +116,7 @@ export function gardeUrl(
   if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error("URL http ou https exigée");
   if (u.username || u.password) throw new Error("identifiants interdits dans l'URL");
   const hote = u.hostname.toLowerCase();
-  // Un nom sans point (« auto-api », « postgres ») désigne un conteneur ou une machine du réseau local.
+  // A name without a dot ("auto-api", "postgres") designates a container or a machine of the local network.
   const interne =
     hote === "localhost" ||
     hote.endsWith(".localhost") ||
@@ -130,12 +130,12 @@ export function gardeUrl(
 }
 
 /**
- * Réseau local entièrement joignable (`AUTO_RESEAU_LOCAL=permis`) : réservé à une installation dont on contrôle tous
- * les comptes (Aphrody Box chez soi), pour atteindre Home Assistant, Nextcloud ou une imprimante du réseau.
+ * Local network fully reachable (`AUTO_RESEAU_LOCAL=permis`): reserved for an installation where all the
+ * accounts are controlled (Aphrody Box at home), to reach Home Assistant, Nextcloud or a network printer.
  */
 const reseauLocal = () => Bun.env.AUTO_RESEAU_LOCAL === "permis";
 
-/** Hôtes internes joignables malgré tout (`AUTO_HOTES_PERMIS`, séparés par des virgules ; ex. `ollama`). */
+/** Internal hosts reachable anyway (`AUTO_HOTES_PERMIS`, comma-separated; e.g. `ollama`). */
 const hotesPermis = (liste = Bun.env.AUTO_HOTES_PERMIS ?? "") =>
   liste
     .split(",")
@@ -145,12 +145,12 @@ const hotesPermis = (liste = Bun.env.AUTO_HOTES_PERMIS ?? "") =>
 const fetchGarde: Services["fetch"] = (url, init) =>
   fetch(gardeUrl(url), { ...init, redirect: "manual", signal: init.signal ?? AbortSignal.timeout(30_000) });
 
-/** API d'auto vue du worker et de l'API elle-même. */
+/** The auto API as seen by the worker and the API itself. */
 const urlApi = () => (Bun.env.AUTO_API_URL ?? `http://localhost:${Bun.env.PORT ?? 3000}`).replace(/\/+$/, "");
 
 /**
- * Clé d'API temporaire de l'auteur du workflow pour les nœuds « Action auto » : une clé Better Auth
- * ordinaire qui expire seule et que l'exécution supprime à la fin. Droits = rôle actuel de l'auteur.
+ * Temporary API key of the workflow's author for the "auto Action" nodes: an ordinary Better Auth
+ * key that expires by itself and that the execution deletes at the end. Rights = the author's current role.
  */
 const jetonTemporaire = (sql: Sql, tenantId: string, userId: string, nom: string) =>
   cleTemporaire(sql, tenantId, userId, nom);
@@ -161,14 +161,14 @@ export interface Lancement {
   origine: string;
   entree: Element[];
   signal?: AbortSignal;
-  /** Niveau d'imbrication : 0 pour un workflow lancé directement, +1 par sous-workflow. */
+  /** Nesting level: 0 for a directly started workflow, +1 per sub-workflow. */
   profondeur?: number;
 }
 
-/** Sous-workflows imbriqués au plus : un appel en boucle s'arrête vite et clairement. */
+/** Nested sub-workflows at most: a looping call stops quickly and clearly. */
 export const PROFONDEUR_MAX = 3;
 
-/** Services réels d'une exécution ; `fermer` révoque le jeton temporaire. */
+/** Real services of an execution; `fermer` revokes the temporary token. */
 async function servicesPour(
   sql: Sql,
   tenantId: string,
@@ -178,7 +178,7 @@ async function servicesPour(
   profondeur = 0,
 ) {
   let temporaire: Awaited<ReturnType<typeof jetonTemporaire>> | null = null;
-  // Essai : mémoire éphémère, l'état d'un workflow enregistré n'est pas modifié par un essai.
+  // Trial: ephemeral memory, the state of a saved workflow is not modified by a trial.
   const ephemere = new Map<string, unknown>();
   const services: Services = {
     memoire: automatisationId
@@ -245,7 +245,7 @@ async function secretsClairs(sql: Sql, tenantId: string, def: Definition) {
   return clairs;
 }
 
-/** Retire les secrets des étapes conservées (un nœud peut recopier une valeur résolue dans sa sortie). */
+/** Removes secrets from the kept steps (a node may copy a resolved value into its output). */
 function masquer(r: Resultat, secrets: Record<string, string>): Resultat {
   const valeurs = Object.values(secrets).filter((v) => v.length >= 6);
   if (!valeurs.length) return r;
@@ -253,7 +253,7 @@ function masquer(r: Resultat, secrets: Record<string, string>): Resultat {
   return JSON.parse(s) as Resultat;
 }
 
-/** Exécute un workflow enregistré et consigne l'exécution ; renvoie l'exécution et la sortie. */
+/** Runs a saved workflow and records the execution; returns the execution and the output. */
 export async function lancer(sql: Sql, l: Lancement): Promise<{ execution: Execution; resultat: Resultat }> {
   const a = await withTenant(sql, l.tenantId, (tx) => lireAutomatisation(tx, l.automatisationId));
   if (!a) throw new ErreurMetier("automatisation introuvable", [], 404);
@@ -290,7 +290,7 @@ export async function lancer(sql: Sql, l: Lancement): Promise<{ execution: Execu
   return { execution: { ...execution, etapes: resultat.etapes }, resultat };
 }
 
-/** Essai d'une définition non enregistrée (bouton « Tester » de l'éditeur) : rien n'est consigné. */
+/** Trial of an unsaved definition (the editor's "Test" button): nothing is recorded. */
 export async function essayer(
   sql: Sql,
   tenantId: string,
@@ -335,9 +335,9 @@ export async function essayer(
   }
 }
 
-// ── URL secrète des webhooks entrants ──────────────────────────────────────
-// Jeton sans état `<charge>.<HMAC>` (clé dérivée de la clé maître, usage propre) portant le tenant et le
-// workflow : rien à stocker, et l'URL d'un workflow ne déclenche jamais celui d'une autre entreprise.
+// ── Secret URL of incoming webhooks ──────────────────────────────────────
+// Stateless token `<payload>.<HMAC>` (key derived from the master key, dedicated usage) carrying the tenant and the
+// workflow: nothing to store, and a workflow's URL never triggers another company's.
 
 const b64 = (o: Uint8Array) => o.toBase64({ alphabet: "base64url", omitPadding: true });
 
@@ -383,7 +383,7 @@ export async function verifierCrochet(jeton: string, maitre = cleMaitre()): Prom
   }
 }
 
-/** Élément d'entrée d'un webhook reçu : méthode, requête, en-têtes (sans cookies ni autorisation), corps. */
+/** Input element of a received webhook: method, query, headers (without cookies or authorization), body. */
 export async function elementWebhook(req: Request): Promise<Element> {
   const u = new URL(req.url);
   const entetes = Object.fromEntries(

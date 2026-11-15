@@ -19,7 +19,7 @@ afterAll(async () => {
   if (relatif && relatif.startsWith("auto-activer-") && !relatif.includes(".."))
     await rm(parent, { recursive: true, force: true });
 });
-test("préparation opt-in isolée par entreprise, sans réactiver les sources désactivées", async () => {
+test("opt-in preparation isolated per company, without reactivating disabled sources", async () => {
   const env = { AUTO_DOSSIERS_PARENT: parent };
   expect(await preparerArrivages(sql, {})).toEqual({ entreprises: 0, sources: 0 });
   expect(await preparerArrivages(sql, env)).toEqual({ entreprises: 2, sources: 14 });

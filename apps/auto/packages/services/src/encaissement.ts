@@ -1,6 +1,6 @@
-// Paiement en ligne des factures : le client paie par carte sur le compte Stripe de l'entreprise (sa propre clé,
-// chiffrée au repos). Au retour, la session Checkout est relue chez Stripe avec cette clé : seul un paiement
-// confirmé par Stripe est enregistré, une seule fois (référence `stripe:<session>`, index unique).
+// Online payment of invoices: the customer pays by card on the company's Stripe account (its own key,
+// encrypted at rest). On return, the Checkout session is re-read from Stripe with that key: only a payment
+// confirmed by Stripe is recorded, exactly once (reference `stripe:<session>`, unique index).
 import { encoderForm } from "@auto/billing";
 import {
   enregistrerPaiement,
@@ -18,7 +18,7 @@ import type { Emetteur } from "./evenements";
 const usage = (tenantId: string) => `encaissement:stripe:${tenantId}`;
 const base = () => Bun.env.AUTO_STRIPE_API ?? "https://api.stripe.com";
 
-/** Clé secrète ou restreinte Stripe (`sk_…`, `rk_…`, test ou live). */
+/** Stripe secret or restricted key (`sk_…`, `rk_…`, test or live). */
 export const cleValide = (c: string) => /^(sk|rk)_(test|live)_[A-Za-z0-9]{10,}$/.test(c);
 
 export async function chiffrerCle(tenantId: string, cle: string) {
@@ -48,12 +48,12 @@ async function stripe<T>(cle: string, methode: "GET" | "POST", chemin: string, c
   return b;
 }
 
-/** Vérifie la clé auprès de Stripe (compte lisible) avant de l'enregistrer. */
+/** Checks the key with Stripe (readable account) before saving it. */
 export async function verifierCle(cle: string) {
   return stripe<{ id: string; business_profile?: { name?: string } }>(cle, "GET", "/v1/account");
 }
 
-/** Session Checkout pour le reste dû d'une facture ; null si l'entreprise n'encaisse pas en ligne. */
+/** Checkout session for the remaining balance of an invoice; null if the company does not collect online. */
 export async function creerSessionPaiement(
   sql: Sql,
   tenantId: string,
@@ -87,8 +87,8 @@ export async function creerSessionPaiement(
 }
 
 /**
- * Retour du client : la session est relue chez Stripe ; payée, elle devient un paiement par carte de son montant.
- * Rejouable sans effet (référence unique). Renvoie le reste dû après coup.
+ * Customer return: the session is re-read from Stripe; once paid, it becomes a card payment of its amount.
+ * Replayable without effect (unique reference). Returns the remaining balance afterwards.
  */
 export async function confirmerPaiement(
   sql: Sql,

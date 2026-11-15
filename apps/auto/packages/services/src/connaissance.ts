@@ -1,16 +1,16 @@
-// Base de connaissances des automatisations (RAG) : découpage natif (aphrody-rag-core par auto-ffi), embeddings
-// par une API compatible OpenAI (`POST <url>/embeddings` : aphrody-llama-server, Ollama, OpenAI…) appelée par le
-// `fetch` gardé du workflow, stockage sous RLS (table connaissance) et recherche exacte par similarité cosinus.
+// Automations knowledge base (RAG): native chunking (aphrody-rag-core through auto-ffi), embeddings
+// through an OpenAI-compatible API (`POST <url>/embeddings`: aphrody-llama-server, Ollama, OpenAI…) called by the workflow's
+// guarded `fetch`, storage under RLS (knowledge table) and exact cosine-similarity search.
 import type { ApiEmbeddings, MorceauTrouve, Services } from "@auto/automate";
 import { decouperTexte, plusProches } from "@auto/native";
 import { lireMorceaux, remplacerSource, vecteursBase, withTenant, type Sql } from "@auto/store";
 
-/** Textes envoyés par requête d'embeddings. */
+/** Texts sent per embeddings request. */
 const LOT = 32;
-/** Morceaux au plus par indexation (un document de quelques Mo). */
+/** At most this many chunks per indexing (a document of a few MB). */
 const MORCEAUX_PAR_SOURCE = 4000;
 
-/** Embeddings des textes, dans l'ordre, par lots. */
+/** Embeddings of the texts, in order, in batches. */
 export async function embeddings(
   fetch: Services["fetch"],
   api: ApiEmbeddings,
@@ -49,7 +49,7 @@ export async function embeddings(
   return sortie;
 }
 
-/** Service `connaissance` d'une exécution, sur la base de l'entreprise. */
+/** `knowledge` service of an execution, on the company's database. */
 export function servicesConnaissance(
   sql: Sql,
   tenantId: string,

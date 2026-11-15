@@ -1,6 +1,6 @@
 import { ajouterEvenement, type Tx } from "@auto/store";
 
-/** Événements métier poussés vers l'automatisation (n8n) par l'outbox. */
+/** Business events pushed to the automation (n8n) by the outbox. */
 export type TypeEvenement =
   | "document.emis"
   | "document.statut"
@@ -10,24 +10,24 @@ export type TypeEvenement =
   | "relance.a_envoyer"
   | "export.mensuel"
   | "invitation.creee"
-  // Types ajoutés par les autres lots, de la forme `<domaine>.<fait>`.
+  // Types added by the other batches, of the form `<domain>.<fact>`.
   | `${string}.${string}`;
 
 export type Evenement = { id: string; type: TypeEvenement; tenantId: string; date: string; data: unknown };
 
 /**
- * Publication dans la transaction métier (withTenant) : l'événement entre dans l'outbox avec l'action
- * et sera livré par le worker, avec nouvel essai. Renvoie l'id de l'événement.
+ * Publication within the business transaction (withTenant): the event enters the outbox with the action
+ * and will be delivered by the worker, with retries. Returns the event id.
  */
 export type Emetteur = (tx: Tx, type: TypeEvenement, data: unknown) => Promise<{ id: string }>;
 
 export const outbox: Emetteur = (tx, type, data) => ajouterEvenement(tx, type, data);
 
 export const SIGNATURE = "x-auto-signature";
-/** Identifiant de l'événement (aussi présent dans le corps signé) : clé d'idempotence du récepteur. */
+/** Event id (also present in the signed body): idempotency key of the receiver. */
 export const EN_TETE_ID = "x-auto-evenement";
 
-/** Signature `sha256=<hex>` : HMAC-SHA256 du corps brut avec le secret partagé. */
+/** `sha256=<hex>` signature: HMAC-SHA256 of the raw body with the shared secret. */
 export const signer = (secret: string, corps: string) =>
   `sha256=${new Bun.CryptoHasher("sha256", secret).update(corps).digest("hex")}`;
 
@@ -37,7 +37,7 @@ export interface Webhook {
   timeoutMs?: number;
 }
 
-/** Un essai de livraison : POST JSON signé ; lève une erreur si le récepteur ne répond pas 2xx. */
+/** One delivery attempt: signed JSON POST; throws if the receiver does not answer 2xx. */
 export async function livrer(w: Webhook, id: string, corps: string, signal?: AbortSignal): Promise<void> {
   const timeout = AbortSignal.timeout(w.timeoutMs ?? 10_000);
   const r = await fetch(w.url, {
@@ -49,7 +49,7 @@ export async function livrer(w: Webhook, id: string, corps: string, signal?: Abo
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
 }
 
-/** Depuis l'environnement (`N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`) ; sans URL, aucune livraison. */
+/** From the environment (`N8N_WEBHOOK_URL`, `N8N_WEBHOOK_SECRET`); without a URL, no delivery. */
 export function webhookDepuisEnv(env: Record<string, string | undefined> = Bun.env): Webhook | null {
   const url = env.N8N_WEBHOOK_URL;
   if (!url) return null;

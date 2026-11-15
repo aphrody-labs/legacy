@@ -1,4 +1,4 @@
-// Thread du bac à sable du nœud Code (voir script.ts).
+// Code node sandbox thread (see script.ts).
 import { executerScriptIci } from "./script";
 
 declare const self: Worker;

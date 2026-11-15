@@ -62,8 +62,8 @@ async function requeteDistant(f: FournisseurCourrier, url: string, token: string
     });
     if (r.status === 401) throw new ErreurMetier("Autorisation expirée : reconnecter le compte", [], 409);
     if (r.ok) return r;
-    // Ne conserver que le code structurel du fournisseur : son message peut
-    // contenir des détails de compte ou des données renvoyées par le service.
+    // Keep only the provider's structural code: its message may
+    // contain account details or data returned by the service.
     let raison: string | undefined;
     try {
       const body = (await r.json()) as { error?: { code?: string; errors?: { reason?: string }[] } };
@@ -377,7 +377,7 @@ export async function synchroniserCourrier(sql: Sql, a: Auth, id: string, signal
             });
             continue;
           }
-          // Le MIME permet de récupérer les pièces jointes avec Mail.Read, sans permission d'écriture.
+          // MIME lets us retrieve attachments with Mail.Read, without write permission.
           const r = await apiDistant(
             "microsoft",
             `https://graph.microsoft.com/v1.0/me/messages/${encodeURIComponent(m.id)}/$value`,

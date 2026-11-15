@@ -14,7 +14,7 @@ import { lireTableur, texteDocx } from "@auto/native";
 import { ocrParDefaut } from "@auto/ingest";
 import { deposer } from "./ingest";
 import { deposerDevis } from "./devis-recus";
-/** Racines accordées par l'opérateur à une entreprise précise ; UNC/SMB et NFS passent par les montages du serveur. */
+/** Roots granted by the operator to a specific company; UNC/SMB and NFS go through the server's mounts. */
 export function racinesFichiers(tenantId: string, env = Bun.env): Record<string, string> {
   let conf: Record<string, { tenantId: string; chemin: string }>;
   try {
@@ -35,7 +35,7 @@ export function racinesFichiers(tenantId: string, env = Bun.env): Record<string,
   }
   return racines;
 }
-/** Installation opt-in : seul le worker écrit les répertoires vides, l’API monte le parent en lecture seule. */
+/** Opt-in installation: only the worker writes empty directories, the API mounts the parent read-only. */
 export async function preparerArrivages(sql: Sql, env = Bun.env) {
   const parent = env.AUTO_DOSSIERS_PARENT;
   if (!parent) return { entreprises: 0, sources: 0 };

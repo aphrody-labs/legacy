@@ -1,8 +1,8 @@
-// Abonnements webhook par tenant : chaque entreprise reçoit ses propres événements signés (son n8n, son
-// outil d'automatisation), en plus de la livraison opérateur. Même format et même signature que l'outbox.
+// Per-tenant webhook subscriptions: each company receives its own signed events (its n8n, its
+// automation tool), in addition to the operator delivery. Same format and same signature as the outbox.
 import { ErreurMetier } from "@auto/store";
 
-/** Info de dérivation de la clé du secret de signature : propre au tenant. */
+/** Derivation info of the signing secret key: specific to the tenant. */
 export const infoSecret = (tenantId: string) => `webhook:${tenantId}`;
 
 export const PRIVE = [
@@ -17,8 +17,8 @@ export const PRIVE = [
 ];
 
 /**
- * URL de destination : https obligatoire et aucune adresse privée en production (pas de requête vers le
- * réseau interne de l'opérateur). En dev, `http://localhost` est admis pour les essais.
+ * Destination URL: https required and no private address in production (no request to the
+ * operator's internal network). In dev, `http://localhost` is allowed for trials.
  */
 export function verifierUrl(brute: string, production = Bun.env.NODE_ENV === "production"): string {
   let u: URL;

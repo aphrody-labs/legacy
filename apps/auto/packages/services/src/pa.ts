@@ -1,5 +1,5 @@
-// Lot pa : connexion du tenant à sa plateforme agréée, dépôt des factures émises, statuts du cycle de
-// vie, webhook entrant signé, réception des factures, annuaire, e-reporting.
+// PA batch: tenant connection to its approved platform, submission of issued invoices, lifecycle
+// statuses, signed incoming webhook, invoice reception, directory, e-reporting.
 import {
   dechiffrer,
   ErreurPa,
@@ -31,14 +31,14 @@ import { deposer } from "./ingest";
 import type { Emetteur, TypeEvenement } from "./evenements";
 
 /**
- * `pa.statut` et `facture.recue` s'ajoutent aux événements de evenements.ts (fichier du lot outbox) :
- * à intégrer à `TypeEvenement` lors de la fusion.
+ * `pa.statut` and `facture.recue` are added to the events of evenements.ts (outbox batch file):
+ * to be merged into `TypeEvenement`.
  */
 export type EvenementLot = "pa.statut" | "facture.recue";
 
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Statut du document de facturation déduit du cycle de vie PA (transition tentée, ignorée si interdite). */
+/** Billing document status deduced from the PA lifecycle (attempted transition, ignored if forbidden). */
 export const VERS_DOCUMENT: Partial<Record<StatutCycle, Statut>> = {
   deposee: "depose",
   rejetee: "rejete",
@@ -46,7 +46,7 @@ export const VERS_DOCUMENT: Partial<Record<StatutCycle, Statut>> = {
   encaissee: "paye",
 };
 
-/** Statuts que le vendeur peut poser lui-même sur une facture déposée. */
+/** Statuses the seller may set on a submitted invoice. */
 export const VENDEUR: StatutCycle[] = ["encaissee"];
 
 export function cleMaitre(): string {
@@ -57,7 +57,7 @@ export function cleMaitre(): string {
 
 export const options = () => ({ b2brouter: { base: Bun.env.AUTO_PA_B2BROUTER_URL } });
 
-/** Erreur d'une PA traduite en erreur métier (réponse JSON). */
+/** PA error translated into a business error (JSON response). */
 export async function pa<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
@@ -81,8 +81,8 @@ export async function connexion(tx: Tx, tenantId: string): Promise<Connecte | nu
 }
 
 /**
- * Relève auprès de la PA les statuts des dépôts en cours et les factures entrantes du tenant.
- * Appelée par `POST /v1/pa/synchroniser` et par la tâche planifiée du worker ; `null` sans PA connectée.
+ * Polls the PA for the statuses of pending submissions and the tenant's incoming invoices.
+ * Called by `POST /v1/pa/synchroniser` and by the worker's scheduled task; `null` without a connected PA.
  */
 export async function synchroniser(
   sql: Sql,
@@ -118,7 +118,7 @@ export async function synchroniser(
   return { statuts, recues };
 }
 
-/** Tenants ayant une PA connectée : la RLS est forcée, chaque tenant est donc interrogé sous son identité. */
+/** Tenants with a connected PA: RLS is enforced, so each tenant is queried under its own identity. */
 export async function tenantsConnectes(sql: Sql): Promise<string[]> {
   const out: string[] = [];
   for (const { id } of await sql<{ id: string }[]>`SELECT id FROM tenant ORDER BY id`)
@@ -133,7 +133,7 @@ export async function exigerConnexion(tx: Tx, tenantId: string): Promise<Connect
   return c;
 }
 
-/** Ajoute un statut au dépôt et reporte le statut sur le document ; null si déjà connu. */
+/** Adds a status to the submission and reports the status on the document; null if already known. */
 export async function appliquerStatut(tx: Tx, depotId: string, documentId: string, s: Omit<StatutPa, "code">) {
   const statut = s.statut as StatutCycle;
   if (!(await ajouterStatut(tx, depotId, { ...s, code: STATUTS[statut] }))) return null;
@@ -141,7 +141,7 @@ export async function appliquerStatut(tx: Tx, depotId: string, documentId: strin
   return lireDepot(tx, depotId);
 }
 
-/** Reporte un statut PA sur le document ; une transition interdite (ex. déjà payé) est ignorée. */
+/** Reports a PA status on the document; a forbidden transition (e.g. already paid) is ignored. */
 export async function reporter(tx: Tx, actor: string | null, documentId: string, statut: StatutCycle) {
   const cible = VERS_DOCUMENT[statut];
   if (!cible) return;
@@ -154,7 +154,7 @@ export async function reporter(tx: Tx, actor: string | null, documentId: string,
 
 export const champ = (xml: string, re: RegExp) => re.exec(xml)?.[1]?.trim() ?? null;
 
-/** Télécharge et enregistre une facture entrante ; null si déjà reçue. */
+/** Downloads and saves an incoming invoice; null if already received. */
 export async function recevoir(sql: Sql, tenantId: string, c: Connecte, idPa: string, date: string) {
   const deja = await withTenant(sql, tenantId, (tx) => recueConnue(tx, c.nom, idPa));
   if (deja) return null;
@@ -172,7 +172,7 @@ export async function recevoir(sql: Sql, tenantId: string, c: Connecte, idPa: st
       recueAt: date ? new Date(date).toISOString() : new Date().toISOString(),
     }),
   );
-  // Facture fournisseur : lecture du XML CII et contrôles par l'ingestion (file « à vérifier » si doute).
+  // Supplier invoice: CII XML reading and ingestion checks (queue "to verify" if in doubt).
   await deposer(sql, tenantId, null, { contenu, nom: `${idPa}.pdf`, typeMime: "application/pdf", canal: "pa" }).catch(
     (e) => console.error(`ingestion PA ${tenantId} : ${e instanceof Error ? e.message : e}`),
   );

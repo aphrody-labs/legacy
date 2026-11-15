@@ -1,13 +1,13 @@
-// Bac à sable du nœud Code : QuickJS compilé en WebAssembly. Le code de l'utilisateur n'a ni réseau, ni fichiers,
-// ni `Bun`, ni `process` ; un runtime neuf par appel (aucun état partagé entre entreprises), mémoire et pile
-// bornées, interruption à l'échéance (boucles infinies comprises). Le `ShadowRealm` de Bun n'isole pas : il expose
-// `Bun`, `fetch` et `process` au code évalué (vérifié sur Bun 1.4.6), d'où ce moteur séparé.
+// Code node sandbox: QuickJS compiled to WebAssembly. The user's code has no network, no files,
+// no `Bun`, no `process`; a fresh runtime per call (no state shared between companies), bounded memory and stack,
+// interruption at the deadline (infinite loops included). Bun's `ShadowRealm` does not isolate: it exposes
+// `Bun`, `fetch` and `process` to the evaluated code (verified on Bun 1.4.6), hence this separate engine.
 import type { DonneesScript } from "@auto/automate";
 import { getQuickJS, shouldInterruptAfterDeadline } from "quickjs-emscripten";
 
 export const LIMITES_SCRIPT = { memoire: 64 * 1024 * 1024, pile: 1024 * 1024, dureeMs: 5_000, sortie: 5_000_000 };
 
-/** Prélude : l'API d'un nœud Code de n8n, sur les données passées en JSON. */
+/** Prelude: the n8n Code node API, over the data passed as JSON. */
 const prelude = (donnees: string) => `
 const __d = JSON.parse(${JSON.stringify(donnees)});
 const items = __d.elements.map((json) => ({ json }));
@@ -28,7 +28,7 @@ console.info = console.warn = console.error = console.log;
 
 export class ErreurScript extends Error {}
 
-/** Exécution dans le thread courant (bloquant jusqu'à l'échéance) : utilisée par le Worker ci-dessous. */
+/** Execution in the current thread (blocking until the deadline): used by the Worker below. */
 export async function executerScriptIci(
   code: string,
   donnees: DonneesScript,
@@ -88,8 +88,8 @@ function traduire(e: { name?: string; message?: string } | string): string {
 }
 
 /**
- * Exécution dans un Worker Bun dédié : le WebAssembly synchrone ne bloque pas la boucle de l'API ou du worker,
- * et le thread est arrêté si l'échéance interne ne suffit pas.
+ * Execution in a dedicated Bun Worker: synchronous WebAssembly does not block the API or worker loop,
+ * and the thread is stopped if the internal deadline is not enough.
  */
 export function executerScript(
   code: string,

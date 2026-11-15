@@ -9,7 +9,7 @@ const avant = {
   AUTO_GOOGLE_CLIENT_ID: Bun.env.AUTO_GOOGLE_CLIENT_ID,
   AUTO_GOOGLE_CLIENT_SECRET: Bun.env.AUTO_GOOGLE_CLIENT_SECRET,
 };
-test("Outlook : MIME et pièces jointes, curseur delta, retrait et rejet des redirections de jeton", async () => {
+test("Outlook: MIME and attachments, delta cursor, removal and rejection of token redirects", async () => {
   const secret = await chiffrer(cleMaitre(), user, `courrier/${user}`, {
     access_token: "outlook-factice",
     refresh_token: "refresh-factice",
@@ -180,7 +180,7 @@ test("Gmail : pagination puis historique, suppression distante locale, reprise e
     mock.mockRestore();
   }
 });
-test("Gmail : diagnostique un refus fournisseur sans persister le texte de réponse", async () => {
+test("Gmail: diagnoses a provider refusal without persisting the response text", async () => {
   const secret = await chiffrer(cleMaitre(), user, `courrier/${user}`, {
     access_token: "jeton-factice",
     refresh_token: "refresh-factice",
@@ -217,7 +217,7 @@ test("Gmail : diagnostique un refus fournisseur sans persister le texte de répo
     mock.mockRestore();
   }
 });
-test("Gmail : reprend avec un backoff borné et conserve le curseur sous limitation", async () => {
+test("Gmail: resumes with a bounded backoff and keeps the cursor under throttling", async () => {
   const secret = await chiffrer(cleMaitre(), user, `courrier/${user}`, {
     access_token: "jeton-factice",
     refresh_token: "refresh-factice",
@@ -268,7 +268,7 @@ test("Gmail : reprend avec un backoff borné et conserve le curseur sous limitat
     hasard.mockRestore();
   }
 });
-test("OAuth : état privé à usage unique, PKCE, aucun échange depuis une autre session", async () => {
+test("OAuth: single-use private state, PKCE, no exchange from another session", async () => {
   const a = { userId: user, tenantId: user, role: "owner" as const },
     b = { userId: autre, tenantId: autre, role: "owner" as const };
   const { url } = await debutCourrier(sql, a, "google"),

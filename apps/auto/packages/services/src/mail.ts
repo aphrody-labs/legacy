@@ -1,5 +1,5 @@
-// Lot mail : boîte IMAP/SMTP du tenant, relève classée, envoi des devis et factures (voir docs/MAIL.md).
-import { eur, type Type } from "@auto/domain";
+// Mail batch: tenant IMAP/SMTP mailbox, classified fetch, sending of quotes and invoices (see docs/MAIL.md).
+import type { Translator } from "@auto/i18n";
 import {
   adresseValide,
   analyser,
@@ -40,18 +40,19 @@ import {
 } from "@auto/store";
 import { entreprise } from "@auto/tenancy";
 import type { Emetteur } from "./evenements";
+import { premiereMajuscule, traducteur } from "./i18n";
 import { deposer } from "./ingest";
 
 export const USAGE = "mail/identifiants";
 export const SECURITES: Securite[] = ["tls", "starttls", "aucune"];
 
-/** Événements du lot (à ajouter à `TypeEvenement` par le lot outbox). */
+/** Events of the batch (to be added to `TypeEvenement` by the outbox batch). */
 export type EvenementMail = "mail.recu" | "mail.facture_recue";
-/** Publication hors transaction métier : l'événement entre dans l'outbox par sa propre transaction. */
+/** Publication outside the business transaction: the event enters the outbox through its own transaction. */
 export const emettre = (sql: Sql, publier: Emetteur, type: EvenementMail, tenantId: string, data: unknown) =>
   withTenant(sql, tenantId, (tx) => publier(tx, type, data));
 
-/** Dev et tests : autorise le clair et les certificats auto-signés (`AUTO_MAIL_DEV=1`). */
+/** Dev and tests: allows plaintext and self-signed certificates (`AUTO_MAIL_DEV=1`). */
 export const modeDev = () => Bun.env.AUTO_MAIL_DEV === "1";
 
 export function cle(): string {
@@ -132,7 +133,7 @@ export async function ouvrir(tenantId: string, b: Boite) {
 
 export const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-/** Test de connexion IMAP et SMTP ; les deux erreurs sont rapportées ensemble. */
+/** IMAP and SMTP connection test; both errors are reported together. */
 export async function tester(c: { imap: ConfigImap; smtp: ConfigSmtp }) {
   const [imap, smtp] = await Promise.allSettled([testerImap(c.imap), testerSmtp(c.smtp)]);
   const details = [
@@ -168,8 +169,8 @@ export const extrait = (texte: string, html: string | null) =>
   (texte || (html ?? "").replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim().slice(0, 280);
 
 /**
- * Relève la boîte d'un tenant : messages d'UID supérieur au dernier relevé, analysés et classés hors
- * transaction, puis enregistrés avec l'état de relève dans une seule transaction (idempotente).
+ * Fetches a tenant's mailbox: messages with UID above the last fetch, parsed and classified outside the
+ * transaction, then saved with the fetch state in a single (idempotent) transaction.
  */
 export async function relever(sql: Sql, tenantId: string, publier: Emetteur, actor: string | null = null) {
   const b = await withTenant(sql, tenantId, (tx) => lireBoite(tx));
@@ -212,7 +213,7 @@ export async function relever(sql: Sql, tenantId: string, publier: Emetteur, act
   });
   for (const m of nouveaux)
     await emettre(sql, publier, m.classement === "facture" ? "mail.facture_recue" : "mail.recu", tenantId, m);
-  // Factures reçues par mail : chaque pièce PDF ou XML d'un message classé « facture » part à l'ingestion.
+  // Invoices received by mail: each PDF or XML part of a message classified "invoice" goes to ingestion.
   for (const { a, k } of analyses) {
     for (const [i, p] of a.pieces.entries()) {
       const estDevis = !k.facturx[i] && !/facture/i.test(p.nom) && (/devis/i.test(p.nom) || /\bdevis\b/i.test(a.sujet));
@@ -236,7 +237,7 @@ export async function relever(sql: Sql, tenantId: string, publier: Emetteur, act
   return { nouveaux: nouveaux.length, factures: nouveaux.filter((m) => m.classement === "facture").length };
 }
 
-/** Tenants ayant une boîte connectée (interrogés un à un : la RLS est forcée). */
+/** Tenants with a connected mailbox (queried one by one: RLS is enforced). */
 export async function tenantsAvecBoite(sql: Sql): Promise<string[]> {
   const out: string[] = [];
   for (const { id } of await sql<{ id: string }[]>`SELECT id FROM tenant ORDER BY id`)
@@ -244,7 +245,7 @@ export async function tenantsAvecBoite(sql: Sql): Promise<string[]> {
   return out;
 }
 
-/** Relève de toutes les boîtes (pour `Bun.cron` du worker) ; une boîte en erreur n'arrête pas les autres. */
+/** Fetch of all mailboxes (for the worker's `Bun.cron`); a mailbox in error does not stop the others. */
 export async function releverTous(sql: Sql, publier: Emetteur) {
   const tenants = await sql<{ id: string }[]>`SELECT id FROM tenant`;
   const bilan: Record<string, { nouveaux: number; factures: number } | { erreur: string }> = {};
@@ -255,48 +256,45 @@ export async function releverTous(sql: Sql, publier: Emetteur) {
   return bilan;
 }
 
-export const LIBELLES: Record<Type, string> = {
-  devis: "devis",
-  facture: "facture",
-  acompte: "facture d'acompte",
-  avoir: "avoir",
-};
-
 export const echapper = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-export const dateFr = (iso: string) => iso.split("-").reverse().join("/");
+/** Short numeric date (Intl, language of the translator) of an ISO day `YYYY-MM-DD`. */
+const dateCourte = (i: Translator, iso: string) =>
+  i.date(new Date(`${iso.slice(0, 10)}T12:00:00Z`), { timeZone: "UTC", dateStyle: "short" });
 
 export interface CorpsEnvoi {
   a?: string[];
   cc?: string[];
   sujet?: string;
   message?: string;
+  /** Language of the generated text (tag or Accept-Language); `AUTO_LOCALE_DOCUMENTS` or French otherwise. */
+  langue?: string;
 }
 
-/** Objet et texte d'une relance d'impayé selon le palier (J+7 courtois, J+30 ferme, J+60 avant mise en demeure). */
+/** Subject and text of an unpaid-invoice reminder by level (D+7 courteous, D+30 firm, D+60 before formal notice). */
 export function texteRelance(
   r: { numero: string; echeance: string; joursRetard: number; niveau: 1 | 2 | 3; resteCents: number },
   entreprise: string,
+  locale?: string | null,
 ): { sujet: string; message: string } {
-  const reste = `${eur(r.resteCents)} TTC`;
-  const rappel = `notre facture ${r.numero}, échue le ${dateFr(r.echeance)}, reste impayée (${reste}, ${r.joursRetard} jours de retard)`;
-  const legal =
-    "Conformément à l'article L441-10 du Code de commerce, tout retard de paiement entraîne des pénalités de retard " +
-    "et une indemnité forfaitaire de 40 € pour frais de recouvrement.";
-  const corps = {
-    1: `Bonjour,\n\nSauf erreur de notre part, ${rappel}. Il s'agit peut-être d'un simple oubli : vous trouverez la facture ci-jointe.\n\nSi le règlement est déjà parti, merci de ne pas tenir compte de ce message.`,
-    2: `Bonjour,\n\nMalgré notre précédent rappel, ${rappel}. Nous vous remercions de procéder au règlement sous huit jours.\n\n${legal}`,
-    3: `Bonjour,\n\n${rappel[0]!.toUpperCase() + rappel.slice(1)} malgré nos deux relances. Sans règlement sous huit jours, nous engagerons une procédure de recouvrement, en commençant par une mise en demeure.\n\n${legal}`,
-  }[r.niveau];
-  const sujet = { 1: "Rappel", 2: "Deuxième relance", 3: "Dernière relance avant mise en demeure" }[r.niveau];
-  return {
-    sujet: `${sujet} : facture ${r.numero} — ${entreprise}`,
-    message: `${corps}\n\nCordialement,\n${entreprise}`,
-  };
+  const i = traducteur(locale);
+  const reminder = i.t("dunning.reminder", {
+    number: r.numero,
+    due: dateCourte(i, r.echeance),
+    remaining: i.t("price.incl", { amount: i.currency(r.resteCents / 100, "EUR") }),
+    days: r.joursRetard,
+  });
+  const corps = i.t(`dunning.text.${r.niveau}`, {
+    reminder,
+    Reminder: premiereMajuscule(reminder),
+    legal: i.t("dunning.legal"),
+  });
+  const sujet = i.t("dunning.subject", { label: i.t(`dunning.label.${r.niveau}`), number: r.numero, company: entreprise });
+  return { sujet, message: `${corps}\n\n${i.t("dunning.closing", { company: entreprise })}` };
 }
 
-/** Envoie l'exemplaire figé d'un document émis depuis la boîte du tenant ; `emis` passe à `envoye`. */
+/** Sends the frozen copy of an issued document from the tenant's mailbox; `emis` becomes `envoye`. */
 export async function envoyerDocument(
   sql: Sql,
   publier: Emetteur,
@@ -324,18 +322,23 @@ export async function envoyerDocument(
   if (!a.length) throw new ErreurMetier("destinataire manquant (aucune adresse sur la fiche client)");
   if (invalides.length) throw new ErreurMetier("adresse invalide", invalides);
 
-  const libelle = LIBELLES[d.type];
-  const Libelle = libelle[0]!.toUpperCase() + libelle.slice(1);
-  const echeance = d.type !== "devis" && d.data.echeance ? `, à régler avant le ${dateFr(d.data.echeance)}` : "";
+  const i = traducteur(c.langue);
+  const kind = i.t(`document.kind.${d.type}`);
+  const due = d.type !== "devis" && d.data.echeance ? i.t("document.due", { date: dateCourte(i, d.data.echeance) }) : "";
   const texte =
     c.message ??
-    `Bonjour,\n\nVeuillez trouver ci-joint notre ${libelle} ${d.numero} d'un montant de ${eur(d.ttcCents)} TTC${echeance}.\n\n` +
-      `Cordialement,\n${e.nom}`;
+    i.t("document.text", {
+      kind,
+      number: d.numero,
+      amount: i.t("price.incl", { amount: i.currency(d.ttcCents / 100, "EUR") }),
+      due,
+      company: e.nom,
+    });
   const html = texte
     .split(/\n{2,}/)
     .map((p) => `<p>${echapper(p).replaceAll("\n", "<br>")}</p>`)
     .join("\n");
-  const sujet = c.sujet ?? `${Libelle} ${d.numero} — ${e.nom}`;
+  const sujet = c.sujet ?? i.t("document.subject", { Kind: premiereMajuscule(kind), number: d.numero, company: e.nom });
   const conn = await ouvrir(tenantId, b);
   let x: ReturnType<typeof construire>;
   try {
@@ -372,7 +375,7 @@ export async function envoyerDocument(
   return { messageId: x.messageId, destinataires: x.destinataires, statut: apres?.statut ?? d.statut };
 }
 
-/** Mail texte depuis la boîte du tenant (nœud « Envoyer un mail » des automatisations). */
+/** Text mail from the tenant's mailbox (the "Send a mail" node of the automations). */
 export async function envoyerTexte(
   sql: Sql,
   tenantId: string,

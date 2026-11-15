@@ -33,7 +33,7 @@ test("isolation : ni Bun, ni fetch, ni process, ni require", async () => {
   expect(r.resultat).toEqual(["undefined", "undefined", "undefined", "undefined", "undefined"]);
 });
 
-test("bornes : boucle infinie, mémoire, erreur levée, promesse jamais résolue", async () => {
+test("bounds: infinite loop, memory, thrown error, promise never resolved", async () => {
   const debut = Date.now();
   await expect(executerScript(`while (true) {}`, donnees([]), { ...LIMITES_SCRIPT, dureeMs: 200 })).rejects.toThrow(
     "durée maximale",
@@ -51,7 +51,7 @@ test("bornes : boucle infinie, mémoire, erreur levée, promesse jamais résolue
   await expect(executerScript(`await new Promise(() => {}); return 1;`, donnees([]))).rejects.toThrow("jamais");
 });
 
-test("nœud Code dans le moteur : par lot et par élément", async () => {
+test("Code node in the engine: per batch and per item", async () => {
   const def = (mode: string, code: string) =>
     valider({
       noeuds: [
@@ -72,7 +72,7 @@ test("nœud Code dans le moteur : par lot et par élément", async () => {
   expect(parElement.sortie.map((e) => e.json)).toEqual([{ double: 2 }, { double: 4 }]);
 });
 
-test("le code tourne dans un thread à part : la boucle d'événements reste libre", async () => {
+test("the code runs in a separate thread: the event loop stays free", async () => {
   let ticks = 0;
   const h = setInterval(() => ticks++, 10);
   await expect(executerScript(`while (true) {}`, donnees([]), { ...LIMITES_SCRIPT, dureeMs: 300 })).rejects.toThrow();

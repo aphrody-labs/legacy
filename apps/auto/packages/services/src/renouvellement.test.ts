@@ -12,7 +12,7 @@ beforeAll(async () => {
 afterAll(() => drop());
 
 const JOUR = "2026-10-23";
-/** Échéance à midi (Paris), `n` jours après JOUR. */
+/** Due date at noon (Paris), `n` days after JOUR. */
 const echeance = (n: number) => new Date(`${jourPlus(JOUR, n)}T10:00:00Z`).toISOString();
 
 async function entreprise(email: string) {
@@ -28,7 +28,7 @@ async function entreprise(email: string) {
 const types = async (tenant: string) =>
   (await withTenant(sql, tenant, (tx) => listerEvenements(tx))).map((e) => e.type);
 
-test("rappel sept jours avant le renouvellement : événement et e-mail au propriétaire", async () => {
+test("reminder seven days before renewal: event and e-mail to the owner", async () => {
   const t = await entreprise("owner@atelier.fr");
   await withTenant(sql, t, (tx) =>
     majAbonnement(tx, { plan: "pro", periodicite: "mensuel", statut: "active", periodeFin: echeance(7) }),
@@ -50,7 +50,7 @@ test("rappel sept jours avant le renouvellement : événement et e-mail au propr
   expect(envoyeur.envoyes).toHaveLength(1);
 });
 
-test("essai, résiliation programmée et offre gratuite", async () => {
+test("trial, scheduled cancellation and free plan", async () => {
   const essai = await entreprise("essai@atelier.fr");
   await withTenant(sql, essai, (tx) =>
     majAbonnement(tx, { plan: "business", periodicite: "annuel", statut: "trialing", essaiFin: echeance(7) }),

@@ -55,7 +55,7 @@ test("Bun.Image : redimensionner et convertir", async () => {
 });
 
 test.skipIf(!Bun.Video.available || !(await Bun.file(VIDEO).exists()))(
-  "Bun.Video : métadonnées, image extraite et GIF",
+  "Bun.Video: metadata, extracted frame and GIF",
   async () => {
     const octets = await Bun.file(VIDEO).bytes();
     const meta = await media.video!.metadonnees(octets);
@@ -81,7 +81,7 @@ test("Bun.WebView : page rendue avec son JavaScript, texte et capture", async ()
   expect(await new Bun.Image(r.capture!).metadata()).toMatchObject({ format: "png" });
 }, 60_000);
 
-test("ia.ocr : image réduite par Bun.Image puis envoyée au modèle de vision (API compatible OpenAI)", async () => {
+test("ia.ocr: image downscaled by Bun.Image then sent to the vision model (OpenAI-compatible API)", async () => {
   let recu: { model: string; messages: { content: { type: string; image_url?: { url: string } }[] }[] } | null = null;
   const vision = Bun.serve({
     port: 0,

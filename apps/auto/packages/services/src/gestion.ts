@@ -1,4 +1,4 @@
-// Exports des cinq espaces à partir des données persistées, avec le moteur tableur/PDF existant.
+// Exports of the five spaces from the persisted data, with the existing spreadsheet/PDF engine; texts from the catalogs.
 import { totaux } from "@auto/domain";
 import {
   calculerAnalytique,
@@ -10,11 +10,15 @@ import {
   ErreurMetier,
   type Tx,
 } from "@auto/store";
+import { traducteur } from "./i18n";
 import { creerDocx, docxEnPdf, type Classeur, type DocumentSimple } from "@auto/native";
 export async function classeurGestion(
   tx: Tx,
   segments: readonly string[] = ["clients", "fournisseurs", "chantiers", "livraisons", "commandes"],
+  locale?: string | null,
 ): Promise<Classeur> {
+  const i = traducteur(locale);
+  const t = (k: string) => i.t(`export.${k}`);
   const documents = await documentsGestion(tx),
     chantiers = await listerChantiers(tx),
     fournisseurs = await listerFournisseurs(tx),
@@ -39,35 +43,35 @@ export async function classeurGestion(
   const chantier = (id: string | undefined | null) => chantiersParId.get(id || "");
   const signe = (type: string) => (type === "avoir" ? -1 : 1);
   const colonnesPiece: Classeur["feuilles"][number]["colonnes"] = [
-    { titre: "Référence", largeur: 24 },
-    { titre: "Fournisseur", largeur: 30 },
-    { titre: "Chantier", largeur: 30 },
-    { titre: "Code analytique" },
-    { titre: "Date", type: "date" },
-    { titre: "Statut" },
-    { titre: "HT", type: "euros" },
-    { titre: "TVA", type: "euros" },
-    { titre: "TTC", type: "euros" },
-    { titre: "Facture liée", largeur: 24 },
-    { titre: "Archivé" },
-    { titre: "Notes", largeur: 48 },
+    { titre: t("col.reference"), largeur: 24 },
+    { titre: t("col.supplier"), largeur: 30 },
+    { titre: t("col.project"), largeur: 30 },
+    { titre: t("col.analyticCode") },
+    { titre: t("col.date"), type: "date" },
+    { titre: t("col.status") },
+    { titre: t("col.excl"), type: "euros" },
+    { titre: t("col.vat"), type: "euros" },
+    { titre: t("col.incl"), type: "euros" },
+    { titre: t("col.linkedInvoice"), largeur: 24 },
+    { titre: t("col.archived") },
+    { titre: t("col.notes"), largeur: 48 },
   ];
   const feuilles: Classeur["feuilles"] = [
     {
-      nom: "Comptabilité fournisseurs",
+      nom: t("sheet.suppliers"),
       colonnes: [
-        { titre: "Référence", largeur: 24 },
-        { titre: "Fournisseur", largeur: 30 },
-        { titre: "Code analytique" },
-        { titre: "Chantier", largeur: 30 },
-        { titre: "Date", type: "date" },
-        { titre: "Statut" },
-        { titre: "Type" },
-        { titre: "Devise" },
-        { titre: "HT EUR", type: "euros" },
-        { titre: "TVA EUR", type: "euros" },
-        { titre: "TTC EUR", type: "euros" },
-        { titre: "Classement" },
+        { titre: t("col.reference"), largeur: 24 },
+        { titre: t("col.supplier"), largeur: 30 },
+        { titre: t("col.analyticCode") },
+        { titre: t("col.project"), largeur: 30 },
+        { titre: t("col.date"), type: "date" },
+        { titre: t("col.status") },
+        { titre: t("col.type") },
+        { titre: t("col.currency") },
+        { titre: t("col.exclEur"), type: "euros" },
+        { titre: t("col.vatEur"), type: "euros" },
+        { titre: t("col.inclEur"), type: "euros" },
+        { titre: t("col.filing") },
       ],
       lignes: achats.map((a) => {
         const l = affectationsParAchat.get(a.id),
@@ -87,29 +91,29 @@ export async function classeurGestion(
           euro ? s * f!.totaux.htCents : null,
           euro ? s * f!.totaux.tvaCents : null,
           euro ? s * f!.totaux.ttcCents : null,
-          l ? "Classé" : "À classer",
+          l ? t("filing.filed") : t("filing.toFile"),
         ];
       }),
     },
     {
-      nom: "Comptabilité clients",
+      nom: t("sheet.customers"),
       colonnes: [
-        { titre: "Référence", largeur: 24 },
-        { titre: "Type" },
-        { titre: "Client", largeur: 30 },
-        { titre: "Code analytique" },
-        { titre: "Chantier", largeur: 30 },
-        { titre: "Date", type: "date" },
-        { titre: "Statut" },
-        { titre: "HT", type: "euros" },
-        { titre: "TVA", type: "euros" },
-        { titre: "TTC", type: "euros" },
+        { titre: t("col.reference"), largeur: 24 },
+        { titre: t("col.type") },
+        { titre: t("col.customer"), largeur: 30 },
+        { titre: t("col.analyticCode") },
+        { titre: t("col.project"), largeur: 30 },
+        { titre: t("col.date"), type: "date" },
+        { titre: t("col.status") },
+        { titre: t("col.excl"), type: "euros" },
+        { titre: t("col.vat"), type: "euros" },
+        { titre: t("col.incl"), type: "euros" },
       ],
       lignes: documents.map((d) => {
         const c = chantier(docChantier(d)),
           s = signe(d.type);
         return [
-          d.numero || "Brouillon",
+          d.numero || t("draft"),
           d.type,
           d.data.client.nom,
           c?.code || "",
@@ -123,19 +127,19 @@ export async function classeurGestion(
       }),
     },
     {
-      nom: "Analytique chantiers",
+      nom: t("sheet.analytics"),
       colonnes: [
-        { titre: "Code analytique" },
-        { titre: "Chantier", largeur: 30 },
-        { titre: "Budget HT", type: "euros" },
-        { titre: "Ventes émises HT", type: "euros" },
-        { titre: "Achats validés HT", type: "euros" },
-        { titre: "Solde HT", type: "euros" },
-        { titre: "Commandes ouvertes HT", type: "euros" },
-        { titre: "Achats non chiffrés", type: "nombre" },
-        { titre: "Avancement", type: "pourcent" },
-        { titre: "Statut" },
-        { titre: "Archivé" },
+        { titre: t("col.analyticCode") },
+        { titre: t("col.project"), largeur: 30 },
+        { titre: t("col.budget"), type: "euros" },
+        { titre: t("col.sales"), type: "euros" },
+        { titre: t("col.purchases"), type: "euros" },
+        { titre: t("col.balance"), type: "euros" },
+        { titre: t("col.openOrders"), type: "euros" },
+        { titre: t("col.unpriced"), type: "nombre" },
+        { titre: t("col.progress"), type: "pourcent" },
+        { titre: t("col.status") },
+        { titre: t("col.archived") },
       ],
       lignes: chantiers.map((c) => {
         const a = calculerAnalytique(
@@ -154,12 +158,12 @@ export async function classeurGestion(
           a.achatsNonChiffres,
           c.avancement * 100,
           c.statut,
-          c.archive ? "Oui" : "Non",
+          c.archive ? t("yes") : t("no"),
         ];
       }),
     },
     ...(["bon_livraison", "confirmation_commande"] as const).map((type) => ({
-      nom: type === "bon_livraison" ? "Bons de livraison" : "Confirmations de commande",
+      nom: t(type === "bon_livraison" ? "sheet.deliveries" : "sheet.orders"),
       colonnes: colonnesPiece,
       lignes: pieces
         .filter((p) => p.type === type)
@@ -177,47 +181,48 @@ export async function classeurGestion(
             t.tvaCents,
             t.ttcCents,
             achatsParId.get(p.recueId || "")?.numero || "",
-            p.archive ? "Oui" : "Non",
+            p.archive ? t("yes") : t("no"),
             p.notes,
           ];
         }),
     })),
   ];
   const acces: Record<string, string> = {
-    "Comptabilité fournisseurs": "fournisseurs",
-    "Comptabilité clients": "clients",
-    "Analytique chantiers": "chantiers",
-    "Bons de livraison": "livraisons",
-    "Confirmations de commande": "commandes",
+    "sheet.suppliers": "fournisseurs",
+    "sheet.customers": "clients",
+    "sheet.analytics": "chantiers",
+    "sheet.deliveries": "livraisons",
+    "sheet.orders": "commandes",
   };
-  return { feuilles: feuilles.filter((f) => segments.includes(acces[f.nom]!)) };
+  const parNom = new Map(Object.keys(acces).map((k) => [t(k), acces[k]!]));
+  return { feuilles: feuilles.filter((f) => segments.includes(parNom.get(f.nom)!)) };
 }
 
-/** Rapport imprimable des données du classeur ; n'altère pas les exemplaires comptables des factures. */
-export function rapportGestion(classeur: Classeur): Uint8Array<ArrayBuffer> {
+/** Printable report of the workbook data; does not alter the accounting copies of the invoices. */
+export function rapportGestion(classeur: Classeur, locale?: string | null): Uint8Array<ArrayBuffer> {
+  const i = traducteur(locale);
   if (classeur.feuilles.reduce((s, f) => s + f.lignes.length, 0) > 10000)
     throw new ErreurMetier("rapport PDF limité à 10 000 lignes ; utilisez le classeur Excel", [], 413);
   const paragraphes: DocumentSimple["paragraphes"] = [
-    { texte: "Rapport de gestion", style: "titre" },
+    { texte: i.t("export.report.title"), style: "titre" },
     {
-      texte:
-        "Instantané des cinq espaces. Les brouillons et pièces à vérifier sont identifiés. Le solde analytique exclut les charges non saisies.",
+      texte: i.t("export.report.intro"),
     },
   ];
   for (const f of classeur.feuilles) {
     paragraphes.push({ texte: f.nom, style: "titre1" });
-    if (!f.lignes.length) paragraphes.push({ texte: "Aucune donnée." });
+    if (!f.lignes.length) paragraphes.push({ texte: i.t("export.report.empty") });
     for (const row of f.lignes) {
       const texte = row
         .map((v, i) => {
           const c = f.colonnes[i]!;
           const valeur =
             typeof v === "number" && c.type === "euros"
-              ? new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(v / 100)
+              ? i.currency(v / 100, "EUR")
               : typeof v === "number" && c.type === "pourcent"
-                ? v / 100 + " %"
+                ? i.number(v / 10000, { style: "percent", maximumFractionDigits: 2 })
                 : (v ?? "—");
-          return c.titre + " : " + valeur;
+          return i.t("export.report.field", { title: c.titre, value: String(valeur) });
         })
         .join(" · ");
       paragraphes.push({ texte });
