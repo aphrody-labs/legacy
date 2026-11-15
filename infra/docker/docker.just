@@ -25,9 +25,9 @@ docker-build targets="default" ref="main":
 # Full multi-arch build + push stays in images.yml (usage: just docker-smoke, just docker-smoke bun main iteration)
 [group('docker')]
 docker-smoke targets="smoke" ref="main" profile="release":
-    timeout 900 ssh vps 't=$(mktemp) && cat >"$t" && sudo install -m 0755 "$t" /usr/local/bin/aphrody-heavy; rc=$?; rm -f "$t"; exit $rc' < "{{root}}/infra/fleet/bin/heavy.sh"
-    timeout 7200 ssh vps 'TAG=smoke CARGO_PROFILE={{ if profile =~ '^[a-z-]+$' { profile } else { error("invalid profile") } }} CARGO_BUILD_JOBS=4 aphrody-heavy docker buildx bake --builder aphrody "https://github.com/aphrody-labs/src.git#{{ if ref =~ '^[A-Za-z0-9._/-]+$' { ref } else { error("invalid ref") } }}" -f infra/docker/docker-bake.hcl --set "*.platform=linux/amd64" --set "*.attest=" --set "*.cache-from=" --load --progress quiet {{ if targets =~ '^[A-Za-z0-9._ -]+$' { targets } else { error("invalid targets") } }}'
-    timeout 900 ssh vps 'SRC_TAG=smoke sh -s' < "{{root}}/infra/docker/smoke.sh"
+    timeout 900 ssh fr1 't=$(mktemp) && cat >"$t" && sudo install -m 0755 "$t" /usr/local/bin/aphrody-heavy; rc=$?; rm -f "$t"; exit $rc' < "{{root}}/infra/fleet/bin/heavy.sh"
+    timeout 7200 ssh fr1 'TAG=smoke CARGO_PROFILE={{ if profile =~ '^[a-z-]+$' { profile } else { error("invalid profile") } }} CARGO_BUILD_JOBS=4 aphrody-heavy docker buildx bake --builder aphrody "https://github.com/aphrody-labs/src.git#{{ if ref =~ '^[A-Za-z0-9._/-]+$' { ref } else { error("invalid ref") } }}" -f infra/docker/docker-bake.hcl --set "*.platform=linux/amd64" --set "*.attest=" --set "*.cache-from=" --load --progress quiet {{ if targets =~ '^[A-Za-z0-9._ -]+$' { targets } else { error("invalid targets") } }}'
+    timeout 900 ssh fr1 'SRC_TAG=smoke sh -s' < "{{root}}/infra/docker/smoke.sh"
 
 # Deploy the compose stack: profile core on prd, edge on fr2 (usage: just docker-up, just docker-up edge fr2, SRC_TAG=<sha> to roll back)
 [group('docker')]

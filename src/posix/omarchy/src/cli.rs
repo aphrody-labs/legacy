@@ -804,7 +804,7 @@ pub fn handle_linux(root: &Path, cmd: LinuxCommand) -> Result<i32> {
                 "f=$(mktemp -t aphrody-kernel.XXXXXX) && cat > \"$f\" && {} systemd-run --user --collect --unit=aphrody-kernel-{flavor} --nice=19 -p IOSchedulingClass=idle -E FLAVOR -E IMAGE -E HOST -E LLVM_DIR -E KNOBS sh \"$f\"",
                 shell_env(&vars)
             );
-            println!("ssh vps \"{remote}\" < infra/linux/build/kernel.sh");
+            println!("ssh fr1 \"{remote}\" < infra/linux/build/kernel.sh");
             if !run {
                 return Ok(0);
             }

@@ -1,7 +1,7 @@
 # Migration Vercel + Cloudflare (2026-11-12)
 
 Source de vérité hôtes/IP : `C:\src\infra/deploy.toml` (`[nodes.*]`). Workers : `C:\src\infra\fleet\workers\`. Secrets : Workers secrets / Vercel env uniquement.
-Relevé live 2026-11-12 (ssh cdn/prd, API Cloudflare). Zones CF : aphrody.com, aphrody.app, dragonballfr.com, rosegriffon.fr (hors périmètre), 3dland.tech (pending).
+Relevé live 2026-11-12 (ssh fr2/prd, API Cloudflare). Zones CF : aphrody.com, aphrody.app, dragonballfr.com, rosegriffon.fr (hors périmètre), 3dland.tech (pending).
 
 ## Vhosts fr2 (/etc/nginx/sites)
 

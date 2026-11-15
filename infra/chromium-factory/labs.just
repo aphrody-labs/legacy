@@ -45,23 +45,23 @@ lab-deploy-loreserver:
 # Deploy Chromium factory scripts, args and units to fr1.
 [group('labs')]
 lab-factory-deploy:
-    ssh vps 'mkdir -p /srv/chromium/factory/scripts /srv/chromium/factory/third_party /srv/chromium/factory/args'
-    scp -q infra/chromium-factory/chromium-factory.sh infra/chromium-factory/cros-factory.sh vps:/srv/chromium/factory/
-    scp -q infra/chromium-factory/args/*.gn vps:/srv/chromium/factory/args/
-    scp -q tools/labs-scripts/chrome-channels.sh vps:/srv/chromium/factory/scripts/
-    scp -q third_party/chrome-channels.toml vps:/srv/chromium/factory/third_party/
-    scp -q infra/chromium-factory/systemd/chromium-factory.* vps:/tmp/
-    ssh vps 'sudo mv /tmp/chromium-factory.service /tmp/chromium-factory.timer /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable chromium-factory.timer'
+    ssh fr1 'mkdir -p /srv/chromium/factory/scripts /srv/chromium/factory/third_party /srv/chromium/factory/args'
+    scp -q infra/chromium-factory/chromium-factory.sh infra/chromium-factory/cros-factory.sh fr1:/srv/chromium/factory/
+    scp -q infra/chromium-factory/args/*.gn fr1:/srv/chromium/factory/args/
+    scp -q tools/labs-scripts/chrome-channels.sh fr1:/srv/chromium/factory/scripts/
+    scp -q third_party/chrome-channels.toml fr1:/srv/chromium/factory/third_party/
+    scp -q infra/chromium-factory/systemd/chromium-factory.* fr1:/tmp/
+    ssh fr1 'sudo mv /tmp/chromium-factory.service /tmp/chromium-factory.timer /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable chromium-factory.timer'
 
 # Run a factory step on fr1 as a managed unit: sync | build | publish | all.
 [group('labs')]
 lab-factory step="all" channel="stable":
-    ssh vps 'sudo systemd-run --unit=chromium-factory-{{step}} --uid=ubuntu --gid=ubuntu -p Nice=10 -p WorkingDirectory=/srv/chromium -E HOME=/home/ubuntu /srv/chromium/factory/chromium-factory.sh {{step}} {{channel}}'
+    ssh fr1 'sudo systemd-run --unit=chromium-factory-{{step}} --uid=ubuntu --gid=ubuntu -p Nice=10 -p WorkingDirectory=/srv/chromium -E HOME=/home/ubuntu /srv/chromium/factory/chromium-factory.sh {{step}} {{channel}}'
 
 # Factory status and last log lines.
 [group('labs')]
 lab-factory-status:
-    ssh vps 'systemctl list-units "chromium-factory*" --all --no-pager; journalctl -u "chromium-factory*" -n 15 --no-pager; df -h /srv | tail -1'
+    ssh fr1 'systemctl list-units "chromium-factory*" --all --no-pager; journalctl -u "chromium-factory*" -n 15 --no-pager; df -h /srv | tail -1'
 
 # Download the latest published labs_agent build from R2.
 [group('labs')]

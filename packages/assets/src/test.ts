@@ -223,7 +223,7 @@ async function runRust(
       "sudo env PKG_CONFIG_PATH=$PKG_CONFIG_PATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PATH=$PATH CARGO_HOME=$CARGO_HOME RUSTUP_HOME=$RUSTUP_HOME CARGO_TARGET_DIR=$CARGO_TARGET_DIR nice cargo build -q -j8 -p asset-test --profile iteration >&2",
       `sudo /srv/build/target-assets/iteration/asset-test /srv/build/assets ${typeArg.join(" ")}`,
     ].join("; ");
-    const p = Bun.spawnSync(["timeout", "3000", "ssh", "vps", cmd], {
+    const p = Bun.spawnSync(["timeout", "3000", "ssh", "fr1", cmd], {
       stdout: "pipe",
       stderr: "pipe",
     });

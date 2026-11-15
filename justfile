@@ -91,4 +91,4 @@ test ref="origin/main":
 # Ghidra fork: LLVM full-LTO decompiler/sleigh on fr1 (clone /srv/ghidra)
 [group('re')]
 ghidra-build:
-    ssh vps "make -C /srv/ghidra/Ghidra/Features/Decompiler/src/decompile/cpp -j12 LLVM=1 ghidra_opt sleigh_opt"
+    ssh fr1 "make -C /srv/ghidra/Ghidra/Features/Decompiler/src/decompile/cpp -j12 LLVM=1 ghidra_opt sleigh_opt"

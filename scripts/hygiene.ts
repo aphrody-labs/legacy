@@ -292,6 +292,12 @@ export const RULES: Rule[] = [
     line: (l) => personalData(l),
   },
   {
+    id: "ssh-alias",
+    why: "Legacy ssh alias (vps, cdn) of a fleet host; use the role (fr1, fr2, prd), a Host alias of ~/.ssh/config that also carries the old names",
+    files: (f) => !MANIFEST.test(f) && !/\.(png|jpg|svg|wasm|woff2?|ico|pdf|lock|der)$/.test(f) && !/^(docs\/reviews|third_party)\//.test(f),
+    line: (l) => /\b(ssh|scp)(\.exe)?\b/.test(l) && /(?<![\w./-])(vps|cdn)(?![\w.-])/.test(l),
+  },
+  {
     id: "pinned-version",
     why: "Version or tag pinned outside a manifest or lockfile; resolve latest from the registry or the manifest",
     files: (f) =>

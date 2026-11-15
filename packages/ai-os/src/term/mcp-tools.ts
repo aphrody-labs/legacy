@@ -26,7 +26,7 @@ export function createTermTools(manager = sharedTermManager()): Tool[] {
     {
       name: "term_spawn",
       description:
-        "Spawn a new interactive PTY pane (e.g. niubash, pwsh, opencode, ssh:vps).",
+        "Spawn a new interactive PTY pane (e.g. niubash, pwsh, opencode, ssh:fr1).",
       inputSchema: s.object(
         {
           profile: str("Profile id from term_profiles"),

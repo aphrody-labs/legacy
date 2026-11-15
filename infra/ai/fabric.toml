@@ -65,7 +65,7 @@ share = 7
 
 [[node]]
 id = "fr1"
-ssh = "vps"
+ssh = "fr1"
 os = "linux"
 bind = "@@hosts.fr1.mesh_ip@@"
 reach = "@@hosts.fr1.mesh_ip@@"
@@ -98,7 +98,7 @@ watch_s = 10
 
 [[node]]
 id = "fr2"
-ssh = "cdn"
+ssh = "fr2"
 os = "linux"
 bind = "@@hosts.fr2.mesh_ip@@"
 reach = "@@hosts.fr2.mesh_ip@@"

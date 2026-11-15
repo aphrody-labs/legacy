@@ -84,7 +84,7 @@ const dossier = `.cache/releases/${version}`;
 contenu["SOURCE_SHA256SUMS.json"] = new TextEncoder().encode(JSON.stringify(empreintes, null, 2));
 if (reutiliser) {
   const precedent = JSON.parse(
-    await $`${ssh} -o BatchMode=yes vps ${`cat ~/auto/releases/${reutiliser}/release.json`}`.text(),
+    await $`${ssh} -o BatchMode=yes fr1 ${`cat ~/auto/releases/${reutiliser}/release.json`}`.text(),
   );
   if (precedent.shaNatif !== shaNatif || precedent.craft !== craft.version)
     throw new Error("The FFI or the editors changed: a full release is required");
@@ -102,7 +102,7 @@ await Bun.write(
 );
 
 const distant = async (cmd: string) => {
-  const p = Bun.spawn(["ssh", "-o", "BatchMode=yes", "-o", "ServerAliveInterval=15", "vps", cmd], {
+  const p = Bun.spawn(["ssh", "-o", "BatchMode=yes", "-o", "ServerAliveInterval=15", "fr1", cmd], {
     stdin: "ignore",
     stdout: "inherit",
     stderr: "inherit",
@@ -111,8 +111,8 @@ const distant = async (cmd: string) => {
 };
 console.log(`Preparation ${version} (${Math.round((await Bun.file(archive).size) / 1024 / 1024)} MiB)`);
 await distant(`umask 077; mkdir -p ~/auto/releases/${version}; chmod 700 ~/auto/releases/${version}`);
-await $`scp -S ${ssh} -q ${archive} ${`vps:auto/releases/${version}/context.tar.gz`}`;
-await $`scp -S ${ssh} -q ${`${dossier}/release.json`} ${`vps:auto/releases/${version}/release.json`}`;
+await $`scp -S ${ssh} -q ${archive} ${`fr1:auto/releases/${version}/context.tar.gz`}`;
+await $`scp -S ${ssh} -q ${`${dossier}/release.json`} ${`fr1:auto/releases/${version}/release.json`}`;
 await distant(
   `cd ~/auto/releases/${version} && printf '%s  context.tar.gz\n' '${shaArchive}' | sha256sum -c - && ${reutiliser ? `cp -a ../${reutiliser}/native . && mkdir -p apps/web/public && cp -a ../${reutiliser}/apps/web/public/craft apps/web/public/ && ` : ""}tar xzf context.tar.gz --no-same-owner && ~/.local/bin/bun -e 'for(const [p,h] of Object.entries(await Bun.file("SOURCE_SHA256SUMS.json").json())){if(new Bun.CryptoHasher("sha256").update(await Bun.file(p).bytes()).digest("hex")!==h)throw Error("Empreinte incorrecte : "+p)}console.log("Integrite de la livraison verifiee")' && docker build --target precompiled -f docker/app.Dockerfile -t auto-app:${version} . && docker build --target web -f docker/app.Dockerfile -t auto-web:${version} .`,
 );

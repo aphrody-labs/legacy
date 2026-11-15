@@ -180,5 +180,8 @@
     "docs/infra/WSL.md",
     "docs/infra/FLEET-OFFLOAD.md",
     "packages/ai-os/docs/FUSION.md"
+  ],
+  "ssh-alias": [
+    "scripts/hygiene.ts"
   ]
 }

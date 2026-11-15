@@ -19,8 +19,8 @@ async function commande(args: string[]) {
   const p = Bun.spawn(args, { stdin: "ignore", stdout: "inherit", stderr: "inherit" });
   if (await p.exited) throw Error("Publication interrupted; previous catalog kept");
 }
-await commande(["ssh", "vps", `umask 022; mkdir -p ~/${depot} ~/auto/outils; chmod 755 ~/auto/distributions`]);
-await commande(["scp", "-S", Bun.which("ssh") ?? "ssh", `${dossier}/manifest.json`, `vps:${depot}/manifest.json`]);
+await commande(["ssh", "fr1", `umask 022; mkdir -p ~/${depot} ~/auto/outils; chmod 755 ~/auto/distributions`]);
+await commande(["scp", "-S", Bun.which("ssh") ?? "ssh", `${dossier}/manifest.json`, `fr1:${depot}/manifest.json`]);
 // These two sources contain neither a private key nor an account configuration.
 await commande([
   "scp",
@@ -29,7 +29,7 @@ await commande([
   "scripts/distributions-vps.ts",
   "vps:auto/outils/distributions-vps.ts",
 ]);
-const plan = Bun.spawn(["ssh", "vps", `~/.local/bin/bun ~/auto/outils/distributions-vps.ts ${id} ${livraison} plan`], {
+const plan = Bun.spawn(["ssh", "fr1", `~/.local/bin/bun ~/auto/outils/distributions-vps.ts ${id} ${livraison} plan`], {
   stdin: "ignore",
   stdout: "pipe",
   stderr: "inherit",
@@ -47,6 +47,6 @@ console.log(
   `Transfer: ${manquants.length} new files, ${c.fichiers.length - manquants.length} files already verified`,
 );
 for (const nom of manquants)
-  await commande(["scp", "-S", Bun.which("ssh") ?? "ssh", `${dossier}/${nom}`, `vps:${depot}/${nom}`]);
+  await commande(["scp", "-S", Bun.which("ssh") ?? "ssh", `${dossier}/${nom}`, `fr1:${depot}/${nom}`]);
 // The validator comes from the immutable release; no source of this release is modified.
-await commande(["ssh", "vps", `~/.local/bin/bun ~/auto/outils/distributions-vps.ts ${id} ${livraison}`]);
+await commande(["ssh", "fr1", `~/.local/bin/bun ~/auto/outils/distributions-vps.ts ${id} ${livraison}`]);

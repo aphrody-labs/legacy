@@ -19,7 +19,7 @@ caches = [
 ]
 
 [host.fr1]
-ssh = "vps"
+ssh = "fr1"
 caches = [
   { name = "target-ubuntu", path = "/home/ubuntu/build/target" },
   { name = "target-ci", path = "/home/ubuntu/actions-runner/_work/src/ci-target" },
@@ -35,7 +35,7 @@ caches = [
 ]
 
 [host.fr2]
-ssh = "cdn"
+ssh = "fr2"
 caches = [
   { name = "cargo-home", path = "/home/ubuntu/.cargo" },
   { name = "rustup", path = "/home/ubuntu/.rustup" },

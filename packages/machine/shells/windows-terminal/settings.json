@@ -114,16 +114,16 @@
         "startingDirectory": "%USERPROFILE%"
       },
       {
-        "commandline": "ssh.exe vps",
+        "commandline": "ssh.exe fr1",
         "guid": "{8b1c6f0a-0e1d-4f3a-9a51-0a0a0a0a0001}",
         "hidden": false,
-        "name": "ssh vps"
+        "name": "ssh fr1"
       },
       {
-        "commandline": "ssh.exe cdn",
+        "commandline": "ssh.exe fr2",
         "guid": "{8b1c6f0a-0e1d-4f3a-9a51-0a0a0a0a0002}",
         "hidden": false,
-        "name": "ssh cdn"
+        "name": "ssh fr2"
       },
       {
         "commandline": "ssh.exe prd",

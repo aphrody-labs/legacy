@@ -1,6 +1,6 @@
 #!/bin/sh
 # just ping (docs/packaging/VERSIONING.md): fleet hosts over ssh + public endpoints; exit 1 if anything is down.
-# Hosts are ~/.ssh/config aliases: vps = fr1 (factory), cdn = fr2 (edge), prd = production.
+# Hosts are ~/.ssh/config aliases: fr1 = fr1 (factory), fr2 = fr2 (edge), prd = production.
 # A host fails when ssh fails, systemd is not `running`, or any unit is failed.
 set -u
 fail=0

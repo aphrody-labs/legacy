@@ -23,37 +23,37 @@ ci-local *args:
 # Full ci-local on fr1 in /srv/src (the synced main; push first)
 [group('fleet')]
 ci-local-fr1 *args:
-    timeout 7200 ssh vps 'cd /srv/src && sudo systemctl start src-checkout-update.service; bun install --frozen-lockfile >/dev/null && bun infra/fleet/ci-local.ts {{args}}'
+    timeout 7200 ssh fr1 'cd /srv/src && sudo systemctl start src-checkout-update.service; bun install --frozen-lockfile >/dev/null && bun infra/fleet/ci-local.ts {{args}}'
 
 # actionlint over every workflow (runs on fr1: no Windows build of the binary is installed)
 [group('fleet')]
 ci-lint:
-    tar -cf - -C "{{root}}" .github | timeout 120 ssh vps 'rm -rf /tmp/al-lint && mkdir /tmp/al-lint && tar -xf - -C /tmp/al-lint && cd /tmp/al-lint && actionlint -ignore SC2016 -ignore SC2034 -ignore SC2086 -ignore SC2129'
+    tar -cf - -C "{{root}}" .github | timeout 120 ssh fr1 'rm -rf /tmp/al-lint && mkdir /tmp/al-lint && tar -xf - -C /tmp/al-lint && cd /tmp/al-lint && actionlint -ignore SC2016 -ignore SC2034 -ignore SC2086 -ignore SC2129'
 
 # Everything on fr1 from the synced /srv/src: images pushed to ghcr.io/aphrody-labs, ay, game wasm, site, artifacts in
 # /srv/artifacts/builds/<sha> (+ R2). Prints BUILD_SHA; then: SRC_TAG=<sha> just deploy core prd; SRC_TAG=<sha> just deploy edge fr2
 [group('fleet')]
 build-all targets="default" *args:
-    timeout 14400 ssh vps 'sudo systemd-run --unit=build-all --uid=ubuntu --collect --wait --pipe --property=Nice=10 --setenv=HOME=/home/ubuntu --setenv=TARGETS="{{targets}}" bash /srv/src/infra/fleet/bin/build-all.sh {{args}}'
+    timeout 14400 ssh fr1 'sudo systemd-run --unit=build-all --uid=ubuntu --collect --wait --pipe --property=Nice=10 --setenv=HOME=/home/ubuntu --setenv=TARGETS="{{targets}}" bash /srv/src/infra/fleet/bin/build-all.sh {{args}}'
 
 # Ship build-all images to prd or fr2 from fr1 (ghcr packages are private: pulled on fr1, streamed to the target) and
 # compose up the named services with --wait (usage: just deploy-images prd <sha> core ai-os-relay ai-os-gateway)
 [group('fleet')]
 deploy-images host sha profile *services:
-    timeout 1800 ssh vps 'bash /srv/src/infra/fleet/bin/deploy-images.sh {{host}} {{sha}} {{profile}} {{services}}'
+    timeout 1800 ssh fr1 'bash /srv/src/infra/fleet/bin/deploy-images.sh {{host}} {{sha}} {{profile}} {{services}}'
 
 # Toolchain bootstrap of a fleet host from tools.toml (usage: just fleet-bootstrap prd|fr1|fr2)
 [group('fleet')]
 fleet-bootstrap role:
-    tar -cf - -C "{{root}}" infra/fleet/bootstrap/common.sh infra/fleet/bootstrap/{{role}}.sh infra/fleet/bin/heavy.sh infra/fleet/sysctl infra/agents/install.sh tools.toml | timeout 120 ssh {{ if role == "fr1" { "vps" } else if role == "fr2" { "cdn" } else { "prd" } }} 'rm -rf /tmp/aphrody-bootstrap && mkdir -p /tmp/aphrody-bootstrap && tar -xf - -C /tmp/aphrody-bootstrap'
-    timeout 1800 ssh {{ if role == "fr1" { "vps" } else if role == "fr2" { "cdn" } else { "prd" } }} 'cd /tmp/aphrody-bootstrap && LOCK=$PWD/tools.toml sh infra/fleet/bootstrap/{{role}}.sh'
+    tar -cf - -C "{{root}}" infra/fleet/bootstrap/common.sh infra/fleet/bootstrap/{{role}}.sh infra/fleet/bin/heavy.sh infra/fleet/sysctl infra/agents/install.sh tools.toml | timeout 120 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'rm -rf /tmp/aphrody-bootstrap && mkdir -p /tmp/aphrody-bootstrap && tar -xf - -C /tmp/aphrody-bootstrap'
+    timeout 1800 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'cd /tmp/aphrody-bootstrap && LOCK=$PWD/tools.toml sh infra/fleet/bootstrap/{{role}}.sh'
 
 # One src checkout (/srv/src, full, main) + 5-min sync timer + role extras on a fleet host, idempotent
 # (usage: just fleet-setup fr1|fr2|prd [runners=6]); dependencies first through just fleet-bootstrap <role>.
 [group('fleet')]
 fleet-setup role runners="6":
-    tar -cf - -C "{{root}}" infra/fleet/bin infra/fleet/systemd infra/fleet/{{role}}/resilience.conf | timeout 120 ssh {{ if role == "fr1" { "vps" } else if role == "fr2" { "cdn" } else { "prd" } }} 'rm -rf /tmp/aphrody-setup && mkdir -p /tmp/aphrody-setup/infra/fleet && tar -xf - -C /tmp/aphrody-setup'
-    timeout 900 ssh {{ if role == "fr1" { "vps" } else if role == "fr2" { "cdn" } else { "prd" } }} 'sudo bash /tmp/aphrody-setup/infra/fleet/bin/fleet-setup.sh {{role}} {{runners}}'
+    tar -cf - -C "{{root}}" infra/fleet/bin infra/fleet/systemd infra/fleet/{{role}}/resilience.conf | timeout 120 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'rm -rf /tmp/aphrody-setup && mkdir -p /tmp/aphrody-setup/infra/fleet && tar -xf - -C /tmp/aphrody-setup'
+    timeout 900 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'sudo bash /tmp/aphrody-setup/infra/fleet/bin/fleet-setup.sh {{role}} {{runners}}'
 
 # Real reboot proof of one fleet host, the others keep serving (docs/infra/RESILIENCE.md; usage: just fleet-resilience-proof fr2)
 [group('fleet')]
@@ -83,12 +83,12 @@ fleet-rebuild host *flags:
 # Offload layer (slices, bfq, fleet-run, samplers; docs/infra/FLEET-OFFLOAD.md): just fleet-offload apply|check fr1|fr2
 [group('fleet')]
 fleet-offload mode host:
-    timeout 300 ssh {{ if host == "fr1" { "vps" } else if host == "fr2" { "cdn" } else { error("host: fr1|fr2") } }} 'git -C /srv/src fetch -q --no-recurse-submodules origin main && git -C /srv/src merge --ff-only FETCH_HEAD >/dev/null && sudo bash /srv/src/infra/fleet/bin/fleet-offload.sh {{ if mode =~ '^(apply|check)$' { mode } else { error("mode: apply|check") } }}'
+    timeout 300 ssh {{ if host == "fr1" { "fr1" } else if host == "fr2" { "fr2" } else { error("host: fr1|fr2") } }} 'git -C /srv/src fetch -q --no-recurse-submodules origin main && git -C /srv/src merge --ff-only FETCH_HEAD >/dev/null && sudo bash /srv/src/infra/fleet/bin/fleet-offload.sh {{ if mode =~ '^(apply|check)$' { mode } else { error("mode: apply|check") } }}'
 
 # Run a job on the least-loaded host (PSI) inside a cgroup slice; usage: just fleet-run test cargo test -p core  (class: agent|test|lint|research|bench|build)
 [group('fleet')]
 fleet-run class *cmd:
-    timeout 7200 ssh vps fleet-run -c {{class}} -C /srv/src -- {{cmd}}
+    timeout 7200 ssh fr1 fleet-run -c {{class}} -C /srv/src -- {{cmd}}
 
 # Install units captured from live hosts (infra/fleet/<role>/orphans; docs/infra/PROD-MAP.md); usage: just fleet-orphans prd|fr1
 [group('fleet')]

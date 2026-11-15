@@ -34,7 +34,7 @@ struct Common {
 enum Cmd {
     /// Run a command on one or more hosts: `exec <host|all|a,b> -- <cmd...>`
     Exec {
-        /// Node name (usa, fr1, fr2), ssh alias (prd, vps, cdn), `all`, or a comma list
+        /// Node name (usa, fr1, fr2), ssh alias (prd, fr1, fr2), `all`, or a comma list
         targets: String,
         /// Command and arguments, joined with spaces as ssh(1) does
         #[arg(required = true, trailing_var_arg = true, allow_hyphen_values = true)]

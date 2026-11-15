@@ -20,7 +20,7 @@ cdn=$(pick "$cdn" "${RG_CDN_SSH_PUBLIC:-root@$(site_get hosts.fr2.public_ip)}")
 
 mkdir -p "$src"
 [ "$prod" = local ] || rsync -a -e "ssh $ssh_opts" "$prod:/srv/rosegriffon/cdn/static/" "$src/"
-ssh $ssh_opts "$cdn" "install -d -o 1000 -g 1000 -m 0755 /srv/rosegriffon/cdn/static"
-rsync -a --chmod=D755,F644 -e "ssh $ssh_opts" "$src/" "$cdn:/srv/rosegriffon/cdn/static/"
+ssh $ssh_opts "$fr2" "install -d -o 1000 -g 1000 -m 0755 /srv/rosegriffon/cdn/static"
+rsync -a --chmod=D755,F644 -e "ssh $ssh_opts" "$src/" "$fr2:/srv/rosegriffon/cdn/static/"
 rclone copy --fast-list --transfers 16 "$src" "$bucket"
 echo "sync-cdn ok $(date -u +%FT%TZ) files=$(find "$src" -type f | wc -l)"
