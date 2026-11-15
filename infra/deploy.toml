@@ -8,14 +8,14 @@
 # =============================================================================
 
 [mesh]
-network_cidr = "10.200.77.0/24"
+network_cidr = "@@network.mesh_cidrs.0@@"
 tunnel_protocol = "MASQUE+WireGuard"
 config_dir = "C:/src/infra/mesh-vn/generated"
 
 [nodes.fr1]
 provider = "ovhcloud"
-public_ip = "51.77.147.152"
-mesh_ip = "10.200.77.1"
+public_ip = "@@hosts.fr1.public_ip@@"
+mesh_ip = "@@hosts.fr1.mesh_ip@@"
 region = "eu-fr"
 role = "build"
 ssh_alias = "vps"
@@ -23,8 +23,8 @@ ssh_user = "ubuntu"
 
 [nodes.fr2]
 provider = "ovhcloud"
-public_ip = "51.255.162.6"
-mesh_ip = "10.200.77.3"
+public_ip = "@@hosts.fr2.public_ip@@"
+mesh_ip = "@@hosts.fr2.mesh_ip@@"
 region = "eu-fr"
 role = "cdn-edge-and-test"
 ssh_alias = "cdn"
@@ -32,8 +32,8 @@ ssh_user = "ubuntu"
 
 [nodes.usa]
 provider = "hostinger"
-public_ip = "72.60.186.43"
-mesh_ip = "10.200.77.5"
+public_ip = "@@hosts.prd.public_ip@@"
+mesh_ip = "@@hosts.prd.mesh_ip@@"
 region = "us-google-egress"
 role = "production"
 ssh_alias = "prd"
@@ -41,7 +41,7 @@ ssh_user = "root"
 allow_non_google_workloads = true
 
 [cloud]
-cloudflare_account_id = "ca22c1a51a145f919b54afa18d936516"
+cloudflare_account_id = "@@accounts.cloudflare_account_ids.0@@"
 gcloud_project = "aphrody"
 gcloud_region = "europe-west1"
 ollama_models = ["qwen3-coder", "deepseek-r1", "gemma4"]
@@ -125,7 +125,7 @@ verify_gate = "wck check C:/src/apps/yolo"
 # -----------------------------------------------------------------------------
 # Live test targets (owner directive 2026-11-12). Tests tagged e2e:auth drive the
 # owner's logged-in Chrome over CDP (APHRODY_CDP_URL, profile dir in
-# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: apps/open/apps/open/apps/open/packages/chromium-bun/test/targets.json.
+# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: apps/open/apps/open/packages/chromium-bun/test/targets.json.
 # Pure unit fixtures (URL parsing, rewriting) keep RFC 2606 example.* hosts: they must not touch the network.
 # -----------------------------------------------------------------------------
 [test_targets.gemini]
@@ -252,7 +252,7 @@ units = ["shenron-cloudflare-s3-renew", "rg-steam-depot"]
 # the OIDC mechanism that makes it unnecessary (reported by `ay auth status --only oidc` while present).
 [auth.oidc.gcp]
 project = "aphrody"
-project_number = "468000409790"
+project_number = "@@accounts.gcp_project_numbers.0@@"
 pool = "github"
 provider = "aphrody-dev"
 issuer = "https://token.actions.githubusercontent.com"
@@ -379,14 +379,19 @@ targets = { fr2 = "127.0.0.1:8790" }
 mode = "tcp"
 lb_port = 19080
 targets = { fr2 = "127.0.0.1:80" }
+# desktop.aphrody.app (tunnel prod merged into mig-prd): prd origin, nothing listens on :8793 today (the old tunnel answered 502 too).
+[cluster.services.desktop]
+mode = "tcp"
+lb_port = 19793
+targets = { prd = "127.0.0.1:8793" }
 [cluster.services.depot]
 lb_port = 19182
-targets = { prd = "10.200.77.5:8182" }
+targets = { prd = "@@hosts.prd.mesh_ip@@:8182" }
 check = { path = "/health", host = "mig-depot.aphrody.com", expect = "rstatus ^[24]" }
 cache = "off"
 [cluster.services.commons]
 lb_port = 19766
-targets = { prd = "10.200.77.5:8766" }
+targets = { prd = "@@hosts.prd.mesh_ip@@:8766" }
 check = { path = "/health", host = "mig-commons.aphrody.com", expect = "status 200" }
 cache = "off"
 [cluster.services.relay]
@@ -399,11 +404,11 @@ cache = "off"
 [cluster.services.nativelink]
 mode = "tcp"
 lb_port = 19051
-targets = { fr1 = "10.200.77.1:50051" }
+targets = { fr1 = "@@hosts.fr1.mesh_ip@@:50051" }
 [cluster.services.nativelink-cas]
 mode = "tcp"
 lb_port = 19061
-targets = { fr1 = "10.200.77.1:50061" }
+targets = { fr1 = "@@hosts.fr1.mesh_ip@@:50061" }
 
 # sshd of every member over the mesh (pinned: no pool, reached as <member>-mesh through ProxyCommand
 # aphrody-ssh-mesh / openssl s_client). Independent of WireGuard; runner.ts and orch/fleet.ts fall back to direct ssh.

@@ -6,14 +6,14 @@
 # (rosegriffon.fr, dragonballfr.com, nie.aphrody.app, cdn.rosegriffon.fr: rosegriffon-52 / shenron).
 # Content "tunnel:<name>" expands to <tunnel id>.cfargotunnel.com. No secrets in this file.
 
-account = "ca22c1a51a145f919b54afa18d936516"
+account = "@@accounts.cloudflare_account_ids.0@@"
 
 [zones]
-"aphrody.com" = "963461271f885bc3f3c2bfd586f2b7ba"
-"aphrody.app" = "f4dab237b9811435da6fee0b5b3438d4"
+"aphrody.com" = "@@accounts.cloudflare_zone_ids.0@@"
+"aphrody.app" = "@@accounts.cloudflare_zone_ids.1@@"
 # Product zones: only the [[rules]] refs below are managed here (content and DNS stay with shenron / rosegriffon).
-"dragonballfr.com" = "255ff360c8d411f03086741b50539641"
-"rosegriffon.fr" = "3eaec2aa7c611a728fe1b514af6603e3"
+"dragonballfr.com" = "@@accounts.cloudflare_zone_ids.2@@"
+"rosegriffon.fr" = "@@accounts.cloudflare_zone_ids.3@@"
 
 # Remote-managed tunnels. Connector: systemd unit + token in an encrypted systemd credential on the host.
 [tunnels.mig-prd]
@@ -21,7 +21,7 @@ id = "72153924-6650-4dd4-bced-f8b6731edcd8"
 host = "prd"
 ingress = [
   # Cluster LB ports (HAProxy on fr1/fr2/prd, infra/cluster, docs/infra/CLUSTER.md): same answer on every host, so
-  # mig-prd connector replicas can run anywhere. Rollback: the old origins 127.0.0.1:8780 / :8797, 10.200.77.5:8182 / :8766.
+  # mig-prd connector replicas can run anywhere. Rollback: the old origins 127.0.0.1:8780 / :8797, @@hosts.prd.mesh_ip@@:8182 / :8766.
   { hostname = "mig-test.aphrody.com", service = "http://127.0.0.1:19780" },
   { hostname = "mig-downloads.aphrody.com", service = "http://127.0.0.1:19797" },
   { hostname = "mig-depot.aphrody.com", service = "http://127.0.0.1:19182" },
@@ -38,6 +38,8 @@ ingress = [
   { hostname = "ssh-fr2.aphrody.com", service = "ssh://127.0.0.1:19023" },
   { hostname = "mcp-origin.aphrody.com", service = "http://127.0.0.1:19790" },
   { hostname = "gnu.aphrody.com", service = "http://127.0.0.1:19080" },
+  # tunnel prod merged here: desktop.aphrody.app (origin prd :8793, dead before and after: 502 parity)
+  { hostname = "desktop.aphrody.app", service = "http://127.0.0.1:19793" },
   # aphrody service: cluster LB pool aphrody (prd:23000, blue/green switched in deploy.toml only).
   { hostname = "aphrody.com", service = "http://127.0.0.1:19300" },
   { hostname = "*.aphrody.com", service = "http://127.0.0.1:19300" },
@@ -62,12 +64,12 @@ ingress = [
 
 # DNS: name -> desired single record. rollback = the record before migration (one line, also in the doc).
 [dns."aphrody.com"]
-"aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
+"aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
 "ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "delete" }
 "ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
 "mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
 "gnu.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
-"os.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
+"os.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
 "admin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "ai.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "art.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
@@ -102,32 +104,33 @@ ingress = [
 "translate.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 # shenron community gateway, still served by fr2 (static JSON) until shenron moves it to usa: proxied so fr2 can
 # refuse non-Cloudflare clients on 80/443 (cert *.aphrody.com, SSL Full strict).
-"dbfr.aphrody.com" = { type = "A", content = "51.255.162.6", rollback = "A 51.255.162.6 proxied=false" }
+"dbfr.aphrody.com" = { type = "A", content = "@@hosts.fr2.public_ip@@", rollback = "A @@hosts.fr2.public_ip@@ proxied=false" }
 
 [dns."aphrody.app"]
+"desktop.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME 7a6e3e3d-de15-45f8-9b50-73bdbbc283ae.cfargotunnel.com (tunnel prod)" }
 # Previews <project>-<sha7>.aphrody.app and project domains: Worker aphrody-deploy on route *.aphrody.app/* (explicit records win).
 "*.aphrody.app" = { type = "AAAA", content = "100::", proxied = true, rollback = "delete" }
-"api.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"auth.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"craft.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"deploy.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"git.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"play.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"source.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-audio.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-cad.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-compositing.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-documents.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-generation.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-images.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-interface-layouts.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-layout.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-pdf.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-photo-processing.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-slides.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-tables.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-vectors.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
-"app-video.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
+"api.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"auth.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"craft.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"deploy.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"git.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"play.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"source.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-audio.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-cad.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-compositing.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-documents.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-generation.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-images.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-interface-layouts.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-layout.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-pdf.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-photo-processing.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-slides.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-tables.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-vectors.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
+"app-video.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }
 
 # Zone rules managed by ref (other rules in the same phase are kept as they are).
 [[rules]]
