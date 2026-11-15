@@ -1,6 +1,6 @@
 ---
 name: ui-system
-description: Règles UI uniques du monorepo. Utiliser AVANT toute création ou modification d'une interface (site, app web, dashboard, desktop, TUI, composant, icône, couleur, police, maquette Figma ou Stitch). Impose @aphrody/design (tokens Material 3 générés par Material Color Utilities depuis assets/brand/brand.toml), Material Web, Material Symbols, GPUI ou Microsoft WebUI pour le desktop, et route vers les MCP Figma et Stitch.
+description: Règles UI uniques du monorepo. Utiliser AVANT toute création ou modification d'une interface (site, app web, dashboard, desktop, TUI, composant, icône, couleur, police, maquette Figma ou Stitch). Impose @aphrody/design (tokens Material 3 générés par Material Color Utilities depuis assets/brand/brand.toml), Angular Material, Material Symbols, GPUI ou Microsoft WebUI pour le desktop, et route vers les MCP Figma et Stitch.
 ---
 
 # ui-system
@@ -11,7 +11,7 @@ Source de vérité : `packages/design` (tokens, DESIGN.md, composants), `docs/ui
 
 | Surface                                           | Cible                                                                                                                                                 | Interdit                                                                           |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Web (sites, dashboards, aphrody.com, aphrody.app) | Material Web `@material/web` + `packages/design/tokens/tokens.css` + Material Symbols Rounded ; HTML servi par bun (`Bun.serve`) ou Microsoft WebUI   | React/shadcn/Tailwind/Base UI, CSS de couleurs maison, autre bibliothèque d'icônes |
+| Web (sites, dashboards, aphrody.com, aphrody.app) | Angular Material `@angular/material` (app Angular `apps/aphrody/web`) + `packages/design/tokens/tokens.css` + Material Symbols Rounded ; pages serveur sans Angular : HTML natif `.btn` sur les mêmes tokens | React/shadcn/Tailwind/Base UI, CSS de couleurs maison, autre bibliothèque d'icônes |
 | Desktop natif                                     | GPUI (crate `gpui`) ou Microsoft WebUI desktop (WebView2 sur Windows) ; nt garde sa direction (WebUI, WinUI 3, Fluent, GPU) via son agent | egui, iced, slint, Tauri, Electron                                                 |
 | TUI                                               | ratatui/crossterm ou bun, couleurs de `tokens/tokens.rs` ou `tokens/ansi.json` (SGR 24 bits)                                                          | codes ANSI 16 couleurs codés en dur                                                |
 | Outils natifs Zig                                 | Native SDK de vercel-labs (`vercel-labs/native`) seulement si le cœur est déjà en Zig ; tokens `tokens/tokens.zig`                                    | CLI `@native-sdk/cli` via Node (bun uniquement)                                    |
@@ -20,7 +20,7 @@ Source de vérité : `packages/design` (tokens, DESIGN.md, composants), `docs/ui
 
 1. Aucune valeur de couleur, rayon, durée ou police recopiée : consommer `tokens.css` (`var(--md-sys-color-primary)`), `tokens.json`, `tokens.rs` (`include!`), `tokens.zig` ou `ansi.json`.
 2. Changement de couleur de marque : éditer `assets/brand/brand.toml` (propriété de l'agent marque), puis `bun run --cwd packages/design build` ; `bun test --cwd packages/design` vérifie la dérive et le contraste AA.
-3. Composants web : `import "@aphrody/design/components"` puis `<md-filled-button>`, `<md-outlined-text-field>`, etc. Une seule bibliothèque. Icônes : `@aphrody/design/symbols.css`, `<md-icon>nom</md-icon>`.
+3. Composants web : `import { APHRODY_MATERIAL } from "@aphrody/design/components"` dans `imports` d'un composant Angular standalone, puis `<a matButton="filled">`, `<mat-card>`, `matInput`, etc. Thème : `@use "@aphrody/design/tokens/angular-theme"` (variables `--mat-sys-*` posées sur les tokens `--md-sys-*`). Une seule bibliothèque. Icônes : `@aphrody/design/symbols.css`, `<mat-icon fontSet="material-symbols-rounded">nom</mat-icon>`. Choix par plateforme : web = Angular Material ; Android = Compose ; multiplateforme = Flutter. Build : `bunx --bun ng build` dans `apps/aphrody/web`.
 4. Typographie : Google Sans Flex (brand.toml), échelle M3 `--md-sys-typescale-*`. Formes `--md-sys-shape-corner-*`. Mouvement `--md-sys-motion-*`.
 5. bun uniquement pour JS/TS (aucun node, npm, vite, tsc). Rust avec windows-rs. Aucune compilation sur le PC : CI ou fr1 en `nice -n 19`.
 6. Commits : directement sur main, limités à vos chemins, sans attribution IA ni emoji.
@@ -36,7 +36,7 @@ Source de vérité : `packages/design` (tokens, DESIGN.md, composants), `docs/ui
 ## Stitch (MCP du relais)
 
 - Serveur `stitch` intégré au relais (`packages/ai-os/src/relay/mcp-hub.ts`, https://stitch.googleapis.com/mcp, jeton gcloud). Outils exposés sous `mcp__relay__stitch__*` quand le relais est connecté.
-- Donner à Stitch `packages/design/DESIGN.md` (format google-labs-code/design.md, version alpha) comme système ; toute maquette Stitch est ensuite reconstruite en Material Web, jamais collée.
+- Donner à Stitch `packages/design/DESIGN.md` (format google-labs-code/design.md, version alpha) comme système ; toute maquette Stitch est ensuite reconstruite en Angular Material, jamais collée.
 - Lint : `ay design lint` (linter `aphrody-ui::design_md` dans `src/ui/kit`, lit `packages/design/DESIGN.md` par défaut) ou `bun run --cwd packages/design lint` ; 0 erreur exigée.
 
 ## Direction et critique (d'après anthropics/skills frontend-design, 41bbe19d1a1a)

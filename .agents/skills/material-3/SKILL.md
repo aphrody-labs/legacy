@@ -5,7 +5,7 @@ description: Material Design 3 rules (including M3 Expressive) normalized for th
 
 # material-3
 
-Rewritten specs (factual values verified; tokens taken from material-web and androidx):
+Rewritten specs (factual values verified; tokens taken from Angular Material, material-web history and androidx):
 
 | Domain                                                                 | Human-readable                               | Machine |
 | ---------------------------------------------------------------------- | -------------------------------------------- | ------- |
@@ -31,11 +31,11 @@ Schema: `docs/design/specs/spec.schema.json`. Index of source pages: `docs/desig
 6. Motion: springs (expressive scheme by default, standard for utilitarian UI); spatial for geometry, effects for color/opacity; easing + duration as fallback; reduced motion respected.
 7. Layout: classes compact < 600, medium 600–839, expanded 840–1199, large 1200–1599, extra-large ≥ 1600dp; margins 16dp (compact) then 24dp; 8dp grid with 4dp sub-units.
 8. Accessibility: target ≥ 48 × 48dp, contrast 4.5:1 text / 3:1 large text and non-text, accessible name for every icon control, logical focus order, focus returned to the opener, mirrored RTL.
-9. Components: take the variant and measurements from `components/material-3.json`; on the web, the implementation is `@material/web` via `@aphrody/design/components` (ui-system), not an in-house component.
+9. Components: take the variant and measurements from `components/material-3.json`; on the web, the implementation is Angular Material (`@angular/material`) via `@aphrody/design/components` and the generated theme `@aphrody/design/tokens/angular-theme` (ui-system), not an in-house component. Android = Compose, multiplatform = Flutter.
 
 ## Verify before asserting
 
-- Token values: `gh api repos/material-components/material-web/contents/tokens/versions/latest/sass`; springs: `androidx/androidx` `compose/material3/.../tokens/*MotionTokens.kt`; contrast: `material-foundation/material-color-utilities`.
+- Token values: `packages/design/tokens/angular-material.css` (compiled theme) and `node_modules/@angular/material/core/tokens/m3/`; springs: `androidx/androidx` `compose/material3/.../tokens/*MotionTokens.kt`; contrast: `material-foundation/material-color-utilities`.
 - Usage rules: reread the m3 page cited in `source` (SPA: `agent-browser open <url>` then `agent-browser read`, ~1 request/s).
 - Gap between spec and `packages/design`: fix the generator, regenerate, `bun test --cwd packages/design`.
 

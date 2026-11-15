@@ -304,7 +304,7 @@
     {
       "id": "m3.comp.use-library",
       "level": "MUST",
-      "rule": "Sur le web, chaque composant M3 vient de @material/web via @aphrody/design/components ; un composant absent de la bibliothèque se construit avec les tokens md.comp/md.sys et les mesures de cette spec, jamais avec des valeurs inventées.",
+      "rule": "Sur le web, chaque composant M3 vient d'Angular Material (@angular/material) via @aphrody/design/components ; un composant absent de la bibliothèque se construit avec les tokens md.comp/md.sys et les mesures de cette spec, jamais avec des valeurs inventées.",
       "source": "https://m3.material.io/components"
     },
     {

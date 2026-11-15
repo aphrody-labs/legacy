@@ -4,7 +4,7 @@ Vérifié. Contenu m3.material.io : propriétaire (conditions Google), anatomie,
 
 ## Règles communes
 
-- `m3.comp.use-library` (MUST) Sur le web, chaque composant M3 vient de @material/web via @aphrody/design/components ; un composant absent de la bibliothèque se construit avec les tokens md.comp/md.sys et les mesures de cette spec, jamais avec des valeurs inventées. — [source](https://m3.material.io/components)
+- `m3.comp.use-library` (MUST) Sur le web, chaque composant M3 vient d'Angular Material (@angular/material) via @aphrody/design/components ; un composant absent de la bibliothèque se construit avec les tokens md.comp/md.sys et les mesures de cette spec, jamais avec des valeurs inventées. — [source](https://m3.material.io/components)
 - `m3.comp.measures-from-tokens` (MUST) Les mesures dp listées ici sont des valeurs de contrôle ; le code consomme les tokens générés (packages/design) et un écart se corrige dans le générateur. — [source](https://github.com/material-components/material-web/tree/37aa14b843dcaeb3a46f898679fa6fcd109b1905/tokens/versions/latest/sass)
 
 ## app-bars

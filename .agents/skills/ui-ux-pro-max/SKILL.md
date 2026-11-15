@@ -8,7 +8,7 @@ metadata:
 
 # ui-ux-pro-max
 
-Advice, never authority: `ui-system` (M3 tokens, Material Web, GPUI, WebUI, Zig) wins in case of conflict. No color, font or Tailwind class from the results is copied; a style or palette suggestion is translated into an M3 variant (`brand.toml`) or a composition, not into homemade CSS.
+Advice, never authority: `ui-system` (M3 tokens, Angular Material, GPUI, WebUI, Zig) wins in case of conflict. No color, font or Tailwind class from the results is copied; a style or palette suggestion is translated into an M3 variant (`brand.toml`) or a composition, not into homemade CSS.
 
 ## Search
 
@@ -29,8 +29,8 @@ Domains: `ux` (UX/a11y rules, default), `web` (app and native interface: safe ar
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | Palette, hex color, "Primary"       | M3 role `--md-sys-color-*`; brand hue = `assets/brand/brand.toml`                                             |
 | Font pair, Tailwind config          | Google Sans Flex (brand); `google-fonts --ofl` only for a secondary family, shipped as woff2 from an OFL fork |
-| Icons (Lucide, Heroicons, Phosphor) | Material Symbols Rounded (`<md-icon>`)                                                                        |
-| React/Next/shadcn/Tailwind code     | Material Web (`<md-*>`) served by bun, GPUI or WebUI; keep the rule, rewrite the example                      |
+| Icons (Lucide, Heroicons, Phosphor) | Material Symbols Rounded (`<mat-icon>`)                                                                        |
+| React/Next/shadcn/Tailwind code     | Angular Material (`mat-*`), GPUI or WebUI; keep the rule, rewrite the example                      |
 | GSAP, Framer Motion                 | `--md-sys-motion-*`, View Transitions, `prefers-reduced-motion`                                               |
 | `--stack threejs`                   | complements the skill `threejs-webgpu`                                                                        |
 | `--stack winui`                     | Windows desktop only if the surface belongs to nt (WinUI 3)                                                   |

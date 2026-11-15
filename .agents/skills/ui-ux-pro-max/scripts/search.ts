@@ -316,7 +316,7 @@ if (argv.includes("--brief")) {
   const st = flag("--stack")!;
   if (!STACKS.includes(st)) {
     console.error(
-      `pile inconnue : ${st} (disponibles : ${STACKS.join(", ")} ; web = Material Web, voir ui-system)`,
+      `pile inconnue : ${st} (disponibles : ${STACKS.join(", ")} ; web = Angular Material, voir ui-system)`,
     );
     process.exit(2);
   }
