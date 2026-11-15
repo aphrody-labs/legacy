@@ -143,6 +143,7 @@ export function truth(x: any): boolean {
       if (x instanceof PyRange) return x.length > 0;
       if (typeof x.__bool__ === "function") return !!x.__bool__();
       if (typeof x.__len__ === "function") return x.__len__() > 0;
+      if (typeof x.$list === "function") return true; // JObject proxy: Java truthiness is unknown, non-null
       if (typeof x.isEmpty === "function") return !x.isEmpty();
       return true;
     }
@@ -406,6 +407,17 @@ export function next(it: any, ...d: any[]) {
     throw new StopIteration();
   }
   return r.value;
+}
+export function len(x: any): number {
+  if (typeof x === "string") return [...x].length === x.length ? x.length : [...x].length;
+  if (Array.isArray(x) || ArrayBuffer.isView(x)) return (x as any).length;
+  if (x instanceof Map || x instanceof Set) return x.size;
+  if (x instanceof PyRange) return x.length;
+  if (x && typeof x.__len__ === "function") return x.__len__();
+  if (x && typeof x.size === "function") return x.size();
+  if (x && typeof x.length === "number") return x.length;
+  if (x && typeof x.length === "function") return x.length();
+  throw new TypeError(`object of type '${typeName(x)}' has no len()`);
 }
 export const list = (x?: any) => (x === undefined ? [] : Array.from(iter(x)));
 export const tuple = list;
@@ -748,6 +760,32 @@ export function exit(code: any = 0): never {
 }
 export const quit = exit;
 
+/** Lazy `from pkg import *`: first module in `paths` exporting `name` wins (NameError otherwise). */
+export async function starPick(paths: string[], name: string): Promise<any> {
+  for (const p of paths) {
+    try {
+      const mod = await import(p);
+      if (name in mod) return mod[name];
+    } catch {}
+  }
+  throw new NameError(`name '${name}' is not defined (star imports: ${paths.join(", ")})`);
+}
+
+// Python 2 names still used by Jython-era Ghidra scripts
+export { open as file };
+export const xrange = range;
+export const unicode = str;
+export const long = int;
+export const raw_input = input;
+export const unichr = chr;
+export const basestring = str;
+export function reduce(f: any, it: any, ...init: any[]) {
+  const a = Array.from(iter(it));
+  let acc = init.length ? init[0] : a.shift();
+  for (const x of a) acc = f(acc, x);
+  return acc;
+}
+
 class PyFile {
   private pos = 0;
   private buf: string | Uint8Array | null = null;
@@ -1081,3 +1119,5 @@ export const m = {
     return i < 0 ? [o, "", ""] : [o.slice(0, i), sep, o.slice(i + sep.length)];
   },
 };
+
+export * from "./async";

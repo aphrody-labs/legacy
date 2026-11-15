@@ -1,18 +1,21 @@
 use std::io::{Read, Write};
 use std::process::ExitCode;
 
-const USAGE: &str = "usage: py2bun [FILE|-] [-o OUT] [--json] [--strict]\n  FILE  Python source ('-' or absent: stdin); -o: output path (default stdout)\n  --json    print diagnostics as JSON lines on stderr\n  --strict  exit 1 if any diagnostic (warnings included)\nexit: 0 ok, 1 diagnostics (errors; or any with --strict), 2 usage/io";
+const USAGE: &str = "usage: py2bun [FILE|-] [-o OUT] [--json] [--strict]\n  FILE  Python source ('-' or absent: stdin); -o: output path (default stdout)\n  --json    print diagnostics as JSON lines on stderr\n  --strict  exit 1 if any diagnostic (warnings included)\n  --async / --sync  force async (await every call) or sync output; default: async when the script uses Ghidra\nexit: 0 ok, 1 diagnostics (errors; or any with --strict), 2 usage/io";
 
 fn main() -> ExitCode {
     let mut input: Option<String> = None;
     let mut out: Option<String> = None;
     let (mut json, mut strict) = (false, false);
+    let mut mode = py2bun::AsyncMode::Auto;
     let mut it = std::env::args().skip(1);
     while let Some(a) = it.next() {
         match a.as_str() {
             "-o" | "--output" => out = it.next(),
             "--json" => json = true,
             "--strict" => strict = true,
+            "--async" => mode = py2bun::AsyncMode::On,
+            "--sync" => mode = py2bun::AsyncMode::Off,
             "-h" | "--help" => {
                 println!("{USAGE}");
                 return ExitCode::SUCCESS;
@@ -36,7 +39,7 @@ fn main() -> ExitCode {
             }
         },
     }
-    let res = py2bun::transpile(&src);
+    let res = py2bun::transpile_with(&src, mode);
     for d in &res.diagnostics {
         if json {
             eprintln!(

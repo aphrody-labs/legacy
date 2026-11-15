@@ -5,8 +5,16 @@ pub const BUILTINS: &[&str] = &[
     "hex", "oct", "bin", "format", "repr", "abs", "min", "max", "sum", "any", "all", "map", "filter",
     "list", "dict", "set", "tuple", "isinstance", "issubclass", "getattr", "setattr", "hasattr", "ord",
     "chr", "round", "divmod", "pow", "type", "id", "iter", "next", "open", "input", "callable",
+    "file", "xrange", "unicode", "long", "raw_input", "unichr", "basestring", "reduce",
     "bytes", "bytearray", "hash", "slice", "frozenset", "object", "exit", "quit", "vars", "dir",
 ];
+
+/// Builtins that may receive Java objects/iterables: async variants `__py.a_NAME` (awaited) in async mode.
+pub const ASYNC_BUILTINS: &[&str] = &[
+    "len", "list", "tuple", "set", "frozenset", "sorted", "sum", "min", "max", "any", "all", "reversed", "str", "dict",
+];
+/// Lazy builtins with async-generator variants (not awaited).
+pub const ASYNC_GEN_BUILTINS: &[&str] = &["enumerate", "zip", "map", "filter"];
 
 pub const EXCEPTIONS: &[&str] = &[
     "BaseException", "Exception", "ValueError", "KeyError", "IndexError", "TypeError", "RuntimeError",
@@ -36,42 +44,69 @@ pub const JAVA_ROOTS: &[&str] = &[
 pub const STDLIB: &[&str] = &["math", "json", "os", "sys", "re", "time", "string", "struct", "random"];
 
 /// Modules that may be silently dropped.
-pub const IGNORED_MODULES: &[&str] = &["__future__", "typing", "__main__", "jarray"];
+pub const IGNORED_MODULES: &[&str] = &["__future__", "typing", "__main__", "jarray", "exceptions"];
 
-/// GhidraScript + FlatProgramAPI + FlatDecompilerAPI-less globals. Resolved to
-/// `import { ... } from "@aphrody/ghidra/script"`.
+/// Names importable from `@aphrody/ghidra/script`: the fields of `packages/ghidra/src/script.ts` plus
+
+/// every async function of `packages/ghidra/src/script.generated.ts` (GhidraScript + FlatProgramAPI,
+
+/// generated from the Java sources by `packages/ghidra/scripts/gen-script-exports.ts`).
+
 pub const GHIDRA_FLAT: &[&str] = &[
+
     "currentProgram", "currentAddress", "currentLocation", "currentSelection", "currentHighlight",
-    "monitor", "state", "sourceFile", "potentialPropertiesFileLocs", "writer",
-    "println", "printerr", "printf", "popup", "getScriptArgs", "getState", "getMonitor",
-    "askString", "askInt", "askLong", "askDouble", "askAddress", "askFile", "askDirectory",
-    "askChoice", "askChoices", "askYesNo", "askBytes", "askProgram", "askDomainFile",
-    "askProjectFolder", "askValues", "askTaskMonitor", "runScript", "runCommand", "goTo",
-    "isRunningHeadless", "getSourceFile", "getProgramFile", "getCurrentProgram", "setCurrentLocation",
-    "analyzeAll", "analyzeChanges", "getCurrentAnalysisOptionsAndValues",
-    "toAddr", "getFunctionAt", "getFunctionContaining", "getFunctionAfter", "getFunctionBefore",
-    "getFirstFunction", "getLastFunction", "getGlobalFunctions", "getSymbolAt", "getSymbols",
-    "getSymbol", "getNamespace", "createFunction", "createLabel", "createData", "createAsciiString",
-    "createUnicodeString", "createByte", "createWord", "createDWord", "createQWord", "createFloat",
-    "createDouble", "createChar", "createFragment", "createFolder", "createMemoryBlock",
-    "createBookmark", "createClass", "createNamespace", "createEquate", "createStructure",
-    "getInstructionAt", "getInstructionAfter", "getInstructionBefore", "getInstructionContaining",
-    "getFirstInstruction", "getLastInstruction", "getDataAt", "getDataAfter", "getDataBefore",
-    "getDataContaining", "getFirstData", "getLastData", "getUndefinedDataAt",
-    "getUndefinedDataAfter", "getUndefinedDataBefore", "getByte", "getBytes", "getShort", "getInt",
-    "getLong", "setByte", "setBytes", "setShort", "setInt", "setLong", "setFloat", "setDouble",
-    "setBoolean", "setString", "find", "findBytes", "findStrings", "findPascalStrings",
-    "getReferencesFrom", "getReferencesTo", "getReference", "addInstructionXref", "addDataXref",
-    "createMemoryReference", "createExternalReference", "removeReference", "getMemoryBlock",
-    "getMemoryBlocks", "removeFunction", "removeData", "removeInstruction", "removeSymbol",
-    "removeEquate", "removeBookmark", "clearListing", "disassemble", "setEOLComment",
-    "setPlateComment", "setPreComment", "setPostComment", "setRepeatableComment", "getEOLComment",
-    "getPlateComment", "getPreComment", "getPostComment", "getRepeatableComment", "getBookmarks",
-    "getEquate", "getEquates", "getDataTypes", "getAddressFactory", "getCurrentProgram",
-    "getAddressAt", "getLanguage", "getCompilerSpec", "getMinAddress", "getMaxAddress",
-    "getEntryPoint", "getEntryPoints", "openDataTypeArchive", "setAnalysisOption", "getFunction",
-    "removeFunctionAt", "currentAnalysis", "getRegister", "getProgramFile", "getProgramInfo",
-    "startTransaction", "endTransaction", "getCurrentHighlight", "setCurrentHighlight",
-    "getDefaultDataTypeManager", "clearBookmark", "getEOL", "getCurrentSelection", "createLabel",
-    "isAddress", "parseAddress", "getAddressesInRange",
+
+    "monitor", "state", "sourceFile",
+    "addEntryPoint", "addInstructionXref", "analyze", "analyzeAll", "analyzeChanges", "askAddress", 
+    "askBytes", "askChoice", "askChoices", "askDirectory", "askDomainFile", "askDouble", "askFile", 
+    "askInt", "askLanguage", "askLong", "askPassword", "askProgram", "askProjectFolder", 
+    "askString", "askValues", "askYesNo", "clearBackgroundColor", "clearListing", 
+    "createAddressSet", "createAsciiString", "createBookmark", "createByte", "createChar", 
+    "createClass", "createDWord", "createData", "createDouble", "createDwords", "createEquate", 
+    "createExternalReference", "createFloat", "createFragment", "createFunction", 
+    "createHighlight", "createLabel", "createMemoryBlock", "createMemoryReference", 
+    "createNamespace", "createProgram", "createQWord", "createSelection", "createStackReference", 
+    "createSymbol", "createUnicodeString", "createWord", "disassemble", "end", "find", "findBytes", 
+    "findPascalStrings", "findStrings", "getAddressFactory", "getAnalysisOptionDefaultValue", 
+    "getAnalysisOptionDefaultValues", "getAnalysisOptionDescription", 
+    "getAnalysisOptionDescriptions", "getBookmarks", "getByte", "getBytes", "getCategory", 
+    "getCodeUnitFormat", "getCurrentAnalysisOptionsAndValues", "getCurrentProgram", "getDataAfter", 
+    "getDataAt", "getDataBefore", "getDataContaining", "getDataTypes", "getDefaultLanguage", 
+    "getDemangled", "getDouble", "getEOLComment", "getEOLCommentAsRendered", "getEquate", 
+    "getEquates", "getFirstData", "getFirstFunction", "getFirstInstruction", "getFloat", 
+    "getFragment", "getFunction", "getFunctionAfter", "getFunctionAt", "getFunctionBefore", 
+    "getFunctionContaining", "getGhidraVersion", "getGlobalFunctions", "getInstructionAfter", 
+    "getInstructionAt", "getInstructionBefore", "getInstructionContaining", "getInt", 
+    "getLanguage", "getLastData", "getLastFunction", "getLastInstruction", "getLong", 
+    "getMemoryBlock", "getMemoryBlocks", "getMonitor", "getNamespace", "getPlateComment", 
+    "getPlateCommentAsRendered", "getPostComment", "getPostCommentAsRendered", "getPreComment", 
+    "getPreCommentAsRendered", "getProgramFile", "getProjectRootFolder", "getReference", 
+    "getReferencesFrom", "getReferencesTo", "getRepeatableComment", 
+    "getRepeatableCommentAsRendered", "getReusePreviousChoices", "getScriptAnalysisMode", 
+    "getScriptArgs", "getScriptName", "getShort", "getSourceFile", "getState", "getSymbol", 
+    "getSymbolAfter", "getSymbolAt", "getSymbolBefore", "getSymbols", "getUndefinedDataAfter", 
+    "getUndefinedDataAt", "getUndefinedDataBefore", "getUserName", "goTo", "importFile", 
+    "importFileAsBinary", "isAnalysisOptionDefaultValue", "isRunningHeadless", 
+    "openDataTypeArchive", "openFileDataTypeArchive", "popup", "print", "printerr", "printf", 
+    "println", "removeBookmark", "removeData", "removeDataAt", "removeEntryPoint", "removeEquate", 
+    "removeEquates", "removeFunction", "removeFunctionAt", "removeHighlight", "removeInstruction", 
+    "removeInstructionAt", "removeMemoryBlock", "removeReference", "removeSelection", 
+    "removeSymbol", "run", "runCommand", "runScript", "runScriptPreserveMyState", "saveProgram", 
+    "set", "setAnalysisOption", "setAnalysisOptions", "setBackgroundColor", "setByte", "setBytes", 
+    "setCurrentHighlight", "setCurrentLocation", "setCurrentSelection", "setDouble", 
+    "setEOLComment", "setFloat", "setInt", "setLong", "setPlateComment", "setPostComment", 
+    "setPreComment", "setReferencePrimary", "setRepeatableComment", "setReusePreviousChoices", 
+    "setScriptArgs", "setShort", "setToolStatusMessage", "start", "toAddr", 
 ];
+
+/// Generic names that are in the generated script exports but must not capture an unbound Python name.
+
+pub const FLAT_AMBIGUOUS: &[&str] = &["start", "end", "set", "show", "execute", "cleanup", "print", "toString", "analyze"];
+
+
+
+pub fn is_flat(id: &str) -> bool {
+
+    GHIDRA_FLAT.contains(&id) && !FLAT_AMBIGUOUS.contains(&id)
+
+}

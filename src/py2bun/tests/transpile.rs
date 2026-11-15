@@ -66,6 +66,24 @@ fn unsupported_is_explicit() {
 }
 
 #[test]
+fn jython_implicit_java_root_and_star_import() {
+    let t = ts("l = java.util.ArrayList()\nfrom ghidra.program.model.symbol import *\nx = SourceType.USER_DEFINED\ny = Foo()\n");
+    assert!(t.contains("import { java } from \"@aphrody/ghidra/java\";"));
+    assert!(t.contains("(await java.util.ArrayList.new_())"));
+    assert!(t.contains("const SourceType = await __py.starPick([\"@aphrody/ghidra/java/ghidra/program/model/symbol\"], \"SourceType\");"));
+    assert!(t.contains("(await Foo.new_())"));
+}
+
+#[test]
+fn ghidra_flat_list_comes_from_java_sources() {
+    use py2bun::names::GHIDRA_FLAT;
+    for n in ["currentProgram", "getFunctionAt", "askLanguage", "getScriptName", "setBackgroundColor", "toAddr", "createFunction"] {
+        assert!(GHIDRA_FLAT.contains(&n), "{n}");
+    }
+    assert!(!py2bun::names::is_flat("start"));
+}
+
+#[test]
 fn undefined_name_is_warned() {
     let o = transpile("print(zzz)\n");
     assert!(o.diagnostics.iter().any(|d| d.severity == Severity::Warning && d.message.contains("zzz")));

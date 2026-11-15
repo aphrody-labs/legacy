@@ -2,12 +2,22 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
+fn parse_mode(m: &str) -> PyResult<crate::AsyncMode> {
+    match m {
+        "auto" => Ok(crate::AsyncMode::Auto),
+        "async" => Ok(crate::AsyncMode::On),
+        "sync" => Ok(crate::AsyncMode::Off),
+        _ => Err(PyValueError::new_err("mode must be 'auto', 'async' or 'sync'")),
+    }
+}
+
 /// Transpile Python 3 source to Bun TypeScript. Raises ValueError on a syntax error;
 /// other diagnostics are embedded as `// py2bun ...` header comments (see
-/// `transpile_with_diagnostics`).
+/// `transpile_with_diagnostics`). `mode`: "auto" (async when the script uses Ghidra), "async", "sync".
 #[pyfunction]
-fn transpile(source: &str) -> PyResult<String> {
-    let o = crate::transpile(source);
+#[pyo3(signature = (source, mode="auto"))]
+fn transpile(source: &str, mode: &str) -> PyResult<String> {
+    let o = crate::transpile_with(source, parse_mode(mode)?);
     if o.ts.is_empty() {
         let m = o.diagnostics.first().map(|d| d.to_string()).unwrap_or_default();
         return Err(PyValueError::new_err(m));
@@ -17,8 +27,9 @@ fn transpile(source: &str) -> PyResult<String> {
 
 /// Returns (ts, [(line, col, severity, message)]); `ts` is "" on a syntax error.
 #[pyfunction]
-fn transpile_with_diagnostics(source: &str) -> (String, Vec<(usize, usize, String, String)>) {
-    let o = crate::transpile(source);
+#[pyo3(signature = (source, mode="auto"))]
+fn transpile_with_diagnostics(source: &str, mode: &str) -> PyResult<(String, Vec<(usize, usize, String, String)>)> {
+    let o = crate::transpile_with(source, parse_mode(mode)?);
     let d = o
         .diagnostics
         .into_iter()
@@ -27,7 +38,7 @@ fn transpile_with_diagnostics(source: &str) -> (String, Vec<(usize, usize, Strin
             (d.line, d.col, s.to_string(), d.message)
         })
         .collect();
-    (o.ts, d)
+    Ok((o.ts, d))
 }
 
 #[pymodule]

@@ -45,25 +45,59 @@ impl Output {
     }
 }
 
+/// Async code generation: Ghidra calls cross a process boundary (every call returns a Promise).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum AsyncMode {
+    /// async when the script uses Ghidra (flat API names, Java imports, pyghidra)
+    #[default]
+    Auto,
+    On,
+    Off,
+}
+
 /// Transpile Python 3 source to Bun TypeScript. Parse errors yield empty `ts` plus errors.
 pub fn transpile(source: &str) -> Output {
+    transpile_with(source, AsyncMode::Auto)
+}
+
+pub fn transpile_with(source: &str, mode: AsyncMode) -> Output {
+    let mut fixed_lines: Vec<usize> = vec![];
+    let fixed_src: String;
+    let mut source = source;
     let parsed = match ruff_python_parser::parse_module(source) {
         Ok(p) => p,
         Err(e) => {
             let (line, col) = line_col(source, e.location.start().to_usize());
-            return Output {
+            let fail = |m: String| Output {
                 ts: String::new(),
-                diagnostics: vec![Diagnostic {
-                    line,
-                    col,
-                    severity: Severity::Error,
-                    message: format!("syntax error: {}", e.error),
-                }],
+                diagnostics: vec![Diagnostic { line, col, severity: Severity::Error, message: m }],
             };
+            let (fs, changed) = crate::py2::fix(source);
+            if changed.is_empty() {
+                return fail(format!("syntax error: {}", e.error));
+            }
+            fixed_src = fs;
+            match ruff_python_parser::parse_module(&fixed_src) {
+                Ok(p) => {
+                    fixed_lines = changed;
+                    source = &fixed_src;
+                    p
+                }
+                Err(_) => return fail(format!("syntax error: {}", e.error)),
+            }
         }
     };
     let module = parsed.into_syntax();
     let mut em = Emitter::new(source);
+    em.mode = mode;
+    for l in &fixed_lines {
+        em.diags.push(Diagnostic {
+            line: *l,
+            col: 1,
+            severity: Severity::Warning,
+            message: "Python 2 syntax (print statement / except X, e) rewritten to Python 3".into(),
+        });
+    }
     em.module(&module.body);
     Output { ts: em.finish(), diagnostics: em.diags }
 }
@@ -145,6 +179,7 @@ struct Collector<'a> {
     nonlocals: BTreeSet<String>,
     imports: Vec<&'a Stmt>,
     has_yield: bool,
+    ghidra_hit: bool,
     funcs: Vec<&'a StmtFunctionDef>,
     classes: BTreeSet<String>,
 }
@@ -199,8 +234,14 @@ impl<'a> Visitor<'a> for Collector<'a> {
     }
     fn visit_expr(&mut self, expr: &'a Expr) {
         match expr {
-            Expr::Name(n) if n.ctx == ExprContext::Store => {
-                self.assigned.insert(n.id.as_str().to_string());
+            Expr::Name(n) => {
+                let id = n.id.as_str();
+                if is_flat(id) || JAVA_ROOTS.contains(&id) {
+                    self.ghidra_hit = true;
+                }
+                if n.ctx == ExprContext::Store {
+                    self.assigned.insert(id.to_string());
+                }
             }
             Expr::Lambda(_) | Expr::ListComp(_) | Expr::SetComp(_) | Expr::DictComp(_) | Expr::Generator(_) => {}
             Expr::Yield(_) | Expr::YieldFrom(_) => self.has_yield = true,
@@ -242,6 +283,13 @@ struct Emitter<'s> {
     user_classes: HashSet<String>,
     java_names: HashSet<String>,
     class_stack: Vec<ClassCtx>,
+    star_pkgs: Vec<String>,
+    star_names: BTreeSet<String>,
+    asyncs: bool,
+    no_await: u32,
+    ghidra_seen: bool,
+    mode: AsyncMode,
+    pyghidra_names: HashSet<String>,
 }
 
 fn is_const(e: &Expr) -> bool {
@@ -277,6 +325,13 @@ impl<'s> Emitter<'s> {
             user_classes: HashSet::new(),
             java_names: HashSet::new(),
             class_stack: vec![],
+            star_pkgs: vec![],
+            star_names: BTreeSet::new(),
+            asyncs: false,
+            no_await: 0,
+            ghidra_seen: false,
+            mode: AsyncMode::Auto,
+            pyghidra_names: HashSet::new(),
         }
     }
 
@@ -320,6 +375,12 @@ impl<'s> Emitter<'s> {
             let v: Vec<&str> = self.flat_used.iter().copied().collect();
             head.push_str(&format!("import {{ {} }} from \"@aphrody/ghidra/script\";\n", v.join(", ")));
         }
+        if !self.star_names.is_empty() {
+            let paths: Vec<String> = self.star_pkgs.iter().map(|p| js_str(p)).collect();
+            for n in &self.star_names {
+                head.push_str(&format!("const {} = await __py.starPick([{}], {});\n", ident(n), paths.join(", "), js_str(n)));
+            }
+        }
         for d in &self.diags {
             head.push_str(&format!("// py2bun {d}\n"));
         }
@@ -351,6 +412,11 @@ impl<'s> Emitter<'s> {
         for imp in &deep.imports {
             self.handle_import(imp);
         }
+        self.asyncs = match self.mode {
+            AsyncMode::On => true,
+            AsyncMode::Off => false,
+            AsyncMode::Auto => deep.ghidra_hit || self.ghidra_seen || !self.java_names.is_empty(),
+        };
         self.scopes.push(names);
         let mut lets: BTreeSet<String> = shallow.assigned.clone();
         lets.extend(deep.globals.iter().cloned());
@@ -389,11 +455,12 @@ impl<'s> Emitter<'s> {
                             ));
                         }
                     } else if full == "pyghidra" {
-                        self.imports.push(format!(
-                            "import * as {} from \"@aphrody/ghidra/pyghidra\";",
-                            ident(a.asname.as_ref().map(|x| x.as_str()).unwrap_or("pyghidra"))
-                        ));
-                    } else if STDLIB.contains(&root) && !full.contains('.') {
+                        // snake_case API -> camelCase in @aphrody/ghidra (packages/ghidra/PARITY.md)
+                        let bind = a.asname.as_ref().map(|x| x.as_str()).unwrap_or("pyghidra").to_string();
+                        self.ghidra_seen = true;
+                        self.imports.push(format!("import * as {} from \"@aphrody/ghidra\";", ident(&bind)));
+                        self.pyghidra_names.insert(bind);
+                    } else if STDLIB.contains(&root) && (!full.contains('.') || full == "os.path") {
                         let bind = a.asname.as_ref().map(|x| x.as_str()).unwrap_or(root);
                         self.imports.push(format!(
                             "import * as {} from \"@aphrody/py2bun/runtime/{}\";",
@@ -417,7 +484,34 @@ impl<'s> Emitter<'s> {
                         None => ident_import(a.name.as_str()),
                     })
                     .collect();
-                if i.level > 0 {
+                let star = i.names.iter().any(|a| a.name.as_str() == "*");
+                if star {
+                    let path = if i.level == 0 && JAVA_ROOTS.contains(&root) {
+                        Some(format!("@aphrody/ghidra/java/{}", module.replace('.', "/")))
+                    } else if i.level == 0 && STDLIB.contains(&root) && !module.contains('.') {
+                        Some(format!("@aphrody/py2bun/runtime/{module}"))
+                    } else {
+                        None
+                    };
+                    match path {
+                        Some(p) => {
+                            self.star_pkgs.push(p);
+                            self.diag(i.range(), Severity::Warning, format!("star import from `{module}` resolved lazily, name by name (top-level await)"));
+                        }
+                        None => self.diag(i.range(), Severity::Error, format!("unsupported: star import from `{module}`")),
+                    }
+                } else if module == "os.path" && i.level == 0 {
+                    let parts: Vec<String> = i
+                        .names
+                        .iter()
+                        .map(|a| match &a.asname {
+                            Some(x) => format!("{}: {}", a.name.as_str(), ident(x.as_str())),
+                            None => ident(a.name.as_str()),
+                        })
+                        .collect();
+                    self.imports.push("import { path as __ospath } from \"@aphrody/py2bun/runtime/os\";".into());
+                    self.imports.push(format!("const {{ {} }} = __ospath;", parts.join(", ")));
+                } else if i.level > 0 {
                     let p = format!("{}{}", if i.level == 1 { "./".to_string() } else { "../".repeat(i.level as usize - 1) }, module.replace('.', "/"));
                     self.imports.push(format!("import {{ {} }} from \"{}\";", names.join(", "), p));
                 } else if JAVA_ROOTS.contains(&root) {
@@ -425,21 +519,23 @@ impl<'s> Emitter<'s> {
                         let b = a.asname.as_ref().unwrap_or(&a.name).as_str();
                         self.java_names.insert(b.to_string());
                     }
-                    if i.names.iter().any(|a| a.name.as_str() == "*") {
-                        self.diag(i.range(), Severity::Error, "unsupported: star import from a Java package");
-                    } else {
-                        self.imports.push(format!(
-                            "import {{ {} }} from \"@aphrody/ghidra/java/{}\";",
-                            names.join(", "),
-                            module.replace('.', "/")
-                        ));
-                    }
-                } else if module == "pyghidra" || module.starts_with("pyghidra.") {
                     self.imports.push(format!(
-                        "import {{ {} }} from \"@aphrody/ghidra/{}\";",
+                        "import {{ {} }} from \"@aphrody/ghidra/java/{}\";",
                         names.join(", "),
                         module.replace('.', "/")
                     ));
+                } else if module == "pyghidra" || module.starts_with("pyghidra.") {
+                    self.ghidra_seen = true;
+                    let nm: Vec<String> = i
+                        .names
+                        .iter()
+                        .map(|a| {
+                            let bind = a.asname.as_ref().unwrap_or(&a.name).as_str();
+                            let c = camel(a.name.as_str());
+                            if c == bind { c } else { format!("{c} as {}", ident(bind)) }
+                        })
+                        .collect();
+                    self.imports.push(format!("import {{ {} }} from \"@aphrody/ghidra\";", nm.join(", ")));
                 } else if STDLIB.contains(&root) && !module.contains('.') {
                     self.imports.push(format!(
                         "import {{ {} }} from \"@aphrody/py2bun/runtime/{}\";",
@@ -621,6 +717,12 @@ impl<'s> Emitter<'s> {
         (self.user_classes.contains(n) && self.lookup(n))
             || (EXCEPTIONS.contains(&n) && !self.lookup(n))
             || (self.java_names.contains(n) && n.chars().next().map_or(false, |c| c.is_uppercase()))
+            || (!self.star_pkgs.is_empty()
+                && !self.lookup(n)
+                && n.chars().next().map_or(false, |c| c.is_uppercase())
+                && n.chars().any(|c| c.is_lowercase())
+                && !BUILTINS.contains(&n)
+                && !is_flat(n))
     }
 
     fn assign(&mut self, a: &StmtAssign) {
@@ -720,8 +822,15 @@ impl<'s> Emitter<'s> {
         }
         let it = self.expr(&f.iter);
         let pat = self.pattern(&f.target);
-        let aw = if f.is_async { " await" } else { "" };
-        let iter = if f.is_async { it } else { format!("__py.iter({it})") };
+        let use_async = self.asyncs && self.no_await == 0;
+        let aw = if f.is_async || use_async { " await" } else { "" };
+        let iter = if f.is_async {
+            it
+        } else if use_async {
+            format!("__py.aiter({it})")
+        } else {
+            format!("__py.iter({it})")
+        };
         self.line(&format!("for{aw} ({pat} of {iter}) {{"));
         self.loops.push(flag.clone());
         self.block(&f.body);
@@ -742,7 +851,7 @@ impl<'s> Emitter<'s> {
         for item in &w.items {
             let cm = self.fresh("cm");
             let e = self.expr(&item.context_expr);
-            let aw = if w.is_async { "await " } else { "" };
+            let aw = if w.is_async || (self.asyncs && self.no_await == 0) { "await " } else { "" };
             self.line(&format!("const {cm} = {e};"));
             let enter = format!("{aw}__py.ctxEnter({cm})");
             match &item.optional_vars {
@@ -806,12 +915,34 @@ impl<'s> Emitter<'s> {
             for h in &t.handlers {
                 let ExceptHandler::ExceptHandler(h) = h;
                 let kw = if first { "if" } else { "} else if" };
+                // Python 2 `except A, e:` parses as the PEP 758 tuple `A, e`: read it as `except A as e`
+                let mut py2name: Option<String> = None;
+                let mut ty_expr: Option<&Expr> = h.type_.as_deref();
+                if let Some(Expr::Tuple(tp)) = ty_expr {
+                    if !tp.parenthesized && tp.elts.len() == 2 {
+                        if let Expr::Name(n) = &tp.elts[1] {
+                            let id = n.id.as_str();
+                            if !self.lookup(id) && !EXCEPTIONS.contains(&id) && !BUILTINS.contains(&id) && !is_flat(id) && !self.java_names.contains(id) {
+                                py2name = Some(id.to_string());
+                                ty_expr = Some(&tp.elts[0]);
+                                self.diag(h.range(), Severity::Warning, "Python 2 `except A, e` read as `except A as e`");
+                            }
+                        }
+                    }
+                }
+                let hname: Option<String> = h.name.as_ref().map(|n| n.as_str().to_string());
                 let bind = |em: &mut Self| {
-                    if let Some(n) = &h.name {
-                        em.line(&format!("{} = {ev};", ident(n.as_str())));
+                    if let Some(n) = &hname {
+                        em.line(&format!("{} = {ev};", ident(n)));
+                    } else if let Some(n) = &py2name {
+                        em.line(&format!("let {} = {ev};", ident(n)));
                     }
                 };
-                match &h.type_ {
+                if let Some(n) = &py2name {
+                    self.scopes.push(HashSet::from([n.clone()]));
+                }
+                let scoped = py2name.is_some();
+                match ty_expr {
                     Some(ty) => {
                         let tys = self.expr(ty);
                         self.line(&format!("{kw} (__py.catches({ev}, {tys})) {{"));
@@ -819,6 +950,9 @@ impl<'s> Emitter<'s> {
                         bind(self);
                         self.ind -= 1;
                         self.block(&h.body);
+                        if scoped {
+                            self.scopes.pop();
+                        }
                     }
                     None => {
                         self.line(if first { "{" } else { "} else {" });
@@ -826,6 +960,9 @@ impl<'s> Emitter<'s> {
                         bind(self);
                         self.ind -= 1;
                         self.block(&h.body);
+                        if scoped {
+                            self.scopes.pop();
+                        }
                         closed = true;
                         break;
                     }
@@ -989,7 +1126,12 @@ impl<'s> Emitter<'s> {
         self.ind = 1;
         let derived = class.map(|c| c.derived).unwrap_or(false);
         let is_ctor = as_method && f.name.as_str() == "__init__";
-        let alias = |sn: &str| format!("const {sn} = this;");
+        // JS constructors, accessors and toString cannot be async: calls inside are not awaited
+        let sync_forced = as_method && (is_ctor || deco_prop || deco_setter || matches!(f.name.as_str(), "__str__" | "__repr__"));
+        let saved_no_await = self.no_await;
+        self.no_await = if sync_forced { 1 } else { 0 };
+        let decl = if c.assigned.contains(selfname.as_deref().unwrap_or("\0")) { "let" } else { "const" };
+        let alias = |sn: &str| format!("{decl} {sn} = this;");
         let mut self_alias_done = false;
         if let Some(sn) = &selfname {
             if !(is_ctor && derived) {
@@ -1051,10 +1193,11 @@ impl<'s> Emitter<'s> {
         self.ind = saved_ind;
         self.loops = saved_loops;
         self.exc_stack = saved_exc;
+        self.no_await = saved_no_await;
         self.scopes.pop();
 
         let is_gen = c.has_yield;
-        let asy = if f.is_async { "async " } else { "" };
+        let asy = if f.is_async || (self.asyncs && !sync_forced) { "async " } else { "" };
         let star = if is_gen { "*" } else { "" };
         let name = f.name.as_str();
         let (pre, mname) = if as_method {
@@ -1227,8 +1370,18 @@ impl<'s> Emitter<'s> {
         if BUILTINS.contains(&id) || EXCEPTIONS.contains(&id) {
             return format!("__py.{id}");
         }
-        if let Some(n) = GHIDRA_FLAT.iter().find(|n| **n == id) {
+        if let Some(n) = GHIDRA_FLAT.iter().find(|n| **n == id && is_flat(id)) {
             self.flat_used.insert(n);
+            return ident(id);
+        }
+        if JAVA_ROOTS.contains(&id) {
+            // Jython-style implicit package root (`java.util.ArrayList()` without an import)
+            self.imports.push(format!("import {{ {id} }} from \"@aphrody/ghidra/java\";"));
+            self.java_names.insert(id.to_string());
+            return ident(id);
+        }
+        if !self.star_pkgs.is_empty() {
+            self.star_names.insert(id.to_string());
             return ident(id);
         }
         self.diag(r, Severity::Warning, format!("unresolved name `{id}` (not a builtin, local, import or Ghidra script global)"));
@@ -1281,6 +1434,10 @@ impl<'s> Emitter<'s> {
             }
             Expr::BoolOp(b) => {
                 let f = if b.op == BoolOp::And { "and" } else { "or" };
+                if self.asyncs && self.no_await == 0 {
+                    let parts: Vec<String> = b.values.iter().map(|v| format!("async () => {}", self.expr(v))).collect();
+                    return format!("(await __py.a_{f}({}))", parts.join(", "));
+                }
                 let parts: Vec<String> = b.values.iter().map(|v| format!("() => {}", self.expr(v))).collect();
                 format!("__py.{f}({})", parts.join(", "))
             }
@@ -1294,6 +1451,9 @@ impl<'s> Emitter<'s> {
                 let num = |e: &Expr| matches!(e, Expr::NumberLiteral(_));
                 if matches!(b.op, Operator::Add) && num(&b.left) && num(&b.right) {
                     return format!("({l} + {r})");
+                }
+                if matches!(b.op, Operator::Mod) && self.asyncs && self.no_await == 0 && matches!(&*b.left, Expr::StringLiteral(_)) {
+                    return format!("(await __py.a_mod({l}, {r}))");
                 }
                 self.binop_str(b.op, &l, &r, false)
             }
@@ -1333,7 +1493,9 @@ impl<'s> Emitter<'s> {
                 } else {
                     self.scopes.push(names);
                 }
+                self.no_await += 1; // lambdas stay synchronous
                 let b = self.expr(&l.body);
+                self.no_await -= 1;
                 self.scopes.pop();
                 format!("(({}) => {})", ps.join(", "), if b.starts_with('{') { format!("({b})") } else { b })
             }
@@ -1361,7 +1523,13 @@ impl<'s> Emitter<'s> {
             Expr::Call(c) => self.call(c),
             Expr::Attribute(a) => {
                 let o = self.expr(&a.value);
-                format!("{}.{}", o, a.attr.as_str())
+                let n = a.attr.as_str();
+                let from_pyghidra = matches!(&*a.value, Expr::Name(x) if self.pyghidra_names.contains(x.id.as_str()));
+                if from_pyghidra {
+                    format!("{}.{}", o, camel(n))
+                } else {
+                    format!("{}.{}", o, n)
+                }
             }
             Expr::Subscript(s) => {
                 let (o, k) = (self.expr(&s.value), self.subscript_key(&s.slice));
@@ -1426,9 +1594,11 @@ impl<'s> Emitter<'s> {
         let tmps: Vec<String> = (0..n).map(|i| format!("__c{i}")).collect();
         let vals: Vec<String> = c.operands.iter().map(|e| self.expr(e)).collect();
         let mut parts = vec![];
+        self.no_await += 1; // the comparison runs inside a plain arrow function
         for (i, op) in c.ops.iter().enumerate() {
             parts.push(self.cmp_strs(*op, &tmps[i], &tmps[i + 1], None, None));
         }
+        self.no_await -= 1;
         format!("(({}) => {})({})", tmps.join(", "), parts.join(" && "), vals.join(", "))
     }
 
@@ -1447,6 +1617,8 @@ impl<'s> Emitter<'s> {
             CmpOp::IsNot => format!("({l} !== {r})"),
             CmpOp::Eq if konst(le) || konst(re) => format!("({l} === {r})"),
             CmpOp::NotEq if konst(le) || konst(re) => format!("({l} !== {r})"),
+            CmpOp::Eq if self.asyncs && self.no_await == 0 => format!("(await __py.a_eq({l}, {r}))"),
+            CmpOp::NotEq if self.asyncs && self.no_await == 0 => format!("!(await __py.a_eq({l}, {r}))"),
             CmpOp::Eq => format!("__py.eq({l}, {r})"),
             CmpOp::NotEq => format!("!__py.eq({l}, {r})"),
             CmpOp::Lt => format!("({l} < {r})"),
@@ -1469,7 +1641,7 @@ impl<'s> Emitter<'s> {
         }
         self.scopes.push(names);
         let acc = "__r";
-        let aw = gens.iter().any(|g| g.is_async);
+        let aw = gens.iter().any(|g| g.is_async) || (self.asyncs && self.no_await == 0);
         let mut s = format!("({}() => {{ const {acc} = ", if aw { "async " } else { "" });
         s.push_str(match out {
             CompOut::List(_) => "[];",
@@ -1482,6 +1654,8 @@ impl<'s> Emitter<'s> {
             let pat = self.decl_pattern(&g.target);
             if g.is_async {
                 s.push_str(&format!(" for await (const {pat} of {it}) {{"));
+            } else if aw {
+                s.push_str(&format!(" for await (const {pat} of __py.aiter({it})) {{"));
             } else {
                 s.push_str(&format!(" for (const {pat} of __py.iter({it})) {{"));
             }
@@ -1563,6 +1737,7 @@ impl<'s> Emitter<'s> {
                             let sp = self.interp_elements(spec.elements.iter());
                             format!("__py.format({v}, `{sp}`)")
                         }
+                        None if self.asyncs && self.no_await == 0 => format!("await __py.a_str({v})"),
                         None => format!("__py.str({v})"),
                     };
                     body.push_str(&format!("${{{s}}}"));
@@ -1572,32 +1747,59 @@ impl<'s> Emitter<'s> {
         body
     }
 
-    fn is_new_callee(&self, f: &Expr) -> bool {
+    /// 0 = plain call, 1 = JS class (`new X()`), 2 = Java class (`X.new_()` through the proxy).
+    fn new_kind(&self, f: &Expr) -> u8 {
         match f {
-            Expr::Name(n) => self.is_class_name(n.id.as_str()),
+            Expr::Name(n) => {
+                let id = n.id.as_str();
+                if (self.user_classes.contains(id) && self.lookup(id)) || (EXCEPTIONS.contains(&id) && !self.lookup(id)) {
+                    1
+                } else if self.is_class_name(id) {
+                    2
+                } else {
+                    0
+                }
+            }
             Expr::Attribute(a) => {
                 let last = a.attr.as_str();
                 let upper = last.chars().next().map_or(false, |c| c.is_uppercase())
                     && last.chars().any(|c| c.is_lowercase());
                 if !upper {
-                    return false;
+                    return 0;
                 }
                 let mut cur: &Expr = &a.value;
                 loop {
                     match cur {
                         Expr::Attribute(x) => cur = &x.value,
                         Expr::Name(n) => {
-                            return self.java_names.contains(n.id.as_str()) || self.user_classes.contains(n.id.as_str()) && false
+                            let r = n.id.as_str();
+                            return if self.java_names.contains(r) || (JAVA_ROOTS.contains(&r) && !self.lookup(r)) { 2 } else { 0 };
                         }
-                        _ => return false,
+                        _ => return 0,
                     }
                 }
             }
-            _ => false,
+            _ => 0,
         }
     }
 
+    fn is_new_callee(&self, f: &Expr) -> bool {
+        self.new_kind(f) != 0
+    }
+
     fn call(&mut self, c: &ExprCall) -> String {
+        let (s, awaitable) = self.call_inner(c);
+        if !(awaitable && self.asyncs) {
+            return s;
+        }
+        if self.no_await > 0 {
+            self.diag(c.range(), Severity::Warning, "call not awaited: JS constructors, accessors, toString and lambdas cannot await");
+            return s;
+        }
+        format!("(await {s})")
+    }
+
+    fn call_inner(&mut self, c: &ExprCall) -> (String, bool) {
         let args = &c.arguments.args;
         let kws = &c.arguments.keywords;
         // super().method(...)
@@ -1607,10 +1809,10 @@ impl<'s> Emitter<'s> {
                     let m = a.attr.as_str();
                     if m == "__init__" {
                         self.diag(c.range(), Severity::Error, "unsupported: super().__init__ outside the first statements of a derived constructor");
-                        return "__py.unsupported(\"super().__init__ placement\")".into();
+                        return ("__py.unsupported(\"super().__init__ placement\")".into(), false);
                     }
                     let al = self.args_list(args, kws);
-                    return format!("super.{m}({al})");
+                    return (format!("super.{m}({al})"), true);
                 }
             }
         }
@@ -1621,14 +1823,14 @@ impl<'s> Emitter<'s> {
                 // 1-arg dict.get / no-arg forms behave natively; the runtime dispatches by receiver type
                 let recv = self.expr(&a.value);
                 let al = self.args_list(args, kws);
-                return if al.is_empty() {
-                    format!("__py.m.{m}({recv})")
-                } else {
-                    format!("__py.m.{m}({recv}, {al})")
-                };
+                return (
+                    if al.is_empty() { format!("__py.m.{m}({recv})") } else { format!("__py.m.{m}({recv}, {al})") },
+                    true,
+                );
             }
         }
-        let newk = if self.is_new_callee(&c.func) { "new " } else { "" };
+        let nk = self.new_kind(&c.func);
+        let newk = if nk == 1 { "new " } else { "" };
         // user function with keywords: map to positional
         if let Expr::Name(n) = &*c.func {
             let nm = n.id.as_str();
@@ -1649,7 +1851,7 @@ impl<'s> Emitter<'s> {
                             slots.pop();
                         }
                         let v: Vec<String> = slots.into_iter().map(|s| s.unwrap_or_else(|| "undefined".into())).collect();
-                        return format!("{}({})", ident(nm), v.join(", "));
+                        return (format!("{}({})", ident(nm), v.join(", ")), true);
                     }
                 }
             }
@@ -1661,13 +1863,35 @@ impl<'s> Emitter<'s> {
         if !kws.is_empty() {
             let user_kw = matches!(&*c.func, Expr::Name(n) if self.lookup(n.id.as_str()) && self.user_funcs.get(n.id.as_str()).map_or(false, |s| s.has_kw));
             let builtin = matches!(&*c.func, Expr::Name(n) if !self.lookup(n.id.as_str()) && (BUILTINS.contains(&n.id.as_str()) || EXCEPTIONS.contains(&n.id.as_str())));
-            let ghidra = matches!(&*c.func, Expr::Name(n) if !self.lookup(n.id.as_str()) && GHIDRA_FLAT.contains(&n.id.as_str()));
+            let ghidra = matches!(&*c.func, Expr::Name(n) if !self.lookup(n.id.as_str()) && is_flat(n.id.as_str()));
             if !(user_kw || builtin || ghidra) {
                 self.diag(c.range(), Severity::Warning, "keyword arguments to an unresolved callee are passed as a trailing __py.kw({...}) object");
             }
         }
         let al = self.args_list(args, kws);
-        format!("{newk}{f}({al})")
+        if nk == 2 {
+            return (format!("{f}.new_({al})"), true);
+        }
+        if nk == 1 {
+            return (format!("new {f}({al})"), false);
+        }
+        // builtins: sync, except those that read Java iterables/objects (async-aware variants)
+        if let Expr::Name(n) = &*c.func {
+            let id = n.id.as_str();
+            if self.asyncs && self.no_await == 0 && !self.lookup(id) {
+                if ASYNC_BUILTINS.contains(&id) {
+                    return (format!("__py.a_{id}({al})"), true);
+                }
+                if ASYNC_GEN_BUILTINS.contains(&id) {
+                    return (format!("__py.a_{id}({al})"), false);
+                }
+            }
+            if !self.lookup(id) && (BUILTINS.contains(&id) || EXCEPTIONS.contains(&id)) {
+                return (format!("{f}({al})"), false);
+            }
+        }
+        let _ = newk;
+        (format!("{f}({al})"), true)
     }
 }
 
@@ -1695,6 +1919,22 @@ fn sig_of(p: &Parameters) -> FuncSig {
         has_kw: p.kwarg.is_some() || !p.kwonlyargs.is_empty(),
         has_vararg: p.vararg.is_some(),
     }
+}
+
+fn camel(s: &str) -> String {
+    let mut o = String::new();
+    let mut up = false;
+    for (i, c) in s.chars().enumerate() {
+        if c == '_' && i > 0 {
+            up = true;
+        } else if up {
+            o.extend(c.to_uppercase());
+            up = false;
+        } else {
+            o.push(c);
+        }
+    }
+    o
 }
 
 fn ident_import(n: &str) -> String {
