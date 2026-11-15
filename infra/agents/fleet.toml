@@ -59,13 +59,13 @@ budget_usd = 2
 
 # Hosts. `src` = git checkout (main) the runner works in; `ssh` = targets tried in order
 # (<host>-mesh = sshd through the cluster mTLS mesh, TCP 7444, fleet IPs only (infra/cluster, docs/infra/CLUSTER.md);
-# then PC aliases, WireGuard 10.200.77.0/24, public IP). `ship` = where every host sends log.jsonl.
+# then PC aliases, WireGuard @@network.mesh_cidrs.0@@, public IP). `ship` = where every host sends log.jsonl.
 [hosts.prd]
 # Production backends only: light prod roles (deploy, health, text-only growth drafts).
 roles = ["deployer", "sre", "growth"]
 # Every host: user `agent` (systemd --user + linger, sudo NOPASSWD, docker), never uid 0.
 src = "/home/agent/agents/src"
-ssh = ["agent@prd-mesh", "agent@prd", "agent@10.200.77.5", "agent@72.60.186.43"]
+ssh = ["agent@prd-mesh", "agent@prd", "agent@@@hosts.prd.mesh_ip@@", "agent@@@hosts.prd.public_ip@@"]
 
 [hosts.fr1]
 # Factory (12 cores / 45 GB): every heavy role, plus review/design/sre.
@@ -84,15 +84,15 @@ src = "/home/agent/agents/src"
 ssh = [
   "agent@fr1-mesh",
   "agent@fr1",
-  "agent@10.200.77.1",
-  "agent@51.77.147.152",
+  "agent@@@hosts.fr1.mesh_ip@@",
+  "agent@@@hosts.fr1.public_ip@@",
 ]
 
 [hosts.fr2]
 # Edge/proxy/CDN host, 11 GB RAM: minimal, sre only.
 roles = ["sre"]
 src = "/home/agent/agents/src"
-ssh = ["agent@fr2-mesh", "agent@fr2", "agent@10.200.77.3", "agent@51.255.162.6"]
+ssh = ["agent@fr2-mesh", "agent@fr2", "agent@@@hosts.fr2.mesh_ip@@", "agent@@@hosts.fr2.public_ip@@"]
 
 [hosts.pc]
 # No heavy builds on the PC.

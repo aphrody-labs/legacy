@@ -40,7 +40,7 @@ lab-lore-sync:
 lab-deploy-loreserver:
     cargo build --release -p lore-server --target x86_64-unknown-linux-gnu
     scp target/x86_64-unknown-linux-gnu/release/loreserver prd:/opt/lore/bin/loreserver.new
-    ssh prd 'mv /opt/lore/bin/loreserver.new /opt/lore/bin/loreserver && systemctl restart loreserver && sleep 3 && curl -fsS -o /dev/null -w "health %{http_code}\n" http://10.200.77.5:41339/health_check'
+    ssh prd 'mv /opt/lore/bin/loreserver.new /opt/lore/bin/loreserver && systemctl restart loreserver && sleep 3 && curl -fsS -o /dev/null -w "health %{http_code}\n" http://@@hosts.prd.mesh_ip@@:41339/health_check'
 
 # Deploy Chromium factory scripts, args and units to fr1.
 [group('labs')]

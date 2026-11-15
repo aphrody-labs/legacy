@@ -1,6 +1,6 @@
 # Sovereign Mail Infrastructure for aphrody.com (contact@aphrody.com)
 # Pure-Rust Stalwart Mail Server (JMAP, IMAP4rev2, SMTP, ManageSieve, SPF/DKIM/DMARC/ARC/MTA-STS/TLS-RPT/ACME)
-# Deployed on OVH FR VPS (fr1: 51.77.147.152 primary, fr2: 51.255.162.6 warm replica)
+# Deployed on OVH FR VPS (fr1: @@hosts.fr1.public_ip@@ primary, fr2: @@hosts.fr2.public_ip@@ warm replica)
 
 name: aphrody-sovereign-mail
 

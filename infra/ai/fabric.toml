@@ -18,7 +18,7 @@ model = "gemma4-e2b"
 ctx = 8192
 cache = "~/.local/share/ay/ai"
 # WireGuard addresses of the coordinator: only sources admitted on the nodes' RPC port (nft).
-mesh = ["10.200.77.2", "10.200.78.2"]
+mesh = ["@@hosts.pc.mesh_ip@@", "@@hosts.pc.extra_mesh_ip@@"]
 
 # Opportunistic admission (`ai-os fabric ensure`, scheduled task `ai-os fabric timer`): as soon as a listed node passes its
 # condition, short distributed trial (one remote layer, `tokens` tokens) then return to the previous state; result in
@@ -67,8 +67,8 @@ share = 7
 id = "fr1"
 ssh = "vps"
 os = "linux"
-bind = "10.200.77.1"
-reach = "10.200.77.1"
+bind = "@@hosts.fr1.mesh_ip@@"
+reach = "@@hosts.fr1.mesh_ip@@"
 port = 50052
 threads = 8
 share = 1
@@ -82,9 +82,9 @@ watch_s = 15
 id = "prd"
 ssh = "prd"
 os = "linux"
-# Direct PC <-> prd link (`prod` interface, 10.200.78.0/30): only the PC can reach this port.
-bind = "10.200.78.1"
-reach = "10.200.78.1"
+# Direct PC <-> prd link (`prod` interface, @@network.mesh_cidrs.0@@): only the PC can reach this port.
+bind = "@@hosts.prd.link_ip@@"
+reach = "@@hosts.prd.link_ip@@"
 port = 50052
 threads = 2
 share = 1
@@ -100,8 +100,8 @@ watch_s = 10
 id = "fr2"
 ssh = "cdn"
 os = "linux"
-bind = "10.200.77.3"
-reach = "10.200.77.3"
+bind = "@@hosts.fr2.mesh_ip@@"
+reach = "@@hosts.fr2.mesh_ip@@"
 port = 50052
 threads = 2
 cpu_quota = "100%"

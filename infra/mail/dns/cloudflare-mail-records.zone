@@ -4,10 +4,10 @@ $ORIGIN aphrody.com.
 $TTL 3600
 
 ; Sovereign Stalwart Mail primary node (OVH fr1)
-mail.aphrody.com.                      300    IN A     51.77.147.152
+mail.aphrody.com.                      300    IN A     @@hosts.fr1.public_ip@@
 
 ; Sovereign Stalwart Mail warm standby node (OVH fr2)
-mx2.aphrody.com.                       300    IN A     51.255.162.6
+mx2.aphrody.com.                       300    IN A     @@hosts.fr2.public_ip@@
 
 ; HTTPS host serving /.well-known/mta-sts.txt
 mta-sts.aphrody.com.                   3600   IN CNAME aphrody.com.
@@ -19,7 +19,7 @@ aphrody.com.                           3600   IN MX    10 mail.aphrody.com.
 aphrody.com.                           3600   IN MX    20 smtp.google.com.
 
 ; Unified SPF authorizing OVH Stalwart (fr1/fr2) + Google Workspace
-aphrody.com.                           3600   IN TXT   "v=spf1 mx a:mail.aphrody.com ip4:51.77.147.152 ip4:51.255.162.6 include:_spf.google.com ~all"
+aphrody.com.                           3600   IN TXT   "v=spf1 mx a:mail.aphrody.com ip4:@@hosts.fr1.public_ip@@ ip4:@@hosts.fr2.public_ip@@ include:_spf.google.com ~all"
 
 ; Primary DKIM Ed25519 public key (Stalwart s1-ed25519)
 s1-ed25519._domainkey.aphrody.com.     3600   IN TXT   "v=DKIM1; k=ed25519; p=REPLACE_WITH_STALWART_ED25519_PUBKEY_BASE64"

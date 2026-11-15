@@ -5,14 +5,14 @@
 
 [host.fr1]
 ssh = "vps"
-mesh = "10.200.77.1"
+mesh = "@@hosts.fr1.mesh_ip@@"
 user = "ubuntu"
 role = "factory"
 classes = "agent test lint research bench build"
 
 [host.fr2]
 ssh = "cdn"
-mesh = "10.200.77.3"
+mesh = "@@hosts.fr2.mesh_ip@@"
 user = "ubuntu"
 role = "test-research-edge"
 classes = "agent test lint research bench"
@@ -20,7 +20,7 @@ classes = "agent test lint research bench"
 # prd runs production only: it is observed (status) and never receives a fleet-run job.
 [host.prd]
 ssh = "prd"
-mesh = "10.200.77.5"
+mesh = "@@hosts.prd.mesh_ip@@"
 user = "root"
 role = "production"
 classes = ""
@@ -35,16 +35,16 @@ cargo_build_dir = "/srv/xbuild/target/$CLASS/{workspace-path-hash}"
 # Service registry: name -> mesh endpoint. Every consumer resolves it with `fleet-registry endpoint <name>`.
 [service.valkey]
 host = "fr2"
-endpoint = "10.200.77.3:6379"
+endpoint = "@@hosts.fr2.mesh_ip@@:6379"
 auth = "env:VALKEY_PASSWORD"
 
 [service.nativelink-scheduler]
 host = "fr1"
-endpoint = "10.200.77.1:50051"
+endpoint = "@@hosts.fr1.mesh_ip@@:50051"
 
 [service.nativelink-cas]
 host = "fr1"
-endpoint = "10.200.77.1:50061"
+endpoint = "@@hosts.fr1.mesh_ip@@:50061"
 
 [service.cloudflared-tunnel]
 host = "all"

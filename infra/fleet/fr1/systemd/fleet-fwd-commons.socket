@@ -1,7 +1,7 @@
 [Unit]
-Description=Compat forward 10.200.77.1:8766 -> prd 10.200.77.5:8766 (commons moved to prd 2026-11-12)
+Description=Compat forward @@hosts.fr1.mesh_ip@@:8766 -> prd @@hosts.prd.mesh_ip@@:8766 (commons moved to prd 2026-11-12)
 [Socket]
-ListenStream=10.200.77.1:8766
+ListenStream=@@hosts.fr1.mesh_ip@@:8766
 FreeBind=true
 [Install]
 WantedBy=sockets.target

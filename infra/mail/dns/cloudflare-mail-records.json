@@ -2,7 +2,7 @@
   {
     "type": "A",
     "name": "mail.aphrody.com",
-    "content": "51.77.147.152",
+    "content": "@@hosts.fr1.public_ip@@",
     "ttl": 300,
     "proxied": false,
     "comment": "Sovereign Stalwart Mail primary node (OVH fr1)"
@@ -10,7 +10,7 @@
   {
     "type": "A",
     "name": "mx2.aphrody.com",
-    "content": "51.255.162.6",
+    "content": "@@hosts.fr2.public_ip@@",
     "ttl": 300,
     "proxied": false,
     "comment": "Sovereign Stalwart Mail warm standby node (OVH fr2)"
@@ -44,7 +44,7 @@
   {
     "type": "TXT",
     "name": "aphrody.com",
-    "content": "v=spf1 mx a:mail.aphrody.com ip4:51.77.147.152 ip4:51.255.162.6 include:_spf.google.com ~all",
+    "content": "v=spf1 mx a:mail.aphrody.com ip4:@@hosts.fr1.public_ip@@ ip4:@@hosts.fr2.public_ip@@ include:_spf.google.com ~all",
     "ttl": 3600,
     "proxied": false,
     "comment": "Unified SPF authorizing OVH Stalwart (fr1/fr2) + Google Workspace"

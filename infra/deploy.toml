@@ -379,11 +379,6 @@ targets = { fr2 = "127.0.0.1:8790" }
 mode = "tcp"
 lb_port = 19080
 targets = { fr2 = "127.0.0.1:80" }
-# desktop.aphrody.app (tunnel prod merged into mig-prd): prd origin, nothing listens on :8793 today (the old tunnel answered 502 too).
-[cluster.services.desktop]
-mode = "tcp"
-lb_port = 19793
-targets = { prd = "127.0.0.1:8793" }
 [cluster.services.depot]
 lb_port = 19182
 targets = { prd = "@@hosts.prd.mesh_ip@@:8182" }

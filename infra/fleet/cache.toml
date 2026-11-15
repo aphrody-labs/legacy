@@ -57,7 +57,7 @@ caches = [
 [sync]
 from = "fr1"
 to = "fr2"
-mesh = "ubuntu@10.200.77.3" # fr2 on wg1, reached from fr1
+mesh = "ubuntu@@@hosts.fr2.mesh_ip@@" # fr2 on wg1, reached from fr1
 dest = "/var/cache/aphrody/replica/fr1"
 r2 = "r2:aphrody-archive/cache/fr1"
 zstd_level = 19

@@ -1,4 +1,4 @@
-// NativeLink 1.8.5 scheduler + CAS + AC on fr1 (mesh 10.200.77.x only). Chromium siso: -reapi_instance=main.
+// NativeLink 1.8.5 scheduler + CAS + AC on fr1 (mesh <mesh-ip> only). Chromium siso: -reapi_instance=main.
 {
   stores: [
     {
@@ -43,7 +43,7 @@
     {
       listener: {
         http: {
-          socket_address: "10.200.77.1:50051",
+          socket_address: "@@hosts.fr1.mesh_ip@@:50051",
           advanced_http: { http2_keep_alive_interval: 10 },
         },
       },
@@ -61,7 +61,7 @@
       },
     },
     {
-      listener: { http: { socket_address: "10.200.77.1:50061" } },
+      listener: { http: { socket_address: "@@hosts.fr1.mesh_ip@@:50061" } },
       services: { worker_api: { scheduler: "MAIN" }, health: {} },
     },
   ],

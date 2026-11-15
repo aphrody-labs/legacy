@@ -5,13 +5,13 @@ Wants=network-online.target
 # commons relay token outside argv: systemd-creds credential (/etc/credstore.encrypted/commons-relay-token),
 # read from $CREDENTIALS_DIRECTORY then passed to commons.relay.serve() in Python, never on the command line.
 # Rotation : head -c 48 /dev/urandom | base64 | tr -d '\n+/=' | systemd-creds encrypt --name=commons-relay-token - /etc/credstore.encrypted/commons-relay-token
-# Clients: ~/.commons/secrets/vps-relay-token (PC, fr2), remote `fleet` on http://10.200.77.5:8766.
+# Clients: ~/.commons/secrets/vps-relay-token (PC, fr2), remote `fleet` on http://@@hosts.prd.mesh_ip@@:8766.
 [Service]
 User=ubuntu
 Group=ubuntu
 Environment=HOME=/srv/commons-relay/home
 LoadCredentialEncrypted=commons-relay-token
-ExecStart=/srv/commons-relay/tools/agent-commons/bin/python -c "import os; from commons.relay import serve; serve(host='10.200.77.5', port=8766, db='/srv/commons-relay/state/relay.db', token=open(os.path.join(os.environ['CREDENTIALS_DIRECTORY'], 'commons-relay-token')).read().strip())"
+ExecStart=/srv/commons-relay/tools/agent-commons/bin/python -c "import os; from commons.relay import serve; serve(host='@@hosts.prd.mesh_ip@@', port=8766, db='/srv/commons-relay/state/relay.db', token=open(os.path.join(os.environ['CREDENTIALS_DIRECTORY'], 'commons-relay-token')).read().strip())"
 Restart=always
 RestartSec=5
 Slice=fleet-apps.slice

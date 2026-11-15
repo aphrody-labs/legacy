@@ -13,8 +13,8 @@ table inet fleet {
     ct state established,related accept
     ct state invalid drop
     meta l4proto { icmp, ipv6-icmp } accept
-    ip saddr { 51.77.147.152, 51.255.162.6, 72.60.186.43 } accept
-    ip6 saddr { 2001:41d0:404:200::4d8e, 2001:41d0:305:2100::a461, 2a02:4780:28:8e1e::1 } accept
+    ip saddr { @@hosts.fr1.public_ip@@, @@hosts.fr2.public_ip@@, @@hosts.prd.public_ip@@ } accept
+    ip6 saddr { @@hosts.fr1.public_ipv6@@, @@hosts.fr2.public_ipv6@@, @@hosts.prd.public_ipv6@@ } accept
     tcp dport { 22, 80, 443 } accept
     udp dport { 443, 45667 } accept
     counter drop

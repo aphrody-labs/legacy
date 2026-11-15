@@ -3,7 +3,7 @@ Description=NativeLink scheduler/CAS over ssh (TCP) to fr1 - avoids UDP mesh fil
 After=network-online.target
 Wants=network-online.target
 [Service]
-ExecStart=/usr/bin/ssh -N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o Compression=no -L 127.0.0.1:50051:10.200.77.1:50051 -L 127.0.0.1:50061:10.200.77.1:50061 ubuntu@51.77.147.152
+ExecStart=/usr/bin/ssh -N -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o Compression=no -L 127.0.0.1:50051:@@hosts.fr1.mesh_ip@@:50051 -L 127.0.0.1:50061:@@hosts.fr1.mesh_ip@@:50061 ubuntu@@@hosts.fr1.public_ip@@
 Restart=always
 RestartSec=5
 [Install]

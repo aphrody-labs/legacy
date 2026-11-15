@@ -6,7 +6,7 @@ Wants=network-online.target
 Type=simple
 Environment=APHRODY_SETUP_NO_UPDATE=1
 Environment=HOME=/srv/aphrody-gpu-depot/home
-ExecStart=/usr/local/bin/bun /srv/aphrody-gpu-depot/lib/gpu-fleet/product.mjs admin flotte depot /srv/aphrody-gpu-depot/models/gpu-fleet/d36bdd3855c82a6a1a23f7c459b749f5724ae75d /srv/aphrody-gpu-depot/private/gpu-fleet/depot.token 10.200.77.5
+ExecStart=/usr/local/bin/bun /srv/aphrody-gpu-depot/lib/gpu-fleet/product.mjs admin flotte depot /srv/aphrody-gpu-depot/models/gpu-fleet/d36bdd3855c82a6a1a23f7c459b749f5724ae75d /srv/aphrody-gpu-depot/private/gpu-fleet/depot.token @@hosts.prd.mesh_ip@@
 Restart=always
 RestartSec=10
 Slice=fleet-apps.slice
