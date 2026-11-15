@@ -1,0 +1,51 @@
+# Single source of the "three hosts, one logical server" layer (docs/infra/SINGLE-SERVER.md).
+# Read by infra/fleet/bin/fleet-registry.sh (installed on every host as /etc/fleet/cluster.toml by fleet-offload.sh),
+# which feeds fleet-run (peers, allowed classes) and prints the service registry. Flat TOML only: [section], key = "value".
+# No secrets here (Valkey needs AUTH, the password stays in /etc/aphrody/secrets.env).
+
+[host.fr1]
+ssh = "vps"
+mesh = "10.200.77.1"
+user = "ubuntu"
+role = "factory"
+classes = "agent test lint research bench build"
+
+[host.fr2]
+ssh = "cdn"
+mesh = "10.200.77.3"
+user = "ubuntu"
+role = "test-research-edge"
+classes = "agent test lint research bench"
+
+# prd runs production only: it is observed (status) and never receives a fleet-run job.
+[host.prd]
+ssh = "prd"
+mesh = "10.200.77.5"
+user = "ubuntu"
+role = "production"
+classes = ""
+
+# Same mount point and subdirectories on every host (volume per host: fleet-xfs.sh, <host>/offload/etc/fleet/xfs.conf).
+[storage]
+build_mount = "/srv/xbuild"
+subdirs = "target cache ci cas clones"
+cargo_target_dir = "/srv/xbuild/target/$CLASS"
+cargo_build_dir = "/srv/xbuild/target/$CLASS/{workspace-path-hash}"
+
+# Service registry: name -> mesh endpoint. Every consumer resolves it with `fleet-registry endpoint <name>`.
+[service.valkey]
+host = "fr2"
+endpoint = "10.200.77.3:6379"
+auth = "env:VALKEY_PASSWORD"
+
+[service.nativelink-scheduler]
+host = "fr1"
+endpoint = "10.200.77.1:50051"
+
+[service.nativelink-cas]
+host = "fr1"
+endpoint = "10.200.77.1:50061"
+
+[service.cloudflared-tunnel]
+host = "all"
+endpoint = "mig-prd"

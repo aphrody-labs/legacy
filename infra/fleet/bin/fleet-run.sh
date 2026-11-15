@@ -24,6 +24,11 @@ case $class in
   build) slice=build.slice;; bench) slice=bench.slice;; agent|test|lint|research) slice=agents.slice;;
   *) echo "fleet-run: class must be agent|test|lint|research|bench|build" >&2; exit 64;;
 esac
+# One registry for the three hosts (infra/fleet/cluster.toml): peers = every other host allowed to run this class
+# (prd has no class, so it never receives a job); run.conf PEERS stays the fallback when no registry is installed.
+if [ -f /etc/fleet/cluster.toml ] && command -v fleet-registry >/dev/null 2>&1; then
+  reg=$(fleet-registry peers "$class" 2>/dev/null | tr '\n' ' ') && [ "${reg// /}" != "" ] && PEERS=$reg
+fi
 
 psi() { # psi <spec> -> "score cpu10 cpu60 io10 mem10 freeGB"; spec = local | ssh target
   local cmd='for f in cpu io memory; do awk "/^some/{print \$2,\$3}" /proc/pressure/$f; done; df --output=avail -BG / | tail -n 1'
@@ -47,6 +52,11 @@ run_local() {
   if [ -z "${CARGO_HOME:-}" ] && [ -d /srv ]; then
     ch=/srv/cargo-home-fleet-$class-$(id -un); [ -d "$ch" ] || "${pre[@]}" install -d -m 0755 -o "$(id -u)" -g "$(id -g)" "$ch" 2>/dev/null || ch=
     [ -n "$ch" ] && envs+=("--setenv=CARGO_HOME=$ch")
+  fi
+  # pinned target dir on the XFS build volume (same path on every host; stable path = sccache key reuse, reflink clones)
+  if [ -z "${CARGO_TARGET_DIR:-}" ] && findmnt -rn -t xfs /srv/xbuild >/dev/null 2>&1; then
+    td=/srv/xbuild/target/$class-$(id -un); [ -d "$td" ] || mkdir -p "$td" 2>/dev/null || td=   # target/ is 1777
+    [ -n "$td" ] && envs+=("--setenv=CARGO_TARGET_DIR=$td")
   fi
   exec "${pre[@]}" systemd-run --scope --quiet --collect --slice="$slice" --uid="$(id -u)" --gid="$(id -g)" "${envs[@]}" -- \
     env -C "$dir" "$@"

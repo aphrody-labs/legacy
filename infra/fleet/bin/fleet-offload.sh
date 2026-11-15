@@ -17,10 +17,11 @@ inst() { # inst <from> <to> <mode>
   fi
   return 1
 }
-for b in fleet-cgsample fleet-cgreport fleet-atopreport fleet-run fleet-offload-bench; do
+for b in fleet-cgsample fleet-cgreport fleet-atopreport fleet-run fleet-offload-bench fleet-xfs fleet-registry; do
   inst "$src/bin/$b.sh" "/usr/local/bin/$b.sh" 0755 || true
   inst "$src/bin/$b.sh" "/usr/local/bin/$b" 0755 || true
 done
+inst "$src/cluster.toml" /etc/fleet/cluster.toml 0644 || true
 for u in fleet-cgsample.service fleet-cgsample.timer; do inst "$src/systemd/$u" "/etc/systemd/system/$u" 0644 && sysd=1; done
 if [ -d "$off/systemd" ]; then
   while IFS= read -r f; do inst "$f" "/etc/systemd/system/${f#"$off/systemd/"}" 0644 && sysd=1; done < <(find "$off/systemd" -type f)
