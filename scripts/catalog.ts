@@ -412,7 +412,7 @@ async function profile(id: string): Promise<string> {
   const p = cfg.profiles.find((x) => x.id === id);
   if (!p) throw new Error(`profile ${id}: not in scripts/catalog.config.json`);
   const r = cfg.ranking;
-  const repos = (await Promise.all(p.sources.map((o) => listRepos(o)))).flat().filter((x) => !x.archived && !x.private && (r.includeForks || !x.fork));
+  const repos = (await Promise.all(p.sources.map((o) => listRepos(o)))).flat().filter((x) => !x.archived && !x.private && (r.includeForks || !x.fork) && !cfg.profiles.some((q) => q.repo.toLowerCase() === x.full_name.toLowerCase()));
   const now = Date.now();
   const scored = await Promise.all(
     repos.map(async (x) => {
