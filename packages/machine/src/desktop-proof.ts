@@ -85,7 +85,7 @@ for (const url of urls) {
     (l) =>
       count.get(l.name!) === 1 &&
       !AVOID.test(l.name!) &&
-      !/^(home|accueil|\w+( logo)?)$/i.test(l.name!) && // logo ou nom de marque : retour à l'accueil
+      !/^(home|accueil|\w+( logo)?)$/i.test(l.name!) && // logo or brand name: back to the home page ("accueil" = French home label)
       !/\/home$/.test(l.value ?? "") &&
       (l.value ?? "").includes(host) &&
       !(l.value ?? "").includes("#") &&

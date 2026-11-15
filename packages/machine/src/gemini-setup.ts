@@ -45,7 +45,7 @@ if (check) {
     `$s = Get-AuthenticodeSignature -LiteralPath '${exe.replaceAll("'", "''")}'; "$($s.Status)|$($s.SignerCertificate.Subject)"`,
   );
   if (!/^Valid\|CN=Google LLC, O=Google LLC,/.test(sig))
-    throw new Error(`signature refusée : ${sig || "aucune"}`);
+    throw new Error(`signature refused: ${sig || "none"}`);
   const r = Bun.spawnSync([exe, "--silent"], {
     stdout: "ignore",
     stderr: "ignore",
@@ -53,6 +53,6 @@ if (check) {
   });
   const after = installed();
   if (r.exitCode !== 0 || !after)
-    throw new Error(`installation en échec (code ${r.exitCode})`);
-  console.log(`set  Gemini ${after} installé`);
+    throw new Error(`installation failed (code ${r.exitCode})`);
+  console.log(`set  Gemini ${after} installed`);
 }
