@@ -1,0 +1,8 @@
+[Unit]
+Description=Fleet cgroup + PSI sample (per-cgroup CPU/IO/mem history)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/fleet-cgsample.sh
+Nice=10
+IOSchedulingClass=idle

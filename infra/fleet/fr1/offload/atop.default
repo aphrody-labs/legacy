@@ -1,0 +1,5 @@
+# managed by infra/fleet/bin/fleet-offload.sh: per-process accounting history every 30 s, 3 days
+LOGOPTS=""
+LOGINTERVAL=30
+LOGGENERATIONS=3
+LOGPATH=/var/log/atop

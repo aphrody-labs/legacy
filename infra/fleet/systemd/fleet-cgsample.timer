@@ -1,0 +1,10 @@
+[Unit]
+Description=Fleet cgroup + PSI sample every 60 s
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=60s
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
