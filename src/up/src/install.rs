@@ -165,17 +165,23 @@ fn link(target: &Path, link: &Path) -> Result<(), String> {
 
 /// Resolve `bin/gcloud` inside a tree to the file that exists for this OS
 /// (`gcloud.exe`, `gcloud.cmd` on Windows).
+/// A bare name (`ollama`) is also looked up under `bin/`: ollama's Linux archive holds `bin/ollama`, its Windows one `ollama.exe` at the root.
 fn tree_bin(root: &Path, rel: &str) -> Option<PathBuf> {
-    let base = root.join(rel);
     let candidates: &[&str] = if cfg!(windows) {
         &[".exe", ".cmd", ".bat", ""]
     } else {
         &[""]
     };
-    candidates
-        .iter()
-        .map(|ext| PathBuf::from(format!("{}{ext}", base.display())))
-        .find(|p| p.is_file())
+    let mut bases = vec![root.join(rel)];
+    if !rel.contains('/') {
+        bases.push(root.join("bin").join(rel));
+    }
+    bases.iter().find_map(|base| {
+        candidates
+            .iter()
+            .map(|ext| PathBuf::from(format!("{}{ext}", base.display())))
+            .find(|p| p.is_file())
+    })
 }
 
 fn install_archive(
@@ -389,8 +395,29 @@ pub fn install(
 
 #[cfg(test)]
 mod tests {
-    use super::{contained, place_file, sidecar};
+    use super::{contained, place_file, sidecar, tree_bin};
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn tree_bin_finds_root_bin_dir_and_explicit_paths() {
+        let dir = std::env::temp_dir().join(format!("ay-tree-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        // ollama (Linux): bin/ollama + lib/; servo (after the common root `servo/` is stripped): servoshell at the root.
+        let ollama = dir.join("ollama");
+        let servo = dir.join("servo");
+        std::fs::create_dir_all(ollama.join("bin")).unwrap();
+        std::fs::create_dir_all(ollama.join("lib/ollama")).unwrap();
+        std::fs::create_dir_all(&servo).unwrap();
+        let exe = |n: &str| format!("{n}{}", std::env::consts::EXE_SUFFIX);
+        std::fs::write(ollama.join("bin").join(exe("ollama")), b"x").unwrap();
+        std::fs::write(servo.join(exe("servoshell")), b"x").unwrap();
+        assert_eq!(tree_bin(&ollama, "ollama").unwrap(), ollama.join("bin").join(exe("ollama")));
+        assert_eq!(tree_bin(&ollama, "bin/ollama").unwrap(), ollama.join("bin").join(exe("ollama")));
+        assert_eq!(tree_bin(&servo, "servoshell").unwrap(), servo.join(exe("servoshell")));
+        assert!(tree_bin(&servo, "servo").is_none());
+        assert!(tree_bin(&ollama, "lib").is_none());
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn contained_refuses_every_escape_and_keeps_plain_paths() {

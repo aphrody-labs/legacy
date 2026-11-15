@@ -858,7 +858,7 @@ unsupported = ["windows-x86_64"] # pas de binaire Windows en release
 [[tool]]
 name = "servo"
 version = "0.8.0"
-bin = ["servo"]
+bin = ["servoshell"] # the Linux archive ships servo/servoshell (no file named servo)
 source = "github"
 repo = "servo/servo"
 layout = "tree"
