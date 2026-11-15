@@ -224,8 +224,9 @@ export function withoutComments(text: string): string {
 
 // What a build reads in place of `@types/bun` where a project has not installed it.
 function declarationsOfRuntime(): [string, Buffer][] {
-  const bunTypes = path.join(import.meta.dirname, "..", "..", "packages", "bun-types");
-  const installed = (name: string) => path.dirname(Bun.resolveSync(`${name}/package.json`, bunTypes));
+  const root = path.join(import.meta.dirname, "..", "..");
+  const installed = (name: string) => path.dirname(Bun.resolveSync(`${name}/package.json`, root));
+  const bunTypes = installed("bun-types");
   const packages = {
     "bun-types": bunTypes,
     "@types/node": installed("@types/node"),

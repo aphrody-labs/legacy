@@ -16,5 +16,5 @@
       "internal/*": ["./internal/*"] //deprecated
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "./builtins.d.ts", "./private.d.ts", "../../packages/bun-types/index.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "./builtins.d.ts", "./private.d.ts", "../../node_modules/bun-types/index.d.ts"]
 }

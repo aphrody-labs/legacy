@@ -58,7 +58,6 @@
     "docs/design/replica/**",
     "docs/replica/**",
     "packages/native/native/**",
-    "packages/bun-types/**",
     "packages/upstream/src/rules.ts",
     "scripts/skills-adopt.ts",
     "scripts/bun-codegen.ts",

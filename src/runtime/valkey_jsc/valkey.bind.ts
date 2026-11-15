@@ -232,7 +232,7 @@ export const RedisClient = b.class({
     length: 0,
   },
   internalFields: ["onconnect", "onclose", "connectionPromise", "hello", "subscriptionCallbackMap"],
-  /** Every member needs a declaration in packages/bun-types/redis.d.ts: redis-client-types.test.ts compares the two. */
+  /** Every member needs a declaration in bun-types/redis.d.ts: redis-client-types.test.ts compares the two. */
   proto: Object.fromEntries(
     [
       ...Object.entries(commands).map(

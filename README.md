@@ -26,7 +26,7 @@ Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md)
 | Directory | Count / Content |
 | :--- | :--- |
 | [`apps/`](apps) | 7 apps: `.claude`, `aphrody`, `auto`, `C`, `nt`, `rosegriffon` (submodule), `shenron` (submodule) |
-| [`packages/`](packages) | 23 Bun `@aphrody/*` packages: `ai-os`, `assets`, `browser`, `bun-types`, `bunify`, `chromium-bun`, `core`, `deploy`, `design`, `env-kit`, `ffi-bridge`, `gaming`, `ghidra`, `gnu`, `i18n`, `machine`, `native`, `net`, `py2bun`, `release`, `upstream`, `vault`, `wck` |
+| [`packages/`](packages) | 22 Bun `@aphrody/*` packages: `ai-os`, `assets`, `browser`, `bunify`, `chromium-bun`, `core`, `deploy`, `design`, `env-kit`, `ffi-bridge`, `gaming`, `ghidra`, `gnu`, `i18n`, `machine`, `native`, `net`, `py2bun`, `release`, `upstream`, `vault`, `wck` |
 | [`src/`](src) | 215 Rust 2024 crates (130 from Bun) next to the C core |
 | [`infra/`](infra) | Fleet, Docker, Cloudflare, and Chromium factory configuration |
 | [`third_party/`](third_party) | Pinned upstream checkouts and forks in `src.lock.json` (`DEPS`, `.gitmodules`) |

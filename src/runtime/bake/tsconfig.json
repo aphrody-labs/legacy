@@ -22,6 +22,6 @@
     "**/*.tsx",
     "../../runtime.js",
     "../../runtime.bun.js",
-    "../../../packages/bun-types/index.d.ts"
+    "../../../node_modules/bun-types/index.d.ts"
   ]
 }

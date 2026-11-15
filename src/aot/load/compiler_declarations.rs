@@ -13,7 +13,7 @@ mod tests {
     use crate::compile::testing::{default_settings, with_loaded_build};
     use crate::load::project::ProjectId;
 
-    const BUN_TYPES: &[u8] = include_bytes!("../../../packages/bun-types/bun.d.ts");
+    const BUN_TYPES: &[u8] = include_bytes!("../../../node_modules/bun-types/bun.d.ts");
     const PROGRAM_WITH_OTHER_DECLARATIONS: [(&str, &str); 3] = [
         (
             "main.ts",
