@@ -1,5 +1,3 @@
-<img src="../../icons/skill.svg" alt="" width="48" height="48">
-
 # Agent skill
 
 A skill of .agents/skills
@@ -52,7 +50,7 @@ A skill of .agents/skills
 | [archguard](../../../.agents/skills/archguard) | Architecture gate (ARCH-001..017) of the monorepo: domain purity, boundaries, hygiene, dependency graph. |
 | [axum](../../../.agents/skills/axum) | Axum 0.8 and tower-http 0.7 rules for writing, reviewing or porting Rust HTTP services (routes, extractors, state, body limits, error envelopes, middleware order, CORS, tracing,... |
 | [ay-index](../../../.agents/skills/ay-index) | The monorepo index pipeline (detect, tree-sitter, triage, Ghidra, SQLite+FTS5, Valkey). |
-| [ay-monorepo-migrator](../../../.agents/skills/ay-monorepo-migrator) | Audit and migrate legacy Node.js, V8, Electron, VS Code, Discord, Microsoft TypeScript/Rust, node-api-dotnet, and Unreal Engine monorepos to Bun v1.4.4 Full-Rust + Rust LTO/AOT... |
+| [ay-monorepo-migrator](../../../.agents/skills/ay-monorepo-migrator) | Audit and migrate legacy Node.js, V8, Electron, node-api-dotnet and Lua repositories with the `migrate` subcommand of depot-cli (crate `src/depot/migrate`): AST codemods, LLVM I... |
 | [browser-engines](../../../.agents/skills/browser-engines) | Use when choosing, driving, building or comparing a browser engine for Aphrody — render oracle, agent browser, embedded browser, cross-engine diff, conformance runs, CDP/WebDriv... |
 | [bun](../../../.agents/skills/bun) | bun reference (CLI, runtime API, upstream docs), bun:ffi bridge to native C ABIs, zero-dependency / zero-bunx package rules with native replacements (Bun.SQL, bun:sqlite, Bun.S3... |
 | [chrome-devtools](../../../.agents/skills/chrome-devtools) | Debug, inspect and automate a browser through Chrome DevTools MCP - snapshots, network, console, CSS, performance, emulation, extensions. |
@@ -137,7 +135,7 @@ A skill of .agents/skills
 | [env-auth](../../../.agents/skills/env-auth) | Safe cross-language loading of .env (Bun, Rust, uv/Python, C/C++, .NET, Go, Lua, Vercel, Cloudflare) and automated credential management across gh, npm, crates.io, PyPI, NuGet,... |
 | [epic-games](../../../.agents/skills/epic-games) | Epic Games ecosystem entry point and engineering reference (.pak, IoStore, .uasset formats, repak, unreal_asset, Unreal Engine C++, Unreal MCP, Lore VCS, Zen, EOS SDK and Web AP... |
 | [finding-google-skills](../../../.agents/skills/finding-google-skills) | Live lookup of Google's published skill catalog (index.json) when google-skills-index has no match. |
-| [fleet](../../../.agents/skills/fleet) | Run a command, deploy or check on the 3 VPS (ssh <fr1> = fr1 Chromium/LLVM builds, ssh <fr2> = fr2 tests/lint/bench/research without limits plus edge proxy/CDN, ssh prd = usa pr... |
+| [fleet](../../../.agents/skills/fleet) | Run a command, deploy or check on the 3 VPS (ssh <fr1> = fr1 builds (Chromium, LLVM), CI, training, heavy agents, ssh <fr2> = fr2 tests/lint/bench/research without limits plus e... |
 | [gaming-stack](../../../.agents/skills/gaming-stack) | This skill should be used when the user asks about "the gaming stack of src", "ay gaming", "which Proton, Wine, DXVK or vkd3d-proton source do we use", "Vulkan layers or ICDs on... |
 | [gcloud](../../../.agents/skills/gcloud) | Guardrails for any gcloud CLI command - validate syntax with `gcloud help <leaf>`, reduce output (--limit/--filter/--format), --quiet, --dry-run, denylist (IAM, billing, delete,... |
 | [gemini-api-cli](../../../.agents/skills/gemini-api-cli) | Call the Gemini API from the shell with gemini-api - media generation (images, TTS, music, video), file and YouTube analysis, transcription, Deep Research, sandboxed agents. |

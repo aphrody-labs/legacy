@@ -1,8 +1,6 @@
 # @aphrody/gnu
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > GNU upstream tracker and distributor: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix and the Rust equivalents, as a JSON feed, an Atom feed, a static site and MCP tools
 
 | Type | Path |

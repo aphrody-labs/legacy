@@ -1,8 +1,6 @@
 # auto
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/app.svg" alt="App" width="40" height="40" align="right">
-
 | Type | Path |
 | :-- | :-- |
 | App | `apps/auto` |

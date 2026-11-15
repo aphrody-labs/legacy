@@ -1,8 +1,6 @@
 # @aphrody/gcp
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > Google Cloud for src: 3-principal gcloud configurations, IAM bindings plan, agent-managed billing (split from env-kit)
 
 | Type | Path |

@@ -1,8 +1,6 @@
 # `@aphrody/env-kit` — Monorepo Environment & Secret Architecture
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/src
 
 | Type | Path |

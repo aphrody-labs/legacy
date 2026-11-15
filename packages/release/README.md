@@ -1,8 +1,6 @@
 # @aphrody/release
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first
 
 | Type | Path |

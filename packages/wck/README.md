@@ -1,8 +1,6 @@
 # `@aphrody/wck`
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > Compile-Time Web Validator (Google SEO + AI Mode SEO + Modern Web Guidelines + Core Web Vitals + Lighthouse 100 + WASM + WebGPU Chromium Spec)
 
 | Type | Path |

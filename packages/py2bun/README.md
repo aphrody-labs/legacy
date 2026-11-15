@@ -1,8 +1,6 @@
 # py2bun
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun)
 
 | Type | Path |

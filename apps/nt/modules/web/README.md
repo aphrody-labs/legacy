@@ -1,8 +1,6 @@
 # @aphrody/web
 
 <!-- catalog:begin unit -->
-<img src="../../../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > No description in the manifest.
 
 | Type | Path |

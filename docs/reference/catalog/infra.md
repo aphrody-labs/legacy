@@ -1,5 +1,3 @@
-<img src="../../icons/infra.svg" alt="" width="48" height="48">
-
 # Infrastructure
 
 Fleet, deploy and CI configuration (infra/*)

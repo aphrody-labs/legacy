@@ -1,8 +1,6 @@
 # `archguard` (`C:\src\tools\archguard`)
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Monorepo architecture, domain-purity, boundary and hygiene gate (library behind `ay arch`)
 
 | Type | Path |

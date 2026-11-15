@@ -1,8 +1,6 @@
 # @aphrody/bunify
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > legacy Node/TS/JS -> Bun -> Rust migrator
 
 | Type | Path |

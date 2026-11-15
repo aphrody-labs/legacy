@@ -1,8 +1,6 @@
 # @aphrody/native
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > bun:ffi bindings for the Zig native desktop SDK (third_party/native, vercel-labs/native)
 
 | Type | Path |

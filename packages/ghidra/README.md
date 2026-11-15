@@ -1,8 +1,6 @@
 # @aphrody/ghidra (`bun-ghidra`)
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > Ghidra API for Bun (pyghidra parity), Bun plugin and native onBeforeParse plugin
 
 | Type | Path |

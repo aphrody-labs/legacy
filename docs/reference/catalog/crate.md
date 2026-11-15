@@ -1,5 +1,3 @@
-<img src="../../icons/crate.svg" alt="" width="48" height="48">
-
 # Rust crate
 
 A member of the Cargo workspace (src/*)
@@ -189,7 +187,7 @@ A member of the Cargo workspace (src/*)
 | [tv-cli](../../../src/tv/cli) | Interface en ligne de commande du domaine média tv. |
 | [tv-core](../../../src/tv/core) | Types communs du domaine média tv : rationnels, temps, flux, médias, erreurs. |
 | [tv-ffmpeg](../../../src/tv/ffmpeg) | Wrapper sûr au-dessus de ffmpeg-next (libav* 9.x) qui produit les types tv-core. |
-| [aphrody-ui](../../../src/ui/kit) | Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends and the brand renderer. |
+| [aphrody-ui](../../../src/ui/kit) | Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends. |
 | [aphrody-up](../../../src/up) | Toolchain installer and updater behind `ay up`: tools.toml manifest, GitHub release and URL sources, sha256 checks, provider setup |
 | [bun_url](../../../src/url) | - |
 | [bun_uws](../../../src/uws) | - |

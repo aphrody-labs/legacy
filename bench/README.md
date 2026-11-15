@@ -1,8 +1,6 @@
 # stack-bench
 
 <!-- catalog:begin unit -->
-<img src="../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Hardware and compiler benchmark suite behind `ay bench` (Windows)
 
 | Type | Path |

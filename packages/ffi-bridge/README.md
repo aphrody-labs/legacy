@@ -1,8 +1,6 @@
 # @aphrody/ffi-bridge
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > bun:ffi bindings and tests of the Rust cdylibs (dx12-hal, unix-distro probes)
 
 | Type | Path |

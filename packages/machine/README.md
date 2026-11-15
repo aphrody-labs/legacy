@@ -1,8 +1,6 @@
 # packages/machine/ — poste Windows reproductible, du noyau à Claude Code
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > Reproducible Windows workstation: WinGet DSC v3 (niubash, Coreutils), Claude Code shell/MCP setup, aphrody-labs forks, flat third_party
 
 | Type | Path |

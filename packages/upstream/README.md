@@ -1,8 +1,6 @@
 # @aphrody/upstream
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
-
 > Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks
 
 | Type | Path |
