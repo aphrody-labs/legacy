@@ -8,7 +8,7 @@
 //   policy   : refus de politique de contenu                        -> autre fournisseur
 //   timeout  : timed out                                          -> one retry, then switch
 //   overload : 5xx, overload, network                             -> retry after a wait, then switch
-//   login    : Google web session missing in the relay's Chrome   -> owner signs in once (relay login)
+//   login    : Google web session missing in the relay's Chrome   -> toast, one click (auth login gemini-web)
 //   task     : the engine answered but the task failed            -> fix ticket
 export type FailClass =
   | "quota"
@@ -36,7 +36,7 @@ const RULES: [FailClass, RegExp][] = [
     "missing",
     /service_disabled|api_key_service_blocked|api has not been used in project|accessnotconfigured|api (is )?(not enabled|disabled)|has not been (enabled|used)/i,
   ],
-  ["login", /google session missing|sign in required \(relay login\)/i],
+  ["login", /google session missing|sign in required \(ay auth login/i],
   [
     "auth",
     /failed to authenticate|oauth session expired|not logged in|please (log|sign) ?in|login required|unauthori[sz]ed|(status|http|error|code)\D{0,12}\b40[13]\b|invalid api key|authentication (failed|required|error)/i,

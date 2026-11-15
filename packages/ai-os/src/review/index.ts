@@ -77,6 +77,8 @@ export type WebCfg = {
   max_message_bytes?: number;
   headful?: boolean;
   lang?: string;
+  /** Seconds to wait for the owner's sign-in after the toast (0 = report health login at once). */
+  login_wait_s?: number;
 };
 export type Config = {
   web?: WebCfg;
@@ -141,6 +143,7 @@ export function webOptsOf(
     maxMessageBytes: w.max_message_bytes,
     headful: w.headful,
     lang: w.lang,
+    loginWaitMs: ms(w.login_wait_s),
   };
   return {
     ...base,

@@ -1,7 +1,8 @@
 // gemini-web review engine: gemini.google.com driven headless over CDP in the relay's dedicated Chrome
 // (relay/cdp.ts, profile under relayHome()/chrome, `--headless=new`; headful only for the first Google sign-in and for
 // debugging). No claude-in-chrome, no credentials typed: the owner signs in once with
-// `bun packages/ai-os/src/relay/cli.ts login`; without a session the engine reports health `login`.
+// the sign-in toast (env-kit auth daemon, one click) or `<binary> auth login gemini-web`; without a session the engine
+// raises the toast and waits `loginWaitMs`, then reports health `login`.
 //
 // Every run starts a fresh chat, picks the model mode and thinking level from the config, inserts the prompt with
 // Input.insertText (never a synthetic paste; over the byte budget it is split into several messages), sends, waits for
@@ -62,7 +63,11 @@ export const SELECTORS = {
   },
 } satisfies Record<string, Selector>;
 
-export const LOGIN_COMMAND = "bun packages/ai-os/src/relay/cli.ts login";
+import { cliBinary } from "../../../env-kit/src/identity.ts";
+
+/** What the owner can run by hand (the toast does it with one click); the binary name comes from tools/identity.toml. */
+export const loginCommand = () => `${cliBinary()} auth login gemini-web`;
+export const LOGIN_COMMAND = loginCommand();
 const SIGN_IN_TEXT = "^(Sign in|Se connecter)$";
 
 export type WebOpts = {
@@ -82,6 +87,10 @@ export type WebOpts = {
   maxMessageBytes?: number;
   headful?: boolean;
   lang?: string;
+  /** Seconds-to-ms wait for the owner's sign-in (toast flow) before reporting health login; 0 = do not wait. */
+  loginWaitMs?: number;
+  /** Raises the sign-in notification (default: the toast of env-kit/auth-toast.ts); tests inject their own. */
+  raiseLogin?: () => void;
   /** PNG path: screenshot of the page at the end of the run (answer, login wall or failure), kept as proof. */
   screenshot?: string;
   /** Schema the answer must follow (repair message and validation). */
@@ -110,6 +119,19 @@ const serial = <T>(f: () => Promise<T>): Promise<T> => {
 const sel = (k: keyof typeof SELECTORS) => SELECTORS[k].css;
 const J = JSON.stringify;
 const SLEEP = "const sleep = (ms) => new Promise((r) => setTimeout(r, ms));";
+
+/** Navigates and waits until the NEW document is loaded (the old one stays inspectable while the navigation starts). */
+async function goto(tab: Tab, url: string) {
+  await tab.eval("window.__gwOld = true").catch(() => {});
+  await tab.navigate(url);
+  for (let i = 0; i < 150; i++) {
+    const done = await tab
+      .eval<boolean>("document.readyState === 'complete' && !window.__gwOld")
+      .catch(() => false);
+    if (done) return;
+    await Bun.sleep(200);
+  }
+}
 
 /** Splits at line boundaries into parts of at most `max` characters (a longer single line is cut). */
 export function splitMessage(text: string, max: number): string[] {
@@ -261,6 +283,33 @@ const chatIdOf = (url: string) => {
   }
 };
 
+/** Quick login state of the live page: ok (signed in, editor present), login, or wait (still loading). */
+export const quickScript = () => `(() => {
+  const re = new RegExp(${J(SIGN_IN_TEXT)});
+  const out = [...document.querySelectorAll(${J(sel("signIn"))})].some((b) => re.test((b.getAttribute("aria-label") ?? b.textContent ?? "").trim()));
+  if (location.host.startsWith("accounts.")) return "login";
+  if (!document.querySelector(${J(sel("editor"))})) return "wait";
+  return out ? "login" : "ok";
+})()`;
+
+/** Session state of the relay's Chrome without sending anything (headless). */
+export async function probeSession(
+  o: { base?: string; headful?: boolean } = {},
+): Promise<"ok" | "login" | "editor"> {
+  const base = (o.base ?? "https://gemini.google.com").replace(/\/+$/, "");
+  return serial(async () => {
+    await launchBrowser(!o.headful, `${base}/app?hl=en`);
+    const tab = await Tab.open(`${base}/app`, `${base}/`);
+    try {
+      await goto(tab, `${base}/app?hl=en`);
+      return (await tab.eval<string>(readyScript())) as
+        "ok" | "login" | "editor";
+    } finally {
+      tab.close();
+    }
+  });
+}
+
 /** Page.captureScreenshot of the tab into `path` (best effort). */
 async function shot(tab: Tab, path?: string) {
   if (!path) return;
@@ -281,7 +330,32 @@ export function geminiWebAsk(
   return serial(() => run(prompt, o));
 }
 
+/** Run with the sign-in flow: a missing session raises one toast, waits for the owner's click and sign-in, then resumes. */
 async function run(prompt: string, o: WebOpts): Promise<WebResult> {
+  const r = await runOnce(prompt, o);
+  if (r.cls !== "login" || !o.loginWaitMs || process.platform !== "win32")
+    return r;
+  const since = Date.now();
+  const paths = await import("../../../env-kit/src/auth-paths.ts");
+  paths.writeSession("gemini-web", false, "login needed");
+  if (o.raiseLogin) o.raiseLogin();
+  else
+    (await import("../../../env-kit/src/auth-toast.ts")).raiseLogin(
+      "gemini-web",
+      "Gemini",
+    );
+  const end = since + o.loginWaitMs;
+  while (Date.now() < end) {
+    await Bun.sleep(2000);
+    const s = paths.readSession("gemini-web");
+    if (s?.ok && s.at >= since)
+      return runOnce(prompt, { ...o, loginWaitMs: 0 });
+  }
+  r.notes.push(`no sign-in within ${Math.round(o.loginWaitMs / 1000)} s`);
+  return r;
+}
+
+async function runOnce(prompt: string, o: WebOpts): Promise<WebResult> {
   const t0 = performance.now();
   const notes: string[] = [];
   const base = (o.base ?? "https://gemini.google.com").replace(/\/+$/, "");
@@ -308,17 +382,17 @@ async function run(prompt: string, o: WebOpts): Promise<WebResult> {
   }
   const tab = await Tab.open(`${base}/app`, `${base}/`);
   try {
-    await tab.navigate(`${base}/app?hl=${lang}`);
+    await goto(tab, `${base}/app?hl=${lang}`);
     const ready = await tab.eval<string>(readyScript());
     if (ready === "login")
       return fail(
         "login",
-        `gemini-web: Google session missing in the relay's Chrome; the owner signs in once with: ${LOGIN_COMMAND}`,
+        `gemini-web: Google session missing in the relay's Chrome; sign in with: ${loginCommand()} (or the toast)`,
       );
     if (ready !== "ok")
       return fail(
         "task",
-        "gemini-web: selector 'editor' not found (interface changed? run: bun packages/ai-os/src/review/cli.ts --selftest gemini-web)",
+        "gemini-web: selector 'editor' not found (interface changed? run: ai-os review --selftest gemini-web)",
       );
 
     let mode: string | undefined;
@@ -444,7 +518,7 @@ export async function selftest(
     await launchBrowser(!o.headful, `${base}/app?hl=${o.lang ?? "en"}`);
     const tab = await Tab.open(`${base}/app`, `${base}/`);
     try {
-      await tab.navigate(`${base}/app?hl=${o.lang ?? "en"}`);
+      await goto(tab, `${base}/app?hl=${o.lang ?? "en"}`);
       const ready = await tab.eval<string>(readyScript());
       if (ready === "login")
         return { ok: false, login: true, command: LOGIN_COMMAND, checks };

@@ -88,6 +88,8 @@ export interface AuthOptions {
   dryRun?: boolean;
   /** Positional arguments after the subcommand (login targets, mint provider and command). */
   args?: string[];
+  /** Probe the services that need a browser (status): otherwise only their last recorded state is read. */
+  deep?: boolean;
   /** Persist a renewed credential (store + .env + user env); provided by the CLI. */
   persist?: (key: string, value: string) => void;
 }
@@ -1567,7 +1569,15 @@ export async function collectChecks(
       ...checkGcloud(repair ? o : { ...o, browser: false }),
       ...checkSimple(repair ? o : { ...o, browser: false }),
     );
-  if (want("browser")) checks.push(...checkBrowser());
+  if (want("browser"))
+    checks.push(
+      ...checkBrowser(),
+      ...(await Promise.all(
+        (await import("./auth-services.ts")).SERVICES.map((s) =>
+          s.probe(!!o.deep),
+        ),
+      )),
+    );
   if (want("token")) checks.push(...(await checkTokens()));
   if (want("ci"))
     checks.push(...syncGithubSecrets(m, o, repair, await rejectedSecrets()));
@@ -1605,7 +1615,7 @@ export async function runAuth(sub: string, o: AuthOptions): Promise<number> {
     checks = await deployTunnels(m, o);
   } else {
     console.error(
-      `ay auth: unknown subcommand ${sub}. Expected: status, repair, daemon, login, oidc, mint, github-app, gh-secrets, tunnels, rotate`,
+      `ay auth: unknown subcommand ${sub}. Expected: status, login [service], repair, daemon, oidc, mint, github-app, gh-secrets, tunnels, rotate`,
     );
     return 2;
   }

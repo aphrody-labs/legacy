@@ -1,5 +1,5 @@
 {
-  "$comment": "ai-os review (src/review, docs/reviews/README.md). No model or provider here: voices only declare engine families (regular expressions on registry ids: agent CLIs + llm_models) and task classes of config/model-routing.json; the real order comes from orch/select.ts (health, cooldowns). The gemini voice runs gemini-web first (gemini.google.com in the relay's headless Chrome, web block: mode and thinking are regexes on the mode picker texts, timeouts in seconds, max_message_bytes splits longer prompts into several messages, headful for debugging), then the ranked engines. Optional keys, all overridable by CLI flags: sampling (temperature, seed), output.schema (inline or file relative to this file) and output.strict, thinking (low, medium, high), rubric (text or .md file), prompt (template file with {{label}} {{stance}} {{rules}} {{judge}} {{rubric}} {{contract}} {{grounding}} {{pleas}} {{subject}}), files.include and files.exclude (git glob pathspecs); per voice: model (family regex tried first inside a prefer tier), prefer (ordered tiers), fallback (engines after the family), thinking, rubric, prompt.",
+  "$comment": "ai-os review (src/review, docs/reviews/README.md). No model or provider here: voices only declare engine families (regular expressions on registry ids: agent CLIs + llm_models) and task classes of config/model-routing.json; the real order comes from orch/select.ts (health, cooldowns). The gemini voice runs gemini-web first (gemini.google.com in the relay's headless Chrome, web block: mode and thinking are regexes on the mode picker texts, timeouts in seconds, max_message_bytes splits longer prompts into several messages, headful for debugging, login_wait_s: how long a review waits for the owner to click the sign-in toast before reporting health login), then the ranked engines. Optional keys, all overridable by CLI flags: sampling (temperature, seed), output.schema (inline or file relative to this file) and output.strict, thinking (low, medium, high), rubric (text or .md file), prompt (template file with {{label}} {{stance}} {{rules}} {{judge}} {{rubric}} {{contract}} {{grounding}} {{pleas}} {{subject}}), files.include and files.exclude (git glob pathspecs); per voice: model (family regex tried first inside a prefer tier), prefer (ordered tiers), fallback (engines after the family), thinking, rubric, prompt.",
   "sampling": { "temperature": 0, "seed": 20261115 },
   "output": { "strict": true },
   "web": {
@@ -12,7 +12,8 @@
     "stop_wait_s": 20,
     "max_message_bytes": 90000,
     "headful": false,
-    "lang": "en"
+    "lang": "en",
+    "login_wait_s": 600
   },
   "threshold": 16,
   "timeout_s": 420,

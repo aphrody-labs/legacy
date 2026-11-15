@@ -7,19 +7,13 @@
  *   tunnels, ssh keys); tokens with a refresh token (gcloud, service-account impersonation, codex, claude
  *   setup-token) renew inside their CLI at each probe.
  * - Last resort: a credential that requires a click is reported once per 24 h, all grouped in a
- *   single notification; no page is opened, no sign-in relaunched. The owner answers with
- *   `ay auth daemon --ack <target>`: a single sign-in is then launched for that target.
+ *   single toast; no page is opened until the owner clicks it: the click runs `<binary> auth login <target>`
+ *   (auth-toast.ts, auth-services.ts), a single sign-in for that target.
  * Files: <state>/auth-state.json (last probe), <state>/auth-prompts.json (last reports).
  */
-import { spawnSync } from "./spawn.ts";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  renameSync,
-  writeFileSync,
-} from "node:fs";
-import { homedir } from "node:os";
+import { readJson, stateDir, writeJson } from "./auth-paths.ts";
+import { loginUri, notify } from "./auth-toast.ts";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   type AuthOptions,
@@ -50,27 +44,7 @@ export const scope = (checks: Check[], pc = PC) =>
         (c) => c.kind === "store" || RUNNER_TARGETS.includes(c.target),
       );
 
-export const stateDir = () =>
-  process.env.AY_AUTH_STATE ??
-  (process.platform === "win32"
-    ? join(process.env.LOCALAPPDATA ?? homedir(), "aphrody", "auth")
-    : join(
-        process.env.XDG_STATE_HOME ?? join(homedir(), ".local", "state"),
-        "aphrody",
-        "auth",
-      ));
-
-const readJson = <T>(p: string, d: T): T => {
-  try {
-    return JSON.parse(readFileSync(p, "utf8")) as T;
-  } catch {
-    return d;
-  }
-};
-const writeJson = (p: string, v: unknown) => {
-  writeFileSync(`${p}.tmp`, JSON.stringify(v, null, 2), { mode: 0o600 });
-  renameSync(`${p}.tmp`, p);
-};
+export { stateDir };
 
 const key = (c: Check) => `${c.host}/${c.target}`;
 /** Credential that waits for a human gesture (not a mere missing tool). */
@@ -88,27 +62,6 @@ export function due(
 ): Check[] {
   return checks.filter(
     (c) => needsOwner(c) && now - (prompts[key(c)] ?? 0) >= DAY,
-  );
-}
-
-function notify(title: string, lines: string[]) {
-  const body = lines.slice(0, 12).join("\n");
-  if (process.platform === "win32") {
-    // Native Windows notification (a single, grouped one); no browser.
-    const esc = (s: string) =>
-      s.replace(/[<>&'"]/g, (m) => `&#${m.charCodeAt(0)};`);
-    const xml = `<toast><visual><binding template='ToastGeneric'><text>${esc(title)}</text><text>${esc(body)}</text></binding></visual></toast>`;
-    const ps = `$x=New-Object Windows.Data.Xml.Dom.XmlDocument; $x.LoadXml('${xml.replace(/'/g, "''")}'); [Windows.UI.Notifications.ToastNotificationManager,Windows.UI.Notifications,ContentType=WindowsRuntime] > $null; [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('aphrody auth').Show([Windows.UI.Notifications.ToastNotification]::new($x))`;
-    spawnSync("pwsh", ["-NoProfile", "-NonInteractive", "-Command", ps], {
-      windowsHide: true,
-      timeout: 30_000,
-    });
-  }
-  const out = join(stateDir(), "auth-pending.md");
-  writeFileSync(
-    out,
-    `# ${title}\n\n${lines.map((l) => `- ${l}`).join("\n")}\n`,
-    { mode: 0o600 },
   );
 }
 
@@ -143,12 +96,11 @@ export async function pass(m: Manifest, o: AuthOptions, refresh: boolean) {
   const now = Date.now();
   const d = due(checks, prompts, now);
   if (d.length) {
+    // One toast for the lot; one click opens the sign-in (of the single target, or the picker for several).
     notify(
       `${d.length} credential(s) to reconnect`,
-      d.map(
-        (c) =>
-          `${key(c)} : ${c.fix ?? c.proof} ; puis ay auth daemon --ack ${c.target}`,
-      ),
+      d.map((c) => `${key(c)} : ${c.fix ?? c.proof}`),
+      loginUri(d.length === 1 ? d[0]!.target : ""),
     );
     for (const c of d) prompts[key(c)] = now;
     writeJson(pf, prompts);
@@ -164,14 +116,6 @@ export async function pass(m: Manifest, o: AuthOptions, refresh: boolean) {
 export async function daemon(m: Manifest, o: AuthOptions): Promise<number> {
   const a = o.args ?? [];
   const opt = (n: string) => (a.includes(n) ? a[a.indexOf(n) + 1] : undefined);
-  const ack = opt("--ack");
-  if (ack) {
-    // Owner signal: a single sign-in for this target, never a loop.
-    return runAuth("login", {
-      ...o,
-      args: [ack.replace(/^gcloud:.*/, "gcloud")],
-    });
-  }
   const every = Math.max(1, Number(opt("--every") ?? 5)) * 60_000;
   const refreshEvery = Math.max(every, Number(opt("--refresh") ?? 30) * 60_000);
   let lastRefresh = 0;

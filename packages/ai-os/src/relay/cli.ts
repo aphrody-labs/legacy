@@ -2,7 +2,7 @@
 // relay: Claude Code <-> Gemini bridge and fleet tools.
 //   relay serve                  HTTP (rpc, mcp, a2a, ws), TCP, TLS
 //   relay browser [--headful]    relay Chrome (dedicated profile, CDP 127.0.0.1:RELAY_CDP_PORT)
-//   relay login                  visible relay Chrome: Google sign-in once (typed by the user)
+//   relay login                  visible relay Chrome: Google sign-in (the owner-facing entry point is `<binary> auth login gemini-web`)
 //   relay ask <prompt…>          question to Gemini (Antigravity, --web: gemini.google.com); --claude for headless Claude Code
 //   relay review <file>          Gemini review of a file, scored /20
 //   relay inspect                survey of the Gemini selectors (diagnostic)

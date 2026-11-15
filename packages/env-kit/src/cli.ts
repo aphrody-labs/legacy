@@ -8,7 +8,7 @@ import { GOOGLE_SCOPES, googleOAuthLoopback } from "./google-auth.ts";
 import { gmailProfile, listMessages, sendMessage } from "./gmail.ts";
 import { contextEnv, detectContext, exportLines } from "./google-context.ts";
 import { formatIdentities, whoami } from "./whoami";
-import { runAuth } from "./auth";
+import { collectChecks, loadManifest, runAuth } from "./auth";
 import {
   secretDelete,
   secretGet,
@@ -569,9 +569,10 @@ ${formatIdentities(ids)}`);
       (argv.includes("--only") ? argv[argv.indexOf("--only") + 1] : undefined);
     const root =
       process.env.SRC_ROOT ?? resolve(import.meta.dir, "..", "..", "..");
-    return runAuth(argv[1] ?? "status", {
+    const base = {
       root,
       json: flag("--json"),
+      deep: (argv[1] ?? "status") === "status",
       browser: flag("--browser"),
       dryRun: flag("--dry-run"),
       only: only?.split(","),
@@ -581,8 +582,28 @@ ${formatIdentities(ids)}`);
           : argv[1] === "login"
             ? argv.slice(2).filter((a) => !a.startsWith("-"))
             : undefined,
-      persist: (k, v) => setCredentialEverywhere(envPath, k, v),
-    });
+      persist: (k: string, v: string) => setCredentialEverywhere(envPath, k, v),
+    };
+    if (argv[1] === "login") {
+      // `<binary> auth login [service]`: services with their own flow, the CLIs of auth.ts, or a list to pick from.
+      const svc = await import("./auth-services.ts");
+      return svc.dispatchLogin(argv.slice(2), {
+        services: svc.SERVICES,
+        runCli: (t) => runAuth("login", { ...base, args: t }),
+        attention: async () =>
+          (
+            await collectChecks(
+              loadManifest(root),
+              { ...base, deep: false, only: ["cli", "browser"], args: undefined },
+              false,
+            )
+          ).filter((c) => c.status === "action" || c.status === "invalid"),
+        isTTY: !!process.stdin.isTTY && !!process.stdout.isTTY,
+        ask: (q) => prompt(q),
+        out: (s) => console.log(s),
+      });
+    }
+    return runAuth(argv[1] ?? "status", base);
   }
 
   if (cmd === "accounts" || cmd === "billing") {

@@ -51,7 +51,7 @@ export function geminiWeb(
       })()`);
       if (ready === "login")
         throw new Error(
-          "Gemini: Google session missing in the relay's Chrome (relay login)",
+          "Gemini: Google session missing in the relay's Chrome (ay auth login gemini-web)",
         );
       if (ready !== "ok")
         throw new Error("Gemini: editor not found (interface changed?)");
@@ -151,7 +151,7 @@ export function notebookAsk(
       if ("error" in out)
         throw new Error(
           out.error === "login"
-            ? "NotebookLM: Google session missing (relay login)"
+            ? "NotebookLM: Google session missing (ay auth login gemini-web)"
             : `NotebookLM : ${out.error}`,
         );
       return {

@@ -28,6 +28,6 @@ Checked 2026-11-14. Goal: Gemini works like Claude in the cloud (same MCP tools,
 ## Operate
 
 - Also exposed: A2A `POST /a2a` (same bearer, proxied to the relay) and the agent card `GET /.well-known/agent-card.json` (relay card, `url` rewritten to the gateway).
-- Deploy Worker: `bun packages/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN APHRODY_OWNER_GOOGLE_ACCOUNT [GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET] -- bun infra/cloudflare/workers/aphrody-mcp-gateway/deploy.ts` (REST API: bundle, upload keeping secrets, R2 bucket + binding, secrets, custom domain). The former placeholder CNAME `mcp.aphrody.com -> mig-prd` was removed; rollback = re-add it in `cloudflare.toml` and delete the Worker domain.
+- Deploy Worker: `ay secret exec CLOUDFLARE_API_TOKEN APHRODY_OWNER_GOOGLE_ACCOUNT [GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET] -- bun infra/cloudflare/workers/aphrody-mcp-gateway/deploy.ts` (REST API: bundle, upload keeping secrets, R2 bucket + binding, secrets, custom domain). The former placeholder CNAME `mcp.aphrody.com -> mig-prd` was removed; rollback = re-add it in `cloudflare.toml` and delete the Worker domain.
 - The relay origin needs a clean checkout of `/srv/src` (fr2 pull = `git fetch origin main && git merge --ff-only FETCH_HEAD`); it fails to start while HEAD imports untracked or uncommitted modules (seen 2026-11-14: `relay/core-tools.ts`, `term/`, `core` export `VTerm`).
 - Test through the public URL: bun MCP client: 401 + `WWW-Authenticate` resource_metadata, DCR, authorize (browser, owner Google login), token, `tools/list`, one `tools/call`.
