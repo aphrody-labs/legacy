@@ -19,7 +19,7 @@ path = "src/main.rs"
 [lib]
 name = "ay"
 path = "src/lib.rs"
-# No doctests in ay; rustdoc does not see the build-script rlib of bun-flat nor aphrody-docs (fr1, 2026-11-13).
+# No doctests in ay; rustdoc does not see the build-script rlib of aphrody-docs (fr1, 2026-11-13).
 doctest = false
 
 [dependencies]
@@ -56,7 +56,9 @@ rt = { version = "0.4.0", package = "aphrody-rt", path = "../rt" }
 aphrody-docs = { version = "0.4.0", path = "../docs" }
 aphrody-omarchy = { version = "0.4.0", path = "../posix/omarchy" }
 aphrody-ui = { version = "0.4.0", path = "../ui/kit", default-features = false, features = ["std", "serde", "fusion", "dioxus", "anyrender", "tui", "editor"] }
-bun-flat = { version = "0.4.0", package = "aphrody-bun-flat", path = "../bun-flat" }
+# Bun crates used by `ay hash` / `ay time` (src/ay/src/low/flat.rs).
+bun_wyhash.workspace = true
+bun_histogram.workspace = true
 # `ay steam`: Steam data as JSON (VDF, appinfo, manifests, compat tools, Proton env).
 bun-steam = { version = "1.4.8", package = "steam-depot", path = "../steam" }
 # `ay self-update` against the dist releases (blocking API, no async runtime in ay itself).
