@@ -416,7 +416,7 @@ export async function streamTerminalAgent(
           method: "POST",
           headers: {
             "content-type": "application/json",
-            ...(await prov.headers()),
+            ...prov.headers(),
           },
           body: JSON.stringify({
             model: modelShort,

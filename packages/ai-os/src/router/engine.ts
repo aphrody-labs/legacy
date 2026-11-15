@@ -53,7 +53,7 @@ export const providerCall: CallFn = async (offer, body, o) => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          ...(await p.chat!.headers()),
+          ...p.chat!.headers(),
         },
         body: JSON.stringify(b),
         signal: o.signal,

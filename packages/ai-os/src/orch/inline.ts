@@ -13,6 +13,11 @@ export type InlineResult = {
   cls?: FailClass;
   ms: number;
   tokens: number;
+  /** Web engines: chat URL and id of the run, mode used, non-fatal findings (recorded in the verdict). */
+  chat?: string;
+  chatId?: string;
+  mode?: string;
+  notes?: string[];
 };
 
 const ARGV_MAX = 24_000; // Windows command line: 32,767 characters
@@ -126,6 +131,8 @@ export type InlineOpts = {
   schema?: Record<string, unknown>;
   schemaName?: string;
   thinking?: string;
+  /** gemini-web engine settings (mode, thinking, budgets, timeouts; review/gemini-web.ts WebOpts). */
+  web?: import("../review/gemini-web").WebOpts;
 };
 
 export async function inline(
@@ -137,6 +144,35 @@ export async function inline(
 ): Promise<InlineResult> {
   const t0 = performance.now();
   const [cli, model] = provider.split(/:(.*)/s);
+  if (cli === "gemini-web") {
+    if (!h.local)
+      return {
+        ok: false,
+        text: "gemini-web: local host only (relay Chrome)",
+        cls: "missing",
+        ms: 0,
+        tokens: 0,
+      };
+    const { geminiWebAsk } = await import("../review/gemini-web");
+    const r = await geminiWebAsk(prompt, {
+      ...opts.web,
+      // The voice's remaining budget bounds the configured wait.
+      timeoutMs: Math.min(opts.web?.timeoutMs ?? timeoutMs, timeoutMs),
+      schema: opts.schema,
+      mode: model || opts.web?.mode,
+    });
+    return {
+      ok: r.ok,
+      text: r.text,
+      cls: r.cls,
+      ms: r.ms,
+      tokens: estimate(prompt, r.text),
+      chat: r.chat,
+      chatId: r.chatId,
+      mode: r.mode,
+      notes: r.notes,
+    };
+  }
   if (provider.includes("/") && !provider.includes(":")) {
     if (!h.local)
       return {

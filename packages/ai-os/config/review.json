@@ -1,7 +1,19 @@
 {
-  "$comment": "ai-os review (src/review, docs/reviews/README.md). No model or provider here: voices only declare engine families (regular expressions on registry ids: agent CLIs + llm_models) and task classes of config/model-routing.json; the real order comes from orch/select.ts (health, cooldowns). Optional keys, all overridable by CLI flags: sampling (temperature, seed), output.schema (inline or file relative to this file) and output.strict, thinking (low, medium, high), rubric (text or .md file), prompt (template file with {{label}} {{stance}} {{rules}} {{judge}} {{rubric}} {{contract}} {{grounding}} {{pleas}} {{subject}}), files.include and files.exclude (git glob pathspecs); per voice: model (family regex tried first inside a prefer tier), prefer (ordered tiers), fallback (engines after the family), thinking, rubric, prompt.",
+  "$comment": "ai-os review (src/review, docs/reviews/README.md). No model or provider here: voices only declare engine families (regular expressions on registry ids: agent CLIs + llm_models) and task classes of config/model-routing.json; the real order comes from orch/select.ts (health, cooldowns). The gemini voice runs gemini-web first (gemini.google.com in the relay's headless Chrome, web block: mode and thinking are regexes on the mode picker texts, timeouts in seconds, max_message_bytes splits longer prompts into several messages, headful for debugging), then the ranked engines. Optional keys, all overridable by CLI flags: sampling (temperature, seed), output.schema (inline or file relative to this file) and output.strict, thinking (low, medium, high), rubric (text or .md file), prompt (template file with {{label}} {{stance}} {{rules}} {{judge}} {{rubric}} {{contract}} {{grounding}} {{pleas}} {{subject}}), files.include and files.exclude (git glob pathspecs); per voice: model (family regex tried first inside a prefer tier), prefer (ordered tiers), fallback (engines after the family), thinking, rubric, prompt.",
   "sampling": { "temperature": 0, "seed": 20261115 },
   "output": { "strict": true },
+  "web": {
+    "base": "https://gemini.google.com",
+    "mode": "carbon",
+    "mode_fallback": ["argon"],
+    "thinking": "high",
+    "strict_mode": true,
+    "timeout_s": 600,
+    "stop_wait_s": 20,
+    "max_message_bytes": 90000,
+    "headful": false,
+    "lang": "en"
+  },
   "threshold": 16,
   "timeout_s": 420,
   "max_bytes": 120000,
@@ -14,7 +26,9 @@
       "stance": "Google voice: Chromium (styleguide, depot_tools, gn), Google eng-practices, Google style guides, Python, Go, Android, ChromiumOS, Bazel. You defend Google practices and cite the official rule that grounds each grievance.",
       "tasks": ["ci-review", "judge"],
       "only": ["^agy(:|$)", "gemini", "gemma"],
-      "prefer": ["^google-vertex/", "^google/", "^agy(:|$)"],
+      "engines": ["gemini-web"],
+      "ignore": ["^google/"],
+      "prefer": ["^agy(:|$)"],
       "model": "gemini-4-carbon",
       "fallback": ["^codex(:|$)", "^opencode(:|$)"]
     },

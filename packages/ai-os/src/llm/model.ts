@@ -77,7 +77,7 @@ export function chatModel(
       const r = await retryWithBackoff(
         async () => {
           const body: Record<string, unknown> = {
-            model: chat.model ? chat.model(model) : model,
+            model: model,
             messages: [
               ...(req.system ? [{ role: "system", content: req.system }] : []),
               ...req.messages.map(toWire),
@@ -117,7 +117,7 @@ export function chatModel(
           };
           const headers = {
             "content-type": "application/json",
-            ...(await chat.headers()),
+            ...chat.headers(),
           };
           const send = () => {
             for (const k of dropped) delete body[k];
@@ -295,7 +295,7 @@ export function providerEmbedder(spec: string): Embedder {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            ...(await p.chat!.headers()),
+            ...p.chat!.headers(),
           },
           body: JSON.stringify({ model, input: texts.slice(i, i + 64) }),
           signal: AbortSignal.timeout(120_000),

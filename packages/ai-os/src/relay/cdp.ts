@@ -43,7 +43,10 @@ export function chromePath(): string {
 export const cdpPort = () => Number(Bun.env.RELAY_CDP_PORT ?? 9333);
 
 /** Launches the relay's Chrome (no effect if it already answers). `headless` false for the initial Google sign-in. */
-export async function launchBrowser(headless: boolean): Promise<void> {
+export async function launchBrowser(
+  headless: boolean,
+  url = "https://gemini.google.com/app",
+): Promise<void> {
   if (await version().catch(() => null)) return;
   const profile = join(relayHome(), "chrome");
   mkdirSync(profile, { recursive: true });
@@ -54,7 +57,7 @@ export async function launchBrowser(headless: boolean): Promise<void> {
     "--no-first-run",
     "--no-default-browser-check",
     ...(headless ? ["--headless=new"] : []),
-    "https://gemini.google.com/app",
+    url,
   ];
   Bun.spawn([chromePath(), ...args], {
     stdout: "ignore",
@@ -66,6 +69,22 @@ export async function launchBrowser(headless: boolean): Promise<void> {
     await Bun.sleep(200);
   }
   throw new Error(`Relay Chrome unreachable on 127.0.0.1:${cdpPort()}`);
+}
+
+/** Closes the relay's Chrome through CDP (Browser.close); no effect if none answers. */
+export async function closeBrowser(): Promise<void> {
+  const v = await version().catch(() => null);
+  if (!v) return;
+  await new Promise<void>((ok) => {
+    const ws = new WebSocket(v.webSocketDebuggerUrl);
+    ws.onopen = () =>
+      ws.send(JSON.stringify({ id: 1, method: "Browser.close" }));
+    ws.onclose = () => ok();
+    ws.onerror = () => ok();
+    setTimeout(ok, 3000);
+  });
+  for (let i = 0; i < 25 && (await version().catch(() => null)); i++)
+    await Bun.sleep(200);
 }
 
 const base = () => `http://127.0.0.1:${cdpPort()}`;

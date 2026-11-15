@@ -1,5 +1,5 @@
 // ai-os review: entry point of the tribunal (src/review/index.ts, docs/reviews/README.md). JSON output on stdout,
-// JSONL journal on stderr. Exit code: 0 score >= threshold, 1 below the threshold (or frozen), 2 no engine.
+// JSONL journal on stderr. Exit code: 0 score >= threshold, 1 below the threshold (or frozen), 2 no engine, 3 gemini-web login missing (selftest).
 //   ai-os review <chemins|diff|A..B|commit> [-- chemins] [--voices gemini,claude,judge] [--threshold 16]
 //                [--fix] [--rounds 4] [--check "<cmd>"] [--slug s] [--title t] [--timeout 420] [--no-cache]
 //                [--out <folder>] [--no-write] [--dry-run] [--host H] [--summary <file>]
@@ -7,6 +7,8 @@
 //                targets) [--voice gemini] [--model <regex>] [--thinking low|medium|high] [--temperature 0] [--seed N]
 //                [--prompt <template>] [--include <glob>] [--exclude <glob>] [--lenient] [--fresh] [--json]
 //   --fresh           ignore recorded engine cooldowns (after enabling billing or an API key)
+//   gemini-web:    [--web-mode carbon] [--web-thinking high] [--web-timeout 600] [--max-message-bytes 90000] [--headful] [--screenshot <png>]
+//   --selftest gemini-web [--send]   checks each page selector on the live page (login state reported)
 //   --bundle <path>   review a text bundle (`===== FILE: path =====` headers, the browser route's format)
 //   --json            JSON on stdout only (no journal on stderr)
 //   ai-os review sources [--force]   refreshes the official sources (var/review/sources, source commit noted)
@@ -37,6 +39,14 @@ export async function main(argv: string[]): Promise<number> {
       exclude: { type: "string", multiple: true },
       lenient: { type: "boolean" },
       fresh: { type: "boolean" },
+      selftest: { type: "string" },
+      send: { type: "boolean" },
+      headful: { type: "boolean" },
+      screenshot: { type: "string" },
+      "web-mode": { type: "string" },
+      "web-thinking": { type: "string" },
+      "web-timeout": { type: "string" },
+      "max-message-bytes": { type: "string" },
       json: { type: "boolean" },
       threshold: { type: "string" },
       fix: { type: "boolean" },
@@ -68,6 +78,33 @@ export async function main(argv: string[]): Promise<number> {
       ?.flatMap((x) => x.split(","))
       .map((x) => x.trim())
       .filter(Boolean);
+  const config = loadConfig();
+  const flagsWeb = {
+    mode: values["web-mode"],
+    thinking: values["web-thinking"],
+    timeoutMs:
+      num(values["web-timeout"], "web-timeout") &&
+      num(values["web-timeout"], "web-timeout")! * 1000,
+    maxMessageBytes: num(values["max-message-bytes"], "max-message-bytes"),
+    headful: values.headful,
+    screenshot: values.screenshot && resolve(values.screenshot),
+  };
+  if (values.selftest !== undefined) {
+    if (values.selftest !== "gemini-web")
+      throw new Error("--selftest: only gemini-web is available");
+    const { selftest } = await import("./gemini-web");
+    const { webOptsOf } = await import("./index");
+    const r = await selftest({
+      ...webOptsOf(
+        config,
+        config.voices.gemini ?? { label: "", stance: "" },
+        flagsWeb,
+      ),
+      deep: values.send,
+    });
+    print(r);
+    return r.login ? 3 : r.ok ? 0 : 1;
+  }
   if (positionals[0] === "sources" && dash < 0) {
     print(
       await new SourceCache(srcRoot()).refresh(
@@ -107,6 +144,7 @@ export async function main(argv: string[]): Promise<number> {
     seed: num(values.seed, "seed", true),
     strict: values.lenient ? false : undefined,
     fresh: values.fresh,
+    web: flagsWeb,
     prompt: values.prompt,
     globs: include || exclude ? { include, exclude } : undefined,
     voices: (values.voices ?? values.voice)

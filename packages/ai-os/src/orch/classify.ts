@@ -8,6 +8,7 @@
 //   policy   : refus de politique de contenu                        -> autre fournisseur
 //   timeout  : timed out                                          -> one retry, then switch
 //   overload : 5xx, overload, network                             -> retry after a wait, then switch
+//   login    : Google web session missing in the relay's Chrome   -> owner signs in once (relay login)
 //   task     : the engine answered but the task failed            -> fix ticket
 export type FailClass =
   | "quota"
@@ -18,6 +19,7 @@ export type FailClass =
   | "policy"
   | "timeout"
   | "overload"
+  | "login"
   | "task";
 
 const RULES: [FailClass, RegExp][] = [
@@ -34,6 +36,7 @@ const RULES: [FailClass, RegExp][] = [
     "missing",
     /service_disabled|api_key_service_blocked|api has not been used in project|accessnotconfigured|api (is )?(not enabled|disabled)|has not been (enabled|used)/i,
   ],
+  ["login", /google session missing|sign in required \(relay login\)/i],
   [
     "auth",
     /failed to authenticate|oauth session expired|not logged in|please (log|sign) ?in|login required|unauthori[sz]ed|(status|http|error|code)\D{0,12}\b40[13]\b|invalid api key|authentication (failed|required|error)/i,
@@ -91,6 +94,8 @@ export function cooldownMs(c: FailClass, fails: number): number {
       return exp(60_000);
     case "auth":
       return 6 * 3600_000;
+    case "login":
+      return 10 * 60_000;
     case "missing":
       return 24 * 3600_000;
     case "overload":
@@ -106,6 +111,7 @@ export function cooldownMs(c: FailClass, fails: number): number {
 export const switches = (c: FailClass) =>
   c === "quota" ||
   c === "auth" ||
+  c === "login" ||
   c === "missing" ||
   c === "context" ||
   c === "policy";

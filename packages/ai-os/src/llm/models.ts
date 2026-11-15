@@ -14,15 +14,6 @@
 //   cloudflare    CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID  GET /ai/models/search (Text Generation)    /ai/v1/chat/completions
 //   antigravity   authenticated agy CLI                         agy models                                 agy -p
 //   claude        authenticated claude CLI                      (CLI alias)                                claude -p
-//   google-vertex service account (GOOGLE_SERVICE_ACCOUNT, GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_CLIENT_EMAIL + GOOGLE_PRIVATE_KEY)
-//                                                               GET publishers/google/models, else the models.dev catalog  Vertex /endpoints/openapi/chat/completions
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join, relative } from "node:path";
-import {
-  loadServiceAccount,
-  serviceAccountProject,
-  serviceAccountToken,
-} from "../../../env-kit/src/google-auth.ts";
 import { outboundFetch } from "../relay/outbound.ts";
 import { agy, claude, opencode } from "./agents";
 
@@ -40,11 +31,8 @@ export type Provider = {
   list: () => Promise<Model[]>;
   chat?: {
     base: () => string;
-    /** Async when the credential is minted per call (service-account bearer). */
-    headers: () => Record<string, string> | Promise<Record<string, string>>;
+    headers: () => Record<string, string>;
     path?: string;
-    /** Wire name of a listed model (Vertex wants `google/<model>`). */
-    model?: (listed: string) => string;
   };
   ask?: (model: string, prompt: string) => Promise<string>;
 };
@@ -93,64 +81,6 @@ const openaiList = (provider: string, j: any): Model[] =>
     name: m.name ?? m.id,
     context: m.context_length ?? m.context_window,
   }));
-
-/** Directory of the models.dev catalog kept in apps/open (MODELS_DEV_DIR overrides). */
-export const catalogDir = () =>
-  Bun.env.MODELS_DEV_DIR ??
-  join(
-    import.meta.dir,
-    "..",
-    "..",
-    "..",
-    "..",
-    "apps",
-    "open",
-    "packages",
-    "models.dev",
-  );
-
-/**
- * Text-generation models of a provider read from the models.dev catalog (providers/<id>/models/*.toml, top level
- * only), the offline source when a provider cannot list its models (billing off, API key denied).
- * `family` restricts file names (regular expression); context comes from the base model file.
- */
-export function catalogModels(
-  provider: string,
-  family = "^gemini",
-  dir = catalogDir(),
-  textOnly = true,
-): Model[] {
-  const root = join(dir, "providers", provider, "models");
-  if (!existsSync(root)) return [];
-  const re = new RegExp(family, "i");
-  const out: Model[] = [];
-  for (const f of readdirSync(root)) {
-    if (!f.endsWith(".toml") || !re.test(f)) continue;
-    try {
-      const t: any = Bun.TOML.parse(readFileSync(join(root, f), "utf8"));
-      const base = t.base_model && join(dir, "models", `${t.base_model}.toml`);
-      const b: any =
-        base && existsSync(base)
-          ? Bun.TOML.parse(readFileSync(base, "utf8"))
-          : {};
-      const output: string[] = t.modalities?.output ??
-        b.modalities?.output ?? ["text"];
-      if (textOnly && (output.length !== 1 || output[0] !== "text")) continue;
-      const stem = relative(root, join(root, f)).replace(/\.toml$/, "");
-      out.push({
-        id: `${provider}/${stem}`,
-        provider,
-        name: t.name ?? b.name ?? stem,
-        context: t.limit?.context ?? b.limit?.context,
-      });
-    } catch {}
-  }
-  return out.sort((a, b) => a.id.localeCompare(b.id));
-}
-
-/** Vertex OpenAI-compatible base of a project and location (`global` has its own host). */
-export const vertexBase = (project: string, location: string) =>
-  `${location === "global" ? "https://aiplatform.googleapis.com" : `https://${location}-aiplatform.googleapis.com`}/v1/projects/${project}/locations/${location}/endpoints/openapi`;
 
 function compat(id: string, base: string, key?: string): Provider {
   return {
@@ -246,87 +176,12 @@ export function providers(): Provider[] {
     out.push({
       id: "google",
       available: async () => true,
-      // Key denied on the list endpoint (API not enabled): the catalog keeps the models rankable, the call
-      // reports the real health state.
-      list: async () => {
-        try {
-          return openaiList(
-            "google",
-            await getJson(`${gbase}/models`, bearer(gkey)),
-          );
-        } catch (e) {
-          const c = catalogModels("google");
-          if (!c.length) throw e;
-          return c;
-        }
-      },
+      list: async () =>
+        openaiList("google", await getJson(`${gbase}/models`, bearer(gkey))),
       chat: {
         base: () => gbase,
         headers: () => bearer(gkey),
         path: "/chat/completions",
-      },
-    });
-  }
-  // Vertex AI with a service account: bearer minted per call (env-kit/google-auth.ts, cached until expiry).
-  // Billing off, API disabled and quota come back as HTTP errors that orch/classify.ts turns into cooldown classes.
-  const sa = loadServiceAccount();
-  const vproject = sa && serviceAccountProject(sa);
-  if (sa && vproject) {
-    const location = env("GOOGLE_CLOUD_LOCATION")?.trim() || "global";
-    const vbase = vertexBase(vproject, location);
-    const host =
-      location === "global"
-        ? "https://aiplatform.googleapis.com"
-        : `https://${location}-aiplatform.googleapis.com`;
-    const auth = async () => bearer(await serviceAccountToken({ account: sa }));
-    out.push({
-      id: "google-vertex",
-      available: async () => true,
-      list: async () => {
-        try {
-          const found: Model[] = [];
-          let page = "";
-          for (let i = 0; i < 5; i++) {
-            const j = await getJson(
-              `${host}/v1beta1/publishers/google/models?pageSize=200${page}`,
-              await auth(),
-              8000,
-            );
-            for (const m of j.publisherModels ?? [])
-              found.push({
-                id: `google-vertex/${String(m.name).split("/").pop()}`,
-                provider: "google-vertex",
-                name: m.name,
-              });
-            if (!j.nextPageToken) break;
-            page = `&pageToken=${encodeURIComponent(j.nextPageToken)}`;
-          }
-          // Live ids filtered by the catalog's text-generation set (the API lists image, speech and embedding models too).
-          const text = catalogModels("google-vertex");
-          const known = new Set(text.map((m) => m.id));
-          const all = new Set(
-            catalogModels("google-vertex", "^", catalogDir(), false).map(
-              (m) => m.id,
-            ),
-          );
-          const live = found
-            .filter(
-              (m) =>
-                /\/gemini/i.test(m.id) && (known.has(m.id) || !all.has(m.id)),
-            )
-            .map((m) => ({
-              ...m,
-              context: text.find((t) => t.id === m.id)?.context,
-            }));
-          if (live.length) return live;
-        } catch {}
-        return catalogModels("google-vertex");
-      },
-      chat: {
-        base: () => vbase,
-        headers: auth,
-        path: "/chat/completions",
-        model: (m) => (m.includes("/") ? m : `google/${m}`),
       },
     });
   }

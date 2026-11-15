@@ -21,6 +21,7 @@ import { Health } from "../orch/health";
 import { inline, type InlineOpts } from "../orch/inline";
 import { candidates, rank, taskModels } from "../orch/select";
 import { Outbound, requestKey } from "../relay/outbound";
+import type { WebOpts } from "./gemini-web";
 import {
   DEFAULT_SCHEMA,
   parseReview,
@@ -53,6 +54,10 @@ export type VoiceCfg = {
   model?: string;
   /** Engines tried after the `only` family is exhausted (regular expressions, ranked by health). */
   fallback?: string[];
+  /** Engines tried before the ranked ones (e.g. "gemini-web"), skipped with the recorded reason while cooling down. */
+  engines?: string[];
+  /** gemini-web settings of this voice (override the top-level web block). */
+  web?: WebCfg;
   /** Thinking level sent to reasoning models (low, medium, high). */
   thinking?: string;
   /** Rubric text appended to the instruction (overrides the top-level one). */
@@ -60,7 +65,21 @@ export type VoiceCfg = {
   /** Prompt template file, relative to the config (overrides the top-level one). */
   prompt?: string;
 };
+/** gemini-web engine settings (review.json "web"; flags override). Mode and thinking are regexes on the picker texts. */
+export type WebCfg = {
+  base?: string;
+  mode?: string;
+  mode_fallback?: string[];
+  thinking?: string;
+  strict_mode?: boolean;
+  timeout_s?: number;
+  stop_wait_s?: number;
+  max_message_bytes?: number;
+  headful?: boolean;
+  lang?: string;
+};
 export type Config = {
+  web?: WebCfg;
   threshold: number;
   timeout_s: number;
   max_bytes: number;
@@ -102,6 +121,34 @@ export const loadConfig = (p = configPath()): Config => ({
 });
 
 const configDir = (cfg: Config) => cfg.dir ?? dirname(configPath());
+
+/** gemini-web settings of a voice: review.json web block (top level, then voice), then flags. */
+export function webOptsOf(
+  cfg: Config,
+  v: VoiceCfg,
+  flags: Partial<WebOpts> = {},
+): WebOpts {
+  const w = { ...cfg.web, ...v.web };
+  const ms = (s?: number) => (s ? s * 1000 : undefined);
+  const base: WebOpts = {
+    base: w.base,
+    mode: w.mode,
+    modeFallback: w.mode_fallback,
+    thinking: w.thinking ?? v.thinking ?? cfg.thinking,
+    strictMode: w.strict_mode,
+    timeoutMs: ms(w.timeout_s),
+    stopWaitMs: ms(w.stop_wait_s),
+    maxMessageBytes: w.max_message_bytes,
+    headful: w.headful,
+    lang: w.lang,
+  };
+  return {
+    ...base,
+    ...Object.fromEntries(
+      Object.entries(flags).filter(([, x]) => x !== undefined),
+    ),
+  };
+}
 
 /** Answer schema of the config (inline object or file relative to the config), default DEFAULT_SCHEMA. */
 export function schemaOf(cfg: Config): Schema {
@@ -474,7 +521,7 @@ export async function ground(
 
 /** Answer contract: the schema itself, so an agent CLI without response_format gets the same instruction. */
 export const contract = (schema: Schema) =>
-  `Mandatory response format, in English, no compliments: a single JSON object, nothing before or after it, that validates against this JSON schema. score is the mark out of 20 (decimals allowed); findings is empty when no defect is retained; line is the line number in the provided content (0 if none); source is an official source id, checklist:<topic> or "-"; to_confirm lists assumptions that cannot be verified in the provided content (never presented as facts); summary is at most 3 lines.\n${JSON.stringify(schema)}`;
+  `Mandatory response format, in English, no compliments: exactly one \`\`\`json fenced block holding a single JSON object, nothing before or after the block, that validates against this JSON schema. score is the mark out of 20 (decimals allowed); findings is empty when no defect is retained; line is the line number in the provided content (0 if none); source is an official source id, checklist:<topic> or "-"; to_confirm lists assumptions that cannot be verified in the provided content (never presented as facts); summary is at most 3 lines.\n${JSON.stringify(schema)}`;
 
 const fence = (s: string) => {
   const ticks = "`".repeat(
@@ -545,6 +592,9 @@ export type Attempt = {
   ms: number;
   cache?: string;
   note?: string;
+  /** Web engines: chat URL and id of the run. */
+  chat?: string;
+  chatId?: string;
 };
 export type EngineAnswer = {
   ok: boolean;
@@ -552,6 +602,10 @@ export type EngineAnswer = {
   cls?: FailClass;
   ms: number;
   cache?: string;
+  chat?: string;
+  chatId?: string;
+  mode?: string;
+  notes?: string[];
 };
 /** Sampling, schema and thinking sent with the call (part of the cache key). */
 export type EngineOpts = InlineOpts;
@@ -640,9 +694,17 @@ export function cachedEngine(
       cls: j.cls,
       ms: Number(j.ms ?? 0),
       cache: r.headers.get("x-aphrody-cache") ?? undefined,
+      chat: j.chat,
+      chatId: j.chatId,
+      mode: j.mode,
+      notes: j.notes,
     };
   };
 }
+
+/** Health view that ignores recorded cooldowns (--fresh); outcomes are still recorded on the real one. */
+const noCooldowns = (h: Health) =>
+  Object.create(h, { cooling: { value: () => null } }) as Health;
 
 export type Skipped = { provider: string; reason: string };
 
@@ -707,7 +769,14 @@ export async function enginesFor(
       .map((id, i) => ({ id, i, t: tier(id) }))
       .sort((a, b) => a.t[0]! - b.t[0]! || a.t[1]! - b.t[1]! || a.i - b.i)
       .map((x) => x.id);
-  return [...order(list), ...order(extra)];
+  // Leading engines (gemini-web): local host only, skipped with the recorded class while cooling down.
+  const lead = (h.local ? (v.engines ?? []) : []).filter((id) => {
+    const why = health.cooling(h.id, id);
+    if (why)
+      skipped?.push({ provider: id, reason: `cooling down after ${why}` });
+    return !why;
+  });
+  return [...lead, ...order(list), ...order(extra)];
 }
 
 export type VoiceResult = {
@@ -724,6 +793,10 @@ export type VoiceResult = {
   findings?: Finding[];
   /** Some findings broke the schema and were dropped: never a passed gate. */
   partial?: boolean;
+  /** Web engines: chat URL and id of the run, mode used. */
+  chat?: string;
+  chatId?: string;
+  mode?: string;
   /** Engines left out with their recorded health reason. */
   skipped?: Skipped[];
 };
@@ -783,7 +856,13 @@ async function runVoice(
   engine: Engine,
   timeoutMs: number,
   record: (p: string, a: Attempt) => void,
-  x: { schema: Schema; strict: boolean; opts: EngineOpts; maxEngines: number },
+  x: {
+    schema: Schema;
+    strict: boolean;
+    opts: EngineOpts;
+    maxEngines: number;
+    web?: WebOpts;
+  },
 ): Promise<VoiceResult> {
   const t0 = performance.now();
   const deadline = Date.now() + timeoutMs;
@@ -839,7 +918,7 @@ async function runVoice(
           left,
           Math.max(60_000, Math.floor(timeoutMs / providers.length)),
         ),
-        x.opts,
+        p.startsWith("gemini-web") ? { ...x.opts, web: x.web } : x.opts,
       );
     } catch (e: any) {
       const msg = String(e?.message ?? e);
@@ -853,7 +932,15 @@ async function runVoice(
       cls: ok ? undefined : a.ok ? "task" : a.cls,
       ms: a.ms,
       cache: a.cache,
-      note: ok ? it?.note : it ? it.note : a.text.slice(0, 200),
+      chat: a.chat,
+      chatId: a.chatId,
+      note:
+        [
+          ok ? it?.note : it ? it.note : a.text.slice(0, 200),
+          ...(a.notes ?? []),
+        ]
+          .filter(Boolean)
+          .join("; ") || undefined,
     };
     attempts.push(at);
     if (a.cache !== "hit") record(p, at);
@@ -880,6 +967,9 @@ async function runVoice(
         provider: p,
         ms: Math.round(performance.now() - t0),
         cache: a.cache,
+        chat: a.chat,
+        chatId: a.chatId,
+        mode: a.mode,
         attempts,
       };
   }
@@ -937,7 +1027,10 @@ export function verdictMarkdown(o: {
     `# Revue ${r.label} : ${t.title.replace(/[\r\n]+/g, " ")} (${o.date})`,
     `# Review ${r.label}: ${t.title.replace(/[\r\n]+/g, " ")} (${o.date})`,
     `- Date: ${o.date}. Tool: ai-os review (three-voice tribunal, docs/reviews/README.md). Voice: ${r.label}.`,
-    `- Engine: ${r.provider ?? "none"} (${r.ms} ms${r.cache ? `, cache ${r.cache}` : ""}); attempts: ${tries || "no candidate engine"}.`,
+    `- Engine: ${r.provider ?? "none"}${r.mode ? ` (mode ${r.mode})` : ""} (${r.ms} ms${r.cache ? `, cache ${r.cache}` : ""}); attempts: ${tries || "no candidate engine"}.`,
+    ...(r.chat
+      ? [`- Chat: ${r.chat}${r.chatId ? ` (id ${r.chatId})` : ""}.`]
+      : []),
     `- Subject: \`${t.title}\`; ${t.files.length} file(s)${t.truncated ? `, truncated by ${t.truncated} characters` : ""}.`,
     `- Score: ${fmt(r.score)}/20.${o.final ? ` Threshold: ${o.threshold}/20. Status: ${o.status}.` : ""}`,
     ...(o.history.length > 1
@@ -1048,6 +1141,8 @@ export type ReviewOptions = {
   seed?: number;
   /** false accepts a legacy markdown `Score: n/20` answer when the JSON is invalid. */
   strict?: boolean;
+  /** gemini-web overrides from flags (win over review.json). */
+  web?: Partial<WebOpts>;
   /** Ignore recorded cooldowns when ranking engines (after an owner action such as enabling billing). */
   fresh?: boolean;
   /** Prompt template file (relative to the cwd or absolute). */
@@ -1093,6 +1188,9 @@ export type ReviewResult = {
     cache?: string;
     ok: boolean;
     partial?: boolean;
+    chat?: string;
+    chatId?: string;
+    mode?: string;
     attempts: Attempt[];
     skipped?: Skipped[];
   }[];
@@ -1234,7 +1332,7 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
       return enginesFor(
         v,
         host,
-        o.fresh ? new Health(":memory:") : health,
+        o.fresh ? noCooldowns(health) : health,
         cands,
         Math.ceil(chars / 3) + 8_000,
         skipped,
@@ -1329,6 +1427,7 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
                 schema,
                 strict,
                 maxEngines: cfg.max_engines ?? 8,
+                web: webOptsOf(cfg, v, o.web),
                 opts: {
                   ...sampling,
                   schema: wireSchema(schema),
@@ -1448,6 +1547,9 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
           cache: r.cache,
           ok: r.ok,
           partial: r.partial,
+          chat: r.chat,
+          chatId: r.chatId,
+          mode: r.mode,
           attempts: r.attempts,
           skipped: r.skipped,
         })),

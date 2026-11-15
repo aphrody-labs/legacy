@@ -1,12 +1,10 @@
 // Headless review: structured JSON output, deterministic cache keys, engine fallback on billing/quota, Vertex provider
 // with a generated service-account key and a stubbed fetch. No network, no real credentials.
-import { afterAll, beforeAll, expect, test } from "bun:test";
+import { afterAll, expect, test } from "bun:test";
 import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { clearServiceAccountTokens } from "../../../env-kit/src/google-auth.ts";
-import { catalogModels, providers } from "../../src/llm/models.ts";
 import { llmAsk } from "../../src/llm/model.ts";
 import { classify } from "../../src/orch/classify.ts";
 import { Health } from "../../src/orch/health.ts";
@@ -324,7 +322,7 @@ test("fallback: billing then quota failures move to the next engine, sampling an
   expect(p.status).toBe("incomplet");
 });
 
-test("engine order: vertex, key, agy, then fallback families; cooling engines reported with their class", async () => {
+test("engine order: gemini-web first, then ranked and fallback families; cooling engines reported with their class", async () => {
   const d = tmp();
   const health = new Health(join(d, "h.sqlite"));
   const host = { id: "t", local: true, src: ".", roles: [], maxAgents: 1 };
@@ -332,36 +330,39 @@ test("engine order: vertex, key, agy, then fallback families; cooling engines re
     { id: "agy", kind: "cli" as const, why: "x" },
     { id: "codex", kind: "cli" as const, why: "x" },
     { id: "claude", kind: "cli" as const, why: "x" },
+    { id: "openai/gemini-4-carbon", kind: "model" as const, why: "x" },
     { id: "google/gemini-4-carbon", kind: "model" as const, why: "x" },
-    { id: "google-vertex/gemini-4-argon", kind: "model" as const, why: "x" },
-    { id: "google-vertex/gemini-4-carbon", kind: "model" as const, why: "x" },
   ];
   const v = {
     label: "G",
     stance: "s",
+    engines: ["gemini-web"],
     only: ["^agy(:|$)", "gemini"],
-    prefer: ["^google-vertex/", "^google/", "^agy(:|$)"],
+    ignore: ["^google/"],
+    prefer: ["^agy(:|$)"],
     model: "gemini-4-carbon",
     fallback: ["^codex(:|$)"],
   };
   const order = await enginesFor(v, host, health, all);
-  expect(order.slice(0, 3)).toEqual([
-    "google-vertex/gemini-4-carbon",
-    "google-vertex/gemini-4-argon",
-    "google/gemini-4-carbon",
-  ]);
+  expect(order[0]).toBe("gemini-web");
+  expect(order[1]).toBe("agy");
   expect(order.at(-1)).toBe("codex");
   expect(order).not.toContain("claude");
-  health.record("t", "google-vertex/gemini-4-carbon", false, "quota", 1);
+  expect(order).not.toContain("google/gemini-4-carbon");
+  health.record("t", "gemini-web", false, "login", 1);
+  health.record("t", "agy", false, "quota", 1);
   const skipped: Skipped[] = [];
   const next = await enginesFor(v, host, health, all, undefined, skipped);
-  expect(next).not.toContain("google-vertex/gemini-4-carbon");
-  expect(skipped).toEqual([
-    {
-      provider: "google-vertex/gemini-4-carbon",
-      reason: "cooling down after quota",
-    },
-  ]);
+  expect(next).not.toContain("gemini-web");
+  expect(next).not.toContain("agy");
+  expect(skipped).toContainEqual({
+    provider: "gemini-web",
+    reason: "cooling down after login",
+  });
+  expect(skipped).toContainEqual({
+    provider: "agy",
+    reason: "cooling down after quota",
+  });
   health.close();
 });
 
@@ -385,142 +386,16 @@ test("bundle headers and glob targets", async () => {
   expect(e.files).toEqual(["src/a.ts"]);
 });
 
-// ---- Vertex provider ------------------------------------------------------------------------------------------
-
-const realFetch = globalThis.fetch;
-const saved: Record<string, string | undefined> = {};
-const KEYS = [
-  "GOOGLE_SERVICE_ACCOUNT",
-  "GOOGLE_APPLICATION_CREDENTIALS",
-  "GOOGLE_CLIENT_EMAIL",
-  "GOOGLE_PRIVATE_KEY",
-  "GOOGLE_CLOUD_PROJECT",
-  "GOOGLE_CLOUD_LOCATION",
-  "MODELS_DEV_DIR",
-];
-beforeAll(async () => {
-  for (const k of KEYS) saved[k] = Bun.env[k];
-  const pair = await crypto.subtle.generateKey(
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      modulusLength: 2048,
-      publicExponent: new Uint8Array([1, 0, 1]),
-      hash: "SHA-256",
-    },
-    true,
-    ["sign", "verify"],
-  );
-  const der = Buffer.from(
-    await crypto.subtle.exportKey("pkcs8", pair.privateKey),
-  ).toString("base64");
-  const pem = `-----BEGIN PRIVATE KEY-----\n${der.replace(/(.{64})/g, "$1\n")}\n-----END PRIVATE KEY-----\n`;
-  Bun.env.GOOGLE_SERVICE_ACCOUNT = JSON.stringify({
-    type: "service_account",
-    project_id: "proj-x",
-    client_email: "r@proj-x.iam.gserviceaccount.com",
-    private_key: pem,
-  }).replace(/"/g, '\\"');
-  Bun.env.GOOGLE_CLOUD_LOCATION = "global";
-  delete Bun.env.GOOGLE_CLOUD_PROJECT;
-  // catalog fixture (models.dev layout): one text model, one speech model
-  const cat = tmp();
-  const dir = join(cat, "providers", "google-vertex", "models");
-  mkdirSync(dir, { recursive: true });
-  mkdirSync(join(cat, "models", "google"), { recursive: true });
-  writeFileSync(
-    join(cat, "models", "google", "gemini-4-carbon.toml"),
-    'name = "Gemini 4 Carbon"\n[limit]\ncontext = 1_048_576\n',
-  );
-  writeFileSync(
-    join(dir, "gemini-4-carbon.toml"),
-    'base_model = "google/gemini-4-carbon"\n[modalities]\noutput = ["text"]\n',
-  );
-  writeFileSync(
-    join(dir, "gemini-4-tts.toml"),
-    '[modalities]\noutput = ["audio"]\n',
-  );
-  Bun.env.MODELS_DEV_DIR = cat;
-  clearServiceAccountTokens();
-});
-afterAll(() => {
-  globalThis.fetch = realFetch;
-  for (const k of KEYS)
-    saved[k] === undefined ? delete Bun.env[k] : (Bun.env[k] = saved[k]);
-});
-
-test("google-vertex: listed from the catalog when billing is off, bearer minted, wire model and structured request, billing error classified", async () => {
-  expect(catalogModels("google-vertex").map((m) => [m.id, m.context])).toEqual([
-    ["google-vertex/gemini-4-carbon", 1_048_576],
-  ]);
-  const requests: { url: string; auth?: string; body?: any }[] = [];
-  globalThis.fetch = (async (input: any, init?: RequestInit) => {
-    const url = String(input);
-    const headers = new Headers(init?.headers);
-    requests.push({
-      url,
-      auth: headers.get("authorization") ?? undefined,
-      body:
-        init?.body && !url.includes("oauth2")
-          ? JSON.parse(String(init.body))
-          : undefined,
-    });
-    if (url.includes("oauth2.googleapis.com"))
-      return Response.json({ access_token: "ya29.test", expires_in: 3600 });
-    if (url.includes("/publishers/google/models"))
-      return Response.json(
-        { error: { code: 403, message: "billing must be enabled" } },
-        { status: 403 },
-      );
-    return Response.json(
-      {
-        error: {
-          code: 403,
-          message: "This API method requires billing to be enabled.",
-          status: "PERMISSION_DENIED",
-        },
-      },
-      { status: 403 },
-    );
-  }) as typeof fetch;
-
-  // plain fetch for the provider calls: the relay's response cache is switched off while this test runs
-  Bun.env.RELAY_CACHE = "0";
-  const p = providers().find((x) => x.id === "google-vertex")!;
-  expect(p).toBeTruthy();
-  expect(p.chat!.base()).toBe(
-    "https://aiplatform.googleapis.com/v1/projects/proj-x/locations/global/endpoints/openapi",
-  );
-  expect((await p.list()).map((m) => m.id)).toEqual([
-    "google-vertex/gemini-4-carbon",
-  ]);
-  expect(p.chat!.model!("gemini-4-carbon")).toBe("google/gemini-4-carbon");
-
-  const err = await llmAsk("google-vertex/gemini-4-carbon", "hi", undefined, {
-    temperature: 0,
-    seed: 3,
-    reasoningEffort: "high",
-    responseSchema: { name: "review", schema: wireSchema(DEFAULT_SCHEMA) },
-  }).catch((e) => String(e.message));
-  const chat = requests.find((r) => r.url.endsWith("/chat/completions"))!;
-  expect(chat.auth).toBe("Bearer ya29.test");
-  expect(chat.body).toMatchObject({
-    model: "google/gemini-4-carbon",
-    temperature: 0,
-    seed: 3,
-    reasoning_effort: "high",
-    response_format: { type: "json_schema", json_schema: { name: "review" } },
-  });
-  delete Bun.env.RELAY_CACHE;
-  expect(classify(err)).toBe("quota"); // billing off: explicit state, cooldown, next engine
-});
-
 test("optional sampling parameters refused by an endpoint are dropped and the call is retried once", async () => {
   const bodies: any[] = [];
+  const saved = {
+    ep: Bun.env.RELAY_OPENAI_ENDPOINTS,
+    cache: Bun.env.RELAY_CACHE,
+  };
+  Bun.env.RELAY_OPENAI_ENDPOINTS = "seedless=http://127.0.0.1:9";
   Bun.env.RELAY_CACHE = "0";
-  globalThis.fetch = (async (input: any, init?: RequestInit) => {
-    const url = String(input);
-    if (url.includes("oauth2.googleapis.com"))
-      return Response.json({ access_token: "ya29.test", expires_in: 3600 });
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = (async (_input: any, init?: RequestInit) => {
     const b = JSON.parse(String(init?.body));
     bodies.push(b);
     if ("seed" in b)
@@ -540,13 +415,22 @@ test("optional sampling parameters refused by an endpoint are dropped and the ca
       ],
     });
   }) as typeof fetch;
-  const r = await llmAsk("google-vertex/gemini-4-carbon", "hi", undefined, {
-    temperature: 0,
-    seed: 9,
-  });
-  delete Bun.env.RELAY_CACHE;
-  expect(JSON.parse(r.text).score).toBe(12.5);
-  expect(bodies).toHaveLength(2);
-  expect("seed" in bodies[0]).toBe(true);
-  expect("seed" in bodies[1]).toBe(false);
+  try {
+    const r = await llmAsk("seedless/m", "hi", undefined, {
+      temperature: 0,
+      seed: 9,
+    });
+    expect(JSON.parse(r.text).score).toBe(12.5);
+    expect(bodies).toHaveLength(2);
+    expect("seed" in bodies[0]).toBe(true);
+    expect("seed" in bodies[1]).toBe(false);
+  } finally {
+    globalThis.fetch = realFetch;
+    saved.ep === undefined
+      ? delete Bun.env.RELAY_OPENAI_ENDPOINTS
+      : (Bun.env.RELAY_OPENAI_ENDPOINTS = saved.ep);
+    saved.cache === undefined
+      ? delete Bun.env.RELAY_CACHE
+      : (Bun.env.RELAY_CACHE = saved.cache);
+  }
 });

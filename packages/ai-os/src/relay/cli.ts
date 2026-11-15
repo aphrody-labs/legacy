@@ -14,7 +14,7 @@
 //   relay approve <code> [--deny]  consent d'une demande OAuth en attente (code utilisateur RFC 8628 ou demande /authorize)
 //   relay client add <name> [--scope "mcp a2a"]  confidential client_credentials client; secret written to
 //                                <relayHome>/clients/<name>.json (0600), never displayed
-import { browserInfo, launchBrowser } from "./cdp.ts";
+import { browserInfo, closeBrowser, launchBrowser } from "./cdp.ts";
 import { acp } from "./acp.ts";
 import { claude, gemini } from "./backends.ts";
 import { dispatch, mcpRpc } from "./protocols.ts";
@@ -34,6 +34,8 @@ switch (cmd) {
     console.log(await browserInfo());
     break;
   case "login":
+    // A headless relay Chrome already holds the profile: close it so the visible one can open.
+    await closeBrowser();
     await launchBrowser(false);
     console.log(
       "Relay Chrome opened on gemini.google.com: sign in, then close the window and run `relay browser`.",
