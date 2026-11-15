@@ -1,11 +1,11 @@
-// Service Windows « AphrodyRelay » : supervise `bun <cli.ts> serve`.
-// Le relais doit agir avec l'identité de l'utilisateur (sessions agy/Antigravity, Claude Code, gcloud, clés ssh
-// protégées par DPAPI ou par ACL) sans qu'aucun mot de passe soit stocké : le service (LocalSystem) lance le relais dans
-// la session console active avec le jeton de l'utilisateur (WTSQueryUserToken + CreateProcessAsUserW, procédé documenté
-// pour les services : Learn « WTSQueryUserToken »). Sans session ouverte, il attend qu'une session s'ouvre.
-// Relance après un arrêt inattendu (attente croissante plafonnée à 60 s) et arrêt de l'enfant avec le service.
-// Configuration (HKLM\SYSTEM\CurrentControlSet\Services\AphrodyRelay\Environment, posée par install.ps1) :
-//   RELAY_BUN, RELAY_CLI, RELAY_HOME, RELAY_PORT, RELAY_TCP_PORT, SRC_ROOT, et TLS éventuel.
+// Windows service "AphrodyRelay": supervises `bun <cli.ts> serve`.
+// The relay must act with the user's identity (agy/Antigravity sessions, Claude Code, gcloud, ssh keys
+// protected by DPAPI or ACLs) without storing any password: the service (LocalSystem) launches the relay in
+// the active console session with the user's token (WTSQueryUserToken + CreateProcessAsUserW, technique documented
+// for services: Learn "WTSQueryUserToken"). With no open session, it waits for one to open.
+// Restarts after an unexpected exit (growing wait capped at 60 s) and stops the child with the service.
+// Configuration (HKLM\SYSTEM\CurrentControlSet\Services\AphrodyRelay\Environment, set by install.ps1):
+//   RELAY_BUN, RELAY_CLI, RELAY_HOME, RELAY_PORT, RELAY_TCP_PORT, SRC_ROOT, and optional TLS.
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 
@@ -33,10 +33,15 @@ sealed partial class RelayWorker(ILogger<RelayWorker> log) : BackgroundService
             }
             var started = DateTime.UtcNow;
             uint exit;
-            using (token)
+            // Full administrator, no UIPI wall: the console token of an admin user is the UAC-filtered (medium) half.
+            // LocalSystem holds SeTcbPrivilege, so TokenLinkedToken yields the elevated primary token: the relay and the
+            // agent-desktop / agent-browser children it spawns run at high integrity and can drive every window.
+            var run = Native.Elevated(token) ?? token;
+            if (!ReferenceEquals(run, token)) token.Dispose();
+            using (run)
             {
-                var pi = Native.StartAsUser(token, $"\"{bun}\" \"{cli}\" serve", relayEnv);
-                log.LogInformation("relay lancé dans la session {Session} (pid {Pid})", session, pi.dwProcessId);
+                var pi = Native.StartAsUser(run, $"\"{bun}\" \"{cli}\" serve", relayEnv);
+                log.LogInformation("relay started in session {Session} (pid {Pid}, elevated {Elevated})", session, pi.dwProcessId, Native.IsElevated(run));
                 using var proc = new Native.SafeKernelHandle(pi.hProcess);
                 using var thread = new Native.SafeKernelHandle(pi.hThread);
                 try
@@ -50,7 +55,7 @@ sealed partial class RelayWorker(ILogger<RelayWorker> log) : BackgroundService
                 }
                 Native.GetExitCodeProcess(proc, out exit);
             }
-            log.LogWarning("relay terminé (code {Code}), relance dans {Delay}", exit, delay);
+            log.LogWarning("relay exited (code {Code}), restarting in {Delay}", exit, delay);
             if (DateTime.UtcNow - started > TimeSpan.FromMinutes(5)) delay = TimeSpan.FromSeconds(1);
             await Task.Delay(delay, stop).ContinueWith(_ => { });
             delay = TimeSpan.FromSeconds(Math.Min(60, delay.TotalSeconds * 2));
@@ -89,6 +94,31 @@ static partial class Native
     [LibraryImport("kernel32.dll")]
     public static partial uint WTSGetActiveConsoleSessionId();
 
+    [LibraryImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetTokenInformation(SafeKernelHandle token, int cls, out nint info, int len, out int ret);
+
+    [LibraryImport("advapi32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetTokenInformation(SafeKernelHandle token, int cls, out int info, int len, out int ret);
+
+    const int TokenLinkedToken = 19, TokenElevation = 20;
+
+    /// TOKEN_ELEVATION.TokenIsElevated.
+    public static bool IsElevated(SafeKernelHandle token) =>
+        GetTokenInformation(token, TokenElevation, out int e, sizeof(int), out _) && e != 0;
+
+    /// Elevated linked token of a UAC-filtered admin token (a primary token when queried by a TCB holder), or null.
+    public static SafeKernelHandle? Elevated(SafeKernelHandle token)
+    {
+        if (IsElevated(token)) return null;
+        if (!GetTokenInformation(token, TokenLinkedToken, out nint linked, nint.Size, out _) || linked == 0) return null;
+        var h = new SafeKernelHandle(linked);
+        if (IsElevated(h)) return h;
+        h.Dispose();
+        return null;
+    }
+
     [LibraryImport("wtsapi32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool WTSQueryUserToken(uint session, out SafeKernelHandle token);
@@ -121,13 +151,13 @@ static partial class Native
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool CloseHandle(nint h);
 
-    /// Lance `cmd` avec le jeton et le bloc d'environnement de l'utilisateur, plus les variables du relais.
+    /// Launches `cmd` with the user's token and environment block, plus the relay variables.
     public static PROCESS_INFORMATION StartAsUser(SafeKernelHandle token, string cmd, (string k, string? v)[] extra)
     {
         if (!CreateEnvironmentBlock(out var block, token, false)) throw new Win32Exception();
         try
         {
-            // Bloc Unicode : "k=v\0k=v\0\0" ; les variables du relais remplacent celles du profil.
+            // Unicode block: "k=v\0k=v\0\0"; the relay variables override those of the profile.
             var vars = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             for (var p = block; ;)
             {

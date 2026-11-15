@@ -1,18 +1,18 @@
-// Connexions des CLI d'agents sans saisie par un agent : seul le clic final revient au propriétaire.
-//   claude : le propriétaire lance `claude setup-token` sur le PC et copie le jeton ; il est lu au presse-papiers
-//            (jamais affiché), rangé dans le coffre (@aphrody/vault, DPAPI), presse-papiers vidé, puis livré aux
-//            hôtes par le coffre (enveloppe age par hôte -> systemd-creds --user du runner, docs/infra/VAULT.md), vérifié.
-//   codex  : `codex login --device-auth` dans une fenêtre tmux de l'hôte ; le code d'appareil (public) est écrit dans
-//            <RELAY_HOME>/device-code.txt pour la page https://auth.openai.com/codex/device ouverte chez le propriétaire.
+// Agent CLI sign-ins without typing by an agent: only the final click returns to the owner.
+//   claude : the owner runs `claude setup-token` on the PC and copies the token; it is read from the clipboard
+//            (never displayed), stored in the vault (@aphrody/vault, DPAPI), clipboard cleared, then delivered to the
+//            hosts by the vault (per-host age envelope -> runner's systemd-creds --user, docs/infra/VAULT.md), verified.
+//   codex  : `codex login --device-auth` in a tmux window on the host; the (public) device code is written to
+//            <RELAY_HOME>/device-code.txt for the https://auth.openai.com/codex/device page opened at the owner's.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { relayHome } from "../relay/cdp";
 import { register, setSecret, sync } from "@aphrody/vault";
 
 const TOKEN = /sk-ant-oat01-[A-Za-z0-9_-]{60,}/;
-const DEVICE = /\b[A-Z0-9]{4}-[A-Z0-9]{5}/; // 9 caractères ; sous ConPTY, le texte suivant est collé au code
+const DEVICE = /\b[A-Z0-9]{4}-[A-Z0-9]{5}/; // 9 characters; under ConPTY, the following text is stuck to the code
 
-/** Cibles ssh des runners : prd par rebond fr2 (mesh WireGuard), fr2 direct. */
+/** ssh targets of the runners: prd through a fr2 hop (WireGuard mesh), fr2 direct. */
 const TARGETS: Record<string, string[]> = {
   prd: ["-o", "HostKeyAlias=72.60.186.43", "-J", "fr2", "agent@10.200.77.5"],
   fr2: ["fr2"],
@@ -41,14 +41,14 @@ const clip = () =>
     "Get-Clipboard -Raw",
   ]).stdout.toString();
 
-/** Vérification sur l'hôte : le jeton livré par le coffre est lu dans le credstore et testé (jamais affiché). */
+/** Check on the host: the token delivered by the vault is read from the credstore and tested (never displayed). */
 const VERIFY =
   "CLAUDE_CODE_OAUTH_TOKEN=$(systemd-creds --user decrypt --name=CLAUDE_CODE_OAUTH_TOKEN ~/.config/credstore.encrypted/CLAUDE_CODE_OAUTH_TOKEN - 2>/dev/null) " +
   "PATH=$HOME/.local/bin:/usr/local/bin:$PATH timeout 120 claude -p 'Reply with the single word: ok' --output-format text 2>&1 | head -c 200";
 
-/** Lance `claude setup-token` dans un PTY bun (Bun.Terminal) : le navigateur s'ouvre, le propriétaire clique
- *  « Autoriser », le rappel localhost arrive au CLI et le jeton est extrait du flux sans être affiché ni écrit
- *  sur disque. Seules les lignes d'état (URL, erreurs) sont relayées, jeton masqué. */
+/** Launches `claude setup-token` in a bun PTY (Bun.Terminal): the browser opens, the owner clicks
+ *  "Authorize", the localhost callback reaches the CLI and the token is extracted from the stream without being displayed or written
+ *  to disk. Only status lines (URL, errors) are relayed, token masked. */
 async function captureSetupToken(waitMin: number): Promise<string> {
   const env = { ...process.env } as Record<string, string | undefined>;
   delete env.ANTHROPIC_API_KEY;
@@ -77,8 +77,8 @@ async function captureSetupToken(waitMin: number): Promise<string> {
   await p.exited;
   clearTimeout(timer);
   term.close();
-  // Le CLI espace les mots par des déplacements de curseur (CSI n C, convertis en espaces) ; sans cela le mot suivant
-  // (« Store ») se collait au jeton. Le jeton peut aussi être coupé par un retour à la ligne de mise en forme.
+  // The CLI spaces words with cursor moves (CSI n C, converted to spaces); without that the next word
+  // ("Store") stuck to the token. The token may also be split by a formatting line break.
   return TOKEN.exec(buf)?.[0] ?? TOKEN.exec(buf.replace(/\s+/g, ""))?.[0] ?? "";
 }
 
@@ -99,10 +99,10 @@ export async function login(
       return {
         cli,
         ok: false,
-        error: "aucun jeton sk-ant-oat01 au presse-papiers",
+        error: "no sk-ant-oat01 token on the clipboard",
       };
     Bun.spawnSync(["pwsh", "-NoProfile", "-c", "Set-Clipboard -Value $null"]);
-    // Coffre : DPAPI local, portée PC + hôtes, enveloppes age poussées tout de suite (le timer reprend sinon).
+    // Vault: local DPAPI, PC + hosts scope, age envelopes pushed right away (the timer picks up otherwise).
     const remote = hosts.filter((h) => h !== "pc" && h !== "local");
     await setSecret("CLAUDE_CODE_OAUTH_TOKEN", tok);
     await register("CLAUDE_CODE_OAUTH_TOKEN", "token", ["pc", ...remote]);
@@ -176,11 +176,11 @@ export async function login(
   );
 }
 
-/** Codex sur la machine locale : device-auth dans un PTY, code écrit dans <RELAY_HOME>/device-code.txt, page ouverte. */
+/** Codex on the local machine: device-auth in a PTY, code written to <RELAY_HOME>/device-code.txt, page opened. */
 async function codexLocal(waitMin: number) {
   const codex = Bun.which("codex");
   if (!codex)
-    return { ok: false, error: "codex absent (bun add -g @openai/codex)" };
+    return { ok: false, error: "codex missing (bun add -g @openai/codex)" };
   const status = () =>
     Bun.spawnSync([codex, "login", "status"])
       .stdout.toString()

@@ -1,9 +1,9 @@
-// ai-os nhitl : index SQLite FTS5 des violations NHITL (doc : packages/ai-os/docs/NHITL.md). Sorties JSON sur stdout.
+// ai-os nhitl: SQLite FTS5 index of NHITL violations (doc: packages/ai-os/docs/NHITL.md). JSON output on stdout.
 //   ai-os nhitl scan [--only transcript,settings,code,queue,docs,hook,ledger] [--local]   rescan reproductible
 //   ai-os nhitl list [--source S] [--category C] [--status open|fixed|inevitable] [--severity S] [--q fts] [--limit N]
-//   ai-os nhitl stats                                                                      comptes par catégorie/statut
-//   ai-os nhitl set <id> <open|fixed|inevitable> [--reason "…"]                             tri qui survit aux rescans
-//   ai-os nhitl login claude|codex [--hosts prd,fr2] [--clipboard]                                     flux de connexion sans saisie
+//   ai-os nhitl stats                                                                      counts per category/status
+//   ai-os nhitl set <id> <open|fixed|inevitable> [--reason "…"]                             triage that survives rescans
+//   ai-os nhitl login claude|codex [--hosts prd,fr2] [--clipboard]                                     sign-in flow without typing
 import { parseArgs } from "node:util";
 import { Index, type Source, type Status } from "./index";
 import { scan } from "./scan";

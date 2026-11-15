@@ -1,23 +1,25 @@
 #!/usr/bin/env bun
-// Suivi des copies absorbées de google-labs-code et miroirs de skills. Source unique : les forks
-// third_party/<checkout> décrits par infra/upstream/stacks.d/google-labs.toml (section `absorbed`).
-//   check            pour chaque copie absorbée : fichiers amont modifiés depuis le commit enregistré
-//                    (fork absent = ignoré, sauf --strict)
-//   skills [--write] miroirs générés des skills stitch-skills et jules-skills dans .agents/skills/<préfixe>-<nom>
-//                    (lus par tous les agents ; Claude Code par le lien .claude/skills). Sans --write : écart
-//                    seulement, code 1 si le miroir dérive.
-// Les commandes de skills sont réécrites pour bun (npx/npm/node -> bunx/bun) et un bandeau renvoie aux
-// surfaces de src (outils relais stitch__*, ay design, ay jules).
+// Tracking of the absorbed copies of google-labs-code / android and skill mirrors. Single source: the forks
+// third_party/<checkout> described by infra/upstream/stacks.d/google-labs.toml (`absorbed` section).
+//   check            for each absorbed copy: upstream files modified since the recorded commit
+//                    (missing fork = ignored, except with --strict)
+//   skills [--write] generated mirrors of the stitch-skills, jules-skills and android-skills skills in
+//                    .agents/skills/<prefix>-<name> (read by all agents; Claude Code through the .claude/skills link).
+//                    Without --write: diff only, exit code 1 if the mirror drifts.
+// Skill commands are rewritten for bun (npx/npm/node -> bunx/bun) and a banner points to the
+// surfaces de src (outils relais stitch__*, ay design, ay jules, android-ndk-compose / Theme.kt / sys.h).
 import {
   existsSync,
   mkdirSync,
+  mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
+import { basename, dirname, join, relative, resolve } from "node:path";
 
 const root = resolve(
   Bun.env.SRC_ROOT ?? join(import.meta.dir, "..", "..", "..", ".."),
@@ -55,7 +57,7 @@ export function check(strict: boolean): number {
     if (!s.absorbed) continue;
     const dir = join(root, s.checkout);
     if (!existsSync(join(dir, ".git"))) {
-      console.log(`${name}: ${s.checkout} absent${strict ? "" : " (ignoré)"}`);
+      console.log(`${name}: ${s.checkout} missing${strict ? "" : " (ignored)"}`);
       if (strict) drift++;
       continue;
     }
@@ -79,45 +81,90 @@ export function check(strict: boolean): number {
     const files = changed ? changed.split("\n") : [];
     console.log(
       files.length
-        ? `${name}: ${files.length} fichier(s) amont modifié(s) depuis ${s.absorbed.commit.slice(0, 12)} -> ${tip.slice(0, 12)} (copie : ${s.absorbed.into})\n  ${files.join("\n  ")}`
-        : `${name}: à jour (${s.absorbed.commit.slice(0, 12)}, ${s.absorbed.into})`,
+        ? `${name}: ${files.length} upstream file(s) modified since ${s.absorbed.commit.slice(0, 12)} -> ${tip.slice(0, 12)} (copy: ${s.absorbed.into})\n  ${files.join("\n  ")}`
+        : `${name}: up to date (${s.absorbed.commit.slice(0, 12)}, ${s.absorbed.into})`,
     );
     drift += files.length ? 1 : 0;
   }
   return drift ? 1 : 0;
 }
 
-/** Skill sources: [prefix, directory holding <skill>/SKILL.md, fork checkout]. */
-function skillSources(): Array<{ prefix: string; dir: string; repo: string }> {
+type SkillSource = {
+  prefix: string;
+  from: string;
+  skill: string;
+  repo: string;
+};
+
+/** Individual skill directories across stitch-skills, jules-skills, and android-skills. */
+function skillSources(): SkillSource[] {
   const s = stacks();
-  const out: Array<{ prefix: string; dir: string; repo: string }> = [];
+  const out: SkillSource[] = [];
   const stitch = join(root, s["stitch-skills"]!.checkout, "plugins");
   if (existsSync(stitch))
-    for (const plugin of readdirSync(stitch).sort())
-      if (existsSync(join(stitch, plugin, "skills")))
+    for (const plugin of readdirSync(stitch).sort()) {
+      const skillsDir = join(stitch, plugin, "skills");
+      if (!existsSync(skillsDir)) continue;
+      for (const skill of readdirSync(skillsDir)
+        .filter((n) => existsSync(join(skillsDir, n, "SKILL.md")))
+        .sort()) {
         out.push({
           prefix: "stitch",
-          dir: join(stitch, plugin, "skills"),
+          from: join(skillsDir, skill),
+          skill,
           repo: "google-labs-code/stitch-skills",
         });
+      }
+    }
   const jules = join(root, s["jules-skills"]!.checkout, "skills");
   if (existsSync(jules))
-    out.push({
-      prefix: "jules",
-      dir: jules,
-      repo: "google-labs-code/jules-skills",
-    });
+    for (const skill of readdirSync(jules)
+      .filter((n) => existsSync(join(jules, n, "SKILL.md")))
+      .sort()) {
+      out.push({
+        prefix: "jules",
+        from: join(jules, skill),
+        skill,
+        repo: "google-labs-code/jules-skills",
+      });
+    }
+  const androidCheckout = s["android-skills"]?.checkout;
+  if (androidCheckout) {
+    const androidRoot = join(root, androidCheckout);
+    const pluginPath = join(androidRoot, ".claude-plugin", "plugin.json");
+    if (existsSync(pluginPath)) {
+      const manifest = JSON.parse(readFileSync(pluginPath, "utf8")) as {
+        skills?: string[];
+      };
+      for (const relSkill of [...(manifest.skills ?? [])].sort()) {
+        const from = resolve(androidRoot, relSkill);
+        if (existsSync(join(from, "SKILL.md"))) {
+          out.push({
+            prefix: "android",
+            from,
+            skill: basename(from),
+            repo: "android/skills",
+          });
+        }
+      }
+    }
+  }
   return out;
 }
 
 const BANNER = (repo: string, rel: string) =>
-  `> Mirror generated from ${repo} (${rel}) by \`bun packages/ai-os/src/google/absorb.ts skills --write\`; do not edit here.
+  repo === "android/skills"
+    ? `> Mirror generated from ${repo} (${rel}) by \`bun packages/ai-os/src/google/absorb.ts skills --write\`; do not edit here.
+> In src: entry skill \`.agents/skills/android-ndk-compose/SKILL.md\`, Material 3 Expressive tokens \`packages/design/tokens/adapters/Theme.kt\`,
+> Pure C11/JNI/NDK ABI \`src/include/ay/sys.h\` (\`src/include/uapi/ay/ui.h\`, \`libaysys.so\`). JS/TS: bun only.
+`
+    : `> Mirror generated from ${repo} (${rel}) by \`bun packages/ai-os/src/google/absorb.ts skills --write\`; do not edit here.
 > In src: relay Stitch tools \`stitch__<tool>\` (MCP \`mcp__relay__stitch__*\`, gcloud auth), CLI \`ay design stitch <cmd>\`
 > (upload, design-md, generate, html, download), DESIGN.md \`ay design lint|export\` (system: packages/design/DESIGN.md),
 > Jules \`ay jules run|sessions\` and tools \`jules_run\`, \`jules_status\`. JS/TS: bun only.
 `;
 
-/** bun en place des outils qu'il remplace, dans le texte des skills et de leurs scripts. */
+/** bun in place of the tools it replaces, in the text of the skills and their scripts. */
 export function bunify(text: string): string {
   return text
     .replace(/\bnpx tsx\b/g, "bun")
@@ -147,38 +194,56 @@ export function mirror(
 ): { skill: string; file: string; kind: string }[] {
   const dst = join(root, ".agents", "skills");
   const drift: { skill: string; file: string; kind: string }[] = [];
-  for (const src of skillSources()) {
-    for (const skill of readdirSync(src.dir)
-      .filter((n) => existsSync(join(src.dir, n, "SKILL.md")))
-      .sort()) {
-      const from = join(src.dir, skill);
-      const name = `${src.prefix}-${skill.replace(new RegExp(`^${src.prefix}-`), "")}`;
-      const to = join(dst, name);
-      const rel = relative(join(root, "third_party"), from).replaceAll(
+  const stage = mkdtempSync(join(tmpdir(), "absorb-skills-"));
+  try {
+    const skillNames: string[] = [];
+    for (const src of skillSources()) {
+      const name = `${src.prefix}-${src.skill.replace(new RegExp(`^${src.prefix}-`), "")}`;
+      skillNames.push(name);
+      const stageSkill = join(stage, name);
+      const rel = relative(join(root, "third_party"), src.from).replaceAll(
         "\\",
         "/",
       );
-      const want = new Map<string, string>();
-      for (const f of files(from)) {
-        const r = relative(from, f).replaceAll("\\", "/");
-        let text = readFileSync(f, "utf8");
+      for (const f of files(src.from)) {
+        const r = relative(src.from, f).replaceAll("\\", "/");
+        let text = readFileSync(f, "utf8").replaceAll("\r\n", "\n");
         if (/\.(md|sh|ts|tsx|js|json|yml)$/.test(f)) text = bunify(text);
         if (r === "SKILL.md") {
           // Frontmatter name aligned on the directory (agents index skills by folder); banner after it.
           text = text.replace(
-            /^(---\r?\n[\s\S]*?\r?\n)---\r?\n/,
+            /^(---\n[\s\S]*?\n)---\n/,
             (_m, fm: string) =>
               `${fm.replace(/^name:.*$/m, `name: ${name}`)}---\n\n${BANNER(src.repo, rel)}\n`,
           );
         }
-        want.set(r, text);
+        const stagedPath = join(stageSkill, r);
+        mkdirSync(dirname(stagedPath), { recursive: true });
+        writeFileSync(stagedPath, text);
+      }
+    }
+    Bun.spawnSync([process.execPath, "fmt", "--no-script", stage], {
+      cwd: root,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    for (const name of skillNames) {
+      const stageSkill = join(stage, name);
+      const to = join(dst, name);
+      const want = new Map<string, string>();
+      for (const f of files(stageSkill)) {
+        const r = relative(stageSkill, f).replaceAll("\\", "/");
+        want.set(r, readFileSync(f, "utf8").replaceAll("\r\n", "\n"));
       }
       const have = existsSync(to)
         ? files(to).map((f) => relative(to, f).replaceAll("\\", "/"))
         : [];
       for (const [r, text] of want) {
         const target = join(to, r);
-        const cur = existsSync(target) ? readFileSync(target, "utf8") : null;
+        const cur = existsSync(target)
+          ? readFileSync(target, "utf8").replaceAll("\r\n", "\n")
+          : null;
         if (cur === text) continue;
         drift.push({
           skill: name,
@@ -196,6 +261,8 @@ export function mirror(
           if (write) rmSync(join(to, r));
         }
     }
+  } finally {
+    rmSync(stage, { recursive: true, force: true });
   }
   return drift;
 }
@@ -206,14 +273,14 @@ if (import.meta.main) {
   if (cmd === "skills") {
     if (!skillSources().length) {
       console.log(
-        "skills : forks stitch-skills / jules-skills absents (third_party), rien à comparer",
+        "skills: stitch-skills / jules-skills / android-skills forks missing (third_party), nothing to compare",
       );
       process.exit(0);
     }
     const write = rest.includes("--write");
     const d = mirror(write);
     for (const x of d) console.log(`${x.kind}\t${x.skill}/${x.file}`);
-    console.log(`${d.length} écart(s)${write ? " corrigé(s)" : ""}`);
+    console.log(`${d.length} diff(s)${write ? " fixed" : ""}`);
     process.exit(!write && d.length ? 1 : 0);
   }
   console.error("usage: absorb.ts check [--strict] | skills [--write]");

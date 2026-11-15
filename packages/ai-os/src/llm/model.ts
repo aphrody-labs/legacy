@@ -128,7 +128,7 @@ export function chatModel(
         j = JSON.parse(raw);
       } catch {
         throw new Error(
-          `${id} : HTTP ${r.status}, réponse non JSON : ${raw.slice(0, 200)}`,
+          `${id}: HTTP ${r.status}, non-JSON response: ${raw.slice(0, 200)}`,
         );
       }
       if (!r.ok || j.error || (!j.choices && !j.result))
@@ -226,7 +226,7 @@ export async function defaultModelId(): Promise<string> {
   for (const r of [...all.filter((x) => chat.has(x.provider)), ...all])
     if (r.available && r.models[0]) return r.models[0].id;
   throw new Error(
-    "aucun modèle découvert (voir llm_models : Ollama, RELAY_OPENAI_ENDPOINTS, clés API ou CLI agy/claude)",
+    "no model discovered (see llm_models: Ollama, RELAY_OPENAI_ENDPOINTS, API keys or agy/claude CLI)",
   );
 }
 
@@ -239,21 +239,21 @@ export async function resolveModel(
   const p = providers().find((x) => x.id === pid);
   if (!p)
     throw new Error(
-      `fournisseur inconnu ou inactif : ${pid} (voir llm_models)`,
+      `unknown or inactive provider: ${pid} (see llm_models)`,
     );
   if (!mid)
-    throw new Error(`modèle manquant : ${id} (attendu fournisseur/modèle)`);
+    throw new Error(`missing model: ${id} (expected provider/model)`);
   return p.chat ? chatModel(id, p, mid!) : cliModel(id, p, mid!);
 }
 
 /** OpenAI-compatible /v1/embeddings of a discovered provider. */
 export function providerEmbedder(spec: string): Embedder {
   const [pid, model] = split(spec);
-  if (!model) throw new Error(`modèle d'embeddings manquant : ${spec}`);
+  if (!model) throw new Error(`missing embeddings model: ${spec}`);
   const p = providers().find((x) => x.id === pid);
   if (!p?.chat)
     throw new Error(
-      `embeddings indisponibles pour ${pid} (fournisseur sans API compatible OpenAI)`,
+      `embeddings unavailable for ${pid} (provider without OpenAI-compatible API)`,
     );
   const path = (p.chat.path ?? "/v1/chat/completions").replace(
     "chat/completions",
@@ -286,7 +286,7 @@ export function providerEmbedder(spec: string): Embedder {
   };
 }
 
-/** Appel d'un modèle « fournisseur/modèle » (le modèle est celui que renvoie la liste ; rien n'est supposé). */
+/** Call of a "provider/model" model (the model is the one the list returns; nothing is assumed). */
 export async function llmAsk(
   model: string,
   prompt: string,

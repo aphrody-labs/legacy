@@ -1,8 +1,8 @@
-// Ancrage des revues sur les sources officielles Google (config/review.json `sources`) : guides de style Chromium et
-// depot_tools, google/eng-practices, google/styleguide, ChromiumOS, Android, Bazel. Lecture depuis le dépôt officiel :
-// `gh api` pour GitHub, gitiles (`?format=JSON` / `?format=TEXT`) pour *.googlesource.com, jamais un navigateur.
-// Cache local <src>/var/review/sources/ (ignoré par git) : un fichier par source + index.json (commit source, date,
-// URL) ; rafraîchi au plus une fois par jour (REVIEW_SOURCES_TTL_MS), l'ancienne copie sert si le réseau manque.
+// Anchoring of reviews on the official Google sources (config/review.json `sources`): Chromium and depot_tools style
+// guides, google/eng-practices, google/styleguide, ChromiumOS, Android, Bazel. Read from the official repository:
+// `gh api` for GitHub, gitiles (`?format=JSON` / `?format=TEXT`) for *.googlesource.com, never a browser.
+// Local cache <src>/var/review/sources/ (ignored by git): one file per source + index.json (source commit, date,
+// URL); refreshed at most once a day (REVIEW_SOURCES_TTL_MS), the old copy serves if the network is down.
 import {
   existsSync,
   mkdirSync,
@@ -35,7 +35,7 @@ export type Fetcher = (
 
 const DAY = 864e5;
 
-/** Écriture atomique : fichier temporaire voisin puis rename (aucune copie à moitié écrite après un crash). */
+/** Atomic write: neighboring temporary file then rename (no half-written copy after a crash). */
 function atomic(path: string, text: string) {
   const tmp = `${path}.${process.pid}.tmp`;
   writeFileSync(tmp, text);
@@ -61,7 +61,7 @@ async function run(argv: string[], timeoutMs = 30_000) {
   return out;
 }
 
-/** GitHub (gh api) ou gitiles : contenu au commit qui a touché le fichier en dernier, et ce commit. */
+/** GitHub (gh api) or gitiles: content at the commit that last touched the file, and that commit. */
 export const officialFetch: Fetcher = async (s) => {
   if (s.github) {
     if (!/^[\w.-]+\/[\w.-]+$/.test(s.github) || /\.\./.test(s.path))
@@ -81,7 +81,7 @@ export const officialFetch: Fetcher = async (s) => {
       ])
     ).trim();
     if (!/^[0-9a-f]{40}$/.test(commit))
-      throw new Error(`${s.id} : commit introuvable`);
+      throw new Error(`${s.id}: commit not found`);
     const text = await run([
       "gh",
       "api",
@@ -107,11 +107,11 @@ export const officialFetch: Fetcher = async (s) => {
       signal: AbortSignal.timeout(20_000),
     });
     if (!log.ok) throw new Error(`${s.id} : gitiles HTTP ${log.status}`);
-    // Réponse gitiles préfixée par )]}' (anti-XSSI).
+    // gitiles response prefixed by )]}' (anti-XSSI).
     const j = JSON.parse((await log.text()).replace(/^\)\]\}'\s*/, ""));
     const commit = String(j.log?.[0]?.commit ?? "");
     if (!/^[0-9a-f]{40}$/.test(commit))
-      throw new Error(`${s.id} : commit introuvable`);
+      throw new Error(`${s.id}: commit not found`);
     const r = await fetch(`${base}/+/${commit}/${s.path}?format=TEXT`, {
       signal: AbortSignal.timeout(20_000),
     });
@@ -136,7 +136,7 @@ export class SourceCache {
     try {
       this.index = existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : {};
     } catch {
-      this.index = {}; // index corrompu : tout est relu depuis les dépôts officiels
+      this.index = {}; // corrupted index: everything is reread from the official repositories
     }
   }
   private save() {
@@ -148,7 +148,7 @@ export class SourceCache {
   private file = (id: string) =>
     join(this.dir, `${id.replace(/[^\w.-]/g, "_")}.md`);
 
-  /** Texte d'une source, rafraîchi si la copie a plus d'un jour (ou `force`). Copie périmée si le réseau échoue. */
+  /** Text of a source, refreshed if the copy is over a day old (or `force`). Stale copy if the network fails. */
   async get(
     s: SourceSpec,
     force = false,
@@ -198,7 +198,7 @@ export class SourceCache {
     }
   }
 
-  /** Rafraîchit toutes les sources (tâche quotidienne `ai-os review sources`). */
+  /** Refreshes all sources (daily task `ai-os review sources`). */
   async refresh(specs: SourceSpec[], force = true) {
     const out: SourceMeta[] = [];
     for (const s of specs) {
@@ -209,7 +209,7 @@ export class SourceCache {
   }
 }
 
-/** Sujets d'un ensemble de fichiers d'après les motifs de config/review.json `topics`. */
+/** Topics of a set of files according to the config/review.json `topics` patterns. */
 export function topicsOf(files: string[], patterns: Record<string, string>) {
   const out = new Set<string>();
   for (const [t, re] of Object.entries(patterns)) {
@@ -219,7 +219,7 @@ export function topicsOf(files: string[], patterns: Record<string, string>) {
   return [...out].sort();
 }
 
-/** Sections d'un document Markdown (titres #..###), avec leur titre. */
+/** Sections of a Markdown document (#..### headings), with their title. */
 export function sections(text: string): { title: string; body: string }[] {
   const out: { title: string; body: string }[] = [];
   let cur = { title: "", body: "" };
@@ -245,7 +245,7 @@ const STOP = new Set(
   ),
 );
 
-/** Extraits les plus pertinents d'une source pour un diff : sections classées par mots du diff qu'elles contiennent. */
+/** Most relevant excerpts of a source for a diff: sections ranked by the diff words they contain. */
 export function excerpt(text: string, subject: string, budget: number): string {
   const want = words(subject);
   const ranked = sections(text)

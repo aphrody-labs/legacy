@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
-// `ai-os jules <cmd>` et `ai-os stitch <cmd>` (aussi `ay jules`, `ay design stitch`) : clients absorbés de
-// google-labs-code (src/google/jules = jules-sdk core, src/google/stitch = stitch-sdk). Sortie JSON sur stdout.
-// Jules : JULES_API_KEY si présente (coffre : `ay secret exec JULES_API_KEY -- ai-os jules ...`), sinon OAuth gcloud.
-// Stitch : STITCH_API_KEY si présente, sinon jeton OAuth gcloud + projet de quota (src/google/auth.ts).
+// `ai-os jules <cmd>` and `ai-os stitch <cmd>` (also `ay jules`, `ay design stitch`): absorbed clients of
+// google-labs-code (src/google/jules = jules-sdk core, src/google/stitch = stitch-sdk). JSON output on stdout.
+// Jules: JULES_API_KEY if present (vault: `ay secret exec JULES_API_KEY -- ai-os jules ...`), otherwise gcloud OAuth.
+// Stitch: STITCH_API_KEY if present, otherwise gcloud OAuth token + quota project (src/google/auth.ts).
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
 
-// Cache local du SDK Jules hors du dépôt (sinon .jules/ dans le cwd s'il contient un package.json).
+// Local cache of the Jules SDK outside the repository (otherwise .jules/ in the cwd if it has a package.json).
 process.env.JULES_HOME ??= join(
   Bun.env.AGENT_HOME ?? join(homedir(), ".agent"),
   "jules",
@@ -19,7 +19,7 @@ const print = (v: unknown) => console.log(JSON.stringify(v, null, 2));
 const readStdin = async () =>
   (await new Response(Bun.stdin.stream()).text()).trim();
 
-/** Client Jules de src : JULES_API_KEY si présente, sinon OAuth gcloud (Bearer + projet de quota). */
+/** src Jules client: JULES_API_KEY if present, otherwise gcloud OAuth (Bearer + quota project). */
 export async function julesClient() {
   const { jules } = await import("./jules/index.ts");
   if (Bun.env.JULES_API_KEY) return jules;
@@ -27,9 +27,9 @@ export async function julesClient() {
   return jules.with({ authHeaders: gcloudHeaders });
 }
 
-const JULES_USAGE = `ai-os jules <cmd>   (Jules API, jules.googleapis.com/v1alpha ; JULES_API_KEY, sinon OAuth gcloud)
+const JULES_USAGE = `ai-os jules <cmd>   (Jules API, jules.googleapis.com/v1alpha; JULES_API_KEY, otherwise gcloud OAuth)
   run [prompt|-] [--repo o/r] [--branch b] [--no-pr] [--approve] [--wait] [--title t]
-                       nouvelle session (prompt sur stdin avec -) ; --wait attend le résultat (PR)
+                       new session (prompt on stdin with -); --wait waits for the result (PR)
   sessions [--limit n] | show <id> | activities <id> | result <id>
   approve <id> | send <id> <message> | sources`;
 
@@ -126,7 +126,7 @@ export async function julesCli(argv: string[]): Promise<number> {
   }
 }
 
-/** Client Stitch de src : clé d'API si présente, sinon OAuth gcloud (mêmes en-têtes que le relais). */
+/** src Stitch client: API key if present, otherwise gcloud OAuth (same headers as the relay). */
 export async function stitchClient() {
   const { StitchToolClient } = await import("./stitch/src/index.ts");
   if (Bun.env.STITCH_API_KEY) return new StitchToolClient({});
@@ -138,11 +138,11 @@ export async function stitchClient() {
 const STITCH_USAGE = `ai-os stitch <cmd>   (Stitch MCP, stitch.googleapis.com/mcp)
   projects | create <title> | screens <projectId> | tools
   generate <projectId> <prompt> [--device DESKTOP|MOBILE|TABLET|AGNOSTIC]
-  html <projectId> <screenId>          HTML de l'écran (stdout)
-  download <projectId> <dir>           écrans + assets (HTML réécrit en local)
-  upload <projectId> <file>            image (png/jpg/webp) ou HTML -> nouvel écran (BatchCreateScreens)
-  design-md <projectId> <DESIGN.md>    téléverse un DESIGN.md (format google-labs-code/design.md)
-  design-layout <DESIGN.md> [w] [h]    résout le layout Taffy depuis DESIGN.md (via ay design layout)
+  html <projectId> <screenId>          screen HTML (stdout)
+  download <projectId> <dir>           screens + assets (HTML rewritten locally)
+  upload <projectId> <file>            image (png/jpg/webp) or HTML -> new screen (BatchCreateScreens)
+  design-md <projectId> <DESIGN.md>    uploads a DESIGN.md (google-labs-code/design.md format)
+  design-layout <DESIGN.md> [w] [h]    resolves the Taffy layout from DESIGN.md (via ay design layout)
   skills-sync [--write]                synchronise stitch-skills + design.md vers .agents/skills
   call <tool> [json-args]              appel brut d'un outil`;
 
@@ -166,7 +166,7 @@ export async function stitchCli(argv: string[]): Promise<number> {
     const write = Boolean(o.write);
     const d = mirror(write);
     for (const x of d) console.log(`${x.kind}\t${x.skill}/${x.file}`);
-    console.log(`${d.length} écart(s)${write ? " corrigé(s)" : ""}`);
+    console.log(`${d.length} diff(s)${write ? " fixed" : ""}`);
     return !write && d.length ? 1 : 0;
   }
   if (cmd === "design-layout") {
@@ -253,7 +253,7 @@ export async function stitchCli(argv: string[]): Promise<number> {
   }
 }
 
-/** Erreur d'API rendue en JSON sur stderr (code, statut HTTP), sans pile. */
+/** API error rendered as JSON on stderr (code, HTTP status), without stack. */
 export async function guarded(run: () => Promise<number>): Promise<number> {
   try {
     return await run();

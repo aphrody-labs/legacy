@@ -1,19 +1,19 @@
-// Fournisseurs et modèles découverts à l'exécution, jamais codés en dur : chaque fournisseur est actif si son accès existe
-// (variable d'environnement, CLI authentifiée ou serveur local qui répond) et sa liste de modèles vient de son API.
-// Pont de modèles unique de @aphrody/ai-os (agent, relais, recherche, passerelle) : `fournisseur/modèle`, appel en API
-// compatible OpenAI (chat/completions, outils, embeddings) ou par CLI ; voir model.ts.
+// Providers and models discovered at run time, never hardcoded: each provider is active if its access exists
+// (environment variable, authenticated CLI or a local server that answers) and its model list comes from its API.
+// Single model bridge of @aphrody/ai-os (agent, relay, search, gateway): `provider/model`, OpenAI-compatible
+// API call (chat/completions, tools, embeddings) or by CLI; see model.ts.
 //
-//   fournisseur   accès                                         liste des modèles                         appel
-//   ollama        OLLAMA_HOST ou 127.0.0.1:11434 qui répond     GET /api/tags                              /v1/chat/completions
-//   fabric        AI_FABRIC_URL ou 127.0.0.1:8090 qui répond    GET /v1/models (coordinateur llama.cpp RPC) /v1/chat/completions
+//   provider      access                                        model list                                call
+//   ollama        OLLAMA_HOST or 127.0.0.1:11434 that answers   GET /api/tags                              /v1/chat/completions
+//   fabric        AI_FABRIC_URL or 127.0.0.1:8090 that answers  GET /v1/models (llama.cpp RPC coordinator) /v1/chat/completions
 //   openai-compat RELAY_OPENAI_ENDPOINTS="nom=url,…" (llama.cpp llama-server, vLLM, mistral.rs, LM Studio, LiteLLM proxy…)
 //                                                               GET /v1/models                             /v1/chat/completions
 //   openrouter    OPENROUTER_API_KEY                            GET /api/v1/models                         /api/v1/chat/completions
 //   huggingface   HF_TOKEN                                      GET router.huggingface.co/v1/models        router /v1/chat/completions
 //   vercel        AI_GATEWAY_API_KEY                            GET ai-gateway.vercel.sh/v1/models         /v1/chat/completions
 //   cloudflare    CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID  GET /ai/models/search (Text Generation)    /ai/v1/chat/completions
-//   antigravity   CLI agy authentifiée                          agy models                                 agy -p
-//   claude        CLI claude authentifiée                       (alias de la CLI)                          claude -p
+//   antigravity   authenticated agy CLI                         agy models                                 agy -p
+//   claude        authenticated claude CLI                      (CLI alias)                                claude -p
 import { outboundFetch } from "../relay/outbound.ts";
 import { agy, claude, opencode } from "./agents";
 
@@ -49,7 +49,7 @@ const getJson = async (
   headers: Record<string, string> = {},
   ms = 4000,
 ) => {
-  // Listes de modèles : lectures, cachées le TTL court du relais (relay/outbound.ts).
+  // Model lists: reads, cached for the relay's short TTL (relay/outbound.ts).
   const r = await outboundFetch(url, {
     headers,
     signal: AbortSignal.timeout(ms),
@@ -115,8 +115,8 @@ export function providers(): Provider[] {
       })),
     chat: { base: () => ollama, headers: () => ({}) },
   });
-  // Tissu d'inférence distribué (src/fabric, infra/ai/fabric.toml) : coordinateur llama-server + rpc-server WireGuard.
-  // Absent de la liste dès que le coordinateur ne répond plus : la sélection bascule sur les autres fournisseurs.
+  // Distributed inference fabric (src/fabric, infra/ai/fabric.toml): llama-server coordinator + WireGuard rpc-server.
+  // Gone from the list as soon as the coordinator stops answering: selection switches to the other providers.
   out.push({
     ...compat(
       "fabric",
@@ -262,7 +262,7 @@ export function providers(): Provider[] {
       {
         id: "claude/default",
         provider: "claude",
-        name: "modèle par défaut de Claude Code",
+        name: "Claude Code default model",
       },
     ],
     ask: async (model, prompt) =>
@@ -297,7 +297,7 @@ export function providers(): Provider[] {
   return out;
 }
 
-/** Modèles de tous les fournisseurs actifs (les fournisseurs injoignables sont signalés, pas bloquants). */
+/** Models of all active providers (unreachable providers are reported, not blocking). */
 export async function listModels(filter?: string) {
   const res = await Promise.all(
     providers().map(async (p) => {
@@ -315,7 +315,7 @@ export async function listModels(filter?: string) {
       }
     }),
   );
-  // Filtre = sous-chaîne insensible à la casse (pas d'expression régulière venant d'un client MCP/A2A).
+  // Filter = case-insensitive substring (no regular expression coming from an MCP/A2A client).
   const f = filter?.toLowerCase();
   return res.map((r) => ({
     ...r,

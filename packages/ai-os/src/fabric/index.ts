@@ -1,8 +1,8 @@
-// Tissu d'inférence distribué : un llama-server coordinateur (GPU CUDA du PC) qui délègue des couches à des
-// ggml-rpc-server joints uniquement par WireGuard (backend RPC de llama.cpp, tools/rpc/README.md amont).
-// Configuration : infra/ai/fabric.toml. Nœuds Linux : infra/ai/fabric/node.sh (unité systemd transitoire plafonnée,
-// condition d'admission vérifiée en continu). Santé : orch/health.ts (hôte = nœud, fournisseur = "fabric-rpc").
-// Le modèle servi apparaît dans llm_models sous `fabric/<alias>` (llm/models.ts), absent dès que le coordinateur tombe.
+// Distributed inference fabric: a coordinator llama-server (the PC's CUDA GPU) that delegates layers to
+// ggml-rpc-server reached only over WireGuard (llama.cpp RPC backend, upstream tools/rpc/README.md).
+// Configuration: infra/ai/fabric.toml. Linux nodes: infra/ai/fabric/node.sh (capped transient systemd unit,
+// admission condition checked continuously). Health: orch/health.ts (host = node, provider = "fabric-rpc").
+// The served model appears in llm_models as `fabric/<alias>` (llm/models.ts), gone as soon as the coordinator drops.
 import { createHash } from "node:crypto";
 import {
   appendFileSync,
@@ -37,7 +37,7 @@ export type FabricNode = {
   priority_url?: string;
   watch_s?: number;
   enabled?: boolean;
-  /** Part relative des couches confiées à ce nœud (coordinateur : appareils locaux). */
+  /** Relative share of the layers handed to this node (coordinator: local devices). */
   share?: number;
 };
 export type Fabric = {
@@ -56,7 +56,7 @@ export type Fabric = {
     { path: string; bytes: number; sha256: string; url?: string }
   >;
   node: FabricNode[];
-  /** Essai court réparti lancé par `ensure` dès qu'un nœud listé passe l'admission (une fois par nœud). */
+  /** Short distributed trial launched by `ensure` as soon as a listed node passes admission (once per node). */
   trial?: { nodes: string[]; model: string; split: number[]; tokens: number };
 };
 export type NodeState = {
@@ -80,12 +80,12 @@ export function loadFabric(root = srcRoot()): Fabric {
   return f as Fabric;
 }
 
-/** URL OpenAI-compatible du coordinateur (llm/models.ts la lit aussi par AI_FABRIC_URL). */
+/** OpenAI-compatible URL of the coordinator (llm/models.ts also reads it through AI_FABRIC_URL). */
 export const coordinatorUrl = (f: Fabric) =>
   `http://${f.coordinator.host}:${f.coordinator.port}`;
 
 // ------------------------------------------------------------------------------------------------
-// Nœuds Linux : node.sh envoyé sur stdin, puis exécuté avec les paramètres du nœud.
+// Linux nodes: node.sh sent on stdin, then run with the node's parameters.
 
 function nodeEnv(f: Fabric, n: FabricNode): Record<string, string> {
   const rel = f.release[`${n.os}-x86_64`] as Asset;
@@ -107,7 +107,7 @@ function nodeEnv(f: Fabric, n: FabricNode): Record<string, string> {
   };
 }
 
-/** GGUF du coordinateur pour `warm` : mêmes octets partout (sha256), tiré par chaque nœud depuis `url`. */
+/** Coordinator GGUF for `warm`: same bytes everywhere (sha256), pulled by each node from `url`. */
 const modelEnv = (f: Fabric): Record<string, string> => {
   const m = f.model[f.coordinator.model];
   return m?.url
@@ -123,7 +123,7 @@ export function remoteLine(env: Record<string, string>, action: string) {
   return [
     `S=; [ "$(id -u)" = 0 ] || S="sudo -n"`,
     `$S mkdir -p /opt/aphrody/fabric`,
-    // Renommage atomique : une unité en cours lit encore l'ancien fichier (sh lit son script au fil de l'eau).
+    // Atomic rename: a running unit still reads the old file (sh reads its script as it goes).
     `$S tee /opt/aphrody/fabric/node.sh.new >/dev/null`,
     `$S mv -f /opt/aphrody/fabric/node.sh.new /opt/aphrody/fabric/node.sh`,
     `exec $S env ${kv} sh /opt/aphrody/fabric/node.sh ${shq(action)}`,
@@ -158,7 +158,7 @@ async function nodeSh(
   return { code, out: out.trim(), err: err.trim() };
 }
 
-/** Port TCP joignable (nœud Windows, ou vérification après démarrage). */
+/** Reachable TCP port (Windows node, or check after startup). */
 export async function reachable(host: string, port: number, ms = 3000) {
   if (!host) return false;
   return await new Promise<boolean>((done) => {
@@ -191,12 +191,12 @@ const workers = (f: Fabric, only?: string[]) =>
   f.node.filter(
     (n) =>
       n.role !== "coordinator" &&
-      // --only nomme explicitement un nœud : il est tenté même désactivé par défaut (fr2).
+      // --only names a node explicitly: it is tried even when disabled by default (fr2).
       (only?.length ? only.includes(n.id) : n.enabled !== false),
   );
 
 // ------------------------------------------------------------------------------------------------
-// Coordinateur : binaire CUDA officiel vérifié (sha256 = digest GitHub), jamais compilé ici.
+// Coordinator: verified official CUDA binary (sha256 = GitHub digest), never compiled here.
 
 const toolDir = (f: Fabric) =>
   expand(
@@ -218,7 +218,7 @@ export async function ensureCoordinatorBin(f: Fabric): Promise<string> {
   if (existsSync(exe)) return exe;
   if (process.platform !== "win32")
     throw new Error(
-      "coordinateur prévu sur l'hôte Windows GPU (fabric.toml [coordinator])",
+      "coordinator planned on the Windows GPU host (fabric.toml [coordinator])",
     );
   mkdirSync(dir, { recursive: true });
   for (const key of ["windows-x86_64", "windows-x86_64-cudart"]) {
@@ -247,17 +247,17 @@ export function modelPath(
   verify = false,
 ) {
   const m = f.model[alias];
-  if (!m) throw new Error(`modèle inconnu dans fabric.toml : ${alias}`);
+  if (!m) throw new Error(`unknown model in fabric.toml: ${alias}`);
   const p = join(expand(f.coordinator.cache), m.path);
   if (!existsSync(p))
-    throw new Error(`GGUF absent : ${p} (ay ai pull ollama, puis lien dur)`);
+    throw new Error(`GGUF missing: ${p} (ay ai pull ollama, then hard link)`);
   if (statSync(p).size !== m.bytes)
     throw new Error(`${p} : ${statSync(p).size} octets, attendu ${m.bytes}`);
   return { path: p, sha256: verify ? sha256File(p) : undefined };
 }
 
-/** -ts dans l'ordre des appareils de llama.cpp : nœuds RPC (ordre de --rpc) puis l'appareil local (CUDA0).
- *  Vide si une part manque : llama.cpp répartit alors selon la mémoire libre (le CPU d'un VPS l'emporterait). */
+/** -ts in llama.cpp device order: RPC nodes (--rpc order) then the local device (CUDA0).
+ *  Empty if a share is missing: llama.cpp then splits by free memory (a VPS CPU would win). */
 export function tensorSplit(f: Fabric, admitted: string[]): number[] {
   const by = (id: string) => f.node.find((n) => n.id === id)?.share;
   const parts = [...admitted.map(by), by(f.coordinator.node)];
@@ -266,7 +266,7 @@ export function tensorSplit(f: Fabric, admitted: string[]): number[] {
     : [];
 }
 
-/** Arguments du coordinateur pour une liste de nœuds RPC admis. */
+/** Coordinator arguments for a list of admitted RPC nodes. */
 export function coordinatorArgs(
   f: Fabric,
   model: string,
@@ -348,11 +348,11 @@ export type UpOpts = {
   split?: number[];
   local?: boolean;
   noWarm?: boolean;
-  /** Alias de [model.*] (défaut : coordinator.model) ; retenu dans l'état pour status, bench et ensure. */
+  /** [model.*] alias (default: coordinator.model); kept in the state for status, bench and ensure. */
   model?: string;
 };
 
-/** Configuration avec le modèle réellement servi (état du dernier `up`). */
+/** Configuration with the model actually served (state of the last `up`). */
 const served = (root: string) => {
   const f = loadFabric(root);
   const m = readState()?.model;
@@ -360,12 +360,12 @@ const served = (root: string) => {
   return f;
 };
 
-/** Admet les nœuds (condition + santé), démarre leurs rpc-server, puis le coordinateur avec --rpc. */
+/** Admits the nodes (condition + health), starts their rpc-servers, then the coordinator with --rpc. */
 export async function up(o: UpOpts = {}, root = srcRoot()) {
   const f = loadFabric(root);
   if (o.model) {
     if (!f.model[o.model])
-      throw new Error(`modèle inconnu dans fabric.toml : ${o.model}`);
+      throw new Error(`unknown model in fabric.toml: ${o.model}`);
     f.coordinator.model = o.model;
   }
   const health = new Health();
@@ -392,7 +392,7 @@ export async function up(o: UpOpts = {}, root = srcRoot()) {
             ? undefined
             : n.reach
               ? "rpc-server injoignable"
-              : "non déclaré (reach vide)",
+              : "not declared (empty reach)",
         });
         continue;
       }
@@ -400,14 +400,14 @@ export async function up(o: UpOpts = {}, root = srcRoot()) {
       const r = await nodeSh(root, f, n, "up");
       let ok =
         r.code === 0 && (await reachable(n.reach ?? "", n.port ?? 50052, 5000));
-      // Cache de tenseurs rempli depuis la copie locale du nœud avant que le coordinateur charge le modèle.
+      // Tensor cache filled from the node's local copy before the coordinator loads the model.
       if (ok && !o.noWarm && modelEnv(f).MODEL_URL) {
         const w = await nodeSh(root, f, n, "warm", 3_600_000);
         if (w.code !== 0) r.out += `\nwarm : ${w.out || w.err}`;
         ok = w.code === 0;
       }
       const ms = Math.round(performance.now() - t0);
-      // Refus par condition (75) = attendu, pas un échec de santé ; panne ssh/installation = refroidissement.
+      // Refusal by condition (75) = expected, not a health failure; ssh/install failure = cooldown.
       if (r.code !== 75)
         health.record(n.id, PROVIDER, ok, ok ? null : "overload", ms);
       nodes.push({
@@ -474,7 +474,7 @@ export async function up(o: UpOpts = {}, root = srcRoot()) {
 const trialsPath = () => join(dataDir(), "fabric-trials.jsonl");
 const lockPath = () => join(dataDir(), "fabric-ensure.lock");
 
-/** Essais consignés (une ligne JSON par essai). */
+/** Logged trials (one JSON line per trial). */
 export function trials(): any[] {
   try {
     return readFileSync(trialsPath(), "utf8")
@@ -486,7 +486,7 @@ export function trials(): any[] {
   }
 }
 
-/** Un seul `ensure` à la fois (timer toutes les 10 min, essai de plusieurs minutes) ; verrou périmé après 1 h. */
+/** A single `ensure` at a time (timer every 10 min, trial of several minutes); lock stale after 1 h. */
 function takeLock(): boolean {
   mkdirSync(dataDir(), { recursive: true });
   try {
@@ -502,7 +502,7 @@ function takeLock(): boolean {
   }
 }
 
-/** Essai court réparti avec un nœud admis, puis retour exact à l'état précédent ; résultat consigné. */
+/** Short distributed trial with an admitted node, then exact return to the previous state; result logged. */
 export async function trial(id: string, root = srcRoot()) {
   const f = loadFabric(root);
   const t = f.trial ?? {
@@ -556,9 +556,9 @@ export async function trial(id: string, root = srcRoot()) {
   return r;
 }
 
-/** Timer : bascule (coordinateur muet -> `up` avec les nœuds encore admis, sinon GPU seul ; rien si le tissu a été
- *  arrêté par `down`), puis admission opportuniste : chaque nœud de [trial] sans essai réussi est sondé, et l'essai
- *  court part dès qu'il passe sa condition. */
+/** Timer: failover (silent coordinator -> `up` with the still-admitted nodes, otherwise GPU alone; nothing if the fabric was
+ *  stopped by `down`), then opportunistic admission: each [trial] node without a successful trial is probed, and the short
+ *  trial starts as soon as it passes its condition. */
 export async function ensure(root = srcRoot()) {
   if (!takeLock()) return { action: "busy" };
   try {
@@ -614,11 +614,11 @@ export async function ensure(root = srcRoot()) {
   }
 }
 
-/** Tâche planifiée Windows (utilisateur courant, sans élévation, `conhost --headless` : aucune fenêtre) : `ai-os fabric ensure` toutes les `every` minutes. */
+/** Windows scheduled task (current user, no elevation, `conhost --headless`: no window): `ai-os fabric ensure` every `every` minutes. */
 export function timer(remove = false, every = 10, root = srcRoot()) {
   const name = "aphrody-fabric-ensure";
   if (process.platform !== "win32")
-    throw new Error("timer prévu sur le coordinateur Windows");
+    throw new Error("timer planned on the Windows coordinator");
   const argv = remove
     ? ["schtasks", "/Delete", "/TN", name, "/F"]
     : [
@@ -687,11 +687,11 @@ export async function status(root = srcRoot()) {
   };
 }
 
-/** Remplit le cache de tenseurs des nœuds Linux actifs depuis leur propre copie du GGUF (lien montant du PC épargné). */
+/** Fills the tensor cache of active Linux nodes from their own copy of the GGUF (PC uplink spared). */
 export async function warm(only?: string[], root = srcRoot()) {
   const f = loadFabric(root);
   if (!modelEnv(f).MODEL_URL)
-    throw new Error(`modèle ${f.coordinator.model} sans url dans fabric.toml`);
+    throw new Error(`model ${f.coordinator.model} has no url in fabric.toml`);
   return await Promise.all(
     workers(f, only)
       .filter((n) => n.os === "linux")
@@ -720,7 +720,7 @@ export async function down(root = srcRoot()) {
   return { stopped: true, nodes };
 }
 
-/** Une génération réelle ; tokens/s lus dans `timings` de llama-server. */
+/** One real generation; tokens/s read from llama-server `timings`. */
 export async function bench(prompt: string, n = 128, root = srcRoot()) {
   const f = served(root);
   const t0 = performance.now();
@@ -732,7 +732,7 @@ export async function bench(prompt: string, n = 128, root = srcRoot()) {
       messages: [{ role: "user", content: prompt }],
       max_tokens: n,
       temperature: 0,
-      // Longueur fixe pour comparer les débits : pas d'arrêt anticipé.
+      // Fixed length to compare throughputs: no early stop.
       ignore_eos: true,
     }),
     signal: AbortSignal.timeout(900_000),
@@ -759,12 +759,12 @@ export async function bench(prompt: string, n = 128, root = srcRoot()) {
   };
 }
 
-/** Nœud Windows (second hôte GPU) : rpc-server au premier plan, lié à son adresse WireGuard. */
+/** Windows node (second GPU host): rpc-server in the foreground, bound to its WireGuard address. */
 export async function serveNode(id: string, root = srcRoot()) {
   const f = loadFabric(root);
   const n = f.node.find((x) => x.id === id);
   if (!n?.bind)
-    throw new Error(`nœud ${id} sans adresse bind dans fabric.toml`);
+    throw new Error(`node ${id} has no bind address in fabric.toml`);
   const exe = join(toolDir(f), "ggml-rpc-server.exe");
   await ensureCoordinatorBin(f);
   const p = Bun.spawn(

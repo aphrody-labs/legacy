@@ -1,15 +1,15 @@
-// ai-os review : tribunal de revue de src à trois voix, sans humain (docs/reviews/README.md).
-//   - voix gemini (Google, Chromium, Python, Go) et claude (Rust, bun) en parallèle, puis le juge neutre (C/C++/natif)
-//     qui contre-vérifie les deux plaidoiries et tranche ; sa note est la note finale ;
-//   - moteurs jamais figés : familles déclarées dans config/review.json, ordre calculé par orch/select.ts (CLI d'agents
-//     + llm_models + config/model-routing.json + santé), exécution par orch/inline.ts (lecture seule), repli sur le
-//     moteur suivant, délai par voix ;
-//   - appels dédupliqués par le client sortant du relais (relay/outbound.ts : clé sha256, singleflight, cache SQLite
+// ai-os review: three-voice review tribunal for src, no human involved (docs/reviews/README.md).
+//   - gemini voice (Google, Chromium, Python, Go) and claude (Rust, bun) in parallel, then the neutral judge (C/C++/native)
+//     who cross-checks both pleas and decides; its score is the final score;
+//   - engines never pinned: families declared in config/review.json, order computed by orch/select.ts (agent CLIs
+//     + llm_models + config/model-routing.json + health), execution by orch/inline.ts (read-only), fallback to the
+//     next engine, timeout per voice;
+//   - calls deduplicated by the relay's outbound client (relay/outbound.ts: sha256 key, singleflight, SQLite cache
 //     <src>/var/review/cache.sqlite, TTL 24 h) ;
-//   - ancrage : sources officielles Google (sources.ts) + listes de contrôle distillées des verdicts (CHECKLISTS.md) ;
-//   - sortie : docs/reviews/<voix>-<date>-<slug>.md (note /20, défauts, sources), ligne de docs/reviews/INDEX.md ;
-//   - boucle de correction : ticket coder de l'orchestrateur, nouvelle revue, gel après deux tours sans progrès
-//     (docs/ALPHABET.md, « Arrêt et gel ») ; moteur absent = violation dans var/agents/nhitl.sqlite.
+//   - anchoring: official Google sources (sources.ts) + checklists distilled from the verdicts (CHECKLISTS.md);
+//   - output: docs/reviews/<voice>-<date>-<slug>.md (score /20, defects, sources), docs/reviews/INDEX.md line;
+//   - fix loop: orchestrator coder ticket, new review, freeze after two rounds without progress
+//     (docs/ALPHABET.md, "Arrêt et gel"); missing engine = violation in var/agents/nhitl.sqlite.
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { fingerprint, Index as Nhitl, scrub } from "../nhitl/index";
@@ -37,7 +37,7 @@ export type VoiceCfg = {
   only?: string[];
   ignore?: string[];
   prefer?: string[];
-  /** Voix dont la plaidoirie est jointe : la voix tourne après elles (le juge). */
+  /** Voices whose plea is attached: the voice runs after them (the judge). */
   after?: string[];
 };
 export type Config = {
@@ -65,11 +65,11 @@ export const configPath = () =>
 export const loadConfig = (p = configPath()): Config =>
   JSON.parse(readFileSync(p, "utf8"));
 
-// ---- objet de la revue -----------------------------------------------------------------------------------------
+// ---- review subject -------------------------------------------------------------------------------------------
 
 export type Target = {
   title: string;
-  /** Spécification d'origine (chemins, diff, A..B, commit), rejouée après une correction. */
+  /** Original specification (paths, diff, A..B, commit), replayed after a fix. */
   spec: string[];
   files: string[];
   text: string;
@@ -78,10 +78,10 @@ export type Target = {
 };
 
 const REV = /^(?!-)[\w./~^@{}-]+$/;
-/** Fichiers de secrets jamais envoyés à un moteur, même suivis par git. */
+/** Secret files never sent to an engine, even when tracked by git. */
 const SECRET_FILE =
   /(^|\/)(\.env(\..*)?|.*\.(pem|key|p12|pfx)|id_(rsa|ed25519|ecdsa)|secrets?\.(env|json|toml|ya?ml))$/i;
-/** Slug de fichier de verdict : jamais de séparateur ni de .. (écriture confinée à docs/reviews). */
+/** Verdict file slug: never a separator or .. (writes confined to docs/reviews). */
 export const SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 async function git(root: string, args: string[], allowFail = false) {
@@ -106,14 +106,14 @@ const isRev = async (root: string, s: string) =>
   (await git(root, ["rev-parse", "--verify", "-q", `${s}^{commit}`], true))
     .length > 0;
 
-/** Fichiers d'un diff unifié (en-têtes diff --git). */
+/** Files of a unified diff (diff --git headers). */
 export const diffFiles = (text: string) => [
   ...new Set(
     [...text.matchAll(/^diff --git a\/(\S+) b\/(\S+)$/gm)].map((m) => m[2]!),
   ),
 ];
 
-/** Chemins sous la racine uniquement (aucun absolu ni ..). */
+/** Paths under the root only (no absolute path or ..). */
 function inside(root: string, p: string): string {
   const rel = relative(resolve(root), resolve(root, p)).replace(/\\/g, "/");
   if (!rel || rel === ".." || rel.startsWith("../") || isAbsolute(rel))
@@ -121,8 +121,8 @@ function inside(root: string, p: string): string {
   return rel;
 }
 
-/** Contenu revu : chemins (fichiers numérotés), `diff` (arbre de travail), A..B / A...B, commit ; `--` sépare les
- * révisions des chemins qui les filtrent. `ref` lit les fichiers à une révision (après une correction poussée). */
+/** Reviewed content: paths (numbered files), `diff` (working tree), A..B / A...B, commit; `--` separates the
+ * revisions from the paths that filter them. `ref` reads the files at a revision (after a pushed fix). */
 export async function collect(
   spec: string[],
   o: { root?: string; maxBytes?: number; ref?: string } = {},
@@ -143,11 +143,11 @@ export async function collect(
       const [a, b] = s.split(/\.\.\.?/);
       for (const r of [a || "HEAD", b || "HEAD"])
         if (!(await isRev(root, r)))
-          throw new Error(`révision inconnue : ${r}`);
+          throw new Error(`unknown revision: ${r}`);
       revs.push(s);
     } else if (existsSync(join(root, s))) paths.push(inside(root, s));
     else if (await isRev(root, s)) revs.push(s);
-    else throw new Error(`cible inconnue (ni chemin, ni révision) : ${s}`);
+    else throw new Error(`unknown target (neither path nor revision): ${s}`);
   }
   const filterArgs = paths.length ? ["--", ...paths] : [];
   let text = "";
@@ -198,7 +198,7 @@ export async function collect(
       );
     }
   } else {
-    if (!paths.length) throw new Error("rien à revoir");
+    if (!paths.length) throw new Error("nothing to review");
     for (const p of paths) {
       const abs = join(root, p);
       if (!o.ref && existsSync(abs) && statSync(abs).isDirectory())
@@ -254,17 +254,17 @@ export async function collect(
   }
   files = [...new Set(files)].filter((f) => !skipped.includes(f)).sort();
   if (skipped.length)
-    text += `\n[fichiers écartés (ignorés par git ou secrets) : ${skipped.join(", ")}]\n`;
-  // Aucun secret ne part vers un moteur ni dans un verdict archivé (motifs de nhitl/index.ts).
+    text += `\n[files skipped (ignored by git or secrets): ${skipped.join(", ")}]\n`;
+  // No secret goes to an engine or into an archived verdict (patterns of nhitl/index.ts).
   text = scrub(text);
   const truncated = Math.max(0, text.length - max);
   if (truncated)
-    text = `${text.slice(0, max)}\n[tronqué : ${truncated} caractères omis ; revue partielle, le signaler]\n`;
+    text = `${text.slice(0, max)}\n[truncated: ${truncated} characters omitted; partial review, say so]\n`;
   const title = spec.join(" ");
   return { title, spec, files, text, truncated, kind };
 }
 
-// ---- notes et défauts ------------------------------------------------------------------------------------------
+// ---- scores and defects ----------------------------------------------------------------------------------------
 
 /** Première note /20 d'un verdict (formats relevés dans docs/reviews : « Note : 11/20 », « **Note : 12,5/20** »,
  * « Score: 7 / 20 », « - **Note** : 9,5/20 »). Sous-notes « 2 / 6 » ignorées. */
@@ -434,24 +434,24 @@ export type EngineAnswer = {
   ms: number;
   cache?: string;
 };
-/** Appel d'un moteur (« cli[:modèle] » ou « fournisseur/modèle ») avec un délai. */
+/** Call of an engine ("cli[:model]" or "provider/model") with a timeout. */
 export type Engine = (
   provider: string,
   prompt: string,
   timeoutMs: number,
 ) => Promise<EngineAnswer>;
 
-/** Moteur de production : orch/inline.ts derrière le client sortant du relais (clé sha256 de la consigne et du
- * moteur, singleflight, cache SQLite). Seules les réponses réussies sont gardées. */
+/** Production engine: orch/inline.ts behind the relay's outbound client (sha256 key of the instruction and
+ * engine, singleflight, SQLite cache). Only successful responses are kept. */
 export function cachedEngine(
   h: Host,
   o: {
     root?: string;
     ttlMs?: number;
     noCache?: boolean;
-    /** Base du cache (":memory:" en test). */
+    /** Cache database (":memory:" in tests). */
     db?: string;
-    /** Exécution d'un moteur (défaut orch/inline.ts). */
+    /** Execution of an engine (default orch/inline.ts). */
     call?: typeof inline;
   } = {},
 ): Engine {
@@ -467,7 +467,7 @@ export function cachedEngine(
       );
       const r = await call(h, provider, prompt, timeout);
       return new Response(JSON.stringify(r), {
-        // Une réponse sans note /20 n'est pas un verdict : jamais gardée en cache.
+        // A response without a /20 score is not a verdict: never cached.
         status: r.ok && parseScore(r.text) !== undefined ? 200 : 502,
         headers: { "content-type": "application/json" },
       });
@@ -499,7 +499,7 @@ export function cachedEngine(
   };
 }
 
-/** Moteurs d'une voix, dans l'ordre : modèles des classes de tâche (model-routing.json), puis classement santé. */
+/** Engines of a voice, in order: models of the task classes (model-routing.json), then health ranking. */
 export async function enginesFor(
   v: VoiceCfg,
   h: Host,
@@ -566,7 +566,7 @@ async function runVoice(
     }
     let a: EngineAnswer;
     try {
-      // Le premier moteur ne prend pas tout le budget de la voix : part égale, plancher 60 s.
+      // The first engine does not take the voice's whole budget: equal share, 60 s floor.
       a = await engine(
         p,
         prompt,
@@ -629,7 +629,7 @@ export const slugOf = (s: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 48) || "revue";
 
-/** « incomplet » : note au seuil mais revue tronquée ou voix manquante ; jamais une porte franchie. */
+/** "incomplet": score at the threshold but review truncated or voice missing; never a gate passed. */
 export type Status =
   "conforme" | "à corriger" | "incomplet" | "gelé" | "sans moteur";
 
@@ -749,7 +749,7 @@ export function recordMissing(
 
 export type ReviewOptions = {
   spec?: string[];
-  /** Contenu fourni tel quel (étape d'orchestrateur : sortie d'une étape précédente). */
+  /** Content provided as is (orchestrator step: output of a previous step). */
   content?: { title: string; text: string; files?: string[] };
   voices?: string[];
   threshold?: number;
@@ -759,7 +759,7 @@ export type ReviewOptions = {
   rounds?: number;
   timeoutS?: number;
   noCache?: boolean;
-  /** Dossier des verdicts (défaut docs/reviews ; INDEX.md mis à jour seulement dans ce dossier). */
+  /** Verdict folder (default docs/reviews; INDEX.md updated only in this folder). */
   out?: string;
   write?: boolean;
   dryRun?: boolean;
@@ -808,11 +808,11 @@ export type ReviewResult = {
   fix?: string;
 };
 
-/** Ticket coder de l'orchestrateur (file du runner, commit borné aux fichiers revus), puis main relu à jour. */
+/** Orchestrator coder ticket (runner queue, commit bounded to the reviewed files), then main reread up to date. */
 export const orchFixer: Fixer = async (o) => {
   const { runWorkflow } = await import("../orch/run");
   const files = o.target.files;
-  if (!files.length) return { ok: false, note: "aucun fichier à corriger" };
+  if (!files.length) return { ok: false, note: "no file to fix" };
   const r = await runWorkflow({
     name: `review-fix-${o.slug}-r${o.round}`,
     paths: files,
@@ -849,7 +849,7 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
   const names = (o.voices?.length ? o.voices : Object.keys(cfg.voices)).filter(
     (n) => {
       if (!Object.hasOwn(cfg.voices, n))
-        throw new Error(`voix inconnue : ${n}`);
+        throw new Error(`unknown voice: ${n}`);
       return true;
     },
   );
@@ -873,7 +873,7 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
         : commonDir(target.files) || target.title,
     );
   if (!SLUG.test(slug))
-    throw new Error(`slug invalide : ${slug} (attendu ${SLUG.source})`);
+    throw new Error(`invalid slug: ${slug} (expected ${SLUG.source})`);
   const outDir = o.out ?? join(root, "docs", "reviews");
   const indexed = resolve(outDir) === resolve(root, "docs", "reviews");
   const write = o.write ?? !o.dryRun;
@@ -897,8 +897,8 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
     (async (_n: string, v: VoiceCfg, chars: number) => {
       health ??= new Health();
       cands ??= await candidates(host, undefined, host.local);
-      // Contexte exigé = taille de la consigne (environ 3 caractères par jeton) + réponse : un modèle du pont trop
-      // petit ou sans métadonnée de contexte est écarté (orch/select.ts rank) ; les CLI d'agents gèrent le leur.
+      // Required context = instruction size (about 3 characters per token) + response: a bridge model too
+      // small or without context metadata is discarded (orch/select.ts rank); agent CLIs manage their own.
       return enginesFor(v, host, health, cands, Math.ceil(chars / 3) + 8_000);
     });
   const engine = o.engine ?? cachedEngine(host, { root, noCache: o.noCache });
@@ -1003,7 +1003,7 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
         .reverse()
         .find((r) => r.ok && cfg.voices[r.voice]!.after?.length);
       const okVoices = done.filter((r) => r.ok);
-      // Note finale : celle du juge ; sans juge, la plus basse des voix (prudence).
+      // Final score: the judge's; without a judge, the lowest of the voices (caution).
       const score =
         deciding?.score ??
         (okVoices.length
@@ -1108,12 +1108,12 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
       });
       log({ ev: "fix", round, ok: f.ok, note: f.note });
       if (!f.ok) {
-        fixNote = `correction du tour ${round} en échec : ${f.note}`;
+        fixNote = `round ${round} fix failed: ${f.note}`;
         last.fix = fixNote;
         break;
       }
-      // Relecture sur main à jour : la correction a été commitée et poussée par le runner.
-      // Échec fermé : sans main à jour, la relecture porterait sur l'ancien code.
+      // Re-review on an up-to-date main: the fix was committed and pushed by the runner.
+      // Fail closed: without an up-to-date main, the re-review would cover the old code.
       const ref = f.ref ?? "origin/main";
       if (ref.startsWith("origin/"))
         await git(root, ["fetch", "-q", "origin", ref.slice("origin/".length)]);
@@ -1125,7 +1125,7 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
   return last!;
 }
 
-/** Même cible après correction : fichiers relus à `ref`, plages et commits prolongés jusqu'à `ref`. */
+/** Same target after a fix: files reread at `ref`, ranges and commits extended up to `ref`. */
 async function advance(
   t: Target,
   root: string,
@@ -1166,9 +1166,9 @@ function commonDir(files: string[]): string {
   return out.join("/");
 }
 
-// ---- fouille des verdicts --------------------------------------------------------------------------------------
+// ---- verdict mining --------------------------------------------------------------------------------------------
 
-/** Notes de tous les verdicts archivés (docs/reviews/*.md et auto/*.md) : le contrat de note que l'outil reproduit. */
+/** Scores of all archived verdicts (docs/reviews/*.md and auto/*.md): the score contract the tool reproduces. */
 export function mine(root = srcRoot()) {
   const dir = join(root, "docs", "reviews");
   const out: { file: string; voice: string; date?: string; score?: number }[] =

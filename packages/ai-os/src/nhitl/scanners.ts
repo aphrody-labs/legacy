@@ -1,4 +1,4 @@
-// Scanners NHITL : chacun rend des Violation[] reproductibles (id = empreinte de source + emplacement + règle).
+// NHITL scanners: each returns reproducible Violation[] (id = fingerprint of source + location + rule).
 import { Database } from "bun:sqlite";
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
@@ -17,7 +17,7 @@ const HOME = homedir();
 const claudeDir = () => Bun.env.CLAUDE_CONFIG_DIR ?? join(HOME, ".claude");
 
 // ---------------------------------------------------------------- transcripts
-/** Fin de tour d'un assistant qui rend la main à un humain. Ordre = priorité (une catégorie par message). */
+/** End of an assistant turn that hands control back to a human. Order = priority (one category per message). */
 export const TAIL_RULES: {
   category: string;
   severity: Severity;
@@ -28,25 +28,25 @@ export const TAIL_RULES: {
     category: "passive_wait",
     severity: "high",
     re: /\b(j'attends|j’attends|en attente (de|du|d'une|d’une) (ta|ton|votre|vos|validation|confirmation|réponse|retour|feu vert|propriétaire)|je patiente|waiting for (you|your)|awaiting (your|confirmation))\b/i,
-    fix: "Ne jamais attendre : poursuivre le reste à faire, inscrire le blocage dans l'index NHITL et continuer.",
+    fix: "Never wait: carry on with the rest to do, record the blocker in the NHITL index and continue.",
   },
   {
     category: "owner_todo",
     severity: "high",
     re: /(reste (à faire )?(au|pour le|côté) propriétaire|de ton côté|à toi de|il te (reste|faut)|tu (dois|devras|peux) (lancer|cliquer|exécuter|ouvrir|saisir|coller|valider)|ce qui reste au propriétaire|action (manuelle|requise)|you('ll)? need to|on your side|manual step)/i,
-    fix: "Faire soi-même chaque point (CLI non interactive, stockage de secrets, claude-in-chrome) ; sinon une entrée d'index avec la cause.",
+    fix: "Do each item yourself (non-interactive CLI, secret storage, claude-in-chrome); otherwise an index entry with the cause.",
   },
   {
     category: "conditional_offer",
     severity: "medium",
     re: /(si tu (le )?(veux|souhaites|préfères)|si vous (le )?(voulez|souhaitez)|veux-tu|voulez-vous|souhaites-tu|dis[- ]moi|dites[- ]moi|\bdis\s+[«"`“]|want me to|shall i|should i|let me know|if you('d)? (want|like|prefer))/i,
-    fix: "Ne pas proposer : exécuter l'option la plus probable, puis rendre compte.",
+    fix: "Do not propose: run the most likely option, then report.",
   },
   {
     category: "final_question",
     severity: "medium",
     re: /\?\s*[*_`)\]»"”]*\s*$/,
-    fix: "Trancher au lieu de demander (CLAUDE.md : aucune question ni confirmation).",
+    fix: "Decide instead of asking (CLAUDE.md: no question or confirmation).",
   },
 ];
 
@@ -69,7 +69,7 @@ const textOf = (content: unknown): string =>
           .join("\n")
       : "";
 
-/** Transcripts Claude Code : dernier message texte de chaque tour de l'agent principal (pas les sous-agents). */
+/** Claude Code transcripts: last text message of each turn of the main agent (not the sub-agents). */
 export function scanTranscripts(ix: Index) {
   const root = join(claudeDir(), "projects");
   const items: Violation[] = [];
@@ -103,7 +103,7 @@ export function scanTranscripts(ix: Index) {
       tailsOf(unit, text, items);
     }
   }
-  // Transcripts froids compressés par `ai-os brain` dans <AGENT_HOME>/brain.sqlite (table blobs, zstd).
+  // Cold transcripts compressed by `ai-os brain` in <AGENT_HOME>/brain.sqlite (blobs table, zstd).
   const brain = join(
     Bun.env.AGENT_HOME ?? join(HOME, ".agent"),
     "brain.sqlite",
@@ -148,7 +148,7 @@ export function scanTranscripts(ix: Index) {
   return { items, keep, stamps };
 }
 
-/** Tours de l'agent principal d'un transcript qui rendent la main. */
+/** Turns of the main agent in a transcript that hand control back. */
 function tailsOf(unit: string, text: string, items: Violation[]) {
   for (const line of text.split("\n")) {
     if (!line.includes('"end_turn"') || !line.includes('"role":"assistant"'))
@@ -194,7 +194,7 @@ const jsonc = (p: string): any => {
   }
 };
 
-/** Garde-fous voulus : protection de secrets et du système, jamais levés (statut inévitable). */
+/** Intended guardrails: protection of secrets and of the system, never lifted (inevitable status). */
 const GUARD =
   /\.env|System32|credstore|secrets?|\.ssh|id_ed25519|rm -rf \/|force|--no-verify|IS_SANDBOX/i;
 
@@ -248,11 +248,11 @@ export function scanSettings(): Violation[] {
         guard ? "info" : "low",
         `deny ${rule}`,
         guard
-          ? "Garder : garde-fou de secret ou du système."
-          : "Retirer la règle ou fournir une voie non interactive équivalente.",
+          ? "Keep: secret or system guardrail."
+          : "Remove the rule or provide an equivalent non-interactive path.",
         guard ? "inevitable" : "open",
         guard
-          ? "garde-fou de sécurité (secret, système, historique git)"
+          ? "security guardrail (secret, system, git history)"
           : undefined,
       );
     }
@@ -263,7 +263,7 @@ export function scanSettings(): Violation[] {
         "settings_confirm",
         "high",
         `ask ${rule}`,
-        "Passer la règle en allow (ou en deny si dangereuse) : une règle ask bloque les sessions headless.",
+        "Turn the rule into allow (or deny if dangerous): an ask rule blocks headless sessions.",
       );
     if (p.defaultMode && p.defaultMode !== "bypassPermissions")
       v(
@@ -272,11 +272,11 @@ export function scanSettings(): Violation[] {
         "settings_confirm",
         "medium",
         `defaultMode ${p.defaultMode}`,
-        "defaultMode bypassPermissions dans ~/.claude/settings.json (les réglages de projet ne l'honorent pas).",
+        "defaultMode bypassPermissions in ~/.claude/settings.json (project settings do not honor it).",
         f.startsWith(claudeDir()) ? "open" : "inevitable",
         f.startsWith(claudeDir())
           ? undefined
-          : "réglage de projet : bypass imposé par les réglages utilisateur",
+          : "project setting: bypass imposed by the user settings",
       );
     if (p.disableBypassPermissionsMode)
       v(
@@ -334,7 +334,7 @@ export function scanSettings(): Violation[] {
             "settings_confirm",
             "high",
             `${k} ${val}`,
-            `${k} en mode sans confirmation (${want[k]!.source}).`,
+            `${k} in no-confirmation mode (${want[k]!.source}).`,
           );
         else if (typeof val === "object") walk(val, `${path}${k}.`);
       }
@@ -364,9 +364,9 @@ export function scanSettings(): Violation[] {
             "settings_deny",
             GUARD.test(path) ? "info" : "low",
             `${path} deny`,
-            "Vérifier que le refus est un garde-fou voulu.",
+            "Check that the denial is an intended guardrail.",
             GUARD.test(path) ? "inevitable" : "open",
-            GUARD.test(path) ? "garde-fou de sécurité" : undefined,
+            GUARD.test(path) ? "security guardrail" : undefined,
           );
       } else if (x && typeof x === "object")
         for (const [k, val] of Object.entries(x)) walk(val, `${path}.${k}`);
@@ -387,7 +387,7 @@ type CodeRule = {
   fix: string;
   status?: Status;
   reason?: string;
-  /** Ligne ignorée si elle correspond (forme non interactive déjà présente). */
+  /** Line ignored if it matches (non-interactive form already present). */
   unless?: RegExp;
 };
 
@@ -397,14 +397,14 @@ export const CODE_RULES: CodeRule[] = [
     severity: "high",
     pattern: String.raw`(?<![\w.$])(prompt|confirm)\(\s*["'\x60]`,
     glob: ["*.{ts,tsx,js,mjs,cjs}"],
-    fix: "Lire la valeur d'un argument, d'une variable d'environnement ou du stockage de secrets ; jamais d'invite.",
+    fix: "Read the value from an argument, an environment variable or secret storage; never a prompt.",
   },
   {
     category: "interactive_prompt",
     severity: "high",
     pattern: String.raw`\b(Read-Host|Get-Credential)\b`,
     glob: ["*.{ps1,psm1}"],
-    fix: "Paramètre obligatoire ou secret lu par `ay secret exec`, jamais Read-Host/Get-Credential.",
+    fix: "Mandatory parameter or secret read by `ay secret exec`, never Read-Host/Get-Credential.",
   },
   {
     category: "interactive_prompt",
@@ -433,21 +433,21 @@ export const CODE_RULES: CodeRule[] = [
     severity: "medium",
     pattern: String.raw`approval["']?\s*[:=]\s*["']owner["']|owner-rules`,
     glob: ["*.{ts,json,toml,md}"],
-    fix: "Autoriser l'effet dans .agents/owner-rules.json quand il est réversible ; sinon brouillon tenu en outbox (inévitable : publication, envoi, dépense).",
+    fix: "Allow the effect in .agents/owner-rules.json when it is reversible; otherwise a draft held in the outbox (inevitable: publication, sending, spending).",
   },
   {
     category: "endless_wait",
     severity: "medium",
     pattern: String.raw`sleep infinity|tail -f /dev/null|Bun\.sleep\(\s*Infinity|while\s*\(\s*true\s*\)\s*\{\s*await\s+Bun\.sleep|while true; do sleep`,
     glob: ["*.{ts,js,sh,bash,ps1,yml,yaml}", "Dockerfile*", "justfile"],
-    fix: "Attente bornée (timeout) ou événement (fichier, socket, systemd) au lieu d'une boucle sans fin.",
+    fix: "Bounded wait (timeout) or event (file, socket, systemd) instead of an endless loop.",
   },
   {
     category: "browser_login",
     severity: "high",
     pattern: String.raw`\b(gh auth login|npm login|gcloud auth login|wrangler login|vercel login|codex login|claude auth login|az login|docker login)\b`,
     glob: ["*.{ts,js,sh,bash,ps1,toml,yml,yaml}", "justfile"],
-    fix: "Jeton longue durée tiré du stockage de secrets : gh --with-token, npm token, gcloud compte de service, codex --with-api-key, claude setup-token, docker --password-stdin.",
+    fix: "Long-lived token drawn from secret storage: gh --with-token, npm token, gcloud service account, codex --with-api-key, claude setup-token, docker --password-stdin.",
     unless:
       /--with-token|--with-api-key|--password-stdin|--cred-file|--no-launch-browser/,
   },
@@ -511,7 +511,7 @@ export async function scanCode(root = srcRoot()): Promise<Violation[]> {
         const [, file, ln, code] = m;
         if (r.unless?.test(code!)) continue;
         const rel = file!.replace(/^\.[\\/]/, "").replaceAll("\\", "/");
-        // Boîte de confirmation d'une page web : destinée à l'utilisateur final du site, pas à un agent.
+        // Confirmation box of a web page: meant for the site's end user, not for an agent.
         const ui =
           r.category === "interactive_prompt" && /\.(tsx|jsx)$/.test(rel);
         out.push({
@@ -524,7 +524,7 @@ export async function scanCode(root = srcRoot()): Promise<Violation[]> {
           fix: r.fix,
           status: ui ? "inevitable" : (r.status ?? "open"),
           reason: ui
-            ? "confirmation d'interface web pour l'utilisateur final, hors boucle d'agent"
+            ? "web interface confirmation for the end user, outside the agent loop"
             : r.reason,
         });
       }
@@ -577,17 +577,17 @@ export async function scanDocs(root = srcRoot()): Promise<Violation[]> {
       category: "doc_manual_action",
       severity: review ? "info" : "medium",
       excerpt: redact(m[3]!, 160),
-      fix: "Automatiser l'étape (recette just, CLI non interactive, secret du stockage) puis réécrire la doc ; sinon une entrée de registre avec la cause.",
+      fix: "Automate the step (just recipe, non-interactive CLI, secret from storage) then rewrite the doc; otherwise a registry entry with the cause.",
       status: review ? "inevitable" : "open",
       reason: review
-        ? "rapport archivé : constat daté, non modifiable"
+        ? "archived report: dated finding, not modifiable"
         : undefined,
     });
   }
   return out;
 }
 
-// ---------------------------------------------------------------- hook (refus du plugin aphrody-nhitl)
+// ---------------------------------------------------------------- hook (denials of the aphrody-nhitl plugin)
 export function scanHook(): Violation[] {
   const f = join(claudeDir(), "learning", "nhitl.jsonl");
   if (!existsSync(f)) return [];
@@ -607,8 +607,8 @@ export function scanHook(): Violation[] {
     location: `~/.claude/learning/nhitl.jsonl:${k}`,
     category: k.startsWith("ask") ? "hook_confirm" : "hook_deny",
     severity: (k.startsWith("ask") ? "high" : "low") as Severity,
-    excerpt: `${n} décision(s) ${k}`,
-    fix: "Revoir plugins/aphrody-nhitl/src/policy.ts : refus réservés aux garde-fous, jamais d'ask.",
+    excerpt: `${n} ${k} decision(s)`,
+    fix: "Review plugins/aphrody-nhitl/src/policy.ts: denials reserved for guardrails, never ask.",
     status: "open" as Status,
   }));
 }
@@ -616,7 +616,7 @@ export function scanHook(): Violation[] {
 // ---------------------------------------------------------------- files d'agents
 type Target = { host: string; ssh?: string[]; local?: string; dir?: string };
 
-/** Hôtes de la file : fleet.toml (pc local, fr1, prd, fr2). ssh = cibles essayées dans l'ordre, puis rebond. */
+/** Queue hosts: fleet.toml (local pc, fr1, prd, fr2). ssh = targets tried in order, then hop. */
 export function queueTargets(root = srcRoot()): Target[] {
   const fleet: any = existsSync(join(root, "infra/agents/fleet.toml"))
     ? Bun.TOML.parse(
@@ -638,7 +638,7 @@ export function queueTargets(root = srcRoot()): Target[] {
       .find((x) => /^\d+\.\d+\.\d+\.\d+$/.test(x) && !x.startsWith("10."));
     const jump = Bun.env.NHITL_JUMP ?? "fr2";
     const cmds = raw.map((t) => [t]);
-    // Mesh WireGuard fermé depuis le PC : rebond par fr2, clé d'hôte vérifiée sous l'IP publique connue.
+    // WireGuard mesh closed from the PC: hop through fr2, host key verified under the known public IP.
     for (const t of raw.filter((t) => /@10\./.test(t)))
       if (h.id !== jump)
         cmds.push([
@@ -696,7 +696,7 @@ async function dumpQueue(
     if (code === 0) return { text: out, via: args.join(" ") };
     last = err.trim().split("\n").pop() ?? `exit ${code}`;
   }
-  return { text: "", error: last || "aucune cible ssh" };
+  return { text: "", error: last || "no ssh target" };
 }
 
 const AUTH_RE =
@@ -725,10 +725,10 @@ export function parseQueueDump(host: string, text: string): Violation[] {
         category: "held_effect",
         severity: "low",
         excerpt: `effet externe retenu : ${basename(path!)}`,
-        fix: "Autoriser l'effet dans .agents/owner-rules.json s'il est réversible ; sinon reste retenu.",
+        fix: "Allow the effect in .agents/owner-rules.json if it is reversible; otherwise it stays held.",
         status: "inevitable",
         reason:
-          "publication, envoi ou dépense : décision du propriétaire par contrat (owner-rules)",
+          "publication, sending or spending: owner decision by contract (owner-rules)",
         unit: host,
       });
       continue;
@@ -755,8 +755,8 @@ export function parseQueueDump(host: string, text: string): Violation[] {
         location: `${host}:queue/new/${t.id}.json`,
         category: "owner_approval",
         severity: "medium",
-        excerpt: `tâche ${t.role ?? "?"} en attente d'approbation propriétaire`,
-        fix: "Effet réversible : owner-rules ; sinon brouillon en outbox, la file continue.",
+        excerpt: `${t.role ?? "?"} task awaiting owner approval`,
+        fix: "Reversible effect: owner-rules; otherwise draft in outbox, the queue continues.",
         status: "open",
         unit: host,
       });
@@ -774,12 +774,12 @@ export function parseQueueDump(host: string, text: string): Violation[] {
       category,
       severity: category === "queue_failed" ? "medium" : "high",
       excerpt: redact(
-        `${t.role ?? "?"} ; essais ${attempts.length} (${reasons.join(",") || "aucun"})${r?.commit?.error ? ` ; ${r.commit.error}` : ""}`,
+        `${t.role ?? "?"}; attempts ${attempts.length} (${reasons.join(",") || "none"})${r?.commit?.error ? `; ${r.commit.error}` : ""}`,
       ),
       fix:
         category === "queue_failed"
-          ? "Relancer après correction (just agents enqueue) ou retirer la tâche."
-          : "Identifiant longue durée dans le stockage de l'hôte (systemd-creds --user : CLAUDE_CODE_OAUTH_TOKEN, GH_TOKEN), puis remettre en file.",
+          ? "Retry after the fix (just agents enqueue) or remove the task."
+          : "Long-lived credential in the host's storage (systemd-creds --user: CLAUDE_CODE_OAUTH_TOKEN, GH_TOKEN), then requeue.",
       status: "open",
       unit: host,
     });
@@ -806,7 +806,7 @@ export async function scanQueues(
             category: "host_unreachable",
             severity: "medium",
             excerpt: redact(d.error),
-            fix: "Rétablir ssh (charge, pare-feu, clé) ; la file de l'hôte n'est pas lisible.",
+            fix: "Restore ssh (load, firewall, key); the host's queue is not readable.",
             status: "open",
             unit: t.host,
           });
@@ -818,7 +818,7 @@ export async function scanQueues(
   return { items, errors };
 }
 
-// ---------------------------------------------------------------- registre versionné (points relevés à la main)
+// ---------------------------------------------------------------- versioned registry (items surveyed by hand)
 export function scanLedger(root = srcRoot()): Violation[] {
   const f = join(root, "packages/ai-os/src/nhitl/ledger.json");
   const j = jsonc(f) as { entries?: any[] } | undefined;

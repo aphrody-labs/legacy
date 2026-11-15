@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
-  <!-- Service Windows du relais (Learn « Create a Windows Service using BackgroundService ») : supervise `bun relay serve`. -->
+  <!-- Windows service of the relay (Learn "Create a Windows Service using BackgroundService"): supervises `bun relay serve`. -->
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
     <OutputType>Exe</OutputType>

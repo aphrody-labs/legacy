@@ -1,8 +1,8 @@
-// Index des violations NHITL (no human in the loop) : tout ce qui fait attendre un humain (question finale d'un agent,
-// invite interactive, confirmation, clic de connexion, tâche en échec faute d'identifiant, doc qui demande une action
-// manuelle). Base : <src>/var/agents/nhitl.sqlite (même racine que la file d'agents ; NHITL_DB prime), table `violation`
-// + FTS5 `violation_fts`. Le tri humain (statut, raison) vit dans `triage` et survit aux rescans. Aucune valeur secrète :
-// les extraits sont courts et passés par redact().
+// Index of NHITL (no human in the loop) violations: everything that makes a human wait (an agent's final question,
+// interactive prompt, confirmation, sign-in click, task failing for lack of a credential, doc asking for a manual
+// action). Store: <src>/var/agents/nhitl.sqlite (same root as the agent queue; NHITL_DB takes precedence), table `violation`
+// + FTS5 `violation_fts`. Human triage (status, reason) lives in `triage` and survives rescans. No secret value:
+// excerpts are short and passed through redact().
 import { Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -30,7 +30,7 @@ export type Violation = {
   fix: string;
   status: Status;
   reason?: string;
-  /** Unité de rescan (fichier, hôte) : les entrées d'une unité inchangée sont conservées telles quelles. */
+  /** Rescan unit (file, host): entries of an unchanged unit are kept as is. */
   unit?: string;
 };
 
@@ -56,13 +56,13 @@ const SECRET_RES = [
 const SECRET_NAME = /TOKEN|SECRET|KEY|PASSWORD|PASS|CREDENTIAL|AUTH/i;
 let envValues: string[] | undefined;
 
-/** Extrait court sans secret : motifs de jetons connus, valeurs des variables d'environnement sensibles, 160 car. max. */
+/** Short excerpt without secrets: known token patterns, values of sensitive environment variables, 160 chars max. */
 export function redact(text: string, max = 160): string {
   const s = scrub(text.replace(/\s+/g, " ").trim());
   return s.length > max ? `${s.slice(0, max - 1)}…` : s;
 }
 
-/** Mêmes motifs que redact(), mise en forme conservée (ai-os review : contenu envoyé aux moteurs et archivé). */
+/** Same patterns as redact(), formatting preserved (ai-os review: content sent to the engines and archived). */
 export function scrub(text: string): string {
   envValues ??= Object.entries(Bun.env)
     .filter(([k, v]) => SECRET_NAME.test(k) && v && v.length >= 12)
@@ -110,7 +110,7 @@ export class Index {
     );
   }
 
-  /** Ids déjà indexés pour une unité inchangée (gardés lors du remplacement de la source). */
+  /** Ids already indexed for an unchanged unit (kept when the source is replaced). */
   idsOf(source: Source, unit: string): string[] {
     return this.db
       .query<{ id: string }, [string, string]>(
@@ -120,7 +120,7 @@ export class Index {
       .map((r) => r.id);
   }
 
-  /** Remplace les entrées d'une source : upsert de `items`, conservation de `keep`, suppression du reste. */
+  /** Replaces the entries of a source: upsert of `items`, keep `keep`, delete the rest. */
   replace(
     source: Source,
     items: Violation[],
@@ -172,7 +172,7 @@ export class Index {
     })();
   }
 
-  /** Upsert d'une seule entrée, sans toucher aux autres entrées de sa source (ai-os review : moteur absent). */
+  /** Upsert of a single entry, without touching the other entries of its source (ai-os review: missing engine). */
   record(v: Violation) {
     const now = new Date().toISOString();
     this.db.transaction(() => {
@@ -217,7 +217,7 @@ export class Index {
       .run(id, status, reason ?? null, new Date().toISOString());
   }
 
-  /** Vue effective : le tri humain prime sur le statut calculé par le scanner. */
+  /** Effective view: human triage takes precedence over the status computed by the scanner. */
   list(
     o: {
       source?: string;

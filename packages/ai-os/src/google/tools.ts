@@ -1,5 +1,5 @@
-// Outils du relais pour l'agent Jules (client absorbé src/google/jules). Stitch n'a pas d'outil ici : ses outils
-// officiels sont relayés tels quels par le hub MCP (stitch__<outil>, src/relay/mcp-hub.ts).
+// Relay tools for the Jules agent (absorbed client src/google/jules). Stitch has no tool here: its official tools
+// are relayed as is by the MCP hub (stitch__<tool>, src/relay/mcp-hub.ts).
 import type { Tool } from "../relay/tools.ts";
 import { DEFAULT_REPO, julesClient } from "./cli.ts";
 

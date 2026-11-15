@@ -145,7 +145,7 @@ test("echo model and unknown provider", async () => {
       ).chat({ messages: [{ role: "user", content: "hi" }] })
     ).text,
   ).toBe("e: hi");
-  expect(resolveModel("nope/x")).rejects.toThrow("fournisseur inconnu");
+  expect(resolveModel("nope/x")).rejects.toThrow("unknown or inactive provider");
 });
 
 test("schema: own keys only, optional undefined, finite numbers; tool loop ignores prototype names", async () => {

@@ -1,7 +1,7 @@
-// Authentification Google sans clé d'API pour les clients absorbés de google-labs-code (Stitch) et le relais : jeton
-// OAuth du compte gcloud actif + projet de facturation (RELAY_GCP_QUOTA_PROJECT, sinon le projet gcloud courant).
-// gcloud est lancé sans bloquer la boucle d'événements (un spawnSync gelait le relais plusieurs secondes) et le
-// jeton est gardé 45 min (durée de vie 1 h). Les valeurs ne sont jamais journalisées.
+// Google authentication without an API key for the absorbed google-labs-code clients (Stitch) and the relay: OAuth
+// token of the active gcloud account + billing project (RELAY_GCP_QUOTA_PROJECT, otherwise the current gcloud project).
+// gcloud is launched without blocking the event loop (a spawnSync froze the relay for several seconds) and the
+// token is kept 45 min (lifetime 1 h). Values are never logged.
 
 let cache: { at: number; token: string; project: string } | null = null;
 
@@ -23,7 +23,7 @@ export async function gcloudCredentials(): Promise<{
   return cache;
 }
 
-/** En-têtes Bearer + projet de quota (format attendu par stitch.googleapis.com/mcp). */
+/** Bearer + quota project headers (format expected by stitch.googleapis.com/mcp). */
 export async function gcloudHeaders(): Promise<Record<string, string>> {
   const { token, project } = await gcloudCredentials();
   return { authorization: `Bearer ${token}`, "x-goog-user-project": project };

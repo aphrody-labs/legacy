@@ -1,10 +1,10 @@
-// ai-os review : point d'entrée du tribunal (src/review/index.ts, docs/reviews/README.md). Sortie JSON sur stdout,
-// journal JSONL sur stderr. Code de sortie : 0 note >= seuil, 1 sous le seuil (ou gelé), 2 aucun moteur.
+// ai-os review: entry point of the tribunal (src/review/index.ts, docs/reviews/README.md). JSON output on stdout,
+// JSONL journal on stderr. Exit code: 0 score >= threshold, 1 below the threshold (or frozen), 2 no engine.
 //   ai-os review <chemins|diff|A..B|commit> [-- chemins] [--voices gemini,claude,judge] [--threshold 16]
 //                [--fix] [--rounds 4] [--check "<cmd>"] [--slug s] [--title t] [--timeout 420] [--no-cache]
-//                [--out <dossier>] [--no-write] [--dry-run] [--host H] [--summary <fichier>]
-//   ai-os review sources [--force]   rafraîchit les sources officielles (var/review/sources, commit source noté)
-//   ai-os review mine                notes de tous les verdicts archivés, par voix
+//                [--out <folder>] [--no-write] [--dry-run] [--host H] [--summary <file>]
+//   ai-os review sources [--force]   refreshes the official sources (var/review/sources, source commit noted)
+//   ai-os review mine                scores of all archived verdicts, per voice
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
@@ -92,8 +92,8 @@ export async function main(argv: string[]): Promise<number> {
   return r.status === "sans moteur" ? 2 : r.ok ? 0 : 1;
 }
 
-// Lancé directement ou par le répartiteur src/cli.ts ; importé par les tests sans exécution (bun test : NODE_ENV=test).
-// Exécuté seulement comme point d'entrée : direct, ou via le répartiteur src/cli.ts (`ai-os review`).
+// Launched directly or by the src/cli.ts dispatcher; imported by tests without running (bun test: NODE_ENV=test).
+// Runs only as an entry point: directly, or through the src/cli.ts dispatcher (`ai-os review`).
 const entry = Bun.argv[1] ? resolve(Bun.argv[1]) : "";
 if (import.meta.main || entry === resolve(import.meta.dir, "..", "cli.ts")) {
   try {

@@ -2,8 +2,8 @@ import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-// Agents en ligne de commande servant de fournisseurs de modèles (Antigravity `agy`, Claude Code `claude`) :
-// partagés par le pont de modèles (models.ts) et le relais (relay/backends.ts). Exécution sans shell, délai borné.
+// Command-line agents serving as model providers (Antigravity `agy`, Claude Code `claude`):
+// shared by the model bridge (models.ts) and the relay (relay/backends.ts). Shell-free execution, bounded timeout.
 
 export type Answer = {
   text: string;
@@ -12,8 +12,8 @@ export type Answer = {
   ms: number;
 };
 
-// Une clé d'API Anthropic dans l'environnement prime sur la connexion claude.ai et désactive ses connecteurs (Gmail,
-// Drive…) ; GOOGLE_GENAI_USE_VERTEXAI envoie Gemini CLI vers Vertex au lieu du compte Google. Retirées pour ces moteurs.
+// An Anthropic API key in the environment takes precedence over the claude.ai login and disables its connectors (Gmail,
+// Drive…); GOOGLE_GENAI_USE_VERTEXAI sends Gemini CLI to Vertex instead of the Google account. Removed for these engines.
 const without = (...keys: string[]) =>
   Object.fromEntries(
     Object.entries(process.env).filter(([k]) => !keys.includes(k)),
@@ -27,10 +27,10 @@ export const CLAUDE_ENV = () =>
     "ANTHROPIC_WORKSPACE_ID",
   );
 
-/** Sous Windows, une CLI installée en shim .cmd (agy.cmd, codex.cmd) passerait ses arguments par cmd.exe, qui
- * interprète & | < > ^ % : Bun refuse alors l'appel, et un passage forcé par cmd.exe permettrait une injection par la
- * consigne. On lance donc l'exécutable que le shim appelle (ligne `"<exe>" %*`, variables `set "X=…"` et
- * d'environnement résolues). Si le shim ne se résout pas, la commande est rendue telle quelle. */
+/** On Windows, a CLI installed as a .cmd shim (agy.cmd, codex.cmd) would pass its arguments through cmd.exe, which
+ * interprets & | < > ^ %: Bun then refuses the call, and forcing it through cmd.exe would allow an injection through the
+ * instruction. So the executable the shim calls is launched (line `"<exe>" %*`, `set "X=…"` variables and
+ * environment variables resolved). If the shim does not resolve, the command is returned as is. */
 export function resolveExe(name: string): string {
   if (process.platform !== "win32") return name;
   const p = Bun.which(name);
@@ -50,7 +50,7 @@ export function resolveExe(name: string): string {
     );
   for (const m of text.matchAll(/^\s*set\s+"(\w+)=([^"]*)"/gim))
     vars[m[1]!] ??= expand(m[2]!);
-  // Premier appel `"<cible>" %*` : le chemin par défaut du shim, avant ses étiquettes de sous-commandes.
+  // First call `"<target>" %*`: the shim's default path, before its subcommand labels.
   const call = text.match(/^\s*"([^"]+)"\s+%\*/im)?.[1];
   const exe = call && expand(call);
   return exe && /\.exe$/i.test(exe) && !exe.includes("%") && existsSync(exe)
@@ -87,18 +87,18 @@ export async function cli(
   return { text, engine, ms: Math.round(performance.now() - t0) };
 }
 
-/** Consigne longue pour un agent qui lit des fichiers (agy) : écrite dans un fichier temporaire privé, la ligne de
- * commande ne porte que l'ordre de le lire (Windows : 32 767 caractères, ENAMETOOLONG ; Linux : 128 Kio par argument).
- * Partagé par agy() et l'exécution directe de l'orchestrateur (orch/inline.ts). */
+/** Long instruction for an agent that reads files (agy): written to a private temporary file, the command line
+ * carries only the order to read it (Windows: 32,767 characters, ENAMETOOLONG; Linux: 128 KiB per argument).
+ * Shared by agy() and the orchestrator's direct execution (orch/inline.ts). */
 export function viaFile(prompt: string): string {
   const file = join(mkdtempSync(join(tmpdir(), "agy-")), "prompt.md");
   writeFileSync(file, prompt, { mode: 0o600 });
-  return `Lis intégralement le fichier ${file} (${prompt.length} caractères) et réponds à la demande qu il contient, comme si son contenu était ce message.`;
+  return `Read in full the file ${file} (${prompt.length} characters) and answer the request it contains, as if its content were this message.`;
 }
 
-/** Antigravity CLI headless (`agy -p … --output-format json --mode plan`, 1.5.7) : session Antigravity déjà ouverte,
- * modèles Gemini 4. Modèle demandé (argument ou RELAY_AGY_MODEL, ex. gemini-4-carbon-high) ; s'il est épuisé
- * (RESOURCE_EXHAUSTED, crédits insuffisants), nouvel essai avec le modèle par défaut du compte. Mesuré : 1,96 s. */
+/** Headless Antigravity CLI (`agy -p … --output-format json --mode plan`, 1.5.7): Antigravity session already open,
+ * Gemini 4 models. Requested model (argument or RELAY_AGY_MODEL, e.g. gemini-4-carbon-high); if exhausted
+ * (RESOURCE_EXHAUSTED, insufficient credits), retry with the account's default model. Measured: 1.96 s. */
 export async function agy(
   prompt: string,
   model?: string,
@@ -126,11 +126,11 @@ export async function agy(
     if (!wanted || !/RESOURCE_EXHAUSTED|credits balance/i.test(e.message))
       throw e;
     const a = await cli("antigravity", argv(), pick);
-    return { ...a, engine: `antigravity (repli : ${wanted} épuisé)` };
+    return { ...a, engine: `antigravity (fallback: ${wanted} exhausted)` };
   }
 }
 
-/** Claude Code headless limité aux outils listés (ex. connecteurs claude.ai Google), sans autre permission. */
+/** Headless Claude Code limited to the listed tools (e.g. claude.ai Google connectors), without any other permission. */
 export const claudeWithTools = (prompt: string, tools: string[]) =>
   cli(
     "claude",

@@ -1,4 +1,4 @@
-// Rescan reproductible de toutes les sources NHITL (appelé par `ai-os nhitl scan` et la tâche planifiée).
+// Reproducible rescan of all NHITL sources (called by `ai-os nhitl scan` and the scheduled task).
 import type { Index, Source } from "./index";
 import {
   scanCode,

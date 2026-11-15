@@ -35,7 +35,7 @@ export type ChatRequest = {
   tools?: ToolSpec[];
   toolChoice?: "auto" | "required" | "none";
   maxOutputTokens?: number;
-  /** 0 (ou un seed entier) rend la requête déterministe, donc cachable par le relais (relay/outbound.ts). */
+  /** 0 (or an integer seed) makes the request deterministic, hence cacheable by the relay (relay/outbound.ts). */
   temperature?: number;
   seed?: number;
   signal?: AbortSignal;

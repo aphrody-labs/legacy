@@ -118,7 +118,7 @@ test("cible : chemins numérotés, plage, commit, filtre, refus hors racine", as
   expect(c.files).toEqual(["src/a.ts"]);
   expect(diffFiles(c.text)).toEqual(["src/a.ts"]);
   await expect(collect(["nope-xyz"], { root: d })).rejects.toThrow(
-    /cible inconnue/,
+    /unknown target/,
   );
   await expect(collect(["HEAD", "--", "../x"], { root: d })).rejects.toThrow(
     /hors de src/,
@@ -128,7 +128,7 @@ test("cible : chemins numérotés, plage, commit, filtre, refus hors racine", as
   ).rejects.toThrow();
   const t = await collect(["src/a.ts"], { root: d, maxBytes: 10 });
   expect(t.truncated).toBeGreaterThan(0);
-  expect(t.text).toContain("[tronqué");
+  expect(t.text).toContain("[truncated");
 });
 
 test("sources : sujets, extraits pertinents, cache quotidien, copie périmée hors réseau", async () => {
@@ -358,7 +358,7 @@ test("orchestrateur : le cycle software passe par le tribunal, consigne agy long
   expect(wf.steps.find((s) => s.id === "fix")!.deps).toEqual(["review"]);
   expect(wf.steps.some((s) => s.tool === "gemini_review")).toBe(false);
   const msg = viaFile("x".repeat(9000));
-  const file = msg.match(/fichier (.+?) \(/)![1]!;
+  const file = msg.match(/file (.+?) \(/)![1]!;
   expect(readFileSync(file, "utf8")).toHaveLength(9000);
   rmSync(dirname(file), { recursive: true, force: true });
 });
@@ -399,7 +399,7 @@ test("garde-fous : slug confiné, secrets écartés et expurgés, tableau des d�
   };
   await expect(
     review({ ...base, spec: ["src/a.ts"], slug: "../../x" }),
-  ).rejects.toThrow(/slug invalide/);
+  ).rejects.toThrow(/invalid slug/);
   const r = await review({ ...base, spec: ["src/a.ts"] });
   expect(r.score).toBe(19);
   expect(r.status).toBe("incomplet");
