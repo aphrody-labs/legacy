@@ -36,6 +36,7 @@ available = [
   "auto-env",
   "dirmarks",
   "git-fetch-reminder",
+  "modern-cli",
 ]
 
 [layout]

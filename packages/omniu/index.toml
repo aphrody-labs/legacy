@@ -252,3 +252,14 @@ summary = "Periodic reminder when the git branch diverged from its upstream."
 default = false
 permissions = ["shell:source", "cwd:read", "process:run:git"]
 required_binaries = ["git"]
+
+[[packs]]
+name = "modern-cli"
+version = "1.0.0"
+api = "niubash:plugin@0.1.0"
+kind = "source"
+category = "ux"
+summary = "Modern CLI replacements (eza, bat, dust, duf, fd, erd) as aliases; from unixwin/winuxsh-profiles modern-cli."
+default = false
+permissions = ["shell:source", "cwd:read"]
+required_binaries = []

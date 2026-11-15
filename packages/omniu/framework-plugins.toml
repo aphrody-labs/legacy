@@ -52,4 +52,5 @@ plugins = [
   "theme-tokyonight",
   "starship",
   "ay",
+  "modern-cli",
 ]
