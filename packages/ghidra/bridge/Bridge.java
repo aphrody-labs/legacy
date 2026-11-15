@@ -6,7 +6,7 @@ import java.util.*;
 /**
  * Reflection bridge: line-delimited JSON-RPC over stdin/stdout, any public class/method of the JVM
  * (Ghidra included) callable by name with handle ids (jpype equivalent, pure JDK, no dependency).
- * Launch: java -cp Utility.jar:<this dir> ghidra.GhidraLauncher Bridge  (or plain `java Bridge` for JDK-only use).
+ * Launch: java -cp Utility.jar:<this dir> ghidra.Ghidra GhidraBridge  (or plain `java Bridge` for JDK-only use).
  * Request:  {"id":N,"op":"new|call|static|field|setfield|list|str|class|instanceof|release|batch|ping", ...}
  * Value encoding: null,bool,string,number; {"$h":id,"c":cls} handle; {"$long":"n"}; {"$bytes":"b64"}; {"$class":"name"};
  * {"$arr":"elemType","v":[...]}.
@@ -16,6 +16,8 @@ public final class Bridge {
   static final IdentityHashMap<Object, Integer> ids = new IdentityHashMap<>();
   static int next = 1;
   static ClassLoader loader;
+  /** GhidraApplicationLayout handed over by GhidraBridge (null for plain `java Bridge`); op `layout` returns it. */
+  static Object launchLayout;
 
   public static void main(String[] args) throws Exception {
     PrintStream proto = new PrintStream(new FileOutputStream(FileDescriptor.out), false, "UTF-8");
@@ -36,6 +38,7 @@ public final class Bridge {
       proto.print(sb.append('\n'));
       proto.flush();
     }
+    System.exit(0); // stdin closed: do not let non-daemon Ghidra threads keep the JVM alive
   }
 
   static String idJson(Object id) {
@@ -67,12 +70,20 @@ public final class Bridge {
     }
   }
 
+  /** The object behind request field `h`; a stale handle is an error, never a silent null. */
+  static Object reqHandle(Map<String, Object> r) {
+    Object o = handles.get(((Number) r.get("h")).intValue());
+    if (o == null) throw new IllegalStateException("stale handle " + r.get("h"));
+    return o;
+  }
+
   @SuppressWarnings("unchecked")
   static Object exec(Map<String, Object> r) throws Throwable {
     String op = (String) r.get("op");
     List<Object> a = (List<Object>) r.getOrDefault("a", new ArrayList<>());
     switch (op) {
       case "ping": return "pong";
+      case "layout": return launchLayout;
       case "batch": {
         List<Object> out = new InlineList();
         for (Object o : (List<Object>) r.get("reqs")) {
@@ -85,8 +96,7 @@ public final class Bridge {
         return invokeBest(c.getConstructors(), null, a, c.getName());
       }
       case "call": {
-        Object target = handles.get(((Number) r.get("h")).intValue());
-        if (target == null) throw new IllegalStateException("stale handle " + r.get("h"));
+        Object target = reqHandle(r);
         return callMethod(target.getClass(), target, (String) r.get("m"), a);
       }
       case "static": {
@@ -94,22 +104,22 @@ public final class Bridge {
         return callMethod(c, null, (String) r.get("m"), a);
       }
       case "field": {
-        Object t = r.containsKey("h") ? handles.get(((Number) r.get("h")).intValue()) : null;
+        Object t = r.containsKey("h") ? reqHandle(r) : null;
         Class<?> c = t != null ? t.getClass() : cls((String) r.get("c"));
         Field f = findField(c, (String) r.get("f"));
         return f.get(t);
       }
       case "setfield": {
-        Object t = r.containsKey("h") ? handles.get(((Number) r.get("h")).intValue()) : null;
+        Object t = r.containsKey("h") ? reqHandle(r) : null;
         Class<?> c = t != null ? t.getClass() : cls((String) r.get("c"));
         Field f = findField(c, (String) r.get("f"));
         f.set(t, conv(a.get(0), f.getType()));
         return null;
       }
-      case "list": return listOf(handles.get(((Number) r.get("h")).intValue()));
-      case "str": return String.valueOf(handles.get(((Number) r.get("h")).intValue()));
+      case "list": return listOf(reqHandle(r));
+      case "str": return String.valueOf(reqHandle(r));
       case "class": return cls((String) r.get("c"));
-      case "instanceof": return cls((String) r.get("c")).isInstance(handles.get(((Number) r.get("h")).intValue()));
+      case "instanceof": return cls((String) r.get("c")).isInstance(reqHandle(r));
       case "release": {
         for (Object o : (List<Object>) r.get("hs")) {
           Object v = handles.remove(((Number) o).intValue());
@@ -127,7 +137,9 @@ public final class Bridge {
   static final class Raw { final String s; Raw(String s) { this.s = s; } }
 
   static Class<?> cls(String n) throws ClassNotFoundException {
+    if (n.endsWith("[]")) return cls(n.substring(0, n.length() - 2)).arrayType();
     switch (n) {
+      case "void": return void.class;
       case "int": return int.class; case "long": return long.class; case "boolean": return boolean.class;
       case "double": return double.class; case "float": return float.class; case "short": return short.class;
       case "byte": return byte.class; case "char": return char.class;
@@ -137,7 +149,7 @@ public final class Bridge {
 
   static Field findField(Class<?> c, String n) throws NoSuchFieldException {
     for (Class<?> k = c; k != null; k = k.getSuperclass()) {
-      try { Field f = k.getDeclaredField(n); try { f.setAccessible(true); } catch (Throwable ignore) {} return f; }
+      try { Field f = k.getDeclaredField(n); if (f.trySetAccessible() || Modifier.isPublic(f.getModifiers())) return f; }
       catch (NoSuchFieldException e) { /* next */ }
     }
     return c.getField(n);
@@ -158,8 +170,6 @@ public final class Bridge {
   static Object callMethod(Class<?> c, Object target, String name, List<Object> a) throws Throwable {
     List<Method> ms = new ArrayList<>();
     for (Method m : c.getMethods()) if (m.getName().equals(name) && (target != null || Modifier.isStatic(m.getModifiers()))) ms.add(m);
-    if (ms.isEmpty()) // non-public class access to public interface methods; Object methods
-      for (Method m : c.getMethods()) if (m.getName().equals(name)) ms.add(m);
     if (ms.isEmpty()) throw new NoSuchMethodException(c.getName() + "." + name);
     return invokeBest(ms.toArray(new Executable[0]), target, a, name);
   }
@@ -169,18 +179,37 @@ public final class Bridge {
     for (Executable e : cands) {
       Object[] cv = new Object[1];
       int cost = tryConv(e, a, cv);
-      if (cost >= 0 && cost < bestCost) { best = e; bestArgs = (Object[]) cv[0]; bestCost = cost; }
+      if (cost >= 0 && (cost < bestCost || (cost == bestCost && moreSpecific(e, best)))) { best = e; bestArgs = (Object[]) cv[0]; bestCost = cost; }
     }
     if (best == null) {
       StringBuilder sb = new StringBuilder("no overload of " + what + " for " + a.size() + " args; candidates:");
       for (Executable e : cands) sb.append(' ').append(e.toGenericString());
       throw new NoSuchMethodException(sb.toString());
     }
-    if (best instanceof Constructor) return ((Constructor<?>) best).newInstance(bestArgs);
+    if (best instanceof Constructor) {
+      Constructor<?> k = (Constructor<?>) best;
+      if (!Modifier.isPublic(k.getDeclaringClass().getModifiers())) k.trySetAccessible();
+      return k.newInstance(bestArgs);
+    }
     Method m = (Method) best;
     m = publicMethod(m);
-    try { m.setAccessible(true); } catch (Throwable ignore) {}
+    if (!m.trySetAccessible() && !Modifier.isPublic(m.getDeclaringClass().getModifiers()))
+      throw new IllegalAccessException("method " + m + " is not accessible (module does not open its package)");
     return m.invoke(target, bestArgs);
+  }
+
+  /** True when every parameter of `a` is the same as or narrower than the one of `b`, and at least one is narrower. */
+  static boolean moreSpecific(Executable a, Executable b) {
+    if (b == null) return true;
+    Class<?>[] x = a.getParameterTypes(), y = b.getParameterTypes();
+    if (x.length != y.length) return false;
+    boolean narrower = false;
+    for (int i = 0; i < x.length; i++) {
+      if (x[i] == y[i]) continue;
+      if (!y[i].isAssignableFrom(x[i])) return false;
+      narrower = true;
+    }
+    return narrower;
   }
 
   static Method publicMethod(Method m) {
@@ -216,7 +245,7 @@ public final class Bridge {
       if (va) {
         Class<?> vt = pt[pt.length - 1];
         if (a.size() == pt.length) { // try passing array directly
-          try { int[] c = new int[1]; res[pt.length - 1] = convCost(a.get(pt.length - 1), vt, c); cost += c[0]; out[0] = res; return cost; } catch (RuntimeException ex) { /* spread */ }
+          try { int[] c = new int[1]; res[pt.length - 1] = convCost(a.get(pt.length - 1), vt, c); cost += c[0]; out[0] = res; return cost; } catch (NoConv ex) { /* spread */ }
         }
         int n = a.size() - fixed;
         Object arr = Array.newInstance(vt.getComponentType(), n);
@@ -225,7 +254,7 @@ public final class Bridge {
       }
       out[0] = res;
       return cost;
-    } catch (RuntimeException ex) { return -1; }
+    } catch (NoConv ex) { return -1; }
   }
 
   static final class NoConv extends RuntimeException { NoConv() { super(null, null, false, false); } }
@@ -244,7 +273,12 @@ public final class Bridge {
         if (t.isPrimitive() && box(t).isInstance(o)) return o;
         throw new NoConv();
       }
-      if (m.containsKey("$long")) return numTo(Long.parseLong((String) m.get("$long")), t, cost);
+      if (m.containsKey("$long")) {
+        java.math.BigInteger bi = new java.math.BigInteger((String) m.get("$long"));
+        if (t == java.math.BigInteger.class || (t == Object.class && bi.bitLength() > 63)) return bi;
+        if (bi.bitLength() > 63) throw new NoConv();
+        return numTo(bi.longValue(), t, cost);
+      }
       if (m.containsKey("$bytes")) {
         if (t == byte[].class || t == Object.class) return Base64.getDecoder().decode((String) m.get("$bytes"));
         throw new NoConv();
@@ -257,7 +291,7 @@ public final class Bridge {
         Class<?> et; try { et = cls((String) m.get("$arr")); } catch (ClassNotFoundException x) { throw new NoConv(); }
         List<Object> l = (List<Object>) m.get("v");
         Object arr = Array.newInstance(et, l.size());
-        for (int i = 0; i < l.size(); i++) Array.set(arr, i, convCost(l.get(i), et, new int[1]));
+        for (int i = 0; i < l.size(); i++) Array.set(arr, i, convCost(l.get(i), et, cost));
         if (t.isInstance(arr)) return arr;
         throw new NoConv();
       }
@@ -306,7 +340,7 @@ public final class Bridge {
   }
 
   static Object numTo(Number n, Class<?> t, int[] cost) {
-    boolean integral = n instanceof Long || n instanceof Integer || (n.doubleValue() == Math.rint(n.doubleValue()) && !Double.isInfinite(n.doubleValue()));
+    boolean integral = n instanceof Long || n instanceof Integer || (n.doubleValue() == Math.rint(n.doubleValue()) && Math.abs(n.doubleValue()) <= 9007199254740992.0);
     if (t == int.class || t == Integer.class) { if (!integral || n.longValue() != (int) n.longValue()) throw new NoConv(); return n.intValue(); }
     if (t == long.class || t == Long.class) { if (!integral) throw new NoConv(); cost[0] += 1; return n.longValue(); }
     if (t == short.class || t == Short.class) { if (!integral || n.longValue() != (short) n.longValue()) throw new NoConv(); cost[0] += 2; return n.shortValue(); }
@@ -325,7 +359,9 @@ public final class Bridge {
     if (v instanceof Character) { sb.append(Json.str(String.valueOf(v))); return; }
     if (v instanceof Double || v instanceof Float) {
       double d = ((Number) v).doubleValue();
-      if (Double.isNaN(d) || Double.isInfinite(d)) sb.append("{\"$double\":\"").append(d).append("\"}"); else sb.append(d);
+      if (Double.isNaN(d) || Double.isInfinite(d)) sb.append("{\"$double\":\"").append(d).append("\"}");
+      else if (v instanceof Float) sb.append(((Float) v).floatValue());
+      else sb.append(d);
       return;
     }
     if (v instanceof Long) {
@@ -333,6 +369,7 @@ public final class Bridge {
       if ((l > -(1L << 53) && l < (1L << 53))) sb.append(l); else sb.append("{\"$long\":\"").append(l).append("\"}");
       return;
     }
+    if (v instanceof java.math.BigInteger) { sb.append("{\"$long\":\"").append(v).append("\"}"); return; }
     if (v instanceof Number && (v instanceof Integer || v instanceof Short || v instanceof Byte)) { sb.append(((Number) v).longValue()); return; }
     if (v instanceof byte[]) { sb.append("{\"$bytes\":\"").append(Base64.getEncoder().encodeToString((byte[]) v)).append("\"}"); return; }
     if (v instanceof InlineList) {
@@ -354,41 +391,47 @@ public final class Bridge {
   static final class Json {
     final String s; int i = 0;
     Json(String s) { this.s = s; }
-    Object parse() { ws(); Object v = val(); ws(); return v; }
+    Object parse() { ws(); Object v = val(); ws(); if (i != s.length()) throw new IllegalArgumentException("bad JSON: trailing text at " + i); return v; }
+    void expect(char c) { if (i >= s.length() || s.charAt(i) != c) throw new IllegalArgumentException("bad JSON: expected '" + c + "' at " + i); i++; }
+    boolean lit(String w) { if (!s.startsWith(w, i)) return false; int e = i + w.length(); if (e < s.length() && Character.isLetterOrDigit(s.charAt(e))) throw new IllegalArgumentException("bad JSON literal at " + i); i = e; return true; }
     void ws() { while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++; }
     Object val() {
+      if (i >= s.length()) throw new IllegalArgumentException("bad JSON: unexpected end");
       char c = s.charAt(i);
       if (c == '{') {
         i++; Map<String, Object> m = new LinkedHashMap<>(); ws();
         if (s.charAt(i) == '}') { i++; return m; }
-        while (true) { ws(); String k = (String) val(); ws(); i++; ws(); m.put(k, val()); ws(); if (s.charAt(i++) == '}') return m; }
+        while (true) { ws(); String k = (String) val(); ws(); expect(':'); ws(); m.put(k, val()); ws(); if (i >= s.length()) throw new IllegalArgumentException("bad JSON: unexpected end"); char d = s.charAt(i++); if (d == '}') return m; if (d != ',') throw new IllegalArgumentException("bad JSON: expected , or } at " + (i - 1)); }
       }
       if (c == '[') {
         i++; List<Object> l = new ArrayList<>(); ws();
         if (s.charAt(i) == ']') { i++; return l; }
-        while (true) { ws(); l.add(val()); ws(); if (s.charAt(i++) == ']') return l; }
+        while (true) { ws(); l.add(val()); ws(); if (i >= s.length()) throw new IllegalArgumentException("bad JSON: unexpected end"); char d = s.charAt(i++); if (d == ']') return l; if (d != ',') throw new IllegalArgumentException("bad JSON: expected , or ] at " + (i - 1)); }
       }
       if (c == '"') return strv();
-      if (s.startsWith("true", i)) { i += 4; return Boolean.TRUE; }
-      if (s.startsWith("false", i)) { i += 5; return Boolean.FALSE; }
-      if (s.startsWith("null", i)) { i += 4; return null; }
+      if (lit("true")) return Boolean.TRUE;
+      if (lit("false")) return Boolean.FALSE;
+      if (lit("null")) return null;
       int st = i;
       while (i < s.length() && "+-0123456789.eE".indexOf(s.charAt(i)) >= 0) i++;
       String n = s.substring(st, i);
+      if (n.isEmpty()) throw new IllegalArgumentException("bad JSON at " + st);
       if (n.indexOf('.') < 0 && n.indexOf('e') < 0 && n.indexOf('E') < 0) return Long.parseLong(n);
       return Double.parseDouble(n);
     }
     String strv() {
       StringBuilder sb = new StringBuilder(); i++;
       while (true) {
+        if (i >= s.length()) throw new IllegalArgumentException("bad JSON: unterminated string");
         char c = s.charAt(i++);
         if (c == '"') return sb.toString();
         if (c == '\\') {
+          if (i >= s.length()) throw new IllegalArgumentException("bad JSON: unterminated escape");
           char e = s.charAt(i++);
           switch (e) {
             case 'n': sb.append('\n'); break; case 't': sb.append('\t'); break; case 'r': sb.append('\r'); break;
             case 'b': sb.append('\b'); break; case 'f': sb.append('\f'); break;
-            case 'u': sb.append((char) Integer.parseInt(s.substring(i, i + 4), 16)); i += 4; break;
+            case 'u': if (i + 4 > s.length()) throw new IllegalArgumentException("bad JSON: truncated \\u escape"); sb.append((char) Integer.parseInt(s.substring(i, i + 4), 16)); i += 4; break;
             default: sb.append(e);
           }
         } else sb.append(c);

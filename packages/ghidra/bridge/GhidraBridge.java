@@ -5,6 +5,7 @@ import ghidra.GhidraLaunchable;
 public final class GhidraBridge implements GhidraLaunchable {
   @Override
   public void launch(GhidraApplicationLayout layout, String[] args) throws Exception {
+    Bridge.launchLayout = layout;
     Bridge.main(args);
   }
 }
