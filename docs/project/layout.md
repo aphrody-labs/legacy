@@ -94,7 +94,7 @@ No replacement was executed: each one runs on fr1, fr2 or prd, or writes files o
 | `infra/cloudflare/proof.ts`, `infra/cloudflare/cf.ts`, `infra/cloudflare/aop.ts` | 807, 567, 239 | candidate: an OpenTofu Cloudflare provider config or the `cf` CLI plan; stays until a plan with no drift is shown |
 | `tools/gnu-index/*`, `tools/trackers/*` | 774 to 168 | stay: data builders with no upstream equivalent (GNU inventory, Chromium-style pin trackers) |
 | `scripts/hygiene.ts`, `scripts/checkdeps.ts`, `scripts/topology.ts` | 637, 401, 301 | stay: first-party gates; `checkdeps` follows Chromium's buildtools checkdeps, `cargo-deny` already covers crate licenses and advisories |
-| `scripts/identity.ts`, `scripts/catalog.ts`, `scripts/cli-skills.ts`, `scripts/skills-adopt.ts`, `scripts/docs-index.ts` | 405, 468, 299, 521, about 90 | stay: generators from one manifest, each gated by `--check` |
+| `scripts/identity.ts`, `scripts/catalog.ts`, `scripts/cli-skills.ts`, `scripts/skills-adopt.ts`, `scripts/docs-index.ts` | 405, 468, 299, 521, 97 | stay: generators from one manifest, each gated by `--check` |
 | `scripts/android-setup.ts` | 401 | candidate: `sdkmanager` driven by `infra/android/android.toml` directly |
 | `infra/fleet/bin/fleet-resilience.sh`, `fleet-tune.sh`, `bootstrap/common.sh` | 244, 184, 234 | candidate: systemd units, `sysctl.d` and `tmpfiles.d` drop-ins (already in `infra/fleet/sysctl`), and `ay up --bootstrap` for the toolchains of `infra/up/tools.toml` |
 | `infra/cluster/gen.ts` | 336 | stays: renders haproxy and nginx from `infra/deploy.toml`, a single source |
