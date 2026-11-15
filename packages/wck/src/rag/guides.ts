@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { gunzipSync } from "node:zlib";
 import { mwgFeatureLookup } from "../mwg-ffi";
 import {
   OriginTrialGateError,
@@ -49,7 +48,7 @@ export function loadGuides(dataDir = defaultDataDir()): GuideRecord[] {
   if (!existsSync(gzPath)) {
     throw new Error(`guides.json.gz not found at ${gzPath}`);
   }
-  const raw = gunzipSync(readFileSync(gzPath)).toString("utf8");
+  const raw = new TextDecoder().decode(Bun.gunzipSync(readFileSync(gzPath)));
   cachedGuides = JSON.parse(raw) as GuideRecord[];
   return cachedGuides;
 }
@@ -115,7 +114,7 @@ export function loadBaselineFeatures(
   if (cachedBaseline) return cachedBaseline;
   const gzPath = join(dataDir, "features", "baseline-features.json.gz");
   if (!existsSync(gzPath)) return {};
-  const raw = gunzipSync(readFileSync(gzPath)).toString("utf8");
+  const raw = new TextDecoder().decode(Bun.gunzipSync(readFileSync(gzPath)));
   cachedBaseline = JSON.parse(raw) as Record<string, BaselineFeatureEntry>;
   return cachedBaseline;
 }

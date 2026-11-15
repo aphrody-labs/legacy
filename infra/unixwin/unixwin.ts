@@ -8,7 +8,6 @@
 //   bun infra/unixwin/unixwin.ts fetch-ci [triple]          fork CI artifact at the pinned commit -> var/unixwin/ci/<triple>
 //   bun infra/unixwin/unixwin.ts install [prd|ci] [triple]  replaces the workstation's niu.exe (and its bash.exe/sh.exe copies)
 //   bun infra/unixwin/unixwin.ts test-fr1 <filter>          targeted cargo test of rubash on fr1, the factory (full suite: fork CI)
-import { createHash } from "node:crypto";
 import {
   existsSync,
   readdirSync,
@@ -64,7 +63,7 @@ const must = (cwd: string, ...a: string[]) => {
   return r.out;
 };
 const sha256 = async (f: string) =>
-  createHash("sha256")
+  new Bun.CryptoHasher("sha256")
     .update(new Uint8Array(await Bun.file(f).arrayBuffer()))
     .digest("hex");
 

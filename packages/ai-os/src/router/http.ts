@@ -4,7 +4,6 @@
 //   POST /v1/messages          Anthropic Messages (+ /v1/messages/count_tokens)
 // Headers: x-router-fail: N (simulate N failing offers), x-router-strict: 1 (no cross-model fallback),
 // x-caller: label (spend is tracked per bearer token and label).
-import { createHash } from "node:crypto";
 import { type Body, Exhausted, type Router } from "./engine.ts";
 import { VIRTUAL } from "./policy.ts";
 import { anthropicStream, anthropicToOpenAI, openAIToAnthropic } from "./wire.ts";
@@ -14,7 +13,7 @@ import { anthropicStream, anthropicToOpenAI, openAIToAnthropic } from "./wire.ts
 export function callerOf(req: Request): string {
   const a = req.headers.get("authorization") ?? "";
   const t = a.startsWith("Bearer ") ? a.slice(7).trim() : (req.headers.get("x-api-key") ?? "");
-  const h = createHash("sha256").update(t).digest("hex").slice(0, 10);
+  const h = new Bun.CryptoHasher("sha256").update(t).digest("hex").slice(0, 10);
   const label = (req.headers.get("x-caller") ?? "").replace(/[^\w.-]/g, "").slice(0, 32);
   return label ? `${h}/${label}` : h;
 }

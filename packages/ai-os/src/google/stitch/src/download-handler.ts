@@ -427,7 +427,7 @@ export class DownloadAssetsHandler implements DownloadAssetsSpec {
     const ext = rawExt
       ? `.${sanitizeFilename(rawExt.slice(1), "").slice(0, 10)}`
       : "";
-    const hash = crypto.createHash("md5").update(url).digest("hex");
+    const hash = new Bun.CryptoHasher("md5").update(url).digest("hex");
 
     // SANITIZATION: Only allow alphanumeric, hyphen, underscore
     const sanitizedBase = sanitizeFilename(rawFilename, rawExt);

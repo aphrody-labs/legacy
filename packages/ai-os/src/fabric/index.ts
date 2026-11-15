@@ -3,7 +3,6 @@
 // Configuration: infra/ai/fabric.toml. Linux nodes: infra/ai/fabric/node.sh (capped transient systemd unit,
 // admission condition checked continuously). Health: orch/health.ts (host = node, provider = "fabric-rpc").
 // The served model appears in llm_models as `fabric/<alias>` (llm/models.ts), gone as soon as the coordinator drops.
-import { createHash } from "node:crypto";
 import {
   appendFileSync,
   createReadStream,
@@ -204,7 +203,7 @@ const toolDir = (f: Fabric) =>
   );
 
 async function sha256File(p: string) {
-  const h = createHash("sha256");
+  const h = new Bun.CryptoHasher("sha256");
   for await (const c of createReadStream(p)) h.update(c as Buffer);
   return h.digest("hex");
 }

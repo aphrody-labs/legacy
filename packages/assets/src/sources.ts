@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   createWriteStream,
   existsSync,
@@ -52,8 +51,8 @@ async function download(
     try {
       const r = await fetch(url, { headers: UA, redirect: "follow" });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const s = createHash("sha256");
-      const m = createHash("md5");
+      const s = new Bun.CryptoHasher("sha256");
+      const m = new Bun.CryptoHasher("md5");
       const out = createWriteStream(part);
       for await (const c of r.body as unknown as AsyncIterable<Uint8Array>) {
         s.update(c);

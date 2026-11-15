@@ -90,9 +90,9 @@ const SCRAPE_HOST =
 /** node: APIs with a native Bun replacement (https://bun.com/docs/runtime/file-io and the Bun API reference). */
 export const NODE_REPLACED: [RegExp, string][] = [
   [/from ["']node:child_process["']|require\(["']node:child_process["']\)/, "Bun.spawn / Bun.spawnSync / Bun.$"],
-  [/\bfileURLToPath\(/, "Bun.fileURLToPath or import.meta.dir / import.meta.path"],
-  [/\bcreateHash\(/, "Bun.CryptoHasher"],
-  [/from ["']node:zlib["']/, "Bun.gzipSync / Bun.deflateSync / Bun.zstdCompressSync"],
+  [/(?<![.\w])fileURLToPath\(/, "Bun.fileURLToPath or import.meta.dir / import.meta.path"],
+  [/(?<!["'`\w])(?:crypto\.)?createHash\((?![^)]*\)\s*:)/, "Bun.CryptoHasher"],
+  [/\b(gzipSync|gunzipSync|deflateSync|inflateSync|zstdCompressSync|zstdDecompressSync)\b[^\n]*from ["']node:zlib["']/, "Bun.gzipSync / Bun.gunzipSync / Bun.deflateSync / Bun.zstdCompressSync (brotli has no Bun API, so node:zlib stays for it)"],
   [/from ["']node:https?["']/, "Bun.serve / fetch"],
   [/from ["']node:(test|assert(\/strict)?)["']/, "bun:test"],
   [/from ["']node:sqlite["']/, "bun:sqlite"],
@@ -113,7 +113,13 @@ export const RULES: Rule[] = [
   {
     id: "node-builtin",
     why: "A node: API that Bun replaces natively (bun-only stack; Bun's file-io docs keep node:fs for mkdir/readdir/stat and node:path/node:os have no Bun equivalent, so those stay)",
-    files: (f) => /\.(ts|tsx|js|mjs|cjs)$/.test(f) && !UPSTREAM_PORT.test(f) && !/(^|\/)node_modules\//.test(f),
+    files: (f) =>
+      /\.(ts|tsx|js|mjs|cjs)$/.test(f) &&
+      !/\.d\.ts$/.test(f) &&
+      !UPSTREAM_PORT.test(f) &&
+      !/(^|\/)node_modules\//.test(f) &&
+      !/^\.agents\/skills\/(vercel-|jules-|stitch-)/.test(f) /* skills mirrored from Vercel and Google keep their upstream code */ &&
+      !/\/test\/.*\.test\.ts$/.test(f) /* fixtures quote node: imports as data */,
     line: (l) => NODE_REPLACED.some(([re]) => re.test(l)),
   },
   {

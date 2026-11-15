@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 
 /** Run `fn` over `items` with at most `n` in flight; results keep input order. */
@@ -28,7 +27,7 @@ export function hashFile(
   enc: "hex" | "base64" = "hex",
 ): Promise<string> {
   return new Promise((res, rej) => {
-    const h = createHash(algo);
+    const h = new Bun.CryptoHasher(algo);
     createReadStream(path)
       .on("data", (c) => h.update(c))
       .on("end", () => res(h.digest(enc)))
@@ -40,7 +39,7 @@ export const hashBytes = (
   b: Uint8Array,
   algo: "sha256" | "sha384" = "sha256",
   enc: "hex" | "base64" = "hex",
-) => createHash(algo).update(b).digest(enc);
+) => new Bun.CryptoHasher(algo).update(b).digest(enc);
 
 /** Absolute path of an executable on PATH, or null. */
 export const which = (name: string): string | null => Bun.which(name);

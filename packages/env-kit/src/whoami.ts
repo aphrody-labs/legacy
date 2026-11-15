@@ -6,7 +6,6 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 
 export interface Identity {
   provider: string;
@@ -57,7 +56,7 @@ async function ovhMe(env: Env): Promise<Identity> {
   const url = `${base}/me`;
   const sig =
     "$1$" +
-    createHash("sha1")
+    new Bun.CryptoHasher("sha1")
       .update(`${as}+${ck}+GET+${url}++${time.trim()}`)
       .digest("hex");
   const r = await json(url, {

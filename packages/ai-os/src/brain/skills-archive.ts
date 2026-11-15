@@ -4,7 +4,6 @@
 // paragraphs dropped, relative links rewritten to in-bundle anchors, per-file size budget, split per domain.
 // Output: <out>/00-index.md (TOC + conventions + memory index), memory.md, skills-<domain>[-N].md, refs-<domain>[-N].md,
 // manifest.json (sha256 per file). Secrets: memory files only; each file is scanned and a hit aborts the run.
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -57,7 +56,7 @@ function dedup(body: string): string {
     .filter((p) => {
       const t = p.trim();
       if (t.length < 200 || t.startsWith("```")) return true;
-      const h = createHash("sha1").update(t.replace(/\s+/g, " ")).digest("base64");
+      const h = new Bun.CryptoHasher("sha1").update(t.replace(/\s+/g, " ")).digest("base64");
       if (seen.has(h)) return false;
       seen.add(h);
       return true;
@@ -112,7 +111,7 @@ export async function archive(opts: { out: string; budgetKB: number; refsCapKB: 
   const put = async (file: string, text: string) => {
     if (SECRET.test(text)) throw new Error(`secret-like content in ${file}: aborted`);
     await Bun.write(join(opts.out, file), text);
-    written.push({ file, bytes: Buffer.byteLength(text), sha256: createHash("sha256").update(text).digest("hex") });
+    written.push({ file, bytes: Buffer.byteLength(text), sha256: new Bun.CryptoHasher("sha256").update(text).digest("hex") });
   };
 
   // Conventions + memory (verbatim, not deduplicated: they are the contract).

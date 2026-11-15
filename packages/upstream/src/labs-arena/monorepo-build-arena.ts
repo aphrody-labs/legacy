@@ -1,5 +1,4 @@
 import { dlopen, FFIType, ptr } from "bun:ffi";
-import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
@@ -239,7 +238,7 @@ function benchmarkPiOpenCodeRustFfi(
           walk(full);
         } else if (st.isFile()) {
           const content = readFileSync(full);
-          const sha = createHash("sha256").update(content).digest("hex");
+          const sha = new Bun.CryptoHasher("sha256").update(content).digest("hex");
           records.push({
             rel: relative(absTarget, full).split("\\").join("/"),
             size: st.size,
@@ -250,7 +249,7 @@ function benchmarkPiOpenCodeRustFfi(
     };
     walk(absTarget);
     records.sort((a, b) => a.rel.localeCompare(b.rel));
-    const rootHash = createHash("sha256")
+    const rootHash = new Bun.CryptoHasher("sha256")
       .update(JSON.stringify(records))
       .digest("hex")
       .slice(0, 16);

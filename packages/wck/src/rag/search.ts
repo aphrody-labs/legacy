@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { gunzipSync } from "node:zlib";
 import {
   buildBm25Index,
   rankBm25,
@@ -67,7 +66,7 @@ export function loadVectors(dataDir = defaultDataDir()): UseCaseVector[] {
     throw new Error(`Vectors files not found in ${genDir}`);
   }
 
-  const jsonContent = gunzipSync(readFileSync(vectorsFile)).toString("utf8");
+  const jsonContent = new TextDecoder().decode(Bun.gunzipSync(readFileSync(vectorsFile)));
   const items = JSON.parse(jsonContent) as Array<Omit<UseCaseVector, "vector">>;
   const i8Buf = readFileSync(i8File);
   const scaleBuf = readFileSync(scaleFile);

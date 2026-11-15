@@ -4,7 +4,7 @@
 // A2A is served once, by the relay (A2A 1.0.1 SendMessage, skill agent_run; src/relay/protocols.ts).
 // - channels (/channels/<id>): pluggable adapters; Chat SDK adapters (Slack, Telegram, Discord, Teams...) plug in here.
 // Sessions keep per-id history (multi-turn) and every turn goes through core run() (Context-selected memory/skills).
-import { createHash, timingSafeEqual } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import { run } from "../core/agent";
 import { layout } from "../core/home";
 import { Memory } from "../core/memory";
@@ -199,7 +199,7 @@ export function createGateway(o: GatewayOptions) {
     return next;
   };
   // Fixed-length digests: the comparison leaks neither content nor token length.
-  const sha256 = (s: string) => createHash("sha256").update(s).digest();
+  const sha256 = (s: string) => new Bun.CryptoHasher("sha256").update(s).digest();
   const same = (a: string | null, b: string) =>
     a !== null && timingSafeEqual(sha256(a), sha256(b));
   const bad = (msg: string) =>

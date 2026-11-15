@@ -1,7 +1,6 @@
 // Bun-side wrapper: shells to the Rust CLI (`py2bun-rs`, crate src/py2bun).
 import { existsSync } from "node:fs";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 export interface Diagnostic {
   line: number;
@@ -25,7 +24,7 @@ export function findBinary(): string | null {
   if (env && existsSync(env)) return env;
   const onPath = Bun.which("py2bun-rs");
   if (onPath) return onPath;
-  const here = dirname(fileURLToPath(import.meta.url));
+  const here = import.meta.dir;
   const crate = join(here, "..", "..", "..", "src", "py2bun");
   const targets = [process.env.CARGO_TARGET_DIR, join(crate, "target")].filter((t): t is string => !!t);
   for (const t of targets) for (const prof of ["release", "debug"]) {
