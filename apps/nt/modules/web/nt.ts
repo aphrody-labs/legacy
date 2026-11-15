@@ -1,7 +1,7 @@
-// nt — modèle 3D du noyau Windows NT en direct, rendu GPU pur (WebGPU, 3840 x 2160, MSAA 4x) : aucun texte DOM.
-// Couches : %SystemRoot% réel (index NTFS, treemap) · matériel (KPRCB, mémoire physique, volume NTFS/MFT) ·
-// noyau et exécutif (ntoskrnl, 75 types d'objets, pool par tag, pilotes chargés) · processus et threads réels,
-// icônes extraites des PE réels, chemins réels. Textes : atlas de glyphes ; icônes : atlas RGBA ; tout est GPU.
+// nt — live 3D model of the Windows NT kernel, pure GPU rendering (WebGPU, 3840 x 2160, MSAA 4x): no DOM text.
+// Layers: real %SystemRoot% (NTFS index, treemap) · hardware (KPRCB, physical memory, NTFS volume/MFT) ·
+// kernel and executive (ntoskrnl, 75 object types, pool by tag, loaded drivers) · real processes and threads,
+// icons extracted from the real PE files, real paths. Text: glyph atlas; icons: RGBA atlas; everything is GPU.
 import {
   FRAME,
   MAGIC,
@@ -11,6 +11,7 @@ import {
 } from "./ntsys-format.ts";
 import shaderSrc from "./scene.wgsl" with { type: "text" };
 import { role, tokens } from "@aphrody/design";
+import { loc, num, t } from "./i18n.ts";
 
 const W = 3840;
 const H = 2160;
@@ -24,10 +25,11 @@ const adapter = await navigator.gpu?.requestAdapter({
 if (!adapter) throw new Error("WebGPU indisponible");
 const device = await adapter.requestDevice();
 const format = navigator.gpu.getPreferredCanvasFormat();
+document.documentElement.lang = loc;
 const ctx = canvas.getContext("webgpu") as GPUCanvasContext;
 ctx.configure({ device, format, alphaMode: "opaque" });
 
-// --- Atlas : glyphes (haut) + icônes 64 px (dessous) + pavé blanc pour les aplats ---------------------------------------
+// --- Atlas: glyphs (top) + 64 px icons (below) + white tile for flat fills -------------------------------------------------
 const ATLAS = 4096;
 const atlas = device.createTexture({
   size: [ATLAS, ATLAS],
@@ -68,7 +70,7 @@ const SOLID: [number, number, number, number] = [
 ];
 const ICON = 64;
 const ICON_COLS = ATLAS / ICON;
-const icons = new Map<string, number>(); // chemin -> case (>= 0 prête, -1 en cours, -2 absente)
+const icons = new Map<string, number>(); // path -> cell (>= 0 ready, -1 loading, -2 missing)
 let iconNext = 0;
 let iconsDirty = false;
 function iconSlot(path: string): number {
@@ -221,7 +223,7 @@ const passDesc: GPURenderPassDescriptor = {
   },
 };
 
-// --- Tampons CPU (aucune allocation par frame) ------------------------------------------------------------------------------
+// --- CPU buffers (no per-frame allocation) ----------------------------------------------------------------------------------
 type RGB = [number, number, number];
 const BOX = new Float32Array(MAX_BOX * 12);
 const SPR = new Float32Array(MAX_SPRITE * 16);
@@ -257,7 +259,7 @@ function box(
   boxRef[nBox] = { kind, ref };
   nBox++;
 }
-/** Sprite : monde (screen = false, ancre xyz) ou écran (pixels). Les sprites monde sont rangés en tête du tampon. */
+/** Sprite: world (screen = false, xyz anchor) or screen (pixels). World sprites are stored at the head of the buffer. */
 function sprite(
   screen: boolean,
   x: number,
@@ -299,7 +301,7 @@ const glyphUv = (i: number): [number, number, number, number] => {
   const y = Math.floor(i / 128) * GH;
   return [x / ATLAS, y / ATLAS, (x + GW) / ATLAS, (y + GH) / ATLAS];
 };
-/** Texte GPU : ancre (monde ou écran), taille de glyphe en px, centrage horizontal optionnel. */
+/** GPU text: anchor (world or screen), glyph size in px, optional horizontal centering. */
 function text(
   s: string,
   screen: boolean,
@@ -311,7 +313,7 @@ function text(
   center = false,
   a = 1,
 ) {
-  // Atlas rastérisé à 38 px (chasse 0,6 em) dans des cases de 32 x 48 : mise à l'échelle k.
+  // Atlas rasterized at 38 px (0.6 em advance) in 32 x 48 cells: scale factor k.
   const k = px / 38;
   const adv = 22.8 * k;
   let ox = center ? (-s.length * adv) / 2 : 0;
@@ -339,8 +341,8 @@ const panel = (x: number, y: number, w: number, h: number, c: RGB, a = 0.85) =>
   sprite(true, x, y, 0, w, h, 0, 0, SOLID, c, a);
 
 // --- Couleurs ------------------------------------------------------------------------------------------------------------
-// Chrome (texte, fonds, plaques, titres) = rôles M3 sombres de la marque (packages/design, Material Color Utilities depuis
-// assets/brand/brand.toml) ; les couleurs de données (user, kernel, DPC, ISR, états, attentes) restent une palette de visualisation.
+// Chrome (text, backgrounds, plates, titles) = dark M3 roles of the brand (packages/design, Material Color Utilities from
+// assets/brand/brand.toml); data colors (user, kernel, DPC, ISR, states, waits) remain a visualization palette.
 const hex = (h: string): RGB => [
   Number.parseInt(h.slice(1, 3), 16) / 255,
   Number.parseInt(h.slice(3, 5), 16) / 255,
@@ -386,51 +388,51 @@ const STATE: RGB[] = [
   "#6c757d",
 ].map(hex);
 const WAIT_FAMILY: [string, RGB, number[]][] = [
-  ["requête utilisateur", hex("#3b5480"), [6, 13]],
+  [t("wait.user"), hex("#3b5480"), [6, 13]],
   ["WrQueue", hex("#23707f"), [15]],
-  ["délai", hex("#5b4a91"), [4, 11]],
-  ["exécutif", hex("#7a6040"), [0, 7]],
+  [t("wait.delay"), hex("#5b4a91"), [4, 11]],
+  [t("wait.exec"), hex("#7a6040"), [0, 7]],
   ["ALPC", hex("#3a76ad"), [16, 17]],
-  ["alerte", hex("#44587a"), [37]],
-  ["suspendu", hex("#9a3a4a"), [5, 12]],
-  ["mémoire", hex("#8a7440"), [1, 2, 8, 9, 18, 19, 39]],
-  ["verrous", hex("#8a3a76"), [27, 28, 29, 34, 35]],
+  [t("wait.alert"), hex("#44587a"), [37]],
+  [t("wait.suspended"), hex("#9a3a4a"), [5, 12]],
+  [t("wait.memory"), hex("#8a7440"), [1, 2, 8, 9, 18, 19, 39]],
+  [t("wait.locks"), hex("#8a3a76"), [27, 28, 29, 34, 35]],
 ];
 const WAIT: RGB[] = WAIT_REASON.map(() => STATE[5]!);
 for (const [, c, rs] of WAIT_FAMILY) for (const r of rs) WAIT[r] = c;
 const MODULE_FAMILY: [string, RGB, RegExp][] = [
   [
-    "noyau / HAL",
+    t("mod.kernel"),
     hex("#c0392b"),
     /^(ntoskrnl|hal|kd|ci|cng|clfs|tm|pshed|bootvid|werkernel|skci|msrpc|ksecdd|ksecpkg)\./i,
   ],
   [
-    "fichiers",
+    t("mod.files"),
     hex("#2f6db5"),
     /^(ntfs|refs|fastfat|exfat|udfs|cdfs|fltmgr|wof|cldflt|bindflt|wcifs|npfs|msfs|fileinfo|luafv|storqosflt|bfs|dfsc|mup|rdbss|csc|afunix)/i,
   ],
   [
-    "réseau",
+    t("mod.network"),
     hex("#2e8b57"),
     /^(tcpip|ndis|netio|afd|http|nwifi|wfplwfs|netbt|mrxsmb|srv|tdx|vwifi|pacer|ndu|nsiproxy|wanarp|ras|bowser|fwpkclnt|vmswitch|winnat)/i,
   ],
   [
-    "stockage",
+    t("mod.storage"),
     hex("#b8860b"),
     /^(storport|stornvme|storahci|disk|partmgr|volmgr|volsnap|volume|iastor|classpnp|spaceport|ehstor|fvevol|rdyboost|mountmgr|acpiex|pci|acpi)/i,
   ],
   [
-    "graphique",
+    t("mod.graphics"),
     hex("#a33ea1"),
     /^(dxgkrnl|dxgmms|nvlddmkm|watchdog|basicdisplay|basicrender|monitor|cdd|win32k|nvvad|nvhda)/i,
   ],
   [
-    "USB / HID / audio",
+    t("mod.usb"),
     hex("#1b9aaa"),
     /^(usb|hid|kbd|mou|i8042|ks|portcls|hdaudio|audio|bth|ucx|wudf)/i,
   ],
   [
-    "sécurité / hyperviseur",
+    t("mod.security"),
     hex("#e07a1f"),
     /^(wdfilter|wdnisdrv|wd|peauth|tpm|mssecflt|mpsdrv|bam|appid|vmgid|hvsocket|vid|hvservice|winhv)/i,
   ],
@@ -439,23 +441,24 @@ const moduleColor = (n: string): RGB =>
   MODULE_FAMILY.find(([, , re]) => re.test(n))?.[1] ?? hex("#56617a");
 const fmt = (v: number) =>
   v >= 1e9
-    ? `${(v / 1e9).toFixed(1)}G`
+    ? `${num(v / 1e9, 1)}G`
     : v >= 1e6
-      ? `${(v / 1e6).toFixed(1)}M`
+      ? `${num(v / 1e6, 1)}M`
       : v >= 1e3
-        ? `${(v / 1e3).toFixed(1)}k`
-        : v.toFixed(0);
+        ? `${num(v / 1e3, 1)}k`
+        : num(v);
 const bytes = (v: number) =>
   v >= 2 ** 40
-    ? `${(v / 2 ** 40).toFixed(2)} Tio`
+    ? t("unit.tib", { v: num(v / 2 ** 40, 2) })
     : v >= 2 ** 30
-      ? `${(v / 2 ** 30).toFixed(1)} Gio`
+      ? t("unit.gib", { v: num(v / 2 ** 30, 1) })
       : v >= 2 ** 20
-        ? `${(v / 2 ** 20).toFixed(0)} Mio`
-        : `${(v / 1024).toFixed(0)} Kio`;
-const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
+        ? t("unit.mib", { v: num(v / 2 ** 20) })
+        : t("unit.kib", { v: num(v / 1024) });
+const rate = (v: number) => t("rate.bytes", { v: fmt(v) });
+const pct = (v: number) => `${num(v * 100, 1)}%`;
 
-// --- Caméra orbitale ----------------------------------------------------------------------------------------------------
+// --- Orbit camera -------------------------------------------------------------------------------------------------------
 const cam = {
   yaw: -Math.PI / 4,
   pitch: 0.62,
@@ -608,7 +611,7 @@ canvas.addEventListener(
   { passive: false },
 );
 
-// --- Modèle reçu ----------------------------------------------------------------------------------------------------------
+// --- Received model -----------------------------------------------------------------------------------------------------
 let names: string[] = [];
 const paths = new Map<number, string>();
 let slow: (Slow & { ntfs?: Ntfs | null }) | null = null;
@@ -703,7 +706,7 @@ function squarify(vals: number[], b: Box, out: Box[]) {
   }
 }
 
-// --- Construction de la scène (à chaque échantillon) ------------------------------------------------------------------------
+// --- Scene construction (on every sample) -------------------------------------------------------------------------------
 const procGroups: {
   name: string;
   path: string;
@@ -714,19 +717,19 @@ const procGroups: {
 function buildStatic() {
   nBox = 0;
   nWorldSpr = 0;
-  // Plaques des couches.
+  // Layer plates.
   box(0, Y.fs - 0.5, 0, 74, 0.3, 74, C.plate, "plate", 0);
   box(0, Y.hw - 1.6, 0, 74, 0.3, 74, C.plate, "plate", 1);
   box(0, Y.ex - 0.5, 0, 80, 0.3, 80, C.plate, "plate", 2);
   box(0, Y.pr - 0.5, 0, 74, 0.3, 74, C.plate, "plate", 3);
   const layer = (s: string, y: number) =>
     text(s, false, -37, y, -37, 30, C.title);
-  layer("C:\\Windows — index NTFS réel", Y.fs + 1);
-  layer("matériel — KPRCB · mémoire physique · volume NTFS", Y.hw + 1);
-  layer("noyau & exécutif — ntoskrnl · Ob · Mm · Io", Y.ex + 1);
-  layer("processus (EPROCESS) · threads (ETHREAD)", Y.pr + 1);
+  layer(t("layer.fs", { root: "C:\\Windows" }), Y.fs + 1);
+  layer(t("layer.hw"), Y.hw + 1);
+  layer(t("layer.ex"), Y.ex + 1);
+  layer(t("layer.pr"), Y.pr + 1);
 
-  // %SystemRoot% : dossiers niveau 1 (socles) et 2 (tours), icône de l'exécutable principal.
+  // %SystemRoot%: level 1 (bases) and level 2 (towers) folders, icon of the main executable.
   if (tree) {
     const lv1 = tree.children.filter((d) => d.bytes > 0);
     const b1: Box[] = [];
@@ -800,7 +803,7 @@ function buildStatic() {
   }
 
   if (!ncpu) return;
-  // Mémoire physique : 48 x 48 cellules (utilisée / disponible).
+  // Physical memory: 48 x 48 cells (used / available).
   if (slow) {
     const phys = slow.basic.physicalMB;
     const used = (phys - F[g0 + 11]!) / phys;
@@ -817,7 +820,7 @@ function buildStatic() {
         "mem",
         i,
       );
-    // Volume NTFS : disque (anneau extérieur) + MFT (tour) à côté de la mémoire.
+    // NTFS volume: disk (outer ring) + MFT (tower) next to the memory.
     const n = slow.ntfs;
     if (n) {
       const usedV = 1 - n.freeBytes / n.totalBytes;
@@ -848,7 +851,10 @@ function buildStatic() {
         0,
       );
       text(
-        `$MFT ${bytes(n.mftBytes)} · ${fmt(n.mftRecords)} enregistrements`,
+        t("mft.records", {
+          size: bytes(n.mftBytes),
+          records: fmt(n.mftRecords),
+        }),
         false,
         -36,
         Y.hw + (n.mftBytes / 2 ** 30) * 1.2,
@@ -858,7 +864,12 @@ function buildStatic() {
         true,
       );
       text(
-        `NTFS ${n.version} ${n.volume} ${bytes(n.totalBytes - n.freeBytes)} / ${bytes(n.totalBytes)}`,
+        t("ntfs.label", {
+          version: n.version,
+          volume: n.volume,
+          used: bytes(n.totalBytes - n.freeBytes),
+          total: bytes(n.totalBytes),
+        }),
         false,
         36,
         Y.hw + 3,
@@ -868,7 +879,7 @@ function buildStatic() {
         true,
       );
     }
-    // Exécutif : ntoskrnl, types d'objets, pool, pilotes.
+    // Executive: ntoskrnl, object types, pool, drivers.
     const nt = slow.modules.find((m) => /^ntoskrnl/i.test(m.name));
     box(
       0,
@@ -971,7 +982,7 @@ function buildStatic() {
     });
   }
 
-  // Processus groupés par image ; threads posés sur chaque tuile ; icône réelle du binaire.
+  // Processes grouped by image; threads placed on each tile; real icon of the binary.
   const byName = new Map<string, number[]>();
   for (let i = 0; i < nproc; i++) {
     const o = procBase + i * FRAME.proc;
@@ -1095,7 +1106,7 @@ function buildStatic() {
   device.queue.writeBuffer(spriteBuf, 0, SPR, 0, nWorldSpr * 16);
 }
 
-// --- Par frame : processeurs interpolés, HUD et survol en sprites écran --------------------------------------------------------
+// --- Per frame: interpolated processors, HUD and hover as screen sprites -------------------------------------------------
 function cpuBoxes() {
   nBox = nStaticBox;
   const R = 30;
@@ -1175,18 +1186,37 @@ function describe(h: { kind: string; ref: number }): string[] {
     case "cpu": {
       const o = cpuBase + r * FRAME.cpu;
       return [
-        `processeur logique ${r} (KPRCB)`,
-        `user ${pct(F[o]!)} · noyau ${pct(F[o + 1]!)} · DPC ${pct(F[o + 2]!)} · ISR ${pct(F[o + 3]!)} · idle ${pct(F[o + 4]!)}`,
-        `interruptions ${fmt(F[o + 5]!)}/s · DPC ${fmt(F[o + 6]!)}/s · commutations ${fmt(F[o + 7]!)}/s`,
+        t("cpu.1", { n: r }),
+        t("cpu.2", {
+          user: pct(F[o]!),
+          kernel: pct(F[o + 1]!),
+          dpc: pct(F[o + 2]!),
+          isr: pct(F[o + 3]!),
+          idle: pct(F[o + 4]!),
+        }),
+        t("cpu.3", {
+          irq: fmt(F[o + 5]!),
+          dpcs: fmt(F[o + 6]!),
+          cs: fmt(F[o + 7]!),
+        }),
       ];
     }
     case "proc": {
       const o = procBase + r * FRAME.proc;
       return [
         `${names[U[o + 10]!]}  pid ${U[o]}  ppid ${U[o + 1]}  session ${U[o + 11]}`,
-        paths.get(U[o]!) || "(chemin protégé)",
-        `threads ${U[o + 2]} · handles ${U[o + 3]} · working set ${bytes(F[o + 5]! * 2 ** 20)} · privé ${bytes(F[o + 6]! * 2 ** 20)}`,
-        `CPU ${(F[o + 7]! * ncpu * 100).toFixed(1)}% d'un cœur · E/S ${fmt(F[o + 8]!)}o/s · défauts ${fmt(F[o + 9]!)}/s`,
+        paths.get(U[o]!) || t("proc.nopath"),
+        t("proc.3", {
+          threads: U[o + 2]!,
+          handles: U[o + 3]!,
+          ws: bytes(F[o + 5]! * 2 ** 20),
+          priv: bytes(F[o + 6]! * 2 ** 20),
+        }),
+        t("proc.4", {
+          cpu: num(F[o + 7]! * ncpu * 100, 1),
+          io: rate(F[o + 8]!),
+          faults: fmt(F[o + 9]!),
+        }),
       ];
     }
     case "thr": {
@@ -1202,21 +1232,30 @@ function describe(h: { kind: string; ref: number }): string[] {
       return [
         `thread ${U[ti]} — ${owner}`,
         `${THREAD_STATE[st]}${st === 5 ? ` · ${WAIT_REASON[(p >>> 8) & 0xff]}` : ""}`,
-        `priorité ${(p >>> 16) & 0xff} (base ${(p >>> 24) & 0xff}) · CPU ${pct(F[ti + 2]!)} · commutations ${fmt(F[ti + 3]!)}/s`,
+        t("thr.3", {
+          prio: (p >>> 16) & 0xff,
+          base: (p >>> 24) & 0xff,
+          cpu: pct(F[ti + 2]!),
+          cs: fmt(F[ti + 3]!),
+        }),
       ];
     }
     case "type": {
-      const t = slow!.objectTypes[r]!;
+      const ty = slow!.objectTypes[r]!;
       return [
-        `type d'objet ${t.name} (index ${t.index})`,
-        `${t.objects.toLocaleString("fr")} objets · ${t.handles.toLocaleString("fr")} handles`,
+        t("type.1", { name: ty.name, index: ty.index }),
+        t("type.2", { objects: ty.objects, handles: ty.handles }),
       ];
     }
     case "pool": {
       const p = slow!.pool[r]!;
       return [
-        `tag de pool « ${p.tag} »`,
-        `paginé ${bytes(p.pagedMB * 2 ** 20)} · non paginé ${bytes(p.nonPagedMB * 2 ** 20)} · ${fmt(p.allocsPerSec)} alloc/s`,
+        t("pool.1", { tag: p.tag }),
+        t("pool.2", {
+          paged: bytes(p.pagedMB * 2 ** 20),
+          nonpaged: bytes(p.nonPagedMB * 2 ** 20),
+          allocs: fmt(p.allocsPerSec),
+        }),
       ];
     }
     case "drv": {
@@ -1224,7 +1263,7 @@ function describe(h: { kind: string; ref: number }): string[] {
       return [
         m.name,
         m.path,
-        `${bytes(m.size)} · ordre de chargement ${m.order}`,
+        t("drv.3", { size: bytes(m.size), order: m.order }),
       ];
     }
     case "fs1":
@@ -1239,26 +1278,37 @@ function describe(h: { kind: string; ref: number }): string[] {
       return d
         ? [
             `${tree!.name}\\${h.kind === "fs2" ? `${d1!.name}\\` : ""}${d.name}`,
-            `${bytes(d.bytes)} · ${d.files.toLocaleString("fr")} fichiers`,
+            t("fs.2", { size: bytes(d.bytes), files: d.files }),
           ]
         : [];
     }
     case "mem":
       return [
-        `mémoire physique ${bytes(slow!.basic.physicalMB * 2 ** 20)} · disponible ${bytes(F[g0 + 11]! * 2 ** 20)}`,
-        `page ${slow!.basic.pageSize} o`,
+        t("mem.1", {
+          phys: bytes(slow!.basic.physicalMB * 2 ** 20),
+          avail: bytes(F[g0 + 11]! * 2 ** 20),
+        }),
+        t("mem.2", { size: slow!.basic.pageSize }),
       ];
     case "ntfs":
     case "mft": {
       const n = slow!.ntfs!;
       return [
-        `volume NTFS ${n.version} ${n.volume}`,
-        `utilisé ${bytes(n.totalBytes - n.freeBytes)} / ${bytes(n.totalBytes)} · cluster ${n.bytesPerCluster} o`,
-        `$MFT ${bytes(n.mftBytes)} · ${n.mftRecords.toLocaleString("fr")} enregistrements de ${n.bytesPerFileRecord} o`,
+        t("ntfs.1", { version: n.version, volume: n.volume }),
+        t("ntfs.2", {
+          used: bytes(n.totalBytes - n.freeBytes),
+          total: bytes(n.totalBytes),
+          cluster: n.bytesPerCluster,
+        }),
+        t("ntfs.3", {
+          mft: bytes(n.mftBytes),
+          records: n.mftRecords,
+          size: n.bytesPerFileRecord,
+        }),
       ];
     }
     case "core":
-      return ["ntoskrnl.exe — noyau (Ke) et exécutif (Ob, Mm, Ps, Io, Se, Cm)"];
+      return [t("core.1")];
     default:
       return [];
   }
@@ -1268,17 +1318,37 @@ function screenLayer() {
   nScreenSpr = 0;
   if (ncpu) {
     const lines = [
-      `${ncpu} CPU · ${nproc} processus · ${nthread} threads · Running ${sched[2]} · Ready ${sched[1]} · Waiting ${sched[5]}`,
-      `syscalls ${fmt(F[g0 + 5]!)}/s · commutations ${fmt(F[g0 + 6]!)}/s · défauts ${fmt(F[g0 + 7]!)}/s · E/S ${fmt(F[g0 + 8]! + F[g0 + 9]!)}o/s`,
-      `commit ${bytes(F[g0 + 12]! * 2 ** 20)}/${bytes(F[g0 + 13]! * 2 ** 20)} · pool ${bytes(F[g0 + 14]! * 2 ** 20)} + ${bytes(F[g0 + 15]! * 2 ** 20)}${indexStats ? ` · index ${indexStats.files.toLocaleString("fr")} fichiers ${bytes(indexStats.bytes)}` : ""}`,
-      `${fps.toFixed(0)} i/s · ${W}x${H} MSAA ${SAMPLES}x`,
+      t("hud.1", {
+        cpus: ncpu,
+        procs: nproc,
+        threads: nthread,
+        running: sched[2]!,
+        ready: sched[1]!,
+        waiting: sched[5]!,
+      }),
+      t("hud.2", {
+        sys: fmt(F[g0 + 5]!),
+        cs: fmt(F[g0 + 6]!),
+        pf: fmt(F[g0 + 7]!),
+        io: rate(F[g0 + 8]! + F[g0 + 9]!),
+      }),
+      t("hud.3", {
+        used: bytes(F[g0 + 12]! * 2 ** 20),
+        limit: bytes(F[g0 + 13]! * 2 ** 20),
+        paged: bytes(F[g0 + 14]! * 2 ** 20),
+        nonpaged: bytes(F[g0 + 15]! * 2 ** 20),
+      }) +
+        (indexStats
+          ? ` · ${t("hud.index", { files: indexStats.files, size: bytes(indexStats.bytes) })}`
+          : ""),
+      t("hud.4", { fps: num(fps), w: W, h: H, samples: SAMPLES }),
     ];
     panel(24, 24, 1500, 30 + lines.length * 40, C.bg, 0.78);
     lines.forEach((l, i) =>
       text(l, true, 40, 64 + i * 40, 0, 28, i === 3 ? C.dim : C.text),
     );
   }
-  // Légende des états de threads.
+  // Thread state legend.
   let lx = 40;
   const ly = H - 44;
   const leg: [string, RGB][] = [
@@ -1293,7 +1363,7 @@ function screenLayer() {
     sprite(true, lx, ly - 22, 0, 22, 22, 0, 0, SOLID, c);
     lx += 30 + text(n, true, lx + 30, ly, 0, 22, C.dim) + 34;
   }
-  // Survol.
+  // Hover.
   const h = drag ? null : hit();
   const info = h ? describe(h) : [];
   if (info.length) {
@@ -1314,7 +1384,7 @@ function screenLayer() {
   );
 }
 
-// --- Boucle de rendu ---------------------------------------------------------------------------------------------------------
+// --- Render loop --------------------------------------------------------------------------------------------------------
 let fps = 0;
 let last = performance.now();
 const RING = 512;
@@ -1356,7 +1426,7 @@ function frame(now: number) {
   requestAnimationFrame(frame);
 }
 
-// Mesure (?report=1) : intervalles d'images réellement affichées, publiés vers le serveur.
+// Measurement (?report=1): intervals of the frames actually displayed, published to the server.
 if (new URLSearchParams(location.search).has("report"))
   setInterval(() => {
     const v = Array.from(intervals.subarray(0, filled)).sort((a, b) => a - b);
