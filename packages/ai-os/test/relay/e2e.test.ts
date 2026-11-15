@@ -481,8 +481,9 @@ describe.skipIf(!alive)("relay e2e", () => {
       return { deny: j.permissionDecision === "deny", reason: String(j.permissionDecisionReason) };
     };
     test.skipIf(!bash)("bash is available", () => expect(bash).toBeTruthy());
-    const denied = ["cat x", "git commit -m x", "git add -A", "git add .", "git stash", "grep x y", "ls", "curl http://x", "cd /tmp", "git commit -m x -- src/dir/", "rg x | cat"];
-    const allowed = ["rg x", "git commit -m x -- a.ts", "git commit-tree abc -m x", "git status", "bun test packages/core", "git add a.ts b.ts"];
+    // Only the .env vault is guarded (owner decision 2026-11-15); everything else is allowed.
+    const denied = ["git add .env", "git add -f .env", "git commit -m x -- .env"];
+    const allowed = ["cat x", "cd /tmp", "git stash", "git add -A", "git commit -m x", "git add .env.example", "rg x"];
     for (const c of denied)
       test.skipIf(!bash)(`denies: ${c}`, async () => {
         const r = await run(c);
