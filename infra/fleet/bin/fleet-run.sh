@@ -58,6 +58,18 @@ run_local() {
     td=/srv/xbuild/target/$class-$(id -un); [ -d "$td" ] || mkdir -p "$td" 2>/dev/null || td=   # target/ is 1777
     [ -n "$td" ] && envs+=("--setenv=CARGO_TARGET_DIR=$td")
   fi
+  # shared sccache backend: Valkey of the single server (endpoint from the registry, password from /etc/aphrody/secrets.env).
+  # Own sccache server port so a long-lived local-disk server of another session cannot ignore these variables; entries expire after
+  # 7 days (Valkey runs volatile-lru: keys without a TTL would never be evicted). Same CARGO_HOME/CARGO_TARGET_DIR paths on every host
+  # are what make the keys equal across hosts (docs/infra/FLEET-OFFLOAD.md section 3).
+  if [ -z "${SCCACHE_REDIS_ENDPOINT:-}" ] && [ -r /etc/aphrody/secrets.env ] && command -v sccache >/dev/null 2>&1 && command -v fleet-registry >/dev/null 2>&1; then
+    vk=$(fleet-registry endpoint valkey 2>/dev/null); vp=$(awk -F= '$1=="VALKEY_PASSWORD"{print substr($0,index($0,"=")+1)}' /etc/aphrody/secrets.env)
+    if [ -n "$vk" ] && [ -n "$vp" ]; then
+      envs+=("--setenv=SCCACHE_REDIS_ENDPOINT=redis://$vk" "--setenv=SCCACHE_REDIS_PASSWORD=$vp" "--setenv=SCCACHE_REDIS_EXPIRATION=604800"
+             "--setenv=SCCACHE_REDIS_KEY_PREFIX=sccache/" "--setenv=SCCACHE_SERVER_PORT=4237")
+      [ -n "${RUSTC_WRAPPER:-}" ] || envs+=("--setenv=RUSTC_WRAPPER=sccache")
+    fi
+  fi
   exec "${pre[@]}" systemd-run --scope --quiet --collect --slice="$slice" --uid="$(id -u)" --gid="$(id -g)" "${envs[@]}" -- \
     env -C "$dir" "$@"
 }
