@@ -201,6 +201,9 @@
     "packages/mail": {
       "name": "@auto/mail",
       "version": "0.0.0",
+      "dependencies": {
+        "@auto/i18n": "workspace:*",
+      },
     },
     "packages/native": {
       "name": "@auto/native",
@@ -217,6 +220,7 @@
         "@auto/automate": "workspace:*",
         "@auto/billing": "workspace:*",
         "@auto/domain": "workspace:*",
+        "@auto/i18n": "workspace:*",
         "@auto/ingest": "workspace:*",
         "@auto/mail": "workspace:*",
         "@auto/native": "workspace:*",
@@ -258,6 +262,7 @@
       "dependencies": {
         "@aphrody/m3-tokens": "1.4.7",
         "@auto/domain": "workspace:*",
+        "@auto/i18n": "workspace:*",
         "@fontsource/inter": "^5.3.0",
         "@fontsource/plus-jakarta-sans": "^5.3.0",
         "pattern.css": "1.0.0",

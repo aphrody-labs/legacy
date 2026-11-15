@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { autorisationCourrier, configurationCourrier, urlGraphCourrier, echangerCourrier } from "./courrier-oauth";
-test("Outlook : un curseur ne peut pas transmettre le jeton hors de Graph", () => {
+test("Outlook: a cursor cannot send the token outside Graph", () => {
   for (const u of [
     "https://evil.example/v1.0/me/messages",
     "https://graph.microsoft.com.evil.example/v1.0/me/messages",
@@ -13,7 +13,7 @@ test("Outlook : un curseur ne peut pas transmettre le jeton hors de Graph", () =
     urlGraphCourrier("https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages/delta?$deltatoken=123"),
   ).toContain("deltatoken");
 });
-test("OAuth mail : lecture seule, PKCE et retour fixe indépendant de la requête", async () => {
+test("OAuth mail: read-only, PKCE and fixed return independent of the request", async () => {
   const precedent = {
     AUTO_URL_APP: Bun.env.AUTO_URL_APP,
     AUTO_GOOGLE_CLIENT_ID: Bun.env.AUTO_GOOGLE_CLIENT_ID,

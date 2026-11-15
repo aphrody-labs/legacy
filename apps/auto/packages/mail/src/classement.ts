@@ -1,4 +1,4 @@
-// Classement des messages reçus : facture (Factur-X ou PDF de facture) ou courrier ordinaire.
+// Classification of received messages: invoice (Factur-X or invoice PDF) or ordinary mail.
 import type { PieceJointe } from "./mime";
 
 export type Classement = "facture" | "autre";
@@ -10,8 +10,8 @@ const estPdf = (p: PieceJointe) =>
   (p.nom.toLowerCase().endsWith(".pdf") && new TextDecoder().decode(p.octets.subarray(0, 5)) === "%PDF-");
 
 /**
- * `estFacturx` reçoit les octets d'un PDF et dit s'il embarque un XML Factur-X (extraction Rust).
- * Une facture est reconnue par un Factur-X, ou par un PDF dont le nom ou le sujet parle de facture.
+ * `estFacturx` receives the bytes of a PDF and says whether it embeds a Factur-X XML (Rust extraction).
+ * An invoice is recognized by a Factur-X, or by a PDF whose name or subject mentions an invoice.
  */
 export function classer(
   sujet: string,

@@ -1,4 +1,4 @@
-// API transactionnelle Resend ; SMTP reste disponible par sélection explicite du fournisseur.
+// Resend transactional API; SMTP remains available through explicit provider selection.
 import type { EnvoyeurMail } from "./envoyeur";
 import { adresseDe, construire, type Adresse } from "./mime";
 
@@ -12,7 +12,7 @@ export interface ConfigResend {
 const formater = (a: Adresse) =>
   typeof a === "string" || !a.nom ? adresseDe(a) : `${JSON.stringify(a.nom)} <${adresseDe(a)}>`;
 
-/** Pas de repli SMTP automatique après un timeout : l'acceptation distante peut déjà avoir eu lieu. */
+/** No automatic SMTP fallback after a timeout: the remote may already have accepted the message. */
 export function envoyeurResend(c: ConfigResend): EnvoyeurMail {
   if (!/^re_[A-Za-z0-9_-]+$/.test(c.cle)) throw new Error("AUTO_RESEND_CLE_API invalide");
   adresseDe(c.expediteur);

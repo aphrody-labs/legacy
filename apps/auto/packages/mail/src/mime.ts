@@ -1,4 +1,4 @@
-// MIME (RFC 5322, 2045-2047, 2231) : construction des messages envoyés, analyse des messages reçus.
+// MIME (RFC 5322, 2045-2047, 2231): building of sent messages, parsing of received messages.
 
 export type Adresse = string | { nom?: string; adresse: string };
 
@@ -39,7 +39,7 @@ const sansSautDeLigne = (v: string, quoi: string) => {
 
 const ascii = (s: string) => /^[\x20-\x7e]*$/.test(s);
 
-/** Mots encodés RFC 2047 (base64 UTF-8), découpés sur des caractères entiers, 75 octets maximum. */
+/** RFC 2047 encoded words (base64 UTF-8), split on whole characters, 75 bytes maximum. */
 function motsEncodes(s: string): string {
   const mots: string[] = [];
   let cur = "";
@@ -68,12 +68,12 @@ const JOURS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MOIS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const p2 = (n: number) => String(n).padStart(2, "0");
 
-/** Date RFC 5322 en UTC. */
+/** RFC 5322 date in UTC. */
 export const dateRfc5322 = (d: Date) =>
   `${JOURS[d.getUTCDay()]}, ${p2(d.getUTCDate())} ${MOIS[d.getUTCMonth()]} ${d.getUTCFullYear()} ` +
   `${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())} +0000`;
 
-/** Quoted-printable (RFC 2045 §6.7) d'un texte UTF-8, fins de ligne CRLF, lignes de 76 caractères. */
+/** Quoted-printable (RFC 2045 §6.7) of a UTF-8 text, CRLF line endings, 76-character lines. */
 export function quotedPrintable(texte: string): string {
   const lignes = texte.replace(/\r\n|\r|\n/g, "\n").split("\n");
   return lignes
@@ -87,7 +87,7 @@ export function quotedPrintable(texte: string): string {
         const sur =
           (b >= 33 && b <= 126 && b !== 61) || ((b === 32 || b === 9) && !dernier) ? String.fromCharCode(b) : null;
         const t = sur ?? `=${b.toString(16).toUpperCase().padStart(2, "0")}`;
-        // Un point en début de ligne est encodé : le message reste sûr même sans dot-stuffing.
+        // A leading dot is encoded: the message stays safe even without dot-stuffing.
         const tok = len === 0 && t === "." ? "=2E" : t;
         if (len + tok.length > 75) {
           out += "=\r\n";
@@ -103,7 +103,7 @@ export function quotedPrintable(texte: string): string {
 
 const base64Lignes = (o: Uint8Array) => (o.toBase64().match(/.{1,76}/g) ?? []).join("\r\n");
 
-/** Paramètre `filename` : ASCII entre guillemets, sinon RFC 2231 (`filename*=UTF-8''…`). */
+/** `filename` parameter: quoted ASCII, otherwise RFC 2231 (`filename*=UTF-8''…`). */
 function parametreNom(cle: string, nom: string): string {
   sansSautDeLigne(nom, "nom de fichier");
   if (ascii(nom) && !/["\\]/.test(nom)) return `${cle}="${nom}"`;
@@ -119,7 +119,7 @@ export interface Construit {
   expediteur: string;
 }
 
-/** Construit un message RFC 5322 : multipart/mixed (alternative texte et HTML, puis pièces jointes). */
+/** Builds an RFC 5322 message: multipart/mixed (text and HTML alternative, then attachments). */
 export function construire(m: Message, o: { date?: Date; domaine?: string } = {}): Construit {
   const expediteur = adresseDe(m.de);
   const destinataires = [...m.a, ...(m.cc ?? [])].map(adresseDe);
@@ -163,7 +163,7 @@ export function construire(m: Message, o: { date?: Date; domaine?: string } = {}
     const parts = [
       `Content-Type: multipart/mixed; boundary="${b}"`,
       "",
-      "Ce message est au format MIME.",
+      "This is a MIME message.",
       `--${b}`,
       ...corps,
     ];
@@ -187,7 +187,7 @@ export function construire(m: Message, o: { date?: Date; domaine?: string } = {}
 
 // Analyse ---------------------------------------------------------------------------------------
 
-/** Octets → chaîne binaire (un caractère par octet), pour découper sans décoder. */
+/** Bytes → binary string (one character per byte), to split without decoding. */
 function binaire(o: Uint8Array): string {
   let s = "";
   for (let i = 0; i < o.length; i += 0x8000) s += String.fromCharCode(...o.subarray(i, i + 0x8000));
@@ -231,7 +231,7 @@ function decoderBase64(s: string): Uint8Array {
   }
 }
 
-/** Décode les mots encodés RFC 2047 d'un en-tête (déjà en chaîne binaire). */
+/** Decodes the RFC 2047 encoded words of a header (already a binary string). */
 export function decoderEntete(v: string): string {
   const s = v.replace(/(=\?[^?]+\?[bBqQ]\?[^?]*\?=)\s+(?==\?)/g, "$1");
   const parts: string[] = [];
@@ -259,7 +259,7 @@ function lireEntetes(bloc: string): Entetes {
   return h;
 }
 
-/** `type/sous-type; a=b; c="d"` avec les continuations RFC 2231. */
+/** `type/subtype; a=b; c="d"` with RFC 2231 continuations. */
 function lireParametres(v: string): { valeur: string; params: Record<string, string> } {
   const morceaux: string[] = [];
   let cur = "";
@@ -324,7 +324,7 @@ export interface Analyse {
   pieces: PieceJointe[];
 }
 
-/** Adresses d'un en-tête `To`/`From` : `Nom <a@b>, c@d`. */
+/** Addresses of a `To`/`From` header: `Name <a@b>, c@d`. */
 function lireAdresses(v: string | undefined): string[] {
   if (!v) return [];
   const out: string[] = [];
@@ -381,7 +381,7 @@ function parcourir(partie: string, a: Analyse, profondeur: number) {
     });
 }
 
-/** Analyse un message reçu : en-têtes principaux, corps texte et HTML, pièces jointes décodées. */
+/** Parses a received message: main headers, text and HTML bodies, decoded attachments. */
 export function analyser(o: Uint8Array): Analyse {
   const s = binaire(o);
   const [bloc] = separer(s);

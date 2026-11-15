@@ -1,4 +1,4 @@
-// Flux ligne à ligne sur `Bun.connect` : TLS implicite, STARTTLS (`upgradeTLS`), contre-pression, délais.
+// Line-by-line stream over `Bun.connect`: implicit TLS, STARTTLS (`upgradeTLS`), backpressure, timeouts.
 import type { Socket, SocketHandler } from "bun";
 
 export type Securite = "tls" | "starttls" | "aucune";
@@ -7,9 +7,9 @@ export interface Serveur {
   hote: string;
   port: number;
   securite: Securite;
-  /** Dev et tests uniquement : accepte un certificat auto-signé. */
+  /** Dev and tests only: accepts a self-signed certificate. */
   certificatNonVerifie?: boolean;
-  /** Délai d'inactivité, en millisecondes. */
+  /** Inactivity timeout, in milliseconds. */
   delaiMs?: number;
 }
 
@@ -46,8 +46,8 @@ export class Flux {
   }
 
   /**
-   * Chaque gestionnaire appartient à une génération (connexion, puis STARTTLS) : les événements de
-   * l'ancien socket brut sont ignorés après la bascule, y compris avant l'affectation de `sock`.
+   * Each handler belongs to a generation (connection, then STARTTLS): events from the
+   * old raw socket are ignored after the switch, including before `sock` is assigned.
    */
   private generation = 0;
 
@@ -73,7 +73,7 @@ export class Flux {
         s.end();
       },
       connectError: (_s, e) => this.arreter(new ErreurMail(e.message)),
-      // Pas de `end()` dans ce rappel : il fait planter le runtime (1.4.6) ; l'appelant ferme le flux.
+      // No `end()` in this callback: it crashes the runtime (1.4.6); the caller closes the stream.
       handshake: (_s, ok, err) => {
         if (actif() && !ok && !this.serveur.certificatNonVerifie)
           this.arreter(new ErreurMail(`certificat refusé : ${err?.message ?? "inconnu"}`));
@@ -123,7 +123,7 @@ export class Flux {
     });
   }
 
-  /** Ligne suivante, sans CRLF. */
+  /** Next line, without CRLF. */
   async ligne(): Promise<string> {
     for (;;) {
       const i = this.buf.subarray(this.debut, this.fin).indexOf(CRLF);
@@ -137,7 +137,7 @@ export class Flux {
     }
   }
 
-  /** Exactement `n` octets (littéral IMAP). */
+  /** Exactly `n` bytes (IMAP literal). */
   async octets(n: number): Promise<Uint8Array> {
     while (this.fin - this.debut < n) await this.attendre();
     const r = this.buf.slice(this.debut, this.debut + n);
@@ -166,7 +166,7 @@ export class Flux {
     if (this.ferme) throw this.ferme;
   }
 
-  /** STARTTLS : bascule le flux en TLS après la réponse positive du serveur. */
+  /** STARTTLS: switches the stream to TLS after the server's positive reply. */
   starttls() {
     const [, tls] = this.sock.upgradeTLS<undefined>({ tls: this.optionsTls(), socket: this.gestionnaire() });
     this.sock = tls;

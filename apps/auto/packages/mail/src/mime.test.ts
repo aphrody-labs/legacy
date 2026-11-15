@@ -8,7 +8,7 @@ import { preparerData } from "./smtp";
 
 const pdf = new Uint8Array([...new TextEncoder().encode("%PDF-1.7\n"), 0, 255, 128, 13, 10, 46, 46, 1]);
 
-test("construction puis analyse : en-têtes, texte, HTML, pièce binaire", () => {
+test("build then parse: headers, text, HTML, binary attachment", () => {
   const x = construire(
     {
       de: { nom: "Société Énergie", adresse: "compta@alpha.fr" },
@@ -44,21 +44,21 @@ test("construction puis analyse : en-têtes, texte, HTML, pièce binaire", () =>
   expect(a.pieces[0]!.octets).toEqual(pdf);
 });
 
-test("injection d'en-tête et adresses invalides refusées", () => {
+test("header injection and invalid addresses refused", () => {
   const base = { de: "a@b.fr", a: ["c@d.fr"], texte: "x" };
   expect(() => construire({ ...base, sujet: "x\r\nBcc: e@f.fr" })).toThrow(ErreurMime);
   expect(() => construire({ ...base, sujet: "x", a: ["c@d.fr>\r\nX: y"] })).toThrow(ErreurMime);
   expect(() => construire({ ...base, sujet: "x", a: [] })).toThrow("aucun destinataire");
 });
 
-test("quoted-printable : lignes de 76 caractères, = et espaces finaux encodés", () => {
+test("quoted-printable: 76-character lines, = and trailing spaces encoded", () => {
   const qp = quotedPrintable(`${"é".repeat(60)} \na=b\t`);
   expect(qp.split("\r\n").every((l) => l.length <= 76)).toBe(true);
   expect(qp).toContain("a=3Db=09");
   expect(qp).toContain("=20\r\n");
 });
 
-test("analyse d'un message externe : multipart imbriqué, RFC 2231, ISO-8859-1, QP", () => {
+test("parsing an external message: nested multipart, RFC 2231, ISO-8859-1, QP", () => {
   const m = [
     "From: =?ISO-8859-1?Q?Fran=E7ois?= <Francois@Exemple.FR>",
     "To: compta@alpha.fr",
@@ -103,12 +103,12 @@ test("analyse d'un message externe : multipart imbriqué, RFC 2231, ISO-8859-1, 
   expect(new TextDecoder().decode(a.pieces[0]!.octets)).toBe("%PDF-1.4\n");
 });
 
-test("dot-stuffing et terminaison DATA", () => {
+test("dot-stuffing and DATA termination", () => {
   const d = new TextDecoder().decode(preparerData(new TextEncoder().encode(".a\r\nb\r\n..c")));
   expect(d).toBe("..a\r\nb\r\n...c\r\n.\r\n");
 });
 
-test("classement : Factur-X, PDF nommé facture, autre", () => {
+test("classification: Factur-X, PDF named invoice, other", () => {
   const p = (nom: string) => ({ nom, type: "application/pdf", octets: pdf });
   expect(classer("Bonjour", [p("doc.pdf")], () => true)).toEqual({ classement: "facture", facturx: [true] });
   expect(classer("Bonjour", [p("Facture-12.pdf")], () => false).classement).toBe("facture");
@@ -120,7 +120,7 @@ test("classement : Factur-X, PDF nommé facture, autre", () => {
   });
 });
 
-test("chiffrement AES-GCM : clé dérivée par tenant, liée au tenant", async () => {
+test("AES-GCM encryption: key derived per tenant, bound to the tenant", async () => {
   const k = "k".repeat(32);
   const c = await chiffrer(k, "t1", "mail", { motDePasse: "secret" });
   expect(new TextDecoder().decode(c)).not.toContain("secret");
@@ -130,7 +130,7 @@ test("chiffrement AES-GCM : clé dérivée par tenant, liée au tenant", async (
   expect(() => cleMaitre({ AUTO_CLE_MAITRE: "court" })).toThrow();
 });
 
-test("relais de l'opérateur : OVH préréglé, expéditeur contact@aphrody.com, surcharges", () => {
+test("operator relay: OVH preset, sender contact@aphrody.com, overrides", () => {
   expect(configRelais({})).toEqual({ expediteur: { nom: "Auto", adresse: "contact@aphrody.com" }, smtp: null });
   expect(configRelais({ AUTO_SMTP_MOT_DE_PASSE: "s" }).smtp).toEqual({
     hote: "ssl0.ovh.net",
@@ -147,11 +147,11 @@ test("relais de l'opérateur : OVH préréglé, expéditeur contact@aphrody.com,
     expediteur: "x@y.fr",
     smtp: { hote: "relais.local", port: 587, securite: "starttls", identifiants: undefined },
   });
-  expect(() => envoyeurDepuisEnv({ NODE_ENV: "production" })).toThrow("requis en production");
+  expect(() => envoyeurDepuisEnv({ NODE_ENV: "production" })).toThrow("required in production");
   expect(FOURNISSEURS.map((f) => f.id)).toContain("ovh-mxplan");
 });
 
-test("adresse d'expéditeur depuis l'environnement", () => {
+test("sender address from the environment", () => {
   expect(lireAdresse("Auto <no-reply@auto.fr>")).toEqual({ nom: "Auto", adresse: "no-reply@auto.fr" });
   expect(lireAdresse("x@y.fr")).toBe("x@y.fr");
 });

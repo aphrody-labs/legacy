@@ -70,7 +70,7 @@ export async function echangerCourrier(
     scope: b.scope,
   };
 }
-/** Aucun curseur distant ne doit pouvoir exfiltrer le jeton vers une autre origine. */
+/** No remote cursor may be able to exfiltrate the token to another origin. */
 export function urlGraphCourrier(value: string) {
   const u = new URL(value);
   if (u.origin !== "https://graph.microsoft.com" || u.username || u.password || !u.pathname.startsWith("/v1.0/me/"))

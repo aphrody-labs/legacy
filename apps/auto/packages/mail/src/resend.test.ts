@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { envoyeurDepuisEnv } from "./envoyeur";
 import { envoyeurResend } from "./resend";
 
-test("Resend : contenu, destinataires, réponse OVH et pièce jointe transmis sans redirection", async () => {
+test("Resend: content, recipients, OVH response and attachment forwarded without redirect", async () => {
   const e = envoyeurResend({
     cle: "re_factice",
     expediteur: { nom: "Auto", adresse: "auto@notifications.aphrody.com" },
@@ -32,7 +32,7 @@ test("Resend : contenu, destinataires, réponse OVH et pièce jointe transmis sa
   expect(r.messageId).toContain("@notifications.aphrody.com>");
 });
 
-test("Resend : refus fournisseur sans contenu sensible ni repli SMTP", async () => {
+test("Resend: provider refusal without sensitive content or SMTP fallback", async () => {
   const e = envoyeurResend({
     cle: "re_factice",
     expediteur: "auto@notifications.aphrody.com",
@@ -43,7 +43,7 @@ test("Resend : refus fournisseur sans contenu sensible ni repli SMTP", async () 
   );
 });
 
-test("Resend : configuration explicite, SMTP toujours sélectionné par défaut", () => {
+test("Resend: explicit configuration, SMTP always selected by default", () => {
   expect(() => envoyeurDepuisEnv({ NODE_ENV: "production", AUTO_MAIL_FOURNISSEUR: "resend" })).toThrow(
     "AUTO_RESEND_CLE_API",
   );

@@ -12,7 +12,7 @@ interface Untagged {
   litteraux: Uint8Array[];
 }
 
-/** Chaîne IMAP entre guillemets (sans CR/LF ni NUL). */
+/** Quoted IMAP string (without CR/LF or NUL). */
 function chaine(s: string): string {
   if (/[\r\n\0]/.test(s)) throw new ErreurMail("IMAP : saut de ligne interdit");
   return `"${s.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
@@ -40,7 +40,7 @@ export class Imap {
     return i;
   }
 
-  /** Réponse non étiquetée complète, littéraux `{n}` compris. */
+  /** Complete untagged response, including `{n}` literals. */
   private async untagged(premiere: string): Promise<Untagged> {
     const u: Untagged = { texte: premiere, litteraux: [] };
     let l = premiere;
@@ -68,7 +68,7 @@ export class Imap {
     }
   }
 
-  /** Sélectionne le dossier (lecture seule) ; renvoie UIDVALIDITY et le nombre de messages. */
+  /** Selects the folder (read-only); returns UIDVALIDITY and the message count. */
   async examiner(dossier = "INBOX"): Promise<{ uidValidity: number; existe: number }> {
     const r = await this.commande(`EXAMINE ${chaine(dossier)}`, "EXAMINE");
     let uidValidity = 0;
@@ -83,17 +83,17 @@ export class Imap {
     return { uidValidity, existe };
   }
 
-  /** UID strictement supérieurs à `apres`, croissants. */
+  /** UIDs strictly greater than `apres`, ascending. */
   async uidsApres(apres: number): Promise<number[]> {
     const r = await this.commande(`UID SEARCH UID ${apres + 1}:*`, "SEARCH");
     const uids = r
       .filter((u) => /^\* SEARCH\b/i.test(u.texte))
       .flatMap((u) => u.texte.slice(8).trim().split(/\s+/).filter(Boolean).map(Number));
-    // `n:*` renvoie toujours le dernier message, même si son UID est inférieur à n.
+    // `n:*` always returns the last message, even if its UID is lower than n.
     return [...new Set(uids)].filter((u) => u > apres).sort((x, y) => x - y);
   }
 
-  /** Message brut (sans marquer \Seen). */
+  /** Raw message (without setting \Seen). */
   async lire(uid: number): Promise<Uint8Array | null> {
     const r = await this.commande(`UID FETCH ${uid} (UID BODY.PEEK[])`, "FETCH");
     const u = r.find((x) => /^\* \d+ FETCH/i.test(x.texte) && new RegExp(`UID ${uid}\\b`).test(x.texte));
@@ -106,7 +106,7 @@ export class Imap {
   }
 }
 
-/** Vérifie connexion, TLS, authentification et accès au dossier. */
+/** Checks connection, TLS, authentication and folder access. */
 export async function testerImap(c: ConfigImap): Promise<{ uidValidity: number; existe: number }> {
   const i = await Imap.ouvrir(c);
   try {
@@ -122,8 +122,8 @@ export interface MessageBrut {
 }
 
 /**
- * Relève les messages d'UID supérieur à `dernierUid` (au plus `limite`). Si UIDVALIDITY a changé,
- * la numérotation repart de zéro : l'idempotence est assurée par l'appelant (clé UIDVALIDITY + UID).
+ * Fetches the messages with UID above `dernierUid` (at most `limite`). If UIDVALIDITY changed,
+ * numbering restarts from zero: idempotence is ensured by the caller (key UIDVALIDITY + UID).
  */
 export async function relever(
   c: ConfigImap,

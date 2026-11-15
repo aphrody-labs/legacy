@@ -8,7 +8,7 @@ import { envoyerSmtp, testerSmtp } from "./smtp";
 const avecGreenmail = test.skipIf(!greenmailDisponible);
 
 avecGreenmail(
-  "SMTP en clair puis IMAP : relève depuis le dernier UID",
+  "SMTP in clear then IMAP: fetch since the last UID",
   async () => {
     const b = boiteJetable("clair");
     await testerSmtp(b.smtp);
@@ -35,21 +35,21 @@ avecGreenmail(
     const dernier = r1.messages[1]!.uid;
     const r2 = await relever(b.imap, { uidValidity: r1.uidValidity, dernierUid: dernier });
     expect(r2.messages).toHaveLength(0);
-    // UIDVALIDITY différent : tout est relu.
+    // Different UIDVALIDITY: everything is re-read.
     expect((await relever(b.imap, { uidValidity: r1.uidValidity + 1, dernierUid: dernier })).messages).toHaveLength(2);
   },
   30_000,
 );
 
 avecGreenmail(
-  "SMTPS et IMAPS (TLS implicite)",
+  "SMTPS and IMAPS (implicit TLS)",
   async () => {
     const b = boiteJetable("tls", true);
     await envoyerSmtp(b.smtp, "exp@exemple.test", [b.adresse], new TextEncoder().encode("Subject: tls\r\n\r\nok\r\n"));
     const r = await relever(b.imap, { uidValidity: null, dernierUid: 0 });
     expect(analyser(r.messages[0]!.octets).sujet).toBe("tls");
-    // Certificat auto-signé refusé sans dérogation. Dans un processus à part : un échec de poignée de main
-    // TLS après usage de crypto.subtle fait planter le runtime 1.4.6 de façon intermittente.
+    // Self-signed certificate refused without an exemption. In a separate process: a TLS handshake failure
+    // after using crypto.subtle intermittently crashes the 1.4.6 runtime.
     const p = Bun.spawn(
       [
         process.execPath,
@@ -65,7 +65,7 @@ avecGreenmail(
   30_000,
 );
 
-avecGreenmail("erreurs : port fermé, STARTTLS absent", async () => {
+avecGreenmail("errors: closed port, STARTTLS absent", async () => {
   const b = boiteJetable("err");
   await expect(testerSmtp({ ...b.smtp, port: 1 })).rejects.toThrow("connexion impossible");
   await expect(testerSmtp({ ...b.smtp, securite: "starttls" })).rejects.toThrow("STARTTLS non proposé");

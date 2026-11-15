@@ -1,0 +1,10 @@
+{
+  "provider.ovh-zimbra.note": "Login: the full address and the password of the Zimbra mailbox. Starter plan with IMAP/SMTP.",
+  "provider.ovh-mxplan.note": "Login: the full address. Official aliases: imap.mail.ovh.net and smtp.mail.ovh.net.",
+  "provider.ovh-emailpro.note": "Replace pro1 with the server number shown in the customer area (pro?.mail.ovh.net).",
+  "provider.ovh-exchange.note": "Replace ex5 with the server shown in the customer area (ex?.mail.ovh.net); IMAP must be enabled on the account.",
+  "provider.google.note": "An app password is required (2-step verification enabled), not the account password.",
+  "provider.microsoft.note": "Microsoft is retiring password authentication (IMAP and SMTP AUTH) in favor of OAuth 2, not yet supported here: it only works if the administrator left SMTP AUTH enabled.",
+  "provider.ionos.note": "Login: the full address.",
+  "provider.orange.note": "Login: the full @orange.fr address; password of the Orange mailbox."
+}

@@ -1,14 +1,14 @@
-// Secrets au repos : AES-256-GCM, clé dérivée par HKDF-SHA-256 de la clé maître et du tenant.
+// Secrets at rest: AES-256-GCM, key derived by HKDF-SHA-256 from the master key and the tenant.
 
 const VERSION = 1;
 const enc = (s: string) => new TextEncoder().encode(s);
 
 export class ErreurCle extends Error {}
 
-/** Clé maître de l'opérateur (`AUTO_CLE_MAITRE`), 32 caractères au moins. */
+/** Operator master key (`AUTO_CLE_MAITRE`), at least 32 characters. */
 export function cleMaitre(env: Record<string, string | undefined> = Bun.env): string {
   const k = env.AUTO_CLE_MAITRE;
-  if (!k || k.length < 32) throw new ErreurCle("AUTO_CLE_MAITRE absente ou trop courte (32 caractères au moins)");
+  if (!k || k.length < 32) throw new ErreurCle("AUTO_CLE_MAITRE missing or too short (at least 32 characters)");
   return k;
 }
 
@@ -24,8 +24,8 @@ async function cle(maitre: string, tenantId: string, usage: string): Promise<Cry
 }
 
 /**
- * Chiffre une valeur JSON pour un tenant : `version ‖ nonce (12) ‖ chiffré + étiquette`. Le tenant est
- * aussi en données associées : un secret recopié chez un autre tenant ne se déchiffre pas.
+ * Encrypts a JSON value for a tenant: `version ‖ nonce (12) ‖ ciphertext + tag`. The tenant is
+ * also in the associated data: a secret copied to another tenant does not decrypt.
  */
 export async function chiffrer(maitre: string, tenantId: string, usage: string, valeur: unknown): Promise<Uint8Array> {
   const iv = crypto.getRandomValues(new Uint8Array(12));

@@ -1,0 +1,10 @@
+{
+  "provider.ovh-zimbra.note": "Identifiant : l'adresse complète et le mot de passe de la boîte Zimbra. Offre Starter avec IMAP/SMTP.",
+  "provider.ovh-mxplan.note": "Identifiant : l'adresse complète. Alias officiels : imap.mail.ovh.net et smtp.mail.ovh.net.",
+  "provider.ovh-emailpro.note": "Remplacer pro1 par le numéro de serveur affiché dans l'espace client (pro?.mail.ovh.net).",
+  "provider.ovh-exchange.note": "Remplacer ex5 par le serveur indiqué dans l'espace client (ex?.mail.ovh.net) ; IMAP à activer sur le compte.",
+  "provider.google.note": "Mot de passe d'application obligatoire (validation en deux étapes activée), pas le mot de passe du compte.",
+  "provider.microsoft.note": "Microsoft retire l'authentification par mot de passe (IMAP et SMTP AUTH) au profit d'OAuth 2, non encore pris en charge ici : ne fonctionne que si l'administrateur a laissé SMTP AUTH actif.",
+  "provider.ionos.note": "Identifiant : l'adresse complète.",
+  "provider.orange.note": "Identifiant : l'adresse @orange.fr complète ; mot de passe de la messagerie Orange."
+}

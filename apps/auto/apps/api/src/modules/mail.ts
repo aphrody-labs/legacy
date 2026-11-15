@@ -1,8 +1,8 @@
 // Lot mail : boîte IMAP/SMTP du tenant, relève classée, envoi des devis et factures (voir docs/MAIL.md).
-import { chiffrer, FOURNISSEURS } from "@auto/mail";
+import { ErreurApi, refus } from "../i18n";
+import { chiffrer, fournisseursPour } from "@auto/mail";
 import {
   enregistrerBoite,
-  ErreurMetier,
   lireBoite,
   lirePieceMail,
   listerMailsRecus,
@@ -29,12 +29,12 @@ import {
 
 export const routes: Module = ({ sql, publier, auth }) => ({
   "/v1/mail/fournisseurs": {
-    GET: auth("lire", async () => Response.json(FOURNISSEURS)),
+    GET: auth("lire", async (req) => Response.json(fournisseursPour(req.headers.get("accept-language")))),
   },
   "/v1/mail/boite": {
-    GET: auth("lire", async (_req, a) => {
+    GET: auth("lire", async (req, a) => {
       const b = await withTenant(sql, a.tenantId, (tx) => lireBoite(tx));
-      return b ? Response.json(publique(b)) : Response.json({ erreur: "aucune boîte mail connectée" }, { status: 404 });
+      return b ? Response.json(publique(b)) : refus(req, "no_mailbox_connected", 404);
     }),
     PUT: auth("parametres", async (req, a) => {
       const { config, identifiants } = valider((await req.json()) as CorpsBoite);
@@ -50,20 +50,20 @@ export const routes: Module = ({ sql, publier, auth }) => ({
       });
       return Response.json({ ...publique(b), test });
     }),
-    DELETE: auth("parametres", async (_req, a) => {
+    DELETE: auth("parametres", async (req, a) => {
       const ok = await withTenant(sql, a.tenantId, (tx) => supprimerBoite(tx, a.userId));
-      return ok ? new Response(null, { status: 204 }) : Response.json({ erreur: "aucune boîte" }, { status: 404 });
+      return ok ? new Response(null, { status: 204 }) : refus(req, "no_mailbox", 404);
     }),
   },
   "/v1/mail/boite/test": {
-    POST: auth("parametres", async (_req, a) => {
+    POST: auth("parametres", async (req, a) => {
       const b = await withTenant(sql, a.tenantId, (tx) => lireBoite(tx));
-      if (!b) throw new ErreurMetier("aucune boîte mail connectée", [], 404);
+      if (!b) throw new ErreurApi("no_mailbox_connected", [], 404);
       return Response.json(await tester(await ouvrir(a.tenantId, b)));
     }),
   },
   "/v1/mail/releve": {
-    POST: auth("ecrire", async (_req, a) => Response.json(await relever(sql, a.tenantId, publier, a.userId))),
+    POST: auth("ecrire", async (req, a) => Response.json(await relever(sql, a.tenantId, publier, a.userId))),
   },
   "/v1/mail/messages": {
     GET: auth("lire", async (req, a) => {
@@ -74,9 +74,9 @@ export const routes: Module = ({ sql, publier, auth }) => ({
   },
   "/v1/mail/pieces/:id": {
     GET: auth("lire", async (req: BunRequest<"/v1/mail/pieces/:id">, a) => {
-      if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return Response.json({ erreur: "introuvable" }, { status: 404 });
+      if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) return refus(req, "not_found", 404);
       const p = await withTenant(sql, a.tenantId, (tx) => lirePieceMail(tx, req.params.id));
-      if (!p) return Response.json({ erreur: "introuvable" }, { status: 404 });
+      if (!p) return refus(req, "not_found", 404);
       return new Response(p.contenu, {
         headers: {
           "content-type": p.type,

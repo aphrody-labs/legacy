@@ -1,11 +1,11 @@
-// Serveur GreenMail de dev (compose.yaml, service greenmail) pour les tests d'intégration.
+// Dev GreenMail server (compose.yaml, greenmail service) for integration tests.
 import { Flux } from "./flux";
 import type { ConfigImap } from "./imap";
 import type { ConfigSmtp } from "./smtp";
 
 export const GREENMAIL_HOTE = Bun.env.GREENMAIL_HOTE ?? "127.0.0.1";
 
-/** Le mandataire de ports de Docker Desktop accepte la connexion même conteneur arrêté : on attend l'accueil. */
+/** Docker Desktop's port proxy accepts the connection even with the container stopped: wait for the greeting. */
 async function joignable(port: number, accueil: string): Promise<boolean> {
   try {
     const f = await Flux.ouvrir({ hote: GREENMAIL_HOTE, port, securite: "aucune", delaiMs: 1500 });
@@ -17,10 +17,10 @@ async function joignable(port: number, accueil: string): Promise<boolean> {
   }
 }
 
-/** Vrai si GreenMail répond (sinon les tests d'intégration sont ignorés). */
+/** True if GreenMail answers (otherwise integration tests are skipped). */
 export const greenmailDisponible = (await joignable(3025, "220")) && (await joignable(3143, "* OK"));
 
-/** Boîte jetable : GreenMail (auth désactivée) la crée à la première connexion. */
+/** Disposable mailbox: GreenMail (auth disabled) creates it on first connection. */
 export function boiteJetable(prefixe = "boite", tls = false) {
   const adresse = `${prefixe}-${crypto.randomUUID().slice(0, 8)}@exemple.test`;
   const identifiants = { utilisateur: adresse, motDePasse: "mot de passe" };

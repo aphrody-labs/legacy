@@ -1,4 +1,4 @@
-// Client SMTP (RFC 5321) : EHLO, STARTTLS, AUTH PLAIN ou LOGIN, enveloppe, DATA avec dot-stuffing.
+// SMTP client (RFC 5321): EHLO, STARTTLS, AUTH PLAIN or LOGIN, envelope, DATA with dot-stuffing.
 import { ErreurMail, Flux, type Serveur } from "./flux";
 
 export interface Identifiants {
@@ -8,7 +8,7 @@ export interface Identifiants {
 
 export interface ConfigSmtp extends Serveur {
   identifiants?: Identifiants;
-  /** Nom annoncé dans EHLO. */
+  /** Name announced in EHLO. */
   ehlo?: string;
 }
 
@@ -42,7 +42,7 @@ async function commande(f: Flux, cmd: string, attendu: number, quoi = cmd.split(
 
 const b64 = (s: string) => new TextEncoder().encode(s).toBase64();
 
-/** Dot-stuffing (RFC 5321 §4.5.2) et terminaison `CRLF.CRLF`. */
+/** Dot-stuffing (RFC 5321 §4.5.2) and `CRLF.CRLF` termination. */
 export function preparerData(o: Uint8Array): Uint8Array {
   const out: number[] = [];
   let debutLigne = true;
@@ -57,7 +57,7 @@ export function preparerData(o: Uint8Array): Uint8Array {
   return new Uint8Array(out);
 }
 
-/** Session ouverte, authentifiée : `fn` reçoit le flux, QUIT est envoyé à la fin. */
+/** Open, authenticated session: `fn` receives the stream, QUIT is sent at the end. */
 async function session<T>(c: ConfigSmtp, fn: (f: Flux) => Promise<T>): Promise<T> {
   const f = await Flux.ouvrir(c);
   try {
@@ -93,10 +93,10 @@ async function session<T>(c: ConfigSmtp, fn: (f: Flux) => Promise<T>): Promise<T
   }
 }
 
-/** Vérifie connexion, TLS et authentification. */
+/** Checks connection, TLS and authentication. */
 export const testerSmtp = (c: ConfigSmtp) => session(c, async () => {});
 
-/** Transmet un message déjà construit (octets RFC 5322) à ses destinataires. */
+/** Sends an already built message (RFC 5322 bytes) to its recipients. */
 export function envoyerSmtp(c: ConfigSmtp, expediteur: string, destinataires: string[], message: Uint8Array) {
   return session(c, async (f) => {
     await commande(f, `MAIL FROM:<${expediteur}>`, 250, "MAIL FROM");
