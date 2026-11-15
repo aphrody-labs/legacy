@@ -8,7 +8,7 @@ Guidance for Claude Code (`claude.ai/code`). Canonical contract: [`AGENTS.md`](.
 ## Key Conventions
 
 - Layout, scope and execution rules: `AGENTS.md` (imported above); not repeated here.
-- C and WebAssembly targets in `src/` build locally in < 4s (`src/Makefile`); heavy Rust workspace builds run on `fr1` or CI (`ci.yml`).
+- C and WebAssembly targets in `src/` build locally (`src/Makefile`); heavy Rust workspace builds run on `fr1` or CI (`.github/workflows/ci.yml`).
 - Never run bare `bun test` at root: target a package (`bun test packages/core`).
 - Subagents: use the project types in `.claude/agents/`, each with its skills preloaded (`general-purpose` is denied in `.claude/settings.json`):
   - `rust-crates`: cargo on fr1.
@@ -51,7 +51,7 @@ bun packages/ai-os/src/brain/cli.ts sync   # global CLAUDE.md + memory index -> 
 - Headless Claude from a shell: `claude -p "..." < /dev/null`; without it the CLI waits 3 s for stdin on every run .
 - Never `cmd //c ...` from the Bash tool (niubash opens an interactive cmd and hangs): remove a junction with `bun -e` (`fs.unlinkSync`, fallback `fs.rmdirSync`).
 - Relay code changes load only after `pwsh -NoProfile -c "Restart-Service AphrodyRelay -Force"` (service runs `packages/ai-os/src/relay/cli.ts serve` from source; killing the bun child is not enough).
-- VPS update (`/srv/src` on vps, prd, cdn): `git fetch -q --no-recurse-submodules origin main && git merge --ff-only FETCH_HEAD`. Blocked by a file identical to upstream: `git checkout FETCH_HEAD -- <file>`. Blocked by a submodule upstream absorbed: `git submodule deinit -f <path>` only if it is clean and its HEAD is on a remote branch.
+- Fleet update (`/srv/src` on fr1, prd, fr2; roles fr1, fr2 and prd are ssh Host aliases): `git fetch -q --no-recurse-submodules origin main && git merge --ff-only FETCH_HEAD`. Blocked by a file identical to upstream: `git checkout FETCH_HEAD -- <file>`. Blocked by a submodule upstream absorbed: `git submodule deinit -f <path>` only if it is clean and its HEAD is on a remote branch.
 - Gemini review, headless first: `bun packages/ai-os/src/review/cli.ts <paths|A..B> --voice gemini --json` (or `--bundle <file>`); Vertex service account, then Gemini API key, then agy, then other engines, each skipped with its recorded health reason (`docs/reviews/README.md`).
 - Gemini review, last manual fallback when no headless engine answers (billing off, key blocked, no credits): gemini.google.com through claude-in-chrome; insert long text with `document.execCommand("insertText")` (synthetic paste is ignored, page CSP blocks fetch to localhost and raw.githubusercontent.com). A large bundle goes through an `<input type=file>` appended to the page, filled with the `file_upload` tool, read with `files[0].text()`. The browser tool withholds response slices that look like cookies or query strings: extract title, location and severity lines. Sub-agents have no claude-in-chrome, so the main session runs this route.
 - R2 listing: `cf r2 buckets list`, `cf r2 objects list --bucket-name <b>` (discover others with `cf cli search`).

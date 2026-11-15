@@ -8,7 +8,7 @@ src is the public monorepo of Aphrody: a game engine and creative suite built in
 
 ## 2. Layout (check with `fd -d 1`; the lists are examples)
 
-- [`apps/`](apps): `aphrody` (static site and Wayland WASM), `auto`, `nt`, `open`, `rosegriffon` and `shenron` (git submodules, community sites Aphrody maintains, not Aphrody products).
+- [`apps/`](apps): `aphrody` (static site and Wayland WASM), `auto` and `nt` (in tree), `open` (separate clone, `aphrody-labs/open`, not tracked here), `rosegriffon` and `shenron` (git submodules, community sites Aphrody maintains, not Aphrody products).
 - [`packages/`](packages): Bun `@aphrody/*` packages (`ai-os`, `assets`, `core`, `deploy`, `design`, `env-kit`, `ffi-bridge`, `gaming`, `machine` (includes the shell matrix), `native`, `wck`, ...).
 - [`src/`](src): Rust 2024 crates (Bun upstream layout, members in the root `Cargo.toml`: `ay`, `archguard`, `tv`, `steam`, `ui`, ...) next to the C core and assembly (`arch/`, `kernel/`, `wayland/`, `nt/`, `wine/`, `wasm/`, `include/ay/sys.h`), built by Clang and LLD (`src/Makefile`); specs in [`docs/native/`](docs/native).
 - [`infra/`](infra): fleet and deploy configuration assembled from upstream tools (`docs/infra/UPSTREAM-STACK.md`).

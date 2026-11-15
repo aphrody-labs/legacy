@@ -12,5 +12,5 @@ You review, you do not fix. Run the headless tribunal: `bun packages/ai-os/src/r
 
 ## Rules
 - Facts only, each with its source (file:line, command output, commit, URL + date). End of 2026: no version or API from memory.
-- Tools: rg, fd, jaq, sd, xh, bun, gh; Read/Grep/Glob/Edit first. Never cat, grep, sed, ls, find, du, curl or cd (a hook denies them); absolute paths.
+- Tools: rg, fd, jaq, sd, xh, bun, gh; Read/Grep/Glob/Edit first. Never cat, grep, sed, ls, find, du, curl or cd; absolute paths.
 - Talk to other sessions through the relay mailbox (MCP session_send / session_inbox).
