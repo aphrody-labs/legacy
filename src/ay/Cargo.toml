@@ -24,6 +24,7 @@ doctest = false
 
 [features]
 # Magika (ONNX Runtime) as the detector of `ay index --sniff` for files that extension and magic bytes cannot place.
+default = ["magika"]
 magika = ["aphrody-re/magika"]
 
 [dependencies]
