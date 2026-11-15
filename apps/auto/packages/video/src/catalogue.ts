@@ -1,6 +1,6 @@
 import type { Scene } from "./scenario";
 
-/** Catalogue local autonome, sans données de compte ni requêtes externes. */
+/** Self-contained local catalogue, without account data or external requests. */
 export async function genererCatalogue(out: string, scenes: Scene[]) {
   const recordings = [...new Bun.Glob("*.webm").scanSync({ cwd: `${out}/parcours-brut`, onlyFiles: true })]
     .map((name) => ({ name, modified: Bun.file(`${out}/parcours-brut/${name}`).lastModified }))

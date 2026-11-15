@@ -4,13 +4,13 @@ import type { Scene } from "./scenario";
 const scenes: Scene[] = [
   { id: "a", chapter: "Exemple", title: "Chantier", subtitle: "Démonstration", speech: "Un vrai parcours." },
 ];
-test("accepte des timecodes audio alignés et des sous-titres locaux", () => {
+test("accepts aligned audio timecodes and local captions", () => {
   const [result] = validerTimeline(scenes, [
     { id: "a", start: 0, duration: 12 + 2 / 24, captions: [{ start: 0.5, end: 11, text: "Un vrai parcours." }] },
   ]);
   expect(result?.duration).toBe(12 + 2 / 24);
 });
-test("refuse des timestamps SAPI cumulés hors de la scène", () => {
+test("rejects cumulative SAPI timestamps outside the scene", () => {
   expect(() =>
     validerTimeline(scenes, [
       {
@@ -23,9 +23,9 @@ test("refuse des timestamps SAPI cumulés hors de la scène", () => {
         ],
       },
     ]),
-  ).toThrow("Sous-titres invalides");
+  ).toThrow("Invalid captions");
 });
-test("refuse les trous et les durées non alignées", () => {
+test("rejects gaps and misaligned durations", () => {
   expect(() => validerTimeline(scenes, [{ id: "a", start: 1, duration: 12 }])).toThrow("Timecodes");
   expect(() => validerTimeline(scenes, [{ id: "a", start: 0, duration: 12.01 }])).toThrow("Timecodes");
 });

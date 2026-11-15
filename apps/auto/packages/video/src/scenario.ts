@@ -12,7 +12,7 @@ export interface Scene {
   start?: number;
 }
 
-/** Texte métier : les captures proviennent du vrai front et d'une base PostgreSQL jetable. */
+/** Business text (French, as the film is): the captures come from the real front end and a throwaway PostgreSQL database. */
 export const lancement: Scene[] = [
   {
     id: "ouverture",

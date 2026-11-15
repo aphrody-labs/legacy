@@ -1,4 +1,4 @@
-// Contrat de composition déterministe Bun Video / HyperFrames : aucun délai lié au temps réel.
+// Deterministic composition contract of Bun Video / HyperFrames: no delay tied to real time.
 const clamp = (v, lo = 0, hi = 1) => Math.min(hi, Math.max(lo, v));
 const ease = (v) => 1 - (1 - clamp(v)) ** 3;
 const escapeText = (v = "") =>
