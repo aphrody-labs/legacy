@@ -1,8 +1,8 @@
-// Couche partagée des shells : env.toml -> env.{sh,ps1,nu,fish}, complétions `ay` (spec carapace, fish, nu)
-// générées depuis `ay --help`, stubs/copier de manifest.toml, contrôle de shells.lock.toml et de HKCU.
-// Usage : bun packages/machine/src/shells.ts [--gen | --check] [--only nu,fish,bash,pwsh,carapace]
-//   (aucun)  génère + installe (idempotent)     --gen  génère seulement     --check  rapporte l'écart (code 1)
-// Appelé aussi par apply-user.ts (export `shells`). Windows et Linux (flotte : bun présent).
+// Shared shell layer: env.toml -> env.{sh,ps1,nu,fish}, `ay` completions (carapace spec, fish, nu)
+// generated from `ay --help`, stubs/copies of manifest.toml, check of shells.lock.toml and of HKCU.
+// Usage: bun packages/machine/src/shells.ts [--gen | --check] [--only nu,fish,bash,pwsh,carapace]
+//   (none)  generate + install (idempotent)     --gen  generate only     --check  report drift (exit code 1)
+// Also called by apply-user.ts (export `shells`). Windows and Linux (fleet: bun present).
 import {
   existsSync,
   mkdirSync,
@@ -47,7 +47,7 @@ const vars = (e: EnvToml, p: Plat) =>
     return v === undefined ? [] : [{ name, value: parts(v) }];
   }) as { name: string; value: Part[] }[];
 
-// --- émetteurs -------------------------------------------------------------------------------------------
+// --- emitters --------------------------------------------------------------------------------------------
 
 const sq = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
 
@@ -152,7 +152,7 @@ function emitNu(e: EnvToml): string {
     const xs = ps.map((x) => {
       if ("lit" in x) {
         if (x.lit.includes("'"))
-          throw new Error(`apostrophe non supportée pour nu : ${x.lit}`);
+          throw new Error(`apostrophe not supported for nu: ${x.lit}`);
         return `'${x.lit}'`;
       }
       return "home" in x ? "$h" : `$env.${x.ref}`;
@@ -192,7 +192,7 @@ function emitFish(e: EnvToml): string {
   const l: string[] = [];
   for (const v of vars(e, "linux")) l.push(`set -gx ${v.name} ${val(v.value)}`);
   const dirs = (e.path.linux ?? []).map((d) => val(parts(d)));
-  // fish_add_path : -g global, -P modifie $PATH (pas fish_user_paths), -m déplace l'existant ; dossiers absents ignorés.
+  // fish_add_path: -g global, -P changes $PATH (not fish_user_paths), -m moves the existing entry; missing folders ignored.
   if (dirs.length) l.push(`fish_add_path -gPm ${dirs.join(" ")}`);
   return `# ${HEADER}
 # fish 4.x (Linux seulement : pas de build Windows natif amont). Sourcé par fish/config.fish.
@@ -200,7 +200,7 @@ ${l.join("\n")}
 `;
 }
 
-// --- complétions `ay` depuis clap --help -----------------------------------------------------------------
+// --- `ay` completions from clap --help -------------------------------------------------------------------
 
 type Opt = { short?: string; long?: string; value: boolean; desc: string };
 type Cmd = { name: string; desc: string; opts: Opt[]; cmds: Cmd[] };
@@ -222,7 +222,7 @@ function parseHelp(text: string): {
   const cmds: { name: string; desc: string }[] = [];
   const opts: Opt[] = [];
   let sec = "";
-  // argh (ay arch) : options à valeur visibles seulement dans la ligne Usage (`--root <root>`).
+  // argh (ay arch): options with a value are visible only in the Usage line (`--root <root>`).
   const usage = text.match(/^Usage:.*$/m)?.[0] ?? "";
   const valued = new Set([...usage.matchAll(/(--[\w-]+) </g)].map((x) => x[1]));
   for (const line of text.split(/\r?\n/)) {
@@ -390,7 +390,7 @@ function generate(res: Results, check: boolean) {
   const ay = Bun.which("ay");
   if (!ay) {
     res.push(
-      "info ay absent : complétions ay non régénérées (fichiers du dépôt utilisés)",
+      "info ay missing: ay completions not regenerated (repository files used)",
     );
     return;
   }
@@ -453,7 +453,7 @@ function links(res: Results, check: boolean, only?: string[]) {
     const dst = expand(d);
     const src = join(SH, l.src);
     if (!existsSync(src)) {
-      res.push(`DIFF ${l.src} absent (manifest)`);
+      res.push(`DIFF ${l.src} missing (manifest)`);
       continue;
     }
     const content =
@@ -462,7 +462,7 @@ function links(res: Results, check: boolean, only?: string[]) {
   }
 }
 
-// Caches d'init nushell dans le dossier vendor/autoload (mécanisme amont : chargé après config.nu).
+// nushell init caches in the vendor/autoload folder (upstream mechanism: loaded after config.nu).
 function nuCaches(res: Results, check: boolean) {
   const nu = Bun.which("nu");
   if (!nu) return;
@@ -479,7 +479,7 @@ function nuCaches(res: Results, check: boolean) {
     const exe = Bun.which(argv[0]);
     const f = join(dir, file);
     if (!exe) {
-      res.push(`info ${argv[0]} absent : ${file} non généré`);
+      res.push(`info ${argv[0]} missing: ${file} not generated`);
       continue;
     }
     if (check) {
@@ -491,7 +491,7 @@ function nuCaches(res: Results, check: boolean) {
     }).stdout.toString();
     put(res, false, f, out, `nu autoload ${file}`);
   }
-  // Ancienne config à plat (remplacée par le dépôt + autoload) : purge.
+  // Old flat config (replaced by the repository + autoload): purge.
   const old = process.env.APPDATA
     ? join(process.env.APPDATA, "nushell")
     : join(HOME, ".config", "nushell");
@@ -502,7 +502,7 @@ function nuCaches(res: Results, check: boolean) {
   ]) {
     const p = join(old, f);
     if (existsSync(p)) {
-      res.push(`${check ? "DIFF" : "rm  "} ${p} (obsolète)`);
+      res.push(`${check ? "DIFF" : "rm  "} ${p} (obsolete)`);
       if (!check) rmSync(p);
     }
   }
@@ -539,7 +539,7 @@ function lock(res: Results) {
     if (!raw) continue;
     const exe = expand(raw);
     if (!existsSync(exe)) {
-      res.push(`DIFF lock ${name} ${s.version} : ${exe} absent`);
+      res.push(`DIFF lock ${name} ${s.version}: ${exe} missing`);
       continue;
     }
     const v = Bun.spawnSync([exe, ...(s.verify ?? ["--version"])], {
@@ -558,7 +558,7 @@ function lock(res: Results) {
           .stdout.toString()
           .trim() === sum;
     res.push(
-      `${vok && hok ? "ok  " : "DIFF"} lock ${name} ${want}${vok ? "" : ` (version: ${vout.split("\n")[0].trim()})`}${hok ? "" : " (b3sum diffère)"}`,
+      `${vok && hok ? "ok  " : "DIFF"} lock ${name} ${want}${vok ? "" : ` (version: ${vout.split("\n")[0].trim()})`}${hok ? "" : " (b3sum differs)"}`,
     );
   }
 }
@@ -572,8 +572,8 @@ const winExpand = (s: string) =>
 const pathKey = (s: string) =>
   winExpand(s).replaceAll("/", "\\").replace(/\\+$/, "").toLowerCase();
 
-// HKCU\Environment : variables [persist.windows] (setx : écrit et diffuse WM_SETTINGCHANGE) et
-// tête du PATH utilisateur [persist_path] (reg add REG_EXPAND_SZ, reste du PATH conservé).
+// HKCU\Environment: [persist.windows] variables (setx: writes and broadcasts WM_SETTINGCHANGE) and
+// head of the user PATH [persist_path] (reg add REG_EXPAND_SZ, rest of the PATH kept).
 function persist(res: Results, check: boolean) {
   if (!WIN) return;
   const e = envToml() as EnvToml & { persist_path?: { windows?: string[] } };
@@ -588,7 +588,7 @@ function persist(res: Results, check: boolean) {
     const cur = have.get(k.toLowerCase());
     const ok = cur !== undefined && winExpand(cur) === v;
     res.push(
-      `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment ${k}=${v}${ok ? "" : ` (actuel: ${cur ?? "absent"})`}`,
+      `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment ${k}=${v}${ok ? "" : ` (current: ${cur ?? "missing"})`}`,
     );
     if (!ok && !check) run(["setx", k, v]);
   }
@@ -604,7 +604,7 @@ function persist(res: Results, check: boolean) {
     next.slice(0, front.length).map(pathKey).join(";") ===
     cur.slice(0, front.length).map(pathKey).join(";");
   res.push(
-    `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment Path : tête = ${front.join(" ; ")}`,
+    `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment Path: head = ${front.join(" ; ")}`,
   );
   if (!ok && !check)
     run([
@@ -621,7 +621,7 @@ function persist(res: Results, check: boolean) {
     ]);
 }
 
-// Windows Terminal : [terminal] de manifest.toml comparé à settings.json (lecture seule).
+// Windows Terminal: [terminal] of manifest.toml compared with settings.json (read-only).
 function terminal(res: Results) {
   if (!WIN) return;
   const m = Bun.TOML.parse(readFileSync(join(SH, "manifest.toml"), "utf8")) as {
@@ -663,12 +663,12 @@ function terminal(res: Results) {
         : have !== v;
     });
     res.push(
-      `${p && !bad.length ? "ok  " : "DIFF"} Windows Terminal profil ${name}${p ? bad.map(([k, v]) => ` ${k}≠${v}`).join("") : " absent"}`,
+      `${p && !bad.length ? "ok  " : "DIFF"} Windows Terminal profile ${name}${p ? bad.map(([k, v]) => ` ${k}≠${v}`).join("") : " missing"}`,
     );
   }
 }
 
-// Binaires en double ([[duplicate]] du lock) : retirés sans --check.
+// Duplicate binaries ([[duplicate]] of the lock): removed without --check.
 function duplicates(res: Results, check: boolean) {
   if (!WIN) return;
   const t = Bun.TOML.parse(
@@ -679,7 +679,7 @@ function duplicates(res: Results, check: boolean) {
   for (const d of t.duplicate ?? []) {
     const p = expand(d.path);
     if (!existsSync(p)) {
-      res.push(`ok   doublon absent : ${p}`);
+      res.push(`ok   duplicate missing: ${p}`);
       continue;
     }
     res.push(
@@ -689,13 +689,13 @@ function duplicates(res: Results, check: boolean) {
       const r = run(d.run);
       if (r.exitCode !== 0)
         res.push(
-          `DIFF échec ${d.run.join(" ")} : ${r.stderr.toString().trim().split("\n")[0]}`,
+          `DIFF failed ${d.run.join(" ")}: ${r.stderr.toString().trim().split("\n")[0]}`,
         );
     }
   }
 }
 
-// Dossiers épinglés de env.toml qui n'existent plus (JDK, SDK) : écart à signaler.
+// Pinned folders of env.toml that no longer exist (JDK, SDK): drift to report.
 function pins(res: Results) {
   const e = envToml();
   const p: Plat = WIN ? "windows" : "linux";
@@ -707,11 +707,11 @@ function pins(res: Results) {
       /_HOME$|_DIR$|_INSTALL$|_ROOT$/.test(v.name) &&
       !existsSync(s)
     )
-      res.push(`info ${v.name}=${s} absent`);
+      res.push(`info ${v.name}=${s} missing`);
   }
 }
 
-// only : restreint les [[link]] déployés à ces shells (ex. ["nu", "fish", "carapace"]).
+// only: restricts the deployed [[link]] entries to these shells (e.g. ["nu", "fish", "carapace"]).
 export function shells(opts: {
   check: boolean;
   genOnly?: boolean;

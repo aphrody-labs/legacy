@@ -1,6 +1,6 @@
-# nushell 0.117 — config.nu du dépôt (stub : $nu.config-path -> ce fichier, manifest.toml).
-# Clés vérifiées avec `config nu --doc` (0.117.0). Démarrage : aucun processus externe ici ;
-# zoxide et carapace sont pré-générés dans vendor/autoload par shells.ts (chargés après ce fichier).
+# nushell 0.117 — repository config.nu (stub: $nu.config-path -> this file, manifest.toml).
+# Keys verified with `config nu --doc` (0.117.0). Startup: no external process here;
+# zoxide and carapace are pre-generated in vendor/autoload by shells.ts (loaded after this file).
 
 $env.config.show_banner = false
 $env.config.history.file_format = "plaintext"
@@ -16,7 +16,7 @@ $env.config.completions.external.max_results = 100
 $env.config.table.index_mode = "auto"
 $env.config.footer_mode = 25
 
-# Alias : jamais sur une commande interne de nu (ls, find, du, ps restent structurés).
+# Aliases: never on a nu internal command (ls, find, du, ps stay structured).
 alias ll = eza -la --git --icons=auto --time-style=relative
 alias la = eza -a --git --icons=auto
 alias tree = eza --tree --icons=auto
@@ -28,5 +28,5 @@ alias gaa = git add -A
 alias b = bun
 alias bx = bunx
 
-# Complétion native de `ay` (signatures externes générées depuis `ay --help`).
+# Native completion of `ay` (external signatures generated from `ay --help`).
 source ../completions/ay.nu

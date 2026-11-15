@@ -545,7 +545,7 @@ export async function syncNerdFonts(
     }
     if (check || !install) {
       res.push(
-        `${check ? "DIFF" : "info"} font ${font.family} absent (--fonts pour installer)`,
+        `${check ? "DIFF" : "info"} font ${font.family} missing (--fonts to install)`,
       );
       continue;
     }
@@ -602,7 +602,7 @@ export async function syncNerdFonts(
     }
     if (check || !install) {
       res.push(
-        `${check ? "DIFF" : "info"} font ${googleRegLabel(g)} absent/obsolète (--fonts)`,
+        `${check ? "DIFF" : "info"} font ${googleRegLabel(g)} missing/obsolete (--fonts)`,
       );
       continue;
     }
@@ -728,7 +728,7 @@ export async function deployFontsToFleet(res: Results, check: boolean) {
   );
   if (!existsSync(lockPath)) return;
   if (check) {
-    res.push("info flotte Polices/Fontconfig vérifiables via --vps");
+    res.push("info fleet fonts/Fontconfig can be checked with --vps");
     return;
   }
 
@@ -946,12 +946,12 @@ export async function syncPinnedCliTools(
     const assetTpl = spec.assets?.[platKey];
     const wantSha = spec.sha256?.[platKey];
     if (!assetTpl || !wantSha || !spec.repo) {
-      res.push(`info cli ${spec.name} non packagé pour ${platKey}`);
+      res.push(`info cli ${spec.name} not packaged for ${platKey}`);
       continue;
     }
     if (check || !install) {
       res.push(
-        `${check ? "DIFF" : "info"} cli ${spec.name} ${spec.version} absent (--install pour installer)`,
+        `${check ? "DIFF" : "info"} cli ${spec.name} ${spec.version} missing (--install to install)`,
       );
       continue;
     }
@@ -1010,16 +1010,16 @@ export function writeCustomizationIndexDoc(res: Results, check: boolean) {
   const catalog = listShellCatalog();
   const themes = listTermThemes();
   const lines: string[] = [
-    "# Index 2026 — Shells, CLIs, TUIs, Terminaux, Polices & Themes",
+    "# Index 2026 — Shells, CLIs, TUIs, Terminals, Fonts & Themes",
     "",
-    "> Généré depuis le C ABI pur [`shell_kit.c`](../../../src/ui/shell_kit.c) (`aysys.dll` / `aysys.wasm`) via `bun packages/machine/src/shells.ts`.",
+    "> Generated from the pure C ABI [`shell_kit.c`](../../../src/ui/shell_kit.c) (`aysys.dll` / `aysys.wasm`) via `bun packages/machine/src/shells.ts`.",
     "",
-    `- **Commande unique (sync + polices + binaires)** : \`bun packages/machine/src/shells.ts --all\``,
-    `- **Recherche C ABI O(log N) / docs** : \`bun packages/machine/src/shells.ts --index\` | \`--search <requête>\` | \`--docs <slug>\` | \`--theme <slug>\``,
+    `- **Single command (sync + fonts + binaries)** : \`bun packages/machine/src/shells.ts --all\``,
+    `- **C ABI O(log N) search / docs**: \`bun packages/machine/src/shells.ts --index\` | \`--search <query>\` | \`--docs <slug>\` | \`--theme <slug>\``,
     "",
-    "## Catalogue des composants (" + catalog.length + " entrées)",
+    "## Component catalog (" + catalog.length + " entries)",
     "",
-    "| Slug | Catégorie | Version | Plateformes | Source | Config | Documentation officielle |",
+    "| Slug | Category | Version | Platforms | Source | Config | Official documentation |",
     "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
   ];
   for (const e of catalog) {
@@ -1030,9 +1030,9 @@ export function writeCustomizationIndexDoc(res: Results, check: boolean) {
   }
   lines.push(
     "",
-    "## Palettes terminaux C ABI (" + themes.length + " thèmes)",
+    "## C ABI terminal palettes (" + themes.length + " themes)",
     "",
-    "| Slug | Nom | Mode | Fond | Texte | Accent |",
+    "| Slug | Name | Mode | Background | Text | Accent |",
     "| :--- | :--- | :--- | :--- | :--- | :--- |",
   );
   for (const t of themes) {
@@ -1059,7 +1059,7 @@ export function writeCustomizationIndexDoc(res: Results, check: boolean) {
 export function formatCatalogCli(query?: string, docsSlug?: string): string {
   if (docsSlug) {
     const entry = findShellEntry(docsSlug);
-    if (!entry) return `Inconnu dans l'index C ABI : ${docsSlug}`;
+    if (!entry) return `Not in the C ABI index: ${docsSlug}`;
     return [
       `${entry.name} (${entry.slug}) v${entry.version} [${entry.category}]`,
       `repo   : https://github.com/${entry.repo}`,
@@ -1084,7 +1084,7 @@ export function formatCatalogCli(query?: string, docsSlug?: string): string {
     return `${swatch} ${t.name} \x1b[0m (${t.slug})`;
   });
   return [
-    `# C ABI 2026 Customization Index (${entries.length} entrées)`,
+    `# C ABI 2026 Customization Index (${entries.length} entries)`,
     ...rows,
     "",
     "# C ABI Palettes:",

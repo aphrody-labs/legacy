@@ -1,13 +1,13 @@
-# Index 2026 — Shells, CLIs, TUIs, Terminaux, Polices & Themes
+# Index 2026 — Shells, CLIs, TUIs, Terminals, Fonts & Themes
 
-> Généré depuis le C ABI pur [`shell_kit.c`](../../../src/ui/shell_kit.c) (`aysys.dll` / `aysys.wasm`) via `bun packages/machine/src/shells.ts`.
+> Generated from the pure C ABI [`shell_kit.c`](../../../src/ui/shell_kit.c) (`aysys.dll` / `aysys.wasm`) via `bun packages/machine/src/shells.ts`.
 
-- **Commande unique (sync + polices + binaires)** : `bun packages/machine/src/shells.ts --all`
-- **Recherche C ABI O(log N) / docs** : `bun packages/machine/src/shells.ts --index` | `--search <requête>` | `--docs <slug>` | `--theme <slug>`
+- **Single command (sync + fonts + binaries)** : `bun packages/machine/src/shells.ts --all`
+- **C ABI O(log N) search / docs**: `bun packages/machine/src/shells.ts --index` | `--search <query>` | `--docs <slug>` | `--theme <slug>`
 
-## Catalogue des composants (45 entrées)
+## Component catalog (45 entries)
 
-| Slug | Catégorie | Version | Plateformes | Source | Config | Documentation officielle |
+| Slug | Category | Version | Platforms | Source | Config | Official documentation |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `alacritty` | terminal | `0.16.1` | win/linux/mac | pkg-mgr | `packages/machine/shells/alacritty/alacritty.toml` | [alacritty/alacritty](https://alacritty.org/config-alacritty.html) |
 | `aphrody-m3-dark` | theme | `2026.11` | win/linux/mac | builtin | `packages/design/tokens/ansi.json` | [aphrody-dev/src](https://m3.material.io/styles/color/roles) |
@@ -55,9 +55,9 @@
 | `zoxide` | cli | `0.10.0` | win/linux/mac | tools.toml | `packages/machine/shells/bash/bashrc` | [ajeetdsouza/zoxide](https://github.com/ajeetdsouza/zoxide#readme) |
 | `zsh` | shell | `5.9` | linux/mac | pkg-mgr | `packages/machine/shells/zsh/zshrc` | [zsh-users/zsh](https://zsh.sourceforge.io/Doc/) |
 
-## Palettes terminaux C ABI (9 thèmes)
+## C ABI terminal palettes (9 themes)
 
-| Slug | Nom | Mode | Fond | Texte | Accent |
+| Slug | Name | Mode | Background | Text | Accent |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | `aphrody-m3-dark` | Aphrody M3 Dark | dark | `#0C141B` | `#DBE3ED` | `#8BCEFF` |
 | `aphrody-m3-light` | Aphrody M3 Light | light | `#F6FAFF` | `#141D23` | `#006492` |

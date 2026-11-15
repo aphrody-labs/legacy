@@ -1,17 +1,17 @@
-# Profil PowerShell canonique (pwsh 7.7 + Windows PowerShell 5.1). Source : C:\src\packages\machine\shells\pwsh\profile.ps1.
-# Déployé en copie par packages/machine (shells/manifest.toml) vers $PROFILE.CurrentUserCurrentHost des deux éditions.
-# Réglages, versions et sources : docs/shell/pwsh-setup.md. Code compatible 5.1 (ni ??, ni ternaire, ni &&).
-# Aucun réseau, aucun module importé au démarrage ; tout l'interactif est différé après le premier prompt.
+# Canonical PowerShell profile (pwsh 7.7 + Windows PowerShell 5.1). Source: C:\src\packages\machine\shells\pwsh\profile.ps1.
+# Deployed as a copy by packages/machine (shells/manifest.toml) to $PROFILE.CurrentUserCurrentHost of both editions.
+# Settings, versions and sources: docs/native/shell/pwsh-setup.md. 5.1-compatible code (no ??, no ternary, no &&).
+# No network, no module imported at startup; everything interactive is deferred until after the first prompt.
 
-# Le chemin de démarrage n'appelle aucune cmdlet : la première (Select-Object, Remove-Variable…) charge
-# Microsoft.PowerShell.Utility, soit ~20 ms mesurés. Seuls des appels .NET et des affectations.
+# The startup path calls no cmdlet: the first one (Select-Object, Remove-Variable…) loads
+# Microsoft.PowerShell.Utility, about 20 ms measured. Only .NET calls and assignments.
 
-# 1. Environnement partagé (généré : bun packages/machine/src/shells.ts --gen ; $env:* uniquement, zéro sous-processus).
+# 1. Shared environment (generated: bun packages/machine/src/shells.ts --gen; $env:* only, zero subprocesses).
 $global:__ay_src = $env:AY_SRC
 if (-not $global:__ay_src) { $global:__ay_src = 'C:\src' }
 if ([IO.File]::Exists("$global:__ay_src\packages\machine\shells\env.ps1")) { . "$global:__ay_src\packages\machine\shells\env.ps1" }
 
-# 2. UTF-8 sans BOM pour la console et les programmes natifs (about_Character_Encoding).
+# 2. UTF-8 without BOM for the console and native programs (about_Character_Encoding).
 $OutputEncoding = [Text.UTF8Encoding]::new($false)
 [Console]::OutputEncoding = $OutputEncoding
 if ($PSVersionTable.PSVersion.Major -ge 7) {
@@ -19,9 +19,9 @@ if ($PSVersionTable.PSVersion.Major -ge 7) {
     $PSDefaultParameterValues['*:Encoding'] = 'utf8NoBOM'
 }
 
-# 3. Hôtes non interactifs (-c / -File / -NonInteractive / -EncodedCommand, sauf avec -NoExit) : arrêt ici.
-# Comparaisons de chaînes insensibles à la casse : pas de regex sur le chemin de démarrage. Les arguments qui
-# suivent -Command/-File appartiennent au script : on s'arrête au premier.
+# 3. Non-interactive hosts (-c / -File / -NonInteractive / -EncodedCommand, except with -NoExit): stop here.
+# Case-insensitive string comparisons: no regex on the startup path. Arguments that
+# follow -Command/-File belong to the script: we stop at the first.
 $__ay_batch = -not [Environment]::UserInteractive
 $__ay_noexit = $false
 foreach ($__ay_a in [Environment]::GetCommandLineArgs()) {
@@ -34,13 +34,13 @@ foreach ($__ay_a in [Environment]::GetCommandLineArgs()) {
 if ($__ay_batch -and -not $__ay_noexit) { $__ay_batch = $null; $__ay_noexit = $null; $__ay_a = $null; return }
 $__ay_batch = $null; $__ay_noexit = $null; $__ay_a = $null
 
-# 4. Raccourcis vers les outils natifs (cat reste Get-Content ; bat par son nom).
+# 4. Shortcuts to native tools (cat stays Get-Content; bat by its name).
 function ll { eza -la --git --icons=auto @args }
 function gs { git status -sb @args }
 function gd { git diff @args }
 function gl { git log --oneline --graph -20 @args }
 
-# Environnement Visual Studio à la demande (vswhere, aucun coût au démarrage).
+# Visual Studio environment on demand (vswhere, no startup cost).
 function global:vs-env {
     $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
     if ([IO.File]::Exists($vsWhere)) {
@@ -51,10 +51,10 @@ function global:vs-env {
     Write-Warning 'Visual Studio build tools not found.'
 }
 
-# 5. Complétions en cache : $env:AY_SHELL_CACHE\pwsh\<nom>.ps1. Ligne 1 = « # ay-src: <exe> » ; régénération seulement
-# si cet exécutable est plus récent que le cache (ou absent du disque), donc aucun sous-processus quand rien n'a changé.
-# Générateurs natifs d'abord (just, rustup, gh, zoxide) ; carapace pour cargo/bun/git (pas de sortie PowerShell native)
-# et pour ay (spec partagée {appdata}\carapace\specs\ay.yaml, déployée par shells/manifest.toml).
+# 5. Cached completions: $env:AY_SHELL_CACHE\pwsh\<name>.ps1. Line 1 = "# ay-src: <exe>"; regenerated only
+# if that executable is newer than the cache (or missing from disk), hence no subprocess when nothing changed.
+# Native generators first (just, rustup, gh, zoxide); carapace for cargo/bun/git (no native PowerShell output)
+# and for ay (shared spec {appdata}\carapace\specs\ay.yaml, deployed by shells/manifest.toml).
 $global:__ay_comp_dir = $env:AY_SHELL_CACHE
 if (-not $global:__ay_comp_dir) { $global:__ay_comp_dir = "$HOME\.cache\shell" }
 $global:__ay_comp_dir += '\pwsh'
@@ -62,8 +62,8 @@ $global:__ay_generators = [ordered]@{
     zoxide = @('zoxide', { zoxide init powershell })
     just   = @('just', { $env:JUST_COMPLETE = 'powershell'; try { just } finally { $env:JUST_COMPLETE = $null } })
     rustup = @('rustup', { rustup completions powershell rustup })
-    # cobra : « 2>&1 » posé sur Invoke-Expression ne capte pas le stderr natif de `gh __complete`
-    # (« Completion ended with directive… » s'imprime sur la ligne) ; la redirection est déplacée dans la commande.
+    # cobra: "2>&1" put on Invoke-Expression does not capture the native stderr of `gh __complete`
+    # ("Completion ended with directive…" prints on the line); the redirection is moved into the command.
     gh     = @('gh', { (gh completion -s powershell) -replace '"\$RequestComp" 2>&1', '"$$RequestComp 2>`$$null"' })
     cargo  = @('carapace', { carapace cargo powershell })
     bun    = @('carapace', { carapace bun powershell })
@@ -72,7 +72,7 @@ $global:__ay_generators = [ordered]@{
 }
 
 function global:Update-AyCompletions {
-    # -Force : tout régénérer (outil mis à jour sans changement de date, nouvelle spec ay…).
+    # -Force: regenerate everything (tool updated without a date change, new ay spec…).
     param([switch]$Force)
     [void][IO.Directory]::CreateDirectory($global:__ay_comp_dir)
     foreach ($name in $global:__ay_generators.Keys) {
@@ -90,12 +90,12 @@ function global:Update-AyCompletions {
     }
 }
 
-# 6. Différé : PSReadLine émet PowerShell.OnIdle dès qu'il attend une touche, donc après l'affichage du premier prompt.
-# Le bloc est lié à l'état de session global et dot-sourcé depuis l'action : ses définitions restent globales.
+# 6. Deferred: PSReadLine emits PowerShell.OnIdle as soon as it waits for a key, hence after the first prompt is shown.
+# The block is bound to the global session state and dot-sourced from the action: its definitions stay global.
 $global:__ay_idle = {
     Set-PSReadLineOption -EditMode Windows -BellStyle None -HistoryNoDuplicates -MaximumHistoryCount 50000 `
         -HistorySearchCursorMovesToEnd -HistorySaveStyle SaveIncrementally
-    # Prédiction (PSReadLine >= 2.1 ; refusée si la sortie n'est pas un terminal VT ou est redirigée).
+    # Prediction (PSReadLine >= 2.1; refused if the output is not a VT terminal or is redirected).
     if ((Get-Command Set-PSReadLineOption).Parameters.ContainsKey('PredictionSource')) {
         try { Set-PSReadLineOption -PredictionSource History -PredictionViewStyle ListView } catch { }
     }
@@ -103,7 +103,7 @@ $global:__ay_idle = {
     Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
     Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
     Set-PSReadLineKeyHandler -Chord 'Ctrl+RightArrow' -Function ForwardWord
-    # fzf sans PSFzf : Ctrl+t fichiers (fd), Ctrl+r historique.
+    # fzf without PSFzf: Ctrl+t files (fd), Ctrl+r history.
     Set-PSReadLineKeyHandler -Chord 'Ctrl+t' -ScriptBlock {
         $f = fd --type f --hidden --exclude .git | fzf --height 40% --reverse
         if ($f) { [Microsoft.PowerShell.PSConsoleReadLine]::Insert($f) }
@@ -123,7 +123,7 @@ $global:__ay_idle = {
 $null = $ExecutionContext.Events.SubscribeEvent($null, $null, 'PowerShell.OnIdle', $null, { . $global:__ay_idle; $global:__ay_idle = $null }, $false, $false, 1)
 
 if ($PSVersionTable.PSVersion.Major -ge 7) {
-# 7. Bloc géré par l'installeur Coreutils for Windows (2026.9.3) : conservé tel quel, son marqueur évite qu'il le réécrive.
+# 7. Block managed by the Coreutils for Windows installer (2026.9.3): kept as is, its marker keeps it from rewriting it.
 # DO NOT MODIFY -- coreutils -- 60b36fc6-2d59-49df-be51-28dd2f4c3c9a
 # vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 # Inlining the template into the profile shaves off ~10ms (25%).
