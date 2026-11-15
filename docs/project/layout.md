@@ -43,8 +43,8 @@ Bun has no `identity.toml`, `tools.toml`, `src.lock.json` or `dist-workspace.tom
 | --- | --- | --- | --- |
 | `infra/fleet/fr1-orig/`, `infra/fleet/fr2-orig/` | purge | pre-migration nginx captures; no code reader (`git grep fr1-orig`); only a sentence in `docs/infra/FLEET.md` and a table cell in `docs/infra/PROD-MAP.md`, rewritten to `infra/fleet/fr2/nginx` and `infra/fleet/prd/nginx` | done |
 | `infra/generated/aphrody-app.service`, `aphrody-web.service`, `aphrody.nginx.conf` | purge | stale generated files (one still names Bun v1.4.4); no reader by name. `infra/generated/systemd/ay-up.*` stays: `docs/infra/INSTALL_UPDATE.md` names it | done |
-| `infra/fleet/orphans/` | none | empty directory on disk, nothing tracked | - |
-| `tools/monorepo-merge/` | none | empty directory on disk, nothing tracked (merge leftover) | - |
+| `infra/fleet/orphans/`, root `conformance/` | none | empty directories on disk, nothing tracked; removed | done |
+| `tools/monorepo-merge/` | purge when its owner is done | merge leftover; two untracked files on disk (`merge.ts`, `native-ui.json`), nothing tracked | blocked (untracked work of another session) |
 | `tools/labs-scripts/` | merge into the chromium factory | merge leftover (`labs` is the old repository); readers are `infra/chromium-factory/labs.just` and `.agents/skills/chromium/SKILL.md`. Another session has an untracked `absorb-lore.ts` in it, so it is not moved here | blocked (live edit by another session) |
 | `infra/chromium-factory/labs.just` | rename to `chromium-factory.just` | same leftover; imported by `justfile`, named in `scripts/hygiene.allow.json` | blocked (`justfile` carries another session's edit) |
 | `.agents/skills/rust-stack-sovereign/` | purge | "sovereign" legacy; the deletion is in the working tree from another session | not mine |
