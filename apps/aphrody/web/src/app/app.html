@@ -1,0 +1,39 @@
+<mat-toolbar class="app-bar">
+  <span><a href="/">Aphrody</a> / <strong>Pure-C Material 3 Expressive (WASI + WebGPU)</strong></span>
+  <span class="spacer"></span>
+  <code id="m3-status">Seed #135B82 | Light #006492 / Dark #8BCEFF</code>
+</mat-toolbar>
+<main>
+  <section class="grid" aria-label="Cross-Platform Material 3 Targets">
+    @for (t of targets; track t.href) {
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title>{{ t.title }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ t.text }}</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <a matButton="filled" [href]="t.href">{{ t.label }}</a>
+        </mat-card-actions>
+      </mat-card>
+    }
+  </section>
+  <mat-card appearance="outlined" aria-label="Interactive Pure-C Spring &amp; WebGPU Surface">
+    <mat-card-header>
+      <mat-card-title>Interactive Pure-C M3 Expressive Spring &amp; Adaptive Shell (aysys.wasm)</mat-card-title>
+      <mat-card-subtitle>Compact 390dp -> nav=8 cols=1 | Desktop 1440dp -> rail=220px cols=3 | Fast-Spatial 16ms step=0.0904</mat-card-subtitle>
+    </mat-card-header>
+    <mat-divider />
+    <mat-card-content>
+      <div class="controls" role="toolbar" aria-label="M3 Spring Controls">
+        <button id="btn-spring-spatial" matButton="filled" type="button" data-preset="0">Trigger Fast-Spatial Spring (0.6 / 800)</button>
+        <button id="btn-spring-default" matButton="tonal" type="button" data-preset="2">Default-Spatial (0.8 / 380)</button>
+        <button id="btn-spring-effects" matButton="tonal" type="button" data-preset="1">Fast-Effects (1.0 / 3800)</button>
+        <button id="btn-theme-toggle" matButton="outlined" type="button">Toggle Light / Dark Scheme</button>
+      </div>
+      <canvas id="m3-canvas" width="720" height="260" tabindex="0" role="img" aria-label="WebGPU and Canvas2D surface driven by pure C ay_ui_spring_step and ay_ui_compute_shell in aysys.wasm"></canvas>
+      <p id="m3-telemetry"><code>Loading /m3/aysys.wasm...</code></p>
+    </mat-card-content>
+  </mat-card>
+</main>

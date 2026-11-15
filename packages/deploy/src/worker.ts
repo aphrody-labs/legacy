@@ -76,7 +76,6 @@ const LLMS = `# aphrody.app
 `; // analytics project of the platform pages themselves
 
 const APEX = new Set(["aphrody.app", "www.aphrody.app"]);
-const MDJS = "deploys/_platform/md.js";
 // Names of the zone that had no backend (tunnel catch-all to prd:3010, nothing listening): served by the platform.
 const ALIASES: Record<string, (u: URL) => string | "api"> = {
   "api.aphrody.app": () => "api",
@@ -267,15 +266,6 @@ async function api(req: Request, env: Env, url: URL): Promise<Response> {
         date: latest ? (latest.readyAt ?? latest.createdAt) : null,
       })),
     );
-  }
-  // PUT /api/assets/md.js: Material Web bundle (packages/design/src/components.ts), built by CI.
-  if (seg[0] === "assets" && seg[1] === "md.js" && method === "PUT") {
-    if (!(await authorize(req, env)))
-      return json({ error: "unauthorized" }, 401);
-    await env.BUCKET.put(MDJS, req.body, {
-      httpMetadata: { contentType: "text/javascript; charset=utf-8" },
-    });
-    return json({ ok: true });
   }
   if (seg[0] === "registry" && method === "PUT") {
     const a = await authorize(req, env);
@@ -519,22 +509,6 @@ export default {
       if (url.pathname.startsWith("/api/")) return api(req, env, url);
       const rt = await runtime(req, env, PLATFORM, "", ctx);
       if (rt) return rt;
-      if (url.pathname === "/_/md.js") {
-        const o = await env.BUCKET.get(MDJS);
-        if (!o)
-          return new Response("// Material Web bundle not uploaded yet\n", {
-            status: 404,
-            headers: { "content-type": "text/javascript" },
-          });
-        return new Response(o.body, {
-          headers: {
-            "content-type": "text/javascript; charset=utf-8",
-            "cache-control": "public, max-age=300",
-            etag: o.httpEtag,
-            "x-content-type-options": "nosniff",
-          },
-        });
-      }
       if (
         url.pathname === "/dashboard" ||
         url.pathname.startsWith("/dashboard/")

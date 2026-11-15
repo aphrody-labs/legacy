@@ -11,7 +11,6 @@
 // Container deploys stay under `ay deploy up|build|smoke|ps|shell|run|products` (just docker-*).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { componentsBundle } from "./m3.ts";
 import {
   affected,
   buildRegistry,
@@ -124,21 +123,11 @@ async function upload(
   return { files: files.length, bytes };
 }
 
-/** Registry (projects, inventory, labs, tokens) and the Material Web bundle served at aphrody.app/_/md.js. */
+/** Registry (projects, inventory, labs, tokens) of the platform. */
 async function publishPlatform(commit: string): Promise<string> {
   const reg = await buildRegistry(commit);
   const r = await call("PUT", "/api/registry", reg);
-  const md = await componentsBundle(SRC_ROOT);
-  const up = await fetch(`${API}/api/assets/md.js`, {
-    method: "PUT",
-    headers: {
-      authorization: `Bearer ${TOKEN}`,
-      "content-type": "text/javascript",
-    },
-    body: md,
-  });
-  if (!up.ok) throw new Error(`md.js upload: HTTP ${up.status}`);
-  return `registry: ${r.projects} projects, ${reg.inventory.length} units, ${reg.labs.length} labs cards; md.js ${md.length} bytes`;
+  return `registry: ${r.projects} projects, ${reg.inventory.length} units, ${reg.labs.length} labs cards`;
 }
 
 async function githubDeployment(

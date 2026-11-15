@@ -1,6 +1,6 @@
 // Server-rendered HTML of aphrody.app (landing, labs, dashboard). Design system: packages/design (tokens.css in the
-// registry, Material Web components loaded from /_/md.js, Google Sans Flex). Only M3 tokens are referenced in CSS.
-// Pages read without JavaScript: Material Web elements upgrade links, lists and chips that already carry their text.
+// registry, M3 buttons in native HTML styled by the tokens, Google Sans Flex). Only M3 tokens are referenced in CSS.
+// Pages read without JavaScript: links, buttons, lists and chips are native HTML that already carry their text.
 import { catalogs } from "@aphrody/i18n";
 import { FONT_LINK, NATIVE_CSS, m3List, paintMark, type } from "./m3.ts";
 import { UI_CSS, themeButton } from "./ui.ts";
@@ -152,8 +152,8 @@ export function layout(
   const url = `https://aphrody.app${path}`;
   const nav = (x: Tab, href: string, label: string) =>
     x === tab
-      ? `<md-filled-tonal-button href="${href}" aria-current="page">${label}</md-filled-tonal-button>`
-      : `<md-text-button href="${href}">${label}</md-text-button>`;
+      ? `<a class="btn btn-tonal" href="${href}" aria-current="page">${label}</a>`
+      : `<a class="btn btn-text" href="${href}">${label}</a>`;
   const graph = ld.length
     ? `<script type="application/ld+json">${JSON.stringify({ "@context": "https://schema.org", "@graph": [ORG, ...ld] }).replace(/</g, "\\u003c")}</script>`
     : "";
@@ -169,7 +169,7 @@ export function layout(
     tab === "home" || tab === "platform"
       ? `<nav class="langs" aria-label="${esc(t("home.lang"))}">${LOCALES.map((x) => `<a href="${pagePath(tab, x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="page"' : ""}>${NATIVE_NAME[x]}</a>`).join("")}</nav>`
       : "";
-  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${desc ? `<meta name="description" content="${esc(desc)}">` : ""}<meta name="color-scheme" content="light dark"><link rel="canonical" href="${url}">${alt}<link rel="icon" href="https://aphrody.com/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="https://aphrody.com/apple-touch-icon.png"><meta property="og:type" content="website"><meta property="og:site_name" content="aphrody.app"><meta property="og:locale" content="${OG_LOCALE[l]}"><meta property="og:title" content="${esc(title)}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}<meta property="og:url" content="${url}"><meta property="og:image" content="https://aphrody.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">${tab === "dashboard" ? '<meta name="robots" content="noindex">' : '<meta name="robots" content="index, follow, max-image-preview:large">'}${FONT_LINK}<style>${reg.css}${NATIVE_CSS}${BASE_CSS}${UI_CSS}${HERO_CSS}</style><script src="/_/theme.js"></script><script type="module" src="/_/md.js"></script><script src="/_/hero.js" defer></script><script src="/_aphrody/insights.js" defer></script>${graph}</head><body><a class="skip" href="#main">${esc(t("plat.skip"))}</a><header class="top-app-bar"><a class="brand" href="${localePath(l)}">${paintMark(reg.mark)}<span>aphrody.app</span></a><nav aria-label="${esc(t("plat.nav.label"))}">${nav("home", localePath(l), esc(t("plat.nav.home")))}${nav("platform", pagePath("platform", l), esc(t("plat.nav.platform")))}${nav("dashboard", "/dashboard", esc(t("plat.nav.dash")))}</nav>${langs}${themeButton(t("home.theme"))}</header>${o.hero ?? ""}<main id="main">${body}</main><footer><p>Aphrody. <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>. ${esc(t("plat.footer"))} <a href="https://aphrody.com/">aphrody.com</a>.</p></footer></body></html>`;
+  return `<!doctype html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${desc ? `<meta name="description" content="${esc(desc)}">` : ""}<meta name="color-scheme" content="light dark"><link rel="canonical" href="${url}">${alt}<link rel="icon" href="https://aphrody.com/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="https://aphrody.com/apple-touch-icon.png"><meta property="og:type" content="website"><meta property="og:site_name" content="aphrody.app"><meta property="og:locale" content="${OG_LOCALE[l]}"><meta property="og:title" content="${esc(title)}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}<meta property="og:url" content="${url}"><meta property="og:image" content="https://aphrody.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">${tab === "dashboard" ? '<meta name="robots" content="noindex">' : '<meta name="robots" content="index, follow, max-image-preview:large">'}${FONT_LINK}<style>${reg.css}${NATIVE_CSS}${BASE_CSS}${UI_CSS}${HERO_CSS}</style><script src="/_/theme.js"></script><script src="/_/hero.js" defer></script><script src="/_aphrody/insights.js" defer></script>${graph}</head><body><a class="skip" href="#main">${esc(t("plat.skip"))}</a><header class="top-app-bar"><a class="brand" href="${localePath(l)}">${paintMark(reg.mark)}<span>aphrody.app</span></a><nav aria-label="${esc(t("plat.nav.label"))}">${nav("home", localePath(l), esc(t("plat.nav.home")))}${nav("platform", pagePath("platform", l), esc(t("plat.nav.platform")))}${nav("dashboard", "/dashboard", esc(t("plat.nav.dash")))}</nav>${langs}${themeButton(t("home.theme"))}</header>${o.hero ?? ""}<main id="main">${body}</main><footer><p>Aphrody. <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>. ${esc(t("plat.footer"))} <a href="https://aphrody.com/">aphrody.com</a>.</p></footer></body></html>`;
 }
 
 const when = (iso?: string) =>
@@ -208,7 +208,7 @@ export function platform(
     (i) =>
       `<li class="card"><h3 class="title">${esc(t(`plat.f${i}.t`))}</h3><p class="support">${esc(t(`plat.f${i}.d`))}</p></li>`,
   ).join("");
-  const hero = `<section class="hero-art" aria-labelledby="h"><div data-hero-stage><div class="bg sun-css"></div><div class="bg hills-css"></div><div class="bg hills-css near"></div></div><div class="hero-copy"><h1 id="h">${esc(t("plat.h1"))}</h1><p class="lead">${esc(t("plat.lead"))}</p><div class="actions"><md-filled-button href="#f">${esc(t("plat.features"))}</md-filled-button><md-outlined-button href="https://aphrody.com${l === "fr" ? "/" : "/" + l}">aphrody.com</md-outlined-button></div></div></section>`;
+  const hero = `<section class="hero-art" aria-labelledby="h"><div data-hero-stage><div class="bg sun-css"></div><div class="bg hills-css"></div><div class="bg hills-css near"></div></div><div class="hero-copy"><h1 id="h">${esc(t("plat.h1"))}</h1><p class="lead">${esc(t("plat.lead"))}</p><div class="actions"><a class="btn btn-filled" href="#f">${esc(t("plat.features"))}</a><a class="btn btn-outlined" href="https://aphrody.com${l === "fr" ? "/" : "/" + l}">aphrody.com</a></div></div></section>`;
   const body = `<section aria-labelledby="f"><h2 id="f">${esc(t("plat.features"))}</h2><ul class="grid" role="list">${features}</ul></section><section aria-labelledby="s"><h2 id="s">${esc(t("plat.sites"))}</h2><ul class="grid" role="list">${sites || `<li class="support">${esc(t("plat.none"))}</li>`}</ul></section><section aria-labelledby="c"><h2 id="c">${esc(t("plat.contact"))}</h2><p>${esc(t("plat.contact.p"))} <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>.</p></section>`;
   const desc = t("plat.desc");
   return layout(reg, t("plat.title"), "platform", body, {
@@ -281,10 +281,10 @@ export function landing(reg: Registry, l: Locale = "fr"): string {
   const t = (k: string) => tr(l, k);
   const cards = LAUNCH_CARDS.map(
     (c) =>
-      `<li class="card"><div class="head"><img class="pico" src="https://aphrody.com/icons/${c.icon}" alt="" width="56" height="56"><div><h3 class="title">${esc(t(`home.p.${c.id}.name`))}</h3><span class="support">${esc(t(`home.state.${c.state}`))}</span></div></div><p class="support">${esc(t(`home.p.${c.id}.text`))}</p>${c.url ? `<div class="actions"><md-outlined-button href="${c.url}">${esc(t("home.open"))}</md-outlined-button></div>` : ""}</li>`,
+      `<li class="card"><div class="head"><img class="pico" src="https://aphrody.com/icons/${c.icon}" alt="" width="56" height="56"><div><h3 class="title">${esc(t(`home.p.${c.id}.name`))}</h3><span class="support">${esc(t(`home.state.${c.state}`))}</span></div></div><p class="support">${esc(t(`home.p.${c.id}.text`))}</p>${c.url ? `<div class="actions"><a class="btn btn-outlined" href="${c.url}">${esc(t("home.open"))}</a></div>` : ""}</li>`,
   ).join("");
-  const platformCard = `<li class="card"><h3 class="title">${esc(t("launch.platform.name"))}</h3><p class="support">${esc(t("launch.platform.text"))}</p><div class="actions"><md-outlined-button href="${pagePath("platform", l)}">${esc(t("home.open"))}</md-outlined-button></div></li>`;
-  const hero = `<section class="hero-art" aria-labelledby="h"><div data-hero-stage><div class="bg sun-css"></div><div class="bg hills-css"></div><div class="bg hills-css near"></div></div><div class="hero-copy"><h1 id="h">${esc(t("launch.h1"))}</h1><p class="lead">${esc(t("launch.lead"))}</p><div class="actions"><md-filled-button href="https://aphrody.com/play">${esc(t("launch.cta.play"))}</md-filled-button><md-outlined-button href="https://aphrody.com/os">${esc(t("launch.cta.os"))}</md-outlined-button></div></div></section>`;
+  const platformCard = `<li class="card"><h3 class="title">${esc(t("launch.platform.name"))}</h3><p class="support">${esc(t("launch.platform.text"))}</p><div class="actions"><a class="btn btn-outlined" href="${pagePath("platform", l)}">${esc(t("home.open"))}</a></div></li>`;
+  const hero = `<section class="hero-art" aria-labelledby="h"><div data-hero-stage><div class="bg sun-css"></div><div class="bg hills-css"></div><div class="bg hills-css near"></div></div><div class="hero-copy"><h1 id="h">${esc(t("launch.h1"))}</h1><p class="lead">${esc(t("launch.lead"))}</p><div class="actions"><a class="btn btn-filled" href="https://aphrody.com/play">${esc(t("launch.cta.play"))}</a><a class="btn btn-outlined" href="https://aphrody.com/os">${esc(t("launch.cta.os"))}</a></div></div></section>`;
   const body = `<section aria-labelledby="w"><h2 id="w">${esc(t("launch.sec"))}</h2><ul class="grid" role="list">${cards}${platformCard}</ul><p class="support">${esc(t("launch.status"))}</p></section><section aria-labelledby="c"><h2 id="c">${esc(t("plat.contact"))}</h2><p>${esc(t("plat.contact.p"))} <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>.</p></section>`;
   const desc = t("launch.desc");
   return layout(reg, t("launch.title"), "home", body, {
@@ -377,9 +377,9 @@ export function projectPage(
       const live = d.sha === prod;
       const action =
         !live && d.state === "ready"
-          ? `<form method="post" action="/dashboard/${esc(p.name)}/promote"><input type="hidden" name="sha" value="${esc(d.sha)}"><md-filled-tonal-button type="submit">${prodIdx >= 0 && i > prodIdx ? "Rollback ici" : "Promouvoir"}</md-filled-tonal-button></form>`
+          ? `<form method="post" action="/dashboard/${esc(p.name)}/promote"><input type="hidden" name="sha" value="${esc(d.sha)}"><button class="btn btn-tonal" type="submit">${prodIdx >= 0 && i > prodIdx ? "Rollback ici" : "Promouvoir"}</button></form>`
           : "";
-      return `<article class="card"><a class="title" href="${esc(previewUrl(p.name, d.sha))}"><code>${esc(d.sha.slice(0, 7))}</code>${live ? " (production)" : ""}</a><p class="support">${esc(d.message)}</p><p class="support">${esc(d.branch)}, ${state(d)}, ${when(d.readyAt ?? d.createdAt)}${d.files ? `, ${d.files} fichiers, ${Math.round((d.bytes ?? 0) / 1024)} Kio` : ""}</p><div class="actions"><md-text-button href="/dashboard/${esc(p.name)}/${esc(d.sha)}/log">Journal</md-text-button>${d.run ? `<md-text-button href="${esc(d.run)}">CI</md-text-button>` : ""}${action}</div></article>`;
+      return `<article class="card"><a class="title" href="${esc(previewUrl(p.name, d.sha))}"><code>${esc(d.sha.slice(0, 7))}</code>${live ? " (production)" : ""}</a><p class="support">${esc(d.message)}</p><p class="support">${esc(d.branch)}, ${state(d)}, ${when(d.readyAt ?? d.createdAt)}${d.files ? `, ${d.files} fichiers, ${Math.round((d.bytes ?? 0) / 1024)} Kio` : ""}</p><div class="actions"><a class="btn btn-text" href="/dashboard/${esc(p.name)}/${esc(d.sha)}/log">Journal</a>${d.run ? `<a class="btn btn-text" href="${esc(d.run)}">CI</a>` : ""}${action}</div></article>`;
     })
     .join("");
   const hist = m3List(
@@ -405,6 +405,6 @@ export function logPage(
     reg,
     `Journal ${p}@${sha.slice(0, 7)}`,
     "dashboard",
-    `<h1>Journal de ${esc(p)}@<code>${esc(sha.slice(0, 7))}</code></h1><div class="actions"><md-text-button href="/dashboard/${esc(p)}">Retour</md-text-button></div><pre>${esc(log)}</pre>`,
+    `<h1>Journal de ${esc(p)}@<code>${esc(sha.slice(0, 7))}</code></h1><div class="actions"><a class="btn btn-text" href="/dashboard/${esc(p)}">Retour</a></div><pre>${esc(log)}</pre>`,
   );
 }

@@ -1,0 +1,29 @@
+// Angular Material M3 theme generated from assets/brand/brand.toml by packages/design (MCU colors per mode, M3
+// typescale, shape and state tokens). tokens.css (angular.json styles) provides the --md-sys-* variables.
+@use "@aphrody/design/tokens/angular-theme";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-large);
+}
+
+a:not([matButton]) {
+  color: var(--mat-sys-primary);
+}
+
+:focus-visible {
+  outline: 3px solid var(--mat-sys-secondary);
+  outline-offset: 2px;
+}
+
+code {
+  font-family: var(--md-ref-typeface-code);
+  font-size: var(--mat-sys-body-small-size);
+}

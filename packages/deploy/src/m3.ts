@@ -1,9 +1,9 @@
 // Design inputs of the aphrody.com and aphrody.app pages, all from the monorepo design system (skill ui-system):
-// tokens from packages/design/tokens/tokens.css (Material Color Utilities from assets/brand/brand.toml), Material
-// Web components from packages/design/src/components.ts (bundled by bun), Google Sans Flex, the brand mark.
+// tokens from packages/design/tokens/tokens.css (Material Color Utilities from assets/brand/brand.toml), Angular
+// Material M3 theme (--mat-sys-*) lives in packages/design; these server pages use its token twins. Google Sans Flex, the brand mark.
 // No color, radius, duration or font value is written here: CSS only references `--md-sys-*` / `--md-ref-*`.
 import { existsSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 
 export interface Brand {
   name: string;
@@ -91,8 +91,9 @@ export const FONT_LINK =
   '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..1000&display=optional">';
 
 /** M3 list and chip in native HTML (ul/li/a, span/a): the md-list-item shadow `role="listitem"` has no `list`
- * parent for axe (aria-required-parent), and labels must not wait for JavaScript. Buttons keep Material Web but
- * reserve their box before the upgrade, so `md.js` arriving late does not shift the page. */
+ * parent for axe (aria-required-parent), and labels must not wait for JavaScript. Buttons are native a/button
+ * twins of the Angular Material M3 buttons (Angular components need the Angular runtime, absent from these server
+ * rendered pages), styled by the same --md-sys-* tokens that feed Angular Material (packages/design). */
 export const NATIVE_CSS = `${MARK_CSS}
 .m3-list{list-style:none;margin:0;padding:8px 0;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container-low)}
 .m3-list a,.m3-list .row{display:flex;gap:16px;align-items:center;min-height:72px;padding:12px 24px 12px 16px;color:var(--md-sys-color-on-surface);text-decoration:none}
@@ -106,8 +107,13 @@ export const NATIVE_CSS = `${MARK_CSS}
 .chip{display:inline-flex;align-items:center;height:32px;padding:0 16px;border:1px solid var(--md-sys-color-outline);border-radius:var(--md-sys-shape-corner-small);color:var(--md-sys-color-on-surface);text-decoration:none;${type("label-large")}}
 a.chip:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 8%,transparent)}
 a:focus-visible{outline:3px solid var(--md-sys-color-secondary);outline-offset:2px}
-:is(md-filled-button,md-filled-tonal-button,md-outlined-button,md-text-button):not(:defined){display:inline-flex;align-items:center;height:40px;padding:0 24px;${type("label-large")}}
-md-text-button:not(:defined){padding:0 12px}`;
+.btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:40px;padding:0 24px;border:0;border-radius:var(--md-sys-shape-corner-full);background:transparent;color:var(--md-sys-color-primary);text-decoration:none;cursor:pointer;${type("label-large")}}
+.btn-filled{background:var(--md-sys-color-primary);color:var(--md-sys-color-on-primary)}
+.btn-tonal{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
+.btn-outlined{border:1px solid var(--md-sys-color-outline)}
+.btn-text{padding:0 12px}
+.btn:hover{box-shadow:inset 0 0 0 999px color-mix(in srgb,currentColor calc(var(--md-sys-state-hover-state-layer-opacity)*100%),transparent)}
+.btn:focus-visible{outline:3px solid var(--md-sys-color-secondary);outline-offset:2px}`;
 
 export interface ListRow {
   headline: string; // already escaped HTML
@@ -125,27 +131,3 @@ export const m3List = (rows: ListRow[]): string =>
     })
     .join("")}</ul>`;
 
-/** Material Web bundle for the browser, minified: the elements of src/client/md.ts, resolved from
- * packages/design/node_modules (the one Material Web install of the monorepo). */
-export async function componentsBundle(root: string): Promise<string> {
-  const from = resolve(root, "packages", "design", "src");
-  const r = await Bun.build({
-    entrypoints: [join(import.meta.dir, "client", "md.ts")],
-    target: "browser",
-    format: "esm",
-    minify: true,
-    plugins: [
-      <import("bun").BunPlugin>{
-        name: "aphrody-design",
-        setup(b) {
-          b.onResolve({ filter: /^@material\/web\// }, (a) => ({
-            path: Bun.resolveSync(a.path, from),
-          }));
-        },
-      },
-    ],
-  });
-  if (!r.success)
-    throw new Error(`Material Web bundle: ${r.logs.map(String).join("\n")}`);
-  return r.outputs[0]!.text();
-}
