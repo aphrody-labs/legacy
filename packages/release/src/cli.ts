@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // ay release: one release flow run on fr1 (config: packages/release/release.toml). Dry-run unless `publish` is given.
-//   ay release freeze [--check]   set (or verify) every version field from VERSION, see docs/packaging/VERSIONING.md
+//   ay release freeze [--check]   set (or verify) every version field from packages/release/VERSION, see docs/packaging/VERSIONING.md
 //   ay release [plan|dry-run|publish] [--only crates,npm,pypi,vcpkg,github] [--verify] [--json] [--out DIR]
 // plan     registry state only (no build); dry-run (default) adds cargo publish --dry-run, bun publish --dry-run,
 //          maturin wheel + twine check, vcpkg git-registry generated locally; publish needs every NEW package listed
@@ -56,7 +56,7 @@ const ws = (
   Bun.TOML.parse(readFileSync(join(root, "Cargo.toml"), "utf8")) as any
 ).workspace.package;
 // Monorepo version = VERSION (docs/packaging/VERSIONING.md); `ay release freeze --check` keeps Cargo.toml equal to it.
-const version: string = readFileSync(join(root, "VERSION"), "utf8").trim();
+const version: string = readFileSync(join(root, "packages/release/VERSION"), "utf8").trim();
 const tag = `${cfg.tag_prefix}${version}`;
 const log = (s: string) => json || console.error(s);
 

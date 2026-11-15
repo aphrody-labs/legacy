@@ -6,7 +6,7 @@ by code). The version rules below are checked by code: `ay release freeze --chec
 
 ## One version, one file
 
-- `VERSION` (repo root, one line) is the only hand-written version of the monorepo: SemVer `MAJOR.MINOR.PATCH`.
+- `packages/release/VERSION` (one line) is the only hand-written version of the monorepo: SemVer `MAJOR.MINOR.PATCH`.
 - `ay release freeze` copies it into `Cargo.toml` `[workspace.package] version` (every crate with
   `version.workspace = true`), into the `version` of every path dependency on such a crate, and into the root
   `package.json`, then refreshes `Cargo.lock` offline. `--check` writes nothing and fails on any drift, on a

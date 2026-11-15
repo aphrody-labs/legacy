@@ -1,5 +1,5 @@
 // `ay release freeze [--check]`: the frozen versioning system of docs/packaging/VERSIONING.md, applied by code.
-// VERSION (repo root, one SemVer line) is the only hand-written monorepo version. freeze copies it into
+// packages/release/VERSION (one SemVer line) is the only hand-written monorepo version. freeze copies it into
 //   - Cargo.toml [workspace.package] version (every crate with version.workspace = true inherits it),
 //   - the `version` of every path dependency on such a crate (inline tables and [*dependencies.<name>] tables,
 //     in every workspace Cargo.toml; only inside dependency sections),
@@ -125,7 +125,7 @@ export function freeze(
 ): { version: string; drift: Drift[]; errors: string[] } {
   const errors: string[] = [];
   const drift: Drift[] = [];
-  const vf = join(root, "VERSION");
+  const vf = join(root, "packages/release/VERSION");
   const version = existsSync(vf) ? readFileSync(vf, "utf8").trim() : "";
   if (!SEMVER.test(version) || version.includes("+"))
     return {
