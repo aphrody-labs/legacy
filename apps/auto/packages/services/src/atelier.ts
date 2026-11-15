@@ -1,6 +1,6 @@
 import {
   creerDocx,
-  ecrireXlsx,
+  writeXlsx,
   texteDocx,
   champsDocx,
   nombrePagesPdf,
@@ -79,7 +79,7 @@ export function inspecterAtelier(contenu: Uint8Array, format: FormatAtelier) {
 export function nouveauAtelier(format: FormatAtelier) {
   if (format === "word") return creerDocx({ titre: "", paragraphes: [{ texte: "" }] });
   if (format === "excel")
-    return ecrireXlsx({
+    return writeXlsx({
       feuilles: [
         { nom: "Feuille 1", colonnes: [{ titre: "Désignation" }, { titre: "Montant", type: "nombre" }], lignes: [] },
       ],

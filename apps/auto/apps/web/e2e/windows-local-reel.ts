@@ -3,7 +3,7 @@ import { strict as assert } from "node:assert";
 import { join } from "node:path";
 import { chromium } from "playwright-core";
 import { chrome } from "./support";
-import { ecrireXlsx } from "../../../packages/native/src/index";
+import { writeXlsx } from "../../../packages/native/src/index";
 const service = "Auto.Windows.Local",
   name = "qa-controle",
   base = "http://127.0.0.1:3007";
@@ -53,7 +53,7 @@ const p = Bun.spawn([process.execPath, "scripts/windows-local.ts", "preparer"], 
 });
 assert.equal(await p.exited, 0);
 const conf = JSON.parse((await Bun.secrets.get({ service, name: "instance" }))!);
-const original = ecrireXlsx({
+const original = writeXlsx({
   feuilles: [{ nom: "Feuille 1", colonnes: [{ titre: "Valeur" }, { titre: "Montant" }], lignes: [[2, 3]] }],
 });
 const fichier = join(conf.dossiers, q.tenantId, "fournisseurs/documents", "controle-excel.xlsx");

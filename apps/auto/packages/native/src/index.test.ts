@@ -17,7 +17,7 @@ import {
   textePdf,
   texteDocx,
   dateExcel,
-  ecrireXlsx,
+  writeXlsx,
   lireTableur,
   ErreurNative,
   extraireXml,
@@ -67,7 +67,7 @@ test("total including tax read from the XML", () => {
 });
 
 test("spreadsheet: typed xlsx writing, re-reading, csv", () => {
-  const xlsx = ecrireXlsx({
+  const xlsx = writeXlsx({
     feuilles: [
       {
         nom: "Ventes",
@@ -84,7 +84,7 @@ test("spreadsheet: typed xlsx writing, re-reading, csv", () => {
     ["a", "b"],
     [1, "x"],
   ]);
-  expect(() => ecrireXlsx({ feuilles: [] })).toThrow(ErreurNative);
+  expect(() => writeXlsx({ feuilles: [] })).toThrow(ErreurNative);
 });
 
 test("PDF : fusion, pages, texte", () => {

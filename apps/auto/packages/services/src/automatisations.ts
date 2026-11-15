@@ -34,7 +34,7 @@ import {
   creerDocx,
   creerPptx,
   docxEnPdf,
-  ecrireXlsx,
+  writeXlsx,
   extrairePagesPdf,
   fusionnerPdf,
   lireTableur,
@@ -191,7 +191,7 @@ async function servicesPour(
     envoyerMail: (m) => envoyerTexte(sql, tenantId, auteur, m),
     script: executerScript,
     ...servicesMedia((u) => gardeUrl(u)),
-    tableur: { ecrire: (feuille) => ecrireXlsx({ feuilles: [feuille] }), lire: (octets) => lireTableur(octets) },
+    tableur: { ecrire: (feuille) => writeXlsx({ feuilles: [feuille] }), lire: (octets) => lireTableur(octets) },
     pdf: { fusionner: fusionnerPdf, pages: extrairePagesPdf, nombrePages: nombrePagesPdf, texte: textePdf },
     word: { creer: creerDocx, champs: champsDocx, remplir: remplirDocx, enPdf: docxEnPdf, texte: texteDocx },
     documents: {

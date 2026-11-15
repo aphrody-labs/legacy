@@ -1,7 +1,7 @@
 // B2Brouter adapter (registered PA), from its public documentation (docs.b2brouter.net,
 // b2brouter.readme.io, API 2026-06-26). Inactive without credentials. Unverified points: see docs/PA.md.
 import { egal, hmac } from "./chiffrement";
-import { ErreurPa, type EvenementPa, type Plateforme, type StatutCycle } from "./types";
+import { PaError, type EvenementPa, type Plateforme, type StatutCycle } from "./types";
 
 export interface IdentifiantsB2brouter {
   /** `X-B2B-API-Key` key (`test_` prefix in the sandbox). */
@@ -58,7 +58,7 @@ const echapper = (s: string) => s.replace(/[<>&"]/g, (c) => `&#${c.charCodeAt(0)
 
 export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}): Plateforme {
   if (!ids.cleApi || !ids.compte || !ids.secretWebhook)
-    throw new ErreurPa("B2Brouter désactivé : cleApi, compte et secretWebhook requis", 422);
+    throw new PaError("B2Brouter désactivé : cleApi, compte et secretWebhook requis", 422);
   const base = (o.base ?? B2BROUTER_URL).replace(/\/$/, "");
   const f = o.fetch ?? fetch;
   const horloge = o.horloge ?? (() => new Date());
@@ -70,7 +70,7 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
   ) {
     const url = new URL(chemin, base + "/");
     if (url.origin !== new URL(base).origin || url.username || url.password)
-      throw new ErreurPa("B2Brouter : URL de suivi hors de l'origine autorisée");
+      throw new PaError("B2Brouter : URL de suivi hors de l'origine autorisée");
     const res = await f(url, {
       method: init.method ?? (init.corps ? "POST" : "GET"),
       headers: {
@@ -85,7 +85,7 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
       signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok && res.status !== 202 && res.status !== 404)
-      throw new ErreurPa(`B2Brouter ${chemin.split("?")[0]} : HTTP ${res.status} ${(await res.text()).slice(0, 300)}`);
+      throw new PaError(`B2Brouter ${chemin.split("?")[0]} : HTTP ${res.status} ${(await res.text()).slice(0, 300)}`);
     return res;
   }
   const json = async <T>(res: Response) => (await res.json()) as T;
@@ -97,13 +97,13 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
         corps: new Uint8Array(d.facturx),
         type: "application/pdf",
       });
-      if (res.status === 404) throw new ErreurPa("B2Brouter : compte introuvable", 502);
+      if (res.status === 404) throw new PaError("B2Brouter : compte introuvable", 502);
       const { invoice } = await json<{ invoice: { id: number; state: string } }>(res);
       return { idPa: String(invoice.id), statut: ETATS[invoice.state] ?? "deposee" };
     },
     async statuts(idPa) {
       const res = await appel(`/invoices/${encodeURIComponent(idPa)}`);
-      if (res.status === 404) throw new ErreurPa(`B2Brouter : facture ${idPa} introuvable`, 404);
+      if (res.status === 404) throw new PaError(`B2Brouter : facture ${idPa} introuvable`, 404);
       const { invoice } = await json<{ invoice: { state: string; state_updated_at?: string; updated_at?: string } }>(
         res,
       );
@@ -113,7 +113,7 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
     },
     async signaler(idPa, statut, motif) {
       const state = VERS_ETAT[statut];
-      if (!state) throw new ErreurPa(`B2Brouter : statut ${statut} non transmissible`, 422);
+      if (!state) throw new PaError(`B2Brouter : statut ${statut} non transmissible`, 422);
       await appel(`/invoices/${encodeURIComponent(idPa)}/mark_as`, {
         corps: JSON.stringify({ state, reason: motif ?? null }),
         type: "application/json",
@@ -136,7 +136,7 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
       const res = await appel(`/invoices/${encodeURIComponent(idPa)}/as/original`, {
         entetes: { accept: "*/*" },
       });
-      if (res.status === 404) throw new ErreurPa(`B2Brouter : facture ${idPa} introuvable`, 404);
+      if (res.status === 404) throw new PaError(`B2Brouter : facture ${idPa} introuvable`, 404);
       return new Uint8Array(await res.arrayBuffer());
     },
     async annuaire(siren) {
@@ -150,10 +150,10 @@ export function b2brouter(ids: IdentifiantsB2brouter, o: OptionsB2brouter = {}):
         url = b.polling_url ?? url;
         await Bun.sleep(o.attenteMs ?? 1000);
       }
-      throw new ErreurPa("B2Brouter : annuaire sans réponse");
+      throw new PaError("B2Brouter : annuaire sans réponse");
     },
     async ereporting() {
-      throw new ErreurPa(
+      throw new PaError(
         "E-reporting indisponible : les totaux agrégés ne suffisent pas au flux natif et aucun Flux 10 v3.2 validé n'est fourni",
         503,
       );

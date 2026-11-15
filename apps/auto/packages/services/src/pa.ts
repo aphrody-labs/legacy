@@ -2,7 +2,7 @@
 // statuses, signed incoming webhook, invoice reception, directory, e-reporting.
 import {
   dechiffrer,
-  ErreurPa,
+  PaError,
   plateforme,
   STATUTS,
   type Identifiants,
@@ -62,7 +62,7 @@ export async function pa<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
   } catch (e) {
-    if (e instanceof ErreurPa) throw new ErreurMetier(e.message, [], e.status);
+    if (e instanceof PaError) throw new ErreurMetier(e.message, [], e.status);
     throw e;
   }
 }

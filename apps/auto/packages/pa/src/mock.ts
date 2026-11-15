@@ -4,7 +4,7 @@
 import { egal, hmac, sha256 } from "./chiffrement";
 import {
   estStatut,
-  ErreurPa,
+  PaError,
   type Depot,
   type EvenementPa,
   type EvenementStatut,
@@ -54,12 +54,12 @@ export function sirenValide(siren: string): boolean {
 }
 
 export function mock(ids: IdentifiantsMock, horloge: () => Date = () => new Date()): Plateforme {
-  if (!ids.compte || !ids.secretWebhook) throw new ErreurPa("mock : compte et secretWebhook requis", 422);
+  if (!ids.compte || !ids.secretWebhook) throw new PaError("mock : compte et secretWebhook requis", 422);
   const c = compte(ids.compte);
   const maintenant = () => horloge().toISOString();
   const facture = (idPa: string) => {
     const f = c.factures.get(idPa);
-    if (!f) throw new ErreurPa(`mock : facture ${idPa} inconnue`, 404);
+    if (!f) throw new PaError(`mock : facture ${idPa} inconnue`, 404);
     return f;
   };
 
@@ -93,7 +93,7 @@ export function mock(ids: IdentifiantsMock, horloge: () => Date = () => new Date
     },
     async telecharger(idPa) {
       const e = c.entrantes.get(idPa);
-      if (!e) throw new ErreurPa(`mock : facture entrante ${idPa} inconnue`, 404);
+      if (!e) throw new PaError(`mock : facture entrante ${idPa} inconnue`, 404);
       return e.contenu;
     },
     async annuaire(siren) {
@@ -123,7 +123,7 @@ export const bacMock = {
   /** Advances a submitted invoice (status set by the buyer, the PA or the tax authority). */
   avancer(idCompte: string, idPa: string, statut: StatutCycle, date: string, motif?: string): EvenementPa {
     const f = compte(idCompte).factures.get(idPa);
-    if (!f) throw new ErreurPa(`mock : facture ${idPa} inconnue`, 404);
+    if (!f) throw new PaError(`mock : facture ${idPa} inconnue`, 404);
     const e = { idPa, statut, date, motif };
     f.statuts.push(e);
     return { type: "statut", ...e };

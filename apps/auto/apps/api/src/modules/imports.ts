@@ -16,7 +16,7 @@ import {
   type ChampProduit,
 } from "@auto/store";
 import { entreprise } from "@auto/tenancy";
-import { ecrireXlsx, lireTableur } from "@auto/native";
+import { writeXlsx, lireTableur } from "@auto/native";
 import type { Module } from "../modules";
 import { brut, date, liste, objet, op, str } from "../openapi-outils";
 import type { Chemins } from "../modules";
@@ -113,7 +113,7 @@ export const routes: Module = ({ sql, auth }) => ({
       const { du, au } = periode(req);
       const pieces = await withTenant(sql, a.tenantId, (tx) => piecesVente(tx, du, au));
       const signe = (t: string) => (t === "avoir" ? -1 : 1);
-      const xlsx = ecrireXlsx({
+      const xlsx = writeXlsx({
         feuilles: [
           {
             nom: "Journal des ventes",
@@ -145,7 +145,7 @@ export const routes: Module = ({ sql, auth }) => ({
     GET: auth("lire", async (req, a) => {
       const au = new URL(req.url).searchParams.get("au") ?? undefined;
       const liste = await withTenant(sql, a.tenantId, (tx) => creances(tx, au));
-      const xlsx = ecrireXlsx({
+      const xlsx = writeXlsx({
         feuilles: [
           {
             nom: "Créances",

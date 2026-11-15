@@ -108,7 +108,7 @@ export interface Classeur {
 }
 
 /** Typed workbook → xlsx (frozen bold header). */
-export const ecrireXlsx = (c: Classeur) => appeler("xlsx_ecrire", json(c));
+export const writeXlsx = (c: Classeur) => appeler("xlsx_ecrire", json(c));
 export interface EditionCellule {
   feuille: string;
   ligne: number;

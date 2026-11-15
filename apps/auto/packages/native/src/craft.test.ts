@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import {
-  ecrireXlsx,
+  writeXlsx,
   lireTableur,
   modifierXlsx,
   creerDocx,
@@ -10,7 +10,7 @@ import {
   remplirDocx,
 } from "./index";
 test("Gridcraft: targeted edit, other sheets kept and dependent recalculation", () => {
-  const original = ecrireXlsx({
+  const original = writeXlsx({
     feuilles: [
       {
         nom: "Calcul",

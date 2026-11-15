@@ -21,7 +21,7 @@ import type { BunRequest } from "bun";
 import type { Module, Chemins } from "../modules";
 import { avecId, brut, cents, date, enumere, liste, objet, op, ref, str, uuid } from "../openapi-outils";
 import { classeurGestion, rapportGestion } from "@auto/services/gestion";
-import { ecrireXlsx } from "@auto/native";
+import { writeXlsx } from "@auto/native";
 import { segmentsDe, accesSegment, type Auth } from "@auto/tenancy";
 const segmentPiece = (type: string) => (type === "bon_livraison" ? "livraisons" : "commandes");
 function dossierPermis<T extends { documents: unknown[]; achats: unknown[]; pieces: { type: string }[] }>(
@@ -41,7 +41,7 @@ export const routes: Module = ({ sql, auth }) => ({
       "lire",
       async (_req, a) =>
         new Response(
-          new Uint8Array(ecrireXlsx(await withTenant(sql, a.tenantId, (tx) => classeurGestion(tx, segmentsDe(a))))),
+          new Uint8Array(writeXlsx(await withTenant(sql, a.tenantId, (tx) => classeurGestion(tx, segmentsDe(a))))),
           {
             headers: {
               "content-type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

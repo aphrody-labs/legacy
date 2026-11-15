@@ -99,7 +99,7 @@ export interface Plateforme {
   webhook(corps: string, entetes: Headers): Promise<EvenementPa[] | null>;
 }
 
-export class ErreurPa extends Error {
+export class PaError extends Error {
   constructor(
     message: string,
     readonly status = 502,

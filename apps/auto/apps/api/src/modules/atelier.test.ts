@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, expect, test } from "bun:test";
 import { testDb, type Sql } from "@auto/store";
-import { creerDocx, rendrePdf, ecrireXlsx, lireTableur } from "@auto/native";
+import { creerDocx, rendrePdf, writeXlsx, lireTableur } from "@auto/native";
 import { authDe, bearer } from "@auto/tenancy";
 import { creerApp } from "../app";
 let sql: Sql, drop: () => Promise<void>, server: ReturnType<typeof Bun.serve>, A: any, B: any;
@@ -48,7 +48,7 @@ test("atelier Excel : formules natives, conflit concurrent, versions et restaura
   expect(edite.body.revision).toBe(2);
   expect((await appel(`/v1/atelier/${d.id}`)).body.inspection.feuilles[0].apercu[1]).toEqual([2, 3, 5]);
   const x = (n: number) =>
-    ecrireXlsx({ feuilles: [{ nom: "Nouvelle", colonnes: [{ titre: "Valeur" }], lignes: [[n]] }] }).toBase64();
+    writeXlsx({ feuilles: [{ nom: "Nouvelle", colonnes: [{ titre: "Valeur" }], lignes: [[n]] }] }).toBase64();
   const concurrents = await Promise.all([
     appel(`/v1/atelier/${d.id}/fichier`, A.session, { revision: 2, fichier: x(10) }, "PUT"),
     appel(`/v1/atelier/${d.id}/fichier`, A.session, { revision: 2, fichier: x(20) }, "PUT"),

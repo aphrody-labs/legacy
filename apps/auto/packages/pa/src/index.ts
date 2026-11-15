@@ -1,7 +1,7 @@
 // Approved platform (PA) connectors: `Plateforme` contract, mock and B2Brouter adapters.
 import { b2brouter, type IdentifiantsB2brouter, type OptionsB2brouter } from "./b2brouter";
 import { mock, type IdentifiantsMock } from "./mock";
-import { ErreurPa, type NomPlateforme, type Plateforme } from "./types";
+import { PaError, type NomPlateforme, type Plateforme } from "./types";
 
 export * from "./types";
 export * from "./chiffrement";
@@ -31,6 +31,6 @@ export function plateforme(nom: NomPlateforme, ids: Identifiants, o: Options = {
     case "b2brouter":
       return b2brouter(ids as IdentifiantsB2brouter, { horloge: o.horloge, ...o.b2brouter });
     default:
-      throw new ErreurPa(`plateforme inconnue : ${String(nom)}`, 422);
+      throw new PaError(`plateforme inconnue : ${String(nom)}`, 422);
   }
 }
