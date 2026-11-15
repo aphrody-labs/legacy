@@ -2,7 +2,7 @@
 
 # src
 
-Aphrody 的单体仓库（monorepo）。贡献者与代理的约定见 [AGENTS.md](../../../AGENTS.md) 和 [CLAUDE.md](../../../CLAUDE.md)；目标架构见 [docs/ARCHITECTURE.md](../../ARCHITECTURE.md)，路线图见 [docs/STACK-ROADMAP.md](../../STACK-ROADMAP.md)。品牌、令牌与图标位于 [assets/brand](../../../assets/brand)（`ay brand build`），设计系统见 [packages/design](../../../packages/design/DESIGN.md)。
+Aphrody 的单体仓库（monorepo）。贡献者与代理的约定见 [AGENTS.md](../../../AGENTS.md) 和 [CLAUDE.md](../../../CLAUDE.md)；目标架构见 [docs/ARCHITECTURE.md](../../ARCHITECTURE.md)，路线图见 [docs/STACK-ROADMAP.md](../../STACK-ROADMAP.md)。品牌、令牌与图标位于 [packages/design/brand](../../../packages/design/brand)（`ay brand build`），设计系统见 [packages/design](../../../packages/design/DESIGN.md)。
 
 ## 目录结构
 

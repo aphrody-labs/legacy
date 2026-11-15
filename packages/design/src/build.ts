@@ -1,4 +1,4 @@
-// Generates every token output of @aphrody/design from assets/brand/brand.toml.
+// Generates every token output of @aphrody/design from packages/design/brand/brand.toml.
 // Color: official @material/material-color-utilities (DynamicScheme, MaterialDynamicColors).
 // Type scale, shape, elevation, state: docs/design/specs/tokens/material-3.json ; motion: Angular Material M3 tokens.
 // `bun run src/build.ts` writes tokens/ and DESIGN.md ; `--check` fails if anything would change.
@@ -27,15 +27,15 @@ type Brand = {
   font: string;
   font_fallback: string[];
 };
-// Source : assets/brand/brand.toml (agent marque) ; à défaut (checkout CI sans assets/brand), la copie
+// Source : packages/design/brand/brand.toml (agent marque) ; à défaut (checkout CI sans packages/design/brand), la copie
 // gardée dans tokens/tokens.json (source.brand), pour que --check et les tests restent reproductibles.
-const brandFile = Bun.file(join(root, "assets/brand/brand.toml"));
+const brandFile = Bun.file(join(root, "packages/design/brand/brand.toml"));
 const brand: Brand = (await brandFile.exists())
   ? (Bun.TOML.parse(await brandFile.text()) as { brand: Brand }).brand
   : (await Bun.file(join(out, "tokens.json")).json()).source.brand;
 if (!brand?.seed)
   throw new Error(
-    "graine de marque introuvable (assets/brand/brand.toml ou tokens/tokens.json source.brand)",
+    "graine de marque introuvable (packages/design/brand/brand.toml ou tokens/tokens.json source.brand)",
   );
 const mcuVersion = (
   await Bun.file(
@@ -214,7 +214,7 @@ const tokens = {
 // --- emitters ---
 const files: Record<string, string> = {};
 const header = (c: string) =>
-  `${c} Généré par packages/design/src/build.ts depuis assets/brand/brand.toml (seed ${tokens.source.seed}, ${brand.variant}, MCU ${mcuVersion}). Ne pas éditer.\n`;
+  `${c} Généré par packages/design/src/build.ts depuis packages/design/brand/brand.toml (seed ${tokens.source.seed}, ${brand.variant}, MCU ${mcuVersion}). Ne pas éditer.\n`;
 files["tokens.json"] = JSON.stringify(tokens, null, 2) + "\n";
 
 const cssVars = (m: Record<string, string>) =>
@@ -450,7 +450,7 @@ pub const font_brand = ${JSON.stringify(brand.font)};
 `;
 
 const symbolsJsonFile = Bun.file(
-  join(root, "assets/brand/gen/symbols/symbols.json"),
+  join(root, "packages/design/brand/gen/symbols/symbols.json"),
 );
 if (await symbolsJsonFile.exists()) {
   const { renderRustIconsModule } =
@@ -672,7 +672,7 @@ components:
 
 ## Overview
 
-Système unique \`@aphrody/design\` : Material 3 strict (m3.material.io), schéma ${brand.variant} depuis la couleur de marque ${tokens.source.seed} de \`assets/brand/brand.toml\`. Sobre, dense, technique. Aucune couleur hors rôles M3, aucune police hors ${brand.font}.
+Système unique \`@aphrody/design\` : Material 3 strict (m3.material.io), schéma ${brand.variant} depuis la couleur de marque ${tokens.source.seed} de \`packages/design/brand/brand.toml\`. Sobre, dense, technique. Aucune couleur hors rôles M3, aucune police hors ${brand.font}.
 
 ## Colors
 
@@ -696,7 +696,7 @@ Coins M3 : none 0, extra-small 4, small 8, medium 12, large 16, extra-large 28, 
 
 ## Components
 
-Web : Angular Material (\`@angular/material\`) uniquement, thème M3 via \`@aphrody/design/angular\` (\`tokens/angular-material.css\`, \`tokens/angular-theme.scss\`). Icônes : SVG 2 statiques (\`assets/brand/gen/symbols/sprite.svg\`, \`svg/*.svg\`) et structs Rust typées à la compilation (\`tokens/symbols.rs\` \`IconData\` / \`lucide-dioxus\` / \`lucide-leptos\` / \`dioxus-icons\` / \`icondata_core\`, tree-shakées par LLVM/wasm-opt sans chargement \`.woff2\` runtime). Desktop natif GPU : enum \`Symbol::codepoint()\` (\`tokens/symbols.rs\`, compatible \`egui_material_icons\` / \`iced_lucide\` / \`cosmic-text\`) avec \`tokens.rs\`. TUI : \`ansi.json\`.
+Web : Angular Material (\`@angular/material\`) uniquement, thème M3 via \`@aphrody/design/angular\` (\`tokens/angular-material.css\`, \`tokens/angular-theme.scss\`). Icônes : SVG 2 statiques (\`packages/design/brand/gen/symbols/sprite.svg\`, \`svg/*.svg\`) et structs Rust typées à la compilation (\`tokens/symbols.rs\` \`IconData\` / \`lucide-dioxus\` / \`lucide-leptos\` / \`dioxus-icons\` / \`icondata_core\`, tree-shakées par LLVM/wasm-opt sans chargement \`.woff2\` runtime). Desktop natif GPU : enum \`Symbol::codepoint()\` (\`tokens/symbols.rs\`, compatible \`egui_material_icons\` / \`iced_lucide\` / \`cosmic-text\`) avec \`tokens.rs\`. TUI : \`ansi.json\`.
 
 ## Do's and Don'ts
 

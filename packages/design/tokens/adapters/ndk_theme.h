@@ -1,4 +1,4 @@
-/* Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (assets/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer. */
+/* Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer. */
 /* Pont C ABI / JNI léger pour Android NDK (ANativeWindow WINDOW_FORMAT_RGBA_8888, AChoreographer, Vulkan/GLES clear colors).
  * Table de 48 rôles strictement alignée sur l'ordre de Theme.kt (Jetpack Compose Material 3). */
 #ifndef AY_NDK_THEME_H

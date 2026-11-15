@@ -3,7 +3,7 @@
 //! compiles it with `-Zbuild-std=core` through a throwaway manifest, no dependencies, and it includes the geometry
 //! of `gpu.rs` (the same file `brand::model` uses on the host).
 //!
-//! wasm ABI for assets/brand/web/gpu.ts: `mesh()` fills the static buffers and returns the vertex
+//! wasm ABI for packages/design/brand/web/gpu.ts: `mesh()` fills the static buffers and returns the vertex
 //! pointer; `indices()`, `vertex_count()`, `index_count()`; `frame(t, aspect)` returns a pointer to
 //! 32 floats. Single-threaded by construction (wasm32-unknown-unknown without atomics).
 #![no_std]

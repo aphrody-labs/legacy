@@ -6,7 +6,7 @@ const tone = (hex: string) => Hct.fromInt(argbFromHex(hex)).tone;
 const ratio = (a: string, b: string) => Contrast.ratioOfTones(tone(a), tone(b));
 
 const brandToml = Bun.file(
-  `${import.meta.dir}/../../../assets/brand/brand.toml`,
+  `${import.meta.dir}/../../../packages/design/brand/brand.toml`,
 );
 test.skipIf(!(await brandToml.exists()))("source = brand.toml", async () => {
   const brand = Bun.TOML.parse(await brandToml.text()) as any;

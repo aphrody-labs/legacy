@@ -118,97 +118,6 @@ function formatBunCratesTable(snap: MonorepoSnapshot): string {
   ].join("\n");
 }
 
-/** Generates README.md from live monorepo snapshot and SQLite/graph stats. */
-export function buildReadme(snap: MonorepoSnapshot): string {
-  const pkgNames = snap.packages
-    .map((p) => `\`${p.dir.replace("packages/", "")}\``)
-    .join(", ");
-  const appNames = snap.apps
-    .map((a) => `\`${a.name}\`${a.isSubmodule ? " (submodule)" : ""}`)
-    .join(", ");
-  const idxLine = snap.indexCounts
-    ? `SQLite index (\`var/index/core.db\`): ${snap.indexCounts.files} files, ${snap.indexCounts.symbols} symbols, ${snap.indexCounts.imports} imports, ${snap.indexCounts.refs} call refs.`
-    : "SQLite index: run `bun packages/core/src/cli.ts gen-docs` to populate or refresh.";
-  const graphLine = snap.graphify
-    ? `Code graph (\`${snap.graphify.source}\`): ${snap.graphify.nodes} nodes, ${snap.graphify.edges} edges, ${snap.graphify.communities} communities.`
-    : "";
-
-  const tpl = `<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/gen/logo/aphrody-labs-wordmark-dark.svg">
-  <img alt="Aphrody Labs" src="assets/brand/gen/logo/aphrody-labs-wordmark-light.svg" height="56">
-</picture>
-
-<img alt="license: MIT OR Apache-2.0" src="assets/brand/gen/badges/license.svg"> <img alt="rust toolchain" src="assets/brand/gen/badges/rust.svg"> <img alt="runtime: bun" src="assets/brand/gen/badges/bun.svg"> <img alt="workflow: main only" src="assets/brand/gen/badges/main-only.svg">
-
-Brand, tokens and icons: [assets/brand](assets/brand) (\`ay brand build\`, design system in [packages/design](packages/design/DESIGN.md)).
-
-# src
-
-Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Master plan: [docs/PLAN.mdx](docs/PLAN.mdx).
-
-## Stack Overview
-
-- **Pure C23 LLVM ABI Core**: [src/core/capi](src/core/capi) (\`aphrody_core.h\` exporting \`core_*\` and unified \`ai_os_*\`, \`aphrody_zig.h\`, \`aphrody_mwg.h\`) compiled with \`clang\` ThinLTO and \`-Wall -Wextra -Wpedantic -Werror\`. See [docs/native/llvm/PURE-C-LLVM.mdx](docs/native/llvm/PURE-C-LLVM.mdx).
-- **Agent OS (\`@aphrody/ai-os\`)**: cross-platform sandboxed Unix/GNU-like OS distribution for agents unifying FHS VFS (\`/etc/ai-os\`, \`/var/lib/ai-os\`, \`/proc/agent\`, \`/dev/{llm,rag,world,sys1}\`), LLM, RAG, World Model, and System 1 decision under one C ABI (\`aphrody_core_capi\`).
-- **Bun Runtime**: pure Bun TypeScript packages with zero third-party npm dependencies (\`bun:ffi\`, \`bun:sqlite\`, \`Bun.Glob\`, \`Bun.serve\`).
-- **Rust {{workspace.edition}} Workspace**: {{cratesCount}} crates in \`src/*\` (edition {{workspace.edition}}, rust-version {{workspace.rustVersion}}, {{workspace.workspaceDepsCount}} workspace dependencies), {{bunCratesCount}} of them absorbed from Bun.
-- **Zig Native Cores**: \`packages/native/native\` and browser cores exporting stable C ABI symbols via \`aphrody_zig.h\`.
-- **Modern Web Guidance (\`@aphrody/wck\`)**: pure Bun + \`mwg_capi\` (\`packages/wck/native\`) hybrid RAG search, Baseline gates, and MCP tools. See [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx).
-- **\`ay\` Multicall CLI**: unified repository interface (\`ay arch check --strict\`, \`ay manifests\`, \`ay gaming\`, \`ay steam\`).
-
-## Layout
-
-| Directory | Count / Content |
-| :--- | :--- |
-| [\`apps/\`](apps) | {{appsCount}} apps: {{appNames}} |
-| [\`packages/\`](packages) | {{packagesCount}} Bun \`@aphrody/*\` packages: {{pkgNames}} |
-| [\`src/\`](src) | {{cratesCount}} Rust {{workspace.edition}} crates ({{bunCratesCount}} from Bun) next to the C core |
-| [\`infra/\`](infra) | Fleet, Docker, Cloudflare, and Chromium factory configuration |
-| [\`third_party/\`](third_party) | Pinned upstream checkouts and forks in \`src.lock.json\` (\`DEPS\`, \`.gitmodules\`) |
-| [\`docs/\`](docs) | Architecture MDX plans, LLVM/C ABI docs, Modern Web Guidance, and generated [\`docs/reference/\`](docs/reference) |
-
-## Live Graph and Index
-
-- {{idxLine}}
-{{#each extraGraphLines}}- {{this}}
-{{/each}}
-## Commands
-
-Rust compiles in CI or on the build host (\`fr1\`), never on the workstation.
-
-\`\`\`sh
-just doctor                            # toolchain doctor
-just arch-check                        # architecture gate (ay arch check --strict)
-bun scripts/checkdeps.ts               # Chromium-style DEPS.rules layer gate
-bun packages/core/src/cli.ts gen-docs  # regenerate README.md, MDX plans, and docs/reference/*.md
-bun packages/core/src/cli.ts search <q> # fuzzy symbol and doc search
-bun test packages/wck                  # @aphrody/wck Modern Web Guidance suite
-\`\`\`
-
-## Key Documents
-
-| Topic | Document |
-| :--- | :--- |
-| Master Architectural Plan | [docs/PLAN.mdx](docs/PLAN.mdx) |
-| Pure C23 LLVM Core & C ABI | [docs/native/llvm/PURE-C-LLVM.mdx](docs/native/llvm/PURE-C-LLVM.mdx) |
-| Modern Web Guidance & RAG | [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx) |
-| Reference Pillars | [docs/reference/tree-sitter.md](docs/reference/tree-sitter.md), [docs/reference/llvm-toolchain.md](docs/reference/llvm-toolchain.md), [docs/reference/bun-ffi.md](docs/reference/bun-ffi.md) |
-| Games & Creative Suite Plan | [docs/games/PLAN.md](docs/games/PLAN.md) |
-`;
-
-  return renderTemplate(tpl, {
-    workspace: snap.workspace,
-    cratesCount: snap.crates.length,
-    bunCratesCount: snap.bunCrates.length,
-    packagesCount: snap.packages.length,
-    appsCount: snap.apps.length,
-    appNames,
-    pkgNames,
-    idxLine,
-    extraGraphLines: graphLine ? [graphLine] : [],
-  });
-}
-
 /** Generates docs/PLAN.mdx in Bun Docs MDX format. */
 export function buildPlanMdx(snap: MonorepoSnapshot): string {
   const layerTable = formatLayerSummary(snap);
@@ -251,7 +160,7 @@ ${layerTable}
 
 ## 3. Pure C23 LLVM ABI Core
 
-All native cross-language boundaries converge on C ABI headers in \`src/core/capi/include/\` consumed by Bun (\`bun:ffi\`), Rust (\`src/ffi\`), and Zig.
+All native cross-language boundaries converge on C ABI headers in \`src/core/capi/include/\` consumed by Bun (\`bun:ffi\`), Rust (\`src/core/capi\`), and Zig.
 
 ${headersTable}
 

@@ -1,7 +1,7 @@
 // @aphrody/design CLI : bun run src/cli.ts themes [--check] | lint [path] [--format json|text] | screenshots [name...]
 //   themes       writes tokens/themes.json and tokens/themes.css from src/themes.ts (--check: fail on drift)
 //   lint         validates DESIGN.md frontmatter, 8 canonical sections, token refs, WCAG contrast, zero emoji
-//   screenshots  headless Chrome over DevTools (CHROME env, else usual paths) -> assets/brand/captures/themes/<name>-<mode>.png
+//   screenshots  headless Chrome over DevTools (CHROME env, else usual paths) -> packages/design/brand/captures/themes/<name>-<mode>.png
 import { existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -57,10 +57,10 @@ function chromePath(): string {
 }
 
 async function screenshots(only: string[]) {
-  const out = join(root, "assets/brand/captures/themes");
+  const out = join(root, "packages/design/brand/captures/themes");
   mkdirSync(out, { recursive: true });
   const tmp = mkdtempSync(join(tmpdir(), "design-themes-"));
-  // Chrome may fork and exit its launcher: talk to the browser over DevTools (as assets/brand/capture.ts does).
+  // Chrome may fork and exit its launcher: talk to the browser over DevTools.
   Bun.spawn(
     [
       chromePath(),

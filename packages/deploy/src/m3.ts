@@ -1,5 +1,5 @@
 // Design inputs of the aphrody.com and aphrody.app pages, all from the monorepo design system (skill ui-system):
-// tokens from packages/design/tokens/tokens.css (Material Color Utilities from assets/brand/brand.toml), Angular
+// tokens from packages/design/tokens/tokens.css (Material Color Utilities from packages/design/brand/brand.toml), Angular
 // Material M3 theme (--mat-sys-*) lives in packages/design; these server pages use its token twins. Google Sans Flex, the brand mark.
 // No color, radius, duration or font value is written here: CSS only references `--md-sys-*` / `--md-ref-*`.
 import { existsSync, readFileSync } from "node:fs";
@@ -10,10 +10,10 @@ export interface Brand {
   mark: string;
 }
 
-/** Brand name and mark from assets/brand (brand.toml, src/mark.svg). */
+/** Brand name and mark from packages/design/brand (brand.toml, src/mark.svg). */
 export function readBrand(root: string): Brand {
-  const toml = join(root, "assets", "brand", "brand.toml");
-  const svg = join(root, "assets", "brand", "src", "mark.svg");
+  const toml = join(root, "packages", "design", "brand", "brand.toml");
+  const svg = join(root, "packages", "design", "brand", "src", "mark.svg");
   const b = existsSync(toml)
     ? ((Bun.TOML.parse(readFileSync(toml, "utf8")) as any).brand ?? {})
     : {};
@@ -44,7 +44,7 @@ export function readBrand(root: string): Brand {
   return { name: b.name ?? "Aphrody", mark };
 }
 
-/** Paint the placeholders of assets/brand/src/mark.svg ({container}, {glyph}, {bolt}, filled by `ay brand build`
+/** Paint the placeholders of packages/design/brand/src/mark.svg ({container}, {glyph}, {bolt}, filled by `ay brand build`
  * in the generated files) with the theme roles, for inline use: the mark follows light and dark. The bolt gets
  * class `bolt` (animated by MARK_CSS when motion is allowed). Idempotent on an already painted mark. */
 export function paintMark(svg: string): string {

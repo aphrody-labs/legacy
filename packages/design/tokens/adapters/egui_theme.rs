@@ -1,4 +1,4 @@
-// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (assets/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+// Généré par packages/design/src/adapters.ts depuis tokens/tokens.json (packages/design/brand/brand.toml, seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 // Rust egui Material 3 theme adapter (Visuals & Style, Color32::from_rgb, CornerRadius, Stroke).
 // Usage : include!(concat!(env!("CARGO_MANIFEST_DIR"), "/<chemin relatif>/packages/design/tokens/adapters/egui_theme.rs"));
 

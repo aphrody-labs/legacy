@@ -1,11 +1,11 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/gen/logo/aphrody-labs-wordmark-dark.svg">
-  <img alt="Aphrody Labs" src="assets/brand/gen/logo/aphrody-labs-wordmark-light.svg" height="56">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-with-wordmark-dark.svg">
+  <img alt="Aphrody Labs" src="docs/logo/logo-with-wordmark-light.svg" height="56">
 </picture>
 
-<img alt="license: MIT OR Apache-2.0" src="assets/brand/gen/badges/license.svg"> <img alt="rust toolchain" src="assets/brand/gen/badges/rust.svg"> <img alt="runtime: bun" src="assets/brand/gen/badges/bun.svg"> <img alt="workflow: main only" src="assets/brand/gen/badges/main-only.svg">
+<img alt="license: MIT OR Apache-2.0" src="docs/badges/license.svg"> <img alt="rust toolchain" src="docs/badges/rust.svg"> <img alt="runtime: bun" src="docs/badges/bun.svg"> <img alt="workflow: main only" src="docs/badges/main-only.svg">
 
-Brand, tokens and icons: [assets/brand](assets/brand) (`ay brand build`, design system in [packages/design](packages/design/DESIGN.md)).
+Brand, tokens and icons: [packages/design/brand](packages/design/brand) (`ay brand build`, design system in [packages/design](packages/design/DESIGN.md)).
 
 # src
 

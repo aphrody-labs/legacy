@@ -21,7 +21,7 @@ agent protocols are sent to those projects as pull requests.
 | ay             | One multicall CLI for the monorepo: architecture gate, locks, VCS tooling, Chromium tools, toolchain install, benchmarks                                    | `src/ay`            |
 | nt             | A model of the machine's Windows NT, rendered entirely by the GPU on the Microsoft stack                                                                    | `apps/nt`              |
 | ai-os          | Agent core, model bridge discovered at run time, relay (MCP, A2A, ACP), gateway and TUI in one Bun package with no npm dependency                           | `packages/ai-os`       |
-| Brand pipeline | `ay brand build`: outlined SVG logos and icons from the shared Material 3 tokens, ICO/PNG, social cards and ANSI banners rendered with resvg/usvg/tiny-skia | `assets/brand` |
+| Brand pipeline | `ay brand build`: outlined SVG logos and icons from the shared Material 3 tokens, ICO/PNG, social cards and ANSI banners rendered with resvg/usvg/tiny-skia | `packages/design/brand` |
 
 Monorepo languages, GitHub linguist bytes on 2026-11-13: Rust 81.1 %, Python 8.0 %, TypeScript 6.4 %,
 C 1.6 %, JavaScript 1.4 % ([source](https://github.com/aphrody-labs/src)).

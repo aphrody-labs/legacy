@@ -28,7 +28,7 @@ watch = [
   "packages/design/tokens/**",
   "packages/design/**",
   "packages/wck/**",
-  "assets/brand/**",
+  "packages/design/brand/**",
 ]
 env = ["PUBLIC_CONTACT_EMAIL", "INDEXNOW_KEY"]
 exclude = ["**/*.gz", "**/*.br", "**/*.exe"]

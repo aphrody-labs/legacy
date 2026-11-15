@@ -62,7 +62,7 @@ Forks aphrody-labs ajoutés le 2026-11-13 (`gh api`, licence SPDX et dernier pus
 | Skills            | `nextlevelbuilder/ui-ux-pro-max-skill`, `blader/humanizer`, `CloudAI-X/threejs-skills`, `anthropics/skills` (frontend-design) | MIT, MIT, MIT, Apache-2.0 | absorbées dans `.agents/skills/{ui-ux-pro-max,humanizer,threejs-webgpu,ui-system}` |
 | Sécurité          | `trailofbits/skills` (fork `aphrody-labs/skills-4`)                                                                           | CC-BY-SA-4.0              | forké                                                                              |
 
-Police : Google Sans Flex, SIL OFL 1.1 sans Reserved Font Name (google/fonts `ofl/googlesansflex`, voir `assets/brand/brand.toml`) ; le nom ne doit pas servir de nom de produit.
+Police : Google Sans Flex, SIL OFL 1.1 sans Reserved Font Name (google/fonts `ofl/googlesansflex`, voir `packages/design/brand/brand.toml`) ; le nom ne doit pas servir de nom de produit.
 
 Choix par plateforme (décision du propriétaire, 2026-11-15) : web = Angular Material (Material Web `@material/web` est en maintenance et retiré) ; Android = Jetpack Compose ; multiplateforme = Flutter. Les pages rendues côté serveur sans runtime Angular (Worker de `packages/deploy`) utilisent des équivalents HTML natifs (`a`/`button` `.btn`) pilotés par les mêmes tokens `--md-sys-*`.
 

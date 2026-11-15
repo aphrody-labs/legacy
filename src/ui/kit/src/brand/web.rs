@@ -94,7 +94,7 @@ pub struct Environment {
 
 #[derive(Debug, Deserialize)]
 pub struct Gpu {
-    /// bun entry that draws the wasm mesh, relative to assets/brand.
+    /// bun entry that draws the wasm mesh, relative to packages/design/brand.
     pub loader: String,
 }
 
@@ -682,7 +682,7 @@ fn manifest(cx: &mut Ctx<'_>, m: &Manifest, brand_dir: &Path) -> Result<()> {
     // Written outside put(): the manifest does not list itself; manifest.json.sha256 pins it.
     super::write(&cx.gen_dir.join("manifest.json"), &text)?;
     super::write(&cx.gen_dir.join("manifest.json.sha256"), format!("{sha}  manifest.json\n"))?;
-    cx.report.files.push(("assets/brand/gen/manifest.json".into(), text.len() as u64));
+    cx.report.files.push(("packages/design/brand/gen/manifest.json".into(), text.len() as u64));
     cx.report.manifest_sha256 = Some(sha);
     Ok(())
 }

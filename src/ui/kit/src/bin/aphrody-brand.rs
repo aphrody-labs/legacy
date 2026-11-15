@@ -4,7 +4,7 @@
 use aphrody_ui::brand::{BuildOptions, build, check::check, ico_sides};
 use std::{path::PathBuf, process::ExitCode};
 
-const USAGE: &str = "usage: ay brand build [--root <dir>] [--deploy]\n       ay brand check [--root <dir>]\n       ay brand banner <id> [--plain]\n       ay brand check-ico <file>";
+const USAGE: &str = "usage: ay brand build [--root <dir>] [--deploy] [--docs]\n       ay brand check [--root <dir>]\n       ay brand banner <id> [--plain]\n       ay brand check-ico <file>";
 
 fn repo_root() -> PathBuf {
     if let Some(r) = std::env::var_os("SRC_ROOT").filter(|v| !v.is_empty()) {
@@ -12,7 +12,7 @@ fn repo_root() -> PathBuf {
     }
     let mut dir = std::env::current_dir().unwrap_or_default();
     loop {
-        if dir.join("assets").join("brand").join("brand.toml").is_file() {
+        if dir.join("packages").join("design").join("brand").join("brand.toml").is_file() {
             return dir;
         }
         if !dir.pop() {
@@ -25,11 +25,12 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("build") => {
-            let mut opts = BuildOptions { root: repo_root(), deploy: false };
+            let mut opts = BuildOptions { root: repo_root(), deploy: false, docs_only: false };
             let mut it = args[1..].iter();
             while let Some(a) = it.next() {
                 match a.as_str() {
                     "--deploy" => opts.deploy = true,
+                    "--docs" => opts.docs_only = true,
                     "--root" => opts.root = it.next().map(PathBuf::from).unwrap_or_default(),
                     other => {
                         eprintln!("ay brand: unknown argument {other}\n{USAGE}");
@@ -40,7 +41,7 @@ fn main() -> ExitCode {
             match build(&opts) {
                 Ok(r) => {
                     let bytes: u64 = r.files.iter().map(|f| f.1).sum();
-                    println!("ay brand: {} files, {} KiB in assets/brand/gen", r.files.len(), bytes / 1024);
+                    println!("ay brand: {} files, {} KiB (packages/design/brand/gen, docs/logo, docs/icons)", r.files.len(), bytes / 1024);
                     for d in &r.deployed {
                         println!("deployed {d}");
                     }
@@ -85,7 +86,7 @@ fn main() -> ExitCode {
             };
             let plain = args.iter().any(|a| a == "--plain") || std::env::var_os("NO_COLOR").is_some();
             let ext = if plain { "txt" } else { "ansi" };
-            let path = repo_root().join("assets/brand/gen/banner").join(format!("{id}.{ext}"));
+            let path = repo_root().join("packages/design/brand/gen/banner").join(format!("{id}.{ext}"));
             match std::fs::read_to_string(&path) {
                 Ok(s) => {
                     print!("{s}");

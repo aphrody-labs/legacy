@@ -1,4 +1,6 @@
 export * from "./ffi.ts";
+export * from "./depot.ts";
+export * from "./re.ts";
 export * from "./sys.ts";
 export {
   classification,
@@ -37,7 +39,6 @@ export {
   buildModernWebGuidanceMdx,
   buildPlanMdx,
   buildPureCLlvmMdx,
-  buildReadme,
   renderMdx,
   renderTemplate,
   type MdxFrontmatter,

@@ -27,7 +27,7 @@ Domains: `ux` (UX/a11y rules, default), `web` (app and native interface: safe ar
 
 | Upstream result                     | src translation                                                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Palette, hex color, "Primary"       | M3 role `--md-sys-color-*`; brand hue = `assets/brand/brand.toml`                                             |
+| Palette, hex color, "Primary"       | M3 role `--md-sys-color-*`; brand hue = `packages/design/brand/brand.toml`                                             |
 | Font pair, Tailwind config          | Google Sans Flex (brand); `google-fonts --ofl` only for a secondary family, shipped as woff2 from an OFL fork |
 | Icons (Lucide, Heroicons, Phosphor) | Material Symbols Rounded (`<mat-icon>`)                                                                        |
 | React/Next/shadcn/Tailwind code     | Angular Material (`mat-*`), GPUI or WebUI; keep the rule, rewrite the example                      |

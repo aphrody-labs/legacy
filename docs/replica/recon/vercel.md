@@ -85,7 +85,7 @@ Légende « notre équivalent » : chemin dans src, ou « absent ».
 | Fonctionnalité                                                 | Source                        | Notre équivalent                                                                                                                              |
 | -------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `next/font` (auto-hébergement, subset, `size-adjust`, preload) | next.js `components/font.mdx` | partiel : woff2 auto-hébergé préchargé (`apps/aphrody/build.ts`, `/atkinson-next.woff2`) ; pas de subset ni de fallback métrique automatiques |
-| Geist (OFL)                                                    | vercel/geist-font             | absent (marque : `assets/brand`)                                                                                                              |
+| Geist (OFL)                                                    | vercel/geist-font             | absent (marque : `packages/design/brand`)                                                                                                              |
 
 ### Edge / compute
 

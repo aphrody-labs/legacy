@@ -34,7 +34,7 @@ Commands:
   pkg          Package recipes for every distro: list, matrix, gen, build, check (packages/linux, infra/pkg)
   lfs          bun-LFS (third_party/lfs/bun, GitHub CI): build, logs, wsl (runs `just lfs-<sub>`)
   ssh          Pure-Rust SSH (russh): exec <host|all|a,b> -- cmd, cp, hosts, check
-  brand        Brand assets (assets/brand): build [--deploy], banner <id>, check-ico (runs `aphrody-brand`)
+  brand        Brand assets (packages/design/brand): build [--deploy], banner <id>, check-ico (runs `aphrody-brand`)
   rt           Runtimes: Python engines (uv, RustPython), Bun versions, package managers, PyTorch
   gclient      gclient in Rust: revinfo, getdep, setdep, sync (gitoxide), hooks, root
   fetch        Write .gclient for a depot_tools fetch config (chromium, v8, webrtc, ...) and sync it

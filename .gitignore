@@ -33,8 +33,6 @@ graphify-out/
 /.claude/settings.local.json
 !/docs/
 !/src/
-# Brand sources and generated assets (assets/brand, `ay brand build`).
-!/assets/
 !/apps/
 !/packages/
 !/bench/

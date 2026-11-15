@@ -247,7 +247,7 @@ components:
 
 ## Overview
 
-Système unique `@aphrody/design` : Material 3 strict (m3.material.io), schéma vibrant depuis la couleur de marque #135B82 de `assets/brand/brand.toml`. Sobre, dense, technique. Aucune couleur hors rôles M3, aucune police hors Google Sans Flex.
+Système unique `@aphrody/design` : Material 3 strict (m3.material.io), schéma vibrant depuis la couleur de marque #135B82 de `packages/design/brand/brand.toml`. Sobre, dense, technique. Aucune couleur hors rôles M3, aucune police hors Google Sans Flex.
 
 ## Colors
 
@@ -271,7 +271,7 @@ Coins M3 : none 0, extra-small 4, small 8, medium 12, large 16, extra-large 28, 
 
 ## Components
 
-Web : Angular Material (`@angular/material`) uniquement, thème M3 via `@aphrody/design/angular` (`tokens/angular-material.css`, `tokens/angular-theme.scss`). Icônes : SVG 2 statiques (`assets/brand/gen/symbols/sprite.svg`, `svg/*.svg`) et structs Rust typées à la compilation (`tokens/symbols.rs` `IconData` / `lucide-dioxus` / `lucide-leptos` / `dioxus-icons` / `icondata_core`, tree-shakées par LLVM/wasm-opt sans chargement `.woff2` runtime). Desktop natif GPU : enum `Symbol::codepoint()` (`tokens/symbols.rs`, compatible `egui_material_icons` / `iced_lucide` / `cosmic-text`) avec `tokens.rs`. TUI : `ansi.json`.
+Web : Angular Material (`@angular/material`) uniquement, thème M3 via `@aphrody/design/angular` (`tokens/angular-material.css`, `tokens/angular-theme.scss`). Icônes : SVG 2 statiques (`packages/design/brand/gen/symbols/sprite.svg`, `svg/*.svg`) et structs Rust typées à la compilation (`tokens/symbols.rs` `IconData` / `lucide-dioxus` / `lucide-leptos` / `dioxus-icons` / `icondata_core`, tree-shakées par LLVM/wasm-opt sans chargement `.woff2` runtime). Desktop natif GPU : enum `Symbol::codepoint()` (`tokens/symbols.rs`, compatible `egui_material_icons` / `iced_lucide` / `cosmic-text`) avec `tokens.rs`. TUI : `ansi.json`.
 
 ## Do's and Don'ts
 

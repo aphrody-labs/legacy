@@ -8,9 +8,9 @@
 //! - [`layout`]: CSS and utility parsing lowered to `taffy` layout trees.
 //! - [`shared`]: theme presets and manifest types shared by the hosts.
 //! - [`react`], [`next`]: React/Next.js analysis and migration front ends.
-//! - [`brand`]: `ay brand build`, rendering assets/brand with `packages/design/tokens/tokens.rs`.
+//! - [`brand`]: `ay brand build`, rendering packages/design/brand with `packages/design/tokens/tokens.rs`.
 //!
-//! Brand colors come from `packages/design` (Material Color Utilities from assets/brand/brand.toml);
+//! Brand colors come from `packages/design` (Material Color Utilities from packages/design/brand/brand.toml);
 //! see docs/ui/STACK.md.
 #![allow(clippy::struct_excessive_bools, clippy::doc_markdown, clippy::too_many_lines)]
 

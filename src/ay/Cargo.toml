@@ -82,6 +82,6 @@ stack-bench.workspace = true
 # `ay applet`: the WinuxCmd Rust applets (src/winux), Win32 implementations, linked on Windows only.
 winux-cmds = { version = "0.1.0", path = "../winux/cmds" }
 
-# Brand icon and version resource of ay.exe (build.rs, ay.ico from assets/brand).
+# Brand icon and version resource of ay.exe (build.rs, ay.ico from packages/design/brand).
 [build-dependencies]
 winresource = "0.1.34"

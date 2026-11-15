@@ -1,6 +1,6 @@
 // Collects the public facts shown on the GitHub profile cards into docs/native/profile/stats.json.
 // Source: the GitHub REST and search APIs through the authenticated `gh` CLI. No badge or stats
-// service is involved; `ay brand build` renders the JSON to static SVG (assets/brand/gen/profile).
+// service is involved; `ay brand build` renders the JSON to static SVG (packages/design/brand/gen/profile).
 // Usage: bun docs/native/profile/stats.ts
 import { $ } from "bun";
 import { join } from "node:path";

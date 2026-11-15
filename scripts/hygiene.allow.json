@@ -82,7 +82,7 @@
     "docs/core/ARCHITECTURE-ROOT.md",
     ".claude/agents/fact-checker.md",
     ".github/workflows/assets.yml",
-    "assets/brand/brand.just",
+    "packages/design/brand/brand.just",
     "docs/PLAN.mdx",
     "docs/ai/ANOMALYCO.md",
     "docs/ai/DISTRIBUTED-INFERENCE.md",

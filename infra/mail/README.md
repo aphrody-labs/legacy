@@ -57,7 +57,7 @@ env-kit exec -- bun run C:\src\infra\mesh-vn\src\cloudflare-mail-dns.ts --apply
 
 Serve `C:\src\infra\mail\mta-sts.txt` at `https://mta-sts.aphrody.com/.well-known/mta-sts.txt` with `Content-Type: text/plain; charset=utf-8` (enforces TLS 1.2/1.3 MX transport across `mail.aphrody.com` and `*.google.com`).
 
-BIMI (`default._bimi.aphrody.com`) references `https://aphrody.com/assets/brand/aphrody-monogram-bimi.svg`.
+BIMI (`default._bimi.aphrody.com`) references `https://aphrody.com/packages/design/brand/aphrody-monogram-bimi.svg`.
 
 ## 5. Google Workspace Split-Delivery Compatibility (`contact@aphrody.com`)
 

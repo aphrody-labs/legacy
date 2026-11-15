@@ -1,7 +1,7 @@
 {
   "name": "@aphrody/design",
   "version": "0.1.0",
-  "description": "Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis assets/brand/brand.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; composants Angular Material (thème M3 généré) ; Material Symbols (SVG et police : sous-ensemble d ay brand build ; material-symbols ne sert qu au catalogue des noms).",
+  "description": "Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis packages/design/brand/brand.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; composants Angular Material (thème M3 généré) ; Material Symbols (SVG et police : sous-ensemble d ay brand build ; material-symbols ne sert qu au catalogue des noms).",
   "private": true,
   "type": "module",
   "exports": {

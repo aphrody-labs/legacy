@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Image regression gate of the design system: renders the brand sources (assets/brand/src) with the
+//! Image regression gate of the design system: renders the brand sources (packages/design/brand/src) with the
 //! M3 roles of packages/design through resvg/tiny-skia (CPU, deterministic) and compares a SHA-256
 //! of the RGBA pixels with `tests/fixtures/visual/*.sha256`.
 //! Rewrite the goldens on fr1 with `APHRODY_UPDATE_GOLDENS=1 cargo test -p aphrody-ui --test visual_regression`.
@@ -31,7 +31,7 @@ fn check(name: &str, rgba: &[u8]) {
 
 #[test]
 fn brand_sources_render_identically() {
-    let src = root().join("assets/brand/src");
+    let src = root().join("packages/design/brand/src");
     let palette = Palette::new();
     let (container, glyph) = palette.org("primary");
     let vars = [("container", hex(container)), ("glyph", hex(glyph)), ("bolt", hex(palette.accent))];

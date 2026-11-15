@@ -1,4 +1,4 @@
-// Généré par packages/design/src/build.ts depuis assets/brand/brand.toml (seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
+// Généré par packages/design/src/build.ts depuis packages/design/brand/brand.toml (seed #135B82, vibrant, MCU 0.4.0). Ne pas éditer.
 // Couleurs en RGBA u32 (0xRRGGBBFF), directement utilisables avec gpui::rgba(u32) ou ratatui Color::from_u32(c >> 8).
 // Usage : include!(concat!(env!("CARGO_MANIFEST_DIR"), "/<chemin relatif>/packages/design/tokens/tokens.rs"));
 #[allow(dead_code)]

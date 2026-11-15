@@ -169,7 +169,7 @@ impl fmt::Display for RgbaColor {
 /// By default, `aphrody-design` uses [`YoloThemePreset::Neutral`] (`"yolo-neutral"`), ensuring
 /// zero vendor lock-in while allowing instant switching to M3, Fluent 2, Apple HIG Liquid Glass,
 /// Omacom Omarchy (`Tokyo Night` + 23 official subthemes), Hyprland (`#33ccff` -> `#00ff99` active border + kawase blur),
-/// or Aphrody (original brand of `assets/brand`, Material 3 vibrant from `#3355FF`).
+/// or Aphrody (original brand of `packages/design/brand`, Material 3 vibrant from `#3355FF`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum YoloThemePreset {
@@ -186,7 +186,7 @@ pub enum YoloThemePreset {
     Omarchy,
     /// `"yolo-hyprland"` — Hyprwm / Hyprland / `hyprtoolkit` / `hyprqt6engine` Wayland compositor design system (`#33ccff` -> `#00ff99` 45deg active border, kawase blur).
     Hyprland,
-    /// `"yolo-aphrody"` — Aphrody brand theme (`assets/brand/brand.toml`: seed `#3355FF`, M3 vibrant, roles from `packages/design/tokens`).
+    /// `"yolo-aphrody"` — Aphrody brand theme (`packages/design/brand/brand.toml`: seed `#3355FF`, M3 vibrant, roles from `packages/design/tokens`).
     Aphrody,
     /// `"yolo-chromium"` — Chromium Views and WebUI design language with editable HCT accent and light/dark surfaces.
     Chromium,

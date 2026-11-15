@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Embeds the brand icon (`ay.ico`, written by `ay brand build --deploy` from assets/brand) and the
+//! Embeds the brand icon (`ay.ico`, written by `ay brand build --deploy` from packages/design/brand) and the
 //! version resource into ay.exe. Non-fatal: without a resource compiler the build only warns.
 
 fn main() {

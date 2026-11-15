@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 //! The Aphrody brand tile in 3D: a rounded square slab (radius 12/48 of the side, as in
-//! `assets/brand/src/tile.svg`) whose front face carries the tile drawing through its UVs.
+//! `packages/design/brand/src/tile.svg`) whose front face carries the tile drawing through its UVs.
 //!
 //! Two consumers share this file, so the glTF and the live renderer never drift:
 //! - `brand::model` writes the mesh to `gen/model/<id>.glb` (a module of this crate);
 //! - `gpu_wasm.rs` includes it as the root of a `wasm32-unknown-unknown` cdylib that exports the mesh and
-//!   the per-frame matrices to `assets/brand/web/gpu.ts`, which draws it with WebGPU (`brand::web`, stage `gpu`).
+//!   the per-frame matrices to `packages/design/brand/web/gpu.ts`, which draws it with WebGPU (`brand::web`, stage `gpu`).
 //!
 //! Units: the tile spans -0.5..0.5 on x and y, faces +z; glTF conventions (right-handed, y up,
 //! counter-clockwise front faces, UV origin top-left). No allocation, no float intrinsics from std:

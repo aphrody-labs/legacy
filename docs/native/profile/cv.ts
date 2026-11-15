@@ -1,5 +1,5 @@
 // Renders docs/native/profile/CV.md to a print-ready HTML page in the Aphrody style (brand tokens from
-// assets/brand/gen/tokens/tokens.css, Google Sans Flex), then to PDF with headless Chrome.
+// packages/design/brand/gen/tokens/tokens.css, Google Sans Flex), then to PDF with headless Chrome.
 // The PDF step runs on fr1 (no rendering on the workstation):
 //   bun docs/native/profile/cv.ts            -> docs/profile/CV.html
 //   bun docs/native/profile/cv.ts --pdf      -> also docs/native/profile/CV.pdf (needs google-chrome)
@@ -9,12 +9,12 @@ const DIR = import.meta.dir;
 const ROOT = join(DIR, "..", "..");
 const md = await Bun.file(join(DIR, "CV.md")).text();
 const tokens = await Bun.file(
-  join(ROOT, "assets/brand/gen/tokens/tokens.css"),
+  join(ROOT, "packages/design/brand/gen/tokens/tokens.css"),
 ).text();
 const mark = await Bun.file(
-  join(ROOT, "assets/brand/gen/logo/aphrody-dev.svg"),
+  join(ROOT, "docs/logo/aphrody-dev.svg"),
 ).text();
-const font = join(ROOT, "assets/brand/gen-cache/GoogleSansFlex.ttf");
+const font = join(ROOT, "packages/design/brand/gen-cache/GoogleSansFlex.ttf");
 
 const html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Aphrody Dev</title>

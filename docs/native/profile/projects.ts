@@ -1,4 +1,4 @@
-// Renders the project grid shared by the profile READMEs from assets/brand/brand.toml, so the
+// Renders the project grid shared by the profile READMEs from packages/design/brand/brand.toml, so the
 // cards, icons and one-line purposes stay identical to the brand source.
 // Usage: bun docs/native/profile/projects.ts  (rewrites the <!-- projects --> blocks in place)
 import { join } from "node:path";
@@ -8,7 +8,7 @@ const CDN = "https://cdn.aphrody.com/brand/v1";
 const REPO = "https://github.com/aphrody-labs/src/tree/main";
 type P = { id: string; name: string; tagline: string; path: string };
 const brand = Bun.TOML.parse(
-  await Bun.file(join(ROOT, "assets/brand/brand.toml")).text(),
+  await Bun.file(join(ROOT, "packages/design/brand/brand.toml")).text(),
 ) as { product: P[] };
 
 // Public link targets only: apps whose source lives in a public repository.

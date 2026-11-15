@@ -14,7 +14,6 @@ import {
   buildModernWebGuidanceMdx,
   buildPlanMdx,
   buildPureCLlvmMdx,
-  buildReadme,
 } from "./templates.ts";
 
 export interface Pillar {
@@ -175,7 +174,7 @@ function renderPillar(
     "Scripts:",
     "- `bun packages/core/src/cli.ts index . --all`: reindexes (sqlite var/index/core.db + JSON).",
     `- \`bun packages/core/src/cli.ts users ${p.needles[0]}\`: lists the files that import/call it.`,
-    "- `bun packages/core/src/cli.ts gen-docs`: regenerates README.md, MDX plans, and docs/reference/*.md.",
+    "- `bun packages/core/src/cli.ts gen-docs`: regenerates the MDX plans and docs/reference/*.md (READMEs: `bun scripts/catalog.ts`).",
     "- `bun test ./packages/core/test/`: round-trip bun:ffi <-> core-capi and doc generator tests.",
     "",
   ];
@@ -222,7 +221,7 @@ export interface GenDocsResult {
   snapshot: MonorepoSnapshot;
 }
 
-/** Regenerates README.md, PLAN.mdx, PURE-C-LLVM.mdx, MODERN-WEB-GUIDANCE.mdx, and docs/reference/*.md. */
+/** Regenerates PLAN.mdx, PURE-C-LLVM.mdx, MODERN-WEB-GUIDANCE.mdx, and docs/reference/*.md. */
 export async function generateDocs(
   db: Database,
   srcRoot: string,
@@ -239,11 +238,6 @@ export async function generateDocs(
   const written: string[] = [];
 
   const targets: { key: string; relPath: string; content: () => string }[] = [
-    {
-      key: "readme",
-      relPath: "README.md",
-      content: () => buildReadme(snapshot),
-    },
     {
       key: "plan",
       relPath: "docs/PLAN.mdx",

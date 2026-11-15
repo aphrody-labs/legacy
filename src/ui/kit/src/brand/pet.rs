@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! `gen/pet/`: Volt, the Aphrody pet. Original artwork derived only from the brand identity (a
 //! rounded A-bolt tile with an amber bolt antenna and a screen face, seed blue, amber accent); it
-//! depicts no existing character. Source: `assets/brand/pet/pet.svg` (placeholders below).
+//! depicts no existing character. Source: `packages/design/brand/pet/pet.svg` (placeholders below).
 //!
 //! One pose function per state (idle, wave, think, success, error) drives both outputs, so they never
 //! drift: `pet/<state>.svg` animated in CSS (16 keyframes sampled from the pose, still under
@@ -176,7 +176,7 @@ fn encode(png: &Path, out: &Path, avif: bool) -> Result<()> {
 }
 
 pub(super) fn pet(cx: &mut Ctx<'_>, m: &Manifest, tmp: &Path) -> Result<()> {
-    let src = cx.root.join("assets/brand/pet/pet.svg");
+    let src = cx.root.join("packages/design/brand/pet/pet.svg");
     if !src.is_file() {
         return Ok(());
     }

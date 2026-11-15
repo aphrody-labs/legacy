@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! `ay brand check`: verifies `assets/brand/gen` after `ay brand build`, on the host that built it.
+//! `ay brand check`: verifies `packages/design/brand/gen` after `ay brand build`, on the host that built it.
 //!
 //! - `manifest.json` has the sha256 of `manifest.json.sha256`, and its version and inputs are those of
 //!   `brand.toml` and `inputs.lock.json`;
@@ -80,9 +80,9 @@ fn gltf_problem(path: &Path) -> Option<String> {
     (!out.status.success() || !clean).then(|| format!("{}: gltf-transform validate\n{text}", path.display()))
 }
 
-/// Checks `root/assets/brand/gen`; the error lists every problem.
+/// Checks `root/packages/design/brand/gen`; the error lists every problem.
 pub fn check(root: &Path) -> Result<Checked> {
-    let brand_dir = root.join("assets").join("brand");
+    let brand_dir = root.join("packages").join("design").join("brand");
     let gen_dir = brand_dir.join("gen");
     let mut bad: Vec<String> = Vec::new();
 
@@ -169,7 +169,50 @@ pub fn check(root: &Path) -> Result<Checked> {
         bad.extend(gltf_problem(&gen_dir.join(rel)));
     }
 
+    bad.extend(docs_problems(root, &brand));
+
     if bad.is_empty() { Ok(Checked { files: files.len(), manifest_sha256: sha }) } else { Err(Error::Check(bad)) }
+}
+
+/// The published SVGs of `docs/logo` and `docs/icons`: the Bun layout files exist, every SVG has a `viewBox`
+/// and an accessible title, and no text is left that would need a font.
+fn docs_problems(root: &Path, brand: &Manifest) -> Vec<String> {
+    let mut bad = Vec::new();
+    let docs = root.join("docs");
+    for f in ["logo/logo.svg", "logo/logo.png", "logo/logo-with-wordmark-dark.svg", "logo/logo-with-wordmark-light.svg"] {
+        if !docs.join(f).is_file() {
+            bad.push(format!("docs/{f}: missing"));
+        }
+    }
+    for p in &brand.product {
+        if !docs.join(format!("icons/ecosystem/{}.svg", p.id)).is_file() {
+            bad.push(format!("docs/icons/ecosystem/{}.svg: missing", p.id));
+        }
+    }
+    for t in &brand.kinds {
+        for f in [format!("icons/{}.svg", t.id), format!("icons/glyphs/{}.svg", t.id)] {
+            if !docs.join(&f).is_file() {
+                bad.push(format!("docs/{f}: missing"));
+            }
+        }
+    }
+    let mut present = Vec::new();
+    for d in ["logo", "icons"] {
+        walk(&docs.join(d), &docs, &mut present);
+    }
+    for rel in present.iter().filter(|r| r.ends_with(".svg")) {
+        let text = fs::read_to_string(docs.join(rel)).unwrap_or_default();
+        if !text.contains("viewBox=") {
+            bad.push(format!("docs/{rel}: no viewBox"));
+        }
+        if !text.contains("<title") {
+            bad.push(format!("docs/{rel}: no accessible title"));
+        }
+        if text.contains("<text") || text.contains("font-family") {
+            bad.push(format!("docs/{rel}: text not outlined"));
+        }
+    }
+    bad
 }
 
 #[cfg(test)]

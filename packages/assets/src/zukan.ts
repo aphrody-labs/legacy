@@ -271,7 +271,7 @@ export async function runZukanBrandPipeline(
   iconCount: number;
   errors: string[];
 }> {
-  const brandDir = join(root, "assets", "brand");
+  const brandDir = join(root, "packages", "design", "brand");
   const srcDir = join(brandDir, "src");
   const zukanDir = join(brandDir, "gen", "zukan");
   const iconsDir = join(brandDir, "gen", "icons", "aphrody");
@@ -422,7 +422,7 @@ export async function runZukanBrandPipeline(
     }
   }
 
-  // Canonical crawled palette grounded in Byron Love (#185 IE1 Zeus Sapphire + Blonde + GO Rose + Ares + assets/logo.svg)
+  // Canonical crawled palette grounded in Byron Love (#185 IE1 Zeus Sapphire + Blonde + GO Rose + Ares + brand/src/owner/logo.svg)
   const palette = {
     sapphire: "#135B82",
     deepSapphire: "#0B3B59",
@@ -436,7 +436,7 @@ export async function runZukanBrandPipeline(
 
   // Write W3C SVG 2 brand mark, favicon, and wordmark
   const markSvg = optimizeSvg2(buildBrandMarkSvg2(palette));
-  const wordmarkSource = join(root, "assets", "logo.svg");
+  const wordmarkSource = join(root, "packages", "design", "brand", "src", "owner", "logo.svg");
   const wordmarkSvg = existsSync(wordmarkSource)
     ? optimizeSvg2(readFileSync(wordmarkSource, "utf8"))
     : markSvg;
@@ -596,7 +596,7 @@ export async function runZukanBrandPipeline(
   const symRes = syncMaterialSymbolsDir(symbolsDir);
   errors.push(...symRes.errors);
 
-  // Write canonical assets/brand/brand.toml pointing to crawled Byron Love Zeus Sapphire seed & official symbols
+  // Write canonical packages/design/brand/brand.toml pointing to crawled Byron Love Zeus Sapphire seed & official symbols
   const symList = existsSync(join(symbolsDir, "symbols.json"))
     ? Object.keys(
         JSON.parse(readFileSync(join(symbolsDir, "symbols.json"), "utf8")),

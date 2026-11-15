@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //! The Aphrody brand pipeline behind `ay brand build`.
 //!
-//! One source, `assets/brand/` (`brand.toml`, SVG templates in `src/`), its third-party inputs fetched
+//! One source, `packages/design/brand/` (`brand.toml`, SVG templates in `src/`), its third-party inputs fetched
 //! into `gen-cache/` by `ay assets brand-inputs` (fonts, Material Symbols; commits in `inputs.lock.json`),
-//! one output tree, `assets/brand/gen/` (only the directories of [`OUTPUT_DIRS`] and the manifest; the
+//! one output tree, `packages/design/brand/gen/` (only the directories of [`OUTPUT_DIRS`] and the manifest; the
 //! Zukan crawl keeps `gen/zukan` and `gen/themes`):
 //!
 //! | Output | Content |
@@ -15,6 +15,14 @@
 //! | `banner/` | ANSI truecolor and plain banners for CLIs and TUIs |
 //! | `profile/` | statistics cards from `docs/profile/stats.json` |
 //! | `preview/` | PNG previews for review; gitignored, never in the manifest or on the CDN |
+//!
+//! The published layout (the same as oven-sh/bun, `docs/logo` and `docs/icons`), written outside `gen/` and
+//! rebuilt from scratch on every build: `docs/logo/{logo.svg, logo.png, logo-mono.svg,
+//! logo-with-wordmark-dark.svg, logo-with-wordmark-light.svg}` for the primary organisation and
+//! `<org>{,-wordmark-light,-wordmark-dark}.svg` for each; `docs/icons/<type>.svg` (one tile per `[[type]]`
+//! of brand.toml, the global types of the monorepo), `docs/icons/glyphs/<type>.svg` (the same glyph in
+//! `currentColor`) and `docs/icons/ecosystem/<product>.svg`. Every one has a `viewBox`, an accessible
+//! `<title>` and no text left (outlined by usvg); `ay brand check` verifies it. `docs/badges/` holds the README badges.
 //!
 //! `ay brand check` verifies a build (manifest sha256, URLs, sprite, glTF).
 //!
@@ -93,6 +101,9 @@ fn read(path: &Path) -> Result<String> {
 /// Directories of `gen/` that `build` writes and deletes first (the rest of `gen/` belongs to other tools).
 pub const OUTPUT_DIRS: &[&str] = &["badges", "banner", "env", "fonts", "gpu", "icons", "img", "logo", "model", "og", "pet", "preview", "profile", "symbols", "video"];
 
+/// Directories of `docs/` that `build` writes and deletes first (the published logos and icons).
+pub const DOCS_DIRS: &[&str] = &["logo", "icons", "badges"];
+
 /// A third-party input of `gen-cache/`; a missing file says which command fetches it.
 fn input(path: &Path) -> Result<String> {
     if !path.is_file() {
@@ -126,6 +137,9 @@ pub struct Manifest {
     pub org: Vec<Org>,
     #[serde(default)]
     pub product: Vec<Product>,
+    /// The global types of the monorepo (crate, package, app, ...): one icon each in `docs/icons`.
+    #[serde(default, rename = "type")]
+    pub kinds: Vec<Kind>,
     #[serde(default)]
     pub badge: Vec<Badge>,
     /// Web asset stages (web.rs): absent sections are skipped.
@@ -163,6 +177,18 @@ pub struct Org {
     pub tagline: String,
     pub container: String,
     pub url: String,
+    /// The organisation whose files take the unprefixed names of `docs/logo` (`logo.svg`, ...).
+    #[serde(default)]
+    pub primary: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Kind {
+    pub id: String,
+    pub name: String,
+    pub symbol: String,
+    pub hue: f64,
+    pub description: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -339,7 +365,7 @@ impl Svg {
             attributes_indent: usvg::Indent::None,
             ..usvg::WriteOptions::default()
         };
-        Ok(tree.to_string(&opt))
+        Ok(tidy(&tree.to_string(&opt)))
     }
 
     /// Right edge of the drawn content, for sizing a canvas to its text.
@@ -397,6 +423,78 @@ pub fn strip_comments(svg: &str) -> String {
         rest = rest[i..].find("-->").map_or("", |j| &rest[i + j + 3..]);
     }
     out.push_str(rest);
+    out
+}
+
+/// Names the root `<svg>` for assistive technology: `role="img"`, `aria-labelledby`, a `<title>` and, when
+/// `desc` is not empty, a `<desc>`.
+#[must_use]
+pub fn titled(svg: &str, title: &str, desc: &str) -> String {
+    let Some(open) = svg.find("<svg") else { return svg.to_string() };
+    let Some(end) = svg[open..].find('>').map(|j| open + j) else { return svg.to_string() };
+    let (ids, desc_el) = if desc.is_empty() { ("ay-title", String::new()) } else { ("ay-title ay-desc", format!("<desc id=\"ay-desc\">{}</desc>", xml_text(desc))) };
+    let mut out = String::with_capacity(svg.len() + 160);
+    out.push_str(&svg[..end]);
+    out.push_str(&format!(" role=\"img\" aria-labelledby=\"{ids}\"><title id=\"ay-title\">{}</title>{desc_el}", xml_text(title)));
+    out.push_str(&svg[end + 1..]);
+    out
+}
+
+/// A hand-written template as one line: comments and the whitespace between tags removed (not run through usvg,
+/// which would resolve `currentColor` to a fixed color).
+#[must_use]
+pub fn compact(svg: &str) -> String {
+    strip_comments(svg).lines().map(str::trim).filter(|l| !l.is_empty()).collect::<Vec<_>>().join("")
+}
+
+/// Last pass over usvg output: a `viewBox` (usvg drops it when it equals the size, and a scalable SVG needs one),
+/// default attributes removed, path data without the separators that carry no information.
+#[must_use]
+pub fn tidy(svg: &str) -> String {
+    let mut out = svg.replace(" stroke=\"none\"", "").replace(" fill-rule=\"nonzero\"", "");
+    if let Some(open) = out.find("<svg") {
+        if let Some(close) = out[open..].find('>').map(|j| open + j) {
+            let tag = &out[open..close];
+            let attr = |name: &str| {
+                let key = format!(" {name}=\"");
+                tag.find(&key).and_then(|i| tag[i + key.len()..].find('"').map(|j| tag[i + key.len()..i + key.len() + j].to_string()))
+            };
+            if !tag.contains("viewBox=") {
+                if let (Some(w), Some(h)) = (attr("width"), attr("height")) {
+                    let at = if tag.ends_with('/') { close - 1 } else { close };
+                    out.insert_str(at, &format!(" viewBox=\"0 0 {w} {h}\""));
+                }
+            }
+        }
+    }
+    let mut res = String::with_capacity(out.len());
+    let mut rest = out.as_str();
+    while let Some(i) = rest.find(" d=\"") {
+        let start = i + 4;
+        res.push_str(&rest[..start]);
+        let Some(len) = rest[start..].find('"') else { rest = &rest[start..]; break };
+        res.push_str(&compact_path(&rest[start..start + len]));
+        rest = &rest[start + len..];
+    }
+    res.push_str(rest);
+    res
+}
+
+/// `M 12 0 L 36 0 C -0 5.37` to `M12 0L36 0C0 5.37`: no space around a command or before a minus sign, no negative zero.
+fn compact_path(d: &str) -> String {
+    let d = d.split(' ').map(|t| if t == "-0" { "0" } else { t }).collect::<Vec<_>>().join(" ");
+    let chars: Vec<char> = d.chars().collect();
+    let mut out = String::with_capacity(d.len());
+    for (i, &c) in chars.iter().enumerate() {
+        if c == ' ' {
+            let prev_cmd = out.chars().last().is_none_or(|p| p.is_ascii_alphabetic());
+            let next = chars.get(i + 1);
+            if prev_cmd || next.is_none_or(|n| n.is_ascii_alphabetic() || *n == '-') {
+                continue;
+            }
+        }
+        out.push(c);
+    }
     out
 }
 
@@ -542,10 +640,13 @@ pub struct AccountStats {
 /// Options of `ay brand build`.
 #[derive(Debug, Clone, Default)]
 pub struct BuildOptions {
-    /// Monorepo root (the directory holding `assets/brand`).
+    /// Monorepo root (the directory holding `packages/design/brand`).
     pub root: PathBuf,
     /// Copy web icon sets and `.ico` files to the `deploy` and `ico` paths of `brand.toml`.
     pub deploy: bool,
+    /// Only the published SVGs and the PNG of `docs/`: no icon sets, cards, banners, web stages or manifest, so the
+    /// font and the 48 px glyphs of `gen-cache/` are the only inputs (no image encoder needed).
+    pub docs_only: bool,
 }
 
 /// What a build wrote, relative to the root.
@@ -560,6 +661,7 @@ pub struct Report {
 
 struct Ctx<'a> {
     root: &'a Path,
+    docs_only: bool,
     gen_dir: PathBuf,
     svg: Svg,
     report: Report,
@@ -571,25 +673,39 @@ struct Ctx<'a> {
 
 impl Ctx<'_> {
     fn put(&mut self, rel: &str, bytes: impl AsRef<[u8]>) -> Result<()> {
+        if self.docs_only {
+            return Ok(());
+        }
         let bytes = bytes.as_ref();
         write(&self.gen_dir.join(rel), bytes)?;
-        self.report.files.push((format!("assets/brand/gen/{rel}"), bytes.len() as u64));
+        self.report.files.push((format!("packages/design/brand/gen/{rel}"), bytes.len() as u64));
         self.hashes.insert(rel.to_string(), (bytes.len() as u64, web::sha256_hex(bytes)));
+        Ok(())
+    }
+
+    /// A published file: written under `docs/` (outside the manifest), listed in the report.
+    fn publish(&mut self, rel: &str, bytes: impl AsRef<[u8]>) -> Result<()> {
+        let bytes = bytes.as_ref();
+        write(&self.root.join("docs").join(rel), bytes)?;
+        self.report.files.push((format!("docs/{rel}"), bytes.len() as u64));
         Ok(())
     }
 
     /// A review preview: written under gen/preview, outside the manifest.
     fn preview(&mut self, rel: &str, bytes: impl AsRef<[u8]>) -> Result<()> {
+        if self.docs_only {
+            return Ok(());
+        }
         let bytes = bytes.as_ref();
         write(&self.gen_dir.join("preview").join(rel), bytes)?;
-        self.report.files.push((format!("assets/brand/gen/preview/{rel}"), bytes.len() as u64));
+        self.report.files.push((format!("packages/design/brand/gen/preview/{rel}"), bytes.len() as u64));
         Ok(())
     }
 }
 
 /// Renders the whole brand.
 pub fn build(opts: &BuildOptions) -> Result<Report> {
-    let brand_dir = opts.root.join("assets").join("brand");
+    let brand_dir = opts.root.join("packages").join("design").join("brand");
     let manifest = Manifest::load(&brand_dir.join("brand.toml"))?;
     let palette = Palette::new();
     let svg = Svg::new(&manifest.brand.font, &brand_dir.join(&manifest.brand.font_file))?;
@@ -602,13 +718,19 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     let gen_dir = brand_dir.join("gen");
     // Start from none of our outputs so that no stale file survives into the manifest; inputs (gen-cache/)
     // and the outputs of other tools (gen/zukan, gen/themes) stay.
-    for d in OUTPUT_DIRS {
+    for d in OUTPUT_DIRS.iter().filter(|_| !opts.docs_only) {
         let dir = gen_dir.join(d);
         if dir.exists() {
             fs::remove_dir_all(&dir).map_err(|e| Error::Io(dir.clone(), e))?;
         }
     }
-    for f in ["manifest.json", "manifest.json.sha256"] {
+    for d in DOCS_DIRS {
+        let dir = opts.root.join("docs").join(d);
+        if dir.exists() {
+            fs::remove_dir_all(&dir).map_err(|e| Error::Io(dir.clone(), e))?;
+        }
+    }
+    for f in ["manifest.json", "manifest.json.sha256"].iter().filter(|_| !opts.docs_only) {
         let file = gen_dir.join(f);
         if file.exists() {
             fs::remove_file(&file).map_err(|e| Error::Io(file.clone(), e))?;
@@ -616,6 +738,7 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     }
     let mut cx = Ctx {
         root: &opts.root,
+        docs_only: opts.docs_only,
         gen_dir,
         svg,
         report: Report::default(),
@@ -624,6 +747,7 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     };
     let src = |name: &str| read(&brand_dir.join("src").join(name)).map(|s| if name.ends_with(".svg") { strip_comments(&s) } else { s });
     let (mark_t, tile_t, word_t, og_t) = (src("mark.svg")?, src("tile.svg")?, src("wordmark.svg")?, src("og.svg")?);
+    let (mono_t, glyph_t) = (src("mark-mono.svg")?, src("glyph.svg")?);
 
     let accent = hex(palette.accent);
     let font = font_stack(&manifest.brand);
@@ -632,7 +756,16 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     for org in &manifest.org {
         let (container, glyph) = palette.org(&org.container);
         let mark = fill(&mark_t, &[("container", &hex(container)), ("glyph", &hex(glyph)), ("bolt", &accent)]);
-        cx.put(&format!("logo/{}.svg", org.id), cx.svg.optimize(&mark)?)?;
+        let title = format!("{} {}", org.name, org.suffix);
+        let mark_svg = titled(&cx.svg.optimize(&mark)?, &title, &org.tagline);
+        cx.put(&format!("logo/{}.svg", org.id), &mark_svg)?;
+        cx.publish(&format!("logo/{}.svg", org.id), &mark_svg)?;
+        if org.primary {
+            let png = cx.svg.png(&mark, 512, 512)?;
+            cx.publish("logo/logo.svg", &mark_svg)?;
+            cx.publish("logo/logo.png", png)?;
+            cx.publish("logo/logo-mono.svg", titled(&compact(&mono_t), &title, &org.tagline))?;
+        }
         for dark in [false, true] {
             let scheme = if dark { &palette.dark } else { &palette.light };
             let vars = |width: &str| {
@@ -649,13 +782,19 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
             let right = cx.svg.content_right(&vars("800"))?;
             let width = format!("{}", (right + 8.0).ceil() as u32);
             let theme = if dark { "dark" } else { "light" };
-            cx.put(&format!("logo/{}-wordmark-{theme}.svg", org.id), cx.svg.optimize(&vars(&width))?)?;
+            let wordmark = titled(&cx.svg.optimize(&vars(&width))?, &title, &org.tagline);
+            cx.put(&format!("logo/{}-wordmark-{theme}.svg", org.id), &wordmark)?;
+            cx.publish(&format!("logo/{}-wordmark-{theme}.svg", org.id), &wordmark)?;
+            if org.primary {
+                cx.publish(&format!("logo/logo-with-wordmark-{theme}.svg"), &wordmark)?;
+            }
             cx.preview(&format!("{}-wordmark-{theme}.png", org.id), cx.svg.png_scaled(&vars(&width), 3.0)?)?;
         }
-        let title = format!("{} {}", org.name, org.suffix);
-        icon_set(&mut cx, &org.id, &title, &mark, container)?;
-        social(&mut cx, &og_t, &palette, &font, &org.id, &mark, &title, &org.tagline, &org.url)?;
-        banner(&mut cx, &org.id, &mark, &title, &org.tagline, palette.dark.argb("primary"))?;
+        if !opts.docs_only {
+            icon_set(&mut cx, &org.id, &title, &mark, container)?;
+            social(&mut cx, &og_t, &palette, &font, &org.id, &mark, &title, &org.tagline, &org.url)?;
+            banner(&mut cx, &org.id, &mark, &title, &org.tagline, palette.dark.argb("primary"))?;
+        }
     }
 
     // Products: tile, icon set, social card, banner, deploy.
@@ -674,6 +813,11 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
             ("bolt", &accent),
             ("symbol", &symbol),
         ]);
+        let ecosystem = titled(&cx.svg.optimize(&tile)?, &p.name, &p.tagline);
+        cx.publish(&format!("icons/ecosystem/{}.svg", p.id), ecosystem)?;
+        if opts.docs_only {
+            continue;
+        }
         icon_set(&mut cx, &p.id, &p.name, &tile, container)?;
         if p.msix {
             // MSIX visual assets (Package.appxmanifest): 150 and 50 px full drawing, 44 px small variant.
@@ -689,7 +833,26 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
         }
     }
 
+    // Global types of the monorepo: a colored tile and a `currentColor` glyph each, published in docs/icons.
+    for t in &manifest.kinds {
+        let sym_file = brand_dir.join("gen-cache").join("symbols").join("48").join(format!("{}.svg", t.symbol));
+        let symbol = symbol_path(&input(&sym_file)?)?;
+        let container = palette.product(t.hue);
+        let ratio = contrast(0xFFFF_FFFF, container);
+        if ratio < 4.5 {
+            cx.report.warnings.push(format!("type {}: glyph contrast {ratio:.2} < 4.5", t.id));
+        }
+        let tile = fill(&tile_t, &[("container", &hex(container)), ("glyph", "#FFFFFF"), ("bolt", &accent), ("symbol", &symbol)]);
+        let svg = titled(&cx.svg.optimize(&tile)?, &t.name, &t.description);
+        cx.publish(&format!("icons/{}.svg", t.id), svg)?;
+        let glyph = titled(&compact(&fill(&glyph_t, &[("symbol", &symbol)])), &t.name, &t.description);
+        cx.publish(&format!("icons/glyphs/{}.svg", t.id), glyph)?;
+    }
+
     badges(&mut cx, &manifest, &palette, &font)?;
+    if opts.docs_only {
+        return Ok(cx.report);
+    }
     stats_cards(&mut cx, &palette, &font)?;
 
     // Web stages: symbols, fonts, responsive images, wallpapers, captures and video, animated
@@ -818,7 +981,9 @@ fn badges(cx: &mut Ctx<'_>, m: &Manifest, p: &Palette, font: &str) -> Result<()>
             vfg = hex(p.light.argb("on-primary")),
             vx = lw + 10.0,
         );
-        cx.put(&format!("badges/{}.svg", b.id), cx.svg.optimize(&svg)?)?;
+        let badge = titled(&cx.svg.optimize(&svg)?, &format!("{}: {value}", b.label), "");
+        cx.put(&format!("badges/{}.svg", b.id), &badge)?;
+        cx.publish(&format!("badges/{}.svg", b.id), &badge)?;
     }
     Ok(())
 }
@@ -941,6 +1106,25 @@ fn deploy(cx: &mut Ctx<'_>, p: &Product) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn titled_names_the_root_and_escapes() {
+        let svg = titled("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\"><path d=\"M0 0\"/></svg>", "A & B", "x < y");
+        assert!(svg.contains("role=\"img\" aria-labelledby=\"ay-title ay-desc\"><title id=\"ay-title\">A &amp; B</title><desc id=\"ay-desc\">x &lt; y</desc><path"));
+        assert!(!titled("<svg viewBox=\"0 0 1 1\"></svg>", "t", "").contains("<desc"));
+    }
+
+    #[test]
+    fn tidy_adds_view_box_and_packs_paths() {
+        let out = tidy("<svg width=\"48\" height=\"24\" xmlns=\"x\"><path fill=\"#fff\" stroke=\"none\" d=\"M 12 0 L 36 -0 C -0 5.37 -2 3\"/></svg>");
+        assert_eq!(out, "<svg width=\"48\" height=\"24\" xmlns=\"x\" viewBox=\"0 0 48 24\"><path fill=\"#fff\" d=\"M12 0L36 0C0 5.37-2 3\"/></svg>");
+        assert_eq!(tidy(&out), out, "idempotent");
+    }
+
+    #[test]
+    fn compact_drops_comments_and_whitespace_between_tags() {
+        assert_eq!(compact("<svg>\n  <!-- c -->\n  <path d=\"M0\"/>\n</svg>\n"), "<svg><path d=\"M0\"/></svg>");
+    }
+
     use super::*;
 
     #[test]
@@ -989,7 +1173,7 @@ mod tests {
 
     #[test]
     fn sources_render_without_font() {
-        let root = Path::new(env!("SRC_ROOT")).join("assets/brand/src");
+        let root = Path::new(env!("SRC_ROOT")).join("packages/design/brand/src");
         let svg = Svg::new("X", Path::new("")).unwrap();
         let mark = fill(&strip_comments(&read(&root.join("mark.svg")).unwrap()), &[("container", "#3355FF"), ("glyph", "#FFFFFF"), ("bolt", "#FFB300")]);
         let png = svg.png(&mark, 32, 32).unwrap();

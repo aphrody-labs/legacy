@@ -1,0 +1,6 @@
+Material Symbols Rounded: the variable font, the 48 px fill 1 glyph of each product tile and the 24 px outline and fill
+SVGs (weight 400, grade 0) of `ay brand build`: sprite, per-icon SVGs, symbols.json and the subset font.
+Copyright Google LLC. Licensed under the Apache License, Version 2.0
+(https://www.apache.org/licenses/LICENSE-2.0).
+Source: https://github.com/google/material-design-icons, commit recorded in packages/design/brand/inputs.lock.json.
+Files are unmodified; refetch with `ay assets brand-inputs`.

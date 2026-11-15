@@ -126,7 +126,7 @@ pub enum Cmd {
     /// Pure-Rust SSH (russh): exec <host|all|a,b> -- cmd, cp, hosts, check
     #[command(disable_help_flag = true)]
     Ssh(Rest),
-    /// Brand assets (assets/brand): build [--deploy], banner <id>, check-ico (runs `aphrody-brand`)
+    /// Brand assets (packages/design/brand): build [--deploy], banner <id>, check-ico (runs `aphrody-brand`)
     #[command(disable_help_flag = true)]
     Brand(Rest),
     /// Runtimes: Python engines (uv, RustPython), Bun versions, package managers, PyTorch
