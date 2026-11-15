@@ -1,7 +1,7 @@
-// Graphe des fonctionnalités de bun (amont), extrait de l'arbre source sans rien compiler.
-// Usage : bun sdk/tools/bun-graph.ts <racine-bun> [--out docs/bun] -> feature-graph.json + feature-graph.md
-// Sources lues : src/trim/features/*.def (modèle trim), src/codegen/builtins/host/features-*.builtins.ts (built-in -> fonctionnalité),
-// Cargo.toml (crates), scripts/build/deps (vendeurs), BunObject.cpp (Bun.*), packages/bun-types, src/js, *.bind.ts, C++, scripts de build.
+// Feature graph of bun (upstream), extracted from the source tree without compiling anything.
+// Usage: bun sdk/tools/bun-graph.ts <bun-root> [--out docs/bun] -> feature-graph.json + feature-graph.md
+// Sources read: src/trim/features/*.def (trim model), src/codegen/builtins/host/features-*.builtins.ts (built-in -> feature),
+// Cargo.toml (crates), scripts/build/deps (vendors), BunObject.cpp (Bun.*), packages/bun-types, src/js, *.bind.ts, C++, build scripts.
 import {
   existsSync,
   mkdirSync,
@@ -20,7 +20,7 @@ const rootArg = argv.find(
 );
 if (!rootArg) {
   console.error(
-    "usage : bun sdk/tools/bun-graph.ts <racine-bun> [--out docs/bun]",
+    "usage: bun sdk/tools/bun-graph.ts <bun-root> [--out docs/bun]",
   );
   process.exit(2);
 }
@@ -30,7 +30,7 @@ const outDir = resolve(
   outIdx >= 0 ? (argv[outIdx + 1] ?? "docs/bun") : "docs/bun",
 );
 
-// ---------- Tables de regroupement (seule donnée écrite à la main ; reprise dans le .md) ----------
+// ---------- Grouping tables (the only hand-written data; repeated in the .md) ----------
 
 type DomainSpec = {
   id: string;
@@ -41,7 +41,7 @@ type DomainSpec = {
   apis: string[];
 };
 
-/** Domaines : répertoires/fichiers (vérifiés), fonctionnalités trim et préfixes d'API rattachés. */
+/** Domains: directories/files (checked), trim features and attached API prefixes. */
 const DOMAINS: DomainSpec[] = [
   {
     id: "bun-apis",
@@ -191,7 +191,7 @@ const DOMAINS: DomainSpec[] = [
   },
   {
     id: "transpiler",
-    label: "Transpileur (parseur, printer, résolveur)",
+    label: "Transpiler (parser, printer, resolver)",
     dirs: [
       "src/transpiler",
       "src/js_parser",
@@ -223,7 +223,7 @@ const DOMAINS: DomainSpec[] = [
   },
   {
     id: "node-compat",
-    label: "Compatibilité Node (node:*)",
+    label: "Node compatibility (node:*)",
     dirs: [
       "src/js/node",
       "src/runtime/node",
@@ -316,7 +316,7 @@ const DOMAINS: DomainSpec[] = [
   },
   {
     id: "event-loop-io",
-    label: "Boucle d'événements, E/S, système",
+    label: "Event loop, I/O, system",
     dirs: [
       "src/event_loop",
       "src/io",
@@ -341,7 +341,7 @@ const DOMAINS: DomainSpec[] = [
   },
   {
     id: "core",
-    label: "Socle (alloc, collections, chaînes)",
+    label: "Foundation (alloc, collections, strings)",
     dirs: [
       "src/bun_core",
       "src/bun_core_macros",
@@ -362,14 +362,14 @@ const DOMAINS: DomainSpec[] = [
   },
   {
     id: "trim",
-    label: "Modèle trim (fonctionnalités retirables)",
+    label: "Trim model (removable features)",
     dirs: ["src/trim"],
     features: [],
     apis: [],
   },
   {
     id: "build-system",
-    label: "Système de build et codegen",
+    label: "Build system and codegen",
     dirs: ["scripts/build", "src/codegen"],
     files: ["Cargo.toml", "package.json"],
     features: [],
@@ -377,10 +377,10 @@ const DOMAINS: DomainSpec[] = [
   },
 ];
 
-/** Crate *_sys -> nom de dépendance vendue quand ils diffèrent. */
+/** *_sys crate -> vendored dependency name when they differ. */
 const VENDOR_ALIASES: Record<string, string> = { tcc: "tinycc" };
 
-/** Recherche d'absence : termes WebGPU dans les sources. */
+/** Absence search: WebGPU terms in the sources. */
 const WEBGPU_TERMS = /webgpu|navigator\.gpu|GPUAdapter|GPUDevice|wgpu|dawn/i;
 
 // ---------- Graphe ----------
@@ -456,7 +456,7 @@ const addApi = (n: GNode, a: string) => {
   if (!n.api.includes(a)) n.api.push(a);
 };
 
-// ---------- Index des fichiers ----------
+// ---------- File index ----------
 
 const CODE = /\.(rs|cpp|cc|c|h|hpp|mm|ts|tsx|js|mjs|cjs|toml|idl|def)$/;
 const rel = (p: string) => p.replaceAll("\\", "/");
@@ -545,7 +545,7 @@ const pkg = JSON.parse(
   read("package.json") || readFileSync(join(root, "package.json"), "utf8"),
 ) as { version?: string };
 
-// ---------- 1. Modèle trim (src/trim/features/*.def) ----------
+// ---------- 1. Trim model (src/trim/features/*.def) ----------
 
 type FeatureRec = {
   name: string;
@@ -573,10 +573,10 @@ const trimApi: {
   loadFeatures?: (r: string) => { features?: unknown; trimFeatures?: unknown };
 } = await import(trimModule);
 if (typeof trimApi.loadFeatures !== "function")
-  throw new Error("scripts/build/trim/features.ts : loadFeatures absent");
+  throw new Error("scripts/build/trim/features.ts: loadFeatures missing");
 const model = trimApi.loadFeatures(root);
 if (!Array.isArray(model.features) || !Array.isArray(model.trimFeatures))
-  throw new Error("modèle trim : forme inattendue");
+  throw new Error("trim model: unexpected shape");
 const featureDefs = new Bun.Glob("src/trim/features/*.def").scanSync({
   cwd: root,
 });
@@ -617,10 +617,10 @@ for (const t of model.trimFeatures as TrimRec[]) {
   for (const f of t.features) edge(n.id, `feature:${f}`, "includes");
 }
 
-// ---------- 2. Built-ins -> fonctionnalités (cale de bun-builtins-table) ----------
+// ---------- 2. Built-ins -> features (shim of bun-builtins-table) ----------
 
-// Les fichiers features-*.builtins.ts importent la bibliothèque du moteur (WebKit, absente) : on la remplace par un
-// enregistreur. b.extend(chemin, { usesFeature }) est capté ; tout le reste rend un mandataire inerte.
+// The features-*.builtins.ts files import the engine library (WebKit, absent): it is replaced by a
+// recorder. b.extend(path, { usesFeature }) is captured; everything else returns an inert proxy.
 type Use = { feature: string; conditional: boolean };
 const builtinUses = new Map<string, { uses: Use[]; from: Set<string> }>();
 const nativeKinds = new Map<string, string>();
@@ -687,9 +687,9 @@ try {
       };
       walk(mod.default);
     } catch (e) {
-      // Repli : lecture textuelle des appels extendAll([...], "chemin", ...) aux littéraux seuls.
+      // Fallback: textual read of extendAll([...], "path", ...) calls with plain literals only.
       notes.push(
-        `${file} : import impossible (${String(e).split("\n")[0]}), repli textuel`,
+        `${file}: import failed (${String(e).split("\n")[0]}), textual fallback`,
       );
       const t = read(file);
       for (const m of t.matchAll(
@@ -751,7 +751,7 @@ for (const f of files)
     if (c) rsByCrate.set(c, [...(rsByCrate.get(c) ?? []), f]);
   }
 const vendorOfPath = (p: string) => {
-  // Crate de l'arbre hors workspace (ex. proc-macro) : nœud crate ; sinon source récupérée au build.
+  // Tree crate outside the workspace (e.g. proc-macro): crate node; otherwise source fetched at build.
   const inTree = (tomlOf(`${p}/Cargo.toml`) as { package?: { name?: string } })
     .package?.name;
   if (inTree) {
@@ -765,7 +765,7 @@ const vendorOfPath = (p: string) => {
   }
   const n = node(`vendor:${posix.basename(p)}`, "vendor");
   addPath(n, p);
-  attrs(n).source ??= "chemin Cargo (récupéré au build)";
+  attrs(n).source ??= "Cargo path (fetched at build)";
   return n.id;
 };
 for (const dir of members) {
@@ -820,7 +820,7 @@ for (const dir of members) {
   if (external.size) a.externalCrates = [...external].sort();
 }
 
-// Dépendances vendues (scripts/build/deps/*.ts) et rattachement aux crates *_sys.
+// Vendored dependencies (scripts/build/deps/*.ts) and attachment to the *_sys crates.
 const depFiles = [
   ...new Bun.Glob("scripts/build/deps/*.ts").scanSync({ cwd: root }),
 ]
@@ -858,7 +858,7 @@ for (const f of depFiles.sort()) {
       commitValue = [...consts.entries()].find(([k]) =>
         k.endsWith("_VERSION"),
       )?.[1];
-    // Premier paragraphe du commentaire d'en-tête.
+    // First paragraph of the header comment.
     const head = /^\/\*\*\s*\n((?:\s*\*[^\n]*\n)+?)\s*\*\s*\n/.exec(t)?.[1];
     const about = head
       ?.split("\n")
@@ -867,7 +867,7 @@ for (const f of depFiles.sort()) {
       .join(" ")
       .slice(0, 300);
     Object.assign(a, {
-      source: inTree ? "dans l'arbre" : (kind ?? "inconnu"),
+      source: inTree ? "in tree" : (kind ?? "unknown"),
       ...(repo ? { repo } : {}),
       ...(commitValue ? { commit: commitValue } : {}),
       ...(patchesOf(body).length ? { patches: patchesOf(body) } : {}),
@@ -892,7 +892,7 @@ for (const pkgDir of ["packages/bun-usockets", "packages/bun-uws"])
   if (existsSync(join(root, pkgDir))) {
     const n = node(`vendor:${posix.basename(pkgDir)}`, "vendor");
     addPath(n, pkgDir);
-    attrs(n).source = "dans l'arbre (packages/)";
+    attrs(n).source = "in tree (packages/)";
     edge("crate:bun_uws_sys", n.id, "links");
   }
 
@@ -905,7 +905,7 @@ const bunObjectCpp = "src/jsc/bindings/BunObject.cpp";
   const begin = t.indexOf("@begin bunObjectTable");
   const end = t.indexOf("@end", begin);
   if (begin < 0 || end < 0)
-    notes.push(`${bunObjectCpp} : table bunObjectTable introuvable`);
+    notes.push(`${bunObjectCpp}: bunObjectTable not found`);
   else {
     const startLine = lineOf(t, begin);
     t.slice(begin, end)
@@ -928,7 +928,7 @@ const bunObjectCpp = "src/jsc/bindings/BunObject.cpp";
   }
 }
 
-// 4b. Déclarations de types (packages/bun-types).
+// 4b. Type declarations (packages/bun-types).
 function stripComments(t: string) {
   return t
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
@@ -991,7 +991,7 @@ for (const f of files.filter(
 for (const n of nodes.values())
   if (n.attrs?.bunObject) n.attrs.typed = typedBun.has(n.label.slice(4));
 
-// 4c. Fichiers *.bind.ts (bindgen) : modules Rust, fonctions exportées, symboles C, fonctionnalité.
+// 4c. *.bind.ts files (bindgen): Rust modules, exported functions, C symbols, feature.
 const bindFiles = files.filter((f) => f.endsWith(".bind.ts"));
 const bindByBase = new Map<string, string>();
 for (const f of bindFiles) {
@@ -1028,7 +1028,7 @@ for (const f of bindFiles) {
   }
 }
 
-// 4d. Modules JS intégrés (src/js) : spécificateur, exports, imports, appels natifs.
+// 4d. Built-in JS modules (src/js): specifier, exports, imports, native calls.
 const moduleFiles = new Map<string, string>();
 const specOf = (f: string): string | undefined => {
   const m = /^src\/js\/(bun|node|internal|thirdparty)\/(.+)\.(ts|js)$/.exec(f);
@@ -1129,7 +1129,7 @@ for (const [spec, f] of [...moduleFiles].sort()) {
   attrs(n).files = filesUnder(builtinsDir).length;
 }
 
-// 4e. Built-ins (étape 2) -> nœuds api/module/natifs et arêtes « uses ».
+// 4e. Built-ins (step 2) -> api/module/native nodes and "uses" edges.
 const isModuleSpec = (p: string) =>
   moduleFiles.has(p) || nodes.has(`module:${p}`);
 const topModuleOf = (p: string) => {
@@ -1305,7 +1305,7 @@ for (const d of DOMAINS) {
   for (const h of hosts) edge(n.id, `crate:${h}`, "part-of");
   for (const f of d.features) {
     if (!nodes.has(`feature:${f}`))
-      missing.push(`${d.id}: fonctionnalité ${f}`);
+      missing.push(`${d.id}: feature ${f}`);
     else edge(n.id, `feature:${f}`, "implements");
   }
   for (const x of nodes.values()) {
@@ -1332,7 +1332,7 @@ for (const d of DOMAINS) {
       edge(n.id, x.id, "exposes");
   }
 }
-// Arêtes domaine -> domaine : dépendances Cargo des crates contenues + références `bun_x::` / `crate::m` du code Rust.
+// Domain -> domain edges: Cargo dependencies of the contained crates + `bun_x::` / `crate::m` references in the Rust code.
 for (const d of DOMAINS) {
   const from = `domain:${d.id}`;
   for (const f of domainFiles.get(d.id) ?? []) {
@@ -1380,7 +1380,7 @@ Object.assign(attrs(webgpu), {
   hitCount: webgpuHits.length,
 });
 
-// Fonctionnalités référencées mais non déclarées dans le modèle trim.
+// Features referenced but not declared in the trim model.
 const undeclared = [...edges.values()]
   .filter((e) => e.to.startsWith("feature:") && !nodes.has(e.to))
   .map((e) => e.to);
@@ -1392,11 +1392,11 @@ const dangling = [...edges.values()].filter(
 for (const e of dangling) edges.delete(`${e.from}\u0000${e.kind}\u0000${e.to}`);
 if (dangling.length)
   notes.push(
-    `${dangling.length} arête(s) vers un nœud inconnu retirée(s) : ${[...new Set(dangling.map((e) => e.to))].slice(0, 8).join(", ")}`,
+    `${dangling.length} edge(s) to an unknown node removed: ${[...new Set(dangling.map((e) => e.to))].slice(0, 8).join(", ")}`,
   );
 if (missing.length)
   notes.push(
-    `chemins/fonctionnalités de la table DOMAINS introuvables : ${missing.join(" ; ")}`,
+    `paths/features of the DOMAINS table not found: ${missing.join(" ; ")}`,
   );
 
 // ---------- Sortie ----------
@@ -1460,15 +1460,15 @@ const list = (xs: string[], max: number) =>
   xs.length > max
     ? `${xs.slice(0, max).join(", ")} … (+${xs.length - max})`
     : xs.join(", ");
-md.push("# Graphe des fonctionnalités de bun (amont)");
+md.push("# Feature graph of bun (upstream)");
 md.push("");
 md.push(
-  `Généré par \`sdk/tools/bun-graph.ts\` le ${generatedAt} depuis bun ${pkg.version ?? "?"} @ \`${commit.slice(0, 12)}\` (${commitDate}). Ne pas éditer : \`bun sdk/tools/bun-graph.ts <racine-bun>\`. Données complètes : [feature-graph.json](feature-graph.json).`,
+  `Generated by \`sdk/tools/bun-graph.ts\` on ${generatedAt} from bun ${pkg.version ?? "?"} @ \`${commit.slice(0, 12)}\` (${commitDate}). Do not edit: \`bun sdk/tools/bun-graph.ts <bun-root>\`. Full data: [feature-graph.json](feature-graph.json).`,
 );
 md.push("");
 md.push("## Comptes");
 md.push("");
-md.push("| Nœuds | n | | Arêtes | n |");
+md.push("| Nodes | n | | Edges | n |");
 md.push("|---|---|---|---|---|");
 const nk = Object.entries(graph.counts.nodes).sort();
 const ek = Object.entries(graph.counts.edges).sort();
@@ -1478,7 +1478,7 @@ for (let i = 0; i < Math.max(nk.length, ek.length); i++)
   );
 md.push("");
 md.push(
-  "Sources : modèle trim `src/trim/features/*.def` (fonctionnalités, trim-features) ; `src/codegen/builtins/host/features-*.builtins.ts` (built-in -> fonctionnalité) ; `Cargo.toml` (crates, dépendances `path`) ; `scripts/build/deps/*.ts` (vendeurs, `fetchDeps`) ; `src/jsc/bindings/BunObject.cpp` (`bunObjectTable`) ; `packages/bun-types/*.d.ts` ; `src/js/**` (modules, `require`, `$bindgen`/`$newCppFunction`) ; `*.bind.ts` (bindgen) ; C/C++ par répertoire ; imports relatifs de `scripts/build` et `src/codegen`.",
+  "Sources: trim model `src/trim/features/*.def` (features, trim-features); `src/codegen/builtins/host/features-*.builtins.ts` (built-in -> feature); `Cargo.toml` (crates, `path` dependencies); `scripts/build/deps/*.ts` (vendors, `fetchDeps`); `src/jsc/bindings/BunObject.cpp` (`bunObjectTable`); `packages/bun-types/*.d.ts`; `src/js/**` (modules, `require`, `$bindgen`/`$newCppFunction`); `*.bind.ts` (bindgen); C/C++ by directory; relative imports of `scripts/build` and `src/codegen`.",
 );
 md.push("");
 md.push("## Domaines");
@@ -1493,7 +1493,7 @@ const locText = (n: GNode | undefined) => {
   return `${n?.loc ?? 0} (${by.map(([e, k]) => `${e} ${k}`).join(", ")}${v ? `; dont ${v} vendu` : ""})`;
 };
 md.push(
-  "| Domaine | Chemins | LOC | Crates | API exposées (extrait) | Fonctionnalités trim |",
+  "| Domain | Paths | LOC | Crates | Exposed APIs (excerpt) | Trim features |",
 );
 md.push("|---|---|---|---|---|---|");
 for (const d of DOMAINS) {
@@ -1501,7 +1501,7 @@ for (const d of DOMAINS) {
   const n = nodes.get(id);
   const crates = [
     ...out(id, "contains").filter((x) => x.startsWith("crate:")),
-    ...out(id, "part-of").map((x) => `${x} (hôte)`),
+    ...out(id, "part-of").map((x) => `${x} (host)`),
   ].map(short);
   const apis = out(id, "exposes").map(short);
   md.push(
@@ -1516,14 +1516,14 @@ for (const d of DOMAINS) {
 md.push("| **WebGPU** (`webgpu`) | — | 0 | — | — | voir ci-dessous |");
 md.push("");
 md.push(
-  `WebGPU : recherche de \`${String(WEBGPU_TERMS)}\` dans src/, scripts/build et packages/bun-types (.rs .cpp .h .c .mm .ts .js) : ${webgpuHits.length} fichier(s).`,
+  `WebGPU: search for \`${String(WEBGPU_TERMS)}\` in src/, scripts/build and packages/bun-types (.rs .cpp .h .c .mm .ts .js): ${webgpuHits.length} file(s).`,
 );
 for (const l of webgpuLines) md.push(`- \`${esc(l)}\``);
 md.push("");
-md.push("## Dépendances entre domaines");
+md.push("## Dependencies between domains");
 md.push("");
 md.push(
-  "Poids = nombre de fichiers Rust du domaine source qui nomment une crate (`bun_x::`) ou un module (`crate::m`) du domaine cible, plus les dépendances Cargo entre crates. Les 60 plus fortes :",
+  "Weight = number of Rust files of the source domain that name a crate (`bun_x::`) or a module (`crate::m`) of the target domain, plus the Cargo dependencies between crates. The 60 strongest:",
 );
 md.push("");
 md.push("```mermaid");
@@ -1555,7 +1555,7 @@ for (const f of ["Ffi", "NativeAddons"]) {
     .filter((e) => e.to === fid && e.kind === "includes")
     .map((e) => short(e.from));
   md.push(
-    `- **${f}** — ${esc(String(fn?.attrs?.text ?? ""))} (${(fn?.paths ?? []).join(", ")}) ; trim-features : ${trims.join(", ")} ; utilisé par : ${esc(list(users, 30))}`,
+    `- **${f}** — ${esc(String(fn?.attrs?.text ?? ""))} (${(fn?.paths ?? []).join(", ")}); trim-features: ${trims.join(", ")}; used by: ${esc(list(users, 30))}`,
   );
 }
 for (const id of [
@@ -1568,7 +1568,7 @@ for (const id of [
   if (!n) continue;
   const syms = (n.attrs?.cSymbols as string[] | undefined) ?? [];
   md.push(
-    `- \`${short(id)}\` : ${esc(list(n.api ?? [], 40))}${syms.length ? ` ; symboles C : ${esc(list(syms, 20))}` : ""}`,
+    `- \`${short(id)}\`: ${esc(list(n.api ?? [], 40))}${syms.length ? `; C symbols: ${esc(list(syms, 20))}` : ""}`,
   );
 }
 const featureUsers = (f: string) => [
@@ -1582,13 +1582,13 @@ const nativeDeps = edgeList
   .filter((e) => e.kind === "uses" && featureUsers("Ffi").includes(e.from))
   .map((e) => short(e.to));
 md.push(
-  `- Fonctionnalités tirées par les API FFI : ${[...new Set(nativeDeps)].sort().join(", ")}`,
+  `- Features pulled by FFI APIs: ${[...new Set(nativeDeps)].sort().join(", ")}`,
 );
 md.push("");
 md.push("## Trim-features (src/trim/features/trim-features.def)");
 md.push("");
 md.push(
-  "| Trim-feature | Fonctionnalités | Économie Linux / macOS (Mo) | Description |",
+  "| Trim-feature | Features | Linux / macOS saving (MB) | Description |",
 );
 md.push("|---|---|---|---|");
 for (const t of nodeList.filter((n) => n.kind === "trim-feature")) {
@@ -1599,10 +1599,10 @@ for (const t of nodeList.filter((n) => n.kind === "trim-feature")) {
   );
 }
 md.push("");
-md.push(`## Propriétés de l'objet Bun (${bunObjectCpp})`);
+md.push(`## Properties of the Bun object (${bunObjectCpp})`);
 md.push("");
 md.push(
-  "| Propriété | Symbole C++ | Typée (bun-types) | Fonctionnalités (built-ins) |",
+  "| Property | C++ symbol | Typed (bun-types) | Features (built-ins) |",
 );
 md.push("|---|---|---|---|");
 for (const n of nodeList.filter((x) => x.attrs?.bunObject))
@@ -1613,37 +1613,37 @@ md.push("");
 md.push("## Heuristiques de regroupement");
 md.push("");
 md.push(
-  "Seules données écrites à la main dans le script ; tout le reste est lu dans l'arbre.",
+  "The only hand-written data in the script; everything else is read from the tree.",
 );
 md.push("");
 md.push(
-  "- `DOMAINS` : chaque domaine = répertoires + motifs de fichiers (vérifiés à l'exécution), noms de fonctionnalités trim (vérifiés contre le modèle) et préfixes d'API rattachés. Une crate appartient au domaine dont un répertoire contient son `Cargo.toml` (le plus long préfixe gagne) ; un domaine logé dans une crate plus large (ex. `src/runtime/ffi` dans `bun_runtime`) la reçoit en `part-of`.",
+  "- `DOMAINS`: each domain = directories + file patterns (checked at run time), trim feature names (checked against the model) and attached API prefixes. A crate belongs to the domain whose directory contains its `Cargo.toml` (longest prefix wins); a domain housed in a larger crate (e.g. `src/runtime/ffi` in `bun_runtime`) receives it as `part-of`.",
 );
 md.push(
-  `- \`VENDOR_ALIASES\` : ${Object.entries(VENDOR_ALIASES)
+  `- \`VENDOR_ALIASES\`: ${Object.entries(VENDOR_ALIASES)
     .map(([k, v]) => `\`${k}\` -> \`${v}\``)
     .join(
       ", ",
-    )} ; sinon crate \`bun_<x>[_sys]\` <-> dépendance \`<x>\` par nom normalisé. \`packages/bun-usockets\` et \`packages/bun-uws\` rattachés à \`bun_uws_sys\`.`,
+    )}; otherwise crate \`bun_<x>[_sys]\` <-> dependency \`<x>\` by normalized name. \`packages/bun-usockets\` and \`packages/bun-uws\` are attached to \`bun_uws_sys\`.`,
 );
 md.push(
-  "- Spécificateurs de modules : `src/js/bun/x.ts` -> `bun:x`, `src/js/node/a.b.ts` -> `node:a/b`, `src/js/internal/**` -> `internal/**`, `src/js/thirdparty/x.ts` -> `x`.",
+  "- Module specifiers: `src/js/bun/x.ts` -> `bun:x`, `src/js/node/a.b.ts` -> `node:a/b`, `src/js/internal/**` -> `internal/**`, `src/js/thirdparty/x.ts` -> `x`.",
 );
 md.push(
-  `- \`WEBGPU_TERMS\` : \`${String(WEBGPU_TERMS)}\` (recherche d'absence du domaine WebGPU).`,
+  `- \`WEBGPU_TERMS\`: \`${String(WEBGPU_TERMS)}\` (absence search of the WebGPU domain).`,
 );
 md.push(
-  "- LOC : lignes des fichiers .rs .cpp .cc .c .h .hpp .mm .ts .tsx .js .mjs .cjs .toml .idl .def (fixtures de tests comprises) ; `sqlite3.[ch]` comptés comme vendus.",
+  "- LOC: lines of the .rs .cpp .cc .c .h .hpp .mm .ts .tsx .js .mjs .cjs .toml .idl .def files (test fixtures included); `sqlite3.[ch]` counted as vendored.",
 );
 md.push(
-  "- Built-ins : `b.extend(chemin, { usesFeature })` capté via une cale de `bun-builtins-table` (bibliothèque du moteur WebKit absente) ; `pathOfNativeBinding(kind, fichier, symbole)` rendu `native:<kind>:<fichier>#<symbole>`, rattaché au `.bind.ts` ou au fichier C++ du même nom.",
+  "- Built-ins: `b.extend(path, { usesFeature })` captured through a shim of `bun-builtins-table` (WebKit engine library absent); `pathOfNativeBinding(kind, file, symbol)` rendered `native:<kind>:<file>#<symbol>`, attached to the `.bind.ts` or the C++ file of the same name.",
 );
 md.push("");
-md.push("## Remarques de génération");
+md.push("## Generation notes");
 md.push("");
 md.push(notes.length ? notes.map((x) => `- ${x}`).join("\n") : "- aucune");
 md.push("");
 writeFileSync(join(outDir, "feature-graph.md"), md.join("\n"));
-console.log(`${nodeList.length} nœuds, ${edgeList.length} arêtes -> ${outDir}`);
+console.log(`${nodeList.length} nodes, ${edgeList.length} edges -> ${outDir}`);
 console.log(JSON.stringify(graph.counts));
-for (const x of notes) console.log(`note : ${x}`);
+for (const x of notes) console.log(`note: ${x}`);
