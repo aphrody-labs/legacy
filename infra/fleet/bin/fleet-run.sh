@@ -42,6 +42,12 @@ run_local() {
   while IFS= read -r -d '' kv; do
     case ${kv%%=*} in _|PWD|OLDPWD|SHLVL|SUDO_*|MAIL|LOGNAME|USER|XDG_RUNTIME_DIR|DBUS_SESSION_BUS_ADDRESS|INVOCATION_ID|JOURNAL_STREAM) ;; *) envs+=("--setenv=$kv");; esac
   done < <(env -0)
+  # cargo serializes every invocation on one global flock (CARGO_HOME/.package-cache; measured 2026-11-15: 3 writers + readers on
+  # /home/ubuntu/.cargo, a rotational disk, blocked a bench for over 10 min): jobs get their own SSD CARGO_HOME per class and user
+  if [ -z "${CARGO_HOME:-}" ] && [ -d /srv ]; then
+    ch=/srv/cargo-home-fleet-$class-$(id -un); [ -d "$ch" ] || "${pre[@]}" install -d -m 0755 -o "$(id -u)" -g "$(id -g)" "$ch" 2>/dev/null || ch=
+    [ -n "$ch" ] && envs+=("--setenv=CARGO_HOME=$ch")
+  fi
   exec "${pre[@]}" systemd-run --scope --quiet --collect --slice="$slice" --uid="$(id -u)" --gid="$(id -g)" "${envs[@]}" -- \
     env -C "$dir" "$@"
 }
