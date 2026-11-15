@@ -236,6 +236,12 @@ name = "gnu"
 command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/gnu-mcp.ts"]
 hosts = ["pc"]
 
+# py2bun: Python to Bun TypeScript transpiler (packages/py2bun, crate src/py2bun). hub_call py2bun__py2bun_transpile.
+[[hub.mcp]]
+name = "py2bun"
+command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/py2bun-mcp.ts"]
+hosts = ["pc"]
+
 [[hub.mcp]]
 name = "agent-desktop"
 command = ["{bin}/agent-desktop.exe", "mcp"]
