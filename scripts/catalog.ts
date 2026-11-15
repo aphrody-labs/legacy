@@ -402,7 +402,7 @@ async function listRepos(owner: string): Promise<Repo[]> {
 }
 
 async function ci(repo: Repo): Promise<{ ok: boolean; workflow?: string }> {
-  const runs = await gh<{ workflow_runs: { conclusion: string | null; path: string }[] }>(`/repos/${repo.full_name}/actions/runs?branch=${repo.default_branch}&status=completed&per_page=1`);
+  const runs = await gh<{ workflow_runs: { conclusion: string | null; path: string }[] }>(`/repos/${repo.full_name}/actions/runs?branch=${repo.default_branch}&event=push&status=completed&per_page=1`);
   const run = runs?.workflow_runs?.[0];
   return { ok: run?.conclusion === "success", workflow: run?.path?.split("/").pop() };
 }
