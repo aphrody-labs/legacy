@@ -36,8 +36,13 @@ psi() { # psi <spec> -> "score cpu10 cpu60 io10 mem10 freeGB"; spec = local | ss
 
 run_local() {
   # the scope needs root to join a system slice; the job still runs as the caller (--uid/--gid) with the caller's environment
-  if [ "$(id -u)" = 0 ]; then pre=(); else pre=(sudo -n -E); fi
-  exec "${pre[@]}" systemd-run --scope --quiet --collect --slice="$slice" --uid="$(id -u)" --gid="$(id -g)" -- \
+  # sudo resets the environment: re-inject the caller's exported variables with --setenv
+  if [ "$(id -u)" = 0 ]; then pre=(); else pre=(sudo -n); fi
+  envs=()
+  while IFS= read -r -d '' kv; do
+    case ${kv%%=*} in _|PWD|OLDPWD|SHLVL|SUDO_*|MAIL|LOGNAME|USER|XDG_RUNTIME_DIR|DBUS_SESSION_BUS_ADDRESS|INVOCATION_ID|JOURNAL_STREAM) ;; *) envs+=("--setenv=$kv");; esac
+  done < <(env -0)
+  exec "${pre[@]}" systemd-run --scope --quiet --collect --slice="$slice" --uid="$(id -u)" --gid="$(id -g)" "${envs[@]}" -- \
     env -C "$dir" "$@"
 }
 [ "$local" = 1 ] && run_local "$@"
