@@ -15,7 +15,12 @@
 - [x] Bridge.java `isRawList` always true: `InlineList` marker class; string request id encoded by `idJson`; `Long.MIN_VALUE` range check. Test in `packages/ghidra/test/ghidra.test.ts`.
 - [x] json.ts `dumps` string corruption; `cli.ts` `py2bun script.py` without `-o`: tests in `packages/py2bun/test/runtime.test.ts`.
 - [x] GHIDRA.md:7 Chromium clang (24.0.0git) documented; provision-fr2.sh installs JDK 25 with `set -euo pipefail`, `apt-get update`, optional SHA256.
-- Not fixed yet: chained comparison short-circuit, `not x` double emission, float `inf`, `def f(x=x)` default evaluation, and the remaining 300+ rows below.
+- [x] emit.rs: chained comparisons short-circuit; `not x` once; `inf`/`nan`; defaults and lambda defaults hoisted out of the parameter scope (TDZ); integers above 2^53-1 only become BigInt; matrix multiplication diagnostic. Tests in `src/py2bun/tests/transpile.rs`.
+- [x] py2.rs bare `print` and `except (A, B), e:`; main.rs JSON escaping; index.ts surfaces unparseable diagnostics. Tests in `py2_fallback.rs`.
+- [x] runtime: `re.split(p, s, maxsplit, flags)`, `%X` precision uppercase, modular `pow` (negative base and inverse), `eq` bigint vs number. Tests in `packages/py2bun/test/runtime.test.ts`.
+- [x] flat.ts: `sprintf` 0 and + flags, bigint, negative hex; `ask*` typed returns; `askYesNo` cancel. rpc.ts `$release` honours the reference count; api.ts single shared start, session published after init, `openProgram` releases the bundle host and project on error, `runScript` passes `scriptName`/`scriptArgs` and null `current*`. Tests in `packages/ghidra/test/ghidra.test.ts`.
+- [x] README (py2bun) and GHIDRA.md:41 corrected.
+- Not fixed: per-call re-evaluation of Python default values, the Gemini rows of the detailed tables 2a to 6c not listed above (about 300), continuation rewrite `)` after a trailing comment (py2.rs:154,169).
 
 ## Highest-impact confirmed defects (details and fixes in the tables)
 
