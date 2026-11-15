@@ -81,7 +81,7 @@ async function serveIso(request, env) {
   return new Response(full?.body ?? null, { headers });
 }
 
-function handleConsole(url) {
+function handleConsole(url, env) {
   if (url.pathname === "/health" || url.pathname === "/api/health") {
     return Response.json({
       status: "ok",
@@ -117,36 +117,8 @@ function handleConsole(url) {
     });
   }
   if (url.pathname === "/api/fleet") {
-    return Response.json({
-      meshSubnet: "10.200.77.0/24",
-      hosts: [
-        {
-          name: "prod",
-          hostname: "srv2116886",
-          provider: "Hostinger",
-          meshIp: "10.200.77.5",
-          publicIp: "72.60.186.43",
-          status: "online",
-        },
-        {
-          name: "vps",
-          hostname: "vps-203bea89",
-          provider: "OVH",
-          meshIp: "10.200.77.1",
-          publicIp: "51.77.147.152",
-          status: "online",
-        },
-        {
-          name: "bunos",
-          hostname: "bunos",
-          provider: "OVH",
-          meshIp: "10.200.77.3",
-          publicIp: "51.255.162.6",
-          status: "online",
-        },
-      ],
-      activeTunnels: 3,
-    });
+    // topology is a deploy-time binding (wrangler var FLEET, JSON); nothing about the hosts is committed
+    return Response.json(JSON.parse(env.FLEET ?? '{"hosts":[],"activeTunnels":0}'));
   }
   if (url.pathname === "/api/registries") {
     return Response.json({
@@ -210,7 +182,7 @@ export default {
 
     // 2. Console / YOLO Dashboard
     if (host === "console.aphrody.com") {
-      return handleConsole(url);
+      return handleConsole(url, env);
     }
 
     // 3. Craft Web Studios (14 *craft.aphrody.app, 14 app-*.aphrody.app, 10 *.aphrody.com)

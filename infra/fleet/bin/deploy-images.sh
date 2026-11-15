@@ -5,9 +5,10 @@
 # Then `compose up -d --wait --pull never` of the named services from the synced /srv/src checkout of the target.
 #   deploy-images.sh <prd|fr2> <sha> <profile> <service...>      run on fr1:  ssh <fr1> bash /srv/src/infra/fleet/bin/deploy-images.sh prd <sha> core ai-os-relay ai-os-gateway
 # Rollback: the same command with the previous sha (its image stays on the target until pruned).
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -euo pipefail
 HOST=${1:?host prd|fr2}; SHA=${2:?sha}; PROFILE=${3:?profile}; shift 3; SVCS=("$@"); [ ${#SVCS[@]} -gt 0 ] || { echo "no service" >&2; exit 2; }
-case $HOST in prd) T=root@72.60.186.43 ;; fr2) T=root@51.255.162.6 ;; *) echo "host prd|fr2" >&2; exit 2 ;; esac
+case $HOST in prd) T=root@$(site_get hosts.prd.public_ip) ;; fr2) T=root@$(site_get hosts.fr2.public_ip) ;; *) echo "host prd|fr2" >&2; exit 2 ;; esac
 SSH=(ssh -o BatchMode=yes -o ConnectTimeout=15 "$T")
 COMPOSE=/srv/src/infra/docker/compose.yaml
 export DOCKER_CONFIG; DOCKER_CONFIG=$(mktemp -d); trap 'rm -rf "$DOCKER_CONFIG"' EXIT

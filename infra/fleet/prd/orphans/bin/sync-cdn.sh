@@ -6,16 +6,17 @@
 #   2. vps  -> cdn  edge disk   (/srv/rosegriffon/cdn/static, served under /static/)
 #   3. vps  -> R2   bucket rosegriffon-cdn (rclone remote r2), off-site copy
 # No --delete: the vps copy is the archive; the edge only gains files.
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -eu
 src=${RG_CDN_STATIC:-/srv/rosegriffon/cdn/static}
-prod=${RG_PROD_SSH:-root@10.200.77.5}   # "local" when this runs on the prod host itself
-cdn=${RG_CDN_SSH:-root@10.200.77.3}
+prod=${RG_PROD_SSH:-root@$(site_get hosts.prd.mesh_ip)}   # "local" when this runs on the prod host itself
+cdn=${RG_CDN_SSH:-root@$(site_get hosts.fr2.mesh_ip)}
 bucket=${RG_R2_BUCKET:-r2:rosegriffon-cdn/static}
 ssh_opts="-o BatchMode=yes -o ConnectTimeout=10"
 # Mesh first, public address when the WireGuard link drops: the timer must not need a human.
 pick() { for h in "$@"; do ssh -n $ssh_opts "$h" true 2>/dev/null && { echo "$h"; return 0; }; done; echo "sync-cdn: no route ($*)" >&2; return 1; }
-[ "$prod" = local ] || prod=$(pick "$prod" "${RG_PROD_SSH_PUBLIC:-root@72.60.186.43}")
-cdn=$(pick "$cdn" "${RG_CDN_SSH_PUBLIC:-root@51.255.162.6}")
+[ "$prod" = local ] || prod=$(pick "$prod" "${RG_PROD_SSH_PUBLIC:-root@$(site_get hosts.prd.public_ip)}")
+cdn=$(pick "$cdn" "${RG_CDN_SSH_PUBLIC:-root@$(site_get hosts.fr2.public_ip)}")
 
 mkdir -p "$src"
 [ "$prod" = local ] || rsync -a -e "ssh $ssh_opts" "$prod:/srv/rosegriffon/cdn/static/" "$src/"

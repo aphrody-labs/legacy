@@ -30,18 +30,12 @@ const SESSION = join(
   "aphrody",
   "npm-session.npmrc",
 );
-/** Hosts: ssh alias -> argv. prd agent goes through the WireGuard mesh (fr2 hop). */
+/** Hosts: role -> ssh argv. A role is a Host alias of ~/.ssh/config (address, jump host and key alias live there). */
 const HOSTS: Record<string, string[]> = {
   "prd:root": ["prd"],
-  "prd:agent": [
-    "-o",
-    "HostKeyAlias=72.60.186.43",
-    "-J",
-    "fr2",
-    "agent@10.200.77.5",
-  ],
-  fr2: ["cdn"],
-  fr1: ["vps"],
+  "prd:agent": ["-l", "agent", "prd"],
+  fr2: ["fr2"],
+  fr1: ["fr1"],
 };
 const SECRET = /\bnpm_[A-Za-z0-9]{20,}/g;
 const mask = (s: string) => s.replace(SECRET, "[secret]");

@@ -95,14 +95,16 @@ const COOLDOWN_MS = 15 * 60_000;
 const RETRYABLE =
   /\b429\b|rate.?limit|quota|usage limit|overloaded|insufficient.?credit|credit balance|billing|unauthori[sz]ed|\b401\b|\b403\b|\b5\d\d\b|ECONNRESET|ETIMEDOUT|not logged in|login required|command not found|ENOENT/i;
 
+/** The role of this host (/etc/aphrody/role: fr1, fr2, prd), else its hostname; the PC is "pc". */
 function hostAlias(h: string): string {
   if (WIN) return "pc";
-  const map: Record<string, string> = {
-    "vps-203bea89": "fr1",
-    bunos: "fr2",
-    srv2116886: "prd",
-  };
-  return map[h] ?? h;
+  try {
+    const role = readFileSync("/etc/aphrody/role", "utf8").trim().split("\n").pop();
+    if (role) return role;
+  } catch {
+    /* not a fleet host */
+  }
+  return h;
 }
 const now = () => new Date().toISOString();
 // Heavy roles (fleet.toml heavy = true: builds, tests, training) run on the factory only, whatever

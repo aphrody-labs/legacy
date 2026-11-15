@@ -7,24 +7,20 @@
 os = "windows"
 recipient = "age1m26zgufngsrmn2ach9ayrnys6pff2dw42hfjt7e5mp372zj7vyys3qar3g"
 
-# prd (USA, backends): runner user `agent`, user credstore; reached through the fr2 mesh hop.
+# prd (USA, backends): runner user `agent`, user credstore; route (jump host, key alias) comes from the Host entry in ~/.ssh/config.
 [prd]
 os = "linux"
-ssh = ["-o", "HostKeyAlias=@@hosts.prd.public_ip@@", "-J", "fr2", "agent@@@hosts.prd.mesh_ip@@"]
-# Public route (pinned host key "usa") when the mesh hop is down.
-fallback = [["-l", "agent", "usp"], ["-l", "agent", "usa"]]
+ssh = ["-l", "agent", "prd"]
 recipient = "age178yp32swtmrew7lhsz97cgqc9fxsmatn6n0gwuam0qj5uackh4nq2e4pp5"
 
-# fr2 (proxy, vhosts, CDN): user `ubuntu`, user credstore, mesh @@hosts.fr2.mesh_ip@@.
+# fr2 (proxy, vhosts, CDN): user credstore; user and address come from ~/.ssh/config.
 [fr2]
 os = "linux"
 ssh = ["fr2"]
-fallback = [["f2p"]]
 recipient = "age1t58pdvctqrkt3t3hmqv8t85fqs854skg75efrrpctk79zurdgststcgjc6"
 
-# fr1 (Chromium/LLVM builds only): user `ubuntu`, mesh @@hosts.fr1.mesh_ip@@.
+# fr1 (Chromium/LLVM builds only): user credstore; user and address come from ~/.ssh/config.
 [fr1]
 os = "linux"
 ssh = ["fr1"]
-fallback = [["f1p"]]
 recipient = "age1wtpumsxfp9wxcgej5f8qygcsem9rtrlshmvugm44arjyhp0ry5qqdhhsue"

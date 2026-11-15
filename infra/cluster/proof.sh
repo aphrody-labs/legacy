@@ -2,10 +2,11 @@
 # just cluster-proof: member health, mesh reachability matrix + benchmark vs WireGuard, kill-test (failover and
 # restore timings), cache coalescing and idempotency. Read-only except the kill-test, which stops one stateless
 # replica on fr1/fr2 (never prd) and restarts it. Output: JSON lines on stdout (docs/infra/CLUSTER.md).
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -uo pipefail
 members=(fr1 fr2 prd)
-declare -A ip=([fr1]=51.77.147.152 [fr2]=51.255.162.6 [prd]=72.60.186.43)
-declare -A wg=([fr1]=10.200.77.1 [fr2]=10.200.77.3 [prd]=10.200.77.5)
+declare -A ip=([fr1]=$(site_get hosts.fr1.public_ip) [fr2]=$(site_get hosts.fr2.public_ip) [prd]=$(site_get hosts.prd.public_ip))
+declare -A wg=([fr1]=$(site_get hosts.fr1.mesh_ip) [fr2]=$(site_get hosts.fr2.mesh_ip) [prd]=$(site_get hosts.prd.mesh_ip))
 D=cluster.internal; P=7444; T=/etc/aphrody-cluster/tls
 on() { local h=$1; shift; timeout "${TMO:-90}" ssh -o ConnectTimeout=10 "$h" "sudo bash -c $(printf '%q' "$*")"; }
 stat_cmd='echo "show stat" | (command -v socat >/dev/null && socat - UNIX:/run/aphrody-cluster/haproxy.sock || python3 -c "import socket,sys;s=socket.socket(socket.AF_UNIX);s.connect(\"/run/aphrody-cluster/haproxy.sock\");s.sendall(b\"show stat\n\");b=b\"\"

@@ -517,11 +517,14 @@ type LockEntry = {
   hosts?: string[];
 };
 
-const HOSTS: Record<string, string> = {
-  srv2116886: "prd",
-  bunos: "fr2",
-  "vps-203bea89": "fr1",
-};
+/** The fleet role of this host (/etc/aphrody/role), else its hostname. */
+function hostRole(): string {
+  try {
+    return readFileSync("/etc/aphrody/role", "utf8").trim().split("\n").pop() || hostname();
+  } catch {
+    return hostname();
+  }
+}
 
 function lock(res: Results) {
   const t = Bun.TOML.parse(
@@ -529,7 +532,7 @@ function lock(res: Results) {
   ) as { shell: Record<string, LockEntry> };
   const host = WIN
     ? "pc"
-    : (process.env.AY_HOST ?? HOSTS[hostname()] ?? hostname());
+    : (process.env.AY_HOST ?? hostRole());
   const arch = process.arch === "arm64" ? "aarch64" : "x86_64";
   const key = `${WIN ? "windows" : "linux"}-${arch}`;
   const b3 = Bun.which("b3sum");

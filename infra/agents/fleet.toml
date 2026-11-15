@@ -59,7 +59,7 @@ budget_usd = 2
 
 # Hosts. `src` = git checkout (main) the runner works in; `ssh` = targets tried in order
 # (<host>-mesh = sshd through the cluster mTLS mesh, TCP 7444, fleet IPs only (infra/cluster, docs/infra/CLUSTER.md);
-# then PC aliases, WireGuard @@network.mesh_cidrs.0@@, public IP). `ship` = where every host sends log.jsonl.
+# then PC aliases, WireGuard @@network.mesh_cidr@@, public IP). `ship` = where every host sends log.jsonl.
 [hosts.prd]
 # Production backends only: light prod roles (deploy, health, text-only growth drafts).
 roles = ["deployer", "sre", "growth"]

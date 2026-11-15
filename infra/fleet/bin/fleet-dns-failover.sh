@@ -11,14 +11,15 @@
 #   2. IP: FLEET_DNS_FALLBACK hosts serving the name on 443 with a valid certificate (strict TLS checked first).
 # Records without a valid standby stay on fr2 and are alerted. Token: CF_API_TOKEN of /etc/aphrody/secrets.env
 # (fleet-<host>-dns: Zone Read + DNS Write on aphrody.com and aphrody.app). State: /var/lib/fleet-health/dns-failover.state.
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -uo pipefail
 [ -f /etc/fleet/resilience.conf ] && . /etc/fleet/resilience.conf
 [ -f /etc/fleet/health.env ] && . /etc/fleet/health.env
 T=$(sed -n 's/^CF_API_TOKEN=//p' /etc/aphrody/secrets.env 2>/dev/null | tr -d '\r\n')
 [ -n "$T" ] || { echo "dns-failover: no CF_API_TOKEN in /etc/aphrody/secrets.env"; exit 2; }
-ZONES=${FLEET_DNS_ZONES:-"963461271f885bc3f3c2bfd586f2b7ba f4dab237b9811435da6fee0b5b3438d4"}
-E4=${FLEET_EDGE_IP:-51.255.162.6}; E6=${FLEET_EDGE_IP6:-2001:41d0:305:2100::a461}
-FB=${FLEET_DNS_FALLBACK:-"prd=72.60.186.43,2a02:4780:28:8e1e::1 fr1=51.77.147.152,2001:41d0:404:200::4d8e"}
+ZONES=${FLEET_DNS_ZONES:-"$(site_get zones.aphrody.com) $(site_get zones.aphrody.app)"}
+E4=${FLEET_EDGE_IP:-$(site_get hosts.fr2.public_ip)}; E6=${FLEET_EDGE_IP6:-$(site_get hosts.fr2.public_ipv6)}
+FB=${FLEET_DNS_FALLBACK:-"prd=$(site_get hosts.prd.public_ip),$(site_get hosts.prd.public_ipv6) fr1=$(site_get hosts.fr1.public_ip),$(site_get hosts.fr1.public_ipv6)"}
 TUN=${FLEET_DNS_TUNNEL:-72153924-6650-4dd4-bced-f8b6731edcd8.cfargotunnel.com}; TREADY=${FLEET_DNS_TUNNEL_READY:-http://127.0.0.1:20244/ready}
 STANDBY=${FLEET_STANDBY:-"dbfr.aphrody.com=29401 nie.aphrody.app=29402"}
 S=${FLEET_DNS_STATE:-/var/lib/fleet-health/dns-failover.state}; mkdir -p "${S%/*}"

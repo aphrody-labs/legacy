@@ -6,14 +6,14 @@
 # (rosegriffon.fr, dragonballfr.com, nie.aphrody.app, cdn.rosegriffon.fr: rosegriffon-52 / shenron).
 # Content "tunnel:<name>" expands to <tunnel id>.cfargotunnel.com. No secrets in this file.
 
-account = "@@accounts.cloudflare_account_ids.0@@"
+account = "@@accounts.cloudflare_account_id@@"
 
 [zones]
-"aphrody.com" = "@@accounts.cloudflare_zone_ids.0@@"
-"aphrody.app" = "@@accounts.cloudflare_zone_ids.1@@"
+"aphrody.com" = "@@zones.aphrody.com@@"
+"aphrody.app" = "@@zones.aphrody.app@@"
 # Product zones: only the [[rules]] refs below are managed here (content and DNS stay with shenron / rosegriffon).
-"dragonballfr.com" = "@@accounts.cloudflare_zone_ids.2@@"
-"rosegriffon.fr" = "@@accounts.cloudflare_zone_ids.3@@"
+"dragonballfr.com" = "@@zones.dragonballfr.com@@"
+"rosegriffon.fr" = "@@zones.rosegriffon.fr@@"
 
 # Remote-managed tunnels. Connector: systemd unit + token in an encrypted systemd credential on the host.
 [tunnels.mig-prd]
@@ -38,6 +38,8 @@ ingress = [
   { hostname = "ssh-fr2.aphrody.com", service = "ssh://127.0.0.1:19023" },
   { hostname = "mcp-origin.aphrody.com", service = "http://127.0.0.1:19790" },
   { hostname = "gnu.aphrody.com", service = "http://127.0.0.1:19080" },
+  # tunnel prod merged here: desktop.aphrody.app (origin prd :8793, dead before and after: 502 parity)
+  { hostname = "desktop.aphrody.app", service = "http://127.0.0.1:19793" },
   # aphrody service: cluster LB pool aphrody (prd:23000, blue/green switched in deploy.toml only).
   { hostname = "aphrody.com", service = "http://127.0.0.1:19300" },
   { hostname = "*.aphrody.com", service = "http://127.0.0.1:19300" },
@@ -105,6 +107,7 @@ ingress = [
 "dbfr.aphrody.com" = { type = "A", content = "@@hosts.fr2.public_ip@@", rollback = "A @@hosts.fr2.public_ip@@ proxied=false" }
 
 [dns."aphrody.app"]
+"desktop.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME 7a6e3e3d-de15-45f8-9b50-73bdbbc283ae.cfargotunnel.com (tunnel prod)" }
 # Previews <project>-<sha7>.aphrody.app and project domains: Worker aphrody-deploy on route *.aphrody.app/* (explicit records win).
 "*.aphrody.app" = { type = "AAAA", content = "100::", proxied = true, rollback = "delete" }
 "api.aphrody.app" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A @@hosts.fr2.public_ip@@" }

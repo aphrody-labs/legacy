@@ -12,9 +12,9 @@ import { register, setSecret, sync } from "@aphrody/vault";
 const TOKEN = /sk-ant-oat01-[A-Za-z0-9_-]{60,}/;
 const DEVICE = /\b[A-Z0-9]{4}-[A-Z0-9]{5}/; // 9 characters; under ConPTY, the following text is stuck to the code
 
-/** ssh targets of the runners: prd through a fr2 hop (WireGuard mesh), fr2 direct. */
+/** ssh targets of the runners: roles, Host aliases of ~/.ssh/config (jump host and key alias are configured there). */
 const TARGETS: Record<string, string[]> = {
-  prd: ["-o", "HostKeyAlias=72.60.186.43", "-J", "fr2", "agent@10.200.77.5"],
+  prd: ["-l", "agent", "prd"],
   fr2: ["fr2"],
 };
 const ssh = (h: string, cmd: string, stdin?: string) =>

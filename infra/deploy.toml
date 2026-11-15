@@ -8,7 +8,7 @@
 # =============================================================================
 
 [mesh]
-network_cidr = "@@network.mesh_cidrs.0@@"
+network_cidr = "@@network.mesh_cidr@@"
 tunnel_protocol = "MASQUE+WireGuard"
 config_dir = "C:/src/infra/mesh-vn/generated"
 
@@ -41,7 +41,7 @@ ssh_user = "root"
 allow_non_google_workloads = true
 
 [cloud]
-cloudflare_account_id = "@@accounts.cloudflare_account_ids.0@@"
+cloudflare_account_id = "@@accounts.cloudflare_account_id@@"
 gcloud_project = "aphrody"
 gcloud_region = "europe-west1"
 ollama_models = ["qwen3-coder", "deepseek-r1", "gemma4"]
@@ -252,7 +252,7 @@ units = ["shenron-cloudflare-s3-renew", "rg-steam-depot"]
 # the OIDC mechanism that makes it unnecessary (reported by `ay auth status --only oidc` while present).
 [auth.oidc.gcp]
 project = "aphrody"
-project_number = "@@accounts.gcp_project_numbers.0@@"
+project_number = "@@accounts.gcp_project_number@@"
 pool = "github"
 provider = "aphrody-dev"
 issuer = "https://token.actions.githubusercontent.com"
@@ -379,6 +379,11 @@ targets = { fr2 = "127.0.0.1:8790" }
 mode = "tcp"
 lb_port = 19080
 targets = { fr2 = "127.0.0.1:80" }
+# desktop.aphrody.app (tunnel prod merged into mig-prd): prd origin, nothing listens on :8793 today (the old tunnel answered 502 too).
+[cluster.services.desktop]
+mode = "tcp"
+lb_port = 19793
+targets = { prd = "127.0.0.1:8793" }
 [cluster.services.depot]
 lb_port = 19182
 targets = { prd = "@@hosts.prd.mesh_ip@@:8182" }

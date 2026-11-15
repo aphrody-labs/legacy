@@ -82,7 +82,7 @@ watch_s = 15
 id = "prd"
 ssh = "prd"
 os = "linux"
-# Direct PC <-> prd link (`prod` interface, @@network.mesh_cidrs.0@@): only the PC can reach this port.
+# Direct PC <-> prd link (`prod` interface, @@network.mesh_cidr@@): only the PC can reach this port.
 bind = "@@hosts.prd.link_ip@@"
 reach = "@@hosts.prd.link_ip@@"
 port = 50052

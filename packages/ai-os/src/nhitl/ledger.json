@@ -118,7 +118,7 @@
       "reason": "invite UAC ; contourné par le rebond fr2 sur le mesh WireGuard"
     },
     {
-      "location": "gcp admin-sa@rgfr-8927d",
+      "location": "gcp admin-sa@<gcp-project-2>",
       "category": "secret_leak",
       "severity": "high",
       "status": "fixed",
@@ -175,7 +175,7 @@
       "severity": "high",
       "status": "fixed",
       "excerpt": "jeton du relais commons passé en argv (--token, visible par ps)",
-      "fix": "LoadCredentialEncrypted=commons-relay-token, jeton lu en Python depuis $CREDENTIALS_DIRECTORY (infra/fleet/prd/systemd/commons-relay.service) ; fichier en clair supprimé ; clients PC et fr2 mis à jour et repointés sur 10.200.77.5:8766",
+      "fix": "LoadCredentialEncrypted=commons-relay-token, jeton lu en Python depuis $CREDENTIALS_DIRECTORY (infra/fleet/prd/systemd/commons-relay.service) ; fichier en clair supprimé ; clients PC et fr2 mis à jour et repointés sur <prd-mesh-ip>:8766",
       "reason": "2026-11-13 : jeton tourné ; nouveau accepté, ancien refusé (401) ; plus de --token dans ps"
     },
     {
@@ -216,7 +216,7 @@
       "severity": "medium",
       "status": "open",
       "excerpt": "ssh prd (IP publique) : timeout de bannière sous charge (load 206 à 02:56 UTC)",
-      "fix": "rebond fr2 -> 10.200.77.5 (HostKeyAlias=IP publique) utilisé par le scanner et login ; limiter la charge des builds"
+      "fix": "rebond fr2 -> <prd-mesh-ip> (HostKeyAlias) utilisé par le scanner et login ; limiter la charge des builds"
     },
     {
       "location": "chromium-review.googlesource.com (CL amont)",

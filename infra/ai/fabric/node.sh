@@ -8,6 +8,7 @@
 #   over loopback to fill rpc-server's tensor cache; the coordinator then only sends
 #   fingerprints for tensors over 10 MiB (HASH_THRESHOLD of ggml-rpc.cpp).
 # GATE : no-build (fr1), prd (charge, verrou lourd, service prioritaire, mémoire), proxy (fr2), always.
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -eu
 UNIT=aphrody-rpc
 ROOT=/opt/aphrody
@@ -75,7 +76,7 @@ nft_on() {
 table inet aphrody_rpc {
   chain input {
     type filter hook input priority -10; policy accept;
-    tcp dport $PORT ip saddr != { ${COORD:-10.200.77.2}, $BIND } drop
+    tcp dport $PORT ip saddr != { ${COORD:?COORD is the coordinator mesh address}, $BIND } drop
   }
 }
 EOF

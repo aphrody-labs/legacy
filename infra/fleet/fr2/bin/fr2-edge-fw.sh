@@ -6,6 +6,7 @@
 # Untouched: ssh 22 (break-glass until Access SSH is proven), WireGuard UDP, FORWARD (wg forwarding, docker).
 # Cloudflare ranges: https://api.cloudflare.com/client/v4/ips (refreshed by fr2-edge-fw.timer, last good copy kept).
 # Rollback (one line): systemctl disable --now fr2-edge-fw.timer fr2-edge-fw.service; nft delete table inet fr2_edge
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -euo pipefail
 out=/etc/nftables.d/fr2-edge.nft; cache=/var/lib/fr2-edge-fw/ips.json
 mkdir -p "${out%/*}" "${cache%/*}"
@@ -15,8 +16,8 @@ fi
 [ -s "$cache" ] || { echo "no Cloudflare range list (fetch failed, no cache): leaving rules as they are" >&2; exit 1; }
 v4=$(jq -r '.result.ipv4_cidrs|join(", ")' "$cache"); v6=$(jq -r '.result.ipv6_cidrs|join(", ")' "$cache")
 # fr1, prd, fr2 itself (deploy.toml [nodes.*] + AAAA of the hosts).
-fleet4="51.77.147.152, 72.60.186.43, 51.255.162.6"
-fleet6="2001:41d0:404:200::4d8e, 2a02:4780:28:8e1e::1, 2001:41d0:305:2100::a461"
+fleet4="$(site_get hosts.fr1.public_ip), $(site_get hosts.prd.public_ip), $(site_get hosts.fr2.public_ip)"
+fleet6="$(site_get hosts.fr1.public_ipv6), $(site_get hosts.prd.public_ipv6), $(site_get hosts.fr2.public_ipv6)"
 cat > "$out.new" <<EOF
 add table inet fr2_edge
 delete table inet fr2_edge

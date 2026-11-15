@@ -255,7 +255,7 @@ ${micro}        add_header X-Cluster-Cache $upstream_cache_status always;
     out.push(`server {
     listen 29990; # loopback + WireGuard subnet (comparison only), no bind on the wg interface
     allow 127.0.0.1;
-    allow 10.200.77.0/24;
+    allow @@network.mesh_cidr@@;
     deny all;
     access_log off;
     root /var/lib/aphrody-cluster;

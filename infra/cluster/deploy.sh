@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Push the generated cluster data plane to one member, validate, then reload (keeps services up).
-# Usage: infra/cluster/deploy.sh <member> [down]     (ssh alias = `ssh` of [host.<member>] in infra/fleet/cluster.toml, else the member name)
+# Usage: infra/cluster/deploy.sh <member> [down]     (the member is a role: a Host alias of ~/.ssh/config; @@tokens@@ of the generated files are discovered at push time)
 # Rollback (one line): infra/cluster/deploy.sh <member> down   -> HAProxy stopped, nginx shard conf removed.
 set -euo pipefail
 m=$1; here=$(cd "$(dirname "$0")" && pwd); g="$here/generated/$m"
-tgt=$(awk -v h="[host.$m]" '/^\[/{s=($0==h)} s&&/^ssh *=/{gsub(/[" ]/,"",$3);print $3}' "$here/../fleet/cluster.toml" 2>/dev/null); tgt=${tgt:-$m}
+tgt=$m
 run() { timeout 120 ssh "$tgt" "sudo bash -s" ; }
 if [ "${2:-}" = down ]; then
   run <<'R'
@@ -17,7 +17,11 @@ R
   exit 0
 fi
 [ -f "$g/haproxy.cfg" ] || { echo "run: bun infra/cluster/gen.ts" >&2; exit 1; }
-tar -cf - -C "$g" haproxy.cfg nginx-cluster.conf aphrody-cluster.slice -C "$here/systemd" aphrody-cluster-haproxy.service nginx-restart.conf -C "$here/generated/ssh" aphrody-ssh-mesh ssh_config.host \
+stage=$(mktemp -d); trap "rm -rf $stage" EXIT
+for f in "$g"/haproxy.cfg "$g"/nginx-cluster.conf "$g"/aphrody-cluster.slice "$here"/systemd/aphrody-cluster-haproxy.service "$here"/systemd/nginx-restart.conf "$here"/generated/ssh/aphrody-ssh-mesh "$here"/generated/ssh/ssh_config.host; do
+  bun "$here/../../packages/env-kit/src/render.ts" "$f" "$stage/$(basename "$f")"
+done
+tar -cf - -C "$stage" haproxy.cfg nginx-cluster.conf aphrody-cluster.slice aphrody-cluster-haproxy.service nginx-restart.conf aphrody-ssh-mesh ssh_config.host \
   | timeout 120 ssh "$tgt" 'rm -rf /tmp/aphrody-cluster && mkdir -p /tmp/aphrody-cluster && tar -xf - -C /tmp/aphrody-cluster'
 run <<'R'
 set -euo pipefail

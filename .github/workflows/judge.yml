@@ -34,6 +34,8 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Layered dependency gate (checkdeps)
         run: bun scripts/checkdeps.ts
+      - name: Personal-data gate (generic patterns; the discovery cache is absent in CI)
+        run: bun scripts/hygiene.ts --rule personal-data
       - name: Identity gate
         env:
           APHRODY_PII_TERMS: ${{ secrets.APHRODY_PII_TERMS }}

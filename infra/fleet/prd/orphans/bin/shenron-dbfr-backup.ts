@@ -1,5 +1,5 @@
 const BACKUPS = "/srv/shenron/data/backups/container";
-const REMOTE = "shenronbackup@10.200.77.3:current/";
+const REMOTE = "shenronbackup@fr2.mesh:current/";
 const SSH_WRITE =
   "ssh -i /root/.ssh/id_ed25519_shenron_dbfr_write -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UpdateHostKeys=no -o UserKnownHostsFile=/root/.ssh/known_hosts";
 const SSH_READ =

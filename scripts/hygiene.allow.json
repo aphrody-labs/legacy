@@ -161,5 +161,24 @@
     "apps/auto/scripts/video-lancement-captures.ts",
     "apps/auto/crates/*/src/lib.rs",
     "apps/auto/crates/auto-facturx/src/cii.rs"
+  ],
+  "personal-data": [
+    "apps/auto/**",
+    "infra/gnu/install.sh",
+    "infra/fleet/fr1-orig/nginx/conf.d/fleet-api.conf",
+    "infra/fleet/fr2-orig/nginx/conf.d/fleet-api.conf",
+    "infra/fleet/fr2/nginx/sites/api.aphrody.com.conf",
+    "infra/fleet/prd/nginx/conf.d/zz-fleet-standby.conf",
+    "infra/cloudflare/workers/api-gateway/worker.js",
+    "docs/native/linux-kernel-story/**",
+    "docs/native/android/PROOF-x64.md",
+    "docs/native/bench/REPORT.md",
+    "docs/native/gnu/DISTROS.md",
+    "docs/packaging/UNIFIED.md",
+    "docs/research/dragon-ball.md",
+    "docs/machine/PC-TUNING.md",
+    "docs/infra/WSL.md",
+    "docs/infra/FLEET-OFFLOAD.md",
+    "packages/ai-os/docs/FUSION.md"
   ]
 }

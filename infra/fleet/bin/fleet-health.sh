@@ -8,6 +8,7 @@
 # Service failover between hosts is the cluster LB (infra/cluster, HAProxy pools fr1/fr2/prd with health checks).
 # Alerts: journald (tag fleet-health, priority err), mailed by fleet-notify.sh (one per cause per 24 h).
 # DNS failover: FLEET_DNS_FAILOVER=1 (prd) -> fleet-dns-failover.sh down/up (token fleet-<host>-dns).
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -uo pipefail
 [ -f /etc/fleet/resilience.conf ] && . /etc/fleet/resilience.conf
 [ -f /etc/fleet/health.env ] && . /etc/fleet/health.env
@@ -30,13 +31,13 @@ for p in ${HEAL_PEERS:-}; do
   echo $n > "$st/down.$name"
 done
 
-for ip in ${FLEET_PEERS:-10.200.77.1 10.200.77.3 10.200.77.5}; do ping_ok "$ip" || fail+=("mesh:$ip"); done
-for hp in ${FLEET_TCP:-10.200.77.1:50051 10.200.77.1:50061 10.200.77.5:8766 10.200.77.5:8182}; do tcp_ok "${hp%:*}" "${hp#*:}" || fail+=("tcp:$hp"); done
+for ip in ${FLEET_PEERS:-$(site_get hosts.fr1.mesh_ip) $(site_get hosts.fr2.mesh_ip) $(site_get hosts.prd.mesh_ip)}; do ping_ok "$ip" || fail+=("mesh:$ip"); done
+for hp in ${FLEET_TCP:-$(site_get hosts.fr1.mesh_ip):50051 $(site_get hosts.fr1.mesh_ip):50061 $(site_get hosts.prd.mesh_ip):8766 $(site_get hosts.prd.mesh_ip):8182}; do tcp_ok "${hp%:*}" "${hp#*:}" || fail+=("tcp:$hp"); done
 # Edge = fr2: down only when every edge URL fails (one broken vhost is not an edge outage).
 edge_ok=0; edge_n=0
 for u in ${FLEET_URLS:-https://api.aphrody.com/v1/health https://creator.aphrody.com/health https://cdn.aphrody.com/}; do
   h=${u#https://}; h=${h%%/*}; edge_n=$((edge_n+1))
-  if http_ok --resolve "$h:443:${FLEET_EDGE_IP:-51.255.162.6}" "$u"; then edge_ok=$((edge_ok+1)); else fail+=("edge:$u"); fi
+  if http_ok --resolve "$h:443:${FLEET_EDGE_IP:-$(site_get hosts.fr2.public_ip)}" "$u"; then edge_ok=$((edge_ok+1)); else fail+=("edge:$u"); fi
 done
 n=$(cat "$st/edge_fail" 2>/dev/null || echo 0); [ $edge_ok = 0 ] && n=$((n+1)) || n=0; echo $n > "$st/edge_fail"
 up=$(cat "$st/edge_up" 2>/dev/null || echo 0); [ $edge_ok = "$edge_n" ] && up=$((up+1)) || up=0; echo $up > "$st/edge_up"

@@ -6,9 +6,11 @@
 // Vantage points: this machine = "internet" (not in the fr2 allow-list), ssh fr2/prd for fleet-side checks.
 import { connect } from "node:tls";
 import { join } from "node:path";
+import { resolve } from "../../packages/env-kit/src/discover.ts";
 import { api, cfg } from "./lib.ts";
 
-const FR2 = ["51.255.162.6", "2001:41d0:305:2100::a461"];
+const fr2 = await resolve("fr2");
+const FR2 = [fr2.public, fr2.public6].filter(Boolean) as string[];
 const md = Bun.argv.includes("--md");
 const record = Bun.argv.includes("--record");
 const expFile = Bun.file(join(import.meta.dir, "expected-status.json"));
@@ -243,7 +245,7 @@ add(
 );
 const fleet = sh(
   "prd",
-  "curl -s -o /dev/null -w '%{http_code}' --resolve api.aphrody.com:443:51.255.162.6 https://api.aphrody.com/v1/health",
+  `curl -s -o /dev/null -w '%{http_code}' --resolve api.aphrody.com:443:${FR2[0]} https://api.aphrody.com/v1/health`,
 );
 add(
   "origin-fleet",

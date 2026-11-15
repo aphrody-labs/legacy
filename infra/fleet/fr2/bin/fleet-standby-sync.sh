@@ -4,19 +4,21 @@
 # upstream, proxy_cache_path) and only the HTTPS server blocks of STANDBY_NAMES, rewritten to plain HTTP on prd
 # loopback ports (TLS ends at Cloudflare: the standby is reached through the prd tunnel mig-prd, ingress in
 # infra/cloudflare/cloudflare.toml). Snippets are copied. prd: `nginx -t`, reload, otherwise previous state kept.
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -euo pipefail
-PRD=${STANDBY_TARGET:-root@72.60.186.43}
+PRD_PUB=$(site_get hosts.prd.public_ip); PRD_MESH=$(site_get hosts.prd.mesh_ip)
+PRD=${STANDBY_TARGET:-root@$PRD_PUB}
 CONFS=${STANDBY_CONFS:-"/etc/nginx/conf.d/fleet-api.conf /etc/nginx/conf.d/rosegriffon-cdn.conf"}
 NAMES=${STANDBY_NAMES:-"dbfr.aphrody.com=29401 nie.aphrody.app=29402"}
 t=$(mktemp -d); trap 'rm -rf "$t"' EXIT
 mkdir -p "$t/snippets"
 # shellcheck disable=SC2086
-awk -v names="$NAMES" '
+awk -v names="$NAMES" -v mesh="$PRD_MESH" '
   BEGIN { n = split(names, a, " "); for (i = 1; i <= n; i++) { split(a[i], kv, "="); port[kv[1]] = kv[2] } }
   function flush(   p, k, line, i) {
     p = ""; for (k in port) if (index(sname, " " k " ") || index(sname, " " k ";")) p = port[k]
     if (p == "" || !tls) return
-    print "server {"; print "    listen 127.0.0.1:" p ";"; print "    listen 10.200.77.5:" p ";  # mig-prd replicas on fr1/fr2 reach it via fleet-fwd-standby@" p
+    print "server {"; print "    listen 127.0.0.1:" p ";"; print "    listen " mesh ":" p ";  # mig-prd replicas on fr1/fr2 reach it via fleet-fwd-standby@" p
     for (i = 1; i <= nb; i++) { line = buf[i]
       if (line ~ /^[ \t]*(listen|ssl_[a-z_]+|http2)[ \t;]/) continue
       if (line ~ /\$aop_deny/) continue
@@ -33,7 +35,7 @@ awk -v names="$NAMES" '
   }
   { print }
 ' $CONFS | sed -e 's#/etc/nginx/snippets/#/etc/fleet-standby/snippets/#g' \
-  -e 's#server 72.60.186.43:8443#server 10.200.77.5:8443#' > "$t/zz-fleet-standby.conf"  # rosegriffon origin allow-lists the mesh, not prd's public IP
+  -e "s#server $PRD_PUB:8443#server $PRD_MESH:8443#" > "$t/zz-fleet-standby.conf"  # rosegriffon origin allow-lists the mesh, not prd's public IP
 for i in $(grep -hoE 'include /etc/fleet-standby/snippets/[^;]+' "$t/zz-fleet-standby.conf" | cut -d' ' -f2); do
   f=/etc/nginx/snippets/${i##*/}; grep -vE '^[ \t]*(ssl_[a-z_]+|http2)[ \t]' "$f" > "$t/snippets/${i##*/}"
 done

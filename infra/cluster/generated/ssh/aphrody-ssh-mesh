@@ -3,9 +3,9 @@
 # Cert: $APHRODY_CLUSTER_DIR (default ~/.config/aphrody-cluster) holding client.pem (cert+key) and ca.pem.
 d=${APHRODY_CLUSTER_DIR:-$HOME/.config/aphrody-cluster}
 case "$1" in
-  fr1) ip=51.77.147.152 ;;
-  fr2) ip=51.255.162.6 ;;
-  prd) ip=72.60.186.43 ;;
+  fr1) ip=@@hosts.fr1.public_ip@@ ;;
+  fr2) ip=@@hosts.fr2.public_ip@@ ;;
+  prd) ip=@@hosts.prd.public_ip@@ ;;
   *) echo "aphrody-ssh-mesh: unknown member $1" >&2; exit 2 ;;
 esac
 sni="ssh.$1.cluster.internal"

@@ -180,11 +180,11 @@
         "source": "Windows.Terminal.VisualStudio"
       },
       {
-        "commandline": "C:\\Users\\aphro\\AppData\\Local\\Programs\\Niubash\\niu.exe",
+        "commandline": "%USERPROFILE%\\AppData\\Local\\Programs\\Niubash\\niu.exe",
         "elevate": true,
         "guid": "{7d8b7341-8f4d-4c56-91f0-4ad220d41db1}",
         "hidden": false,
-        "icon": "C:\\Users\\aphro\\AppData\\Local\\Programs\\Niubash\\assets\\niubash-icon-256.png",
+        "icon": "%USERPROFILE%\\AppData\\Local\\Programs\\Niubash\\assets\\niubash-icon-256.png",
         "name": "Niubash",
         "startingDirectory": "%USERPROFILE%"
       },
