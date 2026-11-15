@@ -85,7 +85,7 @@ export async function journaliser(
   await tx`INSERT INTO audit (actor, action, ref, payload) VALUES (${actor}, ${action}, ${ref}, ${payload})`;
 }
 
-/** Crée un brouillon (sans numéro). */
+/** Creates a draft (without a number). */
 export async function creerBrouillon(
   tx: Tx,
   actor: string | null,
@@ -100,7 +100,7 @@ export async function creerBrouillon(
   return ligne(r!);
 }
 
-/** Remplace le contenu d'un brouillon. */
+/** Replaces the content of a draft. */
 export async function modifierBrouillon(
   tx: Tx,
   actor: string | null,
@@ -119,8 +119,8 @@ export async function modifierBrouillon(
 }
 
 /**
- * Émet un brouillon : contrôle des mentions, attribution du numéro suivant de la série
- * (compteur verrouillé dans la même transaction, donc sans trou ni doublon), document figé.
+ * Issues a draft: mandatory-mention check, assignment of the next number in the series
+ * (counter locked in the same transaction, hence no gap or duplicate), frozen document.
  */
 export async function emettre(tx: Tx, actor: string | null, id: string): Promise<Ligne> {
   const [cur] = await tx<Row[]>`SELECT * FROM document WHERE id = ${id} FOR UPDATE`;
@@ -145,8 +145,8 @@ export async function emettre(tx: Tx, actor: string | null, id: string): Promise
 }
 
 /**
- * Un avoir rectifie une facture ou un acompte émis du même tenant ; le cumul des avoirs émis
- * sur une facture ne dépasse pas son TTC.
+ * A credit note corrects an invoice or deposit invoice issued by the same tenant; the sum of the credit notes issued
+ * against an invoice does not exceed its total including tax.
  */
 async function controlerAvoir(tx: Tx, origine: string, ttcCents: number) {
   const [f] = await tx<{ id: string; ttc_cents: string; statut: Statut }[]>`
@@ -162,7 +162,7 @@ async function controlerAvoir(tx: Tx, origine: string, ttcCents: number) {
   const reste = Number(f.ttc_cents) - Number(deja);
   if (ttcCents > reste)
     throw new ErreurMetier("avoir : montant supérieur au reste de la facture", [`reste ${reste} centimes`], 409);
-  // Avoir soldant une facture non payée : la facture est annulée.
+  // Credit note settling an unpaid invoice: the invoice is cancelled.
   if (ttcCents === reste && f.statut !== "paye")
     await tx`UPDATE document SET statut = 'annule', updated_at = now() WHERE id = ${f.id}`;
 }
@@ -207,12 +207,12 @@ export async function lister(tx: Tx, type?: Type, limite = 100): Promise<Ligne[]
   return rows.map(ligne);
 }
 
-/** Export de gestion complet ; le plafond des listes d'écran ne tronque pas le classeur. */
+/** Full management export; the cap of screen lists does not truncate the workbook. */
 export async function documentsGestion(tx: Tx): Promise<Ligne[]> {
   return (await tx<Row[]>`SELECT * FROM document ORDER BY created_at DESC`).map(ligne);
 }
 
-/** Lecture groupée du chantier ; les avoirs suivent leur facture, même sans affectation manuelle. */
+/** Grouped read of the project; credit notes follow their invoice, even without a manual assignment. */
 export async function documentsChantier(tx: Tx, chantierId: string): Promise<Ligne[]> {
   const rows = await tx<Row[]>`SELECT d.* FROM document d WHERE
     (d.type <> 'avoir' AND EXISTS (SELECT 1 FROM chantier_document c WHERE c.tenant_id=d.tenant_id AND c.document_id=d.id AND c.chantier_id=${chantierId}))
@@ -222,7 +222,7 @@ export async function documentsChantier(tx: Tx, chantierId: string): Promise<Lig
   return rows.map(ligne);
 }
 
-/** Vérifie le chaînage de la piste d'audit du tenant courant. */
+/** Checks the chaining of the current tenant's audit trail. */
 export async function verifierAudit(tx: Tx): Promise<{ ok: boolean; entrees: number }> {
   const rows = await tx<{ prev_hash: string; hash: string }[]>`SELECT prev_hash, hash FROM audit ORDER BY id`;
   let prev = "0".repeat(64);
@@ -235,7 +235,7 @@ export async function verifierAudit(tx: Tx): Promise<{ ok: boolean; entrees: num
 
 export type TypeFichier = "facturx" | "pdf";
 
-/** Fige l'exemplaire d'un document émis (ajout seul) ; renvoie son SHA-256. */
+/** Freezes the copy of an issued document (append-only); returns its SHA-256. */
 export async function enregistrerFichier(
   tx: Tx,
   actor: string | null,

@@ -39,7 +39,7 @@ beforeAll(async () => {
 
 afterAll(() => drop());
 
-test("employé : création, modification, isolation entre tenants", async () => {
+test("employee: creation, update, isolation between tenants", async () => {
   const e = await withTenant(sql, A, (tx) => creerEmploye(tx, null, lea));
   expect(e.dateEntree).toBe("2025-01-06");
   const m = await withTenant(sql, A, (tx) => modifierEmploye(tx, null, e.id, { ...lea, poste: "Office manager" }));
@@ -51,9 +51,9 @@ test("employé : création, modification, isolation entre tenants", async () => 
   );
 });
 
-test("congés payés : solde, chevauchement, validation, annulation", async () => {
+test("paid leave: balance, overlap, validation, cancellation", async () => {
   const e = await withTenant(sql, A, (tx) => creerEmploye(tx, null, { ...lea, prenom: "Paul" }));
-  // période 2026-06-01 : 4 mois entiers au 2026-10-01 → 10 jours acquis
+  // period 2026-06-01: 4 whole months on 2026-10-01 → 10 days accrued
   expect(await withTenant(sql, A, (tx) => soldeConges(tx, e.id, "2026-10-01"))).toEqual({
     periode: "2026-06-01",
     acquis: 10,

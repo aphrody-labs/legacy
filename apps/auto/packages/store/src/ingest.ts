@@ -1,4 +1,4 @@
-// Lot ingest : factures fournisseurs reçues et leur fichier d'origine (voir docs/ARCHITECTURE.md).
+// Ingest batch: received supplier invoices and their original file (see docs/ARCHITECTURE.md).
 import type { FactureRecue, Resultat, StatutRecue } from "@auto/ingest";
 import type { Tx } from "./db";
 import { ErreurMetier, journaliser } from "./index";
@@ -66,7 +66,7 @@ const recue = (r: Row): Recue => ({
 });
 
 const UUID = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
-/** Lecture groupée du dossier analytique, sans limite de liste globale. */
+/** Grouped read of the analytic file, without a global list limit. */
 export async function achatsChantier(tx: Tx, chantierId: string): Promise<(Recue & { fournisseurId: string })[]> {
   const rows = await tx<(Row & { fournisseur_id: string })[]>`SELECT f.*, a.fournisseur_id FROM facture_recue f
     JOIN achat_affectation a ON a.tenant_id=f.tenant_id AND a.recue_id=f.id
@@ -89,7 +89,7 @@ const dateOk = (d: string | undefined) =>
 /** Bun.sql : JSON explicite (un tableau JS serait lu comme un tableau Postgres). */
 const jsonb = (v: unknown) => (v == null ? null : JSON.stringify(v));
 
-/** Colonnes de recherche dérivées de la facture normalisée. */
+/** Search columns derived from the normalized invoice. */
 const colonnes = (f: FactureRecue | null) => ({
   fournisseur: f?.fournisseur?.nom ?? null,
   siren: f?.fournisseur?.siren ?? f?.fournisseur?.siret?.slice(0, 9) ?? null,
@@ -101,7 +101,7 @@ const colonnes = (f: FactureRecue | null) => ({
 
 export const empreinteSha256 = (o: Uint8Array) => new Bun.CryptoHasher("sha256").update(o).digest("hex");
 
-/** Facture déjà reçue avec le même fichier (même SHA-256) dans ce tenant. */
+/** Invoice already received with the same file (same SHA-256) in this tenant. */
 export async function recueParFichier(tx: Tx, empreinte: string): Promise<Recue | null> {
   const [r] = await tx<Row[]>`
     SELECT f.* FROM facture_recue f JOIN fichier_recu x ON x.tenant_id = f.tenant_id AND x.id = f.fichier_id
@@ -156,14 +156,14 @@ export async function lireFichierRecu(tx: Tx, id: string) {
 
 export interface Decision {
   statut: Exclude<StatutRecue, "a_verifier">;
-  /** Facture corrigée à la main (remplace l'extraction). */
+  /** Invoice corrected by hand (replaces the extraction). */
   facture?: FactureRecue;
-  /** Anomalies restantes après correction (recalculées par l'appelant). */
+  /** Remaining anomalies after correction (recomputed by the caller). */
   anomalies?: string[];
   motif?: string;
 }
 
-/** Validation ou rejet manuel. Une facture rejetée ne change plus. */
+/** Manual validation or rejection. A rejected invoice no longer changes. */
 export async function deciderRecue(tx: Tx, actor: string, id: string, d: Decision): Promise<Recue> {
   const avant = await lireRecue(tx, id);
   if (!avant) throw new ErreurMetier("facture reçue introuvable", [], 404);

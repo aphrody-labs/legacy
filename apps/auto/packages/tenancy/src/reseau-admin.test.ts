@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { ipAdministration } from "./reseau-admin";
-test("restriction IP admin : opt-in, proxy explicitement déclaré, IPv4/IPv6 exactes et refus des listes/en-têtes forgés", () => {
+test("admin IP restriction: opt-in, explicitly declared proxy, exact IPv4/IPv6 and refusal of lists/forged headers", () => {
   const r = (headers: Record<string, string>, env: Record<string, string | undefined>) =>
     ipAdministration(new Request("https://auto.test", { headers }), env);
   expect(r({}, {}).autorise).toBe(true);

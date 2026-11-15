@@ -51,7 +51,7 @@ async function owner(email: string): Promise<Auth & { session: string }> {
 
 const jetonRecu = () => boite.at(-1)!.donnees.jeton!;
 
-test("inscription : utilisateur, entreprise (organization), owner ; mot de passe argon2id dans account", async () => {
+test("sign-up: user, company (organization), owner; argon2id password in account", async () => {
   const a = await owner("inscrit@alpha.fr");
   expect(await authentifier(sql, a.session)).toEqual({ userId: a.userId, tenantId: a.tenantId, role: "owner" });
   const [acc] = await sql`SELECT password FROM account WHERE user_id = ${a.userId} AND provider_id = 'credential'`;
@@ -65,12 +65,12 @@ test("inscription : utilisateur, entreprise (organization), owner ; mot de passe
   expect(await authentifier(sql, "inconnu")).toBeNull();
   await expect(connecter(sql, "inscrit@alpha.fr", "faux mot de passe")).rejects.toMatchObject({ status: 401 });
 
-  // Hachage historique Bun.password repris tel quel par Better Auth.
+  // Historical Bun.password hash taken over as is by Better Auth.
   await sql`UPDATE account SET password = ${await Bun.password.hash("ancien mot de passe")} WHERE user_id = ${a.userId}`;
   expect("session" in (await connecter(sql, "inscrit@alpha.fr", "ancien mot de passe"))).toBe(true);
 });
 
-test("clés d'API : entreprise, auteur, rôle relu, révocation, reprise des anciens jetons", async () => {
+test("API keys: company, author, role re-read, revocation, takeover of old tokens", async () => {
   const a = await owner("cles@alpha.fr");
   const cle = await creerJetonApi(sql, a, "agent");
   expect(cle).toStartWith("auto_");
@@ -80,12 +80,12 @@ test("clés d'API : entreprise, auteur, rôle relu, révocation, reprise des anc
   expect(JSON.stringify(await sql`SELECT * FROM apikey`)).not.toContain(cle);
   await expect(creerJetonApi(sql, { ...a, role: "comptable" }, "x")).rejects.toMatchObject({ status: 403 });
 
-  // Rôle relu à chaque requête : rétrogradé, la clé n'a plus que les droits de lecture.
+  // Role re-read on every request: demoted, the key only has read rights.
   await sql`UPDATE membership SET role = 'lecture' WHERE user_id = ${a.userId}`;
   expect((await authentifier(sql, cle))?.role).toBe("lecture");
   await sql`UPDATE membership SET role = 'owner' WHERE user_id = ${a.userId}`;
 
-  // Entreprise suspendue : plus d'accès.
+  // Suspended company: no more access.
   await sql`UPDATE tenant SET suspendu_at = now() WHERE id = ${a.tenantId}`;
   expect(await authentifier(sql, cle)).toBeNull();
   await sql`UPDATE tenant SET suspendu_at = NULL WHERE id = ${a.tenantId}`;
@@ -93,21 +93,21 @@ test("clés d'API : entreprise, auteur, rôle relu, révocation, reprise des anc
   await revoquerJeton(sql, a, l!.id);
   expect(await authentifier(sql, cle)).toBeNull();
 
-  // Ancien jeton `auto_…` (SHA-256 hexadécimal) : même empreinte, convertie en base64url par 020.
+  // Old `auto_…` token (hexadecimal SHA-256): same hash, converted to base64url by 020.
   const ancien = "auto_ancienjetonquivientdelacouchemaison";
   const b64 = Buffer.from(hash(ancien), "hex").toString("base64url");
   await sql`INSERT INTO apikey (reference_id, prefix, key, metadata) VALUES (${a.tenantId}, 'auto_', ${b64},
     ${JSON.stringify({ userId: a.userId })})`;
   expect(await authentifier(sql, ancien)).toMatchObject({ tenantId: a.tenantId });
 
-  // Clé temporaire des workflows.
+  // Temporary workflow key.
   const t = await cleTemporaire(sql, a.tenantId, a.userId, "automatisation:test");
   expect((await authentifier(sql, t.jeton))?.userId).toBe(a.userId);
   await t.revoquer();
   expect(await authentifier(sql, t.jeton)).toBeNull();
 });
 
-test("invitation : création, usage unique, révocation, rattachement d'un compte existant", async () => {
+test("invitation: creation, single use, revocation, attaching an existing account", async () => {
   const a = await owner("owner@alpha.fr");
   const inv = await inviter(sql, a, "Nouveau@Alpha.fr", "comptable");
   expect(inv).toMatchObject({ email: "nouveau@alpha.fr", role: "comptable", statut: "en_attente" });
@@ -116,12 +116,12 @@ test("invitation : création, usage unique, révocation, rattachement d'un compt
   expect(boite.at(-1)!.de).toBe("contact@aphrody.com");
   expect(boite.at(-1)!.texte).toContain(`/app/invitation?id=${inv.id}`);
 
-  // Un comptable ne peut pas inviter ; un admin ne peut pas nommer d'owner.
+  // An accountant cannot invite; an admin cannot appoint an owner.
   const comptable: Auth = { ...a, role: "comptable" };
   await expect(inviter(sql, comptable, "x@alpha.fr", "lecture")).rejects.toThrow("membres");
   await expect(inviter(sql, { ...a, role: "admin" }, "x@alpha.fr", "owner")).rejects.toThrow("owner");
 
-  // Acceptation : création du compte, puis lien consommé.
+  // Acceptance: account creation, then link consumed.
   const jeton = jetonRecu();
   await expect(accepterInvitation(sql, jeton, "court")).rejects.toThrow("12 caractères");
   const r = await accepterInvitation(sql, jeton, MDP);
@@ -131,7 +131,7 @@ test("invitation : création, usage unique, révocation, rattachement d'un compt
   await expect(accepterInvitation(sql, jeton, MDP)).rejects.toThrow("déjà utilisée");
   await expect(inviter(sql, a, "nouveau@alpha.fr", "lecture")).rejects.toThrow("déjà membre");
 
-  // Révocation : le lien ne sert plus.
+  // Revocation: the link no longer works.
   await inviter(sql, a, "revoque@alpha.fr", "rh");
   const revoque = jetonRecu();
   const [enCours] = (await listerInvitations(sql, a)).filter((i) => i.email === "revoque@alpha.fr");
@@ -139,7 +139,7 @@ test("invitation : création, usage unique, révocation, rattachement d'un compt
   await expect(accepterInvitation(sql, revoque, MDP)).rejects.toThrow("invalide");
   await expect(revoquerInvitation(sql, a, enCours!.id)).rejects.toThrow("déjà close");
 
-  // Compte existant d'une autre entreprise : rattaché, mot de passe du compte exigé.
+  // Existing account of another company: attached, account password required.
   const b = await owner("owner@beta.fr");
   await inviter(sql, a, "owner@beta.fr", "admin");
   const jb = jetonRecu();
@@ -151,13 +151,13 @@ test("invitation : création, usage unique, révocation, rattachement d'un compt
     tenantId: b.tenantId,
   });
 
-  // Expiration : au-delà de 7 jours, refusée.
+  // Expiry: beyond 7 days, refused.
   await inviter(sql, a, "tard@alpha.fr", "lecture");
   const tard = jetonRecu();
   await sql`UPDATE invitation SET expires_at = now() - interval '1 second' WHERE email = 'tard@alpha.fr'`;
   await expect(accepterInvitation(sql, tard, MDP)).rejects.toThrow("expirée");
 
-  // Ancienne invitation (jeton haché, lien `/invitation#…`) : toujours acceptée.
+  // Old invitation (hashed token, `/invitation#…` link): still accepted.
   const ancien = "i_ancienneinvitation";
   await sql`INSERT INTO invitation (tenant_id, email, role, token_hash, invite_par, expires_at)
     VALUES (${a.tenantId}, 'ancien@alpha.fr', 'lecture', ${hash(ancien)}, ${a.userId}, now() + interval '1 day')`;
@@ -165,7 +165,7 @@ test("invitation : création, usage unique, révocation, rattachement d'un compt
     tenantId: a.tenantId,
   });
 
-  // Isolation : B ne liste ni ne révoque les invitations de A ; piste d'audit intacte.
+  // Isolation: B neither lists nor revokes A's invitations; audit trail intact.
   expect(await listerInvitations(sql, b)).toEqual([]);
   const [i] = await listerInvitations(sql, a);
   await expect(revoquerInvitation(sql, b, i!.id)).rejects.toThrow("introuvable");
@@ -175,7 +175,7 @@ test("invitation : création, usage unique, révocation, rattachement d'un compt
   expect(JSON.stringify(actions)).not.toContain("@");
 });
 
-test("2FA TOTP : enrôlement, confirmation, connexion en deux étapes, secours, désactivation", async () => {
+test("TOTP 2FA: enrollment, confirmation, two-step sign-in, backup, deactivation", async () => {
   const a = await owner("totp@alpha.fr");
   await expect(enrolerTotp(sql, a, "mauvais")).rejects.toThrow("identifiants");
   const { secret, uri, codesSecours } = await enrolerTotp(sql, a, MDP);
@@ -183,36 +183,36 @@ test("2FA TOTP : enrôlement, confirmation, connexion en deux étapes, secours, 
   expect(codesSecours).toHaveLength(10);
   const brut = depuisBase32(secret);
 
-  // Tant que la 2FA n'est pas confirmée, la connexion reste en une étape.
+  // As long as 2FA is not confirmed, sign-in stays one-step.
   expect("session" in (await connecter(sql, "totp@alpha.fr", MDP))).toBe(true);
   await expect(confirmerTotp(sql, a, "000000")).rejects.toThrow("code invalide");
   await confirmerTotp(sql, a, await totp(brut));
 
-  // Étape 1 : défi, sans accès aux routes.
+  // Step 1: challenge, without access to the routes.
   const c = await connecter(sql, "totp@alpha.fr", MDP);
-  if (!("defi" in c)) throw new Error("défi attendu");
+  if (!("defi" in c)) throw new Error("challenge expected");
   expect(await authentifier(sql, c.defi)).toBeNull();
   await expect(validerDeuxFacteurs(sql, c.defi, "000000")).rejects.toThrow("code invalide");
   const s = await validerDeuxFacteurs(sql, c.defi, await totp(brut));
   expect((await authentifier(sql, s.session))?.userId).toBe(a.userId);
   await expect(validerDeuxFacteurs(sql, c.defi, await totp(brut))).rejects.toThrow("défi");
 
-  // Code de secours : à usage unique.
+  // Backup code: single use.
   const c2 = await connecter(sql, "totp@alpha.fr", MDP);
-  if (!("defi" in c2)) throw new Error("défi attendu");
+  if (!("defi" in c2)) throw new Error("challenge expected");
   await validerDeuxFacteurs(sql, c2.defi, codesSecours[0]!);
   const c3 = await connecter(sql, "totp@alpha.fr", MDP);
-  if (!("defi" in c3)) throw new Error("défi attendu");
+  if (!("defi" in c3)) throw new Error("challenge expected");
   await expect(validerDeuxFacteurs(sql, c3.defi, codesSecours[0]!)).rejects.toThrow("code invalide");
 
-  // Nouveaux codes : les anciens ne servent plus.
+  // New codes: the old ones no longer work.
   const { codesSecours: neufs } = await regenererCodesSecours(sql, a, MDP);
   await expect(validerDeuxFacteurs(sql, c3.defi, codesSecours[1]!)).rejects.toThrow();
   const c4 = await connecter(sql, "totp@alpha.fr", MDP);
-  if (!("defi" in c4)) throw new Error("défi attendu");
+  if (!("defi" in c4)) throw new Error("challenge expected");
   await validerDeuxFacteurs(sql, c4.defi, neufs[0]!);
 
-  // Désactivation : mot de passe et code exigés.
+  // Deactivation: password and code required.
   await expect(desactiverTotp(sql, a, MDP, "000000")).rejects.toThrow("code invalide");
   await expect(desactiverTotp(sql, a, "mauvais", await totp(brut))).rejects.toThrow("identifiants");
   await desactiverTotp(sql, a, MDP, await totp(brut));
@@ -220,7 +220,7 @@ test("2FA TOTP : enrôlement, confirmation, connexion en deux étapes, secours, 
   expect(await sql`SELECT 1 FROM two_factor WHERE user_id = ${a.userId}`).toHaveLength(0);
 });
 
-test("reprise de l'ancienne 2FA : secret TOTP et codes de secours conservés", async () => {
+test("takeover of the former 2FA: TOTP secret and backup codes kept", async () => {
   const a = await owner("ancienne2fa@alpha.fr");
   const brut = crypto.getRandomValues(new Uint8Array(20));
   await sql`UPDATE app_user SET totp_secret = ${await chiffrer(`totp:${a.userId}`, brut)}, totp_actif = true
@@ -232,22 +232,22 @@ test("reprise de l'ancienne 2FA : secret TOTP et codes de secours conservés", a
   const { secretConfig } = await authDe(sql).$context;
   expect(await symmetricDecrypt({ key: secretConfig, data: tf.secret })).toStartWith("legacy:");
 
-  // L'application d'authentification déjà enrôlée continue de servir.
+  // The already enrolled authenticator application keeps working.
   const c = await connecter(sql, "ancienne2fa@alpha.fr", MDP);
-  if (!("defi" in c)) throw new Error("défi attendu");
+  if (!("defi" in c)) throw new Error("challenge expected");
   await expect(validerDeuxFacteurs(sql, c.defi, "000000")).rejects.toThrow("code invalide");
   expect((await validerDeuxFacteurs(sql, c.defi, await totp(brut))).userId).toBe(a.userId);
 
-  // Ancien code de secours : accepté une fois.
+  // Old backup code: accepted once.
   const c2 = await connecter(sql, "ancienne2fa@alpha.fr", MDP);
-  if (!("defi" in c2)) throw new Error("défi attendu");
+  if (!("defi" in c2)) throw new Error("challenge expected");
   expect((await validerDeuxFacteurs(sql, c2.defi, "ABCDE-ABCDE")).userId).toBe(a.userId);
   const c3 = await connecter(sql, "ancienne2fa@alpha.fr", MDP);
-  if (!("defi" in c3)) throw new Error("défi attendu");
+  if (!("defi" in c3)) throw new Error("challenge expected");
   await expect(validerDeuxFacteurs(sql, c3.defi, "abcde-abcde")).rejects.toThrow("code invalide");
 });
 
-test("Sirene : préremplissage depuis la réponse de recherche-entreprises (simulée)", async () => {
+test("Sirene: prefill from the recherche-entreprises response (simulated)", async () => {
   const appels: string[] = [];
   const reponse = {
     results: [
@@ -287,7 +287,7 @@ test("Sirene : préremplissage depuis la réponse de recherche-entreprises (simu
     tvaIntracom: "FR44732829320",
   });
   expect(appels[0]).toBe("https://recherche-entreprises.api.gouv.fr/search?q=732829320&page=1&per_page=1");
-  // SIRET accepté, SIREN invalide refusé, inconnu → null, annuaire en panne → 502.
+  // SIRET accepted, invalid SIREN refused, unknown → null, directory down → 502.
   expect((await rechercherSiren("73282932000074", fetcher))?.siren).toBe("732829320");
   await expect(rechercherSiren("123456789", fetcher)).rejects.toThrow("siren invalide");
   const vide = (async () => Response.json({ results: [] })) as unknown as typeof fetch;

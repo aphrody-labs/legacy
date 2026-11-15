@@ -32,7 +32,7 @@ beforeAll(async () => {
 
 afterAll(() => drop());
 
-test("événement ajouté avec la transaction métier, absent si elle est annulée", async () => {
+test("event added with the business transaction, absent if it is rolled back", async () => {
   const { id, corps } = await withTenant(sql, A, (tx) => ajouterEvenement(tx, "document.emis", { numero: "F-1" }));
   expect(JSON.parse(corps)).toMatchObject({ id, type: "document.emis", tenantId: A, data: { numero: "F-1" } });
   const e = await lireEvenement(sql, id);
@@ -42,25 +42,25 @@ test("événement ajouté avec la transaction métier, absent si elle est annul�
   await expect(
     withTenant(sql, A, async (tx) => {
       annule = (await ajouterEvenement(tx, "document.emis", {})).id;
-      throw new Error("action métier en échec");
+      throw new Error("business action failed");
     }),
-  ).rejects.toThrow("action métier");
+  ).rejects.toThrow("business action");
   expect(await lireEvenement(sql, annule)).toBeNull();
 
   await expect(sql.begin((tx) => ajouterEvenement(tx, "document.emis", {}))).rejects.toThrow("withTenant");
 });
 
-test("outbox isolée par tenant (RLS)", async () => {
+test("outbox isolated per tenant (RLS)", async () => {
   await withTenant(sql, B, (tx) => ajouterEvenement(tx, "paiement.enregistre", {}));
   const a = await withTenant(sql, A, (tx) => listerEvenements(tx));
   const b = await withTenant(sql, B, (tx) => listerEvenements(tx));
   expect(a.every((e) => e.tenantId === A)).toBe(true);
   expect(b.map((e) => e.type)).toEqual(["paiement.enregistre"]);
-  // Un tenant ne peut ni lire ni insérer de job pour un autre.
+  // A tenant can neither read nor insert a job for another.
   await expect(withTenant(sql, A, (tx) => enfiler(tx, "x", {}, { tenantId: B }))).rejects.toThrow();
 });
 
-test("un job par événement ; prise exclusive entre workers (SKIP LOCKED)", async () => {
+test("one job per event; exclusive pick between workers (SKIP LOCKED)", async () => {
   await avecWorker(sql, (tx) => tx`UPDATE job SET statut = 'fait'`);
   for (let i = 0; i < 6; i++) await withTenant(sql, A, (tx) => ajouterEvenement(tx, "document.statut", { i }));
   const [x, y] = await Promise.all([prendreJobs(sql, [JOB_LIVRAISON], 4), prendreJobs(sql, [JOB_LIVRAISON], 4)]);
@@ -73,7 +73,7 @@ test("un job par événement ; prise exclusive entre workers (SKIP LOCKED)", asy
   expect((await lireJob(sql, ids[0]!))?.statut).toBe("fait");
 });
 
-test("bail expiré : job repris, puis en échec une fois les essais épuisés", async () => {
+test("expired lease: job taken again, then failed once attempts are exhausted", async () => {
   const id = (await avecWorker(sql, (tx) => enfiler(tx, "test.bail", {}, { maxEssais: 2 })))!;
   expect((await prendreJobs(sql, ["test.bail"], 1, 1)).map((j) => j.id)).toEqual([id]);
   await Bun.sleep(10);
@@ -84,11 +84,11 @@ test("bail expiré : job repris, puis en échec une fois les essais épuisés", 
   expect(await lireJob(sql, id)).toMatchObject({ statut: "echec", derniereErreur: "bail expiré" });
 });
 
-test("nouvel essai différé, échec définitif après max_essais", async () => {
+test("deferred retry, permanent failure after max_essais", async () => {
   const id = (await avecWorker(sql, (tx) => enfiler(tx, "test.essai", {}, { maxEssais: 2 })))!;
   const [j1] = await prendreJobs(sql, ["test.essai"]);
   expect(await reporterJob(sql, j1!, "HTTP 500", 60_000)).toBe("reporte");
-  expect(await prendreJobs(sql, ["test.essai"])).toEqual([]); // pas avant le délai
+  expect(await prendreJobs(sql, ["test.essai"])).toEqual([]); // not before the delay
   await avecWorker(sql, (tx) => tx`UPDATE job SET executer_apres = now() WHERE id = ${id}`);
   const [j2] = await prendreJobs(sql, ["test.essai"]);
   expect(j2).toMatchObject({ essais: 2, derniereErreur: "HTTP 500" });
@@ -96,7 +96,7 @@ test("nouvel essai différé, échec définitif après max_essais", async () => 
   expect(await lireJob(sql, id)).toMatchObject({ statut: "echec", derniereErreur: "HTTP 502" });
 });
 
-test("clé de dédoublonnage et job système hors tenant", async () => {
+test("deduplication key and system job outside a tenant", async () => {
   const a = await avecWorker(sql, (tx) => enfiler(tx, "relances.planifier", {}, { cle: "relances:2026-10-22" }));
   const b = await avecWorker(sql, (tx) => enfiler(tx, "relances.planifier", {}, { cle: "relances:2026-10-22" }));
   expect(a).not.toBeNull();
@@ -104,7 +104,7 @@ test("clé de dédoublonnage et job système hors tenant", async () => {
   expect((await lireJob(sql, a!))?.tenantId).toBeNull();
 });
 
-test("marquage livré et échec de l'outbox", async () => {
+test("marking delivered and outbox failure", async () => {
   const { id } = await withTenant(sql, A, (tx) => ajouterEvenement(tx, "absence.decidee", {}));
   await noterLivraison(sql, id, "HTTP 503");
   expect(await lireEvenement(sql, id)).toMatchObject({ statut: "a_livrer", essais: 1, derniereErreur: "HTTP 503" });
@@ -112,12 +112,12 @@ test("marquage livré et échec de l'outbox", async () => {
   const e = await lireEvenement(sql, id);
   expect(e).toMatchObject({ statut: "livre", essais: 2, derniereErreur: null });
   expect(e?.livreAt).not.toBeNull();
-  // Un échec définitif tardif ne déclasse pas un événement livré.
+  // A late permanent failure does not downgrade a delivered event.
   await noterLivraison(sql, id, "abandon", true);
   expect((await lireEvenement(sql, id))?.statut).toBe("livre");
 });
 
-test("délai exponentiel plafonné", () => {
+test("capped exponential delay", () => {
   expect([1, 2, 3, 4].map((n) => delaiNouvelEssai(n, 100))).toEqual([100, 200, 400, 800]);
   expect(delaiNouvelEssai(40)).toBe(3_600_000);
 });

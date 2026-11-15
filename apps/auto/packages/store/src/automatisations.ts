@@ -1,13 +1,13 @@
-// Automatisations, exécutions et secrets (migration 017). La validation des définitions appartient au moteur
-// (`@auto/automate`) et aux services ; ici, persistance sous RLS et aiguillage des déclenchements.
+// Automations, executions and secrets (migration 017). Validation of the definitions belongs to the engine
+// (`@auto/automate`) and to the services; here, persistence under RLS and trigger routing.
 import type { Sql, Tx } from "./db";
 import { avecWorker, enfiler } from "./outbox";
 import { ErreurMetier, journaliser } from "./index";
 
-/** Job d'exécution d'un workflow par le worker. */
+/** Job running a workflow by the worker. */
 export const JOB_AUTOMATISATION = "automatisation.executer";
 
-/** Exécutions conservées par workflow (les plus anciennes sont purgées). */
+/** Executions kept per workflow (the oldest are purged). */
 export const EXECUTIONS_CONSERVEES = 200;
 
 export type TypeDeclencheur = "manuel" | "evenement" | "planifie" | "webhook";
@@ -40,7 +40,7 @@ export interface Execution {
   etapes?: unknown[];
 }
 
-/** Champs écrits : le déclencheur est extrait de la définition par l'appelant. */
+/** Written fields: the trigger is extracted from the definition by the caller. */
 export interface Ecriture {
   nom: string;
   description: string;
@@ -145,11 +145,11 @@ export interface VersionAutomatisation {
 }
 
 /**
- * Avant une modification du contenu (nom, description ou définition ; pas une simple activation), l'état actuel
- * devient une version numérotée. Les plus anciennes au-delà de VERSIONS_MAX sont effacées.
+ * Before a content change (name, description or definition; not a mere activation), the current state
+ * becomes a numbered version. The oldest beyond VERSIONS_MAX are deleted.
  */
 async function conserverVersion(tx: Tx, actor: string | null, id: string, e: Ecriture) {
-  // Égalité jsonb : l'ordre des clés n'entre pas en compte.
+  // jsonb equality: key order does not matter.
   const [avant] = await tx<{ nom: string; description: string; definition: unknown; inchange: boolean }[]>`
     SELECT nom, description, definition,
       nom = ${e.nom} AND description = ${e.description} AND definition = ${e.definition}::jsonb AS inchange
@@ -180,7 +180,7 @@ const version = (r: {
   createdAt: r.created_at.toISOString(),
 });
 
-/** Versions précédentes, de la plus récente à la plus ancienne. */
+/** Previous versions, from most recent to oldest. */
 export async function listerVersions(tx: Tx, id: string): Promise<VersionAutomatisation[]> {
   const rows = await tx<Parameters<typeof version>[0][]>`
     SELECT numero, nom, description, definition, auteur, created_at FROM automatisation_version
@@ -294,7 +294,7 @@ export async function supprimerSecret(tx: Tx, actor: string | null, id: string):
   await journaliser(tx, actor, "secret.supprimer", id);
 }
 
-/** Valeurs chiffrées des secrets cités, pour le déchiffrement au moment de l'exécution. */
+/** Encrypted values of the cited secrets, for decryption at execution time. */
 export async function secretsChiffres(tx: Tx, noms: string[]): Promise<{ nom: string; valeur: Uint8Array }[]> {
   if (!noms.length) return [];
   const rows = await tx<{ nom: string; valeur_chiffree: Uint8Array }[]>`
@@ -302,7 +302,7 @@ export async function secretsChiffres(tx: Tx, noms: string[]): Promise<{ nom: st
   return rows.map((r) => ({ nom: r.nom, valeur: new Uint8Array(r.valeur_chiffree) }));
 }
 
-// ── Déclenchements ─────────────────────────────────────────────────────────
+// ── Triggers ─────────────────────────────────────────────────────────
 
 export interface ChargeExecution {
   automatisationId: string;
@@ -310,7 +310,7 @@ export interface ChargeExecution {
   entree: { json: Record<string, unknown> }[];
 }
 
-/** Dans la transaction de l'événement : un job par workflow actif abonné à ce type. */
+/** Within the event's transaction: one job per active workflow subscribed to this type. */
 export async function enfilerAutomatisations(
   tx: Tx,
   evenementId: string,
@@ -330,7 +330,7 @@ export async function enfilerAutomatisations(
   return abonnes.length;
 }
 
-/** Workflows planifiés actifs de tous les tenants (worker). */
+/** Active scheduled workflows of all tenants (worker). */
 export function automatisationsPlanifiees(
   sql: Sql,
 ): Promise<{ id: string; tenantId: string; cron: string; fuseau: string }[]> {
@@ -343,7 +343,7 @@ export function automatisationsPlanifiees(
   );
 }
 
-// ── Mémoire du workflow ────────────────────────────────────────────────────
+// ── Workflow memory ────────────────────────────────────────────────────
 
 export async function lireMemoire(tx: Tx, id: string, cle: string): Promise<unknown> {
   const [r] = await tx<{ v: unknown }[]>`SELECT memoire -> ${cle} AS v FROM automatisation WHERE id = ${id}`;

@@ -1,4 +1,4 @@
-// Sauvegarde chiffrée puis restauration sur une base jetable (scripts/sauvegarde.ts, scripts/restauration.ts).
+// Encrypted backup then restore onto a disposable database (scripts/sauvegarde.ts, scripts/restauration.ts).
 import { afterAll, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -13,7 +13,7 @@ const docker = Bun.which("docker")
   ? Bun.spawnSync(["docker", "inspect", "-f", "{{.State.Running}}", conteneur], { stderr: "ignore" })
   : null;
 const disponible = docker?.exitCode === 0 && docker.stdout.toString().trim() === "true";
-if (!disponible) console.warn(`sauvegarde : conteneur ${conteneur} absent, test sauté`);
+if (!disponible) console.warn(`backup: container ${conteneur} missing, test skipped`);
 
 const nettoyage: (() => Promise<unknown>)[] = [];
 afterAll(async () => {
@@ -21,7 +21,7 @@ afterAll(async () => {
 });
 
 test.skipIf(!disponible)(
-  "sauvegarde chiffrée, rotation, restauration identique",
+  "encrypted backup, rotation, identical restore",
   async () => {
     const { sql, drop } = await testDb();
     nettoyage.push(drop);
@@ -45,11 +45,11 @@ test.skipIf(!disponible)(
     const restantes = (await Array.fromAsync(new Bun.Glob("*.dump.chiffre").scan(dossier))).sort();
     expect(restantes).toHaveLength(2);
     expect(restantes.map((r) => join(dossier, r))).toEqual(chemins.slice(1).map((c) => join(c)));
-    // Chiffré : aucune donnée en clair dans le fichier.
+    // Encrypted: no plaintext data in the file.
     const octets = await Bun.file(chemins[2]!).bytes();
     expect(Buffer.from(octets).includes(Buffer.from("Client SAS"))).toBe(false);
 
-    // Restauration dans une base neuve.
+    // Restore into a fresh database.
     const admin = new SQL(Bun.env.DATABASE_URL ?? DEFAULT_URL);
     const cible = `auto_restau_${crypto.randomUUID().replaceAll("-", "")}`;
     await admin.unsafe(`CREATE DATABASE ${cible}`);
@@ -69,7 +69,7 @@ test.skipIf(!disponible)(
     expect(clients.map((c: { nom: string }) => c.nom)).toEqual(["Client SAS"]);
     expect(await withTenant(r, t.id, (tx) => verifierAudit(tx))).toEqual({ ok: true, entrees: 1 });
 
-    // Mauvaise clé : refus.
+    // Wrong key: refused.
     await expect(
       restaurer({ fichier: chemins[2]!, base: cible, conteneur, cle: new Uint8Array(32).fill(1) }),
     ).rejects.toThrow();

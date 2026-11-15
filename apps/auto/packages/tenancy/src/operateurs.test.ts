@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { testDb } from "@auto/store";
 import { synchroniserOperateurs } from "./operateurs";
-test("Super-admin : deux adresses Linux/Windows, vérification et retrait sans sérialisation de tableaux native", async () => {
+test("Super-admin: two Linux/Windows addresses, verification and removal without native array serialization", async () => {
   const { sql, drop } = await testDb(),
     avant = Bun.env.AUTO_SUPER_ADMIN_EMAILS;
   try {

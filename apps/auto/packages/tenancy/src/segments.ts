@@ -1,18 +1,18 @@
-// Sans dépendance serveur : les mêmes règles alimentent la navigation et le contrôle HTTP.
+import { traducteurPour } from "./i18n";
+// No server dependency: the same rules feed navigation and HTTP control.
 export const SEGMENTS = ["clients", "fournisseurs", "chantiers", "livraisons", "commandes"] as const;
 export type Segment = (typeof SEGMENTS)[number];
-export const LIBELLES_SEGMENTS: Record<Segment, string> = {
-  clients: "Comptabilité clients",
-  fournisseurs: "Comptabilité fournisseurs",
-  chantiers: "Analytique chantier",
-  livraisons: "Bons de livraison",
-  commandes: "Confirmations de commande",
+/** Segment labels in the language of the tag (catalogs); `LIBELLES_SEGMENTS` is the French set until the front end picks its language. */
+export const libellesSegments = (locale?: string | null): Record<Segment, string> => {
+  const { t } = traducteurPour(locale);
+  return Object.fromEntries(SEGMENTS.map((s) => [s, t(`segment.${s}`)])) as Record<Segment, string>;
 };
+export const LIBELLES_SEGMENTS: Record<Segment, string> = libellesSegments("fr");
 export type AccesSegments = { role: string; segments?: Segment[] };
 export const segmentsDe = (a: AccesSegments): readonly Segment[] =>
   ["owner", "admin"].includes(a.role) || a.segments === undefined ? SEGMENTS : a.segments;
 export const accesSegment = (a: AccesSegments, s: Segment) => segmentsDe(a).includes(s);
-/** Les listes de référence sont partagées ; les dossiers et opérations restent segmentés. */
+/** Reference lists are shared; files and operations stay segmented. */
 export function segmentsRequis(chemin: string, methode: string): readonly Segment[] | "tous" | null {
   let p: string;
   try {

@@ -1,12 +1,12 @@
-// Outbox des événements et file de jobs Postgres (migration 005).
+// Event outbox and Postgres job queue (migration 005).
 //
-// Côté API : `ajouterEvenement` dans la transaction métier (withTenant). Côté worker : `avecWorker`
-// (rôle auto_worker, tous tenants) pour prendre, terminer ou reporter les jobs.
+// API side: `ajouterEvenement` within the business transaction (withTenant). Worker side: `avecWorker`
+// (role auto_worker, all tenants) to take, complete or postpone jobs.
 import type { Sql, Tx } from "./db";
 import { enfilerWebhooks } from "./webhooks";
 import { enfilerAutomatisations } from "./automatisations";
 
-/** Job de livraison d'un événement de l'outbox vers le webhook. */
+/** Job delivering an outbox event to the webhook. */
 export const JOB_LIVRAISON = "evenement.livrer";
 
 export type StatutEvenement = "a_livrer" | "livre" | "echec";
@@ -15,7 +15,7 @@ export interface EvenementStocke {
   id: string;
   tenantId: string;
   type: string;
-  /** Corps JSON exact, signé à chaque essai. */
+  /** Exact JSON body, signed at each attempt. */
   corps: string;
   statut: StatutEvenement;
   essais: number;
@@ -57,7 +57,7 @@ export interface Job<P = Record<string, unknown>> {
   payload: P;
   cle: string | null;
   statut: StatutJob;
-  /** Essais commencés, celui en cours compris. */
+  /** Attempts started, the current one included. */
   essais: number;
   maxEssais: number;
   derniereErreur: string | null;
@@ -87,7 +87,7 @@ const job = (r: JobRow): Job => ({
   derniereErreur: r.derniere_erreur,
 });
 
-/** Transaction du worker : rôle auto_worker, seul autorisé à lire l'outbox et les jobs de tous les tenants. */
+/** Worker transaction: role auto_worker, the only one allowed to read the outbox and the jobs of all tenants. */
 export function avecWorker<T>(sql: Sql, fn: (tx: Tx) => Promise<T>): Promise<T> {
   return sql.begin(async (tx) => {
     await tx`SET LOCAL ROLE auto_worker`;
@@ -96,15 +96,15 @@ export function avecWorker<T>(sql: Sql, fn: (tx: Tx) => Promise<T>): Promise<T> 
 }
 
 export interface OptionsJob {
-  /** Clé de dédoublonnage : un job existant de même clé rend l'ajout sans effet. */
+  /** Deduplication key: an existing job with the same key makes the addition a no-op. */
   cle?: string;
   executerApres?: Date;
   maxEssais?: number;
-  /** Tenant explicite (worker) ; par défaut celui de la transaction (`app.tenant`), NULL hors tenant. */
+  /** Explicit tenant (worker); defaults to the transaction's (`app.tenant`), NULL outside a tenant. */
   tenantId?: string | null;
 }
 
-/** Ajoute un job ; renvoie son id, ou null si la clé existait déjà. */
+/** Adds a job; returns its id, or null if the key already existed. */
 export async function enfiler(tx: Tx, type: string, payload: object = {}, o: OptionsJob = {}): Promise<string | null> {
   const [r] = await tx<{ id: string }[]>`
     INSERT INTO job (tenant_id, type, payload, cle, executer_apres, max_essais)
@@ -115,8 +115,8 @@ export async function enfiler(tx: Tx, type: string, payload: object = {}, o: Opt
 }
 
 /**
- * Ajoute un événement à l'outbox avec son job de livraison, dans la transaction métier : l'événement
- * existe si et seulement si l'action est validée. Corps `{ id, type, tenantId, date, data }`, figé ici.
+ * Adds an event to the outbox with its delivery job, within the business transaction: the event
+ * exists if and only if the action is committed. Body `{ id, type, tenantId, date, data }`, frozen here.
  */
 export async function ajouterEvenement(
   tx: Tx,
@@ -125,7 +125,7 @@ export async function ajouterEvenement(
   maxEssais = 15,
 ): Promise<{ id: string; corps: string }> {
   const [r] = await tx<{ tenant: string | null }[]>`SELECT app_tenant() AS tenant`;
-  if (!r?.tenant) throw new Error("ajouterEvenement : transaction sans tenant (withTenant requis)");
+  if (!r?.tenant) throw new Error("ajouterEvenement: transaction without a tenant (withTenant required)");
   const id = Bun.randomUUIDv7();
   const corps = JSON.stringify({ id, type, tenantId: r.tenant, date: new Date().toISOString(), data });
   await tx`INSERT INTO evenement (id, type, corps) VALUES (${id}, ${type}, ${corps})`;
@@ -135,7 +135,7 @@ export async function ajouterEvenement(
   return { id, corps };
 }
 
-/** Événements du tenant courant (withTenant), plus récents d'abord. */
+/** Events of the current tenant (withTenant), most recent first. */
 export async function listerEvenements(tx: Tx, statut?: StatutEvenement, limite = 100): Promise<EvenementStocke[]> {
   const rows = statut
     ? await tx<
@@ -150,7 +150,7 @@ export async function lireEvenement(sql: Sql, id: string): Promise<EvenementStoc
   return r ? evenement(r) : null;
 }
 
-/** Résultat d'un essai de livraison : livré (erreur null), en échec temporaire ou définitif. */
+/** Result of a delivery attempt: delivered (error null), temporary failure or permanent failure. */
 export async function noterLivraison(sql: Sql, id: string, erreur: string | null, definitif = false): Promise<void> {
   await avecWorker(sql, async (tx) => {
     if (erreur === null)
@@ -164,9 +164,9 @@ export async function noterLivraison(sql: Sql, id: string, erreur: string | null
 }
 
 /**
- * Prend jusqu'à `limite` jobs exécutables (FOR UPDATE SKIP LOCKED : plusieurs workers ne prennent jamais
- * le même) et les loue pour `bailMs`. Un job dont le bail a expiré (worker arrêté en cours) est repris ;
- * s'il a épuisé ses essais, il passe en échec.
+ * Takes up to `limite` runnable jobs (FOR UPDATE SKIP LOCKED: several workers never take
+ * the same one) and leases them for `bailMs`. A job whose lease expired (worker stopped mid-run) is taken again;
+ * if it has exhausted its attempts, it fails.
  */
 export async function prendreJobs(sql: Sql, types: string[], limite = 10, bailMs = 60_000): Promise<Job[]> {
   if (!types.length) return [];
@@ -199,7 +199,7 @@ export async function terminerJob(sql: Sql, id: string): Promise<void> {
   );
 }
 
-/** Après un essai en échec : nouvel essai dans `delaiMs`, ou échec définitif si les essais sont épuisés. */
+/** After a failed attempt: new attempt in `delaiMs`, or permanent failure if attempts are exhausted. */
 export async function reporterJob(sql: Sql, j: Job, erreur: string, delaiMs: number): Promise<"reporte" | "echec"> {
   const definitif = j.essais >= j.maxEssais;
   await avecWorker(sql, (tx) =>
@@ -218,6 +218,6 @@ export async function lireJob(sql: Sql, id: string): Promise<Job | null> {
   return r ? job(r) : null;
 }
 
-/** Délai exponentiel avant l'essai suivant : base × 2^(essais − 1), plafonné. */
+/** Exponential delay before the next attempt: base × 2^(attempts − 1), capped. */
 export const delaiNouvelEssai = (essais: number, baseMs = 2_000, maxMs = 3_600_000) =>
   Math.min(maxMs, baseMs * 2 ** Math.max(0, essais - 1));

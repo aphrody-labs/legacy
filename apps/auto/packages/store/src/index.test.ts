@@ -41,7 +41,7 @@ beforeAll(async () => {
 
 afterAll(() => drop());
 
-test("brouillon sans numéro, émission numérotée", async () => {
+test("draft without a number, numbered issuance", async () => {
   const d = await withTenant(sql, A, (tx) => creerBrouillon(tx, null, facture));
   expect(d.numero).toBeNull();
   expect(d.ttcCents).toBe(12000);
@@ -50,12 +50,12 @@ test("brouillon sans numéro, émission numérotée", async () => {
   expect(e.statut).toBe("emis");
 });
 
-test("mentions manquantes : émission refusée", async () => {
+test("missing mentions: issuance refused", async () => {
   const d = await withTenant(sql, A, (tx) => creerBrouillon(tx, null, { ...facture, echeance: undefined }));
   await expect(withTenant(sql, A, (tx) => emettre(tx, null, d.id))).rejects.toThrow("mentions obligatoires manquantes");
 });
 
-test("document émis figé", async () => {
+test("frozen issued document", async () => {
   const d = await withTenant(sql, A, async (tx) => emettre(tx, null, (await creerBrouillon(tx, null, facture)).id));
   await expect(withTenant(sql, A, (tx) => modifierBrouillon(tx, null, d.id, facture))).rejects.toThrow(
     "brouillon introuvable",
@@ -74,22 +74,22 @@ test("isolation entre tenants", async () => {
   const vusParA = await withTenant(sql, A, (tx) => lister(tx));
   expect(vusParA.some((d) => d.id === docB.id)).toBe(false);
   expect(await withTenant(sql, A, (tx) => tx`SELECT id FROM tenant`)).toHaveLength(1);
-  // Écriture forcée vers un autre tenant : refusée par la politique WITH CHECK.
+  // Forced write to another tenant: refused by the WITH CHECK policy.
   await expect(
     withTenant(sql, A, (tx) => tx`INSERT INTO client (tenant_id, nom, adresse) VALUES (${B}, 'x', 'y')`),
   ).rejects.toThrow();
-  // Sans tenant posé : aucune ligne.
+  // Without a tenant set: no rows.
   const rien = await sql.begin(async (tx) => {
     await tx`SET LOCAL ROLE auto_app`;
     return tx`SELECT id FROM document`;
   });
   expect(rien).toHaveLength(0);
-  // Numérotation indépendante par tenant.
+  // Independent numbering per tenant.
   const e = await withTenant(sql, B, (tx) => emettre(tx, null, docB.id));
   expect(e.numero).toBe("F-2026-0001");
 });
 
-test("100 émissions concurrentes : numéros continus sans doublon", async () => {
+test("100 concurrent issuances: continuous numbers without duplicates", async () => {
   const [{ id: C }] = (await sql<
     { id: string }[]
   >`INSERT INTO tenant (nom, siren, siret) VALUES ('C', '732829320', '73282932000074') RETURNING id`) as unknown as [
@@ -105,14 +105,14 @@ test("100 émissions concurrentes : numéros continus sans doublon", async () =>
   expect(seqs).toEqual(Array.from({ length: 100 }, (_, i) => i + 1));
 });
 
-test("piste d'audit chaînée", async () => {
+test("chained audit trail", async () => {
   const r = await withTenant(sql, A, (tx) => verifierAudit(tx));
   expect(r.ok).toBe(true);
   expect(r.entrees).toBeGreaterThan(5);
   await expect(withTenant(sql, A, (tx) => tx`DELETE FROM audit`)).rejects.toThrow();
 });
 
-test("fichier figé : immuable et isolé", async () => {
+test("frozen file: immutable and isolated", async () => {
   const d = await withTenant(sql, A, async (tx) => emettre(tx, null, (await creerBrouillon(tx, null, facture)).id));
   const octets = new Uint8Array([37, 80, 68, 70, 0, 255]);
   const sha = await withTenant(sql, A, (tx) => enregistrerFichier(tx, null, d.id, "facturx", octets));

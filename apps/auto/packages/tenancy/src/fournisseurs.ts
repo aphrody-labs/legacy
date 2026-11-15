@@ -1,12 +1,12 @@
 import type { BetterAuthOptions } from "better-auth";
 
-/** Une configuration partielle doit échouer au démarrage, pas masquer un bouton de connexion. */
+/** A partial configuration must fail at startup, not hide a sign-in button. */
 export function sociaux(env: Record<string, string | undefined>): BetterAuthOptions["socialProviders"] {
   for (const nom of ["GOOGLE", "MICROSOFT"]) {
     const id = env[`AUTO_${nom}_CLIENT_ID`]?.trim();
     const secret = env[`AUTO_${nom}_CLIENT_SECRET`]?.trim();
     if (Boolean(id) !== Boolean(secret))
-      throw new Error(`AUTO_${nom}_CLIENT_ID et AUTO_${nom}_CLIENT_SECRET requis ensemble`);
+      throw new Error(`AUTO_${nom}_CLIENT_ID and AUTO_${nom}_CLIENT_SECRET required together`);
   }
   return {
     ...(env.AUTO_GOOGLE_CLIENT_ID?.trim() && env.AUTO_GOOGLE_CLIENT_SECRET?.trim()

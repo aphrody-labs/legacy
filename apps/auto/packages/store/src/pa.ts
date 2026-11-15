@@ -1,5 +1,5 @@
-// Lot pa : stockage des connexions aux plateformes agréées, dépôts, statuts, factures reçues et
-// e-reporting (migration 008). Toutes les fonctions s'exécutent sous withTenant (RLS).
+// PA batch: storage of approved-platform connections, submissions, statuses, received invoices and
+// e-reporting (migration 008). All functions run under withTenant (RLS).
 import type { Tx } from "./db";
 import { journaliser } from "./index";
 
@@ -26,7 +26,7 @@ export async function lireConnexionPa(tx: Tx): Promise<ConnexionPa | null> {
     : null;
 }
 
-/** Connecte (ou remplace) la PA du tenant courant. */
+/** Connects (or replaces) the current tenant's PA. */
 export async function connecterPa(
   tx: Tx,
   actor: string | null,
@@ -88,7 +88,7 @@ export interface StatutPa {
   at: string;
 }
 
-/** Dépôt vivant (non rejeté) d'un document, verrouillé. */
+/** Live (non-rejected) submission of a document, locked. */
 export async function depotActif(tx: Tx, documentId: string): Promise<DepotPa | null> {
   const [r] = await tx<RowDepot[]>`
     SELECT p.*, d.numero FROM pa_depot p JOIN document d ON d.id = p.document_id
@@ -136,8 +136,8 @@ export async function listerDepots(tx: Tx, limite = 100): Promise<DepotPa[]> {
 }
 
 /**
- * Ajoute un statut (idempotent sur statut + horodatage) et recalcule le statut courant du dépôt :
- * le plus récent. Renvoie false si le statut était déjà connu.
+ * Adds a status (idempotent on status + timestamp) and recomputes the submission's current status:
+ * the most recent. Returns false if the status was already known.
  */
 export async function ajouterStatut(tx: Tx, depotId: string, s: StatutPa): Promise<boolean> {
   const r = await tx`
@@ -164,7 +164,7 @@ export async function statutsDepot(tx: Tx, depotId: string): Promise<StatutPa[]>
   }));
 }
 
-/** Dépôts dont le cycle n'est pas terminé (à synchroniser). */
+/** Submissions whose cycle is not finished (to synchronize). */
 export async function depotsEnCours(tx: Tx): Promise<DepotPa[]> {
   const rows = await tx<RowDepot[]>`
     SELECT p.*, d.numero FROM pa_depot p JOIN document d ON d.id = p.document_id
@@ -214,7 +214,7 @@ const recue = (r: RowRecue): RecuePa => ({
 export const recueConnue = async (tx: Tx, plateforme: string, idPa: string) =>
   (await tx`SELECT 1 FROM pa_recue WHERE plateforme = ${plateforme} AND id_pa = ${idPa}`).length > 0;
 
-/** Enregistre une facture reçue ; null si elle l'était déjà. */
+/** Saves a received invoice; null if already received. */
 export async function enregistrerRecuePa(
   tx: Tx,
   actor: string | null,

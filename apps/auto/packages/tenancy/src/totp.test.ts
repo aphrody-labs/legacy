@@ -4,13 +4,13 @@ import { base32, depuisBase32, hotp, totp, uriOtpauth, verifierTotp, type Algori
 
 const ascii = (s: string) => new TextEncoder().encode(s);
 
-test("HOTP : vecteurs de la RFC 4226 (annexe D)", async () => {
+test("HOTP: RFC 4226 vectors (appendix D)", async () => {
   const secret = ascii("12345678901234567890");
   const attendus = ["755224", "287082", "359152", "969429", "338314", "254676", "287922", "162583", "399871", "520489"];
   for (const [i, code] of attendus.entries()) expect(await hotp(secret, i)).toBe(code);
 });
 
-test("TOTP : vecteurs de la RFC 6238 (annexe B), 8 chiffres, SHA-1/256/512", async () => {
+test("TOTP: RFC 6238 vectors (appendix B), 8 digits, SHA-1/256/512", async () => {
   const graines: Record<Algorithme, Uint8Array<ArrayBuffer>> = {
     "SHA-1": ascii("12345678901234567890"),
     "SHA-256": ascii("12345678901234567890123456789012"),
@@ -31,7 +31,7 @@ test("TOTP : vecteurs de la RFC 6238 (annexe B), 8 chiffres, SHA-1/256/512", asy
   }
 });
 
-test("vérification : fenêtre de ±1 pas, pas reconnu renvoyé", async () => {
+test("verification: window of ±1 step, recognized step returned", async () => {
   const s = ascii("12345678901234567890");
   const t = 1111111111 * 1000;
   const code = await totp(s, t);
@@ -41,7 +41,7 @@ test("vérification : fenêtre de ±1 pas, pas reconnu renvoyé", async () => {
   expect(await verifierTotp(s, "abc", t)).toBeNull();
 });
 
-test("base32 RFC 4648 et URI otpauth", () => {
+test("base32 RFC 4648 and otpauth URI", () => {
   expect(base32(ascii("foobar"))).toBe("MZXW6YTBOI");
   expect(base32(ascii("12345678901234567890"))).toBe("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ");
   expect(new TextDecoder().decode(depuisBase32("mzxw 6ytb-oi"))).toBe("foobar");
@@ -49,12 +49,12 @@ test("base32 RFC 4648 et URI otpauth", () => {
   expect(uri).toStartWith("otpauth://totp/auto:a%40exemple.fr?secret=MZXW6YTBOI&issuer=auto");
 });
 
-test("chiffrement au repos : AES-GCM, clé HKDF liée à l'info", async () => {
+test("encryption at rest: AES-GCM, HKDF key bound to the info", async () => {
   const clair = ascii("secret totp");
   const c = await chiffrer("totp:u1", clair);
   expect(c[0]).toBe(1);
   expect(new TextDecoder().decode(await dechiffrer("totp:u1", c))).toBe("secret totp");
-  // Chiffré déplacé vers un autre utilisateur, ou altéré : refusé.
+  // Ciphertext moved to another user, or tampered with: refused.
   await expect(dechiffrer("totp:u2", c)).rejects.toThrow();
   const altere = c.slice();
   altere[20]! ^= 1;

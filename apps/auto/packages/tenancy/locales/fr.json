@@ -6,5 +6,15 @@
   "auth.mail.reset.subject": "Réinitialiser votre mot de passe auto",
   "auth.mail.reset.text": ".input {$hours :number}\n.match $hours\none {{Pour choisir un nouveau mot de passe, ouvrez ce lien (valable {$hours} heure) :\n{$url}}}\n* {{Pour choisir un nouveau mot de passe, ouvrez ce lien (valable {$hours} heures) :\n{$url}}}",
   "auth.mail.verify.subject": "Confirmez votre adresse sur auto",
-  "auth.mail.verify.text": "Pour confirmer votre adresse, ouvrez ce lien :\n{$url}"
+  "auth.mail.verify.text": "Pour confirmer votre adresse, ouvrez ce lien :\n{$url}",
+  "role.owner": "Propriétaire",
+  "role.admin": "Administrateur",
+  "role.comptable": "Comptable",
+  "role.lecture": "Lecture seule",
+  "role.rh": "Ressources humaines",
+  "segment.clients": "Comptabilité clients",
+  "segment.fournisseurs": "Comptabilité fournisseurs",
+  "segment.chantiers": "Analytique chantier",
+  "segment.livraisons": "Bons de livraison",
+  "segment.commandes": "Confirmations de commande"
 }

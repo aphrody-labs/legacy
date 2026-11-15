@@ -1,6 +1,6 @@
-// Dialecte Kysely sur `Bun.SQL` (Postgres) : Better Auth parle à la base de l'application par le même
-// pool que le reste d'auto, sans pilote `pg`. Les requêtes isolées passent par le pool ; une transaction
-// réserve une connexion (`sql.reserve()`) jusqu'au COMMIT ou ROLLBACK.
+// Kysely dialect over `Bun.SQL` (Postgres): Better Auth talks to the application database through the same
+// pool as the rest of auto, without the `pg` driver. Standalone queries go through the pool; a transaction
+// reserves a connection (`sql.reserve()`) until COMMIT or ROLLBACK.
 import type { SQL, ReservedSQL } from "bun";
 import {
   CompiledQuery,
@@ -25,7 +25,7 @@ async function executer<R>(cible: SQL | ReservedSQL, q: CompiledQuery): Promise<
   return MODIFICATIONS.has(r.command ?? "") ? { rows, numAffectedRows: BigInt(r.count ?? 0) } : { rows };
 }
 
-/** Connexion paresseuse : le pool tant qu'aucune transaction n'est ouverte, une connexion réservée ensuite. */
+/** Lazy connection: the pool while no transaction is open, a reserved connection afterwards. */
 class ConnexionBun implements DatabaseConnection {
   reservee: ReservedSQL | null = null;
 
@@ -86,13 +86,13 @@ class PiloteBun implements Driver {
     await c.executeQuery(CompiledQuery.raw(`RELEASE SAVEPOINT ${nom}`));
   }
   async releaseConnection(c: DatabaseConnection) {
-    // Transaction abandonnée sans COMMIT ni ROLLBACK : la connexion réservée revient au pool annulée.
+    // Transaction abandoned without COMMIT or ROLLBACK: the reserved connection returns to the pool rolled back.
     await (c as ConnexionBun).finir("ROLLBACK");
   }
   async destroy() {}
 }
 
-/** `new Kysely({ dialect: new DialecteBunSql(sql) })` : le pool reste celui de l'appelant (jamais fermé ici). */
+/** `new Kysely({ dialect: new DialecteBunSql(sql) })`: the pool stays the caller's (never closed here). */
 export class DialecteBunSql implements Dialect {
   constructor(private readonly sql: SQL) {}
   createAdapter() {

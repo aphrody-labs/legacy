@@ -1,11 +1,11 @@
-// Serveur Better Auth d'auto : comptes, sessions, entreprises (plugin organization = tenant), 2FA,
-// passkeys, clés d'API, lien magique, console opérateur (admin), OAuth 2.1 pour les clients MCP.
+// Better Auth server of auto: accounts, sessions, companies (organization plugin = tenant), 2FA,
+// passkeys, API keys, magic link, operator console (admin), OAuth 2.1 for MCP clients.
 //
-// Base : la base Postgres de l'application par `Bun.SQL` (dialecte Kysely maison, kysely-bun.ts) ; les
-// identifiants camelCase de Better Auth deviennent des colonnes snake_case (CamelCasePlugin). Les tables
-// historiques sont reprises telles quelles : user = app_user, organization = tenant, member = membership,
-// invitation = invitation. Le schéma est versionné dans packages/store/migrations (020_better_auth.sql) :
-// aucune migration automatique de Better Auth.
+// Database: the application's Postgres database through `Bun.SQL` (in-house Kysely dialect, kysely-bun.ts); Better Auth's
+// camelCase identifiers become snake_case columns (CamelCasePlugin). The historical
+// tables are taken over as is: user = app_user, organization = tenant, member = membership,
+// invitation = invitation. The schema is versioned in packages/store/migrations (020_better_auth.sql):
+// no automatic Better Auth migration.
 import { apiKey } from "@better-auth/api-key";
 import { cimd } from "@better-auth/cimd";
 import { fetchClientMetadataResource } from "@better-auth/cimd/node";
@@ -41,7 +41,7 @@ export const INVITATION_JOURS = 7;
 const MAGIC_MINUTES = 10;
 export const CHEMIN_AUTH = "/api/auth";
 
-/** Piste d'audit du tenant (sans email : l'audit est immuable). */
+/** Tenant audit trail (without email: the audit is immutable). */
 async function auditer(sql: Sql, tenantId: string, actor: string | null, action: string, ref: string, payload = {}) {
   await sql.begin(async (tx) => {
     await tx`SELECT set_config('app.tenant', ${tenantId}, true)`;
@@ -50,18 +50,18 @@ async function auditer(sql: Sql, tenantId: string, actor: string | null, action:
 }
 
 export interface OptionsAuth {
-  /** Origine publique (`BETTER_AUTH_URL`, sinon `AUTO_URL_APP`) : cookies, liens des mails, émetteur OAuth. */
+  /** Public origin (`BETTER_AUTH_URL`, otherwise `AUTO_URL_APP`): cookies, mail links, OAuth issuer. */
   baseURL?: string;
-  /** Secret de signature (`BETTER_AUTH_SECRET`) ; par défaut dérivé de la clé maître d'auto. */
+  /** Signing secret (`BETTER_AUTH_SECRET`); derived from auto's master key by default. */
   secret?: string;
-  /** Limitation de débit des routes d'authentification ; active par défaut en production. */
+  /** Rate limiting of the authentication routes; active by default in production. */
   limiteDebit?: boolean;
   env?: Record<string, string | undefined>;
-  /** Contrôle du schéma au démarrage (tables et colonnes attendues) ; désactivé pour générer la doc hors base. */
+  /** Schema check at startup (expected tables and columns); disabled to generate docs without a database. */
   validerSchema?: boolean;
 }
 
-/** Secret Better Auth dérivé de `AUTO_CLE_MAITRE` (HMAC-SHA256) : un seul secret à garder au coffre. */
+/** Better Auth secret derived from `AUTO_CLE_MAITRE` (HMAC-SHA256): one secret to keep in the vault. */
 export function secretDerive(env = Bun.env) {
   return new Bun.CryptoHasher("sha256", cleMaitre(env)).update("auto/better-auth/v1").digest("hex");
 }
@@ -70,7 +70,7 @@ export function urlPublique(env: Record<string, string | undefined> = Bun.env) {
   return (env.BETTER_AUTH_URL ?? env.AUTO_URL_APP ?? env.AUTO_APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
 }
 
-/** Fournisseurs de connexion sociale configurés (affichés par le front). */
+/** Configured social sign-in providers (shown by the front end). */
 export const fournisseursSociaux = (env = Bun.env) => Object.keys(sociaux(env) ?? {});
 
 export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
@@ -87,8 +87,8 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
     basePath: CHEMIN_AUTH,
     secret: o.secret ?? env.BETTER_AUTH_SECRET ?? secretDerive(env),
     database: { db, type: "postgres", transaction: true },
-    // Production : l'origine publique et AUTO_ORIGINES_CONFIANCE. Hors production, toute origine locale
-    // (front de développement, bancs de test sur des ports aléatoires).
+    // Production: the public origin and AUTO_ORIGINES_CONFIANCE. Outside production, any local origin
+    // (development front end, test benches on random ports).
     trustedOrigins: [
       baseURL,
       ...(env.AUTO_ORIGINES_CONFIANCE?.split(",").map((s) => s.trim()) ?? []),
@@ -98,7 +98,7 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
     logger: {
       disabled: env.NODE_ENV === "test",
       level: "warn",
-      // Une clé invalide est une réponse 401 ordinaire, pas une erreur du serveur.
+      // An invalid key is an ordinary 401 response, not a server error.
       log: (niveau, message, ...args) => {
         if (message.includes("Failed to validate API key")) return;
         (niveau === "error" ? console.error : console.warn)(`[auth] ${message}`, ...args);
@@ -119,7 +119,7 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
     session: {
       expiresIn: SESSION_JOURS * 86400,
       updateAge: 86400,
-      // Pas de cache de session en cookie : rôle, suspension et révocation s'appliquent à la requête suivante.
+      // No session cookie cache: role, suspension and revocation apply on the next request.
       cookieCache: { enabled: false },
     },
     account: {
@@ -132,7 +132,7 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
       maxPasswordLength: 256,
       autoSignIn: true,
       revokeSessionsOnPasswordReset: true,
-      // Hachages historiques `Bun.password` (argon2id) repris tels quels ; les nouveaux aussi.
+      // Historical `Bun.password` hashes (argon2id) kept as is; new ones too.
       password: {
         hash: (mdp) => Bun.password.hash(mdp),
         verify: ({ hash, password }) => Bun.password.verify(password, hash).catch(() => false),
@@ -178,7 +178,7 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
     databaseHooks: {
       session: {
         create: {
-          // Entreprise active (= tenant de la session) : la première, par ancienneté d'adhésion.
+          // Active company (= the session's tenant): the first, by membership seniority.
           before: async (s) => {
             if ((s as { activeOrganizationId?: string | null }).activeOrganizationId) return;
             const [m] = await sql<{ tenant_id: string }[]>`
@@ -214,7 +214,7 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
         creatorRole: "owner",
         invitationExpiresIn: INVITATION_JOURS * 86400,
         cancelPendingInvitationsOnReInvite: true,
-        // Les entreprises se créent par l'inscription (SIRET contrôlé) : /v1/auth/inscription.
+        // Companies are created through sign-up (SIRET checked): /v1/auth/inscription.
         allowUserToCreateOrganization: true,
         sendInvitationEmail: async ({ id, email, role, organization: org }, request) => {
           const lien = `${app}/invitation?id=${id}`;
@@ -273,11 +273,11 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
       }),
       passkey({ rpID: new URL(baseURL).hostname, rpName: "auto", origin: baseURL }),
       apiKey({
-        // Clé d'entreprise (référence = tenant) ; l'auteur est gardé dans les métadonnées.
+        // Company key (reference = tenant); the author is kept in the metadata.
         references: "organization",
         defaultPrefix: "auto_",
         enableMetadata: true,
-        // Débit des clés : celui de l'API (quotas du plan), pas la limite par défaut du plugin (10/jour).
+        // Key rate: the API's (plan quotas), not the plugin's default limit (10/day).
         rateLimit: { enabled: false },
         keyExpiration: { defaultExpiresIn: null, minExpiresIn: 0, maxExpiresIn: 3650 },
       }),
@@ -303,12 +303,12 @@ export function creerAuth(sql: Sql, o: OptionsAuth = {}) {
         loginPage: `${app}/connexion`,
         consentPage: `${app}/autorisation`,
         resource: `${baseURL}/mcp`,
-        // Claude Code et les autres clients s'inscrivent seuls (RFC 7591) ou par document CIMD.
+        // Claude Code and other clients register themselves (RFC 7591) or by CIMD document.
         allowDynamicClientRegistration: true,
         allowUnauthenticatedClientRegistration: true,
         postLogin: {
           page: `${app}/autorisation`,
-          // Le consentement et le jeton sont liés à l'entreprise active de la session.
+          // Consent and token are bound to the session's active company.
           consentReferenceId: ({ session }) =>
             (session as { activeOrganizationId?: string | null }).activeOrganizationId ?? undefined,
           shouldRedirect: ({ session }) => !(session as { activeOrganizationId?: string | null }).activeOrganizationId,
@@ -324,7 +324,7 @@ export type AuthAuto = ReturnType<typeof creerAuth>;
 
 const instances = new WeakMap<Sql, AuthAuto>();
 
-/** Instance Better Auth d'une base : créée une fois (ou fournie par `enregistrerAuth`). */
+/** Better Auth instance of a database: created once (or supplied by `enregistrerAuth`). */
 export function authDe(sql: Sql): AuthAuto {
   let a = instances.get(sql);
   if (!a) instances.set(sql, (a = creerAuth(sql)));

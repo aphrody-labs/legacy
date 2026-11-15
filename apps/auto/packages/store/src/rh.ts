@@ -1,4 +1,4 @@
-// Employés, absences et solde de congés payés.
+// Employees, absences and paid-leave balance.
 import {
   congesAcquis,
   debutPeriode,
@@ -77,7 +77,7 @@ export async function lireEmploye(tx: Tx, id: string): Promise<FicheEmploye | nu
   return r ? employe(r) : null;
 }
 
-/** Employés présents à la date (par défaut aujourd'hui), ou tous avec `tous`. */
+/** Employees present at the date (default today), or all with `tous`. */
 export async function listerEmployes(tx: Tx, tous = false): Promise<FicheEmploye[]> {
   const rows = tous
     ? await tx<EmployeRow[]>`SELECT * FROM employe ORDER BY nom, prenom LIMIT 1000`
@@ -129,7 +129,7 @@ export interface SoldeConges {
   disponible: number;
 }
 
-/** Solde de congés payés sur la période de référence qui contient `au`. */
+/** Paid-leave balance over the reference period containing `au`. */
 export async function soldeConges(tx: Tx, employeId: string, au = new Date().toISOString().slice(0, 10)) {
   const e = await lireEmploye(tx, employeId);
   if (!e) throw new ErreurMetier("employé introuvable", [], 404);

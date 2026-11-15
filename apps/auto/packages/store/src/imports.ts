@@ -1,5 +1,5 @@
-// Imports de clients et de produits depuis un tableur (correspondance de colonnes guidée), et données
-// des exports comptables : pièces de vente, encaissements, créances.
+// Imports of customers and products from a spreadsheet (guided column mapping), and data
+// of the accounting exports: sales records, payments, receivables.
 import { totaux, type Document, type Partie, type PieceVente, type Tva, type Encaissement } from "@auto/domain";
 import type { Tx } from "./db";
 import { creerClient, creerProduit } from "./gestion";
@@ -12,7 +12,7 @@ export const CHAMPS_PRODUIT = ["designation", "prixHt", "tva", "unite"] as const
 export type ChampClient = (typeof CHAMPS_CLIENT)[number];
 export type ChampProduit = (typeof CHAMPS_PRODUIT)[number];
 
-/** Synonymes d'en-têtes reconnus pour proposer la correspondance. */
+/** Recognized header synonyms to propose the mapping. */
 const SYNONYMES: Record<ChampClient | ChampProduit, string[]> = {
   nom: ["nom", "raison sociale", "client", "societe", "entreprise", "denomination"],
   siret: ["siret", "siren", "numero siret"],
@@ -33,7 +33,7 @@ const normaliser = (s: unknown) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-/** Propose une correspondance champ → index de colonne d'après la ligne d'en-tête. */
+/** Proposes a field → column index mapping from the header row. */
 export function proposerCorrespondance<C extends ChampClient | ChampProduit>(
   entete: Cellule[],
   champs: readonly C[],
@@ -57,20 +57,20 @@ export interface ResultatImport {
   erreurs: { ligne: number; message: string }[];
 }
 
-/** Point de sauvegarde : une ligne en erreur n'annule pas les lignes déjà importées. */
+/** Savepoint: a row in error does not cancel the rows already imported. */
 const enSousTransaction = <T>(tx: Tx, fn: (sp: Tx) => Promise<T>) => tx.savepoint((sp) => fn(sp as unknown as Tx));
 
 const texte = (v: Cellule | undefined) => (v === null || v === undefined ? "" : String(v).trim());
 
-/** Ligne de données → champs, d'après la correspondance (index de colonne). */
+/** Data row → fields, from the mapping (column index). */
 const extraire = <C extends string>(ligne: Cellule[], corr: Partial<Record<C, number>>) =>
   Object.fromEntries(Object.entries(corr).map(([k, i]) => [k, ligne[i as number] ?? null])) as Partial<
     Record<C, Cellule>
   >;
 
 /**
- * Importe des clients (lignes de données, sans l'en-tête). Un SIRET déjà présent est ignoré ; une ligne
- * invalide est signalée sans bloquer les autres.
+ * Imports customers (data rows, without the header). A SIRET already present is ignored; an invalid
+ * row is reported without blocking the others.
  */
 export async function importerClients(
   tx: Tx,
@@ -113,7 +113,7 @@ export async function importerClients(
 
 const TAUX: Record<string, Tva> = { "0": 0, "2.1": 21, "5.5": 55, "10": 100, "20": 200 };
 
-/** « 20 », « 20 % », 0,2 ou 20 → dixièmes de pourcent du domaine ; null si taux inconnu. */
+/** "20", "20 %", 0.2 or 20 → tenths of a percent of the domain; null if unknown rate. */
 export function tauxTva(v: Cellule | undefined): Tva | null {
   if (v === null || v === undefined || v === "") return 200;
   let n = typeof v === "number" ? v : Number(String(v).replace("%", "").replace(",", ".").trim());
@@ -122,7 +122,7 @@ export function tauxTva(v: Cellule | undefined): Tva | null {
   return TAUX[String(Math.round(n * 10) / 10)] ?? null;
 }
 
-/** Prix « 12,50 », « 12.5 € » ou 12.5 → centimes. */
+/** Price "12,50", "12.5 €" or 12.5 → cents. */
 export function centimes(v: Cellule | undefined): number | null {
   if (typeof v === "number") return Math.round(v * 100);
   const s = texte(v)
@@ -173,7 +173,7 @@ export async function importerProduits(
 
 // Exports -----------------------------------------------------------------------------------------
 
-/** Pièces de vente émises (factures, acomptes, avoirs) dont la date est dans [du, au]. */
+/** Sales records issued (invoices, deposit invoices, credit notes) whose date is within [du, au]. */
 export async function piecesVente(tx: Tx, du: string, au: string): Promise<(PieceVente & { id: string })[]> {
   const rows = await tx<{ id: string; type: Document["type"]; numero: string; data: Document }[]>`
     SELECT id, type, numero, data FROM document
@@ -189,7 +189,7 @@ export async function piecesVente(tx: Tx, du: string, au: string): Promise<(Piec
   }));
 }
 
-/** Encaissements dont la date est dans [du, au]. */
+/** Payments whose date is within [du, au]. */
 export async function encaissements(tx: Tx, du: string, au: string): Promise<Encaissement[]> {
   const rows = await tx<{ id: string; date: Date; montant_cents: string; numero: string; data: Document }[]>`
     SELECT p.id, p.date, p.montant_cents, d.numero, d.data FROM paiement p
@@ -215,7 +215,7 @@ export interface Creance {
   retardJours: number;
 }
 
-/** Factures et acomptes émis non soldés (reste dû = TTC − avoirs − paiements), à la date `au`. */
+/** Unsettled issued invoices and deposit invoices (remaining balance = total incl. tax − credit notes − payments), at date `au`. */
 export async function creances(tx: Tx, au = new Date().toISOString().slice(0, 10)): Promise<Creance[]> {
   const rows = await tx<{ id: string; numero: string; data: Document; ttc: string; reste: string }[]>`
     SELECT d.id, d.numero, d.data, d.ttc_cents AS ttc,

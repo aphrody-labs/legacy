@@ -1,4 +1,4 @@
-// TOTP (RFC 6238) sur HOTP (RFC 4226), HMAC par crypto.subtle. Base32 RFC 4648 sans remplissage.
+// TOTP (RFC 6238) over HOTP (RFC 4226), HMAC through crypto.subtle. Base32 RFC 4648 without padding.
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
@@ -25,7 +25,7 @@ export function depuisBase32(texte: string): Uint8Array<ArrayBuffer> {
   let valeur = 0;
   for (const c of propre) {
     const i = ALPHABET.indexOf(c);
-    if (i < 0) throw new Error(`base32 : caractère invalide « ${c} »`);
+    if (i < 0) throw new Error(`base32: invalid character "${c}"`);
     valeur = (valeur << 5) | i;
     bits += 5;
     if (bits >= 8) {
@@ -38,7 +38,7 @@ export function depuisBase32(texte: string): Uint8Array<ArrayBuffer> {
 
 export type Algorithme = "SHA-1" | "SHA-256" | "SHA-512";
 
-/** HOTP : HMAC(secret, compteur sur 8 octets gros-boutiste), troncature dynamique. */
+/** HOTP: HMAC(secret, big-endian 8-byte counter), dynamic truncation. */
 export async function hotp(
   secret: Uint8Array<ArrayBuffer>,
   compteur: number,
@@ -69,8 +69,8 @@ export function totp(
 }
 
 /**
- * Vérifie un code à ±`fenetre` pas (dérive d'horloge) ; renvoie le pas reconnu, pour refuser
- * ensuite tout code d'un pas déjà utilisé (rejeu).
+ * Checks a code within ±`fenetre` steps (clock drift); returns the recognized step, so as to refuse
+ * any later code of an already used step (replay).
  */
 export async function verifierTotp(
   secret: Uint8Array<ArrayBuffer>,
@@ -82,7 +82,7 @@ export async function verifierTotp(
   if (!/^\d{6}$/.test(c)) return null;
   const t = pas(instantMs);
   let trouve: number | null = null;
-  // Toutes les candidates sont calculées : durée indépendante de la position du code.
+  // All candidates are computed: duration independent of the code's position.
   for (let d = -fenetre; d <= fenetre; d++) {
     const attendu = await hotp(secret, t + d);
     if (egal(attendu, c) && trouve === null) trouve = t + d;
@@ -97,7 +97,7 @@ function egal(a: string, b: string) {
   return diff === 0;
 }
 
-/** URI d'enrôlement lue par les applications d'authentification (format Google Authenticator). */
+/** Enrollment URI read by authenticator applications (Google Authenticator format). */
 export function uriOtpauth(secretBase32: string, compte: string, emetteur = "auto") {
   const libelle = `${encodeURIComponent(emetteur)}:${encodeURIComponent(compte)}`;
   const q = new URLSearchParams({

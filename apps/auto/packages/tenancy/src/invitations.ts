@@ -1,6 +1,6 @@
-// Invitations par mail sur le plugin organization de Better Auth : l'identifiant de l'invitation sert de
-// jeton (lien /app/invitation?id=…), 7 jours, usage unique, révocable. Les invitations antérieures à
-// Better Auth gardent leur hash : l'ancien lien (`/invitation#<jeton>`) est toujours accepté.
+// E-mail invitations on Better Auth's organization plugin: the invitation id serves as the
+// token (link /app/invitation?id=…), 7 days, single use, revocable. Invitations predating
+// Better Auth keep their hash: the old link (`/invitation#<token>`) is still accepted.
 import { ErreurMetier, type Sql } from "@auto/store";
 import { authDe } from "./auth";
 import { emailValide, hash, normaliserEmail } from "./commun";
@@ -43,8 +43,8 @@ const invitation = (r: Row): Invitation => ({
 });
 
 /**
- * Invite un email avec un rôle (mail envoyé par Better Auth, `sendInvitationEmail`). Une invitation en
- * cours pour le même email est remplacée ; un owner ne peut être nommé que par un owner.
+ * Invites an email with a role (mail sent by Better Auth, `sendInvitationEmail`). A pending invitation
+ * for the same email is replaced; an owner can only be appointed by an owner.
  */
 export async function inviter(sql: Sql, auth: Auth, emailBrut: string, role: Role): Promise<Invitation> {
   exiger(auth, "membres");
@@ -76,7 +76,7 @@ export async function revoquerInvitation(sql: Sql, auth: Auth, id: string) {
   await auNomDe(sql, auth, (headers) => ba(authDe(sql).api.cancelInvitation({ headers, body: { invitationId: id } })));
 }
 
-/** Invitation en cours désignée par son identifiant (lien Better Auth) ou par un ancien jeton. */
+/** Pending invitation designated by its id (Better Auth link) or by an old token. */
 async function enCours(sql: Sql, jetonOuId: string) {
   const [inv] = UUID.test(jetonOuId)
     ? await sql<{ id: string; tenant_id: string; email: string }[]>`
@@ -89,9 +89,9 @@ async function enCours(sql: Sql, jetonOuId: string) {
 }
 
 /**
- * Acceptation sans session (façade /v1) : crée le compte (12 caractères minimum) ou rattache un compte
- * existant, dont le mot de passe est alors exigé (le lien prouve la boîte mail, pas l'identité). Puis
- * connexion normale : la 2FA du compte s'applique.
+ * Acceptance without a session (/v1 facade): creates the account (12 characters minimum) or attaches an
+ * existing account, whose password is then required (the link proves the mailbox, not the identity). Then
+ * normal sign-in: the account's 2FA applies.
  */
 export async function accepterInvitation(sql: Sql, jetonOuId: string, motDePasse: string): Promise<Connexion> {
   if (typeof jetonOuId !== "string" || typeof motDePasse !== "string")
@@ -111,7 +111,7 @@ export async function accepterInvitation(sql: Sql, jetonOuId: string, motDePasse
     userId = r.user.id;
     await sql`DELETE FROM session WHERE token = ${r.token!}`;
   }
-  // Session éphémère du destinataire (sans entreprise) pour l'acceptation par Better Auth.
+  // Ephemeral session of the recipient (without a company) for acceptance by Better Auth.
   const c = await authDe(sql).$context;
   const s = await c.internalAdapter.createSession(userId, true);
   try {

@@ -1,4 +1,4 @@
-// Erreurs de Better Auth (APIError, codes en anglais) traduites en erreurs métier d'auto.
+// Better Auth errors (APIError, English codes) translated into auto business errors.
 import { ErreurMetier } from "@auto/store";
 
 const CODES: Record<string, [string, number]> = {
@@ -35,7 +35,7 @@ interface ErreurBa {
   message?: string;
 }
 
-/** Erreur Better Auth → ErreurMetier ; toute autre erreur est relancée telle quelle. */
+/** Better Auth error → ErreurMetier; any other error is rethrown as is. */
 export function traduire(e: unknown): never {
   const x = e as ErreurBa;
   if (x?.name === "APIError" || (x && typeof x.statusCode === "number" && x.body)) {

@@ -1,14 +1,14 @@
-// Double authentification TOTP par le plugin twoFactor de Better Auth (façades des routes /v1/2fa).
-// Le front appelle directement /api/auth/two-factor/* ; ces fonctions servent l'API, le CLI et les tests.
+// TOTP two-factor authentication through Better Auth's twoFactor plugin (facades of the /v1/2fa routes).
+// The front end calls /api/auth/two-factor/* directly; these functions serve the API, the CLI and the tests.
 import { ErreurMetier, type Sql } from "@auto/store";
 import { authDe } from "./auth";
 import { ba } from "./erreurs";
 import { auNomDe, lireCookie, type Auth } from "./index";
 
-/** Secret base32 de l'URI otpauth (saisie manuelle dans l'application d'authentification). */
+/** Base32 secret of the otpauth URI (manual entry in the authenticator application). */
 const secretDe = (uri: string) => new URL(uri).searchParams.get("secret") ?? "";
 
-/** Enrôlement (mot de passe exigé) : secret, URI otpauth et codes de secours ; inactif avant confirmation. */
+/** Enrollment (password required): secret, otpauth URI and backup codes; inactive until confirmed. */
 export async function enrolerTotp(sql: Sql, auth: Auth, motDePasse: string) {
   const r = await auNomDe(sql, auth, (headers) =>
     ba(authDe(sql).api.enableTwoFactor({ headers, body: { password: String(motDePasse ?? ""), method: "totp" } })),
@@ -17,14 +17,14 @@ export async function enrolerTotp(sql: Sql, auth: Auth, motDePasse: string) {
   return { secret: secretDe(r.totpURI), uri: r.totpURI, codesSecours: r.backupCodes };
 }
 
-/** Session que Better Auth recrée en activant la 2FA : elle n'est jamais remise, on la supprime. */
+/** Session that Better Auth recreates when enabling 2FA: it is never handed out, so we delete it. */
 async function oublierSessions(sql: Sql, cookies: string[]) {
   const nom = (await authDe(sql).$context).authCookies.sessionToken.name;
   const v = lireCookie(cookies, nom);
   if (v) await sql`DELETE FROM session WHERE token = ${decodeURIComponent(v).split(".")[0]!}`;
 }
 
-/** Confirmation par un premier code : la 2FA devient active. */
+/** Confirmation with a first code: 2FA becomes active. */
 export async function confirmerTotp(sql: Sql, auth: Auth, code: string) {
   const { headers } = await auNomDe(sql, auth, (h) =>
     ba(authDe(sql).api.verifyTOTP({ headers: h, body: { code: String(code ?? "") }, returnHeaders: true })),
@@ -39,7 +39,7 @@ export async function totpActif(sql: Sql, userId: string): Promise<boolean> {
   return u?.two_factor_enabled ?? false;
 }
 
-/** Désactivation : mot de passe et code (TOTP) exigés. */
+/** Deactivation: password and code (TOTP) required. */
 export async function desactiverTotp(sql: Sql, auth: Auth, motDePasse: string, code: string) {
   if (!(await totpActif(sql, auth.userId))) throw new ErreurMetier("double authentification inactive", [], 409);
   const api = authDe(sql).api;
@@ -52,7 +52,7 @@ export async function desactiverTotp(sql: Sql, auth: Auth, motDePasse: string, c
   });
 }
 
-/** Nouveaux codes de secours (les anciens sont invalidés) ; mot de passe exigé. */
+/** New backup codes (the old ones are invalidated); password required. */
 export async function regenererCodesSecours(sql: Sql, auth: Auth, motDePasse: string) {
   if (!(await totpActif(sql, auth.userId))) throw new ErreurMetier("double authentification inactive", [], 409);
   const r = await auNomDe(sql, auth, (headers) =>

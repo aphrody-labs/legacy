@@ -1,4 +1,4 @@
-// Répertoires et affectations analytiques. Les montants réutilisent les centimes et taux de @auto/domain.
+// Directories and analytic assignments. Amounts reuse the cents and rates of @auto/domain.
 import { siretValide, totaux, type Ligne as LigneMetier } from "@auto/domain";
 import type { Tx } from "./db";
 import { documentsChantier, ErreurMetier, journaliser, lire, type Ligne } from "./index";

@@ -1,4 +1,4 @@
-// Gabarit des documents par tenant (lot L4) : appliqué au rendu PDF des brouillons et à l'émission.
+// Per-tenant document template (batch L4): applied to the PDF rendering of drafts and at issuance.
 import type { Gabarit } from "@auto/domain";
 import type { Tx } from "./db";
 import { ErreurMetier, journaliser } from "./index";
@@ -11,7 +11,7 @@ interface GabaritRow {
   pied_de_page: string | null;
 }
 
-/** Gabarit du tenant courant ; `undefined` s'il n'a rien personnalisé. */
+/** Template of the current tenant; `undefined` if nothing was customized. */
 export async function lireGabarit(tx: Tx): Promise<Gabarit | undefined> {
   const [r] = await tx<GabaritRow[]>`SELECT couleur, logo, logo_largeur, logo_hauteur, pied_de_page FROM gabarit`;
   if (!r) return undefined;
@@ -36,7 +36,7 @@ export async function enregistrerGabarit(
   await journaliser(tx, actor, "gabarit.modifier", null, { couleur: g.couleur ?? null });
 }
 
-/** Logo déjà converti en JPEG RVB ; `null` le retire. */
+/** Logo already converted to RGB JPEG; `null` removes it. */
 export async function enregistrerLogo(
   tx: Tx,
   actor: string | null,

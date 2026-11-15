@@ -1,26 +1,26 @@
-// Lot conformité : export complet d'un tenant, suppression avec délai de grâce et conservation légale,
-// archivage des exemplaires figés en stockage objet (voir docs/conformite/ et migration 012).
+// Compliance batch: full export of a tenant, deletion with grace period and legal retention,
+// archiving of frozen copies in object storage (see docs/conformite/ and migration 012).
 import type { S3Client } from "bun";
 import { withTenant, type Sql, type Tx } from "./db";
 import { ErreurMetier, journaliser } from "./index";
 
-/** Délai de grâce entre la demande de suppression et son exécution (annulable pendant ce délai). */
+/** Grace period between the deletion request and its execution (cancellable during this period). */
 export const DELAI_GRACE_JOURS = 30;
-/** Conservation des pièces comptables : 10 ans après la clôture de l'exercice (C. com. art. L123-22). */
+/** Retention of accounting records: 10 years after the close of the financial year (C. com. art. L123-22). */
 export const CONSERVATION_ANS = 10;
 
 /**
- * Règle de conservation à la suppression d'un tenant.
+ * Retention rule on deletion of a tenant.
  *
- * - `conserver` : pièces comptables et leur preuve (facture émise, exemplaire figé, paiements, relances,
- *   piste d'audit, compteurs, archives). Conservées intactes : une facture doit rester lisible avec
- *   toutes ses mentions, y compris le nom du client (exception de l'art. 17.3.b du RGPD : obligation
- *   légale). Elles ne sont plus rattachées à aucun compte : les comptes utilisateurs sont supprimés et
- *   les identifiants d'acteurs de l'audit ne renvoient plus à personne (pseudonymisation).
- * - `pseudonymiser` : fiche client encore référencée par une facture ; les champs hors facture
- *   (email, adresse de la fiche, SIRET, TVA) sont effacés, le nom remplacé par un alias.
- * - `supprimer` : tout le reste, dont les tables ajoutées par d'autres lots qui ne se déclarent pas
- *   ici. Un lot dont une table relève d'une obligation de conservation doit l'ajouter à `conserver`.
+ * - `conserver`: accounting records and their proof (issued invoice, frozen copy, payments, reminders,
+ *   audit trail, counters, archives). Kept intact: an invoice must remain readable with
+ *   all its mentions, including the customer's name (exception of GDPR art. 17.3.b: legal
+ *   obligation). They are no longer attached to any account: user accounts are deleted and
+ *   the audit actor ids no longer point to anyone (pseudonymization).
+ * - `pseudonymiser`: customer record still referenced by an invoice; the fields outside the invoice
+ *   (email, record address, SIRET, VAT) are erased, the name replaced by an alias.
+ * - `supprimer`: everything else, including tables added by other batches that do not declare themselves
+ *   here. A batch with a table subject to a retention obligation must add it to `conserver`.
  */
 export const CONSERVATION = {
   conserver: [
@@ -45,7 +45,7 @@ export const CONSERVATION = {
   pseudonymiser: ["client"],
 } as const;
 
-/** Colonnes jamais exportées (secrets) ; les colonnes bytea sont exportées en fichiers. */
+/** Columns never exported (secrets); bytea columns are exported as files. */
 const COLONNES_SECRETES = new Set(["token_hash", "password_hash", "totp_secret", "secret", "backup_codes", "key"]);
 
 const ident = (n: string) => `"${n.replaceAll('"', '""')}"`;
@@ -67,9 +67,9 @@ async function tablesDuTenant(tx: Tx): Promise<{ table: string; colonnes: { nom:
 }
 
 /**
- * Export complet (portabilité, art. 20 RGPD) : archive tar.gz avec un JSON par table, les fichiers
- * (exemplaires figés), l'entreprise, les membres et un manifeste (nombre de lignes, SHA-256 des fichiers).
- * Les tables métier sont lues sous RLS (withTenant) et filtrées sur le tenant ; les secrets sont exclus.
+ * Full export (portability, GDPR art. 20): tar.gz archive with one JSON per table, the files
+ * (frozen copies), the company, the members and a manifest (row count, SHA-256 of the files).
+ * Business tables are read under RLS (withTenant) and filtered on the tenant; secrets are excluded.
  */
 export async function exporterTenant(sql: Sql, tenantId: string): Promise<Uint8Array<ArrayBuffer>> {
   const contenu: Record<string, string | Uint8Array> = {};
@@ -84,7 +84,7 @@ export async function exporterTenant(sql: Sql, tenantId: string): Promise<Uint8A
     manifeste.fichiers[chemin] = new Bun.CryptoHasher("sha256").update(octets).digest("hex");
   };
 
-  // Couche comptes (hors RLS, lue par le propriétaire du schéma) : entreprise et membres, sans secret.
+  // Accounts layer (outside RLS, read by the schema owner): company and members, without secrets.
   const [t] = await sql`SELECT id, nom, siren, siret, adresse, tva_intracom, franchise_tva, created_at,
     suppression_effective_at FROM tenant WHERE id = ${tenantId}`;
   if (!t) throw new ErreurMetier("entreprise introuvable", [], 404);
@@ -149,7 +149,7 @@ export async function etatSuppression(sql: Sql, tenantId: string): Promise<EtatS
   };
 }
 
-/** Demande de suppression (droit owner et confirmation vérifiés par l'appelant) : exécution à J+30. */
+/** Deletion request (owner right and confirmation checked by the caller): execution at D+30. */
 export async function demanderSuppression(sql: Sql, tenantId: string, userId: string, delaiJours = DELAI_GRACE_JOURS) {
   await sql.begin(async (tx) => {
     const r = await tx`UPDATE tenant SET suppression_demandee_at = now(), suppression_demandee_par = ${userId},
@@ -175,9 +175,9 @@ export async function annulerSuppression(sql: Sql, tenantId: string, userId: str
 }
 
 /**
- * Exécute une suppression : comptes, membres, invitations et données non comptables effacés, fiches
- * clients facturés pseudonymisées, pièces comptables conservées jusqu'au 31 décembre de l'année de la
- * dernière émission + 10 ans. Sans pièce à conserver, le tenant est purgé immédiatement.
+ * Executes a deletion: accounts, members, invitations and non-accounting data erased, invoiced
+ * customer records pseudonymized, accounting records kept until 31 December of the year of the
+ * last issuance + 10 years. With no record to keep, the tenant is purged immediately.
  */
 export async function executerSuppression(sql: Sql, tenantId: string) {
   const conservation = await sql.begin(async (tx) => {
@@ -185,8 +185,8 @@ export async function executerSuppression(sql: Sql, tenantId: string) {
     const [t] = await tx`SELECT id FROM tenant WHERE id = ${tenantId} AND supprime_at IS NULL FOR UPDATE`;
     if (!t) throw new ErreurMetier("entreprise introuvable ou déjà supprimée", [], 404);
 
-    // Comptes : clés d'API, invitations, adhésions ; utilisateurs sans autre entreprise (leurs sessions,
-    // comptes de connexion, passkeys et 2FA suivent par ON DELETE CASCADE).
+    // Accounts: API keys, invitations, memberships; users with no other company (their sessions,
+    // login accounts, passkeys and 2FA follow through ON DELETE CASCADE).
     const membres = await tx<{ user_id: string }[]>`SELECT user_id FROM membership WHERE tenant_id = ${tenantId}`;
     await tx`DELETE FROM apikey WHERE reference_id = ${tenantId}`;
     await tx`UPDATE session SET active_organization_id = NULL WHERE active_organization_id = ${tenantId}`;
@@ -196,7 +196,7 @@ export async function executerSuppression(sql: Sql, tenantId: string) {
       await tx`DELETE FROM app_user WHERE id = ${user_id}
         AND NOT EXISTS (SELECT 1 FROM membership WHERE user_id = ${user_id})`;
 
-    // Données sans obligation de conservation (ordre imposé par les clés étrangères).
+    // Data with no retention obligation (order imposed by the foreign keys).
     await tx`DELETE FROM absence WHERE tenant_id = ${tenantId}`;
     await tx`DELETE FROM employe WHERE tenant_id = ${tenantId}`;
     await tx`DELETE FROM produit WHERE tenant_id = ${tenantId}`;
@@ -207,7 +207,7 @@ export async function executerSuppression(sql: Sql, tenantId: string) {
     await tx`UPDATE client SET nom = 'client ' || left(id::text, 8), email = NULL, siret = NULL,
       tva_intracom = NULL, adresse = '' WHERE tenant_id = ${tenantId}`;
 
-    // Tables des autres lots non déclarées : supprimées (plusieurs passes si elles se référencent).
+    // Tables of other batches not declared: deleted (several passes if they reference each other).
     const traitees = new Set<string>([
       ...CONSERVATION.conserver,
       ...CONSERVATION.pseudonymiser,
@@ -249,7 +249,7 @@ export async function executerSuppression(sql: Sql, tenantId: string) {
   return { conservationJusqua: conservation };
 }
 
-/** Suppressions dont le délai de grâce est écoulé (tâche planifiée quotidienne). */
+/** Deletions whose grace period has elapsed (daily scheduled task). */
 export async function executerSuppressionsEchues(sql: Sql): Promise<string[]> {
   const rows = await sql<{ id: string }[]>`SELECT id FROM tenant
     WHERE supprime_at IS NULL AND suppression_effective_at <= now() ORDER BY suppression_effective_at`;
@@ -258,8 +258,8 @@ export async function executerSuppressionsEchues(sql: Sql): Promise<string[]> {
 }
 
 /**
- * Purge définitive après la conservation légale : seule exception à l'immuabilité (fonction SQL
- * `purge_autorisee`, migration 012). Les objets archivés expirent d'eux-mêmes (rétention S3).
+ * Final purge after the legal retention: the only exception to immutability (SQL function
+ * `purge_autorisee`, migration 012). Archived objects expire on their own (S3 retention).
  */
 export async function purgerTenant(sql: Sql, tenantId: string) {
   await sql.begin(async (tx) => {
@@ -299,7 +299,7 @@ export async function purgerConservationsEchues(sql: Sql): Promise<string[]> {
   return rows.map((r) => r.id);
 }
 
-/** Configuration S3 depuis l'environnement (MinIO en dev : voir compose.yaml) ; null si absente. */
+/** S3 configuration from the environment (MinIO in dev: see compose.yaml); null if absent. */
 export function s3DepuisEnv(env = Bun.env): S3Client | null {
   if (!env.S3_ENDPOINT || !env.S3_BUCKET) return null;
   return new Bun.S3Client({
@@ -312,9 +312,9 @@ export function s3DepuisEnv(env = Bun.env): S3Client | null {
 }
 
 /**
- * Copie en stockage objet les exemplaires figés pas encore archivés. Le seau doit avoir le verrou d'objet
- * activé avec une rétention couvrant la conservation légale (11 ans : 10 ans après la
- * clôture d'un exercice d'au plus 12 mois) ; l'objet relu doit avoir le même SHA-256.
+ * Copies the frozen copies not yet archived to object storage. The bucket must have object lock
+ * enabled with a retention covering the legal retention (11 years: 10 years after the
+ * close of a financial year of at most 12 months); the re-read object must have the same SHA-256.
  */
 export async function archiverFichiers(sql: Sql, tenantId: string, s3: S3Client, actor: string | null = null) {
   return withTenant(sql, tenantId, async (tx) => {

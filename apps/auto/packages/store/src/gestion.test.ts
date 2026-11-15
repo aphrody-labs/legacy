@@ -50,7 +50,7 @@ beforeAll(async () => {
 
 afterAll(() => drop());
 
-test("paiements partiels puis solde : statut payé, trop-perçu refusé", async () => {
+test("partial payments then settlement: paid status, overpayment refused", async () => {
   const f = await withTenant(sql, A, (tx) => emise(tx));
   expect(f.ttcCents).toBe(24000);
   const p1 = await withTenant(sql, A, (tx) =>
@@ -77,7 +77,7 @@ test("paiements partiels puis solde : statut payé, trop-perçu refusé", async 
   await expect(withTenant(sql, A, (tx) => tx`DELETE FROM paiement`)).rejects.toThrow();
 });
 
-test("avoirs partiels : reste dû réduit, dépassement refusé, avoir soldant annule la facture", async () => {
+test("partial credit notes: remaining balance reduced, excess refused, settling credit note cancels the invoice", async () => {
   const f = await withTenant(sql, A, (tx) => emise(tx));
   const partiel = avoirPartiel(base, f.numero!, "2026-10-05", [base.lignes[1]!]);
   const a1 = await withTenant(sql, A, (tx) => emise(tx, partiel));
@@ -95,7 +95,7 @@ test("avoirs partiels : reste dû réduit, dépassement refusé, avoir soldant a
   );
 });
 
-test("relances aux paliers J+7, J+30, J+60, une seule fois par palier", async () => {
+test("reminders at D+7, D+30, D+60 levels, once per level", async () => {
   const [{ id: C }] = (await sql<{ id: string }[]>`
     INSERT INTO tenant (nom, siren, siret) VALUES ('C', '732829320', '73282932000074') RETURNING id`) as unknown as [
     { id: string },
@@ -117,7 +117,7 @@ test("relances aux paliers J+7, J+30, J+60, une seule fois par palier", async ()
   );
 });
 
-test("clients enregistrés isolés et liés au document", async () => {
+test("registered customers isolated and linked to the document", async () => {
   const c = await withTenant(sql, A, (tx) =>
     creerClient(tx, null, { nom: "Dupont SARL", siret: "73282932000074", adresse: "3 rue C", email: "a@b.fr" }),
   );
@@ -126,7 +126,7 @@ test("clients enregistrés isolés et liés au document", async () => {
   const d = await withTenant(sql, A, (tx) => creerBrouillon(tx, null, base, c.id));
   expect(d.clientId).toBe(c.id);
   await expect(withTenant(sql, B, (tx) => creerBrouillon(tx, null, base, c.id))).rejects.toThrow("document_client_fk");
-  // Référence directe à un document d'un autre tenant : refusée par la base elle-même.
+  // Direct reference to another tenant's document: refused by the database itself.
   const fa = await withTenant(sql, A, (tx) => emise(tx));
   await expect(
     withTenant(

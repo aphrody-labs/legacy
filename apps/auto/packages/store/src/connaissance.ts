@@ -1,11 +1,11 @@
-// Base de connaissances par entreprise (migration 019) : morceaux de documents et vecteurs, sous RLS. Le
-// découpage, les embeddings et la recherche sont faits par les services (@auto/services/connaissance).
+// Per-company knowledge base (migration 019): document chunks and vectors, under RLS. The
+// chunking, embeddings and search are done by the services (@auto/services/connaissance).
 import type { Tx } from "./db";
 import { ErreurMetier, journaliser } from "./index";
 
-/** Morceaux au plus par entreprise, toutes bases confondues. */
+/** Chunks at most per company, all bases combined. */
 export const MORCEAUX_MAX = 20_000;
-/** Bases au plus par entreprise. */
+/** Bases at most per company. */
 export const BASES_MAX = 50;
 
 export const BASE = /^[a-z0-9_-]{1,60}$/;
@@ -33,8 +33,8 @@ export interface BaseConnaissance {
 const octets = (v: Float32Array) => new Uint8Array(v.buffer, v.byteOffset, v.byteLength);
 
 /**
- * Remplace les morceaux d'une source (supprimés puis réinsérés) : modèle et dimension doivent être ceux du reste
- * de la base ; quotas de l'entreprise vérifiés sous verrou (deux indexations simultanées ne les dépassent pas).
+ * Replaces the chunks of a source (deleted then reinserted): model and dimension must match the rest
+ * of the base; company quotas checked under lock (two simultaneous indexings cannot exceed them).
  */
 export async function remplacerSource(
   tx: Tx,
@@ -85,7 +85,7 @@ export async function remplacerSource(
   return { morceaux: o.morceaux.length, remplaces: supprimes.length };
 }
 
-/** Bases de l'entreprise avec leurs comptes. */
+/** Bases of the company with their counts. */
 export async function listerBases(tx: Tx): Promise<BaseConnaissance[]> {
   const rows = await tx<
     { base: string; sources: number; morceaux: number; modele: string; dimension: number; maj: Date }[]
@@ -102,7 +102,7 @@ export async function listerBases(tx: Tx): Promise<BaseConnaissance[]> {
   }));
 }
 
-/** Supprime une base entière, ou une seule de ses sources ; renvoie le nombre de morceaux supprimés. */
+/** Deletes a whole base, or just one of its sources; returns the number of chunks deleted. */
 export async function supprimerConnaissance(
   tx: Tx,
   actor: string | null,
@@ -119,7 +119,7 @@ export async function supprimerConnaissance(
   return r.length;
 }
 
-/** Vecteurs d'une base mis bout à bout (matrice de la recherche native) ; `ids[i]` : morceau de la ligne i. */
+/** Vectors of a base laid end to end (native search matrix); `ids[i]`: chunk of row i. */
 export async function vecteursBase(
   tx: Tx,
   base: string,
@@ -138,7 +138,7 @@ export async function vecteursBase(
   return { modele: rows[0]!.modele, dimension, ids: rows.map((r) => r.id), matrice };
 }
 
-/** Morceaux par identifiant, dans l'ordre demandé. */
+/** Chunks by id, in the requested order. */
 export async function lireMorceaux(
   tx: Tx,
   ids: string[],

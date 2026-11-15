@@ -10,7 +10,7 @@ export interface ResultatGestion {
   url: string;
   total: number;
 }
-/** Recherche des pièces connues d'auto, jamais de parcours arbitraire du réseau ou du disque de l'hôte. */
+/** Search of the pieces known to auto, never an arbitrary walk of the host's network or disk. */
 export async function rechercherGestion(
   tx: Tx,
   q: unknown,

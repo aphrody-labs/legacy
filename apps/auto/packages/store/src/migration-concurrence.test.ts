@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { SQL } from "bun";
 import { DEFAULT_URL, migrate } from "./db";
 
-test("les migrations concurrentes d'une base neuve sont sérialisées", async () => {
+test("concurrent migrations of a fresh database are serialized", async () => {
   const url = Bun.env.DATABASE_URL ?? DEFAULT_URL;
   const admin = new SQL(url, { max: 1 });
   const nom = `auto_test_${crypto.randomUUID().replaceAll("-", "")}`;

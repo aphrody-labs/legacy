@@ -1,6 +1,6 @@
-// Couche comptes d'auto sur Better Auth (auth.ts) : résolution de l'appelant pour la RLS, inscription avec
-// l'entreprise (SIRET), connexion, clés d'API, membres. Les routes /v1 historiques en sont des façades ;
-// le front parle directement à Better Auth (/api/auth).
+// Accounts layer of auto on Better Auth (auth.ts): caller resolution for RLS, sign-up with
+// the company (SIRET), sign-in, API keys, members. The historical /v1 routes are facades over it;
+// the front end talks to Better Auth directly (/api/auth).
 import { sirenValide, siretValide, tvaIntracomFr } from "@auto/domain";
 import { ErreurMetier, withTenant, type Sql } from "@auto/store";
 import { makeSignature } from "better-auth/crypto";
@@ -41,7 +41,7 @@ export function exiger(auth: Auth, action: Action) {
 
 export const bearer = (jeton: string) => new Headers({ authorization: `Bearer ${jeton}` });
 
-/** Rôle relu à chaque requête ; entreprise suspendue ou compte banni : aucun accès. */
+/** Role re-read on every request; suspended company or banned account: no access. */
 export async function resoudre(sql: Sql, userId: string, tenantId: string | null | undefined): Promise<Auth | null> {
   if (!tenantId) return null;
   const [r] = await sql<{ role: string }[]>`
@@ -62,7 +62,7 @@ export async function resoudre(sql: Sql, userId: string, tenantId: string | null
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const JWT = /^[\w-]+\.[\w-]+\.[\w-]+$/;
 
-/** Clé d'API (`auto_…`) : entreprise = référence de la clé, auteur = metadata.userId. */
+/** API key (`auto_…`): company = the key's reference, author = metadata.userId. */
 async function parCle(sql: Sql, auth: AuthAuto, cle: string): Promise<Auth | null> {
   const r = await auth.api.verifyApiKey({ body: { key: cle } }).catch(() => null);
   if (!r?.valid || !r.key) return null;
@@ -73,8 +73,8 @@ async function parCle(sql: Sql, auth: AuthAuto, cle: string): Promise<Auth | nul
 const jwks = new WeakMap<AuthAuto, { jeu: ReturnType<typeof createLocalJWKSet>; lu: number }>();
 
 /**
- * Jeton d'accès OAuth (JWT signé par le plugin jwt, émis aux clients MCP) : émetteur Better Auth, audience
- * = la ressource /mcp, entreprise = revendication `auto_tenant` (entreprise active lors du consentement).
+ * OAuth access token (JWT signed by the jwt plugin, issued to MCP clients): Better Auth issuer, audience
+ * = the /mcp resource, company = `auto_tenant` claim (active company at consent time).
  */
 export async function verifierJetonOAuth(auth: AuthAuto, jeton: string) {
   const c = await auth.$context;
@@ -94,9 +94,9 @@ async function parOAuth(sql: Sql, auth: AuthAuto, jeton: string): Promise<Auth |
 }
 
 /**
- * Appelant d'une requête : session Better Auth (cookie, ou `Authorization: Bearer <jeton de session>`),
- * clé d'API (`Bearer auto_…` ou `x-api-key`), ou jeton d'accès OAuth d'un client MCP. Le tenant de la
- * session est son entreprise active ; il alimente withTenant et la RLS (`app.tenant`).
+ * Caller of a request: Better Auth session (cookie, or `Authorization: Bearer <session token>`),
+ * API key (`Bearer auto_…` or `x-api-key`), or OAuth access token of an MCP client. The session's
+ * tenant is its active company; it feeds withTenant and RLS (`app.tenant`).
  */
 export async function authentifierRequete(sql: Sql, headers: Headers, auth = authDe(sql)): Promise<Auth | null> {
   const jeton = headers
@@ -106,8 +106,8 @@ export async function authentifierRequete(sql: Sql, headers: Headers, auth = aut
   const cle = headers.get("x-api-key") ?? (jeton?.startsWith("auto_") ? jeton : null);
   if (cle) return parCle(sql, auth, cle);
   if (jeton && JWT.test(jeton)) return parOAuth(sql, auth, jeton);
-  // Une résolution interne ne peut pas transmettre Set-Cookie au navigateur : laisser le renouvellement
-  // au endpoint public Better Auth, appelé par le front, plutôt que prolonger uniquement la base.
+  // An internal resolution cannot pass Set-Cookie to the browser: leave the renewal
+  // to the public Better Auth endpoint, called by the front end, rather than only extend the database.
   const s = await auth.api.getSession({ headers, query: { disableRefresh: true } }).catch(() => null);
   if (!s) return null;
   return resoudre(sql, s.user.id, (s.session as { activeOrganizationId?: string | null }).activeOrganizationId);
@@ -115,14 +115,14 @@ export async function authentifierRequete(sql: Sql, headers: Headers, auth = aut
 
 const parRequete = new WeakMap<Request, Promise<Auth | null>>();
 
-/** Appelant d'une requête HTTP, résolu une seule fois par requête (quotas puis route). */
+/** Caller of an HTTP request, resolved once per request (quotas then route). */
 export function appelant(sql: Sql, req: Request): Promise<Auth | null> {
   let p = parRequete.get(req);
   if (!p) parRequete.set(req, (p = authentifierRequete(sql, req.headers)));
   return p;
 }
 
-/** Cookie de session signé (nom et valeur) d'un jeton de session : bancs de test, captures. */
+/** Signed session cookie (name and value) of a session token: test benches, captures. */
 export async function cookieSession(sql: Sql, token: string) {
   const c = await authDe(sql).$context;
   return {
@@ -131,15 +131,15 @@ export async function cookieSession(sql: Sql, token: string) {
   };
 }
 
-/** Contrat historique : un jeton (session, clé d'API ou jeton OAuth) → `{ userId, tenantId, role }`. */
+/** Historical contract: a token (session, API key or OAuth token) → `{ userId, tenantId, role }`. */
 export function authentifier(sql: Sql, token: string | null | undefined): Promise<Auth | null> {
   if (!token) return Promise.resolve(null);
   return authentifierRequete(sql, bearer(token));
 }
 
 /**
- * Exécute un appel Better Auth au nom d'un membre authentifié par n'importe quel moyen (clé d'API,
- * OAuth) : session éphémère sur son entreprise, supprimée aussitôt après.
+ * Runs a Better Auth call on behalf of a member authenticated by any means (API key,
+ * OAuth): ephemeral session on their company, deleted right after.
  */
 export async function auNomDe<T>(sql: Sql, a: Auth, fn: (h: Headers) => Promise<T>): Promise<T> {
   const c = await authDe(sql).$context;
@@ -163,13 +163,13 @@ export interface Session {
   tenantId: string;
   /** Jeton de session Better Auth (`Authorization: Bearer`). */
   session: string;
-  /** En-têtes Set-Cookie à retransmettre au navigateur. */
+  /** Set-Cookie headers to forward to the browser. */
   cookies?: string[];
 }
 
 const cookiesDe = (h: Headers | undefined) => h?.getSetCookie() ?? [];
 
-/** Crée l'entreprise (tenant) de l'utilisateur, qui en devient owner. */
+/** Creates the company (tenant) of the user, who becomes its owner. */
 export async function creerEntreprise(sql: Sql, userId: string, e: Inscription["entreprise"]) {
   const erreurs: string[] = [];
   if (!siretValide(e?.siret ?? "")) erreurs.push("siret invalide");
@@ -198,7 +198,7 @@ export async function creerEntreprise(sql: Sql, userId: string, e: Inscription["
   return org.id;
 }
 
-/** Inscription : utilisateur (Better Auth), entreprise et adhésion owner ; renvoie une session. */
+/** Sign-up: user (Better Auth), company and owner membership; returns a session. */
 export async function inscrire(sql: Sql, i: Inscription): Promise<Session> {
   const email = normaliserEmail(i?.email ?? "");
   const erreurs: string[] = [];
@@ -232,10 +232,10 @@ export async function inscrire(sql: Sql, i: Inscription): Promise<Session> {
 
 export type Connexion =
   | Session
-  /** 2FA active : la session s'obtient avec `defi` et un code (`validerDeuxFacteurs`). */
+  /** 2FA active: the session is obtained with `defi` and a code (`validerDeuxFacteurs`). */
   | { deuxFacteurs: true; defi: string; cookies?: string[] };
 
-/** Valeur d'un cookie dans des en-têtes Set-Cookie. */
+/** Value of a cookie in Set-Cookie headers. */
 export function lireCookie(cookies: string[], nom: string) {
   for (const c of cookies) {
     const [kv] = c.split(";");
@@ -249,7 +249,7 @@ async function nomCookie(sql: Sql, nom: string) {
   return (await authDe(sql).$context).createAuthCookie(nom).name;
 }
 
-/** Choisit l'entreprise active d'une session (membre exigé) ; sinon garde celle par défaut. */
+/** Chooses a session's active company (membership required); otherwise keeps the default. */
 async function activer(sql: Sql, token: string, userId: string, tenantId?: string): Promise<string> {
   if (tenantId) {
     if (!(await resoudre(sql, userId, tenantId))) throw new ErreurMetier("aucune entreprise accessible", [], 403);
@@ -263,8 +263,8 @@ async function activer(sql: Sql, token: string, userId: string, tenantId?: strin
 }
 
 /**
- * Connexion par email et mot de passe ; `tenantId` choisit l'entreprise si l'utilisateur en a plusieurs.
- * Avec la 2FA, renvoie un défi (cookie signé `two_factor` de Better Auth) au lieu d'une session.
+ * Sign-in by email and password; `tenantId` picks the company if the user has several.
+ * With 2FA, returns a challenge (signed `two_factor` cookie of Better Auth) instead of a session.
  */
 export async function connecter(sql: Sql, email: string, motDePasse: string, tenantId?: string): Promise<Connexion> {
   const { headers, response } = await ba(
@@ -293,7 +293,7 @@ export async function connecter(sql: Sql, email: string, motDePasse: string, ten
   }
 }
 
-/** Seconde étape : code TOTP (6 chiffres) ou code de secours, sur le défi de `connecter`. */
+/** Second step: TOTP code (6 digits) or backup code, on the challenge of `connecter`. */
 export async function validerDeuxFacteurs(sql: Sql, defiBrut: string, code: string): Promise<Session> {
   const [defi, tenantId] = String(defiBrut ?? "").split("~");
   if (!defi) throw new ErreurMetier("défi expiré ou inconnu", [], 401);
@@ -314,7 +314,7 @@ export async function validerDeuxFacteurs(sql: Sql, defiBrut: string, code: stri
   };
 }
 
-/** Ré-authentification avant une action irréversible (suppression de l'entreprise). */
+/** Re-authentication before an irreversible action (company deletion). */
 export async function verifierMotDePasse(sql: Sql, userId: string, motDePasse: string) {
   const [a] = await sql<{ password: string | null }[]>`
     SELECT password FROM account WHERE user_id = ${userId} AND provider_id = 'credential'`;
@@ -331,7 +331,7 @@ export async function deconnecter(sql: Sql, headers: Headers): Promise<string[]>
   return cookiesDe(r?.headers);
 }
 
-/** Clé d'API d'entreprise (agent, CLI, MCP, n8n) : renvoyée une seule fois, seul son hash est conservé. */
+/** API key of the company (agent, CLI, MCP, n8n): returned only once, only its hash is kept. */
 export async function creerJetonApi(
   sql: Sql,
   auth: Auth,
@@ -354,8 +354,8 @@ export async function creerJetonApi(
 }
 
 /**
- * Clé d'API courte de l'auteur d'un workflow (nœuds « Action auto ») : expire seule, supprimée par
- * `revoquer()` à la fin de l'exécution. Droits = rôle actuel de l'auteur.
+ * Short API key of the workflow's author ("auto Action" nodes): expires by itself, deleted by
+ * `revoquer()` at the end of the execution. Rights = the author's current role.
  */
 export async function cleTemporaire(sql: Sql, tenantId: string, userId: string, nom: string, minutes = 15) {
   const cle = `auto_${crypto.getRandomValues(new Uint8Array(32)).toBase64({ alphabet: "base64url", omitPadding: true })}`;
@@ -371,7 +371,7 @@ export async function cleTemporaire(sql: Sql, tenantId: string, userId: string, 
 export interface JetonApi {
   id: string;
   nom: string | null;
-  /** Premiers caractères (préfixe compris) des clés créées depuis Better Auth ; null pour les reprises. */
+  /** First characters (prefix included) of the keys created from Better Auth; null for takeovers. */
   debut: string | null;
   email: string | null;
   creeLe: string;
@@ -379,7 +379,7 @@ export interface JetonApi {
   dernierUsage: string | null;
 }
 
-/** Clés d'API de l'entreprise (jamais le secret). */
+/** API keys of the company (never the secret). */
 export async function listerJetons(sql: Sql, auth: Auth): Promise<JetonApi[]> {
   exiger(auth, "parametres");
   const rows = await sql<
@@ -441,7 +441,7 @@ export async function listerMembres(sql: Sql, auth: Auth): Promise<Membre[]> {
   }));
 }
 
-/** Ajoute un utilisateur existant ou change son rôle ; un owner ne peut être nommé que par un owner. */
+/** Adds an existing user or changes their role; an owner can only be appointed by an owner. */
 export async function ajouterMembre(sql: Sql, auth: Auth, email: string, role: Role) {
   exiger(auth, "membres");
   if (!estRole(role)) throw new ErreurMetier("rôle invalide");
@@ -458,7 +458,7 @@ export async function ajouterMembre(sql: Sql, auth: Auth, email: string, role: R
   else await ba(api.addMember({ body: { userId: u.id, role, organizationId: auth.tenantId } }));
 }
 
-/** Retire un membre (le dernier owner reste). */
+/** Removes a member (the last owner stays). */
 export async function retirerMembre(sql: Sql, auth: Auth, memberId: string) {
   exiger(auth, "membres");
   if (!UUID.test(memberId)) throw new ErreurMetier("membre introuvable", [], 404);
@@ -521,9 +521,9 @@ export interface FicheSirene {
   naf: string | null;
   natureJuridique: string | null;
   dateCreation: string | null;
-  /** Unité légale active (état administratif « A ») ; une entreprise cessée ne s'inscrit pas. */
+  /** Active legal unit (administrative status "A"); a ceased company cannot sign up. */
   active: boolean;
-  /** Numéro de TVA calculé depuis le SIREN (clé FR) ; à confirmer par l'entreprise (VIES). */
+  /** VAT number computed from the SIREN (the FR key); to be confirmed by the company (VIES). */
   tvaIntracom: string;
 }
 
@@ -545,8 +545,8 @@ interface ResultatAnnuaire {
 }
 
 /**
- * Préremplissage depuis l'annuaire public des entreprises (recherche-entreprises.api.gouv.fr, données
- * Sirene de l'INSEE, sans clé). Accepte un SIREN ou un SIRET ; `null` si l'unité légale est inconnue.
+ * Preliminary fill from the public company directory (recherche-entreprises.api.gouv.fr, data
+ * INSEE Sirene data, no key). Accepts a SIREN or a SIRET; `null` if the legal unit is unknown.
  */
 export async function rechercherSiren(identifiant: string, fetcher: typeof fetch = fetch): Promise<FicheSirene | null> {
   const id = String(identifiant ?? "").replace(/\s/g, "");

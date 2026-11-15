@@ -1,14 +1,14 @@
-// Reprise de la double authentification de l'ancienne couche comptes (avant Better Auth).
+// Takeover of two-factor authentication from the former accounts layer (before Better Auth).
 //
-// Better Auth dérive la clé HMAC du TOTP des octets UTF-8 d'un secret texte : les anciens secrets
-// (20 octets aléatoires, chiffrés par la clé maître) ne s'y expriment pas. La migration écrit donc dans
-// `two_factor.secret` le texte `legacy:<base32>` (chiffré par Better Auth), et ce crochet, avant
-// `/two-factor/verify-totp`, vérifie le code sur l'ancien secret puis le remplace par le code que Better
-// Auth attend pour ce texte. Les applications d'authentification déjà enrôlées continuent de servir.
+// Better Auth derives the TOTP HMAC key from the UTF-8 bytes of a text secret: the old secrets
+// (20 random bytes, encrypted by the master key) cannot be expressed that way. The migration therefore writes into
+// `two_factor.secret` the text `legacy:<base32>` (encrypted by Better Auth), and this hook, before
+// `/two-factor/verify-totp`, checks the code against the old secret then replaces it with the code Better
+// Auth expects for that text. Already enrolled authenticator applications keep working.
 //
-// Codes de secours : seul leur SHA-256 était gardé. La migration place dans Better Auth un code sentinelle
-// `legacy-<16 premiers caractères du hash>` par code non utilisé ; le crochet, avant
-// `/two-factor/verify-backup-code`, reconnaît l'ancien code et le remplace par sa sentinelle.
+// Backup codes: only their SHA-256 was kept. The migration puts into Better Auth a sentinel code
+// `legacy-<first 16 characters of the hash>` per unused code; the hook, before
+// `/two-factor/verify-backup-code`, recognizes the old code and replaces it with its sentinel.
 import type { Sql } from "@auto/store";
 import { createOTP } from "@better-auth/utils/otp";
 import { getSessionFromCtx } from "better-auth/api";
@@ -20,7 +20,7 @@ import { base32, depuisBase32, verifierTotp } from "./totp";
 
 const PREFIXE = "legacy:";
 
-// Contexte d'un point d'accès Better Auth, réduit à ce que le crochet lit.
+// Context of a Better Auth endpoint, reduced to what the hook reads.
 interface Ctx {
   path?: string;
   body?: Record<string, unknown>;
@@ -36,7 +36,7 @@ interface Ctx {
   getSignedCookie: (nom: string, secret: string) => Promise<string | null>;
 }
 
-/** Utilisateur de la session, sinon du défi 2FA en cours (cookie signé `two_factor`), comme Better Auth. */
+/** User of the session, otherwise of the pending 2FA challenge (signed `two_factor` cookie), as Better Auth does. */
 async function utilisateur(ctx: Ctx): Promise<string | null> {
   const s = await getSessionFromCtx(ctx as never).catch(() => null);
   if (s) return s.user.id;
@@ -74,8 +74,8 @@ export async function reprendreDeuxFacteurs(c: unknown, sql: Sql) {
 const sentinelle = (h: string) => `legacy-${h.slice(0, 16)}`;
 
 /**
- * Migration idempotente des secrets TOTP actifs et des codes de secours non utilisés vers `two_factor`.
- * Lancée au démarrage de l'API (après les migrations SQL) et par `bun scripts/migrer-auth.ts`.
+ * Idempotent migration of the active TOTP secrets and unused backup codes to `two_factor`.
+ * Run at API startup (after the SQL migrations) and by `bun scripts/migrer-auth.ts`.
  */
 export async function migrerDeuxFacteurs(sql: Sql, auth: AuthAuto): Promise<number> {
   const { secretConfig } = await auth.$context;

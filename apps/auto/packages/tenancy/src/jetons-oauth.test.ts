@@ -3,7 +3,7 @@ import { testDb } from "@auto/store";
 import { setTokenUtil, decryptOAuthToken } from "better-auth/oauth2";
 import { creerAuth } from "./auth";
 import { betterAuth, type BetterAuthOptions } from "better-auth";
-test("Jetons OAuth SSO : chiffrement officiel et reprise des anciens jetons sans couper les connexions", async () => {
+test("SSO OAuth tokens: official encryption and takeover of old tokens without cutting connections", async () => {
   const { sql, drop } = await testDb();
   try {
     const ba = creerAuth(sql, {

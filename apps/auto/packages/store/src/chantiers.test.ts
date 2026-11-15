@@ -112,7 +112,7 @@ async function achat(
     { source: "facturx", statut, facture, anomalies: [] },
   );
 }
-test("validations : dates réelles, centimes entiers, TVA et identifiants", () => {
+test("validations: real dates, whole cents, VAT and identifiers", () => {
   expect(() => verifierFournisseur({ ...fournisseur, siret: "123" })).toThrow("SIRET");
   expect(() => verifierFournisseur({ ...fournisseur, email: "non" })).toThrow("e-mail");
   expect(() =>
@@ -138,7 +138,7 @@ test("validations : dates réelles, centimes entiers, TVA et identifiants", () =
     }),
   ).toThrow("lignes");
 });
-test("répertoires persistants, archives et isolation des cinq tables", async () => {
+test("persistent directories, archives and isolation of the five tables", async () => {
   const x = await withTenant(sql, A, preparer);
   const p = await withTenant(sql, A, (tx) => enregistrerPiece(tx, null, piece(x.f, x.c)));
   await withTenant(sql, A, (tx) => enregistrerFournisseur(tx, null, { ...x.f, archive: true }, x.f.id));
@@ -159,7 +159,7 @@ test("répertoires persistants, archives et isolation des cinq tables", async ()
     ),
   ).rejects.toThrow();
 });
-test("une facture émise reste figée après affectation ; incohérence client refusée", async () => {
+test("an issued invoice stays frozen after assignment; customer inconsistency refused", async () => {
   const x = await withTenant(sql, A, preparer);
   const doc = await withTenant(sql, A, async (tx) =>
     emettre(tx, null, (await creerBrouillon(tx, null, base, x.client.id)).id),
@@ -170,7 +170,7 @@ test("une facture émise reste figée après affectation ; incohérence client r
   await expect(withTenant(sql, A, (tx) => affecterDocument(tx, null, doc.id, autre.c.id))).rejects.toThrow("client");
   await expect(withTenant(sql, B, (tx) => affecterDocument(tx, null, doc.id, x.c.id))).rejects.toThrow("introuvable");
 });
-test("analytique : brouillons et devis exclus, commandes séparées, achats rejetés ou non EUR exclus", async () => {
+test("analytics: drafts and quotes excluded, orders separated, rejected or non-EUR purchases excluded", async () => {
   const x = await withTenant(sql, A, preparer);
   const resultat = await withTenant(sql, A, async (tx) => {
     for (const type of ["facture", "devis", "facture"] as const) {
@@ -198,7 +198,7 @@ test("analytique : brouillons et devis exclus, commandes séparées, achats reje
     achatsNonChiffres: 1,
   });
 });
-test("rapprochement : pas de double compte, même fournisseur et chantier, archives neutres", async () => {
+test("reconciliation: no double count, same supplier and project, archives neutral", async () => {
   const x = await withTenant(sql, A, preparer);
   const r = await withTenant(sql, A, achat);
   const p = await withTenant(sql, A, (tx) =>
@@ -217,7 +217,7 @@ test("rapprochement : pas de double compte, même fournisseur et chantier, archi
   ).rejects.toThrow("autre fournisseur");
   expect((await withTenant(sql, A, verifierAudit)).ok).toBe(true);
 });
-test("avoir total non affecté : suit la facture et annule son montant analytique", async () => {
+test("total credit note not assigned: follows the invoice and cancels its analytic amount", async () => {
   const x = await withTenant(sql, A, preparer);
   await withTenant(sql, A, async (tx) => {
     const d = await emettre(tx, null, (await creerBrouillon(tx, null, base, x.client.id)).id);
@@ -227,7 +227,7 @@ test("avoir total non affecté : suit la facture et annule son montant analytiqu
   });
   expect((await withTenant(sql, A, (tx) => dossierChantier(tx, x.c.id))).analytique.ventesHtCents).toBe(0);
 });
-test("codes et références concurrentes : une seule création acceptée", async () => {
+test("concurrent codes and references: a single creation accepted", async () => {
   const x = await withTenant(sql, A, preparer);
   const code = crypto.randomUUID();
   const results = await Promise.allSettled(
@@ -239,7 +239,7 @@ test("codes et références concurrentes : une seule création acceptée", async
   expect(pieces.filter((r) => r.status === "fulfilled")).toHaveLength(1);
 });
 
-test("conservation et purge : achats et pièces seuls conservent aussi le dossier", async () => {
+test("retention and purge: purchases and pieces alone also keep the file", async () => {
   const [t] =
     await sql`INSERT INTO tenant (nom,siren,siret) VALUES ('Conservation chantier','732829320','73282932000074') RETURNING id`;
   const x = await withTenant(sql, t.id, preparer);

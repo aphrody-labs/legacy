@@ -1,4 +1,4 @@
-// Paiement en ligne : configuration d'encaissement du tenant (clé Stripe chiffrée, migration 016).
+// Online payment: tenant collection settings (encrypted Stripe key, migration 016).
 import type { Tx } from "./db";
 
 export interface Encaissement {
@@ -23,7 +23,7 @@ export async function supprimerEncaissement(tx: Tx) {
   await tx`DELETE FROM encaissement`;
 }
 
-/** Vrai si un paiement de cette référence existe déjà (idempotence du retour de paiement en ligne). */
+/** True if a payment with this reference already exists (idempotence of the online payment return). */
 export async function paiementExiste(tx: Tx, reference: string): Promise<boolean> {
   return (await tx`SELECT 1 FROM paiement WHERE reference = ${reference}`).length > 0;
 }

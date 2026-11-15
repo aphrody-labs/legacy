@@ -27,3 +27,12 @@ test("mail text follows the request language, plural included, and falls back to
   expect(b).not.toBe(a);
   expect(traducteur(demande("zz")).t("auth.mail.invite.text", { ...args, days: 7 })).toContain("7 days:");
 });
+
+test("role and segment labels follow the language tag", async () => {
+  const { libellesRoles } = await import("./droits");
+  const { libellesSegments } = await import("./segments");
+  expect(libellesRoles("en").owner).toBe("Owner");
+  expect(libellesRoles("fr").owner).toBe("Propriétaire");
+  expect(libellesSegments("en").clients).toBe("Customer accounting");
+  expect(libellesSegments("zz").clients).toBe("Customer accounting");
+});

@@ -1,4 +1,4 @@
-// Lot mail : stockage (voir docs/ARCHITECTURE.md et docs/MAIL.md). Le chiffrement est fait par l'appelant.
+// Mail batch: storage (see docs/ARCHITECTURE.md and docs/MAIL.md). Encryption is done by the caller.
 import type { Tx } from "./db";
 
 type Securite = "tls" | "starttls" | "aucune";
@@ -59,8 +59,8 @@ const boite = (r: RowBoite): Boite => ({
 });
 
 /**
- * Connecte (ou remplace) la boîte du tenant. L'état de relève repart de zéro : les messages déjà
- * enregistrés sont reconnus par leur clé (source, UIDVALIDITY, UID) et ne sont pas dupliqués.
+ * Connects (or replaces) the tenant's mailbox. The fetch state restarts from zero: messages already
+ * saved are recognized by their key (source, UIDVALIDITY, UID) and are not duplicated.
  */
 export async function enregistrerBoite(
   tx: Tx,
@@ -128,7 +128,7 @@ export interface NouveauMail {
 
 const sha256 = (o: Uint8Array) => new Bun.CryptoHasher("sha256").update(o).digest("hex");
 
-/** Enregistre un message relevé ; `null` s'il l'était déjà (idempotence). */
+/** Saves a fetched message; `null` if it already was (idempotence). */
 export async function enregistrerMailRecu(tx: Tx, m: NouveauMail): Promise<MailRecu | null> {
   const [r] = await tx<{ id: string; created_at: Date }[]>`
     INSERT INTO mail_recu (source, uid_validity, uid, message_id, expediteur, destinataires, sujet, date_envoi,
@@ -161,7 +161,7 @@ export async function enregistrerMailRecu(tx: Tx, m: NouveauMail): Promise<MailR
   };
 }
 
-/** Avance l'état de relève (après enregistrement des messages, dans la même transaction). */
+/** Advances the fetch state (after saving the messages, in the same transaction). */
 export async function noterReleve(
   tx: Tx,
   actor: string | null,

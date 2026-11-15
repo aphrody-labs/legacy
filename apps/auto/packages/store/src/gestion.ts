@@ -1,4 +1,4 @@
-// Clients et produits enregistrés, paiements (reste dû, statut payé) et relances d'impayés.
+// Registered customers and products, payments (remaining balance, paid status) and unpaid-invoice reminders.
 import type { Partie, Tva } from "@auto/domain";
 import type { Tx } from "./db";
 import { ErreurMetier, journaliser } from "./index";
@@ -133,7 +133,7 @@ const paiement = (r: PaiementRow): Paiement => ({
   reference: r.reference,
 });
 
-/** TTC de la facture − avoirs émis − paiements reçus. */
+/** Invoice total incl. tax − issued credit notes − payments received. */
 export async function resteDu(tx: Tx, documentId: string): Promise<{ ttcCents: number; resteCents: number }> {
   const [r] = await tx<{ ttc: string; avoirs: string; payes: string }[]>`
     SELECT d.ttc_cents AS ttc,
@@ -145,7 +145,7 @@ export async function resteDu(tx: Tx, documentId: string): Promise<{ ttcCents: n
   return { ttcCents: Number(r.ttc), resteCents: Number(r.ttc) - Number(r.avoirs) - Number(r.payes) };
 }
 
-/** Enregistre un paiement ; la facture soldée passe au statut payé. */
+/** Saves a payment; the settled invoice moves to the paid status. */
 export async function enregistrerPaiement(
   tx: Tx,
   actor: string | null,
@@ -182,7 +182,7 @@ export async function listerPaiements(tx: Tx, documentId: string): Promise<Paiem
 
 // Relances -------------------------------------------------------------------------------------
 
-/** Paliers de relance en jours de retard après l'échéance. */
+/** Reminder levels in days late after the due date. */
 export const PALIERS = [7, 30, 60] as const;
 
 export interface ARelancer {
@@ -195,7 +195,7 @@ export interface ARelancer {
   resteCents: number;
 }
 
-/** Factures échues non soldées dont le palier de relance atteint n'a pas encore été envoyé. */
+/** Unsettled overdue invoices whose reached reminder level has not been sent yet. */
 export async function aRelancer(tx: Tx, aujourdhui: string): Promise<ARelancer[]> {
   const rows = await tx<
     { id: string; numero: string; data: { client: Partie; echeance: string }; niveau_max: number }[]

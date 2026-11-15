@@ -21,7 +21,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await drop?.();
 });
-test("Isolation privée y compris sous le même namespace, idempotence et pièces jointes", async () => {
+test("Private isolation including under the same namespace, idempotence and attachments", async () => {
   const c = await avecCourrier(sql, a, a, (tx) => compteCourrier(tx, compte));
   expect(c).toBeDefined();
   expect(await avecCourrier(sql, a, b, (tx) => compteCourrier(tx, compte))).toBeUndefined();

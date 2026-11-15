@@ -1,9 +1,9 @@
-// Abonnements webhook par tenant (migration 014) : livrés par le worker comme l'outbox opérateur.
+// Per-tenant webhook subscriptions (migration 014): delivered by the worker like the operator outbox.
 import type { Sql, Tx } from "./db";
 import { avecWorker, enfiler } from "./outbox";
 import { ErreurMetier, journaliser } from "./index";
 
-/** Job de livraison d'un événement vers un abonnement webhook d'un tenant. */
+/** Job delivering an event to a tenant's webhook subscription. */
 export const JOB_WEBHOOK = "webhook.livrer";
 
 export interface Webhook {
@@ -54,7 +54,7 @@ export async function supprimerWebhook(tx: Tx, actor: string | null, id: string)
   await journaliser(tx, actor, "webhook.supprimer", id);
 }
 
-/** Dans la transaction de l'événement : un job de livraison par abonnement actif concerné. */
+/** Within the event's transaction: one delivery job per concerned active subscription. */
 export async function enfilerWebhooks(tx: Tx, evenementId: string, type: string): Promise<number> {
   const abonnes = await tx<{ id: string }[]>`
     SELECT id FROM webhook WHERE actif AND (cardinality(types) = 0 OR ${type} = ANY (types))`;
@@ -62,7 +62,7 @@ export async function enfilerWebhooks(tx: Tx, evenementId: string, type: string)
   return abonnes.length;
 }
 
-/** Lecture par le worker (tous tenants) : URL, tenant et secret chiffré. */
+/** Read by the worker (all tenants): URL, tenant and encrypted secret. */
 export async function lireWebhook(
   sql: Sql,
   id: string,

@@ -1,5 +1,5 @@
 import { isIP } from "node:net";
-/** Ce filtre restreint une identité déjà authentifiée, sans jamais accorder de rôle. */
+/** This filter restricts an already authenticated identity, never granting a role. */
 export function ipAdministration(
   req: Request,
   env: Record<string, string | undefined> = Bun.env,

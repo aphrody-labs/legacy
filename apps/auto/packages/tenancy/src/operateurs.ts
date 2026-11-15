@@ -3,8 +3,8 @@ import type { Sql } from "@auto/store";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Console opérateur (plugin admin) : rôle global `admin` pour les owner et admin du tenant opérateur
- * (`AUTO_TENANT_OPERATEUR`), retiré aux autres. Lancée au démarrage de l'API.
+ * Operator console (admin plugin): global `admin` role for the owners and admins of the operator tenant
+ * (`AUTO_TENANT_OPERATEUR`), removed from the others. Run at API startup.
  */
 export async function synchroniserOperateurs(sql: Sql, operateur = Bun.env.AUTO_TENANT_OPERATEUR) {
   const superAdmins = (Bun.env.AUTO_SUPER_ADMIN_EMAILS ?? "")

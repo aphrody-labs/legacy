@@ -5,7 +5,7 @@ export async function importConnu(tx: Tx, p: { chemin: string; segment: string; 
     await tx`SELECT i.id,i.fichier_id AS "fichierId",i.devis_id AS "devisId",i.recue_id AS "recueId" FROM fichier_indexe i JOIN source_fichiers s ON s.tenant_id=i.tenant_id AND s.id=i.source_id WHERE s.racine=${RACINE_IMPORTS_LOCAUX} AND i.segment=${p.segment} AND i.chemin=${p.chemin} AND i.empreinte=${p.empreinte} AND (${p.cible}='index' OR (${p.cible}='devis' AND i.devis_id IS NOT NULL) OR (${p.cible}='facture' AND i.recue_id IS NOT NULL))`;
   return f ?? null;
 }
-/** Dépôt logique géré par Auto, jamais un chemin du disque ni une source à scanner. */
+/** Logical deposit managed by Auto, never a disk path nor a source to scan. */
 export async function indexerImport(
   tx: Tx,
   actor: string,

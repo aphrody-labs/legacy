@@ -6,5 +6,15 @@
   "auth.mail.reset.subject": "Reset your auto password",
   "auth.mail.reset.text": ".input {$hours :number}\n.match $hours\none {{To choose a new password, open this link (valid for {$hours} hour):\n{$url}}}\n* {{To choose a new password, open this link (valid for {$hours} hours):\n{$url}}}",
   "auth.mail.verify.subject": "Confirm your address on auto",
-  "auth.mail.verify.text": "To confirm your address, open this link:\n{$url}"
+  "auth.mail.verify.text": "To confirm your address, open this link:\n{$url}",
+  "role.owner": "Owner",
+  "role.admin": "Administrator",
+  "role.comptable": "Accountant",
+  "role.lecture": "Read-only",
+  "role.rh": "Human resources",
+  "segment.clients": "Customer accounting",
+  "segment.fournisseurs": "Supplier accounting",
+  "segment.chantiers": "Project analytics",
+  "segment.livraisons": "Delivery notes",
+  "segment.commandes": "Order confirmations"
 }
