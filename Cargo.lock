@@ -529,6 +529,7 @@ version = "0.4.0"
 dependencies = [
  "agent-context",
  "aphrody-core",
+ "c-abi",
  "rusqlite",
  "serde",
  "serde_json",
@@ -6592,6 +6593,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f3a53fac24f34a81bc9954b5d6cfce0c21e18ec6959f44f56e8e90e4bb7c346c"
 dependencies = [
  "libbz2-rs-sys",
+]
+
+[[package]]
+name = "c-abi"
+version = "0.4.0"
+source = "git+https://github.com/aphrody-labs/open?branch=main#396f9669b97c4cb28fc5fd2e1a6d67bab394db9a"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
