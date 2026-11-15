@@ -1,0 +1,11 @@
+{
+  // Serverless face of the Aphrody AI router (packages/ai-os/src/router): OpenAI-compatible, free providers
+  // first (Gemini API free tier, Workers AI free allocation), failover across them, M3 chat UI on GET /.
+  "name": "ai-aphrody-com",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-01",
+  "ai": { "binding": "AI" },
+  "routes": [{ "pattern": "router.aphrody.com", "custom_domain": true }],
+  "rules": [{ "type": "Text", "globs": ["**/*.css"], "fallthrough": true }],
+  // secrets: ROUTER_KEY (bearer required by /v1/*), GEMINI_API_KEY
+}
