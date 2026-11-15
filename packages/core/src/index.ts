@@ -1,4 +1,5 @@
 export * from "./ffi.ts";
+export * from "./sys.ts";
 export {
   classification,
   indexCounts,

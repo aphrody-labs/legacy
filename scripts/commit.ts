@@ -1,7 +1,7 @@
 // Safe commit for the shared working tree: builds the commit in a private index from HEAD plus the listed
 // paths only, refuses a tree that loses files (b38c8de7 was committed from an empty index, 2026-11-15),
 // moves main with compare-and-swap, then resyncs the shared index for those paths only.
-// usage: bun scripts/commit.ts -m "<msg>" [--allow-shrink N] [--push] <path>...
+// usage: bun scripts/commit.ts -m "<msg>" [--allow-shrink N] [--push] [--content <path>=<file>]... <path>...
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -10,15 +10,20 @@ const argv = Bun.argv.slice(2);
 let msg = "";
 let allowShrink = 0;
 let push = false;
+const contents: [string, string][] = [];
 const paths: string[] = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]!;
   if (a === "-m") msg = argv[++i] ?? "";
   else if (a === "--allow-shrink") allowShrink = Number(argv[++i] ?? 0);
   else if (a === "--push") push = true;
+  else if (a === "--content") {
+    const [p, file] = (argv[++i] ?? "").split("=");
+    contents.push([p!, file!]);
+  }
   else paths.push(a);
 }
-if (!msg || !paths.length) {
+if (!msg || (!paths.length && !contents.length)) {
   console.error('usage: bun scripts/commit.ts -m "<msg>" [--allow-shrink N] [--push] <path>...');
   process.exit(2);
 }
@@ -42,7 +47,12 @@ try {
   git(["read-tree", old], true);
   const loaded = git(["ls-files"], true).split("\n").filter(Boolean).length;
   if (loaded !== before) throw new Error(`private index holds ${loaded} files, HEAD ${before}: refusing`);
-  git(["add", "-A", "--", ...paths], true);
+  if (paths.length) git(["add", "-A", "--", ...paths], true);
+  // --content <repo path>=<local file>: commit that exact content (e.g. HEAD plus one hunk), not the working copy
+  for (const [p, file] of contents) {
+    const blob = git(["hash-object", "-w", file]);
+    git(["update-index", "--add", "--cacheinfo", `100644,${blob},${p}`], true);
+  }
   const tree = git(["write-tree"], true);
   const after = count(tree);
   if (before - after > allowShrink)
