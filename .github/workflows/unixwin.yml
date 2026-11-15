@@ -31,9 +31,13 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - id: pin
         name: WinuxCmd pin from src.lock.json
-        run: bun -e 'const l = await Bun.file("src.lock.json").json(); console.log("sha=" + l.repositories["third_party/WinuxCmd"].commit)' >> "$GITHUB_OUTPUT"
+        run: |
+          bun -e 'const l = await Bun.file("src.lock.json").json(); console.log("sha=" + l.repositories["third_party/WinuxCmd"].commit)' >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v7
-        with: { repository: aphrody-labs/WinuxCmd, ref: "${{ steps.pin.outputs.sha }}", path: winuxcmd }
+        with:
+          repository: aphrody-labs/WinuxCmd
+          ref: ${{ steps.pin.outputs.sha }}
+          path: winuxcmd
       - name: Record GNU coreutils results (distribution build)
         run: |
           /usr/bin/true --version | head -1
@@ -50,7 +54,10 @@ jobs:
         with: { submodules: false }
       - uses: oven-sh/setup-bun@v2
       - uses: actions/checkout@v7
-        with: { repository: aphrody-labs/WinuxCmd, ref: "${{ needs.oracle.outputs.winux_sha }}", path: winuxcmd }
+        with:
+          repository: aphrody-labs/WinuxCmd
+          ref: ${{ needs.oracle.outputs.winux_sha }}
+          path: winuxcmd
       - uses: actions/download-artifact@v8
         with: { name: gnu-results }
       - name: Toolchain (rustup chromium-157)
@@ -58,7 +65,7 @@ jobs:
       - name: Build ay (WinuxCmd library linked)
         run: cargo build --release -p aphrody --no-default-features
       - name: Unit tests of ay applet and ay sh
-        run: cargo test --release -p aphrody --lib --no-default-features -- applet:: sh::
+        run: cargo test --release -p aphrody --lib --no-default-features -- applet sh
       - name: Provider table and an applet in process
         shell: bash
         run: |
