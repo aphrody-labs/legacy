@@ -42,7 +42,6 @@ graphify-out/
 # Shell completions of Bun, embedded by src/runtime/cli/shell_completions.rs.
 !/completions/
 !/third_party/
-!/plugins/
 /test/conformance/upstream/
 /test/conformance/results/
 !/rust-toolchain.toml
@@ -64,17 +63,14 @@ graphify-out/
 !/Cargo.toml
 !/Cargo.lock
 !/deny.toml
-!/identity.toml
 !/package.json
 !/tsconfig.json
 # Single monorepo version (docs/packaging/VERSIONING.md, ay release freeze).
-!/VERSION
 !/bun.lock
 !/bunfig.toml
 !/pyproject.toml
 !/uv.lock
 !/src.lock.json
-!/tools.toml
 !/dist-workspace.toml
 
 
