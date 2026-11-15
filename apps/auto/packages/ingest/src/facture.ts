@@ -1,11 +1,11 @@
-// Facture fournisseur reçue, au format normalisé commun au Factur-X et à l'OCR + LLM.
+// Received supplier invoice, in the normalized format shared by Factur-X and OCR + LLM.
 import { sirenValide, siretValide, tvaIntracomFr } from "@auto/domain";
 
 export interface LigneRecue {
   designation: string;
   quantite: number;
   prixUnitaireHtCents: number;
-  /** Taux de TVA en dixièmes de pourcent : 200 = 20 %. */
+  /** VAT rate in tenths of a percent: 200 = 20%. */
   tauxTva: number;
   htCents: number;
 }
@@ -28,12 +28,12 @@ export type Source = "facturx" | "ocr";
 
 const texte = { type: "string", minLength: 1 };
 const texteNul = { type: ["string", "null"] };
-// Classes explicites : également comprises par les grammaires JSON Schema de llama.cpp.
+// Explicit classes: also understood by the JSON Schema grammars of llama.cpp.
 const dateIso = { type: "string", pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" };
 const dateNulle = { type: ["string", "null"], pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" };
 const centimes = { type: "integer" };
 
-/** JSON Schema imposé au LLM (mode strict : tous les champs présents, `null` si absent). */
+/** JSON Schema imposed on the LLM (strict mode: all fields present, `null` if absent). */
 export const SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -118,20 +118,20 @@ function typeDe(v: unknown): string {
   return typeof v;
 }
 
-/** Sous-ensemble de JSON Schema suffisant pour SCHEMA : renvoie les écarts (vide = conforme). */
+/** JSON Schema subset enough for SCHEMA: returns the deviations (empty = conformant). */
 export function conforme(s: Schema, v: unknown, chemin = "$"): string[] {
   const t = typeDe(v);
   if (s.type) {
     const types = typeof s.type === "string" ? [s.type] : s.type;
     if (!types.includes(t) && !(t === "integer" && types.includes("number")))
-      return [`${chemin} : ${t} au lieu de ${types.join("|")}`];
+      return [`${chemin}: ${t} instead of ${types.join("|")}`];
   }
   if (v === null) return [];
   const e: string[] = [];
-  if (s.enum && !s.enum.includes(v)) e.push(`${chemin} : valeur hors de ${s.enum.join(", ")}`);
+  if (s.enum && !s.enum.includes(v)) e.push(`${chemin}: value not in ${s.enum.join(", ")}`);
   if (typeof v === "string") {
-    if (s.minLength && v.length < s.minLength) e.push(`${chemin} : vide`);
-    if (s.pattern && !new RegExp(s.pattern).test(v)) e.push(`${chemin} : format invalide`);
+    if (s.minLength && v.length < s.minLength) e.push(`${chemin}: empty`);
+    if (s.pattern && !new RegExp(s.pattern).test(v)) e.push(`${chemin}: invalid format`);
   }
   if (typeof v === "number") {
     if (s.minimum !== undefined && v < s.minimum) e.push(`${chemin} : < ${s.minimum}`);
@@ -139,18 +139,18 @@ export function conforme(s: Schema, v: unknown, chemin = "$"): string[] {
   }
   if (t === "object") {
     const o = v as Record<string, unknown>;
-    for (const k of s.required ?? []) if (!(k in o)) e.push(`${chemin}.${k} : manquant`);
+    for (const k of s.required ?? []) if (!(k in o)) e.push(`${chemin}.${k}: missing`);
     for (const [k, x] of Object.entries(o)) {
       const sp = s.properties?.[k];
       if (sp) e.push(...conforme(sp, x, `${chemin}.${k}`));
-      else if (s.additionalProperties === false) e.push(`${chemin}.${k} : propriété inattendue`);
+      else if (s.additionalProperties === false) e.push(`${chemin}.${k}: unexpected property`);
     }
   }
   if (t === "array" && s.items) (v as unknown[]).forEach((x, i) => e.push(...conforme(s.items!, x, `${chemin}[${i}]`)));
   return e;
 }
 
-/** Retire les `null` (champs absents) d'une sortie conforme à SCHEMA. */
+/** Removes the `null`s (absent fields) from an output conformant to SCHEMA. */
 export function sansNuls<T>(v: T): T {
   if (Array.isArray(v)) return v.map(sansNuls) as T;
   if (v && typeof v === "object")
@@ -168,58 +168,58 @@ function dateValide(d: string): boolean {
   return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d;
 }
 
-/** Montant en centimes affiché en euros dans les anomalies (lues par l'utilisateur). */
-const eur = (c: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(c / 100);
+/** Amount in cents shown in euros in the anomalies (read by the user). */
+const eur = (c: number) => new Intl.NumberFormat("en", { style: "currency", currency: "EUR" }).format(c / 100);
 
 const jourPlus = (d: string, n: number) =>
   new Date(Date.parse(`${d}T00:00:00Z`) + n * 86400e3).toISOString().slice(0, 10);
 
 /**
- * Contrôles de cohérence : identifiants (SIREN, SIRET, TVA), dates, totaux. Vide = la facture peut
- * être validée sans intervention ; sinon elle part dans la file « à vérifier ».
+ * Consistency checks: identifiers (SIREN, SIRET, VAT), dates, totals. Empty = the invoice can be validated
+ * without intervention; otherwise it goes to the "to check" queue.
  */
 export function valider(f: FactureRecue, aujourdhui = new Date().toISOString().slice(0, 10)): string[] {
   const e: string[] = [];
-  if (!f.numero?.trim()) e.push("numéro absent");
-  if (!f.fournisseur?.nom?.trim()) e.push("fournisseur absent");
+  if (!f.numero?.trim()) e.push("missing number");
+  if (!f.fournisseur?.nom?.trim()) e.push("missing supplier");
 
   const { siren, siret, tvaIntracom } = f.fournisseur ?? {};
-  if (siren && !sirenValide(siren)) e.push(`SIREN ${siren} invalide`);
-  if (siret && !siretValide(siret)) e.push(`SIRET ${siret} invalide`);
-  if (siret && siren && !siret.startsWith(siren)) e.push("SIRET et SIREN discordants");
+  if (siren && !sirenValide(siren)) e.push(`invalid SIREN ${siren}`);
+  if (siret && !siretValide(siret)) e.push(`invalid SIRET ${siret}`);
+  if (siret && siren && !siret.startsWith(siren)) e.push("SIRET and SIREN do not match");
   const s = siren ?? siret?.slice(0, 9);
   if (tvaIntracom?.startsWith("FR") && s && sirenValide(s) && tvaIntracomFr(s) !== tvaIntracom.replace(/\s/g, ""))
-    e.push(`TVA ${tvaIntracom} discordante avec le SIREN ${s}`);
-  if (!s && !tvaIntracom) e.push("aucun identifiant du fournisseur (SIREN, SIRET ou TVA)");
+    e.push(`VAT number ${tvaIntracom} does not match SIREN ${s}`);
+  if (!s && !tvaIntracom) e.push("no supplier identifier (SIREN, SIRET or VAT number)");
 
-  if (!dateValide(f.date)) e.push(`date ${f.date} invalide`);
-  else if (f.date > jourPlus(aujourdhui, 1)) e.push(`date ${f.date} dans le futur`);
+  if (!dateValide(f.date)) e.push(`invalid date ${f.date}`);
+  else if (f.date > jourPlus(aujourdhui, 1)) e.push(`date ${f.date} is in the future`);
   for (const [nom, d] of [
-    ["échéance", f.echeance],
-    ["date de prestation", f.datePrestation],
+    ["due date", f.echeance],
+    ["service date", f.datePrestation],
   ] as const)
-    if (d !== undefined && !dateValide(d)) e.push(`${nom} ${d} invalide`);
+    if (d !== undefined && !dateValide(d)) e.push(`invalid ${nom} ${d}`);
   if (f.echeance && dateValide(f.echeance) && dateValide(f.date) && f.echeance < f.date)
-    e.push("échéance antérieure à la date de facture");
+    e.push("due date before the invoice date");
 
   const t = f.totaux;
-  if (!t) return [...e, "totaux absents"];
+  if (!t) return [...e, "missing totals"];
   if (t.htCents + t.tvaCents !== t.ttcCents)
-    e.push(`HT + TVA ≠ TTC (${eur(t.htCents)} + ${eur(t.tvaCents)} ≠ ${eur(t.ttcCents)})`);
-  if (!f.lignes?.length) return [...e, "aucune ligne"];
+    e.push(`excl. VAT + VAT ≠ gross (${eur(t.htCents)} + ${eur(t.tvaCents)} ≠ ${eur(t.ttcCents)})`);
+  if (!f.lignes?.length) return [...e, "no lines"];
 
   const n = f.lignes.length;
   f.lignes.forEach((l, i) => {
     const attendu = Math.round(l.quantite * l.prixUnitaireHtCents);
-    // Remise de ligne possible : le HT de ligne ne dépasse pas le brut (au centime près).
+    // A line discount is possible: the line total excluding VAT does not exceed the gross (to the cent).
     if (l.htCents > attendu + 1 || l.htCents < 0 !== attendu < 0)
-      e.push(`ligne ${i + 1} : HT ${eur(l.htCents)} incohérent avec ${l.quantite} × ${eur(l.prixUnitaireHtCents)}`);
+      e.push(`line ${i + 1}: excl. VAT ${eur(l.htCents)} inconsistent with ${l.quantite} × ${eur(l.prixUnitaireHtCents)}`);
   });
   const somme = f.lignes.reduce((a, l) => a + l.htCents, 0);
-  if (Math.abs(somme - t.htCents) > n) e.push(`somme des lignes ${eur(somme)} ≠ HT ${eur(t.htCents)}`);
+  if (Math.abs(somme - t.htCents) > n) e.push(`sum of lines ${eur(somme)} ≠ excl. VAT ${eur(t.htCents)}`);
   const parTaux = new Map<number, number>();
   for (const l of f.lignes) parTaux.set(l.tauxTva, (parTaux.get(l.tauxTva) ?? 0) + l.htCents);
   const tva = [...parTaux].reduce((a, [taux, base]) => a + Math.round((base * taux) / 1000), 0);
-  if (Math.abs(tva - t.tvaCents) > parTaux.size) e.push(`TVA recalculée ${eur(tva)} ≠ TVA ${eur(t.tvaCents)}`);
+  if (Math.abs(tva - t.tvaCents) > parTaux.size) e.push(`recomputed VAT ${eur(tva)} ≠ VAT ${eur(t.tvaCents)}`);
   return e;
 }

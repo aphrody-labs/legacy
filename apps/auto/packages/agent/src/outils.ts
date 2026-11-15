@@ -1,10 +1,10 @@
-// Outils métier de l'agent : chacun appelle l'API /v1 avec le jeton de l'utilisateur.
+// Business tools of the agent: each calls the /v1 API with the user's token.
 import type { ApiAuto } from "./api";
 
 export interface Outil {
   nom: string;
   description: string;
-  /** JSON Schema des arguments. */
+  /** JSON Schema of the arguments. */
   schema: { type: "object"; properties: Record<string, object>; required?: string[]; additionalProperties?: boolean };
   /** Lecture seule (annotation MCP readOnlyHint). */
   lecture: boolean;
@@ -45,7 +45,7 @@ const lignes = {
       designation: { type: "string" },
       quantite: { type: "number" },
       prixUnitaireHtCents: { type: "integer", description: "Prix unitaire HT en centimes (450 € = 45000)" },
-      tva: { type: "integer", enum: [0, 21, 55, 100, 200], description: "Taux en dixièmes de % (20 % = 200)" },
+      tva: { type: "integer", enum: [0, 21, 55, 100, 200], description: "Rate in tenths of a % (20% = 200)" },
       remiseBp: { type: "integer", description: "Remise en points de base (10 % = 1000)" },
       unite: { type: "string" },
     },
@@ -53,7 +53,7 @@ const lignes = {
 };
 const client = {
   type: "object",
-  description: "Client saisi (si pas de clientId)",
+  description: "Customer typed in (if no clientId)",
   required: ["nom", "siret", "adresse"],
   properties: {
     nom: { type: "string" },
@@ -72,7 +72,7 @@ async function documents(api: ApiAuto, type?: string): Promise<Doc[]> {
 
 function brouillon(type: "devis" | "facture", a: Record<string, unknown>) {
   const { clientId, client, lignes, ...reste } = a;
-  if (!clientId && !client) throw new Error("clientId ou client requis (utiliser chercher_client)");
+  if (!clientId && !client) throw new Error("clientId or client required (use chercher_client)");
   return { ...reste, type, clientId, client, lignes };
 }
 
@@ -85,7 +85,7 @@ export const OUTILS: Outil[] = [
   {
     nom: "chercher_piece_gestion",
     description:
-      "Retrouve les devis, factures clients et fournisseurs, chantiers, bons de livraison et confirmations de commande connus d’auto, archives comprises, par référence, tiers, chantier ou texte extrait. Ne parcourt pas un partage réseau non connecté.",
+      "Finds the quotes, customer and supplier invoices, sites, delivery notes and order confirmations known to auto, archives included, by reference, third party, site or extracted text. Does not browse a network share that is not connected.",
     lecture: true,
     schema: { type: "object", properties: { q: { type: "string", minLength: 2, maxLength: 200 } }, required: ["q"] },
     executer: (api, a) => api.get("/v1/recherche-gestion?q=" + enc(String(a.q))),
@@ -93,14 +93,14 @@ export const OUTILS: Outil[] = [
   {
     nom: "consulter_chantier",
     description:
-      "Consulte un chantier avec ses documents, achats, pièces et analytique HT (ventes émises, achats validés, commandes séparées).",
+      "Shows a site with its documents, purchases, files and analytics excluding VAT (issued sales, validated purchases, separate orders).",
     lecture: true,
     schema: { type: "object", properties: { id }, required: ["id"] },
     executer: (api, a) => api.get("/v1/chantiers/" + enc(String(a.id))),
   },
   {
     nom: "lister_documents",
-    description: "Liste les devis, factures, acomptes et avoirs (résumé : numéro, client, statut, TTC en centimes).",
+    description: "Lists quotes, invoices, down payments and credit notes (summary: number, customer, status, gross total in cents).",
     lecture: true,
     schema: {
       type: "object",
@@ -113,14 +113,14 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "lire_document",
-    description: "Détail complet d'un document (lignes, mentions, totaux).",
+    description: "Full detail of a document (lines, mentions, totals).",
     lecture: true,
     schema: { type: "object", properties: { id }, required: ["id"] },
     executer: (api, a) => api.get(`/v1/documents/${enc(String(a.id))}`),
   },
   {
     nom: "chercher_document",
-    description: "Cherche un document par numéro, nom de client ou désignation de ligne.",
+    description: "Finds a document by number, customer name or line description.",
     lecture: true,
     schema: {
       type: "object",
@@ -142,14 +142,14 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "chercher_client",
-    description: "Cherche un client enregistré par nom (renvoie son id pour créer un devis ou une facture).",
+    description: "Finds a registered customer by name (returns its id to create a quote or an invoice).",
     lecture: true,
     schema: { type: "object", properties: { q: { type: "string" } } },
     executer: (api, a) => api.get(`/v1/clients${a.q ? `?q=${enc(String(a.q))}` : ""}`),
   },
   {
     nom: "creer_devis",
-    description: "Crée un devis en brouillon (non numéroté) pour un client enregistré (clientId) ou saisi.",
+    description: "Creates a draft quote (unnumbered) for a registered customer (clientId) or a typed-in one.",
     lecture: false,
     schema: {
       type: "object",
@@ -169,7 +169,7 @@ export const OUTILS: Outil[] = [
   {
     nom: "creer_facture",
     description:
-      "Crée une facture en brouillon. L'émission (numéro définitif, Factur-X) se fait avec emettre_document.",
+      "Creates a draft invoice. Issuing (final number, Factur-X) is done with emettre_document.",
     lecture: false,
     schema: {
       type: "object",
@@ -181,7 +181,7 @@ export const OUTILS: Outil[] = [
         date,
         echeance: date,
         datePrestation: date,
-        origine: { type: "string", description: "Numéro du devis d'origine" },
+        origine: { type: "string", description: "Number of the original quote" },
         notes: { type: "string" },
       },
       required: ["lignes"],
@@ -190,14 +190,14 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "emettre_document",
-    description: "Émet un brouillon : numéro définitif et exemplaire figé (Factur-X pour une facture). Irréversible.",
+    description: "Issues a draft: final number and frozen copy (Factur-X for an invoice). Irreversible.",
     lecture: false,
     schema: { type: "object", properties: { id }, required: ["id"] },
     executer: async (api, a) => resume(await api.post<Doc>(`/v1/documents/${enc(String(a.id))}/emettre`)),
   },
   {
     nom: "enregistrer_paiement",
-    description: "Enregistre un paiement reçu sur une facture émise ; renvoie le reste dû.",
+    description: "Records a payment received on an issued invoice; returns the amount still due.",
     lecture: false,
     schema: {
       type: "object",
@@ -220,14 +220,14 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "lister_relances",
-    description: "Factures échues non soldées à relancer à une date (palier 1, 2 ou 3).",
+    description: "Overdue unsettled invoices to chase on a date (level 1, 2 or 3).",
     lecture: true,
     schema: { type: "object", properties: { date } },
     executer: (api, a) => api.get(`/v1/relances${a.date ? `?date=${enc(String(a.date))}` : ""}`),
   },
   {
     nom: "relancer",
-    description: "Enregistre la relance d'une facture (niveau 1, 2 ou 3).",
+    description: "Records the reminder of an invoice (level 1, 2 or 3).",
     lecture: false,
     schema: {
       type: "object",
@@ -245,7 +245,7 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "lister_absences",
-    description: "Absences des employés (congés, RTT, maladie…), filtrables par statut. Droit « rh » requis.",
+    description: "Employee absences (leave, RTT, sickness...), filterable by status. Requires the \"rh\" right.",
     lecture: true,
     schema: {
       type: "object",
@@ -255,14 +255,14 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "lister_factures_recues",
-    description: "Factures fournisseurs reçues (à vérifier, validées, rejetées).",
+    description: "Supplier invoices received (to check, validated, rejected).",
     lecture: true,
     schema: { type: "object", properties: { statut: { type: "string", enum: ["a_verifier", "validee", "rejetee"] } } },
     executer: (api, a) => api.get(`/v1/factures-recues${a.statut ? `?statut=${enc(String(a.statut))}` : ""}`),
   },
   {
     nom: "exporter",
-    description: "Exporte les documents en CSV (séparateur ;) ou JSON, filtrés par type et période d'émission.",
+    description: "Exports documents as CSV (separator ;) or JSON, filtered by type and issue period.",
     lecture: true,
     schema: {
       type: "object",
@@ -284,7 +284,7 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "lister_automatisations",
-    description: "Workflows d'automatisation de l'entreprise : déclencheur, actif ou non, dernière exécution.",
+    description: "Automation workflows of the company: trigger, active or not, last run.",
     lecture: true,
     schema: { type: "object", properties: {} },
     executer: (api) => api.get("/v1/automatisations"),
@@ -292,7 +292,7 @@ export const OUTILS: Outil[] = [
   {
     nom: "catalogue_automatisation",
     description:
-      "Types de nœuds disponibles pour construire un workflow (déclencheurs, logique, données, HTTP, Slack, mail, IA, actions auto), paramètres en JSON Schema, et modèles prêts à l'emploi.",
+      "Node types available to build a workflow (triggers, logic, data, HTTP, Slack, mail, AI, auto actions), parameters as JSON Schema, and ready-made templates.",
     lecture: true,
     schema: { type: "object", properties: {} },
     executer: async (api) => ({
@@ -303,7 +303,7 @@ export const OUTILS: Outil[] = [
   {
     nom: "creer_automatisation",
     description:
-      "Crée un workflow à partir d'une définition { noeuds: [{ id, type, nom, parametres, position: [x, y] }], connexions: [{ de, sortie, vers }] } avec un seul déclencheur. Expressions : {{ $json.champ }}, {{ $secret.nom }}. Créé inactif sauf actif: true.",
+      "Creates a workflow from a definition { noeuds: [{ id, type, nom, parametres, position: [x, y] }], connexions: [{ de, sortie, vers }] } with a single trigger. Expressions: {{ $json.champ }}, {{ $secret.nom }}. Created inactive unless actif: true.",
     lecture: false,
     schema: {
       type: "object",
@@ -320,7 +320,7 @@ export const OUTILS: Outil[] = [
   {
     nom: "importer_n8n",
     description:
-      "Importe un workflow exporté de n8n (JSON nodes + connections) : conversion des nœuds courants et des expressions, un workflow par déclencheur, création inactive ; renvoie les avertissements à traiter.",
+      "Imports a workflow exported from n8n (JSON nodes + connections): conversion of the common nodes and expressions, one workflow per trigger, created inactive; returns the warnings to handle.",
     lecture: false,
     schema: { type: "object", properties: { workflow: { type: "object" } }, required: ["workflow"] },
     async executer(api, a) {
@@ -330,7 +330,7 @@ export const OUTILS: Outil[] = [
         avertissements: string[];
         autres: { nom: string; definition: unknown }[];
       }>("/v1/automatisations/importer-n8n", { workflow: a.workflow });
-      // Un workflow par déclencheur n8n, tous créés inactifs.
+      // One workflow per n8n trigger, all created inactive.
       const automatisations = [];
       for (const w of [r, ...r.autres])
         automatisations.push(
@@ -341,14 +341,14 @@ export const OUTILS: Outil[] = [
   },
   {
     nom: "executer_automatisation",
-    description: "Exécute un workflow maintenant avec des données d'entrée facultatives ; renvoie chaque étape.",
+    description: "Runs a workflow now with optional input data; returns each step.",
     lecture: false,
     schema: { type: "object", properties: { id, donnees: { type: "object" } }, required: ["id"] },
     executer: (api, a) => api.post(`/v1/automatisations/${enc(String(a.id))}/executer`, { donnees: a.donnees }),
   },
   {
     nom: "lire_execution",
-    description: "Détail d'une exécution de workflow : statut, erreur, éléments produits par chaque nœud.",
+    description: "Detail of a workflow run: status, error, items produced by each node.",
     lecture: true,
     schema: { type: "object", properties: { id }, required: ["id"] },
     executer: (api, a) => api.get(`/v1/executions/${enc(String(a.id))}`),

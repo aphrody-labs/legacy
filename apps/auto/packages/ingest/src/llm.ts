@@ -1,6 +1,6 @@
-// Client d'un LLM compatible OpenAI (llama-server, Ollama, vLLM…) : /chat/completions.
-// Aucun cache côté client ; `cache_prompt: false` empêche llama-server de réutiliser le préfixe
-// d'une requête précédente (éventuellement d'un autre tenant).
+// Client of an OpenAI-compatible LLM (llama-server, Ollama, vLLM...): /chat/completions.
+// No client-side cache; `cache_prompt: false` stops llama-server from reusing the prefix of a previous request
+// (possibly from another tenant).
 
 export interface AppelOutil {
   id: string;
@@ -22,7 +22,7 @@ export interface Requete {
   signal?: AbortSignal;
   messages: Message[];
   tools?: OutilLlm[];
-  /** JSON Schema imposé à la réponse (response_format json_schema). */
+  /** JSON Schema imposed on the response (response_format json_schema). */
   schema?: { nom: string; schema: object };
 }
 
@@ -36,7 +36,7 @@ export interface ClientLlm {
 }
 
 export interface ConfigLlm {
-  /** Base de l'API, ex. http://localhost:8080/v1 (llama-server) ou http://localhost:11434/v1 (Ollama). */
+  /** API base, e.g. http://localhost:8080/v1 (llama-server) or http://localhost:11434/v1 (Ollama). */
   url: string;
   modele?: string;
   cle?: string;
@@ -85,7 +85,7 @@ export function clientOpenAi(c: ConfigLlm, fetcher: typeof fetch = fetch): Clien
       if (!res.ok) throw new ErreurLlm(`LLM : HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
       const j = (await res.json()) as { choices?: { message?: Reponse }[] };
       const m = j.choices?.[0]?.message;
-      if (!m) throw new ErreurLlm("LLM : réponse sans message");
+      if (!m) throw new ErreurLlm("LLM: response without a message");
       return { content: m.content ?? null, tool_calls: m.tool_calls?.length ? m.tool_calls : undefined };
     },
   };

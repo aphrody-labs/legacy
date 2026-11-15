@@ -1,12 +1,12 @@
-// Boucle d'agent : LLM compatible OpenAI avec appels d'outils, outils exécutés contre l'API /v1.
+// Agent loop: OpenAI-compatible LLM with tool calls, tools executed against the /v1 API.
 import type { ClientLlm, Message, OutilLlm } from "@auto/ingest/llm";
 import { ErreurApi, type ApiAuto } from "./api";
 import { OUTILS, type Outil } from "./outils";
 
-export const SYSTEME = `Tu es l'assistant de gestion d'une entreprise française (devis, factures, paiements, relances, absences).
-Tu agis uniquement par les outils fournis, avec les droits de l'utilisateur. Montants en centimes, TVA en dixièmes de pourcent.
-Avant d'émettre un document ou d'enregistrer un paiement, vérifie l'identifiant avec un outil de lecture.
-N'invente aucune donnée : si une information manque, demande-la. Réponds en français, brièvement.`;
+export const SYSTEME = `You are the management assistant of a French company (quotes, invoices, payments, reminders, absences).
+You act only through the tools provided, with the rights of the user. Amounts in cents, VAT in tenths of a percent.
+Before issuing a document or recording a payment, check the identifier with a read tool.
+Never invent data: if information is missing, ask for it. Reply briefly, in the language of the user.`;
 
 export const versLlm = (outils: Outil[]): OutilLlm[] =>
   outils.map((o) => ({
@@ -14,7 +14,7 @@ export const versLlm = (outils: Outil[]): OutilLlm[] =>
     function: { name: o.nom, description: o.description, parameters: o.schema },
   }));
 
-/** Exécute un outil ; une erreur est renvoyée au modèle (et à l'appelant MCP) comme résultat en erreur. */
+/** Runs a tool; an error is returned to the model (and to the MCP caller) as an error result. */
 export async function appelerOutil(
   api: ApiAuto,
   outils: Outil[],
@@ -22,7 +22,7 @@ export async function appelerOutil(
   args: Record<string, unknown>,
 ): Promise<{ ok: boolean; texte: string; valeur?: unknown }> {
   const o = outils.find((x) => x.nom === nom);
-  if (!o) return { ok: false, texte: JSON.stringify({ erreur: `outil inconnu : ${nom}` }) };
+  if (!o) return { ok: false, texte: JSON.stringify({ erreur: `unknown tool: ${nom}` }) };
   try {
     const v = await o.executer(api, args);
     return { ok: true, texte: typeof v === "string" ? v : JSON.stringify(v), valeur: v };
@@ -39,10 +39,10 @@ export interface OptionsAgent {
   llm: ClientLlm;
   api: ApiAuto;
   outils?: Outil[];
-  /** Historique d'une conversation en cours (sans le message système). */
+  /** History of a conversation in progress (without the system message). */
   historique?: Message[];
   maxEtapes?: number;
-  /** Trace des appels d'outils (CLI : affichage sur stderr). */
+  /** Trace of the tool calls (CLI: printed on stderr). */
   surOutil?: (nom: string, args: unknown, ok: boolean) => void;
 }
 
@@ -68,12 +68,12 @@ export async function executerAgent(demande: string, o: OptionsAgent): Promise<T
         args = c.function.arguments ? (JSON.parse(c.function.arguments) as Record<string, unknown>) : {};
         res = await appelerOutil(o.api, outils, c.function.name, args);
       } catch {
-        res = { ok: false, texte: JSON.stringify({ erreur: "arguments JSON invalides" }) };
+        res = { ok: false, texte: JSON.stringify({ erreur: "invalid JSON arguments" }) };
       }
       appels.push({ nom: c.function.name, args, ok: res.ok });
       o.surOutil?.(c.function.name, args, res.ok);
       messages.push({ role: "tool", tool_call_id: c.id, content: res.texte });
     }
   }
-  return { reponse: "Nombre maximal d'étapes atteint sans réponse finale.", messages, appels };
+  return { reponse: "Maximum number of steps reached without a final answer.", messages, appels };
 }

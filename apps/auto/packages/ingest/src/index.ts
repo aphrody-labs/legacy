@@ -1,6 +1,6 @@
-// Ingestion des factures fournisseurs : Factur-X (XML CII lu directement) ou PDF (OCR puis LLM
-// contraint par JSON Schema), puis contrôles. Fonctions sans état : aucun cache entre deux appels,
-// donc rien ne passe d'un tenant à l'autre.
+// Ingestion of supplier invoices: Factur-X (CII XML read directly) or PDF (OCR then LLM constrained by JSON
+// Schema), then checks. Stateless functions: no cache between two calls, so nothing passes from one tenant to
+// another.
 import { extraireXml } from "@auto/native";
 import { lireCii } from "./cii";
 import { conforme, SCHEMA, sansNuls, valider, type FactureRecue, type Source } from "./facture";
@@ -24,19 +24,19 @@ export interface Resultat {
 
 export interface OptionsIngestion {
   ocr?: Ocr;
-  /** Sans LLM, un PDF sans XML part directement dans la file « à vérifier ». */
+  /** Without an LLM, a PDF without XML goes straight to the "to check" queue. */
   llm?: ClientLlm | null;
   aujourdhui?: string;
-  /** Texte OCR transmis au LLM, tronqué (caractères). */
+  /** OCR text sent to the LLM, truncated (characters). */
   maxTexte?: number;
 }
 
-const PROMPT = `Tu extrais les données d'une facture fournisseur française à partir de son texte OCR.
-Réponds uniquement par un objet JSON conforme au schéma fourni.
-- Montants en centimes entiers (12,50 € = 1250) ; taux de TVA en dixièmes de pourcent (20 % = 200, 5,5 % = 55).
-- Dates au format AAAA-MM-JJ ; devise en code ISO 4217 (EUR par défaut).
-- SIREN : 9 chiffres ; SIRET : 14 chiffres ; sans espaces.
-- N'invente rien : null pour un champ absent du texte.`;
+const PROMPT = `You extract the data of a French supplier invoice from its OCR text.
+Reply only with a JSON object that matches the schema provided.
+- Amounts in whole cents (12.50 EUR = 1250); VAT rates in tenths of a percent (20% = 200, 5.5% = 55).
+- Dates as YYYY-MM-DD; currency as an ISO 4217 code (EUR by default).
+- SIREN: 9 digits; SIRET: 14 digits; no spaces.
+- Invent nothing: null for a field absent from the text.`;
 
 const debut = (o: Uint8Array, s: string) => new TextDecoder().decode(o.subarray(0, 64)).trimStart().startsWith(s);
 
@@ -45,7 +45,7 @@ function conclure(source: Source, f: FactureRecue, anomalies: string[], aujourdh
   return { source, statut: a.length ? "a_verifier" : "validee", facture: f, anomalies: a };
 }
 
-/** Extraction par LLM d'un texte OCR, en JSON contraint par SCHEMA puis revérifié. */
+/** LLM extraction from an OCR text, as JSON constrained by SCHEMA then checked again. */
 export async function extraireParLlm(llm: ClientLlm, texte: string, max = 24_000): Promise<FactureRecue> {
   const r = await llm.completer({
     messages: [
@@ -58,14 +58,14 @@ export async function extraireParLlm(llm: ClientLlm, texte: string, max = 24_000
   try {
     v = JSON.parse((r.content ?? "").replace(/^```(?:json)?\s*|\s*```$/g, ""));
   } catch {
-    throw new Error("réponse du LLM non JSON");
+    throw new Error("LLM response is not JSON");
   }
   const ecarts = conforme(SCHEMA, v);
-  if (ecarts.length) throw new Error(`réponse du LLM hors schéma : ${ecarts.slice(0, 5).join(" ; ")}`);
+  if (ecarts.length) throw new Error(`LLM response does not match the schema: ${ecarts.slice(0, 5).join("; ")}`);
   return sansNuls(v as FactureRecue);
 }
 
-/** Fichier reçu (PDF Factur-X, PDF simple ou XML CII) → facture normalisée et statut. */
+/** Received file (Factur-X PDF, plain PDF or CII XML) → normalized invoice and status. */
 export async function ingerer(fichier: Uint8Array, o: OptionsIngestion = {}): Promise<Resultat> {
   const xml = debut(fichier, "<")
     ? new TextDecoder().decode(fichier)
@@ -83,7 +83,7 @@ export async function ingerer(fichier: Uint8Array, o: OptionsIngestion = {}): Pr
       source: null,
       statut: "a_verifier",
       facture: null,
-      anomalies: ["format non reconnu (PDF ou XML CII attendu)"],
+      anomalies: ["unrecognized format (PDF or CII XML expected)"],
     };
 
   const texte = await (o.ocr ?? ocrParDefaut)(fichier);
@@ -92,10 +92,10 @@ export async function ingerer(fichier: Uint8Array, o: OptionsIngestion = {}): Pr
       source: "ocr",
       statut: "a_verifier",
       facture: null,
-      anomalies: ["aucun texte lisible (OCR indisponible ou vide)"],
+      anomalies: ["no readable text (OCR unavailable or empty)"],
     };
   if (!o.llm)
-    return { source: "ocr", statut: "a_verifier", facture: null, anomalies: ["LLM non configuré (AUTO_LLM_URL)"] };
+    return { source: "ocr", statut: "a_verifier", facture: null, anomalies: ["LLM not configured (AUTO_LLM_URL)"] };
   try {
     return conclure("ocr", await extraireParLlm(o.llm, texte, o.maxTexte), [], o.aujourdhui);
   } catch (e) {

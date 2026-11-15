@@ -1,4 +1,4 @@
-// Client de l'API /v1 avec le jeton de l'utilisateur : l'agent n'a que ses droits et son tenant.
+// Client of the /v1 API with the user's token: the agent only has their rights and their tenant.
 
 export class ErreurApi extends Error {
   constructor(
@@ -42,6 +42,6 @@ export class ApiAuto {
 
 export function apiDepuisEnv(env = Bun.env): ApiAuto {
   const jeton = env.AUTO_TOKEN;
-  if (!jeton) throw new Error("AUTO_TOKEN manquant : créez un jeton API (POST /v1/jetons) et exportez-le");
+  if (!jeton) throw new Error("AUTO_TOKEN missing: create an API token (POST /v1/jetons) and export it");
   return new ApiAuto(env.AUTO_API_URL ?? "https://auto.aphrody.com", jeton);
 }

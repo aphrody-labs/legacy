@@ -1,4 +1,4 @@
-// Aide aux tests : API de test sur une base jetable, deux tenants avec chacun un jeton API.
+// Test helper: test API on a throwaway database, two tenants each with an API token.
 import { testDb } from "@auto/store";
 import { creerApp } from "@auto/api/app";
 

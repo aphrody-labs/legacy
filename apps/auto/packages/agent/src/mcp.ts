@@ -1,5 +1,5 @@
-// Serveur MCP (Model Context Protocol) sur stdio : JSON-RPC 2.0, un message JSON par ligne.
-// Méthodes : initialize, ping, tools/list, tools/call ; notifications ignorées sans réponse.
+// MCP (Model Context Protocol) server on stdio: JSON-RPC 2.0, one JSON message per line.
+// Methods: initialize, ping, tools/list, tools/call; notifications are ignored without a reply.
 import { appelerOutil } from "./agent";
 import type { ApiAuto } from "./api";
 import { OUTILS, type Outil } from "./outils";
@@ -25,7 +25,7 @@ export class ServeurMcp {
     private readonly outils: Outil[] = OUTILS,
   ) {}
 
-  /** Traite un message (ou un lot) ; null pour une notification. */
+  /** Handles a message (or a batch); null for a notification. */
   async traiter(m: unknown): Promise<object | null> {
     if (Array.isArray(m)) {
       if (!m.length) return ko(null, -32600, "lot vide");
@@ -34,7 +34,7 @@ export class ServeurMcp {
     }
     const q = m as Requete;
     if (!q || typeof q !== "object" || q.jsonrpc !== "2.0" || typeof q.method !== "string")
-      return ko(q && typeof q === "object" && "id" in q ? (q.id ?? null) : null, -32600, "requête JSON-RPC invalide");
+      return ko(q && typeof q === "object" && "id" in q ? (q.id ?? null) : null, -32600, "invalid JSON-RPC request");
     if (!("id" in q) || q.id === undefined) return null; // notification (notifications/initialized…)
     const id = q.id;
     const p = q.params ?? {};
@@ -44,9 +44,9 @@ export class ServeurMcp {
         return ok(id, {
           protocolVersion: VERSIONS.includes(demandee) ? demandee : VERSIONS[0],
           capabilities: { tools: { listChanged: false } },
-          serverInfo: { name: NOM, title: "Auto (automatisation et gestion)", version: VERSION },
+          serverInfo: { name: NOM, title: "Auto (automation and management)", version: VERSION },
           instructions:
-            "Outils de gestion (devis, factures, paiements, relances, absences) exécutés avec le jeton API de l'utilisateur. Montants en centimes.",
+            "Management tools (quotes, invoices, payments, reminders, absences) run with the user's API token. Amounts in cents.",
         });
       }
       case "ping":
@@ -63,7 +63,7 @@ export class ServeurMcp {
       case "tools/call": {
         const nom = p.name;
         if (typeof nom !== "string" || !this.outils.some((o) => o.nom === nom))
-          return ko(id, -32602, `outil inconnu : ${String(nom)}`);
+          return ko(id, -32602, `unknown tool: ${String(nom)}`);
         const args = (p.arguments ?? {}) as Record<string, unknown>;
         if (typeof args !== "object" || Array.isArray(args)) return ko(id, -32602, "arguments : objet attendu");
         const r = await appelerOutil(this.api, this.outils, nom, args);
@@ -75,11 +75,11 @@ export class ServeurMcp {
         });
       }
       default:
-        return ko(id, -32601, `méthode inconnue : ${q.method}`);
+        return ko(id, -32601, `unknown method: ${q.method}`);
     }
   }
 
-  /** Lit des lignes JSON sur `entree`, écrit les réponses sur `ecrire` ; se termine à la fin du flux. */
+  /** Reads JSON lines from `entree`, writes replies to `ecrire`; ends when the stream ends. */
   async servir(entree: ReadableStream<Uint8Array>, ecrire: (ligne: string) => void): Promise<void> {
     const dec = new TextDecoder();
     const enCours = new Set<Promise<void>>();
@@ -91,7 +91,7 @@ export class ServeurMcp {
         try {
           m = JSON.parse(l);
         } catch {
-          ecrire(JSON.stringify(ko(null, -32700, "JSON invalide")));
+          ecrire(JSON.stringify(ko(null, -32700, "invalid JSON")));
           return;
         }
         const r = await this.traiter(m).catch((e: Error) => ko((m as Requete)?.id ?? null, -32603, e.message));

@@ -1,4 +1,4 @@
-// Lecture directe du XML CII (EN 16931, Factur-X) vers le format normalisé.
+// Direct reading of the CII XML (EN 16931, Factur-X) into the normalized format.
 import type { FactureRecue, LigneRecue } from "./facture";
 
 interface Noeud {
@@ -16,7 +16,7 @@ const decoder = (s: string) =>
       : (ENTITES[e] ?? m),
   );
 
-/** Analyseur XML minimal (éléments, attributs, texte ; préfixes d'espace de noms retirés). */
+/** Minimal XML parser (elements, attributes, text; namespace prefixes removed). */
 export function analyserXml(xml: string): Noeud {
   const racine: Noeud = { nom: "#", attrs: {}, enfants: [], texte: "" };
   const pile = [racine];
@@ -43,7 +43,7 @@ export function analyserXml(xml: string): Noeud {
   return racine;
 }
 
-/** Premier descendant suivant le chemin `A/B/C` (noms locaux). */
+/** First descendant following the path `A/B/C` (local names). */
 function trouver(n: Noeud | undefined, chemin: string): Noeud | undefined {
   let cur = n;
   for (const p of chemin.split("/")) {
@@ -56,7 +56,7 @@ function trouver(n: Noeud | undefined, chemin: string): Noeud | undefined {
 const tous = (n: Noeud | undefined, nom: string) => n?.enfants.filter((e) => e.nom === nom) ?? [];
 const val = (n: Noeud | undefined, chemin: string) => trouver(n, chemin)?.texte.trim() || undefined;
 
-/** Montant décimal (« 2182.16 ») → centimes, sans erreur d'arrondi binaire. */
+/** Decimal amount ("2182.16") → cents, without binary rounding error. */
 export function centimes(s: string | undefined): number {
   if (!s) return 0;
   const m = /^(-?)(\d*)(?:[.,](\d*))?$/.exec(s.trim());
@@ -94,7 +94,7 @@ function partie(p: Noeud | undefined) {
   return { nom: val(p, "Name") ?? "", siren, siret, tvaIntracom: tva, adresse };
 }
 
-/** XML CII → facture normalisée (null si ce n'est pas une CrossIndustryInvoice). */
+/** CII XML → normalized invoice (null if it is not a CrossIndustryInvoice). */
 export function lireCii(xml: string): FactureRecue | null {
   const cii = analyserXml(xml).enfants.find((e) => e.nom === "CrossIndustryInvoice");
   if (!cii) return null;
@@ -126,7 +126,7 @@ export function lireCii(xml: string): FactureRecue | null {
     .map((t) => date(t, "DueDateDateTime"))
     .find(Boolean);
   const devise = val(reglement, "InvoiceCurrencyCode") ?? "EUR";
-  // TaxTotalAmount peut figurer deux fois (devise de facture et devise de TVA).
+  // TaxTotalAmount can appear twice (invoice currency and VAT currency).
   const tva = tous(somme, "TaxTotalAmount");
   const tvaFacture = (tva.find((t) => t.attrs.currencyID === devise) ?? tva[0])?.texte.trim();
   const r: FactureRecue = {
@@ -145,5 +145,5 @@ export function lireCii(xml: string): FactureRecue | null {
       ttcCents: centimes(val(somme, "GrandTotalAmount")),
     },
   };
-  return JSON.parse(JSON.stringify(r)) as FactureRecue; // retire les champs undefined
+  return JSON.parse(JSON.stringify(r)) as FactureRecue; // removes undefined fields
 }

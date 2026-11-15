@@ -1,4 +1,4 @@
-// OCR des PDF reçus sans XML. Interface : PDF → texte (vide si rien n'est lisible).
+// OCR of the PDFs received without XML. Interface: PDF → text (empty when nothing is readable).
 import { mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,7 +12,7 @@ async function executer(cmd: string[]): Promise<string> {
   return code === 0 ? sortie : "";
 }
 
-/** PDF écrit dans un répertoire temporaire propre à l'appel, supprimé ensuite. */
+/** PDF written to a temporary directory owned by the call, removed afterwards. */
 async function avecFichier<T>(pdf: Uint8Array, fn: (fichier: string, dir: string) => Promise<T>): Promise<T> {
   const dir = await mkdtemp(join(tmpdir(), "auto-ocr-"));
   try {
@@ -24,7 +24,7 @@ async function avecFichier<T>(pdf: Uint8Array, fn: (fichier: string, dir: string
   }
 }
 
-/** Couche texte du PDF (`pdftotext` de poppler ou xpdf), si l'outil est présent. */
+/** Text layer of the PDF (`pdftotext` from poppler or xpdf), if the tool is present. */
 export const texteDuPdf: Ocr = async (pdf) => {
   const bin = Bun.which("pdftotext");
   if (bin) return avecFichier(pdf, (f) => executer([bin, "-layout", "-enc", "UTF-8", f, "-"]));
@@ -35,7 +35,7 @@ export const texteDuPdf: Ocr = async (pdf) => {
   }
 };
 
-/** OCR d'image : `aphrody-ocr <fichier>`, sinon `pdftoppm` + `tesseract` (fra), s'ils sont présents. */
+/** Image OCR: `aphrody-ocr <file>`, else `pdftoppm` + `tesseract` (fra), if present. */
 export const ocrImage: Ocr = async (pdf) => {
   const ocr = Bun.which("aphrody-ocr");
   const pdftoppm = Bun.which("pdftoppm");
@@ -53,7 +53,7 @@ export const ocrImage: Ocr = async (pdf) => {
   });
 };
 
-/** Par défaut : la couche texte si elle existe (≥ 20 caractères utiles), sinon l'OCR d'image. */
+/** Default: the text layer if there is one (at least 20 useful characters), else image OCR. */
 export const ocrParDefaut: Ocr = async (pdf) => {
   const t = await texteDuPdf(pdf);
   if (t.replace(/\s/g, "").length >= 20) return t;
