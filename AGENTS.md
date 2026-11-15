@@ -10,8 +10,7 @@ src is the public monorepo of Aphrody: a game engine and creative suite built in
 
 - [`apps/`](apps): `aphrody` (static site and Wayland WASM), `auto`, `nt`, `open`, `rosegriffon` and `shenron` (git submodules, community sites Aphrody maintains, not Aphrody products).
 - [`packages/`](packages): Bun `@aphrody/*` packages (`ai-os`, `assets`, `core`, `deploy`, `design`, `env-kit`, `ffi-bridge`, `gaming`, `machine` (includes the shell matrix), `native`, `wck`, ...).
-- [`crates/`](crates): Rust 2024 crates in one flat workspace (`ay`, `archguard`, `depot-*`, `lore*`, `tv-*`, `steam-depot`, ...).
-- [`src/`](src): C core and assembly (`arch/`, `kernel/`, `wayland/`, `nt/`, `wine/`, `wasm/`, `include/ay/sys.h`), built by Clang and LLD (`src/Makefile`); specs in [`docs/native/`](docs/native).
+- [`src/`](src): Rust 2024 crates (Bun upstream layout, members in the root `Cargo.toml`: `ay`, `archguard`, `tv`, `steam`, `ui`, ...) next to the C core and assembly (`arch/`, `kernel/`, `wayland/`, `nt/`, `wine/`, `wasm/`, `include/ay/sys.h`), built by Clang and LLD (`src/Makefile`); specs in [`docs/native/`](docs/native).
 - [`infra/`](infra): fleet and deploy configuration assembled from upstream tools (`docs/infra/UPSTREAM-STACK.md`).
 - [`third_party/`](third_party): upstream checkouts and aphrody-labs forks, pinned in `src.lock.json`, listed in `third_party/forks.txt`.
 
