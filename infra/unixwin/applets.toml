@@ -7,6 +7,9 @@ provider = "winux"
 ["arch"]
 provider = "winux"
 
+["awk"]
+provider = "uutils"
+
 ["b2sum"]
 provider = "winux"
 
@@ -22,10 +25,19 @@ provider = "winux"
 ["basenc"]
 provider = "uutils"
 
+["blockdev"]
+provider = "uutils"
+
 ["cal"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["cat"]
+provider = "uutils"
+
+["chacl"]
+provider = "uutils"
+
+["chage"]
 provider = "uutils"
 
 ["chattr"]
@@ -34,7 +46,16 @@ provider = "winux-cxx"
 ["chcon"]
 provider = "winux"
 
+["chcpu"]
+provider = "uutils"
+
 ["checksum_common"]
+provider = "uutils"
+
+["chfn"]
+provider = "uutils"
+
+["chgpasswd"]
 provider = "uutils"
 
 ["chgrp"]
@@ -46,7 +67,13 @@ provider = "winux"
 ["chown"]
 provider = "winux"
 
+["chpasswd"]
+provider = "uutils"
+
 ["chroot"]
+provider = "uutils"
+
+["chsh"]
 provider = "uutils"
 
 ["cksum"]
@@ -76,6 +103,9 @@ provider = "winux-cxx"
 ["csplit"]
 provider = "winux"
 
+["ctrlaltdel"]
+provider = "uutils"
+
 ["cut"]
 provider = "winux"
 
@@ -83,7 +113,7 @@ provider = "winux"
 provider = "winux-cxx"
 
 ["d2u"]
-provider = "winux-cxx"
+provider = "winux"
 
 ["date"]
 provider = "winux"
@@ -109,8 +139,11 @@ provider = "uutils"
 ["dirname"]
 provider = "winux"
 
+["dmesg"]
+provider = "uutils"
+
 ["dos2unix"]
-provider = "winux-cxx"
+provider = "winux"
 
 ["du"]
 provider = "winux"
@@ -122,10 +155,13 @@ provider = "winux"
 provider = "uutils"
 
 ["envsubst"]
-provider = "winux-cxx"
+provider = "winux"
 
 ["expand"]
 provider = "winux"
+
+["expiry"]
+provider = "uutils"
 
 ["expr"]
 provider = "uutils"
@@ -149,28 +185,52 @@ provider = "winux"
 provider = "winux"
 
 ["free"]
-provider = "winux-cxx"
+provider = "uutils"
+
+["fsfreeze"]
+provider = "uutils"
 
 ["getconf"]
 provider = "winux"
 
 ["getfacl"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["getopt"]
 provider = "winux-cxx"
 
+["gpasswd"]
+provider = "uutils"
+
 ["grep"]
-provider = "winux-cxx"
+provider = "uutils"
+
+["groupadd"]
+provider = "uutils"
+
+["groupdel"]
+provider = "uutils"
+
+["groupmod"]
+provider = "uutils"
 
 ["groups"]
 provider = "winux"
+
+["grpck"]
+provider = "uutils"
+
+["grpconv"]
+provider = "uutils"
+
+["grpunconv"]
+provider = "uutils"
 
 ["head"]
 provider = "winux"
 
 ["hexdump"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["hmac256"]
 provider = "winux-cxx"
@@ -180,6 +240,9 @@ provider = "winux"
 
 ["hostname"]
 provider = "winux"
+
+["hugetop"]
+provider = "uutils"
 
 ["id"]
 provider = "winux"
@@ -198,6 +261,9 @@ provider = "uutils"
 
 ["killall"]
 provider = "winux-cxx"
+
+["last"]
+provider = "uutils"
 
 ["ldd"]
 provider = "winux-cxx"
@@ -220,11 +286,14 @@ provider = "uutils"
 ["logger"]
 provider = "winux-cxx"
 
+["login"]
+provider = "uutils"
+
 ["logname"]
 provider = "uutils"
 
 ["look"]
-provider = "winux-cxx"
+provider = "winux"
 
 ["ls"]
 provider = "uutils"
@@ -232,14 +301,35 @@ provider = "uutils"
 ["lsattr"]
 provider = "winux-cxx"
 
+["lscpu"]
+provider = "uutils"
+
+["lsipc"]
+provider = "uutils"
+
+["lslocks"]
+provider = "uutils"
+
+["lsmem"]
+provider = "uutils"
+
+["lsns"]
+provider = "uutils"
+
 ["lsof"]
 provider = "winux-cxx"
 
 ["man"]
 provider = "winux-cxx"
 
+["mcookie"]
+provider = "uutils"
+
 ["md5sum"]
 provider = "winux"
+
+["mesg"]
+provider = "uutils"
 
 ["mkdir"]
 provider = "winux"
@@ -262,6 +352,9 @@ provider = "winux"
 ["more"]
 provider = "uutils"
 
+["mountpoint"]
+provider = "uutils"
+
 ["mpicalc"]
 provider = "winux-cxx"
 
@@ -270,6 +363,18 @@ provider = "uutils"
 
 ["namei"]
 provider = "winux-cxx"
+
+["newgidmap"]
+provider = "uutils"
+
+["newgrp"]
+provider = "uutils"
+
+["newuidmap"]
+provider = "uutils"
+
+["newusers"]
+provider = "uutils"
 
 ["nice"]
 provider = "winux"
@@ -280,6 +385,9 @@ provider = "uutils"
 ["nohup"]
 provider = "winux"
 
+["nologin"]
+provider = "uutils"
+
 ["nproc"]
 provider = "winux"
 
@@ -288,6 +396,9 @@ provider = "winux"
 
 ["od"]
 provider = "winux"
+
+["passwd"]
+provider = "uutils"
 
 ["paste"]
 provider = "winux"
@@ -299,19 +410,25 @@ provider = "winux-cxx"
 provider = "winux"
 
 ["pgrep"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["pidof"]
-provider = "winux-cxx"
+provider = "uutils"
+
+["pidwait"]
+provider = "uutils"
 
 ["pinky"]
 provider = "winux"
 
 ["pkill"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["pldd"]
 provider = "winux-cxx"
+
+["pmap"]
+provider = "uutils"
 
 ["pr"]
 provider = "uutils"
@@ -323,13 +440,25 @@ provider = "winux"
 provider = "uutils"
 
 ["ps"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["ptx"]
 provider = "winux"
 
+["pwck"]
+provider = "uutils"
+
+["pwconv"]
+provider = "uutils"
+
 ["pwd"]
 provider = "winux"
+
+["pwdx"]
+provider = "uutils"
+
+["pwunconv"]
+provider = "uutils"
 
 ["readlink"]
 provider = "winux"
@@ -340,8 +469,11 @@ provider = "winux"
 ["regtool"]
 provider = "winux-cxx"
 
+["rename"]
+provider = "uutils"
+
 ["renice"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["reset"]
 provider = "winux-cxx"
@@ -362,10 +494,22 @@ provider = "winux"
 provider = "winux-cxx"
 
 ["sed"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["seq"]
 provider = "winux"
+
+["setfacl"]
+provider = "uutils"
+
+["setpgid"]
+provider = "uutils"
+
+["setsid"]
+provider = "uutils"
+
+["sg"]
+provider = "uutils"
 
 ["sha1sum"]
 provider = "winux"
@@ -388,8 +532,17 @@ provider = "uutils"
 ["shuf"]
 provider = "winux"
 
+["skill"]
+provider = "uutils"
+
+["slabtop"]
+provider = "uutils"
+
 ["sleep"]
 provider = "winux"
+
+["snice"]
+provider = "uutils"
 
 ["sort"]
 provider = "winux"
@@ -404,7 +557,7 @@ provider = "winux"
 provider = "uutils"
 
 ["strings"]
-provider = "winux-cxx"
+provider = "winux"
 
 ["stty"]
 provider = "uutils"
@@ -415,11 +568,17 @@ provider = "winux"
 ["sync"]
 provider = "winux"
 
+["sysctl"]
+provider = "uutils"
+
 ["tac"]
 provider = "winux"
 
 ["tail"]
 provider = "winux"
+
+["tar"]
+provider = "uutils"
 
 ["tee"]
 provider = "winux"
@@ -436,11 +595,14 @@ provider = "winux-cxx"
 ["timeout"]
 provider = "winux"
 
+["tload"]
+provider = "uutils"
+
 ["toe"]
 provider = "winux-cxx"
 
 ["top"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["touch"]
 provider = "winux"
@@ -470,7 +632,7 @@ provider = "winux"
 provider = "winux-cxx"
 
 ["u2d"]
-provider = "winux-cxx"
+provider = "winux"
 
 ["uname"]
 provider = "winux"
@@ -482,7 +644,7 @@ provider = "winux"
 provider = "uutils"
 
 ["unix2dos"]
-provider = "winux-cxx"
+provider = "winux"
 
 ["unlink"]
 provider = "winux"
@@ -493,20 +655,38 @@ provider = "uutils"
 ["uptime"]
 provider = "uutils"
 
+["useradd"]
+provider = "uutils"
+
+["userdel"]
+provider = "uutils"
+
+["usermod"]
+provider = "uutils"
+
 ["users"]
 provider = "winux"
+
+["uuidgen"]
+provider = "uutils"
 
 ["vdir"]
 provider = "uutils"
 
+["vigr"]
+provider = "uutils"
+
+["vipw"]
+provider = "uutils"
+
 ["vmstat"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["w"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["watch"]
-provider = "winux-cxx"
+provider = "uutils"
 
 ["wc"]
 provider = "uutils"

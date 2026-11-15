@@ -5,6 +5,8 @@
 //! `uutils` applets run through the uutils multicall binary (`coreutils`) and `winux-cxx` applets through the WinuxCmd
 //! executable, both found on PATH (`ay up` installs them), because they are not linkable Rust.
 //!
+//! Applets ported from C++ to portable Rust (`src/winux/extra`) run in process on every host.
+//!
 //! The WinuxCmd library is the Windows implementation (Win32 console, handles, ACLs): it is linked on Windows only. On other
 //! hosts a `winux` applet runs through the uutils multicall, which implements the same GNU behavior natively.
 //!
@@ -75,6 +77,25 @@ pub fn run_winux(name: &str, args: &[OsString]) -> Option<i32> {
     })
 }
 
+/// Run an applet of the portable ports (`src/winux/extra`) in process, on any host.
+pub fn run_extra(name: &str, args: &[OsString]) -> Option<i32> {
+    use std::io::Write as _;
+    let env = winux_core::ProcessEnv;
+    let ctx = winux_core::Ctx::new(std::env::current_dir().unwrap_or_default(), &env);
+    let stdin = std::io::stdin();
+    let stdout = std::io::stdout();
+    let stderr = std::io::stderr();
+    let (mut sin, mut sout, mut serr) = (stdin.lock(), stdout.lock(), stderr.lock());
+    let mut io = winux_core::Io { stdin: &mut sin, stdout: &mut sout, stderr: &mut serr };
+    let result = winux_extra::dispatch(name, args, &mut io, &ctx)?;
+    let _ = io.stdout.flush();
+    let _ = io.stderr.flush();
+    Some(match result {
+        Ok(status) => status as i32,
+        Err(_) => winux_core::ABI_FAILURE_STATUS as i32,
+    })
+}
+
 /// WinuxCmd applets by name; empty where the library is not linked (not Windows).
 pub fn winux_registry() -> Vec<&'static str> {
     #[cfg(windows)]
@@ -116,6 +137,9 @@ pub fn run(args: &[String]) -> i32 {
         }
         Some(name) => {
             let rest: Vec<OsString> = args[1..].iter().map(OsString::from).collect();
+            if let Some(code) = run_extra(name, &rest) {
+                return code;
+            }
             match table.get(name) {
                 #[cfg(windows)]
                 Some(Provider::Winux) => run_winux(name, &rest).unwrap_or_else(|| {
@@ -139,7 +163,6 @@ pub fn run(args: &[String]) -> i32 {
 mod tests {
     use super::*;
 
-    #[cfg(windows)]
     fn os(a: &[&str]) -> Vec<OsString> {
         a.iter().map(OsString::from).collect()
     }
@@ -161,6 +184,15 @@ mod tests {
             if p == Provider::Winux {
                 assert!(registry.contains(&name.as_str()), "{name} is provided by winux but the registry lacks it");
             }
+        }
+    }
+
+    #[test]
+    fn ported_applets_run_in_process_on_every_host() {
+        assert_eq!(run_extra("dos2unix", &os(&["--bogus"])), Some(1));
+        assert_eq!(run_extra("nope", &os(&[])), None);
+        for (name, _) in winux_extra::registry() {
+            assert_eq!(providers()[name], Provider::Winux, "{name} must be provided by winux");
         }
     }
 

@@ -1,0 +1,10 @@
+[package]
+name = "winux-extra"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["unixwin team"]
+description = "WinuxCmd applets ported from C++ to portable Rust (same shape contract as winux-cmds: run(args, io, ctx))"
+
+[dependencies]
+winux-core = { path = "../core" }

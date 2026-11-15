@@ -59,6 +59,9 @@ up = { version = "0.4.0", package = "aphrody-up", path = "../up" }
 rt = { version = "0.4.0", package = "aphrody-rt", path = "../rt" }
 # `ay sh`: the embedded Bash 5.3 engine (src/rubash), linked through its Session API.
 rubash = { version = "1.5.0", path = "../rubash" }
+# `ay applet`: applets ported from WinuxCmd C++ to portable Rust, in process on every host.
+winux-core = { version = "0.1.0", path = "../winux/core" }
+winux-extra = { version = "0.1.0", path = "../winux/extra" }
 # `ay docs` (Bun docs index) and `ay flat` / `ay hash` / `ay time` (bun fork crates, flattened).
 aphrody-docs = { version = "0.4.0", path = "../docs" }
 aphrody-omarchy = { version = "0.4.0", path = "../posix/omarchy" }
@@ -78,7 +81,6 @@ axoupdater = { workspace = true, features = ["blocking"] }
 stack-bench.workspace = true
 # `ay applet`: the WinuxCmd Rust applets (src/winux), Win32 implementations, linked on Windows only.
 winux-cmds = { version = "0.1.0", path = "../winux/cmds" }
-winux-core = { version = "0.1.0", path = "../winux/core" }
 
 # Brand icon and version resource of ay.exe (build.rs, ay.ico from assets/brand).
 [build-dependencies]
