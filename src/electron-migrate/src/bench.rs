@@ -57,6 +57,10 @@ fn descendants(sys: &System, root: Pid) -> Vec<Pid> {
     loop {
         let before = set.len();
         for (pid, p) in sys.processes() {
+            // Linux lists every thread as a process with the same RSS: counting them would multiply the memory.
+            if p.thread_kind().is_some() {
+                continue;
+            }
             if let Some(parent) = p.parent() {
                 if set.contains(&parent) && !set.contains(pid) {
                     set.push(*pid);

@@ -260,6 +260,10 @@ fn tauri_project_is_complete_and_valid() {
     let shim = std::fs::read_to_string(out.join("shim/electron-compat.ts")).unwrap();
     assert!(shim.contains("\"app:get-version\":\"ipc_app_get_version\"") && shim.contains("expose(\"electronAPI\""));
     assert!(shim.contains("ipcRenderer.invoke(\"file:read\""));
+    // The sidecar entry has no top-level await: `bun build --bytecode` emits CommonJS.
+    let side = std::fs::read_to_string(out.join("sidecar/main.ts")).unwrap();
+    assert!(side.contains("async function main()") && side.contains("import(\"./app/main.js\")"));
+    assert!(!side.lines().any(|l| l.starts_with("await ") || l.starts_with("for await")), "top-level await in sidecar/main.ts");
     // MAPPING and coverage agree
     let cov: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(out.join("coverage.json")).unwrap()).unwrap();
     assert_eq!(cov["total"]["total"].as_u64().unwrap() as usize, rep.coverage.total.total);
