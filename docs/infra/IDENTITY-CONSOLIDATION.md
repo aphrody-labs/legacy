@@ -65,7 +65,7 @@ XML-RPC `user_packages aphrody-dev` : `aphrody-cli`, `aphrody-embedding-fixtures
 
 ## Cloudflare
 
-Un seul compte visible (`ca22c1a5…`, contact@aphrody.com), donc pas de fusion de comptes.
+Un seul compte visible (`<cloudflare-account-ids>`, contact@aphrody.com), donc pas de fusion de comptes.
 
 - Zones : aphrody.app, aphrody.com, dragonballfr.com, rosegriffon.fr (actives), 3dland.tech (pending).
 - Workers sans domaine ni route : `aphrody-com` (workers.dev, modifié le 2026-11-12), `downloads-portable` (workers.dev, 2026-11-12), `aphrody-email-worker` (Email Routing probable), `rosegriffon-maintenance` (page de maintenance de secours). Doublons apparents : `aphrody` (aphrody.com/_, www) contre `aphrody-com` ; `aphrody-app` (bun.aphrody._) contre `aphrody-app-site` (aphrody.app, www).

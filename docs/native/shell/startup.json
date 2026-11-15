@@ -11,7 +11,7 @@
   "primary_metric": "time_wall_clock",
   "results": [
     {
-      "command": "C:/Users/aphro/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe -c exit",
+      "command": "~/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -857,7 +857,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/.local/share/brush/bash.exe -c exit",
+      "command": "~/.local/share/brush/bash.exe -c exit",
       "measurements": [
         {
           "time_wall_clock": {

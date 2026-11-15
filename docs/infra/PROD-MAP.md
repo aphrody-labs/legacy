@@ -2,7 +2,7 @@
 
 Read-only inventory of live state, mapped to src. Statuses: SRC (served from src), BROUGHT (captured into src on this date), ORPHAN (live, source not in src), LEGACY (old vision or dead), DUPLICATE (same service served twice). Nothing was stopped or deleted; every decommission is a held command in `var/agents/outbox/decommission.md` (local, untracked). Raw lists: `var/inv/` (untracked). HTTP codes measured from the PC with `curl`.
 
-Providers read: Cloudflare (account `ca22c1a5...`, 5 zones, 17 Workers, 11 R2 buckets, 1 D1, 1 KV, 5 tunnels), Hostinger (1 VPS = prd, KVM 8, Arch), OVH (fr1, fr2 by ssh; CLI lists no VPS or domain), Vercel (0 deployments, 0 domains), GCloud (project list and Cloud Run and Compute empty or unauthenticated). The `cf` token lacks DNS scope; DNS was read through the Cloudflare MCP.
+Providers read: Cloudflare (account `<cloudflare-account-ids>`, 5 zones, 17 Workers, 11 R2 buckets, 1 D1, 1 KV, 5 tunnels), Hostinger (1 VPS = prd, KVM 8, Arch), OVH (fr1, fr2 by ssh; CLI lists no VPS or domain), Vercel (0 deployments, 0 domains), GCloud (project list and Cloud Run and Compute empty or unauthenticated). The `cf` token lacks DNS scope; DNS was read through the Cloudflare MCP.
 
 ## Hostnames
 

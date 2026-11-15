@@ -1,6 +1,6 @@
 {
   "startedAt": "2026-11-12T12:11:07.573Z",
-  "host": "Linux vps-203bea89 7.3.0-9-generic #9-Ubuntu SMP PREEMPT_DYNAMIC Mon Oct  5 10:38:02 UTC 2026 x86_64 GNU/Linux",
+  "host": "Linux <fr1-hostname> 7.3.0-9-generic #9-Ubuntu SMP PREEMPT_DYNAMIC Mon Oct  5 10:38:02 UTC 2026 x86_64 GNU/Linux",
   "runs": 3,
   "engines": {
     "pw-chromium": {

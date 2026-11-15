@@ -11,7 +11,7 @@
   "primary_metric": "time_wall_clock",
   "results": [
     {
-      "command": "C:/Users/aphro/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe --norc --noprofile -c exit",
+      "command": "~/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe --norc --noprofile -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -434,7 +434,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe -l -c exit",
+      "command": "~/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe -l -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -857,7 +857,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe --norc -i -c exit",
+      "command": "~/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe --norc -i -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -1280,7 +1280,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe -i -c exit",
+      "command": "~/AppData/Local/Programs/Niubash/winuxcmd/bin/bash.exe -i -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -3395,7 +3395,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/.local/share/brush-main/brush.exe --norc --noprofile -c exit",
+      "command": "~/.local/share/brush-main/brush.exe --norc --noprofile -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -3818,7 +3818,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/.local/share/brush-main/brush.exe -l -c exit",
+      "command": "~/.local/share/brush-main/brush.exe -l -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -4241,7 +4241,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/.local/share/brush-main/brush.exe --norc -i -c exit",
+      "command": "~/.local/share/brush-main/brush.exe --norc -i -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -4664,7 +4664,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/.local/share/brush-main/brush.exe -i -c exit",
+      "command": "~/.local/share/brush-main/brush.exe -i -c exit",
       "measurements": [
         {
           "time_wall_clock": {
@@ -5087,7 +5087,7 @@
       }
     },
     {
-      "command": "C:/Users/aphro/.cargo/bin/brush.exe -i -c exit",
+      "command": "~/.cargo/bin/brush.exe -i -c exit",
       "measurements": [
         {
           "time_wall_clock": {
