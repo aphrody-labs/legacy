@@ -105,7 +105,7 @@ const FORKS: Fork[] = [
     ],
   },
   { name: "webui", upstream: gh("microsoft/webui") },
-  // Browsers, automation and crawl (2026-11-13), facade packages/chromium-bun/src/engines. Clones already
+  // Browsers, automation and crawl (2026-11-13), facade apps/open/packages/chromium-bun/src/engines. Clones already
   // present (playwright, puppeteer, crawlee, apify-sdk-js, obscura, lightpanda, servo, blitz, stylo, taffy) keep
   // origin = upstream and remote aphrody = fork; only the new ones go through here.
   ...[

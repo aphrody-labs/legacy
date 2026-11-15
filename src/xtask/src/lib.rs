@@ -414,10 +414,7 @@ fn third_party_in(rel_name: &str, set: &[&str]) -> bool {
 }
 
 fn classify_pillar(rel_name: &str) -> &'static str {
-    if rel_name.starts_with("third_party/chromium")
-        || rel_name == "third_party/depot_tools"
-        || rel_name == "packages/chromium-bun"
-    {
+    if rel_name.starts_with("third_party/chromium") || rel_name == "third_party/depot_tools" {
         "chromium"
     } else if rel_name == "third_party/linux"
         || third_party_in(rel_name, LINUX_THIRD_PARTY)

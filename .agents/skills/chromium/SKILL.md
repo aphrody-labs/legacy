@@ -17,7 +17,7 @@ Verified 2026-11-12 against: local checkout `third_party/chromium/src` (chrome/V
 
 ## Trackers, ecosystem graph, per-dependency metadata
 
-`just trackers [refresh|graph|metadata|all|show|check] [--only=id,id] [--no-links] [--no-gn]` (`packages/chromium-bun/src/trackers`, bun; extends the in-memory `src/browser/chromium-tracker.ts` with persistence and more targets).
+`just trackers [refresh|graph|metadata|all|show|check] [--only=id,id] [--no-links] [--no-gn]` (`apps/open/packages/chromium-bun/src/trackers` in aphrody-labs/open, bun; extends the in-memory `src/browser/chromium-tracker.ts` with persistence and more targets).
 
 - Static targets: `[tracker.<id>]` tables of `third_party/ECOSYSTEM.toml` (Chromium, Blink, V8, Skia, Dawn, ANGLE, CEF, cef-rs, rusty_v8, deno_core, Node, Electron, Obscura, agent-browser, Lightpanda zig-v8, Brave, Edge, Vivaldi, Opera, ungoogled-chromium, Thorium, Helium, Cromite, Supermium). Each declares issue tracker, CL/PR source, news feed, changelog, skills, `consumes` edges and the resolver of its version and V8 pin. No version is written there.
 - `third_party/chromium-trackers.json`: live data of the last run. Every version has `source` and `fetched_at`; channels from chromiumdash (Windows and Linux), Chrome for Testing, versionhistory; V8 of each consumer (header at the Chromium tag, `deps/v8` of Node, rusty_v8 submodule through the crates.io chain deno_core -> deno_v8 -> v8, `V8_VERSION` of zig-v8, Electron's index); link checks read the body (feed item, Gerrit JSON, page title), not only the status.

@@ -5,7 +5,7 @@
 //!   `ay hash`, `ay time`: the commands backed by Bun's `bun_wyhash` and `bun_histogram` crates;
 //! - `ay chromium`: depot_tools, gclient, gn and autoninja of the Chromium checkout on the build
 //!   host (fr1), delegated over `ay ssh` from any other machine;
-//! - `ay engines`: the engines facade of `packages/chromium-bun` (V8, JavaScriptCore, Dawn, wgpu,
+//! - `ay engines`: the engines facade of `apps/open/packages/chromium-bun` (aphrody-labs/open) (V8, JavaScriptCore, Dawn, wgpu,
 //!   browsers), run by bun, plus `ay engines js` and `ay engines build`;
 //! - `ay agents`: the ai-os orchestrator (`orch`), run by bun;
 //! - `ay steam`: Steam data of the host as JSON over `src/steam` (docs/gaming/OWNERSHIP.md).

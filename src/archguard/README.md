@@ -50,7 +50,6 @@ flowchart TD
     packages_brain["@aphrody/brain"]
     packages_bun_parity["@aphrody/bun-parity"]
     packages_bun_plugins["@aphrody/bun-plugins"]
-    packages_chromium_bun["@aphrody/chromium-bun"]
     packages_env_kit["@aphrody/env-kit"]
     packages_epic_games["@aphrody/epic-games"]
     packages_forge["@aphrody/forge"]

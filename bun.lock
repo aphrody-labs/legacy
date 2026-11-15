@@ -82,10 +82,6 @@
         "n2r": "./src/cli.ts",
       },
     },
-    "packages/chromium-bun": {
-      "name": "@aphrody/chromium-bun",
-      "version": "0.0.0",
-    },
     "packages/core": {
       "name": "@aphrody/core",
       "version": "0.1.0",
@@ -170,6 +166,13 @@
     "packages/native": {
       "name": "@aphrody/native",
       "version": "0.1.0",
+    },
+    "packages/omniu": {
+      "name": "@aphrody/omniu",
+      "version": "0.1.0",
+      "bin": {
+        "omniu": "./src/cli.ts",
+      },
     },
     "packages/py2bun": {
       "name": "@aphrody/py2bun",
@@ -268,8 +271,6 @@
 
     "@aphrody/bunify": ["@aphrody/bunify@workspace:packages/bunify"],
 
-    "@aphrody/chromium-bun": ["@aphrody/chromium-bun@workspace:packages/chromium-bun"],
-
     "@aphrody/core": ["@aphrody/core@workspace:packages/core"],
 
     "@aphrody/deploy": ["@aphrody/deploy@workspace:packages/deploy"],
@@ -297,6 +298,8 @@
     "@aphrody/native": ["@aphrody/native@workspace:packages/native"],
 
     "@aphrody/nt": ["@aphrody/nt@workspace:apps/nt"],
+
+    "@aphrody/omniu": ["@aphrody/omniu@workspace:packages/omniu"],
 
     "@aphrody/py2bun": ["@aphrody/py2bun@workspace:packages/py2bun"],
 

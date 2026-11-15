@@ -6,7 +6,7 @@
 //! formats other tools read: `.python-version` (uv, pyenv) and `.bun-version` (setup-bun).
 //! Node.js and Deno versions come live from nodejs.org/dist/index.json and the Deno GitHub
 //! releases (`js`); `matrix`, `detect` and `switch` combine runtimes with the browser and
-//! render engines of packages/chromium-bun/src/engines (`combo`).
+//! render engines of apps/open/packages/chromium-bun/src/engines (`combo`).
 
 pub mod combo;
 pub mod js;

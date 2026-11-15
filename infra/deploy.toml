@@ -125,7 +125,7 @@ verify_gate = "wck check C:/src/apps/yolo"
 # -----------------------------------------------------------------------------
 # Live test targets (owner directive 2026-11-12). Tests tagged e2e:auth drive the
 # owner's logged-in Chrome over CDP (APHRODY_CDP_URL, profile dir in
-# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: apps/open/apps/open/packages/chromium-bun/test/targets.json.
+# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: apps/open/apps/open/apps/open/packages/chromium-bun/test/targets.json.
 # Pure unit fixtures (URL parsing, rewriting) keep RFC 2606 example.* hosts: they must not touch the network.
 # -----------------------------------------------------------------------------
 [test_targets.gemini]

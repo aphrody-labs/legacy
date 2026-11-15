@@ -29,7 +29,7 @@ Source: `https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform
 | tree-sitter-gn, tree-sitter-ninja | checkout | parsers for GN/ninja files, not fetchers | depot_tools gn/ninja | keep |
 | vite 8.3.8 | package | root package.json | none | keep (outside scope) |
 
-Existing owner of the matrix: `packages/chromium-bun/src/audit/purge-matrix.ts` (PURGE_FOR_BUN / KEEP_CHROMIUM_NATIVE verdicts).
+Existing owner of the matrix: `apps/open/packages/chromium-bun/src/audit/purge-matrix.ts` (aphrody-labs/open) (PURGE_FOR_BUN / KEEP_CHROMIUM_NATIVE verdicts).
 
 ## Not done
 

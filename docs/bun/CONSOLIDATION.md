@@ -62,7 +62,7 @@ Ces fichiers restent dans `bun-parity` : `src/patcher/rust-gen.ts` les génère.
 | plugins de build (just, turbo-cache, vcs-meta, decide, m3-icons) + `bun-native.d.ts` | `packages/bun-plugins`                                                                                                                                                   |
 | import Lua 5.2 (`.lua`, `.luac`)                                                     | `apps/rosegriffon/packages/rg-lua` (`@rosegriffon/lua-plugin`, AST + bytecode). **Doublon `packages/bun-plugins/lua-plugin.ts` et son test supprimés** (aucun importeur) |
 | parité Chromium et patchs générés                                                    | `packages/bun-parity`                                                                                                                                                    |
-| moteurs navigateur, CDP                                                              | `packages/chromium-bun`                                                                                                                                                  |
+| moteurs navigateur, CDP                                                              | `apps/open/packages/chromium-bun` (moved to aphrody-labs/open)                                                                                                                                                  |
 | adaptateur Workers / Vercel / Bun.serve                                              | `packages/runtime-adapter`                                                                                                                                               |
 | IA (routage, MCP)                                                                    | `packages/ai-os`                                                                                                                                                         |
 
@@ -90,7 +90,7 @@ Copies hors git dans `var/legacy` (git-ignoré, 7,4 Go) laissées en place : `yo
 
 ## Références repointées vers aphrody-labs/bun
 
-`DEPS` (`third_party/bun` @ `c7b36732e0`), `MAINTAINERS` (et retrait de `aphrody-dev/bun-parity`, archivé), `packages/chromium-bun/src/browser/bun-v8-bridge.ts`, `docs/AY_ON_BUN.md`, `docs/native/TOOLCHAIN_UPSTREAM_LEVERS.md`, `apps/rosegriffon/README.md` (sous-module, `490046b5`).
+`DEPS` (`third_party/bun` @ `c7b36732e0`), `MAINTAINERS` (et retrait de `aphrody-dev/bun-parity`, archivé), `apps/open/packages/chromium-bun/src/browser/bun-v8-bridge.ts`, `docs/AY_ON_BUN.md`, `docs/native/TOOLCHAIN_UPSTREAM_LEVERS.md`, `apps/rosegriffon/README.md` (sous-module, `490046b5`).
 
 ## Pour le binaire natif
 

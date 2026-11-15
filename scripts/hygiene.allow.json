@@ -26,7 +26,6 @@
   "hardcoded-list": [
     "scripts/skills-adopt.ts",
     "tools/gnu-index/curated.ts",
-    "packages/chromium-bun/src/engines/registry.ts",
     "packages/machine/src/toolchains-lock.ts",
     "packages/machine/src/forks.ts",
     "packages/bunify/src/rust.ts",
@@ -53,7 +52,6 @@
     "infra/upstream/**",
     "conformance/upstreams.toml",
     "tools/factory/configs/shenron.toml",
-    "packages/chromium-bun/**",
     "docs/design/replica/**",
     "docs/replica/**",
     "packages/upstream/src/rules.ts",

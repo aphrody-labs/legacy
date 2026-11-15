@@ -85,7 +85,6 @@ S:	Supported
 W:	https://about.aphrody.com
 T:	git https://chromium.googlesource.com/chromium/src.git
 T:	git https://chromium.googlesource.com/chromium/tools/depot_tools.git
-T:	git https://github.com/aphrody-dev/chromium-bun.git
 T:	git https://github.com/aphrody-dev/depot.git
 F:	DEPS
 F:	src/depot/cli/
@@ -97,7 +96,6 @@ F:	src/depot/ingest/
 F:	src/depot/migrate/
 F:	crates/depot-re/
 F:	src/core/
-F:	packages/chromium-bun/
 F:	third_party/chromium/
 F:	third_party/depot_tools/
 

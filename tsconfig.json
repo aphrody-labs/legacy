@@ -2,7 +2,6 @@
   "files": [],
   "references": [
     { "path": "packages/assets" },
-    { "path": "packages/chromium-bun" },
     { "path": "packages/core" },
     { "path": "packages/deploy" },
     { "path": "packages/env-kit" },
