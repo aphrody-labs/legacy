@@ -142,7 +142,7 @@ const verdict = Number.isNaN(passRate)
     : `non remplacé : pass_rate ${fmt(passRate)} % (seuil ${thr} %), max_skip_delta ${skipDelta >= 0 ? "+" : ""}${fmt(skipDelta)} % (≤ +1 %), error_count ${errors} (0 requis)`;
 const md = `# Preuve : ${id} ${version}
 
-Généré par \`just gnu-check ${id}\` le ${kv.date}. Build : fr1 (${fr1}), tests : fr2 (${kv.host}), bac à sable : ${kv.sandbox}. Source GNU : ftp.gnu.org/gnu/${id}/${id}-${version}.tar.*, sha256 ${sha256} (GSRC, docs/research/gsrc-gnu-2026-11-14.json). Crate : \`aphrody-gnu-${id}\` (src/gnu/${id}).
+Généré par \`just gnu-check ${id}\` le ${kv.date}. Build : fr1 (${fr1}), tests : fr2 (${kv.host}), bac à sable : ${kv.sandbox}. Source GNU : ftp.gnu.org/gnu/${id}/${id}-${version}.tar.*, sha256 ${sha256} (GSRC, docs/research/gsrc-gnu.json). Crate : \`aphrody-gnu-${id}\` (src/gnu/${id}).
 
 | Mesure | GNU ${version} | Aphrody |
 | --- | --- | --- |

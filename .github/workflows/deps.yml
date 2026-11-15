@@ -1,4 +1,4 @@
-# Supply chain (docs/deps/POLICY.md §4): weekly `ay lock --deps --bump --dedupe`, verified by
+# Supply chain (docs/native/deps/POLICY.md §4): weekly `ay lock --deps --bump --dedupe`, verified by
 # `cargo check --workspace --all-targets --locked` and `ay doctor --deps`, then committed on main.
 # workflow_dispatch also builds ay.exe for Windows (artifact) so `ay lock` runs on the PC without
 # compiling there. GitHub-hosted runners only (fr1 is Chromium/LLVM, prd is production).

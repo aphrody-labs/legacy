@@ -244,7 +244,7 @@ Table limitée aux contrôles qui passent ; même run : 115/120 checks ok, code 
 
 ## 7. Validation Gemini
 
-Verdicts : `docs/reviews/gemini-2026-11-13-fr2-cloudflare.md` (Gemini 4 Carbon High, par le relais `relay review`).
+Verdicts : `docs/reviews/` (Gemini 4 Carbon High, par le relais `relay review`).
 
 - Passe 1 : **10/20**. Corrigé ensuite : décomptes (33 CNAME, 21 A, certificats), état de nie.aphrody.app et du port 22, affirmation `/api`, commandes de retour arrière, filtre UDP 80/443, ordre au démarrage, Access sur admin/control, preuve v6 par jeu de règles.
 - Passe 2 : **12/20**. Corrigé : Access sur console, jeton invalide = échec, jetons de flotte par hôte, jetons Access par sens, dépôt atomique et rotation des secrets, secrets hors argv, repli fr2 par LB cluster, certificats en DNS-01, inet fleet versionnée, ufw purgé, codes HTTP figés.

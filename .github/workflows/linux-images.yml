@@ -1,6 +1,6 @@
 # Base images of the Linux layer (infra/linux/images): built from upstream images pinned by digest,
 # pushed to ghcr.io/<owner>/base-<distro>, with build provenance. Consumers pin the digest printed in
-# the job summary (`<image>@sha256:...`), never a tag. Docs: docs/linux/OWNERSHIP.md.
+# the job summary (`<image>@sha256:...`), never a tag. Docs: docs/native/linux/OWNERSHIP.md.
 name: linux-images
 on:
   push:

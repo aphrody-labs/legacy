@@ -9,11 +9,6 @@ lot below ends with its proof.
 
 It extends and does not repeat:
 
-- `docs/AY_ON_BUN.md`: `ay` is Bun minus JavaScriptCore and minus the JS/TS engine; crate
-  evidence of 2026-11-12, the two edges that pull the engine in, and the `bun` feature design.
-- `docs/AY_LOW_LEVEL.md`: targets, LTO/AOT, wasm and micro-VMs.
-- `docs/DEPOT_TOOLS_RUST.md`: depot_tools rewritten in Rust (`ay gclient`, `ay fetch`, `ay vpy`,
-  `ay cipd`, `ay cl`, `ay gn`, `ay ninja`).
 - `docs/native/CHROMIUM-FACTORY.md`, `infra/chromium-factory/`: the fr1 factory (sync, gn, siso over
   NativeLink, R2 publish).
 - `docs/native/llvm/UNIFIED-TOOLCHAIN.md`: one LLVM for Chromium, Rust and bun.

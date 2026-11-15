@@ -1,6 +1,6 @@
 # Fleet (fr1, prd, fr2): caches, bootstrap, setup, resilience, build-all, CI on fr1 (imported by the root justfile).
 
-# Build caches of the PC and fr1/fr2/prd (docs/infra/CACHE.md, infra/fleet/cache.toml): sizes, free disk, sccache hits
+# Build caches of the PC and fr1/fr2/prd (infra/fleet/cache.toml): sizes, free disk, sccache hits
 [group('fleet')]
 cache-status *args:
     bun "{{root}}/infra/fleet/cache.ts" status {{args}}
@@ -60,7 +60,7 @@ fleet-setup role runners="6":
 fleet-resilience-proof host:
     sh "{{root}}/infra/fleet/bin/fleet-resilience-proof.sh" {{host}}
 
-# Fleet hosts + public endpoints health, exit 1 if anything is down (docs/VERSIONING.md)
+# Fleet hosts + public endpoints health, exit 1 if anything is down (docs/packaging/VERSIONING.md)
 [group('fleet')]
 ping:
     sh "{{root}}/infra/fleet/bin/fleet-ping.sh"

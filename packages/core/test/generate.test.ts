@@ -110,7 +110,7 @@ describe("monorepo snapshot & live scanner", () => {
       const res = await generateDocs(db, tmp, { rescan: false, useFfi: false });
       expect(res.written).toContain("README.md");
       expect(res.written).toContain("docs/PLAN.mdx");
-      expect(res.written).toContain("docs/llvm/PURE-C-LLVM.mdx");
+      expect(res.written).toContain("docs/native/llvm/PURE-C-LLVM.mdx");
       expect(res.written).toContain("docs/web/MODERN-WEB-GUIDANCE.mdx");
       expect(res.written).toContain("docs/reference/tree-sitter.md");
 
@@ -127,7 +127,7 @@ describe("monorepo snapshot & live scanner", () => {
       expect(plan).toContain("src/bun-flat");
 
       const pureC = readFileSync(
-        join(SRC_ROOT, "docs", "llvm", "PURE-C-LLVM.mdx"),
+        join(SRC_ROOT, "docs", "native", "llvm", "PURE-C-LLVM.mdx"),
         "utf8",
       );
       expect(pureC).toContain("<Tabs");

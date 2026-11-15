@@ -1,4 +1,4 @@
-# Repo-wide cargo settings for the root workspace. Measurements: docs/BUILD_SPEED.md.
+# Repo-wide cargo settings for the root workspace. Measurements: docs/native/BUILD_SPEED.md.
 # Credentials never go here; they stay in $CARGO_HOME.
 # Vendored sources: deliberately NOT replaced here (vendor is regenerable and ignored).
 

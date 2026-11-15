@@ -1,4 +1,4 @@
-# bun install for the whole monorepo (docs/infra/CACHE.md): one hoisted node_modules at the root,
+# bun install for the whole monorepo: one hoisted node_modules at the root,
 # one bun.lock, packages hardlinked from the shared global cache (~/.bun/install/cache).
 # Keys per bun.com/docs/runtime/bunfig (read 2026-11-14).
 telemetry = false

@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Vendor a fork without git: sync fork with upstream via gh, download the tarball
 # of the synced commit into third_party/<name>/, record the pin in third_party/vendor.lock.
-# Usage: scripts/vendor.sh <fork owner/repo> <name> [branch]
+# Usage: tools/labs-scripts/vendor.sh <fork owner/repo> <name> [branch]
 set -eu
 fork="$1"; name="$2"; branch="${3:-main}"
 root="$(cd "$(dirname "$0")/../.." && pwd)"

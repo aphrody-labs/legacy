@@ -1,6 +1,6 @@
 # Kernel flavor build (infra/linux/kernels.toml) from aphrody-labs/linux-cachyos + our series, in the
 # CachyOS container pinned by digest. Manual only: `ay linux build <flavor> --host ci --run`. The fleet
-# alternative is fr1 (preemptible, Chromium LLVM); never the PC, never prd. Docs: docs/linux/PATCHSETS.md.
+# alternative is fr1 (preemptible, Chromium LLVM); never the PC, never prd. Docs: docs/native/linux/PATCHSETS.md.
 name: linux-kernel
 on:
   workflow_dispatch:

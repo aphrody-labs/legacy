@@ -1,6 +1,6 @@
 # Unified package recipes (infra/pkg, `ay pkg`): one recipe -> PKGBUILD, debian/, APKBUILD, ebuild,
 # Android.bp, Nix and an OCI layer; each CI pair builds and install-tests it in the distro container
-# pinned by digest in infra/pkg/distros.toml. Docs: docs/linux/OWNERSHIP.md.
+# pinned by digest in infra/pkg/distros.toml. Docs: docs/native/linux/OWNERSHIP.md.
 # Action versions: latest releases read with `gh api repos/<action>/releases/latest` on 2026-11-13.
 name: linux-pkg
 on:

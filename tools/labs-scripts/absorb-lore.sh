@@ -2,7 +2,7 @@
 # Absorb Lore into the monorepo: vendor the synced fork, then move its crates to
 # crates/, its docs/tools under lore-named dirs.
 # The root Cargo.toml merge ([workspace.dependencies], lints, [patch.crates-io]) is manual.
-# Usage: scripts/absorb-lore.sh
+# Usage: tools/labs-scripts/absorb-lore.sh
 set -eu
 root="$(cd "$(dirname "$0")/../.." && pwd)"
 sh "$root/tools/labs-scripts/vendor.sh" aphrody-labs/lore lore main

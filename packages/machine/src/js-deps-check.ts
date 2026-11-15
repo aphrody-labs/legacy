@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// js-deps-check: supply-chain gate for the root bun workspace (docs/deps/POLICY.md §3, §5, §7).
+// js-deps-check: supply-chain gate for the root bun workspace (docs/native/deps/POLICY.md §3, §5, §7).
 //
 // Fails (exit 1) when:
 //   - a workspace package.json declares an external dependency that is not "catalog:" (internal ones use "workspace:*");

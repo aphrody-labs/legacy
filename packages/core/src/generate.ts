@@ -70,7 +70,7 @@ export const PILLARS: Pillar[] = [
     ],
     localClones: ["third_party/llvm-project"],
     summary:
-      "Native C ABI (src/core/capi, cdylib) built with the shared LLVM toolchain for cross-language LTO (docs/llvm/PURE-C-LLVM.mdx).",
+      "Native C ABI (src/core/capi, cdylib) built with the shared LLVM toolchain for cross-language LTO (docs/native/llvm/PURE-C-LLVM.mdx).",
   },
   {
     skill: "bun-ffi",
@@ -251,7 +251,7 @@ export async function generateDocs(
     },
     {
       key: "llvm",
-      relPath: "docs/llvm/PURE-C-LLVM.mdx",
+      relPath: "docs/native/llvm/PURE-C-LLVM.mdx",
       content: () => buildPureCLlvmMdx(snapshot),
     },
     {

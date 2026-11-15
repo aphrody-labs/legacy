@@ -23,7 +23,7 @@ esac
 limit=${HEAVY_LIMIT:-$limit} # HEAVY_LIMIT: load below which a job may start (nice 19 and idle I/O already yield to Chromium)
 [ "$jobs" -ge 1 ] || jobs=1
 export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-$jobs} MAKEFLAGS=${MAKEFLAGS:--j$jobs} CMAKE_BUILD_PARALLEL_LEVEL=${CMAKE_BUILD_PARALLEL_LEVEL:-$jobs}
-# Build caches (docs/infra/CACHE.md): one cargo target dir per user on the btrfs /home (zstd, noatime, reflink),
+# Build caches: one cargo target dir per user on the btrfs /home (zstd, noatime, reflink),
 # one sccache dir capped like fleet-tune.sh clean (SCCACHE_MAX_MB of tune.conf). RUSTC_WRAPPER only when unset:
 # an explicit value wins, including the empty one of ci.yml and of .cargo/config.toml readers.
 export CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-$HOME/build/target}

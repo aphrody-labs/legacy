@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// Build caches of the PC and the fleet (docs/infra/CACHE.md, inventory infra/fleet/cache.toml).
+// Build caches of the PC and the fleet (inventory infra/fleet/cache.toml).
 //   bun infra/fleet/cache.ts status [--json] [host...]   sizes, free disk, file system, sccache hit rate
 //   bun infra/fleet/cache.ts gc [--dry-run] [host...]    PC: caps of cache.toml ; VPS: fleet-tune.sh clean (tune.conf caps)
 //   bun infra/fleet/cache.ts sync [--dry-run] [--r2]     fr1 download caches -> fr2 over WireGuard (or R2), tar.zst by BLAKE3

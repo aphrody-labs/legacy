@@ -152,7 +152,7 @@ Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md)
 
 ## Stack Overview
 
-- **Pure C23 LLVM ABI Core**: [src/core/capi](src/core/capi) (\`aphrody_core.h\` exporting \`core_*\` and unified \`ai_os_*\`, \`aphrody_zig.h\`, \`aphrody_mwg.h\`) compiled with \`clang\` ThinLTO and \`-Wall -Wextra -Wpedantic -Werror\`. See [docs/llvm/PURE-C-LLVM.mdx](docs/llvm/PURE-C-LLVM.mdx).
+- **Pure C23 LLVM ABI Core**: [src/core/capi](src/core/capi) (\`aphrody_core.h\` exporting \`core_*\` and unified \`ai_os_*\`, \`aphrody_zig.h\`, \`aphrody_mwg.h\`) compiled with \`clang\` ThinLTO and \`-Wall -Wextra -Wpedantic -Werror\`. See [docs/native/llvm/PURE-C-LLVM.mdx](docs/native/llvm/PURE-C-LLVM.mdx).
 - **Agent OS (\`@aphrody/ai-os\`)**: cross-platform sandboxed Unix/GNU-like OS distribution for agents unifying FHS VFS (\`/etc/ai-os\`, \`/var/lib/ai-os\`, \`/proc/agent\`, \`/dev/{llm,rag,world,sys1}\`), LLM, RAG, World Model, and System 1 decision under one C ABI (\`aphrody_core_capi\`).
 - **Bun v1.4.5+ Runtime**: pure Bun TypeScript packages with zero third-party npm dependencies (\`bun:ffi\`, \`bun:sqlite\`, \`Bun.Glob\`, \`Bun.serve\`).
 - **Rust {{workspace.edition}} Workspace**: {{cratesCount}} crates in \`src/*\` (edition {{workspace.edition}}, rust-version {{workspace.rustVersion}}, {{workspace.workspaceDepsCount}} workspace dependencies) including \`ay\` CLI, \`archguard\`, \`core\`, \`core-capi\`, \`ffi\`, \`bun-flat\`, \`tv-*\`, \`steam-depot\`, \`lore*\`.
@@ -194,7 +194,7 @@ bun test packages/wck                  # @aphrody/wck Modern Web Guidance suite
 | Topic | Document |
 | :--- | :--- |
 | Master Architectural Plan | [docs/PLAN.mdx](docs/PLAN.mdx) |
-| Pure C23 LLVM Core & C ABI | [docs/llvm/PURE-C-LLVM.mdx](docs/llvm/PURE-C-LLVM.mdx) |
+| Pure C23 LLVM Core & C ABI | [docs/native/llvm/PURE-C-LLVM.mdx](docs/native/llvm/PURE-C-LLVM.mdx) |
 | Modern Web Guidance & RAG | [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx) |
 | Reference Pillars | [docs/reference/tree-sitter.md](docs/reference/tree-sitter.md), [docs/reference/llvm-toolchain.md](docs/reference/llvm-toolchain.md), [docs/reference/bun-ffi.md](docs/reference/bun-ffi.md) |
 | Games & Creative Suite Plan | [docs/games/PLAN.md](docs/games/PLAN.md) |
@@ -279,7 +279,7 @@ ${topLangs ? `| Cluster | Language | Files | Symbols |\n| :--- | :--- | ---: | -
   });
 }
 
-/** Generates docs/llvm/PURE-C-LLVM.mdx in Bun Docs MDX format. */
+/** Generates docs/native/llvm/PURE-C-LLVM.mdx in Bun Docs MDX format. */
 export function buildPureCLlvmMdx(snap: MonorepoSnapshot): string {
   const headersTable = formatHeadersTable(snap);
   const bunFlatTable = formatBunFlatTable(snap);

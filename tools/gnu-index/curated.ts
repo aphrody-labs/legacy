@@ -302,7 +302,7 @@ export const curated: Record<string, C> = {
         "brush",
         "Rust",
         "beta",
-        "shell-matrix 31/34 (docs/shell/MATRIX.md)",
+        "shell-matrix 31/34 (docs/native/shell/MATRIX.md)",
       ),
       m(
         "oils (osh)",

@@ -5,7 +5,7 @@
 //   bun packages/machine/src/toolchains-lock.ts            regenerate the lock (needs gh auth)
 //   bun packages/machine/src/toolchains-lock.ts --check    fail when a pinned entry no longer resolves
 // Consumers: infra/fleet/bootstrap/*.sh (Linux hosts), infra/docker/Dockerfile (build args), packages/machine (PC).
-// Single source (docs/deps/POLICY.md §5): the generated block lives at the end of tools.toml,
+// Single source (docs/native/deps/POLICY.md §5): the generated block lives at the end of tools.toml,
 // between BEGIN and END, after the [[tool]] declarations read by `ay up`.
 const out = new URL("../../../tools.toml", import.meta.url);
 const BEGIN =
@@ -88,7 +88,7 @@ const specs: Spec[] = [
     source: "github",
     repo: "llvm/llvm-project",
     tag: "llvmorg-{version}",
-    why: "clang/clang-cl/lld shared with Chromium and rustc (docs/llvm/UNIFIED-TOOLCHAIN.md); bindgen/clang-sys, aws-lc-sys",
+    why: "clang/clang-cl/lld shared with Chromium and rustc (docs/native/llvm/UNIFIED-TOOLCHAIN.md); bindgen/clang-sys, aws-lc-sys",
     assets: {
       "windows-x86_64": "clang+llvm-{version}-x86_64-pc-windows-msvc.tar.xz",
       "linux-x86_64": "LLVM-{version}-Linux-X64.tar.xz",
