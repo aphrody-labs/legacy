@@ -1,16 +1,16 @@
-// Catalogue, TVA, portail et webhook Stripe réels. Aucun client ni paiement créé.
+// Real Stripe catalog, VAT, portal and webhook. No customer or payment created.
 // bun --env-file=<secrets> scripts/stripe-provisionner.ts <configuration-sortie> [--production]
 import { encoderForm } from "../packages/billing/src/stripe";
 import { PLANS } from "../packages/billing/src/plans";
 
 const cle = Bun.env.STRIPE_SECRET_KEY ?? "";
 const production = Bun.argv.includes("--production");
-if (!cle.startsWith(production ? "sk_live_" : "sk_test_")) throw new Error("Clé Stripe du mode demandé requise");
+if (!cle.startsWith(production ? "sk_live_" : "sk_test_")) throw new Error("Stripe key of the requested mode required");
 const origine = new URL(Bun.env.AUTO_URL_APP ?? "");
 if (origine.protocol !== "https:" || origine.username || origine.password || origine.pathname !== "/")
   throw new Error("Origine HTTPS requise");
 const sortie = Bun.argv[2];
-if (!sortie || sortie.startsWith("--")) throw new Error("Fichier de configuration de sortie requis, hors dépôt");
+if (!sortie || sortie.startsWith("--")) throw new Error("Output configuration file required, outside the repository");
 const existant = (await Bun.file(sortie).exists())
   ? Object.fromEntries(
       (await Bun.file(sortie).text())
@@ -41,13 +41,13 @@ async function appel(chemin: string, corps?: Parameters<typeof encoderForm>[0], 
 }
 const compte = await appel("account");
 if (production && !compte.charges_enabled)
-  throw new Error("Compte Stripe non autorisé à encaisser : terminer sa vérification");
+  throw new Error("Stripe account not allowed to collect payments: finish its verification");
 const env: Record<string, string> = { STRIPE_API_VERSION: version };
 const url = `${origine.origin}/v1/abonnement/webhook`;
 const endpoints = await appel("webhook_endpoints?limit=100");
 const endpoint = endpoints.data.find((e: any) => e.url === url);
 if (endpoint && !existant.STRIPE_WEBHOOK_SECRET?.startsWith("whsec_"))
-  throw new Error("Webhook existant : fournir son secret dans le fichier de sortie pour reprendre sans doublon");
+  throw new Error("Webhook exists: provide its secret in the output file to resume without a duplicate");
 const produits: { product: string; prices: string[] }[] = [];
 for (const plan of ["pro", "business"] as const) {
   const catalogue = await appel(`products?limit=100&active=true`);

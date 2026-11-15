@@ -1,17 +1,17 @@
-// Exécuter uniquement sur le serveur avec son environnement protégé. Aucune clé n'est affichée.
+// Run only on the server with its protected environment. No key is printed.
 import { SQL } from "bun";
 import { synchroniserOperateurs, estSuperAdmin } from "../packages/tenancy/src/index";
 const destination = Bun.argv[2];
 if (!destination || !Bun.env.AUTO_COURRIER_PROPRIETAIRE)
-  throw Error("Destination privée et propriétaire configuré requis");
+  throw Error("Private destination and configured owner required");
 const sql = new SQL(Bun.env.DATABASE_URL!);
 try {
   await synchroniserOperateurs(sql);
   const [user] =
     await sql`SELECT id,email,email_verified,role FROM app_user WHERE lower(email)=${Bun.env.AUTO_COURRIER_PROPRIETAIRE.toLowerCase()}`;
   if (!user || !estSuperAdmin(user.email, user.email_verified, user.role))
-    throw Error("Propriétaire vérifié et super-administrateur requis");
-  if (await Bun.file(destination).exists()) throw Error("Fichier de clés déjà présent : aucune rotation implicite");
+    throw Error("Verified owner and super administrator required");
+  if (await Bun.file(destination).exists()) throw Error("Key file already present: no implicit rotation");
   const config: Record<string, string> = { AUTO_ADMIN_URL: Bun.env.AUTO_URL_APP! };
   await sql.begin(async (tx) => {
     for (const [nom, variable] of [

@@ -1,4 +1,4 @@
-// Chaîne reproductible du monorepo : composition déterministe, capture Bun Video, encodage NVENC.
+// Reproducible chain of the monorepo: deterministic composition, Bun Video capture, NVENC encoding.
 import { chromium } from "../apps/web/node_modules/playwright-core";
 import { lancement, type Scene } from "../packages/video/src/scenario";
 import { genererCatalogue } from "../packages/video/src/catalogue";
@@ -12,7 +12,7 @@ const width = 1920;
 const height = 1080;
 const frameWorkers = Number(Bun.env.AUTO_VIDEO_FRAME_WORKERS ?? 4);
 if (!Number.isSafeInteger(frameWorkers) || frameWorkers < 1 || frameWorkers > 4)
-  throw new Error("AUTO_VIDEO_FRAME_WORKERS doit être compris entre 1 et 4");
+  throw new Error("AUTO_VIDEO_FRAME_WORKERS must be between 1 and 4");
 const command = process.argv[2] ?? "preparer";
 const packageRoot = (
   Bun.env.BUN_VIDEO_PACKAGE_ROOT ??
@@ -24,7 +24,7 @@ const cachedFfmpeg = [
   ...new Bun.Glob(".cache/video-outils/**/bin/ffmpeg.exe").scanSync({ cwd: root, onlyFiles: true }),
 ][0];
 const ffmpeg = Bun.env.AUTO_VIDEO_FFMPEG ?? (cachedFfmpeg ? `${root}/${cachedFfmpeg}` : Bun.which("ffmpeg"));
-if (!ffmpeg) throw new Error("Définir AUTO_VIDEO_FFMPEG vers un FFmpeg avec h264_nvenc.");
+if (!ffmpeg) throw new Error("Set AUTO_VIDEO_FFMPEG to an FFmpeg with h264_nvenc.");
 const ffprobe = Bun.env.AUTO_VIDEO_FFPROBE ?? ffmpeg.replace(/ffmpeg(\.exe)?$/, "ffprobe$1");
 const chromeRoot = `${Bun.env.LOCALAPPDATA}/ms-playwright`;
 const browser =
@@ -32,12 +32,12 @@ const browser =
   [...new Bun.Glob("chromium-*/chrome-win64/chrome.exe").scanSync({ cwd: chromeRoot, onlyFiles: true })].map(
     (p) => `${chromeRoot}/${p}`,
   )[0];
-if (!browser) throw new Error("AUTO_CHROME doit désigner Chromium.");
+if (!browser) throw new Error("AUTO_CHROME must point to Chromium.");
 
 async function run(args: string[], options: Record<string, unknown> = {}) {
   const p = Bun.spawn(args, { stdout: "pipe", stderr: "pipe", ...options });
   const [stdout, stderr, code] = await Promise.all([p.stdout.text(), p.stderr.text(), p.exited]);
-  if (code !== 0) throw new Error(`${args[0]} a échoué (${code}): ${stderr.slice(-5000)}`);
+  if (code !== 0) throw new Error(`${args[0]} failed (${code}): ${stderr.slice(-5000)}`);
   return { stdout, stderr };
 }
 
@@ -69,7 +69,7 @@ async function prepare() {
     Bun.file(`${root}/apps/web/node_modules/@fontsource/inter/files/inter-latin-400-normal.woff2`),
   );
   await Bun.write(`${out}/scenario.json`, JSON.stringify(lancement, null, 2));
-  // La timeline de voix est conservée lorsqu'elle existe. Le brouillon sert aux previews avant narration.
+  // The voice timeline is kept when it exists. The draft is used for previews before narration.
   if (!(await Bun.file(`${out}/timeline.json`).exists())) {
     let time = 0;
     const timeline = lancement.map((s) => {
@@ -80,7 +80,7 @@ async function prepare() {
     });
     await Bun.write(`${out}/timeline-brouillon.json`, JSON.stringify(timeline, null, 2));
   }
-  console.log("Scénario et ressources préparés", out);
+  console.log("Scenario and resources prepared", out);
   if (await Bun.file(`${out}/captures/provenance.json`).exists()) await genererCatalogue(out, lancement);
 }
 
@@ -104,7 +104,7 @@ function server(scenes: Scene[]) {
     },
   };
   if (Bun.env.AUTO_VIDEO_PORT) return Bun.serve({ ...options, port: Number(Bun.env.AUTO_VIDEO_PORT) });
-  // Même précaution que le banc E2E : éviter les ports bas parfois rendus par port:0 sur ce runtime Windows.
+  // Same precaution as the E2E bench: avoid the low ports sometimes returned by port:0 on this Windows runtime.
   for (let attempt = 0; attempt < 20; attempt++) {
     try {
       return Bun.serve({ ...options, port: 30000 + (crypto.getRandomValues(new Uint32Array(1))[0]! % 30000) });
@@ -147,16 +147,16 @@ async function render(previewsOnly = false, smoke = false) {
       const canvas = document.createElement("canvas");
       const gl = canvas.getContext("webgl2");
       const ext = gl?.getExtension("WEBGL_debug_renderer_info");
-      return ext ? gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "non exposé";
+      return ext ? gl!.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "not exposed";
     });
     for (const [i, s] of scenes.entries()) {
       await page.evaluate((t) => (window as any).__hf.seek(t), s.start! + Math.min(3.5, s.duration! / 2));
       await page.screenshot({ path: `${out}/planches/${String(i + 1).padStart(2, "0")}-${s.id}.png` });
     }
-    console.log("Planches vérifiées", scenes.length, "GPU", gpu, "durée", total);
+    console.log("Boards verified", scenes.length, "GPU", gpu, "duration", total);
     if (previewsOnly) return;
     if (!(await Bun.file(`${out}/timeline.json`).exists()))
-      throw new Error("La timeline voix finale est requise pour le rendu.");
+      throw new Error("The final voice timeline is required for rendering.");
     const modulePath = `${packageRoot}/src/hyperframes-native.ts`;
     const { captureNativeWebViewFrames } = await import(Bun.pathToFileURL(modulePath).href);
     const target = `${out}/${smoke ? "essai" : "image"}.mp4`;
@@ -202,7 +202,7 @@ async function render(previewsOnly = false, smoke = false) {
     );
     const diagnostics = encoder.stderr.text();
     const encoderStdout = encoder.stdout.text();
-    // Chaque contexte garde un seul PNG en vol ; la publication reste strictement ordonnée.
+    // Each context keeps a single PNG in flight; publication stays strictly ordered.
     const pages = [page, ...(await Promise.all(Array.from({ length: frameWorkers - 1 }, () => context.newPage())))];
     const sessions = await Promise.all(pages.map((p) => context.newCDPSession(p)));
     const nativeContexts: any[] = [];
@@ -221,10 +221,10 @@ async function render(previewsOnly = false, smoke = false) {
       gpu = await nativeContexts[0].context.evaluate(
         `(()=>{const gl=document.createElement('canvas').getContext('webgl2');const ext=gl?.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'non exposé';})()`,
       );
-      console.log("GPU du fournisseur natif", gpu);
+      console.log("GPU of the native provider", gpu);
       if (/SwiftShader|llvmpipe|software/i.test(gpu))
         throw new Error(
-          "Le fournisseur natif utilise un rendu logiciel ; utiliser AUTO_VIDEO_CAPTURE_PROVIDER=playwright",
+          "The native provider uses software rendering; use AUTO_VIDEO_CAPTURE_PROVIDER=playwright",
         );
     }
     const captureStarted = Date.now();
@@ -262,7 +262,7 @@ async function render(previewsOnly = false, smoke = false) {
         for (const item of batch) {
           if (item.done) continue;
           const frame = item.value;
-          if (frame.frame !== count) throw new Error("Ordre des images de capture incorrect");
+          if (frame.frame !== count) throw new Error("Capture frames out of order");
           if (encoder.exitCode !== null) throw new Error(`NVENC interrompu : ${await diagnostics}`);
           encoder.stdin.write(frame.png);
           await encoder.stdin.flush();
@@ -284,9 +284,9 @@ async function render(previewsOnly = false, smoke = false) {
       );
       const video = probe.streams.find((s: any) => s.codec_type === "video");
       if (video?.width !== width || video?.height !== height || Number(video.nb_read_frames) !== frames)
-        throw new Error("Le fichier encodé ne correspond pas au plan");
+        throw new Error("The encoded file does not match the plan");
       if (!Bun.deepEquals(inputs, await inputHashes(scenes, smoke)))
-        throw new Error("Les sources de la composition ont changé pendant le rendu ; relancer sur une entrée stable");
+        throw new Error("The composition sources changed during rendering; rerun on a stable input");
       await Bun.write(
         `${out}/${smoke ? "essai" : "rendu"}.json`,
         JSON.stringify(
@@ -336,7 +336,7 @@ async function verify() {
   );
   const v = data.streams.find((s: any) => s.codec_type === "video");
   const a = data.streams.find((s: any) => s.codec_type === "audio");
-  if (v?.width !== width || v?.height !== height || !a) throw new Error("Vidéo finale incomplète");
+  if (v?.width !== width || v?.height !== height || !a) throw new Error("Incomplete final video");
   await run([ffmpeg!, "-v", "error", "-i", target, "-f", "null", "-"]);
   const native = new Bun.Video(target);
   const nativeMetadata = await native.metadata();
@@ -355,7 +355,7 @@ async function verify() {
       2,
     ),
   );
-  console.log("Vidéo finale décodée et vérifiée", target, data.format.duration);
+  console.log("Final video decoded and verified", target, data.format.duration);
 }
 
 if (command === "preparer") await prepare();
@@ -403,4 +403,4 @@ else if (command === "servir") {
       ])
     ).stderr.slice(-1000),
   );
-} else throw new Error(`Commande vidéo inconnue : ${command}`);
+} else throw new Error(`Unknown video command: ${command}`);

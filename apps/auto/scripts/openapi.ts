@@ -1,10 +1,10 @@
-// Écrit docs/openapi.json depuis apps/api/src/openapi.ts et le plugin openAPI de Better Auth. Usage, à la racine du dépôt : bun run openapi
+// Writes docs/openapi.json from apps/api/src/openapi.ts and the Better Auth openAPI plugin. Usage, at the repository root: bun run openapi
 import type { SQL } from "bun";
 import { creerAuth } from "../packages/tenancy/src/auth";
 import { specificationComplete } from "../apps/api/src/openapi";
 
 const CIBLE = "docs/openapi.json";
-// Aucune base ici : toute requête (amorçage des ressources OAuth au démarrage) reçoit un résultat vide.
+// No database here: any query (OAuth resource seeding at startup) gets an empty result.
 const vide = async () => Object.assign([], { count: 0, command: "SELECT" });
 const BASE_VIDE = { unsafe: vide, reserve: async () => ({ unsafe: vide, release() {} }) } as unknown as SQL;
 await Bun.write(
@@ -13,4 +13,4 @@ await Bun.write(
 );
 const p = Bun.spawnSync([process.execPath, "fmt", CIBLE], { stdout: "inherit", stderr: "inherit" });
 if (p.exitCode !== 0) process.exit(p.exitCode ?? 1);
-console.log(`écrit : ${CIBLE}`);
+console.log(`written: ${CIBLE}`);

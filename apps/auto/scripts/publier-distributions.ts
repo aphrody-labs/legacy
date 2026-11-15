@@ -1,15 +1,15 @@
-// Le répertoire local contient manifest.json et uniquement les fichiers publics référencés.
+// The local directory contains manifest.json and only the public files it references.
 import { catalogue } from "../apps/web/src/distributions";
 const dossier = Bun.argv[2];
-if (!dossier) throw Error("Usage : bun scripts/publier-distributions.ts <répertoire>");
+if (!dossier) throw Error("Usage: bun scripts/publier-distributions.ts <directory>");
 const livraison = (await Bun.file(".cache/last-release.json").json()).version as string;
-if (!/^\d{8}T\d{6}Z-[a-f0-9]{8}$/.test(livraison)) throw Error("Livraison validée invalide");
+if (!/^\d{8}T\d{6}Z-[a-f0-9]{8}$/.test(livraison)) throw Error("Invalid validated release");
 const c = await catalogue(dossier);
-if (!c?.fichiers.length) throw Error("Catalogue absent ou invalide");
+if (!c?.fichiers.length) throw Error("Catalog missing or invalid");
 for (const a of c.fichiers) {
   const f = Bun.file(`${dossier}/${a.fichier}`);
   const h = new Bun.CryptoHasher("sha256");
-  if (!(await f.exists()) || f.size !== a.octets) throw Error(`Fichier absent ou incomplet : ${a.fichier}`);
+  if (!(await f.exists()) || f.size !== a.octets) throw Error(`File missing or incomplete: ${a.fichier}`);
   for await (const chunk of f.stream()) h.update(chunk);
   if (h.digest("hex") !== a.sha256) throw Error(`Empreinte incorrecte : ${a.fichier}`);
 }
@@ -17,11 +17,11 @@ const id = crypto.randomUUID();
 const depot = `auto/distributions/.publication-${id}`;
 async function commande(args: string[]) {
   const p = Bun.spawn(args, { stdin: "ignore", stdout: "inherit", stderr: "inherit" });
-  if (await p.exited) throw Error("Publication interrompue ; ancien catalogue conservé");
+  if (await p.exited) throw Error("Publication interrupted; previous catalog kept");
 }
 await commande(["ssh", "vps", `umask 022; mkdir -p ~/${depot} ~/auto/outils; chmod 755 ~/auto/distributions`]);
 await commande(["scp", "-S", Bun.which("ssh") ?? "ssh", `${dossier}/manifest.json`, `vps:${depot}/manifest.json`]);
-// Ces deux sources ne contiennent ni clé privée ni configuration de compte.
+// These two sources contain neither a private key nor an account configuration.
 await commande([
   "scp",
   "-S",
@@ -35,18 +35,18 @@ const plan = Bun.spawn(["ssh", "vps", `~/.local/bin/bun ~/auto/outils/distributi
   stderr: "inherit",
 });
 const sortie = await new Response(plan.stdout).text();
-if (await plan.exited) throw Error("Plan de publication refusé ; catalogue actuel conservé");
+if (await plan.exited) throw Error("Publication plan refused; current catalog kept");
 const { manquants } = JSON.parse(sortie) as { manquants: string[] };
 if (
   !Array.isArray(manquants) ||
   manquants.some((n) => !c.fichiers.some((a) => a.fichier === n)) ||
   new Set(manquants).size !== manquants.length
 )
-  throw Error("Plan de transfert incohérent");
+  throw Error("Inconsistent transfer plan");
 console.log(
-  `Transfert : ${manquants.length} fichiers nouveaux, ${c.fichiers.length - manquants.length} fichiers déjà vérifiés`,
+  `Transfer: ${manquants.length} new files, ${c.fichiers.length - manquants.length} files already verified`,
 );
 for (const nom of manquants)
   await commande(["scp", "-S", Bun.which("ssh") ?? "ssh", `${dossier}/${nom}`, `vps:${depot}/${nom}`]);
-// Le validateur provient de la livraison immuable ; aucune source de cette livraison n'est modifiée.
+// The validator comes from the immutable release; no source of this release is modified.
 await commande(["ssh", "vps", `~/.local/bin/bun ~/auto/outils/distributions-vps.ts ${id} ${livraison}`]);

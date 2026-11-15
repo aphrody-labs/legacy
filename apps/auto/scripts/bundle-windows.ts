@@ -1,4 +1,4 @@
-// Empaquette les binaires MinGW qualifiés sans recompilation sous MSVC.
+// Packages the qualified MinGW binaries without recompiling under MSVC.
 import { join } from "node:path";
 const racine = Bun.fileURLToPath(new URL("../", import.meta.url));
 const source = Bun.argv[2] ?? "dist/desktop-updater/windows-x64";
@@ -7,7 +7,7 @@ const cible = join(racine, ".cache/tauri-distribution-target");
 for (const nom of ["auto-desktop.exe", "WebView2Loader.dll"])
   await Bun.write(join(cible, "x86_64-pc-windows-gnu/release", nom), Bun.file(join(racine, source, nom)));
 const cle = join(Bun.env.USERPROFILE!, ".auto/updater-auto.key");
-if (!(await Bun.file(cle).exists())) throw Error("Clé de signature absente du répertoire privé");
+if (!(await Bun.file(cle).exists())) throw Error("Signing key missing from the private directory");
 const configuration = JSON.stringify({
   bundle: { resources: { [join(cible, "x86_64-pc-windows-gnu/release/WebView2Loader.dll")]: "WebView2Loader.dll" } },
 });
@@ -39,5 +39,5 @@ const p = Bun.spawn(
     stderr: "inherit",
   },
 );
-if (await p.exited) throw Error("Création de l’installateur échouée");
-console.log(`Installateur et signature : ${cible}/x86_64-pc-windows-gnu/release/bundle/nsis`);
+if (await p.exited) throw Error("Installer creation failed");
+console.log(`Installer and signature: ${cible}/x86_64-pc-windows-gnu/release/bundle/nsis`);

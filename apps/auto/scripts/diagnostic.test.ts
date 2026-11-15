@@ -1,20 +1,20 @@
 import { expect, test } from "bun:test";
 import { verifierConfiguration } from "./diagnostic";
 
-test("diagnostic : aucune intégration absente n'est annoncée prête", () => {
+test("diagnostic: no absent integration is announced ready", () => {
   const controles = verifierConfiguration({});
   expect(controles).toHaveLength(7);
   expect(controles.every((c) => !c.ok)).toBe(true);
 });
 
-test("diagnostic : Resend sélectionné n'exige pas de relais SMTP", () => {
+test("diagnostic: selected Resend does not require an SMTP relay", () => {
   const controles = verifierConfiguration({ AUTO_MAIL_FOURNISSEUR: "resend", AUTO_RESEND_CLE_API: "re_factice" });
   expect(controles.find((c) => c.service === "resend")?.ok).toBe(true);
   expect(controles.some((c) => c.service === "smtp")).toBe(false);
   expect(JSON.stringify(controles)).not.toContain("re_factice");
 });
 
-test("diagnostic : configuration complète, secrets absents du rapport, Stripe test refusé", () => {
+test("diagnostic: full configuration, secrets absent from the report, Stripe test refused", () => {
   const env = {
     AUTO_URL_APP: "https://auto.example.com",
     AUTO_CLE_MAITRE: "secret-maitre".repeat(4),

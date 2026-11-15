@@ -4,7 +4,7 @@ import { testDb } from "../packages/store/src/db";
 
 const binaire = Bun.env.AUTO_STANDALONE;
 (binaire ? test : test.skip)(
-  "paquet autonome : aide, migrations, API et front depuis un autre répertoire",
+  "standalone package: help, migrations, API and front end from another directory",
   async () => {
     const executable = resolve(binaire!);
     const aide = Bun.spawnSync([executable, "--help"], { cwd: Bun.env.TEMP ?? "/tmp" });
@@ -15,7 +15,7 @@ const binaire = Bun.env.AUTO_STANDALONE;
     expect(outils.stdout.toString().length).toBeGreaterThan(100);
     const db = await testDb();
     try {
-      // La base du banc est jetable ; son nom est propre à cette exécution.
+      // The test bench database is throwaway; its name is specific to this run.
       const [{ nom }] = await db.sql`SELECT current_database() AS nom`;
       const connexion = new URL(Bun.env.DATABASE_URL ?? "postgres://auto:auto@localhost:5433/auto");
       connexion.pathname = `/${nom}`;

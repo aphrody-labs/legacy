@@ -1,4 +1,4 @@
-// Provisionne n8n (compose) : credential vers l'API auto, workflows de infra/n8n/workflows publiés.
+// Provisions n8n (compose): credential to the auto API, workflows of infra/n8n/workflows published.
 // Usage : bun scripts/n8n.ts <jeton auto_…>
 const RACINE = new URL("..", import.meta.url);
 const WORKFLOWS = new URL("infra/n8n/workflows/", RACINE);
@@ -28,10 +28,10 @@ export async function attendreN8n(timeoutMs = 120_000) {
       return;
     await Bun.sleep(1000);
   }
-  throw new Error(`n8n indisponible sur ${N8N_URL}`);
+  throw new Error(`n8n unavailable at ${N8N_URL}`);
 }
 
-/** Les webhooks s'enregistrent après /healthz/readiness : sonde CORS sans déclencher d'exécution. */
+/** Webhooks register after /healthz/readiness: CORS probe without triggering a run. */
 export async function attendreWebhook(chemin: string, timeoutMs = 60_000) {
   const fin = Date.now() + timeoutMs;
   while (Date.now() < fin) {
@@ -42,10 +42,10 @@ export async function attendreWebhook(chemin: string, timeoutMs = 60_000) {
     if (r?.status === 204) return;
     await Bun.sleep(500);
   }
-  throw new Error(`webhook n8n ${chemin} non enregistré`);
+  throw new Error(`n8n webhook ${chemin} not registered`);
 }
 
-/** Credential « API auto » (en-tête Bearer), importé chiffré par n8n, puis workflows importés et publiés. */
+/** "auto API" credential (Bearer header), imported encrypted by n8n, then workflows imported and published. */
 export async function provisionner(jeton: string) {
   if (
     !(await fetch(`${N8N_URL}/healthz`).then(
@@ -78,7 +78,7 @@ export async function provisionner(jeton: string) {
     await compose("exec", "-T", "n8n", "n8n", "publish:workflow", `--id=${id}`);
     ids.push(id);
   }
-  // Les imports CLI ne sont pris en compte qu'au redémarrage.
+  // CLI imports only take effect after a restart.
   await compose("restart", "n8n");
   await attendreN8n();
   await attendreWebhook("auto-evenements");
@@ -89,5 +89,5 @@ export async function provisionner(jeton: string) {
 if (import.meta.main) {
   const jeton = Bun.argv[2];
   if (!jeton?.startsWith("auto_")) throw new Error("usage : bun scripts/n8n.ts <jeton auto_…>");
-  console.log(`workflows publiés : ${(await provisionner(jeton)).join(", ")}`);
+  console.log(`workflows published: ${(await provisionner(jeton)).join(", ")}`);
 }

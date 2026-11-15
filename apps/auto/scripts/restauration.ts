@@ -1,16 +1,16 @@
-// Restauration d'une sauvegarde chiffrée (scripts/sauvegarde.ts) dans une base existante et vide :
+// Restore of an encrypted backup (scripts/sauvegarde.ts) into an existing, empty database:
 //
 //   bun scripts/restauration.ts <fichier.dump.chiffre> <base-cible> [base-d-origine]
 //
-// La base d'origine (déduite du nom du fichier) fixe la clé de déchiffrement. La restauration vers une
-// base neuve, puis le basculement, évite d'écraser la production en cas d'échec.
+// The original database (deduced from the file name) sets the decryption key. Restoring into a new
+// database, then switching over, avoids overwriting production on failure.
 import { dechiffrer } from "../packages/tenancy/src/chiffrement";
 import { ENTETE, envLibpq, executer, infoCle, local } from "./sauvegarde";
 
 export interface OptionsRestauration {
   fichier: string;
   base: string;
-  /** Base sauvegardée (clé de déchiffrement) ; par défaut, préfixe du nom de fichier. */
+  /** Backed-up database (decryption key); by default, prefix of the file name. */
   origine?: string;
   conteneur?: string;
   utilisateur?: string;
@@ -22,7 +22,7 @@ export async function restaurer(o: OptionsRestauration) {
   if (!ENTETE.every((b, i) => octets[i] === b)) throw new Error("restauration : fichier de sauvegarde inconnu");
   const origine = o.origine ?? (o.fichier.split(/[\\/]/).pop() ?? "").replace(/-\d{4}-\d\d-\d\dT.*$/, "");
   const dump = await dechiffrer(infoCle(origine), octets.subarray(ENTETE.length), o.cle);
-  // AUTO_PG_LOCAL=1 : pg_restore local vers DATABASE_URL_DIRECT, base `o.base`, sans docker.
+  // AUTO_PG_LOCAL=1: local pg_restore to DATABASE_URL_DIRECT, database `o.base`, without docker.
   if (local() && Bun.env.DATABASE_URL_DIRECT) {
     const libpq = { ...envLibpq(Bun.env.DATABASE_URL_DIRECT), PGDATABASE: o.base };
     await executer(["pg_restore", "-d", o.base, "--no-owner", "--exit-on-error"], dump, libpq);
@@ -50,5 +50,5 @@ if (import.meta.main) {
   const [fichier, base, origine] = Bun.argv.slice(2);
   if (!fichier || !base) throw new Error("usage : bun scripts/restauration.ts <fichier> <base-cible> [origine]");
   await restaurer({ fichier, base, origine });
-  console.log(`restauré dans ${base}`);
+  console.log(`restored into ${base}`);
 }

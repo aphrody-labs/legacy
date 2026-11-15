@@ -1,13 +1,13 @@
-// Sauvegarde chiffrée de Postgres : pg_dump (format custom) dans le conteneur local, ou depuis une base distante
-// (Neon) par `DATABASE_URL_DIRECT` avec le pg_dump de l'image postgres:18-alpine, puis AES-256-GCM (clé dérivée
-// de AUTO_CLE_MAITRE, info « sauvegarde:<base> »), écriture dans AUTO_SAUVEGARDES (data/sauvegardes),
-// rotation des AUTO_SAUVEGARDES_GARDER dernières (14 par défaut).
+// Encrypted Postgres backup: pg_dump (custom format) in the local container, or from a remote database (Neon)
+// through `DATABASE_URL_DIRECT` with the pg_dump of the postgres:18-alpine image, then AES-256-GCM (key derived
+// from AUTO_CLE_MAITRE, info "sauvegarde:<base>"), written to AUTO_SAUVEGARDES (data/sauvegardes), rotation of
+// the last AUTO_SAUVEGARDES_GARDER (14 by default).
 //
 //   bun scripts/sauvegarde.ts [base]
 //
-// La clé maître est indispensable à la restauration : elle se conserve hors du serveur sauvegardé.
-// Le dump est tenu en mémoire (adapté à la taille actuelle de la base) ; copie hors site à brancher
-// (rclone vers un seau S3 à verrou d'objet).
+// The master key is required to restore: keep it outside the backed-up server.
+// The dump is held in memory (suited to the current size of the database); off-site copy to be wired
+// (rclone to an S3 bucket with object lock).
 import { chiffrer } from "../packages/tenancy/src/chiffrement";
 
 export const ENTETE = new TextEncoder().encode("AUTOSAV1");
@@ -19,7 +19,7 @@ export interface OptionsSauvegarde {
   dossier?: string;
   garder?: number;
   cle?: Uint8Array<ArrayBuffer>;
-  /** Base distante (point d'accès direct, jamais le pooler) ; prioritaire sur le conteneur. */
+  /** Remote database (direct endpoint, never the pooler); takes precedence over the container. */
   url?: string;
 }
 
@@ -32,7 +32,7 @@ const defauts = (o: OptionsSauvegarde) => ({
   url: o.url ?? (Bun.env.AUTO_PG_CONTENEUR ? undefined : Bun.env.DATABASE_URL_DIRECT || undefined),
 });
 
-/** Variables libpq d'une URL : le mot de passe passe par l'environnement, jamais par la ligne de commande. */
+/** libpq variables of a URL: the password goes through the environment, never the command line. */
 export function envLibpq(url: string): Record<string, string> {
   const u = new URL(url);
   return {
@@ -45,7 +45,7 @@ export function envLibpq(url: string): Record<string, string> {
   };
 }
 
-/** pg_dump et pg_restore installés localement (image `sauvegarde` de docker/app.Dockerfile). */
+/** pg_dump and pg_restore installed locally (`sauvegarde` image of docker/app.Dockerfile). */
 export const local = () => Bun.env.AUTO_PG_LOCAL === "1";
 
 export const infoCle = (base: string) => `sauvegarde:${base}`;
@@ -66,11 +66,11 @@ export async function executer(cmd: string[], entree?: Uint8Array, env?: Record<
   return sortie;
 }
 
-/** Renvoie le chemin de la sauvegarde écrite. */
+/** Returns the path of the backup written. */
 export async function sauvegarder(options: OptionsSauvegarde = {}): Promise<string> {
   const o = defauts(options);
   const libpq = o.url ? envLibpq(o.url) : null;
-  // AUTO_PG_LOCAL=1 (image `sauvegarde`) : pg_dump présent dans le conteneur, sans appel à docker.
+  // AUTO_PG_LOCAL=1 (`sauvegarde` image): pg_dump present in the container, without a docker call.
   const dump = libpq
     ? local()
       ? await executer(["pg_dump", "--format=custom", "--no-owner"], undefined, libpq)
@@ -105,7 +105,7 @@ export async function sauvegarder(options: OptionsSauvegarde = {}): Promise<stri
   const chemin = `${o.dossier}/${o.base}-${horodatage}.dump.chiffre`;
   await Bun.write(chemin, new Blob([ENTETE, chiffre]));
 
-  // Rotation : les noms sont horodatés, le tri lexical est chronologique.
+  // Rotation: names are timestamped, lexical order is chronological.
   const existantes = (await Array.fromAsync(new Bun.Glob(`${o.base}-*.dump.chiffre`).scan(o.dossier))).sort();
   for (const ancienne of existantes.slice(0, Math.max(0, existantes.length - o.garder)))
     await Bun.file(`${o.dossier}/${ancienne}`).delete();

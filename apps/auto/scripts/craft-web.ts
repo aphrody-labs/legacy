@@ -1,4 +1,4 @@
-// Importe les distributions WASM qualifiées de Craft (grid, word, pdf) dans apps/web/public/craft.
+// Imports the qualified Craft WASM distributions (grid, word, pdf) into apps/web/public/craft.
 // Usage : bun scripts/craft-web.ts <dossier de distribution>
 import { resolve, relative } from "node:path";
 
@@ -21,7 +21,7 @@ const root = Bun.fileURLToPath(new URL("..", import.meta.url));
       if (nom === "index.html") {
         const html = new TextDecoder().decode(bytes),
           module = html.match(/<script type="module">([\s\S]*?)<\/script>/);
-        if (!module) throw new Error(studio + " : point d’entrée WASM non reconnu");
+        if (!module) throw new Error(studio + ": WASM entry point not recognized");
         const script = new TextEncoder().encode(module[1]!);
         await Bun.write(resolve(sortie, studio, "auto-start.js"), script);
         fichiers["auto-start.js"] = {
@@ -48,17 +48,17 @@ const root = Bun.fileURLToPath(new URL("..", import.meta.url));
       !Object.keys(fichiers).some((n) => n.endsWith(".wasm")) ||
       !Object.keys(fichiers).some((n) => n.startsWith("licenses/"))
     )
-      throw new Error(studio + " : distribution incomplète (WASM/notices requis)");
+      throw new Error(studio + ": incomplete distribution (WASM/notices required)");
     revision.update(studio).update(JSON.stringify(fichiers));
     editeurs[studio] = { source: sources[studio], fichiers };
   }
   if (relative(resolve(root, "apps/web/public"), sortie).startsWith(".."))
-    throw new Error("sortie hors des ressources publiques");
+    throw new Error("output outside the public resources");
   await Bun.write(
     resolve(sortie, "manifest.json"),
     JSON.stringify({ schema: 1, version: revision.digest("hex").slice(0, 16), editeurs }, null, 2) + "\n",
   );
   console.log(
-    "Craft WASM importé : grid, word, pdf ; notices conservées, WASM compressés, bootstrap sans script inline.",
+    "Craft WASM imported: grid, word, pdf; notices kept, WASM compressed, bootstrap without inline script.",
   );
 }

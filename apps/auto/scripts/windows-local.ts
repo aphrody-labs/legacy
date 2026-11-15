@@ -1,9 +1,9 @@
-// Instance Windows locale : secrets dans le Gestionnaire d’identifiants du compte Windows courant.
+// Local Windows instance: secrets in the Credential Manager of the current Windows account.
 import windows from "bun:windows";
 import { mkdir, unlink } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { homedir } from "node:os";
-if (process.platform !== "win32") throw Error("Ce lanceur nécessite Windows");
+if (process.platform !== "win32") throw Error("This launcher requires Windows");
 const root = resolve(import.meta.dir, "..");
 const prive = join(homedir(), ".auto");
 const service = "Auto.Windows.Local",
@@ -29,9 +29,9 @@ const identite = JSON.parse(
 );
 async function lire() {
   const v = await Bun.secrets.get({ service, name });
-  if (!v) throw Error("Exécuter d’abord : bun scripts/windows-local.ts configurer");
+  if (!v) throw Error("Run first: bun scripts/windows-local.ts configurer");
   const c = JSON.parse(v);
-  if (c.sid !== identite.sid) throw Error("Cette configuration appartient à un autre compte Windows");
+  if (c.sid !== identite.sid) throw Error("This configuration belongs to another Windows account");
   return c as { sid: string; env: Record<string, string>; dossiers: string };
 }
 const action = Bun.argv[2] ?? "etat";
@@ -51,7 +51,7 @@ if (action === "inventaire") {
 } else if (action === "configurer") {
   await mkdir(prive, { recursive: true });
   if (await Bun.secrets.get({ service, name })) {
-    console.log("Configuration existante conservée dans le coffre Windows");
+    console.log("Existing configuration kept in the Windows vault");
     process.exit(0);
   }
   const dossiers = join(windows.knownFolder("Documents"), "Auto", "Arrivages");
@@ -76,7 +76,7 @@ if (action === "inventaire") {
     windowsHide: true,
   });
   if ((await existant.exited) === 0)
-    throw Error("Conteneur auto-pg-windows existant sans configuration locale : aucune modification automatique");
+    throw Error("Container auto-pg-windows exists without a local configuration: no automatic change");
   const pgEnv = join(prive, "local-postgres-initialisation.env");
   await Bun.write(pgEnv, `POSTGRES_USER=auto_local\nPOSTGRES_PASSWORD=${password}\nPOSTGRES_DB=auto_local\n`);
   await cmd(["icacls", pgEnv, "/inheritance:r", "/grant:r", identite.nom + ":(F)"]);
@@ -151,7 +151,7 @@ if (action === "inventaire") {
   await powershell(
     "$t=Get-ScheduledTask -TaskName 'Auto local Windows';if($t.Description -notlike 'Auto local,*'){throw 'Tâche étrangère'};Stop-ScheduledTask -TaskName 'Auto local Windows'",
   );
-  console.log("Instance locale arrêtée ; données Postgres conservées.");
+  console.log("Local instance stopped; Postgres data kept.");
 } else if (action === "demarrer") {
   const c = await lire();
   await cmd(["docker", "start", "auto-pg-windows"]);
@@ -266,9 +266,9 @@ if (action === "inventaire") {
   const c = await lire(),
     cible = resolve(chemin);
   const stat = await import("node:fs/promises").then((fs) => fs.stat(cible));
-  if (!stat.isDirectory()) throw Error("Dossier accessible requis sous le compte Windows courant");
+  if (!stat.isDirectory()) throw Error("A folder accessible to the current Windows account is required");
   const racines = JSON.parse(c.env.AUTO_DOSSIERS_RACINES ?? "{}");
-  if (racines[alias]) throw Error("Alias existant : aucune réaffectation implicite");
+  if (racines[alias]) throw Error("Alias already exists: no implicit reassignment");
   racines[alias] = { tenantId: tenant, chemin: cible };
   c.env.AUTO_DOSSIERS_RACINES = JSON.stringify(racines);
   await Bun.secrets.set({ service, name, value: JSON.stringify(c) });
@@ -310,16 +310,16 @@ if (action === "inventaire") {
     const email = Bun.argv[3]?.trim().toLowerCase();
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Error("Usage : proprietaire adresse_email");
     if (c.env.AUTO_LOCAL_WINDOWS_EMAIL && c.env.AUTO_LOCAL_WINDOWS_EMAIL !== email)
-      throw Error("Propriétaire déjà lié à ce compte Windows : aucune réaffectation implicite");
+      throw Error("Owner already linked to this Windows account: no implicit reassignment");
     c.env.AUTO_LOCAL_WINDOWS_EMAIL = email;
     c.env.AUTO_SUPER_ADMIN_EMAILS = email;
     c.env.AUTO_COURRIER_PROPRIETAIRE = email;
     await Bun.secrets.set({ service, name, value: JSON.stringify(c) });
   }
   const email = c.env.AUTO_LOCAL_WINDOWS_EMAIL;
-  if (!email) throw Error("Lier d’abord le propriétaire local avec la commande proprietaire");
+  if (!email) throw Error("Link the local owner first with the proprietaire command");
   if (c.env.AUTO_BIND_HOST !== "127.0.0.1" || c.env.AUTO_URL_APP !== "http://127.0.0.1:3007")
-    throw Error("La connexion Windows nécessite l’instance locale de boucle interne");
+    throw Error("Windows sign-in requires the local loopback instance");
   Object.assign(Bun.env, c.env);
   const { connect, migrate } = await import("../packages/store/src/index");
   const { authDe, brancherEnvoyeur, synchroniserOperateurs } = await import("../packages/tenancy/src/index");
@@ -347,21 +347,21 @@ if (action === "inventaire") {
     } else {
       const [lien] =
         await sql`SELECT id FROM account WHERE user_id=${existant.id} AND provider_id='windows-local' AND account_id=${identite.sid}`;
-      if (!lien) throw Error("Le compte local existe sans liaison à cette identité Windows : connexion Auto requise");
+      if (!lien) throw Error("The local account exists without a link to this Windows identity: Auto sign-in required");
     }
     await synchroniserOperateurs(sql);
     if (action === "connexion") {
       let lien: string | undefined;
       brancherEnvoyeur(async (m) => {
         if (m.a !== email || m.modele !== "lien-magique")
-          throw Error("Connexion Windows limitée au propriétaire local");
+          throw Error("Windows sign-in limited to the local owner");
         lien = m.donnees.lien;
       });
       await auth.api.signInMagicLink({
         headers: new Headers({ origin: c.env.AUTO_URL_APP! }),
         body: { email, callbackURL: c.env.AUTO_URL_APP + "/app/administration" },
       });
-      if (!lien || new URL(lien).origin !== c.env.AUTO_URL_APP) throw Error("Lien local non créé");
+      if (!lien || new URL(lien).origin !== c.env.AUTO_URL_APP) throw Error("Local link not created");
       await Bun.secrets.set({ service, name: "connexion-en-attente", value: lien });
       if (!Bun.argv.includes("--sans-ouvrir"))
         await powershell("Start-Process -FilePath '" + lien.replaceAll("'", "''") + "'");

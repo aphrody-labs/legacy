@@ -1,6 +1,6 @@
-// Prépare une livraison immuable sur le VPS : sources publiques et bibliothèque qualifiée, jamais prod.env.
-// La bascule lit ~/auto/prod.env (application, DATABASE_URL poolée et DATABASE_URL_DIRECT Neon) et
-// ~/auto/neon.env (NEON_API_KEY, NEON_ORG_ID, NEON_PROJECT_ID : branches de migration candidates).
+// Prepares an immutable release on the VPS: public sources and qualified library, never prod.env.
+// The cutover reads ~/auto/prod.env (application, pooled DATABASE_URL and Neon DATABASE_URL_DIRECT) and
+// ~/auto/neon.env (NEON_API_KEY, NEON_ORG_ID, NEON_PROJECT_ID: candidate migration branches).
 import { $ } from "bun";
 
 const action = Bun.argv[2] ?? "preparer";
@@ -14,7 +14,7 @@ const vitrineGelee = new Set([
   "apps/web/src/styles/accueil.css",
 ]);
 if (reutiliser && !/^\d{8}T\d{6}Z-[a-f0-9]{8}$/.test(reutiliser)) throw new Error("Base de livraison invalide");
-if (!["preparer", "valider", "deployer"].includes(action)) throw new Error("Action : preparer, valider ou deployer");
+if (!["preparer", "valider", "deployer"].includes(action)) throw new Error("Action: preparer, valider or deployer");
 const horodatage = new Date()
   .toISOString()
   .replaceAll(/[-:]/g, "")
@@ -24,11 +24,11 @@ const suivis =
 const chemins = new Set(suivis.split("\0").filter(Boolean));
 const manifeste = "apps/web/public/craft/manifest.json";
 if (!(await Bun.file(manifeste).exists()))
-  throw new Error("Les trois distributions Craft doivent être installées avant la livraison");
+  throw new Error("The three Craft distributions must be installed before the release");
 const craft = await Bun.file(manifeste).json();
 for (const editeur of ["word", "grid", "pdf"]) {
   if (!Object.keys(craft.editeurs?.[editeur]?.fichiers ?? {}).some((f) => f.endsWith(".wasm")))
-    throw new Error(`Distribution Craft incomplète : ${editeur}`);
+    throw new Error(`Incomplete Craft distribution: ${editeur}`);
 }
 for await (const fichier of new Bun.Glob("**/*").scan({ cwd: "apps/web/public/craft", onlyFiles: true }))
   chemins.add(`apps/web/public/craft/${fichier.replaceAll("\\", "/")}`);
@@ -39,13 +39,13 @@ const hash = new Bun.CryptoHasher("sha256");
 const empreintes: Record<string, string> = {};
 for (const chemin of [...chemins].sort()) {
   if (chemin.includes("..") || chemin.startsWith("/") || /(^|\/)\.env(?:\.|$)/.test(chemin))
-    throw new Error(`Chemin interdit dans la livraison : ${chemin}`);
+    throw new Error(`Path not allowed in the release: ${chemin}`);
   const fichier = Bun.file(chemin);
   if (!(await fichier.exists())) continue;
   let octets = await fichier.bytes();
   if (vitrineBase && vitrineGelee.has(chemin)) {
     const lecture = Bun.spawnSync(["tar", "-xOf", `.cache/releases/${vitrineBase}/context.tar.gz`, chemin]);
-    if (lecture.exitCode !== 0) throw new Error(`Vitrine gelée introuvable : ${chemin}`);
+    if (lecture.exitCode !== 0) throw new Error(`Frozen showcase not found: ${chemin}`);
     octets = new Uint8Array(lecture.stdout);
   }
   contenu[chemin] = octets;
@@ -55,7 +55,7 @@ for (const chemin of [...chemins].sort()) {
 }
 const natif = await Bun.file("dist/native/linux-x64/libauto_ffi.so").bytes();
 const craftLivre = JSON.parse(new TextDecoder().decode(contenu[manifeste]));
-if (craftLivre.version !== craft.version) throw new Error("Les ressources Craft ont changé pendant la préparation");
+if (craftLivre.version !== craft.version) throw new Error("The Craft resources changed during preparation");
 for (const [editeur, definition] of Object.entries(craftLivre.editeurs) as [
   string,
   { fichiers: Record<string, { sha256: string; taille: number; gzip?: string }> },
@@ -69,7 +69,7 @@ for (const [editeur, definition] of Object.entries(craftLivre.editeurs) as [
       octets.length !== fichier.taille ||
       new Bun.CryptoHasher("sha256").update(octets).digest("hex") !== fichier.sha256
     )
-      throw new Error(`Intégrité Craft incorrecte : ${editeur}/${nom}`);
+      throw new Error(`Craft integrity mismatch: ${editeur}/${nom}`);
   }
 }
 contenu["native/libauto_ffi.so"] = natif;
@@ -87,7 +87,7 @@ if (reutiliser) {
     await $`${ssh} -o BatchMode=yes vps ${`cat ~/auto/releases/${reutiliser}/release.json`}`.text(),
   );
   if (precedent.shaNatif !== shaNatif || precedent.craft !== craft.version)
-    throw new Error("La FFI ou les éditeurs ont changé : une livraison complète est nécessaire");
+    throw new Error("The FFI or the editors changed: a full release is required");
   for (const chemin of Object.keys(contenu))
     if (chemin === "native/libauto_ffi.so" || (chemin.startsWith("apps/web/public/craft/") && chemin !== manifeste))
       delete contenu[chemin];
@@ -107,9 +107,9 @@ const distant = async (cmd: string) => {
     stdout: "inherit",
     stderr: "inherit",
   });
-  if ((await p.exited) !== 0) throw new Error("L'étape distante a échoué ; livraison conservée pour diagnostic");
+  if ((await p.exited) !== 0) throw new Error("The remote step failed; release kept for diagnosis");
 };
-console.log(`Préparation ${version} (${Math.round((await Bun.file(archive).size) / 1024 / 1024)} Mio)`);
+console.log(`Preparation ${version} (${Math.round((await Bun.file(archive).size) / 1024 / 1024)} MiB)`);
 await distant(`umask 077; mkdir -p ~/auto/releases/${version}; chmod 700 ~/auto/releases/${version}`);
 await $`scp -S ${ssh} -q ${archive} ${`vps:auto/releases/${version}/context.tar.gz`}`;
 await $`scp -S ${ssh} -q ${`${dossier}/release.json`} ${`vps:auto/releases/${version}/release.json`}`;
@@ -121,4 +121,4 @@ if (action !== "preparer")
   await distant(
     `cd ~/auto/releases/${version} && ~/.local/bin/bun --env-file=$HOME/auto/prod.env --env-file=$HOME/auto/neon.env scripts/release-vps.ts ${version} ${action}`,
   );
-console.log(`Livraison ${version} : ${action} terminé`);
+console.log(`Release ${version}: ${action} done`);

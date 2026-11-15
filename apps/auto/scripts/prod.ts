@@ -1,7 +1,7 @@
-// Exploitation de la production sur usa (alias ssh `prd`, IP publique ; le maillage 10.200.77.x peut être coupé) :
-// `ay ssh` pour l'hôte et les conteneurs, sonde publique par fetch. Données et fichiers d'environnement : /srv/auto.
-//   bun run prod etat       hôte, conteneurs auto-*, santé publique
-//   bun run prod deployer   image construite ici, chargée sur le serveur, API, worker et web relancés
+// Production operations on usa (ssh alias `prd`, public IP; the 10.200.77.x mesh may be cut):
+// `ay ssh` for the host and the containers, public probe through fetch. Data and environment files: /srv/auto.
+//   bun run prod etat       host, auto-* containers, public health
+//   bun run prod deployer   image built here, loaded on the server, API, worker and web relaunched
 import { $ } from "bun";
 import { empreinteFichiers } from "./empreinte";
 
@@ -9,13 +9,13 @@ const URL_PUBLIQUE = "https://auto.aphrody.com";
 const HOTE = Bun.env.AUTO_HOTE ?? "prd";
 const RACINE = "/srv/auto";
 
-/** Options communes : non-root, système de fichiers en lecture seule, journaux bornés. */
+/** Common options: non-root, read-only file system, bounded logs. */
 const COMMUN =
   "--init --read-only --user 10001:10001 --cap-drop ALL --security-opt no-new-privileges:true " +
   "--tmpfs /tmp:rw,nosuid,nodev,size=512m,mode=1777 --tmpfs /home/auto:rw,nosuid,nodev,size=256m,uid=10001,gid=10001 " +
   "--log-driver json-file --log-opt max-size=10m --log-opt max-file=3";
 
-/** Conteneurs applicatifs : options propres (le worker n'expose pas de port). */
+/** Application containers: specific options (the worker exposes no port). */
 const CONTENEURS = [
   {
     nom: "auto-api",
@@ -23,7 +23,7 @@ const CONTENEURS = [
     options: `--shm-size 256m -v ${RACINE}/arrivages:/mnt/arrivages:ro`,
     commande: "bun apps/api/src/index.ts",
   },
-  // Le worker rappelle l'API (nœuds « Action auto » des workflows) par le réseau interne.
+  // The worker calls the API back ("auto action" nodes of the workflows) through the internal network.
   {
     nom: "auto-worker",
     image: "auto-app:dev",
@@ -53,7 +53,7 @@ async function etat() {
   console.log(`${URL_PUBLIQUE}/health : ${(await sonde()) ? "ok" : "KO"}`);
 }
 
-/** Empreinte de ce qui compose la bibliothèque native (crates, verrou Cargo, suite vendorisée épinglée). */
+/** Fingerprint of what makes up the native library (crates, Cargo lock, pinned vendored suite). */
 async function empreinteNatif() {
   const suivis =
     await $`git ls-files --cached --others --exclude-standard -- Cargo.toml Cargo.lock crates vendor/suite docker/app.Dockerfile .dockerignore`.text();
@@ -61,8 +61,8 @@ async function empreinteNatif() {
 }
 
 /**
- * Voie complète : image construite ici et copiée en archive (scp avec nouvel essai, empreinte vérifiée), puis
- * marquée `auto-app:base` sur le serveur. Lente (lien montant faible) : seulement quand le natif change.
+ * Full path: image built here and copied as an archive (scp with retry, fingerprint verified), then
+ * tagged `auto-app:base` on the server. Slow (weak uplink): only when the native part changes.
  */
 async function deployerComplet(natif: string) {
   await $`docker build -q -f docker/app.Dockerfile -t auto-app:dev .`;
@@ -76,7 +76,7 @@ async function deployerComplet(natif: string) {
         .quiet();
     const distante = await distant(`sha256sum ${RACINE}/auto-app.tar.gz | cut -d' ' -f1`).nothrow().quiet();
     if (copie.exitCode === 0 && distante.text().includes(empreinte)) break;
-    if (essai === 5) throw new Error("copie de l'image impossible après 5 essais");
+    if (essai === 5) throw new Error("image copy failed after 5 attempts");
     console.error(`copie de l'image interrompue, nouvel essai (${essai + 1}/5)`);
     await Bun.sleep(10_000);
   }
@@ -87,8 +87,8 @@ async function deployerComplet(natif: string) {
 }
 
 /**
- * Voie rapide : sources TypeScript seules (environ 1 Mo) envoyées au serveur, image reconstruite là-bas sur
- * `auto-app:base` qui contient déjà la bibliothèque native (docker/app-maj.Dockerfile).
+ * Fast path: TypeScript sources only (about 1 MB) sent to the server, image rebuilt there on
+ * `auto-app:base` which already contains the native library (docker/app-maj.Dockerfile).
  */
 async function deployerRapide() {
   await $`tar czf - --exclude=node_modules --exclude=dist --exclude=target --exclude=gen package.json bun.lock bunfig.toml tsconfig.json apps packages docker/app-maj.Dockerfile | ssh -o BatchMode=yes ${HOTE} "rm -rf ${RACINE}/src && mkdir -p ${RACINE}/src && tar xzf - -C ${RACINE}/src"`;
@@ -116,7 +116,7 @@ async function deployer() {
     if (await sonde()) return etat();
     await Bun.sleep(5000);
   }
-  throw new Error(`${URL_PUBLIQUE}/health ne répond pas après le déploiement`);
+  throw new Error(`${URL_PUBLIQUE}/health does not answer after the deployment`);
 }
 
 const actions: Record<string, () => Promise<unknown>> = {

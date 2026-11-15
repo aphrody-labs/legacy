@@ -1,7 +1,7 @@
-// Clé stable hors dépôt, mot de passe dans le coffre système ; jamais de secret dans les arguments.
+// Stable key outside the repository, password in the system vault; never a secret in the arguments.
 import { join } from "node:path";
 const java = Bun.env.JAVA_HOME;
-if (!java) throw Error("JAVA_HOME est requis");
+if (!java) throw Error("JAVA_HOME is required");
 const sdk = Bun.env.ANDROID_HOME ?? join(Bun.env.LOCALAPPDATA!, "Android/Sdk");
 const outils = join(sdk, "build-tools/37.0.0");
 const cle = join(Bun.env.USERPROFILE!, ".auto/android-release.p12");
@@ -9,7 +9,7 @@ const identite = { service: "Auto.Android.Release", name: "mot-de-passe-signatur
 let motDePasse = await Bun.secrets.get(identite);
 if (!motDePasse) {
   if (await Bun.file(cle).exists())
-    throw Error("Clé existante sans mot de passe dans le coffre ; restauration nécessaire");
+    throw Error("Existing key without a password in the vault; restore required");
   motDePasse = crypto.randomUUID() + crypto.randomUUID();
   await Bun.secrets.set({ ...identite, value: motDePasse });
 }
@@ -67,4 +67,4 @@ await commande([...signer, "verify", "--verbose", "--print-certs", sortie]);
 await commande([join(outils, "zipalign.exe"), "-c", "-P", "16", "4", sortie]);
 const sha = new Bun.CryptoHasher("sha256").update(await Bun.file(sortie).bytes()).digest("hex");
 await Bun.write(`${sortie}.sha256`, `${sha}  auto-${version}-arm64.apk\n`);
-console.log(`APK de production signé et vérifié : ${sortie}`);
+console.log(`Signed and verified production APK: ${sortie}`);

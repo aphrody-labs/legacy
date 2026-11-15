@@ -1,4 +1,4 @@
-// Captures de communication : application réelle, base jetable et données fictives BTP.
+// Communication captures: real application, throwaway database and fictitious construction data.
 import { demarrerBanc, chrome } from "../apps/web/e2e/support";
 import { enregistrerRecue, enregistrerDevisRecu, withTenant } from "../packages/store/src";
 
@@ -136,7 +136,7 @@ try {
     if (heading) await p.getByRole("heading", { name: heading, exact: true }).waitFor();
     await p.evaluate(() => document.fonts.ready);
     const titre = await p.locator("h1").first().innerText();
-    if (/introuvable|connexion/i.test(titre)) throw new Error(`Écran inattendu pour ${path} : ${titre}`);
+    if (/introuvable|connexion/i.test(titre)) throw new Error(`Unexpected screen for ${path}: ${titre}`);
     await p.screenshot({ path: `${root}/captures/${name}.png`, animations: "disabled" });
     manifest.push({
       file: `${name}.png`,
@@ -218,7 +218,7 @@ try {
   await p.setViewportSize({ width: 430, height: 900 });
   await snap("mobile", `/app/chantiers/${chantier.id}`);
   await ctx.close();
-  // Site public actuel, sans création de compte ou transmission de données.
+  // Current public site, without account creation or data transmission.
   const publicCtx = await banc.navigateur.newContext({
     viewport: { width: 1600, height: 900 },
     locale: "fr-FR",
@@ -239,7 +239,7 @@ try {
       date: "2026-10-25",
     });
   }
-  // Seule la validation locale du premier formulaire est activée ; aucune inscription envoyée.
+  // Only the local validation of the first form is activated; no sign-up sent.
   await publicPage.getByLabel("E-mail professionnel").fill("presentation@batir-ensemble.example");
   await publicPage.locator('input[type="password"]').fill("Exemple-video-uniquement-2026");
   await publicPage.getByRole("button", { name: /Continuer/ }).click();

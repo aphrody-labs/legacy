@@ -1,4 +1,4 @@
-// Envoie un seul message à la boîte configurée et vérifie sa réception IMAP, sans le marquer lu.
+// Sends a single message to the configured mailbox and verifies its IMAP reception, without marking it read.
 import { configRelais, envoyeurSmtp } from "../packages/mail/src/envoyeur";
 import { Imap, type ConfigImap } from "../packages/mail/src/imap";
 import { adresseDe, analyser, type Adresse } from "../packages/mail/src/mime";
@@ -17,12 +17,12 @@ export async function qualifierMail(smtp: ConfigSmtp, imap: ConfigImap, expedite
     const { messageId } = await envoyeurSmtp(smtp, expediteur).envoyer({
       a: [adresseDe(expediteur)],
       sujet,
-      texte: `Message de vérification automatique. Référence : ${marqueur}`,
+      texte: `Automatic verification message. Reference: ${marqueur}`,
       pieces: [{ nom: "diagnostic-auto.txt", type: "text/plain", octets: contenu }],
     });
     while (Date.now() - debut < delaiMs) {
       if ((await boite.examiner(imap.dossier)).uidValidity !== etat.uidValidity)
-        throw new Error("UIDVALIDITY modifié pendant le test : relancer la qualification");
+        throw new Error("UIDVALIDITY changed during the test: rerun the qualification");
       for (const uid of (await boite.uidsApres(dernierUid)).slice(0, 50)) {
         const brut = await boite.lire(uid);
         dernierUid = uid;
@@ -36,12 +36,12 @@ export async function qualifierMail(smtp: ConfigSmtp, imap: ConfigImap, expedite
           !piece ||
           !Bun.deepEquals(piece.octets, contenu)
         )
-          throw new Error("Message reçu mais contenu ou pièce jointe altéré");
+          throw new Error("Message received but content or attachment altered");
         return { ok: true, messageId, uid, dureeMs: Date.now() - debut };
       }
       await Bun.sleep(1000);
     }
-    throw new Error("SMTP accepté, mais réception IMAP non confirmée avant le délai");
+    throw new Error("SMTP accepted, but IMAP reception not confirmed before the deadline");
   } finally {
     await boite.fermer();
   }
@@ -50,7 +50,7 @@ export async function qualifierMail(smtp: ConfigSmtp, imap: ConfigImap, expedite
 if (import.meta.main) {
   try {
     const { smtp, expediteur } = configRelais({ ...Bun.env, NODE_ENV: "production" });
-    if (!smtp?.identifiants) throw new Error("Relais SMTP authentifié requis pour le test réel");
+    if (!smtp?.identifiants) throw new Error("Authenticated SMTP relay required for the real test");
     const resultat = await qualifierMail(
       smtp,
       {
@@ -67,7 +67,7 @@ if (import.meta.main) {
     console.log(JSON.stringify(resultat));
   } catch {
     console.error(
-      "Qualification mail échouée : configuration, connexion ou réception non validée. Aucun secret affiché.",
+      "Mail qualification failed: configuration, connection or reception not validated. No secret printed.",
     );
     process.exitCode = 1;
   }

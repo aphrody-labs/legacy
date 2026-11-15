@@ -1,11 +1,11 @@
-// Exécutable avec runtime embarqué ; la bibliothèque native et les ressources restent dans le paquet.
+// Executable with embedded runtime; the native library and the resources stay in the package.
 import type { BunPlugin } from "bun";
-// Le paquet distribue ses sources TS ; le charger à l'exécution garde ses détails internes hors du projet.
+// The package ships its TS sources; loading it at run time keeps its internal details out of the project.
 const moduleTailwind = "@aphrody/bun-plugin-tailwind";
 const { tailwind } = (await import(moduleTailwind)) as { tailwind: () => BunPlugin };
 
 const cible = Bun.argv[2] ?? (process.platform === "win32" ? "windows-x64" : "linux-x64");
-if (!["windows-x64", "linux-x64"].includes(cible)) throw new Error("Cible : windows-x64 ou linux-x64");
+if (!["windows-x64", "linux-x64"].includes(cible)) throw new Error("Target: windows-x64 or linux-x64");
 const dossier = `dist/standalone/${cible}`;
 const executable = `${dossier}/auto${cible === "windows-x64" ? ".exe" : ""}`;
 const native = cible === "windows-x64" ? "auto_ffi.dll" : "libauto_ffi.so";
@@ -13,9 +13,9 @@ const sourceNative = `dist/native/${cible}/${native}`;
 if (!(await Bun.file(sourceNative).exists())) throw new Error(`Construire d’abord ${sourceNative}`);
 const plateformeHote = process.platform === "win32" ? "windows-x64" : process.platform === "linux" ? "linux-x64" : null;
 if (cible !== plateformeHote || process.arch !== "x64")
-  throw new Error("Construire ce paquet sur sa plateforme cible pour qualifier le runtime embarqué et ses notices");
+  throw new Error("Build this package on its target platform to qualify the embedded runtime and its notices");
 const noticeRuntime = Bun.file(`licenses/bun/${Bun.revision.slice(0, 12)}/LICENSE.md`);
-if (!(await noticeRuntime.exists())) throw new Error(`Notice du runtime ${Bun.revision} non qualifiée`);
+if (!(await noticeRuntime.exists())) throw new Error(`Notice of runtime ${Bun.revision} not qualified`);
 
 const resultat = await Bun.build({
   entrypoints: ["apps/standalone/src/index.ts"],

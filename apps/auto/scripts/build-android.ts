@@ -1,12 +1,12 @@
-// APK de contrôle Android ; les SDK/JDK restent des dépendances explicites de l'hôte.
+// Android control APK; the SDKs/JDK remain explicit dependencies of the host.
 import { join } from "node:path";
 const sdk = Bun.env.ANDROID_HOME ?? join(Bun.env.LOCALAPPDATA ?? "", "Android", "Sdk");
 const ndk = Bun.env.NDK_HOME;
 const java = Bun.env.JAVA_HOME;
-if (!ndk || !java) throw Error("Définir NDK_HOME et JAVA_HOME ; ANDROID_HOME peut personnaliser le SDK");
+if (!ndk || !java) throw Error("Set NDK_HOME and JAVA_HOME; ANDROID_HOME can customize the SDK");
 const release = Bun.argv.includes("--release");
 const cible = Bun.argv.slice(2).find((a) => !a.startsWith("--")) ?? "aarch64";
-if (!["aarch64", "x86_64"].includes(cible)) throw Error("Cible Android : aarch64 ou x86_64");
+if (!["aarch64", "x86_64"].includes(cible)) throw Error("Android target: aarch64 or x86_64");
 const racine = Bun.fileURLToPath(new URL("../", import.meta.url));
 const gnu = join(
   Bun.env.USERPROFILE ?? "",
@@ -31,7 +31,7 @@ const processus = Bun.spawn(
     stderr: "inherit",
   },
 );
-if (await processus.exited) throw Error("Compilation Android échouée");
+if (await processus.exited) throw Error("Android build failed");
 const apk = join(
   racine,
   `apps/desktop/src-tauri/gen/android/app/build/outputs/apk/universal/${release ? "release/app-universal-release-unsigned.apk" : "debug/app-universal-debug.apk"}`,
@@ -44,5 +44,5 @@ await Bun.write(
     `  auto-${release ? "release-unsigned" : "debug"}.apk\n`,
 );
 console.log(
-  "APK de contrôle et empreinte : dist/mobile/android ; AUTO_INSTANCE_URL choisit l’instance à la compilation",
+  "Control APK and fingerprint: dist/mobile/android; AUTO_INSTANCE_URL chooses the instance at build time",
 );

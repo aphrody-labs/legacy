@@ -1,14 +1,14 @@
-// À exécuter uniquement sur le VPS, avec --env-file ~/auto/prod.env --env-file ~/auto/neon.env, après
-// construction des deux images. La base de production est sur Neon : les essais de migration tournent sur une
-// branche copie-sur-écriture de la production, supprimée ensuite ; aucun worker candidat n'est démarré.
+// To run only on the VPS, with --env-file ~/auto/prod.env --env-file ~/auto/neon.env, after building the two
+// images. The production database is on Neon: migration trials run on a copy-on-write branch of production,
+// deleted afterwards; no candidate worker is started.
 import { $ } from "bun";
 import { configDepuisEnv, creerBranche, envBranche, projet, reinitialiserMotDePasse, supprimerBranche } from "./neon";
 
 const [version, action = "valider"] = Bun.argv.slice(2);
 if (!version || !/^\d{8}T\d{6}Z-[a-f0-9]{8}$/.test(version)) throw new Error("Identifiant de livraison invalide");
-// relancer : recrée les conteneurs de la livraison en place avec le prod.env courant (changement de base,
-// rotation de secrets), sans candidat ni migration ; l'API applique les migrations au démarrage.
-if (!["valider", "deployer", "relancer"].includes(action)) throw new Error("Action : valider, deployer ou relancer");
+// relancer: recreates the containers of the release in place with the current prod.env (database change,
+// secret rotation), without candidate or migration; the API applies the migrations at startup.
+if (!["valider", "deployer", "relancer"].includes(action)) throw new Error("Action: valider, deployer or relancer");
 const home = Bun.env.HOME!;
 const base = `${home}/auto`;
 const dossier = `${base}/releases/${version}`;
@@ -112,10 +112,10 @@ async function attendre(nom: string) {
       "{{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{end}}",
     ]);
     if (etat === "running healthy") return;
-    if (!etat.startsWith("running")) throw new Error(`${nom} ne reste pas démarré`);
+    if (!etat.startsWith("running")) throw new Error(`${nom} does not stay up`);
     await Bun.sleep(1000);
   }
-  throw new Error(`${nom} : délai de santé dépassé`);
+  throw new Error(`${nom}: health timeout exceeded`);
 }
 
 async function retirer(nom: string) {
@@ -125,7 +125,7 @@ async function retirer(nom: string) {
   await commande(["docker", "rm", nom]);
 }
 
-/** Remplace (ou ajoute) des clés dans un contenu d'environnement. */
+/** Replaces (or adds) keys in an environment content. */
 function remplacerEnv(contenu: string, valeurs: Record<string, string>) {
   for (const [cle, valeur] of Object.entries(valeurs)) {
     const expression = new RegExp(`^(?:export\\s+)?${cle}=.*$`, "m");
@@ -136,7 +136,7 @@ function remplacerEnv(contenu: string, valeurs: Record<string, string>) {
   return contenu;
 }
 
-/** Recrée API, worker et web sur des images données, puis vérifie la santé locale et publique. */
+/** Recreates API, worker and web on given images, then checks local and public health. */
 async function demarrer(images: { api: string; worker: string; web: string }) {
   await retirer("auto-worker");
   await retirer("auto-api");
@@ -151,20 +151,20 @@ async function demarrer(images: { api: string; worker: string; web: string }) {
     (await texte(["docker", "inspect", "auto-worker", "--format", "{{.State.Status}} {{.RestartCount}}"])) !==
     "running 0"
   )
-    throw new Error("Le worker ne reste pas stable");
+    throw new Error("The worker does not stay stable");
   const r = await fetch("https://auto.aphrody.com/health", { signal: AbortSignal.timeout(10000) });
   if (!r.ok) throw new Error(`Sonde publique : ${r.status}`);
 }
 
 if (action === "relancer") {
-  console.log(`Relance de ${version} avec le prod.env courant`);
+  console.log(`Relaunching ${version} with the current prod.env`);
   await demarrer({ api: image, worker: image, web: imageWeb });
-  console.log(`Livraison ${version} relancée`);
+  console.log(`Release ${version} relaunched`);
   process.exit(0);
 }
 
 const projetNeon = await projet(neon);
-console.log(`Livraison ${version} : sauvegarde chiffrée et branche Neon de migration`);
+console.log(`Release ${version}: encrypted backup and Neon migration branch`);
 await commande(["bash", `${base}/sauvegarde.sh`]);
 await creerBranche(neon, projetNeon, brancheCandidate, { ttlHeures: 6 });
 try {
@@ -194,14 +194,14 @@ try {
     "-e",
     "const r=await fetch('http://127.0.0.1:3001/craft/manifest.json');if(!r.ok)throw Error('Craft absent');const m=await r.json();for(const s of ['word','grid','pdf']){if(!m.editeurs?.[s])throw Error('Craft incomplet '+s)}console.log('Craft présent')",
   ]);
-  console.log("Copie de production : migrations, API, web et FFI qualifiés");
+  console.log("Production copy: migrations, API, web and FFI qualified");
 } catch (erreur) {
   const journal = Bun.spawnSync(["docker", "logs", "--tail", "40", apiCandidat], { stdout: "pipe", stderr: "pipe" });
   let diagnostic = `${journal.stdout.toString()}\n${journal.stderr.toString()}`;
-  diagnostic = diagnostic.replace(/([a-z][a-z0-9+.-]*:\/\/[^:\s"']+:)[^@\s"']+@/gi, "$1[secret masqué]@");
+  diagnostic = diagnostic.replace(/([a-z][a-z0-9+.-]*:\/\/[^:\s"']+:)[^@\s"']+@/gi, "$1[secret masked]@");
   for (const [cle, valeur] of Object.entries(Bun.env))
     if (/SECRET|PASSWORD|MOT_DE_PASSE|CLE|TOKEN|KEY/.test(cle) && valeur && valeur.length > 8)
-      diagnostic = diagnostic.replaceAll(valeur, "[secret masqué]");
+      diagnostic = diagnostic.replaceAll(valeur, "[secret masked]");
   await Bun.write(`${dossier}/candidat-erreur.log`, diagnostic);
   await $`chmod 600 ${`${dossier}/candidat-erreur.log`}`;
   console.error(diagnostic.slice(-3500));
@@ -224,7 +224,7 @@ await Bun.write(`${dossier}/retour.json`, JSON.stringify({ version, images: prec
 await $`chmod 600 ${`${dossier}/retour.json`}`;
 for (const [nom, id] of Object.entries(precedentes)) await commande(["docker", "tag", id, `${nom}:avant-${version}`]);
 try {
-  console.log("Bascule : arrêt du worker et migration de production");
+  console.log("Cutover: stopping the worker and migrating production");
   await retirer("auto-worker");
   if (Bun.env.AUTO_ROTATION_DB === "1") {
     await retirer("auto-api");
@@ -236,7 +236,7 @@ try {
     await Bun.write(`${fichier}.nouveau`, remplacerEnv(contenu, await envBranche(neon, projetNeon)));
     await $`chmod 600 ${`${fichier}.nouveau`}`;
     await $`mv ${`${fichier}.nouveau`} ${fichier}`;
-    console.log("Mot de passe Neon renouvelé dans le fichier protégé");
+    console.log("Neon password renewed in the protected file");
   }
   await commande([
     "docker",
@@ -255,9 +255,9 @@ try {
     `${base}/current-release.json`,
     JSON.stringify({ version, image, imageWeb, date: new Date().toISOString() }, null, 2),
   );
-  console.log(`Livraison ${version} en ligne ; images précédentes conservées`);
+  console.log(`Release ${version} online; previous images kept`);
 } catch (erreur) {
-  console.error("Bascule en échec : reprise des images précédentes, sauvegarde conservée");
+  console.error("Cutover failed: previous images restored, backup kept");
   await retirer("auto-worker");
   await retirer("auto-web");
   await retirer("auto-api");

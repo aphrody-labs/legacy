@@ -1,4 +1,4 @@
-// Qualification native sur une instance isolée, sans modifier la production.
+// Native qualification on an isolated instance, without modifying production.
 import { sauvegarder, executer } from "./sauvegarde";
 
 const version = Bun.argv[2];
@@ -60,6 +60,6 @@ for (const role of ["api", "web"]) {
     }
     await Bun.sleep(1000);
   }
-  if (!sain) throw Error(`${nom} ne devient pas sain`);
+  if (!sain) throw Error(`${nom} does not become healthy`);
 }
-console.log("Recette isolée saine ; connexion appareil activée");
+console.log("Isolated acceptance instance healthy; device sign-in enabled");

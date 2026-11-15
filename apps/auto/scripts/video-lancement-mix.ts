@@ -1,4 +1,4 @@
-// Ajoute la narration au rendu muet, conserve les images NVENC et contrôle le résultat.
+// Adds the narration to the silent render, keeps the NVENC frames and checks the result.
 import { rename } from "node:fs/promises";
 import { resolve } from "node:path";
 
@@ -18,9 +18,9 @@ const ffmpeg =
     Bun.which("ffmpeg"),
   ffprobe =
     Bun.env.AUTO_VIDEO_FFPROBE ?? (ffmpeg ? ffmpeg.replace(/ffmpeg(\.exe)?$/, "ffprobe$1") : Bun.which("ffprobe"));
-if (!ffmpeg || !ffprobe) throw new Error("FFmpeg et FFprobe doivent être installés pour le mix final.");
+if (!ffmpeg || !ffprobe) throw new Error("FFmpeg and FFprobe must be installed for the final mix.");
 for (const path of [image, narration, timelinePath, sousTitres])
-  if (!(await Bun.file(path).exists())) throw new Error(`Élément requis avant le mix absent : ${path}`);
+  if (!(await Bun.file(path).exists())) throw new Error(`Element required before the mix is missing: ${path}`);
 
 async function run(args: string[]) {
   const process = Bun.spawn(args, { stdout: "pipe", stderr: "pipe", windowsHide: true });
@@ -29,7 +29,7 @@ async function run(args: string[]) {
     new Response(process.stderr).text(),
     process.exited,
   ]);
-  if (code !== 0) throw new Error(`${args[0]} a échoué (${code}) : ${stderr.slice(-3000)}`);
+  if (code !== 0) throw new Error(`${args[0]} failed (${code}): ${stderr.slice(-3000)}`);
   return { stdout, stderr };
 }
 const timeline = (await Bun.file(timelinePath).json()) as {
@@ -38,14 +38,14 @@ const timeline = (await Bun.file(timelinePath).json()) as {
   durationFrames: number;
   captions: { start: number; end: number }[];
 }[];
-if (timeline.length !== 23) throw new Error(`La timeline doit contenir les 23 scènes, contient ${timeline.length}.`);
+if (timeline.length !== 23) throw new Error(`The timeline must contain the 23 scenes, it contains ${timeline.length}.`);
 let frame = 0;
 for (const scene of timeline) {
   if (scene.startFrame !== frame || !Number.isInteger(scene.durationFrames) || scene.durationFrames <= 0)
-    throw new Error(`Timeline discontinue ou invalide à la scène ${scene.id}.`);
+    throw new Error(`Timeline discontinuous or invalid at scene ${scene.id}.`);
   for (const caption of scene.captions ?? [])
     if (!(caption.start >= 0 && caption.end > caption.start && caption.end <= scene.durationFrames / 24))
-      throw new Error(`Sous-titre hors scène ${scene.id}.`);
+      throw new Error(`Caption outside scene ${scene.id}.`);
   frame += scene.durationFrames;
 }
 const duration = frame / 24,
@@ -67,9 +67,9 @@ const duration = frame / 24,
   ),
   video = probe.streams.find((s: any) => s.codec_type === "video");
 if (!video || video.width !== 1920 || video.height !== 1080 || video.codec_name !== "h264")
-  throw new Error("Le rendu muet ne contient pas la vidéo H.264 1080p prévue.");
+  throw new Error("The silent render does not contain the expected H.264 1080p video.");
 if (Number(video.nb_frames) !== frame)
-  throw new Error(`Le rendu muet contient ${video.nb_frames} images, la timeline en prévoit ${frame}.`);
+  throw new Error(`The silent render contains ${video.nb_frames} frames, the timeline expects ${frame}.`);
 const audioProbe = JSON.parse(
   (
     await run([
@@ -88,10 +88,10 @@ const audioProbe = JSON.parse(
 );
 const audio = audioProbe.streams[0];
 if (!audio || Number(audio.sample_rate) !== 48000 || Number(audio.channels) !== 1)
-  throw new Error("La narration doit être en PCM mono 48 kHz.");
+  throw new Error("The narration must be mono 48 kHz PCM.");
 const expectedAudioDuration = samples / 48000;
 if (Math.abs(Number(audio.duration) - expectedAudioDuration) > 1 / 48000)
-  throw new Error("La narration et la timeline n'ont pas la même durée exacte.");
+  throw new Error("The narration and the timeline do not have the exact same duration.");
 
 await run([
   ffmpeg,
@@ -150,7 +150,7 @@ if (
   Number(finalAudio.sample_rate) !== 48000 ||
   Math.abs(Number(finalProbe.format.duration) - duration) > 1 / 24
 )
-  throw new Error("Le conteneur final ne correspond pas à la vidéo et à l'audio synchronisés.");
+  throw new Error("The final container does not match the synchronized video and audio.");
 await run([ffmpeg, "-v", "error", "-i", temp, "-f", "null", "-"]);
 await rename(temp, final);
 const hasher = new Bun.CryptoHasher("sha256");

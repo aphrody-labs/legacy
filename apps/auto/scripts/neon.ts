@@ -1,16 +1,16 @@
-// Base PostgreSQL de production sur Neon : projet retrouvé ou créé par nom dans l'organisation, branches et URL
-// de connexion (poolée pour l'API et le worker, directe pour les migrations, pg_dump et pg_restore).
-// Module partagé par le déploiement VPS, la CI et tout futur déployeur ; aucune URL n'est jamais affichée.
+// Production PostgreSQL database on Neon: project found or created by name in the organization, branches and
+// connection URLs (pooled for the API and the worker, direct for migrations, pg_dump and pg_restore).
+// Module shared by the VPS deployment, the CI and any future deployer; no URL is ever printed.
 //
-//   bun scripts/neon.ts projet                                  identifiant du projet (créé au besoin)
-//   bun scripts/neon.ts env <fichier> [--branche=nom] [--direct]  ajoute DATABASE_URL et DATABASE_URL_DIRECT
+//   bun scripts/neon.ts projet                                  project identifier (created if needed)
+//   bun scripts/neon.ts env <file> [--branche=name] [--direct]  adds DATABASE_URL and DATABASE_URL_DIRECT
 //   bun scripts/neon.ts branche-creer <nom> [--parent=nom] [--ttl-heures=24] [--env=<fichier>] [--direct] [--masquer]
 //
-// --direct : DATABASE_URL vise aussi le point d'accès direct (tests : CREATE DATABASE, DDL) ;
-// --masquer : masque les URL dans les journaux GitHub Actions (::add-mask::).
+// --direct: DATABASE_URL also targets the direct endpoint (tests: CREATE DATABASE, DDL);
+// --masquer: masks the URLs in the GitHub Actions logs (::add-mask::).
 //   bun scripts/neon.ts branche-supprimer <nom>
 //
-// Configuration : NEON_API_KEY (obligatoire), NEON_ORG_ID, NEON_PROJECT_ID ou NEON_PROJECT (nom, « auto »),
+// Configuration: NEON_API_KEY (required), NEON_ORG_ID, NEON_PROJECT_ID or NEON_PROJECT (name, "auto"),
 // NEON_REGION (aws-eu-central-1), NEON_PG_VERSION (18), NEON_DATABASE (auto), NEON_ROLE (auto).
 
 const API = "https://console.neon.tech/api/v2";
@@ -58,7 +58,7 @@ export function configDepuisEnv(env: Record<string, string | undefined> = Bun.en
   return c;
 }
 
-/** Appel de l'API Neon ; le corps d'une erreur est tronqué et ne contient jamais l'URL de connexion. */
+/** Neon API call; the body of an error is truncated and never contains the connection URL. */
 export async function neon<T>(
   c: ConfigNeon,
   chemin: string,
@@ -72,7 +72,7 @@ export async function neon<T>(
       headers: { Authorization: `Bearer ${c.apiKey}`, Accept: "application/json", "Content-Type": "application/json" },
       signal: AbortSignal.timeout(30_000),
     });
-    // 423 : une opération est en cours sur le projet ; on réessaie brièvement.
+    // 423: an operation is in progress on the project; retry briefly.
     if ((r.status === 423 || r.status === 429 || r.status >= 500) && essai < 10) {
       await Bun.sleep(1000 * (essai + 1));
       continue;
@@ -83,7 +83,7 @@ export async function neon<T>(
   }
 }
 
-/** Projet retrouvé par identifiant ou par nom dans l'organisation, créé (région, version, base, rôle) sinon. */
+/** Project found by identifier or by name in the organization, created (region, version, database, role) otherwise. */
 export async function projet(c: ConfigNeon): Promise<string> {
   if (c.projectId) return c.projectId;
   const projets: { id: string; name: string }[] = [];
@@ -104,7 +104,7 @@ export async function projet(c: ConfigNeon): Promise<string> {
   }
   const existants = projets.filter((p) => p.name === c.projet);
   if (existants.length > 1)
-    throw new Error(`Plusieurs projets Neon portent le nom ${c.projet} ; fixer NEON_PROJECT_ID`);
+    throw new Error(`Several Neon projects have the name ${c.projet}; set NEON_PROJECT_ID`);
   if (existants[0]) return existants[0].id;
   const cree = await neon<{ project: { id: string } }>(c, "/projects", {
     method: "POST",
@@ -125,17 +125,17 @@ export async function branches(c: ConfigNeon, projectId: string): Promise<Branch
   return (await neon<{ branches: Branche[] }>(c, `/projects/${projectId}/branches`)).branches;
 }
 
-/** Branche par nom, ou branche par défaut (production) sans nom. */
+/** Branch by name, or default branch (production) without a name. */
 export async function branche(c: ConfigNeon, projectId: string, nom?: string): Promise<Branche> {
   const liste = await branches(c, projectId);
   const b = nom ? liste.find((x) => x.name === nom || x.id === nom) : liste.find((x) => x.default);
-  if (!b) throw new Error(`Branche Neon introuvable : ${nom ?? "par défaut"}`);
+  if (!b) throw new Error(`Neon branch not found: ${nom ?? "default"}`);
   return b;
 }
 
 /**
- * Branche copie-sur-écriture de `parent` (par défaut la production) avec son point de calcul ; `ttlHeures`
- * fixe une expiration pour que les branches de CI oubliées disparaissent d'elles-mêmes.
+ * Copy-on-write branch of `parent` (production by default) with its compute endpoint; `ttlHeures`
+ * sets an expiry so that forgotten CI branches disappear by themselves.
  */
 export async function creerBranche(
   c: ConfigNeon,
@@ -164,12 +164,12 @@ export async function creerBranche(
 export async function supprimerBranche(c: ConfigNeon, projectId: string, nom: string): Promise<boolean> {
   const b = (await branches(c, projectId)).find((x) => x.name === nom || x.id === nom);
   if (!b) return false;
-  if (b.default) throw new Error("La branche par défaut (production) ne se supprime pas");
+  if (b.default) throw new Error("The default branch (production) cannot be deleted");
   await neon(c, `/projects/${projectId}/branches/${b.id}`, { method: "DELETE" });
   return true;
 }
 
-/** URL de connexion `sslmode=require` : poolée (PgBouncer, API et worker) ou directe (migrations, dump). */
+/** `sslmode=require` connection URL: pooled (PgBouncer, API and worker) or direct (migrations, dump). */
 export async function urlConnexion(
   c: ConfigNeon,
   projectId: string,
@@ -186,13 +186,13 @@ export async function urlConnexion(
   return u.toString();
 }
 
-/** Nouveau mot de passe du rôle applicatif (toutes les branches qui n'ont pas divergé le partagent). */
+/** New password of the application role (all branches that have not diverged share it). */
 export async function reinitialiserMotDePasse(c: ConfigNeon, projectId: string, nomBranche?: string) {
   const b = await branche(c, projectId, nomBranche);
   await neon(c, `/projects/${projectId}/branches/${b.id}/roles/${c.role}/reset_password`, { method: "POST" });
 }
 
-/** Variables d'environnement de l'application pour une branche. */
+/** Environment variables of the application for a branch. */
 export async function envBranche(c: ConfigNeon, projectId: string, nomBranche?: string, direct = false) {
   const DATABASE_URL_DIRECT = await urlConnexion(c, projectId, { branche: nomBranche, pooled: false });
   return {
@@ -227,7 +227,7 @@ if (import.meta.main) {
   else if (commande === "env") {
     if (!arg) throw new Error("Fichier d'environnement requis");
     await ajouterEnv(arg, await envBranche(c, id, option("branche"), direct), masquer);
-    console.log(`DATABASE_URL et DATABASE_URL_DIRECT ajoutées (${option("branche") ?? "branche par défaut"})`);
+    console.log(`DATABASE_URL and DATABASE_URL_DIRECT added (${option("branche") ?? "default branch"})`);
   } else if (commande === "branche-creer") {
     if (!arg) throw new Error("Nom de branche requis");
     const ttl = option("ttl-heures");
@@ -237,6 +237,6 @@ if (import.meta.main) {
     if (env) await ajouterEnv(env, await envBranche(c, id, b.id, direct), masquer);
   } else if (commande === "branche-supprimer") {
     if (!arg) throw new Error("Nom de branche requis");
-    console.log((await supprimerBranche(c, id, arg)) ? `Branche ${arg} supprimée` : `Branche ${arg} absente`);
-  } else throw new Error("Commande : projet, env, branche-creer ou branche-supprimer");
+    console.log((await supprimerBranche(c, id, arg)) ? `Branch ${arg} deleted` : `Branch ${arg} not found`);
+  } else throw new Error("Command: projet, env, branche-creer or branche-supprimer");
 }

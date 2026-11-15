@@ -1,4 +1,4 @@
-// Voix française native Windows, pauses et sous-titres alignés sur le rendu à 24 images/s.
+// Native Windows French voice, pauses and captions aligned on the 24 frames/s render.
 import { resolve } from "node:path";
 import { lancement } from "../packages/video/src/scenario";
 const dossier = resolve("dist/lancement-btp/audio"),
@@ -45,7 +45,7 @@ const preview = process.argv.includes("--preview");
 const assembleOnly = process.argv.includes("--assemble-only");
 const sceneIndex = process.argv.indexOf("--scene");
 const sceneId = sceneIndex >= 0 ? process.argv[sceneIndex + 1] : undefined;
-if (sceneIndex >= 0 && !sceneId) throw Error("La valeur de --scene est obligatoire");
+if (sceneIndex >= 0 && !sceneId) throw Error("The value of --scene is required");
 if (referenceVoix && !assembleOnly) {
   const script = resolve("scripts/video-lancement-chatterbox.py");
   const p = Bun.spawn(
@@ -68,9 +68,9 @@ if (referenceVoix && !assembleOnly) {
     ],
     { stdout: "inherit", stderr: "inherit", windowsHide: true },
   );
-  if (await p.exited) throw Error("La synthèse locale Chatterbox n'a pas abouti");
+  if (await p.exited) throw Error("The local Chatterbox synthesis did not complete");
   if (preview) {
-    console.log("Échantillon local généré :", resolve(dossier, lancement[0]!.id + "-voix.wav"));
+    console.log("Local sample generated:", resolve(dossier, lancement[0]!.id + "-voix.wav"));
     process.exit(0);
   }
 } else if (!assembleOnly) {
@@ -90,13 +90,13 @@ if (referenceVoix && !assembleOnly) {
     ],
     { stdout: "inherit", stderr: "inherit", windowsHide: true },
   );
-  if (await p.exited) throw Error("Synthèse vocale française impossible");
+  if (await p.exited) throw Error("French speech synthesis impossible");
 }
 const outils = resolve(".cache/video-outils/ffmpeg-9.0.2-essentials_build/bin");
 const ffmpeg = Bun.env.AUTO_VIDEO_FFMPEG ?? resolve(outils, "ffmpeg.exe"),
   ffprobe = Bun.env.AUTO_VIDEO_FFPROBE ?? resolve(outils, "ffprobe.exe");
 for (const chemin of [ffmpeg, ffprobe])
-  if (!(await Bun.file(chemin).exists())) throw Error("Fournisseur média qualifié requis : " + chemin);
+  if (!(await Bun.file(chemin).exists())) throw Error("Qualified media provider required: " + chemin);
 async function commande(args: string[]) {
   const proc = Bun.spawn(args, { stdout: "pipe", stderr: "pipe", windowsHide: true });
   const [out, err, code] = await Promise.all([
@@ -104,7 +104,7 @@ async function commande(args: string[]) {
     new Response(proc.stderr).text(),
     proc.exited,
   ]);
-  if (code) throw Error("Média : " + err.slice(-1600));
+  if (code) throw Error("Media: " + err.slice(-1600));
   return out;
 }
 const paroles = JSON.parse((await Bun.file(resolve(dossier, "paroles-fr.json")).text()).replace(/^\uFEFF/, "")) as {
@@ -120,7 +120,7 @@ for (const scene of lancement) {
     await commande([ffprobe, "-v", "error", "-show_entries", "format=duration", "-of", "json", source]),
   );
   const duree = Number(meta.format.duration);
-  if (!Number.isFinite(duree) || duree <= 0) throw Error("Durée vocale invalide");
+  if (!Number.isFinite(duree) || duree <= 0) throw Error("Invalid voice duration");
   const images = Math.max(8 * fps, Math.ceil(duree * fps) + 30),
     sortie = resolve(dossier, scene.id + ".wav");
   await commande([
@@ -233,10 +233,10 @@ await Bun.write(
       duree: frame / fps,
       scenes: timeline.length,
       horodatageParMots: referenceVoix
-        ? "répartition proportionnelle au texte, sous-titres bornés à chaque scène"
-        : "System.Speech SpeakProgress réel",
+        ? "proportional split on the text, captions bounded to each scene"
+        : "real System.Speech SpeakProgress",
       BunVideoWav:
-        "conteneur WAV non pris en charge par le décodeur installé ; durée mesurée avec le fournisseur FFprobe qualifié",
+        "WAV container not supported by the installed decoder; duration measured with the qualified FFprobe provider",
     },
     null,
     2,

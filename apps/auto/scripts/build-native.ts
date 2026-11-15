@@ -1,5 +1,5 @@
-// Compile auto-ffi en conteneur et copie les bibliothèques dans dist/native/<plateforme>/ :
-// Linux (production) et Windows x64 par compilation croisée MinGW (poste de dev sans MSVC).
+// Builds auto-ffi in a container and copies the libraries to dist/native/<platform>/:
+// Linux (production) and Windows x64 through MinGW cross-compilation (dev machine without MSVC).
 import { $ } from "bun";
 import { racineDocker } from "./docker-racine";
 
@@ -13,7 +13,7 @@ const voulues = Bun.argv.slice(2);
 for (const c of cibles.filter((c) => !voulues.length || voulues.includes(c.dossier))) {
   await $`${process.execPath} ${`${root}scripts/cargo.ts`} build -q --release --locked -p auto-ffi --target ${c.triple}`;
   const dest = `/w/dist/native/${c.dossier}`;
-  // Le répertoire cible est un volume du conteneur : copie par un conteneur jetable.
+  // The target directory is a container volume: copy through a throwaway container.
   await $`docker run --rm -e MSYS_NO_PATHCONV=1 -v auto-cargo-target:/target -v ${`${await racineDocker(root)}`}:/w alpine sh -c ${`mkdir -p ${dest} && cp /target/${c.triple}/release/${c.fichier} ${dest}/`}`.env(
     {
       ...Bun.env,

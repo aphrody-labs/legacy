@@ -1,7 +1,7 @@
-// Publication npm des paquets du dépôt sous `@aphrody/auto-*` (le scope `@auto` appartient à un autre projet).
-// Chaque paquet est copié dans .cache/publication, renommé, ses dépendances `workspace:*` et ses imports `@auto/…`
-// réécrits, puis publié dans l'ordre des dépendances. Le paquet native embarque les binaires de dist/native.
-// Usage : bun scripts/publier.ts [--publier] [--version 0.1.0] (sans --publier : `bun publish --dry-run`).
+// npm publication of the repository packages under `@aphrody/auto-*` (the `@auto` scope belongs to another
+// project). Each package is copied into .cache/publication, renamed, its `workspace:*` dependencies and its
+// `@auto/…` imports rewritten, then published in dependency order. The native package embeds the dist/native
+// binaries. Usage: bun scripts/publier.ts [--publier] [--version 0.1.0] (without --publier: `bun publish --dry-run`).
 import { $ } from "bun";
 import { cp, mkdir, rm } from "node:fs/promises";
 import { basename, join } from "node:path";
@@ -34,11 +34,11 @@ for (const d of dossiers) {
   if (!m.private) paquets.set(m.name, { dossier: d, m });
 }
 
-// Ordre topologique (dépendances internes d'abord).
+// Topological order (internal dependencies first).
 const ordre: string[] = [];
 const visiter = (nom: string, pile = new Set<string>()) => {
   if (ordre.includes(nom) || !paquets.has(nom)) return;
-  if (pile.has(nom)) throw new Error(`cycle de dépendances : ${[...pile, nom].join(" → ")}`);
+  if (pile.has(nom)) throw new Error(`dependency cycle: ${[...pile, nom].join(" → ")}`);
   pile.add(nom);
   for (const d of Object.keys(paquets.get(nom)!.m.dependencies ?? {})) visiter(d, pile);
   pile.delete(nom);
@@ -58,7 +58,7 @@ for (const nom of ordre) {
   await mkdir(cible, { recursive: true });
   await cp(dossier, cible, { recursive: true, filter: (s) => !ignorer(s) });
 
-  // Imports `@auto/x` → `@aphrody/auto-x` dans les sources publiées.
+  // `@auto/x` imports → `@aphrody/auto-x` in the published sources.
   for (const f of new Bun.Glob("**/*.{ts,tsx,css,md}").scanSync(cible)) {
     const p = join(cible, f);
     const t = await Bun.file(p).text();
@@ -97,5 +97,5 @@ for (const nom of ordre) {
     console.error(`✗ ${renommer(nom)}@${version}\n${sortie.trim().split("\n").slice(-8).join("\n")}`);
     process.exit(1);
   }
-  console.log(`${publier ? "publié" : "essai"} ${renommer(nom)}@${version} (${taille})`);
+  console.log(`${publier ? "published" : "dry run"} ${renommer(nom)}@${version} (${taille})`);
 }

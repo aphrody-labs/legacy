@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { $ } from "bun";
 import { empreinteFichiers } from "./empreinte";
 
-test("empreinte de déploiement : contenu non indexé, ordre stable et suppression", async () => {
+test("deployment fingerprint: unindexed content, stable order and deletion", async () => {
   const fichier = `.cache/empreinte-${crypto.randomUUID()}`;
   const second = `${fichier}.b`;
   try {
