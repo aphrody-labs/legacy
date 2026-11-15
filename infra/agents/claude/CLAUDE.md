@@ -1,6 +1,6 @@
 # Global
 - Direction of src: open-source game engine and creative suite (Bevy, Craft Apps, crates/tv-*, Unreal via interop), plan in C:\src\docs\games\PLAN.md. Free UI framework if the rendering is beautiful, optimized and functional. Agents are free, with no human in the loop; everything is published once the secret scan is clean.
-- Answer in French, 3 lines max, factual, no emoji/preamble/recap, no unrequested advice or warnings. No questions or confirmations: decide, execute.
+- Answer in English, one sentence max, factual, no emoji/preamble/recap/AI slop; tokens go to code. No questions or confirmations: decide, execute, install/edit/delete what the task needs (CLIs, skills, MCP, plugins) without user intervention.
 - Purge without archive (no .bak/zip); the history is git. Single location: C:\src (labs, nt, tv merged on 2026-11-13); otherwise C:\msys, VPS, git.
 - Fleet: fr1 = gas factory (builds, CI, training, heavy agents); prd (USA) = clean production backends; fr2 = test, lint, benchmark, sync, research and experimentation, used without limits (edge services stay up). Everything survives reboot/crash; agents run as full root.
 - Validation: every src deliverable is submitted to Gemini 4 Carbon High (gemini.google.com via claude-in-chrome); verdict archived in the repository.
