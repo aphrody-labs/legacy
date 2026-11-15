@@ -80,6 +80,16 @@ fleet-restore-test host:
 fleet-rebuild host *flags:
     bash "{{root}}/infra/fleet/bin/fleet-rebuild.sh" {{host}} {{flags}}
 
+# Offload layer (slices, bfq, fleet-run, samplers; docs/infra/FLEET-OFFLOAD.md): just fleet-offload apply|check fr1|fr2
+[group('fleet')]
+fleet-offload mode host:
+    timeout 300 ssh {{ if host == "fr1" { "vps" } else if host == "fr2" { "cdn" } else { error("host: fr1|fr2") } }} 'git -C /srv/src fetch -q --no-recurse-submodules origin main && git -C /srv/src merge --ff-only FETCH_HEAD >/dev/null && sudo bash /srv/src/infra/fleet/bin/fleet-offload.sh {{ if mode =~ '^(apply|check)$' { mode } else { error("mode: apply|check") } }}'
+
+# Run a job on the least-loaded host (PSI) inside a cgroup slice; usage: just fleet-run test cargo test -p core  (class: agent|test|lint|research|bench|build)
+[group('fleet')]
+fleet-run class *cmd:
+    timeout 7200 ssh vps fleet-run -c {{class}} -C /srv/src -- {{cmd}}
+
 # Install units captured from live hosts (infra/fleet/<role>/orphans; docs/infra/PROD-MAP.md); usage: just fleet-orphans prd|fr1
 [group('fleet')]
 fleet-orphans role:
