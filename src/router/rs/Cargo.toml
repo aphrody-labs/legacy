@@ -1,0 +1,10 @@
+[package]
+name = "ay-router"
+version = "0.1.0"
+edition = "2024"
+description = "Rust binding of the Aphrody AI router C ABI (src/include/ay/router.h): compiles src/router/router.c, no other dependency"
+license = "MIT OR Apache-2.0"
+links = "ayrouter"
+build = "build.rs"
+
+[dependencies]
