@@ -2,10 +2,8 @@
 // Seule une règle explicite du propriétaire dans .agents/owner-rules.json les autorise :
 //   { "rules": [ { "effect": "external", "step": "<regex>", "command": "<regex>", "granted": "AAAA-MM-JJ", "note": "…" } ] }
 // Les deux expressions sont ancrées (correspondance complète) : "step" vise l'identifiant exact d'une étape (une étape
-// générée « publish.x » ne profite pas d'une règle « publish »), "command" la ligne complète d'une étape cmd ou d'une
-// commande d'agent (garde pre-tool-guard). Une règle sans "step" ne vaut que pour le garde.
-// Le fichier n'est écrit que par le propriétaire (absent = tout effet externe refusé). Le même fichier sert au garde
-// .agents/scripts/pre-tool-guard.ts (AGENT_GUARD=enforce) pour les commandes de publication lancées par un agent.
+// générée « publish.x » ne profite pas d'une règle « publish »), "command" la ligne complète d'une étape cmd.
+// Le fichier n'est écrit que par le propriétaire (absent = tout effet externe refusé).
 // Une étape refusée n'est pas exécutée : elle passe à l'état « held » et son contenu (brouillon) est mis en file
 // dans var/agents/outbox/<run>/<étape>.json pour relecture.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";

@@ -175,7 +175,7 @@ RUN apk add --no-cache ca-certificates git libgcc libstdc++ && adduser -D -u 100
 COPY --from=bun-alpine /usr/local/bin/bun /usr/local/bin/bun
 COPY --from=rust-build /out/ay /usr/local/bin/ay
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx
-ENV SRC_ROOT=/src AGENT_GUARD=off
+ENV SRC_ROOT=/src
 WORKDIR /src
 USER 1000:1000
 HEALTHCHECK NONE
@@ -200,6 +200,6 @@ RUN base="https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}" 
  && unzip -q /tmp/bun-linux-x64.zip -d /tmp \
  && install -Dm755 /tmp/bun-linux-x64/bun /root/.bun/bin/bun \
  && rm -rf /tmp/bun-linux-x64 /tmp/bun-linux-x64.zip
-ENV SRC_ROOT=/src AGENT_GUARD=off
+ENV SRC_ROOT=/src
 WORKDIR /src
 CMD ["zsh"]

@@ -1,17 +1,1 @@
-{
-  "sovereign-userspace-and-secret-guard": {
-    "enabled": true,
-    "PreToolUse": [
-      {
-        "matcher": "run_command|write_to_file|replace_file_content|multi_replace_file_content",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun run C:/src/.agents/scripts/pre-tool-guard.ts",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  }
-}
+{}

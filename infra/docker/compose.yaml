@@ -164,7 +164,7 @@ services:
     build: { context: ../.., dockerfile: infra/docker/Dockerfile, target: dev }
     platform: linux/amd64
     working_dir: /src
-    environment: { SRC_ROOT: /src, AGENT_GUARD: "${AGENT_GUARD:-off}" }
+    environment: { SRC_ROOT: /src }
     volumes:
       - ../..:/src
       - node-modules:/src/node_modules

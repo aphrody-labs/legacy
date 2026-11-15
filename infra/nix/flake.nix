@@ -41,7 +41,6 @@
           ];
           shellHook = ''
             export SRC_ROOT="$PWD"
-            export AGENT_GUARD="''${AGENT_GUARD:-off}"
             rustup show active-toolchain >/dev/null 2>&1 || rustup default nightly
           '';
         };

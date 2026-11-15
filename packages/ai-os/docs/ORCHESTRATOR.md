@@ -173,10 +173,7 @@ External effects are refused by default: publication, sending a message, spendin
   ```
 - **Without a rule**, the step takes the `held` state: its content (draft, filled-in instruction) is queued in `var/agents/outbox/<run>/<step>.json`. The marketing drafts of `just orch market` are written to `var/agents/outbox/<product>-<date>.md`, and nothing is published.
 - **Queue tasks**: an authorized external step goes out with `approval: "none"`; the other `growth` tasks go out with `approval: "owner"`, which the runner never commits. An external step never runs directly (read-only): without a worker, it fails instead of appearing done.
-- **Commands launched by the agents themselves**: the guard `.agents/scripts/pre-tool-guard.ts` (`AGENT_GUARD=enforce`) blocks, unless there is a matching `command` rule in the same file:
-  - `npm|bun|cargo|… publish` and `gh release create`;
-  - `resend` sends;
-  - MCP tools for sending, publishing or payment.
+- **Commands launched by the agents themselves**: no PreToolUse guard checks publication; only the orchestrator steps above go through the owner rules.
 
 ## Lifecycle (`lifecycle.ts`)
 

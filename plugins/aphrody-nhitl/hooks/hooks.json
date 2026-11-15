@@ -1,91 +1,9 @@
 {
-  "description": "aphrody-nhitl: auto-approve with deny list, log notifications, continue open work, session digest, learn capture",
+  "description": "aphrody-nhitl: learn capture + session digest (zero PreToolUse overhead)",
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash|PowerShell|Monitor",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 20,
-            "onFailure": "block"
-          }
-        ]
-      },
-      {
-        "matcher": "^(?!(Bash|PowerShell|Monitor)$).*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 30,
-            "onFailure": "continue"
-          }
-        ]
-      }
-    ],
-    "PermissionRequest": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 20,
-            "onFailure": "block"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 5,
-            "async": true
-          }
-        ]
-      }
-    ],
-    "SubagentStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 10
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 10
-          },
           {
             "type": "command",
             "command": "bun",
@@ -101,32 +19,8 @@
           {
             "type": "command",
             "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bun",
             "args": ["${CLAUDE_PLUGIN_ROOT}/src/learn-auto.ts"],
             "timeout": 5
-          }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/hook.ts"],
-            "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "bun",
-            "args": ["${CLAUDE_PLUGIN_ROOT}/src/learn-capture.ts"],
-            "timeout": 10
           }
         ]
       }
