@@ -32,6 +32,8 @@ ingress = [
   { hostname = "dbfr.aphrody.com", service = "http://127.0.0.1:29401" },
   { hostname = "nie.aphrody.app", service = "http://127.0.0.1:29402" },
   { hostname = "fleet-failover-test.aphrody.com", service = "http://127.0.0.1:29401" }, # fleet-dns-failover-test.sh only
+  # Live entry added outside this file (found by `cf.ts plan tunnels` 2026-11-15), reconciled here.
+  { hostname = "open-origin.aphrody.com", service = "http://127.0.0.1:29403" },
   # aphrody service: cluster LB pool aphrody (prd:23000, blue/green switched in deploy.toml only).
   { hostname = "aphrody.com", service = "http://127.0.0.1:19300" },
   { hostname = "*.aphrody.com", service = "http://127.0.0.1:19300" },

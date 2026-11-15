@@ -27,7 +27,7 @@ for dst in $aliases; do
     line="restrict,from=\"$FLEET_MESH_FROM\",command=\"/usr/local/bin/fleet-probe\" ${pub[$src]}"
     blob=$(echo "${pub[$src]}" | cut -d" " -f2)
     if [ "$mode" = apply ]; then
-      timeout 30 ssh "$dst" "grep -qF '$blob' ~/.ssh/authorized_keys 2>/dev/null || { echo '$line' >> ~/.ssh/authorized_keys; echo '$dst: added key of $src'; }"
+      timeout 30 ssh "$dst" "grep -qF '$blob' ~/.ssh/authorized_keys 2>/dev/null || { [ -z \"\$(tail -c1 ~/.ssh/authorized_keys)\" ] || echo >> ~/.ssh/authorized_keys; echo '$line' >> ~/.ssh/authorized_keys; echo '$dst: added key of $src'; }"
     else
       timeout 30 ssh "$dst" "grep -qF '$blob' ~/.ssh/authorized_keys" && echo "$dst accepts $src" || { echo "$dst missing $src"; exit 1; }
     fi
