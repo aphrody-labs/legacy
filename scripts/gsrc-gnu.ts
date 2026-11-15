@@ -1,8 +1,11 @@
-// Extract GNU packages from a GSRC checkout (bzr https://bzr.savannah.gnu.org/r/gsrc/trunk):
-// version, distfile sha256, build/lib deps per pkg/gnu/<name>/Makefile.
-// Usage: bun scripts/gsrc-gnu.ts <gsrc-root> [revno] > docs/research/gsrc-gnu-<date>.json
+// Extract GNU packages from a GSRC tree: version, distfile sha256, build/lib deps per pkg/gnu/<name>/Makefile.
+// Get the tree without history on any host with uv:  uvx --from breezy brz export <dir> https://bzr.savannah.gnu.org/r/gsrc/trunk
+// Usage: bun scripts/gsrc-gnu.ts <gsrc-root> > docs/research/gsrc-gnu.json   (revno read live from the branch)
 import { Glob } from "bun";
-const [root, revno] = process.argv.slice(2);
+import { GSRC_REVNO } from "../packages/gnu/src/upstream.ts";
+const root = process.argv[2];
+if (!root) throw new Error("usage: bun scripts/gsrc-gnu.ts <gsrc-root>");
+const revno = (await (await fetch(GSRC_REVNO)).text()).trim().split(/\s+/)[0];
 const vars = (mk: string) => {
   const out: Record<string, string> = {};
   for (const m of mk.replace(/\\\n/g, " ").matchAll(/^([A-Z_]+)\s*[?:]?=[ \t]*(.*)$/gm)) out[m[1]] ??= m[2].trim();
@@ -31,4 +34,4 @@ for await (const rel of new Glob("pkg/gnu/*/Makefile").scan(root)) {
   };
 }
 const sorted = Object.fromEntries(Object.entries(packages).sort(([a], [b]) => a.localeCompare(b)));
-console.log(JSON.stringify({ source: `bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno ${revno ?? "?"}`, count: Object.keys(sorted).length, packages: sorted }, null, 1));
+console.log(JSON.stringify({ source: `bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno ${revno}`, count: Object.keys(sorted).length, packages: sorted }, null, 1));

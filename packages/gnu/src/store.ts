@@ -131,26 +131,10 @@ export type Inventory = {
   guixHead: string | null;
 };
 
-const newest = async (dir: string, prefix: string) => {
-  const names = [
-    ...new Bun.Glob(`${prefix}-*.json`).scanSync({ cwd: dir }),
-  ].toSorted();
-  return names.length ? join(dir, names.at(-1)!) : null;
-};
-
 /** Load the repository inventory: GSRC, Guix and gnu-packages.json (docs/research, docs/native/gnu). */
 export async function loadInventory(root = repoRoot()): Promise<Inventory> {
   const research = join(root, "docs", "research");
-  const gs = await newest(research, "gsrc-gnu");
-  const gx = await newest(research, "guix-gnu");
-  const g = gs
-    ? await readJson<{ source?: string; packages?: Inventory["gsrc"] }>(gs, {})
-    : {};
-  const x = gx
-    ? await readJson<{
-        packages?: Record<string, { version: string; guix_name?: string }>;
-      }>(gx, {})
-    : {};
+  const g = await readJson<{ source?: string; packages?: Inventory["gsrc"] }>(join(research, "gsrc-gnu.json"), {});
   const inv = await readJson<{
     packages?: {
       name: string;
@@ -162,11 +146,6 @@ export async function loadInventory(root = repoRoot()): Promise<Inventory> {
       status?: string;
     }[];
   }>(join(root, "docs", "native", "gnu", "gnu-packages.json"), {});
-  const guix: Record<string, string> = {};
-  for (const [k, v] of Object.entries(x.packages ?? {})) {
-    guix[k] = v.version;
-    if (v.guix_name) guix[v.guix_name] = v.version;
-  }
   return {
     gsrc: g.packages ?? {},
     gsrcRevno: Number(/revno (\d+)/.exec(g.source ?? "")?.[1]) || null,
@@ -184,7 +163,7 @@ export async function loadInventory(root = repoRoot()): Promise<Inventory> {
         },
       ]),
     ),
-    guix,
+    guix: {},
     guixHead: null,
   };
 }

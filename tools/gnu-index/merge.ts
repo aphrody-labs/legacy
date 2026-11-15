@@ -1,7 +1,7 @@
 // Merge the 2026-11-14 research into docs/native/gnu/gnu-packages.json (and re-render PACKAGES.md):
 //   - `purpose` (null) <- first sentence of the official blurb, full text in `blurb` (docs/research/gnu-blurbs-2026-11-14.json)
 //   - ftp.gnu.org/gnu/ dirs missing from the inventory, added from their live directory listing
-//   - `latest_release` <- GSRC when GSRC is newer (docs/research/gsrc-gnu-2026-11-14.json); `gsrc` carries id, version, sha256, deps
+//   - `latest_release` <- GSRC when GSRC is newer (docs/research/gsrc-gnu.json); `gsrc` carries id, version, sha256, deps
 // Idempotent. Usage: bun tools/gnu-index/merge.ts [--offline]   (offline: skip the ftp listings, keep already added rows)
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -11,7 +11,8 @@ const root = join(import.meta.dir, "../..");
 const J = join(root, "docs/native/gnu/gnu-packages.json");
 const data = JSON.parse(readFileSync(J, "utf8"));
 const blurbs: Record<string, string> = JSON.parse(readFileSync(join(root, "docs/research/gnu-blurbs-2026-11-14.json"), "utf8")).blurbs;
-const gsrc: Record<string, any> = JSON.parse(readFileSync(join(root, "docs/research/gsrc-gnu-2026-11-14.json"), "utf8")).packages;
+const gsrcFile = JSON.parse(readFileSync(join(root, "docs/research/gsrc-gnu.json"), "utf8"));
+const gsrc: Record<string, any> = gsrcFile.packages;
 const offline = process.argv.includes("--offline");
 
 const gid = gsrcId;
@@ -107,9 +108,9 @@ for (const p of data.packages) {
   }
 }
 
-data.generated = "2026-11-14";
+data.generated = new Date().toISOString().slice(0, 10);
 data.sources.blurbs = "https://www.gnu.org/manual/blurbs.html (docs/research/gnu-blurbs-2026-11-14.json)";
-data.sources.gsrc = "bzr gsrc/trunk revno 12334 (docs/research/gsrc-gnu-2026-11-14.json)";
+data.sources.gsrc = `${gsrcFile.source} (docs/research/gsrc-gnu.json)`;
 data.sources.ftp_dirs = "https://ftp.gnu.org/gnu/ directory listings (2026-11-14): guile-debbugs micron sauce speedx cfengine flex git aspell-dict-*";
 data.counts = data.packages.reduce((a: any, r: any) => ((a[r.category] = (a[r.category] ?? 0) + 1), a), {});
 writeFileSync(J, JSON.stringify(data, null, 1) + "\n");

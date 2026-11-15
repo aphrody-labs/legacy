@@ -21,7 +21,7 @@ export type KernelRelease = {
   mirror: { key: string; sign_key: string | null; at: string } | null;
 };
 
-/** Per-branch analysis written by scripts/android-kernel-track.ts (units android-kernel-track@<branch>.timer on fr2). */
+/** Per-branch analysis of a GKI branch read from gitiles (parseAndroid); fields that need a clone (patch classes, Rust file count) stay empty. */
 export type AndroidTrack = {
   branch: string;
   fetched: string;
@@ -126,8 +126,8 @@ export const TREES: Record<string, string> = {
   "linux-next":
     "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git",
 };
-const GKI_URL =
-  "https://android.googlesource.com/kernel/common/+refs/heads?format=JSON";
+const GKI_REPO = "https://android.googlesource.com/kernel/common";
+const GKI_URL = `${GKI_REPO}/+refs/heads?format=JSON`;
 const CHROMEOS_URL =
   "https://chromium.googlesource.com/chromiumos/third_party/kernel/+refs/heads?format=JSON";
 const RFL = "https://github.com/Rust-for-Linux/linux.git";
@@ -261,7 +261,7 @@ export async function pollKernel(
       // keep
     }
   }
-  ks.android = { ...ks.android, ...(await readAndroid()) };
+  await pollAndroid(ks);
   try {
     ks.docs_rust = (await get("https://docs.kernel.org/rust/index.html")).ok;
   } catch {
@@ -305,50 +305,82 @@ export async function pollKernel(
   ks.checked = Date.now();
 }
 
-/** Trim one latest.json of scripts/android-kernel-track.ts to the fields the feed carries. */
-export function trimAndroid(j: any): AndroidTrack | null {
-  if (!j?.branch || !j.head?.commit) return null;
+/** Gitiles file as text (`?format=TEXT` is base64); null when the ref has no such file. */
+async function gitilesFile(ref: string, path: string): Promise<string | null> {
+  try {
+    const r = await get(`${GKI_REPO}/+/${ref}/${path}?format=TEXT`);
+    return r.ok ? Buffer.from(await r.text(), "base64").toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Per-branch analysis from the gitiles reads of one GKI branch head; pure so tests feed it fixtures. */
+export function parseAndroid(
+  branch: string,
+  head: { commit?: string; message?: string; committer?: { time?: string } },
+  files: { makefile: string; constants: string; bazel: string; defconfig: string },
+  fetched = new Date().toISOString(),
+): AndroidTrack | null {
+  if (!head.commit) return null;
+  const mk = (k: string) => new RegExp(`^${k}\\s*=\\s*(.*)$`, "m").exec(files.makefile)?.[1]?.trim() ?? "";
+  const pin = (k: string) => new RegExp(`^${k}\\s*=\\s*"?([^"\\n]*)"?`, "m").exec(files.constants)?.[1] ?? null;
+  const cfg = (k: string) => new RegExp(`^CONFIG_${k}=(.*)$`, "m").exec(files.defconfig)?.[1] ?? null;
+  const enforced = /^\s*kmi_enforced = True/m.test(files.bazel);
+  const t = head.committer?.time ? Date.parse(head.committer.time) : NaN;
+  const known = mk("VERSION") !== "";
   return {
-    branch: String(j.branch),
-    fetched: String(j.fetched ?? ""),
+    branch,
+    fetched,
     head: {
-      commit: String(j.head.commit),
-      date: String(j.head.date ?? ""),
-      subject: String(j.head.subject ?? ""),
+      commit: head.commit,
+      date: Number.isNaN(t) ? "" : new Date(t).toISOString(),
+      subject: head.message?.split("\n")[0] ?? "",
     },
-    kernel: j.kernel ?? null,
-    upstream_base: j.upstream_base ?? null,
-    commits_since_base: j.commits_since_base ?? null,
-    patch_classes: j.patch_classes ?? {},
+    kernel: known ? `${mk("VERSION")}.${mk("PATCHLEVEL")}.${mk("SUBLEVEL")}${mk("EXTRAVERSION")}` : null,
+    upstream_base: known ? `v${mk("VERSION")}.${mk("PATCHLEVEL")}` : null,
+    commits_since_base: null,
+    patch_classes: {},
     kmi: {
-      phase: j.kmi?.phase ?? null,
-      enforced: j.kmi?.enforced ?? null,
-      abi_definition: j.kmi?.abi_definition ?? null,
-      symbol_lists: j.kmi?.symbol_lists ?? null,
+      phase: files.bazel ? (enforced ? "kmi-tracking-or-frozen" : "development") : null,
+      enforced: files.bazel ? enforced : null,
+      abi_definition: files.bazel ? /^\s*abi_definition_stg = "/m.test(files.bazel) : null,
+      symbol_lists: null,
     },
-    clang: j.toolchain?.CLANG_VERSION ?? null,
-    rustc: j.toolchain?.RUSTC_VERSION ?? null,
-    kmi_generation: j.toolchain?.KMI_GENERATION ?? null,
-    rust_binder: j.defconfig?.ANDROID_BINDER_IPC_RUST ?? null,
-    rust_config: j.defconfig?.RUST ?? null,
-    rust_files: j.rust?.files ?? null,
+    clang: pin("CLANG_VERSION"),
+    rustc: pin("RUSTC_VERSION"),
+    kmi_generation: pin("KMI_GENERATION"),
+    rust_binder: cfg("ANDROID_BINDER_IPC_RUST"),
+    rust_config: cfg("RUST"),
+    rust_files: null,
   };
 }
 
-/** Read /srv/research/android/state/<branch>/latest.json (GNU_ANDROID_STATE overrides); empty when the tracker is absent. */
-export async function readAndroid(
-  dir = Bun.env.GNU_ANDROID_STATE ?? "/srv/research/android/state",
-): Promise<Record<string, AndroidTrack>> {
-  const out: Record<string, AndroidTrack> = {};
-  try {
-    for (const rel of new Bun.Glob("*/latest.json").scanSync({ cwd: dir })) {
-      const t = trimAndroid(await Bun.file(join(dir, rel)).json());
-      if (t) out[t.branch] = t;
+/** Analyse every GKI branch whose head moved since the last cycle (pins sit in bazel/constants.scl or build.config.constants). */
+export async function pollAndroid(ks: KernelState) {
+  for (const [branch, sha] of Object.entries(ks.gki)) {
+    if (ks.android[branch]?.head.commit === sha) continue;
+    try {
+      const r = await get(`${GKI_REPO}/+/${sha}?format=JSON`);
+      if (!r.ok) continue;
+      const head = JSON.parse((await r.text()).replace(/^\)\]\}'\n/, ""));
+      const [makefile, scl, legacy, bazel, defconfig] = await Promise.all(
+        ["Makefile", "bazel/constants.scl", "build.config.constants", "BUILD.bazel", "arch/arm64/configs/gki_defconfig"].map(
+          (p) => gitilesFile(sha, p),
+        ),
+      );
+      const t = parseAndroid(branch, head, {
+        makefile: makefile ?? "",
+        constants: `${scl ?? ""}\n${legacy ?? ""}`,
+        bazel: bazel ?? "",
+        defconfig: defconfig ?? "",
+      });
+      if (t) ks.android[branch] = t;
+    } catch {
+      // retry next cycle
     }
-  } catch {
-    // directory absent (PC): nothing to read
   }
-  return out;
+  for (const b of Object.keys(ks.android)) if (!ks.gki[b]) delete ks.android[b];
 }
 
 export function buildKernel(ks: KernelState): KernelSection {

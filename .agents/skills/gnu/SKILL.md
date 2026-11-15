@@ -22,10 +22,10 @@ Site: https://gnu.aphrody.com (feed.json, feed.atom, events.json). Doc: `docs/na
 
 ## Feed semantics
 
-- One entry per package: GSRC ids, the inventory, plus ftp directories that have tarballs. `upstream` = newest stable tarball on ftp.gnu.org (ls-lrRt.txt.gz, UTC minutes); `gsrc` and `guix` are pins; `drift.gsrc` = ftp newer than GSRC.
+- One entry per package: GSRC ids, the inventory, plus ftp directories that have tarballs. `upstream` = newest stable tarball on ftp.gnu.org (ls-lrRt.txt.gz, UTC minutes); `gsrc` is a pin; `drift.gsrc` = ftp newer than GSRC.
 - `signature`: `verified` (sqv, GSRC `gpg-keyring`; a "legacy policy" note means SHA-1 key bindings), `unverified`, `invalid` (only on a clear mismatch), `missing` (no `.sig`). `sha256` comes from GSRC when the file matches, else from the mirror download.
 - `rust`: equivalents from `packages/gnu/src/rust.ts` (RUST_MAP, GitHub releases with ETag, crates.io). `rust_status` = best of `drop-in`, `partial`, `alt`, `lib`. `proof` reads `src/gnu/<id>/PROOF.md`.
-- `kernel`: kernel.org releases.json, sha256sums.asc, tree heads (git smart HTTP), gitiles GKI and ChromeOS branches, Rust in tree per series, google/kernel-research; `android` = per-branch analysis from the Android GKI tracker (`scripts/android-kernel-track.ts`, units `android-kernel-track@<branch>.timer`, output `/srv/research/android/state/<branch>/latest.json`: head, base, patch classes, KMI phase, clang and rustc pins, Rust Binder). Not duplicated: enable a branch with `sudo systemctl enable --now android-kernel-track@<branch>.timer` (on: android18-7.3, android17-6.18, android16-6.12).
+- `kernel`: kernel.org releases.json, sha256sums.asc, tree heads (git smart HTTP), gitiles GKI and ChromeOS branches, Rust in tree per series, google/kernel-research; `android` = per-branch analysis of every GKI branch (`pollAndroid` in `packages/gnu/src/kernel.ts`, gitiles reads of Makefile, `bazel/constants.scl`, `BUILD.bazel`, `gki_defconfig` at the branch head, redone only when the head moves: kernel, base, KMI phase, clang and rustc pins, Rust Binder). No per-branch timer, no clone.
 
 ## Service (fr2)
 

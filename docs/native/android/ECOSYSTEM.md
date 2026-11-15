@@ -54,9 +54,9 @@ All rows read on 2026-11-14. Pins live in `infra/android/android.toml`; this fil
 |---|---|---|
 | platform/manifest branches | `android17-release` (head 29ace668ae), `android17-security-release`, `android16-release`, `android16-qpr1-release`, `android16-qpr2-release`, `android16-s1/s2-release`, `android-latest-release` (ad156f32ca), `main`, `main-16k`, `main-plus-rust`, `main-cuttlefish-vendor-dev`, `master*` (legacy names) | `android.googlesource.com/platform/manifest/+refs/heads?format=JSON` |
 | AOSP tags | `android-17.0.0_r1`, `android-16.0.0_r1` to `_r4` | `+refs/tags` |
-| GKI kernels | `docs/research/android18-7.3.md` (fr2 tracker, every 30 minutes) | in repo |
+| GKI kernels | `ay gnu kernel` (GKI branches read from gitiles by the aphrody-gnu daemon on fr2, every 10 minutes) | in repo |
 | Cuttlefish | branches `main-cuttlefish-vendor-dev`, `master-cuttlefish-testing(-release)` | platform/manifest refs |
-| Kleaf (Bazel kernel build) | built from the kernel manifests tracked in `docs/research/android18-7.3.md`; not set up here | in repo |
+| Kleaf (Bazel kernel build) | built from the kernel manifests tracked by `ay gnu kernel`; not set up here | in repo |
 | repo | Google `repo` launcher fetches the manifest above; not installed here (no AOSP checkout is built) | |
 | `android` CLI | single binary from `dl.google.com/android/cli/latest/<os>/android[.exe]`, no published checksum (observed sha256 is written to `android.lock.json`); commands per its SKILL.md: `sdk`, `docs`, `skills`, `install`; installed on fr2 (sha256 2aabb936...b84cf in the run log), 404 from fr1's IP, PC install pending | `.claude/skills/android-cli/SKILL.md`; `dl.google.com/android/cli/latest/*/install.{cmd,sh}` |
 | Skills | 37 `android-*` skills mirrored in `.agents/skills` from `android/skills`; see "Skills" below | repo |

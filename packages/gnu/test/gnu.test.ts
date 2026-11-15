@@ -8,7 +8,7 @@ import {
   parseGitiles,
   parseSums,
   pickBranches,
-  trimAndroid,
+  parseAndroid,
 } from "../src/kernel.ts";
 import {
   RUST_MAP,
@@ -183,36 +183,27 @@ describe("kernel", () => {
       "chromeos-5.4",
     ]);
   });
-  test("android tracker output is trimmed into the section", () => {
-    const t = trimAndroid({
-      branch: "android18-7.3",
-      fetched: "2026-11-14T22:30:16Z",
-      head: {
-        commit: "8cb307d9ca5e",
-        date: "2026-11-13T14:41:47-08:00",
-        subject: "x",
+  test("android branch analysis from gitiles files", () => {
+    const t = parseAndroid(
+      "android18-7.3",
+      { commit: "8cb307d9ca5e", message: "x\nbody", committer: { time: "Fri Nov 13 14:41:47 2026 -0800" } },
+      {
+        makefile: "VERSION = 7\nPATCHLEVEL = 3\nSUBLEVEL = 0\nEXTRAVERSION =\n",
+        constants: "KMI_GENERATION=0\nCLANG_VERSION=\"r596125\"\nRUSTC_VERSION=\"1.96.0\"\n",
+        bazel: "kmi_enforced = False",
+        defconfig: "CONFIG_RUST=y\nCONFIG_ANDROID_BINDER_IPC_RUST=y\n",
       },
+    )!;
+    expect(t).toMatchObject({
       kernel: "7.3.0",
       upstream_base: "v7.3",
-      commits_since_base: 4799,
-      patch_classes: { ANDROID: 3104 },
-      kmi: { phase: "development", enforced: false },
-      toolchain: {
-        CLANG_VERSION: "r596125",
-        RUSTC_VERSION: "1.96.0",
-        KMI_GENERATION: "0",
-      },
-      defconfig: { RUST: "y", ANDROID_BINDER_IPC_RUST: "y" },
-      rust: { files: 501 },
-    })!;
-    expect(t).toMatchObject({
       clang: "r596125",
       rustc: "1.96.0",
       rust_binder: "y",
-      rust_files: 501,
-      commits_since_base: 4799,
+      head: { date: "2026-11-13T22:41:47.000Z", subject: "x" },
     });
-    expect(trimAndroid({})).toBeNull();
+    expect(t.kmi.phase).toBe("development");
+    expect(parseAndroid("b", {}, { makefile: "", constants: "", bazel: "", defconfig: "" })).toBeNull();
     const ks = emptyKernel();
     ks.android = { [t.branch]: t };
     expect(buildKernel(ks).android[0]!.branch).toBe("android18-7.3");

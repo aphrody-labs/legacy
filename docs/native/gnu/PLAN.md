@@ -6,7 +6,7 @@ Cohérent avec docs/native/llvm/UNIFIED-TOOLCHAIN.md, docs/native/compat/PLAN.md
 - réécritures Rust préférées ;
 - sous Windows, aucun runtime MinGW/MSYS (cible `*-windows-gnullvm` seulement quand l'ABI MinGW est requise).
   Le critère de priorité est l'impact sur notre système de base : Linux prd/fr1/fr2 (Ubuntu 26.10 : `/etc/os-release` des trois hôtes au 2026-11-14), le poste Windows nt-03 et nos builds. Une étape est adoptée quand sa preuve (`src/gnu/<id>/PROOF.md`, suite GNU amont contre le remplaçant) atteint le taux de l'amont Rust de référence (règle 5 d'OS.md).
-- sources de recettes : Guix (`docs/research/guix-gnu-2026-11-14.json`, phases `check`, entrées) ; versions et dépendances de build : GSRC (`docs/research/gsrc-gnu-2026-11-14.json`) ; Guix reste un paquet « abandonné » à remplacer, cité ici comme référence de recettes seulement.
+- sources de recettes : Guix (dépôt `git.savannah.gnu.org/git/guix.git`, phases `check`, entrées) ; versions et dépendances de build : GSRC (`docs/research/gsrc-gnu.json`) ; Guix reste un paquet « abandonné » à remplacer, cité ici comme référence de recettes seulement.
 
 ## Méthode et hôtes
 

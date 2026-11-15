@@ -1,5 +1,5 @@
 // Rust equivalents of GNU packages, keyed by GSRC id (or ftp directory). Sources: docs/native/gnu/gnu-packages.json
-// `modern` and docs/research/gnu-rust-upstream-2026-11-14.md. Versions come live from GitHub releases and crates.io.
+// `modern`. Versions come live from GitHub releases and crates.io.
 import type { RustDef, RustRelease } from "./types.ts";
 import { UA } from "./upstream.ts";
 

@@ -6,8 +6,8 @@ Revue Gemini (Carbon High, 10,5/20, archive `docs/reviews/gemini-2026-11-14-gnu-
 
 Sources de vérité, toutes sous `docs/research/` :
 
-- Liste et versions : GSRC, bzr `gsrc/trunk` (revno 12334, 434 paquets `pkg/gnu`), extrait par `scripts/gsrc-gnu.ts` dans `gsrc-gnu-2026-11-14.json`.
-- Recettes, entrées et phases `check` : Guix `gnu/packages/*.scm` (`guix-gnu-2026-11-14.json`) ; amorçage dans `commencement.scm` (hex0 -> mes -> tcc -> gcc), référence seulement.
+- Liste et versions : GSRC, bzr `gsrc/trunk` (434 paquets `pkg/gnu`, revno dans le champ `source`), extrait par `scripts/gsrc-gnu.ts` dans `docs/research/gsrc-gnu.json` (arbre obtenu par `uvx --from breezy brz export`).
+- Recettes, entrées et phases `check` : Guix `gnu/packages/*.scm` (lus dans le dépôt guix à la demande, plus d extrait figé) ; amorçage dans `commencement.scm` (hex0 -> mes -> tcc -> gcc), référence seulement.
 - Recettes de référence côté distribution : CachyOS (`docs/research/cachyos-2026-11-15.md`, PKGBUILDS clonés sur fr1 dans `/srv/research/cachyos/CachyOS-PKGBUILDS`) : drapeaux, patches et `check()` de chaque paquet GNU se lisent à côté de Guix et de GSRC.
 - Descriptions : `manual/blurbs.html` (`gnu-blurbs-2026-11-14.json`).
 - Inventaire et verdicts : `docs/native/gnu/gnu-packages.json` (472 entrées après `tools/gnu-index/merge.ts`). Adoption : PLAN.md.
@@ -17,7 +17,7 @@ Sources de vérité, toutes sous `docs/research/` :
 
 | Composant du système GNU | Aphrody | État |
 | --- | --- | --- |
-| noyau (Linux, Hurd) | Linux amont de référence (stable 7.3, LTS, GKI Android, ChromeOS ; `docs/research/linux-kernel-upstream-2026-11-14.md`) ; couche propre `src/kernel`, `src/arch`, `src/drivers` (C, style Linux) | suivi, existant |
+| noyau (Linux, Hurd) | Linux amont de référence (stable 7.3, LTS, GKI Android, ChromeOS ; `ay gnu kernel`) ; couche propre `src/kernel`, `src/arch`, `src/drivers` (C, style Linux) | suivi, existant |
 | GNU libc | `src/posix` (personnalité POSIX/Linux) ; glibc de la distro sous Linux | existant, partiel |
 | chaîne d'outils (gcc, binutils, gdb) | LLVM partagé avec Chromium (PLAN.md n°3, n°10) | décidé |
 | paquets GNU (coreutils, findutils, diffutils, sed, grep, tar, gzip, bc, ed, m4, which, time, make...) | `src/gnu/<id GSRC>`, une unité par paquet ; `src/gnu/{which,time,bc,ed,m4}` écrits, forks uutils pinnés (PLAN.md) | en cours |
