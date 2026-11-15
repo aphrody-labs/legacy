@@ -66,6 +66,15 @@ describe("policy", () => {
     expect(ids(order(o, parsePolicy("auto:code", o)))).toEqual(["y/coder", "x/plain"]);
     expect(ids(order(o, parsePolicy("auto", o)))).toEqual(["x/plain", "y/coder"]);
   });
+  test("auto:free puts zero-priced offers first (best arena), then the cheapest paid", () => {
+    const o = [
+      offer("p/paid", { arena: 1600, priceIn: 3, priceOut: 9 }),
+      offer("q/cheap", { arena: 1200, priceIn: 0.1, priceOut: 0.2 }),
+      offer("or/free-low", { arena: 1300, priceIn: 0, priceOut: 0 }),
+      offer("or/free-high", { arena: 1450, priceIn: 0, priceOut: 0 }),
+    ];
+    expect(ids(order(o, parsePolicy("auto:free", o)))).toEqual(["or/free-high", "or/free-low", "q/cheap", "p/paid"]);
+  });
   test("auto:fast uses measured p50", () => {
     const s = new Store(":memory:");
     const rec = (offer: string, ms: number) => s.record({ ts: Date.now(), offer, ok: true, status: 200, ms, inTok: 1, outTok: 1, cost: 0, caller: "x" });

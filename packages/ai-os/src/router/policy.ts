@@ -4,11 +4,12 @@
 //   auto             best arena rating (within budget)      auto:cheap  lowest price
 //   auto:fast        lowest measured p50 latency            auto:code   arena coding-category rating
 //   auto:long        largest context                        arena       two different offers (engine.arena)
+//   auto:free        zero-priced offers first (best arena), then the cheapest paid ones
 // Unknown names fall back to `auto`: something always answers.
 import { type Offer, norm } from "./catalog.ts";
 import type { OfferStat } from "./stats.ts";
 
-export type Mode = "best" | "cheap" | "fast" | "code" | "long";
+export type Mode = "best" | "cheap" | "fast" | "code" | "long" | "free";
 export type Policy =
   | { kind: "exact"; id: string }
   | { kind: "name"; key: string }
@@ -33,7 +34,10 @@ const MODES: Record<string, Mode> = {
   fast: "fast",
   code: "code",
   long: "long",
+  free: "free",
 };
+
+const isFree = (o: Offer) => o.priceIn === 0 && o.priceOut === 0;
 
 /** Virtual model ids the router answers to (listed by GET /v1/models), derived from the modes above. */
 export const VIRTUAL = [
@@ -62,6 +66,8 @@ export const cost = (o: Offer, inTok: number, outTok: number) =>
 
 const INF = Number.POSITIVE_INFINITY;
 
+const isFree = (o: Offer) => o.priceIn === 0 && o.priceOut === 0;
+
 function comparator(mode: Mode, st: (o: Offer) => OfferStat | undefined) {
   const price = (o: Offer) => (o.priceOut === undefined ? INF : (o.priceIn ?? 0) * 3 + o.priceOut);
   const arena = (o: Offer) => o.arena ?? -INF;
@@ -73,6 +79,9 @@ function comparator(mode: Mode, st: (o: Offer) => OfferStat | undefined) {
     fast: (a, b) => (st(a)?.p50 ?? INF) - (st(b)?.p50 ?? INF) || price(a) - price(b),
     code: (a, b) => code(b) - code(a) || price(a) - price(b),
     long: (a, b) => (b.context ?? 0) - (a.context ?? 0) || arena(b) - arena(a),
+    // free: zero-priced offers (OpenRouter :free, free allocations, local models) best-rated first, then the cheapest paid
+    free: (a, b) =>
+      Number(isFree(b)) - Number(isFree(a)) || (isFree(a) ? arena(b) - arena(a) : price(a) - price(b)),
   };
   return byMode[mode];
 }
