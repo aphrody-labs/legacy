@@ -34,7 +34,7 @@ Site: https://gnu.aphrody.com (feed.json, feed.atom, events.json). Doc: `docs/na
 - Ops: `just gnu-service` (status, journal), `just gnu-deploy` (pull and `infra/gnu/install.sh`). Units and nginx vhost live in `infra/gnu/`. Public path: Cloudflare tunnel `fr2` ingress `gnu.aphrody.com` -> `http://127.0.0.1:80`, proxied CNAME.
 - Kernel signatures need `/srv/gnu/kernel-keyring.pgp` (WKD export of the kernel.org developer keys, trust on first fetch).
 
-## Sources (checked 2026-11-14)
+## Sources
 
 ftp.gnu.org ls-lrRt.txt.gz; lists.gnu.org info-gnu monthly index; git.savannah.gnu.org smart HTTP (cgit pages time out); bzr.savannah.gnu.org gsrc last-revision; Guix git head; api.github.com releases; crates.io API; kernel.org releases.json and cdn sha256sums.asc; android.googlesource.com and chromium.googlesource.com `+refs/heads?format=JSON`. www.gnu.org recent-releases.html times out from every host: never rely on it. Requests use a generic User-Agent, never an email.
 

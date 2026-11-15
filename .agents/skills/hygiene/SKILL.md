@@ -31,7 +31,7 @@ A justified hit gets `hygiene-ok: <reason>` on its line, or a glob in `scripts/h
 
 Never scanned: `third_party/`, lockfiles, root manifests, verdict archive `docs/reviews/`, upstream copies (`.agents/skills/*/references/`, `docs/bun`, `apps/auto/vendor`, `tools/lore`), and the areas other sessions own.
 
-## Criteria (fetched live 2026-11-15)
+## Criteria (fetch live before citing)
 
 - Google eng-practices, "What to look for in a code review": no over-engineering or functionality not needed now; comments explain why, not what. https://google.github.io/eng-practices/review/reviewer/looking-for.html
 - Google developer documentation style guide, "Timeless documentation": no statements that rot with time or version. https://developers.google.com/style/timeless-documentation
