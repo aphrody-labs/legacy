@@ -441,7 +441,7 @@ function claude(
             s.name,
             s.url,
           ])
-      : // name before -e: -e is variadic in `claude mcp add` and would swallow the name (fr2, 2026-11-13)
+      : // name before -e: -e is variadic in `claude mcp add` and would swallow the name (seen on fr2)
         run([
           "claude",
           "mcp",

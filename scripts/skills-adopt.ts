@@ -285,7 +285,7 @@ If that fails (401, 403, any credential error), substitute \`gcloud auth applica
     description:
       "Call the Gemini API from the shell with gemini-api: media generation (images, TTS, music, video), file and YouTube analysis, transcription, Deep Research, sandboxed agents.",
     notes: `${GEMINI_NOTES}
-- \`gemini-api\` is installed at \`%LOCALAPPDATA%\\Programs\\gemini-api\\gemini-api.exe\` (0.4.5 on 2026-11-15; latest release v0.4.6, asset \`gemini-api_Windows_x86_64.zip\` of google-gemini/gemini-api-cli). Check with \`command -v gemini-api\` and \`gemini-api whoami\`; the key resolved is the \`.env\` one only when env-kit exported it, so check \`whoami\` before a paid call.`,
+- \`gemini-api\` is installed at \`%LOCALAPPDATA%\\Programs\\gemini-api\\gemini-api.exe\` (asset \`gemini-api_Windows_x86_64.zip\` of google-gemini/gemini-api-cli). Check with \`command -v gemini-api\` and \`gemini-api whoami\`; the key resolved is the \`.env\` one only when env-kit exported it, so check \`whoami\` before a paid call.`,
     skill: [
       between(
         "```sh\n# macOS / Linux",

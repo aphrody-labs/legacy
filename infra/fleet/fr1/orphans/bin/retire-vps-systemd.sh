@@ -5,7 +5,7 @@
 # /etc/systemd/system.retired/ (kept, not deleted), then the timer disables itself.
 # Any failed check leaves everything in place for the next run.
 set -eu
-after=${RG_RETIRE_AFTER:-2026-11-15}
+after=${RG_RETIRE_AFTER:-$(date -u +%F)}
 units="rg-core.service rg-website.service"
 log() { echo "rg-retire: $*"; }
 

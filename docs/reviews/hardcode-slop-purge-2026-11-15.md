@@ -20,7 +20,7 @@ First run (tracked tree minus third_party, lockfiles, upstream copies and areas 
 | --- | --- | --- |
 | dated-snapshot (41) | docs with "state as of / verified on <date>" | provenance stamps on measured facts; removing them loses the date of the measurement. Not rewritten in bulk |
 | magic-date (56) | `tools/gnu-index/{build,curated,merge}.ts`, `packages/machine/src/toolchains-lock.ts`, `infra/fleet/bin/build-all.sh`, `infra/docker/*`, apps/auto fixtures and scripts | GNU index: GNU agent area. Rust nightly pins (`nightly-2026-11-12`) in CI and docker need a fr2 build to change safely. apps/auto: invoice fixtures |
-| dated-filename (14) | docs/infra/resilience/*.txt, AUDIT-2026-11-13, OS-BENCH-2026-11, DEDUP-2026-11-12, research/*, CLI-LIBS-2026-11 | resilience files are run outputs; the others have inbound links (global CLAUDE.md names CLI-LIBS-2026-11.md) or uncommitted edits by other sessions |
+| dated-filename (14) | docs/infra/resilience/*.txt, AUDIT-2026-11-13, OS-BENCH-2026-11, DEDUP-2026-11-12, research/*, CLI-LIBS-2026-11 | resilience files are run outputs; the others have inbound links (global CLAUDE.md names CLI-LIBS.md) or uncommitted edits by other sessions |
 | hardcoded-list (9) | packages/machine/src/forks.ts (121), chromium-bun engines registry, bunify rust.ts, upstream-recon, toolchains-lock, gnu-packages, skills-adopt, microsoft facts | curated registries; fork parents could come from `gh api repos/<fork> --jq .parent`, but the non-parent remotes cannot. Candidate for a later refactor |
 | home-scraper (3) | scripts/gnu-proof.sh, tools/gnu-index/merge.ts, infra/gnu/install.sh | mirrors.kernel.org fetches inside the GNU tooling: GNU agent area |
 | sovereign (4) | docs/research/dragon-ball.md (uncommitted edits by another session), `justfile:43`, `src/rust-stack/src/main.rs:249` | justfile and src/ are not edited by this purge |
@@ -38,6 +38,7 @@ First run (tracked tree minus third_party, lockfiles, upstream copies and areas 
 | hardcoded-list | `packages/machine/src/forks.ts` | fork manifest: upstream, extra remotes and sparse paths; `third_party/forks.txt` lists the forks only. Fork parents alone could come from `gh api`, the remotes cannot |
 | hardcoded-list | `packages/bunify/src/rust.ts` | crate -> upstream repo decision table (`fork` flag is a decision, not a listing) |
 | hardcoded-list | `scripts/gnu-packages.ts` | the `FORK` table pins the tested revision of each aphrody-labs fork; the pin is the data |
+| magic-date | `apps/auto` demo scripts and crate tests, `agent-platform-deploy/scripts/calculate_cost.py`, `jules/query/schema.ts` | invoice and payroll fixtures and demo data need fixed dates; the price table carries its own stamp; the query examples document a date filter |
 | home-scraper | `scripts/gnu-proof.sh` | downloads a release tarball and checks it against the GSRC sha256; no page is parsed |
 
 Externalised instead of allowed: `docs/epic/community-repos.json` (read by `packages/upstream/src/upstream-recon.ts`) and `.agents/skills/microsoft/scripts/repos.json` (read by `facts.ts`).

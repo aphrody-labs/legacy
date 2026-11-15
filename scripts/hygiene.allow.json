@@ -39,5 +39,13 @@
   "dead-ref": [
     ".claude/agents/coherence-fixer.md",
     ".claude/agent-memory/**"
+  ],
+  "magic-date": [
+    ".agents/skills/agent-platform-deploy/scripts/calculate_cost.py",
+    "packages/ai-os/src/google/jules/query/schema.ts",
+    "apps/auto/apps/web/scripts/vitrine.ts",
+    "apps/auto/scripts/video-lancement-captures.ts",
+    "apps/auto/crates/*/src/lib.rs",
+    "apps/auto/crates/auto-facturx/src/cii.rs"
   ]
 }

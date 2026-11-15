@@ -543,7 +543,7 @@ class OfflineSandboxShell {
     }
     if (cmd === "protocols") {
       this.write(
-        "OpenRouter SSE | ACP v1.31.0 | MCP 2026-07-28 | A2A 1.0.1 | WebMCP | OpenCode TUI",
+        "OpenRouter SSE | ACP | MCP | A2A | WebMCP | OpenCode TUI",
       );
       return 0;
     }

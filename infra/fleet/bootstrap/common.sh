@@ -139,7 +139,7 @@ agent_user() {
   { cat "$HOME/.ssh/authorized_keys" 2>/dev/null; $SUDO cat /root/.ssh/authorized_keys 2>/dev/null; } |
     sudo -u "$AGENT" sh -c 'umask 077; mkdir -p "$1/.ssh"; touch "$1/.ssh/authorized_keys"; cat - "$1/.ssh/authorized_keys" | sort -u > "$1/.ssh/k" && mv "$1/.ssh/k" "$1/.ssh/authorized_keys"' _ "$H"
   getent group docker >/dev/null && $SUDO usermod -aG docker "$AGENT"
-  t=$(mktemp); printf '# infra/fleet/bootstrap/common.sh agent_user (owner decision 2026-11-13)\n%s ALL=(ALL:ALL) NOPASSWD: ALL\n' "$AGENT" > "$t"
+  t=$(mktemp); printf '# infra/fleet/bootstrap/common.sh agent_user (owner decision)\n%s ALL=(ALL:ALL) NOPASSWD: ALL\n' "$AGENT" > "$t"
   $SUDO visudo -cf "$t" >/dev/null && $SUDO install -m 0440 -o root -g root "$t" /etc/sudoers.d/aphrody-agent; rm -f "$t"
   $SUDO visudo -c >/dev/null
   $SUDO loginctl enable-linger "$AGENT"
