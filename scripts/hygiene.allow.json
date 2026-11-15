@@ -124,7 +124,7 @@
     "docs/research/dragon-ball.md",
     "infra/agents/tasks/product-page-rosegriffon.json",
     "infra/chromium-factory/chromium-factory.sh",
-    "infra/chromium-factory/labs.just",
+    "infra/chromium-factory/chromium-factory.just",
     "infra/cloudflare/cloudflare.toml",
     "infra/cloudflare/expected-status.json",
     "infra/deploy.toml",

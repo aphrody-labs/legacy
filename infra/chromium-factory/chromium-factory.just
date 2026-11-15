@@ -1,4 +1,4 @@
-# Labs (merged into src): conformance (ay conformance), Lore, Chromium factory.
+# Conformance (ay conformance), Lore and Chromium factory recipes.
 
 # ay + conformance harness build.
 [group('labs')]
@@ -48,7 +48,7 @@ lab-factory-deploy:
     ssh fr1 'mkdir -p /srv/chromium/factory/scripts /srv/chromium/factory/third_party /srv/chromium/factory/args'
     scp -q infra/chromium-factory/chromium-factory.sh infra/chromium-factory/cros-factory.sh fr1:/srv/chromium/factory/
     scp -q infra/chromium-factory/args/*.gn fr1:/srv/chromium/factory/args/
-    scp -q tools/labs-scripts/chrome-channels.sh fr1:/srv/chromium/factory/scripts/
+    scp -q infra/chromium-factory/chrome-channels.sh fr1:/srv/chromium/factory/scripts/
     scp -q third_party/chrome-channels.toml fr1:/srv/chromium/factory/third_party/
     scp -q infra/chromium-factory/systemd/chromium-factory.* fr1:/tmp/
     ssh fr1 'sudo mv /tmp/chromium-factory.service /tmp/chromium-factory.timer /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable chromium-factory.timer'
