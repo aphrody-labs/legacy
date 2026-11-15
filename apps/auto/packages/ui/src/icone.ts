@@ -1,9 +1,9 @@
-// Icône de la marque auto, dessinée en code (aucune image binaire versionnée) : extension, application web
-// installable, coques natives. PNG RVBA encodé ici, sans dépendance.
+// Brand icon of auto, drawn in code (no binary image versioned): extension, installable web app, native shells.
+// RGBA PNG encoded here, without dependency.
 import { deflateSync } from "node:zlib";
 import { palettes } from "./tokens";
 
-/** PNG RVBA non entrelacé (filtre 0 par ligne), compressé en zlib. */
+/** Non-interlaced RGBA PNG (filter 0 per row), zlib-compressed. */
 export function png(largeur: number, hauteur: number, rvba: Uint8Array): Uint8Array {
   const morceau = (type: string, data: Uint8Array) => {
     const out = new Uint8Array(12 + data.length);
@@ -24,7 +24,7 @@ export function png(largeur: number, hauteur: number, rvba: Uint8Array): Uint8Ar
   const parts = [
     new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     morceau("IHDR", ihdr),
-    // Flux zlib (en-tête 78) exigé par PNG : Bun.deflateSync de ce runtime ignore windowBits et produit du deflate brut.
+    // zlib stream (header 78) required by PNG: Bun.deflateSync of this runtime ignores windowBits and emits raw deflate.
     morceau("IDAT", deflateSync(brut, { level: 9 })),
     morceau("IEND", new Uint8Array()),
   ];
@@ -40,20 +40,20 @@ export function png(largeur: number, hauteur: number, rvba: Uint8Array): Uint8Ar
 const rvb = (hex: string) => [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
 
 /**
- * Icône : carré arrondi couleur primaire M3, document blanc à coin replié et trois lignes de texte. Chaque pixel est
- * suréchantillonné (4 × 4) pour un bord lissé à toutes les tailles.
+ * Icon: rounded square in the M3 primary color, white document with a folded corner and three text lines. Each
+ * pixel is supersampled (4 × 4) for a smooth edge at every size.
  */
 export function icone(taille: number): Uint8Array {
   const fond = rvb(palettes.clair.primaire);
   const page = rvb(palettes.clair.surPrimaire);
   const N = 4;
-  const r = 0.22; // rayon du carré, en fraction de la taille
+  const r = 0.22; // radius of the square, as a fraction of the size
   const dans = (x: number, y: number): [number, number, number] | null => {
-    // Carré arrondi.
+    // Rounded square.
     const cx = Math.min(Math.max(x, r), 1 - r);
     const cy = Math.min(Math.max(y, r), 1 - r);
     if ((x - cx) ** 2 + (y - cy) ** 2 > r * r) return null;
-    // Document : 0,30..0,70 en x, 0,20..0,80 en y, coin replié de 0,14 en haut à droite.
+    // Document: 0.30..0.70 in x, 0.20..0.80 in y, folded corner of 0.14 at the top right.
     const [g, d, h, b, pli] = [0.3, 0.7, 0.2, 0.8, 0.14];
     if (x >= g && x <= d && y >= h && y <= b && !(x > d - pli && y < h + pli && x - (d - pli) > y - h)) {
       const ligne = [0.42, 0.53, 0.64].some(

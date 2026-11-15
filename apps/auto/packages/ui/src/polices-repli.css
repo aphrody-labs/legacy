@@ -1,7 +1,7 @@
-/* Polices de repli aux métriques d'Inter et de Plus Jakarta Sans (Arial ou Liberation Sans ajustées) : le texte
-   affiché avant le chargement des WOFF2 (font-display: swap) occupe déjà la même place, sans décalage (CLS).
-   Valeurs mesurées sur les fichiers Fontsource latin : largeur moyenne pondérée par la fréquence des lettres en
-   français rapportée à Liberation Sans (métriques d'Arial), ascendante et descendante hhea divisées par ce rapport. */
+/* Fallback fonts with the metrics of Inter and Plus Jakarta Sans (adjusted Arial or Liberation Sans): text shown
+   before the WOFF2 files load (font-display: swap) already takes the same room, without layout shift (CLS).
+   Values measured on the Fontsource latin files: average width weighted by letter frequency in French, relative
+   to Liberation Sans (Arial metrics); hhea ascent and descent divided by that ratio. */
 @font-face {
   font-family: "Inter repli";
   src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Helvetica");

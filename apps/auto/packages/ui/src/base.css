@@ -1,5 +1,5 @@
-/* Base commune du front (web, admin, landing) : jetons @auto/ui (rôles M3 et alias --auto-*), polices
-   libres auto-hébergées, composants. Aucune couleur brute : uniquement des variables. */
+/* Common base of the front end (web, admin, landing): @auto/ui tokens (M3 roles and --auto-* aliases), self-hosted
+   open fonts, components. No raw color: variables only. */
 @import "@aphrody/m3-tokens/m3-tokens.css";
 @import "./tokens.css";
 @import "./polices-repli.css";
@@ -16,7 +16,7 @@
   box-sizing: border-box;
 }
 
-/* Un élément masqué le reste, même si sa classe impose un display (grid, flex). */
+/* A hidden element stays hidden, even if its class sets a display (grid, flex). */
 [hidden] {
   display: none !important;
 }
@@ -70,8 +70,8 @@ a {
   outline-offset: 2px;
 }
 
-/* Le focus n'est jamais masqué par l'en-tête collant. */
-/* Un élément masqué le reste, même si sa classe impose un display (grid, flex). */
+/* Focus is never hidden by the sticky header. */
+/* A hidden element stays hidden, even if its class sets a display (grid, flex). */
 [hidden] {
   display: none !important;
 }
@@ -123,7 +123,7 @@ th.num {
   height: 16px;
 }
 
-/* Boutons : calques d'état M3 (opacité du rôle on-* sur le conteneur), cibles 44 px. */
+/* Buttons: M3 state layers (opacity of the on-* role over the container), 44 px targets. */
 .bouton {
   --calque: var(--auto-texte);
   position: relative;
@@ -213,7 +213,7 @@ th.num {
   }
 }
 
-/* Champs : libellé visible au-dessus, aide persistante, erreur sous le champ. */
+/* Fields: visible label above, persistent help text, error under the field. */
 .champ {
   display: flex;
   flex-direction: column;
@@ -286,7 +286,7 @@ textarea.controle {
   accent-color: var(--auto-primaire);
 }
 
-/* Cartes et surfaces : bordure fine préférée à l'ombre. */
+/* Cards and surfaces: thin border preferred to shadow. */
 .carte {
   background: var(--auto-surface);
   border: 1px solid var(--auto-bordure);
@@ -299,7 +299,7 @@ textarea.controle {
   }
 }
 
-/* Badge de statut : pictogramme + libellé, couleurs de conteneur M3 testées AA. */
+/* Status badge: icon + label, M3 container colors tested for AA. */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -313,7 +313,7 @@ textarea.controle {
   background: var(--fond);
 }
 
-/* Bandeaux d'information, d'avertissement et d'erreur. */
+/* Info, warning and error banners. */
 .bandeau {
   display: flex;
   gap: var(--auto-espace-3);
@@ -346,8 +346,8 @@ textarea.controle {
   outline-offset: 2px;
 }
 
-/* Tableaux denses : lignes de 40 px, en-têtes surface-alt ; cartes empilées quand le conteneur fait moins de
-   600 px (requête de conteneur : un tableau dans une colonne étroite s'empile aussi sur grand écran). */
+/* Dense tables: 40 px rows, surface-alt headers; stacked cards when the container is under 600 px
+   (container query: a table in a narrow column stacks on a wide screen too). */
 .tableau-conteneur {
   container-type: inline-size;
   overflow-x: auto;
@@ -387,7 +387,7 @@ table.tableau {
   font-weight: 500;
 }
 @container (width < 600px) {
-  /* En-têtes retirés aussi des lecteurs d'écran : chaque cellule porte déjà son libellé (data-libelle). */
+  /* Headers also removed from screen readers: each cell already carries its label (data-libelle). */
   .tableau thead {
     display: none;
   }
@@ -412,7 +412,7 @@ table.tableau {
   }
 }
 
-/* États : vide, chargement (squelette), erreur. */
+/* States: empty, loading (skeleton), error. */
 .etat {
   display: flex;
   flex-direction: column;
@@ -447,7 +447,7 @@ table.tableau {
   }
 }
 
-/* Modale native (<dialog>) : focus piégé par le navigateur, Échap, retour du focus. */
+/* Native modal (<dialog>): focus trapped by the browser, Escape, focus returned. */
 dialog.modale {
   width: min(560px, calc(100vw - 32px));
   max-height: calc(100dvh - 32px);
@@ -494,7 +494,7 @@ dialog.modale[open] {
   border-top: 1px solid var(--auto-bordure);
 }
 
-/* Toasts : aria-live, sans vol de focus. */
+/* Toasts: aria-live, no focus stealing. */
 .toasts {
   position: fixed;
   right: var(--auto-espace-4);
@@ -516,7 +516,7 @@ dialog.modale[open] {
   animation: entree var(--auto-mouvement-normal) var(--auto-mouvement-courbe);
 }
 
-/* Grilles de formulaire. */
+/* Form grids. */
 .grille {
   display: grid;
   gap: var(--auto-espace-4);
@@ -552,7 +552,7 @@ dialog.modale[open] {
   gap: var(--auto-espace-6);
 }
 
-/* Onglets et filtres. */
+/* Tabs and filters. */
 .onglets {
   display: flex;
   gap: var(--auto-espace-1);
@@ -576,7 +576,7 @@ dialog.modale[open] {
   border-bottom-color: var(--auto-primaire);
 }
 
-/* Stepper d'onboarding. */
+/* Onboarding stepper. */
 .etapes {
   display: flex;
   gap: var(--auto-espace-2);
@@ -608,7 +608,7 @@ dialog.modale[open] {
   font-weight: 600;
 }
 
-/* Choix du thème (paramètres) : trois boutons radio, cibles de 44 px. */
+/* Theme choice (settings): three radio buttons, 44 px targets. */
 .choix-theme {
   display: flex;
   flex-wrap: wrap;
@@ -646,7 +646,7 @@ dialog.modale[open] {
   accent-color: var(--auto-primaire);
 }
 
-/* Numéros de pièce et actions de ligne : jamais coupés dans un tableau large. */
+/* Document numbers and row actions: never cut in a wide table. */
 .tableau td.chiffres,
 .tableau .actions-ligne {
   white-space: nowrap;
@@ -655,9 +655,9 @@ dialog.modale[open] {
   flex-wrap: nowrap;
 }
 
-/* Fonds à motifs (pattern.css, MIT) : calque décoratif sous le contenu, couleur de bordure des jetons, estompé
-   par un masque pour ne jamais gêner la lecture. Usage : <div class="fond-motif pattern-grid-lg" aria-hidden="true">
-   dans un parent en position relative. */
+/* Patterned backgrounds (pattern.css, MIT): decorative layer under the content, border color of the tokens, faded
+   by a mask so it never hurts reading. Usage: <div class="fond-motif pattern-grid-lg" aria-hidden="true">
+   in a relatively positioned parent. */
 .fond-motif {
   position: absolute;
   inset: 0;
@@ -667,7 +667,7 @@ dialog.modale[open] {
   mask-image: radial-gradient(ellipse 70% 60% at 70% 35%, black, transparent 75%);
 }
 
-/* Colonne de texte libre (nom, anomalies) : jamais écrasée par les colonnes numériques. */
+/* Free-text column (name, anomalies): never squeezed by the numeric columns. */
 .tableau td.col-texte {
   min-width: 22ch;
 }

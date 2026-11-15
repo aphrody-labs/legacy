@@ -1,32 +1,38 @@
-// Formatage et calculs d'affichage du front (purs, testés) : montants, dates, TVA, remises, statuts, indicateurs.
+// Display formatting and calculations of the front end (pure, tested): amounts, dates, VAT, discounts, statuses,
+// indicators. Text and number formats follow the UI locale (see i18n.ts); function names keep the French domain terms.
 import { htLigne, type Statut, type Tva, type Type } from "@auto/domain";
 import type { StatutVisuel } from "@auto/ui";
+import { t, translator } from "./i18n";
 
-const euros = new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" });
-const dates = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", day: "2-digit", month: "2-digit", year: "numeric" });
-const mois = new Intl.DateTimeFormat("fr-FR", { timeZone: "UTC", month: "long", year: "numeric" });
-const nombres = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
+/** Cents → "€1,234.56" or "1 234,56 €" (Intl, UI locale). */
+export const eur = (cents: number) => translator().currency(cents / 100, "EUR");
 
-/** Centimes → « 1 234,56 € » (espaces insécables de la locale fr-FR). */
-export const eur = (cents: number) => euros.format(cents / 100);
+/** YYYY-MM-DD → "22/10/2026" (UI locale, no time zone shift); empty when absent. */
+export const dateFr = (iso?: string | null) =>
+  iso
+    ? translator().date(new Date(`${iso.slice(0, 10)}T00:00:00Z`), {
+        timeZone: "UTC",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : "";
 
-/** AAAA-MM-JJ → « 22/10/2026 » ; vide si absent. */
-export const dateFr = (iso?: string | null) => (iso ? dates.format(new Date(`${iso.slice(0, 10)}T00:00:00Z`)) : "");
+/** YYYY-MM-DD → "October 2026" (UI locale). */
+export const moisFr = (iso: string) =>
+  translator().date(new Date(`${iso.slice(0, 7)}-01T00:00:00Z`), { timeZone: "UTC", month: "long", year: "numeric" });
 
-/** AAAA-MM-JJ → « octobre 2026 ». */
-export const moisFr = (iso: string) => mois.format(new Date(`${iso.slice(0, 7)}-01T00:00:00Z`));
+export const nombre = (n: number) => translator().number(n, { maximumFractionDigits: 2 });
 
-export const nombre = (n: number) => nombres.format(n);
-
-/** Taux de TVA admis, en dixièmes de pourcent. */
+/** VAT rates allowed, in tenths of a percent. */
 export const TAUX_TVA: Tva[] = [200, 100, 55, 21, 0];
 
-/** 200 → « 20 % », 55 → « 5,5 % ». */
-export const tauxTva = (t: number) => `${nombres.format(t / 10)} %`;
+/** 200 → "20 %" (fr) or "20%" (en), 55 → "5,5 %" or "5.5%". */
+export const tauxTva = (t: number) => translator().number(t / 1000, { style: "percent", maximumFractionDigits: 2 });
 
 /**
- * Saisie d'un montant en euros (« 1 234,56 », « 1234.5 », « 12 € ») → centimes entiers ; `null` si invalide.
- * Deux décimales au plus, pas de montant négatif.
+ * Amount typed in euros ("1 234,56", "1234.5", "12 €") → integer cents; `null` when invalid.
+ * Two decimals at most, no negative amount. Input accepts a comma or a point as decimal separator.
  */
 export function versCentimes(saisie: string): number | null {
   const s = saisie.replace(/[\s  €]/g, "").replace(",", ".");
@@ -35,14 +41,14 @@ export function versCentimes(saisie: string): number | null {
   return Number(ent) * 100 + Number(dec.padEnd(2, "0"));
 }
 
-/** Centimes → valeur de champ « 1234,56 » (sans symbole, pour l'édition). */
+/** Cents → field value "1234,56" (no symbol, for editing; `versCentimes` reads it back). */
 export const depuisCentimes = (cents: number) => {
   const e = Math.trunc(cents / 100);
   const c = Math.abs(cents % 100);
   return c ? `${e},${String(c).padStart(2, "0")}` : String(e);
 };
 
-/** Saisie d'une remise en % (« 10 », « 12,5 ») → points de base ; `null` hors de 0 à 100 %. */
+/** Discount typed in % ("10", "12,5") → basis points; `null` outside 0 to 100%. */
 export function versPointsDeBase(saisie: string): number | null {
   const s = saisie.replace(/[\s%]/g, "").replace(",", ".");
   if (s === "") return 0;
@@ -51,9 +57,9 @@ export function versPointsDeBase(saisie: string): number | null {
   return bp <= 10000 ? bp : null;
 }
 
-export const pourcentDepuisBp = (bp?: number) => (bp ? nombres.format(bp / 100) : "");
+export const pourcentDepuisBp = (bp?: number) => (bp ? nombre(bp / 100) : "");
 
-/** Quantité saisie (« 1,5 ») → nombre strictement positif ; `null` sinon. */
+/** Quantity typed ("1,5") → strictly positive number; `null` otherwise. */
 export function versQuantite(saisie: string): number | null {
   const s = saisie.replace(/\s/g, "").replace(",", ".");
   if (!/^\d+(\.\d{1,3})?$/.test(s)) return null;
@@ -61,7 +67,7 @@ export function versQuantite(saisie: string): number | null {
   return n > 0 ? n : null;
 }
 
-/** Date locale du poste au format AAAA-MM-JJ. */
+/** Local date of the machine as YYYY-MM-DD. */
 export function aujourdhui(d = new Date()): string {
   const p = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
@@ -73,7 +79,7 @@ export function ajouterJours(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Premier et dernier jour du mois de `iso`. */
+/** First and last day of the month of `iso`. */
 export function bornesMois(iso: string): { du: string; au: string } {
   const [a, m] = iso.split("-").map(Number) as [number, number];
   const dernier = new Date(Date.UTC(a, m, 0)).getUTCDate();
@@ -81,14 +87,23 @@ export function bornesMois(iso: string): { du: string; au: string } {
   return { du: `${a}-${p(m)}-01`, au: `${a}-${p(m)}-${p(dernier)}` };
 }
 
-export const LIBELLE_TYPE: Record<Type, string> = {
-  devis: "Devis",
-  facture: "Facture",
-  acompte: "Acompte",
-  avoir: "Avoir",
-};
+/** Read-only record of labels resolved at access time, in the UI locale: `libelles("type", ["devis"])["devis"]`. */
+function libelles<K extends string>(prefix: string, keys: readonly K[]): Record<K, string> {
+  const own = new Set<string>(keys);
+  return new Proxy({} as Record<K, string>, {
+    get: (_, k) => (typeof k === "string" && own.has(k) ? t(`${prefix}.${k}`) : undefined),
+    has: (_, k) => typeof k === "string" && own.has(k),
+    ownKeys: () => [...keys],
+    getOwnPropertyDescriptor: (_, k) =>
+      typeof k === "string" && own.has(k)
+        ? { enumerable: true, configurable: true, value: t(`${prefix}.${k}`) }
+        : undefined,
+  });
+}
 
-/** Statuts pour lesquels une facture reste à encaisser. */
+export const LIBELLE_TYPE: Record<Type, string> = libelles("type", ["devis", "facture", "acompte", "avoir"]);
+
+/** Statuses for which an invoice is still to be collected. */
 const NON_SOLDES: Statut[] = ["emis", "envoye", "accepte", "depose"];
 
 export interface DocResume {
@@ -103,47 +118,25 @@ export interface DocResume {
 
 export const estFactureVente = (t: Type) => t === "facture" || t === "acompte";
 
-/** Statut affiché : « en retard » est dérivé (facture échue et non soldée), jamais stocké. */
+/** Displayed status: "overdue" is derived (invoice past due and not settled), never stored. */
 export function statutVisuel(d: Pick<DocResume, "type" | "statut" | "data">, jour = aujourdhui()): StatutVisuel {
   if (estFactureVente(d.type) && NON_SOLDES.includes(d.statut) && d.data.echeance && d.data.echeance < jour)
     return "en_retard";
   return d.statut;
 }
 
-/** Libellés accordés : un devis est « émis », une facture « émise ». */
-const MASCULIN: Partial<Record<StatutVisuel, string>> = {
-  emis: "Émis",
-  envoye: "Envoyé",
-  accepte: "Accepté",
-  refuse: "Refusé",
-  depose: "Déposé",
-  rejete: "Rejeté",
-  paye: "Payé",
-  annule: "Annulé",
+/** Agreed labels (grammatical gender in French): a quote is "émis", an invoice "émise". */
+export const libelleStatut = (s: StatutVisuel, type: Type) => {
+  const masculin = type === "devis" || type === "acompte" || type === "avoir";
+  return masculin && translator().has(`status.${s}.masc`) ? t(`status.${s}.masc`) : t(`status.${s}`);
 };
-
-const FEMININ: Record<StatutVisuel, string> = {
-  brouillon: "Brouillon",
-  emis: "Émise",
-  envoye: "Envoyée",
-  accepte: "Acceptée",
-  refuse: "Refusée",
-  depose: "Déposée",
-  rejete: "Rejetée",
-  paye: "Payée",
-  annule: "Annulée",
-  en_retard: "En retard",
-};
-
-export const libelleStatut = (s: StatutVisuel, t: Type) =>
-  t === "devis" || t === "acompte" || t === "avoir" ? (MASCULIN[s] ?? FEMININ[s]) : FEMININ[s];
 
 export interface Indicateurs {
-  /** Chiffre d'affaires HT du mois : factures et acomptes émis, moins les avoirs émis. */
+  /** Month revenue excluding VAT: issued invoices and down payments, minus issued credit notes. */
   caMoisHtCents: number;
-  /** TVA collectée du mois, avoirs déduits. */
+  /** VAT collected in the month, credit notes deducted. */
   tvaMoisCents: number;
-  /** Factures émises non soldées : TTC moins avoirs (et paiements si fournis). */
+  /** Issued invoices not settled: gross total minus credit notes (and payments when provided). */
   impayesCents: number;
   impayes: number;
   enRetardCents: number;
@@ -152,8 +145,8 @@ export interface Indicateurs {
 }
 
 /**
- * Indicateurs du tableau de bord à partir de la liste des documents. `restes` (id → reste dû) affine
- * les impayés avec les paiements partiels quand ils sont connus.
+ * Dashboard indicators from the document list. `restes` (id → amount still due) refines the unpaid
+ * figures with partial payments when they are known.
  */
 export function indicateurs(
   docs: (DocResume & { id: string })[],
@@ -199,16 +192,16 @@ export function indicateurs(
 
 export const emailValide = (s: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s.trim());
 
-/** Chiffres seuls d'un SIREN ou SIRET saisi avec espaces. */
+/** Digits only of a SIREN or SIRET typed with spaces. */
 export const chiffres = (s: string) => s.replace(/\D/g, "");
 
-/** SIRET (ou SIREN) groupé pour l'affichage : « 732 829 320 00074 ». */
+/** SIRET (or SIREN) grouped for display: "732 829 320 00074". */
 export function grouperSiret(s: string): string {
   const c = chiffres(s);
   return [c.slice(0, 3), c.slice(3, 6), c.slice(6, 9), c.slice(9, 14)].filter(Boolean).join(" ");
 }
 
-/** Lignes d'un document converties en lignes du domaine ; `null` pour une ligne invalide. */
+/** A document line as typed in the editor; `versLigne` converts it to a domain line (`null` if invalid). */
 export interface SaisieLigne {
   designation: string;
   quantite: string;
@@ -233,75 +226,69 @@ export function versLigne(s: SaisieLigne) {
   };
 }
 
-/** HT net d'une ligne en saisie (0 tant qu'elle est incomplète), par la règle de @auto/domain. */
+/** Net amount excluding VAT of a line being typed (0 while incomplete), by the @auto/domain rule. */
 export function htLigneSaisie(s: SaisieLigne): number {
   const l = versLigne(s);
   return l ? htLigne(l) : 0;
 }
 
-/** Erreurs d'une ligne en saisie, par champ (affichées sous le champ concerné). */
+/** Errors of a line being typed, per field (shown under the field). */
 export function erreursLigne(s: SaisieLigne): Partial<Record<keyof SaisieLigne, string>> {
   const e: Partial<Record<keyof SaisieLigne, string>> = {};
-  if (!s.designation.trim()) e.designation = "Désignation obligatoire.";
-  if (versQuantite(s.quantite) === null) e.quantite = "Quantité positive, 3 décimales au plus.";
-  if (versCentimes(s.prix) === null) e.prix = "Montant en euros, par exemple 120,50.";
-  if (versPointsDeBase(s.remise) === null) e.remise = "Remise entre 0 et 100 %.";
+  if (!s.designation.trim()) e.designation = t("line.designation");
+  if (versQuantite(s.quantite) === null) e.quantite = t("line.quantity");
+  if (versCentimes(s.prix) === null) e.prix = t("line.price");
+  if (versPointsDeBase(s.remise) === null) e.remise = t("line.discount");
   return e;
 }
 
-export const LIBELLE_ABSENCE: Record<string, string> = {
-  conges_payes: "Congés payés",
-  rtt: "RTT",
-  maladie: "Maladie",
-  sans_solde: "Sans solde",
-  evenement_familial: "Événement familial",
-  autre: "Autre",
-};
+const ABSENCES = ["conges_payes", "rtt", "maladie", "sans_solde", "evenement_familial", "autre"] as const;
+export const LIBELLE_ABSENCE: Record<string, string> = libelles("absence", ABSENCES);
 
-export const LIBELLE_STATUT_ABSENCE: Record<string, string> = {
-  demandee: "Demandée",
-  validee: "Validée",
-  refusee: "Refusée",
-  annulee: "Annulée",
-};
+export const LIBELLE_STATUT_ABSENCE: Record<string, string> = libelles("absence.status", [
+  "demandee",
+  "validee",
+  "refusee",
+  "annulee",
+]);
 
-export const LIBELLE_CONTRAT: Record<string, string> = {
-  cdi: "CDI",
-  cdd: "CDD",
-  apprentissage: "Apprentissage",
-  professionnalisation: "Professionnalisation",
-  stage: "Stage",
-  interim: "Intérim",
-};
+export const LIBELLE_CONTRAT: Record<string, string> = libelles("contract", [
+  "cdi",
+  "cdd",
+  "apprentissage",
+  "professionnalisation",
+  "stage",
+  "interim",
+]);
 
-export const LIBELLE_MODE: Record<string, string> = {
-  virement: "Virement",
-  carte: "Carte",
-  cheque: "Chèque",
-  especes: "Espèces",
-  prelevement: "Prélèvement",
-  autre: "Autre",
-};
+export const LIBELLE_MODE: Record<string, string> = libelles("payment", [
+  "virement",
+  "carte",
+  "cheque",
+  "especes",
+  "prelevement",
+  "autre",
+]);
 
-/** Octets (unités décimales, comme les quotas) : « 1,5 Go », « 20 Go », « 350 Mo ». */
+/** Bytes (decimal units, like the quotas): "1.5 GB", "20 GB", "350 MB" (fr: "1,5 Go"). */
 export function octets(n: number): string {
   const u = [
-    [1e9, "Go"],
-    [1e6, "Mo"],
-    [1e3, "ko"],
+    [1e9, "unit.gb"],
+    [1e6, "unit.mb"],
+    [1e3, "unit.kb"],
   ] as const;
-  for (const [v, s] of u) if (n >= v) return `${nombre(Math.round((n / v) * 10) / 10)} ${s}`;
-  return `${nombre(n)} o`;
+  for (const [v, s] of u) if (n >= v) return `${nombre(Math.round((n / v) * 10) / 10)} ${t(s)}`;
+  return `${nombre(n)} ${t("unit.b")}`;
 }
 
-/** Nombre accordé (règle française : 0 et 1 au singulier) : « 1 créé », « 3 créés ». */
+/** Count with its noun, singular per the plural rules of the UI locale (French: 0 and 1): "1 created", "3 created". */
 export const pluriel = (n: number, singulier: string, pl = `${singulier}s`) =>
-  `${nombre(n)} ${Math.abs(n) < 2 ? singulier : pl}`;
+  `${nombre(n)} ${new Intl.PluralRules(translator().locale).select(Math.abs(n)) === "one" ? singulier : pl}`;
 
-/** Jours (ouvrables) : « 1 jour », « 2,5 jours ». */
-export const jours = (n: number) => pluriel(n, "jour");
+/** (Working) days: "1 day", "2.5 days". */
+export const jours = (n: number) => t("ui.days", { n });
 
-/** Octets → base64 (corps des imports). */
+/** Bytes → base64 (body of the imports). */
 export function enBase64(octets: Uint8Array): string {
   const u = octets as Uint8Array & { toBase64?: () => string };
   if (typeof u.toBase64 === "function") return u.toBase64();

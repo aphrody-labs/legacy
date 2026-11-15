@@ -1,16 +1,16 @@
 /**
- * Jetons de design « auto », alignés sur Material 3 (`@aphrody/m3-tokens`) : chaque couleur est un rôle
- * `--md-sys-color-*` dérivé de la graine de marque, ou une couleur personnalisée M3 (succès, avertissement)
- * dérivée de sa propre graine. tokens.css en est le miroir (vérifié par test).
+ * Design tokens of "auto", aligned on Material 3 (`@aphrody/m3-tokens`): each color is an `--md-sys-color-*` role
+ * derived from the brand seed, or an M3 custom color (success, warning) derived from its own seed. tokens.css
+ * mirrors it (checked by a test).
  */
 import { schemeFromSeed, type ColorRoleMap } from "@aphrody/m3-tokens/dynamic-color";
 
 export type Theme = "clair" | "sombre";
 
-/** Graine de marque (vert-teal) et graines des couleurs personnalisées. */
+/** Brand seed (green-teal) and seeds of the custom colors. */
 export const graines = { marque: "#0F6B5C", succes: "#1E8E3E", avertissement: "#B26A00" } as const;
 
-/** Rôles M3 résolus par thème, pour la marque et chaque couleur personnalisée. */
+/** M3 roles resolved per theme, for the brand and each custom color. */
 export const roles = {
   clair: schemeFromSeed(graines.marque),
   sombre: schemeFromSeed(graines.marque, { dark: true }),
@@ -28,7 +28,7 @@ export interface Palette {
   surface: string;
   surfaceAlt: string;
   bordure: string;
-  /** Bordure des champs et contrôles : au moins 3:1 sur la surface (WCAG 1.4.11). */
+  /** Border of fields and controls: at least 3:1 on the surface (WCAG 1.4.11). */
   bordureControle: string;
   texte: string;
   texteAttenue: string;
@@ -44,9 +44,9 @@ export interface Palette {
 type Role = string | Record<Theme, string>;
 
 /**
- * Correspondance des jetons « auto » vers les rôles M3 ; succès et avertissement sont des couleurs personnalisées.
- * Les cartes reposent sur `surface-container-lowest` en clair mais `surface-container` en sombre, pour rester
- * plus claires que la page dans les deux thèmes.
+ * Mapping of the "auto" tokens to M3 roles; success and warning are custom colors.
+ * Cards sit on `surface-container-lowest` in light but `surface-container` in dark, so they stay lighter than
+ * the page in both themes.
  */
 export const correspondance: Record<Exclude<keyof Palette, "succes" | "avertissement">, Role> = {
   fond: "surface",
@@ -74,7 +74,7 @@ const palette = (t: Theme): Palette => ({
 
 export const palettes: Record<Theme, Palette> = { clair: palette("clair"), sombre: palette("sombre") };
 
-/** Statuts de `@auto/domain` plus `en_retard` (dérivé de l'échéance, non stocké). */
+/** Statuses of `@auto/domain` plus `en_retard` (derived from the due date, not stored). */
 export type StatutVisuel =
   | "brouillon"
   | "emis"
@@ -90,13 +90,11 @@ export type StatutVisuel =
 export interface CouleurStatut {
   texte: string;
   fond: string;
-  /** Libellé affiché : le statut n'est jamais transmis par la couleur seule. */
-  libelle: string;
-  /** Nom de pictogramme (jeu libre Lucide). */
+  /** Icon name (free Lucide set). */
   icone: string;
 }
 
-/** Conteneur M3 (texte `on-*-container` sur fond `*-container`) de chaque statut. */
+/** M3 container (`on-*-container` text on `*-container` background) of each status. */
 const conteneurs: Record<
   StatutVisuel,
   "primary" | "secondary" | "tertiary" | "error" | "neutre" | "succes" | "avertissement"
@@ -113,17 +111,17 @@ const conteneurs: Record<
   en_retard: "error",
 };
 
-const libelles: Record<StatutVisuel, Pick<CouleurStatut, "libelle" | "icone">> = {
-  brouillon: { libelle: "Brouillon", icone: "pencil" },
-  emis: { libelle: "Émise", icone: "file-check" },
-  envoye: { libelle: "Envoyée", icone: "send" },
-  accepte: { libelle: "Acceptée", icone: "circle-check" },
-  refuse: { libelle: "Refusée", icone: "circle-x" },
-  depose: { libelle: "Déposée", icone: "upload" },
-  rejete: { libelle: "Rejetée", icone: "triangle-alert" },
-  paye: { libelle: "Payée", icone: "banknote" },
-  annule: { libelle: "Annulée", icone: "ban" },
-  en_retard: { libelle: "En retard", icone: "clock-alert" },
+const icones: Record<StatutVisuel, Pick<CouleurStatut, "icone">> = {
+  brouillon: { icone: "pencil" },
+  emis: { icone: "file-check" },
+  envoye: { icone: "send" },
+  accepte: { icone: "circle-check" },
+  refuse: { icone: "circle-x" },
+  depose: { icone: "upload" },
+  rejete: { icone: "triangle-alert" },
+  paye: { icone: "banknote" },
+  annule: { icone: "ban" },
+  en_retard: { icone: "clock-alert" },
 };
 
 function couleurStatut(t: Theme, s: StatutVisuel): CouleurStatut {
@@ -136,7 +134,7 @@ function couleurStatut(t: Theme, s: StatutVisuel): CouleurStatut {
           src[`--md-sys-color-${c === "succes" || c === "avertissement" ? "primary" : c}-container`]!,
           src[`--md-sys-color-on-${c === "succes" || c === "avertissement" ? "primary" : c}-container`]!,
         ];
-  return { texte, fond, ...libelles[s] };
+  return { texte, fond, ...icones[s] };
 }
 
 const tous = Object.keys(conteneurs) as StatutVisuel[];
@@ -145,7 +143,7 @@ export const statuts: Record<Theme, Record<StatutVisuel, CouleurStatut>> = {
   sombre: Object.fromEntries(tous.map((s) => [s, couleurStatut("sombre", s)])) as Record<StatutVisuel, CouleurStatut>,
 };
 
-/** Échelle de 4 px. */
+/** 4 px scale. */
 export const espacement = {
   0: "0",
   1: "4px",
@@ -161,26 +159,26 @@ export const espacement = {
 } as const;
 
 /**
- * Forme, élévation et mouvement viennent des jetons système M3 de `@aphrody/m3-tokens/m3-tokens.css` (importé
- * par base.css) : chaque alias `--auto-*` pointe sur le jeton `--md-sys-*` correspondant.
+ * Shape, elevation and motion come from the M3 system tokens of `@aphrody/m3-tokens/m3-tokens.css` (imported
+ * by base.css): each `--auto-*` alias points to the matching `--md-sys-*` token.
  */
 export const rayons = { sm: "extra-small", md: "small", lg: "medium", pleine: "full" } as const;
 
 export const ombres = { sm: "level1", md: "level2", lg: "level3" } as const;
 
 /**
- * Polices de marque : elles remplacent les typefaces de référence M3, que les composants M3 suivent aussi. Les
- * « repli » (polices-repli.css) sont Arial aux métriques de la police attendue : pas de décalage au chargement.
+ * Brand fonts: they replace the M3 reference typefaces, which the M3 components follow too. The "repli"
+ * fallbacks (polices-repli.css) are Arial with the metrics of the expected font: no layout shift on load.
  */
 export const typographie = {
   titre: '"Plus Jakarta Sans", "Plus Jakarta Sans repli", system-ui, sans-serif',
-  /** Corps et chiffres : Inter avec `font-variant-numeric: tabular-nums`. */
+  /** Body and figures: Inter with `font-variant-numeric: tabular-nums`. */
   corps: '"Inter", "Inter repli", system-ui, sans-serif',
   taille: { xs: "12px", sm: "14px", base: "16px", lg: "18px", xl: "24px", xxl: "32px" },
   interligne: { serre: 1.25, corps: 1.5 },
 } as const;
 
-/** Durées et courbe M3 (`--md-sys-motion-*`). */
+/** M3 durations and easing (`--md-sys-motion-*`). */
 export const mouvement = {
   rapide: "duration-short3",
   normal: "duration-short4",
@@ -188,11 +186,11 @@ export const mouvement = {
   courbe: "easing-standard",
 } as const;
 
-/** Classes de fenêtre M3 (compact, medium, expanded, large, extra-large). */
+/** M3 window classes (compact, medium, expanded, large, extra-large). */
 export { BREAKPOINTS as pointsDeRupture } from "@aphrody/m3-tokens/breakpoints";
 export const zIndex = { base: 0, collant: 10, menu: 20, modale: 40, toast: 100 } as const;
 
-/** Luminance relative WCAG 2.x. */
+/** WCAG 2.x relative luminance. */
 export function luminance(hex: string): number {
   const n = Number.parseInt(hex.replace("#", ""), 16);
   const canaux = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
@@ -211,7 +209,7 @@ export function contraste(a: string, b: string): number {
 const kebab = (s: string) => s.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
 const nomStatut = (s: string) => s.replace("_", "-");
 
-/** Valeurs propres au thème : rôles M3 et couleurs personnalisées (succès, avertissement). */
+/** Theme-specific values: M3 roles and custom colors (success, warning). */
 function blocTheme(t: Theme, indent: string): string {
   const persos = { succes: succes[t], avertissement: avertissement[t] };
   return [
@@ -227,7 +225,7 @@ function blocTheme(t: Theme, indent: string): string {
   ].join("\n");
 }
 
-/** Rôles exposés pour chaque couleur personnalisée M3. */
+/** Roles exposed for each M3 custom color. */
 const rolesPerso = {
   base: "primary",
   sur: "on-primary",
@@ -235,7 +233,7 @@ const rolesPerso = {
   "on-container": "on-primary-container",
 } as const;
 
-/** Alias « auto » vers les rôles M3 : identiques pour les deux thèmes, la cascade fait le reste. */
+/** "auto" aliases to M3 roles: the same for both themes, the cascade does the rest. */
 function alias(): string {
   const conteneur = (c: (typeof conteneurs)[StatutVisuel]) =>
     c === "neutre"
@@ -256,7 +254,7 @@ function alias(): string {
   ].join("\n");
 }
 
-/** Génère le CSS des variables (contenu de tokens.css). */
+/** Generates the CSS variables (content of tokens.css). */
 export function genererCss(): string {
   const fixes = [
     ...Object.entries(espacement).map(([k, v]) => `  --auto-espace-${k}: ${v};`),
@@ -269,8 +267,8 @@ export function genererCss(): string {
     ...Object.entries(typographie.taille).map(([k, v]) => `  --auto-taille-${k}: ${v};`),
     ...Object.entries(mouvement).map(([k, v]) => `  --auto-mouvement-${k}: var(--md-sys-motion-${v});`),
   ].join("\n");
-  return `/* Généré depuis src/tokens.ts (bun packages/ui/src/gen.ts) : ne pas modifier à la main. */
-/* Rôles Material 3 (@aphrody/m3-tokens, graine ${graines.marque}) et alias --auto-* ; à charger après @aphrody/m3-tokens/m3-tokens.css. */
+  return `/* Generated from src/tokens.ts (bun packages/ui/src/gen.ts): do not edit by hand. */
+/* Material 3 roles (@aphrody/m3-tokens, seed ${graines.marque}) and --auto-* aliases; load after @aphrody/m3-tokens/m3-tokens.css. */
 :root {
   color-scheme: light dark;
 ${fixes}
@@ -278,7 +276,7 @@ ${alias()}
 ${blocTheme("clair", "  ")}
 }
 
-/* Thème clair imposé sur un système sombre : les contrôles natifs (barres de défilement, listes) suivent. */
+/* Light theme forced on a dark system: native controls (scrollbars, lists) follow. */
 :root[data-theme="clair"] {
   color-scheme: light;
 }

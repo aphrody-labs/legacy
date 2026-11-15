@@ -1,5 +1,5 @@
-// Icônes Material Symbols (Rounded) en composants React : SVG en ligne, couleur héritée (currentColor), taille par
-// la classe `icone`. Les tracés viennent de symboles.gen.ts (scripts/symboles.ts).
+// Material Symbols (Rounded) icons as React components: inline SVG, inherited color (currentColor), size set by the
+// `icone` class. Paths come from symboles.gen.ts (scripts/symboles.ts).
 import type { SVGProps } from "react";
 import { TRACES } from "./symboles.gen";
 

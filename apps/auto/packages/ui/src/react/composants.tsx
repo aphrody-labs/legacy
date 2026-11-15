@@ -1,5 +1,6 @@
-// Composants d'auto sur les jetons @auto/ui (rôles M3), voir docs/UI.md.
+// Components of auto on the @auto/ui tokens (M3 roles), see docs/UI.md. Text comes from the catalogs in ../../locales.
 import type { StatutVisuel } from "@auto/ui";
+import { t } from "../i18n";
 import {
   Ban,
   Banknote,
@@ -106,7 +107,7 @@ function Enveloppe({
             <span className="requis" aria-hidden="true">
               *
             </span>
-            <span className="visuellement-cache"> (obligatoire)</span>
+            <span className="visuellement-cache"> {t("ui.field.required")}</span>
           </>
         )}
       </label>
@@ -220,7 +221,7 @@ const ICONES_STATUT: Record<StatutVisuel, Symbole> = {
   en_retard: ClockAlert,
 };
 
-/** Badge : pictogramme + libellé ; la couleur ne porte jamais seule le statut. */
+/** Badge: icon + label; color never carries the status alone. */
 export function BadgeStatut({ statut, libelle }: { statut: StatutVisuel; libelle: string }) {
   const Icone = ICONES_STATUT[statut];
   const nom = statut.replace("_", "-");
@@ -236,7 +237,7 @@ export function BadgeStatut({ statut, libelle }: { statut: StatutVisuel; libelle
       }
     >
       <Icone className="icone icone-sm" aria-hidden="true" />
-      <span className="visuellement-cache">Statut : </span>
+      <span className="visuellement-cache">{t("ui.badge.status")}</span>
       {libelle}
     </span>
   );
@@ -251,7 +252,7 @@ export function Bandeau({
   ton?: "info" | "erreur" | "avertissement" | "succes";
   titre?: string;
   children?: ReactNode;
-  /** Résumé d'erreurs : reçoit le focus à l'affichage. */
+  /** Error summary: takes focus when shown. */
   focaliser?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -276,7 +277,7 @@ export function Bandeau({
   );
 }
 
-/** Erreurs de l'API : message et détails (mentions manquantes, lignes invalides). */
+/** API errors: message and details (missing mentions, invalid lines). */
 export function ResumeErreurs({ erreur }: { erreur: { message: string; details?: string[] } | null }) {
   if (!erreur) return null;
   return (
@@ -310,7 +311,7 @@ export function EtatVide({
   );
 }
 
-export function EtatChargement({ lignes = 4, libelle = "Chargement" }: { lignes?: number; libelle?: string }) {
+export function EtatChargement({ lignes = 4, libelle = t("ui.loading") }: { lignes?: number; libelle?: string }) {
   return (
     <div className="pile" role="status" aria-live="polite">
       <span className="visuellement-cache">{libelle}…</span>
@@ -325,18 +326,18 @@ export function EtatErreur({ message, onReessayer }: { message: string; onReessa
   return (
     <div className="etat" role="alert">
       <CircleAlert className="icone" aria-hidden="true" />
-      <h2>Chargement impossible</h2>
+      <h2>{t("ui.error.title")}</h2>
       <p>{message}</p>
       {onReessayer && (
         <Bouton icone={RotateCcw} onClick={onReessayer}>
-          Réessayer
+          {t("ui.retry")}
         </Bouton>
       )}
     </div>
   );
 }
 
-/** Modale native : `showModal()` piège le focus, Échap ferme, le focus revient au déclencheur. */
+/** Native modal: `showModal()` traps focus, Escape closes, focus returns to the trigger. */
 export function Modale({
   ouverte,
   titre,
@@ -373,7 +374,7 @@ export function Modale({
         <>
           <div className="modale-entete">
             <h2 id={titreId}>{titre}</h2>
-            <Bouton variante="fantome" icone={X} aria-label="Fermer" onClick={onFermer} />
+            <Bouton variante="fantome" icone={X} aria-label={t("ui.close")} onClick={onFermer} />
           </div>
           <div className="modale-corps">{children}</div>
           {pied && <div className="modale-pied">{pied}</div>}
@@ -386,7 +387,7 @@ export function Modale({
 type Toast = { id: number; message: string };
 const ContexteToast = createContext<(message: string) => void>(() => {});
 
-/** Toasts : région `aria-live="polite"`, fermeture automatique en 4 s, sans vol de focus. */
+/** Toasts: `aria-live="polite"` region, automatic close after 4 s, no focus stealing. */
 export function FournisseurToasts({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const suivant = useRef(0);
@@ -417,8 +418,8 @@ export type Theme = "clair" | "sombre" | "systeme";
 const CLE_THEME = "auto-theme";
 
 /**
- * Applique un thème et le mémorise. « systeme » efface la valeur enregistrée : la page suit de nouveau le
- * système, y compris ses changements ultérieurs. Un stockage indisponible n'empêche pas d'appliquer le thème.
+ * Applies a theme and remembers it. "systeme" clears the stored value: the page follows the system again,
+ * including its later changes. Unavailable storage does not prevent applying the theme.
  */
 export function appliquerTheme(t: Theme) {
   if (t === "systeme") delete document.documentElement.dataset.theme;
@@ -427,7 +428,7 @@ export function appliquerTheme(t: Theme) {
     if (t === "systeme") localStorage.removeItem(CLE_THEME);
     else localStorage.setItem(CLE_THEME, t);
   } catch {
-    // Données du site bloquées : le thème vaut pour cette page seulement.
+    // Site data blocked: the theme holds for this page only.
   }
 }
 
@@ -441,19 +442,19 @@ export function themeEnregistre(): Theme {
 }
 
 const systemeSombre = () => matchMedia("(prefers-color-scheme: dark)").matches;
-/** Thème réellement affiché : le thème imposé, sinon celui du système. */
+/** Theme actually shown: the forced theme, else the system one. */
 const themeAffiche = (t: Theme): "clair" | "sombre" => (t === "systeme" ? (systemeSombre() ? "sombre" : "clair") : t);
 
 /**
- * Bascule à deux états pour la barre latérale : passe au thème opposé de celui affiché. Si ce thème est celui du
- * système, l'utilisateur annule son réglage : rien n'est mémorisé, la page suit à nouveau le système. Les trois choix
- * explicites (système, clair, sombre) sont dans les paramètres (`ChoixTheme`).
+ * Two-state toggle for the sidebar: switches to the opposite of the shown theme. If that theme is the system one,
+ * the user cancels their setting: nothing is stored, the page follows the system again. The three explicit
+ * choices (system, light, dark) are in the settings (`ChoixTheme`).
  */
 export function BasculeTheme({ avecLibelle }: { avecLibelle?: boolean }) {
   const [theme, setTheme] = useState<Theme>(themeEnregistre);
   const [, rafraichir] = useState(0);
   useEffect(() => {
-    // Autre onglet ou changement du thème du système : l'icône et l'action proposée suivent.
+    // Other tab or system theme change: the icon and the proposed action follow.
     const surStockage = (e: StorageEvent) => {
       if (e.key !== CLE_THEME && e.key !== null) return;
       const t = themeEnregistre();
@@ -471,7 +472,7 @@ export function BasculeTheme({ avecLibelle }: { avecLibelle?: boolean }) {
   }, []);
   const affiche = themeAffiche(theme);
   const cible = affiche === "sombre" ? "clair" : "sombre";
-  const action = cible === "sombre" ? "Passer au thème sombre" : "Passer au thème clair";
+  const action = t(cible === "sombre" ? "ui.theme.switch.dark" : "ui.theme.switch.light");
   function basculer() {
     const t: Theme = cible === (systemeSombre() ? "sombre" : "clair") ? "systeme" : cible;
     appliquerTheme(t);
@@ -489,19 +490,19 @@ export function BasculeTheme({ avecLibelle }: { avecLibelle?: boolean }) {
   );
 }
 
-const CHOIX_THEME: { valeur: Theme; libelle: string; icone: Symbole }[] = [
-  { valeur: "systeme", libelle: "Système", icone: Monitor },
-  { valeur: "clair", libelle: "Clair", icone: Sun },
-  { valeur: "sombre", libelle: "Sombre", icone: Moon },
+const CHOIX_THEME: { valeur: Theme; cle: string; icone: Symbole }[] = [
+  { valeur: "systeme", cle: "ui.theme.choice.system", icone: Monitor },
+  { valeur: "clair", cle: "ui.theme.choice.light", icone: Sun },
+  { valeur: "sombre", cle: "ui.theme.choice.dark", icone: Moon },
 ];
 
-/** Réglage explicite à trois choix (paramètres) ; « Système » indique le thème qu'il donne actuellement. */
+/** Explicit three-way setting (settings); "System" tells which theme it currently gives. */
 export function ChoixTheme() {
   const [theme, setTheme] = useState<Theme>(themeEnregistre);
-  const systeme = systemeSombre() ? "sombre" : "clair";
+  const systeme = t(systemeSombre() ? "ui.theme.now.dark" : "ui.theme.now.light");
   return (
     <fieldset className="choix-theme">
-      <legend>Thème</legend>
+      <legend>{t("ui.theme.legend")}</legend>
       {CHOIX_THEME.map((c) => (
         <label key={c.valeur} className="choix-theme-option">
           <input
@@ -515,7 +516,7 @@ export function ChoixTheme() {
             }}
           />
           <c.icone className="icone icone-sm" aria-hidden="true" />
-          {c.valeur === "systeme" ? `${c.libelle} (actuellement ${systeme})` : c.libelle}
+          {c.valeur === "systeme" ? t("ui.theme.system.current", { label: t(c.cle), current: systeme }) : t(c.cle)}
         </label>
       ))}
     </fieldset>
@@ -527,7 +528,7 @@ export type Etat<T> =
   | { etat: "ok"; donnees: T; erreur?: undefined }
   | { etat: "erreur"; donnees?: undefined; erreur: string };
 
-/** Chargement asynchrone avec états chargement, ok, erreur et rechargement. */
+/** Async loading with loading, ok and error states, and reload. */
 export function useDonnees<T>(charger: () => Promise<T>, deps: unknown[] = []) {
   const [etat, setEtat] = useState<Etat<T>>({ etat: "chargement" });
   const [jeton, setJeton] = useState(0);

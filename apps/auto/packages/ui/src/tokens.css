@@ -1,5 +1,5 @@
-/* Généré depuis src/tokens.ts (bun packages/ui/src/gen.ts) : ne pas modifier à la main. */
-/* Rôles Material 3 (@aphrody/m3-tokens, graine #0F6B5C) et alias --auto-* ; à charger après @aphrody/m3-tokens/m3-tokens.css. */
+/* Generated from src/tokens.ts (bun packages/ui/src/gen.ts): do not edit by hand. */
+/* Material 3 roles (@aphrody/m3-tokens, seed #0F6B5C) and --auto-* aliases; load after @aphrody/m3-tokens/m3-tokens.css. */
 :root {
   color-scheme: light dark;
   --auto-espace-0: 0;
@@ -127,7 +127,7 @@
   --auto-avertissement-on-container: #693c00;
 }
 
-/* Thème clair imposé sur un système sombre : les contrôles natifs (barres de défilement, listes) suivent. */
+/* Light theme forced on a dark system: native controls (scrollbars, lists) follow. */
 :root[data-theme="clair"] {
   color-scheme: light;
 }

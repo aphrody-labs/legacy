@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { beforeAll, expect, test } from "bun:test";
 import { totaux } from "@auto/domain";
 import {
   ajouterJours,
@@ -23,18 +23,22 @@ import {
   versQuantite,
   type DocResume,
 } from "./format";
+import { setLocale } from "./i18n";
 
-// Espaces de la locale fr-FR : insécable fine (U+202F) pour les milliers, insécable (U+00A0) avant « € ».
+// The assertions below are the French rendering; English is checked in the last test.
+beforeAll(() => setLocale("fr"));
+
+// fr-FR spaces: narrow no-break (U+202F) for thousands, no-break (U+00A0) before the euro sign.
 const sans = (s: string) => s.replace(/[  ]/g, " ");
 
-test("montants : Intl fr-FR, centimes entiers, négatifs", () => {
+test("amounts: Intl fr-FR, integer cents, negatives", () => {
   expect(sans(eur(123456))).toBe("1 234,56 €");
   expect(sans(eur(0))).toBe("0,00 €");
   expect(sans(eur(-4000))).toBe("-40,00 €");
   expect(eur(100)).toMatch(/ €$/);
 });
 
-test("saisie des montants → centimes", () => {
+test("typed amounts → cents", () => {
   expect(versCentimes("1 234,56")).toBe(123456);
   expect(versCentimes("1234.5")).toBe(123450);
   expect(versCentimes("12 €")).toBe(1200);
@@ -47,7 +51,7 @@ test("saisie des montants → centimes", () => {
   expect(depuisCentimes(1200)).toBe("12");
 });
 
-test("remises, quantités et taux de TVA", () => {
+test("discounts, quantities and VAT rates", () => {
   expect(versPointsDeBase("10")).toBe(1000);
   expect(versPointsDeBase("12,5 %")).toBe(1250);
   expect(versPointsDeBase("")).toBe(0);
@@ -55,12 +59,12 @@ test("remises, quantités et taux de TVA", () => {
   expect(versQuantite("1,5")).toBe(1.5);
   expect(versQuantite("0")).toBeNull();
   expect(versQuantite("1,2345")).toBeNull();
-  expect(tauxTva(200)).toBe("20 %");
-  expect(tauxTva(55)).toBe("5,5 %");
-  expect(tauxTva(21)).toBe("2,1 %");
+  expect(sans(tauxTva(200))).toBe("20 %");
+  expect(sans(tauxTva(55))).toBe("5,5 %");
+  expect(sans(tauxTva(21))).toBe("2,1 %");
 });
 
-test("dates : affichage fr-FR sans décalage de fuseau, mois, bornes, échéances", () => {
+test("dates: fr-FR display without time zone shift, months, bounds, due dates", () => {
   expect(dateFr("2026-10-22")).toBe("22/10/2026");
   expect(dateFr("2026-01-01T23:30:00Z")).toBe("01/01/2026");
   expect(dateFr(null)).toBe("");
@@ -69,7 +73,7 @@ test("dates : affichage fr-FR sans décalage de fuseau, mois, bornes, échéance
   expect(ajouterJours("2026-12-15", 30)).toBe("2027-01-14");
 });
 
-test("lignes saisies → lignes du domaine, totaux identiques à @auto/domain", () => {
+test("typed lines → domain lines, totals identical to @auto/domain", () => {
   const s = { designation: " Conseil ", quantite: "2,5", unite: "h", prix: "80", remise: "10", tva: 200 as const };
   const l = versLigne(s)!;
   expect(l).toEqual({
@@ -93,7 +97,7 @@ test("lignes saisies → lignes du domaine, totaux identiques à @auto/domain", 
   expect(erreursLigne(s)).toEqual({});
 });
 
-test("statuts : « en retard » dérivé, libellés accordés", () => {
+test("statuses: derived \"overdue\", agreed labels", () => {
   const f = {
     type: "facture" as const,
     statut: "emis" as const,
@@ -108,7 +112,7 @@ test("statuts : « en retard » dérivé, libellés accordés", () => {
   expect(libelleStatut("en_retard", "facture")).toBe("En retard");
 });
 
-test("indicateurs du tableau de bord : CA, TVA, impayés, retards, avoirs déduits", () => {
+test("dashboard indicators: revenue, VAT, unpaid, overdue, credit notes deducted", () => {
   const doc = (
     id: string,
     p: Partial<DocResume> & { date: string; echeance?: string; origine?: string },
@@ -123,7 +127,7 @@ test("indicateurs du tableau de bord : CA, TVA, impayés, retards, avoirs dédui
     data: { date: p.date, echeance: p.echeance, origine: p.origine, client: { nom: "C" } },
   });
   const docs = [
-    doc("F1", { date: "2026-10-05", echeance: "2026-10-10" }), // en retard
+    doc("F1", { date: "2026-10-05", echeance: "2026-10-10" }), // overdue
     doc("F2", { date: "2026-10-15", echeance: "2026-11-15" }),
     doc("F3", { date: "2026-09-01", echeance: "2026-09-30", statut: "paye" }),
     doc("A1", { type: "avoir", date: "2026-10-20", htCents: 5000, tvaCents: 1000, ttcCents: 6000, origine: "F2" }),
@@ -136,11 +140,11 @@ test("indicateurs du tableau de bord : CA, TVA, impayés, retards, avoirs dédui
   expect(k.impayes).toBe(2);
   expect(k.impayesCents).toBe(12000 + 6000);
   expect(k).toMatchObject({ enRetard: 1, enRetardCents: 12000, devisEnAttente: 1 });
-  // Paiement partiel connu : le reste dû remplace le TTC.
+  // Known partial payment: the amount still due replaces the gross total.
   expect(indicateurs(docs, "2026-10-22", { F1: 2000 }).enRetardCents).toBe(2000);
 });
 
-test("divers : e-mail, SIRET groupé, octets, jours", () => {
+test("misc: e-mail, grouped SIRET, bytes, days", () => {
   expect(emailValide("a@b.fr")).toBe(true);
   expect(emailValide("a@b")).toBe(false);
   expect(grouperSiret("73282932000074")).toBe("732 829 320 00074");
@@ -150,4 +154,24 @@ test("divers : e-mail, SIRET groupé, octets, jours", () => {
   expect(octets(512)).toBe("512 o");
   expect(jours(1)).toBe("1 jour");
   expect(jours(2.5)).toBe("2,5 jours");
+});
+
+test("English locale: labels, amounts, dates, plurals", () => {
+  setLocale("en");
+  try {
+    expect(eur(123456)).toBe("€1,234.56");
+    expect(dateFr("2026-10-22")).toBe("10/22/2026");
+    expect(moisFr("2026-10-22")).toBe("October 2026");
+    expect(sans(tauxTva(55))).toBe("5.5%");
+    expect(libelleStatut("emis", "facture")).toBe("Issued");
+    expect(libelleStatut("en_retard", "facture")).toBe("Overdue");
+    expect(octets(1_500_000_000)).toBe("1.5 GB");
+    expect(jours(1)).toBe("1 day");
+    expect(jours(2.5)).toBe("2.5 days");
+    expect(erreursLigne({ designation: "", quantite: "1", unite: "", prix: "1", remise: "", tva: 200 }).designation).toBe(
+      "Description required.",
+    );
+  } finally {
+    setLocale("fr");
+  }
 });

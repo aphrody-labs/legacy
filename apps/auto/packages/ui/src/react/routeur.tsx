@@ -1,4 +1,4 @@
-// Routeur minimal sur l'API History : liens profonds, retour navigateur, focus déplacé vers le contenu.
+// Minimal router on the History API: deep links, browser back, focus moved to the content.
 import { useEffect, useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from "react";
 
 const abonnes = new Set<() => void>();
@@ -24,7 +24,7 @@ const souscrire = (f: () => void) => {
   return () => abonnes.delete(f);
 };
 
-/** Chemin courant (avec la requête), réactif. */
+/** Current path (with the query), reactive. */
 export function useChemin(): string {
   return useSyncExternalStore(
     souscrire,
@@ -33,7 +33,7 @@ export function useChemin(): string {
   );
 }
 
-/** Correspondance d'un motif `/app/documents/:id` ; renvoie les paramètres ou `null`. */
+/** Match of a pattern like `/app/documents/:id`; returns the parameters or `null`. */
 export function correspond(motif: string, chemin: string): Record<string, string> | null {
   const p = motif.split("/");
   const c = chemin.split("?")[0]!.split("/");
@@ -69,7 +69,7 @@ export function Lien({ href, onClick, ...p }: AnchorHTMLAttributes<HTMLAnchorEle
   );
 }
 
-/** Après un changement de page : titre du document et focus sur le titre principal (lecteurs d'écran). */
+/** After a page change: document title and focus on the main heading (screen readers). */
 export function useTitrePage(titre: string) {
   useEffect(() => {
     document.title = `${titre} · auto`;
