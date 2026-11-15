@@ -17,7 +17,7 @@ export function sharedChecks(
     expect(api.tickCount()).toBeGreaterThan(0n);
   });
 
-  test(`${name} : structure NtSystemInfo par pointeur`, () => {
+  test(`${name}: NtSystemInfo struct by pointer`, () => {
     const { b, api } = get();
     expect(b.NtSystemInfo.size).toBe(88);
     const info = new b.NtSystemInfo();
@@ -61,7 +61,7 @@ export function sharedChecks(
     expect(api.upper(long)).toBe(long.toUpperCase());
   });
 
-  test(`${name} : rappels .NET -> JS (JSCallback)`, () => {
+  test(`${name}: .NET -> JS callbacks (JSCallback)`, () => {
     const { b, api } = get();
     const seen: string[] = [];
     const n = api.drives((p, len, kind, size) => {

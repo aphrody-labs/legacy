@@ -1,6 +1,6 @@
 {
   "date": "2026-11-12T17:51:10.292Z",
-  "source": "binaires de %SystemRoot% et système en marche (ntdll via bun:ffi), relevé par sdk/tools/host/ntmap.ts",
+  "source": "binaries of %SystemRoot% and running system (ntdll via bun:ffi), read by sdk/tools/host/ntmap.ts",
   "boot": [
     {
       "path": "C:\\WINDOWS\\Boot\\EFI\\bootmgfw.efi",

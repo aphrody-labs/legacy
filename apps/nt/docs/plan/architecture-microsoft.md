@@ -1,78 +1,78 @@
-# nt sur la pile Microsoft — décisions du 2026-11-12
+# nt on the Microsoft stack — decisions of 2026-11-12
 
-Sources : cinq relevés en lecture seule (forks aphrody-labs dans `third_party/`, `gh api`, NuGet, npm), tous datés du 2026-11-12.
+Sources: five read-only surveys (aphrody-labs forks in `third_party/`, `gh api`, NuGet, npm), all dated 2026-11-12.
 
-## Faits relevés
+## Facts gathered
 
-**windows-rs** (8ca69fd, identique à upstream master)
+**windows-rs** (8ca69fd, identical to upstream master)
 
-- Organisation : `crates/{libs,tools,samples,tests}`.
-- Métadonnées générées à partir des en-têtes du SDK et du WDK 10.0.28000 ; on n'utilise plus win32metadata.
-- Bindings : chaque crate génère les siens, privés, via `windows-bindgen --flat --minimal|--sys` et un fichier filtre `.txt`. Le `bindings.rs` produit est commité ; la CI `gen` vérifie qu'il n'a pas dérivé.
-- Liaison : `windows-link` (`raw-dylib`).
-- `windows-sys` et `windows-link` sont `no_std` sans allocation. `windows-core`, `-result` et `-strings` ont besoin d'`alloc`.
-- Exports du noyau (ntoskrnl) : non publiés. Il faut des RDL maison ou `--sys --extern`.
-- Pas de CI wasm.
+- Layout: `crates/{libs,tools,samples,tests}`.
+- Metadata generated from the SDK and WDK 10.0.28000 headers; win32metadata is no longer used.
+- Bindings: each crate generates its own, private, through `windows-bindgen --flat --minimal|--sys` and a `.txt` filter file. The generated `bindings.rs` is committed; the `gen` CI checks that it has not drifted.
+- Linking: `windows-link` (`raw-dylib`).
+- `windows-sys` and `windows-link` are `no_std` without allocation. `windows-core`, `-result` and `-strings` need `alloc`.
+- Kernel (ntoskrnl) exports: not published. Custom RDL files or `--sys --extern` are required.
+- No wasm CI.
 
-**webui** (v3.1.1, fork identique à upstream)
+**webui** (v3.1.1, fork identical to upstream)
 
-- Gabarits HTML compilés en `protocol.bin`, rendus côté serveur en Rust (axum, hyper) ou en JS (Bun.serve documenté), puis activés par îlots côté client.
-- Pas de WebSocket ni de WebGPU : la scène GPU et le flux du noyau restent dans un composant `<nt-scene>`.
-- Fluent UI web components 3.2.1 n'a pas de `.template-webui.html` : pas de rendu serveur en l'état.
+- HTML templates compiled to `protocol.bin`, rendered server side in Rust (axum, hyper) or in JS (Bun.serve documented), then activated by islands on the client.
+- No WebSocket or WebGPU: the GPU scene and the kernel stream stay in an `<nt-scene>` component.
+- Fluent UI web components 3.2.1 has no `.template-webui.html`: no server rendering as it stands.
 
 **node-api-dotnet** (0.9.36)
 
-- Addon NativeAOT exposant `[JSExport]` en `.node`. `bun.exe` 1.4.4 exporte les 140 fonctions Node-API utilisées, mais rien n'est testé sous Bun.
-- Cible maximale : net10.0. Il faudra patcher pour net11.
+- NativeAOT addon exposing `[JSExport]` as `.node`. `bun.exe` 1.4.4 exports the 140 Node-API functions used, but nothing is tested under Bun.
+- Maximum target: net10.0. It would need patching for net11.
 
-**LiberNT** (fork de ReactOS, cible NT 10)
+**LiberNT** (ReactOS fork, NT 10 target)
 
-- Arborescence : `boot/`, `bootloader/`, `hal/`, `ntos/{ke,mm,ob,ps,io,se,config,po,ex,alpc,cc,fsrtl,rtl,tm,wmi,kd…}`, `drivers/`, `dll/{ntdll,win32}`, `subsystems/{csr,win/win32k,linux}`, `base/{system,services,shell}`, `sdk/`.
-- 407 services système. Sources de vérité, dans l'ordre : en-têtes SDK/WDK, symboles Windows 11, documentation Microsoft.
+- Tree: `boot/`, `bootloader/`, `hal/`, `ntos/{ke,mm,ob,ps,io,se,config,po,ex,alpc,cc,fsrtl,rtl,tm,wmi,kd…}`, `drivers/`, `dll/{ntdll,win32}`, `subsystems/{csr,win/win32k,linux}`, `base/{system,services,shell}`, `sdk/`.
+- 407 system services. Sources of truth, in order: SDK/WDK headers, Windows 11 symbols, Microsoft documentation.
 
-**Écosystème OS Microsoft en Rust** (dix projets prioritaires)
+**Microsoft OS ecosystem in Rust** (ten priority projects)
 
-- openvmm : `minimal_rt`, `openhcl_boot`, `whp`, `tmk`.
-- litebox : ses traits Platform servent de modèle de HAL.
-- windows-drivers-rs ; win32metadata et wdkmetadata ; DirectX-Headers ; terminal (condrv, Atlas) ; ebpf-for-windows et ntosebpfext ; DXC ; WindowsAppSDK et WinUI 2.6.5 ; mxc (FFI vers SDK .NET et Node).
+- openvmm: `minimal_rt`, `openhcl_boot`, `whp`, `tmk`.
+- litebox: its Platform traits serve as a HAL model.
+- windows-drivers-rs; win32metadata and wdkmetadata; DirectX-Headers; terminal (condrv, Atlas); ebpf-for-windows and ntosebpfext; DXC; WindowsAppSDK and WinUI 2.6.5; mxc (FFI to the .NET and Node SDKs).
 
-**Ce poste**
+**This machine**
 
-- `System32\win32kbase_rs.sys` existe sur ce build (Rust dans le sous-système graphique du noyau).
+- `System32\win32kbase_rs.sys` exists on this build (Rust in the kernel graphics subsystem).
 
-## Décisions
+## Decisions
 
-1. Le cœur de nt est un monorepo à plat dont la base est le fork aphrody-labs/windows-rs (branche master ; tout le travail nt est sur la branche par défaut des forks).
-    - Les crates de nt rejoignent `crates/libs/nt-*`.
-    - Les projets Rust OS de Microsoft sont importés en sous-arbres compressés (squash), avec leur provenance dans un manifeste.
-    - On unifie dans le workspace ce qui se résout ensemble ; le reste est exclu, avec ses blocages listés.
-2. windows-rs passe sur wasm32 (master du fork, docs/wasm.md) : une fonction Win32 ou NT devient une importation wasm (module = DLL, nom = symbole), fournie par l'hôte « NT dans le navigateur ».
-3. L'outillage JS de webui passe entièrement sur bun (main du fork) : workspaces et catalogues bun, Bun.build, bun test.
-4. Fluent UI web components est converti au format de gabarits webui (master du fork fluentui), et Fluent UI React v9 passe sur bun (scripts/bun).
-5. Coques :
-    - WinUI 3 (Windows App SDK 2.6.5) pour la coque native ;
-    - webui + Fluent pour la coque web ;
-    - la scène noyau est en rendu GPU pur (Direct3D 12 natif, WebGPU dans le navigateur) ;
-    - la passerelle .NET ↔ bun est directe : bun:ffi sur NativeAOT ou CoreCLR hébergé via hostfxr, sans node-api-dotnet (docs/bun/dotnet-native.md).
-6. Aucune compilation sur le poste : la compilation se fait sur GitHub Actions (forks aphrody-labs) ou sur prd.
+1. The nt core is a flat monorepo based on the aphrody-labs/windows-rs fork (master branch; all nt work is on the default branch of the forks).
+    - The nt crates join `crates/libs/nt-*`.
+    - Microsoft's Rust OS projects are imported as squashed subtrees, with their provenance in a manifest.
+    - What resolves together is unified in the workspace; the rest is excluded, with its blockers listed.
+2. windows-rs moves to wasm32 (fork master, docs/wasm.md): a Win32 or NT function becomes a wasm import (module = DLL, name = symbol), provided by the "NT in the browser" host.
+3. The webui JS tooling moves entirely to bun (fork main): bun workspaces and catalogs, Bun.build, bun test.
+4. Fluent UI web components is converted to the webui template format (fluentui fork master), and Fluent UI React v9 moves to bun (scripts/bun).
+5. Shells:
+    - WinUI 3 (Windows App SDK 2.6.5) for the native shell;
+    - webui + Fluent for the web shell;
+    - the kernel scene is pure GPU rendering (native Direct3D 12, WebGPU in the browser);
+    - the .NET ↔ bun bridge is direct: bun:ffi over NativeAOT or CoreCLR hosted through hostfxr, without node-api-dotnet (docs/bun/dotnet-native.md).
+6. No compilation on the machine: building happens on GitHub Actions (aphrody-labs forks) or on prd.
 
-## Chaîne d'outils native — décisions du 2026-11-12
+## Native toolchain — decisions of 2026-11-12
 
-Sources consultées le jour même : Kitware/CMake `v4.5.0` (Help/release/4.5.rst, cmake-cxxmodules(7)), Learn (vcpkg binary caching,
+Sources consulted the same day: Kitware/CMake `v4.5.0` (Help/release/4.5.rst, cmake-cxxmodules(7)), Learn (vcpkg binary caching,
 single-project MSIX, Windows App SDK 1.6/2.x, Native AOT, WinGet Configuration v3, MSVC 14.52 / VS 18.12), microsoft/vcpkg@177e8175,
-nuget.org, PowerShell/DSC, PSGallery, `winget show`, actions/runner-images (windows-2025-vs2026 20261103 : VS 18.11, CMake 4.4.5).
+nuget.org, PowerShell/DSC, PSGallery, `winget show`, actions/runner-images (windows-2025-vs2026 20261103: VS 18.11, CMake 4.4.5).
 
-7. C++23 `import std;` par CMake 4.5 (stable, tag du 2026-11-12) avec Ninja et MSVC ; les générateurs Visual Studio ne le
-   prennent pas en charge (pas de BMI pour les cibles importées). CMake 4.5.0 et Ninja 1.13.2 sont épinglés par
-   `sdk/tools/fetch-tools.ts` (SHA-256), l'environnement VS est chargé par `sdk/tools/vsdev.ts` (vswhere + VsDevCmd).
-   MSVC 19.52.37029+ reçoit `-std:c++23` (stable), les versions antérieures `-std:c++latest`.
-8. vcpkg en mode manifeste : registre par défaut microsoft/vcpkg épinglé par commit, ports aphrody-labs en overlay
-   (`sdk/vcpkg/ports` : directx-headers 1.620.2 = Agility SDK 1.620.2, absent du registre ; wil abb1bd35). Cache binaire CI :
-   fournisseur NuGet sur GitHub Packages (recommandé par Learn ; `x-gha` est retiré de vcpkg).
-9. Coque : NativeAOT (exe 3,5 Mo mesuré) ; deux sorties, non empaquetée autonome et MSIX projet unique, Windows App SDK 2.6.5
-   embarqué dans les deux cas ; certificat de test généré par la CI, jamais versionné.
-10. WinUI depuis Rust : windows-reactor (windows-rs) en dépendance git épinglée, échantillon `sdk/rust/winui-hello`.
-11. Poste : `.config/configuration.winget` (WinGet Configuration v3, processeur dscv3) ; module PSGallery
-    Microsoft.VisualStudio.DSC pour les composants C++ de Visual Studio Build Tools 2026.
-12. .NET : applications net11.0 ; bibliothèques consommées par d'autres hôtes .NET en net10.0;net11.0
-    (`$(NtLibraryTargetFrameworks)`), IsAotCompatible par défaut.
+7. C++23 `import std;` through CMake 4.5 (stable, tag of 2026-11-12) with Ninja and MSVC; the Visual Studio generators do not
+   support it (no BMI for imported targets). CMake 4.5.0 and Ninja 1.13.2 are pinned by
+   `sdk/tools/fetch-tools.ts` (SHA-256), the VS environment is loaded by `sdk/tools/vsdev.ts` (vswhere + VsDevCmd).
+   MSVC 19.52.37029+ gets `-std:c++23` (stable), earlier versions `-std:c++latest`.
+8. vcpkg in manifest mode: default registry microsoft/vcpkg pinned by commit, aphrody-labs ports as overlay
+   (`sdk/vcpkg/ports`: directx-headers 1.620.2 = Agility SDK 1.620.2, absent from the registry; wil abb1bd35). CI binary cache:
+   NuGet provider on GitHub Packages (recommended by Learn; `x-gha` is removed from vcpkg).
+9. Shell: NativeAOT (3.5 MB exe measured); two outputs, unpackaged self-contained and single-project MSIX, Windows App SDK 2.6.5
+   embedded in both cases; test certificate generated by the CI, never versioned.
+10. WinUI from Rust: windows-reactor (windows-rs) as a pinned git dependency, sample `sdk/rust/winui-hello`.
+11. Machine: `.config/configuration.winget` (WinGet Configuration v3, dscv3 processor); PSGallery module
+    Microsoft.VisualStudio.DSC for the Visual Studio Build Tools 2026 C++ components.
+12. .NET: net11.0 applications; libraries consumed by other .NET hosts as net10.0;net11.0
+    (`$(NtLibraryTargetFrameworks)`), IsAotCompatible by default.

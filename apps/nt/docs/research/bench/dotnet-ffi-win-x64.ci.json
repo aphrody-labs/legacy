@@ -4,7 +4,7 @@
   "cpu": "INTEL(R) XEON(R) PLATINUM 8573C",
   "bun": "1.4.4+38afee6c8",
   "iterations": 1000000,
-  "unit": "ns/appel (médiane de 7)",
+  "unit": "ns/call (median of 7)",
   "results": {
     "js": {
       "add": 0.6

@@ -60,7 +60,7 @@ const METHOD: Record<string, string> = {
     "LoadLibraryExW(DONT_RESOLVE_DLL_REFERENCES) + GetProcAddress (processus enfant)",
   "winrt-registered":
     "HKLM\\SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId",
-  "activation-export": "DllPath exporte DllGetActivationFactory",
+  "activation-export": "DllPath exports DllGetActivationFactory",
   RoGetActivationFactory:
     "factory obtained (IID_IActivationFactory), in-process classes",
   "wasdk-activation":
