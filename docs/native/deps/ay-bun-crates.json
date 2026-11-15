@@ -1,0 +1,2941 @@
+{
+  "generator": "scripts/ay-bun-map.ts",
+  "fork": "third_party/bun",
+  "crateCount": 136,
+  "summary": {
+    "jscRoots": [
+      "bun_ast_jsc",
+      "bun_bundler_jsc",
+      "bun_css_jsc",
+      "bun_executable",
+      "bun_http_jsc",
+      "bun_install_jsc",
+      "bun_js_parser_jsc",
+      "bun_jsc",
+      "bun_patch_jsc",
+      "bun_runtime",
+      "bun_semver_jsc",
+      "bun_sourcemap_jsc",
+      "bun_sql_jsc",
+      "bun_sys_jsc"
+    ],
+    "jsRoots": [
+      "bun_bundler",
+      "bun_js_parser",
+      "bun_js_printer",
+      "bun_lint",
+      "bun_lint_conformance",
+      "bun_lint_driver",
+      "bun_lint_eslint",
+      "bun_lint_graph",
+      "bun_lint_jest",
+      "bun_lint_json",
+      "bun_lint_markdown",
+      "bun_lint_oxlint",
+      "bun_lint_plugins",
+      "bun_lint_react",
+      "bun_lint_react_compiler",
+      "bun_lint_typescript",
+      "bun_lint_unicorn",
+      "bun_react_compiler",
+      "bun_sema",
+      "bun_sema_baselines",
+      "bun_sema_driver",
+      "bun_sema_parser",
+      "bun_sema_standalone",
+      "bun_transpiler"
+    ],
+    "clean": 87,
+    "jscClean": 122
+  },
+  "wanted": [
+    {
+      "crate": "bun_install",
+      "dir": "third_party/bun/src/install",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_archive",
+        "bun_ast",
+        "bun_base64",
+        "bun_boringssl_sys",
+        "bun_bunfig",
+        "bun_clap",
+        "bun_collections",
+        "bun_core",
+        "bun_crash_handler",
+        "bun_dns",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_glob",
+        "bun_http",
+        "bun_ini",
+        "bun_install_types",
+        "bun_io",
+        "bun_js_parser",
+        "bun_js_printer",
+        "bun_libdeflate_sys",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_patch",
+        "bun_paths",
+        "bun_perf",
+        "bun_picohttp",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_resolver",
+        "bun_semver",
+        "bun_sha_hmac",
+        "bun_simdutf_sys",
+        "bun_spawn",
+        "bun_sys",
+        "bun_threading",
+        "bun_transpiler",
+        "bun_url",
+        "bun_uws",
+        "bun_which",
+        "bun_wyhash"
+      ],
+      "externalDeps": 7,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_install",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_semver",
+      "dir": "third_party/bun/src/semver",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_wyhash"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_spawn",
+      "dir": "third_party/bun/src/spawn",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_core",
+        "bun_dispatch",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_io",
+        "bun_opaque",
+        "bun_output",
+        "bun_ptr",
+        "bun_spawn_sys",
+        "bun_sys",
+        "bun_threading"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_http",
+      "dir": "third_party/bun/src/http",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_ast",
+        "bun_base64",
+        "bun_boringssl",
+        "bun_boringssl_sys",
+        "bun_brotli",
+        "bun_collections",
+        "bun_core",
+        "bun_dns",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_http_types",
+        "bun_io",
+        "bun_libdeflate_sys",
+        "bun_picohttp",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_sys",
+        "bun_threading",
+        "bun_url",
+        "bun_uws",
+        "bun_wyhash",
+        "bun_zlib",
+        "bun_zstd"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_s3_signing",
+      "dir": "third_party/bun/src/s3_signing",
+      "internalDeps": [
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_http_types",
+        "bun_picohttp",
+        "bun_ptr",
+        "bun_sha_hmac"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sql",
+      "dir": "third_party/bun/src/sql",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_boringssl",
+        "bun_collections",
+        "bun_core",
+        "bun_ptr",
+        "bun_sha_hmac",
+        "bun_sys"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_valkey",
+      "dir": "third_party/bun/src/valkey",
+      "internalDeps": [
+        "bun_core"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_archive",
+      "dir": "third_party/bun/src/archive",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_libdeflate_sys",
+        "bun_paths",
+        "bun_sys",
+        "bun_tar",
+        "bun_wyhash",
+        "bun_zlib"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_tar",
+      "dir": "third_party/bun/src/tar",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_zlib"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_glob",
+      "dir": "third_party/bun/src/glob",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_paths",
+        "bun_sys"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_watcher",
+      "dir": "third_party/bun/src/watcher",
+      "internalDeps": [
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_paths",
+        "bun_ptr",
+        "bun_sys",
+        "bun_threading",
+        "bun_wyhash"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_ini",
+      "dir": "third_party/bun/src/ini",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_dotenv",
+        "bun_install_types",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_url"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_dotenv",
+      "dir": "third_party/bun/src/dotenv",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_paths",
+        "bun_sys",
+        "bun_url",
+        "bun_which"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_which",
+      "dir": "third_party/bun/src/which",
+      "internalDeps": [
+        "bun_core",
+        "bun_paths",
+        "bun_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_url",
+      "dir": "third_party/bun/src/url",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_opaque",
+        "bun_paths",
+        "bun_wyhash"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_patch",
+      "dir": "third_party/bun/src/patch",
+      "internalDeps": [
+        "bun_core",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_paths",
+        "bun_spawn",
+        "bun_sys",
+        "bun_which"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_shell_parser",
+      "dir": "third_party/bun/src/shell_parser",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_clap",
+      "dir": "third_party/bun/src/clap",
+      "internalDeps": [
+        "bun_clap_macros",
+        "bun_core"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_bunfig",
+      "dir": "third_party/bun/src/bunfig",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_ast",
+        "bun_bundler",
+        "bun_clap",
+        "bun_collections",
+        "bun_core",
+        "bun_install_types",
+        "bun_io",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_paths",
+        "bun_resolver",
+        "bun_standalone_graph",
+        "bun_sys"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_bunfig",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_paths",
+      "dir": "third_party/bun/src/paths",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_errno"
+      ],
+      "externalDeps": 5,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sys",
+      "dir": "third_party/bun/src/sys",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_errno",
+        "bun_libuv_sys",
+        "bun_opaque",
+        "bun_paths",
+        "bun_windows_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 8,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_wyhash",
+      "dir": "third_party/bun/src/wyhash",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_histogram",
+      "dir": "third_party/bun/src/histogram",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_md",
+      "dir": "third_party/bun/src/md",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_paths",
+        "bun_sys",
+        "bun_url"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_zstd",
+      "dir": "third_party/bun/src/zstd",
+      "internalDeps": [
+        "bun_core",
+        "bun_opaque"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_brotli",
+      "dir": "third_party/bun/src/brotli",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_brotli_sys",
+        "bun_core"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_zlib",
+      "dir": "third_party/bun/src/zlib",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_zlib_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_dns",
+      "dir": "third_party/bun/src/dns",
+      "internalDeps": [
+        "bun_cares_sys",
+        "bun_core",
+        "bun_sys",
+        "bun_windows_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_router",
+      "dir": "third_party/bun/src/router",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_http_types",
+        "bun_paths",
+        "bun_ptr",
+        "bun_resolver",
+        "bun_sys",
+        "bun_url",
+        "bun_wyhash"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_router",
+        "bun_resolver",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_csrf",
+      "dir": "third_party/bun/src/csrf",
+      "internalDeps": [
+        "bun_base64",
+        "bun_boringssl_sys",
+        "bun_core",
+        "bun_sha_hmac"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    }
+  ],
+  "cuts": {
+    "jsc": [],
+    "js": [
+      {
+        "from": "bun_aot",
+        "to": "bun_js_parser"
+      },
+      {
+        "from": "bun_aot",
+        "to": "bun_react_compiler"
+      },
+      {
+        "from": "bun_aot",
+        "to": "bun_sema"
+      },
+      {
+        "from": "bun_aot",
+        "to": "bun_sema_driver"
+      },
+      {
+        "from": "bun_aot",
+        "to": "bun_sema_parser"
+      },
+      {
+        "from": "bun_aot_absent",
+        "to": "bun_sema"
+      },
+      {
+        "from": "bun_aot_builtins",
+        "to": "bun_sema"
+      },
+      {
+        "from": "bun_aot_interface",
+        "to": "bun_js_parser"
+      },
+      {
+        "from": "bun_aot_interface",
+        "to": "bun_react_compiler"
+      },
+      {
+        "from": "bun_aot_interface",
+        "to": "bun_sema"
+      },
+      {
+        "from": "bun_aot_interface",
+        "to": "bun_sema_driver"
+      },
+      {
+        "from": "bun_bunfig",
+        "to": "bun_bundler"
+      },
+      {
+        "from": "bun_format",
+        "to": "bun_lint"
+      },
+      {
+        "from": "bun_format",
+        "to": "bun_sema"
+      },
+      {
+        "from": "bun_install",
+        "to": "bun_js_parser"
+      },
+      {
+        "from": "bun_install",
+        "to": "bun_js_printer"
+      },
+      {
+        "from": "bun_install",
+        "to": "bun_transpiler"
+      },
+      {
+        "from": "bun_resolver",
+        "to": "bun_js_parser"
+      },
+      {
+        "from": "bun_standalone_graph",
+        "to": "bun_bundler"
+      }
+    ]
+  },
+  "crates": [
+    {
+      "crate": "bun_alloc",
+      "dir": "third_party/bun/src/bun_alloc",
+      "internalDeps": [
+        "bun_mimalloc_sys",
+        "bun_opaque",
+        "bun_wyhash"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_analytics",
+      "dir": "third_party/bun/src/analytics",
+      "internalDeps": [
+        "bun_core",
+        "bun_semver"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_aot",
+      "dir": "third_party/bun/src/aot",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_aot_builtins",
+        "bun_aot_interface",
+        "bun_ast",
+        "bun_base64",
+        "bun_builtin_sources",
+        "bun_collections",
+        "bun_core",
+        "bun_glob",
+        "bun_js_parser",
+        "bun_options_types",
+        "bun_paths",
+        "bun_react_compiler",
+        "bun_removable_features",
+        "bun_resolve_builtins",
+        "bun_sema",
+        "bun_sema_driver",
+        "bun_sema_parser",
+        "bun_sort_by_number",
+        "bun_sys",
+        "bun_threading",
+        "bun_trim",
+        "bun_zstd"
+      ],
+      "externalDeps": 5,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_aot",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_aot_absent",
+      "dir": "third_party/bun/src/aot/absent",
+      "internalDeps": [
+        "bun_aot_interface",
+        "bun_ast",
+        "bun_options_types",
+        "bun_sema",
+        "bun_trim"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_aot_absent",
+        "bun_sema"
+      ]
+    },
+    {
+      "crate": "bun_aot_builtins",
+      "dir": "third_party/bun/src/aot/builtins",
+      "internalDeps": [
+        "bun_collections",
+        "bun_core",
+        "bun_removable_features",
+        "bun_sema",
+        "bun_sort_by_number"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_aot_builtins",
+        "bun_sema"
+      ]
+    },
+    {
+      "crate": "bun_aot_interface",
+      "dir": "third_party/bun/src/aot/interface",
+      "internalDeps": [
+        "bun_ast",
+        "bun_core",
+        "bun_js_parser",
+        "bun_options_types",
+        "bun_paths",
+        "bun_react_compiler",
+        "bun_sema",
+        "bun_sema_driver",
+        "bun_trim"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_aot_interface",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_archive",
+      "dir": "third_party/bun/src/archive",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_libdeflate_sys",
+        "bun_paths",
+        "bun_sys",
+        "bun_tar",
+        "bun_wyhash",
+        "bun_zlib"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_ast",
+      "dir": "third_party/bun/src/ast",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_dispatch",
+        "bun_paths",
+        "bun_perf",
+        "bun_ptr",
+        "bun_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 7,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_ast_jsc",
+      "dir": "third_party/bun/src/ast_jsc",
+      "internalDeps": [
+        "bun_ast",
+        "bun_jsc"
+      ],
+      "externalDeps": 0,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_ast_jsc",
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_base64",
+      "dir": "third_party/bun/src/base64",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_simdutf_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_boringssl",
+      "dir": "third_party/bun/src/boringssl",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_boringssl_sys",
+        "bun_cares_sys",
+        "bun_core",
+        "bun_sys"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_boringssl_sys",
+      "dir": "third_party/bun/src/boringssl_sys",
+      "internalDeps": [
+        "bun_core",
+        "bun_opaque"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_brotli",
+      "dir": "third_party/bun/src/brotli",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_brotli_sys",
+        "bun_core"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_brotli_sys",
+      "dir": "third_party/bun/src/brotli_sys",
+      "internalDeps": [
+        "bun_opaque"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_builtin_sources",
+      "dir": "third_party/bun/src/builtin_sources",
+      "internalDeps": [
+        "bun_core",
+        "bun_exe_format",
+        "bun_zstd"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_bundler",
+      "dir": "third_party/bun/src/bundler",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_aot_interface",
+        "bun_ast",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_css",
+        "bun_dispatch",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_exe_format",
+        "bun_glob",
+        "bun_hash",
+        "bun_http_types",
+        "bun_io",
+        "bun_js_parser",
+        "bun_js_printer",
+        "bun_md",
+        "bun_opaque",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_paths",
+        "bun_perf",
+        "bun_ptr",
+        "bun_react_compiler",
+        "bun_removable_features",
+        "bun_resolve_builtins",
+        "bun_resolver",
+        "bun_sema",
+        "bun_sema_driver",
+        "bun_sourcemap",
+        "bun_sys",
+        "bun_threading",
+        "bun_url",
+        "bun_watcher",
+        "bun_wyhash",
+        "bun_zstd"
+      ],
+      "externalDeps": 7,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_bundler_jsc",
+      "dir": "third_party/bun/src/bundler_jsc",
+      "internalDeps": [
+        "bun_ast",
+        "bun_bundler",
+        "bun_jsc",
+        "bun_opaque",
+        "bun_options_types"
+      ],
+      "externalDeps": 1,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_bundler_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_bunfig",
+      "dir": "third_party/bun/src/bunfig",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_ast",
+        "bun_bundler",
+        "bun_clap",
+        "bun_collections",
+        "bun_core",
+        "bun_install_types",
+        "bun_io",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_paths",
+        "bun_resolver",
+        "bun_standalone_graph",
+        "bun_sys"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_bunfig",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_cares_sys",
+      "dir": "third_party/bun/src/cares_sys",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_libuv_sys",
+        "bun_opaque"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_clap",
+      "dir": "third_party/bun/src/clap",
+      "internalDeps": [
+        "bun_clap_macros",
+        "bun_core"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_clap_macros",
+      "dir": "third_party/bun/src/clap_macros",
+      "internalDeps": [
+        "bun_output_tags"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_collections",
+      "dir": "third_party/bun/src/collections",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_ptr",
+        "bun_simdutf_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 5,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_core",
+      "dir": "third_party/bun/src/bun_core",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core_macros",
+        "bun_dispatch",
+        "bun_hash",
+        "bun_highway",
+        "bun_opaque",
+        "bun_output_tags",
+        "bun_pod",
+        "bun_simdutf_sys",
+        "bun_windows_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_core_macros",
+      "dir": "third_party/bun/src/bun_core_macros",
+      "internalDeps": [
+        "bun_output_tags"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_crash_handler",
+      "dir": "third_party/bun/src/crash_handler",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_io",
+        "bun_paths",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_sys",
+        "bun_threading",
+        "bun_which",
+        "bun_zlib"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_csrf",
+      "dir": "third_party/bun/src/csrf",
+      "internalDeps": [
+        "bun_base64",
+        "bun_boringssl_sys",
+        "bun_core",
+        "bun_sha_hmac"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_css",
+      "dir": "third_party/bun/src/css",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_css_derive",
+        "bun_io",
+        "bun_paths",
+        "bun_wyhash"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_css_derive",
+      "dir": "third_party/bun/src/css_derive",
+      "internalDeps": [],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_css_jsc",
+      "dir": "third_party/bun/src/css_jsc",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_core",
+        "bun_css",
+        "bun_jsc"
+      ],
+      "externalDeps": 1,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_css_jsc",
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_dispatch",
+      "dir": "third_party/bun/src/dispatch",
+      "internalDeps": [],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_dns",
+      "dir": "third_party/bun/src/dns",
+      "internalDeps": [
+        "bun_cares_sys",
+        "bun_core",
+        "bun_sys",
+        "bun_windows_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_dotenv",
+      "dir": "third_party/bun/src/dotenv",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_paths",
+        "bun_sys",
+        "bun_url",
+        "bun_which"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_errno",
+      "dir": "third_party/bun/src/errno",
+      "internalDeps": [
+        "bun_core",
+        "bun_libuv_sys",
+        "bun_windows_sys"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_event_loop",
+      "dir": "third_party/bun/src/event_loop",
+      "internalDeps": [
+        "bun_collections",
+        "bun_core",
+        "bun_dispatch",
+        "bun_dotenv",
+        "bun_io",
+        "bun_ptr",
+        "bun_sys",
+        "bun_threading",
+        "bun_uws"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_exe_format",
+      "dir": "third_party/bun/src/exe_format",
+      "internalDeps": [
+        "bun_core",
+        "bun_sha_hmac",
+        "bun_sys"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_executable",
+      "dir": "third_party/bun/src/executable",
+      "internalDeps": [
+        "bun_aot",
+        "bun_aot_absent",
+        "bun_runtime"
+      ],
+      "externalDeps": 0,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_executable",
+        "bun_aot",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_format",
+      "dir": "third_party/bun/src/format",
+      "internalDeps": [
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_glob",
+        "bun_highway",
+        "bun_lint",
+        "bun_md",
+        "bun_parsers",
+        "bun_sema",
+        "bun_semver",
+        "bun_threading"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_format",
+        "bun_lint"
+      ]
+    },
+    {
+      "crate": "bun_format_conformance",
+      "dir": "third_party/bun/src/format/conformance",
+      "internalDeps": [
+        "bun_core",
+        "bun_format",
+        "bun_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_format_conformance",
+        "bun_format",
+        "bun_lint"
+      ]
+    },
+    {
+      "crate": "bun_glob",
+      "dir": "third_party/bun/src/glob",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_paths",
+        "bun_sys"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_hash",
+      "dir": "third_party/bun/src/hash",
+      "internalDeps": [
+        "bun_highway"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_highway",
+      "dir": "third_party/bun/src/highway",
+      "internalDeps": [],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_histogram",
+      "dir": "third_party/bun/src/histogram",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_http",
+      "dir": "third_party/bun/src/http",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_ast",
+        "bun_base64",
+        "bun_boringssl",
+        "bun_boringssl_sys",
+        "bun_brotli",
+        "bun_collections",
+        "bun_core",
+        "bun_dns",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_http_types",
+        "bun_io",
+        "bun_libdeflate_sys",
+        "bun_picohttp",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_sys",
+        "bun_threading",
+        "bun_url",
+        "bun_uws",
+        "bun_wyhash",
+        "bun_zlib",
+        "bun_zstd"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_http_jsc",
+      "dir": "third_party/bun/src/http_jsc",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_base64",
+        "bun_boringssl",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_highway",
+        "bun_http",
+        "bun_http_types",
+        "bun_io",
+        "bun_jsc",
+        "bun_libdeflate_sys",
+        "bun_opaque",
+        "bun_picohttp",
+        "bun_ptr",
+        "bun_sha_hmac",
+        "bun_uws",
+        "bun_uws_sys",
+        "bun_zlib"
+      ],
+      "externalDeps": 3,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_http_jsc",
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_http_types",
+      "dir": "third_party/bun/src/http_types",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_url"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_ini",
+      "dir": "third_party/bun/src/ini",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_dotenv",
+        "bun_install_types",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_url"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_install",
+      "dir": "third_party/bun/src/install",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_archive",
+        "bun_ast",
+        "bun_base64",
+        "bun_boringssl_sys",
+        "bun_bunfig",
+        "bun_clap",
+        "bun_collections",
+        "bun_core",
+        "bun_crash_handler",
+        "bun_dns",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_glob",
+        "bun_http",
+        "bun_ini",
+        "bun_install_types",
+        "bun_io",
+        "bun_js_parser",
+        "bun_js_printer",
+        "bun_libdeflate_sys",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_patch",
+        "bun_paths",
+        "bun_perf",
+        "bun_picohttp",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_resolver",
+        "bun_semver",
+        "bun_sha_hmac",
+        "bun_simdutf_sys",
+        "bun_spawn",
+        "bun_sys",
+        "bun_threading",
+        "bun_transpiler",
+        "bun_url",
+        "bun_uws",
+        "bun_which",
+        "bun_wyhash"
+      ],
+      "externalDeps": 7,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_install",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_install_jsc",
+      "dir": "third_party/bun/src/install_jsc",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_core",
+        "bun_dotenv",
+        "bun_ini",
+        "bun_install",
+        "bun_js_parser_jsc",
+        "bun_jsc",
+        "bun_options_types",
+        "bun_paths",
+        "bun_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_install_jsc",
+        "bun_install",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_install_types",
+      "dir": "third_party/bun/src/install_types",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_core",
+        "bun_semver",
+        "bun_wyhash"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_io",
+      "dir": "third_party/bun/src/io",
+      "internalDeps": [
+        "bun_collections",
+        "bun_core",
+        "bun_dispatch",
+        "bun_errno",
+        "bun_ptr",
+        "bun_spawn_sys",
+        "bun_sys",
+        "bun_threading",
+        "bun_uws_sys"
+      ],
+      "externalDeps": 7,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_js_parser",
+      "dir": "third_party/bun/src/js_parser",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_crash_handler",
+        "bun_glob",
+        "bun_highway",
+        "bun_node_path",
+        "bun_options_types",
+        "bun_paths",
+        "bun_ptr",
+        "bun_react_compiler",
+        "bun_sys",
+        "bun_url",
+        "bun_wyhash"
+      ],
+      "externalDeps": 7,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_js_parser_jsc",
+      "dir": "third_party/bun/src/js_parser_jsc",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_base64",
+        "bun_bundler",
+        "bun_collections",
+        "bun_core",
+        "bun_dotenv",
+        "bun_js_parser",
+        "bun_jsc",
+        "bun_parsers",
+        "bun_ptr",
+        "bun_resolver"
+      ],
+      "externalDeps": 3,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_js_parser_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_js_printer",
+      "dir": "third_party/bun/src/js_printer",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_crash_handler",
+        "bun_io",
+        "bun_options_types",
+        "bun_ptr",
+        "bun_sourcemap",
+        "bun_wyhash"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_jsc",
+      "dir": "third_party/bun/src/jsc",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_aot_interface",
+        "bun_ast",
+        "bun_base64",
+        "bun_boringssl",
+        "bun_bundler",
+        "bun_collections",
+        "bun_core",
+        "bun_crash_handler",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_exe_format",
+        "bun_hash",
+        "bun_http",
+        "bun_http_types",
+        "bun_install",
+        "bun_io",
+        "bun_js_parser",
+        "bun_js_printer",
+        "bun_jsc_macros",
+        "bun_libdeflate_sys",
+        "bun_opaque",
+        "bun_options_types",
+        "bun_patch",
+        "bun_paths",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_resolve_builtins",
+        "bun_resolver",
+        "bun_s3_signing",
+        "bun_sha_hmac",
+        "bun_sourcemap",
+        "bun_spawn",
+        "bun_sys",
+        "bun_threading",
+        "bun_url",
+        "bun_uws",
+        "bun_watcher",
+        "bun_wyhash"
+      ],
+      "externalDeps": 6,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_jsc_macros",
+      "dir": "third_party/bun/src/jsc_macros",
+      "internalDeps": [],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_libdeflate_sys",
+      "dir": "third_party/bun/src/libdeflate_sys",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_opaque"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_libuv_sys",
+      "dir": "third_party/bun/src/libuv_sys",
+      "internalDeps": [
+        "bun_core",
+        "bun_windows_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_lint",
+      "dir": "third_party/bun/src/lint",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_glob",
+        "bun_node_path",
+        "bun_parsers",
+        "bun_paths",
+        "bun_sema",
+        "bun_threading",
+        "bun_wyhash",
+        "bun_yarr",
+        "bun_zstd"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_conformance",
+      "dir": "third_party/bun/src/lint/conformance",
+      "internalDeps": [
+        "bun_core",
+        "bun_format_conformance",
+        "bun_lint",
+        "bun_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_driver",
+      "dir": "third_party/bun/src/lint/driver",
+      "internalDeps": [
+        "bun_ast",
+        "bun_clap",
+        "bun_collections",
+        "bun_core",
+        "bun_format",
+        "bun_glob",
+        "bun_lint",
+        "bun_lint_conformance",
+        "bun_lint_eslint",
+        "bun_lint_graph",
+        "bun_lint_jest",
+        "bun_lint_json",
+        "bun_lint_markdown",
+        "bun_lint_plugins",
+        "bun_lint_react",
+        "bun_lint_typescript",
+        "bun_lint_unicorn",
+        "bun_md",
+        "bun_paths",
+        "bun_sema",
+        "bun_sema_driver",
+        "bun_sema_parser",
+        "bun_semver",
+        "bun_sys",
+        "bun_threading",
+        "bun_zstd"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_eslint",
+      "dir": "third_party/bun/src/lint/eslint",
+      "internalDeps": [
+        "bun_core",
+        "bun_glob",
+        "bun_lint",
+        "bun_lint_oxlint"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_graph",
+      "dir": "third_party/bun/src/lint/graph",
+      "internalDeps": [
+        "bun_core",
+        "bun_glob",
+        "bun_lint",
+        "bun_sema",
+        "bun_sema_driver",
+        "bun_sema_parser",
+        "bun_threading"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_jest",
+      "dir": "third_party/bun/src/lint/jest",
+      "internalDeps": [
+        "bun_core",
+        "bun_lint",
+        "bun_lint_oxlint"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_json",
+      "dir": "third_party/bun/src/lint/json",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_lint",
+        "bun_parsers"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_markdown",
+      "dir": "third_party/bun/src/lint/markdown",
+      "internalDeps": [
+        "bun_core",
+        "bun_format",
+        "bun_lint"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_oxlint",
+      "dir": "third_party/bun/src/lint/oxlint",
+      "internalDeps": [
+        "bun_core",
+        "bun_glob",
+        "bun_lint"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_plugins",
+      "dir": "third_party/bun/src/lint/plugins",
+      "internalDeps": [
+        "bun_core",
+        "bun_glob",
+        "bun_lint",
+        "bun_lint_oxlint",
+        "bun_semver",
+        "bun_text_diff"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_react",
+      "dir": "third_party/bun/src/lint/react",
+      "internalDeps": [
+        "bun_core",
+        "bun_glob",
+        "bun_lint",
+        "bun_lint_oxlint",
+        "bun_lint_react_compiler",
+        "bun_semver"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_react_compiler",
+      "dir": "third_party/bun/src/lint/react_compiler",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_core",
+        "bun_lint",
+        "bun_react_compiler"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_typescript",
+      "dir": "third_party/bun/src/lint/typescript",
+      "internalDeps": [
+        "bun_core",
+        "bun_lint",
+        "bun_lint_eslint"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lint_unicorn",
+      "dir": "third_party/bun/src/lint/unicorn",
+      "internalDeps": [
+        "bun_core",
+        "bun_lint",
+        "bun_lint_oxlint"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_lsquic_sys",
+      "dir": "third_party/bun/src/lsquic_sys",
+      "internalDeps": [
+        "bun_core"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_md",
+      "dir": "third_party/bun/src/md",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_paths",
+        "bun_sys",
+        "bun_url"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_mimalloc_sys",
+      "dir": "third_party/bun/src/mimalloc_sys",
+      "internalDeps": [
+        "bun_opaque"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_node_path",
+      "dir": "third_party/bun/src/node_path",
+      "internalDeps": [
+        "bun_core",
+        "bun_highway",
+        "bun_paths",
+        "bun_sys"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_opaque",
+      "dir": "third_party/bun/src/opaque",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_options_types",
+      "dir": "third_party/bun/src/options_types",
+      "internalDeps": [
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_install_types",
+        "bun_paths",
+        "bun_removable_features",
+        "bun_semver",
+        "bun_sys",
+        "bun_url",
+        "bun_wyhash"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_output",
+      "dir": "third_party/bun/src/output",
+      "internalDeps": [
+        "bun_core"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_output_tags",
+      "dir": "third_party/bun/src/bun_output_tags",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_parsers",
+      "dir": "third_party/bun/src/parsers",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_highway",
+        "bun_simdutf_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_patch",
+      "dir": "third_party/bun/src/patch",
+      "internalDeps": [
+        "bun_core",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_paths",
+        "bun_spawn",
+        "bun_sys",
+        "bun_which"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_patch_jsc",
+      "dir": "third_party/bun/src/patch_jsc",
+      "internalDeps": [
+        "bun_core",
+        "bun_jsc",
+        "bun_patch",
+        "bun_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_patch_jsc",
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_paths",
+      "dir": "third_party/bun/src/paths",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_errno"
+      ],
+      "externalDeps": 5,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_perf",
+      "dir": "third_party/bun/src/perf",
+      "internalDeps": [
+        "bun_core",
+        "bun_sys"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_picohttp",
+      "dir": "third_party/bun/src/picohttp",
+      "internalDeps": [
+        "bun_core"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_platform",
+      "dir": "third_party/bun/src/platform",
+      "internalDeps": [],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_png",
+      "dir": "third_party/bun/src/png",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_highway",
+        "bun_zlib"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_pod",
+      "dir": "third_party/bun/src/pod",
+      "internalDeps": [
+        "bun_windows_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_ptr",
+      "dir": "third_party/bun/src/ptr",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_core_macros"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_react_compiler",
+      "dir": "third_party/bun/src/react_compiler",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_removable_features",
+        "bun_threading"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_removable_features",
+      "dir": "third_party/bun/src/trim/removable_features",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_resolve_builtins",
+      "dir": "third_party/bun/src/resolve_builtins",
+      "internalDeps": [
+        "bun_ast",
+        "bun_collections",
+        "bun_core"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_resolver",
+      "dir": "third_party/bun/src/resolver",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_ast",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_crash_handler",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_glob",
+        "bun_hash",
+        "bun_http_types",
+        "bun_install_types",
+        "bun_js_parser",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_paths",
+        "bun_perf",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_resolve_builtins",
+        "bun_semver",
+        "bun_sys",
+        "bun_threading",
+        "bun_url",
+        "bun_watcher",
+        "bun_wyhash",
+        "bun_zstd"
+      ],
+      "externalDeps": 8,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_resolver",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_router",
+      "dir": "third_party/bun/src/router",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_http_types",
+        "bun_paths",
+        "bun_ptr",
+        "bun_resolver",
+        "bun_sys",
+        "bun_url",
+        "bun_wyhash"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_router",
+        "bun_resolver",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_runtime",
+      "dir": "third_party/bun/src/runtime",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_aot_interface",
+        "bun_archive",
+        "bun_ast",
+        "bun_ast_jsc",
+        "bun_base64",
+        "bun_boringssl",
+        "bun_boringssl_sys",
+        "bun_brotli",
+        "bun_bundler",
+        "bun_bundler_jsc",
+        "bun_bunfig",
+        "bun_cares_sys",
+        "bun_clap",
+        "bun_collections",
+        "bun_core",
+        "bun_crash_handler",
+        "bun_csrf",
+        "bun_css",
+        "bun_css_jsc",
+        "bun_dns",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_exe_format",
+        "bun_format_conformance",
+        "bun_glob",
+        "bun_hash",
+        "bun_highway",
+        "bun_histogram",
+        "bun_http",
+        "bun_http_jsc",
+        "bun_http_types",
+        "bun_install",
+        "bun_install_jsc",
+        "bun_install_types",
+        "bun_io",
+        "bun_js_parser",
+        "bun_js_parser_jsc",
+        "bun_js_printer",
+        "bun_jsc",
+        "bun_libdeflate_sys",
+        "bun_libuv_sys",
+        "bun_lint",
+        "bun_lint_driver",
+        "bun_lsquic_sys",
+        "bun_md",
+        "bun_node_path",
+        "bun_opaque",
+        "bun_options_types",
+        "bun_output",
+        "bun_parsers",
+        "bun_patch_jsc",
+        "bun_paths",
+        "bun_picohttp",
+        "bun_platform",
+        "bun_png",
+        "bun_ptr",
+        "bun_removable_features",
+        "bun_resolve_builtins",
+        "bun_resolver",
+        "bun_router",
+        "bun_s3_signing",
+        "bun_safety",
+        "bun_sema",
+        "bun_sema_baselines",
+        "bun_sema_driver",
+        "bun_semver",
+        "bun_semver_jsc",
+        "bun_sha_hmac",
+        "bun_shell_parser",
+        "bun_simdutf_sys",
+        "bun_sourcemap",
+        "bun_sourcemap_jsc",
+        "bun_spawn",
+        "bun_sql_jsc",
+        "bun_standalone_graph",
+        "bun_sys",
+        "bun_sys_jsc",
+        "bun_tcc_sys",
+        "bun_text_diff",
+        "bun_threading",
+        "bun_trim",
+        "bun_url",
+        "bun_uws",
+        "bun_uws_sys",
+        "bun_valkey",
+        "bun_watcher",
+        "bun_which",
+        "bun_wyhash",
+        "bun_zlib",
+        "bun_zstd"
+      ],
+      "externalDeps": 16,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_runtime",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_s3_signing",
+      "dir": "third_party/bun/src/s3_signing",
+      "internalDeps": [
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_http_types",
+        "bun_picohttp",
+        "bun_ptr",
+        "bun_sha_hmac"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_safety",
+      "dir": "third_party/bun/src/safety",
+      "internalDeps": [
+        "bun_core"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sema",
+      "dir": "third_party/bun/src/sema",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_paths",
+        "bun_sort_by_number",
+        "bun_threading",
+        "bun_wyhash",
+        "bun_zstd"
+      ],
+      "externalDeps": 5,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_sema_baselines",
+      "dir": "third_party/bun/src/sema/baselines",
+      "internalDeps": [
+        "bun_core",
+        "bun_paths",
+        "bun_sema",
+        "bun_sema_driver",
+        "bun_sys",
+        "bun_threading"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_sema_driver",
+      "dir": "third_party/bun/src/sema/driver",
+      "internalDeps": [
+        "bun_ast",
+        "bun_core",
+        "bun_parsers",
+        "bun_paths",
+        "bun_sema",
+        "bun_sema_parser",
+        "bun_sys",
+        "bun_threading"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_sema_parser",
+      "dir": "third_party/bun/src/sema/parser",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_core",
+        "bun_highway",
+        "bun_sema",
+        "bun_threading"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_sema_standalone",
+      "dir": "third_party/bun/src/sema/standalone",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_boringssl_sys",
+        "bun_core",
+        "bun_js_parser",
+        "bun_sema",
+        "bun_sema_baselines",
+        "bun_sema_driver",
+        "bun_sema_parser",
+        "bun_sys",
+        "bun_threading",
+        "bun_zstd"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_semver",
+      "dir": "third_party/bun/src/semver",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_wyhash"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_semver_jsc",
+      "dir": "third_party/bun/src/semver_jsc",
+      "internalDeps": [
+        "bun_core",
+        "bun_jsc",
+        "bun_semver"
+      ],
+      "externalDeps": 1,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_semver_jsc",
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_sha_hmac",
+      "dir": "third_party/bun/src/sha_hmac",
+      "internalDeps": [
+        "bun_boringssl",
+        "bun_boringssl_sys",
+        "bun_core"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_shell_parser",
+      "dir": "third_party/bun/src/shell_parser",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_shim_impl",
+      "dir": "third_party/bun/src/install/windows-shim",
+      "internalDeps": [
+        "bun_opaque",
+        "bun_pod",
+        "bun_windows_sys"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_simdutf_sys",
+      "dir": "third_party/bun/src/simdutf_sys",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sort_by_number",
+      "dir": "third_party/bun/src/sort_by_number",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sourcemap",
+      "dir": "third_party/bun/src/sourcemap",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_base64",
+        "bun_collections",
+        "bun_core",
+        "bun_highway",
+        "bun_io",
+        "bun_opaque",
+        "bun_parsers",
+        "bun_paths",
+        "bun_ptr",
+        "bun_semver",
+        "bun_sys",
+        "bun_zstd"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sourcemap_jsc",
+      "dir": "third_party/bun/src/sourcemap_jsc",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_ast",
+        "bun_collections",
+        "bun_core",
+        "bun_io",
+        "bun_js_parser",
+        "bun_js_printer",
+        "bun_jsc",
+        "bun_options_types",
+        "bun_paths",
+        "bun_removable_features",
+        "bun_sourcemap",
+        "bun_wyhash"
+      ],
+      "externalDeps": 0,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_sourcemap_jsc",
+        "bun_js_parser"
+      ]
+    },
+    {
+      "crate": "bun_spawn",
+      "dir": "third_party/bun/src/spawn",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_core",
+        "bun_dispatch",
+        "bun_errno",
+        "bun_event_loop",
+        "bun_io",
+        "bun_opaque",
+        "bun_output",
+        "bun_ptr",
+        "bun_spawn_sys",
+        "bun_sys",
+        "bun_threading"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_spawn_sys",
+      "dir": "third_party/bun/src/spawn_sys",
+      "internalDeps": [
+        "bun_analytics",
+        "bun_core",
+        "bun_libuv_sys",
+        "bun_sys",
+        "bun_windows_sys"
+      ],
+      "externalDeps": 5,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sql",
+      "dir": "third_party/bun/src/sql",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_boringssl",
+        "bun_collections",
+        "bun_core",
+        "bun_ptr",
+        "bun_sha_hmac",
+        "bun_sys"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sql_jsc",
+      "dir": "third_party/bun/src/sql_jsc",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_analytics",
+        "bun_base64",
+        "bun_boringssl",
+        "bun_boringssl_sys",
+        "bun_collections",
+        "bun_core",
+        "bun_event_loop",
+        "bun_io",
+        "bun_jsc",
+        "bun_ptr",
+        "bun_sha_hmac",
+        "bun_sql",
+        "bun_uws"
+      ],
+      "externalDeps": 5,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_sql_jsc",
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_standalone_graph",
+      "dir": "third_party/bun/src/standalone_graph",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_aot_interface",
+        "bun_archive",
+        "bun_ast",
+        "bun_bundler",
+        "bun_collections",
+        "bun_core",
+        "bun_dotenv",
+        "bun_errno",
+        "bun_exe_format",
+        "bun_highway",
+        "bun_http",
+        "bun_opaque",
+        "bun_options_types",
+        "bun_parsers",
+        "bun_paths",
+        "bun_perf",
+        "bun_resolver",
+        "bun_sourcemap",
+        "bun_sys",
+        "bun_threading",
+        "bun_trim",
+        "bun_url",
+        "bun_zlib",
+        "bun_zstd"
+      ],
+      "externalDeps": 7,
+      "jsc": "clean",
+      "js": "reaches",
+      "jsPath": [
+        "bun_standalone_graph",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_sys",
+      "dir": "third_party/bun/src/sys",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_errno",
+        "bun_libuv_sys",
+        "bun_opaque",
+        "bun_paths",
+        "bun_windows_sys",
+        "bun_wyhash"
+      ],
+      "externalDeps": 8,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_sys_jsc",
+      "dir": "third_party/bun/src/sys_jsc",
+      "internalDeps": [
+        "bun_core",
+        "bun_jsc",
+        "bun_sys"
+      ],
+      "externalDeps": 0,
+      "jsc": "root",
+      "js": "reaches",
+      "jsPath": [
+        "bun_sys_jsc",
+        "bun_jsc",
+        "bun_bundler"
+      ]
+    },
+    {
+      "crate": "bun_tar",
+      "dir": "third_party/bun/src/tar",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_zlib"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_tcc_sys",
+      "dir": "third_party/bun/src/tcc_sys",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_core",
+        "bun_opaque",
+        "bun_ptr"
+      ],
+      "externalDeps": 3,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_text_diff",
+      "dir": "third_party/bun/src/text_diff",
+      "internalDeps": [
+        "bun_core",
+        "bun_wyhash"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_threading",
+      "dir": "third_party/bun/src/threading",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_ptr",
+        "bun_safety",
+        "bun_sys"
+      ],
+      "externalDeps": 4,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_transpiler",
+      "dir": "third_party/bun/src/transpiler",
+      "internalDeps": [
+        "bun_bundler"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "root"
+    },
+    {
+      "crate": "bun_trim",
+      "dir": "third_party/bun/src/trim",
+      "internalDeps": [
+        "bun_core",
+        "bun_exe_format",
+        "bun_options_types",
+        "bun_removable_features"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_url",
+      "dir": "third_party/bun/src/url",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_opaque",
+        "bun_paths",
+        "bun_wyhash"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_uws",
+      "dir": "third_party/bun/src/uws",
+      "internalDeps": [
+        "bun_boringssl",
+        "bun_core",
+        "bun_jsc_macros",
+        "bun_uws_sys"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_uws_sys",
+      "dir": "third_party/bun/src/uws_sys",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_boringssl_sys",
+        "bun_core",
+        "bun_errno",
+        "bun_http_types",
+        "bun_libuv_sys",
+        "bun_opaque",
+        "bun_paths",
+        "bun_ptr",
+        "bun_windows_sys"
+      ],
+      "externalDeps": 5,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_valkey",
+      "dir": "third_party/bun/src/valkey",
+      "internalDeps": [
+        "bun_core"
+      ],
+      "externalDeps": 2,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_watcher",
+      "dir": "third_party/bun/src/watcher",
+      "internalDeps": [
+        "bun_collections",
+        "bun_core",
+        "bun_errno",
+        "bun_paths",
+        "bun_ptr",
+        "bun_sys",
+        "bun_threading",
+        "bun_wyhash"
+      ],
+      "externalDeps": 6,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_which",
+      "dir": "third_party/bun/src/which",
+      "internalDeps": [
+        "bun_core",
+        "bun_paths",
+        "bun_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_windows_sys",
+      "dir": "third_party/bun/src/windows_sys",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_wyhash",
+      "dir": "third_party/bun/src/wyhash",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_yarr",
+      "dir": "third_party/bun/src/yarr",
+      "internalDeps": [],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_zlib",
+      "dir": "third_party/bun/src/zlib",
+      "internalDeps": [
+        "bun_alloc",
+        "bun_collections",
+        "bun_core",
+        "bun_zlib_sys"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_zlib_sys",
+      "dir": "third_party/bun/src/zlib_sys",
+      "internalDeps": [
+        "bun_core"
+      ],
+      "externalDeps": 0,
+      "jsc": "clean",
+      "js": "clean"
+    },
+    {
+      "crate": "bun_zstd",
+      "dir": "third_party/bun/src/zstd",
+      "internalDeps": [
+        "bun_core",
+        "bun_opaque"
+      ],
+      "externalDeps": 1,
+      "jsc": "clean",
+      "js": "clean"
+    }
+  ]
+}
