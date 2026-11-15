@@ -65,7 +65,7 @@ See `infra/fleet/ACME.md`: a single certbot on fr2, Cloudflare DNS-01, conventio
 - about 620 files were written (ctime 18:19–18:21): profiles (502), private (64), a2a (14), backup (12), lib (10), config (6), deploy (4), `memory.sqlite`, `db/steam.sqlite`, `google-cookies.json`, `x-session.json`, cookies, data, host, ocr. Some were new, others may have replaced prd-specific versions with fr1's (fr1 mtime preserved).
 - no btrfs snapshot and no backup of prd:~/.aphrody was found.
 - no other prd path was touched, and the final chown did not run. The directories created by root (protected-backups, qualifications, reports, run, runtimes, secrets, var, workspace) are empty.
-- exact list (623 files, all identical to fr1 by sha256): `INCIDENT-2026-11-12-prd-aphrody.md`. Decision: no restoration or deletion, since no known service uses this folder.
+- 623 files, all identical to fr1 by sha256. Decision: no restoration or deletion, since no known service uses this folder.
 
 ### Backends ported to prd
 
@@ -120,4 +120,3 @@ Details and checksums in `FR1-CHROMIUM-HOST.md`.
 - fr1 CI runners: six instances (`actions.runner.aphrody-dev-src.fr1`, `actions.runner.aphrody-labs-src.fr1-{2..6}`), labels `self-hosted, Linux, X64, fr1, build`, `Restart=always`. `aphrody-heavy` has three slots (`HEAVY_SLOTS`) and a load gate. Shared cargo target dirs live in `/home/ubuntu/build/*-target`.
 - Setup of a host, idempotent: `just fleet-bootstrap <role>` (toolchains from tools.toml) then `just fleet-setup <role>`; runners need a registration token on stdin (`gh api -X POST repos/aphrody-labs/src/actions/runners/registration-token --jq .token | ssh vps gh-runners.sh 6`).
 - `just build-all` (fr1, `infra/fleet/bin/build-all.sh`): images to ghcr (packages are private), ay, game wasm, site, artifacts in `/srv/artifacts/builds/<sha>` and `r2:aphrody-dist/builds/<sha>`; then `just deploy-images <prd|fr2> <sha> <profile> <services>` (pull on fr1, stream to the target, `compose up --wait`, no registry credential on prd or fr2). Rollback: same command with the previous tag (`SRC_REGISTRY=ghcr.io/aphrody-dev SRC_TAG=smoke` for the pre-2026-11-13 images). `just ci-local` and `just ci-lint` mirror the workflows.
-- Purge ledger: `docs/infra/VPS-PURGE-2026-11-13.md`.
