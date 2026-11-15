@@ -329,7 +329,7 @@ async function pty(
         .decode(d)
         .replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "");
       text += s;
-      if (/press enter|appuyez sur entr/i.test(s)) term.write("\r");
+      if (/press enter|appuyez sur entr|appuyez sur entrée/i.test(s)) term.write("\r");
       for (const url of s.match(
         /https:\/\/www\.npmjs\.com\/(?:login|auth)\/[^\s"']+/g,
       ) ?? []) {
@@ -454,7 +454,7 @@ async function harden(dry: boolean) {
 }
 
 // ------------------------------------------------------------------------------------------------- SHA pinning
-/** Fichiers workflow npm-publish.yml : src + sous-modules qui l'appellent. */
+/** npm-publish.yml workflow files: src + submodules that call it. */
 const PIN_FILES = [
   ROOT,
   ...SUBMODULES.map((m) => join(ROOT, m).replaceAll("\\", "/")),
@@ -465,7 +465,7 @@ const gh = (path: string) => JSON.parse(run(["gh", "api", path]).out || "null");
 const shaOf = (repo: string, ref: string) =>
   (gh(`repos/${repo}/commits/${ref}`) as { sha: string }).sha;
 
-/** Dernière release stable de la même majeure que `tag` (v7.0.1 -> v7.x.y la plus récente). */
+/** Latest stable release of the same major as `tag` (v7.0.1 -> the most recent v7.x.y). */
 function latestInMajor(repo: string, tag: string): string {
   const major = /^v?(\d+)/.exec(tag)?.[1];
   const rel =
@@ -496,7 +496,7 @@ function pins(write: boolean, push: boolean) {
       (m, action: string, sub: string, ref: string, comment?: string) => {
         let tag: string, sha: string;
         if (sub) {
-          // workflow réutilisable du monorepo : dernier commit de main qui l'a modifié
+          // reusable workflow of the monorepo: latest commit of main that modified it
           tag = "main";
           sha = (
             gh(
@@ -528,7 +528,7 @@ function pins(write: boolean, push: boolean) {
       repo,
       "commit",
       "-m",
-      `npm-publish : actions épinglées par SHA (${changes.join(", ")})`,
+      `npm-publish: actions pinned by SHA (${changes.join(", ")})`,
       "--",
       wf,
     ]);
@@ -539,7 +539,7 @@ function pins(write: boolean, push: boolean) {
       timeout: 300_000,
     });
     out[rel].push(
-      p.code === 0 ? "poussé" : `push en échec : ${p.err.slice(-160)}`,
+      p.code === 0 ? "pushed" : `push failed: ${p.err.slice(-160)}`,
     );
   }
   console.log(JSON.stringify(out, null, 2));

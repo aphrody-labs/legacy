@@ -40,36 +40,36 @@ export function checkCommon(
   const f: Finding[] = [];
   const msg = p.meta.subject + "\n" + p.meta.body;
   if (EMOJI.test(msg))
-    f.push({ level: "error", rule: "no-emoji", msg: "emoji dans le message" });
+    f.push({ level: "error", rule: "no-emoji", msg: "emoji in the message" });
   if (EMOJI.test(p.added))
     f.push({
       level: "warn",
       rule: "no-emoji",
-      msg: "emoji dans les lignes ajoutées",
+      msg: "emoji in the added lines",
     });
   if (!opts.aiNote && AI_ATTRIBUTION.test(msg))
     f.push({
       level: "error",
       rule: "no-ai-attribution",
-      msg: "attribution IA dans le message",
+      msg: "AI attribution in the message",
     });
   if (SECRET.test(p.added) || SECRET.test(msg))
     f.push({
       level: "error",
       rule: "no-secret",
-      msg: "motif de secret dans le patch",
+      msg: "secret pattern in the patch",
     });
   if (p.meta.subject.length > 72)
     f.push({
       level: "warn",
       rule: "subject-length",
-      msg: `sujet de ${p.meta.subject.length} caractères (> 72)`,
+      msg: `subject of ${p.meta.subject.length} characters (> 72)`,
     });
   if (p.meta.status === "inappropriate")
     f.push({
       level: "error",
       rule: "status",
-      msg: `Upstream-Status: Inappropriate [${p.meta.statusNote}] : pas destiné à l'amont`,
+      msg: `Upstream-Status: Inappropriate [${p.meta.statusNote}]: not meant for upstream`,
     });
   return f;
 }
@@ -84,13 +84,13 @@ export function checkBun(p: PatchInput): Finding[] {
     f.push({
       level: "error",
       rule: "bun-pr-template",
-      msg: "corps vide : « What does this PR do? » sans contenu",
+      msg: "empty body: \"What does this PR do?\" without content",
     });
   if (!VERIFY.test(p.meta.body))
     f.push({
       level: "error",
       rule: "bun-pr-template",
-      msg: "aucun paragraphe « Tested: » / « Verification: » : « How did you verify your code works? » serait vide (on-slop.yml)",
+      msg: "no \"Tested:\" / \"Verification:\" paragraph: \"How did you verify your code works?\" would be empty (on-slop.yml)",
     });
   const code = p.files.some((x) => BUN_CODE.test(x) && !BUN_TEST.test(x));
   const tests = p.files.some((x) => BUN_TEST.test(x));
@@ -98,7 +98,7 @@ export function checkBun(p: PatchInput): Finding[] {
     f.push({
       level: "error",
       rule: "bun-test",
-      msg: "code de src/ modifié sans test sous test/ (on-slop.yml : tester le correctif)",
+      msg: "src/ code changed without a test under test/ (on-slop.yml: test the fix)",
     });
   return f;
 }
@@ -109,13 +109,13 @@ export function checkChromium(p: PatchInput): Finding[] {
     f.push({
       level: "error",
       rule: "cr-ai-note",
-      msg: "paragraphe « AI assistance: <outil, parties concernées> » absent (agents/ai_policy.md : signaler les zones écrites avec un outil IA)",
+      msg: "\"AI assistance: <tool, parts concerned>\" paragraph missing (agents/ai_policy.md: flag the areas written with an AI tool)",
     });
   if (!/^(Bug|Fixed): \S+/m.test(p.meta.body))
     f.push({
       level: "error",
       rule: "cr-footer",
-      msg: "pied « Bug: <n> » ou « Fixed: <n> » absent (docs/contributing.md)",
+      msg: "\"Bug: <n>\" or \"Fixed: <n>\" footer missing (docs/contributing.md)",
     });
   const long = p.meta.body
     .split("\n")
@@ -135,23 +135,23 @@ export function checkChromium(p: PatchInput): Finding[] {
       f.push({
         level: "error",
         rule: "cr-authors",
-        msg: `${p.authorEmail} absent de AUTHORS : l'ajouter dans la première CL`,
+        msg: `${p.authorEmail} missing from AUTHORS: add it in the first CL`,
       });
   }
   f.push({
     level: "info",
     rule: "cr-cla",
-    msg: "CLA individuel Google signé par le propriétaire : https://cla.developers.google.com/about/google-individual",
+    msg: "Google individual CLA signed by the owner: https://cla.developers.google.com/about/google-individual",
   });
   f.push({
     level: "info",
     rule: "cr-ai-policy",
-    msg: "agents/ai_policy.md : le propriétaire relit, comprend et répond lui-même aux relecteurs",
+    msg: "agents/ai_policy.md: the owner reads, understands and answers reviewers personally",
   });
   f.push({
     level: "info",
     rule: "cr-presubmit",
-    msg: "git cl format && git cl presubmit --upload sur fr1 avant git cl upload",
+    msg: "git cl format && git cl presubmit --upload on fr1 before git cl upload",
   });
   return f;
 }

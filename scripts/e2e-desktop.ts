@@ -1,6 +1,6 @@
-// E2E desktop : agent-desktop, rea, ghidra (relais), agent-browser, gnu sur le PC. `just e2e-desktop`.
-// Sortie : var/e2e-desktop-<horodatage>.json + docs/reviews/e2e-desktop-<date>.md (+ verdict Gemini archivé).
-// Pas de secret saisi : session Gemini existante uniquement ; E2E_GEMINI_PROMPT=0 saute la saisie.
+// Desktop E2E: agent-desktop, rea, ghidra (relay), agent-browser, gnu on the PC. `just e2e-desktop`.
+// Output: var/e2e-desktop-<timestamp>.json + docs/reviews/e2e-desktop-<date>.md (+ archived Gemini verdict).
+// No secret typed: existing Gemini session only; E2E_GEMINI_PROMPT=0 skips the input.
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { call } from "../packages/ai-os/src/relay/protocols.ts";
@@ -55,7 +55,7 @@ await step("agent-desktop", "restore+focus", async () => {
   await hub("agent-desktop__desktop_focus_window", { app: APP });
 });
 await step("agent-desktop", "snapshot", async () => {
-  // profondeur 10 : 25 dépasse l'échéance sur Chromium (mesuré 2026-11-15)
+  // depth 10: 25 exceeds the deadline on Chromium (measured 2026-11-15)
   const d = dataOf(await hub("agent-desktop__desktop_snapshot", { app: APP, interactive_only: true, compact: true, max_depth: 10, timeout_ms: 60000 }));
   assert(d.ref_count > 5, `ref_count=${d.ref_count}`);
   return `refs=${d.ref_count}`;
@@ -75,14 +75,14 @@ else {
     if (d.matches?.[0]?.ref_id) await hub("agent-desktop__desktop_click", { ref_id: d.matches[0].ref_id });
   });
   await step("agent-desktop", "type-prompt", async () => {
-    // desktop_type exige --headed (POLICY_DENIED en mode strict par défaut) : set_value (ValuePattern) livre sans focus ;
-    // Chromium ne relit pas la valeur, d'où post_action_verification = delivered_unverified, accepté.
+    // desktop_type requires --headed (POLICY_DENIED in default strict mode): set_value (ValuePattern) delivers without focus;
+    // Chromium does not reread the value, hence post_action_verification = delivered_unverified, accepted.
     box = dataOf(await hub("agent-desktop__desktop_find", { app: APP, role: "textbox", limit: 1, timeout_ms: 30000 })).matches?.[0]?.ref_id ?? box;
     const r: any = await call("agent-desktop__desktop_set_value", { ref_id: box, value: `Review ${file} (Rust ABI symbol classifier). Reply with a score /20 and the 3 main defects, then end with the word FINI followed by the digits of 7 times 6. Code: ${code}` });
     const s = JSON.stringify(sc(r));
     assert(!r.isError || s.includes("delivered_unverified"), s.slice(0, 250));
   });
-  // press exige le premier plan (refusé hors --headed) : clic sémantique (InvokePattern) sur le bouton d'envoi
+  // press requires the foreground (refused outside --headed): semantic click (InvokePattern) on the send button
   await step("agent-desktop", "send", async () => {
     const d = dataOf(await hub("agent-desktop__desktop_find", { app: APP, role: "button", name: "Send", limit: 1, timeout_ms: 30000 }));
     const ref = d.matches?.[0]?.ref_id;
@@ -90,14 +90,14 @@ else {
     await hub("agent-desktop__desktop_click", { ref_id: ref });
   });
   await step("agent-desktop", "read-answer", async () => {
-    // la fenêtre se réduit seule hors premier plan et Chromium n'expose alors plus son arbre : restore à chaque sondage
+    // the window shrinks on its own in the background and Chromium then no longer exposes its tree: restore at each poll
     let lines: string[] = [];
     let hit = false;
     for (let i = 0; i < 30 && !hit; i++) {
       await call("agent-desktop__desktop_restore", { app: APP }).catch(() => {});
       const w: any = await call("agent-desktop__desktop_find", { app: APP, role: "statictext", limit: 0, timeout_ms: 30000 }).catch(() => null);
       lines = w && !w.isError ? (dataOf(w).matches ?? []).map((m: any) => m.name ?? m.value ?? "") : [];
-      // Gemini rend « FINI 42 » (espace) : le prompt, lui, ne contient jamais FINI suivi de 42
+      // Gemini renders "FINI 42" (space): the prompt itself never contains FINI followed by 42
       hit = /FINI\s*42/.test(lines.slice(lines.lastIndexOf("Gemini said") + 1).join(""));
       if (!hit) await Bun.sleep(6000);
     }
@@ -124,7 +124,7 @@ await step("rea", "pe-certificates", async () => void (await hub("rea__inspect_p
 await step("rea", "audit-asar", async () => void (await hub("rea__audit_release_exposure", { path: `${GEM}/resources/app.asar` })));
 await step("rea", "desktop-application", async () => void (await hub("rea__inspect_desktop_application", { path: GEM })));
 
-// ---- ghidra (outil du relais) ----
+// ---- ghidra (relay tool) ----
 await step("ghidra", "decompile(launcher)", async () => {
   const r: any = await call("core_ghidra_decompile", { path: `${GEM}/GeminiAppLauncher.exe`, maxFunctions: 4 });
   const d = r?.structuredContent ?? r;
@@ -152,7 +152,7 @@ await step("agent-browser", "gnu search coreutils", async () => {
 });
 await step("agent-browser", "gnu kernel tab", async () => {
   const j = await ev(`[...document.querySelectorAll('button,a,[role=tab]')].find(e=>e.textContent.trim()==='Linux kernel').click(); await new Promise(r=>setTimeout(r,1500)); return JSON.stringify(/kernel/i.test(document.body.innerText))`);
-  assert(j === true, "kernel text absent");
+  assert(j === true, "kernel text missing");
 });
 await step("agent-browser", "gemini.google.com", async () => {
   await hub("agent-browser__agent_browser_open", { url: "https://gemini.google.com/app" });
@@ -194,7 +194,7 @@ const md = [
   "|---|---|---|---|---|",
   ...fams.map((f) => `| ${f} | ${count(f, "pass")} | ${count(f, "fail")} | ${count(f, "blocked")} | ${count(f, "skip")} |`),
   "",
-  "| étape | statut | ms | note |",
+  "| step | status | ms | note |",
   "|---|---|---|---|",
   ...results.map((r) => `| ${r.family}/${r.name} | ${r.status} | ${r.ms} | ${r.note.replace(/\|/g, "/").slice(0, 120)} |`),
   "",

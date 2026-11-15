@@ -1,5 +1,5 @@
-// Hook Stop/SessionEnd : capture locale des leçons -> ~/.claude/learning/journal.jsonl
-// Le parent lit stdin, lance un worker détaché et sort 0 immédiatement. Aucune donnée ne sort de la machine.
+// Stop/SessionEnd hook: local capture of lessons -> ~/.claude/learning/journal.jsonl
+// The parent reads stdin, launches a detached worker and exits 0 immediately. No data leaves the machine.
 import {
   appendFileSync,
   readFileSync,
@@ -29,7 +29,7 @@ async function parent() {
 }
 
 function work() {
-  Bun.sleepSync(1500); // le transcript peut être en retard sur la session
+  Bun.sleepSync(1500); // the transcript may lag behind the session
   try {
     const inp = JSON.parse(process.env.LEARN_IN || "{}");
     const tp: string = inp.transcript_path;

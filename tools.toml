@@ -786,8 +786,8 @@ assets.linux-aarch64 = "ollama-linux-arm64.tar.zst"
 assets.macos-x86_64 = "ollama-darwin.tgz"
 assets.macos-aarch64 = "ollama-darwin.tgz"
 
-# mistral.rs, build CPU officiel (serveur OpenAI-compatible de `ay ai`, prd sans GPU). Empreinte :
-# digest de l'asset GitHub de la release v0.9.5, relevé le 2026-11-13.
+# mistral.rs, official CPU build (OpenAI-compatible server of `ay ai`, prd without GPU). Fingerprint:
+# digest of the GitHub asset of release v0.9.5, surveyed on 2026-11-13.
 sha256.windows-x86_64 = "50fcf5ad54277f2fa5d173ebfc93bcb017adbc0c9ef2314daabc96ca9e6aa64e"
 sha256.linux-x86_64 = "87bfafb2acbc89b2e6a1be0a9043de6aa75fb450696f86bc426e65fc448f788d"
 sha256.linux-aarch64 = "e45b8e6dcb86cb9f3057396351655079c9a4879b4ced2678c9350d375dcbc224"
@@ -807,15 +807,15 @@ unsupported = [
   "linux-aarch64",
   "macos-x86_64",
   "macos-aarch64",
-] # ay ai ne l'utilise que sur prd
+] # ay ai only uses it on prd
 
 # ---------------------------------------------------------------------------------------------
-# Navigateurs headless et automatisation : façade packages/chromium-bun/src/engines (`just browsers`).
-# Ici les binaires publiés en release ; Chrome for Testing, les navigateurs Playwright et les outils
-# Python (uv tool) passent par `chromium-bun engines install`. Rien n'est compilé sur le poste.
+# Headless browsers and automation: packages/chromium-bun/src/engines facade (`just browsers`).
+# Here the binaries published as releases; Chrome for Testing, Playwright browsers and Python
+# tools (uv tool) go through `chromium-bun engines install`. Nothing is compiled on the workstation.
 # ---------------------------------------------------------------------------------------------
 
-# Obscura (Rust) : CDP sur `obscura serve`. Empreintes : digests des assets GitHub v0.2.7, relevés le 2026-11-14.
+# Obscura (Rust): CDP on `obscura serve`. Fingerprints: digests of the GitHub assets v0.2.7, surveyed on 2026-11-14.
 [[tool]]
 name = "obscura"
 version = "0.2.7"
@@ -833,8 +833,8 @@ sha256.linux-aarch64 = "4ee0aeeb38fa8bb2cb004ba104abe1c79f1bdfd02f51672c694e8234
 sha256.macos-x86_64 = "c47383e5b5551e09d2055ee7bdcce788af409fb4394e39bdaf179734df18e829"
 sha256.macos-aarch64 = "fc7e73f23058f18d6d5be983d83b24ba374d12167677657a307a9476c0f5a7c1"
 
-# Lightpanda (Zig) : CDP sur `lightpanda serve --host 127.0.0.1 --port N`. Binaires nus de la release stable ;
-# empreintes = digests des assets GitHub. Le fork (packages/browser/native) vit dans aphrody-labs/open.
+# Lightpanda (Zig): CDP on `lightpanda serve --host 127.0.0.1 --port N`. Bare binaries of the stable release;
+# fingerprints = digests of the GitHub assets. The fork (packages/browser/native) lives in aphrody-labs/open.
 [[tool]]
 name = "lightpanda"
 version = "1.0.4"
@@ -853,7 +853,7 @@ sha256.macos-x86_64 = "8c02127c6fc2a713d166349bf1b511d470c8fcd684681927c978cc8bb
 sha256.macos-aarch64 = "83b0ba5ae31086b675fb3ba50644bda075a13bebabe46dc5f7543952bc41ae46"
 unsupported = ["windows-x86_64"] # pas de binaire Windows en release
 
-# Servo (Rust) : WebDriver sur `servo --headless --webdriver=<port>` ; arbre servo/ + resources/.
+# Servo (Rust): WebDriver on `servo --headless --webdriver=<port>`; servo/ tree + resources/.
 [[tool]]
 name = "servo"
 version = "0.8.0"
@@ -867,7 +867,7 @@ assets.linux-x86_64 = "servo-x86_64-linux-gnu.tar.gz"
 assets.linux-aarch64 = "servo-aarch64-linux-gnu.tar.gz"
 unsupported = ["macos-x86_64", "macos-aarch64"] # macOS : .dmg uniquement
 
-# agent-browser (Rust, vercel-labs) : CLI et serveur MCP déjà déclaré côté Claude Code.
+# agent-browser (Rust, vercel-labs): CLI and MCP server already declared on the Claude Code side.
 [[tool]]
 name = "agent-browser"
 version = "0.43.0"
@@ -907,13 +907,13 @@ bin = ["apify"]
 source = "bun"
 package = "apify-cli"
 
-# Shell : niubash remplace Git Bash et pwsh (bash 5.3 natif Rust, git MSVC, sans MSYS).
-# Installation de référence : configuration/shell.dsc.winget (winget configure) ; cette entrée
-# épingle la même version et vérifie le binaire sur le PATH. Preuves : dépôt nt,
+# Shell: niubash replaces Git Bash and pwsh (native Rust bash 5.3, MSVC git, no MSYS).
+# Reference installation: configuration/shell.dsc.winget (winget configure); this entry
+# pins the same version and verifies the binary on the PATH. Proofs: nt repository,
 # apps/nt/docs/research/shell-replacement.md (test Claude Code de bout en bout, imports PE).
-# Première installation seulement : le niu.exe en service vient des forks aphrody-labs (niubash + rubash)
-# construits par prd ou par la CI du fork, puis `just unixwin-install`.
-# `bin` n'est pas un gabarit {version} : à mettre à jour avec `version`.
+# First installation only: the niu.exe in service comes from the aphrody-labs forks (niubash + rubash)
+# built by prd or by the fork's CI, then `just unixwin-install`.
+# `bin` is not a {version} template: update it together with `version`.
 [[tool]]
 name = "niubash"
 version = "1.5.0"
@@ -924,11 +924,11 @@ repo = "unixwin/niubash"
 layout = "tree"
 checksum = "SHA256SUMS"
 assets.windows-x86_64 = "niubash-v{version}-win-x64.zip"
-unsupported = ["linux-x86_64", "linux-aarch64", "macos-x86_64", "macos-aarch64"] # Unix : bash du système ; niubash remplace Git Bash sous Windows
+unsupported = ["linux-x86_64", "linux-aarch64", "macos-x86_64", "macos-aarch64"] # Unix: system bash; niubash replaces Git Bash on Windows
 
 # Coreutils for Windows : build Microsoft de uutils coreutils + findutils + grep (Learn :
-# learn.microsoft.com/windows/core-utils/overview). Pas de fichier de sommes publié : SHA256
-# épinglés ici (calculés le 2026-11-12 sur les zips de la release v2026.9.3).
+# learn.microsoft.com/windows/core-utils/overview). No published checksum file: SHA256
+# pinned here (computed on 2026-11-12 on the zips of release v2026.9.3).
 [[tool]]
 name = "ms-coreutils"
 version = "2026.9.3"
@@ -1534,8 +1534,8 @@ assets.macos-x86_64 = "cargo-llvm-cov-x86_64-apple-darwin.tar.gz"
 assets.macos-aarch64 = "cargo-llvm-cov-aarch64-apple-darwin.tar.gz"
 
 # ---------------------------------------------------------------------------------------------
-# Audit, refactor, build (relevé 2026-11-14 : API GitHub releases, empreintes = digest des assets).
-# Gagnant par catégorie ; cargo-deny/audit/machete/shear/hack : hygiène des dépendances Rust.
+# Audit, refactor, build (surveyed 2026-11-14: GitHub releases API, fingerprints = asset digests).
+# Winner per category; cargo-deny/audit/machete/shear/hack: Rust dependency hygiene.
 # ---------------------------------------------------------------------------------------------
 
 [[tool]]
@@ -1556,12 +1556,12 @@ sha256.linux-aarch64 = "526e2286d77533cfd8b231c0877befb412dafcf4fa0479974e8dc2c2
 sha256.macos-x86_64 = "ef347c331d97cb6a043809091bd96bdd64de6a8354f01da66764496885230591"
 sha256.macos-aarch64 = "ea4f4082d25e5f8e0450add6fd488dd008a373c90483cc2031759c8431f1dcfb"
 
-# Bazelisk (Google) : lanceur Bazel épinglé par .bazelversion ; binaire nu.
+# Bazelisk (Google): Bazel launcher pinned by .bazelversion; bare binary.
 [[tool]]
 name = "bazelisk"
 version = "1.30.0"
 bin = ["bazelisk"]
-# `--version` affiche la version de Bazel résolue (.bazelversion), pas celle de bazelisk : état "ahead" attendu.
+# `--version` prints the resolved Bazel version (.bazelversion), not bazelisk's: "ahead" state expected.
 source = "github"
 repo = "bazelbuild/bazelisk"
 assets.windows-x86_64 = "bazelisk-windows-amd64.exe"

@@ -41,17 +41,17 @@ export const APP = {
 } as const;
 
 /**
- * Permissions : clés du schéma `app-permissions` de github/rest-api-description (commit bd6df26, 2026-11-12),
- * validées une par une contre le validateur de manifeste de GitHub le 2026-11-13. Deux clés de l'OpenAPI y sont
- * refusées (« resource is not included in the list ») et portent un autre nom interne, celui que renvoie
- * `gh api /apps/<slug>` : email_addresses -> emails (App renovate), git_ssh_keys -> keys. Ajoutées hors OpenAPI
- * mais acceptées et présentes sur des Apps réelles : repository_advisories (événement repository_advisory),
- * repository_creation (App claude). Refusée : models. Exclues
- * volontairement : codespaces et organization_copilot_seat_management (facturés à l'usage), single_file (couvert par
+ * Permissions: keys of the `app-permissions` schema of github/rest-api-description (commit bd6df26, 2026-11-12),
+ * validated one by one against GitHub's manifest validator on 2026-11-13. Two OpenAPI keys are
+ * refused there ("resource is not included in the list") and carry another internal name, the one returned by
+ * `gh api /apps/<slug>`: email_addresses -> emails (renovate App), git_ssh_keys -> keys. Added outside the OpenAPI
+ * but accepted and present on real Apps: repository_advisories (repository_advisory event),
+ * repository_creation (claude App). Refused: models. Deliberately
+ * excluded: codespaces and organization_copilot_seat_management (usage-billed), single_file (covered by
  * contents), enterprise_* (pas d'entreprise).
  */
 export const PERMISSIONS: Record<string, "read" | "write" | "admin"> = {
-  // Dépôt
+  // Repository
   actions: "write",
   administration: "write",
   artifact_metadata: "write",
@@ -119,8 +119,8 @@ export const USER_PERMISSIONS = new Set([
 ]);
 
 /**
- * Événements webhook (x-webhooks de l'OpenAPI), chacun couvert par une permission ci-dessus (EVENT_PERMISSION,
- * vérifié par github-app.test.ts). Refusés par le validateur : package (registry_package le remplace),
+ * Webhook events (x-webhooks of the OpenAPI), each covered by a permission above (EVENT_PERMISSION,
+ * verified by github-app.test.ts). Refused by the validator: package (registry_package replaces it),
  * repository_import, repository_vulnerability_alert.
  */
 export const EVENTS = [
@@ -194,8 +194,8 @@ export function manifest(name: string = APP.name) {
     setup_url: `http://127.0.0.1:${APP.port}/setup`,
     setup_on_update: false,
     request_oauth_on_install: false,
-    // Publique : une App privée ne s'installe que sur le compte propriétaire (docs « making a GitHub App public
-    // or private ») ; il faut yolo-rs et le compte aphrody-dev. Installer n'accorde rien aux autres comptes.
+    // Public: a private App can only be installed on the owner account (docs "making a GitHub App public
+    // or private"); yolo-rs and the aphrody-dev account are needed. Installing grants nothing to other accounts.
     public: true,
     default_permissions: PERMISSIONS,
     default_events: EVENTS,
