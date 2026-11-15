@@ -51,6 +51,8 @@ interface Client {
   /** sha256 of the secret (confidential clients, created with the relay token as initial access token). */
   secret_sha256?: string;
   scope?: string;
+  /** Registered with the relay token, or approved once by the owner: only such clients are auto-approved on loopback. */
+  trusted?: boolean;
   created: number;
 }
 interface Pending {
@@ -483,6 +485,7 @@ export function createOAuth(o: OAuthOptions) {
         : "none",
       secret_sha256: secret ? sha(secret) : undefined,
       scope: typeof m.scope === "string" ? m.scope : undefined,
+      trusted: trusted || undefined,
       created: now(),
     };
     load().clients[c.client_id] = c;
@@ -564,6 +567,11 @@ export function createOAuth(o: OAuthOptions) {
       pending.delete(id);
       if (decision !== "allow")
         return redirectWith(base, p, null, "access_denied");
+      const approvedClient = load().clients[p.client_id];
+      if (approvedClient && !approvedClient.trusted) {
+        approvedClient.trusted = true;
+        save();
+      }
       const code = rand(24);
       pending.set(code, { ...p, approved: true, exp: now() + CODE_TTL });
       return redirectWith(base, p, code);
@@ -610,7 +618,8 @@ export function createOAuth(o: OAuthOptions) {
       }
     })();
     // Request Host on loopback too: a DNS name that rebinds to 127.0.0.1 gets nothing automatically.
-    if (autoApprove && local && isLoopbackHost(new URL(req.url).hostname)) {
+    // Only trusted clients: anonymous dynamic registration never yields a token without the owner (CWE-306).
+    if (autoApprove && local && c.trusted && isLoopbackHost(new URL(req.url).hostname)) {
       const code = rand(24);
       pending.set(code, { ...p, approved: true });
       return redirectWith(base, p, code);

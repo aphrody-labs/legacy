@@ -243,10 +243,13 @@ export const AGENT_TOOLS: Tool[] = [
     ),
     readOnly: true,
     run: async (a) => {
-      const target = resolve(
+      const base = realpathSync(
         Bun.env.SRC_ROOT ?? resolve(import.meta.dir, "..", "..", "..", ".."),
-        String(a.path ?? "."),
       );
+      const target = resolve(base, String(a.path ?? "."));
+      // Callers audit inside the checkout only, symlinks resolved (CWE-22).
+      if (!inside(base, existsSync(target) ? realpathSync(target) : target))
+        throw new Error(`path outside the checkout: ${a.path}`);
       if (a.mode === "legacy-scan") {
         return JSON.stringify(scanLegacyPatterns(target), null, 2);
       }
