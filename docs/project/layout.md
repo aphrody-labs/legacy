@@ -23,7 +23,7 @@ Decisions: keep, move, merge, purge. Status: done (commit in git log), pending, 
 | `tools.toml` | keep | `ay up` declares the toolchain from it; `packages/ai-os/test/relay/e2e.test.ts`, `packages/core/src/sys.ts` and about 100 skills name it | - |
 | `depot-artifacts.toml` | keep | default manifest path of `ay artifacts` (`src/depot/cli/src/lib.rs`) and of `just artifacts-verify` | - |
 | `VERSION` | keep | single version source: `ay release freeze` (`packages/release/src/cli.ts`, `freeze.ts`) writes it into `Cargo.toml` and `package.json`. Bun's `LATEST` records the last published release, a different role | - |
-| `LICENSE-APACHE`, `LICENSE-MIT` | keep | two files, kept as they are; no license is chosen by the owner and none gates a design (`docs/legal/LICENSE-QUEUE.md`). Bun's `LICENSE.md` form applies only if one license text remains | - |
+| `LICENSE-APACHE`, `LICENSE-MIT` | merge into `LICENSE.md` | Bun's root has a single `LICENSE.md`; the new file states both texts (MIT, then Apache-2.0) under one header. No license is chosen by the owner and none gates a design (`docs/legal/LICENSE-QUEUE.md`) | done |
 | `.gitattributes`, `.gitignore`, `.gitmodules`, `.env.example` | keep | git and the env tooling read them at the root | - |
 | `.graphifyignore` | keep | graphify reads it at the root | - |
 | `.github/` | keep | GitHub reads it; Bun precedent | - |

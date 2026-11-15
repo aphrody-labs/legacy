@@ -18,7 +18,7 @@ Aphrody 的单体仓库（monorepo）。贡献者与代理的约定见 [AGENTS.m
 ## 锁定与许可证
 
 - `src.lock.json` 是唯一的版本锁定来源；[`DEPS`](../../../DEPS) 与 [`.gitmodules`](../../../.gitmodules) 由 `ay manifests` 派生。[`MAINTAINERS`](../../../MAINTAINERS) 手工维护。
-- 自有代码采用 MIT OR Apache-2.0（[LICENSE-MIT](../../../LICENSE-MIT)、[LICENSE-APACHE](../../../LICENSE-APACHE)）。依赖策略见 `deny.toml` 和 [docs/ARCHITECTURE.md](../../ARCHITECTURE.md)。
+- 自有代码采用 MIT OR Apache-2.0（[LICENSE.md](../../../LICENSE.md)）。依赖策略见 `deny.toml` 和 [docs/ARCHITECTURE.md](../../ARCHITECTURE.md)。
 
 ## 常用命令
 

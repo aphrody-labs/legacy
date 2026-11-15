@@ -18,7 +18,7 @@ Monorepo d'Aphrody. Le contrat des contributeurs et des agents est [AGENTS.md](.
 ## Épinglage et licences
 
 - `src.lock.json` est l'unique épinglage ; `DEPS` et `.gitmodules` en sont dérivés par `ay manifests`. `MAINTAINERS` est tenu à la main.
-- Le code first-party est sous MIT OR Apache-2.0 (`LICENSE-MIT`, `LICENSE-APACHE`). La politique de dépendances est dans `deny.toml` et `docs/ARCHITECTURE.md`.
+- Le code first-party est sous MIT OR Apache-2.0 (`LICENSE.md`). La politique de dépendances est dans `deny.toml` et `docs/ARCHITECTURE.md`.
 
 ## Commandes
 

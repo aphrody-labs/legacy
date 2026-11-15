@@ -18,7 +18,7 @@ Aphrody のモノレポです。コントリビューターとエージェント
 ## ピンとライセンス
 
 - ピンは `src.lock.json` のみです。`DEPS` と `.gitmodules` は `ay manifests` がここから生成します。`MAINTAINERS` は手作業で管理します。
-- 自社コードのライセンスは MIT OR Apache-2.0 です(`LICENSE-MIT`、`LICENSE-APACHE`)。依存関係のポリシーは `deny.toml` と `docs/ARCHITECTURE.md` にあります。
+- 自社コードのライセンスは MIT OR Apache-2.0 です(`LICENSE.md`)。依存関係のポリシーは `deny.toml` と `docs/ARCHITECTURE.md` にあります。
 
 ## コマンド
 
