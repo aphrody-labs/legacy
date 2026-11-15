@@ -22,7 +22,7 @@ const repo = join(import.meta.dir, "..", "..", "..");
 const lockPath = join(repo, "src.lock.json");
 const gh = (r: string) => `https://github.com/${r}.git`;
 
-// Clones unixwin (même liste que le bloc unixwin de packages/machine/src/forks.ts).
+// unixwin clones (same list as the unixwin block of packages/machine/src/forks.ts).
 const DIRS = [
   ...[
     "niubash",

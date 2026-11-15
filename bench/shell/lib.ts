@@ -133,7 +133,7 @@ export function generate(spec: string): string {
   const rows: string[] = [];
   for (let i = 0; i < n; i++) {
     switch (kind) {
-      case "lines": rows.push(`line ${i} lorem ipsum dolor sit amet ${(i * 7) % 997}\n`); break;
+      case "lines": rows.push(`line ${i} lorem ipsum dolor sit amet ${(i * 7) % 997}\n`); break; // hygiene-ok: fixture text, byte-identical to the Python generator
       case "words": rows.push(`${Array.from({ length: 8 }, (_, j) => WORDS[(i + j) % WORDS.length]).join(" ")}\n`); break;
       case "kv": rows.push(`key${i}=value${i}\n`); break;
       case "csv": rows.push(`${i},field${i},3.14,item-${i},active,${i % 50}\n`); break;

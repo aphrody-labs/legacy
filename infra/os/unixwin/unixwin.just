@@ -31,7 +31,7 @@ unixwin-install from="ci" triple="x86_64-pc-windows-msvc":
 unixwin-test-fr1 filter:
     bun "{{root}}/infra/os/unixwin/unixwin.ts" test-fr1 {{filter}}
 
-# Suite bun de bout en bout (niubash, rubash, WinuxCmd) contre GNU bash et uutils
+# End-to-end Bun suite (niubash, rubash, WinuxCmd) against GNU bash and uutils
 [group('unixwin')]
 unixwin-test:
     bun test "{{root}}/packages/machine/matrix/test/unixwin"

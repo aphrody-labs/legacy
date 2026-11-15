@@ -11,7 +11,11 @@
     "packages/machine/shells/**",
     "packages/machine/matrix/test/**",
     ".claude/agents/coherence-fixer.md",
-    "packages/ai-os/test/relay/sessions.test.ts"
+    "packages/ai-os/test/relay/sessions.test.ts",
+    "src/rubash/**",
+    "src/niubash/**",
+    "src/ruline/**",
+    "src/winux/**"
   ],
   "stub": [
     "scripts/hygiene.ts"
@@ -183,5 +187,24 @@
   ],
   "ssh-alias": [
     "scripts/hygiene.ts"
+  ],
+  "non-english": [
+    "src/rubash/**",
+    "src/niubash/**",
+    "src/ruline/**",
+    "src/winux/**",
+    "packages/omniu/**"
+  ],
+  "dated-snapshot": [
+    "src/rubash/**",
+    "src/niubash/**",
+    "src/ruline/**",
+    "src/winux/**"
+  ],
+  "dated-filename": [
+    "src/rubash/**",
+    "src/niubash/**",
+    "src/ruline/**",
+    "src/winux/**"
   ]
 }
