@@ -28,7 +28,7 @@ A report never says "not verified" or "not run". If a step cannot complete, the 
 | 8 | Build science (`docs/native/BUILD-SCIENCE.md`) | each measured gain is adopted in `just` | sccache adopted |
 | 9 | Fleet offload (`docs/infra/FLEET-OFFLOAD.md`) | fr1 PSI below saturation, no yolo legacy, clean file systems | slices and `fleet-run` live |
 | 10 | Hygiene purge | `just hygiene` green on the whole tree | running |
-| 11 | unixwin fusion (`docs/native/UNIXWIN.md`) | every unixwin repo absorbed or pinned once; `src/{rubash,ruline,niubash}` workspace members; `ay` is a plugin of Bun and of niu | forks rebased; absorption running |
+| 11 | unixwin fusion (`docs/native/UNIXWIN.md`) | every unixwin repo absorbed or pinned once; `src/{rubash,ruline,niubash}` workspace members; `ay` is a plugin of Bun and of niu | steps 1-8 done on fr2 (crates, `ay sh`, plugin surface, Bun ports, WinuxCmd-based applet multicall, wpm in `ay up`, skills and MCP); open: WinuxCmd C++ applets to Rust, winuxcmd-i18n and profiles, linux/unix/posix/nt merge (see `docs/native/UNIXWIN.md`) |
 
 ## Order
 
