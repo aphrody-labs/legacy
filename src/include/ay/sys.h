@@ -92,12 +92,6 @@ AY_API __s32 wasm_simd_dot_i32(const __s32 *a, const __s32 *b, __usize count,
 
 /* ui/ (Material 3 Expressive colors, spring motion, adaptive shell & zero-alloc SSR HTML) */
 AY_API __u32 ay_ui_color_argb(__u32 theme_mode, __u32 role_id) AY_WASM("ay_ui_color_argb");
-/* ui/hct.c: Material 3 colour science (HCT, tonal palettes, dynamic scheme) from any seed */
-AY_API void  ay_hct_from_argb(__u32 argb, double *hue, double *chroma, double *tone) AY_WASM("ay_hct_from_argb");
-AY_API __u32 ay_hct_to_argb(double hue, double chroma, double tone) AY_WASM("ay_hct_to_argb");
-AY_API __u32 ay_m3_tone(double hue, double chroma, double tone) AY_WASM("ay_m3_tone");
-AY_API __s32 ay_m3_scheme(__u32 seed_argb, __u32 variant, __u32 theme_mode, __u32 accent_argb,
-			  __u32 out_argb[AY_UI_ROLE_COUNT]) AY_WASM("ay_m3_scheme");
 AY_API __u32 ay_ui_argb_to_abgr(__u32 argb) AY_WASM("ay_ui_argb_to_abgr");
 AY_API __u32 ay_ui_state_blend_argb(__u32 base_argb, __u32 content_argb,
 				    __u32 opacity_permille) AY_WASM("ay_ui_state_blend_argb");

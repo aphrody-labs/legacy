@@ -43,7 +43,6 @@ C_SRCS := \
 	wine/server_proto.c \
 	wasm/module.c \
 	ui/m3.c \
-	ui/hct.c \
 	ui/shell_kit.c \
 	ui/vterm.c
 
@@ -57,37 +56,6 @@ linux:
 	mkdir -p $(OUT_DIR)
 	$(CC) $(CFLAGS_BASE) -fPIC -flto=thin -fuse-ld=lld -shared \
 		$(C_SRCS) $(ASM_X86_64) -o $(OUT_DIR)/libaysys.so
-
-# AI router client ABI (include/ay/router.h): libayrouter + ay-router CLI, hosted libc (sockets), not in the wasm core.
-# Golden check of ui/hct.c (MCU reference values + the Aphrody vibrant scheme of tokens.json).
-hct-test:
-	mkdir -p $(OUT_DIR)
-	$(CC) -std=gnu11 -O2 -Wall -Wextra -Werror -Iinclude $(HOST_SDK) ui/hct.c ui/m3.c ui/hct_test.c -o $(OUT_DIR)/hct_test
-	$(OUT_DIR)/hct_test
-
-router:
-	mkdir -p $(OUT_DIR)
-	$(CC) -std=c11 -D_POSIX_C_SOURCE=200809L -O2 -Wall -Wextra -Werror -fPIC -flto=thin -fuse-ld=lld -shared \
-		router/router.c -ldl -o $(OUT_DIR)/libayrouter.so
-	$(CC) -std=c11 -D_POSIX_C_SOURCE=200809L -O2 -Wall -Wextra -Werror -fuse-ld=lld router/ay-router.c \
-		-L$(OUT_DIR) -layrouter -Wl,-rpath,'$$ORIGIN' -o $(OUT_DIR)/ay-router
-
-# Windows SDK pinned to the one packages/machine/machine.export.dsc.winget installs (Microsoft.WindowsSDK.10.0.26100):
-# clang otherwise picks the highest Windows Kits version, and a partial kit (10.0.28000, no ucrt) hides stdio.h.
-WINSDK ?= 10.0.26100.0
-HOST_SDK := $(if $(filter Windows_NT,$(OS)),-Xmicrosoft-windows-sdk-version $(WINSDK) -D_CRT_SECURE_NO_WARNINGS -fuse-ld=lld,)
-
-router-windows:
-	mkdir -p $(OUT_DIR)
-	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=c11 -O2 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS \
-		-flto=thin -fuse-ld=lld -shared router/router.c -lws2_32 -lwinhttp -o $(OUT_DIR)/ayrouter.dll
-	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=c11 -O2 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS \
-		-fuse-ld=lld router/ay-router.c router/router.c -lws2_32 -lwinhttp -o $(OUT_DIR)/ay-router.exe
-	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=gnu11 -O2 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS -Iinclude \
-		-fuse-ld=lld router/ay-chat.c router/router.c ui/hct.c -lws2_32 -lwinhttp -o $(OUT_DIR)/ay-chat.exe
-	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=gnu11 -O2 -Wall -Wextra -D_CRT_SECURE_NO_WARNINGS -DUNICODE -Iinclude \
-		-fuse-ld=lld -Wl,/subsystem:windows -Wl,/entry:wWinMainCRTStartup router/ay-chat-gui.c router/router.c ui/hct.c \
-		-lws2_32 -lwinhttp -luser32 -lgdi32 -o $(OUT_DIR)/ay-chat-gui.exe
 
 windows:
 	mkdir -p $(OUT_DIR)

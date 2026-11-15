@@ -44,8 +44,6 @@ function resolveVercelPackageEntry(dir, exists) {
   const packageRoots = [
     win32.join(dir, "node_modules", "vercel"),
     win32.join(win32.dirname(dir), "vercel"),
-    // `bun add -g vercel`: ~/.bun/bin/vercel.exe, package under ~/.bun/install/global.
-    win32.join(win32.dirname(dir), "install", "global", "node_modules", "vercel"),
   ];
   for (const root of packageRoots) {
     for (const rel of ["dist/vc.js", "dist/index.js"]) {

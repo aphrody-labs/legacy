@@ -244,7 +244,7 @@ Table limitée aux contrôles qui passent ; même run : 115/120 checks ok, code 
 
 ## 7. Validation Gemini
 
-Verdict : Gemini 4 Carbon High, par le relais `relay review`.
+Verdicts : `docs/reviews/gemini-2026-11-13-fr2-cloudflare.md` (Gemini 4 Carbon High, par le relais `relay review`).
 
 - Passe 1 : **10/20**. Corrigé ensuite : décomptes (33 CNAME, 21 A, certificats), état de nie.aphrody.app et du port 22, affirmation `/api`, commandes de retour arrière, filtre UDP 80/443, ordre au démarrage, Access sur admin/control, preuve v6 par jeu de règles.
 - Passe 2 : **12/20**. Corrigé : Access sur console, jeton invalide = échec, jetons de flotte par hôte, jetons Access par sens, dépôt atomique et rotation des secrets, secrets hors argv, repli fr2 par LB cluster, certificats en DNS-01, inet fleet versionnée, ufw purgé, codes HTTP figés.
@@ -319,17 +319,3 @@ Relevé en lecture seule : `cf` 1.0.0-beta.31 avec le jeton de compte du coffre 
 - Push temps réel vers `/srv/src` (item 1, non livré) : un Durable Object SQLite (gratuit, WebSocket en hibernation) dans le Worker `aphrody-github` suffit, sans port entrant sur les hôtes. Ce n'est qu'une conception, rien n'est déployé.
 
 fr2 reste minimal : nginx de repli, HAProxy du cluster, cloudflared, pare-feu. Aucun daemon n'est ajouté par cet inventaire.
-
-## 9. Cost (optimisation du compte, 2026-11-15)
-
-Tarifs R2 lus sur https://developers.cloudflare.com/r2/pricing/ le 2026-11-15 : Standard 0,015 USD/Go-mois, classe A 4,50 USD/M, classe B 0,36 USD/M, gratuit par mois 10 Go, 1 M A, 10 M B ; Infrequent Access 0,01 USD/Go, A 9,00 USD/M, B 0,90 USD/M, retrait 0,01 USD/Go (hors franchise) ; egress gratuit via Workers et S3.
-
-Mesure GraphQL du 2026-10-16 au 2026-11-15 (Go / objets / classe A / classe B) : aphrody-archive 335 / 3,8 M / 4,42 M / 3,80 M ; shenron-cdn 37,8 / 182 k / 62 k / 3,88 M ; aphrody-dist 18,3 / 41 k / 144 k / 4,71 M ; aphrody-assets 0,84 / 694 / 1 k / 3,01 M ; aphrody-lore 0,23 / 39 k / 55 k / 2,38 M ; rosegriffon-cdn 0,08 / 559 / 2 k / 170 k. Total : environ 392 Go, 4,68 M A, 17,95 M B (franchise partagée par le compte).
-
-Estimation mensuelle avant (hors petits buckets) : stockage (392-10) Go x 0,015 = 5,73 ; classe A (4,68-1) M x 4,50 = 16,56 ; classe B (17,95-10) M x 0,36 = 2,86 ; total environ **25 USD/mois**.
-
-Après : le seul poste réduit est la classe B de shenron-cdn (3 lectures R2 par requête : manifeste, head, objet), désormais derrière Workers Cache. Taux de HIT non encore mesuré : à 80 %, B passe de 17,95 M à 14,85 M, soit 1,75 USD au lieu de 2,86, total environ **24 USD/mois** (gain environ 1 USD). Les nettoyages de buckets vides et l'abandon des multipart après 1 jour ne changent le coût qu'en cas d'envoi interrompu. Le coût dominant reste la classe A d'`aphrody-archive` (4,42 M, environ 16 USD) : `fr1-r2.sh` et la sauvegarde `fleet-backup.sh` copient avec `--checksum` (écritures et listages) ; réduire la fréquence ou passer à `--size-only` est le seul levier réel (non appliqué, à mesurer sur fr1).
-
-`aphrody-archive` reste en Standard : lue régulièrement (sauvegardes chiffrées quotidiennes avec rétention 30 j dans `fleet/<hote>/`, `cache.toml` `r2:aphrody-archive/cache/fr1`, `fr1-r2.sh` en `--checksum` qui fait un HEAD par objet à chaque passage, test de restauration `just fleet-restore-test`). Ses 3,8 M de classe B ne sont donc pas un envoi unique ; en Infrequent Access la classe B coûte 0,90 USD/M (x2,5), la classe A 9,00 USD/M (x2) et les objets supprimés avant 30 j sont facturés, ce qui annule le gain de stockage (-0,005 USD/Go-mois, soit environ 1,7 USD).
-
-Cache Workers : Workers Cache activé (`"cache": {"enabled": true}`) sur creator-aphrody-com, open-aphrody-com et shenron-cdn. Les HIT comptent comme requêtes Workers (plan Free : 100 000/jour pour le compte, relevé 30 j : environ 910 k, soit environ 30 k/jour) mais ne consomment ni CPU ni lecture R2 (https://developers.cloudflare.com/workers/platform/pricing/). Cache Reserve non activé (payant, aucun besoin mesuré).

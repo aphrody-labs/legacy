@@ -11,7 +11,6 @@ cargo-features = ["codegen-backend", "panic-immediate-abort"]
 resolver = "3"
 members = [
   "bench",
-  "src/router/rs",
   "src/agent/context",
   "src/agent/py",
   "src/analytics",

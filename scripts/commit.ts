@@ -1,7 +1,7 @@
 // Safe commit for the shared working tree: builds the commit in a private index from HEAD plus the listed
 // paths only, refuses a tree that loses files (b38c8de7 was committed from an empty index, 2026-11-15),
 // moves main with compare-and-swap, then resyncs the shared index for those paths only.
-// usage: bun scripts/commit.ts -m "<msg>" [--allow-shrink N] [--push] [--content <path>=<file>]... [--gitlink <path>=<sha>]... <path>...
+// usage: bun scripts/commit.ts -m "<msg>" [--allow-shrink N] [--push] [--content <path>=<file>]... <path>...
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -11,7 +11,6 @@ let msg = "";
 let allowShrink = 0;
 let push = false;
 const contents: [string, string][] = [];
-const gitlinks: [string, string][] = [];
 const paths: string[] = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i]!;
@@ -22,14 +21,10 @@ for (let i = 0; i < argv.length; i++) {
     const [p, file] = (argv[++i] ?? "").split("=");
     contents.push([p!, file!]);
   }
-  else if (a === "--gitlink") {
-    const [p, sha] = (argv[++i] ?? "").split("=");
-    gitlinks.push([p!, sha!]);
-  }
   else paths.push(a);
 }
-if (!msg || (!paths.length && !contents.length && !gitlinks.length)) {
-  console.error('usage: bun scripts/commit.ts -m "<msg>" [--allow-shrink N] [--push] [--gitlink <path>=<sha>] <path>...');
+if (!msg || (!paths.length && !contents.length)) {
+  console.error('usage: bun scripts/commit.ts -m "<msg>" [--allow-shrink N] [--push] <path>...');
   process.exit(2);
 }
 
@@ -57,11 +52,6 @@ try {
   for (const [p, file] of contents) {
     const blob = git(["hash-object", "-w", file]);
     git(["update-index", "--add", "--cacheinfo", `100644,${blob},${p}`], true);
-  }
-  // --gitlink <repo path>=<commit sha>: pin a submodule without a local checkout of it
-  for (const [p, sha] of gitlinks) {
-    if (!/^[0-9a-f]{40}$/.test(sha)) throw new Error(`--gitlink ${p}: expected a full 40-hex commit sha`);
-    git(["update-index", "--add", "--cacheinfo", `160000,${sha},${p}`], true);
   }
   const tree = git(["write-tree"], true);
   const after = count(tree);
