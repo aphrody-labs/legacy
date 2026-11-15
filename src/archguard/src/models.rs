@@ -50,7 +50,7 @@ pub struct AuditConfig {
 impl Default for AuditConfig {
     fn default() -> Self {
         Self {
-            root: PathBuf::from(if cfg!(windows) { r"C:\src" } else { "/src" }),
+            root: PathBuf::from(option_env!("SRC_ROOT").unwrap_or(".")),
             strict: false,
             only_rule: None,
             check_docs_emojis: true,

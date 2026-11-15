@@ -508,12 +508,14 @@ fn run_cosmic_env(export_theme: bool) -> Result<(), Box<dyn std::error::Error>> 
     println!("{}", ron);
 
     if export_theme {
-        let appdata = std::env::var("USERPROFILE").unwrap_or_else(|_| "C:\\Users\\Default".into());
-        let dir = format!("{}\\.config\\cosmic", appdata);
+        let home = std::env::var_os("USERPROFILE")
+            .or_else(|| std::env::var_os("HOME"))
+            .ok_or("neither USERPROFILE nor HOME is set")?;
+        let dir = std::path::PathBuf::from(home).join(".config").join("cosmic");
         std::fs::create_dir_all(&dir)?;
-        let path = format!("{}\\com.system76.CosmicTheme.Dark", dir);
+        let path = dir.join("com.system76.CosmicTheme.Dark");
         std::fs::write(&path, &ron)?;
-        println!("Exported theme RON to: {}", path);
+        println!("Exported theme RON to: {}", path.display());
     }
 
     Ok(())

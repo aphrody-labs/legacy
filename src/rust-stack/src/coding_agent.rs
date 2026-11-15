@@ -632,6 +632,14 @@ mod tests {
         assert!(
             agent
                 .guard
+                .resolve_safe_path("../../outside.txt")
+                .is_err()
+        );
+        // A backslash separates components on Windows only.
+        #[cfg(windows)]
+        assert!(
+            agent
+                .guard
                 .resolve_safe_path("..\\..\\outside.txt")
                 .is_err()
         );
@@ -679,7 +687,8 @@ mod tests {
         let s = agent.execute_tool(&ToolCallSpec {
             id: "5".into(),
             name: "run_shell".into(),
-            arguments: json!({ "command": "Write-Output 'rsc-ok'" }),
+            // `echo` works in PowerShell (alias of Write-Output) and in sh.
+            arguments: json!({ "command": "echo rsc-ok" }),
         });
         assert!(s.ok && s.output.contains("rsc-ok"));
 

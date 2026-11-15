@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
-use windows_sys::Win32::System::Performance::{QueryPerformanceCounter, QueryPerformanceFrequency};
 
 static QPC_FREQ: AtomicU64 = AtomicU64::new(0);
 
@@ -10,22 +9,14 @@ pub fn get_qpc_frequency() -> u64 {
     if freq != 0 {
         return freq;
     }
-    let mut f: i64 = 0;
-    unsafe {
-        QueryPerformanceFrequency(&mut f);
-    }
-    let u_freq = f as u64;
+    let u_freq = crate::platform::counter_frequency();
     QPC_FREQ.store(u_freq, Ordering::Relaxed);
     u_freq
 }
 
 #[inline]
 pub fn get_qpc_counter() -> u64 {
-    let mut count: i64 = 0;
-    unsafe {
-        QueryPerformanceCounter(&mut count);
-    }
-    count as u64
+    crate::platform::counter_now()
 }
 
 #[derive(Clone, Copy, Debug)]

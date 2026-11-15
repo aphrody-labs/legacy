@@ -1,11 +1,7 @@
 use crate::hardware::QpcInstant;
+use crate::platform::MappedRegion;
 use serde::{Deserialize, Serialize};
 use std::process::Command;
-use std::ptr::null_mut;
-use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
-use windows_sys::Win32::System::Memory::{
-    CreateFileMappingW, MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS, PAGE_READWRITE,
-};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct LmbenchMetrics {
@@ -47,23 +43,11 @@ pub fn run_lmbench() -> LmbenchMetrics {
     let qpc_total_ns = t0.elapsed_nanos();
     let qpc_latency_ns = qpc_total_ns / (QPC_ITERS as f64);
 
-    // 2. Win32 MapViewOfFile lifecycle latency
+    // 2. Memory mapping lifecycle latency (Win32 MapViewOfFile, mmap on Unix)
     let mut min_mmap_us = f64::MAX;
     for _ in 0..20 {
         let t = QpcInstant::now();
-        unsafe {
-            let handle = CreateFileMappingW(
-                INVALID_HANDLE_VALUE,
-                null_mut(),
-                PAGE_READWRITE,
-                0,
-                1024 * 1024, // 1MB
-                null_mut(),
-            );
-            let view = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, 1024 * 1024);
-            UnmapViewOfFile(view);
-            CloseHandle(handle);
-        }
+        drop(MappedRegion::new(1024 * 1024).expect("1 MiB memory mapping")); // 1MB
         let dt = t.elapsed_micros();
         if dt < min_mmap_us {
             min_mmap_us = dt;

@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 //! The Aphrody brand pipeline behind `ay brand build`.
 //!
-//! One source, `assets/brand/` (`brand.toml`, SVG templates in `src/`, Material Symbols in
-//! `symbols/`), one output tree, `assets/brand/gen/`:
+//! One source, `assets/brand/` (`brand.toml`, SVG templates in `src/`), its third-party inputs fetched
+//! into `gen-cache/` by `ay assets brand-inputs` (fonts, Material Symbols; commits in `inputs.lock.json`),
+//! one output tree, `assets/brand/gen/` (only the directories of [`OUTPUT_DIRS`] and the manifest; the
+//! Zukan crawl keeps `gen/zukan` and `gen/themes`):
 //!
 //! | Output | Content |
 //! | :-- | :-- |
@@ -12,6 +14,9 @@
 //! | `badges/` | static README badges |
 //! | `banner/` | ANSI truecolor and plain banners for CLIs and TUIs |
 //! | `profile/` | statistics cards from `docs/profile/stats.json` |
+//! | `preview/` | PNG previews for review; gitignored, never in the manifest or on the CDN |
+//!
+//! `ay brand check` verifies a build (manifest sha256, URLs, sprite, glTF); `ay brand publish` uploads it.
 //!
 //! Colors come from the shared design tokens, `packages/design/tokens/tokens.rs` (the M3
 //! schemes and per-hue tonal palettes generated from brand.toml by Material Color Utilities),
@@ -21,8 +26,10 @@
 
 include!(concat!(env!("SRC_ROOT"), "/packages/design/tokens/tokens.rs"));
 
+pub mod check;
 mod model;
 mod pet;
+pub mod publish;
 mod web;
 
 /// `0xRRGGBBAA` of tokens.rs to the `0xAARRGGBB` used here.
@@ -58,6 +65,8 @@ pub enum Error {
     Render(String),
     /// An external encoder of the web stages (hb-subset, woff2_compress, avifenc, cwebp, ktx, ffmpeg, cargo, wasm-opt, bun).
     Tool(String),
+    /// Problems found by `check`, one per line.
+    Check(Vec<String>),
 }
 
 impl fmt::Display for Error {
@@ -68,6 +77,7 @@ impl fmt::Display for Error {
             Self::Svg(m) => write!(f, "svg: {m}"),
             Self::Render(m) => write!(f, "render: {m}"),
             Self::Tool(m) => write!(f, "tool: {m}"),
+            Self::Check(p) => write!(f, "{} problem(s)\n{}", p.len(), p.join("\n")),
         }
     }
 }
@@ -78,6 +88,25 @@ type Result<T> = std::result::Result<T, Error>;
 
 fn read(path: &Path) -> Result<String> {
     fs::read_to_string(path).map_err(|e| Error::Io(path.to_path_buf(), e))
+}
+
+/// Directories of `gen/` that `build` writes and deletes first (the rest of `gen/` belongs to other tools).
+pub const OUTPUT_DIRS: &[&str] = &["badges", "banner", "env", "fonts", "gpu", "icons", "img", "logo", "model", "og", "pet", "preview", "profile", "symbols", "video"];
+
+/// A third-party input of `gen-cache/`; a missing file says which command fetches it.
+fn input(path: &Path) -> Result<String> {
+    if !path.is_file() {
+        return Err(Error::Manifest(format!("{} missing: run `ay assets brand-inputs`", path.display())));
+    }
+    read(path)
+}
+
+/// Commits that `ay assets brand-inputs` resolved (`inputs.lock.json`), repository to commit.
+pub fn inputs(brand_dir: &Path) -> Result<BTreeMap<String, String>> {
+    let text = input(&brand_dir.join("inputs.lock.json"))?;
+    let v: serde_json::Value = serde_json::from_str(&text).map_err(|e| Error::Manifest(format!("inputs.lock.json: {e}")))?;
+    let repos = v.get("repos").and_then(|r| r.as_object()).ok_or_else(|| Error::Manifest("inputs.lock.json: repos".into()))?;
+    Ok(repos.iter().filter_map(|(k, c)| Some((k.clone(), c.as_str()?.to_string()))).collect())
 }
 
 fn write(path: &Path, bytes: impl AsRef<[u8]>) -> Result<()> {
@@ -548,6 +577,14 @@ impl Ctx<'_> {
         self.hashes.insert(rel.to_string(), (bytes.len() as u64, web::sha256_hex(bytes)));
         Ok(())
     }
+
+    /// A review preview: written under gen/preview, outside the manifest.
+    fn preview(&mut self, rel: &str, bytes: impl AsRef<[u8]>) -> Result<()> {
+        let bytes = bytes.as_ref();
+        write(&self.gen_dir.join("preview").join(rel), bytes)?;
+        self.report.files.push((format!("assets/brand/gen/preview/{rel}"), bytes.len() as u64));
+        Ok(())
+    }
 }
 
 /// Renders the whole brand.
@@ -558,14 +595,24 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     let svg = Svg::new(&manifest.brand.font, &brand_dir.join(&manifest.brand.font_file))?;
     if !svg.has_font() {
         return Err(Error::Manifest(format!(
-            "{} missing: run `bun assets/brand/fetch.ts` first",
+            "{} missing: run `ay assets brand-inputs` first",
             manifest.brand.font_file
         )));
     }
     let gen_dir = brand_dir.join("gen");
-    // gen/ is entirely derived: start from nothing so that no stale file survives into the manifest.
-    if gen_dir.exists() {
-        fs::remove_dir_all(&gen_dir).map_err(|e| Error::Io(gen_dir.clone(), e))?;
+    // Start from none of our outputs so that no stale file survives into the manifest; inputs (gen-cache/)
+    // and the outputs of other tools (gen/zukan, gen/themes) stay.
+    for d in OUTPUT_DIRS {
+        let dir = gen_dir.join(d);
+        if dir.exists() {
+            fs::remove_dir_all(&dir).map_err(|e| Error::Io(dir.clone(), e))?;
+        }
+    }
+    for f in ["manifest.json", "manifest.json.sha256"] {
+        let file = gen_dir.join(f);
+        if file.exists() {
+            fs::remove_file(&file).map_err(|e| Error::Io(file.clone(), e))?;
+        }
     }
     let mut cx = Ctx {
         root: &opts.root,
@@ -603,7 +650,7 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
             let width = format!("{}", (right + 8.0).ceil() as u32);
             let theme = if dark { "dark" } else { "light" };
             cx.put(&format!("logo/{}-wordmark-{theme}.svg", org.id), cx.svg.optimize(&vars(&width))?)?;
-            cx.put(&format!("preview/{}-wordmark-{theme}.png", org.id), cx.svg.png_scaled(&vars(&width), 3.0)?)?;
+            cx.preview(&format!("{}-wordmark-{theme}.png", org.id), cx.svg.png_scaled(&vars(&width), 3.0)?)?;
         }
         let title = format!("{} {}", org.name, org.suffix);
         icon_set(&mut cx, &org.id, &title, &mark, container)?;
@@ -613,8 +660,8 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
 
     // Products: tile, icon set, social card, banner, deploy.
     for p in &manifest.product {
-        let sym_file = brand_dir.join("symbols").join(format!("{}.svg", p.symbol));
-        let symbol = symbol_path(&read(&sym_file)?)?;
+        let sym_file = brand_dir.join("gen-cache").join("symbols").join("48").join(format!("{}.svg", p.symbol));
+        let symbol = symbol_path(&input(&sym_file)?)?;
         let container = palette.product(p.hue);
         let glyph = 0xFFFF_FFFF;
         let ratio = contrast(glyph, container);
@@ -857,7 +904,7 @@ fn stats_cards(cx: &mut Ctx<'_>, p: &Palette, font: &str) -> Result<()> {
                 gen = xml_text(&stats.generated),
             );
             cx.put(&format!("profile/stats-{}-{theme}.svg", a.id), cx.svg.optimize(&svg)?)?;
-            cx.put(&format!("preview/stats-{}-{theme}.png", a.id), cx.svg.png_scaled(&svg, 2.0)?)?;
+            cx.preview(&format!("stats-{}-{theme}.png", a.id), cx.svg.png_scaled(&svg, 2.0)?)?;
         }
     }
     Ok(())
@@ -929,7 +976,7 @@ mod tests {
     #[test]
     fn product_tiles_keep_white_glyph_readable() {
         let p = Palette::new();
-        assert_eq!(hex(p.light.argb("primary")), "#1242FF");
+        assert_eq!(hex(p.light.argb("primary")), "#006492");
         for hue in (0..360).step_by(15) {
             let c = p.product(f64::from(hue));
             assert!(contrast(0xFFFF_FFFF, c) >= 4.5, "hue {hue}: {}", hex(c));

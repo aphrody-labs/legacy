@@ -9,6 +9,11 @@ description = "Hardware and compiler benchmark suite behind `ay bench` (Windows)
 [dependencies]
 argh = { workspace = true }
 zerocopy = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+rayon = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
 windows-sys = { workspace = true, features = [
   "Win32_Foundation",
   "Win32_Security",
@@ -17,6 +22,6 @@ windows-sys = { workspace = true, features = [
   "Win32_System_Performance",
   "Win32_System_Threading",
 ] }
-serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
-rayon = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+libc = { workspace = true }

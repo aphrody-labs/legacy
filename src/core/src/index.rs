@@ -121,7 +121,7 @@ mod tests {
 
     #[test]
     fn classify_layers() {
-        assert_eq!(classify("src/core/src/lib.rs"), ("crates".into(), "core".into()));
+        assert_eq!(classify("src/core/src/lib.rs"), ("src".into(), "core".into()));
         assert_eq!(classify("justfile.rs"), ("root".into(), "justfile.rs".into()));
     }
 

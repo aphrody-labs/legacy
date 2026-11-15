@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
+#[cfg(windows)]
 use std::path::Path;
+#[cfg(windows)]
 use std::process::Command;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -13,13 +15,30 @@ pub struct Tier3Metrics {
     pub compiler_flags: String,
 }
 
+/// MSVC `cl.exe` exists only on Windows: there is no Unix counterpart for this tier.
+#[cfg(not(windows))]
+pub fn run_benchmark() -> Tier3Metrics {
+    panic!("tier3_msvc is unsupported on this platform: it needs MSVC cl.exe (Windows only)")
+}
+
+/// `vcvars64.bat` of the Visual Studio Build Tools, located from `%ProgramFiles(x86)%`.
+#[cfg(windows)]
+fn vcvars64() -> std::path::PathBuf {
+    Path::new(&std::env::var("ProgramFiles(x86)").expect("ProgramFiles(x86) not set"))
+        .join(r"Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvars64.bat")
+}
+
+#[cfg(windows)]
 pub fn run_benchmark() -> Tier3Metrics {
     let exe_path = Path::new("tier3_msvc/kernel.exe");
     if !exe_path.exists() {
         println!("[tier3_msvc] Compiling kernel.cpp with MSVC cl.exe /O2 /GL /LTCG /arch:AVX2...");
-        let build_cmd = r#"call "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && cl /O2 /GL /arch:AVX2 /std:c++latest /fp:fast /EHsc /Fotier3_msvc/kernel.obj /Fetier3_msvc/kernel.exe tier3_msvc/kernel.cpp /link /LTCG"#;
+        let build_cmd = format!(
+            r#"call "{}" && cl /O2 /GL /arch:AVX2 /std:c++latest /fp:fast /EHsc /Fotier3_msvc/kernel.obj /Fetier3_msvc/kernel.exe tier3_msvc/kernel.cpp /link /LTCG"#,
+            vcvars64().display()
+        );
         let status = Command::new("cmd")
-            .args(["/c", build_cmd])
+            .args(["/c", &build_cmd])
             .status()
             .expect("Failed to execute MSVC cl build");
         if !status.success() {

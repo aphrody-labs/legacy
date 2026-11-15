@@ -25,8 +25,8 @@ const SCANNER_FNS: [&str; 5] = [
 ];
 
 fn main() {
-    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
-    let src_root = manifest_dir.join("../..");
+    // SRC_ROOT comes from .cargo/config.toml [env] (absolute repo root).
+    let src_root = PathBuf::from(std::env::var("SRC_ROOT").expect("SRC_ROOT (.cargo/config.toml [env])"));
     let out = PathBuf::from(std::env::var("OUT_DIR").unwrap()).join("grammars.rs");
     println!("cargo:rerun-if-env-changed=APHRODY_GRAMMARS");
     println!("cargo:rerun-if-env-changed=APHRODY_GRAMMARS_MANIFEST");

@@ -10,7 +10,7 @@ use aphrody_ui::brand::{Palette, Svg, fill, strip_comments};
 use sha2::{Digest, Sha256};
 
 fn root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..")
+    PathBuf::from(env!("SRC_ROOT"))
 }
 
 fn hex(c: u32) -> String {
@@ -38,7 +38,8 @@ fn brand_sources_render_identically() {
     let vars: Vec<(&str, &str)> = vars.iter().map(|(k, v)| (*k, v.as_str())).collect();
     let svg = Svg::new("X", std::path::Path::new("")).unwrap();
     for (name, size) in [("mark", 64u32), ("tile", 64)] {
-        let text = fs::read_to_string(src.join(format!("{name}.svg"))).unwrap();
+        let path = src.join(format!("{name}.svg"));
+        let text = fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
         let pixmap = svg.pixmap(&fill(&strip_comments(&text), &vars), size, size).unwrap();
         check(&format!("{name}-{size}"), pixmap.data());
     }

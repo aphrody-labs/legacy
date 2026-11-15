@@ -44,9 +44,11 @@ pub struct LlvmIrAnalysisReport {
 }
 
 fn find_llvm_tool(exe_name: &str) -> Option<PathBuf> {
-    let default_win = PathBuf::from(r"C:\Program Files\LLVM\bin").join(exe_name);
-    if default_win.exists() {
-        return Some(default_win);
+    if let Some(pf) = std::env::var_os("ProgramFiles") {
+        let default_win = PathBuf::from(pf).join("LLVM").join("bin").join(exe_name);
+        if default_win.exists() {
+            return Some(default_win);
+        }
     }
     if let Ok(path_var) = std::env::var("PATH") {
         for dir in std::env::split_paths(&path_var) {

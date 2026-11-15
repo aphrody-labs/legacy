@@ -1121,8 +1121,13 @@ mod tests {
             eprintln!("Skipped: set ADOBE_SMOKE_TEST=1 to enable.");
             return;
         }
-        let root_str = std::env::var("ADOBE_PS_2026_ROOT")
-            .unwrap_or_else(|_| r"C:\Program Files\Adobe\Adobe Photoshop 2026".to_owned());
+        let root_str = std::env::var("ADOBE_PS_2026_ROOT").unwrap_or_else(|_| {
+            std::path::Path::new(&std::env::var("ProgramFiles").unwrap_or_default())
+                .join("Adobe")
+                .join("Adobe Photoshop 2026")
+                .to_string_lossy()
+                .into_owned()
+        });
         let root = std::path::Path::new(&root_str);
         assert!(root.exists(), "Photoshop root not found: {root_str}");
 
@@ -1164,8 +1169,13 @@ mod tests {
             eprintln!("Skipped: set ADOBE_GEN_ARTIFACT=1 to enable.");
             return;
         }
-        let root_str = std::env::var("ADOBE_PS_2026_ROOT")
-            .unwrap_or_else(|_| r"C:\Program Files\Adobe\Adobe Photoshop 2026".to_owned());
+        let root_str = std::env::var("ADOBE_PS_2026_ROOT").unwrap_or_else(|_| {
+            std::path::Path::new(&std::env::var("ProgramFiles").unwrap_or_default())
+                .join("Adobe")
+                .join("Adobe Photoshop 2026")
+                .to_string_lossy()
+                .into_owned()
+        });
         let root = std::path::Path::new(&root_str);
         assert!(root.exists(), "Photoshop root not found: {root_str}");
 

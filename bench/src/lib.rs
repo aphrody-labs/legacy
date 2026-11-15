@@ -2,6 +2,7 @@ pub mod cli;
 pub mod cold_start;
 pub mod hardware;
 pub mod picker;
+pub mod platform;
 pub mod public_bench;
 pub mod tier1_cuda;
 pub mod tier2_rust;

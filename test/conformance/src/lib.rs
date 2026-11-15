@@ -174,7 +174,7 @@ mod tests {
     use super::*;
 
     fn repo_root() -> PathBuf {
-        Path::new(env!("SRC_ROOT"))
+        PathBuf::from(env!("SRC_ROOT"))
     }
 
     #[test]

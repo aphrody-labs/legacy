@@ -912,12 +912,12 @@ mod tests {
         let r = recipes.iter().find(|x| x.name == "aphrody-sysctl").unwrap();
         let body = fs::read(root.join(&r.files[0].src)).unwrap();
         let pkgbuild = String::from_utf8(
-            generate(&root, r, Format::Arch, None).files["PKGBUILD"].clone(),
+            generate(&root, r, Format::Arch, None).expect("generate").files["PKGBUILD"].clone(),
         )
         .unwrap();
         assert!(pkgbuild.contains(&sha256_hex(&body)));
 
-        let apk_map = generate(&root, r, Format::Alpine, None).files;
+        let apk_map = generate(&root, r, Format::Alpine, None).expect("generate").files;
         let apk = String::from_utf8(apk_map["aphrody/aphrody-sysctl/APKBUILD"].clone()).unwrap();
         assert!(apk.contains(&sha512_hex(&body)));
         assert!(apk.contains("pkgrel=0"));
@@ -952,7 +952,7 @@ mod tests {
             depends: None,
         };
         let bp = String::from_utf8(
-            generate(&dir, &base, Format::Soong, None).files["Android.bp"].clone(),
+            generate(&dir, &base, Format::Soong, None).expect("generate").files["Android.bp"].clone(),
         )
         .unwrap();
         assert!(bp.contains("prebuilt_etc {"));

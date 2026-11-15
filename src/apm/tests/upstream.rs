@@ -1,6 +1,6 @@
 //! Conformance tests against the upstream checkout (microsoft/apm @ 1a6c1df).
 //!
-//! Set `APM_UPSTREAM` to the checkout; defaults to `C:\src\third_party\ai\microsoft_apm`.
+//! Set `APM_UPSTREAM` to the checkout; defaults to `$SRC_ROOT/third_party/ai/microsoft_apm`.
 //! Tests are skipped (pass with a note) when the checkout is absent.
 
 use std::fs;
@@ -20,7 +20,7 @@ use aphrody_apm::yaml::{self};
 
 fn upstream() -> Option<PathBuf> {
     let p = std::env::var_os("APM_UPSTREAM").map_or_else(
-        || PathBuf::from(r"C:\src\third_party\ai\microsoft_apm"),
+        || PathBuf::from(env!("SRC_ROOT")).join("third_party/ai/microsoft_apm"),
         PathBuf::from,
     );
     if p.join("apm.yml").is_file() {

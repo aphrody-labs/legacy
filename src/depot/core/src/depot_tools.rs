@@ -42,7 +42,7 @@ pub fn home_dir() -> Option<PathBuf> {
 
 /// Candidate roots, most specific first: `$DEPOT_TOOLS_PATH`, `<$SRC_ROOT or the nearest
 /// ancestor with src.lock.json>/third_party/depot_tools`, a `PATH` entry holding gclient.py,
-/// `C:\depot_tools`.
+/// `%SystemDrive%\depot_tools` (Windows).
 fn candidates() -> Vec<PathBuf> {
     let mut out = Vec::new();
     if let Some(p) = std::env::var_os("DEPOT_TOOLS_PATH") {
@@ -55,8 +55,12 @@ fn candidates() -> Vec<PathBuf> {
     if let Some(path) = std::env::var_os("PATH") {
         out.extend(std::env::split_paths(&path));
     }
-    if cfg!(windows) {
-        out.push(PathBuf::from(r"C:\depot_tools"));
+    if cfg!(windows)
+        && let Some(drive) = std::env::var_os("SystemDrive").filter(|v| !v.is_empty())
+    {
+        let mut p = drive;
+        p.push("\\depot_tools");
+        out.push(PathBuf::from(p));
     }
     out
 }

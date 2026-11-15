@@ -7,10 +7,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../../../crates")
-        .canonicalize()
-        .unwrap()
+    PathBuf::from(env!("SRC_ROOT"))
 }
 
 fn chromium() -> Option<PathBuf> {

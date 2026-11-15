@@ -259,7 +259,7 @@ mod tests {
         assert!(wslcfg.contains("bzImage-aphrody-cachyos"));
         assert!(wslcfg.contains("memory=24GB"));
         assert!(wslcfg.contains("processors=24"));
-        assert!(wslcfg.contains("networkingMode=mirrored"));
+        assert!(wslcfg.contains("autoMemoryReclaim=gradual"));
 
         let distcfg =
             fs::read_to_string(out_dir.join("rootfs/etc/wsl-distribution.conf")).unwrap();
@@ -285,11 +285,10 @@ mod tests {
 
     #[test]
     fn test_official_omarchy_command_registry_check_passes() {
-        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(|p| p.parent())
-            .expect("repo root")
-            .to_path_buf();
+        let root = std::path::PathBuf::from(env!("SRC_ROOT"));
+        if !root.join("third_party/omarchy").is_dir() {
+            return eprintln!("skip: no third_party/omarchy checkout");
+        }
         let reg = OmarchyCommandRegistry::scan_default(&root);
         assert!(
             reg.commands.len() > 200,
@@ -306,11 +305,12 @@ mod tests {
 
     #[test]
     fn test_theme_template_engine_and_sanitization() {
-        let mut colors = ColorsToml::default();
-        colors.accent = "#7aa2f7".into();
-        colors.background = "#000000".into();
-        colors.foreground = "#ffffff".into();
-        colors.color0 = Some("#101010".into());
+        let colors = ColorsToml::parse_toml_str(
+            "test",
+            "test",
+            "mode = \"dark\"\naccent = \"#7aa2f7\"\nbackground = \"#000000\"\nforeground = \"#ffffff\"\ndark_background = \"#101010\"\n",
+        )
+        .unwrap();
 
         let tpl = "strip={{ accent_strip }};rgb={{ accent_rgb }};type={{ theme_type }};mix={{ mix background foreground 50% }}";
         let rendered = colors.render_template(tpl);
@@ -342,17 +342,15 @@ mod tests {
     fn test_plugin_validator_rejects_omarchy_namespace_and_symlinks() {
         let root = std::env::temp_dir().join("aphrody_omarchy_plugin_val_test");
         let _ = fs::remove_dir_all(&root);
-        let engine = OmarchyPluginEngine::new(root.clone());
-        let valid_dir = root.join("custom-bar");
-        engine
-            .scaffold_plugin(&valid_dir, "custom.status-bar", "Custom Status", "bar-widget")
+        // scaffold_plugin creates `<target_root>/<last id segment>`.
+        OmarchyPluginEngine::scaffold_plugin(&root, "custom.status-bar", "Custom Status", "bar-widget")
             .unwrap();
+        let valid_dir = root.join("status-bar");
         assert!(OmarchyPluginEngine::validate_plugin_dir(&valid_dir).is_ok());
 
-        let reserved_dir = root.join("reserved-bar");
-        engine
-            .scaffold_plugin(&reserved_dir, "omarchy.reserved", "Reserved", "bar-widget")
+        OmarchyPluginEngine::scaffold_plugin(&root, "omarchy.reserved", "Reserved", "bar-widget")
             .unwrap();
+        let reserved_dir = root.join("reserved");
         let err = OmarchyPluginEngine::validate_plugin_dir(&reserved_dir).unwrap_err();
         assert!(err.contains("omarchy."));
 
@@ -361,11 +359,10 @@ mod tests {
 
     #[test]
     fn test_manual_index_scans_chapters() {
-        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(|p| p.parent())
-            .expect("repo root")
-            .to_path_buf();
+        let root = std::path::PathBuf::from(env!("SRC_ROOT"));
+        if !root.join("third_party/omarchy").is_dir() {
+            return eprintln!("skip: no third_party/omarchy checkout");
+        }
         let idx = OmarchyManualIndex::scan(&root);
         assert!(
             !idx.chapters.is_empty(),

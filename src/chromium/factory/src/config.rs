@@ -90,15 +90,19 @@ pub struct Doctor {
 
 impl Default for Config {
     fn default() -> Self {
+        // Per-user defaults come from $HOME (fr1 runs as the service user), never a fixed /home path.
+        let home = std::env::var_os("HOME")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("."));
         Self {
             root: "/srv/chromium".into(),
             factory: "/srv/chromium/factory".into(),
             out_name: "labs_agent".into(),
             target: "headless_shell".into(),
             args: "args/labs_agent.gn".into(),
-            ay: "/home/ubuntu/bin/ay".into(),
+            ay: home.join("bin/ay"),
             sync_with_ay: false,
-            depot_tools: "/home/ubuntu/depot_tools".into(),
+            depot_tools: home.join("depot_tools"),
             state: "/srv/chromium/factory-state.json".into(),
             reapi: Reapi::default(),
             workers: vec![

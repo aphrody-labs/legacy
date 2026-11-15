@@ -1,5 +1,5 @@
 #![forbid(unsafe_op_in_unsafe_fn)]
-//! Zero-dependency Rust 2024 loader for `C:\src\.env` with automatic secret redaction.
+//! Zero-dependency Rust 2024 loader for the repository-root `.env` with automatic secret redaction.
 
 use std::collections::BTreeMap;
 use std::env;
@@ -8,12 +8,9 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-/// Default monorepo root `.env` location on Windows and POSIX.
-pub const DEFAULT_MONOREPO_ENV_PATH: &str = if cfg!(windows) {
-    r"C:\src\.env"
-} else {
-    "/src/.env"
-};
+/// Default monorepo root `.env` location: the repository root recorded at build time
+/// (`SRC_ROOT`, defined in `.cargo/config.toml` `[env]`).
+pub const DEFAULT_MONOREPO_ENV_PATH: &str = concat!(env!("SRC_ROOT"), "/.env");
 
 /// Wrapper around sensitive credential strings whose `Debug` and `Display`
 /// implementations always emit `[REDACTED]`, preventing accidental logging leaks.
@@ -420,7 +417,7 @@ mod tests {
         let sample = "GITHUB_TOKEN=ghp_1234567890abcdef\nGOOGLE_CLOUD_PROJECT=aphrody\n";
         let entries = parse_dotenv(sample);
         let env = SovereignEnv {
-            env_path: PathBuf::from("C:/src/.env"),
+            env_path: PathBuf::from(DEFAULT_MONOREPO_ENV_PATH),
             entries,
         };
         let dbg = format!("{env:?}");

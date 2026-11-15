@@ -64,9 +64,9 @@ pub fn probe_mingw_rea_environment(repo_root: &Path) -> Result<MingwReaDoctorRep
         .join("include")
         .join("rea_mingw_intrinsics.h");
 
-    let clang = resolve_tool(&["C:/Program Files/LLVM/bin/clang.exe", "clang"]);
-    let dlltool = resolve_tool(&["C:/Program Files/LLVM/bin/llvm-dlltool.exe", "llvm-dlltool"]);
-    let lld_link = resolve_tool(&["C:/Program Files/LLVM/bin/lld-link.exe", "lld-link"]);
+    let clang = resolve_llvm_tool("clang");
+    let dlltool = resolve_llvm_tool("llvm-dlltool");
+    let lld_link = resolve_llvm_tool("lld-link");
 
     let ready = fork_dir.exists() && Path::new(&clang).exists() && Path::new(&dlltool).exists();
 
@@ -194,7 +194,7 @@ pub fn synthesize_proxy_hook_dll(
         .map_err(|e| format!("write {}: {e}", def_path.display()))?;
 
     let import_lib_path = out_dir.join(format!("{proxy_stem}.lib"));
-    let dlltool = resolve_tool(&["C:/Program Files/LLVM/bin/llvm-dlltool.exe", "llvm-dlltool"]);
+    let dlltool = resolve_llvm_tool("llvm-dlltool");
     let dt_status = Command::new(&dlltool)
         .args(["-m", "i386:x86-64", "-d", &def_path.to_string_lossy(), "-l", &import_lib_path.to_string_lossy()])
         .output()
@@ -229,7 +229,7 @@ pub fn synthesize_proxy_hook_dll(
         .map_err(|e| format!("write {}: {e}", shim_c_path.display()))?;
 
     let out_dll_path = out_dir.join(format!("{proxy_stem}.dll"));
-    let clang = resolve_tool(&["C:/Program Files/LLVM/bin/clang.exe", "clang"]);
+    let clang = resolve_llvm_tool("clang");
     let mut args = vec![
         "--target=x86_64-pc-windows-msvc".to_string(),
         "-O2".to_string(),
@@ -300,13 +300,15 @@ fn extract_rea_beacon(bytes: &[u8]) -> Option<String> {
     core::str::from_utf8(&bytes[start..end]).ok().map(ToString::to_string)
 }
 
-fn resolve_tool(candidates: &[&str]) -> String {
-    for &c in candidates {
-        if Path::new(c).exists() {
-            return c.to_string();
+/// `%ProgramFiles%\LLVM\bin\<name>.exe` when present (Windows), else the bare name for `PATH`.
+fn resolve_llvm_tool(name: &str) -> String {
+    if let Some(pf) = std::env::var_os("ProgramFiles") {
+        let p = Path::new(&pf).join("LLVM").join("bin").join(format!("{name}.exe"));
+        if p.exists() {
+            return p.to_string_lossy().into_owned();
         }
     }
-    candidates.last().copied().unwrap_or("").to_string()
+    name.to_string()
 }
 
 #[cfg(test)]

@@ -28,7 +28,7 @@ pub fn vault_root() -> PathBuf {
         return d.into();
     }
     if cfg!(windows) {
-        return Path::new(&env("SRC_ROOT").unwrap_or_else(|| r"C:\src".into())).join("var").join("secrets");
+        return Path::new(&env("SRC_ROOT").unwrap_or_else(|| env!("SRC_ROOT").into())).join("var").join("secrets");
     }
     let data = env("XDG_DATA_HOME").map(PathBuf::from).unwrap_or_else(|| home().join(".local").join("share"));
     data.join("aphrody").join("vault")

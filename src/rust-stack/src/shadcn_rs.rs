@@ -379,7 +379,7 @@ pub fn default_primitive_for_slug(slug: &str) -> Result<UiPrimitive, String> {
         }),
         "terminal-pane" | "terminalpane" | "terminal" => Ok(UiPrimitive::TerminalPane {
             title: "rsc coding-agent".to_string(),
-            cwd: "C:\\src\\crates\\rust-stack".to_string(),
+            cwd: concat!(env!("SRC_ROOT"), "/src/rust-stack").to_string(),
             lines: vec![
                 "$ cargo test --release".to_string(),
                 "test result: ok. 0 failed; 100% pure rust".to_string(),

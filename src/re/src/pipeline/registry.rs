@@ -942,6 +942,9 @@ mod workspace_probe_tests {
     fn local_re_owners_do_not_require_bun_os_root() {
         let mut options = Options::new("", TargetKind::Os, ".");
         options.root = None;
+        if find_re_root().is_none() {
+            return eprintln!("skip: apps/rosegriffon (yolo-re workspace) is not checked out");
+        }
         for id in ["re-steam", "nie-formats", "rea", "re-nie", "re-dbxv2"] {
             if id == "rea"
                 && !find_re_root()

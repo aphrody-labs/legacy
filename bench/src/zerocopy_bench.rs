@@ -1,10 +1,6 @@
 use crate::hardware::QpcInstant;
+use crate::platform::MappedRegion;
 use serde::{Deserialize, Serialize};
-use std::ptr::null_mut;
-use windows_sys::Win32::Foundation::{CloseHandle, INVALID_HANDLE_VALUE};
-use windows_sys::Win32::System::Memory::{
-    CreateFileMappingW, MapViewOfFile, UnmapViewOfFile, FILE_MAP_ALL_ACCESS, PAGE_READWRITE,
-};
 use zerocopy::{FromBytes, Immutable, IntoBytes, KnownLayout};
 
 #[repr(C)]
@@ -35,27 +31,10 @@ pub fn run_zerocopy_benchmark() -> ZeroCopyMetrics {
     const RECORD_COUNT: usize = 1_000_000;
     let total_bytes = RECORD_COUNT * std::mem::size_of::<TelemetryRecord>(); // 32 MB
 
-    // 1. Create Win32 Paging-File backed Memory Mapping
-    unsafe {
-        let handle = CreateFileMappingW(
-            INVALID_HANDLE_VALUE,
-            null_mut(),
-            PAGE_READWRITE,
-            (total_bytes >> 32) as u32,
-            (total_bytes & 0xFFFFFFFF) as u32,
-            null_mut(),
-        );
-        if handle.is_null() {
-            panic!("Win32 CreateFileMappingW failed");
-        }
-
-        let map_view = MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, total_bytes);
-        if map_view.Value.is_null() {
-            CloseHandle(handle);
-            panic!("Win32 MapViewOfFile failed");
-        }
-
-        let mapped_slice = std::slice::from_raw_parts_mut(map_view.Value as *mut u8, total_bytes);
+    // 1. Create a paging-file backed memory mapping (Win32 MapViewOfFile, anonymous mmap on Unix)
+    {
+        let mut region = MappedRegion::new(total_bytes).expect("memory mapping");
+        let mapped_slice = region.as_mut_slice();
 
         // Pre-populate mapped buffer with structured records
         let sample = TelemetryRecord {
@@ -106,9 +85,6 @@ pub fn run_zerocopy_benchmark() -> ZeroCopyMetrics {
                 min_heap_ns = dt;
             }
         }
-
-        UnmapViewOfFile(map_view);
-        CloseHandle(handle);
 
         let speedup = min_heap_ns / min_zerocopy_ns.max(1.0);
 

@@ -488,7 +488,7 @@ impl CoreClrHost {
     pub fn discover_dotnet_root() -> Result<(PathBuf, PathBuf, String), String> {
         let candidates = [
             std::env::var("DOTNET_ROOT").ok().map(PathBuf::from),
-            Some(PathBuf::from("C:/Program Files/dotnet")),
+            std::env::var_os("ProgramFiles").map(|pf| PathBuf::from(pf).join("dotnet")),
             Some(PathBuf::from("/usr/share/dotnet")),
             Some(PathBuf::from("/usr/local/share/dotnet")),
         ];

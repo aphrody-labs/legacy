@@ -1117,10 +1117,7 @@ mod tests {
 
     #[test]
     fn canonical_repo_design_md_lints_cleanly() {
-        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(|p| p.parent())
-            .expect("repo root")
+        let path = PathBuf::from(env!("SRC_ROOT"))
             .join("packages")
             .join("design")
             .join("DESIGN.md");

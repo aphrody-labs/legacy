@@ -110,11 +110,7 @@ pub fn default_root() -> PathBuf {
             return found.to_path_buf();
         }
     }
-    if cfg!(windows) {
-        PathBuf::from(r"C:\src")
-    } else {
-        PathBuf::from("/src")
-    }
+    PathBuf::from(option_env!("SRC_ROOT").unwrap_or("."))
 }
 
 /// Run the architecture gate CLI. `cmd` is the name shown in usage (e.g. `ay arch`),

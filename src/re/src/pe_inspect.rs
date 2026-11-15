@@ -625,9 +625,13 @@ fn subsystem_name(subsystem: u16) -> String {
 mod tests {
     use super::*;
 
-    /// Default path for the smoke-test binary.
-    const DEFAULT_NIE_EXE: &str =
-        "C:/Program Files (x86)/Steam/steamapps/common/INAZUMA ELEVEN Victory Road/nie.exe";
+    /// Default path for the smoke-test binary: `%ProgramFiles(x86)%\Steam\...` (Windows).
+    fn default_nie_exe() -> String {
+        std::path::Path::new(&std::env::var("ProgramFiles(x86)").unwrap_or_default())
+            .join("Steam/steamapps/common/INAZUMA ELEVEN Victory Road/nie.exe")
+            .to_string_lossy()
+            .into_owned()
+    }
 
     /// Build a minimal PE32+ image with one `.text` section.
     fn synthetic_pe() -> Vec<u8> {
@@ -679,7 +683,7 @@ mod tests {
     #[ignore = "requires IEVR_NIE_EXE"]
     #[test]
     fn parses_nie_exe() {
-        let path_str = std::env::var("IEVR_NIE_EXE").unwrap_or_else(|_| DEFAULT_NIE_EXE.to_owned());
+        let path_str = std::env::var("IEVR_NIE_EXE").unwrap_or_else(|_| default_nie_exe());
         let path = std::path::Path::new(&path_str);
 
         if !path.exists() {

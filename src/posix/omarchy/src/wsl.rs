@@ -91,7 +91,11 @@ impl SovereignWslBuilder {
             distro_name: "aphrody-omarchy".to_string(),
             default_user: "aphrody".to_string(),
             default_theme: "tokyo-night".to_string(),
-            kernel_win_path: r"C:\\src\\target\\wsl\\bzImage-aphrody-cachyos".to_string(),
+            // .wslconfig wants doubled backslashes; the root is the repository root recorded at build time.
+            kernel_win_path: format!(
+                r"{}\\target\\wsl\\bzImage-aphrody-cachyos",
+                env!("SRC_ROOT").replace(['/', '\\'], r"\\")
+            ),
             memory_gb: 24,
             processors: 24,
         }

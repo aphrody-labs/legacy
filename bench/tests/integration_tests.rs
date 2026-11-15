@@ -1,20 +1,13 @@
+use stack_bench::hardware::{get_qpc_counter, get_qpc_frequency};
 use zerocopy::{FromBytes, IntoBytes};
 
 #[test]
 fn test_qpc_timer_monotonicity() {
-    let mut f: i64 = 0;
-    unsafe {
-        windows_sys::Win32::System::Performance::QueryPerformanceFrequency(&mut f);
-    }
-    assert!(f > 0, "QPC frequency must be positive");
+    assert!(get_qpc_frequency() > 0, "QPC frequency must be positive");
 
-    let mut t0: i64 = 0;
-    let mut t1: i64 = 0;
-    unsafe {
-        windows_sys::Win32::System::Performance::QueryPerformanceCounter(&mut t0);
-        std::thread::sleep(std::time::Duration::from_millis(1));
-        windows_sys::Win32::System::Performance::QueryPerformanceCounter(&mut t1);
-    }
+    let t0 = get_qpc_counter();
+    std::thread::sleep(std::time::Duration::from_millis(1));
+    let t1 = get_qpc_counter();
     assert!(t1 > t0, "QPC counter must be strictly monotonic");
 }
 
