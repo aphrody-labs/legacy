@@ -95,3 +95,12 @@ Log (UTC, 2026-11-15):
 Rollback tunnels: DNS rollback lines in cloudflare.toml, then `systemctl enable --now cloudflared-fr2` (fr2) or `cloudflared-prod` (prd). Rollback fr2: `sudo fleet-xfs down --purge` (umount, fstab line removed, image deleted); `rm /etc/fleet/cluster.toml` returns fleet-run to `run.conf` PEERS.
 
 Open: fr2 `/srv/src` carries uncommitted work blocking fast-forward (owner of that work to commit or drop); `cloudflare.toml` lacks the live `open-origin` ingress.
+
+## 4. fr2 and prd to XFS roots: what blocks it
+
+`infra/fleet/reinstall/` (00-preflight to 60-hot-tier, `20-arch-install.sh` guarded by `CONFIRM=REINSTALL-<host>`) already installs a single XFS root; neither root can be converted in place (ext4 and btrfs have no in-place path to XFS, `FILESYSTEMS.md`).
+
+- fr2 (OVH Public Cloud instance, one 100 GB disk): the rescue step is an OpenStack or OVH API call (`docs/infra/REINSTALL-PLAN.md` line 91, `openstack server rescue`) and needs the owner's OVH Public Cloud credentials, which are not in the repo. The Manager-level `/etc/aphrody/ovh.env` on fr1 was not read or tried.
+- fr2 holds services other hosts now depend on: Valkey (the sccache and registry backend), `dbfr.aphrody.com` and `nie.aphrody.app` (A record to fr2, `cloudflare.toml`), the relay origin behind `mcp-origin` (reached through mig-prd but running on fr2), the gnu mirror. Valkey and the relay must be moved or restored from backup before the disk is wiped; there is no second disk to stage a backup on, so the backup goes to fr1 or R2 first.
+- The reinstall script has not been rehearsed on a throwaway instance; the plan marks the Arch cloud image on OVH as unverified.
+- prd (Hostinger, btrfs root 222 GB used): the API `recreate` is irreversible and deletes snapshots; it waits for the owner's downtime window together with the nginx restart and the auto-web port publish.
