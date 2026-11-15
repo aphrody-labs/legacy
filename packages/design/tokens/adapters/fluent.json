@@ -21,7 +21,7 @@
   "light": {
     "colorBrandBackground": "#006492",
     "colorBrandBackgroundHover": "#14709B",
-    "colorBrandBackgroundPressed": "#1F779F",
+    "colorBrandBackgroundPressed": "#1A749D",
     "colorBrandBackground2": "#C9E6FF",
     "colorBrandForeground1": "#006492",
     "colorBrandForeground2": "#004B6F",
@@ -48,7 +48,7 @@
   "dark": {
     "colorBrandBackground": "#8BCEFF",
     "colorBrandBackgroundHover": "#80C2F1",
-    "colorBrandBackgroundPressed": "#7ABCEA",
+    "colorBrandBackgroundPressed": "#7DBFED",
     "colorBrandBackground2": "#004B6F",
     "colorBrandForeground1": "#8BCEFF",
     "colorBrandForeground2": "#C9E6FF",
@@ -75,7 +75,7 @@
   "highContrastLight": {
     "colorBrandBackground": "#002F48",
     "colorBrandBackgroundHover": "#144057",
-    "colorBrandBackgroundPressed": "#1F485E",
+    "colorBrandBackgroundPressed": "#1A445A",
     "colorBrandBackground2": "#004E73",
     "colorBrandForeground1": "#002F48",
     "colorBrandForeground2": "#FFFFFF",
@@ -102,7 +102,7 @@
   "highContrastDark": {
     "colorBrandBackground": "#E4F2FF",
     "colorBrandBackgroundHover": "#D2DFEB",
-    "colorBrandBackgroundPressed": "#C9D5E0",
+    "colorBrandBackgroundPressed": "#CDDAE6",
     "colorBrandBackground2": "#81CAFF",
     "colorBrandForeground1": "#E4F2FF",
     "colorBrandForeground2": "#000D17",

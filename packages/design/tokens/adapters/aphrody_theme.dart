@@ -352,6 +352,7 @@ abstract final class AphrodyMotion {
 }
 
 ThemeData aphrodyTheme(ColorScheme scheme) => ThemeData(
+      useMaterial3: true,
       colorScheme: scheme,
       textTheme: aphrodyTextTheme,
       fontFamily: "Google Sans Flex",

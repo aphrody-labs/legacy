@@ -5,6 +5,8 @@ package com.aphrody.design
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -349,4 +351,23 @@ object AphrodyTheme {
         titleMedium = TextStyle(fontSize = 16.sp, lineHeight = 24.sp, letterSpacing = (0.15.sp), fontWeight = FontWeight(500)),
         titleSmall = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, letterSpacing = (0.1.sp), fontWeight = FontWeight(500)),
     )
+
+    /** Material 3 Expressive spring physics (MotionScheme, androidx.compose.material3 >= 1.4.0). */
+    object ExpressiveSprings {
+        const val SPATIAL_FAST_STIFFNESS = 800.0f
+        const val SPATIAL_FAST_DAMPING = 0.6f
+        const val SPATIAL_DEFAULT_STIFFNESS = 380.0f
+        const val SPATIAL_DEFAULT_DAMPING = 0.8f
+        const val SPATIAL_SLOW_STIFFNESS = 200.0f
+        const val SPATIAL_SLOW_DAMPING = 0.8f
+        const val EFFECTS_FAST_STIFFNESS = 3800.0f
+        const val EFFECTS_FAST_DAMPING = 1.0f
+        const val EFFECTS_DEFAULT_STIFFNESS = 1600.0f
+        const val EFFECTS_DEFAULT_DAMPING = 1.0f
+        const val EFFECTS_SLOW_STIFFNESS = 800.0f
+        const val EFFECTS_SLOW_DAMPING = 1.0f
+    }
+
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+    val motionScheme: MotionScheme = MotionScheme.expressive()
 }

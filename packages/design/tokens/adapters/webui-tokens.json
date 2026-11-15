@@ -152,7 +152,6 @@
       "md-sys-motion-duration-short2": "100ms",
       "md-sys-motion-duration-short3": "150ms",
       "md-sys-motion-duration-short4": "200ms",
-      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-emphasized-accelerate": "cubic-bezier(0.3, 0, 0.8, 0.15)",
       "md-sys-motion-easing-emphasized-decelerate": "cubic-bezier(0.05, 0.7, 0.1, 1)",
       "md-sys-motion-easing-legacy": "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -162,10 +161,12 @@
       "md-sys-motion-easing-standard": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-standard-accelerate": "cubic-bezier(0.3, 0, 1, 1)",
       "md-sys-motion-easing-standard-decelerate": "cubic-bezier(0, 0, 0, 1)",
+      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
+      "md-sys-state-disabled-state-layer-opacity": "0.38",
       "md-sys-state-dragged-state-layer-opacity": "0.16",
-      "md-sys-state-focus-state-layer-opacity": "0.12",
+      "md-sys-state-focus-state-layer-opacity": "0.1",
       "md-sys-state-hover-state-layer-opacity": "0.08",
-      "md-sys-state-pressed-state-layer-opacity": "0.12"
+      "md-sys-state-pressed-state-layer-opacity": "0.1"
     },
     "dark": {
       "md-sys-color-background": "#0C141B",
@@ -319,7 +320,6 @@
       "md-sys-motion-duration-short2": "100ms",
       "md-sys-motion-duration-short3": "150ms",
       "md-sys-motion-duration-short4": "200ms",
-      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-emphasized-accelerate": "cubic-bezier(0.3, 0, 0.8, 0.15)",
       "md-sys-motion-easing-emphasized-decelerate": "cubic-bezier(0.05, 0.7, 0.1, 1)",
       "md-sys-motion-easing-legacy": "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -329,10 +329,12 @@
       "md-sys-motion-easing-standard": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-standard-accelerate": "cubic-bezier(0.3, 0, 1, 1)",
       "md-sys-motion-easing-standard-decelerate": "cubic-bezier(0, 0, 0, 1)",
+      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
+      "md-sys-state-disabled-state-layer-opacity": "0.38",
       "md-sys-state-dragged-state-layer-opacity": "0.16",
-      "md-sys-state-focus-state-layer-opacity": "0.12",
+      "md-sys-state-focus-state-layer-opacity": "0.1",
       "md-sys-state-hover-state-layer-opacity": "0.08",
-      "md-sys-state-pressed-state-layer-opacity": "0.12"
+      "md-sys-state-pressed-state-layer-opacity": "0.1"
     },
     "light-medium-contrast": {
       "md-sys-color-background": "#F6FAFF",
@@ -486,7 +488,6 @@
       "md-sys-motion-duration-short2": "100ms",
       "md-sys-motion-duration-short3": "150ms",
       "md-sys-motion-duration-short4": "200ms",
-      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-emphasized-accelerate": "cubic-bezier(0.3, 0, 0.8, 0.15)",
       "md-sys-motion-easing-emphasized-decelerate": "cubic-bezier(0.05, 0.7, 0.1, 1)",
       "md-sys-motion-easing-legacy": "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -496,10 +497,12 @@
       "md-sys-motion-easing-standard": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-standard-accelerate": "cubic-bezier(0.3, 0, 1, 1)",
       "md-sys-motion-easing-standard-decelerate": "cubic-bezier(0, 0, 0, 1)",
+      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
+      "md-sys-state-disabled-state-layer-opacity": "0.38",
       "md-sys-state-dragged-state-layer-opacity": "0.16",
-      "md-sys-state-focus-state-layer-opacity": "0.12",
+      "md-sys-state-focus-state-layer-opacity": "0.1",
       "md-sys-state-hover-state-layer-opacity": "0.08",
-      "md-sys-state-pressed-state-layer-opacity": "0.12"
+      "md-sys-state-pressed-state-layer-opacity": "0.1"
     },
     "dark-medium-contrast": {
       "md-sys-color-background": "#0C141B",
@@ -653,7 +656,6 @@
       "md-sys-motion-duration-short2": "100ms",
       "md-sys-motion-duration-short3": "150ms",
       "md-sys-motion-duration-short4": "200ms",
-      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-emphasized-accelerate": "cubic-bezier(0.3, 0, 0.8, 0.15)",
       "md-sys-motion-easing-emphasized-decelerate": "cubic-bezier(0.05, 0.7, 0.1, 1)",
       "md-sys-motion-easing-legacy": "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -663,10 +665,12 @@
       "md-sys-motion-easing-standard": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-standard-accelerate": "cubic-bezier(0.3, 0, 1, 1)",
       "md-sys-motion-easing-standard-decelerate": "cubic-bezier(0, 0, 0, 1)",
+      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
+      "md-sys-state-disabled-state-layer-opacity": "0.38",
       "md-sys-state-dragged-state-layer-opacity": "0.16",
-      "md-sys-state-focus-state-layer-opacity": "0.12",
+      "md-sys-state-focus-state-layer-opacity": "0.1",
       "md-sys-state-hover-state-layer-opacity": "0.08",
-      "md-sys-state-pressed-state-layer-opacity": "0.12"
+      "md-sys-state-pressed-state-layer-opacity": "0.1"
     },
     "light-high-contrast": {
       "md-sys-color-background": "#F6FAFF",
@@ -820,7 +824,6 @@
       "md-sys-motion-duration-short2": "100ms",
       "md-sys-motion-duration-short3": "150ms",
       "md-sys-motion-duration-short4": "200ms",
-      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-emphasized-accelerate": "cubic-bezier(0.3, 0, 0.8, 0.15)",
       "md-sys-motion-easing-emphasized-decelerate": "cubic-bezier(0.05, 0.7, 0.1, 1)",
       "md-sys-motion-easing-legacy": "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -830,10 +833,12 @@
       "md-sys-motion-easing-standard": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-standard-accelerate": "cubic-bezier(0.3, 0, 1, 1)",
       "md-sys-motion-easing-standard-decelerate": "cubic-bezier(0, 0, 0, 1)",
+      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
+      "md-sys-state-disabled-state-layer-opacity": "0.38",
       "md-sys-state-dragged-state-layer-opacity": "0.16",
-      "md-sys-state-focus-state-layer-opacity": "0.12",
+      "md-sys-state-focus-state-layer-opacity": "0.1",
       "md-sys-state-hover-state-layer-opacity": "0.08",
-      "md-sys-state-pressed-state-layer-opacity": "0.12"
+      "md-sys-state-pressed-state-layer-opacity": "0.1"
     },
     "dark-high-contrast": {
       "md-sys-color-background": "#0C141B",
@@ -987,7 +992,6 @@
       "md-sys-motion-duration-short2": "100ms",
       "md-sys-motion-duration-short3": "150ms",
       "md-sys-motion-duration-short4": "200ms",
-      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-emphasized-accelerate": "cubic-bezier(0.3, 0, 0.8, 0.15)",
       "md-sys-motion-easing-emphasized-decelerate": "cubic-bezier(0.05, 0.7, 0.1, 1)",
       "md-sys-motion-easing-legacy": "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -997,10 +1001,12 @@
       "md-sys-motion-easing-standard": "cubic-bezier(0.2, 0, 0, 1)",
       "md-sys-motion-easing-standard-accelerate": "cubic-bezier(0.3, 0, 1, 1)",
       "md-sys-motion-easing-standard-decelerate": "cubic-bezier(0, 0, 0, 1)",
+      "md-sys-motion-easing-emphasized": "cubic-bezier(0.2, 0, 0, 1)",
+      "md-sys-state-disabled-state-layer-opacity": "0.38",
       "md-sys-state-dragged-state-layer-opacity": "0.16",
-      "md-sys-state-focus-state-layer-opacity": "0.12",
+      "md-sys-state-focus-state-layer-opacity": "0.1",
       "md-sys-state-hover-state-layer-opacity": "0.08",
-      "md-sys-state-pressed-state-layer-opacity": "0.12"
+      "md-sys-state-pressed-state-layer-opacity": "0.1"
     }
   },
   "presets": {

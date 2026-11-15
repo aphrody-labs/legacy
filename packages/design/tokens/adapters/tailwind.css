@@ -123,7 +123,6 @@
   --text-title-small--line-height: var(--md-sys-typescale-title-small-line-height);
   --text-title-small--letter-spacing: var(--md-sys-typescale-title-small-tracking);
   --text-title-small--font-weight: var(--md-sys-typescale-title-small-weight);
-  --ease-emphasized: var(--md-sys-motion-easing-emphasized);
   --ease-emphasized-accelerate: var(--md-sys-motion-easing-emphasized-accelerate);
   --ease-emphasized-decelerate: var(--md-sys-motion-easing-emphasized-decelerate);
   --ease-legacy: var(--md-sys-motion-easing-legacy);
@@ -133,4 +132,5 @@
   --ease-standard: var(--md-sys-motion-easing-standard);
   --ease-standard-accelerate: var(--md-sys-motion-easing-standard-accelerate);
   --ease-standard-decelerate: var(--md-sys-motion-easing-standard-decelerate);
+  --ease-emphasized: var(--md-sys-motion-easing-emphasized);
 }

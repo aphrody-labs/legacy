@@ -1,6 +1,6 @@
 // Generates every token output of @aphrody/design from assets/brand/brand.toml.
 // Color: official @material/material-color-utilities (DynamicScheme, MaterialDynamicColors).
-// Type scale, shape, motion, elevation, state: parsed from @material/web tokens/versions/v0_192.
+// Type scale, shape, motion, elevation, state: parsed from @material/web tokens/versions/latest.
 // `bun run src/build.ts` writes tokens/ and DESIGN.md ; `--check` fails if anything would change.
 import {
   argbFromHex,
@@ -97,7 +97,8 @@ for (const [name, p] of Object.entries({
 }
 
 // --- Material Web sys tokens (SCSS maps, hardcoded values) ---
-const v = join(moduleDir("@material/web"), "tokens/versions/v0_192");
+// Official latest token set published by Google (tokens/versions/latest/sass), never a pinned version directory.
+const v = join(moduleDir("@material/web"), "tokens/versions/latest/sass");
 async function scss(name: string): Promise<Record<string, string>> {
   const src = (await Bun.file(join(v, `_md-${name}.scss`)).text()).replace(
     /\s+/g,
@@ -112,6 +113,14 @@ async function scss(name: string): Promise<Record<string, string>> {
     /'([a-z0-9-]+)': map\.get\(\$deps, 'md-ref-typeface', '([a-z-]+)'\)/g,
   ))
     r[m[1]] = `ref:${m[2]}`;
+  // Format published since the 34.x token sets: one Sass variable per token ("$body-large-size: 1rem;").
+  for (const m of src.matchAll(/\$([a-z0-9-]+): (.+?);/g)) {
+    const ref = m[2].match(/^md-ref-typeface\.\$([a-z-]+)$/);
+    r[m[1]] ??= ref ? `ref:${ref[1]}` : m[2].trim();
+  }
+  // aliases inside the same set ("$easing-emphasized: $easing-standard;")
+  for (const [k, x] of Object.entries(r))
+    if (x.startsWith("$") && r[x.slice(1)] !== undefined) r[k] = r[x.slice(1)];
   return r;
 }
 const [typeRaw, refType, shapeRaw, motionRaw, elevRaw, stateRaw] =
@@ -160,7 +169,7 @@ const motion = Object.fromEntries(
 const elevation = Object.fromEntries(
   Object.entries(elevRaw)
     .filter(([k]) => /^level\d$/.test(k))
-    .map(([k, x]) => [k, `${strip(x)}dp`]),
+    .map(([k, x]) => [k, `${strip(x).replace(/px$/, "")}dp`]),
 );
 const state = Object.fromEntries(
   Object.entries(stateRaw)
@@ -185,7 +194,7 @@ expect(
   16,
 );
 expect("élévations", Object.keys(elevation).length, 6);
-expect("opacités d'état", Object.keys(state).length, 4);
+expect("opacités d'état", Object.keys(state).length, 5); // hover, focus, pressed, dragged, disabled (34.x)
 
 const tokens = {
   $schema: "aphrody-design/1",
@@ -202,7 +211,7 @@ const tokens = {
     variant: brand.variant,
     "material-color-utilities": mcuVersion,
     "material-web": mwcVersion,
-    "material-web-tokens": "v0_192",
+    "material-web-tokens": "latest",
   },
   color,
   custom: { bolt: brand.accent.toUpperCase() },
