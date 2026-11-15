@@ -207,8 +207,8 @@ state = "absent"
 # Servers reserved for the relay (<relay folder>/hub.json): no tool in the clients' context.
 [[hub.mcp]]
 name = "rea"
-# runs on Bun (--bun overrides the node shebang); probe 2026-11-15: initialize + tools/list 255 tools
-command = ["{home}/.bun/bin/bun.exe", "--bun", "{home}/.bun/install/global/node_modules/rea-agents/scripts/rea.mjs", "mcp"]
+# by package name through bun x, on Bun (--bun overrides the node shebang): no install path, no Node.js
+command = ["bun", "x", "--bun", "rea-agents", "mcp"]
 # JAVA_HOME comes from the user environment (no JDK patch path pinned here).
 env = { GHIDRA_INSTALL_DIR = "{home}/AppData/Local/ghidra" }
 install = ["bun", "add", "-g", "rea-agents"]
@@ -271,8 +271,8 @@ hosts = ["pc"]
 # Headless + disposable profile (the relay is a service without a desktop); Google usage statistics off; probe 2026-11-15: initialize + tools/list OK.
 [[hub.mcp]]
 name = "chrome-devtools"
-# runs on Bun (--bun overrides the node shebang); probe 2026-11-15: initialize + tools/list 33 tools
-command = ["{home}/.bun/bin/bun.exe", "--bun", "{home}/.bun/install/global/node_modules/chrome-devtools-mcp/out/Default/gen/src/bin/chrome-devtools-mcp.js", "--headless", "--isolated", "--memoryDebugging", "--categoryExtensions", "--categoryNetworkMocks"]
+# by package name through bun x, on Bun (--bun overrides the node shebang): no install path, no Node.js
+command = ["bun", "x", "--bun", "chrome-devtools-mcp", "--headless", "--isolated", "--memoryDebugging", "--categoryExtensions", "--categoryNetworkMocks"]
 env = { CHROME_DEVTOOLS_MCP_NO_USAGE_STATISTICS = "1" }
 install = ["bun", "add", "-g", "chrome-devtools-mcp"]
 hosts = ["pc"]
