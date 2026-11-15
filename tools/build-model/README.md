@@ -1,8 +1,6 @@
 # build-model
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Work/span model of a ninja/siso build: DAG from `siso query graph`, measured weights from siso_metrics.json, Graham/Brent bounds, list-scheduling simulation, bootstrap.
 
 | Type | Path |

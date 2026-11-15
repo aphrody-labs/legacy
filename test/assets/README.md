@@ -1,8 +1,6 @@
 # asset-test
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Asset validators for assets/library: FFmpeg (tv-ffmpeg) decode of audio, resvg render of SVG, craft-formats probe, glTF structural validation and a headless Bevy load, TTF/OTF parse. Prints one JSON line per asset.
 
 | Type | Path |

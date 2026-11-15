@@ -1,8 +1,6 @@
 # aphrody-conformance
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Fetch pinned upstream suites, run them, report JSON results.
 
 | Type | Path |
