@@ -125,6 +125,17 @@
       "name": "@aphrody/gaming",
       "version": "1.0.0",
     },
+    "packages/gcp": {
+      "name": "@aphrody/gcp",
+      "version": "1.0.0",
+      "bin": {
+        "gcp": "./src/cli.ts",
+      },
+      "dependencies": {
+        "@aphrody/env-kit": "workspace:*",
+        "@aphrody/vault": "workspace:*",
+      },
+    },
     "packages/ghidra": {
       "name": "@aphrody/ghidra",
       "version": "0.1.0",
@@ -278,6 +289,8 @@
     "@aphrody/ffi-bridge": ["@aphrody/ffi-bridge@workspace:packages/ffi-bridge"],
 
     "@aphrody/gaming": ["@aphrody/gaming@workspace:packages/gaming"],
+
+    "@aphrody/gcp": ["@aphrody/gcp@workspace:packages/gcp"],
 
     "@aphrody/ghidra": ["@aphrody/ghidra@workspace:packages/ghidra"],
 

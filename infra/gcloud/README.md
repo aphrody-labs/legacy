@@ -15,10 +15,10 @@ Canonical multi-account Google Cloud identity and IAM sharing reference for GCP 
 
 Autonomous daemons and agent harnesses (`ai-os`, `triad`, `pi-opencode`, Spark, Hermes, OpenClaw) must never mutate the global active `gcloud` configuration file (`~/.config/gcloud/active_config`) used in human interactive terminals.
 
-Use `getIsolatedGcloudEnv('ai')` from `@aphrody/env-kit`:
+Use `getIsolatedGcloudEnv('ai')` from `@aphrody/gcp`:
 
 ```ts
-import { getIsolatedGcloudEnv } from "@aphrody/env-kit";
+import { getIsolatedGcloudEnv } from "@aphrody/gcp";
 
 const childEnv = getIsolatedGcloudEnv("ai");
 // Sets CLOUDSDK_ACTIVE_CONFIG_NAME="ai-agent", CLOUDSDK_CORE_PROJECT="aphrody",

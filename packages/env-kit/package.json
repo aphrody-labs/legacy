@@ -1,7 +1,7 @@
 {
   "name": "@aphrody/env-kit",
   "version": "1.0.0",
-  "description": "Zero-dependency cross-language environment sharing, secret redaction, 3-principal Google Cloud IAM, and editor/agent sync toolkit for C:/src",
+  "description": "Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/src",
   "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

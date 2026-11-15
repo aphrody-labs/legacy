@@ -68,7 +68,7 @@ de 017AB5 : page console bloquée tant que la validation en deux étapes n'est p
   Testée : message publié, journal `sous le plafond`. Réactivation : `env-kit billing relink <projet>`.
 - **Export BigQuery** : jeu de données `aphrody:billing_export` (US) créé, lisible par `billing-agent` ; stockage
   et requêtes dans le niveau gratuit BigQuery. L'activation de l'export reste un clic console.
-- **Commande** `env-kit billing` (`packages/env-kit/src/billing.ts`) :
+- **Commande** `env-kit billing` (`packages/gcp/src/billing.ts`; `env-kit billing` delegates to `gcp billing`) :
   `status` (comptes, liaisons, budgets, état des caps, dernière dépense notifiée), `plan`/`apply` (budget manquant par
   projet facturé au plafond de `.agents/owner-rules.json` sinon 5 EUR, rebranchement Pub/Sub, ressources inactives :
   VM arrêtées, disques détachés, IP réservées, recommandations Idle*, endpoints Vertex), `lift <cap>`, `relink`.

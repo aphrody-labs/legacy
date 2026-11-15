@@ -9,7 +9,6 @@ import { gmailProfile, listMessages, sendMessage } from "./gmail.ts";
 import { contextEnv, detectContext, exportLines } from "./google-context.ts";
 import { formatIdentities, whoami } from "./whoami";
 import { runAuth } from "./auth";
-import { runBillingCommand } from "./billing";
 import {
   secretDelete,
   secretGet,
@@ -18,14 +17,6 @@ import {
   secretSet,
   storeInfo,
 } from "@aphrody/vault/sync";
-import {
-  buildAphrodyIamBindingsPlan,
-  formatAccountsStatusReport,
-  formatIamBindingsPlan,
-  initGcloudConfigurations,
-  inspectAccountsStatus,
-  switchGcloudPrincipal,
-} from "./accounts";
 import {
   DEFAULT_MONOREPO_ENV_PATH,
   exportForCloudflareDevVars,
@@ -499,7 +490,7 @@ Usage:
   env-kit google-auth <gmail|calendar|drive>  One-click OAuth: approve in the browser, token to vault
   env-kit gmail <status|list|send>      Gmail automation (send needs --yes)
   env-kit doctor                       Audit masked status of all credentials, ACLs, and editors
-  env-kit accounts status [--json]     Inspect 3-principal gcloud configs, rclone, and org provider surfaces
+  env-kit accounts status [--json]     (-> packages/gcp) Inspect 3-principal gcloud configs, rclone, and org provider surfaces
   env-kit accounts init-gcloud         Idempotently initialize ai-agent, owner, org-contact, sa-automation
   env-kit accounts switch <principal>  Activate gcloud configuration for <ai|owner|org|sa>
   env-kit billing <status|plan|apply|lift|relink>  GCP billing via billing-agent (keyless): budgets, spend, idle resources
@@ -526,63 +517,6 @@ Usage:
   env-kit auth tunnels [--dry-run]     cloudflared tokens from the Cloudflare API into systemd-creds
   env-kit auth rotate cloudflare       Roll CLOUDFLARE_API_TOKEN through the API; store, .env, user env, then gh-secrets
 `);
-}
-
-function runAccountsCommand(envPath: string, args: readonly string[]): number {
-  const sub = args[0] ?? "status";
-
-  if (sub === "status") {
-    const asJson = args.includes("--json");
-    const report = inspectAccountsStatus({ envPath });
-    if (asJson) {
-      console.log(JSON.stringify(report, null, 2));
-    } else {
-      console.log(formatAccountsStatusReport(report));
-    }
-    return 0;
-  }
-
-  if (sub === "init-gcloud") {
-    const res = initGcloudConfigurations();
-    console.log(
-      `[env-kit] Initialized gcloud configurations (${res.updatedConfigs.join(", ")}) [created=${res.createdConfigs.length}, active=${res.preservedActiveConfig ?? "NONE"}].`,
-    );
-    return 0;
-  }
-
-  if (sub === "switch") {
-    const target = args[1];
-    if (!target) {
-      console.error("Usage: env-kit accounts switch <ai|owner|org|sa>");
-      return 1;
-    }
-    const res = switchGcloudPrincipal(target);
-    console.log(
-      `[env-kit] Activated gcloud configuration "${res.principal.gcloudConfig}" (${res.principal.email}, project=${res.principal.project}).`,
-    );
-    if (!res.oauthCached && res.loginHint) {
-      console.log(
-        `[env-kit] OAuth token not cached yet for ${res.principal.email}. Run:\n  ${res.loginHint}`,
-      );
-    }
-    return 0;
-  }
-
-  if (sub === "iam-bindings") {
-    const asJson = args.includes("--json");
-    const plan = buildAphrodyIamBindingsPlan();
-    if (asJson) {
-      console.log(JSON.stringify(plan, null, 2));
-    } else {
-      console.log(formatIamBindingsPlan(plan));
-    }
-    return 0;
-  }
-
-  console.error(
-    `Unknown accounts subcommand: ${sub}. Expected one of: status, init-gcloud, switch, iam-bindings`,
-  );
-  return 1;
 }
 
 export async function main(
@@ -651,15 +585,10 @@ ${formatIdentities(ids)}`);
     });
   }
 
-  if (cmd === "accounts") {
-    return runAccountsCommand(envPath, argv.slice(1));
-  }
-
-  if (cmd === "billing") {
-    return runBillingCommand(
-      resolve(import.meta.dir, "../../.."),
-      argv.slice(1),
-    );
+  if (cmd === "accounts" || cmd === "billing") {
+    // Google Cloud lives in packages/gcp (split from env-kit); same commands.
+    const gcp = Bun.resolveSync("@aphrody/gcp/cli", import.meta.dir);
+    return spawnSync(process.execPath, [gcp, ...argv], { stdio: "inherit", env: process.env }).status ?? 1;
   }
 
   if (cmd === "set") {
