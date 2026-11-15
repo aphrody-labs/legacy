@@ -16,11 +16,10 @@ Local upstream docs: `third_party/bun/docs`. Release notes: https://bun.com/blog
 - tests: `bun test` (not vitest/jest) · bundle: `bun build` · standalone executable: `bun compile` or `bun build --compile` (not vite/esbuild/pkg)
 - scripts: `Bun.$`, `Bun.spawn`, `fetch`, `Bun.Glob`, `Bun.file/write` (not node/python/pwsh)
 - native: `bun:ffi` (dlopen, cc) · data: `bun:sqlite`, `Bun.SQL`, `Bun.redis`, `Bun.s3`
-- `bun lint` and `bun compile` exist in the canary and not in 1.4.4: confirm with `bun --help` on the binary in use.
 
 ## Windows
 
-- `bun upgrade` extracts with `powershell Expand-Archive` and ignores its exit code; launched from pwsh 7, Windows PowerShell inherits pwsh 7's `PSModulePath` and loads an incompatible Archive module (`MethodCountCouldNotFindBest`, then `Failed to verify Bun (code: ENOENT)`). Workaround: `PSModulePath= bun upgrade --canary`, or `ay rt install bun@canary` (also `ay rt run bun@canary -- x.ts`). Observed 2026-11-13 on 1.4.4 and canary; the aphrody-labs/bun fork carries a native-zip fix.
+- `bun upgrade` extracts with `powershell Expand-Archive` and ignores its exit code; launched from pwsh 7, Windows PowerShell inherits pwsh 7's `PSModulePath` and loads an incompatible Archive module (`MethodCountCouldNotFindBest`, then `Failed to verify Bun (code: ENOENT)`). Workaround: `PSModulePath= bun upgrade --canary`, or `ay rt install bun@canary` (also `ay rt run bun@canary -- x.ts`). Observed 2026-11-13 on a 1.4.4 and a canary binary; re-check on the binary in use.
 - The `SHASUMS256.txt` of the `canary` release can lag behind republished archives: check the sha256 `digest` from the GitHub API.
 
 ## References

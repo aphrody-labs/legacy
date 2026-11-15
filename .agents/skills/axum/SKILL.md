@@ -9,12 +9,12 @@ metadata:
 
 # Axum
 
-Rules for Axum 0.8 services, checked against the aphrody-labs forks (`third_party/axum` at 2449f160, `third_party/tower-http` at 8569ec8b, `third_party/tower` at df06d70d). There are 13 rules in 8 categories, ordered by impact. Full text with examples: `AGENTS.md`, compiled from `rules/` by `bun .agents/skills/axum/scripts/compile.ts`.
+Rules for Axum 0.8 services, checked against the aphrody-labs forks (`third_party/axum`, `third_party/tower-http`, `third_party/tower`; commits: `git -C third_party/<name> log -1`). There are 13 rules in 8 categories, ordered by impact. Full text with examples: `AGENTS.md`, compiled from `rules/` by `bun .agents/skills/axum/scripts/compile.ts`.
 
 ## When to Apply
 
 - Adding or changing a route, extractor, middleware or server setup in a crate that depends on `axum`.
-- Porting a route from the Shenron TypeScript host (`packages/api`) to `crates/shenron-api`. The golden cases are in `data/api/fixtures`; see `docs/decisions/0004-migration-typescript-rust.md` in Shenron.
+- Porting a route from the Shenron TypeScript host (`apps/shenron/packages/api`) to `apps/shenron/crates/shenron-api`. The golden cases are in `apps/shenron/data/api/fixtures`; see `apps/shenron/docs/decisions/0004-migration-typescript-rust.md`.
 - Reviewing an HTTP service for limits, error envelopes, CORS or layer order.
 
 ## Rule Categories by Priority
