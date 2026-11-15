@@ -156,10 +156,18 @@ if [[ -z ${BRUSH_VERSION-} ]]; then
     [[ -d $AY_SHELL_CACHE ]] || mkdir -p "$AY_SHELL_CACHE"
     # The ble.sh integration declares `function ble/complete/...:atuin-history {` inside a function; niubash
     # rejects that name ("unexpected end of file from `{'"), and ble.sh is not loaded here: the hook becomes a no-op.
+    # Atuin binds every keymap (emacs, vi-insert, vi-command); niubash reports each bind aimed at a keymap the
+    # session does not use. The keymaps follow the active editing mode, read when the cache is sourced.
     atuin init bash --disable-up-arrow 2>/dev/null |
-      awk '/^__atuin_initialize_blesh\(\) \{/ { print "__atuin_initialize_blesh() { :; }"; skip = 1; next }
+      awk 'NR == 1 { print "[[ -o vi ]] && __ay_keymaps=\"vi-insert vi-command\" || __ay_keymaps=emacs" }
+        /^__atuin_initialize_blesh\(\) \{/ { print "__atuin_initialize_blesh() { :; }"; skip = 1; next }
         skip && /^}$/ { skip = 0; next }
-        !skip' >"$_ay_c"
+        skip { next }
+        { gsub(/for __atuin_keymap in emacs vi-insert vi-command;/, "for __atuin_keymap in $__ay_keymaps;") }
+        match($0, /^[ \t]*(atuin-bind|bind) -m (emacs|vi-insert|vi-command)[ \t]/) {
+          km = $0; sub(/^[ \t]*(atuin-bind|bind) -m /, "", km); sub(/[ \t].*/, "", km)
+          print "[[ \" $__ay_keymaps \" == *\" " km " \"* ]] && " $0; next }
+        { print }' >"$_ay_c"
   fi
   [[ -s $_ay_c ]] && . "$_ay_c"
 fi
