@@ -23,7 +23,7 @@ pub static AI_WRAPPER_SLOP_RE: LazyLock<Regex> = LazyLock::new(|| {
 });
 
 pub static FILE_URI_SRC_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"file:///C:/src(?:/([^\s\)\]#`]+))?").expect("valid file:///C:/src regex")
+    Regex::new(r"file:///C:/src(?:/([^\s\)\]#`]+))?").expect("valid file:///C:/src regex") // hygiene-ok: detects stale absolute links
 });
 
 pub static SEMVER_OR_CALVER_RE: LazyLock<Regex> = LazyLock::new(|| {

@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Reproduce results/2026-11-12-report.txt. Reads on fr1 (nice -n 19), computes on prd.
 # Usage: run from a machine with `ssh vps` and `ssh prd`. No Chromium build is started.
 set -euo pipefail
 OUT=/srv/chromium/src/out/labs_agent-157.0.8103.78

@@ -25,7 +25,7 @@ Suite de [OS.md](OS.md) : suivre et distribuer chaque amont GNU, son équivalent
 
 `feed.json` : `entries[]` (un par paquet : amont, GSRC, Guix, annonce, tête Savannah, équivalents Rust avec version et couverture, preuve, clé de miroir) et `kernel`. `feed.atom` : une entrée par paquet, la plus récente en tête. `events.json` : changements détectés (release, rust, announce, kernel).
 
-Signatures : `sqv` avec le `gpg-keyring` GSRC du paquet. Les clés à liaisons SHA-1 sont retentées avec la politique au 2022-01-01 et marquées « legacy policy » ; `invalid` seulement sur incohérence nette ; sans `sqv`, sans trousseau ou avant téléchargement : `unverified`. Noyau : `.tar.sign` vérifié sur le tar décompressé avec `/srv/gnu/kernel-keyring.pgp` (export WKD des clés kernel.org, confiance au premier usage).
+Signatures : `sqv` avec le `gpg-keyring` GSRC du paquet. Les clés à liaisons SHA-1 sont retentées avec la politique et marquées « legacy policy » ; `invalid` seulement sur incohérence nette ; sans `sqv`, sans trousseau ou avant téléchargement : `unverified`. Noyau : `.tar.sign` vérifié sur le tar décompressé avec `/srv/gnu/kernel-keyring.pgp` (export WKD des clés kernel.org, confiance au premier usage).
 
 ## Exploitation
 

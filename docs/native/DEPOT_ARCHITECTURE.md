@@ -2,7 +2,7 @@
 
 **Git Engine: Depot Tools, Unreal Engine GitDependencies, Jujutsu (`jj`), and Gitoxide (`gix`)**
 
-> État au 2026-11-13 : le binaire `depot` n'existe plus ; ces commandes passent par `ay git`, `ay ingest`, `ay graph` (src/depot/cli, voir CLAUDE.md). Pas de worktree : tout se fait sur main.
+> le binaire `depot` n'existe plus ; ces commandes passent par `ay git`, `ay ingest`, `ay graph` (src/depot/cli, voir CLAUDE.md). Pas de worktree : tout se fait sur main.
 
 ---
 

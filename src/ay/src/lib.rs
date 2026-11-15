@@ -15,6 +15,7 @@ pub mod chromium;
 pub mod code;
 pub mod electron;
 mod exec;
+pub mod index;
 pub mod low;
 pub mod self_update;
 pub mod ui;
@@ -31,7 +32,7 @@ const OVERVIEW: &str = "\
 Areas:
   repo       arch, lock, manifests, git, ingest, graph, conformance, brand
   toolchain  up, doctor, sys, build, self-update, rt
-  bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in src/<fork>-flat), hash, time
+  bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in src/bun-flat), hash, time
   chromium   chromium (fr1 build chain), gclient, fetch, gn, ninja, cipd, cl, vpy, engines (V8, JSC, Dawn, wgpu)
   fleet      ssh, deploy, auth, secret, vault, ai, agents
   linux      omarchy, linux, pkg (Omarchy quattro command center + CachyOS kernel/pkg/WSL2 via aphrody-omarchy)
@@ -173,7 +174,8 @@ pub enum Cmd {
     /// Cross-platform PATH manager alias (packages/machine)
     #[command(disable_help_flag = true)]
     Path(Rest),
-    /// Tree-sitter codebase index & doc generator (packages/core)
+    /// Content-addressed index pipeline (detect, tree-sitter, triage, Ghidra, SQLite+FTS5, Valkey): [root], watch, worker, sync, query, text, status, bench
+    /// (gen, gen-docs, search, users: packages/core)
     #[command(disable_help_flag = true)]
     Index(Rest),
     /// Localization catalog checker & key extractor (packages/i18n)
@@ -203,7 +205,7 @@ pub enum Cmd {
 
 #[derive(clap::Args, Debug, PartialEq, Default)]
 pub struct SysArgs {
-    /// Full profile as JSON (schema `machine::SCHEMA_VERSION`)
+    /// Full profile as JSON (schema `sys::SCHEMA_VERSION`)
     #[arg(long)]
     pub json: bool,
     /// Keep serials, UUIDs and public addresses (local use only, never agent context)
@@ -239,6 +241,8 @@ pub enum Route {
     Ssh(Vec<String>),
     Conformance(Vec<String>),
     Re(Vec<String>),
+    /// In-process index pipeline ([`index`]); `gen`, `gen-docs`, `search`, `users` still go to packages/core.
+    Index(Vec<String>),
     Rt(Vec<String>),
     Chromium(chromium::Tool, Vec<String>),
     Build(build::BuildArgs),
@@ -339,7 +343,7 @@ pub fn route(cmd: Cmd) -> Route {
         Cmd::Sys(s) => Route::Sys(s),
         Cmd::Up(u) => Route::Up(u),
         Cmd::Bin(r) | Cmd::Path(r) => Route::Package("machine", prefixed(&["binpath"], &r.args)),
-        Cmd::Index(r) => Route::Package("core", r.args),
+        Cmd::Index(r) => Route::Index(r.args),
         Cmd::I18n(r) => Route::Package("i18n", r.args),
         Cmd::ShellMatrix(r) => Route::Package("machine", prefixed(&["matrix"], &r.args)),
         Cmd::Re(r) => Route::Re(r.args),
@@ -354,7 +358,7 @@ pub fn route(cmd: Cmd) -> Route {
 }
 
 fn run_sys(a: SysArgs) -> i32 {
-    let profile = machine::probe(machine::Options { skip_toolchains: a.no_tools, include_identifiers: a.ids });
+    let profile = sys::probe(sys::Options { skip_toolchains: a.no_tools, include_identifiers: a.ids });
     if a.json {
         match serde_json::to_string_pretty(&profile) {
             Ok(s) => println!("{s}"),
@@ -386,6 +390,7 @@ fn run_route(route: Route) -> i32 {
         Route::Ssh(args) => remote::run("ay ssh", &args, &repo_root()),
         Route::Conformance(args) => run_conformance(&args),
         Route::Re(args) => aphrody_re::cli::run(&args),
+        Route::Index(args) => index::run(&args),
         Route::Rt(args) => rt::run("ay rt", &args),
         Route::Chromium(tool, args) => chromium::run(tool, &args),
         Route::Build(args) => build::run(args),
@@ -440,7 +445,7 @@ pub fn run(args: &[String]) -> i32 {
 }
 
 /// Repository root: `$SRC_ROOT`, else the nearest ancestor of the current directory that holds
-/// `identity.toml` (or `src.lock.json`), else the fleet's read-only checkout `/srv/src`
+/// `identity.toml` (or `src.lock.json`), else the fleet's read-only checkout (`FLEET_CHECKOUT`)
 /// (infra/fleet `src-checkout-update`, on fr1, fr2 and prd), else the current directory.
 pub fn repo_root() -> PathBuf {
     if let Some(root) = std::env::var_os("SRC_ROOT").filter(|v| !v.is_empty()) {
@@ -458,7 +463,7 @@ pub fn repo_root() -> PathBuf {
 }
 
 /// Read-only src checkout kept up to date on every VPS (infra/fleet/*/resilience.conf `SRC_CHECKOUT`).
-pub const FLEET_CHECKOUT: &str = "/srv/src";
+pub const FLEET_CHECKOUT: &str = "/srv/src"; // hygiene-ok: fleet checkout path (CLAUDE.md, VPS update)
 
 /// Spawn `cmd`, inherit stdio, return its exit code (127 when it cannot start).
 pub fn status_of(cmd: &mut Command) -> i32 {
@@ -667,6 +672,14 @@ mod tests {
     #[test]
     fn release_runs_the_release_package() {
         assert_eq!(parse("release dry-run --only crates"), Route::Package("release", v(&["dry-run", "--only", "crates"])));
+    }
+
+    #[test]
+    fn index_runs_in_process_and_forwards_the_bun_generators() {
+        assert_eq!(parse("index watch . --no-shared"), Route::Index(v(&["watch", ".", "--no-shared"])));
+        assert_eq!(parse("index gen-docs --scan"), Route::Index(v(&["gen-docs", "--scan"])));
+        assert_eq!(run(&v(&["index", "help"])), 0);
+        assert_eq!(run(&v(&["index", "nope"])), 1);
     }
 
     #[test]

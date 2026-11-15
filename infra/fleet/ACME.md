@@ -29,4 +29,4 @@ ln -sfn /etc/letsencrypt/live/<domaine> /etc/nginx/certs/<domaine>
 
 Check: `ay auth status --only fleet` (fr2's `certbot` unit, `[auth.hosts.fr2]` of infra/deploy.toml). On 2026-11-13, the aphrody.com, dragonballfr.com and rosegriffon.fr lineages had files copied into `live/` instead of links (certbot: "expected cert.pem to be a symlink", unit failing); the files were moved into `archive/` as a new version and `live/` redone as links, `certbot renew --dry-run` ok. Never copy into `live/`: `certbot certonly --cert-name` or a link.
 
-State as of 2026-11-12: aphrody.com and aphrody.app (wildcards, expire on 2027-02-05) managed by certbot; rpbey.fr = static copy from fr1 (expires on 2027-02-05), to be moved to webroot after the OVH DNS switch.
+: aphrody.com and aphrody.app (wildcards, expire managed by certbot; rpbey.fr = static copy from fr1 (expires, to be moved to webroot after the OVH DNS switch.

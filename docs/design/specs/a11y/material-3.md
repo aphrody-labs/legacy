@@ -1,6 +1,6 @@
 # Material 3 — accessibilité
 
-Vérifié le 2026-11-13. Contenu m3.material.io : propriétaire (conditions Google), règles reformulées, seules les valeurs factuelles sont reprises. Valeurs de tokens : sources Apache-2.0 citées. Version machine : [material-3.json](material-3.json) (schéma [spec.schema.json](../spec.schema.json)).
+Vérifié. Contenu m3.material.io : propriétaire (conditions Google), règles reformulées, seules les valeurs factuelles sont reprises. Valeurs de tokens : sources Apache-2.0 citées. Version machine : [material-3.json](material-3.json) (schéma [spec.schema.json](../spec.schema.json)).
 
 ## Sources
 

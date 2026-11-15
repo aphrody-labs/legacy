@@ -1392,7 +1392,7 @@ why = "JVM build system for `packages/core-java` and `aphrody-labs/ghidra`"
 
 # END toolchains
 
-# Added 2026-11-14 (docs/tools/CLI-LIBS-2026-11.md): winners of the CLI ranking that were missing from the manifest.
+# Added 2026-11-14 (docs/tools/CLI-LIBS.md): winners of the CLI ranking that were missing from the manifest.
 [[tool]]
 name = "jaq"
 version = "3.1.2"
@@ -1503,6 +1503,7 @@ assets.macos-aarch64 = "ty-aarch64-apple-darwin.tar.gz"
 name = "cargo-llvm-cov"
 version = "0.9.1"
 bin = ["cargo-llvm-cov"]
+verify = ["cargo-llvm-cov", "llvm-cov", "--version"]
 source = "github"
 repo = "taiki-e/cargo-llvm-cov"
 tag = "v{version}"

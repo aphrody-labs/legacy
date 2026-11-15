@@ -1,4 +1,4 @@
-# Famille POSIX/Bourne — état au 2026-11-12
+# Famille POSIX/Bourne — état
 
 Légende : [V] vérifié (source citée), [NV] non vérifié (mémoire, à confirmer). Dates commit via `gh api repos/<r>/commits?per_page=1` le 2026-11-12.
 

@@ -1,6 +1,6 @@
 # Matrice de cibles (OS / CPU / GPU / firmware)
 
-[V] = vérifié le 2026-11-12 dans `third_party/llvm-project` @ 392dfff9 (`llvm/lib/Target/*`, `llvm/include/llvm/TargetParser/Triple.h`, `llvm/lib/TargetParser/X86TargetParser.cpp`). Backends présents (ARC, CSKY, DirectX, M68k, Xtensa = expérimentaux, via `LLVM_EXPERIMENTAL_TARGETS_TO_BUILD`) : AArch64 AMDGPU ARC ARM AVR BPF CSKY DirectX Hexagon Lanai LoongArch M68k MSP430 Mips NVPTX PowerPC RISCV SPIRV Sparc SystemZ VE WebAssembly X86 XCore Xtensa. Rien n'est compilé sur le PC. [V] = présence dans les sources (parser/backend), pas un toolchain testé.
+[V] = vérifié dans `third_party/llvm-project` @ 392dfff9 (`llvm/lib/Target/*`, `llvm/include/llvm/TargetParser/Triple.h`, `llvm/lib/TargetParser/X86TargetParser.cpp`). Backends présents (ARC, CSKY, DirectX, M68k, Xtensa = expérimentaux, via `LLVM_EXPERIMENTAL_TARGETS_TO_BUILD`) : AArch64 AMDGPU ARC ARM AVR BPF CSKY DirectX Hexagon Lanai LoongArch M68k MSP430 Mips NVPTX PowerPC RISCV SPIRV Sparc SystemZ VE WebAssembly X86 XCore Xtensa. Rien n'est compilé sur le PC. [V] = présence dans les sources (parser/backend), pas un toolchain testé.
 
 ## OS
 

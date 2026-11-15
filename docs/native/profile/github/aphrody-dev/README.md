@@ -17,7 +17,7 @@ projects they belong to.
 | agentclientprotocol/agent-client-protocol | [#2804](https://github.com/agentclientprotocol/agent-client-protocol/pull/2804) docs(protocol): mark availableCommands as required in slash commands page | open  |
 | a2aproject/A2A                            | [#2452](https://github.com/a2aproject/A2A/pull/2452) docs(spec): add required messageId to Message examples                                               | open  |
 
-<sub>State as of 2026-11-13 (<code>docs/native/profile/stats.json</code>).</sub>
+<sub>(<code>docs/native/profile/stats.json</code>).</sub>
 
 ### Projects
 
@@ -30,12 +30,7 @@ projects they belong to.
 </tr>
 <tr>
 <td width="33%" valign="top"><a href="https://github.com/aphrody-labs/src/tree/main/packages/ai-os/src/relay"><img src="https://cdn.aphrody.com/brand/v1/icons/relay/icon.svg" width="40" height="40" alt=""></a><br><b><a href="https://github.com/aphrody-labs/src/tree/main/packages/ai-os/src/relay">relay</a></b><br><sub>MCP, A2A and ACP relay of ai-os</sub></td>
-<td width="33%" valign="top"><a href="https://github.com/aphrody-labs/src/tree/main/apps/unixwin"><img src="https://cdn.aphrody.com/brand/v1/icons/unixwin/icon.svg" width="40" height="40" alt=""></a><br><b><a href="https://github.com/aphrody-labs/src/tree/main/apps/unixwin">unixwin</a></b><br><sub>Native Windows bash and coreutils in Rust</sub></td>
 <td width="33%" valign="top"><a href="https://github.com/aphrody-labs/src/tree/main/apps/aphrody"><img src="https://cdn.aphrody.com/brand/v1/icons/aphrody/icon.svg" width="40" height="40" alt=""></a><br><b><a href="https://github.com/aphrody-labs/src/tree/main/apps/aphrody">aphrody.com</a></b><br><sub>Brand homepage</sub></td>
-</tr>
-<tr>
-<td width="33%" valign="top"><a href="https://github.com/aphrody-labs/src/tree/main/apps/aphrody-app"><img src="https://cdn.aphrody.com/brand/v1/icons/aphrody-app/icon.svg" width="40" height="40" alt=""></a><br><b><a href="https://github.com/aphrody-labs/src/tree/main/apps/aphrody-app">aphrody.app</a></b><br><sub>Rust WebGPU tiling desktop shell</sub></td>
-<td width="33%" valign="top"><a href="https://github.com/aphrody-labs/src/tree/main/apps/yolo"><img src="https://cdn.aphrody.com/brand/v1/icons/yolo/icon.svg" width="40" height="40" alt=""></a><br><b><a href="https://github.com/aphrody-labs/src/tree/main/apps/yolo">yolo</a></b><br><sub>Bun fullstack framework with a Material 3 stack</sub></td>
 <td width="33%" valign="top"><a href="https://github.com/aphrody-labs/shenron"><img src="https://cdn.aphrody.com/brand/v1/icons/shenron/icon.svg" width="40" height="40" alt=""></a><br><b><a href="https://github.com/aphrody-labs/shenron">Shenron</a></b><br><sub>dragonballfr.com: site, Discord bot, translation pipeline</sub></td>
 </tr>
 <tr>

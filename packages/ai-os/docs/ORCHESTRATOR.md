@@ -1,6 +1,6 @@
 # Multi-agent orchestrator (`ai-os orch`)
 
-State as of 2026-11-13. Code: `src/orch/`; tests: `test/orch/`; proof: `fixtures/orch/proof.json`.
+Code: `src/orch/`; tests: `test/orch/`; proof: `fixtures/orch/proof.json`.
 
 The orchestrator runs a graph of steps computed at run time, in parallel, on the fleet hosts. For each step it picks an engine among those actually available (agent CLIs and discovered models). It fails over when an engine or a host fails, opens fix tickets, stops on its budgets and holds every external effect as long as the owner has not authorized it through a rule.
 

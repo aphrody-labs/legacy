@@ -1,39 +1,33 @@
 # VCS, large files and forges for `ay`
 
-Snapshot 2026-11-12. Stars, last push, license and latest release from `gh api repos/<o>/<r>` and
-`gh api repos/<o>/<r>/releases/latest`; Forgejo from the Codeberg API; crates from crates.io. Local
-pins are the `third_party/vcs/*` checkouts. This page does not repeat:
-
-- [RUST_STACK.md](./RUST_STACK.md): one fork per layer, compatibility oracles (Git, Binary-asset VCS rows).
-- [DEPOT_TOOLS_RUST.md](./DEPOT_TOOLS_RUST.md): per-subcommand git/gix/jj coverage of our call sites
-  ("Replacing Git for Windows") and what `src/depot/cas` takes from Lore ("Lore: what we take").
-- [ECOSYSTEM_CHOICES.md](./ECOSYSTEM_CHOICES.md): crate selection rules, russh, keyring, object_store, dev CLIs.
-
+. Stars, last push, license and latest release from `gh api repos/<o>/<r>` and
+`gh api repos/<o>/<r>/releases/latest`; Forgejo from the Codeberg API; crates from crates.io. Pins
+are in `src.lock.json` and `tools.toml`; no VCS checkout lives under `third_party`.
 ## 1. VCS engines
 
 | Engine              | Lang              | License               | Stars      | Last push        | Latest                                     | Model                                                                  | Git interop                  | Local pin                                                |
 | ------------------- | ----------------- | --------------------- | ---------- | ---------------- | ------------------------------------------ | ---------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------- |
 | git                 | C                 | GPL-2.0               | 64.3k      | 2026-11-11       | v2.56.1 (tag)                              | distributed, snapshot DAG                                              | reference                    | none                                                     |
 | Git for Windows     | C + MSYS2         | GPL-2.0               | 9.5k       | 2026-11-12       | v2.56.1.windows.1 / 2026-11-10             | git + POSIX runtime                                                    | reference                    | installed 2.56.0.windows.4                               |
-| gitoxide (`gix`)    | Rust              | Apache-2.0 / MIT      | 12.1k      | 2026-11-12       | CLI v0.61.0, crate gix 0.90.0 / 2026-10-22 | library + `gix`/`ein` CLI                                              | same on-disk format          | `third_party/gitoxide` d1e064e; workspace `gix = 0.90.0` |
-| jj                  | Rust              | Apache-2.0            | 32.5k      | 2026-11-12       | v0.47.1 / 2026-11-05                       | change-based, working copy is a commit, oplog                          | git backend, colocated repos | `third_party/jj` 406bacf; tools.toml 0.46.0              |
+| gitoxide (`gix`)    | Rust              | Apache-2.0 / MIT      | 12.1k      | 2026-11-12       | CLI v0.61.0, crate gix 0.90.0 / 2026-10-22 | library + `gix`/`ein` CLI                                              | same on-disk format          | workspace `gix = 0.90.0` |
+| jj                  | Rust              | Apache-2.0            | 32.5k      | 2026-11-12       | v0.47.1 / 2026-11-05                       | change-based, working copy is a commit, oplog                          | git backend, colocated repos | tools.toml 0.46.0              |
 | Sapling             | Rust, C++, Python | GPL-2.0               | 7.3k       | 2026-11-12       | 0.2.20261103 / 2026-11-04                  | stacks, smartlog; server Mononoke                                      | clones git remotes           | none                                                     |
 | Pijul               | Rust              | GPL-2.0               | n/a (Nest) | crate 2026-10-30 | pijul 0.15.0                               | patch theory, commutative changes                                      | none (import only)           | none                                                     |
-| Lore (EpicGames)    | Rust              | MIT                   | 9.1k       | 2026-11-12       | v0.13.0 / 2026-11-06                       | centralized, content-addressed, sparse hydration, FUSE, advisory locks | none (own protocol)          | `third_party/lore` 166908c, `aphrody-dev/lore`           |
-| Radicle (heartwood) | Rust              | MIT / Apache-2.0      | 273        | 2026-11-11       | no GH release; crate radicle 0.25.1        | P2P gossip, git storage, COBs                                          | git remote helper `rad://`   | `third_party/radicle` 8b05332 (upstream origin, no fork) |
+| Lore (EpicGames)    | Rust              | MIT                   | 9.1k       | 2026-11-12       | v0.13.0 / 2026-11-06                       | centralized, content-addressed, sparse hydration, FUSE, advisory locks | none (own protocol)          | `aphrody-dev/lore`           |
+| Radicle (heartwood) | Rust              | MIT / Apache-2.0      | 273        | 2026-11-11       | no GH release; crate radicle 0.25.1        | P2P gossip, git storage, COBs                                          | git remote helper `rad://`   | upstream origin, no fork |
 | GitButler (client)  | Rust, TS          | FSL-1.1 (fair source) | 22.0k      | 2026-11-12       | n/a                                        | virtual branches over git                                              | git                          | none; license excludes forking for a competing product   |
 
 ### Git for Windows bundle (installed, `C:\Program Files\Git`)
 
 | Component                                             | Version seen                                            | Rust replacement                          | Status in `ay`                                       |
 | ----------------------------------------------------- | ------------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------- |
-| git                                                   | 2.56.0.windows.4                                        | gix + jj                                  | see DEPOT_TOOLS_RUST table                           |
+| git                                                   | 2.56.0.windows.4                                        | gix + jj                                  | none                           |
 | MSYS2 runtime + bash                                  | bash 5.3.15 (cygwin target)                             | brush, Bun shell                          | pwsh twins exist for `install`/`deploy`              |
 | coreutils, sed, awk, grep, find, less, vim, perl, tig | MSYS2 builds, 366 files in `usr/bin`                    | uutils, ripgrep, fd, sd                   | uutils installed                                     |
 | OpenSSH (ssh, scp, sftp, ssh-agent, ssh-keygen)       | OpenSSH_10.6p1, OpenSSL 3.5.9                           | russh, russh-sftp                         | `ay ssh` (`src/remote`); gix still spawns `ssh`   |
 | curl + OpenSSL                                        | debug-enabled libcurl in PATH                           | ureq/reqwest + rustls                     | gix `reqwest` transport                              |
 | GnuPG (commit signing)                                | gpg 2.x                                                 | sequoia-openpgp, or SSH signing           | jj signs (gpg/ssh); gix cannot create signed commits |
-| Git Credential Manager                                | 2.9.1 installed; upstream v3.0.2 / 2026-10-26 (C#, MIT) | `gix-credentials::helper::main` + keyring | plan in DEPOT_TOOLS_RUST                             |
+| Git Credential Manager                                | 2.9.1 installed; upstream v3.0.2 / 2026-10-26 (C#, MIT) | `gix-credentials::helper::main` + keyring | none                             |
 | git-lfs                                               | 3.8.1 (Go 1.27.3); upstream v3.8.1 / 2026-10-22         | see section 2                             | `GIT_LFS_SKIP_SMUDGE=1`                              |
 | scalar                                                | bundled                                                 | `jj util gc`, gix maintenance (none yet)  | still git                                            |
 
@@ -60,8 +54,7 @@ pins are the `third_party/vcs/*` checkouts. This page does not repeat:
 | hooks                                         | yes                          | no                         | no                    | `core.hooksPath`, client and server hooks open                                                                |
 | config write                                  | yes                          | low level only             | yes                   | no write-back API                                                                                             |
 
-Difference with DEPOT_TOOLS_RUST: crate-status now marks "create linked worktrees" as done; the
-workspace already pins gix 0.90.0 while `tools.toml` still installs the 0.61.0 CLI.
+The workspace already pins gix 0.90.0 while `tools.toml` still installs the 0.61.0 CLI.
 
 ## 2. Large files
 

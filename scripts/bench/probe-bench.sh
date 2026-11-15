@@ -4,7 +4,7 @@ export PATH=$HOME/.cargo/bin:$PATH
 cd /srv/bench/src
 cargo metadata --format-version 1 --no-deps 2>/dev/null | jaq -r '.packages[] | .name as $n | .targets[] | "\($n) \(.kind|join(",")) \(.name)"' 2>/dev/null || echo nojaq
 which jaq jq
-for t in chromium-157 nightly-2026-11-13 nightly; do
+for t in "$(sed -n 's/^channel *= *"\(.*\)"/\1/p' rust-toolchain.toml)" nightly; do
   echo "== $t"
   ls ~/.rustup/toolchains/$t/bin | tr '\n' ' '
   echo

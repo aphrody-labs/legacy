@@ -5,7 +5,7 @@ description: Material Design 3 rules (including M3 Expressive) normalized for th
 
 # material-3
 
-Rewritten specs (factual values verified on 2026-11-13; tokens taken from material-web and androidx):
+Rewritten specs (factual values verified; tokens taken from material-web and androidx):
 
 | Domain                                                                 | Human-readable                               | Machine |
 | ---------------------------------------------------------------------- | -------------------------------------------- | ------- |

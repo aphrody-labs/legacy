@@ -155,7 +155,7 @@ ANDROID_HOME=… NDK_HOME=… bun msvc exec -- cargo tauri android build --debug
 Les scripts de build Rust tournent sur l'hôte Windows et exigent la bibliothèque d'exécution MSVC (`msvcrt.lib`).
 En attendant, l'application web installable (manifeste, icônes) fait office d'application mobile.
 
-État au 2026-10-23 : APK de débogage construit (`dist/mobile/android/auto-debug.apk`, arm64, `com.aphrody.auto`) et
+APK de débogage construit (`dist/mobile/android/auto-debug.apk`, arm64, `com.aphrody.auto`) et
 lancé dans l'émulateur `bun_pixel_api37` (page de connexion de production affichée). Chaîne utilisée, sans MSVC :
 Rust `stable-x86_64-pc-windows-gnu` (hôte), NDK Android 30, JDK 25, `as.exe` relais vers le clang du NDK placé à côté
 de `dlltool` (le toolset GNU n'embarque pas d'assembleur), `JAVA_HOME` défini. Gradle accepte les licences du SDK.

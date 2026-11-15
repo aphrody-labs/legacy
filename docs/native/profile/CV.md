@@ -21,16 +21,14 @@ agent protocols are sent to those projects as pull requests.
 | ay             | One multicall CLI for the monorepo: architecture gate, locks, VCS tooling, Chromium tools, toolchain install, benchmarks                                    | `src/ay`            |
 | nt             | A model of the machine's Windows NT, rendered entirely by the GPU on the Microsoft stack                                                                    | `apps/nt`              |
 | ai-os          | Agent core, model bridge discovered at run time, relay (MCP, A2A, ACP), gateway and TUI in one Bun package with no npm dependency                           | `packages/ai-os`       |
-| aphrody.app    | Rust WebGPU/WGSL tiling desktop shell with CRDT state, OPFS storage and WebMCP tools                                                                        | `apps/aphrody-app`     |
-| unixwin        | Native Windows bash in Rust, with coreutils, an MSVC git and a package manager                                                                              | `apps/unixwin`         |
-| Brand pipeline | `ay brand build`: outlined SVG logos and icons from the shared Material 3 tokens, ICO/PNG, social cards and ANSI banners rendered with resvg/usvg/tiny-skia | `crates/aphrody-brand` |
+| Brand pipeline | `ay brand build`: outlined SVG logos and icons from the shared Material 3 tokens, ICO/PNG, social cards and ANSI banners rendered with resvg/usvg/tiny-skia | `assets/brand` |
 
 Monorepo languages, GitHub linguist bytes on 2026-11-13: Rust 81.1 %, Python 8.0 %, TypeScript 6.4 %,
 C 1.6 %, JavaScript 1.4 % ([source](https://github.com/aphrody-labs/src)).
 
 ## Upstream contributions
 
-Open pull requests as of 2026-11-13 (none merged yet):
+Open pull requests (none merged yet):
 
 - oven-sh/bun [#48787](https://github.com/oven-sh/bun/pull/48787): build, pass the `.bind.ts` schema list to the codegen scripts in a file.
 - oven-sh/bun [#48786](https://github.com/oven-sh/bun/pull/48786): docs, sizes `Bun.gzipSync` and `Bun.deflateSync` give for the utils examples.

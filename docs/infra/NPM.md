@@ -1,6 +1,6 @@
 # npm sans humain
 
-État au 2026-11-13. Compte npm : `<npm-owner>`, owner des orgs `@aphrody` et `@rosegriffon`. Commande unique :
+Compte npm : `<npm-owner>`, owner des orgs `@aphrody` et `@rosegriffon`. Commande unique :
 `just npm <status|sync|inventory|align|login|trust|harden>` (`packages/release/src/npm.ts`).
 
 ## État de npm (sources lues le 2026-11-13)

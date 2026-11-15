@@ -1,4 +1,4 @@
-# Écosystème LLVM — état au 2026-11-12
+# Écosystème LLVM — état
 
 Sources (consultées le 2026-11-12) :
 

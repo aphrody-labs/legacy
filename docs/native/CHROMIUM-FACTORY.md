@@ -110,7 +110,6 @@ Vulkan validation layers : −248 actions, 1 580 cœur·s mesurés au run 1 (cxx
 
 ## Modèle et bornes (work/span, 2026-11-12)
 
-Remplace les « gains attendus » estimés. Code : `tools/build-model/` (Rust ; `cargo test` vérifie DP, bornes et simulation sur DAG synthétiques à réponse connue et sur 300 DAG aléatoires). Reproduction : `tools/build-model/run.sh`. Sortie brute : `tools/build-model/results/2026-11-12-report.txt`. Règles : `docs/SCIENTIFIC-RIGOR.md`.
 
 Entrées (mesurées)
 

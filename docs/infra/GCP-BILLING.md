@@ -1,6 +1,6 @@
 # Facturation Google Cloud gérée par agents
 
-État au 2026-11-13. Outils : `env-kit billing status|plan|apply|lift|relink`, outil relais `billing_status`,
+Outils : `env-kit billing status|plan|apply|lift|relink`, outil relais `billing_status`,
 fonction `billing-cap` (`infra/gcp/billing-agent/cap-function`), compte de service `billing-agent@aphrody`.
 
 ## 1. Règles Google vérifiées en direct (2026-11-13)

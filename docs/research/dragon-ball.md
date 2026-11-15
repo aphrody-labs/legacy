@@ -1,4 +1,4 @@
-# Sovereign Deep-Research Dossier: dragon ball
+# Research dossier: Dragon Ball
 
 - **Generated At**: `2026-11-14T14:48:04.783Z`
 - **Slug**: `dragon-ball`
@@ -9,17 +9,19 @@
 ## 1. Decomposed Sub-Queries & Channel Telemetry
 
 ### Targeted Sub-Queries
+
 1. `dragon ball`
 2. `dragon ball specification architecture reference`
 
 ### Parallel Channel Status
-| Channel | Status |
-| :--- | :--- |
-| `context7_official_docs` | OK (4 items) |
-| `exa_neural_web` | OK (5 items) |
-| `github_live_api` | OK (5 items) |
+
+| Channel                      | Status       |
+| :--------------------------- | :----------- |
+| `context7_official_docs`     | OK (4 items) |
+| `exa_neural_web`             | OK (5 items) |
+| `github_live_api`            | OK (5 items) |
 | `systems_kernel_freedesktop` | OK (0 items) |
-| `local_monorepo_grounding` | OK (3 items) |
+| `local_monorepo_grounding`   | OK (3 items) |
 
 ## 2. Ranked & Deduplicated Multi-Channel Evidence
 
@@ -38,7 +40,7 @@
 6. **[Local Workspace Manifest: apps\shenron\package.json](file:///C:/src/apps/shenron/package.json)** (`local_monorepo`, blake3=`d02b58ff964e`)
    - "description": "Shenron (dragonballfr.com): Dragon Ball site, Discord bot, editorial pipeline, Koharu manga translation and the Shenron agent tooling, built on published Aphrody packages.",
 7. **[Local Workspace Manifest: apps\shenron\README.md](file:///C:/src/apps/shenron/README.md)** (`local_monorepo`, blake3=`30ccd22cef88`)
-   - # Shenron: Sovereign Dragon Ball Universe Studio & Platform
+   - # Shenron: Dragon Ball Universe Studio & Platform
 
 ### Tier 2: Upstream GitHub/GitLab Repo (5)
 
@@ -68,22 +70,22 @@
 
 ## 3. Citation Ledger
 
-| # | Tier | Channel | Source | Blake3 Prefix |
-| :--- | :--- | :--- | :--- | :--- |
-| 1 | Tier 1 | `context7` | [[Context7 /dragonminez/dragonminez] Dragon Balls, Radar & Wishes (datapack-driven rework)](https://github.com/dragonminez/dragonminez/blob/main/PATCH_NOTES/PATCH_NOTES_V2.1_final.md) | `47c3f765b3007465` |
-| 2 | Tier 1 | `context7` | [[Context7 /dragonminez/dragonminez] Dragon Balls, Radar & Wishes (datapack-driven rework)](https://context7.com/dragonminez/dragonminez) | `c6a8b78ede02e4da` |
-| 3 | Tier 1 | `context7` | [[Context7 /dragonminez/dragonminez] Dragons & Wishes](https://github.com/dragonminez/dragonminez/wiki/Dragons-and-Wishes) | `fc60f141485657b6` |
-| 4 | Tier 1 | `context7` | [[Context7 /dragonminez/dragonminez] World bosses, tournaments, Dragon Balls & minigames](https://github.com/dragonminez/dragonminez/wiki/Commands) | `ae88fc6b2a0422e0` |
-| 5 | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\Cargo.toml](file:///C:/src/apps/shenron/Cargo.toml) | `e8a1aa64296dbf18` |
-| 6 | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\package.json](file:///C:/src/apps/shenron/package.json) | `d02b58ff964ee5d6` |
-| 7 | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\README.md](file:///C:/src/apps/shenron/README.md) | `30ccd22cef886123` |
-| 8 | Tier 2 | `github` | [GitHub: Aerthas/UNITY-Arc-system-Works-Shader](https://github.com/Aerthas/UNITY-Arc-system-Works-Shader) | `0720fea22f8c8fc2` |
-| 9 | Tier 2 | `github` | [GitHub: novapowers0/DBZ-Budokai-3-HD-Collection](https://github.com/novapowers0/DBZ-Budokai-3-HD-Collection) | `b2198fa5a385567b` |
-| 10 | Tier 2 | `github` | [GitHub: pxvr-official/1](https://github.com/pxvr-official/1) | `ff25ae58eabf1542` |
-| 11 | Tier 2 | `github` | [GitHub: WistfulHopes/DBZ1](https://github.com/WistfulHopes/DBZ1) | `e455729c31f525e2` |
-| 12 | Tier 2 | `github` | [GitHub: z3xox/Tenkaichi3Decomp](https://github.com/z3xox/Tenkaichi3Decomp) | `4dd9e08b25ec8df9` |
-| 13 | Tier 3 | `exa` | [Dragon Ball](https://en.wikipedia.org/wiki/Dragon_Ball) | `0742265a6bfe6f8e` |
-| 14 | Tier 3 | `exa` | [DRAGON BALL - TOEI ANIMATION LIST OF WORKS](https://lineup.toei-anim.co.jp/en/tv/dragon) | `c96fea9cf23bdb00` |
-| 15 | Tier 3 | `exa` | [DRAGON BALL OFFICIAL SITE](https://en.dragon-ball-official.com/) | `31394b6892fe85da` |
-| 16 | Tier 3 | `exa` | [Dragon Ball Wiki - Fandom](https://dragonball.fandom.com/wiki/Main_Page) | `83ac34932c62387b` |
-| 17 | Tier 3 | `exa` | [Watch Dragon Ball - Crunchyroll](https://www.crunchyroll.com/series/G8DHV7W21/dragon-ball) | `24b0c23671eb88d0` |
+| #   | Tier   | Channel          | Source                                                                                                                                                                                  | Blake3 Prefix      |
+| :-- | :----- | :--------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
+| 1   | Tier 1 | `context7`       | [[Context7 /dragonminez/dragonminez] Dragon Balls, Radar & Wishes (datapack-driven rework)](https://github.com/dragonminez/dragonminez/blob/main/PATCH_NOTES/PATCH_NOTES_V2.1_final.md) | `47c3f765b3007465` |
+| 2   | Tier 1 | `context7`       | [[Context7 /dragonminez/dragonminez] Dragon Balls, Radar & Wishes (datapack-driven rework)](https://context7.com/dragonminez/dragonminez)                                               | `c6a8b78ede02e4da` |
+| 3   | Tier 1 | `context7`       | [[Context7 /dragonminez/dragonminez] Dragons & Wishes](https://github.com/dragonminez/dragonminez/wiki/Dragons-and-Wishes)                                                              | `fc60f141485657b6` |
+| 4   | Tier 1 | `context7`       | [[Context7 /dragonminez/dragonminez] World bosses, tournaments, Dragon Balls & minigames](https://github.com/dragonminez/dragonminez/wiki/Commands)                                     | `ae88fc6b2a0422e0` |
+| 5   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\Cargo.toml](file:///C:/src/apps/shenron/Cargo.toml)                                                                                             | `e8a1aa64296dbf18` |
+| 6   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\package.json](file:///C:/src/apps/shenron/package.json)                                                                                         | `d02b58ff964ee5d6` |
+| 7   | Tier 1 | `local_monorepo` | [Local Workspace Manifest: apps\shenron\README.md](file:///C:/src/apps/shenron/README.md)                                                                                               | `30ccd22cef886123` |
+| 8   | Tier 2 | `github`         | [GitHub: Aerthas/UNITY-Arc-system-Works-Shader](https://github.com/Aerthas/UNITY-Arc-system-Works-Shader)                                                                               | `0720fea22f8c8fc2` |
+| 9   | Tier 2 | `github`         | [GitHub: novapowers0/DBZ-Budokai-3-HD-Collection](https://github.com/novapowers0/DBZ-Budokai-3-HD-Collection)                                                                           | `b2198fa5a385567b` |
+| 10  | Tier 2 | `github`         | [GitHub: pxvr-official/1](https://github.com/pxvr-official/1)                                                                                                                           | `ff25ae58eabf1542` |
+| 11  | Tier 2 | `github`         | [GitHub: WistfulHopes/DBZ1](https://github.com/WistfulHopes/DBZ1)                                                                                                                       | `e455729c31f525e2` |
+| 12  | Tier 2 | `github`         | [GitHub: z3xox/Tenkaichi3Decomp](https://github.com/z3xox/Tenkaichi3Decomp)                                                                                                             | `4dd9e08b25ec8df9` |
+| 13  | Tier 3 | `exa`            | [Dragon Ball](https://en.wikipedia.org/wiki/Dragon_Ball)                                                                                                                                | `0742265a6bfe6f8e` |
+| 14  | Tier 3 | `exa`            | [DRAGON BALL - TOEI ANIMATION LIST OF WORKS](https://lineup.toei-anim.co.jp/en/tv/dragon)                                                                                               | `c96fea9cf23bdb00` |
+| 15  | Tier 3 | `exa`            | [DRAGON BALL OFFICIAL SITE](https://en.dragon-ball-official.com/)                                                                                                                       | `31394b6892fe85da` |
+| 16  | Tier 3 | `exa`            | [Dragon Ball Wiki - Fandom](https://dragonball.fandom.com/wiki/Main_Page)                                                                                                               | `83ac34932c62387b` |
+| 17  | Tier 3 | `exa`            | [Watch Dragon Ball - Crunchyroll](https://www.crunchyroll.com/series/G8DHV7W21/dragon-ball)                                                                                             | `24b0c23671eb88d0` |

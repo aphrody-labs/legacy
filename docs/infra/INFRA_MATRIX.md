@@ -32,8 +32,7 @@ Mesh: WireGuard + MASQUE overlay `10.200.77.0/24`, config generated in `infra/me
 
 ## 2. Services (target: all on `usa`, blue/green ports)
 
-As of 2026-11-12, aphrody.com, aphrody.app and their subdomains are still served from fr1. The
-per-domain cutover table is in `docs/AY_MIGRATION.md`.
+aphrody.com, aphrody.app and their subdomains are still served from fr1.
 
 | Service                             | Runtime        | Domains                                   | Port (blue/green)  | R2 bucket          |
 | ----------------------------------- | -------------- | ----------------------------------------- | ------------------ | ------------------ |
@@ -42,7 +41,7 @@ per-domain cutover table is in `docs/AY_MIGRATION.md`.
 | rosegriffon (community, maintained) | Bun fullstack  | rosegriffon.fr, www                       | 3320               | rosegriffon-media  |
 | ai-os                               | Bun fullstack  | ai.aphrody.com                            | 4000               | -                  |
 | rust-stack / depot daemon           | Rust           | depot.internal.aphrody.com                | 4100               | -                  |
-| ai-triad                            | Bun fullstack  | triad.aphrody.com, gemini-egress.internal | 4200               | -                  |
+| ai-triad (`packages/ai-os`)         | Bun fullstack  | triad.aphrody.com, gemini-egress.internal | 4200               | -                  |
 | ring3-agent                         | Rust           | r3d.internal.aphrody.com                  | 8080               | -                  |
 | yolo                                | Bun fullstack  | yolo.aphrody.com, yolo.aphrody.app        | 3092               | -                  |
 | auto (on usa since 2026-11-12)      | Bun + Rust FFI | auto.aphrody.com (tunnel `auto-usa`)      | none (auto-prod)   | - (RustFS auto-s3) |
@@ -93,16 +92,15 @@ Account notes (2026-11-12):
 
 | Layer      | Versions                                                                     | Source                           |
 | ---------- | ---------------------------------------------------------------------------- | -------------------------------- |
-| Rust       | nightly 1.101 (edition 2024), targets msvc, gnu, musl, wasm32, android       | `rustup`, `ay build --list`      |
-| Bun / Node | 1.4.4 / 26.13                                                                | `src.lock.json`                  |
-| Go         | 1.27                                                                         | `infra/go.mod`                   |
-| C/C++      | MSVC 19.51, clang 23.1.4, zig 0.17 (musl cross C compiler)                   | `ay sys`                         |
-| Containers | Docker 29.9 (Alpine runtime, Arch dev images)                                | `Dockerfile`, `compose.yaml`     |
+| Rust       | nightly `chromium-157` (rustc 1.100.0-nightly, LLVM 24.0.0), edition 2024, targets msvc, gnu, musl, wasm32, android       | `third_party/toolchain-157.toml`, `ay build --list` |
+| Bun / Node | pinned                                                                       | `src.lock.json`                  |
+| C/C++      | MSVC, clang (LLVM 24.0.0), zig (musl cross C compiler)                      | `ay sys`                         |
+| Containers | Docker (Alpine runtime, Arch dev images)                                   | `Dockerfile`, `compose.yaml`     |
 | WASM       | `gamescope-web-wasm`, wasm32 presets of `ay build`                           | `crates/`                        |
 | Linux VPS  | static musl binaries from `ay build --target linux-musl` (zig as C compiler) | `docs/native/WINDOWS_UNIX_TOOLCHAIN.md` |
 
 ## 6. Products
 
-Aphrody products: aphrody.com (`apps/aphrody`), aphrody.app (`apps/aphrody-app`), `packages/ai-os`.
+Aphrody products: aphrody.com (`apps/aphrody`), `packages/ai-os`.
 Community products maintained by Aphrody (not Aphrody products): dragonballfr.com (`apps/shenron`),
 rosegriffon.fr (`apps/rosegriffon`). Aphrody Labs (labs.aphrody.com) is merged into this repository since 2026-11-12 (README, section Labs).

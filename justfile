@@ -40,7 +40,7 @@ import "infra/unixwin/unixwin.just"
 default:
     just --list
 
-# Verify all sovereign compiler, VCS, cloud, architecture, and AI CLI toolchains
+# Verify the compiler, VCS, cloud, architecture, and AI CLI toolchains
 [group('dev')]
 doctor:
     ay doctor

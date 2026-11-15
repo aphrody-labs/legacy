@@ -44,7 +44,7 @@ bun src/cli.ts orch health                      # fleet & engine health
 ## Architecture & Research References
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Layered Agent OS architecture, C ABI contract, and `Context` retrieval metrics.
-- [../../docs/research/ai-os-stack-factcheck-2026-11.md](../../docs/research/ai-os-stack-factcheck-2026-11.md) — November 2026 Context7 + GitHub/npm/crates.io deterministic fact-check (`100/100`).
-- [../../docs/research/fx-vs-rust-c-agent-os-2026-11.md](../../docs/research/fx-vs-rust-c-agent-os-2026-11.md) — Architectural & security comparison: purged Zig `fx` and incomplete `brush-core` vs real cross-platform Rust/C Unix Agent OS stack (`rubash`/`niubash`, `yash-rs`, `uutils/coreutils`, `WinuxCmd`, `litebox`, `hyperlight`, `wasmtime`/`cap-std`, `aphrody_core_capi`).
+- [../../docs/research/ai-os-stack-factcheck.md](../../docs/research/ai-os-stack-factcheck.md) — November 2026 Context7 + GitHub/npm/crates.io deterministic fact-check (`100/100`).
+- [../../docs/research/fx-vs-rust-c-agent-os.md](../../docs/research/fx-vs-rust-c-agent-os.md) — Architectural & security comparison: purged Zig `fx` and incomplete `brush-core` vs real cross-platform Rust/C Unix Agent OS stack (`rubash`/`niubash`, `yash-rs`, `uutils/coreutils`, `WinuxCmd`, `litebox`, `hyperlight`, `wasmtime`/`cap-std`, `aphrody_core_capi`).
 
 License: MIT OR Apache-2.0. Third-party notices in `NOTICE` and `licenses/`.

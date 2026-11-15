@@ -30,7 +30,7 @@ NVIDIA :
 AMD :
 
 - RADV (Mesa) pour Vulkan partout ; firmware `linux-firmware-amdgpu` sur Arch ;
-- ROCm : paquets Arch (`rocm-hip-sdk`), dépôt AMD sur Ubuntu LTS (jammy, noble), `rocminfo` de Debian ailleurs ; Ubuntu 26.x n'a pas de dépôt AMD au 2026-11-13 ;
+- ROCm : paquets Arch (`rocm-hip-sdk`), dépôt AMD sur Ubuntu LTS (jammy, noble), `rocminfo` de Debian ailleurs ; Ubuntu 26.x n'a pas de dépôt AMD ;
 - utilisateur dans les groupes `render` et `video`.
 
 ## Docker

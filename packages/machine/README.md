@@ -18,7 +18,7 @@ Exécution : Claude Code tourne en administrateur (intégrité élevée `S-1-16-
 
 Ces réglages changent la posture de sécurité du poste ; ils restent une décision humaine.
 
-| Réglage                                                                                              | Où                                                    | État au 2026-11-12                                                             |
+| Réglage | Où | État |
 | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Sudo for Windows                                                                                     | Paramètres > Système > Avancé > Activer sudo          | activé, mode Inline (`HKLM\…\Sudo Enabled=3`)                                  |
 | Élévation admin sans invite UAC                                                                      | `ConsentPromptBehaviorAdmin`                          | `0` (aucune invite) : tout processus de l'utilisateur peut s'élever en silence |

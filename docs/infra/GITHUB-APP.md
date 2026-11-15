@@ -2,7 +2,7 @@
 
 Une seule App GitHub pour l'automatisation de tout aphrody : CI, releases, sous-modules, agents, webhooks. Elle
 remplace l'App `aphrody-labs-submodules` (id 5738448, `contents: read`) et les PAT. Code :
-`packages/env-kit/src/github-app.ts` (`ay auth github-app …`). État vérifié le 2026-11-13.
+`packages/env-kit/src/github-app.ts` (`ay auth github-app …`). État vérifié.
 
 | Champ          | Valeur                                                                                                                                                                 |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -89,10 +89,10 @@ l'hôte ship toutes les 2 min, jeton `CF_QUEUES_TOKEN` Queues Read+Write) → `v
   push → `reviewer`, regroupés à une revue par dépôt et par heure sur la plage depuis la précédente, sans commit ;
   release → `deployer` en lecture seule ; sécurité → `sre`. Les dépôts hors checkout (ni src ni ses sous-modules)
   donnent un rapport, jamais un commit.
-- Revue Gemini : docs/reviews/gemini-2026-11-13-github-app.md (8/20, corrections dans le commit suivant).
+- Revue Gemini : 8/20, corrections dans le commit suivant.
 - prd : `APHRODY_APP_KEY`, `APHRODY_APP_CLIENT_ID`, `CF_QUEUES_TOKEN` chiffrés par `systemd-creds --user` (agent) ;
   premier `health` : 65 messages tirés, 4 tâches (1 CI rouge rubash, 3 revues).
-- Vérifié le 2026-11-13 : livraisons `workflow_run`/`check_run`/`workflow_job` en 202 ; `pull --dry-run` : 24
+- Vérifié : livraisons `workflow_run`/`check_run`/`workflow_job` en 202 ; `pull --dry-run` : 24
   messages, 9 tâches (5 CI rouges src ramenées à 1 par la règle « une ouverte par dépôt »).
 
 ## npm, crates.io, déploiements
@@ -103,7 +103,7 @@ Une App GitHub n'authentifie aucun de ces services. Pont retenu pour chacun :
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | npm              | trusted publishing OIDC (`npm-publish.yml`, npm 12.2.2, `id-token: write`, provenance)                                                                                                | trusted publisher posé sur les 33 paquets (commit 4d19523) ; `NPM_TOKEN` d'org reste le repli du premier publish                                                                                                                          |
 | crates.io        | trusted publishing OIDC : `crates-publish.yml` + `rust-lang/crates-io-auth-action@3268eb4` (v1.0.6), jeton temporaire révoqué en fin de job                                           | aucune crate du workspace src n'est publiée sous `aphrody-dev` (les 370 crates du compte viennent d'autres dépôts) : `crates-trust` s'applique à la première crate publiée depuis src ; le premier publish reste manuel (règle crates.io) |
-| Déploiements web | aphrody.app tient le rôle de Vercel sur notre stack (docs/ALPHABET.md) : `cf deploy` et la CI, jetons Cloudflare courts (`ay auth mint cloudflare`) ; ni App Vercel ni Workers Builds | projets Vercel `rg-*` sans dépôt lié, laissés tels quels                                                                                                                                                                                  |
+| Déploiements web | aphrody.app tient le rôle de Vercel sur notre stack : `cf deploy` et la CI, jetons Cloudflare courts (`ay auth mint cloudflare`) ; ni App Vercel ni Workers Builds | projets Vercel `rg-*` sans dépôt lié, laissés tels quels                                                                                                                                                                                  |
 
 ## Ancienne App
 

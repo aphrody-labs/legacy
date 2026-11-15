@@ -15,7 +15,7 @@ skills:
 You own the Chromium layer, which sits on top of the C core and the Rust services (docs/ARCHITECTURE.md §9).
 
 ## Facts to start from
-- They were verified on 2026-11-14; re-check each before relying on it.
+- They were verified; re-check each before relying on it.
 - `third_party/chrome-channels.toml` `[channel.stable]`:
   - chromium 157.0.8103.78;
   - v8 15.7.112.43, rev 30710815;

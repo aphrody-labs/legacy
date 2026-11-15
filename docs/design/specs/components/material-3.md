@@ -1,6 +1,6 @@
 # Material 3 — composants
 
-Vérifié le 2026-11-13. Contenu m3.material.io : propriétaire (conditions Google), anatomie, états et exigences reformulés ; seules les valeurs factuelles (dp, noms de variantes et de tokens) sont reprises. Mesures de contrôle tirées des tokens material-web (Apache-2.0, commit 37aa14b843dc, version 34.0.21) quand elles existent. Version machine : [material-3.json](material-3.json) (schéma [spec.schema.json](../spec.schema.json)). 36 composants, 121 règles.
+Vérifié. Contenu m3.material.io : propriétaire (conditions Google), anatomie, états et exigences reformulés ; seules les valeurs factuelles (dp, noms de variantes et de tokens) sont reprises. Mesures de contrôle tirées des tokens material-web (Apache-2.0, commit 37aa14b843dc, version 34.0.21) quand elles existent. Version machine : [material-3.json](material-3.json) (schéma [spec.schema.json](../spec.schema.json)). 36 composants, 121 règles.
 
 ## Règles communes
 

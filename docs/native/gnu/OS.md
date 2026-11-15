@@ -8,8 +8,8 @@ Sources de vérité, toutes sous `docs/research/` :
 
 - Liste et versions : GSRC, bzr `gsrc/trunk` (434 paquets `pkg/gnu`, revno dans le champ `source`), extrait par `scripts/gsrc-gnu.ts` dans `docs/research/gsrc-gnu.json` (arbre obtenu par `uvx --from breezy brz export`).
 - Recettes, entrées et phases `check` : Guix `gnu/packages/*.scm` (lus dans le dépôt guix à la demande, plus d extrait figé) ; amorçage dans `commencement.scm` (hex0 -> mes -> tcc -> gcc), référence seulement.
-- Recettes de référence côté distribution : CachyOS (`docs/research/cachyos-2026-11-15.md`, PKGBUILDS clonés sur fr1 dans `/srv/research/cachyos/CachyOS-PKGBUILDS`) : drapeaux, patches et `check()` de chaque paquet GNU se lisent à côté de Guix et de GSRC.
-- Descriptions : `manual/blurbs.html` (`gnu-blurbs-2026-11-14.json`).
+- Recettes de référence côté distribution : CachyOS (`docs/research/cachyos.md`, PKGBUILDS clonés sur fr1 dans `/srv/research/cachyos/CachyOS-PKGBUILDS`) : drapeaux, patches et `check()` de chaque paquet GNU se lisent à côté de Guix et de GSRC.
+- Descriptions : `manual/blurbs.html` (`gnu-blurbs.json`).
 - Inventaire et verdicts : `docs/native/gnu/gnu-packages.json` (472 entrées après `tools/gnu-index/merge.ts`). Adoption : PLAN.md.
 - Registre canonique : `src/gnu/packages.toml`, généré par `scripts/gnu-packages.ts` (D3).
 

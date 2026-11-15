@@ -39,7 +39,7 @@ fi
 
 if step wasm; then
   log "game wasm32 bundle"
-  export RUSTUP_TOOLCHAIN=nightly-2026-11-12 RUSTC_WRAPPER=
+  export RUSTUP_TOOLCHAIN="$(sed -n 's/^channel *= *"\(.*\)"/\1/p' "$SRC_ROOT/rust-toolchain.toml")" RUSTC_WRAPPER=
   rustup target add wasm32-unknown-unknown --toolchain "$RUSTUP_TOOLCHAIN" >/dev/null
   W=${CARGO_TARGET_DIR:-$HOME/build/target}-wasm
   CARGO_TARGET_DIR=$W CARGO_PROFILE_RELEASE_STRIP=none aphrody-heavy cargo build -p game --bin game --target wasm32-unknown-unknown --release

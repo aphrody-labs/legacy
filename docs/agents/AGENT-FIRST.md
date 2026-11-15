@@ -1,6 +1,6 @@
 # Agent-first: operating model of src
 
-State as of 2026-11-13. src is coded, reviewed, tested, fixed, deployed and maintained by agents, with no human in the loop. The owner steps in only to publish commercial drafts (queue `publish/`) and for actions that require their identity (UAC, OAuth).
+src is coded, reviewed, tested, fixed, deployed and maintained by agents, with no human in the loop. The owner steps in only to publish commercial drafts (queue `publish/`) and for actions that require their identity (UAC, OAuth).
 
 ## 1. Division of responsibilities
 
@@ -151,8 +151,8 @@ Each host declares its targets in `fleet.toml` (`ssh = [alias, WireGuard IP, pub
 
 | Host | Task                                                                                            | Run                                                                                                                       | Result            |
 | ---- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| prd  | `smoke-prd-lint-epic-fmt` (linter, `bun fmt` of `packages/epic-games`, check `bun fmt --check`) | claude refused (root) -> failover to codex -> green check -> commit. The prd runner was then moved under the user `agent` | `0c8f6e4` on main |
-| pc   | `smoke-pc-lint-gds-fmt` (coder, `bun fmt` of `packages/google-design`)                          | 1st attempt: 400 (`.env` key) -> cooldown + requeue; after `--no-env-file`: claude -> green check -> commit               | `82215ad` on main |
+| prd  | `smoke-prd-lint-epic-fmt` (linter, `bun fmt` of the epic-games skill scripts, check `bun fmt --check`) | claude refused (root) -> failover to codex -> green check -> commit. The prd runner was then moved under the user `agent` | `0c8f6e4` on main |
+| pc   | `smoke-pc-lint-gds-fmt` (coder, `bun fmt` of `packages/design`)                          | 1st attempt: 400 (`.env` key) -> cooldown + requeue; after `--no-env-file`: claude -> green check -> commit               | `82215ad` on main |
 
 ## 9. Runner credentials (no human, except the final click)
 

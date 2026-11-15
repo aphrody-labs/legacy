@@ -1,6 +1,6 @@
 # Cloudflare One : migration du mesh WireGuard (pilote `mig-`)
 
-État au 2026-11-12 ~19:25 UTC. Inventaire relevé en direct (ssh `wg show`, `ss -tlnp`, `nginx` sur fr1/fr2/prd) et via `cf` 1.0.0-beta.31. Contexte : `docs/infra/FLEET.md`, `infra/fleet/RUNBOOK.md`.
+Inventaire relevé en direct (ssh `wg show`, `ss -tlnp`, `nginx` sur fr1/fr2/prd) et via `cf` 1.0.0-beta.31. Contexte : `docs/infra/FLEET.md`, `infra/fleet/RUNBOOK.md`.
 
 ## Migration Assessment
 

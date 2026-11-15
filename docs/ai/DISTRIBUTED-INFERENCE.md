@@ -63,7 +63,7 @@ PC (Windows, RTX 4070)                       WireGuard uniquement
 
 ## 4. Intégrer le second hôte GPU Windows
 
-Au 2026-11-13, il est absent de `infra/deploy.toml`, `infra/agents/fleet.toml`, `docs/infra/*`, `~/.ssh/config`, et des pairs WireGuard documentés (fr1 `wg1`, prd `prod`). Il n'est donc pas joignable. Le nœud `gpu2` de `fabric.toml` est prêt (`reach = ""`). Pour l'intégrer :
+Il est absent de `infra/deploy.toml`, `infra/agents/fleet.toml`, `docs/infra/*`, `~/.ssh/config`, et des pairs WireGuard documentés (fr1 `wg1`, prd `prod`). Il n'est donc pas joignable. Le nœud `gpu2` de `fabric.toml` est prêt (`reach = ""`). Pour l'intégrer :
 
 1. Pair WireGuard : une adresse dans 10.200.77.0/24 (par exemple `.6`) sur le hub fr1 (`wg1`), à déclarer dans `docs/infra/FLEET.md` et `deploy.toml`.
 2. Pilote NVIDIA avec CUDA UMD ≥ 13.5 (`nvidia-smi`) et bun. Le binaire `win-cuda-13.5-x64` est récupéré et vérifié par `ai-os fabric node gpu2`.

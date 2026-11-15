@@ -9,9 +9,9 @@
   "ubuntu": "archive.ubuntu.com dists/stonking{,-updates,-security} main+universe amd64 Packages.xz/Sources.xz (Release Version 26.10, Codename stonking, Date 2026-10-15)",
   "arch": "geo.mirror.pkgbuild.com core.db + extra.db (fetched 2026-11-12); base/base-devel = metapackages",
   "gnupackages_txt": "unavailable: womb.git clone vide, viewvc 401 (2026-11-12)",
-  "blurbs": "https://www.gnu.org/manual/blurbs.html (docs/research/gnu-blurbs-2026-11-14.json)",
+  "blurbs": "https://www.gnu.org/manual/blurbs.html (docs/research/gnu-blurbs.json)",
   "gsrc": "bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno 12335 (docs/research/gsrc-gnu.json)",
-  "ftp_dirs": "https://ftp.gnu.org/gnu/ directory listings: guile-debbugs micron sauce speedx cfengine flex git aspell-dict-csb aspell-dict-ga aspell-dict-hr aspell-dict-is aspell-dict-it aspell-dict-sk"
+  "ftp_dirs": "https://ftp.gnu.org/gnu/ directory listings: "
  },
  "counts": {
   "applications": 43,

@@ -47,7 +47,7 @@ Measured pitfalls, handled by the generator:
 
 ## Nix (Linux)
 
-- Nix is installed on no host as of 2026-11-13. fr2 keeps the `nixbld*` accounts of a removed installation, without `/nix`. The hosts are not modified.
+- Nix is installed on no host. fr2 keeps the `nixbld*` accounts of a removed installation, without `/nix`. The hosts are not modified.
 - `infra/fleet/nix/` contains a standalone home-manager flake (`root@prd`, `ubuntu@fr1`, `ubuntu@fr2`) that reads `packages/machine/shells`. The options were verified in `nix-community/home-manager` (modules/programs/{bash,fish,nushell,carapace,zoxide}.nix). Built on 2026-11-13 in the `nixos/nix` container (Nix 2.35.6) on prd, from a git checkout: `nix build .#homeConfigurations."root@prd".activationPackage` succeeds, and the relative path `../../../packages/machine/shells` is accepted, because a flake in a git subfolder has the whole repository as its root. Smoke test with the store packages: nu 0.116.1 and fish 4.9.3 load the repository configs (SRC_ROOT=/root/src, EDITOR=nvim, 119 ay `extern`s). `flake.lock` pins nixpkgs d4f25a3e (2026-11-11) and home-manager 82ce401a (2026-11-10).
 - Verdict: for 3 hosts with native distributions (pacman, apt), `shells.ts` under bun is enough, and home-manager is not required. The flake is ready if a host moves to Nix. Gap to report: nixpkgs (nixos-unstable) is still on nushell 0.116.1, while the lock pins 0.117.0.
 

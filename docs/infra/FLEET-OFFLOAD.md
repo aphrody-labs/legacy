@@ -1,6 +1,6 @@
 # Fleet offload (fr1 load, isolation, dispatch)
 
-Owner order 2026-11-15: offload fr1 in depth. Measured 2026-11-15 00:10-01:05 UTC, tools in `infra/fleet/bin`, apply with `just fleet-offload apply fr1|fr2` (`infra/fleet/bin/fleet-offload.sh`, idempotent, survives reboot: units are enabled, drop-ins and udev rules live in `/etc`).
+Owner order 2026-11-15: offload fr1 in depth. 00:10-01:05 UTC, tools in `infra/fleet/bin`, apply with `just fleet-offload apply fr1|fr2` (`infra/fleet/bin/fleet-offload.sh`, idempotent, survives reboot: units are enabled, drop-ins and udev rules live in `/etc`).
 
 ## 1. Diagnosis (15 min windows, not a snapshot)
 

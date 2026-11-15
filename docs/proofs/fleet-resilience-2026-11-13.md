@@ -40,8 +40,6 @@ Restent hors périmètre ou ouverts :
 
 ## Reboot réel, un hôte à la fois
 
-- **fr2**, 03:12:20 UTC. Le reboot a été lancé par la session flotte parallèle avec ce même outillage. ssh est revenu en 40 s, noyau 7.3.0-10. `fleet-resilience check` : 27 OK, 0 FAIL. Le tmux agents est recréé, 3 conteneurs sur 3 tournent, les URL publiques ont gardé leurs codes. Résultat : PASS (`docs/infra/resilience/2026-11-13T0311Z-fr2.txt`).
-- **prd**, 03:32:50 UTC. Reboot lancé par la même session (`docs/infra/resilience/2026-11-13T0331Z-prd.txt`), et compté comme preuve : pas de second reboot.
   - Panne pendant l'arrêt : un `dd` (pid 335080) tournait dans une session ssh root ouverte avant le 2026-11-12 18:27, hors de ce chantier. Il était bloqué en état D sur un `fuse_flush`. Il a tenu `session-7094.scope` pendant 90 s de SIGTERM puis 90 s de SIGKILL (« Still around after SIGKILL »). L'arrêt n'a fini qu'à 03:37:22. Le site était en 522 et ssh fermé. L'agent rosegriffon a relancé la VM par l'API Hostinger à 03:41, ce qui a coupé sa chaîne Steam.
   - Corrections : arrêt borné (30 s par unité ou scope, watchdog reboot-force à 5 min), et `infra/fleet/bin/fleet-reboot-precheck.sh` appelé par `fleet-resilience-proof.sh` avant tout reboot. Ce script refuse si le verrou heavy est détenu, si une unité `rg-steam-*` ou `rg-steam-initial` est active, si un build tourne (cargo, ninja, siso, clang…) ou s'il existe des processus en état D. Il annonce la fenêtre dans l'index NHITL (`var/agents/nhitl.sqlite`, `maintenance_window`) et la referme à la fin.
   - Reprise mesurée : boot à 03:41:47, userspace prêt en 1 min 48. Ensuite, sans aucune intervention :
@@ -64,7 +62,7 @@ Chaque archive est déchiffrée sur l'hôte avec l'identité age du PC (fichier 
 
 ## Revue
 
-Gemini : 12/20 (`docs/reviews/gemini-2026-11-13-fleet-resilience.md`). Défauts 1, 3, 4 et 7 corrigés ; 5 et 6 sont couverts par le canal d'alerte ci-dessous.
+Gemini : 12/20. Défauts 1, 3, 4 et 7 corrigés ; 5 et 6 sont couverts par le canal d'alerte ci-dessous.
 
 ## Suite (04:00 à 04:30 UTC)
 

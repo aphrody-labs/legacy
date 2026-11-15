@@ -246,7 +246,7 @@ fn resolve_hmac_key() -> Vec<u8> {
 
 fn run_benchmarks(iters: usize) -> Result<(), String> {
     let n = iters.max(1_000);
-    let payload = b"POST /v1/chat/completions sovereign prompt cache benchmark payload 2024";
+    let payload = b"POST /v1/chat/completions prompt cache benchmark payload";
 
     let t0 = Instant::now();
     let mut acc = 0u8;

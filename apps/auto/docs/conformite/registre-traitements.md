@@ -1,6 +1,6 @@
 # Registre des traitements
 
-> **À faire valider par un juriste.** Modèle établi au 2026-10-22 d'après le fonctionnement du produit.
+> **À faire valider par un juriste.** Modèle établi d'après le fonctionnement du produit.
 
 Responsable : [raison sociale de l'éditeur], [adresse], [SIREN]. Contact : contact@aphrody.com.
 Délégué à la protection des données : [nom ou « non désigné »], contact@aphrody.com.
