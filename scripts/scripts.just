@@ -10,6 +10,16 @@ vcs *args:
 hygiene *args:
     bun "{{root}}/scripts/hygiene.ts" {{args}}
 
+# Personal and site-specific values in tracked files (rule personal-data; also part of `just hygiene`)
+[group('gates')]
+personal-data:
+    bun "{{root}}/scripts/hygiene.ts" --rule personal-data
+
+# Runs bun test and fails when the output holds a secret (env or .env value, token shape); prints no value
+[group('gates')]
+test-guard *args:
+    bun "{{root}}/scripts/test-leak-guard.ts" {{args}}
+
 # identity.toml gate / rewrite / lookup (check | apply | get <key>)
 [group('gates')]
 identity cmd="check" *args:

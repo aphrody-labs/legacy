@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { spawnSync } from "../src/spawn.ts";
 import {
   existsSync,
@@ -22,6 +22,24 @@ import {
 } from "../src/index";
 
 const LOADERS = join(import.meta.dir, "..", "loaders");
+
+// Isolation: these tests read process.env before files, so the real environment (tokens, keys) must not be visible.
+// Only the variables a child process needs to start survive; HOME and USERPROFILE point to an empty temp directory.
+const KEEP = /^(PATH|PATHEXT|SYSTEMROOT|WINDIR|COMSPEC|TEMP|TMP|TMPDIR|LANG)$/i;
+let savedEnv: Record<string, string | undefined> = {};
+let fakeHome = "";
+beforeAll(() => {
+  savedEnv = { ...process.env };
+  fakeHome = mkdtempSync(join(tmpdir(), "env-kit-home-"));
+  for (const k of Object.keys(process.env)) if (!KEEP.test(k)) delete process.env[k];
+  process.env.HOME = fakeHome;
+  process.env.USERPROFILE = fakeHome;
+});
+afterAll(() => {
+  for (const k of Object.keys(process.env)) delete process.env[k];
+  Object.assign(process.env, savedEnv);
+  rmSync(fakeHome, { recursive: true, force: true });
+});
 
 function withTempDir(fn: (dir: string) => void): void {
   const dir = mkdtempSync(join(tmpdir(), "env-kit-test-"));
@@ -149,7 +167,8 @@ describe("env-kit Bun/TypeScript core", () => {
       expect(writtenKeys).not.toContain("CARGO_HOME");
 
       const devVarsText = readFileSync(devVarsPath, "utf8");
-      expect(devVarsText).toContain("CLOUDFLARE_ACCOUNT_ID=");
+      // boolean assertion: a failing toContain would print the whole file, which may hold secrets
+      expect(devVarsText.includes("CLOUDFLARE_ACCOUNT_ID=0123456789abcdef0123456789abcdef")).toBe(true);
 
       const vercel = exportForVercelEnv({ envPath: envFile });
       expect(vercel.summary.GEMINI_API_KEY).toBe("SET [len=34]");
