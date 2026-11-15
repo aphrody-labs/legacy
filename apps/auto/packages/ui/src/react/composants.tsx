@@ -1,5 +1,4 @@
-// Composants propres à auto sur les jetons @auto/ui (rôles M3) ; les composants Material génériques
-// viennent de @aphrody/m3-react (apps/web), voir docs/UI.md.
+// Composants d'auto sur les jetons @auto/ui (rôles M3), voir docs/UI.md.
 import type { StatutVisuel } from "@auto/ui";
 import {
   Ban,

@@ -14,10 +14,8 @@
     "vitrine": "bun scripts/vitrine.ts"
   },
   "dependencies": {
-    "@aphrody/m3-react": "1.4.7",
     "@aphrody/m3-tailwind": "1.4.7",
     "@aphrody/m3-tokens": "1.4.7",
-    "@aphrody/material-web": "3.3.3",
     "@auto/automate": "workspace:*",
     "@auto/client": "workspace:*",
     "@auto/domain": "workspace:*",

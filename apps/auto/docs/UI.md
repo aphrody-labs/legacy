@@ -77,8 +77,7 @@ absence validée, gabarit, exports ; pages publiques. Captures en clair, sombre 
 ### Design system Material 3
 
 Les jetons viennent des paquets npm publiés `@aphrody/m3-tokens` (rôles de couleur dérivés de la graine,
-forme, élévation, mouvement, classes de fenêtre), `@aphrody/m3-tailwind` et `@aphrody/m3-react` (composants
-Material génériques, page d'accueil). `@auto/ui` n'ajoute que ce qui est propre à auto : alias `--auto-*`,
+forme, élévation, mouvement, classes de fenêtre), et `@aphrody/m3-tailwind`. `@auto/ui` n'ajoute que ce qui est propre à auto : alias `--auto-*`,
 couleurs personnalisées (succès, avertissement), statuts de documents et composants métier
 (`packages/ui/src/react/composants.tsx`).
 

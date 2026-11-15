@@ -41,8 +41,7 @@ API natives utilisées à la place de paquets npm : `Bun.serve` (API, front, con
 `Bun.password` et `Bun.CryptoHasher` (secrets, signatures de webhooks), `Bun.Archive` (extension Chrome),
 `Bun.Glob`. Outils : `bun check`, `bun lint`, `bun fmt`, `bun n2b`, `bun test`.
 
-Paquets Aphrody : `@aphrody/bun-types`, `@aphrody/m3-react`, `@aphrody/m3-tokens`, `@aphrody/m3-tailwind`,
-`@aphrody/material-web`, `@aphrody/bun-plugin-tailwind`.
+Paquets Aphrody : `@aphrody/bun-types`, `@aphrody/m3-tokens`, `@aphrody/m3-tailwind`, `@aphrody/bun-plugin-tailwind`.
 
 ## Crates Craft et Aphrody
 
