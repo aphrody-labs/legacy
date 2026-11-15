@@ -7,7 +7,6 @@
     "@aphrody/ffi-bridge": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "catalog:",
     "@webgpu/types": "catalog:",
     "tree-sitter-c": "catalog:",
     "tree-sitter-cpp": "catalog:",

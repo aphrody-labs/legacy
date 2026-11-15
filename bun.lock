@@ -37,7 +37,6 @@
         "@aphrody/ffi-bridge": "workspace:*",
       },
       "devDependencies": {
-        "@types/bun": "catalog:",
         "@webgpu/types": "catalog:",
         "tree-sitter-c": "catalog:",
         "tree-sitter-cpp": "catalog:",
@@ -177,9 +176,6 @@
       "version": "0.1.0",
       "bin": {
         "py2bun": "./src/cli.ts",
-      },
-      "devDependencies": {
-        "@types/bun": "latest",
       },
       "peerDependencies": {
         "@aphrody/ghidra": "workspace:*",
