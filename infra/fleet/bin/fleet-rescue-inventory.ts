@@ -16,7 +16,7 @@ const [out, ...roots] = Bun.argv.slice(2);
 if (!out || roots.length === 0) { console.error("usage: fleet-rescue-inventory.ts <out.json> <root>..."); process.exit(64); }
 
 // third-party caches that hold git clones but no work of ours (plugin managers, package caches, agent snapshots)
-const PRUNE = ["/.bun/install", "/.local/share/nvim", "/.local/share/opencode", "/.local/share/pnpm", "/.cargo/registry", "/.cargo/git", "/.cache", "/.npm", "/.rustup", "/.claude/plugins", "/.nvm", "/.pyenv", "/go/pkg"];
+const PRUNE = ["/.bun/install", "/.local/share/nvim", "/.local/share/opencode", "/.local/share/pnpm", "/.cargo/registry", "/.cargo/git", "/.cache", "/.npm", "/.rustup", "/.claude/plugins", "/.nvm", "/.pyenv", "/go/pkg", "/build/cargo/", "/target/", "/out/ghostty-src", "/git/checkouts/", "/git/db/", "/registry/", "/.local/state/bun-m3/cache", "/.codex/.tmp", "/.upstream/", "/.local/share/uv", "/cache/uv", "/.local/lib", "/.hermes-", "/.gemini", "/google-cloud-sdk"];
 const SKIP = new Set([".git", "node_modules", "target", ".cache", ".npm", ".rustup", "__pycache__", ".gradle", ".nuget", ".pnpm-store", "site-packages", ".venv", "venv", "dist-newstyle"]);
 const MANIFESTS = /^(Cargo\.toml|package\.json|pyproject\.toml|go\.mod|setup\.py|CMakeLists\.txt|Makefile|.*\.csproj|.*\.sln)$/;
 const repos: { path: string; bare: boolean }[] = [];
@@ -67,7 +67,9 @@ const repoRows = repos.map((r) => {
   const remotes = g(gitdir, "remote", "-v").split("\n").filter(Boolean).filter((l) => l.includes("(fetch)")).map((l) => l.replace(/\s+\(fetch\).*$/, "").replace(/\/\/[^@/]+@/, "//***@"));
   const shallow = g(gitdir, "rev-parse", "--is-shallow-repository") === "true";
   const unpushed0 = g(gitdir, "log", "--branches", "--not", "--remotes", "--oneline", "-n", "1000").split("\n").filter(Boolean).length;
-  const unpushed = shallow ? -1 : unpushed0; // shallow clones cannot tell
+  // shallow clones: the grafted root counts as unpushed; compare HEAD with its upstream instead (equal = 0, else unknown = -1)
+  const head = g(gitdir, "rev-parse", "HEAD"), up = g(gitdir, "rev-parse", "@{u}");
+  const unpushed = shallow ? (head && head === up ? 0 : -1) : unpushed0;
   const dirty = r.bare ? 0 : g(gitdir, "status", "--porcelain", "-uno").split("\n").filter(Boolean).length;
   return {
     path: r.path, bare: r.bare, shallow, remotes, branch: g(gitdir, "rev-parse", "--abbrev-ref", "HEAD"),
