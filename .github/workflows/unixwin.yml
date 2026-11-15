@@ -62,6 +62,14 @@ jobs:
         with: { name: gnu-results }
       - name: Toolchain (rustup chromium-157)
         run: bun scripts/toolchain.ts install
+      # The Chromium 157 rust toolchain carries no rust-lld: link with the lld-link of its LLVM, against the MSVC libraries.
+      - name: Linker (lld-link of the Chromium LLVM)
+        shell: bash
+        run: |
+          L="$HOME/.local/share/aphrody/toolchain/157/clang/bin/lld-link.exe"
+          test -f "$L" || { ls "$HOME/.local/share/aphrody/toolchain/157/clang/bin" | head -40; exit 1; }
+          echo "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$L" >> "$GITHUB_ENV"
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Build ay (WinuxCmd library linked)
         run: cargo build --release -p aphrody --no-default-features
       - name: Unit tests of ay applet and ay sh
