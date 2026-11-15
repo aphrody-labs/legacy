@@ -94,7 +94,7 @@ const DOCTOR_SECTIONS: ReadonlyArray<{
     ],
   },
   {
-    title: "AI Models & Sovereign Local Inference",
+    title: "AI Models & Local Inference",
     keys: [
       "ANTHROPIC_API_KEY",
       "ANTHROPIC_WORKSPACE_ID",
@@ -491,7 +491,7 @@ async function runMerge(
 }
 
 function printHelp(): void {
-  console.log(`env-kit — Sovereign Multi-Language Environment & Secret Manager
+  console.log(`env-kit — Multi-Language Environment & Secret Manager
 
 Usage:
   env-kit whoami [--json]               Who every configured credential belongs to (parallel, masked)

@@ -16,7 +16,7 @@ const tier5Script = join(import.meta.dir, "tier5-bun-bench.ts");
 console.log(
   "====================================================================",
 );
-console.log("Sovereign Hardware & Compiler Benchmark Suite (Bun Entrypoint)");
+console.log("Hardware & Compiler Benchmark Suite (Bun Entrypoint)");
 console.log(
   "Intel i7-13700F 16C/24T | 32GB DDR5-5800 | RTX 4070 sm_89 CUDA 13.4",
 );
@@ -67,7 +67,7 @@ const workloads = [
 console.log(
   "\n====================================================================",
 );
-console.log("Running Deterministic Stack Picker across Sovereign Workloads");
+console.log("Running Deterministic Stack Picker across Workloads");
 console.log(
   "====================================================================",
 );

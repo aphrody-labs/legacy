@@ -69,7 +69,7 @@ function unquoteYamlScalar(raw: string): string | boolean | number {
 }
 
 /**
- * Sovereign zero-dependency single-pass indexOf frontmatter scanner.
+ * zero-dependency single-pass indexOf frontmatter scanner.
  * Avoids whole-document regex backtracking (`[\s\S]*?`) and external `yaml` AST allocation,
  * scanning only up to the closing `---` fence.
  */
@@ -553,7 +553,7 @@ export function benchmarkSkillsParser(
   }
   const baselineMultiPassWalkMs = (Bun.nanoseconds() - tWalkBase0) / 1e6;
 
-  // Include reading frontmatter slice in sovereign discovery walk to keep apples-to-apples discovery work
+  // Include reading frontmatter slice in discovery walk to keep apples-to-apples discovery work
   const tWalkSovFull0 = Bun.nanoseconds();
   for (let i = 0; i < walkIterations; i++) {
     const out: string[] = [];

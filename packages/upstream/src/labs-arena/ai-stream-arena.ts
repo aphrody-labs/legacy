@@ -117,7 +117,7 @@ export function isValidUIMessageChunk(value: unknown): value is UIMessageChunk {
 }
 
 /**
- * Sovereign Bun v1.4.4 direct byte-batched `ReadableStream` emitter for `vercel/ai` UIMessageStream v1.
+ * Bun v1.4.4 direct byte-batched `ReadableStream` emitter for `vercel/ai` UIMessageStream v1.
  * Avoids chained `TransformStream` object->string->Uint8Array microtask allocations per frame.
  */
 export function createSovereignUIMessageByteStream(
@@ -154,7 +154,7 @@ export function createSovereignUIMessageResponse(
 }
 
 /**
- * Sovereign streaming SSE parser for `vercel/ai` UIMessageStream v1 (`data: <json>\n\n` + `data: [DONE]\n\n`).
+ * streaming SSE parser for `vercel/ai` UIMessageStream v1 (`data: <json>\n\n` + `data: [DONE]\n\n`).
  */
 export async function parseSovereignUIMessageStream(
   stream: ReadableStream<Uint8Array>,
@@ -265,7 +265,7 @@ export function buildAgentSessionFrames(turnCount = 2500): UIMessageChunk[] {
     frames.push({
       type: "text-delta",
       id: "txt-1",
-      delta: `Analyzing sovereign Ring-3 sm_89 kernel frame #${i} with zero-copy SSE batching. `,
+      delta: `Analyzing Ring-3 sm_89 kernel frame #${i} with zero-copy SSE batching. `,
     });
     if (i % 10 === 0) {
       const callId = `call_${i}`;

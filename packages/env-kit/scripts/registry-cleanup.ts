@@ -105,7 +105,7 @@ async function main() {
           "npm",
           "deprecate",
           `${pkg.name}@*`,
-          "Consolidated into @aphrody/* sovereign monorepo packages (https://aphrody.com).",
+          "Consolidated into @aphrody/* monorepo packages (https://aphrody.com).",
         ]);
         console.log(`[npm deprecate] ${pkg.name} -> exit=${proc.exitCode}`);
       }

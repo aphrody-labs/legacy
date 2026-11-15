@@ -15,7 +15,7 @@ import type { WebFilesContext } from "../src/types";
 
 const ROOT_DIR = join(import.meta.dir, "..");
 
-describe("WCK Zero-Dependency Sovereign Architecture", () => {
+describe("WCK Zero-Dependency Architecture", () => {
   it("should have ZERO external dependencies in package.json", () => {
     const pkg = JSON.parse(
       readFileSync(join(ROOT_DIR, "package.json"), "utf-8"),

@@ -14,7 +14,7 @@ GCP_REGION="${GCP_REGION:-europe-west1}"
 GCLOUD_CONFIG="${GCLOUD_CONFIG:-org-contact}"
 DRY_RUN="${DRY_RUN:-0}"
 
-echo "[Tri-Forge Setup] Initializing Sovereign Tri-Forge across ${SRC_ROOT}"
+echo "[Tri-Forge Setup] Initializing Tri-Forge across ${SRC_ROOT}"
 
 # 1. Load .env safely without printing values
 if [[ -f "${SRC_ROOT}/.env" ]]; then

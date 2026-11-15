@@ -47,7 +47,7 @@ export const skipped = (f: string) => SKIP.some((r) => r.test(f));
 
 const AI_FILLER =
   /\b(delve[sd]?|seamless(ly)?|tapestry|game-?chang(er|ing)|cutting-edge|state-of-the-art|supercharg\w+|unlock(s|ing)? the (power|potential)|elevate[sd]?|pivotal|testament to|in today's (fast|digital)|navigate the (complex|landscape)|rich tapestry|véritable|incontournable|au cœur de|révolutionn\w+|sublim\w+)\b/i;
-const SOVEREIGN = /\b(sovereign|antigravity)\b/i;
+const SOVEREIGN = /(?<![\w\/.-])sovereign(?![\w\/.-])/i; // Antigravity is a real product (agy CLI), not slop
 const STUB = /\b(TODO: implement|not implemented yet|lorem ipsum|placeholder implementation|stub implementation|fake output|demo only)\b/i;
 const ABS_PATH = /(\b[A-Za-z]:[\\/](?:src|Users|labs|msys\d*|Program Files)[\\/]|(?<![\w.])\/(?:home|Users)\/[a-z][\w-]*\/|\/srv\/(?:src|build|artifacts)\b)/;
 const MAGIC_DATE = /\b20[2-3]\d-[01]\d-[0-3]\d\b/;
@@ -60,7 +60,7 @@ const SCRAPE = /(href=|<a [^>]*href|DOMParser|cheerio|parse5|querySelectorAll)[^
 const SCRAPE_HOST = /(github\.com\/[^/\s"'`]+\/[^/\s"'`]+\/(releases|tags)\b(?!\/download)|kernel\.org\/(?!releases\.json)|android\.googlesource\.com)/;
 
 export const RULES: Rule[] = [
-  { id: "sovereign", why: "Legacy Sovereign/Antigravity wording often wraps fake outputs; verify the claim or delete it", files: (f) => (CODE.test(f) || DOC.test(f)) && !/^\.agents\/skills\/rust-stack-sovereign\//.test(f), line: (l) => SOVEREIGN.test(l) },
+  { id: "sovereign", why: "Legacy 'Sovereign' wording often wraps fake outputs; verify the claim or delete it", files: (f) => (CODE.test(f) || DOC.test(f)) && !/^\.agents\/skills\/rust-stack-sovereign\//.test(f), line: (l) => SOVEREIGN.test(l) },
   { id: "ai-filler", why: "AI-filler prose (humanizer catalogue); say the fact", files: (f) => DOC.test(f), line: (l) => AI_FILLER.test(l) },
   { id: "stub", why: "Stub, demo or fake output left in tracked code (eng-practices: no functionality not needed now)", files: (f) => CODE.test(f) && !UPSTREAM_PORT.test(f) && !/(^|\/)(tests?|__tests__|fixtures?)\//.test(f) && !/\.test\./.test(f), line: (l) => STUB.test(l) },
   { id: "backup-file", why: "Backup or leftover file; git is the history", path: (f) => /\.(bak|orig|rej|swp|old)(-[\w.]+)?$|~$|(^|\/)\.#|\.old$/.test(f) },

@@ -1,4 +1,4 @@
-# Sovereign Rust WSLg Compositor (`wslg-rs`): Direct3D 12 + Hyprland + COSMIC + Omarchy Patch
+# Rust WSLg Compositor (`wslg-rs`): Direct3D 12 + Hyprland + COSMIC + Omarchy Patch
 
 Native Rust 2024 WSLg compositor and protocol engine replacing legacy Weston/RDP WSLg with zero-copy Direct3D 12 Ultimate (`/dev/dxg` -> Windows NT Shared Handles), WinUI DirectComposition presentation, 120Hz Hyprland dynamic tiling, COSMIC desktop session compatibility, and Omarchy keyboard-first workflows.
 

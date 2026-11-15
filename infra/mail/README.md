@@ -1,6 +1,6 @@
-# Sovereign `contact@aphrody.com` Mailing Infrastructure (`C:\src\infra\mail`)
+# `contact@aphrody.com` Mailing Infrastructure (`C:\src\infra\mail`)
 
-Production-ready sovereign mail infrastructure for `aphrody.com` powered by **Stalwart Mail Server** (`stalwartlabs/mail-server:latest`) — a 100% pure-Rust all-in-one JMAP, IMAP4rev2, SMTP, ManageSieve, and built-in SPF/DKIM/DMARC/ARC/MTA-STS/TLS-RPT/ACME engine with zero Java, PHP, or Python runtime bloat.
+Production-ready mail infrastructure for `aphrody.com` powered by **Stalwart Mail Server** (`stalwartlabs/mail-server:latest`) — a 100% pure-Rust all-in-one JMAP, IMAP4rev2, SMTP, ManageSieve, and built-in SPF/DKIM/DMARC/ARC/MTA-STS/TLS-RPT/ACME engine with zero Java, PHP, or Python runtime bloat.
 
 ## 1. Canonical Domain Identities & Routing (`aphrody.com`)
 
@@ -61,7 +61,7 @@ BIMI (`default._bimi.aphrody.com`) references `https://aphrody.com/assets/brand/
 
 ## 5. Google Workspace Split-Delivery Compatibility (`contact@aphrody.com`)
 
-To allow `contact@aphrody.com` to operate seamlessly across both Google Workspace (Calendar, Meet, Docs, Google Cloud Org Identity) and Sovereign Stalwart JMAP/IMAP:
+To allow `contact@aphrody.com` to operate seamlessly across both Google Workspace (Calendar, Meet, Docs, Google Cloud Org Identity) and Stalwart JMAP/IMAP:
 
 1. **Google Workspace Admin Console (`admin.google.com` -> Apps -> Google Workspace -> Gmail -> Routing)**:
    - Add `mail.aphrody.com` (`51.77.147.152`) to **Inbound Gateway** IPs so forwarded messages preserve original SPF alignment.

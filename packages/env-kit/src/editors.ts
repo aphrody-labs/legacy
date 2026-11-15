@@ -264,7 +264,7 @@ export function syncAllEditorConfigs(
   };
 
   ocProviders.ring3_local = {
-    name: "Ring-3 Sovereign CUDA/AVX2 Daemon (r3d)",
+    name: "Ring-3 CUDA/AVX2 Daemon (r3d)",
     baseUrl: "http://127.0.0.1:8787/v1",
     apiKey: "ring3-local",
     models: [

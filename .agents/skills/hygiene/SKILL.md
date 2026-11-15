@@ -1,6 +1,6 @@
 ---
 name: hygiene
-description: Scan the tracked tree for hardcoded values (pinned versions, magic dates, dated files, absolute paths, hand-kept URL lists, home-made scrapers) and slop (Sovereign/Antigravity wording, AI filler, stubs, backups, dead references). Use before a docs or scripts change, for a purge batch, or when `just hygiene` is red.
+description: Scan the tracked tree for hardcoded values (pinned versions, magic dates, dated files, absolute paths, hand-kept URL lists, home-made scrapers) and slop (Sovereign wording, AI filler, stubs, backups, dead references). Use before a docs or scripts change, for a purge batch, or when `just hygiene` is red.
 ---
 
 # hygiene

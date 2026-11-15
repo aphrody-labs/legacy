@@ -1,6 +1,6 @@
 ---
 title: "Comparative Architectural Study: The Linux Kernel & Aphrody"
-description: "Deep technical and philosophical comparative analysis between Linus Torvalds' Linux kernel systems engineering and Aphrody's sovereign Bun runtime architecture."
+description: "Deep technical and philosophical comparative analysis between Linus Torvalds' Linux kernel systems engineering and Aphrody's Bun runtime architecture."
 tags:
   [
     "linux",
@@ -23,11 +23,11 @@ Operating systems and user-facing software are frequently viewed as fundamentall
 
 **Aphrody** (`aphrody.com`, `C:\src\apps\aphrody`) represents an intentional, rigorous userland manifestation of the Linux Kernel engineering philosophy formulated by **Linus Torvalds**, fused with **Jarred Sumner's** full-Rust zero-dependency Bun v1.4.4 execution model and **Larry Page's** task-first ambient clarity.
 
-Where the Linux kernel provides sovereign hardware virtualization in Ring 0 without breaking userspace, Aphrody delivers a sovereign discovery and execution hub in Ring 3 without external npm dependencies, artificial abstractions, or layout volatility.
+Where the Linux kernel provides hardware virtualization in Ring 0 without breaking userspace, Aphrody delivers a discovery and execution hub in Ring 3 without external npm dependencies, artificial abstractions, or layout volatility.
 
 ```
 +---------------------------------------------------------------------------------------------------+
-| LINUX KERNEL (Ring 0)                                 | APHRODY (Ring 3 Sovereign Web/Edge)       |
+| LINUX KERNEL (Ring 0)                                 | APHRODY (Ring 3 Web/Edge)       |
 +---------------------------------------------------------------------------------------------------+
 | Philosophy: "Good taste in data structures"           | Flat, honest information hierarchy;       |
 |             "Never break userspace"                   | zero decorative bloat; deterministic      |
@@ -137,7 +137,7 @@ Aphrody extends this principle of inviolable contract to the web client and cons
                      Architectural Isomorphism
                                     v
        +-----------------------------------------------------------+
-       |                  APHRODY (Ring 3 Sovereign)               |
+       |                  APHRODY (Ring 3)                         |
        |  UniversalStoreManager (Bun, Winget, Nix, AUR drivers)    |
        |  AssetStore (Pre-compressed Brotli/Gzip RAM cache)        |
        |  Embedded bun:sqlite (WAL mode, declarative generations)  |
@@ -205,7 +205,7 @@ Aphrody reproduces this exact dual-boundary architecture at the application and 
 
 | Engineering Dimension    | Linux Kernel (Linus Torvalds)                                    | Aphrody (`aphrody.com` / `DESIGN.md`)                             |
 | :----------------------- | :--------------------------------------------------------------- | :---------------------------------------------------------------- |
-| **Execution Domain**     | Ring 0 bare-metal kernel space                                   | Ring 3 sovereign web/edge runtime                                 |
+| **Execution Domain**     | Ring 0 bare-metal kernel space                                   | Ring 3 web/edge runtime                                 |
 | **Primary Philosophy**   | "Good taste in data structures", "Never break userspace"         | Flat, honest information hierarchy, zero decorative bloat         |
 | **Dependency Model**     | Zero external libraries; self-hosting C, assembly & safe Rust    | Zero external npm dependencies; 100% native Bun v1.4.4 primitives |
 | **Language & Toolchain** | GCC / Clang, Rust (`kernel::prelude`), zero C++ bloat            | Bun full-Rust engine, TypeScript, raw hand-assembled WASM         |

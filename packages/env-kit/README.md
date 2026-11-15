@@ -1,4 +1,4 @@
-# `@aphrody/env-kit` — Sovereign Monorepo Environment & Secret Architecture
+# `@aphrody/env-kit` — Monorepo Environment & Secret Architecture
 
 Zero-dependency cross-language environment loader, secret redaction guard, and unified editor/CLI credential synchronizer for `C:\src`.
 

@@ -388,7 +388,7 @@ export function benchmarkMonorepoBuildArena(
       measureSpawnAvgMs([bunExec, "-e", nodeEvalScript], 5) * 2.1;
   }
 
-  // Run `bun build --compile` on a sovereign micro-probe (`vercel-labs/scriptc` vs `bun build --compile` AOT)
+  // Run `bun build --compile` on a micro-probe (`vercel-labs/scriptc` vs `bun build --compile` AOT)
   const distDir = join(labsRoot, "dist");
   mkdirSync(distDir, { recursive: true });
   const probeEntry = join(distDir, "labs-aot-probe.ts");
@@ -470,7 +470,7 @@ export function renderBenchmarkReportMarkdown(
   skillsReport: SkillsDiscoveryReport,
 ): string {
   const lines: string[] = [
-    "# Sovereign `C:\\src\\labs` Empirical Benchmark & Interoperability Report",
+    "# `C:\\src\\labs` Empirical Benchmark & Interoperability Report",
     "",
     `- **Generated At**: \`${result.generatedAt}\``,
     `- **Runtime**: \`Bun v${result.runtime.bunVersion}\` (\`${result.runtime.platform}/${result.runtime.arch}\`, \`${result.runtime.hardwareThreads}\` logical threads)`,
@@ -480,7 +480,7 @@ export function renderBenchmarkReportMarkdown(
     "",
     "## 1. Executive Head-to-Head Summary",
     "",
-    "| Arena | Upstream Open Standard | Sovereign `C:\\src` Engine | Sovereign Metric | Baseline Metric | Advantage |",
+    "| Arena | Upstream Open Standard | `C:\\src` Engine | Metric | Baseline Metric | Advantage |",
     "| :--- | :--- | :--- | ---: | ---: | ---: |",
     `| **1. Agent Skills Parser** | \`vercel-labs/skills\` + \`agent-skills\` (\`SKILL.md\`) | Single-Pass \`indexOf\` Scanner | \`${result.skillsParser.sovereignOpsPerSec.toLocaleString("en-US")} ops/s\` (\`${result.skillsParser.sovereignSinglePassMs}ms\`) | \`${result.skillsParser.baselineOpsPerSec.toLocaleString("en-US")} ops/s\` (\`${result.skillsParser.baselineRegexYamlMs}ms\`) | **${result.skillsParser.speedupFactor}x faster** |`,
     `| **2. Generative UI SSR** | \`vercel-labs/json-render\` (\`Spec\` + \`$state\`) | \`aphrody\` + \`google-design\` M3/Fluent 2 SSR | \`${result.jsonRender.sovereignSsrOpsPerSec.toLocaleString("en-US")} ops/s\` / \`${result.jsonRender.sovereignGzipBytes} B\` gz (\`CLS = ${result.jsonRender.clsScore}\`) | \`${result.jsonRender.baselineVdomOpsPerSec.toLocaleString("en-US")} ops/s\` / \`~182.4 KB\` runtime | **${result.jsonRender.speedupFactor}x faster / ${result.jsonRender.payloadReductionFactor}x smaller** |`,

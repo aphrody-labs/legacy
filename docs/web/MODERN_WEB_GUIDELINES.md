@@ -1,4 +1,4 @@
-# Sovereign Modern Web, UI/UX Pro & Visual Verification Guidelines
+# Modern Web, UI/UX Pro & Visual Verification Guidelines
 
 Canonical engineering contract for all web platforms, applications, and graphical interfaces across `C:\src` (`aphrody.com`, `dragonballfr.com`, `rosegriffon.fr`, `yolo`, and desktop apps).
 
@@ -10,7 +10,7 @@ Every web surface combines the highest aesthetic standards of the three premier 
 
 ```mermaid
 flowchart TD
-    M3["Google Material Design 3<br/>Dynamic Color Tokens & Surface Containers"] --> U["Sovereign UI/UX Pro"]
+    M3["Google Material Design 3<br/>Dynamic Color Tokens & Surface Containers"] --> U["UI/UX Pro"]
     AP["Apple macOS Design<br/>Subtle Vibrancy, Precision Typography & Windows"] --> U
     FL["Microsoft Fluent 2<br/>Acrylic Depth & Micro-Interactions"] --> U
     U --> OUT["Sub-100ms Native Web Experience"]
@@ -32,7 +32,7 @@ flowchart TD
 
 ## 2. Anti-AI-Slop & Impeccable Quality Checklist
 
-To eliminate AI-generated mediocrity and maintain sovereign software taste:
+To eliminate AI-generated mediocrity and maintain software taste:
 
 - **Strictly Zero Emojis (`ARCH-009`)**:
   - Zero pictographic emoji characters (`\p{Extended_Pictographic}`) in UI labels, buttons, navigation menus, metadata, or documentation.

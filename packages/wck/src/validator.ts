@@ -63,7 +63,7 @@ export function formatReport(report: ValidationReport): string {
     "===============================================================================",
   );
   lines.push(
-    "           WCK: Sovereign Compile-Time Web & Lighthouse Gate           ",
+    "           WCK: Compile-Time Web & Lighthouse Gate           ",
   );
   lines.push(
     "===============================================================================",

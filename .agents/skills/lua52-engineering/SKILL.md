@@ -3,7 +3,7 @@ name: lua52-engineering
 description: End-to-end Lua 5.2 engineering reference covering PUC-Rio Lua 5.2.4 specifications, _ENV lexical scoping, bytecode structure, 40 opcodes, mlua Rust integration, REA disassembly, WezTerm and Bevy scripting.
 ---
 
-# Lua 5.2 Sovereign Engineering Reference
+# Lua 5.2 Engineering Reference
 
 This skill guides development, reverse-engineering, AST analysis, and runtime embedding for **Lua 5.2.4 (PUC-Rio)** in this monorepo (Lua code and tooling live in `apps/rosegriffon/crates/aphrody-nie-lua`, `apps/rosegriffon/crates/aphrody-nie-wasm`, `apps/shenron/docs/lua-5-2`; bytecode analysis in `src/re`).
 

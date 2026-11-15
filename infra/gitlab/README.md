@@ -1,4 +1,4 @@
-# Sovereign GitLab & Tri-Forge Infrastructure (`infra/gitlab`)
+# GitLab & Tri-Forge Infrastructure (`infra/gitlab`)
 
 Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Google Cloud Git** across all 26 `C:\src` repositories.
 
@@ -8,13 +8,13 @@ Every repository in `C:\src` (root `src` + 25 submodules = 26 repositories) main
 
 - `origin` (**GitHub**): `https://github.com/aphrody-dev/<repo>.git`
 - `gitlab` (**GitLab SaaS**): `https://gitlab.com/aphrody-dev/<repo>.git`
-- `gitlab-self` (**Sovereign GitLab CE on OVH `fr2`**): `https://git.aphrody.com/aphrody/<repo>.git` (owner `contact@aphrody.com`, SSH `:2224`, OCI Registry `registry.aphrody.com`)
+- `gitlab-self` (**GitLab CE on OVH `fr2`**): `https://git.aphrody.com/aphrody/<repo>.git` (owner `contact@aphrody.com`, SSH `:2224`, OCI Registry `registry.aphrody.com`)
 - `google` (**Google Cloud Git — GCP `aphrody` `#468000409790`**): `https://source.developers.google.com/p/aphrody/r/<repo>` + Developer Connect (`projects/aphrody/locations/europe-west1/connections/aphrody-triforge`)
 - `all` (**Multi-Forge Push Fanout**): pushes simultaneously to `origin`, `gitlab`, and `google`.
 
 ## 2. Directory Layout
 
-- `docker-compose.gitlab.yml` — Sovereign GitLab CE Omnibus (`git.aphrody.com`) + Docker CI Runner + `archlinux-pkgctl` Runner.
+- `docker-compose.gitlab.yml` — GitLab CE Omnibus (`git.aphrody.com`) + Docker CI Runner + `archlinux-pkgctl` Runner.
 - `gitlab.rb` — Memory-tuned Omnibus configuration for OVH `fr2` (< 3.2 GB RSS), Puma (2 workers), Sidekiq (concurrency 8), Prometheus disabled, Container & Package Registries enabled, and SMTP wired to Stalwart (`mail.aphrody.com` / `contact@aphrody.com`).
 - `arch-ci/Dockerfile.arch-builder` — Arch Linux + CachyOS `x86-64-v3` repo + `devtools` (`pkgctl`) + `mkinitcpio` + Rust + Bun + Go CI container for building `.pkg.tar.zst` packages and WSL2 `.wsl` rootfs images.
 - `setup-triforge.sh` — Cross-platform (bash, niubash, Git Bash) bootstrap script for `gh`, `glab`, `gcloud`, and `frg` without exposing secrets.
@@ -43,7 +43,7 @@ frg arch-upstreams
 frg arch-upstreams --sync
 ```
 
-## 4. Deploying Sovereign GitLab on OVH `fr2`
+## 4. Deploying GitLab on OVH `fr2`
 
 ```bash
 export GITLAB_ROOT_PASSWORD="<from-sovereign-vault>"
