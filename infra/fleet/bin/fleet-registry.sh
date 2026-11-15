@@ -21,11 +21,9 @@ peers) cls=${2:?class}; hosts | while read -r n _ m u _ c; do
          [ "$n" = "$self" ] && continue; case " $c " in *" $cls "*) echo "$n=$u@$m";; esac; done;;
 endpoint) flat | awk -F'\t' -v s="service.${2:?service}" '$1==s && $2=="endpoint"{print $3; f=1} END{exit !f}';;
 status)
-  mp=$(flat | awk -F'\t' '$1=="storage" && $2=="build_mount"{print $3}')
-  probe='awk "/^some/{printf \"%s \", \$2}" /proc/pressure/cpu /proc/pressure/io /proc/pressure/memory; df --output=avail -BG / | tail -n 1 | tr -d " \n"; echo -n " "; (findmnt -rn -o FSTYPE '"$mp"' || echo none) | tr -d "\n"; echo -n " "; (systemctl is-active "cloudflared*" 2>/dev/null | sort -u | tr "\n" ",")'
   printf '%-4s %-18s %-30s %-30s %-30s\n' host role "psi cpu/io/mem (avg10)" "root free GB / build fs" "tunnel connectors"
   hosts | while read -r n s m u r c; do
-    if [ "$n" = "$self" ]; then out=$(bash -c "$probe" 2>/dev/null); else out=$(timeout 10 ssh -n -o BatchMode=yes -o ConnectTimeout=4 "${u}@${m}" "$probe" 2>/dev/null); fi
+    if [ "$n" = "$self" ]; then out=$(fleet-probe 2>/dev/null); else out=$(timeout 10 ssh -n -i "$HOME/.ssh/fleet_mesh" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=4 "${u}@${m}" fleet-probe 2>/dev/null); fi
     [ -n "$out" ] || { printf '%-4s %-18s unreachable\n' "$n" "$r"; continue; }
     # shellcheck disable=SC2086
     set -- $out; printf '%-4s %-18s %-30s %-30s %-30s\n' "$n" "$r" "${1#avg10=}/${2#avg10=}/${3#avg10=}" "$4 / $5" "${6:-none}"

@@ -17,7 +17,7 @@ inst() { # inst <from> <to> <mode>
   fi
   return 1
 }
-for b in fleet-cgsample fleet-cgreport fleet-atopreport fleet-run fleet-offload-bench fleet-xfs fleet-registry; do
+for b in fleet-cgsample fleet-cgreport fleet-atopreport fleet-run fleet-offload-bench fleet-xfs fleet-registry fleet-probe; do
   inst "$src/bin/$b.sh" "/usr/local/bin/$b.sh" 0755 || true
   inst "$src/bin/$b.sh" "/usr/local/bin/$b" 0755 || true
 done

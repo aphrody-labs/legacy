@@ -21,7 +21,7 @@ classes = "agent test lint research bench"
 [host.prd]
 ssh = "prd"
 mesh = "10.200.77.5"
-user = "ubuntu"
+user = "root"
 role = "production"
 classes = ""
 
