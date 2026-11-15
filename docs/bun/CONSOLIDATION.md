@@ -95,3 +95,19 @@ Copies hors git dans `var/legacy` (git-ignoré, 7,4 Go) laissées en place : `yo
 ## Pour le binaire natif
 
 `NATIVE-BINARY.md` prévoit un fork sur une nouvelle org à partir de `aphrody-labs/bun` `9dda375835` : partir de `c7b36732e0` (2 commits de plus, `main` réécrite par le rebase).
+
+## External dependencies of the workspace manifests
+
+Scope: root, `packages/*`, `apps/aphrody/web`, `apps/nt`, `infra/cloudflare/workers/*` and the `apps/auto` workspace (`apps/open`, `rosegriffon`, `shenron` are separate repositories). Counts exclude `workspace:` links and `@aphrody/*` workspace packages; sections are dependencies, devDependencies and peerDependencies.
+
+| | declarations | distinct packages | spec literals shared by 2+ manifests |
+| --- | --- | --- | --- |
+| before | 82 | 55 | 29 declarations over 14 packages in `apps/auto`, 3 `@types/bun` specs |
+| after | 80 | 55 | 0 in `apps/auto` (14 entries in its `catalog`) |
+
+- Gate: `bun scripts/hygiene.ts --rule bun-dependency` flags every dependency Bun replaces (test runners, bundlers and transpilers, dotenv, fetch clients, ws, uuid, glob, sqlite and SQL drivers, password hashing, yaml/toml/json5, chalk and colour libraries, execa and cross-spawn, semver, archives and compression, arg parsers, rimraf and friends), with the Bun API and its docs page. Result: 0 hits. An exception needs a reason of its own in the manifest's `bunExceptions` map.
+- `node-builtin` went from 25 hits to 0 plus three written exceptions: `node:zlib` `deflateSync` for PNG (Bun.deflateSync emits raw deflate, first byte 0x63, with `level` and `windowBits` ignored) and a Node baseline script run by the build arena.
+- Removed: `@types/bun` from `packages/py2bun` (`latest`) and `apps/nt`; the root `devDependencies` entry (catalog) provides it to every workspace. No other declaration is unused by the import graph (the Angular peer packages of `packages/design` and `apps/aphrody/web` are peers of `@angular/material`; `@better-auth/oauth-provider` is a peer of `@better-auth/cimd`).
+- Deduplicated: `apps/auto/package.json` carries a `catalog` for react, react-dom, `@types/react*`, zod, better-auth and its plugins, playwright-core, the fontsource families and m3-tokens. `apps/auto` is its own workspace root with its own `bun.lock`, so its catalog cannot live in the root one.
+- Kept, no Bun equivalent: `jose` (JWKS verification), `kysely`, `quickjs-emscripten`, `svgo`, `wawoff2`, `gltf-validator`, `messageformat`, `eld`, `web-tree-sitter`, the Angular and React stacks, `tailwindcss`.
+- Open: `playwright-core` (`apps/auto` web e2e and extension) against `Bun.WebView`; not measured.
