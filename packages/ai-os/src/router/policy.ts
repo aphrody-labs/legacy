@@ -66,8 +66,6 @@ export const cost = (o: Offer, inTok: number, outTok: number) =>
 
 const INF = Number.POSITIVE_INFINITY;
 
-const isFree = (o: Offer) => o.priceIn === 0 && o.priceOut === 0;
-
 function comparator(mode: Mode, st: (o: Offer) => OfferStat | undefined) {
   const price = (o: Offer) => (o.priceOut === undefined ? INF : (o.priceIn ?? 0) * 3 + o.priceOut);
   const arena = (o: Offer) => o.arena ?? -INF;
