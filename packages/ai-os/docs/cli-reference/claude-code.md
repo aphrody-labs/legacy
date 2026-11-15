@@ -48,7 +48,7 @@ Sources: `claude --help` (2.1.322); CS = https://code.claude.com/docs/en/setting
 - `cleanupPeriodDays`: any file, default `30`; transcripts of Desktop/Cowork sessions kept past it since v2.1.248. (SR)
 - Sweep also covers `~/.claude/tasks/`, `~/.claude/shell-snapshots/`, `~/.claude/backups/`, `cc-daemon-*` temp folders; `skills/.trash`, `plugins/.trash` capped near 1024 entries. (CL)
 
-## Local state vs docs (C:\Users\aphro\.claude\settings.json, read-only check)
+## Local state vs docs (`~/.claude/settings.json`, read-only check)
 
 - `permissions.defaultMode: "bypassPermissions"` and `skipDangerousModePermissionPrompt: true` sit in user settings: honored (SR). No conflict.
 - `cleanupPeriodDays` is not set locally: default 30 days applies (SR).

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-// checkdeps: layered dependency gate for C:\src (Chromium buildtools/checkdeps analogue).
+// checkdeps: layered dependency gate for this repository (Chromium buildtools/checkdeps analogue).
 //
 // Every first-party unit (a directory holding Cargo.toml [package] or package.json) gets a
 // layer from the nearest DEPS.rules file at or above it. Rules accumulate from the root

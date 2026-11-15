@@ -47,7 +47,7 @@ export function sandboxSettings(o: {
   });
 }
 
-// C:\src\x -> /mnt/c/src/x ; already-POSIX paths pass through. UNC and other forms are refused.
+// <drive>:\x -> /mnt/<drive>/x ; already-POSIX paths pass through. UNC and other forms are refused.
 export function toWslPath(p: string): string {
   const m = /^([A-Za-z]):[\\/](.*)$/.exec(p);
   if (m) return `/mnt/${m[1]!.toLowerCase()}/${m[2]!.replace(/\\/g, "/")}`;

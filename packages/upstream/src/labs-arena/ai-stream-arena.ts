@@ -278,13 +278,13 @@ export function buildAgentSessionFrames(turnCount = 2500): UIMessageChunk[] {
       frames.push({
         type: "tool-input-delta",
         toolCallId: callId,
-        inputTextDelta: `{"path":"C:/src/labs/src/cli.ts","line":${i}}`,
+        inputTextDelta: `{"path":"src/cli.ts","line":${i}}`,
       });
       frames.push({
         type: "tool-input-available",
         toolCallId: callId,
         toolName: "pi_read_workspace",
-        input: { path: "C:/src/labs/src/cli.ts", line: i },
+        input: { path: "src/cli.ts", line: i },
       });
       frames.push({
         type: "tool-output-available",

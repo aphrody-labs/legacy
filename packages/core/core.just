@@ -14,7 +14,7 @@ index-gen:
 [group('core')]
 core-header:
     cbindgen --config src/core/capi/cbindgen.toml src/core/capi -o src/core/capi/include/aphrody_core.h
-# --- Labs (merged from C:\labs): conformance (ay conformance), Lore, Chromium factory ---
+# --- Labs (merged into src): conformance (ay conformance), Lore, Chromium factory ---
 
 # Build native Python core (`src/core/py` PyO3 ABI3 -> `packages/core-py/src/aphrody_native`)
 [group('core')]

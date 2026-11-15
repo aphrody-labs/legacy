@@ -41,7 +41,7 @@ C:\src\crates\wayland\
 
 ## CLI Usage (`wslg-rs`)
 
-Installed in `C:\Users\aphro\.local\bin\wslg-rs.exe`:
+Installed as `~/.local/bin/wslg-rs.exe`:
 
 ```powershell
 # Inspect GPU adapter, D3D12 Ultimate tiers, DirectComposition, and Wayland globals

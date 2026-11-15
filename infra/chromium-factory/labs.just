@@ -1,4 +1,4 @@
-# Labs (merged from C:\labs): conformance (ay conformance), Lore, Chromium factory.
+# Labs (merged into src): conformance (ay conformance), Lore, Chromium factory.
 
 # ay + conformance harness build.
 [group('labs')]

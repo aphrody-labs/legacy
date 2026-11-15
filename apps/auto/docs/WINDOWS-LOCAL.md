@@ -29,7 +29,7 @@ Le tunnel IA utilise le service déjà configuré sur `dbfr` via SSH, avec le mo
 
 ## Dossiers, classeurs et réseau
 
-La racine dédiée est `C:\Users\aphro\Documents\Auto\Arrivages`. Le préparateur crée un sous-dossier UUID par entreprise et les espaces clients, fournisseurs, devis, factures, chantiers, livraisons et commandes. Les permissions par segment d’Auto s’appliquent aux fichiers indexés et aux copies Craft.
+La racine dédiée est `%USERPROFILE%\Documents\Auto\Arrivages`. Le préparateur crée un sous-dossier UUID par entreprise et les espaces clients, fournisseurs, devis, factures, chantiers, livraisons et commandes. Les permissions par segment d’Auto s’appliquent aux fichiers indexés et aux copies Craft.
 
 Un dossier local ou UNC accessible au compte Windows courant se raccorde explicitement à une entreprise :
 

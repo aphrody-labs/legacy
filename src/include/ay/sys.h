@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT OR Apache-2.0 */
 /*
- * src/include/ay/sys.h - Master Public C ABI Header for C:\src\src (`libaysys` / `aysys.dll` / `aysys.wasm`)
+ * src/include/ay/sys.h - Master Public C ABI Header for src/ (`libaysys` / `aysys.dll` / `aysys.wasm`)
  *
  * Subsystems preserve canonical upstream C namespaces (`drm_*`, `mesa_*`, `wl_*`, `xcb_*`, `xwm_*`,
  * `nt_*`, `wine_*`, `wasm_*`) while `ay_*` serves cross-subsystem CPU/ASM glue.

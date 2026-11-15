@@ -14,7 +14,7 @@ sudo systemctl reload nginx
 # Dedicated R2 bucket (rclone remote "r2"; bucket creation needs an admin token, an existing bucket is kept).
 rclone mkdir r2:aphrody-gnu || echo "bucket aphrody-gnu: create it with: cf r2 buckets create aphrody-gnu"
 
-# kernel.org developer keys through WKD (trust on first fetch; fingerprints are listed on kernel.org/category/signatures.html).
+# kernel.org developer keys through WKD (trust on first fetch; the fingerprints are published on the kernel.org signatures page).
 if [ ! -s /srv/gnu/kernel-keyring.pgp ]; then
   GH=$(mktemp -d)
   gpg --homedir "$GH" --batch --auto-key-locate clear,wkd --locate-keys torvalds@kernel.org gregkh@kernel.org sashal@kernel.org >/dev/null 2>&1 || true
