@@ -229,7 +229,7 @@ L'accès délégué Gmail API / Microsoft Graph avec renouvellement des jetons e
 - Compléter l'observabilité et la recette de reprise des jobs ; sauvegarde/restauration déjà vérifiée sur le VPS.
 
 Les intégrations existantes sont documentées dans `AUTH.md`, `MAIL.md`, `PA.md`, `ARCHITECTURE.md` et
-`DEPLOIEMENT.md`. Aucun déploiement ni création d'identifiants fournisseur n'est effectué par le diagnostic.
+`DEPLOYMENT.md`. Aucun déploiement ni création d'identifiants fournisseur n'est effectué par le diagnostic.
 
 ## Recette mail prête à exécuter
 
@@ -248,7 +248,7 @@ avec authentification SPF/DKIM/DMARC positive.
 
 Sources prêtes à intégrer au déploiement global : migrations `024_courrier_unifie.sql` et `025_agents_admin.sql`,
 écrans `/app/courrier` et `/app/administration`, OAuth mail distinct de la connexion Auto, IMAP Aphrody et envoi Resend.
-Voir `COURRIER.md` pour les contrats, variables serveur et preuves de tests. Aucune identité juridique fictive
+Voir `MAILBOX.md` pour les contrats, variables serveur et preuves de tests. Aucune identité juridique fictive
 n'est créée pour ouvrir la messagerie personnelle sans entreprise.
 
 Configuration requise : `AUTO_COURRIER_PROPRIETAIRE=yohanpierre15@gmail.com` et
@@ -266,11 +266,11 @@ API/worker/web sains, migrations 024/025/026 appliquées après préflight sur c
 Le compte Gmail vérifié est super-admin, deux clés agents sont protégées en 0600 sur le VPS ; leur accès
 administration HTTP 200 et le refus de lecture mail privée HTTP 401 sont vérifiés.
 Aphrody est connectée : un message rédigé dans Auto, envoyé par Resend, reçu sur OVH puis affiché dans Auto
-qualifie le parcours complet. Voir `COURRIER.md`. Les consentements Gmail/Outlook restent à accorder et tester.
+qualifie le parcours complet. Voir `MAILBOX.md`. Les consentements Gmail/Outlook restent à accorder et tester.
 Le retour de session OAuth dans la coque desktop native reste à qualifier séparément du navigateur/PWA.
 
 Second lot natif : `026_connexion_appareil.sql`, client RFC8628 `auto-native`, page
 `/app/verification-appareil?user_code=…`, code secret uniquement en mémoire et cookie HttpOnly posé par le
 hook officiel Better Auth. Désactivé par défaut (`AUTO_CONNEXION_APPAREIL=1` requis après qualification).
 API : 3 tests/25 assertions ; Chrome deux contextes isolés : 8 assertions ; conteneur Linux :
-5 tests appareil/courrier et 47 assertions. Voir `APPAREILS.md` pour le contrat exact et la limite des preuves.
+5 tests appareil/courrier et 47 assertions. Voir `DEVICES.md` pour le contrat exact et la limite des preuves.

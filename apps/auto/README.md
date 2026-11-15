@@ -8,7 +8,7 @@ User-facing text is English at the source and translated through the catalogs of
 
 Standalone server distribution, Docker images and production Compose: [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md).
 Production: OVH server `vps` (Docker containers behind a Cloudflare Tunnel) and **Neon** PostgreSQL
-(project `auto`, `aws-eu-central-1`): [docs/DEPLOIEMENT.md](docs/DEPLOIEMENT.md).
+(project `auto`, `aws-eu-central-1`): [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 | Surface                | Who and what for                                                            | Folder                     |
 | ---------------------- | --------------------------------------------------------------------------- | -------------------------- |
@@ -23,7 +23,7 @@ Production: OVH server `vps` (Docker containers behind a Cloudflare Tunnel) and 
 
 ## Scope
 
-Online: https://auto.aphrody.com (production on an OVH server, see `docs/DEPLOIEMENT.md`). API documented in OpenAPI
+Online: https://auto.aphrody.com (production on an OVH server, see `docs/DEPLOYMENT.md`). API documented in OpenAPI
 3.1: `GET /v1/openapi.json` and `docs/openapi.json`.
 
 | Domain                       | Content                                                                                                                                              | Component                                                    | Status                                           |
@@ -50,7 +50,7 @@ Suite building blocks: see `docs/SUITE.md`. Invariants and technical decisions: 
 Presentation videos from the real screens and database: `bun run video:tout`, see [docs/VIDEO.md](docs/VIDEO.md).
 
 Suppliers, job sites, analytical assignments, delivery notes and order confirmations:
-see [docs/CHANTIERS.md](docs/CHANTIERS.md).
+see [docs/CONSTRUCTION-SITES.md](docs/CONSTRUCTION-SITES.md).
 
 ## Repository
 

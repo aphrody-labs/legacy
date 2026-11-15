@@ -1,54 +1,54 @@
-# Ce qu'auto reprend de l'open source
+# What auto takes from open source
 
-Revue des références de l'automatisation par workflows et de ce qu'auto en tire, puis des briques Bun, Bun OS,
-Aphrody et Craft effectivement utilisées. « Repris » renvoie au code du dépôt ; « manque » est un écart connu.
+Review of the workflow automation references and what auto takes from them, then of the Bun, Bun OS, Aphrody and
+Craft building blocks actually used. "Taken" points to code in the repository; "missing" is a known gap.
 
-## Plateformes d'automatisation
+## Automation platforms
 
-| Projet       | Licence                     | Idée retenue                                                             | Dans auto                                                                                                                                           |
-| ------------ | --------------------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| n8n          | Sustainable Use (fair-code) | Graphe de nœuds, éléments `json`, expressions `{{ }}`, sorties multiples | Repris : moteur `packages/automate`, import des workflows n8n (`importerN8n`), n8n lui-même dans l'Aphrody Box                                      |
-| n8n          |                             | « Retry On Fail », « Continue On Fail », nœud Code                       | Repris : `tentatives` et `delaiEssaiMs` par nœud (attente doublée), `continuerSurErreur`, nœud Code en QuickJS isolé dans un Worker                 |
-| Activepieces | MIT (cœur)                  | Pièces typées par schéma, catalogue exposé à l'IA                        | Repris : paramètres Zod, catalogue en JSON Schema (`GET /v1/automatisations/catalogue`), outils MCP pour créer et lancer                            |
-| Node-RED     | Apache-2.0                  | Nœuds communautaires pour les services de la maison et de l'IoT          | Repris : Home Assistant, ntfy, Gotify, Matrix, Mastodon, Nextcloud (API HTTP documentées, sans SDK)                                                 |
-| Windmill     | AGPL-3.0                    | Moteur et exécution natifs rapides, scripts isolés                       | Repris : calcul natif en Rust (crates Craft par FFI), scripts sans `eval` (QuickJS, 64 Mo, 5 s)                                                     |
-| Huginn       | MIT                         | Agents qui surveillent le web et réagissent                              | Repris : flux RSS/Atom (`Bun.XML`), extraction par sélecteurs (`HTMLRewriter`), « seulement les nouveaux » avec mémoire persistante                 |
-| Temporal     | MIT                         | Exécution durable, reprises                                              | Partiel : file de jobs Postgres avec nouvel essai du worker, exécutions conservées (200 par workflow). Manque : reprise d'un workflow à mi-parcours |
-| Kestra       | Apache-2.0                  | Workflows déclaratifs versionnés                                         | Repris : définitions JSON validées, 50 versions par workflow, restauration réversible (l'état remplacé devient une version)                         |
+| Project      | Idea retained                                                            | In auto                                                                                                                                           |
+| ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| n8n          | Node graph, `json` items, `{{ }}` expressions, multiple outputs          | Taken: `packages/automate` engine, n8n workflow import (`importerN8n`), n8n itself in the Aphrody Box                                             |
+| n8n          | "Retry On Fail", "Continue On Fail", Code node                           | Taken: `tentatives` and `delaiEssaiMs` per node (doubling wait), `continuerSurErreur`, Code node in QuickJS isolated in a Worker                  |
+| Activepieces | Pieces typed by schema, catalog exposed to the AI                        | Taken: Zod parameters, JSON Schema catalog (`GET /v1/automatisations/catalogue`), MCP tools to create and run                                     |
+| Node-RED     | Community nodes for home and IoT services                                | Taken: Home Assistant, ntfy, Gotify, Matrix, Mastodon, Nextcloud (documented HTTP APIs, no SDK)                                                   |
+| Windmill     | Fast native engine and execution, isolated scripts                       | Taken: native computation in Rust (Craft crates through FFI), scripts without `eval` (QuickJS, 64 MB, 5 s)                                        |
+| Huginn       | Agents that watch the web and react                                      | Taken: RSS/Atom feeds (`Bun.XML`), selector extraction (`HTMLRewriter`), "only new ones" with persistent memory                                   |
+| Temporal     | Durable execution, resumption                                            | Partial: Postgres job queue with worker retry, runs kept (200 per workflow). Missing: resuming a workflow midway                                  |
+| Kestra       | Versioned declarative workflows                                          | Taken: validated JSON definitions, 50 versions per workflow, reversible restore (the replaced state becomes a version)                            |
 
-Sous-workflows (« Execute Workflow » de n8n) : repris par le nœud `auto.workflow`. Versions (Kestra, n8n) : reprises, 50 versions par
-workflow et restauration réversible. Manque suivi : reprise d'une exécution interrompue.
+Sub-workflows (n8n "Execute Workflow"): taken by the `auto.workflow` node. Versions (Kestra, n8n): taken, 50
+versions per workflow and reversible restore. Missing, tracked: resuming an interrupted run.
 
-## Services auto-hébergés de l'Aphrody Box
+## Self-hosted services of the Aphrody Box
 
-| Projet                       | Rôle                                       | Licence               |
-| ---------------------------- | ------------------------------------------ | --------------------- |
-| n8n                          | Éditeur de workflows, 400 intégrations     | fair-code             |
-| Hermes Agent (Nous Research) | Agent avec mémoire, outils et messageries  | MIT                   |
-| Ollama                       | Modèles d'IA locaux, API compatible OpenAI | MIT                   |
-| Obsidian (image linuxserver) | Notes Markdown dans le navigateur          | propriétaire, gratuit |
-| Mailpit                      | Courriels de test                          | MIT                   |
-| Caddy                        | HTTPS automatique                          | Apache-2.0            |
-| PostgreSQL                   | Base de données                            | PostgreSQL            |
+| Project                      | Role                                       |
+| ---------------------------- | ------------------------------------------ |
+| n8n                          | Workflow editor, 400 integrations          |
+| Hermes Agent (Nous Research) | Agent with memory, tools and messaging     |
+| Ollama                       | Local AI models, OpenAI-compatible API     |
+| Obsidian (linuxserver image) | Markdown notes in the browser              |
+| Mailpit                      | Test e-mails                               |
+| Caddy                        | Automatic HTTPS                            |
+| PostgreSQL                   | Database                                   |
 
-Console de la boîte : Leptos (rendu serveur et hydratation WebAssembly) et axum, MIT.
+Box console: Leptos (server rendering and WebAssembly hydration) and axum.
 
-## Runtime Bun OS (fork Aphrody de Bun)
+## Bun OS runtime (Aphrody fork of Bun)
 
-API natives utilisées à la place de paquets npm : `Bun.serve` (API, front, console opérateur), `Bun.SQL`
-(Postgres, y compris le dialecte Kysely de Better Auth), `Bun.Image` et `Bun.Video` (nœuds média, OCR),
-`Bun.WebView` (nœud navigateur), `Bun.XML` (flux), `HTMLRewriter` (extraction), `Bun.cron` (planification),
-`Bun.password` et `Bun.CryptoHasher` (secrets, signatures de webhooks), `Bun.Archive` (extension Chrome),
-`Bun.Glob`. Outils : `bun check`, `bun lint`, `bun fmt`, `bun n2b`, `bun test`.
+Native APIs used in place of npm packages: `Bun.serve` (API, front end, operator console), `Bun.SQL`
+(Postgres, including the Kysely dialect of Better Auth), `Bun.Image` and `Bun.Video` (media nodes, OCR),
+`Bun.WebView` (browser node), `Bun.XML` (feeds), `HTMLRewriter` (extraction), `Bun.cron` (scheduling),
+`Bun.password` and `Bun.CryptoHasher` (secrets, webhook signatures), `Bun.Archive` (Chrome extension),
+`Bun.Glob`. Tools: `bun check`, `bun lint`, `bun fmt`, `bun n2b`, `bun test`.
 
-Paquets Aphrody : `@aphrody/bun-types`, `@aphrody/m3-tokens`, `@aphrody/m3-tailwind`, `@aphrody/bun-plugin-tailwind`.
+Aphrody packages: `@aphrody/bun-types`, `@aphrody/m3-tokens`, `@aphrody/m3-tailwind`, `@aphrody/bun-plugin-tailwind`.
 
-## Crates Craft et Aphrody
+## Craft and Aphrody crates
 
-Suite Aphrody vendorisée (`vendor/suite`), liée par FFI (`crates/auto-ffi`) :
+Aphrody suite vendored (`vendor/suite`), linked through FFI (`crates/auto-ffi`):
 
-- PDF : `pdfcraft-create`, `-organize`, `-render`, `-redact`, `-sign`, `-annot`, `-preflight` (fusion, pages, texte,
-  caviardage, signature et vérification) ;
-- Word et PowerPoint : `wordcraft-docx`, `wordcraft-pdf`, `deckcraft-pptx`, `deckcraft-pdf` ;
-- Tableurs : `gridcraft-xlsx` (création, lecture xlsx, ods, csv) ;
-- Base de connaissances : `aphrody-rag-core` (découpage, plus proches voisins, MMR).
+- PDF: `pdfcraft-create`, `-organize`, `-render`, `-redact`, `-sign`, `-annot`, `-preflight` (merge, pages, text,
+  redaction, signature and verification);
+- Word and PowerPoint: `wordcraft-docx`, `wordcraft-pdf`, `deckcraft-pptx`, `deckcraft-pdf`;
+- Spreadsheets: `gridcraft-xlsx` (creation, reading xlsx, ods, csv);
+- Knowledge base: `aphrody-rag-core` (chunking, nearest neighbors, MMR).
