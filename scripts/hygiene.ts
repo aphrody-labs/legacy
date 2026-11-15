@@ -12,6 +12,7 @@
 //   statements that rot (https://developers.google.com/style/timeless-documentation).
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { isNonSourceProse, sourceLanguage } from "../packages/i18n/src/detect.ts";
 
 export type Hit = { rule: string; file: string; line: number; text: string };
 export type Rule = {
@@ -25,6 +26,7 @@ export type Rule = {
   path?: (f: string) => boolean;
 };
 
+const SOURCE_LANG = sourceLanguage();
 const CODE =
   /\.(ts|tsx|js|mjs|cjs|rs|sh|ps1|just|py|c|h|zig|cs)$|(^|\/)justfile$/;
 const DOC = /\.(md|mdx|txt)$/;
@@ -85,23 +87,15 @@ const SCRAPE =
 const SCRAPE_HOST =
   /(github\.com\/[^/\s"'`]+\/[^/\s"'`]+\/(releases|tags)\b(?!\/download)|kernel\.org\/(?!releases\.json)|android\.googlesource\.com)/;
 
-// French function words; three distinct ones on a line is French prose (English uses none of them as words).
-const FR_WORDS =
-  /\b(les|des|une|avec|pour|dans|sont|aucun|aucune|chaque|depuis|lorsque|sinon|être|où|déjà|très|sans|cette|ces|leur|leurs|puis|donc|selon|vers|chez|qui|que|est|et|du|au|aux|le|la|un|il|elle|nous|vous|pas|ne|ou|sur|par|mais|même|tout|tous|toutes)\b/gi;
 /** Locale catalogues are the only place a non-English string may live. */
 const LOCALE_FILE =
   /(^|\/)(locales?|messages|i18n|l10n|translations?)\/|(^|[./])(fr|fr-FR)\.(json|ftl|arb|po|xlf|xliff|properties|ts)$|\/values-fr\/|\.fr\.(md|mdx|html)$|(^|\/)(fr|es|ja|zh-CN|de|it|pt)\//;
-export const frenchLine = (l: string) => {
-  const seen = new Set((l.match(FR_WORDS) ?? []).map((w) => w.toLowerCase()));
-  return seen.size >= 3;
-};
-
 export const RULES: Rule[] = [
   {
-    id: "french-source",
-    why: "Source is English only; user-facing text goes through i18n message catalogues (Paraglide, @angular/localize, Fluent, ARB)",
+    id: "non-english",
+    why: "Source is English (the sourceLocale of packages/i18n/i18n.config.json); user-facing text goes through i18n catalogues and nothing else is written in another language (language detector: eld)",
     files: (f) => (CODE.test(f) || DOC.test(f)) && !LOCALE_FILE.test(f),
-    line: (l) => frenchLine(l),
+    line: (l, f) => isNonSourceProse(l, CODE.test(f), SOURCE_LANG),
   },
   {
     id: "sovereign",

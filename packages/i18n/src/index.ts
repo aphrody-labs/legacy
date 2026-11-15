@@ -1,11 +1,19 @@
-export * from "./icu.ts";
+export * from "./adapter.ts";
+export * from "./config.ts";
 export * from "./negotiate.ts";
 export * from "./i18n.ts";
-import en from "../locales/en.json" with { type: "json" };
-import es from "../locales/es.json" with { type: "json" };
-import fr from "../locales/fr.json" with { type: "json" };
-import ja from "../locales/ja.json" with { type: "json" };
-import zhCN from "../locales/zh-CN.json" with { type: "json" };
+export {
+  argNames,
+  formatMessage,
+  isRtl,
+  mf2Adapter,
+  MessageSyntaxError,
+  parseMessage,
+  pluralCategory,
+} from "./mf2.ts";
+import { loadCatalogsSync } from "./i18n.ts";
 
-/** Bundled catalogs; the same JSON files are read by src/i18n. */
-export const catalogs = { en, fr, "zh-CN": zhCN, ja, es } as const;
+/** Catalogs found in packages/i18n/locales at load time; the same JSON files are read by src/i18n. */
+export const catalogs: Readonly<
+  Record<string, Readonly<Record<string, string>>>
+> = loadCatalogsSync();

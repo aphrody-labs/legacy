@@ -1,6 +1,7 @@
-export const SOURCE_LOCALE = "en";
-export const LOCALES = ["en", "fr", "zh-CN", "ja", "es"] as const;
-export type Locale = (typeof LOCALES)[number];
+import { readConfig } from "./config.ts";
+
+/** Source locale of the project, from i18n.config.json (default en). */
+export const sourceLocale = (): string => readConfig().sourceLocale;
 
 /** Parse an Accept-Language header into tags ordered by q (stable for ties); q=0 entries are dropped. */
 export function parseAcceptLanguage(header: string): string[] {
@@ -18,26 +19,48 @@ export function parseAcceptLanguage(header: string): string[] {
     .map((e) => e.tag);
 }
 
-/** Closest supported locale for one requested tag: exact, then same language (zh-Hans-CN -> zh-CN). */
+function parse(tag: string): Intl.Locale | undefined {
+  try {
+    return new Intl.Locale(tag.replace(/_/g, "-").split(/[.@]/)[0]!);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Closest supported locale for one requested tag, in the order of the ECMA-402 lookup extended with
+ * likely subtags: exact, same language+script+region, same language+script, same language.
+ * (zh-Hans-CN matches zh-CN; zh-TW has no Hant catalog and falls back to the zh one.)
+ */
 export function matchLocale<T extends string>(
   tag: string,
   supported: readonly T[],
 ): T | undefined {
-  const norm = tag.replace(/_/g, "-").split(/[.@]/)[0]!.toLowerCase();
-  const exact = supported.find((s) => s.toLowerCase() === norm);
-  if (exact) return exact;
-  const base = norm.split("-")[0]!;
+  const want = parse(tag);
+  if (!want) return undefined;
+  const full = want.maximize();
+  const cands = supported.flatMap((s) => {
+    const l = parse(s);
+    return l ? [{ s, l, full: l.maximize() }] : [];
+  });
+  const exact = cands.find((c) => c.l.toString() === want.toString());
+  if (exact) return exact.s;
+  const byLang = cands.filter((c) => c.l.language === want.language);
   return (
-    supported.find((s) => s.toLowerCase() === base) ??
-    supported.find((s) => s.toLowerCase().split("-")[0] === base)
+    byLang.find(
+      (c) => c.full.script === full.script && c.full.region === full.region,
+    )?.s ??
+    byLang.find((c) => c.full.script === full.script)?.s ??
+    byLang.find((c) => !c.l.script && !c.l.region)?.s ??
+    byLang[0]?.s
   );
 }
 
-/** Pick a locale from an Accept-Language header; falls back to `fallback` (default en). */
-export function negotiate<T extends string = Locale>(
+/** Pick a supported locale from an Accept-Language header; falls back to `fallback`. */
+export function negotiate<T extends string>(
   acceptLanguage: string | null | undefined,
-  supported: readonly T[] = LOCALES as unknown as readonly T[],
-  fallback: T = SOURCE_LOCALE as unknown as T,
+  supported: readonly T[],
+  fallback: T,
 ): T {
   if (!acceptLanguage) return fallback;
   for (const tag of parseAcceptLanguage(acceptLanguage)) {

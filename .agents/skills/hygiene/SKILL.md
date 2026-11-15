@@ -18,6 +18,7 @@ One engine, `scripts/hygiene.ts`, three front ends: `just hygiene [--summary | -
 | `absolute-path` | `C:\src`, `C:/Users/...`, `/home/<user>`, `/srv/src` | repo root, `SRC_ROOT`, `os.homedir()` |
 | `hardcoded-list` | 8+ `owner/repo` slugs in one file | GitHub API listing or a manifest |
 | `home-scraper` | fetch or curl of release or tag pages, kernel.org, googlesource without an API | releases API, gitiles `?format=JSON`, kernel.org `releases.json`, Repology, nvchecker |
+| `non-english` | prose (comments, long strings, docs) detected as a language other than the project's source locale (`packages/i18n/i18n.config.json`, default en), outside locale catalogs; detector `eld` | translate to the source locale, route user-facing text through `ay i18n` catalogs |
 | `sovereign` | "Sovereign" or "Antigravity" wording | verify the claim against a real run, else delete |
 | `ai-filler` | AI-filler vocabulary in docs | rewrite with the humanizer skill |
 | `stub` | `TODO: implement`, fake output, demo-only in non-test code | implement or delete |
