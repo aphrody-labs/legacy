@@ -286,9 +286,11 @@ export function providerCmd(
   const m = (flag: string) => (model ? [flag, model] : []);
   switch (cli) {
     case "claude": {
-      // Prefer the NHITL headless launcher (plugins/aphrody-nhitl) when the checkout has it.
+      // Prefer the NHITL headless launcher (infra/agents/plugins/aphrody-nhitl) when the checkout has it.
       const nhitl = join(
         SRC,
+        "infra",
+        "agents",
         "plugins",
         "aphrody-nhitl",
         "bin",

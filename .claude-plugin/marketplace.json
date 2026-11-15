@@ -12,7 +12,7 @@
     },
     {
       "name": "aphrody-nhitl",
-      "source": "./plugins/aphrody-nhitl",
+      "source": "./infra/agents/plugins/aphrody-nhitl",
       "description": "No human in the loop hooks, status line and headless launcher (bun)."
     }
   ]

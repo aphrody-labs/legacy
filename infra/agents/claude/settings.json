@@ -12,7 +12,7 @@
   "skipDangerousModePermissionPrompt": true,
   "statusLine": {
     "type": "command",
-    "command": "bun {src}/plugins/aphrody-nhitl/src/statusline.ts"
+    "command": "bun {src}/infra/agents/plugins/aphrody-nhitl/src/statusline.ts"
   },
   "verbose": false,
   "fileCheckpointingEnabled": false,

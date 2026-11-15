@@ -609,7 +609,7 @@ export function scanHook(): Violation[] {
     category: k.startsWith("ask") ? "hook_confirm" : "hook_deny",
     severity: (k.startsWith("ask") ? "high" : "low") as Severity,
     excerpt: `${n} ${k} decision(s)`,
-    fix: "Review plugins/aphrody-nhitl/src/policy.ts: denials reserved for guardrails, never ask.",
+    fix: "Review infra/agents/plugins/aphrody-nhitl/src/policy.ts: denials reserved for guardrails, never ask.",
     status: "open" as Status,
   }));
 }

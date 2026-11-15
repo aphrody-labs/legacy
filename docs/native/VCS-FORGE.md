@@ -9,7 +9,7 @@ Canonical reference for repository identity, zero-PAT GitHub App authentication,
   - `aphrody` (`branch.main.remote = aphrody`): `https://github.com/aphrody-labs/aphrody.git`
   - `origin`: `https://github.com/aphrody-labs/aphrody.git` (compatibility alias for scripts expecting `origin`)
   - `all`: multi-push remote mirroring to GitHub (`aphrody-labs/aphrody`), GitLab (`aphrody-dev/src`), and Cloud Source Repositories.
-- **PreToolUse Hooks Disabled**: `.agents/hooks.json`, `~/.gemini/config/hooks.json`, and `plugins/aphrody-nhitl/hooks/hooks.json` run with zero `PreToolUse` interception so CLI and forge commands execute without per-command hook latency.
+- **PreToolUse Hooks Disabled**: `.agents/hooks.json`, `~/.gemini/config/hooks.json`, and `infra/agents/plugins/aphrody-nhitl/hooks/hooks.json` run with zero `PreToolUse` interception so CLI and forge commands execute without per-command hook latency.
 
 ## 2. NHITL GitHub App Authentication (`aphrody-labs`)
 

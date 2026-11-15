@@ -16,7 +16,7 @@ launcher can run Claude Code under WSL2 with the sandbox (see "OS boundary").
 | Status line      | `src/statusline.ts`    | `nhitl · mode · model · agents n[/total] · ctx %`, wired in `~/.claude/settings.json`.                                                                                                                                                                                                                                                                                                    |
 | Launcher         | `bin/claude-nhitl.ts`  | `claude -p` with `--permission-mode bypassPermissions --permission-prompts none --output-format stream-json --verbose`, `--session-id`/`--resume`/`--continue`, stream teed to `~/.claude/learning/runs/<sid>.jsonl`. As root, claude runs via `runuser -u $NHITL_RUN_AS` (default `agent`), never with `IS_SANDBOX`. `--help` for the runner contract. |
 
-Tests: `bun test ./test` here (`bun test plugins/aphrody-nhitl` from the root). Install: `claude plugin marketplace add C:/src` (root marketplace `.claude-plugin/marketplace.json`) then
+Tests: `bun test ./test` here (`bun test infra/agents/plugins/aphrody-nhitl` from the root). Install: `claude plugin marketplace add C:/src` (root marketplace `.claude-plugin/marketplace.json`) then
 `claude plugin install aphrody-nhitl@aphrody --scope user`; after edits bump `version` and run
 `claude plugin marketplace update aphrody && claude plugin update aphrody-nhitl@aphrody`.
 
