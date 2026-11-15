@@ -23,6 +23,14 @@ src is the public monorepo of Aphrody: a game engine and creative suite built in
 - The UI framework is free (examples: Dioxus + Blitz + Vello, GPUI, `taffy`, Ratatui, Bevy UI, WinUI 3, WebUI, fused in `src/ui`): the criteria are rendering quality, performance and function. Tokens come from `packages/design` and `src/ui` (`docs/design/DESIGN_SYSTEM.md`, `docs/ui/STACK.md`).
 - AI features live in `packages/ai-os`; providers and models are discovered at run time, none is hard-coded.
 - Publish in the open once a secret scan of the repository is clean (`docs/publish/STATUS.md`).
+- Every session and sub-agent uses the skills, MCP servers, CLIs and public upstream docs available, and explores the upstream GitHub repos in depth before acting. CLAUDE.md, memory, skills and docs may hold past hallucinations: verify each claim you rely on, and fix or delete it when it is wrong.
+- Nothing frozen in time: the repo changes every hour. Indexes, versions, counts, lists and dates are generated from live sources, never written by hand.
+
+## 3b. Quality bar (anything below it is slop)
+
+- Showcase sites speak to users, not developers: no jargon ("sovereign", "C ABI", "full Rust WebGPU"), no generic SVG icons. Pages have real background imagery, motion and real content: screenshots and renders of what exists, with links.
+- Docs are short and formatted, with a generated index, screenshots and links, and follow the GitHub templates (`.github` issue and PR templates, README layout). No long hand-written markdown.
+- Scripts and infra are short and declarative, built on upstream tools; no long hand-written scripts.
 
 ## 4. Limits that stay
 
