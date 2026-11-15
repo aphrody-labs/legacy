@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Push the generated cluster data plane to one member, validate, then reload (keeps services up).
-# Usage: infra/cluster/deploy.sh <member> [down]     (ssh alias = member name)
+# Usage: infra/cluster/deploy.sh <member> [down]     (ssh alias = `ssh` of [host.<member>] in infra/fleet/cluster.toml, else the member name)
 # Rollback (one line): infra/cluster/deploy.sh <member> down   -> HAProxy stopped, nginx shard conf removed.
 set -euo pipefail
 m=$1; here=$(cd "$(dirname "$0")" && pwd); g="$here/generated/$m"
-run() { timeout 120 ssh "$m" "sudo bash -s" ; }
+tgt=$(awk -v h="[host.$m]" '/^\[/{s=($0==h)} s&&/^ssh *=/{gsub(/[" ]/,"",$3);print $3}' "$here/../fleet/cluster.toml" 2>/dev/null); tgt=${tgt:-$m}
+run() { timeout 120 ssh "$tgt" "sudo bash -s" ; }
 if [ "${2:-}" = down ]; then
   run <<'R'
 systemctl disable --now aphrody-cluster-haproxy 2>/dev/null || true
@@ -17,7 +18,7 @@ R
 fi
 [ -f "$g/haproxy.cfg" ] || { echo "run: bun infra/cluster/gen.ts" >&2; exit 1; }
 tar -cf - -C "$g" haproxy.cfg nginx-cluster.conf aphrody-cluster.slice -C "$here/systemd" aphrody-cluster-haproxy.service nginx-restart.conf -C "$here/generated/ssh" aphrody-ssh-mesh ssh_config.host \
-  | timeout 120 ssh "$m" 'rm -rf /tmp/aphrody-cluster && mkdir -p /tmp/aphrody-cluster && tar -xf - -C /tmp/aphrody-cluster'
+  | timeout 120 ssh "$tgt" 'rm -rf /tmp/aphrody-cluster && mkdir -p /tmp/aphrody-cluster && tar -xf - -C /tmp/aphrody-cluster'
 run <<'R'
 set -euo pipefail
 s=/tmp/aphrody-cluster
@@ -33,7 +34,7 @@ if ! nginx -t -q; then
   if [ $had = 1 ]; then install -m 644 $s/prev.conf /etc/nginx/conf.d/aphrody-cluster.conf; else rm -f /etc/nginx/conf.d/aphrody-cluster.conf; fi
   echo "nginx -t failed: previous state restored" >&2; exit 1
 fi
-systemctl reload nginx
+systemctl reload nginx || nginx -s reload   # prd: the unit reload can fail with 226/NAMESPACE (private /tmp removed under a running nginx); HUP is the same graceful reload
 install -m 644 $s/haproxy.cfg /etc/aphrody-cluster/haproxy.cfg
 install -m 644 $s/aphrody-cluster.slice /etc/systemd/system/aphrody-cluster.slice
 install -m 644 $s/aphrody-cluster-haproxy.service /etc/systemd/system/aphrody-cluster-haproxy.service

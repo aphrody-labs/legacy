@@ -125,7 +125,7 @@ verify_gate = "wck check C:/src/apps/yolo"
 # -----------------------------------------------------------------------------
 # Live test targets (owner directive 2026-11-12). Tests tagged e2e:auth drive the
 # owner's logged-in Chrome over CDP (APHRODY_CDP_URL, profile dir in
-# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: packages/chromium-bun/test/targets.json.
+# APHRODY_CHROME_PROFILE); never store cookies or tokens. Mirror: apps/open/apps/open/packages/chromium-bun/test/targets.json.
 # Pure unit fixtures (URL parsing, rewriting) keep RFC 2606 example.* hosts: they must not touch the network.
 # -----------------------------------------------------------------------------
 [test_targets.gemini]
@@ -365,6 +365,20 @@ cache = "off"
 mode = "tcp"
 lb_port = 19022
 targets = { prd = "127.0.0.1:22" }
+# fr2 origins moved behind mig-prd (docs/infra/SINGLE-SERVER.md stage 3): single member fr2, tcp passthrough (HTTP bytes and the
+# bearer token reach the origin untouched), reachable from the connector replica of any member.
+[cluster.services.ssh-fr2]
+mode = "tcp"
+lb_port = 19023
+targets = { fr2 = "127.0.0.1:22" }
+[cluster.services.mcp-origin]
+mode = "tcp"
+lb_port = 19790
+targets = { fr2 = "127.0.0.1:8790" }
+[cluster.services.gnu]
+mode = "tcp"
+lb_port = 19080
+targets = { fr2 = "127.0.0.1:80" }
 [cluster.services.depot]
 lb_port = 19182
 targets = { prd = "10.200.77.5:8182" }
