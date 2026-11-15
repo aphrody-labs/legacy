@@ -82,8 +82,8 @@ main{grid-area:main;display:grid;grid-template-columns:1fr 400px 260px;gap:12px;
 .chips{display:flex;flex-wrap:wrap;gap:8px;padding:16px 12px 8px}
 .chip{height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--md-sys-color-outline-variant);background:none;color:var(--md-sys-color-on-surface-variant);font:500 14px var(--md-ref-typeface-plain);cursor:pointer}
 .chip.on{border-color:transparent;background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}
-.scroll{overflow:auto;flex:1}table{width:100%;border-collapse:collapse;font-size:13px}
-th{position:sticky;top:0;background:var(--md-sys-color-surface);text-align:left;font:500 11px var(--md-ref-typeface-plain);letter-spacing:.05em;text-transform:uppercase;color:var(--md-sys-color-on-surface-variant);padding:6px 8px;border-bottom:1px solid var(--md-sys-color-outline-variant)}
+.scroll{overflow:auto;flex:1;container-type:inline-size}thead{position:sticky;inset-block-start:0;z-index:1}table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--md-sys-color-surface);text-align:left;font:500 11px var(--md-ref-typeface-plain);letter-spacing:.05em;text-transform:uppercase;color:var(--md-sys-color-on-surface-variant);padding:6px 8px;border-bottom:1px solid var(--md-sys-color-outline-variant)}
 td{padding:6px 8px;white-space:nowrap}tr[data-name]{cursor:pointer}.m{color:var(--md-sys-color-on-surface-variant)}.p{color:var(--md-sys-color-primary)}
 .c{width:16px;color:transparent}tr.on{background:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container)}tr.on .c{color:var(--md-sys-color-primary)}tr.on .m{color:inherit}
 .foot{display:flex;justify-content:space-between;padding:8px 12px;border-top:1px solid var(--md-sys-color-outline-variant);color:var(--md-sys-color-on-surface-variant);font:12px var(--md-ref-typeface-code)}
@@ -106,6 +106,7 @@ kbd{padding:1px 6px;border:1px solid var(--md-sys-color-outline);border-radius:4
 .st>:last-child{padding-right:12px;color:var(--md-sys-color-on-surface-variant)}
 @media (max-width:1199px){main{grid-template-columns:1fr 360px}main>.pane:last-child{display:none}}
 @media (max-width:839px){body{grid-template:"bar" 64px "main" 1fr "st" 28px "rail" 80px/1fr}nav{flex-direction:row;justify-content:space-around;padding:6px 0 10px;border:0;background:var(--md-sys-color-surface-container)}nav>svg,.search,.btn,.st .hints,header code{display:none}main{grid-template-columns:1fr;padding:12px}main>.pane:nth-child(n+2){display:none}td:nth-child(2),td:nth-child(4),td:nth-child(6),th:nth-child(2),th:nth-child(4),th:nth-child(6){display:none}tr:not(.on) td:nth-child(3){color:inherit}}
+@container (width < 480px){td:nth-child(4),td:nth-child(6),th:nth-child(4),th:nth-child(6){display:none}}
 </style></head><body>
 <nav aria-label="Sections">${mark}${rail}</nav>
 <header><h1>open</h1><code>aphrody-labs/open</code>
@@ -113,7 +114,7 @@ kbd{padding:1px 6px;border:1px solid var(--md-sys-color-outline);border-radius:4
 <a class="btn" href="https://github.com/aphrody-labs/open">GitHub</a></header>
 <main>
 <section class="pane"><h2>repos ${lock.length}</h2><div class="chips">${chips}</div>
-<div class="scroll"><table><thead><tr><th></th><th>name</th><th>path</th><th>lang</th><th>rev</th><th>license</th></tr></thead><tbody id="rows">${rows}</tbody></table></div>
+<div class="scroll" tabindex="0" role="region" aria-labelledby="cap"><table><caption id="cap" hidden> repositories of aphrody-labs/open</caption><thead><tr><th></th><th>name</th><th>path</th><th>lang</th><th>rev</th><th>license</th></tr></thead><tbody id="rows">${rows}</tbody></table></div>
 <div class="foot"><span id="count">${lock.length} of ${lock.length}</span><a class="m" href="/open.lock.json">open.lock.json</a></div></section>
 <section class="pane"><h2 id="dt">${esc(selected.name)}</h2><div class="detail" id="detail"></div>
 <div class="cl"><b>&gt;</b><span id="cl">${esc(selected.path)}</span></div></section>
