@@ -11,6 +11,26 @@ everything here; only crates below it name `bun_pod`.
 
 # Implementing the traits
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
+
+> No description in the manifest.
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/pod` |
+
+**Commands**
+
+```sh
+cargo test -p bun_pod
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 `impl_no_uninit!`, `impl_any_bit_pattern!`, `impl_pod!` and `impl_zeroable!` are
 safe. rustc's own layout analysis (`core::mem::TransmuteFrom`) proves the promise
 for the type's real layout on the target being compiled, so a field that

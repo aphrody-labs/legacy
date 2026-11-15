@@ -1,5 +1,28 @@
 # auto
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/app.svg" alt="App" width="40" height="40" align="right">
+
+| Type | Path |
+| :-- | :-- |
+| App | `apps/auto` |
+
+**Commands**
+
+```sh
+bun run --cwd apps/auto dev
+bun run --cwd apps/auto migrate
+bun run --cwd apps/auto worker
+bun run --cwd apps/auto openapi
+bun run --cwd apps/auto test
+bun run --cwd apps/auto check
+bun run --cwd apps/auto lint
+bun run --cwd apps/auto fmt
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- catalog:end -->
+
 Multi-tenant automation platform for freelancers and small businesses: n8n-style visual workflows (triggers on events, cron or webhooks; HTTP, web, RSS, spreadsheets, Slack, Discord, Telegram, mail, AI models, data actions), with business management built in as an event source: e-invoicing, purchasing, mail, employees, office documents, AI agents. A single `/v1` API, several surfaces: web app, desktop app, mobile app, CLI, MCP server, Claude Code plugin and Chrome extension.
 
 User-facing text is English at the source and translated through the catalogs of `packages/i18n` (Unicode MessageFormat 2); locales are whatever catalogs are present, and the source locale comes from `packages/i18n/locales/config.json`. French legal and fiscal terms (Factur-X, SIRET, TVA, FEC, URSSAF) stay as data. Many docs, file names and code identifiers are still French (see [docs/I18N.md](docs/I18N.md)).

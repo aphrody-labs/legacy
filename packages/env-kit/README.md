@@ -1,5 +1,28 @@
 # `@aphrody/env-kit` — Monorepo Environment & Secret Architecture
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
+
+> Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/src
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/env-kit` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/env-kit check
+bun run --cwd packages/env-kit fmt
+bun run --cwd packages/env-kit fmt:check
+bun run --cwd packages/env-kit test
+bun run --cwd packages/env-kit doctor
+bun run --cwd packages/env-kit accounts
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Zero-dependency cross-language environment loader, secret redaction guard, and unified editor/CLI credential synchronizer for `C:\src`.
 
 ## Security Model

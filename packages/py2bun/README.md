@@ -1,5 +1,23 @@
 # py2bun
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
+
+> Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun)
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/py2bun` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/py2bun test
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Python 3 to Bun TypeScript transpiler, built for Ghidra (PyGhidra) scripts.
 
 - Rust crate: `src/py2bun` (standalone workspace, parser `ruff_python_parser` 0.0.22 from crates.io).

@@ -1,5 +1,28 @@
 # packages/machine/ — poste Windows reproductible, du noyau à Claude Code
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
+
+> Reproducible Windows workstation: WinGet DSC v3 (niubash, Coreutils), Claude Code shell/MCP setup, aphrody-labs forks, flat third_party
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/machine` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/machine check
+bun run --cwd packages/machine apply
+bun run --cwd packages/machine flatten
+bun run --cwd packages/machine shells
+bun run --cwd packages/machine shells:check
+bun run --cwd packages/machine binpath
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Décisions et preuves : [aphrody-labs/nt docs/research](https://github.com/aphrody-labs/nt/tree/main/docs/research) (`shell-replacement.md`, `claude-to-nt-stack.md`, `fork-merge-plan.md`, `rust-in-windows.md`). Profil matériel : skill `windows-machine`.
 
 ## Ordre d'application

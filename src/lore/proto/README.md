@@ -1,5 +1,25 @@
 # Lore Protos
 
+<!-- catalog:begin unit -->
+<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
+
+> Lore version control: lore-proto (absorbed from Epic Games Lore, MIT)
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/lore/proto` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-lore-proto
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 ## Description
 
 This crate contains the proto files and the build code to generate and expose a crate, using `prost` and `tonic`.

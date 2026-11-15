@@ -1,0 +1,19 @@
+{
+  "catalog": "Catalog",
+  "catalog_intro": "The global types of the monorepo, listed from its manifests.",
+  "name": "Name",
+  "description": "Description",
+  "type": "Type",
+  "path": "Path",
+  "commands": "Commands",
+  "entries": "Entries",
+  "no_description": "No description in the manifest.",
+  "remote_build": "Rust builds run on the build host or in CI, not on a workstation.",
+  "part_of": "Part of {$name}",
+  "projects": "Projects",
+  "project": "Project",
+  "language": "Language",
+  "stars": "Stars",
+  "ci": "CI",
+  "profile_source": "This page is generated from the GitHub API by [scripts/catalog.ts]({$url}); projects are ranked by stars, recent pushes and CI status, archived repositories are left out."
+}

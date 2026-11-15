@@ -1,5 +1,25 @@
 # `archguard` (`C:\src\tools\archguard`)
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
+
+> Monorepo architecture, domain-purity, boundary and hygiene gate (library behind `ay arch`)
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/archguard` |
+
+**Commands**
+
+```sh
+cargo test -p archguard
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 Deterministic, zero-compromise Rust Edition 2024 architectural gate, domain-purity auditor, upstream hygiene enforcer, and dependency graph engine for the `C:\src` Sovereign Monorepo.
 
 Built with Rayon parallel scanning, Blake3 deterministic report hashing (`report_blake3`), Fat-LTO (`lto = "fat"`), `codegen-units = 1`, and `panic = "abort"`.

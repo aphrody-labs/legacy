@@ -1,5 +1,24 @@
 # @aphrody/omniu
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
+
+> oh-my-niu for Bun: plugin bundle as data, validator, packager and scaffolder, and the host that loads the ay plugin into both Bun and niu
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/omniu` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/omniu test
+bun run --cwd packages/omniu validate
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 oh-my-niu (the niu plugin bundle, from unixwin/oh-my-niu) as Bun-native data and tools, plus the host that loads one plugin surface into both Bun and niu. Fusion plan: `docs/native/UNIXWIN.md`.
 
 - Bundle data: `plugins/`, `packs/`, `lib/`, `aliases/`, `completions/`, `prompts/`, `keybindings/`, `themes/`, `envs/`, `templates/`, `docs/`, `bundle.toml`, `index.toml`. The inventory of `plugins/` is `framework-plugins.toml`.

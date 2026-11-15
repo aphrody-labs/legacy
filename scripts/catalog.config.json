@@ -1,0 +1,23 @@
+{
+  "profiles": [
+    {
+      "id": "aphrody-labs",
+      "kind": "org",
+      "org": "aphrody-labs",
+      "repo": "aphrody-labs/.github",
+      "file": "profile/README.md",
+      "sources": ["aphrody-labs"],
+      "top": 8
+    },
+    {
+      "id": "aphrody-dev",
+      "kind": "user",
+      "org": "aphrody-dev",
+      "repo": "aphrody-dev/aphrody-dev",
+      "file": "README.md",
+      "sources": ["aphrody-dev", "aphrody-labs"],
+      "top": 8
+    }
+  ],
+  "ranking": { "starWeight": 10, "recentDays": 30, "recentWeight": 5, "ciPassWeight": 3, "includeForks": false }
+}

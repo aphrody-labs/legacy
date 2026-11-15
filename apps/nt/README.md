@@ -1,5 +1,15 @@
 # nt
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/app.svg" alt="App" width="40" height="40" align="right">
+
+| Type | Path |
+| :-- | :-- |
+| App | `apps/nt` |
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- catalog:end -->
+
 Model of the **real** Windows NT of this machine, live and rendered entirely by the GPU, on the Microsoft stack.
 Architecture and decisions: [docs/plan/architecture-microsoft.md](docs/plan/architecture-microsoft.md).
 

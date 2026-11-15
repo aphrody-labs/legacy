@@ -1,0 +1,19 @@
+{
+  "catalog": "Catalogue",
+  "catalog_intro": "Les types globaux du monorepo, listes depuis ses manifestes.",
+  "name": "Nom",
+  "description": "Description",
+  "type": "Type",
+  "path": "Chemin",
+  "commands": "Commandes",
+  "entries": "Entrees",
+  "no_description": "Pas de description dans le manifeste.",
+  "remote_build": "Les builds Rust tournent sur l'hote de build ou en CI, pas sur un poste de travail.",
+  "part_of": "Partie de {$name}",
+  "projects": "Projets",
+  "project": "Projet",
+  "language": "Langage",
+  "stars": "Etoiles",
+  "ci": "CI",
+  "profile_source": "Cette page est generee depuis l'API GitHub par [scripts/catalog.ts]({$url}) ; les projets sont classes par etoiles, pushes recents et statut CI, les depots archives sont exclus."
+}

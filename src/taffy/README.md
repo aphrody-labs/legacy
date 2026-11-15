@@ -1,3 +1,23 @@
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
+
+> First-party Layer-0 UI, Wayland, terminal, and compositing layout engine (absorbed DioxusLabs/taffy)
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/taffy` |
+
+**Commands**
+
+```sh
+cargo test -p taffy
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 <!-- markdownlint-disable-next-line MD041 -->
 <p>
 <picture>

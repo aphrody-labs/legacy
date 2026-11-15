@@ -1,0 +1,30 @@
+name: profiles
+
+# The GitHub profile READMEs (scripts/catalog.config.json) regenerate themselves on a schedule in their own
+# repositories; when the logo or the organisations change here, run them at once.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/logo/**"
+      - "packages/design/brand/brand.toml"
+      - "scripts/catalog.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Run the readme workflow of every profile repository
+        env:
+          # A token that may run workflows in the profile repositories (this repository's GITHUB_TOKEN cannot).
+          GH_TOKEN: ${{ secrets.PROFILES_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "PROFILES_TOKEN is not set: the profiles refresh on their schedule"; exit 0; fi
+          for repo in $(jq -r '.profiles[].repo' scripts/catalog.config.json); do
+            gh workflow run readme.yml --repo "$repo"
+          done

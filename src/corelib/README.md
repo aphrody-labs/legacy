@@ -1,5 +1,25 @@
 # corelib (`aphrody-corelib`)
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
+
+> Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets and Boq wire format
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/corelib` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-corelib
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 Unified sovereign core library consolidating GPU, RE (Reverse Engineering), Emulation, and WASM surfaces for **Shenron** (`apps/shenron`) and **RoseGriffon** (`apps/rosegriffon`).
 
 ---

@@ -1,41 +1,40 @@
+<!-- catalog:begin header -->
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/logo-with-wordmark-dark.svg">
-  <img alt="Aphrody Labs" src="docs/logo/logo-with-wordmark-light.svg" height="56">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/logo/aphrody-labs-wordmark-dark.svg">
+  <img alt="Aphrody" src="docs/logo/aphrody-labs-wordmark-light.svg" height="56">
 </picture>
 
-<img alt="license: MIT OR Apache-2.0" src="docs/badges/license.svg"> <img alt="rust toolchain" src="docs/badges/rust.svg"> <img alt="runtime: bun" src="docs/badges/bun.svg"> <img alt="workflow: main only" src="docs/badges/main-only.svg">
-
-Brand, tokens and icons: [packages/design/brand](packages/design/brand) (`ay brand build`, design system in [packages/design](packages/design/DESIGN.md)).
+<img alt="license" src="docs/badges/license.svg"> <img alt="rust" src="docs/badges/rust.svg"> <img alt="runtime" src="docs/badges/bun.svg"> <img alt="workflow" src="docs/badges/main-only.svg">
+<!-- catalog:end -->
 
 # src
 
-Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Master plan: [docs/PLAN.mdx](docs/PLAN.mdx).
+Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Master plan: [docs/PLAN.mdx](docs/PLAN.mdx). Brand sources and design tokens: [packages/design](packages/design/DESIGN.md) and [packages/design/brand](packages/design/brand); generated logos and icons: [docs/logo](docs/logo) and [docs/icons](docs/icons) (`ay brand build`).
 
 ## Stack Overview
 
 - **Pure C23 LLVM ABI Core**: [src/core/capi](src/core/capi) (`aphrody_core.h` exporting `core_*` and unified `ai_os_*`, `aphrody_zig.h`, `aphrody_mwg.h`) compiled with `clang` ThinLTO and `-Wall -Wextra -Wpedantic -Werror`. See [docs/native/llvm/PURE-C-LLVM.mdx](docs/native/llvm/PURE-C-LLVM.mdx).
 - **Agent OS (`@aphrody/ai-os`)**: cross-platform sandboxed Unix/GNU-like OS distribution for agents unifying FHS VFS (`/etc/ai-os`, `/var/lib/ai-os`, `/proc/agent`, `/dev/{llm,rag,world,sys1}`), LLM, RAG, World Model, and System 1 decision under one C ABI (`aphrody_core_capi`).
 - **Bun Runtime**: pure Bun TypeScript packages with zero third-party npm dependencies (`bun:ffi`, `bun:sqlite`, `Bun.Glob`, `Bun.serve`).
-- **Rust 2024 Workspace**: 215 crates in `src/*` (edition 2024, rust-version 1.85, 419 workspace dependencies), 130 of them absorbed from Bun.
+- **Rust Workspace**: first-party crates and crates absorbed from Bun in `src/*`, members listed in [`Cargo.toml`](Cargo.toml).
 - **Zig Native Cores**: `third_party/native` (vercel-labs/native, bound by `packages/native`) and browser cores exporting stable C ABI symbols via `aphrody_zig.h`.
 - **Modern Web Guidance (`@aphrody/wck`)**: pure Bun + `mwg_capi` (`packages/wck/native`) hybrid RAG search, Baseline gates, and MCP tools. See [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx).
 - **`ay` Multicall CLI**: unified repository interface (`ay arch check --strict`, `ay manifests`, `ay gaming`, `ay steam`).
 
-## Layout
+<!-- catalog:begin types -->
+## Catalog
 
-| Directory | Count / Content |
-| :--- | :--- |
-| [`apps/`](apps) | 7 apps: `.claude`, `aphrody`, `auto`, `C`, `nt`, `rosegriffon` (submodule), `shenron` (submodule) |
-| [`packages/`](packages) | 22 Bun `@aphrody/*` packages: `ai-os`, `assets`, `browser`, `bunify`, `core`, `deploy`, `design`, `env-kit`, `ffi-bridge`, `gaming`, `gcp`, `ghidra`, `gnu`, `i18n`, `machine`, `native`, `net`, `py2bun`, `release`, `upstream`, `vault`, `wck` |
-| [`src/`](src) | 215 Rust 2024 crates (130 from Bun) next to the C core |
-| [`infra/`](infra) | Fleet, Docker, Cloudflare, and Chromium factory configuration |
-| [`third_party/`](third_party) | Pinned upstream checkouts and forks in `src.lock.json` (`DEPS`, `.gitmodules`) |
-| [`docs/`](docs) | Architecture MDX plans, LLVM/C ABI docs, Modern Web Guidance, and generated [`docs/reference/`](docs/reference) |
+The global types of the monorepo, listed from its manifests.
 
-## Live Graph and Index
-
-- SQLite index (`var/index/core.db`): 8000 files, 164631 symbols, 62394 imports, 1181320 call refs.
-- Code graph (`graphify-out/GRAPH_REPORT.md`): 695105 nodes, 1371565 edges, 25459 communities.
+| Type | Path | Description |
+| :-- | :-- | :-- |
+| <img src="docs/icons/crate.svg" alt="" width="24" height="24"> [Rust crate](docs/reference/catalog/crate.md) | `src/` | A member of the Cargo workspace (src/*) |
+| <img src="docs/icons/package.svg" alt="" width="24" height="24"> [Bun package](docs/reference/catalog/package.md) | `packages/` | A Bun workspace package (@aphrody/*) |
+| <img src="docs/icons/app.svg" alt="" width="24" height="24"> [App](docs/reference/catalog/app.md) | `apps/` | An application or site (apps/*) |
+| <img src="docs/icons/infra.svg" alt="" width="24" height="24"> [Infrastructure](docs/reference/catalog/infra.md) | `infra/` | Fleet, deploy and CI configuration (infra/*) |
+| <img src="docs/icons/third-party.svg" alt="" width="24" height="24"> [Upstream](docs/reference/catalog/third-party.md) | `third_party/` | An upstream checkout or fork pinned in src.lock.json (third_party/*) |
+| <img src="docs/icons/skill.svg" alt="" width="24" height="24"> [Agent skill](docs/reference/catalog/skill.md) | `.agents/skills/` | A skill of .agents/skills |
+<!-- catalog:end -->
 
 ## Commands
 
@@ -45,7 +44,9 @@ Rust compiles in CI or on the build host (`fr1`), never on the workstation.
 just doctor                            # toolchain doctor
 just arch-check                        # architecture gate (ay arch check --strict)
 bun scripts/checkdeps.ts               # Chromium-style DEPS.rules layer gate
-bun packages/core/src/cli.ts gen-docs  # regenerate README.md, MDX plans, and docs/reference/*.md
+bun scripts/catalog.ts                 # regenerate the READMEs, docs/reference/catalog and the site catalog from the manifests
+bun scripts/catalog.ts --check         # the same as a CI gate
+bun packages/core/src/cli.ts gen-docs  # regenerate the MDX plans and docs/reference/*.md
 bun packages/core/src/cli.ts search <q> # fuzzy symbol and doc search
 bun test packages/wck                  # @aphrody/wck Modern Web Guidance suite
 ```
@@ -59,3 +60,4 @@ bun test packages/wck                  # @aphrody/wck Modern Web Guidance suite
 | Modern Web Guidance & RAG | [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx) |
 | Reference Pillars | [docs/reference/tree-sitter.md](docs/reference/tree-sitter.md), [docs/reference/llvm-toolchain.md](docs/reference/llvm-toolchain.md), [docs/reference/bun-ffi.md](docs/reference/bun-ffi.md) |
 | Games & Creative Suite Plan | [docs/games/PLAN.md](docs/games/PLAN.md) |
+| Repository layout | [docs/project/layout.md](docs/project/layout.md) |

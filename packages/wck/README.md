@@ -1,5 +1,26 @@
 # `@aphrody/wck`
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
+
+> Compile-Time Web Validator (Google SEO + AI Mode SEO + Modern Web Guidelines + Core Web Vitals + Lighthouse 100 + WASM + WebGPU Chromium Spec)
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/wck` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/wck build
+bun run --cwd packages/wck test
+bun run --cwd packages/wck check
+bun run --cwd packages/wck fmt
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Compile-Time Web Validator and Modern Web Guidance (MWG) RAG engine for the `src` monorepo.
 100% pure Bun (`zero` external npm dependencies) paired with a Pure C23 LLVM native core (`src/core/capi/c/mwg_core.c` -> `native/mwg_capi.dll`) via `bun:ffi`.
 

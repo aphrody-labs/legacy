@@ -1,5 +1,25 @@
 # @aphrody/ai-os
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
+
+> Aphrody AI OS: Unix/GNU-like agent OS distribution unifying LLM, RAG, World Model, and System 1 decision under one C ABI (aphrody_core_capi)
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/ai-os` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/ai-os test
+bun run --cwd packages/ai-os check
+bun run --cwd packages/ai-os relay
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Cross-platform sandboxed Unix/GNU-like operating system distribution for autonomous agents, unifying POSIX/FHS VFS, LLM runtime discovery, hybrid RAG, causal World Model, and sub-millisecond System 1 decision routing behind **one single C ABI** (`ai_os_*` in [src/core/capi](../../src/core/capi), header [aphrody_core.h](../../src/core/capi/include/aphrody_core.h)).
 
 `@aphrody/ai-os` is an agent kernel and runtime distribution, not a TUI, package manager, or cron wrapper (those belong to host agent harnesses such as `agy`, Claude Code, and OpenCode). Zero third-party npm dependencies (`bun:ffi`, `bun:sqlite`, `Bun.serve`, `Bun.listen`, `Bun.spawn`, `fetch`).

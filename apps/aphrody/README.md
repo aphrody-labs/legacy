@@ -1,5 +1,15 @@
 # Aphrody (`apps/aphrody`)
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/app.svg" alt="App" width="40" height="40" align="right">
+
+| Type | Path |
+| :-- | :-- |
+| App | `apps/aphrody` |
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- catalog:end -->
+
 Merged static SEO and brand assets distribution for `aphrody.com` and `aphrody.app`.
 All application source code, servers, bundlers, and workers have been purged; UI design tokens live in `packages/design` and native runtimes in `crates/*`.
 

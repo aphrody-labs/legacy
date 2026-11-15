@@ -1,5 +1,23 @@
 # @aphrody/ghidra (`bun-ghidra`)
 
+<!-- catalog:begin unit -->
+<img src="../../docs/icons/package.svg" alt="Bun package" width="40" height="40" align="right">
+
+> Ghidra API for Bun (pyghidra parity), Bun plugin and native onBeforeParse plugin
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/ghidra` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/ghidra test
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Ghidra for Bun: the pyghidra API surface, a Bun plugin (`?ghidra`, `ghidra:`), a script context for translated GhidraScripts, and a native `onBeforeParse` plugin (Rust, `src/ghidra-bun`). Bun only, no npm dependency.
 
 - Full API: a headless Ghidra JVM (official release) driven through `bridge/Bridge.java` (reflection JSON-RPC over stdio). Any Ghidra class/method is reachable by name; every call is `async`.

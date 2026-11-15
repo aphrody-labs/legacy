@@ -1,0 +1,46 @@
+name: catalog
+
+# The READMEs, docs/reference/catalog and the site catalog are generated from the manifests of the monorepo
+# (scripts/catalog.ts); this gate fails when a manifest changed and the outputs did not.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.toml"
+      - "package.json"
+      - "src.lock.json"
+      - "src/**/Cargo.toml"
+      - "packages/*/package.json"
+      - "apps/*/package.json"
+      - ".agents/skills/*/SKILL.md"
+      - "packages/design/brand/brand.toml"
+      - "packages/i18n/catalogs/catalog/**"
+      - "docs/icons/**"
+      - "docs/logo/**"
+      - "scripts/catalog.*"
+  pull_request:
+    paths:
+      - "Cargo.toml"
+      - "package.json"
+      - "src.lock.json"
+      - "src/**/Cargo.toml"
+      - "packages/*/package.json"
+      - "apps/*/package.json"
+      - ".agents/skills/*/SKILL.md"
+      - "packages/design/brand/brand.toml"
+      - "packages/i18n/catalogs/catalog/**"
+      - "docs/icons/**"
+      - "docs/logo/**"
+      - "scripts/catalog.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - run: bun scripts/catalog.ts --check

@@ -2,6 +2,27 @@ The client is still an early draft so the readme is basic and to the point becau
 
 # Example Commands
 
+<!-- catalog:begin unit -->
+<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
+
+> Lore version control: lore-chaos-client (absorbed from Epic Games Lore, MIT)
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/lore/chaos-client` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-lore-chaos-client
+cargo run -p aphrody-lore-chaos-client --bin lore_chaos_client
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 ```
 // Create a fresh copy of an empty repo for the client to use before every command
 lore clone <repository url>/<repository>
