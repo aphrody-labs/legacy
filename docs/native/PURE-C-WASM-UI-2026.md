@@ -66,7 +66,7 @@ Every visual token in the monorepo originates from [design.toml](file:///C:/src/
 
 ```mermaid
 flowchart LR
-  Brand["packages/design/design.toml (#135B82 vibrant)"] --> Build["packages/design/src/build.ts (MCU 0.4.0)"]
+  Seed["packages/design/design.toml (#135B82 vibrant)"] --> Build["packages/design/src/build.ts (MCU 0.4.0)"]
   Build --> JSON["tokens/tokens.json (6 modes x 49 roles)"]
   JSON --> CSS["tokens/tokens.css (--md-sys-*)"]
   JSON --> CHeader["adapters/tokens.h + ndk_theme.h + src/include/uapi/ay/ui.h"]

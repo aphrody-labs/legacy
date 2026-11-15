@@ -393,7 +393,7 @@ const specs: Spec[] = [
     hosts: ["fr1"],
     source: "distro",
     pkg: "libharfbuzz-bin",
-    why: "hb-subset/hb-shape: Latin and Material Symbols font subsets (ay brand build)",
+    why: "hb-subset/hb-shape: Latin and Material Symbols font subsets",
   },
   {
     name: "woff2",
@@ -401,7 +401,7 @@ const specs: Spec[] = [
     hosts: ["fr1"],
     source: "distro",
     pkg: "woff2",
-    why: "woff2_compress (ay brand build)",
+    why: "woff2_compress",
   },
   {
     name: "libavif",
@@ -409,7 +409,7 @@ const specs: Spec[] = [
     hosts: ["fr1"],
     source: "distro",
     pkg: "libavif-bin",
-    why: "avifenc (ay brand build)",
+    why: "avifenc",
   },
   {
     name: "libwebp",
@@ -417,7 +417,7 @@ const specs: Spec[] = [
     hosts: ["fr1"],
     source: "distro",
     pkg: "webp",
-    why: "cwebp (ay brand build)",
+    why: "cwebp",
   },
   {
     name: "ffmpeg",
@@ -433,7 +433,7 @@ const specs: Spec[] = [
     hosts: ["fr1"],
     source: "distro",
     pkg: "binaryen",
-    why: "wasm-opt of gen/gpu/brand-gpu.wasm (ay brand build)",
+    why: "wasm-opt",
   },
   {
     name: "ktx-software",
@@ -442,7 +442,7 @@ const specs: Spec[] = [
     source: "github",
     repo: "KhronosGroup/KTX-Software",
     tag: "v{version}",
-    why: "ktx create: KTX2 UASTC/zstd textures and HDR environment (ay brand build)",
+    why: "ktx create: KTX2 UASTC/zstd textures and HDR environment",
     assets: { "linux-x86_64": "KTX-Software-{version}-Linux-x86_64.deb" },
   },
   {
