@@ -76,6 +76,9 @@ axoupdater = { workspace = true, features = ["blocking"] }
 # The benchmark suite measures Win32 APIs; `ay bench` reports unsupported elsewhere.
 [target.'cfg(windows)'.dependencies]
 stack-bench.workspace = true
+# `ay applet`: the WinuxCmd Rust applets (src/winux), Win32 implementations, linked on Windows only.
+winux-cmds = { version = "0.1.0", path = "../winux/cmds" }
+winux-core = { version = "0.1.0", path = "../winux/core" }
 
 # Brand icon and version resource of ay.exe (build.rs, ay.ico from assets/brand).
 [build-dependencies]

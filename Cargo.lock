@@ -459,6 +459,8 @@ dependencies = [
  "ureq",
  "uuid",
  "winresource",
+ "winux-cmds",
+ "winux-core",
  "xtk",
 ]
 
@@ -21577,6 +21579,22 @@ dependencies = [
  "toml 1.2.1+spec-1.1.0",
  "version_check",
 ]
+
+[[package]]
+name = "winux-cmds"
+version = "0.1.0"
+dependencies = [
+ "winux-core",
+ "winux-regex",
+]
+
+[[package]]
+name = "winux-core"
+version = "0.1.0"
+
+[[package]]
+name = "winux-regex"
+version = "0.1.0"
 
 [[package]]
 name = "wit-bindgen"

@@ -1,0 +1,15 @@
+[package]
+name = "winux-regex"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["unixwin team"]
+
+[dependencies]
+
+[features]
+default = ["fast-path"]
+# Compile-time literal pre-filters (anchored / prefix / first-byte /
+# pure-literal; see src/fastpath.rs, WinuxCmd #1531). Turn off for A/B
+# diffing against the pure interpreter — results must stay byte-identical.
+fast-path = []
