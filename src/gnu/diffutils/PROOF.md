@@ -13,6 +13,8 @@ Mesuré le 2026-11-14 sur fr1 (vps-203bea89, Ubuntu 26.10, Rust 1.99.1) : ces pa
 | durée | 14 s |
 | hôte de build et de test | fr1 |
 
+Performance (hyperfine, 5 mesures, fr2 ; binaires GNU de la distro, Rust en release du fork) : `diff` de deux fichiers de 67 Mo (un million de lignes, presque toutes différentes : fox remplacé par cat) : GNU diff 3.12 570,2 ± 42,9 ms, uutils diffutils 90,3 ± 2,8 s (près de 160 fois plus lent).
+
 Échecs : empty-file, expand-tabs, ifdef, invalid-re, ignore-case, ignore-matching-lines, ignore-tab-expansion, no-newline-at-eof, side-by-side, side-by-side-seq, strip-trailing-cr.
 
 Ignorés : brief-vs-stat-zero-kernel-lies, diff3, help-version (le harnais saute les commandes absentes : diff3, sdiff).

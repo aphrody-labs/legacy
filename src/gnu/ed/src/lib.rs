@@ -5,7 +5,7 @@
 
 use gnu_posix_re::{self as re, Regex};
 use std::collections::VecDeque;
-use std::io::{BufRead, Write};
+use std::io::{BufRead, IsTerminal, Write};
 
 type R<T> = Result<T, String>;
 type Line = (u64, String);
@@ -59,6 +59,8 @@ struct Ed<'a> {
     re: Option<Regex>,
     rep: String,
     shell: String,
+    /// stdin ended inside a command or in input mode: behaves as `q` (status 2)
+    eof_cut: bool,
     ere: bool,
     marks: [u64; 26],
     undo: Option<(Vec<Line>, usize)>,
@@ -89,9 +91,11 @@ impl Ed<'_> {
         match self.input.read_until(b'\n', &mut b) {
             Ok(0) | Err(_) => None,
             Ok(_) => {
-                if b.last() == Some(&b'\n') {
-                    b.pop();
+                if b.last() != Some(&b'\n') {
+                    self.eof_cut = true;
+                    return None;
                 }
+                b.pop();
                 Some(lossy(&b))
             }
         }
@@ -118,11 +122,15 @@ impl Ed<'_> {
 
     fn text(&mut self) -> Vec<String> {
         let mut v = Vec::new();
-        while let Some(l) = self.line() {
-            if l == "." {
-                break;
+        loop {
+            match self.line() {
+                Some(l) if l == "." => break,
+                Some(l) => v.push(l),
+                None => {
+                    self.eof_cut = !self.in_g;
+                    break;
+                }
             }
-            v.push(l);
         }
         v
     }
@@ -250,17 +258,14 @@ impl Ed<'_> {
     }
 
     fn suffix(c: &mut Cur) -> R<Option<char>> {
-        let mut f = None;
-        loop {
-            match c.peek() {
-                Some(x @ ('p' | 'n' | 'l')) => {
-                    f = Some(x);
-                    c.i += 1;
-                }
-                None => return Ok(f),
-                _ => return Err("Invalid command suffix".into()),
+        let f = match c.peek() {
+            Some(x @ ('p' | 'n' | 'l')) => {
+                c.i += 1;
+                Some(x)
             }
-        }
+            _ => None,
+        };
+        if c.peek().is_some() { Err("Invalid command suffix".into()) } else { Ok(f) }
     }
 
     fn print(&mut self, a1: usize, a2: usize, mode: char) {
@@ -318,6 +323,9 @@ impl Ed<'_> {
     }
 
     fn fname(&mut self, c: &mut Cur) -> R<String> {
+        if !matches!(c.peek(), None | Some(' ' | '\t' | '!')) {
+            return Err("Unexpected command suffix".into());
+        }
         c.ws();
         let r = c.rest();
         let r = r.trim_end().to_owned();
@@ -373,6 +381,9 @@ impl Ed<'_> {
                 Some(x) if x.is_ascii_digit() => nth = c.num().filter(|n| *n > 0).ok_or("Invalid command suffix")?,
                 _ => break,
             }
+        }
+        if g && nth != 1 {
+            return Err("Invalid command suffix".into());
         }
         let f = Self::suffix(c)?;
         let (was_dirty, was_undo) = (self.dirty, self.undo.clone());
@@ -504,6 +515,9 @@ impl Ed<'_> {
                 let t = self.text();
                 self.snap();
                 let at = if k == 'a' { a2 } else { a2.saturating_sub(1) };
+                if t.is_empty() && k == 'a' {
+                    self.cur = at;
+                }
                 self.insert_at(at, t);
             }
             Some('c') => {
@@ -632,6 +646,9 @@ impl Ed<'_> {
             }
             Some('f') => {
                 none_ok(n)?;
+                if !matches!(c.peek(), None | Some(' ' | '\t')) {
+                    return Err("Unexpected command suffix".into());
+                }
                 c.ws();
                 let r = c.rest();
                 if !r.trim().is_empty() {
@@ -650,18 +667,26 @@ impl Ed<'_> {
                 self.dirty = true;
             }
             Some('h') => {
+                none_ok(n)?;
                 let _ = writeln!(self.out, "{}", self.err);
             }
             Some('H') => {
+                none_ok(n)?;
                 self.explain = !self.explain;
                 if self.explain && !self.err.is_empty() {
                     let _ = writeln!(self.out, "{}", self.err);
                 }
             }
-            Some('P') => self.show_prompt = !self.show_prompt,
+            Some('P') => {
+                none_ok(n)?;
+                self.show_prompt = !self.show_prompt;
+            }
             Some('!') => {
                 let mut cmd = c.rest();
                 if let Some(t) = cmd.strip_prefix('!') {
+                    if self.shell.is_empty() {
+                        return Err("No previous command".into());
+                    }
                     cmd = format!("{}{t}", self.shell);
                 }
                 self.shell.clone_from(&cmd);
@@ -831,6 +856,7 @@ pub fn run(args: Vec<String>, input: &mut dyn BufRead, out: &mut dyn Write) -> i
         re: None,
         rep: String::new(),
         shell: String::new(),
+        eof_cut: false,
         ere: o.ere,
         marks: [0; 26],
         undo: None,
@@ -882,10 +908,18 @@ pub fn run(args: Vec<String>, input: &mut dyn BufRead, out: &mut dyn Write) -> i
             Err(m) => {
                 e.fail(&m);
                 status = status.max(1);
+                // a script (stdin is not a terminal) stops at its first failing command
+                if !std::io::stdin().is_terminal() {
+                    let _ = e.out.flush();
+                    return end(status);
+                }
             }
         }
     }
     let _ = e.out.flush();
+    if e.dirty || e.eof_cut {
+        status = status.max(2);
+    }
     end(status)
 }
 

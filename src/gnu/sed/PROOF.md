@@ -13,6 +13,8 @@ Mesuré le 2026-11-14 sur fr1 (vps-203bea89, Ubuntu 26.10, Rust 1.99.1) : ces pa
 | durée | 42 s |
 | hôte de build et de test | fr1 |
 
+Performance (hyperfine, 5 mesures, fr2 ; binaires GNU de la distro, Rust en release du fork) : `s/fox/cat/g` sur 67 Mo (1 000 000 de lignes) : GNU sed 4.9 468,2 ± 39,7 ms, uutils sed 395,0 ± 21,7 ms.
+
 Échecs : 8to7, bsd-wrapper, cmd-0r, cmd-l, colon-with-no-label, comment-n, compile-errors, compile-tests, convert-number, execute-tests, follow-symlinks, follow-symlinks-stdin, help, in-place-hyphen, in-place-suffix-backup, mb-bad-delim, mb-match-slash, mb-y-translate, missing-filename, normalize-text, nulldata, posix-mode-addr, posix-mode-bad-ref, posix-mode-N, posix-mode-s, recursive-escape-c, regex-errors, sandbox, subst-mb-incomplete, subst-replacement, temp-file-cleanup, unbuffered.
 
 Les tests multioctets ignorés dépendent des locales installées sur fr1.

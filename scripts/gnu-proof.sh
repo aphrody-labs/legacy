@@ -82,13 +82,13 @@ time)
   ;;
 ed)
   kv gnu_bytes "$(stat -c %s $S/ed/ed)"
-  nscripts=$(rg --files $S/ed/testsuite | rg -c '\.ed$')
+  nscripts=$(rg --files $S/ed/testsuite | rg -c '\.(ed|err)$')
   for w in gnu ours; do
     d=$B/ed-obj-$w; rm -rf $d; mkdir -p $d
     if [ $w = gnu ]; then cp $S/ed/ed $d/ed; else cp $R/ed $d/ed; fi
     (cd $d && sbx timeout 300 sh $S/ed/testsuite/check.sh $S/ed/testsuite $w > $L/check-ed-$w.log 2>&1; echo $? > rc)
     kv ${w}_rc "$(cat $d/rc)"
-    kv ${w}_scripts_failed "$(rg -N '^\*\*\* ' $L/check-ed-$w.log | rg -o '[A-Za-z0-9_]+\.ed' | sort -u | wc -l) of $nscripts"
+    kv ${w}_scripts_failed "$(rg -N '^\*\*\* ' $L/check-ed-$w.log | rg -o '[A-Za-z0-9_]+\.(ed|err)' | sort -u | wc -l) of $nscripts"
     kv ${w}_failed_lines "$(rg -N -o '^( [0-9]+(\([a-z0-9._]*\))?)+$' $L/check-ed-$w.log | tr '\n' ' ')"
     kv ${w}_tail "$(rg -N '' $L/check-ed-$w.log | tail -1 | cut -c1-120)"
   done

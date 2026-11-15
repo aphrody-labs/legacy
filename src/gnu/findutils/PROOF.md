@@ -13,6 +13,8 @@ Mesuré le 2026-11-14 sur fr1 (vps-203bea89, Ubuntu 26.10, Rust 1.99.1) : ces pa
 | durée | build GNU + uutils et tests 744 s |
 | hôte de build et de test | fr1 |
 
+Performance (hyperfine, 5 mesures, fr2 ; binaires GNU de la distro, Rust en release du fork) : `find /usr -name '*.so*' -type f` : GNU find 4.11.0 482,8 ± 46,2 ms, uutils find 403,4 ± 76,3 ms.
+
 Échecs : tests/find/{arg-nan,debug-missing-arg,files0-from,ls-format-file,ls-format-symlink,name-slash,newer,operators-wrong-with-dash,opt-numeric-arg,readdir_race,used}, tests/misc/help-version, tests/xargs/{conflicting_opts,test-option-range,test-sigusr,verbose-quote}.
 
 `locate` et `updatedb` ne sont pas dans ces suites.

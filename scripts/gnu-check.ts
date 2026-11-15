@@ -71,7 +71,8 @@ const tar = Bun.spawnSync(["tar", "-cf", "-", "-C", root, "src/gnu"]);
 ssh(FR1, `mkdir -p ${WS}/ws && rm -rf ${WS}/ws/src && tar -x -C ${WS}/ws`, tar.stdout);
 ssh(FR1, `cat > ${WS}/ws/Cargo.toml`, rootToml);
 console.log(`fr1: build aphrody-gnu-${id}`);
-ssh(FR1, `RUSTC_WRAPPER= CARGO_BUILD_RUSTC_WRAPPER= RUSTFLAGS="-C target-cpu=x86-64-v3" CARGO_TARGET_DIR=${WS}/target/ws cargo build --release --manifest-path ${WS}/ws/Cargo.toml --workspace 2>&1 | tail -3`);
+// own CARGO_HOME: the shared one is locked for long stretches by the other agents' builds on fr1; pipefail so a failed build stops the check
+ssh(FR1, `set -o pipefail; RUSTC_WRAPPER= CARGO_BUILD_RUSTC_WRAPPER= CARGO_HOME=${WS}/cargo-home RUSTFLAGS="-C target-cpu=x86-64-v3" CARGO_TARGET_DIR=${WS}/target/ws cargo build --release --manifest-path ${WS}/ws/Cargo.toml --workspace 2>&1 | tail -3`);
 const fr1 = ssh(FR1, "hostname").toString().trim();
 
 // hyperfine for the benchmark (fr2 has none): relayed once from fr1

@@ -959,6 +959,8 @@ pub fn run(args: Vec<String>, stdin: &mut dyn Read, out: &mut dyn Write, err: &m
             }
         }
     }
+    // include search path: -I directories, then $M4PATH
+    inc.extend(std::env::var("M4PATH").unwrap_or_default().split(':').filter(|d| !d.is_empty()).map(str::to_owned));
     let mut m = M4 {
         defs: HashMap::new(),
         inp: Vec::new(),
