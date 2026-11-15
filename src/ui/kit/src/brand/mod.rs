@@ -644,9 +644,10 @@ pub struct BuildOptions {
     pub root: PathBuf,
     /// Copy web icon sets and `.ico` files to the `deploy` and `ico` paths of `brand.toml`.
     pub deploy: bool,
-    /// Only the published SVGs and the PNG of `docs/`: no icon sets, cards, banners, web stages or manifest, so the
-    /// font and the 48 px glyphs of `gen-cache/` are the only inputs (no image encoder needed).
-    pub docs_only: bool,
+    /// Skip the web stages (fonts, responsive images, video, 3D, wasm) and `gen/manifest.json`: they need external
+    /// encoders (hb-subset, avifenc, ktx, ...), while every SVG, PNG and ICO output, `docs/` included, needs only
+    /// the font and the Material Symbols of `gen-cache/`. A host without the encoders builds this way.
+    pub no_web: bool,
 }
 
 /// What a build wrote, relative to the root.
@@ -661,7 +662,6 @@ pub struct Report {
 
 struct Ctx<'a> {
     root: &'a Path,
-    docs_only: bool,
     gen_dir: PathBuf,
     svg: Svg,
     report: Report,
@@ -673,9 +673,6 @@ struct Ctx<'a> {
 
 impl Ctx<'_> {
     fn put(&mut self, rel: &str, bytes: impl AsRef<[u8]>) -> Result<()> {
-        if self.docs_only {
-            return Ok(());
-        }
         let bytes = bytes.as_ref();
         write(&self.gen_dir.join(rel), bytes)?;
         self.report.files.push((format!("packages/design/brand/gen/{rel}"), bytes.len() as u64));
@@ -693,9 +690,6 @@ impl Ctx<'_> {
 
     /// A review preview: written under gen/preview, outside the manifest.
     fn preview(&mut self, rel: &str, bytes: impl AsRef<[u8]>) -> Result<()> {
-        if self.docs_only {
-            return Ok(());
-        }
         let bytes = bytes.as_ref();
         write(&self.gen_dir.join("preview").join(rel), bytes)?;
         self.report.files.push((format!("packages/design/brand/gen/preview/{rel}"), bytes.len() as u64));
@@ -718,7 +712,7 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     let gen_dir = brand_dir.join("gen");
     // Start from none of our outputs so that no stale file survives into the manifest; inputs (gen-cache/)
     // and the outputs of other tools (gen/zukan, gen/themes) stay.
-    for d in OUTPUT_DIRS.iter().filter(|_| !opts.docs_only) {
+    for d in OUTPUT_DIRS {
         let dir = gen_dir.join(d);
         if dir.exists() {
             fs::remove_dir_all(&dir).map_err(|e| Error::Io(dir.clone(), e))?;
@@ -730,7 +724,7 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
             fs::remove_dir_all(&dir).map_err(|e| Error::Io(dir.clone(), e))?;
         }
     }
-    for f in ["manifest.json", "manifest.json.sha256"].iter().filter(|_| !opts.docs_only) {
+    for f in ["manifest.json", "manifest.json.sha256"] {
         let file = gen_dir.join(f);
         if file.exists() {
             fs::remove_file(&file).map_err(|e| Error::Io(file.clone(), e))?;
@@ -738,7 +732,6 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     }
     let mut cx = Ctx {
         root: &opts.root,
-        docs_only: opts.docs_only,
         gen_dir,
         svg,
         report: Report::default(),
@@ -790,11 +783,9 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
             }
             cx.preview(&format!("{}-wordmark-{theme}.png", org.id), cx.svg.png_scaled(&vars(&width), 3.0)?)?;
         }
-        if !opts.docs_only {
-            icon_set(&mut cx, &org.id, &title, &mark, container)?;
-            social(&mut cx, &og_t, &palette, &font, &org.id, &mark, &title, &org.tagline, &org.url)?;
-            banner(&mut cx, &org.id, &mark, &title, &org.tagline, palette.dark.argb("primary"))?;
-        }
+        icon_set(&mut cx, &org.id, &title, &mark, container)?;
+        social(&mut cx, &og_t, &palette, &font, &org.id, &mark, &title, &org.tagline, &org.url)?;
+        banner(&mut cx, &org.id, &mark, &title, &org.tagline, palette.dark.argb("primary"))?;
     }
 
     // Products: tile, icon set, social card, banner, deploy.
@@ -815,9 +806,6 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
         ]);
         let ecosystem = titled(&cx.svg.optimize(&tile)?, &p.name, &p.tagline);
         cx.publish(&format!("icons/ecosystem/{}.svg", p.id), ecosystem)?;
-        if opts.docs_only {
-            continue;
-        }
         icon_set(&mut cx, &p.id, &p.name, &tile, container)?;
         if p.msix {
             // MSIX visual assets (Package.appxmanifest): 150 and 50 px full drawing, 44 px small variant.
@@ -850,10 +838,10 @@ pub fn build(opts: &BuildOptions) -> Result<Report> {
     }
 
     badges(&mut cx, &manifest, &palette, &font)?;
-    if opts.docs_only {
+    stats_cards(&mut cx, &palette, &font)?;
+    if opts.no_web {
         return Ok(cx.report);
     }
-    stats_cards(&mut cx, &palette, &font)?;
 
     // Web stages: symbols, fonts, responsive images, wallpapers, captures and video, animated
     // logos, 3D, environment, wasm + WebGPU; then gen/manifest.json (sha256 of every file).
@@ -872,7 +860,7 @@ fn font_stack(brand: &Brand) -> String {
 fn icon_set(cx: &mut Ctx<'_>, id: &str, name: &str, drawing: &str, theme: u32) -> Result<()> {
     let dir = format!("icons/{id}");
     cx.drawings.insert(id.to_string(), drawing.to_string());
-    let optimized = cx.svg.optimize(drawing)?;
+    let optimized = titled(&cx.svg.optimize(drawing)?, name, "");
     cx.put(&format!("{dir}/icon.svg"), &optimized)?;
     let mut pngs = BTreeMap::new();
     let small_drawing = small(drawing);
@@ -1086,6 +1074,7 @@ fn deploy(cx: &mut Ctx<'_>, p: &Product) -> Result<()> {
         for (from, to) in [
             ("favicon.ico", "favicon.ico"),
             ("icon.svg", "favicon.svg"),
+            ("icon.svg", "icon.svg"),
             ("apple-touch-icon.png", "apple-touch-icon.png"),
             ("icon-192.png", "icon-192.png"),
             ("icon-512.png", "icon-512.png"),

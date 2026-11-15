@@ -51,7 +51,7 @@ url = "https://github.com/aphrody-dev"
 # One icon per product: an M3 rounded tile in the product hue (HCT, chroma 56, tone 40) and a
 # Material Symbols Rounded glyph (Apache-2.0, packages/design/brand/symbols/NOTICE).
 # Sites read their icon set from gen/icons/<id>/ at build time (packages/deploy, aphrody-app
-# dist.rs): no copy. `ico` lists the Windows .ico copies embedded in binaries (crates/ay/ay.ico).
+# dist.rs), or get it copied by `ay brand build --deploy` (`deploy` lists the target directories). `ico` lists the Windows .ico copies embedded in binaries (crates/ay/ay.ico).
 [[product]]
 id = "ay"
 name = "ay"
@@ -100,8 +100,11 @@ id = "aphrody"
 name = "aphrody.com"
 symbol = "bolt"
 hue = 290
-tagline = "Merged static SEO and brand asset portal (aphrody.com / aphrody.app)"
+tagline = "Static site and brand portal of Aphrody"
 path = "apps/aphrody"
+# `ay brand build --deploy` copies the icon set and the social card here (favicon, icon.svg, touch and manifest icons,
+# og-image.png), so the site head and site.webmanifest always show the generated brand.
+deploy = ["apps/aphrody/public"]
 
 [[product]]
 id = "shenron"

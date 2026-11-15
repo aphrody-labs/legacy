@@ -4,7 +4,7 @@
 use aphrody_ui::brand::{BuildOptions, build, check::check, ico_sides};
 use std::{path::PathBuf, process::ExitCode};
 
-const USAGE: &str = "usage: ay brand build [--root <dir>] [--deploy] [--docs]\n       ay brand check [--root <dir>]\n       ay brand banner <id> [--plain]\n       ay brand check-ico <file>";
+const USAGE: &str = "usage: ay brand build [--root <dir>] [--deploy] [--no-web]\n       ay brand check [--root <dir>]\n       ay brand banner <id> [--plain]\n       ay brand check-ico <file>";
 
 fn repo_root() -> PathBuf {
     if let Some(r) = std::env::var_os("SRC_ROOT").filter(|v| !v.is_empty()) {
@@ -25,12 +25,12 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     match args.first().map(String::as_str) {
         Some("build") => {
-            let mut opts = BuildOptions { root: repo_root(), deploy: false, docs_only: false };
+            let mut opts = BuildOptions { root: repo_root(), deploy: false, no_web: false };
             let mut it = args[1..].iter();
             while let Some(a) = it.next() {
                 match a.as_str() {
                     "--deploy" => opts.deploy = true,
-                    "--docs" => opts.docs_only = true,
+                    "--no-web" => opts.no_web = true,
                     "--root" => opts.root = it.next().map(PathBuf::from).unwrap_or_default(),
                     other => {
                         eprintln!("ay brand: unknown argument {other}\n{USAGE}");
