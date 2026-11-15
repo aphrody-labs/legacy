@@ -227,13 +227,30 @@ export function mod(a: any, b: any): any {
 }
 export function pow(a: any, b: any, m?: any): any {
   if (m !== undefined && m !== null) {
-    let [r, base, e, mm] = [1n, bi(a) % bi(m), bi(b), bi(m)];
+    const mm = bi(m);
+    if (mm === 0n) throw new ValueError("pow() 3rd argument cannot be 0");
+    const am = ((bi(a) % mm) + mm) % mm;
+    let e = bi(b);
+    let base = am;
+    if (e < 0n) {
+      // modular inverse by extended Euclid
+      let [t, nt, r0, nr] = [0n, 1n, mm < 0n ? -mm : mm, am];
+      while (nr !== 0n) {
+        const q = r0 / nr;
+        [t, nt] = [nt, t - q * nt];
+        [r0, nr] = [nr, r0 - q * nr];
+      }
+      if (r0 !== 1n) throw new ValueError("base is not invertible for the given modulus");
+      base = ((t % mm) + mm) % mm;
+      e = -e;
+    }
+    let r = 1n % mm;
     while (e > 0n) {
       if (e & 1n) r = (r * base) % mm;
       base = (base * base) % mm;
       e >>= 1n;
     }
-    return norm(r);
+    return norm(((r % mm) + mm) % mm);
   }
   if (isBig(a) || isBig(b)) {
     if (isInt(a) && isInt(b) && bi(b) >= 0n) return norm(bi(a) ** bi(b));
@@ -256,7 +273,14 @@ export function eq(a: any, b: any): boolean {
   if (a == null || b == null) return false;
   const ta = typeof a;
   const tb = typeof b;
-  if ((ta === "number" || ta === "bigint" || ta === "boolean") && (tb === "number" || tb === "bigint" || tb === "boolean")) return Number(a) === Number(b) && (!isBig(a) || !isBig(b) || a === b);
+  if ((ta === "number" || ta === "bigint" || ta === "boolean") && (tb === "number" || tb === "bigint" || tb === "boolean")) {
+    const x = ta === "boolean" ? Number(a) : a;
+    const y = tb === "boolean" ? Number(b) : b;
+    if (typeof x === "bigint" && typeof y === "bigint") return x === y;
+    if (typeof x === "bigint") return Number.isInteger(y) && BigInt(y as number) === x;
+    if (typeof y === "bigint") return Number.isInteger(x) && BigInt(x as number) === y;
+    return x === y;
+  }
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((x, i) => eq(x, b[i]));
   if (a instanceof Map && b instanceof Map) return a.size === b.size && [...a].every(([k, v]) => b.has(k) && eq(v, b.get(k)));
   if (a instanceof Set && b instanceof Set) return a.size === b.size && [...a].every((x) => b.has(x));

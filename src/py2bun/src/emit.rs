@@ -299,6 +299,22 @@ fn is_const(e: &Expr) -> bool {
     )
 }
 
+/// True when `js` contains `name` as a whole identifier token.
+fn mentions_ident(js: &str, name: &str) -> bool {
+    let b = js.as_bytes();
+    let isid = |c: u8| c.is_ascii_alphanumeric() || c == b'_' || c == b'$';
+    let mut from = 0;
+    while let Some(i) = js[from..].find(name) {
+        let st = from + i;
+        let en = st + name.len();
+        if (st == 0 || !isid(b[st - 1])) && (en >= b.len() || !isid(b[en])) {
+            return true;
+        }
+        from = st + 1;
+    }
+    false
+}
+
 fn is_pure(e: &Expr) -> bool {
     match e {
         Expr::Name(_) => true,
@@ -823,6 +839,11 @@ impl<'s> Emitter<'s> {
     }
 
     fn aug_assign(&mut self, a: &StmtAugAssign) {
+        if matches!(a.op, Operator::MatMult) {
+            let u = self.unsupported(a.range(), "matrix multiplication");
+            self.line(&format!("{u};"));
+            return;
+        }
         let v = self.expr(&a.value);
         if let Expr::Name(n) = &*a.target {
             let t = ident(n.id.as_str());
@@ -1080,6 +1101,27 @@ impl<'s> Emitter<'s> {
         let mut sig_params = String::new();
         let positional: Vec<&ParameterWithDefault> =
             p.posonlyargs.iter().chain(p.args.iter()).skip(if skip_first { 1 } else { 0 }).collect();
+        // defaults are evaluated in the enclosing scope (`def f(x=x)` must not hit the param TDZ)
+        let mut default_js: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        for pd in positional.iter().copied().chain(p.kwonlyargs.iter()) {
+            if let Some(d) = &pd.default {
+                let js = self.expr(d);
+                default_js.insert(pd.parameter.name.as_str().to_string(), js);
+            }
+        }
+        if !as_method {
+            // a default naming any parameter would read the parameter (TDZ): hoist it into a const first
+            let pn = pnames.clone();
+            let keys: Vec<String> = default_js.keys().cloned().collect();
+            for k in keys {
+                if pn.iter().any(|q| mentions_ident(&default_js[&k], &ident(q))) {
+                    let t = self.fresh("d");
+                    let js = default_js[&k].clone();
+                    self.line(&format!("const {t} = {js};"));
+                    default_js.insert(k, t);
+                }
+            }
+        }
         // the signature body must be emitted with the new scope active
         let mut sc = names.clone();
         sc.remove(selfname.as_deref().unwrap_or("\0"));
@@ -1098,11 +1140,8 @@ impl<'s> Emitter<'s> {
                 let mut pats: Vec<String> = vec![];
                 for pd in &positional {
                     let n = ident(pd.parameter.name.as_str());
-                    match &pd.default {
-                        Some(d) => {
-                            let d = self.expr(d);
-                            pats.push(format!("{n} = {d}"));
-                        }
+                    match default_js.get(pd.parameter.name.as_str()) {
+                        Some(d) => pats.push(format!("{n} = {d}")),
                         None => pats.push(n),
                     }
                 }
@@ -1114,11 +1153,8 @@ impl<'s> Emitter<'s> {
             let mut kwpats: Vec<String> = vec![];
             for pd in &p.kwonlyargs {
                 let n = ident(pd.parameter.name.as_str());
-                match &pd.default {
-                    Some(d) => {
-                        let d = self.expr(d);
-                        kwpats.push(format!("{n} = {d}"));
-                    }
+                match default_js.get(pd.parameter.name.as_str()) {
+                    Some(d) => kwpats.push(format!("{n} = {d}")),
                     None => kwpats.push(n),
                 }
             }
@@ -1130,11 +1166,8 @@ impl<'s> Emitter<'s> {
             let mut ps: Vec<String> = vec![];
             for pd in &positional {
                 let n = ident(pd.parameter.name.as_str());
-                match &pd.default {
-                    Some(d) => {
-                        let d = self.expr(d);
-                        ps.push(format!("{n} = {d}"));
-                    }
+                match default_js.get(pd.parameter.name.as_str()) {
+                    Some(d) => ps.push(format!("{n} = {d}")),
                     None => ps.push(n),
                 }
             }
@@ -1432,14 +1465,18 @@ impl<'s> Emitter<'s> {
             Expr::NumberLiteral(n) => match &n.value {
                 Number::Int(i) => {
                     let s = i.to_string();
-                    if s.len() > 15 {
+                    if s.len() > 16 || (s.len() == 16 && s.as_str() > "9007199254740991") {
                         format!("{s}n")
                     } else {
                         s
                     }
                 }
                 Number::Float(f) => {
-                    if f.fract() == 0.0 && f.abs() < 1e15 {
+                    if f.is_infinite() {
+                        "Infinity".to_string()
+                    } else if f.is_nan() {
+                        "NaN".to_string()
+                    } else if f.fract() == 0.0 && f.abs() < 1e15 {
                         format!("{f:.1}")
                     } else {
                         format!("{f:?}")
@@ -1481,6 +1518,7 @@ impl<'s> Emitter<'s> {
                 let t = self.expr(&n.target);
                 format!("({t} = {v})")
             }
+            Expr::BinOp(b) if matches!(b.op, Operator::MatMult) => self.unsupported(b.range(), "matrix multiplication"),
             Expr::BinOp(b) => {
                 let (l, r) = (self.expr(&b.left), self.expr(&b.right));
                 let num = |e: &Expr| matches!(e, Expr::NumberLiteral(_));
@@ -1493,9 +1531,12 @@ impl<'s> Emitter<'s> {
                 self.binop_str(b.op, &l, &r, false)
             }
             Expr::UnaryOp(u) => {
+                if u.op == UnaryOp::Not {
+                    return format!("!{}", self.paren_cond(&u.operand));
+                }
                 let o = self.expr(&u.operand);
                 match u.op {
-                    UnaryOp::Not => format!("!{}", self.paren_cond(&u.operand)),
+                    UnaryOp::Not => unreachable!(),
                     UnaryOp::USub => format!("(-{o})"),
                     UnaryOp::UAdd => format!("(+{o})"),
                     UnaryOp::Invert => format!("__py.inv({o})"),
@@ -1504,18 +1545,25 @@ impl<'s> Emitter<'s> {
             Expr::Lambda(l) => {
                 let mut names = HashSet::new();
                 let mut ps = vec![];
+                let mut outer: Vec<(String, String)> = vec![];
                 if let Some(p) = &l.parameters {
                     for pd in p.posonlyargs.iter().chain(p.args.iter()).chain(p.kwonlyargs.iter()) {
                         names.insert(pd.parameter.name.as_str().to_string());
                     }
+                    // defaults use the enclosing scope (`lambda x=x: x`)
+                    let mut defs: Vec<Option<String>> =
+                        p.posonlyargs.iter().chain(p.args.iter()).map(|pd| pd.default.as_ref().map(|d| self.expr(d))).collect();
+                    for d in defs.iter_mut().flatten() {
+                        if names.iter().any(|q| mentions_ident(d, &ident(q))) {
+                            let t = self.fresh("d");
+                            outer.push((t.clone(), std::mem::replace(d, t)));
+                        }
+                    }
                     self.scopes.push(names);
-                    for pd in p.posonlyargs.iter().chain(p.args.iter()) {
+                    for (pd, d) in p.posonlyargs.iter().chain(p.args.iter()).zip(defs) {
                         let n = ident(pd.parameter.name.as_str());
-                        match &pd.default {
-                            Some(d) => {
-                                let d = self.expr(d);
-                                ps.push(format!("{n} = {d}"));
-                            }
+                        match d {
+                            Some(d) => ps.push(format!("{n} = {d}")),
                             None => ps.push(n),
                         }
                     }
@@ -1532,7 +1580,13 @@ impl<'s> Emitter<'s> {
                 let b = self.expr(&l.body);
                 self.no_await -= 1;
                 self.scopes.pop();
-                format!("(({}) => {})", ps.join(", "), if b.starts_with('{') { format!("({b})") } else { b })
+                let lam = format!("(({}) => {})", ps.join(", "), if b.starts_with('{') { format!("({b})") } else { b });
+                if outer.is_empty() {
+                    lam
+                } else {
+                    let (ts, vs): (Vec<String>, Vec<String>) = outer.into_iter().unzip();
+                    format!("(({}) => {lam})({})", ts.join(", "), vs.join(", "))
+                }
             }
             Expr::If(i) => {
                 let (c, a, b) = (self.cond(&i.test), self.expr(&i.body), self.expr(&i.orelse));
@@ -1625,17 +1679,23 @@ impl<'s> Emitter<'s> {
         if c.ops.len() == 1 {
             return self.cmp1(c.ops[0], &c.operands[0], &c.operands[1]);
         }
-        // chained: evaluate each operand once
+        // chained: each operand evaluated once, later operands only when the previous comparison held
         let n = c.operands.len();
-        let tmps: Vec<String> = (0..n).map(|i| format!("__c{i}")).collect();
+        let tmps: Vec<String> = (0..n).map(|_| self.fresh("c")).collect();
         let vals: Vec<String> = c.operands.iter().map(|e| self.expr(e)).collect();
-        let mut parts = vec![];
-        self.no_await += 1; // the comparison runs inside a plain arrow function
-        for (i, op) in c.ops.iter().enumerate() {
-            parts.push(self.cmp_strs(*op, &tmps[i], &tmps[i + 1], None, None));
-        }
+        self.no_await += 1; // the comparison runs inside plain arrow functions
+        let cmps: Vec<String> = c.ops.iter().enumerate().map(|(i, op)| self.cmp_strs(*op, &tmps[i], &tmps[i + 1], None, None)).collect();
         self.no_await -= 1;
-        format!("(({}) => {})({})", tmps.join(", "), parts.join(" && "), vals.join(", "))
+        let mut inner = String::new();
+        for i in (0..n - 1).rev() {
+            inner = if i == n - 2 {
+                cmps[i].clone()
+            } else {
+                format!("{} && {}", cmps[i], inner)
+            };
+            inner = format!("(({}) => {})({})", tmps[i + 1], inner, vals[i + 1]);
+        }
+        format!("(({}) => {})({})", tmps[0], inner, vals[0])
     }
 
     fn cmp1(&mut self, op: CmpOp, l: &Expr, r: &Expr) -> String {

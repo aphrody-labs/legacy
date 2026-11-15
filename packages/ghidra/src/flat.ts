@@ -105,12 +105,22 @@ export function createFlat(
     getScriptArgs: async () => scriptArgs,
     setScriptArgs: async (a: string[]) => void (scriptArgs = a),
     setToolStatusMessage: async () => undefined,
-    askYesNo: async (_t: string, _m: string) => String(await ask("yesno", true)) === "true",
+    askYesNo: async (_t: string, _m: string) => {
+      const v = String(await ask("yesno", true));
+      if (v === "cancel") throw new CancelledError("YesNo");
+      return v === "true";
+    },
   };
   for (const n of ["askAddress", "askBytes", "askChoice", "askChoices", "askDirectory", "askDomainFile",
     "askDouble", "askFile", "askInt", "askLanguage", "askLong", "askPassword", "askProgram", "askProjectFolder",
     "askString", "askValues"]) {
-    local[n] = () => ask(n.slice(3));
+    local[n] = async () => {
+      const v = await ask(n.slice(3));
+      if (typeof v !== "string") return v;
+      if (n === "askInt" || n === "askDouble") return Number(v);
+      if (n === "askLong") return BigInt(v) >= -(2n ** 53n) && BigInt(v) <= 2n ** 53n ? Number(v) : BigInt(v);
+      return v;
+    };
   }
   return new Proxy({} as Flat, {
     get(_t, prop) {
@@ -121,20 +131,31 @@ export function createFlat(
   });
 }
 
-/** Minimal Java-style printf (%s %d %x %f %n %%) for GhidraScript.printf. */
+/** Minimal Java-style printf (%s %d %x %f %n %%, flags - 0 +) for GhidraScript.printf. */
 export function sprintf(fmt: string, args: unknown[]): string {
   let i = 0;
-  return fmt.replace(/%(-?\d*)(?:\.(\d+))?([sdxXfn%])/g, (_m, w: string, p: string | undefined, c: string) => {
+  return fmt.replace(/%([-0+]*)(\d*)(?:\.(\d+))?([sdxXfn%])/g, (_m, fl: string, w: string, p: string | undefined, c: string) => {
     if (c === "%") return "%";
     if (c === "n") return "\n";
     const a = args[i++];
     let s: string;
-    if (c === "d") s = String(a);
-    else if (c === "x") s = Number(a).toString(16);
-    else if (c === "X") s = Number(a).toString(16).toUpperCase();
+    const hex = (v: unknown) => {
+      const b = typeof v === "bigint" ? v : BigInt(Math.trunc(Number(v)));
+      // Java prints negative values as two's complement: int width when it fits, else long
+      return b < 0n ? BigInt.asUintN(b >= -(2n ** 31n) ? 32 : 64, b).toString(16) : b.toString(16);
+    };
+    if (c === "d") s = typeof a === "bigint" ? a.toString() : String(Math.trunc(Number(a)));
+    else if (c === "x") s = hex(a);
+    else if (c === "X") s = hex(a).toUpperCase();
     else if (c === "f") s = Number(a).toFixed(p === undefined ? 6 : Number(p));
     else s = String(a);
-    const width = Math.abs(Number(w || 0));
-    return w.startsWith("-") ? s.padEnd(width) : s.padStart(width);
+    if (fl.includes("+") && "dfxX".includes(c) && !s.startsWith("-")) s = "+" + s;
+    const width = Number(w || 0);
+    if (fl.includes("-")) return s.padEnd(width);
+    if (fl.includes("0") && "dfxX".includes(c)) {
+      const sign = /^[-+]/.test(s) ? s[0] : "";
+      return sign + s.slice(sign.length).padStart(width - sign.length, "0");
+    }
+    return s.padStart(width);
   });
 }

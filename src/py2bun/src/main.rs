@@ -43,11 +43,11 @@ fn main() -> ExitCode {
     for d in &res.diagnostics {
         if json {
             eprintln!(
-                "{{\"line\":{},\"col\":{},\"severity\":\"{}\",\"message\":{:?}}}",
+                "{{\"line\":{},\"col\":{},\"severity\":\"{}\",\"message\":{}}}",
                 d.line,
                 d.col,
                 if d.severity == py2bun::Severity::Error { "error" } else { "warning" },
-                d.message
+                json_str(&d.message)
             );
         } else {
             eprintln!("{}: {d}", input.as_deref().unwrap_or("<stdin>"));
@@ -72,4 +72,22 @@ fn main() -> ExitCode {
     } else {
         ExitCode::SUCCESS
     }
+}
+
+/// JSON string literal (Rust `{:?}` would emit invalid escapes such as `\u{1b}`).
+fn json_str(s: &str) -> String {
+    let mut o = String::from("\"");
+    for c in s.chars() {
+        match c {
+            '"' => o.push_str("\\\""),
+            '\\' => o.push_str("\\\\"),
+            '\n' => o.push_str("\\n"),
+            '\r' => o.push_str("\\r"),
+            '\t' => o.push_str("\\t"),
+            c if (c as u32) < 0x20 => o.push_str(&format!("\\u{:04x}", c as u32)),
+            c => o.push(c),
+        }
+    }
+    o.push('"');
+    o
 }

@@ -54,8 +54,20 @@ class Pattern {
       return r.replace(/\\(\d+)/g, (_m: string, i: string) => a[+i] ?? "");
     });
   }
-  split(s: string) {
-    return s.split(mk(this.pattern, this.flags, true));
+  split(s: string, maxsplit = 0) {
+    const out: any[] = [];
+    let last = 0;
+    let n = 0;
+    for (const m of s.matchAll(mk(this.pattern, this.flags, true))) {
+      if (maxsplit > 0 && n >= maxsplit) break;
+      if (m[0] === "" && (m.index === 0 || m.index === s.length)) continue;
+      out.push(s.slice(last, m.index));
+      for (const g of m.slice(1)) out.push(g === undefined ? null : g);
+      last = m.index! + m[0].length;
+      n++;
+    }
+    out.push(s.slice(last));
+    return out;
   }
 }
 export const compile = (p: string, f = 0) => new Pattern(p, f);
@@ -65,5 +77,5 @@ export const search = (p: string, s: string, f = 0) => new Pattern(p, f).search(
 export const findall = (p: string, s: string, f = 0) => new Pattern(p, f).findall(s);
 export const finditer = (p: string, s: string, f = 0) => new Pattern(p, f).finditer(s);
 export const sub = (p: string, r: any, s: string, count = 0, f = 0) => new Pattern(p, f).sub(r, s, count);
-export const split = (p: string, s: string, f = 0) => new Pattern(p, f).split(s);
+export const split = (p: string, s: string, maxsplit = 0, f = 0) => new Pattern(p, f).split(s, maxsplit);
 export const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

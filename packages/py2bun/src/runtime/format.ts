@@ -163,6 +163,7 @@ export function percent(fmt: string, args: any): string {
     if (prec !== undefined && "diouxX".includes(conv)) {
       // precision on ints = minimum digits
       let digits = (typeof v === "bigint" ? (v < 0n ? -v : v) : Math.abs(v)).toString(conv === "x" || conv === "X" ? 16 : conv === "o" ? 8 : 10);
+      if (conv === "X") digits = digits.toUpperCase();
       digits = digits.padStart(+prec, "0");
       const sg = v < 0 ? "-" : flags.includes("+") ? "+" : "";
       return pad(sg + digits, width, left);

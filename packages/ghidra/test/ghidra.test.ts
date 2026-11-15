@@ -110,3 +110,18 @@ describe("bridge review fixes", () => {
     expect(src).not.toContain("Math.abs(l)");
   });
 });
+
+describe("flat review fixes", () => {
+  test("sprintf zero flag, bigint and negative hex", () => {
+    expect(sprintf("%08x|%d|%x|%+d", [255, 12345678901234567890n, -1, 5])).toBe("000000ff|12345678901234567890|ffffffff|+5");
+  });
+  test("askInt returns a number and askYesNo honours env", async () => {
+    process.env.GHIDRA_ASK_INT = "42";
+    process.env.GHIDRA_ASK_YESNO = "false";
+    const f: any = createFlat({ callFlat: async () => undefined }, { out: () => {} });
+    expect(await f.askInt("t", "m")).toBe(42);
+    expect(await f.askYesNo("t", "m")).toBe(false);
+    delete process.env.GHIDRA_ASK_INT;
+    delete process.env.GHIDRA_ASK_YESNO;
+  });
+});

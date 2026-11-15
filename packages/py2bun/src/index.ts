@@ -40,7 +40,9 @@ export function transpile(source: string, bin: string | null = findBinary()): Tr
     if (!l.startsWith("{")) continue;
     try {
       diagnostics.push(JSON.parse(l));
-    } catch {}
+    } catch (e) {
+      diagnostics.push({ line: 0, col: 0, severity: "error", message: `unparseable diagnostic: ${l}` } as Diagnostic);
+    }
   }
   const ts = p.stdout.toString();
   return { ts, diagnostics, ok: ts.length > 0 && !diagnostics.some((d) => d.severity === "error") };

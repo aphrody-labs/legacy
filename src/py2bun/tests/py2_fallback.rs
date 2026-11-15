@@ -8,7 +8,7 @@ fn print_statement_rewritten_with_warning() {
     assert!(o.ts.contains("\"file\": f"));
     assert!(o.ts.contains("\"end\": \" \""));
     let w = o.diagnostics.iter().filter(|d| d.severity == Severity::Warning && d.message.contains("Python 2")).count();
-    assert_eq!(w, 3);
+    assert_eq!(w, 4);
 }
 
 #[test]
@@ -30,4 +30,10 @@ fn one_line_compound_and_continuation() {
 #[test]
 fn genuine_syntax_error_still_fails() {
     assert!(transpile("x = = 1\n").ts.is_empty());
+}
+
+#[test]
+fn except_tuple_with_comma_name_rewritten() {
+    let o = transpile("try:\n    pass\nexcept (ValueError, KeyError), e:\n    print e\n");
+    assert!(!o.ts.is_empty(), "{:?}", o.diagnostics);
 }

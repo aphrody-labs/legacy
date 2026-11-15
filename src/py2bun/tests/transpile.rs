@@ -109,3 +109,33 @@ fn comprehension_first_iterable_evaluated_outside_scope() {
     let o = ts("x = [1, 2]\nr = [x for x in x]\n");
     assert!(o.contains("(__i0) =>") && o.contains(")(x)"), "{o}");
 }
+
+#[test]
+fn chained_comparison_short_circuits() {
+    let o = ts("r = 1 < f() < g()\n");
+    // g() only inside the nested arrow evaluated after the first comparison
+    assert!(o.contains("&& ((__c"), "{o}");
+}
+
+#[test]
+fn not_emits_operand_once_and_inf_is_infinity() {
+    let o = ts("a = not f()\nb = 1e999\n");
+    assert_eq!(o.matches("f()").count(), 1, "{o}");
+    assert!(o.contains("Infinity"), "{o}");
+}
+
+#[test]
+fn defaults_evaluated_in_enclosing_scope() {
+    let o = ts("x = 1\ndef f(x=x):\n    return x\ng = lambda y=x: y\n");
+    assert!(!o.contains("x = x"), "{o}");
+    assert!(o.contains("const __d"), "{o}");
+}
+
+#[test]
+fn sixteen_digit_int_is_number_and_matmul_has_diagnostic() {
+    let o = ts("a = 1234567890123456\nb = 9007199254740993\n");
+    assert!(o.contains("a = 1234567890123456;") && o.contains("9007199254740993n"), "{o}");
+    let r = transpile("m = a @ b
+");
+    assert!(r.diagnostics.iter().any(|d| d.message.contains("matrix multiplication")), "{:?}", r.diagnostics);
+}

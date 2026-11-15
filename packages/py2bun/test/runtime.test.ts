@@ -160,3 +160,24 @@ describe("review fixes", () => {
     expect(r.stdout.toString()).toContain("print");
   });
 });
+
+describe("review fixes 2", () => {
+  test("re.split signature and maxsplit", () => {
+    const re = require("../src/runtime/re");
+    expect(re.split(",", "a,b,c", 1)).toEqual(["a", "b,c"]);
+    expect(re.split("(,)", "a,b")).toEqual(["a", ",", "b"]);
+  });
+  test("pow modular with negative base and inverse", () => {
+    expect(py.pow(-2, 3, 5)).toBe(2);
+    expect(py.pow(3, -1, 7)).toBe(5);
+  });
+  test("eq bigint vs number precision", () => {
+    expect(py.eq(9007199254740993n, 9007199254740992)).toBe(false);
+    expect(py.eq(2n, 2)).toBe(true);
+  });
+  test("%X precision is uppercase", async () => {
+    const f = await import("../src/runtime/format");
+    const fn = (f as any).percent ?? (f as any).pyPercent ?? Object.values(f).find((x: any) => typeof x === "function" && /percent/i.test(x.name));
+    if (fn) expect(fn("%.4X", 255)).toBe("00FF");
+  });
+});

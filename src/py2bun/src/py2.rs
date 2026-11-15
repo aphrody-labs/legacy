@@ -67,6 +67,9 @@ fn fix_line(line: &str) -> Option<String> {
         }
         // fall through to the `except X, e:` rule
     }
+    if body.trim_end() == "print" {
+        return Some(format!("{indent}print()"));
+    }
     if let Some(rest) = body.strip_prefix("print") {
         if !rest.starts_with([' ', '\t']) {
             return None;
@@ -109,7 +112,30 @@ fn fix_line(line: &str) -> Option<String> {
         let (code, comment) = body.split_at(cut);
         let code_t = code.trim_end();
         let inner = code_t.strip_prefix("except")?.trim().strip_suffix(':')?;
-        if inner.starts_with('(') || inner.starts_with("*") {
+        if inner.starts_with('(') {
+            // `except (A, B), e:` -> `except (A, B) as e:`
+            let mut depth = 0usize;
+            let mut close = None;
+            for (i, ch) in inner.char_indices() {
+                match ch {
+                    '(' => depth += 1,
+                    ')' => {
+                        depth -= 1;
+                        if depth == 0 {
+                            close = Some(i);
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            let close = close?;
+            let after = inner[close + 1..].trim();
+            let name = after.strip_prefix(',')?.trim();
+            let c = if comment.is_empty() { String::new() } else { format!("  {comment}") };
+            return Some(format!("{indent}except {} as {name}:{c}", &inner[..=close]));
+        }
+        if inner.starts_with("*") {
             return None;
         }
         let i = first_comma(inner)?;
