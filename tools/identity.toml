@@ -1,7 +1,8 @@
 # Single source of the product identity. Renaming = edit this file, `just identity apply`, `just check`.
 # Gate: `just identity check` (in `just check` and CI). Readers: scripts/identity.ts (apply/check of the manifests),
 # src/xtask (DEPS vars), packages via `import identity from "<root>/tools/identity.toml"` (Bun TOML import).
-# The repository root is the nearest ancestor holding src.lock.json, else $SRC_ROOT.
+# The repository root is the nearest ancestor holding tools/identity.toml (this file: no marker name carries the product or the
+# checkout folder name), else $REPO_ROOT. Checkout paths are never written in sources: derive them from the root.
 
 [product]
 name = "aphrody"
@@ -17,8 +18,11 @@ crate = "aphrody" # package name of src/ay
 npm_scope = "@aphrody" # every packages/*/package.json#name and the root package
 crate_prefix = "aphrody-" # crates/<dir> is named <dir> or <crate_prefix><dir> (crates.io collisions, docs/ay/NAMING.md)
 
+# Prefixes follow the name: C symbols `<name>_`, environment `<NAME>_`; override with [naming] c_prefix and env_prefix.
+# `just identity apply` rewrites the old identity (HEAD:tools/identity.toml) literals to the new one: npm scope, crate prefix,
+# C and env prefixes, product name, binary calls. Upstream namespaces (win32, ffmpeg, Linux, Chromium, upstream env) never change.
+
 # Historical names kept as-is (renaming them is a breaking change for their users).
-# C symbol and env prefixes (aphrody_*, APHRODY_*) are frozen: TICKET identity-001.
 [naming.crate_names]
 bench = "stack-bench"
 xtask = "xtk"

@@ -1,0 +1,4768 @@
+{
+ ".agents/.claude-plugin/plugin.json": {
+  "crate-prefix": 1
+ },
+ ".agents/gemini-extension.json": {
+  "crate-prefix": 1
+ },
+ ".agents/skills/a11y-debugging/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/agent-platform-architecture/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/agent-platform-deploy/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/aphrody-stack/SKILL.md": {
+  "crate-prefix": 2
+ },
+ ".agents/skills/archguard/SKILL.md": {
+  "checkout-path": 1,
+  "binary-call": 7
+ },
+ ".agents/skills/axum/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/ay-index/SKILL.md": {
+  "crate-prefix": 2,
+  "c-prefix": 2,
+  "binary-call": 8
+ },
+ ".agents/skills/ay-monorepo-migrator/SKILL.md": {
+  "binary-call": 2
+ },
+ ".agents/skills/bun/SKILL.md": {
+  "binary-call": 7
+ },
+ ".agents/skills/bun/references/ffi.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/bun/references/zero-dep.md": {
+  "npm-scope": 1,
+  "binary-call": 2
+ },
+ ".agents/skills/chrome-devtools-cli/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/chrome-devtools/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/chrome-troubleshooting/SKILL.md": {
+  "product-name": 2
+ },
+ ".agents/skills/chromium/SKILL.md": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ ".agents/skills/cli-agent-browser/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ast-grep/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-atuin/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ay/SKILL.md": {
+  "binary-call": 4
+ },
+ ".agents/skills/cli-b3sum/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-bat/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-bazelisk/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-bottom/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-bun/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-caddy/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-audit/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-binstall/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-deny/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-hack/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-llvm-cov/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-machete/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-nextest/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-shear/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cargo-zigbuild/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-cloudflared/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-coreutils/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-delta/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-difftastic/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-dist/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-dua/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-dust/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-eza/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-fastfetch/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-fd/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-fzf/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-gcloud/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-gh/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-gitoxide/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-glow/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-hostinger-api-mcp/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-hyperfine/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-jaq/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-jj/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-just/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-lazygit/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-llama-cpp/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ms-coreutils/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-niubash/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-obscura/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-oha/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ollama/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ouch/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ovhcloud/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-rclone/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ripgrep/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ruff/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-rustup/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-sccache/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-sd/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-starship/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-tealdeer/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-tokei/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-ty/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-typos/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-uv/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-watchexec/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-whisper-cpp/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-wrangler/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-xh/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-yq/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-zig/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cli-zoxide/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/context7-deep-research/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/cookie-debugging/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/cuda-nvidia-kernel/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/debug-optimize-lcp/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/electron-migrate/SKILL.md": {
+  "crate-prefix": 1,
+  "c-prefix": 2,
+  "binary-call": 7
+ },
+ ".agents/skills/env-auth/SKILL.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 3
+ },
+ ".agents/skills/epic-games/SKILL.md": {
+  "npm-scope": 1
+ },
+ ".agents/skills/finding-google-skills/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/gaming-stack/SKILL.md": {
+  "npm-scope": 1,
+  "binary-call": 14
+ },
+ ".agents/skills/gcloud/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/gemini-api-cli/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/gemini-api-dev/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/gemini-live-api-dev/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/gemini-omni-flash-api/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/github-workflow/SKILL.md": {
+  "product-name": 2
+ },
+ ".agents/skills/gnu/SKILL.md": {
+  "checkout-path": 1,
+  "crate-prefix": 4,
+  "binary-call": 1
+ },
+ ".agents/skills/google-cloud-recipe-auth/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/google-cloud-recipe-onboarding/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/google-labs-stitch-jules-design/SKILL.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 8
+ },
+ ".agents/skills/hygiene/SKILL.md": {
+  "checkout-path": 2,
+  "binary-call": 1
+ },
+ ".agents/skills/inspect-in-devtools/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/jules-automate-github-issues/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/jules-local-action-verification/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/learn/SKILL.md": {
+  "crate-prefix": 1
+ },
+ ".agents/skills/lua52-engineering/SKILL.md": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ ".agents/skills/material-3/SKILL.md": {
+  "npm-scope": 2,
+  "crate-prefix": 1
+ },
+ ".agents/skills/memory-leak-debugging/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/py2bun/SKILL.md": {
+  "npm-scope": 3
+ },
+ ".agents/skills/r2/SKILL.md": {
+  "crate-prefix": 4
+ },
+ ".agents/skills/retrieving-developer-knowledge/SKILL.md": {
+  "product-name": 1
+ },
+ ".agents/skills/reverse-engineer-anything/references/rea-ghidra-crate.md": {
+  "crate-prefix": 1,
+  "c-prefix": 8,
+  "binary-call": 1
+ },
+ ".agents/skills/rust-cargo/references/crates-io.md": {
+  "crate-prefix": 2
+ },
+ ".agents/skills/steam-client-windows/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/steam-client-windows/references/vdf-formats.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/steam-ids-and-urls/SKILL.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/steam-linux-proton/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/steam-local-inspect/SKILL.md": {
+  "binary-call": 12
+ },
+ ".agents/skills/steam-local-inspect/references/layout.md": {
+  "binary-call": 1
+ },
+ ".agents/skills/stitch-code-to-design/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-design-md/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-enhance-prompt/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-extract-design-md/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-extract-static-html/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-generate-design/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-loop/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-manage-design-system/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-react-components/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-react-native/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-react-vite-dashboard/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-remotion/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-shadcn-ui/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-site-md/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-taste-design/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/stitch-upload-to-stitch/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/tree-sitter/SKILL.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ ".agents/skills/ui-system/SKILL.md": {
+  "npm-scope": 5,
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "env-prefix": 1,
+  "binary-call": 1
+ },
+ ".agents/skills/unixwin/SKILL.md": {
+  "binary-call": 9
+ },
+ ".agents/skills/upstream-sources/SKILL.md": {
+  "binary-call": 3
+ },
+ ".agents/skills/vercel-geist/SKILL.md": {
+  "npm-scope": 1
+ },
+ ".agents/skills/web-quality/references/bcd.md": {
+  "checkout-path": 1
+ },
+ ".claude-plugin/marketplace.json": {
+  "product-name": 1,
+  "crate-prefix": 2
+ },
+ ".claude/agent-memory/rust-crates/electron-migrate-facts.md": {
+  "checkout-path": 1
+ },
+ ".claude/agents/c-core.md": {
+  "checkout-path": 3
+ },
+ ".claude/agents/chromium-integrator.md": {
+  "checkout-path": 1
+ },
+ ".claude/agents/coherence-fixer.md": {
+  "checkout-path": 2
+ },
+ ".claude/agents/rust-crates.md": {
+  "checkout-path": 3
+ },
+ ".claude/agents/ts-packages.md": {
+  "checkout-path": 2,
+  "product-name": 1,
+  "npm-scope": 1,
+  "binary-call": 4
+ },
+ ".claude/agents/upstream-absorber.md": {
+  "checkout-path": 2,
+  "binary-call": 2
+ },
+ ".claude/workflows/gemini-review.js": {
+  "checkout-path": 1
+ },
+ ".env.example": {
+  "checkout-path": 8,
+  "product-name": 5,
+  "npm-scope": 1,
+  "env-prefix": 8
+ },
+ ".github/ISSUE_TEMPLATE/bug-report.yml": {
+  "binary-call": 1
+ },
+ ".github/workflows/canary.yml": {
+  "product-name": 2,
+  "crate-prefix": 1,
+  "env-prefix": 3
+ },
+ ".github/workflows/ci-revert.yml": {
+  "env-prefix": 3
+ },
+ ".github/workflows/ci.yml": {
+  "product-name": 3,
+  "crate-prefix": 10,
+  "env-prefix": 3
+ },
+ ".github/workflows/claude.yml": {
+  "env-prefix": 3
+ },
+ ".github/workflows/crates-publish.yml": {
+  "binary-call": 1
+ },
+ ".github/workflows/deploy.yml": {
+  "npm-scope": 1,
+  "env-prefix": 2,
+  "binary-call": 2
+ },
+ ".github/workflows/deps.yml": {
+  "product-name": 2,
+  "binary-call": 3
+ },
+ ".github/workflows/game.yml": {
+  "crate-prefix": 10
+ },
+ ".github/workflows/gamescope.yml": {
+  "crate-prefix": 8
+ },
+ ".github/workflows/gcp-oidc.yml": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "binary-call": 1
+ },
+ ".github/workflows/images.yml": {
+  "product-name": 2,
+  "crate-prefix": 1
+ },
+ ".github/workflows/judge.yml": {
+  "env-prefix": 2
+ },
+ ".github/workflows/jules.yml": {
+  "binary-call": 1
+ },
+ ".github/workflows/linux-kernel.yml": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ ".github/workflows/linux-pkg.yml": {
+  "crate-prefix": 5,
+  "binary-call": 1
+ },
+ ".github/workflows/observe.yml": {
+  "env-prefix": 2
+ },
+ ".github/workflows/pypi-publish.yml": {
+  "binary-call": 1
+ },
+ ".github/workflows/release.yml": {
+  "env-prefix": 15
+ },
+ ".github/workflows/unixwin.yml": {
+  "product-name": 2,
+  "binary-call": 1
+ },
+ ".github/workflows/upstream-sync.yml": {
+  "env-prefix": 4
+ },
+ ".gitignore": {
+  "checkout-path": 1
+ },
+ ".gitmodules": {
+  "binary-call": 1
+ },
+ "AGENTS.md": {
+  "product-name": 2,
+  "npm-scope": 1,
+  "binary-call": 3
+ },
+ "CLAUDE.md": {
+  "checkout-path": 1,
+  "product-name": 2,
+  "binary-call": 1
+ },
+ "Cargo.toml": {
+  "product-name": 5,
+  "crate-prefix": 22,
+  "binary-call": 1
+ },
+ "DEPS": {
+  "binary-call": 1
+ },
+ "README.md": {
+  "npm-scope": 4,
+  "c-prefix": 5,
+  "binary-call": 4
+ },
+ "apps/aphrody/DESIGN.md": {
+  "npm-scope": 1
+ },
+ "apps/aphrody/build.ts": {
+  "npm-scope": 1
+ },
+ "apps/aphrody/public/catalog.json": {
+  "checkout-path": 3,
+  "product-name": 3,
+  "npm-scope": 72,
+  "crate-prefix": 56,
+  "c-prefix": 2,
+  "binary-call": 27
+ },
+ "apps/aphrody/public/catalog/index.html": {
+  "checkout-path": 1,
+  "product-name": 3,
+  "npm-scope": 66,
+  "crate-prefix": 53,
+  "c-prefix": 2,
+  "binary-call": 3
+ },
+ "apps/aphrody/public/fr/catalog/index.html": {
+  "checkout-path": 1,
+  "product-name": 3,
+  "npm-scope": 66,
+  "crate-prefix": 53,
+  "c-prefix": 2,
+  "binary-call": 3
+ },
+ "apps/aphrody/public/llms-full.txt": {
+  "crate-prefix": 1
+ },
+ "apps/aphrody/public/m3/index.html": {
+  "crate-prefix": 1
+ },
+ "apps/aphrody/public/m3/main.js": {
+  "c-prefix": 1
+ },
+ "apps/aphrody/public/m3/styles.css": {
+  "crate-prefix": 1
+ },
+ "apps/aphrody/public/tokens.css": {
+  "crate-prefix": 1
+ },
+ "apps/aphrody/web/README.md": {
+  "npm-scope": 2
+ },
+ "apps/aphrody/web/angular.json": {
+  "npm-scope": 1,
+  "crate-prefix": 3
+ },
+ "apps/aphrody/web/package.json": {
+  "npm-scope": 3
+ },
+ "apps/aphrody/web/src/app/app.ts": {
+  "c-prefix": 1
+ },
+ "apps/aphrody/web/src/styles.scss": {
+  "npm-scope": 1
+ },
+ "apps/auto/AY_FIELD_TEST.md": {
+  "checkout-path": 1,
+  "product-name": 2,
+  "crate-prefix": 2,
+  "binary-call": 12
+ },
+ "apps/auto/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/MIGRATION.md": {
+  "product-name": 1,
+  "crate-prefix": 2,
+  "binary-call": 4
+ },
+ "apps/auto/README.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "apps/auto/apps/api/src/auth.test.ts": {
+  "npm-scope": 1
+ },
+ "apps/auto/apps/web/package.json": {
+  "npm-scope": 3
+ },
+ "apps/auto/apps/web/public/craft/grid/index.html": {
+  "crate-prefix": 2
+ },
+ "apps/auto/apps/web/public/craft/manifest.json": {
+  "crate-prefix": 3
+ },
+ "apps/auto/apps/web/public/craft/word/index.html": {
+  "crate-prefix": 2
+ },
+ "apps/auto/apps/web/src/construction.tsx": {
+  "npm-scope": 1
+ },
+ "apps/auto/apps/web/src/styles/accueil.css": {
+  "npm-scope": 3
+ },
+ "apps/auto/box/README.md": {
+  "crate-prefix": 1
+ },
+ "apps/auto/box/compose.yaml": {
+  "crate-prefix": 3
+ },
+ "apps/auto/box/console/Cargo.toml": {
+  "crate-prefix": 3
+ },
+ "apps/auto/box/console/Dockerfile": {
+  "crate-prefix": 4
+ },
+ "apps/auto/box/console/src/lib.rs": {
+  "crate-prefix": 1
+ },
+ "apps/auto/box/console/src/main.rs": {
+  "crate-prefix": 4,
+  "c-prefix": 3
+ },
+ "apps/auto/box/console/src/serveur/mod.rs": {
+  "crate-prefix": 1
+ },
+ "apps/auto/box/console/src/serveur/preparer.rs": {
+  "crate-prefix": 3
+ },
+ "apps/auto/box/installer.ps1": {
+  "crate-prefix": 4
+ },
+ "apps/auto/box/installer.sh": {
+  "crate-prefix": 1
+ },
+ "apps/auto/bunfig.toml": {
+  "npm-scope": 1
+ },
+ "apps/auto/crates/auto-connaissance/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "apps/auto/crates/auto-connaissance/src/lib.rs": {
+  "crate-prefix": 2,
+  "c-prefix": 1
+ },
+ "apps/auto/docker/app.Dockerfile": {
+  "binary-call": 1
+ },
+ "apps/auto/docs/AGENT.md": {
+  "crate-prefix": 3
+ },
+ "apps/auto/docs/ARCHITECTURE.md": {
+  "crate-prefix": 2
+ },
+ "apps/auto/docs/AUTOMATISATIONS.md": {
+  "crate-prefix": 4
+ },
+ "apps/auto/docs/DEPLOYMENT.md": {
+  "binary-call": 2
+ },
+ "apps/auto/docs/MAILBOX.md": {
+  "product-name": 1
+ },
+ "apps/auto/docs/OPEN-SOURCE.md": {
+  "npm-scope": 4,
+  "crate-prefix": 1
+ },
+ "apps/auto/docs/PRODUCTION.md": {
+  "product-name": 2,
+  "npm-scope": 1,
+  "crate-prefix": 3
+ },
+ "apps/auto/docs/STACK.md": {
+  "npm-scope": 4
+ },
+ "apps/auto/docs/STRIPE.md": {
+  "crate-prefix": 1
+ },
+ "apps/auto/docs/SUITE.md": {
+  "npm-scope": 2,
+  "crate-prefix": 16
+ },
+ "apps/auto/docs/UI.md": {
+  "npm-scope": 3
+ },
+ "apps/auto/docs/design/DESIGN-SYSTEM.md": {
+  "npm-scope": 2
+ },
+ "apps/auto/package.json": {
+  "npm-scope": 3
+ },
+ "apps/auto/packages/automate/src/noeuds.ts": {
+  "crate-prefix": 2
+ },
+ "apps/auto/packages/ingest/src/ocr.ts": {
+  "crate-prefix": 2
+ },
+ "apps/auto/packages/native/src/index.ts": {
+  "crate-prefix": 1
+ },
+ "apps/auto/packages/services/src/connaissance.ts": {
+  "crate-prefix": 2
+ },
+ "apps/auto/packages/store/migrations/019_connaissance.sql": {
+  "crate-prefix": 1
+ },
+ "apps/auto/packages/ui/package.json": {
+  "npm-scope": 1
+ },
+ "apps/auto/packages/ui/src/base.css": {
+  "npm-scope": 1
+ },
+ "apps/auto/packages/ui/src/tokens.css": {
+  "npm-scope": 2
+ },
+ "apps/auto/packages/ui/src/tokens.test.ts": {
+  "npm-scope": 1
+ },
+ "apps/auto/packages/ui/src/tokens.ts": {
+  "npm-scope": 6
+ },
+ "apps/auto/packages/video/src/scenario.ts": {
+  "product-name": 2
+ },
+ "apps/auto/scripts/build-standalone.ts": {
+  "npm-scope": 1
+ },
+ "apps/auto/scripts/prod.ts": {
+  "binary-call": 3
+ },
+ "apps/auto/scripts/publier.ts": {
+  "npm-scope": 5
+ },
+ "apps/auto/scripts/video-lancement-voix.ts": {
+  "product-name": 2
+ },
+ "apps/auto/tsconfig.json": {
+  "npm-scope": 1
+ },
+ "apps/auto/vendor/suite/apps/pdfcraft/vendor/hayro-interpret/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "apps/auto/vendor/suite/apps/pdfcraft/vendor/hayro-jbig2/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/apps/pdfcraft/vendor/hayro-syntax/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "apps/auto/vendor/suite/apps/pdfcraft/vendor/hayro/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "apps/auto/vendor/suite/apps/pdfcraft/vendor/lopdf/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/Cargo.toml": {
+  "product-name": 1,
+  "crate-prefix": 2
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/src/api.rs": {
+  "product-name": 1,
+  "crate-prefix": 3
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/src/eval.rs": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/src/fusion.rs": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/src/lib.rs": {
+  "product-name": 2,
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/src/text.rs": {
+  "product-name": 1
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/tests/chunk_invariants.rs": {
+  "c-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/tests/eval_tests.rs": {
+  "c-prefix": 5
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/tests/fixtures/parity/README.md": {
+  "c-prefix": 2
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/tests/fusion_tests.rs": {
+  "c-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/aphrody-rag-core/tests/ts_parity_golden.rs": {
+  "product-name": 2,
+  "c-prefix": 12
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-annot/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-cos/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-create/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-edit/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-forms/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-organize/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-redact/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "apps/auto/vendor/suite/crates/pdfcraft-render/Cargo.toml": {
+  "crate-prefix": 3
+ },
+ "apps/auto/vendor/suite/crates/wordcraft-pdf/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "apps/nt/CLAUDE.md": {
+  "npm-scope": 1
+ },
+ "apps/nt/docs/interop/bun-lowlevel.md": {
+  "product-name": 1
+ },
+ "apps/nt/modules/web/README.md": {
+  "npm-scope": 1
+ },
+ "apps/nt/modules/web/i18n.ts": {
+  "npm-scope": 1
+ },
+ "apps/nt/modules/web/nt.ts": {
+  "npm-scope": 1
+ },
+ "apps/nt/modules/web/package.json": {
+  "npm-scope": 1
+ },
+ "apps/nt/package.json": {
+  "npm-scope": 2
+ },
+ "apps/nt/sdk/tools/host/server.ts": {
+  "npm-scope": 2
+ },
+ "apps/nt/sdk/tools/msindex/main.ts": {
+  "checkout-path": 1
+ },
+ "apps/r2b/crates/rea-ghidra/python/rea_ghidra_uv.py": {
+  "checkout-path": 3
+ },
+ "bench/Cargo.toml": {
+  "binary-call": 1
+ },
+ "bench/README.md": {
+  "binary-call": 1
+ },
+ "bench/src/cli.rs": {
+  "binary-call": 2
+ },
+ "dist-workspace.toml": {
+  "product-name": 3,
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "docs/ALPHABET.md": {
+  "binary-call": 7
+ },
+ "docs/ARCHITECTURE.md": {
+  "product-name": 19,
+  "npm-scope": 4,
+  "crate-prefix": 32,
+  "c-prefix": 2,
+  "env-prefix": 1,
+  "binary-call": 15
+ },
+ "docs/PLAN.mdx": {
+  "npm-scope": 4,
+  "c-prefix": 4
+ },
+ "docs/README.md": {
+  "checkout-path": 9,
+  "product-name": 6,
+  "npm-scope": 7,
+  "crate-prefix": 2,
+  "env-prefix": 1
+ },
+ "docs/agents/AGENT-FIRST.md": {
+  "checkout-path": 2,
+  "crate-prefix": 4,
+  "binary-call": 1
+ },
+ "docs/agents/WINDOWS-NATIVE-PORT.md": {
+  "checkout-path": 1
+ },
+ "docs/ai/ANOMALYCO.md": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 3
+ },
+ "docs/ai/DISTRIBUTED-INFERENCE.md": {
+  "product-name": 1,
+  "crate-prefix": 6,
+  "c-prefix": 1,
+  "binary-call": 12
+ },
+ "docs/audit/first-party.jsonl": {
+  "checkout-path": 84,
+  "product-name": 2,
+  "npm-scope": 6,
+  "crate-prefix": 26,
+  "c-prefix": 10,
+  "binary-call": 7
+ },
+ "docs/audit/first-party.md": {
+  "npm-scope": 2,
+  "crate-prefix": 13,
+  "c-prefix": 4,
+  "binary-call": 5
+ },
+ "docs/audit/legacy-forks.md": {
+  "checkout-path": 5,
+  "npm-scope": 1
+ },
+ "docs/axum/README.md": {
+  "binary-call": 2
+ },
+ "docs/ay/MIGRATION.md": {
+  "product-name": 2,
+  "npm-scope": 1,
+  "crate-prefix": 5,
+  "c-prefix": 1,
+  "binary-call": 116
+ },
+ "docs/ay/NAMING.md": {
+  "product-name": 3,
+  "npm-scope": 2,
+  "crate-prefix": 1,
+  "binary-call": 45
+ },
+ "docs/base-ui/FORK.md": {
+  "product-name": 1,
+  "npm-scope": 1
+ },
+ "docs/better-auth/FORK.md": {
+  "product-name": 1,
+  "binary-call": 1
+ },
+ "docs/core/ARCHITECTURE-ROOT.md": {
+  "product-name": 1,
+  "binary-call": 6
+ },
+ "docs/craft/PLAN.md": {
+  "checkout-path": 3
+ },
+ "docs/design/DESIGN_SYSTEM.md": {
+  "crate-prefix": 4,
+  "binary-call": 2
+ },
+ "docs/design/README.md": {
+  "crate-prefix": 1
+ },
+ "docs/design/REFERENCES.md": {
+  "product-name": 1
+ },
+ "docs/design/replica/console/architecture.md": {
+  "product-name": 1,
+  "crate-prefix": 20,
+  "binary-call": 2
+ },
+ "docs/design/replica/console/recon.md": {
+  "crate-prefix": 2
+ },
+ "docs/design/replica/console/schema.sql": {
+  "product-name": 1
+ },
+ "docs/design/specs/components/material-3.json": {
+  "npm-scope": 1
+ },
+ "docs/design/specs/components/material-3.md": {
+  "npm-scope": 1
+ },
+ "docs/epic/FREE-ASSETS.md": {
+  "binary-call": 2
+ },
+ "docs/epic/TRACKING.md": {
+  "product-name": 1
+ },
+ "docs/games/ARTCRAFT.md": {
+  "crate-prefix": 1
+ },
+ "docs/games/ASSET-TESTS.md": {
+  "binary-call": 1
+ },
+ "docs/games/BROWSER-OS.md": {
+  "product-name": 1,
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "docs/games/FEATURE-MATRIX.md": {
+  "crate-prefix": 1
+ },
+ "docs/games/MEDIA-STACK.md": {
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 1
+ },
+ "docs/games/PLAN.md": {
+  "crate-prefix": 6,
+  "c-prefix": 1,
+  "binary-call": 10
+ },
+ "docs/games/PLATFORM-EQUIV.md": {
+  "binary-call": 4
+ },
+ "docs/games/WASM-DEPLOY.md": {
+  "crate-prefix": 1
+ },
+ "docs/gaming/OWNERSHIP.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 19
+ },
+ "docs/i18n/README.md": {
+  "npm-scope": 1,
+  "crate-prefix": 2,
+  "env-prefix": 1,
+  "binary-call": 6
+ },
+ "docs/i18n/es/PLAN.md": {
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 6
+ },
+ "docs/i18n/es/README.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "docs/i18n/fr/AGENTS.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 4
+ },
+ "docs/i18n/fr/PLAN.md": {
+  "crate-prefix": 2,
+  "c-prefix": 1,
+  "binary-call": 7
+ },
+ "docs/i18n/fr/README.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 2,
+  "binary-call": 3
+ },
+ "docs/i18n/ja/AGENTS.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 4
+ },
+ "docs/i18n/ja/PLAN.md": {
+  "crate-prefix": 3,
+  "c-prefix": 1,
+  "binary-call": 9
+ },
+ "docs/i18n/ja/README.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 2,
+  "binary-call": 3
+ },
+ "docs/i18n/zh-CN/AGENTS.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 4
+ },
+ "docs/i18n/zh-CN/PLAN.md": {
+  "crate-prefix": 4,
+  "c-prefix": 1,
+  "binary-call": 9
+ },
+ "docs/i18n/zh-CN/README.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 2,
+  "binary-call": 4
+ },
+ "docs/infra/AGENT-TOOLCHAIN.md": {
+  "checkout-path": 2,
+  "product-name": 2,
+  "npm-scope": 1,
+  "crate-prefix": 18,
+  "binary-call": 3
+ },
+ "docs/infra/AUTH-ECOSYSTEM.md": {
+  "product-name": 1,
+  "npm-scope": 2,
+  "binary-call": 11
+ },
+ "docs/infra/AUTH.md": {
+  "product-name": 4,
+  "npm-scope": 2,
+  "crate-prefix": 1,
+  "env-prefix": 1,
+  "binary-call": 29
+ },
+ "docs/infra/CLOUDFLARE-ONE.md": {
+  "product-name": 3,
+  "binary-call": 1
+ },
+ "docs/infra/CLUSTER.md": {
+  "product-name": 4,
+  "crate-prefix": 5
+ },
+ "docs/infra/DEPLOY.md": {
+  "product-name": 7,
+  "crate-prefix": 8,
+  "binary-call": 1
+ },
+ "docs/infra/FILESYSTEMS.md": {
+  "checkout-path": 1
+ },
+ "docs/infra/FLEET-OFFLOAD.md": {
+  "checkout-path": 7,
+  "product-name": 2,
+  "crate-prefix": 5
+ },
+ "docs/infra/FLEET.md": {
+  "checkout-path": 1,
+  "product-name": 3,
+  "npm-scope": 1,
+  "crate-prefix": 13,
+  "binary-call": 2
+ },
+ "docs/infra/FR1-CHROMIUM-HOST.md": {
+  "product-name": 2,
+  "crate-prefix": 12
+ },
+ "docs/infra/FR2-CLOUDFLARE.md": {
+  "checkout-path": 1,
+  "product-name": 10,
+  "crate-prefix": 28,
+  "binary-call": 1
+ },
+ "docs/infra/GCP-BILLING.md": {
+  "product-name": 10,
+  "npm-scope": 3,
+  "crate-prefix": 5,
+  "c-prefix": 1
+ },
+ "docs/infra/GEMINI-WEB-MCP.md": {
+  "checkout-path": 1,
+  "crate-prefix": 2,
+  "env-prefix": 2
+ },
+ "docs/infra/GITHUB-APP.md": {
+  "product-name": 2,
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "env-prefix": 14,
+  "binary-call": 11
+ },
+ "docs/infra/GLOBAL-STACK.md": {
+  "product-name": 1,
+  "crate-prefix": 3
+ },
+ "docs/infra/HOSTING-POLICY.md": {
+  "product-name": 3,
+  "crate-prefix": 7
+ },
+ "docs/infra/IDENTITY-CONSOLIDATION.md": {
+  "checkout-path": 1,
+  "product-name": 10,
+  "npm-scope": 7,
+  "crate-prefix": 30
+ },
+ "docs/infra/IDENTITY.md": {
+  "product-name": 7,
+  "npm-scope": 4,
+  "crate-prefix": 3,
+  "env-prefix": 2,
+  "binary-call": 1
+ },
+ "docs/infra/INFRA_MATRIX.md": {
+  "checkout-path": 2,
+  "product-name": 5,
+  "npm-scope": 1,
+  "crate-prefix": 3,
+  "binary-call": 7
+ },
+ "docs/infra/INSTALL_UPDATE.md": {
+  "product-name": 2,
+  "crate-prefix": 4,
+  "env-prefix": 2,
+  "binary-call": 41
+ },
+ "docs/infra/MIGRATION-VERCEL-CF.md": {
+  "checkout-path": 2,
+  "crate-prefix": 20
+ },
+ "docs/infra/NPM.md": {
+  "product-name": 1,
+  "npm-scope": 4,
+  "crate-prefix": 1
+ },
+ "docs/infra/OS-BENCH.md": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 3
+ },
+ "docs/infra/PROD-MAP.md": {
+  "product-name": 2,
+  "crate-prefix": 29
+ },
+ "docs/infra/REINSTALL-PLAN.md": {
+  "crate-prefix": 2,
+  "binary-call": 3
+ },
+ "docs/infra/RESILIENCE.md": {
+  "product-name": 2,
+  "crate-prefix": 16
+ },
+ "docs/infra/SINGLE-SERVER.md": {
+  "checkout-path": 7,
+  "crate-prefix": 2
+ },
+ "docs/infra/UPSTREAM-STACK.md": {
+  "product-name": 6,
+  "crate-prefix": 3,
+  "binary-call": 3
+ },
+ "docs/infra/VAULT.md": {
+  "checkout-path": 2,
+  "product-name": 6,
+  "npm-scope": 4,
+  "crate-prefix": 9,
+  "c-prefix": 2,
+  "binary-call": 3
+ },
+ "docs/infra/WSL.md": {
+  "product-name": 8,
+  "crate-prefix": 3
+ },
+ "docs/machine/FEATURE-FLAGS.md": {
+  "crate-prefix": 2
+ },
+ "docs/machine/PC-TUNING.md": {
+  "checkout-path": 4
+ },
+ "docs/native/AY-UNIVERSAL-PIPELINE.md": {
+  "checkout-path": 2,
+  "crate-prefix": 1,
+  "binary-call": 23
+ },
+ "docs/native/BUILD_SPEED.md": {
+  "checkout-path": 2
+ },
+ "docs/native/CHROMIUM-FACTORY.md": {
+  "checkout-path": 1,
+  "product-name": 3,
+  "crate-prefix": 12,
+  "c-prefix": 1,
+  "binary-call": 16
+ },
+ "docs/native/COMPAT-WINDOWS-LINUX.md": {
+  "crate-prefix": 4,
+  "binary-call": 1
+ },
+ "docs/native/DEPOT_ARCHITECTURE.md": {
+  "checkout-path": 14,
+  "binary-call": 3
+ },
+ "docs/native/NAMESPACE-ISOLATION.md": {
+  "checkout-path": 3,
+  "npm-scope": 2
+ },
+ "docs/native/PIPELINE.md": {
+  "checkout-path": 2,
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 16
+ },
+ "docs/native/PURE-C-WASM-UI-2026.md": {
+  "crate-prefix": 3,
+  "c-prefix": 6,
+  "binary-call": 1
+ },
+ "docs/native/ROADMAP.md": {
+  "binary-call": 5
+ },
+ "docs/native/UNIX.md": {
+  "checkout-path": 7,
+  "crate-prefix": 4
+ },
+ "docs/native/UNIXWIN.md": {
+  "product-name": 1,
+  "crate-prefix": 2,
+  "binary-call": 15
+ },
+ "docs/native/VCS-FORGE.md": {
+  "checkout-path": 1,
+  "product-name": 3,
+  "env-prefix": 2
+ },
+ "docs/native/VCS_FORGE_MATRIX.md": {
+  "binary-call": 12
+ },
+ "docs/native/WEBASSEMBLY-EMSCRIPTEN.md": {
+  "checkout-path": 1
+ },
+ "docs/native/android/ECOSYSTEM.md": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "docs/native/android/PROOF-x64.md": {
+  "crate-prefix": 3,
+  "c-prefix": 1
+ },
+ "docs/native/android/SETUP.md": {
+  "crate-prefix": 1
+ },
+ "docs/native/android/proof/layout-api37.json": {
+  "crate-prefix": 1
+ },
+ "docs/native/compat/DEDUP.md": {
+  "checkout-path": 27
+ },
+ "docs/native/compat/ECOSYSTEM.md": {
+  "checkout-path": 5
+ },
+ "docs/native/compat/PLAN.md": {
+  "checkout-path": 3,
+  "binary-call": 1
+ },
+ "docs/native/compat/PROOF.md": {
+  "binary-call": 1
+ },
+ "docs/native/deps/CHROMIUM-STACK-ALIGNMENT.md": {
+  "crate-prefix": 4
+ },
+ "docs/native/deps/DEDUP.md": {
+  "product-name": 1,
+  "crate-prefix": 5,
+  "binary-call": 3
+ },
+ "docs/native/deps/DEPS-MINIMIZE.md": {
+  "product-name": 2,
+  "crate-prefix": 1,
+  "binary-call": 3
+ },
+ "docs/native/deps/POLICY.md": {
+  "binary-call": 22
+ },
+ "docs/native/gnu/DISTRIBUTION.md": {
+  "checkout-path": 1,
+  "crate-prefix": 3,
+  "binary-call": 3
+ },
+ "docs/native/gnu/OS.md": {
+  "crate-prefix": 3,
+  "binary-call": 3
+ },
+ "docs/native/gnu/PLAN.md": {
+  "crate-prefix": 1
+ },
+ "docs/native/linux-kernel-story/mdx/11-comparative-study-linux-vs-aphrody.mdx": {
+  "checkout-path": 6,
+  "product-name": 7,
+  "npm-scope": 1,
+  "c-prefix": 3
+ },
+ "docs/native/linux-kernel-story/mdx/12-linux-2026-variants-non-c-kernels-discovery.mdx": {
+  "checkout-path": 1
+ },
+ "docs/native/linux/ANDROID-CHROMIUMOS.md": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "docs/native/linux/GPU.md": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "docs/native/linux/OWNERSHIP.md": {
+  "crate-prefix": 1,
+  "binary-call": 11
+ },
+ "docs/native/linux/PATCHSETS.md": {
+  "crate-prefix": 2,
+  "binary-call": 5
+ },
+ "docs/native/llvm/AY-AS-LLVM.md": {
+  "checkout-path": 1,
+  "product-name": 2,
+  "crate-prefix": 7,
+  "binary-call": 8
+ },
+ "docs/native/llvm/BEST-PRACTICES.md": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 3
+ },
+ "docs/native/llvm/CHROMIUM-157-TOOLCHAIN.md": {
+  "product-name": 2,
+  "crate-prefix": 2
+ },
+ "docs/native/llvm/PURE-C-LLVM.mdx": {
+  "crate-prefix": 7,
+  "c-prefix": 8
+ },
+ "docs/native/llvm/ROADMAP.md": {
+  "checkout-path": 1,
+  "binary-call": 8
+ },
+ "docs/native/llvm/TOOLCHAIN-FORKS.md": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "docs/native/llvm/UNIFIED-TOOLCHAIN.md": {
+  "product-name": 1,
+  "crate-prefix": 2,
+  "binary-call": 7
+ },
+ "docs/native/llvm/ZIG-CROSS.md": {
+  "c-prefix": 5
+ },
+ "docs/native/patches/series": {
+  "binary-call": 1
+ },
+ "docs/native/re/GHIDRA.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "docs/native/shell/CLAUDE-NT.md": {
+  "checkout-path": 1
+ },
+ "docs/native/shell/CUSTOMIZATION-INDEX.md": {
+  "crate-prefix": 4
+ },
+ "docs/native/shell/MATRIX.md": {
+  "checkout-path": 2
+ },
+ "docs/native/shell/SETUP.md": {
+  "checkout-path": 1
+ },
+ "docs/native/shell/bash-setup.md": {
+  "binary-call": 1
+ },
+ "docs/native/shell/ecosystem-links.md": {
+  "product-name": 1
+ },
+ "docs/native/shell/pwsh-setup.md": {
+  "checkout-path": 1,
+  "binary-call": 1
+ },
+ "docs/native/specs/APHRODY_DESIGN_CAHIER_DES_CHARGES.md": {
+  "checkout-path": 4,
+  "product-name": 2,
+  "npm-scope": 3,
+  "crate-prefix": 5
+ },
+ "docs/native/terminal/ARCHITECTURE.md": {
+  "binary-call": 2
+ },
+ "docs/net/NETWORK-STACK.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "c-prefix": 3,
+  "env-prefix": 2
+ },
+ "docs/nextjs/FORK.md": {
+  "product-name": 3,
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "docs/nextjs/README.md": {
+  "binary-call": 3
+ },
+ "docs/packaging/OURS.md": {
+  "checkout-path": 1,
+  "binary-call": 2
+ },
+ "docs/packaging/RECOMMENDATION.md": {
+  "binary-call": 3
+ },
+ "docs/packaging/UNIFIED.md": {
+  "binary-call": 2
+ },
+ "docs/packaging/VERSIONING.md": {
+  "npm-scope": 1,
+  "binary-call": 12
+ },
+ "docs/project/layout.md": {
+  "crate-prefix": 2,
+  "binary-call": 7
+ },
+ "docs/project/restore-inventory.json": {
+  "checkout-path": 6,
+  "product-name": 1,
+  "crate-prefix": 109
+ },
+ "docs/project/restore-inventory.md": {
+  "checkout-path": 2,
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 20
+ },
+ "docs/proofs/ai-os-interop-2026-11-13.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 2
+ },
+ "docs/proofs/ay-steam-2026-11-13.md": {
+  "crate-prefix": 4,
+  "binary-call": 4
+ },
+ "docs/proofs/fleet-resilience-2026-11-13.md": {
+  "checkout-path": 3,
+  "crate-prefix": 3,
+  "binary-call": 1
+ },
+ "docs/publish/BLOCKED.md": {
+  "npm-scope": 1
+ },
+ "docs/publish/STATUS.md": {
+  "crate-prefix": 1
+ },
+ "docs/reference/catalog/app.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 2
+ },
+ "docs/reference/catalog/crate.md": {
+  "checkout-path": 1,
+  "product-name": 1,
+  "crate-prefix": 47,
+  "c-prefix": 1,
+  "binary-call": 19
+ },
+ "docs/reference/catalog/infra.md": {
+  "product-name": 1
+ },
+ "docs/reference/catalog/package.md": {
+  "checkout-path": 1,
+  "npm-scope": 67,
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 3
+ },
+ "docs/reference/catalog/skill.md": {
+  "crate-prefix": 3,
+  "binary-call": 2
+ },
+ "docs/reference/tree-sitter.md": {
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "docs/reference/wck-modern-web.md": {
+  "npm-scope": 1
+ },
+ "docs/replica/recon/google.md": {
+  "product-name": 5,
+  "crate-prefix": 4,
+  "binary-call": 2
+ },
+ "docs/replica/recon/vercel.md": {
+  "product-name": 1,
+  "binary-call": 2
+ },
+ "docs/research/ai-os-stack-factcheck.md": {
+  "npm-scope": 2,
+  "c-prefix": 2
+ },
+ "docs/research/dragon-ball.md": {
+  "checkout-path": 6
+ },
+ "docs/research/shell-replacement.md": {
+  "product-name": 1,
+  "binary-call": 1
+ },
+ "docs/shadcn/FORK.md": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "binary-call": 2
+ },
+ "docs/tailwindcss/FORK.md": {
+  "binary-call": 1
+ },
+ "docs/tooling/AI-TOOLING-AUDIT.md": {
+  "checkout-path": 2
+ },
+ "docs/tooling/CLAUDE-CODE-TUNING.md": {
+  "checkout-path": 1
+ },
+ "docs/tooling/CONFORMANCE.md": {
+  "c-prefix": 2,
+  "env-prefix": 1,
+  "binary-call": 2
+ },
+ "docs/tools/CLI-LIBS.md": {
+  "checkout-path": 1,
+  "binary-call": 4
+ },
+ "docs/tools/cli-proof-2026-11.json": {
+  "checkout-path": 4,
+  "binary-call": 1
+ },
+ "docs/topology/TOPOLOGY.html": {
+  "product-name": 5,
+  "npm-scope": 32,
+  "crate-prefix": 55
+ },
+ "docs/topology/critical-path.mmd": {
+  "npm-scope": 2
+ },
+ "docs/topology/topology.json": {
+  "product-name": 5,
+  "npm-scope": 30,
+  "crate-prefix": 53
+ },
+ "docs/tv/environnement.mdx": {
+  "checkout-path": 1
+ },
+ "docs/tv/ffmpeg-analyse.mdx": {
+  "checkout-path": 1
+ },
+ "docs/ui/ECOSYSTEM-AUDIT.md": {
+  "product-name": 1,
+  "c-prefix": 3,
+  "binary-call": 1
+ },
+ "docs/ui/STACK.md": {
+  "npm-scope": 2,
+  "crate-prefix": 2,
+  "binary-call": 2
+ },
+ "docs/upstream/STRATEGY.md": {
+  "checkout-path": 1,
+  "product-name": 3,
+  "crate-prefix": 1,
+  "binary-call": 22
+ },
+ "docs/upstream/spacedrive-cosmic-locally-uncensored.md": {
+  "checkout-path": 6,
+  "binary-call": 2
+ },
+ "docs/web/MODERN-WEB-GUIDANCE.mdx": {
+  "npm-scope": 4,
+  "c-prefix": 1,
+  "env-prefix": 2
+ },
+ "docs/web/MODERN_WEB_GUIDELINES.md": {
+  "checkout-path": 1
+ },
+ "infra/agents/claude/CLAUDE.md": {
+  "checkout-path": 3
+ },
+ "infra/agents/fleet.toml": {
+  "checkout-path": 1,
+  "crate-prefix": 1
+ },
+ "infra/agents/gh-token.test.ts": {
+  "env-prefix": 2
+ },
+ "infra/agents/gh-token.ts": {
+  "npm-scope": 2,
+  "env-prefix": 2
+ },
+ "infra/agents/github-events.test.ts": {
+  "product-name": 1
+ },
+ "infra/agents/github-events.ts": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "infra/agents/install-pc.sh": {
+  "checkout-path": 1
+ },
+ "infra/agents/install.sh": {
+  "crate-prefix": 5
+ },
+ "infra/agents/plugins/aphrody-nhitl/.claude-plugin/plugin.json": {
+  "crate-prefix": 1
+ },
+ "infra/agents/plugins/aphrody-nhitl/README.md": {
+  "checkout-path": 2,
+  "product-name": 1,
+  "npm-scope": 2,
+  "crate-prefix": 3
+ },
+ "infra/agents/plugins/aphrody-nhitl/hooks/hooks.json": {
+  "crate-prefix": 1
+ },
+ "infra/agents/plugins/aphrody-nhitl/src/lib.ts": {
+  "crate-prefix": 1
+ },
+ "infra/agents/plugins/aphrody-nhitl/test/launcher.test.ts": {
+  "checkout-path": 9
+ },
+ "infra/agents/runner.ts": {
+  "checkout-path": 1,
+  "product-name": 2,
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "env-prefix": 6,
+  "binary-call": 1
+ },
+ "infra/agents/toolchain.toml": {
+  "product-name": 2,
+  "npm-scope": 7,
+  "crate-prefix": 6,
+  "binary-call": 2
+ },
+ "infra/ai/ai.toml": {
+  "binary-call": 6
+ },
+ "infra/ai/fabric.toml": {
+  "binary-call": 1
+ },
+ "infra/ai/fabric/node.sh": {
+  "crate-prefix": 2,
+  "c-prefix": 3
+ },
+ "infra/ai/litellm-overlay.toml": {
+  "binary-call": 1
+ },
+ "infra/ai/litellm-serve.ts": {
+  "binary-call": 3
+ },
+ "infra/bench/os-bench/os-bench.sh": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "infra/browser-engines.just": {
+  "npm-scope": 1
+ },
+ "infra/chromium-factory/args/labs_agent.gn": {
+  "crate-prefix": 1
+ },
+ "infra/chromium-factory/chromium-factory.just": {
+  "product-name": 7,
+  "crate-prefix": 2
+ },
+ "infra/chromium-factory/chromium-factory.sh": {
+  "crate-prefix": 1
+ },
+ "infra/chromium-factory/cros-factory.sh": {
+  "crate-prefix": 1
+ },
+ "infra/chromium-factory/factory.toml": {
+  "product-name": 1,
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "infra/chromium-factory/systemd/chromium-factory.service": {
+  "crate-prefix": 1
+ },
+ "infra/chromium-factory/systemd/cros-factory.service": {
+  "crate-prefix": 1
+ },
+ "infra/cloudflare/aop.ts": {
+  "product-name": 1
+ },
+ "infra/cloudflare/cloudflare.toml": {
+  "product-name": 2,
+  "crate-prefix": 17,
+  "c-prefix": 2,
+  "env-prefix": 1
+ },
+ "infra/cloudflare/expected-status.json": {
+  "product-name": 1,
+  "crate-prefix": 4
+ },
+ "infra/cloudflare/proof.ts": {
+  "product-name": 1,
+  "crate-prefix": 10,
+  "env-prefix": 2
+ },
+ "infra/cloudflare/workers/aphrody-email-worker/index.js": {
+  "crate-prefix": 1
+ },
+ "infra/cloudflare/workers/aphrody-email-worker/index.js.map": {
+  "crate-prefix": 2
+ },
+ "infra/cloudflare/workers/aphrody-email-worker/wrangler.jsonc": {
+  "crate-prefix": 2
+ },
+ "infra/cloudflare/workers/aphrody-mcp-gateway/deploy.ts": {
+  "crate-prefix": 2,
+  "env-prefix": 3
+ },
+ "infra/cloudflare/workers/aphrody-mcp-gateway/index.ts": {
+  "crate-prefix": 1,
+  "env-prefix": 1
+ },
+ "infra/cloudflare/workers/aphrody-webos/index.js": {
+  "checkout-path": 10,
+  "product-name": 4,
+  "npm-scope": 2,
+  "crate-prefix": 5
+ },
+ "infra/cloudflare/workers/aphrody-webos/wrangler.jsonc": {
+  "crate-prefix": 3
+ },
+ "infra/cloudflare/workers/api-gateway/api.aphrody.com.toml": {
+  "product-name": 1,
+  "crate-prefix": 3
+ },
+ "infra/cloudflare/workers/bun-video-showcase/wrangler.jsonc": {
+  "crate-prefix": 1
+ },
+ "infra/cloudflare/workers/creator-aphrody-com/wrangler.jsonc": {
+  "crate-prefix": 3
+ },
+ "infra/cloudflare/workers/github-app/README.md": {
+  "npm-scope": 1
+ },
+ "infra/cloudflare/workers/github-app/cloudflare.config.ts": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "infra/cloudflare/workers/github-app/package.json": {
+  "npm-scope": 1
+ },
+ "infra/cloudflare/workers/github-app/src/index.ts": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "infra/cluster/compose.capped.yaml": {
+  "product-name": 2,
+  "crate-prefix": 5
+ },
+ "infra/cluster/dedup.ts": {
+  "crate-prefix": 1
+ },
+ "infra/cluster/deploy.sh": {
+  "crate-prefix": 12
+ },
+ "infra/cluster/gen.ts": {
+  "crate-prefix": 4,
+  "env-prefix": 2
+ },
+ "infra/cluster/generated/fr1/nginx-cluster.conf": {
+  "product-name": 2
+ },
+ "infra/cluster/generated/fr2/nginx-cluster.conf": {
+  "product-name": 2
+ },
+ "infra/cluster/generated/prd/nginx-cluster.conf": {
+  "product-name": 2
+ },
+ "infra/cluster/generated/ssh/aphrody-ssh-mesh": {
+  "crate-prefix": 1,
+  "env-prefix": 2
+ },
+ "infra/cluster/pki.sh": {
+  "product-name": 1,
+  "env-prefix": 2
+ },
+ "infra/cluster/proof.sh": {
+  "product-name": 1,
+  "crate-prefix": 9
+ },
+ "infra/cluster/standby.sh": {
+  "product-name": 4,
+  "crate-prefix": 2
+ },
+ "infra/cluster/systemd/aphrody-cluster-haproxy.service": {
+  "product-name": 1,
+  "crate-prefix": 3
+ },
+ "infra/cluster/systemd/cloudflared-mig-prd.service": {
+  "crate-prefix": 2
+ },
+ "infra/deploy.toml": {
+  "checkout-path": 11,
+  "product-name": 8,
+  "npm-scope": 1,
+  "crate-prefix": 10,
+  "env-prefix": 3,
+  "binary-call": 5
+ },
+ "infra/docker/Dockerfile": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "infra/docker/compose.yaml": {
+  "checkout-path": 2,
+  "product-name": 2,
+  "crate-prefix": 8,
+  "env-prefix": 1
+ },
+ "infra/docker/docker.just": {
+  "product-name": 1,
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "infra/fleet/ACME.md": {
+  "binary-call": 1
+ },
+ "infra/fleet/RUNBOOK.md": {
+  "checkout-path": 1,
+  "crate-prefix": 6,
+  "binary-call": 3
+ },
+ "infra/fleet/bin/agents-sync.sh": {
+  "checkout-path": 2,
+  "crate-prefix": 1
+ },
+ "infra/fleet/bin/build-all.sh": {
+  "checkout-path": 2,
+  "product-name": 5,
+  "crate-prefix": 8
+ },
+ "infra/fleet/bin/deploy-images.sh": {
+  "checkout-path": 4
+ },
+ "infra/fleet/bin/fleet-backup.sh": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/bin/fleet-mesh-hosts.sh": {
+  "crate-prefix": 5
+ },
+ "infra/fleet/bin/fleet-notify.sh": {
+  "binary-call": 1
+ },
+ "infra/fleet/bin/fleet-offload.sh": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/bin/fleet-ping.sh": {
+  "checkout-path": 1
+ },
+ "infra/fleet/bin/fleet-rebuild.sh": {
+  "crate-prefix": 5
+ },
+ "infra/fleet/bin/fleet-resilience-remote.sh": {
+  "checkout-path": 2,
+  "crate-prefix": 3
+ },
+ "infra/fleet/bin/fleet-setup.sh": {
+  "checkout-path": 12
+ },
+ "infra/fleet/bin/fleet-tune.sh": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/bin/fleet-valkey-rotate.sh": {
+  "binary-call": 2
+ },
+ "infra/fleet/bin/heavy.sh": {
+  "crate-prefix": 7
+ },
+ "infra/fleet/bin/src-checkout-update.sh": {
+  "checkout-path": 2,
+  "crate-prefix": 1
+ },
+ "infra/fleet/bin/ssh22-probe-install.sh": {
+  "checkout-path": 1
+ },
+ "infra/fleet/bin/third-party-sync.sh": {
+  "checkout-path": 2,
+  "binary-call": 1
+ },
+ "infra/fleet/bootstrap/common.sh": {
+  "product-name": 3,
+  "crate-prefix": 7
+ },
+ "infra/fleet/bootstrap/fr1.sh": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/cache.toml": {
+  "checkout-path": 2,
+  "crate-prefix": 1
+ },
+ "infra/fleet/cache.ts": {
+  "checkout-path": 1
+ },
+ "infra/fleet/ci-local.ts": {
+  "product-name": 2,
+  "crate-prefix": 6
+ },
+ "infra/fleet/ffmpeg-lgpl/build.sh": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "infra/fleet/fleet.just": {
+  "checkout-path": 10
+ },
+ "infra/fleet/fr1/offload/etc/udev/rules.d/66-fleet-bfq.rules": {
+  "crate-prefix": 2
+ },
+ "infra/fleet/fr1/offload/systemd/aphrody.slice.d/50-offload.conf": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/fr1/orphans/bin/fr1-r2.sh": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/fr1/resilience.conf": {
+  "checkout-path": 3,
+  "crate-prefix": 6
+ },
+ "infra/fleet/fr2/nginx/sites/api.aphrody.com.conf": {
+  "c-prefix": 26
+ },
+ "infra/fleet/fr2/nginx/sites/cdn.aphrody.com.conf": {
+  "crate-prefix": 2,
+  "c-prefix": 13
+ },
+ "infra/fleet/fr2/nginx/sites/creator.aphrody.com.conf": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/fr2/nginx/sites/downloads.aphrody.com.conf": {
+  "crate-prefix": 1,
+  "c-prefix": 7
+ },
+ "infra/fleet/fr2/resilience.conf": {
+  "checkout-path": 2,
+  "crate-prefix": 6
+ },
+ "infra/fleet/fr2/systemd/aphrody-relay.service": {
+  "checkout-path": 2,
+  "crate-prefix": 1
+ },
+ "infra/fleet/fr2/systemd/skills-archive.service": {
+  "checkout-path": 5,
+  "crate-prefix": 1
+ },
+ "infra/fleet/migrations/prd.window.sh": {
+  "checkout-path": 15
+ },
+ "infra/fleet/nix/flake.nix": {
+  "checkout-path": 1,
+  "product-name": 1
+ },
+ "infra/fleet/prd/nginx/conf.d/aphrody-cluster.conf": {
+  "product-name": 2
+ },
+ "infra/fleet/prd/nginx/conf.d/rosegriffon-stack.conf": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/prd/orphans/systemd/lore-r2-backup.service": {
+  "crate-prefix": 2
+ },
+ "infra/fleet/prd/resilience.conf": {
+  "checkout-path": 1,
+  "crate-prefix": 13
+ },
+ "infra/fleet/prd/systemd/aphrody-gpu-depot.service": {
+  "env-prefix": 1
+ },
+ "infra/fleet/prd/systemd/aphrody-relay.service": {
+  "checkout-path": 2,
+  "npm-scope": 1,
+  "crate-prefix": 2
+ },
+ "infra/fleet/reinstall/00-preflight.sh": {
+  "binary-call": 1
+ },
+ "infra/fleet/reinstall/50-mesh-caches.sh": {
+  "product-name": 1
+ },
+ "infra/fleet/sysctl/90-aphrody-fr1-god.conf": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/sysctl/90-aphrody-serve.conf": {
+  "crate-prefix": 1
+ },
+ "infra/fleet/systemd/aphrody-agents-sync.service": {
+  "checkout-path": 1
+ },
+ "infra/fleet/systemd/aphrody-auth-daemon.service": {
+  "crate-prefix": 2
+ },
+ "infra/fleet/systemd/src-checkout-update.service": {
+  "checkout-path": 1
+ },
+ "infra/fleet/systemd/third-party-sync.service": {
+  "checkout-path": 1
+ },
+ "infra/gcloud/README.md": {
+  "product-name": 8,
+  "npm-scope": 3,
+  "crate-prefix": 2,
+  "env-prefix": 1
+ },
+ "infra/gcloud/share-aphrody-project-iam.sh": {
+  "npm-scope": 1,
+  "env-prefix": 4
+ },
+ "infra/gitlab/README.md": {
+  "checkout-path": 4,
+  "product-name": 2,
+  "npm-scope": 1
+ },
+ "infra/gitlab/arch-ci/Dockerfile.arch-builder": {
+  "crate-prefix": 4
+ },
+ "infra/gitlab/docker-compose.gitlab.yml": {
+  "crate-prefix": 6
+ },
+ "infra/gitlab/gitlab-ci.yml": {
+  "checkout-path": 1,
+  "product-name": 2,
+  "crate-prefix": 1
+ },
+ "infra/gitlab/setup-triforge.sh": {
+  "checkout-path": 1,
+  "product-name": 1
+ },
+ "infra/gnu/install.sh": {
+  "checkout-path": 2,
+  "crate-prefix": 7
+ },
+ "infra/gnu/systemd/aphrody-gnu-watch.service": {
+  "checkout-path": 2,
+  "crate-prefix": 1
+ },
+ "infra/gnu/systemd/aphrody-gnu.service": {
+  "checkout-path": 1,
+  "crate-prefix": 1
+ },
+ "infra/mail/README.md": {
+  "checkout-path": 5
+ },
+ "infra/mail/dns/cloudflare-mail-records.zone": {
+  "checkout-path": 1
+ },
+ "infra/mail/docker-compose.mail.yml": {
+  "crate-prefix": 2,
+  "c-prefix": 3
+ },
+ "infra/os/linux/android/local_manifests/aphrody-gki.xml": {
+  "crate-prefix": 1
+ },
+ "infra/os/linux/build/kernel.sh": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "infra/os/linux/gpu/manifest.toml": {
+  "binary-call": 1
+ },
+ "infra/os/linux/images/debian/Dockerfile": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "infra/os/linux/images/nix/Dockerfile": {
+  "binary-call": 1
+ },
+ "infra/os/linux/kernels.toml": {
+  "binary-call": 1
+ },
+ "infra/os/linux/patchsets.toml": {
+  "binary-call": 3
+ },
+ "infra/os/unixwin/fr1-test.sh": {
+  "crate-prefix": 2
+ },
+ "infra/os/unixwin/unixwin.just": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "infra/os/unixwin/unixwin.ts": {
+  "product-name": 3
+ },
+ "infra/os/wsl/arch-gitlab-manifest.json": {
+  "crate-prefix": 1
+ },
+ "infra/os/wsl/kernel/build-kernel.sh": {
+  "product-name": 1,
+  "crate-prefix": 8
+ },
+ "infra/os/wsl/kernel/wsl2-cachyos-omarchy-7.4.config": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "infra/os/wsl/rootfs/etc/wsl-distribution.conf": {
+  "crate-prefix": 3
+ },
+ "infra/os/wsl/rootfs/etc/wsl.conf": {
+  "product-name": 1
+ },
+ "infra/os/wsl/rootfs/usr/lib/wsl/first-setup-aphrody-omarchy.sh": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "infra/os/wsl/scripts/build-image.sh": {
+  "product-name": 1,
+  "crate-prefix": 2
+ },
+ "infra/os/wsl/scripts/build-on-fr1.sh": {
+  "crate-prefix": 2
+ },
+ "infra/os/wsl/scripts/mount-data.ps1": {
+  "crate-prefix": 1
+ },
+ "infra/os/wsl/scripts/proof.sh": {
+  "product-name": 1
+ },
+ "infra/pipeline/ay-index-worker.service": {
+  "checkout-path": 2
+ },
+ "infra/pipeline/ay-index.service": {
+  "checkout-path": 4
+ },
+ "infra/pipeline/bench.sh": {
+  "env-prefix": 2,
+  "binary-call": 2
+ },
+ "infra/pipeline/pc-install.ts": {
+  "binary-call": 1
+ },
+ "infra/pkg/distros.toml": {
+  "binary-call": 1
+ },
+ "infra/pkg/recipes/aphrody-gpu-setup.toml": {
+  "crate-prefix": 1
+ },
+ "infra/pkg/recipes/aphrody-sysctl.toml": {
+  "crate-prefix": 4,
+  "binary-call": 1
+ },
+ "infra/up/tools.d/wpm.toml": {
+  "binary-call": 1
+ },
+ "infra/up/tools.toml": {
+  "product-name": 2,
+  "crate-prefix": 5,
+  "binary-call": 8
+ },
+ "infra/upstream/install.sh": {
+  "crate-prefix": 4
+ },
+ "infra/upstream/patches/bun-parity/RUST_INTEGRATION_SPEC.md": {
+  "checkout-path": 1
+ },
+ "infra/upstream/stacks.d/gaming.toml": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "infra/upstream/stacks.d/google-labs.toml": {
+  "binary-call": 2
+ },
+ "infra/upstream/stacks.d/web.toml": {
+  "product-name": 1,
+  "binary-call": 2
+ },
+ "infra/upstream/stacks.toml": {
+  "binary-call": 4
+ },
+ "infra/upstream/status/base-ui.toml": {
+  "product-name": 3,
+  "c-prefix": 3,
+  "binary-call": 1
+ },
+ "infra/upstream/status/better-auth.toml": {
+  "product-name": 3,
+  "c-prefix": 3,
+  "binary-call": 1
+ },
+ "infra/upstream/status/bun.toml": {
+  "product-name": 1,
+  "crate-prefix": 15,
+  "binary-call": 1
+ },
+ "infra/upstream/status/jules-action.toml": {
+  "binary-call": 1
+ },
+ "infra/upstream/status/nextjs.toml": {
+  "product-name": 5,
+  "crate-prefix": 3,
+  "c-prefix": 5,
+  "binary-call": 1
+ },
+ "infra/upstream/status/shadcn-ui.toml": {
+  "product-name": 2,
+  "c-prefix": 2,
+  "binary-call": 1
+ },
+ "infra/upstream/status/tailwindcss.toml": {
+  "product-name": 2,
+  "c-prefix": 2,
+  "binary-call": 1
+ },
+ "infra/vault/hosts.toml": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "infra/vault/policy.toml": {
+  "crate-prefix": 1
+ },
+ "infra/vault/systemd/aphrody-vault-apply.service": {
+  "product-name": 1
+ },
+ "infra/vault/systemd/aphrody-vault-apply.timer": {
+  "product-name": 1
+ },
+ "infra/vault/vault-host.sh": {
+  "product-name": 1,
+  "crate-prefix": 4
+ },
+ "justfile": {
+  "product-name": 1
+ },
+ "package.json": {
+  "npm-scope": 1,
+  "binary-call": 2
+ },
+ "packages/ai-os/README.md": {
+  "npm-scope": 2,
+  "c-prefix": 4
+ },
+ "packages/ai-os/ai-os.just": {
+  "npm-scope": 2,
+  "crate-prefix": 4
+ },
+ "packages/ai-os/bench/term-bench.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 3
+ },
+ "packages/ai-os/docs/ARCHITECTURE.md": {
+  "npm-scope": 1,
+  "c-prefix": 2
+ },
+ "packages/ai-os/docs/BRAIN.md": {
+  "checkout-path": 1,
+  "npm-scope": 1
+ },
+ "packages/ai-os/docs/FUSION.md": {
+  "checkout-path": 1
+ },
+ "packages/ai-os/docs/NHITL.md": {
+  "crate-prefix": 2
+ },
+ "packages/ai-os/docs/NOTE-core-hash.md": {
+  "npm-scope": 2
+ },
+ "packages/ai-os/docs/ORCHESTRATOR.md": {
+  "product-name": 2,
+  "crate-prefix": 1,
+  "binary-call": 4
+ },
+ "packages/ai-os/docs/RELAY.md": {
+  "npm-scope": 1
+ },
+ "packages/ai-os/docs/ROADMAP.md": {
+  "checkout-path": 1
+ },
+ "packages/ai-os/docs/cli-reference/agy.md": {
+  "checkout-path": 3
+ },
+ "packages/ai-os/docs/cli-reference/claude-code.md": {
+  "checkout-path": 1
+ },
+ "packages/ai-os/native/relay-windows/Relay.Service.csproj": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/native/relay-windows/install.ps1": {
+  "product-name": 1,
+  "crate-prefix": 2
+ },
+ "packages/ai-os/package.json": {
+  "npm-scope": 3,
+  "c-prefix": 1
+ },
+ "packages/ai-os/src/brain/skills-archive.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/cli.ts": {
+  "npm-scope": 1
+ },
+ "packages/ai-os/src/core/cabi.ts": {
+  "crate-prefix": 1,
+  "c-prefix": 3,
+  "env-prefix": 1
+ },
+ "packages/ai-os/src/fabric/index.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/google/absorb.ts": {
+  "binary-call": 3
+ },
+ "packages/ai-os/src/google/cli.ts": {
+  "binary-call": 3
+ },
+ "packages/ai-os/src/google/stitch/src/client.ts": {
+  "npm-scope": 1
+ },
+ "packages/ai-os/src/index.ts": {
+  "npm-scope": 1
+ },
+ "packages/ai-os/src/llm/models.ts": {
+  "npm-scope": 1
+ },
+ "packages/ai-os/src/nhitl/ledger.json": {
+  "product-name": 2,
+  "npm-scope": 3,
+  "crate-prefix": 4,
+  "binary-call": 2
+ },
+ "packages/ai-os/src/nhitl/login.ts": {
+  "npm-scope": 2
+ },
+ "packages/ai-os/src/nhitl/scanners.ts": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "packages/ai-os/src/orch/lifecycle.ts": {
+  "product-name": 1,
+  "binary-call": 1
+ },
+ "packages/ai-os/src/providers/cli.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/a2a.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/accounts.ts": {
+  "env-prefix": 2
+ },
+ "packages/ai-os/src/relay/acp.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/agent-tools.ts": {
+  "npm-scope": 3
+ },
+ "packages/ai-os/src/relay/cdp.ts": {
+  "product-name": 2
+ },
+ "packages/ai-os/src/relay/core-tools.ts": {
+  "npm-scope": 28,
+  "binary-call": 1
+ },
+ "packages/ai-os/src/relay/electron-mcp.ts": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "packages/ai-os/src/relay/gnu-mcp.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/mcp-http.ts": {
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/relay/mcp-hub.ts": {
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/relay/oauth.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/outbound.ts": {
+  "crate-prefix": 6,
+  "c-prefix": 1
+ },
+ "packages/ai-os/src/relay/protocols.ts": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/py2bun-mcp.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/registry-mcp.ts": {
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/relay/server.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/relay/tools.ts": {
+  "crate-prefix": 1,
+  "env-prefix": 2
+ },
+ "packages/ai-os/src/relay/unixwin-mcp.ts": {
+  "crate-prefix": 1,
+  "binary-call": 6
+ },
+ "packages/ai-os/src/relay/webmcp.ts": {
+  "product-name": 1
+ },
+ "packages/ai-os/src/review/index.ts": {
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/router/http.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/term/agent-bridge.ts": {
+  "npm-scope": 1
+ },
+ "packages/ai-os/src/term/cli.ts": {
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/term/mcp-tools.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/src/term/pty.ts": {
+  "product-name": 1,
+  "npm-scope": 2,
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/term/server.ts": {
+  "product-name": 2,
+  "npm-scope": 1,
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/term/web/term-host.js": {
+  "checkout-path": 2,
+  "crate-prefix": 2
+ },
+ "packages/ai-os/src/term/web/vterm-wasm.js": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/test/core/ai-os-cabi.test.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/test/google/jules.test.ts": {
+  "product-name": 2
+ },
+ "packages/ai-os/test/relay/e2e.test.ts": {
+  "crate-prefix": 4
+ },
+ "packages/ai-os/test/relay/outbound.test.ts": {
+  "crate-prefix": 9
+ },
+ "packages/ai-os/test/relay/registry-mcp.test.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/test/relay/sessions.test.ts": {
+  "checkout-path": 2
+ },
+ "packages/ai-os/test/relay/sockets.test.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ai-os/test/relay/unixwin-mcp.test.ts": {
+  "crate-prefix": 1
+ },
+ "packages/assets/README.md": {
+  "npm-scope": 1
+ },
+ "packages/assets/package.json": {
+  "npm-scope": 1
+ },
+ "packages/assets/src/cli.ts": {
+  "binary-call": 1
+ },
+ "packages/assets/src/games.ts": {
+  "product-name": 1
+ },
+ "packages/assets/src/manifest.ts": {
+  "binary-call": 1
+ },
+ "packages/assets/src/material-symbols.ts": {
+  "npm-scope": 1
+ },
+ "packages/assets/src/publish.ts": {
+  "binary-call": 1
+ },
+ "packages/assets/src/repos.ts": {
+  "binary-call": 2
+ },
+ "packages/assets/src/sources.ts": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "packages/bunify/README.md": {
+  "npm-scope": 3,
+  "env-prefix": 1
+ },
+ "packages/bunify/package.json": {
+  "npm-scope": 1
+ },
+ "packages/bunify/src/fullbun.ts": {
+  "npm-scope": 1,
+  "c-prefix": 1,
+  "env-prefix": 2
+ },
+ "packages/bunify/src/index.ts": {
+  "npm-scope": 2
+ },
+ "packages/bunify/src/rust.ts": {
+  "npm-scope": 1
+ },
+ "packages/core/README.md": {
+  "npm-scope": 1
+ },
+ "packages/core/core.just": {
+  "npm-scope": 2,
+  "crate-prefix": 2,
+  "c-prefix": 5
+ },
+ "packages/core/package.json": {
+  "npm-scope": 1
+ },
+ "packages/core/src/cli.ts": {
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 2
+ },
+ "packages/core/src/depot.ts": {
+  "crate-prefix": 1,
+  "c-prefix": 6,
+  "env-prefix": 1
+ },
+ "packages/core/src/ffi.ts": {
+  "c-prefix": 3,
+  "env-prefix": 3
+ },
+ "packages/core/src/generate.ts": {
+  "npm-scope": 2,
+  "crate-prefix": 1,
+  "c-prefix": 3
+ },
+ "packages/core/src/re.ts": {
+  "crate-prefix": 1,
+  "c-prefix": 18
+ },
+ "packages/core/src/scanner.ts": {
+  "npm-scope": 1,
+  "c-prefix": 1
+ },
+ "packages/core/src/templates.ts": {
+  "npm-scope": 8,
+  "c-prefix": 8
+ },
+ "packages/core/test/ffi.test.ts": {
+  "c-prefix": 1
+ },
+ "packages/core/test/generate.test.ts": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "c-prefix": 2
+ },
+ "packages/deploy/README.md": {
+  "npm-scope": 1,
+  "crate-prefix": 5,
+  "env-prefix": 1,
+  "binary-call": 6
+ },
+ "packages/deploy/package.json": {
+  "npm-scope": 1
+ },
+ "packages/deploy/projects.toml": {
+  "product-name": 1,
+  "binary-call": 1
+ },
+ "packages/deploy/src/cli.ts": {
+  "crate-prefix": 1,
+  "env-prefix": 4,
+  "binary-call": 2
+ },
+ "packages/deploy/src/pages.ts": {
+  "npm-scope": 1
+ },
+ "packages/deploy/src/registry.ts": {
+  "crate-prefix": 1
+ },
+ "packages/deploy/src/serve.ts": {
+  "crate-prefix": 3
+ },
+ "packages/deploy/src/state.ts": {
+  "binary-call": 1
+ },
+ "packages/deploy/src/ui.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 2
+ },
+ "packages/deploy/src/worker.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 2
+ },
+ "packages/deploy/tests/deploy.test.ts": {
+  "product-name": 5,
+  "crate-prefix": 3
+ },
+ "packages/deploy/tests/pages-i18n.test.ts": {
+  "npm-scope": 1
+ },
+ "packages/deploy/wrangler.toml": {
+  "crate-prefix": 3,
+  "env-prefix": 1,
+  "binary-call": 1
+ },
+ "packages/design/DESIGN.md": {
+  "npm-scope": 2
+ },
+ "packages/design/README.md": {
+  "npm-scope": 1
+ },
+ "packages/design/package.json": {
+  "npm-scope": 1
+ },
+ "packages/design/src/adapters.ts": {
+  "product-name": 2,
+  "npm-scope": 4,
+  "crate-prefix": 3,
+  "c-prefix": 5
+ },
+ "packages/design/src/build.ts": {
+  "npm-scope": 4,
+  "crate-prefix": 2
+ },
+ "packages/design/src/bun-plugin.ts": {
+  "crate-prefix": 1
+ },
+ "packages/design/src/cli.ts": {
+  "npm-scope": 1
+ },
+ "packages/design/src/components.ts": {
+  "env-prefix": 2
+ },
+ "packages/design/src/design-mirror.ts": {
+  "crate-prefix": 1
+ },
+ "packages/design/src/figma.ts": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "packages/design/src/index.ts": {
+  "npm-scope": 1
+ },
+ "packages/design/src/themes.ts": {
+  "product-name": 1
+ },
+ "packages/design/src/web.ts": {
+  "npm-scope": 1
+ },
+ "packages/design/tests/adapters.test.ts": {
+  "c-prefix": 5
+ },
+ "packages/design/tests/themes.test.ts": {
+  "product-name": 1
+ },
+ "packages/design/tests/web.test.ts": {
+  "npm-scope": 1,
+  "env-prefix": 1
+ },
+ "packages/design/tokens/adapters/_angular-theme.scss": {
+  "product-name": 1,
+  "npm-scope": 1
+ },
+ "packages/design/tokens/adapters/bevy_theme.rs": {
+  "c-prefix": 1
+ },
+ "packages/design/tokens/adapters/egui_theme.rs": {
+  "c-prefix": 1
+ },
+ "packages/design/tokens/adapters/gpui-kit.json": {
+  "product-name": 1
+ },
+ "packages/design/tokens/adapters/iced_theme.rs": {
+  "c-prefix": 1
+ },
+ "packages/design/tokens/adapters/leptos_dioxus_tokens.rs": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "packages/design/tokens/adapters/taffy_tokens.rs": {
+  "product-name": 1
+ },
+ "packages/design/tokens/adapters/tailwind.css": {
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "packages/design/tokens/adapters/webui-tokens.json": {
+  "product-name": 1,
+  "crate-prefix": 6
+ },
+ "packages/design/tokens/angular-theme.scss": {
+  "npm-scope": 1
+ },
+ "packages/design/tokens/figma-mockup.json": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "packages/design/tokens/figma-sync.js": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "packages/design/tokens/figma-themes-sync.js": {
+  "product-name": 2
+ },
+ "packages/design/tokens/hyprland.conf": {
+  "product-name": 1,
+  "c-prefix": 36
+ },
+ "packages/design/tokens/themes.css": {
+  "product-name": 3
+ },
+ "packages/design/tokens/themes.json": {
+  "product-name": 2
+ },
+ "packages/design/tokens/tokens.css": {
+  "crate-prefix": 1
+ },
+ "packages/design/tokens/tokens.json": {
+  "crate-prefix": 1
+ },
+ "packages/env-kit/README.md": {
+  "checkout-path": 17,
+  "product-name": 2,
+  "npm-scope": 3,
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 7
+ },
+ "packages/env-kit/env-kit.just": {
+  "crate-prefix": 3
+ },
+ "packages/env-kit/loaders/cpp/sovereign_env.h": {
+  "checkout-path": 2
+ },
+ "packages/env-kit/loaders/cpp/sovereign_env.hpp": {
+  "checkout-path": 1
+ },
+ "packages/env-kit/loaders/dotnet/SovereignEnv.cs": {
+  "checkout-path": 2
+ },
+ "packages/env-kit/loaders/go/envkit.go": {
+  "checkout-path": 4
+ },
+ "packages/env-kit/loaders/go/envkit_test.go": {
+  "product-name": 2
+ },
+ "packages/env-kit/loaders/lua/sovereign_env.lua": {
+  "checkout-path": 2
+ },
+ "packages/env-kit/loaders/python/sovereign_env.py": {
+  "checkout-path": 2
+ },
+ "packages/env-kit/loaders/shell/discover.sh": {
+  "env-prefix": 1
+ },
+ "packages/env-kit/loaders/shell/load-env.ps1": {
+  "checkout-path": 4
+ },
+ "packages/env-kit/loaders/shell/load-env.sh": {
+  "checkout-path": 6
+ },
+ "packages/env-kit/package.json": {
+  "checkout-path": 1,
+  "npm-scope": 3
+ },
+ "packages/env-kit/scripts/registry-cleanup.ts": {
+  "npm-scope": 22,
+  "crate-prefix": 5
+ },
+ "packages/env-kit/src/auth-daemon.ts": {
+  "product-name": 3,
+  "npm-scope": 1,
+  "binary-call": 3
+ },
+ "packages/env-kit/src/auth.ts": {
+  "product-name": 1,
+  "npm-scope": 2,
+  "env-prefix": 2,
+  "binary-call": 15
+ },
+ "packages/env-kit/src/cli.ts": {
+  "product-name": 1,
+  "npm-scope": 2
+ },
+ "packages/env-kit/src/discover.ts": {
+  "checkout-path": 1,
+  "product-name": 2,
+  "crate-prefix": 1,
+  "env-prefix": 6
+ },
+ "packages/env-kit/src/github-app.test.ts": {
+  "product-name": 1
+ },
+ "packages/env-kit/src/github-app.ts": {
+  "product-name": 5,
+  "npm-scope": 2,
+  "crate-prefix": 2,
+  "env-prefix": 30,
+  "binary-call": 10
+ },
+ "packages/env-kit/src/google-context.ts": {
+  "product-name": 3,
+  "npm-scope": 1,
+  "env-prefix": 1
+ },
+ "packages/env-kit/src/index.ts": {
+  "env-prefix": 1
+ },
+ "packages/env-kit/src/whoami.ts": {
+  "crate-prefix": 1
+ },
+ "packages/env-kit/tests/auth.test.ts": {
+  "npm-scope": 1
+ },
+ "packages/env-kit/tests/discover.test.ts": {
+  "crate-prefix": 2,
+  "env-prefix": 1
+ },
+ "packages/env-kit/tests/env-kit.test.ts": {
+  "product-name": 3,
+  "crate-prefix": 4
+ },
+ "packages/env-kit/tests/google-context.test.ts": {
+  "product-name": 3
+ },
+ "packages/ffi-bridge/README.md": {
+  "npm-scope": 1
+ },
+ "packages/ffi-bridge/package.json": {
+  "npm-scope": 1
+ },
+ "packages/ffi-bridge/src/stack-bench-runner.ts": {
+  "checkout-path": 1
+ },
+ "packages/gaming/README.md": {
+  "npm-scope": 1,
+  "binary-call": 2
+ },
+ "packages/gaming/package.json": {
+  "npm-scope": 1,
+  "binary-call": 2
+ },
+ "packages/gaming/src/cli.ts": {
+  "binary-call": 4
+ },
+ "packages/gaming/src/downloads.toml": {
+  "binary-call": 3
+ },
+ "packages/gaming/src/dx.ts": {
+  "binary-call": 1
+ },
+ "packages/gaming/src/index.ts": {
+  "npm-scope": 1,
+  "binary-call": 1
+ },
+ "packages/gaming/src/native.ts": {
+  "binary-call": 6
+ },
+ "packages/gaming/src/proton.ts": {
+  "binary-call": 3
+ },
+ "packages/gaming/src/skills.ts": {
+  "binary-call": 2
+ },
+ "packages/gaming/src/steam.ts": {
+  "binary-call": 2
+ },
+ "packages/gcp/README.md": {
+  "npm-scope": 1
+ },
+ "packages/gcp/package.json": {
+  "npm-scope": 3
+ },
+ "packages/gcp/src/accounts.ts": {
+  "product-name": 5,
+  "npm-scope": 4,
+  "crate-prefix": 2,
+  "env-prefix": 50
+ },
+ "packages/gcp/src/billing.ts": {
+  "product-name": 1,
+  "npm-scope": 3,
+  "env-prefix": 1
+ },
+ "packages/gcp/src/cli.ts": {
+  "npm-scope": 1
+ },
+ "packages/gcp/tests/accounts.test.ts": {
+  "product-name": 6,
+  "npm-scope": 15,
+  "env-prefix": 12
+ },
+ "packages/ghidra/README.md": {
+  "npm-scope": 7,
+  "crate-prefix": 3,
+  "c-prefix": 3
+ },
+ "packages/ghidra/package.json": {
+  "npm-scope": 1
+ },
+ "packages/ghidra/src/api.ts": {
+  "npm-scope": 1
+ },
+ "packages/ghidra/src/plugin.ts": {
+  "crate-prefix": 4,
+  "c-prefix": 1
+ },
+ "packages/ghidra/src/preload.ts": {
+  "npm-scope": 1
+ },
+ "packages/ghidra/src/rpc.ts": {
+  "crate-prefix": 1
+ },
+ "packages/ghidra/src/script.ts": {
+  "npm-scope": 2
+ },
+ "packages/gnu/README.md": {
+  "npm-scope": 1
+ },
+ "packages/gnu/gnu.just": {
+  "checkout-path": 3,
+  "crate-prefix": 4
+ },
+ "packages/gnu/package.json": {
+  "npm-scope": 1
+ },
+ "packages/gnu/src/cli.ts": {
+  "crate-prefix": 3
+ },
+ "packages/gnu/src/feed.ts": {
+  "npm-scope": 2
+ },
+ "packages/gnu/src/site.ts": {
+  "product-name": 1
+ },
+ "packages/gnu/src/sync.ts": {
+  "crate-prefix": 1
+ },
+ "packages/gnu/src/tools.ts": {
+  "crate-prefix": 2
+ },
+ "packages/gnu/src/upstream.ts": {
+  "crate-prefix": 1
+ },
+ "packages/i18n/README.md": {
+  "npm-scope": 1
+ },
+ "packages/i18n/package.json": {
+  "npm-scope": 3
+ },
+ "packages/i18n/src/cli.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "packages/i18n/src/config.ts": {
+  "env-prefix": 2
+ },
+ "packages/machine/README.md": {
+  "binary-call": 3
+ },
+ "packages/machine/bootstrap/install.ts": {
+  "binary-call": 1
+ },
+ "packages/machine/matrix/test/unixwin/paths.test.ts": {
+  "checkout-path": 1
+ },
+ "packages/machine/package.json": {
+  "npm-scope": 1
+ },
+ "packages/machine/shell.dsc.winget": {
+  "checkout-path": 1
+ },
+ "packages/machine/shells/bash/bashrc": {
+  "checkout-path": 2
+ },
+ "packages/machine/shells/bash/niubashrc": {
+  "checkout-path": 1
+ },
+ "packages/machine/shells/completions/ay.fish": {
+  "checkout-path": 1,
+  "binary-call": 13
+ },
+ "packages/machine/shells/completions/ay.nu": {
+  "checkout-path": 1,
+  "binary-call": 5
+ },
+ "packages/machine/shells/completions/ay.yaml": {
+  "checkout-path": 1,
+  "binary-call": 13
+ },
+ "packages/machine/shells/env.nu": {
+  "checkout-path": 1
+ },
+ "packages/machine/shells/env.ps1": {
+  "checkout-path": 1
+ },
+ "packages/machine/shells/env.sh": {
+  "checkout-path": 1
+ },
+ "packages/machine/shells/env.toml": {
+  "checkout-path": 2,
+  "binary-call": 1
+ },
+ "packages/machine/shells/pwsh/profile.ps1": {
+  "checkout-path": 1
+ },
+ "packages/machine/src/apply-user.ts": {
+  "checkout-path": 1,
+  "npm-scope": 3
+ },
+ "packages/machine/src/binpath.ts": {
+  "checkout-path": 1,
+  "crate-prefix": 2
+ },
+ "packages/machine/src/cli.ts": {
+  "binary-call": 1
+ },
+ "packages/machine/src/flatten-third-party.ts": {
+  "binary-call": 1
+ },
+ "packages/machine/src/forks.ts": {
+  "product-name": 1,
+  "binary-call": 3
+ },
+ "packages/machine/src/js-deps-check.ts": {
+  "binary-call": 1
+ },
+ "packages/machine/src/mcp-headers.ts": {
+  "npm-scope": 1
+ },
+ "packages/machine/src/shell-kit.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 8
+ },
+ "packages/machine/src/toolchain.ts": {
+  "product-name": 2,
+  "npm-scope": 1,
+  "crate-prefix": 4,
+  "binary-call": 2
+ },
+ "packages/machine/src/toolchains-lock.ts": {
+  "binary-call": 2
+ },
+ "packages/machine/tests/shells.test.ts": {
+  "npm-scope": 1
+ },
+ "packages/machine/wsl/wslconfig": {
+  "checkout-path": 2,
+  "crate-prefix": 2
+ },
+ "packages/native/README.md": {
+  "npm-scope": 1
+ },
+ "packages/native/package.json": {
+  "npm-scope": 1
+ },
+ "packages/native/src/index.test.ts": {
+  "npm-scope": 1
+ },
+ "packages/native/src/index.ts": {
+  "env-prefix": 2
+ },
+ "packages/omniu/README.md": {
+  "npm-scope": 1,
+  "binary-call": 1
+ },
+ "packages/omniu/envs/modern-cli.toml": {
+  "binary-call": 1
+ },
+ "packages/omniu/framework-plugins.toml": {
+  "product-name": 1
+ },
+ "packages/omniu/package.json": {
+  "npm-scope": 1
+ },
+ "packages/omniu/plugins/ay/ay.plugin.niu": {
+  "binary-call": 2
+ },
+ "packages/omniu/plugins/ay/plugin.toml": {
+  "npm-scope": 1,
+  "binary-call": 1
+ },
+ "packages/omniu/src/ay.ts": {
+  "product-name": 2,
+  "binary-call": 4
+ },
+ "packages/omniu/src/validate.ts": {
+  "npm-scope": 1
+ },
+ "packages/omniu/test/ay.test.ts": {
+  "product-name": 5
+ },
+ "packages/omniu/test/fixtures/fake-ay.ts": {
+  "product-name": 1
+ },
+ "packages/py2bun/README.md": {
+  "npm-scope": 12
+ },
+ "packages/py2bun/package.json": {
+  "npm-scope": 2
+ },
+ "packages/py2bun/src/runtime/index.ts": {
+  "npm-scope": 1
+ },
+ "packages/py2bun/test/wrapper.test.ts": {
+  "npm-scope": 1
+ },
+ "packages/py2bun/tests/test_py2bun.py": {
+  "npm-scope": 3
+ },
+ "packages/release/README.md": {
+  "npm-scope": 1,
+  "binary-call": 1
+ },
+ "packages/release/package.json": {
+  "npm-scope": 1
+ },
+ "packages/release/release.just": {
+  "crate-prefix": 1
+ },
+ "packages/release/release.toml": {
+  "product-name": 1,
+  "crate-prefix": 2,
+  "c-prefix": 2,
+  "binary-call": 2
+ },
+ "packages/release/src/cli.ts": {
+  "npm-scope": 1,
+  "crate-prefix": 6,
+  "binary-call": 3
+ },
+ "packages/release/src/freeze.ts": {
+  "binary-call": 4
+ },
+ "packages/release/src/npm.ts": {
+  "product-name": 1,
+  "npm-scope": 4
+ },
+ "packages/release/src/plan.ts": {
+  "binary-call": 1
+ },
+ "packages/release/tests/plan.test.ts": {
+  "product-name": 2,
+  "crate-prefix": 4,
+  "c-prefix": 2
+ },
+ "packages/upstream/README.md": {
+  "npm-scope": 1
+ },
+ "packages/upstream/package.json": {
+  "npm-scope": 1
+ },
+ "packages/upstream/src/cli.ts": {
+  "binary-call": 2
+ },
+ "packages/upstream/src/labs-arena/cli.ts": {
+  "checkout-path": 1
+ },
+ "packages/upstream/src/labs-arena/json-render-arena.ts": {
+  "checkout-path": 1
+ },
+ "packages/upstream/src/labs-arena/monorepo-build-arena.ts": {
+  "checkout-path": 8,
+  "product-name": 1
+ },
+ "packages/upstream/src/labs-arena/portless-router.ts": {
+  "checkout-path": 9,
+  "product-name": 6
+ },
+ "packages/upstream/src/labs-arena/skills-compat.ts": {
+  "checkout-path": 2
+ },
+ "packages/upstream/src/registry.ts": {
+  "binary-call": 1
+ },
+ "packages/upstream/src/stack.ts": {
+  "binary-call": 1
+ },
+ "packages/upstream/src/upstream-recon.ts": {
+  "crate-prefix": 1
+ },
+ "packages/upstream/tests/upstream.test.ts": {
+  "crate-prefix": 3
+ },
+ "packages/vault/README.md": {
+  "npm-scope": 1
+ },
+ "packages/vault/bench/bench.ts": {
+  "env-prefix": 1
+ },
+ "packages/vault/package.json": {
+  "npm-scope": 1
+ },
+ "packages/vault/src/cli.ts": {
+  "product-name": 1,
+  "binary-call": 1
+ },
+ "packages/vault/src/crypto.ts": {
+  "product-name": 2,
+  "crate-prefix": 1
+ },
+ "packages/vault/src/index.ts": {
+  "npm-scope": 1
+ },
+ "packages/vault/src/migrate.ts": {
+  "product-name": 1
+ },
+ "packages/vault/src/paths.ts": {
+  "product-name": 3,
+  "env-prefix": 3
+ },
+ "packages/vault/src/store.ts": {
+  "product-name": 3
+ },
+ "packages/vault/src/sync.ts": {
+  "product-name": 1,
+  "crate-prefix": 10
+ },
+ "packages/vault/src/win/ffi.ts": {
+  "product-name": 2
+ },
+ "packages/vault/tests/linux-sandbox.test.ts": {
+  "crate-prefix": 1
+ },
+ "packages/vault/tests/vault.test.ts": {
+  "env-prefix": 1
+ },
+ "packages/wck/README.md": {
+  "npm-scope": 1
+ },
+ "packages/wck/package.json": {
+  "npm-scope": 1
+ },
+ "packages/wck/src/mwg-ffi.ts": {
+  "env-prefix": 1
+ },
+ "packages/wck/tests/mwg-rag.test.ts": {
+  "product-name": 2
+ },
+ "scripts/android-x64.ts": {
+  "checkout-path": 3,
+  "crate-prefix": 2
+ },
+ "scripts/bench/affected-stats.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/fetch-res.sh": {
+  "checkout-path": 2
+ },
+ "scripts/bench/fs-fr2.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/fs-probe.sh": {
+  "checkout-path": 2
+ },
+ "scripts/bench/host-bench.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/launch-chains.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/launch-fr2-chain.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/launch-fr2-final.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/launch-fr2-more.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/launch-host.sh": {
+  "checkout-path": 2
+ },
+ "scripts/bench/launch.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/p2.sh": {
+  "checkout-path": 3
+ },
+ "scripts/bench/p3.sh": {
+  "checkout-path": 3
+ },
+ "scripts/bench/p4.sh": {
+  "checkout-path": 3
+ },
+ "scripts/bench/probe-fleet.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/probe-rust.sh": {
+  "checkout-path": 2
+ },
+ "scripts/bench/probe-rust2.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/probe.sh": {
+  "checkout-path": 2
+ },
+ "scripts/bench/push-b.sh": {
+  "checkout-path": 2
+ },
+ "scripts/bench/push-ws.sh": {
+  "checkout-path": 3
+ },
+ "scripts/bench/run-variant.sh": {
+  "crate-prefix": 1
+ },
+ "scripts/bench/setup-bench-ws.sh": {
+  "checkout-path": 1
+ },
+ "scripts/bench/setup.sh": {
+  "checkout-path": 2
+ },
+ "scripts/bench/setup2.sh": {
+  "checkout-path": 8
+ },
+ "scripts/bench/wait-short.sh": {
+  "checkout-path": 1
+ },
+ "scripts/catalog.config.json": {
+  "npm-scope": 1
+ },
+ "scripts/catalog.ts": {
+  "npm-scope": 2,
+  "crate-prefix": 1,
+  "env-prefix": 1
+ },
+ "scripts/cli-skills.ts": {
+  "binary-call": 1
+ },
+ "scripts/commit.ts": {
+  "product-name": 1
+ },
+ "scripts/gnu-check.ts": {
+  "crate-prefix": 2
+ },
+ "scripts/gnu-packages.ts": {
+  "crate-prefix": 1
+ },
+ "scripts/gnu-proof.sh": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "scripts/hygiene-mcp.ts": {
+  "crate-prefix": 1
+ },
+ "scripts/hygiene.allow.json": {
+  "env-prefix": 1
+ },
+ "scripts/hygiene.ts": {
+  "product-name": 3
+ },
+ "scripts/restore-inventory.ts": {
+  "npm-scope": 3,
+  "crate-prefix": 3
+ },
+ "scripts/skills-adopt.ts": {
+  "product-name": 6,
+  "binary-call": 1
+ },
+ "scripts/unixwin-proof.ts": {
+  "binary-call": 2
+ },
+ "scripts/wpm-import.ts": {
+  "binary-call": 3
+ },
+ "src.lock.json": {
+  "checkout-path": 4,
+  "product-name": 91
+ },
+ "src/android/smoke.c": {
+  "crate-prefix": 1
+ },
+ "src/aot/load/externals.rs": {
+  "checkout-path": 13
+ },
+ "src/apm/Cargo.toml": {
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "src/apm/README.md": {
+  "checkout-path": 1,
+  "crate-prefix": 3,
+  "c-prefix": 1
+ },
+ "src/apm/src/bin/apm.rs": {
+  "c-prefix": 2
+ },
+ "src/apm/tests/install.rs": {
+  "c-prefix": 4
+ },
+ "src/apm/tests/upstream.rs": {
+  "c-prefix": 11
+ },
+ "src/archguard/Cargo.toml": {
+  "binary-call": 1
+ },
+ "src/archguard/README.md": {
+  "checkout-path": 13,
+  "product-name": 1,
+  "npm-scope": 16,
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/archguard/archguard.rules.json": {
+  "checkout-path": 1,
+  "product-name": 1,
+  "npm-scope": 1
+ },
+ "src/archguard/src/cli.rs": {
+  "checkout-path": 3,
+  "binary-call": 1
+ },
+ "src/archguard/src/constants.rs": {
+  "checkout-path": 2
+ },
+ "src/archguard/src/lib.rs": {
+  "checkout-path": 2,
+  "product-name": 1,
+  "npm-scope": 3,
+  "crate-prefix": 1
+ },
+ "src/archguard/src/rules/apps.rs": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "c-prefix": 11
+ },
+ "src/archguard/src/rules/atlas.rs": {
+  "checkout-path": 2,
+  "npm-scope": 1
+ },
+ "src/archguard/src/rules/chromium.rs": {
+  "binary-call": 1
+ },
+ "src/archguard/src/rules/hygiene.rs": {
+  "checkout-path": 5,
+  "product-name": 1,
+  "npm-scope": 2
+ },
+ "src/archguard/src/rules/linux.rs": {
+  "binary-call": 1
+ },
+ "src/archguard/src/rules/mod.rs": {
+  "checkout-path": 1,
+  "npm-scope": 3
+ },
+ "src/archguard/src/rules/packages.rs": {
+  "npm-scope": 7
+ },
+ "src/archguard/src/rules/tools.rs": {
+  "npm-scope": 3
+ },
+ "src/archguard/src/rules/versioning.rs": {
+  "binary-call": 1
+ },
+ "src/archguard/tests/archguard_test.rs": {
+  "checkout-path": 1,
+  "product-name": 1,
+  "npm-scope": 10,
+  "crate-prefix": 1
+ },
+ "src/ay/Cargo.toml": {
+  "product-name": 1,
+  "crate-prefix": 13,
+  "binary-call": 15
+ },
+ "src/ay/README.md": {
+  "product-name": 3
+ },
+ "src/ay/ay.just": {
+  "binary-call": 2
+ },
+ "src/ay/src/ai.rs": {
+  "binary-call": 3
+ },
+ "src/ay/src/applet.rs": {
+  "binary-call": 6
+ },
+ "src/ay/src/build.rs": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "src/ay/src/bump.rs": {
+  "binary-call": 3
+ },
+ "src/ay/src/bun/bump.rs": {
+  "binary-call": 1
+ },
+ "src/ay/src/bun/install.rs": {
+  "product-name": 1,
+  "crate-prefix": 3,
+  "binary-call": 2
+ },
+ "src/ay/src/bun/mod.rs": {
+  "product-name": 1,
+  "binary-call": 10
+ },
+ "src/ay/src/bun/schedule.rs": {
+  "checkout-path": 3,
+  "binary-call": 3
+ },
+ "src/ay/src/bun/watch.rs": {
+  "c-prefix": 1,
+  "binary-call": 1
+ },
+ "src/ay/src/chromium.rs": {
+  "binary-call": 7
+ },
+ "src/ay/src/code.rs": {
+  "checkout-path": 28,
+  "binary-call": 1
+ },
+ "src/ay/src/electron.rs": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/ay/src/exec.rs": {
+  "binary-call": 3
+ },
+ "src/ay/src/index.rs": {
+  "crate-prefix": 2,
+  "c-prefix": 6,
+  "binary-call": 5
+ },
+ "src/ay/src/lib.rs": {
+  "checkout-path": 1,
+  "product-name": 4,
+  "crate-prefix": 11,
+  "c-prefix": 6,
+  "binary-call": 12
+ },
+ "src/ay/src/low/agents.rs": {
+  "binary-call": 5
+ },
+ "src/ay/src/low/chromium_chain.rs": {
+  "crate-prefix": 1,
+  "binary-call": 8
+ },
+ "src/ay/src/low/docs.rs": {
+  "crate-prefix": 1,
+  "c-prefix": 10,
+  "binary-call": 3
+ },
+ "src/ay/src/low/engines.rs": {
+  "binary-call": 5
+ },
+ "src/ay/src/low/flat.rs": {
+  "binary-call": 5
+ },
+ "src/ay/src/low/flat_sync.rs": {
+  "binary-call": 7
+ },
+ "src/ay/src/low/mod.rs": {
+  "binary-call": 11
+ },
+ "src/ay/src/low/steam.rs": {
+  "binary-call": 3
+ },
+ "src/ay/src/main.rs": {
+  "binary-call": 1
+ },
+ "src/ay/src/plugin.rs": {
+  "product-name": 1,
+  "npm-scope": 1,
+  "binary-call": 5
+ },
+ "src/ay/src/self_update.rs": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 4
+ },
+ "src/ay/src/sh.rs": {
+  "binary-call": 8
+ },
+ "src/ay/src/ui.rs": {
+  "c-prefix": 1,
+  "binary-call": 2
+ },
+ "src/chromium/factory/Cargo.toml": {
+  "crate-prefix": 3,
+  "c-prefix": 1,
+  "binary-call": 1
+ },
+ "src/chromium/factory/README.md": {
+  "crate-prefix": 4,
+  "binary-call": 1
+ },
+ "src/chromium/factory/src/config.rs": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/chromium/factory/src/lib.rs": {
+  "crate-prefix": 5,
+  "c-prefix": 2,
+  "binary-call": 2
+ },
+ "src/chromium/factory/src/main.rs": {
+  "c-prefix": 2,
+  "binary-call": 1
+ },
+ "src/chromium/factory/src/plan.rs": {
+  "crate-prefix": 2,
+  "binary-call": 2
+ },
+ "src/chromium/factory/src/toolchain.rs": {
+  "crate-prefix": 2
+ },
+ "src/core/Cargo.toml": {
+  "product-name": 1,
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "src/core/README.md": {
+  "crate-prefix": 2
+ },
+ "src/core/build.rs": {
+  "c-prefix": 6,
+  "env-prefix": 6
+ },
+ "src/core/capi/Cargo.toml": {
+  "product-name": 1,
+  "crate-prefix": 8,
+  "c-prefix": 6,
+  "binary-call": 1
+ },
+ "src/core/capi/README.md": {
+  "crate-prefix": 3,
+  "c-prefix": 1
+ },
+ "src/core/capi/c/mwg_core.c": {
+  "c-prefix": 1,
+  "env-prefix": 1
+ },
+ "src/core/capi/cbindgen.toml": {
+  "c-prefix": 2,
+  "env-prefix": 1
+ },
+ "src/core/capi/include/aphrody_core.h": {
+  "c-prefix": 3,
+  "env-prefix": 5,
+  "binary-call": 1
+ },
+ "src/core/capi/include/aphrody_mwg.h": {
+  "env-prefix": 7
+ },
+ "src/core/capi/include/aphrody_zig.h": {
+  "env-prefix": 7
+ },
+ "src/core/capi/py/README.md": {
+  "crate-prefix": 4
+ },
+ "src/core/capi/src/ai_os.rs": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "env-prefix": 3
+ },
+ "src/core/capi/src/lib.rs": {
+  "crate-prefix": 2,
+  "c-prefix": 19,
+  "env-prefix": 3,
+  "binary-call": 2
+ },
+ "src/core/capi/src/sys.rs": {
+  "checkout-path": 1
+ },
+ "src/core/jni/Cargo.toml": {
+  "crate-prefix": 5,
+  "c-prefix": 1
+ },
+ "src/core/jni/README.md": {
+  "crate-prefix": 4
+ },
+ "src/core/jni/src/lib.rs": {
+  "crate-prefix": 2,
+  "c-prefix": 3
+ },
+ "src/core/src/pipeline/detect.rs": {
+  "crate-prefix": 1
+ },
+ "src/core/src/pipeline/shared.rs": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/core/src/pipeline/stages.rs": {
+  "crate-prefix": 1
+ },
+ "src/core/tests/registry.rs": {
+  "crate-prefix": 1
+ },
+ "src/corelib/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/corelib/README.md": {
+  "checkout-path": 1,
+  "crate-prefix": 4
+ },
+ "src/depot/cas/src/lib.rs": {
+  "binary-call": 1
+ },
+ "src/depot/cipd/Cargo.toml": {
+  "binary-call": 1
+ },
+ "src/depot/cipd/README.md": {
+  "binary-call": 1
+ },
+ "src/depot/cipd/src/cli.rs": {
+  "binary-call": 1
+ },
+ "src/depot/cli/Cargo.toml": {
+  "crate-prefix": 1,
+  "binary-call": 3
+ },
+ "src/depot/cli/README.md": {
+  "binary-call": 3
+ },
+ "src/depot/cli/src/commands/ast.rs": {
+  "c-prefix": 1
+ },
+ "src/depot/cli/src/commands/fork.rs": {
+  "binary-call": 1
+ },
+ "src/depot/cli/src/commands/rope.rs": {
+  "c-prefix": 1
+ },
+ "src/depot/cli/src/lib.rs": {
+  "binary-call": 3
+ },
+ "src/depot/core/src/build_tools.rs": {
+  "binary-call": 4
+ },
+ "src/depot/core/src/depot_tools.rs": {
+  "checkout-path": 1
+ },
+ "src/depot/core/src/ecosystems.rs": {
+  "checkout-path": 1
+ },
+ "src/depot/core/src/git_slim.rs": {
+  "binary-call": 1
+ },
+ "src/depot/core/src/gitx.rs": {
+  "binary-call": 2
+ },
+ "src/depot/core/src/vault.rs": {
+  "checkout-path": 1
+ },
+ "src/depot/forge/src/lib.rs": {
+  "product-name": 1,
+  "crate-prefix": 2
+ },
+ "src/depot/gclient/Cargo.toml": {
+  "binary-call": 2
+ },
+ "src/depot/gclient/README.md": {
+  "binary-call": 2
+ },
+ "src/depot/gclient/src/cl.rs": {
+  "binary-call": 1
+ },
+ "src/depot/gclient/src/cli.rs": {
+  "binary-call": 7
+ },
+ "src/depot/gclient/src/fetch.rs": {
+  "binary-call": 1
+ },
+ "src/depot/gclient/src/gcs.rs": {
+  "binary-call": 1
+ },
+ "src/depot/gclient/src/lib.rs": {
+  "binary-call": 2
+ },
+ "src/depot/graph/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/depot/graph/src/parser.rs": {
+  "c-prefix": 1
+ },
+ "src/depot/ingest/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/depot/ingest/src/formatter.rs": {
+  "c-prefix": 1
+ },
+ "src/depot/migrate/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/depot/migrate/src/archetype.rs": {
+  "crate-prefix": 1
+ },
+ "src/depot/migrate/src/dotnet.rs": {
+  "crate-prefix": 2,
+  "c-prefix": 2
+ },
+ "src/depot/migrate/src/lib.rs": {
+  "c-prefix": 1
+ },
+ "src/depot/migrate/src/transformer.rs": {
+  "npm-scope": 2,
+  "c-prefix": 1
+ },
+ "src/depot/vpython/Cargo.toml": {
+  "binary-call": 1
+ },
+ "src/depot/vpython/README.md": {
+  "binary-call": 1
+ },
+ "src/depot/vpython/src/lib.rs": {
+  "binary-call": 2
+ },
+ "src/diffutils-flat/Cargo.toml": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/diffutils-flat/README.md": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "src/diffutils-flat/flat.toml": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "src/diffutils-flat/src/bre.rs": {
+  "binary-call": 1
+ },
+ "src/diffutils-flat/src/lib.rs": {
+  "binary-call": 1
+ },
+ "src/docs/Cargo.toml": {
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 1
+ },
+ "src/docs/README.md": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "src/docs/src/lib.rs": {
+  "binary-call": 9
+ },
+ "src/docs/src/schedule.rs": {
+  "checkout-path": 3,
+  "binary-call": 2
+ },
+ "src/electron-migrate/Cargo.toml": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "src/electron-migrate/DEPS.rules": {
+  "crate-prefix": 1
+ },
+ "src/electron-migrate/src/analyze.rs": {
+  "binary-call": 1
+ },
+ "src/electron-migrate/src/bench.rs": {
+  "binary-call": 2
+ },
+ "src/electron-migrate/src/gpui.rs": {
+  "binary-call": 2
+ },
+ "src/electron-migrate/src/lib.rs": {
+  "c-prefix": 2,
+  "binary-call": 1
+ },
+ "src/electron-migrate/src/manifest.rs": {
+  "binary-call": 1
+ },
+ "src/electron-migrate/src/map.rs": {
+  "binary-call": 1
+ },
+ "src/electron-migrate/src/migrate.rs": {
+  "binary-call": 9
+ },
+ "src/electron-migrate/src/optimize.rs": {
+  "binary-call": 3
+ },
+ "src/electron-migrate/src/source.rs": {
+  "c-prefix": 4
+ },
+ "src/electron-migrate/src/tauri.rs": {
+  "binary-call": 4
+ },
+ "src/electron-migrate/src/tests.rs": {
+  "crate-prefix": 1,
+  "c-prefix": 2
+ },
+ "src/env/Cargo.toml": {
+  "checkout-path": 1,
+  "crate-prefix": 1
+ },
+ "src/env/README.md": {
+  "checkout-path": 1,
+  "crate-prefix": 2
+ },
+ "src/env/src/lib.rs": {
+  "checkout-path": 1,
+  "product-name": 2
+ },
+ "src/game/assets/models/explorer.glb": {
+  "product-name": 1
+ },
+ "src/game/src/procgen.rs": {
+  "product-name": 1
+ },
+ "src/ghidra-bun/Cargo.toml": {
+  "npm-scope": 1,
+  "crate-prefix": 5
+ },
+ "src/ghidra-bun/DEPS.rules": {
+  "crate-prefix": 1
+ },
+ "src/ghidra-bun/src/lib.rs": {
+  "npm-scope": 1,
+  "crate-prefix": 2,
+  "c-prefix": 2
+ },
+ "src/gnu/bc/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "src/gnu/bc/PROOF.md": {
+  "crate-prefix": 1
+ },
+ "src/gnu/bc/src/lib.rs": {
+  "crate-prefix": 1
+ },
+ "src/gnu/ed/Cargo.toml": {
+  "crate-prefix": 3
+ },
+ "src/gnu/ed/PROOF.md": {
+  "crate-prefix": 1
+ },
+ "src/gnu/ed/src/lib.rs": {
+  "crate-prefix": 3
+ },
+ "src/gnu/m4/Cargo.toml": {
+  "crate-prefix": 3
+ },
+ "src/gnu/m4/PROOF.md": {
+  "crate-prefix": 1
+ },
+ "src/gnu/m4/src/lib.rs": {
+  "crate-prefix": 1
+ },
+ "src/gnu/packages.toml": {
+  "crate-prefix": 5
+ },
+ "src/gnu/posix-re/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/gnu/rt/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/gnu/rt/src/lib.rs": {
+  "crate-prefix": 2
+ },
+ "src/gnu/time/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "src/gnu/time/PROOF.md": {
+  "crate-prefix": 1
+ },
+ "src/gnu/time/src/lib.rs": {
+  "crate-prefix": 2
+ },
+ "src/gnu/which/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "src/gnu/which/PROOF.md": {
+  "crate-prefix": 1
+ },
+ "src/gnu/which/src/lib.rs": {
+  "crate-prefix": 2
+ },
+ "src/i18n/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/i18n/README.md": {
+  "crate-prefix": 2
+ },
+ "src/i18n/src/lib.rs": {
+  "npm-scope": 1,
+  "env-prefix": 1
+ },
+ "src/i18n/tests/shared.rs": {
+  "c-prefix": 1
+ },
+ "src/include/uapi/ay/ui.h": {
+  "crate-prefix": 1
+ },
+ "src/machine/Cargo.toml": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/machine/README.md": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "src/machine/src/lib.rs": {
+  "binary-call": 1
+ },
+ "src/net/Cargo.toml": {
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "src/net/README.md": {
+  "crate-prefix": 3
+ },
+ "src/net/src/lib.rs": {
+  "crate-prefix": 3,
+  "c-prefix": 6
+ },
+ "src/net/src/main.rs": {
+  "c-prefix": 3
+ },
+ "src/net/tests/live.rs": {
+  "c-prefix": 1,
+  "env-prefix": 3
+ },
+ "src/niubash/build.rs": {
+  "product-name": 1
+ },
+ "src/niubash/docs/src/windows-path-contract.md": {
+  "checkout-path": 3
+ },
+ "src/niubash/runtime/src/path_utils.rs": {
+  "checkout-path": 1
+ },
+ "src/niubash/tests/root_fallback.rs": {
+  "checkout-path": 1
+ },
+ "src/posix/omarchy/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "src/posix/omarchy/README.md": {
+  "crate-prefix": 3
+ },
+ "src/posix/omarchy/src/bin/omarchy.rs": {
+  "c-prefix": 1
+ },
+ "src/posix/omarchy/src/cachyos/discovery.rs": {
+  "crate-prefix": 2
+ },
+ "src/posix/omarchy/src/cachyos/mod.rs": {
+  "crate-prefix": 1
+ },
+ "src/posix/omarchy/src/cachyos/patchsets.rs": {
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "src/posix/omarchy/src/cachyos/recipe.rs": {
+  "product-name": 2,
+  "crate-prefix": 1,
+  "c-prefix": 1,
+  "binary-call": 1
+ },
+ "src/posix/omarchy/src/cli.rs": {
+  "crate-prefix": 3,
+  "binary-call": 6
+ },
+ "src/posix/omarchy/src/lib.rs": {
+  "product-name": 1,
+  "crate-prefix": 5,
+  "c-prefix": 6
+ },
+ "src/posix/omarchy/src/packages.rs": {
+  "product-name": 1,
+  "crate-prefix": 1
+ },
+ "src/posix/omarchy/src/themes.rs": {
+  "crate-prefix": 5
+ },
+ "src/posix/omarchy/src/wsl.rs": {
+  "product-name": 2,
+  "crate-prefix": 4
+ },
+ "src/py2bun/src/emit.rs": {
+  "npm-scope": 15
+ },
+ "src/py2bun/src/names.rs": {
+  "npm-scope": 2
+ },
+ "src/py2bun/tests/async_mode.rs": {
+  "npm-scope": 2
+ },
+ "src/py2bun/tests/transpile.rs": {
+  "npm-scope": 4
+ },
+ "src/re/Cargo.toml": {
+  "crate-prefix": 5
+ },
+ "src/re/README.md": {
+  "crate-prefix": 2
+ },
+ "src/re/src/adobe.rs": {
+  "c-prefix": 3
+ },
+ "src/re/src/asar.rs": {
+  "c-prefix": 2
+ },
+ "src/re/src/cli.rs": {
+  "binary-call": 6
+ },
+ "src/re/src/dump.rs": {
+  "crate-prefix": 1
+ },
+ "src/re/src/electron.rs": {
+  "c-prefix": 2
+ },
+ "src/re/src/game/formats/model_assemble.rs": {
+  "crate-prefix": 2
+ },
+ "src/re/src/game/fs/eac.rs": {
+  "crate-prefix": 1
+ },
+ "src/re/src/game/fs/vfs.rs": {
+  "crate-prefix": 2
+ },
+ "src/re/src/game/steam.rs": {
+  "crate-prefix": 2
+ },
+ "src/re/src/golang.rs": {
+  "c-prefix": 2
+ },
+ "src/re/src/google.rs": {
+  "product-name": 1,
+  "c-prefix": 3
+ },
+ "src/re/src/headers.rs": {
+  "c-prefix": 1
+ },
+ "src/re/src/index.rs": {
+  "c-prefix": 6
+ },
+ "src/re/src/leveldb.rs": {
+  "product-name": 2,
+  "crate-prefix": 1,
+  "c-prefix": 2
+ },
+ "src/re/src/lib.rs": {
+  "crate-prefix": 1
+ },
+ "src/re/src/magika.rs": {
+  "product-name": 2
+ },
+ "src/re/src/mingw.rs": {
+  "crate-prefix": 1
+ },
+ "src/re/src/minidump.rs": {
+  "crate-prefix": 1
+ },
+ "src/re/src/pdata.rs": {
+  "crate-prefix": 2
+ },
+ "src/re/src/pe_forge/asm/mod.rs": {
+  "crate-prefix": 3,
+  "c-prefix": 1
+ },
+ "src/re/src/pe_forge/mod.rs": {
+  "crate-prefix": 2
+ },
+ "src/re/src/pe_forge/units.rs": {
+  "crate-prefix": 2,
+  "c-prefix": 1
+ },
+ "src/re/src/pipeline/stages.rs": {
+  "c-prefix": 1
+ },
+ "src/re/src/propagate.rs": {
+  "crate-prefix": 1
+ },
+ "src/re/src/triage.rs": {
+  "c-prefix": 1
+ },
+ "src/re/src/wasm_container.rs": {
+  "crate-prefix": 1
+ },
+ "src/re/src/yara.rs": {
+  "product-name": 2,
+  "crate-prefix": 1,
+  "c-prefix": 2
+ },
+ "src/remote/Cargo.toml": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/remote/README.md": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "src/remote/src/cli.rs": {
+  "checkout-path": 1,
+  "binary-call": 2
+ },
+ "src/remote/src/config.rs": {
+  "binary-call": 1
+ },
+ "src/remote/src/known_hosts.rs": {
+  "crate-prefix": 1
+ },
+ "src/remote/src/lib.rs": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/rt/Cargo.toml": {
+  "crate-prefix": 3,
+  "binary-call": 2
+ },
+ "src/rt/README.md": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "src/rt/src/combo.rs": {
+  "c-prefix": 3,
+  "binary-call": 3
+ },
+ "src/rt/src/js.rs": {
+  "binary-call": 4
+ },
+ "src/rt/src/lib.rs": {
+  "binary-call": 5
+ },
+ "src/rubash/src/executor/path.rs": {
+  "checkout-path": 2
+ },
+ "src/rubash/tests/oils_spec_array_regressions.rs": {
+  "checkout-path": 1
+ },
+ "src/rubash/tests/parser_tests.rs": {
+  "checkout-path": 2
+ },
+ "src/ruline/examples/semantic_prompt_verify.rs": {
+  "checkout-path": 3
+ },
+ "src/ruline/readline-abi/src/misc_text.rs": {
+  "checkout-path": 1
+ },
+ "src/ruline/readline-abi/tests/conformance/conformance.c": {
+  "checkout-path": 1
+ },
+ "src/ruline/readline-abi/tests/readline_smoke.c": {
+  "checkout-path": 1
+ },
+ "src/ruline/readline-abi/tests/text_remain.rs": {
+  "checkout-path": 1
+ },
+ "src/sema/program/projects/tests.rs": {
+  "checkout-path": 2
+ },
+ "src/sema/resolve/code/computed/tests.rs": {
+  "checkout-path": 4
+ },
+ "src/sema/resolve/code/search/tests.rs": {
+  "checkout-path": 12
+ },
+ "src/sema/resolve/code/tests/computed_specifiers.rs": {
+  "checkout-path": 4
+ },
+ "src/steam/UPSTREAM.md": {
+  "binary-call": 1
+ },
+ "src/steam/src/depot/mod.rs": {
+  "crate-prefix": 1
+ },
+ "src/steam/src/emulator.rs": {
+  "crate-prefix": 2,
+  "c-prefix": 5
+ },
+ "src/steam/src/install.rs": {
+  "binary-call": 1
+ },
+ "src/taffy/src/ecosystem.rs": {
+  "crate-prefix": 1
+ },
+ "src/tv/cli/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/tv/cli/src/main.rs": {
+  "c-prefix": 2
+ },
+ "src/ui/kit/Cargo.toml": {
+  "crate-prefix": 2
+ },
+ "src/ui/kit/README.md": {
+  "crate-prefix": 2
+ },
+ "src/ui/kit/src/color/adaptive.rs": {
+  "c-prefix": 4
+ },
+ "src/ui/kit/src/color/cam16.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/color.rs": {
+  "product-name": 6,
+  "c-prefix": 6,
+  "env-prefix": 5
+ },
+ "src/ui/kit/src/color/component.rs": {
+  "c-prefix": 2
+ },
+ "src/ui/kit/src/color/dynamic.rs": {
+  "c-prefix": 4
+ },
+ "src/ui/kit/src/color/facade.rs": {
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/gemini_brand.rs": {
+  "crate-prefix": 39,
+  "c-prefix": 10,
+  "env-prefix": 30
+ },
+ "src/ui/kit/src/color/google_sans_code.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/image.rs": {
+  "crate-prefix": 1
+ },
+ "src/ui/kit/src/color/mod.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/presets.rs": {
+  "c-prefix": 1,
+  "env-prefix": 3
+ },
+ "src/ui/kit/src/color/quantize.rs": {
+  "c-prefix": 4
+ },
+ "src/ui/kit/src/color/quantize_wsmeans.rs": {
+  "crate-prefix": 1
+ },
+ "src/ui/kit/src/color/scheme.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/shape.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/sheets.rs": {
+  "product-name": 1,
+  "npm-scope": 9,
+  "crate-prefix": 3,
+  "c-prefix": 3,
+  "env-prefix": 2
+ },
+ "src/ui/kit/src/color/spaceui.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/theme.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/color/tonal.rs": {
+  "c-prefix": 3
+ },
+ "src/ui/kit/src/components/controls/mod.rs": {
+  "c-prefix": 2
+ },
+ "src/ui/kit/src/components/focus.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/components/interaction.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/src/components/layout.rs": {
+  "crate-prefix": 1
+ },
+ "src/ui/kit/src/components/theme.rs": {
+  "c-prefix": 5
+ },
+ "src/ui/kit/src/components/visual.rs": {
+  "c-prefix": 2
+ },
+ "src/ui/kit/src/design_md.rs": {
+  "crate-prefix": 1,
+  "binary-call": 2
+ },
+ "src/ui/kit/src/fusion/dioxus_blitz.rs": {
+  "crate-prefix": 4
+ },
+ "src/ui/kit/src/fusion/embedded.rs": {
+  "product-name": 1
+ },
+ "src/ui/kit/src/fusion/mod.rs": {
+  "checkout-path": 1,
+  "crate-prefix": 1
+ },
+ "src/ui/kit/src/fusion/pages.rs": {
+  "checkout-path": 1,
+  "product-name": 1,
+  "binary-call": 2
+ },
+ "src/ui/kit/src/fusion/targets.rs": {
+  "crate-prefix": 2
+ },
+ "src/ui/kit/src/fusion/tests.rs": {
+  "crate-prefix": 1
+ },
+ "src/ui/kit/src/fusion/theme_bridge.rs": {
+  "product-name": 3,
+  "crate-prefix": 5,
+  "c-prefix": 2
+ },
+ "src/ui/kit/src/layout/ecosystem.rs": {
+  "crate-prefix": 1
+ },
+ "src/ui/kit/src/lib.rs": {
+  "crate-prefix": 1
+ },
+ "src/ui/kit/src/next/emit_bun.rs": {
+  "checkout-path": 1
+ },
+ "src/ui/kit/src/next/emit_dioxus.rs": {
+  "checkout-path": 1
+ },
+ "src/ui/kit/src/next/emit_leptos.rs": {
+  "checkout-path": 1
+ },
+ "src/ui/kit/src/next/metadata.rs": {
+  "npm-scope": 2
+ },
+ "src/ui/kit/src/next/routes.rs": {
+  "checkout-path": 1,
+  "npm-scope": 1
+ },
+ "src/ui/kit/src/next/rsc.rs": {
+  "c-prefix": 2
+ },
+ "src/ui/kit/src/shared/mod.rs": {
+  "product-name": 3,
+  "crate-prefix": 7,
+  "c-prefix": 1,
+  "env-prefix": 4
+ },
+ "src/ui/kit/tests/bevy_headless.rs": {
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "src/ui/kit/tests/color_brand_theme_golden.rs": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "c-prefix": 2,
+  "env-prefix": 3
+ },
+ "src/ui/kit/tests/color_creator_theme_golden.rs": {
+  "crate-prefix": 1,
+  "c-prefix": 2,
+  "env-prefix": 3
+ },
+ "src/ui/kit/tests/color_mcu_fidelity.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/tests/color_mcu_image_parity.rs": {
+  "c-prefix": 2
+ },
+ "src/ui/kit/tests/color_mcu_parity.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/tests/color_sheets_golden.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/kit/tests/color_theme_export.rs": {
+  "c-prefix": 1
+ },
+ "src/ui/m3.c": {
+  "npm-scope": 1,
+  "crate-prefix": 1,
+  "c-prefix": 1
+ },
+ "src/ui/shell_kit.c": {
+  "crate-prefix": 4
+ },
+ "src/ui/site_wasi.c": {
+  "c-prefix": 1
+ },
+ "src/up/Cargo.toml": {
+  "crate-prefix": 1,
+  "binary-call": 1
+ },
+ "src/up/README.md": {
+  "crate-prefix": 2,
+  "binary-call": 1
+ },
+ "src/up/src/bootstrap.rs": {
+  "checkout-path": 3,
+  "binary-call": 2
+ },
+ "src/up/src/lib.rs": {
+  "binary-call": 10
+ },
+ "src/up/src/manifest.rs": {
+  "binary-call": 6
+ },
+ "src/up/src/probe.rs": {
+  "binary-call": 3
+ },
+ "src/up/src/setup.rs": {
+  "checkout-path": 3,
+  "binary-call": 1
+ },
+ "src/up/src/shim.rs": {
+  "binary-call": 1
+ },
+ "src/vault/Cargo.toml": {
+  "npm-scope": 1,
+  "crate-prefix": 2
+ },
+ "src/vault/README.md": {
+  "crate-prefix": 2
+ },
+ "src/vault/src/ayv1.rs": {
+  "npm-scope": 1
+ },
+ "src/vault/src/capi.rs": {
+  "c-prefix": 11
+ },
+ "src/vault/src/lib.rs": {
+  "npm-scope": 1,
+  "crate-prefix": 1
+ },
+ "src/vault/src/local.rs": {
+  "product-name": 3,
+  "env-prefix": 1
+ },
+ "src/vault/src/win.rs": {
+  "product-name": 2
+ },
+ "src/vault/tests/interop.rs": {
+  "npm-scope": 1,
+  "c-prefix": 4
+ },
+ "src/wasm/wayland_wire.h": {
+  "env-prefix": 3
+ },
+ "src/wayland/cosmic/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "src/wayland/cosmic/src/theme.rs": {
+  "c-prefix": 1
+ },
+ "src/wayland/gamescope/cli/src/main.rs": {
+  "checkout-path": 1
+ },
+ "src/wayland/gamescope/core/src/console.rs": {
+  "product-name": 1
+ },
+ "src/winux/extra/src/lib.rs": {
+  "binary-call": 1
+ },
+ "src/xtask/Cargo.toml": {
+  "binary-call": 4
+ },
+ "src/xtask/README.md": {
+  "binary-call": 4
+ },
+ "src/xtask/src/deps.rs": {
+  "binary-call": 5
+ },
+ "src/xtask/src/lib.rs": {
+  "checkout-path": 1
+ },
+ "src/xtask/src/manifests.rs": {
+  "binary-call": 10
+ },
+ "test/conformance/Cargo.toml": {
+  "crate-prefix": 1
+ },
+ "test/conformance/README.md": {
+  "crate-prefix": 2
+ },
+ "test/conformance/src/channels.rs": {
+  "binary-call": 1
+ },
+ "test/conformance/src/cli.rs": {
+  "product-name": 1,
+  "binary-call": 3
+ },
+ "test/conformance/src/lib.rs": {
+  "c-prefix": 4,
+  "env-prefix": 2
+ },
+ "test/lore/Cargo.toml": {
+  "crate-prefix": 8
+ },
+ "test/lore/README.md": {
+  "crate-prefix": 1
+ },
+ "tools/trackers/graph.ts": {
+  "binary-call": 2
+ },
+ "tools/trackers/net.ts": {
+  "crate-prefix": 1
+ }
+}

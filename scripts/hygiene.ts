@@ -14,6 +14,8 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { sensitiveValues } from "../packages/env-kit/src/discover.ts";
 import { isNonSourceProse, sourceLanguage } from "../packages/i18n/src/detect.ts";
+import { findRoot, loadIdentity } from "./identity.ts";
+import { classes, dataPattern, namesOf, trackedSkip } from "./identity-literals.ts";
 
 export type Hit = { rule: string; file: string; line: number; text: string };
 export type Rule = {
@@ -191,6 +193,24 @@ for (const [names, what, page] of [
 /** Locale catalogues are the only place a non-English string may live. */
 const LOCALE_FILE =
   /(^|\/)(locales?|messages|i18n|l10n|translations?)\/|(^|[./])(fr|fr-FR)\.(json|ftl|arb|po|xlf|xliff|properties|ts)$|\/values-fr\/|\.fr\.(md|mdx|html)$|(^|\/)(fr|es|ja|zh-CN|de|it|pt)\//;
+// literal-identity: names that tools/identity.toml owns (product, scope, prefixes, binary calls, checkout paths).
+// Files already counted in tools/identity-baseline.json are the ratchet (scripts/identity-literals.ts check); every
+// other file must hold none.
+const IDENTITY = (() => {
+  try {
+    const root = findRoot();
+    const names = namesOf(loadIdentity(root));
+    const base = join(root, "tools/identity-baseline.json");
+    return {
+      cls: Object.values(classes(names, [root.split(/[\\/]/).pop()!])),
+      data: dataPattern(names),
+      base: new Set(existsSync(base) ? Object.keys(JSON.parse(readFileSync(base, "utf8"))) : []),
+    };
+  } catch {
+    return undefined; // no identity file (fork without it): the rule is off
+  }
+})();
+
 export const RULES: Rule[] = [
   {
     id: "non-english",
@@ -284,6 +304,15 @@ export const RULES: Rule[] = [
     line: (l, f) =>
       ABS_USER.test(l) ||
       (CODE.test(f) && !/^(infra|scripts\/bench)\//.test(f) && ABS_SRC.test(l)),
+  },
+  {
+    id: "literal-identity",
+    why: "Literal product, scope, prefix, binary or checkout-folder name; derive it from tools/identity.toml (just identity apply), the discovered repository root, or an env variable. Upstream namespaces (win32, ffmpeg, Linux, Chromium, upstream env) and our domains are data",
+    files: (f) => !!IDENTITY && !trackedSkip(f) && !IDENTITY.base.has(f),
+    line: (l) => {
+      const t = IDENTITY!.data ? l.replace(IDENTITY!.data, " ") : l;
+      return IDENTITY!.cls.some((re) => ((re.lastIndex = 0), re.test(t)));
+    },
   },
   {
     id: "personal-data",

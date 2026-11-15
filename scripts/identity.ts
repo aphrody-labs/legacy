@@ -3,7 +3,11 @@
 // rewrites every manifest that copies it (docs/core/ARCHITECTURE-ROOT.md invariant 5).
 //
 //   bun scripts/identity.ts check [--root DIR]   exit 1 on drift (gate in `just check` and CI)
-//   bun scripts/identity.ts apply [--root DIR]   rewrite the derived fields from tools/identity.toml
+//   bun scripts/identity.ts apply [--root DIR] [--from OLD.toml]
+//                                                rewrite the derived fields from tools/identity.toml; the literals of the old
+//                                                identity (HEAD:tools/identity.toml unless --from) become the new names:
+//                                                npm scope, crate prefix, C and env prefixes, product name, binary calls
+//                                                (scripts/identity-literals.ts rewrite)
 //   bun scripts/identity.ts get <dotted.key>     print one value (recipes, CI)
 //
 // Derived fields:
@@ -14,7 +18,7 @@
 //   (`<scope>/<binary>` for [products.*], `<scope>/monorepo` at the root), and every `workspace:`
 //   dependency must name one of them.
 // TOML values are compared parsed (comments, multi-line arrays); JSON is rewritten as objects.
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 
 export type Identity = {
@@ -35,15 +39,19 @@ export type Identity = {
   products?: Record<string, { binary: string; path: string }>;
 };
 
-/** Nearest ancestor of `from` holding src.lock.json, else $SRC_ROOT. */
+/** Root marker: the identity file itself, so no file name carries the product or folder name. */
+export const ROOT_MARKER = "tools/identity.toml";
+
+/** Nearest ancestor of `from` holding tools/identity.toml, else $REPO_ROOT (legacy $SRC_ROOT). */
 export function findRoot(from = process.cwd()): string {
   for (let d = resolve(from); ; d = dirname(d)) {
-    if (existsSync(join(d, "src.lock.json"))) return d;
+    if (existsSync(join(d, ROOT_MARKER))) return d;
     if (dirname(d) === d) break;
   }
-  if (process.env.SRC_ROOT) return process.env.SRC_ROOT;
+  const env = process.env.REPO_ROOT ?? process.env.SRC_ROOT;
+  if (env) return env;
   throw new Error(
-    "src.lock.json not found above the working directory and SRC_ROOT unset",
+    `${ROOT_MARKER} not found above the working directory and REPO_ROOT unset`,
   );
 }
 
@@ -247,8 +255,10 @@ export function plan(root: string, id = loadIdentity(root)): Edit[] {
           what: "name collision",
           have: `${e.want} (also ${prev})`,
           want: "one workspace per name",
-          apply: () => {
-            throw new Error(`${e.file} and ${prev} would both be ${e.want}`);
+          // reported by check; apply keeps converging the other manifests
+          apply: (s) => {
+            console.warn(`identity: ${e.file} and ${prev} would both be ${e.want}`);
+            return s;
           },
         });
       seen.set(e.want, e.file);
@@ -362,7 +372,7 @@ function main(argv: string[]) {
   const root = i >= 0 ? resolve(argv[i + 1]!) : findRoot();
   const id = loadIdentity(root);
   const cmd =
-    argv.find((a, j) => !a.startsWith("--") && (i < 0 || j !== i + 1)) ??
+    argv.find((a, j) => !a.startsWith("--") && (i < 0 || j !== i + 1) && argv[j - 1] !== "--from") ??
     "check";
   if (cmd === "get") {
     const key = argv[argv.indexOf("get") + 1] ?? "";
@@ -382,9 +392,31 @@ function main(argv: string[]) {
     for (const e of edits)
       console.error(`identity: ${e.file} ${e.what}: ${e.have} != ${e.want}`);
     if (!edits.length) console.log("identity: manifests match tools/identity.toml");
-    return (edits.length ? 1 : 0) | piiGate(root);
+    const lit = Bun.spawnSync(
+      ["bun", join(import.meta.dir, "identity-literals.ts"), "check", "--root", root],
+      { stdout: "inherit", stderr: "inherit" },
+    );
+    return (edits.length ? 1 : 0) | (lit.exitCode ? 1 : 0) | piiGate(root);
   }
   if (cmd === "apply") {
+    const fi = argv.indexOf("--from");
+    let from = fi >= 0 ? resolve(argv[fi + 1]!) : "";
+    if (!from) {
+      const head = Bun.spawnSync(["git", "show", `HEAD:${ROOT_MARKER}`], { cwd: root });
+      if (head.success) {
+        from = join(root, "var", "identity.head.toml");
+        mkdirSync(dirname(from), { recursive: true });
+        writeFileSync(from, head.stdout);
+      }
+    }
+    if (from) {
+      const lit = Bun.spawnSync(
+        ["bun", join(import.meta.dir, "identity-literals.ts"), "rewrite", "--old", from, "--root", root],
+        { stdout: "inherit", stderr: "inherit" },
+      );
+      if (lit.exitCode) return lit.exitCode;
+    }
+    const edits = plan(root, id);
     for (const [file, es] of Map.groupBy(edits, (e) => e.file)) {
       const p = join(root, file);
       writeFileSync(
