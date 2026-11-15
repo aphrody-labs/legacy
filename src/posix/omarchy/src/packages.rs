@@ -3,8 +3,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
-const KERNEL_FRAGMENT: &str = include_str!("../../../../infra/wsl-distro/kernel/wsl2-cachyos-omarchy-7.4.config");
-const KERNEL_BUILD_SCRIPT: &str = include_str!("../../../../infra/wsl-distro/kernel/build-kernel.sh");
+const KERNEL_FRAGMENT: &str = include_str!("../../../../infra/os/wsl/kernel/wsl2-cachyos-omarchy-7.4.config");
+const KERNEL_BUILD_SCRIPT: &str = include_str!("../../../../infra/os/wsl/kernel/build-kernel.sh");
 const WSLCONFIG_TEMPLATE: &str = include_str!("../../../../packages/machine/wsl/wslconfig");
 
 #[derive(Error, Debug)]
@@ -146,7 +146,7 @@ impl SovereignPackageEngine {
     }
 
     /// CachyOS patches applied on top of the CachyOS/linux release tree by
-    /// infra/wsl-distro/kernel/build-kernel.sh (the tree already carries the base CachyOS patches; BORE and
+    /// infra/os/wsl/kernel/build-kernel.sh (the tree already carries the base CachyOS patches; BORE and
     /// Project C are alternatives, NVIDIA patches target the out-of-tree module, not the kernel).
     pub fn list_kernel_patches(&self, kernel_series: &str) -> Vec<KernelPatchDescriptor> {
         let series_dir = self.cachyos_patches_root.join(kernel_series);
@@ -175,7 +175,7 @@ impl SovereignPackageEngine {
             .collect()
     }
 
-    /// Kernel config fragment merged over Microsoft's config-wsl (single source: infra/wsl-distro/kernel).
+    /// Kernel config fragment merged over Microsoft's config-wsl (single source: infra/os/wsl/kernel).
     pub fn generate_wsl2_kernel_config_fragment(&self) -> String {
         KERNEL_FRAGMENT.to_string()
     }

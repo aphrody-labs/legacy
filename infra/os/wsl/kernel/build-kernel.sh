@@ -1,7 +1,7 @@
 #!/bin/sh
 # build-kernel.sh - aphrody CachyOS WSL 2 kernel (bzImage + modules VHDX for .wslconfig kernel= / kernelModules=).
 # Runs on fr1 only (never on the PC):
-#   ssh <fr1> 'cd <checkout>/infra/wsl-distro && HEAVY_WAIT_MAX=14400 aphrody-heavy sh kernel/build-kernel.sh'
+#   ssh <fr1> 'cd <checkout>/infra/os/wsl && HEAVY_WAIT_MAX=14400 aphrody-heavy sh kernel/build-kernel.sh'
 # Sources, all pinned:
 #   CachyOS/linux release cachyos-7.4-rc2-2 (the tree linux-cachyos-rc builds, CachyOS/linux-cachyos@8e308d0a)
 #   CachyOS/kernel-patches@21d72141 7.4/sched/0001-bore-cachy.patch
