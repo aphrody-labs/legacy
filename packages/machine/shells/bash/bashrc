@@ -1,6 +1,6 @@
 # packages/machine/shells/bash/bashrc — single config for the bash family: niubash 1.5, Git Bash 5.3, brush 0.4.
 # Installed by packages/machine/shells/manifest.toml (stubs ~/.bashrc, ~/.bash_profile, ~/.niubashrc).
-# Choices, versions and sources: docs/native/shell/bash-setup.md. Startup: zero forks except the first launch (caches).
+# Choices, versions and sources: docs/shell/bash-setup.md. Startup: zero forks except the first launch (caches).
 
 # --- Shared environment (all modes, including Claude Code `bash -c -l`) ---
 _ay_d=${BASH_SOURCE[0]:-C:/src/packages/machine/shells/bash/bashrc}
@@ -35,7 +35,10 @@ PS1='\[\e[31m\]${?#0}\[\e[0m\]\[\e[34m\]\w\[\e[0m\] \$ '
 # History shared between sessions: `history -a` is a builtin.
 case ";${PROMPT_COMMAND-};" in *"history -a"*) ;; *) PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}" ;; esac
 
-alias ll='eza -la --git --icons=auto' gs='git status -sb' gd='git diff' gl='git log --oneline --graph -20'
+alias ls='eza --icons=auto --group-directories-first' ll='eza -la --git --icons=auto --group-directories-first' lt='eza -T --level=2 --icons=auto'
+alias gs='git status -sb' gd='git diff' gl='git log --oneline --graph -20' lg='lazygit' ff='fastfetch'
+command -v bat >/dev/null 2>&1 && alias cat='bat --paging=never'
+y() { local tmp cwd; tmp="$(mktemp -t "yazi-cwd.XXXXXX")"; yazi "$@" --cwd-file="$tmp"; if cwd="$(cat -- "$tmp" 2>/dev/null)" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then cd -- "$cwd" || return; fi; rm -f -- "$tmp"; }
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --exclude .git --path-separator /'
 export FZF_CTRL_T_COMMAND=$FZF_DEFAULT_COMMAND FZF_ALT_C_COMMAND='fd --type d --hidden --exclude .git --path-separator /'
 
@@ -137,4 +140,27 @@ if [[ ! -s $_ay_c ]] && command -v fzf >/dev/null; then
     -e '1,/^### end: key-bindings.bash ###/p' >"$_ay_c"
 fi
 [[ -s $_ay_c ]] && . "$_ay_c"
+# starship + atuin: cached inits (zero forks after first launch; brush skips if unsupported).
+if [[ -z ${BRUSH_VERSION-} ]]; then
+  # scan_timeout stays short (starship.toml) for a fast prompt in large directories such as $HOME; the
+  # "Scanning current directory timed out" warning that follows is noise, so only errors are logged.
+  export STARSHIP_LOG=error
+  _ay_c=$AY_SHELL_CACHE/bash-starship.bash
+  if [[ ! -s $_ay_c ]] && command -v starship >/dev/null; then
+    [[ -d $AY_SHELL_CACHE ]] || mkdir -p "$AY_SHELL_CACHE"
+    starship init bash --print-full-init >"$_ay_c" 2>/dev/null
+  fi
+  [[ -s $_ay_c ]] && . "$_ay_c"
+  _ay_c=$AY_SHELL_CACHE/bash-atuin.bash
+  if [[ ! -s $_ay_c ]] && command -v atuin >/dev/null; then
+    [[ -d $AY_SHELL_CACHE ]] || mkdir -p "$AY_SHELL_CACHE"
+    # The ble.sh integration declares `function ble/complete/...:atuin-history {` inside a function; niubash
+    # rejects that name ("unexpected end of file from `{'"), and ble.sh is not loaded here: the hook becomes a no-op.
+    atuin init bash --disable-up-arrow 2>/dev/null |
+      awk '/^__atuin_initialize_blesh\(\) \{/ { print "__atuin_initialize_blesh() { :; }"; skip = 1; next }
+        skip && /^}$/ { skip = 0; next }
+        !skip' >"$_ay_c"
+  fi
+  [[ -s $_ay_c ]] && . "$_ay_c"
+fi
 unset _ay_c
