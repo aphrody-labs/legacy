@@ -379,7 +379,7 @@ const errors = findings.filter((f) => f.level === "error").length;
 if (args.includes("--units")) {
   // Full unit graph (scripts/topology.ts builds the monorepo map from it).
   const rows = [...units.values()].map((u) => ({ ...u, layer: scopeFor(u.dir).layer ?? null }));
-  console.log(JSON.stringify({ units: rows, findings }, null, 2));
+  console.log(JSON.stringify({ layers: LAYER_NAMES, units: rows, findings }, null, 2));
 } else if (args.includes("--json")) {
   console.log(JSON.stringify({ units: units.size, errors, findings }, null, 2));
 } else if (args.includes("--graph")) {

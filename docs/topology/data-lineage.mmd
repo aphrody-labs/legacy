@@ -1,37 +1,17 @@
 graph LR
   sqlite[("SQLite")]
   valkey[("Valkey / Redis")]
-  r2[("R2 / S3")]
+  s3[("S3 / R2")]
   postgres[("Postgres")]
-  sqlite -. "read 2" .-> L4
-  L4 == "write 2" ==> sqlite
-  valkey -. "read 8" .-> L0
-  sqlite -. "read 9" .-> L0
-  L0 == "write 4" ==> valkey
-  sqlite -. "read 11" .-> L3
-  r2 -. "read 9" .-> L3
-  sqlite -. "read 1" .-> L1
-  L1 == "write 1" ==> valkey
-  valkey -. "read 1" .-> L1
-  L1 == "write 1" ==> sqlite
-  sqlite -. "read 2" .-> L2
-  L2 == "write 1" ==> sqlite
-  valkey -. "read 2" .-> L2
-  L3 == "write 7" ==> sqlite
-  r2 -. "read 4" .-> L0
-  postgres -. "read 4" .-> L0
-  L0 == "write 1" ==> sqlite
-  L0 == "write 2" ==> r2
-  L3 == "write 6" ==> r2
-  valkey -. "read 2" .-> L3
-  postgres -. "read 3" .-> L3
-  r2 -. "read 2" .-> L5
-  L3 == "write 1" ==> valkey
-  L3 == "write 3" ==> postgres
-  L2 == "write 1" ==> valkey
-  postgres -. "read 1" .-> L2
-  sqlite -. "read 1" .-> L5
-  L5 == "write 1" ==> valkey
-  valkey -. "read 1" .-> L5
-  postgres -. "read 1" .-> L5
-  L5 == "write 1" ==> sqlite
+  L4 -- "2 units link the client" --> sqlite
+  L3 -- "8 units link the client" --> sqlite
+  L3 -- "3 units link the client" --> s3
+  L3 -- "1 units link the client" --> valkey
+  L3 -- "2 units link the client" --> postgres
+  L2 -- "2 units link the client" --> sqlite
+  L2 -- "1 units link the client" --> valkey
+  L5 -- "1 units link the client" --> sqlite
+  L5 -- "1 units link the client" --> valkey
+  L5 -- "2 units link the client" --> s3
+  L5 -- "1 units link the client" --> postgres
+  L1 -- "1 units link the client" --> sqlite

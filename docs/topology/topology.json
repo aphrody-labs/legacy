@@ -771,6 +771,14 @@
       "file": "src/resolve_builtins"
      },
      {
+      "id": "src/router",
+      "name": "bun_router",
+      "kind": "module",
+      "language": "rust",
+      "loc": 1774,
+      "file": "src/router"
+     },
+     {
       "id": "src/runtime",
       "name": "bun_runtime",
       "kind": "module",
@@ -1620,7 +1628,7 @@
       "name": "aphrody-env",
       "kind": "module",
       "language": "rust",
-      "loc": 429,
+      "loc": 434,
       "file": "src/env"
      },
      {
@@ -1772,7 +1780,7 @@
       "name": "aphrody-ui",
       "kind": "module",
       "language": "rust",
-      "loc": 55707,
+      "loc": 55584,
       "file": "src/ui/kit"
      },
      {
@@ -1828,7 +1836,7 @@
       "name": "@aphrody/browser",
       "kind": "module",
       "language": "typescript",
-      "loc": 320803,
+      "loc": 323877,
       "file": "packages/browser"
      },
      {
@@ -1852,7 +1860,7 @@
       "name": "@aphrody/chromium-bun",
       "kind": "module",
       "language": "typescript",
-      "loc": 11943,
+      "loc": 11967,
       "file": "packages/chromium-bun"
      },
      {
@@ -2003,7 +2011,7 @@
       "name": "aphrody-electron-migrate",
       "kind": "module",
       "language": "rust",
-      "loc": 5297,
+      "loc": 5302,
       "file": "src/electron-migrate"
      },
      {
@@ -2042,7 +2050,7 @@
       "name": "aphrody",
       "kind": "module",
       "language": "rust",
-      "loc": 9537,
+      "loc": 9687,
       "file": "src/ay"
      },
      {
@@ -2106,7 +2114,7 @@
       "name": "asset-test",
       "kind": "module",
       "language": "rust",
-      "loc": 304,
+      "loc": 297,
       "file": "test/assets"
      },
      {
@@ -2165,8 +2173,8 @@
       "kind": "datastore"
      },
      {
-      "id": "ds:r2",
-      "name": "R2 / S3",
+      "id": "ds:s3",
+      "name": "S3 / R2",
       "kind": "datastore"
      },
      {
@@ -2181,43 +2189,8 @@
  "edges": [
   {
    "source": "src/agent/context",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/agent/context",
    "target": "packages/ai-os",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/agent/context",
-   "target": "ds:sqlite",
-   "kind": "write"
-  },
-  {
-   "source": "src/analytics",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/aot",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/aot/builtins",
-   "target": "ds:valkey",
-   "kind": "write"
-  },
-  {
-   "source": "src/aot/builtins",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/aot/builtins",
-   "target": "ds:sqlite",
-   "kind": "read"
   },
   {
    "source": "src/archguard",
@@ -2231,11 +2204,6 @@
   },
   {
    "source": "src/archguard",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/archguard",
    "target": "src/posix/omarchy",
    "kind": "dispatch"
   },
@@ -2243,11 +2211,6 @@
    "source": "src/archguard",
    "target": "packages/core",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/ast",
-   "target": "ds:sqlite",
-   "kind": "read"
   },
   {
    "source": "src/ay",
@@ -2306,11 +2269,6 @@
   },
   {
    "source": "src/bun_core",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/bun_core",
    "target": "src/jsc",
    "kind": "dispatch"
   },
@@ -2330,44 +2288,9 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/chromium/factory",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
-   "source": "src/core",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/core",
-   "target": "ds:valkey",
-   "kind": "write"
-  },
-  {
-   "source": "src/core",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/core",
-   "target": "ds:sqlite",
-   "kind": "write"
-  },
-  {
-   "source": "src/core/capi",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
    "source": "src/core/capi",
    "target": "src/ffi",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/core/capi",
-   "target": "ds:sqlite",
-   "kind": "write"
   },
   {
    "source": "src/core/capi",
@@ -2375,29 +2298,9 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/core/capi",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
    "source": "src/corelib",
    "target": "src/ffi",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/depot/migrate",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/docs",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/docs",
-   "target": "ds:sqlite",
-   "kind": "write"
   },
   {
    "source": "src/drivers/gpu/dx12",
@@ -2451,43 +2354,8 @@
   },
   {
    "source": "src/install",
-   "target": "ds:valkey",
-   "kind": "write"
-  },
-  {
-   "source": "src/install",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/install",
    "target": "src/jsc",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/jsc",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/jsc",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/jsc",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
-   "source": "src/jsc",
-   "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
-   "source": "src/jsc",
-   "target": "ds:sqlite",
-   "kind": "write"
   },
   {
    "source": "src/jsc",
@@ -2495,39 +2363,9 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/jsc",
-   "target": "ds:r2",
-   "kind": "write"
-  },
-  {
-   "source": "src/jsc",
-   "target": "ds:valkey",
-   "kind": "write"
-  },
-  {
    "source": "src/lint",
    "target": "src/jsc",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/lint/driver",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/lore/aws",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
-   "source": "src/lore/aws",
-   "target": "ds:r2",
-   "kind": "write"
-  },
-  {
-   "source": "src/options_types",
-   "target": "ds:r2",
-   "kind": "read"
   },
   {
    "source": "src/parsers",
@@ -2555,64 +2393,14 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/resolve_builtins",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
    "source": "src/rt",
    "target": "packages/chromium-bun",
    "kind": "dispatch"
   },
   {
    "source": "src/runtime",
-   "target": "ds:valkey",
-   "kind": "write"
-  },
-  {
-   "source": "src/runtime",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/runtime",
-   "target": "ds:r2",
-   "kind": "write"
-  },
-  {
-   "source": "src/runtime",
    "target": "src/aot",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/runtime",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
-   "source": "src/runtime",
-   "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
-   "source": "src/runtime",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/rust-stack",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/rust-stack",
-   "target": "ds:sqlite",
-   "kind": "write"
-  },
-  {
-   "source": "src/sema",
-   "target": "ds:sqlite",
-   "kind": "read"
   },
   {
    "source": "src/spawn_sys",
@@ -2625,49 +2413,14 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/sql",
-   "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
-   "source": "src/sql_jsc",
-   "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
    "source": "src/taffy",
    "target": "packages/design",
    "kind": "dispatch"
   },
   {
-   "source": "src/trim",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
-   "source": "src/trim",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
    "source": "src/ui/kit",
    "target": "packages/design",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/ui/kit",
-   "target": "ds:r2",
-   "kind": "write"
-  },
-  {
-   "source": "src/ui/kit",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "src/up",
-   "target": "ds:r2",
-   "kind": "read"
   },
   {
    "source": "src/uws_sys",
@@ -2680,24 +2433,9 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/uws_sys",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "src/valkey",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
    "source": "src/vault",
    "target": "packages/vault",
    "kind": "dispatch"
-  },
-  {
-   "source": "src/xtask",
-   "target": "ds:valkey",
-   "kind": "read"
   },
   {
    "source": "src/xtask",
@@ -2705,49 +2443,14 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/xtask",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
-   "source": "bench",
-   "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
-   "source": "test/lore",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
    "source": "packages/ai-os",
    "target": "ds:sqlite",
-   "kind": "write"
-  },
-  {
-   "source": "packages/ai-os",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "packages/assets",
-   "target": "ds:r2",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "packages/assets",
    "target": "ds:sqlite",
-   "kind": "write"
-  },
-  {
-   "source": "packages/assets",
-   "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "packages/assets",
-   "target": "ds:r2",
-   "kind": "read"
+   "kind": "call"
   },
   {
    "source": "packages/assets",
@@ -2761,58 +2464,28 @@
   },
   {
    "source": "packages/bun-types",
-   "target": "ds:sqlite",
-   "kind": "read"
+   "target": "ds:s3",
+   "kind": "call"
   },
   {
    "source": "packages/bun-types",
    "target": "ds:valkey",
-   "kind": "write"
-  },
-  {
-   "source": "packages/bun-types",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "packages/bun-types",
-   "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
-   "source": "packages/bun-types",
-   "target": "ds:r2",
-   "kind": "write"
-  },
-  {
-   "source": "packages/bun-types",
-   "target": "ds:r2",
-   "kind": "read"
+   "kind": "call"
   },
   {
    "source": "packages/bun-types",
    "target": "ds:sqlite",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "packages/bun-types",
    "target": "ds:postgres",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "packages/chromium-bun",
    "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "packages/chromium-bun",
-   "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
-   "source": "packages/chromium-bun",
-   "target": "ds:sqlite",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "packages/chromium-bun",
@@ -2830,34 +2503,24 @@
    "kind": "dispatch"
   },
   {
-   "source": "packages/chromium-bun",
-   "target": "ds:postgres",
-   "kind": "write"
-  },
-  {
    "source": "packages/core",
    "target": "ds:sqlite",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "packages/core",
-   "target": "ds:r2",
-   "kind": "read"
+   "target": "ds:s3",
+   "kind": "call"
   },
   {
    "source": "packages/core",
    "target": "ds:postgres",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "packages/core",
    "target": "packages/wck",
    "kind": "dispatch"
-  },
-  {
-   "source": "packages/core",
-   "target": "ds:sqlite",
-   "kind": "read"
   },
   {
    "source": "packages/core",
@@ -2887,17 +2550,7 @@
   {
    "source": "packages/deploy",
    "target": "ds:sqlite",
-   "kind": "read"
-  },
-  {
-   "source": "packages/env-kit",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
-   "source": "packages/env-kit",
-   "target": "ds:r2",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "packages/ghidra",
@@ -2910,19 +2563,9 @@
    "kind": "dispatch"
   },
   {
-   "source": "packages/gnu",
-   "target": "ds:r2",
-   "kind": "write"
-  },
-  {
-   "source": "packages/gnu",
-   "target": "ds:r2",
-   "kind": "read"
-  },
-  {
    "source": "packages/machine",
    "target": "ds:sqlite",
-   "kind": "read"
+   "kind": "call"
   },
   {
    "source": "packages/machine",
@@ -2932,17 +2575,7 @@
   {
    "source": "packages/machine",
    "target": "ds:valkey",
-   "kind": "write"
-  },
-  {
-   "source": "packages/machine",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "packages/machine",
-   "target": "ds:postgres",
-   "kind": "read"
+   "kind": "call"
   },
   {
    "source": "packages/machine",
@@ -3002,12 +2635,7 @@
   {
    "source": "packages/vault",
    "target": "ds:sqlite",
-   "kind": "write"
-  },
-  {
-   "source": "packages/vault",
-   "target": "ds:sqlite",
-   "kind": "read"
+   "kind": "call"
   },
   {
    "source": "apps/nt",
@@ -3197,6 +2825,11 @@
   {
    "source": "apps/nt",
    "target": "src/standalone_graph",
+   "kind": "dispatch"
+  },
+  {
+   "source": "apps/nt",
+   "target": "src/router",
    "kind": "dispatch"
   },
   {
@@ -3442,32 +3075,22 @@
   {
    "source": "apps/nt",
    "target": "ds:sqlite",
-   "kind": "read"
+   "kind": "call"
   },
   {
    "source": "apps/nt",
    "target": "ds:valkey",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "apps/nt",
-   "target": "ds:valkey",
-   "kind": "read"
-  },
-  {
-   "source": "apps/nt",
-   "target": "ds:r2",
-   "kind": "read"
+   "target": "ds:s3",
+   "kind": "call"
   },
   {
    "source": "apps/nt",
    "target": "ds:postgres",
-   "kind": "read"
-  },
-  {
-   "source": "apps/nt",
-   "target": "ds:sqlite",
-   "kind": "write"
+   "kind": "call"
   },
   {
    "source": "tools/lore",
@@ -3852,6 +3475,16 @@
   {
    "source": "src/ay",
    "target": "src/electron-migrate",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/env",
+   "kind": "call"
+  },
+  {
+   "source": "src/ay",
+   "target": "src/i18n",
    "kind": "call"
   },
   {
@@ -7470,6 +7103,66 @@
    "kind": "call"
   },
   {
+   "source": "src/router",
+   "target": "src/ast",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/bun_alloc",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/bun_core",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/collections",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/errno",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/http_types",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/paths",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/ptr",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/sys",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/url",
+   "kind": "call"
+  },
+  {
+   "source": "src/router",
+   "target": "src/wyhash",
+   "kind": "call"
+  },
+  {
    "source": "src/rt",
    "target": "src/up",
    "kind": "call"
@@ -7782,6 +7475,11 @@
   {
    "source": "src/runtime",
    "target": "src/resolver",
+   "kind": "call"
+  },
+  {
+   "source": "src/runtime",
+   "target": "src/router",
    "kind": "call"
   },
   {
@@ -9156,6 +8854,11 @@
   },
   {
    "source": "test/assets",
+   "target": "src/craft",
+   "kind": "call"
+  },
+  {
+   "source": "test/assets",
    "target": "src/tv/ffmpeg",
    "kind": "call"
   },
@@ -9245,6 +8948,41 @@
    "kind": "call"
   },
   {
+   "source": "src/agent/context",
+   "target": "ds:sqlite",
+   "kind": "call"
+  },
+  {
+   "source": "src/core",
+   "target": "ds:sqlite",
+   "kind": "call"
+  },
+  {
+   "source": "src/core/capi",
+   "target": "ds:sqlite",
+   "kind": "call"
+  },
+  {
+   "source": "src/docs",
+   "target": "ds:sqlite",
+   "kind": "call"
+  },
+  {
+   "source": "src/lore/aws",
+   "target": "ds:s3",
+   "kind": "call"
+  },
+  {
+   "source": "src/rust-stack",
+   "target": "ds:sqlite",
+   "kind": "call"
+  },
+  {
+   "source": "test/lore",
+   "target": "ds:s3",
+   "kind": "call"
+  },
+  {
    "source": "just",
    "target": "src/ay",
    "kind": "dispatch"
@@ -9322,11 +9060,6 @@
   {
    "source": "src/ay",
    "target": "packages/release",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/ay",
-   "target": "packages/i18n",
    "kind": "dispatch"
   },
   {
@@ -9556,42 +9289,34 @@
  ],
  "deadEnds": [],
  "observations": [
-  "Most depended-on units (single points of failure): bun_core (107), bun_alloc (58), bun_collections (44), bun_sys (43), bun_ast (34).",
+  "Most depended-on units (single points of failure): bun_core (108), bun_alloc (59), bun_collections (45), bun_sys (44), bun_ast (35).",
   "0 units have no inbound edge, no binary and are never named elsewhere: unwired candidates for wiring into ay or deletion.",
-  "2 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
-  "135 of 227 Rust units are absorbed Bun crates (bun_*).",
-  "Data stores by writer count: SQLite 13, Valkey / Redis 8, R2 / S3 8, Postgres 3 (detected from client APIs and SQL keywords, not runtime).",
+  "0 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
+  "136 of 228 Rust units are absorbed Bun crates (bun_*).",
+  "Units linking a data-store client (manifest dependency or Bun built-in API; read/write not measured): SQLite 14, S3 / R2 5, Valkey / Redis 3, Postgres 3.",
   "No dependency cycle (checkdeps).",
   "Every ay External route resolves to a binary in the tree."
  ],
  "flows": [
   {
-   "name": "A developer runs one command",
-   "persona": "developer",
-   "description": "A developer types `ay <task>` and the single CLI routes it to the right Rust crate or Bun package.",
+   "name": "just to SQLite",
+   "persona": "maintainer (just recipe)",
+   "description": "Shortest dependency path from the entry point just (reaches 203 units) to the data store SQLite.",
    "steps": [
     {
-     "label": "Types the command",
+     "label": "Entry: just",
      "nodes": [
-      "src/ay"
+      "just"
      ]
     },
     {
-     "label": "ay dispatches to a Bun facade",
+     "label": "just uses @aphrody/ai-os",
      "nodes": [
-      "packages/chromium-bun",
-      "packages/machine"
+      "packages/ai-os"
      ]
     },
     {
-     "label": "Core indexes and graphs the code",
-     "nodes": [
-      "src/core",
-      "packages/core"
-     ]
-    },
-    {
-     "label": "Results cached",
+     "label": "@aphrody/ai-os uses SQLite",
      "nodes": [
       "ds:sqlite"
      ]
@@ -9599,54 +9324,51 @@
    ]
   },
   {
-   "name": "An agent session asks another",
-   "persona": "AI agent",
-   "description": "One agent session sends a message to another and gets the answer back through the relay.",
+   "name": "aphrody to SQLite",
+   "persona": "CLI or library user",
+   "description": "Shortest dependency path from the entry point aphrody (reaches 202 units) to the data store SQLite.",
    "steps": [
     {
-     "label": "Session registers and sends",
+     "label": "Entry: aphrody",
+     "nodes": [
+      "src/ay"
+     ]
+    },
+    {
+     "label": "aphrody uses @aphrody/ai-os",
      "nodes": [
       "packages/ai-os"
      ]
     },
     {
-     "label": "Relay routes to a model or MCP server",
+     "label": "@aphrody/ai-os uses SQLite",
      "nodes": [
-      "packages/ai-os",
-      "packages/machine"
-     ]
-    },
-    {
-     "label": "State kept",
-     "nodes": [
-      "ds:sqlite",
-      "ds:valkey"
+      "ds:sqlite"
      ]
     }
    ]
   },
   {
-   "name": "A visitor opens the site",
-   "persona": "site visitor",
-   "description": "A visitor loads aphrody.com and sees pages built from the design system and the WebAssembly core.",
+   "name": "ci to SQLite",
+   "persona": "CI (GitHub workflow)",
+   "description": "Shortest dependency path from the entry point ci (reaches 191 units) to the data store SQLite.",
    "steps": [
     {
-     "label": "Page served",
+     "label": "Entry: ci",
      "nodes": [
-      "packages/deploy"
+      "ci"
      ]
     },
     {
-     "label": "Design tokens and components",
+     "label": "ci uses @aphrody/ai-os",
      "nodes": [
-      "packages/design"
+      "packages/ai-os"
      ]
     },
     {
-     "label": "Assets from the CDN",
+     "label": "@aphrody/ai-os uses SQLite",
      "nodes": [
-      "packages/assets",
-      "ds:r2"
+      "ds:sqlite"
      ]
     }
    ]

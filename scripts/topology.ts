@@ -16,7 +16,7 @@ const out = join(root, opt("--out") ?? "docs/topology");
 
 type Unit = { dir: string; name: string; kind: "cargo" | "bun" | "uv"; deps: string[]; layer: number | null };
 const cd = Bun.spawnSync(["bun", join(root, "scripts/checkdeps.ts"), "--units"], { cwd: root });
-const { units, findings } = JSON.parse(cd.stdout.toString()) as { units: Unit[]; findings: { level: string; from: string; to: string; msg: string }[] };
+const { layers: LAYERS, units, findings } = JSON.parse(cd.stdout.toString()) as { layers: string[]; units: Unit[]; findings: { level: string; from: string; to: string; msg: string }[] };
 const byDir = new Map(units.map((u) => [u.dir, u]));
 const dirs = [...byDir.keys()].sort((a, b) => b.length - a.length);
 const ownerOf = (rel: string) => dirs.find((d) => rel === d || rel.startsWith(d + "/"));
@@ -29,11 +29,13 @@ const names = new Map<string, string>(); // normalized crate/package name -> uni
 for (const u of units) names.set(norm(u.name), u.dir);
 for (const u of units) if (u.kind === "bun") names.set(norm(u.name.split("/").pop()!), names.get(norm(u.name.split("/").pop()!)) ?? u.dir);
 
-const STORES: { id: string; name: string; use: RegExp; write: RegExp; read: RegExp }[] = [
-  { id: "ds:sqlite", name: "SQLite", use: /rusqlite|bun:sqlite|sqlx::sqlite/, write: /\b(INSERT|UPDATE|DELETE|CREATE TABLE)\b/, read: /\bSELECT\b/ },
-  { id: "ds:valkey", name: "Valkey / Redis", use: /\bredis\b|valkey|Bun\.redis|RedisClient/, write: /\.(set|hset|xadd|lpush|publish)\(|\b(SET|XADD|LPUSH)\b/, read: /\.(get|hget|xread|subscribe)\(|\bGET\b/ },
-  { id: "ds:r2", name: "R2 / S3", use: /aws_sdk_s3|aws-sdk-s3|Bun\.s3|S3Client|rclone/, write: /put_object|PutObject|\.write\(|upload/, read: /get_object|GetObject|list_objects|\.text\(\)/ },
-  { id: "ds:postgres", name: "Postgres", use: /tokio_postgres|\bpostgres::|Bun\.SQL|postgres:\/\//, write: /\b(INSERT|UPDATE|DELETE)\b/, read: /\bSELECT\b/ },
+// Data stores reached through a client: a manifest dependency on a known client library, or a Bun
+// built-in client API in source. An edge means "links a client", not a measured read or write.
+const STORES: { id: string; name: string; libs: string[]; bunApi: RegExp }[] = [
+  { id: "ds:sqlite", name: "SQLite", libs: ["rusqlite", "libsqlite3-sys", "better-sqlite3"], bunApi: /["']bun:sqlite["']/ },
+  { id: "ds:valkey", name: "Valkey / Redis", libs: ["redis", "fred", "ioredis"], bunApi: /\bBun\.redis\b|new RedisClient\(/ },
+  { id: "ds:s3", name: "S3 / R2", libs: ["aws-sdk-s3", "@aws-sdk/client-s3", "rust-s3"], bunApi: /\bBun\.s3\b|new S3Client\(/ },
+  { id: "ds:postgres", name: "Postgres", libs: ["tokio-postgres", "postgres", "deadpool-postgres", "pg"], bunApi: /\bBun\.sql\b|new SQL\(/ },
 ];
 
 const loc = new Map<string, number>();
@@ -66,15 +68,24 @@ function walk(abs: string, unit: string) {
       const t = names.get(norm(m[0]!));
       if (t && t !== unit) (mentions.get(t) ?? mentions.set(t, new Set()).get(t)!).add(unit);
     }
-    for (const s of STORES)
-      if (s.use.test(text)) {
-        if (s.write.test(text)) addEdge(unit, s.id, "write");
-        if (s.read.test(text) || !s.write.test(text)) addEdge(unit, s.id, "read");
-      }
+    if (/\.(ts|tsx|js|mjs)$/.test(e.name)) for (const s of STORES) if (s.bunApi.test(text)) addEdge(unit, s.id, "call");
   }
 }
 for (const u of units) if (existsSync(join(root, u.dir))) walk(join(root, u.dir), u.dir);
 for (const u of units) for (const d of u.deps) addEdge(u.dir, d, "call");
+// Client libraries declared in the manifests.
+for (const u of units) {
+  const abs = join(root, u.dir);
+  const declared = new Set<string>();
+  if (u.kind === "cargo") {
+    const c = Bun.TOML.parse(readFileSync(join(abs, "Cargo.toml"), "utf8")) as any;
+    for (const tab of [c.dependencies, ...Object.values<any>(c.target ?? {}).map((x) => x.dependencies)]) for (const k of Object.keys(tab ?? {})) declared.add(k);
+  } else if (u.kind === "bun") {
+    const j = JSON.parse(readFileSync(join(abs, "package.json"), "utf8"));
+    for (const k of Object.keys({ ...j.dependencies, ...j.optionalDependencies })) declared.add(k);
+  }
+  for (const s of STORES) if (s.libs.some((l) => declared.has(l))) addEdge(u.dir, s.id, "call");
+}
 // Drop dispatch edges already covered by a manifest call edge.
 for (const k of [...edges.keys()]) {
   const [s, t, kind] = k.split("|");
@@ -154,7 +165,6 @@ if (existsSync(rootPy))
   }
 
 // --- Tree grouped by DEPS.rules layer.
-const LAYERS = ["L0 toolchain", "L1 base", "L2 platform", "L3 services", "L4 agent", "L5 surfaces"];
 const lang = (u: Unit) => (u.kind === "cargo" ? "rust" : u.kind === "bun" ? "typescript" : "python");
 const domains = LAYERS.map((name, i) => ({
   id: `dom:L${i}`,
@@ -197,40 +207,52 @@ if (named.length) console.log(`named only: ${named.join(", ")}`);
 // --- Observations.
 const top = [...inbound].filter(([k]) => byDir.has(k)).sort((a, b) => b[1] - a[1]).slice(0, 5);
 const cycles = findings.filter((f) => f.msg.startsWith("cycle"));
-const writers = usedStores.map((s) => ({ s, n: edgeList.filter((e) => e.target === s.id && e.kind === "write").length })).sort((a, b) => b.n - a.n);
+const clients = usedStores.map((s) => ({ s, n: edgeList.filter((e) => e.target === s.id).length })).sort((a, b) => b.n - a.n);
 const bunCrates = units.filter((u) => u.name.startsWith("bun_")).length;
 const observations = [
   `Most depended-on units (single points of failure): ${top.map(([k, n]) => `${byDir.get(k)!.name} (${n})`).join(", ")}.`,
   `${deadEnds.length} units have no inbound edge, no binary and are never named elsewhere: unwired candidates for wiring into ay or deletion.`,
   `${named.length} more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.`,
   `${bunCrates} of ${units.filter((u) => u.kind === "cargo").length} Rust units are absorbed Bun crates (bun_*).`,
-  writers.length ? `Data stores by writer count: ${writers.map(({ s, n }) => `${s.name} ${n}`).join(", ")} (detected from client APIs and SQL keywords, not runtime).` : "No data-store client detected.",
+  clients.length ? `Units linking a data-store client (manifest dependency or Bun built-in API; read/write not measured): ${clients.map(({ s, n }) => `${s.name} ${n}`).join(", ")}.` : "No data-store client detected.",
   cycles.length ? `${cycles.length} dependency cycles reported by checkdeps.` : "No dependency cycle (checkdeps).",
   unresolved.length ? `ay External routes with no binary in the tree: ${unresolved.join(", ")}.` : "Every ay External route resolves to a binary in the tree.",
 ];
 
-// --- Persona flows: built from ids that exist; a step without nodes is dropped.
+// --- Flows computed from the graph, nothing typed by hand: for every entry point, the shortest
+// call/dispatch path to a data store; the three entries that reach the most units are kept.
 const has = (id: string) => byDir.has(id) || id === JUST || id === CI || id === UV || id.startsWith("ds:");
-const step = (label: string, ids: string[]) => ({ label, nodes: ids.filter(has) });
-const flow = (name: string, persona: string, description: string, steps: ReturnType<typeof step>[]) => ({ name, persona, description, steps: steps.filter((s) => s.nodes.length) });
-const flows = [
-  flow("A developer runs one command", "developer", "A developer types `ay <task>` and the single CLI routes it to the right Rust crate or Bun package.", [
-    step("Types the command", ["src/ay"]),
-    step("ay dispatches to a Bun facade", ["packages/chromium-bun", "packages/machine"]),
-    step("Core indexes and graphs the code", ["src/core", "packages/core"]),
-    step("Results cached", ["ds:sqlite"]),
-  ]),
-  flow("An agent session asks another", "AI agent", "One agent session sends a message to another and gets the answer back through the relay.", [
-    step("Session registers and sends", ["packages/ai-os"]),
-    step("Relay routes to a model or MCP server", ["packages/ai-os", "packages/machine"]),
-    step("State kept", ["ds:sqlite", "ds:valkey"]),
-  ]),
-  flow("A visitor opens the site", "site visitor", "A visitor loads aphrody.com and sees pages built from the design system and the WebAssembly core.", [
-    step("Page served", ["apps/aphrody", "packages/deploy"]),
-    step("Design tokens and components", ["packages/design"]),
-    step("Assets from the CDN", ["packages/assets", "ds:r2"]),
-  ]),
-].filter((f) => f.steps.length >= 2);
+const out_ = new Map<string, { to: string; kind: string }[]>();
+for (const e of edgeList) (out_.get(e.source) ?? out_.set(e.source, []).get(e.source)!).push({ to: e.target, kind: e.kind });
+const label = (id: string) => byDir.get(id)?.name ?? usedStores.find((s) => s.id === id)?.name ?? id;
+const persona = (id: string) =>
+  id === JUST ? "maintainer (just recipe)" : id === CI ? "CI (GitHub workflow)" : id === UV ? "Python user (uv workspace)" : id.startsWith("apps/") ? "app user" : "CLI or library user";
+function pathTo(src: string) {
+  const prev = new Map<string, string | null>([[src, null]]);
+  const q = [src];
+  for (let i = 0; i < q.length; i++)
+    for (const { to } of out_.get(q[i]!) ?? [])
+      if (!prev.has(to)) {
+        prev.set(to, q[i]!);
+        q.push(to);
+      }
+  const store = q.find((n) => n.startsWith("ds:"));
+  const path: string[] = [];
+  for (let n: string | null | undefined = store; n; n = prev.get(n)) path.unshift(n);
+  return { reach: q.length - 1, path };
+}
+const flows = [...entries]
+  .filter(has)
+  .map((id) => ({ id, ...pathTo(id) }))
+  .filter((r) => r.path.length >= 2)
+  .sort((a, b) => b.reach - a.reach)
+  .slice(0, 3)
+  .map((r) => ({
+    name: `${label(r.id)} to ${label(r.path.at(-1)!)}`,
+    persona: persona(r.id),
+    description: `Shortest dependency path from the entry point ${label(r.id)} (reaches ${r.reach} units) to the data store ${label(r.path.at(-1)!)}.`,
+    steps: r.path.map((n, i) => ({ label: i ? `${label(r.path[i - 1]!)} uses ${label(n)}` : `Entry: ${label(n)}`, nodes: [n] })),
+  }));
 
 const topology = { system: "src monorepo", root: tree, edges: edgeList, entryPoints: [...entries].filter(has).sort(), deadEnds, observations, flows };
 mkdirSync(out, { recursive: true });
@@ -257,13 +279,13 @@ for (const e of edgeList)
   }
 const mmdCall = ["graph TD", ...LAYERS.map((n, i) => `  L${i}["${n}"]`), `  just(["just / ay entry points"]):::entry`, `  just --> L5`, ...[...lcount].map(([k, n]) => `  ${k.replace("-->", ` -- ${n} --> `)}`), "  classDef entry fill:#ffd,stroke:#a80"].join("\n");
 const lineage = new Map<string, number>();
-for (const e of edgeList) if (e.kind === "read" || e.kind === "write") {
-  const k = `${lnode(layerOf(e.source))}|${e.target}|${e.kind}`;
+for (const e of edgeList) if (e.target.startsWith("ds:")) {
+  const k = `${lnode(layerOf(e.source))}|${e.target}|client`;
   lineage.set(k, (lineage.get(k) ?? 0) + 1);
 }
 const mmdData = ["graph LR", ...usedStores.map((s) => `  ${s.id.slice(3)}[("${s.name}")]`), ...[...lineage].map(([k, n]) => {
   const [l, s, kind] = k.split("|");
-  return kind === "write" ? `  ${l} == "write ${n}" ==> ${s!.slice(3)}` : `  ${s!.slice(3)} -. "read ${n}" .-> ${l}`;
+  return `  ${l} -- "${n} units link the client" --> ${s!.slice(3)}`;
 })].join("\n");
 const f0 = flows[0];
 const mmdPath = f0 ? ["flowchart TD", ...f0.steps.map((s, i) => `  s${i}["${i + 1}. ${s.label}<br/>${s.nodes.join(", ")}"]`), ...f0.steps.slice(1).map((_, i) => `  s${i} --> s${i + 1}`), "  %% no telemetry wired: wall-clock not annotated"].join("\n") : "flowchart TD\n  none[no flow]";
