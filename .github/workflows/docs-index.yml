@@ -1,0 +1,25 @@
+name: docs-index
+
+# docs/README.md is generated from the tracked markdown files of docs/ (scripts/docs-index.ts).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "scripts/docs-index.ts"
+  pull_request:
+    paths:
+      - "docs/**"
+      - "scripts/docs-index.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+      - run: bun scripts/docs-index.ts --check
