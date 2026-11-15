@@ -833,6 +833,27 @@ sha256.linux-aarch64 = "4ee0aeeb38fa8bb2cb004ba104abe1c79f1bdfd02f51672c694e8234
 sha256.macos-x86_64 = "c47383e5b5551e09d2055ee7bdcce788af409fb4394e39bdaf179734df18e829"
 sha256.macos-aarch64 = "fc7e73f23058f18d6d5be983d83b24ba374d12167677657a307a9476c0f5a7c1"
 
+# Lightpanda (Zig) : CDP sur `lightpanda serve --host 127.0.0.1 --port N`. Binaires nus de la release stable
+# 1.0.4 (13 novembre 2026) ; empreintes = digests des assets GitHub. Le fork aphrody-labs/browser (source absorbée
+# dans packages/browser/native, main amont) se compile sur fr1 : engine `lightpanda-fork`.
+[[tool]]
+name = "lightpanda"
+version = "1.0.4"
+bin = ["lightpanda"]
+verify = ["lightpanda", "version"]
+source = "github"
+repo = "lightpanda-io/browser"
+tag = "{version}"
+assets.linux-x86_64 = "lightpanda-x86_64-linux"
+assets.linux-aarch64 = "lightpanda-aarch64-linux"
+assets.macos-x86_64 = "lightpanda-x86_64-macos"
+assets.macos-aarch64 = "lightpanda-aarch64-macos"
+sha256.linux-x86_64 = "7d22651129901203abdb95c64f49069c49e88f5211f4d8c4c6828c123c4adab4"
+sha256.linux-aarch64 = "f021d49a0b66d07bf2633f8e00870b9075293516f872695b0ca4aeb5848b6ea8"
+sha256.macos-x86_64 = "8c02127c6fc2a713d166349bf1b511d470c8fcd684681927c978cc8bb5952d55"
+sha256.macos-aarch64 = "83b0ba5ae31086b675fb3ba50644bda075a13bebabe46dc5f7543952bc41ae46"
+unsupported = ["windows-x86_64"] # pas de binaire Windows en release
+
 # Servo (Rust) : WebDriver sur `servo --headless --webdriver=<port>` ; arbre servo/ + resources/.
 [[tool]]
 name = "servo"
