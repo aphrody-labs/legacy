@@ -1,0 +1,7 @@
+[Unit]
+Description=Write /var/lib/aphrody/host.json (served as /.well-known/aphrody/host)
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/install -d -m 0755 /var/lib/aphrody
+ExecStart=/bin/sh -c '/usr/local/bin/fleet-probe --well-known > /var/lib/aphrody/host.json.tmp && mv /var/lib/aphrody/host.json.tmp /var/lib/aphrody/host.json && chmod 0644 /var/lib/aphrody/host.json'

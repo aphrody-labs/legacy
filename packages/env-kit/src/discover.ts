@@ -223,6 +223,24 @@ export interface Accounts {
   gcpProjectNumbers: Record<string, string>;
 }
 
+/** The well-known document of a role (served by nginx on the mesh, port 8399): role, hostname, mesh addresses, services. */
+export async function hostInfo(role: string, d?: Deps): Promise<Record<string, unknown> | undefined> {
+  const r = await resolve(role, { remote: true }, d).catch(() => undefined);
+  const mesh = r?.mesh ?? r?.address;
+  return mesh ? wellKnown(`http://${mesh}:8399`) : undefined;
+}
+
+/** A service endpoint `address:port`: SRV `_<service>._tcp.<zone>` whose `<role>.mesh` target is resolved through the role's mesh address. */
+export async function serviceEndpoint(service: string, zoneName: string, d?: Deps): Promise<string | undefined> {
+  d ??= await defaultDeps();
+  const first = (await srv(service, zoneName, d).catch(() => []))[0];
+  if (!first) return undefined;
+  const [target, port] = first.split(":");
+  const role = target!.replace(/\.mesh\.?$/, "");
+  const r = await resolve(role, { remote: true }, d).catch(() => undefined);
+  return r?.mesh ? `${r.mesh}:${port}` : undefined;
+}
+
 export interface Identity {
   name?: string;
   firstName?: string;
@@ -385,7 +403,7 @@ export function sensitiveValues(cachePath = defaultCachePath()): { values: strin
   return { values: [...out].filter((s) => s.length >= 5 && !brand.test(s)), machine: id?.windows?.machine };
 }
 
-// CLI: bun discover.ts resolve <role> | get <path> | warm [role...] | srv <service> <zone>
+// CLI: bun discover.ts resolve <role> | get <path> | warm [role...] | srv <service> <zone> | info <role> | endpoint <service> <zone>
 if (import.meta.main) {
   const [cmd, ...args] = Bun.argv.slice(2);
   if (cmd === "resolve") console.log(JSON.stringify(await resolve(args[0]!), null, 1));
@@ -397,9 +415,11 @@ if (import.meta.main) {
     for (const r of args.length ? args : ["fr1", "fr2", "prd"]) await resolve(r).catch((e) => console.error(String(e.message ?? e)));
     await identity();
     await accounts();
-  } else if (cmd === "srv") console.log((await srv(args[0]!, args[1]!)).join("\n"));
+  } else if (cmd === "info") console.log(JSON.stringify(await hostInfo(args[0]!), null, 1));
+  else if (cmd === "endpoint") console.log((await serviceEndpoint(args[0]!, args[1]!)) ?? "");
+  else if (cmd === "srv") console.log((await srv(args[0]!, args[1]!)).join("\n"));
   else {
-    console.error("usage: discover.ts resolve <role> | get <path> | warm [role...] | srv <service> <zone>");
+    console.error("usage: discover.ts resolve <role> | get <path> | warm [role...] | srv <service> <zone> | info <role> | endpoint <service> <zone>");
     process.exit(2);
   }
 }

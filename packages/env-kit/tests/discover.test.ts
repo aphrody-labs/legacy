@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { type Deps, discoverGet, getCached, parseIpAddr, parseSshG, resolve, sensitiveValues, srv } from "../src/discover.ts";
+import { type Deps, discoverGet, serviceEndpoint, wellKnown, getCached, parseIpAddr, parseSshG, resolve, sensitiveValues, srv } from "../src/discover.ts";
 
 const SSH_G = "user deploy\nhostname 198.51.100.7\nport 2222\nproxyjump none\nidentityfile ~/.ssh/k\n";
 const IP_J = JSON.stringify([
@@ -85,4 +85,16 @@ test("discoverGet answers host and Windows keys from the stubs, and sensitiveVal
   expect(s.values).toContain("198.51.100.7");
   expect(s.values).toContain("host7.example.net");
   expect(s.machine).toBe("TESTBOX");
+});
+
+test("serviceEndpoint maps an SRV <role>.mesh target to the role's mesh address", async () => {
+  const base = deps();
+  const d = deps({ cachePath: base.cachePath, dns: { ...base.dns, resolveSrv: async () => [{ name: "fr9.mesh", port: 6379, priority: 10, weight: 10 }] } });
+  expect(await serviceEndpoint("valkey", "example.net", d)).toBe("192.0.2.7:6379");
+});
+
+test("wellKnown reads the host document", async () => {
+  const s = Bun.serve({ port: 0, fetch: (r) => (new URL(r.url).pathname === "/.well-known/aphrody/host" ? Response.json({ role: "fr9" }) : new Response("no", { status: 404 })) });
+  expect(await wellKnown(`http://127.0.0.1:${s.port}`)).toEqual({ role: "fr9" });
+  s.stop(true);
 });
