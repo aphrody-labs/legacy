@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-// JNI shim between the Compose shell app (apps/android-shell) and libaysys.so.
+// JNI shim between the Compose shell app (apps/android-shell in aphrody-labs/open) and libaysys.so.
 #include <jni.h>
 #include <string.h>
 #include <ay/sys.h>

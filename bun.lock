@@ -75,10 +75,6 @@
         "wawoff2": "catalog:",
       },
     },
-    "packages/browser": {
-      "name": "@aphrody/browser",
-      "version": "0.1.0",
-    },
     "packages/bun-types": {
       "name": "bun-types",
       "dependencies": {
@@ -260,8 +256,6 @@
     "@aphrody/ai-os": ["@aphrody/ai-os@workspace:packages/ai-os"],
 
     "@aphrody/assets": ["@aphrody/assets@workspace:packages/assets"],
-
-    "@aphrody/browser": ["@aphrody/browser@workspace:packages/browser"],
 
     "@aphrody/bunify": ["@aphrody/bunify@workspace:packages/bunify"],
 

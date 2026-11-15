@@ -46,7 +46,6 @@ await must(
   `cargo +chromium-157 test -p ${crate} --target x86_64-linux-android -Zbuild-std=std,panic_abort --no-run --message-format=json 2>target/android-x64/cargo.err | jaq -r 'select(.executable != null) | .executable' > target/android-x64/rust-tests.txt && cat target/android-x64/rust-tests.txt`,
 );
 
-await must("compose shell app (gradle assembleDebug, AGP 9.5.1 / Kotlin 2.4.21 / Compose BOM 2026.09.00)", `cd apps/android-shell && gradle --no-daemon --console=plain -q :app:assembleDebug 2>&1 | tail -30; test -f app/build/outputs/apk/debug/app-debug.apk && ls -l app/build/outputs/apk/debug/app-debug.apk`);
 
 say("== emulator");
 const avd = "ay-x64";
@@ -91,10 +90,6 @@ for (const t of tests) {
   const name = t.split("/").pop()!;
   await run(`push + run rust test ${name}`, `adb push ${t} ${D}/${name} >/dev/null && ${adbRun(`cd ${D} && chmod +x ./${name} && ./${name}`)}`);
 }
-await run(
-  "install + launch Compose shell app, screenshot and layout",
-  `adb install -r apps/android-shell/app/build/outputs/apk/debug/app-debug.apk && adb shell am start -W -n dev.aphrody.shell/.MainActivity && sleep 6 && adb exec-out screencap -p > ${OUT}/shell.png && (command -v android >/dev/null && android layout --pretty > ${OUT}/layout.json 2>${OUT}/layout.err || adb exec-out uiautomator dump /dev/tty > ${OUT}/layout.xml) ; ls -l ${OUT}/shell.png; (rg -o 'FNV-1a64[^"]*|ABI v[0-9]+|cpu: [^"]*' ${OUT}/layout.json ${OUT}/layout.xml 2>/dev/null | sort -u); adb logcat -d -s AndroidRuntime:E | tail -5; rg -q 'FNV-1a64' ${OUT}/layout.json ${OUT}/layout.xml`,
-);
 await sh(`${ENV}; adb exec-out screencap -p > ${OUT}/screen.png; adb shell dumpsys window | rg -m3 'mCurrentFocus|mFocusedApp' > ${OUT}/focus.txt; true`, true);
 await sh(`${ENV}; adb emu kill >/dev/null 2>&1; true`, true);
 emu.kill();

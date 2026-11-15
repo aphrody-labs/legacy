@@ -1137,14 +1137,6 @@
       "language": "python",
       "loc": 99130,
       "file": "tools/lore"
-     },
-     {
-      "id": "tools/site-mirror",
-      "name": "@aphrody/site-mirror",
-      "kind": "module",
-      "language": "typescript",
-      "loc": 148,
-      "file": "tools/site-mirror"
      }
     ]
    },
@@ -1832,14 +1824,6 @@
       "file": "packages/assets"
      },
      {
-      "id": "packages/browser",
-      "name": "@aphrody/browser",
-      "kind": "module",
-      "language": "typescript",
-      "loc": 323877,
-      "file": "packages/browser"
-     },
-     {
       "id": "packages/bun-types",
       "name": "bun-types",
       "kind": "module",
@@ -1860,7 +1844,7 @@
       "name": "@aphrody/chromium-bun",
       "kind": "module",
       "language": "typescript",
-      "loc": 11967,
+      "loc": 11953,
       "file": "packages/chromium-bun"
      },
      {
@@ -2011,7 +1995,7 @@
       "name": "aphrody-electron-migrate",
       "kind": "module",
       "language": "rust",
-      "loc": 5302,
+      "loc": 5333,
       "file": "src/electron-migrate"
      },
      {
@@ -2458,11 +2442,6 @@
    "kind": "dispatch"
   },
   {
-   "source": "packages/browser",
-   "target": "src/core/capi",
-   "kind": "dispatch"
-  },
-  {
    "source": "packages/bun-types",
    "target": "ds:s3",
    "kind": "call"
@@ -2490,11 +2469,6 @@
   {
    "source": "packages/chromium-bun",
    "target": "src/corelib",
-   "kind": "dispatch"
-  },
-  {
-   "source": "packages/chromium-bun",
-   "target": "packages/browser",
    "kind": "dispatch"
   },
   {
@@ -9284,7 +9258,6 @@
   "test/conformance",
   "test/lore",
   "tools/build-model",
-  "tools/site-mirror",
   "uv"
  ],
  "deadEnds": [],
@@ -9301,7 +9274,7 @@
   {
    "name": "just to SQLite",
    "persona": "maintainer (just recipe)",
-   "description": "Shortest dependency path from the entry point just (reaches 203 units) to the data store SQLite.",
+   "description": "Shortest dependency path from the entry point just (reaches 202 units) to the data store SQLite.",
    "steps": [
     {
      "label": "Entry: just",
@@ -9326,7 +9299,7 @@
   {
    "name": "aphrody to SQLite",
    "persona": "CLI or library user",
-   "description": "Shortest dependency path from the entry point aphrody (reaches 202 units) to the data store SQLite.",
+   "description": "Shortest dependency path from the entry point aphrody (reaches 201 units) to the data store SQLite.",
    "steps": [
     {
      "label": "Entry: aphrody",
@@ -9351,7 +9324,7 @@
   {
    "name": "ci to SQLite",
    "persona": "CI (GitHub workflow)",
-   "description": "Shortest dependency path from the entry point ci (reaches 191 units) to the data store SQLite.",
+   "description": "Shortest dependency path from the entry point ci (reaches 190 units) to the data store SQLite.",
    "steps": [
     {
      "label": "Entry: ci",

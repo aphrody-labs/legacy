@@ -833,9 +833,8 @@ sha256.linux-aarch64 = "4ee0aeeb38fa8bb2cb004ba104abe1c79f1bdfd02f51672c694e8234
 sha256.macos-x86_64 = "c47383e5b5551e09d2055ee7bdcce788af409fb4394e39bdaf179734df18e829"
 sha256.macos-aarch64 = "fc7e73f23058f18d6d5be983d83b24ba374d12167677657a307a9476c0f5a7c1"
 
-# Lightpanda (Zig) : CDP sur `lightpanda serve --host 127.0.0.1 --port N`. Binaires nus de la release stable
-# 1.0.4 (13 novembre 2026) ; empreintes = digests des assets GitHub. Le fork aphrody-labs/browser (source absorbée
-# dans packages/browser/native, main amont) se compile sur fr1 : engine `lightpanda-fork`.
+# Lightpanda (Zig) : CDP sur `lightpanda serve --host 127.0.0.1 --port N`. Binaires nus de la release stable ;
+# empreintes = digests des assets GitHub. Le fork (packages/browser/native) vit dans aphrody-labs/open.
 [[tool]]
 name = "lightpanda"
 version = "1.0.4"
@@ -1333,7 +1332,7 @@ version = "8.1"
 source = "distro"
 package = "ffmpeg"
 hosts = ["fr1"]
-why = "SVT-AV1 and VP9 video, capture muxing (ay brand build, assets/brand/capture.ts)"
+why = "SVT-AV1 and VP9 video, still scaling (ay brand build)"
 
 [toolchain."binaryen"]
 version = "133"
@@ -1369,7 +1368,7 @@ version = "4.5.1"
 source = "npm"
 package = "@gltf-transform/cli"
 hosts = ["fr1"]
-why = "glTF validation of gen/model/*.glb (assets/brand/check.ts)"
+why = "glTF validation of gen/model/*.glb (`ay brand check`; 3D assets of `ay assets test`)"
 note = "npm @gltf-transform/cli@4.5.1 integrity sha512-TNPU20U7caqUpyXdbqobQueUjWmrdEhsZeno77MGJJCyiV1EyrC5yOE+aFrpxPli45VSk6aNT0FHAed8LE7ecg=="
 
 [toolchain."nginx"]
