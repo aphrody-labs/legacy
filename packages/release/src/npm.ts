@@ -1,14 +1,14 @@
-// npm sans humain pour tout le monorepo (docs/infra/NPM.md). Aucune valeur secrète n'est affichée ni passée en argv :
-// le jeton vit dans le coffre env-kit (NPM_TOKEN) et n'en sort que par l'env ou le stdin d'un processus enfant.
+// Human-free npm for the whole monorepo (docs/infra/NPM.md). No secret value is displayed or passed in argv:
+// the token lives in the env-kit vault (NPM_TOKEN) and leaves it only through the env or the stdin of a child process.
 //   bun packages/release/src/npm.ts status              whoami : coffre, PC, prd (root, agent), fr2, fr1 ; secret d'org GitHub
-//   bun packages/release/src/npm.ts sync                coffre -> env utilisateur Windows, secret d'org aphrody-labs, ~/.npmrc des hôtes
-//   bun packages/release/src/npm.ts inventory [--json]  paquets publiables (src + sous-modules apps/*), version publiée
-//   bun packages/release/src/npm.ts align [--write]     repository/publishConfig exigés par le trusted publishing ; scopes non possédés -> private
-//   bun packages/release/src/npm.ts login               npm login --auth-type=web en PTY (session séparée), le propriétaire clique
-//   bun packages/release/src/npm.ts trust [--dry-run]   npm trust github pour chaque paquet publié (2FA du compte requise)
-//   bun packages/release/src/npm.ts harden [--dry-run]  npm access set mfa=publish (2FA + jetons refusés) sur les paquets déjà en OIDC
-//   bun packages/release/src/npm.ts pins [--write] [--push]  actions des npm-publish.yml épinglées par SHA (tag en commentaire), mises à
-//                                          jour dans la même majeure ; --push commit + push sur main (timer : just npm-pins-schedule)
+//   bun packages/release/src/npm.ts sync                vault -> Windows user env, aphrody-labs org secret, hosts' ~/.npmrc
+//   bun packages/release/src/npm.ts inventory [--json]  publishable packages (src + apps/* submodules), published version
+//   bun packages/release/src/npm.ts align [--write]     repository/publishConfig required by trusted publishing; unowned scopes -> private
+//   bun packages/release/src/npm.ts login               npm login --auth-type=web in a PTY (separate session), the owner clicks
+//   bun packages/release/src/npm.ts trust [--dry-run]   npm trust github for each published package (account 2FA required)
+//   bun packages/release/src/npm.ts harden [--dry-run]  npm access set mfa=publish (2FA + tokens refused) on packages already on OIDC
+//   bun packages/release/src/npm.ts pins [--write] [--push]  npm-publish.yml actions pinned by SHA (tag in a comment), updated
+//                                          within the same major; --push commit + push to main (timer: just npm-pins-schedule)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
@@ -17,9 +17,9 @@ const ENV_KIT = join(ROOT, "packages/env-kit/src/cli.ts");
 const REGISTRY = "https://registry.npmjs.org";
 const OWNED = ["@aphrody", "@rosegriffon"]; // orgs npm dont <npm-owner> est owner (GET /-/org/<scope>/user)
 const ORG = "aphrody-labs";
-const WORKFLOW = "npm-publish.yml"; // nom du workflow appelant, vérifié par npm à chaque publish OIDC
+const WORKFLOW = "npm-publish.yml"; // name of the calling workflow, checked by npm on every OIDC publish
 const SUBMODULES = ["apps/rosegriffon", "apps/shenron", "apps/auto"];
-/** Doublons de nom : la copie canonique est celle de shenron (domaine média). */
+/** Name duplicates: the canonical copy is shenron's (media domain). */
 const CANONICAL: Record<string, string> = {
   "@aphrody/remotion": "apps/shenron",
   "@aphrody/hyperframes": "apps/shenron",
@@ -30,7 +30,7 @@ const SESSION = join(
   "aphrody",
   "npm-session.npmrc",
 );
-/** Hôtes : alias ssh -> argv. prd agent passe par le mesh WireGuard (rebond fr2). */
+/** Hosts: ssh alias -> argv. prd agent goes through the WireGuard mesh (fr2 hop). */
 const HOSTS: Record<string, string[]> = {
   "prd:root": ["prd"],
   "prd:agent": [
@@ -61,12 +61,12 @@ const run = (
     err: mask(r.stderr.toString()).trim(),
   };
 };
-/** Commande exécutée avec NPM_TOKEN du coffre dans son env (env-kit secret exec). */
+/** Command run with NPM_TOKEN from the vault in its env (env-kit secret exec). */
 const withToken = (argv: string[], timeout?: number) =>
   run(["bun", ENV_KIT, "secret", "exec", "NPM_TOKEN", "--", ...argv], {
     timeout,
   });
-/** Valeur du coffre sur le stdin de la commande (env-kit secret pipe). */
+/** Vault value on the command's stdin (env-kit secret pipe). */
 const pipeToken = (argv: string[], timeout?: number) =>
   run(["bun", ENV_KIT, "secret", "pipe", "NPM_TOKEN", "--", ...argv], {
     timeout,
@@ -191,7 +191,7 @@ async function inventory(json: boolean) {
       `${r.name}\t${r.version}\tnpm=${r.npm ?? "-"}\t${r.repo}\t${r.path}`,
     );
   console.log(
-    `# ${rows.length} publiables, ${rows.filter((r) => r.npm).length} déjà sur npm`,
+    `# ${rows.length} publishable, ${rows.filter((r) => r.npm).length} already on npm`,
   );
 }
 
@@ -203,7 +203,7 @@ function align(write: boolean) {
     const scope = scopeOf(p.name);
     const dup = CANONICAL[p.name] && !p.path.startsWith(CANONICAL[p.name]!);
     if (!p.priv && ((scope && !OWNED.includes(scope)) || dup)) {
-      want.private = true; // scope npm non possédé, ou doublon d'un paquet canonique : jamais publiable
+      want.private = true; // unowned npm scope, or duplicate of a canonical package: never publishable
     } else if (publishable(p)) {
       const directory = relative(p.repoRoot, join(ROOT, p.path)).replaceAll(
         "\\",
@@ -223,7 +223,7 @@ function align(write: boolean) {
     const before = JSON.stringify(p.json);
     if (JSON.stringify(want) === before) continue;
     n++;
-    console.log(`${write ? "écrit" : "à aligner"}\t${p.name}\t${p.path}`);
+    console.log(`${write ? "written" : "to align"}\t${p.name}\t${p.path}`);
     if (write)
       writeFileSync(
         join(ROOT, p.path, "package.json"),
@@ -231,11 +231,11 @@ function align(write: boolean) {
       );
   }
   console.log(
-    `# ${n} package.json ${write ? "alignés" : "à aligner (--write)"}`,
+    `# ${n} package.json ${write ? "aligned" : "to align (--write)"}`,
   );
 }
 
-// ------------------------------------------------------------------------------------------------- jeton et hôtes
+// ------------------------------------------------------------------------------------------------- token and hosts
 async function status() {
   const out: Record<string, string> = {};
   const who = withToken([
@@ -244,7 +244,7 @@ async function status() {
     `const r=await fetch("${REGISTRY}/-/whoami",{headers:{authorization:"Bearer "+process.env.NPM_TOKEN}});console.log(r.status===200?(await r.json()).username:"invalide "+r.status)`,
   ]);
   out.vault = who.out || who.err;
-  // ~/.npmrc du PC lit ${NPM_TOKEN} : valeur courante de l'env utilisateur (un processus parent peut en garder une ancienne).
+  // The PC's ~/.npmrc reads ${NPM_TOKEN}: current value of the user env (a parent process may keep an old one).
   const env = { ...process.env } as Record<string, string>;
   if (process.platform === "win32")
     env.NPM_TOKEN = Bun.spawnSync([
@@ -259,7 +259,7 @@ async function status() {
     cwd: process.env.USERPROFILE ?? process.env.HOME,
     env,
   });
-  out.pc = pc.exitCode === 0 ? pc.stdout.toString().trim() : "non connecté";
+  out.pc = pc.exitCode === 0 ? pc.stdout.toString().trim() : "not signed in";
   for (const h of Object.keys(HOSTS)) {
     const r = run(
       ssh(
@@ -273,10 +273,10 @@ async function status() {
   out.github = run(["gh", "secret", "list", "--org", ORG])
     .out.split("\n")
     .find((l) => l.startsWith("NPM_TOKEN\t"))
-    ? "secret d'org NPM_TOKEN présent"
-    : "absent";
+    ? "org secret NPM_TOKEN present"
+    : "missing";
   out.session = existsSync(SESSION)
-    ? "session npm interactive présente"
+    ? "interactive npm session present"
     : "pas de session (bun packages/release/src/npm.ts login)";
   console.log(JSON.stringify(out, null, 2));
 }
@@ -313,8 +313,8 @@ function sync() {
 }
 
 // ------------------------------------------------------------------------------------------------- session interactive (2FA)
-/** npm dans un PTY bun : Entrée envoyée aux invites, URL d'authentification ouverte chez le propriétaire, lignes
- *  d'état relayées (jamais de jeton). La session vit dans un userconfig séparé : ~/.npmrc garde le jeton du coffre. */
+/** npm in a bun PTY: Enter sent to prompts, authentication URL opened at the owner's, status lines
+ *  relayed (never a token). The session lives in a separate userconfig: ~/.npmrc keeps the vault token. */
 async function pty(
   argv: string[],
   waitMin = 15,
@@ -377,7 +377,7 @@ async function trust(dry: boolean) {
   for (const p of rows) {
     if (!(await latest(p.name))) {
       res[p.name] =
-        "absent de npm : premier publish par le workflow (jeton), puis trust";
+        "missing from npm: first publish by the workflow (token), then trust";
       continue;
     }
     const list = run(
@@ -391,7 +391,7 @@ async function trust(dry: boolean) {
       list.out.includes(p.slug) &&
       list.out.includes(WORKFLOW)
     ) {
-      res[p.name] = "déjà configuré";
+      res[p.name] = "already configured";
       continue;
     }
     const argv = [
@@ -415,8 +415,8 @@ async function trust(dry: boolean) {
     const r = await pty(argv, 10);
     res[p.name] =
       r.code === 0
-        ? "configuré"
-        : `échec ${r.code} : ${
+        ? "configured"
+        : `failed ${r.code}: ${
             r.text
               .split("\n")
               .filter((l) => /error|ERR/i.test(l))
@@ -428,8 +428,8 @@ async function trust(dry: boolean) {
   console.log(JSON.stringify(res, null, 2));
 }
 
-/** mfa=publish = « Require two-factor authentication and disallow tokens » : seul le trusted publishing reste possible.
- *  Appliqué uniquement aux paquets dont la dernière version a été publiée en OIDC (_npmUser.trustedPublisher). */
+/** mfa=publish = "Require two-factor authentication and disallow tokens": only trusted publishing stays possible.
+ *  Applied only to packages whose latest version was published through OIDC (_npmUser.trustedPublisher). */
 async function harden(dry: boolean) {
   const res: Record<string, string> = {};
   for (const p of scan().filter(publishable)) {
@@ -437,7 +437,7 @@ async function harden(dry: boolean) {
     if (r.status !== 200) continue;
     const j = (await r.json()) as { _npmUser?: { trustedPublisher?: unknown } };
     if (!j._npmUser?.trustedPublisher) {
-      res[p.name] = "dernière version publiée par jeton : pas encore";
+      res[p.name] = "latest version published by token: not yet";
       continue;
     }
     if (dry) {
@@ -448,12 +448,12 @@ async function harden(dry: boolean) {
       [npm, "access", "set", "mfa=publish", p.name, `--userconfig=${SESSION}`],
       10,
     );
-    res[p.name] = x.code === 0 ? "2FA + jetons refusés" : `échec ${x.code}`;
+    res[p.name] = x.code === 0 ? "2FA + tokens refused" : `failed ${x.code}`;
   }
   console.log(JSON.stringify(res, null, 2));
 }
 
-// ------------------------------------------------------------------------------------------------- épinglage SHA
+// ------------------------------------------------------------------------------------------------- SHA pinning
 /** Fichiers workflow npm-publish.yml : src + sous-modules qui l'appellent. */
 const PIN_FILES = [
   ROOT,
