@@ -323,8 +323,8 @@ export function parseAndroid(
   fetched = new Date().toISOString(),
 ): AndroidTrack | null {
   if (!head.commit) return null;
-  const mk = (k: string) => new RegExp(`^${k}\\s*=\\s*(.*)$`, "m").exec(files.makefile)?.[1]?.trim() ?? "";
-  const pin = (k: string) => new RegExp(`^${k}\\s*=\\s*"?([^"\\n]*)"?`, "m").exec(files.constants)?.[1] ?? null;
+  const mk = (k: string) => new RegExp(`^${k}[ \\t]*=[ \\t]*(.*)$`, "m").exec(files.makefile)?.[1]?.trim() ?? "";
+  const pin = (k: string) => new RegExp(`^${k}[ \\t]*=[ \\t]*"?([^"\\n]*)"?`, "m").exec(files.constants)?.[1] ?? null;
   const cfg = (k: string) => new RegExp(`^CONFIG_${k}=(.*)$`, "m").exec(files.defconfig)?.[1] ?? null;
   const enforced = /^\s*kmi_enforced = True/m.test(files.bazel);
   const t = head.committer?.time ? Date.parse(head.committer.time) : NaN;

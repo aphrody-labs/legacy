@@ -1,5 +1,5 @@
 {
- "source": "bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno 12334",
+ "source": "bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno 12335",
  "count": 434,
  "packages": {
   "3dldf": {
@@ -1507,12 +1507,12 @@
   "gcc15snapshot": {
    "label": "The GNU Compiler Collection version 15 development version",
    "tarball": "gcc15snapshot",
-   "version": "15-20261106",
+   "version": "15-20261113",
    "description": "GNU Compiler Collection 15 snapshot",
    "home": "https://www.gnu.org/software/gcc",
    "subdir": "pub/gcc/snapshots/$(GARVERSION)/",
    "sha256": {
-    "gcc-15-20261106.tar.xz": "c1f45957673b3a49dfe95bdb0adc3f3778682a9231716c43cf7f548775761f4d"
+    "gcc-15-20261113.tar.xz": "0e4193c45da37cc3653c65680ce07c2645d8c31ae992f309271f2c36bdb6af28"
    },
    "builddeps": [
     "gmp",
@@ -1756,12 +1756,12 @@
   "gforth": {
    "label": "gforth",
    "tarball": "gforth",
-   "version": "1.0.1",
+   "version": "1.0.2",
    "description": "Forth interpreter, with virtual machine generator \"vmgen\"",
    "home": "https://gforth.org",
    "subdir": "forth/$(GARNAME)/",
    "sha256": {
-    "gforth-1.0.1.tar.xz": "d7cb2a1d0d0d9e4d895bce0739179ba97037a9da790fea536afcdc91f6d93d00"
+    "gforth-1.0.2.tar.xz": "4e7573845cdf3af71df6103040ec9e54eddf71adbb744a51e75bc0d644ddbd7e"
    },
    "builddeps": [
     "swig"

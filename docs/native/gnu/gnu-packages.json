@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-14",
+ "generated": "2026-11-15",
  "sources": {
   "list": "https://www.gnu.org/software/allgnupkgs.html (fetched 2026-11-12)",
   "decommissioned": "https://www.gnu.org/software/software.html#decommissioned ($Date 2024/07/31)",
@@ -10,7 +10,7 @@
   "arch": "geo.mirror.pkgbuild.com core.db + extra.db (fetched 2026-11-12); base/base-devel = metapackages",
   "gnupackages_txt": "unavailable: womb.git clone vide, viewvc 401 (2026-11-12)",
   "blurbs": "https://www.gnu.org/manual/blurbs.html (docs/research/gnu-blurbs-2026-11-14.json)",
-  "gsrc": "bzr gsrc/trunk revno 12334 (docs/research/gsrc-gnu-2026-11-14.json)",
+  "gsrc": "bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno 12335 (docs/research/gsrc-gnu.json)",
   "ftp_dirs": "https://ftp.gnu.org/gnu/ directory listings (2026-11-14): guile-debbugs micron sauce speedx cfengine flex git aspell-dict-*"
  },
  "counts": {
@@ -4323,7 +4323,7 @@
    "license_source": null,
    "status": "active",
    "latest_release": {
-    "version": "1.0.1",
+    "version": "1.0.2",
     "date": "2014-07-09",
     "path": "https://ftp.gnu.org/gnu/gforth/gforth-0.7.3.tar.gz",
     "source": "gsrc"
@@ -4348,8 +4348,8 @@
    "blurb": "Gforth is a fast and portable implementation of the ANSI Forth language. It includes an editing mode for Emacs and an interpreter featuring completion and history. A generic virtual machine environment, vmgen , is also included.",
    "gsrc": {
     "id": "gforth",
-    "version": "1.0.1",
-    "sha256": "d7cb2a1d0d0d9e4d895bce0739179ba97037a9da790fea536afcdc91f6d93d00",
+    "version": "1.0.2",
+    "sha256": "4e7573845cdf3af71df6103040ec9e54eddf71adbb744a51e75bc0d644ddbd7e",
     "deps": [
      "swig"
     ]

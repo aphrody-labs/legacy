@@ -188,7 +188,7 @@ describe("kernel", () => {
       "android18-7.3",
       { commit: "8cb307d9ca5e", message: "x\nbody", committer: { time: "Fri Nov 13 14:41:47 2026 -0800" } },
       {
-        makefile: "VERSION = 7\nPATCHLEVEL = 3\nSUBLEVEL = 0\nEXTRAVERSION =\n",
+        makefile: "VERSION = 7\nPATCHLEVEL = 3\nSUBLEVEL = 0\nEXTRAVERSION =\nNAME = Baby Opossum Posse\n",
         constants: "KMI_GENERATION=0\nCLANG_VERSION=\"r596125\"\nRUSTC_VERSION=\"1.96.0\"\n",
         bazel: "kmi_enforced = False",
         defconfig: "CONFIG_RUST=y\nCONFIG_ANDROID_BINDER_IPC_RUST=y\n",

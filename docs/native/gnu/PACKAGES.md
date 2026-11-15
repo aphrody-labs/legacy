@@ -261,7 +261,7 @@ Source de vérité : [gnu-packages.json](gnu-packages.json), généré à partir
 |---|---|---|---|---|---|---|---|
 | [clisp](https://www.gnu.org/software/clisp/impnotes/clisp.html) | A Common Lisp implementation. | C, Lisp | GPL-2.0-only | active | 2.49 (2010-07-07) | — | keep upstream (hors base, à la demande) |
 | [gcl](https://www.gnu.org/software/gcl/) | A Common Lisp implementation. | C, Lisp | — | active | 2.7.1 (2025-04-11) | [savannah](https://git.savannah.gnu.org/cgit/gcl.git) 2026-11-10 | keep upstream (hors base, à la demande) |
-| [gforth](https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/) | Forth interpreter. | C, Forth | — | active | 1.0.1 (2014-07-09) | [savannah](https://git.savannah.gnu.org/cgit/gforth.git) 2026-11-12 | keep upstream (hors base, à la demande) |
+| [gforth](https://www.complang.tuwien.ac.at/forth/gforth/Docs-html/) | Forth interpreter. | C, Forth | — | active | 1.0.2 (2014-07-09) | [savannah](https://git.savannah.gnu.org/cgit/gforth.git) 2026-11-12 | keep upstream (hors base, à la demande) |
 | [gprolog](http://www.gprolog.org/manual/) | Prolog compiler. | C, Prolog | — | active | 1.6.0 (2021-07-08) | — | keep upstream (hors base, à la demande) |
 | [guile](https://www.gnu.org/software/guile/manual/) | Scheme implementation intended especially for extensions. | C, Scheme | LGPL-3.0-or-later | active | 3.0.11 (2025-11-30) | [savannah](https://git.savannah.gnu.org/cgit/guile.git) 2024-06-24 | drop (sauf dépendance guix/make optionnelle) |
 | [kawa](https://www.gnu.org/software/kawa/) | Java framework and implementation of Scheme, Elisp, and more. | Java | — | active | 3.1.1 (2020-01-16) | — | keep upstream (hors base, à la demande) |
