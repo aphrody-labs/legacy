@@ -70,48 +70,77 @@ export function chatModel(
     id,
     tools: true,
     async chat(req: ChatRequest): Promise<ChatResponse> {
+      // Optional sampling parameters some OpenAI-compatible endpoints refuse (the Gemini API: "Unknown name seed"):
+      // dropped one by one when the 400 names them, the request is otherwise unchanged.
+      const optional = ["seed", "reasoning_effort"];
+      const dropped = new Set<string>();
       const r = await retryWithBackoff(
         async () => {
-          const res = await outboundFetch(
-            `${chat.base()}${chat.path ?? "/v1/chat/completions"}`,
-            {
-              method: "POST",
-              headers: {
-                "content-type": "application/json",
-                ...chat.headers(),
+          const body: Record<string, unknown> = {
+            model: chat.model ? chat.model(model) : model,
+            messages: [
+              ...(req.system ? [{ role: "system", content: req.system }] : []),
+              ...req.messages.map(toWire),
+            ],
+            ...(req.tools?.length
+              ? {
+                  tools: req.tools.map((t) => ({
+                    type: "function",
+                    function: {
+                      name: t.name,
+                      description: t.description,
+                      parameters: t.inputSchema,
+                    },
+                  })),
+                  tool_choice: req.toolChoice ?? "auto",
+                }
+              : {}),
+            ...(req.maxOutputTokens ? { max_tokens: req.maxOutputTokens } : {}),
+            ...(req.temperature !== undefined
+              ? { temperature: req.temperature }
+              : {}),
+            ...(req.seed !== undefined ? { seed: req.seed } : {}),
+            ...(req.responseSchema
+              ? {
+                  response_format: {
+                    type: "json_schema",
+                    json_schema: {
+                      name: req.responseSchema.name,
+                      schema: req.responseSchema.schema,
+                    },
+                  },
+                }
+              : {}),
+            ...(req.reasoningEffort
+              ? { reasoning_effort: req.reasoningEffort }
+              : {}),
+          };
+          const headers = {
+            "content-type": "application/json",
+            ...(await chat.headers()),
+          };
+          const send = () => {
+            for (const k of dropped) delete body[k];
+            return outboundFetch(
+              `${chat.base()}${chat.path ?? "/v1/chat/completions"}`,
+              {
+                method: "POST",
+                headers,
+                body: JSON.stringify(body),
+                signal: req.signal ?? AbortSignal.timeout(600_000),
               },
-              body: JSON.stringify({
-                model,
-                messages: [
-                  ...(req.system
-                    ? [{ role: "system", content: req.system }]
-                    : []),
-                  ...req.messages.map(toWire),
-                ],
-                ...(req.tools?.length
-                  ? {
-                      tools: req.tools.map((t) => ({
-                        type: "function",
-                        function: {
-                          name: t.name,
-                          description: t.description,
-                          parameters: t.inputSchema,
-                        },
-                      })),
-                      tool_choice: req.toolChoice ?? "auto",
-                    }
-                  : {}),
-                ...(req.maxOutputTokens
-                  ? { max_tokens: req.maxOutputTokens }
-                  : {}),
-                ...(req.temperature !== undefined
-                  ? { temperature: req.temperature }
-                  : {}),
-                ...(req.seed !== undefined ? { seed: req.seed } : {}),
-              }),
-              signal: req.signal ?? AbortSignal.timeout(600_000),
-            },
-          );
+            );
+          };
+          let res = await send();
+          for (let i = 0; i < optional.length && res.status === 400; i++) {
+            const text = await res.clone().text();
+            const k = optional.find(
+              (o) => o in body && !dropped.has(o) && text.includes(o),
+            );
+            if (!k) break;
+            dropped.add(k);
+            res = await send();
+          }
           if (isRetryableStatus(res.status))
             throw new RetryableHttpError(
               `${id} : HTTP ${res.status}`,
@@ -238,11 +267,8 @@ export async function resolveModel(
   if (pid === "echo") return echoModel(mid || "echo");
   const p = providers().find((x) => x.id === pid);
   if (!p)
-    throw new Error(
-      `unknown or inactive provider: ${pid} (see llm_models)`,
-    );
-  if (!mid)
-    throw new Error(`missing model: ${id} (expected provider/model)`);
+    throw new Error(`unknown or inactive provider: ${pid} (see llm_models)`);
+  if (!mid) throw new Error(`missing model: ${id} (expected provider/model)`);
   return p.chat ? chatModel(id, p, mid!) : cliModel(id, p, mid!);
 }
 
@@ -267,7 +293,10 @@ export function providerEmbedder(spec: string): Embedder {
         const r = await outboundFetch(`${p.chat!.base()}${path}`, {
           deterministic: true,
           method: "POST",
-          headers: { "content-type": "application/json", ...p.chat!.headers() },
+          headers: {
+            "content-type": "application/json",
+            ...(await p.chat!.headers()),
+          },
           body: JSON.stringify({ model, input: texts.slice(i, i + 64) }),
           signal: AbortSignal.timeout(120_000),
         });
@@ -291,7 +320,10 @@ export async function llmAsk(
   model: string,
   prompt: string,
   system?: string,
-  opts: { temperature?: number; seed?: number } = {},
+  opts: Pick<
+    ChatRequest,
+    "temperature" | "seed" | "responseSchema" | "reasoningEffort"
+  > = {},
 ) {
   const t0 = performance.now();
   const m = await resolveModel(model);

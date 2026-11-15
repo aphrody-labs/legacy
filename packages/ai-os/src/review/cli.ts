@@ -3,10 +3,16 @@
 //   ai-os review <chemins|diff|A..B|commit> [-- chemins] [--voices gemini,claude,judge] [--threshold 16]
 //                [--fix] [--rounds 4] [--check "<cmd>"] [--slug s] [--title t] [--timeout 420] [--no-cache]
 //                [--out <folder>] [--no-write] [--dry-run] [--host H] [--summary <file>]
+//   headless overrides of config/review.json: [--files a,b | --files a --files b] (paths or git globs, added to the
+//                targets) [--voice gemini] [--model <regex>] [--thinking low|medium|high] [--temperature 0] [--seed N]
+//                [--prompt <template>] [--include <glob>] [--exclude <glob>] [--lenient] [--fresh] [--json]
+//   --fresh           ignore recorded engine cooldowns (after enabling billing or an API key)
+//   --bundle <path>   review a text bundle (`===== FILE: path =====` headers, the browser route's format)
+//   --json            JSON on stdout only (no journal on stderr)
 //   ai-os review sources [--force]   refreshes the official sources (var/review/sources, source commit noted)
 //   ai-os review mine                scores of all archived verdicts, per voice
-import { appendFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { appendFileSync, readFileSync } from "node:fs";
+import { basename, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { srcRoot } from "../orch/fleet";
 import { loadConfig, mine, review } from "./index";
@@ -19,6 +25,19 @@ export async function main(argv: string[]): Promise<number> {
     allowPositionals: true,
     options: {
       voices: { type: "string" },
+      voice: { type: "string" },
+      files: { type: "string", multiple: true },
+      bundle: { type: "string" },
+      model: { type: "string" },
+      thinking: { type: "string" },
+      temperature: { type: "string" },
+      seed: { type: "string" },
+      prompt: { type: "string" },
+      include: { type: "string", multiple: true },
+      exclude: { type: "string", multiple: true },
+      lenient: { type: "boolean" },
+      fresh: { type: "boolean" },
+      json: { type: "boolean" },
       threshold: { type: "string" },
       fix: { type: "boolean" },
       rounds: { type: "string" },
@@ -37,13 +56,18 @@ export async function main(argv: string[]): Promise<number> {
     },
   });
   const print = (x: unknown) => console.log(JSON.stringify(x, null, 2));
-  const num = (s: string | undefined, name: string) => {
+  const num = (s: string | undefined, name: string, zero = false) => {
     if (s === undefined) return undefined;
     const n = Number(s);
-    if (s.trim() === "" || !Number.isFinite(n) || n <= 0)
-      throw new Error(`--${name} : nombre positif attendu`);
+    if (s.trim() === "" || !Number.isFinite(n) || n < 0 || (n === 0 && !zero))
+      throw new Error(`--${name}: positive number expected`);
     return n;
   };
+  const list = (xs: string[] | undefined) =>
+    xs
+      ?.flatMap((x) => x.split(","))
+      .map((x) => x.trim())
+      .filter(Boolean);
   if (positionals[0] === "sources" && dash < 0) {
     print(
       await new SourceCache(srcRoot()).refresh(
@@ -57,14 +81,35 @@ export async function main(argv: string[]): Promise<number> {
     print(mine());
     return 0;
   }
-  const spec = [...positionals, ...(dash >= 0 ? argv.slice(dash) : [])];
-  if (!positionals.length)
+  const targets = [...positionals, ...(list(values.files) ?? [])];
+  const spec = [...targets, ...(dash >= 0 ? argv.slice(dash) : [])];
+  if (!targets.length && !values.bundle)
     throw new Error(
-      "usage : ai-os review <chemins|diff|A..B|commit> [-- chemins] [--voices …] [--threshold 16] [--fix]",
+      "usage: ai-os review <paths|diff|A..B|commit> [-- paths] [--files a,b] [--bundle <path>] [--voice v] [--model <regex>] [--threshold 16] [--fix] [--json]",
     );
+  const bundle = values.bundle
+    ? (() => {
+        const text = readFileSync(resolve(values.bundle!), "utf8");
+        return {
+          title: values.title ?? `bundle ${basename(values.bundle!)}`,
+          text,
+        };
+      })()
+    : undefined;
+  const include = list(values.include);
+  const exclude = list(values.exclude);
   const r = await review({
-    spec,
-    voices: values.voices
+    spec: bundle ? [] : spec,
+    content: bundle,
+    model: values.model,
+    thinking: values.thinking,
+    temperature: num(values.temperature, "temperature", true),
+    seed: num(values.seed, "seed", true),
+    strict: values.lenient ? false : undefined,
+    fresh: values.fresh,
+    prompt: values.prompt,
+    globs: include || exclude ? { include, exclude } : undefined,
+    voices: (values.voices ?? values.voice)
       ?.split(",")
       .map((s) => s.trim())
       .filter(Boolean),
@@ -80,7 +125,10 @@ export async function main(argv: string[]): Promise<number> {
     write: values["no-write"] ? false : undefined,
     dryRun: values["dry-run"],
     host: values.host,
-    log: values.quiet ? undefined : (e) => console.error(JSON.stringify(e)),
+    log:
+      values.quiet || values.json
+        ? undefined
+        : (e) => console.error(JSON.stringify(e)),
   });
   print(r);
   if (values.summary)

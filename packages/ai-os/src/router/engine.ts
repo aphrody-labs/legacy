@@ -48,10 +48,13 @@ export const providerCall: CallFn = async (offer, body, o) => {
   const p = providers().find((x) => x.id === offer.provider);
   if (!p) throw new Error(`fournisseur inactif : ${offer.provider}`);
   if (p.chat) {
-    const send = (b: any) =>
+    const send = async (b: any) =>
       outboundFetch(`${p.chat!.base()}${p.chat!.path ?? "/v1/chat/completions"}`, {
         method: "POST",
-        headers: { "content-type": "application/json", ...p.chat!.headers() },
+        headers: {
+          "content-type": "application/json",
+          ...(await p.chat!.headers()),
+        },
         body: JSON.stringify(b),
         signal: o.signal,
       });

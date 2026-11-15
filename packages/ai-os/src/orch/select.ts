@@ -185,7 +185,9 @@ export function rank(
     (!only.length || only.some((r) => r.test(id))) &&
     !ignore.some((r) => r.test(id)) &&
     !cooling.includes(sane(id)) &&
-    !health.cooling(host, id);
+    !health.cooling(host, id) &&
+    // Account-level failure recorded on the provider itself (billing off, API disabled): its whole family waits.
+    !(id.includes("/") && health.cooling(host, id.slice(0, id.indexOf("/"))));
   // An agent CLI manages its own tools and context; a bridge model must prove each required capability
   // (missing metadata = rejected), and llm_ask wires no tools.
   const fits = (c: Candidate) =>

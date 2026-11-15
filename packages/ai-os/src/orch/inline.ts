@@ -118,11 +118,22 @@ function parse(out: string): {
 const estimate = (...s: string[]) =>
   Math.ceil(s.reduce((n, x) => n + x.length, 0) / 4);
 
+/** Sampling and output controls honoured by bridge models (agent CLIs expose none of them). */
+export type InlineOpts = {
+  temperature?: number;
+  seed?: number;
+  /** JSON schema of the answer (wire form). */
+  schema?: Record<string, unknown>;
+  schemaName?: string;
+  thinking?: string;
+};
+
 export async function inline(
   h: Host,
   provider: string,
   prompt: string,
   timeoutMs = 600_000,
+  opts: InlineOpts = {},
 ): Promise<InlineResult> {
   const t0 = performance.now();
   const [cli, model] = provider.split(/:(.*)/s);
@@ -137,7 +148,14 @@ export async function inline(
       };
     try {
       const r = await Promise.race([
-        llmAsk(provider, prompt),
+        llmAsk(provider, prompt, undefined, {
+          temperature: opts.temperature,
+          seed: opts.seed,
+          reasoningEffort: opts.thinking,
+          responseSchema: opts.schema
+            ? { name: opts.schemaName ?? "review", schema: opts.schema }
+            : undefined,
+        }),
         Bun.sleep(timeoutMs).then(() => {
           throw new Error(`timed out (${timeoutMs} ms)`);
         }),

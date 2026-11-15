@@ -29,6 +29,11 @@ const RULES: [FailClass, RegExp][] = [
     "throttle",
     /(status|http|error|code)\D{0,12}\b429\b|rate[ _-]?limit|too many requests|resource_exhausted/i,
   ],
+  // API switched off on the project (Vertex, Gemini API): fixed by an owner action, engine discarded for a day.
+  [
+    "missing",
+    /service_disabled|api_key_service_blocked|api has not been used in project|accessnotconfigured|api (is )?(not enabled|disabled)|has not been (enabled|used)/i,
+  ],
   [
     "auth",
     /failed to authenticate|oauth session expired|not logged in|please (log|sign) ?in|login required|unauthori[sz]ed|(status|http|error|code)\D{0,12}\b40[13]\b|invalid api key|authentication (failed|required|error)/i,

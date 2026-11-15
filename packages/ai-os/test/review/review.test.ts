@@ -176,6 +176,8 @@ const cfgFor = (): Config => ({
   ],
   stale_rounds: 2,
   rounds: 5,
+  // These stubs answer in the legacy markdown format.
+  output: { strict: false },
 });
 const fakeSources = (root: string) =>
   new SourceCache(root, async () => ({

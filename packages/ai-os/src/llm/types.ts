@@ -38,6 +38,10 @@ export type ChatRequest = {
   /** 0 (or an integer seed) makes the request deterministic, hence cacheable by the relay (relay/outbound.ts). */
   temperature?: number;
   seed?: number;
+  /** Structured output: JSON schema the answer must match (OpenAI `response_format` json_schema). */
+  responseSchema?: { name: string; schema: Record<string, unknown> };
+  /** Thinking level of reasoning models (OpenAI `reasoning_effort`: low, medium, high). */
+  reasoningEffort?: string;
   signal?: AbortSignal;
 };
 
