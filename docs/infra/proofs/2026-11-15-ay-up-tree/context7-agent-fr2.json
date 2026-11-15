@@ -1,0 +1,13 @@
+{
+ "user": "agent",
+ "host": "bunos",
+ "credential_decrypted": true,
+ "keyed": true,
+ "libraries": [
+  "/websites/rs_tokio",
+  "/websites/rs_tokio_tokio",
+  "/tokio-rs/tokio"
+ ],
+ "docs_mentions_spawn": true,
+ "docs_excerpt": "### Server example using tokio::spawn\n\nSource: https://docs.rs/tokio/latest/tokio/task/fn.spawn.html\n\nExample from the documentation showing a TCP server that spawns a new task to process each incoming connection. The `p"
+}
