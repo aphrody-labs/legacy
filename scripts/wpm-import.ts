@@ -82,7 +82,7 @@ if (import.meta.main) {
   const root = join(import.meta.dir, "..");
   const indexPath = args.includes("--index") ? args[args.indexOf("--index") + 1]! : join(root, "third_party/wpm-source/index.json");
   const index = JSON.parse(readFileSync(indexPath, "utf8"));
-  const r = convert(index, toolNames(readFileSync(join(root, "tools.toml"), "utf8")));
+  const r = convert(index, toolNames(readFileSync(join(root, "infra/up/tools.toml"), "utf8")));
   if (args.includes("--write")) writeFileSync(join(root, "infra/up/tools.d/wpm.toml"), r.toml);
   console.log(`${r.tools} tools; skipped ${JSON.stringify(r.skipped)}`);
 }

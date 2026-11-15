@@ -2,8 +2,7 @@
   "sovereign": [
     "docs/i18n/*/AGENTS.md",
     ".agents/skills/hygiene/SKILL.md",
-    "scripts/hygiene.ts",
-    "docs/reference/catalog/**"
+    "scripts/hygiene.ts"
   ],
   "absolute-path": [
     "docs/native/shell/**",
@@ -26,8 +25,7 @@
     ".agents/skills/stitch-design-md/examples/DESIGN.md",
     "docs/native/linux-kernel-story/mdx/13-upstream-live-releases-git-and-distro-deployments.mdx",
     "docs/research/RUST_6_ORGS_FUSION_INVENTORY.md",
-    "src/runtime/cli/add_completions.txt",
-    "docs/reference/catalog/**"
+    "src/runtime/cli/add_completions.txt"
   ],
   "hardcoded-list": [
     "scripts/skills-adopt.ts",
@@ -158,7 +156,7 @@
     "packages/machine/src/flatten-third-party.ts",
     "packages/machine/src/forks.ts",
     "packages/machine/src/toolchains-lock.ts",
-    "tools.toml"
+    "infra/up/tools.toml"
   ],
   "magic-date": [
     ".agents/skills/agent-platform-deploy/scripts/calculate_cost.py",
@@ -193,8 +191,7 @@
     "src/niubash/**",
     "src/ruline/**",
     "src/winux/**",
-    "packages/omniu/**",
-    "docs/reference/catalog/**"
+    "packages/omniu/**"
   ],
   "dated-snapshot": [
     "src/rubash/**",

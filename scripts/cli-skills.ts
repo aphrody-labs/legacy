@@ -179,7 +179,7 @@ export function render(tool: Tool, m: Manual): string {
 }
 
 export async function generate(opts: { check?: boolean; only?: string[]; tools?: string } = {}) {
-  const toml = opts.tools ?? (await Bun.file(join(ROOT, "tools.toml")).text());
+  const toml = opts.tools ?? (await Bun.file(join(ROOT, "infra/up/tools.toml")).text());
   const result = { written: 0, same: 0, skipped: [] as string[], drift: [] as string[] };
   for (const tool of parseTools(toml)) {
     if (opts.only?.length && !opts.only.includes(tool.name)) continue;

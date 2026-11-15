@@ -48,7 +48,7 @@ pub struct UpArgs {
     /// Release label recorded in the --assets manifest
     #[arg(long, value_name = "LABEL", requires = "assets")]
     pub release: Option<String>,
-    /// Manifest path (default: $AY_TOOLS_MANIFEST, <repo>/tools.toml, then the embedded copy)
+    /// Manifest path (default: $AY_TOOLS_MANIFEST, <repo>/infra/up/tools.toml, then the embedded copy)
     #[arg(long, value_name = "PATH")]
     pub manifest: Option<PathBuf>,
     /// Only these tools

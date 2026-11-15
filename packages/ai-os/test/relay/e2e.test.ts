@@ -502,7 +502,7 @@ describe.skipIf(!alive)("relay e2e", () => {
 
 // ------------------------------------------------------------ 5. CLIs (no relay needed, but kept in the gated suite below)
 describe.skipIf(!alive)("CLIs declared in tools.toml", () => {
-  const toml = Bun.TOML.parse(readFileSync(join(SRC, "tools.toml"), "utf8")) as any;
+  const toml = Bun.TOML.parse(readFileSync(join(SRC, "infra/up/tools.toml"), "utf8")) as any;
   const tools: any[] = (toml.tool ?? []).filter((t: any) => Array.isArray(t.bin) && t.bin.length);
   const PATH = [Bun.env.PATH ?? "", join(homedir(), ".local", "bin")].join(delimiter);
   const exe = (n: string) => Bun.which(n.replace(/\.exe$/i, ""), { PATH });

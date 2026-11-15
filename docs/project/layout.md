@@ -15,27 +15,27 @@ Decisions: keep, move, merge, purge. Status: done (commit in git log), pending, 
 | `package.json`, `bun.lock`, `bunfig.toml`, `tsconfig.json` | keep | Bun precedent; bun reads them at the root | - |
 | `pyproject.toml`, `uv.lock` | keep | uv workspace root (members `tools/lore`, `packages/core-py`, `src/agent/context`, `packages/ai-os/python/hermes_agent_memory`); read by `scripts/checkdeps.ts`, `scripts/topology.ts`, `.github/workflows/deps.yml` | - |
 | `deny.toml` | keep | cargo-deny reads it at the workspace root | - |
-| `dist-workspace.toml` | keep | cargo-dist reads it at the workspace root; `Cargo.toml` and `src/ay/Cargo.toml` name it | - |
+| `dist-workspace.toml` | keep | cargo-dist finds its config there: "Your workspace dist config in dist-workspace.toml or dist.toml" (axodotdev/cargo-dist `book/src/reference/config.md`); `Cargo.toml` and `src/ay/Cargo.toml` name it | - |
 | `justfile` | keep | `just` reads it at the root; recipes are imported from `*/*.just` | - |
 | `DEPS`, `DEPS.rules`, `MAINTAINERS` | keep | `scripts/checkdeps.ts` accumulates `DEPS.rules` from the root down; `ay` regenerates `DEPS` from `src.lock.json` | - |
 | `src.lock.json` | keep | read by `ay upstream`, `ay lock` and the repository-root probe in `src/ay/src/lib.rs` | - |
-| `identity.toml` | keep | repository-root marker: `src/ay/src/lib.rs`, `src/ay/src/low/docs.rs`, `packages/upstream/src/stack.ts`, `packages/ffi-bridge/src/dx12-hal.ts` and `scripts/identity.ts` search upward for it; moving it breaks all of them | - |
-| `tools.toml` | keep | `ay up` declares the toolchain from it; `packages/ai-os/test/relay/e2e.test.ts`, `packages/core/src/sys.ts` and about 100 skills name it | - |
-| `depot-artifacts.toml` | keep | default manifest path of `ay artifacts` (`src/depot/cli/src/lib.rs`) and of `just artifacts-verify` | - |
-| `VERSION` | keep | single version source: `ay release freeze` (`packages/release/src/cli.ts`, `freeze.ts`) writes it into `Cargo.toml` and `package.json`. Bun's `LATEST` records the last published release, a different role | - |
+| `identity.toml` | move to `tools/identity.toml` | no tool requires it at the root. It was the root marker: `src/ay/src/lib.rs`, `src/ay/src/low/docs.rs`, `src/posix/omarchy/src/cli.rs`, `packages/upstream/src/stack.ts`, `packages/ffi-bridge/src/dx12-hal.ts` and `scripts/identity.ts` now search upward for `src.lock.json` (already the alternative marker in the Rust probes); `src/xtask/src/manifests.rs` and `scripts/identity.ts` read `tools/identity.toml` | done |
+| `tools.toml` | move to `infra/up/tools.toml` | `ay up` manifest, next to its overlay `infra/up/tools.d/`; readers repointed: `src/up` (embedded copy and root probe), `src/ay/src/bun/bump.rs`, `src/xtask/src/deps.rs`, `packages/machine`, `scripts/cli-skills.ts`, `scripts/wpm-import.ts`, fleet bootstraps, `fleet.just`. Skills and docs that only name the file keep the bare name | done |
+| `depot-artifacts.toml` | not moved | untracked in git (never committed) and a sample with `cdn.example.com` URLs; `ay artifacts` takes the path as an argument and only defaults to the current directory (`src/depot/cli/src/lib.rs`), so nothing requires the root. It belongs to whoever created it | not mine |
+| `VERSION` | move to `packages/release/VERSION` | the only reader is `ay release freeze` (`packages/release/src/cli.ts`, `freeze.ts`), which copies it into `Cargo.toml` and `package.json`; no external tool needs it at the root. Bun's `LATEST` records the last published release, a different role | done |
 | `LICENSE-APACHE`, `LICENSE-MIT` | merge into `LICENSE.md` | Bun's root has a single `LICENSE.md`; the new file states both texts (MIT, then Apache-2.0) under one header. No license is chosen by the owner and none gates a design (`docs/legal/LICENSE-QUEUE.md`) | done |
 | `.gitattributes`, `.gitignore`, `.gitmodules`, `.env.example` | keep | git and the env tooling read them at the root | - |
 | `.graphifyignore` | keep | graphify reads it at the root | - |
 | `.github/` | keep | GitHub reads it; Bun precedent | - |
 | `.claude/`, `.agents/` | keep | Claude Code and the other agent CLIs read them; Bun has `.claude/` | - |
-| `.claude-plugin/` | keep | `marketplace.json` is read by Claude Code and by Codex (`packages/machine/src/toolchain.ts`); its source is `plugins/aphrody-nhitl` | - |
-| `plugins/` | keep | holds `aphrody-nhitl`, referenced by `.claude-plugin/marketplace.json`, `infra/agents/claude/settings.json` and `infra/agents/runner.ts`. Moving it needs `.claude-plugin/marketplace.json` and the settings rewritten together | pending (own commit) |
+| `.claude-plugin/` | keep | the marketplace root is the checkout (`claude plugin marketplace add <checkout>`, `codex plugin marketplace add`, `packages/machine/src/toolchain.ts`) and reads `.claude-plugin/marketplace.json` there; it also lists the `./.agents` skills plugin, whose source must sit under that root | - |
+| `plugins/` | move to `infra/agents/plugins/` | Bun has no `plugins/`; `aphrody-nhitl` is agent tooling. `.claude-plugin/marketplace.json` (source `./infra/agents/plugins/aphrody-nhitl`), `infra/agents/claude/settings.json`, `infra/agents/runner.ts` and the scanner message follow | done |
 | `conformance/` | move to `test/conformance/` | Bun keeps fixtures and suites under `test/`; the only reader is the crate `test/conformance` (`src/lib.rs`), now `test/conformance/{upstreams.toml,expected/}` with the ignored `upstream/` and `results/` beside them | done |
 | `apps/`, `packages/`, `src/`, `infra/`, `third_party/` | keep | product, library, Rust, fleet and upstream-checkout trees; the brand tree is `packages/design/brand` (section Brand) |
 | `docs/` | keep | Bun precedent; project documents live in `docs/project/` (this file) | - |
 | `bench/`, `test/`, `scripts/`, `tools/`, `completions/` | keep | Bun root has each of them | - |
 
-Bun has no `identity.toml`, `tools.toml`, `src.lock.json` or `dist-workspace.toml`. Each is kept above because a reader needs the path. Moving them under `tools/` or `scripts/` is possible only together with those readers (`src/ay`, `src/depot`, `packages/*`, skills) and is not done.
+Bun has no `src.lock.json` or `dist-workspace.toml`. `src.lock.json` is the repository-root marker for `ay` and its probes; `dist-workspace.toml` is read by cargo-dist at the workspace root. Both stay.
 
 ## Legacy and residue
 
@@ -45,11 +45,12 @@ Bun has no `identity.toml`, `tools.toml`, `src.lock.json` or `dist-workspace.tom
 | `infra/generated/aphrody-app.service`, `aphrody-web.service`, `aphrody.nginx.conf` | purge | stale generated files (one still names Bun v1.4.4); no reader by name. `infra/generated/systemd/ay-up.*` stays: `docs/infra/INSTALL_UPDATE.md` names it | done |
 | `infra/fleet/orphans/`, root `conformance/` | none | empty directories on disk, nothing tracked; removed | done |
 | `tools/monorepo-merge/` | purge when its owner is done | merge leftover; two untracked files on disk (`merge.ts`, `native-ui.json`), nothing tracked | blocked (untracked work of another session) |
-| `tools/labs-scripts/` | merge into the chromium factory | merge leftover (`labs` is the old repository); readers are `infra/chromium-factory/labs.just` and `.agents/skills/chromium/SKILL.md`. Another session has an untracked `absorb-lore.ts` in it, so it is not moved here | blocked (live edit by another session) |
-| `infra/chromium-factory/labs.just` | rename to `chromium-factory.just` | same leftover; imported by `justfile`, named in `scripts/hygiene.allow.json` | blocked (`justfile` carries another session's edit) |
+| `tools/labs-scripts/chrome-channels.sh` | move to `infra/chromium-factory/chrome-channels.sh` | merge leftover; same depth below the root, so its `../..` root probe is unchanged; readers (`chromium-factory.just`, `.agents/skills/chromium/SKILL.md`) follow | done |
+| `tools/labs-scripts/{vendor.sh,absorb-lore.sh,absorb-lore.ts}` | left in place | `absorb-lore.sh` calls `vendor.sh` by path and an untracked `absorb-lore.ts` of another session is being written next to them; the owner merges the three | blocked |
+| `infra/chromium-factory/labs.just` | rename to `chromium-factory.just` | same leftover; imported by `justfile`, named in `scripts/hygiene.allow.json` | done |
 | `.agents/skills/rust-stack-sovereign/` | purge | "sovereign" legacy; the deletion is in the working tree from another session | not mine |
 | `yolo` | none | the only tracked hits are site names (`yolo.aphrody.app` captures under `docs/proofs/`, `docs/replica/`), not code | - |
-| Python after py2bun | keep | remaining `.py` files are upstream skill assets (`.agents/skills/*`), Lore's own tree (`docs/lore/assets/hooks`), `apps/auto` fixtures and the uv members above; no first-party script left to port | - |
+| Python after py2bun | keep `pyproject.toml` and `uv.lock` | Python is still used: `tools/lore` is a Python project (179 `.py` files, its own `pyproject.toml`), `packages/ai-os/python/hermes_agent_memory` is a package with tests, and `packages/py2bun` is itself Python tooling. uv puts the workspace `uv.lock` next to the root `pyproject.toml`, and `scripts/checkdeps.ts`, `scripts/topology.ts` and `deps.yml` read both. The `.py` files elsewhere are upstream skill assets and fixtures | - |
 | `infra/gcp/` and `infra/gcloud/` | keep | different content (a Cloud Function and IAM scripts); `docs/infra/GCP-BILLING.md` names `infra/gcp/billing-agent/cap-function` | - |
 
 ## Submodules

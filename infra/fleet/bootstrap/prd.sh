@@ -2,9 +2,9 @@
 # prd (USA, Arch Linux, root): production backends ONLY (owner decision 2026-11-13). No compiler is installed
 # here: images are built in CI (images.yml) or on fr1 (`just docker-smoke`) and pulled from ghcr.io/aphrody-labs.
 # Idempotent; never restarts running app containers.
-#   LOCK=/root/src/tools.toml sh infra/fleet/bootstrap/prd.sh
+#   LOCK=/root/src/infra/up/tools.toml sh infra/fleet/bootstrap/prd.sh
 # Run from the PC: just fleet-bootstrap prd
-LOCK=${LOCK:-$(cd "$(dirname "$0")/../../.." && pwd)/tools.toml}
+LOCK=${LOCK:-$(cd "$(dirname "$0")/../../.." && pwd)/infra/up/tools.toml}
 . "$(dirname "$0")/common.sh"
 
 # Runtime packages only (pacman -S --needed: no -Syu, a full upgrade of prd is a separate, planned operation).

@@ -643,7 +643,7 @@ fn check_containers(root: &Path, out: &mut Vec<Finding>) {
 }
 
 fn check_tools(root: &Path, out: &mut Vec<Finding>) {
-    let Some(doc) = parse(&root.join("tools.toml")) else {
+    let Some(doc) = parse(&root.join("infra/up/tools.toml")) else {
         return;
     };
     let Some(tools) = doc.get("tool").and_then(Item::as_array_of_tables) else {
@@ -655,7 +655,7 @@ fn check_tools(root: &Path, out: &mut Vec<Finding>) {
         let source = t.get("source").and_then(Item::as_str).unwrap_or("");
         let version = t.get("version").and_then(Item::as_str).unwrap_or("");
         if version.is_empty() || version == "latest" {
-            push(out, Level::Error, "TOOLS-PIN", "tools.toml", format!("{name}: version must be pinned"));
+            push(out, Level::Error, "TOOLS-PIN", "infra/up/tools.toml", format!("{name}: version must be pinned"));
         }
         let verified = t.contains_key("checksum") || t.contains_key("sha256");
         match source {
@@ -665,7 +665,7 @@ fn check_tools(root: &Path, out: &mut Vec<Finding>) {
         }
     }
     if !unverified.is_empty() {
-        push(out, Level::Error, "TOOLS-UNVERIFIED", "tools.toml", format!("{} tools without checksum: {}", unverified.len(), unverified.join(" ")));
+        push(out, Level::Error, "TOOLS-UNVERIFIED", "infra/up/tools.toml", format!("{} tools without checksum: {}", unverified.len(), unverified.join(" ")));
     }
 }
 

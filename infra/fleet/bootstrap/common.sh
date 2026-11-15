@@ -3,7 +3,7 @@
 # Every step is idempotent: it checks the installed version first and only acts on drift.
 set -eu
 
-: "${LOCK:?LOCK=path to tools.toml}"
+: "${LOCK:?LOCK=path to infra/up/tools.toml}"
 ARCH=$(uname -m)
 case "$ARCH" in x86_64) PLAT=linux-x86_64 ;; aarch64) PLAT=linux-aarch64 ;; *) echo "unsupported arch $ARCH" >&2; exit 1 ;; esac
 SUDO=""; [ "$(id -u)" = 0 ] || SUDO="sudo"

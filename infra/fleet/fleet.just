@@ -45,8 +45,8 @@ deploy-images host sha profile *services:
 # Toolchain bootstrap of a fleet host from tools.toml (usage: just fleet-bootstrap prd|fr1|fr2)
 [group('fleet')]
 fleet-bootstrap role:
-    tar -cf - -C "{{root}}" infra/fleet/bootstrap/common.sh infra/fleet/bootstrap/{{role}}.sh infra/fleet/bin/heavy.sh infra/fleet/sysctl infra/agents/install.sh tools.toml | timeout 120 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'rm -rf /tmp/aphrody-bootstrap && mkdir -p /tmp/aphrody-bootstrap && tar -xf - -C /tmp/aphrody-bootstrap'
-    timeout 1800 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'cd /tmp/aphrody-bootstrap && LOCK=$PWD/tools.toml sh infra/fleet/bootstrap/{{role}}.sh'
+    tar -cf - -C "{{root}}" infra/fleet/bootstrap/common.sh infra/fleet/bootstrap/{{role}}.sh infra/fleet/bin/heavy.sh infra/fleet/sysctl infra/agents/install.sh infra/up/tools.toml | timeout 120 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'rm -rf /tmp/aphrody-bootstrap && mkdir -p /tmp/aphrody-bootstrap && tar -xf - -C /tmp/aphrody-bootstrap'
+    timeout 1800 ssh {{ if role == "fr1" { "fr1" } else if role == "fr2" { "fr2" } else { "prd" } }} 'cd /tmp/aphrody-bootstrap && LOCK=$PWD/infra/up/tools.toml sh infra/fleet/bootstrap/{{role}}.sh'
 
 # One src checkout (/srv/src, full, main) + 5-min sync timer + role extras on a fleet host, idempotent
 # (usage: just fleet-setup fr1|fr2|prd [runners=6]); dependencies first through just fleet-bootstrap <role>.
