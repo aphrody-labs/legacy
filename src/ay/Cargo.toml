@@ -52,7 +52,7 @@ tree-sitter-typescript.workspace = true
 tree-sitter-javascript.workspace = true
 uuid.workspace = true
 dotenvy = { workspace = true }
-sys = { version = "0.4.0", path = "../sys", package = "aphrody-sys" }
+sys = { version = "0.4.0", path = "../machine", package = "aphrody-machine" }
 xtk.workspace = true
 up = { version = "0.4.0", package = "aphrody-up", path = "../up" }
 rt = { version = "0.4.0", package = "aphrody-rt", path = "../rt" }
