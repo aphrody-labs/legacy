@@ -220,3 +220,11 @@ fn from_import_rebinding_and_relative_dot() {
     assert!(o.contains("floor as __imp_floor") && o.contains("let floor = __imp_floor"), "{o}");
     assert!(o.contains("from \"./sibling\""), "{o}");
 }
+
+#[test]
+fn unpack_check_defaults_once_and_keywords_for_positionals() {
+    let o = ts("a, b = (1, 2)\ndef f(x, y=[], *a, **k):\n    return x\n");
+    assert!(o.contains("__py.unpack("), "{o}");
+    assert!(o.contains("const __d"), "{o}");
+    assert!(o.contains("Object.hasOwn(__kw, \"x\")"), "{o}");
+}

@@ -468,6 +468,15 @@ export function iter(x: any): any {
   if (typeof x === "object" && typeof x.next === "function") return { [Symbol.iterator]: () => x };
   throw new TypeError(`'${typeName(x)}' object is not iterable`);
 }
+/** Destructuring with CPython's length checks (`a, b = x`; `a, *b = x` needs at least n - 1 values). */
+export function unpack(v: any, n: number, star = false): any[] {
+  const a = Array.isArray(v) ? v : Array.from(iter(v));
+  if (star ? a.length < n - 1 : a.length !== n) {
+    const want = star ? `at least ${n - 1}` : String(n);
+    throw new ValueError(a.length < (star ? n - 1 : n) ? `not enough values to unpack (expected ${want}, got ${a.length})` : `too many values to unpack (expected ${want})`);
+  }
+  return a;
+}
 export function* enumerate(it: any, ...a: any[]) {
   const [pos, k] = splitKw(a);
   let i = pos[0] ?? k.start ?? 0;

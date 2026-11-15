@@ -350,3 +350,13 @@ describe("re struct async review fixes", () => {
     await expect((async () => { for await (const _ of a.a_zip([1], [1, 2], py.kw({ strict: true }))) void _; })()).rejects.toThrow();
   });
 });
+
+describe("unpack", () => {
+  test("length checks", () => {
+    expect(py.unpack([1, 2], 2)).toEqual([1, 2]);
+    expect(() => py.unpack([1], 2)).toThrow();
+    expect(() => py.unpack([1, 2, 3], 2)).toThrow();
+    expect(py.unpack([1, 2, 3], 2, true)).toEqual([1, 2, 3]);
+    expect(() => py.unpack([], 2, true)).toThrow();
+  });
+});

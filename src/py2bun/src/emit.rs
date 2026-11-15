@@ -858,7 +858,14 @@ impl<'s> Emitter<'s> {
                 let (o, k) = (self.expr(&s.value), self.subscript_key(&s.slice));
                 format!("__py.setitem({o}, {k}, {val})")
             }
-            Expr::Tuple(_) | Expr::List(_) if self.simple_pattern(target) => format!("{} = {}", self.pattern(target), val),
+            Expr::Tuple(_) | Expr::List(_) if self.simple_pattern(target) => {
+                let (n, star) = match target {
+                    Expr::Tuple(t) => (t.elts.len(), t.elts.iter().any(|e| matches!(e, Expr::Starred(_)))),
+                    Expr::List(t) => (t.elts.len(), t.elts.iter().any(|e| matches!(e, Expr::Starred(_)))),
+                    _ => (0, false),
+                };
+                format!("{} = __py.unpack({val}, {n}, {star})", self.pattern(target))
+            }
             Expr::Tuple(t) => self.store_unpack(&t.elts, val),
             Expr::List(t) => self.store_unpack(&t.elts, val),
             _ => self.unsupported(target.range(), "assignment target"),
@@ -1237,9 +1244,13 @@ impl<'s> Emitter<'s> {
             p.posonlyargs.iter().chain(p.args.iter()).skip(if skip_first { 1 } else { 0 }).collect();
         // defaults are evaluated in the enclosing scope (`def f(x=x)` must not hit the param TDZ)
         let mut default_js: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        let mut nonconst: HashSet<String> = HashSet::new();
         for pd in positional.iter().copied().chain(p.kwonlyargs.iter()) {
             if let Some(d) = &pd.default {
                 let js = self.expr(d);
+                if !is_const(d) {
+                    nonconst.insert(pd.parameter.name.as_str().to_string());
+                }
                 default_js.insert(pd.parameter.name.as_str().to_string(), js);
             }
         }
@@ -1248,7 +1259,8 @@ impl<'s> Emitter<'s> {
             let pn = pnames.clone();
             let keys: Vec<String> = default_js.keys().cloned().collect();
             for k in keys {
-                if pn.iter().any(|q| mentions_ident(&default_js[&k], &ident(q))) {
+                // Python evaluates a default once, at definition time: non-constant defaults are hoisted
+                if nonconst.contains(&k) || pn.iter().any(|q| mentions_ident(&default_js[&k], &ident(q))) {
                     let t = self.fresh("d");
                     let js = default_js[&k].clone();
                     self.line(&format!("const {t} = {js};"));
@@ -1283,6 +1295,11 @@ impl<'s> Emitter<'s> {
                     pats.push(format!("...{}", ident(v.name.as_str())));
                 }
                 prologue.push(format!("let [{}] = __a;", pats.join(", ")));
+                for pd in &positional {
+                    let n = ident(pd.parameter.name.as_str());
+                    let key = js_str(pd.parameter.name.as_str());
+                    prologue.push(format!("if (Object.hasOwn({kwname}, {key})) {{ {n} = {kwname}[{key}]; delete {kwname}[{key}]; }}"));
+                }
             }
             let mut kwpats: Vec<String> = vec![];
             for pd in &p.kwonlyargs {
@@ -1469,6 +1486,7 @@ impl<'s> Emitter<'s> {
 
     fn call_arg(&mut self, a: &Expr) -> String {
         match a {
+            Expr::Starred(s) if self.asyncs && self.no_await == 0 => format!("...(await __py.a_list({}))", self.expr(&s.value)),
             Expr::Starred(s) => format!("...__py.iter({})", self.expr(&s.value)),
             _ => self.expr(a),
         }
