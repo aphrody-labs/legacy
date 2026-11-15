@@ -59,10 +59,11 @@ Registered in `cluster.toml` (`fleet-registry endpoint valkey` = <fr2-mesh-ip>:6
 | --- | --- | --- |
 | 0 | Inventory, research, design | done 2026-11-15 |
 | 1 | fr2: `fleet-xfs.sh` volume, registry, fleet-run from registry | live on fr2 (below) |
-| 2 | fr1: XFS volume on a real device. Candidates: none free. `sdb`/`sdc` hold `/home` (btrfs, 647 GB) being purged by another agent; take them only after it finishes and the data is moved or confirmed regenerable, then `XFS_DEV` in `fr1/offload/etc/fleet/xfs.conf` and `fleet-xfs.sh apply`. Interim option: the loop image used on fr2 (root has 83 GB free) | pending |
-| 3 | Move fr2 tunnel ingress into `mig-prd` (needs cluster lb_ports) | pending |
-| 4 | prd: `xfsprogs` plus a file-backed or attached volume only (root btrfs is never repartitioned); `prod` and `auto-usa` hostnames into `mig-prd`, old connectors last | pending |
-| 5 | Wire consumers to the registry: Valkey client with AUTH, NativeLink workers on fr2 | pending |
+| 2 | fr1: XFS volume. No free device (sdb/sdc are the btrfs pool /home, which still carries the NativeLink CAS and relocations; a btrfs pool cannot be shrunk in place), so a 40 GB loop image on the SSD root, same paths as fr2 (`fr1/offload/etc/fleet/xfs.conf`) | live: agcount=12, reflink=1, mounted on /srv/xbuild |
+| 2b | Mesh ssh key (`fleet-mesh-key.sh`: key generated on each host, restricted to the read-only `fleet-probe` from the mesh subnet, subnet from `FLEET_MESH_FROM`, nothing in the repo) | live: `fleet-registry status` shows all three hosts from fr1 and fr2 |
+| 3 | Tunnels into `mig-prd`: fr2 (ssh-fr2, mcp-origin, gnu) and prod (desktop.aphrody.app) done, hostname by hostname; old connectors stopped. `auto-usa` NOT merged: its origin is the docker name auto-web:3001 on the auto-prod network, unreachable from the host HAProxy and from fr1/fr2 replicas; needs the compose to publish a loopback port (recreate of auto-web = downtime without blue/green) | fr2 and prod done, auto-usa pending |
+| 4 | Reconcile live `open-origin` ingress into cloudflare.toml | done, `cf.ts plan`: no changes |
+| 5 | prd XFS (xfsprogs missing, root btrfs never repartitioned), consumers on the registry (Valkey AUTH, NativeLink worker on fr2) | pending |
 
 Log (UTC, 2026-11-15):
 
@@ -71,8 +72,12 @@ Log (UTC, 2026-11-15):
 - 07:08 fr2: `fleet-xfs.sh apply`: `/var/lib/fleet/xbuild.img` 4 GB sparse, `mkfs.xfs -d agcount=6`, fstab `loop,noatime,nofail`, `/srv/xbuild` mounted, reflink smoke test ok (`xfs_info`: `agcount=6 reflink=1`). Root cost 0.5 GB (XFS metadata).
 - 07:20 benchmark above (4c352b5298). Temporary trees removed by the script's trap.
 - 07:30 `fleet-run -n -c test` on fr2: peers from the registry (fr1 only, prd absent). `fleet-registry status` reports prd unreachable from fr2 (no mesh ssh key for `ubuntu@<prd-mesh-ip>` from fr2; the status view is complete from the PC and from fr1 only if keys exist, to fix in stage 5).
-- fr1 and prd: no change made.
+- 08:10 fr1: `fleet-xfs apply` (40 GB image, agcount=12, reflink ok). 08:20 mesh key applied; found and fixed a prd `authorized_keys` without trailing newline (first key line glued to the next; repaired, script now newline-safe).
+- 08:35 cluster deploy of lb_ports 19023/19790/19080 (then 19793) to fr2, fr1, prd. On prd `systemctl reload nginx` fails with 226/NAMESPACE (private /tmp of the running nginx removed, first seen 05:10); nginx kept serving, deploy.sh now falls back to `nginx -s reload` (HUP). A `systemctl restart nginx` on prd would fix the unit but is a blip: left for a window.
+- 08:45 mig-prd ingress applied, DNS switched gnu (200 x8), mcp-origin (/health returns the relay JSON), ssh-fr2 (ssh from prd through Access returned the fr2 hostname). cloudflared-fr2 disabled on fr2.
+- 09:00 desktop.aphrody.app to mig-prd (502 before and after: nothing listens on prd :8793), cloudflared-prod disabled on prd; aphrody.com and mig-test.aphrody.com 200 before and after, `cf tunnels list`: prod down, mig-prd 12 connections. A transient 530 appeared for seconds while the connector stopped, then 502 stable.
+- fr1: XFS volume added; prd: listeners and the connector change only, no data or disk change.
 
-Rollback fr2: `sudo fleet-xfs down --purge` (umount, fstab line removed, image deleted); `rm /etc/fleet/cluster.toml` returns fleet-run to `run.conf` PEERS.
+Rollback tunnels: DNS rollback lines in cloudflare.toml, then `systemctl enable --now cloudflared-fr2` (fr2) or `cloudflared-prod` (prd). Rollback fr2: `sudo fleet-xfs down --purge` (umount, fstab line removed, image deleted); `rm /etc/fleet/cluster.toml` returns fleet-run to `run.conf` PEERS.
 
 Open: fr2 `/srv/src` carries uncommitted work blocking fast-forward (owner of that work to commit or drop); `cloudflare.toml` lacks the live `open-origin` ingress.
