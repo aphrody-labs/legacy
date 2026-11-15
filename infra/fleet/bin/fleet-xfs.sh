@@ -46,7 +46,7 @@ apply)
     rg -qF "$line" /etc/fstab || { echo "$line" >> /etc/fstab; log "fstab: $line"; }
     systemctl daemon-reload; mount "$XFS_MOUNT"
   fi
-  for d in target cache ci cas clones; do install -d -m 1777 "$XFS_MOUNT/$d"; done
+  for d in $(fleet-registry layout xbuild_subdirs 2>/dev/null || echo "target cache ci cas clones"); do install -d -m 1777 "$XFS_MOUNT/$d"; done
   # reflink smoke test (same filesystem is required, cp(1) --reflink=always fails otherwise)
   t=$XFS_MOUNT/.smoke.$$; head -c 1048576 /dev/urandom > "$t"; cp --reflink=always "$t" "$t.c" && log "reflink ok"; rm -f "$t" "$t.c"
   xfs_info "$XFS_MOUNT" | rg -o 'agcount=[0-9]+|reflink=[01]' | tr '\n' ' '; echo;;

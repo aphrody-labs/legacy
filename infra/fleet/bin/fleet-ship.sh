@@ -9,12 +9,12 @@ root=$(git rev-parse --show-toplevel)
 . "$root/packages/env-kit/loaders/shell/site.sh"
 alias=$(site_ssh "$role")
 tmp=$(mktemp -d)
-git -C "$root" archive HEAD infra/fleet packages/env-kit/loaders/shell/site.sh -o "$tmp/a.tar"
+git -C "$root" archive HEAD infra/fleet packages/env-kit/loaders/shell/site.sh tools/identity.toml -o "$tmp/a.tar"
 tar -xf "$tmp/a.tar" -C "$tmp"
 rg -l '@@[A-Za-z0-9_.]+@@' "$tmp" > "$tmp.list" || true
 for f in $(cat "$tmp.list"); do site_render "$f" > "$f.r" && mv "$f.r" "$f"; done
 rm -f "$tmp.list"
 if rg -q '@@[A-Za-z0-9_.]+@@' "$tmp/infra/fleet/cluster.toml" "$tmp/infra/fleet/$role/offload" 2>/dev/null; then echo "fleet-ship: unrendered token left" >&2; exit 1; fi
-tar -cf "$tmp/b.tar" -C "$tmp" infra packages
+tar -cf "$tmp/b.tar" -C "$tmp" infra packages tools
 timeout 200 ssh "$alias" "rm -rf /tmp/fs && mkdir /tmp/fs && tar -x -C /tmp/fs && cd /tmp/fs/infra/fleet && sudo bash bin/fleet-offload.sh apply $role 2>&1 | tail -3" < "$tmp/b.tar"
 rm -rf "$tmp"

@@ -42,3 +42,15 @@ endpoint = "fr1:50061"
 [service.cloudflared-tunnel]
 host = "all"
 endpoint = "mig-prd"
+
+# One directory layout on fr1, fr2 and prd (docs/infra/SINGLE-SERVER.md, table "Layout"). Names are variables: {repo} is
+# [product] repo of tools/identity.toml (shipped as /etc/fleet/identity.toml), {root} is this file's root. Scripts read it with
+# `fleet-registry layout <key>`; nothing under {root} outside these keys. Other checkouts: {root}/repos/<org>/<repo>, both read from the remote.
+[layout]
+root = "/srv"
+monorepo = "{root}/{repo}"
+repos = "{root}/repos"
+data = "{root}/data"
+www = "{root}/www"
+xbuild = "{root}/xbuild"
+xbuild_subdirs = "target cache ci cas clones tmp rescue backup"

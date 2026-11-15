@@ -3,6 +3,7 @@
 #   fleet-registry hosts                     name ssh mesh user role classes (one host per line)
 #   fleet-registry peers <class>             "name=user@mesh" of every other host allowed to run <class> (feeds fleet-run)
 #   fleet-registry endpoint <service>        mesh endpoint (address:port) of a service
+#   fleet-registry layout <key>              path of the one directory layout (root monorepo repos data www xbuild xbuild_subdirs); {repo} comes from tools/identity.toml
 #   fleet-registry status                    one view: per host PSI cpu/io/mem avg10, root free, build volume, tunnel connector
 # Config: /etc/fleet/cluster.toml (copy of the repo file), else the file next to this script's repo checkout.
 # cluster.toml lists roles and `role:port` endpoints only. A role becomes an address through discovery (discover.sh): this host's
@@ -38,6 +39,10 @@ endpoint) ep=$(flat | awk -F'\t' -v s="service.${2:?service}" '$1==s && $2=="end
             *:[0-9]*) a=$(mesh_of "${ep%:*}") && [ -n "$a" ] && { echo "$a:${ep##*:}"; exit 0; }; echo "$ep";;
             *) echo "$ep";;
           esac;;
+layout) idf=/etc/fleet/identity.toml; [ -f "$idf" ] || idf=$(dirname "$0")/../../../tools/identity.toml
+  repo=$(awk -F' *= *' '/^\[/{s=$0} s=="[product]" && $1=="repo"{gsub(/"| *#.*/,"",$2); print $2}' "$idf" 2>/dev/null)
+  root=$(flat | awk -F'\t' '$1=="layout" && $2=="root"{print $3}')
+  flat | awk -F'\t' -v k="${2:?key}" -v r="$root" -v p="$repo" '$1=="layout" && $2==k{v=$3; gsub(/\{root\}/,r,v); gsub(/\{repo\}/,p,v); print v; f=1} END{exit !f}';;
 status)
   printf '%-4s %-18s %-30s %-30s %-30s\n' host role "psi cpu/io/mem (avg10)" "root free GB / build fs" "tunnel connectors"
   hosts | while read -r n s m u r c; do

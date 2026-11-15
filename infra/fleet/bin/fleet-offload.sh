@@ -17,11 +17,12 @@ inst() { # inst <from> <to> <mode>
   fi
   return 1
 }
-for b in fleet-cgsample fleet-cgreport fleet-atopreport fleet-run fleet-offload-bench fleet-xfs fleet-registry fleet-probe fleet-nfs fleet-pool; do
+for b in fleet-cgsample fleet-cgreport fleet-atopreport fleet-run fleet-offload-bench fleet-xfs fleet-registry fleet-probe fleet-nfs fleet-pool fleet-layout; do
   inst "$src/bin/$b.sh" "/usr/local/bin/$b.sh" 0755 || true
   inst "$src/bin/$b.sh" "/usr/local/bin/$b" 0755 || true
 done
 inst "$src/cluster.toml" /etc/fleet/cluster.toml 0644 || true
+[ -f "$src/../../tools/identity.toml" ] && { inst "$src/../../tools/identity.toml" /etc/fleet/identity.toml 0644 || true; }
 inst "$src/../../packages/env-kit/loaders/shell/discover.sh" /usr/local/lib/aphrody/discover.sh 0644 || true
 inst "$src/../../packages/env-kit/loaders/shell/site.sh" /usr/local/lib/aphrody/site.sh 0644 || true
 # /.well-known/aphrody/host listener (mesh + loopback :8399) in nginx, rendered for this host. prd (production) gets the files and the timer only:
