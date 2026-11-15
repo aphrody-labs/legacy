@@ -34,6 +34,10 @@ ingress = [
   { hostname = "fleet-failover-test.aphrody.com", service = "http://127.0.0.1:29401" }, # fleet-dns-failover-test.sh only
   # Live entry added outside this file (found by `cf.ts plan tunnels` 2026-11-15), reconciled here.
   { hostname = "open-origin.aphrody.com", service = "http://127.0.0.1:29403" },
+  # fr2 origins (tunnel fr2 merged here, docs/infra/SINGLE-SERVER.md stage 3): lb_ports of infra/deploy.toml, fr2 sshd / relay / gnu mirror.
+  { hostname = "ssh-fr2.aphrody.com", service = "ssh://127.0.0.1:19023" },
+  { hostname = "mcp-origin.aphrody.com", service = "http://127.0.0.1:19790" },
+  { hostname = "gnu.aphrody.com", service = "http://127.0.0.1:19080" },
   # aphrody service: cluster LB pool aphrody (prd:23000, blue/green switched in deploy.toml only).
   { hostname = "aphrody.com", service = "http://127.0.0.1:19300" },
   { hostname = "*.aphrody.com", service = "http://127.0.0.1:19300" },
@@ -43,6 +47,8 @@ ingress = [
   { service = "http_status:404" },
 ]
 
+# RETIRED 2026-11-15: its three hostnames are served by mig-prd (DNS switched, proven). Connector cloudflared-fr2 stopped; rollback = point the
+# three DNS records back (rollback lines below) and `systemctl enable --now cloudflared-fr2` on fr2.
 [tunnels.fr2]
 id = "88aa6a53-0a9a-4a5b-a9b6-3d3394dd978d"
 host = "fr2"
@@ -58,8 +64,9 @@ ingress = [
 [dns."aphrody.com"]
 "aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
 "ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "delete" }
-"ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:fr2", rollback = "delete" }
-"mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:fr2", rollback = "delete" }
+"ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
+"mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
+"gnu.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME tunnel:fr2" }
 "os.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "A 51.255.162.6" }
 "admin.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
 "ai.aphrody.com" = { type = "CNAME", content = "tunnel:mig-prd", rollback = "CNAME aphrody.com" }
