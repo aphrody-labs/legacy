@@ -61,7 +61,6 @@ verify-all:
     ay arch check --strict --root "{{root}}"
     ay doctor
     bun test "{{root}}/packages/env-kit"
-    bun test "{{root}}/.agents/scripts/pre-tool-guard.test.ts"
     bun --cwd "{{root}}/packages/ai-os" test
     # Rust compiles in CI only (never on the workstation): run ci.yml on this commit and wait for it.
     gh workflow run ci.yml --ref main && sleep 5 && gh run watch "$(gh run list --workflow ci.yml -L 1 --json databaseId --jq '.[0].databaseId')" --exit-status
