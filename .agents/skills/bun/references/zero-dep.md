@@ -8,7 +8,7 @@
 
 ## 2. `bun check` without npm type packages
 
-`bun check` ships its own `lib.*.d.ts` (`ESNext`, `DOM`, `DOM.Iterable`). The shared ambient header is `packages/core/bun-native.d.ts`; include it from a package tsconfig (`"include": [..., "../core/bun-native.d.ts"]`, see `apps/open/packages/chromium-bun/tsconfig.json`) or reference it with a triple-slash path. Several packages also set `"types": ["bun"]` (`packages/core/tsconfig.json`, `packages/wck/tsconfig.json`). Copy the closest package's `package.json` and `tsconfig.json` instead of writing new ones.
+`bun check` ships its own `lib.*.d.ts` (`ESNext`, `DOM`, `DOM.Iterable`). The shared ambient header is `packages/core/bun-native.d.ts`; include it from a package tsconfig (`"include": [..., "../core/bun-native.d.ts"]`, see `packages/ffi-bridge/tsconfig.json`) or reference it with a triple-slash path. Several packages also set `"types": ["bun"]` (`packages/core/tsconfig.json`, `packages/wck/tsconfig.json`). Copy the closest package's `package.json` and `tsconfig.json` instead of writing new ones.
 
 ## 3. Replacement table
 

@@ -130,7 +130,7 @@ Modèle relevé le 2026-11-14 sur `oven-sh/bun@7f0db35316` (`gh api repos/oven-s
 | 0 cœur | noyau C style Linux, ABI `src/include/ay/sys.h` | `src/{arch,kernel,drivers,include}`, `src/Makefile`, CI `src.yml` |
 | 1 personnalités | POSIX/Linux (CachyOS, Omarchy, WSL), NT (statuts ReactOS, wineserver, Proton), Wayland | `src/posix`, `src/nt`, `src/wine`, `src/wayland`, `src/wasm` |
 | 2 services | Rust sur l'ABI : VCS, depot_tools, RE, réseau, machine | `src/<crate>` |
-| 3 Chromium | navigateur et usine Chromium au-dessus des couches 0-2 | `src/chromium/*`, `apps/open/packages/chromium-bun` (aphrody-labs/open), forks épinglés `third_party/` |
+| 3 Chromium | navigateur et usine Chromium au-dessus des couches 0-2 | `src/chromium/*`, `apps/open/packages/browser-engines` (aphrody-labs/open), forks épinglés `third_party/` |
 | 4 NT | coque WinUI 3/.NET 11 au-dessus | `apps/nt` (build propre : `nt.yml`, CMake, .NET) |
 | 5 surfaces | `ay`, agents, produits | `src/ay`, `packages/ai-os`, `apps/*` |
 

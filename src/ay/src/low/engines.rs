@@ -1,4 +1,4 @@
-//! `ay engines`: the engines facade of `apps/open/packages/chromium-bun/src/engines` (one registry for
+//! `ay engines`: the engines facade of `apps/open/packages/browser-engines/src/engines` (aphrody-labs/open; one registry for
 //! browsers, automation tools, JS engines and WebGPU implementations), run in place by bun. `ay`
 //! adds two views on top of it and keeps no engine list of its own:
 //! - `ay engines js [--json]`: the rows of `matrix` whose role is `js-engine` or `gpu`
@@ -10,7 +10,7 @@
 
 use std::process::Command;
 
-const FACADE: &str = "apps/open/packages/chromium-bun/src/engines/cli.ts";
+const FACADE: &str = "apps/open/packages/browser-engines/src/engines/cli.ts";
 
 /// Ninja targets of the Chromium checkout for engines built on fr1 (`//v8:d8`, Dawn's end2end
 /// suite, which links Dawn and Tint).
@@ -27,12 +27,12 @@ fn facade_status(args: &[String]) -> i32 {
     let cli = root.join(FACADE);
     if !cli.is_file() {
         eprintln!(
-            "ay engines: {} not found (clone https://github.com/aphrody-labs/open.git into apps/open, or set SRC_ROOT to the monorepo root)",
+            "ay engines: {} not found (clone https://github.com/aphrody-labs/open.git into apps/open)",
             cli.display()
         );
         return 127;
     }
-    crate::status_of(Command::new(crate::exec::locate("bun")).arg(cli).args(args).current_dir(&root).env("SRC_ROOT", &root).env("CHROMIUM_BUN_TOPOLOGY", root.join("infra/deploy.toml")))
+    crate::status_of(Command::new(crate::exec::locate("bun")).arg(cli).args(args).current_dir(&root))
 }
 
 /// Rows of the facade's `matrix --json` whose role is a JS engine or a GPU backend.

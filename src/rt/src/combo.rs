@@ -2,7 +2,7 @@
 //! (`ay rt detect`) and `ay rt switch --runtime node@<v> --engine chrome@<channel> [--gpu dawn]`.
 //!
 //! Runtimes (Node, Deno, Bun, Python) are handled here; browsers, render engines and automation
-//! tools come from the engines facade `apps/open/packages/chromium-bun/src/engines` (one registry, run
+//! tools come from the engines facade `apps/open/packages/browser-engines/src/engines` (one registry, run
 //! through `bun`), and V8 / Dawn per Chrome channel from `aphrody_conformance::channels`
 //! (chromiumdash and the Chromium DEPS of each channel tag).
 
@@ -25,10 +25,10 @@ pub fn repo_root() -> Option<PathBuf> {
         .map(Path::to_path_buf)
 }
 
-/// Run the engines facade (`bun apps/open/packages/chromium-bun/src/engines/cli.ts <args>`) and return its stdout.
+/// Run the engines facade (`bun apps/open/packages/browser-engines/src/engines/cli.ts <args>`) and return its stdout.
 pub fn facade(args: &[&str]) -> Result<String, String> {
     let root = repo_root().ok_or("engines facade: set SRC_ROOT or run inside the src checkout")?;
-    let cli = root.join("apps/open/packages/chromium-bun/src/engines/cli.ts");
+    let cli = root.join("apps/open/packages/browser-engines/src/engines/cli.ts");
     if !cli.is_file() {
         return Err(format!(
             "engines facade missing: {} (clone https://github.com/aphrody-labs/open.git into apps/open)",
@@ -39,8 +39,6 @@ pub fn facade(args: &[&str]) -> Result<String, String> {
         .arg(&cli)
         .args(args)
         .current_dir(&root)
-        .env("SRC_ROOT", &root)
-        .env("CHROMIUM_BUN_TOPOLOGY", root.join("infra/deploy.toml"))
         .output()
         .map_err(|e| format!("bun: {e}"))?;
     let text = String::from_utf8_lossy(&out.stdout).into_owned();
@@ -48,7 +46,7 @@ pub fn facade(args: &[&str]) -> Result<String, String> {
         Ok(text)
     } else {
         Err(format!(
-            "chromium-bun engines {}: {}{}",
+            "browser-engines engines {}: {}{}",
             args.join(" "),
             text.trim(),
             String::from_utf8_lossy(&out.stderr).trim()
@@ -248,7 +246,7 @@ fn engine_rows(dir: &Path) -> Vec<Row> {
                 latest: format!("? ({e})"),
                 installed: "-".into(),
                 active: "-".into(),
-                source: "apps/open/packages/chromium-bun/src/engines".into(),
+                source: "apps/open/packages/browser-engines/src/engines".into(),
             }];
         }
     };

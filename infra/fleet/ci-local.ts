@@ -54,9 +54,9 @@ const J: Job[] = [
     cmd: "cd packages/ai-os && bun --no-env-file test test",
   },
   {
-    name: "bun-chromium-bun",
+    name: "bun-browser-engines",
     group: "suites",
-    cmd: "test -d apps/open/packages/chromium-bun || { echo 'chromium-bun: apps/open/packages/chromium-bun not found; clone https://github.com/aphrody-labs/open.git into apps/open' >&2; exit 127; }; R=$PWD; cd apps/open/packages/chromium-bun && export SRC_ROOT=$R CHROMIUM_BUN_TOPOLOGY=$R/infra/deploy.toml && bun check &&bun --no-env-file test test/ssrf.test.ts test/engines.test.ts test/layers.test.ts test/purge-matrix.test.ts test/winner-picker.test.ts test/chromium-inspector.test.ts",
+    cmd: "test -d apps/open/packages/browser-engines || { echo 'browser-engines: apps/open/packages/browser-engines not found; clone https://github.com/aphrody-labs/open.git into apps/open' >&2; exit 127; }; (cd apps/open/packages/browser-engines && bun check && bun --no-env-file test test) && (cd apps/open/packages/crawl && bun --no-env-file test test/crawl.test.ts) && bun --no-env-file test tools/trackers",
   },
   {
     name: "bun-design",

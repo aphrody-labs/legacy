@@ -810,9 +810,9 @@ unsupported = [
 ] # ay ai only uses it on prd
 
 # ---------------------------------------------------------------------------------------------
-# Headless browsers and automation: apps/open/packages/chromium-bun/src/engines facade (aphrody-labs/open; `just browsers`).
+# Headless browsers and automation: apps/open/packages/browser-engines/src/engines facade (aphrody-labs/open; `just browsers`).
 # Here the binaries published as releases; Chrome for Testing, Playwright browsers and Python
-# tools (uv tool) go through `chromium-bun engines install`. Nothing is compiled on the workstation.
+# tools (uv tool) go through `browser-engines engines install`. Nothing is compiled on the workstation.
 # ---------------------------------------------------------------------------------------------
 
 # Obscura (Rust): CDP on `obscura serve`. Fingerprints: digests of the GitHub assets v0.2.7, surveyed on 2026-11-14.

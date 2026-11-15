@@ -18,18 +18,18 @@ Source: `https://chromiumdash.appspot.com/fetch_releases?channel=Stable&platform
 | Item | Kind | Consumers | Chromium replacement | Verdict |
 |---|---|---|---|---|
 | wgpu (Cargo.lock wgpu, wgpu-core) | crate | 9 manifests: root, apps/shenron (3), aphrody-ui, gamescope-cli, corelib, gamescope-wgsl, gamescope-web-wasm | Dawn | migrate (live Bevy/shenron path) |
-| third_party/wgpu | fork checkout | MAINTAINERS, chromium-bun engines registry | Dawn | migrate |
+| third_party/wgpu | fork checkout | MAINTAINERS, browser-engines registry | Dawn | migrate |
 | vello | crate | 6 manifests (aphrody-ui, shenron koharu-*, shenron-gpu, root) | Skia (Graphite) | migrate |
 | third_party/vello | checkout | 0 outside DEPS/lock | Skia | purge candidate, not removed (submodule removal in the shared dirty index) |
 | resvg, tiny-skia | crate | resvg: root, asset-test, aphrody-ui; tiny-skia: transitive of resvg only | Skia | migrate |
 | mlua | crate | apps/rosegriffon aphrody-nie-lua | none (Lua is not in the Chromium stack) | keep |
 | boa_engine, rquickjs, deno_core, skia-safe | crate | 0 manifests | V8 / Skia | none present |
-| third_party/servo | checkout | chromium-bun engines registry only | Chromium | migrate (engine comparison only) |
+| third_party/servo | checkout | browser-engines registry only | Chromium | migrate (engine comparison only) |
 | third_party/rusty_v8 | checkout | 0 | V8 | purge candidate, not removed (see wgpu note) |
 | tree-sitter-gn, tree-sitter-ninja | checkout | parsers for GN/ninja files, not fetchers | depot_tools gn/ninja | keep |
 | vite 8.3.8 | package | root package.json | none | keep (outside scope) |
 
-Existing owner of the matrix: `apps/open/packages/chromium-bun/src/audit/purge-matrix.ts` (aphrody-labs/open) (PURGE_FOR_BUN / KEEP_CHROMIUM_NATIVE verdicts).
+The former matrix module of chromium-bun (PURGE_FOR_BUN / KEEP_CHROMIUM_NATIVE verdicts) was dropped from aphrody-labs/open with the source-tree audits; this table is the matrix.
 
 ## Not done
 

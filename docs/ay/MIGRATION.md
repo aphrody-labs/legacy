@@ -157,7 +157,7 @@ Crate `src/docs` (package `aphrody-docs`), commands `ay docs ...`:
 
 ## 7. Cross JS engines
 
-`ay engines` runs the existing facade `apps/open/packages/chromium-bun/src/engines/cli.ts` (package @aphrody/chromium-bun, moved to aphrody-labs/open) (one registry for
+`ay engines` runs the existing facade `apps/open/packages/browser-engines/src/engines/cli.ts` (package @aphrody/browser-engines, aphrody-labs/open) (one registry for
 browsers, automation, JS engines and WebGPU) and keeps no list of its own: `list`, `matrix`,
 `channels`, `path`, `install`, `launch` pass through. On top of it: `ay engines js [--json]` shows
 the rows whose registry role is `js-engine` or `gpu` (V8 of the Chromium checkout, JavaScriptCore
