@@ -16,7 +16,7 @@
 //! Every encoder is pinned (tools.toml, `ay doctor`) and run single-threaded with metadata stripped,
 //! so two builds from the same inputs give the same bytes; `manifest.json` proves it.
 
-use super::{Ctx, Error, Manifest, Result, fill, hex, inner, read, strip_comments};
+use super::{Ctx, Error, Manifest, Result, fill, hex, inner, input, strip_comments};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::{
@@ -43,7 +43,6 @@ pub struct Font {
     pub id: String,
     pub family: String,
     pub path: String,
-    pub blob: String,
     #[serde(default)]
     pub preload: bool,
 }
@@ -66,7 +65,7 @@ pub struct Wallpaper {
     pub sizes: Vec<String>,
 }
 
-/// A real capture of a product, committed under `captures/` by `bun assets/brand/capture.ts`.
+/// A real capture of a product: a still taken elsewhere in the repo (`file`) or committed under `captures/`.
 #[derive(Debug, Deserialize)]
 pub struct Capture {
     pub id: String,
@@ -131,6 +130,14 @@ where
     let mut c = Command::new(program);
     c.args(args);
     c
+}
+
+/// A binary input of `gen-cache/`; a missing file says which command fetches it.
+fn present(path: &Path) -> Result<()> {
+    if path.is_file() {
+        return Ok(());
+    }
+    Err(Error::Manifest(format!("{} missing: run `ay assets brand-inputs`", path.display())))
 }
 
 fn bytes(path: &Path) -> Result<Vec<u8>> {
@@ -238,7 +245,7 @@ pub(super) fn run(cx: &mut Ctx<'_>, m: &Manifest, brand_dir: &Path) -> Result<()
     super::pet::pet(cx, m, &st.tmp)?;
     gpu(cx, m, &st)?;
     let _ = fs::remove_dir_all(&st.tmp);
-    manifest(cx, m)
+    manifest(cx, m, brand_dir)
 }
 
 
@@ -259,7 +266,7 @@ fn uncolor(svg: &str) -> String {
 
 fn symbols(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
     let Some(s) = &m.symbols else { return Ok(()) };
-    let codepoints_text = read(&st.brand_dir.join(&s.codepoints_file))?;
+    let codepoints_text = input(&st.brand_dir.join(&s.codepoints_file))?;
     let codepoints: BTreeMap<&str, &str> = codepoints_text.lines().filter_map(|l| l.split_once(' ')).collect();
     let mut sprite = String::from("<svg xmlns=\"http://www.w3.org/2000/svg\">");
     let mut json = serde_json::Map::new();
@@ -270,7 +277,7 @@ fn symbols(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
         let mut entry = serde_json::Map::new();
         entry.insert("codepoint".into(), cp.into());
         for (suffix, key) in [("", "outline"), ("-fill", "fill")] {
-            let src = read(&st.brand_dir.join("symbols").join("24").join(format!("{name}{suffix}.svg")))?;
+            let src = input(&st.brand_dir.join("gen-cache").join("symbols").join("24").join(format!("{name}{suffix}.svg")))?;
             let opt = uncolor(&cx.svg.optimize(&src)?);
             let (vb, body) = (view_box(&opt), inner(&opt).to_string());
             let file = format!(
@@ -289,6 +296,7 @@ fn symbols(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
 
     // Variable font subset: the icon codepoints, the letters of their ligatures, no layout closure
     // (a ligature survives only when its glyph is kept, so nothing else of the 4000 icons does).
+    present(&st.brand_dir.join(&s.font_file))?;
     let ttf = st.tmp("symbols.ttf");
     let unicodes = format!("5F,30-39,61-7A,{}", cps.join(","));
     exec(cmd("hb-subset", [
@@ -325,7 +333,7 @@ fn symbols(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
         wght = range("wght"),
     );
     cx.put("symbols/symbols.css", css)?;
-    cx.put("symbols/NOTICE", read(&st.brand_dir.join("symbols").join("NOTICE"))?)
+    cx.put("symbols/NOTICE", input(&st.brand_dir.join("symbols").join("NOTICE"))?)
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -335,10 +343,13 @@ fn fonts(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
     if m.font.is_empty() {
         return Ok(());
     }
+    let commits = super::inputs(st.brand_dir)?;
+    let commit = commits.get("google/fonts").map_or("", String::as_str);
     let mut css = String::from("/* Web fonts of `ay brand build`: SIL OFL 1.1 (see <id>-OFL.txt), Latin subset, every variable axis kept. */\n");
     let mut list = Vec::new();
     for f in &m.font {
         let src = st.brand_dir.join("gen-cache").join("fonts").join(format!("{}.ttf", f.id));
+        present(&src)?;
         let ttf = st.tmp(&format!("{}.ttf", f.id));
         exec(cmd("hb-subset", [
             format!("--font-file={}", src.display()),
@@ -365,7 +376,7 @@ fn fonts(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
             "bytes": woff2.len(),
             "preload": f.preload,
             "axes": axes.iter().map(|a| serde_json::json!({ "tag": a.0, "min": a.1, "default": a.2, "max": a.3 })).collect::<Vec<_>>(),
-            "source": format!("google/fonts {}", f.path),
+            "source": format!("google/fonts@{commit} {}", f.path),
             "license": "OFL-1.1",
         }));
     }
@@ -382,7 +393,7 @@ fn animated(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
     if !path.is_file() {
         return Ok(());
     }
-    let t = strip_comments(&read(&path)?);
+    let t = strip_comments(&input(&path)?);
     let palette = super::Palette::new();
     for org in &m.org {
         let (container, glyph) = palette.org(&org.container);
@@ -452,12 +463,12 @@ fn images(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
     let Some(im) = &m.images else { return Ok(()) };
     let mut sources: Vec<(String, String)> = Vec::new();
     for id in m.org.iter().map(|o| &o.id).chain(m.product.iter().map(|p| &p.id)) {
-        sources.push((format!("og/{id}"), read(&cx.gen_dir.join("og").join(format!("{id}.svg")))?));
+        sources.push((format!("og/{id}"), input(&cx.gen_dir.join("og").join(format!("{id}.svg")))?));
     }
     for org in &m.org {
         for theme in ["light", "dark"] {
             let key = format!("logo/{}-wordmark-{theme}", org.id);
-            sources.push((key.clone(), read(&cx.gen_dir.join(format!("{key}.svg")))?));
+            sources.push((key.clone(), input(&cx.gen_dir.join(format!("{key}.svg")))?));
         }
     }
     for (key, svg) in sources {
@@ -475,7 +486,7 @@ fn wallpapers(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
     let Some(im) = &m.images else { return Ok(()) };
     let palette = super::Palette::new();
     for wp in &m.wallpaper {
-        let t = strip_comments(&read(&st.brand_dir.join(&wp.template))?);
+        let t = strip_comments(&input(&st.brand_dir.join(&wp.template))?);
         let drawing = cx.drawings.get(&wp.mark).cloned().ok_or_else(|| Error::Manifest(format!("wallpaper {}: no drawing {}", wp.id, wp.mark)))?;
         let s = &palette.dark;
         for size in &wp.sizes {
@@ -509,7 +520,7 @@ fn captures(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
     for c in &m.capture {
         let still = c.file.as_ref().map_or_else(|| dir.join(format!("{}.png", c.id)), |f| st.root.join(f));
         if !still.is_file() {
-            cx.report.warnings.push(format!("capture {}: {} missing (bun assets/brand/capture.ts)", c.id, still.display()));
+            cx.report.warnings.push(format!("capture {}: {} missing", c.id, still.display()));
             continue;
         }
         for &w in &c.widths {
@@ -629,7 +640,7 @@ fn gpu(cx: &mut Ctx<'_>, m: &Manifest, st: &Stage<'_>) -> Result<()> {
 // ---------------------------------------------------------------------------------------------
 // Manifest
 
-fn manifest(cx: &mut Ctx<'_>, m: &Manifest) -> Result<()> {
+fn manifest(cx: &mut Ctx<'_>, m: &Manifest, brand_dir: &Path) -> Result<()> {
     let srcset = srcsets(cx);
     cx.put("img/srcset.json", serde_json::to_string_pretty(&srcset).unwrap_or_default() + "\n")?;
     let tools: BTreeMap<&str, String> = [
@@ -654,6 +665,7 @@ fn manifest(cx: &mut Ctx<'_>, m: &Manifest) -> Result<()> {
         "version": m.brand.version,
         "base": format!("https://cdn.aphrody.com/brand/v{}/", m.brand.version),
         "cache": "public, max-age=31536000, immutable",
+        "inputs": super::inputs(brand_dir)?,
         "tools": tools,
         "files": files,
     });

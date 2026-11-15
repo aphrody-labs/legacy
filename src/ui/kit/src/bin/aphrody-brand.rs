@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
-//! `aphrody-brand` (run as `ay brand`): build | banner <id> [--plain] | check-ico <file>.
+//! `aphrody-brand` (run as `ay brand`): build | check | banner <id> [--plain] | check-ico <file>.
 
-use aphrody_ui::brand::{BuildOptions, build, ico_sides};
+use aphrody_ui::brand::{BuildOptions, build, check::check, ico_sides};
 use std::{path::PathBuf, process::ExitCode};
 
-const USAGE: &str = "usage: ay brand build [--root <dir>] [--deploy]\n       ay brand banner <id> [--plain]\n       ay brand check-ico <file>";
+const USAGE: &str = "usage: ay brand build [--root <dir>] [--deploy]\n       ay brand check [--root <dir>]\n       ay brand banner <id> [--plain]\n       ay brand check-ico <file>";
 
 fn repo_root() -> PathBuf {
     if let Some(r) = std::env::var_os("SRC_ROOT").filter(|v| !v.is_empty()) {
@@ -51,6 +51,29 @@ fn main() -> ExitCode {
                 }
                 Err(e) => {
                     eprintln!("ay brand: {e}");
+                    ExitCode::FAILURE
+                }
+            }
+        }
+        Some("check") => {
+            let mut root = repo_root();
+            let mut it = args[1..].iter();
+            while let Some(a) = it.next() {
+                match a.as_str() {
+                    "--root" => root = it.next().map(PathBuf::from).unwrap_or_default(),
+                    other => {
+                        eprintln!("ay brand check: unknown argument {other}\n{USAGE}");
+                        return ExitCode::from(2);
+                    }
+                }
+            }
+            match check(&root) {
+                Ok(c) => {
+                    println!("ay brand check: ok, {} files, manifest sha256 {}", c.files, c.manifest_sha256);
+                    ExitCode::SUCCESS
+                }
+                Err(e) => {
+                    eprintln!("ay brand check: {e}");
                     ExitCode::FAILURE
                 }
             }

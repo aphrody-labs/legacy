@@ -16,7 +16,7 @@
 //! | `profile/` | statistics cards from `docs/profile/stats.json` |
 //! | `preview/` | PNG previews for review; gitignored, never in the manifest or on the CDN |
 //!
-//! `ay brand check` verifies a build (manifest sha256, URLs, sprite, glTF); `ay brand publish` uploads it.
+//! `ay brand check` verifies a build (manifest sha256, URLs, sprite, glTF).
 //!
 //! Colors come from the shared design tokens, `packages/design/tokens/tokens.rs` (the M3
 //! schemes and per-hue tonal palettes generated from brand.toml by Material Color Utilities),
@@ -29,7 +29,6 @@ include!(concat!(env!("SRC_ROOT"), "/packages/design/tokens/tokens.rs"));
 pub mod check;
 mod model;
 mod pet;
-pub mod publish;
 mod web;
 
 /// `0xRRGGBBAA` of tokens.rs to the `0xAARRGGBB` used here.
