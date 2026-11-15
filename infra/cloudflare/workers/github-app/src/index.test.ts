@@ -8,7 +8,7 @@ const repo = {
 };
 
 describe("classify", () => {
-  test("CI rouge sur main", () => {
+  test("red CI on main", () => {
     const e = classify("workflow_run", "d1", {
       action: "completed",
       repository: repo,
@@ -23,7 +23,7 @@ describe("classify", () => {
       },
     });
     expect(e?.kind).toBe("ci_red");
-    // PR de fork dont la branche s appelle main : ignorée.
+    // Fork PR whose branch is named main: ignored.
     expect(
       classify("workflow_run", "d4", {
         action: "completed",
@@ -36,7 +36,7 @@ describe("classify", () => {
         },
       }),
     ).toBeNull();
-    // Installation tierce de l App publique : ignorée.
+    // Third-party installation of the public App: ignored.
     expect(
       classify("release", "d5", {
         action: "published",
@@ -59,7 +59,7 @@ describe("classify", () => {
       }),
     ).toBeNull();
   });
-  test("push sur la branche par défaut seulement", () => {
+  test("push on the default branch only", () => {
     expect(
       classify("push", "d", {
         ref: "refs/heads/main",
@@ -84,7 +84,7 @@ describe("classify", () => {
       }),
     ).toBeNull();
   });
-  test("release, sécurité, bruit", () => {
+  test("release, security, noise", () => {
     expect(
       classify("release", "d", {
         action: "published",
@@ -117,10 +117,10 @@ describe("fetch", () => {
     );
     return `sha256=${Buffer.from(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(b))).toString("hex")}`;
   };
-  // timingSafeEqual n'existe que dans workerd : équivalent pour le test.
+  // timingSafeEqual only exists in workerd: equivalent for the test.
   (crypto.subtle as any).timingSafeEqual ??= (a: Uint8Array, b: Uint8Array) =>
     a.length === b.length && a.every((x, i) => x === b[i]);
-  test("signature exigée, événement mis en file", async () => {
+  test("signature required, event queued", async () => {
     const sent: unknown[] = [];
     const env = {
       GITHUB_WEBHOOK_SECRET: secret,

@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-// Démarrage du proxy LiteLLM sur un hôte Linux (prd) sans fichier de secrets en clair :
-//   1. identifiants systemd-creds ($CREDENTIALS_DIRECTORY, LoadCredentialEncrypted=) -> environnement du proxy ;
+// Starts the LiteLLM proxy on a Linux host (prd) without a plaintext secrets file:
+//   1. systemd-creds credentials ($CREDENTIALS_DIRECTORY, LoadCredentialEncrypted=) -> proxy environment;
 //   2. `ay ai config --manifest <ai.toml>` écrit les routes (références os.environ/X, aucune valeur) ;
 //   3. infra/ai/litellm-overlay.toml : routes retirées pour l'hôte, extra_headers, plafonds de dépense ;
-//   4. exec litellm sur la config retouchée ($RUNTIME_DIRECTORY, 0600).
+//   4. exec litellm on the patched config ($RUNTIME_DIRECTORY, 0600).
 // Usage (unité) : bun litellm-serve.ts [--manifest ai.toml] [--overlay litellm-overlay.toml] [--dry-run]
 import {
   chmodSync,
@@ -45,7 +45,7 @@ if (credDir && existsSync(credDir))
   for (const name of readdirSync(credDir))
     env[name] = readFileSync(join(credDir, name), "utf8").trim();
 
-// Comptes de service en JSON : exposés sous AY_VERTEX_<PROJET>, le nom que `ay ai config` référence.
+// Service accounts as JSON: exposed as AY_VERTEX_<PROJECT>, the name `ay ai config` references.
 for (const v of Object.values(env)) {
   if (!v.startsWith("{") || !v.includes("private_key")) continue;
   try {
@@ -80,7 +80,7 @@ const resolve = (v: unknown) =>
   typeof v === "string" && v.startsWith("env:")
     ? `os.environ/${v.slice(4)}`
     : v;
-// LiteLLM ne résout os.environ/ qu'au premier niveau de litellm_params : les en-têtes reçoivent la valeur.
+// LiteLLM resolves os.environ/ only at the first level of litellm_params: headers receive the value.
 const value = (v: unknown) =>
   typeof v === "string" && v.startsWith("env:") ? env[v.slice(4)] : v;
 

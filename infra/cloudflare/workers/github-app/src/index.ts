@@ -1,9 +1,9 @@
-// Webhooks de l'App GitHub « aphrody » (docs/infra/GITHUB-APP.md).
-// POST /github : signature X-Hub-Signature-256 (HMAC SHA-256 du corps brut, secret GITHUB_WEBHOOK_SECRET) vérifiée en
-// temps constant, puis les événements utiles à l'automatisation (CI rouge, push sur la branche par défaut, release
-// publiée, alertes de sécurité, installations) partent, résumés, dans la file Cloudflare `github-events`. Le
-// consommateur HTTP pull (infra/agents/github-events.ts, prd) les convertit en tâches `ai-os orch`. Le reste est
-// accusé (202) sans effet. Aucune donnée de la requête n'est journalisée.
+// Webhooks of the "aphrody" GitHub App (docs/infra/GITHUB-APP.md).
+// POST /github: X-Hub-Signature-256 signature (HMAC SHA-256 of the raw body, secret GITHUB_WEBHOOK_SECRET) verified in
+// constant time, then the events useful to automation (red CI, push to the default branch, published release,
+// security alerts, installations) go, summarized, into the Cloudflare queue `github-events`. The
+// HTTP pull consumer (infra/agents/github-events.ts, prd) converts them into `ai-os orch` tasks. The rest is
+// acknowledged (202) with no effect. No request data is logged.
 
 export type GithubEvent = {
   v: 1;
@@ -14,7 +14,7 @@ export type GithubEvent = {
   repo?: string;
   ref?: string;
   sha?: string;
-  /** push : commit de base (payload.before), pour la plage de revue. */
+  /** push: base commit (payload.before), for the review range. */
   before?: string;
   url?: string;
   title?: string;
@@ -51,9 +51,9 @@ async function verify(
   return crypto.subtle.timingSafeEqual(mac, got);
 }
 
-/** Comptes où l'App est installée par nous : une installation tierce (App publique) ne crée aucune tâche. */
+/** Accounts where we installed the App: a third-party installation (public App) creates no task. */
 export const OWNERS = new Set(["aphrody-labs", "yolo-rs", "aphrody-dev"]);
-// Événements de workflow_run qui reflètent la branche par défaut elle-même (jamais une PR, même de fork).
+// workflow_run events that reflect the default branch itself (never a PR, even from a fork).
 const MAIN_EVENTS = new Set([
   "push",
   "schedule",

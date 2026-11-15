@@ -1,12 +1,12 @@
 #!/bin/sh
-# Nœud de calcul du tissu d'inférence (Linux) : ggml-rpc-server officiel de llama.cpp, lié à une adresse
-# WireGuard, dans une unité systemd transitoire plafonnée, retirée seule quand sa condition d'admission tombe.
-# Installé et piloté par packages/ai-os/src/fabric (`ai-os fabric up|status|down`), jamais à la main :
+# Inference fabric compute node (Linux): official llama.cpp ggml-rpc-server, bound to a
+# WireGuard address, in a capped transient systemd unit, removed on its own when its admission condition drops.
+# Installed and driven by packages/ai-os/src/fabric (`ai-os fabric up|status|down`), never by hand:
 #   env TAG= ASSET= SHA= BIND= PORT= THREADS= CPU= MEM= GATE= LOCK= PRIO= WATCH= COORD= sh node.sh <action>
-# Actions : gate (code 0 = admis, sinon raison sur stdout), up, down, status (une ligne JSON), watch (unité),
-#   warm (MODEL_URL MODEL_SHA MODEL_FILE) : GGUF tiré au débit du centre de données, vérifié, puis chargé une fois
-#   par la boucle locale pour remplir le cache de tenseurs de rpc-server ; le coordinateur n'envoie ensuite que des
-#   empreintes pour les tenseurs de plus de 10 Mio (HASH_THRESHOLD de ggml-rpc.cpp).
+# Actions: gate (code 0 = admitted, otherwise reason on stdout), up, down, status (one JSON line), watch (unit),
+#   warm (MODEL_URL MODEL_SHA MODEL_FILE): GGUF pulled at data-center speed, verified, then loaded once
+#   over loopback to fill rpc-server's tensor cache; the coordinator then only sends
+#   fingerprints for tensors over 10 MiB (HASH_THRESHOLD of ggml-rpc.cpp).
 # GATE : no-build (fr1), prd (charge, verrou lourd, service prioritaire, mémoire), proxy (fr2), always.
 set -eu
 UNIT=aphrody-rpc
@@ -18,7 +18,7 @@ nproc_=$(nproc)
 half=$((nproc_ / 2))
 
 load1() { cut -d' ' -f1 /proc/loadavg; }
-# Charge extérieure : en cours d'exécution, on retire au plus nos propres fils (plafonnés par CPUQuota).
+# External load: while running, we only remove our own children (capped by CPUQuota).
 load_ok() {
   own=${1:-0}
   awk -v l="$(load1)" -v o="$own" -v h="$half" 'BEGIN { exit !((l - o) < h) }'
@@ -28,7 +28,7 @@ mem_need_mb() { echo "${MEM:-2G}" | awk '{ v = $1 + 0; u = substr($1, length($1)
 BUILD_RE='ninja|autoninja|siso|reproxy|clang|clang\+\+|cc1plus|rustc|ld\.lld|lld-link'
 building() { pgrep -x "$BUILD_RE" >/dev/null 2>&1; }
 
-# Raison du refus sur stdout, code 1 ; rien et code 0 si admis. $1 = fils propres à ignorer (watch).
+# Refusal reason on stdout, code 1; nothing and code 0 if admitted. $1 = own children to ignore (watch).
 gate() {
   own=${1:-0}
   case "${GATE:-always}" in
@@ -46,7 +46,7 @@ gate() {
         [ "$code" = 200 ] || { echo "service prioritaire $PRIO : HTTP $code"; return 1; }
       fi
       [ "$(mem_avail_mb)" -ge "$(mem_need_mb)" ] || { echo "mémoire disponible $(mem_avail_mb) Mio < $(mem_need_mb) Mio"; return 1; }
-      # Nœud opportuniste : il ne tient jamais le verrou lourd et se retire dès qu'un travail lourd le prend.
+      # Opportunistic node: it never holds the heavy lock and withdraws as soon as heavy work takes it.
       if [ -n "${LOCK:-}" ]; then
         ( exec 9>"$LOCK"; flock -n 9 ) || { echo "verrou lourd $LOCK pris"; return 1; }
       fi ;;
@@ -82,7 +82,7 @@ EOF
 }
 nft_off() { command -v nft >/dev/null 2>&1 && nft delete table inet aphrody_rpc 2>/dev/null || true; }
 
-# Corps de l'unité : rpc-server en arrière-plan, chien de garde au premier plan.
+# Unit body: rpc-server in the background, watchdog in the foreground.
 watch() {
   bin=$(rpc_bin)
   mkdir -p "$CACHE"
@@ -115,7 +115,7 @@ up() {
     --setenv=TAG="$TAG" --setenv=BIND="$BIND" --setenv=PORT="$PORT" --setenv=THREADS="${THREADS:-2}" \
     --setenv=GATE="${GATE:-always}" --setenv=PRIO="${PRIO:-}" --setenv=WATCH="${WATCH:-10}" \
     --setenv=MEM="${MEM:-2G}" --setenv=COORD="${COORD:-}"
-  # prd : aucun verrou tenu ; watch teste le verrou lourd à chaque tick (gate) et cède la place.
+  # prd: no lock held; watch tests the heavy lock on each tick (gate) and yields.
   "$@" sh "$ROOT/fabric/node.sh" watch
   sleep 2
   systemctl is-active --quiet "$UNIT" || { echo "échec : $(cat "$STATE" 2>/dev/null)"; journalctl -u "$UNIT" -n 20 --no-pager; exit 1; }

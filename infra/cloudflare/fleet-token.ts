@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-// Jeton Cloudflare de la flotte (fleet-health, automatisation VPS) : un jeton de compte par hôte, à privilèges
-// minimaux (Zone Read + DNS Write sur les seules zones déclarées), 1 an, rotation idempotente (l'ancien jeton du même
-// nom est supprimé après la pose du nouveau). La valeur ne passe que par stdin de ssh, jamais par argv ni stdout.
+// Fleet Cloudflare token (fleet-health, VPS automation): one account token per host, with minimal
+// privileges (Zone Read + DNS Write on the declared zones only), 1 year, idempotent rotation (the old token of the same
+// name is deleted after the new one is set). The value only goes through ssh stdin, never argv or stdout.
 //   bun packages/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN -- bun infra/cloudflare/fleet-token.ts [fr2 prd]
-// Pose dans /etc/aphrody/secrets.env (600) : CLOUDFLARE_API_TOKEN et CF_API_TOKEN (fleet-health.sh).
+// Set in /etc/aphrody/secrets.env (600): CLOUDFLARE_API_TOKEN and CF_API_TOKEN (fleet-health.sh).
 import { cfg } from "./lib";
 
 const ZONES = ["aphrody.com", "aphrody.app"];
@@ -12,7 +12,7 @@ const hosts = Bun.argv.slice(2).length ? Bun.argv.slice(2) : ["fr2", "prd"];
 const admin = Bun.env.CLOUDFLARE_API_TOKEN ?? "";
 if (!admin)
   throw new Error(
-    "CLOUDFLARE_API_TOKEN absent (lancer via env-kit secret exec)",
+    "CLOUDFLARE_API_TOKEN missing (run through env-kit secret exec)",
   );
 
 async function cf<T = any>(
@@ -49,7 +49,7 @@ const perms = WANT.map(
   (w) =>
     groups.find((g) => g.name === w) ??
     (() => {
-      throw new Error(`groupe inconnu : ${w}`);
+      throw new Error(`unknown group: ${w}`);
     })(),
 );
 const zones = await Promise.all(
@@ -58,7 +58,7 @@ const zones = await Promise.all(
       (await cf<{ id: string }[]>("GET", `/zones?name=${n}`))[0]?.id ?? "",
   ),
 );
-if (zones.some((z) => !z)) throw new Error("zone introuvable");
+if (zones.some((z) => !z)) throw new Error("zone not found");
 const resources = Object.fromEntries(
   zones.map((z) => [`com.cloudflare.api.account.zone.${z}`, "*"]),
 );
@@ -100,13 +100,13 @@ for (const h of hosts) {
   if (r.exitCode !== 0 || !out.endsWith("200")) {
     await cf("DELETE", `/accounts/${A}/tokens/${t.id}`);
     console.log(
-      `${h}: échec (${out || r.stderr.toString().trim().slice(0, 120)}), nouveau jeton supprimé`,
+      `${h}: failed (${out || r.stderr.toString().trim().slice(0, 120)}), new token deleted`,
     );
     continue;
   }
   for (const o of existing.filter((x) => x.name === name))
     await cf("DELETE", `/accounts/${A}/tokens/${o.id}`);
   console.log(
-    `${h}: ${name} ${t.id} posé (${WANT.join(", ")} sur ${ZONES.join(", ")}, expire ${expires}), ${out}`,
+    `${h}: ${name} ${t.id} set (${WANT.join(", ")} on ${ZONES.join(", ")}, expires ${expires}), ${out}`,
   );
 }

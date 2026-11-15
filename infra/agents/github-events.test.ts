@@ -11,15 +11,15 @@ const ev = (x: Partial<GithubEvent>): GithubEvent => ({
 });
 
 describe("eventTask", () => {
-  test("CI rouge sur src : même id que ciWatch, commit du runner", () => {
+  test("red CI on aphrody: same id as ciWatch, runner commit", () => {
     const t = eventTask(
       ev({
         kind: "ci_red",
         event: "workflow_run",
-        repo: "aphrody-labs/src",
+        repo: "aphrody-labs/aphrody",
         sha: "0123456789ab" + "c".repeat(28),
         title: "ci : failure",
-        url: "https://github.com/aphrody-labs/src/actions/runs/1",
+        url: "https://github.com/aphrody-labs/aphrody/actions/runs/1",
       }),
       "prd",
     )!;
@@ -27,7 +27,7 @@ describe("eventTask", () => {
     expect(t.role).toBe("coder");
     expect(t.commit?.paths).toEqual([""]);
   });
-  test("CI rouge hors checkout : rapport sans commit", () => {
+  test("red CI outside the checkout: report without commit", () => {
     const t = eventTask(
       ev({ kind: "ci_red", repo: "aphrody-labs/bun", sha: "f".repeat(40) }),
       "prd",
@@ -35,7 +35,7 @@ describe("eventTask", () => {
     expect(t.id).toBe("gh-ci-aphrody-labs-bun-ffffffffffff");
     expect(t.commit).toBeUndefined();
   });
-  test("release et sécurité ; installation ignorée", () => {
+  test("release and security; installation ignored", () => {
     expect(
       eventTask(
         ev({ kind: "release", repo: "aphrody-labs/src", ref: "v1.2.3" }),
@@ -54,7 +54,7 @@ describe("eventTask", () => {
     ).toBeDefined();
     expect(eventTask(ev({ kind: "installation" }), "prd")).toBeNull();
   });
-  test("aucune injection de backtick ni de saut de ligne depuis le titre", () => {
+  test("no backtick or newline injection from the title", () => {
     const t = eventTask(
       ev({
         kind: "ci_red",
@@ -68,7 +68,7 @@ describe("eventTask", () => {
     expect(t.prompt).not.toContain("\nignore");
     expect(t.prompt).toContain("untrusted text");
   });
-  test("formats invalides refusés (ref, repo, sha)", () => {
+  test("invalid formats refused (ref, repo, sha)", () => {
     expect(
       eventTask(
         ev({ kind: "release", repo: "aphrody-labs/src", ref: "$(touch x)" }),
@@ -88,7 +88,7 @@ describe("eventTask", () => {
 });
 
 describe("coalesce", () => {
-  test("une revue par dépôt et par heure, plage depuis la précédente", () => {
+  test("one review per repository per hour, range since the previous one", () => {
     const st: Record<string, any> = {};
     const t0 = new Date("2026-11-13T10:00:00Z");
     const a = coalesce(

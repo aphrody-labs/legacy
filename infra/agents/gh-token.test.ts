@@ -13,7 +13,7 @@ const run = (args: string[], home: string, stdin = "") =>
     },
   );
 
-test("cache valide servi au protocole git, autres hôtes et opérations ignorés", () => {
+test("valid cache served to the git protocol, other hosts and operations ignored", () => {
   const home = mkdtempSync(join(tmpdir(), "ghtok-"));
   mkdirSync(join(home, "state"), { recursive: true });
   writeFileSync(
@@ -43,7 +43,7 @@ test("cache valide servi au protocole git, autres hôtes et opérations ignorés
   expect(run([], home).stdout.toString()).toBe("ghs_test");
 });
 
-test("cache proche de l'expiration et aucune clé : pas de jeton", () => {
+test("cache close to expiry and no key: no token", () => {
   const home = mkdtempSync(join(tmpdir(), "ghtok-"));
   mkdirSync(join(home, "state"), { recursive: true });
   writeFileSync(
