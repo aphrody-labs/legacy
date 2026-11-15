@@ -1,8 +1,6 @@
 # aphrody-lore-telemetry
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Telemetry and observability utilities for Lore
 
 | Type | Path |

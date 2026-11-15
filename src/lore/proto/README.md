@@ -1,8 +1,6 @@
 # Lore Protos
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Lore version control: lore-proto (absorbed from Epic Games Lore, MIT)
 
 | Type | Path |

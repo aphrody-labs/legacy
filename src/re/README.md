@@ -1,8 +1,6 @@
 # aphrody-re
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Unified Aphrody reverse engineering core: PE/ELF/Mach-O triage, byte-exact PE64 forge/COFF, .pdata/minidump/ASAR/Electron/Go/Android/SteamStub inspection, Ghidra P-Code/Pseudo-C & ghidra-decompiler, MinGW-REA, Lua 5.2, CRIWARE CPK/CRILAYLA, DBXV2 formats, AOB/live memory, YARA-X, Magika
 
 | Type | Path |

@@ -12,8 +12,6 @@ everything here; only crates below it name `bun_pod`.
 # Implementing the traits
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > No description in the manifest.
 
 | Type | Path |

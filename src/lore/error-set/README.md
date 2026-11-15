@@ -1,8 +1,6 @@
 # aphrody-lore-error-set
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Composable, traceable error handling for Rust
 
 | Type | Path |

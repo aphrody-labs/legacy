@@ -1,8 +1,6 @@
 # aphrody-machine
 
 <!-- catalog:begin unit -->
-<img src="../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Low-level machine profile for `ay sys`: SMBIOS, CPUID, PCI, GPUs, storage, virtualization, toolchains
 
 | Type | Path |

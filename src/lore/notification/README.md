@@ -1,8 +1,6 @@
 # aphrody-lore-notification
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Lore version control: lore-notification (absorbed from Epic Games Lore, MIT)
 
 | Type | Path |

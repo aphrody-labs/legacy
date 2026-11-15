@@ -3,8 +3,6 @@ The client is still an early draft so the readme is basic and to the point becau
 # Example Commands
 
 <!-- catalog:begin unit -->
-<img src="../../../docs/icons/crate.svg" alt="Rust crate" width="40" height="40" align="right">
-
 > Lore version control: lore-chaos-client (absorbed from Epic Games Lore, MIT)
 
 | Type | Path |
