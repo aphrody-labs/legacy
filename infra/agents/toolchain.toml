@@ -224,11 +224,11 @@ name = "agent-browser"
 hosts = ["pc"]
 state = "absent"
 
-# Context7 MCP (tools resolve-library-id, query-docs). Anonymous use has a monthly quota; CONTEXT7_API_KEY lifts it when set.
+# Context7 MCP (tools resolve-library-id, query-docs). Anonymous use has a monthly quota; the CTX7_API_KEY vault entry lifts it.
 [[hub.mcp]]
 name = "context7"
 url = "https://mcp.context7.com/mcp"
-headers = { CONTEXT7_API_KEY = "CONTEXT7_API_KEY" }
+headers = { CONTEXT7_API_KEY = "CTX7_API_KEY" }
 
 # GNU upstream tracker (packages/gnu feed: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix, Rust equivalents, Linux kernel).
 # hub_call gnu__gnu_status | gnu__gnu_search | gnu__gnu_package | gnu__gnu_feed | gnu__gnu_kernel; feed from GNU_FEED, GNU_HOME or https://gnu.aphrody.com/feed.json.
