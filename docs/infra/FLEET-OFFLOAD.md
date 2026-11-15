@@ -101,3 +101,38 @@ State: `/` (ext4 SSD, 290 GB) at 100 %, which broke the Shenron image build (`ap
 | Work off fr1                                                            | Section 4 `fleet-run`: fr2 idle (cpu10 0.19) while fr1 io10 is 87                                                                                                                                                                                                                      | `fleet-run` by default for test, lint, bench and research in agent hooks, so only `build` stays on fr1                                                                                                                                                 | The CPU of agents and tests moves to fr2                                                                                                                                                |
 
 Order: disk first (BuildKit policy, `buildx prune -a`, measure the remaining 200 GB), then `SCCACHE_BASEDIRS` with build-dir pinning, then bees and `fleet-run` by default. Verify each step with the `fleet-offload-bench.sh` row (PSI avg300, load, incremental build) and `df`/`docker system df` before and after.
+
+## 8. Aggressive cleanup (2026-11-15, owner order, no archive)
+
+`df -h /` before and after (source: `df` over ssh, 06:10-07:00 UTC):
+
+| Host | Before | After |
+| --- | --- | --- |
+| fr1 (`vps`) `/` sda1 290G | 289G used, 0 avail (100 %) | 205G used, 83G avail (72 %) |
+| fr2 (`cdn`) `/` sda1 96G | 91G used, 5.6G avail (95 %) | 66G used, 31G avail (69 %) |
+| prd `/` sda3 400G | 222G used, 177G avail (56 %) | unchanged (only logs and `/home/agent` caches, below) |
+
+Finding: on fr1 `/home` is a separate btrfs disk (sdb1, 805G, 644G used, 144G free) and bind-mounts `/srv/build`, `/srv/artifacts`, `/opt/android-sdk`, `/var/lib/yolo-cache` (from `/home/.relocated_*`) and the NativeLink CAS (`/home/nativelink-worker` -> `/var/lib/private/nativelink`). Purging `/home` there does not free `/`, and the `.relocated_*` and `nativelink-worker` trees are live data, so they were kept. Moving `/home/ubuntu` binaries to `/srv` on fr1 would add load to the full disk, so no unit was repointed.
+
+fr1 removed (sizes from `du`/`df` delta):
+- `/srv/scratch/*` older than 2 h except `i18n*` (active check): gnufix 8.1G, WebKit 2.4G, orphans-target 1.6G, ch-orphans 1.5G, bunrb 1.2G, orphans-mini-target 0.8G, srcgate 0.5G, gnufix2 0.5G, orphans 0.4G, ayfix 0.3G, logs and scripts.
+- `/srv/src/target/debug/incremental` entries older than 3 h: 42.7G -> 9.9G.
+- Docker (no build running): `builder prune -af` 6.3G, `image prune -af` 7.8G reclaimed.
+- Dead `/srv` trees with no unit or cron reference: open-target 7.7G, cargo-home-open 5.5G, headfix 3.0G, graph-out 3.0G, ghidra-rust 2.4G, tgt-upabs-tauri 1.5G, graph-in 1.4G, webos-c2w 1.2G, tgt-upabs-zed 0.8G.
+- journald vacuum to 200M: 181.5M; `apt clean`; `/tmp` older than 1 day.
+- `/home` (sdb1): `~/.cache`, `~/.bun/install/cache` 2.8G, `~/.npm/_cacache`, `~/.cargo/registry` and `git/checkouts`, `~/.local/share/{pnpm,uv}`, `~/src/yolo-{current,jobs,snapshots,work}`.
+
+fr2 removed:
+- Docker: `builder prune -af` 3.4G, `image prune -af` 3.4G.
+- `/srv/research/target-pipeline` 3.5G; cargo `target/`: `/home/ubuntu/work/tailwindcss` 1.1G, `/srv/p2b-test/py2bun` 0.4G, `/srv/src` 0.26G, `/srv/py2bun-build` 0.2G, `/srv/offload-bench` 0.08G.
+- `/home/ubuntu`: aot 7.0G, src (rosegriffon, shenron) 4.8G, `.cargo/git` 2.3G, `.cargo/registry` 2.0G, work/{base-ui,bu2,tailwindcss} 3.9G, archive 0.9G, `.cache` 0.8G, r2b 0.75G, em-proof 0.64G, audit-* 0.07G, `.npm` 38M, `.bun/install/cache` 28M.
+- Playwright chromium-1248 and headless shell 1248 (1255 kept); uv, pnpm, node-gyp caches; `/tmp` older than 1 day.
+
+prd: journald vacuum 454.5M; `/home/agent/.cache`, `/home/aphrody/.cache`, `/home/agent/.npm/_cacache`. No service touched.
+
+Left:
+- fr1 `/srv/chromium` 57.6G (`chromium-factory.service`), `/srv/src/target` ~26G (live CI cargo builds in actions-runner-*), `/srv/scratch/{autocr,brandfix,rc,i18n*,...}` under 2 h old.
+- fr1 `/home/legacy` (bare repos, not verified against GitHub), `/home/backups/fr2-20261114/fr2.tar.zst` (a backup, not regenerable), `/home/omar`, `/home/ubuntu/actions-runner*` and `.local/bin/{bun,ay}` used by units.
+- fr2 `/var/cache/nginx` 3.1G (edge service cache), `/srv/{ch-pipe,aot,xc,ghidra-release,native-ui,bench}` and `/home/ubuntu/work/ui` (modified today or a live process cwd), `.rustup` 3.8G, `.local/share` 5.9G.
+- Unit repointing to `/srv/tools` not done: fr2 units (`aphrody-gnu`, `aphrody-relay`, `ay-index*`, `rg-fleet-worker`, `skills-archive`) still run `/home/ubuntu/.local/bin/{bun,ay}`.
+- `wii-os-shenron.service` on fr2 was inactive with no activation timestamp before this work (not caused by it).
