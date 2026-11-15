@@ -56,7 +56,8 @@ discover_get() {
         hostname) discover_cached "$1" _dc_on "$_role" 'hostname -f 2>/dev/null || hostname';;
         public_ip) discover_cached "$1" _dc_pub "$_role" || discover_cached "$1" _dc_sshg "$_role-mesh" hostname || discover_addr "$_role";;
         public_ipv6) discover_cached "$1" _dc_pub6 "$_role";;
-        mesh_ip) { [ "$_role" = "$(discover_self)" ] || getent hosts "$_role.mesh" 2>/dev/null | awk '{print $1; exit}' | grep .; } || discover_cached "$1" _dc_mesh "$_role" 1;;
+        mesh_ip) if [ "$_role" = "$(discover_self)" ]; then _dc_mesh "$_role" 1
+                 else getent hosts "$_role.mesh" 2>/dev/null | awk '{print $1; exit}' | grep . || discover_cached "$1" _dc_mesh "$_role" 1; fi;;
         link_ip|extra_mesh_ip) discover_cached "$1" _dc_mesh "$_role" 2;;
         *) return 1;;
       esac;;
