@@ -19,6 +19,8 @@ type Conf = {
   env?: Record<string, string>;
   url?: string;
   headers?: Record<string, string>;
+  /** En-tête -> nom de variable d'environnement (hub.json, [[hub.mcp]] headers) ; absent = non envoyé. */
+  headerEnv?: Record<string, string>;
   /** En-têtes calculés à chaque appel (jeton OAuth à courte durée). */
   dynamicHeaders?: () => Promise<Record<string, string>>;
 };
@@ -163,7 +165,14 @@ class HttpServer {
     this.c = new McpHttpClient({
       url: conf.url!,
       headers: conf.headers,
-      dynamicHeaders: conf.dynamicHeaders,
+      dynamicHeaders:
+        conf.dynamicHeaders ??
+        (conf.headerEnv
+          ? async () =>
+              Object.fromEntries(
+                Object.entries(conf.headerEnv!).flatMap(([h, v]) => (Bun.env[v] ? [[h, Bun.env[v]!]] : [])),
+              )
+          : undefined),
       fetch: (u, i) => outboundFetch(u, i),
     });
   }

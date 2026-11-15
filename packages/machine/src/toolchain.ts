@@ -713,7 +713,8 @@ export async function toolchain({
         if (r.code !== 0) out.push(`ERR  ${s.name} install : ${last(r)}`);
       }
       servers[s.name] = s.url
-        ? { type: "http", url: s.url }
+        ? // headers = { <header> = "<ENV_VAR>" }: names only, the relay reads values from its env per call
+          { type: "http", url: s.url, ...(s.headers ? { headerEnv: s.headers } : {}) }
         : {
             command: argv[0],
             args: argv.slice(1),
