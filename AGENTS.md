@@ -40,7 +40,7 @@ src is the public monorepo of Aphrody: a game engine and creative suite built in
 - Licenses never decide an architecture choice, and no project license has been chosen by the owner. Agents do not gate, skip, replace or rewrite anything for license or trademark reasons (`docs/legal/LICENSE-QUEUE.md`).
 - `C:\Windows\System32` is not modified; userland binaries go to `~/.local/bin`.
 - No emoji and no AI attribution in code, documents, UI text or commits. Upstream contributions follow the upstream policy (`docs/upstream/STRATEGY.md`).
-- Domain purity checked by `ay arch check --strict`: Rust crates under `src/*`, `packages/*` is Bun only, upstream code stays in `third_party/`.
+- Language by domain, no fanaticism: Rust at the core; Python for ML, AI, big data, research and reverse engineering; Go for containers, self-hosting, deploy and cloud tooling; C/C++ for C/C++ ecosystems (FFmpeg, Blender, VLC, Hyprland, LLVM, WebAssembly); TypeScript only where justified (web UI, Bun-native tooling). Each package declares its language through its own manifest (Cargo.toml, pyproject.toml, go.mod, package.json, CMake/meson); `ay arch check --strict` checks that manifests match the code; upstream code stays in `third_party/`.
 
 ## 5. Gaming and Steam
 

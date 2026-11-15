@@ -18,7 +18,7 @@
 - Learning: the hook logs to ~/.claude/learning; skill `learn` distills them into memories/skills.
 
 ## Stack
-- JS/TS: bun only (skill `bun`), no third-party tool that bun replaces.
+- Language by domain, no language fanaticism: Rust at the core; Python for ML, AI, big data, research and reverse engineering; Go for containers, self-hosting, deploy and Google/cloud tooling (rclone, gcloud); C/C++ where the ecosystem is C/C++ (FFmpeg, Blender, VLC, Hyprland, LLVM, WebAssembly). TypeScript only where it is justified (web UI, Bun-native tooling), on Bun (skill `bun`), with no third-party tool that Bun replaces.
 - Rust: pinned nightly; windows-rs (repo) + windows-bindgen.
 - Native: LLVM toolchain shared with Chromium (clang/clang-cl, lld, rustc on the same LLVM, cross-language LTO). C++23 + import std.
 - .NET 11 (apps, NativeAOT), 10+11 (libs); no legacy (FXC, Mono, VSTest, .sln). No Azure.
