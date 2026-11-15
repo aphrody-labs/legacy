@@ -49,13 +49,14 @@ run_local() {
   done < <(env -0)
   # cargo serializes every invocation on one global flock (CARGO_HOME/.package-cache; measured 2026-11-15: 3 writers + readers on
   # /home/ubuntu/.cargo, a rotational disk, blocked a bench for over 10 min): jobs get their own SSD CARGO_HOME per class and user
-  if [ -z "${CARGO_HOME:-}" ] && [ -d /srv ]; then
-    ch=/srv/cargo-home-fleet-$class-$(id -un); [ -d "$ch" ] || "${pre[@]}" install -d -m 0755 -o "$(id -u)" -g "$(id -g)" "$ch" 2>/dev/null || ch=
+  xb=$(fleet-registry layout xbuild 2>/dev/null) || xb=
+  if [ -z "${CARGO_HOME:-}" ] && [ -d "$xb/cache" ]; then
+    ch=$xb/cache/cargo-home-$class-$(id -un); [ -d "$ch" ] || "${pre[@]}" install -d -m 0755 -o "$(id -u)" -g "$(id -g)" "$ch" 2>/dev/null || ch=
     [ -n "$ch" ] && envs+=("--setenv=CARGO_HOME=$ch")
   fi
   # pinned target dir on the XFS build volume (same path on every host; stable path = sccache key reuse, reflink clones)
-  if [ -z "${CARGO_TARGET_DIR:-}" ] && findmnt -rn -t xfs /srv/xbuild >/dev/null 2>&1; then
-    td=/srv/xbuild/target/$class-$(id -un); [ -d "$td" ] || mkdir -p "$td" 2>/dev/null || td=   # target/ is 1777
+  if [ -z "${CARGO_TARGET_DIR:-}" ] && [ -n "$xb" ] && findmnt -rn -t xfs "$xb" >/dev/null 2>&1; then
+    td=$xb/target/$class-$(id -un); [ -d "$td" ] || mkdir -p "$td" 2>/dev/null || td=   # target/ is 1777
     [ -n "$td" ] && envs+=("--setenv=CARGO_TARGET_DIR=$td")
   fi
   # shared sccache backend: Valkey of the single server (endpoint from the registry, password from /etc/aphrody/secrets.env).

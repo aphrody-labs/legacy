@@ -108,3 +108,35 @@ Open: fr2 `/srv/src` carries uncommitted work blocking fast-forward (owner of th
 - fr2 holds services other hosts now depend on: Valkey (the sccache and registry backend), `dbfr.aphrody.com` and `nie.aphrody.app` (A record to fr2, `cloudflare.toml`), the relay origin behind `mcp-origin` (reached through mig-prd but running on fr2), the gnu mirror. Valkey and the relay must be moved or restored from backup before the disk is wiped; there is no second disk to stage a backup on, so the backup goes to fr1 or R2 first.
 - The reinstall script has not been rehearsed on a throwaway instance; the plan marks the Arch cloud image on OVH as unverified.
 - prd (Hostinger, btrfs root 222 GB used): the API `recreate` is irreversible and deletes snapshots; it waits for the owner's downtime window together with the nginx restart and the auto-web port publish.
+
+## 5. One layout on fr1, fr2 and prd
+
+Declared once in `infra/fleet/cluster.toml` `[layout]`; every script reads it with `fleet-registry layout <key>` (names are variables: `{repo}` is `[product] repo` of `tools/identity.toml`, shipped as `/etc/fleet/identity.toml`; org and repo of other checkouts come from their git remote).
+
+| Key | Path | Holds | Argument |
+| --- | --- | --- | --- |
+| `monorepo` | `/srv/{repo}` | the monorepo checkout | one per host, the only name taken from identity |
+| `repos` | `/srv/repos/<org>/<repo>` | every other checkout or mirror; no remote: `_local/<name>` | one canonical copy per remote, read from the remote, never from a human name |
+| `data` | `/srv/data/<service>` | state of a service (databases, queues, uploads) | separates what must be backed up from what can be rebuilt |
+| `www` | `/srv/www/<site>` | static docroots served by nginx | public bytes, replicated by the edge, apart from private state |
+| `xbuild` | `/srv/xbuild/{target,cache,ci,cas,clones,tmp,rescue,backup}` | builds, caches, scratch, rescue copies, backups | regenerable except `rescue` and `backup`; one XFS |
+| (outside /srv) | `/opt/<tool>` | toolchains and SDKs installed by their vendor | not repositories, not moved |
+
+Tools: `fleet-rescue-inventory.ts` (read-only: every checkout with remote, branch, unpushed commits, dirty files, size, referencing services; prunes third-party caches such as cargo git db, bun and nvim plugin clones; shallow clones are compared HEAD against upstream), `fleet-migrate.ts` (plan and a dry-run shell script per host: canonical copy per remote, moves with a reversible `moves.tsv`, duplicates deleted only when clean, unreferenced, idle for 7 days and without a process cwd inside; checkouts with unpushed or dirty work are left and listed; no-remote trees are copied to `xbuild/rescue/<host>`; units that name a moved path get an anchored sed), `fleet-layout.sh` (creates the directories).
+
+### fr2 (applied 2026-11-15)
+
+| | Before | After |
+| --- | --- | --- |
+| checkouts found (caches pruned) | 42 | 42 (31 moved, 0 deleted) |
+| `/srv` top-level entries | 74 | 60 (`/srv/repos/{aphrody-labs,unixwin,uutils,git.guix.gnu.org}` hold 37 checkouts) |
+| monorepo | `/srv/src` | `/srv/aphrody` (+ symlink `/srv/src` for scripts and agents that still name it) |
+| units repointed | 0 | 8 monorepo units and `rg-fleet-worker` (host copies edited, `daemon-reload`) |
+| deleted duplicates | n/a | none: the 4 clean duplicates were modified within 7 days or have a process in them, so they stay |
+
+Proof: `aphrody-relay` restarted from `/srv/aphrody` (WorkingDirectory) and `https://<mcp-origin>/health` answered the relay JSON `{"name":"aphrody-relay","version":"0.1.0"}`. The restart first failed with `Cannot find module './depot.ts'`: `packages/core/src/index.ts` (committed in 7a308f224) exports `depot.ts` and `re.ts`, which were never committed, so origin main did not import. They were committed (e137adf446) and fr2 fast-forwarded; the relay was down about 3 minutes (09:56 to 09:59 UTC). The other units were not restarted (the symlink keeps them valid); restart plus proof per unit is left to the next natural restart. Repo unit files still carry the old monorepo path, resolved by the symlink: `infra/{fleet,gnu,pipeline}` (13 files) must move to a rendered path once every installer renders it.
+
+### fr1 and prd
+
+- fr1: inventory of the root-filesystem part done (247 checkouts found by the first version of the inventory, which did not yet prune the cargo git caches: 26 bare, 27 without remote, 180 shallow). The pool part (`/home`, `/srv/build`, `/srv/artifacts`) is still being walked; no plan is applied before the rescue agent has pushed or copied. Nothing deleted, nothing moved.
+- prd (read-only inventory, 46 checkouts: 22 distinct remotes, 6 clean duplicates, 7 with unpushed or dirty work, 3 without remote): production units reference `/srv/src`, `/srv/rosegriffon/fleet-crawler` and `/root/src/rosegriffon*`. Nothing applied. The non-service part is a dry-run that keeps everything (all duplicates are younger than 7 days or hold unpushed work). The service part is one script ready for the owner window: `infra/fleet/migrations/prd.window.sh` (`APPLY=1`, then `RESTART=1`, each unit proven by a call whose content is checked).
