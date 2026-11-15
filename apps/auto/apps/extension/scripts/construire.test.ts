@@ -1,6 +1,7 @@
-// Conformité du paquet construit : Manifest V3, fichiers référencés présents, icônes aux bonnes dimensions,
-// aucune page avec script en ligne ni gestionnaire d'événement en ligne (CSP des extensions).
+// Conformance of the built package: Manifest V3, referenced files present, icons at the right size,
+// no page with an inline script or inline event handler (extension CSP), one _locales folder per catalog.
 import { beforeAll, expect, test } from "bun:test";
+import { catalogs } from "../src/i18n";
 import { construire, TAILLES } from "./construire";
 
 const dist = new URL("../dist/", import.meta.url);
@@ -12,23 +13,33 @@ beforeAll(async () => {
   manifeste = await Bun.file(new URL("manifest.json", dist)).json();
 });
 
-test("Manifest V3, aucune API V2", () => {
+test("Manifest V3, no V2 API", () => {
   expect(manifeste.manifest_version).toBe(3);
   expect(manifeste.background).toEqual({ service_worker: "service-worker.js", type: "module" });
   expect(manifeste.browser_action).toBeUndefined();
   expect(manifeste.action).toBeDefined(); // requis par chrome.action (badge, titre)
-  expect(manifeste.name.length).toBeLessThanOrEqual(75);
-  expect(manifeste.description.length).toBeLessThanOrEqual(132);
+  expect(manifeste.name).toBe("__MSG_extName__");
+  expect(manifeste.description).toBe("__MSG_extDescription__");
 });
 
-test("permissions minimales et hôtes restreints", () => {
+test("one _locales folder per catalog; names and descriptions within store limits", async () => {
+  expect(manifeste.default_locale).toBeDefined();
+  for (const tag of Object.keys(catalogs)) {
+    const m = await Bun.file(new URL(`_locales/${tag.replace("-", "_")}/messages.json`, dist)).json();
+    expect(m.extName.message.length).toBeLessThanOrEqual(75);
+    expect(m.extDescription.message.length).toBeLessThanOrEqual(132);
+  }
+  expect(fichiers).toContain(`_locales/${manifeste.default_locale}/messages.json`);
+});
+
+test("minimal permissions and restricted hosts", () => {
   expect(manifeste.permissions.sort()).toEqual(["activeTab", "alarms", "contextMenus", "notifications", "storage"]);
   expect(manifeste.host_permissions).toEqual(["https://auto.aphrody.com/*"]);
   expect(manifeste.permissions).not.toContain("tabs");
   expect(JSON.stringify(manifeste)).not.toContain("<all_urls>");
 });
 
-test("chaque fichier référencé existe ; icônes PNG aux dimensions annoncées", async () => {
+test("every referenced file exists; PNG icons at the announced sizes", async () => {
   const references = [
     manifeste.background.service_worker,
     manifeste.action.default_popup,
@@ -45,7 +56,7 @@ test("chaque fichier référencé existe ; icônes PNG aux dimensions annoncées
   expect(fichiers).toContain("tokens.css");
 });
 
-test("pages sans script ni gestionnaire en ligne ; sources sans eval ni .then", async () => {
+test("pages without inline script or handler; sources without eval or .then", async () => {
   const html = await Bun.file(new URL("popup.html", dist)).text();
   expect([...html.matchAll(/<script\b[^>]*>/g)].every((m) => /\bsrc=/.test(m[0]))).toBe(true);
   expect(html).not.toMatch(/\son[a-z]+=/i);

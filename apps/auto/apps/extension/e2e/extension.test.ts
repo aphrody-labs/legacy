@@ -1,6 +1,6 @@
 /// <reference types="chrome" />
-// Extension chargée dans Chrome headless : un fournisseur publie le Factur-X émis par un tenant auto ; l'extension
-// d'un autre tenant le télécharge et le dépose dans ses factures reçues, puis met le badge à jour.
+// Extension loaded in headless Chrome: a supplier publishes the Factur-X issued by an auto tenant; another tenant's
+// extension downloads it and deposits it in its received invoices, then updates the badge.
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -68,7 +68,7 @@ beforeAll(async () => {
     fetch: () => new Response("404", { status: 404 }),
   });
 
-  // Le vendeur émet une facture : son exemplaire Factur-X est ce que le fournisseur met en ligne.
+  // The seller issues an invoice: its Factur-X copy is what the supplier puts online.
   const vendeur = await inscrire("vendeur-ext@exemple.fr", "Vendeur SAS");
   const d = (await appel("/v1/documents", vendeur, {
     type: "facture",
@@ -120,7 +120,7 @@ afterAll(async () => {
   for (const d of dossiers) rmSync(d, { recursive: true, force: true });
 }, 30_000);
 
-test.skipIf(!executable)("dépôt d'une facture fournisseur depuis Chrome, badge à jour", async () => {
+test.skipIf(!executable)("supplier invoice deposit from Chrome, badge up to date", async () => {
   expect(idExtension).toMatch(/^[a-p]{32}$/);
   await sw.evaluate((r) => chrome.storage.local.set(r), {
     instance: new URL(api.url).origin.replace("localhost", "127.0.0.1"),
@@ -150,11 +150,11 @@ test.skipIf(!executable)("dépôt d'une facture fournisseur depuis Chrome, badge
     fournisseur: "Vendeur SAS",
   });
 
-  // Le badge reflète la file « à vérifier » de l'instance (vide : le Factur-X a été lu directement).
+  // The badge reflects the instance's "to verify" queue (empty: the Factur-X was read directly).
   expect(await sw.evaluate(() => chrome.action.getBadgeText({}))).toBe("");
   expect(await sw.evaluate(async () => (await chrome.storage.local.get("aVerifier")).aVerifier)).toBe(0);
 
-  // Renvoyée une seconde fois : reconnue comme doublon, toujours une seule facture.
+  // Sent a second time: recognized as a duplicate, still a single invoice.
   await popup.evaluate((url) => chrome.runtime.sendMessage({ type: "envoyer", url }), lien);
   expect(await appel("/v1/factures-recues", acheteur.session)).toHaveLength(1);
 });

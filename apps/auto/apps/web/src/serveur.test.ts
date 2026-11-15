@@ -55,7 +55,10 @@ test("pages publiques : tarifs et mentions, contact dans le pied de page", async
 test("accueil : une page prérendue par langue livrée, négociée", async () => {
   for (const l of LOCALES) {
     const t = createTranslator(l);
-    for (const r of [await fetch(new URL("/", web.url), { headers: { "accept-language": l } }), await fetch(new URL(`/?lang=${l}`, web.url))]) {
+    for (const r of [
+      await fetch(new URL("/", web.url), { headers: { "accept-language": l } }),
+      await fetch(new URL(`/?lang=${l}`, web.url)),
+    ]) {
       const texte = await r.text();
       expect(r.headers.get("vary")).toBe("Accept-Language");
       expect(texte).toContain(`lang="${l}"`);

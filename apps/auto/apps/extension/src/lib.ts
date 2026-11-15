@@ -1,7 +1,9 @@
-// Logique pure de l'extension (sans API chrome.*) : testée par bun:test, partagée par le service worker et la popup.
+// Pure extension logic (no chrome.* API): tested with bun:test, shared by the service worker and the popup.
+import type { Translator } from "@auto/i18n";
+import { lister, traducteur } from "./i18n";
 
 export const INSTANCE_PAR_DEFAUT = "https://auto.aphrody.com";
-/** Même plafond que l'API (apps/api/src/modules/ingest.ts). */
+/** Same cap as the API (apps/api/src/modules/ingest.ts). */
 export const TAILLE_MAX = 20 * 1024 * 1024;
 
 export interface Reglages {
@@ -9,29 +11,28 @@ export interface Reglages {
   jeton: string;
 }
 
-/** URL d'instance normalisée (origine seule) ; https exigé, sauf localhost pour une instance de dev. */
-export function normaliserInstance(brute: string): string {
+/** Normalized instance URL (origin only); https required, except localhost for a dev instance. */
+export function normaliserInstance(brute: string, t: Translator = traducteur()): string {
   let u: URL;
   try {
     u = new URL(brute.trim());
   } catch {
-    throw new Error("Adresse de l'instance invalide (ex. https://auto.aphrody.com)");
+    throw new Error(t.t("ext.error.instance_invalid"));
   }
   const local = u.hostname === "localhost" || u.hostname === "127.0.0.1";
-  if (u.protocol !== "https:" && !(local && u.protocol === "http:"))
-    throw new Error("L'instance doit être en https (http accepté seulement pour localhost)");
+  if (u.protocol !== "https:" && !(local && u.protocol === "http:")) throw new Error(t.t("ext.error.instance_https"));
   return u.origin;
 }
 
-/** Motif d'autorisation d'hôte pour une origine (ex. https://auto.aphrody.com/*). */
+/** Host permission pattern for an origin (ex. https://auto.aphrody.com/*). */
 export const motifHote = (origine: string) => `${new URL(origine).origin}/*`;
 
-/** Le jeton API d'auto commence par « auto_ » (packages/tenancy). */
+/** auto API tokens start with "auto_" (packages/tenancy). */
 export const jetonValide = (j: string) => /^auto_[A-Za-z0-9_-]{20,}$/.test(j.trim());
 
 export type TypeFichier = "application/pdf" | "application/xml";
 
-/** Type du fichier d'après ses premiers octets (prioritaires sur l'en-tête, souvent faux) ; null si ni PDF ni XML. */
+/** File type from its first bytes (which win over the often wrong header); null if neither PDF nor XML. */
 export function typeFichier(octets: Uint8Array): TypeFichier | null {
   const debut = new TextDecoder().decode(octets.subarray(0, 512)).replace(/^﻿/, "").trimStart();
   if (debut.startsWith("%PDF-")) return "application/pdf";
@@ -39,7 +40,7 @@ export function typeFichier(octets: Uint8Array): TypeFichier | null {
   return null;
 }
 
-/** Nom du fichier : Content-Disposition (filename* RFC 5987 puis filename), sinon dernier segment de l'URL. */
+/** File name: Content-Disposition (RFC 5987 filename*, then filename), otherwise the last URL segment. */
 export function nomFichier(url: string, contentDisposition: string | null, type: TypeFichier): string {
   const extension = type === "application/pdf" ? ".pdf" : ".xml";
   const cd = contentDisposition ?? "";
@@ -58,16 +59,16 @@ export function nomFichier(url: string, contentDisposition: string | null, type:
       nom = "";
     }
   }
-  // Caractères interdits dans un nom de fichier, et caractères de contrôle (code < 32).
+  // Characters forbidden in a file name, and control characters (code < 32).
   nom =
     [...nom]
       .map((c) => (c.charCodeAt(0) < 32 || '\\/:*?"<>|'.includes(c) ? "_" : c))
       .join("")
-      .slice(0, 120) || "facture";
+      .slice(0, 120) || "invoice";
   return nom.toLowerCase().endsWith(extension) ? nom : `${nom}${extension}`;
 }
 
-/** URL de dépôt d'une facture reçue sur l'instance. */
+/** URL used to deposit a received invoice on the instance. */
 export const urlDepot = (instance: string, nom: string) =>
   `${instance}/v1/factures-recues?nom=${encodeURIComponent(nom)}`;
 
@@ -81,32 +82,33 @@ export interface Recue {
   anomalies: string[];
 }
 
-/** Message de notification après un dépôt, du point de vue de l'utilisateur. */
-export function messageDepot(r: Recue, nom: string): { titre: string; message: string } {
-  if (r.doublon) return { titre: "Déjà reçue", message: `${nom} avait déjà été envoyée à auto.` };
-  const qui = r.fournisseur ? ` de ${r.fournisseur}` : "";
-  const ttc =
-    r.ttcCents !== null
-      ? `, ${(r.ttcCents / 100).toLocaleString("fr-FR", { style: "currency", currency: "EUR" })} TTC`
-      : "";
-  const num = r.numero ? ` n° ${r.numero}` : "";
+/** Notification text after a deposit, from the user's point of view. Amounts are in euros (the API model has no currency). */
+export function messageDepot(r: Recue, nom: string, t: Translator = traducteur()): { titre: string; message: string } {
+  if (r.doublon)
+    return { titre: t.t("ext.deposit.duplicate.title"), message: t.t("ext.deposit.duplicate.message", { name: nom }) };
+  const parts = [
+    r.numero ? t.t("ext.deposit.part.invoice_number", { number: r.numero }) : t.t("ext.deposit.part.invoice"),
+    ...(r.fournisseur ? [t.t("ext.deposit.part.supplier", { supplier: r.fournisseur })] : []),
+    ...(r.ttcCents !== null ? [t.t("ext.deposit.part.total", { total: t.currency(r.ttcCents / 100, "EUR") })] : []),
+  ];
+  const summary = lister(t, parts);
   return r.statut === "validee"
-    ? { titre: "Facture enregistrée", message: `Facture${num}${qui}${ttc} lue et validée.` }
+    ? { titre: t.t("ext.deposit.saved.title"), message: t.t("ext.deposit.saved.message", { summary }) }
     : {
-        titre: "Facture à vérifier",
-        message: `Facture${num}${qui}${ttc} reçue : ${r.anomalies.length || "des"} point(s) à contrôler dans auto.`,
+        titre: t.t("ext.deposit.review.title"),
+        message: t.t("ext.deposit.review.message", { summary, count: r.anomalies.length }),
       };
 }
 
-/** Texte du badge : nombre de factures à vérifier, vide à zéro, « 99+ » au-delà. */
+/** Badge text: number of invoices to check, empty at zero, "99+" beyond. */
 export const texteBadge = (n: number) => (n <= 0 ? "" : n > 99 ? "99+" : String(n));
 
-/** Message d'erreur lisible depuis une réponse de l'API ({ erreur, details }). */
-export function erreurApi(statut: number, corps: unknown): string {
+/** Readable error message from an API response ({ erreur, details }); `erreur` is the server's own text. */
+export function erreurApi(statut: number, corps: unknown, t: Translator = traducteur()): string {
   const c = (corps ?? {}) as { erreur?: string; details?: string[] };
-  if (statut === 401) return "Jeton refusé : vérifiez le jeton API dans les réglages de l'extension.";
-  if (statut === 402) return c.erreur ?? "Quota de votre abonnement atteint.";
-  if (statut === 403) return "Ce jeton n'a pas le droit d'enregistrer des factures (rôle lecture).";
-  const details = c.details?.length ? ` (${c.details.join(", ")})` : "";
-  return `${c.erreur ?? `Erreur ${statut}`}${details}`;
+  if (statut === 401) return t.t("ext.error.token_rejected");
+  if (statut === 402) return c.erreur ?? t.t("ext.error.quota");
+  if (statut === 403) return t.t("ext.error.forbidden");
+  const message = c.erreur ?? t.t("ext.error.generic", { status: statut });
+  return c.details?.length ? t.t("ext.error.with_details", { message, details: lister(t, c.details) }) : message;
 }

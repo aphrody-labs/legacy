@@ -1,6 +1,12 @@
 /// <reference types="chrome" />
-// Popup : réglages (instance, jeton API) testés contre /v1/moi, et état des factures à vérifier.
+// Popup: settings (instance, API token) tested against /v1/moi, and the state of invoices to check.
+import { traducteur } from "./i18n";
 import { INSTANCE_PAR_DEFAUT, erreurApi, jetonValide, motifHote, normaliserInstance } from "./lib";
+
+const t = traducteur(chrome.i18n.getUILanguage());
+document.documentElement.lang = t.locale;
+document.title = t.t("ext.popup.title");
+for (const el of document.querySelectorAll<HTMLElement>("[data-i18n]")) el.textContent = t.t(el.dataset.i18n!);
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const form = $<HTMLFormElement>("reglages");
@@ -27,15 +33,16 @@ async function afficherEtat() {
   const resume = $("resume");
   const ouvrir = $<HTMLAnchorElement>("ouvrir");
   if (!s.jeton) {
-    resume.textContent = "Extension non configurée : renseignez votre jeton API ci-dessous.";
+    resume.textContent = t.t("ext.popup.not_configured");
     ouvrir.hidden = true;
     return;
   }
   const n = Number(s.aVerifier ?? 0);
-  const qui = s.entreprise ? `${s.entreprise} : ` : "";
+  const company = s.entreprise ? String(s.entreprise) : null;
+  const state = n === 0 ? (company ? "none" : "none_anonymous") : company ? "some" : "some_anonymous";
   resume.textContent = s.erreurBadge
-    ? `Connexion à ${new URL(instance).host} impossible : ${s.erreurBadge}`
-    : `${qui}${n === 0 ? "aucune facture à vérifier." : `${n} facture(s) à vérifier.`}`;
+    ? t.t("ext.popup.connection_failed", { host: new URL(instance).host, reason: s.erreurBadge })
+    : t.t(`ext.popup.${state}`, { company, count: n });
   ouvrir.href = `${instance}/app/achats`;
   ouvrir.hidden = false;
 }
@@ -44,33 +51,33 @@ form.addEventListener("submit", (e) => {
   e.preventDefault();
   let instance: string;
   try {
-    instance = normaliserInstance(champInstance.value || INSTANCE_PAR_DEFAUT);
+    instance = normaliserInstance(champInstance.value || INSTANCE_PAR_DEFAUT, t);
   } catch (err) {
     afficherErreur((err as Error).message, champInstance);
     return;
   }
   const jeton = champJeton.value.trim();
   if (!jetonValide(jeton)) {
-    afficherErreur("Jeton invalide : il commence par « auto_ ».", champJeton);
+    afficherErreur(t.t("ext.error.token_invalid"), champJeton);
     return;
   }
-  // Une instance autre que auto.aphrody.com demande son autorisation dans le geste de l'utilisateur, avant tout await.
+  // An instance other than auto.aphrody.com asks for permission within the user gesture, before any await.
   const autorisation =
     instance === INSTANCE_PAR_DEFAUT
       ? Promise.resolve(true)
       : chrome.permissions.request({ origins: [motifHote(instance)] });
   void (async () => {
     bouton.disabled = true;
-    bouton.textContent = "Test en cours…";
+    bouton.textContent = t.t("ext.popup.testing");
     try {
       if (!(await autorisation)) {
-        afficherErreur("Accès à l'instance refusé : rien n'a été enregistré.");
+        afficherErreur(t.t("ext.error.access_refused"));
         return;
       }
       const r = await fetch(`${instance}/v1/moi`, { headers: { authorization: `Bearer ${jeton}` } });
       const corps = await r.json().catch(() => null);
       if (!r.ok) {
-        afficherErreur(erreurApi(r.status, corps), r.status === 401 ? champJeton : undefined);
+        afficherErreur(erreurApi(r.status, corps, t), r.status === 401 ? champJeton : undefined);
         return;
       }
       const moi = corps as { entreprise?: { nom?: string } };
@@ -80,10 +87,10 @@ form.addEventListener("submit", (e) => {
       await chrome.runtime.sendMessage({ type: "majBadge" });
       await afficherEtat();
     } catch (err) {
-      afficherErreur(`Instance injoignable : ${(err as Error).message}`, champInstance);
+      afficherErreur(t.t("ext.error.unreachable", { reason: (err as Error).message }), champInstance);
     } finally {
       bouton.disabled = false;
-      bouton.textContent = "Enregistrer et tester";
+      bouton.textContent = t.t("ext.popup.save");
     }
   })();
 });

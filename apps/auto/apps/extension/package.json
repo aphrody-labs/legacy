@@ -10,6 +10,7 @@
     "captures": "bun scripts/captures.ts"
   },
   "dependencies": {
+    "@auto/i18n": "workspace:*",
     "@auto/ui": "workspace:*"
   },
   "devDependencies": {

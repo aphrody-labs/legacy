@@ -67,6 +67,7 @@
       "name": "@auto/extension",
       "version": "0.1.0",
       "dependencies": {
+        "@auto/i18n": "workspace:*",
         "@auto/ui": "workspace:*",
       },
       "devDependencies": {

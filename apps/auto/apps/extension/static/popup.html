@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>auto : factures fournisseurs</title>
+    <title>auto: supplier invoices</title>
     <link rel="stylesheet" href="tokens.css" />
     <link rel="stylesheet" href="popup.css" />
   </head>
@@ -11,14 +11,14 @@
     <main>
       <h1>auto</h1>
       <section id="etat" aria-live="polite" aria-labelledby="titre-etat">
-        <h2 id="titre-etat" class="visuellement-cache">État</h2>
-        <p id="resume">Chargement…</p>
-        <a id="ouvrir" class="bouton" target="_blank" rel="noopener" hidden>Ouvrir auto</a>
+        <h2 id="titre-etat" class="visuellement-cache" data-i18n="ext.popup.status">Status</h2>
+        <p id="resume" data-i18n="ext.popup.loading">Loading…</p>
+        <a id="ouvrir" class="bouton" target="_blank" rel="noopener" hidden data-i18n="ext.popup.open">Open auto</a>
       </section>
       <form id="reglages" novalidate aria-labelledby="titre-reglages">
-        <h2 id="titre-reglages">Réglages</h2>
+        <h2 id="titre-reglages" data-i18n="ext.popup.settings">Settings</h2>
         <div class="champ">
-          <label for="instance">Adresse de votre instance</label>
+          <label for="instance" data-i18n="ext.popup.instance">Your instance address</label>
           <input
             id="instance"
             name="instance"
@@ -28,10 +28,12 @@
             required
             aria-describedby="aide-instance"
           />
-          <p class="aide" id="aide-instance">auto.aphrody.com, ou votre serveur auto-hébergé.</p>
+          <p class="aide" id="aide-instance" data-i18n="ext.popup.instance_help">
+            auto.aphrody.com, or your self-hosted server.
+          </p>
         </div>
         <div class="champ">
-          <label for="jeton">Jeton API</label>
+          <label for="jeton" data-i18n="ext.popup.token">API token</label>
           <input
             id="jeton"
             name="jeton"
@@ -41,12 +43,16 @@
             required
             aria-describedby="aide-jeton"
           />
-          <p class="aide" id="aide-jeton">Créez-le dans auto, Paramètres, Jetons API. Il reste sur cet appareil.</p>
+          <p class="aide" id="aide-jeton" data-i18n="ext.popup.token_help">
+            Create it in auto, Settings, API tokens. It stays on this device.
+          </p>
         </div>
         <p id="erreur" class="erreur" role="alert" hidden></p>
-        <button type="submit" class="bouton bouton-primaire" id="enregistrer">Enregistrer et tester</button>
+        <button type="submit" class="bouton bouton-primaire" id="enregistrer" data-i18n="ext.popup.save">
+          Save and test
+        </button>
       </form>
-      <p class="aide">Clic droit sur un lien de facture PDF ou XML : « Envoyer la facture à auto ».</p>
+      <p class="aide" data-i18n="ext.popup.hint">Right-click a PDF or XML invoice link: “Send the invoice to auto”.</p>
     </main>
     <script type="module" src="popup.js"></script>
   </body>
