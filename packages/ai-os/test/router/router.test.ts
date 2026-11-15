@@ -61,6 +61,11 @@ describe("policy", () => {
     expect(pol("auto:cheap").slice(0, 2)).toEqual(["b/small", "c/mid"]);
     expect(pol("auto:long")[0]).toBe("c/mid");
   });
+  test("auto:code ranks by the arena coding rating, falling back to the overall one", () => {
+    const o = [offer("x/plain", { arena: 1500 }), offer("y/coder", { arena: 1400, arenaCode: 1550 })];
+    expect(ids(order(o, parsePolicy("auto:code", o)))).toEqual(["y/coder", "x/plain"]);
+    expect(ids(order(o, parsePolicy("auto", o)))).toEqual(["x/plain", "y/coder"]);
+  });
   test("auto:fast uses measured p50", () => {
     const s = new Store(":memory:");
     const rec = (offer: string, ms: number) => s.record({ ts: Date.now(), offer, ok: true, status: 200, ms, inTok: 1, outTok: 1, cost: 0, caller: "x" });

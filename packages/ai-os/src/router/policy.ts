@@ -2,7 +2,7 @@
 //   provider/model   that offer, then the same model elsewhere (cheapest first), then the auto order
 //   <bare name>      every offer of that model, cheapest healthy first, then the auto order
 //   auto             best arena rating (within budget)      auto:cheap  lowest price
-//   auto:fast        lowest measured p50 latency            auto:code   arena rating + code-model boost
+//   auto:fast        lowest measured p50 latency            auto:code   arena coding-category rating
 //   auto:long        largest context                        arena       two different offers (engine.arena)
 // Unknown names fall back to `auto`: something always answers.
 import { type Offer, norm } from "./catalog.ts";
@@ -35,6 +35,13 @@ const MODES: Record<string, Mode> = {
   long: "long",
 };
 
+/** Virtual model ids the router answers to (listed by GET /v1/models), derived from the modes above. */
+export const VIRTUAL = [
+  "auto",
+  ...Object.keys(MODES).filter((k) => k && k !== "best").map((k) => `auto:${k}`),
+  "arena",
+];
+
 export function parsePolicy(spec: string | undefined, offers: Offer[]): Policy {
   const s = (spec ?? "auto").trim();
   if (s === "arena") return { kind: "arena" };
@@ -53,13 +60,13 @@ export function parsePolicy(spec: string | undefined, offers: Offer[]): Policy {
 export const cost = (o: Offer, inTok: number, outTok: number) =>
   ((o.priceIn ?? 0) * inTok + (o.priceOut ?? 0) * outTok) / 1e6;
 
-const CODE = /cod(e|er|ex)|devstral|dev\b|swe/i;
 const INF = Number.POSITIVE_INFINITY;
 
 function comparator(mode: Mode, st: (o: Offer) => OfferStat | undefined) {
   const price = (o: Offer) => (o.priceOut === undefined ? INF : (o.priceIn ?? 0) * 3 + o.priceOut);
   const arena = (o: Offer) => o.arena ?? -INF;
-  const code = (o: Offer) => arena(o) + (CODE.test(o.model) ? 60 : 0);
+  // Arena coding-category rating; models without one fall back to the overall rating.
+  const code = (o: Offer) => o.arenaCode ?? arena(o);
   const byMode: Record<Mode, (a: Offer, b: Offer) => number> = {
     best: (a, b) => arena(b) - arena(a) || price(a) - price(b),
     cheap: (a, b) => price(a) - price(b) || arena(b) - arena(a),

@@ -6,6 +6,7 @@
 import { outboundFetch } from "../relay/outbound.ts";
 import type { Provider } from "../llm/models.ts";
 import { listModels, providers } from "../llm/models.ts";
+import { ARENA, SOURCES, TTL } from "./config.ts";
 import type { Store } from "./stats.ts";
 
 export type Offer = {
@@ -27,6 +28,8 @@ export type Offer = {
   /** Arena rating (public leaderboard) and vote count. */
   arena?: number;
   arenaVotes?: number;
+  /** Arena rating in the coding category (drives `auto:code`). */
+  arenaCode?: number;
   sources: string[];
 };
 
@@ -43,7 +46,7 @@ type Sources = {
   litellm: Record<string, Info>;
   openrouter: Record<string, Info>;
   hf: Record<string, Info & { latency?: number }>;
-  arena: Record<string, { rating: number; votes: number; name: string }>;
+  arena: Record<string, { rating: number; votes: number; name: string; code?: number }>;
 };
 
 /** Normalised model key: last path segment, no variant suffix, no date, alphanumerics joined by `-`. */
@@ -70,7 +73,7 @@ const getJson = async (url: string, ms = 30_000) => {
 };
 
 async function fetchModelsDev(): Promise<Sources["modelsdev"]> {
-  const j = await getJson("https://models.dev/api.json");
+  const j = await getJson(SOURCES.modelsdev);
   const out: Sources["modelsdev"] = {};
   for (const p of Object.values<any>(j))
     for (const m of Object.values<any>(p.models ?? {})) {
@@ -88,9 +91,7 @@ async function fetchModelsDev(): Promise<Sources["modelsdev"]> {
   return out;
 }
 async function fetchLitellm(): Promise<Sources["litellm"]> {
-  const j = await getJson(
-    "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json",
-  );
+  const j = await getJson(SOURCES.litellm);
   const out: Sources["litellm"] = {};
   for (const [id, m] of Object.entries<any>(j)) {
     if (m.mode !== "chat" && m.mode !== "responses") continue;
@@ -107,7 +108,7 @@ async function fetchLitellm(): Promise<Sources["litellm"]> {
   return out;
 }
 async function fetchOpenrouter(): Promise<Sources["openrouter"]> {
-  const j = await getJson("https://openrouter.ai/api/v1/models");
+  const j = await getJson(SOURCES.openrouter);
   const out: Sources["openrouter"] = {};
   for (const m of j.data ?? []) {
     const pi = num(m.pricing?.prompt);
@@ -128,7 +129,7 @@ async function fetchOpenrouter(): Promise<Sources["openrouter"]> {
   return out;
 }
 async function fetchHf(): Promise<Sources["hf"]> {
-  const j = await getJson("https://router.huggingface.co/v1/models");
+  const j = await getJson(SOURCES.hf);
   const out: Sources["hf"] = {};
   for (const m of j.data ?? []) {
     const live = (m.providers ?? []).filter((p: any) => p.status === "live");
@@ -145,22 +146,32 @@ async function fetchHf(): Promise<Sources["hf"]> {
   }
   return out;
 }
-/** Arena text leaderboard, overall category (first 100 rows: the datasets-server serves nothing deeper right now). */
+/** Arena text leaderboard rows of one category (datasets-server `/filter`, SQL-like `where`). */
+async function arenaRows(category: string): Promise<any[]> {
+  const q = new URLSearchParams({
+    dataset: SOURCES.arenaDataset,
+    config: "text",
+    split: "latest",
+    where: `"category"='${category}'`,
+    length: "100",
+  });
+  return ((await getJson(`${SOURCES.datasetsServer}/filter?${q}`)).rows ?? []).map((r: any) => r.row);
+}
+/** Arena text leaderboard: overall rating, plus the coding-category rating when the dataset serves it. */
 async function fetchArena(): Promise<Sources["arena"]> {
-  const j = await getJson(
-    "https://datasets-server.huggingface.co/first-rows?dataset=lmarena-ai/leaderboard-dataset&config=text&split=latest",
-  );
   const out: Sources["arena"] = {};
-  for (const { row } of j.rows ?? [])
-    if (row.category === "overall") {
-      const k = norm(String(row.model_name));
-      if (!out[k] || row.rating > out[k]!.rating)
-        out[k] = { rating: row.rating, votes: row.vote_count, name: row.model_name };
-    }
+  for (const row of await arenaRows(ARENA.overall)) {
+    const k = norm(String(row.model_name));
+    if (!out[k] || row.rating > out[k]!.rating)
+      out[k] = { rating: row.rating, votes: row.vote_count, name: row.model_name };
+  }
+  // Optional: a failure here must not lose the overall table.
+  for (const row of await arenaRows(ARENA.code).catch(() => [])) {
+    const e = out[norm(String(row.model_name))];
+    if (e && row.rating > (e.code ?? -Infinity)) e.code = row.rating;
+  }
   return out;
 }
-
-const TTL = 6 * 3_600_000;
 const EMPTY: Sources = { modelsdev: {}, litellm: {}, openrouter: {}, hf: {}, arena: {} };
 const FETCH: Record<keyof Sources, () => Promise<any>> = {
   modelsdev: fetchModelsDev,
@@ -177,7 +188,7 @@ export async function refreshSources(store: Store, force = false) {
   await Promise.all(
     (Object.keys(FETCH) as (keyof Sources)[]).map(async (name) => {
       const c = store.cacheGet<any>(`src:${name}`);
-      if (c && !force && Date.now() - c.ts < TTL) {
+      if (c && !force && Date.now() - c.ts < TTL.sources) {
         out[name] = c.value;
         report[name] = `cache ${Object.keys(c.value).length}`;
         return;
@@ -209,6 +220,7 @@ export function join(
   discovered: { id: string; provider: string; name?: string; context?: number }[],
   cliProviders: Set<string>,
   src: Sources,
+  localProviders: Set<string> = new Set(),
 ): Offer[] {
   return discovered.map((m) => {
     const model = m.id.slice(m.provider.length + 1);
@@ -248,16 +260,15 @@ export function join(
       }
     }
     // Local servers cost nothing; CLI agents are billed by their subscription (price unknown, not zero).
-    if (["ollama", "fabric"].includes(m.provider) || m.id.startsWith("local/")) {
+    if (localProviders.has(m.provider)) {
       o.priceIn = 0;
       o.priceOut = 0;
-      o.tools ||= m.provider === "ollama";
     }
-    if (m.provider === "cloudflare") o.tools ||= true;
     const a = arenaFor(src.arena, key);
     if (a) {
       o.arena = a.rating;
       o.arenaVotes = a.votes;
+      o.arenaCode = a.code;
       sources.push("arena");
     }
     if (o.cli) o.tools = false;
@@ -279,7 +290,8 @@ export async function buildCatalog(store: Store, force = false): Promise<Catalog
     listModels(),
   ]);
   const cli = new Set(providers().filter((p: Provider) => !p.chat).map((p) => p.id));
-  const offers = join(found.flatMap((g) => g.models), cli, sources);
+  const local = new Set(providers().filter((p: Provider) => p.local).map((p) => p.id));
+  const offers = join(found.flatMap((g) => g.models), cli, sources, local);
   const cat: Catalog = {
     offers,
     providers: found.map((g) => ({

@@ -6,6 +6,7 @@ import { flatten } from "../llm/model.ts";
 import { llmAsk } from "../llm/model.ts";
 import { providers } from "../llm/models.ts";
 import { type Catalog, type Offer, buildCatalog } from "./catalog.ts";
+import { TTL, WALK } from "./config.ts";
 import { type Need, cost, order, parsePolicy } from "./policy.ts";
 import { type OfferStat, Store } from "./stats.ts";
 
@@ -130,9 +131,9 @@ export class Router {
   /** Current catalog: memory, else the sqlite cache, else a fresh build; stale tables refresh in the background. */
   async catalog(force = false): Promise<Catalog> {
     if (force) this.cat = undefined;
-    if (this.cat && Date.now() - this.cat.at < 600_000) return this.cat;
+    if (this.cat && Date.now() - this.cat.at < TTL.memory) return this.cat;
     const cached = this.store.cacheGet<Catalog>("offers");
-    if (!force && cached && Date.now() - cached.ts < 3_600_000) {
+    if (!force && cached && Date.now() - cached.ts < TTL.stored) {
       return (this.cat = cached.value);
     }
     this.catP ??= this.build(this.store, force)
@@ -161,13 +162,13 @@ export class Router {
   async exec(offers: Offer[], body: Body, o: RunOpts = {}): Promise<Result> {
     const stream = o.stream ?? body.stream === true;
     const sleep = o.sleep ?? Bun.sleep;
-    const deadline = Date.now() + (o.deadlineMs ?? 300_000);
+    const deadline = Date.now() + (o.deadlineMs ?? WALK.deadlineMs);
     const attempts: Attempt[] = [];
     const caller = o.caller ?? "anon";
     let forced = o.failFirst ?? 0;
     let clientErrors = 0;
     let lastClient: Attempt | undefined;
-    const rounds = o.rounds ?? 3;
+    const rounds = o.rounds ?? WALK.rounds;
     const inEst = tokensOf(body);
 
     const attempt = async (offer: Offer): Promise<Result | undefined> => {
@@ -175,7 +176,7 @@ export class Router {
       const ac = new AbortController();
       const onAbort = () => ac.abort();
       o.signal?.addEventListener("abort", onAbort);
-      const timer = setTimeout(() => ac.abort(), o.attemptMs ?? 90_000);
+      const timer = setTimeout(() => ac.abort(), o.attemptMs ?? WALK.attemptMs);
       const fail = (status: number, err: string, coolMs = 0) => {
         const ms = performance.now() - t0;
         attempts.push({ offer: offer.id, status, ms: Math.round(ms), error: err.slice(0, 200) });
@@ -191,17 +192,17 @@ export class Router {
         o.signal?.throwIfAborted();
         if (forced > 0) {
           forced--;
-          return fail(503, "échec simulé (x-router-fail)", 15_000);
+          return fail(503, "échec simulé (x-router-fail)", WALK.coolServer);
         }
         const res = await this.call(offer, body, { stream, signal: ac.signal });
         if (!res.ok) {
           const text = (await res.text().catch(() => "")).slice(0, 200);
           const ra = Number(res.headers.get("retry-after")) * 1000;
           const cool =
-            /upgrade|not available on|quota|billing|credit|insufficient/i.test(text) ? 3_600_000
-            : res.status === 429 ? Math.min(Math.max(ra || 30_000, 5_000), 300_000)
-            : res.status === 401 || res.status === 403 || res.status === 402 ? 600_000
-            : res.status >= 500 ? 15_000
+            /upgrade|not available on|quota|billing|credit|insufficient/i.test(text) ? WALK.coolQuota
+            : res.status === 429 ? Math.min(Math.max(ra || WALK.coolRateDefault, WALK.coolRateMin), WALK.coolRateMax)
+            : res.status === 401 || res.status === 403 || res.status === 402 ? WALK.coolAuth
+            : res.status >= 500 ? WALK.coolServer
             : 0;
           return fail(res.status, text || `HTTP ${res.status}`, cool);
         }
@@ -216,9 +217,9 @@ export class Router {
         if (stream && ct.includes("text/event-stream") && res.body) {
           const reader = res.body.getReader();
           const first = await reader.read();
-          if (first.done || !first.value?.length) return fail(502, "flux vide", 15_000);
+          if (first.done || !first.value?.length) return fail(502, "flux vide", WALK.coolServer);
           const head = dec.decode(first.value);
-          if (/^\s*(data:\s*)?\{\s*"error"/.test(head)) return fail(502, head, 15_000);
+          if (/^\s*(data:\s*)?\{\s*"error"/.test(head)) return fail(502, head, WALK.coolServer);
           attempts.push({ offer: offer.id, status: 200, ms: Math.round(performance.now() - t0) });
           let tail = head;
           const body2 = new ReadableStream<Uint8Array>({
@@ -245,21 +246,21 @@ export class Router {
         try {
           json = JSON.parse(raw);
         } catch {
-          return fail(502, `réponse non JSON : ${raw.slice(0, 120)}`, 15_000);
+          return fail(502, `réponse non JSON : ${raw.slice(0, 120)}`, WALK.coolServer);
         }
         if (json.error || !json.choices?.length)
-          return fail(502, JSON.stringify(json.error ?? json).slice(0, 200), 15_000);
+          return fail(502, JSON.stringify(json.error ?? json).slice(0, 200), WALK.coolServer);
         const msg = json.choices[0].message ?? {};
         // A reasoning model that spent every token thinking returns no visible answer: try the next offer.
         if (!msg.content && !msg.tool_calls?.length)
-          return fail(502, "réponse vide", 5_000);
+          return fail(502, "réponse vide", WALK.coolEmpty);
         finish(json, String(msg.content ?? "").length);
         attempts.push({ offer: offer.id, status: 200, ms: Math.round(performance.now() - t0) });
         json.model = offer.id;
         return { offer, attempts, stream: stream ? sseOf(json) : undefined, json };
       } catch (e: any) {
         if (o.signal?.aborted) throw e;
-        return fail(e?.name === "AbortError" || e?.name === "TimeoutError" ? 408 : 599, String(e?.message ?? e), 10_000);
+        return fail(e?.name === "AbortError" || e?.name === "TimeoutError" ? 408 : 599, String(e?.message ?? e), WALK.coolTimeout);
       } finally {
         clearTimeout(timer);
         o.signal?.removeEventListener("abort", onAbort);
@@ -272,15 +273,15 @@ export class Router {
       if (round > 0) {
         const st = this.store.stats();
         list = offers.slice().sort((a, b) => (st.get(b.id)?.health ?? 1) - (st.get(a.id)?.health ?? 1));
-        list = list.slice(0, 5);
+        list = list.slice(0, WALK.retryPool);
       }
       for (const offer of list) {
         if (Date.now() > deadline) throw new Exhausted(attempts);
         const r = await attempt(offer);
         if (r) return r;
-        if (clientErrors >= 4 && lastClient) throw new Exhausted(attempts, lastClient.status);
+        if (clientErrors >= WALK.clientErrors && lastClient) throw new Exhausted(attempts, lastClient.status);
       }
-      if (round < rounds - 1) await sleep(Math.min(500 * 2 ** round, 4000));
+      if (round < rounds - 1) await sleep(Math.min(WALK.backoffBase * 2 ** round, WALK.backoffMax));
     }
     throw new Exhausted(attempts);
   }

@@ -6,9 +6,9 @@
 // x-caller: label (spend is tracked per bearer token and label).
 import { createHash } from "node:crypto";
 import { type Body, Exhausted, type Router } from "./engine.ts";
+import { VIRTUAL } from "./policy.ts";
 import { anthropicStream, anthropicToOpenAI, openAIToAnthropic } from "./wire.ts";
 
-export const VIRTUAL = ["auto", "auto:cheap", "auto:fast", "auto:code", "auto:long", "arena"];
 
 /** Spend key: short hash of the bearer token (never the token) plus an optional label. */
 export function callerOf(req: Request): string {

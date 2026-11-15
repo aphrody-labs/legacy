@@ -25,6 +25,8 @@ export type Model = {
 };
 export type Provider = {
   id: string;
+  /** Runs on this machine or this fleet: free to call (router price 0). */
+  local?: boolean;
   available: () => Promise<boolean>;
   list: () => Promise<Model[]>;
   chat?: {
@@ -34,6 +36,12 @@ export type Provider = {
   };
   ask?: (model: string, prompt: string) => Promise<string>;
 };
+
+/** Hosted bases shared with the router catalog (router/config.ts). */
+export const BASES = {
+  openrouter: "https://openrouter.ai/api",
+  huggingface: "https://router.huggingface.co",
+} as const;
 
 const env = (k: string) => Bun.env[k];
 const getJson = async (
@@ -96,6 +104,7 @@ export function providers(): Provider[] {
     : "http://127.0.0.1:11434";
   out.push({
     id: "ollama",
+    local: true,
     available: async () =>
       !!(await getJson(`${ollama}/api/tags`, {}, 1500).catch(() => null)),
     list: async () =>
@@ -108,14 +117,15 @@ export function providers(): Provider[] {
   });
   // Tissu d'inférence distribué (src/fabric, infra/ai/fabric.toml) : coordinateur llama-server + rpc-server WireGuard.
   // Absent de la liste dès que le coordinateur ne répond plus : la sélection bascule sur les autres fournisseurs.
-  out.push(
-    compat(
+  out.push({
+    ...compat(
       "fabric",
       (env("AI_FABRIC_URL") ?? "http://127.0.0.1:8090")
         .replace(/\/+$/, "")
         .replace(/\/v1$/, ""),
     ),
-  );
+    local: true,
+  });
   for (const pair of (env("RELAY_OPENAI_ENDPOINTS") ?? "")
     .split(",")
     .filter(Boolean)) {
@@ -182,16 +192,16 @@ export function providers(): Provider[] {
       list: async () =>
         openaiList(
           "openrouter",
-          await getJson("https://openrouter.ai/api/v1/models"),
+          await getJson(`${BASES.openrouter}/v1/models`),
         ),
       chat: {
-        base: () => "https://openrouter.ai/api",
+        base: () => BASES.openrouter,
         headers: () => bearer(env("OPENROUTER_API_KEY")),
       },
     });
   if (env("HF_TOKEN"))
     out.push(
-      compat("huggingface", "https://router.huggingface.co", env("HF_TOKEN")),
+      compat("huggingface", BASES.huggingface, env("HF_TOKEN")),
     );
   if (env("AI_GATEWAY_API_KEY"))
     out.push(
