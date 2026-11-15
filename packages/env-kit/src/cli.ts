@@ -126,7 +126,7 @@ function setWindowsUserEnv(key: string, value: string): void {
 
 function lockWindowsEnvAcl(envPath: string): void {
   if (process.platform !== "win32" || !existsSync(envPath)) return;
-  const user = process.env.USERNAME ?? "aphro";
+  const user = process.env.USERNAME ?? process.env.USER ?? "user";
   spawnSync(
     "icacls.exe",
     [
@@ -494,7 +494,7 @@ Usage:
   env-kit accounts init-gcloud         Idempotently initialize ai-agent, owner, org-contact, sa-automation
   env-kit accounts switch <principal>  Activate gcloud configuration for <ai|owner|org|sa>
   env-kit billing <status|plan|apply|lift|relink>  GCP billing via billing-agent (keyless): budgets, spend, idle resources
-  env-kit accounts iam-bindings        Print idempotent GCP IAM policy bindings for project aphrody (#468000409790)
+  env-kit accounts iam-bindings        Print idempotent GCP IAM policy bindings for project aphrody
   env-kit set <KEY> <VALUE>            Set key in <repo>/.env + Windows User Env + sync editors
   env-kit merge --source <host>        Merge dotenv from stdin into .env (new keys added, differing as KEY__HOST)
   env-kit merge --from-windows         Merge credential-like Windows user env vars into .env

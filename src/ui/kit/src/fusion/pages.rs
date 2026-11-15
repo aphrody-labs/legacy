@@ -163,7 +163,7 @@ fn build_intelligent_terminal() -> UiNode {
                         "term-pane-left",
                         UiKind::TerminalPane,
                         "Primary POSIX/NT PTY",
-                        "aphro@workstation C:\\src $ ay graph query taffy",
+                        "user@workstation C:\\src $ ay graph query taffy",
                     )
                     .grow(1.0),
                     UiNode::leaf(

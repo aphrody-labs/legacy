@@ -176,15 +176,15 @@ test("SSE streaming: one upstream stream broadcast to all subscribers, then repl
 test("mesh: remote host:port -> local LB port, Idempotency-Key on LB port POSTs", async () => {
   const toml = `
 [nodes.usa]
-public_ip = "72.60.186.43"
-mesh_ip = "10.200.77.5"
+public_ip = "203.0.113.5"
+mesh_ip = "192.0.2.5"
 ssh_alias = "prd"
 [cluster.members.prd]
 node = "usa"
 ssh = "prd"
 [cluster.services.commons]
 lb_port = 19766
-targets = { prd = "10.200.77.5:8766" }
+targets = { prd = "192.0.2.5:8766" }
 cache = "off"
 [cluster.services.api]
 lb_port = ${up.port}
@@ -192,15 +192,15 @@ targets = { prd = "127.0.0.1:28081" }
 cache = "micro"
 `;
   const m = loadMesh(toml);
-  expect(m.routes.get("10.200.77.5:8766")?.lbPort).toBe(19766);
+  expect(m.routes.get("192.0.2.5:8766")?.lbPort).toBe(19766);
   expect(m.routes.get("prd:28081")?.lbPort).toBe(up.port);
-  expect(m.routes.get("72.60.186.43:28081")?.cached).toBe(true);
+  expect(m.routes.get("203.0.113.5:28081")?.cached).toBe(true);
   const o = new Outbound({ db: ":memory:", mesh: m });
   // prd:28081 -> 127.0.0.1:<test port> (listening); fall back to the original URL if absent.
   const r = await o.route("http://prd:28081/v1/chat/completions");
   expect(r.url).toBe(`http://127.0.0.1:${up.port}/v1/chat/completions`);
-  expect((await o.route("http://10.200.77.5:8766/x")).url).toBe(
-    "http://10.200.77.5:8766/x",
+  expect((await o.route("http://192.0.2.5:8766/x")).url).toBe(
+    "http://192.0.2.5:8766/x",
   ); // 19766 does not listen here
   calls = 0;
   const res = await o.fetch("http://prd:28081/v1/chat/completions", {

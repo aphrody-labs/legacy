@@ -74,7 +74,7 @@ describe("Aphrody 3-Principal Multi-Google & Org Identity Architecture", () => {
       expect(env.CLOUDSDK_AI_REGION).toBe("us-central1");
       expect(env.GOOGLE_CLOUD_REGION).toBe("us-central1");
       expect(env.APHRODY_RCLONE_REMOTE).toBe("gdrive-ai");
-      expect(env.APHRODY_GCP_PROJECT_NUMBER).toBe("468000409790");
+      expect(env.APHRODY_GCP_PROJECT_NUMBER).toBe(APHRODY_GCP_PROJECT_NUMBER);
       expect(env.CUSTOM_FLAG).toBe("1");
 
       const orgEnv = getIsolatedGcloudEnv("org", {
@@ -87,7 +87,7 @@ describe("Aphrody 3-Principal Multi-Google & Org Identity Architecture", () => {
     });
   });
 
-  test("builds complete idempotent GCP IAM bindings plan for project aphrody (#468000409790)", () => {
+  test("builds complete idempotent GCP IAM bindings plan for project aphrody", () => {
     const plan = buildAphrodyIamBindingsPlan();
     expect(plan.project).toBe(APHRODY_GCP_PROJECT_ID);
     expect(plan.projectNumber).toBe(APHRODY_GCP_PROJECT_NUMBER);

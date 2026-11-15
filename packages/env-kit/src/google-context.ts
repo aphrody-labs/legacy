@@ -2,7 +2,7 @@
 /**
  * Context-aware Google / gcloud selection.
  *
- * One workstation serves several GCP projects (aphrody #468000409790, rosegriffon rgfr-8927d, ...).
+ * One workstation serves several GCP projects (aphrody, rosegriffon, ...).
  * The right project, account, gcloud configuration and service-account key depend on which repo the
  * command runs in. This module detects that context from the execution directory — git remote first,
  * then the path — and returns the environment that points every Google SDK and the gcloud CLI at the
@@ -14,6 +14,10 @@
 
 import { existsSync } from "node:fs";
 import { dirname, resolve, sep } from "node:path";
+import { siteGet } from "./site.ts";
+
+/** GCP project id of the Rose Griffon context: the private site config (accounts.gcp_projects.1), else a neutral name. */
+export const ROSEGRIFFON_PROJECT = siteGet("accounts.gcp_projects.1") ?? "rosegriffon";
 
 export interface GcloudContext {
   /** Short id, also the gcloud configuration name. */
@@ -40,9 +44,9 @@ export const GCLOUD_CONTEXTS: readonly GcloudContext[] = [
       "aphrody-labs/shenron",
     ],
     pathMatches: [`${sep}apps${sep}rosegriffon`, `${sep}apps${sep}shenron`],
-    project: "rgfr-8927d",
-    projectNumber: "696500805587",
-    account: "admin-sa@rgfr-8927d.iam.gserviceaccount.com",
+    project: ROSEGRIFFON_PROJECT,
+    projectNumber: siteGet("accounts.gcp_project_numbers.1") ?? "",
+    account: `admin-sa@${ROSEGRIFFON_PROJECT}.iam.gserviceaccount.com`,
     credentialsEnv: "GOOGLE_APPLICATION_CREDENTIALS_RGFR",
     region: "europe-west1",
   },
@@ -51,7 +55,7 @@ export const GCLOUD_CONTEXTS: readonly GcloudContext[] = [
     remoteMatches: ["aphrody-dev/", "aphrody-labs/"],
     pathMatches: [sep],
     project: "aphrody",
-    projectNumber: "468000409790",
+    projectNumber: siteGet("accounts.gcp_project_numbers.0") ?? "",
     account: "yolo-automation@aphrody.iam.gserviceaccount.com",
     credentialsEnv: "GOOGLE_APPLICATION_CREDENTIALS_APHRODY",
     region: "europe-west1",

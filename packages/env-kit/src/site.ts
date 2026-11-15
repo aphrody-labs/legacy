@@ -63,3 +63,26 @@ export function siteValues(site: Site | null = loadSite()): string[] {
   walk(site);
   return [...out];
 }
+
+/** The value at a dotted path (`hosts.fr1.mesh_ip`, `accounts.cloudflare_account_ids.0`). */
+export function siteGet(path: string, site: Site | null = loadSite()): string | undefined {
+  let v: unknown = site;
+  for (const k of path.split(".")) v = (v as Record<string, unknown> | undefined)?.[k];
+  return typeof v === "string" ? v : undefined;
+}
+
+/** Replaces every `@@a.b.c@@` token by its site value; a token with no value stays as written when the site file is absent, else throws. */
+export function expand(text: string, site: Site | null = loadSite()): string {
+  if (!text.includes("@@")) return text;
+  return text.replace(/@@([A-Za-z0-9_.]+)@@/g, (m, p: string) => {
+    if (!site) return m;
+    const v = siteGet(p, site);
+    if (v === undefined) throw new Error(`no site value for ${p} in ${sitePath()}`);
+    return v;
+  });
+}
+
+/** Text of a tracked config that carries site tokens (deploy.toml, cluster.toml, ...), expanded. */
+export function readExpanded(path: string): string {
+  return expand(readFileSync(path, "utf8"));
+}

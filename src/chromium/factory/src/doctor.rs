@@ -262,8 +262,8 @@ mod tests {
     #[test]
     fn workers_and_versions() {
         // `ss -Htn state established` on fr1, 2026-11-12 (prd and fr2 connected).
-        let ss = "0      0      10.200.77.1:50061 10.200.77.5:58650\n0      0      10.200.77.1:50061 10.200.77.3:27466\n0 0 10.200.77.1:50051 10.200.77.9:1\n";
-        assert_eq!(parse_ss_peers(ss, 50061), ["10.200.77.3", "10.200.77.5"]);
+        let ss = "0      0      192.0.2.1:50061 192.0.2.5:58650\n0      0      192.0.2.1:50061 192.0.2.3:27466\n0 0 192.0.2.1:50051 192.0.2.9:1\n";
+        assert_eq!(parse_ss_peers(ss, 50061), ["192.0.2.3", "192.0.2.5"]);
         // Real fr1 outputs vs third_party/toolchain-157.toml.
         assert!(version_matches(
             "clang version 24.0.0git (https://chromium.googlesource.com/a/external/github.com/llvm/llvm-project 86922d51225db089fffb99475eefc4904f79e3c8)",

@@ -33,7 +33,7 @@ test("-ts: RPC nodes in admitted order, then the local device; empty if a share 
 });
 
 test("arguments du coordinateur", () => {
-  const a = coordinatorArgs(f, "m.gguf", ["10.200.77.1:50052"], [1, 7]);
+  const a = coordinatorArgs(f, "m.gguf", ["192.0.2.1:50052"], [1, 7]);
   expect(a.slice(a.indexOf("--host"), a.indexOf("--host") + 2)).toEqual([
     "--host",
     "127.0.0.1",

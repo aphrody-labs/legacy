@@ -2,7 +2,7 @@ import { spawnSync } from "@aphrody/env-kit/spawn";
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_MONOREPO_ENV_PATH, loadMonorepoEnv } from "@aphrody/env-kit";
+import { DEFAULT_MONOREPO_ENV_PATH, loadMonorepoEnv, siteGet } from "@aphrody/env-kit";
 import { secretGet } from "@aphrody/vault/sync";
 
 /** Personal Google accounts never live in the public repo: environment first, then the vault (env-kit secret set). */
@@ -24,7 +24,7 @@ export function personalAccount(
 }
 
 export const APHRODY_GCP_PROJECT_ID = "aphrody";
-export const APHRODY_GCP_PROJECT_NUMBER = "468000409790";
+export const APHRODY_GCP_PROJECT_NUMBER = process.env.APHRODY_GCP_PROJECT_NUMBER ?? siteGet("accounts.gcp_project_numbers.0") ?? "";
 export const APHRODY_PRIMARY_REGION = "europe-west1";
 export const APHRODY_AI_REGION = "us-central1";
 
@@ -92,7 +92,7 @@ export const APHRODY_PRINCIPALS: Readonly<
     projectNumber: APHRODY_GCP_PROJECT_NUMBER,
     region: APHRODY_PRIMARY_REGION,
     roleSummary:
-      "Personal developer & root owner account of the owner (GCP project aphrody #468000409790 and personal dev workstation)",
+      "Personal developer & root owner account of the owner (GCP project aphrody and personal dev workstation)",
     iamRoles: ["roles/owner"],
   },
   org: {
@@ -159,7 +159,7 @@ export const ORG_PROVIDER_SURFACES: readonly OrgProviderSurfaceSpec[] = [
     id: "gcp-aphrody",
     name: "GCP aphrody",
     masterIdentity: "contact@aphrody.com",
-    target: "aphrody (468000409790)",
+    target: "aphrody",
     envKeys: [
       "GOOGLE_CLOUD_PROJECT",
       "GOOGLE_CLOUD_REGION",
@@ -200,7 +200,7 @@ export const ORG_PROVIDER_SURFACES: readonly OrgProviderSurfaceSpec[] = [
     id: "ovh",
     name: "OVH",
     masterIdentity: "contact@aphrody.com",
-    target: "fr1 (51.77.147.152) & fr2 (51.255.162.6)",
+    target: "fr1 & fr2",
     envKeys: [
       "OVH_ENDPOINT",
       "OVH_APPLICATION_KEY",
@@ -213,7 +213,7 @@ export const ORG_PROVIDER_SURFACES: readonly OrgProviderSurfaceSpec[] = [
     id: "hostinger",
     name: "Hostinger",
     masterIdentity: "contact@aphrody.com",
-    target: "usa (72.60.186.43 — Google/Gemini egress)",
+    target: "usa (Google/Gemini egress)",
     envKeys: ["HOSTINGER_API_TOKEN"],
     requiredAnyKeys: ["HOSTINGER_API_TOKEN"],
   },

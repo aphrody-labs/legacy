@@ -175,8 +175,8 @@ mod tests {
 
     #[test]
     fn url_forms() {
-        let u = Url::parse("valkey://:s3cret@10.200.77.3:6380").unwrap();
-        assert_eq!((u.host.as_str(), u.port, u.password.as_deref()), ("10.200.77.3", 6380, Some("s3cret")));
+        let u = Url::parse("valkey://:s3cret@192.0.2.3:6380").unwrap();
+        assert_eq!((u.host.as_str(), u.port, u.password.as_deref()), ("192.0.2.3", 6380, Some("s3cret")));
         let u = Url::parse("redis://localhost").unwrap();
         assert_eq!((u.host.as_str(), u.port, u.password), ("localhost", 6379, None));
         assert!(Url::parse("http://x").is_err());

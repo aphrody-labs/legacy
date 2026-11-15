@@ -346,20 +346,20 @@ Host git github.com
     User git
 
 Host f1p vps
-    HostName 51.77.147.152
+    HostName 198.51.100.1
     User ubuntu
     IdentityFile ~/.ssh/id_ed25519_vn
     IdentitiesOnly yes
     ConnectTimeout 10
 
 Host usp prd
-    HostName=72.60.186.43
+    HostName=203.0.113.5
     User root
     IdentityFile "C:/Users/x/.ssh/hostinger_us_ed25519"
     Port 2222
 
 Host fr1
-    HostName 10.200.77.1
+    HostName 192.0.2.1
     HostKeyAlias fr1
     UserKnownHostsFile ~/.ssh/fleet/known_hosts
     StrictHostKeyChecking accept-new
@@ -376,7 +376,7 @@ Host * !github.com
     #[test]
     fn resolves_alias_fields() {
         let h = cfg().resolve("vps");
-        assert_eq!(h.hostname, "51.77.147.152");
+        assert_eq!(h.hostname, "198.51.100.1");
         assert_eq!(h.user.as_deref(), Some("ubuntu"));
         assert_eq!(h.port, 22);
         assert!(h.identities_only);
@@ -388,13 +388,13 @@ Host * !github.com
                 PathBuf::from("/home/me/.ssh/id_default")
             ]
         );
-        assert_eq!(h.known_hosts_name(), "51.77.147.152");
+        assert_eq!(h.known_hosts_name(), "198.51.100.1");
     }
 
     #[test]
     fn equals_sign_quotes_and_port() {
         let h = cfg().resolve("prd");
-        assert_eq!(h.hostname, "72.60.186.43");
+        assert_eq!(h.hostname, "203.0.113.5");
         assert_eq!(h.user.as_deref(), Some("root"));
         assert_eq!(h.port, 2222);
         assert_eq!(
@@ -437,8 +437,8 @@ Host * !github.com
     #[test]
     fn glob_rules() {
         assert!(glob_match("*.google.com", "a.google.com"));
-        assert!(glob_match("10.200.77.?", "10.200.77.5"));
-        assert!(!glob_match("10.200.77.?", "10.200.77.15"));
+        assert!(glob_match("10.200.77.?", "192.0.2.5"));
+        assert!(!glob_match("10.200.77.?", "192.0.2.15"));
         assert!(patterns_match(&["*", "!bad"], "good"));
         assert!(!patterns_match(&["*", "!bad"], "bad"));
     }

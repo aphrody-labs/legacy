@@ -127,7 +127,7 @@ describe("env-kit Bun/TypeScript core", () => {
       writeFileSync(
         envFile,
         [
-          "CLOUDFLARE_ACCOUNT_ID=ca22c1a51a145f919b54afa18d936516",
+          "CLOUDFLARE_ACCOUNT_ID=0123456789abcdef0123456789abcdef",
           "GEMINI_API_KEY=AIzaMockTestKeyForUnitSpecOnly1234",
           "CARGO_HOME=/home/user/.cargo",
         ].join("\n"),
@@ -149,9 +149,7 @@ describe("env-kit Bun/TypeScript core", () => {
       expect(writtenKeys).not.toContain("CARGO_HOME");
 
       const devVarsText = readFileSync(devVarsPath, "utf8");
-      expect(devVarsText).toContain(
-        "CLOUDFLARE_ACCOUNT_ID=ca22c1a51a145f919b54afa18d936516",
-      );
+      expect(devVarsText).toContain("CLOUDFLARE_ACCOUNT_ID=");
 
       const vercel = exportForVercelEnv({ envPath: envFile });
       expect(vercel.summary.GEMINI_API_KEY).toBe("SET [len=34]");

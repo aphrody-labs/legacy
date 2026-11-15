@@ -134,7 +134,7 @@ pub fn scan_first_party_contents(
                             path: rel.clone(),
                             line: Some(idx + 1),
                             message: "Detected command or path mutating sacred Windows host directory (`System32` / `SysWOW64`)".into(),
-                            remediation: "Never write to `C:\\Windows\\System32`; install userland binaries and DLLs exclusively in `C:\\Users\\aphro\\.local\\bin`.".into(),
+                            remediation: "Never write to `C:\\Windows\\System32`; install userland binaries and DLLs exclusively in `%USERPROFILE%\\.local\\bin`.".into(),
                         });
                         break;
                     }

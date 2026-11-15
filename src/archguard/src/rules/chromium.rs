@@ -130,7 +130,7 @@ pub fn check_chromium_hygiene(root: &Path, findings: &mut Vec<ArchFinding>) {
                             file.file_name().and_then(|n| n.to_str()).unwrap_or(""),
                             size_mb
                         ),
-                        remediation: "Move large binary assets to `C:\\Users\\aphro\\.local\\bin`, use Git LFS, or download on demand.".into(),
+                        remediation: "Move large binary assets to `%USERPROFILE%\\.local\\bin`, use Git LFS, or download on demand.".into(),
                     });
                 }
             }

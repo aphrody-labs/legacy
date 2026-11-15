@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn siso_flags() {
         let r = siso(&cfg(), true, 4);
-        for f in ["-reapi_address=10.200.77.1:50051", "-reapi_instance=main", "-reapi_insecure", "-re_cache_enable_write", "-local_jobs=4", "-remote_jobs=26"] {
+        for f in ["-reapi_address=192.0.2.1:50051", "-reapi_instance=main", "-reapi_insecure", "-re_cache_enable_write", "-local_jobs=4", "-remote_jobs=26"] {
             assert!(r.args.contains(&f.to_owned()), "{f}");
         }
         assert_eq!(r.args.last().unwrap(), "headless_shell");

@@ -106,9 +106,9 @@ impl Default for Config {
             state: "/srv/chromium/factory-state.json".into(),
             reapi: Reapi::default(),
             workers: vec![
-                Worker { name: "fr1".into(), addr: "10.200.77.1".into(), ssh: None, local: true, jobs: 10, min_mem_gb: 26 },
-                Worker { name: "prd".into(), addr: "10.200.77.5".into(), ssh: None, local: false, jobs: 4, min_mem_gb: 10 },
-                Worker { name: "fr2".into(), addr: "10.200.77.3".into(), ssh: None, local: false, jobs: 3, min_mem_gb: 8 },
+                Worker { name: "fr1".into(), addr: "192.0.2.1".into(), ssh: None, local: true, jobs: 10, min_mem_gb: 26 },
+                Worker { name: "prd".into(), addr: "192.0.2.5".into(), ssh: None, local: false, jobs: 4, min_mem_gb: 10 },
+                Worker { name: "fr2".into(), addr: "192.0.2.3".into(), ssh: None, local: false, jobs: 3, min_mem_gb: 8 },
             ],
             publish: Publish::default(),
             doctor: Doctor::default(),
@@ -120,8 +120,8 @@ impl Default for Reapi {
     fn default() -> Self {
         Self {
             enabled: true,
-            address: "10.200.77.1:50051".into(),
-            worker_api: "10.200.77.1:50061".into(),
+            address: "192.0.2.1:50051".into(),
+            worker_api: "192.0.2.1:50061".into(),
             instance: "main".into(),
             project: "aphrody".into(),
             local_jobs: 4,

@@ -74,28 +74,39 @@ const STUB =
   /\b(TODO: implement|not implemented yet|lorem ipsum|placeholder implementation|stub implementation|fake output|demo only)\b/i;
 const ABS_USER = /([A-Za-z]:[\\/]labs\b)/;
 // personal-data: values of the private site config (never committed) plus generic personal patterns.
-const SITE_KEYS = new Set(["email", "first_name", "name", "ovh_account", "cloudflare_account_ids", "gcp_projects", "user", "home", "machine_names", "domain_user", "public_ip", "mesh_ip", "extra_mesh_ip", "hostname", "mesh_cidrs"]);
-const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\const ABS_USER = /(Users[\\/]aphro|[A-Za-z]:[\\/]labs\b)/;");
+const SITE_KEYS = new Set(["email", "emails", "first_name", "name", "ovh_account", "cloudflare_account_ids", "gcp_projects", "user", "home", "machine_names", "domain_user", "public_ip", "mesh_ip", "extra_mesh_ip", "hostname", "mesh_cidrs", "public_ipv6", "link_ip", "cloudflare_zone_ids", "gcp_project_numbers", "acme_account_ids"]);
+const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, (c) => "\\" + c);
 let siteRe: RegExp | null | undefined;
 function sitePattern(): RegExp | null {
   if (siteRe !== undefined) return siteRe;
   const site = loadSite();
   if (!site) return (siteRe = null);
-  const vals = new Set<string>();
+  const alts = new Set<string>();
+  const ctx = new Set<string>();
+  const tables: Record<string, unknown>[] = [];
   for (const sec of Object.values(site) as Record<string, unknown>[]) {
-    const tables = sec && typeof sec === "object" && Object.values(sec).every((v) => v && typeof v === "object" && !Array.isArray(v)) ? Object.values(sec) : [sec];
-    for (const tb of tables as Record<string, unknown>[])
-      for (const [k, v] of Object.entries(tb ?? {}))
-        if (SITE_KEYS.has(k)) for (const s of ([] as unknown[]).concat(v)) if (typeof s === "string" && s.length >= 5 && !/^(ubuntu|root)$/.test(s)) vals.add(s);
+    const nested = sec && typeof sec === "object" && Object.values(sec).every((v) => v && typeof v === "object" && !Array.isArray(v));
+    tables.push(...((nested ? Object.values(sec) : [sec]) as Record<string, unknown>[]));
   }
-  return (siteRe = vals.size ? new RegExp("(?<![A-Za-z0-9])(" + [...vals].map(escRe).join("|") + ")(?![A-Za-z0-9])", "i") : null);
+  for (const tb of tables)
+    for (const [k, v] of Object.entries(tb ?? {}))
+      if (SITE_KEYS.has(k))
+        for (const s of ([] as unknown[]).concat(v)) {
+          if (typeof s !== "string" || s.length < 5 || /^(ubuntu|root)$/.test(s)) continue;
+          const cidr = /^(\d+\.\d+\.\d+)\.\d+\/\d+$/.exec(s); // a mesh CIDR covers every address of its /24
+          if (k === "hostname" && /^[A-Z0-9]+$/.test(s)) ctx.add(s); // an all-caps machine name is also a brand word: match its hostname uses only
+          else alts.add(cidr ? escRe(cidr[1]!) + "\\.\\d{1,3}" : escRe(s));
+        }
+  for (const s of ctx) alts.add("(?<=(?:hostname|computername|machine|host)\\W{0,6})" + escRe(s) + "(?![-\\w])"), alts.add(escRe(s) + "(?=\\\\\\w)");
+  return (siteRe = alts.size ? new RegExp("(?<![A-Za-z0-9])(" + [...alts].join("|") + ")(?![A-Za-z0-9])", "i") : null);
 }
-const PD_USERPATH = /(?:[A-Za-z]:[\\/]Users[\\/]|\/home\/|\/Users\/)(?!Public\b|Default\b|user\b|name\b|you\b|me\b|runner\b|\$|%|<|\{|\*|\.\.\.|[Xx]{2,}|node\b|ubuntu\b|builder\b|vscode\b|app\b|nobody\b|Shared\b|linuxbrew\b|git\b|bun\b|aphrody\b|[A-Za-z]*\\?\w*example)[A-Za-z][\w.-]*/;
-const PD_IPV4 = /(?<![\w.])(?!(?:0|127|255)\.|192\.0\.2\.|198\.51\.100\.|203\.0\.113\.|169\.254\.)(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3}(?![\w.]*\w)(?!\.\d)/;
-const PD_EMAIL = /[\w.+-]+@(?!example\.|users\.noreply\.github\.com|aphrody\.|localhost)[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b/;
-// Lines where a dotted quad is a version, an OID or a user agent, and where an e-mail credits an upstream author.
-const PD_VERSIONISH = /version|chrom(e|ium)|mozilla|user.?agent|rustc|\bv8\b|\boid\b|cargo|\bbun\b|\bnode\b|\b\d+\.\d+\.\d+\.\d+\s*(release|build|nightly)|"ua"|"EN-|"[A-Z]+_?VERSION/i;
-const PD_CREDIT = /copyright|\(c\)|author|signed-off|co-authored|maintainer|contact|mailto:/i;
+const PD_USERPATH = /(?:[A-Za-z]:[\\/]Users[\\/]|\/home\/|\/Users\/)(?!Public\b|Default\b|user\b|name\b|you\b|me\b|runner\b|\$|%|<|\{|\*|\.\.\.|[Xx]{2,}|node\b|ubuntu\b|builder\b|vscode\b|app\b|nobody\b|Shared\b|linuxbrew\b|git\b|bun\b|aphrody\b|agent\b|auto\b|legacy\b|backups\b|[A-Za-z]*\\?\w*example)[A-Za-z][\w.-]*/;
+// Public IPv4 only: documentation, loopback, link-local and RFC 1918 ranges are not personal (a site's own mesh is caught by its CIDR in the private file).
+const PD_IPV4 = /(?<![\w.])(?!(?:0|127|255)\.|10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.|192\.0\.2\.|198\.51\.100\.|203\.0\.113\.|169\.254\.|240\.0\.)(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|1?\d?\d)){3}(?![\w.]*\w)(?!\.\d)/;
+const PD_EMAIL = /[\w.+-]+@(?!example\.|exemple\.|users\.noreply\.github\.com|aphrody\.|localhost|[\w.-]*\.example\b)[\w-]+(?:\.[\w-]+)*\.(?!png\b|jpe?g\b|webp\b|gif\b|svg\b)[A-Za-z]{2,}\b/;
+// Lines where a dotted quad is a version, an OID or a user agent, and where an e-mail credits an upstream author or is a sample.
+const PD_VERSIONISH = /version|chrom(e|ium)|mozilla|user.?agent|rustc|\bv8\b|\boid\b|cargo|\bbun\b|\bnode\b|\{text\}|CN=|\b\d+\.\d+\.\d+\.\d+\s*(release|build|nightly)|"ua"|"EN-|"[A-Z]+_?VERSION/i;
+const PD_CREDIT = /copyright|\(c\)|author|signed-off|co-authored|maintainer|contact|mailto:|user:pass@|git@github|jane\.doe/i;
 export function personalData(l: string): boolean {
   const re = sitePattern();
   return (
@@ -283,7 +294,7 @@ export const RULES: Rule[] = [
   {
     id: "personal-data",
     why: "Personal or site-specific value (identity, account, host, address, user path); read it from the private site config (~/.config/aphrody/site.toml, packages/env-kit/src/site.ts) and name roles in prose. The rule also flags every value of that private file; it skips that part when the file is absent",
-    files: (f) => !MANIFEST.test(f) && !/(^|\/)site\.example\.toml$/.test(f) && !/\.test\.|(^|\/)(tests?|e2e|fixtures?)\/|cloudflare|^src\/|^docs\/proofs\//i.test(f) && !/\.(png|jpg|svg|wasm|woff2?|ico|pdf|lock)$/.test(f),
+    files: (f) => !MANIFEST.test(f) && !/(^|\/)site\.example\.toml$/.test(f) && !/\.test\.|(^|\/)(tests?|e2e|fixtures?)\/|cloudflare|^src\/|^docs\/proofs\/|^\.agents\/skills\//i.test(f) && !/\.(png|jpg|svg|wasm|woff2?|ico|pdf|lock)$/.test(f),
     line: (l) => personalData(l),
   },
   {

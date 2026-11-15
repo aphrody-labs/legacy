@@ -3,6 +3,7 @@ import {
   contextEnv,
   detectContext,
   GCLOUD_CONTEXTS,
+  ROSEGRIFFON_PROJECT,
   exportLines,
 } from "../src/google-context";
 
@@ -10,7 +11,7 @@ test("contexts are ordered with a catch-all default last", () => {
   const last = GCLOUD_CONTEXTS[GCLOUD_CONTEXTS.length - 1]!;
   expect(last.pathMatches).toContain(require("node:path").sep);
   expect(GCLOUD_CONTEXTS.find((c) => c.name === "rosegriffon")?.project).toBe(
-    "rgfr-8927d",
+    ROSEGRIFFON_PROJECT,
   );
 });
 
@@ -32,7 +33,7 @@ test("contextEnv points every SDK var at the context project and omits a missing
   const env = contextEnv(ctx, {
     GOOGLE_APPLICATION_CREDENTIALS_RGFR: "C:/nope/missing.json",
   });
-  expect(env.GOOGLE_CLOUD_PROJECT).toBe("rgfr-8927d");
+  expect(env.GOOGLE_CLOUD_PROJECT).toBe(ROSEGRIFFON_PROJECT);
   expect(env.CLOUDSDK_ACTIVE_CONFIG_NAME).toBe("rosegriffon");
   expect(env.GOOGLE_APPLICATION_CREDENTIALS).toBeUndefined();
   expect(exportLines(env)).toContain("export GOOGLE_CLOUD_PROJECT=");
