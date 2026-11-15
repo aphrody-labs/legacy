@@ -31,6 +31,18 @@
     "aosp_manifest_commit": "1ed30a827f1156dc831083e6cf999d6bd9deae18"
   },
   "repositories": {
+    "apps/open": {
+      "path": "apps/open",
+      "url": "https://github.com/aphrody-labs/open.git",
+      "commit": "42795ccf6dbfe5a530f6641d7034f63c26b44a6b",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/open.git"
+      },
+      "sparse_paths": null
+    },
     "apps/rosegriffon": {
       "path": "apps/rosegriffon",
       "url": "https://github.com/aphrody-labs/rosegriffon.git",
