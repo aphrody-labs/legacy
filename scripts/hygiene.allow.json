@@ -169,8 +169,6 @@
   "personal-data": [
     "apps/auto/**",
     "infra/gnu/install.sh",
-    "infra/fleet/fr1-orig/nginx/conf.d/fleet-api.conf",
-    "infra/fleet/fr2-orig/nginx/conf.d/fleet-api.conf",
     "infra/fleet/fr2/nginx/sites/api.aphrody.com.conf",
     "infra/fleet/prd/nginx/conf.d/zz-fleet-standby.conf",
     "infra/cloudflare/workers/api-gateway/worker.js",

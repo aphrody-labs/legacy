@@ -15,7 +15,7 @@ written during the migration. The versioned sources are in `infra/fleet/`.
 
 ### aphrody web frontend: fr1 → fr2
 
-- vhosts: `/etc/nginx/sites/{aphrody.com,api.aphrody.com,cdn.aphrody.com,creator.aphrody.com,downloads.aphrody.com,rpbey.fr}.conf`. Source: `infra/fleet/fr2/nginx/`. The originals of fr1 and fr2 are kept in `infra/fleet/fr1-orig/` and `fr2-orig/`.
+- vhosts: `/etc/nginx/sites/{aphrody.com,api.aphrody.com,cdn.aphrody.com,creator.aphrody.com,downloads.aphrody.com,rpbey.fr}.conf`. Source: `infra/fleet/fr2/nginx/`.
 - backends: the `127.0.0.1:<port>` become `<prd-mesh-ip>:<port>` (prd). The legacy omar relay (`omar.aphrody.com`, `127.0.0.1:8793`) and the omar accounts are removed.
 - a catch-all `*.aphrody.com` → prd:3000 and `*.aphrody.app` → prd:3010 reproduces fr1's default server.
 - static content copied to `/srv/www/`: creator (132M), downloads/files, aphrody-api, aphrody-status, rpbey.fr.
