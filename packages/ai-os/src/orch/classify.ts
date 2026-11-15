@@ -35,7 +35,7 @@ const RULES: [FailClass, RegExp][] = [
   ],
   [
     "missing",
-    /ENOENT|command not found|not recognized as an internal|executable file not found|checkout absent/i,
+    /ENOENT|command not found|not recognized as an internal|executable file not found|checkout (absent|missing)/i,
   ],
   [
     "context",

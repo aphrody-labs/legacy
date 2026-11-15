@@ -1,11 +1,11 @@
-// Serveur du relais : un processus bun, toutes les liaisons sur 127.0.0.1 (ou RELAY_HOST), autorisation obligatoire
-// (sauf carte d'agent A2A et métadonnées OAuth) : jeton d'accès OAuth 2.1 du serveur embarqué (oauth.ts, MCP 2026-07-28)
-// ou jeton fixe du relais en en-tête Authorization ; jamais de jeton dans l'URL hors amorçage de /webmcp.
-//   HTTP   GET /metrics (compteurs hit/miss/coalescés des appels sortants, outbound.ts, sans authentification)
+// Relay server: one bun process, all bindings on 127.0.0.1 (or RELAY_HOST), authorization mandatory
+// (except the A2A agent card and OAuth metadata): OAuth 2.1 access token of the embedded server (oauth.ts, MCP 2026-07-28)
+// or the relay's fixed token in the Authorization header; never a token in the URL outside the /webmcp bootstrap.
+//   HTTP   GET /metrics (hit/miss/coalesced counters of outbound calls, outbound.ts, unauthenticated)
 //          POST /rpc (relais natif)  POST /mcp (MCP Streamable HTTP)  POST /a2a (A2A 1.0, SSE : a2a.ts)  GET /.well-known/agent-card.json
-//   WS     /ws : JSON-RPC du relais natif, un message par trame
-//   WebMCP GET /webmcp?token=… : outils exposés à l agent du navigateur (document.modelContext)
-//   TCP    RELAY_TCP_PORT : JSON-RPC délimité par lignes (NDJSON) ; TLS sur RELAY_TLS_PORT si RELAY_TLS_CERT/KEY sont définis
+//   WS     /ws : native relay JSON-RPC, one message per frame
+//   WebMCP GET /webmcp?token=… : tools exposed to the browser agent (document.modelContext)
+//   TCP    RELAY_TCP_PORT : line-delimited JSON-RPC (NDJSON); TLS on RELAY_TLS_PORT if RELAY_TLS_CERT/KEY are set
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { relayHome } from "./cdp.ts";
@@ -24,7 +24,7 @@ import {
 } from "../router/http.ts";
 import { dispatch, mcpRpc, nativeRpc, VERSION } from "./protocols.ts";
 
-/** Jeton du relais (32 octets aléatoires, créé au premier lancement dans le dossier privé de l'utilisateur). */
+/** Relay token (32 random bytes, created at first launch in the user's private folder). */
 export async function relayToken(): Promise<string> {
   if (Bun.env.RELAY_TOKEN) return Bun.env.RELAY_TOKEN;
   const f = join(relayHome(), "token");
@@ -44,13 +44,13 @@ export async function serve() {
   const port = Number(Bun.env.RELAY_PORT ?? 8790);
   const oauth = createOAuth({ token, host });
   await oauth.ready;
-  // Cookie de session dérivé du jeton (HMAC), jamais le jeton lui-même.
+  // Session cookie derived from the token (HMAC), never the token itself.
   const session = relayCookie(token);
   const cookie = (req: Request) =>
     (req.headers.get("cookie") ?? "")
       .split(/;\s*/)
       .includes(`relay=${session}`);
-  // Cookie HttpOnly SameSite=Strict : posé par l'amorçage de /webmcp, accepté pour la page et ses appels /mcp.
+  // HttpOnly SameSite=Strict cookie: set by the /webmcp bootstrap, accepted for the page and its /mcp calls.
   const authed = (req: Request, resource: "mcp" | "a2a" | "rpc" = "rpc") =>
     cookie(req) || typeof oauth.verify(req, resource) === "object";
   const guard =
@@ -74,7 +74,7 @@ export async function serve() {
       }
       return h(req);
     };
-  // Page WebMCP : ouverte une fois avec ?token=…, le jeton passe en cookie HttpOnly et quitte l'URL.
+  // WebMCP page: opened once with ?token=…, the token moves to an HttpOnly cookie and leaves the URL.
   const webmcp = async (req: Request) => {
     const u = new URL(req.url);
     if (u.searchParams.get("token") === token)
@@ -146,15 +146,15 @@ export async function serve() {
       ...oauth.routes,
       "/health": () =>
         Response.json({ name: "aphrody-relay", version: VERSION }),
-      // Compteurs du dédoublonnage sortant (outbound.ts), format Prometheus ; aucune donnée de requête.
+      // Outbound dedup counters (outbound.ts), Prometheus format; no request data.
       "/metrics": () =>
         new Response(outbound().metrics(), {
           headers: { "content-type": "text/plain; version=0.0.4" },
         }),
       "/rpc": { POST: guard("rpc", rpc(nativeRpc)) },
       "/acp": { POST: guard("rpc", acpHttp) },
-      // Routeur de modèles (src/router) : OpenAI et Anthropic, même autorisation que le relais ; Anthropic envoie
-      // aussi le jeton en x-api-key.
+      // Model router (src/router): OpenAI and Anthropic, same authorization as the relay; Anthropic sends
+      // also the token in x-api-key.
       "/v1/chat/completions": {
         POST: apiKey(guard("rpc", (req) => chatCompletions(req, router()))),
       },
@@ -225,7 +225,7 @@ export async function serve() {
     },
   });
 
-  // TCP / TLS : NDJSON ; la première ligne doit être le jeton.
+  // TCP / TLS: NDJSON; the first line must be the token.
   type Sock = { buf: string; ok: boolean };
   const socketHandlers = {
     open(s: any) {

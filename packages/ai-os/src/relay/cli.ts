@@ -1,19 +1,19 @@
 #!/usr/bin/env bun
-// relay : pont Claude Code <-> Gemini et outils de la flotte.
+// relay: Claude Code <-> Gemini bridge and fleet tools.
 //   relay serve                  HTTP (rpc, mcp, a2a, ws), TCP, TLS
-//   relay browser [--headful]    Chrome du relais (profil dédié, CDP 127.0.0.1:RELAY_CDP_PORT)
-//   relay login                  Chrome du relais visible : connexion Google une fois (saisie par l'utilisateur)
-//   relay ask <prompt…>          question à Gemini (Antigravity, --web : gemini.google.com) ; --claude pour Claude Code headless
-//   relay review <fichier>       revue Gemini notée /20 d'un fichier
-//   relay inspect                relevé des sélecteurs Gemini (diagnostic)
-//   relay acp                    agent ACP sur stdio
-//   relay mcp-stdio              même serveur MCP que POST /mcp, en stdio (JSON-RPC délimité par lignes)
-//   relay token                  affiche le jeton (pour claude mcp add)
-//   relay mcp-add [--bearer]     enregistre le relais dans Claude Code (portée utilisateur) : OAuth 2.1 (DCR + PKCE,
-//                                approbation automatique en boucle locale, zéro clic) ; --bearer : jeton fixe en en-tête
+//   relay browser [--headful]    relay Chrome (dedicated profile, CDP 127.0.0.1:RELAY_CDP_PORT)
+//   relay login                  visible relay Chrome: Google sign-in once (typed by the user)
+//   relay ask <prompt…>          question to Gemini (Antigravity, --web: gemini.google.com); --claude for headless Claude Code
+//   relay review <file>          Gemini review of a file, scored /20
+//   relay inspect                survey of the Gemini selectors (diagnostic)
+//   relay acp                    ACP agent over stdio
+//   relay mcp-stdio              same MCP server as POST /mcp, over stdio (line-delimited JSON-RPC)
+//   relay token                  prints the token (for claude mcp add)
+//   relay mcp-add [--bearer]     registers the relay in Claude Code (user scope): OAuth 2.1 (DCR + PKCE,
+//                                automatic approval on loopback, zero clicks); --bearer: fixed token in a header
 //   relay approve <code> [--deny]  consent d'une demande OAuth en attente (code utilisateur RFC 8628 ou demande /authorize)
-//   relay client add <nom> [--scope "mcp a2a"]  client confidentiel client_credentials ; secret écrit dans
-//                                <relayHome>/clients/<nom>.json (0600), jamais affiché
+//   relay client add <name> [--scope "mcp a2a"]  confidential client_credentials client; secret written to
+//                                <relayHome>/clients/<name>.json (0600), never displayed
 import { browserInfo, launchBrowser } from "./cdp.ts";
 import { acp } from "./acp.ts";
 import { claude, gemini } from "./backends.ts";
@@ -36,7 +36,7 @@ switch (cmd) {
   case "login":
     await launchBrowser(false);
     console.log(
-      "Chrome du relais ouvert sur gemini.google.com : se connecter, puis fermer la fenêtre et lancer `relay browser`.",
+      "Relay Chrome opened on gemini.google.com: sign in, then close the window and run `relay browser`.",
     );
     break;
   case "ask": {
@@ -49,7 +49,7 @@ switch (cmd) {
   }
   case "review": {
     const f = rest[0];
-    if (!f) throw new Error("usage : relay review <fichier>");
+    if (!f) throw new Error("usage: relay review <file>");
     const a: any = await toolByName
       .get("gemini_review")!
       .run({ title: f, content: await Bun.file(f).text() });
@@ -72,7 +72,7 @@ switch (cmd) {
     await acp();
     break;
   case "mcp-stdio": {
-    // UTF-8 décodé en flux (caractères coupés entre deux blocs) ; requêtes traitées en parallèle.
+    // UTF-8 decoded as a stream (characters split across two chunks); requests handled in parallel.
     const dec = new TextDecoder("utf-8");
     const pending = new Set<Promise<void>>();
     const send = (o: unknown) =>
@@ -142,7 +142,7 @@ switch (cmd) {
         decision: flag("--deny") ? "deny" : "allow",
       }),
     });
-    console.log(r.ok ? "approuvé" : `refus : ${await r.text()}`);
+    console.log(r.ok ? "approved" : `refused: ${await r.text()}`);
     process.exit(r.ok ? 0 : 1);
   }
   case "client": {
@@ -165,7 +165,7 @@ switch (cmd) {
         scope,
       }),
     });
-    if (!r.ok) throw new Error(`enregistrement refusé : ${await r.text()}`);
+    if (!r.ok) throw new Error(`registration refused: ${await r.text()}`);
     const { join } = await import("node:path");
     const { mkdirSync } = await import("node:fs");
     const { relayHome } = await import("./cdp.ts");
@@ -181,12 +181,12 @@ switch (cmd) {
       }),
     );
     if (process.platform !== "win32") Bun.spawnSync(["chmod", "600", f]);
-    console.log(`client ${j.client_id} : identifiants dans ${f}`);
+    console.log(`client ${j.client_id}: credentials in ${f}`);
     break;
   }
   default:
     console.error(
-      "usage : relay serve | browser [--headful] | login | ask <prompt> [--claude|--web] | review <fichier> | inspect | recon [url] | acp | mcp-stdio | token | mcp-add [--bearer] | approve <code> | client add <nom>",
+      "usage: relay serve | browser [--headful] | login | ask <prompt> [--claude|--web] | review <file> | inspect | recon [url] | acp | mcp-stdio | token | mcp-add [--bearer] | approve <code> | client add <name>",
     );
     process.exit(2);
 }

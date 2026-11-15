@@ -1,8 +1,8 @@
-// Surfaces protocolaires du relais, toutes en JSON-RPC 2.0 sur les mêmes outils (tools.ts) :
-//   - relais natif : méthodes `<outil>` (ex. gemini_ask) et `tools/list` ;
-//   - MCP Streamable HTTP, double époque : 2025-11-25 (initialize) et 2026-07-28 (server/discover, sans état,
-//     _meta par requête, resultType, ttlMs/cacheScope) — spec modelcontextprotocol@2026-07-28 ;
-//   - A2A 1.0 : a2a.ts (mêmes outils, via call).
+// Protocol surfaces of the relay, all JSON-RPC 2.0 over the same tools (tools.ts):
+//   - native relay: `<tool>` methods (e.g. gemini_ask) and `tools/list`;
+//   - MCP Streamable HTTP, two epochs: 2025-11-25 (initialize) and 2026-07-28 (server/discover, stateless,
+//     per-request _meta, resultType, ttlMs/cacheScope) — spec modelcontextprotocol@2026-07-28;
+//   - A2A 1.0: a2a.ts (same tools, via call).
 import { validate } from "../llm/schema.ts";
 import type { JsonSchema } from "../llm/types.ts";
 import { hubCall, hubTools, isBuiltin } from "./mcp-hub.ts";
@@ -38,8 +38,8 @@ export const fail = (
   id: id ?? null,
   error: { code, message, ...(data ? { data } : {}) },
 });
-/** Code JSON-RPC d'une exception : entier seulement (une erreur réseau porte e.code = "ECONNREFUSED", interdit par
- * JSON-RPC 2.0 §5.1), sinon le code par défaut. */
+/** JSON-RPC code of an exception: integer only (a network error carries e.code = "ECONNREFUSED", forbidden by
+ * JSON-RPC 2.0 §5.1), otherwise the default code. */
 export const rpcCode = (e: any, d: number) =>
   Number.isInteger(e?.code) ? (e.code as number) : d;
 export const text = (v: unknown): string =>
@@ -54,7 +54,7 @@ export const text = (v: unknown): string =>
 
 export async function call(name: string, args: unknown) {
   if (typeof name !== "string")
-    throw Object.assign(new Error("méthode absente"), { code: -32600 });
+    throw Object.assign(new Error("method missing"), { code: -32600 });
   if (
     args !== undefined &&
     (args === null || typeof args !== "object" || Array.isArray(args))
@@ -65,7 +65,7 @@ export async function call(name: string, args: unknown) {
   const t = toolByName.get(name);
   if (!t && name.includes("__")) return hubCall(name, args ?? {});
   if (!t)
-    throw Object.assign(new Error(`outil inconnu : ${name}`), {
+    throw Object.assign(new Error(`unknown tool: ${name}`), {
       code: -32601,
       unknownTool: true,
     });
@@ -78,7 +78,7 @@ export async function call(name: string, args: unknown) {
   return t.run(input);
 }
 
-/** Relais natif : { method: "gemini_ask", params: { prompt } } ; « tools/list » pour l'inventaire. */
+/** Native relay: { method: "gemini_ask", params: { prompt } }; "tools/list" for the inventory. */
 export async function nativeRpc(r: Req): Promise<Res | null> {
   try {
     if (r.method === "tools/list")
@@ -96,7 +96,7 @@ export async function nativeRpc(r: Req): Promise<Res | null> {
 }
 
 const serverInfo = { name: "aphrody-relay", version: VERSION };
-// Outils propres puis outils des serveurs MCP utilisateur agrégés (<serveur>__<outil>), ordre déterministe.
+// Own tools, then tools of the aggregated user MCP servers (<server>__<tool>), deterministic order.
 const mcpTools = async (core = false) => [
   ...TOOLS.map((t) => ({
     name: t.name,
@@ -112,7 +112,7 @@ const mcpTools = async (core = false) => [
       }))),
 ];
 
-/** core : sans les serveurs agrégés de ~/.claude.json (route /mcp/core, pour Claude Code qui les déclare déjà). */
+/** core: without the servers aggregated from ~/.claude.json (route /mcp/core, for Claude Code which already declares them). */
 export async function mcpRpc(r: Req, core = false): Promise<Res | null> {
   const modern = r.params?._meta?.["io.modelcontextprotocol/protocolVersion"];
   if (modern && !MCP_VERSIONS.includes(modern))
@@ -168,7 +168,7 @@ export async function mcpRpc(r: Req, core = false): Promise<Res | null> {
         );
       case "tools/call": {
         const name = r.params?.name;
-        // Outil inconnu ou nom absent : erreur de protocole -32602 (spec MCP 2025-11-25, server/tools, Error Handling).
+        // Unknown tool or missing name: protocol error -32602 (MCP spec 2025-11-25, server/tools, Error Handling).
         if (typeof name !== "string" || !name)
           return r.id === undefined
             ? null
@@ -177,7 +177,7 @@ export async function mcpRpc(r: Req, core = false): Promise<Res | null> {
                 -32602,
                 "Invalid params: name must be a non-empty string",
               );
-        // /mcp/core : même périmètre à l'appel qu'au listage (aucun outil d'un serveur agrégé de ~/.claude.json).
+        // /mcp/core: same scope at call time as at listing time (no tool of an aggregated ~/.claude.json server).
         if (
           core &&
           name.includes("__") &&
@@ -197,14 +197,14 @@ export async function mcpRpc(r: Req, core = false): Promise<Res | null> {
           );
         try {
           const v = await call(name, args);
-          // Outil d'un serveur agrégé : son résultat MCP est renvoyé tel quel.
+          // Tool of an aggregated server: its MCP result is returned as is.
           if (!toolByName.has(name))
             return ok(r.id, complete(v as Record<string, unknown>));
           return ok(
             r.id,
             complete({
               content: [{ type: "text", text: text(v) }],
-              // structuredContent doit être un objet JSON (spécification MCP).
+              // structuredContent must be a JSON object (MCP specification).
               ...(v !== null && typeof v === "object" && !Array.isArray(v)
                 ? { structuredContent: v }
                 : {}),
@@ -212,14 +212,14 @@ export async function mcpRpc(r: Req, core = false): Promise<Res | null> {
             }),
           );
         } catch (e: any) {
-          // Erreurs de protocole : outil local ou serveur agrégé inconnu (-32602), ou erreur JSON-RPC relayée d'un
-          // serveur agrégé (son code). Les échecs d'exécution restent des résultats isError.
+          // Protocol errors: unknown local tool or aggregated server (-32602), or JSON-RPC error relayed from an
+          // aggregated server (its code). Execution failures stay isError results.
           const proto = e?.unknownTool
             ? fail(r.id, -32602, `Unknown tool: ${name}`)
             : e?.code === -32602 && !e?.rpc
               ? fail(r.id, -32602, e.message) // arguments rejected by the tool's inputSchema
               : e?.rpc && Number.isInteger(e.code)
-                ? // Serveur agrégé antérieur à 2025-11-25 : -32601 pour un outil inconnu, normalisé en -32602.
+                ? // Aggregated server older than 2025-11-25: -32601 for an unknown tool, normalized to -32602.
                   fail(
                     r.id,
                     e.code === -32601 ? -32602 : e.code,
@@ -240,7 +240,7 @@ export async function mcpRpc(r: Req, core = false): Promise<Res | null> {
       default:
         return r.id === undefined
           ? null
-          : fail(r.id, -32601, `méthode MCP inconnue : ${r.method}`);
+          : fail(r.id, -32601, `unknown MCP method: ${r.method}`);
     }
   } catch (e: any) {
     return r.id === undefined
@@ -249,7 +249,7 @@ export async function mcpRpc(r: Req, core = false): Promise<Res | null> {
   }
 }
 
-/** Corps JSON-RPC (objet ou lot) -> réponse(s) ; `null` si uniquement des notifications. */
+/** JSON-RPC body (object or batch) -> response(s); `null` if notifications only. */
 export async function dispatch(
   body: unknown,
   h: (r: Req) => Promise<Res | null>,
@@ -275,7 +275,7 @@ export async function dispatch(
       return fail(
         validId(id) ? (id ?? null) : null,
         -32600,
-        "requête JSON-RPC 2.0 invalide",
+        "invalid JSON-RPC 2.0 request",
       );
     }
     const r = b as Req;

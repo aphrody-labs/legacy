@@ -1,4 +1,4 @@
-// relay inspect : relevé de l interface Gemini dans le Chrome du relais (diagnostic des sélecteurs quand Google change le DOM).
+// relay inspect: survey of the Gemini interface in the relay's Chrome (selector diagnostic when Google changes the DOM).
 import { Tab, launchBrowser } from "./cdp.ts";
 await launchBrowser(true);
 const tab = await Tab.open(

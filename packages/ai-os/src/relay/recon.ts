@@ -1,12 +1,12 @@
-// relay recon : relevé de bout en bout de gemini.google.com (front, réseau, API internes, CSS, DOM) dans le Chrome du
-// relais (CDP), indexé dans <RELAY_HOME>/recon.sqlite (FTS5) et résumé en JSON. Aucun secret : les URL sont réduites à
-// origine + chemin + noms de paramètres (valeurs gardées seulement pour rpcids, bl, hl) ; pas de cookies, en-têtes ni corps.
-// Sert à détecter les changements d'interface (sélecteurs, RPC) avant qu'ils ne cassent gemini_ask en mode web.
+// relay recon: end-to-end survey of gemini.google.com (front end, network, internal APIs, CSS, DOM) in the relay's Chrome
+// (CDP), indexed in <RELAY_HOME>/recon.sqlite (FTS5) and summarized as JSON. No secret: URLs are reduced to
+// origin + path + parameter names (values kept only for rpcids, bl, hl); no cookies, headers or bodies.
+// Used to detect interface changes (selectors, RPC) before they break gemini_ask in web mode.
 import { Database } from "bun:sqlite";
 import { join } from "node:path";
 import { Tab, launchBrowser, relayHome } from "./cdp.ts";
 
-/** Expression évaluée dans la page : retourne le relevé sérialisable. */
+/** Expression evaluated in the page: returns the serializable survey. */
 export const RECON_EXPR = `(async () => {
   const keep = new Set(['rpcids', 'bl', 'hl', 'source-path']);
   const clean = (u) => { try { const x = new URL(u, location.href); const q = [...x.searchParams.keys()].map(k => keep.has(k) ? k + '=' + x.searchParams.get(k) : k); return x.origin + x.pathname + (q.length ? '?' + q.join('&') : ''); } catch { return 'invalid'; } };

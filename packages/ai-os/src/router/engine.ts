@@ -29,7 +29,7 @@ export class Exhausted extends Error {
     readonly status = 503,
   ) {
     super(
-      `aucune offre n'a répondu (${attempts.length} tentatives) : ${attempts
+      `no offer answered (${attempts.length} attempts): ${attempts
         .slice(-3)
         .map((a) => `${a.offer} ${a.status} ${a.error ?? ""}`)
         .join("; ")}`,
@@ -192,7 +192,7 @@ export class Router {
         o.signal?.throwIfAborted();
         if (forced > 0) {
           forced--;
-          return fail(503, "échec simulé (x-router-fail)", WALK.coolServer);
+          return fail(503, "simulated failure (x-router-fail)", WALK.coolServer);
         }
         const res = await this.call(offer, body, { stream, signal: ac.signal });
         if (!res.ok) {
@@ -246,14 +246,14 @@ export class Router {
         try {
           json = JSON.parse(raw);
         } catch {
-          return fail(502, `réponse non JSON : ${raw.slice(0, 120)}`, WALK.coolServer);
+          return fail(502, `non-JSON response: ${raw.slice(0, 120)}`, WALK.coolServer);
         }
         if (json.error || !json.choices?.length)
           return fail(502, JSON.stringify(json.error ?? json).slice(0, 200), WALK.coolServer);
         const msg = json.choices[0].message ?? {};
         // A reasoning model that spent every token thinking returns no visible answer: try the next offer.
         if (!msg.content && !msg.tool_calls?.length)
-          return fail(502, "réponse vide", WALK.coolEmpty);
+          return fail(502, "empty response", WALK.coolEmpty);
         finish(json, String(msg.content ?? "").length);
         attempts.push({ offer: offer.id, status: 200, ms: Math.round(performance.now() - t0) });
         json.model = offer.id;
@@ -295,7 +295,7 @@ export class Router {
     let maxCost: number | undefined;
     if (budget !== undefined) {
       const left = budget - this.store.spent(caller);
-      if (left <= 0) throw Object.assign(new Error(`budget épuisé pour ${caller} (${budget} USD)`), { status: 402 });
+      if (left <= 0) throw Object.assign(new Error(`budget exhausted for ${caller} (${budget} USD)`), { status: 402 });
       maxCost = left;
     }
     const need: Need = {
@@ -353,9 +353,9 @@ export class Router {
   /** A judge model reads both answers of a pair and votes (a = the answer that was returned). */
   async judge(pairId: string, judge?: string) {
     const p = this.store.pair(pairId);
-    if (!p) throw new Error(`paire inconnue : ${pairId}`);
+    if (!p) throw new Error(`unknown pair: ${pairId}`);
     const model = judge ?? (await this.route("auto:fast")).offers.find((x) => x.key !== p.a && x.key !== p.b)?.id;
-    if (!model) throw new Error("aucun modèle juge disponible");
+    if (!model) throw new Error("no judge model available");
     const r = await llmAsk(
       model,
       `Question:\n${p.prompt}\n\n=== A ===\n${p.ansA.slice(0, 6000)}\n\n=== B ===\n${p.ansB.slice(0, 6000)}\n\nWhich answer is better (correct, complete, concise)? Reply with exactly one token: A, B or TIE.`,
@@ -363,7 +363,7 @@ export class Router {
       { temperature: 0 },
     );
     const w = /\b(TIE|A|B)\b/i.exec(r.text)?.[1]?.toLowerCase();
-    if (!w) throw new Error(`verdict illisible du juge ${model} : ${r.text.slice(0, 80)}`);
+    if (!w) throw new Error(`unreadable verdict from judge ${model}: ${r.text.slice(0, 80)}`);
     return { ...this.store.vote(pairId, w as "a" | "b" | "tie", `judge:${model}`), judge: model, verdict: w };
   }
 

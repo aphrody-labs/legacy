@@ -1,16 +1,17 @@
-// Agent Client Protocol v1 (agentclientprotocol schema-v1.31.0 : schema/v1/schema.json, docs/protocol/v1) sur stdio :
-// un client ACP (éditeur, Hermes, OpenClaw acpx) utilise Gemini (ou Claude Code headless) comme agent.
-//   initialize (négociation de version), session/new, session/load (rejoue l'historique en session/update),
+// Agent Client Protocol v1 (agentclientprotocol schema-v1.31.0: schema/v1/schema.json, docs/protocol/v1) over stdio:
+// an ACP client (editor, Hermes, OpenClaw acpx) uses Gemini (or headless Claude Code) as the agent.
+//   initialize (version negotiation), session/new, session/load (replays history as session/update),
 //   session/list, session/prompt (agent_message_chunk puis stopReason end_turn), session/cancel (stopReason cancelled).
-// Moteur par session : _meta.engine « claude », _meta.model (ou RELAY_ACP_MODEL) = modèle découvert fournisseur/modèle
-// (llm_models, historique de la session repris dans le prompt), sinon Gemini.
-// Sessions persistées dans le dossier du relais (acp-sessions.json) : conversation Gemini, cwd, historique.
-// Codes d'erreur ACP : -32700 JSON invalide, -32602 paramètres, -32002 session absente, -32603 échec interne
-// (-32000 signifie « authentification requise » en ACP et n'est pas utilisé pour un échec de moteur).
+// Engine per session: _meta.engine "claude", _meta.model (or RELAY_ACP_MODEL) = discovered provider/model
+// (llm_models, session history carried into the prompt), otherwise Gemini.
+// Sessions persisted in the relay folder (acp-sessions.json): Gemini conversation, cwd, history.
+// ACP error codes: -32700 invalid JSON, -32602 parameters, -32002 missing session, -32603 internal failure
+// (-32000 means "authentication required" in ACP and is not used for an engine failure).
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { llmAsk } from "../llm/model.ts";
-import { claude, gemini } from "./backends.ts";
+import { listModels } from "../llm/models.ts";
+import { claude, gemini, opencode } from "./backends.ts";
 import { relayHome } from "./cdp.ts";
 import { VERSION } from "./protocols.ts";
 
@@ -25,7 +26,7 @@ type Msg = {
 type Turn = { role: "user" | "agent"; text: string };
 type Session = {
   cwd: string;
-  engine: "gemini" | "claude" | "llm";
+  engine: "gemini" | "claude" | "opencode" | "llm";
   model?: string;
   chat?: string;
   title?: string;
@@ -52,12 +53,12 @@ const save = () => {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   writeFileSync(f, JSON.stringify(Object.fromEntries(load())));
 };
-/** Tour en cours par session : session/cancel le termine avec stopReason « cancelled ». */
+/** Turn in progress per session: session/cancel ends it with stopReason "cancelled". */
 const pending = new Map<string, () => void>();
 
 export type Out = (m: unknown) => void;
 
-/** Modèle sans état : les derniers tours de la session précèdent la demande. */
+/** Stateless model: the session's last turns precede the request. */
 const withHistory = (h: Turn[], prompt: string) =>
   h.length
     ? `${h
@@ -66,7 +67,7 @@ const withHistory = (h: Turn[], prompt: string) =>
         .join("\n\n")}\n\nUser: ${prompt}`
     : prompt;
 
-/** cwd et mcpServers sont requis par NewSessionRequest et LoadSessionRequest ; cwd doit être absolu. */
+/** cwd and mcpServers are required by NewSessionRequest and LoadSessionRequest; cwd must be absolute. */
 const badSetup = (p: any) =>
   typeof p?.cwd !== "string" || !isAbsolute(p.cwd)
     ? "cwd : chemin absolu requis"
@@ -122,16 +123,29 @@ export async function handle(m: Msg, write: Out) {
       const bad = badSetup(p);
       if (bad) return error(-32602, bad);
       const id = crypto.randomUUID();
+      const eng = p._meta?.engine;
+      let modelSpec = p._meta?.model ?? Bun.env.RELAY_ACP_MODEL;
+      if (eng === "openrouter" && !modelSpec) {
+        const discovered = await listModels().catch(() => []);
+        modelSpec =
+          discovered.find((g) => g.provider === "openrouter")?.models[0]?.id ??
+          "openrouter/auto";
+      }
       load().set(id, {
         cwd: p.cwd,
-        ...(p._meta?.engine === "claude"
+        ...(eng === "claude"
           ? { engine: "claude" as const }
-          : (p._meta?.model ?? Bun.env.RELAY_ACP_MODEL)
+          : eng === "opencode"
             ? {
-                engine: "llm" as const,
-                model: String(p._meta?.model ?? Bun.env.RELAY_ACP_MODEL),
+                engine: "opencode" as const,
+                ...(modelSpec ? { model: String(modelSpec) } : {}),
               }
-            : { engine: "gemini" as const }),
+            : modelSpec || eng === "openrouter"
+              ? {
+                  engine: "llm" as const,
+                  model: String(modelSpec),
+                }
+              : { engine: "gemini" as const }),
         updatedAt: new Date().toISOString(),
         history: [],
       });
@@ -142,7 +156,7 @@ export async function handle(m: Msg, write: Out) {
       const bad = badSetup(p);
       if (bad) return error(-32602, bad);
       const s = load().get(p.sessionId);
-      if (!s) return error(-32002, `session inconnue : ${p.sessionId}`);
+      if (!s) return error(-32002, `unknown session: ${p.sessionId}`);
       for (const t of s.history)
         update(p.sessionId, {
           sessionUpdate:
@@ -166,11 +180,11 @@ export async function handle(m: Msg, write: Out) {
     case "session/prompt": {
       const id = p.sessionId;
       const s = load().get(id);
-      if (!s) return error(-32002, `session inconnue : ${id}`);
+      if (!s) return error(-32002, `unknown session: ${id}`);
       if (!Array.isArray(p.prompt))
         return error(-32602, "prompt : tableau de blocs requis");
       if (pending.has(id))
-        return error(-32602, "un tour est déjà en cours pour cette session");
+        return error(-32602, "a turn is already in progress for this session");
       const prompt = promptText(p.prompt);
       let cancelled = false;
       const done = new Promise<void>((r) =>
@@ -183,9 +197,11 @@ export async function handle(m: Msg, write: Out) {
         const run =
           s.engine === "claude"
             ? claude(prompt)
-            : s.engine === "llm"
-              ? llmAsk(s.model!, withHistory(s.history, prompt))
-              : gemini(prompt, { chat: s.chat });
+            : s.engine === "opencode"
+              ? opencode(withHistory(s.history, prompt), s.model)
+              : s.engine === "llm"
+                ? llmAsk(s.model!, withHistory(s.history, prompt))
+                : gemini(prompt, { chat: s.chat });
         const a = await Promise.race([run, done.then(() => null)]);
         if (cancelled || !a) {
           run.catch(() => {});
@@ -217,7 +233,7 @@ export async function handle(m: Msg, write: Out) {
       return;
     default:
       if (m.id !== undefined)
-        return error(-32601, `méthode ACP non prise en charge : ${m.method}`);
+        return error(-32601, `unsupported ACP method: ${m.method}`);
   }
 }
 

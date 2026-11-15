@@ -1,9 +1,9 @@
-// headersHelper du serveur MCP « relay » de Claude Code (infra/agents/toolchain.toml, headers_helper) : imprime
-// l'en-tête Authorization portant le jeton local du relais (fichier privé de l'utilisateur), jamais écrit dans
-// ~/.claude.json ni dans argv. Sans consentement OAuth interactif : le relais accepte son jeton fixe en local.
+// headersHelper of Claude Code's "relay" MCP server (infra/agents/toolchain.toml, headers_helper): prints
+// the Authorization header carrying the relay's local token (user's private file), never written to
+// ~/.claude.json or in argv. No interactive OAuth consent: the relay accepts its fixed token locally.
 import { relayToken } from "./server.ts";
 
-// Écriture attendue avant la sortie : un process.exit() immédiat peut tronquer un tube sous Windows.
+// Write expected before exit: an immediate process.exit() can truncate a pipe on Windows.
 await Bun.write(
   Bun.stdout,
   JSON.stringify({ Authorization: `Bearer ${await relayToken()}` }),

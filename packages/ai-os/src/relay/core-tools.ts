@@ -1,4 +1,4 @@
-// Outils noyau Aphrody exposés via @aphrody/ai-os (MCP, A2A, JSON-RPC) :
+// Aphrody core tools exposed through @aphrody/ai-os (MCP, A2A, JSON-RPC):
 // AST Tree-sitter, Ghidra P-Code/Pseudo-C, RE, MinGW-REA, Migration, LLVM IR, .NET bindgen.
 import { s } from "../llm/schema";
 import type { Tool } from "./tools.ts";

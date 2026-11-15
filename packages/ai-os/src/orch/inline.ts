@@ -197,7 +197,7 @@ export async function inline(
       tokens: j.tokens ?? estimate(prompt, j.text),
     };
   // Classify on stderr and the structured error field, not on the text produced by the agent (which may quote
-  // « 401 » ou « billing » dans une revue).
+  // "401" or "billing" in a review).
   const diag = (
     j.error ? `${j.errText ?? j.text}\n${r.err}` : r.err || r.out.slice(-1000)
   )

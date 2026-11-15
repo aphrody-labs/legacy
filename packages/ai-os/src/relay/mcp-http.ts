@@ -1,11 +1,11 @@
-// Client MCP « Streamable HTTP » (spec 2025-11-25) partagé : relais (mcp-hub, serveurs http agrégés) et client Stitch
+// Shared MCP "Streamable HTTP" client (spec 2025-11-25): relay (mcp-hub, aggregated http servers) and Stitch client
 // (src/google/stitch). Remplace @modelcontextprotocol/sdk (Client + StreamableHTTPClientTransport) : POST JSON-RPC,
-// réponse JSON ou flux SSE, en-tête Mcp-Session-Id conservé après initialize, DELETE de session à la fermeture.
-// Les en-têtes ne sont jamais journalisés.
+// JSON response or SSE stream, Mcp-Session-Id header kept after initialize, session DELETE on close.
+// Headers are never logged.
 
 export const MCP_PROTOCOL = "2025-11-25";
 
-/** Réponse HTTP non OK (même rôle que StreamableHTTPError du SDK MCP : `code` = statut HTTP). */
+/** Non-OK HTTP response (same role as the MCP SDK's StreamableHTTPError: `code` = HTTP status). */
 export class McpHttpError extends Error {
   constructor(
     readonly code: number,
@@ -17,7 +17,7 @@ export class McpHttpError extends Error {
   }
 }
 
-/** Erreur JSON-RPC renvoyée par le serveur (code et données conservés). */
+/** JSON-RPC error returned by the server (code and data kept). */
 export class McpRpcError extends Error {
   readonly rpc = true;
   constructor(
@@ -37,16 +37,16 @@ export type McpFetch = (
 
 export type McpHttpOptions = {
   url: string;
-  /** En-têtes fixes (auth comprise). */
+  /** Fixed headers (auth included). */
   headers?: Record<string, string>;
-  /** En-têtes calculés à chaque requête (jeton OAuth à courte durée). */
+  /** Headers computed on every request (short-lived OAuth token). */
   dynamicHeaders?: () => Promise<Record<string, string>>;
   clientInfo?: { name: string; version: string };
-  /** fetch utilisé (le relais passe outboundFetch : cache, singleflight). */
+  /** fetch used (the relay passes outboundFetch: cache, singleflight). */
   fetch?: McpFetch;
 };
 
-/** Premier message JSON-RPC d'une réponse JSON ou SSE (`data:` lignes, plusieurs lignes concaténées). */
+/** First JSON-RPC message of a JSON or SSE response (`data:` lines, several lines concatenated). */
 export function parseMcpBody(body: string, id?: number): any {
   const t = body.trimStart();
   if (!t) return {};
@@ -64,13 +64,15 @@ export function parseMcpBody(body: string, id?: number): any {
   return {};
 }
 
-/** Message JSON-RPC portant `id`, sinon erreur (flux coupé ou réponse absente ne passent pas pour un succès). */
-function reply(body: string, id: number): any {
-  const m = parseMcpBody(body, id);
+/** JSON-RPC message carrying `id`, otherwise error (a cut stream or missing response does not pass as a success). */
+function reply(body: string, id: number, shared = false): any {
+  // A body replayed by outboundFetch (cache hit, coalesced flight) answers an earlier request: `id` is ignored in its
+  // cache key, so it carries that request's id; the one-request body is taken as is.
+  const m = parseMcpBody(body, shared ? undefined : id);
   if (m.error)
     throw new McpRpcError(m.error.code, m.error.message, m.error.data);
-  if (m.id !== id)
-    throw new McpRpcError(-32603, `réponse JSON-RPC ${id} absente`);
+  if (shared ? !("result" in m) : m.id !== id)
+    throw new McpRpcError(-32603, `JSON-RPC response ${id} missing`);
   return m.result;
 }
 
@@ -81,7 +83,7 @@ export class McpHttpClient {
   constructor(private o: McpHttpOptions) {}
 
   private async headers(): Promise<Record<string, string>> {
-    // En-têtes protocolaires après ceux de l'appelant : ils ne peuvent pas être écrasés.
+    // Protocol headers after the caller's: they cannot be overwritten.
     return {
       ...(this.o.headers ?? {}),
       ...((await this.o.dynamicHeaders?.()) ?? {}),
@@ -117,7 +119,7 @@ export class McpHttpClient {
     return r;
   }
 
-  /** initialize + notifications/initialized, une seule fois (appels concurrents partagés) ; résultat d'initialize. */
+  /** initialize + notifications/initialized, once only (concurrent calls shared); result of initialize. */
   connect(): Promise<unknown> {
     this.initialized ??= (async () => {
       const id = ++this.seq;
@@ -150,7 +152,7 @@ export class McpHttpClient {
     return this.initialized;
   }
 
-  /** Requête JSON-RPC ; `init` est passé tel quel au fetch (ex. { deterministic: true } pour outboundFetch). */
+  /** JSON-RPC request; `init` is passed as is to fetch (e.g. { deterministic: true } for outboundFetch). */
   async request<T = any>(
     method: string,
     params: unknown,
@@ -159,12 +161,12 @@ export class McpHttpClient {
     const send = async () => {
       const id = ++this.seq;
       const r = await this.post({ jsonrpc: "2.0", id, method, params }, opts);
-      return reply(await r.text(), id) as T;
+      return reply(await r.text(), id, r.headers.has("x-aphrody-cache")) as T;
     };
     try {
       return await send();
     } catch (e) {
-      // Session expirée (spec : HTTP 404 avec Mcp-Session-Id) : nouvelle session, un seul nouvel essai.
+      // Session expired (spec: HTTP 404 with Mcp-Session-Id): new session, a single new attempt.
       if (!(e instanceof McpHttpError) || e.code !== 404 || !this.session)
         throw e;
       this.session = undefined;
@@ -182,7 +184,7 @@ export class McpHttpClient {
     return this.request<T>("tools/call", { name, arguments: args }, opts);
   }
 
-  /** Termine la session côté serveur (DELETE, best effort). */
+  /** Ends the session on the server side (DELETE, best effort). */
   async close(): Promise<void> {
     const sid = this.session;
     this.session = undefined;

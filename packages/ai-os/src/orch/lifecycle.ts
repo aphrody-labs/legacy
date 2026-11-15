@@ -139,7 +139,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
       check: "bun check && ay arch check --strict",
       commit: {
         paths: [...paths, "docs/reviews"],
-        message: msg("corrections du tribunal"),
+        message: msg("tribunal fixes"),
       },
       onFail: "continue",
       budget_usd: 5,

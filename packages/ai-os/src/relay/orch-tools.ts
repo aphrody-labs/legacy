@@ -1,5 +1,5 @@
-// Orchestrateur exposé par le relais (MCP, A2A, JSON-RPC) : graphe d'étapes multi-hôtes, routage des moteurs, santé.
-// Mêmes fonctions que `ai-os orch` (src/orch/cli.ts) ; sorties JSON.
+// Orchestrator exposed by the relay (MCP, A2A, JSON-RPC): multi-host step graph, engine routing, health.
+// Same functions as `ai-os orch` (src/orch/cli.ts); JSON output.
 import { s } from "../llm/schema";
 import type { Tool } from "./tools.ts";
 

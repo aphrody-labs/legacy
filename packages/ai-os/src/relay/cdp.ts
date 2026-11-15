@@ -1,5 +1,5 @@
-// Chrome DevTools Protocol, sans dépendance : lancement d'un Chrome dédié (profil propre au relais, Chrome 136+ refuse le
-// débogage distant sur le profil par défaut) et pilotage d'un onglet par WebSocket (Target / Page / Runtime / Input).
+// Chrome DevTools Protocol, dependency-free: launches a dedicated Chrome (relay-specific profile, Chrome 136+ refuses
+// remote debugging on the default profile) and drives a tab over WebSocket (Target / Page / Runtime / Input).
 import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -14,7 +14,7 @@ export const relayHome = () =>
         "relay",
       ));
 
-/** Exécutable Chrome : RELAY_CHROME, sinon chemin d'application enregistré (Windows), sinon PATH (Linux). */
+/** Chrome executable: RELAY_CHROME, otherwise registered application path (Windows), otherwise PATH (Linux). */
 export function chromePath(): string {
   if (Bun.env.RELAY_CHROME) return Bun.env.RELAY_CHROME;
   if (process.platform === "win32") {
@@ -37,12 +37,12 @@ export function chromePath(): string {
     const p = Bun.which(c);
     if (p) return p;
   }
-  throw new Error("Chrome introuvable : définir RELAY_CHROME");
+  throw new Error("Chrome not found: set RELAY_CHROME");
 }
 
 export const cdpPort = () => Number(Bun.env.RELAY_CDP_PORT ?? 9333);
 
-/** Lance le Chrome du relais (sans effet s'il répond déjà). `headless` false pour la connexion Google initiale. */
+/** Launches the relay's Chrome (no effect if it already answers). `headless` false for the initial Google sign-in. */
 export async function launchBrowser(headless: boolean): Promise<void> {
   if (await version().catch(() => null)) return;
   const profile = join(relayHome(), "chrome");
@@ -65,7 +65,7 @@ export async function launchBrowser(headless: boolean): Promise<void> {
     if (await version().catch(() => null)) return;
     await Bun.sleep(200);
   }
-  throw new Error(`Chrome du relais injoignable sur 127.0.0.1:${cdpPort()}`);
+  throw new Error(`Relay Chrome unreachable on 127.0.0.1:${cdpPort()}`);
 }
 
 const base = () => `http://127.0.0.1:${cdpPort()}`;
@@ -109,7 +109,7 @@ export class Tab {
     return new Promise<void>((ok, ko) => {
       this.ws = new WebSocket(url);
       this.ws.onopen = () => ok();
-      this.ws.onerror = () => ko(new Error("CDP : connexion refusée"));
+      this.ws.onerror = () => ko(new Error("CDP: connection refused"));
       this.ws.onmessage = (e) => {
         const m = JSON.parse(String(e.data));
         const p = m.id && this.pending.get(m.id);
@@ -131,7 +131,7 @@ export class Tab {
     });
   }
 
-  /** Évalue une expression (promesses attendues) dans la page ; valeur sérialisée en JSON. */
+  /** Evaluates an expression (promises awaited) in the page; value serialized as JSON. */
   async eval<T = unknown>(expression: string): Promise<T> {
     const r = await this.send("Runtime.evaluate", {
       expression,
@@ -151,7 +151,7 @@ export class Tab {
     await this.send("Page.navigate", { url });
   }
 
-  /** Saisie réelle (Input.insertText : équivalent d'une frappe pour les éditeurs riches). */
+  /** Real typing (Input.insertText: equivalent to a keystroke for rich editors). */
   insertText(text: string) {
     return this.send("Input.insertText", { text });
   }

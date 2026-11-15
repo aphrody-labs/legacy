@@ -1,10 +1,10 @@
-// Synchronisation des comptes du propriétaire : chaque adresse de ACCOUNTS est propriétaire partout où les CLI déjà
-// authentifiées le permettent. Idempotent : seul l'écart est appliqué ; `apply: false` (défaut) ne fait que le relevé.
-//   GitHub    : organisations dont le compte gh est admin -> invitation par e-mail, rôle admin (POST /orgs/{org}/invitations)
-//   gcloud    : projets listés par le compte actif -> roles/owner pour user:<adresse>
-//   Cloudflare: comptes visibles par le jeton -> membre « Super Administrator » (API /accounts/{id}/members)
-// Non automatisable sans connexion de l'utilisateur : npm (npm login), Vercel (offre Hobby : pas de membres), OVH,
-// Microsoft 365 / Outlook (aucune session CLI) ; signalés dans le relevé.
+// Sync of the owner's accounts: each ACCOUNTS address is owner wherever the already authenticated CLIs
+// allow it. Idempotent: only the gap is applied; `apply: false` (default) only surveys.
+//   GitHub    : organizations where the gh account is admin -> email invitation, admin role (POST /orgs/{org}/invitations)
+//   gcloud    : projects listed by the active account -> roles/owner for user:<address>
+//   Cloudflare: accounts visible to the token -> "Super Administrator" member (API /accounts/{id}/members)
+// Not automatable without the user signing in: npm (npm login), Vercel (Hobby plan: no members), OVH,
+// Microsoft 365 / Outlook (no CLI session); flagged in the survey.
 export const ACCOUNTS = (
   Bun.env.RELAY_OWNER_EMAILS ??
   [
@@ -52,7 +52,7 @@ async function github(apply: boolean): Promise<Step[]> {
     .split(/\r?\n/)
     .filter(Boolean);
   for (const org of orgs) {
-    // Adresses déjà membres (e-mail public ou vérifié visible) ou déjà invitées.
+    // Addresses already members (public or verified email visible) or already invited.
     const invited = new Set(
       (
         await run([
@@ -103,7 +103,7 @@ async function github(apply: boolean): Promise<Step[]> {
         state: r.code === 0 ? "applied" : already ? "present" : "error",
         detail:
           r.code === 0
-            ? "invitation admin envoyée"
+            ? "admin invitation sent"
             : (r.out || r.err).slice(0, 200),
       });
     }
@@ -158,7 +158,7 @@ async function gcloud(apply: boolean): Promise<Step[]> {
         "--quiet",
         "--format=none",
       ]);
-      // Projet hors organisation : Google impose une invitation de propriétaire par la console (SOLO_MUST_INVITE_OWNERS).
+      // Project outside an organization: Google requires an owner invitation through the console (SOLO_MUST_INVITE_OWNERS).
       const invite = /SOLO_MUST_INVITE_OWNERS/.test(r.err + r.out);
       steps.push({
         target,
@@ -168,7 +168,7 @@ async function gcloud(apply: boolean): Promise<Step[]> {
           r.code === 0
             ? "roles/owner"
             : invite
-              ? `invitation propriétaire par la console : https://console.cloud.google.com/iam-admin/iam?project=${p}`
+              ? `owner invitation through the console: https://console.cloud.google.com/iam-admin/iam?project=${p}`
               : r.err.split(/\r?\n/).at(-1)?.slice(0, 240),
       });
     }
@@ -185,7 +185,7 @@ async function cloudflare(apply: boolean): Promise<Step[]> {
         account: "*",
         state: "manual",
         detail:
-          "CLOUDFLARE_API_TOKEN absent (droit Account Members:Edit requis)",
+          "CLOUDFLARE_API_TOKEN missing (Account Members:Edit permission required)",
       },
     ];
   const cf = async (path: string, init?: RequestInit) =>
@@ -206,7 +206,7 @@ async function cloudflare(apply: boolean): Promise<Step[]> {
         target: `cloudflare:${acc.name}`,
         account: "*",
         state: "manual",
-        detail: members.errors?.[0]?.message ?? "lecture des membres refusée",
+        detail: members.errors?.[0]?.message ?? "member listing refused",
       });
       continue;
     }
@@ -232,7 +232,7 @@ async function cloudflare(apply: boolean): Promise<Step[]> {
           state: "missing",
           detail: superAdmin
             ? undefined
-            : "rôle Super Administrator introuvable",
+            : "Super Administrator role not found",
         });
         continue;
       }
@@ -265,19 +265,19 @@ export async function accountsSync(apply = false) {
       account: "*",
       state: "manual",
       detail:
-        "npm login puis npm org set <org> <utilisateur> owner (npm adresse des utilisateurs, pas des e-mails)",
+        "npm login then npm org set <org> <user> owner (npm addresses users, not emails)",
     },
     {
       target: "vercel",
       account: "*",
       state: "manual",
-      detail: "équipe aphrody-dev en offre Hobby : pas de membres",
+      detail: "aphrody-dev team on the Hobby plan: no members",
     },
     {
       target: "ovh / microsoft-365 / outlook",
       account: "*",
       state: "manual",
-      detail: "aucune session CLI : connexion de l'utilisateur requise",
+      detail: "no CLI session: user sign-in required",
     },
   );
   return { apply, accounts: ACCOUNTS, steps };

@@ -1,8 +1,8 @@
-// Agrégation des serveurs MCP utilisateur de Claude Code (~/.claude.json, clé mcpServers) dans le relais : chaque outil
-// d'un serveur est exposé sous le nom `<serveur>__<outil>`. stdio : processus lancé à la demande (protocole 2025-11-25,
-// une ligne JSON par message) ; http : POST JSON-RPC avec les en-têtes configurés. Les valeurs d'env/en-têtes ne sont
-// jamais journalisées. Les connecteurs claude.ai (Gmail, Drive, Docs, Slides, Sheets, Calendar) ne sont joignables que
-// par une session Claude Code : outil `workspace_ask` (tools.ts).
+// Aggregation of Claude Code's user MCP servers (~/.claude.json, mcpServers key) into the relay: each tool
+// of a server is exposed as `<server>__<tool>`. stdio: process launched on demand (protocol 2025-11-25,
+// one JSON line per message); http: JSON-RPC POST with the configured headers. Env/header values are
+// never logged. The claude.ai connectors (Gmail, Drive, Docs, Slides, Sheets, Calendar) are only reachable
+// from a Claude Code session: `workspace_ask` tool (tools.ts).
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -19,15 +19,15 @@ type Conf = {
   env?: Record<string, string>;
   url?: string;
   headers?: Record<string, string>;
-  /** En-tête -> nom de variable d'environnement (hub.json, [[hub.mcp]] headers) ; absent = non envoyé. */
+  /** Header -> environment variable name (hub.json, [[hub.mcp]] headers); absent = not sent. */
   headerEnv?: Record<string, string>;
-  /** En-têtes calculés à chaque appel (jeton OAuth à courte durée). */
+  /** Headers computed on every call (short-lived OAuth token). */
   dynamicHeaders?: () => Promise<Record<string, string>>;
 };
 
-// Serveurs MCP distants de Google intégrés au relais, authentifiés par le jeton OAuth du compte gcloud actif
-// (aucune clé d'API, src/google/auth.ts) : Stitch (stitch.googleapis.com/mcp, même URL que le client absorbé
-// src/google/stitch). Les outils sont exposés sous stitch__<outil>.
+// Google remote MCP servers built into the relay, authenticated by the active gcloud account's OAuth token
+// (no API key, src/google/auth.ts): Stitch (stitch.googleapis.com/mcp, same URL as the absorbed client
+// src/google/stitch). Tools are exposed as stitch__<tool>.
 const BUILTIN: Record<string, Conf> = {
   stitch: {
     type: "http",
@@ -43,8 +43,8 @@ type Remote = {
 };
 
 /**
- * Serveurs réservés au relais (<dossier du relais>/hub.json, { mcpServers }), écrits par toolchain.ts depuis
- * [[hub.mcp]] : joignables par hub_tools / hub_call sans que leurs outils chargent le contexte d'un client.
+ * Servers reserved for the relay (<relay folder>/hub.json, { mcpServers }), written by toolchain.ts from
+ * [[hub.mcp]]: reachable through hub_tools / hub_call without their tools loading a client's context.
  */
 async function hubFile(): Promise<Record<string, Conf>> {
   const f = Bun.file(join(relayHome(), "hub.json"));
@@ -61,7 +61,7 @@ export async function userServers(): Promise<Record<string, Conf>> {
     ...(await hubFile()),
     ...(((await f.exists()) ? (await f.json()).mcpServers : {}) ?? {}),
   } as Record<string, Conf>;
-  // Le relais lui-même est enregistré comme serveur « relay » : pas de boucle.
+  // The relay itself is registered as a "relay" server: no loop.
   return {
     ...(Bun.env.RELAY_BUILTIN_MCP === "0" ? {} : BUILTIN),
     ...Object.fromEntries(
@@ -70,7 +70,7 @@ export async function userServers(): Promise<Record<string, Conf>> {
   };
 }
 
-/** Enfants stdio vivants : tués à la sortie du relais (sinon un `agent-desktop mcp` orphelin par pont stdio). */
+/** Live stdio children: killed when the relay exits (otherwise one orphan `agent-desktop mcp` per stdio bridge). */
 const children = new Set<ReturnType<typeof Bun.spawn>>();
 export const closeHub = () => {
   for (const c of children) c.kill();
@@ -87,8 +87,8 @@ class StdioServer {
 
   private async start() {
     if (this.p) return;
-    // agent-desktop refuse un état dont le propriétaire diffère du jeton (session élevée = BUILTIN\Administrateurs,
-    // non élevée = utilisateur) : racine d'état dédiée au relais, créée par son propre processus.
+    // agent-desktop refuses a state whose owner differs from the token (elevated session = BUILTIN\Administrators,
+    // non-elevated = user): state root dedicated to the relay, created by its own process.
     const home = /agent-desktop(\.exe)?$/i.test(this.conf.command ?? "")
       ? { AGENT_DESKTOP_HOME: join(relayHome(), "agent-desktop") }
       : {};
@@ -134,7 +134,7 @@ class StdioServer {
       const t = setTimeout(
         () => (
           this.pending.delete(id),
-          ko(new Error(`${method} : délai dépassé`))
+          ko(new Error(`${method}: timed out`))
         ),
         timeout,
       );
@@ -157,8 +157,8 @@ class StdioServer {
   }
 }
 
-// Serveur http agrégé : transport partagé avec le client Stitch (mcp-http.ts) sur outboundFetch. tools/list et
-// tools/call d'un outil readOnlyHint sont des lectures, cachées ; le reste passe par le singleflight.
+// Aggregated http server: transport shared with the Stitch client (mcp-http.ts) over outboundFetch. tools/list and
+// tools/call of a readOnlyHint tool are reads, cached; everything else goes through the singleflight.
 class HttpServer {
   private c: McpHttpClient;
   constructor(conf: Conf) {
@@ -192,7 +192,7 @@ async function server(name: string) {
   if (!s) {
     const c = (await userServers())[name];
     if (!c)
-      throw Object.assign(new Error(`serveur MCP inconnu : ${name}`), {
+      throw Object.assign(new Error(`unknown MCP server: ${name}`), {
         code: -32601,
         unknownTool: true,
       });
@@ -210,24 +210,24 @@ async function server(name: string) {
   return s;
 }
 
-/** Délai de listage par serveur agrégé : `tools/list` du relais doit tenir sous le délai des clients MCP. */
+/** Listing timeout per aggregated server: the relay's `tools/list` must fit under the MCP clients' timeout. */
 const LIST_TIMEOUT = Number(Bun.env.RELAY_HUB_LIST_TIMEOUT ?? 3000);
-/** Serveur lent ou injoignable : pas de nouvel essai synchrone avant cette date (le listage tardif remplit le cache). */
+/** Slow or unreachable server: no new synchronous attempt before this date (the late listing fills the cache). */
 const retryAt = new Map<string, number>();
 
 /**
- * Outils de tous les serveurs utilisateur (préfixés), listés en parallèle avec un délai par serveur. Un serveur qui
- * dépasse le délai est omis cette fois-ci ; son listage continue en arrière-plan et alimente le cache ; en cas
- * d'échec il n'est retenté qu'après 10 min. Avant ce correctif, un serveur lent était retenté en série à chaque
- * appel et `tools/list` prenait 22 s (« tools fetch failed — Request timed out » dans `claude mcp list`).
+ * Tools of all user servers (prefixed), listed in parallel with a per-server timeout. A server that
+ * exceeds the timeout is omitted this time; its listing continues in the background and feeds the cache; on
+ * failure it is retried only after 10 min. Before this fix, a slow server was retried serially on every
+ * call and `tools/list` took 22 s ("tools fetch failed — Request timed out" in `claude mcp list`).
  */
-/** Serveur intégré au relais (jamais issu de ~/.claude.json). */
+/** Server built into the relay (never from ~/.claude.json). */
 export const isBuiltin = (server: string) => Object.hasOwn(BUILTIN, server);
 
 export async function hubTools(
   builtinOnly = false,
 ): Promise<(Remote & { server: string })[]> {
-  // builtinOnly : client qui déclare déjà lui-même les serveurs de ~/.claude.json (Claude Code, route /mcp/core).
+  // builtinOnly: client that already declares the ~/.claude.json servers itself (Claude Code, route /mcp/core).
   const names = Object.keys(await userServers())
     .filter((n) => !builtinOnly || Object.hasOwn(BUILTIN, n))
     .sort();
@@ -258,10 +258,10 @@ export async function hubTools(
   );
 }
 
-/** Préchargement au démarrage du relais : le premier `tools/list` d'un client trouve le cache chaud. */
+/** Preload at relay startup: a client's first `tools/list` finds a warm cache. */
 export const warmHub = () => void hubTools().catch(() => {});
 
-/** Erreur JSON-RPC d'un serveur agrégé : code et données conservés (erreur de protocole relayée telle quelle). */
+/** JSON-RPC error of an aggregated server: code and data kept (protocol error relayed as is). */
 const rpcError = (e: { code?: number; message: string; data?: unknown }) =>
   Object.assign(new Error(e.message), {
     code: e.code,
@@ -272,7 +272,7 @@ const rpcError = (e: { code?: number; message: string; data?: unknown }) =>
 export async function hubCall(prefixed: string, args: unknown) {
   const i = prefixed.indexOf("__");
   if (i < 0)
-    throw Object.assign(new Error(`outil inconnu : ${prefixed}`), {
+    throw Object.assign(new Error(`unknown tool: ${prefixed}`), {
       code: -32601,
     });
   const [srv, tool] = [prefixed.slice(0, i), prefixed.slice(i + 2)];

@@ -1,13 +1,19 @@
-// Moteurs du relais.
-//   gemini-web : gemini.google.com piloté par CDP dans le Chrome du relais (sélecteurs relevés le 2026-11-13 :
-//                rich-textarea .ql-editor, bouton aria-label « Send message » / « Envoyer un message », model-response message-content,
-//                bouton d'arrêt présent tant que la génération court ; aller-retour mesuré : 10,5 s).
-//   antigravity : Antigravity CLI headless (`agy -p … --output-format json`), session Antigravity de l'utilisateur, modèles Gemini 4.
-//   claude     : Claude Code headless (`claude -p --output-format json`), authentification existante de la CLI.
-import { type Answer, agy, claude, claudeWithTools } from "../llm/agents.ts";
+// Relay engines.
+//   gemini-web : gemini.google.com driven over CDP in the relay's Chrome (selectors surveyed on 2026-11-13:
+//                rich-textarea .ql-editor, button aria-label "Send message" / "Envoyer un message", model-response message-content,
+//                stop button present while generation runs; measured round trip: 10.5 s).
+//   antigravity : Antigravity CLI headless (`agy -p … --output-format json`), the user's Antigravity session, Gemini 4 models.
+//   claude     : headless Claude Code (`claude -p --output-format json`), the CLI's existing authentication.
+import {
+  type Answer,
+  agy,
+  claude,
+  claudeWithTools,
+  opencode,
+} from "../llm/agents.ts";
 import { Tab, launchBrowser } from "./cdp.ts";
 
-export { type Answer, agy, claude, claudeWithTools };
+export { type Answer, agy, claude, claudeWithTools, opencode };
 
 const GEMINI = "https://gemini.google.com/";
 let queue: Promise<unknown> = Promise.resolve();
@@ -17,7 +23,7 @@ const serial = <T>(f: () => Promise<T>): Promise<T> => {
   return r;
 };
 
-/** Pose une question à Gemini (web). `chat` : identifiant ou URL d'une conversation existante, sinon conversation neuve. */
+/** Asks Gemini (web) a question. `chat`: id or URL of an existing conversation, otherwise a new conversation. */
 export function geminiWeb(
   prompt: string,
   opts: { chat?: string; timeoutMs?: number } = {},
@@ -45,10 +51,10 @@ export function geminiWeb(
       })()`);
       if (ready === "login")
         throw new Error(
-          "Gemini : session Google absente dans le Chrome du relais (relay login)",
+          "Gemini: Google session missing in the relay's Chrome (relay login)",
         );
       if (ready !== "ok")
-        throw new Error("Gemini : éditeur introuvable (interface modifiée ?)");
+        throw new Error("Gemini: editor not found (interface changed?)");
       const before = await tab.eval<number>(
         "document.querySelectorAll('model-response').length",
       );
@@ -61,7 +67,7 @@ export function geminiWeb(
         }
         return false;
       })()`);
-      if (!sent) throw new Error("Gemini : bouton d'envoi introuvable");
+      if (!sent) throw new Error("Gemini: send button not found");
       const timeout = opts.timeoutMs ?? 600_000;
       const out = await tab.eval<{
         text: string;
@@ -80,7 +86,7 @@ export function geminiWeb(
         }
         return null;
       })()`);
-      if (!out) throw new Error(`Gemini : pas de réponse en ${timeout} ms`);
+      if (!out) throw new Error(`Gemini: no response within ${timeout} ms`);
       return {
         text: out.text,
         engine: "gemini-web",
@@ -93,9 +99,9 @@ export function geminiWeb(
   });
 }
 
-// NotebookLM (devenu « Gemini Notebook », notebook.google.com) : sélecteurs relevés le 2026-11-13 —
-// textarea[aria-label="Query box"], button[aria-label="Submit"], réponse = dernier chat-message .to-user-container
-// (bloc thinking-chain-view exclu) ; aller-retour mesuré : 22,5 s.
+// NotebookLM (now "Gemini Notebook", notebook.google.com): selectors surveyed on 2026-11-13 —
+// textarea[aria-label="Query box"], button[aria-label="Submit"], response = last chat-message .to-user-container
+// (thinking-chain-view block excluded); measured round trip: 22.5 s.
 const NOTEBOOK = "https://notebook.google.com/";
 export function notebookAsk(
   notebook: string,
@@ -121,7 +127,7 @@ export function notebookAsk(
           ta = document.querySelector('textarea[aria-label="Query box"]');
           if (!ta) await new Promise(r => setTimeout(r, 150));
         }
-        if (!ta) return { error: 'zone de question introuvable' };
+        if (!ta) return { error: 'question box not found' };
         const before = document.querySelectorAll('chat-message').length;
         ta.focus();
         ta.value = ${JSON.stringify(prompt)};
@@ -140,12 +146,12 @@ export function notebookAsk(
           if (txt && txt === last) { if (++stable >= 3) return { text: txt }; } else stable = 0;
           last = txt;
         }
-        return { error: 'pas de réponse' };
+        return { error: 'no response' };
       })()`);
       if ("error" in out)
         throw new Error(
           out.error === "login"
-            ? "NotebookLM : session Google absente (relay login)"
+            ? "NotebookLM: Google session missing (relay login)"
             : `NotebookLM : ${out.error}`,
         );
       return {
@@ -160,7 +166,7 @@ export function notebookAsk(
   });
 }
 
-/** Gemini : Antigravity (agy) par défaut ; « web » = gemini.google.com dans le Chrome du relais. RELAY_GEMINI=agy|web. */
+/** Gemini: Antigravity (agy) by default; "web" = gemini.google.com in the relay's Chrome. RELAY_GEMINI=agy|web. */
 export async function gemini(
   prompt: string,
   opts: { chat?: string; engine?: string } = {},

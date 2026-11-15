@@ -19,7 +19,7 @@ import type { RunnerState } from "./queue";
 
 /** CLIs the runner can launch (infra/agents/runner.ts providerCmd), addressed "cli" or "cli:model". */
 export const AGENT_CLIS = ["claude", "codex", "opencode", "pi", "agy"];
-/** Fournisseur distant du runner (« jules[:owner/repo] », ai-os jules run --wait) : jamais choisi sans demande. */
+/** Remote runner provider ("jules[:owner/repo]", ai-os jules run --wait): never chosen without a request. */
 export const JULES = "jules";
 
 export type Needs = {
@@ -58,7 +58,7 @@ type Meta = {
 type Registry = Record<string, { models?: Record<string, Meta> }>;
 let registry: { at: number; data: Registry } | undefined;
 
-/** models.dev/api.json, en cache 24 h dans $AGENT_HOME ; vide hors ligne. */
+/** models.dev/api.json, cached 24 h in $AGENT_HOME; empty offline. */
 export async function modelsDev(): Promise<Registry> {
   if (
     registry &&
@@ -130,7 +130,7 @@ export async function candidates(
       id: c,
       kind: "cli" as const,
       tools: true,
-      why: "sonde du runner",
+      why: "runner probe",
     })),
     ...found.map((c) => ({
       id: c,
@@ -235,7 +235,7 @@ export function rank(
 }
 
 /** Price/quality table per task class (config/model-routing.json, live sources): primary "cli:model" then fallback.
- * anthropic passe par la CLI claude, google par agy. Inconnu = liste vide (le classement habituel s'applique). */
+ * anthropic goes through the claude CLI, google through agy. Unknown = empty list (the usual ranking applies). */
 export async function taskModels(task: string | undefined): Promise<string[]> {
   if (!task) return [];
   const f = Bun.file(

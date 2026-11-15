@@ -445,7 +445,7 @@ export class TermManager {
       : profiles[0];
     const argv = opts.argv ?? chosen?.argv;
     if (!argv || argv.length === 0) {
-      throw new Error(`Profil terminal inconnu : ${opts.profile ?? "default"}`);
+      throw new Error(`Unknown terminal profile: ${opts.profile ?? "default"}`);
     }
     const id = `pane-${++this.seq}-${Date.now().toString(36)}`;
     const cwd = opts.cwd && existsSync(opts.cwd) ? opts.cwd : process.cwd();

@@ -1,10 +1,10 @@
-// A2A 1.0 sur la liaison JSON-RPC (a2aproject/A2A v1.0.1 : docs/specification.md §3, §5.4, §9 ; specification/a2a.proto).
-// Chaque SendMessage crée une tâche (Task) servie par un outil du relais (metadata.skill, gemini_ask par défaut) :
+// A2A 1.0 over the JSON-RPC binding (a2aproject/A2A v1.0.1: docs/specification.md §3, §5.4, §9; specification/a2a.proto).
+// Each SendMessage creates a task (Task) served by a relay tool (metadata.skill, gemini_ask by default):
 //   SendMessage (bloquant, ou configuration.returnImmediately), SendStreamingMessage et SubscribeToTask en SSE
-//   (Task, puis TaskStatusUpdateEvent / TaskArtifactUpdateEvent, flux fermé à l'état terminal), GetTask, ListTasks,
-//   CancelTask. Notifications push et carte étendue : erreurs A2A dédiées (-32003, -32007).
-// En-tête A2A-Version (ou paramètre de requête) : absent = 0.3 (§3.6.2), majeure différente de 1 -> VersionNotSupportedError.
-// Tâches en mémoire du processus (500 au plus, les plus anciennes terminées sortent d'abord).
+//   (Task, then TaskStatusUpdateEvent / TaskArtifactUpdateEvent, stream closed at the terminal state), GetTask, ListTasks,
+//   CancelTask. Push notifications and extended card: dedicated A2A errors (-32003, -32007).
+// A2A-Version header (or query parameter): absent = 0.3 (§3.6.2), major other than 1 -> VersionNotSupportedError.
+// In-process task memory (500 at most, the oldest finished ones leave first).
 import {
   call,
   dispatch,
@@ -20,7 +20,7 @@ import { a2aSecurity } from "./oauth.ts";
 
 export const A2A_VERSION = "1.0";
 
-/** Outils exposés comme skills A2A : la carte et SendMessage lisent la même liste. */
+/** Tools exposed as A2A skills: the card and SendMessage read the same list. */
 export const A2A_SKILLS = [
   "gemini_ask",
   "claude_ask",
@@ -31,7 +31,7 @@ export const A2A_SKILLS = [
   "session_send",
 ];
 
-// Codes JSON-RPC des erreurs A2A (§5.4) et raisons google.rpc.ErrorInfo.
+// JSON-RPC codes of A2A errors (§5.4) and google.rpc.ErrorInfo reasons.
 export const A2A_ERRORS = {
   TaskNotFound: [-32001, "TASK_NOT_FOUND"],
   TaskNotCancelable: [-32002, "TASK_NOT_CANCELABLE"],
@@ -67,7 +67,7 @@ const badRequest = (id: Req["id"], field: string, description: string) =>
     },
   ]);
 
-/** Version demandée (Major.Minor) : vide = 0.3 ; acceptée si la majeure est 1 (le correctif est ignoré, §3.6). */
+/** Requested version (Major.Minor): empty = 0.3; accepted if the major is 1 (the patch is ignored, §3.6). */
 export const versionSupported = (v: string | null | undefined) =>
   (v?.trim() || "0.3").split(".")[0] === A2A_VERSION.split(".")[0];
 
@@ -129,7 +129,7 @@ type Event =
         lastChunk: boolean;
       };
     };
-/** done : résolue à l'état terminal (fin, échec ou annulation). */
+/** done: resolved at the terminal state (completion, failure or cancellation). */
 type Entry = {
   task: Task;
   done: Promise<void>;
@@ -138,7 +138,7 @@ type Entry = {
 };
 
 const tasks = new Map<string, Entry>();
-/** contextId -> conversation Gemini (multi-tour, §3.4.1). */
+/** contextId -> Gemini conversation (multi-turn, §3.4.1). */
 const chats = new Map<string, string>();
 const MAX_TASKS = 500;
 
@@ -150,7 +150,7 @@ const agentMessage = (t: Task, s: string): Message => ({
   role: "ROLE_AGENT",
   parts: [{ text: s, mediaType: "text/plain" }],
 });
-/** Copie servie au client : historique borné par historyLength (0 = aucun message, absent = tout), artefacts optionnels. */
+/** Copy served to the client: history bounded by historyLength (0 = no message, absent = all), optional artifacts. */
 const view = (t: Task, historyLength?: number, artifacts = true) => {
   const n = historyLength ?? t.history.length;
   return {
@@ -184,14 +184,14 @@ const prune = () => {
     }
 };
 
-/** Texte du message : parties text, data (JSON), url (référence), raw texte (base64) ; autre raw -> null (type non pris en charge). */
+/** Message text: text parts, data (JSON), url (reference), raw text (base64); other raw -> null (unsupported type). */
 function promptOf(parts: Part[]): { prompt: string } | { mediaType: string } {
   const out: string[] = [];
   for (const p of parts) {
     if (typeof p.text === "string") out.push(p.text);
     else if (p.data !== undefined) out.push(JSON.stringify(p.data));
     else if (typeof p.url === "string")
-      out.push(`[${p.filename ?? "fichier"}] ${p.url}`);
+      out.push(`[${p.filename ?? "file"}] ${p.url}`);
     else if (typeof p.raw === "string") {
       const mt = p.mediaType ?? "application/octet-stream";
       if (!/^text\/|^application\/(json|xml)/.test(mt))
@@ -227,7 +227,7 @@ function argsFor(skill: string, m: Message, prompt: string, chat?: string) {
 
 type Start = { entry: Entry } | { error: Res };
 
-/** Valide SendMessageRequest et lance la tâche ; l'exécution continue en arrière-plan. */
+/** Validates SendMessageRequest and starts the task; execution continues in the background. */
 function start(r: Req): Start {
   const p = r.params ?? {};
   const m = p.message as Message | undefined;
@@ -323,7 +323,7 @@ function start(r: Req): Start {
           },
         ),
       };
-    // Aucun outil ne demande de complément (INPUT_REQUIRED) : une tâche en cours ne reçoit pas d'autre message.
+    // No tool asks for more input (INPUT_REQUIRED): a running task receives no other message.
     return {
       error: a2aError(
         r.id,
@@ -360,7 +360,7 @@ function start(r: Req): Start {
   const { promise, resolve } = Promise.withResolvers<void>();
   const entry: Entry = { task, done: promise, end: resolve, subs: new Set() };
   tasks.set(task.id, entry);
-  // Exécution au tour suivant : le client reçoit d'abord la tâche SUBMITTED (flux SSE, returnImmediately).
+  // Execution on the next tick: the client first receives the SUBMITTED task (SSE stream, returnImmediately).
   queueMicrotask(async () => {
     if (isTerminal(task.status.state)) return;
     setStatus(entry, "TASK_STATE_WORKING");
@@ -372,7 +372,7 @@ function start(r: Req): Start {
         setStatus(entry, "TASK_STATE_FAILED", String(e?.message ?? e));
       return;
     }
-    if (isTerminal(task.status.state)) return; // annulée pendant l'exécution
+    if (isTerminal(task.status.state)) return; // cancelled during execution
     if (typeof v?.chat === "string") chats.set(contextId, v.chat);
     task.metadata = {
       skill,
@@ -405,7 +405,7 @@ const historyLength = (src: any) => {
   return typeof n === "number" && n >= 0 ? Math.floor(n) : undefined;
 };
 
-/** Méthodes A2A sans flux (réponse JSON-RPC unique). */
+/** A2A methods without a stream (single JSON-RPC response). */
 export async function a2aRpc(r: Req): Promise<Res | null> {
   const p = r.params ?? {};
   switch (r.method) {
@@ -555,7 +555,7 @@ const sse = (id: Req["id"], first: (Event | Res)[], e?: Entry) => {
   );
 };
 
-/** POST /a2a : version (§3.6.2), corps JSON-RPC, flux SSE pour SendStreamingMessage et SubscribeToTask (§9.4.2, §9.4.6). */
+/** POST /a2a: version (§3.6.2), JSON-RPC body, SSE stream for SendStreamingMessage and SubscribeToTask (§9.4.2, §9.4.6). */
 export async function a2aHttp(req: Request): Promise<Response> {
   const raw = await req.text();
   let body: any;
@@ -629,7 +629,7 @@ export async function a2aHttp(req: Request): Promise<Response> {
 export const agentCard = (url: string) => ({
   name: "aphrody-relay",
   description:
-    "Relais entre Claude Code et Gemini (gemini.google.com ou Gemini CLI), avec flotte VPS et gcloud en lecture.",
+    "Relay between Claude Code and Gemini (gemini.google.com or Gemini CLI), with read-only access to the VPS fleet and gcloud.",
   supportedInterfaces: [
     {
       url: `${url}/a2a`,

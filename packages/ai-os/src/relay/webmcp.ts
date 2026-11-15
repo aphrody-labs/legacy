@@ -1,6 +1,6 @@
 // WebMCP (webmachinelearning/webmcp, document.modelContext.registerTool ; essai d'origine Chrome 149+, drapeau
-// about:flags#enable-webmcp-testing en local) : la page /webmcp du relais expose ses outils (et ceux des serveurs MCP
-// agrégés) à l'agent du navigateur, par exemple Gemini dans Chrome. Chaque appel repasse par POST /mcp tools/call.
+// about:flags#enable-webmcp-testing locally): the relay's /webmcp page exposes its tools (and those of the MCP servers
+// aggregated) to the browser agent, for example Gemini in Chrome. Each call goes back through POST /mcp tools/call.
 import { TOOLS } from "./tools.ts";
 import { hubTools } from "./mcp-hub.ts";
 
@@ -24,7 +24,7 @@ export async function webmcpPage(): Promise<string> {
 const tools = ${JSON.stringify(tools).replace(/</g, "\\u003c")};
 const s = document.getElementById("s");
 const mc = document.modelContext ?? navigator.modelContext;
-if (!mc?.registerTool) { s.textContent = "WebMCP indisponible : Chrome 149+ avec about:flags#enable-webmcp-testing"; }
+if (!mc?.registerTool) { s.textContent = "WebMCP unavailable: Chrome 149+ with about:flags#enable-webmcp-testing"; }
 else {
   let id = 0;
   for (const t of tools) {
@@ -34,11 +34,11 @@ else {
         const r = await fetch("/mcp", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" },
           body: JSON.stringify({ jsonrpc: "2.0", id: ++id, method: "tools/call", params: { name: t.name, arguments: args ?? {} } }) });
         const j = await r.json();
-        return j.result ?? { content: [{ type: "text", text: j.error?.message ?? "erreur" }], isError: true };
+        return j.result ?? { content: [{ type: "text", text: j.error?.message ?? "error" }], isError: true };
       },
     });
   }
-  s.textContent = "WebMCP : " + tools.length + " outils enregistrés";
+  s.textContent = "WebMCP: " + tools.length + " tools registered";
 }
 </script></body></html>`;
 }

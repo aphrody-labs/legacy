@@ -54,7 +54,7 @@ export async function startTermServer(opts: TermServerOptions = {}) {
   const wasmPath = join(findSrcRoot(), "target", "sys", "aysys.wasm");
   if (!existsSync(wasmPath)) {
     throw new Error(
-      `aysys.wasm introuvable : ${wasmPath} (lancer make -C src wasm)`,
+      `aysys.wasm not found: ${wasmPath} (run make -C src wasm)`,
     );
   }
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-// Hook Claude Code (PostToolUse, outil Bash, asynchrone) : après un `git commit` dans un dépôt sous SRC_ROOT, soumet le
-// commit à Gemini via le relais (outil gemini_review) et archive le verdict dans <dépôt>/docs/reviews/auto/.
-// Règle du propriétaire : « tout livrable de src est soumis à Gemini ; verdict archivé dans le dépôt ».
-// Silencieux si le relais ne répond pas ; ne bloque jamais l'outil (hook async).
+// Claude Code hook (PostToolUse, Bash tool, asynchronous): after a `git commit` in a repository under SRC_ROOT, submits the
+// commit to Gemini through the relay (gemini_review tool) and archives the verdict in <repository>/docs/reviews/auto/.
+// Owner rule: "every src deliverable is submitted to Gemini; verdict archived in the repository".
+// Silent if the relay does not answer; never blocks the tool (async hook).
 import { mkdirSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { relayToken } from "./server.ts";

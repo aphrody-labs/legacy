@@ -171,7 +171,7 @@ describe("arena", () => {
     const v = r.store.vote(res.pair!, "a", "test");
     expect(v.ratings[p.a]).toBeGreaterThan(1000);
     expect(v.ratings[p.b]).toBeLessThan(1000);
-    expect(() => r.store.vote(res.pair!, "b", "test")).toThrow(/déjà/);
+    expect(() => r.store.vote(res.pair!, "b", "test")).toThrow(/already voted/);
     const lb = await r.leaderboard();
     expect(lb.local[0]!.model).toBe(p.a);
   });

@@ -63,7 +63,7 @@ export const workspace = (cwd?: string) => {
       break; // the rest does not exist yet
     }
     if (st.isSymbolicLink() || !inside(root, realpathSync(cur)))
-      throw new Error(`lien symbolique interdit dans le cwd : ${cwd}`);
+      throw new Error(`symbolic link forbidden in cwd: ${cwd}`);
   }
   mkdirSync(abs, { recursive: true });
   const real = realpathSync(abs);
@@ -122,7 +122,7 @@ export const AGENT_TOOLS: Tool[] = [
         const sk = await store.view(name);
         if (sk) return sk.body;
       }
-      throw new Error(`skill introuvable : ${name}`);
+      throw new Error(`skill not found: ${name}`);
     },
   },
   {
@@ -144,7 +144,7 @@ export const AGENT_TOOLS: Tool[] = [
           ? a.members
           : MEMBERS.filter((id) => Bun.which(id));
       const members = ids.filter((id) => Object.hasOwn(CLI, id));
-      if (!members.length) throw new Error("aucune CLI d'agent disponible");
+      if (!members.length) throw new Error("no agent CLI available");
       const r = await council(
         members.map((id) => ({ id, kind: "cli" as const, argv: CLI[id]! })),
         String(a.prompt),

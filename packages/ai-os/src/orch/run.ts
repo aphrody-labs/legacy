@@ -32,7 +32,7 @@ export type Step = {
   /** cmd: sh line run from the host checkout (or its home directory if repo: false). */
   run?: string;
   repo?: boolean;
-  /** tool : outil du relais (relay/tools.ts) et ses arguments. */
+  /** tool: relay tool (relay/tools.ts) and its arguments. */
   tool?: string;
   args?: Record<string, unknown>;
   /** Allowed hosts, by preference (default: hosts whose fleet.toml lists the role, local first). */
@@ -251,7 +251,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
     try {
       const { toolByName } = await import("../relay/tools.ts");
       const t = toolByName.get(s.step.tool!);
-      if (!t) throw new Error(`outil inconnu : ${s.step.tool}`);
+      if (!t) throw new Error(`unknown tool: ${s.step.tool}`);
       // Interpolate on the structure (an output with quotes or newlines does not break the JSON).
       const fillVal = (v: unknown): unknown =>
         typeof v === "string"
@@ -375,7 +375,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         ) {
           for (const a of pend)
             health.record(h.id, a.provider, false, "quota", 0);
-          s.output = `fournisseurs indisponibles sur ${h.id}`;
+          s.output = `providers unavailable on ${h.id}`;
           spentUsd -= budget; // nothing ran
           return "reroute";
         }
@@ -514,7 +514,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
             ms: 0,
             via: "inline",
           });
-          s.output = `aucun moteur ne convient sur ${h.id}`;
+          s.output = `no engine fits on ${h.id}`;
           continue;
         }
         const r = await agentStep(s, h, providers);
@@ -658,7 +658,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         (wf.paths?.length
           ? {
               paths: wf.paths,
-              message: `${wf.paths[0]} : correction de « ${s.step.id} »`,
+              message: `${wf.paths[0]}: fix for "${s.step.id}"`,
             }
           : undefined),
       onFail: "stop",

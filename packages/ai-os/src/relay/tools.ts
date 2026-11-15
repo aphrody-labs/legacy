@@ -1,4 +1,4 @@
-// Outils du relais, partagés par toutes les surfaces (JSON-RPC HTTP/WebSocket/TCP/TLS, MCP, A2A, ACP).
+// Relay tools, shared by all surfaces (JSON-RPC HTTP/WebSocket/TCP/TLS, MCP, A2A, ACP).
 import { llmAsk } from "../llm/model.ts";
 import { listModels } from "../llm/models.ts";
 import { s } from "../llm/schema.ts";
@@ -44,11 +44,11 @@ const obj = (props: Record<string, unknown>, required: string[] = []) => ({
   additionalProperties: false,
 });
 
-// Config ssh de l utilisateur (RELAY_SSH_CONFIG quand le relais tourne en service, sinon ~/.ssh/config).
+// User ssh config (RELAY_SSH_CONFIG when the relay runs as a service, otherwise ~/.ssh/config).
 const sshConfig = () =>
   Bun.env.RELAY_SSH_CONFIG ?? join(homedir(), ".ssh", "config");
 
-/** Alias ssh de la config utilisateur (Host sans joker). */
+/** ssh aliases of the user config (Host without wildcard). */
 export function sshHosts(): string[] {
   const f = sshConfig();
   if (!existsSync(f)) return [];
@@ -65,7 +65,7 @@ export function sshHosts(): string[] {
 const ssh = async (host: string, cmd: string, timeout = 15000) => {
   if (!sshHosts().includes(host))
     throw new Error(
-      `hôte ssh inconnu : ${host} (config ${sshConfig()}, ${sshHosts().length} alias)`,
+      `unknown ssh host: ${host} (config ${sshConfig()}, ${sshHosts().length} aliases)`,
     );
   const p = Bun.spawn(
     [
@@ -91,7 +91,7 @@ const ssh = async (host: string, cmd: string, timeout = 15000) => {
   return { host, code, out: out.trim(), err: err.trim().slice(0, 500) };
 };
 
-// Services réseau suivis sur la flotte (tunnels, VPN, proxys) : lecture seule.
+// Network services tracked on the fleet (tunnels, VPN, proxies): read-only.
 const NET_UNITS =
   "cloudflared* wg-quick@* tailscaled* caddy* nginx* haproxy* frpc* frps* openvpn* headscale* sshd*";
 
@@ -132,7 +132,7 @@ export const TOOLS: Tool[] = [
     readOnly: false,
     run: (a) =>
       gemini(
-        `Revue technique stricte de « ${a.title} ». Donne une note /20, puis la liste des défauts vérifiables (fichier, ligne, correction). Pas de compliments.\n\n${String(a.content).slice(0, 120_000)}`,
+        `Strict technical review of "${a.title}". Give a score /20, then the list of verifiable defects (file, line, fix). No compliments.\n\n${String(a.content).slice(0, 120_000)}`,
         { chat: a.chat },
       ),
   },
@@ -158,7 +158,7 @@ export const TOOLS: Tool[] = [
       const { review } = await import("../review/index.ts");
       const th = a.threshold;
       if (th !== undefined && !(Number.isFinite(th) && th > 0 && th <= 20))
-        throw new Error("threshold : nombre dans ]0, 20]");
+        throw new Error("threshold: number in ]0, 20]");
       if (
         a.voices !== undefined &&
         (!Array.isArray(a.voices) ||
@@ -176,7 +176,7 @@ export const TOOLS: Tool[] = [
         threshold: a.threshold,
         fix: a.fix === true,
       });
-      // Verdict du juge en dernier : l'orchestrateur garde la fin de la sortie d'une étape.
+      // Judge verdict last: the orchestrator keeps the end of a step's output.
       const { verdict, ...rest } = r;
       return { ...rest, verdict };
     },
@@ -488,7 +488,7 @@ TOOLS.push(
       const all = await hubTools();
       if (a.name) {
         const t = all.find((x) => x.name === String(a.name));
-        if (!t) throw new Error(`outil inconnu : ${a.name}`);
+        if (!t) throw new Error(`unknown tool: ${a.name}`);
         return t;
       }
       if (!a.server && !a.query) {

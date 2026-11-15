@@ -1,16 +1,16 @@
-// Appels HTTP sortants du relais (fournisseurs LLM, API compatibles OpenAI, serveurs MCP HTTP agrégés), complément
-// côté client de la coalescence nginx du cluster (infra/cluster, docs/infra/CLUSTER.md) :
-//   - singleflight : les requêtes identiques en vol partagent un seul appel amont ; le corps (JSON ou flux SSE) est
-//     diffusé à tous les abonnés, les retardataires reçoivent d'abord les morceaux déjà lus ;
-//   - cache de réponses bun:sqlite (<relayHome>/cache.sqlite, RELAY_CACHE_DB) : clé = sha256(méthode, URL, corps
-//     canonique, modèle), corps canonique = JSON aux clés triées sans champs volatils (user, id, request_id…) ;
-//     seules les réponses 2xx déterministes (temperature 0, seed entier, lecture déclarée par l'appelant) sont gardées,
-//     TTL RELAY_CACHE_TTL_MS (défaut 120 s), RELAY_CACHE=0 coupe le cache ; `Cache-Control: no-store` et
-//     `x-aphrody-cache: bypass` (requête) ou `no-store` (réponse) contournent ;
-//   - Idempotency-Key = la clé sha256 sur les POST qui passent par un port LB du cluster (nginx les rejoue 24 h) ;
-//   - mesh : une URL inter-hôtes dont l'hôte:port est la cible d'un service [cluster.services] de infra/deploy.toml
-//     part vers 127.0.0.1:<lb_port> quand ce port écoute (HAProxy mTLS, TCP 7444), repli sur l'URL d'origine.
-// Métriques : stats() (outil relay_cache_stats, GET /metrics du serveur).
+// Outbound HTTP calls of the relay (LLM providers, OpenAI-compatible APIs, aggregated HTTP MCP servers), client-side
+// complement of the cluster's nginx coalescing (infra/cluster, docs/infra/CLUSTER.md):
+//   - singleflight: identical in-flight requests share a single upstream call; the body (JSON or SSE stream) is
+//     broadcast to all subscribers, latecomers first receive the chunks already read;
+//   - bun:sqlite response cache (<relayHome>/cache.sqlite, RELAY_CACHE_DB): key = sha256(method, URL, canonical body,
+//     model), canonical body = JSON with sorted keys and no volatile fields (user, id, request_id…);
+//     only deterministic 2xx responses (temperature 0, integer seed, read declared by the caller) are kept,
+//     TTL RELAY_CACHE_TTL_MS (default 120 s), RELAY_CACHE=0 disables the cache; `Cache-Control: no-store` and
+//     `x-aphrody-cache: bypass` (request) or `no-store` (response) bypass it;
+//   - Idempotency-Key = the sha256 key on POSTs that go through a cluster LB port (nginx replays them for 24 h);
+//   - mesh: a cross-host URL whose host:port is the target of a [cluster.services] entry of infra/deploy.toml
+//     goes to 127.0.0.1:<lb_port> when that port listens (HAProxy mTLS, TCP 7444), falling back to the original URL.
+// Metrics: stats() (relay_cache_stats tool, GET /metrics of the server).
 import { Database } from "bun:sqlite";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { connect } from "node:net";
@@ -18,7 +18,7 @@ import { dirname, join } from "node:path";
 import { relayHome } from "./cdp.ts";
 
 export type OutboundInit = RequestInit & {
-  /** Réponse réputée déterministe (lecture, embeddings, tools/call d'un outil readOnly). */
+  /** Response deemed deterministic (read, embeddings, tools/call of a readOnly tool). */
   deterministic?: boolean;
 };
 
@@ -30,7 +30,7 @@ const VOLATILE = new Set([
   "idempotency_key",
 ]);
 
-/** JSON aux clés triées, champs volatils de premier niveau retirés (metadata.user_id aussi). */
+/** JSON with sorted keys, top-level volatile fields removed (metadata.user_id too). */
 export function canonical(body: unknown): string {
   const sort = (v: unknown): unknown =>
     Array.isArray(v)
@@ -73,7 +73,7 @@ export function requestKey(method: string, url: string, body?: string) {
   };
 }
 
-/** Requête déterministe : temperature 0, seed entier (corps JSON), ou déclarée par l'appelant. */
+/** Deterministic request: temperature 0, integer seed (JSON body), or declared by the caller. */
 export function deterministic(
   method: string,
   parsed: unknown,
@@ -86,12 +86,12 @@ export function deterministic(
   return p.temperature === 0 || Number.isInteger(p.seed);
 }
 
-// ---- mesh du cluster -------------------------------------------------------------------------------------------
+// ---- cluster mesh -----------------------------------------------------------------------------------------------
 
 type MeshRoute = { lbPort: number; cached: boolean };
 type Mesh = { routes: Map<string, MeshRoute>; lbPorts: Map<number, boolean> };
 
-/** Table hôte:port distant -> port LB local, depuis infra/deploy.toml [cluster] (SRC_ROOT, sinon la copie du dépôt). */
+/** Remote host:port -> local LB port table, from infra/deploy.toml [cluster] (SRC_ROOT, otherwise the repository copy). */
 export function loadMesh(text?: string): Mesh {
   const routes = new Map<string, MeshRoute>();
   const lbPorts = new Map<number, boolean>();
@@ -141,7 +141,7 @@ const portOf = (u: URL) =>
   u.port ||
   (u.protocol === "https:" ? "443" : u.protocol === "http:" ? "80" : "");
 
-/** Port 127.0.0.1:p à l'écoute (résultat gardé 30 s). */
+/** 127.0.0.1:p port listening (result kept 30 s). */
 const listening = new Map<number, { ok: boolean; at: number }>();
 function portOpen(p: number): Promise<boolean> {
   const c = listening.get(p);
@@ -159,7 +159,7 @@ function portOpen(p: number): Promise<boolean> {
   });
 }
 
-// ---- diffusion d'un corps à plusieurs abonnés ------------------------------------------------------------------
+// ---- broadcasting a body to several subscribers -----------------------------------------------------------------
 
 const safe = (f: () => void) => {
   try {
@@ -207,7 +207,7 @@ class Broadcast {
       },
     });
   }
-  /** Corps complet (attend la fin). */
+  /** Full body (waits for the end). */
   async bytes(): Promise<Uint8Array> {
     await new Response(this.stream()).arrayBuffer();
     return Buffer.concat(this.chunks);
@@ -288,7 +288,7 @@ export class Outbound {
           "CREATE INDEX IF NOT EXISTS responses_expires ON responses (expires)",
         );
       } catch (e) {
-        console.error(`relay cache : SQLite indisponible (${e}), cache coupé`);
+        console.error(`relay cache: SQLite unavailable (${e}), cache disabled`);
         this.db = null;
       }
     }
@@ -353,7 +353,7 @@ export class Outbound {
     }
   }
 
-  /** URL réécrite vers le port LB local du mesh si l'hôte:port distant y est servi et que ce port écoute. */
+  /** URL rewritten to the mesh's local LB port if the remote host:port is served there and that port listens. */
   async route(
     url: string,
   ): Promise<{ url: string; lbPort?: number; cached: boolean }> {
@@ -395,7 +395,7 @@ export class Outbound {
       !bypass && keyable && deterministic(method, parsed, declared);
 
     const routed = await this.route(url);
-    // POST non idempotent par un port LB du cluster : clé stable, nginx coalesce et rejoue (24 h).
+    // Non-idempotent POST through a cluster LB port: stable key, nginx coalesces and replays (24 h).
     if (
       method === "POST" &&
       routed.lbPort !== undefined &&
@@ -475,7 +475,7 @@ export class Outbound {
       this.counters.errors++;
       throw e;
     }
-    // Fin du vol quand le corps est entièrement lu ; mise en cache seulement d'un succès déterministe.
+    // End of the flight once the body is fully read; cache only a deterministic success.
     f.body
       .bytes()
       .then((bytes) => {
@@ -502,7 +502,7 @@ export class Outbound {
 }
 
 let shared: Outbound | null = null;
-/** Client partagé du processus (base en mémoire sous `bun test`). */
+/** Process-wide shared client (in-memory database under `bun test`). */
 export const outbound = () =>
   (shared ??= new Outbound({
     db:

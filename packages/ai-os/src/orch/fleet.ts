@@ -41,7 +41,7 @@ const toml = (p: string): any =>
   existsSync(p) ? Bun.TOML.parse(readFileSync(p, "utf8")) : {};
 
 const WIN = process.platform === "win32";
-/** Identifiant fleet.toml de la machine courante (AGENTS_HOST prime). */
+/** fleet.toml id of the current machine (AGENTS_HOST takes precedence). */
 export const selfId = () => Bun.env.AGENTS_HOST ?? (WIN ? "pc" : hostname());
 
 /** Strictly positive integer, otherwise the default value. */
@@ -61,7 +61,7 @@ export function hosts(root = srcRoot()): Host[] {
       nodes.find(([n]) => n === id) ??
       nodes.find(([, n]) => n.ssh_alias === id);
     const local = id === me;
-    if (!local && typeof h.src !== "string") continue; // checkout du runner inconnu
+    if (!local && typeof h.src !== "string") continue; // runner checkout unknown
     const cap = posInt(
       Bun.env[`ORCH_MAX_AGENTS_${id.toUpperCase()}`] ?? Bun.env.ORCH_MAX_AGENTS,
       local ? 3 : 2,
@@ -136,7 +136,7 @@ export async function exec(
       ? `cd; ${body}`
       : o.raw
         ? `cd ${shq(dir)} 2>/dev/null; ${body}`
-        : `cd ${shq(dir)} || { printf 'checkout absent : %s\\n' ${shq(dir)} >&2; exit 127; }; ${body}`;
+        : `cd ${shq(dir)} || { printf 'checkout missing: %s\\n' ${shq(dir)} >&2; exit 127; }; ${body}`;
     cmds = (h.sshTargets ?? [h.ssh!]).map((t) => [
       "ssh",
       "-o",
@@ -147,7 +147,7 @@ export async function exec(
       remote,
     ]);
   }
-  let r: ExecResult = { code: 255, out: "", err: "aucune cible ssh", ms: 0 };
+  let r: ExecResult = { code: 255, out: "", err: "no ssh target", ms: 0 };
   for (const cmd of cmds) {
     r = await run(cmd);
     if (h.local || r.code !== 255) return r; // 255 = connexion ssh impossible : cible suivante

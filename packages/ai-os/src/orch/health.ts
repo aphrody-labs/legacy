@@ -59,7 +59,7 @@ export class Health {
         .run(host, provider, now + ms2, cls, prev + 1);
   }
 
-  /** Classe du refroidissement en cours, sinon null. */
+  /** Class of the current cooldown, otherwise null. */
   cooling(host: string, provider: string, now = Date.now()): string | null {
     return (
       this.db
@@ -70,7 +70,7 @@ export class Health {
     );
   }
 
-  /** Issues des 7 derniers jours. */
+  /** Outcomes of the last 7 days. */
   stats(host: string, provider: string, now = Date.now()): Stats {
     const rows = this.db
       .query<{ ok: number; ms: number }, [string, string, number]>(

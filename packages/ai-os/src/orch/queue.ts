@@ -179,7 +179,7 @@ export async function withdraw(h: Host, id: string): Promise<boolean> {
 export type RunnerState = {
   alive: boolean; // a worker of the role beat less than 2 min ago
   roles: string[]; // live roles
-  clis: Record<string, string>; // sonde des CLI (state/health.json)
+  clis: Record<string, string>; // CLI probe (state/health.json)
   cooling: string[]; // fournisseurs en refroidissement (state/cooldown-*, 15 min)
 };
 

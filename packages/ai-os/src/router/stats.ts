@@ -190,8 +190,8 @@ export class Store {
   /** Records a vote once per pair; returns the new ratings. `winner` is "a", "b" or "tie". */
   vote(id: string, winner: "a" | "b" | "tie", by: string) {
     const p = this.pair(id);
-    if (!p) throw new Error(`paire inconnue : ${id}`);
-    if (p.winner) throw new Error(`paire ${id} déjà votée (${p.winner})`);
+    if (!p) throw new Error(`unknown pair: ${id}`);
+    if (p.winner) throw new Error(`pair ${id} already voted (${p.winner})`);
     this.db
       .query("UPDATE pairs SET winner=?, by=? WHERE id=?")
       .run(winner, by, id);

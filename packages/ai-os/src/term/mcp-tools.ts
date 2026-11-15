@@ -64,7 +64,7 @@ export function createTermTools(manager = sharedTermManager()): Tool[] {
       readOnly: true,
       run: async (a) => {
         const p = a.paneId ? manager.get(a.paneId) : manager.first();
-        if (!p) throw new Error(`Volet introuvable : ${a.paneId ?? "aucun"}`);
+        if (!p) throw new Error(`Pane not found: ${a.paneId ?? "none"}`);
         const meta = p.vterm.meta();
         const text = a.scrollback
           ? p.vterm.scrollbackText(
@@ -99,7 +99,7 @@ export function createTermTools(manager = sharedTermManager()): Tool[] {
       readOnly: true,
       run: async (a) => {
         const p = a.paneId ? manager.get(a.paneId) : manager.first();
-        if (!p) throw new Error(`Volet introuvable : ${a.paneId ?? "aucun"}`);
+        if (!p) throw new Error(`Pane not found: ${a.paneId ?? "none"}`);
         const all = p.vterm.blocks();
         return a.onlyFailed ? all.filter((b) => b.failed) : all;
       },
@@ -118,7 +118,7 @@ export function createTermTools(manager = sharedTermManager()): Tool[] {
       readOnly: false,
       run: async (a) => {
         const p = a.paneId ? manager.get(a.paneId) : manager.first();
-        if (!p) throw new Error(`Volet introuvable : ${a.paneId ?? "aucun"}`);
+        if (!p) throw new Error(`Pane not found: ${a.paneId ?? "none"}`);
         const payload = `${String(a.data ?? "")}${a.enter ? "\r" : ""}`;
         p.write(payload);
         return { ok: true, paneId: p.id, bytes: payload.length };
@@ -138,7 +138,7 @@ export function createTermTools(manager = sharedTermManager()): Tool[] {
       readOnly: false,
       run: async (a) => {
         const p = a.paneId ? manager.get(a.paneId) : manager.first();
-        if (!p) throw new Error(`Volet introuvable : ${a.paneId ?? "aucun"}`);
+        if (!p) throw new Error(`Pane not found: ${a.paneId ?? "none"}`);
         p.resize(Number(a.cols), Number(a.rows));
         return p.summary();
       },

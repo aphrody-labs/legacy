@@ -1,14 +1,14 @@
-// Serveur d'autorisation OAuth 2.1 embarqué du relais et vérification des jetons côté ressource.
-// Conforme à l'autorisation MCP 2026-07-28 (third_party/modelcontextprotocol, docs/specification/2026-07-28/
-// basic/authorization) et aux securitySchemes A2A 1.0 (third_party/A2A/specification/a2a.proto) :
+// Embedded OAuth 2.1 authorization server of the relay and token verification on the resource side.
+// Compliant with MCP authorization 2026-07-28 (third_party/modelcontextprotocol, docs/specification/2026-07-28/
+// basic/authorization) and A2A 1.0 securitySchemes (third_party/A2A/specification/a2a.proto):
 //   RFC 9728 /.well-known/oauth-protected-resource[/mcp|/a2a|/rpc]   RFC 8414 /.well-known/oauth-authorization-server
 //   RFC 7591 /oauth/register (DCR)   draft-ietf-oauth-client-id-metadata-document (client_id = URL https)
-//   /oauth/authorize (code + PKCE S256 obligatoire, iss RFC 9207)   /oauth/token (authorization_code, refresh_token
-//   tournant, client_credentials, device_code RFC 8628)   /oauth/device_authorization   /oauth/revoke (RFC 7009)
-//   resource RFC 8707 -> aud du jeton ; jeton d'accès = JWT HS256 (clé locale), durée RELAY_OAUTH_TTL (3600 s).
-// Consentement : approbation automatique quand le relais n'écoute que la boucle locale et que la redirection est
-// locale (RFC 8252), ou quand le navigateur porte le cookie du relais ; sinon la demande attend `relay approve <code>`
-// (consentement asynchrone, aucun mot de passe). Le jeton fixe du relais reste accepté en en-tête (usage local).
+//   /oauth/authorize (code + mandatory PKCE S256, iss RFC 9207)   /oauth/token (authorization_code, rotating refresh_token,
+//   client_credentials, device_code RFC 8628)   /oauth/device_authorization   /oauth/revoke (RFC 7009)
+//   resource RFC 8707 -> token aud; access token = JWT HS256 (local key), lifetime RELAY_OAUTH_TTL (3600 s).
+// Consent: automatic approval when the relay listens on loopback only and the redirect is
+// local (RFC 8252), or when the browser carries the relay cookie; otherwise the request waits for `relay approve <code>`
+// (asynchronous consent, no password). The relay's fixed token stays accepted in a header (local use).
 import {
   createHash,
   createHmac,
@@ -31,9 +31,9 @@ import {
 } from "@aphrody/vault";
 
 export const SCOPES: Record<string, string> = {
-  mcp: "outils MCP du relais (POST /mcp)",
-  a2a: "agent A2A du relais (POST /a2a)",
-  rpc: "JSON-RPC natif du relais (/rpc, /ws)",
+  mcp: "relay MCP tools (POST /mcp)",
+  a2a: "relay A2A agent (POST /a2a)",
+  rpc: "relay native JSON-RPC (/rpc, /ws)",
 };
 export const RESOURCES = ["mcp", "a2a", "rpc"] as const;
 const TTL = () => Number(Bun.env.RELAY_OAUTH_TTL ?? 3600);
@@ -48,7 +48,7 @@ interface Client {
   grant_types: string[];
   token_endpoint_auth_method:
     "none" | "client_secret_basic" | "client_secret_post";
-  /** sha256 du secret (clients confidentiels, créés avec le jeton du relais comme jeton d'accès initial). */
+  /** sha256 of the secret (confidential clients, created with the relay token as initial access token). */
   secret_sha256?: string;
   scope?: string;
   created: number;
@@ -94,7 +94,7 @@ const eq = (a: string, b: string) => {
 export const isLoopbackHost = (h: string) =>
   h === "127.0.0.1" || h === "localhost" || h === "::1" || h === "[::1]";
 
-/** Redirection refusée : ni https, ni http en boucle locale, ni schéma privé (RFC 8252 §7.1), ou avec fragment. */
+/** Redirect refused: neither https, nor http on loopback, nor private scheme (RFC 8252 §7.1), or with a fragment. */
 export const badRedirect = (u: string) => {
   try {
     const x = new URL(u);
@@ -110,8 +110,8 @@ export const badRedirect = (u: string) => {
 };
 
 /**
- * Correspondance exacte, sauf le port des redirections http en boucle locale (RFC 8252 §7.3) : un client
- * natif enregistre `http://127.0.0.1/callback` et écoute sur un port éphémère (Claude Code le fait).
+ * Exact match, except the port of http loopback redirects (RFC 8252 §7.3): a
+ * native client registers `http://127.0.0.1/callback` and listens on an ephemeral port (Claude Code does).
  */
 export const redirectMatches = (registered: string, presented: string) => {
   if (registered === presented) return true;
@@ -133,7 +133,7 @@ export const redirectMatches = (registered: string, presented: string) => {
   }
 };
 
-/** Hôte interdit pour la récupération d'un Client ID Metadata Document (SSRF). */
+/** Host forbidden when fetching a Client ID Metadata Document (SSRF). */
 const privateHost = (h: string) =>
   isLoopbackHost(h) ||
   h.endsWith(".localhost") ||
@@ -141,7 +141,7 @@ const privateHost = (h: string) =>
   /^(10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.)/.test(h) ||
   /^\[?(f[cd]|fe80)/i.test(h);
 
-/** Valeur du cookie de session du relais : dérivée du jeton fixe, jamais le jeton lui-même. */
+/** Value of the relay session cookie: derived from the fixed token, never the token itself. */
 export const relayCookie = (token: string) =>
   createHmac("sha256", token).update("relay-cookie-v1").digest("base64url");
 
@@ -154,14 +154,14 @@ export interface Principal {
 }
 
 export interface OAuthOptions {
-  /** Jeton fixe du relais (accepté en en-tête, jeton d'accès initial de DCR confidentiel, approbation). */
+  /** Fixed relay token (accepted in a header, initial access token of confidential DCR, approval). */
   token: string;
-  /** Hôte d'écoute : l'approbation automatique n'existe que sur la boucle locale. */
+  /** Listen host: automatic approval only exists on loopback. */
   host: string;
-  /** Fichier d'état en clair (tests). Sans lui, l'état est le document scellé du coffre `relay-oauth`
-   *  (AYV1, clé maîtresse DPAPI/systemd-creds, docs/infra/VAULT.md) ; un ancien <relayHome>/oauth.json y migre. */
+  /** Plaintext state file (tests). Without it, the state is the sealed document of the `relay-oauth` vault
+   *  (AYV1, master key DPAPI/systemd-creds, docs/infra/VAULT.md); a former <relayHome>/oauth.json migrates into it. */
   file?: string;
-  /** Récupération des Client ID Metadata Documents (injectable pour les tests). */
+  /** Fetching Client ID Metadata Documents (injectable for tests). */
   fetchDoc?: (url: string) => Promise<Response>;
 }
 
@@ -169,7 +169,7 @@ export function createOAuth(o: OAuthOptions) {
   const file = o.file ?? join(relayHome(), "oauth.json");
   let st: State;
   let saving: Promise<void> = Promise.resolve();
-  /** Mode scellé : état lu (et migré) avant de servir ; les écritures sont sérialisées et asynchrones. */
+  /** Sealed mode: state read (and migrated) before serving; writes are serialized and asynchronous. */
   let sealed = o.file === undefined;
   const ready: Promise<void> = sealed
     ? (async () => {
@@ -186,7 +186,7 @@ export function createOAuth(o: OAuthOptions) {
       })().catch((e: Error) => {
         // Vault unusable here (sandbox, no store): the relay keeps serving on its 0600 state file.
         console.error(
-          `[oauth] coffre indisponible (${e.message.split("\n")[0]}), état en fichier ${file}`,
+          `[oauth] vault unavailable (${e.message.split("\n")[0]}), state in file ${file}`,
         );
         sealed = false;
         st = undefined as unknown as State;
@@ -195,8 +195,8 @@ export function createOAuth(o: OAuthOptions) {
   const load = (): State => {
     if (st) return st;
     if (sealed)
-      throw new Error("oauth: état scellé non chargé (await oauth.ready)");
-    // Seule l'absence du fichier régénère la clé ; un fichier illisible est une erreur (jetons préservés).
+      throw new Error("oauth: sealed state not loaded (await oauth.ready)");
+    // Only a missing file regenerates the key; an unreadable file is an error (tokens preserved).
     if (!existsSync(file)) {
       st = { key: rand(32), clients: {}, refresh: {} };
       save();
@@ -215,7 +215,7 @@ export function createOAuth(o: OAuthOptions) {
     }
     const dir = join(file, "..");
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    // Écriture atomique, droits 0600 dès la création (clé HMAC).
+    // Atomic write, 0600 permissions from creation (HMAC key).
     const tmp = `${file}.${process.pid}.tmp`;
     writeFileSync(tmp, JSON.stringify(st), { mode: 0o600 });
     renameSync(tmp, file);
@@ -226,7 +226,7 @@ export function createOAuth(o: OAuthOptions) {
     Bun.env.RELAY_OAUTH_AUTO !== "0" && isLoopbackHost(o.host);
   const cimdCache = new Map<string, { c: Client; exp: number }>();
 
-  /** Origine publique : RELAY_PUBLIC_URL derrière un mandataire, sinon celle de la requête. */
+  /** Public origin: RELAY_PUBLIC_URL behind a proxy, otherwise the request's. */
   const origin = (req: Request) =>
     (Bun.env.RELAY_PUBLIC_URL ?? new URL(req.url).origin).replace(/\/$/, "");
   const resourceUri = (base: string, r: string) => `${base}/${r}`;
@@ -261,7 +261,7 @@ export function createOAuth(o: OAuthOptions) {
     if (c) return c;
     if (!/^https:\/\/[^/]+\/.+/.test(id) || privateHost(new URL(id).hostname))
       return null;
-    // Client ID Metadata Document : le document doit nommer exactement la même URL.
+    // Client ID Metadata Document: the document must name exactly the same URL.
     const hit = cimdCache.get(id);
     if (hit && hit.exp > Date.now()) return hit.c;
     try {
@@ -358,7 +358,7 @@ export function createOAuth(o: OAuthOptions) {
         family: family ?? rand(8),
         exp: now() + REFRESH_TTL,
       };
-      // Purge des jetons expirés.
+      // Purge expired tokens.
       for (const [k, v] of Object.entries(s.refresh))
         if (v.exp < now()) delete s.refresh[k];
       save();
@@ -369,7 +369,7 @@ export function createOAuth(o: OAuthOptions) {
     });
   }
 
-  /** Authentification du client au point de jeton (none, client_secret_basic, client_secret_post). */
+  /** Client authentication at the token endpoint (none, client_secret_basic, client_secret_post). */
   async function tokenClient(
     req: Request,
     f: URLSearchParams,
@@ -384,7 +384,7 @@ export function createOAuth(o: OAuthOptions) {
       secret = decodeURIComponent(i < 0 ? "" : raw.slice(i + 1));
     }
     const c = await client(id);
-    if (!c) return err("invalid_client", "client inconnu", 401);
+    if (!c) return err("invalid_client", "unknown client", 401);
     if (c.secret_sha256 && !eq(sha(secret), c.secret_sha256))
       return err("invalid_client", "secret invalide", 401);
     return c;
@@ -439,7 +439,7 @@ export function createOAuth(o: OAuthOptions) {
     } catch {
       return err("invalid_client_metadata", "JSON invalide");
     }
-    // Le jeton du relais sert de jeton d'accès initial (RFC 7591 §3) : lui seul ouvre client_credentials.
+    // The relay token serves as initial access token (RFC 7591 §3): only it opens client_credentials.
     const trusted = eq(
       req.headers.get("authorization") ?? "",
       `Bearer ${o.token}`,
@@ -450,7 +450,7 @@ export function createOAuth(o: OAuthOptions) {
     if (grants.includes("client_credentials") && !trusted)
       return err(
         "invalid_client_metadata",
-        "client_credentials exige le jeton du relais comme jeton d'accès initial",
+        "client_credentials requires the relay token as initial access token",
         401,
       );
     const redirects: string[] = Array.isArray(m.redirect_uris)
@@ -462,7 +462,7 @@ export function createOAuth(o: OAuthOptions) {
       if (typeof u !== "string" || badRedirect(u))
         return err(
           "invalid_redirect_uri",
-          `${u} : https, boucle locale ou schéma privé attendu, sans fragment`,
+          `${u}: https, loopback or private scheme expected, without fragment`,
         );
     const confidential =
       grants.includes("client_credentials") ||
@@ -505,7 +505,7 @@ export function createOAuth(o: OAuthOptions) {
     (req.headers.get("cookie") ?? "")
       .split(/;\s*/)
       .some((c) => c.startsWith("relay=") && eq(c.slice(6), cookieValue));
-  /** POST porté par le cookie : même origine exigée (Sec-Fetch-Site ou Origin), protection CSRF. */
+  /** Cookie-carried POST: same origin required (Sec-Fetch-Site or Origin), CSRF protection. */
   const sameOrigin = (req: Request) => {
     const site = req.headers.get("sec-fetch-site");
     if (site) return site === "same-origin";
@@ -554,13 +554,13 @@ export function createOAuth(o: OAuthOptions) {
       req.method === "POST"
         ? new URLSearchParams(await req.text())
         : new URL(req.url).searchParams;
-    // Formulaire de consentement (cookie du relais requis) : approuve ou refuse une demande en attente.
+    // Consent form (relay cookie required): approves or denies a pending request.
     const decision = q.get("decision");
     if (decision && req.method === "POST") {
       const id = q.get("request") ?? "";
       const p = pending.get(id);
       if (!p || p.kind !== "code" || !ownerPost(req))
-        return err("access_denied", "demande inconnue ou non autorisée", 403);
+        return err("access_denied", "unknown or unauthorized request", 403);
       pending.delete(id);
       if (decision !== "allow")
         return redirectWith(base, p, null, "access_denied");
@@ -572,7 +572,7 @@ export function createOAuth(o: OAuthOptions) {
     const redirect =
       q.get("redirect_uri") ??
       (c?.redirect_uris.length === 1 ? c.redirect_uris[0] : "");
-    // Sans client ni redirection valides, aucune redirection (RFC 6749 §4.1.2.1).
+    // Without a valid client or redirect, no redirect (RFC 6749 §4.1.2.1).
     if (
       !c ||
       !redirect ||
@@ -609,7 +609,7 @@ export function createOAuth(o: OAuthOptions) {
         return false;
       }
     })();
-    // Host de la requête en boucle locale aussi : un nom DNS qui se rebinde sur 127.0.0.1 n'obtient rien d'office.
+    // Request Host on loopback too: a DNS name that rebinds to 127.0.0.1 gets nothing automatically.
     if (autoApprove && local && isLoopbackHost(new URL(req.url).hostname)) {
       const code = rand(24);
       pending.set(code, { ...p, approved: true });
@@ -620,7 +620,7 @@ export function createOAuth(o: OAuthOptions) {
     if (cookieAuthed(req))
       return page(
         "Autoriser",
-        `<h1>Autoriser ${esc(c.client_name ?? c.client_id)}</h1><p>Portée : <b>${esc(scope)}</b><br>Redirection : ${esc(redirect)}</p><form method=post action="/oauth/authorize"><input type=hidden name=request value="${id}"><button name=decision value=allow>Autoriser</button> <button name=decision value=deny>Refuser</button></form>`,
+        `<h1>Authorize ${esc(c.client_name ?? c.client_id)}</h1><p>Scope: <b>${esc(scope)}</b><br>Redirect: ${esc(redirect)}</p><form method=post action="/oauth/authorize"><input type=hidden name=request value="${id}"><button name=decision value=allow>Authorize</button> <button name=decision value=deny>Deny</button></form>`,
       );
     return new Response(null, {
       status: 303,
@@ -638,11 +638,11 @@ export function createOAuth(o: OAuthOptions) {
     if (c instanceof Response) return c;
     const scope = pickScope(f.get("scope"), c);
     const resource = pickResources(base, f.getAll("resource"));
-    if (!scope) return err("invalid_scope", "portée inconnue");
-    if (!resource) return err("invalid_target", "ressource inconnue");
+    if (!scope) return err("invalid_scope", "unknown scope");
+    if (!resource) return err("invalid_target", "unknown resource");
     const device_code = rand(32);
     const alphabet = "BCDFGHJKLMNPQRSTVWXZ";
-    // Échantillonnage par rejet : 8 caractères sans biais de modulo (256 n'est pas multiple de 20).
+    // Rejection sampling: 8 characters without modulo bias (256 is not a multiple of 20).
     const chars: string[] = [];
     while (chars.length < 8)
       for (const b of randomBytes(16))
@@ -670,7 +670,7 @@ export function createOAuth(o: OAuthOptions) {
     );
   }
 
-  /** Approbation (jeton du relais en en-tête ou cookie) d'un code utilisateur ou d'une demande en attente. */
+  /** Approval (relay token in a header or cookie) of a user code or a pending request. */
   function approve(id: string, allow = true): boolean {
     for (const [k, p] of pending)
       if (k === id || p.user_code === id.toUpperCase()) {
@@ -687,7 +687,7 @@ export function createOAuth(o: OAuthOptions) {
     const ok =
       eq(req.headers.get("authorization") ?? "", `Bearer ${o.token}`) ||
       ownerPost(req);
-    if (!ok) return err("access_denied", "jeton du relais requis", 401);
+    if (!ok) return err("access_denied", "relay token required", 401);
     const f =
       req.method === "POST"
         ? new URLSearchParams(await req.text())
@@ -695,7 +695,7 @@ export function createOAuth(o: OAuthOptions) {
     const id = f.get("user_code") ?? f.get("request") ?? "";
     return approve(id, f.get("decision") !== "deny")
       ? Response.json({ approved: true })
-      : err("invalid_request", "code inconnu ou expiré", 404);
+      : err("invalid_request", "unknown or expired code", 404);
   }
 
   async function devicePage(req: Request) {
@@ -709,16 +709,16 @@ export function createOAuth(o: OAuthOptions) {
     if (!cookieAuthed(req))
       return page(
         "Appareil",
-        `<p>Approuver depuis un terminal du propriétaire : <code>relay approve ${esc(code)}</code>.</p>`,
+        `<p>Approve from an owner terminal: <code>relay approve ${esc(code)}</code>.</p>`,
       );
     if (req.method === "POST") {
-      if (!sameOrigin(req)) return err("access_denied", "origine refusée", 403);
+      if (!sameOrigin(req)) return err("access_denied", "origin refused", 403);
       const f = new URLSearchParams(await req.text());
       return page(
         "Appareil",
         approve(code, f.get("decision") === "allow")
-          ? "<p>Fait. Cette page peut être fermée.</p>"
-          : "<p>Code inconnu ou expiré.</p>",
+          ? "<p>Done. This page can be closed.</p>"
+          : "<p>Unknown or expired code.</p>",
       );
     }
     return page(
@@ -741,7 +741,7 @@ export function createOAuth(o: OAuthOptions) {
     if (!allowed)
       return err(
         "unauthorized_client",
-        `grant ${grant} non enregistré pour ce client`,
+        `grant ${grant} not registered for this client`,
       );
     if (grant === "authorization_code") {
       const code = f.get("code") ?? "";
@@ -754,9 +754,9 @@ export function createOAuth(o: OAuthOptions) {
         p.exp < now() ||
         p.client_id !== c.client_id
       )
-        return err("invalid_grant", "code invalide ou expiré");
+        return err("invalid_grant", "invalid or expired code");
       if (f.get("redirect_uri") && f.get("redirect_uri") !== p.redirect_uri)
-        return err("invalid_grant", "redirect_uri différente");
+        return err("invalid_grant", "different redirect_uri");
       const v = f.get("code_verifier") ?? "";
       if (createHash("sha256").update(v).digest("base64url") !== p.challenge)
         return err("invalid_grant", "PKCE : code_verifier invalide");
@@ -777,16 +777,16 @@ export function createOAuth(o: OAuthOptions) {
       const h = sha(f.get("refresh_token") ?? "");
       const r = load().refresh[h];
       if (!r || r.client_id !== c.client_id || r.exp < now())
-        return err("invalid_grant", "jeton de rafraîchissement invalide");
+        return err("invalid_grant", "invalid refresh token");
       if (r.used) {
-        // Réutilisation d'un jeton déjà tourné : toute la famille est révoquée (OAuth 2.1 §4.3.1).
+        // Reuse of an already rotated token: the whole family is revoked (OAuth 2.1 §4.3.1).
         const s = load();
         for (const [k, v] of Object.entries(s.refresh))
           if (v.family === r.family) delete s.refresh[k];
         save();
         return err(
           "invalid_grant",
-          "jeton de rafraîchissement réutilisé : famille révoquée",
+          "refresh token reused: family revoked",
         );
       }
       const asked = f.getAll("resource");
@@ -807,8 +807,8 @@ export function createOAuth(o: OAuthOptions) {
       if (!c.secret_sha256) return err("unauthorized_client", "client public");
       const scope = pickScope(f.get("scope"), c);
       const resource = pickResources(base, f.getAll("resource"));
-      if (!scope) return err("invalid_scope", "portée inconnue");
-      if (!resource) return err("invalid_target", "ressource inconnue");
+      if (!scope) return err("invalid_scope", "unknown scope");
+      if (!resource) return err("invalid_target", "unknown resource");
       const exp = now() + TTL();
       return Response.json(
         {
@@ -833,21 +833,21 @@ export function createOAuth(o: OAuthOptions) {
       const dc = f.get("device_code") ?? "";
       const p = pending.get(dc);
       if (!p || p.kind !== "device" || p.client_id !== c.client_id)
-        return err("invalid_grant", "device_code inconnu");
+        return err("invalid_grant", "unknown device_code");
       if (p.exp < now()) {
         pending.delete(dc);
-        return err("expired_token", "code expiré");
+        return err("expired_token", "code expired");
       }
       if (p.denied) {
         pending.delete(dc);
-        return err("access_denied", "refusé");
+        return err("access_denied", "denied");
       }
       if (!p.approved) {
         const slow = p.poll && Date.now() - p.poll < 5000;
         p.poll = Date.now();
         return err(
           slow ? "slow_down" : "authorization_pending",
-          "en attente d'approbation",
+          "authorization pending",
         );
       }
       pending.delete(dc);
@@ -878,12 +878,12 @@ export function createOAuth(o: OAuthOptions) {
     return new Response(null, { status: 200 });
   }
 
-  /** Page d'attente : rechargée après `relay approve`, elle reçoit la redirection avec le code. */
+  /** Waiting page: reloaded after `relay approve`, it receives the redirect with the code. */
   function waiting(req: Request) {
     const id = new URL(req.url).searchParams.get("request") ?? "";
     const p = pending.get(id);
     if (!p || p.kind !== "code")
-      return err("invalid_request", "demande inconnue", 404);
+      return err("invalid_request", "unknown request", 404);
     if (!p.approved)
       return page(
         "Approbation requise",
@@ -896,8 +896,8 @@ export function createOAuth(o: OAuthOptions) {
   }
 
   /**
-   * Vérifie le porteur d'une requête protégée. `resource` = mcp | a2a | rpc. Jeton fixe du relais : accepté
-   * en en-tête Authorization (usage local) ; jamais dans l'URL pour mcp et a2a (MCP : « MUST NOT » query string).
+   * Verifies the bearer of a protected request. `resource` = mcp | a2a | rpc. Fixed relay token: accepted
+   * in the Authorization header (local use); never in the URL for mcp and a2a (MCP: "MUST NOT" query string).
    */
   function verify(
     req: Request,
@@ -934,8 +934,8 @@ export function createOAuth(o: OAuthOptions) {
     const h = `Bearer resource_metadata="${base}/.well-known/oauth-protected-resource/${resource}", scope="${resource}"${insufficient ? `, error="insufficient_scope"` : ""}`;
     return new Response(
       insufficient
-        ? "portée insuffisante"
-        : "autorisation requise (OAuth 2.1 ou Authorization: Bearer <jeton du relais>)",
+        ? "insufficient scope"
+        : "authorization required (OAuth 2.1 or Authorization: Bearer <relay token>)",
       {
         status: insufficient ? 403 : 401,
         headers: { "www-authenticate": h },
@@ -972,7 +972,7 @@ export function createOAuth(o: OAuthOptions) {
 
 const SEALED_DOC = "relay-oauth";
 
-/** securitySchemes A2A 1.0 (a2a.proto : SecurityScheme, OAuthFlows est un oneof : un schéma par flux). */
+/** A2A 1.0 securitySchemes (a2a.proto: SecurityScheme, OAuthFlows is a oneof: one scheme per flow). */
 export const a2aSecurity = (base: string) => {
   const scopes = { a2a: SCOPES.a2a! };
   const meta = `${base}/.well-known/oauth-authorization-server`;
@@ -981,7 +981,7 @@ export const a2aSecurity = (base: string) => {
       oauth2: {
         oauth2SecurityScheme: {
           description:
-            "OAuth 2.1, code d'autorisation + PKCE S256 (approbation automatique en boucle locale)",
+            "OAuth 2.1, authorization code + PKCE S256 (automatic approval on loopback)",
           flows: {
             authorizationCode: {
               authorizationUrl: `${base}/oauth/authorize`,
@@ -996,7 +996,7 @@ export const a2aSecurity = (base: string) => {
       },
       device: {
         oauth2SecurityScheme: {
-          description: "RFC 8628 pour agents sans navigateur",
+          description: "RFC 8628 for agents without a browser",
           flows: {
             deviceCode: {
               deviceAuthorizationUrl: `${base}/oauth/device_authorization`,
@@ -1011,7 +1011,7 @@ export const a2aSecurity = (base: string) => {
       agent: {
         oauth2SecurityScheme: {
           description:
-            "client_credentials pour agents enregistrés (relay client add)",
+            "client_credentials for registered agents (relay client add)",
           flows: {
             clientCredentials: { tokenUrl: `${base}/oauth/token`, scopes },
           },
@@ -1021,7 +1021,7 @@ export const a2aSecurity = (base: string) => {
       bearer: {
         httpAuthSecurityScheme: {
           scheme: "Bearer",
-          description: "jeton fixe du relais (usage local)",
+          description: "relay fixed token (local use)",
         },
       },
     },
