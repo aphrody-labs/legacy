@@ -14,10 +14,13 @@ function encoder(img: Bun.Image, format: keyof typeof TYPES, qualite: number) {
   return img.webp({ quality: qualite });
 }
 
+type ImageAvecRecadrage = Bun.Image & { extract(zone: NonNullable<OperationsImage["recadrer"]>): Bun.Image };
+
 async function transformer(octets: Uint8Array, o: OperationsImage) {
   let img = new Bun.Image(octets);
   const source = await img.metadata();
-  if (o.recadrer) img = img.extract(o.recadrer);
+  // `extract exists at runtime but is missing from the published Bun.Image types.
+  if (o.recadrer) img = (img as ImageAvecRecadrage).extract(o.recadrer);
   if (o.rotation) img = img.rotate(o.rotation);
   if (o.largeur || o.hauteur)
     img = img.resize(o.largeur ?? 0, o.hauteur ?? 0, { fit: o.ajustement, withoutEnlargement: true });

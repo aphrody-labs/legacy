@@ -19,5 +19,5 @@ test("every catalog has the keys and placeholders of the source catalog", () => 
 test("client messages follow the language and fall back to the source locale", () => {
   expect(traducteur("en").t("api.import.refused", { status: 413 })).toContain("413");
   expect(traducteur("fr-FR").t("api.unreachable")).toContain("injoignable");
-  expect(traducteur("zz").t("api.unreachable")).toBe(catalogs[SOURCE_LOCALE]!["api.unreachable"]);
+  expect(traducteur("zz").t("api.unreachable")).toBe(catalogs[SOURCE_LOCALE]!["api.unreachable"]!);
 });
