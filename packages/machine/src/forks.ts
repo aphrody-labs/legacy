@@ -1,8 +1,8 @@
-// Forks aphrody-labs intégrés à third_party/ : origin = fork aphrody-labs, upstream = projet amont, remotes
-// supplémentaires pour les forks tiers d'un même réseau (un projet = un clone, voir docs/core/ARCHITECTURE-ROOT.md).
-// Idempotent. Le dossier existant est retrouvé dans src.lock.json par son URL (origin ou upstream), sinon le clone
-// est créé à plat : third_party/<nom> (blobless + Scalar via `ay git clone`).
-// Usage (racine du dépôt) : bun packages/machine/src/forks.ts [--check] [nom...]   puis : ay lock --lock-only
+// aphrody-labs forks integrated into third_party/: origin = aphrody-labs fork, upstream = upstream project, extra
+// remotes for third-party forks of the same network (one project = one clone, see docs/core/ARCHITECTURE-ROOT.md).
+// Idempotent. The existing folder is found in src.lock.json by its URL (origin or upstream), otherwise the clone
+// is created flat: third_party/<name> (blobless + Scalar through `ay git clone`).
+// Usage (repository root): bun packages/machine/src/forks.ts [--check] [name...]   then: ay lock --lock-only
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -11,12 +11,12 @@ type Fork = {
   upstream: string;
   remotes?: Record<string, string>;
   sparse?: string[];
-  fork?: string; // nom du fork aphrody-labs quand il diffère (collision, nom générique)
+  fork?: string; // name of the aphrody-labs fork when it differs (collision, generic name)
   dir?: string; // chemin relatif hors third_party/ (apps/<x>/upstream/<nom> : site, GUI)
 };
 const gh = (r: string) => `https://github.com/${r}.git`;
 const FORKS: Fork[] = [
-  // Compatibilité NT / Linux (demande du 2026-11-12)
+  // NT / Linux compatibility (request of 2026-11-12)
   {
     name: "LiberNT",
     upstream: gh("LiberNT/LiberNT"),
@@ -27,7 +27,7 @@ const FORKS: Fork[] = [
     upstream:
       "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
   },
-  { name: "wine", upstream: "https://gitlab.winehq.org/wine/wine.git" }, // fork GitHub du miroir wine-mirror/wine
+  { name: "wine", upstream: "https://gitlab.winehq.org/wine/wine.git" }, // GitHub fork of the wine-mirror/wine mirror
   // Shell et outils (remplacement de Git Bash, MSYS2, pwsh, WSL)
   {
     name: "coreutils",
@@ -82,7 +82,7 @@ const FORKS: Fork[] = [
     "MrPicklePinosaur/shrs",
     "nushell/nushell",
     "fish-shell/fish-shell",
-    // binutils (objets ELF/PE/COFF, éditeur de liens)
+    // binutils (ELF/PE/COFF objects, linker)
     "wild-linker/wild",
     "gimli-rs/object",
     "gimli-rs/addr2line",
@@ -105,9 +105,9 @@ const FORKS: Fork[] = [
     ],
   },
   { name: "webui", upstream: gh("microsoft/webui") },
-  // Navigateurs, automatisation et crawl (2026-11-13), façade packages/chromium-bun/src/engines. Les clones déjà
-  // présents (playwright, puppeteer, crawlee, apify-sdk-js, obscura, lightpanda, servo, blitz, stylo, taffy) gardent
-  // origin = amont et remote aphrody = fork ; seuls les nouveaux passent ici.
+  // Browsers, automation and crawl (2026-11-13), facade packages/chromium-bun/src/engines. Clones already
+  // present (playwright, puppeteer, crawlee, apify-sdk-js, obscura, lightpanda, servo, blitz, stylo, taffy) keep
+  // origin = upstream and remote aphrody = fork; only the new ones go through here.
   ...[
     "microsoft/playwright-python",
     "apify/apify-sdk-python",
@@ -127,9 +127,9 @@ const FORKS: Fork[] = [
     name: "wayland-c",
     upstream: "https://gitlab.freedesktop.org/wayland/wayland.git",
   },
-  // Pile terminal centrale (2026-11-13) : intelligent-terminal et ses dépendances (tools/wta,
-  // vcpkg.json, dep/nuget/packages.config), dépôts Rust/Zig/terminal/UI des orgs anomalyco, vercel-labs et
-  // de la liste Microsoft du propriétaire. Voir docs/native/terminal/ARCHITECTURE.md.
+  // Central terminal stack (2026-11-13): intelligent-terminal and its dependencies (tools/wta,
+  // vcpkg.json, dep/nuget/packages.config), Rust/Zig/terminal/UI repositories of the anomalyco, vercel-labs and
+  // owner's Microsoft list orgs. See docs/native/terminal/ARCHITECTURE.md.
   ...[
     "agentclientprotocol/agent-client-protocol",
     "ratatui/ratatui",
@@ -177,7 +177,7 @@ const FORKS: Fork[] = [
   {
     name: "mcp-for-beginners",
     upstream: gh("microsoft/mcp-for-beginners"),
-    // 2,8 Go dont translations/ et translated_images/ : cours anglais seulement (cône, racine incluse).
+    // 2.8 GB including translations/ and translated_images/: English courses only (cone, root included).
     sparse: [
       "00-Introduction",
       "01-CoreConcepts",
@@ -194,7 +194,7 @@ const FORKS: Fork[] = [
       "12-tooling",
     ],
   },
-  // Node.js (V8) : binaires officiels par `ay rt` ; ici la source de lib/ et src/ seulement (dépôt de plusieurs Go).
+  // Node.js (V8): official binaries through `ay rt`; here only the lib/ and src/ source (repository of several GB).
   {
     name: "node",
     upstream: gh("nodejs/node"),
@@ -205,7 +205,7 @@ const FORKS: Fork[] = [
     name: "WebKit",
     upstream: gh("oven-sh/WebKit"),
     remotes: { webkit: gh("WebKit/WebKit") },
-    // `ay git clone --sparse` applique `git sparse-checkout set` en mode cône : des dossiers, pas des motifs.
+    // `ay git clone --sparse` applies `git sparse-checkout set` in cone mode: folders, not patterns.
     sparse: [
       "Source/JavaScriptCore",
       "Source/WTF",
@@ -213,9 +213,9 @@ const FORKS: Fork[] = [
       "Source/cmake",
     ],
   },
-  // Écosystème unixwin (2026-11-13) : tous les dépôts de l'org. Code et
-  // données dans third_party/<nom> ; site et GUI dans apps/unixwin/upstream/<nom> ; build et installation par
-  // scripts/unixwin (just unixwin-*). unixwin/codex n'est pas un clone : remote `unixwin` de third_party/codex.
+  // unixwin ecosystem (2026-11-13): all repositories of the org. Code and
+  // data in third_party/<name>; site and GUI in apps/unixwin/upstream/<name>; build and installation by
+  // scripts/unixwin (just unixwin-*). unixwin/codex is not a clone: remote `unixwin` of third_party/codex.
   ...[
     "niubash",
     "rubash",
@@ -230,8 +230,8 @@ const FORKS: Fork[] = [
     "winuxcmd-i18n",
     "winuxsh-profiles",
   ].map((n) => ({ name: n, upstream: gh(`unixwin/${n}`) })),
-  { name: "unixwin-github", upstream: gh("unixwin/.github") }, // profil de l'org ; « .github » réservé côté aphrody-labs
-  // Archive APT signée : hors chaîne (docs/native/deps/POLICY.md : jamais apt) ; scripts et métadonnées, sans paquets.
+  { name: "unixwin-github", upstream: gh("unixwin/.github") }, // org profile; ".github" reserved on the aphrody-labs side
+  // Signed APT archive: out of the chain (docs/native/deps/POLICY.md: never apt); scripts and metadata, no packages.
   {
     name: "unixwin-apt",
     upstream: gh("unixwin/apt"),
@@ -287,7 +287,7 @@ for (const f of FORKS) {
   const dir = join(repo, rel);
   if (!existsSync(join(dir, ".git"))) {
     drift++;
-    console.log(`absent  ${rel}`);
+    console.log(`missing ${rel}`);
     if (check) continue;
     const args = [
       "ay",
@@ -311,13 +311,13 @@ for (const f of FORKS) {
     if (cur.ok && norm(cur.out) === norm(url)) continue;
     drift++;
     console.log(
-      `remote  ${rel} ${name}: ${cur.ok ? cur.out : "(absent)"} -> ${url}`,
+      `remote  ${rel} ${name}: ${cur.ok ? cur.out : "(missing)"} -> ${url}`,
     );
     if (!check)
       run(dir, "git", "remote", cur.ok ? "set-url" : "add", name, url);
   }
 }
 console.log(
-  `${FORKS.length} forks, ${drift} écart(s)${check ? "" : " corrigé(s)"}`,
+  `${FORKS.length} forks, ${drift} drift(s)${check ? "" : " fixed"}`,
 );
 process.exit(check && drift ? 1 : 0);
