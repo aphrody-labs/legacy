@@ -320,18 +320,10 @@ export interface HeaderInfo {
   functions: string[];
 }
 
-export interface BunFlatModule {
+/** A Bun Rust crate absorbed into src/ (root Cargo.toml [workspace.dependencies] entry `bun_* = { path = ... }`). */
+export interface BunCrate {
   name: string;
-  crate: string;
-  files: string[];
-  license: string;
-}
-
-export interface BunFlatInfo {
-  fork: string;
-  commit: string;
-  handwritten: string[];
-  modules: BunFlatModule[];
+  path: string;
 }
 
 export interface GraphifySummary {
@@ -355,7 +347,7 @@ export interface MonorepoSnapshot {
   packages: PackageInfo[];
   apps: AppInfo[];
   headers: HeaderInfo[];
-  bunFlat: BunFlatInfo | null;
+  bunCrates: BunCrate[];
   graphify: GraphifySummary | null;
   indexCounts: IndexCounts | null;
   topClasses: Classification[];
@@ -523,25 +515,14 @@ function collectHeaders(srcRoot: string): HeaderInfo[] {
   return out.sort((a, b) => a.file.localeCompare(b.file));
 }
 
-function collectBunFlat(srcRoot: string): BunFlatInfo | null {
-  const flatPath = join(srcRoot, "src", "bun-flat", "flat.toml");
-  if (!existsSync(flatPath)) return null;
-  const txt = readFileSync(flatPath, "utf8");
-  const fork = txt.match(/^fork\s*=\s*"([^"]+)"/m)?.[1] ?? "";
-  const commit = txt.match(/^commit\s*=\s*"([^"]+)"/m)?.[1] ?? "";
-  const hwRaw = txt.match(/^handwritten\s*=\s*\[([^\]]*)\]/m)?.[1] ?? "";
-  const handwritten = [...hwRaw.matchAll(/"([^"]+)"/g)].map((m) => m[1]!);
-  const modules: BunFlatModule[] = [];
-  const blocks = txt.split("[[module]]").slice(1);
-  for (const b of blocks) {
-    const name = b.match(/^\s*name\s*=\s*"([^"]+)"/m)?.[1] ?? "";
-    const crate = b.match(/^\s*crate\s*=\s*"([^"]+)"/m)?.[1] ?? "";
-    const filesRaw = b.match(/^\s*files\s*=\s*\[([^\]]*)\]/m)?.[1] ?? "";
-    const files = [...filesRaw.matchAll(/"([^"]+)"/g)].map((m) => m[1]!);
-    const license = b.match(/^\s*license\s*=\s*"([^"]+)"/m)?.[1] ?? "";
-    if (name) modules.push({ name, crate, files, license });
-  }
-  return { fork, commit, handwritten, modules };
+function collectBunCrates(srcRoot: string): BunCrate[] {
+  const p = join(srcRoot, "Cargo.toml");
+  if (!existsSync(p)) return [];
+  const deps = (Bun.TOML.parse(readFileSync(p, "utf8")) as any).workspace?.dependencies ?? {};
+  return Object.entries(deps)
+    .filter(([n, v]: [string, any]) => n.startsWith("bun_") && typeof v?.path === "string")
+    .map(([name, v]: [string, any]) => ({ name, path: v.path }))
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function collectGraphify(srcRoot: string): GraphifySummary | null {
@@ -597,7 +578,7 @@ function collectGraphify(srcRoot: string): GraphifySummary | null {
   return null;
 }
 
-/** Collects live monorepo metadata from Cargo.toml, DEPS.rules, package.json, C headers, flat.toml, graphify, and SQLite. */
+/** Collects live monorepo metadata from Cargo.toml, DEPS.rules, package.json, C headers, graphify, and SQLite. */
 export function collectMonorepoSnapshot(
   srcRoot: string,
   db?: Database,
@@ -610,7 +591,7 @@ export function collectMonorepoSnapshot(
     packages: collectPackages(srcRoot),
     apps: collectApps(srcRoot),
     headers: collectHeaders(srcRoot),
-    bunFlat: collectBunFlat(srcRoot),
+    bunCrates: collectBunCrates(srcRoot),
     graphify: collectGraphify(srcRoot),
     indexCounts: db ? indexCounts(db) : null,
     topClasses: db ? classification(db).slice(0, 20) : [],

@@ -58,7 +58,7 @@ describe("declarative template engine", () => {
 });
 
 describe("monorepo snapshot & live scanner", () => {
-  test("collectMonorepoSnapshot reads real Cargo.toml, headers, and bun-flat", () => {
+  test("collectMonorepoSnapshot reads real Cargo.toml, headers, and absorbed Bun crates", () => {
     const snap = collectMonorepoSnapshot(SRC_ROOT);
     expect(snap.workspace.edition).toBe("2024");
     expect(snap.crates.length).toBeGreaterThan(20);
@@ -67,11 +67,8 @@ describe("monorepo snapshot & live scanner", () => {
     expect(snap.headers.some((h) => h.file.endsWith("aphrody_core.h"))).toBe(
       true,
     );
-    expect(snap.bunFlat?.modules.map((m) => m.name)).toEqual([
-      "wyhash",
-      "histogram",
-      "sort_by_number",
-    ]);
+    expect(snap.bunCrates.map((c) => c.name)).toContain("bun_wyhash");
+    expect(snap.bunCrates.every((c) => c.name.startsWith("bun_"))).toBe(true);
   });
 
   test("liveScanToStore populates SQLite and supports symbol + doc search", () => {
@@ -124,7 +121,7 @@ describe("monorepo snapshot & live scanner", () => {
       expect(plan).toMatch(/^---\r?\ntitle:/);
       expect(plan).toContain("<Callout");
       expect(plan).toContain("<Cards>");
-      expect(plan).toContain("src/bun-flat");
+      expect(plan).toContain("bun_wyhash");
 
       const pureC = readFileSync(
         join(SRC_ROOT, "docs", "native", "llvm", "PURE-C-LLVM.mdx"),

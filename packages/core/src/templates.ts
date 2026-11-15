@@ -107,18 +107,14 @@ function formatHeadersTable(snap: MonorepoSnapshot): string {
   ].join("\n");
 }
 
-function formatBunFlatTable(snap: MonorepoSnapshot): string {
-  if (!snap.bunFlat) return "_src/bun-flat/flat.toml not found._";
-  const rows = snap.bunFlat.modules.map(
-    (m) =>
-      `| \`${m.name}\` | \`${m.crate}\` | ${m.files.map((f) => `\`${f}\``).join(", ")} | ${m.license} |`,
-  );
+function formatBunCratesTable(snap: MonorepoSnapshot): string {
+  if (!snap.bunCrates.length) return "_No bun_* crate in the root Cargo.toml [workspace.dependencies]._";
   return [
-    `Fork: \`${snap.bunFlat.fork}\` @ \`${snap.bunFlat.commit.slice(0, 12)}\` (handwritten: ${snap.bunFlat.handwritten.map((h) => `\`${h}\``).join(", ")})`,
+    `${snap.bunCrates.length} Bun Rust crates absorbed into \`src/\` (root \`Cargo.toml\` [workspace.dependencies]).`,
     "",
-    "| Module | Upstream Crate | Source Files | License |",
-    "| :--- | :--- | :--- | :--- |",
-    ...rows,
+    "| Crate | Path |",
+    "| :--- | :--- |",
+    ...snap.bunCrates.map((c) => `| \`${c.name}\` | \`${c.path}\` |`),
   ].join("\n");
 }
 
@@ -154,11 +150,11 @@ Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md)
 
 - **Pure C23 LLVM ABI Core**: [src/core/capi](src/core/capi) (\`aphrody_core.h\` exporting \`core_*\` and unified \`ai_os_*\`, \`aphrody_zig.h\`, \`aphrody_mwg.h\`) compiled with \`clang\` ThinLTO and \`-Wall -Wextra -Wpedantic -Werror\`. See [docs/native/llvm/PURE-C-LLVM.mdx](docs/native/llvm/PURE-C-LLVM.mdx).
 - **Agent OS (\`@aphrody/ai-os\`)**: cross-platform sandboxed Unix/GNU-like OS distribution for agents unifying FHS VFS (\`/etc/ai-os\`, \`/var/lib/ai-os\`, \`/proc/agent\`, \`/dev/{llm,rag,world,sys1}\`), LLM, RAG, World Model, and System 1 decision under one C ABI (\`aphrody_core_capi\`).
-- **Bun v1.4.5+ Runtime**: pure Bun TypeScript packages with zero third-party npm dependencies (\`bun:ffi\`, \`bun:sqlite\`, \`Bun.Glob\`, \`Bun.serve\`).
-- **Rust {{workspace.edition}} Workspace**: {{cratesCount}} crates in \`src/*\` (edition {{workspace.edition}}, rust-version {{workspace.rustVersion}}, {{workspace.workspaceDepsCount}} workspace dependencies) including \`ay\` CLI, \`archguard\`, \`core\`, \`core-capi\`, \`ffi\`, \`bun-flat\`, \`tv-*\`, \`steam-depot\`, \`lore*\`.
-- **Zig 0.17.1 Native Cores**: \`packages/native/native\` and browser cores exporting stable C ABI symbols via \`aphrody_zig.h\`.
+- **Bun Runtime**: pure Bun TypeScript packages with zero third-party npm dependencies (\`bun:ffi\`, \`bun:sqlite\`, \`Bun.Glob\`, \`Bun.serve\`).
+- **Rust {{workspace.edition}} Workspace**: {{cratesCount}} crates in \`src/*\` (edition {{workspace.edition}}, rust-version {{workspace.rustVersion}}, {{workspace.workspaceDepsCount}} workspace dependencies), {{bunCratesCount}} of them absorbed from Bun.
+- **Zig Native Cores**: \`packages/native/native\` and browser cores exporting stable C ABI symbols via \`aphrody_zig.h\`.
 - **Modern Web Guidance (\`@aphrody/wck\`)**: pure Bun + \`mwg_capi\` (\`packages/wck/native\`) hybrid RAG search, Baseline gates, and MCP tools. See [docs/web/MODERN-WEB-GUIDANCE.mdx](docs/web/MODERN-WEB-GUIDANCE.mdx).
-- **\`ay\` Multicall CLI**: unified repository interface (\`ay arch check --strict\`, \`ay manifests\`, \`ay flat check\`, \`ay gaming\`, \`ay steam\`).
+- **\`ay\` Multicall CLI**: unified repository interface (\`ay arch check --strict\`, \`ay manifests\`, \`ay gaming\`, \`ay steam\`).
 
 ## Layout
 
@@ -166,7 +162,7 @@ Monorepo of Aphrody. Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md)
 | :--- | :--- |
 | [\`apps/\`](apps) | {{appsCount}} apps: {{appNames}} |
 | [\`packages/\`](packages) | {{packagesCount}} Bun \`@aphrody/*\` packages: {{pkgNames}} |
-| [\`src/\`](src) | {{cratesCount}} Rust {{workspace.edition}} crates (\`ay\`, \`archguard\`, \`core-capi\`, \`bun-flat\`, \`ffi\`, \`rust-stack\`, \`tv-*\`, \`steam-depot\`, \`lore*\`) |
+| [\`src/\`](src) | {{cratesCount}} Rust {{workspace.edition}} crates ({{bunCratesCount}} from Bun) next to the C core |
 | [\`infra/\`](infra) | Fleet, Docker, Cloudflare, and Chromium factory configuration |
 | [\`third_party/\`](third_party) | Pinned upstream checkouts and forks in \`src.lock.json\` (\`DEPS\`, \`.gitmodules\`) |
 | [\`docs/\`](docs) | Architecture MDX plans, LLVM/C ABI docs, Modern Web Guidance, and generated [\`docs/reference/\`](docs/reference) |
@@ -203,6 +199,7 @@ bun test packages/wck                  # @aphrody/wck Modern Web Guidance suite
   return renderTemplate(tpl, {
     workspace: snap.workspace,
     cratesCount: snap.crates.length,
+    bunCratesCount: snap.bunCrates.length,
     packagesCount: snap.packages.length,
     appsCount: snap.apps.length,
     appNames,
@@ -216,7 +213,7 @@ bun test packages/wck                  # @aphrody/wck Modern Web Guidance suite
 export function buildPlanMdx(snap: MonorepoSnapshot): string {
   const layerTable = formatLayerSummary(snap);
   const headersTable = formatHeadersTable(snap);
-  const bunFlatTable = formatBunFlatTable(snap);
+  const bunCratesTable = formatBunCratesTable(snap);
   const topLangs = snap.topClasses
     .slice(0, 8)
     .map(
@@ -232,14 +229,14 @@ Generated from live monorepo metadata on \`${snap.collectedAt}\` (${snap.crates.
 </Callout>
 
 <Cards>
-  <Card title="Pure C23 LLVM Core" href="/docs/llvm/PURE-C-LLVM" description="C23/C++23 ABI headers, ThinLTO, DEPS.rules layers, and bun-flat crates." />
+  <Card title="Pure C23 LLVM Core" href="/docs/llvm/PURE-C-LLVM" description="C23/C++23 ABI headers, ThinLTO, DEPS.rules layers, and absorbed Bun crates." />
   <Card title="Modern Web Guidance" href="/docs/web/MODERN-WEB-GUIDANCE" description="@aphrody/wck hybrid BM25+Int8 RAG, mwg_capi.dll, and agent MCP." />
 </Cards>
 
 ## 1. Monorepo Topology
 
 - **Rust Workspace**: edition \`${snap.workspace.edition}\`, MSRV \`${snap.workspace.rustVersion}\`, \`${snap.crates.length}\` crates in \`src/*\`, \`${snap.workspace.workspaceDepsCount}\` workspace dependencies in \`Cargo.toml\`.
-- **Bun Packages**: \`${snap.packages.length}\` zero-dependency \`@aphrody/*\` packages in \`packages/*\` targeting Bun v1.4.4+.
+- **Bun Packages**: \`${snap.packages.length}\` zero-dependency \`@aphrody/*\` packages in \`packages/*\` on Bun.
 - **Applications**: \`${snap.apps.length}\` directories in \`apps/*\`.
 ${snap.graphify ? `- **Code Graph**: \`${snap.graphify.nodes}\` nodes, \`${snap.graphify.edges}\` edges, \`${snap.graphify.communities}\` communities (\`${snap.graphify.source}\`).` : ""}
 ${snap.indexCounts ? `- **SQLite Index**: \`${snap.indexCounts.files}\` files, \`${snap.indexCounts.symbols}\` symbols, \`${snap.indexCounts.imports}\` imports, \`${snap.indexCounts.refs}\` calls.` : ""}
@@ -254,13 +251,13 @@ ${layerTable}
 
 ## 3. Pure C23 LLVM ABI Core
 
-All native cross-language boundaries converge on C ABI headers in \`src/core/capi/include/\` consumed by Bun (\`bun:ffi\`), Rust (\`src/ffi\`), and Zig 0.17.1.
+All native cross-language boundaries converge on C ABI headers in \`src/core/capi/include/\` consumed by Bun (\`bun:ffi\`), Rust (\`src/ffi\`), and Zig.
 
 ${headersTable}
 
-## 4. Bun Fork Absorption (\`src/bun-flat\`)
+## 4. Absorbed Bun Crates
 
-${bunFlatTable}
+${bunCratesTable}
 
 ## 5. Modern Web Guidance & Agent Tooling
 
@@ -274,7 +271,7 @@ ${topLangs ? `| Cluster | Language | Files | Symbols |\n| :--- | :--- | ---: | -
   return renderMdx({
     title: "Aphrody Master Architectural Plan",
     description:
-      "Live monorepo architecture: Pure C23 LLVM ABI core, Bun v1.4.4+, Rust 2024, Zig 0.17.1, DEPS.rules layers, and @aphrody/wck.",
+      "Live monorepo architecture: Pure C23 LLVM ABI core, Bun, Rust, Zig, DEPS.rules layers, and @aphrody/wck.",
     body,
   });
 }
@@ -282,7 +279,7 @@ ${topLangs ? `| Cluster | Language | Files | Symbols |\n| :--- | :--- | ---: | -
 /** Generates docs/native/llvm/PURE-C-LLVM.mdx in Bun Docs MDX format. */
 export function buildPureCLlvmMdx(snap: MonorepoSnapshot): string {
   const headersTable = formatHeadersTable(snap);
-  const bunFlatTable = formatBunFlatTable(snap);
+  const bunCratesTable = formatBunCratesTable(snap);
   const l0l1 = snap.crates
     .filter((c) => c.layer === "L0" || c.layer === "L1")
     .map((c) => `- \`${c.dir}\` (\`${c.name}\`, ${c.layer})`)
@@ -294,12 +291,12 @@ export function buildPureCLlvmMdx(snap: MonorepoSnapshot): string {
 Every header in \`src/core/capi/include/*.h\` must pass \`clang -std=c23 -Wall -Wextra -Wpedantic -Werror -fsyntax-only\` and \`clang++ -std=c++23 -Wall -Wextra -Werror -fno-exceptions -fno-rtti -fsyntax-only\` with zero warnings.
 </Callout>
 
-Generated from \`src/core/capi/include/*.h\`, \`src/*/DEPS.rules\`, and \`src/bun-flat/flat.toml\`.
+Generated from \`src/core/capi/include/*.h\`, \`src/*/DEPS.rules\` and the root \`Cargo.toml\`.
 
 ## 1. Compiler and ABI Rigor
 
 - **C Standard**: C23 (\`-std=c23 -Wall -Wextra -Wpedantic -Werror\`) with C++23 header compatibility (\`-fno-exceptions -fno-rtti\`).
-- **Linker & LTO**: shared LLVM toolchain (\`clang\` / \`clang-cl\`, \`lld\` / \`lld-link\`) with ThinLTO (\`-flto=thin\`, \`-Clinker-plugin-lto\`) across C, Rust, and Zig 0.17.1.
+- **Linker & LTO**: shared LLVM toolchain (\`clang\` / \`clang-cl\`, \`lld\` / \`lld-link\`) with ThinLTO (\`-flto=thin\`, \`-Clinker-plugin-lto\`) across C, Rust, and Zig.
 - **Memory Ownership**: caller frees returned strings via the matching \`*_free(char *p)\` function; ABI version is queried via \`*_abi_version()\`.
 
 ## 2. Exported C ABI Headers
@@ -310,9 +307,9 @@ ${headersTable}
 
 ${l0l1 || "_No L0/L1 crates found._"}
 
-## 4. Bun Fork Crates (\`src/bun-flat/flat.toml\`)
+## 4. Absorbed Bun Crates
 
-${bunFlatTable}
+${bunCratesTable}
 
 ## 5. Verification Commands
 
@@ -344,7 +341,7 @@ bun test ./packages/core/test/
   return renderMdx({
     title: "Pure C23 LLVM Core and C ABI",
     description:
-      "C23/C++23 ABI headers, -Wall -Wextra -Wpedantic -Werror, ThinLTO, DEPS.rules base layers, and bun-flat crates.",
+      "C23/C++23 ABI headers, -Wall -Wextra -Wpedantic -Werror, ThinLTO, DEPS.rules base layers, and absorbed Bun crates.",
     body,
   });
 }
@@ -357,7 +354,7 @@ export function buildModernWebGuidanceMdx(snap: MonorepoSnapshot): string {
   const body = `# Modern Web Guidance, RAG, and @aphrody/wck
 
 <Callout type="info" title="Zero-Dependency Pure Bun + C23 Native Core">
-\`@aphrody/wck\` runs with zero external npm dependencies on Bun v1.4.4+, pairing \`mwg_capi.dll\` (\`bun:ffi\`) with a deterministic pure-Bun fallback.
+\`@aphrody/wck\` runs with zero external npm dependencies on Bun, pairing \`mwg_capi.dll\` (\`bun:ffi\`) with a deterministic pure-Bun fallback.
 </Callout>
 
 Generated from \`packages/wck\`, \`src/core/capi/include/\`, and \`packages/ai-os\`.
