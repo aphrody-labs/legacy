@@ -16,7 +16,7 @@ on:
       - ".github/workflows/unixwin.yml"
   workflow_dispatch:
 concurrency:
-  group: unixwin-${{ github.ref }}
+  group: unixwin-${{ github.event_name == 'workflow_dispatch' && github.run_id || github.ref }}
   cancel-in-progress: false
 permissions: { contents: read }
 env:
