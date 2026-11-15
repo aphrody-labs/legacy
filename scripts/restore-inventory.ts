@@ -141,7 +141,7 @@ const HIST_RESTORED: Record<string, string> = {
   "packages/google-design": "packages/google-design", "packages/forge": "packages/forge", "packages/bun-plugins": "packages/bun-plugins", "packages/ai-triad": "packages/ai-triad",
   "packages/pi-opencode": "packages/pi-opencode", "packages/brain": "packages/brain", "packages/knowledge-engine": "packages/knowledge-engine", "packages/bun-parity": "packages/bun-parity",
   "packages/agy": "packages/agy", "packages/site": "packages/site", "packages/runtime-adapter": "packages/runtime-adapter", "packages/chromium-bun": "packages/chromium-bun",
-  "apps/aphrody-app": "apps/aphrody-app", "apps/r2-site": "apps/r2-site", "apps/yolo": "apps/yolo", "crates/ring3-agent": "src/ring3-agent", "apps/aphrody": "apps/aphrody-web (files absent from apps/aphrody)",
+  "apps/aphrody-app": "apps/aphrody-app", "apps/r2-site": "apps/r2-site", "apps/yolo": "apps/yolo", "crates/ring3-agent": "src/ring3-agent", "apps/r2b": "apps/r2b (Python RE bridge and rea-ghidra uv script only, own pyproject.toml and tests; the rest lives in aphrody-labs/r2b)", "packages/ai-os": "packages/ai-os/python/research_ref only (the polyglot kernel and its legacy crates are the purged layer)", "apps/aphrody": "apps/aphrody-web (files absent from apps/aphrody)",
 };
 const HIST_MOVED: [RegExp, string][] = [
   [/^packages\/browser|^apps\/android-shell|^tools\/site-mirror|^src\/adblock-capi|^src\/corelib/, "moved to aphrody-labs/open (commit 4c2780a7c, b16ba00f7); apps/open clone holds the tree"],
@@ -153,6 +153,7 @@ const HIST_MOVED: [RegExp, string][] = [
   [/^packages\/linux|^crates\/unix-(distro|cachyos|uutils)|^apps\/unixwin|^packages\/shell-matrix|^infra\/winnt-sdk|^crates\/depot-cli/, "ported to src/ (unix-omarchy, dx12-hal, ay multicall) or packages/machine/matrix"],
 ];
 const HIST_PURGED: [RegExp, string][] = [
+  [/^infra\/(internal|cmd|cshared|go\.)/, "Go multi-cloud deploy engine replaced by buildx bake and compose on purpose (commit 8763f01e0); not restored"],
   [/^assets\/(brand|generated|library)|^crates\/aphrody-design|^crates\/ui$|^crates\/rust-showcase|^apps\/rust-showcase|^src\/router|^packages\/epic-games|^docs\/|^legacy\/|^infra\/(internal|generated|ffi-bridge)|^plugins\/aphrody-nhitl/, "purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored"],
 ];
 for (const h of json("history.json").rows as any[]) {

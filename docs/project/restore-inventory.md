@@ -1,60 +1,23 @@
 # Restore inventory
 
-Generated 2026-11-15 by `scripts/restore-inventory.ts` from the monorepo at `fb6c05d08`. One row per item in `restore-inventory.json` (3422 rows); this file lists the counts, every own repository, every restore action and the blocked items. Content is compared by git blob oid (not by name): a remote tree is read without blobs (treeless clone), tarballs are hashed in memory, VPS files are hashed on the host.
+Generated 2026-11-15 by `scripts/restore-inventory.ts` from the monorepo at `b4d520d08`. One row per item in `restore-inventory.json` (2356 rows); this file lists the counts, every own repository, every restore action and the blocked items. Content is compared by git blob oid (not by name): a remote tree is read without blobs (treeless clone), tarballs are hashed in memory, VPS files are hashed on the host.
 
 ## Counts by source and status
 
 | source | present-identical | present-newer | present-older | unique-commits | missing | blocked | total |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | cloudflare | 22 | 0 | 0 | 0 | 0 | 0 | 22 |
-| crates.io | 53 | 1 | 8 | 0 | 308 | 0 | 370 |
 | github | 978 | 1 | 18 | 29 | 101 | 0 | 1127 |
-| history | 17 | 208 | 0 | 0 | 182 | 0 | 407 |
+| history | 19 | 207 | 0 | 0 | 181 | 0 | 407 |
 | local | 18 | 0 | 0 | 1 | 0 | 0 | 19 |
-| npm | 27 | 0 | 25 | 0 | 644 | 0 | 696 |
 | vps | 720 | 0 | 23 | 9 | 29 | 0 | 781 |
 
 Status meaning: present-identical (same content in the tree, or restored by this run), present-newer (tree evolved past the source), present-older (source holds content the tree lacks or older tree copy), unique-commits (commits or files not in the tree history), missing (no content in the tree).
 
-## Restored by this run (79)
+## Restored by this run (17)
 
 | item | language | updated | status | monorepo path | decision |
 |---|---|---|---|---|---|
-| aphrody-a2a |  | 2026-10-23 | present-identical | src/a2a | restored into src/a2a from the published crate 1.4.7 (v1.4.7; 16 files, 12 source, 0% shared) |
-| aphrody-a2a-client |  | 2026-10-23 | present-identical | src/a2a-client | restored into src/a2a-client from the published crate 1.4.7 (v1.4.7; 18 files, 15 source, 0% shared) |
-| aphrody-a2a-coord |  | 2026-10-23 | present-identical | src/a2a-coord | restored into src/a2a-coord from the published crate 1.4.7 (v1.4.7; 23 files, 20 source, 0% shared) |
-| aphrody-a2a-grpc |  | 2026-10-23 | present-identical | src/a2a-grpc | restored into src/a2a-grpc from the published crate 1.4.7 (v1.4.7; 11 files, 8 source, 0% shared) |
-| aphrody-a2a-pb |  | 2026-10-23 | present-identical | src/a2a-pb | restored into src/a2a-pb from the published crate 1.4.7 (v1.4.7; 17 files, 14 source, 0% shared) |
-| aphrody-a2a-server |  | 2026-10-23 | present-identical | src/a2a-server | restored into src/a2a-server from the published crate 1.4.7 (v1.4.7; 27 files, 24 source, 0% shared) |
-| aphrody-accounts |  | 2026-10-30 | present-identical | src/accounts | restored into src/accounts from the published crate 1.4.7 (v1.4.7; 17 files, 14 source, 0% shared) |
-| aphrody-agent-home |  | 2026-10-23 | present-identical | src/agent-home | restored into src/agent-home from the published crate 1.4.7 (v1.4.7; 45 files, 41 source, 0% shared) |
-| aphrody-agent-proto |  | 2026-10-23 | present-identical | src/agent-proto | restored into src/agent-proto from the published crate 1.4.7 (v1.4.7; 8 files, 4 source, 0% shared) |
-| aphrody-agent-runtime |  | 2026-11-03 | present-identical | src/agent-runtime | restored into src/agent-runtime from the published crate 1.4.7 (v1.4.7; 15 files, 12 source, 0% shared) |
-| aphrody-agent-tools |  | 2026-11-03 | present-identical | src/agent-tools | restored into src/agent-tools from the published crate 1.4.7 (v1.4.7; 15 files, 12 source, 0% shared) |
-| aphrody-antigravity |  | 2026-10-23 | present-identical | src/antigravity | restored into src/antigravity from the published crate 1.4.7 (v1.4.7; 16 files, 13 source, 0% shared) |
-| aphrody-boq |  | 2026-11-13 | present-identical | src/boq | restored into src/boq from the published crate 1.4.8 (v1.4.8; 6 files, 3 source, 0% shared) |
-| aphrody-embed |  | 2026-10-23 | present-identical | src/embed | restored into src/embed from the published crate 1.4.7 (v1.4.7; 34 files, 29 source, 0% shared) |
-| aphrody-gateway |  | 2026-10-23 | present-identical | src/gateway | restored into src/gateway from the published crate 1.4.7 (v1.4.7; 13 files, 10 source, 0% shared) |
-| aphrody-gemini-runtime |  | 2026-11-03 | present-identical | src/gemini-runtime | restored into src/gemini-runtime from the published crate 1.4.7 (v1.4.7; 11 files, 8 source, 0% shared) |
-| aphrody-gemini-web |  | 2026-10-23 | present-identical | src/gemini-web | restored into src/gemini-web from the published crate 1.4.7 (v1.4.7; 18 files, 15 source, 0% shared) |
-| aphrody-google |  | 2026-11-03 | present-identical | src/google | restored into src/google from the published crate 1.4.7 (v1.4.7; 10 files, 7 source, 0% shared) |
-| aphrody-identity |  | 2026-10-23 | present-identical | src/identity | restored into src/identity from the published crate 1.4.7 (v1.4.7; 71 files, 38 source, 0% shared) |
-| aphrody-infer |  | 2026-10-23 | present-identical | src/infer | restored into src/infer from the published crate 1.4.7 (v1.4.7; 9 files, 6 source, 0% shared) |
-| aphrody-jev |  | 2026-11-13 | present-identical | src/jev | restored into src/jev from the published crate 1.4.8 (v1.4.8; 23 files, 18 source, 4% shared) |
-| aphrody-llama |  | 2026-10-23 | present-identical | src/llama | restored into src/llama from the published crate 1.4.7 (v1.4.7; 26 files, 23 source, 0% shared) |
-| aphrody-llama-server |  | 2026-10-23 | present-identical | src/llama-server | restored into src/llama-server from the published crate 1.4.7 (v1.4.7; 30 files, 27 source, 0% shared) |
-| aphrody-llama-sys |  | 2026-10-23 | present-identical | src/llama-sys | restored into src/llama-sys from the published crate 1.4.7 (v1.4.7; 16 files, 13 source, 0% shared) |
-| aphrody-mcp-client |  | 2026-11-03 | present-identical | src/mcp-client | restored into src/mcp-client from the published crate 1.4.7 (v1.4.7; 23 files, 20 source, 0% shared) |
-| aphrody-memory |  | 2026-10-30 | present-identical | src/memory | restored into src/memory from the published crate 1.4.7 (v1.4.7; 24 files, 21 source, 0% shared) |
-| aphrody-ml-config |  | 2026-10-23 | present-identical | src/ml-config | restored into src/ml-config from the published crate 1.4.7 (v1.4.7; 5 files, 2 source, 0% shared) |
-| aphrody-ml-runtime |  | 2026-10-23 | present-identical | src/ml-runtime | restored into src/ml-runtime from the published crate 1.4.7 (v1.4.7; 27 files, 24 source, 0% shared) |
-| aphrody-model-antigravity |  | 2026-10-23 | present-identical | src/model-antigravity | restored into src/model-antigravity from the published crate 1.4.7 (v1.4.7; 6 files, 3 source, 0% shared) |
-| aphrody-model-client |  | 2026-10-23 | present-identical | src/model-client | restored into src/model-client from the published crate 1.4.7 (v1.4.7; 19 files, 16 source, 0% shared) |
-| aphrody-models |  | 2026-10-23 | present-identical | src/models | restored into src/models from the published crate 1.4.7 (v1.4.7; 19 files, 15 source, 0% shared) |
-| aphrody-n2b |  | 2026-11-13 | present-identical | src/n2b | restored into src/n2b from the published crate 0.7.1 (v0.7.1; 47 files, 39 source, 0% shared) |
-| aphrody-n2b-core |  | 2026-11-13 | present-identical | src/n2b-core | restored into src/n2b-core from the published crate 0.7.1 (v0.7.1; 53 files, 51 source, 0% shared) |
-| aphrody-n2b-registry |  | 2026-11-13 | present-identical | src/n2b-registry | restored into src/n2b-registry from the published crate 0.7.1 (v0.7.1; 12 files, 10 source, 0% shared) |
-| aphrody-n2b-types |  | 2026-11-13 | present-identical | src/n2b-types | restored into src/n2b-types from the published crate 0.7.1 (v0.7.1; 8 files, 5 source, 0% shared) |
 | aphrody-labs/ai-triad | TypeScript | 2026-11-12 | present-identical | packages/ai-triad | restored into packages/ai-triad (restore-import: gitleaks clean, personal values scrubbed) |
 | aphrody-labs/aphrody-app | Rust | 2026-11-11 | present-identical | apps/aphrody-app | restored into apps/aphrody-app (restore-import: gitleaks clean, personal values scrubbed) |
 | aphrody-labs/aphrody-web-archive | TypeScript | 2026-11-12 | present-identical | apps/aphrody-web | restored into apps/aphrody-web (restore-import: gitleaks clean, personal values scrubbed) |
@@ -72,33 +35,6 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | aphrody-labs/mesh-vn | TypeScript | 2026-11-12 | present-identical | infra/mesh-vn | restored into infra/mesh-vn (restore-import: gitleaks clean, personal values scrubbed) |
 | aphrody-labs/pi-opencode | TypeScript | 2026-11-12 | present-identical | packages/pi-opencode | restored into packages/pi-opencode (restore-import: gitleaks clean, personal values scrubbed) |
 | aphrody-labs/ring3-agent | Rust | 2026-11-12 | present-identical | src/ring3-agent | restored into src/ring3-agent (restore-import: gitleaks clean, personal values scrubbed) |
-| @aphrody/a2a |  | 2026-10-23 | present-identical | packages/a2a | restored into packages/a2a from the published tarball 1.4.7 (v1.4.7; 14 files, 13 source, 0% shared) |
-| @aphrody/ag-ui |  | 2026-10-23 | present-identical | packages/ag-ui | restored into packages/ag-ui from the published tarball 1.4.7 (v1.4.7; 8 files, 3 source, 13% shared) |
-| @aphrody/ag-ui-client |  | 2026-10-03 | present-identical | packages/ag-ui-client | restored into packages/ag-ui-client from the published tarball 1.0.1-aphrody.1 (v1.0.1-aphrody.1; 84 files, 41 source, 0% shared) |
-| @aphrody/agent-browser |  | 2026-10-09 | present-identical | packages/agent-browser | restored into packages/agent-browser from the published tarball 1.0.0-canary.4 (v1.0.0-canary.4; 12 files, 11 source, 0% shared) |
-| @aphrody/bun-chromium |  | 2026-10-23 | present-identical | packages/bun-chromium | restored into packages/bun-chromium from the published tarball 1.4.7 (v1.4.7; 9 files, 7 source, 0% shared) |
-| @aphrody/bun-google |  | 2026-10-23 | present-identical | packages/bun-google | restored into packages/bun-google from the published tarball 1.4.7 (v1.4.7; 18 files, 16 source, 0% shared) |
-| @aphrody/bun-sql |  | 2026-10-23 | present-identical | packages/bun-sql | restored into packages/bun-sql from the published tarball 1.4.7 (v1.4.7; 13 files, 12 source, 0% shared) |
-| @aphrody/bun-web |  | 2026-10-23 | present-identical | packages/bun-web | restored into packages/bun-web from the published tarball 1.4.7 (v1.4.7; 43 files, 40 source, 0% shared) |
-| @aphrody/bun-webview-page |  | 2026-10-23 | present-identical | packages/bun-webview-page | restored into packages/bun-webview-page from the published tarball 1.4.7 (v1.4.7; 6 files, 5 source, 0% shared) |
-| @aphrody/chromium |  | 2026-11-03 | present-identical | packages/chromium | restored into packages/chromium from the published tarball 1.4.7 (v1.4.7; 23 files, 21 source, 0% shared) |
-| @aphrody/doc-ai |  | 2026-10-23 | present-identical | packages/doc-ai | restored into packages/doc-ai from the published tarball 1.4.7 (v1.4.7; 10 files, 9 source, 0% shared) |
-| @aphrody/drive-client |  | 2026-10-23 | present-identical | packages/drive-client | restored into packages/drive-client from the published tarball 1.4.7 (v1.4.7; 30 files, 29 source, 0% shared) |
-| @aphrody/gemma-web |  | 2026-10-30 | present-identical | packages/gemma-web | restored into packages/gemma-web from the published tarball 1.4.7 (v1.4.7; 14 files, 13 source, 0% shared) |
-| @aphrody/google |  | 2026-10-23 | present-identical | packages/google | restored into packages/google from the published tarball 1.4.7 (v1.4.7; 15 files, 13 source, 0% shared) |
-| @aphrody/identity |  | 2026-10-23 | present-identical | packages/identity | restored into packages/identity from the published tarball 1.4.7 (v1.4.7; 116 files, 31 source, 1% shared) |
-| @aphrody/inference |  | 2026-10-07 | present-identical | packages/inference | restored into packages/inference from the published tarball 0.1.1 (v0.1.1; 3 files, 2 source, 0% shared) |
-| @aphrody/mcp-ui |  | 2026-10-03 | present-identical | packages/mcp-ui | restored into packages/mcp-ui from the published tarball 7.1.1-aphrody.1 (v7.1.1-aphrody.1; 22 files, 10 source, 0% shared) |
-| @aphrody/paths |  | 2026-10-23 | present-identical | packages/paths | restored into packages/paths from the published tarball 1.4.7 (v1.4.7; 4 files, 1 source, 25% shared) |
-| @aphrody/rag-core |  | 2026-10-23 | present-identical | packages/rag-core | restored into packages/rag-core from the published tarball 1.4.7 (v1.4.7; 7 files, 6 source, 0% shared) |
-| @aphrody/runtime-sdk |  | 2026-10-23 | present-identical | packages/runtime-sdk | restored into packages/runtime-sdk from the published tarball 1.4.7 (v1.4.7; 21 files, 19 source, 0% shared) |
-| @aphrody/shell-web |  | 2026-10-23 | present-identical | packages/shell-web | restored into packages/shell-web from the published tarball 1.4.7 (v1.4.7; 3 files, 2 source, 0% shared) |
-| @aphrody/typesafe-sdk |  | 2026-10-13 | present-identical | packages/typesafe-sdk | restored into packages/typesafe-sdk from the published tarball 0.6.2 (v0.6.2; 7 files, 1 source, 0% shared) |
-| @aphrody/web |  | 2026-10-23 | present-identical | packages/web | restored into packages/web from the published tarball 1.4.7 (v1.4.7; 96 files, 81 source, 0% shared) |
-| @aphrody/web-crawl |  | 2026-11-01 | present-identical | packages/web-crawl | restored into packages/web-crawl from the published tarball 1.4.7 (v1.4.7; 4 files, 3 source, 0% shared) |
-| @aphrody/webos |  | 2026-10-23 | present-identical | packages/webos | restored into packages/webos from the published tarball 1.4.7 (v1.4.7; 97 files, 80 source, 1% shared) |
-| @aphrody/webos-wasm |  | 2026-10-23 | present-identical | packages/webos-wasm | restored into packages/webos-wasm from the published tarball 1.4.7 (v1.4.7; 4 files, 3 source, 0% shared) |
-| @aphrody/xai |  | 2026-10-05 | present-identical | packages/xai | restored into packages/xai from the published tarball 1.1.6 (v1.1.6; 8 files, 6 source, 0% shared) |
 
 ## Own repositories not restored (GitHub, non-fork) (74)
 
@@ -234,7 +170,7 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | /srv/native-ui/crates |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/354 source files shared (0%)) |
 | /srv/native-ui/extra |  |  | missing | src/runtime(19), .agents/hooks.json(4) | scratch, benchmark or research tree on the host (not our product code); kept, no copy (31/25124 source files shared (0%)) |
 | /srv/pipe-src |  |  | present-older | bunfig.toml(1), rust-toolchain.toml(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (6/15 source files shared (40%)) |
-| /srv/pipe-src/.agents |  |  | present-identical | .agents/skills(833), .agents/.claude-plugin(1) | content already in the tree (838/858 source files shared (98%)) |
+| /srv/pipe-src/.agents |  |  | present-identical | .agents/skills(825), .agents/.claude-plugin(1) | content already in the tree (830/858 source files shared (97%)) |
 | /srv/pipe-src/.claude |  |  | present-older | .claude/agents(2), .claude/agent-memory(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (4/16 source files shared (25%)) |
 | /srv/pipe-src/apps |  |  | present-older | apps/auto(1026), apps/aphrody(15) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (1052/1425 source files shared (74%)) |
 | /srv/pipe-src/assets |  |  | present-older | packages/design(3) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (3/7 source files shared (43%)) |
@@ -249,9 +185,9 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | /srv/pipe-src/test |  |  | present-identical | test/lore(34), test/conformance(3) | content already in the tree (39/41 source files shared (95%)) |
 | /srv/pipe-src/third_party |  |  | present-identical | third_party/design-mirror(598), third_party/chromium-trackers.json(1) | content already in the tree (603/603 source files shared (100%)) |
 | /srv/pipe-src/tools |  |  | present-identical | tools/lore(226), tools/gnu-index(5) | content already in the tree (238/242 source files shared (98%)) |
-| /srv/research/adb |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13571/14082 source files shared (96%)) |
+| /srv/research/adb |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13563/14082 source files shared (96%)) |
 | /srv/research/adb2 |  |  | present-identical | src/jsc(1431), src/lint(1295) | content already in the tree (5219/5266 source files shared (99%)) |
-| /srv/research/adb3 |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13569/14031 source files shared (97%)) |
+| /srv/research/adb3 |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13561/14031 source files shared (97%)) |
 | /srv/research/android |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/21 source files shared (0%)) |
 | /srv/research/gnu |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/5 source files shared (0%)) |
 | /srv/research/gsrc |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/7 source files shared (0%)) |
@@ -260,17 +196,17 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | /srv/research/mirror |  |  | missing | apps/gemini-super-app(1) | scratch, benchmark or research tree on the host (not our product code); kept, no copy (1/779 source files shared (0%)) |
 | /srv/research/site-mirror |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/67 source files shared (0%)) |
 | /<home>/agent/agents/src |  |  | present-older | dist-workspace.toml(1), bunfig.toml(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (10/16 source files shared (63%)) |
-| /<home>/agent/agents/src/.agents |  |  | present-identical | .agents/skills(864), .agents/.claude-plugin(1) | content already in the tree (870/884 source files shared (98%)) |
+| /<home>/agent/agents/src/.agents |  |  | present-identical | .agents/skills(855), .agents/.claude-plugin(1) | content already in the tree (861/884 source files shared (97%)) |
 | /<home>/agent/agents/src/.claude |  |  | present-older | .claude/agents(6), .claude/agent-memory(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (8/16 source files shared (50%)) |
-| /<home>/agent/agents/src/apps |  |  | present-identical | apps/auto(1365), apps/nt(70) | content already in the tree (1454/1469 source files shared (99%)) |
-| /<home>/agent/agents/src/bench |  |  | present-identical | bench/src(13), bench/shell(4) | content already in the tree (25/25 source files shared (100%)) |
-| /<home>/agent/agents/src/docs |  |  | present-older | docs/lore(215), docs/native(94) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (539/590 source files shared (91%)) |
-| /<home>/agent/agents/src/infra |  |  | present-older | infra/fleet(61), infra/os(22) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (178/202 source files shared (88%)) |
+| /<home>/agent/agents/src/apps |  |  | present-identical | apps/auto(1364), apps/nt(68) | content already in the tree (1448/1469 source files shared (99%)) |
+| /<home>/agent/agents/src/bench |  |  | present-identical | bench/src(13), bench/shell(4) | content already in the tree (24/25 source files shared (96%)) |
+| /<home>/agent/agents/src/docs |  |  | present-older | docs/lore(215), docs/native(94) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (533/590 source files shared (90%)) |
+| /<home>/agent/agents/src/infra |  |  | present-older | infra/fleet(61), infra/os(22) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (177/202 source files shared (88%)) |
 | /<home>/agent/agents/src/licenses |  |  | present-identical | licenses/lore(7) | content already in the tree (7/7 source files shared (100%)) |
-| /<home>/agent/agents/src/packages |  |  | present-older | packages/omniu(335), packages/ai-os(241) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (934/1021 source files shared (91%)) |
+| /<home>/agent/agents/src/packages |  |  | present-older | packages/omniu(334), packages/ai-os(240) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (915/1021 source files shared (90%)) |
 | /<home>/agent/agents/src/plugins |  |  | present-older | infra/agents(9) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (9/10 source files shared (90%)) |
 | /<home>/agent/agents/src/scripts |  |  | present-older | scripts/bench(68), scripts/android-setup.ts(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (94/101 source files shared (93%)) |
-| /<home>/agent/agents/src/src |  |  | present-identical | src/rubash(2940), src/lore(1830) | content already in the tree (13191/13223 source files shared (100%)) |
+| /<home>/agent/agents/src/src |  |  | present-identical | src/rubash(2940), src/lore(1830) | content already in the tree (13106/13223 source files shared (99%)) |
 | /<home>/agent/agents/src/test |  |  | present-identical | test/diffcorpus(41), test/lore(35) | content already in the tree (86/86 source files shared (100%)) |
 | /<home>/agent/agents/src/third_party |  |  | present-identical | third_party/design-mirror(598), third_party/ECOSYSTEM.toml(1) | content already in the tree (603/603 source files shared (100%)) |
 | /<home>/agent/agents/src/tools |  |  | present-identical | tools/lore(226), packages/chromium-bun(6) | content already in the tree (249/250 source files shared (100%)) |
@@ -301,7 +237,7 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | /root/ws/third_party |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/60 source files shared (0%)) |
 | /srv/auto/build/ctx |  |  | present-older | apps/auto(165) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (165/421 source files shared (39%)) |
 
-## History: restored lost features (17)
+## History: restored lost features (19)
 
 Deleting commit is the first hash in each note; the restoring commit is named in the decision.
 
@@ -310,9 +246,11 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 | apps/aphrody |  | 2026-11-14 | present-identical | apps/aphrody-web (files absent from apps/aphrody) | restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/aphrody); restoring commit ac067b73c (178 files (134 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | apps/aphrody-app |  | 2026-11-14 | present-identical | apps/aphrody-app | restored from 5d771bb74^ into apps/aphrody-app; restoring commit ac067b73c (46 files (31 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | apps/r2-site |  | 2026-11-14 | present-identical | apps/r2-site | restored from 5d771bb74^ into apps/r2-site; restoring commit ac067b73c (11 files (10 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| apps/r2b |  | 2026-11-14 | present-identical | apps/r2b (Python RE bridge and rea-ghidra uv script only, own pyproject.toml and tests; the rest lives in aphrody-labs/r2b) | restored from 36bb44ca2^ into apps/r2b (Python RE bridge and rea-ghidra uv script only, own pyproject.toml and tests; the rest lives in aphrody-labs/r2b); restoring commit ac067b73c (7768 files (7429 code), deleted in 36bb44ca2 on 2026-11-14 (see git show 36bb44ca2)) |
 | apps/yolo |  | 2026-11-14 | present-identical | apps/yolo | restored from 5d771bb74^ into apps/yolo; restoring commit ac067b73c (15 files (14 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | crates/ring3-agent |  | 2026-11-14 | present-identical | src/ring3-agent | restored from 5d771bb74^ into src/ring3-agent; restoring commit ac067b73c (16 files (13 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | packages/agy |  | 2026-11-12 | present-identical | packages/agy | restored from 73bc09414^ into packages/agy; restoring commit ac067b73c (13 files (12 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
+| packages/ai-os |  | 2026-11-15 | present-identical | packages/ai-os/python/research_ref only (the polyglot kernel and its legacy crates are the purged layer) | restored from b38c8de7c^ into packages/ai-os/python/research_ref only (the polyglot kernel and its legacy crates are the purged layer); restoring commit ac067b73c (366 files (337 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | packages/ai-triad |  | 2026-11-12 | present-identical | packages/ai-triad | restored from 73bc09414^ into packages/ai-triad; restoring commit ac067b73c (25 files (23 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
 | packages/brain |  | 2026-11-12 | present-identical | packages/brain | restored from 73bc09414^ into packages/brain; restoring commit ac067b73c (8 files (6 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
 | packages/bun-parity |  | 2026-11-14 | present-identical | packages/bun-parity | restored from 5d771bb74^ into packages/bun-parity; restoring commit ac067b73c (42 files (40 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
@@ -325,7 +263,7 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 | packages/runtime-adapter |  | 2026-11-14 | present-identical | packages/runtime-adapter | restored from 5d771bb74^ into packages/runtime-adapter; restoring commit ac067b73c (10 files (9 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 | packages/site |  | 2026-11-14 | present-identical | packages/site | restored from 5d771bb74^ into packages/site; restoring commit ac067b73c (12 files (12 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 
-## History: deleted directories with 8 or more files, not restored (113)
+## History: deleted directories with 8 or more files, not restored (111)
 
 | item | language | updated | status | monorepo path | decision |
 |---|---|---|---|---|---|
@@ -334,7 +272,6 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 | apps/auto |  | 2026-11-15 | present-newer |  | same blobs found elsewhere in HEAD (moved) (1607 files (1355 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | apps/l2l |  | 2026-11-14 | present-newer |  | RE/n2b absorption: own repo aphrody-labs/r2b; n2b CLI folded into depot-migrate and src/re (commit 36bb44ca2) (27 files (25 code), deleted in 36bb44ca2 on 2026-11-14 (see git show 36bb44ca2)) |
 | apps/nt |  | 2026-11-15 | present-newer |  | paths present again in HEAD (97 files (75 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
-| apps/r2b |  | 2026-11-14 | present-newer |  | RE/n2b absorption: own repo aphrody-labs/r2b; n2b CLI folded into depot-migrate and src/re (commit 36bb44ca2) (7768 files (7429 code), deleted in 36bb44ca2 on 2026-11-14 (see git show 36bb44ca2)) |
 | apps/rust-showcase |  | 2026-11-14 | missing |  | purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored (10 files (8 code), deleted in a4f3934d8 on 2026-11-14 (see git show a4f3934d8)) |
 | assets/brand |  | 2026-11-14 | missing |  | purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored (715 files (20 code), deleted in 0c8ed2d71 on 2026-11-14 (see git show 0c8ed2d71)) |
 | assets/generated |  | 2026-11-14 | missing |  | purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored (433 files (3 code), deleted in 0c8ed2d71 on 2026-11-14 (see git show 0c8ed2d71)) |
@@ -373,7 +310,7 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 | infra/fleet |  | 2026-11-15 | missing |  | deleted code with no equivalent in HEAD and no owner decision recorded: review candidate (264 files (64 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | infra/gamescope-web |  | 2026-11-15 | present-newer |  | same blobs found elsewhere in HEAD (moved) (8 files (4 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | infra/generated |  | 2026-11-13 | missing |  | purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored (17 files (1 code), deleted in 8763f01e0 on 2026-11-13 (see git show 8763f01e0)) |
-| infra/internal |  | 2026-11-13 | missing |  | purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored (15 files (15 code), deleted in 8763f01e0 on 2026-11-13 (see git show 8763f01e0)) |
+| infra/internal |  | 2026-11-13 | missing |  | Go multi-cloud deploy engine replaced by buildx bake and compose on purpose (commit 8763f01e0); not restored (15 files (15 code), deleted in 8763f01e0 on 2026-11-13 (see git show 8763f01e0)) |
 | infra/linux |  | 2026-11-15 | present-newer |  | same blobs found elsewhere in HEAD (moved) (23 files (9 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | infra/upstream |  | 2026-11-15 | present-newer |  | same blobs found elsewhere in HEAD (moved) (27 files (15 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | infra/winnt-sdk |  | 2026-11-13 | present-newer |  | ported to src/ (unix-omarchy, dx12-hal, ay multicall) or packages/machine/matrix (9 files (3 code), deleted in ec5275682 on 2026-11-13 (see git show ec5275682)) |
@@ -384,7 +321,6 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 | legacy/knowledge-engine |  | 2026-11-12 | missing |  | purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored (19 files (18 code), deleted in acfc98c6b on 2026-11-12 (see git show acfc98c6b)) |
 | legacy/pi-opencode |  | 2026-11-12 | missing |  | purged on purpose (brand, slop, stub, dissolved legacy or replaced guard); not restored (18 files (15 code), deleted in d7a5d0b92 on 2026-11-12 (see git show d7a5d0b92)) |
 | licenses/lore |  | 2026-11-15 | present-newer |  | same blobs found elsewhere in HEAD (moved) (9 files (7 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
-| packages/ai-os |  | 2026-11-15 | missing |  | deleted code with no equivalent in HEAD and no owner decision recorded: review candidate (366 files (337 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | packages/assets |  | 2026-11-15 | present-newer |  | same blobs found elsewhere in HEAD (moved) (30 files (29 code), deleted in b38c8de7c on 2026-11-15 (see git show b38c8de7c)) |
 | packages/browser |  | 2026-11-15 | present-newer |  | moved to aphrody-labs/open (commit 4c2780a7c, b16ba00f7); apps/open clone holds the tree (3067 files (3009 code), deleted in 4c2780a7c on 2026-11-15 (see git show 4c2780a7c)) |
 | packages/bun-types |  | 2026-11-15 | present-newer |  | vendored copy byte-identical to npm @types/bun (commit 07c58f536) (42 files (38 code), deleted in 07c58f536 on 2026-11-15 (see git show 07c58f536)) |
@@ -495,86 +431,7 @@ Every package is a row in the JSON. Families with the same prefix are grouped he
 
 | family | count |
 |---|---:|
-| npm missing bun-windows* | 375 |
-| crates.io missing aphrody-nie* | 45 |
-| npm missing bun-plugin* | 25 |
-| npm missing bun-runtime* | 10 |
-| npm missing bun-mdx* | 9 |
-| crates.io missing aphrody-tauri* | 8 |
-| crates.io missing aphrody-bun* | 4 |
-| crates.io missing aphrody-ocr* | 4 |
-| crates.io missing aphrody-shell* | 4 |
-| npm missing m3-next* | 4 |
-| npm missing menu-render* | 4 |
-| crates.io missing aphrody-web* | 3 |
-| crates.io missing aphrody-wii* | 3 |
-| crates.io missing bun-os* | 3 |
-| crates.io missing aphrody-command* | 2 |
-| crates.io missing aphrody-emu* | 2 |
-| crates.io present-identical aphrody-hayro* | 2 |
-| crates.io missing aphrody-kernel* | 2 |
-| crates.io missing aphrody-m3* | 2 |
-| crates.io missing aphrody-rag* | 2 |
-| crates.io missing aphrody-term* | 2 |
-| crates.io missing aphrody-terminal* | 2 |
-| crates.io missing aphrody-toolcall* | 2 |
-| crates.io missing aphrody-translate* | 2 |
-| crates.io missing bun-emu* | 2 |
-| (host-named packages)* | 2 |
-| crates.io missing figcraft-collab* | 2 |
-| npm missing api* | 2 |
-| npm missing base-ui* | 2 |
-| npm missing bun-agent* | 2 |
-| npm missing bun-engine* | 2 |
-| npm missing bun-video* | 2 |
-| npm missing canvas-linux* | 2 |
-| npm missing inagle* | 2 |
-| npm missing inagle-cross* | 2 |
-| crates.io missing aphrody-aarch64* | 1 |
-| crates.io missing aphrody-app* | 1 |
-| crates.io missing aphrody-backend* | 1 |
-| crates.io missing aphrody-bindgen* | 1 |
-| crates.io missing aphrody-capture* | 1 |
-| crates.io missing aphrody-certificates* | 1 |
-| crates.io missing aphrody-code* | 1 |
-| crates.io missing aphrody-config* | 1 |
-| crates.io missing aphrody-ctr* | 1 |
-| crates.io missing aphrody-diagnostics* | 1 |
-| crates.io missing aphrody-egui* | 1 |
-| crates.io missing aphrody-engine* | 1 |
-| crates.io missing aphrody-firefly* | 1 |
-| crates.io missing aphrody-fsindex* | 1 |
-| crates.io missing aphrody-gpu* | 1 |
-| crates.io missing aphrody-guard* | 1 |
-| crates.io missing aphrody-homebrew* | 1 |
-| crates.io missing aphrody-http* | 1 |
-| crates.io missing aphrody-infra* | 1 |
-| crates.io missing aphrody-jobs* | 1 |
-| crates.io present-older aphrody-m3* | 1 |
-| crates.io missing aphrody-nu* | 1 |
-| crates.io missing aphrody-ovh* | 1 |
-| crates.io missing aphrody-oxc* | 1 |
-| crates.io missing aphrody-patch* | 1 |
-| crates.io present-identical aphrody-pdfcraft* | 1 |
-| crates.io missing aphrody-proc* | 1 |
-| crates.io present-newer aphrody-rag* | 1 |
-| crates.io missing aphrody-remote* | 1 |
-| crates.io missing aphrody-render* | 1 |
-| crates.io missing aphrody-rollout* | 1 |
-| crates.io missing aphrody-rust* | 1 |
-| crates.io missing aphrody-secrets* | 1 |
-| crates.io missing aphrody-session* | 1 |
-| crates.io missing aphrody-softraster* | 1 |
-| crates.io missing aphrody-sprite* | 1 |
-| crates.io missing aphrody-sql* | 1 |
-| crates.io missing aphrody-ssh* | 1 |
-| crates.io missing aphrody-store* | 1 |
-| crates.io missing aphrody-subsystem* | 1 |
-| crates.io missing aphrody-svg* | 1 |
-| crates.io missing aphrody-switch* | 1 |
-| crates.io missing aphrody-taffy* | 1 |
-| crates.io missing aphrody-themes* | 1 |
-| crates.io missing aphrody-toolchains* | 1 |
+
 
 ## Gates, proofs and blocked items (2026-11-15)
 
@@ -598,6 +455,8 @@ Blocked or not done:
 - fr1 repo scan is limited to depth 5 with per-repo timeouts; fr2/prd trees are hashed for source extensions up to 3 MB.
 - The relay mailbox tool is not available to this agent: the fleet agent is told through the log and marker file on fr1, not through SendMessage.
 - Wiring left to the owner: Cargo `members` for the restored crates, DEPS/src.lock pins for big own repositories (open, yolo-ui, yolo-web, yolo-re, yolo-engine, wii-os, r2b, aphrody-m3, msys).
+
+Language rule (Python stays Python, Go stays Go, no py2bun): the Python restored from history keeps its manifest and tests. `apps/r2b` Python RE bridge: `uv run --with pytest python -I -m pytest` gives 15 passed, 10 skipped, 10 failed (the pwndbg cases need Linux and pwndbg; the mitmproxy bridge needs the POSIX `resource` module, so it runs on a Linux host only). `packages/ai-os/python/research_ref` is restored with its pyproject.toml. The Go deploy engine (`infra/internal`, `cmd/src-deploy`, module path of the removed multi-cloud layer) was restored, tested (3 of 4 packages green) and then withdrawn again on the coordinator's instruction: it was removed on purpose in favour of buildx bake and compose, so it is classed as the purged layer, together with the ai-os polyglot kernel (`ai_os_stack`, its stub module) and a personal CV copy in google-dream/google-bun.
 
 ## Regenerate
 

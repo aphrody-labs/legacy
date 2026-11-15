@@ -179,7 +179,9 @@
     "docs/machine/PC-TUNING.md",
     "docs/infra/WSL.md",
     "docs/infra/FLEET-OFFLOAD.md",
-    "packages/ai-os/docs/FUSION.md"
+    "packages/ai-os/docs/FUSION.md",
+    "apps/r2b/src/rea/bridge/mitmproxy/test_capture.py",
+    "apps/r2b/src/rea/scripts/test-website.py"
   ],
   "ssh-alias": [
     "scripts/hygiene.ts"
