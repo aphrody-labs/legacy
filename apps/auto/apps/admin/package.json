@@ -14,11 +14,11 @@
   "dependencies": {
     "@auto/client": "workspace:*",
     "@auto/ui": "workspace:*",
-    "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@types/react": "^19.3.0",
-    "@types/react-dom": "^19.3.0"
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:"
   }
 }

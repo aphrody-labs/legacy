@@ -13,13 +13,13 @@
     "@auto/domain": "workspace:*",
     "@auto/i18n": "workspace:*",
     "@auto/store": "workspace:*",
-    "@better-auth/api-key": "1.7.16",
+    "@better-auth/api-key": "catalog:",
     "@better-auth/cimd": "1.7.16",
-    "@better-auth/mcp": "1.7.16",
-    "@better-auth/oauth-provider": "1.7.16",
-    "@better-auth/passkey": "1.7.16",
+    "@better-auth/mcp": "catalog:",
+    "@better-auth/oauth-provider": "catalog:",
+    "@better-auth/passkey": "catalog:",
     "@better-auth/utils": "0.5.1",
-    "better-auth": "1.7.16",
+    "better-auth": "catalog:",
     "jose": "6.2.13",
     "kysely": "0.29.7"
   }

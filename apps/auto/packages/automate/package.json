@@ -9,6 +9,6 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
-    "zod": "^4"
+    "zod": "catalog:"
   }
 }
