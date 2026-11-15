@@ -29,7 +29,7 @@ You own the Chromium layer, which sits on top of the C core and the Rust service
 - Always take the newest canary.
 - Licenses never decide anything.
 - One engine copy only.
-- Builds run on fr1 (`just lab-factory*`, `ssh vps`), never on the PC.
+- Builds run on fr1 (`just lab-factory*`, `ssh <fr1>`), never on the PC.
 - Measure engines with real pages, rendered and interacted with; an HTTP 200 is not proof.
 
 ## Commit

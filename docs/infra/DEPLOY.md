@@ -11,7 +11,7 @@ chosen per building block (versions, source commits): [UPSTREAM-STACK.md](UPSTRE
 
 | Host            | Role                                                                            | Installed by                                                                                         | Container engine                                                                         |
 | --------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| PC (Windows 11) | dev, no heavy build                                                             | winget/official, `packages/machine`                                                                  | none locally (no WSL): contexts `fr1` (ssh://vps), `prd`, `fr2`                          |
+| PC (Windows 11) | dev, no heavy build                                                             | winget/official, `packages/machine`                                                                  | none locally (no WSL): contexts `fr1` (ssh://<fr1>), `prd`, `fr2`                          |
 | prd (USA, Arch) | production backends only, no compiler                                           | `just fleet-bootstrap prd` (purges go, zig, .NET, cargo-zigbuild, cbindgen, nextest, buildx builder) | Docker 29.9 + compose, images pulled from GHCR                                           |
 | fr1 (Ubuntu)    | factory: Chromium/LLVM, image builds, CI (runner `fr1`), training, heavy agents | `just fleet-bootstrap fr1`                                                                           | Docker 29.7, buildx `aphrody` (docker-container, 4 CPU / 12 GiB, amd64+arm64 via binfmt) |
 | fr2 (Ubuntu)    | edge: nginx, CDN, cloudflared                                                   | `just fleet-bootstrap fr2`                                                                           | Docker (`ip-forward-no-drop`, `live-restore`), profile `edge`                            |
@@ -19,7 +19,7 @@ chosen per building block (versions, source commits): [UPSTREAM-STACK.md](UPSTRE
 Agents and heavy jobs (decision 2026-11-13): on all three hosts the agents run under the user `agent`
 (`sudo NOPASSWD: ALL` via `/etc/sudoers.d/aphrody-agent`, group `docker`, linger, runner `infra/agents`), set up by
 `just fleet-bootstrap <role>` or `just agents-install <host>`. `aphrody-heavy` runs a job only on fr1
-(`/etc/aphrody/role`) and exits with 64 elsewhere: from the PC or another host, `ssh vps aphrody-heavy <cmd>`.
+(`/etc/aphrody/role`) and exits with 64 elsewhere: from the PC or another host, `ssh <fr1> aphrody-heavy <cmd>`.
 prd no longer has rustup, clang/llvm, cmake, sccache, a NativeLink worker or BuildKit; fr2 no longer has a
 NativeLink worker. Surviving reboots: [RESILIENCE.md](RESILIENCE.md) (`just fleet-resilience-proof <host>`).
 
@@ -49,7 +49,7 @@ no production is placed there.
 1. `just toolchains-lock` if a version changes, then `just fleet-bootstrap fr1` (factory) and `just fleet-bootstrap prd`
    (runtime only); idempotent, they check the versions.
 2. Images: push to `main` → `images.yml` (amd64+arm64, shared registry cache); or from the PC `just docker-build`
-   (`gh workflow run images.yml`, push by `GITHUB_TOKEN`). Manual build on the factory: `ssh vps aphrody-heavy docker buildx bake --builder aphrody …`.
+   (`gh workflow run images.yml`, push by `GITHUB_TOKEN`). Manual build on the factory: `ssh <fr1> aphrody-heavy docker buildx bake --builder aphrody …`.
 3. Test before switching: `just docker-smoke` (smoke job of `images.yml`: healthcheck of each image), then
    `just docker-up core prd`: the containers listen on the green ports on 127.0.0.1, the current services keep
    the blue ports. Check `curl -fsS http://127.0.0.1:<green port>/<health>` on the host.

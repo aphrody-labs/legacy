@@ -32,7 +32,7 @@ Forks des dépendances à remplacer par du Bun natif (`bunify --fullbun`) : `thi
 
 ## État (2026-11-14)
 
-- Construit et vérifié sur fr1 (`ssh vps`), commit `aphrody: tooling shebangs to bun, bench-db uses bun:sqlite` au-dessus de `4905a63ff6` : `bunify --check` à 0 fichier, `bun run build` 17/17 tâches (9 min 52), `build-native` compilé (profil dev, 6 min 11), `e2e.ts` sans `node` dans le PATH : `postcss pool: bun-1.4.4, render: bun`.
+- Construit et vérifié sur fr1 (`ssh <fr1>`), commit `aphrody: tooling shebangs to bun, bench-db uses bun:sqlite` au-dessus de `4905a63ff6` : `bunify --check` à 0 fichier, `bun run build` 17/17 tâches (9 min 52), `build-native` compilé (profil dev, 6 min 11), `e2e.ts` sans `node` dans le PATH : `postcss pool: bun-1.4.4, render: bun`.
 - Shebangs d'outillage (bench, evals, `.agents`, `scripts/wasi-test-host`) en `#!/usr/bin/env bun` ; `bench-db.mjs` utilise `bun:sqlite`. Les binaires livrés aux utilisateurs (`packages/next`, `create-next-app`, `next-codemod`) restent en `node`. Aucun usage `v8` trouvé dans l'outillage. Les 1516 spécificateurs de modules Node nus ne sont pas réécrits (coût de rebase).
 - Profils Cargo : `release` en `lto = "thin"` et `release-xlto` hérité (LTO inter-langages via `scripts/aphrody/build-native-xlto.ts`).
 

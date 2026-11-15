@@ -218,8 +218,8 @@ the repository instead by setting `SRC_ROOT=/home/ubuntu/src` in `~/.config/ay/e
 | Host              | User   | Notes                                                                 |
 | ----------------- | ------ | --------------------------------------------------------------------- |
 | `usa` (`ssh prd`) | root   | production; `ay up --setup` with `HOSTINGER_API_TOKEN` checks the API |
-| `fr1` (`ssh vps`) | ubuntu | builds: rustup, zig, cargo-zigbuild, dist matter most                 |
-| `fr2` (`ssh cdn`) | ubuntu | CDN, cron and sync: wrangler and gcloud matter most                   |
+| `fr1` (`ssh <fr1>`) | ubuntu | builds: rustup, zig, cargo-zigbuild, dist matter most                 |
+| `fr2` (`ssh <fr2>`) | ubuntu | CDN, cron and sync: wrangler and gcloud matter most                   |
 
 The aarch64 Linux `cargo-zigbuild` asset is a glibc build; the hosts are x86_64 Ubuntu.
 

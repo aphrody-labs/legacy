@@ -72,7 +72,7 @@ out/Default/unit_tests --gtest_filter="Suite.*"
 | `enable_printing=false` / `enable_pdf=false`            | full `gn gen` breaks; keep defaults |
 | `enable_nacl`                                           | removed upstream, unknown arg       |
 
-## Factory on fr1 (`ssh vps`, root /srv/chromium)
+## Factory on fr1 (`ssh <fr1>`, root /srv/chromium)
 
 | Recipe                                     | Effect                                                                                                    |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
