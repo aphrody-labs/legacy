@@ -27,4 +27,19 @@ First run (tracked tree minus third_party, lockfiles, upstream copies and areas 
 | absolute-path (26) | docs, PC bootstrap and loaders, app docs | host layout documentation and PC bootstrap defaults; allowed per `hygiene.allow.json` for shell, compat, env-kit and machine shells |
 | dead-ref (opt-in, 1795) | 602 files | targets move with src-b0's crates/* to src/* rewrite; rerun after it lands |
 
+## Allowances (scripts/hygiene.allow.json), each with its reason
+
+| Rule | Glob | Reason |
+| --- | --- | --- |
+| hardcoded-list | `scripts/skills-adopt.ts` | detector false positive: 3 repo slugs, the other strings are relative paths |
+| hardcoded-list | `tools/gnu-index/curated.ts` | detector false positive: category names (`science/math`), not repositories |
+| hardcoded-list | `packages/chromium-bun/src/engines/registry.ts` | the engine registry is the single declaration of engine -> upstream repo and asset layout; no API provides that mapping |
+| hardcoded-list | `packages/machine/src/toolchains-lock.ts` | the spec table is the input of the generated `tools.toml` block (source repo, asset patterns, hosts); checksums come from upstream at run time |
+| hardcoded-list | `packages/machine/src/forks.ts` | fork manifest: upstream, extra remotes and sparse paths; `third_party/forks.txt` lists the forks only. Fork parents alone could come from `gh api`, the remotes cannot |
+| hardcoded-list | `packages/bunify/src/rust.ts` | crate -> upstream repo decision table (`fork` flag is a decision, not a listing) |
+| hardcoded-list | `scripts/gnu-packages.ts` | the `FORK` table pins the tested revision of each aphrody-labs fork; the pin is the data |
+| home-scraper | `scripts/gnu-proof.sh` | downloads a release tarball and checks it against the GSRC sha256; no page is parsed |
+
+Externalised instead of allowed: `docs/epic/community-repos.json` (read by `packages/upstream/src/upstream-recon.ts`) and `.agents/skills/microsoft/scripts/repos.json` (read by `facts.ts`).
+
 Not done: Rust dependency removal (see purge-2026-11-15.md); `packages/machine/shells/pwsh/profile.ps1` carries another session's uncommitted hunks, so my comment fix there stays uncommitted.

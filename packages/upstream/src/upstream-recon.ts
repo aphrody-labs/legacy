@@ -7,20 +7,8 @@
 import { rename } from "node:fs/promises";
 
 const OWNERS = ["EpicGames", "bevyengine"];
-// Community repositories tracked in docs/epic/RESOURCES.md.
-const COMMUNITY = [
-  "trumank/repak",
-  "AstroTechies/unrealmodding",
-  "FabianFG/CUE4Parse",
-  "4sval/FModel",
-  "UE4SS-RE/RE-UE4SS",
-  "legendary-gl/legendary",
-  "Heroic-Games-Launcher/HeroicGamesLauncher",
-  "RareDevs/Rare",
-  "3ddelano/epic-online-services-godot",
-  "devphmd/eos",
-  "verselang/book",
-];
+// Community repositories described in docs/epic/RESOURCES.md; the list is docs/epic/community-repos.json.
+const COMMUNITY: string[] = (await import("../../../docs/epic/community-repos.json", { with: { type: "json" } })).default;
 
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
 if (!token) throw new Error("GITHUB_TOKEN or GH_TOKEN required");

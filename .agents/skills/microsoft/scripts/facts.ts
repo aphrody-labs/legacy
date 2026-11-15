@@ -43,32 +43,7 @@ const crates = [
   "wasm-bindgen",
   "web-sys",
 ];
-const ghRepos = [
-  "oven-sh/bun",
-  "microsoft/DirectXShaderCompiler",
-  "microsoft/DirectX-Headers",
-  "microsoft/windows-rs",
-  "microsoft/windows-drivers-rs",
-  "microsoft/openvmm",
-  "hyperlight-dev/hyperlight",
-  "microsoft/litebox",
-  "microsoft/mxc",
-  "microsoft/WindowsAppSDK",
-  "microsoft/microsoft-ui-xaml",
-  "microsoft/terminal",
-  "microsoft/WSL",
-  "microsoft/edit",
-  "microsoft/mimalloc",
-  "microsoft/STL",
-  "microsoft/CsWin32",
-  "microsoft/win32metadata",
-  "dotnet/runtime",
-  "dotnet/sdk",
-  "microsoft/vcpkg",
-  "microsoft/DirectStorage",
-  "gfx-rs/wgpu",
-  "gpuweb/gpuweb",
-];
+const ghRepos: string[] = (await import("./repos.json", { with: { type: "json" } })).default;
 
 const nuget = Object.fromEntries(
   await Promise.all(
