@@ -1,11 +1,11 @@
-// Point de validation des effets externes (publication, envoi de message, dépense) : refus par défaut.
-// Seule une règle explicite du propriétaire dans .agents/owner-rules.json les autorise :
+// Validation point for external effects (publishing, sending a message, spending): refused by default.
+// Only an explicit owner rule in .agents/owner-rules.json allows them:
 //   { "rules": [ { "effect": "external", "step": "<regex>", "command": "<regex>", "granted": "AAAA-MM-JJ", "note": "…" } ] }
-// Les deux expressions sont ancrées (correspondance complète) : "step" vise l'identifiant exact d'une étape (une étape
-// générée « publish.x » ne profite pas d'une règle « publish »), "command" la ligne complète d'une étape cmd.
-// Le fichier n'est écrit que par le propriétaire (absent = tout effet externe refusé).
-// Une étape refusée n'est pas exécutée : elle passe à l'état « held » et son contenu (brouillon) est mis en file
-// dans var/agents/outbox/<run>/<étape>.json pour relecture.
+// Both expressions are anchored (full match): "step" targets the exact id of a step (a generated step
+// "publish.x" does not benefit from a "publish" rule), "command" the full line of a cmd step.
+// The file is written by the owner only (absent = every external effect refused).
+// A refused step is not executed: it goes to the "held" state and its content (draft) is queued
+// in var/agents/outbox/<run>/<step>.json for review.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -42,7 +42,7 @@ const full = (re: string, s: string) => {
   }
 };
 
-/** Règle qui autorise l'effet externe de cette étape, ou null (refus). */
+/** Rule that allows this step's external effect, or null (refused). */
 export function allowExternal(
   root: string,
   step: string,
@@ -58,7 +58,7 @@ export function allowExternal(
   );
 }
 
-/** Met un effet externe refusé en file pour le propriétaire ; renvoie le chemin relatif à la racine. */
+/** Queues a refused external effect for the owner; returns the path relative to the root. */
 export function hold(
   root: string,
   run: string,
@@ -76,7 +76,7 @@ export function hold(
         step,
         held_at: new Date().toISOString(),
         reason:
-          "effet externe sans règle du propriétaire (.agents/owner-rules.json)",
+          "external effect without an owner rule (.agents/owner-rules.json)",
         payload,
       },
       null,

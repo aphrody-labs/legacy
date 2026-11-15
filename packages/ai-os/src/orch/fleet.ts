@@ -1,7 +1,7 @@
-// Hôtes de l'orchestrateur et exécution bornée sur chacun.
-// Sources : infra/agents/fleet.toml (hôtes, rôles, checkout `src` du runner, couche de labs-1b) et infra/deploy.toml
-// (`ssh_alias`). fr1 (rôle `build` de fleet.toml) reçoit compilations, conteneurs et agents lourds ; prd : backends de production.
-// Tout tourne en priorité basse : `nice -n 19` + `timeout` à distance, BELOW_NORMAL en local (hérité par les enfants).
+// Orchestrator hosts and bounded execution on each.
+// Sources: infra/agents/fleet.toml (hosts, roles, runner `src` checkout, labs-1b layer) and infra/deploy.toml
+// (`ssh_alias`). fr1 (`build` role in fleet.toml) receives builds, containers and heavy agents; prd: production backends.
+// Everything runs at low priority: `nice -n 19` + `timeout` remotely, BELOW_NORMAL locally (inherited by children).
 import { existsSync, readFileSync } from "node:fs";
 import { constants, hostname, setPriority } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -10,12 +10,12 @@ export type Host = {
   id: string; // nom de fleet.toml : pc, prd, fr2
   local: boolean;
   ssh?: string; // alias ssh (deploy.toml ssh_alias)
-  // Cibles ssh essayées dans l'ordre (fleet.toml `ssh` : <hôte>-mesh = sshd via le mesh mTLS TCP 7444,
-  // infra/cluster, indépendant de WireGuard ; puis ssh direct). Repli seulement si ssh échoue à se connecter (255).
+  // ssh targets tried in order (fleet.toml `ssh`: <host>-mesh = sshd over the mTLS TCP mesh 7444,
+  // infra/cluster, independent of WireGuard; then direct ssh). Fallback only if ssh fails to connect (255).
   sshTargets?: string[];
-  src: string; // checkout du runner sur l'hôte
+  src: string; // runner checkout on the host
   roles: string[];
-  maxAgents: number; // tâches simultanées confiées par l'orchestrateur
+  maxAgents: number; // simultaneous tasks handed out by the orchestrator
 };
 
 export type ExecResult = {
@@ -25,7 +25,7 @@ export type ExecResult = {
   ms: number;
 };
 
-/** Racine de src : $SRC_ROOT, sinon l'ancêtre qui contient src.lock.json. */
+/** src root: $SRC_ROOT, otherwise the ancestor that contains src.lock.json. */
 export function srcRoot(): string {
   if (Bun.env.SRC_ROOT) return resolve(Bun.env.SRC_ROOT);
   let d = import.meta.dir;
@@ -44,7 +44,7 @@ const WIN = process.platform === "win32";
 /** Identifiant fleet.toml de la machine courante (AGENTS_HOST prime). */
 export const selfId = () => Bun.env.AGENTS_HOST ?? (WIN ? "pc" : hostname());
 
-/** Entier strictement positif, sinon la valeur par défaut. */
+/** Strictly positive integer, otherwise the default value. */
 const posInt = (v: unknown, d: number) => {
   const n = Math.floor(Number(v));
   return Number.isFinite(n) && n >= 1 ? n : d;
@@ -83,7 +83,7 @@ export function hosts(root = srcRoot()): Host[] {
       maxAgents: cap,
     });
   }
-  // Machine absente de fleet.toml : ajoutée en local.
+  // Machine missing from fleet.toml: added locally.
   if (!out.some((h) => h.local))
     out.unshift({
       id: me,
@@ -95,20 +95,20 @@ export function hosts(root = srcRoot()): Host[] {
   return out;
 }
 
-/** Hôte de compilation et de conteneurs : premier hôte de fleet.toml qui porte le rôle `build` (fr1). */
+/** Build and container host: first fleet.toml host that carries the `build` role (fr1). */
 export function buildHost(root = srcRoot()): string {
   const fleet = toml(join(root, "infra/agents/fleet.toml"));
   const id = Object.entries<any>(fleet.hosts ?? {}).find(
     ([, h]) => Array.isArray(h.roles) && h.roles.includes("build"),
   )?.[0];
-  if (!id) throw new Error("fleet.toml : aucun hôte avec le rôle build");
+  if (!id) throw new Error("fleet.toml: no host with the build role");
   return id;
 }
 
 /** Guillemets sh : 'a'\''b'. */
 export const shq = (s: string) => `'${s.replace(/'/g, `'\\''`)}'`;
 
-/** Commande argv sur un hôte, depuis son checkout `src` (ou `cwd` relatif), délai borné, priorité basse. */
+/** argv command on a host, from its `src` checkout (or relative `cwd`), bounded timeout, low priority. */
 export async function exec(
   h: Host,
   argv: string[],
@@ -172,7 +172,7 @@ export async function exec(
         new Response(p.stderr).text(),
         p.exited,
       ]);
-      // 124 seulement si le délai est atteint ; un autre signal (OOM, crash) reste un échec ordinaire.
+      // 124 only if the timeout is reached; another signal (OOM, crash) stays an ordinary failure.
       const late = performance.now() - t0 >= timeoutMs;
       return {
         code: p.signalCode ? (late ? 124 : 128 + 9) : code,
@@ -191,7 +191,7 @@ export async function exec(
   }
 }
 
-/** Ligne de commande sh (pour `check` et les étapes `cmd` écrites en texte). */
+/** sh command line (for `check` and `cmd` steps written as text). */
 export const shell = (
   h: Host,
   line: string,
@@ -209,7 +209,7 @@ export const shell = (
       )
     : exec(h, ["sh", "-c", line], { timeoutMs, home });
 
-/** CLI d'agents présentes sur l'hôte (une seule connexion ssh). */
+/** Agent CLIs present on the host (a single ssh connection). */
 export async function clisOn(h: Host, names: string[]): Promise<string[]> {
   if (h.local) return names.filter((n) => Bun.which(n));
   const r = await exec(

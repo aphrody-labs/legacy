@@ -1,7 +1,7 @@
-// Exécution directe d'une étape en lecture seule (relecture, jugement, plan, brouillon) quand aucun runner n'écoute
-// sur l'hôte : même adressage que la file (« cli[:modèle] » ou « fournisseur/modèle »), CLI en mode plan / bac à sable
-// lecture seule, sans ajout de repli interne (la bascule appartient à l'orchestrateur). Les étapes qui modifient des
-// fichiers passent toujours par la file du runner (commit borné aux chemins, contrôle d'acceptation).
+// Direct execution of a read-only step (review, judgment, plan, draft) when no runner listens
+// on the host: same addressing as the queue ("cli[:model]" or "provider/model"), CLIs in plan / read-only
+// sandbox mode, with no internal fallback added (switching belongs to the orchestrator). Steps that modify
+// files always go through the runner queue (commit bounded to paths, acceptance check).
 import { resolveExe, viaFile } from "../llm/agents";
 import { llmAsk } from "../llm/model";
 import { classify, type FailClass } from "./classify";
@@ -15,7 +15,7 @@ export type InlineResult = {
   tokens: number;
 };
 
-const ARGV_MAX = 24_000; // ligne de commande Windows : 32 767 caractères
+const ARGV_MAX = 24_000; // Windows command line: 32,767 characters
 
 function argvFor(
   cli: string,
@@ -25,11 +25,11 @@ function argvFor(
   local = winLocal,
 ): { argv: string[]; stdin?: string } | string {
   const m = (flag: string) => (model ? [flag, model] : []);
-  // agy lit des fichiers : en local, une consigne longue passe par un fichier privé (llm/agents.ts viaFile).
+  // agy reads files: locally, a long instruction goes through a private file (llm/agents.ts viaFile).
   const file = cli === "agy" && local && prompt.length > 8000;
-  // Ligne de commande Windows bornée : une consigne trop longue n'est jamais tronquée en silence, le moteur est écarté.
+  // Windows command line is bounded: an instruction too long is never silently truncated, the engine is discarded.
   if (cli !== "claude" && !file && winLocal && prompt.length > ARGV_MAX)
-    return `consigne de ${prompt.length} caractères : trop longue pour la ligne de commande Windows de ${cli}`;
+    return `instruction of ${prompt.length} characters: too long for the Windows command line of ${cli}`;
   const p = file ? viaFile(prompt) : prompt;
   switch (cli) {
     case "claude":
@@ -75,12 +75,12 @@ function argvFor(
     case "fx":
       return { argv: ["fx", "ask", p] };
     default:
-      // pi n'a pas de mode lecture seule : il ne passe que par la file du runner.
-      return `${cli} : pas de mode lecture seule pour l'exécution directe`;
+      // pi has no read-only mode: it only goes through the runner queue.
+      return `${cli}: no read-only mode for direct execution`;
   }
 }
 
-/** Réponse JSON des CLI (claude : result/is_error/usage ; agy : response) ou texte brut. */
+/** JSON response of the CLIs (claude: result/is_error/usage; agy: response) or plain text. */
 function parse(out: string): {
   text: string;
   error?: boolean;
@@ -130,7 +130,7 @@ export async function inline(
     if (!h.local)
       return {
         ok: false,
-        text: "modèle du pont : hôte local uniquement",
+        text: "bridge model: local host only",
         cls: "missing",
         ms: 0,
         tokens: 0,
@@ -139,13 +139,13 @@ export async function inline(
       const r = await Promise.race([
         llmAsk(provider, prompt),
         Bun.sleep(timeoutMs).then(() => {
-          throw new Error(`délai dépassé (${timeoutMs} ms)`);
+          throw new Error(`timed out (${timeoutMs} ms)`);
         }),
       ]);
       const u = (r.usage?.inputTokens ?? 0) + (r.usage?.outputTokens ?? 0);
       return {
         ok: !!r.text,
-        text: r.text || "réponse vide",
+        text: r.text || "empty response",
         cls: r.text ? undefined : "task",
         ms: r.ms,
         tokens: u || estimate(prompt, r.text),
@@ -172,19 +172,19 @@ export async function inline(
     return { ok: false, text: spec, cls: "missing", ms: 0, tokens: 0 };
   const { argv, stdin } = spec;
   if (h.local) {
-    // Jamais par cmd.exe (injection par la consigne) : l'exécutable visé par le shim .cmd, sinon moteur écarté.
+    // Never through cmd.exe (injection via the instruction): the executable targeted by the .cmd shim, otherwise the engine is discarded.
     argv[0] = resolveExe(argv[0]!);
     if (/\.(cmd|bat)$/i.test(argv[0]!))
       return {
         ok: false,
-        text: `${cli} : shim ${argv[0]} non résolu en .exe ; consigne non transmise par cmd.exe`,
+        text: `${cli}: shim ${argv[0]} not resolved to .exe; instruction not passed through cmd.exe`,
         cls: "missing",
         ms: 0,
         tokens: 0,
       };
   }
-  // À distance, une étape en lecture seule reçoit son contexte dans la consigne : elle tourne depuis le répertoire
-  // personnel, sans exiger le checkout du runner.
+  // Remotely, a read-only step gets its context in the instruction: it runs from the home
+  // directory, without requiring the runner checkout.
   const r = await exec(h, argv, { stdin, timeoutMs, home: !h.local });
   const j = parse(r.out);
   const ok = r.code === 0 && !j.error && !!j.text;
@@ -196,7 +196,7 @@ export async function inline(
       ms,
       tokens: j.tokens ?? estimate(prompt, j.text),
     };
-  // Classement sur stderr et le champ d'erreur structuré, pas sur le texte produit par l'agent (qui peut citer
+  // Classify on stderr and the structured error field, not on the text produced by the agent (which may quote
   // « 401 » ou « billing » dans une revue).
   const diag = (
     j.error ? `${j.errText ?? j.text}\n${r.err}` : r.err || r.out.slice(-1000)

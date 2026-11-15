@@ -1,12 +1,12 @@
-// ai-os orch : orchestrateur multi-hôtes, multi-moteurs. Sorties JSON sur stdout, journal JSONL par exécution.
-//   ai-os orch hosts                              hôtes (fleet.toml + deploy.toml), état des runners
-//   ai-os orch engines [--host H] [--edit]        candidats et ordre `providers` calculé pour un besoin
-//   ai-os orch run <workflow.json|->  [--dry-run] graphe d'étapes (format : docs/ORCHESTRATOR.md)
-//   ai-os orch plan "<objectif>" [--dry-run]      un planificateur génère le graphe (étape expand), puis exécution
+// ai-os orch: multi-host, multi-engine orchestrator. JSON output on stdout, JSONL journal per run.
+//   ai-os orch hosts                              hosts (fleet.toml + deploy.toml), runner state
+//   ai-os orch engines [--host H] [--edit]        candidates and `providers` order computed for a need
+//   ai-os orch run <workflow.json|->  [--dry-run] step graph (format: docs/ORCHESTRATOR.md)
+//   ai-os orch plan "<goal>" [--dry-run]          a planner generates the graph (expand step), then runs it
 //   ai-os orch lifecycle [--task T] [--paths a,b] [--apply] [--dry-run]
 //   ai-os orch design <produit> [--url U] | market <produit> "<brief>"
-//   ai-os orch health                             refroidissements et issues observées par hôte/fournisseur
-//   ai-os orch queue [--host H]                   tâches en file (new, claimed) et jetons estimés de leurs invites
+//   ai-os orch health                             cooldowns and outcomes observed per host/provider
+//   ai-os orch queue [--host H]                   queued tasks (new, claimed) and estimated tokens of their prompts
 import { parseArgs } from "node:util";
 import { hosts as fleetHosts } from "./fleet";
 import { Health } from "./health";
@@ -105,8 +105,8 @@ switch (cmd) {
     break;
   }
   case "queue": {
-    // Tâches en file (new, claimed) par hôte et jetons estimés de leurs invites (~4 caractères par jeton ; le
-    // contexte que la CLI charge ensuite n'est pas compté).
+    // Queued tasks (new, claimed) per host and estimated tokens of their prompts (~4 characters per token; the
+    // context the CLI loads afterwards is not counted).
     const { exec, shq } = await import("./fleet");
     const hs = fleetHosts().filter((h) => !values.host || h.id === values.host);
     const dump = (d: string) =>
@@ -179,10 +179,10 @@ switch (cmd) {
       role: "reviewer",
       expand: true,
       prompt:
-        `Planifie l'objectif suivant pour le monorepo src en graphe d'étapes exécutables par des agents. Objectif : ${goal}\n\n` +
-        'Réponds uniquement par un bloc ```json {"steps":[…]} ``` où chaque étape a id, do ("agent"|"cmd"|"tool"), deps (ids), ' +
-        'et selon do : prompt + role (coder|reviewer|tester|linter|designer|deployer|sre|growth) + needs ({"edit":true} pour modifier des fichiers) + check, ' +
-        'ou run (ligne sh), ou tool + args. Hôtes : pc, prd (compilation, nice -n 19, -j 4), fr2 (léger). Toute publication, envoi ou dépense : "effect":"external". Au plus 12 étapes.',
+        `Plan the following goal for the src monorepo as a graph of steps executable by agents. Goal: ${goal}\n\n` +
+        'Answer only with a ```json {"steps":[…]} ``` block where each step has id, do ("agent"|"cmd"|"tool"), deps (ids), ' +
+        'and depending on do: prompt + role (coder|reviewer|tester|linter|designer|deployer|sre|growth) + needs ({"edit":true} to modify files) + check, ' +
+        'or run (sh line), or tool + args. Hosts: the ones listed in fleet.toml, by role (compilation: nice -n 19, -j 4). Any publication, send or spend: "effect":"external". At most 12 steps.',
     };
     await exec({ name: "plan", steps: [planner] });
     break;

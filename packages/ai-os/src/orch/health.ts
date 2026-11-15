@@ -1,6 +1,6 @@
-// Mémoire de santé des moteurs par (hôte, fournisseur) : issues observées et refroidissements, comme les cooldowns du
-// routeur LiteLLM (allowed_fails, cooldown_time) et le tri par fiabilité/latence d'OpenRouter, mais appris localement.
-// Base : $AGENT_HOME/orch.sqlite (WAL, busy_timeout). Aucune valeur par défaut figée sur un fournisseur.
+// Engine health memory per (host, provider): observed outcomes and cooldowns, like the LiteLLM router
+// cooldowns (allowed_fails, cooldown_time) and OpenRouter's reliability/latency sort, but learned locally.
+// Store: $AGENT_HOME/orch.sqlite (WAL, busy_timeout). No default value pinned to a provider.
 import { Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { homedir } from "node:os";
@@ -77,7 +77,7 @@ export class Health {
         "SELECT ok, ms FROM outcome WHERE host = ? AND provider = ? AND at > ? ORDER BY ms",
       )
       .all(host, provider, now - 7 * 864e5);
-    // Latence mesurée sur les seuls succès : un moteur qui échoue vite ne doit pas paraître rapide.
+    // Latency measured on successes only: an engine that fails fast must not look fast.
     const okRows = rows.filter((r) => r.ok);
     return {
       n: rows.length,

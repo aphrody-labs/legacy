@@ -1,8 +1,8 @@
-// Sélection déclarative des moteurs : une étape décrit ses besoins (édition, outils, contexte, préférence de tri,
-// listes d'autorisation/d'exclusion, modèles souhaités) et reçoit la liste `providers` ordonnée que le runner essaie
-// dans l'ordre. Rien n'est figé : candidats = CLI d'agents présentes sur l'hôte + modèles découverts par le pont
-// (llm_models), métadonnées de models.dev (registre d'opencode : coût, contexte, tool_call, reasoning), santé observée
-// (health.ts) et refroidissements du runner. Parallèles et sources : docs/ORCHESTRATOR.md.
+// Declarative engine selection: a step states its needs (edit, tools, context, sort preference,
+// allow/deny lists, preferred models) and gets back the ordered `providers` list the runner tries
+// in order. Nothing is pinned: candidates = agent CLIs present on the host + models discovered through the bridge
+// (llm_models), models.dev metadata (opencode registry: cost, context, tool_call, reasoning), observed health
+// (health.ts) and runner cooldowns. Prior art and sources: docs/ORCHESTRATOR.md.
 import {
   existsSync,
   mkdirSync,
@@ -17,32 +17,32 @@ import { clisOn, type Host } from "./fleet";
 import type { Health } from "./health";
 import type { RunnerState } from "./queue";
 
-/** CLI que le runner sait lancer (infra/agents/runner.ts providerCmd), adressées « cli » ou « cli:modèle ». */
+/** CLIs the runner can launch (infra/agents/runner.ts providerCmd), addressed "cli" or "cli:model". */
 export const AGENT_CLIS = ["claude", "codex", "opencode", "pi", "agy"];
 /** Fournisseur distant du runner (« jules[:owner/repo] », ai-os jules run --wait) : jamais choisi sans demande. */
 export const JULES = "jules";
 
 export type Needs = {
-  /** L'étape modifie des fichiers : seules les CLI d'agents conviennent (llm_ask ne répond qu'en texte). */
+  /** The step modifies files: only agent CLIs qualify (llm_ask answers in text only). */
   edit?: boolean;
   /** Appels d'outils requis (models.dev tool_call). */
   tools?: boolean;
   /** Contexte minimal en jetons (models.dev limit.context). */
   context?: number;
   reasoning?: boolean;
-  /** Tri, comme provider.sort d'OpenRouter : fiabilité observée (défaut), coût, latence. */
+  /** Sort, like OpenRouter provider.sort: observed reliability (default), cost, latency. */
   prefer?: "reliability" | "cost" | "latency";
-  /** Expressions régulières sur l'identifiant (provider.only / provider.ignore d'OpenRouter). */
+  /** Regular expressions on the identifier (OpenRouter provider.only / provider.ignore). */
   only?: string[];
   ignore?: string[];
-  /** Modèles souhaités, essayés d'abord (paramètre `models` d'OpenRouter) ; « cli:modèle » est suivi de « cli ». */
+  /** Preferred models, tried first (OpenRouter `models` parameter); "cli:model" is followed by "cli". */
   models?: string[];
 };
 
 export type Candidate = {
   id: string; // valeur de `providers`
   kind: "cli" | "model";
-  cost?: number; // $ par million de jetons (entrée + sortie), models.dev
+  cost?: number; // $ per million tokens (input + output), models.dev
   context?: number;
   tools?: boolean;
   reasoning?: boolean;
@@ -97,7 +97,7 @@ export async function modelsDev(): Promise<Registry> {
   return registry.data;
 }
 
-/** Métadonnées d'un modèle `fournisseur/modèle` du pont (OpenRouter : `openrouter/vendeur/modèle`). */
+/** Metadata of a bridge model `provider/model` (OpenRouter: `openrouter/vendor/model`). */
 export function meta(reg: Record<string, any>, id: string): Meta | undefined {
   const i = id.indexOf("/");
   if (i < 0) return undefined;
@@ -111,14 +111,14 @@ export function meta(reg: Record<string, any>, id: string): Meta | undefined {
 
 const sane = (p: string) => p.replace(/[^\w.-]/g, "_");
 
-/** Candidats d'un hôte : CLI présentes (sonde du runner, sinon `command -v`) et, sur l'hôte local, modèles du pont. */
+/** Candidates of a host: CLIs present (runner probe, else `command -v`) and, on the local host, bridge models. */
 export async function candidates(
   h: Host,
   state: RunnerState | undefined,
   withModels = h.local,
 ): Promise<Candidate[]> {
-  // Sonde du runner : seuls les statuts positifs explicites comptent ; les CLI qu'elle ne cite pas sont cherchées
-  // sur l'hôte.
+  // Runner probe: only explicit positive statuses count; CLIs it does not list are looked up
+  // on the host.
   const probe = state?.clis ?? {};
   const positive = (v: unknown) =>
     v === true || /^(ok|ready|installed|v?\d)/i.test(String(v ?? ""));
@@ -143,7 +143,7 @@ export async function candidates(
     const reg = await modelsDev();
     for (const p of await listModels().catch(() => [])) {
       if (!p.available) continue;
-      // Les fournisseurs CLI du pont (antigravity, claude) sont déjà couverts par les CLI du runner.
+      // The bridge's CLI providers (antigravity, claude) are already covered by the runner's CLIs.
       if (p.provider === "antigravity" || p.provider === "claude") continue;
       for (const m of p.models) {
         const md = meta(reg, m.id);
@@ -162,7 +162,7 @@ export async function candidates(
   return out;
 }
 
-/** Liste `providers` ordonnée pour une étape sur un hôte. Vide si aucun moteur ne convient. */
+/** Ordered `providers` list for a step on a host. Empty if no engine fits. */
 export function rank(
   host: string,
   all: Candidate[],
@@ -170,7 +170,7 @@ export function rank(
   health: Health,
   cooling: string[] = [],
 ): string[] {
-  // Motifs venus d'un JSON généré : les invalides sont ignorés plutôt que de faire échouer l'étape.
+  // Patterns from generated JSON: invalid ones are ignored rather than failing the step.
   const re = (xs?: unknown[]) =>
     (Array.isArray(xs) ? xs : []).flatMap((x) => {
       try {
@@ -186,8 +186,8 @@ export function rank(
     !ignore.some((r) => r.test(id)) &&
     !cooling.includes(sane(id)) &&
     !health.cooling(host, id);
-  // Une CLI d'agent gère ses outils et son contexte ; un modèle du pont doit prouver chaque capacité exigée
-  // (métadonnée absente = refus), et llm_ask ne câble pas d'outils.
+  // An agent CLI manages its own tools and context; a bridge model must prove each required capability
+  // (missing metadata = rejected), and llm_ask wires no tools.
   const fits = (c: Candidate) =>
     usable(c.id) &&
     (c.kind === "cli" ||
@@ -196,7 +196,7 @@ export function rank(
         (!needs.reasoning || c.reasoning === true) &&
         (!needs.context ||
           (typeof c.context === "number" && c.context >= needs.context))));
-  // Jules (src/google/jules) travaille sur le dépôt GitHub, pas sur la copie de l'hôte : candidat sur demande
+  // Jules (src/google/jules) works on the GitHub repository, not on the host copy: candidate on request
   // explicite seulement (`models: ["jules"]`, `["jules:owner/repo"]` ou `only: ["^jules"]`).
   const askedJules = [...(needs.models ?? []), ...(needs.only ?? [])].some(
     (m) => typeof m === "string" && /^\^?jules(:|$)/.test(m),
@@ -226,7 +226,7 @@ export function rank(
   for (const m of needs.models ?? []) {
     if (typeof m !== "string") continue;
     const cli = m.includes(":") ? m.split(":")[0]! : m;
-    // Le modèle souhaité passe les mêmes filtres que son moteur (capacités, refroidissement de la CLI).
+    // The preferred model passes the same filters as its engine (capabilities, CLI cooldown).
     if (!pool.some((c) => c.id === cli) || !usable(m)) continue;
     wanted.push(m);
     if (m.includes(":") && pool.some((c) => c.id === cli)) wanted.push(cli);
@@ -234,7 +234,7 @@ export function rank(
   return [...new Set([...wanted, ...ranked])];
 }
 
-/** Table prix/qualité par classe de tâche (config/model-routing.json, sources live) : « cli:modèle » primaire puis repli.
+/** Price/quality table per task class (config/model-routing.json, live sources): primary "cli:model" then fallback.
  * anthropic passe par la CLI claude, google par agy. Inconnu = liste vide (le classement habituel s'applique). */
 export async function taskModels(task: string | undefined): Promise<string[]> {
   if (!task) return [];

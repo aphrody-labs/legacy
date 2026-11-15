@@ -1,13 +1,13 @@
-// Orchestrateur : workflow = graphe d'étapes calculé à l'exécution, exécuté en parallèle sur les hôtes de la flotte.
-//   - étapes `cmd` (ligne sh, priorité basse), `tool` (outil du relais), `agent` (sous-agent : file du runner
-//     infra/agents/runner.ts si un worker du rôle bat sur l'hôte, sinon exécution directe en lecture seule) ;
-//   - `expand` : la sortie d'une étape peut ajouter des étapes ({"steps":[…]}), bornées en nombre et en profondeur ;
-//   - bascule : chaque échec est classé (classify.ts) ; quota/auth/absence -> fournisseur suivant (liste `providers`
-//     calculée par select.ts), puis hôte suivant ; throttle/surcharge/délai -> une relance après attente ;
-//   - réparation : une commande qui échoue ouvre un ticket de correction (sous-agent coder, `check` = la commande),
-//     les étapes dépendantes attendent le ticket ; au plus `fixRounds` tickets par étape ;
-//   - garde-fous : étapes, profondeur, budget en $ (somme des budget_usd confiés), jetons, échéance, arrêt après N échecs
-//     consécutifs, effets externes refusés sans règle du propriétaire (policy.ts).
+// Orchestrator: workflow = graph of steps computed at run time, executed in parallel on the fleet hosts.
+//   - `cmd` steps (sh line, low priority), `tool` (relay tool), `agent` (sub-agent: infra/agents/runner.ts queue
+//     if a worker of the role is beating on the host, otherwise direct read-only execution);
+//   - `expand`: a step's output may add steps ({"steps":[…]}), bounded in count and depth;
+//   - fallback: each failure is classified (classify.ts); quota/auth/missing -> next provider (`providers` list
+//     computed by select.ts), then next host; throttle/overload/timeout -> one retry after a wait;
+//   - repair: a failing command opens a fix ticket (coder sub-agent, `check` = the command),
+//     dependent steps wait for the ticket; at most `fixRounds` tickets per step;
+//   - guardrails: steps, depth, budget in $ (sum of delegated budget_usd), tokens, deadline, stop after N consecutive
+//     failures, external effects refused without an owner rule (policy.ts).
 // Journal JSONL : $AGENT_HOME/orch/runs/<run>.jsonl ; rapport JSON en retour.
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -26,23 +26,23 @@ export type Step = {
   id: string;
   deps?: string[];
   do: "agent" | "cmd" | "tool";
-  /** agent : consigne ; {{id}} = sortie de l'étape id. */
+  /** agent: instruction; {{id}} = output of step id. */
   prompt?: string;
   role?: Role;
-  /** cmd : ligne sh exécutée depuis le checkout de l'hôte (ou son répertoire personnel si repo: false). */
+  /** cmd: sh line run from the host checkout (or its home directory if repo: false). */
   run?: string;
   repo?: boolean;
   /** tool : outil du relais (relay/tools.ts) et ses arguments. */
   tool?: string;
   args?: Record<string, unknown>;
-  /** Hôtes admis, par préférence (défaut : hôtes dont fleet.toml liste le rôle, local d'abord). */
+  /** Allowed hosts, by preference (default: hosts whose fleet.toml lists the role, local first). */
   hosts?: string[];
   needs?: Needs;
   check?: string;
   commit?: { paths: string[]; message: string };
   effect?: "external";
   expand?: boolean;
-  /** Fichier où écrire la sortie (sous docs/reviews/ ou var/ uniquement). */
+  /** File to write the output to (under docs/reviews/ or var/ only). */
   out?: string;
   onFail?: "fix" | "stop" | "continue";
   timeout_s?: number;
@@ -50,7 +50,7 @@ export type Step = {
 };
 
 export type Workflow = {
-  /** Préfixes que les tickets de correction peuvent commiter (défaut : aucun commit). */
+  /** Prefixes the fix tickets may commit (default: no commit). */
   paths?: string[];
   name: string;
   steps: Step[];
@@ -98,7 +98,7 @@ type State = {
   output: string;
   tries: Try[];
   fixes: number;
-  /** Ticket de correction qui remplace cette étape pour ses dépendants. */
+  /** Fix ticket that replaces this step for its dependents. */
   fixedBy?: string;
   note?: string;
   t0?: number;
@@ -119,7 +119,7 @@ const DEFAULT_ROLE: Record<Step["do"], Role> = {
   tool: "sre",
 };
 
-/** Premier objet JSON équilibré qui contient "steps" (sortie d'agent sans bloc ```json). */
+/** First balanced JSON object that contains "steps" (agent output without a ```json block). */
 export function balancedSteps(text: string): string | undefined {
   for (let i = text.indexOf("{"); i >= 0; i = text.indexOf("{", i + 1)) {
     let depth = 0;
@@ -162,9 +162,9 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
 
   const st = new Map<string, State>();
   const add = (s: Step, depth: number) => {
-    if (st.has(s.id)) throw new Error(`étape en double : ${s.id}`);
+    if (st.has(s.id)) throw new Error(`duplicate step: ${s.id}`);
     if (st.size >= L.maxSteps)
-      throw new Error(`plafond d'étapes atteint (${L.maxSteps})`);
+      throw new Error(`step limit reached (${L.maxSteps})`);
     st.set(s.id, {
       step: s,
       depth,
@@ -177,7 +177,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
   for (const s of wf.steps) add(s, 0);
   for (const s of wf.steps)
     for (const d of s.deps ?? [])
-      if (!st.has(d)) throw new Error(`${s.id} dépend de ${d}, absente`);
+      if (!st.has(d)) throw new Error(`${s.id} depends on ${d}, which is missing`);
   const health = new Health();
 
   const busy = new Map<string, number>(fleet.map((h) => [h.id, 0]));
@@ -186,7 +186,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
   let consecutive = 0;
   let stopped: string | undefined;
 
-  // Résolution d'une dépendance à travers les tickets de correction.
+  // Resolve a dependency through the fix tickets.
   const resolve = (id: string): State => {
     let s = st.get(id)!;
     while (s.fixedBy) s = st.get(s.fixedBy)!;
@@ -225,7 +225,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
       : pool.filter((h) => h.local || h.roles.includes(role));
   };
 
-  // ---------- exécution d'une étape sur un hôte ----------
+  // ---------- running one step on a host ----------
   async function cmdStep(s: State, h: Host): Promise<boolean> {
     const r = await shell(
       h,
@@ -252,7 +252,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
       const { toolByName } = await import("../relay/tools.ts");
       const t = toolByName.get(s.step.tool!);
       if (!t) throw new Error(`outil inconnu : ${s.step.tool}`);
-      // Interpolation sur la structure (une sortie avec guillemets ou sauts de ligne ne casse pas le JSON).
+      // Interpolate on the structure (an output with quotes or newlines does not break the JSON).
       const fillVal = (v: unknown): unknown =>
         typeof v === "string"
           ? fill(v)
@@ -302,12 +302,12 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
       const id = `${runId}-${step.id}`.replace(/[^\w.-]/g, "_").slice(0, 120);
       const budget = step.budget_usd ?? 2;
       if (spentUsd + budget > L.budgetUsd) {
-        s.output = `budget $ épuisé (${spentUsd} + ${budget} > ${L.budgetUsd})`;
+        s.output = `$ budget exhausted (${spentUsd} + ${budget} > ${L.budgetUsd})`;
         return "fail";
       }
       spentUsd += budget;
       const maxAttempts = Math.min(providers.length, 6);
-      const allowed = step.effect === "external"; // execute() n'arrive ici qu'avec une règle du propriétaire
+      const allowed = step.effect === "external"; // execute() only gets here with an owner rule
       const task: Q.QueueTask = {
         v: 1,
         id,
@@ -318,7 +318,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         cwd: undefined,
         check: step.check,
         commit: step.commit,
-        // Un effet externe validé par une règle part sans approbation ; growth reste en brouillon sinon (runner).
+        // An external effect cleared by a rule goes out without approval; growth stays a draft otherwise (runner).
         approval: allowed ? "none" : role === "growth" ? "owner" : "none",
         timeout_s: step.timeout_s,
         budget_usd: budget,
@@ -361,12 +361,12 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
             s.output = await Q.output(h, r);
             return "ok";
           }
-          s.output = `échec dans la file de ${h.id} : ${r.attempts.map((a) => `${a.provider}:${a.reason}`).join(", ")}`;
+          s.output = `failed in the queue of ${h.id}: ${r.attempts.map((a) => `${a.provider}:${a.reason}`).join(", ")}`;
           return r.attempts.every((a) => a.reason === "provider_unavailable")
             ? "reroute"
             : "fail";
         }
-        // Tous les fournisseurs indisponibles sur cet hôte : retirer la tâche et changer d'hôte.
+        // All providers unavailable on this host: withdraw the task and switch host.
         const pend = await Q.pendingAttempts(h, id);
         if (
           pend.length >= maxAttempts &&
@@ -376,20 +376,20 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
           for (const a of pend)
             health.record(h.id, a.provider, false, "quota", 0);
           s.output = `fournisseurs indisponibles sur ${h.id}`;
-          spentUsd -= budget; // rien n'a tourné
+          spentUsd -= budget; // nothing ran
           return "reroute";
         }
         if (Date.now() - t0 > L.deadlineMs) break;
       }
-      // Pas de tâche fantôme : retirée si elle attend encore (une tâche réclamée finit dans le runner).
+      // No ghost task: withdrawn if still waiting (a claimed task finishes in the runner).
       await Q.withdraw(h, id).catch(() => false);
       s.output = stopped
-        ? `arrêt (${stopped}) pendant l'attente de la file de ${h.id}`
-        : `délai dépassé dans la file de ${h.id}`;
+        ? `stopped (${stopped}) while waiting on the queue of ${h.id}`
+        : `timed out in the queue of ${h.id}`;
       return "fail";
     }
     if (step.needs?.edit || step.effect === "external") {
-      s.output = `aucun worker « ${role} » sur ${h.id} : une étape qui modifie des fichiers ou agit à l'extérieur passe par la file`;
+      s.output = `no "${role}" worker on ${h.id}: a step that edits files or acts externally goes through the queue`;
       s.tries.push({
         host: h.id,
         ok: false,
@@ -399,16 +399,16 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
       });
       return "reroute";
     }
-    // Exécution directe, fournisseur par fournisseur (routeur rappelé après chaque échec, clé déjà essayée exclue).
+    // Direct execution, provider by provider (router called again after each failure, tried key excluded).
     const failed = new Set<string>();
     for (const p of providers) {
-      // Routeur rappelé : une CLI écartée (auth, absence, quota) écarte aussi ses variantes « cli:modèle ».
+      // Router called again: a discarded CLI (auth, missing, quota) also discards its "cli:model" variants.
       const base = p.includes(":") ? p.split(":")[0]! : p;
       if (failed.has(p) || failed.has(base) || health.cooling(h.id, base))
         continue;
       if (stopped) return "fail";
       if (tokens >= L.tokenBudget) {
-        s.output = "budget de jetons épuisé";
+        s.output = "token budget exhausted";
         return "fail";
       }
       for (let attempt = 0; attempt < 2; attempt++) {
@@ -438,7 +438,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         }
         s.output = r.text;
         failed.add(p);
-        // La tâche elle-même échoue : inutile de la rejouer sur tous les moteurs et tous les hôtes.
+        // The task itself fails: no point replaying it on every engine and host.
         if (r.cls === "task") return "fail";
         if (r.cls === "auth" || r.cls === "missing") {
           failed.add(base);
@@ -471,7 +471,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         ? hostsFor(step).filter((h) => h.local)
         : hostsFor(step);
     if (!pool.length) {
-      s.output = `aucun hôte disponible pour ${JSON.stringify(step.hosts ?? step.role ?? step.do)} (${step.do === "tool" ? "outil du relais : hôte local" : "fleet.toml"})`;
+      s.output = `no host available for ${JSON.stringify(step.hosts ?? step.role ?? step.do)} (${step.do === "tool" ? "relay tool: local host" : "fleet.toml"})`;
       s.status = "failed";
       return;
     }
@@ -488,7 +488,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         if (step.do === "cmd") {
           if (await cmdStep(s, h)) return void (s.status = "done");
           const last = s.tries.at(-1)!;
-          if (last.cls === "missing") continue; // checkout ou outil absent : hôte suivant
+          if (last.cls === "missing") continue; // checkout or tool missing: next host
           s.status = "failed";
           return;
         }
@@ -497,7 +497,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
           return;
         }
         const rs = await runner(h);
-        // Modèles du pont seulement en exécution directe locale ; la file reçoit des CLI que le runner sait lancer.
+        // Bridge models only in local direct execution; the queue receives CLIs the runner can launch.
         const role = step.role ?? DEFAULT_ROLE.agent;
         const all = await candidates(
           h,
@@ -527,7 +527,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
     s.status = "failed";
   }
 
-  // ---------- après une étape ----------
+  // ---------- after a step ----------
   function expand(s: State) {
     if (!s.step.expand || s.status !== "done") return;
     if (s.depth + 1 > L.maxDepth)
@@ -582,12 +582,12 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         hosts: Array.isArray(x.hosts) ? x.hosts.map(String) : undefined,
         needs: x.needs && typeof x.needs === "object" ? x.needs : undefined,
         check: typeof x.check === "string" ? x.check : undefined,
-        // Une étape générée hérite des restrictions du parent : pas d'effet externe levé, pas de commit hors parent.
+        // A generated step inherits the parent's restrictions: no external effect lifted, no commit outside the parent's.
         effect:
           x.effect === "external" || s.step.effect === "external"
             ? "external"
             : undefined,
-        // Commit borné aux chemins du parent, jamais au-delà.
+        // Commit bounded to the parent's paths, never beyond.
         commit: s.step.commit
           ? {
               paths: s.step.commit.paths,
@@ -607,7 +607,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
             : []),
         ],
       };
-      // Les étapes générées qui modifient le même checkout s'enchaînent au lieu de s'écraser.
+      // Generated steps that modify the same checkout run in sequence instead of overwriting each other.
       const edits = child.do === "agent" && child.needs?.edit === true;
       if (edits && prevEdit && !child.deps!.includes(prevEdit))
         child.deps!.push(prevEdit);
@@ -621,7 +621,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
         break;
       }
     }
-    // Les étapes qui attendaient le parent attendent aussi ce qu'il a engendré.
+    // Steps that waited on the parent also wait on what it spawned.
     for (const o of st.values())
       if (
         o.status === "pending" &&
@@ -639,19 +639,19 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
     )
       return;
     if (s.step.do !== "cmd" || s.fixes >= L.fixRounds) return;
-    if (s.tries.at(-1)?.cls === "missing") return; // hôte, checkout ou outil absent : rien à corriger dans le code
-    if (s.step.repo === false) return; // hors checkout : pas de code à corriger
+    if (s.tries.at(-1)?.cls === "missing") return; // host, checkout or tool missing: nothing to fix in the code
+    if (s.step.repo === false) return; // outside a checkout: no code to fix
     s.fixes++;
     const fix: Step = {
       id: `${s.step.id}#fix${s.fixes}`,
       do: "agent",
       role: "coder",
       needs: { edit: true },
-      // Hôte de l'échec d'abord, puis tout hôte qui a un worker coder (checkouts synchronisés par git).
+      // Failing host first, then any host with a coder worker (checkouts synced by git).
       hosts: s.host
         ? [s.host, ...fleet.map((h) => h.id).filter((id) => id !== s.host)]
         : undefined,
-      prompt: `La commande \`${s.step.run}\` échoue sur ${s.host} (sortie ci-dessous). Corrige la cause par le plus petit changement, sans désactiver de contrôle.\n\n${s.output.slice(-6000)}`,
+      prompt: `The command \`${s.step.run}\` fails on ${s.host} (output below). Fix the cause with the smallest change, without disabling any check.\n\n${s.output.slice(-6000)}`,
       check: s.step.run,
       commit:
         s.step.commit ??
@@ -693,11 +693,11 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
   });
   while (true) {
     let progressed = false;
-    if (!stopped && Date.now() - t0 > L.deadlineMs) stopped = "échéance";
+    if (!stopped && Date.now() - t0 > L.deadlineMs) stopped = "deadline";
     if (!stopped && spentUsd > L.budgetUsd) stopped = "budget $";
     if (!stopped && tokens > L.tokenBudget) stopped = "budget de jetons";
     if (!stopped && consecutive >= L.maxConsecutiveFailures)
-      stopped = `${consecutive} échecs consécutifs`;
+      stopped = `${consecutive} consecutive failures`;
     for (const s of st.values()) {
       if (s.status !== "pending" || running.has(s.step.id)) continue;
       if (stopped) {
@@ -708,7 +708,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
       const deps = (s.step.deps ?? []).map(resolve);
       if (deps.some((d) => d.status === "pending" || d.status === "running"))
         continue;
-      // Toute autre issue change l'état de l'étape (sautée, terminée en dry-run, lancée).
+      // Any other outcome changes the step state (skipped, finished in dry-run, launched).
       progressed = true;
       const blocked = deps.find(
         (d) =>
@@ -717,7 +717,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
       );
       if (blocked) {
         s.status = "skipped";
-        s.note = `dépendance ${blocked.step.id} : ${blocked.status}`;
+        s.note = `dependency ${blocked.step.id}: ${blocked.status}`;
         continue;
       }
       if (o.dryRun) {
@@ -742,9 +742,9 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
       if (progressed) continue;
       for (const s of left) {
         s.status = "skipped";
-        s.note = "dépendance circulaire";
+        s.note = "circular dependency";
       }
-      stopped = "dépendance circulaire";
+      stopped = "circular dependency";
       break;
     }
     const id = await Promise.race(running.values());
@@ -762,7 +762,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
     writeOut(s);
     expand(s);
     repair(s);
-    // Un échec pris en charge par un ticket de correction ne compte pas pour l'arrêt sur échecs répétés.
+    // A failure handled by a fix ticket does not count toward the stop on repeated failures.
     consecutive =
       s.status === "failed" && !s.fixedBy
         ? consecutive + 1
@@ -785,7 +785,7 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
     output: s.output.slice(0, 600),
   }));
   const final = (s: State) => resolve(s.step.id).status;
-  // Une étape sautée n'est jamais un succès ; un échec toléré (onFail: continue) l'est.
+  // A skipped step is never a success; a tolerated failure (onFail: continue) is.
   const ok =
     !stopped &&
     [...st.values()].every(

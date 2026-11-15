@@ -1,21 +1,21 @@
-// Workflows reproductibles du cycle de vie de src, sans humain : ils ne figent ni moteur ni modèle (sélection par
-// select.ts), seulement les étapes, leurs hôtes et leurs garde-fous. Compilation et conteneurs sur l'hôte de rôle
-// build de fleet.toml (fr1 ; nice -n 19, -j 4) ; prd ne garde que la production ; le poste ne fait que formater, typer, tester en bun et juger.
+// Reproducible src lifecycle workflows, no human involved: they pin neither engine nor model (selection by
+// select.ts), only the steps, their hosts and their guardrails. Compilation and containers on the host with the role
+// build role of fleet.toml (fr1; nice -n 19, -j 4); prd keeps production only; the workstation only formats, type-checks, runs bun tests and judges.
 //   software : code -> fmt -> check/arch/clippy -> tests -> tribunal (ai-os review) -> correction -> build/docker
-//              -> déploiement (dry-run sauf --apply) -> surveillance -> optimisation (étapes générées)
+//              -> deployment (dry-run unless --apply) -> monitoring -> optimization (generated steps)
 //   design   : PRD + DESIGN.md (gds plan) -> gds verify -> wck 100/100 -> juge
-//   market   : brouillons rédigés et mis en file ; la publication est un effet externe retenu (policy.ts)
+//   market   : drafts written and queued; publishing is a withheld external effect (policy.ts)
 import { buildHost, shq } from "./fleet";
 import type { Step, Workflow } from "./run";
 
 export type LifecycleOptions = {
   task?: string;
-  /** Préfixes de chemins que le code peut toucher et commiter (runner : commit borné). */
+  /** Path prefixes the code may touch and commit (runner: bounded commit). */
   paths?: string[];
   apply?: boolean;
-  /** Paquets bun à tester (défaut : packages/ai-os). */
+  /** Bun packages to test (default: packages/ai-os). */
   bunTests?: string[];
-  /** Hôte de compilation (défaut : hôte de rôle build de fleet.toml). */
+  /** Build host (default: the fleet.toml host with the build role). */
   build?: string;
   slug?: string;
 };
@@ -27,7 +27,7 @@ const slugOf = (s: string) =>
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 40) || "run";
-// Checkout du runner sur l'hôte distant : main à jour avant de compiler.
+// Runner checkout on the remote host: main up to date before compiling.
 const synced = (cmd: string) => `git pull -q --ff-only origin main && ${cmd}`;
 const heavy = (cmd: string) => `nice -n 19 ${cmd}`;
 const q = (xs: string[]) => xs.map(shq).join(" ");
@@ -46,7 +46,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
       do: "agent",
       role: "coder",
       needs: { edit: true },
-      prompt: `${o.task}\n\nRègles de src : lis AGENTS.md et CLAUDE.md ; ne touche que ${paths.join(", ")} ; zéro emoji ; aucun secret affiché ; termine par bun fmt sur tes fichiers.`,
+      prompt: `${o.task}\n\nsrc rules: read AGENTS.md and CLAUDE.md; touch only ${paths.join(", ")}; zero emoji; show no secret; finish with bun fmt on your files.`,
       check: `bun check && bun fmt --check ${q(paths)}`,
       commit: { paths, message: msg(o.task.slice(0, 60)) },
       budget_usd: 5,
@@ -57,12 +57,12 @@ export function software(o: LifecycleOptions = {}): Workflow {
       do: "cmd",
       deps: after(["code"]),
       hosts: ["pc"],
-      // Vérification seulement : un écart ouvre un ticket coder qui formate et commite dans `paths` (aucune
-      // modification locale non commitée que prd ne verrait pas).
+      // Check only: a diff opens a coder ticket that formats and commits within `paths` (no
+      // uncommitted local change that prd would not see).
       run: `bun fmt --check ${q(paths)}`,
     },
     {
-      // Une seule synchronisation git sur l'hôte de compilation, avant toute compilation (pas de index.lock concurrent).
+      // A single git sync on the build host, before any compilation (no concurrent index.lock).
       id: "sync",
       do: "cmd",
       deps: ["fmt"],
@@ -108,14 +108,14 @@ export function software(o: LifecycleOptions = {}): Workflow {
       do: "cmd",
       deps: ["test-bun", "arch"],
       hosts: ["pc"],
-      // Échec de git propagé (pas masqué par le code de sortie de head).
+      // Git failure propagated (not masked by head's exit code).
       run: `out=$(git log -3 -p --stat -- ${q(paths)}) && printf '%s' "$out" | head -c 100000`,
       onFail: "stop",
     },
     {
-      // Tribunal à trois voix (src/review : Gemini et Claude en parallèle, juge neutre qui tranche), moteurs du
-      // registre avec repli, ancré sur les sources officielles Google et docs/reviews/CHECKLISTS.md ; verdicts
-      // docs/reviews/<voix>-<date>-<slug>.md et ligne d'INDEX.md écrits par l'outil.
+      // Three-voice tribunal (src/review: Gemini and Claude in parallel, neutral judge who decides), engines from the
+      // registry with fallback, anchored on the official Google sources and docs/reviews/CHECKLISTS.md; verdicts
+      // docs/reviews/<voice>-<date>-<slug>.md and INDEX.md line written by the tool.
       id: "review",
       do: "tool",
       deps: ["diff"],
@@ -135,7 +135,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
       deps: ["review"],
       needs: { edit: true },
       prompt:
-        "Le tribunal ai-os review (deux voix et un juge) a relu le changement. Vérifie chaque défaut retenu par le juge dans le code ; corrige ceux qui sont réels, ignore les autres en le disant. Rien à faire si le statut est « conforme ».\n\n{{review}}",
+        "The ai-os review tribunal (two voices and a judge) reviewed the change. Check each defect the judge kept against the code; fix the real ones, ignore the others and say so. Nothing to do if the status is \"conforme\".\n\n{{review}}",
       check: "bun check && ay arch check --strict",
       commit: {
         paths: [...paths, "docs/reviews"],
@@ -149,7 +149,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
       do: "cmd",
       deps: ["fix", "test-cargo"],
       hosts: [build],
-      // Resynchronisé : les corrections des juges ont été poussées par le runner depuis « sync ».
+      // Resynced: the judges' fixes were pushed by the runner from "sync".
       run: synced(
         heavy("docker build --target runtime -t aphrody/src:agents ."),
       ),
@@ -176,9 +176,9 @@ export function software(o: LifecycleOptions = {}): Workflow {
       role: "sre",
       deps: ["monitor"],
       prompt:
-        'État de la flotte après déploiement :\n{{monitor}}\n\nPropose au plus 3 optimisations mesurables de src (performance, fiabilité, coût), chacune en tâche pour un agent coder. Réponds uniquement par un bloc ```json {"steps":[{"id":"o1","do":"agent","role":"coder","needs":{"edit":true},"prompt":"…","check":"…"}]} ``` ; liste vide si rien ne le justifie.',
+        'Fleet state after deployment:\n{{monitor}}\n\nPropose at most 3 measurable optimizations of src (performance, reliability, cost), each as a task for a coder agent. Answer only with a ```json {"steps":[{"id":"o1","do":"agent","role":"coder","needs":{"edit":true},"prompt":"…","check":"…"}]} ``` block; empty list if nothing justifies it.',
       expand: true,
-      // Les tâches générées commitent dans le même périmètre et s'enchaînent (run.ts).
+      // Generated tasks commit within the same scope and run in sequence (run.ts).
       commit: { paths, message: msg("optimisation") },
       onFail: "continue",
     },
@@ -201,7 +201,7 @@ export function design(product: string, o: { url?: string } = {}): Workflow {
         do: "agent",
         role: "designer",
         needs: { edit: true },
-        prompt: `Design-First Gate de src pour ${dir} : mets à jour le cahier des charges (PRD) et DESIGN.md avec \`gds plan ${product} --out ${dir}/docs\`, puis complète-les à partir du code réel. Aucun code UI avant ces documents.`,
+        prompt: `src Design-First Gate for ${dir}: update the requirements document (PRD) and DESIGN.md with \`gds plan ${product} --out ${dir}/docs\`, then complete them from the real code. No UI code before these documents.`,
         check: `gds audit-slop ${shq(`${dir}/docs`)}`,
         commit: {
           paths: [`${dir}/docs`],
@@ -254,7 +254,7 @@ export function market(product: string, brief: string): Workflow {
         do: "agent",
         role: "growth",
         needs: {},
-        prompt: `Rédige des brouillons marketing pour ${product} : ${brief}\nFaits vérifiables uniquement (journal ci-dessous), ton direct, zéro emoji, aucun superlatif ni vocabulaire d'IA. Un brouillon par canal, avec le canal en titre.\n\n{{facts}}`,
+        prompt: `Write marketing drafts for ${product}: ${brief}\nVerifiable facts only (log below), direct tone, zero emoji, no superlatives or AI vocabulary. One draft per channel, with the channel as the title.\n\n{{facts}}`,
         out: `var/agents/outbox/${product}-${day()}.md`,
       },
       {
@@ -263,7 +263,7 @@ export function market(product: string, brief: string): Workflow {
         role: "growth",
         deps: ["draft"],
         effect: "external",
-        prompt: "Publier les brouillons validés :\n{{draft}}",
+        prompt: "Publish the approved drafts:\n{{draft}}",
       },
     ],
   };

@@ -1,7 +1,7 @@
-// File d'agents de infra/agents/runner.ts (couche d'exécution de labs-1b, doc docs/agents/AGENT-FIRST.md), format v1
-// produit et lu tel quel : <src de l'hôte>/var/agents/queue/{tmp,new,claimed,done,failed}/<id>.json,
-// résultats results/<id>/result.json, état state/{health.json,heartbeat-<role>,cooldown-<provider>}.
-// Dépôt atomique : écriture dans tmp/ puis renommage dans new/. À distance : une session ssh par opération.
+// Agent queue of infra/agents/runner.ts (execution layer of labs-1b, doc docs/agents/AGENT-FIRST.md), v1 format
+// produced and read as is: <host src>/var/agents/queue/{tmp,new,claimed,done,failed}/<id>.json,
+// results results/<id>/result.json, state state/{health.json,heartbeat-<role>,cooldown-<provider>}.
+// Atomic drop: write into tmp/ then rename into new/. Remote: one ssh session per operation.
 import {
   existsSync,
   mkdirSync,
@@ -85,13 +85,13 @@ export async function enqueue(h: Host, t: QueueTask): Promise<void> {
   if (r.code) throw new Error(`enqueue ${h.id} : ${r.err.trim()}`);
 }
 
-/** Résultat final (done/failed) ou null tant que la tâche est en file, réclamée ou remise en file. */
+/** Final result (done/failed) or null while the task is queued, claimed or requeued. */
 export async function poll(h: Host, id: string): Promise<QueueResult | null> {
   const base = home(h);
   const f = `${base}/results/${id}/result.json`;
-  // La tâche remise en new/ après des fournisseurs indisponibles garde un result.json intermédiaire : seul
+  // A task requeued in new/ after unavailable providers keeps an intermediate result.json: only
   // done/ ou failed/ est final.
-  // Final sans result.json (runner interrompu, retrait) : échec synthétisé plutôt qu'une attente jusqu'au délai.
+  // Final without result.json (runner interrupted, withdrawn): synthesized failure rather than waiting until the timeout.
   const settle = (state: string, text: string): QueueResult | null => {
     if (!state) return null;
     try {
@@ -126,7 +126,7 @@ export async function poll(h: Host, id: string): Promise<QueueResult | null> {
     : settle(r.out.slice(0, nl).trim(), r.out.slice(nl + 1));
 }
 
-/** Tentatives déjà faites sur une tâche encore en file (remise en new/ ou réclamée). */
+/** Attempts already made on a task still in the queue (requeued in new/ or claimed). */
 export async function pendingAttempts(h: Host, id: string): Promise<Attempt[]> {
   const base = home(h);
   const read = (t: string) => {
@@ -151,7 +151,7 @@ export async function pendingAttempts(h: Host, id: string): Promise<Attempt[]> {
   return read(r.out);
 }
 
-/** Retire une tâche encore en new/ (re-routage vers un autre hôte). */
+/** Withdraws a task still in new/ (re-routing to another host). */
 export async function withdraw(h: Host, id: string): Promise<boolean> {
   const base = home(h);
   const src = `${base}/queue/new/${id}.json`;
@@ -159,7 +159,7 @@ export async function withdraw(h: Host, id: string): Promise<boolean> {
   if (h.local) {
     mkdirSync(join(base, "queue", "failed"), { recursive: true });
     try {
-      renameSync(src, dst); // un worker peut l'avoir réclamée entre-temps : rien à retirer
+      renameSync(src, dst); // a worker may have claimed it in the meantime: nothing to withdraw
       return true;
     } catch {
       return false;
@@ -177,8 +177,8 @@ export async function withdraw(h: Host, id: string): Promise<boolean> {
 }
 
 export type RunnerState = {
-  alive: boolean; // un worker du rôle a battu depuis moins de 2 min
-  roles: string[]; // rôles vivants
+  alive: boolean; // a worker of the role beat less than 2 min ago
+  roles: string[]; // live roles
   clis: Record<string, string>; // sonde des CLI (state/health.json)
   cooling: string[]; // fournisseurs en refroidissement (state/cooldown-*, 15 min)
 };
@@ -186,7 +186,7 @@ export type RunnerState = {
 const FRESH_MS = 120_000;
 const COOL_MS = 15 * 60_000;
 
-/** État du runner d'un hôte, lu dans state/ (une session ssh). */
+/** Runner state of a host, read from state/ (one ssh session). */
 export async function runnerState(h: Host): Promise<RunnerState> {
   const base = home(h);
   let files: { name: string; age: number; body?: string }[] = [];
@@ -205,7 +205,7 @@ export async function runnerState(h: Host): Promise<RunnerState> {
                 ? readFileSync(join(d, name), "utf8")
                 : undefined,
           });
-        } catch {} // fichier remplacé pendant la lecture (écriture atomique du runner)
+        } catch {} // file replaced during the read (atomic write by the runner)
   } else {
     const r = await exec(
       h,
@@ -242,7 +242,7 @@ export async function runnerState(h: Host): Promise<RunnerState> {
   };
 }
 
-/** Sortie de l'agent pour la tentative acceptée (results/<id>/<n>-<fournisseur>.log), tronquée. */
+/** Agent output for the accepted attempt (results/<id>/<n>-<provider>.log), truncated. */
 export async function output(
   h: Host,
   r: QueueResult,
@@ -265,8 +265,8 @@ export async function output(
   return extractText(text).slice(-max);
 }
 
-/** Texte de la réponse dans le journal brut d'une CLI : JSON unique (claude `result`, agy `response`) ou flux JSONL
- * (opencode `part.text`, codex `item.text` des messages de l'agent) ; texte brut sinon. stderr retiré. */
+/** Response text in a CLI's raw log: single JSON (claude `result`, agy `response`) or JSONL stream
+ * (opencode `part.text`, codex `item.text` of agent messages); plain text otherwise. stderr removed. */
 export function extractText(log: string): string {
   const body = log.split("\n[stderr]\n")[0]!.trim();
   const pick = (j: any): string | undefined => {

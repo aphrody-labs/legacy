@@ -1,14 +1,14 @@
-// Classes d'échec d'un moteur, d'après sa sortie (code, stderr, JSON d'erreur). Elles décident de la réparation, avec la
-// même séparation que les classes d'erreur d'opencode (packages/ai/src/schema/errors.ts) et le routeur LiteLLM :
-//   quota    : 402, crédits, quota de compte, RESOURCE_EXHAUSTED   -> refroidissement long, bascule sans attendre
-//   throttle : 429 / rate limit sans texte de quota                -> une attente bornée (Retry-After), puis bascule
-//   auth     : session expirée, 401/403                           -> moteur écarté jusqu'à la prochaine sonde
-//   missing  : binaire ou checkout absent (ENOENT, code 127)       -> moteur ou hôte écarté
-//   context  : contexte dépassé                                    -> moteur à plus grand contexte
+// Failure classes of an engine, from its output (code, stderr, error JSON). They decide the repair, with the
+// same split as opencode's error classes (packages/ai/src/schema/errors.ts) and the LiteLLM router:
+//   quota    : 402, credits, account quota, RESOURCE_EXHAUSTED   -> long cooldown, switch without waiting
+//   throttle : 429 / rate limit without quota text                -> one bounded wait (Retry-After), then switch
+//   auth     : expired session, 401/403                           -> engine discarded until the next probe
+//   missing  : binary or checkout missing (ENOENT, code 127)      -> engine or host discarded
+//   context  : context exceeded                                   -> engine with a larger context
 //   policy   : refus de politique de contenu                        -> autre fournisseur
-//   timeout  : délai dépassé                                        -> une relance, puis bascule
-//   overload : 5xx, surcharge, réseau                               -> relance avec attente, puis bascule
-//   task     : le moteur a répondu mais la tâche a échoué           -> ticket de correction
+//   timeout  : timed out                                          -> one retry, then switch
+//   overload : 5xx, overload, network                             -> retry after a wait, then switch
+//   task     : the engine answered but the task failed            -> fix ticket
 export type FailClass =
   | "quota"
   | "throttle"
@@ -59,7 +59,7 @@ export function classify(text: string, code?: number | null): FailClass {
   return "task";
 }
 
-/** Retry-After cité dans la sortie (secondes, « 500ms », date HTTP ou ISO), borné à 60 s ; 0 si absent. */
+/** Retry-After quoted in the output (seconds, "500ms", HTTP date or ISO), capped at 60 s; 0 if absent. */
 export function retryAfterMs(text: string, now = Date.now()): number {
   const m = text.match(
     /retry[- _]after(?:-ms)?["']?\s*[:=]?\s*["']?([^\r\n"';]+)/i,
@@ -76,7 +76,7 @@ export function retryAfterMs(text: string, now = Date.now()): number {
   return Number.isFinite(ms) ? Math.min(Math.max(ms, 0), 60_000) : 0;
 }
 
-/** Durée de refroidissement d'un moteur après un échec de cette classe ; 0 = aucun (échec propre à la tâche). */
+/** Cooldown of an engine after a failure of this class; 0 = none (failure specific to the task). */
 export function cooldownMs(c: FailClass, fails: number): number {
   const exp = (base: number) => base * 2 ** Math.max(0, Math.min(fails - 1, 5));
   switch (c) {
@@ -97,7 +97,7 @@ export function cooldownMs(c: FailClass, fails: number): number {
   }
 }
 
-/** Échecs qui font changer de moteur sans relancer le même. */
+/** Failures that switch engine without retrying the same one. */
 export const switches = (c: FailClass) =>
   c === "quota" ||
   c === "auth" ||
