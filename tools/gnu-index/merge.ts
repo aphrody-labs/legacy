@@ -86,6 +86,7 @@ for (const m of MISSING) {
     modern: [],
     verdict: m.hosted_only ? "keep upstream (hébergé seulement sur ftp.gnu.org ; projet hors GNU)" : "drop (hors périmètre)",
     priority: null,
+    added_from_ftp: true,
     ...(m.hosted_only ? { hosted_only: true } : {}),
   };
   data.packages.push(row);
@@ -116,7 +117,7 @@ for (const p of data.packages) {
 
 data.sources.blurbs = "https://www.gnu.org/manual/blurbs.html (docs/research/gnu-blurbs.json)";
 data.sources.gsrc = `${gsrcFile.source} (docs/research/gsrc-gnu.json)`;
-data.sources.ftp_dirs = `https://ftp.gnu.org/gnu/ directory listings: ${MISSING.filter((m) => byName.has(m.name)).map((m) => m.name).join(" ")}`;
+data.sources.ftp_dirs = `https://ftp.gnu.org/gnu/ directory listings: ${data.packages.filter((p: any) => p.added_from_ftp).map((p: any) => p.name).join(" ")}`;
 data.counts = data.packages.reduce((a: any, r: any) => ((a[r.category] = (a[r.category] ?? 0) + 1), a), {});
 // One date for the whole file: it moves only when this merge changed something (same inputs, same output).
 if (JSON.stringify(data) !== before) data.generated = new Date().toISOString().slice(0, 10);

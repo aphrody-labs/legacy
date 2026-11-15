@@ -1,4 +1,4 @@
-// Génère gnu-packages.json + tables PACKAGES.md / DISTROS.md à partir des sources brutes (2026-11-12).
+// Génère gnu-packages.json + tables PACKAGES.md / DISTROS.md à partir des sources brutes (RAW = dossier de téléchargement).
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { curated, catBySection } from "./curated.ts";
@@ -105,10 +105,10 @@ const latest: Record<string, { version: string; date: string; file: string }> =
       /^(.+?)-(\d[\w.+~-]*?)\.(tar\.(?:gz|xz|bz2|lz|zst)|tgz|zip)$/,
     );
     if (!v) continue;
+    // ls -l prints hh:mm for files of the last 6 months: the year is the current one unless the month is ahead
+    const now = new Date();
     const year = f[3].includes(":")
-      ? Number(mon[f[1]]) > 11
-        ? "2025"
-        : "2026"
+      ? String(Number(mon[f[1]]) > now.getUTCMonth() + 1 ? now.getUTCFullYear() - 1 : now.getUTCFullYear())
       : f[3];
     const date = `${year}-${mon[f[1]]}-${f[2].padStart(2, "0")}`;
     for (const key of [v[1], "dir:" + top]) {
@@ -132,7 +132,9 @@ for (const m of rd("cgit.html").matchAll(
 ))
   cgit[m[1]] = m[2];
 
-// 6. Ubuntu 26.10 « stonking » : Packages + Sources
+// 6. Ubuntu (série = celle des fichiers P_<série>_main téléchargés) : Packages + Sources
+const series = readdirSync(RAW).map((f) => f.match(/^P_([a-z]+)_main$/)?.[1]).find(Boolean);
+if (!series) throw new Error("no P_<series>_main in RAW");
 type Bin = {
   pkg: string;
   ver: string;
@@ -143,7 +145,7 @@ type Bin = {
 };
 const bins: Bin[] = [];
 const srcVer: Record<string, string> = {};
-for (const suite of ["stonking", "stonking-updates", "stonking-security"])
+for (const suite of [series, `${series}-updates`, `${series}-security`])
   for (const comp of ["main", "universe"]) {
     for (const st of rd(`P_${suite}_${comp}`).split("\n\n")) {
       const g = (k: string) =>
@@ -336,20 +338,17 @@ writeFileSync(
   join(OUT, "gnu-packages.json"),
   JSON.stringify(
     {
-      generated: "2026-11-12",
+      generated: new Date().toISOString(),
       sources: {
-        list: "https://www.gnu.org/software/allgnupkgs.html (fetched 2026-11-12)",
+        list: "https://www.gnu.org/software/allgnupkgs.html",
         decommissioned:
-          "https://www.gnu.org/software/software.html#decommissioned ($Date 2024/07/31)",
-        manuals: "https://www.gnu.org/manual/manual.html (fetched 2026-11-12)",
-        releases:
-          "https://ftp.gnu.org/ls-lrRt.txt.gz + https://ftp.gnu.org/gnu/ (fetched 2026-11-12)",
-        repos: "https://git.savannah.gnu.org/cgit/ (index, fetched 2026-11-12)",
+          "https://www.gnu.org/software/software.html#decommissioned",
+        manuals: "https://www.gnu.org/manual/manual.html",
+        releases: "https://ftp.gnu.org/ls-lrRt.txt.gz + https://ftp.gnu.org/gnu/",
+        repos: "https://git.savannah.gnu.org/cgit/",
         ubuntu:
-          "archive.ubuntu.com dists/stonking{,-updates,-security} main+universe amd64 Packages.xz/Sources.xz (Release Version 26.10, Codename stonking, Date 2026-10-15)",
-        arch: "geo.mirror.pkgbuild.com core.db + extra.db (fetched 2026-11-12); base/base-devel = metapackages",
-        gnupackages_txt:
-          "unavailable: womb.git clone vide, viewvc 401 (2026-11-12)",
+          `archive.ubuntu.com dists/${series}{,-updates,-security} main+universe amd64 Packages.xz/Sources.xz`,
+        arch: "geo.mirror.pkgbuild.com core.db + extra.db; base/base-devel = metapackages",
       },
       counts: rows.reduce(
         (acc: any, r) => ((acc[r.category] = (acc[r.category] ?? 0) + 1), acc),
@@ -365,7 +364,7 @@ writeFileSync(
 // ---- Markdown ----
 const cats = [...new Set(rows.map((r) => r.category))].sort();
 const esc = (s: any) => String(s ?? "").replace(/\|/g, "\\|");
-let md = `# Paquets GNU : table classée (${rows.length} entrées, 2026-11-12)\n\nSource de vérité : [gnu-packages.json](gnu-packages.json), généré à partir des sources listées dans [INDEX.md](INDEX.md). Colonnes : version et date = dernière archive dans ftp.gnu.org/gnu/<nom>/ (ls-lrRt.txt, trié par date) ; « commit » = âge du dernier commit dans l'index cgit Savannah (vide si le dépôt est ailleurs ou absent) ; licence = curée, sinon \`%LICENSE%\` du paquet Arch ; « — » = inconnu, [NV].\n\n`;
+let md = `# Paquets GNU : table classée (${rows.length} entrées)\n\nSource de vérité : [gnu-packages.json](gnu-packages.json), généré à partir des sources listées dans [INDEX.md](INDEX.md). Colonnes : version et date = dernière archive dans ftp.gnu.org/gnu/<nom>/ (ls-lrRt.txt, trié par date) ; « commit » = âge du dernier commit dans l'index cgit Savannah (vide si le dépôt est ailleurs ou absent) ; licence = curée, sinon \`%LICENSE%\` du paquet Arch ; « — » = inconnu, [NV].\n\n`;
 for (const cat of cats) {
   const rs = rows.filter((r) => r.category === cat);
   md += `## ${cat} (${rs.length})\n\n| Paquet | Rôle | Lang. | Licence | Statut | Dernière version (ftp) | Dépôt / commit | Verdict |\n|---|---|---|---|---|---|---|---|\n`;
@@ -384,7 +383,7 @@ writeFileSync(join(OUT, "PACKAGES.md"), md);
 
 const inU = rows.filter((r) => r.ubuntu),
   inA = rows.filter((r) => r.arch);
-let dm = `# GNU dans Ubuntu 26.10 et Arch Linux (2026-11-12)\n\nTables générées (voir [gnu-packages.json](gnu-packages.json)) ; analyse et remplacements dans la section finale.\n\n## Couverture\n\n- Paquets GNU (hors décommissionnés) : ${rows.filter((r) => r.status !== "decommissioned").length}\n- Présents dans Ubuntu 26.10 stonking (main+universe) : ${inU.length} ; dont dans le socle (binaire Essential ou Priority required/important) : ${inU.filter((r) => r.ubuntu.base).length}\n- Présents dans Arch core+extra : ${inA.length} ; dont dans \`base\` : ${inA.filter((r) => r.arch.base).length}, dans \`base-devel\` : ${inA.filter((r) => r.arch.base_devel).length}\n\nCorrespondance par nom (nom exact, \`gnu-<nom>\`, suffixe versionné, alias curés) : un paquet absent peut exister sous un autre nom [NV].\n\n`;
+let dm = `# GNU dans Ubuntu ${series} et Arch Linux\n\nTables générées (voir [gnu-packages.json](gnu-packages.json)) ; analyse et remplacements dans la section finale.\n\n## Couverture\n\n- Paquets GNU (hors décommissionnés) : ${rows.filter((r) => r.status !== "decommissioned").length}\n- Présents dans Ubuntu ${series} (main+universe) : ${inU.length} ; dont dans le socle (binaire Essential ou Priority required/important) : ${inU.filter((r) => r.ubuntu.base).length}\n- Présents dans Arch core+extra : ${inA.length} ; dont dans \`base\` : ${inA.filter((r) => r.arch.base).length}, dans \`base-devel\` : ${inA.filter((r) => r.arch.base_devel).length}\n\nCorrespondance par nom (nom exact, \`gnu-<nom>\`, suffixe versionné, alias curés) : un paquet absent peut exister sous un autre nom [NV].\n\n`;
 dm += `## Socle : paquets GNU dans les ensembles de base\n\n| Paquet | Ubuntu source | Version Ubuntu | Socle Ubuntu (binaires) | Arch pkg | Version Arch | base | base-devel | Remplacé par la distro |\n|---|---|---|---|---|---|---|---|---|\n`;
 for (const r of rows.filter(
   (r) => r.ubuntu?.base || r.arch?.base || r.arch?.base_devel,

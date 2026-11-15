@@ -11,7 +11,7 @@
   "gnupackages_txt": "unavailable: womb.git clone vide, viewvc 401 (2026-11-12)",
   "blurbs": "https://www.gnu.org/manual/blurbs.html (docs/research/gnu-blurbs.json)",
   "gsrc": "bzr https://bzr.savannah.gnu.org/r/gsrc/trunk revno 12335 (docs/research/gsrc-gnu.json)",
-  "ftp_dirs": "https://ftp.gnu.org/gnu/ directory listings: "
+  "ftp_dirs": "https://ftp.gnu.org/gnu/ directory listings: guile-debbugs micron sauce speedx cfengine flex git aspell-dict-csb aspell-dict-ga aspell-dict-hr aspell-dict-is aspell-dict-it aspell-dict-sk"
  },
  "counts": {
   "applications": 43,
@@ -17061,7 +17061,8 @@
     "deps": [
      "guile"
     ]
-   }
+   },
+   "added_from_ftp": true
   },
   {
    "name": "micron",
@@ -17094,7 +17095,8 @@
     "version": "1.4",
     "sha256": "036e662f5a60cf98bb6a4b0e6ad39f9d5c213ea07efe9f586b567f192573cda4",
     "deps": []
-   }
+   },
+   "added_from_ftp": true
   },
   {
    "name": "sauce",
@@ -17127,7 +17129,8 @@
     "version": "0.9.6",
     "sha256": "cc63d9775974fcebf80b55dc20f7669bb5e48af54b273ac0f53776fa8510b0d8",
     "deps": []
-   }
+   },
+   "added_from_ftp": true
   },
   {
    "name": "speedx",
@@ -17153,7 +17156,8 @@
    "arch": null,
    "modern": [],
    "verdict": "drop (hors périmètre)",
-   "priority": null
+   "priority": null,
+   "added_from_ftp": true
   },
   {
    "name": "cfengine",
@@ -17187,7 +17191,8 @@
     "version": "2.0.6",
     "sha256": "c5e308a30e004b505c3f948bad774bb837581ad1edab1885e9c05f60fe723d79",
     "deps": []
-   }
+   },
+   "added_from_ftp": true
   },
   {
    "name": "flex",
@@ -17210,7 +17215,8 @@
    "modern": [],
    "verdict": "keep upstream (hébergé seulement sur ftp.gnu.org ; projet hors GNU)",
    "priority": null,
-   "hosted_only": true
+   "hosted_only": true,
+   "added_from_ftp": true
   },
   {
    "name": "git",
@@ -17237,7 +17243,8 @@
    "modern": [],
    "verdict": "keep upstream (hébergé seulement sur ftp.gnu.org ; projet hors GNU)",
    "priority": null,
-   "hosted_only": true
+   "hosted_only": true,
+   "added_from_ftp": true
   },
   {
    "name": "aspell-dict-csb",
@@ -17263,7 +17270,8 @@
    "arch": null,
    "modern": [],
    "verdict": "drop (hors périmètre)",
-   "priority": null
+   "priority": null,
+   "added_from_ftp": true
   },
   {
    "name": "aspell-dict-ga",
@@ -17289,7 +17297,8 @@
    "arch": null,
    "modern": [],
    "verdict": "drop (hors périmètre)",
-   "priority": null
+   "priority": null,
+   "added_from_ftp": true
   },
   {
    "name": "aspell-dict-hr",
@@ -17315,7 +17324,8 @@
    "arch": null,
    "modern": [],
    "verdict": "drop (hors périmètre)",
-   "priority": null
+   "priority": null,
+   "added_from_ftp": true
   },
   {
    "name": "aspell-dict-is",
@@ -17341,7 +17351,8 @@
    "arch": null,
    "modern": [],
    "verdict": "drop (hors périmètre)",
-   "priority": null
+   "priority": null,
+   "added_from_ftp": true
   },
   {
    "name": "aspell-dict-it",
@@ -17367,7 +17378,8 @@
    "arch": null,
    "modern": [],
    "verdict": "drop (hors périmètre)",
-   "priority": null
+   "priority": null,
+   "added_from_ftp": true
   },
   {
    "name": "aspell-dict-sk",
@@ -17393,7 +17405,8 @@
    "arch": null,
    "modern": [],
    "verdict": "drop (hors périmètre)",
-   "priority": null
+   "priority": null,
+   "added_from_ftp": true
   }
  ]
 }

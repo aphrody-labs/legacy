@@ -62,7 +62,7 @@ const m = (
 ): M => ({ name, lang, maturity, compat });
 
 const LLVM = m(
-  "LLVM 23.1.5 / Chromium clang (llvmorg-24-init)",
+  "LLVM / Chromium clang (llvmorg-24-init)",
   "C++",
   "production",
   "drop-in pour C/C++ ; Linux noyau via LLVM=1",
@@ -90,10 +90,10 @@ export const curated: Record<string, C> = {
         "lld / llvm-ar / llvm-objcopy / llvm-strip",
         "C++",
         "production",
-        "lld remplace ld.bfd ; gold retiré de binutils 2.44 [NV]",
+        "lld remplace ld.bfd ; gold retiré de binutils [NV]",
       ),
-      m("mold 3.0.0 (2026-10-05)", "C++", "production (ELF)"),
-      m("wild 0.11.0 (2026-10-24)", "Rust", "beta (ELF, Linux)"),
+      m("mold", "C++", "production (ELF)"),
+      m("wild", "Rust", "beta (ELF, Linux)"),
     ],
     verdict: "replace with LLVM (lld + llvm-*)",
     prio: 3,
@@ -121,7 +121,7 @@ export const curated: Record<string, C> = {
     license: "LGPL-2.1-or-later",
     repo: "https://sourceware.org/git/glibc.git",
     modern: [
-      m("musl 1.2.6", "C", "production", "ABI différente ; static OK"),
+      m("musl", "C", "production", "ABI différente ; static OK"),
       m(
         "llvm-libc",
         "C++",
@@ -138,9 +138,9 @@ export const curated: Record<string, C> = {
     lang: "C",
     license: "GPL-3.0-or-later",
     modern: [
-      m("ninja 1.13.2", "C++", "production"),
-      m("samurai 1.3", "C", "production", "ninja-compatible"),
-      m("just 1.59.0", "Rust", "production", "lanceur de tâches, pas un make"),
+      m("ninja", "C++", "production"),
+      m("samurai", "C", "production", "ninja-compatible"),
+      m("just", "Rust", "production", "lanceur de tâches, pas un make"),
       m("cargo / gn", "Rust/C++", "production"),
     ],
     verdict: "replace with ninja/gn/cargo + just ; garder make pour le noyau",
@@ -151,7 +151,7 @@ export const curated: Record<string, C> = {
     lang: "M4, shell",
     license: "GPL-3.0-or-later WITH Autoconf-exception-3.0",
     modern: [
-      m("meson 1.12.1", "Python", "production"),
+      m("meson", "Python", "production"),
       m("CMake", "C++", "production"),
     ],
     verdict:
@@ -231,7 +231,7 @@ export const curated: Record<string, C> = {
     cat: "toolchain",
     lang: "C",
     modern: [
-      m("clangd / tree-sitter / ast-grep 0.51.2", "C++/Rust", "production"),
+      m("clangd / tree-sitter / ast-grep", "C++/Rust", "production"),
     ],
     verdict: "replace with clangd/ast-grep",
   },
@@ -281,13 +281,13 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     ubuntu: ["coreutils"],
     ubuntuReplaced:
-      "rust-coreutils 0.12.0 (uutils) via coreutils-from-uutils, Priority required ; GNU disponible en gnu-coreutils 9.10",
+      "rust-coreutils (uutils) via coreutils-from-uutils, Priority required ; GNU disponible en gnu-coreutils",
     modern: [
       m(
-        "uutils coreutils 0.12.0 (2026-09-17)",
+        "uutils coreutils",
         "Rust",
         "production (Ubuntu défaut)",
-        "GNU testsuite 676/719 pass (94,0 %), 29 fail, 12 skip, CI 2026-11-12",
+,
       ),
     ],
     verdict: "replace with uutils coreutils (Linux et Windows natif)",
@@ -299,19 +299,19 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     modern: [
       m(
-        "brush 0.4.0 (2026-05-03), main e9d45efe",
+        "brush",
         "Rust",
         "beta",
         "shell-matrix 31/34 (docs/shell/MATRIX.md)",
       ),
       m(
-        "oils (osh) 0.38.0",
+        "oils (osh)",
         "C++ (traduit de Python)",
         "beta",
         "suite spec bash/osh [NV]",
       ),
       m(
-        "niubash 1.5.0",
+        "niubash",
         "?",
         "retenu pour Claude Windows",
         "34/34 shell-matrix",
@@ -327,12 +327,12 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     modern: [
       m(
-        "uutils findutils 0.11.0 (2026-11-02)",
+        "uutils findutils",
         "Rust",
         "beta",
         "Ubuntu : rust-findutils (universe), pas par défaut ; taux GNU [NV]",
       ),
-      m("fd 10.5.2", "Rust", "production", "syntaxe différente"),
+      m("fd", "Rust", "production", "syntaxe différente"),
     ],
     verdict: "replace with uutils findutils (+ fd interactif)",
     prio: 5,
@@ -343,13 +343,13 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     modern: [
       m(
-        "uutils diffutils v0.6.0 (2026-10-23)",
+        "uutils diffutils",
         "Rust",
         "beta",
         "diff/cmp ; diff3/sdiff partiels [NV]",
       ),
       m(
-        "difftastic 0.72.0",
+        "difftastic",
         "Rust",
         "production",
         "diff structurel, pas drop-in",
@@ -364,13 +364,13 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     modern: [
       m(
-        "ripgrep 15.2.0 (2026-07-15)",
+        "ripgrep",
         "Rust",
         "production",
         "pas drop-in POSIX",
       ),
       m(
-        "uutils grep 0.2.0 (2026-08-27)",
+        "uutils grep",
         "Rust",
         "alpha",
         "Ubuntu : rust-grep (universe) [NV : vérifier que c'est bien uutils]",
@@ -386,7 +386,7 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     modern: [
       m(
-        "uutils sed 0.3.0 (2026-10-18)",
+        "uutils sed",
         "Rust",
         "alpha/beta",
         "Ubuntu : rust-sed (universe)",
@@ -411,7 +411,7 @@ export const curated: Record<string, C> = {
     lang: "C",
     license: "GPL-3.0-or-later",
     modern: [
-      m("libarchive bsdtar 3.8.11", "C", "production"),
+      m("libarchive bsdtar", "C", "production"),
       m("uutils tar", "Rust", "pré-alpha (pas de release)"),
     ],
     verdict: "keep upstream ; bsdtar pour Windows (natif dans Windows 11)",
@@ -421,7 +421,7 @@ export const curated: Record<string, C> = {
     cat: "shell/userland",
     lang: "C",
     license: "GPL-3.0-or-later",
-    modern: [m("zlib-rs 0.6.8 / pigz / zstd", "Rust/C", "production")],
+    modern: [m("zlib-rs / pigz / zstd", "Rust/C", "production")],
     verdict: "keep upstream ; zstd pour nos artefacts",
     prio: 9,
   },
@@ -450,13 +450,13 @@ export const curated: Record<string, C> = {
     cat: "shell/userland",
     lang: "C",
     license: "GPL-3.0-or-later OR BSD-2-Clause",
-    modern: [m("minus / bat 0.26.1", "Rust", "production (bat) / lib (minus)")],
+    modern: [m("minus / bat", "Rust", "production (bat) / lib (minus)")],
     verdict: "keep upstream",
   },
   nano: {
     cat: "editors",
     lang: "C",
-    modern: [m("helix 25.07.1 / micro", "Rust/Go", "production")],
+    modern: [m("helix / micro", "Rust/Go", "production")],
     verdict: "keep upstream (secours) ; helix",
   },
   ed: { cat: "editors", lang: "C", verdict: "drop" },
@@ -564,26 +564,21 @@ export const curated: Record<string, C> = {
   },
   // --- crypto/security ---
   gnupg: {
-    release: {
-      version: "2.5.24",
-      date: "2026-09-23",
-      path: "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.5.24.tar.bz2",
-    },
     cat: "crypto/security",
     lang: "C",
     license: "GPL-3.0-or-later",
     ubuntuReplaced:
-      "apt dépend de sqv ≥ 1.3.0 (Sequoia) pour vérifier les dépôts ; gpgv reste Priority important ; gpg-from-sq/gpgv-from-sq en universe (optional)",
+      "apt dépend de sqv ≥ (Sequoia) pour vérifier les dépôts ; gpgv reste Priority important ; gpg-from-sq/gpgv-from-sq en universe (optional)",
     archReplaced: "non : pacman dépend de gpgme",
     modern: [
       m(
-        "sequoia-sq 1.5.0 / sequoia-chameleon-gnupg 0.13.1",
+        "sequoia-sq / sequoia-chameleon-gnupg",
         "Rust",
         "production (sq) / beta (chameleon)",
-        "Arch : sequoia-sq 1.4.1, sqv 1.5.0 ; pacman utilise gpgme [NV]",
+        "Arch : sequoia-sq, sqv ; pacman utilise gpgme [NV]",
       ),
       m(
-        "age 1.3.2 / rage 0.12.1",
+        "age / rage",
         "Go/Rust",
         "production",
         "autre format, pas OpenPGP",
@@ -599,7 +594,7 @@ export const curated: Record<string, C> = {
     lang: "C",
     license: "LGPL-2.1-or-later",
     modern: [
-      m("rustls 0.23.46 (2026-10-14)", "Rust", "production"),
+      m("rustls", "Rust", "production"),
       m("BoringSSL (Chromium third_party)", "C/C++", "production"),
     ],
     verdict: "replace with rustls (Rust) / BoringSSL (Chromium)",
@@ -612,22 +607,12 @@ export const curated: Record<string, C> = {
     verdict: "keep upstream (dep distro) ; RustCrypto chez nous",
   },
   libgcrypt: {
-    release: {
-      version: "1.12.4",
-      date: "2026-09-11",
-      path: "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.12.4.tar.gz",
-    },
     cat: "crypto/security",
     lang: "C, asm",
     modern: [m("RustCrypto / aws-lc-rs", "Rust", "production")],
     verdict: "keep upstream (dep systemd/gnupg) ; drop chez nous",
   },
   "libgpg-error": {
-    release: {
-      version: "1.61",
-      date: "2026-05-07",
-      path: "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.61.tar.gz",
-    },
     cat: "crypto/security",
     lang: "C",
   },
@@ -637,38 +622,18 @@ export const curated: Record<string, C> = {
     modern: [m("rasn / der (RustCrypto)", "Rust", "production")],
   },
   libksba: {
-    release: {
-      version: "1.8.1",
-      date: "2026-08-24",
-      path: "https://gnupg.org/ftp/gcrypt/libksba/libksba-1.8.1.tar.bz2",
-    },
     cat: "crypto/security",
     lang: "C",
   },
   libassuan: {
-    release: {
-      version: "3.0.2",
-      date: "2025-02-18",
-      path: "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-3.0.2.tar.bz2",
-    },
     cat: "crypto/security",
     lang: "C",
   },
   pinentry: {
-    release: {
-      version: "1.3.3",
-      date: "2026-07-01",
-      path: "https://gnupg.org/ftp/gcrypt/pinentry/pinentry-1.3.3.tar.bz2",
-    },
     cat: "crypto/security",
     lang: "C, C++",
   },
   gpgme: {
-    release: {
-      version: "2.2.0",
-      date: "2026-08-31",
-      path: "https://gnupg.org/ftp/gcrypt/gpgme/gpgme-2.2.0.tar.bz2",
-    },
     cat: "crypto/security",
     lang: "C",
   },
@@ -699,8 +664,8 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     repo: "https://git.savannah.gnu.org/cgit/emacs.git",
     modern: [
-      m("Helix 25.07.1", "Rust", "production"),
-      m("Neovim 0.12.6", "C/Lua", "production"),
+      m("Helix", "Rust", "production"),
+      m("Neovim", "C/Lua", "production"),
       m("Zed", "Rust", "production"),
     ],
     verdict: "drop (Helix/Zed)",
@@ -763,7 +728,7 @@ export const curated: Record<string, C> = {
     license: "GPL-3.0-or-later",
     repo: "https://codeberg.org/guix/guix",
     modern: [
-      m("Nix 2.35.6", "C++", "production"),
+      m("Nix", "C++", "production"),
       m("ay toolchain (R2, content-addressed)", "Rust", "interne"),
     ],
     verdict:
