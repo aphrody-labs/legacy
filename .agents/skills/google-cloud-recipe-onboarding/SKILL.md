@@ -11,7 +11,7 @@ description: First steps on Google Cloud for one developer - account, gcloud aut
 - Accounts: no ad hoc `gcloud auth login`. List principals and configurations with the relay tool `gcloud_accounts` (read-only) or `env-kit accounts status`, billing with `env-kit billing`. Pass `--account` and `--project` explicitly.
 - Secrets (API keys, tokens) come from `.env` through env-kit only (`bun --env-file=.env ...`); never print, log or commit them.
 - Tools: `xh --ignore-stdin` for curl (`-b` body only; `k==v` query, `k=v` JSON field, `Header:value`), `jaq` for jq, `rg`/`fd`/Read for grep/find/cat, `sd` for sed. Scripts run with `bun x.ts` or `uv run x.py`; no node, npx, pip or bunx.
-- Fleet: fr1 builds, prd production, fr2 tests (edge box, light checks only). From the PC only read or dry-run; no heavy build.
+- Fleet: fr1 builds, prd production, fr2 tests, lint, benchmarks, sync and research without limits (its edge services stay up). From the PC only read or dry-run; no heavy build.
 - `load_skill_resource(skill_name=..., file_path=...)` below means: Read that file under this skill's directory.
 
 ---

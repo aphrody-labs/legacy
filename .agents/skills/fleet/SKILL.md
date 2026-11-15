@@ -1,6 +1,6 @@
 ---
 name: fleet
-description: Run a command, deploy or check on the 3 VPS (ssh vps = fr1 Chromium/LLVM builds, ssh cdn = fr2 proxy/CDN, ssh prd = usa production). Use for any remote ssh/scp/systemctl/build; never a heavy build on the PC.
+description: Run a command, deploy or check on the 3 VPS (ssh vps = fr1 Chromium/LLVM builds, ssh cdn = fr2 tests/lint/bench/research without limits plus edge proxy/CDN, ssh prd = usa production). Use for any remote ssh/scp/systemctl/build; never a heavy build on the PC.
 ---
 
 1. Always bound it: `timeout 60 ssh <vps|cdn|prd> '<cmd>'` (120 for scp/installs). Builds: only on `vps`.
