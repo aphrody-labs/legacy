@@ -13,6 +13,7 @@ Collectors installed on fr1 (versioned): `fleet-cgsample.timer` (60 s, per-cgrou
 | IO pressure source | `/home` is btrfs on sdb+sdc, rotational ("ROTA 1"). atop: sdb busy avg 95 % (max 104 %), sdc 8 %, sda 25 %. iostat: sdb r_await 80 ms, 99 % util at 17 MB/s read; sda `await` 0.2-3.7 ms. cargo and sccache read 12.0 GB and 11.0 GB in 14 min (cargo home and target under `/home/ubuntu/build`, sccache cache `/home/ubuntu/.cache/sccache`), rustc 8.2 GB. |
 | Swap | Not the IO source: zram0 0.1-0.3 MB/s of block IO, swapfile on sda (3 ms). Swap is 20.4 of 20.5 GB full with 25 GB free RAM (cold pages, mostly the 12 GB of `/tmp` tmpfs: `shen-probe` 2.9 GB, `android-ubuntu` 1.7 GB, `cv`, `ayt2`...); churn 24 MB/s in and out costs CPU (kswapd 0.07 core, `sy` 16 %), not disk. |
 | Runaways | None found in the windows; nothing killed by this work (the 2.2 h `awk | grep` was killed before). |
+| Cargo lock | Every cargo of every agent takes the global flock `/home/ubuntu/.cargo/.package-cache` (on the rotational disk): at 01:00 `lslocks` showed 3 writers plus readers; a 1-crate no-dependency build waited more than 10 min behind them. A second CARGO_HOME (`/srv/cargo-home-open`, `/srv/bench-cargo-home`) already existed as a workaround. |
 | sccache | 4504 requests, 3 hits (0.08 %); see section 3. |
 
 Conclusion: fr1 is CPU-bound by agent sessions in `user.slice` (unmanaged, weight 100 like the services) and IO-bound by one rotational btrfs where every cargo target and registry lives. Nothing was isolating the core services from either.
@@ -52,10 +53,13 @@ Conclusion: fr1 is CPU-bound by agent sessions in `user.slice` (unmanaged, weigh
 | Moment | cpu PSI avg300 | io PSI avg300 | load 1/5/15 | NativeLink /status | cargo incremental |
 | --- | --- | --- | --- | --- | --- |
 | Before (00:30 UTC) | 81.66 | 72.75 | 80.09/70.68/59.83 | p50 4.2 ms, p95 12.0 ms, max 23.5 ms | 78.7 s |
-| After (default path) | AFTER_DEFAULT |
-| After (via fleet-run, placed by PSI) | AFTER_FLEETRUN |
+| After, default path on fr1 (01:00 UTC) | cargo did not finish in 590 s: blocked on the global flock `/home/ubuntu/.cargo/.package-cache` (3 writers and a reader held it, `lslocks`); run killed |
+| After, `fleet-run -H fr1` (agents.slice, private SSD CARGO_HOME), 01:08 UTC | 13.62 | 85.27 | 46.97/45.07/47.22 | p50 0.8 ms, p95 2.6 ms, max 4.2 ms | 2.1 s |
+| After, `fleet-run` placed on fr2 by PSI (01:07 UTC) | fr2: 1.87 | 0.31 | 0.53/1.57/3.55 | p50 22.6 ms, p95 25.3 ms (over the mesh from fr2) | 2.9 s |
 
-The totals only drop when work moves off fr1; the slices and bfq change who is served first under contention. The agents already running keep running in `user.slice` (weight 50 now); new jobs started through `fleet-run` are placed by PSI.
+Read with care: the rows are not at equal load. Agent CPU jobs had finished by 01:00 (fr1 cpu PSI avg300 fell from 81.66 to 13.62) while IO stayed saturated (io PSI avg300 85.27, load average 47 made of D-state waiters on the rotational `/home`). What the numbers do show: (1) the 78.7 s of the "before" incremental build was mostly waiting, not compiling: the same crate rebuilds in 2.1 s with a private SSD CARGO_HOME and never finished through the shared one; (2) NativeLink `/status` p50 went from 4.2 ms to 0.8 ms once the server sat in the top-weight slice and CPU contention eased (siso action latency itself was not measurable: no siso build ran); (3) fleet-run places new work on the idle host (fr2 cpu10 0.19 vs fr1 io10 87).
+
+Open items, not solved by slices: IO PSI on fr1 stays high while cargo registries and targets live on the rotational `/home` (sdb 95 % busy); the fix is capacity on the SSD root (21 GB free, 93 %), i.e. finishing the fr1 legacy migration below and pinning agent `CARGO_TARGET_DIR` under `/srv`. `fleet-run` already gives each class/user its own SSD `CARGO_HOME` (`/srv/cargo-home-fleet-<class>-<user>`).
 
 ## 5. fr2 disk and legacy purge (owner order, no archive)
 
