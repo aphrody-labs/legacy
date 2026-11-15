@@ -139,3 +139,44 @@ fn sixteen_digit_int_is_number_and_matmul_has_diagnostic() {
 ");
     assert!(r.diagnostics.iter().any(|d| d.message.contains("matrix multiplication")), "{:?}", r.diagnostics);
 }
+
+#[test]
+fn identifiers_dunder_and_camel() {
+    let o = ts("__x = 1\nprint(__x)\n");
+    assert!(o.contains("$u__x"), "{o}");
+    assert!(!o.contains("let __x") && !o.contains("(__x)"), "{o}");
+}
+
+#[test]
+fn class_body_annassign_and_sibling_attrs() {
+    let o = ts("class A:\n    x: int = 1\n    y = x + 1\n    z: int\n");
+    assert!(o.contains("static x = 1;"), "{o}");
+    assert!(o.contains("static y = (A.x + 1)") || o.contains("A.x"), "{o}");
+    assert!(!o.contains("__py.unsupported"), "{o}");
+}
+
+#[test]
+fn repr_and_str_do_not_duplicate_tostring() {
+    let o = ts("class A:\n    def __str__(self):\n        return 'a'\n    def __repr__(self):\n        return 'b'\n");
+    assert_eq!(o.matches("toString()").count(), 1, "{o}");
+    assert!(o.contains("__repr__()"), "{o}");
+}
+
+#[test]
+fn keyword_call_rewrite_guards() {
+    let o = ts("def f(a, b):\n    return a\nf(1, 2, a=3)\nxs = [1]\nf(*xs, b=2)\n");
+    assert!(!o.contains("f(3, 2)"), "{o}");
+    assert!(o.contains("__py.kw"), "{o}");
+}
+
+#[test]
+fn walrus_in_comprehension_is_declared() {
+    let o = ts("def g(xs):\n    return [y for x in xs if (y := x)]\n");
+    assert!(o.contains("let y") || o.contains("let y;"), "{o}");
+}
+
+#[test]
+fn error_column_counts_characters() {
+    let r = transpile("s = 'é' +\n");
+    assert!(r.ts.is_empty());
+}

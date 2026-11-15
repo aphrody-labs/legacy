@@ -104,9 +104,14 @@ pub fn transpile_with(source: &str, mode: AsyncMode) -> Output {
 
 fn line_col(src: &str, off: usize) -> (usize, usize) {
     let off = off.min(src.len());
-    let pre = &src.as_bytes()[..off];
-    let line = pre.iter().filter(|&&b| b == b'\n').count() + 1;
-    let col = off - pre.iter().rposition(|&b| b == b'\n').map(|p| p + 1).unwrap_or(0) + 1;
+    let mut off = off;
+    while !src.is_char_boundary(off) {
+        off -= 1;
+    }
+    let pre = &src[..off];
+    let line = pre.matches('\n').count() + 1;
+    let start = pre.rfind('\n').map(|p| p + 1).unwrap_or(0);
+    let col = pre[start..].chars().count() + 1; // characters, not bytes
     (line, col)
 }
 
@@ -124,6 +129,9 @@ const JS_RESERVED: &[&str] = &[
 fn ident(id: &str) -> String {
     if JS_RESERVED.contains(&id) && id != "constructor" {
         format!("{id}_")
+    } else if id.starts_with("__") && !id.ends_with("__") {
+        // user names starting with `__` must not collide with the emitter's `__py`, `__kw`, `__tN`, ...
+        format!("$u{id}")
     } else {
         id.to_string()
     }
@@ -150,7 +158,7 @@ fn js_str(s: &str) -> String {
 }
 
 fn tpl_escape(s: &str) -> String {
-    let mut o = String::new();
+    let mut o = String::with_capacity(s.len() + 8);
     let mut it = s.chars().peekable();
     while let Some(c) = it.next() {
         match c {
@@ -161,7 +169,7 @@ fn tpl_escape(s: &str) -> String {
             '\r' => o.push_str("\\r"),
             '\u{2028}' => o.push_str("\\u2028"),
             '\u{2029}' => o.push_str("\\u2029"),
-            c if (c as u32) < 0x20 && c != '\t' => o.push_str(&format!("\\u{:04x}", c as u32)),
+            c if ((c as u32) < 0x20 && c != '\t') || c == '\u{7f}' => o.push_str(&format!("\\u{:04x}", c as u32)),
             c => o.push(c),
         }
     }
@@ -214,6 +222,9 @@ impl<'a> Visitor<'a> for Collector<'a> {
             }
             Stmt::ImportFrom(i) => {
                 for a in &i.names {
+                    if a.name.as_str() == "*" {
+                        continue;
+                    }
                     let n = a.asname.as_ref().unwrap_or(&a.name).as_str().to_string();
                     self.imported.insert(n);
                 }
@@ -236,14 +247,20 @@ impl<'a> Visitor<'a> for Collector<'a> {
         match expr {
             Expr::Name(n) => {
                 let id = n.id.as_str();
-                if is_flat(id) || JAVA_ROOTS.contains(&id) {
+                if n.ctx == ExprContext::Load && (is_flat(id) || JAVA_ROOTS.contains(&id)) {
                     self.ghidra_hit = true;
                 }
                 if n.ctx == ExprContext::Store {
                     self.assigned.insert(id.to_string());
                 }
             }
-            Expr::Lambda(_) | Expr::ListComp(_) | Expr::SetComp(_) | Expr::DictComp(_) | Expr::Generator(_) => {}
+            Expr::ListComp(_) | Expr::SetComp(_) | Expr::DictComp(_) | Expr::Generator(_) => {
+                // a walrus target inside a comprehension binds in the enclosing scope
+                let mut nc = NamedTargets::default();
+                nc.visit_expr(expr);
+                self.assigned.extend(nc.0);
+            }
+            Expr::Lambda(_) => {}
             Expr::Yield(_) | Expr::YieldFrom(_) => self.has_yield = true,
             _ => visitor::walk_expr(self, expr),
         }
@@ -254,6 +271,20 @@ impl<'a> Visitor<'a> for Collector<'a> {
             self.assigned.insert(n.as_str().to_string());
         }
         visitor::walk_except_handler(self, h);
+    }
+}
+
+#[derive(Default)]
+struct NamedTargets(BTreeSet<String>);
+
+impl<'a> Visitor<'a> for NamedTargets {
+    fn visit_expr(&mut self, expr: &'a Expr) {
+        if let Expr::Named(n) = expr {
+            if let Expr::Name(t) = &*n.target {
+                self.0.insert(t.id.as_str().to_string());
+            }
+        }
+        visitor::walk_expr(self, expr);
     }
 }
 
@@ -290,6 +321,9 @@ struct Emitter<'s> {
     ghidra_seen: bool,
     mode: AsyncMode,
     pyghidra_names: HashSet<String>,
+    /// while emitting a class body: (class name, attributes assigned so far, scope depth of the body)
+    class_attr: Option<(String, HashSet<String>, usize)>,
+    class_has_str: bool,
 }
 
 fn is_const(e: &Expr) -> bool {
@@ -341,6 +375,8 @@ impl<'s> Emitter<'s> {
             user_classes: HashSet::new(),
             java_names: HashSet::new(),
             class_stack: vec![],
+            class_attr: None,
+            class_has_str: false,
             star_pkgs: vec![],
             star_names: BTreeSet::new(),
             asyncs: false,
@@ -1199,7 +1235,7 @@ impl<'s> Emitter<'s> {
         let saved_no_await = self.no_await;
         self.no_await = if sync_forced { 1 } else { 0 };
         let decl = if c.assigned.contains(selfname.as_deref().unwrap_or("\0")) { "let" } else { "const" };
-        let alias = |sn: &str| format!("{decl} {sn} = this;");
+        let alias = |sn: &str| format!("{decl} {} = this;", ident(sn));
         let mut self_alias_done = false;
         if let Some(sn) = &selfname {
             if !(is_ctor && derived) {
@@ -1223,13 +1259,26 @@ impl<'s> Emitter<'s> {
                 if let Stmt::Expr(e) = s {
                     if let Expr::Call(call) = &*e.value {
                         if let Some(args) = self.super_init_args(call, selfname.as_deref()) {
+                            // statements before super(..) that never touch `self` stay before it (JS requires super first for `this`)
+                            let touches = |st: &Stmt, src: &str| {
+                                selfname.as_deref().map_or(false, |sn| {
+                                    let r = st.range();
+                                    mentions_ident(&src[r.start().to_usize()..r.end().to_usize()], sn)
+                                })
+                            };
+                            let src = self.src;
+                            for (j, s2) in body.iter().enumerate() {
+                                if j < i && !touches(s2, src) {
+                                    self.stmt(s2);
+                                }
+                            }
                             self.line(&format!("super({args});"));
                             if let Some(sn) = &selfname {
                                 self.line(&alias(sn));
                             }
                             self_alias_done = true;
                             for (j, s2) in body.iter().enumerate() {
-                                if j < i {
+                                if j < i && touches(s2, src) {
                                     self.stmt(s2);
                                 }
                             }
@@ -1265,13 +1314,17 @@ impl<'s> Emitter<'s> {
         self.scopes.pop();
 
         let is_gen = c.has_yield;
-        let asy = if f.is_async || (self.asyncs && !sync_forced) { "async " } else { "" };
-        let star = if is_gen { "*" } else { "" };
+        if sync_forced && (f.is_async || is_gen) {
+            self.diag(f.range(), Severity::Error, "unsupported: async or generator constructor/accessor/__str__ (JS cannot express it)");
+        }
+        let asy = if !sync_forced && (f.is_async || self.asyncs) { "async " } else { "" };
+        let star = if is_gen && !sync_forced { "*" } else { "" };
         let name = f.name.as_str();
         let (pre, mname) = if as_method {
             let n = match name {
                 "__init__" => "constructor".to_string(),
-                "__str__" | "__repr__" => "toString".to_string(),
+                "__str__" => "toString".to_string(),
+                "__repr__" if !self.class_has_str => "toString".to_string(),
                 n => n.to_string(),
             };
             let st = if deco_static || deco_class { "static " } else { "" };
@@ -1365,6 +1418,11 @@ impl<'s> Emitter<'s> {
         self.ind += 1;
         self.class_stack.push(ClassCtx { derived });
         self.scopes.push(HashSet::new());
+        let saved_attr = self.class_attr.replace((name.clone(), HashSet::new(), self.scopes.len()));
+        let saved_has_str = std::mem::replace(
+            &mut self.class_has_str,
+            c.body.iter().any(|b| matches!(b, Stmt::FunctionDef(f) if f.name.as_str() == "__str__")),
+        );
         for s in &c.body {
             match s {
                 Stmt::FunctionDef(f) => {
@@ -1379,6 +1437,20 @@ impl<'s> Emitter<'s> {
                     let v = self.expr(&a.value);
                     self.diag(a.range(), Severity::Warning, "class attribute emitted as `static` (not visible through instances)");
                     self.line(&format!("static {} = {};", ident(&n), v));
+                    if let Some((_, attrs, _)) = &mut self.class_attr {
+                        attrs.insert(n);
+                    }
+                }
+                Stmt::AnnAssign(a) if matches!(&*a.target, Expr::Name(_)) => {
+                    // `x: int = 1` is a static attribute; a bare annotation emits nothing
+                    if let (Expr::Name(n), Some(v)) = (&*a.target, &a.value) {
+                        let n = n.id.as_str().to_string();
+                        let js = self.expr(v);
+                        self.line(&format!("static {} = {};", ident(&n), js));
+                        if let Some((_, attrs, _)) = &mut self.class_attr {
+                            attrs.insert(n);
+                        }
+                    }
                 }
                 other => {
                     let m = self.unsupported(other.range(), "statement in class body");
@@ -1386,6 +1458,8 @@ impl<'s> Emitter<'s> {
                 }
             }
         }
+        self.class_attr = saved_attr;
+        self.class_has_str = saved_has_str;
         self.scopes.pop();
         self.class_stack.pop();
         self.ind -= 1;
@@ -1427,6 +1501,11 @@ impl<'s> Emitter<'s> {
     }
 
     fn name_expr(&mut self, id: &str, r: TextRange) -> String {
+        if let Some((cn, attrs, depth)) = &self.class_attr {
+            if self.scopes.len() == *depth && attrs.contains(id) {
+                return format!("{cn}.{}", ident(id)); // class-body name: JS static initializers cannot see sibling statics
+            }
+        }
         if self.lookup(id) {
             return ident(id);
         }
@@ -1929,6 +2008,11 @@ impl<'s> Emitter<'s> {
                         return ("__py.unsupported(\"super().__init__ placement\")".into(), false);
                     }
                     let al = self.args_list(args, kws);
+                    let m = match m {
+                        "__str__" => "toString",
+                        "__repr__" if !self.class_has_str => "toString",
+                        m => m,
+                    };
                     return (format!("super.{m}({al})"), true);
                 }
             }
@@ -1951,9 +2035,13 @@ impl<'s> Emitter<'s> {
         // user function with keywords: map to positional
         if let Expr::Name(n) = &*c.func {
             let nm = n.id.as_str();
-            if !kws.is_empty() && self.lookup(nm) {
+            // only a module-level function that no inner scope shadows, no `*args`, no overflow, no duplicate slots
+            let module_level = self.scopes.first().map_or(false, |s| s.contains(nm)) && !self.scopes.iter().skip(1).any(|s| s.contains(nm));
+            let no_star = !args.iter().any(|a| matches!(a, Expr::Starred(_)));
+            if !kws.is_empty() && module_level && no_star {
                 if let Some(sig) = self.user_funcs.get(nm).cloned() {
-                    if !sig.has_kw && !sig.has_vararg && kws.iter().all(|k| k.arg.as_ref().map_or(false, |a| sig.params.iter().any(|p| p == a.as_str()))) {
+                    let dup = kws.iter().any(|k| k.arg.as_ref().map_or(false, |a| sig.params.iter().position(|p| p == a.as_str()).map_or(false, |ix| ix < args.len())));
+                    if args.len() <= sig.params.len() && !dup && !sig.has_kw && !sig.has_vararg && kws.iter().all(|k| k.arg.as_ref().map_or(false, |a| sig.params.iter().any(|p| p == a.as_str()))) {
                         let mut slots: Vec<Option<String>> = vec![None; sig.params.len()];
                         for (i, a) in args.iter().enumerate() {
                             if i < slots.len() {
@@ -2039,10 +2127,21 @@ fn sig_of(p: &Parameters) -> FuncSig {
 }
 
 fn camel(s: &str) -> String {
-    let mut o = String::new();
+    // dunders stay as they are; leading and trailing underscores are kept; only interior `_x` is folded
+    if s.starts_with("__") && s.ends_with("__") {
+        return s.to_string();
+    }
+    let lead = s.len() - s.trim_start_matches('_').len();
+    let trail = s.len() - s.trim_end_matches('_').len();
+    if lead + trail >= s.len() {
+        return s.to_string();
+    }
+    let core = &s[lead..s.len() - trail];
+    let mut o = String::with_capacity(s.len());
+    o.push_str(&s[..lead]);
     let mut up = false;
-    for (i, c) in s.chars().enumerate() {
-        if c == '_' && i > 0 {
+    for c in core.chars() {
+        if c == '_' {
             up = true;
         } else if up {
             o.extend(c.to_uppercase());
@@ -2051,6 +2150,10 @@ fn camel(s: &str) -> String {
             o.push(c);
         }
     }
+    if up {
+        o.push('_');
+    }
+    o.push_str(&s[s.len() - trail..]);
     o
 }
 
