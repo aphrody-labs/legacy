@@ -56,8 +56,7 @@ const translator = (l: Locale): Translator => {
 export const dirOf = (l: Locale) => translator(l).dir;
 /**
  * Text of a packages/i18n key in a locale (MF2). Plain text unless the message carries trusted markup, in which
- * case every argument must already be escaped HTML. Typography is a property of the language: French sets
- * narrow no-break spaces before ; : ! ?
+ * case every argument must already be escaped HTML. Language typography (French narrow no-break spaces) lives in the catalogs.
  */
 export const tr = (
   l: Locale,
@@ -66,8 +65,7 @@ export const tr = (
 ): string => {
   const t = translator(l);
   if (!t.has(key)) throw new Error(`i18n key ${key} missing in ${l}`);
-  const v = t.t(key, args);
-  return new Intl.Locale(t.locale).language === "fr" ? v.replace(/ ([;:!?])/g, "\u202f$1") : v;
+  return t.t(key, args);
 };
 
 const HERO_CSS = `

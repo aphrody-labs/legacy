@@ -111,7 +111,7 @@
     "locale": "fr",
     "key": "status.error",
     "args": { "reason": "x" },
-    "out": "Une erreur s'est produite : x"
+    "out": "Une erreur s'est produite : x"
   },
   { "locale": "de", "key": "nav.home", "args": {}, "out": "Home" },
   { "locale": "fr-CA", "key": "nav.home", "args": {}, "out": "Accueil" },

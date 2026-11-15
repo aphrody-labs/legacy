@@ -39,7 +39,7 @@ describe("locales", () => {
     expect([...LOCALES].sort()).toEqual(Object.keys(catalogs).sort());
     expect(pickLocale("fr-CH, fr;q=0.9, en;q=0.8")).toBe("fr");
     expect(pickLocale("zh-Hans-CN")).toBe("zh-CN");
-    expect(pickLocale("de, it;q=0.5")).toBe("en");
+    expect(pickLocale("tlh, tlh-x;q=0.5")).toBe("en");
     expect(pickLocale(null)).toBe("en");
   });
 });
@@ -61,7 +61,7 @@ describe("public pages", () => {
     expect(seen(html)).toContain(esc(catalogs.fr!["plat.h1"]!));
   });
   test("an unsupported language falls back to the source locale", async () => {
-    const { html } = await get("/", "de");
+    const { html } = await get("/", "tlh");
     expect(html).toContain('<html lang="en"');
   });
   test("not found is localized", async () => {
