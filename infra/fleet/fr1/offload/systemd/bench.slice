@@ -1,0 +1,10 @@
+[Unit]
+Description=Benchmarks (fleet-run -c bench): weakest slice, capped at 4 cores
+
+[Slice]
+CPUWeight=10
+IOWeight=10
+CPUQuota=400%
+MemoryHigh=10G
+MemoryMax=14G
+TasksMax=4096

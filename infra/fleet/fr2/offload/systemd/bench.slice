@@ -1,0 +1,10 @@
+[Unit]
+Description=Benchmarks (fleet-run -c bench): capped at 3 of 6 cores
+
+[Slice]
+CPUWeight=10
+IOWeight=10
+CPUQuota=300%
+MemoryHigh=5G
+MemoryMax=7G
+TasksMax=4096

@@ -1,0 +1,8 @@
+[Unit]
+Description=Agent jobs (fleet-run -c agent|test|lint|research)
+
+[Slice]
+CPUWeight=50
+IOWeight=50
+MemoryHigh=24G
+TasksMax=8192

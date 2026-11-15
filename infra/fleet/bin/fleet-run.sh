@@ -1,0 +1,81 @@
+#!/bin/bash
+# Least-loaded job dispatcher + cgroup isolation for fleet hosts (docs/infra/FLEET-OFFLOAD.md).
+#   fleet-run [-c class] [-H fr1|fr2|auto] [-C dir] [-n] [--] cmd args...
+# class   agent (default), test, lint, research -> agents.slice ; bench -> bench.slice ; build -> build.slice (fr1 only)
+# Placement: PSI of the candidate hosts (cpu some avg10/avg60, io some avg10, memory some avg10) read live, lowest score wins;
+#   the local host keeps the job unless a peer is lower by HYST points (default 12). build never leaves fr1.
+#   A peer is skipped when its root has < MINFREE_GB free (default 8) or when -C dir does not exist there.
+# Isolation: the job runs in `systemd-run --scope --slice=<slice>` as the calling user: slice weights (CPU/IO) keep nativelink,
+#   haproxy, nginx and cloudflared responsive, whatever the job does. Exit status is the job's.
+# Config: /etc/fleet/run.conf (PEERS="fr2=ubuntu@10.200.77.3"), written from infra/fleet/<host>/offload/run.conf.
+set -u
+class=agent host=auto dir=$PWD dry=0 local=0
+while [ $# -gt 0 ]; do
+  case $1 in
+    -c) class=$2; shift 2;; -H) host=$2; shift 2;; -C) dir=$2; shift 2;; -n) dry=1; shift;;
+    --local) local=1; shift;; --) shift; break;; -*) echo "fleet-run: unknown option $1" >&2; exit 64;; *) break;;
+  esac
+done
+[ $# -gt 0 ] || { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit 64; }
+role=$(tail -n 1 /etc/aphrody/role 2>/dev/null || echo unknown)
+PEERS=""; HYST=${HYST:-12}; MINFREE_GB=${MINFREE_GB:-8}
+[ -f /etc/fleet/run.conf ] && . /etc/fleet/run.conf
+case $class in
+  build) slice=build.slice;; bench) slice=bench.slice;; agent|test|lint|research) slice=agents.slice;;
+  *) echo "fleet-run: class must be agent|test|lint|research|bench|build" >&2; exit 64;;
+esac
+
+psi() { # psi <spec> -> "score cpu10 cpu60 io10 mem10 freeGB"; spec = local | ssh target
+  local cmd='for f in cpu io memory; do awk "/^some/{print \$2,\$3}" /proc/pressure/$f; done; df --output=avail -BG / | tail -n 1'
+  if [ "$1" = local ]; then bash -c "$cmd"; else timeout 8 ssh -o BatchMode=yes -o ConnectTimeout=4 "$1" "$cmd" 2>/dev/null; fi |
+  awk '{gsub(/[a-z0-9]+=/,"");gsub(/G/,"")} {v[NR]=$0}
+       END{ split(v[1],c," "); split(v[2],i," "); split(v[3],m," "); f=v[4]+0;
+            if(NR<4){exit 1}
+            printf "%.1f %s %s %s %s %d\n", 0.5*c[1]+0.3*c[2]+0.5*i[1]+2*m[1], c[1], c[2], i[1], m[1], f }'
+}
+
+run_local() {
+  # the scope needs root to join a system slice; the job still runs as the caller (--uid/--gid) with the caller's environment
+  if [ "$(id -u)" = 0 ]; then pre=(); else pre=(sudo -n -E); fi
+  exec "${pre[@]}" systemd-run --scope --quiet --collect --slice="$slice" --uid="$(id -u)" --gid="$(id -g)" -- \
+    env -C "$dir" "$@"
+}
+[ "$local" = 1 ] && run_local "$@"
+
+declare -A SC
+best=local; read -r s0 c1 c2 i1 m1 f0 < <(psi local) || { s0=0; c1=0; c2=0; i1=0; m1=0; f0=99; }
+SC[local]="$s0 cpu10=$c1 cpu60=$c2 io10=$i1 mem10=$m1"
+myname=$role
+cands=()
+if [ "$class" != build ]; then
+  for p in $PEERS; do
+    name=${p%%=*}; tgt=${p#*=}
+    [ "$host" != auto ] && [ "$host" != "$name" ] && continue
+    cands+=("$name=$tgt")
+  done
+fi
+[ "$host" != auto ] && [ "$host" != "$myname" ] && best=none
+bscore=$s0
+[ "$host" != auto ] && [ "$host" != "$myname" ] && bscore=1000
+btgt=local
+for cnd in "${cands[@]:-}"; do
+  [ -n "$cnd" ] || continue
+  name=${cnd%%=*}; tgt=${cnd#*=}
+  out=$(psi "$tgt") || { SC[$name]="unreachable"; continue; }
+  read -r s c1x c2x i1x m1x fx <<<"$out"
+  SC[$name]="$s cpu10=$c1x cpu60=$c2x io10=$i1x mem10=$m1x free=${fx}G"
+  [ "$fx" -lt "$MINFREE_GB" ] && { SC[$name]+=" (skipped: disk)"; continue; }
+  ssh -o BatchMode=yes -o ConnectTimeout=4 "$tgt" "test -d '$dir'" 2>/dev/null || { SC[$name]+=" (skipped: no $dir)"; continue; }
+  if [ "$host" != auto ] && [ "$host" = "$name" ]; then btgt=$tgt; best=$name; bscore=-1; continue; fi
+  # peer must beat the local score by HYST
+  if awk -v a="$s" -v b="$bscore" -v h="$HYST" 'BEGIN{exit !(a+h<b)}'; then btgt=$tgt; best=$name; bscore=$s; fi
+done
+if [ "$host" != auto ] && [ "$host" != "$myname" ] && [ "$btgt" = local ]; then
+  echo "fleet-run: host $host unreachable or unsuitable (${SC[$host]:-unknown})" >&2; exit 69
+fi
+[ "$best" = local ] && best=$myname
+{ echo -n "fleet-run: class=$class -> $best  ["; for k in "${!SC[@]}"; do echo -n " $k: ${SC[$k]};"; done; echo " ]"; } >&2
+[ "$dry" = 1 ] && exit 0
+if [ "$btgt" = local ]; then run_local "$@"; fi
+q=$(printf '%q ' "$@")
+exec ssh -o BatchMode=yes "$btgt" "fleet-run --local -c $class -C $(printf '%q' "$dir") -- $q"

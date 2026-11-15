@@ -17,7 +17,7 @@ t=$(date +%s)
     fi
     cp=$(awk '$1=="some"{split($5,a,"=");print a[2]}' "${d}cpu.pressure" 2>/dev/null)
     ip=$(awk '$1=="some"{split($5,a,"=");print a[2]}' "${d}io.pressure" 2>/dev/null)
-    mem=$(<"${d}memory.current" 2>/dev/null)
+    mem=0; [ -r "${d}memory.current" ] && read -r mem <"${d}memory.current"
     np=$(wc -l <"${d}cgroup.procs" 2>/dev/null)
     n=${d#"$root"}; n=${n%/}; [ -n "$n" ] || n=/
     printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$t" "$n" "${cpu:-0}" "$rb" "$wb" "${cp:-0}" "${ip:-0}" "${mem:-0}" "${np:-0}"
