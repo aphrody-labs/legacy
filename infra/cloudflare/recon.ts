@@ -1,4 +1,4 @@
-// Read-only inventory of the Cloudflare account (docs/replica/recon/cloudflare.md). GET requests only, no secret printed.
+// Read-only inventory of the Cloudflare account. GET requests only, no secret printed.
 //   CF_AUTH=oauth bun infra/cloudflare/recon.ts <out-dir>     writes one JSON file per resource into <out-dir>
 // EU-jurisdiction R2 buckets need the cf-r2-jurisdiction header: cf r2 buckets list --cf-r2-jurisdiction eu.
 // Output dir defaults to $TEMP/cf-recon (raw API dumps stay out of the repo).

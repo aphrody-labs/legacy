@@ -24,7 +24,6 @@
     ".agents/skills/gemini-omni-flash-api/SKILL.md",
     ".agents/skills/stitch-design-md/examples/DESIGN.md",
     "docs/native/linux-kernel-story/mdx/13-upstream-live-releases-git-and-distro-deployments.mdx",
-    "docs/research/RUST_6_ORGS_FUSION_INVENTORY.md",
     "src/runtime/cli/add_completions.txt"
   ],
   "hardcoded-list": [
