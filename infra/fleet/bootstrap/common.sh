@@ -57,6 +57,8 @@ install_archive_bin() {
   rm -rf "$tmp"
   # Purge stale per-user copies that would shadow the pinned one on PATH.
   for old in "$HOME/.cargo/bin/$dest" "$HOME/.local/bin/$dest"; do [ -e "$old" ] && rm -f "$old" && log "purged $old"; done
+  # A cargo config naming the purged copy by absolute path (fr1: rustc-wrapper) would break every cargo call: use the PATH name.
+  [ "$dest" = sccache ] && [ -f "$HOME/.cargo/config.toml" ] && sed -i 's#^rustc-wrapper *= *"[^"]*/sccache"#rustc-wrapper = "sccache"#' "$HOME/.cargo/config.toml"
   log "$tool -> $BIN/$dest"
 }
 
