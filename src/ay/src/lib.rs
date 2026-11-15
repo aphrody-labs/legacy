@@ -17,6 +17,7 @@ pub mod electron;
 mod exec;
 pub mod index;
 pub mod low;
+pub mod plugin;
 pub mod self_update;
 pub mod sh;
 pub mod ui;
@@ -133,6 +134,9 @@ pub enum Cmd {
     /// Embedded Bash 5.3 engine (rubash): `-c CMD`, a script file, or stdin; no external bash needed
     #[command(disable_help_flag = true)]
     Sh(Rest),
+    /// Plugin surface read by the Bun and niu hosts (packages/omniu): `manifest` (JSON), `names`
+    #[command(disable_help_flag = true)]
+    Plugin(Rest),
     /// gclient in Rust: revinfo, getdep, setdep, sync (gitoxide), hooks, root
     #[command(disable_help_flag = true)]
     Gclient(Rest),
@@ -249,6 +253,7 @@ pub enum Route {
     Index(Vec<String>),
     Rt(Vec<String>),
     Sh(Vec<String>),
+    Plugin(Vec<String>),
     Chromium(chromium::Tool, Vec<String>),
     Build(build::BuildArgs),
     Sys(SysArgs),
@@ -335,6 +340,7 @@ pub fn route(cmd: Cmd) -> Route {
         Cmd::Brand(r) => Route::External("aphrody-brand", r.args),
         Cmd::Rt(r) => Route::Rt(r.args),
         Cmd::Sh(r) => Route::Sh(r.args),
+        Cmd::Plugin(r) => Route::Plugin(r.args),
         Cmd::Gclient(r) => Route::Chromium(chromium::Tool::Gclient, r.args),
         Cmd::Fetch(r) => Route::Chromium(chromium::Tool::Fetch, r.args),
         Cmd::Vpy(r) => Route::Chromium(chromium::Tool::Vpy, r.args),
@@ -399,6 +405,7 @@ fn run_route(route: Route) -> i32 {
         Route::Index(args) => index::run(&args),
         Route::Rt(args) => rt::run("ay rt", &args),
         Route::Sh(args) => sh::run(&args),
+        Route::Plugin(args) => plugin::run(&args),
         Route::Chromium(tool, args) => chromium::run(tool, &args),
         Route::Build(args) => build::run(args),
         Route::Sys(args) => run_sys(args),
