@@ -165,7 +165,10 @@ pub fn expand_tokens(text: &str) -> String {
     while let Some(i) = rest.find("@@") {
         out.push_str(&rest[..i]);
         let after = &rest[i + 2..];
-        let Some(j) = after.find("@@") else { break };
+        let Some(j) = after.find("@@") else {
+            out.push_str(&rest[i..]);
+            return out;
+        };
         let key = &after[..j];
         match token_value(key) {
             Some(v) => out.push_str(&v),
