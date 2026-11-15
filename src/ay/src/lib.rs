@@ -171,7 +171,7 @@ pub enum Cmd {
     /// Vault (docs/infra/VAULT.md): init, add, import-chrome-csv, export-chrome-csv, sync, status, rotate, hosts
     #[command(disable_help_flag = true)]
     Vault(Rest),
-    /// Conformance suites: [--fetch] [suite...] writes conformance/results/; `channels [platform]` refreshes Chrome pins
+    /// Conformance suites: [--fetch] [suite...] writes test/conformance/results/; `channels [platform]` refreshes Chrome pins
     #[command(disable_help_flag = true)]
     Conformance(Rest),
     /// Build the workspace for a cross-compilation preset (--list shows toolchain status)

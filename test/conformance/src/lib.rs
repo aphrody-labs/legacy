@@ -1,5 +1,5 @@
-//! Conformance harness: reads `conformance/upstreams.toml`, fetches each pinned
-//! upstream as a `gh` tarball (no git), and writes `conformance/results/<suite>.json`.
+//! Conformance harness: reads `test/conformance/upstreams.toml`, fetches each pinned
+//! upstream as a `gh` tarball (no git), and writes `test/conformance/results/<suite>.json`.
 //! M0: no runner exists yet, so every suite reports `total = 0` (docs/ROADMAP.md).
 
 pub mod channels;
@@ -75,7 +75,7 @@ impl Pins {
     }
 
     pub fn load(root: &Path) -> Result<Self, String> {
-        let p = root.join("conformance/upstreams.toml");
+        let p = root.join("test/conformance/upstreams.toml");
         let src = std::fs::read_to_string(&p).map_err(|e| format!("{}: {e}", p.display()))?;
         Self::parse(&src)
     }
@@ -100,10 +100,10 @@ fn run_cmd(cmd: &mut Command) -> Result<Vec<u8>, String> {
 }
 
 /// Download the suite's upstream tarball at its pinned commit with `gh` (no git)
-/// and extract only the suite paths into `conformance/upstream/<suite>/`.
+/// and extract only the suite paths into `test/conformance/upstream/<suite>/`.
 pub fn fetch(root: &Path, pins: &Pins, suite: &Suite) -> Result<PathBuf, String> {
     let up = &pins.upstream[&suite.upstream];
-    let base = root.join("conformance/upstream");
+    let base = root.join("test/conformance/upstream");
     let dir = base.join(&suite.id);
     let stamp = dir.join(".commit");
     if std::fs::read_to_string(&stamp).is_ok_and(|s| s.trim() == up.commit) {
@@ -161,7 +161,7 @@ pub fn run(root: &Path, pins: &Pins, suite: &Suite, target: &str) -> SuiteResult
 }
 
 pub fn write_result(root: &Path, r: &SuiteResult) -> Result<PathBuf, String> {
-    let dir = root.join("conformance/results");
+    let dir = root.join("test/conformance/results");
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let p = dir.join(format!("{}.json", r.suite));
     let json = serde_json::to_string_pretty(r).map_err(|e| e.to_string())?;
@@ -183,7 +183,7 @@ mod tests {
         assert_eq!(pins.suite.len(), 11);
         for s in &pins.suite {
             assert!(!s.paths.is_empty(), "{}", s.id);
-            let exp = repo_root().join(format!("conformance/expected/{}.txt", s.id));
+            let exp = repo_root().join(format!("test/conformance/expected/{}.txt", s.id));
             assert!(exp.exists(), "missing {}", exp.display());
         }
     }

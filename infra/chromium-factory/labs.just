@@ -20,7 +20,7 @@ lab-iter:
 lab-dev *args:
     cargo run -p aphrody -- {{args}}
 
-# Conformance suites (writes conformance/results/).
+# Conformance suites (writes test/conformance/results/).
 [group('labs')]
 lab-conformance *suites:
     cargo run -p aphrody -- conformance --fetch {{suites}}

@@ -45,9 +45,8 @@ graphify-out/
 !/completions/
 !/third_party/
 !/plugins/
-!/conformance/
-/conformance/upstream/
-/conformance/results/
+/test/conformance/upstream/
+/test/conformance/results/
 !/rust-toolchain.toml
 !/.gitignore
 !/.gitattributes

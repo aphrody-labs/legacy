@@ -23,7 +23,7 @@ Règle : chaque build LLVM se compare à une baseline, soit le même commit comp
 
 ## Reproductibilité
 
-- Pins : commit de chaque dépôt et CLANG_REVISION dans `conformance/upstreams.toml` ; toolchain posée par `ay toolchain` et vérifiée au b3sum.
+- Pins : commit de chaque dépôt et CLANG_REVISION dans `test/conformance/upstreams.toml` ; toolchain posée par `ay toolchain` et vérifiée au b3sum.
 - Environnement : version du SLR sniper, Mesa et pilote GPU épinglés ; `WINEPREFIX` neuf à chaque run ; `SOURCE_DATE_EPOCH` fixé.
 - Résultats : un JSON par run (commits, toolchain, noyau, GPU, verdict de chaque test, FPS) envoyé sur R2, puis diffé contre la baseline par `test/conformance`.
 - Un verdict compte seulement s'il ressort identique sur deux runs.

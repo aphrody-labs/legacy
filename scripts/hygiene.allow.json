@@ -54,7 +54,7 @@
     "packages/ai-os/src/core/sandbox.ts",
     "packages/ai-os/src/core/skill-lint.ts",
     "infra/upstream/**",
-    "conformance/upstreams.toml",
+    "test/conformance/upstreams.toml",
     "tools/factory/configs/shenron.toml",
     "docs/design/replica/**",
     "docs/replica/**",
