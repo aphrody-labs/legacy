@@ -5,6 +5,11 @@
 vcs *args:
     bun run "{{root}}/scripts/vcs.ts" {{args}}
 
+# Hardcode and slop scan of the tracked tree (rules: scripts/hygiene.ts; --summary | --rule id | --json)
+[group('gates')]
+hygiene *args:
+    bun "{{root}}/scripts/hygiene.ts" {{args}}
+
 # identity.toml gate / rewrite / lookup (check | apply | get <key>)
 [group('gates')]
 identity cmd="check" *args:

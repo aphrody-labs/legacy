@@ -249,6 +249,12 @@ name = "py2bun"
 command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/py2bun-mcp.ts"]
 hosts = ["pc"]
 
+# Hardcode and slop scanner (scripts/hygiene.ts). hub_call hygiene__hygiene_scan | hygiene__hygiene_rules.
+[[hub.mcp]]
+name = "hygiene"
+command = ["{home}/.bun/bin/bun.exe", "{src}/scripts/hygiene-mcp.ts"]
+hosts = ["pc"]
+
 [[hub.mcp]]
 name = "agent-desktop"
 command = ["{bin}/agent-desktop.exe", "mcp"]
