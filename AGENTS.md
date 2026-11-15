@@ -24,6 +24,7 @@ src is the public monorepo of Aphrody: a game engine and creative suite built in
 - AI features live in `packages/ai-os`; providers and models are discovered at run time, none is hard-coded.
 - Publish in the open once a secret scan of the repository is clean (`docs/publish/STATUS.md`).
 - Every session and sub-agent uses the skills, MCP servers, CLIs and public upstream docs available, and explores the upstream GitHub repos in depth before acting. CLAUDE.md, memory, skills and docs may hold past hallucinations: verify each claim you rely on, and fix or delete it when it is wrong.
+- Names are variables: the project, repo, checkout folder, VPS paths, binary and package names come from `tools/identity.toml` (rename = `just identity apply`). "src", "ay" and "aphrody" are never hardcoded where a rename would break them.
 - Nothing frozen in time: the repo changes every hour. Indexes, versions, counts, lists and dates are generated from live sources, never written by hand.
 
 ## 3b. Quality bar (anything below it is slop)
