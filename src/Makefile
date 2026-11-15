@@ -68,7 +68,7 @@ hct-test:
 router:
 	mkdir -p $(OUT_DIR)
 	$(CC) -std=c11 -D_POSIX_C_SOURCE=200809L -O2 -Wall -Wextra -Werror -fPIC -flto=thin -fuse-ld=lld -shared \
-		router/router.c -o $(OUT_DIR)/libayrouter.so
+		router/router.c -ldl -o $(OUT_DIR)/libayrouter.so
 	$(CC) -std=c11 -D_POSIX_C_SOURCE=200809L -O2 -Wall -Wextra -Werror -fuse-ld=lld router/ay-router.c \
 		-L$(OUT_DIR) -layrouter -Wl,-rpath,'$$ORIGIN' -o $(OUT_DIR)/ay-router
 
@@ -80,9 +80,9 @@ HOST_SDK := $(if $(filter Windows_NT,$(OS)),-Xmicrosoft-windows-sdk-version $(WI
 router-windows:
 	mkdir -p $(OUT_DIR)
 	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=c11 -O2 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS \
-		-flto=thin -fuse-ld=lld -shared router/router.c -lws2_32 -o $(OUT_DIR)/ayrouter.dll
+		-flto=thin -fuse-ld=lld -shared router/router.c -lws2_32 -lwinhttp -o $(OUT_DIR)/ayrouter.dll
 	$(CC) -Xmicrosoft-windows-sdk-version $(WINSDK) -std=c11 -O2 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS \
-		-fuse-ld=lld router/ay-router.c router/router.c -lws2_32 -o $(OUT_DIR)/ay-router.exe
+		-fuse-ld=lld router/ay-router.c router/router.c -lws2_32 -lwinhttp -o $(OUT_DIR)/ay-router.exe
 
 windows:
 	mkdir -p $(OUT_DIR)

@@ -28,6 +28,7 @@ struct ay_router {
 	char host[256];
 	char port[8];
 	char auth[512];
+	int tls;
 };
 
 unsigned ay_router_abi_version(void)
@@ -39,6 +40,16 @@ struct ay_router *ay_router_open(const char *host, unsigned short port, const ch
 {
 	struct ay_router *r;
 
+	int tls = 0;
+
+	if (host && !strncmp(host, "https://", 8)) {
+		host += 8;
+		tls = 1;
+		if (!port)
+			port = 443;
+	} else if (host && !strncmp(host, "http://", 7)) {
+		host += 7;
+	}
 	if (!host || !*host || strlen(host) >= sizeof(r->host) || !port)
 		return NULL;
 	if (api_key && strlen(api_key) >= sizeof(r->auth) - 32)
@@ -54,6 +65,7 @@ struct ay_router *ay_router_open(const char *host, unsigned short port, const ch
 	if (!r)
 		return NULL;
 	strcpy(r->host, host);
+	r->tls = tls;
 	snprintf(r->port, sizeof(r->port), "%u", port);
 	if (api_key && *api_key)
 		snprintf(r->auth, sizeof(r->auth), "Authorization: Bearer %s\r\n", api_key);
@@ -126,6 +138,146 @@ static size_t dechunk(char *body, size_t len)
 	return out;
 }
 
+/* HTTPS through the OS TLS stack: WinHTTP on Windows, libcurl (dlopen at run time, no link dependency)
+ * elsewhere. Same contract as the plain-socket path: status or AY_ROUTER_E*, body NUL terminated. */
+#if defined(_WIN32)
+#include <winhttp.h>
+
+static int tls_request(struct ay_router *r, const char *method, const char *path, const char *body,
+		       char *out, size_t cap)
+{
+	wchar_t whost[256], wpath[1024], wmethod[16], whdr[640];
+	HINTERNET s = NULL, c = NULL, q = NULL;
+	DWORD status = 0, len = sizeof(status), got = 0;
+	size_t used = 0;
+	int rc = AY_ROUTER_EIO;
+
+	if (!MultiByteToWideChar(CP_UTF8, 0, r->host, -1, whost, 256) ||
+	    !MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, 1024) ||
+	    !MultiByteToWideChar(CP_UTF8, 0, method, -1, wmethod, 16))
+		return AY_ROUTER_EINVAL;
+	char hdr[640];
+	snprintf(hdr, sizeof(hdr), "%sContent-Type: application/json\r\nAccept: application/json\r\n", r->auth);
+	MultiByteToWideChar(CP_UTF8, 0, hdr, -1, whdr, 640);
+	SecureZeroMemory(hdr, sizeof(hdr));
+	s = WinHttpOpen(L"ay-router/1", WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+	if (!s)
+		goto done;
+	c = WinHttpConnect(s, whost, (INTERNET_PORT)atoi(r->port), 0);
+	if (!c) {
+		rc = AY_ROUTER_ECONNECT;
+		goto done;
+	}
+	q = WinHttpOpenRequest(c, wmethod, wpath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+	if (!q)
+		goto done;
+	DWORD blen = body ? (DWORD)strlen(body) : 0;
+	if (!WinHttpSendRequest(q, whdr, (DWORD)-1L, (LPVOID)body, blen, blen, 0) || !WinHttpReceiveResponse(q, NULL)) {
+		rc = AY_ROUTER_ECONNECT;
+		goto done;
+	}
+	WinHttpQueryHeaders(q, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &status, &len, WINHTTP_NO_HEADER_INDEX);
+	rc = (int)status;
+	for (;;) {
+		if (used + 1 >= cap) {
+			rc = AY_ROUTER_ETRUNC;
+			break;
+		}
+		if (!WinHttpReadData(q, out + used, (DWORD)(cap - used - 1), &got)) {
+			rc = AY_ROUTER_EIO;
+			break;
+		}
+		if (!got)
+			break;
+		used += got;
+	}
+	out[used] = 0;
+done:
+	SecureZeroMemory(whdr, sizeof(whdr));
+	if (q) WinHttpCloseHandle(q);
+	if (c) WinHttpCloseHandle(c);
+	if (s) WinHttpCloseHandle(s);
+	return rc;
+}
+#else
+#include <dlfcn.h>
+
+struct sink { char *p; size_t cap, used; int trunc; };
+
+static size_t sink_write(char *ptr, size_t size, size_t n, void *ud)
+{
+	struct sink *k = ud;
+	size_t m = size * n, room = k->cap - 1 - k->used;
+	if (m > room) {
+		k->trunc = 1;
+		m = room;
+	}
+	memcpy(k->p + k->used, ptr, m);
+	k->used += m;
+	return size * n;
+}
+
+/* libcurl ABI: stable since 7.x (CURLOPT_* numbers are part of the ABI) */
+#define C_URL 10002
+#define C_POSTFIELDS 10015
+#define C_HTTPHEADER 10023
+#define C_CUSTOMREQUEST 10036
+#define C_WRITEFUNCTION 20011
+#define C_WRITEDATA 10001
+#define C_TIMEOUT 13
+#define C_INFO_RESPONSE_CODE 0x200002
+
+static int tls_request(struct ay_router *r, const char *method, const char *path, const char *body,
+		       char *out, size_t cap)
+{
+	static void *lib;
+	if (!lib)
+		lib = dlopen("libcurl.so.4", RTLD_NOW);
+	if (!lib)
+		lib = dlopen("libcurl.4.dylib", RTLD_NOW);
+	if (!lib)
+		return AY_ROUTER_ECONNECT;
+	void *(*init)(void) = (void *(*)(void))dlsym(lib, "curl_easy_init");
+	int (*setopt)(void *, int, ...) = (int (*)(void *, int, ...))dlsym(lib, "curl_easy_setopt");
+	int (*perform)(void *) = (int (*)(void *))dlsym(lib, "curl_easy_perform");
+	int (*getinfo)(void *, int, ...) = (int (*)(void *, int, ...))dlsym(lib, "curl_easy_getinfo");
+	void (*cleanup)(void *) = (void (*)(void *))dlsym(lib, "curl_easy_cleanup");
+	void *(*append)(void *, const char *) = (void *(*)(void *, const char *))dlsym(lib, "curl_slist_append");
+	void (*freeall)(void *) = (void (*)(void *))dlsym(lib, "curl_slist_free_all");
+	if (!init || !setopt || !perform || !getinfo || !cleanup || !append || !freeall)
+		return AY_ROUTER_ECONNECT;
+	char url[1400], auth[512];
+	snprintf(url, sizeof(url), "https://%s:%s%s", r->host, r->port, path);
+	void *h = init(), *hl = NULL;
+	if (!h)
+		return AY_ROUTER_ENOMEM;
+	if (r->auth[0]) {
+		snprintf(auth, sizeof(auth), "%.*s", (int)(strlen(r->auth) - 2), r->auth);
+		hl = append(hl, auth);
+		memset(auth, 0, sizeof(auth));
+	}
+	hl = append(hl, "Content-Type: application/json");
+	struct sink k = { out, cap, 0, 0 };
+	setopt(h, C_URL, url);
+	setopt(h, C_HTTPHEADER, hl);
+	setopt(h, C_CUSTOMREQUEST, method);
+	if (body)
+		setopt(h, C_POSTFIELDS, body);
+	setopt(h, C_WRITEFUNCTION, sink_write);
+	setopt(h, C_WRITEDATA, &k);
+	setopt(h, C_TIMEOUT, 120L);
+	int ok = perform(h);
+	long status = 0;
+	getinfo(h, C_INFO_RESPONSE_CODE, &status);
+	cleanup(h);
+	freeall(hl);
+	out[k.used] = 0;
+	if (ok)
+		return AY_ROUTER_ECONNECT;
+	return k.trunc ? AY_ROUTER_ETRUNC : (int)status;
+}
+#endif
+
 int ay_router_request(struct ay_router *r, const char *method, const char *path, const char *json_body,
 		      char *out, size_t cap)
 {
@@ -136,6 +288,8 @@ int ay_router_request(struct ay_router *r, const char *method, const char *path,
 
 	if (!r || !method || !path || !out || cap < 2)
 		return AY_ROUTER_EINVAL;
+	if (r->tls)
+		return tls_request(r, method, path, json_body, out, cap);
 	hlen = (size_t)snprintf(head, sizeof(head),
 				"%s %s HTTP/1.1\r\nHost: %s:%s\r\nUser-Agent: ay-router/1\r\n"
 				"Accept: application/json\r\nConnection: close\r\n%s"

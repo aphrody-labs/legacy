@@ -4,7 +4,7 @@
  *
  * The router is an OpenAI- and Anthropic-compatible HTTP service (relay `/v1/chat/completions`,
  * `/v1/messages`, `/v1/models`) that walks every discovered provider offer with failover. This ABI
- * is the portable client: plain C11 over BSD sockets / Winsock, no TLS, no allocator of its own.
+ * is the portable client: plain C11 over BSD sockets / Winsock, HTTPS through the OS TLS stack.
  * Every language with a C FFI (Rust, Zig, Bun ffi, Swift, Kotlin/JNI, C#, Python ctypes) and every
  * surface (CLI, TUI, GUI, mobile, serverless sidecar) reaches the router through these five calls.
  * TLS endpoints are reached through a local relay or sidecar (the relay terminates TLS upstream).
@@ -38,7 +38,7 @@ struct ay_router;
 /* Version of this ABI (AY_ROUTER_ABI). */
 AY_ROUTER_API unsigned ay_router_abi_version(void);
 
-/* Opens a client for http://host:port. api_key may be NULL (sent as `Authorization: Bearer`).
+/* Opens a client for host:port; host may carry "https://" (TLS through WinHTTP on Windows, libcurl loaded at run time elsewhere; port 0 = 443) or "http://". api_key may be NULL (sent as `Authorization: Bearer`).
  * Returns NULL on bad arguments or allocation failure. */
 AY_ROUTER_API struct ay_router *ay_router_open(const char *host, unsigned short port, const char *api_key);
 

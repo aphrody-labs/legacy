@@ -3,7 +3,7 @@
  * ay-router: CLI over the router C ABI.
  *   ay-router models
  *   ay-router chat [model] "<prompt>"
- * Env: AY_ROUTER_HOST (127.0.0.1), AY_ROUTER_PORT (8790), AY_ROUTER_KEY (optional bearer).
+ * Env: AY_ROUTER_HOST (127.0.0.1, or https://router.aphrody.com), AY_ROUTER_PORT (8790; 0 with https = 443), AY_ROUTER_KEY (optional bearer).
  */
 #include "../include/ay/router.h"
 
@@ -29,7 +29,8 @@ int main(int argc, char **argv)
 		fprintf(stderr, "usage: ay-router models | ay-router chat [model] \"<prompt>\"\n");
 		return 2;
 	}
-	r = ay_router_open(env("AY_ROUTER_HOST", "127.0.0.1"), (unsigned short)atoi(env("AY_ROUTER_PORT", "8790")),
+	const char *host = env("AY_ROUTER_HOST", "127.0.0.1");
+	r = ay_router_open(host, (unsigned short)atoi(env("AY_ROUTER_PORT", strncmp(host, "https://", 8) ? "8790" : "0")),
 			   getenv("AY_ROUTER_KEY"));
 	if (!r) {
 		fprintf(stderr, "ay-router: bad host/port\n");
