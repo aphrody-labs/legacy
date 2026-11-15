@@ -1,4 +1,4 @@
-// Context7 v2 docs client (from legacy knowledge-engine/src/context7/client.ts, trimmed). CONTEXT7_API_KEY optional.
+// Context7 v2 docs client. Key: CTX7_API_KEY (vault name), or upstream's CONTEXT7_API_KEY; optional.
 import { tool } from "../llm/generate";
 import { s } from "../llm/schema";
 
@@ -6,8 +6,8 @@ export const CONTEXT7_BASE = "https://context7.com/api/v2";
 
 function headers() {
   const h: Record<string, string> = { accept: "application/json, text/plain" };
-  if (Bun.env.CONTEXT7_API_KEY)
-    h.authorization = `Bearer ${Bun.env.CONTEXT7_API_KEY}`;
+  const key = Bun.env.CTX7_API_KEY || Bun.env.CONTEXT7_API_KEY;
+  if (key) h.authorization = `Bearer ${key}`;
   return h;
 }
 
