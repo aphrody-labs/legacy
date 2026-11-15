@@ -163,10 +163,12 @@ fn install_archive(
         Layout::Bin => {
             for bin in &tool.bin {
                 let exe = exe_name(bin);
+                // `pick`: the archive names the file differently from the executable it becomes.
+                let wanted = tool.pick.get(&format!("{bin}@{platform}")).or_else(|| tool.pick.get(bin)).cloned().unwrap_or_else(|| exe.clone());
                 let entry = if archive::kind_of(&file_name) == archive::Kind::Raw {
                     entries.first()
                 } else {
-                    archive::find_executable(&entries, &exe)
+                    archive::find_executable(&entries, &wanted)
                 };
                 let entry = entry.ok_or_else(|| format!("{file_name}: no {exe} inside"))?;
                 let dest = bin_dir.join(&exe);
