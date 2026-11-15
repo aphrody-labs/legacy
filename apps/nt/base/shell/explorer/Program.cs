@@ -1,6 +1,6 @@
-// Coque WinUI 3 de nt : fenêtre Mica, barre de titre étendue, NavigationView Fluent (noyau 3D, bureau SVG, index),
-// WebView2 (Chromium Edge, WebGPU) pour la scène GPU servie par src/host/server.ts. F11 : plein écran.
-// URL du serveur : NT_URL (défaut http://localhost:8787/).
+// nt WinUI 3 shell: Mica window, extended title bar, Fluent NavigationView (3D kernel, SVG desktop, index),
+// WebView2 (Chromium Edge, WebGPU) for the GPU scene served by src/host/server.ts. F11: full screen.
+// Server URL: NT_URL (default http://localhost:8787/).
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -42,9 +42,9 @@ public sealed partial class NtApplication : Application
         (string label, Symbol icon, string path)[] pages =
         [
             ("Noyau NT en 3D", Symbol.World, ""),
-            ("Bureau vectorisé (SVG)", Symbol.Pictures, "desktop.svg"),
+            ("Vectorized desktop (SVG)", Symbol.Pictures, "desktop.svg"),
             ("Index C:\\Windows", Symbol.Find, "api/index/stats"),
-            ("Pile Microsoft prouvée (msindex)", Symbol.Library, "api/msindex/stats"),
+            ("Proven Microsoft stack (msindex)", Symbol.Library, "api/msindex/stats"),
         ];
         foreach (var (label, icon, path) in pages)
             nav.MenuItems.Add(new NavigationViewItem { Content = label, Icon = new SymbolIcon(icon), Tag = path });

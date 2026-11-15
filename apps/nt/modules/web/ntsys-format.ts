@@ -1,5 +1,5 @@
-// Format partagé (serveur bun + navigateur) de la trame du noyau NT : aucune dépendance native.
-// Énumérations KTHREAD_STATE / KWAIT_REASON : winsiderss/phnt @53fbbdc5 ntkeapi.h.
+// Shared format (bun server + browser) of the NT kernel frame: no native dependency.
+// KTHREAD_STATE / KWAIT_REASON enumerations: winsiderss/phnt @53fbbdc5 ntkeapi.h.
 export const THREAD_STATE = [
   "Initialized",
   "Ready",
@@ -59,7 +59,7 @@ export const WAIT_REASON = [
 ];
 
 // --- Trame rapide -------------------------------------------------------------------------------------------
-// En-tête : 8 mots u32 (magic, ncpu, nproc, nthread, namesVersion, 0, tMs f64) puis 16 f32 de compteurs globaux.
+// Header: 8 u32 words (magic, ncpu, nproc, nthread, namesVersion, 0, tMs f64) then 16 f32 global counters.
 // CPU : ncpu x 8 f32. Processus : nproc x 12 mots. Threads : nthread x 4 mots. Petit-boutiste.
 export const FRAME = {
   header: 8,

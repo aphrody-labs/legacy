@@ -1,4 +1,4 @@
-// Assertions communes aux deux chemins (NativeAOT, CoreCLR hébergé) : faits réels de l'hôte comparés à node:os.
+// Assertions common to both paths (NativeAOT, hosted CoreCLR): real host facts compared with node:os.
 import { expect, test } from "bun:test";
 import { hostname } from "node:os";
 import type { Api, Bindings } from "./interop.ts";
@@ -8,10 +8,10 @@ export function sharedChecks(
   get: () => { b: Bindings; api: Api },
   aot: boolean,
 ) {
-  test(`${name} : arithmétique et entiers 64 bits`, () => {
+  test(`${name}: arithmetic and 64-bit integers`, () => {
     const { api } = get();
     expect(api.add(2, 3)).toBe(5);
-    expect(api.add(2 ** 31 - 1, 1)).toBe(-(2 ** 31)); // débordement int32 de C#
+    expect(api.add(2 ** 31 - 1, 1)).toBe(-(2 ** 31)); // C# int32 overflow
     expect(api.noop()).toBeUndefined();
     expect(typeof api.tickCount()).toBe("bigint");
     expect(api.tickCount()).toBeGreaterThan(0n);
@@ -43,7 +43,7 @@ export function sharedChecks(
     );
   });
 
-  test(`${name} : chaînes UTF-16/UTF-8 (entrée, tampons de sortie, agrandissement)`, () => {
+  test(`${name}: UTF-16/UTF-8 strings (input, output buffers, growth)`, () => {
     const { api } = get();
     expect(
       hostname().toLowerCase().startsWith(api.machineName().toLowerCase()),
@@ -57,7 +57,7 @@ export function sharedChecks(
     expect(api.utf8Length(s)).toBe(Buffer.byteLength(s, "utf8"));
     expect(api.utf16Length(s)).toBe(s.length);
     expect(api.upper("abc-xyz")).toBe("ABC-XYZ");
-    const long = "x".repeat(1000); // > capacité initiale (256) : deuxième appel
+    const long = "x".repeat(1000); // > initial capacity (256): second call
     expect(api.upper(long)).toBe(long.toUpperCase());
   });
 

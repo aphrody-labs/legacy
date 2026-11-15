@@ -1,25 +1,25 @@
-// Marqueurs lus par sdk/tools/dotnet-ffi/model.ts dans les métadonnées (par nom simple) ; sans effet à l'exécution.
+// Markers read by sdk/tools/dotnet-ffi/model.ts in the metadata (by simple name); no effect at run time.
 namespace Nt.Interop.Ffi;
 
-/// <summary>Paramètre <c>byte*</c> : chaîne UTF-8 terminée par NUL (bun:ffi <c>cstring</c>) ; champ : tampon fixe UTF-8.</summary>
+/// <summary><c>byte*</c> parameter: NUL-terminated UTF-8 string (bun:ffi <c>cstring</c>); field: fixed UTF-8 buffer.</summary>
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Field)]
 public sealed class Utf8Attribute : Attribute
 {
 }
 
-/// <summary>Paramètre <c>char*</c> : chaîne UTF-16 terminée par NUL ; champ : tampon fixe UTF-16.</summary>
+/// <summary><c>char*</c> parameter: NUL-terminated UTF-16 string; field: fixed UTF-16 buffer.</summary>
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Field)]
 public sealed class Utf16Attribute : Attribute
 {
 }
 
-/// <summary>Tampon de sortie UTF-8 suivi d'un <c>int</c> capacité ; la méthode renvoie la longueur en octets (hors NUL).</summary>
+/// <summary>UTF-8 output buffer followed by an <c>int</c> capacity; the method returns the length in bytes (excluding NUL).</summary>
 [AttributeUsage(AttributeTargets.Parameter)]
 public sealed class Utf8BufferAttribute : Attribute
 {
 }
 
-/// <summary>Tampon de sortie UTF-16 suivi d'un <c>int</c> capacité ; la méthode renvoie la longueur en unités (hors NUL).</summary>
+/// <summary>UTF-16 output buffer followed by an <c>int</c> capacity; the method returns the length in units (excluding NUL).</summary>
 [AttributeUsage(AttributeTargets.Parameter)]
 public sealed class Utf16BufferAttribute : Attribute
 {

@@ -1,6 +1,6 @@
-// Types d'interop blittables (aucun bool/char : disposition séquentielle identique côté natif et managé).
-// Valeurs des énumérations = celles de System.IO.DriveType et System.Runtime.InteropServices.Architecture,
-// lues dans les métadonnées de Microsoft.NETCore.App 11.0.0 par sdk/tools/dotnet-ffi/ecma335.ts (2026-11-12).
+// Blittable interop types (no bool/char: identical sequential layout on the native and managed sides).
+// Enumeration values = those of System.IO.DriveType and System.Runtime.InteropServices.Architecture,
+// read from the Microsoft.NETCore.App 11.0.0 metadata by sdk/tools/dotnet-ffi/ecma335.ts (2026-11-12).
 using Nt.Interop.Ffi;
 
 namespace Nt.Interop;
@@ -39,25 +39,25 @@ public enum NtDriveKind
     Ram = 6,
 }
 
-/// <summary>Faits du système hôte, remplis par <c>nt_system_info</c> (88 octets, alignement 8).</summary>
+/// <summary>Host system facts, filled by <c>nt_system_info</c> (88 bytes, alignment 8).</summary>
 [System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 public unsafe struct NtSystemInfo
 {
     public int Major;
     public int Minor;
     public int Build;
-    /// <summary>Windows : UBR du registre ; sinon Environment.OSVersion.Version.Revision.</summary>
+    /// <summary>Windows: registry UBR; otherwise Environment.OSVersion.Version.Revision.</summary>
     public int Revision;
     public NtPlatform Platform;
     public NtArchitecture Architecture;
     public int ProcessorCount;
     public int PageSize;
-    /// <summary>1 si le code tourne en NativeAOT (pas de code dynamique), 0 sous CoreCLR.</summary>
+    /// <summary>1 if the code runs under NativeAOT (no dynamic code), 0 under CoreCLR.</summary>
     public byte IsAot;
     public byte Is64Bit;
     public long TotalMemory;
     public long TickCount;
-    /// <summary>Windows : DisplayVersion du registre (ex. 25H2).</summary>
+    /// <summary>Windows: registry DisplayVersion (e.g. 25H2).</summary>
     [Utf16]
     public fixed ushort DisplayVersion[16];
 }

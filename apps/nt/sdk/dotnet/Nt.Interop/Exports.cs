@@ -1,7 +1,7 @@
-// Exports C de Nt.Interop (.NET 11) pour bun:ffi, sans node-api-dotnet.
-// DisableRuntimeMarshalling : aucune conversion implicite (Learn « Disabled runtime marshalling ») ; .NET 11 NativeAOT termine le
-// processus sur une signature UnmanagedCallersOnly non blittable (Learn « Native code interop with Native AOT »).
-// Aucune exception ne traverse la frontière : codes négatifs (-1 argument invalide, -2 exception).
+// C exports of Nt.Interop (.NET 11) for bun:ffi, without node-api-dotnet.
+// DisableRuntimeMarshalling: no implicit conversion (Learn "Disabled runtime marshalling"); .NET 11 NativeAOT terminates the
+// process on a non-blittable UnmanagedCallersOnly signature (Learn "Native code interop with Native AOT").
+// No exception crosses the boundary: negative codes (-1 invalid argument, -2 exception).
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -15,7 +15,7 @@ namespace Nt.Interop;
 
 public static unsafe class Exports
 {
-    /// <summary>Appel vide : coût fixe d'une transition bun -> .NET.</summary>
+    /// <summary>Empty call: fixed cost of a bun -> .NET transition.</summary>
     [UnmanagedCallersOnly(EntryPoint = "nt_noop")]
     public static void Noop()
     {
@@ -24,7 +24,7 @@ public static unsafe class Exports
     [UnmanagedCallersOnly(EntryPoint = "nt_add")]
     public static int Add(int a, int b) => a + b;
 
-    /// <summary>Environment.TickCount64 (retour 64 bits : BigInt côté bun).</summary>
+    /// <summary>Environment.TickCount64 (64-bit return: BigInt on the bun side).</summary>
     [UnmanagedCallersOnly(EntryPoint = "nt_tick_count")]
     public static long TickCount() => Environment.TickCount64;
 
@@ -104,11 +104,11 @@ public static unsafe class Exports
     [UnmanagedCallersOnly(EntryPoint = "nt_runtime_id")]
     public static int RuntimeId([Utf8Buffer] byte* buffer, int capacity) => CopyUtf8(RuntimeInformation.RuntimeIdentifier, buffer, capacity);
 
-    /// <summary>Longueur en octets d'une chaîne UTF-8 (bun:ffi cstring : transcodée par JavaScriptCore).</summary>
+    /// <summary>Length in bytes of a UTF-8 string (bun:ffi cstring: transcoded by JavaScriptCore).</summary>
     [UnmanagedCallersOnly(EntryPoint = "nt_utf8_length")]
     public static int Utf8Length([Utf8] byte* text) => text == null ? -1 : MemoryMarshal.CreateReadOnlySpanFromNullTerminated(text).Length;
 
-    /// <summary>Longueur en unités UTF-16 d'une chaîne UTF-16 (encodée côté bun : bun:ffi n'a pas de type wchar_t).</summary>
+    /// <summary>Length in UTF-16 units of a UTF-16 string (encoded on the bun side: bun:ffi has no wchar_t type).</summary>
     [UnmanagedCallersOnly(EntryPoint = "nt_utf16_length")]
     public static int Utf16Length([Utf16] char* text) => text == null ? -1 : MemoryMarshal.CreateReadOnlySpanFromNullTerminated(text).Length;
 
@@ -129,7 +129,7 @@ public static unsafe class Exports
         return s.Length;
     }
 
-    /// <summary>Rappel par lecteur : visit(nom, longueur, type, taille totale) ; 0 arrête. Renvoie le nombre visité.</summary>
+    /// <summary>Callback per drive: visit(name, length, type, total size); 0 stops. Returns the number visited.</summary>
     [UnmanagedCallersOnly(EntryPoint = "nt_drives")]
     public static int Drives(delegate* unmanaged<char*, int, NtDriveKind, long, int> visit)
     {
@@ -172,7 +172,7 @@ public static unsafe class Exports
         }
     }
 
-    /// <summary>Appelle callback(i) pour i dans [0, count) et somme les retours : coût d'un rappel .NET -> bun.</summary>
+    /// <summary>Calls callback(i) for i in [0, count) and sums the returns: cost of a .NET -> bun callback.</summary>
     [UnmanagedCallersOnly(EntryPoint = "nt_sum_callbacks")]
     public static long SumCallbacks(delegate* unmanaged<int, int> callback, int count)
     {
@@ -188,7 +188,7 @@ public static unsafe class Exports
         return sum;
     }
 
-    /// <summary>Sans EntryPoint : joignable seulement par l'hôte CoreCLR (hostfxr). 1 sous CoreCLR (JIT), 0 en NativeAOT.</summary>
+    /// <summary>No EntryPoint: reachable only by the CoreCLR host (hostfxr). 1 under CoreCLR (JIT), 0 under NativeAOT.</summary>
     [UnmanagedCallersOnly]
     public static int DynamicCode() => RuntimeFeature.IsDynamicCodeSupported ? 1 : 0;
 

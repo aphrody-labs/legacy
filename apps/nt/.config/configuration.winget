@@ -1,13 +1,13 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2023/08/config/document.json
-# Poste de développement nt (Windows) : WinGet Configuration v3, processeur DSC v3 (Learn « WinGet Configuration file v3
-# schema reference », WinGet 1.11+ ; chemin conventionnel ./.config/configuration.winget).
+# nt development workstation (Windows): WinGet Configuration v3, DSC v3 processor (Learn "WinGet Configuration file v3
+# schema reference", WinGet 1.11+; conventional path ./.config/configuration.winget).
 #   winget configure validate -f .config/configuration.winget     (lecture seule)
 #   winget configure -f .config/configuration.winget               (just setup)
-# Paquets winget relevés le 2026-11-12 (winget show) ; aucune version épinglée sauf niubash (épinglé par sdk/tools/fetch-tools.ts).
-# CMake 4.5.0 et Ninja 1.13.2 de la sonde C++23 `import std` sont épinglés par sdk/tools/fetch-tools.ts : winget n'a que CMake 4.4.4.
-# Modules PSGallery (ressources DSC adaptées par l'adaptateur PowerShell 7) : installés explicitement, DSC v3 ne le fait pas.
-# Scripts : Microsoft.DSC.Transitional/PowerShellScript (pwsh 7, aucun chemin d'exécutable codé en dur) ; testScript émet un
-# seul booléen et setScript est toujours exécuté, donc idempotent (PowerShell/DSC docs/reference/.../PowerShellScript).
+# winget packages surveyed on 2026-11-12 (winget show); no pinned version except niubash (pinned by sdk/tools/fetch-tools.ts).
+# CMake 4.5.0 and Ninja 1.13.2 of the C++23 `import std` probe are pinned by sdk/tools/fetch-tools.ts: winget only has CMake 4.4.4.
+# PSGallery modules (DSC resources adapted by the PowerShell 7 adapter): installed explicitly, DSC v3 does not do it.
+# Scripts: Microsoft.DSC.Transitional/PowerShellScript (pwsh 7, no hardcoded executable path); testScript emits a
+# single boolean and setScript is always run, hence idempotent (PowerShell/DSC docs/reference/.../PowerShellScript).
 $schema: https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2023/08/config/document.json
 metadata:
   winget:
@@ -18,7 +18,7 @@ resources:
   name: PowerShell
   properties: { id: Microsoft.PowerShell, source: winget, useLatest: true }
   metadata:
-    description: PowerShell 7 (scripts DSC et adaptateur des ressources PSGallery)
+    description: PowerShell 7 (DSC scripts and PSGallery resource adapter)
     winget: { securityContext: elevated }
 
 - type: Microsoft.WinGet/Package
@@ -32,14 +32,14 @@ resources:
   name: GitHubCli
   properties: { id: GitHub.cli, source: winget, useLatest: true }
   metadata:
-    description: GitHub CLI (sdk/tools/fetch-tools.ts télécharge les releases épinglées)
+    description: GitHub CLI (sdk/tools/fetch-tools.ts downloads the pinned releases)
     winget: { securityContext: elevated }
 
 - type: Microsoft.WinGet/Package
   name: VisualStudioBuildTools
   properties: { id: Microsoft.VisualStudio.BuildTools, source: winget, useLatest: true }
   metadata:
-    description: Visual Studio Build Tools 2026 (MSVC, link.exe pour NativeAOT, vcpkg)
+    description: Visual Studio Build Tools 2026 (MSVC, link.exe for NativeAOT, vcpkg)
     winget: { securityContext: elevated }
 
 - type: Microsoft.DSC.Transitional/PowerShellScript
@@ -53,7 +53,7 @@ resources:
         Install-PSResource -Name Microsoft.VisualStudio.DSC -Version '[1.0.35,2.0.0)' -Repository PSGallery -TrustRepository -AcceptLicense
       }
   metadata:
-    description: Module PSGallery Microsoft.VisualStudio.DSC 1.0.35 (stable, 2026-07-31) pour VSComponents
+    description: PSGallery module Microsoft.VisualStudio.DSC 1.0.35 (stable, 2026-07-31) for VSComponents
 
 - type: Microsoft.VisualStudio.DSC/VSComponents
   name: VisualStudioCpp
@@ -69,14 +69,14 @@ resources:
     - Microsoft.VisualStudio.Component.Windows11SDK.26100
     - Microsoft.VisualStudio.Component.Vcpkg
   metadata:
-    description: C++ (MSVC x64/ARM64, SDK Windows 11, vcpkg) ; NativeAOT exige link.exe et la CRT VC (Learn « Native AOT deployment »)
+    description: C++ (MSVC x64/ARM64, Windows 11 SDK, vcpkg); NativeAOT requires link.exe and the VC CRT (Learn "Native AOT deployment")
     winget: { securityContext: elevated }
 
 - type: Microsoft.WinGet/Package
   name: CMake
   properties: { id: Kitware.CMake, source: winget, useLatest: true }
   metadata:
-    description: CMake (4.4.4 sur winget au 2026-11-12 ; la sonde utilise CMake 4.5.0 épinglé)
+    description: CMake (4.4.4 on winget as of 2026-11-12; the probe uses the pinned CMake 4.5.0)
     winget: { securityContext: elevated }
 
 - type: Microsoft.WinGet/Package
@@ -96,19 +96,19 @@ resources:
   name: Just
   properties: { id: Casey.Just, source: winget, useLatest: true }
   metadata:
-    description: just (entrée unique du dépôt)
+    description: just (single entry point of the repository)
 
 - type: Microsoft.WinGet/Package
   name: Niubash
   properties: { id: Unixwin.Niubash, source: winget, version: 1.5.0 }
   metadata:
-    description: niubash 1.5.0 (shell Windows des recettes just)
+    description: niubash 1.5.0 (Windows shell of the just recipes)
 
 - type: Microsoft.WinGet/Package
   name: Rustup
   properties: { id: Rustlang.Rustup, source: winget, useLatest: true }
   metadata:
-    description: rustup (sdk/rust/rust-toolchain.toml installe la nightly épinglée)
+    description: rustup (sdk/rust/rust-toolchain.toml installs the pinned nightly)
 
 - type: Microsoft.DSC.Transitional/PowerShellScript
   name: WindowsAppRuntime
@@ -127,5 +127,5 @@ resources:
       }
   metadata:
     description: >-
-      Windows App Runtime 2.6.5 (framework Microsoft.WindowsAppRuntime.2) pour les échantillons reactor dépendants du
-      framework (sdk/rust) ; winget n'a que Microsoft.WindowsAppRuntime.2 2.5.1 au 2026-11-12. Nt.App l'embarque (autonome).
+      Windows App Runtime 2.6.5 (framework Microsoft.WindowsAppRuntime.2) for the reactor samples that depend on the
+      framework (sdk/rust); winget only has Microsoft.WindowsAppRuntime.2 2.5.1 as of 2026-11-12. Nt.App embeds it (self-contained).

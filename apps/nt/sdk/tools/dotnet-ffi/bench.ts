@@ -1,6 +1,6 @@
-// Coût d'appel bun -> .NET sans node-api-dotnet (CI, après `just interop`) -> target/bench/dotnet-ffi-<rid>.json.
-// Modes, chacun dans son propre processus : c (fonction de l'OS via bun:ffi), js (fonction JS), aot (NativeAOT, dlopen),
-// coreclr (CoreCLR hébergé par hostfxr, pointeurs liés par CFunction). Médiane de 7 séries, ns par appel.
+// bun -> .NET call cost without node-api-dotnet (CI, after `just interop`) -> target/bench/dotnet-ffi-<rid>.json.
+// Modes, each in its own process: c (OS function through bun:ffi), js (JS function), aot (NativeAOT, dlopen),
+// coreclr (CoreCLR hosted by hostfxr, pointers bound by CFunction). Median of 7 series, ns per call.
 import { dlopen } from "bun:ffi";
 import { mkdir } from "node:fs/promises";
 import { cpus } from "node:os";
@@ -14,7 +14,7 @@ const CALLBACKS = 200_000;
 
 const median = (xs: number[]) => xs.sort((a, b) => a - b)[xs.length >> 1]!;
 function measure(n: number, body: (n: number) => void): number {
-  body(Math.min(n, 20_000)); // échauffement (JIT de JavaScriptCore, liaison paresseuse)
+  body(Math.min(n, 20_000)); // warm-up (JavaScriptCore JIT, lazy binding)
   const out: number[] = [];
   for (let r = 0; r < RUNS; r++) {
     const t0 = Bun.nanoseconds();
@@ -38,7 +38,7 @@ async function child(mode: string): Promise<Record<string, number | string>> {
   if (mode === "c") {
     const win = process.platform === "win32";
     const t0 = performance.now();
-    // Fonctions C sans appel système : coût de la seule transition bun:ffi (getpid est un appel système sous Linux).
+    // C functions without a system call: cost of the bun:ffi transition alone (getpid is a system call on Linux).
     const lib = win
       ? dlopen("kernel32.dll", {
           GetCurrentProcessId: { args: [], returns: "u32" },
@@ -50,7 +50,7 @@ async function child(mode: string): Promise<Record<string, number | string>> {
     r.openMs = Math.round((performance.now() - t0) * 100) / 100;
     const s = lib.symbols as Record<string, (x?: number) => number>;
     const f = (win ? s.GetCurrentProcessId : s.abs)!;
-    // Arité exacte : un argument en trop fait quitter le chemin rapide du DFG (8 ns au lieu de 2,2 ns constatés).
+    // Exact arity: one extra argument leaves the DFG fast path (8 ns instead of the 2.2 ns observed).
     r.noop = win
       ? measure(N, (n) => {
           for (let i = 0; i < n; i++) f();
@@ -92,7 +92,7 @@ async function child(mode: string): Promise<Record<string, number | string>> {
   r.utf16OutString = measure(N / 10, (n) => {
     for (let i = 0; i < n; i++) api.machineName();
   });
-  // Rappel .NET -> JS : JSCallback créé une fois, coût par rappel.
+  // .NET -> JS callback: JSCallback created once, cost per callback.
   const t1 = Bun.nanoseconds();
   for (let r2 = 0; r2 < 3; r2++) api.sumCallbacks((i) => i, CALLBACKS);
   r.callbackPerCall =
@@ -125,7 +125,7 @@ if (modeArg >= 0) {
     cpu: cpus()[0]?.model ?? "",
     bun: `${Bun.version}+${Bun.revision.slice(0, 9)}`,
     iterations: N,
-    unit: "ns/appel (médiane de 7)",
+    unit: "ns/call (median of 7)",
     results,
   };
   const dir = join(import.meta.dir, "..", "..", "..", "target", "bench");
