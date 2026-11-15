@@ -1,6 +1,6 @@
 {
- "generatedAt": "2026-11-15T09:52:43.000Z",
- "monorepoHead": "b3c5da6ab0459a70ad61d4075e132c7dbe94ca15",
+ "generatedAt": "2026-11-15T09:57:12.447Z",
+ "monorepoHead": "fb6c05d08043b7e1d19b2d0694b58027ddac958c",
  "counts": {
   "cloudflare": {
    "present-identical": 22
@@ -33,10 +33,10 @@
    "present-older": 25
   },
   "vps": {
-   "present-identical": 721,
+   "present-identical": 720,
    "unique-commits": 9,
    "missing": 29,
-   "present-older": 22
+   "present-older": 23
   }
  },
  "rows": [
@@ -15232,7 +15232,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "apps/aphrody-web (files absent from apps/aphrody)",
-   "decision": "restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/aphrody); restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/aphrody); restoring commit ac067b73c",
    "note": "178 files (134 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -15242,7 +15242,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "apps/aphrody-app",
-   "decision": "restored from 5d771bb74^ into apps/aphrody-app; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into apps/aphrody-app; restoring commit ac067b73c",
    "note": "46 files (31 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -15297,7 +15297,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "apps/r2-site",
-   "decision": "restored from 5d771bb74^ into apps/r2-site; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into apps/r2-site; restoring commit ac067b73c",
    "note": "11 files (10 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -15352,7 +15352,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "apps/yolo",
-   "decision": "restored from 5d771bb74^ into apps/yolo; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into apps/yolo; restoring commit ac067b73c",
    "note": "15 files (14 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -15884,7 +15884,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "src/ring3-agent",
-   "decision": "restored from 5d771bb74^ into src/ring3-agent; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into src/ring3-agent; restoring commit ac067b73c",
    "note": "16 files (13 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -17289,7 +17289,7 @@
    "updated": "2026-11-12",
    "status": "present-identical",
    "monorepoPath": "packages/agy",
-   "decision": "restored from 73bc09414^ into packages/agy; restoring commit this commit",
+   "decision": "restored from 73bc09414^ into packages/agy; restoring commit ac067b73c",
    "note": "13 files (12 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)"
   },
   {
@@ -17308,7 +17308,7 @@
    "updated": "2026-11-12",
    "status": "present-identical",
    "monorepoPath": "packages/ai-triad",
-   "decision": "restored from 73bc09414^ into packages/ai-triad; restoring commit this commit",
+   "decision": "restored from 73bc09414^ into packages/ai-triad; restoring commit ac067b73c",
    "note": "25 files (23 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)"
   },
   {
@@ -17327,7 +17327,7 @@
    "updated": "2026-11-12",
    "status": "present-identical",
    "monorepoPath": "packages/brain",
-   "decision": "restored from 73bc09414^ into packages/brain; restoring commit this commit",
+   "decision": "restored from 73bc09414^ into packages/brain; restoring commit ac067b73c",
    "note": "8 files (6 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)"
   },
   {
@@ -17346,7 +17346,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "packages/bun-parity",
-   "decision": "restored from 5d771bb74^ into packages/bun-parity; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into packages/bun-parity; restoring commit ac067b73c",
    "note": "42 files (40 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -17356,7 +17356,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "packages/bun-plugins",
-   "decision": "restored from 5d771bb74^ into packages/bun-plugins; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into packages/bun-plugins; restoring commit ac067b73c",
    "note": "16 files (14 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -17384,7 +17384,7 @@
    "updated": "2026-11-15",
    "status": "present-identical",
    "monorepoPath": "packages/chromium-bun",
-   "decision": "restored from 1fc5d725a^ into packages/chromium-bun; restoring commit this commit",
+   "decision": "restored from 1fc5d725a^ into packages/chromium-bun; restoring commit ac067b73c",
    "note": "137 files (131 code), deleted in 1fc5d725a on 2026-11-15 (see git show 1fc5d725a)"
   },
   {
@@ -17457,7 +17457,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "packages/forge",
-   "decision": "restored from 5d771bb74^ into packages/forge; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into packages/forge; restoring commit ac067b73c",
    "note": "25 files (23 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -17494,7 +17494,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "packages/google-design",
-   "decision": "restored from 5d771bb74^ into packages/google-design; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into packages/google-design; restoring commit ac067b73c",
    "note": "254 files (144 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -17522,7 +17522,7 @@
    "updated": "2026-11-12",
    "status": "present-identical",
    "monorepoPath": "packages/knowledge-engine",
-   "decision": "restored from 73bc09414^ into packages/knowledge-engine; restoring commit this commit",
+   "decision": "restored from 73bc09414^ into packages/knowledge-engine; restoring commit ac067b73c",
    "note": "21 files (19 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)"
   },
   {
@@ -17568,7 +17568,7 @@
    "updated": "2026-11-12",
    "status": "present-identical",
    "monorepoPath": "packages/pi-opencode",
-   "decision": "restored from 73bc09414^ into packages/pi-opencode; restoring commit this commit",
+   "decision": "restored from 73bc09414^ into packages/pi-opencode; restoring commit ac067b73c",
    "note": "19 files (15 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)"
   },
   {
@@ -17587,7 +17587,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "packages/runtime-adapter",
-   "decision": "restored from 5d771bb74^ into packages/runtime-adapter; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into packages/runtime-adapter; restoring commit ac067b73c",
    "note": "10 files (9 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -17606,7 +17606,7 @@
    "updated": "2026-11-14",
    "status": "present-identical",
    "monorepoPath": "packages/site",
-   "decision": "restored from 5d771bb74^ into packages/site; restoring commit this commit",
+   "decision": "restored from 5d771bb74^ into packages/site; restoring commit ac067b73c",
    "note": "12 files (12 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)"
   },
   {
@@ -30993,36 +30993,36 @@
    "id": "/srv/pipe-src/.agents",
    "kind": "tree",
    "status": "present-identical",
-   "monorepoPath": ".agents/skills(836), .agents/.claude-plugin(1)",
+   "monorepoPath": ".agents/skills(833), .agents/.claude-plugin(1)",
    "decision": "content already in the tree",
-   "note": "841/858 source files shared (98%)"
+   "note": "838/858 source files shared (98%)"
   },
   {
    "source": "vps:fr2",
    "id": "/srv/pipe-src/.claude",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": ".claude/agent-memory(3), .claude/agents(2)",
+   "monorepoPath": ".claude/agents(2), .claude/agent-memory(1)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "6/16 source files shared (38%)"
+   "note": "4/16 source files shared (25%)"
   },
   {
    "source": "vps:fr2",
    "id": "/srv/pipe-src/apps",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": "apps/auto(1026), apps/aphrody(24)",
+   "monorepoPath": "apps/auto(1026), apps/aphrody(15)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "1061/1425 source files shared (74%)"
+   "note": "1052/1425 source files shared (74%)"
   },
   {
    "source": "vps:fr2",
    "id": "/srv/pipe-src/assets",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": "packages/design(6)",
+   "monorepoPath": "packages/design(3)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "6/7 source files shared (86%)"
+   "note": "3/7 source files shared (43%)"
   },
   {
    "source": "vps:fr2",
@@ -31038,9 +31038,9 @@
    "id": "/srv/pipe-src/docs",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": "docs/lore(215), docs/native(71)",
+   "monorepoPath": "docs/lore(215), docs/native(68)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "451/567 source files shared (80%)"
+   "note": "446/567 source files shared (79%)"
   },
   {
    "source": "vps:fr2",
@@ -31067,7 +31067,7 @@
    "status": "present-older",
    "monorepoPath": "packages/ai-os(177), packages/chromium-bun(51)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "482/1448 source files shared (33%)"
+   "note": "470/1448 source files shared (32%)"
   },
   {
    "source": "vps:fr2",
@@ -31139,7 +31139,7 @@
    "status": "present-identical",
    "monorepoPath": "src/lore(1810), src/jsc(1431)",
    "decision": "content already in the tree",
-   "note": "13610/14082 source files shared (97%)"
+   "note": "13571/14082 source files shared (96%)"
   },
   {
    "source": "vps:fr2",
@@ -31166,7 +31166,7 @@
    "status": "present-identical",
    "monorepoPath": "src/lore(1810), src/jsc(1431)",
    "decision": "content already in the tree",
-   "note": "13608/14031 source files shared (97%)"
+   "note": "13569/14031 source files shared (97%)"
   },
   {
    "source": "vps:fr2",
@@ -31511,34 +31511,34 @@
    "status": "present-older",
    "monorepoPath": "dist-workspace.toml(1), bunfig.toml(1)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "11/16 source files shared (69%)"
+   "note": "10/16 source files shared (63%)"
   },
   {
    "source": "vps:prd",
    "id": "/<home>/agent/agents/src/.agents",
    "kind": "tree",
    "status": "present-identical",
-   "monorepoPath": ".agents/skills(876), .agents/.claude-plugin(1)",
+   "monorepoPath": ".agents/skills(864), .agents/.claude-plugin(1)",
    "decision": "content already in the tree",
-   "note": "882/884 source files shared (100%)"
+   "note": "870/884 source files shared (98%)"
   },
   {
    "source": "vps:prd",
    "id": "/<home>/agent/agents/src/.claude",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": ".claude/agents(6), .claude/agent-memory(3)",
+   "monorepoPath": ".claude/agents(6), .claude/agent-memory(1)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "10/16 source files shared (63%)"
+   "note": "8/16 source files shared (50%)"
   },
   {
    "source": "vps:prd",
    "id": "/<home>/agent/agents/src/apps",
    "kind": "tree",
    "status": "present-identical",
-   "monorepoPath": "apps/auto(1365), apps/nt(72)",
+   "monorepoPath": "apps/auto(1365), apps/nt(70)",
    "decision": "content already in the tree",
-   "note": "1469/1469 source files shared (100%)"
+   "note": "1454/1469 source files shared (99%)"
   },
   {
    "source": "vps:prd",
@@ -31554,18 +31554,18 @@
    "id": "/<home>/agent/agents/src/docs",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": "docs/lore(215), docs/native(101)",
+   "monorepoPath": "docs/lore(215), docs/native(94)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "551/590 source files shared (93%)"
+   "note": "539/590 source files shared (91%)"
   },
   {
    "source": "vps:prd",
    "id": "/<home>/agent/agents/src/infra",
    "kind": "tree",
    "status": "present-older",
-   "monorepoPath": "infra/fleet(62), infra/os(22)",
+   "monorepoPath": "infra/fleet(61), infra/os(22)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "180/202 source files shared (89%)"
+   "note": "178/202 source files shared (88%)"
   },
   {
    "source": "vps:prd",
@@ -31580,10 +31580,10 @@
    "source": "vps:prd",
    "id": "/<home>/agent/agents/src/packages",
    "kind": "tree",
-   "status": "present-identical",
+   "status": "present-older",
    "monorepoPath": "packages/omniu(335), packages/ai-os(241)",
-   "decision": "content already in the tree",
-   "note": "987/1021 source files shared (97%)"
+   "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
+   "note": "934/1021 source files shared (91%)"
   },
   {
    "source": "vps:prd",
@@ -31601,7 +31601,7 @@
    "status": "present-older",
    "monorepoPath": "scripts/bench(68), scripts/android-setup.ts(1)",
    "decision": "partly in the tree (evolved or moved); scratch or snapshot copy kept on the host",
-   "note": "95/101 source files shared (94%)"
+   "note": "94/101 source files shared (93%)"
   },
   {
    "source": "vps:prd",
@@ -31610,7 +31610,7 @@
    "status": "present-identical",
    "monorepoPath": "src/rubash(2940), src/lore(1830)",
    "decision": "content already in the tree",
-   "note": "13209/13223 source files shared (100%)"
+   "note": "13191/13223 source files shared (100%)"
   },
   {
    "source": "vps:prd",

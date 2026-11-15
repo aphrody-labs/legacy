@@ -1,6 +1,6 @@
 # Restore inventory
 
-Generated 2026-11-15 by `scripts/restore-inventory.ts` from the monorepo at `b3c5da6ab`. One row per item in `restore-inventory.json` (3422 rows); this file lists the counts, every own repository, every restore action and the blocked items. Content is compared by git blob oid (not by name): a remote tree is read without blobs (treeless clone), tarballs are hashed in memory, VPS files are hashed on the host.
+Generated 2026-11-15 by `scripts/restore-inventory.ts` from the monorepo at `fb6c05d08`. One row per item in `restore-inventory.json` (3422 rows); this file lists the counts, every own repository, every restore action and the blocked items. Content is compared by git blob oid (not by name): a remote tree is read without blobs (treeless clone), tarballs are hashed in memory, VPS files are hashed on the host.
 
 ## Counts by source and status
 
@@ -12,7 +12,7 @@ Generated 2026-11-15 by `scripts/restore-inventory.ts` from the monorepo at `b3c
 | history | 17 | 208 | 0 | 0 | 182 | 0 | 407 |
 | local | 18 | 0 | 0 | 1 | 0 | 0 | 19 |
 | npm | 27 | 0 | 25 | 0 | 644 | 0 | 696 |
-| vps | 721 | 0 | 22 | 9 | 29 | 0 | 781 |
+| vps | 720 | 0 | 23 | 9 | 29 | 0 | 781 |
 
 Status meaning: present-identical (same content in the tree, or restored by this run), present-newer (tree evolved past the source), present-older (source holds content the tree lacks or older tree copy), unique-commits (commits or files not in the tree history), missing (no content in the tree).
 
@@ -234,24 +234,24 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | /srv/native-ui/crates |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/354 source files shared (0%)) |
 | /srv/native-ui/extra |  |  | missing | src/runtime(19), .agents/hooks.json(4) | scratch, benchmark or research tree on the host (not our product code); kept, no copy (31/25124 source files shared (0%)) |
 | /srv/pipe-src |  |  | present-older | bunfig.toml(1), rust-toolchain.toml(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (6/15 source files shared (40%)) |
-| /srv/pipe-src/.agents |  |  | present-identical | .agents/skills(836), .agents/.claude-plugin(1) | content already in the tree (841/858 source files shared (98%)) |
-| /srv/pipe-src/.claude |  |  | present-older | .claude/agent-memory(3), .claude/agents(2) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (6/16 source files shared (38%)) |
-| /srv/pipe-src/apps |  |  | present-older | apps/auto(1026), apps/aphrody(24) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (1061/1425 source files shared (74%)) |
-| /srv/pipe-src/assets |  |  | present-older | packages/design(6) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (6/7 source files shared (86%)) |
+| /srv/pipe-src/.agents |  |  | present-identical | .agents/skills(833), .agents/.claude-plugin(1) | content already in the tree (838/858 source files shared (98%)) |
+| /srv/pipe-src/.claude |  |  | present-older | .claude/agents(2), .claude/agent-memory(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (4/16 source files shared (25%)) |
+| /srv/pipe-src/apps |  |  | present-older | apps/auto(1026), apps/aphrody(15) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (1052/1425 source files shared (74%)) |
+| /srv/pipe-src/assets |  |  | present-older | packages/design(3) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (3/7 source files shared (43%)) |
 | /srv/pipe-src/bench |  |  | present-identical | bench/src(13), bench/results(1) | content already in the tree (20/20 source files shared (100%)) |
-| /srv/pipe-src/docs |  |  | present-older | docs/lore(215), docs/native(71) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (451/567 source files shared (80%)) |
+| /srv/pipe-src/docs |  |  | present-older | docs/lore(215), docs/native(68) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (446/567 source files shared (79%)) |
 | /srv/pipe-src/infra |  |  | present-older | infra/fleet(30), infra/os(11) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (96/189 source files shared (51%)) |
 | /srv/pipe-src/licenses |  |  | present-identical | licenses/lore(7) | content already in the tree (7/7 source files shared (100%)) |
-| /srv/pipe-src/packages |  |  | present-older | packages/ai-os(177), packages/chromium-bun(51) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (482/1448 source files shared (33%)) |
+| /srv/pipe-src/packages |  |  | present-older | packages/ai-os(177), packages/chromium-bun(51) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (470/1448 source files shared (32%)) |
 | /srv/pipe-src/plugins |  |  | present-older | infra/agents(8) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (8/10 source files shared (80%)) |
 | /srv/pipe-src/scripts |  |  | present-older | scripts/bench(53), scripts/android-setup.ts(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (66/89 source files shared (74%)) |
 | /srv/pipe-src/src |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (9129/9224 source files shared (99%)) |
 | /srv/pipe-src/test |  |  | present-identical | test/lore(34), test/conformance(3) | content already in the tree (39/41 source files shared (95%)) |
 | /srv/pipe-src/third_party |  |  | present-identical | third_party/design-mirror(598), third_party/chromium-trackers.json(1) | content already in the tree (603/603 source files shared (100%)) |
 | /srv/pipe-src/tools |  |  | present-identical | tools/lore(226), tools/gnu-index(5) | content already in the tree (238/242 source files shared (98%)) |
-| /srv/research/adb |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13610/14082 source files shared (97%)) |
+| /srv/research/adb |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13571/14082 source files shared (96%)) |
 | /srv/research/adb2 |  |  | present-identical | src/jsc(1431), src/lint(1295) | content already in the tree (5219/5266 source files shared (99%)) |
-| /srv/research/adb3 |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13608/14031 source files shared (97%)) |
+| /srv/research/adb3 |  |  | present-identical | src/lore(1810), src/jsc(1431) | content already in the tree (13569/14031 source files shared (97%)) |
 | /srv/research/android |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/21 source files shared (0%)) |
 | /srv/research/gnu |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/5 source files shared (0%)) |
 | /srv/research/gsrc |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/7 source files shared (0%)) |
@@ -259,18 +259,18 @@ Status meaning: present-identical (same content in the tree, or restored by this
 | /srv/research/guix |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/44 source files shared (0%)) |
 | /srv/research/mirror |  |  | missing | apps/gemini-super-app(1) | scratch, benchmark or research tree on the host (not our product code); kept, no copy (1/779 source files shared (0%)) |
 | /srv/research/site-mirror |  |  | missing |  | scratch, benchmark or research tree on the host (not our product code); kept, no copy (0/67 source files shared (0%)) |
-| /<home>/agent/agents/src |  |  | present-older | dist-workspace.toml(1), bunfig.toml(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (11/16 source files shared (69%)) |
-| /<home>/agent/agents/src/.agents |  |  | present-identical | .agents/skills(876), .agents/.claude-plugin(1) | content already in the tree (882/884 source files shared (100%)) |
-| /<home>/agent/agents/src/.claude |  |  | present-older | .claude/agents(6), .claude/agent-memory(3) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (10/16 source files shared (63%)) |
-| /<home>/agent/agents/src/apps |  |  | present-identical | apps/auto(1365), apps/nt(72) | content already in the tree (1469/1469 source files shared (100%)) |
+| /<home>/agent/agents/src |  |  | present-older | dist-workspace.toml(1), bunfig.toml(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (10/16 source files shared (63%)) |
+| /<home>/agent/agents/src/.agents |  |  | present-identical | .agents/skills(864), .agents/.claude-plugin(1) | content already in the tree (870/884 source files shared (98%)) |
+| /<home>/agent/agents/src/.claude |  |  | present-older | .claude/agents(6), .claude/agent-memory(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (8/16 source files shared (50%)) |
+| /<home>/agent/agents/src/apps |  |  | present-identical | apps/auto(1365), apps/nt(70) | content already in the tree (1454/1469 source files shared (99%)) |
 | /<home>/agent/agents/src/bench |  |  | present-identical | bench/src(13), bench/shell(4) | content already in the tree (25/25 source files shared (100%)) |
-| /<home>/agent/agents/src/docs |  |  | present-older | docs/lore(215), docs/native(101) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (551/590 source files shared (93%)) |
-| /<home>/agent/agents/src/infra |  |  | present-older | infra/fleet(62), infra/os(22) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (180/202 source files shared (89%)) |
+| /<home>/agent/agents/src/docs |  |  | present-older | docs/lore(215), docs/native(94) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (539/590 source files shared (91%)) |
+| /<home>/agent/agents/src/infra |  |  | present-older | infra/fleet(61), infra/os(22) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (178/202 source files shared (88%)) |
 | /<home>/agent/agents/src/licenses |  |  | present-identical | licenses/lore(7) | content already in the tree (7/7 source files shared (100%)) |
-| /<home>/agent/agents/src/packages |  |  | present-identical | packages/omniu(335), packages/ai-os(241) | content already in the tree (987/1021 source files shared (97%)) |
+| /<home>/agent/agents/src/packages |  |  | present-older | packages/omniu(335), packages/ai-os(241) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (934/1021 source files shared (91%)) |
 | /<home>/agent/agents/src/plugins |  |  | present-older | infra/agents(9) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (9/10 source files shared (90%)) |
-| /<home>/agent/agents/src/scripts |  |  | present-older | scripts/bench(68), scripts/android-setup.ts(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (95/101 source files shared (94%)) |
-| /<home>/agent/agents/src/src |  |  | present-identical | src/rubash(2940), src/lore(1830) | content already in the tree (13209/13223 source files shared (100%)) |
+| /<home>/agent/agents/src/scripts |  |  | present-older | scripts/bench(68), scripts/android-setup.ts(1) | partly in the tree (evolved or moved); scratch or snapshot copy kept on the host (94/101 source files shared (93%)) |
+| /<home>/agent/agents/src/src |  |  | present-identical | src/rubash(2940), src/lore(1830) | content already in the tree (13191/13223 source files shared (100%)) |
 | /<home>/agent/agents/src/test |  |  | present-identical | test/diffcorpus(41), test/lore(35) | content already in the tree (86/86 source files shared (100%)) |
 | /<home>/agent/agents/src/third_party |  |  | present-identical | third_party/design-mirror(598), third_party/ECOSYSTEM.toml(1) | content already in the tree (603/603 source files shared (100%)) |
 | /<home>/agent/agents/src/tools |  |  | present-identical | tools/lore(226), packages/chromium-bun(6) | content already in the tree (249/250 source files shared (100%)) |
@@ -307,23 +307,23 @@ Deleting commit is the first hash in each note; the restoring commit is named in
 
 | item | language | updated | status | monorepo path | decision |
 |---|---|---|---|---|---|
-| apps/aphrody |  | 2026-11-14 | present-identical | apps/aphrody-web (files absent from apps/aphrody) | restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/aphrody); restoring commit this commit (178 files (134 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| apps/aphrody-app |  | 2026-11-14 | present-identical | apps/aphrody-app | restored from 5d771bb74^ into apps/aphrody-app; restoring commit this commit (46 files (31 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| apps/r2-site |  | 2026-11-14 | present-identical | apps/r2-site | restored from 5d771bb74^ into apps/r2-site; restoring commit this commit (11 files (10 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| apps/yolo |  | 2026-11-14 | present-identical | apps/yolo | restored from 5d771bb74^ into apps/yolo; restoring commit this commit (15 files (14 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| crates/ring3-agent |  | 2026-11-14 | present-identical | src/ring3-agent | restored from 5d771bb74^ into src/ring3-agent; restoring commit this commit (16 files (13 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| packages/agy |  | 2026-11-12 | present-identical | packages/agy | restored from 73bc09414^ into packages/agy; restoring commit this commit (13 files (12 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
-| packages/ai-triad |  | 2026-11-12 | present-identical | packages/ai-triad | restored from 73bc09414^ into packages/ai-triad; restoring commit this commit (25 files (23 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
-| packages/brain |  | 2026-11-12 | present-identical | packages/brain | restored from 73bc09414^ into packages/brain; restoring commit this commit (8 files (6 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
-| packages/bun-parity |  | 2026-11-14 | present-identical | packages/bun-parity | restored from 5d771bb74^ into packages/bun-parity; restoring commit this commit (42 files (40 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| packages/bun-plugins |  | 2026-11-14 | present-identical | packages/bun-plugins | restored from 5d771bb74^ into packages/bun-plugins; restoring commit this commit (16 files (14 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| packages/chromium-bun |  | 2026-11-15 | present-identical | packages/chromium-bun | restored from 1fc5d725a^ into packages/chromium-bun; restoring commit this commit (137 files (131 code), deleted in 1fc5d725a on 2026-11-15 (see git show 1fc5d725a)) |
-| packages/forge |  | 2026-11-14 | present-identical | packages/forge | restored from 5d771bb74^ into packages/forge; restoring commit this commit (25 files (23 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| packages/google-design |  | 2026-11-14 | present-identical | packages/google-design | restored from 5d771bb74^ into packages/google-design; restoring commit this commit (254 files (144 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| packages/knowledge-engine |  | 2026-11-12 | present-identical | packages/knowledge-engine | restored from 73bc09414^ into packages/knowledge-engine; restoring commit this commit (21 files (19 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
-| packages/pi-opencode |  | 2026-11-12 | present-identical | packages/pi-opencode | restored from 73bc09414^ into packages/pi-opencode; restoring commit this commit (19 files (15 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
-| packages/runtime-adapter |  | 2026-11-14 | present-identical | packages/runtime-adapter | restored from 5d771bb74^ into packages/runtime-adapter; restoring commit this commit (10 files (9 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
-| packages/site |  | 2026-11-14 | present-identical | packages/site | restored from 5d771bb74^ into packages/site; restoring commit this commit (12 files (12 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| apps/aphrody |  | 2026-11-14 | present-identical | apps/aphrody-web (files absent from apps/aphrody) | restored from 5d771bb74^ into apps/aphrody-web (files absent from apps/aphrody); restoring commit ac067b73c (178 files (134 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| apps/aphrody-app |  | 2026-11-14 | present-identical | apps/aphrody-app | restored from 5d771bb74^ into apps/aphrody-app; restoring commit ac067b73c (46 files (31 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| apps/r2-site |  | 2026-11-14 | present-identical | apps/r2-site | restored from 5d771bb74^ into apps/r2-site; restoring commit ac067b73c (11 files (10 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| apps/yolo |  | 2026-11-14 | present-identical | apps/yolo | restored from 5d771bb74^ into apps/yolo; restoring commit ac067b73c (15 files (14 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| crates/ring3-agent |  | 2026-11-14 | present-identical | src/ring3-agent | restored from 5d771bb74^ into src/ring3-agent; restoring commit ac067b73c (16 files (13 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| packages/agy |  | 2026-11-12 | present-identical | packages/agy | restored from 73bc09414^ into packages/agy; restoring commit ac067b73c (13 files (12 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
+| packages/ai-triad |  | 2026-11-12 | present-identical | packages/ai-triad | restored from 73bc09414^ into packages/ai-triad; restoring commit ac067b73c (25 files (23 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
+| packages/brain |  | 2026-11-12 | present-identical | packages/brain | restored from 73bc09414^ into packages/brain; restoring commit ac067b73c (8 files (6 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
+| packages/bun-parity |  | 2026-11-14 | present-identical | packages/bun-parity | restored from 5d771bb74^ into packages/bun-parity; restoring commit ac067b73c (42 files (40 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| packages/bun-plugins |  | 2026-11-14 | present-identical | packages/bun-plugins | restored from 5d771bb74^ into packages/bun-plugins; restoring commit ac067b73c (16 files (14 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| packages/chromium-bun |  | 2026-11-15 | present-identical | packages/chromium-bun | restored from 1fc5d725a^ into packages/chromium-bun; restoring commit ac067b73c (137 files (131 code), deleted in 1fc5d725a on 2026-11-15 (see git show 1fc5d725a)) |
+| packages/forge |  | 2026-11-14 | present-identical | packages/forge | restored from 5d771bb74^ into packages/forge; restoring commit ac067b73c (25 files (23 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| packages/google-design |  | 2026-11-14 | present-identical | packages/google-design | restored from 5d771bb74^ into packages/google-design; restoring commit ac067b73c (254 files (144 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| packages/knowledge-engine |  | 2026-11-12 | present-identical | packages/knowledge-engine | restored from 73bc09414^ into packages/knowledge-engine; restoring commit ac067b73c (21 files (19 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
+| packages/pi-opencode |  | 2026-11-12 | present-identical | packages/pi-opencode | restored from 73bc09414^ into packages/pi-opencode; restoring commit ac067b73c (19 files (15 code), deleted in 73bc09414 on 2026-11-12 (see git show 73bc09414)) |
+| packages/runtime-adapter |  | 2026-11-14 | present-identical | packages/runtime-adapter | restored from 5d771bb74^ into packages/runtime-adapter; restoring commit ac067b73c (10 files (9 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
+| packages/site |  | 2026-11-14 | present-identical | packages/site | restored from 5d771bb74^ into packages/site; restoring commit ac067b73c (12 files (12 code), deleted in 5d771bb74 on 2026-11-14 (see git show 5d771bb74)) |
 
 ## History: deleted directories with 8 or more files, not restored (113)
 
