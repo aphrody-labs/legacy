@@ -1,0 +1,77 @@
+Installing layout instrumentation server...
+[
+  {
+    "window-title": "",
+    "type": "SYSTEM",
+    "layer": 1,
+    "bounds": "[0,0][1080,128]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "12:03",
+        "bounds": "[0,43][90,86]",
+        "center": "[45,64]"
+      },
+      {
+        "class": "android.widget.FrameLayout",
+        "resource-id": "com.android.systemui:id/mobile_combo",
+        "content-desc": "Cellular, one bar",
+        "bounds": "[795,35][856,93]",
+        "center": "[825,64]"
+      },
+      {
+        "class": "android.widget.ImageView",
+        "resource-id": "com.android.systemui:id/wifi_signal",
+        "content-desc": "Wifi signal full.",
+        "bounds": "[864,48][907,80]",
+        "center": "[885,64]"
+      },
+      {
+        "class": "android.view.View",
+        "content-desc": "Battery charging, 100 percent.",
+        "bounds": "[923,44][991,83]",
+        "center": "[957,63]"
+      }
+    ]
+  },
+  {
+    "window-title": "Aphrody shell",
+    "type": "APPLICATION",
+    "active": true,
+    "focused": true,
+    "layer": 0,
+    "bounds": "[0,0][1080,2400]",
+    "content": [
+      {
+        "class": "android.widget.TextView",
+        "text": "Aphrody shell",
+        "bounds": "[63,63][506,158]",
+        "center": "[284,110]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "libaysys.so ABI v1",
+        "bounds": "[63,190][423,253]",
+        "center": "[243,221]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "FNV-1a64(\"aphrody-android\") \u003d 0b7d5d872392c916",
+        "bounds": "[63,285][1017,411]",
+        "center": "[540,348]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "cpu: ok sse4.2 - - ",
+        "bounds": "[63,443][411,506]",
+        "center": "[237,474]"
+      },
+      {
+        "class": "android.widget.TextView",
+        "text": "Android 17 (API 37) x86_64",
+        "bounds": "[63,538][609,601]",
+        "center": "[336,569]"
+      }
+    ]
+  }
+]

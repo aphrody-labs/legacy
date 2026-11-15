@@ -52,8 +52,16 @@ rc=0
 RESULT OK
 ```
 
-## Notes and not done
+## Update 2026-11-15: bionic clash fixed, Compose shell app, Android Studio
 
-- `ay_smoke` declares libc by hand: `ay/sys.h` typedefs `__u64` as `uint64_t` and clashes with bionic's `linux/types.h` (`unsigned long long`) when any libc header is included. libaysys.so itself is freestanding and unaffected. Fixing `src/include/uapi/ay/types.h` is outside this task.
+- `src/include/uapi/ay/types.h` now has an `__ANDROID__` branch that takes `__s8..__u64` from `<linux/types.h>` (bionic's `__u64` is `unsigned long long`, the old `uint64_t` was `unsigned long`) and defines `__usize` as `size_t`. `src/android/smoke.c` includes `<stdio.h>`, `<string.h>` and `<ay/sys.h>` with no hand-declared libc. Same run: `make -C src linux` and `make -C src wasm` (OUT_DIR=/tmp/ayout) exit 0 on fr1 and produced `libaysys.so` and `aysys.wasm`; `wasm-validate` is not installed on fr1, so the wasm module was not validated there (`make verify` needs it).
+- `apps/android-shell`: Compose app, AGP 9.5.1, Kotlin 2.4.21 (compose plugin), Compose BOM 2026.09.00, compileSdk/targetSdk 37, minSdk 29, built on fr1 with Gradle 9.9.1 (`gradle --no-daemon :app:assembleDebug`, 29.5 MB debug APK). It loads `libayjni.so` (`src/android/jni.c`, links `libaysys.so`, staged by `make android-x64` into `target/sys/android-x86_64/jniLibs/x86_64`) and shows the ABI version, `ay_fnv1a64("aphrody-android")` and the CPU caps.
+- Run on the API 37 emulator: `adb install` Success, `am start -W` Status ok (cold start 5914 ms). `android layout` (CLI 1.1.16717390, copied from fr2 because dl.google.com is blocked from fr1; sha256 2aabb936...) captured the UI tree: `libaysys.so ABI v1`, `FNV-1a64("aphrody-android") = 0b7d5d872392c916` (identical to the native `ay_smoke` value), `cpu: ok sse4.2 - -`, `Android 17 (API 37) x86_64`. Files: `proof/layout-api37.json`, `proof/shell-api37.png`.
+- Android Studio 2026.2.2.9 (Rabbit 2 Patch 1) installed on the PC from the pinned-sha256 Windows zip into `~/.local/share/ay/android/android-studio-2026.2.2.9`; `product-info.json` reports build 262.10968.63.2622.16840690. Not launched.
+
+## Not done
+
 - fr2 was not used for the emulator: 8.9 GB free, the 37.2 system image install failed with "No space left on device" (profile `emu` exists for it once disk is freed).
-- No Flutter or Compose shell app, no `android layout` or screenshot capture, no Android 18 canary emulator run.
+- No Android 18 canary emulator run (the canary image is installed on the PC profile only, not on fr1).
+- Flutter is installed on the PC but no Flutter app was built.
+- `wasm-validate` check of `aysys.wasm` not run on fr1 (tool absent).
