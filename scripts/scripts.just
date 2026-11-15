@@ -25,13 +25,18 @@ checkdeps *flags:
 affected ref="origin/main":
     bun "{{root}}/scripts/checkdeps.ts" --root "{{root}}" --affected "{{ref}}"
 
+# cargo through a local sccache for a FRESH target dir (fr1/fr2/CI agents): clean depot-core 77 s -> 14 s on a warm cache (docs/native/BUILD-SCIENCE.md). Not for the PC (os error 206) nor incremental loops.
+[group('gates')]
+cargo-cached *args:
+    RUSTC_WRAPPER=sccache CARGO_INCREMENTAL=0 cargo {{args}}
+
 # Test only affected units: cargo -p for crates, bun test for packages. Cargo cache: local sccache (R2 remote cache: TICKET taskgraph-001)
 [group('gates')]
 test-affected ref="origin/main":
     #!/usr/bin/env sh
     set -eu
     out=$(bun "{{root}}/scripts/checkdeps.ts" --root "{{root}}" --affected "{{ref}}")
-    pkgs=$(printf '%s\n' "$out" | awk -F'\t' '$1=="cargo" && $3 ~ /^crates\// {printf "-p %s ", $2}')
+    pkgs=$(printf '%s\n' "$out" | awk -F'\t' '$1=="cargo" && $3 !~ /^third_party\// {printf "-p %s ", $2}')
     bunp=$(printf '%s\n' "$out" | awk -F'\t' '$1=="bun" && $3 ~ /^packages\// {printf "%s/%s ", "{{root}}", $3}')
     [ -z "$pkgs" ] || cargo test $pkgs
     [ -z "$bunp" ] || bun test $bunp
