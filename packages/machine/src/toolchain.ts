@@ -612,7 +612,19 @@ export async function toolchain({
   // --- Codex : marketplace racine (Codex lit .claude-plugin/marketplace.json) et plugins à source locale.
   if (m.codex && Bun.which("codex")) {
     const name = m.codex.marketplace;
-    const list = run(["codex", "plugin", "marketplace", "list"]).out;
+    let listed = run(["codex", "plugin", "marketplace", "list"]);
+    // A configured marketplace whose root vanished makes `list` and `plugin list` fail for every entry (fr2: dbfr-plugins
+    // pointing at a moved checkout): drop those entries, then list again.
+    const broken = [
+      ...listed.err.matchAll(/^- `([^`]+)` at [^\n]*: marketplace root/gm),
+    ].map((x) => x[1]);
+    for (const b of broken) {
+      note(false, `codex marketplace ${b} retiré (racine absente)`);
+      if (!check) run(["codex", "plugin", "marketplace", "remove", b]);
+    }
+    if (broken.length && !check)
+      listed = run(["codex", "plugin", "marketplace", "list"]);
+    const list = listed.out;
     const ok = list
       .split("\n")
       .some(

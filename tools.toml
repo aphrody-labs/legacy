@@ -562,13 +562,14 @@ bin = ["yq"]
 source = "github"
 repo = "mikefarah/yq"
 assets.windows-x86_64 = "yq_windows_amd64.zip"
-assets.linux-x86_64 = "yq_linux_amd64.tar.gz"
-assets.linux-aarch64 = "yq_linux_arm64.tar.gz"
+# Linux: the raw binary asset (the tarball holds yq_linux_amd64 and a man-page script, no file named yq).
+assets.linux-x86_64 = "yq_linux_amd64"
+assets.linux-aarch64 = "yq_linux_arm64"
 assets.macos-x86_64 = "yq_darwin_amd64.tar.gz"
 assets.macos-aarch64 = "yq_darwin_arm64.tar.gz"
 sha256.windows-x86_64 = "2f771df86cd8970054dcb4a2bd19412ff4da72811aa7a9a4c8cb21580b2e3fcf"
-sha256.linux-x86_64 = "09a25baa0e136b8633949e03117fc82cb9e50d10910f988ef17a1305539ebce4"
-sha256.linux-aarch64 = "980de87c439acb5172707560dd137e9fe4a1628af5aaf6f33b293f04c71d4e9d"
+sha256.linux-x86_64 = "129534601871538efe0ba4c5e62a34fb1d5f469bcb975c4fddeb467d82974973"
+sha256.linux-aarch64 = "89f69310b61b68d1245065a1241d1fc843f7a36cd6103ffd77ad987613bd1b67"
 sha256.macos-x86_64 = "5874384a8a7ed8731c76da33fa571d1dc30c95a63e9689266bf8aeb4f0e94b01"
 sha256.macos-aarch64 = "153069933ca07d6a3a2212641a4393f198aea0c7bfc7418a4a9d11445792cd6d"
 
