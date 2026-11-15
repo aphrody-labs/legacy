@@ -31,7 +31,7 @@ pub const RULES: &[RuleSpec] = &[
         id: "ARCH-003",
         category: "package-domain-purity",
         default_severity: Severity::Error,
-        summary: "packages/* must have a valid @aphrody/* package.json, zero npm/pnpm/yarn lockfiles, zero unapproved external npm deps, and isolated native subdirs",
+        summary: "packages/* manifests (package.json, pyproject.toml, go.mod, Cargo.toml, CMakeLists.txt, meson.build) must match the code inside each package; a package.json needs an @aphrody/* name, no npm/pnpm/yarn lockfiles and no unapproved external npm deps; native subdirs stay isolated",
     },
     RuleSpec {
         id: "ARCH-004",

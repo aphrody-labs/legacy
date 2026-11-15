@@ -3,7 +3,7 @@
 //! Deterministically enforces the `C:\src` Sovereign Monorepo operating contract (`AGENTS.md`, `SOUL.md`, `CLAUDE.md`, `GEMINI.md`):
 //! - `ARCH-001` Crate Domain Purity (zero TS/JS/Py/Go in `crates/*`)
 //! - `ARCH-002` Crate Manifest & Edition 2024 Integrity (`Cargo.toml` required, `edition = "2024"`)
-//! - `ARCH-003` Package Domain & Zero-NPM Purity (valid `@aphrody/*` name, zero external npm dependencies, zero lockfiles, isolated native subdirs)
+//! - `ARCH-003` Package Domain Purity (manifest per language matches the code of each package; `@aphrody/*` name, zero external npm dependencies and zero lockfiles for package.json; isolated native subdirs)
 //! - `ARCH-004` Application Contract Purity (`aphrody-app` pure Rust; `aphrody` zero npm dependencies / zero `bun.lock`)
 //! - `ARCH-005` Root Topology & Junction Integrity (canonical physical directories only, valid junctions)
 //! - `ARCH-006` Infra Domain Purity (TypeScript restricted to `mesh-vn`)

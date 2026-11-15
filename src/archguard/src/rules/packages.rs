@@ -1,6 +1,7 @@
 use crate::constants::{is_reparse_point, normalize_rel};
 use crate::models::{ArchFinding, Severity};
 use serde_json::Value;
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
@@ -13,6 +14,151 @@ const ALLOWED_NATIVE_SUBDIRS: &[&str] = &[
     "zig",
     "python",
 ];
+
+/// Source languages a package can hold, each tied to the manifests that declare it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+enum Lang {
+    TypeScript,
+    Python,
+    Go,
+    Rust,
+    Cpp,
+}
+
+impl Lang {
+    fn name(self) -> &'static str {
+        match self {
+            Lang::TypeScript => "TypeScript/JavaScript",
+            Lang::Python => "Python",
+            Lang::Go => "Go",
+            Lang::Rust => "Rust",
+            Lang::Cpp => "C/C++",
+        }
+    }
+
+    fn manifests(self) -> &'static [&'static str] {
+        match self {
+            Lang::TypeScript => &["package.json"],
+            Lang::Python => &["pyproject.toml"],
+            Lang::Go => &["go.mod"],
+            Lang::Rust => &["Cargo.toml"],
+            Lang::Cpp => &["CMakeLists.txt", "meson.build"],
+        }
+    }
+
+    fn of_extension(ext: &str) -> Option<Lang> {
+        match ext {
+            "ts" | "tsx" | "mts" | "cts" | "js" | "mjs" | "cjs" | "jsx" => Some(Lang::TypeScript),
+            "py" => Some(Lang::Python),
+            "go" => Some(Lang::Go),
+            "rs" => Some(Lang::Rust),
+            "c" | "cc" | "cpp" | "cxx" | "h" | "hpp" => Some(Lang::Cpp),
+            _ => None,
+        }
+    }
+
+    fn of_manifest(file: &str) -> Option<Lang> {
+        [Lang::TypeScript, Lang::Python, Lang::Go, Lang::Rust, Lang::Cpp]
+            .into_iter()
+            .find(|l| l.manifests().contains(&file))
+    }
+}
+
+const SKIP_DIRS: &[&str] = &[
+    "node_modules",
+    "target",
+    "dist",
+    "build",
+    "vendor",
+    "__pycache__",
+];
+const MAX_SCAN_DEPTH: usize = 8;
+
+/// Collects the languages of the code and of the manifests found below `dir`.
+fn scan_languages(dir: &Path, depth: usize, code: &mut BTreeSet<Lang>, manifests: &mut BTreeSet<Lang>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+    for e in entries.flatten() {
+        let p = e.path();
+        let fname = p.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        if p.is_dir() {
+            if depth >= MAX_SCAN_DEPTH
+                || fname.starts_with('.')
+                || SKIP_DIRS.contains(&fname)
+                || is_reparse_point(&p)
+            {
+                continue;
+            }
+            scan_languages(&p, depth + 1, code, manifests);
+        } else if let Some(l) = Lang::of_manifest(fname) {
+            manifests.insert(l);
+        } else if let Some(l) = p
+            .extension()
+            .and_then(|x| x.to_str())
+            .and_then(Lang::of_extension)
+        {
+            code.insert(l);
+        }
+    }
+}
+
+/// ARCH-003 manifest rule: the manifests of a package must match the code inside it.
+/// Code of a language needs a manifest of that language (any depth); a Rust, Python, Go or C/C++
+/// manifest without code of its language is a warning; a package with neither is an error.
+fn manifest_findings(root: &Path, pkg_path: &Path, findings: &mut Vec<ArchFinding>) {
+    let name = pkg_path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    let rel = normalize_rel(root, pkg_path);
+    let mut code = BTreeSet::new();
+    let mut manifests = BTreeSet::new();
+    scan_languages(pkg_path, 0, &mut code, &mut manifests);
+
+    if code.is_empty() && manifests.is_empty() {
+        findings.push(ArchFinding {
+            rule_id: "ARCH-003".into(),
+            category: "package-domain-purity".into(),
+            severity: Severity::Error,
+            path: rel,
+            line: None,
+            message: format!("Package `{name}` has no manifest (package.json, pyproject.toml, go.mod, Cargo.toml, CMakeLists.txt or meson.build)"),
+            remediation: "Add the manifest of the language the package is written in.".into(),
+        });
+        return;
+    }
+    for lang in code.difference(&manifests) {
+        findings.push(ArchFinding {
+            rule_id: "ARCH-003".into(),
+            category: "package-domain-purity".into(),
+            severity: Severity::Error,
+            path: rel.clone(),
+            line: None,
+            message: format!(
+                "Package `{name}` holds {} code but no {} manifest",
+                lang.name(),
+                lang.manifests().join(" or ")
+            ),
+            remediation: format!("Add `{}` to the package.", lang.manifests()[0]),
+        });
+    }
+    for lang in manifests.difference(&code) {
+        if *lang == Lang::TypeScript {
+            continue; // package.json also carries metadata-only and data packages
+        }
+        findings.push(ArchFinding {
+            rule_id: "ARCH-003".into(),
+            category: "package-domain-purity".into(),
+            severity: Severity::Warning,
+            path: rel.clone(),
+            line: None,
+            message: format!(
+                "Package `{name}` has a {} manifest but no {} code",
+                lang.manifests().join(" or "),
+                lang.name()
+            ),
+            remediation: "Remove the manifest or add the code it describes.".into(),
+        });
+    }
+}
 
 /// Rules ARCH-003 & ARCH-016: Audit `packages/*`
 pub fn check_packages_domain(root: &Path, findings: &mut Vec<ArchFinding>) {
@@ -31,22 +177,11 @@ pub fn check_packages_domain(root: &Path, findings: &mut Vec<ArchFinding>) {
             continue;
         }
 
+        manifest_findings(root, &pkg_path, findings);
+
+        // The npm checks below apply to packages that carry a package.json at their root
+        // (the read below fails harmlessly for the others).
         let pkg_json = pkg_path.join("package.json");
-        if !pkg_json.is_file() {
-            findings.push(ArchFinding {
-                rule_id: "ARCH-003".into(),
-                category: "package-domain-purity".into(),
-                severity: Severity::Error,
-                path: normalize_rel(root, &pkg_path),
-                line: None,
-                message: format!("Missing `package.json` in package directory `{pkg_dir_name}`"),
-                remediation: format!(
-                    "Create `@aphrody/{pkg_dir_name}` `package.json` in `{}`.",
-                    normalize_rel(root, &pkg_path)
-                ),
-            });
-            continue;
-        }
 
         // Parse package.json
         if let Ok(content) = fs::read_to_string(&pkg_json) {
@@ -171,7 +306,7 @@ pub fn check_packages_domain(root: &Path, findings: &mut Vec<ArchFinding>) {
             }
         }
 
-        // Forbidden root Cargo.toml or go.mod directly under packages/* (must be inside native/ or subdirs)
+        // Forbidden root Cargo.toml directly under packages/* (Rust crates live in src/* or in native/ subdirs)
         let root_cargo = pkg_path.join("Cargo.toml");
         if root_cargo.is_file() {
             findings.push(ArchFinding {
@@ -186,22 +321,6 @@ pub fn check_packages_domain(root: &Path, findings: &mut Vec<ArchFinding>) {
                 remediation: format!(
                     "Move `{}` into `native/`, `crates/`, or `rust-core/` within the package.",
                     normalize_rel(root, &root_cargo)
-                ),
-            });
-        }
-
-        let root_go = pkg_path.join("go.mod");
-        if root_go.is_file() {
-            findings.push(ArchFinding {
-                rule_id: "ARCH-003".into(),
-                category: "package-domain-purity".into(),
-                severity: Severity::Error,
-                path: normalize_rel(root, &root_go),
-                line: None,
-                message: format!("Root `go.mod` found directly inside package `{pkg_dir_name}`"),
-                remediation: format!(
-                    "Move `{}` into `infra/` or isolated native subfolder.",
-                    normalize_rel(root, &root_go)
                 ),
             });
         }
