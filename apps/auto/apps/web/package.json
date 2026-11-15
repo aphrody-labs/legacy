@@ -19,6 +19,7 @@
     "@auto/automate": "workspace:*",
     "@auto/client": "workspace:*",
     "@auto/domain": "workspace:*",
+    "@auto/i18n": "workspace:*",
     "@auto/tenancy": "workspace:*",
     "@auto/ui": "workspace:*",
     "@base-ui/react": "^1.9.0",

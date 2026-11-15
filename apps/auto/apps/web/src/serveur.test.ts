@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { fileURLToPath } from "node:url";
 import { PLANS } from "@auto/billing";
+import { LOCALES, SOURCE_LOCALE, createTranslator } from "@auto/i18n";
 import { palettes } from "@auto/ui";
 import { demarrerWeb } from "./serveur";
 import { PAGES_PUBLIQUES, empreintesScripts, empreintesStyles, routeRapportCsp } from "./securite";
@@ -50,14 +51,29 @@ test("pages publiques : tarifs et mentions, contact dans le pied de page", async
   }
 });
 
+// Every shipped catalog gets its own prerendered landing page, chosen by ?lang= or Accept-Language.
+test("accueil : une page prérendue par langue livrée, négociée", async () => {
+  for (const l of LOCALES) {
+    const t = createTranslator(l);
+    for (const r of [await fetch(new URL("/", web.url), { headers: { "accept-language": l } }), await fetch(new URL(`/?lang=${l}`, web.url))]) {
+      const texte = await r.text();
+      expect(r.headers.get("vary")).toBe("Accept-Language");
+      expect(texte).toContain(`lang="${l}"`);
+      expect(texte).toContain(`<h1 id="titre">${t.t("home.hero.line1")}`);
+      expect(texte).toContain(`<title>${t.t("home.meta.title")}</title>`);
+    }
+  }
+});
+
 // Le premier appel de "/" compile la vitrine React : délai élargi sous charge.
 test("accueil : contenu prérendu (h1 avant JavaScript), CSS en ligne, script à empreinte servi", async () => {
   const p = await page("/");
   expect(p.status).toBe(200);
   expect(p.type).toContain("text/html");
-  expect(p.texte).toContain('lang="fr"');
+  expect(p.texte).toContain(`lang="${SOURCE_LOCALE}"`);
   expect(p.texte).toContain('<div id="racine" data-prerendu');
-  expect(p.texte).toMatch(/<h1 id="titre">Du chantier/);
+  expect(p.texte).toContain(`<h1 id="titre">${createTranslator(SOURCE_LOCALE).t("home.hero.line1")}`);
+  expect(p.texte).not.toContain("%%");
   expect(p.texte).toContain('href="/app/inscription"');
   expect(p.texte).not.toContain('<link rel="stylesheet"');
   expect(p.texte).toContain("<style>");

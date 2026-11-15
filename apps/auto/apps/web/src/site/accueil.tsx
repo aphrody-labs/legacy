@@ -1,219 +1,122 @@
-// Vitrine BTP : captures réelles d’une entreprise de démonstration isolée.
+// Construction-trade showcase: real captures of an isolated demo company. Every string comes from the i18n catalogs.
+import { createTranslator, type Translator } from "@auto/i18n";
 import { Icone, Image } from "./medias";
 import { IMAGES } from "./images.gen";
 
 const INSCRIPTION = "/app/inscription";
-const CONTACT = "mailto:contact@aphrody.com?subject=Installation%20auto%20pour%20mon%20entreprise";
+// DOM ids and capture names are stable identifiers; the catalog keys use English names.
 const DEMONSTRATIONS = [
-  {
-    id: "chantiers",
-    nom: "Chantiers",
-    capture: "analytique",
-    alt: "Le chantier Villa des Pins dans auto : synthèse des ventes, achats et solde HT, avec son avancement.",
-    titre: "Le bon dossier, du premier devis à la dernière livraison.",
-    texte:
-      "Rattachez les devis, factures et achats au chantier. Consultez les ventes et les achats HT dans sa synthèse, avec les commandes non facturées à part.",
-    precision: "Le solde HT exclut la main-d’œuvre et les charges non saisies : ce n’est pas une marge nette.",
-    points: [
-      ["Rattacher les pièces", "Devis, factures et achats liés au bon chantier."],
-      ["Suivre les montants", "Ventes et achats HT dans une même synthèse."],
-      ["Garder l’historique", "Les pièces archivées restent consultables."],
-    ],
-  },
-  {
-    id: "devis",
-    nom: "Devis et factures",
-    capture: "devis-editeur",
-    alt: "L’éditeur de devis réel d’auto, avec le client, le chantier et les lignes de travaux.",
-    titre: "Votre devis prend forme, ligne après ligne.",
-    texte:
-      "Choisissez votre client et votre chantier, détaillez les prestations et préparez votre document. Retrouvez ensuite les factures, acomptes, avoirs et paiements dans le même outil.",
-    precision:
-      "Vous vérifiez le document avant son émission. Le raccordement à une plateforme agréée reste en qualification.",
-    points: [
-      ["Chiffrer les travaux", "Des lignes de prestations, des quantités et des prix HT."],
-      ["Retrouver le client", "Ses coordonnées et son chantier au même endroit."],
-      ["Suivre la facturation", "Factures, acomptes, avoirs et paiements enregistrés."],
-    ],
-  },
-  {
-    id: "achats",
-    nom: "Achats",
-    capture: "achats",
-    alt: "La liste réelle des factures fournisseurs dans auto, avec les pièces à vérifier et leurs montants.",
-    titre: "Les achats fournisseurs rejoignent le bon chantier.",
-    texte:
-      "Déposez vos factures reçues, vérifiez les informations et classez-les par fournisseur et par chantier. Retrouvez aussi vos bons de livraison et confirmations de commande.",
-    precision:
-      "L’extraction assistée dépend des services configurés. Une vérification humaine reste nécessaire avant validation.",
-    points: [
-      ["Rassembler les factures", "Des pièces reçues au même endroit, avec leur statut."],
-      ["Vérifier avant de valider", "Corrigez les informations extraites si nécessaire."],
-      ["Classer par chantier", "Les achats validés alimentent la synthèse HT."],
-    ],
-  },
-  {
-    id: "documents",
-    nom: "Documents",
-    capture: "recherche",
-    alt: "La recherche réelle d’auto retrouve des devis, factures et pièces de chantier par référence.",
-    titre: "Une référence suffit pour retrouver le fil.",
-    texte:
-      "Recherchez une pièce par référence, client, fournisseur ou chantier. Les dossiers raccordés et les documents indexés rejoignent la recherche selon les droits de chaque membre.",
-    precision:
-      "Le raccordement d’un serveur de fichiers nécessite sa configuration. Les originaux ne sont ni déplacés ni supprimés.",
-    points: [
-      ["Retrouver un document", "Une recherche par référence, tiers ou chantier."],
-      ["Raccorder vos dossiers", "Des copies indexées, sans déplacer les originaux."],
-      ["Partager le bon accès", "Des permissions par membre et espace de gestion."],
-    ],
-  },
+  { id: "chantiers", key: "sites", capture: "analytique" },
+  { id: "devis", key: "quotes", capture: "devis-editeur" },
+  { id: "achats", key: "purchases", capture: "achats" },
+  { id: "documents", key: "documents", capture: "recherche" },
 ] as const;
 const OFFRES = [
-  {
-    nom: "Gratuit",
-    prix: "0 €",
-    pour: "Pour découvrir auto",
-    points: ["10 factures par mois", "2 employés", "1 Go de stockage"],
-    note: "20 appels d’IA par mois.",
-  },
-  {
-    nom: "Pro",
-    prix: "14 €",
-    pour: "Pour les petites équipes",
-    points: ["200 factures par mois", "10 employés", "2 boîtes mail"],
-    note: "500 appels d’IA par mois, API publique. 30 jours d’essai.",
-  },
-  {
-    nom: "Business",
-    prix: "39 €",
-    pour: "Pour les structures en croissance",
-    points: ["Factures illimitées", "50 employés", "10 boîtes mail"],
-    note: "5 000 appels d’IA par mois.",
-  },
+  { id: "free", prix: 0, quotas: [10, 2, 1], note: { count: 20 } },
+  { id: "pro", prix: 14, quotas: [200, 10, 2], note: { count: 500, days: 30 } },
+  { id: "business", prix: 39, quotas: [null, 50, 10], note: { count: 5000 } },
 ] as const;
-const QUESTIONS = [
-  [
-    "Est-ce adapté à une entreprise du bâtiment ?",
-    "Auto rassemble vos devis, factures, fournisseurs, chantiers et pièces. Vous gardez la main sur les vérifications et les validations. Le suivi HT par chantier porte sur les documents affectés ; il ne remplace pas un calcul de marge nette intégrant toutes vos charges.",
-  ],
-  [
-    "Faut-il installer un logiciel ?",
-    "Vous pouvez commencer sur le site depuis votre navigateur, avec un compte auto. Sur un navigateur compatible, ajoutez l’application à votre écran d’accueil ou installez-la depuis le menu du navigateur. Une installation locale et le raccordement de vos dossiers se préparent avec votre accompagnant informatique.",
-  ],
-  [
-    "Que fait l’extraction des documents ?",
-    "Selon les services configurés, auto lit les informations des factures et devis reçus pour vous aider à les saisir. Vous vérifiez les montants et les lignes, corrigez les erreurs et validez. Un document extrait n’est pas une facture émise automatiquement.",
-  ],
-  [
-    "Et la facturation électronique ?",
-    "Auto produit des factures au format Factur-X. Le raccordement à une plateforme agréée est en cours de qualification ; nous ne le présentons pas comme un service déjà ouvert. Les paiements Stripe sont actuellement en mode test.",
-  ],
-  [
-    "Puis-je récupérer mes données ?",
-    "Les exports permettent de récupérer vos données et vos pièces selon vos droits. Les espaces de gestion disposent notamment d’exports Excel et PDF ; l’analytique d’un chantier s’exporte aussi en CSV. Retrouvez les conditions de chaque offre sur la page Tarifs.",
-  ],
-] as const;
+const QUESTIONS = [1, 2, 3, 4, 5] as const;
+
+interface Props {
+  t: Translator;
+}
 
 function Fleche() {
   return <Icone nom="arrow_forward" />;
 }
-function Marque() {
+function Marque({ t }: Props) {
   return (
-    <a className="btp-marque" href="/" aria-label="auto, accueil">
+    <a className="btp-marque" href="/" aria-label={t.t("home.brand.label")}>
       <Icone nom="receipt_long" />
       <span>auto</span>
     </a>
   );
 }
-function Entete() {
+function Entete({ t }: Props) {
   return (
     <header className="btp-entete">
-      <nav className="btp-conteneur btp-navigation" aria-label="Navigation du site">
-        <Marque />
+      <nav className="btp-conteneur btp-navigation" aria-label={t.t("home.nav.label")}>
+        <Marque t={t} />
         <div className="btp-liens-principaux">
-          <a href="#produit">Le produit</a>
-          <a href="#installation">Installation</a>
-          <a href="/telechargements">Applications</a>
-          <a href="/tarifs">Tarifs</a>
+          <a href="#produit">{t.t("home.nav.product")}</a>
+          <a href="#installation">{t.t("home.nav.install")}</a>
+          <a href="/telechargements">{t.t("home.nav.apps")}</a>
+          <a href="/tarifs">{t.t("home.nav.pricing")}</a>
         </div>
         <div className="btp-compte">
-          <a href="/app/connexion">Se connecter</a>
+          <a href="/app/connexion">{t.t("home.nav.signin")}</a>
           <a className="btp-bouton btp-bouton-menthe" href={INSCRIPTION}>
-            Essayer gratuitement
+            {t.t("home.nav.try")}
           </a>
         </div>
       </nav>
     </header>
   );
 }
-function Heros() {
+function Heros({ t }: Props) {
   return (
     <section className="btp-heros" aria-labelledby="titre">
       <Image nom="btp-plan" className="btp-heros-fond" sizes="100vw" alt="" fetchPriority="high" />
       <div className="btp-conteneur btp-heros-grille">
         <div className="btp-heros-texte">
           <h1 id="titre">
-            Du chantier
+            {t.t("home.hero.line1")}
             <br />
-            au bureau,
+            {t.t("home.hero.line2")}
             <br />
-            <span>tout se retrouve.</span>
+            <span>{t.t("home.hero.line3")}</span>
           </h1>
-          <p>Devis, factures, achats et documents : gardez le fil de vos chantiers, au même endroit.</p>
+          <p>{t.t("home.hero.lead")}</p>
           <div className="btp-actions">
             <a className="btp-bouton btp-bouton-menthe" href={INSCRIPTION}>
-              Créer mon compte gratuit
+              {t.t("home.cta.create")}
             </a>
             <a className="btp-lien" href="#produit">
-              Découvrir le produit <Fleche />
+              {t.t("home.hero.discover")} <Fleche />
             </a>
           </div>
         </div>
-        <FilmHero />
+        <FilmHero t={t} />
       </div>
-      <div className="btp-conteneur btp-rail" aria-label="Les espaces de gestion">
+      <div className="btp-conteneur btp-rail" aria-label={t.t("home.rail.label")}>
         <span>
           <Icone nom="description" />
-          Devis et factures
+          {t.t("home.rail.quotes")}
         </span>
         <span>
           <Icone nom="shopping_cart" />
-          Achats fournisseurs
+          {t.t("home.rail.purchases")}
         </span>
         <span>
           <Icone nom="folder_open" />
-          Chantiers et documents
+          {t.t("home.rail.sites")}
         </span>
       </div>
     </section>
   );
 }
 /**
- * Capture du héros ; le film (modèle inerte) la remplace si /media répond (ilots.ts). Balisage statique : la
- * page est prérendue au build et animée sans React dans le navigateur.
+ * Hero capture; the film (inert template) replaces it if /media responds (ilots.ts). Static markup: the
+ * page is prerendered at build time and animated without React in the browser.
  */
-function FilmHero() {
+function FilmHero({ t }: Props) {
   return (
     <>
-      <a className="btp-heros-capture" href="#produit" aria-label="Découvrir les écrans réels d’auto">
-        <Image
-          nom="btp-analytique"
-          sizes="(min-width: 1101px) 950px, 100vw"
-          alt="Le dossier Villa des Pins dans auto : ventes, achats et suivi du chantier."
-        />
+      <a className="btp-heros-capture" href="#produit" aria-label={t.t("home.film.capture.label")}>
+        <Image nom="btp-analytique" sizes="(min-width: 1101px) 950px, 100vw" alt={t.t("home.film.capture.alt")} />
       </a>
       <template id="modele-film">
         <figure className="btp-heros-film" id="film-lancement">
-          {/* Ni affiche ni source avant le clic (ilots.ts) : rien n'est téléchargé tant que le film n'est pas lancé. */}
+          {/* Neither poster nor source before the click (ilots.ts): nothing is downloaded until the film is started. */}
           <video
             playsInline
             preload="none"
             width={IMAGES["btp-analytique"].largeur}
             height={IMAGES["btp-analytique"].hauteur}
-            aria-label="Présentation d’auto en français : usages BTP et installation"
+            aria-label={t.t("home.film.video.label")}
           >
-            Votre navigateur ne peut pas lire cette vidéo. Retrouvez les écrans du produit ci-dessous.
+            {t.t("home.film.unsupported")}
           </video>
           <Image
             nom="btp-analytique"
@@ -225,34 +128,30 @@ function FilmHero() {
           <div className="btp-heros-film-voile">
             <div className="btp-heros-film-action">
               <p>
-                Présentation d’auto <span>· 4 min 20</span>
+                {t.t("home.film.title")} <span>{t.t("home.film.duration")}</span>
               </p>
-              <button className="btp-film-lancer" type="button" aria-label="Voir la présentation vidéo d’auto">
+              <button className="btp-film-lancer" type="button" aria-label={t.t("home.film.play.label")}>
                 <Icone nom="play_arrow" />
-                Voir la présentation
+                {t.t("home.film.play")}
               </button>
             </div>
           </div>
-          <figcaption className="btp-visuellement-cache">
-            Usages BTP et installation expliqués en français. La vidéo ne démarre qu’à votre demande.
-          </figcaption>
+          <figcaption className="btp-visuellement-cache">{t.t("home.film.caption")}</figcaption>
         </figure>
       </template>
     </>
   );
 }
 
-function Produit() {
+function Produit({ t }: Props) {
   return (
     <section className="btp-section btp-produit" id="produit" aria-labelledby="titre-produit">
       <div className="btp-conteneur">
-        <h2 id="titre-produit">Un chantier. Toutes ses pièces.</h2>
-        <p className="btp-introduction">
-          Retrouvez le devis, les achats et les livraisons sans passer d’un dossier à l’autre.
-        </p>
-        {/* Onglets ARIA (clavier et sélection : ilots.ts) ; tous les panneaux sont dans le HTML prérendu. */}
+        <h2 id="titre-produit">{t.t("home.product.title")}</h2>
+        <p className="btp-introduction">{t.t("home.product.lead")}</p>
+        {/* ARIA tabs (keyboard and selection: ilots.ts); all panels are in the prerendered HTML. */}
         <div>
-          <div className="btp-onglets" role="tablist" aria-label="Découvrir les espaces d’auto">
+          <div className="btp-onglets" role="tablist" aria-label={t.t("home.product.tabs")}>
             {DEMONSTRATIONS.map((demo, i) => (
               <button
                 key={demo.id}
@@ -264,7 +163,7 @@ function Produit() {
                 tabIndex={i === 0 ? 0 : -1}
                 className="btp-onglet"
               >
-                {demo.nom}
+                {t.t(`home.demo.${demo.key}.name`)}
               </button>
             ))}
           </div>
@@ -283,37 +182,38 @@ function Produit() {
                   href={`/img/btp-${demo.capture}.webp`}
                   target="_blank"
                   rel="noreferrer"
-                  aria-label={`Agrandir la capture : ${demo.nom} (nouvel onglet)`}
+                  aria-label={t.t("home.product.enlarge.label", { name: t.t(`home.demo.${demo.key}.name`) })}
                 >
                   <Image
                     nom={`btp-${demo.capture}`}
                     sizes="(min-width: 1280px) 1180px, 100vw"
-                    alt={demo.alt}
+                    alt={t.t(`home.demo.${demo.key}.alt`)}
                     loading="lazy"
                   />
                 </a>
                 <figcaption>
-                  Écrans réels, données de démonstration.{" "}
+                  {t.t("home.product.real")}{" "}
                   <a href={`/img/btp-${demo.capture}.webp`} target="_blank" rel="noreferrer">
-                    Agrandir<span className="btp-sr"> la capture (nouvel onglet)</span> <Icone nom="open_in_new" />
+                    {t.t("home.product.enlarge")}
+                    <span className="btp-sr">{t.t("home.product.enlarge.sr")}</span> <Icone nom="open_in_new" />
                   </a>
                 </figcaption>
               </figure>
               <div className="btp-points">
-                {demo.points.map(([titre, texte]) => (
-                  <div key={titre}>
-                    <h3>{titre}</h3>
-                    <p>{texte}</p>
+                {[1, 2, 3].map((n) => (
+                  <div key={n}>
+                    <h3>{t.t(`home.demo.${demo.key}.p${n}.title`)}</h3>
+                    <p>{t.t(`home.demo.${demo.key}.p${n}.text`)}</p>
                   </div>
                 ))}
               </div>
-              <p className="btp-note">{demo.precision}</p>
+              <p className="btp-note">{t.t(`home.demo.${demo.key}.note`)}</p>
               <details className="btp-cas">
                 <summary>
-                  {demo.titre}
+                  {t.t(`home.demo.${demo.key}.title`)}
                   <Icone nom="keyboard_arrow_down" />
                 </summary>
-                <p>{demo.texte}</p>
+                <p>{t.t(`home.demo.${demo.key}.text`)}</p>
               </details>
             </div>
           ))}
@@ -322,40 +222,39 @@ function Produit() {
     </section>
   );
 }
-function Installation() {
+function Installation({ t }: Props) {
+  const contact = `mailto:contact@aphrody.com?subject=${encodeURIComponent(t.t("home.install.local.subject"))}`;
   return (
     <section className="btp-section btp-installation" id="installation" aria-labelledby="titre-installation">
       <div className="btp-conteneur">
         <div className="btp-installation-grille">
           <div>
             <h2 id="titre-installation">
-              Commencez dans
+              {t.t("home.install.title1")}
               <br />
-              votre navigateur.
+              {t.t("home.install.title2")}
             </h2>
-            <p className="btp-introduction">
-              Au bureau ou sur le chantier, retrouvez auto sur votre ordinateur, votre tablette ou votre téléphone.
-            </p>
+            <p className="btp-introduction">{t.t("home.install.lead")}</p>
             <ol className="btp-etapes">
               <li>
-                <h3>Créez votre compte</h3>
-                <p>Renseignez votre entreprise et ses coordonnées.</p>
+                <h3>{t.t("home.install.s1.title")}</h3>
+                <p>{t.t("home.install.s1.text")}</p>
               </li>
               <li>
-                <h3>Retrouvez vos premiers dossiers</h3>
-                <p>Ajoutez un client, créez un chantier, préparez votre devis.</p>
+                <h3>{t.t("home.install.s2.title")}</h3>
+                <p>{t.t("home.install.s2.text")}</p>
               </li>
               <li>
-                <h3>Gardez auto à portée de main</h3>
-                <p>Ajoutez l’application à l’écran d’accueil depuis votre navigateur compatible.</p>
+                <h3>{t.t("home.install.s3.title")}</h3>
+                <p>{t.t("home.install.s3.text")}</p>
               </li>
             </ol>
             <a className="btp-bouton btp-bouton-vert" href={INSCRIPTION}>
-              Créer mon compte <Fleche />
+              {t.t("home.install.create")} <Fleche />
             </a>
             <p className="btp-note">
               <a className="btp-lien" href="/telechargements">
-                Voir les applications disponibles <Fleche />
+                {t.t("home.install.apps")} <Fleche />
               </a>
             </p>
           </div>
@@ -364,7 +263,7 @@ function Installation() {
               <Image
                 nom="btp-tableau"
                 sizes="(min-width: 1024px) 50vw, 90vw"
-                alt="Le tableau de bord d’auto sur ordinateur, avec des données de démonstration."
+                alt={t.t("home.install.figure.desktop")}
                 loading="lazy"
               />
             </div>
@@ -372,86 +271,83 @@ function Installation() {
               <Image
                 nom="btp-mobile"
                 sizes="(min-width: 1024px) 160px, 30vw"
-                alt="Le chantier Villa des Pins affiché sur téléphone dans auto."
+                alt={t.t("home.install.figure.mobile")}
                 loading="lazy"
               />
             </div>
-            <figcaption>Application web installable selon votre navigateur.</figcaption>
+            <figcaption>{t.t("home.install.figure.caption")}</figcaption>
           </figure>
         </div>
         <div className="btp-installation-locale">
           <Icone nom="dns" />
           <div>
-            <h3>Vous avez un serveur de fichiers ?</h3>
-            <p>
-              Une installation locale et le raccordement de vos dossiers se préparent avec votre accompagnant
-              informatique.
-            </p>
+            <h3>{t.t("home.install.local.title")}</h3>
+            <p>{t.t("home.install.local.text")}</p>
           </div>
-          <a className="btp-lien" href={CONTACT}>
-            Parlons de votre installation <Fleche />
+          <a className="btp-lien" href={contact}>
+            {t.t("home.install.local.cta")} <Fleche />
           </a>
         </div>
       </div>
     </section>
   );
 }
-function Prix() {
+function Prix({ t }: Props) {
   return (
     <section className="btp-section btp-prix" id="offres" aria-labelledby="titre-prix">
       <div className="btp-conteneur">
         <h2 id="titre-prix">
-          Une offre pour démarrer,
+          {t.t("home.pricing.title1")}
           <br />
-          de la place pour grandir.
+          {t.t("home.pricing.title2")}
         </h2>
         <div className="btp-offres">
           {OFFRES.map((offre) => (
-            <article className={`btp-offre${offre.nom === "Pro" ? " btp-offre-pro" : ""}`} key={offre.nom}>
-              <h3>{offre.nom}</h3>
-              <p className="btp-pour">{offre.pour}</p>
+            <article className={`btp-offre${offre.id === "pro" ? " btp-offre-pro" : ""}`} key={offre.id}>
+              <h3>{t.t(`home.plan.${offre.id}.name`)}</h3>
+              <p className="btp-pour">{t.t(`home.plan.${offre.id}.for`)}</p>
               <p className="btp-montant">
-                {offre.prix}
-                <span>HT par mois</span>
+                {t.currency(offre.prix, "EUR", { maximumFractionDigits: 0 })}
+                <span>{t.t("home.pricing.per_month")}</span>
               </p>
               <ul>
-                {offre.points.map((point) => (
-                  <li key={point}>
+                {offre.quotas.map((count, i) => (
+                  <li key={i}>
                     <Icone nom="check" />
-                    {point}
+                    {t.t(`home.plan.${offre.id}.p${i + 1}`, { count: count ?? 0 })}
                   </li>
                 ))}
               </ul>
-              <p className="btp-note btp-note-offre">{offre.note}</p>
+              <p className="btp-note btp-note-offre">{t.t(`home.plan.${offre.id}.note`, offre.note)}</p>
               <a className="btp-bouton btp-bouton-vert" href={INSCRIPTION}>
-                Créer mon compte gratuit
+                {t.t("home.cta.create")}
               </a>
             </article>
           ))}
         </div>
         <div className="btp-comparer">
           <a className="btp-lien" href="/tarifs">
-            Comparer les offres <Fleche />
+            {t.t("home.pricing.compare")} <Fleche />
           </a>
-          <p className="btp-note">Les paiements d’abonnement sont actuellement en mode test.</p>
+          <p className="btp-note">{t.t("home.pricing.test_mode")}</p>
         </div>
       </div>
     </section>
   );
 }
-function Questions() {
+function Questions({ t }: Props) {
   return (
     <section className="btp-section btp-questions" id="questions" aria-labelledby="titre-questions">
       <div className="btp-conteneur">
-        <h2 id="titre-questions">Des réponses avant de commencer.</h2>
+        <h2 id="titre-questions">{t.t("home.faq.title")}</h2>
         <div className="btp-faq">
-          {QUESTIONS.map(([question, reponse], index) => (
-            <details key={question} open={index === 0}>
+          {QUESTIONS.map((n, index) => (
+            <details key={n} open={index === 0}>
               <summary>
-                {question}
+                {t.t(`home.faq.q${n}`)}
                 <Icone nom="add" />
               </summary>
-              <p>{reponse}</p>
+              <p>{t.t(`home.faq.a${n}`)}</p>
             </details>
           ))}
         </div>
@@ -459,51 +355,53 @@ function Questions() {
     </section>
   );
 }
-function Pied() {
+function Pied({ t }: Props) {
   return (
     <>
       <section className="btp-appel" aria-labelledby="titre-appel">
         <div className="btp-conteneur">
           <h2 id="titre-appel">
-            Votre prochain
+            {t.t("home.footer.title1")}
             <br />
-            chantier commence ici.
+            {t.t("home.footer.title2")}
           </h2>
           <a className="btp-bouton btp-bouton-menthe" href={INSCRIPTION}>
-            Créer mon compte gratuit <Fleche />
+            {t.t("home.cta.create")} <Fleche />
           </a>
         </div>
       </section>
       <footer className="btp-pied">
         <div className="btp-conteneur">
-          <Marque />
-          <nav aria-label="Liens utiles">
-            <a href="/tarifs">Tarifs</a>
-            <a href="/telechargements">Applications</a>
-            <a href="mailto:contact@aphrody.com">Contact</a>
-            <a href="/mentions-legales">Mentions légales</a>
-            <a href="/confidentialite">Confidentialité</a>
+          <Marque t={t} />
+          <nav aria-label={t.t("home.footer.links")}>
+            <a href="/tarifs">{t.t("home.nav.pricing")}</a>
+            <a href="/telechargements">{t.t("home.nav.apps")}</a>
+            <a href="mailto:contact@aphrody.com">{t.t("home.footer.contact")}</a>
+            <a href="/mentions-legales">{t.t("home.footer.legal")}</a>
+            <a href="/confidentialite">{t.t("home.footer.privacy")}</a>
           </nav>
         </div>
       </footer>
     </>
   );
 }
-export function Accueil() {
+/** Landing page in the given locale (BCP 47 tag or Accept-Language value; negotiated against the shipped catalogs). */
+export function Accueil({ locale }: { locale?: string | null }) {
+  const t = createTranslator(locale);
   return (
     <>
       <a className="btp-evitement" href="#contenu">
-        Aller au contenu
+        {t.t("home.skip")}
       </a>
-      <Entete />
+      <Entete t={t} />
       <main id="contenu">
-        <Heros />
-        <Produit />
-        <Installation />
-        <Prix />
-        <Questions />
+        <Heros t={t} />
+        <Produit t={t} />
+        <Installation t={t} />
+        <Prix t={t} />
+        <Questions t={t} />
       </main>
-      <Pied />
+      <Pied t={t} />
     </>
   );
 }

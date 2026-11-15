@@ -16,6 +16,7 @@ import { ressourcesCraft } from "./craft";
 import { fichierPublic } from "./fichier-public";
 import { routePolice } from "./polices";
 import { construireSite, type NomPage } from "./construction";
+import { matchLocale } from "@auto/i18n";
 import { POINT_RAPPORT, reponsePage, routeRapportCsp, routesReferencement } from "./securite";
 import { routesDistributions } from "./distributions";
 
@@ -156,7 +157,13 @@ function front(development: boolean) {
   site.catch((e) => console.error("Construction du front en échec", e));
   const page = (nom: NomPage) => async (req: Request) => {
     try {
-      return reponsePage(req, (await site).pages[nom]);
+      const s = await site;
+      if (nom !== "accueil") return reponsePage(req, s.pages[nom]);
+      // Landing page: one prerendered document per shipped locale, chosen by ?lang= then Accept-Language.
+      const demande = new URL(req.url).searchParams.get("lang") ?? req.headers.get("accept-language");
+      const r = reponsePage(req, s.accueil[matchLocale(demande)] ?? s.pages.accueil);
+      r.headers.set("vary", "Accept-Language");
+      return r;
     } catch {
       return new Response("Page indisponible", { status: 503, headers: { "cache-control": "no-store" } });
     }

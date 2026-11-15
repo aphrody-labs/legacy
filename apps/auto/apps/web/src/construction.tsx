@@ -5,6 +5,7 @@
 import type { BunPlugin } from "bun";
 import { renderToString } from "react-dom/server";
 import { greffonPolices } from "./polices";
+import { LOCALES, SOURCE_LOCALE, createTranslator } from "@auto/i18n";
 import { Accueil } from "./site/accueil";
 
 export const PAGES = {
@@ -25,6 +26,8 @@ export interface Ressource {
 }
 export interface Site {
   pages: Record<NomPage, string>;
+  /** Prerendered landing page per shipped locale (one catalog = one entry); `pages.accueil` is the source-locale one. */
+  accueil: Record<string, string>;
   /** Fichiers à empreinte (`/chunk-….js`, `/chunk-….css`…), servis en cache immuable. */
   ressources: Map<string, Ressource>;
 }
@@ -36,11 +39,27 @@ const SCRIPT_MODULE = /<script type="module"[^>]*src="\/[^"]+\.js"[^>]*><\/scrip
  * Accueil : contenu React prérendu dans #racine, CSS en ligne (aucune feuille bloquante) et, à la place du bundle
  * React, le seul script des îlots (`script`, chemin à empreinte).
  */
-export function finaliserAccueil(html: string, ressources: Map<string, Ressource>, script: string): string {
+/** Replace the `%%key%%` tokens of a page template with the catalog text (HTML-escaped) of the locale. */
+export function localiserTete(html: string, locale: string): string {
+  const t = createTranslator(locale);
+  const echapper = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+  return html.replace(/%%([\w.:]+)%%/g, (_, cle: string) =>
+    cle === "og:locale" ? new Intl.Locale(t.locale).maximize().toString().replace("-", "_") : echapper(t.t(cle)),
+  );
+}
+
+export function finaliserAccueil(
+  html: string,
+  ressources: Map<string, Ressource>,
+  script: string,
+  locale?: string,
+): string {
   if (!RACINE.test(html)) throw new Error("index.html : #racine introuvable");
   if (!SCRIPT_MODULE.test(html)) throw new Error("index.html : script de la vitrine introuvable");
-  const contenu = renderToString(<Accueil />);
-  let sortie = html.replace(RACINE, () => `<div id="racine" data-prerendu>${contenu}</div>`);
+  const contenu = renderToString(<Accueil locale={locale} />);
+  let sortie = (
+    locale ? localiserTete(html, locale).replace(/<html lang="[^"]*"/, () => `<html lang="${locale}"`) : html
+  ).replace(RACINE, () => `<div id="racine" data-prerendu>${contenu}</div>`);
   sortie = sortie.replace(SCRIPT_MODULE, () => `<script type="module" crossorigin src="${script}"></script>`);
   return incorporerCss(sortie, ressources);
 }
@@ -98,10 +117,13 @@ export async function construireSite(): Promise<Site> {
     // Accueil prérendu ; application (connexion comprise) avec sa CSS en ligne : aucune feuille bloquante.
     pages[nom] =
       nom === "accueil"
-        ? finaliserAccueil(page, ressources, scriptIlots)
+        ? finaliserAccueil(page, ressources, scriptIlots, SOURCE_LOCALE)
         : nom === "app"
           ? incorporerCss(page, ressources)
           : page;
   }
-  return { pages, ressources };
+  const accueil = Object.fromEntries(
+    LOCALES.map((l) => [l, finaliserAccueil(html.get(PAGES.accueil)!, ressources, scriptIlots, l)]),
+  );
+  return { pages, accueil, ressources };
 }
