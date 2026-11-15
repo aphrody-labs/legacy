@@ -154,7 +154,7 @@ function claude(env: Env): Identity[] {
           detail: `${oauth.subscriptionType} until ${String(oauth.loginExpiresAt).slice(0, 10)}`,
         }
       : oauth?.loggedIn && oauth.authMethod === "oauth_token"
-        ? // Jeton longue durée de `claude setup-token` (CLAUDE_CODE_OAUTH_TOKEN, coffre) : même abonnement, sans session.
+        ? // Long-lived token from `claude setup-token` (CLAUDE_CODE_OAUTH_TOKEN, vault): same subscription, no session.
           {
             provider: "claude.ai",
             status: "ok",

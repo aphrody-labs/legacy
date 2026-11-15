@@ -20,7 +20,7 @@ describe("auth manifest", () => {
   test("keyless CI federation is declared without spaces (gcloud.cmd goes through cmd.exe)", () => {
     const g = loadManifest(root).auth.oidc?.gcp;
     expect(g?.issuer).toBe("https://token.actions.githubusercontent.com");
-    // Propriétaire du dépôt depuis le transfert aphrody-dev/src -> aphrody-labs/src (2026-11-13).
+    // Repository owner since the transfer aphrody-dev/src -> aphrody-labs/src (2026-11-13).
     expect(g?.condition).toBe("assertion.repository_owner=='aphrody-labs'");
     for (const r of (g as { repos?: string[] }).repos ?? [])
       expect(r.startsWith("aphrody-labs/")).toBe(true);
@@ -63,7 +63,7 @@ describe("auth manifest", () => {
       },
     ]);
     expect(out).toContain("1 ok");
-    expect(out).toContain("1 invalides");
+    expect(out).toContain("1 invalid");
   });
 });
 

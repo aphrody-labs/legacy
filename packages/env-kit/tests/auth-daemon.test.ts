@@ -1,4 +1,4 @@
-// auth daemon : un identifiant qui attend le propriétaire n'est signalé qu'une fois par 24 h.
+// auth daemon: a credential waiting on the owner is reported only once per 24 h.
 import { expect, test } from "bun:test";
 import { due, needsOwner } from "../src/auth-daemon";
 
@@ -20,7 +20,7 @@ test("signalement au plus une fois par 24 h et par identifiant", () => {
   expect(needsOwner({ ...c("NPM_TOKEN", "action"), kind: "oidc" })).toBe(false);
 });
 
-test("runner Linux : seuls gh, claude, codex et le stockage sont sondés", async () => {
+test("Linux runner: only gh, claude, codex and storage are probed", async () => {
   const { scope } = await import("../src/auth-daemon");
   const checks = [
     c("gh", "ok"),

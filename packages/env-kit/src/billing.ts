@@ -1,6 +1,6 @@
-// `env-kit billing status|plan|apply|relink` : facturation Google Cloud gérée par agents (docs/infra/GCP-BILLING.md).
-// Jeton sans clé : impersonation de billing-agent@aphrody (roles/iam.serviceAccountTokenCreator du propriétaire),
-// ou OIDC GitHub (pool `github`) en CI via CLOUDSDK_AUTH_ACCESS_TOKEN. Aucune dépense : budgets, lecture, liaison.
+// `env-kit billing status|plan|apply|relink`: Google Cloud billing managed by agents (docs/infra/GCP-BILLING.md).
+// Keyless token: impersonation of billing-agent@aphrody (owner's roles/iam.serviceAccountTokenCreator),
+// or GitHub OIDC (pool `github`) in CI through CLOUDSDK_AUTH_ACCESS_TOKEN. No spending: budgets, reads, linking.
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -16,7 +16,7 @@ const THRESHOLDS = [
   { thresholdPercent: 1.0 },
   { thresholdPercent: 1.0, spendBasis: "FORECASTED_SPEND" },
 ];
-/** Plafond bas par défaut d'un projet sans budget (EUR/mois), tant que `.agents/owner-rules.json` ne dit rien. */
+/** Default low cap of a project without a budget (EUR/month), as long as `.agents/owner-rules.json` says nothing. */
 const DEFAULT_PROJECT_CAP_EUR = 5;
 
 type Json = Record<string, any>;
@@ -66,11 +66,11 @@ class Api {
 }
 
 export interface OwnerRules {
-  /** EUR/mois par projet ; absent = plafond bas par défaut. */
+  /** EUR/month per project; absent = default low cap. */
   projectCapsEur?: Record<string, number>;
-  /** Projets dont la facturation est coupée au dépassement (fonction billing-cap). */
+  /** Projects whose billing is cut when exceeded (billing-cap function). */
   hardCap?: string[];
-  /** Autorise les dépenses nouvelles (création de ressources payantes). Absent = false. */
+  /** Allows new spending (creation of paid resources). Absent = false. */
   allowNewSpend?: boolean;
 }
 
@@ -111,8 +111,8 @@ async function snapshot(api: Api): Promise<Snapshot> {
         ).budgets ?? []) as Json[];
       }),
   );
-  // Dernière dépense connue par budget : journaux de la fonction billing-cap (une ligne par notification).
-  // entries:list renvoie des pages vides tant que le balayage n'est pas fini : suivre nextPageToken.
+  // Last known spend per budget: billing-cap function logs (one line per notification).
+  // entries:list returns empty pages until the sweep is done: follow nextPageToken.
   const since = new Date(Date.now() - 3 * 86400_000).toISOString();
   const entries: Json[] = [];
   let pageToken: string | undefined;
@@ -148,7 +148,7 @@ async function snapshot(api: Api): Promise<Snapshot> {
 const money = (a?: Json) =>
   a?.specifiedAmount
     ? `${a.specifiedAmount.units ?? 0} ${a.specifiedAmount.currencyCode}`
-    : "dernière période";
+    : "last period";
 
 async function idleFindings(api: Api, project: string): Promise<string[]> {
   const out: string[] = [];
@@ -170,16 +170,16 @@ async function idleFindings(api: Api, project: string): Promise<string[]> {
   for (const v of items(vms))
     if (v.status !== "RUNNING")
       out.push(
-        `${project} : VM ${v.name} ${v.status} (disques toujours facturés)`,
+        `${project}: VM ${v.name} ${v.status} (disks still billed)`,
       );
   for (const d of items(disks))
     if (!d.users?.length)
       out.push(
-        `${project} : disque ${d.name} ${d.sizeGb} Go non attaché → snapshot puis arrêt`,
+        `${project}: disk ${d.name} ${d.sizeGb} GB unattached → snapshot then stop`,
       );
   for (const a of items(addrs))
     if (a.status === "RESERVED")
-      out.push(`${project} : IP ${a.name} (${a.address}) réservée inutilisée`);
+      out.push(`${project}: IP ${a.name} (${a.address}) reserved and unused`);
   for (const r of [
     "google.compute.instance.IdleResourceRecommender",
     "google.compute.disk.IdleResourceRecommender",
@@ -200,7 +200,7 @@ async function idleFindings(api: Api, project: string): Promise<string[]> {
   for (const e of (ep.endpoints ?? []) as Json[])
     if (e.deployedModels?.length)
       out.push(
-        `${project} : endpoint Vertex ${e.displayName} avec modèle déployé (facturé à l'heure)`,
+        `${project}: Vertex endpoint ${e.displayName} with a deployed model (billed hourly)`,
       );
   return out;
 }
@@ -225,10 +225,10 @@ export async function runBillingCommand(
     for (const a of s.accounts.filter((x) => x.open)) {
       const id = String(a.name).split("/")[1]!;
       console.log(
-        `compte ${id} « ${a.displayName} » ${a.currencyCode ?? ""} parent=${a.parent ?? "-"}`,
+        `account ${id} "${a.displayName}" ${a.currencyCode ?? ""} parent=${a.parent ?? "-"}`,
       );
       console.log(
-        `  crédits : aucune API publique → https://console.cloud.google.com/billing/${id}/credits/all`,
+        `  credits: no public API → https://console.cloud.google.com/billing/${id}/credits/all`,
       );
       for (const p of s.links[id] ?? [])
         console.log(
@@ -237,7 +237,7 @@ export async function runBillingCommand(
       for (const b of s.budgets[id] ?? []) {
         const ls = s.lastSpend[b.displayName];
         const spend = ls
-          ? ` dépensé=${ls.cost}/${ls.amount} (${ls.at.slice(0, 16)})`
+          ? ` spent=${ls.cost}/${ls.amount} (${ls.at.slice(0, 16)})`
           : "";
         const topic = b.spendCap
           ? `spend-cap:${b.spendCap.outputState}`
@@ -250,7 +250,7 @@ export async function runBillingCommand(
       }
     }
     console.log(
-      `règles propriétaire : ${rules ? "présentes" : "absentes → aucune dépense nouvelle"}`,
+      `owner rules: ${rules ? "present" : "absent → no new spending"}`,
     );
     return 0;
   }
@@ -267,7 +267,7 @@ export async function runBillingCommand(
         // Les budgets spend cap (budgetFilter.services + spendCap) refusent un topic Pub/Sub.
         if (!b.spendCap && b.notificationsRule?.pubsubTopic !== BILLING_TOPIC)
           actions.push({
-            what: `brancher le budget ${b.displayName} sur ${BILLING_TOPIC}`,
+            what: `wire budget ${b.displayName} to ${BILLING_TOPIC}`,
             run: () =>
               api.call(
                 "PATCH",
@@ -321,22 +321,22 @@ export async function runBillingCommand(
     }
     if (!rules)
       notes.push(
-        "`.agents/owner-rules.json` absent : aucune dépense nouvelle, plafonds bas par défaut",
+        "`.agents/owner-rules.json` absent: no new spending, default low caps",
       );
     for (const a of actions)
-      console.log(`${sub === "apply" ? "applique" : "à faire"} : ${a.what}`);
+      console.log(`${sub === "apply" ? "applying" : "to do"}: ${a.what}`);
     for (const n of notes) console.log(`recommandation : ${n}`);
     if (sub === "plan") return 0;
     let fail = 0;
     for (const a of actions) {
       const r = await a.run();
-      if (r.error) (fail++, console.error(`échec : ${a.what} : ${r.error}`));
+      if (r.error) (fail++, console.error(`failed: ${a.what}: ${r.error}`));
     }
     return fail ? 1 : 0;
   }
 
   if (sub === "lift") {
-    // Lève un spend cap déclenché pour la période en cours (PATCH spendCap.inputState=AWAITING_NEXT_PERIOD).
+    // Lifts a triggered spend cap for the current period (PATCH spendCap.inputState=AWAITING_NEXT_PERIOD).
     const name = args[1];
     if (!name)
       return (console.error("usage : env-kit billing lift <cap-...>"), 1);
@@ -344,14 +344,14 @@ export async function runBillingCommand(
     const b = Object.values(s.budgets)
       .flat()
       .find((x) => x.displayName === name);
-    if (!b) return (console.error(`budget ${name} introuvable`), 1);
+    if (!b) return (console.error(`budget ${name} not found`), 1);
     const r = await api.call(
       "PATCH",
       `https://billingbudgets.googleapis.com/v1/${b.name}?updateMask=spendCap.inputState`,
       { spendCap: { inputState: "AWAITING_NEXT_PERIOD" } },
     );
     console.log(
-      r.error ? `échec : ${r.error}` : `${name} : ${r.spendCap?.outputState}`,
+      r.error ? `failed: ${r.error}` : `${name}: ${r.spendCap?.outputState}`,
     );
     return r.error ? 1 : 0;
   }
@@ -371,7 +371,7 @@ export async function runBillingCommand(
     );
     console.log(
       r.error
-        ? `échec : ${r.error}`
+        ? `failed: ${r.error}`
         : `${project} → ${r.billingAccountName} (facturation ${r.billingEnabled ? "on" : "off"})`,
     );
     return r.error ? 1 : 0;

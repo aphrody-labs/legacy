@@ -1,15 +1,15 @@
 /**
- * `ay auth daemon` : un seul service d'authentification par hôte, à la place des relances de connexion.
+ * `ay auth daemon`: a single authentication service per host, instead of sign-in retries.
  *
- * - Sonde l'état réel de chaque identifiant toutes les `--every` minutes (5 par défaut) : `auth-state.json` n'est
- *   jamais plus vieux que cette période, et `ay auth status` reste une sonde directe (aucun cache).
- * - Rafraîchit seul ce qui se rafraîchit sans humain (`repair` sans navigateur : jeton gh du trousseau, secrets CI,
- *   tunnels, clés ssh) ; les jetons à refresh token (gcloud, impersonation de compte de service, codex, claude
- *   setup-token) se renouvellent dans leur CLI à chaque sonde.
- * - Dernier recours : un identifiant qui exige un clic n'est signalé qu'une fois par 24 h, tous regroupés dans une
- *   seule notification ; aucune page n'est ouverte, aucune connexion relancée. Le propriétaire répond par
- *   `ay auth daemon --ack <cible>` : une seule connexion est alors lancée pour cette cible.
- * Fichiers : <état>/auth-state.json (dernière sonde), <état>/auth-prompts.json (derniers signalements).
+ * - Probes the real state of each credential every `--every` minutes (5 by default): `auth-state.json` is
+ *   never older than that period, and `ay auth status` stays a direct probe (no cache).
+ * - Refreshes on its own whatever refreshes without a human (`repair` without a browser: keychain gh token, CI secrets,
+ *   tunnels, ssh keys); tokens with a refresh token (gcloud, service-account impersonation, codex, claude
+ *   setup-token) renew inside their CLI at each probe.
+ * - Last resort: a credential that requires a click is reported once per 24 h, all grouped in a
+ *   single notification; no page is opened, no sign-in relaunched. The owner answers with
+ *   `ay auth daemon --ack <target>`: a single sign-in is then launched for that target.
+ * Files: <state>/auth-state.json (last probe), <state>/auth-prompts.json (last reports).
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -32,13 +32,13 @@ import { secretGet, secretList } from "./secret-store";
 
 const DAY = 86_400_000;
 
-/** Le PC porte le coffre de référence : secrets CI, OIDC, flotte, tunnels et jetons d'API y sont sondés et poussés. */
+/** The PC holds the reference vault: CI secrets, OIDC, fleet, tunnels and API tokens are probed and pushed from it. */
 const PC =
   process.platform === "win32" || process.env.AY_AUTH_REFRESH_ALL === "1";
 /**
- * Identifiants dont un runner Linux a besoin (infra/agents/runner.ts : gh pour le push, claude et codex pour les
- * tâches) ; les autres CLI (cf, wrangler, vercel, gcloud, portées gh admin) sont l'affaire du PC, qui pousse les
- * valeurs. AY_AUTH_TARGETS (liste séparée par des virgules) remplace cette liste.
+ * Credentials a Linux runner needs (infra/agents/runner.ts: gh for push, claude and codex for the
+ * tasks); the other CLIs (cf, wrangler, vercel, gcloud, gh admin scopes) are the PC's business, which pushes the
+ * values. AY_AUTH_TARGETS (comma-separated list) replaces this list.
  */
 export const RUNNER_TARGETS = (process.env.AY_AUTH_TARGETS ?? "gh,claude,codex")
   .split(",")
@@ -73,14 +73,14 @@ const writeJson = (p: string, v: unknown) => {
 };
 
 const key = (c: Check) => `${c.host}/${c.target}`;
-/** Identifiant qui attend un geste humain (pas une simple absence d'outil). */
-// Seuls les identifiants d'une personne (CLI, navigateur, jetons d'API) peuvent exiger son geste ; les écarts de CI,
-// d'OIDC, de flotte ou d'unités sont du travail d'agent, gardés dans auth-state.json mais jamais signalés au propriétaire.
+/** Credential that waits for a human gesture (not a mere missing tool). */
+// Only a person's credentials (CLI, browser, API tokens) can require their gesture; CI, OIDC, fleet
+// or unit gaps are agent work, kept in auth-state.json but never reported to the owner.
 const OWNER_KINDS = new Set(["cli", "browser", "token", "store"]);
 export const needsOwner = (c: Check) =>
   OWNER_KINDS.has(c.kind) && (c.status === "action" || c.status === "invalid");
 
-/** Cibles à signaler maintenant : au plus une fois par 24 h chacune. */
+/** Targets to report now: at most once per 24 h each. */
 export function due(
   checks: Check[],
   prompts: Record<string, number>,
@@ -94,7 +94,7 @@ export function due(
 function notify(title: string, lines: string[]) {
   const body = lines.slice(0, 12).join("\n");
   if (process.platform === "win32") {
-    // Notification Windows native (une seule, groupée) ; aucun navigateur.
+    // Native Windows notification (a single, grouped one); no browser.
     const esc = (s: string) =>
       s.replace(/[<>&'"]/g, (m) => `&#${m.charCodeAt(0)};`);
     const xml = `<toast><visual><binding template='ToastGeneric'><text>${esc(title)}</text><text>${esc(body)}</text></binding></visual></toast>`;
@@ -114,15 +114,15 @@ function notify(title: string, lines: string[]) {
 
 export async function pass(m: Manifest, o: AuthOptions, refresh: boolean) {
   const at = new Date().toISOString();
-  // Valeurs du coffre à chaque passe : un jeton tourné ailleurs ne laisse pas une copie périmée dans l'environnement.
+  // Vault values on each pass: a token rotated elsewhere does not leave a stale copy in the environment.
   for (const n of secretList()) {
-    // Valeur sans fin de ligne : systemd-creds rend souvent un \n final, refusé dans un en-tête HTTP.
+    // Value without a line ending: systemd-creds often returns a trailing \n, refused in an HTTP header.
     const v = secretGet(n)?.trim();
     if (v) process.env[n] = v;
   }
-  // Rafraîchissement sans humain d'abord, puis la sonde qui fait foi.
-  // Le PC (coffre de référence) répare tout ; les autres hôtes seulement leurs CLI et leur stockage, pour qu'aucun
-  // hôte ne pousse ses copies vers les secrets GitHub ou la flotte.
+  // Refresh without a human first, then the probe that is authoritative.
+  // The PC (reference vault) repairs everything; the other hosts only their CLIs and their storage, so that no
+  // host pushes its copies to the GitHub secrets or the fleet.
   const only = PC ? o.only : ["cli", "store"];
   if (refresh)
     await collectChecks(m, { ...o, only, browser: false }, true).catch(
@@ -144,7 +144,7 @@ export async function pass(m: Manifest, o: AuthOptions, refresh: boolean) {
   const d = due(checks, prompts, now);
   if (d.length) {
     notify(
-      `${d.length} identifiant(s) à reconnecter`,
+      `${d.length} credential(s) to reconnect`,
       d.map(
         (c) =>
           `${key(c)} : ${c.fix ?? c.proof} ; puis ay auth daemon --ack ${c.target}`,
@@ -166,7 +166,7 @@ export async function daemon(m: Manifest, o: AuthOptions): Promise<number> {
   const opt = (n: string) => (a.includes(n) ? a[a.indexOf(n) + 1] : undefined);
   const ack = opt("--ack");
   if (ack) {
-    // Signal du propriétaire : une seule connexion pour cette cible, jamais de boucle.
+    // Owner signal: a single sign-in for this target, never a loop.
     return runAuth("login", {
       ...o,
       args: [ack.replace(/^gcloud:.*/, "gcloud")],
@@ -186,7 +186,7 @@ export async function daemon(m: Manifest, o: AuthOptions): Promise<number> {
   return 0;
 }
 
-/** Dernière sonde si elle a moins de `maxAgeMs` (5 min par défaut), sinon undefined : jamais d'état périmé. */
+/** Last probe if it is younger than `maxAgeMs` (5 min by default), otherwise undefined: never a stale state. */
 export function lastState(
   maxAgeMs = 5 * 60_000,
 ): { at: string; checks: Check[] } | undefined {

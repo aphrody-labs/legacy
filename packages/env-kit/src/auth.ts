@@ -158,7 +158,7 @@ function checkGh(o: AuthOptions): Check[] {
         target: "gh",
         host: LOCAL,
         status: "missing",
-        proof: "gh absent",
+        proof: "gh missing",
       },
     ];
   const r = sh("gh", ["api", "user", "-q", ".login"]);
@@ -255,7 +255,7 @@ function checkGcloud(o: AuthOptions): Check[] {
         target: "gcloud",
         host: LOCAL,
         status: "missing",
-        proof: "gcloud absent",
+        proof: "gcloud missing",
       },
     ];
   const cfg = sh(
@@ -298,7 +298,7 @@ function checkGcloud(o: AuthOptions): Check[] {
         target,
         host: LOCAL,
         status: tok.ok ? "ok" : "invalid",
-        proof: `gcloud auth print-access-token ${acct} -> ${tok.ok ? "jeton émis (non affiché)" : clean(tok.err)}`,
+        proof: `gcloud auth print-access-token ${acct} -> ${tok.ok ? "token issued (not displayed)" : clean(tok.err)}`,
         fix: tok.ok ? undefined : `gcloud auth login ${acct} (navigateur)`,
       });
       continue;
@@ -325,11 +325,11 @@ function checkGcloud(o: AuthOptions): Check[] {
       target,
       host: LOCAL,
       status: "action",
-      proof: `gcloud auth list: ${acct} sans identifiants`,
+      proof: `gcloud auth list: ${acct} without credentials`,
       fix: sa
-        ? `sans clé : ay auth mint gcp --sa ${acct} -- <cmd> (impersonation, jeton 1 h)`
+        ? `keyless: ay auth mint gcp --sa ${acct} -- <cmd> (impersonation, 1 h token)`
         : HEADLESS
-          ? `sans navigateur : ay auth mint gcp --sa <compte de service> -- <cmd>`
+          ? `browserless: ay auth mint gcp --sa <service account> -- <cmd>`
           : `ay auth login gcloud (gcloud auth login ${acct})`,
     });
   }
@@ -343,7 +343,7 @@ function checkGcloud(o: AuthOptions): Check[] {
     target: "gcloud:adc",
     host: LOCAL,
     status: adc.ok ? "ok" : "action",
-    proof: `gcloud auth application-default print-access-token -> ${adc.ok ? "jeton émis (non affiché)" : clean(adc.err)}`,
+    proof: `gcloud auth application-default print-access-token -> ${adc.ok ? "token issued (not displayed)" : clean(adc.err)}`,
     fix: adc.ok
       ? undefined
       : "gcloud auth application-default login (navigateur)",
@@ -392,7 +392,7 @@ const SIMPLE: Simple[] = [
     target: "wrangler",
     bin: "wrangler",
     args: ["whoami", "--json"],
-    fix: "CLOUDFLARE_API_TOKEN ou ay auth login wrangler (--device sans navigateur)",
+    fix: "CLOUDFLARE_API_TOKEN or ay auth login wrangler (--device, browserless)",
     login: (h) => ["login", ...(h ? ["--device"] : [])],
     ok: (r) => (r.ok ? "whoami --json ok" : false),
   },
@@ -417,7 +417,7 @@ const SIMPLE: Simple[] = [
     target: "claude",
     bin: "claude",
     args: ["auth", "status"],
-    fix: "ay auth login claude ; hôte sans navigateur : claude setup-token",
+    fix: "ay auth login claude; browserless host: claude setup-token",
     login: (h) => (h ? ["setup-token"] : ["auth", "login"]),
     ok: (r) => {
       try {
@@ -432,7 +432,7 @@ const SIMPLE: Simple[] = [
     target: "codex",
     bin: "codex",
     args: ["login", "status"],
-    fix: "ay auth login codex (--device-auth sans navigateur)",
+    fix: "ay auth login codex (--device-auth, browserless)",
     login: (h) => ["login", ...(h ? ["--device-auth"] : [])],
     ok: (r) => (r.ok ? clean(r.out || r.err) || "logged in" : false),
   },
@@ -442,7 +442,7 @@ const SIMPLE: Simple[] = [
     args: ["--version"],
     fix: "connexion Antigravity (compte Google, navigateur)",
     ok: (r) =>
-      r.ok || r.out ? `présent (auth Google gérée par Antigravity)` : false,
+      r.ok || r.out ? `present (Google auth managed by Antigravity)` : false,
   },
 ];
 
@@ -457,7 +457,7 @@ function checkSimple(o: AuthOptions): Check[] {
         target: s.target,
         host: LOCAL,
         status: "skip",
-        proof: `${s.bin} absent`,
+        proof: `${s.bin} missing`,
       };
     const r = sh(s.bin, s.args, { timeout: 60_000 });
     const okText = s.ok(r);
@@ -522,10 +522,10 @@ function checkBrowser(): Check[] {
         target: `chrome:${dir}`,
         host: LOCAL,
         status: p.user_name ? "ok" : "action",
-        proof: `Local State info_cache -> ${p.user_name || "non connecté"} (${p.name ?? ""})`,
+        proof: `Local State info_cache -> ${p.user_name || "not signed in"} (${p.name ?? ""})`,
         fix: p.user_name
           ? undefined
-          : "se connecter au profil Chrome (clic propriétaire)",
+          : "sign in to the Chrome profile (owner click)",
       });
     }
   } catch {
@@ -552,11 +552,11 @@ function checkBrowser(): Check[] {
       target,
       host: LOCAL,
       status: ok ? "ok" : "invalid",
-      proof: `reg NativeMessagingHosts\\${key} -> ${ok ? "manifeste présent" : "absent"}`,
+      proof: `reg NativeMessagingHosts\\${key} -> ${ok ? "manifest present" : "missing"}`,
       fix: ok
         ? undefined
         : target === "claude-in-chrome"
-          ? "claude --chrome (réinstalle l'hôte natif)"
+          ? "claude --chrome (reinstalls the native host)"
           : undefined,
     });
   }
@@ -600,7 +600,7 @@ async function checkTokens(): Promise<Check[]> {
         fix:
           i.status === "ok"
             ? undefined
-            : `renouveler le jeton ${i.provider} puis ay secret set <NOM>`,
+            : `renew the ${i.provider} token then ay secret set <NAME>`,
       }) satisfies Check,
   );
 }
@@ -722,8 +722,8 @@ export function syncGithubSecrets(
           target,
           host: "github",
           status: remote.has(name) ? "action" : "missing",
-          proof: `${remote.has(name) ? `présent sur GitHub (${remote.get(name)})` : "absent sur GitHub"}, absent du stockage`,
-          fix: `ay secret set ${name} (valeur depuis le fournisseur), puis ay auth gh-secrets`,
+          proof: `${remote.has(name) ? `present on GitHub (${remote.get(name)})` : "missing on GitHub"}, missing from storage`,
+          fix: `ay secret set ${name} (value from the provider), then ay auth gh-secrets`,
         });
         continue;
       }
@@ -733,8 +733,8 @@ export function syncGithubSecrets(
           target,
           host: "github",
           status: "invalid",
-          proof: `whoami ${PROVIDER_OF[name]} -> invalid : valeur non poussée`,
-          fix: `renouveler ${name} chez le fournisseur, ay secret set ${name}`,
+          proof: `whoami ${PROVIDER_OF[name]} -> invalid: value not pushed`,
+          fix: `renew ${name} at the provider, ay secret set ${name}`,
         });
         continue;
       }
@@ -757,7 +757,7 @@ export function syncGithubSecrets(
           target,
           host: "github",
           status: "action",
-          proof: `${remote.has(name) ? "valeur non synchronisée par ay" : "absent sur GitHub"}`,
+          proof: `${remote.has(name) ? "value not synced by ay" : "missing on GitHub"}`,
           fix: "ay auth gh-secrets",
         });
         continue;
@@ -897,7 +897,7 @@ export function checkFleet(
         host: node,
         status: "invalid",
         proof: `ssh -o BatchMode=yes ${n.ssh_alias} -> ${clean(r.err) || `code ${r.code}`}`,
-        fix: "vérifier la clé (ssh -G) et l'accès réseau (WireGuard/IP publique)",
+        fix: "check the key (ssh -G) and network access (WireGuard/public IP)",
       });
       continue;
     }
@@ -945,7 +945,7 @@ export function checkFleet(
         host: LOCAL,
         status: running ? "ok" : "action",
         proof: `sc query ${s} -> ${running ? "RUNNING" : "STOPPED"}`,
-        fix: running ? undefined : "démarrer le tunnel dans WireGuard (UAC)",
+        fix: running ? undefined : "start the tunnel in WireGuard (UAC)",
       });
     }
   }
@@ -954,7 +954,7 @@ export function checkFleet(
 
 async function cfApi(path: string, init: RequestInit = {}): Promise<any> {
   const t = resolveSecret("CLOUDFLARE_API_TOKEN");
-  if (!t) throw new Error("CLOUDFLARE_API_TOKEN absent");
+  if (!t) throw new Error("CLOUDFLARE_API_TOKEN missing");
   const r = await fetch(`https://api.cloudflare.com/client/v4${path}`, {
     ...init,
     headers: {
@@ -991,7 +991,7 @@ export async function checkTunnelsApi(m: Manifest): Promise<Check[]> {
         host: "cloudflare",
         status: "skip",
         proof:
-          "CLOUDFLARE_API_TOKEN absent sur cet hôte (contrôle fait depuis le PC)",
+          "CLOUDFLARE_API_TOKEN missing on this host (check done from the PC)",
       },
     ];
   try {
@@ -1066,7 +1066,7 @@ export async function deployTunnels(
           target: unit,
           host: node,
           status: "missing",
-          proof: `tunnel ${name} absent du compte`,
+          proof: `tunnel ${name} missing from the account`,
         });
         continue;
       }
@@ -1161,7 +1161,7 @@ export async function rotateCloudflare(
           target: "cloudflare",
           host: "cloudflare",
           status: "action",
-          proof: `token ${v.id} : roll prévu (dry-run)`,
+          proof: `token ${v.id}: roll planned (dry-run)`,
         },
       ];
     const value = (await cfApi(`/accounts/${acct}/tokens/${v.id}/value`, {
@@ -1180,7 +1180,7 @@ export async function rotateCloudflare(
         host: "cloudflare",
         status:
           again.id === v.id && again.status === "active" ? "fixed" : "invalid",
-        proof: `PUT tokens/${v.id}/value -> nouveau jeton actif, ancien révoqué`,
+        proof: `PUT tokens/${v.id}/value -> new token active, old one revoked`,
       },
       ...syncGithubSecrets(m, o, true),
     ];
@@ -1289,7 +1289,7 @@ export function checkOidc(
       target: `gcp:${g.pool}/${g.provider}`,
       host: "gcp",
       status: condOk ? "ok" : "action",
-      proof: `providers describe ${g.provider} -> ${prov.ok ? `condition ${prov.out || "(créée)"}` : clean(prov.err)}`,
+      proof: `providers describe ${g.provider} -> ${prov.ok ? `condition ${prov.out || "(created)"}` : clean(prov.err)}`,
       fix: condOk ? undefined : "ay auth oidc",
     });
     const pol = gc(g, [
@@ -1329,7 +1329,7 @@ export function checkOidc(
         target: `gcp:${repo}`,
         host: "gcp",
         status: ok ? (members.has(who) ? "ok" : "fixed") : "action",
-        proof: `${g.service_account} roles/iam.workloadIdentityUser -> ${ok ? "principalSet du dépôt lié" : "absent"}`,
+        proof: `${g.service_account} roles/iam.workloadIdentityUser -> ${ok ? "repository principalSet bound" : "missing"}`,
         fix: ok ? undefined : "ay auth oidc",
       });
     }
@@ -1359,7 +1359,7 @@ export function checkOidc(
         target: name,
         host: "github",
         status: "action",
-        proof: "secret longue durée encore présent sur GitHub",
+        proof: "long-lived secret still present on GitHub",
         fix: by,
       });
   return out;
@@ -1413,7 +1413,7 @@ export async function mint(m: Manifest, o: AuthOptions): Promise<number> {
       (w) =>
         groups.find((g) => g.name.toLowerCase() === w.toLowerCase()) ??
         (() => {
-          throw new Error(`groupe de permissions inconnu : ${w}`);
+          throw new Error(`unknown permission group: ${w}`);
         })(),
     );
     const zone = sel.filter((g) => g.scopes.some((x) => x.includes(".zone")));
@@ -1510,11 +1510,11 @@ export async function mint(m: Manifest, o: AuthOptions): Promise<number> {
     env.CLOUDSDK_AUTH_ACCESS_TOKEN = r.out.split("\n").pop()!;
     env.GOOGLE_OAUTH_ACCESS_TOKEN = env.CLOUDSDK_AUTH_ACCESS_TOKEN;
     console.error(
-      `ay auth mint : jeton d'accès ${sa} (impersonation, ${Math.min(ttl, 43200)} s, sans clé)`,
+      `ay auth mint: access token ${sa} (impersonation, ${Math.min(ttl, 43200)} s, keyless)`,
     );
   } else {
     console.error(
-      `ay auth mint : fournisseur inconnu ${provider}. Attendu : cloudflare, gcp`,
+      `ay auth mint: unknown provider ${provider}. Expected: cloudflare, gcp`,
     );
     return 2;
   }
@@ -1530,7 +1530,7 @@ export async function mint(m: Manifest, o: AuthOptions): Promise<number> {
   }
 }
 
-// --- GitHub App « aphrody » (github-app.ts, docs/infra/GITHUB-APP.md) ----------------------------------------
+// --- GitHub App "aphrody" (github-app.ts, docs/infra/GITHUB-APP.md) ----------------------------------------
 
 /** `ay auth github-app [create|install|status|hook|token|user|user-token|retire]` : voir github-app.ts. */
 export async function githubApp(o: AuthOptions): Promise<number> {
@@ -1551,7 +1551,7 @@ const KINDS = [
   "tunnel-api",
 ] as const;
 
-/** Sondes réelles (status) ou réparations sans mot de passe (repair) ; jamais de cache. */
+/** Real probes (status) or passwordless repairs (repair); never a cache. */
 export async function collectChecks(
   m: Manifest,
   o: AuthOptions,
@@ -1604,7 +1604,7 @@ export async function runAuth(sub: string, o: AuthOptions): Promise<number> {
     checks = await deployTunnels(m, o);
   } else {
     console.error(
-      `ay auth: sous-commande inconnue ${sub}. Attendu : status, repair, daemon, login, oidc, mint, github-app, gh-secrets, tunnels, rotate`,
+      `ay auth: unknown subcommand ${sub}. Expected: status, repair, daemon, login, oidc, mint, github-app, gh-secrets, tunnels, rotate`,
     );
     return 2;
   }
@@ -1619,7 +1619,7 @@ export function formatChecks(checks: readonly Check[]): string {
       `${c.status.padEnd(7)} ${c.kind.padEnd(10)} ${`${c.host}/${c.target}`.padEnd(44)} ${c.proof}${c.fix ? `  => ${c.fix}` : ""}`,
   );
   const n = (s: Status) => checks.filter((c) => c.status === s).length;
-  return `${rows.join("\n")}\n-- ${checks.length} contrôles : ${n("ok")} ok, ${n("fixed")} réparés, ${n("action")} action, ${n("invalid")} invalides, ${n("missing")} absents, ${n("skip")} ignorés`;
+  return `${rows.join("\n")}\n-- ${checks.length} checks: ${n("ok")} ok, ${n("fixed")} fixed, ${n("action")} action, ${n("invalid")} invalid, ${n("missing")} missing, ${n("skip")} skipped`;
 }
 
 export const AUTH_KINDS = KINDS;

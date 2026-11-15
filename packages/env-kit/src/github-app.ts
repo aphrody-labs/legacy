@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * GitHub App « aphrody » (docs/infra/GITHUB-APP.md) : une App unique pour aphrody-labs, yolo-rs et le compte
- * aphrody-dev, à la place des PAT et de l'ancienne App aphrody-labs-submodules.
+ * GitHub App "aphrody" (docs/infra/GITHUB-APP.md): a single App for aphrody-labs, yolo-rs and the
+ * aphrody-dev account, replacing PATs and the former aphrody-labs-submodules App.
  *
- *   ay auth github-app create [--org aphrody-labs] [--name aphrody]   manifest flow (clic « Create GitHub App »)
+ *   ay auth github-app create [--org aphrody-labs] [--name aphrody]   manifest flow ("Create GitHub App" click)
  *   ay auth github-app install                                          pages d'installation (un clic par compte)
- *   ay auth github-app status [--json]                                  App, installations, écarts au manifeste
+ *   ay auth github-app status [--json]                                  App, installations, gaps against the manifest
  *   ay auth github-app token [--owner o] [--repos a,b] [--perm k=v,..] [-- cmd]
- *                                                                       jeton d'installation de 1 h ; avec `-- cmd`,
- *                                                                       injecté en GH_TOKEN/GITHUB_TOKEN, sinon écrit
- *                                                                       sur stdout seulement si stdout n'est pas un TTY
+ *                                                                       1 h installation token; with `-- cmd`,
+ *                                                                       injected as GH_TOKEN/GITHUB_TOKEN, otherwise written
+ *                                                                       to stdout only if stdout is not a TTY
  *   ay auth github-app user [--device] | user-token -- cmd             jeton utilisateur (8 h, refresh 6 mois)
- *   ay auth github-app hook                                             URL + secret du webhook (PATCH /app/hook/config)
- *   ay auth github-app retire [--slug aphrody-labs-submodules]          désinstalle l'ancienne App, purge ses secrets
+ *   ay auth github-app hook                                             webhook URL + secret (PATCH /app/hook/config)
+ *   ay auth github-app retire [--slug aphrody-labs-submodules]          uninstalls the former App, purges its secrets
  *   ay auth github-app crates-trust --crates a,b                        trusted publishing crates.io -> crates-publish.yml
  *
- * Coffre (`env-kit secret`, jamais affiché) : APHRODY_APP_KEY (PEM), APHRODY_APP_CLIENT_SECRET,
- * APHRODY_APP_WEBHOOK_SECRET, APHRODY_APP_USER_REFRESH ; APHRODY_APP_ID et APHRODY_APP_CLIENT_ID ne sont pas secrets.
- * CI : secret d'org APHRODY_APP_KEY et variable d'org APHRODY_APP_CLIENT_ID sur aphrody-labs et yolo-rs.
+ * Vault (`env-kit secret`, never displayed): APHRODY_APP_KEY (PEM), APHRODY_APP_CLIENT_SECRET,
+ * APHRODY_APP_WEBHOOK_SECRET, APHRODY_APP_USER_REFRESH; APHRODY_APP_ID and APHRODY_APP_CLIENT_ID are not secrets.
+ * CI: org secret APHRODY_APP_KEY and org variable APHRODY_APP_CLIENT_ID on aphrody-labs and yolo-rs.
  */
 
 import { spawnSync } from "node:child_process";
@@ -25,17 +25,17 @@ import { createPrivateKey, randomBytes, sign } from "node:crypto";
 import { secretDelete, secretGet, secretHas, secretSet } from "./secret-store";
 
 export const APP = {
-  /** Nom et slug : « aphrody » est réservé par le compte GitHub @aphrody (tiers), l App s appelle aphrody-labs. */
+  /** Name and slug: "aphrody" is reserved by the GitHub account @aphrody (third party), the App is named aphrody-labs. */
   name: "aphrody-labs",
   owner: "aphrody-labs",
-  /** Comptes où l'App est installée (toutes les orgs + le compte utilisateur). */
+  /** Accounts where the App is installed (all orgs + the user account). */
   targets: ["aphrody-labs", "yolo-rs", "aphrody-dev"],
   /**
-   * Secret d'org APHRODY_APP_KEY : visibilité « selected », limitée aux dépôts dont les workflows mintent un jeton
-   * (une clé visible de tous les dépôts donnerait un jeton complet à n'importe quel workflow). yolo-rs n'a aucun dépôt.
+   * Org secret APHRODY_APP_KEY: "selected" visibility, limited to the repositories whose workflows mint a token
+   * (a key visible to all repositories would give a full token to any workflow). yolo-rs has no repository.
    */
   ciOrgs: ["aphrody-labs"],
-  ciRepos: ["src"],
+  ciRepos: ["aphrody"],
   hook: "https://aphrody-github.aphrody-labs.workers.dev/github",
   port: 47800,
 } as const;
@@ -107,7 +107,7 @@ export const PERMISSIONS: Record<string, "read" | "write" | "admin"> = {
   starring: "write",
 };
 
-/** Permissions de compte : portées par les jetons utilisateur, jamais par une installation. */
+/** Account permissions: carried by user tokens, never by an installation. */
 export const USER_PERMISSIONS = new Set([
   "emails",
   "followers",
@@ -152,7 +152,7 @@ export const EVENTS = [
   "workflow_run",
 ];
 
-/** Permission qui autorise chaque événement (docs « Webhook events and payloads », section Availability). */
+/** Permission that authorizes each event (docs "Webhook events and payloads", Availability section). */
 export const EVENT_PERMISSION: Record<string, string> = {
   check_run: "checks",
   check_suite: "checks",
@@ -187,7 +187,7 @@ export function manifest(name: string = APP.name) {
     name,
     url: "https://aphrody.com",
     description:
-      "Automatisation aphrody : CI, releases, sous-modules, agents (jetons d'installation de 1 h), webhooks vers la file d'agents.",
+      "aphrody automation: CI, releases, submodules, agents (1 h installation tokens), webhooks to the agent queue.",
     hook_attributes: { url: APP.hook, active: true },
     redirect_url: `http://127.0.0.1:${APP.port}/callback`,
     callback_urls: [`http://127.0.0.1:${APP.port}/oauth/callback`],
@@ -216,7 +216,7 @@ function cred(name: string): string | undefined {
 function clientId(): string {
   const v = cred("APHRODY_APP_CLIENT_ID") ?? ghVar("APHRODY_APP_CLIENT_ID");
   if (!v)
-    throw new Error("APHRODY_APP_CLIENT_ID absent (ay auth github-app create)");
+    throw new Error("APHRODY_APP_CLIENT_ID missing (ay auth github-app create)");
   return v;
 }
 
@@ -230,13 +230,13 @@ function ghVar(name: string): string | undefined {
 
 const b64u = (b: Buffer | string) => Buffer.from(b).toString("base64url");
 
-/** JWT RS256 de l'App (iss = client id, recommandé ; iat -60 s ; exp +9 min, max 10). */
+/** App RS256 JWT (iss = client id, recommended; iat -60 s; exp +9 min, max 10). */
 export function appJwt(
   pem = cred("APHRODY_APP_KEY"),
   iss = clientId(),
 ): string {
   if (!pem)
-    throw new Error("APHRODY_APP_KEY absent (ay auth github-app create)");
+    throw new Error("APHRODY_APP_KEY missing (ay auth github-app create)");
   const now = Math.floor(Date.now() / 1000);
   const head = b64u(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const body = b64u(JSON.stringify({ iat: now - 60, exp: now + 540, iss }));
@@ -278,7 +278,7 @@ export async function installations(jwt = appJwt()): Promise<Installation[]> {
   return gh("/app/installations?per_page=100", jwt);
 }
 
-/** Jeton d'installation (1 h), restreignable à des dépôts et des permissions. */
+/** Installation token (1 h), restrictable to repositories and permissions. */
 export async function installationToken(
   o: {
     owner?: string;
@@ -294,7 +294,7 @@ export async function installationToken(
   );
   if (!inst)
     throw new Error(
-      `App non installée sur ${owner} (ay auth github-app install)`,
+      `App not installed on ${owner} (ay auth github-app install)`,
     );
   const body: Record<string, unknown> = {};
   if (o.repos?.length)
@@ -372,8 +372,8 @@ async function create(a: string[]): Promise<number> {
   const org = opt(a, "--org") ?? APP.owner;
   const name = opt(a, "--name") ?? APP.name;
   const state = randomBytes(16).toString("hex");
-  // Secret du webhook choisi ici (pas celui de la conversion) : il doit être au coffre et dans le Worker avant que
-  // GitHub n'envoie le premier événement. Pousser ensuite le Worker : cf deploy --secrets-file (docs/infra/GITHUB-APP.md).
+  // Webhook secret chosen here (not the one from the conversion): it must be in the vault and in the Worker before
+  // GitHub sends the first event. Then push the Worker: cf deploy --secrets-file (docs/infra/GITHUB-APP.md).
   if (!cred("APHRODY_APP_WEBHOOK_SECRET"))
     secretSet("APHRODY_APP_WEBHOOK_SECRET", randomBytes(32).toString("hex"));
   const page = `<!doctype html><meta charset=utf-8><title>GitHub App ${Bun.escapeHTML(name)}</title><form id=f method=post action="https://github.com/organizations/${encodeURIComponent(org)}/settings/apps/new?state=${state}"><input type=hidden name=manifest value="${Bun.escapeHTML(JSON.stringify(manifest(name)))}"><button>Créer l'App GitHub ${Bun.escapeHTML(name)}</button></form><script>document.getElementById("f").submit()</script>`;
@@ -390,7 +390,7 @@ async function create(a: string[]): Promise<number> {
         });
       if (u.pathname === "/setup")
         return new Response(
-          "Installation enregistrée. Cet onglet peut être fermé.",
+          "Installation recorded. This tab can be closed.",
           { headers: { "content-type": "text/plain; charset=utf-8" } },
         );
       if (u.pathname !== "/callback")
@@ -403,7 +403,7 @@ async function create(a: string[]): Promise<number> {
       );
       if (!r.ok) {
         finish(1);
-        return new Response(`conversion refusée : HTTP ${r.status}`, {
+        return new Response(`conversion refused: HTTP ${r.status}`, {
           status: 502,
         });
       }
@@ -421,15 +421,15 @@ async function create(a: string[]): Promise<number> {
       secretSet("APHRODY_APP_CLIENT_ID", app.client_id);
       const ci = APP.ciOrgs.map(
         (o) =>
-          `${o} ${ghSecret("APHRODY_APP_KEY", app.pem, o) && ghVariable("APHRODY_APP_CLIENT_ID", app.client_id, o) ? "ok" : "échec"}`,
+          `${o} ${ghSecret("APHRODY_APP_KEY", app.pem, o) && ghVariable("APHRODY_APP_CLIENT_ID", app.client_id, o) ? "ok" : "failed"}`,
       );
-      // Secret du webhook : celui du Worker (coffre APHRODY_APP_WEBHOOK_SECRET), posé par l'API de l'App.
+      // Webhook secret: the Worker's (vault APHRODY_APP_WEBHOOK_SECRET), set through the App API.
       const hook = await setHook(appJwt(app.pem, app.client_id)).then(
         () => "ok",
         (e) => String(e.message),
       );
       console.error(
-        `ay auth github-app : App ${app.slug} (id ${app.id}, client ${app.client_id}) ; clé, client secret -> coffre ; CI ${ci.join(", ")} ; webhook ${hook}`,
+        `ay auth github-app: App ${app.slug} (id ${app.id}, client ${app.client_id}); key, client secret -> vault; CI ${ci.join(", ")}; webhook ${hook}`,
       );
       setTimeout(() => finish(0), 500);
       return Response.redirect(
@@ -440,7 +440,7 @@ async function create(a: string[]): Promise<number> {
   });
   if (!a.includes("--no-open")) open(`http://127.0.0.1:${APP.port}/`);
   console.error(
-    `ay auth github-app : page ouverte ; clic propriétaire « Create GitHub App for ${org} » puis « Install » (attente 24 h)`,
+    `ay auth github-app: page opened; owner click "Create GitHub App for ${org}" then "Install" (24 h wait)`,
   );
   const code = await Promise.race([done, Bun.sleep(86_400_000).then(() => 1)]);
   server.stop(true);
@@ -449,7 +449,7 @@ async function create(a: string[]): Promise<number> {
 
 async function setHook(jwt = appJwt()): Promise<void> {
   const secret = cred("APHRODY_APP_WEBHOOK_SECRET");
-  if (!secret) throw new Error("APHRODY_APP_WEBHOOK_SECRET absent");
+  if (!secret) throw new Error("APHRODY_APP_WEBHOOK_SECRET missing");
   await gh("/app/hook/config", jwt, {
     method: "PATCH",
     body: JSON.stringify({
@@ -513,14 +513,14 @@ export async function status(json = false): Promise<number> {
   if (json) console.log(JSON.stringify(out, null, 2));
   else {
     console.log(
-      `App ${app.slug} (id ${app.id}, client ${app.client_id}, propriétaire ${app.owner?.login}) ; webhook ${hook.url} (secret ${out.hook.secret})`,
+      `App ${app.slug} (id ${app.id}, client ${app.client_id}, owner ${app.owner?.login}); webhook ${hook.url} (secret ${out.hook.secret})`,
     );
     console.log(
-      `permissions manquantes : ${missingPerm.join(", ") || "aucune"} ; événements manquants : ${missingEv.join(", ") || "aucun"}`,
+      `missing permissions: ${missingPerm.join(", ") || "none"}; missing events: ${missingEv.join(", ") || "none"}`,
     );
     for (const r of rows)
       console.log(
-        `  ${r.account.padEnd(14)} ${r.installation ? `installée ${r.installation} (${r.selection})${r.pending_permissions.length ? `, permissions à accepter : ${r.pending_permissions.join(",")}` : ""}` : "NON installée"}`,
+        `  ${r.account.padEnd(14)} ${r.installation ? `installed ${r.installation} (${r.selection})${r.pending_permissions.length ? `, permissions to accept: ${r.pending_permissions.join(",")}` : ""}` : "NOT installed"}`,
       );
   }
   return missingPerm.length ||
@@ -545,7 +545,7 @@ function storeUser(t: any): void {
   if (t.refresh_token) secretSet("APHRODY_APP_USER_REFRESH", t.refresh_token);
 }
 
-/** Connexion utilisateur : web flow sur 127.0.0.1 (un clic « Authorize »), ou device flow avec --device. */
+/** User sign-in: web flow on 127.0.0.1 (one "Authorize" click), or device flow with --device. */
 async function userLogin(a: string[]): Promise<number> {
   if (a.includes("--device")) {
     const r = await fetch("https://github.com/login/device/code", {
@@ -566,7 +566,7 @@ async function userLogin(a: string[]): Promise<number> {
     };
     if (!d.device_code)
       throw new Error(
-        `device flow refusé : ${d.error ?? r.status} (activer « Enable Device Flow » dans les réglages de l'App)`,
+        `device flow refused: ${d.error ?? r.status} (enable "Enable Device Flow" in the App settings)`,
       );
     spawnSync(process.platform === "win32" ? "clip" : "wl-copy", [], {
       input: d.user_code,
@@ -574,7 +574,7 @@ async function userLogin(a: string[]): Promise<number> {
     });
     open(d.verification_uri);
     console.error(
-      `ay auth github-app user : ${d.verification_uri} ouvert, code ${d.user_code} (copié)`,
+      `ay auth github-app user: ${d.verification_uri} opened, code ${d.user_code} (copied)`,
     );
     let wait = d.interval * 1000;
     const end = Date.now() + d.expires_in * 1000;
@@ -587,7 +587,7 @@ async function userLogin(a: string[]): Promise<number> {
       if (t.access_token) {
         storeUser(t);
         console.error(
-          `ay auth github-app user : jeton utilisateur obtenu (expire dans ${t.expires_in ?? "?"} s, refresh ${t.refresh_token ? "rangé" : "absent : activer l'expiration des jetons"})`,
+          `ay auth github-app user: user token obtained (expires in ${t.expires_in ?? "?"} s, refresh ${t.refresh_token ? "stored" : "absent: enable token expiration"})`,
         );
         return 0;
       }
@@ -598,7 +598,7 @@ async function userLogin(a: string[]): Promise<number> {
     return 1;
   }
   const secret = cred("APHRODY_APP_CLIENT_SECRET");
-  if (!secret) throw new Error("APHRODY_APP_CLIENT_SECRET absent");
+  if (!secret) throw new Error("APHRODY_APP_CLIENT_SECRET missing");
   const state = randomBytes(16).toString("hex");
   let finish: (c: number) => void = () => {};
   const done = new Promise<number>((r) => (finish = r));
@@ -619,16 +619,16 @@ async function userLogin(a: string[]): Promise<number> {
       });
       if (!t.access_token) {
         finish(1);
-        return new Response(`échange refusé : ${t.error ?? "?"}`, {
+        return new Response(`exchange refused: ${t.error ?? "?"}`, {
           status: 502,
         });
       }
       storeUser(t);
       console.error(
-        `ay auth github-app user : jeton utilisateur obtenu (refresh ${t.refresh_token ? "rangé" : "absent"})`,
+        `ay auth github-app user: user token obtained (refresh ${t.refresh_token ? "stored" : "absent"})`,
       );
       setTimeout(() => finish(0), 300);
-      return new Response("Autorisé. Cet onglet peut être fermé.", {
+      return new Response("Authorized. This tab can be closed.", {
         headers: { "content-type": "text/plain; charset=utf-8" },
       });
     },
@@ -637,19 +637,19 @@ async function userLogin(a: string[]): Promise<number> {
   if (a.includes("--no-open")) console.error(authUrl);
   else open(authUrl);
   console.error(
-    "ay auth github-app user : page d'autorisation ouverte ; clic propriétaire « Authorize »",
+    "ay auth github-app user: authorization page opened; owner click \"Authorize\"",
   );
   const code = await Promise.race([done, Bun.sleep(600_000).then(() => 1)]);
   server.stop(true);
   return code;
 }
 
-/** Jeton utilisateur frais (refresh token tournant, rangé à chaque usage). */
+/** Fresh user token (rotating refresh token, stored on each use). */
 export async function userToken(): Promise<string> {
   const refresh = cred("APHRODY_APP_USER_REFRESH");
   const secret = cred("APHRODY_APP_CLIENT_SECRET");
   if (!refresh || !secret)
-    throw new Error("jeton utilisateur absent (ay auth github-app user)");
+    throw new Error("user token missing (ay auth github-app user)");
   const t = await tokenExchange({
     client_secret: secret,
     grant_type: "refresh_token",
@@ -657,7 +657,7 @@ export async function userToken(): Promise<string> {
   });
   if (!t.access_token)
     throw new Error(
-      `refresh refusé : ${t.error ?? "?"} (ay auth github-app user)`,
+      `refresh refused: ${t.error ?? "?"} (ay auth github-app user)`,
     );
   storeUser(t);
   return t.access_token;
@@ -665,7 +665,7 @@ export async function userToken(): Promise<string> {
 
 // --- retire ---------------------------------------------------------------------------------------------------
 
-/** Désinstalle l'ancienne App (sa clé est au coffre), purge ses secrets/variables d'org, ouvre sa page de suppression. */
+/** Uninstalls the former App (its key is in the vault), purges its org secrets/variables, opens its deletion page. */
 async function retire(a: string[]): Promise<number> {
   const slug = opt(a, "--slug") ?? "aphrody-labs-submodules";
   const key = opt(a, "--key") ?? "SUBMODULES_APP_KEY";
@@ -677,11 +677,11 @@ async function retire(a: string[]): Promise<number> {
     const jwt = appJwt(pem, cid);
     for (const i of await installations(jwt)) {
       await gh(`/app/installations/${i.id}`, jwt, { method: "DELETE" });
-      log.push(`désinstallée de ${i.account.login}`);
+      log.push(`uninstalled from ${i.account.login}`);
     }
   } else
     log.push(
-      `clé ${key} ou client id absent : désinstallation par la page de l'App`,
+      `key ${key} or client id missing: uninstall through the App page`,
     );
   for (const o of APP.ciOrgs) {
     if (
@@ -689,21 +689,21 @@ async function retire(a: string[]): Promise<number> {
         windowsHide: true,
       }).status === 0
     )
-      log.push(`secret ${key} supprimé (${o})`);
+      log.push(`secret ${key} deleted (${o})`);
     if (
       spawnSync("gh", ["variable", "delete", idVar, "--org", o], {
         windowsHide: true,
       }).status === 0
     )
-      log.push(`variable ${idVar} supprimée (${o})`);
+      log.push(`variable ${idVar} deleted (${o})`);
   }
-  if (secretHas(key) && secretDelete(key)) log.push(`coffre ${key} supprimé`);
-  // Aucune API ne supprime l'enregistrement d'une App : page « Advanced » ouverte pour le propriétaire.
+  if (secretHas(key) && secretDelete(key)) log.push(`vault ${key} deleted`);
+  // No API deletes an App's registration: "Advanced" page opened for the owner.
   const adv = `https://github.com/organizations/${APP.owner}/settings/apps/${slug}/advanced`;
   if (a.includes("--no-open")) console.error(adv);
   else open(adv);
   console.error(
-    `ay auth github-app retire ${slug} : ${log.join(" ; ")} ; page « Delete GitHub App » ouverte`,
+    `ay auth github-app retire ${slug}: ${log.join("; ")}; "Delete GitHub App" page opened`,
   );
   return 0;
 }
@@ -711,13 +711,13 @@ async function retire(a: string[]): Promise<number> {
 // --- crates.io trusted publishing --------------------------------------------------------------------------
 
 /**
- * Enregistre sur crates.io la configuration GitHub (POST /api/v1/trusted_publishing/github_configs, schéma
- * NewGitHubConfig de rust-lang/crates.io) qui autorise .github/workflows/crates-publish.yml à publier chaque crate.
- * Jeton : CARGO_REGISTRY_TOKEN du coffre (portée trusted-publishing requise par l API). Idempotent.
+ * Registers on crates.io the GitHub configuration (POST /api/v1/trusted_publishing/github_configs, schema
+ * NewGitHubConfig of rust-lang/crates.io) that authorizes .github/workflows/crates-publish.yml to publish each crate.
+ * Token: vault CARGO_REGISTRY_TOKEN (trusted-publishing scope required by the API). Idempotent.
  */
 async function cratesTrust(a: string[]): Promise<number> {
   const crates = (opt(a, "--crates") ?? "").split(",").filter(Boolean);
-  const [owner, repo] = (opt(a, "--repo") ?? "aphrody-labs/src").split("/");
+  const [owner, repo] = (opt(a, "--repo") ?? "aphrody-labs/aphrody").split("/");
   const workflow = opt(a, "--workflow") ?? "crates-publish.yml";
   const token = cred("CARGO_REGISTRY_TOKEN");
   if (!crates.length || !token)
@@ -749,7 +749,7 @@ async function cratesTrust(a: string[]): Promise<number> {
           c.workflow_filename === workflow,
       )
     ) {
-      console.error(`${krate} : déjà configurée`);
+      console.error(`${krate}: already configured`);
       continue;
     }
     const r = await fetch(
@@ -770,13 +770,13 @@ async function cratesTrust(a: string[]): Promise<number> {
     );
     if (!r.ok) bad++;
     console.error(
-      `${krate} : ${r.ok ? "configurée" : `HTTP ${r.status} ${(await r.text()).slice(0, 160)}`}`,
+      `${krate}: ${r.ok ? "configured" : `HTTP ${r.status} ${(await r.text()).slice(0, 160)}`}`,
     );
   }
   return bad ? 1 : 0;
 }
 
-// --- entrée ---------------------------------------------------------------------------------------------------
+// --- entry ----------------------------------------------------------------------------------------------------
 
 export async function githubAppCommand(a: string[]): Promise<number> {
   return dispatch(a).catch((e: Error) => {
@@ -801,14 +801,14 @@ async function dispatch(a: string[]): Promise<number> {
           `https://github.com/apps/${APP.name}/installations/new/permissions?target_id=${await accountId(t)}`,
         );
       console.error(
-        `ay auth github-app install : ${APP.targets.length} pages ouvertes ; clic propriétaire « Install » sur chacune (All repositories)`,
+        `ay auth github-app install: ${APP.targets.length} pages opened; owner click "Install" on each (All repositories)`,
       );
       return 0;
     case "status":
       return status(head.includes("--json"));
     case "hook":
       await setHook();
-      console.error(`ay auth github-app hook : ${APP.hook} (secret du coffre)`);
+      console.error(`ay auth github-app hook: ${APP.hook} (vault secret)`);
       return 0;
     case "token": {
       const perms = Object.fromEntries(
@@ -830,7 +830,7 @@ async function dispatch(a: string[]): Promise<number> {
         });
       if (process.stdout.isTTY) {
         console.error(
-          `ay auth github-app token : jeton de l'installation ${t.installation} (expire ${t.expires_at}) non affiché ; utiliser -- <cmd> ou un tube`,
+          `ay auth github-app token: installation token ${t.installation} (expires ${t.expires_at}) not displayed; use -- <cmd> or a pipe`,
         );
         return 2;
       }

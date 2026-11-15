@@ -71,8 +71,8 @@ export async function googleOAuthLoopback(opts: {
         rejectCode(new Error(`consent refused: ${err}`));
         return new Response(
           html(
-            "Refusé",
-            "<h1>Accès refusé.</h1><p>Vous pouvez fermer cette fenêtre.</p>",
+            "Denied",
+            "<h1>Access denied.</h1><p>You can close this window.</p>",
           ),
           {
             headers: { "content-type": "text/html; charset=utf-8" },
@@ -87,8 +87,8 @@ export async function googleOAuthLoopback(opts: {
       resolveCode(code);
       return new Response(
         html(
-          "Connecté",
-          "<h1>Autorisation reçue.</h1><p>Vous pouvez fermer cette fenêtre et revenir au terminal.</p>",
+          "Signed in",
+          "<h1>Authorization received.</h1><p>You can close this window and return to the terminal.</p>",
         ),
         { headers: { "content-type": "text/html; charset=utf-8" } },
       );

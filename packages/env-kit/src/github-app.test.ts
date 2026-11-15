@@ -1,4 +1,4 @@
-// Manifeste de l'App « aphrody » : chaque événement a sa permission, aucune clé refusée par le validateur de GitHub.
+// "aphrody" App manifest: each event has its permission, no key refused by GitHub's validator.
 import { describe, expect, test } from "bun:test";
 import { generateKeyPairSync, verify } from "node:crypto";
 import {
@@ -10,14 +10,14 @@ import {
 } from "./github-app";
 
 describe("manifeste", () => {
-  test("chaque événement est couvert par une permission accordée", () => {
+  test("each event is covered by a granted permission", () => {
     for (const e of EVENTS) {
       const p = EVENT_PERMISSION[e];
       expect(p, e).toBeDefined();
       expect(PERMISSIONS[p!], `${e} -> ${p}`).toBeDefined();
     }
   });
-  test("clés refusées par le validateur absentes (2026-11-13)", () => {
+  test("keys refused by the validator are absent (2026-11-13)", () => {
     for (const k of [
       "email_addresses",
       "git_ssh_keys",
@@ -33,7 +33,7 @@ describe("manifeste", () => {
     ])
       expect(EVENTS).not.toContain(e);
   });
-  test("niveaux valides, metadata en lecture, App publique avec webhook actif", () => {
+  test("valid levels, metadata read-only, public App with active webhook", () => {
     for (const [k, v] of Object.entries(PERMISSIONS))
       expect(["read", "write", "admin"], k).toContain(v);
     expect(PERMISSIONS.metadata).toBe("read");
