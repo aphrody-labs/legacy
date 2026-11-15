@@ -49,7 +49,16 @@ jobs:
     needs: oracle
     runs-on: windows-latest
     timeout-minutes: 90
+    env:
+      # The git dependency on aphrody-labs/open (c-abi) checks out a whole repository with deep paths: keep CARGO_HOME short.
+      CARGO_HOME: C:\cg
     steps:
+      - name: Long paths
+        shell: pwsh
+        run: |
+          git config --system core.longpaths true
+          New-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem -Name LongPathsEnabled -Value 1 -PropertyType DWORD -Force
+          New-Item -ItemType Directory -Force C:\cg | Out-Null
       - uses: actions/checkout@v7
         with: { submodules: false }
       - uses: oven-sh/setup-bun@v2
