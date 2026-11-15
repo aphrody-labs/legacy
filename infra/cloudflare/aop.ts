@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // Custom (per-hostname) Authenticated Origin Pulls for fr2 origins that Cloudflare proxies to fr2 (dbfr.aphrody.com):
 // a private CA signs a client certificate that only this zone's edge presents; nginx on fr2 requires it (fleet exempt),
-// so another Cloudflare account pointing a zone at 51.255.162.6 is refused. The client key goes only to Cloudflare
+// so another Cloudflare account pointing a zone at <fr2-public-ip> is refused. The client key goes only to Cloudflare
 // (upload over the API), never to disk outside a private temp dir removed at exit; the CA key goes to the vault
 // (AOP_CA_KEY); fr2 receives the CA certificate only.
 //   just cf-aop [host]   (rotate: new CA + client certificate, bundle on fr2)   then   just cf-aop-prune

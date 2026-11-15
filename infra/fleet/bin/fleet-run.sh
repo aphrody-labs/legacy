@@ -7,7 +7,7 @@
 #   A peer is skipped when its root has < MINFREE_GB free (default 8) or when -C dir does not exist there.
 # Isolation: the job runs in `systemd-run --scope --slice=<slice>` as the calling user: slice weights (CPU/IO) keep nativelink,
 #   haproxy, nginx and cloudflared responsive, whatever the job does. Exit status is the job's.
-# Config: /etc/fleet/run.conf (PEERS="fr2=ubuntu@10.200.77.3"), written from infra/fleet/<host>/offload/run.conf.
+# Config: /etc/fleet/run.conf (PEERS="fr2=ubuntu@<fr2-mesh-ip>"), written from infra/fleet/<host>/offload/run.conf.
 set -u
 class=agent host=auto dir=$PWD dry=0 local=0
 while [ $# -gt 0 ]; do

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Daily patch-stack sync for a fleet host, as the runner user (never root). Idempotent.
 #   prd: ssh prd 'sudo -iu agent sh ~/agents/src/infra/upstream/install.sh'      -> bun
-#   fr1: ssh vps 'sh ~/agents/src/infra/upstream/install.sh'                      -> chromium
+#   fr1: ssh <fr1> 'sh ~/agents/src/infra/upstream/install.sh'                      -> chromium
 # Needs the agents runner checkout (infra/agents/install.sh), bun, git and gh with push rights on the
 # forks (GH_TOKEN from systemd-creds --user on prd, gh hosts.yml on fr1). Doc: docs/upstream/STRATEGY.md.
 set -eu

@@ -1,5 +1,5 @@
 #!/bin/sh
-# Probe Rust toolchain state on fr1 (ssh vps sh -s < probe-rust.sh).
+# Probe Rust toolchain state on fr1 (ssh <fr1> sh -s < probe-rust.sh).
 export PATH=$HOME/.cargo/bin:$PATH
 cd /srv/src || exit 1
 git rev-parse --short HEAD

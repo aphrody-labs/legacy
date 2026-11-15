@@ -1,8 +1,8 @@
 #!/bin/bash
 # Installs the ssh 22 closing-criteria probe on one fleet host (run from C:\src, Git Bash):
-#   sh infra/fleet/bin/ssh22-probe-install.sh fr2 root@ssh-prd.aphrody.com root@10.200.77.5 prd
-#   sh infra/fleet/bin/ssh22-probe-install.sh prd ubuntu@ssh-fr2.aphrody.com ubuntu@10.200.77.3 fr2
-#   sh infra/fleet/bin/ssh22-probe-install.sh vps "" ubuntu@10.200.77.3 fr2     (fr1: mesh only, no Access token)
+#   sh infra/fleet/bin/ssh22-probe-install.sh fr2 root@ssh-prd.aphrody.com root@<prd-mesh-ip> prd
+#   sh infra/fleet/bin/ssh22-probe-install.sh prd ubuntu@ssh-fr2.aphrody.com ubuntu@<fr2-mesh-ip> fr2
+#   sh infra/fleet/bin/ssh22-probe-install.sh vps "" ubuntu@<fr2-mesh-ip> fr2     (fr1: mesh only, no Access token)
 # Host key of the mesh peer: read from the peer itself (its ed25519 public host key) over the PC's already
 # authenticated ssh session, then written for the mesh IP into /root/.ssh/known_hosts of the probing host. No
 # ssh-keyscan, so no trust on first use over the network.

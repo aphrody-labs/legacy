@@ -3,7 +3,7 @@
 # labels self-hosted,Linux,X64,fr1,build. Instance 1 is the historical ~/actions-runner (name fr1); 2..N are
 # ~/actions-runner-K (name fr1-K) cloned from its binaries. Idempotent: configured instances are left as is.
 #   gh runner registration token on stdin (only needed when an instance is missing), never printed:
-#   gh api -X POST repos/aphrody-labs/src/actions/runners/registration-token --jq .token | ssh vps gh-runners.sh 6
+#   gh api -X POST repos/aphrody-labs/src/actions/runners/registration-token --jq .token | ssh <fr1> gh-runners.sh 6
 set -euo pipefail
 N=${1:-6}; REPO_URL=${REPO_URL:-https://github.com/aphrody-labs/src}; U=${RUNNER_USER:-ubuntu}; H=/home/$U
 TOKEN=""; [ -t 0 ] || read -r TOKEN || true

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Provision fr2: JDK 25, official Ghidra release, pyghidra venv. Run: ssh cdn bash -s < provision-fr2.sh
+# Provision fr2: JDK 25, official Ghidra release, pyghidra venv. Run: ssh <fr2> bash -s < provision-fr2.sh
 set -euo pipefail
 G=/srv/ghidra-release
 URL=https://github.com/NationalSecurityAgency/ghidra/releases/download/Ghidra_12.2_build/ghidra_12.2_PUBLIC_20261016.zip

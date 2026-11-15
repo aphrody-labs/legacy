@@ -1,6 +1,6 @@
 #!/bin/sh
 # build-on-fr1.sh - build the WSL image on fr1 (never on the PC): Arch Linux container, one heavy job via aphrody-heavy.
-#   ssh vps 'cd <checkout>/infra/wsl-distro && PROFILE=dev aphrody-heavy sh scripts/build-on-fr1.sh [version]'
+#   ssh <fr1> 'cd <checkout>/infra/wsl-distro && PROFILE=dev aphrody-heavy sh scripts/build-on-fr1.sh [version]'
 # Output: work/output/aphrody-<profile>-<version>.wsl (+ .SHA256). CachyOS signing key as in CachyOS/cachyos-wsl CI.
 set -eu
 cd "$(dirname "$0")/.."

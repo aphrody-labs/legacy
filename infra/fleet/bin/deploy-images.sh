@@ -3,7 +3,7 @@
 # the pull happens on fr1 (job-local docker login with the gh token, never written to the target) and the image is
 # streamed to the target (docker save | ssh docker load); the target needs no registry credential and no compiler.
 # Then `compose up -d --wait --pull never` of the named services from the synced /srv/src checkout of the target.
-#   deploy-images.sh <prd|fr2> <sha> <profile> <service...>      run on fr1:  ssh vps bash /srv/src/infra/fleet/bin/deploy-images.sh prd <sha> core ai-os-relay ai-os-gateway
+#   deploy-images.sh <prd|fr2> <sha> <profile> <service...>      run on fr1:  ssh <fr1> bash /srv/src/infra/fleet/bin/deploy-images.sh prd <sha> core ai-os-relay ai-os-gateway
 # Rollback: the same command with the previous sha (its image stays on the target until pruned).
 set -euo pipefail
 HOST=${1:?host prd|fr2}; SHA=${2:?sha}; PROFILE=${3:?profile}; shift 3; SVCS=("$@"); [ ${#SVCS[@]} -gt 0 ] || { echo "no service" >&2; exit 2; }

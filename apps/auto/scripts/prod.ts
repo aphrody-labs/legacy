@@ -1,4 +1,4 @@
-// Production operations on usa (ssh alias `prd`, public IP; the 10.200.77.x mesh may be cut):
+// Production operations on usa (ssh alias `prd`, public IP; the <mesh>.x mesh may be cut):
 // `ay ssh` for the host and the containers, public probe through fetch. Data and environment files: /srv/auto.
 //   bun run prod etat       host, auto-* containers, public health
 //   bun run prod deployer   image built here, loaded on the server, API, worker and web relaunched

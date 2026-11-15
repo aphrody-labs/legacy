@@ -4,7 +4,7 @@
 # parallel CI runners, prd 1) under flock /var/lock/aphrody-heavy[.N].lock, started when load < 2x nproc (fr1: shared with agents, nice 19 yields to Chromium) or
 # nproc/2 (prd), at nice 19 / ionice idle, so Chromium/LLVM builds and production keep priority.
 #   aphrody-heavy <cmd...>      e.g. aphrody-heavy cargo build --release ; aphrody-heavy docker buildx bake ...
-#   from another host or the PC: ssh vps aphrody-heavy <cmd...>
+#   from another host or the PC: ssh <fr1> aphrody-heavy <cmd...>
 # Env: HEAVY_WAIT_MAX (s, default 3600) max wait for the load to drop; CARGO_BUILD_JOBS defaults to nproc/3.
 # The host role comes from /etc/aphrody/role (written by infra/fleet/bootstrap/<role>.sh).
 set -eu
@@ -17,7 +17,7 @@ case $role in
   # prd (owner order 2026-11-13): light builds only (wasm/web bundles, CLI packaging), production first:
   # same lock, -j 2, started only while load < nproc/2, nice 19 / ionice idle.
   prd) limit=$(( n / 2 )); jobs=2; slots=1 ;;
-  *) echo "aphrody-heavy: builds run on fr1 (light ones also on prd), not on $role. Use: ssh vps aphrody-heavy $*" >&2
+  *) echo "aphrody-heavy: builds run on fr1 (light ones also on prd), not on $role. Use: ssh <fr1> aphrody-heavy $*" >&2
      exit 64 ;;
 esac
 limit=${HEAVY_LIMIT:-$limit} # HEAVY_LIMIT: load below which a job may start (nice 19 and idle I/O already yield to Chromium)

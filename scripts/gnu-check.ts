@@ -1,5 +1,5 @@
 // `just gnu-check <id>`: the GNU testsuite of package <id>, GNU binary against ours, and src/gnu/<id>/PROOF.md.
-//   build on fr1 (ssh vps) -> binary relayed to fr2 (ssh cdn) -> scripts/gnu-proof.sh on fr2 -> PROOF.md here.
+//   build on fr1 (ssh <fr1>) -> binary relayed to fr2 (ssh <fr2>) -> scripts/gnu-proof.sh on fr2 -> PROOF.md here.
 // First-party ports only (src/gnu/<id>/Cargo.toml: which time bc ed m4). Rust rewrites carried as forks
 // (coreutils, findutils, diffutils, sed, grep, tar, gawk) keep their upstream harness; see their PROOF.md.
 // Rule (docs/native/gnu/OS.md 5): replaced only when the pass rate reaches the Rust reference (coreutils 94.0 %).

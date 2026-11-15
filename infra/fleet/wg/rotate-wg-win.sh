@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rotation of the Windows peer key (10.200.77.2 / 10.200.78.2), key leaked in aphrody-labs/mesh-vn.
+# Rotation of the Windows peer key (<pc-mesh-ip> / <pc-mesh-ip-2>), key leaked in aphrody-labs/mesh-vn.
 # Run from the PC in an elevated session (Claude Code runs elevated: no prompt). Rotation done on 2026-11-13 (new key in ~/.ssh/fleet/wg/wg-win.pub).
 # ssh goes through the public IPs: cutting the tunnel does not cut access to the servers.
 # New pair: ~/.ssh/fleet/wg/wg-win.{key,pub}, conf: ~/.ssh/fleet/wg/wg-win.conf (outside the repository).

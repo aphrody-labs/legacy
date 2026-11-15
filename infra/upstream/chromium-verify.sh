@@ -2,7 +2,7 @@
 # fr1 only: build and test the Chromium series (infra/upstream/chromium/patches) on the upstream tip, in a
 # gclient checkout of its own (/srv/chromium/upstream), never in the factory checkout (/srv/chromium/src,
 # pinned to a release). Skipped while the series is empty. Doc: docs/upstream/STRATEGY.md.
-#   ssh vps 'sh ~/agents/src/infra/upstream/chromium-verify.sh'
+#   ssh <fr1> 'sh ~/agents/src/infra/upstream/chromium-verify.sh'
 # Subset: the test executables that depend on the files the series touches (`gn refs --testonly`),
 # not the whole tree. Builds through the NativeLink REAPI pool (docs/native/CHROMIUM-FACTORY.md, F1).
 set -eu

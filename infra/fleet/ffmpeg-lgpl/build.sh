@@ -5,7 +5,7 @@
 # their dependency; only GPL/v3 options and their libraries are dropped (x264, x265, xvid, vid.stab,
 # rubberband, frei0r = GPL; gmp, opencore-amr = LGPLv3/Apache needing --enable-version3).
 # Built on fr1 (the factory) in an archlinux container, installed on prd with pacman -U + IgnorePkg.
-#   ssh vps 'aphrody-heavy sh -s' < infra/fleet/ffmpeg-lgpl/build.sh        -> /srv/build/ffmpeg-lgpl/out/*.pkg.tar.zst
+#   ssh <fr1> 'aphrody-heavy sh -s' < infra/fleet/ffmpeg-lgpl/build.sh        -> /srv/build/ffmpeg-lgpl/out/*.pkg.tar.zst
 #   sh infra/fleet/ffmpeg-lgpl/install-prd.sh                               (from the PC)
 # Rollback on prd: sudo pacman -S ffmpeg (repo GPL build) && sudo sed -i '/^IgnorePkg = ffmpeg$/d' /etc/pacman.conf
 set -eu

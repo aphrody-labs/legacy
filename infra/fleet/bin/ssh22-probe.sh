@@ -3,7 +3,7 @@
 # every hour, ssh through Cloudflare Access with this host's service token (if ACCESS_TARGET is set), and ssh over the
 # WireGuard mesh. One JSON line per run in /var/lib/fleet-ssh22/probes.jsonl (last 2000 kept), read by `just cf-proof`.
 # Installed by infra/fleet/bin/ssh22-probe-install.sh as /usr/local/bin/ssh22-probe.sh + fleet-ssh22-probe.{service,timer};
-# config /etc/fleet/ssh22-probe.conf: ACCESS_TARGET=user@ssh-<peer>.aphrody.com (empty on fr1)  MESH_TARGET=user@10.200.77.x
+# config /etc/fleet/ssh22-probe.conf: ACCESS_TARGET=user@ssh-<peer>.aphrody.com (empty on fr1)  MESH_TARGET=user@<mesh>.x
 # Host keys are pinned (StrictHostKeyChecking=yes, known_hosts provisioned at install). secrets.env is never sourced:
 # only the two Access variables are read, and handed to cloudflared through its environment.
 set -u
