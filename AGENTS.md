@@ -1,10 +1,10 @@
 # Aphrody: agent operating contract (`AGENTS.md`)
 
-Read by every agent CLI (Claude Code, Codex, Antigravity, OpenCode, Pi, Zed). The direction and work order are in [`docs/games/PLAN.md`](docs/games/PLAN.md).
+Read by every agent CLI (Claude Code, Codex, Antigravity, OpenCode, Pi, Zed). The spec and work order are in [`docs/native/ROADMAP.md`](docs/native/ROADMAP.md).
 
 ## 1. What Aphrody is
 
-Aphrody (`aphrody-labs/aphrody`, checkout folder named after `tools/identity.toml`) is a public monorepo: a game engine and creative suite built in the open (Bevy, the Craft Apps and ArtCraft, `src/tv` and FFmpeg for media, Unreal Engine by interop only), on top of the platform work (Bun and Rust tooling, deploy, Linux and Windows layers, the C and WebAssembly core in `src/`). Say what is built and what is not.
+Aphrody (`aphrody-labs/aphrody`, checkout folder named after `tools/identity.toml`) is a public, generalist monorepo; the core is `ay`: Bun built from its fork without JavaScriptCore and WebKit, with the Unix userland in their place (bash, coreutils, binutils...), a universal runner for TypeScript/JavaScript, bash and Rust, and a module and extension system with Cargo/crates.io and Bun/npm built in (AOT, LTO). Around it: the platform (OS layers, deploy, the fleet as one server, agents) and the front ends (web, CLI, TUI, GUI, mobile) consuming the `open` and `auto` libraries. Media and games (`src/tv`, Bevy) are domains among others. Say what is built and what is not.
 
 ## 2. Layout (check with `fd -d 1`; the lists are examples)
 
