@@ -411,7 +411,7 @@ async function appeler(
       corps === undefined
         ? undefined
         : brut
-          ? (corps as BodyInit)
+          ? (corps as string | ArrayBuffer | Blob | FormData | URLSearchParams | ReadableStream)
           : JSON.stringify(corps),
     signal: ctx.signal,
   });

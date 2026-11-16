@@ -319,7 +319,7 @@ test("fallback: billing then quota failures move to the next engine, sampling an
     write: false,
   });
   expect(p.score).toBe(19);
-  expect(p.status).toBe("incomplet");
+  expect(p.status).toBe("incomplete");
 });
 
 test("engine order: gemini-web first, then ranked and fallback families; cooling engines reported with their class", async () => {

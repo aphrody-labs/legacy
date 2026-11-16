@@ -91,7 +91,7 @@ export async function chatCompletions(
 ): Promise<Response> {
   let body: Body;
   try {
-    body = await req.json();
+    body = (await req.json()) as Body;
     if (!Array.isArray(body.messages)) throw new Error("messages requis");
   } catch (e: any) {
     return errorResponse(

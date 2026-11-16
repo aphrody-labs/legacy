@@ -404,5 +404,5 @@ test("guardrails: confined slug, secrets dropped and redacted, defects table onl
   ).rejects.toThrow(/invalid slug/);
   const r = await review({ ...base, spec: ["src/a.ts"] });
   expect(r.score).toBe(19);
-  expect(r.status).toBe("incomplet");
+  expect(r.status).toBe("incomplete");
 });

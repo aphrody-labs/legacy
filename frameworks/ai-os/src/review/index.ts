@@ -997,7 +997,7 @@ export const slugOf = (s: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 48) || "revue";
 
-/** "incomplet": score at the threshold but review truncated or voice missing; never a gate passed. */
+/** "incomplete": score at the threshold but review truncated or voice missing; never a gate passed. */
 export type Status =
   "compliant" | "needs-fix" | "incomplete" | "frozen" | "no-engine";
 
@@ -1487,7 +1487,7 @@ export async function review(o: ReviewOptions = {}): Promise<ReviewResult> {
         !okVoices.some((r) => r.partial)
       )
         status = "compliant";
-      else if (score >= threshold) status = "incomplet";
+      else if (score >= threshold) status = "incomplete";
       else {
         if (score <= best) stale++;
         else {

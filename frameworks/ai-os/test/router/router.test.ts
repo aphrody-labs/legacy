@@ -398,8 +398,8 @@ describe("Anthropic wire", () => {
       tool_call_id: "t1",
       content: "files",
     });
-    expect(o.tools[0].function.name).toBe("ls");
-    expect(o.tool_choice).toBe("required");
+    expect((o as any).tools[0].function.name).toBe("ls");
+    expect((o as any).tool_choice).toBe("required");
   });
   test("response and SSE", async () => {
     const a = openAIToAnthropic(

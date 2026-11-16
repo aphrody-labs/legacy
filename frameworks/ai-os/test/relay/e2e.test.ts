@@ -248,7 +248,7 @@ describe.skipIf(!alive)("relay e2e", () => {
   // ------------------------------------------------------------ 1. protocols
   describe("protocols", () => {
     test("health, metrics and auth gate", async () => {
-      const h = await (await fetch(`${BASE}/health`)).json();
+      const h: any = await (await fetch(`${BASE}/health`)).json();
       expect(h.name).toBe("aphrody-relay");
       const m = await fetch(`${BASE}/metrics`);
       expect(m.status).toBe(200);
@@ -294,7 +294,7 @@ describe.skipIf(!alive)("relay e2e", () => {
         headers: auth,
         body: "{not json",
       });
-      expect((await bad.json()).error.code).toBe(-32700);
+      expect(((await bad.json()) as any).error.code).toBe(-32700);
     }, 90_000);
 
     test("/mcp and /mcp/core: initialize, discover, tools/list, core blocks aggregated tools/call", async () => {
@@ -350,7 +350,7 @@ describe.skipIf(!alive)("relay e2e", () => {
     }, 150_000);
 
     test("A2A card and version gate", async () => {
-      const card = await (
+      const card: any = await (
         await fetch(`${BASE}/.well-known/agent-card.json`)
       ).json();
       expect(card.name).toBe("aphrody-relay");

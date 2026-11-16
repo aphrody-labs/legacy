@@ -133,7 +133,12 @@ afterAll(async () => {
   for (const k of Object.keys(saved))
     saved[k] === undefined ? delete Bun.env[k] : (Bun.env[k] = saved[k]);
   await Bun.sleep(300);
-  rmSync(home, { recursive: true, force: true });
+  rmSync(home, {
+    recursive: true,
+    force: true,
+    maxRetries: 20,
+    retryDelay: 250,
+  }); // Windows: Chrome releases its profile a moment after it exits
 });
 
 const opts = () => ({

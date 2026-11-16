@@ -51,8 +51,9 @@ export function createEmulateFetch(
   routes: EmulateRoute[],
   fallback?: typeof fetch,
 ): typeof fetch {
-  return (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const req = input instanceof Request ? input : new Request(input, init);
+  return (async (input: string | Request | URL, init?: RequestInit) => {
+    const req =
+      input instanceof Request ? input : new Request(String(input), init);
     const url = new URL(req.url);
     for (const r of routes) {
       if (r.method && r.method.toUpperCase() !== req.method.toUpperCase())

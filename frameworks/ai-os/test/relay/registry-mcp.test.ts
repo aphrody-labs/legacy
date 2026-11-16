@@ -7,7 +7,10 @@ const out: string[] = [];
 const realWrite = process.stdout.write.bind(process.stdout);
 
 function stub(routes: Record<string, unknown>) {
-  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+  globalThis.fetch = (async (
+    input: string | Request | URL,
+    init?: RequestInit,
+  ) => {
     const url = String(input);
     expect(new Headers(init?.headers).get("user-agent")).toContain(
       "aphrody-registry-mcp",
@@ -77,7 +80,7 @@ describe("registry MCP", () => {
 
   test("npm_info encodes scoped names and dates every dist-tag", async () => {
     let seen = "";
-    globalThis.fetch = (async (u: RequestInfo | URL) => {
+    globalThis.fetch = (async (u: string | Request | URL) => {
       seen = String(u);
       return Response.json({
         name: "@scope/pkg",
@@ -97,7 +100,7 @@ describe("registry MCP", () => {
 
   test("search tools clamp the limit and require the query", async () => {
     let seen = "";
-    globalThis.fetch = (async (u: RequestInfo | URL) => (
+    globalThis.fetch = (async (u: string | Request | URL) => (
       (seen = String(u)),
       Response.json({ objects: [], crates: [] })
     )) as typeof fetch;

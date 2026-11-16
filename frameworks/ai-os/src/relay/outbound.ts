@@ -275,7 +275,8 @@ export class Outbound {
     this.maxEntries = o.maxEntries ?? Number(Bun.env.RELAY_CACHE_MAX ?? 2000);
     this.mesh = o.mesh ?? loadMesh();
     // Late-bound global: a test or a runtime that swaps globalThis.fetch after construction is honoured.
-    this.fetcher = o.fetch ?? ((i, init) => globalThis.fetch(i, init));
+    this.fetcher =
+      o.fetch ?? (((i, init) => globalThis.fetch(i, init)) as typeof fetch);
     const path = o.db === undefined ? join(relayHome(), "cache.sqlite") : o.db;
     this.db = null;
     if (path !== null) {

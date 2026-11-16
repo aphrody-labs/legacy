@@ -81,7 +81,9 @@ export function loadAiOsCabi(): { lib: AiOsLib; path: string } | null {
 
 const cstr = (s: string) => Buffer.from(`${s}\0`, "utf8");
 
-function readJson<T>(lib: AiOsLib, ptrVal: Pointer | null): T {
+function readJson<T>(lib: AiOsLib, ret: Pointer | bigint | null): T {
+  // bun:ffi types a `ptr` return as Pointer or bigint; the value is the same address.
+  const ptrVal = ret as Pointer | null;
   if (!ptrVal) throw new Error("ai_os C ABI returned null pointer");
   try {
     const out = JSON.parse(new CString(ptrVal).toString());
@@ -299,7 +301,8 @@ export async function osRagUpsert(
   }
   const ctx = new Context(dbPath);
   try {
-    await ctx.ingest({ ...entry, at: entry.at ?? Date.now() });
+    const { at, ...rest } = entry;
+    await ctx.ingest(rest, at ?? Date.now());
     return { ok: true, id: entry.id };
   } finally {
     ctx.close();
@@ -324,7 +327,8 @@ export async function osRagQuery(
   try {
     const hits = await ctx.select(req.query, {
       k: req.k ?? 8,
-      mask: { sources: req.sources, scopes: req.scopes },
+      sources: req.sources,
+      scopes: req.scopes,
     });
     return hits.map((h) => ({
       id: h.id,

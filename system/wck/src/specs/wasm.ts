@@ -122,7 +122,7 @@ export function validateWasmSpec(ctx: WebFilesContext): SpecResult {
     }
 
     // Native WebAssembly.validate()
-    const isValid = WebAssembly.validate(bytes as unknown as BufferSource);
+    const isValid = WebAssembly.validate(bytes as unknown as ArrayBuffer);
     if (!isValid) {
       allModulesValid = false;
       const err = `WebAssembly.validate() failed on ${mod.source}`;
@@ -139,7 +139,7 @@ export function validateWasmSpec(ctx: WebFilesContext): SpecResult {
 
     // Native new WebAssembly.Module() compilation & contract check
     try {
-      const compiled = new WebAssembly.Module(bytes as unknown as BufferSource);
+      const compiled = new WebAssembly.Module(bytes as unknown as ArrayBuffer);
       const exportsList = WebAssembly.Module.exports(compiled);
       const importsList = WebAssembly.Module.imports(compiled);
 
