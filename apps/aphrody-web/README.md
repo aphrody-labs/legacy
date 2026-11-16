@@ -1,6 +1,7 @@
 # aphrody-web
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > aphrody.com - Aphrody brand homepage, search with package catalog, and runtime benchmarks, in pure Bun web standards
 
 | Type | Path |
@@ -21,4 +22,5 @@ bun run --cwd apps/aphrody-web bench
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

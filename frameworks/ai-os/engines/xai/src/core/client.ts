@@ -119,7 +119,11 @@ export class XaiClient {
     path: string,
     body?: unknown,
   ): Promise<T> {
-    const res = await this.request(method, path.startsWith("/") ? path : `/${path}`, body);
+    const res = await this.request(
+      method,
+      path.startsWith("/") ? path : `/${path}`,
+      body,
+    );
     const text = await res.text();
     if (!text) return {} as T;
     return JSON.parse(text) as T;
@@ -283,14 +287,28 @@ export class Chat {
     this.params = extra;
     // Support passing zod (or simple schema) via options for post-sample parsing
     const extraAny = extra as any;
-    this.structuredSchema = extraAny.structuredSchema ?? extraAny.zodSchema ?? extraAny.response_format ?? null;
+    this.structuredSchema =
+      extraAny.structuredSchema ??
+      extraAny.zodSchema ??
+      extraAny.response_format ??
+      null;
   }
 
   /** Append a message (string, ChatMessage, or assistant response from previous sample). Supports tool_calls. */
-  append(message: string | ChatMessage | { role?: string; content?: string | null; tool_calls?: any }): this {
+  append(
+    message:
+      | string
+      | ChatMessage
+      | { role?: string; content?: string | null; tool_calls?: any },
+  ): this {
     if (typeof message === "string") {
       this.messages.push({ role: "user", content: message });
-    } else if (message && typeof message === "object" && "role" in message && message.role) {
+    } else if (
+      message &&
+      typeof message === "object" &&
+      "role" in message &&
+      message.role
+    ) {
       this.messages.push(message as ChatMessage);
     } else if (message && typeof message === "object" && "content" in message) {
       // response-like or choice.message
@@ -367,7 +385,10 @@ export class Chat {
     // resolve impl map + auto XTools (supports passing XTools as first arg for auto)
     let implMap: Record<string, (args: any) => Promise<any> | any> = {};
     let xt: XTools | undefined = autoXTools;
-    if (impls instanceof XTools || (impls && typeof (impls as any).search === "function")) {
+    if (
+      impls instanceof XTools ||
+      (impls && typeof (impls as any).search === "function")
+    ) {
       xt = impls as XTools;
     } else {
       implMap = impls as Record<string, (args: any) => Promise<any> | any>;
@@ -418,7 +439,13 @@ export class Chat {
 
   /** Stream deltas. Yields chunks. Auto appends final on end if you consume fully. Supports tool_calls deltas. */
   async *stream(): AsyncGenerator<
-    { content?: string; done: boolean; response?: ChatCompletionResponse; toolCallDeltas?: any[]; toolCalls?: ToolCall[] },
+    {
+      content?: string;
+      done: boolean;
+      response?: ChatCompletionResponse;
+      toolCallDeltas?: any[];
+      toolCalls?: ToolCall[];
+    },
     void,
     unknown
   > {
@@ -445,7 +472,14 @@ export class Chat {
     let finalContent = "";
     let finalResponse: ChatCompletionResponse | undefined;
     // Accumulator for streamed tool_calls (args arrive in chunks, by index)
-    const toolCallAccs: Record<number, { id?: string; type?: string; function: { name?: string; arguments: string } }> = {};
+    const toolCallAccs: Record<
+      number,
+      {
+        id?: string;
+        type?: string;
+        function: { name?: string; arguments: string };
+      }
+    > = {};
 
     try {
       while (true) {
@@ -481,7 +515,12 @@ export class Chat {
                 tool_calls: finalTcs.length ? finalTcs : undefined,
               } as any);
             }
-            yield { content: "", done: true, response: finalResponse, toolCalls: finalTcs.length ? finalTcs : undefined };
+            yield {
+              content: "",
+              done: true,
+              response: finalResponse,
+              toolCalls: finalTcs.length ? finalTcs : undefined,
+            };
             return;
           }
           try {
@@ -510,7 +549,8 @@ export class Chat {
                 if (td.id) acc.id = td.id;
                 if (td.type) acc.type = td.type;
                 if (td.function?.name) acc.function.name = td.function.name;
-                if (td.function?.arguments != null) acc.function.arguments += td.function.arguments;
+                if (td.function?.arguments != null)
+                  acc.function.arguments += td.function.arguments;
               }
               yield { toolCallDeltas: tcsDelta, done: false };
             }
@@ -535,7 +575,9 @@ export class Chat {
    * - Always returns the raw res; parsed is attached if successful.
    * Uses dynamic import for zod if not bundled (keeps @aphrody/xai light, zod optional at runtime).
    */
-  async sampleStructured<T = unknown>(schema?: any): Promise<ChatCompletionResponse & { parsed?: T }> {
+  async sampleStructured<T = unknown>(
+    schema?: any,
+  ): Promise<ChatCompletionResponse & { parsed?: T }> {
     const res = await this.sample();
     const content = res.choices?.[0]?.message?.content;
     let parsed: T | undefined;
@@ -543,7 +585,8 @@ export class Chat {
 
     if (content && useSchema) {
       try {
-        const json = typeof content === "string" ? JSON.parse(content.trim()) : content;
+        const json =
+          typeof content === "string" ? JSON.parse(content.trim()) : content;
         // If looks like zod (has parse), use directly. Else try dynamic load for conversion/validation.
         if (useSchema && typeof useSchema.parse === "function") {
           parsed = useSchema.parse(json);
@@ -561,7 +604,11 @@ export class Chat {
     if (!parsed && content && (this.params as any)?.response_format) {
       try {
         const rf: any = (this.params as any).response_format;
-        const wantsJson = (rf && (rf === "json_object" || rf?.type === "json_object" || rf?.type === "json_schema"));
+        const wantsJson =
+          rf &&
+          (rf === "json_object" ||
+            rf?.type === "json_object" ||
+            rf?.type === "json_schema");
         if (wantsJson && typeof content === "string") {
           parsed = JSON.parse(content.trim()) as T;
         }

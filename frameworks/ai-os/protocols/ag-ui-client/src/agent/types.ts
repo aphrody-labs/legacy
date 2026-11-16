@@ -21,8 +21,10 @@ export type AgentDebugConfig =
 export function resolveAgentDebugConfig(
   debug: AgentDebugConfig | undefined,
 ): ResolvedAgentDebugConfig {
-  if (!debug) return { enabled: false, events: false, lifecycle: false, verbose: false };
-  if (debug === true) return { enabled: true, events: true, lifecycle: true, verbose: true };
+  if (!debug)
+    return { enabled: false, events: false, lifecycle: false, verbose: false };
+  if (debug === true)
+    return { enabled: true, events: true, lifecycle: true, verbose: true };
 
   const events = debug.events ?? true;
   const lifecycle = debug.lifecycle ?? true;
@@ -39,7 +41,10 @@ export interface AgentConfig {
   debug?: AgentDebugConfig;
 }
 
-export type HttpAgentFetchFn = (url: string, requestInit: RequestInit) => Promise<Response>;
+export type HttpAgentFetchFn = (
+  url: string,
+  requestInit: RequestInit,
+) => Promise<Response>;
 
 export interface HttpAgentConfig extends AgentConfig {
   url: string;
@@ -47,8 +52,9 @@ export interface HttpAgentConfig extends AgentConfig {
   fetch?: HttpAgentFetchFn;
 }
 
-export interface RunAgentParameters
-  extends Partial<Pick<RunAgentInput, "runId" | "tools" | "context" | "forwardedProps">> {
+export interface RunAgentParameters extends Partial<
+  Pick<RunAgentInput, "runId" | "tools" | "context" | "forwardedProps">
+> {
   /** Per-interrupt responses addressing every open interrupt from the previous run. */
   resume?: ResumeEntry[];
 }

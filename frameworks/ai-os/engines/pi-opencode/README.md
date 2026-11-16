@@ -1,10 +1,11 @@
 # pi-opencode
 
 <!-- catalog:begin unit -->
+
 > Minimalist modular autonomous coding harness fusing Pi (4-tool core), OpenCode + OpenTUI (Bun & Rust libs/UI), Locally Uncensored + Heretic + Ring3-Agent (open-weights local inference), and Symphony + Ralph NHITL worktree loops
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                   |
+| :---------- | :------------------------------------- |
 | Bun package | `frameworks/ai-os/engines/pi-opencode` |
 
 **Commands**

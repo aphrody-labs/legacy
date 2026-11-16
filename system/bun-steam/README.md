@@ -3,6 +3,7 @@
 # @aphrody/bun-steam
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Bun OS Steam owner (Bun half): VDF text/binary/appinfo parser and writer, Steam client configuration, steamcmd with a cached session, libraries, Proton management and launch tuning, Remote Play state, the local Steam index and the bun-steam CLI.
 
 | Type | Path |
@@ -17,6 +18,7 @@ bun run --cwd system/bun-steam typecheck
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Bun half of the Bun OS Steam owner. The Rust half is [`crates/bun-steam`](../../crates/bun-steam)

@@ -79,7 +79,9 @@ export function parseDotEnv(content: string): Record<string, string> {
 }
 
 export function loadMergedEnv(
-  envFilePath = process.platform === "win32" ? "C:\\aphrody\\.env" : "/src/.env",
+  envFilePath = process.platform === "win32"
+    ? "C:\\aphrody\\.env"
+    : "/src/.env",
 ): Record<string, string> {
   const merged: Record<string, string> = {};
   if (existsSync(envFilePath)) {
@@ -204,7 +206,9 @@ export function resolveBinaryCatalog(home = homedir()): Record<
     aios: {
       label: "Sovereign AI-OS",
       executable: isWin ? join(localBin, "ai-os.exe") : join(localBin, "ai-os"),
-      configDir: isWin ? "C:\\aphrody\\packages\\ai-os" : "/src/frameworks/ai-os",
+      configDir: isWin
+        ? "C:\\aphrody\\packages\\ai-os"
+        : "/src/frameworks/ai-os",
       versionArgs: ["--help"],
     },
   };

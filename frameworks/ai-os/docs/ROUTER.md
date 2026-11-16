@@ -5,14 +5,14 @@ Same auth as the relay (relay token or OAuth bearer; `x-api-key` is accepted on 
 
 ## Sources (verified live 2026-11-15)
 
-| Source | URL | Gives |
-|---|---|---|
-| Discovery | `llm/models.ts` (`llm_models`) | every provider model reachable now (ollama, fabric, `RELAY_OPENAI_ENDPOINTS`, openai, anthropic, google, openrouter, huggingface, vercel, cloudflare, agy, claude, opencode) |
-| models.dev | `https://models.dev/api.json` | context, output limit, modalities, tool support, price |
-| litellm | `.../BerriAI/litellm/main/model_prices_and_context_window.json` | price map, limits, tool/vision flags |
-| OpenRouter | `https://openrouter.ai/api/v1/models` (public) | price, context, supported parameters |
-| Hugging Face router | `https://router.huggingface.co/v1/models` (public list) | per-provider price, context, tools, first-token latency |
-| Arena | datasets-server `lmarena-ai/leaderboard-dataset`, config `text`, split `latest`, `first-rows` | overall rating and votes (top 100 rows; arena.ai itself answers 403 to scripts) |
+| Source              | URL                                                                                           | Gives                                                                                                                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Discovery           | `llm/models.ts` (`llm_models`)                                                                | every provider model reachable now (ollama, fabric, `RELAY_OPENAI_ENDPOINTS`, openai, anthropic, google, openrouter, huggingface, vercel, cloudflare, agy, claude, opencode) |
+| models.dev          | `https://models.dev/api.json`                                                                 | context, output limit, modalities, tool support, price                                                                                                                       |
+| litellm             | `.../BerriAI/litellm/main/model_prices_and_context_window.json`                               | price map, limits, tool/vision flags                                                                                                                                         |
+| OpenRouter          | `https://openrouter.ai/api/v1/models` (public)                                                | price, context, supported parameters                                                                                                                                         |
+| Hugging Face router | `https://router.huggingface.co/v1/models` (public list)                                       | per-provider price, context, tools, first-token latency                                                                                                                      |
+| Arena               | datasets-server `lmarena-ai/leaderboard-dataset`, config `text`, split `latest`, `first-rows` | overall rating and votes (top 100 rows; arena.ai itself answers 403 to scripts)                                                                                              |
 
 Join key: normalised model name (last path segment, no `:variant`, no date, `[^a-z0-9]` to `-`); Arena matches the longest key an offer extends.
 Distilled tables are cached in `relayHome()/router.db` (bun:sqlite, 6 h TTL, stale copy kept when a source fails); `router_models {refresh:true}` re-reads them.

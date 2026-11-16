@@ -21,7 +21,9 @@ type MessageLike = Record<string, unknown>;
  */
 function stripSubagentRunId<T extends object>(obj: T): T {
   if (obj && typeof obj === "object" && "subagentRunId" in obj) {
-    const { subagentRunId: _subagentRunId, ...rest } = obj as T & { subagentRunId?: unknown };
+    const { subagentRunId: _subagentRunId, ...rest } = obj as T & {
+      subagentRunId?: unknown;
+    };
     return rest as T;
   }
   return obj;
@@ -94,22 +96,35 @@ export class BackwardCompatibility_0_0_57 extends Middleware {
     );
   }
 
-  override run(input: RunAgentInput, next: AbstractAgent): Observable<BaseEvent> {
+  override run(
+    input: RunAgentInput,
+    next: AbstractAgent,
+  ): Observable<BaseEvent> {
     const sanitizedInput: RunAgentInput = {
       ...input,
-      messages: (input.messages ?? []).map((message) => stripSubagentRunId(message)),
+      messages: (input.messages ?? []).map((message) =>
+        stripSubagentRunId(message),
+      ),
     } as RunAgentInput;
 
     return this.runNext(sanitizedInput, next).pipe(
       tap((event) => {
         const type = event.type as string;
-        if (type === SUBAGENT_STARTED || type === SUBAGENT_FINISHED || type === SUBAGENT_ERROR) {
+        if (
+          type === SUBAGENT_STARTED ||
+          type === SUBAGENT_FINISHED ||
+          type === SUBAGENT_ERROR
+        ) {
           this.warnDroppedLifecycleEvent(type);
         }
       }),
       filter((event) => {
         const type = event.type as string;
-        return type !== SUBAGENT_STARTED && type !== SUBAGENT_FINISHED && type !== SUBAGENT_ERROR;
+        return (
+          type !== SUBAGENT_STARTED &&
+          type !== SUBAGENT_FINISHED &&
+          type !== SUBAGENT_ERROR
+        );
       }),
       map((event) => {
         const stripped = stripSubagentRunId(event);
@@ -118,7 +133,10 @@ export class BackwardCompatibility_0_0_57 extends Middleware {
         if (stripped.type === EventType.MESSAGES_SNAPSHOT) {
           const snapshot = stripped as BaseEvent & { messages?: MessageLike[] };
           if (Array.isArray(snapshot.messages)) {
-            return { ...snapshot, messages: stripMessages(snapshot.messages) } as BaseEvent;
+            return {
+              ...snapshot,
+              messages: stripMessages(snapshot.messages),
+            } as BaseEvent;
           }
         }
 
@@ -131,7 +149,10 @@ export class BackwardCompatibility_0_0_57 extends Middleware {
           const runFinished = stripped as BaseEvent & {
             outcome?: { type?: string; interrupts?: MessageLike[] };
           };
-          if (runFinished.outcome && Array.isArray(runFinished.outcome.interrupts)) {
+          if (
+            runFinished.outcome &&
+            Array.isArray(runFinished.outcome.interrupts)
+          ) {
             return {
               ...runFinished,
               outcome: {
@@ -146,11 +167,16 @@ export class BackwardCompatibility_0_0_57 extends Middleware {
 
         // RUN_STARTED may echo the run input, whose messages also carry subagentRunId.
         if (stripped.type === EventType.RUN_STARTED) {
-          const runStarted = stripped as BaseEvent & { input?: { messages?: MessageLike[] } };
+          const runStarted = stripped as BaseEvent & {
+            input?: { messages?: MessageLike[] };
+          };
           if (runStarted.input && Array.isArray(runStarted.input.messages)) {
             return {
               ...runStarted,
-              input: { ...runStarted.input, messages: stripMessages(runStarted.input.messages) },
+              input: {
+                ...runStarted.input,
+                messages: stripMessages(runStarted.input.messages),
+              },
             } as BaseEvent;
           }
         }

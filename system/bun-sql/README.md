@@ -1,6 +1,7 @@
 # @aphrody/bun-sql
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Native Bun.SQL provider connections and official Neon and Supabase SDKs
 
 | Type | Path |
@@ -8,6 +9,7 @@
 | Bun package | `system/bun-sql` |
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Native PostgreSQL connections use `Bun.SQL`. Provider SDKs retain their official APIs and separate entrypoints.

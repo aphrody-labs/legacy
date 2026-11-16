@@ -1,6 +1,7 @@
 # corelib (`aphrody-corelib`)
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets and Boq wire format
 
 | Type | Path |
@@ -16,6 +17,7 @@ cargo test -p aphrody-corelib
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Unified sovereign core library consolidating GPU, RE (Reverse Engineering), Emulation, and WASM surfaces for **Shenron** (`../shenron`) and **RoseGriffon** (`../rosegriffon`).

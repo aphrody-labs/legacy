@@ -213,7 +213,13 @@ function argsFor(skill: string, m: Message, prompt: string, chat?: string) {
       return { model: md.model, prompt };
     case "session_send":
       // A2A peer messaging: metadata {from, to, reply_to?}; the task completes with the recipient reply.
-      return { from: md.from, to: md.to, text: prompt, ...(md.reply_to ? { reply_to: md.reply_to } : {}), wait_s: Number(md.wait_s ?? 600) };
+      return {
+        from: md.from,
+        to: md.to,
+        text: prompt,
+        ...(md.reply_to ? { reply_to: md.reply_to } : {}),
+        wait_s: Number(md.wait_s ?? 600),
+      };
     case "claude_ask":
     case "agy_ask":
       return { prompt, ...(md.model ? { model: md.model } : {}) };

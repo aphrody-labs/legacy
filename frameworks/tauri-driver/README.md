@@ -1,6 +1,7 @@
 # `tauri-driver` _(pre-alpha)_
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Webdriver server for Tauri applications
 
 | Type | Path |
@@ -17,6 +18,7 @@ cargo run -p aphrody-tauri-driver --bin tauri-driver
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Cross-platform WebDriver server for Tauri applications.

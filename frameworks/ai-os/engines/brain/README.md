@@ -1,10 +1,11 @@
 # @aphrody/brain
 
 <!-- catalog:begin unit -->
+
 > Autonomous-agent memory: AGY sessions merged into a redacted Obsidian vault, graphify code graph, Google Drive sync for NotebookLM sources
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                             |
+| :---------- | :------------------------------- |
 | Bun package | `frameworks/ai-os/engines/brain` |
 
 **Commands**

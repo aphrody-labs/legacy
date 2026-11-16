@@ -1,12 +1,19 @@
 // Anthropic Messages <-> OpenAI chat/completions (request, response, SSE), so Claude Code, Codex, OpenCode and agy
 // can use the relay as an Anthropic base URL while the router speaks OpenAI to every provider.
 const text = (c: unknown): string =>
-  typeof c === "string" ? c : Array.isArray(c) ? c.map((b: any) => (typeof b?.text === "string" ? b.text : "")).join("") : "";
+  typeof c === "string"
+    ? c
+    : Array.isArray(c)
+      ? c.map((b: any) => (typeof b?.text === "string" ? b.text : "")).join("")
+      : "";
 
 const image = (b: any) => ({
   type: "image_url",
   image_url: {
-    url: b.source?.type === "base64" ? `data:${b.source.media_type};base64,${b.source.data}` : String(b.source?.url ?? ""),
+    url:
+      b.source?.type === "base64"
+        ? `data:${b.source.media_type};base64,${b.source.data}`
+        : String(b.source?.url ?? ""),
   },
 });
 
@@ -22,13 +29,23 @@ export function anthropicToOpenAI(r: any) {
     const blocks: any[] = m.content ?? [];
     // tool results come first (OpenAI wants them right after the assistant tool_calls), then the user's own parts.
     for (const b of blocks.filter((x) => x.type === "tool_result"))
-      messages.push({ role: "tool", tool_call_id: b.tool_use_id, content: text(b.content) || (b.is_error ? "error" : "") });
+      messages.push({
+        role: "tool",
+        tool_call_id: b.tool_use_id,
+        content: text(b.content) || (b.is_error ? "error" : ""),
+      });
     const parts = blocks
       .filter((x) => x.type === "text" || x.type === "image")
-      .map((x) => (x.type === "text" ? { type: "text", text: x.text } : image(x)));
+      .map((x) =>
+        x.type === "text" ? { type: "text", text: x.text } : image(x),
+      );
     const calls = blocks
       .filter((x) => x.type === "tool_use")
-      .map((x) => ({ id: x.id, type: "function", function: { name: x.name, arguments: JSON.stringify(x.input ?? {}) } }));
+      .map((x) => ({
+        id: x.id,
+        type: "function",
+        function: { name: x.name, arguments: JSON.stringify(x.input ?? {}) },
+      }));
     if (m.role === "assistant") {
       if (parts.length || calls.length)
         messages.push({
@@ -39,7 +56,9 @@ export function anthropicToOpenAI(r: any) {
     } else if (parts.length) {
       messages.push({
         role: "user",
-        content: parts.every((p: any) => p.type === "text") ? parts.map((p: any) => p.text).join("") : parts,
+        content: parts.every((p: any) => p.type === "text")
+          ? parts.map((p: any) => p.text).join("")
+          : parts,
       });
     }
   }
@@ -56,12 +75,21 @@ export function anthropicToOpenAI(r: any) {
       ? {
           tools: r.tools.map((t: any) => ({
             type: "function",
-            function: { name: t.name, description: t.description ?? "", parameters: t.input_schema ?? { type: "object" } },
+            function: {
+              name: t.name,
+              description: t.description ?? "",
+              parameters: t.input_schema ?? { type: "object" },
+            },
           })),
           ...(tc?.type === "any"
             ? { tool_choice: "required" }
             : tc?.type === "tool"
-              ? { tool_choice: { type: "function", function: { name: tc.name } } }
+              ? {
+                  tool_choice: {
+                    type: "function",
+                    function: { name: tc.name },
+                  },
+                }
               : tc?.type === "none"
                 ? { tool_choice: "none" }
                 : { tool_choice: "auto" }),
@@ -70,7 +98,12 @@ export function anthropicToOpenAI(r: any) {
   };
 }
 
-const STOP: Record<string, string> = { stop: "end_turn", length: "max_tokens", tool_calls: "tool_use", content_filter: "end_turn" };
+const STOP: Record<string, string> = {
+  stop: "end_turn",
+  length: "max_tokens",
+  tool_calls: "tool_use",
+  content_filter: "end_turn",
+};
 
 export function openAIToAnthropic(j: any, model: string) {
   const c = j.choices?.[0] ?? {};
@@ -83,26 +116,40 @@ export function openAIToAnthropic(j: any, model: string) {
     try {
       input = JSON.parse(tc.function?.arguments || "{}");
     } catch {}
-    content.push({ type: "tool_use", id: tc.id, name: tc.function?.name, input });
+    content.push({
+      type: "tool_use",
+      id: tc.id,
+      name: tc.function?.name,
+      input,
+    });
   }
   if (!content.length) content.push({ type: "text", text: "" });
   return {
-    id: `msg_${String(j.id ?? crypto.randomUUID()).replace(/\W/g, "").slice(0, 24)}`,
+    id: `msg_${String(j.id ?? crypto.randomUUID())
+      .replace(/\W/g, "")
+      .slice(0, 24)}`,
     type: "message",
     role: "assistant",
     model,
     content,
     stop_reason: STOP[c.finish_reason] ?? "end_turn",
     stop_sequence: null,
-    usage: { input_tokens: j.usage?.prompt_tokens ?? 0, output_tokens: j.usage?.completion_tokens ?? 0 },
+    usage: {
+      input_tokens: j.usage?.prompt_tokens ?? 0,
+      output_tokens: j.usage?.completion_tokens ?? 0,
+    },
   };
 }
 
 /** OpenAI SSE -> Anthropic SSE events. */
-export function anthropicStream(src: ReadableStream<Uint8Array>, model: string): ReadableStream<Uint8Array> {
+export function anthropicStream(
+  src: ReadableStream<Uint8Array>,
+  model: string,
+): ReadableStream<Uint8Array> {
   const enc = new TextEncoder();
   const dec = new TextDecoder();
-  const ev = (name: string, data: unknown) => enc.encode(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
+  const ev = (name: string, data: unknown) =>
+    enc.encode(`event: ${name}\ndata: ${JSON.stringify(data)}\n\n`);
   let buf = "";
   let started = false;
   let idx = -1;
@@ -112,7 +159,10 @@ export function anthropicStream(src: ReadableStream<Uint8Array>, model: string):
   let inTok = 0;
   let outTok = 0;
   const closeBlock = (c: TransformStreamDefaultController<Uint8Array>) => {
-    if (open) c.enqueue(ev("content_block_stop", { type: "content_block_stop", index: idx }));
+    if (open)
+      c.enqueue(
+        ev("content_block_stop", { type: "content_block_stop", index: idx }),
+      );
     open = undefined;
   };
   const begin = (c: TransformStreamDefaultController<Uint8Array>) => {
@@ -121,11 +171,23 @@ export function anthropicStream(src: ReadableStream<Uint8Array>, model: string):
     c.enqueue(
       ev("message_start", {
         type: "message_start",
-        message: { id: `msg_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`, type: "message", role: "assistant", model, content: [], stop_reason: null, stop_sequence: null, usage: { input_tokens: 0, output_tokens: 0 } },
+        message: {
+          id: `msg_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`,
+          type: "message",
+          role: "assistant",
+          model,
+          content: [],
+          stop_reason: null,
+          stop_sequence: null,
+          usage: { input_tokens: 0, output_tokens: 0 },
+        },
       }),
     );
   };
-  const frame = (line: string, c: TransformStreamDefaultController<Uint8Array>) => {
+  const frame = (
+    line: string,
+    c: TransformStreamDefaultController<Uint8Array>,
+  ) => {
     if (!line.startsWith("data:")) return;
     const d = line.slice(5).trim();
     if (!d || d === "[DONE]") return;
@@ -148,9 +210,21 @@ export function anthropicStream(src: ReadableStream<Uint8Array>, model: string):
         closeBlock(c);
         idx++;
         open = "text";
-        c.enqueue(ev("content_block_start", { type: "content_block_start", index: idx, content_block: { type: "text", text: "" } }));
+        c.enqueue(
+          ev("content_block_start", {
+            type: "content_block_start",
+            index: idx,
+            content_block: { type: "text", text: "" },
+          }),
+        );
       }
-      c.enqueue(ev("content_block_delta", { type: "content_block_delta", index: idx, delta: { type: "text_delta", text: delta.content } }));
+      c.enqueue(
+        ev("content_block_delta", {
+          type: "content_block_delta",
+          index: idx,
+          delta: { type: "text_delta", text: delta.content },
+        }),
+      );
     }
     for (const tc of delta.tool_calls ?? []) {
       const n = tc.index ?? 0;
@@ -159,10 +233,30 @@ export function anthropicStream(src: ReadableStream<Uint8Array>, model: string):
         idx++;
         tools.set(n, idx);
         open = "tool";
-        c.enqueue(ev("content_block_start", { type: "content_block_start", index: idx, content_block: { type: "tool_use", id: tc.id ?? `toolu_${crypto.randomUUID().slice(0, 12)}`, name: tc.function?.name ?? "", input: {} } }));
+        c.enqueue(
+          ev("content_block_start", {
+            type: "content_block_start",
+            index: idx,
+            content_block: {
+              type: "tool_use",
+              id: tc.id ?? `toolu_${crypto.randomUUID().slice(0, 12)}`,
+              name: tc.function?.name ?? "",
+              input: {},
+            },
+          }),
+        );
       }
       if (tc.function?.arguments)
-        c.enqueue(ev("content_block_delta", { type: "content_block_delta", index: tools.get(n)!, delta: { type: "input_json_delta", partial_json: tc.function.arguments } }));
+        c.enqueue(
+          ev("content_block_delta", {
+            type: "content_block_delta",
+            index: tools.get(n)!,
+            delta: {
+              type: "input_json_delta",
+              partial_json: tc.function.arguments,
+            },
+          }),
+        );
     }
     if (ch.finish_reason) stop = STOP[ch.finish_reason] ?? "end_turn";
   };
@@ -180,7 +274,13 @@ export function anthropicStream(src: ReadableStream<Uint8Array>, model: string):
         if (buf.trim()) frame(buf.trim(), c);
         begin(c);
         closeBlock(c);
-        c.enqueue(ev("message_delta", { type: "message_delta", delta: { stop_reason: stop, stop_sequence: null }, usage: { input_tokens: inTok, output_tokens: outTok } }));
+        c.enqueue(
+          ev("message_delta", {
+            type: "message_delta",
+            delta: { stop_reason: stop, stop_sequence: null },
+            usage: { input_tokens: inTok, output_tokens: outTok },
+          }),
+        );
         c.enqueue(ev("message_stop", { type: "message_stop" }));
       },
     }),

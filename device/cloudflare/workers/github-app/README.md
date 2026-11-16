@@ -1,6 +1,7 @@
 # @aphrody/github-app
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > No description in the manifest.
 
 | Type | Path |
@@ -16,4 +17,5 @@ bun run --cwd device/cloudflare/workers/github-app deploy
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

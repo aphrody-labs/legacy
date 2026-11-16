@@ -13,7 +13,7 @@ set -u
 cfg=/etc/fleet/cluster.toml
 [ -f "$cfg" ] || cfg=$(dirname "$0")/../cluster.toml
 [ -f "$cfg" ] || { echo "fleet-registry: no cluster.toml" >&2; exit 66; }
-for d in /usr/local/lib/aphrody/discover.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/discover.sh"; do [ -f "$d" ] && { . "$d"; break; }; done
+for d in /usr/local/lib/aphrody/discover.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/discover.sh"; do [ -f "$d" ] && { . "$d"; break; }; done
 command -v discover_self >/dev/null 2>&1 || { echo "fleet-registry: discover.sh not installed" >&2; exit 66; }
 self=$(discover_self); self=${self:-unknown}
 

@@ -16,8 +16,7 @@ const dir = join(root, "sdk", "tools", "dxc");
 await mkdir(dir, { recursive: true });
 const extract = async (archive: string, dest: string) => {
   await mkdir(dest, { recursive: true });
-  if (win)
-    await $`${join(process.env.SystemRoot!, "System32", "tar.exe")} -xf ${archive} -C ${dest}`;
+  if (win) await $`${join(process.env.SystemRoot!, "System32", "tar.exe")} -xf ${archive} -C ${dest}`;
   else if (archive.endsWith(".tar.gz")) await $`tar -xzf ${archive} -C ${dest}`;
   else await $`unzip -o -q ${archive} -d ${dest}`;
   await rm(archive);
@@ -44,11 +43,7 @@ if (!(await Bun.file(join(dxcDir, dxc.bin)).exists())) {
 
 const AGILITY = "1.620.2";
 const agilityDir = join(dir, "microsoft.direct3d.d3d12");
-if (
-  !(await Bun.file(
-    join(agilityDir, "build", "native", "bin", "x64", "D3D12Core.dll"),
-  ).exists())
-) {
+if (!(await Bun.file(join(agilityDir, "build", "native", "bin", "x64", "D3D12Core.dll")).exists())) {
   const pkg = join(dir, "agility.nupkg.zip");
   const url = `https://api.nuget.org/v3-flatcontainer/microsoft.direct3d.d3d12/${AGILITY}/microsoft.direct3d.d3d12.${AGILITY}.nupkg`;
   await Bun.write(pkg, await fetch(url));
@@ -69,23 +64,17 @@ if (win) {
   if (!(await Bun.file(join(bin, "niu.exe")).exists())) {
     await mkdir(nbDir, { recursive: true });
     await $`gh release download v${NIUBASH} -R unixwin/niubash -p ${asset} -D ${nbDir} --clobber`;
-    const got = new Bun.CryptoHasher("sha256")
-      .update(await Bun.file(join(nbDir, asset)).bytes())
-      .digest("hex");
-    if (got !== sha[arch])
-      throw new Error(`niubash: SHA256 ${got} != ${sha[arch]}`);
+    const got = new Bun.CryptoHasher("sha256").update(await Bun.file(join(nbDir, asset)).bytes()).digest("hex");
+    if (got !== sha[arch]) throw new Error(`niubash: SHA256 ${got} != ${sha[arch]}`);
     await extract(join(nbDir, asset), nbDir);
   }
-  if (process.env.GITHUB_PATH)
-    await appendFile(process.env.GITHUB_PATH, `${bin}\n`);
+  if (process.env.GITHUB_PATH) await appendFile(process.env.GITHUB_PATH, `${bin}\n`);
   shell = `, niubash ${NIUBASH} -> ${bin}`;
 
   // CMake 4.5.0 (cmake.org/files/v4.5/cmake-4.5.0-SHA-256.txt) and Ninja 1.13.2 (GitHub release digest): the
   // C++23 `import std` probe requires CMake >= 4.5 and Ninja (cmake-cxxmodules(7)); winget and the runner only have CMake 4.4.
   const sha256 = async (file: string, want: string) => {
-    const got = new Bun.CryptoHasher("sha256")
-      .update(await Bun.file(file).bytes())
-      .digest("hex");
+    const got = new Bun.CryptoHasher("sha256").update(await Bun.file(file).bytes()).digest("hex");
     if (got !== want) throw new Error(`${file} : SHA256 ${got} != ${want}`);
   };
   const CMAKE = "4.5.0";
@@ -100,15 +89,10 @@ if (win) {
     },
   }[arch];
   const cmakeDir = join(root, "sdk", "tools", "cmake");
-  if (
-    !(await Bun.file(join(cmakeDir, cmake.dir, "bin", "cmake.exe")).exists())
-  ) {
+  if (!(await Bun.file(join(cmakeDir, cmake.dir, "bin", "cmake.exe")).exists())) {
     await mkdir(cmakeDir, { recursive: true });
     const zip = join(cmakeDir, `${cmake.dir}.zip`);
-    await Bun.write(
-      zip,
-      await fetch(`https://cmake.org/files/v4.5/${cmake.dir}.zip`),
-    );
+    await Bun.write(zip, await fetch(`https://cmake.org/files/v4.5/${cmake.dir}.zip`));
     await sha256(zip, cmake.sha);
     await extract(zip, cmakeDir);
   }
@@ -132,6 +116,4 @@ if (win) {
   }
   shell += `, CMake ${CMAKE}, Ninja ${NINJA}`;
 }
-console.log(
-  `tools ready: DXC ${DXC_TAG} (${dxc.os}), Agility SDK ${AGILITY}${shell}`,
-);
+console.log(`tools ready: DXC ${DXC_TAG} (${dxc.os}), Agility SDK ${AGILITY}${shell}`);

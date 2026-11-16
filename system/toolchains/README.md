@@ -3,6 +3,7 @@
 # aphrody-toolchains
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Unified Bun / uv / Nushell runtime layer: shell-free discovery, repo-file version pins and consistent launch environment.
 
 | Type | Path |
@@ -18,6 +19,7 @@ cargo test -p aphrody-toolchains
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 A unified runtime layer for the three non-Rust toolchains Aphrody launches: Bun (TypeScript and

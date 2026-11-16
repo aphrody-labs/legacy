@@ -42,7 +42,10 @@ export async function runAgentBrowser(raw: readonly string[]): Promise<number> {
     let data: unknown;
     switch (command) {
       case "open":
-        data = { url: page.url(), title: await page.evaluate("document.title") };
+        data = {
+          url: page.url(),
+          title: await page.evaluate("document.title"),
+        };
         break;
       case "snapshot":
         data = (await page.snapshot()).raw;
@@ -75,7 +78,9 @@ export async function runAgentBrowser(raw: readonly string[]): Promise<number> {
         data = await page.evaluate(rest[0] ?? "undefined");
         break;
       case "wait":
-        await page.waitFor(/^\d+$/.test(rest[0] ?? "") ? Number(rest[0]) : (rest[0] as string));
+        await page.waitFor(
+          /^\d+$/.test(rest[0] ?? "") ? Number(rest[0]) : (rest[0] as string),
+        );
         data = true;
         break;
       case "screenshot":
@@ -93,7 +98,9 @@ export async function runAgentBrowser(raw: readonly string[]): Promise<number> {
       default:
         throw new Error(`Unsupported command: ${command}`);
     }
-    console.log(JSON.stringify({ id: options.session ?? "", success: true, data }));
+    console.log(
+      JSON.stringify({ id: options.session ?? "", success: true, data }),
+    );
     return 0;
   } catch (error) {
     console.log(
@@ -110,4 +117,5 @@ export async function runAgentBrowser(raw: readonly string[]): Promise<number> {
 }
 
 // AgentBrowser.exec/execAsync run each command in this file as a child process (synchronous API, timeouts).
-if (import.meta.main) process.exitCode = await runAgentBrowser(process.argv.slice(2));
+if (import.meta.main)
+  process.exitCode = await runAgentBrowser(process.argv.slice(2));

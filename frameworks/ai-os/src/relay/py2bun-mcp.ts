@@ -3,11 +3,19 @@
 // Backend: system/py2bun-ts (Rust CLI py2bun-rs, $PY2BUN_BIN or system/py2bun/target).
 import { transpile } from "../../../../system/py2bun-ts/src/index.ts";
 
-type Rpc = { jsonrpc: "2.0"; id?: number | string; method?: string; params?: any };
+type Rpc = {
+  jsonrpc: "2.0";
+  id?: number | string;
+  method?: string;
+  params?: any;
+};
 
-const send = (m: unknown): void => void process.stdout.write(`${JSON.stringify(m)}\n`);
-const ok = (id: Rpc["id"], result: unknown) => send({ jsonrpc: "2.0", id, result });
-const fail = (id: Rpc["id"], code: number, message: string) => send({ jsonrpc: "2.0", id, error: { code, message } });
+const send = (m: unknown): void =>
+  void process.stdout.write(`${JSON.stringify(m)}\n`);
+const ok = (id: Rpc["id"], result: unknown) =>
+  send({ jsonrpc: "2.0", id, result });
+const fail = (id: Rpc["id"], code: number, message: string) =>
+  send({ jsonrpc: "2.0", id, error: { code, message } });
 
 export const PY2BUN_TOOLS = [
   {
@@ -20,7 +28,8 @@ export const PY2BUN_TOOLS = [
       required: ["source"],
     },
     run: async (a: { source?: string }) => {
-      if (typeof a.source !== "string") throw new Error("source (string) required");
+      if (typeof a.source !== "string")
+        throw new Error("source (string) required");
       return transpile(a.source);
     },
   },
@@ -51,9 +60,14 @@ export async function handle(m: Rpc): Promise<void> {
       if (!t) return fail(m.id, -32602, `unknown tool ${m.params?.name}`);
       try {
         const r = await t.run(m.params?.arguments ?? {});
-        return ok(m.id, { content: [{ type: "text", text: JSON.stringify(r) }] });
+        return ok(m.id, {
+          content: [{ type: "text", text: JSON.stringify(r) }],
+        });
       } catch (e) {
-        return ok(m.id, { isError: true, content: [{ type: "text", text: String(e) }] });
+        return ok(m.id, {
+          isError: true,
+          content: [{ type: "text", text: String(e) }],
+        });
       }
     }
     default:

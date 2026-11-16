@@ -1,6 +1,7 @@
 # winux-extra
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > WinuxCmd applets ported from C++ to portable Rust (same shape contract as winux-cmds: run(args, io, ctx))
 
 | Type | Path |
@@ -16,4 +17,5 @@ cargo test -p winux-extra
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

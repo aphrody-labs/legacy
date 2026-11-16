@@ -4,7 +4,7 @@
 # Bound to the WireGuard address and loopback only, password-protected, AOF-persistent, systemd
 # (Restart=always, ordered after wg-quick@wg1). The password lives in /etc/valkey/ay.pass and in
 # ~ubuntu/.config/ay/valkey.url (mode 600); it is never printed.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -euo pipefail
 WG_IP="${1:-$(site_get hosts.fr2.mesh_ip)}"
 OWNER="${SUDO_USER:-ubuntu}"

@@ -54,7 +54,9 @@ const flattenMessageContentToText = (content: Message["content"]) => {
   }
 
   const textParts = content
-    .filter((part): part is { type: "text"; text: string } => part.type === "text")
+    .filter(
+      (part): part is { type: "text"; text: string } => part.type === "text",
+    )
     .map((part) => part.text)
     .filter((text) => text.length > 0);
 
@@ -78,7 +80,10 @@ const flattenMessageContentToText = (content: Message["content"]) => {
  * be parts. Text parts are concatenated; anything else is dropped with a
  * warning naming the call, because the legacy consumer cannot receive it.
  */
-function flattenLegacyResult(toolCallId: string, content: ToolMessage["content"]): string {
+function flattenLegacyResult(
+  toolCallId: string,
+  content: ToolMessage["content"],
+): string {
   if (contentHasMedia(content)) {
     warnLegacy(
       `[ag-ui][legacy] The result of tool call '${toolCallId}' carries content parts the legacy protocol cannot represent; only its text parts are bridged and the rest is dropped.`,
@@ -193,7 +198,9 @@ export const convertToLegacyEvents =
             const argsEvent = event as ToolCallArgsEvent;
 
             // Find the tool call by ID instead of using the last one
-            const currentToolCall = currentToolCalls.find((tc) => tc.id === argsEvent.toolCallId);
+            const currentToolCall = currentToolCalls.find(
+              (tc) => tc.id === argsEvent.toolCallId,
+            );
             if (!currentToolCall) {
               // Through the gate like the rest of the bridge. TOOL_CALL_ARGS is
               // the per-chunk hot path that gate exists for: one line per
@@ -305,7 +312,10 @@ export const convertToLegacyEvents =
                 // flattened to its text — the downgrade the versioning rules permit for
                 // an older peer — and the loss is announced, since a dropped attachment
                 // must never vanish quietly.
-                result: flattenLegacyResult(resultEvent.toolCallId, resultEvent.content),
+                result: flattenLegacyResult(
+                  resultEvent.toolCallId,
+                  resultEvent.content,
+                ),
                 // `||`, not `??`: see the guard above — an empty name is as
                 // unroutable as an absent one, and the two must agree.
                 actionName: knownName || "unknown",
@@ -370,10 +380,15 @@ export const convertToLegacyEvents =
             // apply/default.ts does with the same failure.
             let patched: Record<string, unknown>;
             try {
-              patched = jsonpatch.applyPatch(currentState, deltaEvent.delta, true, false)
-                .newDocument;
+              patched = jsonpatch.applyPatch(
+                currentState,
+                deltaEvent.delta,
+                true,
+                false,
+              ).newDocument;
             } catch (error: unknown) {
-              const errorMessage = error instanceof Error ? error.message : String(error);
+              const errorMessage =
+                error instanceof Error ? error.message : String(error);
               warnLegacy(
                 `[ag-ui][legacy] Failed to apply state patch:\nCurrent state: ${JSON.stringify(currentState, null, 2)}\nPatch operations: ${JSON.stringify(deltaEvent.delta, null, 2)}\nError: ${errorMessage}`,
               );
@@ -519,11 +534,17 @@ export const convertToLegacyEvents =
     );
   };
 
-export function convertMessagesToLegacyFormat(messages: Message[]): LegacyMessage[] {
+export function convertMessagesToLegacyFormat(
+  messages: Message[],
+): LegacyMessage[] {
   const result: LegacyMessage[] = [];
 
   for (const message of messages) {
-    if (message.role === "assistant" || message.role === "user" || message.role === "system") {
+    if (
+      message.role === "assistant" ||
+      message.role === "user" ||
+      message.role === "system"
+    ) {
       const textContent = flattenMessageContentToText(message.content);
       if (textContent) {
         const textMessage: LegacyTextMessage = {
@@ -533,7 +554,11 @@ export function convertMessagesToLegacyFormat(messages: Message[]): LegacyMessag
         };
         result.push(textMessage);
       }
-      if (message.role === "assistant" && message.toolCalls && message.toolCalls.length > 0) {
+      if (
+        message.role === "assistant" &&
+        message.toolCalls &&
+        message.toolCalls.length > 0
+      ) {
         for (const toolCall of message.toolCalls) {
           let parsedArguments: unknown;
           try {

@@ -1,6 +1,7 @@
 # @aphrody/ffi-bridge
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > bun:ffi bindings and tests of the Rust cdylibs (dx12-hal, unix-distro probes)
 
 | Type | Path |
@@ -16,4 +17,5 @@ bun run --cwd system/ffi-bridge fmt
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

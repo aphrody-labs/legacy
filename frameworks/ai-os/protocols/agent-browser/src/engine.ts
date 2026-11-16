@@ -9,7 +9,11 @@
  */
 import { ProcessExitedError, type ManagedProcess } from "@aphrody/runtime-sdk";
 import { processes } from "@aphrody/runtime-sdk/modules";
-import { loadWebConfig, resolveEngineBinary, type WebConfig } from "./config.ts";
+import {
+  loadWebConfig,
+  resolveEngineBinary,
+  type WebConfig,
+} from "./config.ts";
 
 export interface EngineOptions {
   /** Absolute binary path; defaults to `resolveEngineBinary()`. */
@@ -54,7 +58,11 @@ const STDERR_TAIL_BYTES = 8192;
  * (`runtime:process`); this module only decides what an engine is and how it is started.
  */
 async function reservePort(host: string): Promise<number> {
-  const listener = Bun.listen({ hostname: host, port: 0, socket: { data() {} } });
+  const listener = Bun.listen({
+    hostname: host,
+    port: 0,
+    socket: { data() {} },
+  });
   const port = listener.port;
   listener.stop(true);
   return port;
@@ -66,18 +74,25 @@ function exitCode(status: { exitCode: number; signal: number }): number {
 }
 
 /** Starts an engine and resolves once `/json/version` answers. */
-export async function startEngine(options: EngineOptions = {}): Promise<Engine> {
+export async function startEngine(
+  options: EngineOptions = {},
+): Promise<Engine> {
   const config = options.config ?? loadWebConfig();
   const binary = options.binary ?? resolveEngineBinary(config);
   const host = options.host ?? config.engine.host;
-  const port = options.port && options.port > 0 ? options.port : await reservePort(host);
-  const startupTimeoutMs = options.startupTimeoutMs ?? config.engine.startupTimeoutMs;
-  const shutdownGraceMs = options.shutdownGraceMs ?? config.engine.shutdownGraceMs;
-  const allowPrivate = options.allowPrivateNetwork ?? config.engine.allowPrivateNetwork;
+  const port =
+    options.port && options.port > 0 ? options.port : await reservePort(host);
+  const startupTimeoutMs =
+    options.startupTimeoutMs ?? config.engine.startupTimeoutMs;
+  const shutdownGraceMs =
+    options.shutdownGraceMs ?? config.engine.shutdownGraceMs;
+  const allowPrivate =
+    options.allowPrivateNetwork ?? config.engine.allowPrivateNetwork;
 
   const args = ["launch", "--host", host, "--port", String(port)];
   if (options.stealth ?? config.engine.stealth) args.push("--stealth");
-  if (options.allowFileAccess ?? config.engine.allowFileAccess) args.push("--allow-file-access");
+  if (options.allowFileAccess ?? config.engine.allowFileAccess)
+    args.push("--allow-file-access");
   args.push(...(options.args ?? []));
 
   const env: Record<string, string | undefined> = { ...options.env };
@@ -94,7 +109,8 @@ export async function startEngine(options: EngineOptions = {}): Promise<Engine> 
   let finalStatus: { exitCode: number; signal: number } | undefined;
   let tailSnapshot = "";
   let released = false;
-  const tail = (): string => (released ? tailSnapshot : child.stderrTail(STDERR_TAIL_BYTES));
+  const tail = (): string =>
+    released ? tailSnapshot : child.stderrTail(STDERR_TAIL_BYTES);
   const release = (): void => {
     if (released) return;
     tailSnapshot = child.stderrTail(STDERR_TAIL_BYTES);
@@ -115,7 +131,9 @@ export async function startEngine(options: EngineOptions = {}): Promise<Engine> 
   const fail = async (reason: string): Promise<never> => {
     const diagnostics = tail();
     await stopChild(0);
-    throw new Error(`${reason}${diagnostics ? `\n--- engine stderr ---\n${diagnostics}` : ""}`);
+    throw new Error(
+      `${reason}${diagnostics ? `\n--- engine stderr ---\n${diagnostics}` : ""}`,
+    );
   };
 
   const deadline = Date.now() + startupTimeoutMs;
@@ -189,7 +207,9 @@ export async function stopAllEngines(): Promise<void> {
 }
 
 function reap(signal: NodeJS.Signals): void {
-  void stopAllEngines().finally(() => process.exit(128 + (signal === "SIGINT" ? 2 : 15)));
+  void stopAllEngines().finally(() =>
+    process.exit(128 + (signal === "SIGINT" ? 2 : 15)),
+  );
 }
 
 let signalsInstalled = false;
@@ -215,7 +235,10 @@ export async function withEngine<T>(
   }
 }
 
-const TEST_ENDPOINT_KEYS = ["APHRODY_BROWSER_CDP_URL", "APHRODY_CDP_URL"] as const;
+const TEST_ENDPOINT_KEYS = [
+  "APHRODY_BROWSER_CDP_URL",
+  "APHRODY_CDP_URL",
+] as const;
 
 /**
  * Test harness entry: attaches to `APHRODY_WEB_TEST_CDP_URL` when set, reuses an engine this

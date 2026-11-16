@@ -89,10 +89,12 @@ export async function closeBrowser(): Promise<void> {
 
 /** Open page tabs of the relay's Chrome (url and id), without attaching to them. */
 export async function listTabs(): Promise<{ id: string; url: string }[]> {
-  const r = await fetch(`${base()}/json/list`, { signal: AbortSignal.timeout(2000) });
-  return ((await r.json()) as { id: string; type: string; url: string }[]).filter(
-    (t) => t.type === "page",
-  );
+  const r = await fetch(`${base()}/json/list`, {
+    signal: AbortSignal.timeout(2000),
+  });
+  return (
+    (await r.json()) as { id: string; type: string; url: string }[]
+  ).filter((t) => t.type === "page");
 }
 
 const base = () => `http://127.0.0.1:${cdpPort()}`;

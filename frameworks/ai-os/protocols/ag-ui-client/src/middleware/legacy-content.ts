@@ -19,14 +19,18 @@ interface NewContentPart {
   metadata?: unknown;
 }
 
-function mimeTypeToContentType(mimeType: string): "image" | "audio" | "video" | "document" {
+function mimeTypeToContentType(
+  mimeType: string,
+): "image" | "audio" | "video" | "document" {
   if (mimeType.startsWith("image/")) return "image";
   if (mimeType.startsWith("audio/")) return "audio";
   if (mimeType.startsWith("video/")) return "video";
   return "document";
 }
 
-export function isLegacyBinaryContent(part: unknown): part is LegacyBinaryContent {
+export function isLegacyBinaryContent(
+  part: unknown,
+): part is LegacyBinaryContent {
   return (
     typeof part === "object" &&
     part !== null &&
@@ -78,7 +82,8 @@ function matchesModernPart(
   converted: NewContentPart,
   filename: string | undefined,
 ): boolean {
-  if (typeof part !== "object" || part === null || !("type" in part)) return false;
+  if (typeof part !== "object" || part === null || !("type" in part))
+    return false;
   if (part.type !== converted.type || !("source" in part)) return false;
   const source = part.source;
   if (typeof source !== "object" || source === null) return false;
@@ -116,7 +121,9 @@ export function upgradeMessageContent(message: InputMessage): InputMessage {
       // attachments remain intentional repeats. A mirror can precede its original.
       if (
         converted.type !== "binary" &&
-        rawContent.some((other: unknown) => matchesModernPart(other, converted, part.filename))
+        rawContent.some((other: unknown) =>
+          matchesModernPart(other, converted, part.filename),
+        )
       )
         return [];
       return [converted];

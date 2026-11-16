@@ -1,10 +1,11 @@
 # @aphrody/gemma-web
 
 <!-- catalog:begin unit -->
+
 > Gemma 4 E2B in the browser: ONNX Runtime Web (WebGPU decoder, wasm per-layer embeddings), OPFS shard cache, OpenAI-style streaming client.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                 |
+| :---------- | :----------------------------------- |
 | Bun package | `frameworks/ai-os/engines/gemma-web` |
 
 **Commands**

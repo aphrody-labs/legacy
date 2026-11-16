@@ -132,10 +132,7 @@ class StdioServer {
     return new Promise((ok, ko) => {
       const id = ++this.seq;
       const t = setTimeout(
-        () => (
-          this.pending.delete(id),
-          ko(new Error(`${method}: timed out`))
-        ),
+        () => (this.pending.delete(id), ko(new Error(`${method}: timed out`))),
         timeout,
       );
       this.pending.set(
@@ -170,7 +167,9 @@ class HttpServer {
         (conf.headerEnv
           ? async () =>
               Object.fromEntries(
-                Object.entries(conf.headerEnv!).flatMap(([h, v]) => (Bun.env[v] ? [[h, Bun.env[v]!]] : [])),
+                Object.entries(conf.headerEnv!).flatMap(([h, v]) =>
+                  Bun.env[v] ? [[h, Bun.env[v]!]] : [],
+                ),
               )
           : undefined),
       fetch: (u, i) => outboundFetch(u, i),

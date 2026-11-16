@@ -40,7 +40,9 @@ export function tauriDebugDir(
   home = homedir(),
 ): string {
   const base =
-    env.APHRODY_HOME && env.APHRODY_HOME.length > 0 ? env.APHRODY_HOME : join(home, ".aphrody");
+    env.APHRODY_HOME && env.APHRODY_HOME.length > 0
+      ? env.APHRODY_HOME
+      : join(home, ".aphrody");
   return join(base, "web", "tauri-debug");
 }
 
@@ -85,7 +87,11 @@ function pidAlive(pid: number): boolean {
 
 /** Running debug-enabled Tauri apps. Files of dead processes are skipped (and removed when `prune`). */
 export function listTauriApps(
-  options: { dir?: string; prune?: boolean; alive?: (pid: number) => boolean } = {},
+  options: {
+    dir?: string;
+    prune?: boolean;
+    alive?: (pid: number) => boolean;
+  } = {},
 ): TauriApp[] {
   const dir = options.dir ?? tauriDebugDir();
   if (!existsSync(dir)) return [];
@@ -123,7 +129,11 @@ export interface BridgeResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
-  windowContext?: { windowLabel?: string; totalWindows?: number; warning?: string | null };
+  windowContext?: {
+    windowLabel?: string;
+    totalWindows?: number;
+    warning?: string | null;
+  };
 }
 
 export interface TauriWindow {
@@ -183,7 +193,9 @@ export class TauriBridge {
 
   private constructor(socket: WebSocket) {
     this.#socket = socket;
-    socket.addEventListener("message", (event) => this.#onMessage(String(event.data)));
+    socket.addEventListener("message", (event) =>
+      this.#onMessage(String(event.data)),
+    );
     const fail = () => {
       for (const { reject, timer } of this.#pending.values()) {
         clearTimeout(timer);
@@ -196,7 +208,10 @@ export class TauriBridge {
   }
 
   /** Connects to a discovered app (or a `ws://` URL that already carries `?token=`). */
-  static async connect(target: TauriApp | string, timeoutMs = 10_000): Promise<TauriBridge> {
+  static async connect(
+    target: TauriApp | string,
+    timeoutMs = 10_000,
+  ): Promise<TauriBridge> {
     const url =
       typeof target === "string"
         ? target
@@ -222,7 +237,11 @@ export class TauriBridge {
         "error",
         () => {
           clearTimeout(timer);
-          reject(new Error(`Tauri bridge is unavailable or rejected the token: ${parsed.host}`));
+          reject(
+            new Error(
+              `Tauri bridge is unavailable or rejected the token: ${parsed.host}`,
+            ),
+          );
         },
         { once: true },
       );
@@ -231,8 +250,12 @@ export class TauriBridge {
   }
 
   /** Connects to the newest running debug-enabled app, optionally filtered by executable name. */
-  static async connectToRunning(exe?: string): Promise<{ app: TauriApp; bridge: TauriBridge }> {
-    const app = listTauriApps({ prune: true }).find((candidate) => !exe || candidate.exe === exe);
+  static async connectToRunning(
+    exe?: string,
+  ): Promise<{ app: TauriApp; bridge: TauriBridge }> {
+    const app = listTauriApps({ prune: true }).find(
+      (candidate) => !exe || candidate.exe === exe,
+    );
     if (!app)
       throw new Error(
         `no running Tauri app with the debug bridge${exe ? ` named ${exe}` : ""}; start it with APHRODY_TAURI_DEBUG=1 and the debug-bridge feature`,
@@ -247,7 +270,10 @@ export class TauriBridge {
     } catch {
       return;
     }
-    const pending = typeof message.id === "string" ? this.#pending.get(message.id) : undefined;
+    const pending =
+      typeof message.id === "string"
+        ? this.#pending.get(message.id)
+        : undefined;
     if (pending && typeof message.id === "string") {
       this.#pending.delete(message.id);
       clearTimeout(pending.timer);
@@ -280,11 +306,18 @@ export class TauriBridge {
           ),
         );
       }, timeoutMs);
-      this.#pending.set(id, { resolve: resolve as (value: BridgeResponse) => void, reject, timer });
+      this.#pending.set(id, {
+        resolve: resolve as (value: BridgeResponse) => void,
+        reject,
+        timer,
+      });
       this.#socket.send(JSON.stringify({ id, command, args }));
     });
     if (!response.success)
-      throw new TauriBridgeError(response.error ?? `bridge command ${command} failed`, command);
+      throw new TauriBridgeError(
+        response.error ?? `bridge command ${command} failed`,
+        command,
+      );
     return response.data as T;
   }
 
@@ -298,7 +331,10 @@ export class TauriBridge {
 
   /** Evaluates `script` (a function body; the value of a bare expression is returned). */
   evaluate<T = unknown>(script: string, windowLabel?: string): Promise<T> {
-    return this.request<T>("execute_js", { script, ...(windowLabel ? { windowLabel } : {}) });
+    return this.request<T>("execute_js", {
+      script,
+      ...(windowLabel ? { windowLabel } : {}),
+    });
   }
 
   /** Title, URL, visible text and the role/name tree of interactive and landmark elements. */
@@ -325,7 +361,10 @@ export class TauriBridge {
   consoleLogs(
     windowLabel?: string,
   ): Promise<{ level?: string; message?: string; timestamp?: number }[]> {
-    return this.evaluate("return window.__MCP_CONSOLE_LOGS__ || [];", windowLabel);
+    return this.evaluate(
+      "return window.__MCP_CONSOLE_LOGS__ || [];",
+      windowLabel,
+    );
   }
 
   async clickSelector(selector: string, windowLabel?: string): Promise<void> {
@@ -335,7 +374,11 @@ export class TauriBridge {
     );
   }
 
-  async fillSelector(selector: string, text: string, windowLabel?: string): Promise<void> {
+  async fillSelector(
+    selector: string,
+    text: string,
+    windowLabel?: string,
+  ): Promise<void> {
     await this.evaluate(
       `const el = document.querySelector(${JSON.stringify(selector)}); if (!el) throw new Error("no element matches " + ${JSON.stringify(selector)}); const proto = Object.getPrototypeOf(el); const setter = Object.getOwnPropertyDescriptor(proto, "value")?.set; if (setter) setter.call(el, ${JSON.stringify(text)}); else el.textContent = ${JSON.stringify(text)}; el.dispatchEvent(new Event("input", { bubbles: true })); el.dispatchEvent(new Event("change", { bubbles: true })); return true;`,
       windowLabel,

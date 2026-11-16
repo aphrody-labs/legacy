@@ -14,7 +14,10 @@ export const SOURCES = {
   hf: env("ROUTER_HF_URL", `${BASES.huggingface}/v1/models`),
   /** Arena leaderboard on the Hugging Face datasets-server (`/first-rows` and `/filter?where=` live next to it). */
   arenaDataset: env("ROUTER_ARENA_DATASET", "lmarena-ai/leaderboard-dataset"),
-  datasetsServer: env("ROUTER_DATASETS_SERVER", "https://datasets-server.huggingface.co"),
+  datasetsServer: env(
+    "ROUTER_DATASETS_SERVER",
+    "https://datasets-server.huggingface.co",
+  ),
 } as const;
 
 /** Arena categories the policies read: `overall` ranks, the code one drives `auto:code`. */

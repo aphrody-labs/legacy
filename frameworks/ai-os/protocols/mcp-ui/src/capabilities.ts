@@ -1,5 +1,5 @@
-import type { ClientCapabilities } from '@modelcontextprotocol/sdk/types.js';
-import { RESOURCE_MIME_TYPE } from '@modelcontextprotocol/ext-apps/app-bridge';
+import type { ClientCapabilities } from "@modelcontextprotocol/sdk/types.js";
+import { RESOURCE_MIME_TYPE } from "@modelcontextprotocol/ext-apps/app-bridge";
 
 /**
  * Extended ClientCapabilities type that includes the `extensions` field.
@@ -22,7 +22,7 @@ export interface ClientCapabilitiesWithExtensions extends ClientCapabilities {
  *
  * @see https://github.com/modelcontextprotocol/modelcontextprotocol/issues/1724
  */
-export const UI_EXTENSION_NAME = 'io.modelcontextprotocol/ui' as const;
+export const UI_EXTENSION_NAME = "io.modelcontextprotocol/ui" as const;
 
 /**
  * UI extension capability configuration.

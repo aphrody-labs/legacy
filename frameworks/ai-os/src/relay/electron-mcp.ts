@@ -3,11 +3,19 @@
 // electron__electron_optimize | electron__electron_bench. Registered by [[hub.mcp]] electron in tools/agents/toolchain.toml.
 // Each tool runs `ay electron <sub> ... --json` (system/electron-migrate through system/ay); AY_BIN overrides the `ay` binary.
 
-type Rpc = { jsonrpc: "2.0"; id?: number | string; method?: string; params?: any };
+type Rpc = {
+  jsonrpc: "2.0";
+  id?: number | string;
+  method?: string;
+  params?: any;
+};
 
-const send = (m: unknown): void => void process.stdout.write(`${JSON.stringify(m)}\n`);
-const ok = (id: Rpc["id"], result: unknown) => send({ jsonrpc: "2.0", id, result });
-const fail = (id: Rpc["id"], code: number, message: string) => send({ jsonrpc: "2.0", id, error: { code, message } });
+const send = (m: unknown): void =>
+  void process.stdout.write(`${JSON.stringify(m)}\n`);
+const ok = (id: Rpc["id"], result: unknown) =>
+  send({ jsonrpc: "2.0", id, result });
+const fail = (id: Rpc["id"], code: number, message: string) =>
+  send({ jsonrpc: "2.0", id, error: { code, message } });
 
 const MAX_OUT = 400_000;
 
@@ -32,13 +40,23 @@ export const ELECTRON_TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        input: { type: "string", description: "App directory, install directory or app.asar" },
-        node_modules: { type: "boolean", description: "Also scan node_modules JavaScript (slow)" },
+        input: {
+          type: "string",
+          description: "App directory, install directory or app.asar",
+        },
+        node_modules: {
+          type: "boolean",
+          description: "Also scan node_modules JavaScript (slow)",
+        },
       },
       required: ["input"],
     },
     readOnly: true,
-    args: (a) => ["analyze", str(a.input, "input"), ...(a.node_modules ? ["--node-modules"] : [])],
+    args: (a) => [
+      "analyze",
+      str(a.input, "input"),
+      ...(a.node_modules ? ["--node-modules"] : []),
+    ],
   },
   {
     name: "electron_migrate",
@@ -50,14 +68,28 @@ export const ELECTRON_TOOLS: Tool[] = [
         to: { type: "string", enum: ["tauri", "gpui"] },
         input: { type: "string" },
         out: { type: "string", description: "Output directory (created)" },
-        no_sidecar_app: { type: "boolean", description: "Do not copy the original main-process files into sidecar/app/" },
+        no_sidecar_app: {
+          type: "boolean",
+          description:
+            "Do not copy the original main-process files into sidecar/app/",
+        },
       },
       required: ["to", "input", "out"],
     },
     readOnly: false,
     args: (a) => {
-      if (a.to !== "tauri" && a.to !== "gpui") throw new Error("to must be tauri or gpui");
-      return ["migrate", "--json", "--to", a.to, str(a.input, "input"), "--out", str(a.out, "out"), ...(a.no_sidecar_app ? ["--no-sidecar-app"] : [])];
+      if (a.to !== "tauri" && a.to !== "gpui")
+        throw new Error("to must be tauri or gpui");
+      return [
+        "migrate",
+        "--json",
+        "--to",
+        a.to,
+        str(a.input, "input"),
+        "--out",
+        str(a.out, "out"),
+        ...(a.no_sidecar_app ? ["--no-sidecar-app"] : []),
+      ];
     },
   },
   {
@@ -67,14 +99,27 @@ export const ELECTRON_TOOLS: Tool[] = [
     inputSchema: {
       type: "object",
       properties: {
-        project: { type: "string", description: "Directory produced by electron_migrate" },
+        project: {
+          type: "string",
+          description: "Directory produced by electron_migrate",
+        },
         opt_level: { type: "string", enum: ["3", "2", "1", "s", "z"] },
-        build: { type: "boolean", description: "Run bun and cargo release builds and measure sizes after" },
+        build: {
+          type: "boolean",
+          description:
+            "Run bun and cargo release builds and measure sizes after",
+        },
       },
       required: ["project"],
     },
     readOnly: false,
-    args: (a) => ["optimize", "--json", str(a.project, "project"), ...(a.opt_level ? ["--opt-level", String(a.opt_level)] : []), ...(a.build ? ["--build"] : [])],
+    args: (a) => [
+      "optimize",
+      "--json",
+      str(a.project, "project"),
+      ...(a.opt_level ? ["--opt-level", String(a.opt_level)] : []),
+      ...(a.build ? ["--build"] : []),
+    ],
   },
   {
     name: "electron_bench",
@@ -87,19 +132,25 @@ export const ELECTRON_TOOLS: Tool[] = [
         migrated: { type: "string", description: "Migrated app executable" },
         runs: { type: "integer" },
         warmup: { type: "integer" },
-        ipc_expr_electron: { type: "string", description: "Page-side expression awaited for the Electron IPC round trip" },
+        ipc_expr_electron: {
+          type: "string",
+          description:
+            "Page-side expression awaited for the Electron IPC round trip",
+        },
         ready: { type: "string", enum: ["cdp", "alive"] },
       },
     },
     readOnly: false,
     args: (a) => {
-      if (!a.electron && !a.migrated) throw new Error("electron and/or migrated is required");
+      if (!a.electron && !a.migrated)
+        throw new Error("electron and/or migrated is required");
       const out = ["bench", "--json"];
       if (a.electron) out.push("--electron", String(a.electron));
       if (a.migrated) out.push("--migrated", String(a.migrated));
       if (a.runs) out.push("--runs", String(a.runs));
       if (a.warmup) out.push("--warmup", String(a.warmup));
-      if (a.ipc_expr_electron) out.push("--ipc-expr-electron", String(a.ipc_expr_electron));
+      if (a.ipc_expr_electron)
+        out.push("--ipc-expr-electron", String(a.ipc_expr_electron));
       if (a.ready) out.push("--ready", String(a.ready));
       return out;
     },
@@ -107,10 +158,23 @@ export const ELECTRON_TOOLS: Tool[] = [
 ];
 
 async function runAy(args: string[]): Promise<string> {
-  const proc = Bun.spawn([process.env.AY_BIN ?? "ay", "electron", ...args], { stdout: "pipe", stderr: "pipe", stdin: "ignore" });
-  const [out, err, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited]);
-  if (code !== 0) throw new Error(`ay electron ${args[0]} exited ${code}: ${err.trim() || out.trim()}`);
-  return out.length > MAX_OUT ? `${out.slice(0, MAX_OUT)}\n...truncated (${out.length} bytes); use --out with the CLI for the full manifest` : out;
+  const proc = Bun.spawn([process.env.AY_BIN ?? "ay", "electron", ...args], {
+    stdout: "pipe",
+    stderr: "pipe",
+    stdin: "ignore",
+  });
+  const [out, err, code] = await Promise.all([
+    new Response(proc.stdout).text(),
+    new Response(proc.stderr).text(),
+    proc.exited,
+  ]);
+  if (code !== 0)
+    throw new Error(
+      `ay electron ${args[0]} exited ${code}: ${err.trim() || out.trim()}`,
+    );
+  return out.length > MAX_OUT
+    ? `${out.slice(0, MAX_OUT)}\n...truncated (${out.length} bytes); use --out with the CLI for the full manifest`
+    : out;
 }
 
 export async function handle(m: Rpc): Promise<void> {
@@ -140,7 +204,10 @@ export async function handle(m: Rpc): Promise<void> {
         const text = await runAy(t.args(m.params?.arguments ?? {}));
         return ok(m.id, { content: [{ type: "text", text }] });
       } catch (e) {
-        return ok(m.id, { isError: true, content: [{ type: "text", text: String(e) }] });
+        return ok(m.id, {
+          isError: true,
+          content: [{ type: "text", text: String(e) }],
+        });
       }
     }
     default:

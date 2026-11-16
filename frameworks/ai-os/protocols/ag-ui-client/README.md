@@ -1,10 +1,11 @@
 # @aphrody/ag-ui-client
 
 <!-- catalog:begin unit -->
+
 > AG-UI client with stream error draining and HTTP cancellation fixes.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                      |
+| :---------- | :---------------------------------------- |
 | Bun package | `frameworks/ai-os/protocols/ag-ui-client` |
 
 **Commands**

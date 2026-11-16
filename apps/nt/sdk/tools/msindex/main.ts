@@ -20,78 +20,43 @@ import { indexCrt, CRT_DLLS } from "./crt.ts";
 import { dirs, files, isDir, repoState, sha256, slash } from "./fsx.ts";
 import { Graph } from "./graph.ts";
 import { indexSources } from "./idl.ts";
-import {
-  apiSetResolver,
-  apiSetSchema,
-  child,
-  hklmString,
-  winrtRegistry,
-} from "./system.ts";
+import { apiSetResolver, apiSetSchema, child, hklmString, winrtRegistry } from "./system.ts";
 import { exposedTypes, type Import, indexWinmd } from "./winmd.ts";
 
-if (process.platform !== "win32")
-  throw new Error(
-    "msindex: Windows only (proofs on the running system)",
-  );
+if (process.platform !== "win32") throw new Error("msindex: Windows only (proofs on the running system)");
 const arg = (n: string) => {
   const i = process.argv.indexOf(n);
   return i > 0 ? process.argv[i + 1] : undefined;
 };
 const srcArg = arg("--src");
-if (!srcArg)
-  throw new Error(
-    "usage: bun sdk/tools/msindex/main.ts --src <src root> [--verify] [--no-activate]",
-  );
+if (!srcArg) throw new Error("usage: bun sdk/tools/msindex/main.ts --src <src root> [--verify] [--no-activate]");
 // POSIX path of a Windows shell (/c/aphrody, niubash or msys) -> Windows path.
-const src = resolve(
-  srcArg.replace(
-    /^\/([a-z])(?=\/|$)/i,
-    (_, d: string) => `${d.toUpperCase()}:`,
-  ),
-);
+const src = resolve(srcArg.replace(/^\/([a-z])(?=\/|$)/i, (_, d: string) => `${d.toUpperCase()}:`));
 const verify = process.argv.includes("--verify");
 const activateClasses = !process.argv.includes("--no-activate");
 const nt = join(import.meta.dir, "..", "..", "..");
 const METHOD: Record<string, string> = {
   "apiset-host": "PEB->ApiSetMap: the contract has a host DLL",
-  "pe-export":
-    "API Set contract resolved, name present in the PE export table of the host",
-  loader:
-    "LoadLibraryExW(DONT_RESOLVE_DLL_REFERENCES) + GetProcAddress (processus enfant)",
-  "winrt-registered":
-    "HKLM\\SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId",
+  "pe-export": "API Set contract resolved, name present in the PE export table of the host",
+  loader: "LoadLibraryExW(DONT_RESOLVE_DLL_REFERENCES) + GetProcAddress (processus enfant)",
+  "winrt-registered": "HKLM\\SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId",
   "activation-export": "DllPath exports DllGetActivationFactory",
-  RoGetActivationFactory:
-    "factory obtained (IID_IActivationFactory), in-process classes",
-  "wasdk-activation":
-    "appxfragment of the package -> DLL of the package exporting DllGetActivationFactory",
-  "dotnet-impl":
-    "reference type defined (TypeDef) by the shared runtime, ExportedType forwarders followed",
+  RoGetActivationFactory: "factory obtained (IID_IActivationFactory), in-process classes",
+  "wasdk-activation": "appxfragment of the package -> DLL of the package exporting DllGetActivationFactory",
+  "dotnet-impl": "reference type defined (TypeDef) by the shared runtime, ExportedType forwarders followed",
   "ucrtbase-export": "_ACRTIMP declaration exported by ucrtbase.dll",
 };
 const t0 = performance.now();
-const log = (s: string) =>
-  console.error(
-    `[msindex ${((performance.now() - t0) / 1000).toFixed(1)}s] ${s}`,
-  );
+const log = (s: string) => console.error(`[msindex ${((performance.now() - t0) / 1000).toFixed(1)}s] ${s}`);
 
 // ---------------------------------------------------------------- roots (no hard-coded path: environment, registry, tools)
 const system32 = join(process.env.SystemRoot!, "System32");
-const nuget =
-  process.env.NUGET_PACKAGES ?? join(homedir(), ".nuget", "packages");
+const nuget = process.env.NUGET_PACKAGES ?? join(homedir(), ".nuget", "packages");
 const dotnetExe = Bun.which("dotnet");
 if (!dotnetExe) throw new Error("dotnet not in PATH");
 const dotnet = dirname(realpathSync(dotnetExe));
-const kits = hklmString(
-  "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots",
-  "KitsRoot10",
-).replace(/\\$/, "");
-const vswhere = join(
-  process.env["ProgramFiles(x86)"] ?? "",
-  "Microsoft Visual Studio",
-  "Installer",
-  "vswhere.exe",
-);
+const kits = hklmString("SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots", "KitsRoot10").replace(/\\$/, "");
+const vswhere = join(process.env["ProgramFiles(x86)"] ?? "", "Microsoft Visual Studio", "Installer", "vswhere.exe");
 const vs = Bun.spawnSync([
   vswhere,
   "-latest",
@@ -115,8 +80,7 @@ const repos = {
   "windows-rs": join(src, "third_party", "windows-rs"),
 };
 const props = await Bun.file(join(nt, "Directory.Packages.props")).text();
-const wasdkVersion =
-  /Include="Microsoft\.WindowsAppSDK" Version="([^"]+)"/.exec(props)![1]!;
+const wasdkVersion = /Include="Microsoft\.WindowsAppSDK" Version="([^"]+)"/.exec(props)![1]!;
 const roots: Record<string, string> = {
   src,
   nuget,
@@ -131,13 +95,8 @@ const roots: Record<string, string> = {
 type Input = { root: string; path: string; size: number; sha256: string };
 const inputs: Input[] = [];
 const rel = (p: string) => {
-  for (const [k, r] of Object.entries(roots).sort(
-    (a, b) => b[1].length - a[1].length,
-  ))
-    if (
-      p.toLowerCase().startsWith(r.toLowerCase() + "\\") ||
-      p.toLowerCase().startsWith(r.toLowerCase() + "/")
-    )
+  for (const [k, r] of Object.entries(roots).sort((a, b) => b[1].length - a[1].length))
+    if (p.toLowerCase().startsWith(r.toLowerCase() + "\\") || p.toLowerCase().startsWith(r.toLowerCase() + "/"))
       return { root: k, path: slash(p.slice(r.length + 1)) };
   throw new Error(`entry outside the roots: ${p}`);
 };
@@ -164,27 +123,15 @@ const prev = (await Bun.file(join(nt, "docs", "msindex", "lock.json")).exists())
 const wdkVersion: string =
   verify && prev
     ? prev.nuget.wdk.version
-    : (
-        (await (
-          await fetch(
-            `https://api.nuget.org/v3-flatcontainer/${wdkId}/index.json`,
-          )
-        ).json()) as { versions: string[] }
-      ).versions.at(-1)!;
+    : ((await (await fetch(`https://api.nuget.org/v3-flatcontainer/${wdkId}/index.json`)).json()) as { versions: string[] }).versions.at(
+        -1,
+      )!;
 const wdkDir = join(nuget, wdkId, wdkVersion);
 if (!isDir(wdkDir)) {
   const nupkg = new Uint8Array(
-    await (
-      await fetch(
-        `https://api.nuget.org/v3-flatcontainer/${wdkId}/${wdkVersion}/${wdkId}.${wdkVersion}.nupkg`,
-      )
-    ).arrayBuffer(),
+    await (await fetch(`https://api.nuget.org/v3-flatcontainer/${wdkId}/${wdkVersion}/${wdkId}.${wdkVersion}.nupkg`)).arrayBuffer(),
   );
-  const reg = (await (
-    await fetch(
-      `https://api.nuget.org/v3/registration5-semver1/${wdkId}/${wdkVersion}.json`,
-    )
-  ).json()) as {
+  const reg = (await (await fetch(`https://api.nuget.org/v3/registration5-semver1/${wdkId}/${wdkVersion}.json`)).json()) as {
     catalogEntry: string;
   };
   const cat = (await (await fetch(reg.catalogEntry)).json()) as {
@@ -193,18 +140,14 @@ if (!isDir(wdkDir)) {
   };
   const got = new Bun.CryptoHasher("sha512").update(nupkg).digest("base64");
   if (cat.packageHashAlgorithm !== "SHA512" || got !== cat.packageHash)
-    throw new Error(
-      `${wdkId} ${wdkVersion} : SHA-512 ${got} != catalogue ${cat.packageHash}`,
-    );
+    throw new Error(`${wdkId} ${wdkVersion} : SHA-512 ${got} != catalogue ${cat.packageHash}`);
   const pkg = join(wdkDir, `${wdkId}.${wdkVersion}.nupkg`);
   await Bun.write(pkg, nupkg);
   Bun.spawnSync([join(system32, "tar.exe"), "-xf", pkg, "-C", wdkDir]);
   await Bun.write(`${pkg}.sha512`, got);
 }
 const wdkWinmd = files(wdkDir, /\.winmd$/i)[0]!;
-log(
-  `roots: dotnet ${dotnet}; MSVC ${msvcVer}; UCRT ${ucrtVer}; WDK metadata ${wdkVersion}`,
-);
+log(`roots: dotnet ${dotnet}; MSVC ${msvcVer}; UCRT ${ucrtVer}; WDK metadata ${wdkVersion}`);
 
 // ---------------------------------------------------------------- graphe
 const g = new Graph();
@@ -215,11 +158,7 @@ const allImports: Import[] = [];
 // 1. Win32, WDK, system WinRT (windows-rs: crates/libs/default) — same metadata as the crate generation.
 const meta = g.add(root, "source", "metadata", "Windows metadata (ECMA-335)");
 const rsDefault = join(repos["windows-rs"], "crates", "libs", "default");
-for (const f of [
-  join(rsDefault, "Windows.Win32.winmd"),
-  wdkWinmd,
-  join(rsDefault, "Windows.winmd"),
-]) {
+for (const f of [join(rsDefault, "Windows.Win32.winmd"), wdkWinmd, join(rsDefault, "Windows.winmd")]) {
   await lock(f);
   const n = g.add(meta, "winmd", basename(f), slash(rel(f).path), {
     root: rel(f).root,
@@ -234,23 +173,13 @@ for (const f of [
     members: r.members,
     imports: r.imports.length,
   });
-  log(
-    `${basename(f)}: ${r.types.size} types, ${r.members} members, ${r.imports.length} imported functions`,
-  );
+  log(`${basename(f)}: ${r.types.size} types, ${r.members} members, ${r.imports.length} imported functions`);
 }
 
 // 2. Windows App SDK (NuGet packages of the pinned version) + sources.
-const wasdk = g.add(
-  root,
-  "source",
-  "Windows App SDK",
-  `Microsoft.WindowsAppSDK ${wasdkVersion}`,
-  { version: wasdkVersion },
-);
+const wasdk = g.add(root, "source", "Windows App SDK", `Microsoft.WindowsAppSDK ${wasdkVersion}`, { version: wasdkVersion });
 const fragments: { pkg: string; dir: string; file: string }[] = [];
-for (const id of dirs(nuget).filter((d) =>
-  /^microsoft\.windowsappsdk(\.|$)/.test(d),
-)) {
+for (const id of dirs(nuget).filter((d) => /^microsoft\.windowsappsdk(\.|$)/.test(d))) {
   const dir = join(nuget, id, wasdkVersion);
   if (!isDir(dir)) continue;
   const spec = join(dir, `${id}.nuspec`);
@@ -258,23 +187,12 @@ for (const id of dirs(nuget).filter((d) =>
   const text = await Bun.file(spec).text();
   const pid = /<id>([^<]+)<\/id>/.exec(text)?.[1] ?? id;
   const pkg = g.add(wasdk, "package", pid, `${pid} ${wasdkVersion}`, {
-    description: /<description>([\s\S]*?)<\/description>/
-      .exec(text)?.[1]
-      ?.replace(/\s+/g, " ")
-      .trim(),
-    dependencies: [
-      ...new Set(
-        [...text.matchAll(/<dependency id="([^"]+)" version="([^"]+)"/g)].map(
-          (m) => `${m[1]} ${m[2]}`,
-        ),
-      ),
-    ].sort(),
+    description: /<description>([\s\S]*?)<\/description>/.exec(text)?.[1]?.replace(/\s+/g, " ").trim(),
+    dependencies: [...new Set([...text.matchAll(/<dependency id="([^"]+)" version="([^"]+)"/g)].map((m) => `${m[1]} ${m[2]}`))].sort(),
   });
   const winmds = new Map<string, string>();
   for (const d of ["metadata", "lib"])
-    for (const w of files(join(dir, d), /\.winmd$/i))
-      if (!winmds.has(basename(w).toLowerCase()))
-        winmds.set(basename(w).toLowerCase(), w);
+    for (const w of files(join(dir, d), /\.winmd$/i)) if (!winmds.has(basename(w).toLowerCase())) winmds.set(basename(w).toLowerCase(), w);
   for (const w of [...winmds.values()]) {
     await lock(w);
     await lock(w.replace(/\.winmd$/i, ".xml"));
@@ -292,16 +210,9 @@ for (const id of dirs(nuget).filter((d) =>
     join(dir, "runtimes-framework", "package.appxfragment"),
     join(dir, "build", "native", "LiftedWinRTClassRegistrations.xml"),
   ])
-    if (await Bun.file(f).exists())
-      (await lock(f), fragments.push({ pkg: pid, dir, file: f }));
+    if (await Bun.file(f).exists()) (await lock(f), fragments.push({ pkg: pid, dir, file: f }));
 }
-const wasdkRepo = g.add(
-  wasdk,
-  "repo",
-  "WindowsAppSDK",
-  repoState(repos.WindowsAppSDK).remote,
-  repoState(repos.WindowsAppSDK),
-);
+const wasdkRepo = g.add(wasdk, "repo", "WindowsAppSDK", repoState(repos.WindowsAppSDK).remote, repoState(repos.WindowsAppSDK));
 const muxRepo = g.add(
   wasdk,
   "repo",
@@ -309,14 +220,7 @@ const muxRepo = g.add(
   repoState(repos["microsoft-ui-xaml"]).remote,
   repoState(repos["microsoft-ui-xaml"]),
 );
-const srcLinks = await indexSources(
-  g,
-  wasdkRepo,
-  muxRepo,
-  repos.WindowsAppSDK,
-  repos["microsoft-ui-xaml"],
-  shippedTypes,
-);
+const srcLinks = await indexSources(g, wasdkRepo, muxRepo, repos.WindowsAppSDK, repos["microsoft-ui-xaml"], shippedTypes);
 log(
   `Windows App SDK ${wasdkVersion}: ${fragments.length} activation registrations; ${srcLinks.sourceTypes.size} IDL types; ${srcLinks.features.size} features`,
 );
@@ -324,39 +228,19 @@ log(
 // 3. .NET 10 and 11: Microsoft.NETCore.App.Ref reference packs (public API) and shared runtime (implementation).
 const net = g.add(root, "source", ".NET", "Microsoft.NETCore.App");
 const netProofs: { ref: Map<string, number>; impl: string }[] = [];
-for (const ver of dirs(
-  join(dotnet, "packs", "Microsoft.NETCore.App.Ref"),
-).filter((v) => /^1[01]\./.test(v))) {
+for (const ver of dirs(join(dotnet, "packs", "Microsoft.NETCore.App.Ref")).filter((v) => /^1[01]\./.test(v))) {
   const major = ver.split(".")[0];
-  const refDir = join(
-    dotnet,
-    "packs",
-    "Microsoft.NETCore.App.Ref",
-    ver,
-    "ref",
-    `net${major}.0`,
-  );
+  const refDir = join(dotnet, "packs", "Microsoft.NETCore.App.Ref", ver, "ref", `net${major}.0`);
   const impl = join(dotnet, "shared", "Microsoft.NETCore.App", ver);
-  const vn = g.add(
-    net,
-    "runtime",
-    `.NET ${ver}`,
-    `Microsoft.NETCore.App ${ver}`,
-    {
-      ref: slash(rel(refDir).path),
-      shared: isDir(impl) ? slash(rel(impl).path) : undefined,
-    },
-  );
+  const vn = g.add(net, "runtime", `.NET ${ver}`, `Microsoft.NETCore.App ${ver}`, {
+    ref: slash(rel(refDir).path),
+    shared: isDir(impl) ? slash(rel(impl).path) : undefined,
+  });
   await lockTree(refDir, /\.(dll|xml)$/i);
   if (isDir(impl)) await lockTree(impl, /\.dll$/i);
   const types = new Map<string, number>();
   for (const f of files(refDir, /\.dll$/i)) {
-    const n = g.add(
-      vn,
-      "assembly",
-      basename(f, ".dll"),
-      `${basename(f, ".dll")} ${ver}`,
-    );
+    const n = g.add(vn, "assembly", basename(f, ".dll"), `${basename(f, ".dll")} ${ver}`);
     const r = await indexWinmd(g, n, f, true);
     for (const [k, v] of r.types) types.set(`${basename(f)}|${k}`, v);
     Object.assign(g.node(n).data, {
@@ -373,10 +257,7 @@ for (const ver of dirs(
 // 4. windows-rs (nt monorepo): workspace crates (cargo metadata), features, internal dependencies.
 const rs = repoState(repos["windows-rs"]);
 const rsNode = g.add(root, "source", "windows-rs", rs.remote, rs);
-const cm = Bun.spawnSync(
-  ["cargo", "metadata", "--no-deps", "--format-version", "1", "--offline"],
-  { cwd: repos["windows-rs"] },
-);
+const cm = Bun.spawnSync(["cargo", "metadata", "--no-deps", "--format-version", "1", "--offline"], { cwd: repos["windows-rs"] });
 if (cm.exitCode !== 0) throw new Error(`cargo metadata: ${cm.stderr}`);
 type Pkg = {
   name: string;
@@ -386,14 +267,10 @@ type Pkg = {
   features: Record<string, string[]>;
   dependencies: { name: string; kind: string | null; optional: boolean }[];
 };
-const pkgs = (JSON.parse(cm.stdout.toString()).packages as Pkg[]).sort(
-  (a, b) => (a.manifest_path < b.manifest_path ? -1 : 1),
-);
+const pkgs = (JSON.parse(cm.stdout.toString()).packages as Pkg[]).sort((a, b) => (a.manifest_path < b.manifest_path ? -1 : 1));
 const crateNode = new Map<string, number>();
 const nsByName = new Map<string, number>();
-for (const n of g.nodes)
-  if (n.kind === "namespace" && !nsByName.has(n.full))
-    nsByName.set(n.full, n.id);
+for (const n of g.nodes) if (n.kind === "namespace" && !nsByName.has(n.full)) nsByName.set(n.full, n.id);
 // Source metadata of windows-rs (metadata/{win32,wdk}/*.rdl, produced by crates/tools/win32 from the SDK headers):
 // one file per header; top-level declarations of the Win32 module linked to the types and functions of Windows.Win32.winmd.
 const rdlRoot = join(repos["windows-rs"], "metadata");
@@ -403,37 +280,19 @@ for (const area of ["win32", "wdk"]) {
   const an = g.add(rdl, "rdl-area", area, `metadata/${area}`);
   for (const f of files(join(rdlRoot, area), /\.rdl$/i)) {
     const text = await Bun.file(f).text();
-    const names = [
-      ...text.matchAll(
-        /^ {8}(?:extern fn|const|type|struct|enum|interface|union)\s+([A-Za-z_]\w*)/gm,
-      ),
-    ].map((m) => m[1]!);
-    const h = g.add(
-      an,
-      "header",
-      `${basename(f, ".rdl")}.h`,
-      `metadata/${area}/${basename(f)}`,
-      { declarations: names.length },
-    );
+    const names = [...text.matchAll(/^ {8}(?:extern fn|const|type|struct|enum|interface|union)\s+([A-Za-z_]\w*)/gm)].map((m) => m[1]!);
+    const h = g.add(an, "header", `${basename(f, ".rdl")}.h`, `metadata/${area}/${basename(f)}`, { declarations: names.length });
     if (area === "win32") headerNode.set(basename(f, ".rdl").toLowerCase(), h);
-    if (area === "win32")
-      for (const n of names)
-        g.edge(h, shippedTypes.get(`Windows.Win32.${n}`) ?? 0, "declares");
+    if (area === "win32") for (const n of names) g.edge(h, shippedTypes.get(`Windows.Win32.${n}`) ?? 0, "declares");
   }
 }
 const win32Apis = new Map<string, number>();
 for (const n of g.nodes)
-  if (
-    (n.kind === "function" || n.kind === "constant") &&
-    n.full.startsWith("Windows.Win32.Apis.")
-  )
-    win32Apis.set(n.name, n.id);
+  if ((n.kind === "function" || n.kind === "constant") && n.full.startsWith("Windows.Win32.Apis.")) win32Apis.set(n.name, n.id);
 for (const area of ["win32"])
   for (const f of files(join(rdlRoot, area), /\.rdl$/i)) {
     const h = headerNode.get(basename(f, ".rdl").toLowerCase())!;
-    for (const m of (await Bun.file(f).text()).matchAll(
-      /^ {8}(?:extern fn|const)\s+([A-Za-z_]\w*)/gm,
-    ))
+    for (const m of (await Bun.file(f).text()).matchAll(/^ {8}(?:extern fn|const)\s+([A-Za-z_]\w*)/gm))
       g.edge(h, win32Apis.get(m[1]!) ?? 0, "declares");
   }
 for (const p of pkgs) {
@@ -444,79 +303,39 @@ for (const p of pkgs) {
     features: Object.keys(p.features).length,
   });
   crateNode.set(p.name, c);
-  for (const [f, act] of Object.entries(p.features).sort((a, b) =>
-    a[0] < b[0] ? -1 : 1,
-  )) {
+  for (const [f, act] of Object.entries(p.features).sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
     const fn = g.add(c, "cargo-feature", f, `${p.name}/${f}`, {
       enables: act.length ? act : undefined,
     });
     // windows / windows-sys: feature = WinRT namespace (AI_Actions) or Win32 header (aclapi).
     if (/^windows(-sys)?$/.test(p.name))
-      g.edge(
-        fn,
-        nsByName.get(`Windows.${f.replaceAll("_", ".")}`) ??
-          headerNode.get(f.toLowerCase()) ??
-          0,
-        "projects",
-      );
+      g.edge(fn, nsByName.get(`Windows.${f.replaceAll("_", ".")}`) ?? headerNode.get(f.toLowerCase()) ?? 0, "projects");
   }
 }
 for (const p of pkgs)
-  for (const d of p.dependencies)
-    g.edge(
-      crateNode.get(p.name)!,
-      crateNode.get(d.name) ?? 0,
-      d.kind ? `dep-${d.kind}` : "dep",
-    );
+  for (const d of p.dependencies) g.edge(crateNode.get(p.name)!, crateNode.get(d.name) ?? 0, d.kind ? `dep-${d.kind}` : "dep");
 log(`windows-rs: ${pkgs.length} crates`);
 
 // 5. UCRT, CRT/STL MSVC, `import std`.
-const crtNode = g.add(
-  root,
-  "source",
-  "C/C++ runtime",
-  `UCRT ${ucrtVer} + MSVC ${msvcVer}`,
-);
+const crtNode = g.add(root, "source", "C/C++ runtime", `UCRT ${ucrtVer} + MSVC ${msvcVer}`);
 for (const d of CRT_DLLS) await lock(join(system32, d));
 await lockTree(join(kits, "Include", ucrtVer, "ucrt"), /\.h$/i);
 await lockTree(join(msvc, "include"), /.*/);
-const crt = await indexCrt(
-  g,
-  crtNode,
-  join(kits, "Include", ucrtVer, "ucrt"),
-  system32,
-  msvc,
-);
-log(
-  `CRT: ${crt.dlls} DLLs; UCRT ${crt.declared} declarations (${crt.linked} exported); import std ${crt.exported}`,
-);
+const crt = await indexCrt(g, crtNode, join(kits, "Include", ucrtVer, "ucrt"), system32, msvc);
+log(`CRT: ${crt.dlls} DLLs; UCRT ${crt.declared} declarations (${crt.linked} exported); import std ${crt.exported}`);
 
 // ---------------------------------------------------------------- proofs on the running system
 const os = {
-  caption: hklmString(
-    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-    "DisplayVersion",
-  ),
+  caption: hklmString("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion"),
   build: `${hklmString("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild")}`,
-  lab: hklmString(
-    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
-    "BuildLabEx",
-  ),
+  lab: hklmString("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "BuildLabEx"),
 };
 const schema = apiSetSchema();
 const resolveDll = apiSetResolver(schema.sets);
-const apisets = g.add(
-  root,
-  "source",
-  "API Sets",
-  `ApiSetSchema v${schema.version}`,
-  { count: schema.count, os },
-);
+const apisets = g.add(root, "source", "API Sets", `ApiSetSchema v${schema.version}`, { count: schema.count, os });
 for (const s of schema.sets) {
   const n = g.add(apisets, "apiset", s.name, s.name, {
-    hosts: s.hosts.map((h) =>
-      h.importer ? `${h.importer}->${h.host}` : h.host,
-    ),
+    hosts: s.hosts.map((h) => (h.importer ? `${h.importer}->${h.host}` : h.host)),
     sealed: s.sealed || undefined,
   });
   g.prove(
@@ -532,9 +351,7 @@ const peExports = new Map<string, Set<string> | null>();
 const exportsFor = async (file: string) => {
   const k = file.toLowerCase();
   if (!peExports.has(k)) {
-    const p = [join(system32, file), join(system32, "drivers", file)].find(
-      (x) => Bun.file(x).size > 0,
-    );
+    const p = [join(system32, file), join(system32, "drivers", file)].find((x) => Bun.file(x).size > 0);
     const pe = p ? parsePe(await Bun.file(p).arrayBuffer()) : null;
     peExports.set(k, pe ? new Set(exportsOf(pe)) : null);
   }
@@ -550,24 +367,12 @@ for (const im of allImports) {
     im.node,
     "pe-export",
     Boolean(ex?.has(im.entry)),
-    !host
-      ? `contract ${r.set} without host`
-      : !ex
-        ? `${host} absent`
-        : ex.has(im.entry)
-          ? host
-          : `${im.entry} absent de ${host}`,
+    !host ? `contract ${r.set} without host` : !ex ? `${host} absent` : ex.has(im.entry) ? host : `${im.entry} absent de ${host}`,
   );
   if (!/\.(sys|exe)$/i.test(im.dll) && !/^(ntoskrnl|hal)/i.test(im.dll))
-    (userItems.push([
-      im.dll.includes(".") ? im.dll : `${im.dll}.dll`,
-      im.entry,
-    ]),
-      userNodes.push(im.node));
+    (userItems.push([im.dll.includes(".") ? im.dll : `${im.dll}.dll`, im.entry]), userNodes.push(im.node));
 }
-log(
-  `PE exports: ${allImports.length} functions; loader: ${userItems.length}`,
-);
+log(`PE exports: ${allImports.length} functions; loader: ${userItems.length}`);
 // An item that crashes the proof process must not invalidate the others: batches split in two when the
 // process fails until the faulty group is isolated (failed proof with the cause).
 async function proveIsolated<T>(
@@ -580,9 +385,7 @@ async function proveIsolated<T>(
   const go = async (gs: T[][]): Promise<void> => {
     const items = gs.flat();
     try {
-      (await run(items)).forEach(([ok, why], j) =>
-        g.prove(nodeOf(items[j]!), check, ok, why),
-      );
+      (await run(items)).forEach(([ok, why], j) => g.prove(nodeOf(items[j]!), check, ok, why));
     } catch (e) {
       if (gs.length === 1) {
         const why = `proof process interrupted: ${/panic\([^)]*\): [^\n]*|code \d+/.exec((e as Error).message)?.[0] ?? "failure"}`;
@@ -594,8 +397,7 @@ async function proveIsolated<T>(
       await go(gs.slice(gs.length >> 1));
     }
   };
-  for (let i = 0; i < groups.length; i += batch)
-    await go(groups.slice(i, i + batch));
+  for (let i = 0; i < groups.length; i += batch) await go(groups.slice(i, i + batch));
 }
 type Item = { dll: string; entry: string; node: number };
 const byDll = new Map<string, Item[]>();
@@ -611,8 +413,7 @@ await proveIsolated(
   "loader",
   [...byDll.keys()].sort().map((k) => byDll.get(k)!),
   (x) => x.node,
-  (items) =>
-    child({ kind: "loader", items: items.map((x) => [x.dll, x.entry]) }),
+  (items) => child({ kind: "loader", items: items.map((x) => [x.dll, x.entry]) }),
   64,
 );
 
@@ -624,25 +425,12 @@ const winrtMeta = g.kids(meta).find((n) => n.name === "Windows.winmd")!;
 for (const n of g.walk(winrtMeta.id)) {
   if (n.kind !== "class" || !(n.data.activatable || n.data.statics)) continue;
   const r = reg.get(n.full);
-  g.prove(
-    n.id,
-    "winrt-registered",
-    Boolean(r),
-    r
-      ? `${basename(r.dll) || "(no DllPath)"} type ${r.type}`
-      : "absent de ActivatableClassId",
-  );
+  g.prove(n.id, "winrt-registered", Boolean(r), r ? `${basename(r.dll) || "(no DllPath)"} type ${r.type}` : "absent de ActivatableClassId");
   if (r?.dll) {
     const ex = await exportsFor(basename(r.dll));
-    g.prove(
-      n.id,
-      "activation-export",
-      Boolean(ex?.has("DllGetActivationFactory")),
-      basename(r.dll),
-    );
+    g.prove(n.id, "activation-export", Boolean(ex?.has("DllGetActivationFactory")), basename(r.dll));
   }
-  if (r && r.type === 0 && activateClasses)
-    (toActivate.push(n.full), activateNodes.push(n.id));
+  if (r && r.type === 0 && activateClasses) (toActivate.push(n.full), activateNodes.push(n.id));
 }
 // Activation grouped by host DLL: a factory that crashes the process is isolated with its DLL.
 const byHost = new Map<string, { cls: string; node: number }[]>();
@@ -660,9 +448,7 @@ await proveIsolated(
   (items) => child({ kind: "activate", classes: items.map((x) => x.cls) }),
   32,
 );
-log(
-  `WinRT: ${reg.size} classes registered; ${toActivate.length} factories activated`,
-);
+log(`WinRT: ${reg.size} classes registered; ${toActivate.length} factories activated`);
 
 // Windows App SDK: activation registration (appxfragment) -> package DLL -> DllGetActivationFactory export.
 const arch = process.arch === "arm64" ? "win-arm64" : "win-x64";
@@ -671,29 +457,20 @@ const wasdkDlls = new Map<string, string>();
 for (const fr of new Set(fragments.map((f) => f.dir)))
   for (const d of ["runtimes-framework", "runtimes"])
     for (const p of files(join(fr, d, arch), /\.dll$/i))
-      if (!wasdkDlls.has(basename(p).toLowerCase()))
-        wasdkDlls.set(basename(p).toLowerCase(), p);
-for (const id of dirs(nuget).filter((d) =>
-  /^microsoft\.windowsappsdk(\.|$)/.test(d),
-))
+      if (!wasdkDlls.has(basename(p).toLowerCase())) wasdkDlls.set(basename(p).toLowerCase(), p);
+for (const id of dirs(nuget).filter((d) => /^microsoft\.windowsappsdk(\.|$)/.test(d)))
   for (const d of ["runtimes-framework", "runtimes"])
     for (const p of files(join(nuget, id, wasdkVersion, d, arch), /\.dll$/i))
-      if (!wasdkDlls.has(basename(p).toLowerCase()))
-        wasdkDlls.set(basename(p).toLowerCase(), p);
+      if (!wasdkDlls.has(basename(p).toLowerCase())) wasdkDlls.set(basename(p).toLowerCase(), p);
 const factoryExport = new Map<string, boolean>();
 for (const fr of fragments) {
   const xml = await Bun.file(fr.file).text();
-  for (const s of xml.matchAll(
-    /<InProcessServer>([\s\S]*?)<\/InProcessServer>/g,
-  )) {
+  for (const s of xml.matchAll(/<InProcessServer>([\s\S]*?)<\/InProcessServer>/g)) {
     const dll = /<Path>([^<]+)<\/Path>/.exec(s[1]!)?.[1]?.trim() ?? "";
     const p = wasdkDlls.get(basename(dll).toLowerCase());
     if (p && !factoryExport.has(p)) {
       const pe = parsePe(await Bun.file(p).arrayBuffer());
-      factoryExport.set(
-        p,
-        Boolean(pe && exportsOf(pe).includes("DllGetActivationFactory")),
-      );
+      factoryExport.set(p, Boolean(pe && exportsOf(pe).includes("DllGetActivationFactory")));
     }
     const ok = Boolean(p && factoryExport.get(p));
     for (const c of s[1]!.matchAll(/ActivatableClassId="([^"]+)"/g)) {
@@ -718,12 +495,7 @@ for (const { ref, impl } of netProofs) {
   const expose = (asm: string) => {
     if (!cache.has(asm)) {
       const f = join(impl, `${asm}.dll`);
-      cache.set(
-        asm,
-        Bun.file(f).size
-          ? exposedTypes(readAssembly(readFileSync(f).buffer as ArrayBuffer))
-          : new Map(),
-      );
+      cache.set(asm, Bun.file(f).size ? exposedTypes(readAssembly(readFileSync(f).buffer as ArrayBuffer)) : new Map());
     }
     return cache.get(asm)!;
   };
@@ -732,20 +504,14 @@ for (const { ref, impl } of netProofs) {
     const outer = type.split("+")[0]!;
     let asm = asm0;
     let how = expose(asm).get(outer);
-    for (let hop = 0; how?.startsWith("forward:") && hop < 4; hop++)
-      ((asm = how.slice(8)), (how = expose(asm).get(outer)));
+    for (let hop = 0; how?.startsWith("forward:") && hop < 4; hop++) ((asm = how.slice(8)), (how = expose(asm).get(outer)));
     if (how === "typedef" && type !== outer) how = expose(asm).get(type);
     return { asm, how };
   };
   for (const [key, node] of ref) {
     const [file, type] = key.split("|") as [string, string];
     const { asm, how } = locate(basename(file, ".dll"), type);
-    g.prove(
-      node,
-      "dotnet-impl",
-      how === "typedef",
-      how === "typedef" ? asm : `${how ?? "absent"} (${asm})`,
-    );
+    g.prove(node, "dotnet-impl", how === "typedef", how === "typedef" ? asm : `${how ?? "absent"} (${asm})`);
   }
 }
 log(`proofs: ${g.proofs.length}`);
@@ -755,9 +521,7 @@ const graphDigest = g.digest("graph");
 const proofDigest = g.digest("proofs");
 const summary = new Map<string, { ok: number; total: number }>();
 for (const p of g.proofs) {
-  const s =
-    summary.get(p.check) ??
-    summary.set(p.check, { ok: 0, total: 0 }).get(p.check)!;
+  const s = summary.get(p.check) ?? summary.set(p.check, { ok: 0, total: 0 }).get(p.check)!;
   s.total++;
   if (p.ok) s.ok++;
 }
@@ -785,16 +549,12 @@ const lockData = {
     wdk: {
       id: wdkId,
       version: wdkVersion,
-      sha512: await Bun.file(
-        join(wdkDir, `${wdkId}.${wdkVersion}.nupkg.sha512`),
-      )
+      sha512: await Bun.file(join(wdkDir, `${wdkId}.${wdkVersion}.nupkg.sha512`))
         .text()
         .catch(() => ""),
     },
   },
-  repos: Object.fromEntries(
-    Object.entries(repos).map(([k, p]) => [k, repoState(p)]),
-  ),
+  repos: Object.fromEntries(Object.entries(repos).map(([k, p]) => [k, repoState(p)])),
   inputs: inputs.sort((a, b) => (a.root + a.path < b.root + b.path ? -1 : 1)),
   digests: { graph: graphDigest, proofs: proofDigest },
   counts: {
@@ -808,32 +568,22 @@ const lockData = {
 
 if (verify) {
   if (!prev) throw new Error("--verify: docs/msindex/lock.json missing");
-  const before = new Map(
-    (prev.inputs as Input[]).map((i) => [`${i.root}:${i.path}`, i.sha256]),
-  );
-  const drift = lockData.inputs
-    .filter((i) => before.get(`${i.root}:${i.path}`) !== i.sha256)
-    .map((i) => `${i.root}:${i.path}`);
-  const missing = [...before.keys()].filter(
-    (k) => !lockData.inputs.some((i) => `${i.root}:${i.path}` === k),
-  );
+  const before = new Map((prev.inputs as Input[]).map((i) => [`${i.root}:${i.path}`, i.sha256]));
+  const drift = lockData.inputs.filter((i) => before.get(`${i.root}:${i.path}`) !== i.sha256).map((i) => `${i.root}:${i.path}`);
+  const missing = [...before.keys()].filter((k) => !lockData.inputs.some((i) => `${i.root}:${i.path}` === k));
   const same = prev.digests.graph === graphDigest;
   console.log(
     JSON.stringify({
       inputsDrift: drift,
       inputsMissing: missing,
       graph: same ? "identical" : `${prev.digests.graph} -> ${graphDigest}`,
-      proofs:
-        prev.digests.proofs === proofDigest ? "identical" : "different",
+      proofs: prev.digests.proofs === proofDigest ? "identical" : "different",
     }),
   );
   if (drift.length || missing.length || !same) process.exit(1);
 } else {
   g.write(join(nt, "target", "index", "msindex.sqlite"));
-  await Bun.write(
-    join(nt, "docs", "msindex", "lock.json"),
-    `${JSON.stringify(lockData, null, 1)}\n`,
-  );
+  await Bun.write(join(nt, "docs", "msindex", "lock.json"), `${JSON.stringify(lockData, null, 1)}\n`);
   const L = [
     "# msindex: Microsoft stack indexed and proven on this machine",
     "",
@@ -858,9 +608,7 @@ if (verify) {
     "",
     "| check | passed | total | method |",
     "|---|---|---|---|",
-    ...[...summary]
-      .sort()
-      .map(([k, v]) => `| ${k} | ${v.ok} | ${v.total} | ${METHOD[k] ?? ""} |`),
+    ...[...summary].sort().map(([k, v]) => `| ${k} | ${v.ok} | ${v.total} | ${METHOD[k] ?? ""} |`),
     "",
     "## Nodes by kind",
     "",

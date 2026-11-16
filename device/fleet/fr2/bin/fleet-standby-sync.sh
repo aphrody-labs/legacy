@@ -4,7 +4,7 @@
 # upstream, proxy_cache_path) and only the HTTPS server blocks of STANDBY_NAMES, rewritten to plain HTTP on prd
 # loopback ports (TLS ends at Cloudflare: the standby is reached through the prd tunnel mig-prd, ingress in
 # device/cloudflare/cloudflare.toml). Snippets are copied. prd: `nginx -t`, reload, otherwise previous state kept.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -euo pipefail
 PRD_PUB=$(site_get hosts.prd.public_ip); PRD_MESH=$(site_get hosts.prd.mesh_ip)
 PRD=${STANDBY_TARGET:-root@$PRD_PUB}

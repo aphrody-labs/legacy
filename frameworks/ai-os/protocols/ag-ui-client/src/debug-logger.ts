@@ -1,4 +1,7 @@
-import { ResolvedAgentDebugConfig, resolveAgentDebugConfig } from "./agent/types";
+import {
+  ResolvedAgentDebugConfig,
+  resolveAgentDebugConfig,
+} from "./agent/types";
 
 /** Accepted input wherever a debug logger can be provided. */
 export type DebugLoggerInput = DebugLogger | boolean | null | undefined;
@@ -9,7 +12,9 @@ export type DebugLoggerInput = DebugLogger | boolean | null | undefined;
  * - `DebugLogger` instance → returned as-is
  * - `false`, `null`, `undefined` → returns undefined
  */
-export function resolveDebugLogger(input: DebugLoggerInput): DebugLogger | undefined {
+export function resolveDebugLogger(
+  input: DebugLoggerInput,
+): DebugLogger | undefined {
   if (input instanceof DebugLogger) return input;
   if (input === true) return new DebugLogger(resolveAgentDebugConfig(true));
   return undefined;
@@ -27,10 +32,18 @@ export class DebugLogger {
    * Only logs when `config.events` is enabled.
    * In verbose mode, logs the full data; otherwise logs the summary.
    */
-  event(prefix: string, label: string, data: unknown, summary?: Record<string, unknown>): void {
+  event(
+    prefix: string,
+    label: string,
+    data: unknown,
+    summary?: Record<string, unknown>,
+  ): void {
     if (!this.config.events) return;
     if (this.config.verbose) {
-      console.debug(`[${prefix}] ${label}`, typeof data === "string" ? data : JSON.stringify(data));
+      console.debug(
+        `[${prefix}] ${label}`,
+        typeof data === "string" ? data : JSON.stringify(data),
+      );
     } else {
       console.debug(`[${prefix}] ${label}`, summary ?? data);
     }
@@ -40,7 +53,11 @@ export class DebugLogger {
    * Log a lifecycle-level debug message.
    * Only logs when `config.lifecycle` is enabled.
    */
-  lifecycle(prefix: string, label: string, data?: Record<string, unknown>): void {
+  lifecycle(
+    prefix: string,
+    label: string,
+    data?: Record<string, unknown>,
+  ): void {
     if (!this.config.lifecycle) return;
     if (data) {
       console.debug(`[${prefix}] ${label}`, data);
@@ -69,6 +86,8 @@ export class DebugLogger {
  * Creates a DebugLogger if debug is enabled, otherwise returns undefined.
  * This allows consumers to pass it around cheaply when debug is off.
  */
-export function createDebugLogger(config: ResolvedAgentDebugConfig): DebugLogger | undefined {
+export function createDebugLogger(
+  config: ResolvedAgentDebugConfig,
+): DebugLogger | undefined {
   return config.enabled ? new DebugLogger(config) : undefined;
 }

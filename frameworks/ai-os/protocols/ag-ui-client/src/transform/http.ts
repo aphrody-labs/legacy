@@ -94,20 +94,36 @@ export const transformHttpEventStream = (
               // to `eventSubject.error` — the run would then RESOLVE, claiming
               // success for a stream nobody read. So the shape is checked
               // before anything is read off it.
-              if (typeof json !== "object" || json === null || Array.isArray(json)) {
-                const err = new Error("Invalid event: the frame is not a JSON object.");
-                log?.event("HTTP", "Event invalid:", { json, error: String(err) });
+              if (
+                typeof json !== "object" ||
+                json === null ||
+                Array.isArray(json)
+              ) {
+                const err = new Error(
+                  "Invalid event: the frame is not a JSON object.",
+                );
+                log?.event("HTTP", "Event invalid:", {
+                  json,
+                  error: String(err),
+                });
                 failStream(err);
                 return;
               }
               const record = json as { type?: unknown };
               if (typeof record.type !== "string" || record.type.length === 0) {
-                const err = new Error("Invalid event: the frame carries no event type.");
-                log?.event("HTTP", "Event invalid:", { json, error: String(err) });
+                const err = new Error(
+                  "Invalid event: the frame carries no event type.",
+                );
+                log?.event("HTTP", "Event invalid:", {
+                  json,
+                  error: String(err),
+                });
                 failStream(err);
                 return;
               }
-              log?.event("HTTP", "Event received:", json, { type: record.type });
+              log?.event("HTTP", "Event received:", json, {
+                type: record.type,
+              });
               eventSubject.next(json as BaseEvent);
             },
             error: (err) => {

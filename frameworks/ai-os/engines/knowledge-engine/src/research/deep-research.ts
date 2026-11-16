@@ -531,7 +531,12 @@ function scanLocalMonorepoChannel(
     }
   }
 
-  const sentinelPath = join(srcRoot, "frameworks", "ai-os", "SENTINEL_REPORT.md");
+  const sentinelPath = join(
+    srcRoot,
+    "frameworks",
+    "ai-os",
+    "SENTINEL_REPORT.md",
+  );
   if (existsSync(sentinelPath)) {
     try {
       const sentinelRaw = readFileSync(sentinelPath, "utf8");

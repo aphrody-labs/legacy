@@ -36,7 +36,9 @@ function sanitizeMessageContent(message: InputMessage): InputMessage {
     // actually a string?" decides whether it is well formed. Answering only
     // the second conflated the two, so a text part with `text: 42` was
     // flattened away AND announced as a dropped media part.
-    const isTextPart = (part: unknown): part is { type: "text"; text?: unknown } =>
+    const isTextPart = (
+      part: unknown,
+    ): part is { type: "text"; text?: unknown } =>
       typeof part === "object" &&
       part !== null &&
       "type" in part &&
@@ -51,7 +53,9 @@ function sanitizeMessageContent(message: InputMessage): InputMessage {
     // rule forbids. Hand the message on untouched instead — the outgoing
     // enforcement boundary rejects it fatally, the same as when no shim is
     // installed.
-    const malformedTextParts = rawContent.filter((part) => isTextPart(part) && !isText(part));
+    const malformedTextParts = rawContent.filter(
+      (part) => isTextPart(part) && !isText(part),
+    );
     if (malformedTextParts.length > 0) {
       warnMalformedTextPart(malformedTextParts.length);
       return message;
@@ -109,7 +113,10 @@ function sanitizeMessageContent(message: InputMessage): InputMessage {
  * Currently it simply forwards all events to the next middleware/agent.
  */
 export class BackwardCompatibility_0_0_39 extends Middleware {
-  override run(input: RunAgentInput, next: AbstractAgent): Observable<BaseEvent> {
+  override run(
+    input: RunAgentInput,
+    next: AbstractAgent,
+  ): Observable<BaseEvent> {
     const { parentRunId: _parentRunId, ...rest } = input;
     const sanitizedInput: RunAgentInput = {
       ...rest,

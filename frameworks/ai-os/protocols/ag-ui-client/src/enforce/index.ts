@@ -1,4 +1,8 @@
-export { enforceEvents, enforceOutgoingInput, isRecognizedEvent } from "./enforce";
+export {
+  enforceEvents,
+  enforceOutgoingInput,
+  isRecognizedEvent,
+} from "./enforce";
 export type { UnrecognizedEvent } from "./enforce";
 
 // `stripUnknown` and `StripResult` are deliberately NOT re-exported. Their

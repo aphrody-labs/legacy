@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+} from "react";
 
 import {
   type Client,
@@ -16,8 +22,8 @@ import {
   type LoggingMessageNotification,
   type ReadResourceRequest,
   type ReadResourceResult,
-} from '@modelcontextprotocol/client';
-import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
+} from "@modelcontextprotocol/client";
+import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
 
 import {
   AppBridge,
@@ -30,10 +36,13 @@ import {
   type McpUiToolInputPartialNotification,
   type McpUiHostContext,
   type McpUiHostCapabilities,
-} from '@modelcontextprotocol/ext-apps/app-bridge';
+} from "@modelcontextprotocol/ext-apps/app-bridge";
 
-import { AppFrame, type SandboxConfig } from './AppFrame';
-import { getToolUiResourceUri, readToolUiResourceHtml } from '../utils/app-host-utils';
+import { AppFrame, type SandboxConfig } from "./AppFrame";
+import {
+  getToolUiResourceUri,
+  readToolUiResourceHtml,
+} from "../utils/app-host-utils";
 
 /**
  * Extra metadata passed to request handlers (from AppBridge).
@@ -81,7 +90,7 @@ export interface AppRendererProps {
   toolResult?: CallToolResult;
 
   /** Partial/streaming tool input to send to the guest UI */
-  toolInputPartial?: McpUiToolInputPartialNotification['params'];
+  toolInputPartial?: McpUiToolInputPartialNotification["params"];
 
   /** Set to true to notify the guest UI that the tool execution was cancelled */
   toolCancelled?: boolean;
@@ -97,21 +106,21 @@ export interface AppRendererProps {
 
   /** Handler for open-link requests from the guest UI */
   onOpenLink?: (
-    params: McpUiOpenLinkRequest['params'],
+    params: McpUiOpenLinkRequest["params"],
     extra: RequestHandlerExtra,
   ) => Promise<McpUiOpenLinkResult>;
 
   /** Handler for message requests from the guest UI */
   onMessage?: (
-    params: McpUiMessageRequest['params'],
+    params: McpUiMessageRequest["params"],
     extra: RequestHandlerExtra,
   ) => Promise<McpUiMessageResult>;
 
   /** Handler for logging messages from the guest UI */
-  onLoggingMessage?: (params: LoggingMessageNotification['params']) => void;
+  onLoggingMessage?: (params: LoggingMessageNotification["params"]) => void;
 
   /** Handler for size change notifications from the guest UI */
-  onSizeChanged?: (params: McpUiSizeChangedNotification['params']) => void;
+  onSizeChanged?: (params: McpUiSizeChangedNotification["params"]) => void;
 
   /** Callback invoked when an error occurs during setup or message handling */
   onError?: (error: Error) => void;
@@ -123,7 +132,7 @@ export interface AppRendererProps {
    * If provided, overrides the automatic forwarding to the MCP client.
    */
   onCallTool?: (
-    params: CallToolRequest['params'],
+    params: CallToolRequest["params"],
     extra: RequestHandlerExtra,
   ) => Promise<CallToolResult>;
 
@@ -132,7 +141,7 @@ export interface AppRendererProps {
    * If provided, overrides the automatic forwarding to the MCP client.
    */
   onListResources?: (
-    params: ListResourcesRequest['params'],
+    params: ListResourcesRequest["params"],
     extra: RequestHandlerExtra,
   ) => Promise<ListResourcesResult>;
 
@@ -141,7 +150,7 @@ export interface AppRendererProps {
    * If provided, overrides the automatic forwarding to the MCP client.
    */
   onListResourceTemplates?: (
-    params: ListResourceTemplatesRequest['params'],
+    params: ListResourceTemplatesRequest["params"],
     extra: RequestHandlerExtra,
   ) => Promise<ListResourceTemplatesResult>;
 
@@ -150,7 +159,7 @@ export interface AppRendererProps {
    * If provided, overrides the automatic forwarding to the MCP client.
    */
   onReadResource?: (
-    params: ReadResourceRequest['params'],
+    params: ReadResourceRequest["params"],
     extra: RequestHandlerExtra,
   ) => Promise<ReadResourceResult>;
 
@@ -159,7 +168,7 @@ export interface AppRendererProps {
    * If provided, overrides the automatic forwarding to the MCP client.
    */
   onListPrompts?: (
-    params: ListPromptsRequest['params'],
+    params: ListPromptsRequest["params"],
     extra: RequestHandlerExtra,
   ) => Promise<ListPromptsResult>;
 
@@ -264,326 +273,355 @@ export interface AppRendererProps {
  * />
  * ```
  */
-export const AppRenderer = forwardRef<AppRendererHandle, AppRendererProps>((props, ref) => {
-  const {
-    client,
-    toolName,
-    sandbox,
-    toolResourceUri,
-    html: htmlProp,
-    toolInput,
-    toolResult,
-    toolInputPartial,
-    toolCancelled,
-    hostContext,
-    hostInfo,
-    hostCapabilities,
-    onMessage,
-    onOpenLink,
-    onLoggingMessage,
-    onSizeChanged,
-    onError,
-    onCallTool,
-    onListResources,
-    onListResourceTemplates,
-    onReadResource,
-    onListPrompts,
-    onFallbackRequest,
-  } = props;
+export const AppRenderer = forwardRef<AppRendererHandle, AppRendererProps>(
+  (props, ref) => {
+    const {
+      client,
+      toolName,
+      sandbox,
+      toolResourceUri,
+      html: htmlProp,
+      toolInput,
+      toolResult,
+      toolInputPartial,
+      toolCancelled,
+      hostContext,
+      hostInfo,
+      hostCapabilities,
+      onMessage,
+      onOpenLink,
+      onLoggingMessage,
+      onSizeChanged,
+      onError,
+      onCallTool,
+      onListResources,
+      onListResourceTemplates,
+      onReadResource,
+      onListPrompts,
+      onFallbackRequest,
+    } = props;
 
-  // State
-  const [appBridge, setAppBridge] = useState<AppBridge | null>(null);
-  const [html, setHtml] = useState<string | null>(htmlProp ?? null);
-  const [error, setError] = useState<Error | null>(null);
+    // State
+    const [appBridge, setAppBridge] = useState<AppBridge | null>(null);
+    const [html, setHtml] = useState<string | null>(htmlProp ?? null);
+    const [error, setError] = useState<Error | null>(null);
 
-  // Refs for callbacks
-  const onMessageRef = useRef(onMessage);
-  const onOpenLinkRef = useRef(onOpenLink);
-  const onLoggingMessageRef = useRef(onLoggingMessage);
-  const onSizeChangedRef = useRef(onSizeChanged);
-  const onErrorRef = useRef(onError);
-  const onCallToolRef = useRef(onCallTool);
-  const onListResourcesRef = useRef(onListResources);
-  const onListResourceTemplatesRef = useRef(onListResourceTemplates);
-  const onReadResourceRef = useRef(onReadResource);
-  const onListPromptsRef = useRef(onListPrompts);
-  const onFallbackRequestRef = useRef(onFallbackRequest);
+    // Refs for callbacks
+    const onMessageRef = useRef(onMessage);
+    const onOpenLinkRef = useRef(onOpenLink);
+    const onLoggingMessageRef = useRef(onLoggingMessage);
+    const onSizeChangedRef = useRef(onSizeChanged);
+    const onErrorRef = useRef(onError);
+    const onCallToolRef = useRef(onCallTool);
+    const onListResourcesRef = useRef(onListResources);
+    const onListResourceTemplatesRef = useRef(onListResourceTemplates);
+    const onReadResourceRef = useRef(onReadResource);
+    const onListPromptsRef = useRef(onListPrompts);
+    const onFallbackRequestRef = useRef(onFallbackRequest);
 
-  useEffect(() => {
-    onMessageRef.current = onMessage;
-    onOpenLinkRef.current = onOpenLink;
-    onLoggingMessageRef.current = onLoggingMessage;
-    onSizeChangedRef.current = onSizeChanged;
-    onErrorRef.current = onError;
-    onCallToolRef.current = onCallTool;
-    onListResourcesRef.current = onListResources;
-    onListResourceTemplatesRef.current = onListResourceTemplates;
-    onReadResourceRef.current = onReadResource;
-    onListPromptsRef.current = onListPrompts;
-    onFallbackRequestRef.current = onFallbackRequest;
-  });
+    useEffect(() => {
+      onMessageRef.current = onMessage;
+      onOpenLinkRef.current = onOpenLink;
+      onLoggingMessageRef.current = onLoggingMessage;
+      onSizeChangedRef.current = onSizeChanged;
+      onErrorRef.current = onError;
+      onCallToolRef.current = onCallTool;
+      onListResourcesRef.current = onListResources;
+      onListResourceTemplatesRef.current = onListResourceTemplates;
+      onReadResourceRef.current = onReadResource;
+      onListPromptsRef.current = onListPrompts;
+      onFallbackRequestRef.current = onFallbackRequest;
+    });
 
-  // Expose send methods via ref for Host → Guest notifications
-  useImperativeHandle(
-    ref,
-    () => ({
-      sendToolListChanged: () => appBridge?.sendToolListChanged(),
-      sendResourceListChanged: () => appBridge?.sendResourceListChanged(),
-      sendPromptListChanged: () => appBridge?.sendPromptListChanged(),
-      teardownResource: () => appBridge?.teardownResource({}),
-    }),
-    [appBridge],
-  );
+    // Expose send methods via ref for Host → Guest notifications
+    useImperativeHandle(
+      ref,
+      () => ({
+        sendToolListChanged: () => appBridge?.sendToolListChanged(),
+        sendResourceListChanged: () => appBridge?.sendResourceListChanged(),
+        sendPromptListChanged: () => appBridge?.sendPromptListChanged(),
+        teardownResource: () => appBridge?.teardownResource({}),
+      }),
+      [appBridge],
+    );
 
-  // Effect 1: Create and configure AppBridge
-  useEffect(() => {
-    let mounted = true;
-    let currentBridge: AppBridge | null = null;
+    // Effect 1: Create and configure AppBridge
+    useEffect(() => {
+      let mounted = true;
+      let currentBridge: AppBridge | null = null;
 
-    const createBridge = () => {
-      try {
-        const serverCapabilities = client?.getServerCapabilities();
+      const createBridge = () => {
+        try {
+          const serverCapabilities = client?.getServerCapabilities();
 
-        // Use provided hostInfo or defaults
-        const finalHostInfo: Implementation = hostInfo ?? {
-          name: 'MCP-UI Host',
-          version: '1.0.0',
-        };
+          // Use provided hostInfo or defaults
+          const finalHostInfo: Implementation = hostInfo ?? {
+            name: "MCP-UI Host",
+            version: "1.0.0",
+          };
 
-        // Use provided hostCapabilities or build from serverCapabilities
-        const finalHostCapabilities: McpUiHostCapabilities = hostCapabilities ?? {
-          openLinks: {},
-          serverTools: serverCapabilities?.tools,
-          serverResources: serverCapabilities?.resources,
-        };
+          // Use provided hostCapabilities or build from serverCapabilities
+          const finalHostCapabilities: McpUiHostCapabilities =
+            hostCapabilities ?? {
+              openLinks: {},
+              serverTools: serverCapabilities?.tools,
+              serverResources: serverCapabilities?.resources,
+            };
 
-        const bridge = new AppBridge(
-          client ?? null,
-          finalHostInfo,
-          finalHostCapabilities,
-        );
-
-        currentBridge = bridge;
-
-        // Register message handler
-        bridge.onmessage = async (params, extra) => {
-          if (onMessageRef.current) {
-            return onMessageRef.current(params, extra);
-          } else {
-            throw new McpError(ErrorCode.MethodNotFound, 'Method not found');
-          }
-        };
-
-        // Register open-link handler
-        bridge.onopenlink = async (params, extra) => {
-          if (onOpenLinkRef.current) {
-            return onOpenLinkRef.current(params, extra);
-          } else {
-            throw new McpError(ErrorCode.MethodNotFound, 'Method not found');
-          }
-        };
-
-        // Register logging handler
-        bridge.onloggingmessage = (params) => {
-          if (onLoggingMessageRef.current) {
-            onLoggingMessageRef.current(params);
-          }
-        };
-
-        // Register custom MCP request handlers (these override automatic forwarding)
-        if (onCallToolRef.current) {
-          bridge.oncalltool = (params, extra) => onCallToolRef.current!(params, extra);
-        }
-        if (onListResourcesRef.current) {
-          bridge.onlistresources = (params, extra) => onListResourcesRef.current!(params, extra);
-        }
-        if (onListResourceTemplatesRef.current) {
-          bridge.onlistresourcetemplates = (params, extra) =>
-            onListResourceTemplatesRef.current!(params, extra);
-        }
-        if (onReadResourceRef.current) {
-          bridge.onreadresource = (params, extra) => onReadResourceRef.current!(params, extra);
-        }
-        if (onListPromptsRef.current) {
-          bridge.onlistprompts = (params, extra) => onListPromptsRef.current!(params, extra);
-        }
-
-        // Register fallback handler for unregistered JSON-RPC methods
-        // (e.g., experimental events like "x/clipboard/write" or MCP methods
-        // not yet in the Apps spec like "sampling/createMessage")
-        bridge.fallbackRequestHandler = async (request, extra) => {
-          if (onFallbackRequestRef.current) {
-            return onFallbackRequestRef.current(request, extra);
-          }
-          throw new McpError(
-            ErrorCode.MethodNotFound,
-            `No handler for method: ${request.method}`,
+          const bridge = new AppBridge(
+            client ?? null,
+            finalHostInfo,
+            finalHostCapabilities,
           );
-        };
 
-        if (!mounted) return;
-        setAppBridge(bridge);
-      } catch (err) {
-        console.error('[AppRenderer] Error creating bridge:', err);
-        if (!mounted) return;
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error);
-        onErrorRef.current?.(error);
+          currentBridge = bridge;
+
+          // Register message handler
+          bridge.onmessage = async (params, extra) => {
+            if (onMessageRef.current) {
+              return onMessageRef.current(params, extra);
+            } else {
+              throw new McpError(ErrorCode.MethodNotFound, "Method not found");
+            }
+          };
+
+          // Register open-link handler
+          bridge.onopenlink = async (params, extra) => {
+            if (onOpenLinkRef.current) {
+              return onOpenLinkRef.current(params, extra);
+            } else {
+              throw new McpError(ErrorCode.MethodNotFound, "Method not found");
+            }
+          };
+
+          // Register logging handler
+          bridge.onloggingmessage = (params) => {
+            if (onLoggingMessageRef.current) {
+              onLoggingMessageRef.current(params);
+            }
+          };
+
+          // Register custom MCP request handlers (these override automatic forwarding)
+          if (onCallToolRef.current) {
+            bridge.oncalltool = (params, extra) =>
+              onCallToolRef.current!(params, extra);
+          }
+          if (onListResourcesRef.current) {
+            bridge.onlistresources = (params, extra) =>
+              onListResourcesRef.current!(params, extra);
+          }
+          if (onListResourceTemplatesRef.current) {
+            bridge.onlistresourcetemplates = (params, extra) =>
+              onListResourceTemplatesRef.current!(params, extra);
+          }
+          if (onReadResourceRef.current) {
+            bridge.onreadresource = (params, extra) =>
+              onReadResourceRef.current!(params, extra);
+          }
+          if (onListPromptsRef.current) {
+            bridge.onlistprompts = (params, extra) =>
+              onListPromptsRef.current!(params, extra);
+          }
+
+          // Register fallback handler for unregistered JSON-RPC methods
+          // (e.g., experimental events like "x/clipboard/write" or MCP methods
+          // not yet in the Apps spec like "sampling/createMessage")
+          bridge.fallbackRequestHandler = async (request, extra) => {
+            if (onFallbackRequestRef.current) {
+              return onFallbackRequestRef.current(request, extra);
+            }
+            throw new McpError(
+              ErrorCode.MethodNotFound,
+              `No handler for method: ${request.method}`,
+            );
+          };
+
+          if (!mounted) return;
+          setAppBridge(bridge);
+        } catch (err) {
+          console.error("[AppRenderer] Error creating bridge:", err);
+          if (!mounted) return;
+          const error = err instanceof Error ? err : new Error(String(err));
+          setError(error);
+          onErrorRef.current?.(error);
+        }
+      };
+
+      createBridge();
+
+      return () => {
+        mounted = false;
+        // Clean up the bridge connection to prevent message listener accumulation
+        if (currentBridge) {
+          currentBridge.close().catch((err) => {
+            console.error("[AppRenderer] Error closing bridge:", err);
+          });
+        }
+      };
+    }, [client, hostInfo, hostCapabilities]);
+
+    // Effect 2: Fetch HTML if not provided
+    useEffect(() => {
+      if (htmlProp) {
+        setHtml(htmlProp);
+        return;
       }
-    };
 
-    createBridge();
+      // Determine if we can fetch HTML
+      const canFetchWithClient = !!client;
+      const canFetchWithCallback =
+        !!toolResourceUri && !!onReadResourceRef.current;
 
-    return () => {
-      mounted = false;
-      // Clean up the bridge connection to prevent message listener accumulation
-      if (currentBridge) {
-        currentBridge.close().catch((err) => {
-          console.error('[AppRenderer] Error closing bridge:', err);
-        });
+      if (!canFetchWithClient && !canFetchWithCallback) {
+        setError(
+          new Error(
+            "Either 'html' prop, 'client', or ('toolResourceUri' + 'onReadResource') must be provided to fetch UI resource",
+          ),
+        );
+        return;
       }
-    };
-  }, [client, hostInfo, hostCapabilities]);
 
-  // Effect 2: Fetch HTML if not provided
-  useEffect(() => {
-    if (htmlProp) {
-      setHtml(htmlProp);
-      return;
-    }
+      let mounted = true;
 
-    // Determine if we can fetch HTML
-    const canFetchWithClient = !!client;
-    const canFetchWithCallback = !!toolResourceUri && !!onReadResourceRef.current;
-
-    if (!canFetchWithClient && !canFetchWithCallback) {
-      setError(
-        new Error(
-          "Either 'html' prop, 'client', or ('toolResourceUri' + 'onReadResource') must be provided to fetch UI resource",
-        ),
-      );
-      return;
-    }
-
-    let mounted = true;
-
-    const fetchHtml = async () => {
-      try {
-        // Get resource URI
-        let uri: string;
-        if (toolResourceUri) {
-          uri = toolResourceUri;
-          console.log(`[AppRenderer] Using provided resource URI: ${uri}`);
-        } else if (client) {
-          console.log(`[AppRenderer] Fetching resource URI for tool: ${toolName}`);
-          const info = await getToolUiResourceUri(client, toolName);
-          if (!info) {
+      const fetchHtml = async () => {
+        try {
+          // Get resource URI
+          let uri: string;
+          if (toolResourceUri) {
+            uri = toolResourceUri;
+            console.log(`[AppRenderer] Using provided resource URI: ${uri}`);
+          } else if (client) {
+            console.log(
+              `[AppRenderer] Fetching resource URI for tool: ${toolName}`,
+            );
+            const info = await getToolUiResourceUri(client, toolName);
+            if (!info) {
+              throw new Error(
+                `Tool ${toolName} has no UI resource (no ui/resourceUri in tool._meta)`,
+              );
+            }
+            uri = info.uri;
+            console.log(`[AppRenderer] Got resource URI: ${uri}`);
+          } else {
             throw new Error(
-              `Tool ${toolName} has no UI resource (no ui/resourceUri in tool._meta)`,
+              "Cannot determine resource URI without client or toolResourceUri",
             );
           }
-          uri = info.uri;
-          console.log(`[AppRenderer] Got resource URI: ${uri}`);
-        } else {
-          throw new Error('Cannot determine resource URI without client or toolResourceUri');
-        }
 
-        if (!mounted) return;
+          if (!mounted) return;
 
-        // Read HTML content - use client if available, otherwise use onReadResource callback
-        console.log(`[AppRenderer] Reading resource HTML from: ${uri}`);
-        let htmlContent: string;
+          // Read HTML content - use client if available, otherwise use onReadResource callback
+          console.log(`[AppRenderer] Reading resource HTML from: ${uri}`);
+          let htmlContent: string;
 
-        if (client) {
-          htmlContent = await readToolUiResourceHtml(client, { uri });
-        } else if (onReadResourceRef.current) {
-          // Use the onReadResource callback to fetch the HTML
-          const result = await onReadResourceRef.current({ uri }, {} as RequestHandlerExtra);
-          if (!result.contents || result.contents.length !== 1) {
-            throw new Error('Unsupported UI resource content length: ' + result.contents?.length);
-          }
-          const content = result.contents[0];
-          const isHtml = (t?: string) => t === RESOURCE_MIME_TYPE;
+          if (client) {
+            htmlContent = await readToolUiResourceHtml(client, { uri });
+          } else if (onReadResourceRef.current) {
+            // Use the onReadResource callback to fetch the HTML
+            const result = await onReadResourceRef.current(
+              { uri },
+              {} as RequestHandlerExtra,
+            );
+            if (!result.contents || result.contents.length !== 1) {
+              throw new Error(
+                "Unsupported UI resource content length: " +
+                  result.contents?.length,
+              );
+            }
+            const content = result.contents[0];
+            const isHtml = (t?: string) => t === RESOURCE_MIME_TYPE;
 
-          if ('text' in content && typeof content.text === 'string' && isHtml(content.mimeType)) {
-            htmlContent = content.text;
-          } else if (
-            'blob' in content &&
-            typeof content.blob === 'string' &&
-            isHtml(content.mimeType)
-          ) {
-            htmlContent = atob(content.blob);
+            if (
+              "text" in content &&
+              typeof content.text === "string" &&
+              isHtml(content.mimeType)
+            ) {
+              htmlContent = content.text;
+            } else if (
+              "blob" in content &&
+              typeof content.blob === "string" &&
+              isHtml(content.mimeType)
+            ) {
+              htmlContent = atob(content.blob);
+            } else {
+              throw new Error(
+                "Unsupported UI resource content format: " +
+                  JSON.stringify(content),
+              );
+            }
           } else {
-            throw new Error('Unsupported UI resource content format: ' + JSON.stringify(content));
+            throw new Error("No way to read resource HTML");
           }
-        } else {
-          throw new Error('No way to read resource HTML');
+
+          if (!mounted) return;
+
+          setHtml(htmlContent);
+        } catch (err) {
+          if (!mounted) return;
+          const error = err instanceof Error ? err : new Error(String(err));
+          setError(error);
+          onErrorRef.current?.(error);
         }
+      };
 
-        if (!mounted) return;
+      fetchHtml();
 
-        setHtml(htmlContent);
-      } catch (err) {
-        if (!mounted) return;
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error);
-        onErrorRef.current?.(error);
+      return () => {
+        mounted = false;
+      };
+    }, [client, toolName, toolResourceUri, htmlProp]);
+
+    // Effect 3: Sync host context when it changes
+    useEffect(() => {
+      if (appBridge && hostContext) {
+        appBridge.setHostContext(hostContext);
       }
-    };
+    }, [appBridge, hostContext]);
 
-    fetchHtml();
+    // Effect 4: Send partial tool input when it changes
+    useEffect(() => {
+      if (appBridge && toolInputPartial) {
+        appBridge.sendToolInputPartial(toolInputPartial);
+      }
+    }, [appBridge, toolInputPartial]);
 
-    return () => {
-      mounted = false;
-    };
-  }, [client, toolName, toolResourceUri, htmlProp]);
+    // Effect 5: Send tool cancelled notification when flag is set
+    useEffect(() => {
+      if (appBridge && toolCancelled) {
+        appBridge.sendToolCancelled({});
+      }
+    }, [appBridge, toolCancelled]);
 
-  // Effect 3: Sync host context when it changes
-  useEffect(() => {
-    if (appBridge && hostContext) {
-      appBridge.setHostContext(hostContext);
+    // Handle size change callback
+    const handleSizeChanged = onSizeChangedRef.current;
+
+    // Render error state
+    if (error) {
+      return (
+        <div style={{ color: "red", padding: "1rem" }}>
+          Error: {error.message}
+        </div>
+      );
     }
-  }, [appBridge, hostContext]);
 
-  // Effect 4: Send partial tool input when it changes
-  useEffect(() => {
-    if (appBridge && toolInputPartial) {
-      appBridge.sendToolInputPartial(toolInputPartial);
+    // Render loading state
+    if (!appBridge || !html) {
+      return null;
     }
-  }, [appBridge, toolInputPartial]);
 
-  // Effect 5: Send tool cancelled notification when flag is set
-  useEffect(() => {
-    if (appBridge && toolCancelled) {
-      appBridge.sendToolCancelled({});
-    }
-  }, [appBridge, toolCancelled]);
+    // Render AppFrame with the fetched HTML and configured bridge
+    return (
+      <AppFrame
+        html={html}
+        sandbox={sandbox}
+        appBridge={appBridge}
+        toolInput={toolInput}
+        toolResult={toolResult}
+        onSizeChanged={handleSizeChanged}
+        onError={onError}
+      />
+    );
+  },
+);
 
-  // Handle size change callback
-  const handleSizeChanged = onSizeChangedRef.current;
-
-  // Render error state
-  if (error) {
-    return <div style={{ color: 'red', padding: '1rem' }}>Error: {error.message}</div>;
-  }
-
-  // Render loading state
-  if (!appBridge || !html) {
-    return null;
-  }
-
-  // Render AppFrame with the fetched HTML and configured bridge
-  return (
-    <AppFrame
-      html={html}
-      sandbox={sandbox}
-      appBridge={appBridge}
-      toolInput={toolInput}
-      toolResult={toolResult}
-      onSizeChanged={handleSizeChanged}
-      onError={onError}
-    />
-  );
-});
-
-AppRenderer.displayName = 'AppRenderer';
+AppRenderer.displayName = "AppRenderer";

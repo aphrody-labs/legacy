@@ -11,7 +11,7 @@ mode=${1:-check}; shift || true
 here=$(cd "$(dirname "$0")" && pwd)
 aliases=$*
 [ -n "$aliases" ] || aliases=$(awk '/^\[host\./{gsub(/[\[\]]|host\./,""); print}' "$here/../cluster.toml")
-. "$here/../../../packages/env-kit/loaders/shell/site.sh"
+. "$here/../../../system/env-kit/loaders/shell/site.sh"
 FLEET_MESH_FROM=${FLEET_MESH_FROM:-$(site_get network.mesh_cidr)}
 : "${FLEET_MESH_FROM:?no mesh subnet discovered (is fr1 reachable over ssh?)}"
 declare -A pub

@@ -30,6 +30,7 @@ tauri-plugin-opener = "2.0.0"
 # alternatively with Git:
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Open files and URLs using their default application.
 
 | Type | Path |
@@ -44,6 +45,7 @@ bun run --cwd frameworks/plugin-opener build
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 tauri-plugin-opener = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```

@@ -30,6 +30,7 @@ tauri-plugin-websocket = "2.0.0"
 # alternatively with Git:
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Expose a WebSocket server to your Tauri frontend.
 
 | Type | Path |
@@ -45,6 +46,7 @@ cargo test -p aphrody-tauri-plugin-websocket
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 tauri-plugin-websocket = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```

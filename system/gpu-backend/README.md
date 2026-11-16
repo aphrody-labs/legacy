@@ -1,6 +1,7 @@
 # aphrody-gpu-backend
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Shared wgpu instance, adapter, device and surface-configuration boundary for Aphrody and IECODE renderers, plus the process-wide GPU hub (wgpu + CUDA).
 
 | Type | Path |
@@ -16,4 +17,5 @@ cargo test -p aphrody-gpu-backend
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

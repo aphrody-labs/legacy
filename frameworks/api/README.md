@@ -1,6 +1,7 @@
 # @aphrody/api
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Tauri API definitions
 
 | Type | Path |
@@ -15,6 +16,7 @@ bun run --cwd frameworks/api build
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
  <img align="right" src="https://github.com/tauri-apps/tauri/raw/dev/.github/icon.png" height="128" width="128">

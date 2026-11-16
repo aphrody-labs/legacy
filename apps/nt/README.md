@@ -1,11 +1,13 @@
 # nt
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 | Type | Path |
 | :-- | :-- |
 | App | `apps/nt` |
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Model of the **real** Windows NT of this machine, live and rendered entirely by the GPU, on the Microsoft stack.

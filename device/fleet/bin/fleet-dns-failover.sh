@@ -11,7 +11,7 @@
 #   2. IP: FLEET_DNS_FALLBACK hosts serving the name on 443 with a valid certificate (strict TLS checked first).
 # Records without a valid standby stay on fr2 and are alerted. Token: CF_API_TOKEN of /etc/aphrody/secrets.env
 # (fleet-<host>-dns: Zone Read + DNS Write on aphrody.com and aphrody.app). State: /var/lib/fleet-health/dns-failover.state.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -uo pipefail
 [ -f /etc/fleet/resilience.conf ] && . /etc/fleet/resilience.conf
 [ -f /etc/fleet/health.env ] && . /etc/fleet/health.env

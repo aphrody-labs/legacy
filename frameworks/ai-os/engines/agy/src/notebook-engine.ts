@@ -151,7 +151,10 @@ export function generateDeepMindResearchNotebook(params: {
 
   const notebookPath = join(outDir, `${slug}.ipynb`);
   const markdownExportPath = join(outDir, `${slug}.md`);
-  writeFileSafeUserspace(notebookPath, `${JSON.stringify(notebook, null, 2)}\n`);
+  writeFileSafeUserspace(
+    notebookPath,
+    `${JSON.stringify(notebook, null, 2)}\n`,
+  );
 
   const mdExport = cells
     .map((c) =>

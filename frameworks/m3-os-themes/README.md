@@ -3,6 +3,7 @@
 # @aphrody/m3-os-themes
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Material 3 OS theme generators and installers (Windows 11, GNOME Shell, COSMIC, Chromium browsers) derived from @aphrody/m3-tokens dynamic colour roles.
 
 | Type | Path |
@@ -19,6 +20,7 @@ bun run --cwd frameworks/m3-os-themes lint
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Generates and installs Material 3 OS themes (Windows 11, GNOME Shell, COSMIC, Chromium browsers) from a seed colour, with the colour roles of `@aphrody/m3-tokens/dynamic-color`.

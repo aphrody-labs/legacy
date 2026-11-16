@@ -32,6 +32,7 @@ tauri-plugin-positioner = "2.0.0"
 # alternatively with Git:
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Position your windows at well-known locations.
 
 | Type | Path |
@@ -47,6 +48,7 @@ cargo test -p aphrody-tauri-plugin-positioner
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 tauri-plugin-positioner = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```

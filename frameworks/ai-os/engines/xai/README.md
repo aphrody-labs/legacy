@@ -1,10 +1,11 @@
 # @aphrody/xai
 
 <!-- catalog:begin unit -->
+
 > Headless xAI Grok API client for Bun — high-level fluent Chat API (createChat/append/sample/stream/executeToolCalls/sampleStructured, reasoning, structured, XTools for native X tool fulfillment) + SUPER_GROK_TOKEN keyless + OIDC. OpenAI-compatible REST, deep native integration with @aphrody/x.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                           |
+| :---------- | :----------------------------- |
 | Bun package | `frameworks/ai-os/engines/xai` |
 
 **Commands**
@@ -96,7 +97,10 @@ depend on the Actor runtime.
 ```ts
 import { runGrokXResearch } from "@aphrody/xai";
 
-const result = await runGrokXResearch({ query: "Aphrody release news", maxToolRounds: 4 });
+const result = await runGrokXResearch({
+  query: "Aphrody release news",
+  maxToolRounds: 4,
+});
 // { answer, toolRounds, toolCalls, stopReason: "completed" | "round_limit" }
 ```
 
@@ -106,12 +110,14 @@ the round limit is reached. For tests or an existing session, pass `{ client, xT
 as the second argument.
 
 Analyse of our stack:
+
 - `@aphrody/x`: native cookie-auth X/Twitter client maintained in the sibling Aphrody OS checkout and consumed here as a published package.
 - `frameworks/ai-os/engines/xai`: this package, now with high-level fluent Chat (create/append/sample/stream) + low-level OpenAI compat, using the same keyless SuperGrok token.
 
 Use them together for agentic Grok: let Grok decide to call an `x_search` tool, then fulfill it with the native `XClient` from `@aphrody/x` (no extra keys, fully local/native).
 
 Example tool handler (user code):
+
 ```ts
 import { XClient } from "@aphrody/x";
 const x = new XClient(session);
@@ -122,16 +128,30 @@ if (tool.name === "x_search") {
 ```
 
 Using built-in XTools (recommended):
+
 ```ts
-import { XaiClient, XTools, xSearchToolDef, xWhoamiToolDef, xTweetsToolDef, xNewsToolDef } from "@aphrody/xai";
+import {
+  XaiClient,
+  XTools,
+  xSearchToolDef,
+  xWhoamiToolDef,
+  xTweetsToolDef,
+  xNewsToolDef,
+} from "@aphrody/xai";
 const grok = new XaiClient();
 const xTools = new XTools(); // reuses our native system/x (cookie, store, stealth)
 
-const chat = grok.createChat("grok-3", { tools: [xSearchToolDef, xWhoamiToolDef, xTweetsToolDef, xNewsToolDef] });
+const chat = grok.createChat("grok-3", {
+  tools: [xSearchToolDef, xWhoamiToolDef, xTweetsToolDef, xNewsToolDef],
+});
 // after Grok returns a tool_call e.g. for x_tweets or x_news:
 const toolRes = await xTools.tweets({ handle: "aphrody", count: 5 });
 // or await xTools.news({count:3}); await xTools.whoami();
-chat.append({ role: "tool", tool_call_id: toolCall.id, content: JSON.stringify(toolRes) });
+chat.append({
+  role: "tool",
+  tool_call_id: toolCall.id,
+  content: JSON.stringify(toolRes),
+});
 const final = await chat.sample();
 ```
 
@@ -155,6 +175,7 @@ Corresponding tool defs (`xSearchToolDef`, etc.) and the `xNativeTools` array ar
 `XTools` and the tool definitions are owned by `@aphrody/x` in aphrody-web (`system/x/src/tools/function-tools.ts`, which also provides `XTools.execute(name, args)` and `isXToolName`); this package re-exports them. The dependency points one way: the AI layer consumes the web layer.
 
 Simple agent loop with native X tools:
+
 ```ts
 const grok = new XaiClient();
 const xTools = new XTools();

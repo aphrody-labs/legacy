@@ -175,8 +175,14 @@ export const verifyEvents =
           bucket.set(msg.id, { subagentRunId: msg.subagentRunId });
         }
         for (const tc of msg.toolCalls ?? []) {
-          if (tc && typeof tc.id === "string" && (authoritative || !owners.toolCall.has(tc.id))) {
-            owners.toolCall.set(tc.id, { subagentRunId: msg.subagentRunId ?? undefined });
+          if (
+            tc &&
+            typeof tc.id === "string" &&
+            (authoritative || !owners.toolCall.has(tc.id))
+          ) {
+            owners.toolCall.set(tc.id, {
+              subagentRunId: msg.subagentRunId ?? undefined,
+            });
           }
         }
       }
@@ -248,8 +254,13 @@ export const verifyEvents =
         // Handle first event requirement and sequential RUN_STARTED
         if (!firstEventReceived) {
           firstEventReceived = true;
-          if (eventType !== EventType.RUN_STARTED && eventType !== EventType.RUN_ERROR) {
-            return throwError(() => new AGUIError(`First event must be 'RUN_STARTED'`));
+          if (
+            eventType !== EventType.RUN_STARTED &&
+            eventType !== EventType.RUN_ERROR
+          ) {
+            return throwError(
+              () => new AGUIError(`First event must be 'RUN_STARTED'`),
+            );
           }
         } else if (eventType === EventType.RUN_STARTED) {
           // Allow RUN_STARTED after RUN_FINISHED or RUN_ERROR (new run), but not during an active run
@@ -291,7 +302,12 @@ export const verifyEvents =
         ) {
           const lifecycleOptionals: ReadonlyArray<string> =
             eventType === EventType.SUBAGENT_STARTED
-              ? ["description", "parentSubagentRunId", "parentToolCallId", "parentMessageId"]
+              ? [
+                  "description",
+                  "parentSubagentRunId",
+                  "parentToolCallId",
+                  "parentMessageId",
+                ]
               : eventType === EventType.SUBAGENT_FINISHED
                 ? ["outcome"]
                 : ["code"];
@@ -308,9 +324,11 @@ export const verifyEvents =
           // One level deeper: the outcome's discriminant is schema-required — the
           // union only has two members, so anything else (including null) is the
           // same in-process bypass as the field-level nulls above.
-          const finishedOutcome = (event as {
-            outcome?: { type?: unknown; interruptIds?: unknown } | null;
-          }).outcome;
+          const finishedOutcome = (
+            event as {
+              outcome?: { type?: unknown; interruptIds?: unknown } | null;
+            }
+          ).outcome;
           // Only undefined is absent; every PRESENT value must be a valid outcome
           // (`finishedOutcome &&` let "" / false / 0 through — null is rejected by
           // the field-level check above, kept out of this condition so the two
@@ -339,7 +357,9 @@ export const verifyEvents =
           if (
             finishedOutcome &&
             Array.isArray(finishedOutcome.interruptIds) &&
-            (finishedOutcome.interruptIds as unknown[]).some((id) => typeof id !== "string")
+            (finishedOutcome.interruptIds as unknown[]).some(
+              (id) => typeof id !== "string",
+            )
           ) {
             return throwError(
               () =>
@@ -353,10 +373,18 @@ export const verifyEvents =
           // Interrupt attribution is per interrupt inside the outcome; the same
           // no-null rule applies there (the reducer copies these into
           // agent.pendingInterrupts verbatim).
-          const outcome = (event as {
-            outcome?: { type?: string; interrupts?: Array<{ id?: string; subagentRunId?: unknown }> } | null;
-          }).outcome;
-          if (outcome?.type === "interrupt" && Array.isArray(outcome.interrupts)) {
+          const outcome = (
+            event as {
+              outcome?: {
+                type?: string;
+                interrupts?: Array<{ id?: string; subagentRunId?: unknown }>;
+              } | null;
+            }
+          ).outcome;
+          if (
+            outcome?.type === "interrupt" &&
+            Array.isArray(outcome.interrupts)
+          ) {
             for (const interrupt of outcome.interrupts) {
               if (interrupt && interrupt.subagentRunId === null) {
                 return throwError(
@@ -374,7 +402,7 @@ export const verifyEvents =
         switch (eventType) {
           // Text message flow
           case EventType.TEXT_MESSAGE_START: {
-            const messageId = (event.messageId as string);
+            const messageId = event.messageId as string;
 
             // Check if this message is already in progress
             if (activeMessages.has(messageId)) {
@@ -395,7 +423,11 @@ export const verifyEvents =
             const existingMessageOwner = owners.message.get(messageId);
             if (existingMessageOwner) {
               const subErr = subagentTagError(
-                eventType, (event.subagentRunId as string | undefined), existingMessageOwner, "message", messageId,
+                eventType,
+                event.subagentRunId as string | undefined,
+                existingMessageOwner,
+                "message",
+                messageId,
               );
               if (subErr) return throwError(() => subErr);
             }
@@ -404,13 +436,15 @@ export const verifyEvents =
             // (an absent tag never disagrees), but it must not overwrite an s1 record
             // with `undefined` and hand the message to the parent.
             if (!existingMessageOwner) {
-              owners.message.set(messageId, { subagentRunId: (event.subagentRunId as string | undefined) });
+              owners.message.set(messageId, {
+                subagentRunId: event.subagentRunId as string | undefined,
+              });
             }
             return of(event);
           }
 
           case EventType.TEXT_MESSAGE_CONTENT: {
-            const messageId = (event.messageId as string);
+            const messageId = event.messageId as string;
 
             // Must be in a message with this ID
             if (!activeMessages.has(messageId)) {
@@ -423,14 +457,18 @@ export const verifyEvents =
             }
 
             const subErr = subagentTagError(
-              eventType, (event.subagentRunId as string | undefined), owners.message.get(messageId), "message", messageId,
+              eventType,
+              event.subagentRunId as string | undefined,
+              owners.message.get(messageId),
+              "message",
+              messageId,
             );
             if (subErr) return throwError(() => subErr);
             return of(event);
           }
 
           case EventType.TEXT_MESSAGE_END: {
-            const messageId = (event.messageId as string);
+            const messageId = event.messageId as string;
 
             // Must be in a message with this ID
             if (!activeMessages.has(messageId)) {
@@ -443,7 +481,11 @@ export const verifyEvents =
             }
 
             const subErr = subagentTagError(
-              eventType, (event.subagentRunId as string | undefined), owners.message.get(messageId), "message", messageId,
+              eventType,
+              event.subagentRunId as string | undefined,
+              owners.message.get(messageId),
+              "message",
+              messageId,
             );
             if (subErr) return throwError(() => subErr);
             // Remove message from active set
@@ -453,7 +495,7 @@ export const verifyEvents =
 
           // Tool call flow
           case EventType.TOOL_CALL_START: {
-            const toolCallId = (event.toolCallId as string);
+            const toolCallId = event.toolCallId as string;
 
             // Check if this tool call is already in progress
             if (activeToolCalls.has(toolCallId)) {
@@ -473,13 +515,16 @@ export const verifyEvents =
             // reattributed. An untagged call inherits the parent message's owner (the
             // continuation rule: absent means "whoever owns the surrounding entity"),
             // which is also what the reducer effectively does.
-            const parentMessageId = (event.parentMessageId as string | undefined);
-            const eventTag = (event.subagentRunId as string | undefined);
+            const parentMessageId = event.parentMessageId as string | undefined;
+            const eventTag = event.subagentRunId as string | undefined;
             let inheritedOwner: { subagentRunId?: string } | undefined;
             if (parentMessageId !== undefined) {
               const parentOwner = owners.message.get(parentMessageId);
               if (parentOwner) {
-                if (eventTag !== undefined && eventTag !== parentOwner.subagentRunId) {
+                if (
+                  eventTag !== undefined &&
+                  eventTag !== parentOwner.subagentRunId
+                ) {
                   return throwError(
                     () =>
                       new AGUIError(
@@ -497,7 +542,11 @@ export const verifyEvents =
             const existingToolCallOwner = owners.toolCall.get(toolCallId);
             if (existingToolCallOwner) {
               const subErr = subagentTagError(
-                eventType, eventTag, existingToolCallOwner, "tool call", toolCallId,
+                eventType,
+                eventTag,
+                existingToolCallOwner,
+                "tool call",
+                toolCallId,
               );
               if (subErr) return throwError(() => subErr);
               // An untagged reopen's EFFECTIVE owner is the one it inherits from
@@ -508,7 +557,8 @@ export const verifyEvents =
               if (
                 eventTag === undefined &&
                 inheritedOwner &&
-                inheritedOwner.subagentRunId !== existingToolCallOwner.subagentRunId
+                inheritedOwner.subagentRunId !==
+                  existingToolCallOwner.subagentRunId
               ) {
                 return throwError(
                   () =>
@@ -524,14 +574,14 @@ export const verifyEvents =
                 toolCallId,
                 eventTag !== undefined
                   ? { subagentRunId: eventTag }
-                  : inheritedOwner ?? { subagentRunId: undefined },
+                  : (inheritedOwner ?? { subagentRunId: undefined }),
               );
             }
             return of(event);
           }
 
           case EventType.TOOL_CALL_ARGS: {
-            const toolCallId = (event.toolCallId as string);
+            const toolCallId = event.toolCallId as string;
 
             // Must be in a tool call with this ID
             if (!activeToolCalls.has(toolCallId)) {
@@ -544,14 +594,18 @@ export const verifyEvents =
             }
 
             const subErr = subagentTagError(
-              eventType, (event.subagentRunId as string | undefined), owners.toolCall.get(toolCallId), "tool call", toolCallId,
+              eventType,
+              event.subagentRunId as string | undefined,
+              owners.toolCall.get(toolCallId),
+              "tool call",
+              toolCallId,
             );
             if (subErr) return throwError(() => subErr);
             return of(event);
           }
 
           case EventType.TOOL_CALL_END: {
-            const toolCallId = (event.toolCallId as string);
+            const toolCallId = event.toolCallId as string;
 
             // Must be in a tool call with this ID
             if (!activeToolCalls.has(toolCallId)) {
@@ -564,7 +618,11 @@ export const verifyEvents =
             }
 
             const subErr = subagentTagError(
-              eventType, (event.subagentRunId as string | undefined), owners.toolCall.get(toolCallId), "tool call", toolCallId,
+              eventType,
+              event.subagentRunId as string | undefined,
+              owners.toolCall.get(toolCallId),
+              "tool call",
+              toolCallId,
             );
             if (subErr) return throwError(() => subErr);
             // Remove tool call from active set
@@ -574,14 +632,16 @@ export const verifyEvents =
 
           // Step flow
           case EventType.STEP_STARTED: {
-            const stepName = (event.stepName as string);
-            const stepOwner = (event.subagentRunId as string | undefined);
+            const stepName = event.stepName as string;
+            const stepOwner = event.subagentRunId as string | undefined;
             if (stepsFor(stepOwner).has(stepName)) {
               return throwError(
                 () =>
                   new AGUIError(
                     `Step "${stepName}" is already active for 'STEP_STARTED'${
-                      stepOwner !== undefined ? ` in subagent '${stepOwner}'` : ""
+                      stepOwner !== undefined
+                        ? ` in subagent '${stepOwner}'`
+                        : ""
                     }`,
                   ),
               );
@@ -591,8 +651,8 @@ export const verifyEvents =
           }
 
           case EventType.STEP_FINISHED: {
-            const stepName = (event.stepName as string);
-            const stepOwner = (event.subagentRunId as string | undefined);
+            const stepName = event.stepName as string;
+            const stepOwner = event.subagentRunId as string | undefined;
             if (!stepsFor(stepOwner).has(stepName)) {
               // A step with this name IS open, but under a different owner. Reported
               // separately because it is a distinct and much more likely mistake than a
@@ -617,9 +677,13 @@ export const verifyEvents =
                   () =>
                     new AGUIError(
                       `Cannot send 'STEP_FINISHED' for step "${stepName}" attributed to ${
-                        stepOwner !== undefined ? `subagent '${stepOwner}'` : "the parent agent"
+                        stepOwner !== undefined
+                          ? `subagent '${stepOwner}'`
+                          : "the parent agent"
                       }: that step is open under ${
-                        otherOwner !== undefined ? `subagent '${otherOwner}'` : "the parent agent"
+                        otherOwner !== undefined
+                          ? `subagent '${otherOwner}'`
+                          : "the parent agent"
                       }. A step must be finished by whoever started it.`,
                     ),
                 );
@@ -654,7 +718,7 @@ export const verifyEvents =
           // the two silently patches an activity attributed to someone else —
           // the same defect the text-message and tool-call checks prevent.
           case EventType.ACTIVITY_SNAPSHOT: {
-            const messageId = (event.messageId as string);
+            const messageId = event.messageId as string;
             // Only a REPLACING snapshot re-mints the activity and so re-owns it. With
             // replace:false the reducer leaves the existing message alone, so overwriting
             // the tracked owner here would let a following ACTIVITY_DELTA under the new
@@ -666,7 +730,9 @@ export const verifyEvents =
             // message the reducer still attributes to the original owner.
             const isNew = !owners.activity.has(messageId);
             if (isNew || (event.replace as boolean | undefined) !== false) {
-              owners.activity.set(messageId, { subagentRunId: (event.subagentRunId as string | undefined) });
+              owners.activity.set(messageId, {
+                subagentRunId: event.subagentRunId as string | undefined,
+              });
             }
             return of(event);
           }
@@ -679,18 +745,22 @@ export const verifyEvents =
             // carries its own attribution (the executor can differ from the caller),
             // and an untagged result mints a parent-owned message, so the newest mint
             // wins rather than the first writer.
-            const resultMessageId = (event.messageId as string | undefined);
+            const resultMessageId = event.messageId as string | undefined;
             if (typeof resultMessageId === "string") {
-              owners.message.set(resultMessageId, { subagentRunId: (event.subagentRunId as string | undefined) });
+              owners.message.set(resultMessageId, {
+                subagentRunId: event.subagentRunId as string | undefined,
+              });
             }
             return of(event);
           }
 
           case EventType.REASONING_START:
           case EventType.REASONING_MESSAGE_START: {
-            const messageId = (event.messageId as string);
+            const messageId = event.messageId as string;
             const isSpan = eventType === EventType.REASONING_START;
-            const open = isSpan ? activeReasoningSpans : activeReasoningMessages;
+            const open = isSpan
+              ? activeReasoningSpans
+              : activeReasoningMessages;
 
             // "A producer MUST NOT open a span whose messageId is already open", and
             // the streaming pattern says the same of a message. Checked against the
@@ -717,7 +787,11 @@ export const verifyEvents =
             const existingReasoningOwner = owners.reasoning.get(messageId);
             if (existingReasoningOwner) {
               const subErr = subagentTagError(
-                eventType, (event.subagentRunId as string | undefined), existingReasoningOwner, "reasoning message", messageId,
+                eventType,
+                event.subagentRunId as string | undefined,
+                existingReasoningOwner,
+                "reasoning message",
+                messageId,
               );
               if (subErr) return throwError(() => subErr);
             }
@@ -726,7 +800,9 @@ export const verifyEvents =
             // so an untagged reopen after REASONING_END does not hand the reasoning back
             // to the parent either.
             if (!existingReasoningOwner) {
-              owners.reasoning.set(messageId, { subagentRunId: (event.subagentRunId as string | undefined) });
+              owners.reasoning.set(messageId, {
+                subagentRunId: event.subagentRunId as string | undefined,
+              });
             }
             return of(event);
           }
@@ -734,9 +810,11 @@ export const verifyEvents =
           case EventType.REASONING_MESSAGE_CONTENT:
           case EventType.REASONING_MESSAGE_END:
           case EventType.REASONING_END: {
-            const messageId = (event.messageId as string);
+            const messageId = event.messageId as string;
             const isSpan = eventType === EventType.REASONING_END;
-            const open = isSpan ? activeReasoningSpans : activeReasoningMessages;
+            const open = isSpan
+              ? activeReasoningSpans
+              : activeReasoningMessages;
 
             // A continuation must name something that is open, exactly as for text
             // messages and tool calls. Without this the reducer was left to invent a
@@ -754,7 +832,7 @@ export const verifyEvents =
 
             const subErr = subagentTagError(
               eventType,
-              (event.subagentRunId as string | undefined),
+              event.subagentRunId as string | undefined,
               owners.reasoning.get(messageId),
               "reasoning message",
               messageId,
@@ -764,7 +842,10 @@ export const verifyEvents =
             // the OPEN flag — `owners.reasoning` is retained for the rest of the run,
             // so a later REASONING_ENCRYPTED_VALUE naming this id still has an owner to
             // check, and an untagged reopen cannot hand the id back to the parent.
-            if (eventType === EventType.REASONING_END || eventType === EventType.REASONING_MESSAGE_END) {
+            if (
+              eventType === EventType.REASONING_END ||
+              eventType === EventType.REASONING_MESSAGE_END
+            ) {
               open.delete(messageId);
             }
             return of(event);
@@ -774,8 +855,8 @@ export const verifyEvents =
             // Continues an entity by entityId, and `subtype` says which kind: a
             // "tool-call" encrypted value belongs to a TOOL CALL, so looking only among
             // reasoning owners found none and accepted s2's value against s1's call.
-            const entityId = (event.entityId as string);
-            const subtype = (event.subtype as string | undefined);
+            const entityId = event.entityId as string;
+            const subtype = event.subtype as string | undefined;
             // The "message" subtype spans BOTH message kinds: a text message opened by
             // TEXT_MESSAGE_START and a reasoning message opened by
             // REASONING_MESSAGE_START. Reading only `owners.message` covered the first and
@@ -787,17 +868,22 @@ export const verifyEvents =
               subtype === "tool-call"
                 ? owners.toolCall.get(entityId)
                 : subtype === "message"
-                  ? (owners.message.get(entityId) ?? owners.reasoning.get(entityId))
-                  // Fallback only. The schema defines exactly "tool-call" and "message",
-                  // so this branch is unreachable for a schema-valid event; it treats an
-                  // unknown subtype as a plain reasoning continuation rather than skipping
-                  // the check.
-                  : owners.reasoning.get(entityId);
+                  ? (owners.message.get(entityId) ??
+                    owners.reasoning.get(entityId))
+                  : // Fallback only. The schema defines exactly "tool-call" and "message",
+                    // so this branch is unreachable for a schema-valid event; it treats an
+                    // unknown subtype as a plain reasoning continuation rather than skipping
+                    // the check.
+                    owners.reasoning.get(entityId);
             const kindLabel =
-              subtype === "tool-call" ? "tool call" : subtype === "message" ? "message" : "reasoning message";
+              subtype === "tool-call"
+                ? "tool call"
+                : subtype === "message"
+                  ? "message"
+                  : "reasoning message";
             const subErr = subagentTagError(
               eventType,
-              (event.subagentRunId as string | undefined),
+              event.subagentRunId as string | undefined,
               owner,
               kindLabel,
               entityId,
@@ -807,10 +893,10 @@ export const verifyEvents =
           }
 
           case EventType.ACTIVITY_DELTA: {
-            const messageId = (event.messageId as string);
+            const messageId = event.messageId as string;
             const subErr = subagentTagError(
               eventType,
-              (event.subagentRunId as string | undefined),
+              event.subagentRunId as string | undefined,
               owners.activity.get(messageId),
               "activity",
               messageId,
@@ -832,16 +918,23 @@ export const verifyEvents =
             // opaque id everywhere else in this verifier.
             if (typeof event.subagentRunId !== "string") {
               return throwError(
-                () => new AGUIError(`Cannot send 'SUBAGENT_STARTED' without a 'subagentRunId'.`),
+                () =>
+                  new AGUIError(
+                    `Cannot send 'SUBAGENT_STARTED' without a 'subagentRunId'.`,
+                  ),
               );
             }
             if (typeof (event as { name?: unknown }).name !== "string") {
               return throwError(
-                () => new AGUIError(`Cannot send 'SUBAGENT_STARTED' without a 'name'.`),
+                () =>
+                  new AGUIError(
+                    `Cannot send 'SUBAGENT_STARTED' without a 'name'.`,
+                  ),
               );
             }
-            const subagentRunId = (event.subagentRunId as string);
-            const parentSubagentRunId = (event.parentSubagentRunId as string | undefined);
+            const subagentRunId = event.subagentRunId as string;
+            const parentSubagentRunId = event.parentSubagentRunId as
+              string | undefined;
             if (activeSubagents.has(subagentRunId)) {
               return throwError(
                 () =>
@@ -882,7 +975,10 @@ export const verifyEvents =
             // Required here too, for the same reason as SUBAGENT_STARTED above.
             if (typeof event.subagentRunId !== "string") {
               return throwError(
-                () => new AGUIError(`Cannot send '${eventType}' without a 'subagentRunId'.`),
+                () =>
+                  new AGUIError(
+                    `Cannot send '${eventType}' without a 'subagentRunId'.`,
+                  ),
               );
             }
             if (
@@ -890,10 +986,13 @@ export const verifyEvents =
               typeof (event as { message?: unknown }).message !== "string"
             ) {
               return throwError(
-                () => new AGUIError(`Cannot send 'SUBAGENT_ERROR' without a 'message'.`),
+                () =>
+                  new AGUIError(
+                    `Cannot send 'SUBAGENT_ERROR' without a 'message'.`,
+                  ),
               );
             }
-            const subagentRunId = (event.subagentRunId as string);
+            const subagentRunId = event.subagentRunId as string;
             if (!activeSubagents.has(subagentRunId)) {
               return throwError(
                 () =>
@@ -912,7 +1011,10 @@ export const verifyEvents =
             // replaces each message, so its owners replace recorded ones. See
             // seedOwnersFromMessages.
             {
-              const seedErr = seedOwnersFromMessages((event as { messages?: unknown }).messages, true);
+              const seedErr = seedOwnersFromMessages(
+                (event as { messages?: unknown }).messages,
+                true,
+              );
               if (seedErr) return throwError(() => seedErr);
             }
             return of(event);
@@ -927,7 +1029,8 @@ export const verifyEvents =
             // history, not a rewrite). See seedOwnersFromMessages.
             {
               const seedErr = seedOwnersFromMessages(
-                ((event as { input?: { messages?: unknown } }).input ?? {}).messages,
+                ((event as { input?: { messages?: unknown } }).input ?? {})
+                  .messages,
                 false,
               );
               if (seedErr) return throwError(() => seedErr);
@@ -944,7 +1047,11 @@ export const verifyEvents =
               const parts: string[] = [];
               for (const [owner, names] of activeSteps) {
                 for (const name of names.keys()) {
-                  parts.push(owner !== undefined ? `${name} (subagent '${owner}')` : name);
+                  parts.push(
+                    owner !== undefined
+                      ? `${name} (subagent '${owner}')`
+                      : name,
+                  );
                 }
               }
               const unfinishedSteps = parts.join(", ");
@@ -958,7 +1065,9 @@ export const verifyEvents =
 
             // Check that all messages are finished before run ends
             if (activeMessages.size > 0) {
-              const unfinishedMessages = Array.from(activeMessages.keys()).join(", ");
+              const unfinishedMessages = Array.from(activeMessages.keys()).join(
+                ", ",
+              );
               return throwError(
                 () =>
                   new AGUIError(
@@ -969,7 +1078,9 @@ export const verifyEvents =
 
             // Check that all reasoning messages and spans are finished before run ends
             if (activeReasoningMessages.size > 0) {
-              const unfinished = Array.from(activeReasoningMessages.keys()).join(", ");
+              const unfinished = Array.from(
+                activeReasoningMessages.keys(),
+              ).join(", ");
               return throwError(
                 () =>
                   new AGUIError(
@@ -979,7 +1090,9 @@ export const verifyEvents =
             }
 
             if (activeReasoningSpans.size > 0) {
-              const unfinished = Array.from(activeReasoningSpans.keys()).join(", ");
+              const unfinished = Array.from(activeReasoningSpans.keys()).join(
+                ", ",
+              );
               return throwError(
                 () =>
                   new AGUIError(
@@ -990,7 +1103,9 @@ export const verifyEvents =
 
             // Check that all tool calls are finished before run ends
             if (activeToolCalls.size > 0) {
-              const unfinishedToolCalls = Array.from(activeToolCalls.keys()).join(", ");
+              const unfinishedToolCalls = Array.from(
+                activeToolCalls.keys(),
+              ).join(", ");
               return throwError(
                 () =>
                   new AGUIError(
@@ -1001,7 +1116,9 @@ export const verifyEvents =
 
             // Check that all subagents are finished before run ends
             if (activeSubagents.size > 0) {
-              const unfinishedSubagents = Array.from(activeSubagents.keys()).join(", ");
+              const unfinishedSubagents = Array.from(
+                activeSubagents.keys(),
+              ).join(", ");
               return throwError(
                 () =>
                   new AGUIError(

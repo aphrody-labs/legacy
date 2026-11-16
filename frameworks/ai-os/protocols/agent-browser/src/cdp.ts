@@ -21,13 +21,21 @@ export class WebCdpPage {
   // Bun.WebView accepts one cdp() in flight per view.
   #queue: Promise<unknown> = Promise.resolve();
 
-  private constructor(view: Bun.WebView, console: Set<(params: CdpParams) => void>) {
+  private constructor(
+    view: Bun.WebView,
+    console: Set<(params: CdpParams) => void>,
+  ) {
     this.#view = view;
     this.#console = console;
     listen(view, "Network.responseReceived", (data) => {
       if (data.type !== "Document") return;
       const response = data.response as
-        | { url?: string; status?: number; statusText?: string; headers?: Record<string, string> }
+        | {
+            url?: string;
+            status?: number;
+            statusText?: string;
+            headers?: Record<string, string>;
+          }
         | undefined;
       if (!response) return;
       const status = response.status ?? 0;
@@ -54,9 +62,14 @@ export class WebCdpPage {
     };
     let view: Bun.WebView;
     try {
-      view = new Bun.WebView({ backend: { type: "chrome", url: endpoint }, console: onConsole });
+      view = new Bun.WebView({
+        backend: { type: "chrome", url: endpoint },
+        console: onConsole,
+      });
     } catch (error) {
-      throw new Error(`Obscura CDP is unavailable: ${endpoint}`, { cause: error });
+      throw new Error(`Obscura CDP is unavailable: ${endpoint}`, {
+        cause: error,
+      });
     }
     try {
       await timeout(
@@ -73,14 +86,20 @@ export class WebCdpPage {
       return page;
     } catch (error) {
       view.close();
-      if (error instanceof Error && error.message.startsWith("Obscura CDP")) throw error;
-      throw new Error(`Obscura CDP is unavailable: ${endpoint}`, { cause: error });
+      if (error instanceof Error && error.message.startsWith("Obscura CDP"))
+        throw error;
+      throw new Error(`Obscura CDP is unavailable: ${endpoint}`, {
+        cause: error,
+      });
     }
   }
 
   _send(method: string, params: CdpParams): Promise<CdpParams> {
-    if (this.#closed) return Promise.reject(new Error("Obscura CDP page is closed"));
-    const sent = this.#queue.then(() => this.#view.cdp<CdpParams>(method, params));
+    if (this.#closed)
+      return Promise.reject(new Error("Obscura CDP page is closed"));
+    const sent = this.#queue.then(() =>
+      this.#view.cdp<CdpParams>(method, params),
+    );
     this.#queue = sent.catch(() => undefined);
     return timeout(sent, 30_000, `Obscura CDP ${method} timed out`);
   }
@@ -117,9 +136,17 @@ export class WebCdpPage {
     this.#documentResponse = null;
     await this._send("Page.navigate", { url, waitUntil });
     const tree = await this._send("Page.getFrameTree", {});
-    const frameTree = tree.frameTree as { frame?: { url?: string } } | undefined;
+    const frameTree = tree.frameTree as
+      { frame?: { url?: string } } | undefined;
     this.#url = frameTree?.frame?.url ?? url;
-    return this.#documentResponse ?? { url: this.#url, status: 0, statusText: "", ok: false };
+    return (
+      this.#documentResponse ?? {
+        url: this.#url,
+        status: 0,
+        statusText: "",
+        ok: false,
+      }
+    );
   }
 
   async setContent(html: string): Promise<void> {
@@ -148,7 +175,9 @@ export class WebCdpPage {
   async content(): Promise<string> {
     const document = await this._send("DOM.getDocument", { depth: 0 });
     const root = document.root as { nodeId: number };
-    const result = await this._send("DOM.getOuterHTML", { nodeId: root.nodeId });
+    const result = await this._send("DOM.getOuterHTML", {
+      nodeId: root.nodeId,
+    });
     return String(result.outerHTML ?? "");
   }
 
@@ -157,7 +186,9 @@ export class WebCdpPage {
   }
 
   async screenshot(): Promise<Uint8Array> {
-    const result = await this._send("Page.captureScreenshot", { format: "png" });
+    const result = await this._send("Page.captureScreenshot", {
+      format: "png",
+    });
     return Buffer.from(String(result.data ?? ""), "base64");
   }
 
@@ -178,12 +209,17 @@ function listen(
   method: string,
   handler: (params: CdpParams) => void,
 ): () => void {
-  const listener = (event: Event) => handler((event as Event & { data?: CdpParams }).data ?? {});
+  const listener = (event: Event) =>
+    handler((event as Event & { data?: CdpParams }).data ?? {});
   view.addEventListener(method, listener);
   return () => view.removeEventListener(method, listener);
 }
 
-function timeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+function timeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   return Promise.race([
     promise,

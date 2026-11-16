@@ -1,6 +1,7 @@
 # @aphrody/native
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > bun:ffi bindings for the Zig native desktop SDK (third_party/native, vercel-labs/native)
 
 | Type | Path |
@@ -16,4 +17,5 @@ bun run --cwd system/native fmt
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

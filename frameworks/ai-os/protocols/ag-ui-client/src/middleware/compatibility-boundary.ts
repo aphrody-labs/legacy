@@ -33,7 +33,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function omitLegacyNull(value: unknown, field: string, context: string): unknown {
+function omitLegacyNull(
+  value: unknown,
+  field: string,
+  context: string,
+): unknown {
   if (!isRecord(value) || value[field] !== null) return value;
   warnCompatibility(`${context}.${field}: null`, "an absent field");
   const { [field]: _null, ...rest } = value;
@@ -136,7 +140,10 @@ export class CompatibilityBoundary extends Middleware {
    * message about an id no producer ever wrote, so the mint is announced here:
    * without this line the rejection is untraceable to its cause.
    */
-  private mintedContinuationId(from: string, established: string | null): string {
+  private mintedContinuationId(
+    from: string,
+    established: string | null,
+  ): string {
     if (established !== null) return established;
     const minted = randomUUID();
     this.warnAside(
@@ -164,7 +171,10 @@ export class CompatibilityBoundary extends Middleware {
     );
   }
 
-  override run(input: RunAgentInput, next: AbstractAgent): Observable<BaseEvent> {
+  override run(
+    input: RunAgentInput,
+    next: AbstractAgent,
+  ): Observable<BaseEvent> {
     this.currentReasoningId = null;
     this.currentMessageId = null;
     // Deliberately next.run rather than runNext: runNext transforms chunks
@@ -187,7 +197,8 @@ export class CompatibilityBoundary extends Middleware {
       event = rest;
     }
     if (
-      (event.type === EventType.RUN_FINISHED || event.type === EventType.SUBAGENT_FINISHED) &&
+      (event.type === EventType.RUN_FINISHED ||
+        event.type === EventType.SUBAGENT_FINISHED) &&
       event.result === null
     ) {
       this.warn(`${event.type}.result: null`, "an absent field");
@@ -217,7 +228,10 @@ export class CompatibilityBoundary extends Middleware {
 
       case THINKING_TEXT_MESSAGE_START: {
         this.currentMessageId = randomUUID();
-        this.warn(THINKING_TEXT_MESSAGE_START, EventType.REASONING_MESSAGE_START);
+        this.warn(
+          THINKING_TEXT_MESSAGE_START,
+          EventType.REASONING_MESSAGE_START,
+        );
         return {
           ...event,
           type: EventType.REASONING_MESSAGE_START,
@@ -231,7 +245,10 @@ export class CompatibilityBoundary extends Middleware {
 
       case THINKING_TEXT_MESSAGE_CONTENT: {
         const { delta, ...rest } = event as BaseEvent & { delta: string };
-        this.warn(THINKING_TEXT_MESSAGE_CONTENT, EventType.REASONING_MESSAGE_CONTENT);
+        this.warn(
+          THINKING_TEXT_MESSAGE_CONTENT,
+          EventType.REASONING_MESSAGE_CONTENT,
+        );
         return {
           ...rest,
           type: EventType.REASONING_MESSAGE_CONTENT,
@@ -258,7 +275,10 @@ export class CompatibilityBoundary extends Middleware {
       }
 
       case THINKING_END: {
-        const reasoningId = this.mintedContinuationId(THINKING_END, this.currentReasoningId);
+        const reasoningId = this.mintedContinuationId(
+          THINKING_END,
+          this.currentReasoningId,
+        );
         this.currentReasoningId = null;
         this.warn(THINKING_END, EventType.REASONING_END);
         return {
@@ -294,21 +314,30 @@ export class CompatibilityBoundary extends Middleware {
         if (!Array.isArray(record.messages)) return event;
         return {
           ...record,
-          messages: record.messages.map((message) => this.upgradeInboundMessage(message)),
+          messages: record.messages.map((message) =>
+            this.upgradeInboundMessage(message),
+          ),
         };
       }
 
       case EventType.RUN_STARTED: {
         const normalizedInput = normalizeLegacyRunAgentInput(event.input);
         const normalized =
-          normalizedInput === event.input ? event : { ...event, input: normalizedInput };
-        const record = normalized as BaseEvent & { input?: { messages?: Message[] } };
-        if (!record.input || !Array.isArray(record.input.messages)) return normalized;
+          normalizedInput === event.input
+            ? event
+            : { ...event, input: normalizedInput };
+        const record = normalized as BaseEvent & {
+          input?: { messages?: Message[] };
+        };
+        if (!record.input || !Array.isArray(record.input.messages))
+          return normalized;
         return {
           ...record,
           input: {
             ...record.input,
-            messages: record.input.messages.map((message) => this.upgradeInboundMessage(message)),
+            messages: record.input.messages.map((message) =>
+              this.upgradeInboundMessage(message),
+            ),
           },
         };
       }
@@ -326,7 +355,9 @@ export class CompatibilityBoundary extends Middleware {
     if (!Array.isArray(content)) return message;
     const hasLegacyBinary = content.some(
       (part) =>
-        typeof part === "object" && part !== null && (part as { type?: unknown }).type === "binary",
+        typeof part === "object" &&
+        part !== null &&
+        (part as { type?: unknown }).type === "binary",
     );
     if (!hasLegacyBinary) return message;
     this.warn("binary input content", "the modern media content parts");

@@ -6,7 +6,10 @@ export const GEMMA_WEB_MODEL_ID = "gemma-4-e2b-it-web";
 
 export interface ChatCompletionRequest {
   model?: string;
-  messages: { role: string; content: string | { type: string; text?: string }[] }[];
+  messages: {
+    role: string;
+    content: string | { type: string; text?: string }[];
+  }[];
   stream?: boolean;
   max_tokens?: number;
   max_completion_tokens?: number;
@@ -22,7 +25,11 @@ export interface ChatCompletionChunk {
   object: "chat.completion.chunk";
   created: number;
   model: string;
-  choices: { index: 0; delta: { role?: "assistant"; content?: string }; finish_reason: string | null }[];
+  choices: {
+    index: 0;
+    delta: { role?: "assistant"; content?: string };
+    finish_reason: string | null;
+  }[];
   usage?: Usage;
 }
 export interface ChatCompletion {
@@ -30,7 +37,11 @@ export interface ChatCompletion {
   object: "chat.completion";
   created: number;
   model: string;
-  choices: { index: 0; message: { role: "assistant"; content: string }; finish_reason: string }[];
+  choices: {
+    index: 0;
+    message: { role: "assistant"; content: string };
+    finish_reason: string;
+  }[];
   usage: Usage;
 }
 interface Usage {
@@ -41,10 +52,14 @@ interface Usage {
 
 function flatten(m: ChatCompletionRequest["messages"][number]): ChatMessage {
   const role = m.role === "assistant" || m.role === "system" ? m.role : "user";
-  const content = typeof m.content === "string" ? m.content : m.content.map(p => p.text ?? "").join("");
+  const content =
+    typeof m.content === "string"
+      ? m.content
+      : m.content.map((p) => p.text ?? "").join("");
   return { role, content };
 }
-const finishOf = (s: GenerateStats) => (s.finishReason === "abort" ? "stop" : s.finishReason);
+const finishOf = (s: GenerateStats) =>
+  s.finishReason === "abort" ? "stop" : s.finishReason;
 const usageOf = (s: GenerateStats): Usage => ({
   prompt_tokens: s.promptTokens,
   completion_tokens: s.completionTokens,
@@ -66,8 +81,12 @@ export class GemmaOpenAI {
       create: ((req: ChatCompletionRequest & { signal?: AbortSignal }) => {
         return req.stream ? this.#stream(req) : this.#complete(req);
       }) as {
-        (req: ChatCompletionRequest & { stream: true; signal?: AbortSignal }): AsyncGenerator<ChatCompletionChunk>;
-        (req: ChatCompletionRequest & { stream?: false; signal?: AbortSignal }): Promise<ChatCompletion>;
+        (
+          req: ChatCompletionRequest & { stream: true; signal?: AbortSignal },
+        ): AsyncGenerator<ChatCompletionChunk>;
+        (
+          req: ChatCompletionRequest & { stream?: false; signal?: AbortSignal },
+        ): Promise<ChatCompletion>;
       },
     },
   };
@@ -86,7 +105,9 @@ export class GemmaOpenAI {
     };
   }
 
-  async #complete(req: ChatCompletionRequest & { signal?: AbortSignal }): Promise<ChatCompletion> {
+  async #complete(
+    req: ChatCompletionRequest & { signal?: AbortSignal },
+  ): Promise<ChatCompletion> {
     const it = this.backend.generate(this.#opts(req));
     let text = "";
     for (;;) {
@@ -97,18 +118,36 @@ export class GemmaOpenAI {
           object: "chat.completion",
           created: Math.floor(Date.now() / 1000),
           model: this.model,
-          choices: [{ index: 0, message: { role: "assistant", content: text }, finish_reason: finishOf(r.value) }],
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: text },
+              finish_reason: finishOf(r.value),
+            },
+          ],
           usage: usageOf(r.value),
         };
       text += r.value;
     }
   }
 
-  async *#stream(req: ChatCompletionRequest & { signal?: AbortSignal }): AsyncGenerator<ChatCompletionChunk> {
+  async *#stream(
+    req: ChatCompletionRequest & { signal?: AbortSignal },
+  ): AsyncGenerator<ChatCompletionChunk> {
     const id = `chatcmpl-${crypto.randomUUID()}`;
     const created = Math.floor(Date.now() / 1000);
-    const base = { id, object: "chat.completion.chunk" as const, created, model: this.model };
-    yield { ...base, choices: [{ index: 0, delta: { role: "assistant" }, finish_reason: null }] };
+    const base = {
+      id,
+      object: "chat.completion.chunk" as const,
+      created,
+      model: this.model,
+    };
+    yield {
+      ...base,
+      choices: [
+        { index: 0, delta: { role: "assistant" }, finish_reason: null },
+      ],
+    };
     const it = this.backend.generate(this.#opts(req));
     for (;;) {
       const r = await it.next();
@@ -120,7 +159,12 @@ export class GemmaOpenAI {
         };
         return;
       }
-      yield { ...base, choices: [{ index: 0, delta: { content: r.value }, finish_reason: null }] };
+      yield {
+        ...base,
+        choices: [
+          { index: 0, delta: { content: r.value }, finish_reason: null },
+        ],
+      };
     }
   }
 
@@ -128,16 +172,26 @@ export class GemmaOpenAI {
    * A `fetch` replacement for OpenAI-compatible clients: pass it as `fetch` (or serve it from a
    * Service Worker) and POST /v1/chat/completions is answered in-page, as JSON or `text/event-stream`.
    */
-  readonly fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  readonly fetch = async (
+    input: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> => {
     const req = input instanceof Request ? input : new Request(input, init);
     const path = new URL(req.url).pathname.replace(/\/+$/, "");
     if (req.method === "GET" && path.endsWith("/models"))
-      return Response.json({ object: "list", data: [{ id: this.model, object: "model", owned_by: "google" }] });
+      return Response.json({
+        object: "list",
+        data: [{ id: this.model, object: "model", owned_by: "google" }],
+      });
     if (req.method !== "POST" || !path.endsWith("/chat/completions"))
-      return Response.json({ error: { message: `unsupported ${req.method} ${path}` } }, { status: 404 });
+      return Response.json(
+        { error: { message: `unsupported ${req.method} ${path}` } },
+        { status: 404 },
+      );
     const body = (await req.json()) as ChatCompletionRequest;
     const signal = req.signal;
-    if (!body.stream) return Response.json(await this.#complete({ ...body, signal }));
+    if (!body.stream)
+      return Response.json(await this.#complete({ ...body, signal }));
     const enc = new TextEncoder();
     const gen = this.#stream({ ...body, signal });
     const stream = new ReadableStream<Uint8Array>({
@@ -152,6 +206,11 @@ export class GemmaOpenAI {
         await gen.return(undefined);
       },
     });
-    return new Response(stream, { headers: { "content-type": "text/event-stream", "cache-control": "no-cache" } });
+    return new Response(stream, {
+      headers: {
+        "content-type": "text/event-stream",
+        "cache-control": "no-cache",
+      },
+    });
   };
 }

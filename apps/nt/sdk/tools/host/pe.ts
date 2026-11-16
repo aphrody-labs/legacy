@@ -29,12 +29,8 @@ export function parsePe(buf: ArrayBuffer): Pe | null {
     for (let i = 0; i < nsec; i++) {
       const s = secs + i * 40;
       const va = b.getUint32(s + 12, true);
-      const size = Math.max(
-        b.getUint32(s + 8, true),
-        b.getUint32(s + 16, true),
-      );
-      if (rva >= va && rva < va + size)
-        return rva - va + b.getUint32(s + 20, true);
+      const size = Math.max(b.getUint32(s + 8, true), b.getUint32(s + 16, true));
+      if (rva >= va && rva < va + size) return rva - va + b.getUint32(s + 20, true);
     }
     return -1;
   };
@@ -71,9 +67,7 @@ export function exportsOf(p: Pe): string[] {
   const n = b.getUint32(o + 24, true);
   const names = p.off(b.getUint32(o + 32, true));
   if (names < 0) return [];
-  return Array.from({ length: n }, (_, i) =>
-    p.cstr(b.getUint32(names + i * 4, true)),
-  );
+  return Array.from({ length: n }, (_, i) => p.cstr(b.getUint32(names + i * 4, true)));
 }
 
 export type ExportEntry = {
@@ -113,8 +107,7 @@ export function importFunctions(p: Pe): { dll: string; name: string }[] {
   const d = p.dir(1);
   let o = d.rva ? p.off(d.rva) : -1;
   const b = p.view;
-  const plus =
-    (b.getUint16(b.getUint32(60, true) + 24, true) & 0xffff) === 0x20b;
+  const plus = (b.getUint16(b.getUint32(60, true) + 24, true) & 0xffff) === 0x20b;
   const out: { dll: string; name: string }[] = [];
   while (o >= 0 && o + 20 <= b.byteLength) {
     const nameRva = b.getUint32(o + 12, true);
@@ -127,9 +120,7 @@ export function importFunctions(p: Pe): { dll: string; name: string }[] {
       const byOrd = plus ? v >> 63n === 1n : (v & 0x80000000n) !== 0n;
       out.push({
         dll,
-        name: byOrd
-          ? `#${Number(v & 0xffffn)}`
-          : p.cstr(Number(v & 0x7fffffffn) + 2),
+        name: byOrd ? `#${Number(v & 0xffffn)}` : p.cstr(Number(v & 0x7fffffffn) + 2),
       });
       t += plus ? 8 : 4;
     }

@@ -1,11 +1,13 @@
 # Aphrody App (`aphrody.app`)
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 | Type | Path |
 | :-- | :-- |
 | App | `apps/aphrody-app` |
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Pure-Rust (Edition 2024, zero TypeScript) multi-target desktop & web application combining WebGPU/WGSL Mica rendering, Wayland wire-protocol & tiling layouts, Fluid-style total-order CRDT state (`SharedMap`, `SharedString`, `SharedCounter`), Blake3 content-addressed OPFS/WAL storage, and W3C WebMCP (`navigator.modelContext` + HTTP JSON-RPC `/mcp`).

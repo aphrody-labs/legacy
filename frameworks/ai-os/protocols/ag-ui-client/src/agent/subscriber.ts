@@ -91,7 +91,11 @@ export interface AgentSubscriber {
            */
           pendingToolCallIds: string[];
         }
-      | { event: RunFinishedEvent; outcome: "interrupt"; interrupts: Interrupt[] }
+      | {
+          event: RunFinishedEvent;
+          outcome: "interrupt";
+          interrupts: Interrupt[];
+        }
       | { event: RunFinishedEvent; outcome: "cancelled" }
     ) &
       AgentSubscriberParams,
@@ -127,7 +131,10 @@ export interface AgentSubscriber {
     } & AgentSubscriberParams,
   ): MaybePromise<AgentStateMutation | void>;
   onTextMessageEndEvent?(
-    params: { event: TextMessageEndEvent; textMessageBuffer: string } & AgentSubscriberParams,
+    params: {
+      event: TextMessageEndEvent;
+      textMessageBuffer: string;
+    } & AgentSubscriberParams,
   ): MaybePromise<AgentStateMutation | void>;
 
   onToolCallStartEvent?(
@@ -273,7 +280,11 @@ function deepFreeze<T>(obj: T): T {
   Object.freeze(obj);
   if (obj !== null && typeof obj === "object") {
     for (const value of Object.values(obj)) {
-      if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+      if (
+        value !== null &&
+        typeof value === "object" &&
+        !Object.isFrozen(value)
+      ) {
         deepFreeze(value);
       }
     }
@@ -296,7 +307,11 @@ const DEV_FREEZE_CHAR_LIMIT = 512 * 1024;
 // structuredClone or materialize copies — only a bounded iterative traversal
 // stack plus a visited-set guard, so it is safe for arbitrarily nested or
 // cyclic structures. (`State` is typed `any`, so cycles are possible.)
-function payloadExceeds(messages: unknown, state: unknown, limit: number): boolean {
+function payloadExceeds(
+  messages: unknown,
+  state: unknown,
+  limit: number,
+): boolean {
   let chars = 0;
   const stack: unknown[] = [messages, state];
   const seen = new WeakSet<object>();
@@ -337,9 +352,11 @@ export async function runSubscribersWithMutation(
     state: Readonly<State>,
   ) => MaybePromise<AgentStateMutation | void>,
 ): Promise<AgentStateMutation> {
-  const hasProcess = typeof process !== "undefined" && typeof process.env !== "undefined";
+  const hasProcess =
+    typeof process !== "undefined" && typeof process.env !== "undefined";
   const isTestEnvironment =
-    hasProcess && (process.env.NODE_ENV === "test" || Boolean(process.env.VITEST_WORKER_ID));
+    hasProcess &&
+    (process.env.NODE_ENV === "test" || Boolean(process.env.VITEST_WORKER_ID));
   const isDev =
     hasProcess &&
     (process.env.NODE_ENV === "development" ||
@@ -351,13 +368,19 @@ export async function runSubscribersWithMutation(
   // in dev when the payload is large — otherwise streaming large tool-call
   // arguments deep-clones the whole messages+state on every event and exhausts
   // the heap (V8 fatal: "JavaScript heap out of memory" from structuredClone).
-  let freezeInputs = isDev && !payloadExceeds(initialMessages, initialState, DEV_FREEZE_CHAR_LIMIT);
+  let freezeInputs =
+    isDev &&
+    !payloadExceeds(initialMessages, initialState, DEV_FREEZE_CHAR_LIMIT);
 
   // Only the freeze path needs an isolated baseline copy. Otherwise pass the
   // inputs through and lazily clone only when a subscriber actually returns a
   // mutation — so the common "no mutation" event costs zero clones.
-  let messages: Message[] = freezeInputs ? structuredClone_(initialMessages) : initialMessages;
-  let state: State = freezeInputs ? structuredClone_(initialState) : initialState;
+  let messages: Message[] = freezeInputs
+    ? structuredClone_(initialMessages)
+    : initialMessages;
+  let state: State = freezeInputs
+    ? structuredClone_(initialState)
+    : initialState;
   let messagesMutated = false;
   let stateMutated = false;
 
@@ -447,9 +470,15 @@ export async function runSubscribersWithMutation(
   // clone it before returning so callers receive a mutable copy.
   return {
     ...(messagesMutated
-      ? { messages: Object.isFrozen(messages) ? structuredClone_(messages) : messages }
+      ? {
+          messages: Object.isFrozen(messages)
+            ? structuredClone_(messages)
+            : messages,
+        }
       : {}),
-    ...(stateMutated ? { state: Object.isFrozen(state) ? structuredClone_(state) : state } : {}),
+    ...(stateMutated
+      ? { state: Object.isFrozen(state) ? structuredClone_(state) : state }
+      : {}),
     ...(stopPropagation !== undefined ? { stopPropagation } : {}),
   };
 }

@@ -25,7 +25,8 @@ export class MemoryStorage implements PartStorage {
     this.parts.set(key, data.slice());
   }
   async remove(prefix: string) {
-    for (const k of this.parts.keys()) if (k.startsWith(prefix)) this.parts.delete(k);
+    for (const k of this.parts.keys())
+      if (k.startsWith(prefix)) this.parts.delete(k);
   }
 }
 
@@ -33,7 +34,9 @@ export class MemoryStorage implements PartStorage {
 export class OpfsStorage implements PartStorage {
   #root: Promise<FileSystemDirectoryHandle>;
   constructor(dir: string) {
-    this.#root = navigator.storage.getDirectory().then(r => r.getDirectoryHandle(dir, { create: true }));
+    this.#root = navigator.storage
+      .getDirectory()
+      .then((r) => r.getDirectoryHandle(dir, { create: true }));
   }
   static #name(key: string) {
     return key.replace(/[^A-Za-z0-9._-]/g, "_");
@@ -51,7 +54,9 @@ export class OpfsStorage implements PartStorage {
     return new Uint8Array(await (await h.getFile()).arrayBuffer());
   }
   async write(key: string, data: Uint8Array) {
-    const h = await (await this.#root).getFileHandle(OpfsStorage.#name(key), { create: true });
+    const h = await (
+      await this.#root
+    ).getFileHandle(OpfsStorage.#name(key), { create: true });
     const w = await h.createWritable();
     await w.write(data as unknown as BufferSource);
     await w.close();
@@ -59,7 +64,9 @@ export class OpfsStorage implements PartStorage {
   async remove(prefix: string) {
     const root = await this.#root;
     const p = OpfsStorage.#name(prefix);
-    for await (const name of (root as unknown as { keys(): AsyncIterable<string> }).keys())
+    for await (const name of (
+      root as unknown as { keys(): AsyncIterable<string> }
+    ).keys())
       if (name.startsWith(p)) await root.removeEntry(name);
   }
 }
@@ -125,11 +132,15 @@ export class ShardStore {
       const want = end - start + 1;
       const key = `${this.o.namespace}/${path}.${String(i).padStart(4, "0")}`;
       let part: Uint8Array;
-      if ((await this.o.storage.has(key)) === want) part = await this.o.storage.read(key);
+      if ((await this.o.storage.has(key)) === want)
+        part = await this.o.storage.read(key);
       else {
         allCached = false;
         part = await this.#range(path, start, end);
-        if (part.byteLength !== want) throw new Error(`${path} part ${i}: got ${part.byteLength}, expected ${want}`);
+        if (part.byteLength !== want)
+          throw new Error(
+            `${path} part ${i}: got ${part.byteLength}, expected ${want}`,
+          );
         await this.o.storage.write(key, part);
       }
       out.set(part, start);

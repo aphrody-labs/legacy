@@ -1,6 +1,7 @@
 # @aphrody/site-ng
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT).
 
 | Type | Path |
@@ -15,4 +16,5 @@ bun run --cwd apps/web/web start
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

@@ -2,7 +2,15 @@
 // other registered session, both ways. `from` is the caller's own session name or id (the Claude Code
 // SessionStart hook tells each session its name).
 import { s } from "../llm/schema.ts";
-import { inbox, list, register, render, resolve, send, waitReply } from "./sessions.ts";
+import {
+  inbox,
+  list,
+  register,
+  render,
+  resolve,
+  send,
+  waitReply,
+} from "./sessions.ts";
 import type { Tool } from "./tools.ts";
 
 const str = s.string;
@@ -22,21 +30,31 @@ export const SESSION_TOOLS: Tool[] = [
       {
         id: str("stable session id"),
         name: str("unique human name (optional)"),
-        kind: str("claude-code | codex | agy | opencode | pi | other (optional)"),
+        kind: str(
+          "claude-code | codex | agy | opencode | pi | other (optional)",
+        ),
         cwd: str("working directory (optional)"),
       },
       ["id"],
     ),
     readOnly: false,
-    run: async (a) => register(String(a.id), a.kind ?? "agent", a.cwd ?? "", a.name),
+    run: async (a) =>
+      register(String(a.id), a.kind ?? "agent", a.cwd ?? "", a.name),
   },
   {
     name: "session_list",
-    description: "Sessions seen by the relay mailbox in the last 24 h (name, kind, cwd, last seen).",
+    description:
+      "Sessions seen by the relay mailbox in the last 24 h (name, kind, cwd, last seen).",
     inputSchema: obj({}),
     readOnly: true,
     run: async () =>
-      list().map((x) => ({ name: x.name, id: x.id, kind: x.kind, cwd: x.cwd, seen: new Date(x.seen).toISOString() })),
+      list().map((x) => ({
+        name: x.name,
+        id: x.id,
+        kind: x.kind,
+        cwd: x.cwd,
+        seen: new Date(x.seen).toISOString(),
+      })),
   },
   {
     name: "session_send",
@@ -48,7 +66,11 @@ export const SESSION_TOOLS: Tool[] = [
         to: str("recipient session name or id"),
         text: str("message"),
         reply_to: str("id of the message you answer (optional)"),
-        wait_s: { type: "number", description: "seconds to wait for the reply (optional, 0 = do not wait)" },
+        wait_s: {
+          type: "number",
+          description:
+            "seconds to wait for the reply (optional, 0 = do not wait)",
+        },
       },
       ["from", "to", "text"],
     ),
@@ -59,13 +81,23 @@ export const SESSION_TOOLS: Tool[] = [
       if (!wait) return { sent: m.id, thread: m.thread };
       const r = await waitReply(m.id, wait * 1000);
       return r
-        ? { sent: m.id, thread: m.thread, reply: { id: r.id, from: resolve(r.sender).name, text: r.text } }
-        : { sent: m.id, thread: m.thread, reply: null, note: `no reply within ${wait} s` };
+        ? {
+            sent: m.id,
+            thread: m.thread,
+            reply: { id: r.id, from: resolve(r.sender).name, text: r.text },
+          }
+        : {
+            sent: m.id,
+            thread: m.thread,
+            reply: null,
+            note: `no reply within ${wait} s`,
+          };
     },
   },
   {
     name: "session_inbox",
-    description: "Unread messages of a session (marks them read unless peek). Returns the rendered mail and the rows.",
+    description:
+      "Unread messages of a session (marks them read unless peek). Returns the rendered mail and the rows.",
     inputSchema: obj(
       {
         session: str("your own session name or id"),

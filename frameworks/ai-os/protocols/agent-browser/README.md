@@ -1,10 +1,11 @@
 # @aphrody/agent-browser
 
 <!-- catalog:begin unit -->
+
 > Aphrody Web Bun client: CDP browser automation (agent-browser), engine lifecycle, web service client (fetch, scrape, crawl, sessions) and config reader, backed by the native aphrody-web engine.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                       |
+| :---------- | :----------------------------------------- |
 | Bun package | `frameworks/ai-os/protocols/agent-browser` |
 
 **Commands**

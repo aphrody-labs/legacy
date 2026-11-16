@@ -66,8 +66,10 @@ export const GOOGLE_AI_PLANS: Record<
         monorepoHarnessCommand: "agy-studio notebooklm",
       },
       {
-        feature: "Google Developer Program Premium + Cloud Perks + 30TB + YouTube Premium",
-        quotaOrLimit: "30 TB Google One + YouTube Premium + GCP consultations/credits",
+        feature:
+          "Google Developer Program Premium + Cloud Perks + 30TB + YouTube Premium",
+        quotaOrLimit:
+          "30 TB Google One + YouTube Premium + GCP consultations/credits",
         equivalentApiMonthlyValueUsd: 163.99,
         monorepoHarnessCommand: "ai-os auth-doctor",
       },
@@ -192,7 +194,7 @@ export function calculateContextOptimizationSavings(
     GEMINI_AND_LOCAL_PRICING[0]!;
   const monthlySavedTokens = tokensSavedPerTurnMinimal * turnsPerDay * 30;
   const monthlyUsdSavedAt200TurnsPerDay =
-    Math.round(((monthlySavedTokens / 1_000_000) * spec.inputUsdPer1M) * 100) /
+    Math.round((monthlySavedTokens / 1_000_000) * spec.inputUsdPer1M * 100) /
     100;
 
   return {

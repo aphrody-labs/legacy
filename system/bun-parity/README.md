@@ -1,6 +1,7 @@
 # @aphrody/bun-parity
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Automated Chromium Upstream vs Bun Full-Stack Parity Recon & Auto-Patcher
 
 | Type | Path |
@@ -21,4 +22,5 @@ bun run --cwd system/bun-parity fmt:check
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

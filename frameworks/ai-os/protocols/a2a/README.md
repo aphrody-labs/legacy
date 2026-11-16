@@ -3,10 +3,11 @@
 # @aphrody/a2a
 
 <!-- catalog:begin unit -->
+
 > A2A 1.0 client for Bun and the web platform: Agent Card discovery, JSON-RPC and HTTP+JSON bindings, SSE streaming, push notification configs, and a legacy-dialect shim
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                             |
+| :---------- | :------------------------------- |
 | Bun package | `frameworks/ai-os/protocols/a2a` |
 
 **Commands**

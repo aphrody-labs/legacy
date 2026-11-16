@@ -1,6 +1,7 @@
 # @aphrody/gaming
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Gaming stack of the monorepo: Steam (web API, SteamID, local paths over `ay steam`), Proton, Vulkan layers, DirectX, steamcmd and Proton wrappers; `ay gaming`
 
 | Type | Path |
@@ -16,4 +17,5 @@ bun run --cwd frameworks/gaming test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

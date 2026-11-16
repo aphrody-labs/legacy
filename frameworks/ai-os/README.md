@@ -1,6 +1,7 @@
 # @aphrody/ai-os
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Aphrody AI OS: Unix/GNU-like agent OS distribution unifying LLM, RAG, World Model, and System 1 decision under one C ABI (aphrody_core_capi)
 
 | Type | Path |
@@ -16,6 +17,7 @@ bun run --cwd frameworks/ai-os relay
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Cross-platform sandboxed Unix/GNU-like operating system distribution for autonomous agents, unifying POSIX/FHS VFS, LLM runtime discovery, hybrid RAG, causal World Model, and sub-millisecond System 1 decision routing behind **one single C ABI** (`ai_os_*` in [src/core/capi](../../system/core/capi), header [aphrody_core.h](../../system/core/capi/include/aphrody_core.h)).
@@ -28,7 +30,7 @@ Cross-platform sandboxed Unix/GNU-like operating system distribution for autonom
 | :------------ | :------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `uname` / FHS | `ai_os_uname_json`, `ai_os_vfs_resolve_json`      | OS identity, standards (`openapi-3.2.1`, `mcp-2026-07-28`, `a2a-1.0.1`, `acp-1.31.0`, `vercel-ai-sdk-7.0`, `cloudflare-agents-0.33`), confined FHS paths (`/etc/ai-os`, `/var/lib/ai-os`, `/home/agent`, `/proc/agent`, `/tmp`) |
 | `/dev/llm`    | `ai_os_llm_spec_json`                             | Runtime-discovered multi-provider LLM wire contract (zero hardcoded models)                                                                                                                                                     |
-| `/dev/rag`    | `ai_os_rag_upsert_json`, `ai_os_rag_query_json`   | Shared SQLite WAL + FTS5 BM25 + recency RRF store (`frameworks/agent/context`)                                                                                                                                                      |
+| `/dev/rag`    | `ai_os_rag_upsert_json`, `ai_os_rag_query_json`   | Shared SQLite WAL + FTS5 BM25 + recency RRF store (`frameworks/agent/context`)                                                                                                                                                  |
 | `/dev/world`  | `ai_os_world_step_json`, `ai_os_world_state_json` | Persistent causal state transitions (`world_entities`, `world_transitions`) + prediction error (`surprise`)                                                                                                                     |
 | `/dev/sys1`   | `ai_os_sys1_decide_json`                          | Sub-millisecond (`< 1 ms`) System 1 router (`exec` / `escalate_sys2` / `deny`) with SQLite audit trail (`sys1_decisions`)                                                                                                       |
 
@@ -47,7 +49,7 @@ Cross-platform sandboxed Unix/GNU-like operating system distribution for autonom
 | `src/review`           | -                     | Multi-engine tribunal review & NHITL scoring                                                                                                                                                                   |
 | `src/nhitl`            | -                     | No-Human-In-The-Loop ledger & violation scanner                                                                                                                                                                |
 | `src/google`           | `./jules`, `./stitch` | Absorbed Google Jules (`jules.googleapis.com/v1alpha`) and Stitch MCP clients                                                                                                                                  |
-| `python`               | -                     | `uv` workspace: `pyo3` bridge `agent_core` (`frameworks/agent/context`, feature `python`) + Hermes memory provider                                                                                                                        |
+| `python`               | -                     | `uv` workspace: `pyo3` bridge `agent_core` (`frameworks/agent/context`, feature `python`) + Hermes memory provider                                                                                             |
 | `native/relay-windows` | -                     | Windows service `AphrodyRelay` (.NET 11 NativeAOT)                                                                                                                                                             |
 
 ## Verification & Usage

@@ -18,16 +18,24 @@ self.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
     if (m.type === "load") {
       const variant = GEMMA4_E2B_QAT_MOBILE;
       if (m.ortBase) ort.env.wasm.wasmPaths = m.ortBase;
-      ort.env.wasm.numThreads = self.crossOriginIsolated ? Math.min(4, navigator.hardwareConcurrency || 1) : 1;
+      ort.env.wasm.numThreads = self.crossOriginIsolated
+        ? Math.min(4, navigator.hardwareConcurrency || 1)
+        : 1;
       const base = m.modelBase;
       const store = new ShardStore({
-        url: p => (base ? `${base.replace(/\/$/, "")}/${p}` : hubUrl(variant, p)),
+        url: (p) =>
+          base ? `${base.replace(/\/$/, "")}/${p}` : hubUrl(variant, p),
         storage: new OpfsStorage(`gemma-web-${variant.revision.slice(0, 12)}`),
         namespace: variant.revision.slice(0, 12),
         partBytes: m.partBytes,
-        onProgress: p => post({ type: "progress", p }),
+        onProgress: (p) => post({ type: "progress", p }),
       });
-      engine = new GemmaWebEngine({ ort, store, variant, decoderEp: m.decoderEp ?? "webgpu" });
+      engine = new GemmaWebEngine({
+        ort,
+        store,
+        variant,
+        decoderEp: m.decoderEp ?? "webgpu",
+      });
       post({ type: "loaded", stats: await engine.load() });
     } else if (m.type === "generate") {
       if (!engine) throw new Error("not loaded");
@@ -50,6 +58,10 @@ self.onmessage = async (ev: MessageEvent<WorkerRequest>) => {
       engine = undefined;
     }
   } catch (e) {
-    post({ type: "error", id: "id" in m ? m.id : undefined, message: e instanceof Error ? e.message : String(e) });
+    post({
+      type: "error",
+      id: "id" in m ? m.id : undefined,
+      message: e instanceof Error ? e.message : String(e),
+    });
   }
 };

@@ -12,15 +12,22 @@ export function authoritativeActivityTypes(
 ): string[] | null | undefined {
   if (
     !event.metadata ||
-    !Object.prototype.hasOwnProperty.call(event.metadata, ACTIVITY_HISTORY_METADATA)
+    !Object.prototype.hasOwnProperty.call(
+      event.metadata,
+      ACTIVITY_HISTORY_METADATA,
+    )
   )
     return undefined;
   const value = event.metadata?.[ACTIVITY_HISTORY_METADATA];
   if (!value || typeof value !== "object" || Array.isArray(value)) return [];
-  if (!Object.prototype.hasOwnProperty.call(value, "authoritativeActivityTypes")) return undefined;
+  if (
+    !Object.prototype.hasOwnProperty.call(value, "authoritativeActivityTypes")
+  )
+    return undefined;
   const types = (value as Record<string, unknown>).authoritativeActivityTypes;
   if (types === null) return null;
-  return Array.isArray(types) && types.every((type): type is string => typeof type === "string")
+  return Array.isArray(types) &&
+    types.every((type): type is string => typeof type === "string")
     ? types
     : [];
 }
@@ -37,13 +44,16 @@ export function withAuthoritativeActivityTypes(
   const scope = authoritativeActivityTypes(event);
   const ownsAll =
     scope === null ||
-    (scope === undefined && event.messages.some((message) => message.role === "activity"));
+    (scope === undefined &&
+      event.messages.some((message) => message.role === "activity"));
   return {
     ...event,
     metadata: {
       ...event.metadata,
       [ACTIVITY_HISTORY_METADATA]: {
-        ...(prior && typeof prior === "object" && !Array.isArray(prior) ? prior : {}),
+        ...(prior && typeof prior === "object" && !Array.isArray(prior)
+          ? prior
+          : {}),
         authoritativeActivityTypes: ownsAll
           ? null
           : [...new Set([...(scope ?? []), ...activityTypes])],

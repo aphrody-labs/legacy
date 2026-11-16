@@ -5,7 +5,7 @@
 # Prerequisite credentials in /etc/credstore.encrypted: CLOUDFLARE_API_TOKEN, LITELLM_MASTER_KEY,
 # ANTHROPIC_API_KEY, ANTHROPIC_WORKSPACE_ID, VERTEX_APHRODY_SA_KEY (valeur en stdin de
 # `systemd-creds encrypt --name=<NOM> - /etc/credstore.encrypted/<NOM>`).
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -eu
 [ $# -gt 0 ] || set -- -o BatchMode=yes -o HostKeyAlias=$(site_get hosts.prd.public_ip) -J fr2 root@$(site_get hosts.prd.mesh_ip)
 tar -cf - -C tools/ai ai.toml litellm-overlay.toml litellm-serve.ts systemd/ay-ai-litellm.service.d/10-creds.conf |

@@ -1,6 +1,7 @@
 # aphrody-apm
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Rust port of Microsoft APM (Agent Package Manager): apm.yml, apm.lock.yaml, resolution, install/compile for Claude Code and Copilot.
 
 | Type | Path |
@@ -16,6 +17,7 @@ cargo test -p aphrody-apm
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Rust port of Microsoft APM (Agent Package Manager). Upstream: `C:\aphrody\third_party\ai\microsoft_apm`, commit `1a6c1df` (Apache-2.0, apm-cli 0.35.1). It ships a library (`aphrody_apm`) and an `apm` binary.

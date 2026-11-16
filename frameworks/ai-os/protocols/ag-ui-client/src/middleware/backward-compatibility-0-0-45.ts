@@ -43,12 +43,17 @@ export class BackwardCompatibility_0_0_45 extends Middleware {
       `AG-UI is converting ${from} to ${to}. To remove this warning, upgrade your AG-UI integration package (e.g. @ag-ui/langgraph). To surpress it, set SUPPRESS_TRANSFORMATION_WARNINGS=true in your .env file.`,
     );
   }
-  override run(input: RunAgentInput, next: AbstractAgent): Observable<BaseEvent> {
+  override run(
+    input: RunAgentInput,
+    next: AbstractAgent,
+  ): Observable<BaseEvent> {
     // Reset state for each run
     this.currentReasoningId = null;
     this.currentMessageId = null;
 
-    return this.runNext(input, next).pipe(map((event) => this.transformEvent(event)));
+    return this.runNext(input, next).pipe(
+      map((event) => this.transformEvent(event)),
+    );
   }
 
   private transformEvent(event: BaseEvent): BaseEvent {
@@ -99,7 +104,10 @@ export class BackwardCompatibility_0_0_45 extends Middleware {
 
       case THINKING_TEXT_MESSAGE_END: {
         const messageId = this.currentMessageId ?? randomUUID();
-        this.warnAboutTransformation(THINKING_TEXT_MESSAGE_END, EventType.REASONING_MESSAGE_END);
+        this.warnAboutTransformation(
+          THINKING_TEXT_MESSAGE_END,
+          EventType.REASONING_MESSAGE_END,
+        );
         return {
           ...event,
           type: EventType.REASONING_MESSAGE_END,

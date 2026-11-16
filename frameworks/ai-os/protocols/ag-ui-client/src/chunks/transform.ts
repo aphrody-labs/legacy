@@ -55,7 +55,9 @@ type PendingStream =
 
 /** The id a pending stream is keyed by, whichever kind it is. */
 const pendingEntityId = (pending: PendingStream): string =>
-  pending.kind === "tool" ? pending.fields.toolCallId : pending.fields.messageId;
+  pending.kind === "tool"
+    ? pending.fields.toolCallId
+    : pending.fields.messageId;
 
 const missingIdFieldName = (kind: PendingStream["kind"]) =>
   kind === "tool" ? "toolCallId" : "messageId";
@@ -96,7 +98,10 @@ const requireOpenerAgreement = (
  * and stamping both is what keeps the metadata attached when only one of the two
  * is emitted.
  */
-const withChunkMetadata = <T extends BaseEvent>(event: T, chunk: BaseEvent): T =>
+const withChunkMetadata = <T extends BaseEvent>(
+  event: T,
+  chunk: BaseEvent,
+): T =>
   chunk.metadata === undefined ? event : { ...event, metadata: chunk.metadata };
 
 /**
@@ -109,7 +114,10 @@ const withChunkMetadata = <T extends BaseEvent>(event: T, chunk: BaseEvent): T =
  * expansion used to do — silently lost every provider payload a chunked stream
  * carried, while the same stream sent unchunked kept them.
  */
-const withChunkOrigin = <T extends BaseEvent>(event: T, chunk: BaseEvent): T => {
+const withChunkOrigin = <T extends BaseEvent>(
+  event: T,
+  chunk: BaseEvent,
+): T => {
   const withMetadata = withChunkMetadata(event, chunk);
   return chunk.rawEvent === undefined
     ? withMetadata
@@ -134,12 +142,15 @@ const withChunkOrigin = <T extends BaseEvent>(event: T, chunk: BaseEvent): T => 
  * `@ag-ui/core/schemas` is already a runtime import of this package
  * (enforce/) and zod is already a hard dependency, so this adds no edge.
  */
-const describedFields = (schema: { shape: Record<string, unknown> }): ReadonlySet<string> =>
-  new Set(Object.keys(schema.shape));
+const describedFields = (schema: {
+  shape: Record<string, unknown>;
+}): ReadonlySet<string> => new Set(Object.keys(schema.shape));
 
 const TEXT_CHUNK_FIELDS = describedFields(TextMessageChunkEventSchema);
 const TOOL_CHUNK_FIELDS = describedFields(ToolCallChunkEventSchema);
-const REASONING_CHUNK_FIELDS = describedFields(ReasoningMessageChunkEventSchema);
+const REASONING_CHUNK_FIELDS = describedFields(
+  ReasoningMessageChunkEventSchema,
+);
 
 /**
  * Whatever the chunk carries that this stage has no field for — a property
@@ -170,7 +181,9 @@ const unrecognisedChunkProperties = (
   let remainder: Record<string, unknown> | undefined;
   for (const key of Object.keys(chunk)) {
     if (described.has(key)) continue;
-    (remainder ??= {})[key] = (chunk as unknown as Record<string, unknown>)[key];
+    (remainder ??= {})[key] = (chunk as unknown as Record<string, unknown>)[
+      key
+    ];
   }
   return remainder;
 };
@@ -229,7 +242,8 @@ const carryRemainderOnOpener = (
   alreadyCarried: boolean,
   chunkType: string,
 ): void => {
-  if (remainder === undefined || alreadyCarried || synthesized.length === 0) return;
+  if (remainder === undefined || alreadyCarried || synthesized.length === 0)
+    return;
   const last = synthesized[synthesized.length - 1];
 
   // `hasOwnProperty`, not `in`. The spread below copies OWN enumerable
@@ -284,7 +298,9 @@ export const transformChunks =
               subagentRunId: pending.fields.subagentRunId,
             }),
           } as TextMessageEndEvent;
-          log?.event("TRANSFORM", "TEXT_MESSAGE_END", event, { messageId: event.messageId });
+          log?.event("TRANSFORM", "TEXT_MESSAGE_END", event, {
+            messageId: event.messageId,
+          });
           return [event];
         }
         case "tool": {
@@ -300,7 +316,9 @@ export const transformChunks =
               subagentRunId: pending.fields.subagentRunId,
             }),
           } as ToolCallEndEvent;
-          log?.event("TRANSFORM", "TOOL_CALL_END", event, { toolCallId: event.toolCallId });
+          log?.event("TRANSFORM", "TOOL_CALL_END", event, {
+            toolCallId: event.toolCallId,
+          });
           return [event];
         }
         case "reasoning": {
@@ -316,7 +334,9 @@ export const transformChunks =
               subagentRunId: pending.fields.subagentRunId,
             }),
           } as ReasoningMessageEndEvent;
-          log?.event("TRANSFORM", "REASONING_MESSAGE_END", event, { messageId: event.messageId });
+          log?.event("TRANSFORM", "REASONING_MESSAGE_END", event, {
+            messageId: event.messageId,
+          });
           return [event];
         }
       }
@@ -332,7 +352,8 @@ export const transformChunks =
     /** The lane holding an open stream of `kind` under `entityId`, if any. */
     const laneHolding = (kind: PendingStream["kind"], entityId: string) => {
       for (const [owner, pending] of lanes) {
-        if (pending.kind === kind && pendingEntityId(pending) === entityId) return { owner };
+        if (pending.kind === kind && pendingEntityId(pending) === entityId)
+          return { owner };
       }
       return undefined;
     };
@@ -383,7 +404,9 @@ export const transformChunks =
       // possible referent. The alternatives are continuing it or failing a stream
       // that is perfectly legal for an opener-only-tagging producer whose parent
       // happens to have a different-kind stream in flight.
-      const candidates = [...lanes.entries()].filter(([, pending]) => pending.kind === kind);
+      const candidates = [...lanes.entries()].filter(
+        ([, pending]) => pending.kind === kind,
+      );
       if (candidates.length === 1) return candidates[0][0];
       if (candidates.length > 1) {
         throw new Error(
@@ -420,7 +443,13 @@ export const transformChunks =
             // half-assembled message — the same class of cross-lane damage as closing on
             // an unrelated subagent's terminal. Events that carry no tag read as the
             // parent lane, which is what they are.
-            return [...closeLane((event as { subagentRunId?: string | null }).subagentRunId ?? undefined), event];
+            return [
+              ...closeLane(
+                (event as { subagentRunId?: string | null }).subagentRunId ??
+                  undefined,
+              ),
+              event,
+            ];
           // Run-level events describe the run as a whole rather than any one producer
           // within it, so every lane closes — otherwise a subagent's chunk stream would
           // outlive the run that carried it. MESSAGES_SNAPSHOT belongs here too: it
@@ -450,13 +479,17 @@ export const transformChunks =
           case EventType.SUBAGENT_ERROR: {
             // Its own lane only. A terminal with no id is malformed and must not be read
             // as closing the parent lane — a runtime null reads the same as absent.
-            const terminalOwner = (event as { subagentRunId?: string | null }).subagentRunId;
+            const terminalOwner = (event as { subagentRunId?: string | null })
+              .subagentRunId;
             if (terminalOwner == null) return [event];
             return [...closeLane(terminalOwner), event];
           }
           case EventType.TEXT_MESSAGE_CHUNK: {
             const messageChunkEvent = event as TextMessageChunkEvent;
-            const textChunkRemainder = unrecognisedChunkProperties(event, TEXT_CHUNK_FIELDS);
+            const textChunkRemainder = unrecognisedChunkProperties(
+              event,
+              TEXT_CHUNK_FIELDS,
+            );
             const lane = resolveLane(
               "text",
               messageChunkEvent.messageId,
@@ -497,7 +530,9 @@ export const transformChunks =
               textMessageResult.push(...closeLane(lane));
 
               if (messageChunkEvent.messageId === undefined) {
-                throw new Error("First TEXT_MESSAGE_CHUNK must have a messageId");
+                throw new Error(
+                  "First TEXT_MESSAGE_CHUNK must have a messageId",
+                );
               }
 
               textMessageFields = {
@@ -513,7 +548,10 @@ export const transformChunks =
                 // present-but-wrong role reaching here has not been judged
                 // yet, and substituting for it would repair a producer defect
                 // that is fatal when the same value is sent unchunked.
-                role: messageChunkEvent.role === undefined ? "assistant" : messageChunkEvent.role,
+                role:
+                  messageChunkEvent.role === undefined
+                    ? "assistant"
+                    : messageChunkEvent.role,
                 name: messageChunkEvent.name,
                 subagentRunId: messageChunkEvent.subagentRunId,
               };
@@ -524,7 +562,9 @@ export const transformChunks =
                   type: EventType.TEXT_MESSAGE_START,
                   messageId: messageChunkEvent.messageId,
                   role: textMessageFields.role,
-                  ...(messageChunkEvent.name !== undefined && { name: messageChunkEvent.name }),
+                  ...(messageChunkEvent.name !== undefined && {
+                    name: messageChunkEvent.name,
+                  }),
                   // `!== undefined`, not `!= null`: an absent owner is absent,
                   // but a null one is a violation the spec names, and dropping
                   // it here would hide it from the stage that rejects it.
@@ -537,9 +577,14 @@ export const transformChunks =
 
               textMessageResult.push(textMessageStartEvent);
 
-              log?.event("TRANSFORM", "TEXT_MESSAGE_START", textMessageStartEvent, {
-                messageId: messageChunkEvent.messageId,
-              });
+              log?.event(
+                "TRANSFORM",
+                "TEXT_MESSAGE_START",
+                textMessageStartEvent,
+                {
+                  messageId: messageChunkEvent.messageId,
+                },
+              );
             }
 
             // A content event is emitted when the chunk carries a delta OR a
@@ -547,7 +592,10 @@ export const transformChunks =
             // synthesized START deliberately claims no rawEvent, so a first
             // chunk carrying rawEvent but no delta needs this event as the
             // payload's carrier, exactly as a continuation does.
-            if (messageChunkEvent.delta !== undefined || messageChunkEvent.rawEvent !== undefined) {
+            if (
+              messageChunkEvent.delta !== undefined ||
+              messageChunkEvent.rawEvent !== undefined
+            ) {
               // `!== undefined`, not `??`, on the incoming tag — here and on
               // every continuation path below: a null tag is a violation the
               // spec names, and `??` read it as absence, so a continuation's
@@ -589,11 +637,16 @@ export const transformChunks =
                   // producer defect fatal when sent unchunked and invisible when
                   // sent as a chunk behind a middleware. Preserved, it is fatal on
                   // both paths.
-                  delta: messageChunkEvent.delta === undefined ? "" : messageChunkEvent.delta,
+                  delta:
+                    messageChunkEvent.delta === undefined
+                      ? ""
+                      : messageChunkEvent.delta,
                   // Prefer the INCOMING chunk's tag over the opener's, so a producer that
                   // attributes every chunk sees its own attribution on the output rather
                   // than a value this transform remembered.
-                  ...(contentOwner !== undefined && { subagentRunId: contentOwner }),
+                  ...(contentOwner !== undefined && {
+                    subagentRunId: contentOwner,
+                  }),
                 } as TextMessageContentEvent,
                 messageChunkEvent,
               );
@@ -601,9 +654,14 @@ export const transformChunks =
               textMessageResult.push(textMessageContentEvent);
               textRemainderCarried = true;
 
-              log?.event("TRANSFORM", "TEXT_MESSAGE_CONTENT", textMessageContentEvent, {
-                messageId: textMessageFields.messageId,
-              });
+              log?.event(
+                "TRANSFORM",
+                "TEXT_MESSAGE_CONTENT",
+                textMessageContentEvent,
+                {
+                  messageId: textMessageFields.messageId,
+                },
+              );
             }
 
             // A continuation chunk carrying only metadata — a final chunk with
@@ -640,11 +698,15 @@ export const transformChunks =
                 type: EventType.TEXT_MESSAGE_CONTENT,
                 messageId: textMessageFields!.messageId,
                 delta: "",
-                ...(messageChunkEvent.metadata !== undefined && { metadata: messageChunkEvent.metadata }),
+                ...(messageChunkEvent.metadata !== undefined && {
+                  metadata: messageChunkEvent.metadata,
+                }),
                 ...(messageChunkEvent.rawEvent !== undefined && {
                   rawEvent: messageChunkEvent.rawEvent,
                 }),
-                ...(metadataOwner !== undefined && { subagentRunId: metadataOwner }),
+                ...(metadataOwner !== undefined && {
+                  subagentRunId: metadataOwner,
+                }),
               } as TextMessageContentEvent);
               textRemainderCarried = true;
             }
@@ -659,7 +721,10 @@ export const transformChunks =
           }
           case EventType.TOOL_CALL_CHUNK: {
             const toolCallChunkEvent = event as ToolCallChunkEvent;
-            const toolChunkRemainder = unrecognisedChunkProperties(event, TOOL_CHUNK_FIELDS);
+            const toolChunkRemainder = unrecognisedChunkProperties(
+              event,
+              TOOL_CHUNK_FIELDS,
+            );
             const lane = resolveLane(
               "tool",
               toolCallChunkEvent.toolCallId,
@@ -700,7 +765,9 @@ export const transformChunks =
                 throw new Error("First TOOL_CALL_CHUNK must have a toolCallId");
               }
               if (toolCallChunkEvent.toolCallName === undefined) {
-                throw new Error("First TOOL_CALL_CHUNK must have a toolCallName");
+                throw new Error(
+                  "First TOOL_CALL_CHUNK must have a toolCallName",
+                );
               }
               toolCallFields = {
                 toolCallId: toolCallChunkEvent.toolCallId,
@@ -740,7 +807,10 @@ export const transformChunks =
               });
             }
 
-            if (toolCallChunkEvent.delta !== undefined || toolCallChunkEvent.rawEvent !== undefined) {
+            if (
+              toolCallChunkEvent.delta !== undefined ||
+              toolCallChunkEvent.rawEvent !== undefined
+            ) {
               const argsOwner =
                 toolCallChunkEvent.subagentRunId !== undefined
                   ? toolCallChunkEvent.subagentRunId
@@ -757,7 +827,10 @@ export const transformChunks =
                   // producer defect fatal when sent unchunked and invisible when
                   // sent as a chunk behind a middleware. Preserved, it is fatal on
                   // both paths.
-                  delta: toolCallChunkEvent.delta === undefined ? "" : toolCallChunkEvent.delta,
+                  delta:
+                    toolCallChunkEvent.delta === undefined
+                      ? ""
+                      : toolCallChunkEvent.delta,
                   // Prefer the INCOMING chunk's tag over the opener's, so a producer that
                   // attributes every chunk sees its own attribution on the output rather
                   // than a value this transform remembered.
@@ -792,11 +865,15 @@ export const transformChunks =
                 type: EventType.TOOL_CALL_ARGS,
                 toolCallId: toolCallFields!.toolCallId,
                 delta: "",
-                ...(toolCallChunkEvent.metadata !== undefined && { metadata: toolCallChunkEvent.metadata }),
+                ...(toolCallChunkEvent.metadata !== undefined && {
+                  metadata: toolCallChunkEvent.metadata,
+                }),
                 ...(toolCallChunkEvent.rawEvent !== undefined && {
                   rawEvent: toolCallChunkEvent.rawEvent,
                 }),
-                ...(metadataOwner !== undefined && { subagentRunId: metadataOwner }),
+                ...(metadataOwner !== undefined && {
+                  subagentRunId: metadataOwner,
+                }),
               } as ToolCallArgsEvent);
               toolRemainderCarried = true;
             }
@@ -811,7 +888,10 @@ export const transformChunks =
           }
           case EventType.REASONING_MESSAGE_CHUNK: {
             const reasoningChunkEvent = event as ReasoningMessageChunkEvent;
-            const reasoningChunkRemainder = unrecognisedChunkProperties(event, REASONING_CHUNK_FIELDS);
+            const reasoningChunkRemainder = unrecognisedChunkProperties(
+              event,
+              REASONING_CHUNK_FIELDS,
+            );
             const lane = resolveLane(
               "reasoning",
               reasoningChunkEvent.messageId,
@@ -839,14 +919,19 @@ export const transformChunks =
               reasoningMessageResult.push(...closeLane(lane));
 
               if (reasoningChunkEvent.messageId === undefined) {
-                throw new Error("First REASONING_MESSAGE_CHUNK must have a messageId");
+                throw new Error(
+                  "First REASONING_MESSAGE_CHUNK must have a messageId",
+                );
               }
 
               reasoningMessageFields = {
                 messageId: reasoningChunkEvent.messageId,
                 subagentRunId: reasoningChunkEvent.subagentRunId,
               };
-              lanes.set(lane, { kind: "reasoning", fields: reasoningMessageFields });
+              lanes.set(lane, {
+                kind: "reasoning",
+                fields: reasoningMessageFields,
+              });
 
               const reasoningMessageStartEvent = withChunkMetadata(
                 {
@@ -864,12 +949,20 @@ export const transformChunks =
               );
               reasoningMessageResult.push(reasoningMessageStartEvent);
 
-              log?.event("TRANSFORM", "REASONING_MESSAGE_START", reasoningMessageStartEvent, {
-                messageId: reasoningChunkEvent.messageId,
-              });
+              log?.event(
+                "TRANSFORM",
+                "REASONING_MESSAGE_START",
+                reasoningMessageStartEvent,
+                {
+                  messageId: reasoningChunkEvent.messageId,
+                },
+              );
             }
 
-            if (reasoningChunkEvent.delta !== undefined || reasoningChunkEvent.rawEvent !== undefined) {
+            if (
+              reasoningChunkEvent.delta !== undefined ||
+              reasoningChunkEvent.rawEvent !== undefined
+            ) {
               const contentOwner =
                 reasoningChunkEvent.subagentRunId !== undefined
                   ? reasoningChunkEvent.subagentRunId
@@ -886,11 +979,16 @@ export const transformChunks =
                   // producer defect fatal when sent unchunked and invisible when
                   // sent as a chunk behind a middleware. Preserved, it is fatal on
                   // both paths.
-                  delta: reasoningChunkEvent.delta === undefined ? "" : reasoningChunkEvent.delta,
+                  delta:
+                    reasoningChunkEvent.delta === undefined
+                      ? ""
+                      : reasoningChunkEvent.delta,
                   // Prefer the INCOMING chunk's tag over the opener's, so a producer that
                   // attributes every chunk sees its own attribution on the output rather
                   // than a value this transform remembered.
-                  ...(contentOwner !== undefined && { subagentRunId: contentOwner }),
+                  ...(contentOwner !== undefined && {
+                    subagentRunId: contentOwner,
+                  }),
                 } as ReasoningMessageContentEvent,
                 reasoningChunkEvent,
               );
@@ -898,9 +996,14 @@ export const transformChunks =
               reasoningMessageResult.push(reasoningMessageContentEvent);
               reasoningRemainderCarried = true;
 
-              log?.event("TRANSFORM", "REASONING_MESSAGE_CONTENT", reasoningMessageContentEvent, {
-                messageId: reasoningMessageFields.messageId,
-              });
+              log?.event(
+                "TRANSFORM",
+                "REASONING_MESSAGE_CONTENT",
+                reasoningMessageContentEvent,
+                {
+                  messageId: reasoningMessageFields.messageId,
+                },
+              );
             }
 
             // Same as the text case above.
@@ -921,11 +1024,15 @@ export const transformChunks =
                 type: EventType.REASONING_MESSAGE_CONTENT,
                 messageId: reasoningMessageFields!.messageId,
                 delta: "",
-                ...(reasoningChunkEvent.metadata !== undefined && { metadata: reasoningChunkEvent.metadata }),
+                ...(reasoningChunkEvent.metadata !== undefined && {
+                  metadata: reasoningChunkEvent.metadata,
+                }),
                 ...(reasoningChunkEvent.rawEvent !== undefined && {
                   rawEvent: reasoningChunkEvent.rawEvent,
                 }),
-                ...(metadataOwner !== undefined && { subagentRunId: metadataOwner }),
+                ...(metadataOwner !== undefined && {
+                  subagentRunId: metadataOwner,
+                }),
               } as ReasoningMessageContentEvent);
               reasoningRemainderCarried = true;
             }

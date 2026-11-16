@@ -35,7 +35,8 @@ export function floatToHalf(v: number): number {
     man = (man | 0x800000) >> (1 - exp);
     return sign | ((man + 0x1000) >> 13);
   }
-  if (exp >= 31) return sign | 0x7c00 | (((x >>> 23) & 0xff) === 0xff && man ? 0x200 : 0);
+  if (exp >= 31)
+    return sign | 0x7c00 | (((x >>> 23) & 0xff) === 0xff && man ? 0x200 : 0);
   const r = sign | (exp << 10) | (man >> 13);
   return man & 0x1000 ? r + 1 : r;
 }
@@ -45,6 +46,7 @@ export function toFloat32(data: ArrayLike<number>): Float32Array {
   if (data instanceof Float32Array) return data;
   const out = new Float32Array(data.length);
   const isBits = data instanceof Uint16Array;
-  for (let i = 0; i < out.length; i++) out[i] = isBits ? halfToFloat(data[i]!) : data[i]!;
+  for (let i = 0; i < out.length; i++)
+    out[i] = isBits ? halfToFloat(data[i]!) : data[i]!;
   return out;
 }

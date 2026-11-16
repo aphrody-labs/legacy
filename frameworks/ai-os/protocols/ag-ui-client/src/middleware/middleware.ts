@@ -22,12 +22,18 @@ export interface EventWithState {
 }
 
 export abstract class Middleware {
-  abstract run(input: RunAgentInput, next: AbstractAgent): Observable<BaseEvent>;
+  abstract run(
+    input: RunAgentInput,
+    next: AbstractAgent,
+  ): Observable<BaseEvent>;
 
   /**
    * Runs the next agent in the chain with automatic chunk transformation.
    */
-  protected runNext(input: RunAgentInput, next: AbstractAgent): Observable<BaseEvent> {
+  protected runNext(
+    input: RunAgentInput,
+    next: AbstractAgent,
+  ): Observable<BaseEvent> {
     return next.run(input).pipe(
       transformChunks(false), // Always transform chunks to full events
     );
@@ -45,7 +51,9 @@ export abstract class Middleware {
     // `=== undefined`, not truthiness: State is any JSON value, so `false`,
     // `0`, `""` and `null` are states a run legitimately starts from. Only a
     // genuinely absent state defaults to the empty object.
-    let currentState = structuredClone_(input.state === undefined ? {} : input.state);
+    let currentState = structuredClone_(
+      input.state === undefined ? {} : input.state,
+    );
 
     // Use a ReplaySubject to feed events one by one
     const eventSubject = new ReplaySubject<BaseEvent>();

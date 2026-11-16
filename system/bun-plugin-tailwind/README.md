@@ -1,6 +1,7 @@
 # @aphrody/bun-plugin-tailwind
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Tailwind CSS v4 for Bun: Bun.build, the HTML dev server and Bun.serve, a PostCSS plugin on the same engine, and a Material 3 preset
 
 | Type | Path |
@@ -16,6 +17,7 @@ bun run --cwd system/bun-plugin-tailwind check:types
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Tailwind CSS v4 for Bun, on `@tailwindcss/node` and the Oxide scanner, with no Node.js involved:

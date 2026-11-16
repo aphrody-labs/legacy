@@ -85,10 +85,7 @@ const CODED = {
   ],
   HasFieldMarshal: [1, [T.Field, T.Param]],
   HasDeclSecurity: [2, [T.TypeDef, T.MethodDef, T.Assembly]],
-  MemberRefParent: [
-    3,
-    [T.TypeDef, T.TypeRef, T.ModuleRef, T.MethodDef, T.TypeSpec],
-  ],
+  MemberRefParent: [3, [T.TypeDef, T.TypeRef, T.ModuleRef, T.MethodDef, T.TypeSpec]],
   HasSemantics: [1, [T.Event, T.Property]],
   MethodDefOrRef: [1, [T.MethodDef, T.MemberRef]],
   MemberForwarded: [1, [T.Field, T.MethodDef]],
@@ -337,12 +334,9 @@ export class Metadata {
     const b = new DataView(buf);
     this.b = b;
     this.bytes = new Uint8Array(buf);
-    if (b.getUint32(root, true) !== 0x424a5342)
-      throw new Error("signature BSJB absente (§24.2.1)");
+    if (b.getUint32(root, true) !== 0x424a5342) throw new Error("signature BSJB absente (§24.2.1)");
     const vlen = b.getUint32(root + 12, true);
-    this.version = utf8
-      .decode(this.bytes.subarray(root + 16, root + 16 + vlen))
-      .replace(/\0+$/, "");
+    this.version = utf8.decode(this.bytes.subarray(root + 16, root + 16 + vlen)).replace(/\0+$/, "");
     let p = root + 16 + vlen + 2;
     const nstreams = b.getUint16(p, true);
     p += 2;
@@ -380,17 +374,8 @@ export class Metadata {
     }
     // Heap sizes bit 0x40: 4 extra bytes after the counts (EnC #- stream).
     if (heap & 0x40) q += 4;
-    for (const ptr of [
-      T.FieldPtr,
-      T.MethodPtr,
-      T.ParamPtr,
-      T.EventPtr,
-      T.PropertyPtr,
-    ]) {
-      if (rows[ptr])
-        throw new Error(
-          "indirection tables (non-optimized #-) not supported",
-        );
+    for (const ptr of [T.FieldPtr, T.MethodPtr, T.ParamPtr, T.EventPtr, T.PropertyPtr]) {
+      if (rows[ptr]) throw new Error("indirection tables (non-optimized #-) not supported");
     }
     const strW = heap & 0x01 ? 4 : 2;
     const guidW = heap & 0x02 ? 4 : 2;
@@ -426,8 +411,7 @@ export class Metadata {
   raw(table: number, row: number, col: string): number {
     const tb = this.tables[table];
     const c = tb?.cols.get(col);
-    if (!tb || !c || row < 1 || row > tb.rows)
-      throw new Error(`table ${table} row ${row} column ${col} invalid`);
+    if (!tb || !c || row < 1 || row > tb.rows) throw new Error(`table ${table} row ${row} column ${col} invalid`);
     const o = tb.base + (row - 1) * tb.size + c.off;
     return c.size === 2 ? this.b.getUint16(o, true) : this.b.getUint32(o, true);
   }
@@ -437,8 +421,7 @@ export class Metadata {
     const c = this.tables[table]?.cols.get(col)?.col;
     const v = this.raw(table, row, col);
     if (typeof c === "object") return { table: c.t, row: v };
-    if (typeof c !== "string" || !(c in CODED))
-      throw new Error(`column ${col} not an index`);
+    if (typeof c !== "string" || !(c in CODED)) throw new Error(`column ${col} not an index`);
     const [bits, tabs] = CODED[c as Coded];
     return { table: tabs[v & ((1 << bits) - 1)] ?? -1, row: v >>> bits };
   }
@@ -478,10 +461,7 @@ export class Metadata {
 
   guid(idx: number): string {
     if (!idx) return "";
-    const g = this.bytes.subarray(
-      this.guids + (idx - 1) * 16,
-      this.guids + idx * 16,
-    );
+    const g = this.bytes.subarray(this.guids + (idx - 1) * 16, this.guids + idx * 16);
     const h = [...g].map((x) => x.toString(16).padStart(2, "0"));
     const le = (a: number, n: number) =>
       h
@@ -493,9 +473,7 @@ export class Metadata {
 
   /** End (exclusive) of a row list (FieldList, MethodList, ParamList): start of the next row. */
   listEnd(table: number, row: number, col: string, target: number): number {
-    return row < this.rows(table)
-      ? this.raw(table, row + 1, col)
-      : this.rows(target) + 1;
+    return row < this.rows(table) ? this.raw(table, row + 1, col) : this.rows(target) + 1;
   }
 }
 
@@ -520,21 +498,11 @@ export class Reader {
     const a = this.u8();
     if ((a & 0x80) === 0) return a;
     if ((a & 0xc0) === 0x80) return ((a & 0x3f) << 8) | this.u8();
-    return (
-      (((a & 0x1f) << 24) |
-        (this.u8() << 16) |
-        (this.u8() << 8) |
-        this.u8()) >>>
-      0
-    );
+    return (((a & 0x1f) << 24) | (this.u8() << 16) | (this.u8() << 8) | this.u8()) >>> 0;
   }
   view(n: number): DataView {
     if (this.pos + n > this.end) throw new Error("truncated blob");
-    const v = new DataView(
-      this.bytes.buffer,
-      this.bytes.byteOffset + this.pos,
-      n,
-    );
+    const v = new DataView(this.bytes.buffer, this.bytes.byteOffset + this.pos, n);
     this.pos += n;
     return v;
   }
@@ -683,14 +651,7 @@ export function readType(r: Reader): Sig {
     case E.PINNED:
       return readType(r);
     default:
-      if (
-        (e >= E.VOID && e <= E.STRING) ||
-        e === E.I ||
-        e === E.U ||
-        e === E.OBJECT ||
-        e === E.TYPEDBYREF
-      )
-        return { k: "prim", e };
+      if ((e >= E.VOID && e <= E.STRING) || e === E.I || e === E.U || e === E.OBJECT || e === E.TYPEDBYREF) return { k: "prim", e };
       return { k: "other", e };
   }
 }
@@ -748,13 +709,9 @@ export class Assembly {
   constructor(md: Metadata) {
     this.md = md;
     const a = md.rows(T.Assembly);
-    this.name = a
-      ? md.str(T.Assembly, 1, "Name")
-      : md.str(T.Module, 1, "Name").replace(/\.dll$/i, "");
+    this.name = a ? md.str(T.Assembly, 1, "Name") : md.str(T.Module, 1, "Name").replace(/\.dll$/i, "");
     this.version = a
-      ? ["MajorVersion", "MinorVersion", "BuildNumber", "RevisionNumber"]
-          .map((c) => md.raw(T.Assembly, 1, c))
-          .join(".")
+      ? ["MajorVersion", "MinorVersion", "BuildNumber", "RevisionNumber"].map((c) => md.raw(T.Assembly, 1, c)).join(".")
       : "0.0.0.0";
     this.methodOwner = new Int32Array(md.rows(T.MethodDef) + 1);
     this.fieldOwner = new Int32Array(md.rows(T.Field) + 1);
@@ -767,10 +724,7 @@ export class Assembly {
       for (let f = f0; f < f1; f++) this.fieldOwner[f] = td;
     }
     for (let i = 1; i <= md.rows(T.NestedClass); i++) {
-      this.enclosing.set(
-        md.raw(T.NestedClass, i, "NestedClass"),
-        md.raw(T.NestedClass, i, "EnclosingClass"),
-      );
+      this.enclosing.set(md.raw(T.NestedClass, i, "NestedClass"), md.raw(T.NestedClass, i, "EnclosingClass"));
     }
     for (let i = 1; i <= md.rows(T.CustomAttribute); i++) {
       const p = md.ref(T.CustomAttribute, i, "Parent");
@@ -790,10 +744,7 @@ export class Assembly {
       });
     }
     for (let i = 1; i <= md.rows(T.FieldLayout); i++) {
-      this.fieldOffsets.set(
-        md.raw(T.FieldLayout, i, "Field"),
-        md.raw(T.FieldLayout, i, "Offset"),
-      );
+      this.fieldOffsets.set(md.raw(T.FieldLayout, i, "Field"), md.raw(T.FieldLayout, i, "Offset"));
     }
   }
 
@@ -804,16 +755,14 @@ export class Assembly {
       const n = md.str(T.TypeDef, ref.row, "TypeName");
       const ns = md.str(T.TypeDef, ref.row, "TypeNamespace");
       const outer = this.enclosing.get(ref.row);
-      if (outer)
-        return `${this.typeName({ table: T.TypeDef, row: outer })}+${n}`;
+      if (outer) return `${this.typeName({ table: T.TypeDef, row: outer })}+${n}`;
       return ns ? `${ns}.${n}` : n;
     }
     if (ref.table === T.TypeRef) {
       const n = md.str(T.TypeRef, ref.row, "TypeName");
       const ns = md.str(T.TypeRef, ref.row, "TypeNamespace");
       const scope = md.ref(T.TypeRef, ref.row, "ResolutionScope");
-      if (scope.table === T.TypeRef && scope.row)
-        return `${this.typeName(scope)}+${n}`;
+      if (scope.table === T.TypeRef && scope.row) return `${this.typeName(scope)}+${n}`;
       return ns ? `${ns}.${n}` : n;
     }
     if (ref.table === T.TypeSpec) return `typespec#${ref.row}`;
@@ -830,8 +779,7 @@ export class Assembly {
   findTypeDef(full: string): number {
     if (!this.byName) {
       this.byName = new Map();
-      for (let td = 1; td <= this.md.rows(T.TypeDef); td++)
-        this.byName.set(this.typeName({ table: T.TypeDef, row: td }), td);
+      for (let td = 1; td <= this.md.rows(T.TypeDef); td++) this.byName.set(this.typeName({ table: T.TypeDef, row: td }), td);
     }
     return this.byName.get(full) ?? 0;
   }
@@ -876,15 +824,11 @@ export class Assembly {
           table: T.TypeDef,
           row: this.ownerOfMethod(ctor.row),
         });
-        sig = readMethodSig(
-          new Reader(md.blob(T.MethodDef, ctor.row, "Signature")),
-        );
+        sig = readMethodSig(new Reader(md.blob(T.MethodDef, ctor.row, "Signature")));
       } else {
         const cls = md.ref(T.MemberRef, ctor.row, "Class");
         type = this.typeName(cls);
-        sig = readMethodSig(
-          new Reader(md.blob(T.MemberRef, ctor.row, "Signature")),
-        );
+        sig = readMethodSig(new Reader(md.blob(T.MemberRef, ctor.row, "Signature")));
       }
       try {
         return {
@@ -898,16 +842,12 @@ export class Assembly {
   }
 
   /** Attribute blob (§23.3): prologue 0x0001, fixed arguments, named arguments. */
-  private decodeAttribute(
-    blob: Uint8Array,
-    ctor: MethodSig,
-  ): { fixed: AttrValue[]; named: Record<string, AttrValue> } {
+  private decodeAttribute(blob: Uint8Array, ctor: MethodSig): { fixed: AttrValue[]; named: Record<string, AttrValue> } {
     const r = new Reader(blob);
     const fixed: AttrValue[] = [];
     const named: Record<string, AttrValue> = {};
     if (blob.length < 2) return { fixed, named };
-    if (r.u8() !== 0x01 || r.u8() !== 0x00)
-      throw new Error("prologue d'attribut invalide");
+    if (r.u8() !== 0x01 || r.u8() !== 0x00) throw new Error("prologue d'attribut invalide");
     for (const p of ctor.params) fixed.push(this.readFixed(r, p));
     if (r.end - r.pos < 2) return { fixed, named };
     const n = r.view(2).getUint16(0, true);
@@ -922,14 +862,9 @@ export class Assembly {
 
   private readFixed(r: Reader, s: Sig): AttrValue {
     if (s.k === "prim")
-      return s.e === E.STRING
-        ? r.serString()
-        : s.e === E.OBJECT
-          ? this.readElem(r, readFieldOrPropType(r))
-          : readPrim(r, s.e);
+      return s.e === E.STRING ? r.serString() : s.e === E.OBJECT ? this.readElem(r, readFieldOrPropType(r)) : readPrim(r, s.e);
     if (s.k === "class") return r.serString(); // System.Type
-    if (s.k === "valuetype")
-      return readPrim(r, this.enumUnderlying(s.ref) ?? E.I4);
+    if (s.k === "valuetype") return readPrim(r, this.enumUnderlying(s.ref) ?? E.I4);
     if (s.k === "szarray") {
       const n = r.view(4).getUint32(0, true);
       if (n === 0xffffffff) return null;
@@ -956,8 +891,7 @@ export class Assembly {
         let e = this.enumByName.get(name);
         if (e === undefined) {
           const td = this.findTypeDef(name);
-          e =
-            (td && this.enumUnderlying({ table: T.TypeDef, row: td })) || E.I4;
+          e = (td && this.enumUnderlying({ table: T.TypeDef, row: td })) || E.I4;
           this.enumByName.set(name, e);
         }
         return readPrim(r, e);
@@ -966,8 +900,7 @@ export class Assembly {
         const n = r.view(4).getUint32(0, true);
         if (n === 0xffffffff) return null;
         const out: AttrValue[] = [];
-        for (let i = 0; i < n; i++)
-          out.push(this.readElem(r, ft.of ?? { e: E.I4 }));
+        for (let i = 0; i < n; i++) out.push(this.readElem(r, ft.of ?? { e: E.I4 }));
         return out;
       }
       default:
@@ -1034,10 +967,7 @@ export function readAssembly(buf: ArrayBuffer): Assembly {
   const pe = parsePe(buf);
   if (!pe) throw new Error("not a PE file");
   const cli = pe.dir(14);
-  if (!cli.rva)
-    throw new Error(
-      "no CLI header (directory 14): native binary (NativeAOT?) and not an IL assembly",
-    );
+  if (!cli.rva) throw new Error("no CLI header (directory 14): native binary (NativeAOT?) and not an IL assembly");
   const o = pe.off(cli.rva);
   const mdRva = pe.view.getUint32(o + 8, true);
   return new Assembly(new Metadata(buf, pe.off(mdRva)));

@@ -3,10 +3,11 @@
 # Native inference for Bun
 
 <!-- catalog:begin unit -->
+
 > No description in the manifest.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                 |
+| :---------- | :----------------------------------- |
 | Bun package | `frameworks/ai-os/engines/inference` |
 
 **Commands**

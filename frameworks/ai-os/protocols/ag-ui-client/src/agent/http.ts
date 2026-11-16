@@ -29,7 +29,9 @@ function sanitizeOutgoingInput(input: RunAgentInput): RunAgentInput {
       changed = true;
       // Spread + delete rather than rest-destructuring: Message is a union, and
       // rest types may only be created from object types under tsc.
-      const copy = { ...message } as typeof message & { subagentRunId?: string | null };
+      const copy = { ...message } as typeof message & {
+        subagentRunId?: string | null;
+      };
       delete copy.subagentRunId;
       return copy as typeof message;
     }
@@ -85,7 +87,8 @@ export class HttpAgent extends AbstractAgent {
     // instance; a browser's native fetch is a checked-receiver method and throws
     // "Illegal invocation" when not called with `window` as `this`. (Node's fetch
     // tolerates any receiver, so this only surfaces in the browser.)
-    this.fetch = config.fetch ?? ((url, requestInit) => fetch(url, requestInit));
+    this.fetch =
+      config.fetch ?? ((url, requestInit) => fetch(url, requestInit));
   }
 
   run(input: RunAgentInput): Observable<BaseEvent> {
@@ -109,7 +112,9 @@ export class HttpAgent extends AbstractAgent {
     cloned.fetch = this.fetch;
 
     const newController = new AbortController();
-    const originalSignal = this.abortController.signal as AbortSignal & { reason?: unknown };
+    const originalSignal = this.abortController.signal as AbortSignal & {
+      reason?: unknown;
+    };
     if (originalSignal.aborted) {
       newController.abort(originalSignal.reason);
     }

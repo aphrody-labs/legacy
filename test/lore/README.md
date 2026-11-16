@@ -1,6 +1,7 @@
 # Lore Integration Tests
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Lore version control: lore-integration-tests (absorbed from Epic Games Lore, MIT)
 
 | Type | Path |
@@ -16,6 +17,7 @@ cargo test -p aphrody-lore-integration-tests
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 This module currently contains the following tests:

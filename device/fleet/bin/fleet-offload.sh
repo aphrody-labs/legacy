@@ -23,13 +23,13 @@ for b in fleet-cgsample fleet-cgreport fleet-atopreport fleet-run fleet-offload-
 done
 inst "$src/cluster.toml" /etc/fleet/cluster.toml 0644 || true
 [ -f "$src/../../tools/identity.toml" ] && { inst "$src/../../tools/identity.toml" /etc/fleet/identity.toml 0644 || true; }
-inst "$src/../../packages/env-kit/loaders/shell/discover.sh" /usr/local/lib/aphrody/discover.sh 0644 || true
-inst "$src/../../packages/env-kit/loaders/shell/site.sh" /usr/local/lib/aphrody/site.sh 0644 || true
+inst "$src/../../../system/env-kit/loaders/shell/discover.sh" /usr/local/lib/aphrody/discover.sh 0644 || true
+inst "$src/../../../system/env-kit/loaders/shell/site.sh" /usr/local/lib/aphrody/site.sh 0644 || true
 # /.well-known/aphrody/host listener (mesh + loopback :8399) in nginx, rendered for this host. prd (production) gets the files and the timer only:
 # its nginx conf and reload wait for the owner's prd window (listed at the end of apply).
 ngx=0 ngx_skipped=0
 if [ -d /etc/nginx/conf.d ]; then
-  . "$src/../../packages/env-kit/loaders/shell/site.sh"
+  . "$src/../../../system/env-kit/loaders/shell/site.sh"
   wk=$(mktemp); sed "s/__ROLE__/$role/g" "$src/nginx-wellknown.conf.in" > "$wk.in"
   if site_render "$wk.in" > "$wk"; then
     if [ "$role" = prd ]; then cmp -s "$wk" /etc/nginx/conf.d/aphrody-wellknown.conf 2>/dev/null || ngx_skipped=1

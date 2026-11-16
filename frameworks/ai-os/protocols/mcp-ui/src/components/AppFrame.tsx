@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
-import type { CallToolResult, Implementation } from '@modelcontextprotocol/client';
+import type {
+  CallToolResult,
+  Implementation,
+} from "@modelcontextprotocol/client";
 
 import {
   type AppBridge,
@@ -8,9 +11,12 @@ import {
   type McpUiSizeChangedNotification,
   type McpUiResourceCsp,
   type McpUiAppCapabilities,
-} from '@modelcontextprotocol/ext-apps/app-bridge';
+} from "@modelcontextprotocol/ext-apps/app-bridge";
 
-import { setupSandboxProxyIframe, type SandboxCancelRef } from '../utils/app-host-utils';
+import {
+  setupSandboxProxyIframe,
+  type SandboxCancelRef,
+} from "../utils/app-host-utils";
 
 /**
  * Build sandbox URL with CSP query parameter for HTTP header-based CSP enforcement.
@@ -24,7 +30,7 @@ import { setupSandboxProxyIframe, type SandboxCancelRef } from '../utils/app-hos
 function buildSandboxUrl(baseUrl: URL, csp?: McpUiResourceCsp): URL {
   const url = new URL(baseUrl.href);
   if (csp && Object.keys(csp).length > 0) {
-    url.searchParams.set('csp', JSON.stringify(csp));
+    url.searchParams.set("csp", JSON.stringify(csp));
   }
   return url;
 }
@@ -77,7 +83,7 @@ export interface AppFrameProps {
   appBridge: AppBridge;
 
   /** Callback when guest reports size change */
-  onSizeChanged?: (params: McpUiSizeChangedNotification['params']) => void;
+  onSizeChanged?: (params: McpUiSizeChangedNotification["params"]) => void;
 
   /** Callback when app initialization completes, with app info */
   onInitialized?: (appInfo: AppInfo) => void;
@@ -115,8 +121,16 @@ export interface AppFrameProps {
  * ```
  */
 export const AppFrame = (props: AppFrameProps) => {
-  const { html, sandbox, appBridge, onSizeChanged, onInitialized, toolInput, toolResult, onError } =
-    props;
+  const {
+    html,
+    sandbox,
+    appBridge,
+    onSizeChanged,
+    onInitialized,
+    toolInput,
+    toolResult,
+    onError,
+  } = props;
 
   const [iframeReady, setIframeReady] = useState(false);
   const [bridgeConnected, setBridgeConnected] = useState(false);
@@ -174,14 +188,20 @@ export const AppFrame = (props: AppFrameProps) => {
     const setup = async () => {
       try {
         // If switching to a different sandbox URL or appBridge, clean up the old iframe first
-        if (iframeRef.current && containerRef.current?.contains(iframeRef.current)) {
+        if (
+          iframeRef.current &&
+          containerRef.current?.contains(iframeRef.current)
+        ) {
           containerRef.current.removeChild(iframeRef.current);
           iframeRef.current = null;
           currentSandboxUrlRef.current = null;
           currentAppBridgeRef.current = null;
         }
 
-        const { iframe, onReady } = await setupSandboxProxyIframe(sandboxUrl, cancelRef);
+        const { iframe, onReady } = await setupSandboxProxyIframe(
+          sandboxUrl,
+          cancelRef,
+        );
 
         if (!mounted) return;
 
@@ -213,7 +233,7 @@ export const AppFrame = (props: AppFrameProps) => {
         // Hook into initialization
         appBridge.oninitialized = () => {
           if (!mounted) return;
-          console.log('[AppFrame] App initialized');
+          console.log("[AppFrame] App initialized");
           setIframeReady(true);
           onInitializedRef.current?.({
             appVersion: appBridge.getAppVersion(),
@@ -223,14 +243,17 @@ export const AppFrame = (props: AppFrameProps) => {
 
         // Connect the bridge
         await appBridge.connect(
-          new PostMessageTransport(iframe.contentWindow!, iframe.contentWindow!),
+          new PostMessageTransport(
+            iframe.contentWindow!,
+            iframe.contentWindow!,
+          ),
         );
 
         if (!mounted) return;
 
         setBridgeConnected(true);
       } catch (err) {
-        console.error('[AppFrame] Error:', err);
+        console.error("[AppFrame] Error:", err);
         if (!mounted) return;
         const error = err instanceof Error ? err : new Error(String(err));
         setError(error);
@@ -250,11 +273,12 @@ export const AppFrame = (props: AppFrameProps) => {
   useEffect(() => {
     // Ensure we only send HTML to the correct appBridge that's currently connected
     // This prevents race conditions when switching between apps
-    if (!bridgeConnected || !html || currentAppBridgeRef.current !== appBridge) return;
+    if (!bridgeConnected || !html || currentAppBridgeRef.current !== appBridge)
+      return;
 
     const sendHtml = async () => {
       try {
-        console.log('[AppFrame] Sending HTML to sandbox');
+        console.log("[AppFrame] Sending HTML to sandbox");
         await appBridge.sendSandboxResourceReady({
           html,
           csp: sandbox.csp,
@@ -272,8 +296,13 @@ export const AppFrame = (props: AppFrameProps) => {
   // Effect 3: Send tool input when ready
   useEffect(() => {
     // Ensure we only send to the correct appBridge that's currently connected
-    if (bridgeConnected && iframeReady && toolInput && currentAppBridgeRef.current === appBridge) {
-      console.log('[AppFrame] Sending tool input:', toolInput);
+    if (
+      bridgeConnected &&
+      iframeReady &&
+      toolInput &&
+      currentAppBridgeRef.current === appBridge
+    ) {
+      console.log("[AppFrame] Sending tool input:", toolInput);
       appBridge.sendToolInput({ arguments: toolInput });
     }
   }, [appBridge, bridgeConnected, iframeReady, toolInput]);
@@ -281,8 +310,13 @@ export const AppFrame = (props: AppFrameProps) => {
   // Effect 4: Send tool result when ready
   useEffect(() => {
     // Ensure we only send to the correct appBridge that's currently connected
-    if (bridgeConnected && iframeReady && toolResult && currentAppBridgeRef.current === appBridge) {
-      console.log('[AppFrame] Sending tool result:', toolResult);
+    if (
+      bridgeConnected &&
+      iframeReady &&
+      toolResult &&
+      currentAppBridgeRef.current === appBridge
+    ) {
+      console.log("[AppFrame] Sending tool result:", toolResult);
       appBridge.sendToolResult(toolResult);
     }
   }, [appBridge, bridgeConnected, iframeReady, toolResult]);
@@ -291,13 +325,17 @@ export const AppFrame = (props: AppFrameProps) => {
     <div
       ref={containerRef}
       style={{
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      {error && <div style={{ color: 'red', padding: '1rem' }}>Error: {error.message}</div>}
+      {error && (
+        <div style={{ color: "red", padding: "1rem" }}>
+          Error: {error.message}
+        </div>
+      )}
     </div>
   );
 };

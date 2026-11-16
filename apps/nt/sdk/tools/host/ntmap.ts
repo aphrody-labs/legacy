@@ -56,10 +56,7 @@ const PREFIXES = [
   "Pss",
   "Sbs",
 ].sort((a, b) => b.length - a.length);
-const component = (name: string) =>
-  PREFIXES.find(
-    (p) => name.startsWith(p) && /[A-Z_]/.test(name[p.length] ?? ""),
-  ) ?? "(autre)";
+const component = (name: string) => PREFIXES.find((p) => name.startsWith(p) && /[A-Z_]/.test(name[p.length] ?? "")) ?? "(autre)";
 const group = (names: string[]) => {
   const g: Record<string, { count: number; sample: string[] }> = {};
   for (const n of names) {
@@ -68,9 +65,7 @@ const group = (names: string[]) => {
     g[c].count++;
     if (g[c].sample.length < 6) g[c].sample.push(n);
   }
-  return Object.fromEntries(
-    Object.entries(g).sort((a, b) => b[1].count - a[1].count),
-  );
+  return Object.fromEntries(Object.entries(g).sort((a, b) => b[1].count - a[1].count));
 };
 const image = async (p: string, withImports = false) => {
   const r = await pe(p);
@@ -131,24 +126,15 @@ const SYSTEM = [
 
 const map = {
   date: new Date().toISOString(),
-  source:
-    "binaries of %SystemRoot% and running system (ntdll via bun:ffi), read by sdk/tools/host/ntmap.ts",
+  source: "binaries of %SystemRoot% and running system (ntdll via bun:ffi), read by sdk/tools/host/ntmap.ts",
   boot: await Promise.all(
-    [
-      join(sys, "Boot", "EFI", "bootmgfw.efi"),
-      join(s32, "winload.efi"),
-      join(s32, "winresume.efi"),
-    ].map((p) => image(p)),
+    [join(sys, "Boot", "EFI", "bootmgfw.efi"), join(s32, "winload.efi"), join(s32, "winresume.efi")].map((p) => image(p)),
   ),
   kernel: {
     ntoskrnl: await image(join(s32, "ntoskrnl.exe"), true),
     hal: await image(join(s32, "hal.dll"), true),
   },
-  win32k: await Promise.all(
-    ["win32k.sys", "win32kbase.sys", "win32kfull.sys", "win32kbase_rs.sys"].map(
-      (f) => image(join(s32, f), true),
-    ),
-  ),
+  win32k: await Promise.all(["win32k.sys", "win32kbase.sys", "win32kfull.sys", "win32kbase_rs.sys"].map((f) => image(join(s32, f), true))),
   native: { ntdll: await image(join(s32, "ntdll.dll")) },
   win32: await Promise.all(
     [
@@ -188,23 +174,11 @@ const map = {
     objectTypes: slow.objectTypes.length,
   },
 };
-const out = join(
-  import.meta.dir,
-  "..",
-  "..",
-  "..",
-  "docs",
-  "research",
-  "windows-nt-map.json",
-);
+const out = join(import.meta.dir, "..", "..", "..", "docs", "research", "windows-nt-map.json");
 // Components: compact summary (no samples for the win32 binaries, too large).
 await Bun.write(
   out,
-  JSON.stringify(
-    map,
-    (k, v) => (k === "sample" && Array.isArray(v) ? v.slice(0, 4) : v),
-    1,
-  ),
+  JSON.stringify(map, (k, v) => (k === "sample" && Array.isArray(v) ? v.slice(0, 4) : v), 1),
 );
 const k = map.kernel.ntoskrnl as {
   exports?: number;

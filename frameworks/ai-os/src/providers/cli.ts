@@ -25,7 +25,9 @@ type Provider = {
 
 const SRC = resolve(import.meta.dir, "..", "..", "..", "..");
 const conf = Bun.TOML.parse(
-  await Bun.file(join(SRC, "frameworks/ai-os/src/providers/sources.toml")).text(),
+  await Bun.file(
+    join(SRC, "frameworks/ai-os/src/providers/sources.toml"),
+  ).text(),
 ) as Conf;
 const get = async (url: string) => {
   const r = await fetch(url, {
@@ -52,12 +54,21 @@ const modelsDevRepo = async (dir: string) => {
   };
   const tree = git(["ls-tree", "-r", "HEAD", "--", "providers"]);
   if (!tree) return null;
-  const out: Record<string, { api?: string; doc?: string; models: Record<string, 1> }> = {};
+  const out: Record<
+    string,
+    { api?: string; doc?: string; models: Record<string, 1> }
+  > = {};
   const meta = new Map<string, string>(); // provider id -> blob oid of provider.toml
   for (const line of tree.toString().split("\n")) {
     const m = /^\d+ blob (\w+)\t(providers\/([^/]+)\/(.+))$/.exec(line);
     if (!m) continue;
-    const [, oid, , id, rest] = m as unknown as [string, string, string, string, string];
+    const [, oid, , id, rest] = m as unknown as [
+      string,
+      string,
+      string,
+      string,
+      string,
+    ];
     if (rest === "provider.toml") meta.set(id, oid);
     else if (rest.startsWith("models/") && rest.endsWith(".toml"))
       (out[id] ??= { models: {} }).models[rest.slice(7, -5)] = 1;
@@ -65,7 +76,10 @@ const modelsDevRepo = async (dir: string) => {
   if (!meta.size) return null;
   // one cat-file --batch for every provider.toml
   const ids = [...meta.keys()];
-  const blobs = git(["cat-file", "--batch"], `${ids.map((i) => meta.get(i)).join("\n")}\n`);
+  const blobs = git(
+    ["cat-file", "--batch"],
+    `${ids.map((i) => meta.get(i)).join("\n")}\n`,
+  );
   if (!blobs) return null;
   let at = 0;
   for (const id of ids) {

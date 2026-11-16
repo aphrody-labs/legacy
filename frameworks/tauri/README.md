@@ -1,6 +1,7 @@
 # Tauri
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Make tiny, secure apps for all desktop platforms with Tauri
 
 | Type | Path |
@@ -16,6 +17,7 @@ cargo test -p aphrody-tauri
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
  <img align="right" src="https://github.com/tauri-apps/tauri/raw/dev/.github/icon.png" height="128" width="128">

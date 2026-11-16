@@ -1,6 +1,7 @@
 # @aphrody/omniu
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > oh-my-niu for Bun: plugin bundle as data, validator, packager and scaffolder, and the host that loads the ay plugin into both Bun and niu
 
 | Type | Path |
@@ -15,6 +16,7 @@ bun run --cwd system/omniu validate
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 oh-my-niu (the niu plugin bundle, from unixwin/oh-my-niu) as Bun-native data and tools, plus the host that loads one plugin surface into both Bun and niu. Fusion plan: `docs/native/UNIXWIN.md`.

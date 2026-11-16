@@ -1,4 +1,9 @@
-import { BaseEvent, EventType, RunAgentInput, omitOptionalNulls } from "@ag-ui/core";
+import {
+  BaseEvent,
+  EventType,
+  RunAgentInput,
+  omitOptionalNulls,
+} from "@ag-ui/core";
 import { EventSchema, RunAgentInputSchema } from "@ag-ui/core/schemas";
 import { z } from "zod";
 import { Observable, of, EMPTY } from "rxjs";
@@ -25,14 +30,17 @@ export type UnrecognizedEvent = {
 const KNOWN_EVENT_TYPES = new Set<string>(Object.values(EventType));
 
 /** Narrows an event back to the known set at the enforcement boundary. */
-export function isRecognizedEvent(event: BaseEvent | UnrecognizedEvent): event is BaseEvent {
+export function isRecognizedEvent(
+  event: BaseEvent | UnrecognizedEvent,
+): event is BaseEvent {
   return KNOWN_EVENT_TYPES.has(event.type as string);
 }
 
 // type discriminator -> that event's generated schema, for targeted stripping.
 const EVENT_SCHEMA_BY_TYPE = new Map<string, z.ZodType>(
   (EventSchema.options as z.ZodType[]).map((option) => {
-    const shape = (option as unknown as { shape: Record<string, z.ZodType> }).shape;
+    const shape = (option as unknown as { shape: Record<string, z.ZodType> })
+      .shape;
     return [String(literalValue(shape.type)), option];
   }),
 );
@@ -86,7 +94,9 @@ export const enforceEvents =
         if (schema === undefined) {
           // Unreachable while EventType and the union are generated from the
           // same schema; guarded so a future drift fails loudly.
-          throw new Error(`No validator for recognised event type '${String(event.type)}'`);
+          throw new Error(
+            `No validator for recognised event type '${String(event.type)}'`,
+          );
         }
         const { value, stripped } = stripUnknown(event, schema);
         for (const path of stripped) {
@@ -111,7 +121,9 @@ export function enforceOutgoingInput(input: RunAgentInput): RunAgentInput {
     RunAgentInputSchema as unknown as z.ZodType,
   );
   for (const path of stripped) {
-    warnDeviation(`Removed unrecognised material at '${path}' from the outgoing input.`);
+    warnDeviation(
+      `Removed unrecognised material at '${path}' from the outgoing input.`,
+    );
   }
   // Unasserted on purpose: the generated schema's output and the generated
   // type are two files that must agree, and this is the one place where a

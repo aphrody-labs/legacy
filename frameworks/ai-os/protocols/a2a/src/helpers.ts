@@ -34,7 +34,10 @@ export function urlPart(url: string, extras: PartExtras = {}): Part {
 }
 
 /** File content part: bytes are base64-encoded for the wire. */
-export function rawPart(content: Uint8Array | string, extras: PartExtras = {}): Part {
+export function rawPart(
+  content: Uint8Array | string,
+  extras: PartExtras = {},
+): Part {
   return {
     raw: typeof content === "string" ? content : encodeBase64(content),
     ...extras,
@@ -72,7 +75,11 @@ function buildMessage(
   options: MessageOptions,
 ): Message {
   const parts: Part[] =
-    typeof content === "string" ? [textPart(content)] : Array.isArray(content) ? [...content] : [content as Part];
+    typeof content === "string"
+      ? [textPart(content)]
+      : Array.isArray(content)
+        ? [...content]
+        : [content as Part];
   return {
     messageId: options.messageId ?? crypto.randomUUID(),
     role,
@@ -81,17 +88,25 @@ function buildMessage(
     ...(options.taskId ? { taskId: options.taskId } : {}),
     ...(options.metadata ? { metadata: options.metadata } : {}),
     ...(options.extensions ? { extensions: options.extensions } : {}),
-    ...(options.referenceTaskIds ? { referenceTaskIds: options.referenceTaskIds } : {}),
+    ...(options.referenceTaskIds
+      ? { referenceTaskIds: options.referenceTaskIds }
+      : {}),
   };
 }
 
 /** A client message (`ROLE_USER`) from text, one part or several parts. */
-export function userMessage(content: string | Part | readonly Part[], options: MessageOptions = {}): Message {
+export function userMessage(
+  content: string | Part | readonly Part[],
+  options: MessageOptions = {},
+): Message {
   return buildMessage("ROLE_USER", content, options);
 }
 
 /** An agent message (`ROLE_AGENT`); mainly useful for tests and servers. */
-export function agentMessage(content: string | Part | readonly Part[], options: MessageOptions = {}): Message {
+export function agentMessage(
+  content: string | Part | readonly Part[],
+  options: MessageOptions = {},
+): Message {
   return buildMessage("ROLE_AGENT", content, options);
 }
 
@@ -117,7 +132,7 @@ export function sendMessageRequest(
 /** Text of the `text` parts, joined with a newline. */
 export function partsText(parts: readonly Part[] | undefined): string {
   return (parts ?? [])
-    .map(part => part.text)
+    .map((part) => part.text)
     .filter((text): text is string => typeof text === "string")
     .join("\n");
 }
@@ -132,7 +147,9 @@ export function artifactText(artifact: Artifact): string {
 
 /** Text produced by a task: its artifacts first, else the status message. */
 export function taskText(task: Task): string {
-  const fromArtifacts = (task.artifacts ?? []).map(artifactText).filter(t => t !== "");
+  const fromArtifacts = (task.artifacts ?? [])
+    .map(artifactText)
+    .filter((t) => t !== "");
   if (fromArtifacts.length > 0) return fromArtifacts.join("\n");
   return messageText(task.status.message);
 }
@@ -143,13 +160,17 @@ export function responseTask(response: SendMessageResponse): Task | undefined {
 }
 
 /** The direct message of a `SendMessage` answer, when the agent did not create a task. */
-export function responseMessage(response: SendMessageResponse): Message | undefined {
+export function responseMessage(
+  response: SendMessageResponse,
+): Message | undefined {
   return response.message;
 }
 
 /** Text of an answer, whichever form the agent chose. */
 export function responseText(response: SendMessageResponse): string {
-  return response.task ? taskText(response.task) : messageText(response.message);
+  return response.task
+    ? taskText(response.task)
+    : messageText(response.message);
 }
 
 /**
@@ -157,7 +178,10 @@ export function responseText(response: SendMessageResponse): string {
  * artifact update inserts the artifact or, with `append`, extends its parts. A `message` event
  * yields no task. `undefined` stays `undefined` until a `task` or an update names the task.
  */
-export function applyStreamResponse(current: Task | undefined, event: StreamResponse): Task | undefined {
+export function applyStreamResponse(
+  current: Task | undefined,
+  event: StreamResponse,
+): Task | undefined {
   switch (streamPayloadKind(event)) {
     case "task":
       return event.task;
@@ -180,7 +204,9 @@ export function applyStreamResponse(current: Task | undefined, event: StreamResp
           status: { state: "TASK_STATE_WORKING" },
         } as Task);
       const artifacts = [...(base.artifacts ?? [])];
-      const index = artifacts.findIndex(a => a.artifactId === update.artifact.artifactId);
+      const index = artifacts.findIndex(
+        (a) => a.artifactId === update.artifact.artifactId,
+      );
       const existing = index >= 0 ? artifacts[index] : undefined;
       if (existing && update.append) {
         artifacts[index] = {
@@ -203,7 +229,9 @@ export function applyStreamResponse(current: Task | undefined, event: StreamResp
  * Drain a stream into its final answer: the accumulated task, or the single message of a
  * message-only stream. Returns `undefined` for an empty stream.
  */
-export async function collectStream(stream: AsyncIterable<StreamResponse>): Promise<SendMessageResponse | undefined> {
+export async function collectStream(
+  stream: AsyncIterable<StreamResponse>,
+): Promise<SendMessageResponse | undefined> {
   let task: Task | undefined;
   for await (const event of stream) {
     if (event.message) return { message: event.message };

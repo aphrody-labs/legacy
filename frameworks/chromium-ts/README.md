@@ -1,6 +1,7 @@
 # @aphrody/chromium
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Chromium CDP client and launcher, Obscura alias, Brave adblock-rust and privacy cryptography for upstream Bun: the owner of the aphrody-labs/bun fork's bun:chromium, bun:chrome, bun:obscura, bun:adblock, bun:privacy and bun:fetch, served as a Bun OS plugin.
 
 | Type | Path |
@@ -15,6 +16,7 @@ bun run --cwd frameworks/chromium-ts build:native
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 The Bun OS owner of the browser builtins of the aphrody-labs/bun fork, running on upstream Bun

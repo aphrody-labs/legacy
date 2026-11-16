@@ -51,7 +51,11 @@ export const VISION_FILES: readonly ShardFile[] = [
   { path: "processor_config.json", bytes: 1689 },
 ];
 
-export function hubUrl(v: BrowserVariant, path: string, base = "https://huggingface.co"): string {
+export function hubUrl(
+  v: BrowserVariant,
+  path: string,
+  base = "https://huggingface.co",
+): string {
   return `${base}/${v.repo}/resolve/${v.revision}/${path}`;
 }
 export function totalBytes(v: BrowserVariant): number {
@@ -59,5 +63,9 @@ export function totalBytes(v: BrowserVariant): number {
 }
 
 /** Generation defaults from the model card (generation_config.json). */
-export const GEMMA4_SAMPLING = { temperature: 1.0, topP: 0.95, topK: 64 } as const;
+export const GEMMA4_SAMPLING = {
+  temperature: 1.0,
+  topP: 0.95,
+  topK: 64,
+} as const;
 export const GEMMA4_EOS_IDS: readonly number[] = [1, 106, 50];

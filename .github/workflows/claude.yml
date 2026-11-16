@@ -28,6 +28,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - id: app
+        continue-on-error: true # checkout falls back to github.token
         # GitHub App aphrody-labs : jeton d'installation de 1 h, borné aux permissions listées.
         if: vars.APHRODY_APP_CLIENT_ID != ''
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0

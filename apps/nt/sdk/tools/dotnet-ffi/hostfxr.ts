@@ -12,14 +12,9 @@ const HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER = 5;
 const UNMANAGEDCALLERSONLY_METHOD = -1;
 
 /** NUL-terminated char_t string. */
-export const charT = (s: string) =>
-  Buffer.from(`${s}\0`, win ? "utf16le" : "utf8");
+export const charT = (s: string) => Buffer.from(`${s}\0`, win ? "utf16le" : "utf8");
 
-const fxrName = win
-  ? "hostfxr.dll"
-  : process.platform === "darwin"
-    ? "libhostfxr.dylib"
-    : "libhostfxr.so";
+const fxrName = win ? "hostfxr.dll" : process.platform === "darwin" ? "libhostfxr.dylib" : "libhostfxr.so";
 
 const versionKey = (v: string) => {
   const [core = "", pre] = v.split("-", 2);
@@ -51,16 +46,13 @@ export function findHostfxr(): string {
   for (const root of dotnetRoots()) {
     let best = "";
     try {
-      for (const v of readdirSync(join(root, "host", "fxr")))
-        if (!best || newer(v, best)) best = v;
+      for (const v of readdirSync(join(root, "host", "fxr"))) if (!best || newer(v, best)) best = v;
     } catch {
       continue;
     }
     if (best) return join(root, "host", "fxr", best, fxrName);
   }
-  throw new Error(
-    `hostfxr not found (roots: ${dotnetRoots().join(", ")}); set DOTNET_ROOT`,
-  );
+  throw new Error(`hostfxr not found (roots: ${dotnetRoots().join(", ")}); set DOTNET_ROOT`);
 }
 
 const hex = (rc: number) => `0x${(rc >>> 0).toString(16).padStart(8, "0")}`;
@@ -79,10 +71,7 @@ let current: Host | undefined;
  * Initializes the runtime from a .runtimeconfig.json (framework-dependent component, EnableDynamicLoading) and returns
  * the load delegate. Later calls: same host (the runtime does not unload).
  */
-export function hostDotnet(
-  runtimeConfig: string,
-  hostfxr = process.env.NT_HOSTFXR ?? findHostfxr(),
-): Host {
+export function hostDotnet(runtimeConfig: string, hostfxr = process.env.NT_HOSTFXR ?? findHostfxr()): Host {
   if (current) return current;
   const fxr = dlopen(hostfxr, {
     hostfxr_initialize_for_runtime_config: {
@@ -96,21 +85,10 @@ export function hostDotnet(
     hostfxr_close: { args: ["ptr"], returns: "i32" },
   }).symbols;
   const out = new BigUint64Array(1);
-  const init = fxr.hostfxr_initialize_for_runtime_config(
-    charT(runtimeConfig),
-    null,
-    out,
-  );
-  if (init < 0 || init > 2)
-    throw new Error(
-      `hostfxr_initialize_for_runtime_config(${runtimeConfig}) : ${hex(init)}`,
-    );
+  const init = fxr.hostfxr_initialize_for_runtime_config(charT(runtimeConfig), null, out);
+  if (init < 0 || init > 2) throw new Error(`hostfxr_initialize_for_runtime_config(${runtimeConfig}) : ${hex(init)}`);
   const handle = Number(out[0]) as Pointer;
-  const rc = fxr.hostfxr_get_runtime_delegate(
-    handle,
-    HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER,
-    out,
-  );
+  const rc = fxr.hostfxr_get_runtime_delegate(handle, HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER, out);
   fxr.hostfxr_close(handle); // the delegate stays valid: the runtime is loaded for the life of the process
   if (rc !== 0) throw new Error(`hostfxr_get_runtime_delegate: ${hex(rc)}`);
   const load = CFunction({
@@ -123,18 +101,8 @@ export function hostDotnet(
     hostfxr,
     init,
     functionPointer(assembly, typeName, method) {
-      const r = load(
-        charT(assembly),
-        charT(typeName),
-        charT(method),
-        UNMANAGEDCALLERSONLY_METHOD as Pointer,
-        null,
-        fn,
-      ) as number;
-      if (r !== 0)
-        throw new Error(
-          `load_assembly_and_get_function_pointer(${typeName}.${method}) : ${hex(r)}`,
-        );
+      const r = load(charT(assembly), charT(typeName), charT(method), UNMANAGEDCALLERSONLY_METHOD as Pointer, null, fn) as number;
+      if (r !== 0) throw new Error(`load_assembly_and_get_function_pointer(${typeName}.${method}) : ${hex(r)}`);
       return Number(fn[0]) as Pointer;
     },
   };
@@ -154,11 +122,5 @@ export function openHosted<A>(
 ): A {
   const host = hostDotnet(resolve(runtimeConfig));
   const full = resolve(assemblyPath);
-  return bindings.bindPointers((m) =>
-    host.functionPointer(
-      full,
-      `${m.type}, ${bindings.assembly.name}`,
-      m.method,
-    ),
-  );
+  return bindings.bindPointers((m) => host.functionPointer(full, `${m.type}, ${bindings.assembly.name}`, m.method));
 }

@@ -5,11 +5,7 @@ import fr from "./locales/fr.json";
 
 const catalogs = { en, fr };
 
-export const tr = createTranslator(
-  catalogs,
-  typeof navigator === "undefined" ? "en" : navigator.language,
-  "en",
-);
+export const tr = createTranslator(catalogs, typeof navigator === "undefined" ? "en" : navigator.language, "en");
 export const loc = tr.locale;
 export const t = tr.t;
 

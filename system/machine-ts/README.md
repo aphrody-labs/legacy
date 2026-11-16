@@ -1,6 +1,7 @@
 # system/machine-ts/ — poste Windows reproductible, du noyau à Claude Code
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Reproducible Windows workstation: WinGet DSC v3 (niubash, Coreutils), Claude Code shell/MCP setup, aphrody-labs forks, flat third_party
 
 | Type | Path |
@@ -19,6 +20,7 @@ bun run --cwd system/machine-ts binpath
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Décisions et preuves : [aphrody-labs/nt docs/research](https://github.com/aphrody-labs/nt/tree/main/docs/research) (`shell-replacement.md`, `claude-to-nt-stack.md`, `fork-merge-plan.md`, `rust-in-windows.md`). Profil matériel : skill `windows-machine`.

@@ -5,7 +5,7 @@
 # The block is delimited by `# aphrody-mesh begin/end` and replaced as a whole; it is generated, not committed.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd)
-. "$here/../../../packages/env-kit/loaders/shell/discover.sh"
+. "$here/../../../system/env-kit/loaders/shell/discover.sh"
 roles=${*:-$(awk '/^\[host\./{gsub(/[\[\]]|host\./,""); print}' "$here/../cluster.toml")}
 block="# aphrody-mesh begin"
 for r in $roles; do

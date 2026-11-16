@@ -67,7 +67,8 @@ export class Store {
     }
     this.db = new Database(path, { create: true });
     this.db.run("PRAGMA journal_mode=WAL");
-    this.db.run(`CREATE TABLE IF NOT EXISTS calls(ts INTEGER, offer TEXT, ok INTEGER, status INTEGER, ms INTEGER, in_tok INTEGER, out_tok INTEGER, cost REAL, caller TEXT, err TEXT);
+    this.db
+      .run(`CREATE TABLE IF NOT EXISTS calls(ts INTEGER, offer TEXT, ok INTEGER, status INTEGER, ms INTEGER, in_tok INTEGER, out_tok INTEGER, cost REAL, caller TEXT, err TEXT);
       CREATE INDEX IF NOT EXISTS calls_offer ON calls(offer, ts);
       CREATE INDEX IF NOT EXISTS calls_caller ON calls(caller);
       CREATE TABLE IF NOT EXISTS pairs(id TEXT PRIMARY KEY, ts INTEGER, prompt TEXT, a TEXT, b TEXT, ans_a TEXT, ans_b TEXT, winner TEXT, by TEXT);
@@ -109,19 +110,17 @@ export class Store {
       .all(now - 86_400_000) as any[];
     const m = new Map<string, OfferStat & { lat: number[] }>();
     for (const r of rows) {
-      const s =
-        m.get(r.offer) ??
-        {
-          ok: 0,
-          err: 0,
-          health: 1,
-          calls: 0,
-          errors: 0,
-          tokens: 0,
-          cost: 0,
-          coolUntil: 0,
-          lat: [],
-        };
+      const s = m.get(r.offer) ?? {
+        ok: 0,
+        err: 0,
+        health: 1,
+        calls: 0,
+        errors: 0,
+        tokens: 0,
+        cost: 0,
+        coolUntil: 0,
+        lat: [],
+      };
       const w = decay(now - r.ts, halfLife);
       if (r.ok) {
         s.ok += w;
@@ -139,7 +138,8 @@ export class Store {
     for (const [o, until] of this.cool) {
       const s = m.get(o);
       if (until > now)
-        (s ??
+        (
+          s ??
           m
             .set(o, {
               ok: 0,
@@ -152,7 +152,8 @@ export class Store {
               coolUntil: 0,
               lat: [],
             })
-            .get(o)!).coolUntil = until;
+            .get(o)!
+        ).coolUntil = until;
       else this.cool.delete(o);
     }
     for (const s of m.values()) {
@@ -175,17 +176,19 @@ export class Store {
   }
   pair(id: string): Pair | undefined {
     const r = this.db.query("SELECT * FROM pairs WHERE id=?").get(id) as any;
-    return r && {
-      id: r.id,
-      ts: r.ts,
-      prompt: r.prompt,
-      a: r.a,
-      b: r.b,
-      ansA: r.ans_a,
-      ansB: r.ans_b,
-      winner: r.winner ?? undefined,
-      by: r.by ?? undefined,
-    };
+    return (
+      r && {
+        id: r.id,
+        ts: r.ts,
+        prompt: r.prompt,
+        a: r.a,
+        b: r.b,
+        ansA: r.ans_a,
+        ansB: r.ans_b,
+        winner: r.winner ?? undefined,
+        by: r.by ?? undefined,
+      }
+    );
   }
   /** Records a vote once per pair; returns the new ratings. `winner` is "a", "b" or "tie". */
   vote(id: string, winner: "a" | "b" | "tie", by: string) {
@@ -221,12 +224,10 @@ export class Store {
   // ---- spend and budget per caller
   spent(caller: string) {
     return (
-      (
-        this.db
-          .query("SELECT COALESCE(SUM(cost),0) c FROM calls WHERE caller=?")
-          .get(caller) as any
-      ).c as number
-    );
+      this.db
+        .query("SELECT COALESCE(SUM(cost),0) c FROM calls WHERE caller=?")
+        .get(caller) as any
+    ).c as number;
   }
   budget(caller: string): number | undefined {
     const r = this.db
@@ -235,7 +236,8 @@ export class Store {
     return r?.budget ?? undefined;
   }
   setBudget(caller: string, usd: number | null) {
-    if (usd === null) this.db.query("DELETE FROM budgets WHERE caller=?").run(caller);
+    if (usd === null)
+      this.db.query("DELETE FROM budgets WHERE caller=?").run(caller);
     else
       this.db
         .query(
@@ -248,12 +250,19 @@ export class Store {
       .query(
         "SELECT caller, COUNT(*) calls, SUM(in_tok+out_tok) tokens, SUM(cost) cost FROM calls GROUP BY caller ORDER BY cost DESC",
       )
-      .all() as { caller: string; calls: number; tokens: number; cost: number }[];
+      .all() as {
+      caller: string;
+      calls: number;
+      tokens: number;
+      cost: number;
+    }[];
   }
 
   // ---- catalog cache
   cacheGet<T>(k: string): { ts: number; value: T } | undefined {
-    const r = this.db.query("SELECT ts, json FROM catalog WHERE k=?").get(k) as any;
+    const r = this.db
+      .query("SELECT ts, json FROM catalog WHERE k=?")
+      .get(k) as any;
     return r && { ts: r.ts, value: JSON.parse(r.json) as T };
   }
   cachePut(k: string, v: unknown) {

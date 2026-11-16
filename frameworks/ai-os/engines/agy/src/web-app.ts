@@ -37,7 +37,8 @@ import {
 function renderStudioHtml(): string {
   const catalog = loadGoogleOrgsCatalog();
   const orgCounts = GOOGLE_AI_ORGS.map(
-    (o) => `<li><strong>${o}</strong>: ${catalog[o].length} tracked repositories</li>`,
+    (o) =>
+      `<li><strong>${o}</strong>: ${catalog[o].length} tracked repositories</li>`,
   ).join("");
   const fit = selectOptimalGemma4Model();
   const finops = computeSubscriptionRentabilisation();
@@ -275,9 +276,12 @@ export async function routeAgyWebRequest(req: Request): Promise<Response> {
       if (body.humanizeText !== undefined) {
         return Response.json(runHumanizerAndImpeccableAudit(body.humanizeText));
       }
-      const next = switchAgyMode(body.mode === "fullstack" ? "fullstack" : "minimal", {
-        domainFocus: body.domainFocus,
-      });
+      const next = switchAgyMode(
+        body.mode === "fullstack" ? "fullstack" : "minimal",
+        {
+          domainFocus: body.domainFocus,
+        },
+      );
       return Response.json({ ok: true, state: next });
     }
     return Response.json({

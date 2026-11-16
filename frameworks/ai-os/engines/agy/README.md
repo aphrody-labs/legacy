@@ -1,10 +1,11 @@
 # @aphrody/agy
 
 <!-- catalog:begin unit -->
+
 > Keyless Local-First Google AI Ecosystem Hub (5-Org Depot + Gitingest, Gemma 4 JAX/CUDA/Torch, DeepMind Notebooks, Open NotebookLM, Google AI Ultra FinOps Rentabilisation, Dual Mode minimal/fullstack, Web App & Native Rust Desktop) consuming sole AI owner @aphrody/ai-os
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                           |
+| :---------- | :----------------------------- |
 | Bun package | `frameworks/ai-os/engines/agy` |
 
 **Commands**

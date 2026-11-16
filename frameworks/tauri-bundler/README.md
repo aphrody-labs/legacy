@@ -1,6 +1,7 @@
 # Tauri Bundler
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Wrap rust executables in OS-specific app bundles for Tauri
 
 | Type | Path |
@@ -16,6 +17,7 @@ cargo test -p aphrody-tauri-bundler
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Wrap Rust executables in OS-specific app bundles.

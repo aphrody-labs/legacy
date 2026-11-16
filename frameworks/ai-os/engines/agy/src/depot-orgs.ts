@@ -33,10 +33,7 @@ export interface GoogleAiSurfaceDescriptor {
   id: string;
   title: string;
   category:
-    | "studio-ide-cli"
-    | "consumer-apps"
-    | "cloud-apis"
-    | "open-weights-research";
+    "studio-ide-cli" | "consumer-apps" | "cloud-apis" | "open-weights-research";
   keylessAuthMode: string;
   localBridgeCommand: string;
   upstreamOrg: GoogleAiOrg;
@@ -117,7 +114,8 @@ export const GOOGLE_AI_ECOSYSTEM_SURFACES: readonly GoogleAiSurfaceDescriptor[] 
       id: "vertex-ai-and-cloud-ai",
       title: "Google Cloud Vertex AI, Developer Knowledge & Workspace AI",
       category: "cloud-apis",
-      keylessAuthMode: "gcloud Application Default Credentials (project: aphrody)",
+      keylessAuthMode:
+        "gcloud Application Default Credentials (project: aphrody)",
       localBridgeCommand: "ai-os auth-doctor",
       upstreamOrg: "google",
       capabilities: [
@@ -141,7 +139,8 @@ export const GOOGLE_AI_ECOSYSTEM_SURFACES: readonly GoogleAiSurfaceDescriptor[] 
     },
     {
       id: "google-labs-stitch-jules",
-      title: "Google Labs (Stitch UI, Jules Autonomous Coding, Whisk & Mariner)",
+      title:
+        "Google Labs (Stitch UI, Jules Autonomous Coding, Whisk & Mariner)",
       category: "studio-ide-cli",
       keylessAuthMode: "Local Stitch/Design.md Skills + AI Ultra Entitlements",
       localBridgeCommand: "agy collections install google-labs",
@@ -174,7 +173,7 @@ export function loadGoogleOrgsCatalog(
     "google-gemini": [],
     "google-deepmind": [],
     "google-labs-code": [],
-    "google": [],
+    google: [],
   };
 
   if (existsSync(cachePath)) {
@@ -374,14 +373,10 @@ export function syncDepotRepoKeyless(
   // Check if already checked out in third_party/google-ecosystem first
   const existingMap: Record<string, string> = {
     "google/skills": "C:/aphrody/third_party/google-skills",
-    "google-gemini/gemini-skills":
-      "C:/aphrody/third_party/gemini-skills",
-    "google-labs-code/stitch-skills":
-      "C:/aphrody/third_party/stitch-skills",
-    "google-labs-code/jules-skills":
-      "C:/aphrody/third_party/jules-skills",
-    "google-labs-code/design-md":
-      "C:/aphrody/third_party/design-md",
+    "google-gemini/gemini-skills": "C:/aphrody/third_party/gemini-skills",
+    "google-labs-code/stitch-skills": "C:/aphrody/third_party/stitch-skills",
+    "google-labs-code/jules-skills": "C:/aphrody/third_party/jules-skills",
+    "google-labs-code/design-md": "C:/aphrody/third_party/design-md",
   };
   if (existingMap[fullName] && existsSync(existingMap[fullName]!)) {
     return {
@@ -407,7 +402,8 @@ export function syncDepotRepoKeyless(
       fullName,
       checkoutDir: checkoutDir.replace(/\\/g, "/"),
       action: fetchProc.exitCode === 0 ? "fetched" : "failed",
-      detail: new TextDecoder().decode(fetchProc.stderr).trim() || "Fetched depth=1",
+      detail:
+        new TextDecoder().decode(fetchProc.stderr).trim() || "Fetched depth=1",
     };
   }
 

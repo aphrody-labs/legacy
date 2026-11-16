@@ -32,15 +32,20 @@ export const runHttpRequest = (
           mergeMap((text) => {
             let payload: unknown = text;
             if (contentType.includes("application/json")) {
-              try { payload = JSON.parse(text); } catch {/* keep raw text */}
+              try {
+                payload = JSON.parse(text);
+              } catch {
+                /* keep raw text */
+              }
             }
-            const err: Error & { status?: number; payload?: unknown } = new Error(
-              `HTTP ${response.status}: ${typeof payload === "string" ? payload : JSON.stringify(payload)}`
-            );
+            const err: Error & { status?: number; payload?: unknown } =
+              new Error(
+                `HTTP ${response.status}: ${typeof payload === "string" ? payload : JSON.stringify(payload)}`,
+              );
             err.status = response.status;
             err.payload = payload;
             return throwError(() => err);
-          })
+          }),
         );
       }
       // Emit headers event first
@@ -52,7 +57,9 @@ export const runHttpRequest = (
 
       const reader = response.body?.getReader();
       if (!reader) {
-        return throwError(() => new Error("Failed to getReader() from response"));
+        return throwError(
+          () => new Error("Failed to getReader() from response"),
+        );
       }
 
       return new Observable<HttpEvent>((subscriber) => {

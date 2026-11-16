@@ -19,7 +19,7 @@ fi
 [ -f "$g/haproxy.cfg" ] || { echo "run: bun device/cluster/gen.ts" >&2; exit 1; }
 stage=$(mktemp -d); trap "rm -rf $stage" EXIT
 for f in "$g"/haproxy.cfg "$g"/nginx-cluster.conf "$g"/aphrody-cluster.slice "$here"/systemd/aphrody-cluster-haproxy.service "$here"/systemd/nginx-restart.conf "$here"/generated/ssh/aphrody-ssh-mesh "$here"/generated/ssh/ssh_config.host; do
-  bun "$here/../../packages/env-kit/src/render.ts" "$f" "$stage/$(basename "$f")"
+  bun "$here/../../system/env-kit/src/render.ts" "$f" "$stage/$(basename "$f")"
 done
 tar -cf - -C "$stage" haproxy.cfg nginx-cluster.conf aphrody-cluster.slice aphrody-cluster-haproxy.service nginx-restart.conf aphrody-ssh-mesh ssh_config.host \
   | timeout 120 ssh "$tgt" 'rm -rf /tmp/aphrody-cluster && mkdir -p /tmp/aphrody-cluster && tar -xf - -C /tmp/aphrody-cluster'

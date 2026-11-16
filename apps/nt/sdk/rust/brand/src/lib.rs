@@ -4,7 +4,7 @@
 #![no_std]
 #![forbid(unsafe_code)]
 
-include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../packages/design/tokens/tokens.rs"));
+include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../frameworks/design/tokens/tokens.rs"));
 
 /// Components `[r, g, b, a]` in `0.0..=1.0` (D3D12 clear color, `windows::UI::Color` after scaling).
 pub const fn rgba_f32(c: u32) -> [f32; 4] {

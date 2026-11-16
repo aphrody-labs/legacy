@@ -2,33 +2,20 @@
 // Usage: bun sdk/tools/bun-graph.ts <bun-root> [--out docs/bun] -> feature-graph.json + feature-graph.md
 // Sources read: system/trim/features/*.def (trim model), system/codegen/builtins/host/features-*.builtins.ts (built-in -> feature),
 // Cargo.toml (crates), scripts/build/deps (vendors), BunObject.cpp (Bun.*), packages/bun-types, system/js, *.bind.ts, C++, build scripts.
-import {
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, posix, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const argv = process.argv.slice(2);
-const rootArg = argv.find(
-  (a, i) => !a.startsWith("--") && argv[i - 1] !== "--out",
-);
+const rootArg = argv.find((a, i) => !a.startsWith("--") && argv[i - 1] !== "--out");
 if (!rootArg) {
-  console.error(
-    "usage: bun sdk/tools/bun-graph.ts <bun-root> [--out docs/bun]",
-  );
+  console.error("usage: bun sdk/tools/bun-graph.ts <bun-root> [--out docs/bun]");
   process.exit(2);
 }
 const root = resolve(rootArg);
 const outIdx = argv.indexOf("--out");
-const outDir = resolve(
-  outIdx >= 0 ? (argv[outIdx + 1] ?? "docs/bun") : "docs/bun",
-);
+const outDir = resolve(outIdx >= 0 ? (argv[outIdx + 1] ?? "docs/bun") : "docs/bun");
 
 // ---------- Grouping tables (the only hand-written data; repeated in the .md) ----------
 
@@ -110,14 +97,7 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "sockets",
     label: "Sockets / TLS / DNS",
-    dirs: [
-      "system/runtime/socket",
-      "system/dns",
-      "system/cares_sys",
-      "system/lsquic_sys",
-      "system/boringssl",
-      "system/boringssl_sys",
-    ],
+    dirs: ["system/runtime/socket", "system/dns", "system/cares_sys", "system/lsquic_sys", "system/boringssl", "system/boringssl_sys"],
     features: ["Sockets", "TlsSockets", "Tls", "Dns", "Udp"],
     apis: ["Bun.connect", "Bun.listen", "Bun.udpSocket", "Bun.dns"],
   },
@@ -176,17 +156,8 @@ const DOMAINS: DomainSpec[] = [
       "system/standalone_graph",
       "system/router",
     ],
-    files: [
-      "packages/bun-types/bundle.d.ts",
-      "packages/bun-types/devserver.d.ts",
-    ],
-    features: [
-      "Bundler",
-      "BuildCommand",
-      "CssParser",
-      "ReactCompiler",
-      "SourceMaps",
-    ],
+    files: ["packages/bun-types/bundle.d.ts", "packages/bun-types/devserver.d.ts"],
+    features: ["Bundler", "BuildCommand", "CssParser", "ReactCompiler", "SourceMaps"],
     apis: ["Bun.build", "bun:bundle"],
   },
   {
@@ -224,43 +195,15 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "node-compat",
     label: "Node compatibility (node:*)",
-    dirs: [
-      "system/js/node",
-      "system/runtime/node",
-      "system/jsc/bindings/node",
-      "system/node_path",
-    ],
-    features: [
-      "NodeFs",
-      "NodeOs",
-      "NodePath",
-      "NodeHttp",
-      "NodeCrypto",
-      "NodeUtil",
-      "NodeVm",
-    ],
+    dirs: ["system/js/node", "system/runtime/node", "system/jsc/bindings/node", "system/node_path"],
+    features: ["NodeFs", "NodeOs", "NodePath", "NodeHttp", "NodeCrypto", "NodeUtil", "NodeVm"],
     apis: ["node:"],
   },
   {
     id: "web-apis",
     label: "API Web (WebCore)",
-    dirs: [
-      "system/runtime/webcore",
-      "system/jsc/bindings/webcore",
-      "system/jsc/bindings/webcrypto",
-      "system/js/builtins",
-    ],
-    features: [
-      "WebStreams",
-      "Bodies",
-      "Headers",
-      "Url",
-      "WebCrypto",
-      "TextEncoder",
-      "TextDecoder",
-      "WebSocket",
-      "Worker",
-    ],
+    dirs: ["system/runtime/webcore", "system/jsc/bindings/webcore", "system/jsc/bindings/webcrypto", "system/js/builtins"],
+    features: ["WebStreams", "Bodies", "Headers", "Url", "WebCrypto", "TextEncoder", "TextDecoder", "WebSocket", "Worker"],
     apis: ["Response", "Request", "ReadableStream", "WebSocket", "crypto"],
   },
   {
@@ -385,18 +328,7 @@ const WEBGPU_TERMS = /webgpu|navigator\.gpu|GPUAdapter|GPUDevice|wgpu|dawn/i;
 
 // ---------- Graphe ----------
 
-type Kind =
-  | "feature"
-  | "trim-feature"
-  | "api"
-  | "module"
-  | "binding"
-  | "native"
-  | "crate"
-  | "vendor"
-  | "cpp"
-  | "build"
-  | "domain";
+type Kind = "feature" | "trim-feature" | "api" | "module" | "binding" | "native" | "crate" | "vendor" | "cpp" | "build" | "domain";
 type GNode = {
   id: string;
   kind: Kind;
@@ -418,21 +350,12 @@ const nodes = new Map<string, GNode>();
 const edges = new Map<string, GEdge>();
 const notes: string[] = [];
 
-function node(
-  id: string,
-  kind: Kind,
-  label = id.slice(id.indexOf(":") + 1),
-): GNode {
+function node(id: string, kind: Kind, label = id.slice(id.indexOf(":") + 1)): GNode {
   let n = nodes.get(id);
   if (!n) nodes.set(id, (n = { id, kind, label }));
   return n;
 }
-function edge(
-  from: string,
-  to: string,
-  kind: string,
-  opt: { conditional?: boolean; count?: boolean } = {},
-) {
+function edge(from: string, to: string, kind: string, opt: { conditional?: boolean; count?: boolean } = {}) {
   if (from === to) return;
   const key = `${from}\u0000${kind}\u0000${to}`;
   const e = edges.get(key);
@@ -474,13 +397,7 @@ const files = ["src", "scripts/build", "packages/bun-types"]
 const textCache = new Map<string, string>();
 const read = (f: string) => {
   let t = textCache.get(f);
-  if (t === undefined)
-    textCache.set(
-      f,
-      (t = existsSync(join(root, f))
-        ? readFileSync(join(root, f), "utf8")
-        : ""),
-    );
+  if (t === undefined) textCache.set(f, (t = existsSync(join(root, f)) ? readFileSync(join(root, f), "utf8") : ""));
   return t;
 };
 const locOf = new Map<string, number>();
@@ -493,23 +410,17 @@ for (const f of files) {
   for (let i = 0; i < buf.length; i++) if (buf[i] === 10) n++;
   if (buf.length && buf[buf.length - 1] !== 10) n++;
   locOf.set(f, n);
-  if (
-    /\.(rs|cpp|h|c|mm|ts|js)$/.test(f) &&
-    WEBGPU_TERMS.test(buf.toString("latin1"))
-  ) {
+  if (/\.(rs|cpp|h|c|mm|ts|js)$/.test(f) && WEBGPU_TERMS.test(buf.toString("latin1"))) {
     webgpuHits.push(f);
     buf
       .toString("latin1")
       .split("\n")
-      .flatMap((l, i) =>
-        WEBGPU_TERMS.test(l) ? [`${f}:${i + 1}: ${l.trim().slice(0, 80)}`] : [],
-      )
+      .flatMap((l, i) => (WEBGPU_TERMS.test(l) ? [`${f}:${i + 1}: ${l.trim().slice(0, 80)}`] : []))
       .slice(0, 3)
       .forEach((l) => webgpuLines.push(l));
   }
 }
-const filesUnder = (dir: string) =>
-  files.filter((f) => f.startsWith(`${dir}/`));
+const filesUnder = (dir: string) => files.filter((f) => f.startsWith(`${dir}/`));
 const sumLoc = (fs: Iterable<string>) => {
   let s = 0;
   for (const f of fs) s += locOf.get(f) ?? 0;
@@ -520,12 +431,8 @@ for (const f of files) {
   const b = posix.basename(f);
   byBase.set(b, [...(byBase.get(b) ?? []), f]);
 }
-const lineOf = (text: string, index: number) =>
-  text.slice(0, index).split("\n").length;
-const filesNamed = (file: string) =>
-  (byBase.get(posix.basename(file)) ?? []).filter(
-    (f) => f === file || f.endsWith(`/${file}`),
-  );
+const lineOf = (text: string, index: number) => text.slice(0, index).split("\n").length;
+const filesNamed = (file: string) => (byBase.get(posix.basename(file)) ?? []).filter((f) => f === file || f.endsWith(`/${file}`));
 
 // ---------- Provenance ----------
 
@@ -536,14 +443,8 @@ const git = (...a: string[]) => {
   });
   return r.success ? r.stdout.toString().trim() : "";
 };
-const [commit = "", commitDate = ""] = git(
-  "log",
-  "-1",
-  "--format=%H%n%cI",
-).split("\n");
-const pkg = JSON.parse(
-  read("package.json") || readFileSync(join(root, "package.json"), "utf8"),
-) as { version?: string };
+const [commit = "", commitDate = ""] = git("log", "-1", "--format=%H%n%cI").split("\n");
+const pkg = JSON.parse(read("package.json") || readFileSync(join(root, "package.json"), "utf8")) as { version?: string };
 
 // ---------- 1. Trim model (system/trim/features/*.def) ----------
 
@@ -566,17 +467,13 @@ type TrimRec = {
   saves?: { linux: number; macos: number };
 };
 
-const trimModule = pathToFileURL(
-  join(root, "scripts/build/trim/features.ts"),
-).href;
+const trimModule = pathToFileURL(join(root, "scripts/build/trim/features.ts")).href;
 const trimApi: {
   loadFeatures?: (r: string) => { features?: unknown; trimFeatures?: unknown };
 } = await import(trimModule);
-if (typeof trimApi.loadFeatures !== "function")
-  throw new Error("scripts/build/trim/features.ts: loadFeatures missing");
+if (typeof trimApi.loadFeatures !== "function") throw new Error("scripts/build/trim/features.ts: loadFeatures missing");
 const model = trimApi.loadFeatures(root);
-if (!Array.isArray(model.features) || !Array.isArray(model.trimFeatures))
-  throw new Error("trim model: unexpected shape");
+if (!Array.isArray(model.features) || !Array.isArray(model.trimFeatures)) throw new Error("trim model: unexpected shape");
 const featureDefs = new Bun.Glob("system/trim/features/*.def").scanSync({
   cwd: root,
 });
@@ -596,13 +493,9 @@ for (const f of model.features as FeatureRec[]) {
     enteredFrom: f.enteredFrom,
     isEngine: f.isEngine,
     exports: f.exports,
-    ...(Object.keys(f.minimumBytes).length
-      ? { minimumBytes: f.minimumBytes }
-      : {}),
+    ...(Object.keys(f.minimumBytes).length ? { minimumBytes: f.minimumBytes } : {}),
     ...(f.cFunctions?.length ? { cFunctions: f.cFunctions } : {}),
-    ...(f.cxxFunctions?.length
-      ? { cxxFunctions: f.cxxFunctions.map((c) => c.pattern) }
-      : {}),
+    ...(f.cxxFunctions?.length ? { cxxFunctions: f.cxxFunctions.map((c) => c.pattern) } : {}),
   });
 }
 for (const t of model.trimFeatures as TrimRec[]) {
@@ -636,8 +529,7 @@ try {
         const k = part.split(":")[0]?.trim();
         if (k) s.add(k);
       }
-    for (const m of t.matchAll(/engineModule\.([A-Za-z_$][\w$]*)/g))
-      if (m[1]) s.add(m[1]);
+    for (const m of t.matchAll(/engineModule\.([A-Za-z_$][\w$]*)/g)) if (m[1]) s.add(m[1]);
     return [...s].sort();
   };
   const recorder = `const mk = (name, args) => {
@@ -669,15 +561,12 @@ try {
   emit("paths.ts", (n) => pathImpl[n] ?? `mk(${JSON.stringify(n)})`);
   process.env.AOT_ENGINE_DIRECTORY = shimDir;
   type Rec = { __b: string; args: unknown[] };
-  const isRec = (x: unknown): x is Rec =>
-    typeof x === "function" && typeof (x as unknown as Rec).__b === "string";
+  const isRec = (x: unknown): x is Rec => typeof x === "function" && typeof (x as unknown as Rec).__b === "string";
   for (const part of ["bun", "node", "web", "process"]) {
     const file = `system/codegen/builtins/host/features-${part}.builtins.ts`;
     const found: [unknown, unknown][] = [];
     try {
-      const mod: { default?: unknown } = await import(
-        pathToFileURL(join(root, file)).href
-      );
+      const mod: { default?: unknown } = await import(pathToFileURL(join(root, file)).href);
       const walk = (x: unknown) => {
         if (Array.isArray(x)) x.forEach(walk);
         else if (isRec(x)) {
@@ -688,16 +577,11 @@ try {
       walk(mod.default);
     } catch (e) {
       // Fallback: textual read of extendAll([...], "path", ...) calls with plain literals only.
-      notes.push(
-        `${file}: import failed (${String(e).split("\n")[0]}), textual fallback`,
-      );
+      notes.push(`${file}: import failed (${String(e).split("\n")[0]}), textual fallback`);
       const t = read(file);
-      for (const m of t.matchAll(
-        /extendAll\(\s*\[([^\]]*)\]\s*,((?:\s*"[^"]*"\s*,?)+)/g,
-      )) {
+      for (const m of t.matchAll(/extendAll\(\s*\[([^\]]*)\]\s*,((?:\s*"[^"]*"\s*,?)+)/g)) {
         const feats = [...(m[1] ?? "").matchAll(/"([^"]+)"/g)].map((x) => x[1]);
-        for (const p of (m[2] ?? "").matchAll(/"([^"]+)"/g))
-          found.push([p[1], { usesFeature: feats }]);
+        for (const p of (m[2] ?? "").matchAll(/"([^"]+)"/g)) found.push([p[1], { usesFeature: feats }]);
       }
     }
     for (const [path, spec] of found) {
@@ -707,8 +591,7 @@ try {
       const entry = builtinUses.get(p) ?? { uses: [], from: new Set<string>() };
       entry.from.add(file);
       for (const u of raw) {
-        const feature =
-          typeof u === "string" ? u : (u as { feature?: unknown })?.feature;
+        const feature = typeof u === "string" ? u : (u as { feature?: unknown })?.feature;
         if (typeof feature !== "string") continue;
         entry.uses.push({
           feature,
@@ -725,8 +608,7 @@ try {
 // ---------- 3. Crates Rust (Cargo.toml) ----------
 
 type Toml = Record<string, unknown>;
-const tomlOf = (f: string): Toml =>
-  read(f) ? (Bun.TOML.parse(read(f)) as Toml) : {};
+const tomlOf = (f: string): Toml => (read(f) ? (Bun.TOML.parse(read(f)) as Toml) : {});
 const rootToml = tomlOf("Cargo.toml") as {
   workspace?: { members?: string[]; dependencies?: Record<string, unknown> };
 };
@@ -741,8 +623,7 @@ for (const dir of members) {
   crateDirs.push([dir, name]);
 }
 crateDirs.sort((a, b) => b[0].length - a[0].length);
-const crateOfFile = (f: string) =>
-  crateDirs.find(([d]) => f.startsWith(`${d}/`))?.[1];
+const crateOfFile = (f: string) => crateDirs.find(([d]) => f.startsWith(`${d}/`))?.[1];
 const crateNames = new Set(crateByDir.values());
 const rsByCrate = new Map<string, string[]>();
 for (const f of files)
@@ -752,14 +633,11 @@ for (const f of files)
   }
 const vendorOfPath = (p: string) => {
   // Tree crate outside the workspace (e.g. proc-macro): crate node; otherwise source fetched at build.
-  const inTree = (tomlOf(`${p}/Cargo.toml`) as { package?: { name?: string } })
-    .package?.name;
+  const inTree = (tomlOf(`${p}/Cargo.toml`) as { package?: { name?: string } }).package?.name;
   if (inTree) {
     const c = node(`crate:${inTree}`, "crate", inTree);
     addPath(c, p);
-    c.loc = sumLoc(
-      files.filter((f) => f.startsWith(`${p}/`) && f.endsWith(".rs")),
-    );
+    c.loc = sumLoc(files.filter((f) => f.startsWith(`${p}/`) && f.endsWith(".rs")));
     attrs(c).workspaceMember = false;
     return c.id;
   }
@@ -783,15 +661,13 @@ for (const dir of members) {
   n.loc = sumLoc(rsByCrate.get(name) ?? []);
   const a = attrs(n);
   a.rsFiles = rsByCrate.get(name)?.length ?? 0;
-  if (t.features && Object.keys(t.features).length)
-    a.cargoFeatures = Object.keys(t.features).sort();
+  if (t.features && Object.keys(t.features).length) a.cargoFeatures = Object.keys(t.features).sort();
   if (name.endsWith("_sys")) a.sys = true;
   if (existsSync(join(root, dir, "build.rs"))) a.buildRs = true;
   const external = new Set<string>();
   const scan = (deps: Record<string, unknown> | undefined, scope: string) => {
     for (const [key, spec0] of Object.entries(deps ?? {})) {
-      let spec = spec0 as
-        { path?: string; workspace?: boolean; package?: string } | string;
+      let spec = spec0 as { path?: string; workspace?: boolean; package?: string } | string;
       let base = dir;
       if (typeof spec === "object" && spec.workspace) {
         spec = (wsDeps[key] ?? {}) as typeof spec;
@@ -800,17 +676,9 @@ for (const dir of members) {
       if (typeof spec === "object" && spec.path) {
         const p = posix.normalize(base ? `${base}/${spec.path}` : spec.path);
         const target = crateByDir.get(p);
-        if (target)
-          edge(
-            n.id,
-            `crate:${target}`,
-            scope === "dev" ? "dev-depends" : "depends",
-          );
+        if (target) edge(n.id, `crate:${target}`, scope === "dev" ? "dev-depends" : "depends");
         else if (scope !== "dev") edge(n.id, vendorOfPath(p), "depends");
-      } else if (scope !== "dev")
-        external.add(
-          typeof spec === "object" && spec.package ? spec.package : key,
-        );
+      } else if (scope !== "dev") external.add(typeof spec === "object" && spec.package ? spec.package : key);
     }
   };
   scan(t.dependencies, "normal");
@@ -821,24 +689,15 @@ for (const dir of members) {
 }
 
 // Vendored dependencies (scripts/build/deps/*.ts) and attachment to the *_sys crates.
-const depFiles = [
-  ...new Bun.Glob("scripts/build/deps/*.ts").scanSync({ cwd: root }),
-]
-  .map(rel)
-  .filter((f) => !f.endsWith("/index.ts"));
+const depFiles = [...new Bun.Glob("scripts/build/deps/*.ts").scanSync({ cwd: root })].map(rel).filter((f) => !f.endsWith("/index.ts"));
 const vendorByNorm = new Map<string, string>();
 const vendorsOfFile = new Map<string, string[]>();
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
-const patchesOf = (body: string) =>
-  [
-    ...(/patches:\s*\[([^\]]*)\]/.exec(body)?.[1]?.matchAll(/"([^"]+)"/g) ??
-      []),
-  ].map((m) => m[1] ?? "");
+const patchesOf = (body: string) => [...(/patches:\s*\[([^\]]*)\]/.exec(body)?.[1]?.matchAll(/"([^"]+)"/g) ?? [])].map((m) => m[1] ?? "");
 for (const f of depFiles.sort()) {
   const t = read(f);
   const consts = new Map<string, string>();
-  for (const m of t.matchAll(/const ([A-Z0-9_]+)\s*=\s*"([^"]+)"/g))
-    if (m[1] && m[2]) consts.set(m[1], m[2]);
+  for (const m of t.matchAll(/const ([A-Z0-9_]+)\s*=\s*"([^"]+)"/g)) if (m[1] && m[2]) consts.set(m[1], m[2]);
   for (const m of t.matchAll(/export const \w+: Dependency = \{/g)) {
     const next = t.indexOf("\nexport const ", m.index + 1);
     const body = t.slice(m.index, next < 0 ? undefined : next);
@@ -849,15 +708,10 @@ for (const f of depFiles.sort()) {
     const a = attrs(n);
     const repo = /repo:\s*"([^"]+)"/.exec(body)?.[1];
     const c = /commit:\s*("([^"]+)"|([A-Za-z0-9_.]+))/.exec(body);
-    const kind = /kind:\s*"(in-tree|github-archive|git|[a-z-]+)"/.exec(
-      body,
-    )?.[1];
+    const kind = /kind:\s*"(in-tree|github-archive|git|[a-z-]+)"/.exec(body)?.[1];
     const inTree = /kind:\s*"in-tree",\s*path:\s*"([^"]+)"/.exec(body)?.[1];
     let commitValue = c?.[2] ?? (c?.[3] ? consts.get(c[3]) : undefined);
-    if (!commitValue && c?.[3]?.includes("Version"))
-      commitValue = [...consts.entries()].find(([k]) =>
-        k.endsWith("_VERSION"),
-      )?.[1];
+    if (!commitValue && c?.[3]?.includes("Version")) commitValue = [...consts.entries()].find(([k]) => k.endsWith("_VERSION"))?.[1];
     // First paragraph of the header comment.
     const head = /^\/\*\*\s*\n((?:\s*\*[^\n]*\n)+?)\s*\*\s*\n/.exec(t)?.[1];
     const about = head
@@ -874,10 +728,7 @@ for (const f of depFiles.sort()) {
       ...(about ? { about } : {}),
     });
     if (inTree) addPath(n, inTree);
-    for (const d of [
-      ...(/fetchDeps:\s*\[([^\]]*)\]/.exec(body)?.[1]?.matchAll(/"([^"]+)"/g) ??
-        []),
-    ])
+    for (const d of [...(/fetchDeps:\s*\[([^\]]*)\]/.exec(body)?.[1]?.matchAll(/"([^"]+)"/g) ?? [])])
       if (d[1]) edge(n.id, `vendor:${d[1]}`, "fetch-depends");
     vendorByNorm.set(norm(name), n.id);
     vendorsOfFile.set(f, [...(vendorsOfFile.get(f) ?? []), n.id]);
@@ -904,8 +755,7 @@ const bunObjectCpp = "system/jsc/bindings/BunObject.cpp";
   const t = read(bunObjectCpp);
   const begin = t.indexOf("@begin bunObjectTable");
   const end = t.indexOf("@end", begin);
-  if (begin < 0 || end < 0)
-    notes.push(`${bunObjectCpp}: bunObjectTable not found`);
+  if (begin < 0 || end < 0) notes.push(`${bunObjectCpp}: bunObjectTable not found`);
   else {
     const startLine = lineOf(t, begin);
     t.slice(begin, end)
@@ -914,8 +764,7 @@ const bunObjectCpp = "system/jsc/bindings/BunObject.cpp";
       .forEach((line, i) => {
         const cols = line.trim().split(/\s+/);
         const [prop, symbol, ...flags] = cols;
-        if (!prop || !symbol || prop.startsWith("#") || prop.startsWith("//"))
-          return;
+        if (!prop || !symbol || prop.startsWith("#") || prop.startsWith("//")) return;
         const n = node(`api:Bun.${prop}`, "api", `Bun.${prop}`);
         addPath(n, `${bunObjectCpp}:${startLine + i + 1}`);
         Object.assign(attrs(n), {
@@ -930,9 +779,7 @@ const bunObjectCpp = "system/jsc/bindings/BunObject.cpp";
 
 // 4b. Type declarations (packages/bun-types).
 function stripComments(t: string) {
-  return t
-    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
-    .replace(/\/\/[^\n]*/g, "");
+  return t.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " ")).replace(/\/\/[^\n]*/g, "");
 }
 function declaredModules(t: string) {
   const out: { spec: string; names: string[]; at: number }[] = [];
@@ -967,29 +814,18 @@ function declaredModules(t: string) {
   return out;
 }
 const typedBun = new Set<string>();
-for (const f of files.filter(
-  (f) =>
-    f.startsWith("packages/bun-types/") &&
-    f.endsWith(".d.ts") &&
-    !f.includes("/vendor/"),
-)) {
+for (const f of files.filter((f) => f.startsWith("packages/bun-types/") && f.endsWith(".d.ts") && !f.includes("/vendor/"))) {
   const t = read(f);
   for (const d of declaredModules(t)) {
     if (d.spec.startsWith("*")) continue;
     const n = node(`module:${d.spec}`, "module", d.spec);
     addPath(n, `${f}:${lineOf(t, d.at)}`);
     const a = attrs(n);
-    a.typedExports = [
-      ...new Set([
-        ...((a.typedExports as string[] | undefined) ?? []),
-        ...d.names,
-      ]),
-    ].sort();
+    a.typedExports = [...new Set([...((a.typedExports as string[] | undefined) ?? []), ...d.names])].sort();
     if (d.spec === "bun") for (const x of d.names) typedBun.add(x);
   }
 }
-for (const n of nodes.values())
-  if (n.attrs?.bunObject) n.attrs.typed = typedBun.has(n.label.slice(4));
+for (const n of nodes.values()) if (n.attrs?.bunObject) n.attrs.typed = typedBun.has(n.label.slice(4));
 
 // 4c. *.bind.ts files (bindgen): Rust modules, exported functions, C symbols, feature.
 const bindFiles = files.filter((f) => f.endsWith(".bind.ts"));
@@ -1001,30 +837,21 @@ for (const f of bindFiles) {
   n.loc = locOf.get(f) ?? 0;
   bindByBase.set(posix.basename(f), n.id);
   const a = attrs(n);
-  const rustPaths = [
-    ...new Set(
-      [...t.matchAll(/rustPath:\s*"([^"]+)"/g)].map((m) => m[1] ?? ""),
-    ),
-  ].sort();
+  const rustPaths = [...new Set([...t.matchAll(/rustPath:\s*"([^"]+)"/g)].map((m) => m[1] ?? ""))].sort();
   if (rustPaths.length) a.rustPaths = rustPaths;
   const exportsByKind: Record<string, string[]> = {};
-  for (const m of t.matchAll(/^export const (\w+) = b\.(\w+)/gm))
-    if (m[1] && m[2]) (exportsByKind[m[2]] ??= []).push(m[1]);
+  for (const m of t.matchAll(/^export const (\w+) = b\.(\w+)/gm)) if (m[1] && m[2]) (exportsByKind[m[2]] ??= []).push(m[1]);
   for (const k of Object.keys(exportsByKind)) exportsByKind[k]?.sort();
   if (Object.keys(exportsByKind).length) a.exports = exportsByKind;
-  const cSymbols = [
-    ...new Set([...t.matchAll(/export:\s*"([^"]+)"/g)].map((m) => m[1] ?? "")),
-  ].sort();
+  const cSymbols = [...new Set([...t.matchAll(/export:\s*"([^"]+)"/g)].map((m) => m[1] ?? ""))].sort();
   if (cSymbols.length) a.cSymbols = cSymbols;
   for (const x of Object.values(exportsByKind).flat()) addApi(n, x);
-  for (const m of t.matchAll(/feature:\s*"([A-Za-z0-9]+)"/g))
-    edge(n.id, `feature:${m[1]}`, "uses");
+  for (const m of t.matchAll(/feature:\s*"([A-Za-z0-9]+)"/g)) edge(n.id, `feature:${m[1]}`, "uses");
   const own = crateOfFile(f);
   if (own) edge(n.id, `crate:${own}`, "implemented-in");
   for (const rp of rustPaths) {
     const c = rp.split("::")[0];
-    if (c && c !== "crate" && crateNames.has(c))
-      edge(n.id, `crate:${c}`, "implemented-in");
+    if (c && c !== "crate" && crateNames.has(c)) edge(n.id, `crate:${c}`, "implemented-in");
   }
 }
 
@@ -1053,18 +880,13 @@ const objectKeys = (body: string) => {
     if (ch === "{" || ch === "(" || ch === "[") depth++;
     else if (ch === "}" || ch === ")" || ch === "]") {
       if (depth === 0) {
-        const k =
-          /^\s*(?:\.\.\.)?\s*(?:get\s+|set\s+|async\s+)?\[?["']?([A-Za-z_$][\w$]*)/.exec(
-            body.slice(start, i),
-          )?.[1];
+        const k = /^\s*(?:\.\.\.)?\s*(?:get\s+|set\s+|async\s+)?\[?["']?([A-Za-z_$][\w$]*)/.exec(body.slice(start, i))?.[1];
         if (k) keys.push(k);
         break;
       }
       depth--;
     } else if (ch === "," && depth === 0) {
-      const k = /^\s*(?:get\s+|set\s+|async\s+)?["']?([A-Za-z_$][\w$]*)/.exec(
-        body.slice(start, i),
-      )?.[1];
+      const k = /^\s*(?:get\s+|set\s+|async\s+)?["']?([A-Za-z_$][\w$]*)/.exec(body.slice(start, i))?.[1];
       if (k) keys.push(k);
       start = i + 1;
     }
@@ -1083,30 +905,17 @@ for (const [spec, f] of [...moduleFiles].sort()) {
   const def = /export default (\{|([A-Za-z_$][\w$]*)\s*;)/.exec(t);
   if (def?.[1] === "{") exp = objectKeys(t.slice(def.index + def[0].length));
   else if (def?.[2]) {
-    const decl = new RegExp(
-      `(?:const|let|var) ${def[2]}\\s*(?::[^=]+)?=\\s*\\{`,
-    ).exec(t);
+    const decl = new RegExp(`(?:const|let|var) ${def[2]}\\s*(?::[^=]+)?=\\s*\\{`).exec(t);
     if (decl) exp = objectKeys(t.slice(decl.index + decl[0].length));
   }
-  for (const m of t.matchAll(
-    /^export (?:async )?(?:function\*?|const|let|class) ([A-Za-z_$][\w$]*)/gm,
-  ))
-    if (m[1]) exp.push(m[1]);
+  for (const m of t.matchAll(/^export (?:async )?(?:function\*?|const|let|class) ([A-Za-z_$][\w$]*)/gm)) if (m[1]) exp.push(m[1]);
   for (const x of [...new Set(exp)].sort()) addApi(n, x);
-  for (const m of t.matchAll(
-    /(?:require\(|from\s+|import\()\s*["']([^"']+)["']/g,
-  )) {
+  for (const m of t.matchAll(/(?:require\(|from\s+|import\()\s*["']([^"']+)["']/g)) {
     const target = m[1] ?? "";
-    const s = moduleFiles.has(target)
-      ? target
-      : moduleFiles.has(`node:${target}`)
-        ? `node:${target}`
-        : undefined;
+    const s = moduleFiles.has(target) ? target : moduleFiles.has(`node:${target}`) ? `node:${target}` : undefined;
     if (s) edge(n.id, `module:${s}`, "imports");
   }
-  for (const m of t.matchAll(
-    /\$(bindgen|newCppFunction|newRustFunction|newZigFunction|cpp|rust|zig)\(\s*["']([^"']+)["']/g,
-  )) {
+  for (const m of t.matchAll(/\$(bindgen|newCppFunction|newRustFunction|newZigFunction|cpp|rust|zig)\(\s*["']([^"']+)["']/g)) {
     const file = m[2] ?? "";
     const b = bindByBase.get(file);
     if (b) edge(n.id, b, "calls-native");
@@ -1119,26 +928,19 @@ for (const [spec, f] of [...moduleFiles].sort()) {
 }
 {
   const builtinsDir = "system/js/builtins";
-  const n = node(
-    "module:(js builtins)",
-    "module",
-    "system/js/builtins (WebCore JS builtins)",
-  );
+  const n = node("module:(js builtins)", "module", "system/js/builtins (WebCore JS builtins)");
   addPath(n, builtinsDir);
   n.loc = sumLoc(filesUnder(builtinsDir));
   attrs(n).files = filesUnder(builtinsDir).length;
 }
 
 // 4e. Built-ins (step 2) -> api/module/native nodes and "uses" edges.
-const isModuleSpec = (p: string) =>
-  moduleFiles.has(p) || nodes.has(`module:${p}`);
+const isModuleSpec = (p: string) => moduleFiles.has(p) || nodes.has(`module:${p}`);
 const topModuleOf = (p: string) => {
   const m = /^((?:bun|node):[^.]+|bun)\.(.+)$/.exec(p);
   return m?.[1] && isModuleSpec(m[1]) ? m[1] : undefined;
 };
-for (const [p, { uses, from }] of [...builtinUses].sort((x, y) =>
-  x[0] < y[0] ? -1 : 1,
-)) {
+for (const [p, { uses, from }] of [...builtinUses].sort((x, y) => (x[0] < y[0] ? -1 : 1))) {
   let id: string;
   const nat = /^native:([A-Za-z]+):([^#]+)#(.+)$/.exec(p);
   if (nat) {
@@ -1159,22 +961,13 @@ for (const [p, { uses, from }] of [...builtinUses].sort((x, y) =>
     else if (p.startsWith("Bun.")) edge(id, "module:bun", "member-of");
   }
   const n = nodes.get(id);
-  if (n)
-    attrs(n).declaredIn = [
-      ...new Set([
-        ...((n.attrs?.declaredIn as string[] | undefined) ?? []),
-        ...from,
-      ]),
-    ].sort();
-  for (const u of uses)
-    edge(id, `feature:${u.feature}`, "uses", { conditional: u.conditional });
+  if (n) attrs(n).declaredIn = [...new Set([...((n.attrs?.declaredIn as string[] | undefined) ?? []), ...from])].sort();
+  for (const u of uses) edge(id, `feature:${u.feature}`, "uses", { conditional: u.conditional });
 }
 
 // ---------- 5. C/C++, codegen et build ----------
 
-const cppFiles = files.filter(
-  (f) => /\.(cpp|cc|c|h|hpp|mm)$/.test(f) && f.startsWith("src/"),
-);
+const cppFiles = files.filter((f) => /\.(cpp|cc|c|h|hpp|mm)$/.test(f) && f.startsWith("src/"));
 const cppGroups = new Map<string, string[]>();
 for (const f of cppFiles) {
   const dir = posix.dirname(f);
@@ -1192,17 +985,11 @@ for (const [dir, fs] of [...cppGroups].sort()) {
   }
 }
 for (const n of [...nodes.values()].filter((x) => x.kind === "native"))
-  for (const p of n.paths ?? [])
-    if (cppGroups.has(posix.dirname(p)))
-      edge(n.id, `cpp:${posix.dirname(p)}`, "in");
+  for (const p of n.paths ?? []) if (cppGroups.has(posix.dirname(p))) edge(n.id, `cpp:${posix.dirname(p)}`, "in");
 
-const buildFiles = files.filter((f) =>
-  /^(scripts\/build|src\/codegen)\/[^/]+\.ts$/.test(f),
-);
+const buildFiles = files.filter((f) => /^(scripts\/build|src\/codegen)\/[^/]+\.ts$/.test(f));
 const buildSubdirs = new Set(
-  files
-    .filter((f) => /^(scripts\/build|src\/codegen)\/[^/]+\/./.test(f))
-    .map((f) => f.split("/").slice(0, 3).join("/")),
+  files.filter((f) => /^(scripts\/build|src\/codegen)\/[^/]+\/./.test(f)).map((f) => f.split("/").slice(0, 3).join("/")),
 );
 const buildNodeOf = (f: string) => {
   if (buildFiles.includes(f)) return `build:${f}`;
@@ -1213,9 +1000,7 @@ for (const f of buildFiles) {
   const n = node(`build:${f}`, "build", f);
   addPath(n, f);
   n.loc = locOf.get(f) ?? 0;
-  const doc = /^(?:\/\*\*?\s*\n?\s*\*?\s*|\/\/\s*)(.+)/
-    .exec(read(f))?.[1]
-    ?.trim();
+  const doc = /^(?:\/\*\*?\s*\n?\s*\*?\s*|\/\/\s*)(.+)/.exec(read(f))?.[1]?.trim();
   if (doc) attrs(n).about = doc.slice(0, 200);
 }
 for (const d of [...buildSubdirs].sort()) {
@@ -1224,9 +1009,7 @@ for (const d of [...buildSubdirs].sort()) {
   n.loc = sumLoc(filesUnder(d));
   attrs(n).files = filesUnder(d).length;
 }
-for (const f of files.filter((x) =>
-  /^(scripts\/build|src\/codegen)\/.+\.ts$/.test(x),
-)) {
+for (const f of files.filter((x) => /^(scripts\/build|src\/codegen)\/.+\.ts$/.test(x))) {
   const from = buildNodeOf(f);
   if (!from) continue;
   for (const m of read(f).matchAll(/from\s+["'](\.{1,2}\/[^"']+)["']/g)) {
@@ -1236,9 +1019,7 @@ for (const f of files.filter((x) =>
   }
 }
 for (const ids of vendorsOfFile.values())
-  for (const id of ids)
-    if (nodes.has("build:scripts/build/deps"))
-      edge("build:scripts/build/deps", id, "declares");
+  for (const id of ids) if (nodes.has("build:scripts/build/deps")) edge("build:scripts/build/deps", id, "declares");
 
 // ---------- 6. Domaines (regroupement heuristique) ----------
 
@@ -1257,8 +1038,7 @@ for (const d of DOMAINS) {
   for (const g of d.files ?? []) {
     const glob = new Bun.Glob(g);
     const hit = files.filter((f) => glob.match(f));
-    if (!hit.length && !existsSync(join(root, g)))
-      missing.push(`${d.id}: ${g}`);
+    if (!hit.length && !existsSync(join(root, g))) missing.push(`${d.id}: ${g}`);
     for (const f of hit) set.add(f);
     if (!hit.length && existsSync(join(root, g))) set.add(g);
   }
@@ -1266,37 +1046,28 @@ for (const d of DOMAINS) {
 }
 domainOfDir.sort((a, b) => b[0].length - a[0].length);
 const domainOf = (f: string) =>
-  domainOfDir.find(([d]) => f === d || f.startsWith(`${d}/`))?.[1] ??
-  DOMAINS.find((d) => domainFiles.get(d.id)?.has(f))?.id;
+  domainOfDir.find(([d]) => f === d || f.startsWith(`${d}/`))?.[1] ?? DOMAINS.find((d) => domainFiles.get(d.id)?.has(f))?.id;
 const crateDir = new Map([...crateByDir].map(([d, c]) => [c, d]));
 for (const d of DOMAINS) {
   const n = node(`domain:${d.id}`, "domain", d.label);
   const fs = domainFiles.get(d.id) ?? new Set<string>();
-  for (const p of [...d.dirs, ...(d.files ?? [])])
-    if (!missing.includes(`${d.id}: ${p}`)) addPath(n, p);
+  for (const p of [...d.dirs, ...(d.files ?? [])]) if (!missing.includes(`${d.id}: ${p}`)) addPath(n, p);
   n.loc = sumLoc(fs);
   const a = attrs(n);
   a.files = fs.size;
   const langs: Record<string, number> = {};
   for (const f of fs) {
     const ext = /\.([a-z]+)$/.exec(f)?.[1];
-    if (ext && locOf.has(f))
-      langs[ext] = (langs[ext] ?? 0) + (locOf.get(f) ?? 0);
+    if (ext && locOf.has(f)) langs[ext] = (langs[ext] ?? 0) + (locOf.get(f) ?? 0);
   }
   a.locByExt = langs;
   const vendored = sumLoc([...fs].filter((f) => /\/sqlite3\.[ch]$/.test(f)));
   if (vendored) a.vendoredLoc = vendored;
-  for (const [dir, c] of crateByDir)
-    if (domainOf(dir) === d.id) edge(n.id, `crate:${c}`, "contains");
+  for (const [dir, c] of crateByDir) if (domainOf(dir) === d.id) edge(n.id, `crate:${c}`, "contains");
   const hosts = new Set<string>();
   for (const dir of d.dirs) {
     const host = crateOfFile(`${dir}/x`);
-    if (
-      host &&
-      crateDir.get(host) !== dir &&
-      domainOf(crateDir.get(host) ?? "") !== d.id
-    )
-      hosts.add(host);
+    if (host && crateDir.get(host) !== dir && domainOf(crateDir.get(host) ?? "") !== d.id) hosts.add(host);
   }
   for (const f of d.files ?? []) {
     const host = crateOfFile(f);
@@ -1304,18 +1075,11 @@ for (const d of DOMAINS) {
   }
   for (const h of hosts) edge(n.id, `crate:${h}`, "part-of");
   for (const f of d.features) {
-    if (!nodes.has(`feature:${f}`))
-      missing.push(`${d.id}: feature ${f}`);
+    if (!nodes.has(`feature:${f}`)) missing.push(`${d.id}: feature ${f}`);
     else edge(n.id, `feature:${f}`, "implements");
   }
   for (const x of nodes.values()) {
-    if (
-      x.kind === "binding" ||
-      x.kind === "cpp" ||
-      x.kind === "module" ||
-      x.kind === "build" ||
-      x.kind === "native"
-    ) {
+    if (x.kind === "binding" || x.kind === "cpp" || x.kind === "module" || x.kind === "build" || x.kind === "native") {
       const p = x.paths?.[0]?.replace(/:\d+$/, "");
       if (p && domainOf(p) === d.id) edge(n.id, x.id, "contains");
     }
@@ -1355,8 +1119,7 @@ for (const d of DOMAINS) {
     if (hostDir)
       for (const m of t.matchAll(/\bcrate::([a-z0-9_]+)/g)) {
         const mod = m[1] ?? "";
-        const td =
-          domainOf(`${hostDir}/${mod}`) ?? domainOf(`${hostDir}/${mod}.rs`);
+        const td = domainOf(`${hostDir}/${mod}`) ?? domainOf(`${hostDir}/${mod}.rs`);
         if (td && td !== d.id && !seen.has(`d:${td}`)) {
           seen.add(`d:${td}`);
           edge(from, `domain:${td}`, "depends", { count: true });
@@ -1364,13 +1127,10 @@ for (const d of DOMAINS) {
       }
   }
 }
-for (const e of [...edges.values()].filter(
-  (x) => x.kind === "depends" && x.from.startsWith("crate:"),
-)) {
+for (const e of [...edges.values()].filter((x) => x.kind === "depends" && x.from.startsWith("crate:"))) {
   const a = domainOf(crateDir.get(e.from.slice(6)) ?? "");
   const b = domainOf(crateDir.get(e.to.slice(6)) ?? "");
-  if (a && b && a !== b)
-    edge(`domain:${a}`, `domain:${b}`, "depends", { count: true });
+  if (a && b && a !== b) edge(`domain:${a}`, `domain:${b}`, "depends", { count: true });
 }
 const webgpu = node("domain:webgpu", "domain", "WebGPU");
 Object.assign(attrs(webgpu), {
@@ -1381,23 +1141,13 @@ Object.assign(attrs(webgpu), {
 });
 
 // Features referenced but not declared in the trim model.
-const undeclared = [...edges.values()]
-  .filter((e) => e.to.startsWith("feature:") && !nodes.has(e.to))
-  .map((e) => e.to);
-for (const id of new Set(undeclared))
-  attrs(node(id, "feature")).undeclared = true;
-const dangling = [...edges.values()].filter(
-  (e) => !nodes.has(e.to) || !nodes.has(e.from),
-);
+const undeclared = [...edges.values()].filter((e) => e.to.startsWith("feature:") && !nodes.has(e.to)).map((e) => e.to);
+for (const id of new Set(undeclared)) attrs(node(id, "feature")).undeclared = true;
+const dangling = [...edges.values()].filter((e) => !nodes.has(e.to) || !nodes.has(e.from));
 for (const e of dangling) edges.delete(`${e.from}\u0000${e.kind}\u0000${e.to}`);
 if (dangling.length)
-  notes.push(
-    `${dangling.length} edge(s) to an unknown node removed: ${[...new Set(dangling.map((e) => e.to))].slice(0, 8).join(", ")}`,
-  );
-if (missing.length)
-  notes.push(
-    `paths/features of the DOMAINS table not found: ${missing.join(" ; ")}`,
-  );
+  notes.push(`${dangling.length} edge(s) to an unknown node removed: ${[...new Set(dangling.map((e) => e.to))].slice(0, 8).join(", ")}`);
+if (missing.length) notes.push(`paths/features of the DOMAINS table not found: ${missing.join(" ; ")}`);
 
 // ---------- Sortie ----------
 
@@ -1416,9 +1166,7 @@ for (const n of nodeList) {
   n.paths?.sort();
   n.api?.sort();
 }
-const edgeList = [...edges.values()].sort((a, b) =>
-  a.from + a.kind + a.to < b.from + b.kind + b.to ? -1 : 1,
-);
+const edgeList = [...edges.values()].sort((a, b) => (a.from + a.kind + a.to < b.from + b.kind + b.to ? -1 : 1));
 const count = <T>(xs: T[], key: (x: T) => string) => {
   const r: Record<string, number> = {};
   for (const x of xs) r[key(x)] = (r[key(x)] ?? 0) + 1;
@@ -1444,22 +1192,15 @@ const graph = {
   edges: edgeList,
 };
 mkdirSync(outDir, { recursive: true });
-writeFileSync(
-  join(outDir, "feature-graph.json"),
-  `${JSON.stringify(sortKeys(graph), null, 1)}\n`,
-);
+writeFileSync(join(outDir, "feature-graph.json"), `${JSON.stringify(sortKeys(graph), null, 1)}\n`);
 
 // ---------- Markdown ----------
 
 const md: string[] = [];
 const esc = (s: string) => s.replaceAll("|", "\\|").replaceAll("\n", " ");
-const out = (from: string, kind: string) =>
-  edgeList.filter((e) => e.from === from && e.kind === kind).map((e) => e.to);
+const out = (from: string, kind: string) => edgeList.filter((e) => e.from === from && e.kind === kind).map((e) => e.to);
 const short = (id: string) => id.slice(id.indexOf(":") + 1);
-const list = (xs: string[], max: number) =>
-  xs.length > max
-    ? `${xs.slice(0, max).join(", ")} … (+${xs.length - max})`
-    : xs.join(", ");
+const list = (xs: string[], max: number) => (xs.length > max ? `${xs.slice(0, max).join(", ")} … (+${xs.length - max})` : xs.join(", "));
 md.push("# Feature graph of bun (upstream)");
 md.push("");
 md.push(
@@ -1473,9 +1214,7 @@ md.push("|---|---|---|---|---|");
 const nk = Object.entries(graph.counts.nodes).sort();
 const ek = Object.entries(graph.counts.edges).sort();
 for (let i = 0; i < Math.max(nk.length, ek.length); i++)
-  md.push(
-    `| ${nk[i]?.[0] ?? ""} | ${nk[i]?.[1] ?? ""} | | ${ek[i]?.[0] ?? ""} | ${ek[i]?.[1] ?? ""} |`,
-  );
+  md.push(`| ${nk[i]?.[0] ?? ""} | ${nk[i]?.[1] ?? ""} | | ${ek[i]?.[0] ?? ""} | ${ek[i]?.[1] ?? ""} |`);
 md.push("");
 md.push(
   "Sources: trim model `system/trim/features/*.def` (features, trim-features); `system/codegen/builtins/host/features-*.builtins.ts` (built-in -> feature); `Cargo.toml` (crates, `path` dependencies); `scripts/build/deps/*.ts` (vendors, `fetchDeps`); `system/jsc/bindings/BunObject.cpp` (`bunObjectTable`); `packages/bun-types/*.d.ts`; `system/js/**` (modules, `require`, `$bindgen`/`$newCppFunction`); `*.bind.ts` (bindgen); C/C++ by directory; relative imports of `scripts/build` and `system/codegen`.",
@@ -1484,25 +1223,18 @@ md.push("");
 md.push("## Domaines");
 md.push("");
 const locText = (n: GNode | undefined) => {
-  const by = Object.entries(
-    (n?.attrs?.locByExt as Record<string, number> | undefined) ?? {},
-  )
+  const by = Object.entries((n?.attrs?.locByExt as Record<string, number> | undefined) ?? {})
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3);
   const v = Number(n?.attrs?.vendoredLoc ?? 0);
   return `${n?.loc ?? 0} (${by.map(([e, k]) => `${e} ${k}`).join(", ")}${v ? `; dont ${v} vendu` : ""})`;
 };
-md.push(
-  "| Domain | Paths | LOC | Crates | Exposed APIs (excerpt) | Trim features |",
-);
+md.push("| Domain | Paths | LOC | Crates | Exposed APIs (excerpt) | Trim features |");
 md.push("|---|---|---|---|---|---|");
 for (const d of DOMAINS) {
   const id = `domain:${d.id}`;
   const n = nodes.get(id);
-  const crates = [
-    ...out(id, "contains").filter((x) => x.startsWith("crate:")),
-    ...out(id, "part-of").map((x) => `${x} (host)`),
-  ].map(short);
+  const crates = [...out(id, "contains").filter((x) => x.startsWith("crate:")), ...out(id, "part-of").map((x) => `${x} (host)`)].map(short);
   const apis = out(id, "exposes").map(short);
   md.push(
     `| **${esc(d.label)}** (\`${d.id}\`) | ${esc(
@@ -1528,19 +1260,12 @@ md.push(
 md.push("");
 md.push("```mermaid");
 md.push("flowchart LR");
-for (const d of DOMAINS)
-  md.push(`  ${d.id.replaceAll("-", "_")}["${d.label.replaceAll('"', "'")}"]`);
+for (const d of DOMAINS) md.push(`  ${d.id.replaceAll("-", "_")}["${d.label.replaceAll('"', "'")}"]`);
 for (const e of edgeList
   .filter((x) => x.kind === "depends" && x.from.startsWith("domain:"))
-  .sort(
-    (a, b) =>
-      (b.weight ?? 1) - (a.weight ?? 1) ||
-      (a.from + a.to < b.from + b.to ? -1 : 1),
-  )
+  .sort((a, b) => (b.weight ?? 1) - (a.weight ?? 1) || (a.from + a.to < b.from + b.to ? -1 : 1))
   .slice(0, 60))
-  md.push(
-    `  ${short(e.from).replaceAll("-", "_")} -->|${e.weight ?? 1}| ${short(e.to).replaceAll("-", "_")}`,
-  );
+  md.push(`  ${short(e.from).replaceAll("-", "_")} -->|${e.weight ?? 1}| ${short(e.to).replaceAll("-", "_")}`);
 md.push("```");
 md.push("");
 md.push("## Interop native (bun:ffi, Node-API)");
@@ -1548,12 +1273,8 @@ md.push("");
 for (const f of ["Ffi", "NativeAddons"]) {
   const fid = `feature:${f}`;
   const fn = nodes.get(fid);
-  const users = edgeList
-    .filter((e) => e.to === fid && e.kind === "uses")
-    .map((e) => `${short(e.from)}${e.conditional ? " (cond.)" : ""}`);
-  const trims = edgeList
-    .filter((e) => e.to === fid && e.kind === "includes")
-    .map((e) => short(e.from));
+  const users = edgeList.filter((e) => e.to === fid && e.kind === "uses").map((e) => `${short(e.from)}${e.conditional ? " (cond.)" : ""}`);
+  const trims = edgeList.filter((e) => e.to === fid && e.kind === "includes").map((e) => short(e.from));
   md.push(
     `- **${f}** — ${esc(String(fn?.attrs?.text ?? ""))} (${(fn?.paths ?? []).join(", ")}); trim-features: ${trims.join(", ")}; used by: ${esc(list(users, 30))}`,
   );
@@ -1567,29 +1288,15 @@ for (const id of [
   const n = nodes.get(id);
   if (!n) continue;
   const syms = (n.attrs?.cSymbols as string[] | undefined) ?? [];
-  md.push(
-    `- \`${short(id)}\`: ${esc(list(n.api ?? [], 40))}${syms.length ? `; C symbols: ${esc(list(syms, 20))}` : ""}`,
-  );
+  md.push(`- \`${short(id)}\`: ${esc(list(n.api ?? [], 40))}${syms.length ? `; C symbols: ${esc(list(syms, 20))}` : ""}`);
 }
-const featureUsers = (f: string) => [
-  ...new Set(
-    edgeList
-      .filter((e) => e.kind === "uses" && e.to === `feature:${f}`)
-      .map((e) => e.from),
-  ),
-];
-const nativeDeps = edgeList
-  .filter((e) => e.kind === "uses" && featureUsers("Ffi").includes(e.from))
-  .map((e) => short(e.to));
-md.push(
-  `- Features pulled by FFI APIs: ${[...new Set(nativeDeps)].sort().join(", ")}`,
-);
+const featureUsers = (f: string) => [...new Set(edgeList.filter((e) => e.kind === "uses" && e.to === `feature:${f}`).map((e) => e.from))];
+const nativeDeps = edgeList.filter((e) => e.kind === "uses" && featureUsers("Ffi").includes(e.from)).map((e) => short(e.to));
+md.push(`- Features pulled by FFI APIs: ${[...new Set(nativeDeps)].sort().join(", ")}`);
 md.push("");
 md.push("## Trim-features (system/trim/features/trim-features.def)");
 md.push("");
-md.push(
-  "| Trim-feature | Features | Linux / macOS saving (MB) | Description |",
-);
+md.push("| Trim-feature | Features | Linux / macOS saving (MB) | Description |");
 md.push("|---|---|---|---|");
 for (const t of nodeList.filter((n) => n.kind === "trim-feature")) {
   const s = t.attrs?.savesMB as { linux: number; macos: number } | undefined;
@@ -1601,9 +1308,7 @@ for (const t of nodeList.filter((n) => n.kind === "trim-feature")) {
 md.push("");
 md.push(`## Properties of the Bun object (${bunObjectCpp})`);
 md.push("");
-md.push(
-  "| Property | C++ symbol | Typed (bun-types) | Features (built-ins) |",
-);
+md.push("| Property | C++ symbol | Typed (bun-types) | Features (built-ins) |");
 md.push("|---|---|---|---|");
 for (const n of nodeList.filter((x) => x.attrs?.bunObject))
   md.push(
@@ -1612,9 +1317,7 @@ for (const n of nodeList.filter((x) => x.attrs?.bunObject))
 md.push("");
 md.push("## Heuristiques de regroupement");
 md.push("");
-md.push(
-  "The only hand-written data in the script; everything else is read from the tree.",
-);
+md.push("The only hand-written data in the script; everything else is read from the tree.");
 md.push("");
 md.push(
   "- `DOMAINS`: each domain = directories + file patterns (checked at run time), trim feature names (checked against the model) and attached API prefixes. A crate belongs to the domain whose directory contains its `Cargo.toml` (longest prefix wins); a domain housed in a larger crate (e.g. `system/runtime/ffi` in `bun_runtime`) receives it as `part-of`.",
@@ -1629,9 +1332,7 @@ md.push(
 md.push(
   "- Module specifiers: `system/js/bun/x.ts` -> `bun:x`, `system/js/node/a.b.ts` -> `node:a/b`, `system/js/internal/**` -> `internal/**`, `system/js/thirdparty/x.ts` -> `x`.",
 );
-md.push(
-  `- \`WEBGPU_TERMS\`: \`${String(WEBGPU_TERMS)}\` (absence search of the WebGPU domain).`,
-);
+md.push(`- \`WEBGPU_TERMS\`: \`${String(WEBGPU_TERMS)}\` (absence search of the WebGPU domain).`);
 md.push(
   "- LOC: lines of the .rs .cpp .cc .c .h .hpp .mm .ts .tsx .js .mjs .cjs .toml .idl .def files (test fixtures included); `sqlite3.[ch]` counted as vendored.",
 );

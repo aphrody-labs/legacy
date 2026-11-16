@@ -6,11 +6,7 @@
 //   /api/msindex/{stats,search,node/:id}: indexed and proven Microsoft stack (sdk/tools/msindex)
 //   /api/gpu         real DXGI adapters and D3D12 device (hardware/drivers/gpu/dx12 via @aphrody/ffi-bridge)
 // Usage: bun src/host/server.ts   [PORT=8787] [NT_HZ=15]
-import {
-  dx12Adapters,
-  dx12Device,
-  loadDx12Hal,
-} from "@aphrody/ffi-bridge/dx12-hal";
+import { dx12Adapters, dx12Device, loadDx12Hal } from "@aphrody/ffi-bridge/dx12-hal";
 import { Database } from "bun:sqlite";
 import app from "../../../modules/web/nt.html";
 import { desktopSvg } from "./desktop-svg.ts";
@@ -41,38 +37,26 @@ const slowMsg = () => JSON.stringify({ type: "slow", ...slow, ntfs });
 const pathsMsg = (pids: number[]) =>
   JSON.stringify({
     type: "paths",
-    paths: Object.fromEntries(
-      pids.map((pid) => [pid, procPaths.get(pid) ?? ""]),
-    ),
+    paths: Object.fromEntries(pids.map((pid) => [pid, procPaths.get(pid) ?? ""])),
   });
 let svgCache: { at: number; svg: string } | null = null;
-const json = (v: unknown) =>
-  Response.json(v, { headers: { "cache-control": "no-store" } });
-const noIndex = () =>
-  new Response("index missing: just index", { status: 404 });
+const json = (v: unknown) => Response.json(v, { headers: { "cache-control": "no-store" } });
+const noIndex = () => new Response("index missing: just index", { status: 404 });
 const msindexPath = new URL("target/index/msindex.sqlite", root);
-const msindex = (await Bun.file(msindexPath).exists())
-  ? new Database(Bun.fileURLToPath(msindexPath), { readonly: true })
-  : null;
-const noMsindex = () =>
-  new Response("msindex missing: just msindex <src>", { status: 404 });
+const msindex = (await Bun.file(msindexPath).exists()) ? new Database(Bun.fileURLToPath(msindexPath), { readonly: true }) : null;
+const noMsindex = () => new Response("msindex missing: just msindex <src>", { status: 404 });
 
 const server = Bun.serve({
   port,
   development: process.env.NODE_ENV !== "production",
   routes: {
     "/": app,
-    "/kernel": (req, srv) =>
-      srv.upgrade(req)
-        ? undefined
-        : new Response("WebSocket attendu", { status: 426 }),
+    "/kernel": (req, srv) => (srv.upgrade(req) ? undefined : new Response("WebSocket attendu", { status: 426 })),
     "/api/icon": async (req) => {
       const path = new URL(req.url).searchParams.get("path") ?? "";
       let ico = icons.get(path);
       if (ico === undefined) {
-        ico = /\.(exe|dll|cpl|ocx|scr)$/i.test(path)
-          ? await iconOf(path)
-          : null;
+        ico = /\.(exe|dll|cpl|ocx|scr)$/i.test(path) ? await iconOf(path) : null;
         icons.set(path, ico);
       }
       return ico
@@ -85,8 +69,7 @@ const server = Bun.serve({
         : new Response(null, { status: 404 });
     },
     "/desktop.svg": async () => {
-      if (!svgCache || performance.now() - svgCache.at > 3000)
-        svgCache = { at: performance.now(), svg: (await desktopSvg()).svg };
+      if (!svgCache || performance.now() - svgCache.at > 3000) svgCache = { at: performance.now(), svg: (await desktopSvg()).svg };
       return new Response(svgCache.svg, {
         headers: {
           "content-type": "image/svg+xml; charset=utf-8",
@@ -95,11 +78,7 @@ const server = Bun.serve({
       });
     },
     "/api/gpu": () => {
-      if (!loadDx12Hal())
-        return new Response(
-          "dx12_hal.dll missing: cargo build -p dx12-hal --release (src)",
-          { status: 404 },
-        );
+      if (!loadDx12Hal()) return new Response("dx12_hal.dll missing: cargo build -p dx12-hal --release (src)", { status: 404 });
       try {
         return json({ adapters: dx12Adapters(), device: dx12Device() });
       } catch (e) {
@@ -108,18 +87,10 @@ const server = Bun.serve({
     },
     "/api/index/stats": () => {
       if (!index) return noIndex();
-      const meta = index
-        .query("SELECT v FROM meta WHERE k = 'stats'")
-        .get() as { v: string } | null;
-      const ext = index
-        .query(
-          "SELECT ext, count(*) n, sum(size) bytes FROM files GROUP BY ext ORDER BY bytes DESC LIMIT 24",
-        )
-        .all();
+      const meta = index.query("SELECT v FROM meta WHERE k = 'stats'").get() as { v: string } | null;
+      const ext = index.query("SELECT ext, count(*) n, sum(size) bytes FROM files GROUP BY ext ORDER BY bytes DESC LIMIT 24").all();
       const machines = index
-        .query(
-          "SELECT machine, count(*) n FROM files WHERE machine IS NOT NULL GROUP BY machine ORDER BY n DESC",
-        )
+        .query("SELECT machine, count(*) n FROM files WHERE machine IS NOT NULL GROUP BY machine ORDER BY n DESC")
         .all();
       return json({ ...(meta ? JSON.parse(meta.v) : {}), ext, machines });
     },
@@ -128,17 +99,13 @@ const server = Bun.serve({
       const u = new URL(req.url);
       const depth = Math.min(3, Number(u.searchParams.get("depth") ?? 2));
       const top = Math.min(400, Number(u.searchParams.get("top") ?? 24));
-      const rootRow = index
-        .query("SELECT id, path name, files, bytes FROM dirs WHERE parent = 0")
-        .get() as {
+      const rootRow = index.query("SELECT id, path name, files, bytes FROM dirs WHERE parent = 0").get() as {
         id: number;
         name: string;
         files: number;
         bytes: number;
       };
-      const children = index.query(
-        "SELECT id, name, path, files, bytes FROM dirs WHERE parent = ? ORDER BY bytes DESC LIMIT ?",
-      );
+      const children = index.query("SELECT id, name, path, files, bytes FROM dirs WHERE parent = ? ORDER BY bytes DESC LIMIT ?");
       // Largest executable of each top-level folder: its real icon represents the folder.
       const exe = index.query(
         "SELECT d.path || '\\' || f.name p FROM files f JOIN dirs d ON d.id = f.dir WHERE f.ext = 'exe' AND (d.path = ?1 OR d.path LIKE ?1 || '\\%') ORDER BY f.size DESC LIMIT 1",
@@ -154,10 +121,7 @@ const server = Bun.serve({
           }[]
         ).map((c) => ({
           ...c,
-          exe:
-            d === 1
-              ? ((exe.get(c.path) as { p: string } | null)?.p ?? "")
-              : undefined,
+          exe: d === 1 ? ((exe.get(c.path) as { p: string } | null)?.p ?? "") : undefined,
           children: d < depth ? walk(c.id, d + 1) : [],
         }));
       return json({ ...rootRow, children: walk(rootRow.id, 1) });
@@ -197,9 +161,7 @@ const server = Bun.serve({
       if (q.length < 3) return json([]);
       return json(
         msindex
-          .query(
-            "SELECT n.id, n.kind, n.full, n.data FROM fts JOIN node n ON n.id = fts.rowid WHERE fts MATCH ? LIMIT 200",
-          )
+          .query("SELECT n.id, n.kind, n.full, n.data FROM fts JOIN node n ON n.id = fts.rowid WHERE fts MATCH ? LIMIT 200")
           .all(`"${q.replace(/"/g, '""')}"`),
       );
     },
@@ -208,21 +170,9 @@ const server = Bun.serve({
       const id = Number(req.params.id);
       return json({
         node: msindex.query("SELECT * FROM node WHERE id = ?").get(id),
-        children: msindex
-          .query(
-            "SELECT id, kind, name, full FROM node WHERE parent = ? LIMIT 2000",
-          )
-          .all(id),
-        proofs: msindex
-          .query(
-            'SELECT check_ AS "check", ok, detail FROM proof WHERE node = ?',
-          )
-          .all(id),
-        edges: msindex
-          .query(
-            "SELECT src, dst, kind FROM edge WHERE src = ?1 OR dst = ?1 LIMIT 2000",
-          )
-          .all(id),
+        children: msindex.query("SELECT id, kind, name, full FROM node WHERE parent = ? LIMIT 2000").all(id),
+        proofs: msindex.query('SELECT check_ AS "check", ok, detail FROM proof WHERE node = ?').all(id),
+        edges: msindex.query("SELECT src, dst, kind FROM edge WHERE src = ?1 OR dst = ?1 LIMIT 2000").all(id),
       });
     },
     "/stats": {

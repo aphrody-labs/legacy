@@ -1,6 +1,7 @@
 # @aphrody/bun-runtime-sdk
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > SDK of the buv native runtime: versioned buv C ABI with compatible yolo exports and Bun, .NET and Python bindings
 
 | Type | Path |
@@ -21,6 +22,7 @@ bun run --cwd system/bun-runtime-sdk prepack
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 ## Bun-native typed decisions

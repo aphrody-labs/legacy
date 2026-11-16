@@ -1,6 +1,7 @@
 # Aphrody HTTP transport
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Portable in-process JSON transport shared by Aphrody service clients
 
 | Type | Path |
@@ -16,6 +17,7 @@ bun run --cwd system/http-ts lint
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 `@aphrody/http` owns the portable HTTP/JSON mechanism used by Aphrody compute and

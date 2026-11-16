@@ -2,7 +2,7 @@
 # Live proof of the edge DNS failover without touching fr2 (run as root on prd):
 # a temporary proxied name on fr2 (A + AAAA) goes through `down` (A -> CNAME tunnel mig-prd, AAAA removed),
 # is fetched publicly through the tunnel, goes through `up` (exact old A + AAAA back), then is deleted.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -uo pipefail
 N=${1:-fleet-failover-test.aphrody.com}; Z=${2:-$(site_get zones.aphrody.com)}
 T=$(sed -n 's/^CF_API_TOKEN=//p' /etc/aphrody/secrets.env | tr -d '\r\n')

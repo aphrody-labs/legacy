@@ -1,10 +1,11 @@
 # `@aphrody/ai-triad`
 
 <!-- catalog:begin unit -->
+
 > Cross-AI CLI, TUI, GUI, OAuth 2.1/PKCE/Device-Code, MCP & Multi-Protocol Gateway across OpenAI Codex, Google Antigravity/Gemini, Anthropic Claude Code, OpenCode, Pi, and Zed
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                |
+| :---------- | :---------------------------------- |
 | Bun package | `frameworks/ai-os/engines/ai-triad` |
 
 **Commands**

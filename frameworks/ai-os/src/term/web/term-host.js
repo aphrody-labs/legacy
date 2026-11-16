@@ -542,9 +542,7 @@ class OfflineSandboxShell {
       return 0;
     }
     if (cmd === "protocols") {
-      this.write(
-        "OpenRouter SSE | ACP | MCP | A2A | WebMCP | OpenCode TUI",
-      );
+      this.write("OpenRouter SSE | ACP | MCP | A2A | WebMCP | OpenCode TUI");
       return 0;
     }
     if (cmd === "boxdemo") {

@@ -1692,7 +1692,7 @@
         },
         {
           "name": "open",
-          "description": "Aphrody open ecosystem monorepo: the anomalyco repositories (opencode, opentui, sst, openauth, models.dev, ...) plus OpenAI and OpenAPI ecosystem repositories, flattened into one tree without upstream history. Target toolchain: Bun AOT + Rust LTO.",
+          "description": "One Rust workspace and one framework: agents browse, crawl, tunnel, route and render from the same crates. No vendored upstream, no `third_party/`: every dependency is a crates.io version or a git revision pinned in the root `Cargo.toml` ([docs/upstream.md](docs/upstream.md)).",
           "path": "apps/open"
         },
         {
@@ -1744,6 +1744,11 @@
         },
         {
           "name": "docker",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "os",
           "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
           "path": "/"
         },

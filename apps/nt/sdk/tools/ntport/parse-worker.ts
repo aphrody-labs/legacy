@@ -25,47 +25,23 @@ export type FileInfo = {
 
 const root = new URL("../../../node_modules/", import.meta.url);
 await Parser.init();
-const C = await Language.load(
-  Bun.fileURLToPath(new URL("tree-sitter-c/tree-sitter-c.wasm", root)),
-);
-const CPP = await Language.load(
-  Bun.fileURLToPath(new URL("tree-sitter-cpp/tree-sitter-cpp.wasm", root)),
-);
+const C = await Language.load(Bun.fileURLToPath(new URL("tree-sitter-c/tree-sitter-c.wasm", root)));
+const CPP = await Language.load(Bun.fileURLToPath(new URL("tree-sitter-cpp/tree-sitter-cpp.wasm", root)));
 const pc = new Parser();
 pc.setLanguage(C);
 const pcpp = new Parser();
 pcpp.setLanguage(CPP);
 
-const STUB_IDS = new Set([
-  "UNIMPLEMENTED",
-  "UNIMPLEMENTED_ONCE",
-  "UNIMPLEMENTED_DBGBREAK",
-  "STUB",
-  "UNIMPLEMENTED_ONCE_DBGBREAK",
-]);
-const NOT_IMPL =
-  /^(STATUS_NOT_IMPLEMENTED|E_NOTIMPL|ERROR_CALL_NOT_IMPLEMENTED|STATUS_NOT_SUPPORTED)$/;
+const STUB_IDS = new Set(["UNIMPLEMENTED", "UNIMPLEMENTED_ONCE", "UNIMPLEMENTED_DBGBREAK", "STUB", "UNIMPLEMENTED_ONCE_DBGBREAK"]);
+const NOT_IMPL = /^(STATUS_NOT_IMPLEMENTED|E_NOTIMPL|ERROR_CALL_NOT_IMPLEMENTED|STATUS_NOT_SUPPORTED)$/;
 
 const declName = (d: Node | null): string => {
   // function_declarator -> declarator (identifier, field_identifier, qualified_identifier, pointer_declarator…)
   let n: Node | null = d;
   for (let i = 0; n && i < 8; i++) {
-    if (n.type === "function_declarator")
-      return declName(n.childForFieldName("declarator"));
-    if (
-      [
-        "identifier",
-        "field_identifier",
-        "qualified_identifier",
-        "destructor_name",
-        "operator_name",
-      ].includes(n.type)
-    )
-      return n.text;
-    n =
-      n.childForFieldName("declarator") ??
-      n.namedChildren.find((c) => c && /declarator|identifier/.test(c.type)) ??
-      null;
+    if (n.type === "function_declarator") return declName(n.childForFieldName("declarator"));
+    if (["identifier", "field_identifier", "qualified_identifier", "destructor_name", "operator_name"].includes(n.type)) return n.text;
+    n = n.childForFieldName("declarator") ?? n.namedChildren.find((c) => c && /declarator|identifier/.test(c.type)) ?? null;
   }
   return "";
 };
@@ -104,27 +80,14 @@ function analyze(file: string, text: string): FileInfo {
       ]).length;
       for (const id of body.descendantsOfType("identifier")) {
         if (!id) continue;
-        if (
-          STUB_IDS.has(id.text) &&
-          id.parent &&
-          ["expression_statement", "call_expression"].includes(id.parent.type)
-        )
+        if (STUB_IDS.has(id.text) && id.parent && ["expression_statement", "call_expression"].includes(id.parent.type))
           markers.add(id.text);
         if (NOT_IMPL.test(id.text)) {
           let p = id.parent;
-          while (
-            p &&
-            p.type !== "return_statement" &&
-            p.type !== "call_expression" &&
-            p !== body
-          )
-            p = p.parent;
+          while (p && p.type !== "return_statement" && p.type !== "call_expression" && p !== body) p = p.parent;
           if (
             p?.type === "return_statement" ||
-            (p?.type === "call_expression" &&
-              /SetLastError|BaseSetLastNTError/.test(
-                p.childForFieldName("function")?.text ?? "",
-              ))
+            (p?.type === "call_expression" && /SetLastError|BaseSetLastNTError/.test(p.childForFieldName("function")?.text ?? ""))
           )
             markers.add(id.text);
         }
@@ -134,22 +97,11 @@ function analyze(file: string, text: string): FileInfo {
         if (!fn) continue;
         if (fn.type === "identifier") calls.add(fn.text);
         // Wine: FIXME("… stub …") marks an unimplemented function.
-        if (
-          fn.text === "FIXME" &&
-          /stub/i.test(c!.childForFieldName("arguments")?.text ?? "")
-        )
-          markers.add("FIXME(stub)");
+        if (fn.text === "FIXME" && /stub/i.test(c!.childForFieldName("arguments")?.text ?? "")) markers.add("FIXME(stub)");
       }
     }
-    const status: FnInfo["status"] =
-      markers.size === 0
-        ? "real"
-        : statements <= markers.size + 3
-          ? "stub"
-          : "partial";
-    const spec = f
-      .childForFieldName("type")
-      ?.parent?.children.find((c) => c?.type === "storage_class_specifier");
+    const status: FnInfo["status"] = markers.size === 0 ? "real" : statements <= markers.size + 3 ? "stub" : "partial";
+    const spec = f.childForFieldName("type")?.parent?.children.find((c) => c?.type === "storage_class_specifier");
     functions.push({
       name,
       line: f.startPosition.row + 1,
@@ -162,12 +114,7 @@ function analyze(file: string, text: string): FileInfo {
     });
   }
   const types = new Set<string>();
-  for (const t of r.descendantsOfType([
-    "struct_specifier",
-    "union_specifier",
-    "enum_specifier",
-    "type_definition",
-  ])) {
+  for (const t of r.descendantsOfType(["struct_specifier", "union_specifier", "enum_specifier", "type_definition"])) {
     if (!t) continue;
     if (t.type === "type_definition") {
       const d = t.childForFieldName("declarator");
@@ -179,10 +126,7 @@ function analyze(file: string, text: string): FileInfo {
   }
   const includes = r
     .descendantsOfType("preproc_include")
-    .map(
-      (i) =>
-        i?.childForFieldName("path")?.text.replace(/^[<"]|[>"]$/g, "") ?? "",
-    )
+    .map((i) => i?.childForFieldName("path")?.text.replace(/^[<"]|[>"]$/g, "") ?? "")
     .filter(Boolean);
   const out = {
     file,

@@ -37,7 +37,10 @@ import { structuredClone_ } from "../utils";
  * Ordering within a buffer is preserved as well; see `postStartMetadata`, which
  * keeps deltas and replayed starts in arrival order.
  */
-function carryStartMetadata<T extends BaseEvent>(previous: T | undefined, next: T): T {
+function carryStartMetadata<T extends BaseEvent>(
+  previous: T | undefined,
+  next: T,
+): T {
   if (previous === undefined) {
     return next;
   }
@@ -59,10 +62,17 @@ function carryStartMetadata<T extends BaseEvent>(previous: T | undefined, next: 
  * start ahead of the collapsed delta event; the caller stages that separately so
  * arrival order is preserved.
  */
-function replaceStartFields<T extends BaseEvent>(previous: T | undefined, next: T): T {
-  const { metadata: _replayMetadata, ...fields } = next as T & { metadata?: Metadata };
+function replaceStartFields<T extends BaseEvent>(
+  previous: T | undefined,
+  next: T,
+): T {
+  const { metadata: _replayMetadata, ...fields } = next as T & {
+    metadata?: Metadata;
+  };
   const carried = previous?.metadata;
-  return (carried === undefined ? fields : { ...fields, metadata: carried }) as T;
+  return (
+    carried === undefined ? fields : { ...fields, metadata: carried }
+  ) as T;
 }
 
 function collapseMetadata(events: BaseEvent[]): Metadata | undefined {
@@ -130,7 +140,10 @@ export function compactEvents(events: BaseEvent[]): BaseEvent[] {
         // Compaction hoists START ahead of the collapsed delta event, so a start
         // replayed after deltas keeps its fields but stages its metadata.
         pending.start = replaceStartFields(pending.start, startEvent);
-        pending.postStartMetadata = mergeMetadata(pending.postStartMetadata, startEvent.metadata);
+        pending.postStartMetadata = mergeMetadata(
+          pending.postStartMetadata,
+          startEvent.metadata,
+        );
       }
     } else if (event.type === EventType.TEXT_MESSAGE_CONTENT) {
       const contentEvent = event as TextMessageContentEvent;
@@ -145,7 +158,10 @@ export function compactEvents(events: BaseEvent[]): BaseEvent[] {
 
       const pending = pendingTextMessages.get(messageId)!;
       pending.contents.push(contentEvent);
-      pending.postStartMetadata = mergeMetadata(pending.postStartMetadata, contentEvent.metadata);
+      pending.postStartMetadata = mergeMetadata(
+        pending.postStartMetadata,
+        contentEvent.metadata,
+      );
     } else if (event.type === EventType.TEXT_MESSAGE_END) {
       const endEvent = event as TextMessageEndEvent;
       const messageId = endEvent.messageId;
@@ -180,7 +196,10 @@ export function compactEvents(events: BaseEvent[]): BaseEvent[] {
       } else {
         // Same ordering rule as the text case above.
         pending.start = replaceStartFields(pending.start, startEvent);
-        pending.postStartMetadata = mergeMetadata(pending.postStartMetadata, startEvent.metadata);
+        pending.postStartMetadata = mergeMetadata(
+          pending.postStartMetadata,
+          startEvent.metadata,
+        );
       }
     } else if (event.type === EventType.TOOL_CALL_ARGS) {
       const argsEvent = event as ToolCallArgsEvent;
@@ -195,7 +214,10 @@ export function compactEvents(events: BaseEvent[]): BaseEvent[] {
 
       const pending = pendingToolCalls.get(toolCallId)!;
       pending.args.push(argsEvent);
-      pending.postStartMetadata = mergeMetadata(pending.postStartMetadata, argsEvent.metadata);
+      pending.postStartMetadata = mergeMetadata(
+        pending.postStartMetadata,
+        argsEvent.metadata,
+      );
     } else if (event.type === EventType.TOOL_CALL_END) {
       const endEvent = event as ToolCallEndEvent;
       const toolCallId = endEvent.toolCallId;
@@ -218,12 +240,18 @@ export function compactEvents(events: BaseEvent[]): BaseEvent[] {
       flushState(stateEvents, compacted);
       stateEvents = [];
       compacted.push(event);
-    } else if (event.type === EventType.RUN_FINISHED || event.type === EventType.RUN_ERROR) {
+    } else if (
+      event.type === EventType.RUN_FINISHED ||
+      event.type === EventType.RUN_ERROR
+    ) {
       // Flush compacted state into output before the run boundary event
       flushState(stateEvents, compacted);
       stateEvents = [];
       compacted.push(event);
-    } else if (event.type === EventType.STATE_SNAPSHOT || event.type === EventType.STATE_DELTA) {
+    } else if (
+      event.type === EventType.STATE_SNAPSHOT ||
+      event.type === EventType.STATE_DELTA
+    ) {
       // Collect state events for compaction
       stateEvents.push(event as StateSnapshotEvent | StateDeltaEvent);
     } else {
@@ -431,10 +459,15 @@ function flushState(
       // answering falsy. Warned and skipped, matching the reducer in
       // apply/default.ts, which faces exactly the same failure.
       try {
-        state = jsonpatch.applyPatch(state, structuredClone_(event.delta), true, false)
-          .newDocument;
+        state = jsonpatch.applyPatch(
+          state,
+          structuredClone_(event.delta),
+          true,
+          false,
+        ).newDocument;
       } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         warnCompact(
           `[ag-ui][compact] Failed to apply state patch while compacting:\nCurrent state: ${JSON.stringify(state, null, 2)}\nPatch operations: ${JSON.stringify(event.delta, null, 2)}\nError: ${errorMessage}`,
         );

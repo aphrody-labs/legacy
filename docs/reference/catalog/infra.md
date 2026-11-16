@@ -9,6 +9,7 @@ Fleet, deploy and CI configuration (build/*, device/*, prebuilts/*)
 | [chromium-factory](../../../..) | `ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io a... |
 | [ci](../../../..) | `ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io a... |
 | [docker](../../../..) | `ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io a... |
+| [os](../../../..) | `ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io a... |
 | [pkg](../../../..) | `ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io a... |
 | [cloudflare](../../../..) | `ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io a... |
 | [cluster](../../../..) | `ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io a... |

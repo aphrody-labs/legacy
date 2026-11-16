@@ -1,6 +1,7 @@
 # Gemini Live Voice, Audio, Music & Google Super App — Unified Monorepo (Novembre 2026)
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Unified November 2026 Monorepo (Rust Crates + Bun v1.4.5 Packages + Python uv + Tauri v3 Alpha) for the One Big Gemini Voice, Audio & Music Super App
 
 | Type | Path |
@@ -21,6 +22,7 @@ bun run --cwd apps/gemini-super-app super-app
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Dépôt officiel GitHub (`aphrody-labs`) : **`https://github.com/aphrody-labs/gemini-super-app`**

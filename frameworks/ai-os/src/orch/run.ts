@@ -177,7 +177,8 @@ export async function runWorkflow(wf: Workflow, o: RunOptions = {}) {
   for (const s of wf.steps) add(s, 0);
   for (const s of wf.steps)
     for (const d of s.deps ?? [])
-      if (!st.has(d)) throw new Error(`${s.id} depends on ${d}, which is missing`);
+      if (!st.has(d))
+        throw new Error(`${s.id} depends on ${d}, which is missing`);
   const health = new Health();
 
   const busy = new Map<string, number>(fleet.map((h) => [h.id, 0]));

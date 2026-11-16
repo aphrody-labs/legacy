@@ -1,6 +1,7 @@
 # `@aphrody/wck`
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Compile-Time Web Validator (Google SEO + AI Mode SEO + Modern Web Guidelines + Core Web Vitals + Lighthouse 100 + WASM + WebGPU Chromium Spec)
 
 | Type | Path |
@@ -17,6 +18,7 @@ bun run --cwd system/wck fmt
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Compile-Time Web Validator and Modern Web Guidance (MWG) RAG engine for the `src` monorepo.

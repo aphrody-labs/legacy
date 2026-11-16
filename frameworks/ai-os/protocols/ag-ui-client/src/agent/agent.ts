@@ -25,7 +25,17 @@ import { compareVersions, validate as validateVersion } from "compare-versions";
 import { catchError, map, tap } from "rxjs/operators";
 import { finalize } from "rxjs/operators";
 import { takeUntil } from "rxjs/operators";
-import { pipe, Observable, from, of, EMPTY, Subject, defer, concatWith, throwError } from "rxjs";
+import {
+  pipe,
+  Observable,
+  from,
+  of,
+  EMPTY,
+  Subject,
+  defer,
+  concatWith,
+  throwError,
+} from "rxjs";
 import { verifyEvents } from "../verify";
 import { convertToLegacyEvents } from "../legacy/convert";
 import { LegacyRuntimeProtocolEvent } from "../legacy/types";
@@ -36,7 +46,11 @@ import {
   CompatibilityBoundary,
   compatibilityBoundaryOperator,
 } from "../middleware/compatibility-boundary";
-import { AgentStateMutation, AgentSubscriber, runSubscribersWithMutation } from "./subscriber";
+import {
+  AgentStateMutation,
+  AgentSubscriber,
+  runSubscribersWithMutation,
+} from "./subscriber";
 import { AGUIConnectNotImplementedError, AGUIError } from "@ag-ui/core";
 import { isInterruptExpired } from "../interrupts";
 import {
@@ -48,7 +62,6 @@ import {
   BackwardCompatibility_0_0_57,
 } from "../middleware";
 import packageJson from "../../package.json";
-
 
 /** The maxVersion deprecation warns once per process, not once per call. */
 let warnedDeprecatedMaxVersion = false;
@@ -132,18 +145,26 @@ export abstract class AbstractAgent {
   /** Stops a legacy override that forwards to this.maxProtocolVersion. */
   private resolvingPeerCeiling = false;
 
-  private resolvePeerCeiling(name: "maxVersion" | "maxProtocolVersion"): string {
+  private resolvePeerCeiling(
+    name: "maxVersion" | "maxProtocolVersion",
+  ): string {
     if (this.resolvingPeerCeiling) {
       return packageJson.version;
     }
 
     // Inspect descriptors without executing either public getter.
     let legacyOverride = Object.getOwnPropertyDescriptor(this, "maxVersion");
-    let modernOverride = Object.getOwnPropertyDescriptor(this, "maxProtocolVersion");
+    let modernOverride = Object.getOwnPropertyDescriptor(
+      this,
+      "maxProtocolVersion",
+    );
     let proto = Object.getPrototypeOf(this);
     while (proto && proto !== AbstractAgent.prototype) {
       legacyOverride ??= Object.getOwnPropertyDescriptor(proto, "maxVersion");
-      modernOverride ??= Object.getOwnPropertyDescriptor(proto, "maxProtocolVersion");
+      modernOverride ??= Object.getOwnPropertyDescriptor(
+        proto,
+        "maxProtocolVersion",
+      );
       proto = Object.getPrototypeOf(proto);
     }
 
@@ -152,7 +173,8 @@ export abstract class AbstractAgent {
     if (name === "maxVersion" && legacyOverride) {
       return packageJson.version;
     }
-    const override = name === "maxProtocolVersion" ? legacyOverride : modernOverride;
+    const override =
+      name === "maxProtocolVersion" ? legacyOverride : modernOverride;
     if (!override) {
       return packageJson.version;
     }
@@ -200,7 +222,9 @@ export abstract class AbstractAgent {
 
   set debugLogger(value: DebugLogger | boolean | undefined) {
     if (typeof value === "boolean") {
-      this._debugLogger = value ? createDebugLogger(resolveAgentDebugConfig(true)) : undefined;
+      this._debugLogger = value
+        ? createDebugLogger(resolveAgentDebugConfig(true))
+        : undefined;
     } else {
       this._debugLogger = value;
     }
@@ -287,7 +311,9 @@ export abstract class AbstractAgent {
 
   public use(...middlewares: (Middleware | MiddlewareFunction)[]): this {
     const normalizedMiddlewares = middlewares.map((middleware) =>
-      typeof middleware === "function" ? new FunctionMiddleware(middleware) : middleware,
+      typeof middleware === "function"
+        ? new FunctionMiddleware(middleware)
+        : middleware,
     );
     this.middlewares.push(...normalizedMiddlewares);
     return this;
@@ -308,7 +334,9 @@ export abstract class AbstractAgent {
       });
 
       let result: unknown = undefined;
-      const currentMessageIds = new Set(this.messages.map((message) => message.id));
+      const currentMessageIds = new Set(
+        this.messages.map((message) => message.id),
+      );
 
       const subscribers: AgentSubscriber[] = [
         {
@@ -341,7 +369,10 @@ export abstract class AbstractAgent {
           // enforcement stage see 1.0-shaped events. Appended per run and
           // never stored, so it is installed exactly once regardless of
           // use() or clone().
-          const chainedAgent = [...this.middlewares, new CompatibilityBoundary()].reduceRight(
+          const chainedAgent = [
+            ...this.middlewares,
+            new CompatibilityBoundary(),
+          ].reduceRight(
             (nextAgent: AbstractAgent, middleware) =>
               ({
                 run: (i: RunAgentInput) => middleware.run(i, nextAgent),
@@ -418,7 +449,9 @@ export abstract class AbstractAgent {
       this.agentId = this.agentId ?? uuidv4();
       const input = this.prepareRunAgentInput(parameters);
       let result: unknown = undefined;
-      const currentMessageIds = new Set(this.messages.map((message) => message.id));
+      const currentMessageIds = new Set(
+        this.messages.map((message) => message.id),
+      );
 
       const subscribers: AgentSubscriber[] = [
         {
@@ -448,7 +481,9 @@ export abstract class AbstractAgent {
         // boundary applies as a plain operator here (composed with enforcement:
         // rxjs pipe() runs out of typed arities beyond nine stages).
         (source$: Observable<BaseEvent>) =>
-          enforceEvents(this.debugLogger)(compatibilityBoundaryOperator()(source$)),
+          enforceEvents(this.debugLogger)(
+            compatibilityBoundaryOperator()(source$),
+          ),
         transformChunks(this.debugLogger),
         verifyEvents(this.debugLogger),
         // Stop processing immediately when this run is detached
@@ -534,7 +569,13 @@ export abstract class AbstractAgent {
     events$: Observable<BaseEvent>,
     subscribers: AgentSubscriber[],
   ): Observable<AgentStateMutation> {
-    return defaultApplyEvents(input, events$, this, subscribers, this.debugLogger);
+    return defaultApplyEvents(
+      input,
+      events$,
+      this,
+      subscribers,
+      this.debugLogger,
+    );
   }
 
   protected processApplyEvents(
@@ -575,7 +616,9 @@ export abstract class AbstractAgent {
     );
   }
 
-  protected prepareRunAgentInput(parameters?: RunAgentParameters): RunAgentInput {
+  protected prepareRunAgentInput(
+    parameters?: RunAgentParameters,
+  ): RunAgentInput {
     const clonedMessages = structuredClone_(this.messages) as Message[];
     // Egress chokepoint for the no-null rule on attribution (PNI-199 alignment):
     // the verifier and reducer keep event-derived state clean, but messages also
@@ -584,11 +627,15 @@ export abstract class AbstractAgent {
     // onto the wire — the schemas forbid it, so a receiving agent would reject
     // the whole run. Absent is the only spelling.
     for (const message of clonedMessages) {
-      if ((message as { subagentRunId?: string | null }).subagentRunId === null) {
+      if (
+        (message as { subagentRunId?: string | null }).subagentRunId === null
+      ) {
         delete (message as { subagentRunId?: string | null }).subagentRunId;
       }
     }
-    const messagesWithoutActivity = clonedMessages.filter((message) => message.role !== "activity");
+    const messagesWithoutActivity = clonedMessages.filter(
+      (message) => message.role !== "activity",
+    );
 
     return {
       threadId: this.threadId,
@@ -596,7 +643,8 @@ export abstract class AbstractAgent {
       // Declared only when the peer's ceiling is not pinned below this
       // client: a downgraded peer predates the field, and an unknown input
       // member is exactly what a strict old parser could reject.
-      ...(compareVersions(this.maxProtocolVersion, packageJson.version) >= 0 && {
+      ...(compareVersions(this.maxProtocolVersion, packageJson.version) >=
+        0 && {
         protocolVersion: PROTOCOL_VERSION,
       }),
       tools: structuredClone_(parameters?.tools ?? []),
@@ -604,14 +652,21 @@ export abstract class AbstractAgent {
       forwardedProps: structuredClone_(parameters?.forwardedProps ?? {}),
       state: structuredClone_(this.state),
       messages: messagesWithoutActivity,
-      ...(parameters?.resume !== undefined ? { resume: structuredClone_(parameters.resume) } : {}),
+      ...(parameters?.resume !== undefined
+        ? { resume: structuredClone_(parameters.resume) }
+        : {}),
     };
   }
 
-  protected async onInitialize(input: RunAgentInput, subscribers: AgentSubscriber[]) {
+  protected async onInitialize(
+    input: RunAgentInput,
+    subscribers: AgentSubscriber[],
+  ) {
     if (runInputs.has(input) && this.pendingInterrupts.length > 0) {
       const resumeIds = new Set((input.resume ?? []).map((r) => r.interruptId));
-      const uncovered = this.pendingInterrupts.map((i) => i.id).filter((id) => !resumeIds.has(id));
+      const uncovered = this.pendingInterrupts
+        .map((i) => i.id)
+        .filter((id) => !resumeIds.has(id));
       if (uncovered.length > 0) {
         throw new AGUIError(
           `Thread has ${uncovered.length} pending interrupt(s) not addressed by resume: ${uncovered.join(", ")}`,
@@ -650,7 +705,10 @@ export abstract class AbstractAgent {
         // so the no-null rule must be re-applied here — a subscriber mutation is
         // the one writer that can still put a null tag on the wire.
         for (const message of onRunInitializedMutation.messages) {
-          if ((message as { subagentRunId?: string | null }).subagentRunId === null) {
+          if (
+            (message as { subagentRunId?: string | null }).subagentRunId ===
+            null
+          ) {
             delete (message as { subagentRunId?: string | null }).subagentRunId;
           }
         }
@@ -689,14 +747,24 @@ export abstract class AbstractAgent {
     }
   }
 
-  protected onError(input: RunAgentInput, error: Error, subscribers: AgentSubscriber[]) {
+  protected onError(
+    input: RunAgentInput,
+    error: Error,
+    subscribers: AgentSubscriber[],
+  ) {
     return from(
       runSubscribersWithMutation(
         subscribers,
         this.messages,
         this.state,
         (subscriber, messages, state) =>
-          subscriber.onRunFailed?.({ error, messages, state, agent: this, input }),
+          subscriber.onRunFailed?.({
+            error,
+            messages,
+            state,
+            agent: this,
+            input,
+          }),
       ),
     ).pipe(
       map((onRunFailedMutation) => {
@@ -750,7 +818,10 @@ export abstract class AbstractAgent {
     );
   }
 
-  protected async onFinalize(input: RunAgentInput, subscribers: AgentSubscriber[]) {
+  protected async onFinalize(
+    input: RunAgentInput,
+    subscribers: AgentSubscriber[],
+  ) {
     const onRunFinalizedMutation = await runSubscribersWithMutation(
       subscribers,
       this.messages,
@@ -933,7 +1004,10 @@ export abstract class AbstractAgent {
 
     // Build middleware chain for legacy bridge
     const runObservable = (() => {
-      const chainedAgent = [...this.middlewares, new CompatibilityBoundary()].reduceRight(
+      const chainedAgent = [
+        ...this.middlewares,
+        new CompatibilityBoundary(),
+      ].reduceRight(
         (nextAgent: AbstractAgent, middleware) =>
           ({
             run: (i: RunAgentInput) => middleware.run(i, nextAgent),
@@ -958,7 +1032,9 @@ export abstract class AbstractAgent {
       (events$: Observable<LegacyRuntimeProtocolEvent>) => {
         return events$.pipe(
           map((event) => {
-            this.debugLogger?.event("LEGACY", "Event:", event, { type: event.type });
+            this.debugLogger?.event("LEGACY", "Event:", event, {
+              type: event.type,
+            });
             return event;
           }),
         );

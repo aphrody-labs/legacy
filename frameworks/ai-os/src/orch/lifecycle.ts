@@ -128,7 +128,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
       deps: ["review"],
       needs: { edit: true },
       prompt:
-        "The ai-os review tribunal (two voices and a judge) reviewed the change. Check each defect the judge kept against the code; fix the real ones, ignore the others and say so. Nothing to do if the status is \"compliant\".\n\n{{review}}",
+        'The ai-os review tribunal (two voices and a judge) reviewed the change. Check each defect the judge kept against the code; fix the real ones, ignore the others and say so. Nothing to do if the status is "compliant".\n\n{{review}}',
       check: "bun check",
       commit: {
         paths: [...paths, "docs/reviews"],

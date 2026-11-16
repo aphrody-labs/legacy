@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-export { XaiClient, XaiError, Chat, type XaiClientOptions } from "./core/client.ts";
+export {
+  XaiClient,
+  XaiError,
+  Chat,
+  type XaiClientOptions,
+} from "./core/client.ts";
 export {
   runGrokXResearch,
   type GrokXResearchInput,

@@ -8,7 +8,7 @@
 # Service failover between hosts is the cluster LB (device/cluster, HAProxy pools fr1/fr2/prd with health checks).
 # Alerts: journald (tag fleet-health, priority err), mailed by fleet-notify.sh (one per cause per 24 h).
 # DNS failover: FLEET_DNS_FAILOVER=1 (prd) -> fleet-dns-failover.sh down/up (token fleet-<host>-dns).
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -uo pipefail
 [ -f /etc/fleet/resilience.conf ] && . /etc/fleet/resilience.conf
 [ -f /etc/fleet/health.env ] && . /etc/fleet/health.env

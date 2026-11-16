@@ -65,7 +65,9 @@ function isApiKey(token: string): boolean {
 export function resolveAuth(explicit?: string): ResolvedAuth {
   if (explicit?.trim()) {
     const bearer = explicit.trim();
-    const mode: "api_key" | "supergrok" = isApiKey(bearer) ? "api_key" : "supergrok";
+    const mode: "api_key" | "supergrok" = isApiKey(bearer)
+      ? "api_key"
+      : "supergrok";
     return {
       mode,
       bearer,
@@ -84,12 +86,17 @@ export function resolveAuth(explicit?: string): ResolvedAuth {
 
   // Support for "SuperGrok" / free subscriber token (api key less, gratuite).
   // User can set SUPER_GROK_TOKEN or GROK_SUPER_TOKEN or pass as bearer; treated as supergrok mode.
-  const superGrok = (process.env.SUPER_GROK_TOKEN || process.env.GROK_SUPER_TOKEN || "").trim();
+  const superGrok = (
+    process.env.SUPER_GROK_TOKEN ||
+    process.env.GROK_SUPER_TOKEN ||
+    ""
+  ).trim();
   if (superGrok) {
     return {
       mode: "supergrok",
       bearer: superGrok,
-      source: "SUPER_GROK_TOKEN / GROK_SUPER_TOKEN env (api key less, gratuite)",
+      source:
+        "SUPER_GROK_TOKEN / GROK_SUPER_TOKEN env (api key less, gratuite)",
     };
   }
 

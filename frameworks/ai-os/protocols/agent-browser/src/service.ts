@@ -14,10 +14,20 @@ import { RuntimeError, Status } from "@aphrody/runtime-sdk";
 import { processes } from "@aphrody/runtime-sdk/modules";
 import { WebCdpPage } from "./cdp.ts";
 import { AgentBrowser, AgentPage } from "./client.ts";
-import { loadWebConfig, resolveEngineBinary, type WebConfig } from "./config.ts";
-import { installEngineCleanup, startEngine, type Engine, type EngineOptions } from "./engine.ts";
+import {
+  loadWebConfig,
+  resolveEngineBinary,
+  type WebConfig,
+} from "./config.ts";
+import {
+  installEngineCleanup,
+  startEngine,
+  type Engine,
+  type EngineOptions,
+} from "./engine.ts";
 
-export type FetchDump = "html" | "text" | "links" | "markdown" | "artifact" | "original";
+export type FetchDump =
+  "html" | "text" | "links" | "markdown" | "artifact" | "original";
 
 export interface FetchOptions {
   dump?: FetchDump;
@@ -152,14 +162,24 @@ export class WebServiceError extends Error {
 }
 
 /** Builds the `aphrody-web fetch` argument list. Pure, covered by unit tests. */
-export function fetchArgs(url: string, options: FetchOptions = {}, config?: WebConfig): string[] {
+export function fetchArgs(
+  url: string,
+  options: FetchOptions = {},
+  config?: WebConfig,
+): string[] {
   const args: string[] = [];
   const proxy = options.proxy;
   if (proxy) args.push("--proxy", proxy);
   args.push("fetch", url, "--quiet");
   args.push("--dump", options.dump ?? config?.fetch.dump ?? "markdown");
-  args.push("--timeout", String(options.timeoutSecs ?? config?.fetch.timeoutSecs ?? 30));
-  args.push("--wait-until", options.waitUntil ?? config?.fetch.waitUntil ?? "load");
+  args.push(
+    "--timeout",
+    String(options.timeoutSecs ?? config?.fetch.timeoutSecs ?? 30),
+  );
+  args.push(
+    "--wait-until",
+    options.waitUntil ?? config?.fetch.waitUntil ?? "load",
+  );
   const userAgent = options.userAgent ?? config?.fetch.userAgent ?? undefined;
   if (userAgent) args.push("--user-agent", userAgent);
   if (options.selector) args.push("--selector", options.selector);
@@ -174,25 +194,39 @@ export function crawlArgs(
   options: CrawlOptions = {},
   config?: WebConfig,
 ): string[] {
-  if (seeds.length === 0) throw new TypeError("crawl requires at least one seed URL");
+  if (seeds.length === 0)
+    throw new TypeError("crawl requires at least one seed URL");
   const crawl = config?.crawl;
   const args: string[] = [];
   if (options.proxy) args.push("--proxy", options.proxy);
   args.push("crawl", ...seeds, "--quiet", "--format", "json");
   args.push("--max-depth", String(options.maxDepth ?? crawl?.maxDepth ?? 2));
   args.push("--max-pages", String(options.maxPages ?? crawl?.maxPages ?? 25));
-  args.push("--concurrency", String(options.concurrency ?? crawl?.concurrency ?? 4));
+  args.push(
+    "--concurrency",
+    String(options.concurrency ?? crawl?.concurrency ?? 4),
+  );
   args.push("--delay-ms", String(options.delayMs ?? crawl?.delayMs ?? 0));
-  args.push("--timeout", String(options.timeoutSecs ?? crawl?.timeoutSecs ?? 300));
-  args.push("--user-agent", options.userAgent ?? crawl?.userAgent ?? "AphrodyWeb/1.0");
+  args.push(
+    "--timeout",
+    String(options.timeoutSecs ?? crawl?.timeoutSecs ?? 300),
+  );
+  args.push(
+    "--user-agent",
+    options.userAgent ?? crawl?.userAgent ?? "AphrodyWeb/1.0",
+  );
   for (const host of options.allowedDomains ?? crawl?.allowedHosts ?? [])
     args.push("--allowed-domain", host);
-  for (const pattern of options.includeUrlRegex ?? []) args.push("--include-url-regex", pattern);
-  for (const pattern of options.excludeUrlRegex ?? []) args.push("--exclude-url-regex", pattern);
-  if (options.obeyRobots ?? crawl?.obeyRobots ?? true) args.push("--obey-robots");
+  for (const pattern of options.includeUrlRegex ?? [])
+    args.push("--include-url-regex", pattern);
+  for (const pattern of options.excludeUrlRegex ?? [])
+    args.push("--exclude-url-regex", pattern);
+  if (options.obeyRobots ?? crawl?.obeyRobots ?? true)
+    args.push("--obey-robots");
   if (options.sitemaps ?? crawl?.sitemaps) args.push("--sitemaps");
   if (options.allowPrivateNetwork) args.push("--allow-private-network");
-  for (const path of options.cookieFiles ?? []) args.push("--cookie-file", path);
+  for (const path of options.cookieFiles ?? [])
+    args.push("--cookie-file", path);
   if (options.render) args.push("--render");
   if (options.includeHtml) args.push("--include-html");
   if (options.includeMarkdown) args.push("--include-markdown");
@@ -224,7 +258,9 @@ export class WebService {
       this.#maxOutputBytes < 1 ||
       this.#maxOutputBytes > 64 * 1024 * 1024
     ) {
-      throw new RangeError("maxOutputBytes must be an integer between 1 and 64 MiB");
+      throw new RangeError(
+        "maxOutputBytes must be an integer between 1 and 64 MiB",
+      );
     }
   }
 
@@ -256,12 +292,17 @@ export class WebService {
         timeoutMs,
         signal,
         onStderr(bytes) {
-          diagnostics = (diagnostics + decoder.decode(bytes, { stream: true })).slice(-2000);
+          diagnostics = (
+            diagnostics + decoder.decode(bytes, { stream: true })
+          ).slice(-2000);
         },
       });
       signal?.throwIfAborted();
       const stderr = new TextDecoder().decode(output.stderr);
-      const code = output.status.signal > 0 ? 128 + output.status.signal : output.status.exitCode;
+      const code =
+        output.status.signal > 0
+          ? 128 + output.status.signal
+          : output.status.exitCode;
       if (code !== 0) {
         throw new WebServiceError(
           `aphrody-web exited with ${code}: ${(stderr.trim().split("\n").at(-1) ?? "").slice(0, 300)}`,
@@ -280,7 +321,10 @@ export class WebService {
           diagnostics,
         );
       }
-      if (error instanceof RuntimeError && error.status === Status.OutputLimit) {
+      if (
+        error instanceof RuntimeError &&
+        error.status === Status.OutputLimit
+      ) {
         throw new WebServiceError(
           `aphrody-web ${command} exceeded its ${this.#maxOutputBytes} byte output budget`,
           null,
@@ -297,7 +341,9 @@ export class WebService {
     env: Record<string, string | undefined> = {},
     signal?: AbortSignal,
   ): Promise<string> {
-    return new TextDecoder().decode(await this.#runBytes(args, timeoutMs, env, signal));
+    return new TextDecoder().decode(
+      await this.#runBytes(args, timeoutMs, env, signal),
+    );
   }
 
   /** `aphrody-web --version`. */
@@ -322,10 +368,16 @@ export class WebService {
   }
 
   /** Original response bytes from the native fetch owner, without text decoding. */
-  async bytes(url: string, options: Omit<FetchOptions, "dump" | "eval"> = {}): Promise<Uint8Array> {
+  async bytes(
+    url: string,
+    options: Omit<FetchOptions, "dump" | "eval"> = {},
+  ): Promise<Uint8Array> {
     const timeoutSecs = options.timeoutSecs ?? this.config.fetch.timeoutSecs;
     return this.#runBytes(
-      [...fetchArgs(url, { ...options, dump: "original" }, this.config), "--fail-on-http-error"],
+      [
+        ...fetchArgs(url, { ...options, dump: "original" }, this.config),
+        "--fail-on-http-error",
+      ],
       (timeoutSecs + 15) * 1000,
       options.allowPrivateNetwork ? { OBSCURA_ALLOW_PRIVATE_NETWORK: "1" } : {},
     );
@@ -334,12 +386,22 @@ export class WebService {
   /** Original textual response bounded before transfer; binary bodies are skipped. */
   async response(
     url: string,
-    options: { maxBytes?: number; timeoutSecs?: number; allowPrivateNetwork?: boolean } = {},
+    options: {
+      maxBytes?: number;
+      timeoutSecs?: number;
+      allowPrivateNetwork?: boolean;
+    } = {},
   ): Promise<NativeResponse> {
     const timeoutSecs = options.timeoutSecs ?? 30;
     const maxBytes = options.maxBytes ?? 2_000_000;
-    if (!Number.isSafeInteger(maxBytes) || maxBytes < 1 || maxBytes > 64_000_000) {
-      throw new RangeError("maxBytes must be an integer between 1 and 64000000");
+    if (
+      !Number.isSafeInteger(maxBytes) ||
+      maxBytes < 1 ||
+      maxBytes > 64_000_000
+    ) {
+      throw new RangeError(
+        "maxBytes must be an integer between 1 and 64000000",
+      );
     }
     const args = [
       "response",
@@ -350,36 +412,63 @@ export class WebService {
       String(timeoutSecs),
     ];
     if (options.allowPrivateNetwork) args.push("--allow-private-network");
-    return JSON.parse(await this.#run(args, (timeoutSecs + 15) * 1000)) as NativeResponse;
+    return JSON.parse(
+      await this.#run(args, (timeoutSecs + 15) * 1000),
+    ) as NativeResponse;
   }
 
   /** Page converted to GitHub-flavoured Markdown. */
-  async markdown(url: string, options: Omit<FetchOptions, "dump"> = {}): Promise<string> {
+  async markdown(
+    url: string,
+    options: Omit<FetchOptions, "dump"> = {},
+  ): Promise<string> {
     return await this.fetch(url, { ...options, dump: "markdown" });
   }
 
   /** Stable crawler-to-N2B artifact: HTML, extracted content and discovered scripts. */
-  async artifact(url: string, options: Omit<FetchOptions, "dump"> = {}): Promise<PageArtifact> {
-    return JSON.parse(await this.fetch(url, { ...options, dump: "artifact" })) as PageArtifact;
+  async artifact(
+    url: string,
+    options: Omit<FetchOptions, "dump"> = {},
+  ): Promise<PageArtifact> {
+    return JSON.parse(
+      await this.fetch(url, { ...options, dump: "artifact" }),
+    ) as PageArtifact;
   }
 
   /** Parallel scrape through worker processes; the format is the engine's JSON array. */
-  async scrape(urls: readonly string[], options: ScrapeOptions = {}): Promise<unknown[]> {
-    if (urls.length === 0) throw new TypeError("scrape requires at least one URL");
+  async scrape(
+    urls: readonly string[],
+    options: ScrapeOptions = {},
+  ): Promise<unknown[]> {
+    if (urls.length === 0)
+      throw new TypeError("scrape requires at least one URL");
     const timeoutSecs = options.timeoutSecs ?? 60;
     const args = options.proxy ? ["--proxy", options.proxy] : [];
-    args.push("scrape", ...urls, "--quiet", "--format", "json", "--timeout", String(timeoutSecs));
+    args.push(
+      "scrape",
+      ...urls,
+      "--quiet",
+      "--format",
+      "json",
+      "--timeout",
+      String(timeoutSecs),
+    );
     args.push("--concurrency", String(options.concurrency ?? 4));
     if (options.eval) args.push("--eval", options.eval);
     const out = await this.#run(
       args,
-      (timeoutSecs + 30) * 1000 * Math.ceil(urls.length / (options.concurrency ?? 4)),
+      (timeoutSecs + 30) *
+        1000 *
+        Math.ceil(urls.length / (options.concurrency ?? 4)),
     );
     return JSON.parse(out) as unknown[];
   }
 
   /** Bounded, robots-aware crawl over the static HTTP stack. */
-  async crawl(seeds: readonly string[], options: CrawlOptions = {}): Promise<CrawlReport> {
+  async crawl(
+    seeds: readonly string[],
+    options: CrawlOptions = {},
+  ): Promise<CrawlReport> {
     const timeoutSecs = options.timeoutSecs ?? this.config.crawl.timeoutSecs;
     const out = await this.#run(
       crawlArgs(seeds, options, this.config),
@@ -395,8 +484,11 @@ export class WebService {
    * (`APHRODY_BROWSER_CDP_URL`) is used as is; otherwise a private engine is started once and
    * stopped by `close()`.
    */
-  async engine(options: EngineOptions = {}): Promise<{ endpoint: string; owned: boolean }> {
-    const configured = process.env.APHRODY_BROWSER_CDP_URL ?? process.env.APHRODY_CDP_URL;
+  async engine(
+    options: EngineOptions = {},
+  ): Promise<{ endpoint: string; owned: boolean }> {
+    const configured =
+      process.env.APHRODY_BROWSER_CDP_URL ?? process.env.APHRODY_CDP_URL;
     if (configured) return { endpoint: configured, owned: false };
     this.#engineStart ??= (async () => {
       installEngineCleanup();

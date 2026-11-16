@@ -1,7 +1,7 @@
 #!/bin/sh
 # Post-install of the shared services. Usage: HOST=fr1|fr2|usa CONFIRM=REINSTALL-<host> sh 50-mesh-caches.sh
 # Restores /etc/wireguard (from usa backup/R2), cloudflared, then cache clients/servers.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 . "$(dirname "$0")/lib.sh"; need_root; : "${HOST:?}"; need_confirm "$HOST"
 HUB=$(site_get hosts.fr1.mesh_ip)
 cat > /etc/profile.d/fleet-cache.sh <<E

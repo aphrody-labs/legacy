@@ -137,4 +137,5 @@ export interface LegacyResultMessage {
   actionName: string;
 }
 
-export type LegacyMessage = LegacyTextMessage | LegacyActionExecutionMessage | LegacyResultMessage;
+export type LegacyMessage =
+  LegacyTextMessage | LegacyActionExecutionMessage | LegacyResultMessage;

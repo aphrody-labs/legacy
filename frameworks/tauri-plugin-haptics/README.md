@@ -32,6 +32,7 @@ tauri-plugin-haptics = "2.0.0"
 # alternatively with Git:
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Haptic feedback and vibrations on Android and iOS
 
 | Type | Path |
@@ -47,6 +48,7 @@ cargo test -p aphrody-tauri-plugin-haptics
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 tauri-plugin-haptics = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```

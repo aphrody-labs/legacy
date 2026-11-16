@@ -24,11 +24,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { relayHome } from "./cdp.ts";
-import {
-  readDocument,
-  shred,
-  writeDocument,
-} from "@aphrody/env-kit/vault";
+import { readDocument, shred, writeDocument } from "@aphrody/env-kit/vault";
 
 export const SCOPES: Record<string, string> = {
   mcp: "relay MCP tools (POST /mcp)",
@@ -784,10 +780,7 @@ export function createOAuth(o: OAuthOptions) {
         for (const [k, v] of Object.entries(s.refresh))
           if (v.family === r.family) delete s.refresh[k];
         save();
-        return err(
-          "invalid_grant",
-          "refresh token reused: family revoked",
-        );
+        return err("invalid_grant", "refresh token reused: family revoked");
       }
       const asked = f.getAll("resource");
       const resource = asked.length ? pickResources(base, asked) : r.resource;

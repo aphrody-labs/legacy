@@ -3,6 +3,7 @@
 # bun-steam
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Bun OS Steam owner: VDF text/binary parser and writer, install and library discovery, client configuration, Proton launch tuning, Remote Play state.
 
 | Type | Path |
@@ -19,6 +20,7 @@ cargo run -p steam-depot --bin bun-steam-depot
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Rust half of the Bun OS Steam owner; the Bun half (CLI `bun-steam`, steamcmd driving, Proton

@@ -1,11 +1,13 @@
 # Aphrody Web Surface (`apps/web`)
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 | Type | Path |
 | :-- | :-- |
 | App | `apps/web` |
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`.

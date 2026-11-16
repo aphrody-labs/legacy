@@ -12,7 +12,10 @@ import {
 } from "@aphrody/runtime-sdk/browser";
 import type { LoadOptions } from "@aphrody/runtime-sdk";
 
-export interface RuntimePageOptions extends Omit<BrowserContextOptions, "allowedOrigins"> {
+export interface RuntimePageOptions extends Omit<
+  BrowserContextOptions,
+  "allowedOrigins"
+> {
   /** Defaults to the page's exact origin. Additional resource origins require explicit scope. */
   readonly allowedOrigins?: readonly string[];
   readonly signal?: AbortSignal;
@@ -34,7 +37,10 @@ export class RuntimeWebSession implements Disposable {
     return this.#runtime.closed;
   }
 
-  async openPage(url: string, options: RuntimePageOptions = {}): Promise<RuntimeWebPage> {
+  async openPage(
+    url: string,
+    options: RuntimePageOptions = {},
+  ): Promise<RuntimeWebPage> {
     const { signal, allowedOrigins, ...nativeOptions } = options;
     const context = this.#runtime.createContext({
       ...nativeOptions,
@@ -102,7 +108,11 @@ export class RuntimeWebPage implements Disposable {
     return this.#context.evaluate<T>(expression, options);
   }
 
-  setCookie(url: string, cookie: string, options?: BrowserCallOptions): Promise<null> {
+  setCookie(
+    url: string,
+    cookie: string,
+    options?: BrowserCallOptions,
+  ): Promise<null> {
     return this.#context.setCookie(url, cookie, options);
   }
 

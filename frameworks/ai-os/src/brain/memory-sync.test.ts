@@ -18,10 +18,15 @@ test("push claude files, pull gemini entries once, append-only", async () => {
   expect(r1).toEqual({ pushed: 2, pulled: 1 });
   const r2 = await memorySync({ home, memDir: mem }); // MEMORY.md changed (pointer line) and the inbox is new
   expect(r2.pulled).toBe(0);
-  expect(await memorySync({ home, memDir: mem })).toEqual({ pushed: 0, pulled: 0 });
+  expect(await memorySync({ home, memDir: mem })).toEqual({
+    pushed: 0,
+    pulled: 0,
+  });
   const inbox = readFileSync(join(mem, "gemini-inbox.md"), "utf8");
   expect(inbox).toContain("[source=gemini");
   expect(inbox).toContain("gemini fact one");
   expect(inbox).not.toContain("not exported");
-  expect(readFileSync(join(mem, "MEMORY.md"), "utf8")).toContain("(gemini-inbox.md)");
+  expect(readFileSync(join(mem, "MEMORY.md"), "utf8")).toContain(
+    "(gemini-inbox.md)",
+  );
 });

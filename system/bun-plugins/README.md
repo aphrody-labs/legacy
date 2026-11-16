@@ -1,6 +1,7 @@
 # @aphrody/bun-plugins
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Sovereign Bun Plugins: Just Recipes, Turbo Blake3 Cache, and VCS Metadata
 
 | Type | Path |
@@ -16,4 +17,5 @@ bun run --cwd system/bun-plugins fmt
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

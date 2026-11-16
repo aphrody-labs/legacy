@@ -6,7 +6,7 @@
 #   2. vps  -> cdn  edge disk   (/srv/rosegriffon/cdn/static, served under /static/)
 #   3. vps  -> R2   bucket rosegriffon-cdn (rclone remote r2), off-site copy
 # No --delete: the vps copy is the archive; the edge only gains files.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -eu
 src=${RG_CDN_STATIC:-/srv/rosegriffon/cdn/static}
 prod=${RG_PROD_SSH:-root@$(site_get hosts.prd.mesh_ip)}   # "local" when this runs on the prod host itself

@@ -1,6 +1,7 @@
 # @aphrody/bunify
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > legacy Node/TS/JS -> Bun -> Rust migrator
 
 | Type | Path |
@@ -8,6 +9,7 @@
 | Bun package | `system/bunify` |
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Legacy Node/TS/JS -> Bun -> Rust migrator (bins `bunify` and `n2r`). Idempotent stages: `bun`, `fullbun`, `rust`; run again after each upstream sync. Run again after each upstream sync; `--check` exits 1 when anything is not bunified yet.

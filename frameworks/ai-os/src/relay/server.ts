@@ -171,7 +171,10 @@ export async function serve() {
         GET: () => new Response(null, { status: 405 }),
       },
       "/mcp/core": {
-        POST: guard("mcp", rpc((r) => mcpRpc(r, true))),
+        POST: guard(
+          "mcp",
+          rpc((r) => mcpRpc(r, true)),
+        ),
         GET: () => new Response(null, { status: 405 }),
       },
       "/a2a": {

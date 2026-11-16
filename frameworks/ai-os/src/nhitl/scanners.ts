@@ -252,9 +252,7 @@ export function scanSettings(): Violation[] {
           ? "Keep: secret or system guardrail."
           : "Remove the rule or provide an equivalent non-interactive path.",
         guard ? "inevitable" : "open",
-        guard
-          ? "security guardrail (secret, system, git history)"
-          : undefined,
+        guard ? "security guardrail (secret, system, git history)" : undefined,
       );
     }
     for (const rule of p.ask ?? [])

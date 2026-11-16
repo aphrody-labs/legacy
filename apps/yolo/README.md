@@ -1,6 +1,7 @@
 # yolo
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Reproducible Fullstack Aphrody Bun v1.4.4 Framework, AST Module Graph, Material Design 3 Stack, Aphrody Pets & 3-VPS Search Inspector
 
 | Type | Path |
@@ -20,4 +21,5 @@ bun run --cwd apps/yolo check
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

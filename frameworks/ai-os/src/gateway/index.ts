@@ -199,7 +199,8 @@ export function createGateway(o: GatewayOptions) {
     return next;
   };
   // Fixed-length digests: the comparison leaks neither content nor token length.
-  const sha256 = (s: string) => new Bun.CryptoHasher("sha256").update(s).digest();
+  const sha256 = (s: string) =>
+    new Bun.CryptoHasher("sha256").update(s).digest();
   const same = (a: string | null, b: string) =>
     a !== null && timingSafeEqual(sha256(a), sha256(b));
   const bad = (msg: string) =>

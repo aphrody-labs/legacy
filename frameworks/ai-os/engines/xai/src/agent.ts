@@ -25,7 +25,11 @@ export async function runGrokXResearch(
   if (!query) throw new Error("query must be a non-empty string");
 
   const maxToolRounds = input.maxToolRounds ?? 4;
-  if (!Number.isInteger(maxToolRounds) || maxToolRounds < 1 || maxToolRounds > 10) {
+  if (
+    !Number.isInteger(maxToolRounds) ||
+    maxToolRounds < 1 ||
+    maxToolRounds > 10
+  ) {
     throw new Error("maxToolRounds must be an integer from 1 to 10");
   }
 

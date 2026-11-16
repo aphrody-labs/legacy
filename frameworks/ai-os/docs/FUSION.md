@@ -12,16 +12,16 @@ Status: done / partial / todo / skip (out of scope: macOS/Apple-only, org ops, f
 
 ## Core
 
-| Repo                                                                                        | Target module                                                | Status                                                                                     |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| Repo                                                                                        | Target module                                                 | Status                                                                                     |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | openclaw/openclaw (agent loop, tools, memory, sessions)                                     | system/core-ts (all reads through core/context.ts)            | partial (loop, tools, memory, skills, heartbeat, home, context)                            |
-| openclaw/openclaw (gateway, channels, plugins SDK)                                          | src/gateway, packages/plugins                                | todo                                                                                       |
-| openclaw/openclaw docs/reference/templates                                                  | templates/home                                               | done                                                                                       |
+| openclaw/openclaw (gateway, channels, plugins SDK)                                          | src/gateway, packages/plugins                                 | todo                                                                                       |
+| openclaw/openclaw docs/reference/templates                                                  | templates/home                                                | done                                                                                       |
 | NousResearch/hermes-agent agent/, tools/ (memory, skills, learning loop, cron, compression) | system/core-ts + python/hermes_agent_memory (pyo3 agent_core) | partial (skill lint/usage/curation, cron, memory provider on the shared store, skills hub) |
-| NousResearch/hermes-agent acp_adapter                                                       | src/gateway (ACP)                                            | todo                                                                                       |
-| NousResearch/hermes-agent SOUL / persona                                                    | templates/home/SOUL.md                                       | done                                                                                       |
-| openclaw/openclaw-windows-node, openclaw-windows-packaging (C#)                             | crates/windows (windows-rs) + MSIX in packaging/             | todo                                                                                       |
-| openclaw/ocm (Rust manager)                                                                 | crates/ocm                                                   | todo                                                                                       |
+| NousResearch/hermes-agent acp_adapter                                                       | src/gateway (ACP)                                             | todo                                                                                       |
+| NousResearch/hermes-agent SOUL / persona                                                    | templates/home/SOUL.md                                        | done                                                                                       |
+| openclaw/openclaw-windows-node, openclaw-windows-packaging (C#)                             | crates/windows (windows-rs) + MSIX in packaging/              | todo                                                                                       |
+| openclaw/ocm (Rust manager)                                                                 | crates/ocm                                                    | todo                                                                                       |
 
 ## Skills, plugins, registry
 
@@ -31,7 +31,7 @@ Status: done / partial / todo / skip (out of scope: macOS/Apple-only, org ops, f
 | openclaw/agent-skills                                                                             | skills/ (bundled)                                                                                                         | todo   |
 | openclaw/clawscan (skill security scan, Go)                                                       | packages/hub scan (TS port)                                                                                               | todo   |
 | openclaw/babelfish (plugins from other agent apps)                                                | packages/plugins compat                                                                                                   | todo   |
-| openclaw/catalog (model catalog)                                                                  | system/core-ts model catalog                                                                                               | todo   |
+| openclaw/catalog (model catalog)                                                                  | system/core-ts model catalog                                                                                              | todo   |
 | openclaw/kitchen-sink, plugin-inspector, crabpot, tidepool                                        | packages/plugins test fixtures                                                                                            | todo   |
 | NousResearch/hermes-official-plugins, hermes-labs-plugins, hermes-example-plugins                 | python/plugins + plugin bridge                                                                                            | todo   |
 | NousResearch/hermes-plugin-{honcho,mem0,openviking,supermemory,retaindb,byterover}                | memory provider interface in core                                                                                         | todo   |
@@ -40,18 +40,18 @@ Status: done / partial / todo / skip (out of scope: macOS/Apple-only, org ops, f
 
 ## Protocols, tools, runtime libs
 
-| Repo                                                                                    | Target                                    | Status  |
-| --------------------------------------------------------------------------------------- | ----------------------------------------- | ------- |
-| openclaw/acpx (ACP client)                                                              | src/gateway ACP                           | todo    |
-| openclaw/mcporter (MCP as TS API)                                                       | src/relay (MCP) client                    | todo    |
-| openclaw/turnwire (MCP relay, Go)                                                       | src/relay (MCP) relay                     | todo    |
+| Repo                                                                                    | Target                                     | Status  |
+| --------------------------------------------------------------------------------------- | ------------------------------------------ | ------- |
+| openclaw/acpx (ACP client)                                                              | src/gateway ACP                            | todo    |
+| openclaw/mcporter (MCP as TS API)                                                       | src/relay (MCP) client                     | todo    |
+| openclaw/turnwire (MCP relay, Go)                                                       | src/relay (MCP) relay                      | todo    |
 | openclaw/lobster (workflow shell)                                                       | system/core-ts workflows (Vercel Workflow) | todo    |
-| openclaw/libterminal                                                                    | src/tui                                   | todo    |
-| openclaw/fs-safe, proc-safe, proxyline                                                  | core sandbox/fs (bun-native)              | todo    |
-| openclaw/clawrouter (provider router)                                                   | core/model.ts + AI Gateway                | partial |
-| openclaw/clawpdf, ffmpeg-wasm, libopus-wasm, rastermill                                 | packages/media                            | todo    |
-| openclaw/carapace (design tokens)                                                       | apps/web                                  | todo    |
-| openclaw/collab, cookbook, uirouter, reef, hermit, krillswitch, crabhelm, openclaw-atif | evaluate per repo                         | todo    |
+| openclaw/libterminal                                                                    | src/tui                                    | todo    |
+| openclaw/fs-safe, proc-safe, proxyline                                                  | core sandbox/fs (bun-native)               | todo    |
+| openclaw/clawrouter (provider router)                                                   | core/model.ts + AI Gateway                 | partial |
+| openclaw/clawpdf, ffmpeg-wasm, libopus-wasm, rastermill                                 | packages/media                             | todo    |
+| openclaw/carapace (design tokens)                                                       | apps/web                                   | todo    |
+| openclaw/collab, cookbook, uirouter, reef, hermit, krillswitch, crabhelm, openclaw-atif | evaluate per repo                          | todo    |
 
 ## Channels and crawlers
 

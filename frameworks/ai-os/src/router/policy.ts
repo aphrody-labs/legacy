@@ -38,7 +38,9 @@ const MODES: Record<string, Mode> = {
 /** Virtual model ids the router answers to (listed by GET /v1/models), derived from the modes above. */
 export const VIRTUAL = [
   "auto",
-  ...Object.keys(MODES).filter((k) => k && k !== "best").map((k) => `auto:${k}`),
+  ...Object.keys(MODES)
+    .filter((k) => k && k !== "best")
+    .map((k) => `auto:${k}`),
   "arena",
 ];
 
@@ -49,7 +51,9 @@ export function parsePolicy(spec: string | undefined, offers: Offer[]): Policy {
     const m = MODES[s.slice(5)];
     return { kind: "auto", mode: m ?? "best" };
   }
-  const exact = offers.find((o) => o.id === s) ?? offers.find((o) => o.id.toLowerCase() === s.toLowerCase());
+  const exact =
+    offers.find((o) => o.id === s) ??
+    offers.find((o) => o.id.toLowerCase() === s.toLowerCase());
   if (exact) return { kind: "exact", id: exact.id };
   const key = norm(s);
   if (offers.some((o) => o.key === key)) return { kind: "name", key };
@@ -63,14 +67,16 @@ export const cost = (o: Offer, inTok: number, outTok: number) =>
 const INF = Number.POSITIVE_INFINITY;
 
 function comparator(mode: Mode, st: (o: Offer) => OfferStat | undefined) {
-  const price = (o: Offer) => (o.priceOut === undefined ? INF : (o.priceIn ?? 0) * 3 + o.priceOut);
+  const price = (o: Offer) =>
+    o.priceOut === undefined ? INF : (o.priceIn ?? 0) * 3 + o.priceOut;
   const arena = (o: Offer) => o.arena ?? -INF;
   // Arena coding-category rating; models without one fall back to the overall rating.
   const code = (o: Offer) => o.arenaCode ?? arena(o);
   const byMode: Record<Mode, (a: Offer, b: Offer) => number> = {
     best: (a, b) => arena(b) - arena(a) || price(a) - price(b),
     cheap: (a, b) => price(a) - price(b) || arena(b) - arena(a),
-    fast: (a, b) => (st(a)?.p50 ?? INF) - (st(b)?.p50 ?? INF) || price(a) - price(b),
+    fast: (a, b) =>
+      (st(a)?.p50 ?? INF) - (st(b)?.p50 ?? INF) || price(a) - price(b),
     code: (a, b) => code(b) - code(a) || price(a) - price(b),
     long: (a, b) => (b.context ?? 0) - (a.context ?? 0) || arena(b) - arena(a),
   };
@@ -105,18 +111,26 @@ export function order(
     cost(o, need.tokens ?? 1000, need.outTokens ?? 1000) <= need.maxCost;
   const sort = (list: Offer[], mode: Mode) => {
     const c = comparator(mode, st);
-    return list.slice().sort(
-      (a, b) =>
-        group(a) - group(b) ||
-        c(a, b) ||
-        (st(b)?.health ?? 1) - (st(a)?.health ?? 1) ||
-        a.id.localeCompare(b.id),
-    );
+    return list
+      .slice()
+      .sort(
+        (a, b) =>
+          group(a) - group(b) ||
+          c(a, b) ||
+          (st(b)?.health ?? 1) - (st(a)?.health ?? 1) ||
+          a.id.localeCompare(b.id),
+      );
   };
   const auto = (mode: Mode, within = true) => {
     const ok = within ? pool.filter(affordable) : pool;
     const first = sort(ok.length ? ok : pool, mode);
-    return [...first, ...sort(pool.filter((o) => !first.includes(o)), mode)];
+    return [
+      ...first,
+      ...sort(
+        pool.filter((o) => !first.includes(o)),
+        mode,
+      ),
+    ];
   };
   const dedupe = (l: Offer[]) => [...new Map(l.map((o) => [o.id, o])).values()];
   switch (policy.kind) {
@@ -126,11 +140,17 @@ export function order(
       return auto("best");
     case "exact": {
       const o = offers.find((x) => x.id === policy.id)!;
-      const same = sort(pool.filter((x) => x.key === o.key && x.id !== o.id), "cheap");
+      const same = sort(
+        pool.filter((x) => x.key === o.key && x.id !== o.id),
+        "cheap",
+      );
       return dedupe([o, ...same, ...(need.strict ? [] : auto("best"))]);
     }
     case "name": {
-      const same = sort(pool.filter((x) => x.key === policy.key), "cheap");
+      const same = sort(
+        pool.filter((x) => x.key === policy.key),
+        "cheap",
+      );
       return dedupe([...same, ...(need.strict ? [] : auto("best"))]);
     }
   }

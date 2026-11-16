@@ -1,6 +1,7 @@
 # py2bun
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at system/py2bun)
 
 | Type | Path |
@@ -14,6 +15,7 @@ bun run --cwd system/py2bun-ts test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Python 3 to Bun TypeScript transpiler, built for Ghidra (PyGhidra) scripts.

@@ -3,10 +3,11 @@
 # @aphrody/rag-core
 
 <!-- catalog:begin unit -->
+
 > Aphrody RAG core for the web (WebAssembly) and for Bun (bun:ffi): chunking, fusion, eval and vector kernels behind one typed facade.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                |
+| :---------- | :---------------------------------- |
 | Bun package | `frameworks/ai-os/engines/rag-core` |
 
 **Commands**

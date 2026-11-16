@@ -1,6 +1,7 @@
 # @aphrody/deploy: aphrody.app
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > aphrody.app: first-party deployment platform of the monorepo (previews per commit, production pointer, rollback, logs) on Cloudflare Workers and R2
 
 | Type | Path |
@@ -16,6 +17,7 @@ bun run --cwd system/deploy test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 First-party deployment platform of the monorepo (the role Vercel plays for its users, `docs/ALPHABET.md`), on Cloudflare Workers and R2. No `vercel.json`, no Vercel dependency.

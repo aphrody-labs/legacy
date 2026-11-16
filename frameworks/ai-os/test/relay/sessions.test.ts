@@ -28,30 +28,55 @@ afterAll(() => {
 test("SessionStart hook registers and names the session", () => {
   const o = runHook("start", { session_id: "aaaa1111", cwd: "C:/aphrody" });
   expect(o.hookSpecificOutput.hookEventName).toBe("SessionStart");
-  expect(o.hookSpecificOutput.additionalContext).toContain('this session is "claude-code-src-aaaa11"');
+  expect(o.hookSpecificOutput.additionalContext).toContain(
+    'this session is "claude-code-src-aaaa11"',
+  );
   runHook("start", { session_id: "bbbb2222", cwd: "C:/aphrody" });
   S.resetStore();
-  expect(S.list().map((s) => s.name).sort()).toEqual(["claude-code-src-aaaa11", "claude-code-src-bbbb22"]);
+  expect(
+    S.list()
+      .map((s) => s.name)
+      .sort(),
+  ).toEqual(["claude-code-src-aaaa11", "claude-code-src-bbbb22"]);
 });
 
 test("send, hook delivery, threaded synchronous reply", async () => {
   const pending = join(home, "sessions", "bbbb2222.pending");
-  const ask = tool("session_send").run({ from: "claude-code-src-aaaa11", to: "bbbb", text: "ping?", wait_s: 10 });
+  const ask = tool("session_send").run({
+    from: "claude-code-src-aaaa11",
+    to: "bbbb",
+    text: "ping?",
+    wait_s: 10,
+  });
   await Bun.sleep(100);
   expect(existsSync(pending)).toBe(true);
   // B receives it at its next tool call through the PostToolUse hook
-  const d = runHook("deliver", { session_id: "bbbb2222", hook_event_name: "PostToolUse" });
+  const d = runHook("deliver", {
+    session_id: "bbbb2222",
+    hook_event_name: "PostToolUse",
+  });
   expect(d.hookSpecificOutput.additionalContext).toContain("ping?");
   expect(existsSync(pending)).toBe(false);
-  const msgId = /\[message ([0-9a-f-]+)/.exec(d.hookSpecificOutput.additionalContext)![1]!;
-  await tool("session_send").run({ from: "bbbb2222", to: "claude-code-src-aaaa11", text: "pong", reply_to: msgId });
+  const msgId = /\[message ([0-9a-f-]+)/.exec(
+    d.hookSpecificOutput.additionalContext,
+  )![1]!;
+  await tool("session_send").run({
+    from: "bbbb2222",
+    to: "claude-code-src-aaaa11",
+    text: "pong",
+    reply_to: msgId,
+  });
   const r = (await ask) as any;
   expect(r.reply.text).toBe("pong");
   expect(r.reply.from).toBe("claude-code-src-bbbb22");
 });
 
 test("Stop hook blocks while mail is pending, then lets the session stop", async () => {
-  await tool("session_send").run({ from: "bbbb2222", to: "aaaa1111", text: "one more thing" });
+  await tool("session_send").run({
+    from: "bbbb2222",
+    to: "aaaa1111",
+    text: "one more thing",
+  });
   const o = runHook("stop", { session_id: "aaaa1111" });
   expect(o.decision).toBe("block");
   expect(o.reason).toContain("one more thing");

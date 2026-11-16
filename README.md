@@ -1,5 +1,7 @@
 <!-- catalog:begin header -->
+<!-- prettier-ignore-start -->
 <img alt="Aphrody" src="docs/logo/aphrody.png" width="96" height="96">
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 # Aphrody
@@ -15,6 +17,7 @@
 | [`third_party/`](third_party) | upstream checkouts and forks pinned in `src.lock.json` |
 
 <!-- catalog:begin types -->
+<!-- prettier-ignore-start -->
 ## Catalog
 
 The global types of the monorepo, listed from its manifests.
@@ -27,6 +30,7 @@ The global types of the monorepo, listed from its manifests.
 | [Infrastructure](docs/reference/catalog/infra.md) | `build/`, `device/`, `prebuilts/` | Fleet, deploy and CI configuration (build/*, device/*, prebuilts/*) |
 | [Upstream](docs/reference/catalog/third-party.md) | `third_party/` | An upstream checkout or fork pinned in src.lock.json (third_party/*) |
 | [Agent skill](docs/reference/catalog/skill.md) | `.agents/skills/` | A skill of .agents/skills |
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Docs: [docs/README.md](docs/README.md) (generated index). Spec: [docs/native/ROADMAP.md](docs/native/ROADMAP.md). Contract: [AGENTS.md](AGENTS.md). Names: [tools/identity.toml](tools/identity.toml).

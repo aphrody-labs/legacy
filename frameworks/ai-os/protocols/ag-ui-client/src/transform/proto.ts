@@ -138,10 +138,13 @@ export const parseProtoStream = (
             );
           }
         } else {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           failed = true;
           eventSubject.error(
-            new Error(`Failed to decode protocol buffer message: ${errorMessage}`),
+            new Error(
+              `Failed to decode protocol buffer message: ${errorMessage}`,
+            ),
           );
           return;
         }

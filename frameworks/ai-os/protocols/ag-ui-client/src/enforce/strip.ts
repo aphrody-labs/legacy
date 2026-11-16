@@ -49,7 +49,9 @@ function unwrap(schema: z.ZodType): z.ZodType {
       continue;
     }
     if (current instanceof z.ZodLazy) {
-      current = (current as unknown as { def: { getter(): z.ZodType } }).def.getter();
+      current = (
+        current as unknown as { def: { getter(): z.ZodType } }
+      ).def.getter();
       continue;
     }
     return current;
@@ -87,7 +89,9 @@ export function literalValue(schema: z.ZodType): unknown {
 
 function literalValueOf(schema: z.ZodType): unknown {
   const unwrapped = unwrap(schema);
-  return unwrapped instanceof z.ZodLiteral ? literalValue(unwrapped) : undefined;
+  return unwrapped instanceof z.ZodLiteral
+    ? literalValue(unwrapped)
+    : undefined;
 }
 
 function stripAgainst(
@@ -141,7 +145,12 @@ function stripAgainst(
       // stage warns once per path, and would send an operator looking for a
       // key that was never the reason for anything.
       const mark = stripped.length;
-      const child = stripAgainst(record[key], field, `${path}/${key}`, stripped);
+      const child = stripAgainst(
+        record[key],
+        field,
+        `${path}/${key}`,
+        stripped,
+      );
       if (child === DROP) {
         stripped.length = mark;
         // An unrecognisable value in an OPTIONAL position is removable; in a
@@ -181,13 +190,20 @@ function stripAgainst(
   if (target instanceof z.ZodRecord) {
     // A record describes every key, so no key here is ever "unrecognised" —
     // only a value can be, and it is removable exactly as an array element is.
-    if (typeof value !== "object" || value === null || Array.isArray(value)) return value;
-    const valueType = (target as unknown as { def: { valueType: z.ZodType } }).def.valueType;
+    if (typeof value !== "object" || value === null || Array.isArray(value))
+      return value;
+    const valueType = (target as unknown as { def: { valueType: z.ZodType } })
+      .def.valueType;
     const record = value as Record<string, unknown>;
     const result: Record<string, unknown> = {};
     for (const key of Object.keys(record)) {
       const mark = stripped.length;
-      const child = stripAgainst(record[key], valueType, `${path}/${key}`, stripped);
+      const child = stripAgainst(
+        record[key],
+        valueType,
+        `${path}/${key}`,
+        stripped,
+      );
       if (child === DROP) {
         stripped.length = mark;
         stripped.push(`${path}/${key}`);
@@ -208,7 +224,8 @@ function stripAgainst(
       // stream the validator would have rejected into a successful run with
       // the field quietly gone. It is a malformed VALUE on a described field,
       // which is the one deviation that stays fatal.
-      if (typeof value !== "object" || value === null || Array.isArray(value)) return value;
+      if (typeof value !== "object" || value === null || Array.isArray(value))
+        return value;
       const tag = (value as Record<string, unknown>)[discriminator];
       for (const option of options) {
         const unwrapped = unwrap(option);
@@ -229,8 +246,11 @@ function stripAgainst(
     // keys as unrecognised material — stripping exactly the fields that made
     // the value valid. Nothing generated has this shape today; leaving it
     // untouched hands the choice to the validator, which can actually make it.
-    const objectOptions = options.filter((option) => unwrap(option) instanceof z.ZodObject);
-    const isPlainObject = typeof value === "object" && value !== null && !Array.isArray(value);
+    const objectOptions = options.filter(
+      (option) => unwrap(option) instanceof z.ZodObject,
+    );
+    const isPlainObject =
+      typeof value === "object" && value !== null && !Array.isArray(value);
     if (objectOptions.length > 1 && isPlainObject) return value;
     for (const option of options) {
       const unwrapped = unwrap(option);

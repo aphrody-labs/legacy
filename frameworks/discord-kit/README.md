@@ -1,6 +1,7 @@
 # @aphrody/discord-kit
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Unified Discord bot core kit: pre-flight intent negotiation, memory-bounded caching, resilient interaction dispatching, lifecycle management and guards for Bun.
 
 | Type | Path |
@@ -16,6 +17,7 @@ bun run --cwd frameworks/discord-kit typecheck
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Shared Discord bot core kit, published as `@aphrody/discord-kit` and used by the Shenron and Rose Griffon bots.

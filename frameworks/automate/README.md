@@ -1,6 +1,7 @@
 # @aphrody/automate
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Workflow automation engine: definitions (zod schema), node catalog, expression language, executor with injected services, templates, n8n import/export. No outside access of its own.
 
 | Type | Path |
@@ -16,6 +17,7 @@ bun run --cwd frameworks/automate test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Workflow automation engine extracted from apps/auto, consumed by every front end (web, CLI, TUI, desktop, mobile).

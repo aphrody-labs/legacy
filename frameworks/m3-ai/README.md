@@ -3,6 +3,7 @@
 # @aphrody/m3-ai
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Material Design 3 agent-interaction components (tool calls, markdown, chat composer, workers, tasks): the SpaceUI (@spacedrive/ai) set rebuilt on @aphrody/m3-primitives.
 
 | Type | Path |
@@ -20,6 +21,7 @@ bun run --cwd frameworks/m3-ai prepack
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Material Design 3 React components for agent interfaces (tool-call cards, markdown, chat bubbles and composer, model selector, task board) and a streaming client for OpenAI-compatible chat servers, rebuilt from SpaceUI's `@spacedrive/ai`.

@@ -230,9 +230,7 @@ async function cloudflare(apply: boolean): Promise<Step[]> {
           target,
           account: email,
           state: "missing",
-          detail: superAdmin
-            ? undefined
-            : "Super Administrator role not found",
+          detail: superAdmin ? undefined : "Super Administrator role not found",
         });
         continue;
       }

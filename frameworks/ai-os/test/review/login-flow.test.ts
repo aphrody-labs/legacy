@@ -121,7 +121,8 @@ test("a review without a session raises the notification, waits for the sign-in,
   state.signedIn = false;
   const base = `http://127.0.0.1:${server.port}`;
   let raised = 0;
-  const { writeSession } = await import("../../../../system/env-kit/src/auth-paths.ts");
+  const { writeSession } =
+    await import("../../../../system/env-kit/src/auth-paths.ts");
   const r = await geminiWebAsk("Review.", {
     base,
     loginWaitMs: 60_000,

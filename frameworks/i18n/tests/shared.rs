@@ -31,12 +31,12 @@ fn shared_fixtures_match_typescript() {
 fn locales_are_the_catalogs_present() {
     let c = catalogs();
     assert_eq!(c.source_locale(), "en");
-    let dir = std::fs::read_dir("../../packages/i18n/locales")
+    let dir = std::fs::read_dir("../../i18n-ts/locales")
         .unwrap()
         .filter_map(|e| e.ok()?.file_name().into_string().ok()?.strip_suffix(".json").map(str::to_owned))
         .collect::<BTreeSet<_>>();
     assert_eq!(c.locales().into_iter().map(str::to_owned).collect::<BTreeSet<_>>(), dir);
-    let from_dir = Catalogs::from_dir(std::path::Path::new("../../packages/i18n/locales")).unwrap();
+    let from_dir = Catalogs::from_dir(std::path::Path::new("../../i18n-ts/locales")).unwrap();
     assert_eq!(from_dir.locales(), c.locales());
 }
 

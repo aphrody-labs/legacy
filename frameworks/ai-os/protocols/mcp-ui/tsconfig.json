@@ -1,13 +1,16 @@
 {
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/**/__tests__", "src/**/*.test.ts", "src/**/*.test.tsx", "src/test-setup.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/__tests__",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/test-setup.ts"
+  ],
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "Preserve",
     "moduleDetection": "force",
     "moduleResolution": "Bundler",
@@ -18,10 +21,7 @@
     "verbatimModuleSyntax": true,
     "noUncheckedIndexedAccess": false,
     "noImplicitOverride": false,
-    "types": [
-      "bun-types",
-      "node"
-    ],
+    "types": ["bun-types", "node"],
     "jsx": "react-jsx",
     "declaration": true,
     "noUnusedLocals": true,

@@ -484,7 +484,10 @@ export async function generateMonorepoDocs(
     `- **Installed Userland CLIs & Shims (\`~/.local/bin\`)**: \`${cliShims.length}\``,
     `- **Native C-ABI Shared Libraries (\`*.dll\`)**: \`${ffiDlls.length}\``,
     "",
-    renderGroupTable("apps", "1. Production Applications (`C:\\aphrody\\apps\\*`)"),
+    renderGroupTable(
+      "apps",
+      "1. Production Applications (`C:\\aphrody\\apps\\*`)",
+    ),
     renderGroupTable(
       "packages",
       "2. First-Party Bun v1.4.4 Packages (`C:\\aphrody\\packages\\*`)",

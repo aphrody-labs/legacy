@@ -33,6 +33,7 @@ tauri-plugin-localhost = "2.0.0"
 # alternatively with Git:
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Expose your apps assets through a localhost server instead of the default custom protocol.
 
 | Type | Path |
@@ -48,6 +49,7 @@ cargo test -p aphrody-tauri-plugin-localhost
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 tauri-plugin-localhost = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```

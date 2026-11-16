@@ -3,7 +3,7 @@
 # Run from the PC in an elevated session (Claude Code runs elevated: no prompt). Rotation done on 2026-11-13 (new key in ~/.ssh/fleet/wg/wg-win.pub).
 # ssh goes through the public IPs: cutting the tunnel does not cut access to the servers.
 # New pair: ~/.ssh/fleet/wg/wg-win.{key,pub}, conf: ~/.ssh/fleet/wg/wg-win.conf (outside the repository).
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -euo pipefail
 OLD='up+fbCDKsbVlLZSFXR3k4U3I784oSqwO8/ijyHSM/yM='
 NEW=$(cat ~/.ssh/fleet/wg/wg-win.pub)

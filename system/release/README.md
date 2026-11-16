@@ -1,6 +1,7 @@
 # @aphrody/release
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first
 
 | Type | Path |
@@ -14,4 +15,5 @@ bun run --cwd system/release test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

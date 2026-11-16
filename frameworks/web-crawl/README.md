@@ -1,6 +1,7 @@
 # `@aphrody/web-crawl`
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Typed Bun client for the Aphrody Web crawler CLI
 
 | Type | Path |
@@ -14,6 +15,7 @@ bun run --cwd frameworks/web-crawl typecheck
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Typed Bun client and small CLI for the Aphrody Web crawler. It delegates crawl

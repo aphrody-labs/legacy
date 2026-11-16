@@ -85,13 +85,13 @@ jobs:
         working-directory: kernel
         run: |
           clang -std=gnu11 -O0 -funsigned-char -fno-common -Iinclude -fprofile-instr-generate -fcoverage-mapping \
-            -fuse-ld=lld core/sys.c ../hardware/drivers/gpu/drm/drm_mesa.c ../src/wayland/wire.c ../src/wayland/xwm.c ../src/wayland/tiler.c \
-            ../src/nt/status.c ../src/wine/server_proto.c wasm/module.c ../src/ui/m3.c ../src/ui/shell_kit.c ../src/ui/vterm.c arch/x86/entry_64.S \
+            -fuse-ld=lld core/sys.c ../hardware/drivers/gpu/drm/drm_mesa.c ../system/wayland/wire.c ../system/wayland/xwm.c ../system/wayland/tiler.c \
+            ../system/nt/status.c ../system/wine/server_proto.c wasm/module.c ../frameworks/ui/m3.c ../frameworks/ui/shell_kit.c ../frameworks/ui/vterm.c arch/x86/entry_64.S \
             tests/sanitize.c -o "$RUNNER_TEMP/cov-c"
           LLVM_PROFILE_FILE="$RUNNER_TEMP/cov-c.profraw" "$RUNNER_TEMP/cov-c"
           llvm-profdata merge -sparse "$RUNNER_TEMP/cov-c.profraw" -o "$RUNNER_TEMP/cov-c.profdata"
           llvm-cov report "$RUNNER_TEMP/cov-c" -instr-profile="$RUNNER_TEMP/cov-c.profdata" \
-            core ../src/wayland ../src/nt ../src/wine wasm ../src/ui ../hardware/drivers | tee "$RUNNER_TEMP/coverage-c.txt"
+            core ../system/wayland ../system/nt ../system/wine wasm ../frameworks/ui ../hardware/drivers | tee "$RUNNER_TEMP/coverage-c.txt"
       - name: Rust coverage (cargo-llvm-cov on the chromium rustc, LLVM tools of the same revision)
         run: |
           command -v cargo-llvm-cov >/dev/null || cargo install --locked cargo-llvm-cov

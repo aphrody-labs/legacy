@@ -12,8 +12,17 @@ import { type OfferStat, Store } from "./stats.ts";
 
 export type Body = Record<string, any> & { model?: string; messages: any[] };
 export type CallOpts = { stream: boolean; signal: AbortSignal };
-export type CallFn = (offer: Offer, body: Body, o: CallOpts) => Promise<Response>;
-export type Attempt = { offer: string; status: number; ms: number; error?: string };
+export type CallFn = (
+  offer: Offer,
+  body: Body,
+  o: CallOpts,
+) => Promise<Response>;
+export type Attempt = {
+  offer: string;
+  status: number;
+  ms: number;
+  error?: string;
+};
 export type Result = {
   offer: Offer;
   attempts: Attempt[];
@@ -49,17 +58,21 @@ export const providerCall: CallFn = async (offer, body, o) => {
   if (!p) throw new Error(`fournisseur inactif : ${offer.provider}`);
   if (p.chat) {
     const send = async (b: any) =>
-      outboundFetch(`${p.chat!.base()}${p.chat!.path ?? "/v1/chat/completions"}`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...p.chat!.headers(),
+      outboundFetch(
+        `${p.chat!.base()}${p.chat!.path ?? "/v1/chat/completions"}`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            ...p.chat!.headers(),
+          },
+          body: JSON.stringify(b),
+          signal: o.signal,
         },
-        body: JSON.stringify(b),
-        signal: o.signal,
-      });
+      );
     const b: any = { ...body, model: offer.model, stream: o.stream };
-    if (o.stream) b.stream_options = { include_usage: true, ...b.stream_options };
+    if (o.stream)
+      b.stream_options = { include_usage: true, ...b.stream_options };
     else delete b.stream_options;
     const r = await send(b);
     // Some servers refuse stream_options: one more try without it, same offer.
@@ -72,12 +85,17 @@ export const providerCall: CallFn = async (offer, body, o) => {
   const prompt = flatten({
     messages: body.messages.map((m: any) => ({
       role: m.role === "developer" ? "system" : m.role,
-      content: typeof m.content === "string" ? m.content : (m.content ?? []).map((c: any) => c.text ?? "").join(""),
+      content:
+        typeof m.content === "string"
+          ? m.content
+          : (m.content ?? []).map((c: any) => c.text ?? "").join(""),
     })),
   } as any);
   const text = await Promise.race([
     p.ask!(offer.model, prompt),
-    new Promise<never>((_, rej) => o.signal.addEventListener("abort", () => rej(new Error("timeout")))),
+    new Promise<never>((_, rej) =>
+      o.signal.addEventListener("abort", () => rej(new Error("timeout"))),
+    ),
   ]);
   const inTok = Math.ceil(prompt.length / 4);
   return Response.json({
@@ -85,22 +103,68 @@ export const providerCall: CallFn = async (offer, body, o) => {
     object: "chat.completion",
     created: Math.floor(Date.now() / 1000),
     model: offer.id,
-    choices: [{ index: 0, message: { role: "assistant", content: text }, finish_reason: "stop" }],
-    usage: { prompt_tokens: inTok, completion_tokens: Math.ceil(text.length / 4), total_tokens: inTok },
+    choices: [
+      {
+        index: 0,
+        message: { role: "assistant", content: text },
+        finish_reason: "stop",
+      },
+    ],
+    usage: {
+      prompt_tokens: inTok,
+      completion_tokens: Math.ceil(text.length / 4),
+      total_tokens: inTok,
+    },
   });
 };
 
 /** SSE of an OpenAI completion (CLI offers and arena answers cannot stream natively). */
 export function sseOf(json: any): ReadableStream<Uint8Array> {
   const m = json.choices?.[0]?.message ?? {};
-  const base = { id: json.id, object: "chat.completion.chunk", created: json.created, model: json.model };
+  const base = {
+    id: json.id,
+    object: "chat.completion.chunk",
+    created: json.created,
+    model: json.model,
+  };
   const frames = [
-    { ...base, choices: [{ index: 0, delta: { role: "assistant", content: m.content ?? "", ...(m.tool_calls ? { tool_calls: m.tool_calls.map((t: any, i: number) => ({ index: i, ...t })) } : {}) }, finish_reason: null }] },
-    { ...base, choices: [{ index: 0, delta: {}, finish_reason: json.choices?.[0]?.finish_reason ?? "stop" }], usage: json.usage },
+    {
+      ...base,
+      choices: [
+        {
+          index: 0,
+          delta: {
+            role: "assistant",
+            content: m.content ?? "",
+            ...(m.tool_calls
+              ? {
+                  tool_calls: m.tool_calls.map((t: any, i: number) => ({
+                    index: i,
+                    ...t,
+                  })),
+                }
+              : {}),
+          },
+          finish_reason: null,
+        },
+      ],
+    },
+    {
+      ...base,
+      choices: [
+        {
+          index: 0,
+          delta: {},
+          finish_reason: json.choices?.[0]?.finish_reason ?? "stop",
+        },
+      ],
+      usage: json.usage,
+    },
   ];
   return new ReadableStream({
     start(c) {
-      for (const f of frames) c.enqueue(enc.encode(`data: ${JSON.stringify(f)}\n\n`));
+      for (const f of frames)
+        c.enqueue(enc.encode(`data: ${JSON.stringify(f)}\n\n`));
       c.enqueue(enc.encode("data: [DONE]\n\n"));
       c.close();
     },
@@ -128,7 +192,10 @@ export class Router {
   constructor(
     readonly store: Store = new Store(),
     private call: CallFn = providerCall,
-    private build: (s: Store, force?: boolean) => Promise<Catalog> = buildCatalog,
+    private build: (
+      s: Store,
+      force?: boolean,
+    ) => Promise<Catalog> = buildCatalog,
   ) {}
 
   /** Current catalog: memory, else the sqlite cache, else a fresh build; stale tables refresh in the background. */
@@ -154,11 +221,17 @@ export class Router {
     const policy = parsePolicy(spec, cat.offers);
     const n: Need = {
       tools: !!body?.tools?.length,
-      tokens: body?.messages ? tokensOf(body as Body) + (body.max_tokens ?? 0) : undefined,
+      tokens: body?.messages
+        ? tokensOf(body as Body) + (body.max_tokens ?? 0)
+        : undefined,
       outTokens: body?.max_tokens,
       ...need,
     };
-    return { policy, offers: order(cat.offers, policy, n, this.store.stats()), need: n };
+    return {
+      policy,
+      offers: order(cat.offers, policy, n, this.store.stats()),
+      need: n,
+    };
   }
 
   /** Executes a request over an ordered offer list with failover (the core of the infinite router). */
@@ -182,10 +255,31 @@ export class Router {
       const timer = setTimeout(() => ac.abort(), o.attemptMs ?? WALK.attemptMs);
       const fail = (status: number, err: string, coolMs = 0) => {
         const ms = performance.now() - t0;
-        attempts.push({ offer: offer.id, status, ms: Math.round(ms), error: err.slice(0, 200) });
-        this.store.record({ ts: Date.now(), offer: offer.id, ok: false, status, ms, inTok: 0, outTok: 0, cost: 0, caller, err });
+        attempts.push({
+          offer: offer.id,
+          status,
+          ms: Math.round(ms),
+          error: err.slice(0, 200),
+        });
+        this.store.record({
+          ts: Date.now(),
+          offer: offer.id,
+          ok: false,
+          status,
+          ms,
+          inTok: 0,
+          outTok: 0,
+          cost: 0,
+          caller,
+          err,
+        });
         if (coolMs) this.store.cooldown(offer.id, Date.now() + coolMs);
-        if (!coolMs && status >= 400 && status < 500 && ![401, 402, 403, 408, 429].includes(status)) {
+        if (
+          !coolMs &&
+          status >= 400 &&
+          status < 500 &&
+          ![401, 402, 403, 408, 429].includes(status)
+        ) {
           clientErrors++;
           lastClient = attempts.at(-1);
         }
@@ -195,18 +289,31 @@ export class Router {
         o.signal?.throwIfAborted();
         if (forced > 0) {
           forced--;
-          return fail(503, "simulated failure (x-router-fail)", WALK.coolServer);
+          return fail(
+            503,
+            "simulated failure (x-router-fail)",
+            WALK.coolServer,
+          );
         }
         const res = await this.call(offer, body, { stream, signal: ac.signal });
         if (!res.ok) {
           const text = (await res.text().catch(() => "")).slice(0, 200);
           const ra = Number(res.headers.get("retry-after")) * 1000;
           const cool =
-            /upgrade|not available on|quota|billing|credit|insufficient/i.test(text) ? WALK.coolQuota
-            : res.status === 429 ? Math.min(Math.max(ra || WALK.coolRateDefault, WALK.coolRateMin), WALK.coolRateMax)
-            : res.status === 401 || res.status === 403 || res.status === 402 ? WALK.coolAuth
-            : res.status >= 500 ? WALK.coolServer
-            : 0;
+            /upgrade|not available on|quota|billing|credit|insufficient/i.test(
+              text,
+            )
+              ? WALK.coolQuota
+              : res.status === 429
+                ? Math.min(
+                    Math.max(ra || WALK.coolRateDefault, WALK.coolRateMin),
+                    WALK.coolRateMax,
+                  )
+                : res.status === 401 || res.status === 403 || res.status === 402
+                  ? WALK.coolAuth
+                  : res.status >= 500
+                    ? WALK.coolServer
+                    : 0;
           return fail(res.status, text || `HTTP ${res.status}`, cool);
         }
         const finish = (json: any, outTxt: number) => {
@@ -214,25 +321,49 @@ export class Router {
           const inTok = u.prompt_tokens ?? inEst;
           const outTok = u.completion_tokens ?? Math.ceil(outTxt / 4);
           const ms = performance.now() - t0;
-          this.store.record({ ts: Date.now(), offer: offer.id, ok: true, status: 200, ms, inTok, outTok, cost: cost(offer, inTok, outTok), caller });
+          this.store.record({
+            ts: Date.now(),
+            offer: offer.id,
+            ok: true,
+            status: 200,
+            ms,
+            inTok,
+            outTok,
+            cost: cost(offer, inTok, outTok),
+            caller,
+          });
         };
         const ct = res.headers.get("content-type") ?? "";
         if (stream && ct.includes("text/event-stream") && res.body) {
           const reader = res.body.getReader();
           const first = await reader.read();
-          if (first.done || !first.value?.length) return fail(502, "flux vide", WALK.coolServer);
+          if (first.done || !first.value?.length)
+            return fail(502, "flux vide", WALK.coolServer);
           const head = dec.decode(first.value);
-          if (/^\s*(data:\s*)?\{\s*"error"/.test(head)) return fail(502, head, WALK.coolServer);
-          attempts.push({ offer: offer.id, status: 200, ms: Math.round(performance.now() - t0) });
+          if (/^\s*(data:\s*)?\{\s*"error"/.test(head))
+            return fail(502, head, WALK.coolServer);
+          attempts.push({
+            offer: offer.id,
+            status: 200,
+            ms: Math.round(performance.now() - t0),
+          });
           let tail = head;
           const body2 = new ReadableStream<Uint8Array>({
             start: (c) => c.enqueue(first.value),
             pull: async (c) => {
-              const r = await reader.read().catch((e) => ({ done: true, value: undefined, e }) as any);
+              const r = await reader
+                .read()
+                .catch((e) => ({ done: true, value: undefined, e }) as any);
               if (r.done) {
                 clearTimeout(timer);
-                const usage = [...tail.matchAll(/"usage":(\{[^{}]*\})/g)].at(-1)?.[1];
-                const text = [...tail.matchAll(/"content":"((?:[^"\\]|\\.)*)"/g)].map((m) => m[1]).join("");
+                const usage = [...tail.matchAll(/"usage":(\{[^{}]*\})/g)].at(
+                  -1,
+                )?.[1];
+                const text = [
+                  ...tail.matchAll(/"content":"((?:[^"\\]|\\.)*)"/g),
+                ]
+                  .map((m) => m[1])
+                  .join("");
                 finish({ usage: usage && JSON.parse(usage) }, text.length);
                 c.close();
               } else {
@@ -249,21 +380,42 @@ export class Router {
         try {
           json = JSON.parse(raw);
         } catch {
-          return fail(502, `non-JSON response: ${raw.slice(0, 120)}`, WALK.coolServer);
+          return fail(
+            502,
+            `non-JSON response: ${raw.slice(0, 120)}`,
+            WALK.coolServer,
+          );
         }
         if (json.error || !json.choices?.length)
-          return fail(502, JSON.stringify(json.error ?? json).slice(0, 200), WALK.coolServer);
+          return fail(
+            502,
+            JSON.stringify(json.error ?? json).slice(0, 200),
+            WALK.coolServer,
+          );
         const msg = json.choices[0].message ?? {};
         // A reasoning model that spent every token thinking returns no visible answer: try the next offer.
         if (!msg.content && !msg.tool_calls?.length)
           return fail(502, "empty response", WALK.coolEmpty);
         finish(json, String(msg.content ?? "").length);
-        attempts.push({ offer: offer.id, status: 200, ms: Math.round(performance.now() - t0) });
+        attempts.push({
+          offer: offer.id,
+          status: 200,
+          ms: Math.round(performance.now() - t0),
+        });
         json.model = offer.id;
-        return { offer, attempts, stream: stream ? sseOf(json) : undefined, json };
+        return {
+          offer,
+          attempts,
+          stream: stream ? sseOf(json) : undefined,
+          json,
+        };
       } catch (e: any) {
         if (o.signal?.aborted) throw e;
-        return fail(e?.name === "AbortError" || e?.name === "TimeoutError" ? 408 : 599, String(e?.message ?? e), WALK.coolTimeout);
+        return fail(
+          e?.name === "AbortError" || e?.name === "TimeoutError" ? 408 : 599,
+          String(e?.message ?? e),
+          WALK.coolTimeout,
+        );
       } finally {
         clearTimeout(timer);
         o.signal?.removeEventListener("abort", onAbort);
@@ -275,16 +427,22 @@ export class Router {
       let list = offers;
       if (round > 0) {
         const st = this.store.stats();
-        list = offers.slice().sort((a, b) => (st.get(b.id)?.health ?? 1) - (st.get(a.id)?.health ?? 1));
+        list = offers
+          .slice()
+          .sort(
+            (a, b) => (st.get(b.id)?.health ?? 1) - (st.get(a.id)?.health ?? 1),
+          );
         list = list.slice(0, WALK.retryPool);
       }
       for (const offer of list) {
         if (Date.now() > deadline) throw new Exhausted(attempts);
         const r = await attempt(offer);
         if (r) return r;
-        if (clientErrors >= WALK.clientErrors && lastClient) throw new Exhausted(attempts, lastClient.status);
+        if (clientErrors >= WALK.clientErrors && lastClient)
+          throw new Exhausted(attempts, lastClient.status);
       }
-      if (round < rounds - 1) await sleep(Math.min(WALK.backoffBase * 2 ** round, WALK.backoffMax));
+      if (round < rounds - 1)
+        await sleep(Math.min(WALK.backoffBase * 2 ** round, WALK.backoffMax));
     }
     throw new Exhausted(attempts);
   }
@@ -298,7 +456,11 @@ export class Router {
     let maxCost: number | undefined;
     if (budget !== undefined) {
       const left = budget - this.store.spent(caller);
-      if (left <= 0) throw Object.assign(new Error(`budget exhausted for ${caller} (${budget} USD)`), { status: 402 });
+      if (left <= 0)
+        throw Object.assign(
+          new Error(`budget exhausted for ${caller} (${budget} USD)`),
+          { status: 402 },
+        );
       maxCost = left;
     }
     const need: Need = {
@@ -322,24 +484,37 @@ export class Router {
     const top = (live.length >= 2 ? live : list).slice(0, 8);
     const a = top[Math.floor(Math.random() * Math.min(3, top.length))]!;
     const others = top.filter((x) => x.key !== a.key);
-    const b = others[Math.floor(Math.random() * others.length)] ?? list.find((x) => x.key !== a.key) ?? a;
+    const b =
+      others[Math.floor(Math.random() * others.length)] ??
+      list.find((x) => x.key !== a.key) ??
+      a;
     const sub = { ...body, stream: false };
     const run = (first: Offer, avoid: string) =>
-      this.exec([first, ...list.filter((x) => x.id !== first.id && x.key !== avoid)], sub, { ...o, stream: false }).catch(() => undefined);
+      this.exec(
+        [first, ...list.filter((x) => x.id !== first.id && x.key !== avoid)],
+        sub,
+        { ...o, stream: false },
+      ).catch(() => undefined);
     const [ra, rb] = await Promise.all([run(a, b.key), run(b, a.key)]);
     const ok = [ra, rb].filter((x): x is Result => !!x);
-    if (!ok.length) throw new Exhausted([...(ra?.attempts ?? []), ...(rb?.attempts ?? [])]);
+    if (!ok.length)
+      throw new Exhausted([...(ra?.attempts ?? []), ...(rb?.attempts ?? [])]);
     const flip = Math.random() < 0.5;
-    const [shown, hidden] = ok.length === 2 ? (flip ? [ra!, rb!] : [rb!, ra!]) : [ok[0]!, undefined];
+    const [shown, hidden] =
+      ok.length === 2 ? (flip ? [ra!, rb!] : [rb!, ra!]) : [ok[0]!, undefined];
     const out: Result = { ...shown };
     out.json = { ...shown.json, model: "arena" };
     if (hidden && hidden.offer.key !== shown.offer.key) {
       const id = crypto.randomUUID().slice(0, 12);
-      const txt = (r: Result) => String(r.json.choices[0].message.content ?? "");
+      const txt = (r: Result) =>
+        String(r.json.choices[0].message.content ?? "");
       this.store.savePair({
         id,
         ts: Date.now(),
-        prompt: JSON.stringify(body.messages.at(-1)?.content ?? "").slice(0, 4000),
+        prompt: JSON.stringify(body.messages.at(-1)?.content ?? "").slice(
+          0,
+          4000,
+        ),
         a: shown.offer.key,
         b: hidden.offer.key,
         ansA: txt(shown),
@@ -357,7 +532,11 @@ export class Router {
   async judge(pairId: string, judge?: string) {
     const p = this.store.pair(pairId);
     if (!p) throw new Error(`unknown pair: ${pairId}`);
-    const model = judge ?? (await this.route("auto:fast")).offers.find((x) => x.key !== p.a && x.key !== p.b)?.id;
+    const model =
+      judge ??
+      (await this.route("auto:fast")).offers.find(
+        (x) => x.key !== p.a && x.key !== p.b,
+      )?.id;
     if (!model) throw new Error("no judge model available");
     const r = await llmAsk(
       model,
@@ -366,15 +545,25 @@ export class Router {
       { temperature: 0 },
     );
     const w = /\b(TIE|A|B)\b/i.exec(r.text)?.[1]?.toLowerCase();
-    if (!w) throw new Error(`unreadable verdict from judge ${model}: ${r.text.slice(0, 80)}`);
-    return { ...this.store.vote(pairId, w as "a" | "b" | "tie", `judge:${model}`), judge: model, verdict: w };
+    if (!w)
+      throw new Error(
+        `unreadable verdict from judge ${model}: ${r.text.slice(0, 80)}`,
+      );
+    return {
+      ...this.store.vote(pairId, w as "a" | "b" | "tie", `judge:${model}`),
+      judge: model,
+      verdict: w,
+    };
   }
 
   /** Public arena rating next to the local Elo, per model key. */
   async leaderboard(limit = 50) {
     const cat = await this.catalog();
     const elo = new Map(this.store.elo().map((e) => [e.model, e]));
-    const keys = new Map<string, { model: string; arena?: number; votes?: number; offers: number }>();
+    const keys = new Map<
+      string,
+      { model: string; arena?: number; votes?: number; offers: number }
+    >();
     for (const o of cat.offers) {
       const e = keys.get(o.key) ?? { model: o.key, offers: 0 };
       e.offers++;
@@ -384,7 +573,8 @@ export class Router {
       }
       keys.set(o.key, e);
     }
-    for (const k of elo.keys()) if (!keys.has(k)) keys.set(k, { model: k, offers: 0 });
+    for (const k of elo.keys())
+      if (!keys.has(k)) keys.set(k, { model: k, offers: 0 });
     const rows = [...keys.values()].map((e) => ({
       ...e,
       elo: elo.get(e.model)?.rating,
@@ -393,8 +583,14 @@ export class Router {
     }));
     // Two scales, never mixed: local Elo (battles judged through this router) and the public Arena rating.
     return {
-      local: rows.filter((e) => e.elo !== undefined).sort((a, b) => b.elo! - a.elo!).slice(0, limit),
-      arena: rows.filter((e) => e.arena !== undefined).sort((a, b) => b.arena! - a.arena!).slice(0, limit),
+      local: rows
+        .filter((e) => e.elo !== undefined)
+        .sort((a, b) => b.elo! - a.elo!)
+        .slice(0, limit),
+      arena: rows
+        .filter((e) => e.arena !== undefined)
+        .sort((a, b) => b.arena! - a.arena!)
+        .slice(0, limit),
     };
   }
 

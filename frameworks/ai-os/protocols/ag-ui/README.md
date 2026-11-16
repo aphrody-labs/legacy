@@ -1,10 +1,11 @@
 # @aphrody/ag-ui
 
 <!-- catalog:begin unit -->
+
 > Aphrody AG-UI Protocol — Pure Bun & TypeScript 7 suite connecting Agentic UI events, streaming lifecycle, Protobuf codec, A2UI surfaces, and Agent-to-User bridges.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                               |
+| :---------- | :--------------------------------- |
 | Bun package | `frameworks/ai-os/protocols/ag-ui` |
 
 **Commands**

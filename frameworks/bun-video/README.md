@@ -1,6 +1,7 @@
 # @aphrody/bun-video
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Bun video protocols, native capture adapters, and official Remotion and HyperFrames integrations
 
 | Type | Path |
@@ -8,6 +9,7 @@
 | Bun package | `frameworks/bun-video` |
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Source package for Bun with HLS, DASH/MPD, HAR inspection, Bitmovin integration,

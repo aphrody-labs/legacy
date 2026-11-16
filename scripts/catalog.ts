@@ -200,7 +200,9 @@ const LOGO = "docs/logo/aphrody.png";
 const relLink = (from: string, to: string) => posix.relative(posix.dirname(from), to) || ".";
 const BEGIN = (n: string) => `<!-- catalog:begin ${n} -->`;
 const END = "<!-- catalog:end -->";
-const block = (name: string, body: string) => `${BEGIN(name)}\n${body.trim()}\n${END}`;
+// The formatter leaves an ignore range alone, so `bun fmt` and this generator never rewrite each other.
+const block = (name: string, body: string) =>
+  `${BEGIN(name)}\n<!-- prettier-ignore-start -->\n${body.trim()}\n<!-- prettier-ignore-end -->\n${END}`;
 
 /** Replaces the named block of `existing`; no block yet: after the first heading (or at the top), hand-written text kept. */
 function merge(existing: string | null, name: string, body: string, opts: { title?: string } = {}): string {

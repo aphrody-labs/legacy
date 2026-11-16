@@ -8,7 +8,7 @@
 #   over loopback to fill rpc-server's tensor cache; the coordinator then only sends
 #   fingerprints for tensors over 10 MiB (HASH_THRESHOLD of ggml-rpc.cpp).
 # GATE : no-build (fr1), prd (charge, verrou lourd, service prioritaire, mémoire), proxy (fr2), always.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -eu
 UNIT=aphrody-rpc
 ROOT=/opt/aphrody

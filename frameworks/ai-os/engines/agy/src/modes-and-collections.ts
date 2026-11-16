@@ -32,7 +32,9 @@ export const DEFAULT_AGY_MODE_STATE_PATH = "C:/aphrody/var/agy-mode-state.json";
  * Maximum context economy, ephemeral/unrecorded local mode, 24/7 single-domain
  * autonomy, computer-use + POSIX OS tools, unrestricted userspace (never System32).
  */
-export function buildMinimalPiSudoSystemPrompt(domainFocus = "computer-use"): string {
+export function buildMinimalPiSudoSystemPrompt(
+  domainFocus = "computer-use",
+): string {
   return `Role: Autonomous local agent (${domainFocus}). Ephemeral unrecorded session.
 Tools: os_atomic (read/write/edit/bash), posix_os, desktop_snapshot, desktop_action.
 Rules: Execute directly 24/7 without chatter or emojis. Full userspace privileges enabled; C:\\Windows\\System32 strictly read-only.`;
@@ -44,7 +46,9 @@ Rules: Execute directly 24/7 without chatter or emojis. Full userspace privilege
  * Replica, UI/UX Pro Max, 3D WebGPU/WGSL Pro Max, Impeccable, Humanizer,
  * Cloudflare + Vercel + src-deploy, and Bun v1.4.4 + Rust 2024 fullstack loops.
  */
-export function buildFullstackProMaxSystemPrompt(domainFocus = "fullstack-bun-rust"): string {
+export function buildFullstackProMaxSystemPrompt(
+  domainFocus = "fullstack-bun-rust",
+): string {
   return [
     `Role: Google Antigravity Pro-Max Fullstack Architect (${domainFocus}).`,
     "Stack: Bun v1.4.4 Full-Rust + Rust 2024 Fat-LTO + WASM32 + WebGPU WGSL + CUDA sm_89.",
@@ -62,16 +66,20 @@ export function buildFullstackProMaxSystemPrompt(domainFocus = "fullstack-bun-ru
 // Humanizer & Impeccable Copy / Web Quality Gate
 // ============================================================================
 
-const AI_SLOP_PHRASES: ReadonlyArray<{ pattern: RegExp; replacement: string }> = [
-  { pattern: /\bdelve(?:s|d)? into\b/gi, replacement: "examine" },
-  { pattern: /\btapestry of\b/gi, replacement: "set of" },
-  { pattern: /\btestament to\b/gi, replacement: "proof of" },
-  { pattern: /\bin today's fast-paced digital landscape\b/gi, replacement: "today" },
-  { pattern: /\bseamlessly\b/gi, replacement: "directly" },
-  { pattern: /\bgame-changing\b/gi, replacement: "high-impact" },
-  { pattern: /\bunleash the power of\b/gi, replacement: "use" },
-  { pattern: /\bit is important to note that\b/gi, replacement: "" },
-];
+const AI_SLOP_PHRASES: ReadonlyArray<{ pattern: RegExp; replacement: string }> =
+  [
+    { pattern: /\bdelve(?:s|d)? into\b/gi, replacement: "examine" },
+    { pattern: /\btapestry of\b/gi, replacement: "set of" },
+    { pattern: /\btestament to\b/gi, replacement: "proof of" },
+    {
+      pattern: /\bin today's fast-paced digital landscape\b/gi,
+      replacement: "today",
+    },
+    { pattern: /\bseamlessly\b/gi, replacement: "directly" },
+    { pattern: /\bgame-changing\b/gi, replacement: "high-impact" },
+    { pattern: /\bunleash the power of\b/gi, replacement: "use" },
+    { pattern: /\bit is important to note that\b/gi, replacement: "" },
+  ];
 
 export function runHumanizerAndImpeccableAudit(text: string): {
   cleanText: string;
@@ -206,7 +214,10 @@ export function readCurrentAgyMode(
 // Built-In Cloudflare + Vercel + Bun + Rust Fullstack Scaffolder & /goal Loop
 // ============================================================================
 
-export function generateFullstackCloudflareVercelConfig(targetDir: string, appName = "agy-pro-app"): {
+export function generateFullstackCloudflareVercelConfig(
+  targetDir: string,
+  appName = "agy-pro-app",
+): {
   targetDir: string;
   wranglerTomlPath: string;
   vercelJsonPath: string;
@@ -312,7 +323,9 @@ export async function runAutonomousGoalLoop(options: {
       });
       if (chk.exitCode !== 0) {
         allPassed = false;
-        diagnostics.push(new TextDecoder().decode(chk.stderr || chk.stdout).trim());
+        diagnostics.push(
+          new TextDecoder().decode(chk.stderr || chk.stdout).trim(),
+        );
       }
     }
 
@@ -337,7 +350,9 @@ export async function runAutonomousGoalLoop(options: {
       );
       if (audit.slopDetectedCount > 0) {
         allPassed = false;
-        diagnostics.push(`Humanizer flagged: ${audit.matchedPatterns.join(", ")}`);
+        diagnostics.push(
+          `Humanizer flagged: ${audit.matchedPatterns.join(", ")}`,
+        );
       }
     }
 

@@ -1,6 +1,7 @@
 # @aphrody/ghidra (`bun-ghidra`)
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Ghidra API for Bun (pyghidra parity), Bun plugin and native onBeforeParse plugin
 
 | Type | Path |
@@ -14,6 +15,7 @@ bun run --cwd frameworks/re-ts/ghidra test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Ghidra for Bun: the pyghidra API surface, a Bun plugin (`?ghidra`, `ghidra:`), a script context for translated GhidraScripts, and a native `onBeforeParse` plugin (Rust, `system/ghidra-bun`). Bun only, no npm dependency.

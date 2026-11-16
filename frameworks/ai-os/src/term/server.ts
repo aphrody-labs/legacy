@@ -53,9 +53,7 @@ export async function startTermServer(opts: TermServerOptions = {}) {
   const webDir = join(import.meta.dir, "web");
   const wasmPath = join(findSrcRoot(), "target", "sys", "aysys.wasm");
   if (!existsSync(wasmPath)) {
-    throw new Error(
-      `aysys.wasm not found: ${wasmPath} (run make -C src wasm)`,
-    );
+    throw new Error(`aysys.wasm not found: ${wasmPath} (run make -C src wasm)`);
   }
 
   // Ensure at least one initial PTY pane exists ready for instant zero-wait attach

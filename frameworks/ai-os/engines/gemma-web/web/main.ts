@@ -1,13 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0
 // Browser runner: starts the worker, exposes window.gemma for the benchmark and a small chat UI.
-import { GemmaOpenAI, GemmaWorkerClient, planBudget, type DeviceInfo } from "../src/index";
+import {
+  GemmaOpenAI,
+  GemmaWorkerClient,
+  planBudget,
+  type DeviceInfo,
+} from "../src/index";
 
 declare global {
   interface Window {
     gemma: {
-      device(): Promise<DeviceInfo & { adapter?: string; plan: ReturnType<typeof planBudget> }>;
-      load(o: { decoderEp?: "webgpu" | "wasm"; partBytes?: number }): Promise<unknown>;
-      chat(o: { prompt: string; maxTokens?: number; seed?: number; temperature?: number }): Promise<unknown>;
+      device(): Promise<
+        DeviceInfo & { adapter?: string; plan: ReturnType<typeof planBudget> }
+      >;
+      load(o: {
+        decoderEp?: "webgpu" | "wasm";
+        partBytes?: number;
+      }): Promise<unknown>;
+      chat(o: {
+        prompt: string;
+        maxTokens?: number;
+        seed?: number;
+        temperature?: number;
+      }): Promise<unknown>;
       heap(): number | undefined;
     };
   }
@@ -31,14 +46,19 @@ async function device() {
       webgpu = true;
       maxBufferSize = a.limits.maxBufferSize;
       maxStorageBufferBindingSize = a.limits.maxStorageBufferBindingSize;
-      adapterName = (a.info ? `${a.info.vendor} ${a.info.architecture} ${a.info.description}` : "").trim();
+      adapterName = (
+        a.info
+          ? `${a.info.vendor} ${a.info.architecture} ${a.info.description}`
+          : ""
+      ).trim();
     }
   } catch {}
   const info: DeviceInfo = {
     webgpu,
     maxBufferSize,
     maxStorageBufferBindingSize,
-    deviceMemoryGiB: (navigator as unknown as { deviceMemory?: number }).deviceMemory,
+    deviceMemoryGiB: (navigator as unknown as { deviceMemory?: number })
+      .deviceMemory,
     crossOriginIsolated: self.crossOriginIsolated,
   };
   return { ...info, adapter: adapterName, plan: planBudget(info) };
@@ -47,14 +67,16 @@ async function device() {
 window.gemma = {
   device,
   async load(o) {
-    client = new GemmaWorkerClient(new Worker(new URL("./worker.js", location.href), { type: "module" }));
+    client = new GemmaWorkerClient(
+      new Worker(new URL("./worker.js", location.href), { type: "module" }),
+    );
     api = new GemmaOpenAI(client);
     return client.load({
       modelBase,
       ortBase: new URL("./ort/", location.href).href,
       decoderEp: o.decoderEp,
       partBytes: o.partBytes,
-      onProgress: p => {
+      onProgress: (p) => {
         progress.textContent = `${p.file} ${((100 * p.loaded) / p.total).toFixed(1)}%`;
       },
     });
@@ -82,7 +104,15 @@ window.gemma = {
       }
       if (c.usage) usage = c.usage;
     }
-    return { text, usage, chunks, firstChunkMs: first - t0, totalMs: performance.now() - t0 };
+    return {
+      text,
+      usage,
+      chunks,
+      firstChunkMs: first - t0,
+      totalMs: performance.now() - t0,
+    };
   },
-  heap: () => (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize,
+  heap: () =>
+    (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+      ?.usedJSHeapSize,
 };

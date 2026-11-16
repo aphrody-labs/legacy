@@ -25,11 +25,15 @@ export class FilterToolCallsMiddleware extends Middleware {
 
     // Runtime validation (belt and suspenders approach)
     if (config.allowedToolCalls && config.disallowedToolCalls) {
-      throw new Error("Cannot specify both allowedToolCalls and disallowedToolCalls");
+      throw new Error(
+        "Cannot specify both allowedToolCalls and disallowedToolCalls",
+      );
     }
 
     if (!config.allowedToolCalls && !config.disallowedToolCalls) {
-      throw new Error("Must specify either allowedToolCalls or disallowedToolCalls");
+      throw new Error(
+        "Must specify either allowedToolCalls or disallowedToolCalls",
+      );
     }
 
     if (config.allowedToolCalls) {
@@ -69,7 +73,9 @@ export class FilterToolCallsMiddleware extends Middleware {
           // Handle TOOL_CALL_START events
           if (event.type === EventType.TOOL_CALL_START) {
             const toolCallStartEvent = event as ToolCallStartEvent;
-            const shouldFilter = this.shouldFilterTool(toolCallStartEvent.toolCallName);
+            const shouldFilter = this.shouldFilterTool(
+              toolCallStartEvent.toolCallName,
+            );
 
             if (shouldFilter) {
               // Track this tool call ID as blocked
@@ -95,7 +101,9 @@ export class FilterToolCallsMiddleware extends Middleware {
           // Handle TOOL_CALL_RESULT events
           if (event.type === EventType.TOOL_CALL_RESULT) {
             const toolCallResultEvent = event as ToolCallResultEvent;
-            const isBlocked = blockedToolCallIds.has(toolCallResultEvent.toolCallId);
+            const isBlocked = blockedToolCallIds.has(
+              toolCallResultEvent.toolCallId,
+            );
 
             if (isBlocked) {
               // Clean up the blocked ID after the last event

@@ -1,6 +1,7 @@
 # @aphrody/upstream
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks
 
 | Type | Path |
@@ -16,4 +17,5 @@ bun run --cwd system/upstream test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

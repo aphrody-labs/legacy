@@ -22,8 +22,12 @@ function hasFlag(args: readonly string[], flag: string): boolean {
 
 function isMetaCommand(args: readonly string[]): boolean {
   return (
-    args.some((arg) => arg === "--help" || arg === "-h" || arg === "--version") ||
-    ["skills", "install", "doctor", "upgrade", "help", "version"].includes(args[0] ?? "")
+    args.some(
+      (arg) => arg === "--help" || arg === "-h" || arg === "--version",
+    ) ||
+    ["skills", "install", "doctor", "upgrade", "help", "version"].includes(
+      args[0] ?? "",
+    )
   );
 }
 
@@ -35,10 +39,15 @@ export function resolveAgentBrowserBinary(): string {
     process.env.APHRODY_BROWSER_BIN;
   if (override) {
     const path = existsSync(override) ? override : Bun.which(override);
-    if (!path) throw new Error(`agent-browser binary override is unavailable: ${override}`);
+    if (!path)
+      throw new Error(
+        `agent-browser binary override is unavailable: ${override}`,
+      );
     const binary = realpathSync(resolve(path));
     if (binary === OWN_LAUNCHER)
-      throw new Error("agent-browser binary override points to this Bun launcher");
+      throw new Error(
+        "agent-browser binary override points to this Bun launcher",
+      );
     return binary;
   }
 
@@ -73,7 +82,9 @@ export function prepareAgentBrowserArgs(
   if (!isMetaCommand(finalArgs) && !hasFlag(finalArgs, "--cdp")) {
     const cdpUrl =
       options.cdpUrl ??
-      (options.port ? `ws://127.0.0.1:${options.port}/devtools/browser` : undefined) ??
+      (options.port
+        ? `ws://127.0.0.1:${options.port}/devtools/browser`
+        : undefined) ??
       process.env.APHRODY_BROWSER_CDP_URL ??
       process.env.APHRODY_CDP_URL ??
       DEFAULT_OBSCURA_CDP_URL;
@@ -91,21 +102,29 @@ export function prepareAgentBrowserArgs(
   if (options.userDataDir && !hasFlag(finalArgs, "--profile")) {
     finalArgs.push("--profile", options.userDataDir);
   }
-  if (options.hideScrollbars !== undefined && !hasFlag(finalArgs, "--hide-scrollbars")) {
+  if (
+    options.hideScrollbars !== undefined &&
+    !hasFlag(finalArgs, "--hide-scrollbars")
+  ) {
     finalArgs.push("--hide-scrollbars", String(options.hideScrollbars));
   }
   if (json && !hasFlag(finalArgs, "--json")) finalArgs.push("--json");
   return finalArgs;
 }
 
-function parseResponse(stdout: string, stderr: string, status: number): CommandResponse {
+function parseResponse(
+  stdout: string,
+  stderr: string,
+  status: number,
+): CommandResponse {
   const output = stdout.trim();
   for (const line of output.split("\n").toReversed()) {
     const value = line.trim();
     if (!value.startsWith("{") || !value.endsWith("}")) continue;
     try {
       const parsed = JSON.parse(value) as Record<string, unknown>;
-      const success = typeof parsed.success === "boolean" ? parsed.success : status === 0;
+      const success =
+        typeof parsed.success === "boolean" ? parsed.success : status === 0;
       return {
         id: typeof parsed.id === "string" ? parsed.id : "",
         success,
@@ -125,19 +144,28 @@ function parseResponse(stdout: string, stderr: string, status: number): CommandR
     id: "",
     success: status === 0,
     data: output,
-    error: status === 0 ? undefined : stderr.trim() || `agent-browser exited ${status}`,
+    error:
+      status === 0
+        ? undefined
+        : stderr.trim() || `agent-browser exited ${status}`,
   };
 }
 
 // Public compatibility surface intentionally groups the static browser commands.
 // oxlint-disable-next-line typescript/no-extraneous-class
 export class AgentBrowser {
-  static async open(url?: string, options: LaunchOptions = {}): Promise<AgentPage> {
+  static async open(
+    url?: string,
+    options: LaunchOptions = {},
+  ): Promise<AgentPage> {
     const session =
-      options.session ?? `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      options.session ??
+      `sess-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const endpoint =
       options.cdpUrl ??
-      (options.port ? `ws://127.0.0.1:${options.port}/devtools/browser` : undefined) ??
+      (options.port
+        ? `ws://127.0.0.1:${options.port}/devtools/browser`
+        : undefined) ??
       process.env.APHRODY_BROWSER_CDP_URL ??
       process.env.APHRODY_CDP_URL ??
       DEFAULT_OBSCURA_CDP_URL;
@@ -156,7 +184,11 @@ export class AgentBrowser {
   static exec(args: string[], options: LaunchOptions = {}): CommandResponse {
     try {
       const result = Bun.spawnSync(
-        [process.execPath, OWN_LAUNCHER, ...prepareAgentBrowserArgs(args, options)],
+        [
+          process.execPath,
+          OWN_LAUNCHER,
+          ...prepareAgentBrowserArgs(args, options),
+        ],
         {
           stdin: "ignore",
           stdout: "pipe",
@@ -180,10 +212,17 @@ export class AgentBrowser {
   }
 
   /** Browser actions use this path so a Rust CDP command cannot freeze Bun. */
-  static async execAsync(args: string[], options: LaunchOptions = {}): Promise<CommandResponse> {
+  static async execAsync(
+    args: string[],
+    options: LaunchOptions = {},
+  ): Promise<CommandResponse> {
     try {
       const proc = Bun.spawn(
-        [process.execPath, OWN_LAUNCHER, ...prepareAgentBrowserArgs(args, options)],
+        [
+          process.execPath,
+          OWN_LAUNCHER,
+          ...prepareAgentBrowserArgs(args, options),
+        ],
         {
           stdout: "pipe",
           stderr: "pipe",
@@ -203,7 +242,11 @@ export class AgentBrowser {
           proc.exited,
         ]);
         if (timedOut)
-          return { id: "", success: false, error: `agent-browser timed out after ${timeoutMs} ms` };
+          return {
+            id: "",
+            success: false,
+            error: `agent-browser timed out after ${timeoutMs} ms`,
+          };
         return parseResponse(stdout, stderr, status);
       } finally {
         clearTimeout(timer);
@@ -225,7 +268,11 @@ export class AgentPage {
   #connecting?: Promise<WebCdpPage>;
   readonly #refs = new Map<string, number>();
 
-  constructor(session: string, options: LaunchOptions = {}, native?: WebCdpPage) {
+  constructor(
+    session: string,
+    options: LaunchOptions = {},
+    native?: WebCdpPage,
+  ) {
     this.session = session;
     this.options = { ...options, session };
     this.#native = native;
@@ -244,7 +291,9 @@ export class AgentPage {
     if (this.#native) return;
     const endpoint =
       this.options.cdpUrl ??
-      (this.options.port ? `ws://127.0.0.1:${this.options.port}/devtools/browser` : undefined) ??
+      (this.options.port
+        ? `ws://127.0.0.1:${this.options.port}/devtools/browser`
+        : undefined) ??
       process.env.APHRODY_BROWSER_CDP_URL ??
       process.env.APHRODY_CDP_URL ??
       DEFAULT_OBSCURA_CDP_URL;
@@ -265,7 +314,8 @@ export class AgentPage {
   async #resolve(target: string): Promise<number> {
     const cached = this.#refs.get(target);
     if (cached !== undefined) return cached;
-    if (target.startsWith("@e")) throw new Error(`Unknown snapshot reference: ${target}`);
+    if (target.startsWith("@e"))
+      throw new Error(`Unknown snapshot reference: ${target}`);
     const document = await this.#page._send("DOM.getDocument", { depth: 0 });
     const root = document.root as { nodeId: number };
     const matches = await this.#page._send("DOM.querySelectorAll", {
@@ -300,13 +350,16 @@ export class AgentPage {
           this.#page._send("DOM.describeNode", { nodeId }),
           this.#outerHtml(nodeId),
         ]);
-        const node = described.node as { nodeName?: string; attributes?: string[] } | undefined;
+        const node = described.node as
+          { nodeName?: string; attributes?: string[] } | undefined;
         const attrs = node?.attributes ?? [];
         const attribute = (name: string): string | undefined => {
-          for (let i = 0; i + 1 < attrs.length; i += 2) if (attrs[i] === name) return attrs[i + 1];
+          for (let i = 0; i + 1 < attrs.length; i += 2)
+            if (attrs[i] === name) return attrs[i + 1];
           return undefined;
         };
-        const role = attribute("role") ?? node?.nodeName?.toLowerCase() ?? "element";
+        const role =
+          attribute("role") ?? node?.nodeName?.toLowerCase() ?? "element";
         const name =
           attribute("aria-label") ??
           attribute("placeholder") ??
@@ -323,7 +376,12 @@ export class AgentPage {
       refs.set(ref, { ref, role, name, backendNodeId: nodeId });
       lines.push(`- ${role} ${JSON.stringify(name)} [ref=${ref}]`);
     }
-    return { raw: lines.join("\n"), refs, title: await this.#page.title(), url: this.url() };
+    return {
+      raw: lines.join("\n"),
+      refs,
+      title: await this.#page.title(),
+      url: this.url(),
+    };
   }
 
   async click(target: string, opts: ClickOptions = {}): Promise<void> {
@@ -356,14 +414,18 @@ export class AgentPage {
 
   async fill(target: string, text: string): Promise<void> {
     await this.open();
-    await this.#page._send("DOM.focus", { nodeId: await this.#resolve(target) });
+    await this.#page._send("DOM.focus", {
+      nodeId: await this.#resolve(target),
+    });
     await this.#page.evaluate<void>("document.activeElement.value = ''");
     await this.#page._send("Input.insertText", { text });
   }
 
   async type(target: string, text: string): Promise<void> {
     await this.open();
-    await this.#page._send("DOM.focus", { nodeId: await this.#resolve(target) });
+    await this.#page._send("DOM.focus", {
+      nodeId: await this.#resolve(target),
+    });
     await this.#page._send("Input.insertText", { text });
   }
 
@@ -375,7 +437,9 @@ export class AgentPage {
 
   async hover(target: string): Promise<void> {
     await this.open();
-    const box = await this.#page._send("DOM.getBoxModel", { nodeId: await this.#resolve(target) });
+    const box = await this.#page._send("DOM.getBoxModel", {
+      nodeId: await this.#resolve(target),
+    });
     const quad = (box.model as { content: number[] }).content;
     await this.#page._send("Input.dispatchMouseEvent", {
       type: "mouseMoved",
@@ -386,13 +450,18 @@ export class AgentPage {
 
   async select(target: string, value: string): Promise<void> {
     await this.open();
-    await this.#page._send("DOM.focus", { nodeId: await this.#resolve(target) });
+    await this.#page._send("DOM.focus", {
+      nodeId: await this.#resolve(target),
+    });
     await this.#page.evaluate<void>(
       `document.activeElement.value = ${JSON.stringify(value)}; document.activeElement.dispatchEvent(new Event('change', { bubbles: true }))`,
     );
   }
 
-  async screenshot(path?: string, opts: ScreenshotOptions = {}): Promise<string> {
+  async screenshot(
+    path?: string,
+    opts: ScreenshotOptions = {},
+  ): Promise<string> {
     await this.open();
     const result = await this.#page._send("Page.captureScreenshot", {
       format: opts.format ?? "png",
@@ -437,7 +506,9 @@ export class AgentPage {
     const described = await this.#page._send("DOM.describeNode", {
       nodeId: await this.#resolve(target),
     });
-    const attrs = (described.node as { attributes?: string[] } | undefined)?.attributes ?? [];
+    const attrs =
+      (described.node as { attributes?: string[] } | undefined)?.attributes ??
+      [];
     for (let i = 0; i + 1 < attrs.length; i += 2)
       if (attrs[i] === name) return attrs[i + 1] ?? null;
     return null;

@@ -237,10 +237,16 @@ export async function runAgyCli(argv = process.argv.slice(2)): Promise<void> {
       return;
     }
     const question =
-      argv.slice(2).filter((x) => !x.startsWith("--")).join(" ") ||
-      "Summarize the core architecture.";
+      argv
+        .slice(2)
+        .filter((x) => !x.startsWith("--"))
+        .join(" ") || "Summarize the core architecture.";
     console.log(
-      JSON.stringify(await askOpenNotebookLm({ notebookId, question }), null, 2),
+      JSON.stringify(
+        await askOpenNotebookLm({ notebookId, question }),
+        null,
+        2,
+      ),
     );
     return;
   }
@@ -312,7 +318,9 @@ export async function runAgyCli(argv = process.argv.slice(2)): Promise<void> {
     }
     if (sub === "humanize") {
       const text = argv.slice(2).join(" ");
-      console.log(JSON.stringify(runHumanizerAndImpeccableAudit(text), null, 2));
+      console.log(
+        JSON.stringify(runHumanizerAndImpeccableAudit(text), null, 2),
+      );
       return;
     }
     if (sub === "scaffold") {

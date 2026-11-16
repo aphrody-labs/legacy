@@ -1,6 +1,7 @@
 # `@aphrody/env-kit` — Monorepo Environment & Secret Architecture
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/google/gcp) for C:/aphrody
 
 | Type | Path |
@@ -19,6 +20,7 @@ bun run --cwd system/env-kit accounts
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Zero-dependency cross-language environment loader, secret redaction guard, and unified editor/CLI credential synchronizer for `C:\aphrody`.

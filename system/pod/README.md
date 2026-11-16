@@ -12,6 +12,7 @@ everything here; only crates below it name `bun_pod`.
 # Implementing the traits
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > No description in the manifest.
 
 | Type | Path |
@@ -27,6 +28,7 @@ cargo test -p bun_pod
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 `impl_no_uninit!`, `impl_any_bit_pattern!`, `impl_pod!` and `impl_zeroable!` are

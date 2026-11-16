@@ -4,7 +4,7 @@
 # cargo: synthetic dependency-free crate (60 modules x 300 fns, generated on first use under $WORK, on the SSD root), warm build,
 #   then touch one module and rebuild incrementally: the number is dominated by CPU/IO contention, not by the code.
 # NativeLink: 120 GET /status on the scheduler HTTP listener (REAPI itself needs a siso/bazel client; none ran during the study).
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 label=${1:?label}
 WORK=${WORK:-/srv/offload-bench}; OUT=${OUT:-/var/log/fleet/offload-bench.tsv}
 NL=${NL:-http://$(site_get hosts.fr1.mesh_ip):50061/status}

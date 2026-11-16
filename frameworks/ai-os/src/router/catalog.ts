@@ -46,7 +46,10 @@ type Sources = {
   litellm: Record<string, Info>;
   openrouter: Record<string, Info>;
   hf: Record<string, Info & { latency?: number }>;
-  arena: Record<string, { rating: number; votes: number; name: string; code?: number }>;
+  arena: Record<
+    string,
+    { rating: number; votes: number; name: string; code?: number }
+  >;
 };
 
 /** Normalised model key: last path segment, no variant suffix, no date, alphanumerics joined by `-`. */
@@ -136,12 +139,20 @@ async function fetchHf(): Promise<Sources["hf"]> {
     if (!live.length) continue;
     const priced = live.filter((p: any) => p.pricing);
     out[String(m.id)] = {
-      ctx: Math.max(...live.map((p: any) => num(p.context_length) ?? 0)) || undefined,
+      ctx:
+        Math.max(...live.map((p: any) => num(p.context_length) ?? 0)) ||
+        undefined,
       tools: live.some((p: any) => p.supports_tools),
       vision: (m.architecture?.input_modalities ?? []).includes("image"),
-      pi: priced.length ? Math.min(...priced.map((p: any) => p.pricing.input)) : undefined,
-      po: priced.length ? Math.min(...priced.map((p: any) => p.pricing.output)) : undefined,
-      latency: Math.min(...live.map((p: any) => num(p.first_token_latency_ms) ?? Infinity)),
+      pi: priced.length
+        ? Math.min(...priced.map((p: any) => p.pricing.input))
+        : undefined,
+      po: priced.length
+        ? Math.min(...priced.map((p: any) => p.pricing.output))
+        : undefined,
+      latency: Math.min(
+        ...live.map((p: any) => num(p.first_token_latency_ms) ?? Infinity),
+      ),
     };
   }
   return out;
@@ -155,7 +166,9 @@ async function arenaRows(category: string): Promise<any[]> {
     where: `"category"='${category}'`,
     length: "100",
   });
-  return ((await getJson(`${SOURCES.datasetsServer}/filter?${q}`)).rows ?? []).map((r: any) => r.row);
+  return (
+    (await getJson(`${SOURCES.datasetsServer}/filter?${q}`)).rows ?? []
+  ).map((r: any) => r.row);
 }
 /** Arena text leaderboard: overall rating, plus the coding-category rating when the dataset serves it. */
 async function fetchArena(): Promise<Sources["arena"]> {
@@ -163,7 +176,11 @@ async function fetchArena(): Promise<Sources["arena"]> {
   for (const row of await arenaRows(ARENA.overall)) {
     const k = norm(String(row.model_name));
     if (!out[k] || row.rating > out[k]!.rating)
-      out[k] = { rating: row.rating, votes: row.vote_count, name: row.model_name };
+      out[k] = {
+        rating: row.rating,
+        votes: row.vote_count,
+        name: row.model_name,
+      };
   }
   // Optional: a failure here must not lose the overall table.
   for (const row of await arenaRows(ARENA.code).catch(() => [])) {
@@ -172,7 +189,13 @@ async function fetchArena(): Promise<Sources["arena"]> {
   }
   return out;
 }
-const EMPTY: Sources = { modelsdev: {}, litellm: {}, openrouter: {}, hf: {}, arena: {} };
+const EMPTY: Sources = {
+  modelsdev: {},
+  litellm: {},
+  openrouter: {},
+  hf: {},
+  arena: {},
+};
 const FETCH: Record<keyof Sources, () => Promise<any>> = {
   modelsdev: fetchModelsDev,
   litellm: fetchLitellm,
@@ -199,7 +222,8 @@ export async function refreshSources(store: Store, force = false) {
         report[name] = `live ${Object.keys(out[name]).length}`;
       } catch (e: any) {
         out[name] = c?.value ?? {};
-        report[name] = `${c ? "stale" : "absent"} (${String(e.message).slice(0, 80)})`;
+        report[name] =
+          `${c ? "stale" : "absent"} (${String(e.message).slice(0, 80)})`;
       }
     }),
   );
@@ -217,7 +241,12 @@ function arenaFor(a: Sources["arena"], key: string) {
 
 /** Joins discovered provider models with the source tables. Pure: tests call it with fake sources. */
 export function join(
-  discovered: { id: string; provider: string; name?: string; context?: number }[],
+  discovered: {
+    id: string;
+    provider: string;
+    name?: string;
+    context?: number;
+  }[],
   cliProviders: Set<string>,
   src: Sources,
   localProviders: Set<string> = new Set(),
@@ -229,7 +258,10 @@ export function join(
     const hf = m.provider === "huggingface" ? src.hf[model] : undefined;
     const pick = [
       ["hf", hf],
-      ["openrouter", m.provider === "openrouter" ? src.openrouter[key] : undefined],
+      [
+        "openrouter",
+        m.provider === "openrouter" ? src.openrouter[key] : undefined,
+      ],
       ["models.dev", src.modelsdev[key]],
       ["litellm", src.litellm[key]],
       ["openrouter", src.openrouter[key]],
@@ -278,20 +310,41 @@ export function join(
 
 export type Catalog = {
   offers: Offer[];
-  providers: { provider: string; available: boolean; error?: string; models: number }[];
+  providers: {
+    provider: string;
+    available: boolean;
+    error?: string;
+    models: number;
+  }[];
   at: number;
   report: Record<string, string>;
 };
 
 /** Builds the catalog: discovery (all providers) + joined sources; cached in the store, refreshed when older than `ttl`. */
-export async function buildCatalog(store: Store, force = false): Promise<Catalog> {
+export async function buildCatalog(
+  store: Store,
+  force = false,
+): Promise<Catalog> {
   const [{ sources, report }, found] = await Promise.all([
     refreshSources(store, force),
     listModels(),
   ]);
-  const cli = new Set(providers().filter((p: Provider) => !p.chat).map((p) => p.id));
-  const local = new Set(providers().filter((p: Provider) => p.local).map((p) => p.id));
-  const offers = join(found.flatMap((g) => g.models), cli, sources, local);
+  const cli = new Set(
+    providers()
+      .filter((p: Provider) => !p.chat)
+      .map((p) => p.id),
+  );
+  const local = new Set(
+    providers()
+      .filter((p: Provider) => p.local)
+      .map((p) => p.id),
+  );
+  const offers = join(
+    found.flatMap((g) => g.models),
+    cli,
+    sources,
+    local,
+  );
   const cat: Catalog = {
     offers,
     providers: found.map((g) => ({

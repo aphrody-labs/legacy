@@ -1,6 +1,7 @@
 # @aphrody/messaging
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Aphrody messaging channel contracts and Discord REST adapter.
 
 | Type | Path |
@@ -16,6 +17,7 @@ bun run --cwd frameworks/messaging typecheck
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Bun-first TypeScript port of Aphrody's shared messaging channel contract and

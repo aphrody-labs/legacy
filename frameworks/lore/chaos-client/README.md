@@ -3,6 +3,7 @@ The client is still an early draft so the readme is basic and to the point becau
 # Example Commands
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Lore version control: lore-chaos-client (absorbed from Epic Games Lore, MIT)
 
 | Type | Path |
@@ -19,6 +20,7 @@ cargo run -p aphrody-lore-chaos-client --bin lore_chaos_client
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 ```

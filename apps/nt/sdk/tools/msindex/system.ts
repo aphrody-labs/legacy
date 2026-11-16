@@ -37,26 +37,15 @@ export function apiSetSchema(): {
   sets: ApiSet[];
 } {
   const pbi = new BigUint64Array(6); // PROCESS_BASIC_INFORMATION (48 bytes): PebBaseAddress at +8
-  const st = nt.symbols.NtQueryInformationProcess(
-    -1 as never,
-    0,
-    ptr(pbi),
-    48,
-    null,
-  );
-  if (st !== 0)
-    throw new Error(`NtQueryInformationProcess 0x${(st >>> 0).toString(16)}`);
+  const st = nt.symbols.NtQueryInformationProcess(-1 as never, 0, ptr(pbi), 48, null);
+  if (st !== 0) throw new Error(`NtQueryInformationProcess 0x${(st >>> 0).toString(16)}`);
   const peb = Number(pbi[1]);
   const map = read.ptr(peb as never, 0x68); // PEB->ApiSetMap (x64)
   const head = new DataView(toArrayBuffer(map as never, 0, 28));
   const version = head.getUint32(0, true);
-  if (version !== 6)
-    throw new Error(`API_SET_NAMESPACE version ${version} (attendu 6)`);
-  const v = new DataView(
-    toArrayBuffer(map as never, 0, head.getUint32(4, true)),
-  );
-  const str = (o: number, n: number) =>
-    Buffer.from(v.buffer, v.byteOffset + o, n).toString("utf16le");
+  if (version !== 6) throw new Error(`API_SET_NAMESPACE version ${version} (attendu 6)`);
+  const v = new DataView(toArrayBuffer(map as never, 0, head.getUint32(4, true)));
+  const str = (o: number, n: number) => Buffer.from(v.buffer, v.byteOffset + o, n).toString("utf16le");
   const count = v.getUint32(12, true);
   const entries = v.getUint32(16, true);
   const sets: ApiSet[] = [];
@@ -101,30 +90,20 @@ export function apiSetResolver(sets: ApiSet[]) {
 const DONT_RESOLVE = 0x1;
 const SEARCH_SYSTEM32 = 0x800;
 export type LoaderReq =
-  | { kind: "loader"; items: [string, string][] }
-  | { kind: "activate"; classes: string[] }
-  | { kind: "undecorate"; names: string[] };
+  { kind: "loader"; items: [string, string][] } | { kind: "activate"; classes: string[] } | { kind: "undecorate"; names: string[] };
 
 function loader(items: [string, string][]): [boolean, string][] {
   const mods = new Map<string, number>();
   return items.map(([dll, entry]) => {
     let h = mods.get(dll);
     if (h === undefined) {
-      h = Number(
-        k32.symbols.LoadLibraryExW(
-          ptr(w(dll)),
-          null,
-          DONT_RESOLVE | SEARCH_SYSTEM32,
-        ) ?? 0,
-      );
+      h = Number(k32.symbols.LoadLibraryExW(ptr(w(dll)), null, DONT_RESOLVE | SEARCH_SYSTEM32) ?? 0);
       if (!h) h = -Number(k32.symbols.GetLastError());
       mods.set(dll, h);
     }
     if (h <= 0) return [false, `LoadLibraryExW ${-h}`];
     const p = k32.symbols.GetProcAddress(h as never, ptr(a(entry)));
-    return p
-      ? [true, ""]
-      : [false, `GetProcAddress ${k32.symbols.GetLastError()}`];
+    return p ? [true, ""] : [false, `GetProcAddress ${k32.symbols.GetLastError()}`];
   });
 }
 
@@ -137,20 +116,13 @@ function activate(classes: string[]): [boolean, string][] {
   });
   rt.symbols.RoInitialize(1); // RO_INIT_MULTITHREADED
   // IID_IActivationFactory {00000035-0000-0000-C000-000000000046}
-  const iid = new Uint8Array([
-    0x35, 0, 0, 0, 0, 0, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46,
-  ]);
+  const iid = new Uint8Array([0x35, 0, 0, 0, 0, 0, 0, 0, 0xc0, 0, 0, 0, 0, 0, 0, 0x46]);
   const out = new BigUint64Array(1);
   const hs = new BigUint64Array(1);
   return classes.map((c) => {
     const s = Buffer.from(c, "utf16le");
     rt.symbols.WindowsCreateString(ptr(s), c.length, ptr(hs));
-    const hr =
-      rt.symbols.RoGetActivationFactory(
-        Number(hs[0]) as never,
-        ptr(iid),
-        ptr(out),
-      ) >>> 0;
+    const hr = rt.symbols.RoGetActivationFactory(Number(hs[0]) as never, ptr(iid), ptr(out)) >>> 0;
     rt.symbols.WindowsDeleteString(Number(hs[0]) as never);
     if (hr === 0 && out[0]) {
       const vtbl = read.ptr(Number(out[0]) as never, 0);
@@ -174,12 +146,7 @@ function undecorate(names: string[]): string[] {
   });
   const buf = Buffer.alloc(4096);
   return names.map((n) => {
-    const len = dbg.symbols.UnDecorateSymbolName(
-      ptr(a(n)),
-      ptr(buf),
-      buf.length,
-      0,
-    ); // UNDNAME_COMPLETE
+    const len = dbg.symbols.UnDecorateSymbolName(ptr(a(n)), ptr(buf), buf.length, 0); // UNDNAME_COMPLETE
     return len ? buf.toString("latin1", 0, len) : n;
   });
 }
@@ -203,22 +170,14 @@ export async function child<R>(req: LoaderReq): Promise<R> {
       .delete()
       .catch(() => {}),
   ]);
-  if (code !== 0 || !res)
-    throw new Error(
-      `processus de preuve ${req.kind} : code ${code} ${await new Response(p.stderr).text()}`,
-    );
+  if (code !== 0 || !res) throw new Error(`processus de preuve ${req.kind} : code ${code} ${await new Response(p.stderr).text()}`);
   return res as R;
 }
 
 if (import.meta.main) {
   const [qi, qo] = process.argv.slice(2);
   const req = (await Bun.file(qi!).json()) as LoaderReq;
-  const res =
-    req.kind === "loader"
-      ? loader(req.items)
-      : req.kind === "activate"
-        ? activate(req.classes)
-        : undecorate(req.names);
+  const res = req.kind === "loader" ? loader(req.items) : req.kind === "activate" ? activate(req.classes) : undecorate(req.names);
   await Bun.write(qo!, JSON.stringify(res));
 }
 
@@ -232,15 +191,7 @@ export function hklmString(path: string, value: string): string {
   });
   const data = Buffer.alloc(2048);
   const len = new Uint32Array([data.length]);
-  const st = adv.symbols.RegGetValueW(
-    0x80000002 as never,
-    ptr(w(path)),
-    ptr(w(value)),
-    0x2,
-    null,
-    ptr(data),
-    ptr(len),
-  );
+  const st = adv.symbols.RegGetValueW(0x80000002 as never, ptr(w(path)), ptr(w(value)), 0x2, null, ptr(data), ptr(len));
   return st === 0 ? data.toString("utf16le", 0, Math.max(0, len[0]! - 2)) : "";
 }
 
@@ -265,13 +216,7 @@ export function winrtRegistry(): Map<string, { dll: string; type: number }> {
   const hk = new BigUint64Array(1);
   const out = new Map<string, { dll: string; type: number }>();
   if (
-    adv.symbols.RegOpenKeyExW(
-      HKLM as never,
-      ptr(w("SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId")),
-      0,
-      0x20019,
-      ptr(hk),
-    ) !== 0
+    adv.symbols.RegOpenKeyExW(HKLM as never, ptr(w("SOFTWARE\\Microsoft\\WindowsRuntime\\ActivatableClassId")), 0, 0x20019, ptr(hk)) !== 0
   )
     return out;
   const key = Number(hk[0]);
@@ -282,41 +227,12 @@ export function winrtRegistry(): Map<string, { dll: string; type: number }> {
   const dw = new Uint32Array(1);
   for (let i = 0; ; i++) {
     len[0] = 512;
-    if (
-      adv.symbols.RegEnumKeyExW(
-        key as never,
-        i,
-        ptr(name),
-        ptr(len),
-        null,
-        null,
-        null,
-        null,
-      ) !== 0
-    )
-      break;
+    if (adv.symbols.RegEnumKeyExW(key as never, i, ptr(name), ptr(len), null, null, null, null) !== 0) break;
     const cls = name.toString("utf16le", 0, len[0]! * 2);
     dlen[0] = data.length;
-    const okPath =
-      adv.symbols.RegGetValueW(
-        key as never,
-        ptr(w(cls)),
-        ptr(w("DllPath")),
-        0x2,
-        null,
-        ptr(data),
-        ptr(dlen),
-      ) === 0; // RRF_RT_REG_SZ (REG_EXPAND_SZ expanded)
+    const okPath = adv.symbols.RegGetValueW(key as never, ptr(w(cls)), ptr(w("DllPath")), 0x2, null, ptr(data), ptr(dlen)) === 0; // RRF_RT_REG_SZ (REG_EXPAND_SZ expanded)
     dlen[0] = 4;
-    adv.symbols.RegGetValueW(
-      key as never,
-      ptr(w(cls)),
-      ptr(w("ActivationType")),
-      0x10,
-      null,
-      ptr(dw),
-      ptr(dlen),
-    ); // REG_DWORD
+    adv.symbols.RegGetValueW(key as never, ptr(w(cls)), ptr(w("ActivationType")), 0x10, null, ptr(dw), ptr(dlen)); // REG_DWORD
     out.set(cls, {
       dll: okPath ? data.toString("utf16le").replace(/\0[\s\S]*$/, "") : "",
       type: dw[0]!,

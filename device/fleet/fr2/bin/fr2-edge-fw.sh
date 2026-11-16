@@ -6,7 +6,7 @@
 # Untouched: ssh 22 (break-glass until Access SSH is proven), WireGuard UDP, FORWARD (wg forwarding, docker).
 # Cloudflare ranges: https://api.cloudflare.com/client/v4/ips (refreshed by fr2-edge-fw.timer, last good copy kept).
 # Rollback (one line): systemctl disable --now fr2-edge-fw.timer fr2-edge-fw.service; nft delete table inet fr2_edge
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -euo pipefail
 out=/etc/nftables.d/fr2-edge.nft; cache=/var/lib/fr2-edge-fw/ips.json
 mkdir -p "${out%/*}" "${cache%/*}"

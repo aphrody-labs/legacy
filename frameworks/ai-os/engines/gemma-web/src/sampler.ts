@@ -32,10 +32,17 @@ export function argmax(logits: Float32Array): number {
 }
 
 /** temperature -> top-k -> top-p -> multinomial. temperature <= 0 is greedy. */
-export function sampleToken(logits: Float32Array, o: SamplerOptions, rnd: () => number = Math.random): number {
+export function sampleToken(
+  logits: Float32Array,
+  o: SamplerOptions,
+  rnd: () => number = Math.random,
+): number {
   const t = o.temperature ?? 1;
   if (t <= 0) return argmax(logits);
-  const k = Math.max(1, Math.min(o.topK && o.topK > 0 ? o.topK : logits.length, logits.length));
+  const k = Math.max(
+    1,
+    Math.min(o.topK && o.topK > 0 ? o.topK : logits.length, logits.length),
+  );
   const ids = new Int32Array(k);
   const vals = new Float32Array(k).fill(-Infinity);
   let n = 0;

@@ -1,6 +1,7 @@
 # @aphrody/google
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Aphrody Google: Cloud, Gemini, Drive, Docs, REST services (src/rest), gcloud principals and billing (src/gcp), document translation (src/doc-ai), Drive client (src/drive-client).
 
 | Type | Path |
@@ -21,4 +22,5 @@ bun run --cwd frameworks/google-ts google:sync
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

@@ -1,6 +1,7 @@
 # aphrody-remote
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Pure-Rust SSH client for `ay ssh`: exec, sftp copy, fleet hosts and health check (russh, no OpenSSH binary)
 
 | Type | Path |
@@ -16,4 +17,5 @@ cargo test -p aphrody-remote
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

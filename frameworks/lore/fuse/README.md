@@ -1,6 +1,7 @@
 # lore-fuse
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Lore version control: lore-fuse (absorbed from Epic Games Lore, MIT)
 
 | Type | Path |
@@ -16,6 +17,7 @@ cargo test -p aphrody-lore-fuse
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 A Linux FUSE virtual file system for Lore instances, served by `lore service`. The mount serves one

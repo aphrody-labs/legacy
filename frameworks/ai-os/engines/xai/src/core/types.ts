@@ -93,14 +93,26 @@ export interface SttRequest {
 }
 
 // Convenience message creators (inspired by xai-sdk-python chat helpers)
-export const system = (content: string): ChatMessage => ({ role: "system", content });
-export const user = (content: string | MessageContentPart[]): ChatMessage => ({ role: "user", content: Array.isArray(content) ? content : content });
-export const assistant = (content: string): ChatMessage => ({ role: "assistant", content });
+export const system = (content: string): ChatMessage => ({
+  role: "system",
+  content,
+});
+export const user = (content: string | MessageContentPart[]): ChatMessage => ({
+  role: "user",
+  content: Array.isArray(content) ? content : content,
+});
+export const assistant = (content: string): ChatMessage => ({
+  role: "assistant",
+  content,
+});
 
 /** Richer message content for vision / tools. */
 export type MessageContentPart =
   | { type: "text"; text: string }
-  | { type: "image_url"; image_url: { url: string; detail?: "low" | "high" | "auto" } };
+  | {
+      type: "image_url";
+      image_url: { url: string; detail?: "low" | "high" | "auto" };
+    };
 
 export interface ToolCall {
   id: string;

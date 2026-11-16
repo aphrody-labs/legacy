@@ -52,7 +52,8 @@ export const GEMMA_4_MODEL_CATALOG: readonly Gemma4ModelSpec[] = [
   },
   {
     id: "gemma-4-12b-heretic-q4km",
-    displayName: "Gemma 4 12B Instruct + Heretic Abliterated (RTX 4070 Sweet Spot)",
+    displayName:
+      "Gemma 4 12B Instruct + Heretic Abliterated (RTX 4070 Sweet Spot)",
     paramsBillions: 12.2,
     quantization: "Q4_K_M",
     vramRequiredMb: 8150,
@@ -147,7 +148,9 @@ export function selectOptimalGemma4Model(options?: {
     "q8_0",
     "--cache-type-v",
     "q8_0",
-    ...(chosen.multimodalVisionAudio ? ["--mmproj", "mmproj-gemma4-f16.gguf"] : []),
+    ...(chosen.multimodalVisionAudio
+      ? ["--mmproj", "mmproj-gemma4-f16.gguf"]
+      : []),
   ];
 
   return {

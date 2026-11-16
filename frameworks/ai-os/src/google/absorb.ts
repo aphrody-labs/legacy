@@ -57,7 +57,9 @@ export function check(strict: boolean): number {
     if (!s.absorbed) continue;
     const dir = join(root, s.checkout);
     if (!existsSync(join(dir, ".git"))) {
-      console.log(`${name}: ${s.checkout} missing${strict ? "" : " (ignored)"}`);
+      console.log(
+        `${name}: ${s.checkout} missing${strict ? "" : " (ignored)"}`,
+      );
       if (strict) drift++;
       continue;
     }

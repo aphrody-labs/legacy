@@ -2,8 +2,8 @@ import {
   SANDBOX_PROXY_READY_METHOD,
   getToolUiResourceUri as _getToolUiResourceUri,
   RESOURCE_MIME_TYPE,
-} from '@modelcontextprotocol/ext-apps/app-bridge';
-import { type Client, type Tool } from '@modelcontextprotocol/client';
+} from "@modelcontextprotocol/ext-apps/app-bridge";
+import { type Client, type Tool } from "@modelcontextprotocol/client";
 const DEFAULT_SANDBOX_TIMEOUT_MS = 10000;
 
 /**
@@ -23,26 +23,28 @@ export async function setupSandboxProxyIframe(
   iframe: HTMLIFrameElement;
   onReady: Promise<void>;
 }> {
-  const iframe = document.createElement('iframe');
-  iframe.style.width = '100%';
-  iframe.style.height = '600px';
-  iframe.style.border = 'none';
-  iframe.style.backgroundColor = 'transparent';
-  iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms');
+  const iframe = document.createElement("iframe");
+  iframe.style.width = "100%";
+  iframe.style.height = "600px";
+  iframe.style.border = "none";
+  iframe.style.backgroundColor = "transparent";
+  iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms");
 
   const onReady = new Promise<void>((resolve, reject) => {
     let settled = false;
 
     const cleanup = () => {
-      window.removeEventListener('message', messageListener);
-      iframe.removeEventListener('error', errorListener);
+      window.removeEventListener("message", messageListener);
+      iframe.removeEventListener("error", errorListener);
     };
 
     const timeoutId = setTimeout(() => {
       if (!settled) {
         settled = true;
         cleanup();
-        reject(new Error('Timed out waiting for sandbox proxy iframe to be ready'));
+        reject(
+          new Error("Timed out waiting for sandbox proxy iframe to be ready"),
+        );
       }
     }, timeoutMs);
 
@@ -75,12 +77,12 @@ export async function setupSandboxProxyIframe(
         settled = true;
         clearTimeout(timeoutId);
         cleanup();
-        reject(new Error('Failed to load sandbox proxy iframe'));
+        reject(new Error("Failed to load sandbox proxy iframe"));
       }
     };
 
-    window.addEventListener('message', messageListener);
-    iframe.addEventListener('error', errorListener);
+    window.addEventListener("message", messageListener);
+    iframe.addEventListener("error", errorListener);
   });
 
   iframe.src = sandboxProxyUrl.href;
@@ -114,8 +116,10 @@ export async function getToolUiResourceUri(
   if (!uri) {
     return null;
   }
-  if (!uri.startsWith('ui://')) {
-    throw new Error(`tool ${toolName} has unsupported output template URI: ${uri}`);
+  if (!uri.startsWith("ui://")) {
+    throw new Error(
+      `tool ${toolName} has unsupported output template URI: ${uri}`,
+    );
   }
   return { uri };
 }
@@ -129,21 +133,33 @@ export async function readToolUiResourceHtml(
   const resource = await client.readResource({ uri: opts.uri });
 
   if (!resource) {
-    throw new Error('UI resource not found: ' + opts.uri);
+    throw new Error("UI resource not found: " + opts.uri);
   }
   if (resource.contents.length !== 1) {
-    throw new Error('Unsupported UI resource content length: ' + resource.contents.length);
+    throw new Error(
+      "Unsupported UI resource content length: " + resource.contents.length,
+    );
   }
   const content = resource.contents[0];
   let html: string;
   const isHtml = (t?: string) => t === RESOURCE_MIME_TYPE;
 
-  if ('text' in content && typeof content.text === 'string' && isHtml(content.mimeType)) {
+  if (
+    "text" in content &&
+    typeof content.text === "string" &&
+    isHtml(content.mimeType)
+  ) {
     html = content.text;
-  } else if ('blob' in content && typeof content.blob === 'string' && isHtml(content.mimeType)) {
+  } else if (
+    "blob" in content &&
+    typeof content.blob === "string" &&
+    isHtml(content.mimeType)
+  ) {
     html = atob(content.blob);
   } else {
-    throw new Error('Unsupported UI resource content format: ' + JSON.stringify(content));
+    throw new Error(
+      "Unsupported UI resource content format: " + JSON.stringify(content),
+    );
   }
 
   return html;

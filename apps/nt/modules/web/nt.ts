@@ -2,13 +2,7 @@
 // Layers: real %SystemRoot% (NTFS index, treemap) · hardware (KPRCB, physical memory, NTFS volume/MFT) ·
 // kernel and executive (ntoskrnl, 75 object types, pool by tag, loaded drivers) · real processes and threads,
 // icons extracted from the real PE files, real paths. Text: glyph atlas; icons: RGBA atlas; everything is GPU.
-import {
-  FRAME,
-  MAGIC,
-  type Slow,
-  THREAD_STATE,
-  WAIT_REASON,
-} from "./ntsys-format.ts";
+import { FRAME, MAGIC, type Slow, THREAD_STATE, WAIT_REASON } from "./ntsys-format.ts";
 import shaderSrc from "./scene.wgsl" with { type: "text" };
 import { role, tokens } from "@aphrody/design";
 import { loc, num, t } from "./i18n.ts";
@@ -34,10 +28,7 @@ const ATLAS = 4096;
 const atlas = device.createTexture({
   size: [ATLAS, ATLAS],
   format: "rgba8unorm",
-  usage:
-    GPUTextureUsage.TEXTURE_BINDING |
-    GPUTextureUsage.COPY_DST |
-    GPUTextureUsage.RENDER_ATTACHMENT,
+  usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
 });
 const GW = 32;
 const GH = 48;
@@ -57,17 +48,9 @@ const glyph = new Map<string, number>();
     g.fillText(ch, (i % 128) * GW + 2, Math.floor(i / 128) * GH + GH / 2);
   });
   g.fillRect(ATLAS - 8, 248, 8, 8); // aplat blanc
-  device.queue.copyExternalImageToTexture({ source: off }, { texture: atlas }, [
-    ATLAS,
-    256,
-  ]);
+  device.queue.copyExternalImageToTexture({ source: off }, { texture: atlas }, [ATLAS, 256]);
 }
-const SOLID: [number, number, number, number] = [
-  (ATLAS - 6) / ATLAS,
-  250 / ATLAS,
-  (ATLAS - 2) / ATLAS,
-  254 / ATLAS,
-];
+const SOLID: [number, number, number, number] = [(ATLAS - 6) / ATLAS, 250 / ATLAS, (ATLAS - 2) / ATLAS, 254 / ATLAS];
 const ICON = 64;
 const ICON_COLS = ATLAS / ICON;
 const icons = new Map<string, number>(); // path -> cell (>= 0 ready, -1 loading, -2 missing)
@@ -91,10 +74,7 @@ function iconSlot(path: string): number {
         { source: bmp },
         {
           texture: atlas,
-          origin: [
-            (slot % ICON_COLS) * ICON + 4,
-            256 + Math.floor(slot / ICON_COLS) * ICON + 4,
-          ],
+          origin: [(slot % ICON_COLS) * ICON + 4, 256 + Math.floor(slot / ICON_COLS) * ICON + 4],
         },
         [56, 56],
       );
@@ -130,9 +110,7 @@ const boxPipe = device.createRenderPipeline({
   },
   multisample,
 });
-const spriteDesc = (
-  depthCompare: GPUCompareFunction,
-): GPURenderPipelineDescriptor => ({
+const spriteDesc = (depthCompare: GPUCompareFunction): GPURenderPipelineDescriptor => ({
   layout: "auto",
   vertex: { module, entryPoint: "vs_sprite" },
   fragment: {
@@ -207,9 +185,7 @@ const colorAtt: GPURenderPassColorAttachment = {
   storeOp: "discard",
   clearValue: (() => {
     const h = role("surface-container-lowest", "dark");
-    const [r, g, b] = [1, 3, 5].map(
-      (i) => Number.parseInt(h.slice(i, i + 2), 16) / 255,
-    );
+    const [r = 0, g = 0, b = 0] = [1, 3, 5].map((i) => Number.parseInt(h.slice(i, i + 2), 16) / 255);
     return { r, g, b, a: 1 };
   })(),
 };
@@ -232,18 +208,7 @@ let nStaticBox = 0;
 let nWorldSpr = 0;
 let nScreenSpr = 0;
 const boxRef: { kind: string; ref: number }[] = [];
-function box(
-  x: number,
-  y: number,
-  z: number,
-  sx: number,
-  sy: number,
-  sz: number,
-  c: RGB,
-  kind: string,
-  ref: number,
-  a = 1,
-) {
+function box(x: number, y: number, z: number, sx: number, sy: number, sz: number, c: RGB, kind: string, ref: number, a = 1) {
   if (nBox >= MAX_BOX) return;
   const o = nBox * 12;
   BOX[o] = x;
@@ -274,8 +239,7 @@ function sprite(
   a = 1,
 ) {
   const i = screen ? MAX_SPRITE / 2 + nScreenSpr : nWorldSpr;
-  if (screen ? nScreenSpr >= MAX_SPRITE / 2 : nWorldSpr >= MAX_SPRITE / 2)
-    return;
+  if (screen ? nScreenSpr >= MAX_SPRITE / 2 : nWorldSpr >= MAX_SPRITE / 2) return;
   const o = i * 16;
   SPR[o] = x;
   SPR[o + 1] = y;
@@ -302,43 +266,19 @@ const glyphUv = (i: number): [number, number, number, number] => {
   return [x / ATLAS, y / ATLAS, (x + GW) / ATLAS, (y + GH) / ATLAS];
 };
 /** GPU text: anchor (world or screen), glyph size in px, optional horizontal centering. */
-function text(
-  s: string,
-  screen: boolean,
-  x: number,
-  y: number,
-  z: number,
-  px: number,
-  c: RGB,
-  center = false,
-  a = 1,
-) {
+function text(s: string, screen: boolean, x: number, y: number, z: number, px: number, c: RGB, center = false, a = 1) {
   // Atlas rasterized at 38 px (0.6 em advance) in 32 x 48 cells: scale factor k.
   const k = px / 38;
   const adv = 22.8 * k;
   let ox = center ? (-s.length * adv) / 2 : 0;
   for (const ch of s) {
     const gi = glyph.get(ch) ?? glyph.get("?")!;
-    if (ch !== " ")
-      sprite(
-        screen,
-        x,
-        y,
-        z,
-        GW * k,
-        GH * k,
-        ox - 2 * k,
-        -GH * k * 0.8,
-        glyphUv(gi),
-        c,
-        a,
-      );
+    if (ch !== " ") sprite(screen, x, y, z, GW * k, GH * k, ox - 2 * k, -GH * k * 0.8, glyphUv(gi), c, a);
     ox += adv;
   }
   return s.length * adv;
 }
-const panel = (x: number, y: number, w: number, h: number, c: RGB, a = 0.85) =>
-  sprite(true, x, y, 0, w, h, 0, 0, SOLID, c, a);
+const panel = (x: number, y: number, w: number, h: number, c: RGB, a = 0.85) => sprite(true, x, y, 0, w, h, 0, 0, SOLID, c, a);
 
 // --- Couleurs ------------------------------------------------------------------------------------------------------------
 // Chrome (text, backgrounds, plates, titles) = dark M3 roles of the brand (frameworks/design, Material Color Utilities from
@@ -348,11 +288,7 @@ const hex = (h: string): RGB => [
   Number.parseInt(h.slice(3, 5), 16) / 255,
   Number.parseInt(h.slice(5, 7), 16) / 255,
 ];
-const mix = (a: RGB, b: RGB, t: number): RGB => [
-  a[0] + (b[0] - a[0]) * t,
-  a[1] + (b[1] - a[1]) * t,
-  a[2] + (b[2] - a[2]) * t,
-];
+const mix = (a: RGB, b: RGB, t: number): RGB => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
 const C = {
   text: hex(role("on-surface", "dark")),
   dim: hex(role("on-surface-variant", "dark")),
@@ -375,18 +311,9 @@ const C = {
   fs2: hex("#5c86c0"),
   mft: hex("#e9c46a"),
 };
-const STATE: RGB[] = [
-  "#f1f5f9",
-  "#ffd166",
-  "#3ddc84",
-  "#4cc9f0",
-  "#e63946",
-  "#3a4660",
-  "#b5179e",
-  "#f8961e",
-  "#8d99ae",
-  "#6c757d",
-].map(hex);
+const STATE: RGB[] = ["#f1f5f9", "#ffd166", "#3ddc84", "#4cc9f0", "#e63946", "#3a4660", "#b5179e", "#f8961e", "#8d99ae", "#6c757d"].map(
+  hex,
+);
 const WAIT_FAMILY: [string, RGB, number[]][] = [
   [t("wait.user"), hex("#3b5480"), [6, 13]],
   ["WrQueue", hex("#23707f"), [15]],
@@ -401,11 +328,7 @@ const WAIT_FAMILY: [string, RGB, number[]][] = [
 const WAIT: RGB[] = WAIT_REASON.map(() => STATE[5]!);
 for (const [, c, rs] of WAIT_FAMILY) for (const r of rs) WAIT[r] = c;
 const MODULE_FAMILY: [string, RGB, RegExp][] = [
-  [
-    t("mod.kernel"),
-    hex("#c0392b"),
-    /^(ntoskrnl|hal|kd|ci|cng|clfs|tm|pshed|bootvid|werkernel|skci|msrpc|ksecdd|ksecpkg)\./i,
-  ],
+  [t("mod.kernel"), hex("#c0392b"), /^(ntoskrnl|hal|kd|ci|cng|clfs|tm|pshed|bootvid|werkernel|skci|msrpc|ksecdd|ksecpkg)\./i],
   [
     t("mod.files"),
     hex("#2f6db5"),
@@ -421,32 +344,13 @@ const MODULE_FAMILY: [string, RGB, RegExp][] = [
     hex("#b8860b"),
     /^(storport|stornvme|storahci|disk|partmgr|volmgr|volsnap|volume|iastor|classpnp|spaceport|ehstor|fvevol|rdyboost|mountmgr|acpiex|pci|acpi)/i,
   ],
-  [
-    t("mod.graphics"),
-    hex("#a33ea1"),
-    /^(dxgkrnl|dxgmms|nvlddmkm|watchdog|basicdisplay|basicrender|monitor|cdd|win32k|nvvad|nvhda)/i,
-  ],
-  [
-    t("mod.usb"),
-    hex("#1b9aaa"),
-    /^(usb|hid|kbd|mou|i8042|ks|portcls|hdaudio|audio|bth|ucx|wudf)/i,
-  ],
-  [
-    t("mod.security"),
-    hex("#e07a1f"),
-    /^(wdfilter|wdnisdrv|wd|peauth|tpm|mssecflt|mpsdrv|bam|appid|vmgid|hvsocket|vid|hvservice|winhv)/i,
-  ],
+  [t("mod.graphics"), hex("#a33ea1"), /^(dxgkrnl|dxgmms|nvlddmkm|watchdog|basicdisplay|basicrender|monitor|cdd|win32k|nvvad|nvhda)/i],
+  [t("mod.usb"), hex("#1b9aaa"), /^(usb|hid|kbd|mou|i8042|ks|portcls|hdaudio|audio|bth|ucx|wudf)/i],
+  [t("mod.security"), hex("#e07a1f"), /^(wdfilter|wdnisdrv|wd|peauth|tpm|mssecflt|mpsdrv|bam|appid|vmgid|hvsocket|vid|hvservice|winhv)/i],
 ];
-const moduleColor = (n: string): RGB =>
-  MODULE_FAMILY.find(([, , re]) => re.test(n))?.[1] ?? hex("#56617a");
+const moduleColor = (n: string): RGB => MODULE_FAMILY.find(([, , re]) => re.test(n))?.[1] ?? hex("#56617a");
 const fmt = (v: number) =>
-  v >= 1e9
-    ? `${num(v / 1e9, 1)}G`
-    : v >= 1e6
-      ? `${num(v / 1e6, 1)}M`
-      : v >= 1e3
-        ? `${num(v / 1e3, 1)}k`
-        : num(v);
+  v >= 1e9 ? `${num(v / 1e9, 1)}G` : v >= 1e6 ? `${num(v / 1e6, 1)}M` : v >= 1e3 ? `${num(v / 1e3, 1)}k` : num(v);
 const bytes = (v: number) =>
   v >= 2 ** 40
     ? t("unit.tib", { v: num(v / 2 ** 40, 2) })
@@ -500,72 +404,18 @@ function updateCamera() {
   const near = 0.5;
   const far = 3000;
   // Vue (colonnes) puis projection perspective WebGPU (profondeur 0..1).
-  const v = [
-    right[0]!,
-    up[0]!,
-    -fwd[0]!,
-    0,
-    right[1]!,
-    up[1]!,
-    -fwd[1]!,
-    0,
-    right[2]!,
-    up[2]!,
-    -fwd[2]!,
-    0,
-    0,
-    0,
-    0,
-    1,
-  ];
+  const v = [right[0]!, up[0]!, -fwd[0]!, 0, right[1]!, up[1]!, -fwd[1]!, 0, right[2]!, up[2]!, -fwd[2]!, 0, 0, 0, 0, 1];
   v[12] = -(right[0]! * eye[0]! + right[1]! * eye[1]! + right[2]! * eye[2]!);
   v[13] = -(up[0]! * eye[0]! + up[1]! * eye[1]! + up[2]! * eye[2]!);
   v[14] = fwd[0]! * eye[0]! + fwd[1]! * eye[1]! + fwd[2]! * eye[2]!;
-  const p = [
-    f / aspect,
-    0,
-    0,
-    0,
-    0,
-    f,
-    0,
-    0,
-    0,
-    0,
-    far / (near - far),
-    -1,
-    0,
-    0,
-    (near * far) / (near - far),
-    0,
-  ];
+  const p = [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, far / (near - far), -1, 0, 0, (near * far) / (near - far), 0];
   for (let c = 0; c < 4; c++)
     for (let r = 0; r < 4; r++) {
       let s = 0;
       for (let k = 0; k < 4; k++) s += p[k * 4 + r]! * v[c * 4 + k]!;
       camData[c * 4 + r] = s;
     }
-  camData.set(
-    [
-      eye[0]!,
-      eye[1]!,
-      eye[2]!,
-      0,
-      right[0]!,
-      right[1]!,
-      right[2]!,
-      0,
-      up[0]!,
-      up[1]!,
-      up[2]!,
-      0,
-      W,
-      H,
-      1 / W,
-      1 / H,
-    ],
-    16,
-  );
+  camData.set([eye[0]!, eye[1]!, eye[2]!, 0, right[0]!, right[1]!, right[2]!, 0, up[0]!, up[1]!, up[2]!, 0, W, H, 1 / W, 1 / H], 16);
   device.queue.writeBuffer(camBuf, 0, camData);
 }
 let drag: { x: number; y: number; pan: boolean } | null = null;
@@ -601,10 +451,7 @@ canvas.addEventListener("pointermove", (e) => {
 canvas.addEventListener(
   "wheel",
   (e) => {
-    cam.dist = Math.max(
-      8,
-      Math.min(900, cam.dist * Math.exp(e.deltaY * 0.0012)),
-    );
+    cam.dist = Math.max(8, Math.min(900, cam.dist * Math.exp(e.deltaY * 0.0012)));
     auto = false;
     e.preventDefault();
   },
@@ -662,10 +509,7 @@ function squarify(vals: number[], b: Box, out: Box[]) {
   const total = vals.reduce((a, v) => a + v, 0) || 1;
   const sc = (w * h) / total;
   const worst = (sum: number, mn: number, mx: number, side: number) =>
-    Math.max(
-      (side * side * mx) / (sum * sum),
-      (sum * sum) / (side * side * mn),
-    );
+    Math.max((side * side * mx) / (sum * sum), (sum * sum) / (side * side * mn));
   let i = 0;
   while (i < vals.length) {
     const side = Math.min(w, h);
@@ -675,11 +519,7 @@ function squarify(vals: number[], b: Box, out: Box[]) {
     let j = i + 1;
     while (j < vals.length) {
       const a = vals[j]! * sc;
-      if (
-        worst(sum + a, Math.min(mn, a), Math.max(mx, a), side) >
-        worst(sum, mn, mx, side)
-      )
-        break;
+      if (worst(sum + a, Math.min(mn, a), Math.max(mx, a), side) > worst(sum, mn, mx, side)) break;
       sum += a;
       mn = Math.min(mn, a);
       mx = Math.max(mx, a);
@@ -689,10 +529,7 @@ function squarify(vals: number[], b: Box, out: Box[]) {
     let off = 0;
     for (let k = i; k < j; k++) {
       const len = (vals[k]! * sc) / thick;
-      out[k] =
-        w >= h
-          ? { x, y: y + off, w: thick, h: len }
-          : { x: x + off, y, w: len, h: thick };
+      out[k] = w >= h ? { x, y: y + off, w: thick, h: len } : { x: x + off, y, w: len, h: thick };
       off += len;
     }
     if (w >= h) {
@@ -722,8 +559,7 @@ function buildStatic() {
   box(0, Y.hw - 1.6, 0, 74, 0.3, 74, C.plate, "plate", 1);
   box(0, Y.ex - 0.5, 0, 80, 0.3, 80, C.plate, "plate", 2);
   box(0, Y.pr - 0.5, 0, 74, 0.3, 74, C.plate, "plate", 3);
-  const layer = (s: string, y: number) =>
-    text(s, false, -37, y, -37, 30, C.title);
+  const layer = (s: string, y: number) => text(s, false, -37, y, -37, 30, C.title);
   layer(t("layer.fs", { root: "C:\\Windows" }), Y.fs + 1);
   layer(t("layer.hw"), Y.hw + 1);
   layer(t("layer.ex"), Y.ex + 1);
@@ -740,17 +576,7 @@ function buildStatic() {
     );
     lv1.forEach((d, i) => {
       const b = b1[i]!;
-      box(
-        b.x + b.w / 2,
-        Y.fs,
-        b.y + b.h / 2,
-        b.w - 0.25,
-        0.45,
-        b.h - 0.25,
-        C.fs,
-        "fs1",
-        i,
-      );
+      box(b.x + b.w / 2, Y.fs, b.y + b.h / 2, b.w - 0.25, 0.45, b.h - 0.25, C.fs, "fs1", i);
       const kids = d.children.filter((c) => c.bytes > 0);
       const b2: Box[] = [];
       squarify(
@@ -775,29 +601,8 @@ function buildStatic() {
       if (i < 14) {
         const slot = d.exe ? iconSlot(d.exe) : -2;
         const yy = Y.fs + 8;
-        if (slot >= 0)
-          sprite(
-            false,
-            b.x + b.w / 2,
-            yy,
-            b.y + b.h / 2,
-            56,
-            56,
-            -28,
-            -80,
-            iconUv(slot),
-            C.white,
-          );
-        text(
-          `${d.name}  ${bytes(d.bytes)}`,
-          false,
-          b.x + b.w / 2,
-          yy,
-          b.y + b.h / 2,
-          22,
-          C.text,
-          true,
-        );
+        if (slot >= 0) sprite(false, b.x + b.w / 2, yy, b.y + b.h / 2, 56, 56, -28, -80, iconUv(slot), C.white);
+        text(`${d.name}  ${bytes(d.bytes)}`, false, b.x + b.w / 2, yy, b.y + b.h / 2, 22, C.text, true);
       }
     });
   }
@@ -839,17 +644,7 @@ function buildStatic() {
           i,
         );
       }
-      box(
-        -36,
-        Y.hw - 1.5,
-        36,
-        3,
-        (n.mftBytes / 2 ** 30) * 1.2,
-        3,
-        C.mft,
-        "mft",
-        0,
-      );
+      box(-36, Y.hw - 1.5, 36, 3, (n.mftBytes / 2 ** 30) * 1.2, 3, C.mft, "mft", 0);
       text(
         t("mft.records", {
           size: bytes(n.mftBytes),
@@ -881,27 +676,8 @@ function buildStatic() {
     }
     // Executive: ntoskrnl, object types, pool, drivers.
     const nt = slow.modules.find((m) => /^ntoskrnl/i.test(m.name));
-    box(
-      0,
-      Y.ex,
-      0,
-      7,
-      4 + Math.log2(1 + (nt?.size ?? 1) / 1048576) * 2,
-      7,
-      C.core,
-      "core",
-      0,
-    );
-    text(
-      `${nt?.path ?? "ntoskrnl.exe"}  ${bytes(nt?.size ?? 0)}`,
-      false,
-      0,
-      Y.ex + 13,
-      0,
-      24,
-      hex("#ff9f8a"),
-      true,
-    );
+    box(0, Y.ex, 0, 7, 4 + Math.log2(1 + (nt?.size ?? 1) / 1048576) * 2, 7, C.core, "core", 0);
+    text(`${nt?.path ?? "ntoskrnl.exe"}  ${bytes(nt?.size ?? 0)}`, false, 0, Y.ex + 13, 0, 24, hex("#ff9f8a"), true);
     const arc = (a0: number, a1: number, i: number, n: number, r: number) => {
       const a = a0 + ((a1 - a0) * (i + 0.5)) / n;
       return [Math.cos(a) * r, Math.sin(a) * r] as const;
@@ -909,76 +685,26 @@ function buildStatic() {
     slow.objectTypes.forEach((t, i) => {
       const [x, z] = arc(0, (Math.PI * 2) / 3, i, slow!.objectTypes.length, 30);
       const h = 0.3 + Math.log10(1 + t.objects) * 2.6;
-      box(
-        x,
-        Y.ex,
-        z,
-        1.4,
-        h,
-        1.4,
-        mix(
-          hex("#2f6db5"),
-          hex("#4cc9f0"),
-          Math.min(1, t.handles / Math.max(1, t.objects)),
-        ),
-        "type",
-        i,
-      );
-      if (i < 10)
-        text(
-          `${t.name} ${fmt(t.objects)}`,
-          false,
-          x,
-          Y.ex + h + 1,
-          z,
-          20,
-          hex("#9fd3ff"),
-          true,
-        );
+      box(x, Y.ex, z, 1.4, h, 1.4, mix(hex("#2f6db5"), hex("#4cc9f0"), Math.min(1, t.handles / Math.max(1, t.objects))), "type", i);
+      if (i < 10) text(`${t.name} ${fmt(t.objects)}`, false, x, Y.ex + h + 1, z, 20, hex("#9fd3ff"), true);
     });
-    const pmax = Math.max(
-      1e-6,
-      ...slow.pool.map((p) => p.pagedMB + p.nonPagedMB),
-    );
+    const pmax = Math.max(1e-6, ...slow.pool.map((p) => p.pagedMB + p.nonPagedMB));
     slow.pool.forEach((p, i) => {
-      const [x, z] = arc(
-        (Math.PI * 2) / 3,
-        (Math.PI * 4) / 3,
-        i,
-        slow!.pool.length,
-        30,
-      );
+      const [x, z] = arc((Math.PI * 2) / 3, (Math.PI * 4) / 3, i, slow!.pool.length, 30);
       const hp = (p.pagedMB / pmax) * 15;
       const hn = (p.nonPagedMB / pmax) * 15;
       box(x, Y.ex, z, 1.6, hp, 1.6, C.paged, "pool", i);
       box(x, Y.ex + hp, z, 1.6, hn, 1.6, C.isr, "pool", i);
-      if (i < 8)
-        text(
-          `${p.tag} ${bytes((p.pagedMB + p.nonPagedMB) * 2 ** 20)}`,
-          false,
-          x,
-          Y.ex + hp + hn + 1,
-          z,
-          20,
-          hex("#9fe8d8"),
-          true,
-        );
+      if (i < 8) text(`${p.tag} ${bytes((p.pagedMB + p.nonPagedMB) * 2 ** 20)}`, false, x, Y.ex + hp + hn + 1, z, 20, hex("#9fe8d8"), true);
     });
     const mods = [...slow.modules].sort((a, b) => a.order - b.order);
     const per = Math.ceil(mods.length / 4);
     mods.forEach((m, i) => {
       const row = Math.floor(i / per);
-      const [x, z] = arc(
-        (Math.PI * 4) / 3,
-        Math.PI * 2,
-        i % per,
-        per,
-        25 + row * 3.4,
-      );
+      const [x, z] = arc((Math.PI * 4) / 3, Math.PI * 2, i % per, per, 25 + row * 3.4);
       const s = 0.5 + Math.log2(1 + m.size / 65536) * 0.5;
       box(x, Y.ex, z, s, s * 1.4, s, moduleColor(m.name), "drv", i);
-      if (m.size > 3 * 2 ** 20)
-        text(m.name, false, x, Y.ex + s * 1.4 + 0.6, z, 18, C.text, true);
+      if (m.size > 3 * 2 ** 20) text(m.name, false, x, Y.ex + s * 1.4 + 0.6, z, 18, C.text, true);
     });
   }
 
@@ -1013,11 +739,7 @@ function buildStatic() {
   groups.forEach((g, gi) => {
     const b = gb[gi]!;
     const pb: Box[] = [];
-    squarify(
-      g.idx.map(ws),
-      { x: b.x + 0.2, y: b.y + 0.2, w: b.w - 0.4, h: b.h - 0.4 },
-      pb,
-    );
+    squarify(g.idx.map(ws), { x: b.x + 0.2, y: b.y + 0.2, w: b.w - 0.4, h: b.h - 0.4 }, pb);
     let path = "";
     g.idx.forEach((pi, k) => {
       const r = pb[k]!;
@@ -1038,10 +760,7 @@ function buildStatic() {
       );
       const nth = U[o + 2]!;
       const first = U[o + 4]!;
-      const s = Math.max(
-        0.1,
-        Math.min(1.2, Math.sqrt((r.w * r.h * 0.8) / Math.max(1, nth))),
-      );
+      const s = Math.max(0.1, Math.min(1.2, Math.sqrt((r.w * r.h * 0.8) / Math.max(1, nth))));
       const cols = Math.max(1, Math.floor((r.w - 0.1) / s));
       const rows = Math.max(1, Math.floor((r.h - 0.1) / s));
       for (let t = 0; t < nth; t++) {
@@ -1076,19 +795,7 @@ function buildStatic() {
       const slot = iconSlot(path);
       const cx = b.x + b.w / 2;
       const cz = b.y + b.h / 2;
-      if (slot >= 0)
-        sprite(
-          false,
-          cx,
-          Y.pr + 7,
-          cz,
-          56,
-          56,
-          -28,
-          -84,
-          iconUv(slot),
-          C.white,
-        );
+      if (slot >= 0) sprite(false, cx, Y.pr + 7, cz, 56, 56, -28, -84, iconUv(slot), C.white);
       text(
         `${g.name}${g.idx.length > 1 ? ` ×${g.idx.length}` : ""}  ${bytes(g.total * 2 ** 20)}`,
         false,
@@ -1125,13 +832,7 @@ function cpuBoxes() {
     }
     box(x, y, z, 2.3, Math.max(0.05, Y.hw + 13 - y), 2.3, C.idle, "cpu", c);
   }
-  device.queue.writeBuffer(
-    boxBuf,
-    nStaticBox * 48,
-    BOX,
-    nStaticBox * 12,
-    (nBox - nStaticBox) * 12,
-  );
+  device.queue.writeBuffer(boxBuf, nStaticBox * 48, BOX, nStaticBox * 12, (nBox - nStaticBox) * 12);
 }
 
 function hit(): { kind: string; ref: number } | null {
@@ -1150,16 +851,8 @@ function hit(): { kind: string; ref: number } | null {
     const r = boxRef[i]!;
     if (r.kind === "plate") continue;
     const o = i * 12;
-    const mn = [
-      BOX[o]! - BOX[o + 4]! / 2,
-      BOX[o + 1]!,
-      BOX[o + 2]! - BOX[o + 6]! / 2,
-    ];
-    const mx = [
-      BOX[o]! + BOX[o + 4]! / 2,
-      BOX[o + 1]! + BOX[o + 5]!,
-      BOX[o + 2]! + BOX[o + 6]! / 2,
-    ];
+    const mn = [BOX[o]! - BOX[o + 4]! / 2, BOX[o + 1]!, BOX[o + 2]! - BOX[o + 6]! / 2];
+    const mx = [BOX[o]! + BOX[o + 4]! / 2, BOX[o + 1]! + BOX[o + 5]!, BOX[o + 2]! + BOX[o + 6]! / 2];
     let t0 = 0;
     let t1 = best;
     let ok = true;
@@ -1226,8 +919,7 @@ function describe(h: { kind: string; ref: number }): string[] {
       let owner = "";
       for (let i = 0; i < nproc; i++) {
         const o = procBase + i * FRAME.proc;
-        if (r >= U[o + 4]! && r < U[o + 4]! + U[o + 2]!)
-          owner = `${names[U[o + 10]!]} (${U[o]})`;
+        if (r >= U[o + 4]! && r < U[o + 4]! + U[o + 2]!) owner = `${names[U[o + 10]!]} (${U[o]})`;
       }
       return [
         `thread ${U[ti]} — ${owner}`,
@@ -1242,10 +934,7 @@ function describe(h: { kind: string; ref: number }): string[] {
     }
     case "type": {
       const ty = slow!.objectTypes[r]!;
-      return [
-        t("type.1", { name: ty.name, index: ty.index }),
-        t("type.2", { objects: ty.objects, handles: ty.handles }),
-      ];
+      return [t("type.1", { name: ty.name, index: ty.index }), t("type.2", { objects: ty.objects, handles: ty.handles })];
     }
     case "pool": {
       const p = slow!.pool[r]!;
@@ -1260,26 +949,14 @@ function describe(h: { kind: string; ref: number }): string[] {
     }
     case "drv": {
       const m = [...slow!.modules].sort((a, b) => a.order - b.order)[r]!;
-      return [
-        m.name,
-        m.path,
-        t("drv.3", { size: bytes(m.size), order: m.order }),
-      ];
+      return [m.name, m.path, t("drv.3", { size: bytes(m.size), order: m.order })];
     }
     case "fs1":
     case "fs2": {
-      const d1 = tree?.children.filter((d) => d.bytes > 0)[
-        h.kind === "fs1" ? r : Math.floor(r / 1000)
-      ];
-      const d =
-        h.kind === "fs1"
-          ? d1
-          : d1?.children.filter((c) => c.bytes > 0)[r % 1000];
+      const d1 = tree?.children.filter((d) => d.bytes > 0)[h.kind === "fs1" ? r : Math.floor(r / 1000)];
+      const d = h.kind === "fs1" ? d1 : d1?.children.filter((c) => c.bytes > 0)[r % 1000];
       return d
-        ? [
-            `${tree!.name}\\${h.kind === "fs2" ? `${d1!.name}\\` : ""}${d.name}`,
-            t("fs.2", { size: bytes(d.bytes), files: d.files }),
-          ]
+        ? [`${tree!.name}\\${h.kind === "fs2" ? `${d1!.name}\\` : ""}${d.name}`, t("fs.2", { size: bytes(d.bytes), files: d.files })]
         : [];
     }
     case "mem":
@@ -1337,16 +1014,11 @@ function screenLayer() {
         limit: bytes(F[g0 + 13]! * 2 ** 20),
         paged: bytes(F[g0 + 14]! * 2 ** 20),
         nonpaged: bytes(F[g0 + 15]! * 2 ** 20),
-      }) +
-        (indexStats
-          ? ` · ${t("hud.index", { files: indexStats.files, size: bytes(indexStats.bytes) })}`
-          : ""),
+      }) + (indexStats ? ` · ${t("hud.index", { files: indexStats.files, size: bytes(indexStats.bytes) })}` : ""),
       t("hud.4", { fps: num(fps), w: W, h: H, samples: SAMPLES }),
     ];
     panel(24, 24, 1500, 30 + lines.length * 40, C.bg, 0.78);
-    lines.forEach((l, i) =>
-      text(l, true, 40, 64 + i * 40, 0, 28, i === 3 ? C.dim : C.text),
-    );
+    lines.forEach((l, i) => text(l, true, 40, 64 + i * 40, 0, 28, i === 3 ? C.dim : C.text));
   }
   // Thread state legend.
   let lx = 40;
@@ -1371,17 +1043,9 @@ function screenLayer() {
     const x = Math.min(W - w - 16, mouse.x + 28);
     const y = Math.min(H - info.length * 34 - 40, mouse.y + 28);
     panel(x, y, w, info.length * 34 + 22, hex("#0d1528"), 0.92);
-    info.forEach((s, i) =>
-      text(s, true, x + 16, y + 40 + i * 34, 0, 26, i === 0 ? C.title : C.text),
-    );
+    info.forEach((s, i) => text(s, true, x + 16, y + 40 + i * 34, 0, 26, i === 0 ? C.title : C.text));
   }
-  device.queue.writeBuffer(
-    spriteBuf,
-    (MAX_SPRITE / 2) * 64,
-    SPR,
-    (MAX_SPRITE / 2) * 16,
-    nScreenSpr * 16,
-  );
+  device.queue.writeBuffer(spriteBuf, (MAX_SPRITE / 2) * 64, SPR, (MAX_SPRITE / 2) * 16, nScreenSpr * 16);
 }
 
 // --- Render loop --------------------------------------------------------------------------------------------------------
@@ -1430,8 +1094,7 @@ function frame(now: number) {
 if (new URLSearchParams(location.search).has("report"))
   setInterval(() => {
     const v = Array.from(intervals.subarray(0, filled)).sort((a, b) => a - b);
-    const p = (x: number) =>
-      v[Math.min(v.length - 1, Math.floor(x * v.length))] ?? 0;
+    const p = (x: number) => v[Math.min(v.length - 1, Math.floor(x * v.length))] ?? 0;
     navigator.sendBeacon(
       "/stats",
       JSON.stringify({
@@ -1461,12 +1124,9 @@ function onFrame(buf: ArrayBuffer) {
   cpuBase = FRAME.header + FRAME.globals;
   procBase = cpuBase + ncpu * FRAME.cpu;
   threadBase = procBase + nproc * FRAME.proc;
-  for (let c = 0; c < ncpu; c++)
-    for (let k = 0; k < 5; k++)
-      cpuTgt[c * 5 + k] = F[cpuBase + c * FRAME.cpu + k]!;
+  for (let c = 0; c < ncpu; c++) for (let k = 0; k < 5; k++) cpuTgt[c * 5 + k] = F[cpuBase + c * FRAME.cpu + k]!;
   sched.fill(0);
-  for (let i = 0; i < nthread; i++)
-    sched[U[threadBase + i * FRAME.thread + 1]! & 0xff]!++;
+  for (let i = 0; i < nthread; i++) sched[U[threadBase + i * FRAME.thread + 1]! & 0xff]!++;
   dirty = true;
 }
 function connect() {
@@ -1476,9 +1136,7 @@ function connect() {
     if (e.data instanceof ArrayBuffer) return onFrame(e.data);
     const m = JSON.parse(e.data as string);
     if (m.type === "names") names = m.names;
-    else if (m.type === "paths")
-      for (const [pid, p] of Object.entries(m.paths as Record<string, string>))
-        paths.set(Number(pid), p);
+    else if (m.type === "paths") for (const [pid, p] of Object.entries(m.paths as Record<string, string>)) paths.set(Number(pid), p);
     else if (m.type === "slow") slow = m;
     else if (m.type === "hello") hz = m.hz;
     dirty = true;

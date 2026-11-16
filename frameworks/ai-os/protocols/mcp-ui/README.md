@@ -1,10 +1,11 @@
 # @aphrody/mcp-ui
 
 <!-- catalog:begin unit -->
+
 > MCP interactive app client with sandbox readiness and cancellation fixes.
 
-| Type | Path |
-| :-- | :-- |
+| Type        | Path                                |
+| :---------- | :---------------------------------- |
 | Bun package | `frameworks/ai-os/protocols/mcp-ui` |
 
 **Commands**

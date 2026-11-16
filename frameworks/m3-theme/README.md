@@ -3,6 +3,7 @@
 # @aphrody/m3-theme
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Canonical Material 3 fusion sheets: tokens.css (M3 + shadcn/ui + Tailwind v4 aliases), tailwind.css (every M3 system token as a Tailwind v4 utility) and spaceui.css (the SpaceUI themes rebuilt as M3 dynamic schemes, with SpaceUI compatibility aliases).
 
 | Type | Path |
@@ -23,6 +24,7 @@ bun run --cwd frameworks/m3-theme test
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 One generated Material 3 stylesheet (`tokens.css`, light and dark) that maps the shadcn/ui and Tailwind v4 colour aliases

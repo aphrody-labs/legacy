@@ -84,7 +84,12 @@ export const DEFAULT_WEB_CONFIG: Omit<WebConfig, "root" | "source"> = {
     startupTimeoutMs: 30_000,
     shutdownGraceMs: 5_000,
   },
-  fetch: { timeoutSecs: 30, waitUntil: "load", dump: "markdown", userAgent: null },
+  fetch: {
+    timeoutSecs: 30,
+    waitUntil: "load",
+    dump: "markdown",
+    userAgent: null,
+  },
   crawl: {
     maxDepth: 2,
     maxPages: 25,
@@ -106,8 +111,12 @@ export const DEFAULT_WEB_CONFIG: Omit<WebConfig, "root" | "source"> = {
 };
 
 /** Repository root: `APHRODY_ROOT` when set, otherwise four levels above this file. */
-export function repositoryRoot(env: Record<string, string | undefined> = process.env): string {
-  return resolve(env.APHRODY_ROOT ?? join(import.meta.dir, "../../../../../packages"));
+export function repositoryRoot(
+  env: Record<string, string | undefined> = process.env,
+): string {
+  return resolve(
+    env.APHRODY_ROOT ?? join(import.meta.dir, "../../../../../packages"),
+  );
 }
 
 export function expandHome(path: string, home = homedir()): string {
@@ -126,7 +135,10 @@ export function mergeConfig<T>(base: T, override: unknown): T {
   const out: Record<string, unknown> = { ...base };
   for (const [key, value] of Object.entries(override)) {
     if (value === undefined) continue;
-    out[key] = key in base ? mergeConfig((base as Record<string, unknown>)[key], value) : value;
+    out[key] =
+      key in base
+        ? mergeConfig((base as Record<string, unknown>)[key], value)
+        : value;
   }
   return out as T;
 }
@@ -151,15 +163,21 @@ export function loadWebConfig(options: LoadWebConfigOptions = {}): WebConfig {
   const env = options.env ?? process.env;
   const root = resolve(options.root ?? repositoryRoot(env));
   const file = resolve(options.file ?? join(root, "tools/config/web.json"));
-  let merged: Omit<WebConfig, "root" | "source"> = structuredClone(DEFAULT_WEB_CONFIG);
+  let merged: Omit<WebConfig, "root" | "source"> =
+    structuredClone(DEFAULT_WEB_CONFIG);
   let source: string | null = null;
   if (existsSync(file)) {
     const parsed: unknown = JSON.parse(readFileSync(file, "utf8"));
     if (!isPlainObject(parsed) || parsed.schemaVersion !== 1) {
-      throw new Error(`${file}: unsupported web config (schemaVersion 1 required)`);
+      throw new Error(
+        `${file}: unsupported web config (schemaVersion 1 required)`,
+      );
     }
     // Only the fields the client consumes; documentation-only blocks stay in the file.
-    const { engine, fetch, crawl, network, storage } = parsed as Record<string, unknown>;
+    const { engine, fetch, crawl, network, storage } = parsed as Record<
+      string,
+      unknown
+    >;
     merged = mergeConfig(merged, { engine, fetch, crawl, network, storage });
     source = file;
   }
@@ -183,11 +201,16 @@ export function engineBinaryCandidates(
   const explicit = env[config.engine.binaryEnv];
   const listed = config.engine.binaryCandidates.flatMap((candidate) => {
     const path = resolve(config.root, expandHome(candidate));
-    return process.platform === "win32" && !path.endsWith(".exe") ? [path, `${path}.exe`] : [path];
+    return process.platform === "win32" && !path.endsWith(".exe")
+      ? [path, `${path}.exe`]
+      : [path];
   });
   if (process.platform === "win32") {
-    const localAppData = env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
-    listed.push(join(localAppData, "aphrody", "bin", `${config.engine.binary}.exe`));
+    const localAppData =
+      env.LOCALAPPDATA || join(homedir(), "AppData", "Local");
+    listed.push(
+      join(localAppData, "aphrody", "bin", `${config.engine.binary}.exe`),
+    );
   }
   return [...(explicit ? [resolve(expandHome(explicit))] : []), ...listed];
 }
@@ -201,14 +224,19 @@ export function resolveEngineBinary(
   if (explicit) {
     const path = existsSync(explicit) ? explicit : Bun.which(explicit);
     if (!path)
-      throw new Error(`${config.engine.binaryEnv} points to a missing binary: ${explicit}`);
+      throw new Error(
+        `${config.engine.binaryEnv} points to a missing binary: ${explicit}`,
+      );
     return realpathSync(resolve(path));
   }
   // Among the existing candidates the most recently built binary wins, so a fresh
   // `cargo build` is preferred over an older installed copy.
   const existing = engineBinaryCandidates(config, env)
     .filter((candidate) => existsSync(candidate))
-    .map((candidate) => ({ path: realpathSync(candidate), mtime: statSync(candidate).mtimeMs }))
+    .map((candidate) => ({
+      path: realpathSync(candidate),
+      mtime: statSync(candidate).mtimeMs,
+    }))
     .toSorted((a, b) => b.mtime - a.mtime);
   if (existing[0]) return existing[0].path;
   const onPath = Bun.which(config.engine.binary);
@@ -231,13 +259,23 @@ const SECRET_KEYS = new Set([
   "authorization",
 ]);
 
-function collectSecretLooking(value: unknown, path: string, out: string[]): void {
+function collectSecretLooking(
+  value: unknown,
+  path: string,
+  out: string[],
+): void {
   if (Array.isArray(value))
-    value.forEach((item, index) => collectSecretLooking(item, `${path}[${index}]`, out));
+    value.forEach((item, index) =>
+      collectSecretLooking(item, `${path}[${index}]`, out),
+    );
   else if (isPlainObject(value)) {
     for (const [key, child] of Object.entries(value)) {
       if (path === "env") continue; // documentation of variable names, never values
-      if (SECRET_KEYS.has(key.toLowerCase()) && typeof child === "string" && child.length > 0)
+      if (
+        SECRET_KEYS.has(key.toLowerCase()) &&
+        typeof child === "string" &&
+        child.length > 0
+      )
         out.push(`${path}.${key}`);
       collectSecretLooking(child, path ? `${path}.${key}` : key, out);
     }
@@ -257,7 +295,12 @@ export function validateWebConfig(raw: unknown): string[] {
   const crawl = isPlainObject(raw.crawl) ? raw.crawl : {};
   const network = isPlainObject(raw.network) ? raw.network : {};
   const range = (name: string, value: unknown, min: number, max: number) => {
-    if (typeof value !== "number" || !Number.isInteger(value) || value < min || value > max)
+    if (
+      typeof value !== "number" ||
+      !Number.isInteger(value) ||
+      value < min ||
+      value > max
+    )
       problems.push(`${name} must be an integer in ${min}..${max}`);
   };
   if (typeof engine.host !== "string" || !LOOPBACK_HOSTS.has(engine.host))
@@ -266,14 +309,17 @@ export function validateWebConfig(raw: unknown): string[] {
   range("engine.startupTimeoutMs", engine.startupTimeoutMs, 1_000, 600_000);
   range("engine.shutdownGraceMs", engine.shutdownGraceMs, 100, 120_000);
   if (engine.allowPrivateNetwork !== false)
-    problems.push("engine.allowPrivateNetwork must be false in the shared file");
+    problems.push(
+      "engine.allowPrivateNetwork must be false in the shared file",
+    );
   if (engine.allowFileAccess !== false)
     problems.push("engine.allowFileAccess must be false in the shared file");
   range("crawl.maxDepth", crawl.maxDepth, 0, 20);
   range("crawl.maxPages", crawl.maxPages, 1, 10_000);
   range("crawl.concurrency", crawl.concurrency, 1, 64);
   range("crawl.timeoutSecs", crawl.timeoutSecs, 1, 86_400);
-  if (typeof crawl.obeyRobots !== "boolean") problems.push("crawl.obeyRobots must be a boolean");
+  if (typeof crawl.obeyRobots !== "boolean")
+    problems.push("crawl.obeyRobots must be a boolean");
   if (
     !Array.isArray(crawl.allowedHosts) ||
     crawl.allowedHosts.some((host) => typeof host !== "string")
@@ -290,6 +336,8 @@ export function validateWebConfig(raw: unknown): string[] {
   const secretLooking: string[] = [];
   collectSecretLooking(raw, "", secretLooking);
   for (const path of secretLooking)
-    problems.push(`${path} looks like a secret value; secrets belong in protected stores`);
+    problems.push(
+      `${path} looks like a secret value; secrets belong in protected stores`,
+    );
   return problems;
 }

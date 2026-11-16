@@ -30,6 +30,7 @@ tauri-plugin-geolocation = "2.0.0"
 # alternatively with Git:
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Get and track the device's current position
 
 | Type | Path |
@@ -45,6 +46,7 @@ cargo test -p aphrody-tauri-plugin-geolocation
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 tauri-plugin-geolocation = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```

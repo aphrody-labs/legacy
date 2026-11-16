@@ -1,4 +1,5 @@
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > First-party Layer-0 UI, Wayland, terminal, and compositing layout engine (absorbed DioxusLabs/taffy)
 
 | Type | Path |
@@ -14,6 +15,7 @@ cargo test -p taffy
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 <!-- markdownlint-disable-next-line MD041 -->

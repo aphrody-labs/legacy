@@ -26,7 +26,7 @@ export class GemmaWorkerClient implements GemmaBackend {
     worker.onmessage = (e: MessageEvent<WorkerResponse>) => {
       for (const l of this.#listeners) l(e.data);
     };
-    worker.onerror = e => {
+    worker.onerror = (e) => {
       for (const l of this.#listeners) l({ type: "error", message: e.message });
     };
   }
@@ -52,7 +52,9 @@ export class GemmaWorkerClient implements GemmaBackend {
     });
   }
 
-  async *generate(opts: GenerateOptions): AsyncGenerator<string, GenerateStats, void> {
+  async *generate(
+    opts: GenerateOptions,
+  ): AsyncGenerator<string, GenerateStats, void> {
     const id = ++this.#id;
     const queue: WorkerResponse[] = [];
     let wake: (() => void) | undefined;
@@ -69,7 +71,7 @@ export class GemmaWorkerClient implements GemmaBackend {
     this.#send({ type: "generate", id, opts: rest });
     try {
       for (;;) {
-        while (!queue.length) await new Promise<void>(r => (wake = r));
+        while (!queue.length) await new Promise<void>((r) => (wake = r));
         const m = queue.shift()!;
         if (m.type === "delta") yield m.text;
         else if (m.type === "done") return m.stats;

@@ -3,6 +3,7 @@
 # @aphrody/sql
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Shared Bun database mechanics for Aphrody: env/URL resolution, Bun.SQL and Redis factories, bun:sqlite open policy with optional sqlite-vec
 
 | Type | Path |
@@ -19,6 +20,7 @@ bun run --cwd system/sql-ts lint
 ```
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 
 Shared Bun database mechanics for Aphrody. The package implements decisions

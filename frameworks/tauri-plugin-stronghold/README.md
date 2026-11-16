@@ -30,6 +30,7 @@ tauri-plugin-stronghold = "2.0.0"
 # alternatively with Git:
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Store secrets and keys using the IOTA Stronghold secret management engine.
 
 | Type | Path |
@@ -45,6 +46,7 @@ cargo test -p aphrody-tauri-plugin-stronghold
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->
 tauri-plugin-stronghold = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```

@@ -1,6 +1,7 @@
 # aphrody-conformance
 
 <!-- catalog:begin unit -->
+<!-- prettier-ignore-start -->
 > Fetch pinned upstream suites, run them, report JSON results.
 
 | Type | Path |
@@ -16,4 +17,5 @@ cargo test -p aphrody-conformance
 Rust builds run on the build host or in CI, not on a workstation.
 
 Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- prettier-ignore-end -->
 <!-- catalog:end -->

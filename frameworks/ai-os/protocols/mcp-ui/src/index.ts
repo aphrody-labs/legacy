@@ -1,5 +1,8 @@
-export { getUIResourceMetadata, getResourceMetadata } from './utils/metadataUtils';
-export { isUIResource } from './utils/isUIResource';
+export {
+  getUIResourceMetadata,
+  getResourceMetadata,
+} from "./utils/metadataUtils";
+export { isUIResource } from "./utils/isUIResource";
 
 // Client capabilities for UI extension support
 export {
@@ -7,7 +10,7 @@ export {
   UI_EXTENSION_NAME,
   UI_EXTENSION_CONFIG,
   UI_EXTENSION_CAPABILITIES,
-} from './capabilities';
+} from "./capabilities";
 
 // MCP Apps renderers
 export {
@@ -15,13 +18,13 @@ export {
   type AppRendererProps,
   type AppRendererHandle,
   type RequestHandlerExtra,
-} from './components/AppRenderer';
+} from "./components/AppRenderer";
 export {
   AppFrame,
   type AppFrameProps,
   type SandboxConfig,
   type AppInfo,
-} from './components/AppFrame';
+} from "./components/AppFrame";
 
 // Re-export AppBridge, transport, and common types for advanced use cases
 export {
@@ -29,9 +32,12 @@ export {
   PostMessageTransport,
   type McpUiHostContext,
   type McpUiHostCapabilities,
-} from '@modelcontextprotocol/ext-apps/app-bridge';
+} from "@modelcontextprotocol/ext-apps/app-bridge";
 
 // Re-export MCP types commonly used with AppRenderer
-export type { Implementation, JSONRPCRequest } from '@modelcontextprotocol/client';
+export type {
+  Implementation,
+  JSONRPCRequest,
+} from "@modelcontextprotocol/client";
 
-export type { UIResourceMetadata } from './types';
+export type { UIResourceMetadata } from "./types";

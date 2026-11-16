@@ -1,7 +1,7 @@
 #!/bin/sh
 # prd pre-window backup (run ON usa, read-only on prod data). Destination: fr1 over the mesh (NOT the pool being reformatted).
 # Per ../shenron AGENTS.md section 6: dry-run, verified backup (pg_restore -f /dev/null), never delete /srv/shenron/models.
-for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
+for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../../system/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 . "$(dirname "$0")/lib.sh"; need_root
 DEST=${DEST:-root@$(site_get hosts.fr1.mesh_ip):/srv/stage/usa}; D=$(date -u +%Y%m%d)
 OUT=/var/tmp/reinstall-$D; mkdir -p "$OUT"
