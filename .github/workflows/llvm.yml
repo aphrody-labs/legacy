@@ -64,7 +64,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: libaysys-size, path: "${{ runner.temp }}/libaysys-size.txt" }
   coverage:
-    name: coverage (llvm-cov: C core and Rust)
+    name: "coverage (llvm-cov of the C core and of Rust)"
     runs-on: [self-hosted, fr1]
     timeout-minutes: 120
     steps:
