@@ -5,7 +5,7 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 ## Sources of truth
 - The only third-party code and sources of truth in the tree are `third_party/linux` and `third_party/chromium`. Everything else (other upstreams, sites, repos) is ideas and inspiration, never a pin or a dependency.
 - Vision: [storytold/craft-anything](https://github.com/storytold/craft-anything).
-- Stack: [zed-industries/zed](https://github.com/zed-industries/zed).
+- Stack: [zed-industries/zed](https://github.com/zed-industries/zed). UI: one gpui-os (our Zed fork, worked by the agy CLI session) unifying GPUI, the kit, native shell, taffy and wgpu for web, mobile and desktop (LTO, AOT); src/ui and other UI stacks converge on it.
 - Design, UI and UX: [design.google](https://design.google/).
 - Architecture, philosophy and core: [kernel.org](https://www.kernel.org/).
 - Ultimate goal: [GNU software](https://www.gnu.org/software/software.html), [uutils](https://uutils.org/), [AOSP](https://android.googlesource.com/), [Chromium](https://chromium.googlesource.com/chromium/src.git).
@@ -37,6 +37,6 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 
 ## Antigravity and Gemini CLI
 - Both read this file: `.gemini/settings.json` sets `context.fileName` to `AGENTS.md` (Gemini CLI settings reference, `context.fileName`: string or array); there is no separate `GEMINI.md`.
-- `packages/ai-os` is the sole AI and MCP owner. MCP over stdio: `ai-os relay mcp-stdio` (`packages/ai-os/src/relay/cli.ts`); over HTTP: the relay `POST /mcp` (`packages/ai-os/docs/RELAY.md`). Providers and models are discovered at run time, never hard-coded.
+- `frameworks/ai-os` is the sole AI and MCP owner. MCP over stdio: `ai-os relay mcp-stdio` (`frameworks/ai-os/src/relay/cli.ts`); over HTTP: the relay `POST /mcp` (`frameworks/ai-os/docs/RELAY.md`). Providers and models are discovered at run time, never hard-coded.
 - Antigravity `PreToolUse` hooks are disabled (`{}` in `.agents/hooks.json`); GitHub auth runs through the `aphrody-labs` GitHub App (`tools/agents/gh-token.ts`).
 - Run `bun fmt`, `bun check` and the affected `bun test` (a package, never bare `bun test` at root). Use `graphify` first when `graphify-out/` exists.
