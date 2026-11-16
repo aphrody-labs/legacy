@@ -68,6 +68,10 @@ name = "bundled_package"
 path = "tests/bundled_package.rs"
 
 [[test]]
+name = "character_dataset"
+path = "tests/character_dataset.rs"
+
+[[test]]
 name = "codex_conformite"
 path = "tests/codex_conformite.rs"
 

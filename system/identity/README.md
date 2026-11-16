@@ -11,6 +11,7 @@ Licence Apache-2.0 ; dérivations et sources dans [`NOTICE`](NOTICE).
 | `web` | Données de `<aphrody-pet>` (`assets/aphrody/web.json`) et suite de parité Rust ↔ web |
 | `logo`, `assets`, `design` | Logo, favicon, manifeste web, jetons et CSS de marque |
 | `pixel` | Décodage, rastérisation SVG, comparaison et planches de sprites |
+| `character` | Versioned character dataset of Byron Love (Aphrody): canon facts with sources, soul, voice guide, measured visual identity; JSON in `assets/character/`, readable index in `assets/character/index.md`, source registry, merge log |
 | `loader` | Chargeur d'images et d'icônes : PNG, JPEG, WebP, GIF, SVG, ICO, glyphes Material Symbols ; taille, échelle, teinte, ajustement, cache par contenu |
 
 ## Pet

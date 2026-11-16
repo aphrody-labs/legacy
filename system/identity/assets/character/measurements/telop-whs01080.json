@@ -1,0 +1,132 @@
+{
+ "k": 4,
+ "inputs": [
+  "telop_whs01080.png"
+ ],
+ "opaque_pixels": 78000,
+ "clusters": [
+  {
+   "hex": "#FCEEB1",
+   "share_pct": 37.2,
+   "oklch": {
+    "l": 0.9451,
+    "c": 0.0785,
+    "h": 96.13
+   },
+   "pixels": 29016,
+   "per_input_pixels": {
+    "telop_whs01080.png": 29016
+   }
+  },
+  {
+   "hex": "#CD6F03",
+   "share_pct": 26.42,
+   "oklch": {
+    "l": 0.6362,
+    "c": 0.1515,
+    "h": 57.99
+   },
+   "pixels": 20607,
+   "per_input_pixels": {
+    "telop_whs01080.png": 20607
+   }
+  },
+  {
+   "hex": "#A44F03",
+   "share_pct": 20.49,
+   "oklch": {
+    "l": 0.5242,
+    "c": 0.1331,
+    "h": 52.32
+   },
+   "pixels": 15982,
+   "per_input_pixels": {
+    "telop_whs01080.png": 15982
+   }
+  },
+  {
+   "hex": "#E09B20",
+   "share_pct": 15.89,
+   "oklch": {
+    "l": 0.7381,
+    "c": 0.1479,
+    "h": 75.04
+   },
+   "pixels": 12395,
+   "per_input_pixels": {
+    "telop_whs01080.png": 12395
+   }
+  }
+ ],
+ "roles": {
+  "hair": {
+   "hex": "#EEE0A8",
+   "pixels": 1573,
+   "share_pct": 2.02,
+   "window": {
+    "h": [
+     95,
+     125
+    ],
+    "c": [
+     0.06,
+     0.2
+    ],
+    "l": [
+     0.78,
+     0.93
+    ],
+    "box": null
+   },
+   "per_input_pixels": {
+    "telop_whs01080.png": 1573
+   }
+  },
+  "skin": {
+   "hex": "#F5D595",
+   "pixels": 3,
+   "share_pct": 0.0,
+   "window": {
+    "h": [
+     60,
+     85
+    ],
+    "c": [
+     0.05,
+     0.11
+    ],
+    "l": [
+     0.88,
+     1.0
+    ],
+    "box": null
+   },
+   "per_input_pixels": {
+    "telop_whs01080.png": 3
+   }
+  },
+  "outline": {
+   "hex": "#000000",
+   "pixels": 401,
+   "share_pct": 0.51,
+   "window": {
+    "h": [
+     0,
+     360
+    ],
+    "c": [
+     0.0,
+     1.0
+    ],
+    "l": [
+     0.0,
+     0.15
+    ],
+    "box": null
+   },
+   "per_input_pixels": {
+    "telop_whs01080.png": 401
+   }
+  }
+ }
+}

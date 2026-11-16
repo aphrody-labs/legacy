@@ -1,0 +1,2118 @@
+{
+  "schema": "aphrody.character.canon",
+  "schema_version": 1,
+  "dataset_version": "1.0.0",
+  "character": "byron-love-aphrody",
+  "generated": "2026-11-16",
+  "subject": {
+    "names": {
+      "ja": "亜風炉 照美 / アフロディ",
+      "en": "Byron Love (Aphrody; romanised Afuro Terumi, Aphrodi)",
+      "fr": "Byron Love (Aphrodite, Aphrody)"
+    },
+    "brand_spelling": "Aphrody"
+  },
+  "languages": [
+    "ja",
+    "en",
+    "fr"
+  ],
+  "language_note": "Source language of the text fields is English. ja, en and fr are the languages present in the sources; de, es, it, nl, vi appear only as fan-wiki page titles.",
+  "facts": [
+    {
+      "id": "name.ja.full",
+      "category": "name",
+      "text": "Japanese full name 亜風炉 照美 (Afuro Terumi), read あふろ てるみ.",
+      "value": {
+        "lang": "ja",
+        "family": "亜風炉",
+        "given": "照美",
+        "reading_family": "あふろ",
+        "reading_given": "てるみ",
+        "romaji": "Afuro Terumi"
+      },
+      "sources": [
+        "zukan_ja_ie1",
+        "fandom_en",
+        "rg_wiki"
+      ],
+      "confidence": "official",
+      "i18n": {
+        "ja": "亜風炉 照美（あふろ てるみ）"
+      }
+    },
+    {
+      "id": "name.ja.nickname",
+      "category": "name",
+      "text": "Japanese nickname アフロディ (Afurodi), the name used for the character in the codex and in game text.",
+      "value": {
+        "lang": "ja",
+        "nickname": "アフロディ",
+        "romaji": "Afurodi"
+      },
+      "sources": [
+        "zukan_ja_ie1",
+        "fandom_en"
+      ],
+      "confidence": "official",
+      "i18n": {
+        "ja": "アフロディ"
+      }
+    },
+    {
+      "id": "name.ja.epithet",
+      "category": "name",
+      "text": "Japanese epithet アフロディ帝 ('Emperor Aphrodi'), used by other characters in game event ev15_01600.",
+      "value": {
+        "lang": "ja",
+        "epithet": "アフロディ帝",
+        "event": "ev15_01600"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier",
+        "rg_dossier"
+      ],
+      "confidence": "game-data",
+      "i18n": {
+        "ja": "アフロディ帝"
+      }
+    },
+    {
+      "id": "name.ja.cross",
+      "category": "name",
+      "text": "In Inazuma Eleven Cross he is Shin Aphrodi (シン・アフロディ, 'God Aphrodi').",
+      "value": {
+        "lang": "ja",
+        "name": "シン・アフロディ",
+        "romaji": "Shin Afurodi"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community",
+      "i18n": {
+        "ja": "シン・アフロディ"
+      }
+    },
+    {
+      "id": "name.en.game",
+      "category": "name",
+      "text": "English localisation in Victory Road: name Byron Love, nickname Aphrody.",
+      "value": {
+        "lang": "en",
+        "name": "Byron Love",
+        "nickname": "Aphrody"
+      },
+      "sources": [
+        "zukan_en_list",
+        "zukan_en_ie1"
+      ],
+      "confidence": "official"
+    },
+    {
+      "id": "name.en.romanisation",
+      "category": "name",
+      "text": "Community romanisation of the Japanese name: Afuro Terumi, nickname Aphrodi (the spelling used by the owner and by the fan wiki).",
+      "value": {
+        "lang": "en",
+        "name": "Afuro Terumi",
+        "nickname": "Aphrodi"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "name.en.dub",
+      "category": "name",
+      "text": "Dub nickname Aphrodite in the anime and older games; Victory Road changed it to Aphrody.",
+      "value": {
+        "lang": "en",
+        "dub_name": "Byron Love",
+        "dub_nickname": "Aphrodite",
+        "victory_road_nickname": "Aphrody"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "name.en.epithet",
+      "category": "name",
+      "text": "English epithet 'Archon Aphrodite' in Victory Road event text (ev15_01600: 'What's Archon Aphrodite doing out there?').",
+      "value": {
+        "lang": "en",
+        "epithet": "Archon Aphrodite",
+        "event": "ev15_01600"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "name.en.early_localisation",
+      "category": "name",
+      "text": "The codex first listed the English name as 'Aphro Deetie'; after community backlash it was reverted to Byron Love, and earlier Victory Road credits still show 'Aphro Deetie'.",
+      "value": {
+        "lang": "en",
+        "withdrawn_name": "Aphro Deetie",
+        "current": "Byron Love"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "name.en.titles",
+      "category": "name",
+      "text": "Titles: 'Ruler of the Sky' (天空の支配者, Ares anime, dub 'Sovereign of the Skies'); 'God of Field' (ゴッド・オブ・フィールド, Victory Road and Cross, dub 'God of the Pitch'); 'Deus Ex Machina' (デウス・エクス・マキナ, Shin Aphrodi in Cross).",
+      "value": {
+        "titles": [
+          {
+            "en": "Ruler of the Sky",
+            "alt_en": "Sovereign of the Skies",
+            "ja": "天空の支配者",
+            "scope": "Ares anime"
+          },
+          {
+            "en": "God of Field",
+            "alt_en": "God of the Pitch",
+            "ja": "ゴッド・オブ・フィールド",
+            "scope": "Victory Road, Cross"
+          },
+          {
+            "en": "Deus Ex Machina",
+            "ja": "デウス・エクス・マキナ",
+            "scope": "Cross, Shin Aphrodi"
+          }
+        ]
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "name.fr.game",
+      "category": "name",
+      "text": "French name Byron Love; nickname Aphrodite in the anime and older games, Aphrody in Victory Road.",
+      "value": {
+        "lang": "fr",
+        "name": "Byron Love",
+        "nickname": "Aphrodite",
+        "victory_road_nickname": "Aphrody"
+      },
+      "sources": [
+        "fandom_fr",
+        "manga_fr"
+      ],
+      "confidence": "community",
+      "i18n": {
+        "fr": "Byron Love, surnommé Aphrodite (Aphrody dans Victory Road)"
+      }
+    },
+    {
+      "id": "name.fr.epithet",
+      "category": "name",
+      "text": "French epithet 'Archon Aphrodite' in event text ('Que fait l'Archon Aphrodite ici ?') and the Victory Road title 'Dieu du terrain'.",
+      "value": {
+        "lang": "fr",
+        "epithet": "Archon Aphrodite",
+        "title": "Dieu du terrain",
+        "event": "ev15_01600"
+      },
+      "sources": [
+        "rg_wiki",
+        "fandom_fr"
+      ],
+      "confidence": "game-data",
+      "i18n": {
+        "fr": "Archon Aphrodite ; Dieu du terrain"
+      }
+    },
+    {
+      "id": "name.fr.aqua",
+      "category": "name",
+      "text": "French name of the performance drink: Nectar des Dieux (English: Aqua of the Gods; the Victory Road English line says 'ambrosia').",
+      "value": {
+        "fr": "Nectar des Dieux",
+        "en": "Aqua of the Gods",
+        "en_victory_road": "ambrosia"
+      },
+      "sources": [
+        "fandom_fr",
+        "fandom_en",
+        "rg_wiki"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "name.composite",
+      "category": "name",
+      "text": "The game database stores the composite name 'Byron Love Aphrody' (en and fr) and '亜風炉 照美 アフロディ' (ja); the wiki slug is byron-love-aphrody.",
+      "value": {
+        "name_en": "Byron Love Aphrody",
+        "name_fr": "Byron Love Aphrody",
+        "name_ja": "亜風炉 照美 アフロディ",
+        "slug": "byron-love-aphrody"
+      },
+      "sources": [
+        "game_dossier",
+        "rg_wiki",
+        "nie_team_collation"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "name.interwiki",
+      "category": "name",
+      "text": "Other languages present on the fan wiki: de, es, it, nl use the title Byron Love; vi uses Afuro Terumi.",
+      "value": {
+        "titles": {
+          "de": "Byron Love",
+          "es": "Byron Love",
+          "it": "Byron Love",
+          "nl": "Byron Love",
+          "vi": "Afuro Terumi"
+        }
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "name.etymology",
+      "category": "name",
+      "text": "The name comes from Aphrodite (アフロディーテ), Greek goddess of love and beauty, in line with the Zeus team's naming motif; the kanji 美 in 照美 means beauty.",
+      "value": {
+        "origin": "Aphrodite",
+        "kanji": "美",
+        "meaning": "beauty"
+      },
+      "sources": [
+        "fandom_en",
+        "rg_dossier"
+      ],
+      "confidence": "community",
+      "i18n": {
+        "fr": "Le surnom renvoie à la déesse grecque Aphrodite ; le nom japonais est un calque phonétique de « Aphro »."
+      }
+    },
+    {
+      "id": "identity.gender",
+      "category": "identity",
+      "text": "Male.",
+      "value": {
+        "gender": "male"
+      },
+      "sources": [
+        "zukan_en_list",
+        "zukan_ja_ie1"
+      ],
+      "confidence": "official",
+      "i18n": {
+        "ja": "男"
+      }
+    },
+    {
+      "id": "identity.birthday",
+      "category": "identity",
+      "text": "Birthday is May 17.",
+      "value": {
+        "month": 5,
+        "day": 17
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community",
+      "i18n": {
+        "fr": "17 mai"
+      }
+    },
+    {
+      "id": "identity.nationality",
+      "category": "identity",
+      "text": "Japanese and South Korean (dual); in Inazuma Eleven 3 he joins the Korean national team because he is Korean.",
+      "value": {
+        "nationalities": [
+          "JP",
+          "KR"
+        ]
+      },
+      "sources": [
+        "fandom_fr",
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "identity.school_year",
+      "category": "identity",
+      "text": "Inazuma Eleven form: middle school, grade 8 (二年生); Ares form: middle school, grade 9 (三年生); GO form: adult with no school year, role Manager.",
+      "value": {
+        "forms": [
+          {
+            "form": "Inazuma Eleven",
+            "age_group": "Middle School",
+            "school_year": "Grade 8",
+            "ja": "二年生",
+            "role": "Player"
+          },
+          {
+            "form": "GO: Light / Shadow",
+            "age_group": "Adult",
+            "school_year": null,
+            "role": "Manager"
+          },
+          {
+            "form": "Ares",
+            "age_group": "Middle School",
+            "school_year": "Grade 9",
+            "ja": "三年生",
+            "role": "Player"
+          }
+        ]
+      },
+      "sources": [
+        "zukan_en_ie1",
+        "zukan_en_go",
+        "zukan_en_ares",
+        "zukan_ja_ie1",
+        "zukan_ja_ares"
+      ],
+      "confidence": "official"
+    },
+    {
+      "id": "identity.zukan_numbers",
+      "category": "identity",
+      "text": "Codex numbers are 185 (Inazuma Eleven), 2625 (GO: Light / Shadow) and 4526 (Ares); the game database order is 166.",
+      "value": {
+        "codex_numbers": {
+          "ie1": 185,
+          "go": 2625,
+          "ares": 4526
+        },
+        "game_zukan_order": 166
+      },
+      "sources": [
+        "zukan_en_list",
+        "game_dossier"
+      ],
+      "confidence": "official"
+    },
+    {
+      "id": "identity.internal_codes",
+      "category": "identity",
+      "text": "Three internal character codes, one per era: c01001900 (series IE1, base id 936881403), c05026590 (GO, 4233601308), c07080010 (Ares, 3389112235); series id 1659389071.",
+      "value": {
+        "codes": [
+          {
+            "code": "c01001900",
+            "label": "Inazuma Eleven (IE1)",
+            "face_subdir": "01_IE1",
+            "base_id": 936881403
+          },
+          {
+            "code": "c05026590",
+            "label": "Inazuma Eleven GO",
+            "face_subdir": "05_GO2",
+            "base_id": 4233601308
+          },
+          {
+            "code": "c07080010",
+            "label": "Ares",
+            "face_subdir": "07_ARES",
+            "base_id": 3389112235
+          }
+        ],
+        "series_id": 1659389071
+      },
+      "sources": [
+        "game_dossier",
+        "rg_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "identity.constellation",
+      "category": "identity",
+      "text": "Player Universe constellation: Inazumis (FR Éclaris); the codex also lists Summitas (Inazuma Eleven and Ares forms) and Tornadrix (GO form).",
+      "value": {
+        "en": "Inazumis",
+        "fr": "Éclaris",
+        "codex": {
+          "ie1": [
+            "Inazumis",
+            "Summitas"
+          ],
+          "go": [
+            "Tornadrix"
+          ],
+          "ares": [
+            "Summitas"
+          ]
+        }
+      },
+      "sources": [
+        "game_dossier",
+        "rg_wiki",
+        "zukan_en_ie1",
+        "zukan_en_go",
+        "zukan_en_ares"
+      ],
+      "confidence": "game-data",
+      "i18n": {
+        "fr": "Constellation Éclaris"
+      }
+    },
+    {
+      "id": "identity.voice_actors",
+      "category": "identity",
+      "text": "Voice actors: Japanese Yuko Sanpei (the English wiki also lists Shouji Masayuki for Inazuma Eleven); English David Lee McInnis (anime), Lucien Dodge (US game), Griffin Burns (Ares anime); French Antoni Lo Presti (first voice), Valéry Benjilali (second), Olivier Premel (adult).",
+      "value": {
+        "ja": [
+          "Yuko Sanpei",
+          "Shouji Masayuki (Inazuma Eleven, per fan wiki en only)"
+        ],
+        "en": [
+          "David Lee McInnis (anime)",
+          "Lucien Dodge (US game)",
+          "Griffin Burns (Ares anime)"
+        ],
+        "fr": [
+          "Antoni Lo Presti (first voice)",
+          "Valéry Benjilali (second voice)",
+          "Olivier Premel (adult)"
+        ]
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr",
+        "manga_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "identity.debut",
+      "category": "identity",
+      "text": "Debut: Inazuma Eleven game, anime episode 20, manga chapter 17; GO anime episode 29; Ares anime episode 14; Orion anime episode 1 (French wiki).",
+      "value": {
+        "game": [
+          "Inazuma Eleven",
+          "Inazuma Eleven Strikers",
+          "Inazuma Eleven GO",
+          "Inazuma Eleven Ares"
+        ],
+        "anime": [
+          "Episode 20",
+          "GO Episode 29",
+          "Ares Episode 14",
+          "Orion Episode 1"
+        ],
+        "manga": "Chapter 17"
+      },
+      "sources": [
+        "fandom_fr",
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "identity.back_numbers",
+      "category": "identity",
+      "text": "Shirt numbers: 10 (Zeus, Zeus Ares, Raimon in the English wiki), 11 (Second Raimon), 9 (Fire Dragon), 7 (Inazuma Best Eleven), 16 (Inazuma Japan Orion and Zhao Jinyuns).",
+      "value": {
+        "numbers": {
+          "Zeus": 10,
+          "Zeus (Ares)": 10,
+          "Raimon": 10,
+          "Second Raimon": 11,
+          "Fire Dragon": 9,
+          "Inazuma Best Eleven": 7,
+          "Inazuma Japan (Orion)": 16,
+          "Zhao Jinyuns": 16
+        }
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.zeus",
+      "category": "team",
+      "text": "Captain of Zeus, number 10.",
+      "value": {
+        "team": "Zeus",
+        "role": "captain",
+        "scope": "Inazuma Eleven, Strikers, movie; Victory Road Inazuma Eleven form"
+      },
+      "sources": [
+        "fandom_en",
+        "zukan_en_ie1",
+        "zukan_en_list"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.second-raimon",
+      "category": "team",
+      "text": "Temporary member of Raimon in the Aliea Academy arc (forward, number 11).",
+      "value": {
+        "team": "Second Raimon",
+        "role": "temporary forward",
+        "scope": "Inazuma Eleven anime season 2"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.fire-dragon",
+      "category": "team",
+      "text": "Plays for the Korean national team Fire Dragon, number 9.",
+      "value": {
+        "team": "Fire Dragon",
+        "role": "forward",
+        "scope": "Inazuma Eleven 3, anime season 3"
+      },
+      "sources": [
+        "fandom_en",
+        "zukan_en_ie1",
+        "zukan_en_list"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.kirkwood",
+      "category": "team",
+      "text": "Coach of Kidokawa Seishuu (Kirkwood) in GO; the codex lists the GO form with team Kirkwood.",
+      "value": {
+        "team": "Kirkwood (Kidokawa Seishuu)",
+        "role": "coach",
+        "scope": "Inazuma Eleven GO"
+      },
+      "sources": [
+        "fandom_en",
+        "zukan_en_go"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.inazuma-japan-manga",
+      "category": "team",
+      "text": "Member of Inazuma Japan in the manga side story only.",
+      "value": {
+        "team": "Inazuma Japan",
+        "role": "member",
+        "scope": "manga, Baku Gaidenshuu only"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.earth-eleven",
+      "category": "team",
+      "text": "Optional member in the Big Bang version of GO Galaxy.",
+      "value": {
+        "team": "Earth Eleven",
+        "role": "optional member",
+        "scope": "Inazuma Eleven GO Galaxy Big Bang"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.inazuma-best-eleven",
+      "category": "team",
+      "text": "Member, number 7.",
+      "value": {
+        "team": "Inazuma Best Eleven",
+        "role": "member",
+        "scope": "spin-off"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.zeus-ares",
+      "category": "team",
+      "text": "Captain of Zeus in the Ares timeline; the codex Ares form lists teams Zeus and Inazuma National.",
+      "value": {
+        "team": "Zeus (Ares)",
+        "role": "captain",
+        "scope": "Inazuma Eleven Ares"
+      },
+      "sources": [
+        "fandom_en",
+        "zukan_en_ares",
+        "zukan_en_list"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.inazuma-japan-orion",
+      "category": "team",
+      "text": "Joins Inazuma Japan as a forward in Orion (episode 29), number 16.",
+      "value": {
+        "team": "Inazuma Japan (Orion)",
+        "role": "forward",
+        "scope": "Inazuma Eleven Orion no Kokuin"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.zhao-jinyuns",
+      "category": "team",
+      "text": "Member of Zhao Jinyuns, number 16.",
+      "value": {
+        "team": "Zhao Jinyuns",
+        "role": "member",
+        "scope": "Orion"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.raimon",
+      "category": "team",
+      "text": "The Inazuma Eleven 2 codex entry names Raimon as his team.",
+      "value": {
+        "team": "Raimon",
+        "role": "member",
+        "scope": "Inazuma Eleven 2 (codex)"
+      },
+      "sources": [
+        "fandom_en",
+        "zukan_en_ie1",
+        "zukan_en_list"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "team.codex",
+      "category": "team",
+      "text": "Codex 'Team' column: row 185 lists Zeus and Fire Dragon, row 2625 lists Kirkwood, row 4526 lists Zeus and Inazuma National; the parameter page of the first form shows Inazuma Eleven: Zeus, Inazuma Eleven 2: Raimon, Inazuma Eleven 3: Fire Dragon.",
+      "value": {
+        "rows": {
+          "185": [
+            "Zeus",
+            "Fire Dragon"
+          ],
+          "2625": [
+            "Kirkwood"
+          ],
+          "4526": [
+            "Zeus",
+            "Inazuma National"
+          ]
+        },
+        "by_game_ie1_form": {
+          "Inazuma Eleven": "Zeus",
+          "Inazuma Eleven 2": "Raimon",
+          "Inazuma Eleven 3": "Fire Dragon"
+        }
+      },
+      "sources": [
+        "zukan_en_list",
+        "zukan_en_ie1"
+      ],
+      "confidence": "official"
+    },
+    {
+      "id": "team.game_team_id",
+      "category": "team",
+      "text": "The game data points the character at team id 0x9BB9E791 (2611819281), English team name Zeus.",
+      "value": {
+        "team_id": 2611819281,
+        "team_name_en": "Zeus"
+      },
+      "sources": [
+        "game_dossier",
+        "rg_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "position.primary",
+      "category": "position",
+      "text": "Primary position midfielder (MF), shown as MF in every codex row.",
+      "value": {
+        "position": "MF",
+        "game_main_position_id": 3
+      },
+      "sources": [
+        "zukan_en_list",
+        "game_dossier"
+      ],
+      "confidence": "official"
+    },
+    {
+      "id": "position.secondary",
+      "category": "position",
+      "text": "Secondary position forward (FW): the fan wiki lists MF and FW; the game has a forward variant (chara_param 0xC68B09DE) whose main position id is 2 and sub position id 3, the mirror of the midfielder variant (main 3, sub 2).",
+      "value": {
+        "position": "FW",
+        "game_variant_main_position_id": 2,
+        "game_variant_sub_position_id": 3
+      },
+      "sources": [
+        "fandom_en",
+        "game_dossier",
+        "nie_consolidated"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "position.id_mapping",
+      "category": "position",
+      "text": "Position ids inferred from the data: id 3 is MF, id 2 is FW (so the rosegriffon label map that says 2 = DF is wrong for this character).",
+      "value": {
+        "3": "MF",
+        "2": "FW"
+      },
+      "sources": [
+        "game_dossier",
+        "zukan_en_list",
+        "fandom_en"
+      ],
+      "confidence": "inferred"
+    },
+    {
+      "id": "element.primary",
+      "category": "element",
+      "text": "Element Forest (林, French Forêt or Bois), game element id 2.",
+      "value": {
+        "element": "Forest",
+        "ja": "林",
+        "game_element_id": 2
+      },
+      "sources": [
+        "zukan_en_ie1",
+        "zukan_en_go",
+        "zukan_en_ares",
+        "zukan_ja_ie1",
+        "game_dossier",
+        "fandom_fr"
+      ],
+      "confidence": "official",
+      "i18n": {
+        "ja": "林",
+        "fr": "Forêt"
+      }
+    },
+    {
+      "id": "element.ids",
+      "category": "element",
+      "text": "Element ids seen on his techniques: 1 renders as blue (Wind, 風), 2 as green (Forest), 4 as orange; id 5 (Hopping Trick) has no telop. Only id 2 = Forest is confirmed by the codex.",
+      "value": {
+        "1": "Wind (blue telop; nie memory says Wind)",
+        "2": "Forest",
+        "4": "orange telop (Fire, unconfirmed)",
+        "5": "unlabelled"
+      },
+      "sources": [
+        "game_dossier",
+        "nie_consolidated",
+        "telop_whs00340",
+        "telop_whs01250",
+        "telop_whs01080"
+      ],
+      "confidence": "inferred"
+    },
+    {
+      "id": "stat.codex.lv50",
+      "category": "stat",
+      "text": "Codex level 50 stats, identical in the three forms: Kick 104, Control 112, Technique 109, Pressure 91, Physical 92, Agility 85, Intelligence 100.",
+      "value": {
+        "level": 50,
+        "kick": 104,
+        "control": 112,
+        "technique": 109,
+        "pressure": 91,
+        "physical": 92,
+        "agility": 85,
+        "intelligence": 100
+      },
+      "sources": [
+        "zukan_en_ie1",
+        "zukan_en_go",
+        "zukan_en_ares",
+        "zukan_ja_ie1",
+        "zukan_ja_go",
+        "zukan_ja_ares"
+      ],
+      "confidence": "official"
+    },
+    {
+      "id": "stat.game.lv1",
+      "category": "stat",
+      "text": "Game data LV1 stats of the primary variant: Kick 13, Control 14, Technique 12, Pressure 10, Physical 10, Agility 9, Intelligence 11.",
+      "value": {
+        "level": 1,
+        "agility": 9,
+        "control": 14,
+        "intelligence": 11,
+        "kick": 13,
+        "physical": 10,
+        "pressure": 10,
+        "technique": 12
+      },
+      "sources": [
+        "game_dossier",
+        "rg_wiki"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "stat.game.lv50",
+      "category": "stat",
+      "text": "Game data LV50 stats of the primary variant: Kick 100, Control 109, Technique 105, Pressure 88, Physical 87, Agility 81, Intelligence 97.",
+      "value": {
+        "level": 50,
+        "agility": 81,
+        "control": 109,
+        "intelligence": 97,
+        "kick": 100,
+        "physical": 87,
+        "pressure": 88,
+        "technique": 105
+      },
+      "sources": [
+        "game_dossier",
+        "rg_wiki"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "stat.game.lv99",
+      "category": "stat",
+      "text": "Game data LV99 stats of the primary variant: Kick 160, Control 174, Technique 169, Pressure 141, Physical 140, Agility 129, Intelligence 155.",
+      "value": {
+        "level": 99,
+        "agility": 129,
+        "control": 174,
+        "intelligence": 155,
+        "kick": 160,
+        "physical": 140,
+        "pressure": 141,
+        "technique": 169
+      },
+      "sources": [
+        "game_dossier",
+        "rg_wiki"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "stat.game.hero_lv99",
+      "category": "stat",
+      "text": "Hero / BASARA rarity at level 99: Kick 238, Control 258, Technique 250, Pressure 210, Physical 211, Agility 195, Intelligence 230, total 1592.",
+      "value": {
+        "level": 99,
+        "kick": 238,
+        "control": 258,
+        "technique": 250,
+        "pressure": 210,
+        "physical": 211,
+        "agility": 195,
+        "intelligence": 230,
+        "total": 1592
+      },
+      "sources": [
+        "rg_wiki",
+        "nie_consolidated",
+        "rg_audit"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "appearance.codex_games",
+      "category": "appearance",
+      "text": "Codex 'Game' columns (IE1, IE2, IE3, GO1, GO2, GO3, Ares, Orion, Victory Road): the Inazuma Eleven form appears in IE1 to GO3 and Victory Road, the GO form in GO1 to GO3 and Victory Road, the Ares form in Ares, Orion and Victory Road.",
+      "value": {
+        "columns": [
+          "IE1",
+          "IE2",
+          "IE3",
+          "GO1",
+          "GO2",
+          "GO3",
+          "Ares",
+          "Orion",
+          "Victory Road"
+        ],
+        "rows": {
+          "185": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1
+          ],
+          "2625": [
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            0,
+            0,
+            1
+          ],
+          "4526": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1
+          ]
+        }
+      },
+      "sources": [
+        "zukan_en_list"
+      ],
+      "confidence": "official"
+    },
+    {
+      "id": "appearance.media",
+      "category": "appearance",
+      "text": "Appears in the Inazuma Eleven anime (seasons 1 to 3), GO anime (episodes 29 and 30), Ares (episodes 14 and 15), Orion (episodes 29, 30, 34, 45), the Original Character special (episode 4), the Raimon Legend special, the first movie, and Inazuma Eleven Cross as Shin Aphrodi.",
+      "value": {
+        "anime": [
+          "Inazuma Eleven",
+          "GO",
+          "Ares",
+          "Orion"
+        ],
+        "specials": [
+          "OC episode 4",
+          "RL"
+        ],
+        "movies": [
+          "Inazuma Eleven: Saikyou Gundan Ogre Shuurai"
+        ],
+        "games": [
+          "Inazuma Eleven",
+          "2",
+          "3",
+          "GO",
+          "Chrono Stone",
+          "Galaxy",
+          "Strikers series",
+          "SD",
+          "Cross",
+          "Victory Road"
+        ]
+      },
+      "sources": [
+        "fandom_en",
+        "manga_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "appearance.recruit",
+      "category": "appearance",
+      "text": "In the first game he cannot be recruited; he must be faced in the story of each of the first three games.",
+      "value": {
+        "recruitable_in_ie1": false
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "appearance.spirit_cards",
+      "category": "appearance",
+      "text": "Victory Road spirit cards for Byron Love: ids 0x209B996D (Pink) and 0x09532D9F (Red).",
+      "value": {
+        "cards": [
+          {
+            "id": "0x209B996D",
+            "variant": "Pink"
+          },
+          {
+            "id": "0x09532D9F",
+            "variant": "Red"
+          }
+        ]
+      },
+      "sources": [
+        "nie_spirit"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "look.base",
+      "category": "look",
+      "text": "Fair skin, average height, waist-length pale golden-blonde hair with two side locks over the chest and a middle lock curving to the right cheek; deep maroon-red eyes with long lower lashes (French wiki: eyes turn redder when angry).",
+      "value": {
+        "hair": "pale golden blonde, waist length",
+        "eyes": "deep maroon red",
+        "skin": "fair"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community",
+      "i18n": {
+        "fr": "Cheveux blonds jusqu'à la taille, yeux d'un marron foncé-rouge"
+      }
+    },
+    {
+      "id": "look.zeus",
+      "category": "look",
+      "text": "Zeus kit: white shirt with a blue band on the collar and sleeve ends, white wristbands with blue ends, black leggings, grey sash across the shirt, grey socks, black shoes; the captain's armband is shaped like a laurel wreath.",
+      "value": {
+        "shirt": "white, blue collar and sleeve bands",
+        "sash": "grey",
+        "leggings": "black",
+        "armband": "laurel wreath"
+      },
+      "sources": [
+        "fandom_fr",
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "look.other_kits",
+      "category": "look",
+      "text": "Raimon kit (yellow and blue) with Zeus armbands, socks and shoes; Fire Dragon kit (red shirt with white collar, white shorts, red socks, dark blue shoes); GO coach suit (black coat, white shirt, pink-red tie, shorter hair tied with a red ribbon and azure tips); Orion casual outfit (white unbuttoned blazer, dark blue shirt, black jeans).",
+      "value": {
+        "raimon": "yellow and blue",
+        "fire_dragon": "red shirt, white collar and shorts",
+        "go": "black suit, pink-red tie, red ribbon",
+        "orion_casual": "white blazer, dark blue shirt, black jeans"
+      },
+      "sources": [
+        "fandom_fr",
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "look.casual",
+      "category": "look",
+      "text": "Promotional casual outfit: purple shirt, brown trousers and jacket, silver necklace with a white feather pendant.",
+      "value": {
+        "casual": "purple shirt, brown jacket, white feather pendant"
+      },
+      "sources": [
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "technique.rho10010",
+      "category": "technique",
+      "text": "Hopping Trick (ホッピングトリック). Dribble opener of the Inazuma Eleven form (Lv 1, 40 TP, power 30 in Victory Road).",
+      "value": {
+        "skill_code": "rho10010",
+        "names": {
+          "en": "Hopping Trick",
+          "ja": "ホッピングトリック",
+          "fr": null
+        },
+        "category_id": 2,
+        "element_id": 5,
+        "tp": 40,
+        "power_min": 30,
+        "power_max": 200,
+        "recast_s": 60,
+        "native_learn_levels": {
+          "c01001900:2653135497": [
+            0
+          ],
+          "c05026590:1436790638": [
+            0
+          ],
+          "c01001900:3331000798": [
+            0
+          ]
+        },
+        "name_basis": "code assigned by matching power 30-200, TP 40 and the first learn slot with the fan-wiki list; nie memory calls it 'Dust Kick'"
+      },
+      "sources": [
+        "fandom_en",
+        "nie_consolidated",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.rho10040",
+      "category": "technique",
+      "text": "Matanuki. Opening dribble of the Ares form (Lv 1, 40 TP, power 30).",
+      "value": {
+        "skill_code": "rho10040",
+        "names": {
+          "en": "Matanuki",
+          "ja": null,
+          "fr": null
+        },
+        "category_id": 2,
+        "element_id": 5,
+        "tp": 40,
+        "power_min": 30,
+        "power_max": 200,
+        "recast_s": 60,
+        "native_learn_levels": {
+          "c07080010:1677046233": [
+            0
+          ]
+        },
+        "name_basis": "code assigned by matching the Ares variant learn list"
+      },
+      "sources": [
+        "fandom_en",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.whs00340",
+      "category": "technique",
+      "text": "God Knows (ゴッドノウズ), French Savoir suprême. Signature shoot: wings of light, rising ball, thunderous strike. Power 70-440, 70 TP.",
+      "value": {
+        "skill_code": "whs00340",
+        "names": {
+          "en": "God Knows",
+          "ja": "ゴッドノウズ",
+          "fr": "Savoir suprême"
+        },
+        "category_id": 1,
+        "element_id": 1,
+        "tp": 70,
+        "power_min": 70,
+        "power_max": 440,
+        "recast_s": 90,
+        "native_learn_levels": {
+          "c01001900:2653135497": [
+            1
+          ],
+          "c05026590:1436790638": [
+            1
+          ],
+          "c07080010:1677046233": [
+            20,
+            43
+          ],
+          "c01001900:3331000798": [
+            1,
+            38,
+            38
+          ],
+          "c01001900:865666511": [
+            0
+          ]
+        },
+        "name_basis": "code confirmed by nie memory (whs00340) and the French telop"
+      },
+      "sources": [
+        "fandom_en",
+        "nie_consolidated",
+        "telop_whs00340",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.who00200",
+      "category": "technique",
+      "text": "Heaven's Time (ヘブンズタイム), French Instant céleste. Dribble that stops time with a snap of the fingers (Orion: a hypnosis, broken by fully obedient opponents). Power 85-540, 80 TP.",
+      "value": {
+        "skill_code": "who00200",
+        "names": {
+          "en": "Heaven's Time",
+          "ja": "ヘブンズタイム",
+          "fr": "Instant céleste"
+        },
+        "category_id": 2,
+        "element_id": 1,
+        "tp": 80,
+        "power_min": 85,
+        "power_max": 540,
+        "recast_s": 60,
+        "native_learn_levels": {
+          "c01001900:2653135497": [
+            13
+          ],
+          "c05026590:1436790638": [
+            13
+          ],
+          "c07080010:1677046233": [
+            13
+          ],
+          "c01001900:3331000798": [
+            13
+          ],
+          "c01001900:865666511": [
+            1
+          ],
+          "c01001900:547068269": [
+            1,
+            30
+          ],
+          "c01001900:156446111": [
+            1,
+            30
+          ],
+          "c01001900:314000948": [
+            1,
+            30
+          ]
+        },
+        "name_basis": "code inferred: the only dribble (category 2) with 85-540 and 80 TP, matching the fan-wiki Heaven's Time stats; nie memory gives whs00350, which is absent from the native dossier"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr",
+        "nie_consolidated",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.whs00900",
+      "category": "technique",
+      "text": "God Break (ゴッドブレイク), French Tir solaire. Evolution of God Knows used from Inazuma Eleven 2 and 3 (Fire Dragon). Power 85-540, 80 TP.",
+      "value": {
+        "skill_code": "whs00900",
+        "names": {
+          "en": "God Break",
+          "ja": "ゴッドブレイク",
+          "fr": "Tir solaire"
+        },
+        "category_id": 1,
+        "element_id": 1,
+        "tp": 80,
+        "power_min": 85,
+        "power_max": 540,
+        "recast_s": 90,
+        "native_learn_levels": {
+          "c01001900:2653135497": [
+            20
+          ],
+          "c05026590:1436790638": [
+            20
+          ],
+          "c07080010:1677046233": [
+            30
+          ],
+          "c01001900:3331000798": [
+            20,
+            43
+          ]
+        },
+        "name_basis": "code confirmed by the French telop"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr",
+        "telop_whs00900",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.whs01250",
+      "category": "technique",
+      "text": "Chaos Break (カオスブレイク), French Tir chaotique. Combination shoot with Gazel and Burn (Fire Dragon). Power 100-640, 100 TP, forest element, partner type 3.",
+      "value": {
+        "skill_code": "whs01250",
+        "names": {
+          "en": "Chaos Break",
+          "ja": "カオスブレイク",
+          "fr": "Tir chaotique"
+        },
+        "category_id": 1,
+        "element_id": 2,
+        "tp": 100,
+        "power_min": 100,
+        "power_max": 640,
+        "recast_s": 90,
+        "native_learn_levels": {
+          "c01001900:2653135497": [
+            30
+          ],
+          "c05026590:1436790638": [
+            30
+          ],
+          "c01001900:3331000798": [
+            30,
+            30
+          ],
+          "c01001900:547068269": [
+            13,
+            20
+          ],
+          "c01001900:156446111": [
+            13,
+            20
+          ],
+          "c01001900:314000948": [
+            13,
+            20,
+            43,
+            30
+          ]
+        },
+        "name_basis": "code confirmed by the French telop; nie memory's 'Tir du Chaos' is not the in-game wording"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr",
+        "nie_lore",
+        "telop_whs01250",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.whs00310",
+      "category": "technique",
+      "text": "Divine Arrow, French Flèche céleste. Adult-form shoot. Power 60-360, 60 TP.",
+      "value": {
+        "skill_code": "whs00310",
+        "names": {
+          "en": "Divine Arrow",
+          "ja": null,
+          "fr": "Flèche céleste"
+        },
+        "category_id": 1,
+        "element_id": 1,
+        "tp": 60,
+        "power_min": 60,
+        "power_max": 360,
+        "recast_s": 90,
+        "native_learn_levels": {
+          "c01001900:2653135497": [
+            43
+          ],
+          "c05026590:1436790638": [
+            30
+          ]
+        },
+        "name_basis": "code confirmed by the French telop"
+      },
+      "sources": [
+        "fandom_en",
+        "telop_whs00310",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.whs01080",
+      "category": "technique",
+      "text": "Heaven Drive, French Éclat divin. Adult-form shoot with an orange (fire-coloured) telop. Power 70-440, 70 TP.",
+      "value": {
+        "skill_code": "whs01080",
+        "names": {
+          "en": "Heaven Drive",
+          "ja": null,
+          "fr": "Éclat divin"
+        },
+        "category_id": 1,
+        "element_id": 4,
+        "tp": 70,
+        "power_min": 70,
+        "power_max": 440,
+        "recast_s": 90,
+        "native_learn_levels": {
+          "c01001900:2653135497": [
+            30
+          ],
+          "c05026590:1436790638": [
+            43
+          ]
+        },
+        "name_basis": "code confirmed by the French telop"
+      },
+      "sources": [
+        "fandom_en",
+        "telop_whs01080",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.whs02900",
+      "category": "technique",
+      "text": "God Alone Knows (ゴッドノウズ・インパクト), French Savoir ultime. Ares-form evolution known as God Knows Impact in the anime and older games. Power 100-640, 100 TP.",
+      "value": {
+        "skill_code": "whs02900",
+        "names": {
+          "en": "God Alone Knows",
+          "ja": "ゴッドノウズ・インパクト",
+          "fr": "Savoir ultime"
+        },
+        "category_id": 1,
+        "element_id": 1,
+        "tp": 100,
+        "power_min": 100,
+        "power_max": 640,
+        "recast_s": 90,
+        "native_learn_levels": {
+          "c07080010:1677046233": [
+            1
+          ]
+        },
+        "name_basis": "code confirmed by nie memory (whs02900)"
+      },
+      "sources": [
+        "fandom_en",
+        "nie_consolidated",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.whd00190",
+      "category": "technique",
+      "text": "Sabaki no Tettsui. Ares-form hammer technique (category 3, element 3). Power 70-440, 70 TP.",
+      "value": {
+        "skill_code": "whd00190",
+        "names": {
+          "en": "Sabaki no Tettsui",
+          "ja": null,
+          "fr": null
+        },
+        "category_id": 3,
+        "element_id": 3,
+        "tp": 70,
+        "power_min": 70,
+        "power_max": 440,
+        "recast_s": 60,
+        "native_learn_levels": {
+          "c07080010:1677046233": [
+            30
+          ]
+        },
+        "name_basis": "code assigned by matching the Ares-form list (Sabaki no Tettsui, 70 power, 70 TP)"
+      },
+      "sources": [
+        "fandom_en",
+        "game_dossier"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.learn_levels_note",
+      "category": "technique",
+      "text": "The native learn_level numbers (0, 1, 13, 20, 30, 43) are slot values and do not equal the unlock levels the fan wiki prints for Victory Road (Hopping Trick 1, God Knows 13, Heaven's Time 20, God Break 30, Chaos Break 38, Time Boost 43 for the Zeus form).",
+      "value": {
+        "native": [
+          0,
+          1,
+          13,
+          20,
+          30,
+          43,
+          30
+        ],
+        "fan_wiki_zeus_form": {
+          "Hopping Trick": 1,
+          "God Knows": 13,
+          "Heaven's Time": 20,
+          "God Break": 30,
+          "Chaos Break": 38,
+          "Time Boost": 43
+        }
+      },
+      "sources": [
+        "game_dossier",
+        "fandom_en"
+      ],
+      "confidence": "derived"
+    },
+    {
+      "id": "technique.other_main",
+      "category": "technique",
+      "text": "Other techniques across the main games: The Ikaros, Sprint Warp, Olympus Harmony, White Hurricane, All Delete, Setsuna Boost, God Wind, Time Boost, Nekketsu Overdrive, Kick Plus 20; Fire Dragon forms use God Knows Kai and Heaven's Time Kai.",
+      "value": {
+        "names": [
+          "The Ikaros",
+          "Sprint Warp",
+          "Olympus Harmony",
+          "White Hurricane",
+          "All Delete",
+          "Setsuna Boost",
+          "God Wind",
+          "Time Boost",
+          "Nekketsu Overdrive",
+          "Kick Plus 20",
+          "God Knows Kai",
+          "Heaven's Time Kai"
+        ]
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "technique.anime_only",
+      "category": "technique",
+      "text": "Anime and movie techniques: GGG Senjou no Aria (with Kira Hiroto and Iwato Takashi, Orion episode 30), Hokkyoku Guma 2gou (Orion episode 45), The Birth (movie).",
+      "value": {
+        "names": [
+          "GGG Senjou no Aria",
+          "Hokkyoku Guma 2gou",
+          "The Birth"
+        ]
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "technique.spin_offs",
+      "category": "technique",
+      "text": "Spin-off signatures: God Knows, God Break, Chaos Break, Heaven's Time (Strikers series); God Knows Impact and GGG Senjou no Aria (card games); God Knows Machina for Shin Aphrodi (Cross).",
+      "value": {
+        "names": [
+          "God Knows",
+          "God Break",
+          "Chaos Break",
+          "Heaven's Time",
+          "God Knows Impact",
+          "GGG Senjou no Aria",
+          "God Knows Machina"
+        ]
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "aura.wap01001",
+      "category": "aura",
+      "text": "Aura Burning Overdrive (wap01001), rank 3001; the fan wiki lists a Nekketsu Overdrive at Lv 43, probably the same aura (unconfirmed), learned at slot 38.",
+      "value": {
+        "asset_code": "wap01001",
+        "name_en": "Burning Overdrive",
+        "rank": 3001,
+        "learn_level": 38,
+        "element_id": 0
+      },
+      "sources": [
+        "rg_wiki",
+        "rg_dossier",
+        "game_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "aura.wap01005",
+      "category": "aura",
+      "text": "Aura Instant Burst (wap01005), rank 3005, learned at slot 38.",
+      "value": {
+        "asset_code": "wap01005",
+        "name_en": "Instant Burst",
+        "rank": 3005,
+        "learn_level": 38,
+        "element_id": 0
+      },
+      "sources": [
+        "rg_wiki",
+        "rg_dossier",
+        "game_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "keshin.list",
+      "category": "technique",
+      "text": "Keshin and Mixi Max entries in Chrono Stone and Galaxy include Masaishou Bishop B (GO), Majin Pegasus Arc, Kodaishin Kukulkan, Shourai no Seiryuu; Mixi Max donors include Choi Chang-soo, Shindou Takuto, Yuri Averin; Afubuki is a Mix 'n' Match with Shawn Froste (reference only).",
+      "value": {
+        "keshin": [
+          "Masaishou Bishop B",
+          "Majin Pegasus Arc",
+          "Ankoku Shin Dark Exodus",
+          "Kodaishin Kukulkan",
+          "Shinkan Judge",
+          "Souten no Hasha Gyokuryuu",
+          "Shourai no Seiryuu",
+          "Kousoku Toushi Robin"
+        ],
+        "mix_n_match": "Afubuki (with Shawn Froste)"
+      },
+      "sources": [
+        "fandom_en",
+        "nie_afubuki"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s1-zeus",
+      "category": "timeline",
+      "text": "Kageyama Reiji picks him as captain of Zeus; the team drinks the Aqua of the Gods (French: Nectar des Dieux) to raise its physical ability.",
+      "value": {
+        "order": 1,
+        "era": "Inazuma Eleven season 1"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr",
+        "manga_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s1-teikoku",
+      "category": "timeline",
+      "text": "Zeus beats Teikoku Gakuen 10-0 in the Football Frontier, injuring every Teikoku player except Kidou, who did not play because of a leg injury.",
+      "value": {
+        "order": 2,
+        "era": "Inazuma Eleven season 1"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s1-final",
+      "category": "timeline",
+      "text": "Before the final he tells Raimon that entering is futile; Zeus leads in the first half, then Endou masters Majin The Hand, stops God Knows, and Raimon wins 4-3.",
+      "value": {
+        "order": 3,
+        "era": "Inazuma Eleven season 1"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s1-after",
+      "category": "timeline",
+      "text": "Shocked by the defeat, he refuses the Aqua of the Gods and trains on his own.",
+      "value": {
+        "order": 4,
+        "era": "Inazuma Eleven season 1"
+      },
+      "sources": [
+        "fandom_en",
+        "manga_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s2-join",
+      "category": "timeline",
+      "text": "In the Aliea Academy arc he asks Endou to let him join Raimon; after doubts he scores the first goal against Diamond Dust with the powered-up God Knows.",
+      "value": {
+        "order": 5,
+        "era": "Inazuma Eleven season 2"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s2-chaos",
+      "category": "timeline",
+      "text": "Against Chaos he tries to break the double defence Ignite Steal and Frozen Steal, is injured and collapses when Gran ends the match; he is hospitalised and helps Fubuki through his split personality.",
+      "value": {
+        "order": 6,
+        "era": "Inazuma Eleven season 2"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s3-fire-dragon",
+      "category": "timeline",
+      "text": "He scouts Gazel and Burn for Korea's Fire Dragon (he is Korean) and faces Inazuma Japan in the Asia preliminary final.",
+      "value": {
+        "order": 7,
+        "era": "Inazuma Eleven season 3"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ie-s3-result",
+      "category": "timeline",
+      "text": "He scores with God Break; the combination Chaos Break with Gazel and Burn is stopped by Endou's Ikari no Tettsui, Fire Dragon loses 4-3, and he wishes Inazuma Japan luck on the world stage.",
+      "value": {
+        "order": 8,
+        "era": "Inazuma Eleven season 3"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.go-kirkwood",
+      "category": "timeline",
+      "text": "He appears in episode 29 at the Fifth Sector base and becomes coach of Kidokawa Seishuu to stop its players from destroying themselves with violent football.",
+      "value": {
+        "order": 9,
+        "era": "Inazuma Eleven GO"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.go-neutral",
+      "category": "timeline",
+      "text": "In episode 30 he sides neither with Fifth Sector nor with the Resistance; the match against Raimon is to show which path his team takes, and he trades a smile with Kidou.",
+      "value": {
+        "order": 10,
+        "era": "Inazuma Eleven GO"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.oc-special",
+      "category": "timeline",
+      "text": "Alone in a park, ashamed that Zeus's skill was called fake after the Aqua of the Gods leaked, he says he truly loves soccer and will take responsibility; a mysterious woman (Matsuzaka Kiyo) calls him a god in training.",
+      "value": {
+        "order": 11,
+        "era": "Original Character special, episode 4"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ares-ep14",
+      "category": "timeline",
+      "text": "In episode 14 he appears with Zeus (Ares) at the Football Frontier ceremony and faces the new Raimon.",
+      "value": {
+        "order": 12,
+        "era": "Ares"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.ares-ep15",
+      "category": "timeline",
+      "text": "In episode 15 he performs God Knows Impact; Zeus loses 3-2 and he says there are things you only gain by losing.",
+      "value": {
+        "order": 13,
+        "era": "Ares"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.orion-ep29",
+      "category": "timeline",
+      "text": "Passed over for the squad, he arrives in episode 29 as an extra forward (scouted by Kidou), says Inazuma Japan cannot win as it is, and sets up a 4 versus 4 game with Hiroto.",
+      "value": {
+        "order": 14,
+        "era": "Orion"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.orion-ep30",
+      "category": "timeline",
+      "text": "Against Navy Invader he uses Heaven's Time and God Knows Impact, trains Hiroto and Iwato (amusement park) for GGG Senjou no Aria, and Japan wins 4-3; the French wiki credits him with four goals.",
+      "value": {
+        "order": 15,
+        "era": "Orion"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.orion-ep34",
+      "category": "timeline",
+      "text": "Against Russia he supports Norika, fights on despite being paralysed by Yuri Rodina's band, and Japan loses.",
+      "value": {
+        "order": 16,
+        "era": "Orion"
+      },
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.movie-ie",
+      "category": "timeline",
+      "text": "In the movie's altered timeline Team Ogre beats Zeus 36-0 in the semi-final.",
+      "value": {
+        "order": 17,
+        "era": "Inazuma Eleven movie"
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "timeline.vr-eras",
+      "category": "timeline",
+      "text": "Three forms exist: Inazuma Eleven (Zeus, middle school grade 8), GO (adult coach of Kirkwood), Ares (Zeus, grade 9; 'Raimon's defeat fueled him to refine his game').",
+      "value": {
+        "order": 18,
+        "era": "Inazuma Eleven: Victory Road"
+      },
+      "sources": [
+        "zukan_en_list",
+        "zukan_en_ie1",
+        "zukan_en_go",
+        "zukan_en_ares"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "timeline.vr-ev22",
+      "category": "timeline",
+      "text": "He returns to Endou and asks to join Raimon: 'Never again will I foolishly rely on ambrosia.'",
+      "value": {
+        "order": 19,
+        "era": "Victory Road event ev22_15202"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "timeline.vr-ev23",
+      "category": "timeline",
+      "text": "As leader of Korea's Fire Dragon he tells Inazuma National they are not the players they were.",
+      "value": {
+        "order": 20,
+        "era": "Victory Road event ev23_05000"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "timeline.vr-ev24",
+      "category": "timeline",
+      "text": "As Kirkwood's coach: 'Not for Fifth Sector, nor for the revolution. We'll fight for our own sakes.'",
+      "value": {
+        "order": 21,
+        "era": "Victory Road event ev24_11000"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "confidence": "game-data"
+    },
+    {
+      "id": "profile.vr.ie1",
+      "category": "profile",
+      "text": "Codex blurb, Inazuma Eleven form: 'Captivating the opposition with artistic grace, he plays with the aura of a deity from on high.'",
+      "value": {
+        "form": "Inazuma Eleven"
+      },
+      "sources": [
+        "zukan_en_ie1",
+        "zukan_ja_ie1",
+        "rg_wiki"
+      ],
+      "confidence": "official",
+      "i18n": {
+        "en": "Captivating the opposition with artistic grace, he plays with the aura of a deity from on high.",
+        "ja": "芸術的なプレイで敵をも魅了する。その姿は神のように美しい。",
+        "fr": "Captivant ses adversaires avec une grâce artistique, il joue avec une aura divine."
+      }
+    },
+    {
+      "id": "profile.vr.go",
+      "category": "profile",
+      "text": "Codex blurb, GO form: 'Former Zeus Jr High captain, now coaches Kirkwood. His graceful tactics earn him the admiration of even his enemies.'",
+      "value": {
+        "form": "GO: Light / Shadow"
+      },
+      "sources": [
+        "zukan_en_go",
+        "zukan_ja_go"
+      ],
+      "confidence": "official",
+      "i18n": {
+        "en": "Former Zeus Jr High captain, now coaches Kirkwood. His graceful tactics earn him the admiration of even his enemies.",
+        "ja": "元世宇子キャプテンで木戸川清修の監督。その美しい采配に　敵までもウットリ。"
+      }
+    },
+    {
+      "id": "profile.vr.ares",
+      "category": "profile",
+      "text": "Codex blurb, Ares form: 'Raimon's defeat fueled him to refine his game into something sharp and almost artistic.'",
+      "value": {
+        "form": "Ares"
+      },
+      "sources": [
+        "zukan_en_ares",
+        "zukan_ja_ares"
+      ],
+      "confidence": "official",
+      "i18n": {
+        "en": "Raimon's defeat fueled him to refine his game into something sharp and almost artistic.",
+        "ja": "雷門への敗北をバネに　自らを鍛え直し芸術的なプレイに磨きがかかった。"
+      }
+    },
+    {
+      "id": "profile.classic",
+      "category": "profile",
+      "text": "Older games' profile (English dub): 'His elegant, artistic style leaves his opponents spellbound'; Fire Dragon form: 'Making plays which are both beautiful and deadly, this player is one to watch.'",
+      "value": {
+        "games": [
+          "IE",
+          "IE2",
+          "IE3",
+          "GO"
+        ]
+      },
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community",
+      "i18n": {
+        "en": "His elegant, artistic style leaves his opponents spellbound.",
+        "ja": "まるで芸術のような　美しいプレイで敵までもウットリしてしまう。",
+        "fr": "Son style élégant et artistique laisse ses adversaires en haleine."
+      }
+    },
+    {
+      "id": "trivia.heritage",
+      "category": "trivia",
+      "text": "Joining Fire Dragon because he is Korean implies Korean-Japanese dual nationality, consistent with his place in Inazuma Japan (Orion).",
+      "value": {},
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "trivia.first",
+      "category": "trivia",
+      "text": "In the original anime he is the first character to break a goal net with a shot, and one of the players to score a hat-trick.",
+      "value": {},
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "trivia.design",
+      "category": "trivia",
+      "text": "The GO design was first drawn with shorter chin-length hair before the ponytail was chosen; in GO he is exclusive to the Dark version.",
+      "value": {},
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "trivia.poll",
+      "category": "trivia",
+      "text": "In the Inazuma Soulmates 2011 poll (Animage, January 2012) he, Burn and Gazel placed 19th with 12 votes.",
+      "value": {},
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "trivia.yokai",
+      "category": "trivia",
+      "text": "He appeared as an obtainable Yo-kai in the Level-5 collaboration with Yo-kai Watch Punipuni.",
+      "value": {},
+      "sources": [
+        "fandom_en"
+      ],
+      "confidence": "community"
+    },
+    {
+      "id": "trivia.fan_world",
+      "category": "trivia",
+      "text": "The nie fan-world build places an NPC 'Terumi Afuro (Aphrody)' in Kizuna Town with the role 'Architecte Celeste' and Wind element; this is product content, not canon.",
+      "value": {},
+      "sources": [
+        "nie_open_world"
+      ],
+      "confidence": "internal"
+    }
+  ]
+}

@@ -20,6 +20,9 @@
 pub mod assets;
 #[cfg(feature = "fs")]
 mod cli;
+/// The versioned character dataset (canon, soul, voice, visual identity) and its source registry,
+/// embedded from `assets/character/`.
+pub mod character;
 pub mod codex;
 /// Le design system du site : les couleurs de l'interface **dérivées** de la palette mesurée
 /// d'Aphrody, et la feuille `game-tokens.css` qu'elles produisent.

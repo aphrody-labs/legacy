@@ -1,0 +1,109 @@
+{
+ "k": 4,
+ "inputs": [
+  "telop_whs01250.png"
+ ],
+ "opaque_pixels": 95139,
+ "clusters": [
+  {
+   "hex": "#ECFC99",
+   "share_pct": 38.84,
+   "oklch": {
+    "l": 0.9563,
+    "c": 0.1237,
+    "h": 116.32
+   },
+   "pixels": 36952,
+   "per_input_pixels": {
+    "telop_whs01250.png": 36952
+   }
+  },
+  {
+   "hex": "#75CC13",
+   "share_pct": 37.8,
+   "oklch": {
+    "l": 0.7613,
+    "c": 0.2135,
+    "h": 133.8
+   },
+   "pixels": 35967,
+   "per_input_pixels": {
+    "telop_whs01250.png": 35967
+   }
+  },
+  {
+   "hex": "#4DA015",
+   "share_pct": 21.99,
+   "oklch": {
+    "l": 0.6277,
+    "c": 0.1817,
+    "h": 136.69
+   },
+   "pixels": 20924,
+   "per_input_pixels": {
+    "telop_whs01250.png": 20924
+   }
+  },
+  {
+   "hex": "#000000",
+   "share_pct": 1.36,
+   "oklch": {
+    "l": 0.0519,
+    "c": 0.0044,
+    "h": 113.01
+   },
+   "pixels": 1296,
+   "per_input_pixels": {
+    "telop_whs01250.png": 1296
+   }
+  }
+ ],
+ "roles": {
+  "hair": {
+   "hex": "#DCE592",
+   "pixels": 3832,
+   "share_pct": 4.03,
+   "window": {
+    "h": [
+     95,
+     125
+    ],
+    "c": [
+     0.06,
+     0.2
+    ],
+    "l": [
+     0.78,
+     0.93
+    ],
+    "box": null
+   },
+   "per_input_pixels": {
+    "telop_whs01250.png": 3832
+   }
+  },
+  "outline": {
+   "hex": "#000000",
+   "pixels": 1093,
+   "share_pct": 1.15,
+   "window": {
+    "h": [
+     0,
+     360
+    ],
+    "c": [
+     0.0,
+     1.0
+    ],
+    "l": [
+     0.0,
+     0.15
+    ],
+    "box": null
+   },
+   "per_input_pixels": {
+    "telop_whs01250.png": 1093
+   }
+  }
+ }
+}

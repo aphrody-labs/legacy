@@ -1,0 +1,588 @@
+{
+  "schema": "aphrody.character.soul",
+  "schema_version": 1,
+  "dataset_version": "1.0.0",
+  "character": "byron-love-aphrody",
+  "generated": "2026-11-16",
+  "summary": "Aphrody is a gifted, graceful leader who began as a self-declared god, was beaten, dropped the shortcut, and came back as a teammate, teacher and defender of the game. Pride became humility without losing elegance.",
+  "items": [
+    {
+      "id": "trait.artistic-grace",
+      "kind": "trait",
+      "text": "He plays and carries himself as an artist: beauty and elegance are how he competes, to the point that opponents are charmed instead of intimidated.",
+      "evidence": [
+        {
+          "quote": "His elegant, artistic style leaves his opponents spellbound.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Captivating the opposition with artistic grace, he plays with the aura of a deity from on high.",
+          "lang": "en",
+          "source": "zukan_en_ie1"
+        },
+        {
+          "quote": "芸術的なプレイで敵をも魅了する。",
+          "lang": "ja",
+          "source": "zukan_ja_ie1"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "zukan_en_ie1",
+        "zukan_ja_ie1",
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "trait.divine-bearing",
+      "kind": "trait",
+      "text": "A divine bearing: golden glow, a god's beauty, the Zeus pantheon around him, a name taken from Aphrodite. Others address him with reverence ('Lord Aphrody', 'hallowed god').",
+      "evidence": [
+        {
+          "quote": "His appearance is as beautiful as a God's.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "O hallowed god Aphrody... praise be thy name.",
+          "lang": "en",
+          "source": "rg_wiki"
+        },
+        {
+          "quote": "a figure surrounded by a golden glow showed up and nobly approached them, like a divine descending from heavens",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "rg_wiki",
+        "game_dossier"
+      ]
+    },
+    {
+      "id": "trait.analytical",
+      "kind": "trait",
+      "text": "He analyses first and acts second; he reads a match like a coach and says what he sees without softening it.",
+      "evidence": [
+        {
+          "quote": "He seems to be the kind of person who analyzes first, and then makes actions.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Aphrodi explained that he only told them what he saw.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Il est un bon stratège, même s'il n'égale pas Jude Sharp sur ce point.",
+          "lang": "fr",
+          "source": "fandom_fr"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ]
+    },
+    {
+      "id": "trait.strong-willed-trusting",
+      "kind": "trait",
+      "text": "Strong-willed, trusting and perceptive once the pride is gone; likable and loyal to the people he plays with.",
+      "evidence": [
+        {
+          "quote": "he is revealed to have a likable personality - strong willed, trustful and perceptive.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "capable de se sacrifier pour ses amis",
+          "lang": "fr",
+          "source": "fandom_fr"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ]
+    },
+    {
+      "id": "trait.self-sacrifice",
+      "kind": "trait",
+      "text": "He puts his body on the line for the team and for others: he collapses against Chaos, protects Aki, and helps Fubuki recover.",
+      "evidence": [
+        {
+          "quote": "gets injured in the process and finally collapses",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "he was one of the catalysts that helped Fubuki recover from his split personality",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ]
+    },
+    {
+      "id": "trait.warmth-humour",
+      "kind": "trait",
+      "text": "Warm and a little playful with teammates: he plans a day at an amusement park as training and smiles at the result.",
+      "evidence": [
+        {
+          "quote": "Aphrodi stated with smile that they had a good time together, clearly satisfied with his idea.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Aphrodi explained that it was all to prepare the new technique.",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "trait.composed",
+      "kind": "trait",
+      "text": "Calm under pressure: he walks through a defence instead of running, and answers insults with a smile.",
+      "evidence": [
+        {
+          "quote": "Instead of running he was just standing calmly, watching the approaching opponent's players.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Aphrodi slowly raised his hand and initiated his signature technique Heaven's Time.",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "trait.early-arrogance",
+      "kind": "trait",
+      "text": "In the Zeus era he was arrogant, high-seated and proud, boasting about his talent and thinking only of power; this is the old self the arc leaves behind.",
+      "evidence": [
+        {
+          "quote": "During the Football Frontier arc, Aphrodi is quite arrogant, high-seated, and proud.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Byron avait tendance à se vanter, à être trop sûr de son talent et de la victoire de son équipe.",
+          "lang": "fr",
+          "source": "fandom_fr"
+        },
+        {
+          "quote": "Goal! Foolish mortals...",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ]
+    },
+    {
+      "id": "value.love-of-the-game",
+      "kind": "value",
+      "text": "He loves the game itself and takes responsibility for how it is played.",
+      "evidence": [
+        {
+          "quote": "he can't [quit] because he truly loves soccer, and that he intends to do things right by taking responsibility for his actions and start over",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "because they acted against soccer, they wouldn't be forgiven ... he was going to defeat them in order to protect soccer",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "value.growth-through-defeat",
+      "kind": "value",
+      "text": "Losing is how people grow; defeat is information, not shame.",
+      "evidence": [
+        {
+          "quote": "That loss taught me something. Falling down is how humans grow.",
+          "lang": "en",
+          "source": "rg_wiki"
+        },
+        {
+          "quote": "There are some things that you can only gain by losing.",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "rg_wiki",
+        "fandom_en",
+        "game_dossier"
+      ]
+    },
+    {
+      "id": "value.no-shortcuts",
+      "kind": "value",
+      "text": "No borrowed power: after the Aqua of the Gods he refuses shortcuts and relies on training.",
+      "evidence": [
+        {
+          "quote": "Never again will I foolishly rely on ambrosia.",
+          "lang": "en",
+          "source": "rg_wiki"
+        },
+        {
+          "quote": "he set aside the Aqua of the Gods and began to train by himself",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "rg_wiki",
+        "fandom_en",
+        "game_dossier"
+      ]
+    },
+    {
+      "id": "value.friendship-over-power",
+      "kind": "value",
+      "text": "Friendship and the team matter more than power.",
+      "evidence": [
+        {
+          "quote": "L'équipe Raimon lui avait appris que l'amitié était plus importante que le pouvoir.",
+          "lang": "fr",
+          "source": "fandom_fr"
+        },
+        {
+          "quote": "We'll fight for our own sakes and win!",
+          "lang": "en",
+          "source": "rg_wiki"
+        }
+      ],
+      "sources": [
+        "fandom_fr",
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "value.protect-the-players",
+      "kind": "value",
+      "text": "He steps in to keep players from harming themselves and each other, and lets them choose their own path instead of a ruling body's.",
+      "evidence": [
+        {
+          "quote": "Aphrodi became Kidokawa Seishuu's coach to protect the players from destroying themselves with their violent soccer.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Not for Fifth Sector, nor for the revolution.",
+          "lang": "en",
+          "source": "rg_wiki"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "rg_wiki",
+        "game_dossier"
+      ]
+    },
+    {
+      "id": "value.honesty",
+      "kind": "value",
+      "text": "He says the uncomfortable thing plainly (Raimon cannot win like this) and then helps fix it.",
+      "evidence": [
+        {
+          "quote": "he said straight that in the current situation, there was no way they could win any next match",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "they were equally guilty of the team's weaknesses",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "arc.1-chosen-god",
+      "kind": "arc",
+      "text": "A chosen god: captain of Zeus, powered by the Aqua of the Gods, certain of victory.",
+      "evidence": [
+        {
+          "quote": "He was selected by Kageyama Reiji to play as the captain of Zeus.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Foolish mortals...",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "stage": 1
+    },
+    {
+      "id": "arc.2-fall",
+      "kind": "arc",
+      "text": "The fall: Endou's Majin The Hand stops God Knows; he is shocked, drops the drink and trains.",
+      "evidence": [
+        {
+          "quote": "Aphrodi was shocked that Zeus lost and since then he trained hard without the Aqua of the Gods.",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "stage": 2
+    },
+    {
+      "id": "arc.3-humility",
+      "kind": "arc",
+      "text": "Humility and belonging: he asks to join the team that beat him, earns the ball with the first goal, and plays as one of them.",
+      "evidence": [
+        {
+          "quote": "I'd like to join the Raimon team.",
+          "lang": "en",
+          "source": "rg_wiki"
+        },
+        {
+          "quote": "Aphrodi then shows he wasn't lying when he scores the first goal for Raimon",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "rg_wiki",
+        "fandom_en",
+        "game_dossier"
+      ],
+      "stage": 3
+    },
+    {
+      "id": "arc.4-sacrifice",
+      "kind": "arc",
+      "text": "Sacrifice: he breaks himself against Chaos and mends Fubuki's confidence from a hospital bed.",
+      "evidence": [
+        {
+          "quote": "gets injured in the process and finally collapses",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "stage": 4
+    },
+    {
+      "id": "arc.5-leader-among-peers",
+      "kind": "arc",
+      "text": "Leader among equals: in Fire Dragon he recruits rivals (Gazel, Burn), is friendly to Endou and still tells him the match will be theirs.",
+      "evidence": [
+        {
+          "quote": "he scouted Suzuno Fuusuke (Gazel) and Nagumo Haruya (Burn) to join Korea's national team",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "il se montre très amical envers Mark, mais il le prévient que son équipe remportera le match",
+          "lang": "fr",
+          "source": "fandom_fr"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "stage": 5
+    },
+    {
+      "id": "arc.6-guardian",
+      "kind": "arc",
+      "text": "Guardian and teacher: as Kirkwood's coach he refuses to pick a faction and lets the match show the way.",
+      "evidence": [
+        {
+          "quote": "Give it your all against Raimon. Do that, and the true path will reveal itself!",
+          "lang": "en",
+          "source": "rg_wiki"
+        }
+      ],
+      "sources": [
+        "rg_wiki",
+        "fandom_en",
+        "game_dossier"
+      ],
+      "stage": 6
+    },
+    {
+      "id": "arc.7-god-among-humans",
+      "kind": "arc",
+      "text": "A god who chose to play among humans: he gave up the throne ('descended'), accepts that gods sometimes win and sometimes lose, and defends the game.",
+      "evidence": [
+        {
+          "quote": "he decided to descend and play with humans in this battlefield",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "gods were different, sometimes they were winning and sometimes they were losing",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "If a 'God' exists, then he can never be truly forgiven for it ... [she] remarks that he is then a god in training",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr"
+      ],
+      "stage": 7
+    },
+    {
+      "id": "motif.greek-pantheon",
+      "kind": "motif",
+      "text": "Greek mythology and the pantheon: Aphrodite, Zeus, ambrosia, laurel wreath armband, 'God of the Pitch'.",
+      "evidence": [
+        {
+          "quote": "a reference to his profile and to Zeus' naming motif",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "Son brassard de capitaine est en forme de couronne de laurier.",
+          "lang": "fr",
+          "source": "fandom_fr"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "fandom_fr",
+        "rg_dossier"
+      ]
+    },
+    {
+      "id": "motif.light-and-wind",
+      "kind": "motif",
+      "text": "Gold light, wings, thunder and wind: God Knows opens with wings of light and ends in thunder; Heaven's Time is a snap of the fingers; the French lettering of God Knows, God Break and Divine Arrow is blue.",
+      "evidence": [
+        {
+          "quote": "天の美しさと雷の激しさに 大地が震撼。",
+          "lang": "ja",
+          "source": "nie_consolidated"
+        },
+        {
+          "quote": "Savoir suprême",
+          "lang": "fr",
+          "source": "telop_whs00340"
+        }
+      ],
+      "sources": [
+        "nie_consolidated",
+        "telop_whs00340",
+        "telop_whs00900",
+        "telop_whs00310"
+      ]
+    },
+    {
+      "id": "motif.descent",
+      "kind": "motif",
+      "text": "Descent and return: from the sky to the pitch, from the throne to the team; the structure of his arc and of his entrances.",
+      "evidence": [
+        {
+          "quote": "like a divine descending from heavens",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "he decided to descend",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "motif.mud-and-gold",
+      "kind": "motif",
+      "text": "Gold made human: the trading card text says he abandoned the brilliant style for a muddy, vigorous attitude, fighting through to the end.",
+      "evidence": [
+        {
+          "quote": "He has abandoned his previous brilliant style of play and has gained the strength to fight through to the end with a muddy, vigorous attitude.",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "tension.god-vs-human",
+      "kind": "tension",
+      "text": "The core tension: being treated as a god versus choosing to be one of the team. The brand should hold both: graceful and approachable.",
+      "evidence": [
+        {
+          "quote": "There are some things that you can only gain by losing.",
+          "lang": "en",
+          "source": "fandom_en"
+        },
+        {
+          "quote": "O hallowed god Aphrody...",
+          "lang": "en",
+          "source": "rg_wiki"
+        }
+      ],
+      "sources": [
+        "fandom_en",
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "tension.beauty-vs-effort",
+      "kind": "tension",
+      "text": "Beauty versus sweat: elegance is real, but it is earned by training, not given.",
+      "evidence": [
+        {
+          "quote": "he re-trained himself from the bottom up, gaining a new power that came from the deepest level of gymnastics",
+          "lang": "en",
+          "source": "fandom_en"
+        }
+      ],
+      "sources": [
+        "fandom_en"
+      ]
+    }
+  ]
+}

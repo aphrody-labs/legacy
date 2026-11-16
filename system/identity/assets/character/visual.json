@@ -1,0 +1,1464 @@
+{
+  "schema": "aphrody.character.visual",
+  "schema_version": 1,
+  "dataset_version": "1.0.0",
+  "character": "byron-love-aphrody",
+  "generated": "2026-11-16",
+  "palette": {
+    "method": {
+      "space": "OKLab (Ottosson matrices), sRGB output",
+      "pixel_filter": "alpha >= 250 (the renders are cut out on transparency)",
+      "clustering": "k-means++ seeded with 7, 40 iterations",
+      "roles": "median colour of pixels inside an OKLCH window (and a box for the iris: x 85-185, y 120-170 of the 256 px render)",
+      "inputs": "the three official 256 x 256 renders (zukan_img_ie1, zukan_img_go, zukan_img_ares), 83 210 opaque pixels; 5 official French skill telops for element accents",
+      "script": "tools/measure_palette.py",
+      "outputs": "assets/character/measurements/*.json",
+      "reproduce": "uv run tools/measure_palette.py 12 out.json ie1.png go.png ares.png",
+      "limits": "the Ares face icon (c07080010_l.png) answered 502 on every attempt and was not measured; the official Ares render from the codex was used instead."
+    },
+    "roles": [
+      {
+        "id": "role.hair",
+        "name": "Hair blond",
+        "hex": "#D1D293",
+        "pixels": 27270,
+        "share_pct": 32.77,
+        "window": {
+          "h": [
+            95,
+            125
+          ],
+          "c": [
+            0.06,
+            0.2
+          ],
+          "l": [
+            0.78,
+            0.93
+          ],
+          "box": null
+        },
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "pixels_per_input": {
+          "dykb3jbxeis.png": 9249,
+          "gltgpqjnrn0.png": 8942,
+          "6q1af7euf9m.png": 9079
+        },
+        "how": "median OKLab colour of the opaque pixels (alpha >= 250) of the official renders listed in measured_from whose OKLCH falls in the stated window; converted back to sRGB",
+        "canon_check": "look.base (pale golden-blonde hair)",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "role.skin",
+        "name": "Skin",
+        "hex": "#FFCE9E",
+        "pixels": 6443,
+        "share_pct": 7.74,
+        "window": {
+          "h": [
+            60,
+            85
+          ],
+          "c": [
+            0.05,
+            0.11
+          ],
+          "l": [
+            0.88,
+            1.0
+          ],
+          "box": null
+        },
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "pixels_per_input": {
+          "dykb3jbxeis.png": 2419,
+          "gltgpqjnrn0.png": 4009,
+          "6q1af7euf9m.png": 15
+        },
+        "how": "median OKLab colour of the opaque pixels (alpha >= 250) of the official renders listed in measured_from whose OKLCH falls in the stated window; converted back to sRGB",
+        "canon_check": "look.base (fair skin)",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "role.iris",
+        "name": "Iris red-brown",
+        "hex": "#BA4A2E",
+        "pixels": 536,
+        "share_pct": 0.64,
+        "window": {
+          "h": [
+            10,
+            55
+          ],
+          "c": [
+            0.08,
+            0.4
+          ],
+          "l": [
+            0.0,
+            0.75
+          ],
+          "box": [
+            85,
+            120,
+            185,
+            170
+          ]
+        },
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "pixels_per_input": {
+          "dykb3jbxeis.png": 119,
+          "gltgpqjnrn0.png": 223,
+          "6q1af7euf9m.png": 194
+        },
+        "how": "median OKLab colour of the opaque pixels (alpha >= 250) of the official renders listed in measured_from whose OKLCH falls in the stated window and inside the stated box; converted back to sRGB",
+        "canon_check": "look.base (deep maroon-red eyes)",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "role.outline",
+        "name": "Line black",
+        "hex": "#000000",
+        "pixels": 648,
+        "share_pct": 0.78,
+        "window": {
+          "h": [
+            0,
+            360
+          ],
+          "c": [
+            0.0,
+            1.0
+          ],
+          "l": [
+            0.0,
+            0.15
+          ],
+          "box": null
+        },
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "pixels_per_input": {
+          "dykb3jbxeis.png": 285,
+          "gltgpqjnrn0.png": 200,
+          "6q1af7euf9m.png": 163
+        },
+        "how": "median OKLab colour of the opaque pixels (alpha >= 250) of the official renders listed in measured_from whose OKLCH falls in the stated window; converted back to sRGB",
+        "canon_check": "cut-out line work",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "role.garment_white",
+        "name": "Shirt white",
+        "hex": "#F0F1F3",
+        "pixels": 8316,
+        "share_pct": 9.99,
+        "window": {
+          "h": [
+            0,
+            360
+          ],
+          "c": [
+            0.0,
+            0.01
+          ],
+          "l": [
+            0.93,
+            1.0
+          ],
+          "box": null
+        },
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "pixels_per_input": {
+          "dykb3jbxeis.png": 4355,
+          "gltgpqjnrn0.png": 1536,
+          "6q1af7euf9m.png": 2425
+        },
+        "how": "median OKLab colour of the opaque pixels (alpha >= 250) of the official renders listed in measured_from whose OKLCH falls in the stated window; converted back to sRGB",
+        "canon_check": "look.zeus (white shirt)",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "role.sash_blue",
+        "name": "Collar band blue",
+        "hex": "#155C83",
+        "pixels": 390,
+        "share_pct": 0.47,
+        "window": {
+          "h": [
+            225,
+            265
+          ],
+          "c": [
+            0.03,
+            0.4
+          ],
+          "l": [
+            0.0,
+            1.0
+          ],
+          "box": null
+        },
+        "measured_from": [
+          "zukan_img_ie1"
+        ],
+        "pixels_per_input": {
+          "dykb3jbxeis.png": 390,
+          "gltgpqjnrn0.png": 0,
+          "6q1af7euf9m.png": 0
+        },
+        "how": "median OKLab colour of the opaque pixels (alpha >= 250) of the official renders listed in measured_from whose OKLCH falls in the stated window; converted back to sRGB",
+        "canon_check": "look.zeus (blue collar and sleeve bands)",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      }
+    ],
+    "clusters": [
+      {
+        "id": "cluster.01",
+        "name": "Hair light",
+        "hex": "#D2D495",
+        "share_pct": 31.77,
+        "oklch": {
+          "l": 0.8527,
+          "c": 0.0823,
+          "h": 109.36
+        },
+        "pixels": 26432,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.02",
+        "name": "White highlight",
+        "hex": "#F5F2EE",
+        "share_pct": 13.7,
+        "oklch": {
+          "l": 0.9622,
+          "c": 0.0058,
+          "h": 65.38
+        },
+        "pixels": 11402,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.03",
+        "name": "Hair shade tan",
+        "hex": "#A48464",
+        "share_pct": 9.82,
+        "oklch": {
+          "l": 0.6354,
+          "c": 0.0603,
+          "h": 66.31
+        },
+        "pixels": 8174,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.04",
+        "name": "Skin light",
+        "hex": "#FCD4A8",
+        "share_pct": 9.66,
+        "oklch": {
+          "l": 0.8937,
+          "c": 0.0728,
+          "h": 69.5
+        },
+        "pixels": 8034,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.05",
+        "name": "Grey sash and shadow",
+        "hex": "#6A6060",
+        "share_pct": 7.77,
+        "oklch": {
+          "l": 0.4984,
+          "c": 0.0126,
+          "h": 21.74
+        },
+        "pixels": 6465,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.06",
+        "name": "Deep brown shadow",
+        "hex": "#3B1F1A",
+        "share_pct": 7.68,
+        "oklch": {
+          "l": 0.2756,
+          "c": 0.0449,
+          "h": 30.51
+        },
+        "pixels": 6392,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.07",
+        "name": "Warm grey",
+        "hex": "#B0A395",
+        "share_pct": 5.27,
+        "oklch": {
+          "l": 0.7233,
+          "c": 0.0248,
+          "h": 69.1
+        },
+        "pixels": 4385,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.08",
+        "name": "Brown",
+        "hex": "#8B634C",
+        "share_pct": 4.66,
+        "oklch": {
+          "l": 0.5356,
+          "c": 0.0617,
+          "h": 50.87
+        },
+        "pixels": 3875,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.09",
+        "name": "Pale gold",
+        "hex": "#C9B991",
+        "share_pct": 3.46,
+        "oklch": {
+          "l": 0.7878,
+          "c": 0.056,
+          "h": 88.37
+        },
+        "pixels": 2876,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.10",
+        "name": "Dark brown",
+        "hex": "#54443B",
+        "share_pct": 2.86,
+        "oklch": {
+          "l": 0.4,
+          "c": 0.0269,
+          "h": 47.3
+        },
+        "pixels": 2382,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.11",
+        "name": "Coral accent",
+        "hex": "#DD7D6D",
+        "share_pct": 2.58,
+        "oklch": {
+          "l": 0.6915,
+          "c": 0.1223,
+          "h": 30.57
+        },
+        "pixels": 2143,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      },
+      {
+        "id": "cluster.12",
+        "name": "Line black",
+        "hex": "#000000",
+        "share_pct": 0.78,
+        "oklch": {
+          "l": 0.0281,
+          "c": 0.0057,
+          "h": 34.2
+        },
+        "pixels": 650,
+        "measured_from": [
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ],
+        "how": "k-means centroid (k=12, k-means++ seed 7, 40 iterations) in OKLab over the pooled opaque pixels of the three official renders; share = pixels in the cluster / pooled opaque pixels",
+        "sources": [
+          "measurement",
+          "zukan_img_ie1",
+          "zukan_img_go",
+          "zukan_img_ares"
+        ]
+      }
+    ],
+    "element_accents": [
+      {
+        "id": "accent.whs00340",
+        "name": "Wind blue",
+        "hex": "#035BBC",
+        "share_pct": 42.88,
+        "oklch": {
+          "l": 0.4855,
+          "c": 0.1694,
+          "h": 256.84
+        },
+        "element": "element_id 1, God Knows",
+        "measured_from": [
+          "telop_whs00340"
+        ],
+        "how": "k-means (k=4) in OKLab over the opaque pixels of the French skill lettering; the largest cluster with chroma >= 0.12 and OKLab L <= 0.8 (the glow is lighter and less saturated)",
+        "sources": [
+          "measurement",
+          "telop_whs00340"
+        ]
+      },
+      {
+        "id": "accent.whs01250",
+        "name": "Forest green",
+        "hex": "#75CC13",
+        "share_pct": 37.8,
+        "oklch": {
+          "l": 0.7613,
+          "c": 0.2135,
+          "h": 133.8
+        },
+        "element": "element_id 2, Chaos Break",
+        "measured_from": [
+          "telop_whs01250"
+        ],
+        "how": "k-means (k=4) in OKLab over the opaque pixels of the French skill lettering; the largest cluster with chroma >= 0.12 and OKLab L <= 0.8 (the glow is lighter and less saturated)",
+        "sources": [
+          "measurement",
+          "telop_whs01250"
+        ]
+      },
+      {
+        "id": "accent.whs01080",
+        "name": "Fire orange",
+        "hex": "#CD6F03",
+        "share_pct": 26.42,
+        "oklch": {
+          "l": 0.6362,
+          "c": 0.1515,
+          "h": 57.99
+        },
+        "element": "element_id 4, Heaven Drive",
+        "measured_from": [
+          "telop_whs01080"
+        ],
+        "how": "k-means (k=4) in OKLab over the opaque pixels of the French skill lettering; the largest cluster with chroma >= 0.12 and OKLab L <= 0.8 (the glow is lighter and less saturated)",
+        "sources": [
+          "measurement",
+          "telop_whs01080"
+        ]
+      }
+    ],
+    "atlas_hues": [
+      {
+        "id": "atlas.creme",
+        "name": "creme",
+        "hex": "#F7F3F0",
+        "share_pct": 25.0,
+        "oklch": {
+          "l": 0.9664,
+          "c": 0.0059,
+          "h": 59.65
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.blond",
+        "name": "blond",
+        "hex": "#EADBA6",
+        "share_pct": 21.0,
+        "oklch": {
+          "l": 0.8908,
+          "c": 0.0707,
+          "h": 94.17
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.sable",
+        "name": "sable",
+        "hex": "#C2B19E",
+        "share_pct": 13.0,
+        "oklch": {
+          "l": 0.7696,
+          "c": 0.0329,
+          "h": 70.41
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.taupe",
+        "name": "taupe",
+        "hex": "#AF9183",
+        "share_pct": 11.0,
+        "oklch": {
+          "l": 0.6803,
+          "c": 0.0416,
+          "h": 46.43
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.mauve",
+        "name": "mauve",
+        "hex": "#8B7083",
+        "share_pct": 9.0,
+        "oklch": {
+          "l": 0.5774,
+          "c": 0.0435,
+          "h": 337.07
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.brun",
+        "name": "brun",
+        "hex": "#6C5454",
+        "share_pct": 7.0,
+        "oklch": {
+          "l": 0.4705,
+          "c": 0.032,
+          "h": 18.35
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.ocre",
+        "name": "ocre",
+        "hex": "#91704C",
+        "share_pct": 5.0,
+        "oklch": {
+          "l": 0.569,
+          "c": 0.0658,
+          "h": 68.31
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.cacao",
+        "name": "cacao",
+        "hex": "#4E3738",
+        "share_pct": 4.0,
+        "oklch": {
+          "l": 0.3633,
+          "c": 0.033,
+          "h": 15.93
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.azur",
+        "name": "azur",
+        "hex": "#17335C",
+        "share_pct": 2.0,
+        "oklch": {
+          "l": 0.3229,
+          "c": 0.0807,
+          "h": 258.02
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "atlas.nuit",
+        "name": "nuit",
+        "hex": "#131420",
+        "share_pct": 2.0,
+        "oklch": {
+          "l": 0.1963,
+          "c": 0.0242,
+          "h": 280.23
+        },
+        "measured_from": [
+          "pet atlas assets/aphrody/sprites/spritesheet.png"
+        ],
+        "how": "pixel mesurer --k 10 on the pet atlas (k-means in Oklab), measured 2026-09-06 by the identity crate; share of the opaque atlas area",
+        "sources": [
+          "ay_design"
+        ]
+      }
+    ],
+    "seeds": [
+      {
+        "id": "seed.m3_tokens",
+        "hex": "#E2DBAD",
+        "role": "seed of assets/brand/m3-tokens.json (tonal-spot)",
+        "sources": [
+          "ay_m3_tokens"
+        ]
+      },
+      {
+        "id": "seed.m3_seed_hex",
+        "hex": "#17335C",
+        "role": "design::m3_seed_hex(), the AZUR hue of the atlas palette (earlier game-atlas contract)",
+        "sources": [
+          "ay_design"
+        ]
+      },
+      {
+        "id": "seed.pet",
+        "hex": "#8C6C88",
+        "role": "design::pet_seed_hex(), the product UI seed (canonical pet sock mauve measured 2026-10-06)",
+        "sources": [
+          "ay_design"
+        ]
+      }
+    ]
+  },
+  "theme": {
+    "source": "assets/brand/m3-tokens.json",
+    "spec_version": "2021",
+    "variant": "tonal-spot",
+    "contrast_level": 0.0,
+    "seed": "#e2dbad",
+    "light": {
+      "primary": "#676013",
+      "onPrimary": "#ffffff",
+      "primaryContainer": "#efe58b",
+      "onPrimaryContainer": "#4e4800",
+      "secondary": "#635f41",
+      "onSecondary": "#ffffff",
+      "tertiary": "#406653",
+      "onTertiary": "#ffffff",
+      "background": "#fef9eb",
+      "onBackground": "#1d1c14",
+      "surface": "#fef9eb",
+      "onSurface": "#1d1c14",
+      "surfaceVariant": "#e8e2d0",
+      "onSurfaceVariant": "#49473a",
+      "outline": "#7a7768",
+      "outlineVariant": "#cbc7b5",
+      "error": "#ba1a1a",
+      "onError": "#ffffff"
+    },
+    "dark": {
+      "primary": "#d3c972",
+      "onPrimary": "#363100",
+      "primaryContainer": "#4e4800",
+      "onPrimaryContainer": "#efe58b",
+      "secondary": "#cdc7a3",
+      "onSecondary": "#343117",
+      "tertiary": "#a6d0b8",
+      "onTertiary": "#0f3727",
+      "background": "#15140c",
+      "onBackground": "#e7e2d5",
+      "surface": "#15140c",
+      "onSurface": "#e7e2d5",
+      "surfaceVariant": "#49473a",
+      "onSurfaceVariant": "#cbc7b5",
+      "outline": "#949181",
+      "outlineVariant": "#49473a",
+      "error": "#ffb4ab",
+      "onError": "#690005"
+    },
+    "full_scheme": "assets/brand/m3-tokens.json (29+ roles per mode) and assets/brand/m3-tokens.css",
+    "sources": [
+      "ay_m3_tokens"
+    ]
+  },
+  "fonts": [
+    {
+      "id": "font.google-sans-flex",
+      "name": "Google Sans Flex",
+      "usage": "brand text (M3 reference typeface, brand and plain)",
+      "source": "https://github.com/google/fonts/tree/main/ofl/googlesansflex",
+      "served_from": "https://cdn.aphrody.com/h/5471cd49142ee6f3.woff2 (answered 404 on 2026-11-16; the stylesheet in assets/brand/aphrody-fonts.css still points at it)",
+      "licence": "SIL OFL 1.1",
+      "licence_status": "verified: OFL.txt read in google/fonts",
+      "css": "assets/brand/aphrody-fonts.css",
+      "axes": "ROND, opsz, slnt, wdth, wght",
+      "sources": [
+        "ay_fonts_css",
+        "gfonts_googlesansflex"
+      ]
+    },
+    {
+      "id": "font.material-symbols",
+      "name": "Material Symbols",
+      "usage": "icons",
+      "source": "https://github.com/google/material-design-icons",
+      "served_from": "https://cdn.aphrody.com/s/symbols/material-symbols.css",
+      "licence": "Apache-2.0",
+      "licence_status": "verified: LICENSE read in google/material-design-icons",
+      "sources": [
+        "ay_fonts_css",
+        "mdi_license"
+      ]
+    },
+    {
+      "id": "font.roboto",
+      "name": "Roboto",
+      "usage": "Rose Griffon wiki body text (self-hosted 400, 500, 700)",
+      "source": "https://github.com/google/fonts/tree/main/ofl/roboto",
+      "served_from": "rg-website src/fonts/roboto-*.woff2",
+      "licence": "SIL OFL 1.1",
+      "licence_status": "verified: ofl/roboto/OFL.txt exists",
+      "sources": [
+        "rg_fonts_ts",
+        "gfonts_roboto"
+      ]
+    },
+    {
+      "id": "font.poppins",
+      "name": "Poppins",
+      "usage": "Rose Griffon marketing headings (600, 700)",
+      "source": "https://github.com/google/fonts/tree/main/ofl/poppins",
+      "served_from": "rg-website src/fonts/poppins-*.woff2",
+      "licence": "SIL OFL 1.1",
+      "licence_status": "verified: ofl/poppins/OFL.txt exists",
+      "sources": [
+        "rg_fonts_ts",
+        "gfonts_poppins"
+      ]
+    },
+    {
+      "id": "font.super-cartoon",
+      "name": "Super Cartoon",
+      "usage": "Rose Griffon display font",
+      "source": "rg-website public/fonts/Super Cartoon.woff2",
+      "served_from": "/fonts/Super%20Cartoon.woff2",
+      "licence": null,
+      "licence_status": "not stated in the source; owner handles rights",
+      "sources": [
+        "rg_globals_css"
+      ]
+    },
+    {
+      "id": "font.bradbunr",
+      "name": "BradBunR",
+      "usage": "Rose Griffon display font",
+      "source": "rg-website public/fonts/DEFAULT_BradBunR.woff2",
+      "served_from": "/fonts/DEFAULT_BradBunR.woff2",
+      "licence": null,
+      "licence_status": "not stated in the source; owner handles rights",
+      "sources": [
+        "rg_globals_css"
+      ]
+    },
+    {
+      "id": "font.aklatan",
+      "name": "Aklatan",
+      "usage": "Rose Griffon display font",
+      "source": "rg-website public/fonts/Autre police/aklatan.woff2",
+      "served_from": "/fonts/Autre%20police/aklatan.woff2",
+      "licence": null,
+      "licence_status": "not stated in the source; owner handles rights",
+      "sources": [
+        "rg_globals_css"
+      ]
+    }
+  ],
+  "fonts_note": "The game's skill-name lettering (telops) is bitmap artwork, not a font; it is referenced as images.",
+  "svgs": [
+    {
+      "id": "svg.icon",
+      "path": "assets/brand/icon.svg",
+      "bytes": 93766,
+      "sha256": "750a299d10e63a4959c36cd00a674e55090b221aab0446b2d615d25edcec66ab",
+      "viewBox": "0 0 256 256",
+      "usage": "square emblem traced from the official render (silhouette plus 24 colour layers)",
+      "sources": [
+        "ay_brand_assets",
+        "ay_pipeline_svg",
+        "ay_notice"
+      ]
+    },
+    {
+      "id": "svg.logo-wordmark-light",
+      "path": "assets/brand/logo-wordmark-light.svg",
+      "bytes": 97903,
+      "sha256": "3ed4ce1bf694980e6eb316152e0e3ca17ffcead47ce2b2e01f901eefb281c07e",
+      "viewBox": "0 0 370.643 100",
+      "usage": "emblem plus wordmark for light surfaces",
+      "sources": [
+        "ay_brand_assets",
+        "ay_pipeline_svg",
+        "ay_notice"
+      ]
+    },
+    {
+      "id": "svg.logo-wordmark-dark",
+      "path": "assets/brand/logo-wordmark-dark.svg",
+      "bytes": 97903,
+      "sha256": "3d1a4bdd215cf0fd79c5e19c9f20cebbaf95a6f8d098538bc2e00e825e7e5f46",
+      "viewBox": "0 0 370.643 100",
+      "usage": "emblem plus wordmark for dark surfaces",
+      "sources": [
+        "ay_brand_assets",
+        "ay_pipeline_svg",
+        "ay_notice"
+      ]
+    }
+  ],
+  "svg_pipeline": {
+    "doc": "docs/pipeline-svg.md",
+    "generator": "src/logo.rs (logo::svg_vectoriel) via src/cli/export_assets.rs (aphrody identity export-assets)",
+    "input": "assets/logo/source/byron_r0.png (cut-out front render of c01001900 from the official codex)",
+    "settings": "256 px, 24 layers, Douglas-Peucker tolerance 0.5 px, no stroke, dark silhouette under the layers, compact relative paths",
+    "measured": {
+      "bytes": 93766,
+      "ssim": 0.926,
+      "pixels_within_16_levels_pct": 92.8,
+      "gate": "SSIM >= 0.90 and <= 150 KiB (test le_svg_se_rasterise_fidelement)"
+    },
+    "note": "the two wordmark SVGs have the same bytes in both modes (the generator writes one file for both); the dark one is not recoloured."
+  },
+  "images": [
+    {
+      "id": "render.ie1",
+      "url": "https://dxi4wb638ujep.cloudfront.net/1/k/d/y/dykb3jbxeis.png",
+      "kind": "official render (PNG)",
+      "era": "Inazuma Eleven (Zeus)",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "zukan_img_ie1"
+      ],
+      "sha256": "3a0aa3cd67e8de8eec1799a3835c93fac87b22dfc501dea022de61bb293f2230",
+      "bytes": 41736,
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "fetched": true,
+      "note": "Also published as WebP: https://dxi4wb638ujep.cloudfront.net/1/k/d/y/dykb3jbxeis.webp (7 998 bytes)."
+    },
+    {
+      "id": "render.go",
+      "url": "https://dxi4wb638ujep.cloudfront.net/1/k/g/l/gltgpqjnrn0.png",
+      "kind": "official render (PNG)",
+      "era": "GO (coach)",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "zukan_img_go"
+      ],
+      "sha256": "73f2ccec7aa7166703eb0cdd22142469faa3976c9f3334f1726cca275ab99dd1",
+      "bytes": 42240,
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "render.ares",
+      "url": "https://dxi4wb638ujep.cloudfront.net/1/k/6/q/6q1af7euf9m.png",
+      "kind": "official render (PNG)",
+      "era": "Ares (Zeus)",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "zukan_img_ares"
+      ],
+      "sha256": "a6cc7e39caaff4314a5e86e05e9e897deef6b171c0f7802e9694ab74fda75c06",
+      "bytes": 44637,
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "fetched": true,
+      "note": "The game database stores this same hash on c01001900 (IE1), which the audit flags as an era mismatch; the official IE1 render is render.ie1."
+    },
+    {
+      "id": "face.c01001900",
+      "url": "https://nie.aphrody.app/dx11/menu/200_icon/10_icon_chr/face/c01001900_l.png",
+      "kind": "game face icon",
+      "era": "IE1",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "face_ie1"
+      ],
+      "sha256": "99cbbeaf04f3fef56df36262f3818e4547ee8c2924628f4d554f95482c490cda",
+      "bytes": 29180,
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "face.c05026590",
+      "url": "https://nie.aphrody.app/dx11/menu/200_icon/10_icon_chr/face/c05026590_l.png",
+      "kind": "game face icon",
+      "era": "GO",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "face_go"
+      ],
+      "sha256": "dfdb412d3f516eab57abdb752efaccb2407783cc0b6dd299ccaa891438a50342",
+      "bytes": 32556,
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "face.c07080010",
+      "url": "https://nie.aphrody.app/dx11/menu/200_icon/10_icon_chr/face/c07080010_l.png",
+      "kind": "game face icon",
+      "era": "Ares",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "face_ares"
+      ],
+      "sha256": "ba9550e1a2bd9a2958441e0907a8be81da36bc7664432f854d29707a9321053a",
+      "bytes": 30355,
+      "width": 256,
+      "height": 256,
+      "mode": "RGBA",
+      "fetched": true,
+      "note": "HTTP 502 on every attempt on 2026-11-16."
+    },
+    {
+      "id": "viewer.ie1",
+      "url": "https://zukan.inazuma.jp/en/chara_model_view/?q=hN2cl56NnpyLmo2glpvdxaTdnM_Oz8_Oxs_P3aKC",
+      "kind": "3D model viewer page",
+      "era": "IE1",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "zukan_en_list"
+      ],
+      "fetched": false
+    },
+    {
+      "id": "viewer.go",
+      "url": "https://zukan.inazuma.jp/en/chara_model_view/?q=hN2cl56NnpyLmo2glpvdxaTdnM_Kz83JysbP3aKC",
+      "kind": "3D model viewer page",
+      "era": "GO",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "zukan_en_list"
+      ],
+      "fetched": false
+    },
+    {
+      "id": "viewer.ares",
+      "url": "https://zukan.inazuma.jp/en/chara_model_view/?q=hN2cl56NnpyLmo2glpvdxaTdnM_Iz8fPz87P3aKC",
+      "kind": "3D model viewer page",
+      "era": "Ares",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "zukan_en_list"
+      ],
+      "fetched": false
+    },
+    {
+      "id": "telop.whs00340",
+      "url": "https://nie.aphrody.app/dx11/menu/220_img/telop_waza/fr/whs00340.png",
+      "kind": "skill telop, French lettering (God Knows)",
+      "era": "Victory Road",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "telop_whs00340"
+      ],
+      "sha256": "90c89f755d7c6e0ad6d93fd19f9eacfc471e57b3fab58efed22057a3bdea3957",
+      "bytes": 251296,
+      "width": 1728,
+      "height": 352,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "telop.whs00900",
+      "url": "https://nie.aphrody.app/dx11/menu/220_img/telop_waza/fr/whs00900.png",
+      "kind": "skill telop, French lettering (God Break)",
+      "era": "Victory Road",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "telop_whs00900"
+      ],
+      "sha256": "2a20e2f35760709a50ac3f86b9c96c05819007662830937bf7fce31a2acb7949",
+      "bytes": 168145,
+      "width": 1728,
+      "height": 352,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "telop.whs01250",
+      "url": "https://nie.aphrody.app/dx11/menu/220_img/telop_waza/fr/whs01250.png",
+      "kind": "skill telop, French lettering (Chaos Break)",
+      "era": "Victory Road",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "telop_whs01250"
+      ],
+      "sha256": "fb61df451e4f5604cc31ce089b4b8420dacd6247314fd04b929d117825150d04",
+      "bytes": 212149,
+      "width": 1728,
+      "height": 352,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "telop.whs00310",
+      "url": "https://nie.aphrody.app/dx11/menu/220_img/telop_waza/fr/whs00310.png",
+      "kind": "skill telop, French lettering (Divine Arrow)",
+      "era": "Victory Road",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "telop_whs00310"
+      ],
+      "sha256": "769d76a7fc1ab8c8a2822dff58ec05427f65f650c8f0a32858bbeb3fa43246cf",
+      "bytes": 233862,
+      "width": 1728,
+      "height": 352,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "telop.whs01080",
+      "url": "https://nie.aphrody.app/dx11/menu/220_img/telop_waza/fr/whs01080.png",
+      "kind": "skill telop, French lettering (Heaven Drive)",
+      "era": "Victory Road",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "telop_whs01080"
+      ],
+      "sha256": "f449876721c847210ed7e33c330bf0c692023bb1a2e00d749ff16d94cc6d336d",
+      "bytes": 176483,
+      "width": 1728,
+      "height": 352,
+      "mode": "RGBA",
+      "fetched": true
+    },
+    {
+      "id": "telop.rho10010",
+      "url": "https://nie.aphrody.app/dx11/menu/220_img/telop_waza/fr/rho10010.png",
+      "kind": "skill telop, French lettering",
+      "era": "Victory Road",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "game_dossier"
+      ],
+      "fetched": false,
+      "note": "HTTP 404 on 2026-11-16 (502 then 404): no French lettering could be read."
+    },
+    {
+      "id": "telop.who00200",
+      "url": "https://nie.aphrody.app/dx11/menu/220_img/telop_waza/fr/who00200.png",
+      "kind": "skill telop, French lettering",
+      "era": "Victory Road",
+      "retrieved": "2026-11-16",
+      "sources": [
+        "game_dossier"
+      ],
+      "fetched": false,
+      "note": "HTTP 404 on 2026-11-16 (502 then 404): no French lettering could be read."
+    },
+    {
+      "id": "fandom.afuro-terumi",
+      "url": "https://inazuma.fandom.com/wiki/File:Afuro_Terumi.png",
+      "kind": "fan wiki gallery file page",
+      "era": "Original",
+      "retrieved": "2026-11-16",
+      "fetched": false,
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Named in the page gallery; not downloaded."
+    },
+    {
+      "id": "fandom.afuro-terumi-go",
+      "url": "https://inazuma.fandom.com/wiki/File:Afuro_Terumi_(GO).png",
+      "kind": "fan wiki gallery file page",
+      "era": "GO",
+      "retrieved": "2026-11-16",
+      "fetched": false,
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Named in the page gallery; not downloaded."
+    },
+    {
+      "id": "fandom.afuro-terumi-orion",
+      "url": "https://inazuma.fandom.com/wiki/File:Afuro_Terumi_(Orion).png",
+      "kind": "fan wiki gallery file page",
+      "era": "Orion",
+      "retrieved": "2026-11-16",
+      "fetched": false,
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Named in the page gallery; not downloaded."
+    },
+    {
+      "id": "logo.source",
+      "path": "assets/logo/source/byron_r0.png",
+      "kind": "repo asset",
+      "note": "logo input, official cut-out render of c01001900",
+      "sha256": "5041ddd794dcea7f18c6e556764548ab436b9b62cc39dcb010487e3dc9783ecf",
+      "bytes": 87969,
+      "width": 750,
+      "height": 422,
+      "mode": "RGBA",
+      "sources": [
+        "ay_notice"
+      ],
+      "retrieved": "2026-11-16",
+      "fetched": true
+    },
+    {
+      "id": "logo.fullbody",
+      "path": "assets/logo/source/byron_r0_fullbody.png",
+      "kind": "repo asset",
+      "note": "full-body cut-out",
+      "sha256": "37d009ea244f0f43a1eeca29d6d850319d2575af35fa417efc0a8c5f4f24e612",
+      "bytes": 113988,
+      "width": 750,
+      "height": 750,
+      "mode": "RGBA",
+      "sources": [
+        "ay_brand_assets"
+      ],
+      "retrieved": "2026-11-16",
+      "fetched": true
+    },
+    {
+      "id": "logo.webp",
+      "path": "assets/logo/aphrody.webp",
+      "kind": "repo asset",
+      "note": "lossless WebP portrait",
+      "sha256": "f1d6c80bbad83418a720f0afe685cd4b9267427c69c793eca1302e3522f3ebd9",
+      "bytes": 68542,
+      "width": 750,
+      "height": 422,
+      "mode": "RGBA",
+      "sources": [
+        "ay_brand_assets"
+      ],
+      "retrieved": "2026-11-16",
+      "fetched": true
+    },
+    {
+      "id": "pet.spritesheet",
+      "path": "assets/aphrody/sprites/spritesheet.png",
+      "kind": "repo asset",
+      "note": "pet atlas used for the atlas_hues palette",
+      "sha256": "bc48f3e2a4d3086234062b9175d58f2caaec39f6afeb53ab8b222513fe964037",
+      "bytes": 1993069,
+      "width": 1536,
+      "height": 2288,
+      "mode": "RGBA",
+      "sources": [
+        "ay_brand_assets"
+      ],
+      "retrieved": "2026-11-16",
+      "fetched": true
+    }
+  ],
+  "raster_assets": [
+    {
+      "path": "assets/brand/apple-touch-icon.png",
+      "bytes": 31158,
+      "sha256": "dd0571149109ce0e8337c208622295d0464fe4c3c14fe6363fbee0c1758b5618",
+      "width": 180,
+      "height": 180
+    },
+    {
+      "path": "assets/brand/favicon.ico",
+      "bytes": 107962,
+      "sha256": "6d6dee386d021ea25c2d1bac70455ccc2a2e52d3c9145861fe50c4afb8320153"
+    },
+    {
+      "path": "assets/brand/icon-1024.png",
+      "bytes": 617587,
+      "sha256": "ceb2beebdc6aff9b37d47b4fedceb25f3645b21186e4380e26479036dd8b5112",
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "path": "assets/brand/icon-128.png",
+      "bytes": 23061,
+      "sha256": "8c1cade6e69e6b7b6e64934db2a53f5cacd3d52381ae368bae3ca900f363e4b2",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "path": "assets/brand/icon-16.png",
+      "bytes": 942,
+      "sha256": "f7898841f00be70ad9cd0df19a26090bea9e9cce01656c83f33deeb077981ba7",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "path": "assets/brand/icon-180.png",
+      "bytes": 38263,
+      "sha256": "c903209190167418d0be364ff338ece7954f5bf0fc2d93247a64789962732bb3",
+      "width": 180,
+      "height": 180
+    },
+    {
+      "path": "assets/brand/icon-192.png",
+      "bytes": 42089,
+      "sha256": "9949d2220921a18a59546545c24ec073e8194189ec82c4f3cf7cb68b8e93fd73",
+      "width": 192,
+      "height": 192
+    },
+    {
+      "path": "assets/brand/icon-256.png",
+      "bytes": 66226,
+      "sha256": "f4b8ab970088883911ee2df27ba9d2fe83e0156d21c830ead167408e99653af2",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/brand/icon-32.png",
+      "bytes": 2696,
+      "sha256": "b935eccd6d3df7b5093f42922fa3ab4e5eee461337dd29feb5b647764244af66",
+      "width": 32,
+      "height": 32
+    },
+    {
+      "path": "assets/brand/icon-48.png",
+      "bytes": 5165,
+      "sha256": "eb07a903aa8443412f37822d70a40ea4334f6f162726e6fa17fcaa3cc76bbdeb",
+      "width": 48,
+      "height": 48
+    },
+    {
+      "path": "assets/brand/icon-512.png",
+      "bytes": 208735,
+      "sha256": "c1871d1e901d98e048585912bb183550cbe9e5240e02c02051bd765fad4a790c",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "path": "assets/brand/icon-64.png",
+      "bytes": 8051,
+      "sha256": "00e41d4bf4d5a7a5abf64b8dd430d209a9a0b44904879f167466af7f101bcfc5",
+      "width": 64,
+      "height": 64
+    },
+    {
+      "path": "assets/brand/maskable-192.png",
+      "bytes": 25911,
+      "sha256": "b929d061b63067f03e0157c3735b6e9fccd06771b158692650267a1f94106459",
+      "width": 192,
+      "height": 192
+    },
+    {
+      "path": "assets/brand/maskable-512.png",
+      "bytes": 127506,
+      "sha256": "a4ee671f42ee4e42efb27de170f78685011fcd222b1d84e94e088782a1b6d29b",
+      "width": 512,
+      "height": 512
+    },
+    {
+      "path": "assets/brand/site.webmanifest",
+      "bytes": 856,
+      "sha256": "65cd2df067b029bd45a17dcfca1b42481e7fcd276641bf654072ee2d2557bc3c"
+    }
+  ]
+}

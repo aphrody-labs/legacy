@@ -1,0 +1,646 @@
+{
+  "schema": "aphrody.character.voice",
+  "schema_version": 1,
+  "dataset_version": "1.0.0",
+  "character": "byron-love-aphrody",
+  "generated": "2026-11-16",
+  "source_language": "en",
+  "translation_policy": "Other languages are present only where a source gives them (game text, codex, wiki); authored copy has English only.",
+  "summary": "Graceful, composed, warm and honest; a touch of the divine as an accent; admits failure and invites people in; never talks down.",
+  "rules": [
+    {
+      "id": "tone.composed",
+      "kind": "tone",
+      "text": "Composed and graceful: short, calm sentences, no shouting.",
+      "sources": [
+        "fandom_en",
+        "zukan_en_ie1"
+      ]
+    },
+    {
+      "id": "tone.warm",
+      "kind": "tone",
+      "text": "Warm and inviting, addressing the reader like a teammate ('join us', 'with you').",
+      "sources": [
+        "rg_wiki",
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "tone.honest",
+      "kind": "tone",
+      "text": "Plain and honest: say what you see, then say how to fix it.",
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "tone.quietly-confident",
+      "kind": "tone",
+      "text": "Quietly confident, never boastful; confidence comes from preparation.",
+      "sources": [
+        "fandom_en",
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "tone.lightly-divine",
+      "kind": "tone",
+      "text": "A light touch of the divine and the artistic (grace, aura, beauty, heaven), used as an accent, not as every sentence.",
+      "sources": [
+        "zukan_en_ie1",
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "rhythm.short",
+      "kind": "rhythm",
+      "text": "One idea per sentence; pauses carried by an ellipsis only in dramatic moments.",
+      "sources": [
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "person.we-with-you",
+      "kind": "person",
+      "text": "First person plural for the product team and 'you' for the reader; never talk down.",
+      "sources": [
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "do.admit-and-improve",
+      "kind": "do",
+      "text": "Admit a failure in one sentence and move to the next step.",
+      "sources": [
+        "rg_wiki",
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "do.name-the-effort",
+      "kind": "do",
+      "text": "Credit training and effort over talent.",
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "do.invite",
+      "kind": "do",
+      "text": "Invite people in ('I'd like to join', 'fight with you'); ask for help openly.",
+      "sources": [
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "do.keep-the-grace",
+      "kind": "do",
+      "text": "Keep a little elegance in the wording (a precise verb, a clean image).",
+      "sources": [
+        "zukan_en_ie1"
+      ]
+    },
+    {
+      "id": "do.state-the-truth",
+      "kind": "do",
+      "text": "Give the hard fact first (no way they could win like this) and offer a path.",
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "dont.mortals",
+      "kind": "dont",
+      "text": "Do not talk down to the user as a mortal or a weakling.",
+      "sources": [
+        "fandom_en"
+      ],
+      "why": "The Zeus-era lines ('Foolish mortals', 'Begone, weaklings') are the old self the arc rejects."
+    },
+    {
+      "id": "dont.shortcut",
+      "kind": "dont",
+      "text": "Do not sell shortcuts or magic drinks; no 'effortless power' claims.",
+      "sources": [
+        "rg_wiki",
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "dont.hype",
+      "kind": "dont",
+      "text": "No hype stacking: one exclamation mark at most, never in error text.",
+      "sources": [
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "dont.name-drop-gods",
+      "kind": "dont",
+      "text": "Do not name-drop mythology in every line; the pantheon is a motif, not a vocabulary quota.",
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "dont.blame",
+      "kind": "dont",
+      "text": "Do not blame the user for a failure; share responsibility.",
+      "sources": [
+        "fandom_en"
+      ],
+      "why": "He says the team is 'equally guilty', and takes responsibility himself."
+    }
+  ],
+  "lexicon": [
+    {
+      "term": "grace",
+      "status": "prefer",
+      "sources": [
+        "zukan_en_ie1"
+      ]
+    },
+    {
+      "term": "artistic",
+      "status": "prefer",
+      "sources": [
+        "zukan_en_ie1",
+        "zukan_en_ares"
+      ]
+    },
+    {
+      "term": "aura",
+      "status": "prefer",
+      "sources": [
+        "zukan_en_ie1"
+      ]
+    },
+    {
+      "term": "beautiful",
+      "status": "prefer",
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "term": "together",
+      "status": "prefer",
+      "sources": [
+        "rg_wiki"
+      ],
+      "note": "'fight with you', 'join the team'"
+    },
+    {
+      "term": "grow",
+      "status": "prefer",
+      "sources": [
+        "rg_wiki"
+      ],
+      "note": "'Falling down is how humans grow'"
+    },
+    {
+      "term": "train",
+      "status": "prefer",
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "term": "heaven",
+      "status": "prefer",
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Heaven's Time, Heaven Drive"
+    },
+    {
+      "term": "light",
+      "status": "prefer",
+      "sources": [
+        "telop_whs00900"
+      ],
+      "note": "Tir solaire"
+    },
+    {
+      "term": "learn",
+      "status": "prefer",
+      "sources": [
+        "rg_wiki"
+      ],
+      "note": "'That loss taught me something'"
+    },
+    {
+      "term": "worry not",
+      "status": "prefer",
+      "sources": [
+        "rg_wiki"
+      ],
+      "note": "ev22_18234; use sparingly"
+    },
+    {
+      "term": "fight for our own sakes",
+      "status": "prefer",
+      "sources": [
+        "rg_wiki"
+      ]
+    },
+    {
+      "term": "mortals",
+      "status": "avoid",
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Zeus-era goal line"
+    },
+    {
+      "term": "weaklings",
+      "status": "avoid",
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Zeus-era goal line"
+    },
+    {
+      "term": "fragile",
+      "status": "avoid",
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Zeus-era goal line ('So fragile')"
+    },
+    {
+      "term": "not worth talking about",
+      "status": "avoid",
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "Zeus-era goal line"
+    },
+    {
+      "term": "ambrosia / aqua",
+      "status": "avoid",
+      "sources": [
+        "rg_wiki"
+      ],
+      "note": "as a crutch"
+    },
+    {
+      "term": "foolish",
+      "status": "avoid",
+      "sources": [
+        "fandom_en"
+      ],
+      "note": "unless self-directed ('foolishly rely')"
+    }
+  ],
+  "samples": [
+    {
+      "id": "game.join-raimon",
+      "origin": "game-text",
+      "context": "Asking to join Raimon.",
+      "text": {
+        "en": "I'd like to join the Raimon team.",
+        "ja": "僕を 雷門の一員に加えてほしい。",
+        "fr": "J'aimerais me joindre à l'équipe de Raimon."
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0x8FC1439F",
+      "event": "ev22_15202"
+    },
+    {
+      "id": "game.fight-with-you",
+      "origin": "game-text",
+      "context": "Offering to fight alongside Endou.",
+      "text": {
+        "en": "I'm here to fight. I shall fight with you... and defeat Alius Academy!",
+        "ja": "僕は戦うために来たんだ。 君たちと共に… エイリア学園を倒す！",
+        "fr": "Je suis là pour combattre. Je me battrai à tes côtés... et vaincrai l'Alius Academy !"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0xF374DDED",
+      "event": "ev22_15202"
+    },
+    {
+      "id": "game.fighting-spirit",
+      "origin": "game-text",
+      "context": "Why he came back.",
+      "text": {
+        "en": "Watching you battle again and again... I couldn't suppress my fighting spirit.",
+        "ja": "激戦を続ける君たちの姿に 湧き上がる闘志を抑えられなくなったんだ。",
+        "fr": "En voyant l'étendue de votre détermination, je n'ai pas pu retenir l'envie de venir me battre à vos côtés."
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0xC142BF6F",
+      "event": "ev22_15202"
+    },
+    {
+      "id": "game.no-ambrosia",
+      "origin": "game-text",
+      "context": "Refusing the shortcut.",
+      "text": {
+        "en": "Never again will I foolishly rely on ambrosia.",
+        "ja": "僕は 神のアクアに頼るような愚かなことは 二度としない。",
+        "fr": "Plus jamais je ne me reposerai bêtement sur le Nectar des dieux."
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0x46DAA3A0",
+      "event": "ev22_15202"
+    },
+    {
+      "id": "game.falling-down",
+      "origin": "game-text",
+      "context": "What defeat taught him.",
+      "text": {
+        "en": "That loss taught me something. Falling down is how humans grow.",
+        "ja": "君たちに敗れて学んだんだ。 人は 倒れる度に強くなるんだって…。",
+        "fr": "Cet échec m'a appris quelque chose. Les humains grandissent dans la défaite."
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0x5FC192E1",
+      "event": "ev22_15202"
+    },
+    {
+      "id": "game.worry-not",
+      "origin": "game-text",
+      "context": "Reassuring the team.",
+      "text": {
+        "en": "Worry not! Come now, keep on bringing the ball to me!",
+        "ja": "大丈夫だよ！ さあ どんどん僕にボールを集めて！",
+        "fr": "Ne t'en fais pas ! Allez, continue de m'amener le ballon !"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0xBAB7884D",
+      "event": "ev22_18234"
+    },
+    {
+      "id": "game.fire-dragon",
+      "origin": "game-text",
+      "context": "Introducing Fire Dragon.",
+      "text": {
+        "en": "That's right... We're on the Korean team. We are Fire Dragon!",
+        "ja": "そう… 僕たちが 韓国代表『ファイアードラゴン』！",
+        "fr": "Exactement... Nous sommes l'équipe coréenne. Les Dragons de feu !"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0xAEC2D800",
+      "event": "ev23_05000"
+    },
+    {
+      "id": "game.not-the-same",
+      "origin": "game-text",
+      "context": "Warning the opponent.",
+      "text": {
+        "en": "We're not the same players we were before, though. We've been through some brutal training. Plus, we've got <FUL:CHANGSU>.",
+        "ja": "かつての僕たちだとは 思わないことだ。 各々が 過酷な特訓を重ねた上に このチームには チェ・チャンスウがいるからね。",
+        "fr": "Mais nous ne sommes plus les mêmes joueurs. Nous avons suivi un entraînement rigoureux. De plus, nous avons <FUL:CHANGSU>."
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (the export does not label speakers)",
+      "line_id": "0xB7D9E941",
+      "event": "ev23_05000"
+    },
+    {
+      "id": "game.own-sakes",
+      "origin": "game-text",
+      "context": "Coaching Kirkwood.",
+      "text": {
+        "en": "We'll fight for our own sakes and win!",
+        "ja": "必ず勝つぞ！",
+        "fr": "Nous allons nous battre dans notre propre intérêt et pour la victoire !"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (Kirkwood coach)",
+      "line_id": "0xBD099266",
+      "event": "ev24_11000"
+    },
+    {
+      "id": "game.true-path",
+      "origin": "game-text",
+      "context": "Coaching Kirkwood.",
+      "text": {
+        "en": "Give it your all against Raimon. Do that, and the true path will reveal itself!",
+        "ja": "この試合 全力で雷門を倒せ。 そうすれば 進むべき道は見える！",
+        "fr": "... donnez tout ce que vous avez contre Raimon, et le chemin de la victoire s'ouvrira à vous !"
+      },
+      "sources": [
+        "rg_wiki",
+        "game_dossier"
+      ],
+      "speaker_basis": "scene context (Kirkwood coach)",
+      "line_id": "0xF24804A1",
+      "event": "ev24_11000"
+    },
+    {
+      "id": "codex.ie1",
+      "origin": "official",
+      "context": "Victory Road codex blurb.",
+      "text": {
+        "en": "Captivating the opposition with artistic grace, he plays with the aura of a deity from on high.",
+        "ja": "芸術的なプレイで敵をも魅了する。その姿は神のように美しい。",
+        "fr": "Captivant ses adversaires avec une grâce artistique, il joue avec une aura divine."
+      },
+      "sources": [
+        "zukan_en_ie1",
+        "zukan_ja_ie1",
+        "rg_wiki"
+      ]
+    },
+    {
+      "id": "codex.ares",
+      "origin": "official",
+      "context": "Victory Road codex blurb.",
+      "text": {
+        "en": "Raimon's defeat fueled him to refine his game into something sharp and almost artistic.",
+        "ja": "雷門への敗北をバネに　自らを鍛え直し芸術的なプレイに磨きがかかった。"
+      },
+      "sources": [
+        "zukan_en_ares",
+        "zukan_ja_ares"
+      ]
+    },
+    {
+      "id": "anime.losing",
+      "origin": "anime-dub",
+      "context": "Ares episode 15, after the 3-2 loss to Raimon.",
+      "text": {
+        "en": "There are some things that you can only gain by losing."
+      },
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "zeus.goal-1",
+      "origin": "anime-dub",
+      "context": "Zeus-era goal line, kept as the counter-example (see dont.mortals). The Japanese line reads 'Goal! So fragile.'",
+      "text": {
+        "en": "Goal! Foolish mortals...",
+        "ja": "ゴール! 儚いな。"
+      },
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "zeus.goal-2",
+      "origin": "anime-dub",
+      "context": "Inazuma Eleven 2 and 3 goal line (stray character フ in the wiki transcription dropped).",
+      "text": {
+        "en": "Goal! A truly divine goal!",
+        "ja": "ゴール！これが神の力！"
+      },
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "zeus.goal-3",
+      "origin": "anime-dub",
+      "context": "Inazuma Eleven goal line (Japanese 'Goal! We won't lose.').",
+      "text": {
+        "en": "Goal! We can never lose!",
+        "ja": "ゴール!我らに負けはない。"
+      },
+      "sources": [
+        "fandom_en"
+      ]
+    },
+    {
+      "id": "brand.welcome",
+      "origin": "authored",
+      "context": "welcome screen",
+      "text": {
+        "en": "Welcome. Let us begin."
+      },
+      "sources": [
+        "authored",
+        "rg_wiki"
+      ],
+      "derived_from": [
+        "game.join-raimon",
+        "tone.warm"
+      ],
+      "text_note": "English only: translations in other languages must come from sources, and none exist for authored copy."
+    },
+    {
+      "id": "brand.error",
+      "origin": "authored",
+      "context": "error message",
+      "text": {
+        "en": "That did not work. Here is what to try next."
+      },
+      "sources": [
+        "authored",
+        "rg_wiki"
+      ],
+      "derived_from": [
+        "do.admit-and-improve",
+        "dont.blame"
+      ],
+      "text_note": "English only: translations in other languages must come from sources, and none exist for authored copy."
+    },
+    {
+      "id": "brand.success",
+      "origin": "authored",
+      "context": "success toast",
+      "text": {
+        "en": "Done. Well played."
+      },
+      "sources": [
+        "authored",
+        "rg_wiki"
+      ],
+      "derived_from": [
+        "tone.composed",
+        "codex.ie1"
+      ],
+      "text_note": "English only: translations in other languages must come from sources, and none exist for authored copy."
+    },
+    {
+      "id": "brand.update",
+      "origin": "authored",
+      "context": "update prompt",
+      "text": {
+        "en": "A new version is ready. It takes a moment, and everything stays where you left it."
+      },
+      "sources": [
+        "authored",
+        "rg_wiki"
+      ],
+      "derived_from": [
+        "tone.composed",
+        "tone.honest"
+      ],
+      "text_note": "English only: translations in other languages must come from sources, and none exist for authored copy."
+    },
+    {
+      "id": "brand.empty",
+      "origin": "authored",
+      "context": "empty state",
+      "text": {
+        "en": "Nothing here yet. Start with one small thing."
+      },
+      "sources": [
+        "authored",
+        "rg_wiki"
+      ],
+      "derived_from": [
+        "do.name-the-effort",
+        "game.worry-not"
+      ],
+      "text_note": "English only: translations in other languages must come from sources, and none exist for authored copy."
+    },
+    {
+      "id": "brand.help",
+      "origin": "authored",
+      "context": "help entry",
+      "text": {
+        "en": "Ask for help whenever you like. We will work through it with you."
+      },
+      "sources": [
+        "authored",
+        "rg_wiki"
+      ],
+      "derived_from": [
+        "do.invite",
+        "game.fight-with-you"
+      ],
+      "text_note": "English only: translations in other languages must come from sources, and none exist for authored copy."
+    }
+  ]
+}
