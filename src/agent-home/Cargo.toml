@@ -47,10 +47,12 @@ path = "benches/agent_home_bench.rs"
 harness = false
 
 [dependencies.aphrody-config]
+path = "../config"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-models]
+path = "../models"
 version = "1.4.7"
 features = []
 

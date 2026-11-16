@@ -15,9 +15,9 @@ unsafe_code = "forbid"
 
 # One rev for every craft-* crate (docs/games/PLAN.md step 3).
 [dependencies]
-craft-svg = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9" }
-craft-webp = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9" }
-craft-exr = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9", features = ["decode"] }
-craft-psd = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9" }
-craft-tiff = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9" }
-craft-heif = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9" }
+craft-svg = { git = "https://github.com/storytold/craft-libs", rev = "7f3fdc0dfebd03f33a241f91f916e9a78d3e5c93" }
+craft-webp = { git = "https://github.com/storytold/craft-libs", rev = "7f3fdc0dfebd03f33a241f91f916e9a78d3e5c93" }
+craft-exr = { git = "https://github.com/storytold/craft-libs", rev = "7f3fdc0dfebd03f33a241f91f916e9a78d3e5c93", features = ["decode"] }
+craft-psd = { git = "https://github.com/storytold/craft-libs", rev = "7f3fdc0dfebd03f33a241f91f916e9a78d3e5c93" }
+craft-tiff = { git = "https://github.com/storytold/craft-libs", rev = "7f3fdc0dfebd03f33a241f91f916e9a78d3e5c93" }
+craft-heif = { git = "https://github.com/storytold/craft-libs", rev = "7f3fdc0dfebd03f33a241f91f916e9a78d3e5c93" }

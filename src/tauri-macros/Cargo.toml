@@ -20,8 +20,8 @@ proc-macro2 = { version = "1", features = ["span-locations"] }
 quote = "1"
 syn = { version = "2", features = ["full"] }
 heck = "0.5"
-tauri-codegen = { version = "~3.0.0-alpha.3", path = "../aphrody-tauri-codegen", package = "aphrody-tauri-codegen" }
-tauri-utils = { version = "~3.0.0-alpha.3", path = "../aphrody-tauri-utils", package = "aphrody-tauri-utils" }
+tauri-codegen = { version = "~3.0.0-alpha.3", path = "../tauri-codegen", package = "aphrody-tauri-codegen" }
+tauri-utils = { version = "~3.0.0-alpha.3", path = "../tauri-utils", package = "aphrody-tauri-utils" }
 
 [features]
 custom-protocol = []

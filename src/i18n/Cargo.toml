@@ -1,10 +1,15 @@
 [package]
 name = "aphrody-i18n"
-description = "Shared i18n catalogs (packages/i18n/locales/*.json): ICU plural/select subset, fallback to en, Accept-Language negotiation."
+description = "Shared i18n catalogs (packages/i18n/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+build = "build.rs"
 
 [dependencies]
 serde_json.workspace = true
+icu_locale = "2.4"
+icu_plurals = "2.4"
+icu_decimal = "2.4"
+sys-locale.workspace = true

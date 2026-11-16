@@ -1,42 +1,20 @@
-//! Reads the catalogs shared with `@aphrody/i18n` (`packages/i18n/locales/*.json`).
-//! Same message subset: `{name}`, `{n, number}`, `{n, plural, =0 {} one {} other {}}` with `#`,
-//! `{g, select, ...}`, apostrophe quoting. Plural rules are the CLDR ones for the shipped
-//! locales (en, es: one = 1; fr: one = 0 or 1; zh-CN, ja: other). `#` and `number` print the
-//! integer without grouping (the TypeScript side uses Intl.NumberFormat; keep shared test
-//! values below 1000).
+//! Reads the catalogs shared with `@aphrody/i18n` (`packages/i18n/locales/*.json`) and formats their Unicode
+//! MessageFormat 2 messages. Locales are the catalogs that exist (discovered at build time for the embedded set,
+//! at run time with [`Catalogs::from_dir`]); the source locale comes from `packages/i18n/i18n.config.json`.
+//! Locale negotiation uses ICU4X likely subtags, plural rules and number formatting come from ICU4X.
 
-use std::collections::HashMap;
+mod mf2;
+
+use icu_locale::{Locale, LocaleDirectionality, LocaleExpander};
+use std::collections::BTreeMap;
+use std::path::Path;
 use std::sync::OnceLock;
 
-pub const SOURCE_LOCALE: &str = "en";
-pub const LOCALES: [&str; 5] = ["en", "fr", "zh-CN", "ja", "es"];
-
-const RAW: [(&str, &str); 5] = [
-    ("en", include_str!("../../../packages/i18n/locales/en.json")),
-    ("fr", include_str!("../../../packages/i18n/locales/fr.json")),
-    (
-        "zh-CN",
-        include_str!("../../../packages/i18n/locales/zh-CN.json"),
-    ),
-    ("ja", include_str!("../../../packages/i18n/locales/ja.json")),
-    ("es", include_str!("../../../packages/i18n/locales/es.json")),
-];
-
-pub type Catalog = HashMap<String, String>;
-
-pub fn catalogs() -> &'static HashMap<&'static str, Catalog> {
-    static C: OnceLock<HashMap<&'static str, Catalog>> = OnceLock::new();
-    C.get_or_init(|| {
-        RAW.iter()
-            .map(|(l, raw)| {
-                (
-                    *l,
-                    serde_json::from_str(raw).expect("catalog JSON is valid"),
-                )
-            })
-            .collect()
-    })
+mod embedded {
+    include!(concat!(env!("OUT_DIR"), "/embedded.rs"));
 }
+
+pub type Catalog = BTreeMap<String, String>;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Arg {
@@ -72,306 +50,67 @@ impl std::fmt::Display for SyntaxError {
 }
 impl std::error::Error for SyntaxError {}
 
-#[derive(Debug, Clone)]
-enum Node {
-    Text(String),
-    Arg {
-        name: String,
-        number: bool,
-    },
-    Pound,
-    Plural {
-        name: String,
-        cases: Vec<(String, Vec<Node>)>,
-    },
-    Select {
-        name: String,
-        cases: Vec<(String, Vec<Node>)>,
-    },
+/// Canonical BCP 47 form of a tag (`zh_cn.UTF-8` -> `zh-CN`), or None when it is not a valid tag.
+pub fn canonical_tag(tag: &str) -> Option<String> {
+    let t = tag.replace('_', "-");
+    let t = t.split(['.', '@']).next().unwrap_or_default();
+    Locale::try_from_str(t).ok().map(|l| l.to_string())
 }
 
-struct Parser {
-    s: Vec<char>,
-    i: usize,
+/// Format one MF2 message for `locale`. Unresolved variables render as `{$name}` like the TypeScript side.
+pub fn format_message(src: &str, locale: &str, args: Args<'_>) -> Result<String, SyntaxError> {
+    let m = mf2::parse(src)?;
+    let loc = canonical_tag(locale)
+        .and_then(|t| Locale::try_from_str(&t).ok())
+        .unwrap_or(Locale::UNKNOWN);
+    mf2::format(&m, &loc, args)
 }
 
-impl Parser {
-    fn err<T>(&self, m: &str) -> Result<T, SyntaxError> {
-        Err(SyntaxError(format!("{m} at {}", self.i)))
-    }
-    fn peek(&self, off: usize) -> Option<char> {
-        self.s.get(self.i + off).copied()
-    }
-    fn ws(&mut self) {
-        while self.peek(0).is_some_and(char::is_whitespace) {
-            self.i += 1;
-        }
-    }
-    fn ident(&mut self) -> Result<String, SyntaxError> {
-        self.ws();
-        let start = self.i;
-        while self
-            .peek(0)
-            .is_some_and(|c| !c.is_whitespace() && !matches!(c, ',' | '{' | '}'))
-        {
-            self.i += 1;
-        }
-        if start == self.i {
-            return self.err("expected identifier");
-        }
-        Ok(self.s[start..self.i].iter().collect())
-    }
-
-    fn nodes(&mut self, nested: bool, in_plural: bool) -> Result<Vec<Node>, SyntaxError> {
-        let mut out = Vec::new();
-        let mut text = String::new();
-        while let Some(c) = self.peek(0) {
-            match c {
-                '\'' => match self.peek(1) {
-                    Some('\'') => {
-                        text.push('\'');
-                        self.i += 2;
-                    }
-                    Some('{' | '}') => {
-                        self.i += 1;
-                        while let Some(q) = self.peek(0) {
-                            if q == '\'' {
-                                if self.peek(1) == Some('\'') {
-                                    text.push('\'');
-                                    self.i += 2;
-                                    continue;
-                                }
-                                self.i += 1;
-                                break;
-                            }
-                            text.push(q);
-                            self.i += 1;
-                        }
-                    }
-                    _ => {
-                        text.push(c);
-                        self.i += 1;
-                    }
-                },
-                '{' => {
-                    if !text.is_empty() {
-                        out.push(Node::Text(std::mem::take(&mut text)));
-                    }
-                    out.push(self.argument()?);
-                }
-                '}' => {
-                    if nested {
-                        break;
-                    }
-                    return self.err("unmatched }");
-                }
-                '#' if in_plural => {
-                    if !text.is_empty() {
-                        out.push(Node::Text(std::mem::take(&mut text)));
-                    }
-                    out.push(Node::Pound);
-                    self.i += 1;
-                }
-                _ => {
-                    text.push(c);
-                    self.i += 1;
-                }
-            }
-        }
-        if !text.is_empty() {
-            out.push(Node::Text(text));
-        }
-        Ok(out)
-    }
-
-    fn argument(&mut self) -> Result<Node, SyntaxError> {
-        self.i += 1;
-        let name = self.ident()?;
-        self.ws();
-        match self.peek(0) {
-            Some('}') => {
-                self.i += 1;
-                return Ok(Node::Arg {
-                    name,
-                    number: false,
-                });
-            }
-            Some(',') => self.i += 1,
-            _ => return self.err("expected , or }"),
-        }
-        let kind = self.ident()?;
-        self.ws();
-        if kind == "number" {
-            if self.peek(0) != Some('}') {
-                return self.err("expected }");
-            }
-            self.i += 1;
-            return Ok(Node::Arg { name, number: true });
-        }
-        if kind != "plural" && kind != "select" {
-            return self.err(&format!("unsupported type {kind}"));
-        }
-        if self.peek(0) != Some(',') {
-            return self.err("expected ,");
-        }
-        self.i += 1;
-        let mut cases = Vec::new();
-        loop {
-            self.ws();
-            match self.peek(0) {
-                Some('}') => {
-                    self.i += 1;
-                    break;
-                }
-                None => return self.err("unterminated argument"),
-                _ => {}
-            }
-            let key = self.ident()?;
-            self.ws();
-            if self.peek(0) != Some('{') {
-                return self.err("expected {");
-            }
-            self.i += 1;
-            let body = self.nodes(true, kind == "plural")?;
-            if self.peek(0) != Some('}') {
-                return self.err("unterminated case");
-            }
-            self.i += 1;
-            cases.push((key, body));
-        }
-        if !cases.iter().any(|(k, _)| k == "other") {
-            return self.err(&format!("{kind} requires an other case"));
-        }
-        Ok(if kind == "plural" {
-            Node::Plural { name, cases }
-        } else {
-            Node::Select { name, cases }
-        })
-    }
+/// Names of the variables a message reads.
+pub fn arg_names(src: &str) -> Result<Vec<String>, SyntaxError> {
+    Ok(mf2::arg_names(&mf2::parse(src)?))
 }
 
-fn parse(src: &str) -> Result<Vec<Node>, SyntaxError> {
-    let mut p = Parser {
-        s: src.chars().collect(),
-        i: 0,
-    };
-    let n = p.nodes(false, false)?;
-    if p.i < p.s.len() {
-        return p.err("unexpected }");
-    }
-    Ok(n)
-}
-
-/// CLDR plural category for integer-valued `n` in the shipped locales.
+/// CLDR plural category of `n` in `locale` (ICU4X).
 pub fn plural_category(n: f64, locale: &str) -> &'static str {
-    let lang = locale.split('-').next().unwrap_or_default();
-    let int = n.fract() == 0.0;
-    match lang {
-        "en" | "es" if int && n == 1.0 => "one",
-        "fr" if (0.0..2.0).contains(&n) => "one",
+    let src = ".input {$n :number}\n.match $n\nzero {{zero}}\none {{one}}\ntwo {{two}}\nfew {{few}}\nmany {{many}}\n* {{other}}";
+    let out = format_message(src, locale, &[("n", Arg::Num(n))]).unwrap_or_default();
+    match out.as_str() {
+        "zero" => "zero",
+        "one" => "one",
+        "two" => "two",
+        "few" => "few",
+        "many" => "many",
         _ => "other",
     }
 }
 
-fn num_text(v: f64) -> String {
-    if v.fract() == 0.0 {
-        format!("{}", v as i64)
-    } else {
-        v.to_string()
-    }
-}
-
-fn arg<'a>(args: Args<'a>, name: &str) -> Option<&'a Arg> {
-    args.iter().find(|(k, _)| *k == name).map(|(_, v)| v)
-}
-
-fn render(nodes: &[Node], locale: &str, args: Args<'_>, pound: Option<f64>, out: &mut String) {
-    for n in nodes {
-        match n {
-            Node::Text(t) => out.push_str(t),
-            Node::Pound => match pound {
-                Some(p) => out.push_str(&num_text(p)),
-                None => out.push('#'),
-            },
-            Node::Arg { name, number } => match arg(args, name) {
-                None => out.push_str(&format!("{{{name}}}")),
-                Some(Arg::Num(v)) if *number => out.push_str(&num_text(*v)),
-                Some(Arg::Num(v)) => out.push_str(&num_text(*v)),
-                Some(Arg::Str(s)) => out.push_str(s),
-            },
-            Node::Plural { name, cases } => {
-                let v = match arg(args, name) {
-                    Some(Arg::Num(v)) => *v,
-                    Some(Arg::Str(s)) => match s.parse::<f64>() {
-                        Ok(v) => v,
-                        Err(_) => {
-                            out.push_str(&format!("{{{name}}}"));
-                            continue;
-                        }
-                    },
-                    None => {
-                        out.push_str(&format!("{{{name}}}"));
-                        continue;
-                    }
-                };
-                let exact = format!("={}", num_text(v));
-                let cat = plural_category(v, locale);
-                let branch = find(cases, &exact)
-                    .or_else(|| find(cases, cat))
-                    .or_else(|| find(cases, "other"));
-                if let Some(b) = branch {
-                    render(b, locale, args, Some(v), out);
-                }
-            }
-            Node::Select { name, cases } => {
-                let v = match arg(args, name) {
-                    Some(Arg::Str(s)) => s.clone(),
-                    Some(Arg::Num(v)) => num_text(*v),
-                    None => "undefined".to_owned(),
-                };
-                if let Some(b) = find(cases, &v).or_else(|| find(cases, "other")) {
-                    render(b, locale, args, pound, out);
-                }
-            }
-        }
-    }
-}
-
-fn find<'a>(cases: &'a [(String, Vec<Node>)], key: &str) -> Option<&'a Vec<Node>> {
-    cases.iter().find(|(k, _)| k == key).map(|(_, v)| v)
-}
-
-/// Format one message for `locale`.
-pub fn format_message(src: &str, locale: &str, args: Args<'_>) -> Result<String, SyntaxError> {
-    let nodes = parse(src)?;
-    let mut out = String::new();
-    render(&nodes, locale, args, None, &mut out);
-    Ok(out)
-}
-
-/// Closest supported locale for one tag: exact, then same language.
+/// Closest supported locale for one tag: exact, same language+script+region, same language+script, same language
+/// (likely subtags from ICU4X, so `zh-Hans-CN` matches `zh-CN`; `zh-TW` falls back to the `zh` catalog).
 pub fn match_locale<'a>(tag: &str, supported: &[&'a str]) -> Option<&'a str> {
-    let norm = tag.replace('_', "-");
-    let norm = norm
-        .split(['.', '@'])
-        .next()
-        .unwrap_or_default()
-        .to_ascii_lowercase();
-    if let Some(s) = supported.iter().find(|s| s.eq_ignore_ascii_case(&norm)) {
+    let want = Locale::try_from_str(&canonical_tag(tag)?).ok()?;
+    let exp = LocaleExpander::new_common();
+    let max = |l: &Locale| {
+        let mut id = l.id.clone();
+        exp.maximize(&mut id);
+        id
+    };
+    let want_max = max(&want);
+    let cands: Vec<_> = supported
+        .iter()
+        .filter_map(|s| Some((*s, Locale::try_from_str(&canonical_tag(s)?).ok()?)))
+        .collect();
+    if let Some((s, _)) = cands.iter().find(|(_, l)| *l == want) {
         return Some(s);
     }
-    let base = norm.split('-').next().unwrap_or_default();
-    supported
-        .iter()
-        .find(|s| s.eq_ignore_ascii_case(base))
-        .or_else(|| {
-            supported.iter().find(|s| {
-                s.split('-')
-                    .next()
-                    .is_some_and(|b| b.eq_ignore_ascii_case(base))
-            })
-        })
-        .copied()
+    let same_lang: Vec<_> = cands.iter().filter(|(_, l)| l.id.language == want.id.language).collect();
+    let pick = |f: &dyn Fn(&icu_locale::LanguageIdentifier, &Locale) -> bool| {
+        same_lang.iter().find(|(_, l)| f(&max(l), l)).map(|(s, _)| *s)
+    };
+    pick(&|m, _| m.script == want_max.script && m.region == want_max.region)
+        .or_else(|| pick(&|m, _| m.script == want_max.script))
+        .or_else(|| pick(&|_, l| l.id.script.is_none() && l.id.region.is_none()))
+        .or_else(|| same_lang.first().map(|(s, _)| *s))
 }
 
 /// Tags of an Accept-Language header ordered by q (stable on ties); q=0 dropped.
@@ -397,43 +136,151 @@ pub fn parse_accept_language(header: &str) -> Vec<String> {
     v.into_iter().map(|e| e.2).collect()
 }
 
-/// Pick a shipped locale from an Accept-Language header; falls back to `en`.
-pub fn negotiate(accept_language: Option<&str>) -> &'static str {
-    let Some(h) = accept_language else {
-        return SOURCE_LOCALE;
-    };
-    for tag in parse_accept_language(h) {
-        if tag == "*" {
-            return SOURCE_LOCALE;
-        }
-        if let Some(m) = match_locale(&tag, &LOCALES) {
-            return m;
-        }
-    }
-    SOURCE_LOCALE
+/// A set of catalogs plus the locale every other one is translated from.
+#[derive(Debug, Clone)]
+pub struct Catalogs {
+    source: String,
+    map: BTreeMap<String, Catalog>,
 }
 
-/// Translator bound to a locale, with fallback to the base language, then en, then the key.
+fn source_from_config(raw: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(raw)
+        .ok()
+        .and_then(|v| v.get("sourceLocale")?.as_str().map(str::to_owned))
+        .and_then(|t| canonical_tag(&t))
+        .unwrap_or_else(|| "en".to_owned())
+}
+
+impl Catalogs {
+    /// Catalogs embedded at build time from `packages/i18n/locales`.
+    pub fn embedded() -> &'static Catalogs {
+        static C: OnceLock<Catalogs> = OnceLock::new();
+        C.get_or_init(|| {
+            let mut map = BTreeMap::new();
+            for (name, raw) in embedded::EMBEDDED {
+                if let Some(l) = canonical_tag(name).filter(|l| l == name) {
+                    map.insert(l, serde_json::from_str(raw).expect("embedded catalog is valid JSON"));
+                }
+            }
+            let source = std::env::var("APHRODY_I18N_SOURCE")
+                .ok()
+                .and_then(|t| canonical_tag(&t))
+                .unwrap_or_else(|| source_from_config(embedded::CONFIG));
+            Catalogs { source, map }
+        })
+    }
+
+    /// Catalogs of a directory: every `<bcp47>.json` file; `i18n.config.json` is read from its parent when present.
+    pub fn from_dir(dir: &Path) -> std::io::Result<Catalogs> {
+        let mut map = BTreeMap::new();
+        for e in std::fs::read_dir(dir)? {
+            let p = e?.path();
+            let Some(stem) = p.file_name().and_then(|n| n.to_str()).and_then(|n| n.strip_suffix(".json")) else {
+                continue;
+            };
+            if canonical_tag(stem).as_deref() != Some(stem) {
+                continue;
+            }
+            let cat = serde_json::from_slice(&std::fs::read(&p)?)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{}: {e}", p.display())))?;
+            map.insert(stem.to_owned(), cat);
+        }
+        let source = dir
+            .parent()
+            .and_then(|d| std::fs::read_to_string(d.join("i18n.config.json")).ok())
+            .map(|raw| source_from_config(&raw))
+            .unwrap_or_else(|| "en".to_owned());
+        Ok(Catalogs { source, map })
+    }
+
+    pub fn source_locale(&self) -> &str {
+        &self.source
+    }
+
+    pub fn locales(&self) -> Vec<&str> {
+        self.map.keys().map(String::as_str).collect()
+    }
+
+    pub fn get(&self, locale: &str) -> Option<&Catalog> {
+        self.map.get(locale)
+    }
+
+    pub fn match_locale(&self, tag: &str) -> Option<&str> {
+        match_locale(tag, &self.locales())
+    }
+
+    /// Pick a locale from an Accept-Language header; falls back to the source locale.
+    pub fn negotiate(&self, accept_language: Option<&str>) -> &str {
+        let Some(h) = accept_language else { return &self.source };
+        for tag in parse_accept_language(h) {
+            if tag == "*" {
+                return &self.source;
+            }
+            if let Some(m) = self.match_locale(&tag) {
+                return m;
+            }
+        }
+        &self.source
+    }
+}
+
+/// The embedded catalogs.
+pub fn catalogs() -> &'static Catalogs {
+    Catalogs::embedded()
+}
+
+/// Pick an embedded locale from an Accept-Language header.
+pub fn negotiate(accept_language: Option<&str>) -> &'static str {
+    catalogs().negotiate(accept_language)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Direction {
+    Ltr,
+    Rtl,
+}
+
+/// Translator bound to a locale, with fallback to the base language, then the source locale, then the key.
 #[derive(Debug, Clone)]
 pub struct I18n {
-    locale: &'static str,
+    cats: &'static Catalogs,
+    locale: String,
 }
 
 impl I18n {
     pub fn new(requested: &str) -> Self {
-        Self {
-            locale: match_locale(requested, &LOCALES).unwrap_or(SOURCE_LOCALE),
-        }
+        Self::with(catalogs(), requested)
+    }
+
+    pub fn with(cats: &'static Catalogs, requested: &str) -> Self {
+        let locale = cats.match_locale(requested).unwrap_or(cats.source_locale()).to_owned();
+        Self { cats, locale }
     }
 
     pub fn from_accept_language(header: Option<&str>) -> Self {
-        Self {
-            locale: negotiate(header),
-        }
+        let cats = catalogs();
+        Self { cats, locale: cats.negotiate(header).to_owned() }
     }
 
-    pub fn locale(&self) -> &'static str {
-        self.locale
+    /// Translator for the system language: `env_var` (for example `TV_LANG`) when set, else the OS locale.
+    pub fn from_system(env_var: Option<&str>) -> Self {
+        let requested = env_var
+            .and_then(|v| std::env::var(v).ok())
+            .filter(|v| !v.is_empty())
+            .or_else(sys_locale::get_locale)
+            .unwrap_or_default();
+        Self::new(&requested)
+    }
+
+    pub fn locale(&self) -> &str {
+        &self.locale
+    }
+
+    /// Writing direction of the locale (ICU4X script directionality).
+    pub fn direction(&self) -> Direction {
+        let rtl = Locale::try_from_str(&self.locale)
+            .is_ok_and(|l| LocaleDirectionality::new_common().is_right_to_left(&l.id));
+        if rtl { Direction::Rtl } else { Direction::Ltr }
     }
 
     pub fn t(&self, key: &str) -> String {
@@ -441,9 +288,9 @@ impl I18n {
     }
 
     pub fn t_args(&self, key: &str, args: Args<'_>) -> String {
-        let all = catalogs();
-        for l in [self.locale, SOURCE_LOCALE] {
-            if let Some(text) = all.get(l).and_then(|c| c.get(key)) {
+        let base = self.locale.split('-').next().unwrap_or_default();
+        for l in [self.locale.as_str(), base, self.cats.source_locale()] {
+            if let Some(text) = self.cats.get(l).and_then(|c| c.get(key)) {
                 return format_message(text, l, args).unwrap_or_else(|_| key.to_owned());
             }
         }

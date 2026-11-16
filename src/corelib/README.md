@@ -83,8 +83,3 @@ flowchart TD
   cargo build --release
   # Generates corelib.dll & libcorelib.rlib with fat LTO
   ```
-- **ArchGuard Architecture Gate**:
-  ```powershell
-  archguard check --strict --root C:\src
-  # 13/13 rules PASS (0 errors, 0 warnings)
-  ```

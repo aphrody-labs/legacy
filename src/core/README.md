@@ -11,6 +11,7 @@
 
 ```sh
 cargo test -p aphrody-core
+cargo run -p aphrody-core --bin aphrody-code
 ```
 
 Rust builds run on the build host or in CI, not on a workstation.

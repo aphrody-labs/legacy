@@ -60,10 +60,12 @@ name = "transport_kind"
 path = "tests/transport_kind.rs"
 
 [dependencies.aphrody-a2a]
+path = "../a2a"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-a2a-pb]
+path = "../a2a-pb"
 version = "1.4.7"
 
 [dependencies.async-trait]

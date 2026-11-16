@@ -36,9 +36,11 @@ name = "antigravity_model_tests"
 path = "tests/antigravity_model_tests.rs"
 
 [dependencies.aphrody-antigravity]
+path = "../antigravity"
 version = "1.4.7"
 
 [dependencies.aphrody-model-client]
+path = "../model-client"
 version = "1.4.7"
 features = []
 

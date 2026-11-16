@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use tv_core::{Definition, MediaInfo, MediaKind, StreamInfo};
-use tv_i18n::I18n;
+use aphrody_i18n::I18n;
 
 fn lang_from_args() -> Option<String> {
     let mut args = std::env::args();
@@ -22,25 +22,27 @@ fn lang_from_args() -> Option<String> {
 fn cli(t: &I18n) -> Command {
     Command::new("tv")
         .version(env!("CARGO_PKG_VERSION"))
-        .about(t.t("app-description"))
+        .about(t.t("tv.app-description"))
         .subcommand_required(true)
         .arg(
             Arg::new("lang")
                 .long("lang")
                 .global(true)
                 .env("TV_LANG")
-                .value_parser(tv_i18n::LANGUAGES)
-                .help(t.t("arg-lang")),
+                .value_parser(|s: &str| {
+                    aphrody_i18n::canonical_tag(s).ok_or_else(|| format!("{s} is not a BCP 47 language tag"))
+                })
+                .help(t.t("tv.arg-lang")),
         )
         .subcommand(
             Command::new("probe")
-                .about(t.t("cmd-probe"))
-                .arg(Arg::new("source").required(true).help(t.t("arg-source")))
+                .about(t.t("tv.cmd-probe"))
+                .arg(Arg::new("source").required(true).help(t.t("tv.arg-source")))
                 .arg(
                     Arg::new("json")
                         .long("json")
                         .action(ArgAction::SetTrue)
-                        .help(t.t("arg-json")),
+                        .help(t.t("tv.arg-json")),
                 ),
         )
 }
@@ -69,7 +71,7 @@ fn probe(t: &I18n, m: &ArgMatches) -> ExitCode {
             ExitCode::SUCCESS
         }
         Err(e) => {
-            eprintln!("{} : {e}", t.t("label-error"));
+            eprintln!("{} : {e}", t.t("tv.label-error"));
             ExitCode::FAILURE
         }
     }
@@ -77,7 +79,7 @@ fn probe(t: &I18n, m: &ArgMatches) -> ExitCode {
 
 fn duration(d: Option<Duration>, t: &I18n) -> String {
     d.map_or_else(
-        || t.t("value-unknown"),
+        || t.t("tv.value-unknown"),
         |d| {
             let s = d.as_secs();
             format!(
@@ -92,68 +94,68 @@ fn duration(d: Option<Duration>, t: &I18n) -> String {
 }
 
 fn kbps(b: Option<u64>, t: &I18n) -> String {
-    b.map_or_else(|| t.t("value-unknown"), |b| format!("{} kb/s", b / 1000))
+    b.map_or_else(|| t.t("tv.value-unknown"), |b| format!("{} kb/s", b / 1000))
 }
 
 fn definition(d: Definition, t: &I18n) -> String {
     t.t(match d {
-        Definition::Sd => "def-sd",
-        Definition::Hd => "def-hd",
-        Definition::FullHd => "def-fullhd",
-        Definition::Uhd4k => "def-uhd4k",
-        Definition::Uhd8k => "def-uhd8k",
+        Definition::Sd => "tv.def-sd",
+        Definition::Hd => "tv.def-hd",
+        Definition::FullHd => "tv.def-fullhd",
+        Definition::Uhd4k => "tv.def-uhd4k",
+        Definition::Uhd8k => "tv.def-uhd8k",
     })
 }
 
 fn stream_line(s: &StreamInfo, t: &I18n) -> String {
     let kind = t.t(match s.kind {
-        MediaKind::Video => "kind-video",
-        MediaKind::Audio => "kind-audio",
-        MediaKind::Subtitle => "kind-subtitle",
-        MediaKind::Data => "kind-data",
-        _ => "kind-other",
+        MediaKind::Video => "tv.kind-video",
+        MediaKind::Audio => "tv.kind-audio",
+        MediaKind::Subtitle => "tv.kind-subtitle",
+        MediaKind::Data => "tv.kind-data",
+        _ => "tv.kind-other",
     });
     let mut out = format!("  #{} {kind} : {}", s.index, s.codec);
     if let Some(p) = &s.profile {
         out += &format!(" ({p})");
     }
     if let (Some(w), Some(h)) = (s.width, s.height) {
-        out += &format!(" | {} {w}x{h}", t.t("label-resolution"));
+        out += &format!(" | {} {w}x{h}", t.t("tv.label-resolution"));
         if let Some(d) = s.definition() {
             out += &format!(" [{}]", definition(d, t));
         }
     }
     if let Some(fps) = s.frame_rate.and_then(|r| r.as_f64()) {
-        out += &format!(" | {} {fps:.3}", t.t("label-frame-rate"));
+        out += &format!(" | {} {fps:.3}", t.t("tv.label-frame-rate"));
     }
     if let Some(pf) = &s.pixel_format {
-        out += &format!(" | {} {pf}", t.t("label-pixel-format"));
+        out += &format!(" | {} {pf}", t.t("tv.label-pixel-format"));
     }
     if s.kind == MediaKind::Video {
-        let range = t.t(if s.is_hdr() { "range-hdr" } else { "range-sdr" });
-        out += &format!(" | {} {range}", t.t("label-dynamic-range"));
+        let range = t.t(if s.is_hdr() { "tv.range-hdr" } else { "tv.range-sdr" });
+        out += &format!(" | {} {range}", t.t("tv.label-dynamic-range"));
     }
     if let Some(sr) = s.sample_rate {
-        out += &format!(" | {} {sr} Hz", t.t("label-sample-rate"));
+        out += &format!(" | {} {sr} Hz", t.t("tv.label-sample-rate"));
     }
     if let Some(c) = s.channels {
-        out += &format!(" | {} {c}", t.t("label-channels"));
+        out += &format!(" | {} {c}", t.t("tv.label-channels"));
     }
     if let Some(l) = &s.language {
-        out += &format!(" | {} {l}", t.t("label-language"));
+        out += &format!(" | {} {l}", t.t("tv.label-language"));
     }
     out
 }
 
 fn render(t: &I18n, m: &MediaInfo) -> String {
     let mut out = format!("{}\n", m.source);
-    out += &format!("{} : {}\n", t.t("label-format"), m.format);
-    out += &format!("{} : {}\n", t.t("label-duration"), duration(m.duration, t));
-    out += &format!("{} : {}\n", t.t("label-bitrate"), kbps(m.bit_rate, t));
+    out += &format!("{} : {}\n", t.t("tv.label-format"), m.format);
+    out += &format!("{} : {}\n", t.t("tv.label-duration"), duration(m.duration, t));
+    out += &format!("{} : {}\n", t.t("tv.label-bitrate"), kbps(m.bit_rate, t));
     out += &format!(
         "{}\n",
         t.t_args(
-            "streams-count",
+            "tv.streams-count",
             &[("count", (m.streams.len() as i64).into())]
         )
     );

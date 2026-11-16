@@ -21,10 +21,8 @@ bevy-load = ["dep:bevy"]
 
 [dependencies]
 tv-ffmpeg.workspace = true
-# Same rev as src/craft (docs/games/PLAN.md step 3).
-craft-svg = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9" }
-craft-webp = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9" }
-craft-exr = { git = "https://github.com/storytold/craft-libs", rev = "a9949872bd91ecf6bcec4e86339e3f50ad007fb9", features = ["decode"] }
+# The craft-libs pin lives once, in src/craft (docs/games/PLAN.md step 3).
+craft-formats = { version = "0.4.0", path = "../../src/craft" }
 resvg = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true

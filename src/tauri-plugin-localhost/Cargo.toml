@@ -22,7 +22,7 @@ name = "tauri_plugin_localhost"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tauri = { version = "3.0.0-alpha.4", path = "../aphrody-tauri", package = "aphrody-tauri", default-features = false }
+tauri = { version = "3.0.0-alpha.4", path = "../tauri", package = "aphrody-tauri", default-features = false }
 log = "0.4.21"
 thiserror = "2"
 tiny_http = "0.12"

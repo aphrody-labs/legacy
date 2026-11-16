@@ -40,6 +40,7 @@ crate-type = ["rlib"]
 path = "src/lib.rs"
 
 [dependencies.aphrody-agent-home]
+path = "../agent-home"
 version = "1.4.7"
 features = []
 optional = true
@@ -50,7 +51,7 @@ features = ["serde"]
 optional = true
 
 [dependencies.rusqlite]
-version = "0.40"
+version = "0.42"
 features = ["bundled"]
 optional = true
 

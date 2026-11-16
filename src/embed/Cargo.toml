@@ -110,6 +110,7 @@ features = []
 optional = true
 
 [dependencies.aphrody-models]
+path = "../models"
 version = "1.4.7"
 features = []
 

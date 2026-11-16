@@ -48,6 +48,7 @@ path = "src/lib.rs"
 version = "1.0.104"
 
 [dependencies.aphrody-ml-config]
+path = "../ml-config"
 version = "1.4.7"
 
 [dependencies.backon]

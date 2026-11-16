@@ -59,9 +59,9 @@ uuid = { version = "1", features = ["v4"], optional = true }
 url = "2"
 anyhow = "1"
 thiserror = "2"
-tauri-runtime = { version = "~3.0.0-alpha.3", path = "../aphrody-tauri-runtime", package = "aphrody-tauri-runtime" }
-tauri-macros = { version = "~3.0.0-alpha.3", path = "../aphrody-tauri-macros", package = "aphrody-tauri-macros" }
-tauri-utils = { version = "~3.0.0-alpha.3", path = "../aphrody-tauri-utils", package = "aphrody-tauri-utils", features = ["resources"] }
+tauri-runtime = { version = "~3.0.0-alpha.3", path = "../tauri-runtime", package = "aphrody-tauri-runtime" }
+tauri-macros = { version = "~3.0.0-alpha.3", path = "../tauri-macros", package = "aphrody-tauri-macros" }
+tauri-utils = { version = "~3.0.0-alpha.3", path = "../tauri-utils", package = "aphrody-tauri-utils", features = ["resources"] }
 getrandom = "0.3"
 serde_repr = "0.1"
 http = "1"
@@ -168,8 +168,8 @@ objc2-ui-kit = { version = "0.3.2", default-features = false, features = [
 [build-dependencies]
 glob = "0.3"
 heck = "0.5"
-tauri-build = { version = "3.0.0-alpha.3", path = "../aphrody-tauri-build", package = "aphrody-tauri-build", default-features = false }
-tauri-utils = { version = "~3.0.0-alpha.3", path = "../aphrody-tauri-utils", package = "aphrody-tauri-utils", features = ["build-2"] }
+tauri-build = { version = "3.0.0-alpha.3", path = "../tauri-build", package = "aphrody-tauri-build", default-features = false }
+tauri-utils = { version = "~3.0.0-alpha.3", path = "../tauri-utils", package = "aphrody-tauri-utils", features = ["build-2"] }
 
 [dev-dependencies]
 proptest = "1.6.0"

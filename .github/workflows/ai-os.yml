@@ -9,7 +9,6 @@ on:
       [
         "packages/ai-os/**",
         "src/agent/context/**",
-        "src/agent/py/**",
         ".github/workflows/ai-os.yml",
       ]
   pull_request:
@@ -17,7 +16,6 @@ on:
       [
         "packages/ai-os/**",
         "src/agent/context/**",
-        "src/agent/py/**",
         ".github/workflows/ai-os.yml",
       ]
   workflow_dispatch:

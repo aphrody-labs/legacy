@@ -144,6 +144,11 @@ impl SovereignEnv {
         &self.env_path
     }
 
+    /// Names of the loaded entries, in order.
+    pub fn keys(&self) -> impl Iterator<Item = &str> {
+        self.entries.keys().map(String::as_str)
+    }
+
     #[must_use]
     pub fn get_secret(&self, key: &str) -> Option<&SecretString> {
         self.entries.get(key)

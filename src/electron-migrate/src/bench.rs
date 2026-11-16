@@ -230,15 +230,34 @@ pub fn hyperfine(command: &str, runs: u32, warmup: u32, tag: &str) -> Result<Sta
     let text = std::fs::read_to_string(&json_path).map_err(io_err(&json_path))?;
     let _ = std::fs::remove_file(&json_path);
     let v: Value = serde_json::from_str(&text)?;
+    parse_hyperfine(&v, runs)
+}
+
+/// hyperfine 1.x: `results[0].{mean,stddev,median,min,max,times}` in seconds.
+/// hyperfine 2.x (`schema_version` 2): `results[0].summary.time_wall_clock.{mean,..,count,unit}`.
+pub fn parse_hyperfine(v: &Value, runs: u32) -> Result<Stats> {
     let r = &v["results"][0];
-    let ms = |k: &str| r[k].as_f64().map_or(0.0, |s| s * 1000.0);
+    let (w, factor, n) = if r["mean"].is_number() {
+        (r, 1000.0, r["times"].as_array().map_or(runs as usize, Vec::len))
+    } else {
+        let w = &r["summary"]["time_wall_clock"];
+        let factor = match w["unit"].as_str() {
+            Some("millisecond") => 1.0,
+            Some("microsecond") => 0.001,
+            Some("nanosecond") => 0.000_001,
+            _ => 1000.0,
+        };
+        (w, factor, w["count"].as_u64().map_or(runs as usize, |c| c as usize))
+    };
+    let get = |k: &str| w[k].as_f64().map(|s| s * factor);
+    let mean_ms = get("mean").ok_or_else(|| Error::msg("hyperfine JSON has neither results[0].mean (1.x) nor summary.time_wall_clock.mean (2.x)"))?;
     Ok(Stats {
-        mean_ms: ms("mean"),
-        stddev_ms: ms("stddev"),
-        median_ms: ms("median"),
-        min_ms: ms("min"),
-        max_ms: ms("max"),
-        runs: r["times"].as_array().map_or(runs as usize, Vec::len),
+        mean_ms,
+        stddev_ms: get("stddev").unwrap_or(0.0),
+        median_ms: get("median").unwrap_or(mean_ms),
+        min_ms: get("min").unwrap_or(mean_ms),
+        max_ms: get("max").unwrap_or(mean_ms),
+        runs: n,
         method: "hyperfine".into(),
     })
 }

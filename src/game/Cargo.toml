@@ -20,6 +20,11 @@ path = "src/main.rs"
 name = "gen-assets"
 path = "src/bin/gen-assets.rs"
 
+# `steam` and `epic` are the storefront services of `store`; the web build enables none.
+[features]
+steam = ["dep:bevy-steamworks", "dep:steamworks"]
+epic = ["dep:eos-rs"]
+
 # Features verified against bevy v0.20.1 Cargo.toml (gh api, 2026-11-13): the default set pulls the 2d,
 # ui and picking profiles that this slice does not use, so everything is listed explicitly.
 [dependencies]
@@ -54,6 +59,9 @@ bevy = { workspace = true, features = [
 ] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+bevy-steamworks = { workspace = true, optional = true }
+steamworks = { workspace = true, optional = true }
+eos-rs = { workspace = true, optional = true }
 bevy = { workspace = true, features = ["multi_threaded", "x11", "wayland"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -54,20 +54,24 @@ version = "1.4.7"
 features = []
 
 [dependencies.aphrody-config]
+path = "../config"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-embed]
+path = "../embed"
 version = "1.4.7"
 features = []
 optional = true
 default-features = false
 
 [dependencies.aphrody-models]
+path = "../models"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-rag-core]
+path = "../rag-core"
 version = "1.4.7"
 features = []
 
@@ -133,7 +137,7 @@ features = [
 default-features = false
 
 [dependencies.rusqlite]
-version = "0.40"
+version = "0.42"
 features = ["bundled"]
 
 [dependencies.rustls]

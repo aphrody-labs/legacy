@@ -16,16 +16,12 @@ core-header:
     cbindgen --config src/core/capi/cbindgen.toml src/core/capi -o src/core/capi/include/aphrody_core.h
 # --- Labs (merged into src): conformance (ay conformance), Lore, Chromium factory ---
 
-# Build native Python core (`src/core/py` PyO3 ABI3 -> `packages/core-py/src/aphrody_native`)
+# Build the native Python core (`src/core/capi/py`, PyO3 ABI3) into target/py/aphrody_native.{pyd,so}
 [group('core')]
 py-build:
     cargo build -p aphrody-core-py --release
-    cp -f "{{root}}/target/release/aphrody_native.dll" "{{root}}/packages/core-py/src/aphrody_native.pyd" 2>/dev/null || cp -f "{{root}}/target/release/libaphrody_native.so" "{{root}}/packages/core-py/src/aphrody_native.so" 2>/dev/null || true
-
-# Run Python core unit tests (`aysys.dll`, `aphrody_core_capi.dll`, `aphrody_ffi.dll`, `aphrody_native`)
-[group('core')]
-py-test: py-build
-    python -m unittest discover -s "{{root}}/packages/core-py/tests" -v
+    mkdir -p "{{root}}/target/py"
+    cp -f "{{root}}/target/release/aphrody_native.dll" "{{root}}/target/py/aphrody_native.pyd" 2>/dev/null || cp -f "{{root}}/target/release/libaphrody_native.so" "{{root}}/target/py/aphrody_native.so" 2>/dev/null || true
 
 # Build Java 25 core (`src/core/jni` + `packages/core-java`) and run FFM + JNI verification
 [group('core')]

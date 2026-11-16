@@ -40,6 +40,7 @@ name = "aphrody_n2b_registry"
 path = "src/lib.rs"
 
 [dependencies.aphrody-n2b-types]
+path = "../n2b-types"
 version = "=0.7.0"
 
 [dependencies.once_cell]

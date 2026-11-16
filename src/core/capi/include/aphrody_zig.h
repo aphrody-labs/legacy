@@ -4,7 +4,7 @@
 /* Canonical C23/C11/C++23 ABI header for the monorepo Zig cores:
  * - third_party/native (`libnative_sdk` / `native_sdk_app_*`)
  * - packages/browser of aphrody-labs/open (`browser_capi`)
- * Consumed by C, C++23, Rust (`src/ffi`), and Bun (`bun:ffi`).
+ * Consumed by C, C++23, Rust (`src/core/capi`), and Bun (`bun:ffi`).
  */
 
 #include <stddef.h>

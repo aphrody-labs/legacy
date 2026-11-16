@@ -106,7 +106,7 @@ ndk = "0.9"
 ndk-sys = "0.6"
 ndk-context = "0.1"
 percent-encoding = "2.3"
-tao-macros = { version = "0.1.4", path = "../aphrody-tao-macros", package = "aphrody-tao-macros" }
+tao-macros = { version = "0.1.4", path = "../tao-macros", package = "aphrody-tao-macros" }
 
 [target."cfg(any(target_os = \"ios\", target_os = \"macos\"))".dependencies]
 objc2 = "0.6"

@@ -254,6 +254,7 @@ fn tauri_project_is_complete_and_valid() {
     }
     let main = std::fs::read_to_string(out.join("src-tauri/src/main.rs")).unwrap();
     assert!(main.contains("async fn ipc_app_get_version") && main.contains("async fn ipc_file_read"));
+    assert!(main.contains("#[cfg(windows)]") && main.contains("additional_browser_args") && main.contains("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"), "WebView2 needs the CDP port forwarded to its own arguments");
     let menu = std::fs::read_to_string(out.join("src-tauri/src/menu.rs")).unwrap();
     assert!(menu.contains(".quit()") && menu.contains("CmdOrCtrl+O"));
     // shim maps channels
@@ -482,4 +483,20 @@ fn pages_referencing_files_outside_their_directory_widen_the_frontend_root() {
     }
     let conf: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(out.join("src-tauri/tauri.conf.json")).unwrap()).unwrap();
     assert_eq!(conf["app"]["windows"][0]["url"], "src/top_bar/top_bar.html");
+    // bun keeps the path below the lowest common directory of the entries unless --root pins it: dist/ must mirror frontend/ (the window url).
+    let pkg: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(out.join("package.json")).unwrap()).unwrap();
+    let build = pkg["scripts"]["build:frontend"].as_str().unwrap();
+    assert!(build.contains("--root frontend") && build.contains("frontend/src/top_bar/top_bar.html"), "{build}");
+}
+
+#[test]
+fn hyperfine_json_v1_and_v2_are_parsed() {
+    // hyperfine 1.x: seconds under results[0]; 2.x (schema_version 2): results[0].summary.time_wall_clock. A missing mean is an error, not 0 ms.
+    let v1 = serde_json::json!({"results":[{"mean":0.1,"stddev":0.01,"median":0.09,"min":0.08,"max":0.12,"times":[0.1,0.1,0.1]}]});
+    let s = bench::parse_hyperfine(&v1, 5).unwrap();
+    assert!((s.mean_ms - 100.0).abs() < 1e-9 && s.runs == 3 && (s.min_ms - 80.0).abs() < 1e-9);
+    let v2 = serde_json::json!({"schema_version":2,"results":[{"summary":{"time_wall_clock":{"unit":"second","count":4,"mean":0.25,"stddev":0.02,"median":0.24,"min":0.2,"max":0.3}}}]});
+    let s = bench::parse_hyperfine(&v2, 5).unwrap();
+    assert!((s.mean_ms - 250.0).abs() < 1e-9 && s.runs == 4 && (s.max_ms - 300.0).abs() < 1e-9 && (s.median_ms - 240.0).abs() < 1e-9);
+    assert!(bench::parse_hyperfine(&serde_json::json!({"results":[{}]}), 5).is_err());
 }

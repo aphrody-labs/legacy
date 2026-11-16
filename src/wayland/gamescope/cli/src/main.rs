@@ -30,9 +30,7 @@ fn print_help() {
     println!("    gamescope-rs <SUBCOMMAND> [OPTIONS]");
     println!();
     println!("SUBCOMMANDS:");
-    println!(
-        "    info                 Enumerate wgpu adapters (RTX 4070 Vulkan / DX12) and hardware limits"
-    );
+    println!("    info                 Enumerate wgpu adapters and hardware limits");
     println!(
         "    benchmark-upscale    Run real 1080p -> 4K EASU + RCAS compute passes on GPU and measure latency"
     );
@@ -166,7 +164,7 @@ fn cmd_benchmark_upscale(args: &[String]) {
     let metrics = upscaler.benchmark(iterations, &info);
 
     println!("------------------------------------------------------------");
-    println!("BENCHMARK RESULTS (NVIDIA GeForce RTX 4070):");
+    println!("BENCHMARK RESULTS ({}):", info.name);
     println!("  Total Elapsed Time:   {:.3} ms", metrics.total_time_ms);
     println!(
         "  Average GPU Latency:  {:.4} ms ({:.1} us)",
@@ -254,7 +252,7 @@ impl ApplicationHandler for GamescopeApp {
         }
 
         let window_attrs = WindowAttributes::default()
-            .with_title("Gamescope-rs (Rust + WebGPU / RTX 4070)")
+            .with_title("Gamescope-rs (Rust + WebGPU)")
             .with_inner_size(winit::dpi::LogicalSize::new(1920.0, 1080.0));
 
         let window: Arc<Window> = Arc::new(
@@ -280,6 +278,10 @@ impl ApplicationHandler for GamescopeApp {
             ..Default::default()
         }))
         .expect("Failed to get GPU adapter");
+        window.set_title(&format!(
+            "Gamescope-rs (Rust + WebGPU / {})",
+            adapter.get_info().name
+        ));
 
         let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
             label: Some("Gamescope Window Device"),

@@ -156,7 +156,8 @@ pub fn measure(project: &Path) -> Vec<Artifact> {
 }
 
 fn run_in(project: &Path, program: &str, args: &[&str]) -> Result<()> {
-    let status = Command::new(program).args(args).current_dir(project).status().map_err(io_err(project))?;
+    // Child output goes to stderr: stdout carries the `--json` report only.
+    let status = Command::new(program).args(args).current_dir(project).stdout(std::process::Stdio::from(std::io::stderr())).status().map_err(io_err(project))?;
     if status.success() { Ok(()) } else { Err(Error::msg(format!("`{program} {}` failed ({status})", args.join(" ")))) }
 }
 

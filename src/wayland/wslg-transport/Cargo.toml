@@ -1,0 +1,15 @@
+[package]
+repository.workspace = true
+description = "wslg-transport: Hyper-V socket address, D3D12 dmabuf mapping and DXGI output enumeration for the WSLg compositor host"
+name = "wslg-transport"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+# The Wayland wire, state and protocols come from upstream Smithay (wslg-cli, unix). This crate holds
+# only what Smithay cannot provide: the Windows side of the link. `output` is portable, the rest is
+# `cfg(windows)`.
+[target.'cfg(windows)'.dependencies]
+dx12-hal.workspace = true
+windows.workspace = true

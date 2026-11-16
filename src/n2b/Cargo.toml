@@ -58,6 +58,7 @@ path = "tests/contract.rs"
 version = "1.0.104"
 
 [dependencies.aphrody-n2b-core]
+path = "../n2b-core"
 version = "=0.7.0"
 
 [dependencies.clap]

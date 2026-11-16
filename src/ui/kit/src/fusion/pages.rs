@@ -152,7 +152,7 @@ fn build_intelligent_terminal() -> UiNode {
                 "term-palette",
                 UiKind::CommandPalette,
                 "AI Command Palette",
-                "> ay arch check --strict | cachy-opt | omarchy theme",
+                "> ay doctor | cachy-opt | omarchy theme",
             )
             .height_px(38.0),
             UiNode::container("term-split", UiKind::ResizableSplit, "Split Panes")

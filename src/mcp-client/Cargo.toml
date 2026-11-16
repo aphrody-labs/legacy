@@ -39,6 +39,7 @@ name = "mcp_client_tests"
 path = "tests/mcp_client_tests.rs"
 
 [dependencies.aphrody-config]
+path = "../config"
 version = "1.4.7"
 features = []
 

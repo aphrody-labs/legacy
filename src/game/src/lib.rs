@@ -5,6 +5,7 @@
 pub mod noise;
 pub mod procgen;
 pub mod synth;
+pub mod store;
 pub mod terrain_mesh;
 
 mod ambience;
@@ -22,7 +23,14 @@ pub const WORLD_SEED: u32 = 0x0A9F_0D17;
 
 /// Builds and runs the game. Blocks on native; on the web the event loop is driven by the browser.
 pub fn run() {
-    App::new()
+    run_with(|_| {});
+}
+
+/// Like [`run`], with `setup` applied first: plugins that must precede the render plugin (storefronts, see [`store`]) go there.
+pub fn run_with(setup: impl FnOnce(&mut App)) {
+    let mut app = App::new();
+    setup(&mut app);
+    app
         .add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {

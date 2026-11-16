@@ -41,6 +41,7 @@ name = "smoke"
 path = "examples/smoke.rs"
 
 [dependencies.aphrody-boq]
+path = "../boq"
 version = "1.4.7"
 
 [dependencies.regex]

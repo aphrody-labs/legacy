@@ -1,5 +1,17 @@
 //! C ABI over `aphrody-core`, shipped as `aphrody_core_capi.dll` / `libaphrody_core_capi.so`.
 //!
+//! One C ABI for the monorepo's native libraries (merged with the former `aphrody_ffi`).
+//! Surfaces, each behind a default feature so a consumer can build a smaller library with
+//! `--no-default-features --features <surface>`:
+//! - `core` / `pipeline`: `core_*` (tree-sitter, BLAKE3, index, in-process index pipeline).
+//! - `ai-os`: `ai_os_*` (VFS, RAG, world model, System 1).
+//! - `depot`: `depot_*`, the native depot contract (`src/depot*`); strings released with
+//!   `depot_free_string` or `aphrody_free`; `depot_abi_version` returns [`depot::DEPOT_ABI_VERSION`].
+//! - `re`: `aphrody_re_*`, `aphrody_ghidra_*`, `aphrody_mingw_*`, `aphrody_lua52_*` (`src/re`).
+//! - `web`: `aphrody_*` from `corelib::web` (Boq parser; the adblock engine is
+//!   `src/adblock-capi`); framed buffers released with `aphrody_chromium_buf_free`.
+//! Symbol names are a stable contract with their consumers and never change.
+//!
 //! Contract (mirrored by `packages/core/src/ffi.ts` and `include/aphrody_core.h`):
 //! - Strings in are NUL-terminated UTF-8; strings out are NUL-terminated UTF-8 JSON owned by
 //!   the library and released with [`core_free`] or [`aphrody_free`].
@@ -13,6 +25,13 @@ pub use c_abi::{aphrody_abi_version, aphrody_free};
 pub mod sys;
 #[cfg(feature = "ai-os")]
 pub mod ai_os;
+#[cfg(feature = "depot")]
+pub mod depot;
+pub mod mwg;
+#[cfg(feature = "re")]
+pub mod re;
+#[cfg(feature = "web")]
+pub mod web;
 
 #[cfg(feature = "core")]
 mod core_exports {

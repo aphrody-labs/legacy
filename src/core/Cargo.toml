@@ -21,6 +21,8 @@ default = []
 pipeline = ["dep:rusqlite", "dep:zstd"]
 # The `aphrody-code` binary and `aphrody_core::cli`: facts queries, outlines, grammar registry and its upstream sync.
 cli = ["dep:clap", "dep:ureq", "dep:toml", "dep:zstd"]
+# build.rs compiles the parser.c of every third_party/tree-sitter-* clone into the registry (GRAMMARS): tens of MB of tables, so off by default.
+grammars = []
 
 [[bin]]
 name = "aphrody-code"

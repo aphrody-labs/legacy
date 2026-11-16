@@ -51,7 +51,7 @@ sublime_fuzzy = "0.7"
 clap_complete = "4"
 clap = { version = "4", features = ["derive", "env"] }
 thiserror = "2"
-tauri-bundler = { version = "=3.0.0-alpha.3", path = "../aphrody-tauri-bundler", package = "aphrody-tauri-bundler", default-features = false }
+tauri-bundler = { version = "=3.0.0-alpha.3", path = "../tauri-bundler", package = "aphrody-tauri-bundler", default-features = false }
 colored = "3"
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
@@ -63,7 +63,7 @@ shared_child = "1"
 duct = "1.0"
 toml_edit = { version = "0.25", features = ["serde"] }
 json-patch = "4"
-tauri-utils = { version = "~3.0.0-alpha.3", path = "../aphrody-tauri-utils", package = "aphrody-tauri-utils", features = ["isolation", "schema", "config-json5", "config-toml", "html-manipulation-2"] }
+tauri-utils = { version = "~3.0.0-alpha.3", path = "../tauri-utils", package = "aphrody-tauri-utils", features = ["isolation", "schema", "config-json5", "config-toml", "html-manipulation-2"] }
 toml = "1"
 jsonschema = { version = "0.49", default-features = false }
 handlebars = "6"
@@ -134,7 +134,7 @@ libc = "0.2"
 
 [target."cfg(target_os = \"macos\")".dependencies]
 plist = "1"
-tauri-macos-sign = { version = "=3.0.0-alpha.2", path = "../aphrody-tauri-macos-sign", package = "aphrody-tauri-macos-sign" }
+tauri-macos-sign = { version = "=3.0.0-alpha.2", path = "../tauri-macos-sign", package = "aphrody-tauri-macos-sign" }
 object = { version = "0.39", default-features = false, features = [
   "macho",
   "read_core",

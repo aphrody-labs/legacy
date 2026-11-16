@@ -50,10 +50,12 @@ path = "benches/recall.rs"
 harness = false
 
 [dependencies.aphrody-agent-home]
+path = "../agent-home"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-models]
+path = "../models"
 version = "1.4.7"
 features = []
 
@@ -98,7 +100,7 @@ features = [
 default-features = false
 
 [dependencies.rusqlite]
-version = "0.40"
+version = "0.42"
 features = ["bundled"]
 
 [dependencies.serde]

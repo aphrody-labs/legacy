@@ -53,6 +53,7 @@ name = "aphrody_llama"
 path = "src/lib.rs"
 
 [dependencies.aphrody-llama-sys]
+path = "../llama-sys"
 version = "1.4.7"
 
 [dependencies.encoding_rs]

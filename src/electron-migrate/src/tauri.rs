@@ -581,7 +581,7 @@ pub fn main_rs(m: &Manifest) -> String {
     let mut handlers = vec!["electron_ipc".to_string(), "electron_send".to_string()];
     handlers.extend(cmds.iter().map(|(_, id)| format!("ipc_{id}")));
     s.push_str(&format!("        .invoke_handler(tauri::generate_handler![{}])\n", handlers.join(", ")));
-    s.push_str("        .setup(|app| {\n            Sidecar::start(app.handle())?;\n            let windows = app.config().app.windows.clone();\n            for cfg in windows.iter() {\n                WebviewWindowBuilder::from_config(app.handle(), cfg)?.initialization_script(SHIM).build()?;\n            }\n");
+    s.push_str("        .setup(|app| {\n            Sidecar::start(app.handle())?;\n            let windows = app.config().app.windows.clone();\n            for cfg in windows.iter() {\n                let builder = WebviewWindowBuilder::from_config(app.handle(), cfg)?.initialization_script(SHIM);\n                // WebView2 ignores WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS once the host passes its own arguments (wry does): forward it so DevTools attach (--remote-debugging-port) and `ay electron bench` work.\n                #[cfg(windows)]\n                let builder = match std::env::var(\"WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS\") {\n                    Ok(extra) if !extra.is_empty() => builder.additional_browser_args(&format!(\"--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection {extra}\")),\n                    _ => builder,\n                };\n                builder.build()?;\n            }\n");
     if has_menu {
         s.push_str("            menu::install(app.handle())?;\n");
     }
@@ -676,7 +676,7 @@ function expose(name: string, api: Record<string, unknown>) {
 pub fn package_json(m: &Manifest) -> String {
     let name = slug(m.app.product_name.as_deref().or(m.app.name.as_deref()).unwrap_or("app"));
     let html: Vec<String> = if m.renderer.entries.is_empty() { vec!["frontend/index.html".into()] } else { m.renderer.entries.iter().map(|e| format!("frontend/{}", frontend_path(m, e))).collect() };
-    let build_frontend = if m.renderer.entries.is_empty() { "bun run scripts/placeholder-frontend.ts".to_string() } else { format!("bun build {} --outdir dist --minify", html.join(" ")) };
+    let build_frontend = if m.renderer.entries.is_empty() { "bun run scripts/placeholder-frontend.ts".to_string() } else { format!("bun build {} --outdir dist --root frontend --minify", html.join(" ")) };
     let v = json!({
         "name": format!("{name}-tauri"),
         "private": true,

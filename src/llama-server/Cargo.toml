@@ -80,28 +80,34 @@ name = "supervisor"
 path = "tests/supervisor.rs"
 
 [dependencies.aphrody-gemini-web]
+path = "../gemini-web"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-infer]
+path = "../infer"
 version = "1.4.7"
 features = ["onnx"]
 optional = true
 
 [dependencies.aphrody-llama]
+path = "../llama"
 version = "1.4.7"
 optional = true
 
 [dependencies.aphrody-ml-runtime]
+path = "../ml-runtime"
 version = "1.4.7"
 optional = true
 
 [dependencies.aphrody-model-client]
+path = "../model-client"
 version = "1.4.7"
 features = []
 optional = true
 
 [dependencies.aphrody-models]
+path = "../models"
 version = "1.4.7"
 features = []
 

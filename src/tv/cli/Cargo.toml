@@ -15,4 +15,4 @@ clap.workspace = true
 serde_json.workspace = true
 tv-core.workspace = true
 tv-ffmpeg.workspace = true
-tv-i18n.workspace = true
+aphrody-i18n.workspace = true

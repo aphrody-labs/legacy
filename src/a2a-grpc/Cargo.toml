@@ -65,18 +65,22 @@ name = "e2e"
 path = "tests/e2e.rs"
 
 [dependencies.aphrody-a2a]
+path = "../a2a"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-a2a-client]
+path = "../a2a-client"
 version = "1.4.7"
 features = []
 default-features = false
 
 [dependencies.aphrody-a2a-pb]
+path = "../a2a-pb"
 version = "1.4.7"
 
 [dependencies.aphrody-a2a-server]
+path = "../a2a-server"
 version = "1.4.7"
 features = []
 default-features = false

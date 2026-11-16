@@ -1,0 +1,22 @@
+[package]
+name = "aphrody-game"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary"
+publish = false
+
+[[bin]]
+name = "aphrody-game"
+path = "src/main.rs"
+
+[features]
+default = ["steam"]
+steam = ["game/steam"]
+epic = ["game/epic"]
+
+[dependencies]
+game = { path = "../../src/game" }

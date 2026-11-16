@@ -2,7 +2,7 @@
 //! LLM standard contract, RAG (SQLite FTS5 + RRF), World Model, and System 1 Decision.
 
 use crate::cabi::{APHRODY_ABI_VERSION, c_str, free_c_string, json_err, json_ok};
-use agent_context::{Entry, Select, Store, now_ms};
+use agent_core::{Entry, Select, Store, now_ms};
 use rusqlite::{Connection, params};
 use serde::{Deserialize, Serialize};
 use std::ffi::c_char;

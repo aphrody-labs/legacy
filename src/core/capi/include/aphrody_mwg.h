@@ -3,7 +3,7 @@
 
 /* Canonical C23/C11/C++23 ABI header for the Modern Web Guidance Pure-C LLVM Core:
  * - src/core/capi/c/mwg_core.c -> packages/wck/native/mwg_capi.dll
- * Consumed by C, C++23, Rust (src/ffi/src/mwg.rs), and Bun (bun:ffi).
+ * Consumed by C, C++23, Rust (src/core/capi/src/mwg.rs), and Bun (bun:ffi).
  */
 
 #include <stddef.h>

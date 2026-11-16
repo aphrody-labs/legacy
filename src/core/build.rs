@@ -7,7 +7,9 @@
 //! `OUT_DIR/grammars.rs`: one `Grammar` entry with file types and the embedded `tags.scm`.
 //! Exported C symbols are renamed `aphrody_grammar_<name>*` so they never clash with the
 //! crates.io grammars linked for the dedicated extractors.
-//! Override the manifest with `APHRODY_GRAMMARS_MANIFEST`; disable with `APHRODY_GRAMMARS=0`.
+//! Off unless the `grammars` feature (or `APHRODY_GRAMMARS=1`) asks for it: the parser tables are the bulk of
+//! the binary (see `main`). Override the manifest with `APHRODY_GRAMMARS_MANIFEST`; `APHRODY_GRAMMARS=0` wins
+//! over the feature.
 
 use std::fmt::Write as _;
 use std::path::PathBuf;
@@ -33,7 +35,15 @@ fn main() {
 
     let mut code = String::from("pub static GRAMMARS: &[Grammar] = &[\n");
     let mut decls = String::new();
-    if std::env::var("APHRODY_GRAMMARS").as_deref() != Ok("0") {
+    // Opt in, never by what the checkout happens to hold: every clone of third_party/tree-sitter-* adds its parser
+    // tables to the binary (127 clones on fr1: `ay` 204 MB, against 42 MB for the CI checkout that has none, and
+    // `strip` removes none of it). The `grammars` feature or APHRODY_GRAMMARS=1 turns the registry on, =0 turns it off.
+    let wanted = match std::env::var("APHRODY_GRAMMARS").as_deref() {
+        Ok("1") => true,
+        Ok("0") => false,
+        _ => std::env::var_os("CARGO_FEATURE_GRAMMARS").is_some(),
+    };
+    if wanted {
         let manifest = std::env::var("APHRODY_GRAMMARS_MANIFEST")
             .map(PathBuf::from)
             .unwrap_or_else(|_| src_root.join("third_party/ECOSYSTEM.toml"));

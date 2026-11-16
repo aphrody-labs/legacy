@@ -1,7 +1,10 @@
 //! Native access to the agent Context store. Same schema as `packages/ai-os/src/core/context.ts`
-//! (tables `entries`, `entries_fts`, `kv`), so TS (bun:sqlite) and Python (via `agent-py`) share one memory.
+//! (tables `entries`, `entries_fts`, `kv`), so TS (bun:sqlite) and Python (via the `python` feature, module `agent_core`) share one memory.
 //! Heads available natively: lexical (FTS5 bm25) and recency, fused with weighted RRF (k = 60) like the TS default.
 //! The semantic head stays in TS (embedder providers); entries ingested here get embedded lazily by the TS side.
+
+#[cfg(feature = "python")]
+mod python;
 
 use rusqlite::{Connection, params};
 use std::collections::HashMap;

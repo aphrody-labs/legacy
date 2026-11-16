@@ -143,18 +143,11 @@ fn svg(bytes: &[u8]) -> Result<String, String> {
 }
 
 fn craft(bytes: &[u8]) -> Result<String, String> {
-    if craft_svg::sniff::is_svg(bytes) || craft_svg::sniff::is_svgz(bytes) {
-        return Ok("craft-svg: svg signature".into());
-    }
-    if craft_webp::is_webp(bytes) {
-        let i = craft_webp::scan(bytes, 4096).ok_or("webp: no canvas")?;
-        return Ok(format!("craft-webp {}x{} {} frames", i.width, i.height, i.frames.len().max(1)));
-    }
-    if bytes.starts_with(&[0x76, 0x2f, 0x31, 0x01]) {
-        let p = craft_exr::decode::parts(bytes, &craft_exr::decode::Limits::default()).map_err(|e| e.to_string())?;
-        return Ok(format!("craft-exr {} parts", p.len()));
-    }
-    Err("unknown format".into())
+    let i = craft_formats::probe(bytes).map_err(|e| e.to_string())?;
+    Ok(match i.size {
+        Some((w, h)) => format!("craft-formats {:?} {w}x{h} {} part(s)", i.format, i.count),
+        None => format!("craft-formats {:?} {} part(s)", i.format, i.count),
+    })
 }
 
 fn glb(path: &Path) -> Result<String, String> {

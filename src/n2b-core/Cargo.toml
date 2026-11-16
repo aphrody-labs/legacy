@@ -67,9 +67,11 @@ path = "tests/util_edits.rs"
 version = "1.0.104"
 
 [dependencies.aphrody-n2b-registry]
+path = "../n2b-registry"
 version = "=0.7.0"
 
 [dependencies.aphrody-n2b-types]
+path = "../n2b-types"
 version = "=0.7.0"
 
 [dependencies.colored]

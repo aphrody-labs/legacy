@@ -36,6 +36,7 @@ crate-type = ["rlib"]
 path = "src/lib.rs"
 
 [dependencies.aphrody-ocr-core]
+path = "../ocr-core"
 version = "1.4.7"
 features = []
 

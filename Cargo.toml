@@ -10,9 +10,9 @@ cargo-features = ["codegen-backend", "panic-immediate-abort"]
 [workspace]
 resolver = "3"
 members = [
+  "apps/game",
   "bench",
   "src/agent/context",
-  "src/agent/py",
   "src/analytics",
   "src/aot",
   "src/aot/absent",
@@ -23,6 +23,7 @@ members = [
   "src/ast",
   "src/ast_jsc",
   "src/ay",
+  "src/backend",
   "src/base64",
   "src/boringssl",
   "src/boringssl_sys",
@@ -41,10 +42,11 @@ members = [
   "src/clap",
   "src/clap_macros",
   "src/collections",
+  "src/config",
   "src/core",
   "src/core/capi",
+  "src/core/capi/py",
   "src/core/jni",
-  "src/core/py",
   "src/corelib",
   "src/craft",
   "src/crash_handler",
@@ -72,11 +74,11 @@ members = [
   "src/event_loop",
   "src/exe_format",
   "src/executable",
-  "src/ffi",
   "src/format",
   "src/format/conformance",
   "src/game",
   "src/glob",
+  "src/gpu-backend",
   "src/hash",
   "src/highway",
   "src/histogram",
@@ -140,6 +142,8 @@ members = [
   "src/niubash",
   "src/niubash/runtime",
   "src/node_path",
+  "src/ocr",
+  "src/ocr-core",
   "src/opaque",
   "src/options_types",
   "src/output",
@@ -155,6 +159,7 @@ members = [
   "src/posix/omarchy",
   "src/posix/wslg",
   "src/ptr",
+  "src/rag-core",
   "src/re",
   "src/react_compiler",
   "src/remote",
@@ -166,7 +171,6 @@ members = [
   "src/ruline",
   "src/ruline/readline-abi",
   "src/runtime",
-  "src/rust-stack",
   "src/s3_signing",
   "src/safety",
   "src/sema",
@@ -191,17 +195,64 @@ members = [
   "src/sys",
   "src/sys_jsc",
   "src/taffy",
+  "src/tao",
+  "src/tao-macros",
   "src/tar",
+  "src/tauri",
+  "src/tauri-build",
+  "src/tauri-bundler",
+  "src/tauri-cli",
+  "src/tauri-cli-node",
+  "src/tauri-codegen",
+  "src/tauri-driver",
+  "src/tauri-macos-sign",
+  "src/tauri-macros",
+  "src/tauri-plugin",
+  "src/tauri-plugin-autostart",
+  "src/tauri-plugin-barcode-scanner",
+  "src/tauri-plugin-biometric",
+  "src/tauri-plugin-cli",
+  "src/tauri-plugin-clipboard-manager",
+  "src/tauri-plugin-deep-link",
+  "src/tauri-plugin-dialog",
+  "src/tauri-plugin-fs",
+  "src/tauri-plugin-geolocation",
+  "src/tauri-plugin-global-shortcut",
+  "src/tauri-plugin-haptics",
+  "src/tauri-plugin-http",
+  "src/tauri-plugin-localhost",
+  "src/tauri-plugin-log",
+  "src/tauri-plugin-nfc",
+  "src/tauri-plugin-notification",
+  "src/tauri-plugin-opener",
+  "src/tauri-plugin-os",
+  "src/tauri-plugin-persisted-scope",
+  "src/tauri-plugin-positioner",
+  "src/tauri-plugin-process",
+  "src/tauri-plugin-shell",
+  "src/tauri-plugin-single-instance",
+  "src/tauri-plugin-store",
+  "src/tauri-plugin-stronghold",
+  "src/tauri-plugin-updater",
+  "src/tauri-plugin-upload",
+  "src/tauri-plugin-websocket",
+  "src/tauri-plugin-window-state",
+  "src/tauri-runtime",
+  "src/tauri-runtime-cef",
+  "src/tauri-runtime-wry",
+  "src/tauri-schema-generator",
+  "src/tauri-schema-worker",
+  "src/tauri-utils",
   "src/tcc_sys",
   "src/text_diff",
   "src/threading",
+  "src/toolchains",
   "src/transpiler",
   "src/trim",
   "src/trim/removable_features",
   "src/tv/cli",
   "src/tv/core",
   "src/tv/ffmpeg",
-  "src/tv/i18n",
   "src/ui/kit",
   "src/up",
   "src/url",
@@ -290,14 +341,12 @@ lore-transport = { version = "0.13.1-nightly", path = "src/lore/transport", pack
 # Media (merged from ~\tv)
 tv-core = { version = "0.4.0", path = "src/tv/core" }
 tv-ffmpeg = { version = "0.4.0", path = "src/tv/ffmpeg" }
-tv-i18n = { version = "0.4.0", path = "src/tv/i18n" }
+aphrody-i18n = { version = "0.4.0", path = "src/i18n" }
 
 # crates.io. Keys shared by src and labs: labs exact pin (same or newer version), union of features.
 anyhow = "1.0.104"
 ffmpeg-next = "9.1.0"
-fluent-templates = "0.15.1"
 sys-locale = "0.3.2"
-unic-langid = "0.9.6"
 base64 = "0.23.1"
 bitflags = "2.13.2"
 blake3 = { version = "1.8.7", features = ["mmap", "rayon"] }
@@ -349,7 +398,12 @@ windows = { version = "0.62.2", features = [
   "System",
 ] }
 argh = "0.1.19"
-bevy = { version = "0.20", default-features = false }
+# Bevy main of the aphrody-labs fork (upstream bevyengine/bevy ef5312a2, 2026-11-15); crates.io has no release newer than 0.20.1.
+bevy = { git = "https://github.com/aphrody-labs/bevy", rev = "ef5312a29994d66c6b2610a76e743de06a5bd3b7", default-features = false }
+# Storefronts, aphrody-labs forks of upstream crates pinned in src.lock.json.
+bevy-steamworks = { git = "https://github.com/aphrody-labs/bevy_steamworks", rev = "0d28d85517f0f48b7c18e8ef353abf261b728598" }
+eos-rs = { git = "https://github.com/aphrody-labs/eos", rev = "ec374ff6198fa85ba4c639739f4e5869f4aa6512" }
+steamworks = { git = "https://github.com/aphrody-labs/steamworks-rs", rev = "d8114185613be4dbfe4897c8484d0b2670fd3cd7" }
 bytemuck = { version = "1.25", features = ["derive"] }
 console_error_panic_hook = "0.1.7"
 egui = { version = "0.37", default-features = false }
@@ -1040,9 +1094,6 @@ inherits = "release"
 panic = "immediate-abort"
 
 # [profile.dev.package.ring3-agent] removed (crate purged).
-[profile.dev.package.rust-stack]
-opt-level = 1
-
 [patch.crates-io]
 # aphrody-dev forks: russh with sntrup761x25519-sha512 (OpenSSH hybrid PQ kex), pure-Rust sntrup761.
 # Every git source is pinned by rev (branch noted for `ay lock --deps --bump`); deny.toml allows only these repos.

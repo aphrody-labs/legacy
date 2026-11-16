@@ -36,18 +36,22 @@ name = "aphrody_agent_runtime"
 path = "src/lib.rs"
 
 [dependencies.aphrody-agent-proto]
+path = "../agent-proto"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-agent-tools]
+path = "../agent-tools"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-antigravity]
+path = "../antigravity"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-config]
+path = "../config"
 version = "1.4.7"
 features = []
 
@@ -56,26 +60,32 @@ version = "1.4.7"
 features = []
 
 [dependencies.aphrody-llama-server]
+path = "../llama-server"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-mcp-client]
+path = "../mcp-client"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-model-antigravity]
+path = "../model-antigravity"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-model-client]
+path = "../model-client"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-models]
+path = "../models"
 version = "1.4.7"
 features = []
 
 [dependencies.aphrody-rag]
+path = "../rag"
 version = "1.4.7"
 features = []
 optional = true
@@ -135,6 +145,7 @@ version = "8"
 features = []
 
 [dev-dependencies.aphrody-jev]
+path = "../jev"
 version = "1.4.7"
 features = ["client"]
 default-features = false

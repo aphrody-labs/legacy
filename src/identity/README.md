@@ -26,10 +26,10 @@ par défaut de Codex.
 
 ## Pet web : `<aphrody-pet>`
 
-Choix : **option B**, un port TypeScript de l'horloge (`m3/packages/identity/src/runtime.ts`)
+Choix : **option B**, un port TypeScript de l'horloge (`m3/packages/env-kit/identity/src/runtime.ts`)
 alimenté par `assets/aphrody/web.json`, que la crate génère (pistes, états, ligne de regard, CSS
 des 88 cellules produite par `aphrody-sprite-sheet`). Mesures du 2026-10-09 (Bun 1.4.3, Windows,
-`bun run measure` dans `m3/packages/identity`) :
+`bun run measure` dans `m3/packages/env-kit/identity`) :
 
 | | Brut | gzip | brotli | Chargement | Tick |
 | --- | --- | --- | --- | --- | --- |
@@ -110,5 +110,5 @@ aphrody-labs/bun) importe `symbol:home` et les `.ico`.
 
 ```sh
 bun scripts/aphrody/build/rust/cargo-serial.ts --msvc test -p aphrody-identity   # Windows natif, depuis la racine
-cd m3/packages/identity && bun test src && bun check -p tsconfig.json --noEmit
+cd m3/packages/env-kit/identity && bun test src && bun check -p tsconfig.json --noEmit
 ```

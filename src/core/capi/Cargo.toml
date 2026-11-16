@@ -6,9 +6,9 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 homepage.workspace = true
-keywords = ["c-abi", "ffi", "tree-sitter", "aphrody"]
+keywords = ["c-abi", "ffi", "tree-sitter", "reverse-engineering", "aphrody"]
 categories = ["api-bindings", "development-tools::ffi"]
-description = "C ABI over aphrody-core (core_* symbols), loaded by bun:ffi, Python, and Java"
+description = "One C ABI cdylib: core_* (aphrody-core), ai_os_*, depot_*, aphrody_re_* and Boq (aphrody_*), loaded by bun:ffi, Python, and Java"
 
 [lib]
 name = "aphrody_core_capi"
@@ -16,17 +16,37 @@ crate-type = ["cdylib", "rlib"]
 
 
 [features]
-default = ["core", "ai-os", "pipeline"]
+default = ["core", "ai-os", "pipeline", "depot", "re", "web"]
 core = ["dep:aphrody-core"]
 # core_pipeline_* : the in-process index pipeline (tree-sitter and document stages) over the same SQLite file as `ay index`.
 pipeline = ["core", "aphrody-core/pipeline"]
 ai-os = ["dep:agent-context", "dep:rusqlite"]
+# depot_*: depot engines (gix, just, ingest, graph, forge, migrate) over the core parsers.
+depot = [
+  "core",
+  "dep:depot-core",
+  "dep:depot-migrate",
+  "dep:depot-forge",
+  "dep:depot-ingest",
+  "dep:depot-graph",
+]
+# aphrody_re_*, aphrody_ghidra_*, aphrody_mingw_*, aphrody_lua52_*: reverse engineering (aphrody-re).
+re = ["dep:aphrody-re"]
+# aphrody_* Boq parser (corelib).
+web = ["dep:corelib"]
 aysys-link = []
 
 [dependencies]
 agent-context = { workspace = true, optional = true }
 c-abi.workspace = true
 aphrody-core = { workspace = true, optional = true }
+aphrody-re = { workspace = true, optional = true }
+corelib = { workspace = true, optional = true }
+depot-core = { workspace = true, optional = true }
+depot-migrate = { workspace = true, optional = true }
+depot-forge = { workspace = true, optional = true }
+depot-ingest = { workspace = true, optional = true }
+depot-graph = { workspace = true, optional = true }
 rusqlite = { workspace = true, features = ["bundled"], optional = true }
 serde.workspace = true
 serde_json.workspace = true
