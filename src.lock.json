@@ -268,7 +268,7 @@
       "path": "third_party/LiberNT",
       "url": "https://github.com/aphrody-labs/LiberNT.git",
       "upstream_url": "https://github.com/LiberNT/LiberNT",
-      "commit": "b9d7fc111b47ac61d5afa8032f535394ab6430e4",
+      "commit": "747af8fd6fc1ce05d39fe74930b6b315e0b4a906",
       "branch": "main-nt10",
       "engine": "git",
       "pillar": "git",

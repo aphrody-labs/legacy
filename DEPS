@@ -28,7 +28,7 @@ deps = {
   'third_party/GSL': 'https://github.com/aphrody-labs/GSL.git@a4651c0f995d3309432f78e977058d9d4760f9fa',
   'third_party/GameNetworkingSockets': 'https://github.com/aphrody-labs/GameNetworkingSockets.git@d534c19aa760df3fb75fd20db13ba1932b8a5463',
   'third_party/GitPython': 'https://github.com/gitpython-developers/GitPython.git@57d278fd0cbc872fac5e702f42ea455030237850',
-  'third_party/LiberNT': 'https://github.com/aphrody-labs/LiberNT.git@b9d7fc111b47ac61d5afa8032f535394ab6430e4',
+  'third_party/LiberNT': 'https://github.com/aphrody-labs/LiberNT.git@747af8fd6fc1ce05d39fe74930b6b315e0b4a906',
   'third_party/MangoHud': 'https://github.com/aphrody-labs/MangoHud.git@791f92016625c866323b35d01da3844531b6c237',
   'third_party/NepTUN': 'https://github.com/NordSecurity/NepTUN.git@633ede4e0613491071a0b3b67cce755882289c02',
   'third_party/Oryx': 'https://github.com/aphrody-labs/Oryx.git@ac5cf5a4d9ac4142493082f51506ad85d6dfbe31',

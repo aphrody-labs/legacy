@@ -63,7 +63,6 @@ rubash = { version = "1.5.0", path = "../rubash" }
 # `ay docs` (Bun docs index) and `ay flat` / `ay hash` / `ay time` (bun fork crates, flattened).
 aphrody-docs = { version = "0.4.0", path = "../docs" }
 # `ay applet`: the WinuxCmd Rust applets (system/winux): Win32 implementations (cmds, Windows only) and portable ports (extra, every host).
-winux-cmds = { version = "0.1.0", path = "../winux/cmds" }
 winux-core = { version = "0.1.0", path = "../winux/core" }
 winux-extra = { version = "0.1.0", path = "../winux/extra" }
 # `ay env`: the monorepo .env loader (system/env/src/lib.rs, system/ay/src/envcmd.rs).
@@ -82,6 +81,7 @@ axoupdater = { workspace = true, features = ["blocking"] }
 
 # The benchmark suite measures Win32 APIs; `ay bench` reports unsupported elsewhere.
 [target.'cfg(windows)'.dependencies]
+winux-cmds = { version = "0.1.0", path = "../winux/cmds" }
 stack-bench.workspace = true
 
 # Version resource of ay.exe (build.rs).
