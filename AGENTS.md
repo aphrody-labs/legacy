@@ -3,7 +3,7 @@
 Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](docs/native/ROADMAP.md). Repo, folder, binary and scope names come from [`tools/identity.toml`](tools/identity.toml).
 
 ## Sources of truth
-- The only third-party code and sources of truth in the tree are `third_party/linux` and `third_party/chromium`. Everything else (other upstreams, sites, repos) is ideas and inspiration, never a pin or a dependency.
+- The only third-party code and sources of truth in the tree are `third_party/linux` and `third_party/chromium`. Everything else (other upstreams, sites, repos) is ideas and inspiration, consumed as released packages (crates.io, npm, PyPI, vcpkg) or prebuilts; the remaining `src.lock.json` pins and git `rev` dependencies in `Cargo.toml` are being converted to that.
 - Vision: [storytold/craft-anything](https://github.com/storytold/craft-anything).
 - Stack: [zed-industries/zed](https://github.com/zed-industries/zed). UI: one gpui-os (our Zed fork, worked by the agy CLI session) unifying GPUI, the kit, native shell, taffy and wgpu for web, mobile and desktop (LTO, AOT); Dioxus and GPUI work together on it, sharing deduplicated dependencies (taffy, wgpu, winit, text and layout crates); frameworks/ui converges on it. Per ecosystem, its native toolkit: egui for the Craft Apps (as craft-anything), Bevy for games, iced for the Wayland desktop (as COSMIC), all on the same shared, deduplicated base.
 - Design, UI and UX: [design.google](https://design.google/).
@@ -22,7 +22,7 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 ## How
 - "Purge legacy" means fixing legacy errors, deleting dead code and modernizing old architecture; it never removes a feature or causes a regression.
 - No human in the loop: decide, execute, prove, report done, not done and failed. No approval gates, blocking warnings or slow backups.
-- Everything on `main` through `bun scripts/commit.ts`; never stash, reset, branch or use worktrees.
+- `main` is frozen (tag `main-freeze-20261116`) during the reorganization; everything goes on `dev` through `bun scripts/commit.ts` (it commits the current branch); never stash, reset or use worktrees.
 - Upstream first at the newest canary, nightly or rc; assemble, never reinvent; dedupe.
 - Language by domain: Rust core; Python for ML, AI, data, research and RE; Go for containers, deploy and cloud tooling; C/C++ for C/C++ ecosystems; TypeScript only where justified, on Bun.
 - Nothing hardcoded or frozen: values from live sources or discovery, names from identity; upstream namespaces (win32, ffmpeg, Linux, crates, packages) never change.
