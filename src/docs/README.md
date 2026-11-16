@@ -1,7 +1,7 @@
 # aphrody-docs
 
 <!-- catalog:begin unit -->
-> `ay docs`: imports Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) into a SQLite FTS5 index and serves search for people and agents
+> `ay docs`: imports the documentation of Bun, Linux, Chromium, ChromiumOS and Android (data-driven sources.toml: local, git, llms.txt, sitemap) into a SQLite FTS5 index and serves search for people and agents
 
 | Type | Path |
 | :-- | :-- |

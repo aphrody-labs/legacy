@@ -5,7 +5,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "`ay docs`: imports Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) into a SQLite FTS5 index and serves search for people and agents"
+description = "`ay docs`: imports the documentation of Bun, Linux, Chromium, ChromiumOS and Android (data-driven sources.toml: local, git, llms.txt, sitemap) into a SQLite FTS5 index and serves search for people and agents"
 repository.workspace = true
 
 [lib]
@@ -15,7 +15,9 @@ name = "aphrody_docs"
 bun_sort_by_number.workspace = true
 bun_wyhash.workspace = true
 rusqlite = { workspace = true, features = ["bundled"] }
+serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+toml.workspace = true
 ureq.workspace = true
 
 [dev-dependencies]

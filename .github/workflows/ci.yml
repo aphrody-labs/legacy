@@ -49,7 +49,7 @@ jobs:
       - name: Rust (ay and its libraries; toolchain from rust-toolchain.toml)
         run: |
           aphrody-heavy cargo build -p aphrody
-          aphrody-heavy cargo test -p aphrody -p depot-gclient -p depot-cas -p depot-cipd -p aphrody-up -p aphrody-rt -p agent-context -p aphrody-ui
+          aphrody-heavy cargo test -p aphrody -p aphrody-docs -p depot-gclient -p depot-cas -p depot-cipd -p aphrody-up -p aphrody-rt -p agent-context -p aphrody-ui
   deny:
     name: supply chain (cargo-deny)
     runs-on: [self-hosted, fr1]

@@ -8,6 +8,7 @@ on:
     paths:
       - "src/winux/**"
       - "src/ay/**"
+      - "src/docs/**"
       - "src/up/**"
       - "device/os/unixwin/**"
       - "scripts/unixwin-applets.ts"
@@ -94,6 +95,8 @@ jobs:
       - name: Unit tests of ay applet and ay sh
         # The embedded engine mutates process-wide state (environment, handles): its tests run one at a time, as upstream does (RUST_TEST_THREADS=1).
         run: cargo test --release -p aphrody --lib --no-default-features -- --test-threads=1 applet sh
+      - name: Unit tests of ay docs (sources, HTML to text, sitemap server, git sparse clone)
+        run: cargo test --release -p aphrody-docs
       - name: uutils multicall for Windows (the executables behind the uutils providers)
         shell: pwsh
         run: |

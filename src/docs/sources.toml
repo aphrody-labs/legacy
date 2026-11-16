@@ -1,0 +1,90 @@
+# Default sources of `ay docs sync` (embedded in the binary; `--sources <file>` or $AY_DOCS_SOURCES replaces it).
+# `ay docs sync --source android` selects an id or every id under a prefix (android/source, android/developer).
+#
+# kind = "local"    files of a checkout: root (repo-relative or absolute), paths (dirs, `*` matches one segment), exts
+# kind = "git"      like local, from `local` when that checkout holds every path, else a shallow partial sparse clone of
+#                   `url` (var/cache/docs/<id>, never in the git tree) refreshed with `git fetch --depth 1`
+# kind = "llms"     `url` = a llms-full.txt split into its pages (`# Title` + `Source: URL`); `index` = llms.txt
+# kind = "sitemap"  sitemap.xml (index or urlset) -> HTML pages -> text; per-shard and per-page <lastmod> skip what is unchanged
+# kind = "skills"   agent skills (~/.claude/skills, <repo>/.agents/skills) whose directory starts with `prefix`
+#
+# Page URL of local/git documents = url_base + (path without strip_prefix, without extension when strip_ext) + url_suffix.
+
+[[source]]
+id = "fork"
+kind = "local"
+root = "third_party/bun"
+paths = ["docs"]
+exts = ["md", "mdx"]
+url_base = "https://bun.com/"
+strip_ext = true
+
+[[source]]
+id = "upstream"
+kind = "llms"
+url = "https://bun.com/llms-full.txt"
+index = "https://bun.com/llms.txt"
+
+[[source]]
+id = "skills"
+kind = "skills"
+prefix = "bun"
+
+# Linux: Documentation/ of the newest mainline. third_party/linux is a sparse checkout without Documentation, so this
+# clones torvalds/linux (partial, depth 1, cone sparse on Documentation) into the cache.
+[[source]]
+id = "linux"
+kind = "git"
+url = "https://github.com/torvalds/linux.git"
+local = "third_party/linux"
+paths = ["Documentation"]
+exts = ["rst", "md", "txt"]
+url_base = "https://docs.kernel.org/"
+strip_prefix = "Documentation/"
+strip_ext = true
+url_suffix = ".html"
+
+# Chromium: docs/ and every <dir>/docs of chromium/src (android_webview, build, chrome, extensions, mojo, net, v8, ...).
+[[source]]
+id = "chromium"
+kind = "git"
+url = "https://chromium.googlesource.com/chromium/src"
+local = "third_party/chromium/src"
+paths = ["docs", "*/docs"]
+exts = ["md"]
+url_base = "https://chromium.googlesource.com/chromium/src/+/main/"
+
+# ChromiumOS: the developer docs repository and the chromium.org/chromium-os site.
+[[source]]
+id = "chromiumos/docs"
+kind = "git"
+url = "https://chromium.googlesource.com/chromiumos/docs"
+exts = ["md"]
+url_base = "https://chromium.googlesource.com/chromiumos/docs/+/main/"
+
+[[source]]
+id = "chromiumos/site"
+kind = "sitemap"
+url = "https://www.chromium.org/sitemap.xml"
+include = ["https://www.chromium.org/chromium-os/"]
+
+# Android. Neither site publishes llms.txt or a markdown form (404, checked 2026-11-16) and the docs repository of
+# source.android.com stopped in 2021, so the cheapest official machine-readable form is the sitemap and the page HTML.
+# The API reference (reference/, sdk/api_diff/: about 70000 javadoc-style pages) stays out; remove the excludes to take it.
+[[source]]
+id = "android/source"
+kind = "sitemap"
+url = "https://source.android.com/sitemap.xml"
+exclude = ["https://source.android.com/reference/tradefed/", "https://source.android.com/reference/oldtradefed/"]
+
+[[source]]
+id = "android/developer"
+kind = "sitemap"
+url = "https://developer.android.com/sitemap.xml"
+exclude = [
+  "https://developer.android.com/reference/",
+  "https://developer.android.com/sdk/api_diff/",
+  "https://developer.android.com/blog/",
+  "https://developer.android.com/newsletter/",
+  "https://developer.android.com/events/",
+]

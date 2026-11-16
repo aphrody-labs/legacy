@@ -6,12 +6,13 @@ use std::path::PathBuf;
 
 const EXAMPLES: &str = "\
 Examples:
-  ay docs sync                     import the fork docs, bun.com llms-full.txt and the bun skills
-  ay docs sync --source fork       one source (fork, upstream, skills); --offline skips bun.com
-  ay docs bun serve websocket      search (also: ay docs search ...)
-  ay docs bun --json -n 5 bunfig   machine output for agents (schema ay-docs-search/1)
-  ay docs show runtime/bunfig      print a page (path, suffix or URL; upstream:<path> for bun.com)
-  ay docs stats --json             what the index holds
+  ay docs sources                  the sources (src/docs/sources.toml): bun, linux, chromium, chromiumos, android
+  ay docs sync                     import every source (incremental and resumable; docs are data, never committed)
+  ay docs sync -s android          one source or an id prefix (android = android/source + android/developer); --offline skips the network
+  ay docs search binder ipc -s android   search one source (also: ay docs bun ...)
+  ay docs search --json -n 5 bunfig      machine output for agents (schema ay-docs-search/1)
+  ay docs show runtime/bunfig      print a page (path, suffix or URL; <source>:<path> to pick the source)
+  ay docs stats --json             documents per source, commit and last sync of each
   ay docs schedule --every 6       keep it fresh (Task Scheduler / systemd user timer)";
 
 #[derive(clap::Args, Debug, PartialEq)]
@@ -20,18 +21,26 @@ pub struct DocsArgs {
     /// Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
     #[arg(long, global = true)]
     pub root: Option<PathBuf>,
+    /// Sources file replacing the embedded sources.toml (default: $AY_DOCS_SOURCES)
+    #[arg(long = "sources-file", global = true)]
+    pub sources_file: Option<PathBuf>,
     #[command(subcommand)]
     pub cmd: DocsCmd,
 }
 
 #[derive(clap::Subcommand, Debug, PartialEq)]
 pub enum DocsCmd {
-    /// Import and index the sources (incremental, by content hash); the command the upstream watch runs
+    /// List the sources (id, kind, origin)
+    Sources {
+        #[arg(long)]
+        json: bool,
+    },
+    /// Import and index the sources (incremental, resumable); the command the upstream watch runs
     Sync {
-        /// Only these sources: fork, upstream, skills (repeatable)
+        /// Only these sources: an id or an id prefix, see `ay docs sources` (repeatable)
         #[arg(long = "source", short = 's')]
         sources: Vec<String>,
-        /// Do not fetch bun.com
+        /// Do not touch the network (bun.com, sitemaps, git fetch)
         #[arg(long)]
         offline: bool,
         /// JSON report (schema ay-docs-sync/1)
@@ -41,7 +50,7 @@ pub enum DocsCmd {
         #[arg(long, short = 'q')]
         quiet: bool,
     },
-    /// Search Bun's docs
+    /// Search the indexed documentation
     #[command(visible_alias = "search")]
     Bun(SearchArgs),
     /// Print one page
@@ -75,7 +84,7 @@ pub struct SearchArgs {
     /// Maximum results
     #[arg(long, short = 'n', default_value_t = 8)]
     pub limit: usize,
-    /// Only one source: fork, upstream, skills
+    /// Only one source or id prefix (see `ay docs sources`), e.g. android, linux, chromiumos/docs
     #[arg(long, short = 's')]
     pub source: Option<String>,
     /// JSON (schema ay-docs-search/1)
@@ -83,12 +92,20 @@ pub struct SearchArgs {
     pub json: bool,
 }
 
-fn config(root: Option<PathBuf>) -> Config {
+fn config(root: Option<PathBuf>, sources: Option<PathBuf>) -> Config {
     let repo = root.or_else(|| {
         let r = crate::repo_root();
         r.join("src.lock.json").is_file().then_some(r)
     });
-    Config::new(repo)
+    let mut cfg = Config::new(repo);
+    if sources.is_some() {
+        cfg.sources_file = sources;
+    }
+    cfg
+}
+
+fn origin(s: &aphrody_docs::Source) -> String {
+    [&s.url, &s.root, &s.prefix].into_iter().flatten().next().cloned().unwrap_or_default()
 }
 
 fn print_json(v: &serde_json::Value) {
@@ -96,9 +113,26 @@ fn print_json(v: &serde_json::Value) {
 }
 
 pub fn run(a: DocsArgs) -> i32 {
-    let cfg = config(a.root);
+    let cfg = config(a.root, a.sources_file);
     match a.cmd {
-        DocsCmd::Sync { sources, offline, json, quiet } => match aphrody_docs::sync(&cfg, &SyncOptions { sources, offline }) {
+        DocsCmd::Sources { json } => match cfg.load_sources() {
+            Ok(list) => {
+                if json {
+                    let rows: Vec<_> = list.iter().map(|s| serde_json::json!({"id": s.id, "kind": s.kind.name(), "origin": origin(s)})).collect();
+                    print_json(&serde_json::json!({"sources": rows}));
+                } else {
+                    for s in &list {
+                        println!("{:<18} {:<8} {}", s.id, s.kind.name(), origin(s));
+                    }
+                }
+                0
+            }
+            Err(e) => {
+                eprintln!("ay docs sources: {e}");
+                1
+            }
+        },
+        DocsCmd::Sync { sources, offline, json, quiet } => match aphrody_docs::sync(&cfg, &SyncOptions { sources, offline, progress: !json && !quiet }) {
             Ok(report) => {
                 let ok = report["ok"] == true;
                 if json {
@@ -106,18 +140,20 @@ pub fn run(a: DocsArgs) -> i32 {
                 } else if !quiet || !ok {
                     for s in report["sources"].as_array().into_iter().flatten() {
                         if s["ok"] == true {
+                            let failed = s["failed"].as_u64().unwrap_or(0);
                             println!(
-                                "{:<9} {:>5} docs  +{} ~{} -{} ={}  {} ms",
+                                "{:<18} {:>6} docs  +{} ~{} -{} ={}{}  {} ms",
                                 s["source"].as_str().unwrap_or(""),
                                 s["documents"],
                                 s["added"],
                                 s["updated"],
                                 s["removed"],
                                 s["unchanged"],
+                                if failed > 0 { format!(" !{failed} to retry") } else { String::new() },
                                 s["ms"]
                             );
                         } else {
-                            eprintln!("{:<9} failed: {}", s["source"].as_str().unwrap_or(""), s["error"].as_str().unwrap_or(""));
+                            eprintln!("{:<18} failed: {}", s["source"].as_str().unwrap_or(""), s["error"].as_str().unwrap_or(""));
                         }
                     }
                     if !quiet {
@@ -155,11 +191,11 @@ pub fn run(a: DocsArgs) -> i32 {
                 if json {
                     print_json(&v);
                 } else {
-                    println!("index {} ({} bytes)", cfg.db.display(), v["db_bytes"]);
-                    println!("fork commit {}", v["fork_commit"].as_str().unwrap_or("-"));
+                    println!("index {} ({} bytes), {} documents", cfg.db.display(), v["db_bytes"], v["documents"]);
                     println!("synced at {} (unix)", v["synced_at"]);
                     for s in v["sources"].as_array().into_iter().flatten() {
-                        println!("{:<9} {:>5} docs {:>10} bytes", s["source"].as_str().unwrap_or(""), s["documents"], s["bytes"]);
+                        let commit = s["commit"].as_str().map(|c| c.chars().take(10).collect::<String>()).unwrap_or_default();
+                        println!("{:<18} {:>6} docs {:>11} bytes  {commit}", s["source"].as_str().unwrap_or(""), s["documents"], s["bytes"]);
                     }
                 }
                 0
@@ -227,7 +263,7 @@ fn search(cfg: &Config, s: SearchArgs) -> i32 {
             0
         }
         Err(e) => {
-            eprintln!("ay docs bun: {e}");
+            eprintln!("ay docs search: {e}");
             1
         }
     })
@@ -255,6 +291,12 @@ mod tests {
             DocsCmd::Bun(SearchArgs { query: vec!["serve".into(), "websocket".into()], limit: 3, source: None, json: true })
         );
         assert!(matches!(parse("search bunfig"), DocsCmd::Bun(_)));
+        assert_eq!(
+            parse("search binder ipc --source android"),
+            DocsCmd::Bun(SearchArgs { query: vec!["binder".into(), "ipc".into()], limit: 8, source: Some("android".into()), json: false })
+        );
+        assert_eq!(parse("sync -s android -s linux"), DocsCmd::Sync { sources: vec!["android".into(), "linux".into()], offline: false, json: false, quiet: false });
+        assert_eq!(parse("sources --json"), DocsCmd::Sources { json: true });
         assert_eq!(parse("sync -s fork --offline"), DocsCmd::Sync { sources: vec!["fork".into()], offline: true, json: false, quiet: false });
         assert_eq!(parse("schedule --every 12"), DocsCmd::Schedule { every: 12, remove: false });
         assert!(T::try_parse_from(["docs", "schedule", "--every", "0"]).is_err());
