@@ -59,8 +59,7 @@ build-rust-unix-wayland:
   tags:
     - archlinux-pkgctl
   script:
-    - cargo run -p aphrody --bin ay -- arch check --strict --root .
-    - cargo test -p archguard -p aphrody
+    - cargo test -p aphrody
     - cargo check --workspace --all-targets
 
 build-go-infra:

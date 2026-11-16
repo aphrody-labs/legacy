@@ -310,7 +310,6 @@ function captureSampleCliHelps(
   localBinDir: string,
 ): Array<{ binary: string; summaryLine: string }> {
   const probeTargets = [
-    "archguard.exe",
     "ske.exe",
     "triad.exe",
     "rust-stack.exe",

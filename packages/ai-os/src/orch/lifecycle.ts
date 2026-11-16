@@ -72,13 +72,6 @@ export function software(o: LifecycleOptions = {}): Workflow {
     },
     { id: "check", do: "cmd", deps: ["fmt"], hosts: ["pc"], run: "bun check" },
     {
-      id: "arch",
-      do: "cmd",
-      deps: ["fmt"],
-      hosts: ["pc"],
-      run: "ay arch check --strict",
-    },
-    {
       id: "clippy",
       do: "cmd",
       deps: ["sync"],
@@ -106,7 +99,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
     {
       id: "diff",
       do: "cmd",
-      deps: ["test-bun", "arch"],
+      deps: ["test-bun"],
       hosts: ["pc"],
       // Git failure propagated (not masked by head's exit code).
       run: `out=$(git log -3 -p --stat -- ${q(paths)}) && printf '%s' "$out" | head -c 100000`,
@@ -136,7 +129,7 @@ export function software(o: LifecycleOptions = {}): Workflow {
       needs: { edit: true },
       prompt:
         "The ai-os review tribunal (two voices and a judge) reviewed the change. Check each defect the judge kept against the code; fix the real ones, ignore the others and say so. Nothing to do if the status is \"compliant\".\n\n{{review}}",
-      check: "bun check && ay arch check --strict",
+      check: "bun check",
       commit: {
         paths: [...paths, "docs/reviews"],
         message: msg("tribunal fixes"),

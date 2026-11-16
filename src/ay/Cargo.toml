@@ -28,7 +28,6 @@ default = ["magika"]
 magika = ["aphrody-re/magika"]
 
 [dependencies]
-archguard.workspace = true
 aphrody-conformance = { version = "0.4.0", path = "../../test/conformance" }
 aphrody-re = { workspace = true, features = ["index"] }
 # `ay index`: the in-process index pipeline (src/core/src/pipeline) and its file watcher.

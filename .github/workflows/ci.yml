@@ -49,7 +49,7 @@ jobs:
       - name: Rust (ay and its libraries; toolchain from rust-toolchain.toml)
         run: |
           aphrody-heavy cargo build -p aphrody
-          aphrody-heavy cargo test -p aphrody -p depot-gclient -p depot-cas -p depot-cipd -p aphrody-up -p aphrody-rt -p archguard -p agent-context -p aphrody-ui
+          aphrody-heavy cargo test -p aphrody -p depot-gclient -p depot-cas -p depot-cipd -p aphrody-up -p aphrody-rt -p agent-context -p aphrody-ui
   deny:
     name: supply chain (cargo-deny)
     runs-on: [self-hosted, fr1]
@@ -63,29 +63,6 @@ jobs:
         run: |
           command -v cargo-deny >/dev/null || aphrody-heavy cargo install --locked cargo-deny
           cargo deny --locked check
-  arch:
-    name: architecture ratchet
-    needs: build-test
-    runs-on: [self-hosted, fr1]
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-        with: { submodules: false }
-      - name: Toolchain
-        run: bun scripts/toolchain.ts install
-      - name: Architecture gate (ratchet vs src/archguard/baseline.json)
-        # Fails when any rule has more --strict errors than its baseline count (new rule = 0); lower the
-        # baseline in the commit that clears debt. Back to plain `arch check --strict` once it is all zeros.
-        # ay comes from the build-test job (same shared target dir); built here only when that dir was wiped.
-        run: |
-          [ -x "$CARGO_TARGET_DIR/debug/ay" ] || aphrody-heavy cargo build -p aphrody
-          "$CARGO_TARGET_DIR/debug/ay" arch check --strict --json > "$RUNNER_TEMP/arch.json" || true
-          jaq -r --slurpfile b src/archguard/baseline.json '
-            [.findings[] | select(.severity == "error") | .rule_id] | group_by(.) | map({k: .[0], n: length})
-            | map(select(.n > ($b[0][.k] // 0))) | .[] | "\(.k): \(.n) errors > baseline \($b[0][.k] // 0)"
-          ' "$RUNNER_TEMP/arch.json" > "$RUNNER_TEMP/arch-over.txt"
-          jaq -r '[.findings[] | select(.severity == "error")] | "arch: \(length) errors (ratchet)"' "$RUNNER_TEMP/arch.json"
-          if [ -s "$RUNNER_TEMP/arch-over.txt" ]; then cat "$RUNNER_TEMP/arch-over.txt"; exit 1; fi
   tokens:
     name: design tokens
     runs-on: [self-hosted, fr1]

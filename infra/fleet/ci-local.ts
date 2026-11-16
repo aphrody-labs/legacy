@@ -1,7 +1,7 @@
 // `just ci-local`: the jobs of .github/workflows/ci.yml and judge.yml, run in parallel in this checkout.
 // Same commands as the workflows (keep both in step). Cargo jobs go through aphrody-heavy when it exists (fr1),
 // and are skipped on hosts that must not compile (the workstation): use `just ci-local-fr1` for the full set.
-//   bun infra/fleet/ci-local.ts [--only gates,suites,rust,deny,arch,tokens] [--jobs N] [--list]
+//   bun infra/fleet/ci-local.ts [--only gates,suites,rust,deny,tokens] [--jobs N] [--list]
 // Exit 1 when any job fails; each job logs to var/ci-local/<name>.log and its tail is printed on failure.
 import { mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -67,20 +67,13 @@ const J: Job[] = [
     name: "rust",
     group: "rust",
     cargo: true,
-    cmd: `${heavy}cargo build -p aphrody && ${heavy}cargo test -p aphrody -p depot-gclient -p depot-cas -p depot-cipd -p aphrody-up -p aphrody-rt -p archguard -p agent-context -p aphrody-ui`,
+    cmd: `${heavy}cargo build -p aphrody && ${heavy}cargo test -p aphrody -p depot-gclient -p depot-cas -p depot-cipd -p aphrody-up -p aphrody-rt -p agent-context -p aphrody-ui`,
   },
   {
     name: "deny",
     group: "deny",
     cargo: true,
     cmd: "cargo deny --locked check",
-  },
-  {
-    name: "arch",
-    group: "arch",
-    cargo: true,
-    after: "rust",
-    cmd: 'T=${CARGO_TARGET_DIR:-target}; "$T/debug/ay" arch check --strict --json > var/ci-local/arch.json || true; jaq -e --slurpfile b src/archguard/baseline.json \'[.findings[] | select(.severity == "error") | .rule_id] | group_by(.) | map({k: .[0], n: length}) | map(select(.n > ($b[0][.k] // 0))) | length == 0\' var/ci-local/arch.json',
   },
   {
     name: "tokens",

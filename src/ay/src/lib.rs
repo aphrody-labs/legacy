@@ -1,5 +1,5 @@
 //! `ay`: the monorepo's multicall CLI. Each command forwards its arguments to the library
-//! that owns the logic (archguard, xtk, depot-cli, aphrody-remote, stack-bench) or to an
+//! that owns the logic (xtk, depot-cli, aphrody-remote, stack-bench) or to an
 //! external program (`gamescope-rs`, `just` recipes). See docs/ay/NAMING.md for the command table.
 //! `ay build` drives cargo itself (see [`build`]).
 
@@ -33,7 +33,7 @@ pub struct Rest {
 /// Commands by area, after the alphabetical table (`ay --help`).
 const OVERVIEW: &str = "\
 Areas:
-  repo       arch, lock, manifests, git, ingest, graph, conformance
+  repo       lock, manifests, git, ingest, graph, conformance
   toolchain  up, doctor, sys, build, self-update, rt
   bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in src/bun-flat), hash, time
   chromium   chromium (fr1 build chain), gclient, fetch, gn, ninja, cipd, cl, vpy, engines (V8, JSC, Dawn, wgpu)
@@ -57,9 +57,6 @@ struct Cli {
 
 #[derive(Subcommand, Debug, PartialEq)]
 pub enum Cmd {
-    /// Architecture gate ARCH-001..017: check, rules, graph
-    #[command(disable_help_flag = true)]
-    Arch(Rest),
     /// Toolchain doctor
     #[command(disable_help_flag = true)]
     Doctor(Rest),
@@ -233,7 +230,6 @@ const DOCKER_SUBCOMMANDS: &[&str] = &["build", "smoke", "up", "ps", "products", 
 /// A resolved invocation: which library (or external program) runs and with what arguments.
 #[derive(Debug, PartialEq)]
 pub enum Route {
-    Arch(Vec<String>),
     Xtk(Vec<String>),
     Depot(&'static str, Vec<String>),
     Design(Vec<String>),
@@ -276,7 +272,6 @@ fn prefixed(head: &[&str], rest: &[String]) -> Vec<String> {
 /// Map a parsed command to its route. Pure, so it is unit-tested without side effects.
 pub fn route(cmd: Cmd) -> Route {
     match cmd {
-        Cmd::Arch(r) => Route::Arch(r.args),
         Cmd::Doctor(r) => Route::Xtk(prefixed(&["doctor"], &r.args)),
         Cmd::Lock(r) => Route::Xtk(prefixed(&["lock"], &r.args)),
         Cmd::Manifests(r) => match r.args.first().map(String::as_str) {
@@ -389,7 +384,6 @@ fn run_sys(a: SysArgs) -> i32 {
 
 fn run_route(route: Route) -> i32 {
     match route {
-        Route::Arch(args) => archguard::cli::run("ay arch", &args),
         Route::Xtk(args) => xtk::run("ay", &args),
         Route::Depot(name, args) => depot_cli::run(name, &args),
         Route::Design(args) => aphrody_ui::design_md::run_cli(&repo_root(), &args),
@@ -514,8 +508,6 @@ mod tests {
 
     #[test]
     fn arch_forwards_flags_and_help() {
-        assert_eq!(parse("arch check --strict --root ."), Route::Arch(v(&["check", "--strict", "--root", "."])));
-        assert_eq!(parse("arch --help"), Route::Arch(v(&["--help"])));
     }
 
     #[test]

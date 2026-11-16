@@ -1,14 +1,9 @@
-# ay CLI recipes: git, graph, lock, manifests, deps, build, arch gates (imported by the root justfile).
+# ay CLI recipes: git, graph, lock, manifests, deps, build (imported by the root justfile).
 
 # bun docs index via ay docs (`ay docs <args>`)
 [group('ay')]
 bun-docs *args:
     ay docs {{args}}
-
-# Run deterministic monorepo architecture, domain-purity, boundary & hygiene gate
-[group('ay')]
-archguard:
-    ay arch check --strict --root "{{root}}"
 
 # System and depot_tools ecosystem overview
 [group('ay')]
@@ -96,11 +91,6 @@ vcs-audit:
     ay git audit --root "{{root}}"
     ay manifests verify "{{root}}"
     frg pillars
-
-# Run architecture gate without --strict
-[group('ay')]
-arch-check:
-    ay arch check --root "{{root}}"
 
 # Lookup Linux Kernel style MAINTAINERS ownership for a path (usage: just maintainer third_party/linux/Makefile)
 [group('ay')]

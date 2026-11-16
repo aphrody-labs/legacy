@@ -4,36 +4,6 @@ export extern "ay" [
   --help(-h)  # Print help
   --version(-V)  # Print version
 ]
-export extern "ay arch" [
-  --root: string  # target monorepo root directory (default: $SRC_ROOT, else
-  --json  # emit structured deterministic JSON report
-  --quiet  # print compact one-line summary
-  --strict  # treat warnings as hard errors
-  --rule: string  # filter to a specific rule ID (e.g. ARCH-001) or category
-  --version(-v)  # print version and exit
-  --help  # display usage information
-]
-export extern "ay arch check" [
-  --root: string  # target monorepo root directory (default: $SRC_ROOT, else
-  --json  # emit structured deterministic JSON report
-  --quiet  # print compact one-line summary
-  --strict  # treat warnings as hard errors
-  --rule: string  # filter to a specific rule ID (e.g. ARCH-001) or category
-  --help  # display usage information
-  ...args: string
-]
-export extern "ay arch rules" [
-  --json  # emit rules list as JSON
-  --help  # display usage information
-  ...args: string
-]
-export extern "ay arch graph" [
-  --root: string  # target monorepo root directory (default: $SRC_ROOT, else
-  --format: string  # output format: mermaid (default), dot, or json
-  --output(-o)  # optional file path to write output to
-  --help  # display usage information
-  ...args: string
-]
 export extern "ay doctor" [
   --help  # display usage information
   ...args: string

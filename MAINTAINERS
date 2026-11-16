@@ -181,7 +181,6 @@ T:	git https://github.com/aphrody-dev/forge.git
 F:	.gitattributes
 F:	.gitignore
 F:	.gitmodules
-F:	src/archguard/
 F:	src/ay/
 F:	src/xtask/
 F:	docs/native/VCS-FORGE.md
