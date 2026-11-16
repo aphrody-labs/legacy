@@ -43,9 +43,17 @@ Glance"](https://github.com/unixwin/rubash#compatibility-at-a-glance)). What it 
 
 ## Core rules
 
-- The current session already **is** Niubash. Run commands directly; do not
+- The current session should **be** Niubash. Run commands directly; do not
   nest `niu -c`, and do not route work through `pwsh`, `powershell`,
   `cmd /c`, `wsl`, or `bash` wrappers.
+- Check it once per session: `uname -s`. `MINGW64_NT-...` means the host fell
+  back to Git Bash. A typical cause is Claude Code's `CLAUDE_CODE_GIT_BASH_PATH`
+  naming no file while Git for Windows is installed; `niu doctor` prints a
+  `claude code shell` row for it. In Git Bash, `\\` in the command text
+  arrives as `\` (heredocs and single quotes included), and `/`, `/c/...` and
+  `/dev/stdin` handed to native programs are converted. Write files that
+  contain backslashes with the host's file tool, and report the host setting
+  instead of working around it.
 - Write bash syntax normally: functions, arrays, `$(...)`, pipes, heredocs,
   globs. For deep bash-isms (`coproc`, exotic redirects, `mapfile` edge
   cases, `compgen`/`complete`), test the exact form in-session before

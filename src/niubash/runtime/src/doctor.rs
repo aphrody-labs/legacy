@@ -647,6 +647,25 @@ pub fn run_doctor(skill_files: &[crate::skill::SkillFile]) -> anyhow::Result<()>
         )?;
     }
 
+    // ── Advisory: which bash Claude Code actually runs ────────────────────
+    // The skill bundle tells an agent "this session is niu"; that only holds
+    // when the host resolves niu. Claude Code takes CLAUDE_CODE_GIT_BASH_PATH
+    // when it names an existing bash/sh file, else probes Git for Windows
+    // under Program Files before the `git` on PATH. A stale or unrendered
+    // value, or a Git for Windows install, silently lands the agent in Git
+    // Bash (MSYS argv rules: `\\` collapse, POSIX path conversion).
+    if platform.checks_windows_command_layer() {
+        let facts = claude_code_shell_facts();
+        if let Some((tone, row)) = claude_code_shell_row(&facts) {
+            let marker = match tone {
+                RowTone::Ok => ok,
+                RowTone::Warn => warn,
+                RowTone::Info => info,
+            };
+            writeln!(out, "  {marker}{row}")?;
+        }
+    }
+
     // ── Advisory: agent skill bundle (niubash#188) ────────────────────────
     // AI hosts (Claude/ZCode/Cursor) only know niubash's capability surface
     // if the bundle is installed into their skill dirs. Report per named
@@ -824,6 +843,244 @@ fn elevation_channel_row(provider: ElevationProvider, platform: Platform) -> (Ro
              niu's builtin sudo is opt-in only (NIU_ENABLE_RUBASH_SUDO=1)"
                 .to_string(),
         ),
+    }
+}
+
+/// Environment variable Claude Code reads to pick its bash (vendor docs).
+const CLAUDE_GIT_BASH_VAR: &str = "CLAUDE_CODE_GIT_BASH_PATH";
+
+/// What the doctor knows about Claude Code's shell resolution. Gathered by
+/// [`claude_code_shell_facts`]; classified by the pure
+/// [`claude_code_shell_row`] so every branch is unit-testable.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+struct ClaudeShellFacts {
+    /// Claude Code's config dir exists (`CLAUDE_CONFIG_DIR` or `~/.claude`).
+    host_present: bool,
+    /// Effective `CLAUDE_CODE_GIT_BASH_PATH` and where it came from
+    /// (`settings.json` env wins over the process environment).
+    configured: Option<(String, &'static str)>,
+    /// The configured value names an existing file.
+    configured_exists: bool,
+    /// The configured file name is one Claude Code accepts.
+    configured_name_ok: bool,
+    /// The configured file is niu (same file or byte-identical hardlink).
+    configured_is_niu: bool,
+    /// First Git for Windows `bin\bash.exe` under Program Files (probe 1).
+    git_for_windows: Option<String>,
+    /// `bin\bash.exe` of the install owning the `git` on PATH (probe 2),
+    /// with whether it is niu.
+    path_git_bash: Option<(String, bool)>,
+    /// The niu bash face to recommend.
+    niu_bash: Option<String>,
+}
+
+/// File names Claude Code accepts for `CLAUDE_CODE_GIT_BASH_PATH`.
+fn claude_accepts_shell_name(path: &str) -> bool {
+    let name = path.rsplit(['\\', '/']).next().unwrap_or(path);
+    ["bash.exe", "sh.exe", "bash", "sh"]
+        .iter()
+        .any(|accepted| name.eq_ignore_ascii_case(accepted))
+}
+
+/// A value that still carries a template or shell expansion token: the
+/// host reads it literally, so it never names a file.
+fn looks_unrendered(value: &str) -> bool {
+    value.contains("@@")
+        || value.contains("{{")
+        || value.contains('$')
+        || value.starts_with('~')
+        || value.matches('%').count() >= 2
+}
+
+/// `CLAUDE_CODE_GIT_BASH_PATH` from a Claude Code `settings.json` body
+/// (`{"env": {"CLAUDE_CODE_GIT_BASH_PATH": "..."}}`).
+fn settings_git_bash_path(settings_json: &str) -> Option<String> {
+    let value: serde_json::Value = serde_json::from_str(settings_json).ok()?;
+    value
+        .get("env")?
+        .get(CLAUDE_GIT_BASH_VAR)?
+        .as_str()
+        .map(str::to_string)
+}
+
+/// The `bin\bash.exe` Claude Code derives from a `git` executable: the
+/// install root is the parent of the directory holding `git` (`<root>\cmd`,
+/// `<root>\bin`).
+fn git_install_bash(git_exe: &Path) -> Option<PathBuf> {
+    let root = git_exe.parent()?.parent()?;
+    Some(root.join("bin").join("bash.exe"))
+}
+
+/// Same file, or a byte-identical copy (a hardlink never canonicalizes to
+/// the other name, so identity falls back to content).
+fn is_same_binary(candidate: &Path, niu: &Path) -> bool {
+    if same_executable(&candidate.to_path_buf(), &niu.to_path_buf()) {
+        return true;
+    }
+    match (std::fs::metadata(candidate), std::fs::metadata(niu)) {
+        (Ok(a), Ok(b)) if a.len() == b.len() => {
+            matches!((std::fs::read(candidate), std::fs::read(niu)), (Ok(x), Ok(y)) if x == y)
+        }
+        _ => false,
+    }
+}
+
+/// Probe the machine for [`ClaudeShellFacts`].
+fn claude_code_shell_facts() -> ClaudeShellFacts {
+    let config_dir = std::env::var_os("CLAUDE_CONFIG_DIR")
+        .map(PathBuf::from)
+        .or_else(|| crate::path_utils::shell_home_dir().map(|home| home.join(".claude")));
+    let host_present = config_dir.as_deref().is_some_and(Path::is_dir);
+    let winuxcmd_root = crate::winuxcmd::find_winuxcmd()
+        .and_then(|exe| Some(exe.parent()?.parent()?.parent()?.to_path_buf()));
+    // niu as this process, as installed beside the winuxcmd tree, and as
+    // found on PATH: a doctor run from another build still recognizes the
+    // installed faces.
+    let mut nius: Vec<PathBuf> = Vec::new();
+    nius.extend(std::env::current_exe().ok());
+    nius.extend(
+        winuxcmd_root
+            .as_deref()
+            .and_then(Path::parent)
+            .map(|dir| dir.join("niu.exe"))
+            .filter(|p| p.is_file()),
+    );
+    nius.extend(find_niu_on_path());
+    let is_niu = |p: &Path| nius.iter().any(|n| is_same_binary(p, n));
+
+    let from_settings = config_dir
+        .as_deref()
+        .and_then(|dir| std::fs::read_to_string(dir.join("settings.json")).ok())
+        .and_then(|body| settings_git_bash_path(&body))
+        .map(|v| (v, "settings.json env"));
+    let configured = from_settings.or_else(|| {
+        std::env::var(CLAUDE_GIT_BASH_VAR)
+            .ok()
+            .filter(|v| !v.is_empty())
+            .map(|v| (v, "environment"))
+    });
+    let (configured_exists, configured_name_ok, configured_is_niu) = match &configured {
+        Some((value, _)) => {
+            let path = Path::new(value);
+            let exists = path.is_file();
+            (
+                exists,
+                claude_accepts_shell_name(value),
+                exists && is_niu(path),
+            )
+        }
+        None => (false, false, false),
+    };
+
+    let git_for_windows = ["ProgramFiles", "ProgramFiles(x86)"]
+        .iter()
+        .filter_map(std::env::var_os)
+        .map(|dir| PathBuf::from(dir).join("Git").join("bin").join("bash.exe"))
+        .find(|p| p.is_file())
+        .map(|p| display(&p));
+    let path_git_bash = find_exe_on_path("git")
+        .and_then(|git| git_install_bash(&git))
+        .filter(|bash| bash.is_file())
+        .map(|bash| (display(&bash), is_niu(&bash)));
+    // Recommend a face that is niu today: `<winuxcmd>\bin\bash.exe` (the
+    // documented one), else `<winuxcmd>\usr\bin\bash.exe`.
+    let niu_bash = winuxcmd_root.as_deref().and_then(|root| {
+        [
+            root.join("bin").join("bash.exe"),
+            root.join("usr").join("bin").join("bash.exe"),
+        ]
+        .into_iter()
+        .find(|p| p.is_file() && is_niu(p))
+        .map(|p| p.to_string_lossy().into_owned())
+    });
+
+    ClaudeShellFacts {
+        host_present,
+        configured,
+        configured_exists,
+        configured_name_ok,
+        configured_is_niu,
+        git_for_windows,
+        path_git_bash,
+        niu_bash,
+    }
+}
+
+/// The `claude code shell` advisory row (without the leading two-space
+/// indent; the caller prepends the tone marker). `None` when Claude Code is
+/// not installed for this user.
+fn claude_code_shell_row(f: &ClaudeShellFacts) -> Option<(RowTone, String)> {
+    if !f.host_present {
+        return None;
+    }
+    const LABEL: &str = " claude code shell   ";
+    let fix = match &f.niu_bash {
+        Some(niu) => format!("set env.{CLAUDE_GIT_BASH_VAR} in ~/.claude/settings.json to {niu}"),
+        None => {
+            format!("set env.{CLAUDE_GIT_BASH_VAR} in ~/.claude/settings.json to niu's bash.exe")
+        }
+    };
+    let msys =
+        "MSYS argv rules: `\\\\` collapses to `\\`, `/`, `/c/...` and /dev/* are path-converted";
+    let fallback = || match (&f.git_for_windows, &f.path_git_bash) {
+        (Some(gfw), _) => format!("Git Bash ({gfw}; {msys})"),
+        (None, Some((bash, true))) => format!("niu via the git on PATH ({bash})"),
+        (None, Some((bash, false))) => format!("{bash} (git on PATH)"),
+        (None, None) => "PowerShell".to_string(),
+    };
+    if let Some((value, origin)) = &f.configured {
+        if !f.configured_exists {
+            let why = if looks_unrendered(value) {
+                " (an unrendered template/expansion token: the host reads it literally)"
+            } else {
+                ""
+            };
+            return Some((
+                RowTone::Warn,
+                format!(
+                    "{LABEL}{CLAUDE_GIT_BASH_VAR} from {origin} = {value} names no file{why} — \
+                     Claude Code ignores it and runs {} — {fix}",
+                    fallback()
+                ),
+            ));
+        }
+        if !f.configured_name_ok {
+            return Some((
+                RowTone::Warn,
+                format!(
+                    "{LABEL}{CLAUDE_GIT_BASH_VAR} from {origin} = {value} is ignored (Claude Code \
+                     accepts only bash.exe, sh.exe, bash, sh) and it runs {} — {fix}",
+                    fallback()
+                ),
+            ));
+        }
+        if f.configured_is_niu {
+            return Some((
+                RowTone::Ok,
+                format!("{LABEL}niu ({value}, via {CLAUDE_GIT_BASH_VAR} from {origin})"),
+            ));
+        }
+        return Some((
+            RowTone::Info,
+            format!("{LABEL}{value} (from {origin}), not niu — for niu semantics {fix}"),
+        ));
+    }
+    match (&f.git_for_windows, &f.path_git_bash) {
+        (Some(_), _) => Some((
+            RowTone::Warn,
+            format!(
+                "{LABEL}runs {}: its Program Files probe wins over the git on PATH — {fix}",
+                fallback()
+            ),
+        )),
+        (None, Some((bash, true))) => Some((
+            RowTone::Ok,
+            format!("{LABEL}niu via the git on PATH ({bash})"),
+        )),
+        (None, _) => Some((
+            RowTone::Info,
+            format!("{LABEL}runs {} — for niu semantics {fix}", fallback()),
+        )),
     }
 }
 
@@ -1085,6 +1342,131 @@ mod tests {
             assert_eq!(tone, RowTone::Info);
             assert!(row.contains(WINDOWS_COMPONENT_NA), "{row}");
             assert!(!row.contains("none found"), "{row}");
+        }
+    }
+
+    fn claude_facts() -> ClaudeShellFacts {
+        ClaudeShellFacts {
+            host_present: true,
+            niu_bash: Some(r"C:\Niubash\winuxcmd\bin\bash.exe".to_string()),
+            ..ClaudeShellFacts::default()
+        }
+    }
+
+    /// Regression: settings.json carried the unrendered template value
+    /// `@@windows.home@@\...\bash.exe`; Claude Code ignored it and ran Git
+    /// Bash, whose argv parsing halved every `\\` of the agent's commands.
+    /// The row must warn, name the Git Bash fallback and the niu fix.
+    #[test]
+    fn claude_shell_unrendered_setting_warns_with_git_bash_fallback() {
+        let facts = ClaudeShellFacts {
+            configured: Some((
+                r"@@windows.home@@\AppData\Local\Programs\Niubash\winuxcmd\bin\bash.exe"
+                    .to_string(),
+                "settings.json env",
+            )),
+            configured_name_ok: true,
+            git_for_windows: Some("C:/Program Files/Git/bin/bash.exe".to_string()),
+            ..claude_facts()
+        };
+        let (tone, row) = claude_code_shell_row(&facts).expect("row");
+        assert_eq!(tone, RowTone::Warn);
+        assert!(row.contains("names no file"), "{row}");
+        assert!(row.contains("unrendered template"), "{row}");
+        assert!(
+            row.contains("Git Bash (C:/Program Files/Git/bin/bash.exe"),
+            "{row}"
+        );
+        assert!(row.contains("`\\\\` collapses"), "{row}");
+        assert!(row.contains(r"C:\Niubash\winuxcmd\bin\bash.exe"), "{row}");
+    }
+
+    /// Git for Windows under Program Files wins Claude Code's probe even
+    /// when the git on PATH belongs to niu: without the variable the agent
+    /// lands in Git Bash.
+    #[test]
+    fn claude_shell_git_for_windows_shadows_path_probe() {
+        let facts = ClaudeShellFacts {
+            git_for_windows: Some("C:/Program Files/Git/bin/bash.exe".to_string()),
+            path_git_bash: Some(("C:/Niubash/winuxcmd/bin/bash.exe".to_string(), true)),
+            ..claude_facts()
+        };
+        let (tone, row) = claude_code_shell_row(&facts).expect("row");
+        assert_eq!(tone, RowTone::Warn);
+        assert!(row.contains("Program Files probe wins"), "{row}");
+        assert!(row.contains(CLAUDE_GIT_BASH_VAR), "{row}");
+    }
+
+    #[test]
+    fn claude_shell_ok_when_setting_names_niu() {
+        let facts = ClaudeShellFacts {
+            configured: Some((
+                r"C:\Niubash\winuxcmd\bin\bash.exe".to_string(),
+                "settings.json env",
+            )),
+            configured_exists: true,
+            configured_name_ok: true,
+            configured_is_niu: true,
+            git_for_windows: Some("C:/Program Files/Git/bin/bash.exe".to_string()),
+            ..claude_facts()
+        };
+        let (tone, row) = claude_code_shell_row(&facts).expect("row");
+        assert_eq!(tone, RowTone::Ok);
+        assert!(row.starts_with(" claude code shell   niu ("), "{row}");
+    }
+
+    #[test]
+    fn claude_shell_rejected_name_and_path_probe_and_absent_host() {
+        let rejected = ClaudeShellFacts {
+            configured: Some((r"C:\Niubash\niu.exe".to_string(), "environment")),
+            configured_exists: true,
+            ..claude_facts()
+        };
+        let (tone, row) = claude_code_shell_row(&rejected).expect("row");
+        assert_eq!(tone, RowTone::Warn);
+        assert!(row.contains("is ignored"), "{row}");
+        assert!(row.contains("runs PowerShell"), "{row}");
+
+        let via_path = ClaudeShellFacts {
+            path_git_bash: Some(("C:/Niubash/winuxcmd/bin/bash.exe".to_string(), true)),
+            ..claude_facts()
+        };
+        let (tone, row) = claude_code_shell_row(&via_path).expect("row");
+        assert_eq!(tone, RowTone::Ok);
+        assert!(row.contains("niu via the git on PATH"), "{row}");
+
+        let absent = ClaudeShellFacts {
+            host_present: false,
+            ..claude_facts()
+        };
+        assert_eq!(claude_code_shell_row(&absent), None);
+    }
+
+    #[test]
+    fn claude_shell_helpers() {
+        assert!(claude_accepts_shell_name(r"C:\x\bin\BASH.EXE"));
+        assert!(claude_accepts_shell_name("/usr/bin/sh"));
+        assert!(!claude_accepts_shell_name(r"C:\x\git-bash.exe"));
+        assert!(!claude_accepts_shell_name(r"C:\x\niu.exe"));
+        assert!(looks_unrendered("@@windows.home@@/bash.exe"));
+        assert!(looks_unrendered(r"%USERPROFILE%\bash.exe"));
+        assert!(looks_unrendered("$HOME/bash.exe"));
+        assert!(!looks_unrendered(r"C:\Program Files\Git\bin\bash.exe"));
+        assert_eq!(
+            settings_git_bash_path(r#"{"env":{"CLAUDE_CODE_GIT_BASH_PATH":"C:\\n\\bash.exe"}}"#),
+            Some(r"C:\n\bash.exe".to_string())
+        );
+        assert_eq!(settings_git_bash_path(r#"{"env":{}}"#), None);
+        assert_eq!(settings_git_bash_path("not json"), None);
+        if cfg!(windows) {
+            assert_eq!(
+                git_install_bash(Path::new(r"C:\Program Files\Git\cmd\git.exe")),
+                Some(
+                    PathBuf::from(r"C:\Program Files\Git")
+                        .join("bin")
+                        .join("bash.exe")
+                )
+            );
         }
     }
 

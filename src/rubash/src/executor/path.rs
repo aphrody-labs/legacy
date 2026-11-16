@@ -3468,7 +3468,7 @@ fn windows_external_absolute_argument_needs_translation(
         return true;
     }
 
-    // Opt-in drive-root fallback (`root_fallback_path`): `/src` resolved to
+    // Opt-in drive-root fallback (`root_fallback_path`): `/aphrody` resolved to
     // the system drive inside the shell, so a child must get that spelling.
     if root_fallback_argument(normalized, env_vars) {
         return true;
@@ -4902,10 +4902,11 @@ fn root_fallback_system_drive(env_vars: &HashMap<String, String>) -> String {
 /// Opt-in drive-root fallback for a configured shell root (nt fix): an
 /// absolute POSIX path whose FIRST component is missing below the shell
 /// root but exists at the system drive root resolves against the drive —
-/// `cd /src` reaches `C:\aphrody` when `<root>\src` does not exist. The probe
-/// is per first component, so `mkdir /src/new` and `> /src/new.txt` reach
-/// the same directory as `cd /src`. Reserved shell-tree components
-/// ([`ROOT_FALLBACK_RESERVED`]), drive forms and the bare `/` never fall
+/// `cd /aphrody` reaches `C:\aphrody` when `<root>\aphrody` does not exist.
+/// The probe is per first component, so `mkdir /aphrody/new` and
+/// `> /aphrody/new.txt` reach the same directory as `cd /aphrody`. Reserved
+/// shell-tree components ([`ROOT_FALLBACK_RESERVED`]), drive forms and the
+/// bare `/` never fall
 /// back; when neither side exists the root mapping (and its error) stays.
 fn root_fallback_path(
     normalized: &str,

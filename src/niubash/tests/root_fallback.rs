@@ -1,8 +1,8 @@
-//! nt fix (`NIU_ROOT_FALLBACK`): `/` maps to NIU_ROOT, so `cd /src` failed
+//! nt fix (`NIU_ROOT_FALLBACK`): `/` maps to NIU_ROOT, so `cd /aphrody` failed
 //! although `C:\aphrody` exists. With the opt-in fallback an absolute POSIX
 //! path whose first component is missing below NIU_ROOT resolves against
 //! the SystemDrive root (rubash `root_fallback_path`). `Windows` stands in
-//! for `src`: it exists at every system drive root and never below a
+//! for `aphrody`: it exists at every system drive root and never below a
 //! fresh shell root.
 #![cfg(windows)]
 

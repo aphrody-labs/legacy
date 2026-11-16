@@ -220,11 +220,37 @@ Interpreting the result:
   skips a `git` sitting in the launch directory or below it, or under
   `node_modules`/`.venv`/`env`.
 - **Set it to niu:** probe (1)'s hardcoded directories are deliberately left
-  unclaimed by the installer (the niubash#398 ruling — see below), so today it
-  is probe (2) that lands on niu: the `git` on `PATH` resolves into
-  `winuxcmd\bin`, whose `bash.exe` is the niu face described above. For
-  explicit control, set `CLAUDE_CODE_GIT_BASH_PATH` in `settings.json` to
-  `...\winuxcmd\bin\bash.exe`.
+  unclaimed by the installer (the niubash#398 ruling — see below), so probe
+  (2) lands on niu **only when Git for Windows is not installed**: the `git`
+  on `PATH` resolves into `winuxcmd\bin`, whose `bash.exe` is the niu face
+  described above. With Git for Windows present, probe (1) wins and every
+  command runs in Git Bash, whatever `PATH` says. The explicit setting is
+  then required: `CLAUDE_CODE_GIT_BASH_PATH` in `settings.json` (`env`) set
+  to the absolute, already-expanded path of `...\winuxcmd\bin\bash.exe`.
+- **Check it:** `niu doctor` prints a `claude code shell` row naming the
+  bash Claude Code will run, and warns when the variable names no file, has
+  a rejected name, or is shadowed by Git for Windows. In the session itself,
+  `uname -s` reading `MINGW64_NT-...` means Git Bash (table above).
+- **Silent fallback:** a value that names no file is ignored, without an
+  error in the session. An unrendered template token (`@@home@@\...`,
+  `%USERPROFILE%\...`, `$HOME/...`, `~\...`) is read literally, so it never
+  names a file. Claude Code then falls back to probe (1) and runs Git Bash,
+  and the agent gets MSYS semantics while the niubash skill tells it it is
+  in niu. Measured differences when a non-MSYS host such as Claude Code
+  spawns `bash.exe -c <script>`:
+
+  | script fragment | Git Bash (MSYS 3.6.10) | niu |
+  |---|---|---|
+  | `printf '%s\n' 'a\\b'` | `a\b` (the MSYS command-line parser treats `\` as an escape) | `a\\b` |
+  | `cat <<'EOF'` body `a\\b` | `a\b` | `a\\b` |
+  | `prog /` (native `prog`) | `C:/Program Files/Git/` | `/` |
+  | `prog /c/x` | `C:/x` | `C:\x` |
+  | `prog /dev/stdin` | `/proc/self/fd/0` (no Windows file) | a materialized temp file |
+
+  The first two rows are lost before bash parses the script, so no quoting
+  in the script can avoid them. `MSYS=noglob` keeps the backslashes but
+  breaks embedded double quotes, so it is not a fix: point the variable at
+  niu instead.
 - **Trap:** the variable only accepts a file named `bash.exe`, `sh.exe`, `bash`
   or `sh`. Point it at `git-bash.exe` and it is ignored with a warning. Pointing
   it at `niu.exe` is likewise ignored — but the hardlinked `bash.exe` *is*
