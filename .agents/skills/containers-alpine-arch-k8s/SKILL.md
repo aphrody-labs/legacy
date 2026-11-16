@@ -11,14 +11,14 @@ description: Build, run, and ship containers and Kubernetes workloads for src. U
 | :---------------------------------------------------------------------------- | :--------------------- | :----------------------------------------------------------------------------------------------------------------- |
 | Runtime, CI job, deployable service                                           | `alpine:3.23`          | musl. Build Rust as static musl, Go with `CGO_ENABLED=0`, Bun via `oven/bun:<ver>-alpine`.                         |
 | Toolchain or workstation image (Rust + Go + Bun + C++, Chromium-style builds) | `archlinux:base-devel` | amd64 only. Pin a dated tag `base-devel-YYYYMMDD.0.N` for reproducible rebuilds (see `archlinux-docker/REPRO.md`). |
-| Reproducible shell without containers                                         | `infra/nix/flake.nix`  | `nix develop ./infra/nix` / `just nix-shell`. Images from Nix: `dockerTools` (see nix.dev tutorial below).         |
+| Reproducible shell without containers                                         | `infra/fleet/nix/devshell/flake.nix`  | `nix develop ./infra/fleet/nix/devshell` / `just nix-shell`. Images from Nix: `dockerTools` (see nix.dev tutorial below).         |
 | Final stage for a single static binary                                        | `scratch` or `alpine`  | Prefer `alpine` when a shell or CA bundle is needed.                                                               |
 
 Never use `debian`, `ubuntu`, `*-slim`, `*-bookworm`, `*-trixie`, `*-jammy`, or `*-noble` tags, including in builder stages. Official language images have Alpine variants: `golang:<ver>-alpine3.23`, `rust:<ver>-alpine3.23`, `oven/bun:<ver>-alpine`, `node:<ver>-alpine3.23`, `python:<ver>-alpine3.23`.
 
 ## Monorepo wiring
 
-- `infra/docker/Dockerfile`: Rust stages (`rust-base` -> `rust-build` -> `rust-runtime`, Alpine, static musl, cargo-chef), Bun stages (`bun-alpine` -> `bun-deps` -> `bun-build` -> `bun-runtime`), product targets (`loreserver`, `r3d`, `rust-stack`, `ai-os`, `api-gateway`), `runtime` (Alpine) and `dev` (Arch).
+- `infra/docker/Dockerfile`: Rust stages (`rust-base` -> `rust-build` -> `rust-runtime`, Alpine, static musl, cargo-chef), Bun stages (`bun-alpine` -> `bun-deps` -> `bun-build` -> `bun-runtime`), product targets (`loreserver`, `r3d`, `ai-os`, `api-gateway`), `runtime` (Alpine) and `dev` (Arch).
 - `infra/docker/compose.yaml` services include `dev` (Arch shell), `verify` (`just verify-all` in Arch), `runtime` (Alpine) and the deployable products. Repo bind-mounted at `/src`; `node_modules` and `target` live in named volumes so Linux outputs never mix with Windows ones. Recipes: `infra/docker/docker.just`.
 - Every version is an `ARG` at the top of the Dockerfile, overridable from the environment (`.env.example` section 0); read the current values there instead of copying them.
 - Recipes: `just docker-build`, `just docker-shell`, `just docker-runtime`, `just docker-run <recipe>`, `just nix-shell`, `just docs-sync`.

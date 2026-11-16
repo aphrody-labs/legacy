@@ -2,7 +2,8 @@
   "sovereign": [
     "docs/i18n/*/AGENTS.md",
     ".agents/skills/hygiene/SKILL.md",
-    "scripts/hygiene.ts"
+    "scripts/hygiene.ts",
+    "docs/reference/catalog/**"
   ],
   "absolute-path": [
     "docs/native/shell/**",
@@ -23,7 +24,8 @@
   "ai-filler": [
     ".agents/skills/gemini-omni-flash-api/SKILL.md",
     ".agents/skills/stitch-design-md/examples/DESIGN.md",
-    "src/runtime/cli/add_completions.txt"
+    "src/runtime/cli/add_completions.txt",
+    "docs/reference/catalog/**"
   ],
   "hardcoded-list": [
     "scripts/skills-adopt.ts",
@@ -96,7 +98,7 @@
     "infra/deploy.toml",
     "infra/fleet/bin/terminal-prd-build.sh",
     "infra/fleet/ffmpeg-lgpl/build.sh",
-    "infra/lfs/lfs.just",
+    "infra/fleet/lfs/lfs.just",
     "infra/os/linux/build/kernel.sh",
     "infra/os/unixwin/unixwin.ts",
     "package.json",
@@ -135,14 +137,14 @@
   "personal-data": [
     "apps/auto/**",
     "infra/gnu/install.sh",
+    "infra/fleet/fr1-orig/nginx/conf.d/fleet-api.conf",
+    "infra/fleet/fr2-orig/nginx/conf.d/fleet-api.conf",
     "infra/fleet/fr2/nginx/sites/api.aphrody.com.conf",
     "infra/fleet/prd/nginx/conf.d/zz-fleet-standby.conf",
     "infra/cloudflare/workers/api-gateway/worker.js",
     "docs/native/linux-kernel-story/**",
     "docs/native/gnu/DISTROS.md",
-    "packages/ai-os/docs/FUSION.md",
-    "apps/r2b/src/rea/bridge/mitmproxy/test_capture.py",
-    "apps/r2b/src/rea/scripts/test-website.py"
+    "packages/ai-os/docs/FUSION.md"
   ],
   "ssh-alias": [
     "scripts/hygiene.ts"
@@ -152,7 +154,8 @@
     "src/niubash/**",
     "src/ruline/**",
     "src/winux/**",
-    "packages/omniu/**"
+    "packages/omniu/**",
+    "docs/reference/catalog/**"
   ],
   "dated-snapshot": [
     "src/rubash/**",

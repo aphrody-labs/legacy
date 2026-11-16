@@ -30,8 +30,8 @@ import "infra/cloudflare/cloudflare.just"
 import "infra/cluster/cluster.just"
 import "infra/docker/docker.just"
 import "infra/fleet/fleet.just"
-import "infra/lfs/lfs.just"
-import "infra/nix/nix.just"
+import "infra/fleet/lfs/lfs.just"
+import "infra/fleet/nix/devshell/nix.just"
 # unixwin chain (niubash, rubash, WinuxCmd): unixwin-* recipes
 import "infra/os/unixwin/unixwin.just"
 
