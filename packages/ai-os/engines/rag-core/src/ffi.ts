@@ -3,7 +3,7 @@
 // (crates/ai/rag-ffi, re-exported by crates/interop/ffi). Caller-owned buffers, no native allocation.
 import { dlopen, FFIType, ptr, suffix } from "bun:ffi";
 import { isAbsolute } from "node:path";
-import { statePath } from "@aphrody/paths";
+import { statePath } from "@aphrody/env-kit/paths";
 import { createRagCore, type RagCore, type RagTransport } from "./core";
 
 export const RAG_FFI_ABI_VERSION = 1;

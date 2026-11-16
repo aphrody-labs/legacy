@@ -19,9 +19,9 @@ export type LocalBackend = "dpapi" | "systemd-creds" | "systemd-creds-user";
 
 export const WIN = process.platform === "win32";
 
-/** Repository root: SRC_ROOT, else three levels above this file (packages/vault/src). */
+/** Repository root: SRC_ROOT, else four levels above this file (packages/env-kit/vault/src). */
 export function srcRoot(): string {
-  return process.env.SRC_ROOT ?? resolve(import.meta.dir, "..", "..", "..");
+  return process.env.SRC_ROOT ?? resolve(import.meta.dir, "..", "..", "..", "..");
 }
 
 /** True when `p` (or its nearest existing ancestor) is writable: false under ProtectSystem=strict,

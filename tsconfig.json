@@ -13,7 +13,6 @@
     { "path": "packages/native" },
     { "path": "packages/release" },
     { "path": "packages/upstream" },
-    { "path": "packages/vault" },
     { "path": "packages/wck" }
   ]
 }

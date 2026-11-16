@@ -18,6 +18,6 @@ Scan 2026-11-15 (code-modernization harden-scan: one finder per vulnerability cl
 | 12 | Low | CWE-214 | `cli.ts:128` | Bearer token passed on the command line to `claude mcp add --header`, and stored in the user-scope MCP config | Prefer the OAuth flow already implemented in oauth.ts. Otherwise pass the header through an environment-variable reference or a 0600 config file instead of argv. |
 | 13 | Low | CWE-276 | `cli.ts:178` | OAuth client credentials file written before chmod, and without chmod on Windows | Use Bun.write or fs.writeFileSync with mode 0o600 at creation time, and apply an owner-only ACL on Windows. |
 | 14 | Low | CWE-312 | `acp.ts:54` | ACP session map persisted without restrictive file mode | Write with { mode: 0o600 } into a 0700 directory, as oauth.ts:220 already does. |
-| 15 | Low | CWE-1104 | `packages/ai-os/package.json:33` | Relay imports workspace packages not declared in its manifest | Add "@aphrody/wck": "workspace:*" and "@aphrody/vault": "workspace:*" to dependencies, and run bun audit at the workspace root so their transitive dependencies are covered. |
+| 15 | Low | CWE-1104 | `packages/ai-os/package.json:33` | Relay imports workspace packages not declared in its manifest | Add "@aphrody/wck": "workspace:*" and "@aphrody/env-kit/vault": "workspace:*" to dependencies, and run bun audit at the workspace root so their transitive dependencies are covered. |
 
 Status of each fix: the commit that closes a row is listed in `git log -- packages/ai-os/docs/SECURITY_FINDINGS.md`.

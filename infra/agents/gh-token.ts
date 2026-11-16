@@ -1,5 +1,5 @@
 // NHITL GitHub App (`aphrody-labs`, id 5738700) token minter, Git credential helper & `gh` wrapper.
-// Cross-platform: Windows DPAPI (`packages/vault/src/sync-store.ts`) + Linux `systemd-creds --user`.
+// Cross-platform: Windows DPAPI (`packages/env-kit/vault/src/sync-store.ts`) + Linux `systemd-creds --user`.
 // Caches installation tokens in `<AGENTS_HOME>/state/gh-token.json` (0600) and refreshes 10 min before expiry.
 // Never prints raw tokens to a TTY.
 import {
@@ -15,7 +15,7 @@ import {
   appJwt,
   installationToken,
 } from "@aphrody/env-kit/github-app";
-import { secretGet } from "@aphrody/vault/sync";
+import { secretGet } from "@aphrody/env-kit/vault/sync";
 
 export const AGENT_PERMISSIONS: Record<string, "read" | "write" | "admin"> = {
   administration: "write",

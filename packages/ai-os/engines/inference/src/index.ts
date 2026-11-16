@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { CString, dlopen, FFIType, ptr, suffix, type Pointer } from "bun:ffi";
 import { isAbsolute } from "node:path";
-import { statePath } from "@aphrody/paths";
+import { statePath } from "@aphrody/env-kit/paths";
 
 const symbols = {
   aphrody_inference_abi_version: { args: [], returns: FFIType.u32 },

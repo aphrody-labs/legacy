@@ -16,7 +16,7 @@ import {
   secretList,
   secretSet,
   storeInfo,
-} from "@aphrody/vault/sync";
+} from "@aphrody/env-kit/vault/sync";
 import {
   DEFAULT_MONOREPO_ENV_PATH,
   exportForCloudflareDevVars,
@@ -246,7 +246,7 @@ async function readStdin(): Promise<string> {
   return text.replace(/\r?\n$/, "");
 }
 
-/** The async vault (packages/vault) when this env-kit runs inside the monorepo; else undefined. */
+/** The async vault (packages/env-kit/vault) when this env-kit runs inside the monorepo; else undefined. */
 type VaultModule = typeof import("../../vault/src/index.ts");
 let vaultModule: Promise<VaultModule | undefined> | undefined;
 export function loadVault(): Promise<VaultModule | undefined> {
@@ -552,7 +552,7 @@ ${formatIdentities(ids)}`);
   if (cmd === "vault") {
     const p = join(import.meta.dir, "..", "..", "vault", "src", "cli.ts");
     if (!existsSync(p)) {
-      console.error("env-kit vault: packages/vault absent (monorepo only)");
+      console.error("env-kit vault: packages/env-kit/vault absent (monorepo only)");
       return 2;
     }
     const { main: vaultMain } = (await import(p)) as {

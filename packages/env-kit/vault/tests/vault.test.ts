@@ -18,7 +18,7 @@ process.env.ENV_KIT_SECRET_DIR = join(root, "local");
 process.env.VAULT_HOSTS_FILE = join(root, "hosts.toml");
 process.env.VAULT_POLICY_FILE = join(root, "policy.toml");
 process.env.VAULT_HELLO = "0";
-const infra = join(import.meta.dir, "..", "..", "..", "infra", "vault");
+const infra = join(import.meta.dir, "..", "..", "..", "..", "infra", "vault");
 copyFileSync(join(infra, "hosts.toml"), process.env.VAULT_HOSTS_FILE);
 copyFileSync(join(infra, "policy.toml"), process.env.VAULT_POLICY_FILE);
 

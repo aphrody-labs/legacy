@@ -50,7 +50,7 @@ env-kit exec -- <command> [args...]  # Run any binary with C:\aphrody\.env injec
 
 ## OS Secret Store (`env-kit secret`, `ay secret`)
 
-Encrypted by the OS, one file per secret named after its environment variable (`packages/vault/src/sync-store.ts`, `@aphrody/vault/sync`):
+Encrypted by the OS, one file per secret named after its environment variable (`packages/env-kit/vault/src/sync-store.ts`, `@aphrody/env-kit/vault/sync`):
 
 | Host       | Backend                                                                  | Directory                                                                    |
 | :--------- | :----------------------------------------------------------------------- | :--------------------------------------------------------------------------- |
@@ -79,7 +79,7 @@ Inventory in `infra/deploy.toml` (`[nodes.*]`, `[auth.*]`).
 | Language / Runtime            | Path                                                      | Native CLI Flag / Usage                                                  |
 | :---------------------------- | :-------------------------------------------------------- | :----------------------------------------------------------------------- |
 | **Bun v1.4.4 / TypeScript**   | `C:\aphrody\packages\env-kit\src\index.ts`                    | `bun --env-file=C:/aphrody/.env` or `loadMonorepoEnv({ service, required })` |
-| **Rust 2024 (`aphrody-env`)** | `C:\aphrody\packages\env-kit\loaders\rust`                    | `aphrody_env::load_monorepo_env(LoadOptions::default())`                 |
+| **Rust 2024 (`aphrody-env`)** | `C:\aphrody\src\env` (`ay env` inspects a `.env` without printing values) | `aphrody_env::load_monorepo_env(LoadOptions::default())`                 |
 | **Python 3.12+ / `uv`**       | `C:\aphrody\packages\env-kit\loaders\python\sovereign_env.py` | `uv run --env-file C:/aphrody/.env` or `sovereign_env.load_monorepo_env()`   |
 | **C11 / C++23**               | `C:\aphrody\packages\env-kit\loaders\cpp\sovereign_env.hpp`   | `sovereign_env::load()` / `sovereign_env_load_file(NULL, 0)`             |
 | **.NET 10/11 C#**             | `C:\aphrody\packages\env-kit\loaders\dotnet\SovereignEnv.cs`  | `Aphrody.EnvKit.SovereignEnv.Load()`                                     |

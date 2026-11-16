@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Stages the canonical pet atlas from crates/aphrody-identity into the gitignored dist/ that the package ships.
 import { join } from "node:path";
-import { findWorkspaceRoot } from "@aphrody/paths";
+import { findWorkspaceRoot } from "@aphrody/env-kit/paths";
 
 const root = join(import.meta.dir, "..");
 const source = join(

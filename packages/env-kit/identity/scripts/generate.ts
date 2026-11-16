@@ -7,7 +7,7 @@
 // src/pet.test.ts and src/runtime.test.ts fail when a generated file and the crate disagree.
 //   bun scripts/generate.ts
 import { join } from "node:path";
-import { findWorkspaceRoot } from "@aphrody/paths";
+import { findWorkspaceRoot } from "@aphrody/env-kit/paths";
 import { compactPet, renderModule } from "../src/compact";
 
 const assets = join(findWorkspaceRoot(import.meta.dir), "crates/aphrody-identity/assets/aphrody");

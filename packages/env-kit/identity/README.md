@@ -5,18 +5,18 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `packages/identity` |
+| Bun package | `packages/env-kit/identity` |
 
 **Commands**
 
 ```sh
-bun run --cwd packages/identity sprite
-bun run --cwd packages/identity prepack
-bun run --cwd packages/identity gen
-bun run --cwd packages/identity typecheck
-bun run --cwd packages/identity test
-bun run --cwd packages/identity demo
-bun run --cwd packages/identity measure
+bun run --cwd packages/env-kit/identity sprite
+bun run --cwd packages/env-kit/identity prepack
+bun run --cwd packages/env-kit/identity gen
+bun run --cwd packages/env-kit/identity typecheck
+bun run --cwd packages/env-kit/identity test
+bun run --cwd packages/env-kit/identity demo
+bun run --cwd packages/env-kit/identity measure
 ```
 
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).

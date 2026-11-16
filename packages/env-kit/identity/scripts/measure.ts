@@ -6,7 +6,7 @@
 //   bun scripts/measure.ts [--wasm path/to/pet_wasm.wasm] [--json]
 import { brotliCompressSync, constants } from "node:zlib";
 import { join } from "node:path";
-import { findWorkspaceRoot } from "@aphrody/paths";
+import { findWorkspaceRoot } from "@aphrody/env-kit/paths";
 import { resolve as resolveTick } from "../src/runtime";
 import type { WebTrack } from "../src/runtime";
 

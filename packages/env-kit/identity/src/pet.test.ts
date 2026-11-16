@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
-import { findWorkspaceRoot } from "@aphrody/paths";
+import { findWorkspaceRoot } from "@aphrody/env-kit/paths";
 import { compactPet, type RawAnimations, renderModule } from "./compact";
 import { frameAt, gazeFrame, PET, spriteStyle, trackDuration } from "./pet";
 

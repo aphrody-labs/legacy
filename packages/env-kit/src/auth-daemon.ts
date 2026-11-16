@@ -22,7 +22,7 @@ import {
   type Manifest,
   runAuth,
 } from "./auth";
-import { secretGet, secretList } from "@aphrody/vault/sync";
+import { secretGet, secretList } from "@aphrody/env-kit/vault/sync";
 
 const DAY = 86_400_000;
 

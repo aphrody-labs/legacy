@@ -28,7 +28,7 @@ import {
   readDocument,
   shred,
   writeDocument,
-} from "@aphrody/vault";
+} from "@aphrody/env-kit/vault";
 
 export const SCOPES: Record<string, string> = {
   mcp: "relay MCP tools (POST /mcp)",

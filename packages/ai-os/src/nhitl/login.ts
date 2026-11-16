@@ -1,13 +1,13 @@
 // Agent CLI sign-ins without typing by an agent: only the final click returns to the owner.
 //   claude : the owner runs `claude setup-token` on the PC and copies the token; it is read from the clipboard
-//            (never displayed), stored in the vault (@aphrody/vault, DPAPI), clipboard cleared, then delivered to the
+//            (never displayed), stored in the vault (@aphrody/env-kit/vault, DPAPI), clipboard cleared, then delivered to the
 //            hosts by the vault (per-host age envelope -> runner's systemd-creds --user, docs/infra/VAULT.md), verified.
 //   codex  : `codex login --device-auth` in a tmux window on the host; the (public) device code is written to
 //            <RELAY_HOME>/device-code.txt for the https://auth.openai.com/codex/device page opened at the owner's.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { relayHome } from "../relay/cdp";
-import { register, setSecret, sync } from "@aphrody/vault";
+import { register, setSecret, sync } from "@aphrody/env-kit/vault";
 
 const TOKEN = /sk-ant-oat01-[A-Za-z0-9_-]{60,}/;
 const DEVICE = /\b[A-Z0-9]{4}-[A-Z0-9]{5}/; // 9 characters; under ConPTY, the following text is stuck to the code

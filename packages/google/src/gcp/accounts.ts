@@ -3,7 +3,7 @@ import { existsSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { DEFAULT_MONOREPO_ENV_PATH, loadMonorepoEnv, siteGet } from "@aphrody/env-kit";
-import { secretGet } from "@aphrody/vault/sync";
+import { secretGet } from "@aphrody/env-kit/vault/sync";
 
 /** Personal Google accounts never live in the public repo: environment first, then the vault (env-kit secret set). */
 const vaultCache = new Map<string, string | undefined>();
