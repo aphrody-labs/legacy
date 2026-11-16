@@ -30,3 +30,14 @@ jobs:
           bun scripts/checkdeps.ts | tee checkdeps.out || true
           # three known upward or unknown-unit errors are the baseline
           test "$(grep -c '^ERROR' checkdeps.out)" -le 3
+
+  # Compile check of crates that read paths across the moved trees (path dependencies, include!, build.rs). The full
+  # workspace builds on the fr1 runners (ci.yml); this job runs where those are offline and only informs.
+  rust-subset:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup toolchain install nightly --profile minimal
+      - run: RUSTUP_TOOLCHAIN=nightly cargo check -p taffy -p xtk -p bun_errno -p bun_core -p aphrody-core
