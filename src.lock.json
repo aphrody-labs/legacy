@@ -1218,7 +1218,7 @@
       "path": "third_party/bun",
       "url": "https://github.com/aphrody-labs/bun.git",
       "upstream_url": "https://github.com/oven-sh/bun.git",
-      "commit": "0f48784fadcdb747bb7f4dae4de3a36a71f47fc7",
+      "commit": "e37f6189cef463102e15e6bb7a0c825a0ece84e6",
       "branch": "main",
       "engine": "git",
       "pillar": "git",

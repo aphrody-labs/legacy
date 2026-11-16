@@ -98,7 +98,7 @@ deps = {
   'third_party/brave-core': 'https://github.com/brave/brave-core.git@c299f814f0f6361771a93bbe57a9e8b03ff4f697',
   'third_party/browser-compat-data': 'https://github.com/mdn/browser-compat-data.git@e665ba48c74db7e5c96077ae26e8fe837ff09ddf',
   'third_party/brush': 'https://github.com/aphrody-labs/brush.git@f550117d8ee1ff6682adceec40d7ef0f94d6e373',
-  'third_party/bun': 'https://github.com/aphrody-labs/bun.git@0f48784fadcdb747bb7f4dae4de3a36a71f47fc7',
+  'third_party/bun': 'https://github.com/aphrody-labs/bun.git@e37f6189cef463102e15e6bb7a0c825a0ece84e6',
   'third_party/cachy-chroot': 'https://github.com/CachyOS/cachy-chroot.git@c87f36a4650fc3a592f2e4ea6e85042e2b492429',
   'third_party/cachyos-hyprland-settings': 'https://github.com/CachyOS/cachyos-hyprland-settings.git@4aa4a28450f4f5dd6d2af84e80bc402817396606',
   'third_party/cachyos-niri-settings': 'https://github.com/CachyOS/cachyos-niri-settings.git@114bce2cc341eeeb8e88e51d6e4437647d6fb047',

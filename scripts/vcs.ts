@@ -7,7 +7,7 @@
 //
 // Subcommands:
 //   auth [status]                                               Verify GitHub App token & remote reachability
-//   submodules [status|init|sync|verify]                        Blobless submodule lifecycle + src.lock.json parity
+//   submodules [status|init|sync|pin|verify]                    Blobless submodule lifecycle + src.lock.json parity
 //   worktree [list|add <name> [ref]|rm <name>|prune]            Isolated .worktrees/<name> + jj workspace tracking
 //   issue [list|view <n>|create --title T [--body B]|close <n>] GitHub App REST issue triage & creation
 //   pr [list|view <n>|create ...|checks <n>|merge <n>]          GitHub App REST PR creation, CI checks & merge
@@ -360,6 +360,49 @@ export function linkSiblingCheckouts(root: string): string[] {
   return linked;
 }
 
+/**
+ * Records each submodule's checked-out commit: stages the gitlink, then writes the commit into its
+ * `src.lock.json` entry and its `DEPS` line (the files `ay manifests --check` compares).
+ */
+export function pinSubmodules(root: string): number {
+  const gm = join(root, ".gitmodules");
+  if (!existsSync(gm)) return 0;
+  const lockPath = join(root, "src.lock.json");
+  const depsPath = join(root, "DEPS");
+  let lock = readFileSync(lockPath, "utf8");
+  let deps = existsSync(depsPath) ? readFileSync(depsPath, "utf8") : "";
+  for (const m of parseGitmodules(readFileSync(gm, "utf8"))) {
+    const head = run(["git", "rev-parse", "HEAD"], join(root, m.path));
+    if (head.code !== 0 || !/^[0-9a-f]{40}$/.test(head.out)) {
+      console.error(`${m.path}: not checked out (run \`submodules init\`)`);
+      return 1;
+    }
+    const add = run(["git", "add", "--", m.path], root);
+    if (add.code !== 0) {
+      console.error(add.err);
+      return 1;
+    }
+    const entry = new RegExp(
+      `("${m.path.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}": \\{[^}]*?"commit": ")[0-9a-f]{40}(")`,
+    );
+    if (!entry.test(lock)) {
+      console.error(`${m.path}: no entry in src.lock.json`);
+      return 1;
+    }
+    lock = lock.replace(entry, `$1${head.out}$2`);
+    deps = deps.replace(
+      new RegExp(
+        `('${m.path.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}': '[^'@]+@)[0-9a-f]{40}(')`,
+      ),
+      `$1${head.out}$2`,
+    );
+    console.log(`${m.path} ${head.out}`);
+  }
+  writeFileSync(lockPath, lock);
+  if (deps) writeFileSync(depsPath, deps);
+  return 0;
+}
+
 async function cmdAuth(root: string, argv: string[]): Promise<number> {
   const repo = opt(argv, "-R") ?? opt(argv, "--repo") ?? defaultRepo(root);
   const tok = await token("aphrody-labs");
@@ -432,6 +475,8 @@ async function cmdSubmodules(root: string, argv: string[]): Promise<number> {
         return 1;
       }
     }
+  } else if (sub === "pin") {
+    return pinSubmodules(root);
   } else if (sub === "sync") {
     run(["git", "submodule", "sync", "--recursive"], root);
     const mods = inspectSubmodules(root);
@@ -989,7 +1034,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
 
 Domains:
   auth [status]                                               Verify GitHub App token & aphrody remote
-  submodules [status|init|sync|verify] [--json]               Blobless submodule lifecycle & src.lock.json check
+  submodules [status|init|sync|pin|verify] [--json]           Blobless submodule lifecycle & src.lock.json check
   worktree [list|add <name> [ref]|rm <name>|prune] [--json]   Isolated .worktrees/<name> + jj workspace list
   issue [list|view <n>|create --title T|close <n>] [--json]   GitHub App REST issue management
   pr [list|view <n>|checks <n>|create ...|merge <n>] [--json] GitHub App REST PR & CI check management
