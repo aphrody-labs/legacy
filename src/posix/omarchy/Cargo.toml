@@ -8,7 +8,7 @@ description = "Unified Omarchy + CachyOS + Arch/Linux orchestration engine: hard
 
 [dependencies]
 machine = { version = "0.4.0", path = "../../machine", package = "aphrody-machine" }
-bun-steam = { version = "1.4.8", package = "steam-depot", path = "../../steam" }
+bun-steam = { version = "1.4.8", package = "steam-depot", path = "../../../frameworks/steam" }
 anyhow.workspace = true
 clap.workspace = true
 hex.workspace = true

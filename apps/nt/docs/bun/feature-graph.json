@@ -42877,7 +42877,7 @@
    "label": "bun_analytics",
    "loc": 573,
    "paths": [
-    "src/analytics"
+    "frameworks/analytics"
    ]
   },
   {
@@ -44458,7 +44458,7 @@
    "label": "bun_safety",
    "loc": 7,
    "paths": [
-    "src/safety"
+    "frameworks/safety"
    ]
   },
   {
@@ -45232,7 +45232,7 @@
     "src/paths",
     "src/pod",
     "src/ptr",
-    "src/safety",
+    "frameworks/safety",
     "src/simdutf_sys"
    ]
   },

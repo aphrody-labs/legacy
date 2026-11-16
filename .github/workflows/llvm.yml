@@ -14,7 +14,7 @@ on:
       - "src/nt/**"
       - "src/wine/**"
       - "kernel/wasm/**"
-      - "src/ui/*.c"
+      - "frameworks/ui/*.c"
       - "hardware/drivers/**/*.c"
       - "kernel/arch/**"
       - "kernel/include/**"

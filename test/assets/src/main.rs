@@ -54,7 +54,7 @@ fn load_manifest(root: &Path) -> Vec<Entry> {
     }
 
     let mut files = Vec::new();
-    for dir in [root.join("assets"), root.join("src").join("game").join("assets")] {
+    for dir in [root.join("assets"), root.join("frameworks").join("game").join("assets")] {
         walk_bevy_dir(&dir, &mut files);
     }
     files.sort();
@@ -235,7 +235,7 @@ fn main() {
     let entries = load_manifest(&root);
     let lib = {
         let legacy = root.join("assets").join("library");
-        if legacy.is_dir() { legacy } else { root.join("src").join("game").join("assets") }
+        if legacy.is_dir() { legacy } else { root.join("frameworks").join("game").join("assets") }
     };
     #[cfg(feature = "bevy-load")]
     let mut bevy_app = None;

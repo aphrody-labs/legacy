@@ -343,7 +343,7 @@
       "command": "steam",
       "state": "current",
       "module": "gaming",
-      "doc": "Steam data as JSON (src/steam): root, libraries, apps, vdf, compat, host, env"
+      "doc": "Steam data as JSON (frameworks/steam): root, libraries, apps, vdf, compat, host, env"
     },
     {
       "command": "sys",

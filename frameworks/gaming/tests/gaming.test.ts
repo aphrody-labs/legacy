@@ -71,9 +71,9 @@ test("downloads manifest and steamcmd script", () => {
   ]);
 });
 
-test("Proton app ids agree with src/steam", () => {
+test("Proton app ids agree with frameworks/steam", () => {
   const rs = readFileSync(
-    join(root, "src", "steam", "src", "proton.rs"),
+    join(root, "frameworks", "steam", "src", "proton.rs"),
     "utf8",
   );
   const block = rs.slice(

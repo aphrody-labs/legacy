@@ -286,10 +286,10 @@ export async function runTests(
         });
     }
   } else if (!hasLib) {
-    // Standard Bevy `assets/` + `src/game/assets/` layout with `.meta` RON sidecars & SVG 2 validation.
+    // Standard Bevy `assets/` + `frameworks/game/assets/` layout with `.meta` RON sidecars & SVG 2 validation.
     for (const rootDir of [
       join(o.root, "assets"),
-      join(o.root, "src", "game", "assets"),
+      join(o.root, "frameworks", "game", "assets"),
     ]) {
       if (!existsSync(rootDir)) continue;
       for (const f of walk(rootDir)) {

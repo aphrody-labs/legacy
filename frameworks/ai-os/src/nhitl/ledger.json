@@ -331,7 +331,7 @@
       "category": "coordination",
       "severity": "info",
       "status": "fixed",
-      "excerpt": "MCP steam : parseurs TypeScript retirés, local_apps/read_vdf/app_paths passent par ay steam (src/steam) ; un ay antérieur au commit gaming répond « no steam command »",
+      "excerpt": "MCP steam : parseurs TypeScript retirés, local_apps/read_vdf/app_paths passent par ay steam (frameworks/steam) ; un ay antérieur au commit gaming répond « no steam command »",
       "fix": "ay à jour (CI) ou AY_BIN ; stack rosegriffon-stack (rg-steam-depot, rg-steam-initial) et son jeton non modifiés ; carte docs/gaming/OWNERSHIP.md",
       "reason": "2026-11-13 : couche gaming unifiée, commits séparés de ceux de l agent rosegriffon"
     }

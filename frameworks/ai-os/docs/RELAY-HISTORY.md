@@ -53,7 +53,7 @@ Claims the code does not back:
 - `LEGACY-INVENTORY.md:26`: MCP through the "official SDK". The relay uses none; `src/relay/mcp-http.ts:2` says it replaces `@modelcontextprotocol/sdk`.
 - `RELAY.md:3` and its commands use `src/relay`; the real path is `frameworks/ai-os/src/relay`.
 - `RELAY.md:19`: `native/relay-windows/install.ps1` does not exist.
-- `ARCHITECTURE.md:3` names `src/agent/py`: absent.
+- `ARCHITECTURE.md:3` names `frameworks/agent/py`: absent.
 - `ROADMAP.md:6` states a license, while `AGENTS.md` §4 says none is chosen.
 - `ROADMAP.md:19` item 6 lists A2A, ACP and MCP over HTTP as future work; the relay already has them. `LEGACY-INVENTORY.md:35` places A2A/ACP in the gateway "(roadmap)".
 

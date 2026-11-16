@@ -348,7 +348,7 @@ const DOMAINS: DomainSpec[] = [
       "src/bun_alloc",
       "src/collections",
       "src/ptr",
-      "src/safety",
+      "frameworks/safety",
       "src/mimalloc_sys",
       "src/simdutf_sys",
       "src/highway",

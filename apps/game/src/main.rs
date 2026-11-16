@@ -1,4 +1,4 @@
-//! Game app: `aphrody-game` plays the game of `src/game` with the storefront services; `aphrody-game probe` prints the
+//! Game app: `aphrody-game` plays the game of `frameworks/game` with the storefront services; `aphrody-game probe` prints the
 //! headless Steam proof as one JSON line. The Steam app id is `STEAM_APP_ID` (default: Spacewar).
 use game::store::{StorePlugin, SPACEWAR};
 

@@ -42,9 +42,9 @@ C_SRCS := \
 	../src/nt/status.c \
 	../src/wine/server_proto.c \
 	wasm/module.c \
-	../src/ui/m3.c \
-	../src/ui/shell_kit.c \
-	../src/ui/vterm.c
+	../frameworks/ui/m3.c \
+	../frameworks/ui/shell_kit.c \
+	../frameworks/ui/vterm.c
 
 ASM_X86_64 := arch/x86/entry_64.S
 
@@ -101,7 +101,7 @@ wasi:
 		$(OUT_DIR)/ay-wasm-inspect.raw.wasm -o $(OUT_DIR)/ay-wasm-inspect.wasm
 	rm -f $(OUT_DIR)/ay-wasm-inspect.raw.wasm
 	$(WASI_CC) $(CFLAGS_BASE) $(WASM_FEATURES) --target=wasm32-wasip1 \
-		$(C_SRCS) ../src/ui/site_wasi.c -o $(OUT_DIR)/ay-m3-site.raw.wasm
+		$(C_SRCS) ../frameworks/ui/site_wasi.c -o $(OUT_DIR)/ay-m3-site.raw.wasm
 	$(WASM_OPT) -O3 --enable-simd --enable-bulk-memory --enable-multivalue \
 		--enable-nontrapping-float-to-int --enable-sign-ext --strip-debug \
 		$(OUT_DIR)/ay-m3-site.raw.wasm -o $(OUT_DIR)/ay-m3-site.wasm

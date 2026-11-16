@@ -68,7 +68,7 @@ await step("agent-desktop", "find-textbox", async () => {
 });
 if (Bun.env.E2E_GEMINI_PROMPT === "0") results.push({ family: "agent-desktop", name: "prompt+answer", status: "skip", ms: 0, note: "E2E_GEMINI_PROMPT=0" });
 else {
-  const file = "src/re/src/abi.rs";
+  const file = "frameworks/re/src/abi.rs";
   const code = (await Bun.file(join(ROOT, file)).text()).split("#[cfg(test)]")[0].replace(/\s+/g, " ").slice(0, 1800);
   await step("agent-desktop", "new-chat", async () => {
     const d = dataOf(await hub("agent-desktop__desktop_find", { app: APP, role: "button", name: "New Chat", limit: 1, timeout_ms: 30000 }));
@@ -202,6 +202,6 @@ const md = [
   ...Object.entries(lat).map(([k, v]) => `- ${k}: froid ${v.cold}, chaud ${v.warm.join("/")}`),
 ].join("\n");
 writeFileSync(join(ROOT, "docs/reviews", `e2e-desktop-${date}.md`), `${md}\n`);
-if (gemini) writeFileSync(join(ROOT, "docs/reviews", `gemini-desktop-${date}-src-re-abi.md`), `# Verdict Gemini (app bureau 1.19.0) sur src/re/src/abi.rs, ${date}\n\n${gemini}\n`);
+if (gemini) writeFileSync(join(ROOT, "docs/reviews", `gemini-desktop-${date}-src-re-abi.md`), `# Verdict Gemini (app bureau 1.19.0) sur frameworks/re/src/abi.rs, ${date}\n\n${gemini}\n`);
 closeHub();
 process.exit(results.some((r) => r.status === "fail") ? 1 : 0);

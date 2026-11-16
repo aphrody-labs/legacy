@@ -69,7 +69,7 @@ commands = ["ssh"]
 
 [module.re]
 kind = "module"
-crate = "src/re (aphrody-re)"
+crate = "frameworks/re (aphrody-re)"
 feature = "re"
 upstream = "NationalSecurityAgency/ghidra, google/magika"
 commands = ["re"]
@@ -112,7 +112,7 @@ commands = ["omarchy", "linux", "pkg", "wsl", "wl"]
 
 [module.ui]
 kind = "module"
-crate = "src/ui/kit (aphrody-ui)"
+crate = "frameworks/ui/kit (aphrody-ui)"
 feature = "ui"
 upstream = "DioxusLabs/dioxus, DioxusLabs/blitz, linebender/vello, google-labs-code/design.md"
 commands = ["ui", "design"]
@@ -190,7 +190,7 @@ commands = ["plugin"]
 
 [module.gaming]
 kind = "ecosystem"
-crate = "src/steam, frameworks/gaming, gamescope-rs"
+crate = "frameworks/steam, frameworks/gaming, gamescope-rs"
 upstream = "ValveSoftware/steam, Bevy fork"
 note = "Bevy fork with Steam and Epic, Craft Apps, tv: ecosystem apps, consumers of ay. Their subcommands stay until the owning agent provides each app's entry point."
 commands = ["steam", "gaming", "scope"]

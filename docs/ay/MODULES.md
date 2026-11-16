@@ -14,13 +14,13 @@ The core is the Bun binary built from the fork (`third_party/bun`), with Bun's o
 | depot | module | src/depot/* (depot-cli, depot-gclient, depot-cipd, depot-vpython, depot-cas, depot-forge, depot-graph, depot-ingest) | depot | chromium/depot_tools | git, gclient, fetch, vpy, cl, cipd, ninja, gn, ingest, graph, chromium, forge (legacy) |
 | repo | module | src/xtask (xtk) | repo | aphrody-labs (lock, manifests, doctor) | lock, manifests, doctor |
 | remote | module | src/remote (aphrody-remote) | remote | Eugeny/russh | ssh |
-| re | module | src/re (aphrody-re) | re | NationalSecurityAgency/ghidra, google/magika | re |
+| re | module | frameworks/re (aphrody-re) | re | NationalSecurityAgency/ghidra, google/magika | re |
 | conformance | module | test/conformance (aphrody-conformance) | conformance | web-platform-tests/wpt, test262 | conformance |
 | toolchain | module | src/up (aphrody-up), src/rt (aphrody-rt), src/machine (aphrody-machine) | toolchain | astral-sh/uv, oven-sh/bun versions, axo-dev/cargo-dist | up, rt, sys, bin, path |
 | docs | module | src/docs (aphrody-docs) | docs | oven-sh/bun docs, bun.com llms-full.txt | docs |
 | flat | module | src/ay/src/low/flat.rs, flat_sync.rs (moves to its own crate) | flat | oven-sh/bun (bun_wyhash, bun_histogram), uutils/diffutils | flat, hash, time |
 | omarchy | module | src/posix/omarchy (aphrody-omarchy), src/posix/wslg | omarchy | basecamp/omarchy, CachyOS, microsoft/wslg | omarchy, linux, pkg, wsl (legacy), wl (legacy) |
-| ui | module | src/ui/kit (aphrody-ui) | ui | DioxusLabs/dioxus, DioxusLabs/blitz, linebender/vello, google-labs-code/design.md | ui, design |
+| ui | module | frameworks/ui/kit (aphrody-ui) | ui | DioxusLabs/dioxus, DioxusLabs/blitz, linebender/vello, google-labs-code/design.md | ui, design |
 | electron | module | src/electron-migrate | electron | electron/asar, tauri-apps/tauri, zed-industries/gpui | electron |
 | bench | module | bench (stack-bench) | bench | (first party; Win32 benchmarks) | bench |
 | index | module | src/core (aphrody-core, pipeline), src/ay/src/code (tree-sitter refactoring) | index | tree-sitter/tree-sitter, google/magika | index, code |
@@ -31,7 +31,7 @@ The core is the Bun binary built from the fork (`third_party/bun`), with Bun's o
 | packages | js | packages/{deploy,assets,env-kit,ai-os,upstream,gnu,release,i18n,machine,wck} |  | (first party Bun packages) | deploy, assets, auth, secret, vault, upstream, gnu, release, i18n, shell-matrix, jules, agents, web (legacy), lfs |
 | engines | js | apps/open/packages/browser-engines (aphrody-labs/open) |  | (first party) | engines |
 | plugin | module | src/ay/src/plugin.rs (plugin surface read by the Bun and niu hosts) | plugin | (first party) | plugin |
-| gaming | ecosystem | src/steam, frameworks/gaming, gamescope-rs |  | ValveSoftware/steam, Bevy fork | steam, gaming, scope |
+| gaming | ecosystem | frameworks/steam, frameworks/gaming, gamescope-rs |  | ValveSoftware/steam, Bevy fork | steam, gaming, scope |
 | removed | removed |  |  |  | arch (legacy), brand (legacy) |
 
 Commands: 60 current, 8 legacy; unmapped: 0.

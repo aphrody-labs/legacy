@@ -21,8 +21,8 @@ bevy-load = ["dep:bevy"]
 
 [dependencies]
 tv-ffmpeg.workspace = true
-# The craft-libs pin lives once, in src/craft (docs/games/PLAN.md step 3).
-craft-formats = { version = "0.4.0", path = "../../src/craft" }
+# The craft-libs pin lives once, in frameworks/craft (docs/games/PLAN.md step 3).
+craft-formats = { version = "0.4.0", path = "../../frameworks/craft" }
 resvg = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true

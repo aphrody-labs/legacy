@@ -1,8 +1,8 @@
-//! `ay steam`: the low-level Steam data of the host as JSON, over `src/steam` (`bun_steam`).
+//! `ay steam`: the low-level Steam data of the host as JSON, over `frameworks/steam` (`bun_steam`).
 //!
 //! One parser per format for the whole monorepo: text and binary KeyValues, `appinfo.vdf`,
 //! `appmanifest_*.acf`, `libraryfolders.vdf`, compatibility tools and the Proton launch
-//! environment live in `src/steam`; `ay steam` prints them as JSON for the Bun side
+//! environment live in `frameworks/steam`; `ay steam` prints them as JSON for the Bun side
 //! (`frameworks/gaming`, the `steam` plugin MCP). Credential files are never read
 //! (`config.vdf`, `loginusers.vdf`, `local.vdf`, `ssfn*`). Ownership: docs/gaming/OWNERSHIP.md.
 

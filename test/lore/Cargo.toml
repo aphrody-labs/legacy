@@ -65,23 +65,23 @@ uuid = { workspace = true }
 
 [dev-dependencies]
 ctor = { workspace = true }
-lore = { path = "../../src/lore", package = "aphrody-lore", features = ["test-util"] }
-lore-base = { path = "../../src/lore/base", package = "aphrody-lore-base", features = [
+lore = { path = "../../frameworks/lore", package = "aphrody-lore", features = ["test-util"] }
+lore-base = { path = "../../frameworks/lore/base", package = "aphrody-lore-base", features = [
   "test-util",
 ] }
-lore-server = { path = "../../src/lore/server", package = "aphrody-lore-server" }
-lore-storage = { path = "../../src/lore/storage", package = "aphrody-lore-storage", features = ["test-util"] }
+lore-server = { path = "../../frameworks/lore/server", package = "aphrody-lore-server" }
+lore-storage = { path = "../../frameworks/lore/storage", package = "aphrody-lore-storage", features = ["test-util"] }
 # Here rather than under [dependencies]: a normal dependency's features apply to every build that
 # includes this package, so a release build of the workspace would compile lore-revision's test
 # access into every binary.
-lore-revision = { path = "../../src/lore/revision", package = "aphrody-lore-revision", features = ["test-util"] }
-lore-transport = { path = "../../src/lore/transport", package = "aphrody-lore-transport", features = ["test-util"] }
+lore-revision = { path = "../../frameworks/lore/revision", package = "aphrody-lore-revision", features = ["test-util"] }
+lore-transport = { path = "../../frameworks/lore/transport", package = "aphrody-lore-transport", features = ["test-util"] }
 rcgen = { workspace = true }
 serde = { workspace = true }
 
 [target.'cfg(target_os = "linux")'.dev-dependencies]
 libc = { workspace = true }
-lore-fuse = { path = "../../src/lore/fuse", features = ["test-util"], package = "aphrody-lore-fuse" }
+lore-fuse = { path = "../../frameworks/lore/fuse", features = ["test-util"], package = "aphrody-lore-fuse" }
 
 [features]
 integration_tests = ["lore-server/integration_tests"]

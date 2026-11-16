@@ -54,7 +54,7 @@ required-git-spec = "rev"
 allow-registry = ["https://github.com/rust-lang/crates.io-index"]
 # Forks only: aphrody-labs (upstream forks) and aphrody-dev (own repos), always pinned by rev.
 [sources.allow-org]
-# storytold: craft-libs (Apache-2.0), consumed by src/craft pinned by rev, not forked.
+# storytold: craft-libs (Apache-2.0), consumed by frameworks/craft pinned by rev, not forked.
 github = ["aphrody-labs", "aphrody-dev", "storytold"]
 
 [advisories]

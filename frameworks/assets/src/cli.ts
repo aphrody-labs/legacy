@@ -163,7 +163,7 @@ switch (cmd) {
   case "bevy-meta": {
     const write = !flag("check");
     const r = syncBevyMeta(join(root, "assets"), { write });
-    const g = syncBevyMeta(join(root, "src", "game", "assets"), { write });
+    const g = syncBevyMeta(join(root, "frameworks", "game", "assets"), { write });
     const errs = [...r.errors, ...g.errors];
     for (const e of errs) console.error(e);
     console.log(

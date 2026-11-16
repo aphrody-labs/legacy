@@ -6,16 +6,16 @@ The games app is a [Bevy](https://github.com/bevyengine/bevy) fork integrated wi
 
 - A Bevy-based game runtime that ships on desktop and in the browser (WebAssembly and WebGPU), with gamepad, keyboard and mouse input.
 - Steam and Epic services behind one API: login, ownership, achievements, downloads, overlay.
-- The Craft Apps and the media stack (`src/tv`, FFmpeg) reused for content tools.
+- The Craft Apps and the media stack (`frameworks/tv`, FFmpeg) reused for content tools.
 
 ## What exists
 
 | Area | Where |
 | --- | --- |
-| Bevy vertical slice (terrain, controller, day/night, audio) | [`src/game`](../../src/game) |
-| Steam client, web API and content CDN tooling | [`src/steam`](../../src/steam) (`ay steam`), [`frameworks/gaming`](../../frameworks/gaming) (`ay gaming`) |
-| Format layer from the Craft libraries | [`src/craft`](../../src/craft) |
-| UI tokens and Bevy layout adapter | [`src/ui/kit`](../../src/ui/kit), feature `bevy` |
+| Bevy vertical slice (terrain, controller, day/night, audio) | [`frameworks/game`](../../frameworks/game) |
+| Steam client, web API and content CDN tooling | [`frameworks/steam`](../../frameworks/steam) (`ay steam`), [`frameworks/gaming`](../../frameworks/gaming) (`ay gaming`) |
+| Format layer from the Craft libraries | [`frameworks/craft`](../../frameworks/craft) |
+| UI tokens and Bevy layout adapter | [`frameworks/ui/kit`](../../frameworks/ui/kit), feature `bevy` |
 | Asset validators | [`test/assets`](../../test/assets) |
 | Epic and Bevy upstream tracking | [`docs/epic/TRACKING.md`](../epic/TRACKING.md), `third_party/forks.txt` |
 

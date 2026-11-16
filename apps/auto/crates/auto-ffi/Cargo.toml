@@ -14,7 +14,7 @@ auto-docs = { path = "../auto-docs" }
 auto-connaissance = { path = "../auto-connaissance" }
 auto-facturx = { path = "../auto-facturx" }
 auto-fichiers = { path = "../auto-fichiers" }
-auto-modele = { package = "aphrody-modele", path = "../../../../src/modele" }
+auto-modele = { package = "aphrody-modele", path = "../../../../frameworks/modele" }
 auto-sheets = { path = "../auto-sheets" }
 serde.workspace = true
 serde_json.workspace = true

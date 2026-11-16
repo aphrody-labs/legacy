@@ -7,7 +7,7 @@
 //! - `ai-os`: `ai_os_*` (VFS, RAG, world model, System 1).
 //! - `depot`: `depot_*`, the native depot contract (`src/depot*`); strings released with
 //!   `depot_free_string` or `aphrody_free`; `depot_abi_version` returns [`depot::DEPOT_ABI_VERSION`].
-//! - `re`: `aphrody_re_*`, `aphrody_ghidra_*`, `aphrody_mingw_*`, `aphrody_lua52_*` (`src/re`).
+//! - `re`: `aphrody_re_*`, `aphrody_ghidra_*`, `aphrody_mingw_*`, `aphrody_lua52_*` (`frameworks/re`).
 //! - `web`: `aphrody_*` from `corelib::web` (Boq parser; the adblock engine is
 //!   `src/adblock-capi`); framed buffers released with `aphrody_chromium_buf_free`.
 //! Symbol names are a stable contract with their consumers and never change.

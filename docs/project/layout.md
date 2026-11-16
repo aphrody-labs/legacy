@@ -28,7 +28,7 @@ Generated: `bun scripts/relayout.ts table --write` from the `[[area]]` rows of `
 | `build/` | CI, container images, package recipes, SDK pins, Chromium factory | AOSP build/ and Chromium build/: how the tree is built |
 | `device/` | targets and fleet: hosts, cluster, OS images, cloud, secrets, deploy | AOSP device/: per-target configuration |
 | `docs/` | documentation, generated index | Chromium docs/ |
-| `frameworks/` | AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends (Bun packages; crates follow in batch 4) | AOSP frameworks/: the services applications are built on |
+| `frameworks/` | AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends (Bun packages and the Rust crates of the AI, agent, media, UI and game families) | AOSP frameworks/: the services applications are built on |
 | `prebuilts/` | binary pins installed by ay up | AOSP prebuilts/: binaries are pinned, not built here |
 | `scripts/` | gates and generators run by CI and just | Bun and Chromium both keep scripts/ and tools/ at the root |
 | `src/` | Rust crates (oven-sh/bun layout), C core, assembly, WebAssembly | kept: crates taken from oven-sh/bun main (Cargo.toml header), so the paths stay the upstream paths; moving it needs a CI-verified pass of its own |

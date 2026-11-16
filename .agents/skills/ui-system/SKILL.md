@@ -44,7 +44,7 @@ Defaults already in the repo: the web app `apps/web/web` is an Angular app on An
 
 - `stitch` server built into the relay (`frameworks/ai-os/src/relay/mcp-hub.ts`, https://stitch.googleapis.com/mcp, gcloud token). Tools exposed as `mcp__relay__stitch__*` when the relay is connected.
 - Give Stitch `frameworks/design/DESIGN.md` (google-labs-code/design.md format, alpha version) as the system; every Stitch mockup is then rebuilt in the framework of the target surface, never pasted.
-- Lint: `ay design lint` (`aphrody-ui::design_md` linter in `src/ui/kit`, reads `frameworks/design/DESIGN.md` by default) or `bun run --cwd frameworks/design lint`; 0 errors required.
+- Lint: `ay design lint` (`aphrody-ui::design_md` linter in `frameworks/ui/kit`, reads `frameworks/design/DESIGN.md` by default) or `bun run --cwd frameworks/design lint`; 0 errors required.
 
 ## Direction and critique (after anthropics/skills frontend-design, 41bbe19d1a1a)
 

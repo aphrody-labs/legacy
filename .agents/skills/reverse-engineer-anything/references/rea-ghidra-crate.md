@@ -1,10 +1,10 @@
-# In-house Rust Ghidra port (src/re) and MinGW noise stripping
+# In-house Rust Ghidra port (frameworks/re) and MinGW noise stripping
 
 Folded from the former rea-ghidra-sre skill. Use for in-repo native analysis with `ay re`; use the REA MCP workflow in SKILL.md for artifact/runtime evidence.
 
 ## Execution Paths
 
-- **Native Rust Ghidra Decompiler & REA (`src/re` (`aphrody-re`) + `system/core-ts/src/re.ts`)**:
+- **Native Rust Ghidra Decompiler & REA (`frameworks/re` (`aphrody-re`) + `system/core-ts/src/re.ts`)**:
   ```powershell
   ay re --ghidra target/debug/ay.exe
   ```

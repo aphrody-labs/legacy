@@ -1,6 +1,6 @@
 ---
 name: re-analyst
-description: Reverse engineering of shipped binaries, packages, Electron/JS apps, firmware or browser targets with REA (relay hub rea__*) and the in-house src/re crate (ay re). Use when a claim depends on a binary rather than source.
+description: Reverse engineering of shipped binaries, packages, Electron/JS apps, firmware or browser targets with REA (relay hub rea__*) and the in-house frameworks/re crate (ay re). Use when a claim depends on a binary rather than source.
 tools: Read, Grep, Glob, Bash, Write, Skill
 model: sonnet
 memory: project

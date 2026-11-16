@@ -186,7 +186,7 @@ const specs: Spec[] = [
     source: "github",
     repo: "astral-sh/uv",
     tag: "{version}",
-    why: "frameworks/ai-os/python, src/agent/context (pyproject + uv.lock)",
+    why: "frameworks/ai-os/python, frameworks/agent/context (pyproject + uv.lock)",
     assets: {
       "windows-x86_64": "uv-x86_64-pc-windows-msvc.zip",
       "linux-x86_64": "uv-x86_64-unknown-linux-musl.tar.gz",
@@ -291,7 +291,7 @@ const specs: Spec[] = [
     hosts: ["pc", "image"],
     source: "winget",
     pkg: "Gyan.FFmpeg.Shared",
-    why: "src/tv/ffmpeg (ffmpeg-next, dynamic): headers + import libs; Linux = distro ffmpeg/ffmpeg-dev",
+    why: "frameworks/tv/ffmpeg (ffmpeg-next, dynamic): headers + import libs; Linux = distro ffmpeg/ffmpeg-dev",
     extra: {
       env: "FFMPEG_DIR",
       linux:

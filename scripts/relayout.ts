@@ -140,13 +140,22 @@ if (mode === "table") {
 } else {
   let bad = 0;
   for (const m of moves) if (existsSync(join(root, m.from))) (console.log(`exists: ${m.from}`), bad++);
-  for (const f of listing()) {
+  const all = listing();
+  const dirSet = new Set<string>();
+  for (const f of all) for (let d = posix.dirname(f); d !== "." && !dirSet.has(d); d = posix.dirname(d)) dirSet.add(d);
+  for (const f of all) {
     if (SKIP.some((s) => s.test(f)) || /^apps\/(rosegriffon|shenron)\//.test(f)) continue;
+    const dir = posix.dirname(f);
+    const local = (name: string) => {
+      for (let d = dir; d !== "." && d !== ""; d = posix.dirname(d)) if (dirSet.has(`${d}/src/${name}`) || dirSet.has(`${d}/packages/${name}`)) return true;
+      return false;
+    };
     const buf = readFileSync(join(root, f));
     if (buf.length > 8_000_000 || !isText(buf)) continue;
     for (const [i, line] of buf.toString("utf8").split("\n").entries()) {
       re.lastIndex = 0;
-      if (re.test(line)) (console.log(`${f}:${i + 1}: ${line.trim().slice(0, 120)}`), bad++);
+      const hits = [...line.matchAll(re)].filter((m) => !(/^(src|packages)\//.test(m[1]!) && local(m[1]!.split("/")[1]!)));
+      if (hits.length) (console.log(`${f}:${i + 1}: ${line.trim().slice(0, 120)}`), bad++);
     }
   }
   console.log(bad ? `${bad} stale` : "layout ok");

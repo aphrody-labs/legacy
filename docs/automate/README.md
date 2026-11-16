@@ -5,7 +5,7 @@ apps/auto keeps its shell (API routes, UI, worker); its domain logic is consumed
 | Library | Language | Content | Consumers |
 | --- | --- | --- | --- |
 | `frameworks/automate` (`@aphrody/automate`) | TypeScript | workflow definitions, node catalog, expressions, executor with injected services, templates, n8n import; 30 tests with the sources | apps/auto (api, worker, web, services, client), apps/web, `ai-os automate`, the TUI |
-| `src/modele` (`aphrody-modele`) | Rust | commercial document model and totals shared with `@auto/domain` | apps/auto crates (`auto-docs`, `auto-facturx`, `auto-ffi`, `auto-fichiers`) |
+| `frameworks/modele` (`aphrody-modele`) | Rust | commercial document model and totals shared with `@auto/domain` | apps/auto crates (`auto-docs`, `auto-facturx`, `auto-ffi`, `auto-fichiers`) |
 
 Front ends in this repository:
 

@@ -19,7 +19,7 @@ default = []
 decompile = ["aphrody-re/decompile"]
 
 [dependencies]
-aphrody-re = { path = "../re", default-features = false }
+aphrody-re = { path = "../../frameworks/re", default-features = false }
 bun-native-plugin = "0.2.0"
 napi = { version = "3.16.2", default-features = false, features = ["napi4"] }
 napi-derive = "3.7.1"

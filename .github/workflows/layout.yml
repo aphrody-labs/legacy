@@ -20,7 +20,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: canary
-      - run: bun scripts/relayout.ts check --upto 3
+      - run: bun scripts/relayout.ts check --upto 4
       - run: bun install --frozen-lockfile
       # rust-toolchain.toml names a local toolchain (chromium-160); the manifests only need a nightly cargo to resolve
       - run: |

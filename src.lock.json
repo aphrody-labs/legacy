@@ -3572,7 +3572,7 @@
       "engine": "git",
       "pillar": "git",
       "remotes": {
-        "aphrody": "https://github.com/aphrody-labs/browser.git",
+        "aphrody": "https://github.com/aphrody-labs/lightpanda.git",
         "origin": "https://github.com/lightpanda-io/browser.git"
       },
       "sparse_paths": null

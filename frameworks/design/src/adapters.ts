@@ -719,7 +719,7 @@ files["webui-tokens.json"] =
 
 // 11. Taffy Layout + Multi-Theme Rust adapter (`tokens/adapters/taffy_tokens.rs`)
 files["taffy_tokens.rs"] =
-  `${header("//")}// Rust layout & theme constants shared with src/taffy and src/ui/kit.
+  `${header("//")}// Rust layout & theme constants shared with frameworks/taffy and frameworks/ui/kit.
 
 pub const GAP_PX: f32 = ${LAYOUT.gap}.0;
 pub const FOCUS_RING_PX: f32 = ${LAYOUT["focus-ring"]}.0;

@@ -3122,34 +3122,34 @@
   "c-prefix": 1,
   "binary-call": 2
  },
- "src/chromium/factory/Cargo.toml": {
+ "frameworks/chromium/factory/Cargo.toml": {
   "crate-prefix": 3,
   "c-prefix": 1,
   "binary-call": 1
  },
- "src/chromium/factory/README.md": {
+ "frameworks/chromium/factory/README.md": {
   "crate-prefix": 4,
   "binary-call": 1
  },
- "src/chromium/factory/src/config.rs": {
+ "frameworks/chromium/factory/src/config.rs": {
   "product-name": 1,
   "crate-prefix": 1,
   "binary-call": 1
  },
- "src/chromium/factory/src/lib.rs": {
+ "frameworks/chromium/factory/src/lib.rs": {
   "crate-prefix": 5,
   "c-prefix": 2,
   "binary-call": 2
  },
- "src/chromium/factory/src/main.rs": {
+ "frameworks/chromium/factory/src/main.rs": {
   "c-prefix": 2,
   "binary-call": 1
  },
- "src/chromium/factory/src/plan.rs": {
+ "frameworks/chromium/factory/src/plan.rs": {
   "crate-prefix": 2,
   "binary-call": 2
  },
- "src/chromium/factory/src/toolchain.rs": {
+ "frameworks/chromium/factory/src/toolchain.rs": {
   "crate-prefix": 2
  },
  "src/core/Cargo.toml": {
@@ -3234,10 +3234,10 @@
  "src/core/tests/registry.rs": {
   "crate-prefix": 1
  },
- "src/corelib/Cargo.toml": {
+ "frameworks/corelib/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/corelib/README.md": {
+ "frameworks/corelib/README.md": {
   "crate-prefix": 4
  },
  "src/depot/cas/src/lib.rs": {
@@ -3440,10 +3440,10 @@
   "checkout-path": 1,
   "product-name": 2
  },
- "src/game/assets/models/explorer.glb": {
+ "frameworks/game/assets/models/explorer.glb": {
   "product-name": 1
  },
- "src/game/src/procgen.rs": {
+ "frameworks/game/src/procgen.rs": {
   "product-name": 1
  },
  "src/ghidra-bun/Cargo.toml": {
@@ -3515,143 +3515,143 @@
  "src/gnu/which/src/lib.rs": {
   "crate-prefix": 2
  },
- "src/i18n/Cargo.toml": {
+ "frameworks/i18n/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/i18n/README.md": {
+ "frameworks/i18n/README.md": {
   "crate-prefix": 2
  },
- "src/i18n/src/lib.rs": {
+ "frameworks/i18n/src/lib.rs": {
   "npm-scope": 1,
   "env-prefix": 1
  },
- "src/i18n/tests/shared.rs": {
+ "frameworks/i18n/tests/shared.rs": {
   "c-prefix": 1
  },
  "kernel/include/uapi/ay/ui.h": {
   "crate-prefix": 1
  },
- "src/lore/Cargo.toml": {
+ "frameworks/lore/Cargo.toml": {
   "crate-prefix": 5
  },
- "src/lore/README.md": {
+ "frameworks/lore/README.md": {
   "crate-prefix": 2
  },
- "src/lore/aws/Cargo.toml": {
+ "frameworks/lore/aws/Cargo.toml": {
   "crate-prefix": 3
  },
- "src/lore/aws/README.md": {
+ "frameworks/lore/aws/README.md": {
   "crate-prefix": 1
  },
- "src/lore/base/Cargo.toml": {
+ "frameworks/lore/base/Cargo.toml": {
   "crate-prefix": 2
  },
- "src/lore/base/README.md": {
+ "frameworks/lore/base/README.md": {
   "crate-prefix": 3
  },
- "src/lore/capi/Cargo.toml": {
+ "frameworks/lore/capi/Cargo.toml": {
   "crate-prefix": 2
  },
- "src/lore/capi/README.md": {
+ "frameworks/lore/capi/README.md": {
   "crate-prefix": 2
  },
- "src/lore/capi/cbindgen.toml": {
+ "frameworks/lore/capi/cbindgen.toml": {
   "crate-prefix": 5
  },
- "src/lore/chaos-client/Cargo.toml": {
+ "frameworks/lore/chaos-client/Cargo.toml": {
   "crate-prefix": 2
  },
- "src/lore/chaos-client/README.md": {
+ "frameworks/lore/chaos-client/README.md": {
   "crate-prefix": 2
  },
- "src/lore/client/Cargo.toml": {
+ "frameworks/lore/client/Cargo.toml": {
   "crate-prefix": 2
  },
- "src/lore/client/README.md": {
+ "frameworks/lore/client/README.md": {
   "crate-prefix": 3
  },
- "src/lore/credential/Cargo.toml": {
+ "frameworks/lore/credential/Cargo.toml": {
   "crate-prefix": 3
  },
- "src/lore/credential/README.md": {
+ "frameworks/lore/credential/README.md": {
   "crate-prefix": 2
  },
- "src/lore/error-set-macro/Cargo.toml": {
+ "frameworks/lore/error-set-macro/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/lore/error-set-macro/README.md": {
+ "frameworks/lore/error-set-macro/README.md": {
   "crate-prefix": 2
  },
- "src/lore/error-set/Cargo.toml": {
+ "frameworks/lore/error-set/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/lore/error-set/README.md": {
+ "frameworks/lore/error-set/README.md": {
   "crate-prefix": 2
  },
- "src/lore/fuse/Cargo.toml": {
+ "frameworks/lore/fuse/Cargo.toml": {
   "crate-prefix": 3
  },
- "src/lore/fuse/README.md": {
+ "frameworks/lore/fuse/README.md": {
   "crate-prefix": 1
  },
- "src/lore/hashicorp/Cargo.toml": {
+ "frameworks/lore/hashicorp/Cargo.toml": {
   "crate-prefix": 2
  },
- "src/lore/hashicorp/README.md": {
+ "frameworks/lore/hashicorp/README.md": {
   "crate-prefix": 2
  },
- "src/lore/io/Cargo.toml": {
+ "frameworks/lore/io/Cargo.toml": {
   "crate-prefix": 3
  },
- "src/lore/io/README.md": {
+ "frameworks/lore/io/README.md": {
   "crate-prefix": 2
  },
- "src/lore/macro/Cargo.toml": {
+ "frameworks/lore/macro/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/lore/macro/README.md": {
+ "frameworks/lore/macro/README.md": {
   "crate-prefix": 2
  },
- "src/lore/notification/Cargo.toml": {
+ "frameworks/lore/notification/Cargo.toml": {
   "crate-prefix": 2
  },
- "src/lore/notification/README.md": {
+ "frameworks/lore/notification/README.md": {
   "crate-prefix": 2
  },
- "src/lore/proto/Cargo.toml": {
+ "frameworks/lore/proto/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/lore/proto/README.md": {
+ "frameworks/lore/proto/README.md": {
   "crate-prefix": 1
  },
- "src/lore/revision/Cargo.toml": {
+ "frameworks/lore/revision/Cargo.toml": {
   "crate-prefix": 7
  },
- "src/lore/revision/README.md": {
+ "frameworks/lore/revision/README.md": {
   "crate-prefix": 2
  },
- "src/lore/server/Cargo.toml": {
+ "frameworks/lore/server/Cargo.toml": {
   "crate-prefix": 6
  },
- "src/lore/server/README.md": {
+ "frameworks/lore/server/README.md": {
   "crate-prefix": 2
  },
- "src/lore/storage/Cargo.toml": {
+ "frameworks/lore/storage/Cargo.toml": {
   "crate-prefix": 4
  },
- "src/lore/storage/README.md": {
+ "frameworks/lore/storage/README.md": {
   "crate-prefix": 2
  },
- "src/lore/telemetry/Cargo.toml": {
+ "frameworks/lore/telemetry/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/lore/telemetry/README.md": {
+ "frameworks/lore/telemetry/README.md": {
   "crate-prefix": 2
  },
- "src/lore/transport/Cargo.toml": {
+ "frameworks/lore/transport/Cargo.toml": {
   "crate-prefix": 3
  },
- "src/lore/transport/README.md": {
+ "frameworks/lore/transport/README.md": {
   "crate-prefix": 2
  },
  "src/machine/Cargo.toml": {
@@ -3752,96 +3752,96 @@
  "src/py2bun/tests/transpile.rs": {
   "npm-scope": 4
  },
- "src/re/Cargo.toml": {
+ "frameworks/re/Cargo.toml": {
   "crate-prefix": 5
  },
- "src/re/README.md": {
+ "frameworks/re/README.md": {
   "crate-prefix": 2
  },
- "src/re/src/adobe.rs": {
+ "frameworks/re/src/adobe.rs": {
   "c-prefix": 3
  },
- "src/re/src/asar.rs": {
+ "frameworks/re/src/asar.rs": {
   "c-prefix": 2
  },
- "src/re/src/cli.rs": {
+ "frameworks/re/src/cli.rs": {
   "binary-call": 6
  },
- "src/re/src/dump.rs": {
+ "frameworks/re/src/dump.rs": {
   "crate-prefix": 1
  },
- "src/re/src/electron.rs": {
+ "frameworks/re/src/electron.rs": {
   "c-prefix": 2
  },
- "src/re/src/game/formats/model_assemble.rs": {
+ "frameworks/re/src/game/formats/model_assemble.rs": {
   "crate-prefix": 2
  },
- "src/re/src/game/fs/eac.rs": {
+ "frameworks/re/src/game/fs/eac.rs": {
   "crate-prefix": 1
  },
- "src/re/src/game/fs/vfs.rs": {
+ "frameworks/re/src/game/fs/vfs.rs": {
   "crate-prefix": 2
  },
- "src/re/src/game/steam.rs": {
+ "frameworks/re/src/game/steam.rs": {
   "crate-prefix": 2
  },
- "src/re/src/golang.rs": {
+ "frameworks/re/src/golang.rs": {
   "c-prefix": 2
  },
- "src/re/src/google.rs": {
+ "frameworks/re/src/google.rs": {
   "product-name": 1,
   "c-prefix": 3
  },
- "src/re/src/headers.rs": {
+ "frameworks/re/src/headers.rs": {
   "c-prefix": 1
  },
- "src/re/src/index.rs": {
+ "frameworks/re/src/index.rs": {
   "c-prefix": 6
  },
- "src/re/src/leveldb.rs": {
+ "frameworks/re/src/leveldb.rs": {
   "product-name": 2,
   "crate-prefix": 1,
   "c-prefix": 2
  },
- "src/re/src/lib.rs": {
+ "frameworks/re/src/lib.rs": {
   "crate-prefix": 1
  },
- "src/re/src/magika.rs": {
+ "frameworks/re/src/magika.rs": {
   "product-name": 2
  },
- "src/re/src/mingw.rs": {
+ "frameworks/re/src/mingw.rs": {
   "crate-prefix": 1
  },
- "src/re/src/minidump.rs": {
+ "frameworks/re/src/minidump.rs": {
   "crate-prefix": 1
  },
- "src/re/src/pdata.rs": {
+ "frameworks/re/src/pdata.rs": {
   "crate-prefix": 2
  },
- "src/re/src/pe_forge/asm/mod.rs": {
+ "frameworks/re/src/pe_forge/asm/mod.rs": {
   "crate-prefix": 3,
   "c-prefix": 1
  },
- "src/re/src/pe_forge/mod.rs": {
+ "frameworks/re/src/pe_forge/mod.rs": {
   "crate-prefix": 2
  },
- "src/re/src/pe_forge/units.rs": {
+ "frameworks/re/src/pe_forge/units.rs": {
   "crate-prefix": 2,
   "c-prefix": 1
  },
- "src/re/src/pipeline/stages.rs": {
+ "frameworks/re/src/pipeline/stages.rs": {
   "c-prefix": 1
  },
- "src/re/src/propagate.rs": {
+ "frameworks/re/src/propagate.rs": {
   "crate-prefix": 1
  },
- "src/re/src/triage.rs": {
+ "frameworks/re/src/triage.rs": {
   "c-prefix": 1
  },
- "src/re/src/wasm_container.rs": {
+ "frameworks/re/src/wasm_container.rs": {
   "crate-prefix": 1
  },
- "src/re/src/yara.rs": {
+ "frameworks/re/src/yara.rs": {
   "product-name": 2,
   "crate-prefix": 1,
   "c-prefix": 2
@@ -3922,219 +3922,219 @@
  "src/sema/resolve/code/tests/computed_specifiers.rs": {
   "checkout-path": 4
  },
- "src/steam/UPSTREAM.md": {
+ "frameworks/steam/UPSTREAM.md": {
   "binary-call": 1
  },
- "src/steam/src/depot/mod.rs": {
+ "frameworks/steam/src/depot/mod.rs": {
   "crate-prefix": 1
  },
- "src/steam/src/emulator.rs": {
+ "frameworks/steam/src/emulator.rs": {
   "crate-prefix": 2,
   "c-prefix": 5
  },
- "src/steam/src/install.rs": {
+ "frameworks/steam/src/install.rs": {
   "binary-call": 1
  },
- "src/taffy/src/ecosystem.rs": {
+ "frameworks/taffy/src/ecosystem.rs": {
   "crate-prefix": 1
  },
- "src/tv/cli/Cargo.toml": {
+ "frameworks/tv/cli/Cargo.toml": {
   "crate-prefix": 1
  },
- "src/tv/cli/src/main.rs": {
+ "frameworks/tv/cli/src/main.rs": {
   "c-prefix": 2
  },
- "src/ui/kit/Cargo.toml": {
+ "frameworks/ui/kit/Cargo.toml": {
   "crate-prefix": 2
  },
- "src/ui/kit/README.md": {
+ "frameworks/ui/kit/README.md": {
   "crate-prefix": 2
  },
- "src/ui/kit/src/color/adaptive.rs": {
+ "frameworks/ui/kit/src/color/adaptive.rs": {
   "c-prefix": 4
  },
- "src/ui/kit/src/color/cam16.rs": {
+ "frameworks/ui/kit/src/color/cam16.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/color/color.rs": {
+ "frameworks/ui/kit/src/color/color.rs": {
   "product-name": 6,
   "c-prefix": 6,
   "env-prefix": 5
  },
- "src/ui/kit/src/color/component.rs": {
+ "frameworks/ui/kit/src/color/component.rs": {
   "c-prefix": 2
  },
- "src/ui/kit/src/color/dynamic.rs": {
+ "frameworks/ui/kit/src/color/dynamic.rs": {
   "c-prefix": 4
  },
- "src/ui/kit/src/color/facade.rs": {
+ "frameworks/ui/kit/src/color/facade.rs": {
   "crate-prefix": 1,
   "c-prefix": 1
  },
- "src/ui/kit/src/color/gemini_brand.rs": {
+ "frameworks/ui/kit/src/color/gemini_brand.rs": {
   "crate-prefix": 39,
   "c-prefix": 10,
   "env-prefix": 30
  },
- "src/ui/kit/src/color/google_sans_code.rs": {
+ "frameworks/ui/kit/src/color/google_sans_code.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/color/image.rs": {
+ "frameworks/ui/kit/src/color/image.rs": {
   "crate-prefix": 1
  },
- "src/ui/kit/src/color/mod.rs": {
+ "frameworks/ui/kit/src/color/mod.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/color/presets.rs": {
+ "frameworks/ui/kit/src/color/presets.rs": {
   "c-prefix": 1,
   "env-prefix": 3
  },
- "src/ui/kit/src/color/quantize.rs": {
+ "frameworks/ui/kit/src/color/quantize.rs": {
   "c-prefix": 4
  },
- "src/ui/kit/src/color/quantize_wsmeans.rs": {
+ "frameworks/ui/kit/src/color/quantize_wsmeans.rs": {
   "crate-prefix": 1
  },
- "src/ui/kit/src/color/scheme.rs": {
+ "frameworks/ui/kit/src/color/scheme.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/color/shape.rs": {
+ "frameworks/ui/kit/src/color/shape.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/color/sheets.rs": {
+ "frameworks/ui/kit/src/color/sheets.rs": {
   "product-name": 1,
   "npm-scope": 9,
   "crate-prefix": 3,
   "c-prefix": 3,
   "env-prefix": 2
  },
- "src/ui/kit/src/color/spaceui.rs": {
+ "frameworks/ui/kit/src/color/spaceui.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/color/theme.rs": {
+ "frameworks/ui/kit/src/color/theme.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/color/tonal.rs": {
+ "frameworks/ui/kit/src/color/tonal.rs": {
   "c-prefix": 3
  },
- "src/ui/kit/src/components/controls/mod.rs": {
+ "frameworks/ui/kit/src/components/controls/mod.rs": {
   "c-prefix": 2
  },
- "src/ui/kit/src/components/focus.rs": {
+ "frameworks/ui/kit/src/components/focus.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/components/interaction.rs": {
+ "frameworks/ui/kit/src/components/interaction.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/src/components/layout.rs": {
+ "frameworks/ui/kit/src/components/layout.rs": {
   "crate-prefix": 1
  },
- "src/ui/kit/src/components/theme.rs": {
+ "frameworks/ui/kit/src/components/theme.rs": {
   "c-prefix": 5
  },
- "src/ui/kit/src/components/visual.rs": {
+ "frameworks/ui/kit/src/components/visual.rs": {
   "c-prefix": 2
  },
- "src/ui/kit/src/design_md.rs": {
+ "frameworks/ui/kit/src/design_md.rs": {
   "crate-prefix": 1,
   "binary-call": 2
  },
- "src/ui/kit/src/fusion/dioxus_blitz.rs": {
+ "frameworks/ui/kit/src/fusion/dioxus_blitz.rs": {
   "crate-prefix": 4
  },
- "src/ui/kit/src/fusion/embedded.rs": {
+ "frameworks/ui/kit/src/fusion/embedded.rs": {
   "product-name": 1
  },
- "src/ui/kit/src/fusion/mod.rs": {
+ "frameworks/ui/kit/src/fusion/mod.rs": {
   "checkout-path": 1,
   "crate-prefix": 1
  },
- "src/ui/kit/src/fusion/pages.rs": {
+ "frameworks/ui/kit/src/fusion/pages.rs": {
   "checkout-path": 1,
   "product-name": 1,
   "binary-call": 2
  },
- "src/ui/kit/src/fusion/targets.rs": {
+ "frameworks/ui/kit/src/fusion/targets.rs": {
   "crate-prefix": 2
  },
- "src/ui/kit/src/fusion/tests.rs": {
+ "frameworks/ui/kit/src/fusion/tests.rs": {
   "crate-prefix": 1
  },
- "src/ui/kit/src/fusion/theme_bridge.rs": {
+ "frameworks/ui/kit/src/fusion/theme_bridge.rs": {
   "product-name": 3,
   "crate-prefix": 5,
   "c-prefix": 2
  },
- "src/ui/kit/src/layout/ecosystem.rs": {
+ "frameworks/ui/kit/src/layout/ecosystem.rs": {
   "crate-prefix": 1
  },
- "src/ui/kit/src/lib.rs": {
+ "frameworks/ui/kit/src/lib.rs": {
   "crate-prefix": 1
  },
- "src/ui/kit/src/next/emit_bun.rs": {
+ "frameworks/ui/kit/src/next/emit_bun.rs": {
   "checkout-path": 1
  },
- "src/ui/kit/src/next/emit_dioxus.rs": {
+ "frameworks/ui/kit/src/next/emit_dioxus.rs": {
   "checkout-path": 1
  },
- "src/ui/kit/src/next/emit_leptos.rs": {
+ "frameworks/ui/kit/src/next/emit_leptos.rs": {
   "checkout-path": 1
  },
- "src/ui/kit/src/next/metadata.rs": {
+ "frameworks/ui/kit/src/next/metadata.rs": {
   "npm-scope": 2
  },
- "src/ui/kit/src/next/routes.rs": {
+ "frameworks/ui/kit/src/next/routes.rs": {
   "checkout-path": 1,
   "npm-scope": 1
  },
- "src/ui/kit/src/next/rsc.rs": {
+ "frameworks/ui/kit/src/next/rsc.rs": {
   "c-prefix": 2
  },
- "src/ui/kit/src/shared/mod.rs": {
+ "frameworks/ui/kit/src/shared/mod.rs": {
   "product-name": 3,
   "crate-prefix": 7,
   "c-prefix": 1,
   "env-prefix": 4
  },
- "src/ui/kit/tests/bevy_headless.rs": {
+ "frameworks/ui/kit/tests/bevy_headless.rs": {
   "crate-prefix": 1,
   "c-prefix": 1
  },
- "src/ui/kit/tests/color_brand_theme_golden.rs": {
+ "frameworks/ui/kit/tests/color_brand_theme_golden.rs": {
   "npm-scope": 1,
   "crate-prefix": 1,
   "c-prefix": 2,
   "env-prefix": 3
  },
- "src/ui/kit/tests/color_creator_theme_golden.rs": {
+ "frameworks/ui/kit/tests/color_creator_theme_golden.rs": {
   "crate-prefix": 1,
   "c-prefix": 2,
   "env-prefix": 3
  },
- "src/ui/kit/tests/color_mcu_fidelity.rs": {
+ "frameworks/ui/kit/tests/color_mcu_fidelity.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/tests/color_mcu_image_parity.rs": {
+ "frameworks/ui/kit/tests/color_mcu_image_parity.rs": {
   "c-prefix": 2
  },
- "src/ui/kit/tests/color_mcu_parity.rs": {
+ "frameworks/ui/kit/tests/color_mcu_parity.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/tests/color_sheets_golden.rs": {
+ "frameworks/ui/kit/tests/color_sheets_golden.rs": {
   "c-prefix": 1
  },
- "src/ui/kit/tests/color_theme_export.rs": {
+ "frameworks/ui/kit/tests/color_theme_export.rs": {
   "c-prefix": 1
  },
- "src/ui/m3.c": {
+ "frameworks/ui/m3.c": {
   "npm-scope": 1,
   "crate-prefix": 1,
   "c-prefix": 1
  },
- "src/ui/shell_kit.c": {
+ "frameworks/ui/shell_kit.c": {
   "crate-prefix": 4
  },
- "src/ui/site_wasi.c": {
+ "frameworks/ui/site_wasi.c": {
   "c-prefix": 1
  },
  "src/up/Cargo.toml": {

@@ -6,7 +6,7 @@ rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
-description = "Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary"
+description = "Game app: the Bevy game of frameworks/game with the Steam and Epic storefront services, as one binary"
 publish = false
 
 [[bin]]
@@ -19,4 +19,4 @@ steam = ["game/steam"]
 epic = ["game/epic"]
 
 [dependencies]
-game = { path = "../../src/game" }
+game = { path = "../../frameworks/game" }

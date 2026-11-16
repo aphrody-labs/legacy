@@ -2920,7 +2920,7 @@ macro_rules! __runtime_embed_impl {
                 // Every workspace crate's manifest is at `<repo>/src/<crate>/`,
                 // so `../` is `<repo>/src/` regardless of call site.
                 ::core::include_str!(::core::concat!(
-                    ::core::env!("CARGO_MANIFEST_DIR"), "/../../src/", $sub
+                    ::core::env!("CARGO_MANIFEST_DIR"), "/../", $sub
                 ))
             }
             #[cfg(not(bun_codegen_embed))]

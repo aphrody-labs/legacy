@@ -8,7 +8,7 @@
       "entries": [
         {
           "name": "aphrody-game",
-          "description": "Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary",
+          "description": "Game app: the Bevy game of frameworks/game with the Steam and Epic storefront services, as one binary",
           "path": "apps/game"
         },
         {
@@ -17,19 +17,444 @@
           "path": "bench"
         },
         {
-          "name": "dx12-hal",
-          "description": "dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo",
-          "path": "hardware/drivers/gpu/dx12"
-        },
-        {
           "name": "agent-context",
           "description": "Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python.",
-          "path": "src/agent/context"
+          "path": "frameworks/agent/context"
         },
         {
           "name": "bun_analytics",
           "description": "",
-          "path": "src/analytics"
+          "path": "frameworks/analytics"
+        },
+        {
+          "name": "aphrody-audio",
+          "description": "Audio building blocks: FFT spectrum, mic bridge, Polaris indexer, Voicebox encoder, local voice loop, Jan agent tools, Rust audio catalog",
+          "path": "frameworks/audio"
+        },
+        {
+          "name": "aphrody-factory",
+          "description": "Chromium factory (F4): sync, gn gen, siso build over NativeLink REAPI, R2 publish, doctor, toolchain. Library first; `ay factory` later.",
+          "path": "frameworks/chromium/factory"
+        },
+        {
+          "name": "aphrody-corelib",
+          "description": "Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets and Boq wire format",
+          "path": "frameworks/corelib"
+        },
+        {
+          "name": "craft-formats",
+          "description": "Format layer: detect and read the header of SVG, WebP, EXR, PSD, TIFF and HEIF through storytold/craft-libs (Apache-2.0), pinned by rev.",
+          "path": "frameworks/craft"
+        },
+        {
+          "name": "game",
+          "description": "Open-world vertical slice on Bevy: streamed procedural terrain, third-person controller, day/night, procedural audio",
+          "path": "frameworks/game"
+        },
+        {
+          "name": "aphrody-i18n",
+          "description": "Shared i18n catalogs (frameworks/i18n-ts/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs.",
+          "path": "frameworks/i18n"
+        },
+        {
+          "name": "aphrody-lore",
+          "description": "Lore version control: lore (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore"
+        },
+        {
+          "name": "aphrody-lore-aws",
+          "description": "Lore version control: lore-aws (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/aws"
+        },
+        {
+          "name": "aphrody-lore-base",
+          "description": "Lore version control: lore-base (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/base"
+        },
+        {
+          "name": "aphrody-lore-capi",
+          "description": "Lore version control: lore-capi (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/capi"
+        },
+        {
+          "name": "aphrody-lore-chaos-client",
+          "description": "Lore version control: lore-chaos-client (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/chaos-client"
+        },
+        {
+          "name": "aphrody-lore-client",
+          "description": "Lore version control: lore-client (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/client"
+        },
+        {
+          "name": "aphrody-lore-credential",
+          "description": "Lore version control: lore-credential (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/credential"
+        },
+        {
+          "name": "aphrody-lore-error-set",
+          "description": "Composable, traceable error handling for Rust",
+          "path": "frameworks/lore/error-set"
+        },
+        {
+          "name": "aphrody-lore-error-set-macro",
+          "description": "Proc-macro crate for lore-error-set",
+          "path": "frameworks/lore/error-set-macro"
+        },
+        {
+          "name": "aphrody-lore-fuse",
+          "description": "Lore version control: lore-fuse (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/fuse"
+        },
+        {
+          "name": "aphrody-lore-hashicorp",
+          "description": "Lore version control: lore-hashicorp (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/hashicorp"
+        },
+        {
+          "name": "aphrody-lore-io",
+          "description": "Lore version control: lore-io (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/io"
+        },
+        {
+          "name": "aphrody-lore-macro",
+          "description": "Lore version control: lore-macro (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/macro"
+        },
+        {
+          "name": "aphrody-lore-notification",
+          "description": "Lore version control: lore-notification (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/notification"
+        },
+        {
+          "name": "aphrody-lore-proto",
+          "description": "Lore version control: lore-proto (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/proto"
+        },
+        {
+          "name": "aphrody-lore-revision",
+          "description": "Lore version control: lore-revision (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/revision"
+        },
+        {
+          "name": "aphrody-lore-server",
+          "description": "Lore version control: lore-server (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/server"
+        },
+        {
+          "name": "aphrody-lore-storage",
+          "description": "Lore version control: lore-storage (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/storage"
+        },
+        {
+          "name": "aphrody-lore-telemetry",
+          "description": "Telemetry and observability utilities for Lore",
+          "path": "frameworks/lore/telemetry"
+        },
+        {
+          "name": "aphrody-lore-transport",
+          "description": "Lore version control: lore-transport (absorbed from Epic Games Lore, MIT)",
+          "path": "frameworks/lore/transport"
+        },
+        {
+          "name": "aphrody-modele",
+          "description": "Commercial document model (invoice, quote, lines, parties, template) as JSON, with the totals computation shared by the TypeScript and Rust sides",
+          "path": "frameworks/modele"
+        },
+        {
+          "name": "aphrody-ocr",
+          "description": "Image-to-text pipeline for aphrody: drives a local vision-language model over one image or a whole directory, parses its DocTags output into markdown, and reports which pages carry no text at all.",
+          "path": "frameworks/ocr"
+        },
+        {
+          "name": "aphrody-ocr-core",
+          "description": "Portable versioned OCR result contract, provenance and quality states for aphrody.",
+          "path": "frameworks/ocr-core"
+        },
+        {
+          "name": "aphrody-rag-core",
+          "description": "Pure, wasm32-safe core of the aphrody RAG layer: source-aware chunkers (Rust/JS-TS/Markdown/structural/prose), reciprocal-rank-fusion + MMR + vector helpers, and a bit-for-bit port of shenron's retrieval eval harness.",
+          "path": "frameworks/rag-core"
+        },
+        {
+          "name": "aphrody-re",
+          "description": "Unified Aphrody reverse engineering core: PE/ELF/Mach-O triage, byte-exact PE64 forge/COFF, .pdata/minidump/ASAR/Electron/Go/Android/SteamStub inspection, Ghidra P-Code/Pseudo-C & ghidra-decompiler, MinGW-REA, Lua 5.2, CRIWARE CPK/CRILAYLA, DBXV2 formats, AOB/live memory, YARA-X, Magika",
+          "path": "frameworks/re"
+        },
+        {
+          "name": "bun_safety",
+          "description": "",
+          "path": "frameworks/safety"
+        },
+        {
+          "name": "steam-depot",
+          "description": "Bun OS Steam owner: VDF text/binary parser and writer, install and library discovery, client configuration, Proton launch tuning, Remote Play state.",
+          "path": "frameworks/steam"
+        },
+        {
+          "name": "taffy",
+          "description": "First-party Layer-0 UI, Wayland, terminal, and compositing layout engine (absorbed DioxusLabs/taffy)",
+          "path": "frameworks/taffy"
+        },
+        {
+          "name": "aphrody-tao",
+          "description": "Cross-platform window manager library.",
+          "path": "frameworks/tao"
+        },
+        {
+          "name": "aphrody-tao-macros",
+          "description": "Proc macros for tao",
+          "path": "frameworks/tao-macros"
+        },
+        {
+          "name": "aphrody-tauri",
+          "description": "Make tiny, secure apps for all desktop platforms with Tauri",
+          "path": "frameworks/tauri"
+        },
+        {
+          "name": "aphrody-tauri-build",
+          "description": "build time code to pair with https://crates.io/crates/tauri",
+          "path": "frameworks/tauri-build"
+        },
+        {
+          "name": "aphrody-tauri-bundler",
+          "description": "Wrap rust executables in OS-specific app bundles for Tauri",
+          "path": "frameworks/tauri-bundler"
+        },
+        {
+          "name": "aphrody-tauri-cli",
+          "description": "Command line interface for building Tauri apps",
+          "path": "frameworks/tauri-cli"
+        },
+        {
+          "name": "aphrody-tauri-cli-node",
+          "description": "",
+          "path": "frameworks/tauri-cli-node"
+        },
+        {
+          "name": "aphrody-tauri-codegen",
+          "description": "code generation meant to be consumed inside of `tauri` through `tauri-build` or `tauri-macros`",
+          "path": "frameworks/tauri-codegen"
+        },
+        {
+          "name": "aphrody-tauri-driver",
+          "description": "Webdriver server for Tauri applications",
+          "path": "frameworks/tauri-driver"
+        },
+        {
+          "name": "aphrody-tauri-macos-sign",
+          "description": "Code signing utilities for macOS and iOS apps",
+          "path": "frameworks/tauri-macos-sign"
+        },
+        {
+          "name": "aphrody-tauri-macros",
+          "description": "Macros for the tauri crate.",
+          "path": "frameworks/tauri-macros"
+        },
+        {
+          "name": "aphrody-tauri-plugin",
+          "description": "Build script and runtime Tauri plugin definitions",
+          "path": "frameworks/tauri-plugin"
+        },
+        {
+          "name": "aphrody-tauri-plugin-autostart",
+          "description": "Automatically launch your application at startup.",
+          "path": "frameworks/tauri-plugin-autostart"
+        },
+        {
+          "name": "aphrody-tauri-plugin-barcode-scanner",
+          "description": "Scan QR codes, EAN-13 and other kinds of barcodes on Android and iOS",
+          "path": "frameworks/tauri-plugin-barcode-scanner"
+        },
+        {
+          "name": "aphrody-tauri-plugin-biometric",
+          "description": "Prompt the user for biometric authentication on Android and iOS.",
+          "path": "frameworks/tauri-plugin-biometric"
+        },
+        {
+          "name": "aphrody-tauri-plugin-cli",
+          "description": "Parse arguments from your Tauri application's command line interface.",
+          "path": "frameworks/tauri-plugin-cli"
+        },
+        {
+          "name": "aphrody-tauri-plugin-clipboard-manager",
+          "description": "Read and write to the system clipboard.",
+          "path": "frameworks/tauri-plugin-clipboard-manager"
+        },
+        {
+          "name": "aphrody-tauri-plugin-deep-link",
+          "description": "Set your Tauri application as the default handler for an URL",
+          "path": "frameworks/tauri-plugin-deep-link"
+        },
+        {
+          "name": "aphrody-tauri-plugin-dialog",
+          "description": "Native system dialogs for opening and saving files along with message dialogs on your Tauri application.",
+          "path": "frameworks/tauri-plugin-dialog"
+        },
+        {
+          "name": "aphrody-tauri-plugin-fs",
+          "description": "Access the file system.",
+          "path": "frameworks/tauri-plugin-fs"
+        },
+        {
+          "name": "aphrody-tauri-plugin-geolocation",
+          "description": "Get and track the device's current position",
+          "path": "frameworks/tauri-plugin-geolocation"
+        },
+        {
+          "name": "aphrody-tauri-plugin-global-shortcut",
+          "description": "Register global hotkeys listeners on your Tauri application.",
+          "path": "frameworks/tauri-plugin-global-shortcut"
+        },
+        {
+          "name": "aphrody-tauri-plugin-haptics",
+          "description": "Haptic feedback and vibrations on Android and iOS",
+          "path": "frameworks/tauri-plugin-haptics"
+        },
+        {
+          "name": "aphrody-tauri-plugin-http",
+          "description": "Access an HTTP client written in Rust.",
+          "path": "frameworks/tauri-plugin-http"
+        },
+        {
+          "name": "aphrody-tauri-plugin-localhost",
+          "description": "Expose your apps assets through a localhost server instead of the default custom protocol.",
+          "path": "frameworks/tauri-plugin-localhost"
+        },
+        {
+          "name": "aphrody-tauri-plugin-log",
+          "description": "Configurable logging for your Tauri app.",
+          "path": "frameworks/tauri-plugin-log"
+        },
+        {
+          "name": "aphrody-tauri-plugin-nfc",
+          "description": "Read and write NFC tags on Android and iOS.",
+          "path": "frameworks/tauri-plugin-nfc"
+        },
+        {
+          "name": "aphrody-tauri-plugin-notification",
+          "description": "Send desktop and mobile notifications on your Tauri application.",
+          "path": "frameworks/tauri-plugin-notification"
+        },
+        {
+          "name": "aphrody-tauri-plugin-opener",
+          "description": "Open files and URLs using their default application.",
+          "path": "frameworks/tauri-plugin-opener"
+        },
+        {
+          "name": "aphrody-tauri-plugin-os",
+          "description": "Read information about the operating system.",
+          "path": "frameworks/tauri-plugin-os"
+        },
+        {
+          "name": "aphrody-tauri-plugin-persisted-scope",
+          "description": "Save filesystem and asset scopes and restore them when the app is reopened.",
+          "path": "frameworks/tauri-plugin-persisted-scope"
+        },
+        {
+          "name": "aphrody-tauri-plugin-positioner",
+          "description": "Position your windows at well-known locations.",
+          "path": "frameworks/tauri-plugin-positioner"
+        },
+        {
+          "name": "aphrody-tauri-plugin-process",
+          "description": "Access the current process of your Tauri application.",
+          "path": "frameworks/tauri-plugin-process"
+        },
+        {
+          "name": "aphrody-tauri-plugin-shell",
+          "description": "Access the system shell. Allows you to spawn child processes.",
+          "path": "frameworks/tauri-plugin-shell"
+        },
+        {
+          "name": "aphrody-tauri-plugin-single-instance",
+          "description": "Ensure a single instance of your tauri app is running.",
+          "path": "frameworks/tauri-plugin-single-instance"
+        },
+        {
+          "name": "aphrody-tauri-plugin-store",
+          "description": "Simple, persistent key-value store.",
+          "path": "frameworks/tauri-plugin-store"
+        },
+        {
+          "name": "aphrody-tauri-plugin-stronghold",
+          "description": "Store secrets and keys using the IOTA Stronghold secret management engine.",
+          "path": "frameworks/tauri-plugin-stronghold"
+        },
+        {
+          "name": "aphrody-tauri-plugin-updater",
+          "description": "In-app updates for Tauri applications.",
+          "path": "frameworks/tauri-plugin-updater"
+        },
+        {
+          "name": "aphrody-tauri-plugin-upload",
+          "description": "Upload files from disk to a remote server over HTTP.",
+          "path": "frameworks/tauri-plugin-upload"
+        },
+        {
+          "name": "aphrody-tauri-plugin-websocket",
+          "description": "Expose a WebSocket server to your Tauri frontend.",
+          "path": "frameworks/tauri-plugin-websocket"
+        },
+        {
+          "name": "aphrody-tauri-plugin-window-state",
+          "description": "Save window positions and sizes and restore them when the app is reopened.",
+          "path": "frameworks/tauri-plugin-window-state"
+        },
+        {
+          "name": "aphrody-tauri-runtime",
+          "description": "Runtime for Tauri applications",
+          "path": "frameworks/tauri-runtime"
+        },
+        {
+          "name": "aphrody-tauri-runtime-cef",
+          "description": "Tauri runtime interface for Chromium Embedded Framework",
+          "path": "frameworks/tauri-runtime-cef"
+        },
+        {
+          "name": "aphrody-tauri-runtime-wry",
+          "description": "Wry bindings to the Tauri runtime",
+          "path": "frameworks/tauri-runtime-wry"
+        },
+        {
+          "name": "aphrody-tauri-schema-generator",
+          "description": "",
+          "path": "frameworks/tauri-schema-generator"
+        },
+        {
+          "name": "aphrody-tauri-schema-worker",
+          "description": "",
+          "path": "frameworks/tauri-schema-worker"
+        },
+        {
+          "name": "aphrody-tauri-utils",
+          "description": "Utilities for Tauri",
+          "path": "frameworks/tauri-utils"
+        },
+        {
+          "name": "tv-cli",
+          "description": "Interface en ligne de commande du domaine média tv.",
+          "path": "frameworks/tv/cli"
+        },
+        {
+          "name": "tv-core",
+          "description": "Types communs du domaine média tv : rationnels, temps, flux, médias, erreurs.",
+          "path": "frameworks/tv/core"
+        },
+        {
+          "name": "tv-ffmpeg",
+          "description": "Wrapper sûr au-dessus de ffmpeg-next (libav* 9.x) qui produit les types tv-core.",
+          "path": "frameworks/tv/ffmpeg"
+        },
+        {
+          "name": "aphrody-ui",
+          "description": "Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends.",
+          "path": "frameworks/ui/kit"
+        },
+        {
+          "name": "dx12-hal",
+          "description": "dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo",
+          "path": "hardware/drivers/gpu/dx12"
         },
         {
           "name": "bun_aot",
@@ -70,11 +495,6 @@
           "name": "bun_ast_jsc",
           "description": "",
           "path": "src/ast_jsc"
-        },
-        {
-          "name": "aphrody-audio",
-          "description": "Audio building blocks: FFT spectrum, mic bridge, Polaris indexer, Voicebox encoder, local voice loop, Jan agent tools, Rust audio catalog",
-          "path": "src/audio"
         },
         {
           "name": "aphrody",
@@ -157,11 +577,6 @@
           "path": "src/cares_sys"
         },
         {
-          "name": "aphrody-factory",
-          "description": "Chromium factory (F4): sync, gn gen, siso build over NativeLink REAPI, R2 publish, doctor, toolchain. Library first; `ay factory` later.",
-          "path": "src/chromium/factory"
-        },
-        {
           "name": "bun_clap",
           "description": "",
           "path": "src/clap"
@@ -200,16 +615,6 @@
           "name": "aphrody-core-jni",
           "description": "Native JNI (Java 25+) core bridge exposing aphrody-core (Tree-sitter, BLAKE3, index) and aphrody-re (RE triage, disasm, Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2)",
           "path": "src/core/jni"
-        },
-        {
-          "name": "aphrody-corelib",
-          "description": "Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets and Boq wire format",
-          "path": "src/corelib"
-        },
-        {
-          "name": "craft-formats",
-          "description": "Format layer: detect and read the header of SVG, WebP, EXR, PSD, TIFF and HEIF through storytold/craft-libs (Apache-2.0), pinned by rev.",
-          "path": "src/craft"
         },
         {
           "name": "bun_crash_handler",
@@ -342,11 +747,6 @@
           "path": "src/format/conformance"
         },
         {
-          "name": "game",
-          "description": "Open-world vertical slice on Bevy: streamed procedural terrain, third-person controller, day/night, procedural audio",
-          "path": "src/game"
-        },
-        {
           "name": "bun_glob",
           "description": "",
           "path": "src/glob"
@@ -385,11 +785,6 @@
           "name": "bun_http_types",
           "description": "",
           "path": "src/http_types"
-        },
-        {
-          "name": "aphrody-i18n",
-          "description": "Shared i18n catalogs (frameworks/i18n-ts/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs.",
-          "path": "src/i18n"
         },
         {
           "name": "bun_ini",
@@ -527,106 +922,6 @@
           "path": "src/lint/unicorn"
         },
         {
-          "name": "aphrody-lore",
-          "description": "Lore version control: lore (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore"
-        },
-        {
-          "name": "aphrody-lore-aws",
-          "description": "Lore version control: lore-aws (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/aws"
-        },
-        {
-          "name": "aphrody-lore-base",
-          "description": "Lore version control: lore-base (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/base"
-        },
-        {
-          "name": "aphrody-lore-capi",
-          "description": "Lore version control: lore-capi (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/capi"
-        },
-        {
-          "name": "aphrody-lore-chaos-client",
-          "description": "Lore version control: lore-chaos-client (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/chaos-client"
-        },
-        {
-          "name": "aphrody-lore-client",
-          "description": "Lore version control: lore-client (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/client"
-        },
-        {
-          "name": "aphrody-lore-credential",
-          "description": "Lore version control: lore-credential (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/credential"
-        },
-        {
-          "name": "aphrody-lore-error-set",
-          "description": "Composable, traceable error handling for Rust",
-          "path": "src/lore/error-set"
-        },
-        {
-          "name": "aphrody-lore-error-set-macro",
-          "description": "Proc-macro crate for lore-error-set",
-          "path": "src/lore/error-set-macro"
-        },
-        {
-          "name": "aphrody-lore-fuse",
-          "description": "Lore version control: lore-fuse (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/fuse"
-        },
-        {
-          "name": "aphrody-lore-hashicorp",
-          "description": "Lore version control: lore-hashicorp (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/hashicorp"
-        },
-        {
-          "name": "aphrody-lore-io",
-          "description": "Lore version control: lore-io (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/io"
-        },
-        {
-          "name": "aphrody-lore-macro",
-          "description": "Lore version control: lore-macro (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/macro"
-        },
-        {
-          "name": "aphrody-lore-notification",
-          "description": "Lore version control: lore-notification (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/notification"
-        },
-        {
-          "name": "aphrody-lore-proto",
-          "description": "Lore version control: lore-proto (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/proto"
-        },
-        {
-          "name": "aphrody-lore-revision",
-          "description": "Lore version control: lore-revision (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/revision"
-        },
-        {
-          "name": "aphrody-lore-server",
-          "description": "Lore version control: lore-server (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/server"
-        },
-        {
-          "name": "aphrody-lore-storage",
-          "description": "Lore version control: lore-storage (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/storage"
-        },
-        {
-          "name": "aphrody-lore-telemetry",
-          "description": "Telemetry and observability utilities for Lore",
-          "path": "src/lore/telemetry"
-        },
-        {
-          "name": "aphrody-lore-transport",
-          "description": "Lore version control: lore-transport (absorbed from Epic Games Lore, MIT)",
-          "path": "src/lore/transport"
-        },
-        {
           "name": "bun_lsquic_sys",
           "description": "",
           "path": "src/lsquic_sys"
@@ -647,11 +942,6 @@
           "path": "src/mimalloc_sys"
         },
         {
-          "name": "aphrody-modele",
-          "description": "Commercial document model (invoice, quote, lines, parties, template) as JSON, with the totals computation shared by the TypeScript and Rust sides",
-          "path": "src/modele"
-        },
-        {
           "name": "aphrody-net",
           "description": "Unified network probe: DNS, TCP, TLS (rustls + platform verifier), ALPN, HTTP/1.1 and HTTP/2 with per-phase timings.",
           "path": "src/net"
@@ -670,16 +960,6 @@
           "name": "bun_node_path",
           "description": "",
           "path": "src/node_path"
-        },
-        {
-          "name": "aphrody-ocr",
-          "description": "Image-to-text pipeline for aphrody: drives a local vision-language model over one image or a whole directory, parses its DocTags output into markdown, and reports which pages carry no text at all.",
-          "path": "src/ocr"
-        },
-        {
-          "name": "aphrody-ocr-core",
-          "description": "Portable versioned OCR result contract, provenance and quality states for aphrody.",
-          "path": "src/ocr-core"
         },
         {
           "name": "bun_opaque",
@@ -757,16 +1037,6 @@
           "path": "src/ptr"
         },
         {
-          "name": "aphrody-rag-core",
-          "description": "Pure, wasm32-safe core of the aphrody RAG layer: source-aware chunkers (Rust/JS-TS/Markdown/structural/prose), reciprocal-rank-fusion + MMR + vector helpers, and a bit-for-bit port of shenron's retrieval eval harness.",
-          "path": "src/rag-core"
-        },
-        {
-          "name": "aphrody-re",
-          "description": "Unified Aphrody reverse engineering core: PE/ELF/Mach-O triage, byte-exact PE64 forge/COFF, .pdata/minidump/ASAR/Electron/Go/Android/SteamStub inspection, Ghidra P-Code/Pseudo-C & ghidra-decompiler, MinGW-REA, Lua 5.2, CRIWARE CPK/CRILAYLA, DBXV2 formats, AOB/live memory, YARA-X, Magika",
-          "path": "src/re"
-        },
-        {
           "name": "bun_react_compiler",
           "description": "",
           "path": "src/react_compiler"
@@ -820,11 +1090,6 @@
           "name": "bun_s3_signing",
           "description": "",
           "path": "src/s3_signing"
-        },
-        {
-          "name": "bun_safety",
-          "description": "",
-          "path": "src/safety"
         },
         {
           "name": "bun_sema",
@@ -917,11 +1182,6 @@
           "path": "src/standalone_graph"
         },
         {
-          "name": "steam-depot",
-          "description": "Bun OS Steam owner: VDF text/binary parser and writer, install and library discovery, client configuration, Proton launch tuning, Remote Play state.",
-          "path": "src/steam"
-        },
-        {
           "name": "bun_sys",
           "description": "",
           "path": "src/sys"
@@ -932,249 +1192,9 @@
           "path": "src/sys_jsc"
         },
         {
-          "name": "taffy",
-          "description": "First-party Layer-0 UI, Wayland, terminal, and compositing layout engine (absorbed DioxusLabs/taffy)",
-          "path": "src/taffy"
-        },
-        {
-          "name": "aphrody-tao",
-          "description": "Cross-platform window manager library.",
-          "path": "src/tao"
-        },
-        {
-          "name": "aphrody-tao-macros",
-          "description": "Proc macros for tao",
-          "path": "src/tao-macros"
-        },
-        {
           "name": "bun_tar",
           "description": "",
           "path": "src/tar"
-        },
-        {
-          "name": "aphrody-tauri",
-          "description": "Make tiny, secure apps for all desktop platforms with Tauri",
-          "path": "src/tauri"
-        },
-        {
-          "name": "aphrody-tauri-build",
-          "description": "build time code to pair with https://crates.io/crates/tauri",
-          "path": "src/tauri-build"
-        },
-        {
-          "name": "aphrody-tauri-bundler",
-          "description": "Wrap rust executables in OS-specific app bundles for Tauri",
-          "path": "src/tauri-bundler"
-        },
-        {
-          "name": "aphrody-tauri-cli",
-          "description": "Command line interface for building Tauri apps",
-          "path": "src/tauri-cli"
-        },
-        {
-          "name": "aphrody-tauri-cli-node",
-          "description": "",
-          "path": "src/tauri-cli-node"
-        },
-        {
-          "name": "aphrody-tauri-codegen",
-          "description": "code generation meant to be consumed inside of `tauri` through `tauri-build` or `tauri-macros`",
-          "path": "src/tauri-codegen"
-        },
-        {
-          "name": "aphrody-tauri-driver",
-          "description": "Webdriver server for Tauri applications",
-          "path": "src/tauri-driver"
-        },
-        {
-          "name": "aphrody-tauri-macos-sign",
-          "description": "Code signing utilities for macOS and iOS apps",
-          "path": "src/tauri-macos-sign"
-        },
-        {
-          "name": "aphrody-tauri-macros",
-          "description": "Macros for the tauri crate.",
-          "path": "src/tauri-macros"
-        },
-        {
-          "name": "aphrody-tauri-plugin",
-          "description": "Build script and runtime Tauri plugin definitions",
-          "path": "src/tauri-plugin"
-        },
-        {
-          "name": "aphrody-tauri-plugin-autostart",
-          "description": "Automatically launch your application at startup.",
-          "path": "src/tauri-plugin-autostart"
-        },
-        {
-          "name": "aphrody-tauri-plugin-barcode-scanner",
-          "description": "Scan QR codes, EAN-13 and other kinds of barcodes on Android and iOS",
-          "path": "src/tauri-plugin-barcode-scanner"
-        },
-        {
-          "name": "aphrody-tauri-plugin-biometric",
-          "description": "Prompt the user for biometric authentication on Android and iOS.",
-          "path": "src/tauri-plugin-biometric"
-        },
-        {
-          "name": "aphrody-tauri-plugin-cli",
-          "description": "Parse arguments from your Tauri application's command line interface.",
-          "path": "src/tauri-plugin-cli"
-        },
-        {
-          "name": "aphrody-tauri-plugin-clipboard-manager",
-          "description": "Read and write to the system clipboard.",
-          "path": "src/tauri-plugin-clipboard-manager"
-        },
-        {
-          "name": "aphrody-tauri-plugin-deep-link",
-          "description": "Set your Tauri application as the default handler for an URL",
-          "path": "src/tauri-plugin-deep-link"
-        },
-        {
-          "name": "aphrody-tauri-plugin-dialog",
-          "description": "Native system dialogs for opening and saving files along with message dialogs on your Tauri application.",
-          "path": "src/tauri-plugin-dialog"
-        },
-        {
-          "name": "aphrody-tauri-plugin-fs",
-          "description": "Access the file system.",
-          "path": "src/tauri-plugin-fs"
-        },
-        {
-          "name": "aphrody-tauri-plugin-geolocation",
-          "description": "Get and track the device's current position",
-          "path": "src/tauri-plugin-geolocation"
-        },
-        {
-          "name": "aphrody-tauri-plugin-global-shortcut",
-          "description": "Register global hotkeys listeners on your Tauri application.",
-          "path": "src/tauri-plugin-global-shortcut"
-        },
-        {
-          "name": "aphrody-tauri-plugin-haptics",
-          "description": "Haptic feedback and vibrations on Android and iOS",
-          "path": "src/tauri-plugin-haptics"
-        },
-        {
-          "name": "aphrody-tauri-plugin-http",
-          "description": "Access an HTTP client written in Rust.",
-          "path": "src/tauri-plugin-http"
-        },
-        {
-          "name": "aphrody-tauri-plugin-localhost",
-          "description": "Expose your apps assets through a localhost server instead of the default custom protocol.",
-          "path": "src/tauri-plugin-localhost"
-        },
-        {
-          "name": "aphrody-tauri-plugin-log",
-          "description": "Configurable logging for your Tauri app.",
-          "path": "src/tauri-plugin-log"
-        },
-        {
-          "name": "aphrody-tauri-plugin-nfc",
-          "description": "Read and write NFC tags on Android and iOS.",
-          "path": "src/tauri-plugin-nfc"
-        },
-        {
-          "name": "aphrody-tauri-plugin-notification",
-          "description": "Send desktop and mobile notifications on your Tauri application.",
-          "path": "src/tauri-plugin-notification"
-        },
-        {
-          "name": "aphrody-tauri-plugin-opener",
-          "description": "Open files and URLs using their default application.",
-          "path": "src/tauri-plugin-opener"
-        },
-        {
-          "name": "aphrody-tauri-plugin-os",
-          "description": "Read information about the operating system.",
-          "path": "src/tauri-plugin-os"
-        },
-        {
-          "name": "aphrody-tauri-plugin-persisted-scope",
-          "description": "Save filesystem and asset scopes and restore them when the app is reopened.",
-          "path": "src/tauri-plugin-persisted-scope"
-        },
-        {
-          "name": "aphrody-tauri-plugin-positioner",
-          "description": "Position your windows at well-known locations.",
-          "path": "src/tauri-plugin-positioner"
-        },
-        {
-          "name": "aphrody-tauri-plugin-process",
-          "description": "Access the current process of your Tauri application.",
-          "path": "src/tauri-plugin-process"
-        },
-        {
-          "name": "aphrody-tauri-plugin-shell",
-          "description": "Access the system shell. Allows you to spawn child processes.",
-          "path": "src/tauri-plugin-shell"
-        },
-        {
-          "name": "aphrody-tauri-plugin-single-instance",
-          "description": "Ensure a single instance of your tauri app is running.",
-          "path": "src/tauri-plugin-single-instance"
-        },
-        {
-          "name": "aphrody-tauri-plugin-store",
-          "description": "Simple, persistent key-value store.",
-          "path": "src/tauri-plugin-store"
-        },
-        {
-          "name": "aphrody-tauri-plugin-stronghold",
-          "description": "Store secrets and keys using the IOTA Stronghold secret management engine.",
-          "path": "src/tauri-plugin-stronghold"
-        },
-        {
-          "name": "aphrody-tauri-plugin-updater",
-          "description": "In-app updates for Tauri applications.",
-          "path": "src/tauri-plugin-updater"
-        },
-        {
-          "name": "aphrody-tauri-plugin-upload",
-          "description": "Upload files from disk to a remote server over HTTP.",
-          "path": "src/tauri-plugin-upload"
-        },
-        {
-          "name": "aphrody-tauri-plugin-websocket",
-          "description": "Expose a WebSocket server to your Tauri frontend.",
-          "path": "src/tauri-plugin-websocket"
-        },
-        {
-          "name": "aphrody-tauri-plugin-window-state",
-          "description": "Save window positions and sizes and restore them when the app is reopened.",
-          "path": "src/tauri-plugin-window-state"
-        },
-        {
-          "name": "aphrody-tauri-runtime",
-          "description": "Runtime for Tauri applications",
-          "path": "src/tauri-runtime"
-        },
-        {
-          "name": "aphrody-tauri-runtime-cef",
-          "description": "Tauri runtime interface for Chromium Embedded Framework",
-          "path": "src/tauri-runtime-cef"
-        },
-        {
-          "name": "aphrody-tauri-runtime-wry",
-          "description": "Wry bindings to the Tauri runtime",
-          "path": "src/tauri-runtime-wry"
-        },
-        {
-          "name": "aphrody-tauri-schema-generator",
-          "description": "",
-          "path": "src/tauri-schema-generator"
-        },
-        {
-          "name": "aphrody-tauri-schema-worker",
-          "description": "",
-          "path": "src/tauri-schema-worker"
-        },
-        {
-          "name": "aphrody-tauri-utils",
-          "description": "Utilities for Tauri",
-          "path": "src/tauri-utils"
         },
         {
           "name": "bun_tcc_sys",
@@ -1210,26 +1230,6 @@
           "name": "bun_removable_features",
           "description": "",
           "path": "src/trim/removable_features"
-        },
-        {
-          "name": "tv-cli",
-          "description": "Interface en ligne de commande du domaine média tv.",
-          "path": "src/tv/cli"
-        },
-        {
-          "name": "tv-core",
-          "description": "Types communs du domaine média tv : rationnels, temps, flux, médias, erreurs.",
-          "path": "src/tv/core"
-        },
-        {
-          "name": "tv-ffmpeg",
-          "description": "Wrapper sûr au-dessus de ffmpeg-next (libav* 9.x) qui produit les types tv-core.",
-          "path": "src/tv/ffmpeg"
-        },
-        {
-          "name": "aphrody-ui",
-          "description": "Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends.",
-          "path": "src/ui/kit"
         },
         {
           "name": "aphrody-up",
@@ -1677,7 +1677,7 @@
         },
         {
           "name": "game",
-          "description": "Game app: the Bevy game of `src/game` with the Steam and Epic storefront services, as one binary (`aphrody-game`) and one entry point (`cli.ts`).",
+          "description": "Game app: the Bevy game of `frameworks/game` with the Steam and Epic storefront services, as one binary (`aphrody-game`) and one entry point (`cli.ts`).",
           "path": "apps/game"
         },
         {
@@ -2727,7 +2727,7 @@
         },
         {
           "name": "reverse-engineer-anything",
-          "description": "Reverse engineer native, managed, Electron/JavaScript, packaged, firmware, and browser targets with REA, and build agent environments (AgentEnv bundles) of web applications from a live instance or a capture, and of Linux desktop apps with a task from a request. Use shipped-artifact or requested runtime evidence to explain features, compare versions, decompile code, or guide a reconstruction. Skip REA for ordinary source-repository architecture analysis. Also covers the in-house Rust Ghidra port and MinGW CRT stripping (ay re, src/re): see references/rea-ghidra-crate.md.",
+          "description": "Reverse engineer native, managed, Electron/JavaScript, packaged, firmware, and browser targets with REA, and build agent environments (AgentEnv bundles) of web applications from a live instance or a capture, and of Linux desktop apps with a task from a request. Use shipped-artifact or requested runtime evidence to explain features, compare versions, decompile code, or guide a reconstruction. Skip REA for ordinary source-repository architecture analysis. Also covers the in-house Rust Ghidra port and MinGW CRT stripping (ay re, frameworks/re): see references/rea-ghidra-crate.md.",
           "path": ".agents/skills/reverse-engineer-anything"
         },
         {

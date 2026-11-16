@@ -122,6 +122,6 @@ SRC_ROOT = { value = ".", relative = true }
 # here; their build.rs read BUN_CODEGEN_DIR (docs/ARCHITECTURE.md section 9).
 BUN_CODEGEN_DIR = { value = "build/debug-codegen/codegen", relative = true }
 # Lore tests must not relay to, or stop, a developer's running Lore service
-# (rationale: labs .cargo/config.toml history, src/lore/tests/service_api.rs).
+# (rationale: labs .cargo/config.toml history, frameworks/lore/tests/service_api.rs).
 LORE_USE_SERVICE = "0"
 LORE_SERVICE_SOCKET = "lore_service-cargo"

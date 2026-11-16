@@ -19,7 +19,7 @@
 
 use std::process::Command;
 
-// Cargo sets CARGO_BIN_EXE_<bin> for integration tests; the old current_exe()/../../rubash
+// Cargo sets CARGO_BIN_EXE_<bin> for integration tests; the old current_exe()/..
 // walk broke under cargo's build-dir layout (target/debug/build/<pkg>/<hash>/out/<test>).
 fn rubash() -> std::path::PathBuf {
     std::path::PathBuf::from(env!("CARGO_BIN_EXE_rubash"))

@@ -2,8 +2,8 @@
 // Resync the absorbed EpicGames/lore tree from the aphrody-labs/lore fork (rebased on upstream main).
 // One entry point: tools/labs-scripts/absorb-lore.sh (wrapper of this file).
 //
-//   upstream lore            -> src/lore            (root crate: src/, tests/, examples/, Cargo.toml)
-//   upstream lore-<name>     -> src/lore/<name>
+//   upstream lore            -> frameworks/lore            (root crate: src/, tests/, examples/, Cargo.toml)
+//   upstream lore-<name>     -> frameworks/lore/<name>
 //   lore-integration-tests   -> test/lore
 //   upstream docs            -> docs/lore
 //   upstream tooling (scripts, contrib, notices, mkdocs, pyproject, ...) -> tools/lore
@@ -11,7 +11,7 @@
 // These paths are upstream mirrors: never edit them by hand. Everything the monorepo needs on top of
 // upstream is a rule in this file (manifest rewrite, layout paths, newer root dependencies), so the
 // next resync re-applies it. Each mirrored root gets an UPSTREAM file (read by scripts/topology.ts and
-// the first-party audit) and src/lore/DEPS.rules carries the same pin in its header.
+// the first-party audit) and frameworks/lore/DEPS.rules carries the same pin in its header.
 //
 // Usage: bun tools/labs-scripts/absorb-lore.ts [--ref <sha>] [--from <extracted dir>] [--no-sync] [--keep-tmp]
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -64,7 +64,7 @@ if (!sha) sha = "unknown";
 const SUBCRATES = readdirSync(src)
   .filter((d) => d.startsWith("lore-") && existsSync(join(src, d, "Cargo.toml")))
   .map((d) => d.slice("lore-".length));
-const dirOf = (name: string) => (name === "lore" ? "src/lore" : name === "integration-tests" ? "test/lore" : `src/lore/${name}`);
+const dirOf = (name: string) => (name === "lore" ? "frameworks/lore" : name === "integration-tests" ? "test/lore" : `frameworks/lore/${name}`);
 const crateName = (n: string) => (n === "lore" ? "lore" : `lore-${n}`);
 const allCrates = ["lore", ...SUBCRATES];
 
@@ -290,12 +290,12 @@ if (existsSync(join(src, ".cargo/neoverse-512tvb.toml"))) writeFileSync(join(roo
 
 // --- Provenance: UPSTREAM files (topology and audit read them) and the DEPS.rules header.
 const pin = `repo: ${UPSTREAM}\nsha: ${sha}\ndate: ${date || "unknown"}\nvia: ${FORK}\nversion: ${upVersion}\nsync: tools/labs-scripts/absorb-lore.sh\nrole: asset and version-control layer for Unreal Engine and Bevy projects (docs/games/PLAN.md)\nedit: never by hand; add a rule to the sync script instead\n`;
-for (const d of ["src/lore", "test/lore", "tools/lore", "docs/lore"]) writeFileSync(join(root, d, "UPSTREAM"), pin);
+for (const d of ["frameworks/lore", "test/lore", "tools/lore", "docs/lore"]) writeFileSync(join(root, d, "UPSTREAM"), pin);
 {
-  const f = join(root, "src/lore/DEPS.rules");
+  const f = join(root, "frameworks/lore/DEPS.rules");
   const body = readFileSync(f, "utf8").split("\n").filter((l) => !l.startsWith("# upstream:"));
   body.unshift(`# upstream: ${UPSTREAM}@${sha} ${date || ""} via ${FORK} (mirror, written by tools/labs-scripts/absorb-lore.sh; edit the script, not these files)`);
   writeFileSync(f, body.join("\n"));
 }
 if (tmp && !args.includes("--keep-tmp")) rmSync(tmp, { recursive: true, force: true });
-console.log(`absorbed ${UPSTREAM}@${sha} ${date} (version ${upVersion}) into src/lore, test/lore, tools/lore, docs/lore`);
+console.log(`absorbed ${UPSTREAM}@${sha} ${date} (version ${upVersion}) into frameworks/lore, test/lore, tools/lore, docs/lore`);

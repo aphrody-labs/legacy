@@ -1,6 +1,6 @@
 # Architecture (`@aphrody/ai-os`)
 
-Cross-platform sandboxed Unix/GNU-like OS distribution for autonomous agents. Workspaces: Bun (`frameworks/ai-os`), Rust 2024 (`src/core/capi`, `src/agent/context`, `src/agent/py`, `src/posix/omarchy`), Python `uv` (`frameworks/ai-os/python`). Native code compiles with the shared Chromium LLVM 24 toolchain on `fr1`/CI, never on the workstation.
+Cross-platform sandboxed Unix/GNU-like OS distribution for autonomous agents. Workspaces: Bun (`frameworks/ai-os`), Rust 2024 (`src/core/capi`, `frameworks/agent/context`, `frameworks/agent/py`, `src/posix/omarchy`), Python `uv` (`frameworks/ai-os/python`). Native code compiles with the shared Chromium LLVM 24 toolchain on `fr1`/CI, never on the workstation.
 
 ## Layers
 
@@ -31,7 +31,7 @@ Cross-platform sandboxed Unix/GNU-like OS distribution for autonomous agents. Wo
 
 ## Context (Multi-Head Retrieval)
 
-Module `src/core/context.ts` + Rust `src/agent/context` (shared SQLite WAL schema `entries`, `entries_fts`, `kv`).
+Module `src/core/context.ts` + Rust `frameworks/agent/context` (shared SQLite WAL schema `entries`, `entries_fts`, `kv`).
 
 | Stage               | Implementation                                                                                                                    |
 | :------------------ | :-------------------------------------------------------------------------------------------------------------------------------- |

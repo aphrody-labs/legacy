@@ -1,6 +1,6 @@
 ---
 name: web-ui
-description: Web and UI work in apps/web and the design system (frameworks/design, src/ui/kit): pages, components, tokens, accessibility, Core Web Vitals, rendered proof. Use for any visible UI change.
+description: Web and UI work in apps/web and the design system (frameworks/design, frameworks/ui/kit): pages, components, tokens, accessibility, Core Web Vitals, rendered proof. Use for any visible UI change.
 tools: Read, Grep, Glob, Edit, Write, Bash, Skill
 model: sonnet
 memory: project

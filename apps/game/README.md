@@ -8,9 +8,9 @@
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->
 
-Game app: the Bevy game of `src/game` with the Steam and Epic storefront services, as one binary (`aphrody-game`) and one entry point (`cli.ts`).
+Game app: the Bevy game of `frameworks/game` with the Steam and Epic storefront services, as one binary (`aphrody-game`) and one entry point (`cli.ts`).
 
-- Framework: `src/game` (Bevy gameplay and `store`), `src/steam` (Steam data: VDF, appinfo, Proton, depots), `frameworks/gaming` (steamcmd, Proton, Vulkan, DirectX).
+- Framework: `frameworks/game` (Bevy gameplay and `store`), `frameworks/steam` (Steam data: VDF, appinfo, Proton, depots), `frameworks/gaming` (steamcmd, Proton, Vulkan, DirectX).
 - Upstream pins (`src.lock.json`, aphrody-labs forks): `bevy` (main), `bevy_steamworks` over `steamworks-rs`, `eos` (Epic Online Services bindings, needs the EOS SDK, feature `epic`), `legendary` (Epic Games Store CLI).
 
 ```sh

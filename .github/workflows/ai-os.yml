@@ -8,14 +8,14 @@ on:
     paths:
       [
         "frameworks/ai-os/**",
-        "src/agent/context/**",
+        "frameworks/agent/context/**",
         ".github/workflows/ai-os.yml",
       ]
   pull_request:
     paths:
       [
         "frameworks/ai-os/**",
-        "src/agent/context/**",
+        "frameworks/agent/context/**",
         ".github/workflows/ai-os.yml",
       ]
   workflow_dispatch:

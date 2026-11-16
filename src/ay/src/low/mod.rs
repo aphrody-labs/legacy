@@ -8,7 +8,7 @@
 //! - `ay engines`: the engines facade of `apps/open/packages/browser-engines` (aphrody-labs/open) (V8, JavaScriptCore, Dawn, wgpu,
 //!   browsers), run by bun, plus `ay engines js` and `ay engines build`;
 //! - `ay agents`: the ai-os orchestrator (`orch`), run by bun;
-//! - `ay steam`: Steam data of the host as JSON over `src/steam`.
+//! - `ay steam`: Steam data of the host as JSON over `frameworks/steam`.
 //!
 //! Plan and status: docs/ay/MIGRATION.md.
 
@@ -38,7 +38,7 @@ pub enum LowCmd {
     /// ai-os orchestrator (frameworks/ai-os, `orch`): run <workflow.json>, plan "<goal>", lifecycle --task ... ; agent toolchain: install, sync, check, list (system/machine-ts/src/toolchain.ts)
     #[command(disable_help_flag = true)]
     Agents(crate::Rest),
-    /// Steam data as JSON (src/steam): root, libraries, apps, vdf, compat, host, env
+    /// Steam data as JSON (frameworks/steam): root, libraries, apps, vdf, compat, host, env
     Steam(steam::SteamArgs),
 }
 

@@ -1400,7 +1400,7 @@
       },
       {
         "name": "steam",
-        "description": "Steam data as JSON (src/steam): root, libraries, apps, vdf, compat, host, env",
+        "description": "Steam data as JSON (frameworks/steam): root, libraries, apps, vdf, compat, host, env",
         "flags":
           {
             "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",

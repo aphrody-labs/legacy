@@ -1105,7 +1105,7 @@ macro_rules! todo_panic {
         // `bun_analytics::features::todo_panic` — the set the crash report
         // serializes via `packed_features()` — is a re-export of this same
         // static (see `define_features!`'s `core =` entries in
-        // src/analytics/lib.rs), so the bit reaches crash reports.
+        // frameworks/analytics/lib.rs), so the bit reaches crash reports.
         $crate::Global::features::TODO_PANIC.store(1, ::core::sync::atomic::Ordering::Relaxed);
         $crate::output::panic(::core::format_args!(
             "TODO: {} ({}:{})",

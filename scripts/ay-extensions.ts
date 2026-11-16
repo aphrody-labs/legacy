@@ -14,7 +14,7 @@ const protocols: Protocol[] = [
   { protocol: "LSP", module: "lsp", crates: ["lsp-server", "tower-lsp", "lsp-types"], note: "language server for ay scripts and configs; lsp-server is rust-analyzer's transport" },
   { protocol: "MCP", module: "mcp", crates: ["rmcp"], note: "Model Context Protocol, official Rust SDK" },
   { protocol: "ACP", module: "acp", crates: ["agent-client-protocol"], note: "Agent Client Protocol (editor to agent)" },
-  { protocol: "A2A", module: "a2a", crates: ["a2a-rs", "a2a-protocol"], note: "agent to agent; first-party src/a2a* crates already exist" },
+  { protocol: "A2A", module: "a2a", crates: ["a2a-rs", "a2a-protocol"], note: "agent to agent; first-party frameworks/a2a* crates already exist" },
   { protocol: "OpenAPI", module: "openapi", crates: ["openapiv3", "utoipa", "oas3"], note: "serve and consume OpenAPI documents" },
   { protocol: "WebAssembly", module: "wasm", crates: ["wasmtime", "wasmtime-wasi", "wit-bindgen"], note: "component model host: the extension ABI" },
   { protocol: "WebGPU", module: "gpu", crates: ["wgpu"], note: "compute and rendering from modules" },

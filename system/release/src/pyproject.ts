@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // pyproject.toml of a PyO3 crate without one, on stdout (used by .github/workflows/pypi-publish.yml).
-//   bun system/release/src/pyproject.ts src/agent/context > src/agent/context/pyproject.toml
+//   bun system/release/src/pyproject.ts frameworks/agent/context > frameworks/agent/context/pyproject.toml
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pyproject } from "./plan.ts";

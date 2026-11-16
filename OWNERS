@@ -213,13 +213,13 @@ LAYER L1 BASE (src/core, net, machine, design tokens, lore-base/io, depot-core/c
 M:	skill:bun agent:claude <contact@aphrody.com>
 S:	Supported
 F:	src/core/
-F:	src/corelib/
+F:	frameworks/corelib/
 F:	src/net/
 F:	src/machine/
 F:	src/depot/core/
 F:	src/depot/cas/
-F:	src/lore/base/
-F:	src/lore/io/
+F:	frameworks/lore/base/
+F:	frameworks/lore/io/
 F:	system/core-ts/
 
 LAYER L2 PLATFORM ABSTRACTION (Windows, Linux, Cloudflare, Vercel, C ABI)
@@ -233,7 +233,7 @@ F:	system/ffi-bridge/
 LAYER L4 AGENT
 M:	agent:claude skill:claude-api <contact@aphrody.com>
 S:	Supported
-F:	src/agent/context/
+F:	frameworks/agent/context/
 F:	device/fleet/prd/systemd/aphrody-relay.service
 F:	frameworks/ai-os/
 

@@ -4,7 +4,7 @@
 members = [
   "tools/lore",
   "system/core-py",
-  "src/agent/context",
+  "frameworks/agent/context",
   "frameworks/ai-os/python/hermes_agent_memory",
   "system/env-kit/loaders/python",
   "frameworks/re-ts/ghidra/scripts/parity",

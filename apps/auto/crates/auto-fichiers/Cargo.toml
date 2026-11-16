@@ -25,4 +25,4 @@ thiserror.workspace = true
 
 [dev-dependencies]
 auto-docs = { path = "../auto-docs" }
-auto-modele = { package = "aphrody-modele", path = "../../../../src/modele" }
+auto-modele = { package = "aphrody-modele", path = "../../../../frameworks/modele" }

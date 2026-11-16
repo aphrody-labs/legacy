@@ -330,7 +330,7 @@ export class ChromiumTrackingEngine {
         name: "V8 Isolate Context Separation & Zero Host Leakage",
         description:
           "Enforces strict isolation between Bun JSC host environment and guest V8 contexts",
-        upstreamFile: "src/corelib/src/web.rs",
+        upstreamFile: "frameworks/corelib/src/web.rs",
         patchStrategy: "deno_v8_binding",
         status: "applied",
       },
@@ -340,7 +340,7 @@ export class ChromiumTrackingEngine {
         name: "AdBlock & Cosmetic Filter Native Hook",
         description:
           "Hooks URL request stream to filter trackers with SovereignAdblockEngine and strip cosmetic banners",
-        upstreamFile: "src/corelib/src/web.rs",
+        upstreamFile: "frameworks/corelib/src/web.rs",
         patchStrategy: "preprocessor_hook",
         status: "applied",
       },

@@ -8,7 +8,7 @@ Earlier PC (Windows) measurements: [BUILD_SPEED.md](BUILD_SPEED.md).
 
 - Node: fr2 (6 vCPU, QEMU Haswell, 2026-11-15), toolchain stable 1.99.1 with `RUSTC_BOOTSTRAP=1` for `-Z` flags, `RUSTC_WRAPPER=` unless stated.
   fr1 was invalid for timing (load 30 to 60 on 12 cores from other jobs); my fr1 chains were killed and discarded.
-- Workload: trimmed copy of the workspace (`src/depot/{core,forge,graph,ingest,migrate,cli}`, `src/core`, `src/taffy`;
+- Workload: trimmed copy of the workspace (`src/depot/{core,forge,graph,ingest,migrate,cli}`, `src/core`, `frameworks/taffy`;
   gix, blake3, regex, serde as dependencies), dev profile of the root `Cargo.toml`. `depot-cli` is a lib: no link step in the dev scenarios.
 - hyperfine, N=5 unless noted (N=3 for clean builds, N=1 where marked). Values are mean +- sd of wall time.
 - fr2 load average was 5 to 9 during the matrix (another agent's benchmarks): differences under about 1 s between

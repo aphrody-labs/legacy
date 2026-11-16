@@ -46,11 +46,11 @@ Names breaking the scheme: 121 rows below (a name can appear in two tables). Syn
 | reactor-winui-hello | apps/nt/sdk/rust/winui-hello | aphrody-nt-sdk-rust-winui-hello | 4 |  |
 | stack-bench | bench | aphrody-bench | 26 | identity.toml [naming.crate_names] |
 | aphrody | src/ay | aphrody-ay | 1540 | identity.toml [cli].crate |
-| craft-formats | src/craft | aphrody-craft | 16 |  |
+| craft-formats | frameworks/craft | aphrody-craft | 16 |  |
 | dx12-hal | hardware/drivers/gpu/dx12 | aphrody-drivers-gpu-dx12 | 37 |  |
 | wslg-cli | src/posix/wslg | aphrody-posix-wslg | 17 |  |
-| steam-depot | src/steam | aphrody-steam | 43 |  |
-| aphrody-ui | src/ui/kit | aphrody-ui-kit | 51 |  |
+| steam-depot | frameworks/steam | aphrody-steam | 43 |  |
+| aphrody-ui | frameworks/ui/kit | aphrody-ui-kit | 51 |  |
 | cosmic-compat | src/wayland/cosmic | aphrody-wayland-cosmic | 20 |  |
 | gamescope-cli | src/wayland/gamescope/cli | aphrody-wayland-gamescope-cli | 18 |  |
 | gamescope-core | src/wayland/gamescope/core | aphrody-wayland-gamescope-core | 21 |  |
@@ -76,9 +76,9 @@ Names breaking the scheme: 121 rows below (a name can appear in two tables). Syn
 | flag | --output-json | --out | src/depot/gclient/src/cli.rs | 4 |
 | flag | --output | --out | src/posix/omarchy/src/cli.rs | 140 |
 | flag | --run | --runs | src/ay/src/bun/mod.rs, src/posix/omarchy/src/cli.rs | 29 |
-| flag | --iterations | --runs | src/lore/chaos-client/src/cli.rs, src/posix/wslg/src/app.rs | 9 |
+| flag | --iterations | --runs | frameworks/lore/chaos-client/src/cli.rs, src/posix/wslg/src/app.rs | 9 |
 | flag | --timeout-ms | --timeout | src/ay/src/electron.rs | 6 |
-| flag | --time-limit-mins | --timeout | src/lore/chaos-client/src/cli.rs | 1 |
+| flag | --time-limit-mins | --timeout | frameworks/lore/chaos-client/src/cli.rs | 1 |
 | flag | --apply | --write | src/ay/src/bun/mod.rs, src/depot/gclient/src/cli.rs | 27 |
 | flag | --no-write | --dry-run | src/rt/src/lib.rs | 3 |
 | subcommand | up | update | src/ay/src/ai.rs, src/ay/src/lib.rs | 3036 |
@@ -110,14 +110,14 @@ Names breaking the scheme: 121 rows below (a name can appear in two tables). Syn
 
 | Name | Path | Target | Files referencing |
 |---|---|---|---|
-| aphrody-factory | src/chromium/factory/Cargo.toml | aphrody-factory | 18 |
+| aphrody-factory | frameworks/chromium/factory/Cargo.toml | aphrody-factory | 18 |
 | bun-shim-impl | src/install/windows-shim/Cargo.toml | bun-shim-impl | 10 |
-| lore_chaos_client | src/lore/chaos-client/Cargo.toml | lore-chaos-client | 5 |
-| decode_request | src/lore/fuse/fuzz/Cargo.toml | decode-request | 3 |
+| lore_chaos_client | frameworks/lore/chaos-client/Cargo.toml | lore-chaos-client | 5 |
+| decode_request | frameworks/lore/fuse/fuzz/Cargo.toml | decode-request | 3 |
 | wslg-rs | src/posix/wslg/Cargo.toml | wslg | 10 |
 | py2bun-rs | src/py2bun/Cargo.toml | py2bun | 8 |
 | bun-sema | src/sema/standalone/Cargo.toml | bun-sema | 4 |
-| bun-steam-depot | src/steam/Cargo.toml | bun-steam-depot | 7 |
+| bun-steam-depot | frameworks/steam/Cargo.toml | bun-steam-depot | 7 |
 | gamescope-rs | src/wayland/gamescope/cli/Cargo.toml | gamescope | 16 |
 
 ## CI workflow names versus file stems

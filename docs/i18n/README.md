@@ -11,9 +11,9 @@ English is the source language of every file in the repository; user-facing text
 One set of flat JSON catalogs, `frameworks/i18n-ts/locales/<locale>.json` (key to message), read by both runtimes:
 
 - TypeScript: `@aphrody/i18n` (`frameworks/i18n-ts`, Bun). `createTranslator(catalogs, locale).t(key, args)`, `negotiate(acceptLanguage, supported, fallback)`, `discoverLocales(dir)`.
-- Rust: `src/i18n` (`aphrody-i18n`) embeds the catalogs found at build time (`build.rs`) or reads a directory (`Catalogs::from_dir`). `I18n::new(locale).t_args(key, args)`, `negotiate(header)`.
+- Rust: `frameworks/i18n` (`aphrody-i18n`) embeds the catalogs found at build time (`build.rs`) or reads a directory (`Catalogs::from_dir`). `I18n::new(locale).t_args(key, args)`, `negotiate(header)`.
 
-The media domain (`src/tv/cli`) reads its strings from the same catalogs under the `tv.` prefix (converted from the former Fluent catalogs; `tv-i18n` is gone). Locales that only hold `tv.*` keys so far (ar, de, hi, it, ko, nl, pl, pt, ru, tr, uk) fall back to the source locale for everything else; `ay i18n translate` fills them and `ay i18n check --strict` fails while keys are missing.
+The media domain (`frameworks/tv/cli`) reads its strings from the same catalogs under the `tv.` prefix (converted from the former Fluent catalogs; `tv-i18n` is gone). Locales that only hold `tv.*` keys so far (ar, de, hi, it, ko, nl, pl, pt, ru, tr, uk) fall back to the source locale for everything else; `ay i18n translate` fills them and `ay i18n check --strict` fails while keys are missing.
 
 A key missing in a locale falls back to its base language, then to the source locale, then to the key itself.
 

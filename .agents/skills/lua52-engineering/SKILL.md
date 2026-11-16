@@ -5,7 +5,7 @@ description: End-to-end Lua 5.2 engineering reference covering PUC-Rio Lua 5.2.4
 
 # Lua 5.2 Engineering Reference
 
-This skill guides development, reverse-engineering, AST analysis, and runtime embedding for **Lua 5.2.4 (PUC-Rio)** in this monorepo (Lua code and tooling live in `../rosegriffon/crates/aphrody-nie-lua`, `../rosegriffon/crates/aphrody-nie-wasm`, `../shenron/docs/lua-5-2`; bytecode analysis in `src/re`).
+This skill guides development, reverse-engineering, AST analysis, and runtime embedding for **Lua 5.2.4 (PUC-Rio)** in this monorepo (Lua code and tooling live in `../rosegriffon/crates/aphrody-nie-lua`, `../rosegriffon/crates/aphrody-nie-wasm`, `../shenron/docs/lua-5-2`; bytecode analysis in `frameworks/re`).
 
 ---
 
@@ -113,7 +113,7 @@ pub fn create_lua52_vm() -> Result<Lua, mlua::Error> {
 
 ### 3.1 Bytecode disassembly
 
-`ay re <file.lua.bin>` (`src/re`; `ay re --help` for the Lua 5.2 options): parses the header, walks the prototype tree, resolves the constant pool and upvalues, and prints instruction listings with RK operands resolved.
+`ay re <file.lua.bin>` (`frameworks/re`; `ay re --help` for the Lua 5.2 options): parses the header, walks the prototype tree, resolves the constant pool and upvalues, and prints instruction listings with RK operands resolved.
 
 ---
 

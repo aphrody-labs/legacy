@@ -11,12 +11,12 @@
     "kind": "domain",
     "children": [
      {
-      "id": "src/analytics",
+      "id": "frameworks/analytics",
       "name": "bun_analytics",
       "kind": "module",
       "language": "rust",
       "loc": 574,
-      "file": "src/analytics"
+      "file": "frameworks/analytics"
      },
      {
       "id": "src/aot",
@@ -795,12 +795,12 @@
       "file": "src/s3_signing"
      },
      {
-      "id": "src/safety",
+      "id": "frameworks/safety",
       "name": "bun_safety",
       "kind": "module",
       "language": "rust",
       "loc": 8,
-      "file": "src/safety"
+      "file": "frameworks/safety"
      },
      {
       "id": "src/sema",
@@ -963,12 +963,12 @@
       "file": "src/sys_jsc"
      },
      {
-      "id": "src/taffy",
+      "id": "frameworks/taffy",
       "name": "taffy",
       "kind": "module",
       "language": "rust",
       "loc": 39833,
-      "file": "src/taffy"
+      "file": "frameworks/taffy"
      },
      {
       "id": "src/tar",
@@ -1170,60 +1170,60 @@
       "file": "src/depot/core"
      },
      {
-      "id": "src/i18n",
+      "id": "frameworks/i18n",
       "name": "aphrody-i18n",
       "kind": "module",
       "language": "rust",
       "loc": 1092,
-      "file": "src/i18n"
+      "file": "frameworks/i18n"
      },
      {
-      "id": "src/lore/base",
+      "id": "frameworks/lore/base",
       "name": "aphrody-lore-base",
       "kind": "module",
       "language": "rust",
       "loc": 14759,
-      "file": "src/lore/base"
+      "file": "frameworks/lore/base"
      },
      {
-      "id": "src/lore/error-set",
+      "id": "frameworks/lore/error-set",
       "name": "aphrody-lore-error-set",
       "kind": "module",
       "language": "rust",
       "loc": 6178,
-      "file": "src/lore/error-set"
+      "file": "frameworks/lore/error-set"
      },
      {
-      "id": "src/lore/error-set-macro",
+      "id": "frameworks/lore/error-set-macro",
       "name": "aphrody-lore-error-set-macro",
       "kind": "module",
       "language": "rust",
       "loc": 1043,
-      "file": "src/lore/error-set-macro"
+      "file": "frameworks/lore/error-set-macro"
      },
      {
-      "id": "src/lore/io",
+      "id": "frameworks/lore/io",
       "name": "aphrody-lore-io",
       "kind": "module",
       "language": "rust",
       "loc": 17686,
-      "file": "src/lore/io"
+      "file": "frameworks/lore/io"
      },
      {
-      "id": "src/lore/macro",
+      "id": "frameworks/lore/macro",
       "name": "aphrody-lore-macro",
       "kind": "module",
       "language": "rust",
       "loc": 462,
-      "file": "src/lore/macro"
+      "file": "frameworks/lore/macro"
      },
      {
-      "id": "src/tv/core",
+      "id": "frameworks/tv/core",
       "name": "tv-core",
       "kind": "module",
       "language": "rust",
       "loc": 324,
-      "file": "src/tv/core"
+      "file": "frameworks/tv/core"
      },
      {
       "id": "src/wayland/gamescope/core",
@@ -1305,28 +1305,28 @@
       "file": "src/gnu/which"
      },
      {
-      "id": "src/lore/credential",
+      "id": "frameworks/lore/credential",
       "name": "aphrody-lore-credential",
       "kind": "module",
       "language": "rust",
       "loc": 3293,
-      "file": "src/lore/credential"
+      "file": "frameworks/lore/credential"
      },
      {
-      "id": "src/lore/fuse",
+      "id": "frameworks/lore/fuse",
       "name": "aphrody-lore-fuse",
       "kind": "module",
       "language": "rust",
       "loc": 12780,
-      "file": "src/lore/fuse"
+      "file": "frameworks/lore/fuse"
      },
      {
-      "id": "src/lore/fuse/fuzz",
+      "id": "frameworks/lore/fuse/fuzz",
       "name": "lore-fuse-fuzz",
       "kind": "module",
       "language": "rust",
       "loc": 9,
-      "file": "src/lore/fuse/fuzz"
+      "file": "frameworks/lore/fuse/fuzz"
      },
      {
       "id": "src/machine",
@@ -1361,20 +1361,20 @@
       "file": "src/remote"
      },
      {
-      "id": "src/steam",
+      "id": "frameworks/steam",
       "name": "steam-depot",
       "kind": "module",
       "language": "rust",
       "loc": 8555,
-      "file": "src/steam"
+      "file": "frameworks/steam"
      },
      {
-      "id": "src/tv/ffmpeg",
+      "id": "frameworks/tv/ffmpeg",
       "name": "tv-ffmpeg",
       "kind": "module",
       "language": "rust",
       "loc": 365,
-      "file": "src/tv/ffmpeg"
+      "file": "frameworks/tv/ffmpeg"
      },
      {
       "id": "src/wayland/cosmic",
@@ -1472,12 +1472,12 @@
       "file": "src/apm"
      },
      {
-      "id": "src/chromium/factory",
+      "id": "frameworks/chromium/factory",
       "name": "aphrody-factory",
       "kind": "module",
       "language": "rust",
       "loc": 1929,
-      "file": "src/chromium/factory"
+      "file": "frameworks/chromium/factory"
      },
      {
       "id": "src/core/capi",
@@ -1504,28 +1504,28 @@
       "file": "src/core/jni"
      },
      {
-      "id": "src/corelib",
+      "id": "frameworks/corelib",
       "name": "aphrody-corelib",
       "kind": "module",
       "language": "rust",
       "loc": 1626,
-      "file": "src/corelib"
+      "file": "frameworks/corelib"
      },
      {
-      "id": "src/corelib/adblock-capi",
+      "id": "frameworks/corelib/adblock-capi",
       "name": "aphrody-adblock-capi",
       "kind": "module",
       "language": "rust",
       "loc": 322,
-      "file": "src/corelib/adblock-capi"
+      "file": "frameworks/corelib/adblock-capi"
      },
      {
-      "id": "src/craft",
+      "id": "frameworks/craft",
       "name": "craft-formats",
       "kind": "module",
       "language": "rust",
       "loc": 143,
-      "file": "src/craft"
+      "file": "frameworks/craft"
      },
      {
       "id": "src/depot/cipd",
@@ -1608,12 +1608,12 @@
       "file": "src/env"
      },
      {
-      "id": "src/game",
+      "id": "frameworks/game",
       "name": "game",
       "kind": "module",
       "language": "rust",
       "loc": 1290,
-      "file": "src/game"
+      "file": "frameworks/game"
      },
      {
       "id": "src/ghidra-bun",
@@ -1624,100 +1624,100 @@
       "file": "src/ghidra-bun"
      },
      {
-      "id": "src/lore",
+      "id": "frameworks/lore",
       "name": "aphrody-lore",
       "kind": "module",
       "language": "rust",
       "loc": 60127,
-      "file": "src/lore"
+      "file": "frameworks/lore"
      },
      {
-      "id": "src/lore/aws",
+      "id": "frameworks/lore/aws",
       "name": "aphrody-lore-aws",
       "kind": "module",
       "language": "rust",
       "loc": 14019,
-      "file": "src/lore/aws"
+      "file": "frameworks/lore/aws"
      },
      {
-      "id": "src/lore/capi",
+      "id": "frameworks/lore/capi",
       "name": "aphrody-lore-capi",
       "kind": "module",
       "language": "rust",
       "loc": 13831,
-      "file": "src/lore/capi"
+      "file": "frameworks/lore/capi"
      },
      {
-      "id": "src/lore/hashicorp",
+      "id": "frameworks/lore/hashicorp",
       "name": "aphrody-lore-hashicorp",
       "kind": "module",
       "language": "rust",
       "loc": 553,
-      "file": "src/lore/hashicorp"
+      "file": "frameworks/lore/hashicorp"
      },
      {
-      "id": "src/lore/notification",
+      "id": "frameworks/lore/notification",
       "name": "aphrody-lore-notification",
       "kind": "module",
       "language": "rust",
       "loc": 390,
-      "file": "src/lore/notification"
+      "file": "frameworks/lore/notification"
      },
      {
-      "id": "src/lore/proto",
+      "id": "frameworks/lore/proto",
       "name": "aphrody-lore-proto",
       "kind": "module",
       "language": "rust",
       "loc": 16050,
-      "file": "src/lore/proto"
+      "file": "frameworks/lore/proto"
      },
      {
-      "id": "src/lore/revision",
+      "id": "frameworks/lore/revision",
       "name": "aphrody-lore-revision",
       "kind": "module",
       "language": "rust",
       "loc": 442497,
-      "file": "src/lore/revision"
+      "file": "frameworks/lore/revision"
      },
      {
-      "id": "src/lore/server",
+      "id": "frameworks/lore/server",
       "name": "aphrody-lore-server",
       "kind": "module",
       "language": "rust",
       "loc": 122472,
-      "file": "src/lore/server"
+      "file": "frameworks/lore/server"
      },
      {
-      "id": "src/lore/storage",
+      "id": "frameworks/lore/storage",
       "name": "aphrody-lore-storage",
       "kind": "module",
       "language": "rust",
       "loc": 80136,
-      "file": "src/lore/storage"
+      "file": "frameworks/lore/storage"
      },
      {
-      "id": "src/lore/telemetry",
+      "id": "frameworks/lore/telemetry",
       "name": "aphrody-lore-telemetry",
       "kind": "module",
       "language": "rust",
       "loc": 2127,
-      "file": "src/lore/telemetry"
+      "file": "frameworks/lore/telemetry"
      },
      {
-      "id": "src/lore/transport",
+      "id": "frameworks/lore/transport",
       "name": "aphrody-lore-transport",
       "kind": "module",
       "language": "rust",
       "loc": 35179,
-      "file": "src/lore/transport"
+      "file": "frameworks/lore/transport"
      },
      {
-      "id": "src/re",
+      "id": "frameworks/re",
       "name": "aphrody-re",
       "kind": "module",
       "language": "rust",
       "loc": 50968,
-      "file": "src/re"
+      "file": "frameworks/re"
      },
      {
       "id": "src/rt",
@@ -1728,12 +1728,12 @@
       "file": "src/rt"
      },
      {
-      "id": "src/ui/kit",
+      "id": "frameworks/ui/kit",
       "name": "aphrody-ui",
       "kind": "module",
       "language": "rust",
       "loc": 55892,
-      "file": "src/ui/kit"
+      "file": "frameworks/ui/kit"
      },
      {
       "id": "src/up",
@@ -1935,12 +1935,12 @@
     "kind": "domain",
     "children": [
      {
-      "id": "src/agent/context",
+      "id": "frameworks/agent/context",
       "name": "agent-context",
       "kind": "module",
       "language": "rust",
       "loc": 254,
-      "file": "src/agent/context"
+      "file": "frameworks/agent/context"
      },
      {
       "id": "src/electron-migrate",
@@ -1990,20 +1990,20 @@
       "file": "src/depot/cli"
      },
      {
-      "id": "src/lore/chaos-client",
+      "id": "frameworks/lore/chaos-client",
       "name": "aphrody-lore-chaos-client",
       "kind": "module",
       "language": "rust",
       "loc": 1659,
-      "file": "src/lore/chaos-client"
+      "file": "frameworks/lore/chaos-client"
      },
      {
-      "id": "src/lore/client",
+      "id": "frameworks/lore/client",
       "name": "aphrody-lore-client",
       "kind": "module",
       "language": "rust",
       "loc": 15184,
-      "file": "src/lore/client"
+      "file": "frameworks/lore/client"
      },
      {
       "id": "src/posix/wslg",
@@ -2014,12 +2014,12 @@
       "file": "src/posix/wslg"
      },
      {
-      "id": "src/tv/cli",
+      "id": "frameworks/tv/cli",
       "name": "tv-cli",
       "kind": "module",
       "language": "rust",
       "loc": 207,
-      "file": "src/tv/cli"
+      "file": "frameworks/tv/cli"
      },
      {
       "id": "src/wayland/gamescope/cli",
@@ -2116,7 +2116,7 @@
  },
  "edges": [
   {
-   "source": "src/agent/context",
+   "source": "frameworks/agent/context",
    "target": "frameworks/ai-os",
    "kind": "dispatch"
   },
@@ -2197,7 +2197,7 @@
   },
   {
    "source": "src/core/capi",
-   "target": "src/corelib/adblock-capi",
+   "target": "frameworks/corelib/adblock-capi",
    "kind": "dispatch"
   },
   {
@@ -2211,7 +2211,7 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/corelib",
+   "source": "frameworks/corelib",
    "target": "src/core/capi",
    "kind": "dispatch"
   },
@@ -2241,7 +2241,7 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/i18n",
+   "source": "frameworks/i18n",
    "target": "frameworks/i18n-ts",
    "kind": "dispatch"
   },
@@ -2306,12 +2306,12 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/taffy",
+   "source": "frameworks/taffy",
    "target": "frameworks/design",
    "kind": "dispatch"
   },
   {
-   "source": "src/ui/kit",
+   "source": "frameworks/ui/kit",
    "target": "frameworks/design",
    "kind": "dispatch"
   },
@@ -2347,7 +2347,7 @@
   },
   {
    "source": "frameworks/assets",
-   "target": "src/game",
+   "target": "frameworks/game",
    "kind": "dispatch"
   },
   {
@@ -2362,7 +2362,7 @@
   },
   {
    "source": "packages/chromium-bun",
-   "target": "src/corelib",
+   "target": "frameworks/corelib",
    "kind": "dispatch"
   },
   {
@@ -2427,7 +2427,7 @@
   },
   {
    "source": "packages/ghidra",
-   "target": "src/re",
+   "target": "frameworks/re",
    "kind": "dispatch"
   },
   {
@@ -2467,12 +2467,12 @@
   },
   {
    "source": "system/machine-ts",
-   "target": "src/tv/ffmpeg",
+   "target": "frameworks/tv/ffmpeg",
    "kind": "dispatch"
   },
   {
    "source": "system/release",
-   "target": "src/agent/context",
+   "target": "frameworks/agent/context",
    "kind": "dispatch"
   },
   {
@@ -2877,7 +2877,7 @@
   },
   {
    "source": "apps/nt",
-   "target": "src/safety",
+   "target": "frameworks/safety",
    "kind": "dispatch"
   },
   {
@@ -2946,12 +2946,12 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/analytics",
+   "source": "frameworks/analytics",
    "target": "src/bun_core",
    "kind": "call"
   },
   {
-   "source": "src/analytics",
+   "source": "frameworks/analytics",
    "target": "src/semver",
    "kind": "call"
   },
@@ -3332,7 +3332,7 @@
   },
   {
    "source": "src/ay",
-   "target": "src/re",
+   "target": "frameworks/re",
    "kind": "call"
   },
   {
@@ -3347,12 +3347,12 @@
   },
   {
    "source": "src/ay",
-   "target": "src/steam",
+   "target": "frameworks/steam",
    "kind": "call"
   },
   {
    "source": "src/ay",
-   "target": "src/ui/kit",
+   "target": "frameworks/ui/kit",
    "kind": "call"
   },
   {
@@ -3467,7 +3467,7 @@
   },
   {
    "source": "src/bundler",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -3687,7 +3687,7 @@
   },
   {
    "source": "src/bunfig",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -3856,7 +3856,7 @@
    "kind": "call"
   },
   {
-   "source": "src/chromium/factory",
+   "source": "frameworks/chromium/factory",
    "target": "test/conformance",
    "kind": "call"
   },
@@ -3902,7 +3902,7 @@
   },
   {
    "source": "src/core/capi",
-   "target": "src/agent/context",
+   "target": "frameworks/agent/context",
    "kind": "call"
   },
   {
@@ -3912,7 +3912,7 @@
   },
   {
    "source": "src/core/capi",
-   "target": "src/corelib",
+   "target": "frameworks/corelib",
    "kind": "call"
   },
   {
@@ -3942,7 +3942,7 @@
   },
   {
    "source": "src/core/capi",
-   "target": "src/re",
+   "target": "frameworks/re",
    "kind": "call"
   },
   {
@@ -3952,7 +3952,7 @@
   },
   {
    "source": "src/core/capi/py",
-   "target": "src/re",
+   "target": "frameworks/re",
    "kind": "call"
   },
   {
@@ -3962,22 +3962,22 @@
   },
   {
    "source": "src/core/jni",
-   "target": "src/re",
+   "target": "frameworks/re",
    "kind": "call"
   },
   {
-   "source": "src/corelib/adblock-capi",
+   "source": "frameworks/corelib/adblock-capi",
    "target": "src/core/capi",
    "kind": "call"
   },
   {
-   "source": "src/corelib/adblock-capi",
-   "target": "src/corelib",
+   "source": "frameworks/corelib/adblock-capi",
+   "target": "frameworks/corelib",
    "kind": "call"
   },
   {
    "source": "src/crash_handler",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -4297,7 +4297,7 @@
   },
   {
    "source": "src/electron-migrate",
-   "target": "src/re",
+   "target": "frameworks/re",
    "kind": "call"
   },
   {
@@ -4462,7 +4462,7 @@
   },
   {
    "source": "src/ghidra-bun",
-   "target": "src/re",
+   "target": "frameworks/re",
    "kind": "call"
   },
   {
@@ -4532,7 +4532,7 @@
   },
   {
    "source": "src/http",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -4662,7 +4662,7 @@
   },
   {
    "source": "src/http_jsc",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -4832,7 +4832,7 @@
   },
   {
    "source": "src/install",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -5187,7 +5187,7 @@
   },
   {
    "source": "src/jsc",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -6056,373 +6056,373 @@
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/base",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/credential",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/credential",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/io",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/io",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/notification",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/notification",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/revision",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/revision",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/storage",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/storage",
    "kind": "call"
   },
   {
-   "source": "src/lore",
-   "target": "src/lore/transport",
+   "source": "frameworks/lore",
+   "target": "frameworks/lore/transport",
    "kind": "call"
   },
   {
-   "source": "src/lore/aws",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/aws",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/aws",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/aws",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/aws",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/aws",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/aws",
-   "target": "src/lore/revision",
+   "source": "frameworks/lore/aws",
+   "target": "frameworks/lore/revision",
    "kind": "call"
   },
   {
-   "source": "src/lore/aws",
-   "target": "src/lore/storage",
+   "source": "frameworks/lore/aws",
+   "target": "frameworks/lore/storage",
    "kind": "call"
   },
   {
-   "source": "src/lore/aws",
-   "target": "src/lore/telemetry",
+   "source": "frameworks/lore/aws",
+   "target": "frameworks/lore/telemetry",
    "kind": "call"
   },
   {
-   "source": "src/lore/base",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/base",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/base",
-   "target": "src/lore/io",
+   "source": "frameworks/lore/base",
+   "target": "frameworks/lore/io",
    "kind": "call"
   },
   {
-   "source": "src/lore/base",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/base",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/capi",
-   "target": "src/lore",
+   "source": "frameworks/lore/capi",
+   "target": "frameworks/lore",
    "kind": "call"
   },
   {
-   "source": "src/lore/chaos-client",
-   "target": "src/lore",
+   "source": "frameworks/lore/chaos-client",
+   "target": "frameworks/lore",
    "kind": "call"
   },
   {
-   "source": "src/lore/client",
-   "target": "src/lore",
+   "source": "frameworks/lore/client",
+   "target": "frameworks/lore",
    "kind": "call"
   },
   {
-   "source": "src/lore/client",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/client",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/client",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/client",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/credential",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/credential",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/credential",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/credential",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/credential",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/credential",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/error-set",
-   "target": "src/lore/error-set-macro",
+   "source": "frameworks/lore/error-set",
+   "target": "frameworks/lore/error-set-macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/fuse",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/fuse",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/fuse",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/fuse",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/fuse/fuzz",
-   "target": "src/lore/fuse",
+   "source": "frameworks/lore/fuse/fuzz",
+   "target": "frameworks/lore/fuse",
    "kind": "call"
   },
   {
-   "source": "src/lore/hashicorp",
-   "target": "src/lore/revision",
+   "source": "frameworks/lore/hashicorp",
+   "target": "frameworks/lore/revision",
    "kind": "call"
   },
   {
-   "source": "src/lore/hashicorp",
-   "target": "src/lore/telemetry",
+   "source": "frameworks/lore/hashicorp",
+   "target": "frameworks/lore/telemetry",
    "kind": "call"
   },
   {
-   "source": "src/lore/io",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/io",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/notification",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/notification",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/notification",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/notification",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/notification",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/notification",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/notification",
-   "target": "src/lore/proto",
+   "source": "frameworks/lore/notification",
+   "target": "frameworks/lore/proto",
    "kind": "call"
   },
   {
-   "source": "src/lore/notification",
-   "target": "src/lore/revision",
+   "source": "frameworks/lore/notification",
+   "target": "frameworks/lore/revision",
    "kind": "call"
   },
   {
-   "source": "src/lore/notification",
-   "target": "src/lore/storage",
+   "source": "frameworks/lore/notification",
+   "target": "frameworks/lore/storage",
    "kind": "call"
   },
   {
-   "source": "src/lore/notification",
-   "target": "src/lore/transport",
+   "source": "frameworks/lore/notification",
+   "target": "frameworks/lore/transport",
    "kind": "call"
   },
   {
-   "source": "src/lore/proto",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/proto",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/credential",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/credential",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/fuse",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/fuse",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/io",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/io",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/proto",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/proto",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/storage",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/storage",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/telemetry",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/telemetry",
    "kind": "call"
   },
   {
-   "source": "src/lore/revision",
-   "target": "src/lore/transport",
+   "source": "frameworks/lore/revision",
+   "target": "frameworks/lore/transport",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/aws",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/aws",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/hashicorp",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/hashicorp",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/notification",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/notification",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/proto",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/proto",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/revision",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/revision",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/storage",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/storage",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/telemetry",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/telemetry",
    "kind": "call"
   },
   {
-   "source": "src/lore/server",
-   "target": "src/lore/transport",
+   "source": "frameworks/lore/server",
+   "target": "frameworks/lore/transport",
    "kind": "call"
   },
   {
-   "source": "src/lore/storage",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/storage",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/storage",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/storage",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/storage",
-   "target": "src/lore/io",
+   "source": "frameworks/lore/storage",
+   "target": "frameworks/lore/io",
    "kind": "call"
   },
   {
-   "source": "src/lore/storage",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/storage",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/storage",
-   "target": "src/lore/telemetry",
+   "source": "frameworks/lore/storage",
+   "target": "frameworks/lore/telemetry",
    "kind": "call"
   },
   {
-   "source": "src/lore/storage",
-   "target": "src/lore/transport",
+   "source": "frameworks/lore/storage",
+   "target": "frameworks/lore/transport",
    "kind": "call"
   },
   {
-   "source": "src/lore/telemetry",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/telemetry",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/transport",
-   "target": "src/lore/base",
+   "source": "frameworks/lore/transport",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
-   "source": "src/lore/transport",
-   "target": "src/lore/credential",
+   "source": "frameworks/lore/transport",
+   "target": "frameworks/lore/credential",
    "kind": "call"
   },
   {
-   "source": "src/lore/transport",
-   "target": "src/lore/error-set",
+   "source": "frameworks/lore/transport",
+   "target": "frameworks/lore/error-set",
    "kind": "call"
   },
   {
-   "source": "src/lore/transport",
-   "target": "src/lore/macro",
+   "source": "frameworks/lore/transport",
+   "target": "frameworks/lore/macro",
    "kind": "call"
   },
   {
-   "source": "src/lore/transport",
-   "target": "src/lore/proto",
+   "source": "frameworks/lore/transport",
+   "target": "frameworks/lore/proto",
    "kind": "call"
   },
   {
@@ -6702,7 +6702,7 @@
   },
   {
    "source": "src/posix/omarchy",
-   "target": "src/steam",
+   "target": "frameworks/steam",
    "kind": "call"
   },
   {
@@ -6741,7 +6741,7 @@
    "kind": "call"
   },
   {
-   "source": "src/re",
+   "source": "frameworks/re",
    "target": "src/core",
    "kind": "call"
   },
@@ -6777,7 +6777,7 @@
   },
   {
    "source": "src/resolver",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -7002,7 +7002,7 @@
   },
   {
    "source": "src/runtime",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -7317,7 +7317,7 @@
   },
   {
    "source": "src/runtime",
-   "target": "src/safety",
+   "target": "frameworks/safety",
    "kind": "call"
   },
   {
@@ -7501,7 +7501,7 @@
    "kind": "call"
   },
   {
-   "source": "src/safety",
+   "source": "frameworks/safety",
    "target": "src/bun_core",
    "kind": "call"
   },
@@ -7897,7 +7897,7 @@
   },
   {
    "source": "src/spawn",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -7962,7 +7962,7 @@
   },
   {
    "source": "src/spawn_sys",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -8022,7 +8022,7 @@
   },
   {
    "source": "src/sql_jsc",
-   "target": "src/analytics",
+   "target": "frameworks/analytics",
    "kind": "call"
   },
   {
@@ -8337,7 +8337,7 @@
   },
   {
    "source": "src/threading",
-   "target": "src/safety",
+   "target": "frameworks/safety",
    "kind": "call"
   },
   {
@@ -8371,28 +8371,28 @@
    "kind": "call"
   },
   {
-   "source": "src/tv/cli",
-   "target": "src/i18n",
+   "source": "frameworks/tv/cli",
+   "target": "frameworks/i18n",
    "kind": "call"
   },
   {
-   "source": "src/tv/cli",
-   "target": "src/tv/core",
+   "source": "frameworks/tv/cli",
+   "target": "frameworks/tv/core",
    "kind": "call"
   },
   {
-   "source": "src/tv/cli",
-   "target": "src/tv/ffmpeg",
+   "source": "frameworks/tv/cli",
+   "target": "frameworks/tv/ffmpeg",
    "kind": "call"
   },
   {
-   "source": "src/tv/ffmpeg",
-   "target": "src/tv/core",
+   "source": "frameworks/tv/ffmpeg",
+   "target": "frameworks/tv/core",
    "kind": "call"
   },
   {
-   "source": "src/ui/kit",
-   "target": "src/taffy",
+   "source": "frameworks/ui/kit",
+   "target": "frameworks/taffy",
    "kind": "call"
   },
   {
@@ -8547,7 +8547,7 @@
   },
   {
    "source": "src/wayland/cosmic",
-   "target": "src/taffy",
+   "target": "frameworks/taffy",
    "kind": "call"
   },
   {
@@ -8572,12 +8572,12 @@
   },
   {
    "source": "src/wayland/gamescope/core",
-   "target": "src/taffy",
+   "target": "frameworks/taffy",
    "kind": "call"
   },
   {
    "source": "src/wayland/gamescope/web-wasm",
-   "target": "src/taffy",
+   "target": "frameworks/taffy",
    "kind": "call"
   },
   {
@@ -8602,7 +8602,7 @@
   },
   {
    "source": "src/wayland/tiler",
-   "target": "src/taffy",
+   "target": "frameworks/taffy",
    "kind": "call"
   },
   {
@@ -8667,47 +8667,47 @@
   },
   {
    "source": "test/assets",
-   "target": "src/craft",
+   "target": "frameworks/craft",
    "kind": "call"
   },
   {
    "source": "test/assets",
-   "target": "src/tv/ffmpeg",
+   "target": "frameworks/tv/ffmpeg",
    "kind": "call"
   },
   {
    "source": "test/lore",
-   "target": "src/lore",
+   "target": "frameworks/lore",
    "kind": "call"
   },
   {
    "source": "test/lore",
-   "target": "src/lore/aws",
+   "target": "frameworks/lore/aws",
    "kind": "call"
   },
   {
    "source": "test/lore",
-   "target": "src/lore/base",
+   "target": "frameworks/lore/base",
    "kind": "call"
   },
   {
    "source": "test/lore",
-   "target": "src/lore/hashicorp",
+   "target": "frameworks/lore/hashicorp",
    "kind": "call"
   },
   {
    "source": "test/lore",
-   "target": "src/lore/proto",
+   "target": "frameworks/lore/proto",
    "kind": "call"
   },
   {
    "source": "test/lore",
-   "target": "src/lore/revision",
+   "target": "frameworks/lore/revision",
    "kind": "call"
   },
   {
    "source": "test/lore",
-   "target": "src/lore/storage",
+   "target": "frameworks/lore/storage",
    "kind": "call"
   },
   {
@@ -8766,7 +8766,7 @@
    "kind": "call"
   },
   {
-   "source": "src/agent/context",
+   "source": "frameworks/agent/context",
    "target": "ds:sqlite",
    "kind": "call"
   },
@@ -8786,7 +8786,7 @@
    "kind": "call"
   },
   {
-   "source": "src/lore/aws",
+   "source": "frameworks/lore/aws",
    "target": "ds:s3",
    "kind": "call"
   },
@@ -8847,7 +8847,7 @@
   },
   {
    "source": "src/ay",
-   "target": "src/ui/kit",
+   "target": "frameworks/ui/kit",
    "kind": "dispatch"
   },
   {
@@ -8887,7 +8887,7 @@
   },
   {
    "source": "ci",
-   "target": "src/agent/context",
+   "target": "frameworks/agent/context",
    "kind": "dispatch"
   },
   {
@@ -8907,12 +8907,12 @@
   },
   {
    "source": "ci",
-   "target": "src/tv/ffmpeg",
+   "target": "frameworks/tv/ffmpeg",
    "kind": "dispatch"
   },
   {
    "source": "ci",
-   "target": "src/craft",
+   "target": "frameworks/craft",
    "kind": "dispatch"
   },
   {
@@ -8932,7 +8932,7 @@
   },
   {
    "source": "ci",
-   "target": "src/game",
+   "target": "frameworks/game",
    "kind": "dispatch"
   },
   {
@@ -9017,7 +9017,7 @@
   },
   {
    "source": "uv",
-   "target": "src/agent/context",
+   "target": "frameworks/agent/context",
    "kind": "dispatch"
   },
   {
@@ -9049,16 +9049,16 @@
   "system/py2bun-ts",
   "packages/vault",
   "system/wck",
-  "src/agent/context",
+  "frameworks/agent/context",
   "src/apm",
   "src/ay",
-  "src/chromium/factory",
+  "frameworks/chromium/factory",
   "src/core/capi",
   "src/core/capi/py",
   "src/core/jni",
-  "src/corelib/adblock-capi",
+  "frameworks/corelib/adblock-capi",
   "hardware/drivers/gpu/dx12",
-  "src/game",
+  "frameworks/game",
   "src/ghidra-bun",
   "src/gnu/bc",
   "src/gnu/ed",
@@ -9066,21 +9066,21 @@
   "src/gnu/time",
   "src/gnu/which",
   "src/install/windows-shim",
-  "src/lore/base",
-  "src/lore/capi",
-  "src/lore/chaos-client",
-  "src/lore/client",
-  "src/lore/fuse/fuzz",
-  "src/lore/server",
+  "frameworks/lore/base",
+  "frameworks/lore/capi",
+  "frameworks/lore/chaos-client",
+  "frameworks/lore/client",
+  "frameworks/lore/fuse/fuzz",
+  "frameworks/lore/server",
   "src/net",
   "src/node-fallbacks",
   "src/posix/omarchy",
   "src/posix/wslg",
   "src/py2bun",
   "src/sema/standalone",
-  "src/steam",
-  "src/tv/cli",
-  "src/ui/kit",
+  "frameworks/steam",
+  "frameworks/tv/cli",
+  "frameworks/ui/kit",
   "src/vault",
   "src/wayland/gamescope/cli",
   "src/wayland/gamescope/web-wasm",

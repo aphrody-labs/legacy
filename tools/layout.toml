@@ -25,7 +25,7 @@ why = "Chromium docs/"
 
 [[area]]
 dir = "frameworks"
-role = "AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends (Bun packages; crates follow in batch 4)"
+role = "AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends (Bun packages and the Rust crates of the AI, agent, media, UI and game families)"
 why = "AOSP frameworks/: the services applications are built on"
 
 [[area]]

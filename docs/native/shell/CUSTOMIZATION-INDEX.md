@@ -1,6 +1,6 @@
 # Index 2026 — Shells, CLIs, TUIs, Terminals, Fonts & Themes
 
-> Generated from the pure C ABI [`shell_kit.c`](../../../src/ui/shell_kit.c) (`aysys.dll` / `aysys.wasm`) via `bun system/machine-ts/src/shells.ts`.
+> Generated from the pure C ABI [`shell_kit.c`](../../../frameworks/ui/shell_kit.c) (`aysys.dll` / `aysys.wasm`) via `bun system/machine-ts/src/shells.ts`.
 
 - **Single command (sync + fonts + binaries)** : `bun system/machine-ts/src/shells.ts --all`
 - **C ABI O(log N) search / docs**: `bun system/machine-ts/src/shells.ts --index` | `--search <query>` | `--docs <slug>` | `--theme <slug>`

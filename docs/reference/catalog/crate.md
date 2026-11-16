@@ -4,11 +4,96 @@ A member of the Cargo workspace (src/*)
 
 | Name | Description |
 | :-- | :-- |
-| [aphrody-game](../../../apps/game) | Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary |
+| [aphrody-game](../../../apps/game) | Game app: the Bevy game of frameworks/game with the Steam and Epic storefront services, as one binary |
 | [stack-bench](../../../bench) | Hardware and compiler benchmark suite behind `ay bench` (Windows) |
+| [agent-context](../../../frameworks/agent/context) | Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python. |
+| [bun_analytics](../../../frameworks/analytics) | - |
+| [aphrody-audio](../../../frameworks/audio) | Audio building blocks: FFT spectrum, mic bridge, Polaris indexer, Voicebox encoder, local voice loop, Jan agent tools, Rust audio catalog |
+| [aphrody-factory](../../../frameworks/chromium/factory) | Chromium factory (F4): sync, gn gen, siso build over NativeLink REAPI, R2 publish, doctor, toolchain. |
+| [aphrody-corelib](../../../frameworks/corelib) | Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets and Boq wire format |
+| [craft-formats](../../../frameworks/craft) | Format layer: detect and read the header of SVG, WebP, EXR, PSD, TIFF and HEIF through storytold/craft-libs (Apache-2.0), pinned by rev. |
+| [game](../../../frameworks/game) | Open-world vertical slice on Bevy: streamed procedural terrain, third-person controller, day/night, procedural audio |
+| [aphrody-i18n](../../../frameworks/i18n) | Shared i18n catalogs (frameworks/i18n-ts/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered... |
+| [aphrody-lore](../../../frameworks/lore) | Lore version control: lore (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-aws](../../../frameworks/lore/aws) | Lore version control: lore-aws (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-base](../../../frameworks/lore/base) | Lore version control: lore-base (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-capi](../../../frameworks/lore/capi) | Lore version control: lore-capi (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-chaos-client](../../../frameworks/lore/chaos-client) | Lore version control: lore-chaos-client (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-client](../../../frameworks/lore/client) | Lore version control: lore-client (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-credential](../../../frameworks/lore/credential) | Lore version control: lore-credential (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-error-set](../../../frameworks/lore/error-set) | Composable, traceable error handling for Rust |
+| [aphrody-lore-error-set-macro](../../../frameworks/lore/error-set-macro) | Proc-macro crate for lore-error-set |
+| [aphrody-lore-fuse](../../../frameworks/lore/fuse) | Lore version control: lore-fuse (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-hashicorp](../../../frameworks/lore/hashicorp) | Lore version control: lore-hashicorp (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-io](../../../frameworks/lore/io) | Lore version control: lore-io (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-macro](../../../frameworks/lore/macro) | Lore version control: lore-macro (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-notification](../../../frameworks/lore/notification) | Lore version control: lore-notification (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-proto](../../../frameworks/lore/proto) | Lore version control: lore-proto (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-revision](../../../frameworks/lore/revision) | Lore version control: lore-revision (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-server](../../../frameworks/lore/server) | Lore version control: lore-server (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-storage](../../../frameworks/lore/storage) | Lore version control: lore-storage (absorbed from Epic Games Lore, MIT) |
+| [aphrody-lore-telemetry](../../../frameworks/lore/telemetry) | Telemetry and observability utilities for Lore |
+| [aphrody-lore-transport](../../../frameworks/lore/transport) | Lore version control: lore-transport (absorbed from Epic Games Lore, MIT) |
+| [aphrody-modele](../../../frameworks/modele) | Commercial document model (invoice, quote, lines, parties, template) as JSON, with the totals computation shared by the TypeScript and Rust sides |
+| [aphrody-ocr](../../../frameworks/ocr) | Image-to-text pipeline for aphrody: drives a local vision-language model over one image or a whole directory, parses its DocTags output into markdown, and reports which pages ca... |
+| [aphrody-ocr-core](../../../frameworks/ocr-core) | Portable versioned OCR result contract, provenance and quality states for aphrody. |
+| [aphrody-rag-core](../../../frameworks/rag-core) | Pure, wasm32-safe core of the aphrody RAG layer: source-aware chunkers (Rust/JS-TS/Markdown/structural/prose), reciprocal-rank-fusion + MMR + vector helpers, and a bit-for-bit p... |
+| [aphrody-re](../../../frameworks/re) | Unified Aphrody reverse engineering core: PE/ELF/Mach-O triage, byte-exact PE64 forge/COFF, .pdata/minidump/ASAR/Electron/Go/Android/SteamStub inspection, Ghidra P-Code/Pseudo-C... |
+| [bun_safety](../../../frameworks/safety) | - |
+| [steam-depot](../../../frameworks/steam) | Bun OS Steam owner: VDF text/binary parser and writer, install and library discovery, client configuration, Proton launch tuning, Remote Play state. |
+| [taffy](../../../frameworks/taffy) | First-party Layer-0 UI, Wayland, terminal, and compositing layout engine (absorbed DioxusLabs/taffy) |
+| [aphrody-tao](../../../frameworks/tao) | Cross-platform window manager library. |
+| [aphrody-tao-macros](../../../frameworks/tao-macros) | Proc macros for tao |
+| [aphrody-tauri](../../../frameworks/tauri) | Make tiny, secure apps for all desktop platforms with Tauri |
+| [aphrody-tauri-build](../../../frameworks/tauri-build) | build time code to pair with https://crates.io/crates/tauri |
+| [aphrody-tauri-bundler](../../../frameworks/tauri-bundler) | Wrap rust executables in OS-specific app bundles for Tauri |
+| [aphrody-tauri-cli](../../../frameworks/tauri-cli) | Command line interface for building Tauri apps |
+| [aphrody-tauri-cli-node](../../../frameworks/tauri-cli-node) | - |
+| [aphrody-tauri-codegen](../../../frameworks/tauri-codegen) | code generation meant to be consumed inside of `tauri` through `tauri-build` or `tauri-macros` |
+| [aphrody-tauri-driver](../../../frameworks/tauri-driver) | Webdriver server for Tauri applications |
+| [aphrody-tauri-macos-sign](../../../frameworks/tauri-macos-sign) | Code signing utilities for macOS and iOS apps |
+| [aphrody-tauri-macros](../../../frameworks/tauri-macros) | Macros for the tauri crate. |
+| [aphrody-tauri-plugin](../../../frameworks/tauri-plugin) | Build script and runtime Tauri plugin definitions |
+| [aphrody-tauri-plugin-autostart](../../../frameworks/tauri-plugin-autostart) | Automatically launch your application at startup. |
+| [aphrody-tauri-plugin-barcode-scanner](../../../frameworks/tauri-plugin-barcode-scanner) | Scan QR codes, EAN-13 and other kinds of barcodes on Android and iOS |
+| [aphrody-tauri-plugin-biometric](../../../frameworks/tauri-plugin-biometric) | Prompt the user for biometric authentication on Android and iOS. |
+| [aphrody-tauri-plugin-cli](../../../frameworks/tauri-plugin-cli) | Parse arguments from your Tauri application's command line interface. |
+| [aphrody-tauri-plugin-clipboard-manager](../../../frameworks/tauri-plugin-clipboard-manager) | Read and write to the system clipboard. |
+| [aphrody-tauri-plugin-deep-link](../../../frameworks/tauri-plugin-deep-link) | Set your Tauri application as the default handler for an URL |
+| [aphrody-tauri-plugin-dialog](../../../frameworks/tauri-plugin-dialog) | Native system dialogs for opening and saving files along with message dialogs on your Tauri application. |
+| [aphrody-tauri-plugin-fs](../../../frameworks/tauri-plugin-fs) | Access the file system. |
+| [aphrody-tauri-plugin-geolocation](../../../frameworks/tauri-plugin-geolocation) | Get and track the device's current position |
+| [aphrody-tauri-plugin-global-shortcut](../../../frameworks/tauri-plugin-global-shortcut) | Register global hotkeys listeners on your Tauri application. |
+| [aphrody-tauri-plugin-haptics](../../../frameworks/tauri-plugin-haptics) | Haptic feedback and vibrations on Android and iOS |
+| [aphrody-tauri-plugin-http](../../../frameworks/tauri-plugin-http) | Access an HTTP client written in Rust. |
+| [aphrody-tauri-plugin-localhost](../../../frameworks/tauri-plugin-localhost) | Expose your apps assets through a localhost server instead of the default custom protocol. |
+| [aphrody-tauri-plugin-log](../../../frameworks/tauri-plugin-log) | Configurable logging for your Tauri app. |
+| [aphrody-tauri-plugin-nfc](../../../frameworks/tauri-plugin-nfc) | Read and write NFC tags on Android and iOS. |
+| [aphrody-tauri-plugin-notification](../../../frameworks/tauri-plugin-notification) | Send desktop and mobile notifications on your Tauri application. |
+| [aphrody-tauri-plugin-opener](../../../frameworks/tauri-plugin-opener) | Open files and URLs using their default application. |
+| [aphrody-tauri-plugin-os](../../../frameworks/tauri-plugin-os) | Read information about the operating system. |
+| [aphrody-tauri-plugin-persisted-scope](../../../frameworks/tauri-plugin-persisted-scope) | Save filesystem and asset scopes and restore them when the app is reopened. |
+| [aphrody-tauri-plugin-positioner](../../../frameworks/tauri-plugin-positioner) | Position your windows at well-known locations. |
+| [aphrody-tauri-plugin-process](../../../frameworks/tauri-plugin-process) | Access the current process of your Tauri application. |
+| [aphrody-tauri-plugin-shell](../../../frameworks/tauri-plugin-shell) | Access the system shell. |
+| [aphrody-tauri-plugin-single-instance](../../../frameworks/tauri-plugin-single-instance) | Ensure a single instance of your tauri app is running. |
+| [aphrody-tauri-plugin-store](../../../frameworks/tauri-plugin-store) | Simple, persistent key-value store. |
+| [aphrody-tauri-plugin-stronghold](../../../frameworks/tauri-plugin-stronghold) | Store secrets and keys using the IOTA Stronghold secret management engine. |
+| [aphrody-tauri-plugin-updater](../../../frameworks/tauri-plugin-updater) | In-app updates for Tauri applications. |
+| [aphrody-tauri-plugin-upload](../../../frameworks/tauri-plugin-upload) | Upload files from disk to a remote server over HTTP. |
+| [aphrody-tauri-plugin-websocket](../../../frameworks/tauri-plugin-websocket) | Expose a WebSocket server to your Tauri frontend. |
+| [aphrody-tauri-plugin-window-state](../../../frameworks/tauri-plugin-window-state) | Save window positions and sizes and restore them when the app is reopened. |
+| [aphrody-tauri-runtime](../../../frameworks/tauri-runtime) | Runtime for Tauri applications |
+| [aphrody-tauri-runtime-cef](../../../frameworks/tauri-runtime-cef) | Tauri runtime interface for Chromium Embedded Framework |
+| [aphrody-tauri-runtime-wry](../../../frameworks/tauri-runtime-wry) | Wry bindings to the Tauri runtime |
+| [aphrody-tauri-schema-generator](../../../frameworks/tauri-schema-generator) | - |
+| [aphrody-tauri-schema-worker](../../../frameworks/tauri-schema-worker) | - |
+| [aphrody-tauri-utils](../../../frameworks/tauri-utils) | Utilities for Tauri |
+| [tv-cli](../../../frameworks/tv/cli) | Interface en ligne de commande du domaine média tv. |
+| [tv-core](../../../frameworks/tv/core) | Types communs du domaine média tv : rationnels, temps, flux, médias, erreurs. |
+| [tv-ffmpeg](../../../frameworks/tv/ffmpeg) | Wrapper sûr au-dessus de ffmpeg-next (libav* 9.x) qui produit les types tv-core. |
+| [aphrody-ui](../../../frameworks/ui/kit) | Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends. |
 | [dx12-hal](../../../hardware/drivers/gpu/dx12) | dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo |
-| [agent-context](../../../src/agent/context) | Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python. |
-| [bun_analytics](../../../src/analytics) | - |
 | [bun_aot](../../../src/aot) | - |
 | [bun_aot_absent](../../../src/aot/absent) | - |
 | [bun_aot_builtins](../../../src/aot/builtins) | - |
@@ -17,7 +102,6 @@ A member of the Cargo workspace (src/*)
 | [bun_archive](../../../src/archive) | - |
 | [bun_ast](../../../src/ast) | - |
 | [bun_ast_jsc](../../../src/ast_jsc) | - |
-| [aphrody-audio](../../../src/audio) | Audio building blocks: FFT spectrum, mic bridge, Polaris indexer, Voicebox encoder, local voice loop, Jan agent tools, Rust audio catalog |
 | [aphrody](../../../src/ay) | ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build) |
 | [aphrody-backend](../../../src/backend) | Aphrody forensics and backend logic (Rust). |
 | [bun_base64](../../../src/base64) | - |
@@ -34,7 +118,6 @@ A member of the Cargo workspace (src/*)
 | [bun_bundler_jsc](../../../src/bundler_jsc) | - |
 | [bun_bunfig](../../../src/bunfig) | - |
 | [bun_cares_sys](../../../src/cares_sys) | - |
-| [aphrody-factory](../../../src/chromium/factory) | Chromium factory (F4): sync, gn gen, siso build over NativeLink REAPI, R2 publish, doctor, toolchain. |
 | [bun_clap](../../../src/clap) | - |
 | [bun_clap_macros](../../../src/clap_macros) | - |
 | [bun_collections](../../../src/collections) | - |
@@ -43,8 +126,6 @@ A member of the Cargo workspace (src/*)
 | [aphrody-core-capi](../../../src/core/capi) | One C ABI cdylib: core_* (aphrody-core), ai_os_*, depot_*, aphrody_re_* and Boq (aphrody_*), loaded by bun:ffi, Python, and Java |
 | [aphrody-core-py](../../../src/core/capi/py) | Native PyO3 (ABI3) Python core extension exposing aphrody-core (Tree-sitter, BLAKE3, index) and aphrody-re (RE triage, disasm, Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2) |
 | [aphrody-core-jni](../../../src/core/jni) | Native JNI (Java 25+) core bridge exposing aphrody-core (Tree-sitter, BLAKE3, index) and aphrody-re (RE triage, disasm, Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2) |
-| [aphrody-corelib](../../../src/corelib) | Product support library for Shenron and RoseGriffon: GPU (wgpu), RE formats, emulation clock, Epic assets and Boq wire format |
-| [craft-formats](../../../src/craft) | Format layer: detect and read the header of SVG, WebP, EXR, PSD, TIFF and HEIF through storytold/craft-libs (Apache-2.0), pinned by rev. |
 | [bun_crash_handler](../../../src/crash_handler) | - |
 | [bun_csrf](../../../src/csrf) | - |
 | [bun_css](../../../src/css) | - |
@@ -71,7 +152,6 @@ A member of the Cargo workspace (src/*)
 | [bun_executable](../../../src/executable) | - |
 | [bun_format](../../../src/format) | - |
 | [bun_format_conformance](../../../src/format/conformance) | - |
-| [game](../../../src/game) | Open-world vertical slice on Bevy: streamed procedural terrain, third-person controller, day/night, procedural audio |
 | [bun_glob](../../../src/glob) | - |
 | [aphrody-gpu-backend](../../../src/gpu-backend) | Shared wgpu instance, adapter, device and surface-configuration boundary for Aphrody and IECODE renderers, plus the process-wide GPU hub (wgpu + CUDA). |
 | [bun_hash](../../../src/hash) | - |
@@ -80,7 +160,6 @@ A member of the Cargo workspace (src/*)
 | [bun_http](../../../src/http) | - |
 | [bun_http_jsc](../../../src/http_jsc) | - |
 | [bun_http_types](../../../src/http_types) | - |
-| [aphrody-i18n](../../../src/i18n) | Shared i18n catalogs (frameworks/i18n-ts/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered... |
 | [bun_ini](../../../src/ini) | - |
 | [bun_install](../../../src/install) | - |
 | [bun_install_jsc](../../../src/install_jsc) | - |
@@ -108,37 +187,14 @@ A member of the Cargo workspace (src/*)
 | [bun_lint_react_compiler](../../../src/lint/react_compiler) | - |
 | [bun_lint_typescript](../../../src/lint/typescript) | - |
 | [bun_lint_unicorn](../../../src/lint/unicorn) | - |
-| [aphrody-lore](../../../src/lore) | Lore version control: lore (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-aws](../../../src/lore/aws) | Lore version control: lore-aws (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-base](../../../src/lore/base) | Lore version control: lore-base (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-capi](../../../src/lore/capi) | Lore version control: lore-capi (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-chaos-client](../../../src/lore/chaos-client) | Lore version control: lore-chaos-client (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-client](../../../src/lore/client) | Lore version control: lore-client (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-credential](../../../src/lore/credential) | Lore version control: lore-credential (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-error-set](../../../src/lore/error-set) | Composable, traceable error handling for Rust |
-| [aphrody-lore-error-set-macro](../../../src/lore/error-set-macro) | Proc-macro crate for lore-error-set |
-| [aphrody-lore-fuse](../../../src/lore/fuse) | Lore version control: lore-fuse (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-hashicorp](../../../src/lore/hashicorp) | Lore version control: lore-hashicorp (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-io](../../../src/lore/io) | Lore version control: lore-io (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-macro](../../../src/lore/macro) | Lore version control: lore-macro (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-notification](../../../src/lore/notification) | Lore version control: lore-notification (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-proto](../../../src/lore/proto) | Lore version control: lore-proto (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-revision](../../../src/lore/revision) | Lore version control: lore-revision (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-server](../../../src/lore/server) | Lore version control: lore-server (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-storage](../../../src/lore/storage) | Lore version control: lore-storage (absorbed from Epic Games Lore, MIT) |
-| [aphrody-lore-telemetry](../../../src/lore/telemetry) | Telemetry and observability utilities for Lore |
-| [aphrody-lore-transport](../../../src/lore/transport) | Lore version control: lore-transport (absorbed from Epic Games Lore, MIT) |
 | [bun_lsquic_sys](../../../src/lsquic_sys) | - |
 | [aphrody-machine](../../../src/machine) | Low-level machine profile for `ay sys`: SMBIOS, CPUID, PCI, GPUs, storage, virtualization, toolchains |
 | [bun_md](../../../src/md) | - |
 | [bun_mimalloc_sys](../../../src/mimalloc_sys) | - |
-| [aphrody-modele](../../../src/modele) | Commercial document model (invoice, quote, lines, parties, template) as JSON, with the totals computation shared by the TypeScript and Rust sides |
 | [aphrody-net](../../../src/net) | Unified network probe: DNS, TCP, TLS (rustls + platform verifier), ALPN, HTTP/1.1 and HTTP/2 with per-phase timings. |
 | [niubash](../../../src/niubash) | AI-native bash-compatible shell for Windows, built on rubash + winuxcmd |
 | [niubash-runtime](../../../src/niubash/runtime) | Runtime crate for niubash: rubash-backed shell REPL on Windows |
 | [bun_node_path](../../../src/node_path) | - |
-| [aphrody-ocr](../../../src/ocr) | Image-to-text pipeline for aphrody: drives a local vision-language model over one image or a whole directory, parses its DocTags output into markdown, and reports which pages ca... |
-| [aphrody-ocr-core](../../../src/ocr-core) | Portable versioned OCR result contract, provenance and quality states for aphrody. |
 | [bun_opaque](../../../src/opaque) | - |
 | [bun_options_types](../../../src/options_types) | - |
 | [bun_output](../../../src/output) | - |
@@ -154,8 +210,6 @@ A member of the Cargo workspace (src/*)
 | [aphrody-omarchy](../../../src/posix/omarchy) | Unified Omarchy + CachyOS + Arch/Linux orchestration engine: hardware probe, kernel/patchsets, multi-distro recipes, Aether themes, plugins, and WSL2 bundle builder |
 | [wslg-cli](../../../src/posix/wslg) | wslg-cli: part of the Aphrody monorepo |
 | [bun_ptr](../../../src/ptr) | - |
-| [aphrody-rag-core](../../../src/rag-core) | Pure, wasm32-safe core of the aphrody RAG layer: source-aware chunkers (Rust/JS-TS/Markdown/structural/prose), reciprocal-rank-fusion + MMR + vector helpers, and a bit-for-bit p... |
-| [aphrody-re](../../../src/re) | Unified Aphrody reverse engineering core: PE/ELF/Mach-O triage, byte-exact PE64 forge/COFF, .pdata/minidump/ASAR/Electron/Go/Android/SteamStub inspection, Ghidra P-Code/Pseudo-C... |
 | [bun_react_compiler](../../../src/react_compiler) | - |
 | [aphrody-remote](../../../src/remote) | Pure-Rust SSH client for `ay ssh`: exec, sftp copy, fleet hosts and health check (russh, no OpenSSH binary) |
 | [bun_resolve_builtins](../../../src/resolve_builtins) | - |
@@ -167,7 +221,6 @@ A member of the Cargo workspace (src/*)
 | [readline-abi](../../../src/ruline/readline-abi) | Clean-room GNU readline 8.x C ABI adapter for ruline |
 | [bun_runtime](../../../src/runtime) | - |
 | [bun_s3_signing](../../../src/s3_signing) | - |
-| [bun_safety](../../../src/safety) | - |
 | [bun_sema](../../../src/sema) | - |
 | [bun_sema_baselines](../../../src/sema/baselines) | - |
 | [bun_sema_driver](../../../src/sema/driver) | - |
@@ -186,58 +239,9 @@ A member of the Cargo workspace (src/*)
 | [bun_sql](../../../src/sql) | - |
 | [bun_sql_jsc](../../../src/sql_jsc) | - |
 | [bun_standalone_graph](../../../src/standalone_graph) | - |
-| [steam-depot](../../../src/steam) | Bun OS Steam owner: VDF text/binary parser and writer, install and library discovery, client configuration, Proton launch tuning, Remote Play state. |
 | [bun_sys](../../../src/sys) | - |
 | [bun_sys_jsc](../../../src/sys_jsc) | - |
-| [taffy](../../../src/taffy) | First-party Layer-0 UI, Wayland, terminal, and compositing layout engine (absorbed DioxusLabs/taffy) |
-| [aphrody-tao](../../../src/tao) | Cross-platform window manager library. |
-| [aphrody-tao-macros](../../../src/tao-macros) | Proc macros for tao |
 | [bun_tar](../../../src/tar) | - |
-| [aphrody-tauri](../../../src/tauri) | Make tiny, secure apps for all desktop platforms with Tauri |
-| [aphrody-tauri-build](../../../src/tauri-build) | build time code to pair with https://crates.io/crates/tauri |
-| [aphrody-tauri-bundler](../../../src/tauri-bundler) | Wrap rust executables in OS-specific app bundles for Tauri |
-| [aphrody-tauri-cli](../../../src/tauri-cli) | Command line interface for building Tauri apps |
-| [aphrody-tauri-cli-node](../../../src/tauri-cli-node) | - |
-| [aphrody-tauri-codegen](../../../src/tauri-codegen) | code generation meant to be consumed inside of `tauri` through `tauri-build` or `tauri-macros` |
-| [aphrody-tauri-driver](../../../src/tauri-driver) | Webdriver server for Tauri applications |
-| [aphrody-tauri-macos-sign](../../../src/tauri-macos-sign) | Code signing utilities for macOS and iOS apps |
-| [aphrody-tauri-macros](../../../src/tauri-macros) | Macros for the tauri crate. |
-| [aphrody-tauri-plugin](../../../src/tauri-plugin) | Build script and runtime Tauri plugin definitions |
-| [aphrody-tauri-plugin-autostart](../../../src/tauri-plugin-autostart) | Automatically launch your application at startup. |
-| [aphrody-tauri-plugin-barcode-scanner](../../../src/tauri-plugin-barcode-scanner) | Scan QR codes, EAN-13 and other kinds of barcodes on Android and iOS |
-| [aphrody-tauri-plugin-biometric](../../../src/tauri-plugin-biometric) | Prompt the user for biometric authentication on Android and iOS. |
-| [aphrody-tauri-plugin-cli](../../../src/tauri-plugin-cli) | Parse arguments from your Tauri application's command line interface. |
-| [aphrody-tauri-plugin-clipboard-manager](../../../src/tauri-plugin-clipboard-manager) | Read and write to the system clipboard. |
-| [aphrody-tauri-plugin-deep-link](../../../src/tauri-plugin-deep-link) | Set your Tauri application as the default handler for an URL |
-| [aphrody-tauri-plugin-dialog](../../../src/tauri-plugin-dialog) | Native system dialogs for opening and saving files along with message dialogs on your Tauri application. |
-| [aphrody-tauri-plugin-fs](../../../src/tauri-plugin-fs) | Access the file system. |
-| [aphrody-tauri-plugin-geolocation](../../../src/tauri-plugin-geolocation) | Get and track the device's current position |
-| [aphrody-tauri-plugin-global-shortcut](../../../src/tauri-plugin-global-shortcut) | Register global hotkeys listeners on your Tauri application. |
-| [aphrody-tauri-plugin-haptics](../../../src/tauri-plugin-haptics) | Haptic feedback and vibrations on Android and iOS |
-| [aphrody-tauri-plugin-http](../../../src/tauri-plugin-http) | Access an HTTP client written in Rust. |
-| [aphrody-tauri-plugin-localhost](../../../src/tauri-plugin-localhost) | Expose your apps assets through a localhost server instead of the default custom protocol. |
-| [aphrody-tauri-plugin-log](../../../src/tauri-plugin-log) | Configurable logging for your Tauri app. |
-| [aphrody-tauri-plugin-nfc](../../../src/tauri-plugin-nfc) | Read and write NFC tags on Android and iOS. |
-| [aphrody-tauri-plugin-notification](../../../src/tauri-plugin-notification) | Send desktop and mobile notifications on your Tauri application. |
-| [aphrody-tauri-plugin-opener](../../../src/tauri-plugin-opener) | Open files and URLs using their default application. |
-| [aphrody-tauri-plugin-os](../../../src/tauri-plugin-os) | Read information about the operating system. |
-| [aphrody-tauri-plugin-persisted-scope](../../../src/tauri-plugin-persisted-scope) | Save filesystem and asset scopes and restore them when the app is reopened. |
-| [aphrody-tauri-plugin-positioner](../../../src/tauri-plugin-positioner) | Position your windows at well-known locations. |
-| [aphrody-tauri-plugin-process](../../../src/tauri-plugin-process) | Access the current process of your Tauri application. |
-| [aphrody-tauri-plugin-shell](../../../src/tauri-plugin-shell) | Access the system shell. |
-| [aphrody-tauri-plugin-single-instance](../../../src/tauri-plugin-single-instance) | Ensure a single instance of your tauri app is running. |
-| [aphrody-tauri-plugin-store](../../../src/tauri-plugin-store) | Simple, persistent key-value store. |
-| [aphrody-tauri-plugin-stronghold](../../../src/tauri-plugin-stronghold) | Store secrets and keys using the IOTA Stronghold secret management engine. |
-| [aphrody-tauri-plugin-updater](../../../src/tauri-plugin-updater) | In-app updates for Tauri applications. |
-| [aphrody-tauri-plugin-upload](../../../src/tauri-plugin-upload) | Upload files from disk to a remote server over HTTP. |
-| [aphrody-tauri-plugin-websocket](../../../src/tauri-plugin-websocket) | Expose a WebSocket server to your Tauri frontend. |
-| [aphrody-tauri-plugin-window-state](../../../src/tauri-plugin-window-state) | Save window positions and sizes and restore them when the app is reopened. |
-| [aphrody-tauri-runtime](../../../src/tauri-runtime) | Runtime for Tauri applications |
-| [aphrody-tauri-runtime-cef](../../../src/tauri-runtime-cef) | Tauri runtime interface for Chromium Embedded Framework |
-| [aphrody-tauri-runtime-wry](../../../src/tauri-runtime-wry) | Wry bindings to the Tauri runtime |
-| [aphrody-tauri-schema-generator](../../../src/tauri-schema-generator) | - |
-| [aphrody-tauri-schema-worker](../../../src/tauri-schema-worker) | - |
-| [aphrody-tauri-utils](../../../src/tauri-utils) | Utilities for Tauri |
 | [bun_tcc_sys](../../../src/tcc_sys) | - |
 | [bun_text_diff](../../../src/text_diff) | - |
 | [bun_threading](../../../src/threading) | - |
@@ -245,10 +249,6 @@ A member of the Cargo workspace (src/*)
 | [bun_transpiler](../../../src/transpiler) | - |
 | [bun_trim](../../../src/trim) | - |
 | [bun_removable_features](../../../src/trim/removable_features) | - |
-| [tv-cli](../../../src/tv/cli) | Interface en ligne de commande du domaine média tv. |
-| [tv-core](../../../src/tv/core) | Types communs du domaine média tv : rationnels, temps, flux, médias, erreurs. |
-| [tv-ffmpeg](../../../src/tv/ffmpeg) | Wrapper sûr au-dessus de ffmpeg-next (libav* 9.x) qui produit les types tv-core. |
-| [aphrody-ui](../../../src/ui/kit) | Rust core of the Aphrody design system: Material 3 color (HCT, schemes, contrast), tokens, component contracts, layout, theme presets, React/Next front ends. |
 | [aphrody-up](../../../src/up) | Toolchain installer and updater behind `ay up`: tools.toml manifest, GitHub release and URL sources, sha256 checks, provider setup |
 | [bun_url](../../../src/url) | - |
 | [bun_uws](../../../src/uws) | - |

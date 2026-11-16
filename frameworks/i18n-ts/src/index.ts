@@ -13,7 +13,7 @@ export {
 } from "./mf2.ts";
 import { loadCatalogsSync } from "./i18n.ts";
 
-/** Catalogs found in frameworks/i18n-ts/locales at load time; the same JSON files are read by src/i18n. */
+/** Catalogs found in frameworks/i18n-ts/locales at load time; the same JSON files are read by frameworks/i18n. */
 export const catalogs: Readonly<
   Record<string, Readonly<Record<string, string>>>
 > = loadCatalogsSync();
