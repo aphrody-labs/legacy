@@ -48,7 +48,7 @@ function ident(r: Repo, depth = 0): { org: string; name: string } {
 const isMono = (i: { org: string; name: string }) => orgs.has(i.org) && monoNames.has(i.name);
 const target = (r: Repo) => { const i = ident(r); return isMono(i) ? L.monorepo : join(L.repos, i.org, i.name); };
 
-const live = inv.repos.filter((r) => !nested(r));
+const live = inv.repos.filter((r) => !nested(r) && !r.path.startsWith(L.xbuild + "/")); // xbuild holds caches, rescue copies and backups: never planned
 const groups = new Map<string, Repo[]>();
 for (const r of live) { const i = ident(r); const k = isMono(i) ? "@mono" : `${i.org}/${i.name}`; groups.set(k, [...(groups.get(k) ?? []), r]); }
 
@@ -107,7 +107,7 @@ for (const a of sel) {
     for (const s of a.services ?? []) sh.push(`[ -f ${q(s)} ] && run sed -i -E ${q(`s#${a.path.replace(/[.]/g, "[.]")}([^A-Za-z0-9_.-]|$)#${a.to}\\1#g`)} ${q(s)}`);
     sh.push("run systemctl daemon-reload");
   } else if (a.kind === "rescue") {
-    sh.push(`[ ! -e ${q(a.to!)} ] && run cp -a --reflink=auto ${q(a.path)} ${q(a.to!)}`);
+    sh.push(`[ ! -e ${q(a.to!)} ] && run install -d ${q(dirname(a.to!))} && run cp -a --reflink=auto ${q(a.path)} ${q(a.to!)}`);
   } else if (a.kind === "push") {
     sh.push(`echo "  NEEDS PUSH OR RESCUE FIRST: ${a.path}"`);
   } else if (a.kind === "delete-dup") {
