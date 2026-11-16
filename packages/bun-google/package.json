@@ -1,0 +1,42 @@
+{
+  "name": "@aphrody/bun-google",
+  "version": "1.4.7",
+  "description": "Google REST services over the Aphrody Bun runtime, with explicit credential ownership.",
+  "license": "Apache-2.0",
+  "repository": "https://github.com/aphrody-labs/bun",
+  "bin": {
+    "bun-google": "./src/cli.ts",
+    "bun-google-index-public": "./src/public-index-cli.ts"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "llms.txt",
+    "crates/boq"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./services": "./src/services.ts",
+    "./edge-proxy": "./src/edge-proxy.ts",
+    "./cli": "./src/cli.ts",
+    "./search": "./src/search.ts",
+    "./public-index": "./src/public-index.ts",
+    "./public-index-cli": "./src/public-index-cli.ts",
+    "./password-store": "./src/password-store.ts"
+  },
+  "scripts": {
+    "config": "bun src/cli.ts config",
+    "authstatus": "bun src/cli.ts authstatus",
+    "models": "bun src/cli.ts models",
+    "generate": "bun src/cli.ts generate",
+    "stream": "bun src/cli.ts stream",
+    "test": "cd ../.. && bun bd test ./packages/bun-google/test"
+  },
+  "engines": {
+    "bun": ">=1.4.4"
+  }
+}
