@@ -2,6 +2,14 @@
 
 Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](docs/native/ROADMAP.md). Repo, folder, binary and scope names come from [`tools/identity.toml`](tools/identity.toml).
 
+## Sources of truth
+- Vision: [storytold/craft-anything](https://github.com/storytold/craft-anything).
+- Stack: [zed-industries/zed](https://github.com/zed-industries/zed).
+- Design, UI and UX: [design.google](https://design.google/).
+- Architecture, philosophy and core: [kernel.org](https://www.kernel.org/).
+- Ultimate goal: [GNU software](https://www.gnu.org/software/software.html), [uutils](https://uutils.org/), [AOSP](https://android.googlesource.com/), [Chromium](https://chromium.googlesource.com/chromium/src.git).
+- Style: the [Google style guides](https://google.github.io/styleguide/), rethought for AOT, LTO and LLVM.
+
 ## What
 - Aphrody is an AI OS with self-hosted Google services (Gemini, Google APIs and apps, Chromium, A2A, local inference...); those packages and crates are features, never legacy to purge.
 - Core: `ay` is Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), a universal TS/JS, bash and Rust runner, and modules and extensions through crates.io and npm (AOT, LTO).
