@@ -22,7 +22,12 @@
 
 import { spawnSync } from "./spawn.ts";
 import { createPrivateKey, randomBytes, sign } from "node:crypto";
-import { secretDelete, secretGet, secretHas, secretSet } from "@aphrody/env-kit/vault/sync";
+import {
+  secretDelete,
+  secretGet,
+  secretHas,
+  secretSet,
+} from "@aphrody/env-kit/vault/sync";
 
 export const APP = {
   /** Name and slug: "aphrody" is reserved by the GitHub account @aphrody (third party), the App is named aphrody-labs. */
@@ -216,13 +221,14 @@ function cred(name: string): string | undefined {
 function clientId(): string {
   const v = cred("APHRODY_APP_CLIENT_ID") ?? ghVar("APHRODY_APP_CLIENT_ID");
   if (!v)
-    throw new Error("APHRODY_APP_CLIENT_ID missing (ay auth github-app create)");
+    throw new Error(
+      "APHRODY_APP_CLIENT_ID missing (ay auth github-app create)",
+    );
   return v;
 }
 
 function ghVar(name: string): string | undefined {
   const r = spawnSync("gh", ["variable", "get", name, "--org", APP.owner], {
-    encoding: "utf8",
     windowsHide: true,
   });
   return r.status === 0 ? r.stdout.trim() || undefined : undefined;
@@ -341,7 +347,7 @@ function ghSecret(name: string, value: string, org: string): boolean {
         "--repos",
         APP.ciRepos.join(","),
       ],
-      { input: value, encoding: "utf8", windowsHide: true },
+      { input: value, windowsHide: true },
     ).status === 0
   );
 }
@@ -361,7 +367,7 @@ function ghVariable(name: string, value: string, org: string): boolean {
         "--body",
         value,
       ],
-      { encoding: "utf8", windowsHide: true },
+      { windowsHide: true },
     ).status === 0
   );
 }
@@ -389,10 +395,9 @@ async function create(a: string[]): Promise<number> {
           headers: { "content-type": "text/html; charset=utf-8" },
         });
       if (u.pathname === "/setup")
-        return new Response(
-          "Installation recorded. This tab can be closed.",
-          { headers: { "content-type": "text/plain; charset=utf-8" } },
-        );
+        return new Response("Installation recorded. This tab can be closed.", {
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        });
       if (u.pathname !== "/callback")
         return new Response(null, { status: 404 });
       if (u.searchParams.get("state") !== state)
@@ -637,7 +642,7 @@ async function userLogin(a: string[]): Promise<number> {
   if (a.includes("--no-open")) console.error(authUrl);
   else open(authUrl);
   console.error(
-    "ay auth github-app user: authorization page opened; owner click \"Authorize\"",
+    'ay auth github-app user: authorization page opened; owner click "Authorize"',
   );
   const code = await Promise.race([done, Bun.sleep(600_000).then(() => 1)]);
   server.stop(true);
@@ -680,9 +685,7 @@ async function retire(a: string[]): Promise<number> {
       log.push(`uninstalled from ${i.account.login}`);
     }
   } else
-    log.push(
-      `key ${key} or client id missing: uninstall through the App page`,
-    );
+    log.push(`key ${key} or client id missing: uninstall through the App page`);
   for (const o of APP.ciOrgs) {
     if (
       spawnSync("gh", ["secret", "delete", key, "--org", o], {

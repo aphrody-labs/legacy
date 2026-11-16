@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Measures the web pet runtime: bundle size (raw, gzip, brotli) of <aphrody-pet> and of the clock
 // alone, import time in a fresh Bun process, cost of one tick. With `--wasm <file>` it measures
-// option A too (the crate's clock compiled to wasm32, crates/aphrody-identity/examples/pet_wasm.rs):
+// option A too (the crate's clock compiled to wasm32, system/identity/examples/pet_wasm.rs):
 // size, compile + instantiate time, tick cost, and parity on the crate fixture.
 //   bun scripts/measure.ts [--wasm path/to/pet_wasm.wasm] [--json]
 import { brotliCompressSync, constants } from "node:zlib";
@@ -62,7 +62,7 @@ const fixture: {
     ticks: [number, string, string | null, number | null, number | null][];
   }[];
 } = await Bun.file(
-  join(findWorkspaceRoot(import.meta.dir), "crates/aphrody-identity/tests/fixtures/parite-web.json"),
+  join(findWorkspaceRoot(import.meta.dir), "system/identity/tests/fixtures/parite-web.json"),
 ).json();
 const aphrody = fixture.cases[0]!;
 

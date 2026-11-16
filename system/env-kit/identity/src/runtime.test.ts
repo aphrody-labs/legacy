@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
-// Rust <-> web parity: crates/aphrody-identity writes tests/fixtures/parite-web.json from its own
+// Rust <-> web parity: system/identity writes tests/fixtures/parite-web.json from its own
 // clock (pets.rs); this file replays every tick through src/runtime.ts and must agree exactly.
 import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { findWorkspaceRoot } from "@aphrody/env-kit/paths";
 import { Ambient, gaze, PET_WEB, resolve, type WebTrack } from "./runtime";
 
-const crate = join(findWorkspaceRoot(import.meta.dir), "crates/aphrody-identity");
+const crate = join(findWorkspaceRoot(import.meta.dir), "system/identity");
 
 type TickRow = [number, string, string | null, number | null, number | null];
 interface Fixture {

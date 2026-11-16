@@ -20,7 +20,14 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { type LocalStoreInfo, localStore } from "./paths.ts";
-import { assertName, DPAPI_V2, entropyV2, isDpapiV2, NAME, v2OnlyMarker } from "./store.ts";
+import {
+  assertName,
+  DPAPI_V2,
+  entropyV2,
+  isDpapiV2,
+  NAME,
+  v2OnlyMarker,
+} from "./store.ts";
 
 export type SecretBackend = LocalStoreInfo["backend"];
 export type SecretStoreInfo = LocalStoreInfo;
@@ -48,7 +55,11 @@ function locate(info: SecretStoreInfo, name: string): string | undefined {
   return best;
 }
 
-function creds(info: SecretStoreInfo, args: string[], input?: Uint8Array): Uint8Array {
+function creds(
+  info: SecretStoreInfo,
+  args: string[],
+  input?: Uint8Array,
+): Uint8Array {
   const user = info.backend === "systemd-creds-user" ? ["--user"] : [];
   let r: ReturnType<typeof Bun.spawnSync>;
   try {
@@ -61,16 +72,19 @@ function creds(info: SecretStoreInfo, args: string[], input?: Uint8Array): Uint8
   }
   if (r.exitCode !== 0) {
     // stderr of systemd-creds never contains the payload.
-    throw new Error(`systemd-creds ${args[0]} failed: ${r.stderr.toString("utf8").trim()}`);
+    throw new Error(
+      `systemd-creds ${args[0]} failed: ${r.stderr?.toString("utf8").trim() ?? ""}`,
+    );
   }
-  return new Uint8Array(r.stdout);
+  return new Uint8Array(r.stdout ?? new Uint8Array());
 }
 
 export function secretSet(name: string, value: string | Uint8Array): void {
   assertName(name);
   const info = storeInfo();
   mkdirSync(info.dir, { recursive: true, mode: 0o700 });
-  const bytes = typeof value === "string" ? new TextEncoder().encode(value) : value;
+  const bytes =
+    typeof value === "string" ? new TextEncoder().encode(value) : value;
   if (!bytes.byteLength) throw new Error(`secret ${name}: empty value`);
   const file = fileOf(info, info.dir, name);
   if (info.backend === "dpapi") {

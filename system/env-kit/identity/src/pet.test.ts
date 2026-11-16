@@ -5,7 +5,7 @@ import { findWorkspaceRoot } from "@aphrody/env-kit/paths";
 import { compactPet, type RawAnimations, renderModule } from "./compact";
 import { frameAt, gazeFrame, PET, spriteStyle, trackDuration } from "./pet";
 
-const crateJson = join(findWorkspaceRoot(import.meta.dir), "crates/aphrody-identity/assets/aphrody/animations.json");
+const crateJson = join(findWorkspaceRoot(import.meta.dir), "system/identity/assets/aphrody/animations.json");
 
 describe("generated pet data", () => {
   test("matches the crate animations.json (run `bun run gen` after a re-export)", async () => {
