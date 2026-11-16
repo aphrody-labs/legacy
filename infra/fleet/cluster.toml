@@ -1,4 +1,4 @@
-# Single source of the "three hosts, one logical server" layer (docs/infra/SINGLE-SERVER.md).
+# Single source of the "three hosts, one logical server" layer.
 # Read by infra/fleet/bin/fleet-registry.sh (installed on every host as /etc/fleet/cluster.toml by fleet-offload.sh),
 # which feeds fleet-run (peers, allowed classes) and prints the service registry. Flat TOML only: [section], key = "value".
 # A host is a role: its ssh alias, user and mesh address are discovered (ssh_config, getent, wg), not listed here.

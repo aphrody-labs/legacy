@@ -1,2 +1,2 @@
-# checkdeps layer rules (see docs/ARCHITECTURE.md). Above aphrody-re (layer 3), below ay (layer 5).
+# checkdeps layer rules. Above aphrody-re (layer 3), below ay (layer 5).
 layer = 4

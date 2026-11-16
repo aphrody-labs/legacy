@@ -1,6 +1,6 @@
 //! Open-world vertical slice on Bevy (docs/games/PLAN.md section 6): streamed procedural terrain,
 //! third-person controller (keyboard, mouse, gamepad), day/night cycle and procedural audio.
-//! Multiplayer is a design note only (docs/games/MULTIPLAYER.md), nothing networked exists here.
+//! Multiplayer is a design note only, nothing networked exists here.
 
 pub mod noise;
 pub mod procgen;

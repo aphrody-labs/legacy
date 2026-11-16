@@ -1,5 +1,5 @@
 // Theme set generated from the seed of design.toml and named seeds (Material Color Utilities, same roles as build.ts).
-// Seeds are plain hex values chosen by us; see docs/design/REFERENCES.md for the moods they refer to.
+// Seeds are plain hex values chosen by us for the moods they refer to.
 import {
   hexFromArgb,
   MaterialDynamicColors,

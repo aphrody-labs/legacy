@@ -1,5 +1,5 @@
 #!/bin/bash
-# Apply / check the offload layer of a fleet host (docs/infra/FLEET-OFFLOAD.md). Idempotent, run as root from /srv/src.
+# Apply / check the offload layer of a fleet host. Idempotent, run as root from /srv/src.
 #   fleet-offload.sh apply|check [host]      host defaults to /etc/aphrody/role (fr1|fr2|prd)
 # Installs: bin scripts -> /usr/local/bin (with and without .sh), fleet-cgsample units, <host>/offload/systemd/** -> /etc/systemd/system
 # (slices + drop-ins), <host>/offload/etc/** -> /etc (udev bfq rule, modules-load, /etc/fleet/run.conf), atop 30 s history.

@@ -440,7 +440,7 @@ for (const from of ["fr2", "prd"]) {
   }
 }
 
-// 10. aphrody.com (holding page from docs/ALPHABET.md) and aphrody.app (deployment platform, packages/deploy).
+// 10. aphrody.com (holding page) and aphrody.app (deployment platform, packages/deploy).
 {
   const page = async (u: string) => {
     const r = await fetch(u, {

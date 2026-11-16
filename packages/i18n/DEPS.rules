@@ -1,4 +1,4 @@
-# checkdeps layer rules (see docs/ARCHITECTURE.md). Inherited by subdirectories.
+# checkdeps layer rules. Inherited by subdirectories.
 layer = 3
 # ticketed: `translate` loads the ai-os model layer lazily as the machine-translation backend (optional peer); everything else in this package is dependency-free of the agent layer.
 !packages/ai-os

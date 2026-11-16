@@ -7,7 +7,7 @@
 # Never on the PC, never on prd.
 
 [toolchain]
-# LLVM shared with Chromium (docs/native/llvm/UNIFIED-TOOLCHAIN.md). On fr1 the factory checkout holds it; the
+# LLVM shared with Chromium. On fr1 the factory checkout holds it; the
 # bin directory has clang, ld.lld, llvm-ar, llvm-nm, llvm-objcopy, llvm-objdump, llvm-readelf and
 # llvm-strip (listed on fr1 2026-11-13, clang 24.0.0git 86922d51). No llvm-profdata: AutoFDO and
 # Propeller use the system LLVM until the factory publishes it.
@@ -38,7 +38,7 @@ image = "v3"
 env = { _processor_opt = "generic_v4", _use_llvm_lto = "thin" }
 
 # KVM guests of the fleet class of fr1/fr2 (Haswell, x86-64-v3). Kept buildable for measurements;
-# fr1/fr2 move to Arch + CachyOS kernels (docs/infra/REINSTALL-PLAN.md).
+# fr1/fr2 move to Arch + CachyOS kernels.
 [flavor.kvm-v3]
 image = "v3"
 env = { _processor_opt = "generic_v3", _cpusched = "eevdf", _cachy_config = "no", _HZ_ticks = "300", _preempt = "lazy", _hugepage = "madvise", _use_llvm_lto = "thin" }

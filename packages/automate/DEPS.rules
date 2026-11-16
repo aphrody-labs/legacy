@@ -1,2 +1,2 @@
-# checkdeps layer rules (see docs/ARCHITECTURE.md). Domain library: no dependency on the agent layer, no I/O of its own.
+# checkdeps layer rules. Domain library: no dependency on the agent layer, no I/O of its own.
 layer = 3

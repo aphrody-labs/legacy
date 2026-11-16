@@ -8,7 +8,7 @@
 //! - `ay engines`: the engines facade of `apps/open/packages/browser-engines` (aphrody-labs/open) (V8, JavaScriptCore, Dawn, wgpu,
 //!   browsers), run by bun, plus `ay engines js` and `ay engines build`;
 //! - `ay agents`: the ai-os orchestrator (`orch`), run by bun;
-//! - `ay steam`: Steam data of the host as JSON over `src/steam` (docs/gaming/OWNERSHIP.md).
+//! - `ay steam`: Steam data of the host as JSON over `src/steam`.
 //!
 //! Plan and status: docs/ay/MIGRATION.md.
 

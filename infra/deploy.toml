@@ -145,7 +145,7 @@ url = "https://www.google.com/"
 tag = "e2e:auth"
 expect = ["avatar", "h2|h3", "TLS 1.3"]
 # =============================================================================
-# Hosting placement (docs/infra/HOSTING-POLICY.md). One table per deployable app.
+# Hosting placement. One table per deployable app.
 # `bun packages/deploy/src/deploy-target.ts <app> <cf|vercel|vps>` renders the host config from here.
 #   target      = current production host; every app must also render for the others
 #   commercial  = true forbids Vercel Hobby (non-commercial personal use only)
@@ -207,7 +207,7 @@ commercial = false
 vps_exec = "bun run server.ts"
 
 # =============================================================================
-# Authentication and network access (docs/infra/AUTH.md). `ay auth status|repair|gh-secrets|tunnels`
+# Authentication and network access. `ay auth status|repair|gh-secrets|tunnels`
 # (packages/env-kit/src/auth.ts) walks [nodes.*] over ssh and the tables below. Names only: values
 # live in the OS secret store (`ay secret`: DPAPI on Windows, systemd-creds on Linux), then .env.
 # =============================================================================
@@ -245,7 +245,7 @@ tunnels = { cloudflared-mig-prd = "mig-prd", cloudflared-prod = "prod" }
 wireguard = ["prod", "vps"]
 units = ["shenron-cloudflare-s3-renew", "rg-steam-depot"]
 
-# Keyless CI (docs/infra/AUTH-ECOSYSTEM.md). `ay auth oidc` creates the GitHub Actions OIDC federation
+# Keyless CI. `ay auth oidc` creates the GitHub Actions OIDC federation
 # into GCP idempotently; workflows then use google-github-actions/auth with
 # workload_identity_provider = projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>
 # and service_account, `permissions: id-token: write`, no JSON key. `replaces`: long-lived CI secret ->
@@ -265,7 +265,7 @@ repos = ["aphrody-labs/aphrody"]
 CARGO_REGISTRY_TOKEN = "crates.io trusted publishing (RFC 3691, rust-lang/crates-io-auth-action) : lier aphrody-labs sur crates.io, puis gh secret delete CARGO_REGISTRY_TOKEN --org aphrody-labs"
 NPM_TOKEN = "npm trusted publishing (OIDC, GA 2025-07-31) : configurer chaque paquet, puis supprimer le secret"
 
-# Public keys leaked in aphrody-labs/mesh-vn history (docs/publish/STATUS.md): rotate with
+# Public keys leaked in aphrody-labs/mesh-vn history: rotate with
 # infra/fleet/wg/rotate-wg-win.sh (UAC), then remove the peer everywhere.
 [auth.wireguard]
 revoked = ["up+fbCDKsbVlLZSFXR3k4U3I784oSqwO8/ijyHSM/yM="]
@@ -292,7 +292,7 @@ llama = { upstream = "ghcr.io/ggml-org/llama.cpp:server-b12316", services = ["ll
 
 # -----------------------------------------------------------------------------
 # Cluster layer (origin side): LB + failover + request dedup across fr1/fr2/prd.
-# Single source for infra/cluster/gen.ts -> infra/cluster/generated/<member>/ (docs/infra/CLUSTER.md).
+# Single source for infra/cluster/gen.ts -> infra/cluster/generated/<member>/.
 # Edge (DNS, Workers, Cache Rules, Tunnel ingress, Access) belongs to infra/cloudflare + docs/infra/FR2-CLOUDFLARE.md.
 # Transport (definitive, 2026-11-13): HAProxy backend mTLS over TCP 7444 between members; also carries sshd
 # (ProxyCommand infra/cluster/ssh-mesh.sh) so runner.ts / orch/fleet.ts get an ssh path independent of WireGuard.

@@ -1,4 +1,4 @@
-# unixwin fusion on real Windows (docs/native/UNIXWIN.md): `ay applet` (WinuxCmd Rust library, in process) and the uutils multicall run the
+# unixwin fusion on real Windows: `ay applet` (WinuxCmd Rust library, in process) and the uutils multicall run the
 # WinuxCmd GNU-master corpus (tests/differential/master-cases.json, byte-compared stdout, stderr and exit status) against results
 # recorded from GNU coreutils on Linux. The WinuxCmd checkout is the fork at the src.lock.json pin.
 name: unixwin

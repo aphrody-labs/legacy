@@ -1,2 +1,2 @@
-# checkdeps layer rules (see docs/ARCHITECTURE.md). Inherited by subdirectories.
+# checkdeps layer rules. Inherited by subdirectories.
 layer = 0

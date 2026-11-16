@@ -30,7 +30,7 @@ identity cmd="check" *args:
 cli-skills *args:
     bun "{{root}}/scripts/cli-skills.ts" {{args}}
 
-# Layered dependency gate (Chromium checkdeps analogue): DEPS.rules per directory, see docs/ARCHITECTURE.md
+# Layered dependency gate (Chromium checkdeps analogue): DEPS.rules per directory
 [group('gates')]
 checkdeps *flags:
     bun "{{root}}/scripts/checkdeps.ts" --root "{{root}}" {{flags}}

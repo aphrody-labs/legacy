@@ -1,4 +1,4 @@
-# Keyless GCP access for CI (docs/infra/AUTH-ECOSYSTEM.md): GitHub Actions OIDC -> Workload Identity
+# Keyless GCP access for CI: GitHub Actions OIDC -> Workload Identity
 # Federation (pool github, provider aphrody-dev, condition repository_owner == aphrody-labs, created by
 # `ay auth oidc` from infra/deploy.toml [auth.oidc.gcp]) -> 1 h token for yolo-automation. No JSON key.
 # Other workflows needing GCP reuse the same two steps with `permissions: id-token: write`.

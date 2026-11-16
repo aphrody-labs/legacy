@@ -1,4 +1,4 @@
-# Hosts of the aphrody vault (docs/infra/VAULT.md). Public data only: each recipient is the public
+# Hosts of the aphrody vault. Public data only: each recipient is the public
 # half of an age X25519 identity whose private half never leaves its host (DPAPI on the PC,
 # systemd-creds credential "aphrody-vault-age" on a VPS). Recipients are written by
 # `env-kit vault hosts init <host>` and changed by `env-kit vault rotate <host>`.

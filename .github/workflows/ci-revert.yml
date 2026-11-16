@@ -1,4 +1,4 @@
-# CI is the judge of the PR-less flow on main (docs/agents/AGENT-FIRST.md).
+# CI is the judge of the PR-less flow on main.
 # When `judge` or `ci` fails on a main commit whose parent was green, that commit is reverted on main
 # (one-line equivalent: git revert --no-edit <sha> && git push origin HEAD:main).
 # Not reverted: reverts themselves, commits with [no-revert] in the message, failures whose parent
@@ -26,7 +26,7 @@ jobs:
       WF: ${{ github.event.workflow_run.name }}
     steps:
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md): 1 h installation token, bounded to the listed permissions.
+        # GitHub App aphrody-labs: 1 h installation token, bounded to the listed permissions.
         if: vars.APHRODY_APP_CLIENT_ID != ''
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:

@@ -71,7 +71,7 @@ Library API for other tools (AI provider keys included): `secretSet`, `secretGet
 
 ## Fleet Authentication (`env-kit auth`, `ay auth`)
 
-`status`, `repair [--browser]`, `gh-secrets`, `tunnels`, `rotate cloudflare`: see `docs/infra/AUTH.md`.
+`status`, `repair [--browser]`, `gh-secrets`, `tunnels`, `rotate cloudflare`.
 Inventory in `infra/deploy.toml` (`[nodes.*]`, `[auth.*]`).
 
 ## Multi-Language Loaders

@@ -5,7 +5,7 @@ description: Use when choosing, driving, building or comparing a browser engine 
 
 # browser-engines
 
-Evidence and figures live in `docs/native/bench/REPORT.md` (+ `docs/native/bench/*.json`), produced by a harness that lives on fr1 (`~/browser-bench/harness`, TypeScript on Bun), not in the repository; cite no figure outside these files. Pins: Chromium `third_party/chrome-channels.toml`, clone commits `git -C third_party/<name> log -1`. Owner amendments: V8 follows the Chromium of cef-rs; oracle = Chrome Stable; the `third_party/chromium` checkout is extraction only.
+Evidence and figures live (+ `docs/native/bench/*.json`), produced by a harness that lives on fr1 (`~/browser-bench/harness`, TypeScript on Bun), not in the repository; cite no figure outside these files. Pins: Chromium `third_party/chrome-channels.toml`, clone commits `git -C third_party/<name> log -1`. Owner amendments: V8 follows the Chromium of cef-rs; oracle = Chrome Stable; the `third_party/chromium` checkout is extraction only.
 
 Removed engines: Lightpanda and Firefox (Nightly, Zen, Playwright firefox) are no longer engines of the stack; their REPORT.md rows are history only. The Brave and Helium clones are gone too.
 

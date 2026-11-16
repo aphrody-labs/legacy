@@ -169,7 +169,7 @@ mod core_exports {
     const _KEEP_ABI_VERSION: u32 = cabi::APHRODY_ABI_VERSION;
 }
 
-/// The index pipeline over the same SQLite file as `ay index` (docs/native/PIPELINE.md): incremental,
+/// The index pipeline over the same SQLite file as `ay index`: incremental,
 /// BLAKE3-addressed, no per-file JSON. Only the tree-sitter and document stages live here (this
 /// crate is L2 and cannot link `aphrody-re`); binary and deep stages run in `ay index`.
 #[cfg(feature = "pipeline")]

@@ -42,7 +42,7 @@ See `infra/fleet/ACME.md`: a single certbot on fr2, Cloudflare DNS-01, conventio
 - new pair generated: `~/.ssh/fleet/wg/wg-win.{key,pub}` (0600, outside the repository). Public key: `08E2m1ElKRNMO2qigTgRoE2X1H8tuwy28LeQqtfpxWc=`.
 - the old key is still active. The switch was tried on the server side, but installing the Windows tunnel requires a UAC prompt (`sudo`) that the agent cannot validate. The servers went back to the old key so as not to cut the mesh.
 - to finish, run `infra/fleet/wg/rotate-wg-win.sh` in an interactive terminal. It installs the client, swaps the key on fr1 (`wg1`) and prd (`prod`), pings .1, .5 and .3, and rolls back automatically on failure. fr2 does not have this peer.
-- mesh-vn: commit `1757fcd`, the key is removed from HEAD and `generator.ts` reads `MESH_WG_WIN_PRIVATE_KEY`. `generated/wg-win.conf` is no longer tracked by git and goes into `.gitignore`. The repository was re-archived. History was not rewritten: the `filter-repo` described in `docs/publish/BLOCKED.md` awaits the owner's approval.
+- mesh-vn: commit `1757fcd`, the key is removed from HEAD and `generator.ts` reads `MESH_WG_WIN_PRIVATE_KEY`. `generated/wg-win.conf` is no longer tracked by git and goes into `.gitignore`. The repository was re-archived. History was not rewritten: the `filter-repo` described awaits the owner's approval.
 
 ### fr1: shutdowns already done
 

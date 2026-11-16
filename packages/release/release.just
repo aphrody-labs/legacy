@@ -1,6 +1,6 @@
 # npm publication without a human (imported by the root justfile).
 
-# npm without a human (docs/infra/NPM.md): status|sync|inventory|align [--write]|login|trust|harden
+# npm without a human: status|sync|inventory|align [--write]|login|trust|harden
 [group('release')]
 npm cmd="status" *args:
     bun run "{{root}}/packages/release/src/npm.ts" {{cmd}} {{args}}

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Fast-forward the default branch of every aphrody-labs fork tracked for the Epic Games and Bevy
-# surface (docs/epic/RESOURCES.md) with its upstream. Runs on fr1 under the existing gh login
+# surface with its upstream. Runs on fr1 under the existing gh login
 # (fork-sync.timer, every 6 h); no token is stored by this script.
 # Usage: fork-sync.sh [forks.txt]   (default: fetched from aphrody-labs/src main)
 set -eu

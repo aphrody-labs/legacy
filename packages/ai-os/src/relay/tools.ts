@@ -442,7 +442,7 @@ export const TOOLS: Tool[] = [
   {
     name: "billing_status",
     description:
-      "Read-only Google Cloud billing status via billing-agent (keyless impersonation): billing accounts, linked projects, budgets and spend caps, last notified spend (docs/infra/GCP-BILLING.md).",
+      "Read-only Google Cloud billing status via billing-agent (keyless impersonation): billing accounts, linked projects, budgets and spend caps, last notified spend.",
     inputSchema: obj({}),
     readOnly: true,
     run: async () => {

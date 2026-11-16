@@ -7,7 +7,7 @@
 import { rename } from "node:fs/promises";
 
 const OWNERS = ["EpicGames", "bevyengine"];
-// Community repositories described in docs/epic/RESOURCES.md; the list is docs/epic/community-repos.json.
+// Community repositories described; the list is docs/epic/community-repos.json.
 const COMMUNITY: string[] = (await import("../../../docs/epic/community-repos.json", { with: { type: "json" } })).default;
 
 const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;

@@ -1,4 +1,4 @@
-# Cloudflare edge of the fleet, declarative (docs/infra/FR2-CLOUDFLARE.md).
+# Cloudflare edge of the fleet, declarative.
 #   bun infra/cloudflare/cf.ts plan            diff live vs this file (read-only, default)
 #   bun infra/cloudflare/cf.ts apply <section> apply one section: dns | tunnels | rules | access
 #   bun infra/cloudflare/proof.ts              re-run every check, exit 1 on regression (just cf-proof)

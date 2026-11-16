@@ -1,4 +1,4 @@
-# Cluster layer (docs/infra/CLUSTER.md): LB + failover + dedup across fr1/fr2/prd, generated from infra/deploy.toml.
+# Cluster layer: LB + failover + dedup across fr1/fr2/prd, generated from infra/deploy.toml.
 
 # Regenerate infra/cluster/generated/* from infra/deploy.toml [cluster]
 [group('cluster')]

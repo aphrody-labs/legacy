@@ -1,5 +1,5 @@
 #!/bin/bash
-# Least-loaded job dispatcher + cgroup isolation for fleet hosts (docs/infra/FLEET-OFFLOAD.md).
+# Least-loaded job dispatcher + cgroup isolation for fleet hosts.
 #   fleet-run [-c class] [-H fr1|fr2|auto] [-C dir] [-n] [--] cmd args...
 # class   agent (default), test, lint, research -> agents.slice ; bench -> bench.slice ; build -> build.slice (fr1 only)
 # Placement: PSI of the candidate hosts (cpu some avg10/avg60, io some avg10, memory some avg10) read live, lowest score wins;

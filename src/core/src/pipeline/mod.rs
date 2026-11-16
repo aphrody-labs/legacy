@@ -1,4 +1,4 @@
-//! One stage graph over the monorepo (docs/native/PIPELINE.md):
+//! One stage graph over the monorepo:
 //!
 //! ```text
 //! walk -> stat skip -> read+BLAKE3 -> detect -> { tree-sitter | text | triage | ghidra | llvm } -> SQLite

@@ -1,4 +1,4 @@
-// Webhooks of the "aphrody" GitHub App (docs/infra/GITHUB-APP.md).
+// Webhooks of the "aphrody" GitHub App.
 // POST /github: X-Hub-Signature-256 signature (HMAC SHA-256 of the raw body, secret GITHUB_WEBHOOK_SECRET) verified in
 // constant time, then the events useful to automation (red CI, push to the default branch, published release,
 // security alerts, installations) go, summarized, into the Cloudflare queue `github-events`. The

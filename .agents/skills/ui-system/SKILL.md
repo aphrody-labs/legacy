@@ -21,7 +21,7 @@ The design system is framework-neutral: one token set, one adapter per target. P
 | C / Zig        | `adapters/tokens.h`, `tokens/tokens.zig`                                                                              |
 | TUI            | `tokens/ansi.json`, `tokens/ansi.sh`, `tokens/tokens.rs` (24-bit SGR)                                                 |
 
-Defaults already in the repo: the web app `apps/web/web` is an Angular app on Angular Material; `docs/ui/STACK.md` lists the sources and the dated version checks for each target. For a new surface, choose from the adapters above and record the choice in `docs/ui/STACK.md`.
+Defaults already in the repo: the web app `apps/web/web` is an Angular app on Angular Material; `docs/ui/STACK.md` lists the sources and the dated version checks for each target. For a new surface, choose from the adapters above and record the choice.
 
 ## Rules
 
@@ -31,7 +31,7 @@ Defaults already in the repo: the web app `apps/web/web` is an Angular app on An
 4. Typography: Google Sans Flex (design.toml), M3 scale `--md-sys-typescale-*`. Shapes `--md-sys-shape-corner-*`. Motion `--md-sys-motion-*`.
 5. bun only for JS/TS. Rust with windows-rs. No compilation on the PC: CI or fr1 under `nice -n 19`.
 6. Commits: directly on main, limited to your paths, no AI attribution or emoji.
-7. Verify every cited version live (`gh api`, npm registry, crates.io, context7, Microsoft Learn MCP) and note it with its date in `docs/ui/STACK.md`.
+7. Verify every cited version live (`gh api`, npm registry, crates.io, context7, Microsoft Learn MCP) and note it with its date.
 
 ## Figma (Figma MCP)
 
@@ -68,7 +68,7 @@ Detailed UX rules, product types, page structures and charts: skill `ui-ux-pro-m
 | Color scheme      | `@material/material-color-utilities`                    | already in `packages/design`                                           |
 | Icons             | Material Symbols (`material-design-icons`)              | the icon library shipped                                               |
 | Icons, reference  | `lucide`                                                | read-only, to draw a pictogram missing from Material Symbols           |
-| Brand font        | Google Sans Flex (`design.toml`)                         | interface; details in `docs/ui/STACK.md`                               |
+| Brand font        | Google Sans Flex (`design.toml`)                         | interface                               |
 | Fallback fonts    | `roboto-flex`, `googlesans-code`, `geist-font`, `inter` | variable fallback, code, docs; subsetted woff2 on fr1                  |
 | SVG: rendering    | `resvg` / `usvg`                                        | rasterization (favicons, preview PNGs, render tests)                   |
 | SVG: optimization | `oxvg`                                                  | SVGO-compatible Rust optimizer, before any committed SVG               |

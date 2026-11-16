@@ -1,4 +1,4 @@
-# Agent fleet (docs/agents/AGENT-FIRST.md). `just <recipe>` is the single agent interface.
+# Agent fleet. `just <recipe>` is the single agent interface.
 
 # Headless Claude Code, no human in the loop (JSON result on stdout)
 # Free text is passed as exported variables ($prompt), never interpolated into the script (tribunal 2026-11-13).

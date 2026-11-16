@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// @aphrody/vault: one async API for every secret of src (docs/infra/VAULT.md).
+// @aphrody/vault: one async API for every secret of src.
 export * from "./paths.ts";
 export * from "./store.ts";
 export {

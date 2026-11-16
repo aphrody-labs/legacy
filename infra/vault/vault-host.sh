@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# Host side of the aphrody vault (docs/infra/VAULT.md). Installed by `env-kit vault hosts install`
+# Host side of the aphrody vault. Installed by `env-kit vault hosts install`
 # into ~/.local/libexec/aphrody/vault-host.sh. Never prints a value: only names, counts, hashes.
 #
 #   keygen [--force]  age identity sealed by systemd-creds as credential "aphrody-vault-age";

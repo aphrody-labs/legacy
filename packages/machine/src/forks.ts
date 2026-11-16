@@ -1,5 +1,5 @@
 // aphrody-labs forks integrated into third_party/: origin = aphrody-labs fork, upstream = upstream project, extra
-// remotes for third-party forks of the same network (one project = one clone, see docs/core/ARCHITECTURE-ROOT.md).
+// remotes for third-party forks of the same network (one project = one clone).
 // Idempotent. The existing folder is found in src.lock.json by its URL (origin or upstream), otherwise the clone
 // is created flat: third_party/<name> (blobless + Scalar through `ay git clone`).
 // Usage (repository root): bun packages/machine/src/forks.ts [--check] [name...]   then: ay lock --lock-only
@@ -231,7 +231,7 @@ const FORKS: Fork[] = [
     "winuxsh-profiles",
   ].map((n) => ({ name: n, upstream: gh(`unixwin/${n}`) })),
   { name: "unixwin-github", upstream: gh("unixwin/.github") }, // org profile; ".github" reserved on the aphrody-labs side
-  // Signed APT archive: out of the chain (docs/native/deps/POLICY.md: never apt); scripts and metadata, no packages.
+  // Signed APT archive: out of the chain; scripts and metadata, no packages.
   {
     name: "unixwin-apt",
     upstream: gh("unixwin/apt"),

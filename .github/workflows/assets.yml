@@ -1,4 +1,4 @@
-# Asset tests (docs/games/ASSET-TESTS.md): every asset of assets/library decoded by our own vendors.
+# Asset tests: every asset of assets/library decoded by our own vendors.
 # Rust parts (tv-ffmpeg/FFmpeg, resvg, craft-libs, gltf crate, headless Bevy) build and run on fr1; the Bun
 # parts (Bun.Image, Khronos glTF-Validator, sha256) and the merged report run in the same job. The
 # fingerprint step re-tests whenever the manifest or a decoder fork/crate pin changes.

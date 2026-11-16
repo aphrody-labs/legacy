@@ -482,7 +482,7 @@ export function taskXml(
     <SessionStateChangeTrigger><Enabled>true</Enabled><StateChange>SessionUnlock</StateChange><UserId>${u}</UserId><Delay>PT30S</Delay></SessionStateChangeTrigger>`;
   return `<?xml version="1.0" encoding="UTF-16"?>
 <Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
-  <RegistrationInfo><Description>aphrody vault: ${push ? "push sealed age envelopes (no DPAPI)" : "seal and push age envelopes"} to the fleet (docs/infra/VAULT.md)</Description></RegistrationInfo>
+  <RegistrationInfo><Description>aphrody vault: ${push ? "push sealed age envelopes (no DPAPI)" : "seal and push age envelopes"} to the fleet</Description></RegistrationInfo>
   <Triggers>${triggers}
     <TimeTrigger><Repetition><Interval>PT${minutes}M</Interval><StopAtDurationEnd>false</StopAtDurationEnd></Repetition><StartBoundary>2026-01-01T00:00:00</StartBoundary><Enabled>true</Enabled></TimeTrigger>
   </Triggers>

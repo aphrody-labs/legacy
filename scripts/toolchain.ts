@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // The one LLVM toolchain of src: Chromium's clang/lld/llvm-* and the rustc Chromium builds on the same
-// LLVM, pinned by the `third_party/toolchain-<milestone>.toml` that rust-toolchain.toml names (docs/native/llvm/CHROMIUM-TOOLCHAIN.md).
+// LLVM, pinned by the `third_party/toolchain-<milestone>.toml` that rust-toolchain.toml names.
 // Downloads the host's packages from Chromium's public bucket (source_url), checks source_sha256, unpacks them
 // under $AY_TOOLCHAIN_DIR (default ~/.local/share/aphrody/toolchain/<milestone>) and links the rust package as
 // the rustup toolchain `chromium-<milestone>` that rust-toolchain.toml names.

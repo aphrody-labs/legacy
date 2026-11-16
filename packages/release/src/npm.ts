@@ -1,4 +1,4 @@
-// Human-free npm for the whole monorepo (docs/infra/NPM.md). No secret value is displayed or passed in argv:
+// Human-free npm for the whole monorepo. No secret value is displayed or passed in argv:
 // the token lives in the env-kit vault (NPM_TOKEN) and leaves it only through the env or the stdin of a child process.
 //   bun packages/release/src/npm.ts status              whoami : coffre, PC, prd (root, agent), fr2, fr1 ; secret d'org GitHub
 //   bun packages/release/src/npm.ts sync                vault -> Windows user env, aphrody-labs org secret, hosts' ~/.npmrc

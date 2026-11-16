@@ -162,7 +162,7 @@ pub enum Cmd {
     /// OS secret store (DPAPI on Windows, systemd-creds on Linux): info, list, set, exec, pipe, import
     #[command(disable_help_flag = true)]
     Secret(Rest),
-    /// Vault (docs/infra/VAULT.md): init, add, import-chrome-csv, export-chrome-csv, sync, status, rotate, hosts
+    /// Vault: init, add, import-chrome-csv, export-chrome-csv, sync, status, rotate, hosts
     #[command(disable_help_flag = true)]
     Vault(Rest),
     /// Conformance suites: [--fetch] [suite...] writes test/conformance/results/; `channels [platform]` refreshes Chrome pins

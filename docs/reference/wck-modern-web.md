@@ -1,6 +1,6 @@
 # Modern Web Guidance (@aphrody/wck) in src
 
-Pure Bun Modern Web Guidance validator, hybrid BM25+Int8 RAG, mwg_capi.dll C23 FFI, and agent MCP integration (docs/web/MODERN-WEB-GUIDANCE.mdx).
+Pure Bun Modern Web Guidance validator, hybrid BM25+Int8 RAG, mwg_capi.dll C23 FFI, and agent MCP integration.
 
 Sources:
 - [V] https://web.dev/baseline

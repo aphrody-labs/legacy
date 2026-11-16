@@ -242,7 +242,7 @@
       "severity": "info",
       "status": "fixed",
       "excerpt": "2FA du compte npm (security key ou authenticator) et défi 2FA de npm trust / npm access set / création de jeton / approbation npm stage",
-      "fix": "page https://www.npmjs.com/settings/<npm-owner>/tfa ouverte chez le propriétaire ; ensuite just npm login (un clic) puis just npm trust (skip 2FA 5 min) ; publication en CI par trusted publishing OIDC (docs/infra/NPM.md)",
+      "fix": "page https://www.npmjs.com/settings/<npm-owner>/tfa ouverte chez le propriétaire ; ensuite just npm login (un clic) puis just npm trust (skip 2FA 5 min) ; publication en CI par trusted publishing OIDC",
       "reason": "2026-11-13 : security key aphrody-pc-win11-2026-11-13 enregistrée (page tfa), npm trust github configuré pour les 33 paquets publiés (npm-publish.yml) ; les 12 nouveaux attendent leur premier publish"
     },
     {
@@ -260,7 +260,7 @@
       "severity": "high",
       "status": "fixed",
       "excerpt": "relances répétées de connexions (gcloud org-contact x3, codex, npm, setup-token) et états d authentification périmés dans les rapports",
-      "fix": "ay auth daemon seul : sonde réelle toutes les 5 min, refresh sans humain, au plus un signalement groupé par identifiant et par 24 h, aucune page ouverte, --ack pour une seule connexion (docs/infra/AUTH.md)",
+      "fix": "ay auth daemon seul : sonde réelle toutes les 5 min, refresh sans humain, au plus un signalement groupé par identifiant et par 24 h, aucune page ouverte, --ack pour une seule connexion",
       "reason": "règle du propriétaire du 2026-11-13 ; toute relance hors du service est une violation"
     },
     {

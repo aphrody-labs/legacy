@@ -1,2 +1,2 @@
-# checkdeps layer rules (see docs/ARCHITECTURE.md). Native Bun plugin over aphrody-re: same services layer.
+# checkdeps layer rules. Native Bun plugin over aphrody-re: same services layer.
 layer = 3

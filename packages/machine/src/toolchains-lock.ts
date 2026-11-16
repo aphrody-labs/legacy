@@ -88,7 +88,7 @@ const specs: Spec[] = [
     source: "github",
     repo: "llvm/llvm-project",
     tag: "llvmorg-{version}",
-    why: "clang/clang-cl/lld shared with Chromium and rustc (docs/native/llvm/UNIFIED-TOOLCHAIN.md); bindgen/clang-sys, aws-lc-sys",
+    why: "clang/clang-cl/lld shared with Chromium and rustc; bindgen/clang-sys, aws-lc-sys",
     assets: {
       "windows-x86_64": "clang+llvm-{version}-x86_64-pc-windows-msvc.tar.xz",
       "linux-x86_64": "LLVM-{version}-Linux-X64.tar.xz",

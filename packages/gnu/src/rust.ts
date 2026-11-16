@@ -81,7 +81,7 @@ export const RUST_MAP: Record<string, RustDef[]> = {
       repo: "reubeno/brush",
       crate: "brush-shell",
       kind: "partial",
-      coverage: "shell-matrix 31/34 (docs/native/shell/MATRIX.md)",
+      coverage: "shell-matrix 31/34",
     },
   ],
   binutils: [

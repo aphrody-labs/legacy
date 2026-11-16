@@ -1,5 +1,5 @@
 #!/bin/bash
-# Rotate the password of the shared Valkey (docs/infra/SINGLE-SERVER.md), from the workstation. The value is generated here, sealed in the
+# Rotate the password of the shared Valkey, from the workstation. The value is generated here, sealed in the
 # vault (`ay vault add`), pushed over ssh stdin and never printed or written to the repo.
 #   fleet-valkey-rotate.sh <valkey-host> <client-host> [<client-host> ...]       (ssh aliases; clients = non-production consumers)
 # 1 vault add FLEET_VALKEY_PASSWORD   2 CONFIG SET requirepass on the server (live, no restart, no connection dropped) and

@@ -4,7 +4,7 @@
 # Needs the aphrody binary in $R (shipped from fr1 by scripts/gnu-check.ts). Writes $L/proof-<id>.txt (key=value).
 # Phase 1 (network): tarball by sha256, configure, make. Phase 2 (sandbox, docs/native/gnu/OS.md rule 9): the tests.
 B=/srv/build/gnu-rust; S=$B/gnu-src; R=$B/target/ws/release; L=$B/log; mkdir -p $S $L $B/gnu-bin $B/home $B/tmp
-# GNU C built like the CachyOS recipes (docs/research/cachyos.md): -O3 -march=x86-64-v3, so the benchmark compares like with like
+# GNU C built like the CachyOS recipes: -O3 -march=x86-64-v3, so the benchmark compares like with like
 export CC=gcc CFLAGS="-O3 -march=x86-64-v3 -pipe -fno-plt -std=gnu17 -Wno-error" MAKEFLAGS=-j6 TERM=dumb LC_ALL=C
 id=$1; ver=$2; sha=$3; out=$L/proof-$id.txt; : > $out
 kv() { echo "$1=$2" >> $out; }

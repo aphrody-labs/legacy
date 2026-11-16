@@ -1,6 +1,6 @@
 # Web and browser ecosystem (GitHub inventory, 2026-11-12)
 
-Source: `gh api search/repositories?q=org:<org>+archived:false+pushed:>=2026-08-14&sort=stars` (max 30/org), run on 2026-11-12. Columns: repository, stars, last push, language, description (truncated). Associated skill: [browser-engines](../SKILL.md). Engine measurements: [docs/native/bench/REPORT.md](../../../../docs/native/bench/REPORT.md).
+Source: `gh api search/repositories?q=org:<org>+archived:false+pushed:>=2026-08-14&sort=stars` (max 30/org), run on 2026-11-12. Columns: repository, stars, last push, language, description (truncated). Associated skill: [browser-engines](../SKILL.md). Engine measurements: docs/native/bench/REPORT.md.
 
 ## [GoogleChrome](https://github.com/GoogleChrome)
 

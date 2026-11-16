@@ -1,4 +1,4 @@
-# aphrody-vault: Rust side of @aphrody/vault (docs/infra/VAULT.md). Same on-disk formats as the TS
+# aphrody-vault: Rust side of @aphrody/vault. Same on-disk formats as the TS
 # package: DPAPI blobs (entropy v1) / systemd-creds credentials, AYV1 envelopes, age X25519.
 # Member of the root workspace (explicit entry in the root Cargo.toml), built in CI or on fr1.
 [package]

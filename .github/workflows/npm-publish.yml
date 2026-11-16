@@ -1,4 +1,4 @@
-# Human-free npm publication (docs/infra/NPM.md).
+# Human-free npm publication.
 # OIDC trusted publishing (npm >= 11.5.1, Node >= 22.14, id-token: write, GitHub-hosted runner): no token,
 # automatic provenance (public repository and package). Falls back to the NPM_TOKEN org secret while the package's trusted publisher
 # does not exist (first publish): npm/cli lib/utils/oidc.js only replaces the token after a successful OIDC exchange.

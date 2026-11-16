@@ -2,7 +2,7 @@
 
 How `ay`, the toolchain around it, and published wasm/CDN assets are installed and kept current on
 the workstation and on the three hosts (`usa` production, `fr1` builds and storage, `fr2` CDN, cron
-and sync; see `docs/infra/INFRA_MATRIX.md`).
+and sync).
 
 | Piece                 | Where                                                                              | Command                                     |
 | --------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------- |
@@ -41,7 +41,7 @@ is preceded by an `actions/create-github-app-token` step (`id: app`, App `aphrod
 (and the workspace glob `crates/*` needs them). In the `host` job the token has `contents: write` and is the
 `GH_TOKEN` of "Create GitHub Release", so the `release` event reaches the App webhook and downstream
 workflows (a release created with `GITHUB_TOKEN` triggers nothing). The App, its org variable
-`APHRODY_APP_CLIENT_ID` and org secret `APHRODY_APP_KEY` are described in docs/infra/GITHUB-APP.md.
+`APHRODY_APP_CLIENT_ID` and org secret `APHRODY_APP_KEY` are described.
 `allow-dirty = ["ci"]` keeps `dist plan` from rejecting the patch; re-apply it after any `dist generate`.
 
 First install on a fresh machine (public release assets):

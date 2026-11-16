@@ -1,4 +1,4 @@
-# Gaming forks (docs/gaming/OWNERSHIP.md): mirror model, no local patches. Default branch even with the
+# Gaming forks: mirror model, no local patches. Default branch even with the
 # fork parent (GitHub Sync fork); variants (Valve, CachyOS, GE) are branches of the same fork, never copies.
 # `ay upstream sync gaming --push` (group = this file name), daily on prd through aphrody-upstream.timer.
 # A fork that starts carrying patches moves to model = "branch" or "series" in ../stacks.toml.

@@ -22,7 +22,7 @@ Map of the org (`docs/native/UNIXWIN.md` has one row per repo, with target, dedu
 Rules that bite:
 - Rust builds and tests run on the fleet (fr1 or CI; fr2 for tests), never on the PC. rubash tests: `RUST_TEST_THREADS=1 cargo test -p rubash --lib` (the suite mutates the process environment). `ay` builds with `--no-default-features` where onnxruntime is absent.
 - The WinuxCmd library (`src/winux`) is Win32 code: it is checked with `cargo check -Zbuild-std --target x86_64-pc-windows-msvc`, and `ay` links it on Windows only; elsewhere the `winux` applets run through uutils.
-- `src/rubash`, `src/ruline`, `src/niubash`, `src/winux` carry the imported upstream commit in `UPSTREAM_REV`; the pins in `src.lock.json` (`third_party/<repo>`) stay the re-import source. Local fixes to rubash are listed in `docs/native/UNIXWIN.md`.
+- `src/rubash`, `src/ruline`, `src/niubash`, `src/winux` carry the imported upstream commit in `UPSTREAM_REV`; the pins in `src.lock.json` (`third_party/<repo>`) stay the re-import source. Local fixes to rubash are listed.
 - The niu skill bundle that `niu skill install` ships is `.agents/skills/niubash/` (the single source; `src/niubash/src/skill.rs` embeds it).
 
 References (rendered from the `third_party/unixwin.dev` pin, and the rubash skill):

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Latency proof of the index pipeline against the previous stack (docs/native/PIPELINE.md). Run on fr2.
+# Latency proof of the index pipeline against the previous stack. Run on fr2.
 #   bash bench.sh <new-ay> <old-capi.so> <checkout> [binary]
 #     new-ay     the built `ay` with `ay index`
 #     old-capi   libaphrody_core_capi.so built from the commit before the pipeline (baseline C ABI)

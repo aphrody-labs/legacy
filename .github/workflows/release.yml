@@ -57,7 +57,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, borné aux permissions listées.
+        # GitHub App aphrody-labs : jeton d'installation de 1 h, borné aux permissions listées.
         if: vars.APHRODY_APP_CLIENT_ID != '' && !github.event.pull_request.head.repo.fork
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
@@ -129,7 +129,7 @@ jobs:
         run: |
           git config --global core.longpaths true
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, borné aux permissions listées.
+        # GitHub App aphrody-labs : jeton d'installation de 1 h, borné aux permissions listées.
         if: vars.APHRODY_APP_CLIENT_ID != '' && !github.event.pull_request.head.repo.fork
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
@@ -200,7 +200,7 @@ jobs:
       BUILD_MANIFEST_NAME: target/distrib/global-dist-manifest.json
     steps:
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, borné aux permissions listées.
+        # GitHub App aphrody-labs : jeton d'installation de 1 h, borné aux permissions listées.
         if: vars.APHRODY_APP_CLIENT_ID != '' && !github.event.pull_request.head.repo.fork
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
@@ -262,7 +262,7 @@ jobs:
       val: ${{ steps.host.outputs.manifest }}
     steps:
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, borné aux permissions listées.
+        # GitHub App aphrody-labs : jeton d'installation de 1 h, borné aux permissions listées.
         if: vars.APHRODY_APP_CLIENT_ID != '' && !github.event.pull_request.head.repo.fork
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
@@ -340,7 +340,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, borné aux permissions listées.
+        # GitHub App aphrody-labs : jeton d'installation de 1 h, borné aux permissions listées.
         if: vars.APHRODY_APP_CLIENT_ID != '' && !github.event.pull_request.head.repo.fork
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:

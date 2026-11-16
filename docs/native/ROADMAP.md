@@ -26,9 +26,9 @@ A report never says "not verified" or "not run". If a step cannot complete, the 
 | 6 | Index pipeline (`ay index`) | shared SQLite and Valkey index across hosts | skill `ay-index`, magika on; open: `cargo check --workspace` red on a clean checkout (src/bun_core/build.rs needs `build_options.rs` from a Bun configure step the repo does not provide), Windows `ay.exe` from CI `deps.yml` then `infra/pipeline/pc-install.ts` |
 | 7 | Electron migrator (`ay electron`) | an Electron app migrated to Tauri or GPUI and benchmarked | skill `electron-migrate` |
 | 8 | Build science (`docs/native/BUILD-SCIENCE.md`) | each measured gain is adopted in `just` | sccache adopted |
-| 9 | Fleet offload (`docs/infra/FLEET-OFFLOAD.md`) | fr1 PSI below saturation, no yolo legacy, clean file systems | slices and `fleet-run` live |
+| 9 | Fleet offload | fr1 PSI below saturation, no yolo legacy, clean file systems | slices and `fleet-run` live |
 | 10 | Hygiene purge | `just hygiene` green on the whole tree | running |
-| 11 | unixwin fusion (`docs/native/UNIXWIN.md`) | every unixwin repo absorbed or pinned once; `src/{rubash,ruline,niubash}` workspace members; `ay` is a plugin of Bun and of niu | steps 1-8 done on fr2 (crates, `ay sh`, plugin surface, Bun ports, WinuxCmd-based applet multicall, wpm in `ay up`, skills and MCP); open: WinuxCmd C++ applets to Rust, winuxcmd-i18n and profiles, linux/unix/posix/nt merge (see `docs/native/UNIXWIN.md`) |
+| 11 | unixwin fusion | every unixwin repo absorbed or pinned once; `src/{rubash,ruline,niubash}` workspace members; `ay` is a plugin of Bun and of niu | steps 1-8 done on fr2 (crates, `ay sh`, plugin surface, Bun ports, WinuxCmd-based applet multicall, wpm in `ay up`, skills and MCP); open: WinuxCmd C++ applets to Rust, winuxcmd-i18n and profiles, linux/unix/posix/nt merge |
 
 ## Order
 

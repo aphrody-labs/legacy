@@ -5,7 +5,7 @@
 toolchains-lock:
     bun "{{root}}/packages/machine/src/toolchains-lock.ts"
 
-# Central terminal stack (docs/native/terminal/ARCHITECTURE.md): Linux validation of the forks on prd at the src.lock.json pins (cpp | rust | all)
+# Central terminal stack: Linux validation of the forks on prd at the src.lock.json pins (cpp | rust | all)
 [group('machine')]
 terminal-prd step="all" jobs="4":
     bun -e "if (!/^(cpp|rust|all)$/.test(process.argv[1]) || !/^[1-8]$/.test(process.argv[2])) process.exit(2)" "{{step}}" "{{jobs}}"

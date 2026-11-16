@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # just cluster-proof: member health, mesh reachability matrix + benchmark vs WireGuard, kill-test (failover and
 # restore timings), cache coalescing and idempotency. Read-only except the kill-test, which stops one stateless
-# replica on fr1/fr2 (never prd) and restarts it. Output: JSON lines on stdout (docs/infra/CLUSTER.md).
+# replica on fr1/fr2 (never prd) and restarts it. Output: JSON lines on stdout.
 for _s in /usr/local/lib/aphrody/site.sh "$(dirname "$0")/../../packages/env-kit/loaders/shell/site.sh"; do [ -f "$_s" ] && { . "$_s"; break; }; done
 set -uo pipefail
 members=(fr1 fr2 prd)

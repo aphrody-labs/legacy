@@ -9,7 +9,7 @@ use crate::symbols::{
 
 thread_local! {
     /// One configured parser per language and thread: `Parser::new` + `set_language` per file
-    /// was a measurable share of the index time (docs/native/PIPELINE.md).
+    /// was a measurable share of the index time.
     static PARSERS: RefCell<HashMap<SupportedLanguage, Parser>> = RefCell::new(HashMap::new());
 }
 

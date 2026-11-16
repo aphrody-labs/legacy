@@ -69,7 +69,7 @@ export const PILLARS: Pillar[] = [
     ],
     localClones: ["third_party/llvm-project"],
     summary:
-      "Native C ABI (src/core/capi, cdylib) built with the shared LLVM toolchain for cross-language LTO (docs/native/llvm/PURE-C-LLVM.mdx).",
+      "Native C ABI (src/core/capi, cdylib) built with the shared LLVM toolchain for cross-language LTO.",
   },
   {
     skill: "bun-ffi",
@@ -87,7 +87,7 @@ export const PILLARS: Pillar[] = [
     sources: [{ url: "https://web.dev/baseline", verified: true }],
     localClones: ["packages/wck"],
     summary:
-      "Pure Bun Modern Web Guidance validator, hybrid BM25+Int8 RAG, mwg_capi.dll C23 FFI, and agent MCP integration (docs/web/MODERN-WEB-GUIDANCE.mdx).",
+      "Pure Bun Modern Web Guidance validator, hybrid BM25+Int8 RAG, mwg_capi.dll C23 FFI, and agent MCP integration.",
   },
 ];
 

@@ -10,7 +10,7 @@
 //! - [`react`], [`next`]: React/Next.js analysis and migration front ends.
 //!
 //! Colors come from `packages/design` (Material Color Utilities from packages/design/design.toml);
-//! see docs/ui/STACK.md.
+//!.
 #![allow(clippy::struct_excessive_bools, clippy::doc_markdown, clippy::too_many_lines)]
 
 pub mod color;

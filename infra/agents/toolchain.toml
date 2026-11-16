@@ -258,7 +258,7 @@ name = "py2bun"
 command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/py2bun-mcp.ts"]
 hosts = ["pc"]
 
-# unixwin fusion (docs/native/UNIXWIN.md): applet providers, the ay plugin manifest, the oh-my-niu bundle validator, the embedded Bash engine.
+# unixwin fusion: applet providers, the ay plugin manifest, the oh-my-niu bundle validator, the embedded Bash engine.
 # hub_call unixwin__unixwin_applets | unixwin__unixwin_plugin_manifest | unixwin__unixwin_validate_bundle | unixwin__unixwin_sh; AY_BIN overrides `ay`.
 [[hub.mcp]]
 name = "unixwin"

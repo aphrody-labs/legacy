@@ -9,4 +9,4 @@ description: Epic Games ecosystem entry point and engineering reference (.pak, I
 4. EOS: one platform handle, `EOS_Platform_Tick` per frame on the game thread, Dev Auth Tool only in development, secrets through env (`-ClientSecretEnvVar` for BuildPatchTool).
 5. Files: `.pak` with `trumank/repak` (Rust), assets with `unreal_asset` (AstroTechies/unrealmodding) or CUE4Parse; never hand-roll parsers.
 6. Never commit Epic launcher client credentials or EOS secrets.
-7. Binary formats (`.pak` footer, IoStore `.utoc`/`.ucas`, `.uasset` header): see [references/formats.md](references/formats.md). Launcher/manifest protocol facts live in `docs/epic/RESOURCES.md`.
+7. Binary formats (`.pak` footer, IoStore `.utoc`/`.ucas`, `.uasset` header): see [references/formats.md](references/formats.md). Launcher/manifest protocol facts live.

@@ -1,4 +1,4 @@
-# Continuous upstream tracking for the Epic Games and Bevy surface (docs/epic/RESOURCES.md):
+# Continuous upstream tracking for the Epic Games and Bevy surface:
 # 1. fast-forwards the default branch of every aphrody-labs fork listed in third_party/forks.txt
 #    whose upstream owner is EpicGames, bevyengine or a tracked community project (gh repo sync);
 # 2. regenerates docs/epic/snapshot.json (repos, branches, head commits, releases) from the
@@ -27,7 +27,7 @@ jobs:
         with:
           bun-version: 1.4.4
       - id: app
-        # GitHub App aphrody-labs (docs/infra/GITHUB-APP.md) : jeton d'installation de 1 h, remplace le PAT APHRODY_DEPLOY_TOKEN.
+        # GitHub App aphrody-labs : jeton d'installation de 1 h, remplace le PAT APHRODY_DEPLOY_TOKEN.
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.APHRODY_APP_CLIENT_ID }}

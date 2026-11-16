@@ -1,5 +1,5 @@
 #!/bin/bash
-# Same workload on one directory (docs/infra/SINGLE-SERVER.md): git status, checkout, clone of a 18k-file tree, cargo check of a
+# Same workload on one directory: git status, checkout, clone of a 18k-file tree, cargo check of a
 # dependency-free crate (cold target in the same directory). Run it once per location: NFS mount and ext4 from fr2, local XFS from fr1.
 #   scripts/bench/fs-nfs.sh <dir> [make <srctree>|prep]   "make" builds <dir>/r from <srctree> (untar timed, git init + 2 commits); "prep" = the git and crate steps only. Long runs: nohup ... > log &
 #   NFILES=2000 (default) files of the tree; the same count on every location. TC=+1.100.0 pins the cargo toolchain.   Output: label, mean ± sd, from hyperfine (N=6, warm-ups 1).

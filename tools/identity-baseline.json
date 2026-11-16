@@ -954,35 +954,12 @@
   "crate-prefix": 1,
   "binary-call": 2
  },
- "docs/ALPHABET.md": {
-  "binary-call": 7
- },
- "docs/ARCHITECTURE.md": {
-  "product-name": 19,
-  "npm-scope": 4,
-  "crate-prefix": 32,
-  "c-prefix": 2,
-  "env-prefix": 1,
-  "binary-call": 15
- },
- "docs/PLAN.mdx": {
-  "npm-scope": 4,
-  "c-prefix": 4
- },
  "docs/README.md": {
   "checkout-path": 8,
   "product-name": 6,
   "npm-scope": 7,
   "crate-prefix": 2,
   "env-prefix": 1
- },
- "docs/agents/AGENT-FIRST.md": {
-  "checkout-path": 2,
-  "crate-prefix": 4,
-  "binary-call": 1
- },
- "docs/agents/WINDOWS-NATIVE-PORT.md": {
-  "checkout-path": 1
  },
  "docs/ai/ANOMALYCO.md": {
   "product-name": 1,
@@ -1009,58 +986,9 @@
   "c-prefix": 4,
   "binary-call": 5
  },
- "docs/audit/legacy-forks.md": {
-  "checkout-path": 5,
-  "npm-scope": 1
- },
- "docs/axum/README.md": {
-  "binary-call": 2
- },
- "docs/ay/MIGRATION.md": {
-  "product-name": 2,
-  "npm-scope": 1,
-  "crate-prefix": 5,
-  "c-prefix": 1,
-  "binary-call": 115
- },
- "docs/ay/NAMING.md": {
-  "product-name": 3,
-  "npm-scope": 2,
-  "crate-prefix": 1,
-  "binary-call": 43
- },
- "docs/base-ui/FORK.md": {
-  "product-name": 1,
-  "npm-scope": 1
- },
- "docs/better-auth/FORK.md": {
-  "product-name": 1,
-  "binary-call": 1
- },
- "docs/core/ARCHITECTURE-ROOT.md": {
-  "product-name": 1,
-  "binary-call": 5
- },
- "docs/craft/PLAN.md": {
-  "checkout-path": 3
- },
  "docs/design/DESIGN_SYSTEM.md": {
   "crate-prefix": 4,
   "binary-call": 2
- },
- "docs/design/README.md": {
-  "crate-prefix": 1
- },
- "docs/design/REFERENCES.md": {
-  "product-name": 1
- },
- "docs/design/replica/console/architecture.md": {
-  "product-name": 1,
-  "crate-prefix": 20,
-  "binary-call": 1
- },
- "docs/design/replica/console/recon.md": {
-  "crate-prefix": 2
  },
  "docs/design/replica/console/schema.sql": {
   "product-name": 1
@@ -1068,49 +996,13 @@
  "docs/design/specs/components/material-3.json": {
   "npm-scope": 1
  },
- "docs/design/specs/components/material-3.md": {
-  "npm-scope": 1
- },
- "docs/epic/FREE-ASSETS.md": {
-  "binary-call": 2
- },
  "docs/epic/TRACKING.md": {
   "product-name": 1
- },
- "docs/games/ARTCRAFT.md": {
-  "crate-prefix": 1
- },
- "docs/games/ASSET-TESTS.md": {
-  "binary-call": 1
- },
- "docs/games/BROWSER-OS.md": {
-  "product-name": 1,
-  "crate-prefix": 2,
-  "binary-call": 1
- },
- "docs/games/FEATURE-MATRIX.md": {
-  "crate-prefix": 1
- },
- "docs/games/MEDIA-STACK.md": {
-  "crate-prefix": 1,
-  "c-prefix": 1,
-  "binary-call": 1
  },
  "docs/games/PLAN.md": {
   "crate-prefix": 6,
   "c-prefix": 1,
   "binary-call": 9
- },
- "docs/games/PLATFORM-EQUIV.md": {
-  "binary-call": 4
- },
- "docs/games/WASM-DEPLOY.md": {
-  "crate-prefix": 1
- },
- "docs/gaming/OWNERSHIP.md": {
-  "npm-scope": 1,
-  "crate-prefix": 1,
-  "binary-call": 19
  },
  "docs/i18n/README.md": {
   "npm-scope": 1,
@@ -1118,107 +1010,10 @@
   "env-prefix": 1,
   "binary-call": 6
  },
- "docs/i18n/es/PLAN.md": {
-  "crate-prefix": 1,
-  "c-prefix": 1,
-  "binary-call": 5
- },
- "docs/i18n/es/README.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "crate-prefix": 1,
-  "binary-call": 2
- },
- "docs/i18n/fr/AGENTS.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "crate-prefix": 1,
-  "binary-call": 3
- },
- "docs/i18n/fr/PLAN.md": {
-  "crate-prefix": 2,
-  "c-prefix": 1,
-  "binary-call": 6
- },
- "docs/i18n/fr/README.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "crate-prefix": 2,
-  "binary-call": 3
- },
- "docs/i18n/ja/AGENTS.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "crate-prefix": 1,
-  "binary-call": 3
- },
- "docs/i18n/ja/PLAN.md": {
-  "crate-prefix": 3,
-  "c-prefix": 1,
-  "binary-call": 8
- },
- "docs/i18n/ja/README.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "crate-prefix": 2,
-  "binary-call": 3
- },
- "docs/i18n/zh-CN/AGENTS.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "crate-prefix": 1,
-  "binary-call": 3
- },
- "docs/i18n/zh-CN/PLAN.md": {
-  "crate-prefix": 4,
-  "c-prefix": 1,
-  "binary-call": 8
- },
- "docs/i18n/zh-CN/README.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "crate-prefix": 2,
-  "binary-call": 4
- },
- "docs/infra/AGENT-TOOLCHAIN.md": {
-  "checkout-path": 2,
-  "product-name": 2,
-  "npm-scope": 1,
-  "crate-prefix": 18,
-  "binary-call": 4
- },
- "docs/infra/AUTH-ECOSYSTEM.md": {
-  "product-name": 1,
-  "npm-scope": 2,
-  "binary-call": 11
- },
- "docs/infra/AUTH.md": {
-  "product-name": 4,
-  "npm-scope": 2,
-  "crate-prefix": 1,
-  "env-prefix": 1,
-  "binary-call": 29
- },
- "docs/infra/CLOUDFLARE-ONE.md": {
-  "product-name": 3,
-  "binary-call": 1
- },
- "docs/infra/CLUSTER.md": {
-  "product-name": 4,
-  "crate-prefix": 5
- },
  "docs/infra/DEPLOY.md": {
   "product-name": 7,
   "crate-prefix": 8,
   "binary-call": 1
- },
- "docs/infra/FILESYSTEMS.md": {
-  "checkout-path": 1
- },
- "docs/infra/FLEET-OFFLOAD.md": {
-  "checkout-path": 7,
-  "product-name": 2,
-  "crate-prefix": 5
  },
  "docs/infra/FLEET.md": {
   "checkout-path": 1,
@@ -1227,49 +1022,6 @@
   "crate-prefix": 13,
   "binary-call": 2
  },
- "docs/infra/FR1-CHROMIUM-HOST.md": {
-  "product-name": 2,
-  "crate-prefix": 12
- },
- "docs/infra/FR2-CLOUDFLARE.md": {
-  "checkout-path": 1,
-  "product-name": 10,
-  "crate-prefix": 28,
-  "binary-call": 1
- },
- "docs/infra/GCP-BILLING.md": {
-  "product-name": 10,
-  "npm-scope": 3,
-  "crate-prefix": 5,
-  "c-prefix": 1
- },
- "docs/infra/GEMINI-WEB-MCP.md": {
-  "checkout-path": 1,
-  "crate-prefix": 2,
-  "env-prefix": 2,
-  "binary-call": 1
- },
- "docs/infra/GITHUB-APP.md": {
-  "product-name": 2,
-  "npm-scope": 1,
-  "crate-prefix": 1,
-  "env-prefix": 14,
-  "binary-call": 11
- },
- "docs/infra/GLOBAL-STACK.md": {
-  "product-name": 1,
-  "crate-prefix": 3
- },
- "docs/infra/HOSTING-POLICY.md": {
-  "product-name": 3,
-  "crate-prefix": 7
- },
- "docs/infra/IDENTITY-CONSOLIDATION.md": {
-  "checkout-path": 1,
-  "product-name": 10,
-  "npm-scope": 7,
-  "crate-prefix": 30
- },
  "docs/infra/IDENTITY.md": {
   "product-name": 7,
   "npm-scope": 4,
@@ -1277,178 +1029,20 @@
   "env-prefix": 2,
   "binary-call": 1
  },
- "docs/infra/INFRA_MATRIX.md": {
-  "checkout-path": 2,
-  "product-name": 5,
-  "npm-scope": 1,
-  "crate-prefix": 3,
-  "binary-call": 7
- },
  "docs/infra/INSTALL_UPDATE.md": {
   "product-name": 2,
   "crate-prefix": 4,
   "env-prefix": 2,
   "binary-call": 41
  },
- "docs/infra/MIGRATION-VERCEL-CF.md": {
-  "checkout-path": 2,
-  "crate-prefix": 20
- },
- "docs/infra/NPM.md": {
-  "product-name": 1,
-  "npm-scope": 4,
-  "crate-prefix": 1
- },
- "docs/infra/OS-BENCH.md": {
-  "product-name": 1,
-  "crate-prefix": 1,
-  "binary-call": 3
- },
- "docs/infra/PROD-MAP.md": {
-  "product-name": 2,
-  "crate-prefix": 29
- },
- "docs/infra/REINSTALL-PLAN.md": {
-  "crate-prefix": 2,
-  "binary-call": 3
- },
- "docs/infra/RESILIENCE.md": {
-  "product-name": 2,
-  "crate-prefix": 16
- },
- "docs/infra/SINGLE-SERVER.md": {
-  "checkout-path": 7,
-  "crate-prefix": 2
- },
- "docs/infra/UPSTREAM-STACK.md": {
-  "product-name": 6,
-  "crate-prefix": 3,
-  "binary-call": 3
- },
- "docs/infra/VAULT.md": {
-  "checkout-path": 2,
-  "product-name": 6,
-  "npm-scope": 4,
-  "crate-prefix": 9,
-  "c-prefix": 2,
-  "binary-call": 3
- },
- "docs/infra/WSL.md": {
-  "product-name": 8,
-  "crate-prefix": 3
- },
- "docs/infra/proofs/2026-11-15-ay-up-tree/README.md": {
-  "crate-prefix": 1
- },
- "docs/machine/FEATURE-FLAGS.md": {
-  "crate-prefix": 2
- },
- "docs/machine/PC-TUNING.md": {
-  "checkout-path": 4
- },
- "docs/native/AY-UNIVERSAL-PIPELINE.md": {
-  "checkout-path": 2,
-  "crate-prefix": 1,
-  "binary-call": 23
- },
- "docs/native/BUILD_SPEED.md": {
-  "checkout-path": 2
- },
- "docs/native/CHROMIUM-FACTORY.md": {
-  "checkout-path": 1,
-  "product-name": 3,
-  "crate-prefix": 12,
-  "c-prefix": 1,
-  "binary-call": 16
- },
- "docs/native/COMPAT-WINDOWS-LINUX.md": {
-  "crate-prefix": 4,
-  "binary-call": 1
- },
- "docs/native/DEPOT_ARCHITECTURE.md": {
-  "checkout-path": 14,
-  "binary-call": 3
- },
- "docs/native/NAMESPACE-ISOLATION.md": {
-  "checkout-path": 3,
-  "npm-scope": 2
- },
- "docs/native/PIPELINE.md": {
-  "checkout-path": 2,
-  "crate-prefix": 1,
-  "c-prefix": 1,
-  "binary-call": 16
- },
- "docs/native/PURE-C-WASM-UI-2026.md": {
-  "crate-prefix": 3,
-  "c-prefix": 6,
-  "binary-call": 1
- },
  "docs/native/ROADMAP.md": {
   "binary-call": 5
- },
- "docs/native/UNIX.md": {
-  "checkout-path": 7,
-  "crate-prefix": 4
- },
- "docs/native/UNIXWIN.md": {
-  "product-name": 1,
-  "crate-prefix": 2,
-  "binary-call": 15
- },
- "docs/native/VCS-FORGE.md": {
-  "checkout-path": 1,
-  "product-name": 3,
-  "env-prefix": 2
- },
- "docs/native/VCS_FORGE_MATRIX.md": {
-  "binary-call": 12
- },
- "docs/native/WEBASSEMBLY-EMSCRIPTEN.md": {
-  "checkout-path": 1
- },
- "docs/native/android/ECOSYSTEM.md": {
-  "crate-prefix": 1,
-  "binary-call": 2
- },
- "docs/native/android/PROOF-x64.md": {
-  "crate-prefix": 3,
-  "c-prefix": 1
  },
  "docs/native/android/SETUP.md": {
   "crate-prefix": 1
  },
  "docs/native/android/proof/layout-api37.json": {
   "crate-prefix": 1
- },
- "docs/native/compat/DEDUP.md": {
-  "checkout-path": 27
- },
- "docs/native/compat/ECOSYSTEM.md": {
-  "checkout-path": 5
- },
- "docs/native/compat/PLAN.md": {
-  "checkout-path": 3,
-  "binary-call": 1
- },
- "docs/native/compat/PROOF.md": {
-  "binary-call": 1
- },
- "docs/native/deps/CHROMIUM-STACK-ALIGNMENT.md": {
-  "crate-prefix": 4
- },
- "docs/native/deps/DEDUP.md": {
-  "product-name": 1,
-  "crate-prefix": 5,
-  "binary-call": 3
- },
- "docs/native/deps/DEPS-MINIMIZE.md": {
-  "product-name": 2,
-  "crate-prefix": 1,
-  "binary-call": 3
- },
- "docs/native/deps/POLICY.md": {
-  "binary-call": 22
  },
  "docs/native/gnu/DISTRIBUTION.md": {
   "checkout-path": 1,
@@ -1462,67 +1056,6 @@
  "docs/native/gnu/PLAN.md": {
   "crate-prefix": 1
  },
- "docs/native/linux-kernel-story/mdx/11-comparative-study-linux-vs-aphrody.mdx": {
-  "checkout-path": 6,
-  "product-name": 7,
-  "npm-scope": 1,
-  "c-prefix": 3
- },
- "docs/native/linux-kernel-story/mdx/12-linux-2026-variants-non-c-kernels-discovery.mdx": {
-  "checkout-path": 1
- },
- "docs/native/linux/ANDROID-CHROMIUMOS.md": {
-  "crate-prefix": 1,
-  "binary-call": 2
- },
- "docs/native/linux/GPU.md": {
-  "crate-prefix": 1,
-  "binary-call": 1
- },
- "docs/native/linux/OWNERSHIP.md": {
-  "crate-prefix": 1,
-  "binary-call": 11
- },
- "docs/native/linux/PATCHSETS.md": {
-  "crate-prefix": 2,
-  "binary-call": 5
- },
- "docs/native/llvm/AY-AS-LLVM.md": {
-  "checkout-path": 1,
-  "product-name": 2,
-  "crate-prefix": 7,
-  "binary-call": 8
- },
- "docs/native/llvm/BEST-PRACTICES.md": {
-  "product-name": 1,
-  "crate-prefix": 1,
-  "binary-call": 3
- },
- "docs/native/llvm/CHROMIUM-TOOLCHAIN.md": {
-  "product-name": 2,
-  "crate-prefix": 2
- },
- "docs/native/llvm/PURE-C-LLVM.mdx": {
-  "crate-prefix": 7,
-  "c-prefix": 8
- },
- "docs/native/llvm/ROADMAP.md": {
-  "checkout-path": 1,
-  "binary-call": 7
- },
- "docs/native/llvm/TOOLCHAIN-FORKS.md": {
-  "product-name": 1,
-  "crate-prefix": 1,
-  "binary-call": 1
- },
- "docs/native/llvm/UNIFIED-TOOLCHAIN.md": {
-  "product-name": 1,
-  "crate-prefix": 2,
-  "binary-call": 7
- },
- "docs/native/llvm/ZIG-CROSS.md": {
-  "c-prefix": 5
- },
  "docs/native/patches/series": {
   "binary-call": 1
  },
@@ -1531,36 +1064,8 @@
   "crate-prefix": 1,
   "c-prefix": 1
  },
- "docs/native/shell/CLAUDE-NT.md": {
-  "checkout-path": 1
- },
  "docs/native/shell/CUSTOMIZATION-INDEX.md": {
   "crate-prefix": 4
- },
- "docs/native/shell/MATRIX.md": {
-  "checkout-path": 2
- },
- "docs/native/shell/SETUP.md": {
-  "checkout-path": 1
- },
- "docs/native/shell/bash-setup.md": {
-  "binary-call": 1
- },
- "docs/native/shell/ecosystem-links.md": {
-  "product-name": 1
- },
- "docs/native/shell/pwsh-setup.md": {
-  "checkout-path": 1,
-  "binary-call": 1
- },
- "docs/native/specs/APHRODY_DESIGN_CAHIER_DES_CHARGES.md": {
-  "checkout-path": 4,
-  "product-name": 2,
-  "npm-scope": 3,
-  "crate-prefix": 5
- },
- "docs/native/terminal/ARCHITECTURE.md": {
-  "binary-call": 2
  },
  "docs/net/NETWORK-STACK.md": {
   "npm-scope": 1,
@@ -1568,62 +1073,19 @@
   "c-prefix": 3,
   "env-prefix": 2
  },
- "docs/nextjs/FORK.md": {
-  "product-name": 3,
-  "npm-scope": 1,
-  "crate-prefix": 1,
-  "binary-call": 1
- },
- "docs/nextjs/README.md": {
-  "binary-call": 3
- },
- "docs/packaging/OURS.md": {
-  "checkout-path": 1,
-  "binary-call": 2
- },
- "docs/packaging/RECOMMENDATION.md": {
-  "binary-call": 3
- },
- "docs/packaging/UNIFIED.md": {
-  "binary-call": 2
- },
  "docs/packaging/VERSIONING.md": {
   "npm-scope": 1,
   "binary-call": 11
  },
- "docs/project/languages.md": {
-  "binary-call": 1
- },
  "docs/project/layout.md": {
   "crate-prefix": 2,
   "binary-call": 6
- },
- "docs/project/naming.md": {
-  "product-name": 1,
-  "npm-scope": 3,
-  "crate-prefix": 23,
-  "binary-call": 3
- },
- "docs/project/purge-plan.md": {
-  "product-name": 2,
-  "npm-scope": 27,
-  "crate-prefix": 12
- },
- "docs/project/purge-report.md": {
-  "npm-scope": 27,
-  "crate-prefix": 7
  },
  "docs/project/restore-inventory.json": {
   "checkout-path": 6,
   "product-name": 1,
   "npm-scope": 645,
   "crate-prefix": 287
- },
- "docs/project/restore-inventory.md": {
-  "checkout-path": 2,
-  "product-name": 1,
-  "npm-scope": 28,
-  "crate-prefix": 116
  },
  "docs/proofs/ai-os-interop-2026-11-13.md": {
   "product-name": 1,
@@ -1638,12 +1100,6 @@
   "checkout-path": 3,
   "crate-prefix": 3,
   "binary-call": 1
- },
- "docs/publish/BLOCKED.md": {
-  "npm-scope": 1
- },
- "docs/publish/STATUS.md": {
-  "crate-prefix": 1
  },
  "docs/reference/catalog/app.md": {
   "product-name": 1,
@@ -1671,46 +1127,8 @@
   "crate-prefix": 3,
   "binary-call": 2
  },
- "docs/reference/tree-sitter.md": {
-  "npm-scope": 1,
-  "crate-prefix": 1
- },
  "docs/reference/wck-modern-web.md": {
   "npm-scope": 1
- },
- "docs/replica/recon/google.md": {
-  "product-name": 5,
-  "crate-prefix": 4,
-  "binary-call": 2
- },
- "docs/replica/recon/vercel.md": {
-  "product-name": 1,
-  "binary-call": 2
- },
- "docs/research/ai-os-stack-factcheck.md": {
-  "npm-scope": 2,
-  "c-prefix": 2
- },
- "docs/research/dragon-ball.md": {
-  "checkout-path": 6
- },
- "docs/research/shell-replacement.md": {
-  "product-name": 1,
-  "binary-call": 1
- },
- "docs/shadcn/FORK.md": {
-  "product-name": 1,
-  "npm-scope": 1,
-  "binary-call": 2
- },
- "docs/tailwindcss/FORK.md": {
-  "binary-call": 1
- },
- "docs/tooling/AI-TOOLING-AUDIT.md": {
-  "checkout-path": 2
- },
- "docs/tooling/CLAUDE-CODE-TUNING.md": {
-  "checkout-path": 1
  },
  "docs/tooling/CONFORMANCE.md": {
   "c-prefix": 2,
@@ -1738,39 +1156,11 @@
   "npm-scope": 30,
   "crate-prefix": 53
  },
- "docs/tv/environnement.mdx": {
-  "checkout-path": 1
- },
- "docs/tv/ffmpeg-analyse.mdx": {
-  "checkout-path": 1
- },
- "docs/ui/ECOSYSTEM-AUDIT.md": {
-  "product-name": 1,
-  "c-prefix": 3,
-  "binary-call": 1
- },
- "docs/ui/STACK.md": {
-  "npm-scope": 2,
-  "crate-prefix": 2,
-  "binary-call": 2
- },
  "docs/upstream/STRATEGY.md": {
   "checkout-path": 1,
   "product-name": 3,
   "crate-prefix": 1,
   "binary-call": 22
- },
- "docs/upstream/spacedrive-cosmic-locally-uncensored.md": {
-  "checkout-path": 6,
-  "binary-call": 2
- },
- "docs/web/MODERN-WEB-GUIDANCE.mdx": {
-  "npm-scope": 4,
-  "c-prefix": 1,
-  "env-prefix": 2
- },
- "docs/web/MODERN_WEB_GUIDELINES.md": {
-  "checkout-path": 1
  },
  "infra/agents/claude/CLAUDE.md": {
   "checkout-path": 3

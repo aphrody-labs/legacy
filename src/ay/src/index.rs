@@ -6,7 +6,7 @@
 //!   ay index worker [--role heavy] [--root path] [--once]   run queued heavy stages (ghidra)
 //!   ay index sync                apply finished deep results from the shared cache
 //!   ay index query <name> [--exact] [--limit N]    ay index text <words>    ay index status
-//!   ay index bench [--queries N] [--binary path]   latency percentiles (docs/native/PIPELINE.md)
+//!   ay index bench [--queries N] [--binary path]   latency percentiles
 //!   ay index gen|gen-docs|search|users             forwarded to packages/core (bun)
 
 use aphrody_core::pipeline::{Deep, Engine, Options, Shared, Stage, Store, WorkOptions};

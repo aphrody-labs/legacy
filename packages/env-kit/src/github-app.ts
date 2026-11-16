@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * GitHub App "aphrody" (docs/infra/GITHUB-APP.md): a single App for aphrody-labs, yolo-rs and the
+ * GitHub App "aphrody": a single App for aphrody-labs, yolo-rs and the
  * aphrody-dev account, replacing PATs and the former aphrody-labs-submodules App.
  *
  *   ay auth github-app create [--org aphrody-labs] [--name aphrody]   manifest flow ("Create GitHub App" click)
@@ -373,7 +373,7 @@ async function create(a: string[]): Promise<number> {
   const name = opt(a, "--name") ?? APP.name;
   const state = randomBytes(16).toString("hex");
   // Webhook secret chosen here (not the one from the conversion): it must be in the vault and in the Worker before
-  // GitHub sends the first event. Then push the Worker: cf deploy --secrets-file (docs/infra/GITHUB-APP.md).
+  // GitHub sends the first event. Then push the Worker: cf deploy --secrets-file.
   if (!cred("APHRODY_APP_WEBHOOK_SECRET"))
     secretSet("APHRODY_APP_WEBHOOK_SECRET", randomBytes(32).toString("hex"));
   const page = `<!doctype html><meta charset=utf-8><title>GitHub App ${Bun.escapeHTML(name)}</title><form id=f method=post action="https://github.com/organizations/${encodeURIComponent(org)}/settings/apps/new?state=${state}"><input type=hidden name=manifest value="${Bun.escapeHTML(JSON.stringify(manifest(name)))}"><button>Créer l'App GitHub ${Bun.escapeHTML(name)}</button></form><script>document.getElementById("f").submit()</script>`;

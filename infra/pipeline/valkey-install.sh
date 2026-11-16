@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Valkey for the ay index pipeline (docs/native/PIPELINE.md). Run as root on fr2; idempotent.
+# Valkey for the ay index pipeline. Run as root on fr2; idempotent.
 #   sudo bash valkey-install.sh [wireguard-ip]
 # Bound to the WireGuard address and loopback only, password-protected, AOF-persistent, systemd
 # (Restart=always, ordered after wg-quick@wg1). The password lives in /etc/valkey/ay.pass and in

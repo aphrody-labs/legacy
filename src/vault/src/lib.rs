@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! aphrody-vault: async Rust API over the vault of src (docs/infra/VAULT.md), byte-compatible
+//! aphrody-vault: async Rust API over the vault of src, byte-compatible
 //! with the TS package `@aphrody/vault`:
 //!
 //! - local layer: DPAPI user scope with the v1 entropy (Windows, `spawn_blocking`), or

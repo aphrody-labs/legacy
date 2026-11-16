@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // SPDX-License-Identifier: Apache-2.0
 /**
- * `env-kit vault …` / `ay vault …` (docs/infra/VAULT.md). Output: names, counts, lengths,
+ * `env-kit vault …` / `ay vault …`. Output: names, counts, lengths,
  * fingerprints. Never a value: values enter on stdin and leave through a child's env or stdin.
  */
 

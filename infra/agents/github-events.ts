@@ -1,4 +1,4 @@
-// Events of the "aphrody-labs" GitHub App -> agent queue (docs/infra/GITHUB-APP.md).
+// Events of the "aphrody-labs" GitHub App -> agent queue.
 // The aphrody-github Worker (infra/cloudflare/workers/github-app) verifies the signature and pushes a summary into the
 // Cloudflare queue `github-events`; this script, launched by `runner.ts health` on the ship host (prd, every 2 min),
 // drains it through the HTTP pull consumer (token CF_QUEUES_TOKEN: Queues Read + Write), writes the tasks into
