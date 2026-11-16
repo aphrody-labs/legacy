@@ -8,6 +8,7 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 - Design, UI and UX: [design.google](https://design.google/).
 - Architecture, philosophy and core: [kernel.org](https://www.kernel.org/).
 - Ultimate goal: [GNU software](https://www.gnu.org/software/software.html), [uutils](https://uutils.org/), [AOSP](https://android.googlesource.com/), [Chromium](https://chromium.googlesource.com/chromium/src.git).
+- Rust references: Rust for Linux, Rust in Chromium, Rust in AOSP. depot_tools is rewritten in Rust; Bun is purified to leave JS/TS behind and move to Rust, C and C++.
 - Style: the [Google style guides](https://google.github.io/styleguide/), rethought for AOT, LTO and LLVM.
 
 ## What
