@@ -21,7 +21,7 @@ const upto = ui > 0 ? Number(Bun.argv[ui + 1]) : undefined;
 const all: Move[] = [...(cfg.move ?? [])];
 for (const g of cfg.group ?? [])
   for (const n of g.names) all.push({ from: `${g.from}/${n}`, to: `${g.to}/${g.rename?.[n] ?? n}`, batch: g.batch });
-const moves = all.filter((m) => batch === undefined || (m.batch ?? 1) === batch).sort((a, b) => b.from.length - a.from.length);
+const moves = all.filter((m) => (batch === undefined || (m.batch ?? 1) === batch) && (upto === undefined || (m.batch ?? 1) <= upto)).sort((a, b) => b.from.length - a.from.length);
 const map = new Map(moves.map((m) => [m.from, m.to]));
 const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const alt = moves.map((m) => esc(m.from)).join("|");
