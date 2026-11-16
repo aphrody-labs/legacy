@@ -67,3 +67,10 @@ cargo yank --undo --version 1.4.7 aphrody-gateway
 cargo yank --undo --version 0.7.1 aphrody-n2b
 cargo yank --undo --version 0.7.0 aphrody-n2b
 ```
+
+## Irreversible actions executed (owner confirmed in chat, 2026-11-15/16)
+
+- GitHub: 93 repositories deleted (G2 empty: aphrody-labs/grep, labs, onetrue-awk; G1, G3, G4: 90), each gate re-checked (archived, no push after the plan, forks 0 commits ahead) and each proven gone by a 404 from the API.
+- Cloudflare: 8 items deleted and proven gone (API 404 or tunnel deleted_at): domain yolo.aphrody.com, worker aphrody-com, worker yolo-aphrody-com, worker aphrody-email-worker, d1 aphrody-app, kv aphrody-app-cache, tunnel fr2, tunnel prod; the fr2 connector was stopped first, desktop.aphrody.app already answered a Cloudflare 502 page with no origin.
+- crates.io: 5 crates deleted through the crates.io website (the API refuses crate deletion), each proven gone by a 404: aphrody-a2a-grpc, aphrody-accounts, aphrody-agent-runtime, aphrody-gateway, aphrody-n2b.
+- npm: the 10 unpublishes are not done. The registry refuses granular tokens that bypass 2FA for unpublish, and the npmjs.com website asks for the owner security key. They stay deprecated.
