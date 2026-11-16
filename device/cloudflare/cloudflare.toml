@@ -49,19 +49,6 @@ ingress = [
   { service = "http_status:404" },
 ]
 
-# RETIRED 2026-11-15: its three hostnames are served by aphrody (DNS switched, proven). Connector cloudflared-fr2 stopped; rollback = point the
-# three DNS records back (rollback lines below) and `systemctl enable --now cloudflared-fr2` on fr2.
-[tunnels.fr2]
-id = "88aa6a53-0a9a-4a5b-a9b6-3d3394dd978d"
-host = "fr2"
-ingress = [
-  { hostname = "ssh-fr2.aphrody.com", service = "ssh://127.0.0.1:22" },
-  # Origin of the public MCP gateway (Worker mcp.aphrody.com, docs/infra/GEMINI-WEB-MCP.md): relay on fr2 loopback, bearer token.
-  { hostname = "mcp-origin.aphrody.com", service = "http://127.0.0.1:8790" },
-  { hostname = "gnu.aphrody.com", service = "http://127.0.0.1:80" }, # live ingress kept as is (gnu mirror), not managed by the MCP work
-  { service = "http_status:404" },
-]
-
 # rosegriffon: the product zone rosegriffon.fr (checkout ../rosegriffon, edge Worker rosegriffon-edge on cdn.rosegriffon.fr/static/*). Same origin ports as the
 # zone Origin Rule it replaces (8443; 9443 for the cacheable apex and www), now reached through this tunnel instead of the public IP of prd.
 # Rollback: point the DNS records back to the A record in their rollback field.
@@ -94,9 +81,9 @@ ingress = [
 [dns."aphrody.com"]
 "aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
 "ssh-prd.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "delete" }
-"ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME tunnel:fr2" }
-"mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME tunnel:fr2" }
-"gnu.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME tunnel:fr2" }
+"ssh-fr2.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody" }
+"mcp-origin.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody" }
+"gnu.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody" }
 "os.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "A @@hosts.fr2.public_ip@@" }
 "admin.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
 "ai.aphrody.com" = { type = "CNAME", content = "tunnel:aphrody", rollback = "CNAME aphrody.com" }
