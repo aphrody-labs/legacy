@@ -534,6 +534,9 @@ dependencies = [
  "ureq",
  "uuid",
  "winresource",
+ "winux-cmds",
+ "winux-core",
+ "winux-extra",
  "xtk",
 ]
 
