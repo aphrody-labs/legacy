@@ -7,6 +7,11 @@
       "description": "A member of the Cargo workspace (src/*)",
       "entries": [
         {
+          "name": "aphrody-game",
+          "description": "Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary",
+          "path": "apps/game"
+        },
+        {
           "name": "stack-bench",
           "description": "Hardware and compiler benchmark suite behind `ay bench` (Windows)",
           "path": "bench"
@@ -1084,39 +1089,14 @@
           "path": "infra/cloudflare/workers/github-app"
         },
         {
-          "name": "@aphrody/a2a",
-          "description": "A2A 1.0 client for Bun and the web platform: Agent Card discovery, JSON-RPC and HTTP+JSON bindings, SSE streaming, push notification configs, and a legacy-dialect shim",
-          "path": "packages/a2a"
-        },
-        {
-          "name": "@aphrody/ag-ui",
-          "description": "Aphrody AG-UI Protocol — Pure Bun & TypeScript 7 suite connecting Agentic UI events, streaming lifecycle, Protobuf codec, A2UI surfaces, and Agent-to-User bridges.",
-          "path": "packages/ag-ui"
-        },
-        {
-          "name": "@aphrody/ag-ui-client",
-          "description": "AG-UI client with stream error draining and HTTP cancellation fixes.",
-          "path": "packages/ag-ui-client"
-        },
-        {
-          "name": "@aphrody/agent-browser",
-          "description": "Aphrody Web Bun client: CDP browser automation (agent-browser), engine lifecycle, web service client (fetch, scrape, crawl, sessions) and config reader, backed by the native aphrody-web engine.",
-          "path": "packages/agent-browser"
-        },
-        {
-          "name": "@aphrody/agy",
-          "description": "Keyless Local-First Google AI Ecosystem Hub (5-Org Depot + Gitingest, Gemma 4 JAX/CUDA/Torch, DeepMind Notebooks, Open NotebookLM, Google AI Ultra FinOps Rentabilisation, Dual Mode minimal/fullstack, Web App & Native Rust Desktop) consuming sole AI owner @aphrody/ai-os",
-          "path": "packages/agy"
-        },
-        {
           "name": "@aphrody/ai-os",
           "description": "Aphrody AI OS: Unix/GNU-like agent OS distribution unifying LLM, RAG, World Model, and System 1 decision under one C ABI (aphrody_core_capi)",
           "path": "packages/ai-os"
         },
         {
-          "name": "@aphrody/ai-triad",
-          "description": "Cross-AI CLI, TUI, GUI, OAuth 2.1/PKCE/Device-Code, MCP & Multi-Protocol Gateway across OpenAI Codex, Google Antigravity/Gemini, Anthropic Claude Code, OpenCode, Pi, and Zed",
-          "path": "packages/ai-triad"
+          "name": "@aphrody/api",
+          "description": "Tauri API definitions",
+          "path": "packages/api"
         },
         {
           "name": "@aphrody/assets",
@@ -1129,24 +1109,14 @@
           "path": "packages/automate"
         },
         {
-          "name": "@aphrody/brain",
-          "description": "Autonomous-agent memory: AGY sessions merged into a redacted Obsidian vault, graphify code graph, Google Drive sync for NotebookLM sources",
-          "path": "packages/brain"
-        },
-        {
-          "name": "@aphrody/bun-chromium",
-          "description": "Chromium CDP SDK over the existing Aphrody Bun Chromium and Chrome builtins.",
-          "path": "packages/bun-chromium"
-        },
-        {
-          "name": "@aphrody/bun-google",
-          "description": "Google REST services over the Aphrody Bun runtime, with explicit credential ownership.",
-          "path": "packages/bun-google"
-        },
-        {
           "name": "@aphrody/bun-parity",
           "description": "Automated Chromium Upstream vs Bun Full-Stack Parity Recon & Auto-Patcher",
           "path": "packages/bun-parity"
+        },
+        {
+          "name": "@aphrody/bun-plugin-tailwind",
+          "description": "Tailwind CSS v4 for Bun: Bun.build, the HTML dev server and Bun.serve, a PostCSS plugin on the same engine, and a Material 3 preset",
+          "path": "packages/bun-plugin-tailwind"
         },
         {
           "name": "@aphrody/bun-plugins",
@@ -1154,19 +1124,29 @@
           "path": "packages/bun-plugins"
         },
         {
+          "name": "@aphrody/bun-runtime-sdk",
+          "description": "SDK of the buv native runtime: versioned buv C ABI with compatible yolo exports and Bun, .NET and Python bindings",
+          "path": "packages/bun-runtime-sdk"
+        },
+        {
           "name": "@aphrody/bun-sql",
           "description": "Native Bun.SQL provider connections and official Neon and Supabase SDKs",
           "path": "packages/bun-sql"
         },
         {
-          "name": "@aphrody/bun-web",
-          "description": "Bun browser SDK: CDP pages over Bun.WebView, the bun_browser engine lifecycle and web service (fetch, scrape, crawl), agent-browser client, Tauri bridge and the Playwright-compatible test runner.",
-          "path": "packages/bun-web"
+          "name": "@aphrody/bun-steam",
+          "description": "Bun OS Steam owner (Bun half): VDF text/binary/appinfo parser and writer, Steam client configuration, steamcmd with a cached session, libraries, Proton management and launch tuning, Remote Play state, the local Steam index and the bun-steam CLI.",
+          "path": "packages/bun-steam"
         },
         {
-          "name": "@aphrody/bun-webview-page",
-          "description": "Playwright-shaped page, locators, routing and events over Bun.WebView (Chrome backend over CDP)",
-          "path": "packages/bun-webview-page"
+          "name": "@aphrody/bun-test-dom",
+          "description": "",
+          "path": "packages/bun-test-dom"
+        },
+        {
+          "name": "@aphrody/bun-video",
+          "description": "Bun video protocols, native capture adapters, and official Remotion and HyperFrames integrations",
+          "path": "packages/bun-video"
         },
         {
           "name": "@aphrody/bunify",
@@ -1174,14 +1154,14 @@
           "path": "packages/bunify"
         },
         {
+          "name": "@aphrody/canvas",
+          "description": "Aphrody native Skia canvas facade over the pinned upstream @napi-rs/canvas runtime",
+          "path": "packages/canvas"
+        },
+        {
           "name": "@aphrody/chromium",
           "description": "Chromium CDP client and launcher, Obscura alias, Brave adblock-rust and privacy cryptography for upstream Bun: the owner of the aphrody-labs/bun fork's bun:chromium, bun:chrome, bun:obscura, bun:adblock, bun:privacy and bun:fetch, served as a Bun OS plugin.",
           "path": "packages/chromium"
-        },
-        {
-          "name": "@aphrody/chromium-bun",
-          "description": "CDP client, SSRF-guarded crawler, BM25 search shards, engine registry and runtime benchmarks, on bun",
-          "path": "packages/chromium-bun"
         },
         {
           "name": "@aphrody/core",
@@ -1199,18 +1179,13 @@
           "path": "packages/design"
         },
         {
-          "name": "@aphrody/doc-ai",
-          "description": "AI-first documentation and automatic translation system",
-          "path": "packages/doc-ai"
-        },
-        {
-          "name": "@aphrody/drive-client",
-          "description": "Type-safe TypeScript client for Spacedrive daemon",
-          "path": "packages/drive-client"
+          "name": "@aphrody/discord-kit",
+          "description": "Unified Discord bot core kit: pre-flight intent negotiation, memory-bounded caching, resilient interaction dispatching, lifecycle management and guards for Bun.",
+          "path": "packages/discord-kit"
         },
         {
           "name": "@aphrody/env-kit",
-          "description": "Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/aphrody",
+          "description": "Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/google/gcp) for C:/aphrody",
           "path": "packages/env-kit"
         },
         {
@@ -1229,49 +1204,19 @@
           "path": "packages/gaming"
         },
         {
-          "name": "gcloud-learn-monorepo",
-          "description": "Google Cloud & Sovereign Engineering Monorepo (Upstream Bun, Pure TS, WebGPU 3D, Chromium/AOSP Tree)",
-          "path": "packages/gcloud-learn"
-        },
-        {
-          "name": "@aphrody/gcp",
-          "description": "Google Cloud for src: 3-principal gcloud configurations, IAM bindings plan, agent-managed billing (split from env-kit)",
-          "path": "packages/gcp"
-        },
-        {
-          "name": "@aphrody/gemma-web",
-          "description": "Gemma 4 E2B in the browser: ONNX Runtime Web (WebGPU decoder, wasm per-layer embeddings), OPFS shard cache, OpenAI-style streaming client.",
-          "path": "packages/gemma-web"
-        },
-        {
-          "name": "@aphrody/ghidra",
-          "description": "Ghidra API for Bun (pyghidra parity), Bun plugin and native onBeforeParse plugin",
-          "path": "packages/ghidra"
-        },
-        {
           "name": "@aphrody/gnu",
           "description": "GNU upstream tracker and distributor: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix and the Rust equivalents, as a JSON feed, an Atom feed, a static site and MCP tools",
           "path": "packages/gnu"
         },
         {
           "name": "@aphrody/google",
-          "description": "Canonical Bun facade for Aphrody Google Cloud and Gemini.",
+          "description": "Aphrody Google: Cloud, Gemini, Drive, Docs, REST services (src/rest), gcloud principals and billing (src/gcp), document translation (src/doc-ai), Drive client (src/drive-client).",
           "path": "packages/google"
         },
         {
-          "name": "@google-llc/monorepo",
-          "description": "Official Google LLC Sovereign Monorepo (//src/google): Cloud (europe-west9, gVisor), Workspace (Drive 20TB, YouTube, Stargardt), and DevTools (google CLI, Terminal, zx, GTS)",
-          "path": "packages/google-bun"
-        },
-        {
-          "name": "@aphrody/google-design",
-          "description": "Anti-AI-Slop Design-First Studio, M3 + Fluent 2 + Omarchy/CachyOS Token Compiler & Open Creative Asset Bank",
-          "path": "packages/google-design"
-        },
-        {
-          "name": "google-dream",
-          "description": "From Guadeloupe to Googleplex: Stargardt warrior journey, Chromium/AOSP origins, Google Cloud mastery, assistive AI tech & sovereign Bun stack.",
-          "path": "packages/google-dream"
+          "name": "@aphrody/http",
+          "description": "Portable in-process JSON transport shared by Aphrody service clients",
+          "path": "packages/http"
         },
         {
           "name": "@aphrody/i18n",
@@ -1279,19 +1224,34 @@
           "path": "packages/i18n"
         },
         {
-          "name": "@aphrody/identity",
-          "description": "Aphrody product identity for the M3 surfaces: brand emblem and icons, the Aphrody avatar, the animated pet (React component and <aphrody-pet> Custom Element, Codex-composed tracks, 16-way gaze) drawn from crates/ui/identity.",
-          "path": "packages/identity"
+          "name": "@aphrody/m3-ai",
+          "description": "Material Design 3 agent-interaction components (tool calls, markdown, chat composer, workers, tasks): the SpaceUI (@spacedrive/ai) set rebuilt on @aphrody/m3-primitives.",
+          "path": "packages/m3-ai"
         },
         {
-          "name": "@aphrody/inference",
-          "description": "",
-          "path": "packages/inference"
+          "name": "@aphrody/m3-os-themes",
+          "description": "Material 3 OS theme generators and installers (Windows 11, GNOME Shell, COSMIC, Chromium browsers) derived from @aphrody/m3-tokens dynamic colour roles.",
+          "path": "packages/m3-os-themes"
         },
         {
-          "name": "@aphrody/knowledge-engine",
-          "description": "Unified Context7 v2 + Multi-Hop Deep Research + Deterministic Fact-Checker + Monorepo Docs & Skills Generator + Continuous AGY Session Reviewer in pure Bun v1.4.4",
-          "path": "packages/knowledge-engine"
+          "name": "@aphrody/m3-primitives",
+          "description": "Material Design 3 React primitives: the SpaceUI (@spacedrive/primitives) component set rebuilt on the M3 roles, shape, typescale, state layers and motion of the aphrody design system.",
+          "path": "packages/m3-primitives"
+        },
+        {
+          "name": "@aphrody/m3-reader",
+          "description": "Material 3 manga and illustrated book readers for React",
+          "path": "packages/m3-reader"
+        },
+        {
+          "name": "@aphrody/m3-theme",
+          "description": "Canonical Material 3 fusion sheets: tokens.css (M3 + shadcn/ui + Tailwind v4 aliases), tailwind.css (every M3 system token as a Tailwind v4 utility) and spaceui.css (the SpaceUI themes rebuilt as M3 dynamic schemes, with SpaceUI compatibility aliases).",
+          "path": "packages/m3-theme"
+        },
+        {
+          "name": "@aphrody/m3-tokens",
+          "description": "Material 3 design tokens (--md-sys-*) for the @aphrody/material-web fork: MUI-theme → M3 token CSS generation and runtime Material You dynamic colour via material-color-utilities.",
+          "path": "packages/m3-tokens"
         },
         {
           "name": "@aphrody/machine",
@@ -1299,9 +1259,9 @@
           "path": "packages/machine"
         },
         {
-          "name": "@aphrody/mcp-ui",
-          "description": "MCP interactive app client with sandbox readiness and cancellation fixes.",
-          "path": "packages/mcp-ui"
+          "name": "@aphrody/messaging",
+          "description": "Aphrody messaging channel contracts and Discord REST adapter.",
+          "path": "packages/messaging"
         },
         {
           "name": "@aphrody/native",
@@ -1309,19 +1269,19 @@
           "path": "packages/native"
         },
         {
+          "name": "@aphrody/next-bun",
+          "description": "Next.js on Bun: run next with no Node.js (Turbopack workers included), build the Pages Router with Bun.build (experimental), Next 16 / Tailwind 4 codemods, instant navigation testing and a Next-compatible App Router on Bun.build + Bun.serve without Next (`@aphrody/next-bun/app`)",
+          "path": "packages/next-bun"
+        },
+        {
           "name": "@aphrody/omniu",
           "description": "oh-my-niu for Bun: plugin bundle as data, validator, packager and scaffolder, and the host that loads the ay plugin into both Bun and niu",
           "path": "packages/omniu"
         },
         {
-          "name": "@aphrody/paths",
-          "description": "Cross-platform path resolution for Aphrody workspaces and runtime data",
-          "path": "packages/paths"
-        },
-        {
-          "name": "@aphrody/pi-opencode",
-          "description": "Minimalist modular autonomous coding harness fusing Pi (4-tool core), OpenCode + OpenTUI (Bun & Rust libs/UI), Locally Uncensored + Heretic + Ring3-Agent (open-weights local inference), and Symphony + Ralph NHITL worktree loops",
-          "path": "packages/pi-opencode"
+          "name": "@aphrody/plugin-opener",
+          "description": "Open files and URLs using their default application.",
+          "path": "packages/plugin-opener"
         },
         {
           "name": "@aphrody/py2bun",
@@ -1329,49 +1289,19 @@
           "path": "packages/py2bun"
         },
         {
-          "name": "@aphrody/rag-core",
-          "description": "Aphrody RAG core for the web (WebAssembly) and for Bun (bun:ffi): chunking, fusion, eval and vector kernels behind one typed facade.",
-          "path": "packages/rag-core"
-        },
-        {
           "name": "@aphrody/release",
           "description": "ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first",
           "path": "packages/release"
         },
         {
-          "name": "@aphrody/runtime-adapter",
-          "description": "One app entrypoint for Cloudflare Workers, Vercel Functions and Bun.serve on the VPS: storage, KV, SQL, cron and env selected by infra/deploy.toml + env",
-          "path": "packages/runtime-adapter"
-        },
-        {
-          "name": "@aphrody/runtime-sdk",
-          "description": "Light TypeScript SDK of the YOLO native runtime: loads the precompiled library through its versioned C ABI",
-          "path": "packages/runtime-sdk"
-        },
-        {
-          "name": "@aphrody/shell-web",
-          "description": "",
-          "path": "packages/shell-web"
-        },
-        {
-          "name": "@aphrody/site",
-          "description": "Framework de sites statiques sur bun : conventions app/ (page, layout, not-found, route, [param], generateStaticParams), métadonnées, i18n, images, polices, CDN /_static immuable, _headers et _redirects.",
-          "path": "packages/site"
-        },
-        {
-          "name": "@aphrody/typesafe-sdk",
-          "description": "TypeScript SDK for the TypeSafe API",
-          "path": "packages/typesafe-sdk"
+          "name": "@aphrody/sql",
+          "description": "Shared Bun database mechanics for Aphrody: env/URL resolution, Bun.SQL and Redis factories, bun:sqlite open policy with optional sqlite-vec",
+          "path": "packages/sql"
         },
         {
           "name": "@aphrody/upstream",
           "description": "Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks",
           "path": "packages/upstream"
-        },
-        {
-          "name": "@aphrody/vault",
-          "description": "Async secret vault for src: DPAPI / Windows Hello (NCrypt Passport KSP) / systemd-creds locally, age envelopes per host for sync, sealed json/xml/csv/toml documents, row-encrypted bun:sqlite, Chromium password CSV and agent profiles",
-          "path": "packages/vault"
         },
         {
           "name": "@aphrody/wck",
@@ -1389,19 +1319,9 @@
           "path": "packages/web-crawl"
         },
         {
-          "name": "@aphrody/webos",
-          "description": "aphrody.com: the Bun OS in the browser. One Cloudflare Worker serves the desktop shell (windows, launcher, file explorer, terminal, browser, Bun Engine) and the catalog of every app, package and crate of the workspace.",
-          "path": "packages/webos"
-        },
-        {
-          "name": "@aphrody/webos-wasm",
-          "description": "Rust WebAssembly backend of the Aphrody browser OS: OPFS-persisted file system, explorer wire protocol, local shell and terminal, binary triage and patches.",
-          "path": "packages/webos-wasm"
-        },
-        {
-          "name": "@aphrody/xai",
-          "description": "Headless xAI Grok API client for Bun — high-level fluent Chat API (createChat/append/sample/stream/executeToolCalls/sampleStructured, reasoning, structured, XTools for native X tool fulfillment) + SUPER_GROK_TOKEN keyless + OIDC. OpenAI-compatible REST, deep native integration with @aphrody/x.",
-          "path": "packages/xai"
+          "name": "@aphrody/x",
+          "description": "Headless X (Twitter) client for Bun: a thin import over the Rust crate aphrody-x (aphrody-ffi), with batch jobs for mass scripting. Cookie-auth GraphQL + REST, no API key. Includes local For You algo (x-algorithm port), store, and X function tools (XTools, x_* JSON Schema definitions) for Grok or any tool-calling model.",
+          "path": "packages/x"
         }
       ]
     },
@@ -1411,9 +1331,34 @@
       "description": "An application or site (apps/*)",
       "entries": [
         {
+          "name": "aphrody-app",
+          "description": "Pure-Rust (Edition 2024, zero TypeScript) multi-target desktop & web application combining WebGPU/WGSL Mica rendering, Wayland wire-protocol & tiling layouts, Fluid-style total-order CRDT state (`SharedMap`, `SharedString`, `SharedCounter`), Blake3 content-addressed OPFS/WAL storage, and W3C WebMCP (`navigator.modelContext` + HTTP JSON-RPC `/mcp`).",
+          "path": "apps/aphrody-app"
+        },
+        {
+          "name": "aphrody-web",
+          "description": "aphrody.com - Aphrody brand homepage, search with package catalog, and runtime benchmarks, in pure Bun web standards",
+          "path": "apps/aphrody-web"
+        },
+        {
           "name": "auto",
           "description": "Multi-tenant automation platform for freelancers and small businesses: n8n-style visual workflows (triggers on events, cron or webhooks; HTTP, web, RSS, spreadsheets, Slack, Discord, Telegram, mail, AI models, data actions), with business management built in as an event source: e-invoicing, purchasing, mail, employees, office documents, AI agents. A single `/v1` API, several surfaces: web app, desktop app, mobile app, CLI, MCP server, Claude Code plugin and Chrome extension.",
           "path": "apps/auto"
+        },
+        {
+          "name": "craft",
+          "description": "Entry point of the Craft Apps (photocraft, pdfcraft, filmcraft, wordcraft, lightcraft, vectorcraft, effectcraft, cadcraft, gridcraft, designcraft, figcraft, deckcraft, soundcraft, anicraft, texturecraft, materialcraft, craft-anything and the launcher).",
+          "path": "apps/craft"
+        },
+        {
+          "name": "game",
+          "description": "Game app: the Bevy game of `src/game` with the Steam and Epic storefront services, as one binary (`aphrody-game`) and one entry point (`cli.ts`).",
+          "path": "apps/game"
+        },
+        {
+          "name": "gemini-super-app",
+          "description": "Unified November 2026 Monorepo (Rust Crates + Bun v1.4.5 Packages + Python uv + Tauri v3 Alpha) for the One Big Gemini Voice, Audio & Music Super App",
+          "path": "apps/gemini-super-app"
         },
         {
           "name": "nt",
@@ -1424,6 +1369,16 @@
           "name": "open",
           "description": "Aphrody open ecosystem monorepo: the anomalyco repositories (opencode, opentui, sst, openauth, models.dev, ...) plus OpenAI and OpenAPI ecosystem repositories, flattened into one tree without upstream history. Target toolchain: Bun AOT + Rust LTO.",
           "path": "apps/open"
+        },
+        {
+          "name": "r2-site",
+          "description": "Portable large-file/static site (downloads, cdn) on @aphrody/runtime-adapter",
+          "path": "apps/r2-site"
+        },
+        {
+          "name": "r2b",
+          "description": "",
+          "path": "apps/r2b"
         },
         {
           "name": "rosegriffon",
@@ -1439,6 +1394,11 @@
           "name": "web",
           "description": "Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`.",
           "path": "apps/web"
+        },
+        {
+          "name": "yolo",
+          "description": "Reproducible Fullstack Aphrody Bun v1.4.4 Framework, AST Module Graph, Material Design 3 Stack, Aphrody Pets & 3-VPS Search Inspector",
+          "path": "apps/yolo"
         }
       ]
     },
@@ -1463,14 +1423,19 @@
           "path": "infra/android"
         },
         {
-          "name": "bench",
+          "name": "ay",
           "description": "",
-          "path": "infra/bench"
+          "path": "infra/ay"
         },
         {
           "name": "chromium-factory",
           "description": "",
           "path": "infra/chromium-factory"
+        },
+        {
+          "name": "ci",
+          "description": "",
+          "path": "infra/ci"
         },
         {
           "name": "cloudflare",
@@ -1513,21 +1478,6 @@
           "path": "infra/gcloud"
         },
         {
-          "name": "gcp",
-          "description": "",
-          "path": "infra/gcp"
-        },
-        {
-          "name": "generated",
-          "description": "",
-          "path": "infra/generated"
-        },
-        {
-          "name": "gitlab",
-          "description": "Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Google Cloud Git** across all 26 `C:\\aphrody` repositories.",
-          "path": "infra/gitlab"
-        },
-        {
           "name": "gnu",
           "description": "",
           "path": "infra/gnu"
@@ -1563,24 +1513,9 @@
           "path": "infra/os"
         },
         {
-          "name": "pipeline",
-          "description": "",
-          "path": "infra/pipeline"
-        },
-        {
           "name": "pkg",
           "description": "",
           "path": "infra/pkg"
-        },
-        {
-          "name": "scripts",
-          "description": "",
-          "path": "infra/scripts"
-        },
-        {
-          "name": "unixwin",
-          "description": "",
-          "path": "infra/unixwin"
         },
         {
           "name": "up",
@@ -1596,11 +1531,6 @@
           "name": "vault",
           "description": "",
           "path": "infra/vault"
-        },
-        {
-          "name": "vcpkg",
-          "description": "",
-          "path": "infra/vcpkg"
         },
         {
           "name": "wsl-distro",

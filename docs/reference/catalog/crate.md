@@ -4,6 +4,7 @@ A member of the Cargo workspace (src/*)
 
 | Name | Description |
 | :-- | :-- |
+| [aphrody-game](../../../apps/game) | Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary |
 | [stack-bench](../../../bench) | Hardware and compiler benchmark suite behind `ay bench` (Windows) |
 | [agent-context](../../../src/agent/context) | Native reader/writer for the agent Context store (same SQLite schema as packages/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python. |
 | [bun_analytics](../../../src/analytics) | - |

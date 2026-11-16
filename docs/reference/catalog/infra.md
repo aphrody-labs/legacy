@@ -7,8 +7,9 @@ Fleet, deploy and CI configuration (infra/*)
 | [agents](../../../infra/agents) | - |
 | [ai](../../../infra/ai) | - |
 | [android](../../../infra/android) | - |
-| [bench](../../../infra/bench) | - |
+| [ay](../../../infra/ay) | - |
 | [chromium-factory](../../../infra/chromium-factory) | - |
+| [ci](../../../infra/ci) | - |
 | [cloudflare](../../../infra/cloudflare) | - |
 | [cluster](../../../infra/cluster) | - |
 | [db](../../../infra/db) | - |
@@ -17,9 +18,6 @@ Fleet, deploy and CI configuration (infra/*)
 | [gamescope-web](../../../infra/gamescope-web) | - |
 | [gaming](../../../infra/gaming) | - |
 | [gcloud](../../../infra/gcloud) | Canonical multi-account Google Cloud identity and IAM sharing reference for GCP project `aphrody` (`#<gcp-project-numbers>`). |
-| [gcp](../../../infra/gcp) | - |
-| [generated](../../../infra/generated) | - |
-| [gitlab](../../../infra/gitlab) | Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Go... |
 | [gnu](../../../infra/gnu) | - |
 | [lfs](../../../infra/lfs) | - |
 | [linux](../../../infra/linux) | - |
@@ -27,12 +25,8 @@ Fleet, deploy and CI configuration (infra/*)
 | [mesh-vn](../../../infra/mesh-vn) | - |
 | [nix](../../../infra/nix) | - |
 | [os](../../../infra/os) | - |
-| [pipeline](../../../infra/pipeline) | - |
 | [pkg](../../../infra/pkg) | - |
-| [scripts](../../../infra/scripts) | - |
-| [unixwin](../../../infra/unixwin) | - |
 | [up](../../../infra/up) | - |
 | [upstream](../../../infra/upstream) | - |
 | [vault](../../../infra/vault) | - |
-| [vcpkg](../../../infra/vcpkg) | - |
 | [wsl-distro](../../../infra/wsl-distro) | - |
