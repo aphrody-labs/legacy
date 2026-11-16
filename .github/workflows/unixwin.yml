@@ -75,13 +75,18 @@ jobs:
           path: winuxcmd
       - uses: actions/download-artifact@v8
         with: { name: gnu-results }
-      - name: Toolchain (rustup chromium-160)
+      - name: Toolchain (the Chromium rust toolchain of scripts/toolchain.ts)
         run: bun scripts/toolchain.ts install
+      # Nothing here names the toolchain generation: the installed rustup toolchain and the clang directory next to its sysroot are read back.
       # The Chromium rust toolchain carries no rust-lld: link with the lld-link of its LLVM, against the MSVC libraries.
       - name: Linker (lld-link of the Chromium LLVM)
         shell: pwsh
         run: |
-          $dir = Join-Path $env:USERPROFILE ".local/share/aphrody/toolchain/160/clang/bin"
+          $tc = rustup toolchain list | ForEach-Object { ($_ -split ' ')[0] } | Where-Object { $_ -like 'chromium-*' } | Select-Object -First 1
+          if (-not $tc) { rustup toolchain list; exit 1 }
+          "RUSTUP_TOOLCHAIN=$tc" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          $sysroot = rustc +$tc --print sysroot
+          $dir = Join-Path (Split-Path $sysroot) "clang/bin"
           $l = Join-Path $dir "lld-link.exe"
           if (-not (Test-Path $l)) { Get-ChildItem $dir | Select-Object -First 40 | ForEach-Object Name; exit 1 }
           "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$l" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
