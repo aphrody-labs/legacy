@@ -29,7 +29,7 @@
 *.mdx text eol=lf
 *.wgsl text eol=lf
 DEPS text eol=lf
-MAINTAINERS text eol=lf
+OWNERS text eol=lf
 justfile text eol=lf
 
 # Binary artifacts

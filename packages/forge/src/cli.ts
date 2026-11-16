@@ -54,7 +54,7 @@ USAGE:
 
 COMMANDS:
   status [repo] [--all]      Inspect all canonical C:\\aphrody repositories (or --all incl. third_party)
-  pillars [--json]           Audit 4-pillar VCS governance (Git + Chromium DEPS + Kernel MAINTAINERS + AOSP repo)
+  pillars [--json]           Audit 4-pillar VCS governance (Git + Chromium DEPS + Kernel OWNERS + AOSP repo)
   remotes [--apply] [--json] Audit or idempotently apply origin/gitlab/google remotes on all 26 repos
   gitlab-init [--dry-run]    Provision aphrody-dev GitLab group/projects, protections & Pacman/OCI registries
   google-git-init [--dry-run] Configure GCP 'aphrody' Developer Connect, Source Repos & credential helper

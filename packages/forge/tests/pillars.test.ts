@@ -28,7 +28,7 @@ describe("4-Pillar VCS Governance (Git + Chromium + Kernel + AOSP)", () => {
     expect(names).not.toContain("vercel");
   }, 15000);
 
-  test("parses root Chromium DEPS, AOSP default.xml, and Kernel MAINTAINERS", () => {
+  test("parses root Chromium DEPS, AOSP default.xml, and Kernel OWNERS", () => {
     const deps = readFileSync(srcPath("DEPS"), "utf-8");
     const pins = parseChromiumDepsPins(deps);
     expect(Object.keys(pins).length).toBeGreaterThanOrEqual(100);
@@ -47,7 +47,7 @@ describe("4-Pillar VCS Governance (Git + Chromium + Kernel + AOSP)", () => {
     );
     expect(projs.some((p) => p.path === "third_party/kleaf")).toBe(true);
 
-    const maint = readFileSync(srcPath("MAINTAINERS"), "utf-8");
+    const maint = readFileSync(srcPath("OWNERS"), "utf-8");
     const subs = parseKernelMaintainersSubsystems(maint);
     expect(subs.length).toBeGreaterThanOrEqual(10);
   });

@@ -262,8 +262,8 @@ export function auditFourPillars(
     existsSync(chromiumSrc) &&
     chromiumHead.length >= 7;
 
-  // 3. Linux Kernel Pillar (MAINTAINERS + torvalds/stable/next/gki + quilt series)
-  const maintainersPath = join(root, "MAINTAINERS");
+  // 3. Linux Kernel Pillar (OWNERS + torvalds/stable/next/gki + quilt series)
+  const maintainersPath = join(root, "OWNERS");
   const linuxDir = join(root, "third_party", "linux");
   const linuxHead = runGitRead(["rev-parse", "HEAD"], linuxDir).stdout;
   const linuxRemotes = readRemotesMap(linuxDir);
@@ -272,7 +272,7 @@ export function auditFourPillars(
     const subs = parseKernelMaintainersSubsystems(
       readFileSync(maintainersPath, "utf-8"),
     );
-    kernelDetails.push(`root MAINTAINERS active (${subs.length} subsystems)`);
+    kernelDetails.push(`root OWNERS active (${subs.length} subsystems)`);
   }
   if (
     linuxRemotes["torvalds"] &&

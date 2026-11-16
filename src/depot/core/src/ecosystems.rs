@@ -138,7 +138,7 @@ impl EcosystemManifests {
         out
     }
 
-    /// Parse Linux Kernel `MAINTAINERS` subsystems (`M:`, `S:`, `T:`, `F:`)
+    /// Parse Linux Kernel `OWNERS` subsystems (`M:`, `S:`, `T:`, `F:`)
     pub fn parse_kernel_maintainers(content: &str) -> Vec<KernelMaintainerSubsystem> {
         let mut subsystems = Vec::new();
         let normalized = content.replace("\r\n", "\n");
@@ -248,7 +248,7 @@ impl EcosystemManifests {
                 .map(|c| Self::parse_aosp_manifest(&c).len())
                 .unwrap_or(0);
 
-        let kernel_subsystem_count = fs::read_to_string(root.join("MAINTAINERS"))
+        let kernel_subsystem_count = fs::read_to_string(root.join("OWNERS"))
             .map(|c| Self::parse_kernel_maintainers(&c).len())
             .unwrap_or(0);
 

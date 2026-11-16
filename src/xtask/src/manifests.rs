@@ -7,7 +7,7 @@
 //! - `docs/patches/series` and `infra/upstream/patches/bun-parity/series` (quilt indexes of patches tracked in
 //!   this tree; `third_party/` is not versioned, so nothing under it is indexed).
 //!
-//! `MAINTAINERS` is hand-maintained (kernel format) and never generated. The org URL in the DEPS
+//! `OWNERS` is hand-maintained (kernel format) and never generated. The org URL in the DEPS
 //! vars comes from `identity.toml` (`[orgs].main`), read without a TOML dependency.
 
 use crate::{LockedRepo, SrcLock};

@@ -527,7 +527,7 @@ pub struct ArtifactInitArgs {
 // Maintainer (manifest drift: `ay manifests --check`, src/xtask)
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "maintainer")]
-/// Lookup Linux Kernel style MAINTAINERS ownership for any monorepo path
+/// Lookup Linux Kernel style OWNERS ownership for any monorepo path
 pub struct MaintainerArgs {
     /// relative path inside monorepo (e.g. third_party/linux/Makefile)
     #[argh(positional)]
@@ -607,7 +607,7 @@ pub fn run(cmd: &str, args: &[String]) -> i32 {
         println!("  slim        Apply Git Scalar and maintenance optimizations");
         println!("  clone       Minimal blobless clone with Git Scalar");
         println!("  artifacts   Blake3 content-addressed binary artifact management");
-        println!("  maintainer  Query subsystem ownership via root MAINTAINERS");
+        println!("  maintainer  Query subsystem ownership via root OWNERS");
         println!("  ignore      Standard .gitignore and .llmignore templates");
         println!("  info        Display environment, native NT kernel32 telemetry");
         return 0;

@@ -3,7 +3,7 @@ use std::path::Path;
 use depot_core::{EcosystemManifests, StyleExt};
 
 pub fn run_maintainer_lookup(root: &Path, target_path: &str) -> Result<(), String> {
-    let maint_file = root.join("MAINTAINERS");
+    let maint_file = root.join("OWNERS");
     let raw = fs::read_to_string(&maint_file)
         .map_err(|e| format!("Failed to read {}: {}", maint_file.display(), e))?;
     let subsystems = EcosystemManifests::parse_kernel_maintainers(&raw);

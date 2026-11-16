@@ -2,7 +2,7 @@
 // First-class 4-Pillar VCS Governance:
 //   1. Git Superproject (.gitmodules, .gitattributes, Scalar, src.lock.json)
 //   2. Chromium depot_tools (DEPS, .gclient)
-//   3. Linux Kernel (MAINTAINERS, torvalds/stable/next/gki remotes, quilt patch series)
+//   3. Linux Kernel (OWNERS, torvalds/stable/next/gki remotes, quilt patch series)
 //   4. Android AOSP (third_party/aosp, Kleaf GKI; audit only, no generated manifest)
 // pin-001: src.lock.json is the only pin; DEPS and .gitmodules derive from it (manifests.rs).
 use argh::FromArgs;
@@ -670,7 +670,7 @@ fn run_audit_vcs(root_str: &str, as_json: bool) -> i32 {
         && root.join("third_party").join("chromium").join("src").is_dir();
 
     let linux_remotes = read_git_remotes(&root.join("third_party").join("linux"));
-    let kernel_ok = root.join("MAINTAINERS").is_file()
+    let kernel_ok = root.join("OWNERS").is_file()
         && root.join("third_party").join("linux").is_dir()
         && linux_remotes.contains_key("stable")
         && linux_remotes.contains_key("next");
@@ -700,8 +700,8 @@ fn run_audit_vcs(root_str: &str, as_json: bool) -> i32 {
         root.join("third_party").join("depot_tools").is_dir()
     ));
     notes.push(format!(
-        "Linux Kernel Pillar: MAINTAINERS={}, remotes={}",
-        root.join("MAINTAINERS").is_file(),
+        "Linux Kernel Pillar: OWNERS={}, remotes={}",
+        root.join("OWNERS").is_file(),
         linux_remotes.len()
     ));
     notes.push(format!(
