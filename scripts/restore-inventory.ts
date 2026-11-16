@@ -3,7 +3,7 @@ import { personalData } from "./hygiene.ts";
 // Restore inventory generator: merges the discovery outputs (GitHub, npm, crates.io, VPS scans and hashes, local roots,
 // antigravity brain, Cloudflare) into docs/project/restore-inventory.{json,md}.
 // Inputs are produced by scripts/restore-github.ts, restore-registries.ts, restore-compare-registries.ts and
-// restore-vps-scan.sh (see docs/project/restore-inventory.md, "Regenerate").
+// restore-vps-scan.sh.
 // Usage: bun scripts/restore-inventory.ts --in <dir> [--restored <file with one repo path per line>]
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";

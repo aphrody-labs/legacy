@@ -15,8 +15,8 @@ binary = "ay" # [[bin]] of system/ay
 crate = "aphrody" # package name of system/ay
 
 [naming]
-npm_scope = "@aphrody" # every packages/*/package.json#name and the root package
-crate_prefix = "aphrody-" # crates/<dir> is named <dir> or <crate_prefix><dir> (crates.io collisions, docs/ay/NAMING.md)
+npm_scope = "@aphrody" # every package.json#name under system/ and frameworks/ and the root package
+crate_prefix = "aphrody-" # a crate under system/ or frameworks/ is named <dir> or <crate_prefix><dir> (crates.io collisions, docs/project/naming.md)
 
 # Prefixes follow the name: C symbols `<name>_`, environment `<NAME>_`; override with [naming] c_prefix and env_prefix.
 # `just identity apply` rewrites the old identity (HEAD:tools/identity.toml) literals to the new one: npm scope, crate prefix,

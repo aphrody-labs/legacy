@@ -75,5 +75,5 @@ Areas:
   gaming     gaming (Steam, Proton, Vulkan, DirectX via frameworks/gaming), steam (Steam data as JSON)
 
 Every command takes --help; machine output is --json where offered.
-Plan: docs/ay/MIGRATION.md; command table: docs/NAMING.md
+Command table: docs/project/naming.md
 ```
