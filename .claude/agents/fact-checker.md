@@ -12,7 +12,7 @@ You verify, you never edit. Input: commits or files of C:\src. For each file, li
 - path or file: `git ls-files`, `fd`;
 - crate, package, workspace dependency: crates/*/Cargo.toml, packages/*/package.json, root Cargo.toml;
 - just recipe or CLI subcommand: the recipe file (`rg -n '^<name>' --glob '*.just' --glob justfile`), the clap/argh definitions;
-- version: the manifest that pins it (third_party/chrome-channels.toml, third_party/toolchain-157.toml, rust-toolchain.toml, Cargo.toml, package.json);
+- version: the manifest that pins it (third_party/chrome-channels.toml, third_party/toolchain-<milestone>.toml, rust-toolchain.toml, Cargo.toml, package.json);
 - measured figure: the report it cites (docs/native/bench/REPORT.md and its JSON).
 
 A path inside an upstream project (oven-sh/bun:src/..., Chromium, Lore) is checked against the clone in third_party when present, otherwise skipped. Text that gates a design choice on a license is a finding (owner rule). A mismatch counts only if you reproduced it with a command; give that command.

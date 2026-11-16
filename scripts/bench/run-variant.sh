@@ -7,7 +7,7 @@ V=$1
 A=$2
 B=/srv/bench
 BASE="--cfg tokio_unstable --cfg uuid_unstable -Cforce-unwind-tables=yes -Cforce-frame-pointers=yes"
-TC=${TC:-chromium-157}
+TC=${TC:?the rustup toolchain named by rust-toolchain.toml}
 export RUSTUP_TOOLCHAIN=$TC
 export RUSTC_BOOTSTRAP=1
 export CARGO_TARGET_DIR=$B/t-$TC-$V

@@ -1,0 +1,148 @@
+# Toolchain Chromium 160 (canary 160.0.8157.0), published on R2 on 2026-11-15.
+# Source: Chromium prebuilts (tools/clang/scripts/update.py and tools/rust/update_rust.py at tag 160.0.8157.0;
+# chrome-channels.toml canary and dev pin the same clang and rust revisions).
+# Repack: .tar.xz -> .tar.zst (zstd -19), content-addressed name = <package>.<blake3[0:16]>.tar.zst.
+# lld, ld.lld, lld-link and llvm-* are in the clang package (no separate lld package); clang-tidy is a package of its own.
+# `bun scripts/toolchain.ts` picks the newest toolchain-<milestone>.toml: a bump is a new file and the channel line of rust-toolchain.toml.
+
+[toolchain]
+chromium = "160.0.8157.0"
+clang_revision = "llvmorg-24-init-17044-gc3223914"
+clang_sub_revision = 1
+rust_revision = "96a18bf5ffa2b24f9cf3d1c731a9eb121c1acad9"
+rust_sub_revision = 5
+clang_version = "clang version 24.0.0git (https://chromium.googlesource.com/a/external/github.com/llvm/llvm-project c3223914b50811fb3be915840f06456acb83d096)"
+rustc_version = "rustc 1.101.0-nightly (41b321963 2026-10-29)"
+llvm_version = "24.0.0"
+r2_bucket = "aphrody-chromium"
+r2_prefix = "toolchain/160/"
+
+[[file]]
+platform = "linux-x64"
+package = "clang-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/linux-x64/clang-llvmorg-24-init-17044-gc3223914-1.34d37676eb2941c0.tar.zst"
+size = 75517550
+sha256 = "c681bad525a3db1696ccbc3aeca6b6e9fd565dab0ecc7b9c77bd33765538da7c"
+blake3 = "34d37676eb2941c04461ff59954465e774339bf976d2feaf429221df183b3e85"
+files = 462
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 58862184
+source_sha256 = "4312432fd57f94766b62264161ec4afabeaca066fc812cf038efa88c154ef4da"
+source_blake3 = "37d54d4115b889bbb12b0e13ec5ddcde2513eee8b57ff3fda93e9642f2fb9802"
+
+[[file]]
+platform = "linux-x64"
+package = "llvm-code-coverage-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/linux-x64/llvm-code-coverage-llvmorg-24-init-17044-gc3223914-1.cd6e5efdb53463c4.tar.zst"
+size = 2598298
+sha256 = "1e87b9dee7b7178fc5234798990b0ec98551ab24af9f78699ab2127452111690"
+blake3 = "cd6e5efdb53463c44b1f1c77b2db319a509783fa35c8e64e6b58f17c0eac552e"
+files = 3
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/llvm-code-coverage-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 2436360
+source_sha256 = "a11f7b0a33accd98f3555e0591226745cc10e341141ed99eca0928accf0621a3"
+source_blake3 = "332f4f46b53465fb74175982fa789a0666e0795ce18a57f8893ce361c5f20bfc"
+
+[[file]]
+platform = "linux-x64"
+package = "llvmobjdump-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/linux-x64/llvmobjdump-llvmorg-24-init-17044-gc3223914-1.dca79462c45dc11b.tar.zst"
+size = 13520786
+sha256 = "07a7a5e52b8d6777af143f9f8e02845da2185db4e3410bef8ba3e160b63b13c5"
+blake3 = "dca79462c45dc11b728d592f70dabc3fe2a913e676bb357a4ac27cdb31ccb533"
+files = 8
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/llvmobjdump-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 6027024
+source_sha256 = "0060c82105b8062ea0f405a087d035248748b75bf46ea3dc1050b8b5a479dbd6"
+source_blake3 = "b1cb84a02d58dd2c1c2e59ae6fd501f91204cf78288b56143a303eac1158df65"
+
+[[file]]
+platform = "linux-x64"
+package = "rust-toolchain-96a18bf5ffa2b24f9cf3d1c731a9eb121c1acad9-5-llvmorg-24-init-17044-gc3223914"
+r2_key = "toolchain/160/linux-x64/rust-toolchain-96a18bf5ffa2b24f9cf3d1c731a9eb121c1acad9-5-llvmorg-24-init-17044-gc3223914.77e473b1e32a1370.tar.zst"
+size = 337678226
+sha256 = "3fd33836294004dbba1e4d2ac6b11c55e8d52776a74623d85702b24769314b74"
+blake3 = "77e473b1e32a13709b7d0537042b7efb209b7d554452d26a29eac1f35c129082"
+files = 8946
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/rust-toolchain-96a18bf5ffa2b24f9cf3d1c731a9eb121c1acad9-5-llvmorg-24-init-17044-gc3223914.tar.xz"
+source_size = 287866428
+source_sha256 = "73e395668def3e0a488f5edffd3ccaeb86a99f0476ed06c04930c6895094b212"
+source_blake3 = "13148a9b4b9796766651c889b476fd2f2620a90c82c6c41b74618bdc35f3b551"
+
+[[file]]
+platform = "windows-x64"
+package = "clang-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/windows-x64/clang-llvmorg-24-init-17044-gc3223914-1.56f9cfb456297864.tar.zst"
+size = 62806931
+sha256 = "8327f7573202f27a62d46e8ba07fcc188f75481f5d4b115584d04c0c045c7659"
+blake3 = "56f9cfb456297864bd71d846c701c764945198347144556c646c732e98018e84"
+files = 375
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Win/clang-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 53275320
+source_sha256 = "357f648893f20ac66fac54d8d6b993c7077cffb06146083c646913d89e53636d"
+source_blake3 = "474d304cdac6e3b4c8bd60231b2400c43881c9c8895b894be110733b0433f59a"
+
+[[file]]
+platform = "windows-x64"
+package = "llvm-code-coverage-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/windows-x64/llvm-code-coverage-llvmorg-24-init-17044-gc3223914-1.86b09e7b28fe4c3f.tar.zst"
+size = 2819237
+sha256 = "c01b2f2289045e8b89688ac8ada600572ebf52a88598dcf1aead0b4321e213c1"
+blake3 = "86b09e7b28fe4c3f4bec0e02291ce7857fc4ec03eb433f776a5fb3a7e41ad895"
+files = 3
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Win/llvm-code-coverage-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 2617424
+source_sha256 = "072fd0708bd28d18ad713495b1489d41d77b092242330125c6995347ef866d03"
+source_blake3 = "05d1503271f3b69f897664ac52c84c9fcd1a860949525b578311ac3cd224e26f"
+
+[[file]]
+platform = "windows-x64"
+package = "llvmobjdump-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/windows-x64/llvmobjdump-llvmorg-24-init-17044-gc3223914-1.e8807114997a154a.tar.zst"
+size = 13419725
+sha256 = "5787f081251aa50506b5294963ea6393984fd38dd21c9a5632b365ddcb34a9bb"
+blake3 = "e8807114997a154ae62c082877c065b3e9c8d06e6f84a59d6d865d742f86d59d"
+files = 7
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Win/llvmobjdump-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 6129952
+source_sha256 = "55a6c6c8c141a1726ee4cabf6340fbb983d838cd860b82adf571977594e99e4a"
+source_blake3 = "73b92cf373c531b88023b6e041d93ecee8db8a740551eb56c1cda18596e48a81"
+
+[[file]]
+platform = "windows-x64"
+package = "rust-toolchain-96a18bf5ffa2b24f9cf3d1c731a9eb121c1acad9-5-llvmorg-24-init-17044-gc3223914"
+r2_key = "toolchain/160/windows-x64/rust-toolchain-96a18bf5ffa2b24f9cf3d1c731a9eb121c1acad9-5-llvmorg-24-init-17044-gc3223914.d2eed9cdff95f8e1.tar.zst"
+size = 511344364
+sha256 = "461080fb1acf8a0c9ad0c86e092469c950c9f2d2a4995bd6b884b377b2238f6a"
+blake3 = "d2eed9cdff95f8e16b19a2726e5ede817db609107847a407566d88da8a0ca913"
+files = 9000
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Win/rust-toolchain-96a18bf5ffa2b24f9cf3d1c731a9eb121c1acad9-5-llvmorg-24-init-17044-gc3223914.tar.xz"
+source_size = 427637256
+source_sha256 = "c3c1f2e465ed50a67e2ba5c5579c3df46e2fb445ccb73d063869087972d84e1c"
+source_blake3 = "7bbe1e24a8c77e42471f9a2bcd2c815031bfc2a0256dbf8cfc661128fcf582d1"
+
+[[file]]
+platform = "linux-x64"
+package = "clang-tidy-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/linux-x64/clang-tidy-llvmorg-24-init-17044-gc3223914-1.cb3e9463d537e756.tar.zst"
+size = 16758018
+sha256 = "ea2c41a49148038419f882b3ef92783bd1509f53622817b10f9b1cb200da3041"
+blake3 = "cb3e9463d537e756f45664c1b983a2ad5e60aa9143c14bb9b2deeafcbaed1bc0"
+files = 2
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/clang-tidy-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 15217164
+source_sha256 = "6d4e813a19448c111c955316a2572c179a15f2f3062762a14064c782f90a01d2"
+source_blake3 = "ca051f04b22c9693c510379e2a64a5bdfcf9e6805c9181ecaee1ea6a2e0b56ee"
+
+[[file]]
+platform = "windows-x64"
+package = "clang-tidy-llvmorg-24-init-17044-gc3223914-1"
+r2_key = "toolchain/160/windows-x64/clang-tidy-llvmorg-24-init-17044-gc3223914-1.18ca7c13e621c673.tar.zst"
+size = 17084864
+sha256 = "662fe7a99568bce1dd13ece5c5734cd1a8e708a5e85e3c56c30c4c68edceab3e"
+blake3 = "18ca7c13e621c6734d9ed80176c9b69be9bffa5dc1e08d9238b96548aa01b575"
+files = 2
+source_url = "https://commondatastorage.googleapis.com/chromium-browser-clang/Win/clang-tidy-llvmorg-24-init-17044-gc3223914-1.tar.xz"
+source_size = 15525416
+source_sha256 = "06d6b936e51347b63a363da75e1ba14045d060f2b2ec47944761b5ebe7a3b96c"
+source_blake3 = "d8264b02cb55075556070baa796780bb18a7bf53ad515fe898292c89451762c7"

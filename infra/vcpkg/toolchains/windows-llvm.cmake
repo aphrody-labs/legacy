@@ -6,7 +6,7 @@ set(CMAKE_SYSTEM_PROCESSOR AMD64)
 set(CMAKE_C_COMPILER_TARGET   x86_64-pc-windows-msvc)
 set(CMAKE_CXX_COMPILER_TARGET x86_64-pc-windows-msvc)
 
-# Lookup: $LLVM_ROOT (Chromium 157 toolchain from R2), then a system LLVM install.
+# Lookup: $LLVM_ROOT (Chromium toolchain from R2), then a system LLVM install.
 if(DEFINED ENV{LLVM_ROOT})
   file(TO_CMAKE_PATH "$ENV{LLVM_ROOT}" _llvm)
 else()

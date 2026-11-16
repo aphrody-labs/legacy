@@ -39,9 +39,9 @@ feature-unification = "workspace"
 incompatible-rust-versions = "allow"
 
 [target.x86_64-pc-windows-msvc]
-# rust-lld ships with the toolchain (lib/rustlib/<host>/bin) and links the
-# multi-binary crates about 10% faster than link.exe.
-linker = "rust-lld.exe"
+# lld-link of the toolchain's own LLVM (Chromium's rust package has no rust-lld): `bun scripts/toolchain.ts bin` gives the
+# directory for PATH. It links the multi-binary crates about 10% faster than link.exe.
+linker = "lld-link"
 rustflags = [
   "-Zthreads=16",
   "--cfg",
@@ -64,7 +64,7 @@ rustflags = [
 # Linux x86_64: nothing to set; nightly links with the bundled rust-lld. [build] flags apply.
 
 # Android x86_64 (bionic). Linker = NDK clang wrapper found on PATH; `bun scripts/android-setup.ts env` exports PATH,
-# CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER (overrides this key), CC_/AR_ for build scripts. The custom chromium-157
+# CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER (overrides this key), CC_/AR_ for build scripts. The custom Chromium
 # toolchain ships no std for this target: build with `-Zbuild-std=std,panic_abort` (just android-x64). No rustflags
 # here on purpose, so the [build] list above still applies.
 [target.x86_64-linux-android]

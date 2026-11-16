@@ -57,7 +57,7 @@ Anglais, et seulement là où le code ne dit pas déjà ce qu'il fait (pourquoi,
 
 ## 7. Ordre (après le merge labs et le flatten de nt-03 ; builds sur prd ou fr2)
 
-1. F-tool : publier la toolchain Chromium 157 (clang+lld+rustc) sur R2 ; `ay toolchain` la pose.
+1. F-tool : publier la toolchain Chromium (clang+lld+rustc) sur R2 ; `ay toolchain` la pose.
 2. Rust de src avec cette toolchain : `cargo build` identique, puis `-Clinker-plugin-lto` ; mesurer taille et temps.
 3. vcpkg : triplet `x64-windows-llvm` / `x64-linux-llvm` chainload ; reconstruire les ports utilisés.
 4. `depot-capi` + bindings générés pour bun, node-api et .NET.
@@ -70,7 +70,7 @@ Fichiers : `infra/vcpkg/triplets/x64-linux-llvm.cmake`, `x64-windows-llvm.cmake`
 
 - Toolchain Linux : clang/clang++ + `-fuse-ld=lld` (`CMAKE_LINKER_TYPE LLD`), llvm-ar/llvm-ranlib/llvm-nm, `-flto=thin -fPIC`, libs statiques, CRT dynamique. `LABS_LTO=off` coupe ThinLTO. Triple forcé à `x86_64-unknown-linux-gnu` (celui de rustc) : sans ça lld avertit « Linking two modules of different target triples » en LTO croisé (`x86_64-pc-linux-gnu` côté clang Ubuntu).
 - Toolchain Windows : clang-cl, lld-link, llvm-lib, llvm-rc, llvm-mt, `-flto=thin`, `/MD`. [NV] écrite, jamais testée (aucun build Windows autorisé).
-- Swap de toolchain : `LLVM_ROOT` (passé par `VCPKG_ENV_PASSTHROUGH`) pointe vers le `bin` de la toolchain. Défaut provisoire : apt.llvm.org `/usr/lib/llvm-23/bin` (Linux), `C:/Program Files/LLVM/bin` (Windows). Quand `third_party/toolchain-157.toml` existera (toolchain Chromium 157 sur R2, `aphrody-chromium/toolchain/157/`), exporter `LLVM_ROOT=<pose>/bin` ; aucun fichier à modifier. Le hash de la toolchain entre dans l'ABI vcpkg, les binaires cachés seront donc reconstruits.
+- Swap de toolchain : `LLVM_ROOT` (passé par `VCPKG_ENV_PASSTHROUGH`) pointe vers le `bin` de la toolchain. Défaut provisoire : apt.llvm.org `/usr/lib/llvm-23/bin` (Linux), `C:/Program Files/LLVM/bin` (Windows). Quand `third_party/toolchain-<milestone>.toml` existera (toolchain Chromium 157 sur R2, `aphrody-chromium/toolchain/<milestone>/`), exporter `LLVM_ROOT=<pose>/bin` ; aucun fichier à modifier. Le hash de la toolchain entre dans l'ABI vcpkg, les binaires cachés seront donc reconstruits.
 
 Validation sur fr2 (Ubuntu 26.10, 6 cœurs, `nice`, `VCPKG_MAX_CONCURRENCY=4`) [V] :
 
@@ -88,6 +88,6 @@ Notes : installés sur fr2 et laissés en place : `clang-23 lld-23 llvm-23` (apt
 
 - Source : prebuilts Chromium 157 (`CLANG_REVISION` llvmorg-24-init-7747-g62397f8b-67, `RUST_REVISION` 1edd55dc…-1125), `commondatastorage.googleapis.com/chromium-browser-clang/{Linux_x64,Win}/`.
 - Paquets : clang (inclut lld, ld.lld, lld-link, llvm-ar/nm/objcopy/readobj/symbolizer…), llvm-code-coverage, llvmobjdump, rust-toolchain (rustc, cargo, clippy, rustfmt, bindgen, crubit). Pas de paquet lld séparé (404).
-- R2 : `aphrody-chromium/toolchain/157/{linux-x64,windows-x64}/<paquet>.<blake3[0:16]>.tar.zst` (8 objets, ~1,0 Go) ; manifeste `third_party/toolchain-157.toml` (tailles, sha256, blake3, URLs source).
+- R2 : `aphrody-chromium/toolchain/<milestone>/{linux-x64,windows-x64}/<paquet>.<blake3[0:16]>.tar.zst` (8 objets, ~1,0 Go) ; manifeste `third_party/toolchain-<milestone>.toml` (tailles, sha256, blake3, URLs source).
 - Vérifié sur prd (Linux) : `clang version 24.0.0git` (llvm-project 86922d51) ; `rustc 1.100.0-nightly (1edd55dcf 2026-09-09)`, `LLVM version: 24.0.0`. Même LLVM majeur.
 - Note : zstd -19 est ~15-25 % plus gros que le xz d'origine ; à reconsidérer (`--ultra -22 --long`) si la taille compte.

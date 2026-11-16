@@ -942,8 +942,8 @@ unnecessary_cast = "allow"
 new_ret_no_self = "allow"
 map_identity = "allow"
 
-# Edit-compile loop: dependencies at opt-level 1. Everything on LLVM: the Chromium 157 Rust toolchain
-# (rust-toolchain.toml) ships no Cranelift backend (docs/llvm/CHROMIUM-157-TOOLCHAIN.md).
+# Edit-compile loop: dependencies at opt-level 1. Everything on LLVM: the Chromium Rust toolchain
+# (rust-toolchain.toml) ships no Cranelift backend (docs/native/llvm/CHROMIUM-TOOLCHAIN.md).
 # Measurements and rejected levers: docs/BUILD_SPEED.md.
 [profile.dev]
 opt-level = 0

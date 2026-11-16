@@ -10,7 +10,7 @@ description: Where upstream projects are pinned, forked and tracked in src (src.
 - Pins: `src.lock.json` (one entry per `third_party/<name>`, with upstream URL and fork); regenerate derived files with `ay lock`.
 - Forks: `third_party/forks.txt` (`owner/repo language`, forks live in the `aphrody-labs` org; skill `gh-fork` to add one).
 - Tracking and patch stacks: `infra/upstream/stacks.toml` and `infra/upstream/stacks.d/*.toml`; run `ay upstream status` (`ay upstream --help` for sync, check, pr, export).
-- Chromium stack pins: `third_party/chrome-channels.toml`, `third_party/toolchain-157.toml`; Chromium `DEPS` at the repo root.
+- Chromium stack pins: `third_party/chrome-channels.toml`, `third_party/toolchain-<milestone>.toml`; Chromium `DEPS` at the repo root.
 - Absorbed code and flattening: `docs/native/deps/`. Dependencies follow the newest upstream, including canary, nightly and pre-release.
 - Verify a version or commit at the source (`gh api`, `git ls-remote`, the clone in `third_party/`) before citing it.
 

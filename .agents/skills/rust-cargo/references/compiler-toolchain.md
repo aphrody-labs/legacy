@@ -9,12 +9,12 @@ Defined in `rust-toolchain.toml` at the repo root:
 
 ```toml
 [toolchain]
-channel = "chromium-157"
+channel = "chromium-<milestone>"
 components = ["rustfmt", "clippy", "rust-src"]
 profile = "minimal"
 ```
 
-- `chromium-157` is the rustc Chromium 157 builds on its own LLVM, matching Chromium's `clang` and `lld` (`third_party/toolchain-157.toml`; confirm with `rustc -vV`).
+- The channel of rust-toolchain.toml is the rustc Chromium builds on its own LLVM, matching Chromium's `clang` and `lld` (`third_party/toolchain-<milestone>.toml`; confirm with `rustc -vV`).
 - Installed and linked via `bun scripts/toolchain.ts install`.
 
 ## Cross-Language Linker-Plugin LTO

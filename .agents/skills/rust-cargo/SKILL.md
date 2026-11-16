@@ -1,6 +1,6 @@
 ---
 name: rust-cargo
-description: Rust and Cargo reference for src, grounded in upstream rust-lang/cargo, rust-lang/rust and crates.io (aphrody-labs forks): Edition 2024, resolver v3, workspace inheritance, sparse registry and credential providers, cargo-deny, crates.io sparse index and live API, publishing, the pinned chromium-157 nightly toolchain with LLVM cross-language LTO and lld, windows-rs, plus jj, gix, just, sccache, nextest, binstall, xwin and xtask. Use for any Cargo.toml, rust-toolchain, crate lookup or publish, Rust build speed or Rust VCS/task tooling question.
+description: Rust and Cargo reference for src, grounded in upstream rust-lang/cargo, rust-lang/rust and crates.io (aphrody-labs forks): Edition 2024, resolver v3, workspace inheritance, sparse registry and credential providers, cargo-deny, crates.io sparse index and live API, publishing, the pinned Chromium nightly toolchain (rust-toolchain.toml) with LLVM cross-language LTO and lld, windows-rs, plus jj, gix, just, sccache, nextest, binstall, xwin and xtask. Use for any Cargo.toml, rust-toolchain, crate lookup or publish, Rust build speed or Rust VCS/task tooling question.
 ---
 
 # Rust Cargo (2026)
@@ -74,5 +74,5 @@ cargo deny check licenses
 ## References
 
 - [references/crates-io.md](references/crates-io.md): crates.io sparse index paths, live REST API, publishing checklist.
-- [references/compiler-toolchain.md](references/compiler-toolchain.md): pinned `chromium-157` nightly, linker-plugin LTO with clang/lld, windows-rs.
+- [references/compiler-toolchain.md](references/compiler-toolchain.md): pinned Chromium nightly (rust-toolchain.toml), linker-plugin LTO with clang/lld, windows-rs.
 - [references/monorepo-tooling.md](references/monorepo-tooling.md): jj, gix, just, sccache, nextest, binstall, xwin, xtask.

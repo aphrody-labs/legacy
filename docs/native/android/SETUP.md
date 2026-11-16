@@ -30,11 +30,11 @@ Requires `/dev/kvm` (present on fr1 and fr2).
 ```sh
 . ~/.local/share/ay/android/android.env.sh                       # ANDROID_NDK_HOME, PATH to NDK clang, CC_/AR_/CARGO_TARGET_*_LINKER
 make -C src android-x64                                          # libaysys.so + ay_smoke, NDK clang --target=x86_64-linux-android29
-cargo +chromium-157 test -p aphrody-env --target x86_64-linux-android -Zbuild-std=std,panic_abort --no-run
+cargo test -p aphrody-env --target x86_64-linux-android -Zbuild-std=std,panic_abort --no-run
 just android-x64                                                 # all of the above on fr1 + emulator boot + adb run (proof in target/android-x64/proof.txt)
 ```
 
-`.cargo/config.toml` sets `[target.x86_64-linux-android] linker = "x86_64-linux-android29-clang"`, found on `PATH` (or `CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER`); no user path is hard-coded. The `chromium-157` toolchain ships no std for the target, hence `-Zbuild-std`. Compiles run on fr1, never on the PC. See `PROOF-x64.md` for the last run.
+`.cargo/config.toml` sets `[target.x86_64-linux-android] linker = "x86_64-linux-android29-clang"`, found on `PATH` (or `CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER`); no user path is hard-coded. The Chromium toolchain ships no std for the target, hence `-Zbuild-std`. Compiles run on fr1, never on the PC. See `PROOF-x64.md` for the last run.
 
 ## Skills
 

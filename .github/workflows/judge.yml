@@ -48,7 +48,7 @@ jobs:
         run: AGENTS_HOME="$RUNNER_TEMP/agents" bun --no-env-file test infra/agents
       - name: JS supply chain (bun workspace deps)
         run: bun packages/machine/src/js-deps-check.ts
-      - name: Toolchain (Chromium 157 rustc, rustup chromium-157 named by rust-toolchain.toml)
+      - name: Toolchain (Chromium's rustc, the rustup toolchain named by rust-toolchain.toml)
         run: bun scripts/toolchain.ts install
       - name: Cargo graph resolves (members and path dependencies present, no compilation)
         run: cargo metadata --locked --no-deps --format-version 1 >/dev/null

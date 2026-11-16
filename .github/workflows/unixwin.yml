@@ -77,19 +77,17 @@ jobs:
         with: { name: gnu-results }
       - name: Toolchain (the Chromium rust toolchain of scripts/toolchain.ts)
         run: bun scripts/toolchain.ts install
-      # Nothing here names the toolchain generation: the installed rustup toolchain and the clang directory next to its sysroot are read back.
+      # Nothing here names a toolchain generation: rust-toolchain.toml names the rustup toolchain and scripts/toolchain.ts knows its directory.
       # The Chromium rust toolchain carries no rust-lld: link with the lld-link of its LLVM, against the MSVC libraries.
       - name: Linker (lld-link of the Chromium LLVM)
         shell: pwsh
         run: |
-          $tc = rustup toolchain list | ForEach-Object { ($_ -split ' ')[0] } | Where-Object { $_ -like 'chromium-*' } | Select-Object -First 1
-          if (-not $tc) { rustup toolchain list; exit 1 }
-          "RUSTUP_TOOLCHAIN=$tc" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
-          $sysroot = rustc +$tc --print sysroot
-          $dir = Join-Path (Split-Path $sysroot) "clang/bin"
+          $dir = bun scripts/toolchain.ts bin
           $l = Join-Path $dir "lld-link.exe"
           if (-not (Test-Path $l)) { Get-ChildItem $dir | Select-Object -First 40 | ForEach-Object Name; exit 1 }
+          "$dir" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
           "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$l" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          rustc -vV; & (Join-Path $dir "clang-cl.exe") --version; & $l --version
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Build ay (WinuxCmd library linked)
         run: cargo build --release -p aphrody --no-default-features

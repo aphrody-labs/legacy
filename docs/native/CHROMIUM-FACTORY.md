@@ -189,7 +189,7 @@ Crate `src/chromium/factory` (package `aphrody-factory`, lib + bin mince ; `tool
 Déploiement sur fr1 (pas fait : rien n'est activé tant que le build est arrêté)
 
 1. prd : `cargo build --release -p aphrody-factory`, copie vers `fr1:/srv/chromium/factory/bin/aphrody-factory` (même glibc 2.44).
-2. fr1 : `infra/chromium-factory/{factory.toml,args/,systemd/}` et `third_party/{chrome-channels.toml,toolchain-157.toml}` dans `/srv/chromium/factory/`.
+2. fr1 : `infra/chromium-factory/{factory.toml,args/,systemd/}` et `third_party/{chrome-channels.toml,toolchain-<milestone>.toml}` dans `/srv/chromium/factory/`.
 3. Redéployer le server (bytestream) : `deploy.sh server`. Worker fr1 : `deploy.sh worker <fr1-mesh-ip> 100000000000 10`. Workers prd et fr2 : `deploy.sh worker <fr1-mesh-ip> <cache> 4` ou `3`.
 4. `aphrody-factory doctor`, puis `aphrody-factory all`, ou l'unité `chromium-factory.service` avec son timer.
 

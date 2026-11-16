@@ -5,7 +5,7 @@ export PATH=$HOME/.cargo/bin:$PATH
 S=/srv/bench/run-variant.sh
 R=/srv/bench/res
 mkdir -p $R
-TC=${TC:-chromium-157}
+TC=${TC:?the rustup toolchain named by rust-toolchain.toml}
 export JOBS=${JOBS:-6}
 for V in "$@"; do
   echo "== $V start $(date +%T) load $(cut -d' ' -f1-3 /proc/loadavg)"

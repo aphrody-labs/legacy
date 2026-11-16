@@ -1,8 +1,8 @@
 [toolchain]
-# One LLVM for src and Chromium (owner rule, docs/native/llvm/CHROMIUM-157-TOOLCHAIN.md): the Rust toolchain
-# Chromium 157 builds on its own LLVM, rustc 1.100.0-nightly (1edd55dcf 2026-09-09), LLVM 24.0.0, the
-# LLVM of Chromium's clang/lld (third_party/toolchain-157.toml). Custom rustup toolchain `chromium-157`,
-# linked by `bun scripts/toolchain.ts install` (PC, fr1, CI). Bump with the next Chromium channel.
-channel = "chromium-157"
+# One LLVM for src and Chromium (owner rule, docs/native/llvm/CHROMIUM-TOOLCHAIN.md): the Rust toolchain Chromium
+# builds on its own LLVM (rustc 1.101.0-nightly, LLVM 24.0.0), the LLVM of Chromium's clang/lld, pinned by the newest
+# third_party/toolchain-<milestone>.toml. Custom rustup toolchain of that milestone, linked by
+# `bun scripts/toolchain.ts install` (PC, fr1, fr2, CI). A bump is a new toolchain-<milestone>.toml plus this line.
+channel = "chromium-160"
 components = ["rustfmt", "clippy", "rust-src"]
 profile = "minimal"

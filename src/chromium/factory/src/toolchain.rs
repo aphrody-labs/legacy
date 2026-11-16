@@ -227,12 +227,12 @@ clang_version = "clang version 24.0.0git"
 rustc_version = "rustc 1.100.0-nightly"
 llvm_version = "24.0.0"
 r2_bucket = "aphrody-chromium"
-r2_prefix = "toolchain/157/"
+r2_prefix = "toolchain/<milestone>/"
 
 [[file]]
 platform = "linux-x64"
 package = "rust-toolchain-1edd55dc-1125"
-r2_key = "toolchain/157/linux-x64/rust.abc.tar.zst"
+r2_key = "toolchain/<milestone>/linux-x64/rust.abc.tar.zst"
 size = 3
 sha256 = "x"
 blake3 = "y"
@@ -240,7 +240,7 @@ blake3 = "y"
 [[file]]
 platform = "linux-x64"
 package = "clang-llvmorg-24-67"
-r2_key = "toolchain/157/linux-x64/clang.def.tar.zst"
+r2_key = "toolchain/<milestone>/linux-x64/clang.def.tar.zst"
 size = 3
 sha256 = "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
 blake3 = "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
@@ -273,7 +273,7 @@ blake3 = "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
         let mut r = Record::default();
         let done = install(&m, "linux-x64", d.path(), d.path(), "r2-chromium", &mut r).unwrap();
         assert_eq!(done[0], "clang-llvmorg-24-67");
-        assert_eq!(r.cmds[0].args[1], "r2-chromium:aphrody-chromium/toolchain/157/linux-x64/clang.def.tar.zst");
+        assert_eq!(r.cmds[0].args[1], "r2-chromium:aphrody-chromium/toolchain/<milestone>/linux-x64/clang.def.tar.zst");
         assert_eq!(r.cmds.len(), 4);
     }
 

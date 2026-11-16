@@ -43,7 +43,7 @@ await must("libaysys.so + ay_smoke (NDK clang, x86_64-linux-android)", `make -C 
 const crate = process.env.AY_ANDROID_RUST_CRATE ?? "aphrody-env";
 await must(
   `rust tests ${crate} (x86_64-linux-android, -Zbuild-std)`,
-  `cargo +chromium-157 test -p ${crate} --target x86_64-linux-android -Zbuild-std=std,panic_abort --no-run --message-format=json 2>target/android-x64/cargo.err | jaq -r 'select(.executable != null) | .executable' > target/android-x64/rust-tests.txt && cat target/android-x64/rust-tests.txt`,
+  `cargo test -p ${crate} --target x86_64-linux-android -Zbuild-std=std,panic_abort --no-run --message-format=json 2>target/android-x64/cargo.err | jaq -r 'select(.executable != null) | .executable' > target/android-x64/rust-tests.txt && cat target/android-x64/rust-tests.txt`,
 );
 
 

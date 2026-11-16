@@ -12,7 +12,7 @@ caches = [
   { name = "cargo-registry", path = ".cargo/registry" },
   { name = "cargo-git", path = ".cargo/git" },
   { name = "rustup", path = ".rustup" },
-  { name = "toolchain-157", path = ".local/share/aphrody/toolchain" },
+  { name = "toolchain", path = ".local/share/aphrody/toolchain" },
   { name = "sccache", path = "AppData/Local/Mozilla/sccache" },
   { name = "uv", path = "AppData/Local/uv/cache" },
   { name = "vcpkg", path = "AppData/Local/vcpkg" },

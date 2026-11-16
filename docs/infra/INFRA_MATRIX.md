@@ -92,7 +92,7 @@ Account notes (2026-11-12):
 
 | Layer      | Versions                                                                     | Source                           |
 | ---------- | ---------------------------------------------------------------------------- | -------------------------------- |
-| Rust       | nightly `chromium-157` (rustc 1.100.0-nightly, LLVM 24.0.0), edition 2024, targets msvc, gnu, musl, wasm32, android       | `third_party/toolchain-157.toml`, `ay build --list` |
+| Rust       | nightly of the Chromium toolchain (rust-toolchain.toml; `rustc -vV`), edition 2024, targets msvc, gnu, musl, wasm32, android       | `third_party/toolchain-<milestone>.toml`, `ay build --list` |
 | Bun / Node | pinned                                                                       | `src.lock.json`                  |
 | C/C++      | MSVC, clang (LLVM 24.0.0), zig (musl cross C compiler)                      | `ay sys`                         |
 | Containers | Docker (Alpine runtime, Arch dev images)                                   | `Dockerfile`, `compose.yaml`     |

@@ -15,7 +15,7 @@ libaysys.so: ELF 64-bit LSB shared object, x86-64, for Android 29, built by NDK 
 ay_smoke:    ELF 64-bit LSB pie executable, x86-64, interpreter /system/bin/linker64, for Android 29
 ```
 
-Rust: `cargo +chromium-157 test -p aphrody-env --target x86_64-linux-android -Zbuild-std=std,panic_abort --no-run` (linker `x86_64-linux-android29-clang` from `.cargo/config.toml`, resolved on PATH) produced a 2.4 MB test executable.
+Rust: `cargo test -p aphrody-env --target x86_64-linux-android -Zbuild-std=std,panic_abort --no-run` (linker `x86_64-linux-android29-clang` from `.cargo/config.toml`, resolved on PATH) produced a 2.4 MB test executable.
 
 ## Emulator
 

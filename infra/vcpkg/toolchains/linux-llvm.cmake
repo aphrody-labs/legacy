@@ -7,7 +7,7 @@ set(CMAKE_SYSTEM_PROCESSOR x86_64)
 set(CMAKE_C_COMPILER_TARGET   x86_64-unknown-linux-gnu)
 set(CMAKE_CXX_COMPILER_TARGET x86_64-unknown-linux-gnu)
 
-# Lookup: $LLVM_ROOT (Chromium 157 toolchain from R2, see third_party/toolchain-157.toml), then apt.llvm.org 23.
+# Lookup: $LLVM_ROOT (Chromium toolchain from R2, see third_party/toolchain-<milestone>.toml), then apt.llvm.org 23.
 if(DEFINED ENV{LLVM_ROOT})
   set(_llvm "$ENV{LLVM_ROOT}")
 else()
