@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Local layer, same files as the TS store (`packages/vault/src/store.ts`).
+//! Local layer, same files as the TS store (`packages/env-kit/vault/src/store.ts`).
 
 use crate::{valid_name, Error, Result};
 use std::path::{Path, PathBuf};

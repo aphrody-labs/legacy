@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Pure-Rust parser, linter, spec reporter, and token exporter for `DESIGN.md`.
 //!
-//! Replaces the legacy TypeScript `packages/google-design` linter (`google-labs-code/design.md`)
+//! Replaces the legacy TypeScript `packages/design/google` linter (`google-labs-code/design.md`)
 //! with a zero-JS, zero-`unsafe` implementation backed by `aphrody-ui`.
 
 use serde::{Deserialize, Serialize};

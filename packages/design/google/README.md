@@ -5,19 +5,19 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `packages/google-design` |
+| Bun package | `packages/design/google` |
 
 **Commands**
 
 ```sh
-bun run --cwd packages/google-design build
-bun run --cwd packages/google-design dev
-bun run --cwd packages/google-design start
-bun run --cwd packages/google-design test
-bun run --cwd packages/google-design check
-bun run --cwd packages/google-design fmt
-bun run --cwd packages/google-design mdx
-bun run --cwd packages/google-design verify
+bun run --cwd packages/design/google build
+bun run --cwd packages/design/google dev
+bun run --cwd packages/design/google start
+bun run --cwd packages/design/google test
+bun run --cwd packages/design/google check
+bun run --cwd packages/design/google fmt
+bun run --cwd packages/design/google mdx
+bun run --cwd packages/design/google verify
 ```
 
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).

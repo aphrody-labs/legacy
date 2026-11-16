@@ -35,6 +35,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aphrody-labs/src.git",
-    "directory": "packages/google-design"
+    "directory": "packages/design/google"
   }
 }
