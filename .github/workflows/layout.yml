@@ -22,7 +22,10 @@ jobs:
           bun-version: canary
       - run: bun scripts/relayout.ts check --upto 3
       - run: bun install --frozen-lockfile
-      - run: cargo metadata --format-version 1 > /dev/null
+      # rust-toolchain.toml names a local toolchain (chromium-160); the manifests only need a nightly cargo to resolve
+      - run: |
+          rustup toolchain install nightly --profile minimal
+          RUSTUP_TOOLCHAIN=nightly cargo metadata --format-version 1 > /dev/null
       - run: |
           bun scripts/checkdeps.ts | tee checkdeps.out || true
           # three known upward or unknown-unit errors are the baseline
