@@ -1,6 +1,6 @@
 # Distributed inference fabric (llama.cpp RPC): a coordinator llama-server on the PC's GPU, ggml-rpc-server on
 # the other hosts, reached only over WireGuard. Read by packages/ai-os/src/fabric
-# (`ai-os fabric up|status|down`, `ay ai fabric ...`). Doc : docs/ai/DISTRIBUTED-INFERENCE.md.
+# (`ai-os fabric up|status|down`, `ay ai fabric ...`).
 #
 # [release]  official ggml-org/llama.cpp binaries, fingerprints = `digest` of the GitHub assets API
 #            (gh api repos/ggml-org/llama.cpp/releases/tags/b<tag>), surveyed on 2026-11-13. Never
@@ -114,7 +114,7 @@ enabled = false
 [[node]]
 # Second Windows host with an NVIDIA GPU: absent from the inventory as of 2026-11-13 (deploy.toml, fleet.toml,
 # docs/infra, ~/.ssh/config, WireGuard peers). It joins the fabric as soon as `reach` answers on `port`
-# (see "Integrate the second GPU host" in docs/ai/DISTRIBUTED-INFERENCE.md).
+# (nothing else to configure: the node is read from this table).
 id = "gpu2"
 os = "windows"
 reach = ""
