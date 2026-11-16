@@ -21,8 +21,8 @@ workflow = "npm-publish.yml"
 
 [pypi]
 # PyO3 crates built with maturin (pyproject.toml generated in the build tree when absent).
-crates = ["src/agent/py"]
-dist_name = { "src/agent/py" = "aphrody-agent-core" }
+crates = ["src/agent/context"]
+dist_name = { "src/agent/context" = "aphrody-agent-core" }
 workflow = "pypi-publish.yml"
 
 [vcpkg]

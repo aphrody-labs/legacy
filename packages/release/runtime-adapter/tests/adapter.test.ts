@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { cloudflare, resolveCtx, vercel } from "../src/index";
 import { fsStorage, bunSQL } from "../src/bun";
-import app, { parseRange } from "../../../apps/r2-site/src/app";
+import app, { parseRange } from "../../../../apps/r2-site/src/app";
 
 const dir = mkdtempSync(join(tmpdir(), "ra-"));
 afterAll(() => rmSync(dir, { recursive: true, force: true }));

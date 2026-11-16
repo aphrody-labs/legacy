@@ -5,13 +5,13 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `packages/runtime-sdk` |
+| Bun package | `packages/release/runtime-sdk` |
 
 **Commands**
 
 ```sh
-bun run --cwd packages/runtime-sdk test
-bun run --cwd packages/runtime-sdk typecheck
+bun run --cwd packages/release/runtime-sdk test
+bun run --cwd packages/release/runtime-sdk typecheck
 ```
 
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).

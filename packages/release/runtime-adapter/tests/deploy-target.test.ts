@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
-import { cronToCalendar, render } from "../../../scripts/deploy-target";
+import { cronToCalendar, render } from "../../../../scripts/deploy-target";
 
 const toml = Bun.TOML.parse(
-  await Bun.file(join(import.meta.dir, "../../../infra/deploy.toml")).text(),
+  await Bun.file(join(import.meta.dir, "../../../../infra/deploy.toml")).text(),
 ) as Record<string, any>;
 
 test("downloads renders for all three targets from infra/deploy.toml", () => {

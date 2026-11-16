@@ -5,19 +5,19 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `packages/typesafe-sdk` |
+| Bun package | `packages/release/typesafe-sdk` |
 
 **Commands**
 
 ```sh
-bun run --cwd packages/typesafe-sdk build
-bun run --cwd packages/typesafe-sdk typecheck
-bun run --cwd packages/typesafe-sdk lint
-bun run --cwd packages/typesafe-sdk lint:fix
-bun run --cwd packages/typesafe-sdk test
-bun run --cwd packages/typesafe-sdk test:watch
-bun run --cwd packages/typesafe-sdk test:integration
-bun run --cwd packages/typesafe-sdk test:coverage
+bun run --cwd packages/release/typesafe-sdk build
+bun run --cwd packages/release/typesafe-sdk typecheck
+bun run --cwd packages/release/typesafe-sdk lint
+bun run --cwd packages/release/typesafe-sdk lint:fix
+bun run --cwd packages/release/typesafe-sdk test
+bun run --cwd packages/release/typesafe-sdk test:watch
+bun run --cwd packages/release/typesafe-sdk test:integration
+bun run --cwd packages/release/typesafe-sdk test:coverage
 ```
 
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).

@@ -5,14 +5,14 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `packages/runtime-adapter` |
+| Bun package | `packages/release/runtime-adapter` |
 
 **Commands**
 
 ```sh
-bun run --cwd packages/runtime-adapter test
-bun run --cwd packages/runtime-adapter check
-bun run --cwd packages/runtime-adapter fmt
+bun run --cwd packages/release/runtime-adapter test
+bun run --cwd packages/release/runtime-adapter check
+bun run --cwd packages/release/runtime-adapter fmt
 ```
 
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
