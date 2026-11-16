@@ -7,7 +7,7 @@ The root follows [`oven-sh/bun`](https://github.com/oven-sh/bun) for manifests (
 | Entry | Why it is at the root |
 | --- | --- |
 | `AGENTS.md`, `CLAUDE.md`, `README.md`, `LICENSE.md` | read by agent CLIs, GitHub and Gemini CLI (`.gemini/settings.json` `context.fileName`); `LICENSE.md` states both texts |
-| `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `deny.toml`, `.cargo/` | cargo, rustup and cargo-deny read the workspace root |
+| `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `.cargo/` | cargo and rustup read the workspace root |
 | `dist-workspace.toml` | cargo-dist: "Your workspace dist config in dist-workspace.toml or dist.toml" |
 | `package.json`, `bun.lock`, `bunfig.toml`, `tsconfig.json` | bun |
 | `pyproject.toml`, `uv.lock` | uv workspace root (Lore, `frameworks/ai-os/python`, `system/core-py`); `scripts/checkdeps.ts` and CI read both |

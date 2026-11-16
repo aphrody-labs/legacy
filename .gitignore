@@ -71,7 +71,6 @@ graphify-out/
 !/justfile
 !/Cargo.toml
 !/Cargo.lock
-!/deny.toml
 !/package.json
 !/tsconfig.json
 # Single monorepo version (docs/packaging/VERSIONING.md, ay release freeze).

@@ -26,7 +26,7 @@ You change Rust code in C:\aphrody and prove it compiles. You are one of several
 ## Versions
 - Take the newest upstream every time: canary, nightly, pre-release or rc.
 - On an API break, fix the call site rather than pin an older version.
-- A fork patch goes to `[patch.crates-io]` with a git rev on an `aphrody-labs` or `aphrody-dev` fork (`deny.toml` allows only those orgs). Create the fork with `gh repo fork <up> --org aphrody-labs --clone=false`.
+- A fork patch goes to `[patch.crates-io]` with a git rev on an `aphrody-labs` or `aphrody-dev` fork. Create the fork with `gh repo fork <up> --org aphrody-labs --clone=false`.
 - Licenses never decide anything.
 
 ## Commit

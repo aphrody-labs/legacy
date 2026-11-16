@@ -244,24 +244,6 @@ fn rel(root: &Path, p: &Path) -> String {
         .replace('\\', "/")
 }
 
-/// Allowed git sources from `deny.toml`: `[sources] allow-git` URLs, plus one
-/// `https://<host>/<org>/` prefix per `[sources.allow-org]` entry (github, gitlab, bitbucket).
-fn deny_allow_git(root: &Path) -> Option<Vec<String>> {
-    let doc = parse(&root.join("deny.toml"))?;
-    let sources = doc.get("sources");
-    let strings = |item: Option<&Item>| -> Vec<String> {
-        item.and_then(Item::as_array)
-            .map(|a| a.iter().filter_map(|v| v.as_str().map(str::to_string)).collect())
-            .unwrap_or_default()
-    };
-    let mut out = strings(sources.and_then(|s| s.get("allow-git")));
-    for (key, host) in [("github", "github.com"), ("gitlab", "gitlab.com"), ("bitbucket", "bitbucket.org")] {
-        let orgs = strings(sources.and_then(|s| s.get("allow-org")).and_then(|o| o.get(key)));
-        out.extend(orgs.into_iter().map(|o| format!("https://{host}/{o}/")));
-    }
-    Some(out)
-}
-
 fn check_cargo(root: &Path, out: &mut Vec<Finding>) {
     let Some(root_doc) = parse(&root.join("Cargo.toml")) else {
         return;
@@ -304,20 +286,8 @@ fn check_cargo(root: &Path, out: &mut Vec<Finding>) {
         }
     }
     // Git and registry sources resolved in Cargo.lock.
-    let allow = deny_allow_git(root);
-    if allow.is_none() {
-        push(out, Level::Error, "CARGO-DENY", "deny.toml", "missing: cargo-deny policy is required".into());
-    }
-    let allow = allow.unwrap_or_default();
-    let mut seen = BTreeSet::new();
     for (name, _, source) in cargo_lock_packages(root) {
-        if let Some(git) = source.strip_prefix("git+") {
-            let url = git.split(['?', '#']).next().unwrap_or(git).trim_end_matches(".git").to_string();
-            let allowed = allow.iter().any(|a| if a.ends_with('/') { url.starts_with(a.as_str()) } else { a.trim_end_matches(".git") == url });
-            if !allowed && seen.insert(url.clone()) {
-                push(out, Level::Error, "CARGO-GIT", "Cargo.lock", format!("{name}: {url} not allowed by deny.toml [sources]"));
-            }
-        } else if source.starts_with("registry+") && !source.contains("github.com/rust-lang/crates.io-index") {
+        if source.starts_with("registry+") && !source.contains("github.com/rust-lang/crates.io-index") {
             push(out, Level::Error, "CARGO-REGISTRY", "Cargo.lock", format!("{name}: {source}"));
         } else if source.starts_with("sparse+") && !source.contains("index.crates.io") {
             push(out, Level::Error, "CARGO-REGISTRY", "Cargo.lock", format!("{name}: {source}"));

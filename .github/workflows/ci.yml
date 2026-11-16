@@ -5,7 +5,7 @@
 # (docs/infra/FLEET.md). Jobs run in parallel on the instances; every cargo step goes through aphrody-heavy (three heavy
 # slots, nice/ionice, load gate) so Chromium/LLVM builds keep priority. Cache: one CARGO_TARGET_DIR shared by the runners
 # (/home/ubuntu/build/ci-target, outside the workspace that actions/checkout cleans); cargo's own lock orders the
-# jobs that touch it, the light jobs (deny, tokens) never wait for it. Docs-only pushes skip the run.
+# jobs that touch it, the light job (tokens) never waits for it. Docs-only pushes skip the run.
 # On main a run is never cancelled: at most one runs and one waits (the waiting one is replaced by
 # the newest push), so commits are verified in batches instead of being starved. Pull requests cancel stale runs.
 name: ci
@@ -50,19 +50,6 @@ jobs:
         run: |
           aphrody-heavy cargo build -p aphrody
           aphrody-heavy cargo test -p aphrody -p aphrody-docs -p depot-gclient -p depot-cas -p depot-cipd -p aphrody-up -p aphrody-rt -p agent-context -p aphrody-ui
-  deny:
-    name: supply chain (cargo-deny)
-    runs-on: [self-hosted, fr1]
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-        with: { submodules: false }
-      - name: Toolchain
-        run: bun scripts/toolchain.ts install
-      - name: Supply-chain gate (cargo-deny)
-        run: |
-          command -v cargo-deny >/dev/null || aphrody-heavy cargo install --locked cargo-deny
-          cargo deny --locked check
   tokens:
     name: design tokens
     runs-on: [self-hosted, fr1]

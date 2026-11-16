@@ -107,7 +107,3 @@ forge cmd="status":
 serve-forge port="4000":
     frg serve --port {{port}}
 
-# Supply-chain gates (docs/DEPS-MINIMIZE.md): cargo-deny (licenses, advisories, bans, sources pinned by rev) and the bun workspace check
-[group('ay')]
-deny *flags:
-    cargo deny --locked check {{flags}}

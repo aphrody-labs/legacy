@@ -702,7 +702,7 @@ bstr = { version = "1.13.1", default-features = false, features = ["alloc"] }
 
 # Bun crates (system/<name>, upstream names and layout). Where a key is also ours, ours is kept when it is the same major and
 # not older (getrandom, bstr, libc, bitflags, thiserror, smallvec); rustix keeps Bun's 0.38 and system/machine depends on 1.x directly.
-# lol_html and rust-argon2 are vendor/ path dependencies upstream; here the aphrody-labs forks pinned by rev (deny.toml).
+# lol_html and rust-argon2 are vendor/ path dependencies upstream; here the aphrody-labs forks pinned by rev.
 rust-argon2 = { git = "https://github.com/aphrody-labs/rust-argon2", rev = "bc5b8b86b9ccd7158af9140ac4bfd0e2a750eeca" }
 bcrypt = "0.19"
 strum = { version = "0.26", features = ["derive"] }
@@ -1097,7 +1097,7 @@ panic = "immediate-abort"
 # [profile.dev.package.ring3-agent] removed (crate purged).
 [patch.crates-io]
 # aphrody-dev forks: russh with sntrup761x25519-sha512 (OpenSSH hybrid PQ kex), pure-Rust sntrup761.
-# Every git source is pinned by rev (branch noted for `ay lock --deps --bump`); deny.toml allows only these repos.
+# Every git source is pinned by rev (branch noted for `ay lock --deps --bump`).
 russh = { git = "https://github.com/aphrody-dev/russh", rev = "a9f644259fa57ddb2da0f980e6ae813b829f7ad4" } # aphrody/sntrup761
 sntrup761 = { git = "https://github.com/aphrody-labs/sntrup761", rev = "54e3a99495e974586085df0c86583eb7c606854e" } # aphrody/pure-rust
 age = { git = "https://github.com/aphrody-labs/rage", rev = "b5b68c4f4f7ea5c368bc060f6fe0237549c3a13f" } # main: ml-kem 0.3 (kem 0.3 shared with russh); 0.12.1 on crates.io needs kem 0.3.0-pre.0
