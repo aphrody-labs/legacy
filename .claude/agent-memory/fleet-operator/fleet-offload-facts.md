@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-fr1 /home is btrfs on rotational sdb+sdc (95% busy, 80 ms await): cargo registry/targets there are the IO pressure source; swap (zram) is not. Disk scheduler is `none` via 65-aphrody-vps.rules, so cgroup io.weight needs the 66-fleet-bfq rule (infra/fleet/fr1/offload).
+fr1 /home is btrfs on rotational sdb+sdc (95% busy, 80 ms await): cargo registry/targets there are the IO pressure source; swap (zram) is not. Disk scheduler is `none` via 65-aphrody-vps.rules, so cgroup io.weight needs the 66-fleet-bfq rule (device/fleet/fr1/offload).
 
 Cargo's global flock CARGO_HOME/.package-cache serializes all agents; a 1-crate build blocked >10 min. fleet-run gives each class/user a private /srv/cargo-home-fleet-<class>-<user>.
 

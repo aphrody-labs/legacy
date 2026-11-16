@@ -38,7 +38,9 @@ graphify-out/
 !/packages/
 !/bench/
 !/test/
-!/infra/
+!/build/
+!/device/
+!/prebuilts/
 !/tools/
 # Shell completions of Bun, embedded by src/runtime/cli/shell_completions.rs.
 !/completions/

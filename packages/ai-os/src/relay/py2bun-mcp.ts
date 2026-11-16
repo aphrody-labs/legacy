@@ -1,5 +1,5 @@
 // py2bun as a stdio MCP server (protocol 2025-11-25, one JSON message per line), reached through the relay hub:
-// hub_call name=py2bun__py2bun_transpile. Registered by [[hub.mcp]] py2bun in infra/agents/toolchain.toml.
+// hub_call name=py2bun__py2bun_transpile. Registered by [[hub.mcp]] py2bun in tools/agents/toolchain.toml.
 // Backend: packages/py2bun (Rust CLI py2bun-rs, $PY2BUN_BIN or src/py2bun/target).
 import { transpile } from "../../../py2bun/src/index.ts";
 

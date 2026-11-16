@@ -9,7 +9,7 @@ on:
       - "src/winux/**"
       - "src/ay/**"
       - "src/up/**"
-      - "infra/os/unixwin/**"
+      - "device/os/unixwin/**"
       - "scripts/unixwin-applets.ts"
       - "Cargo.toml"
       - "Cargo.lock"
@@ -126,7 +126,7 @@ jobs:
           cat winux-compare.txt
           # 0 = identical, 1 = differences; anything else is a harness error
           test "$code" = 0 -o "$code" = 1 || exit 1
-          bun scripts/unixwin-corpus-gate.ts winux-compare.txt winuxcmd/tests/differential/master-cases.json infra/os/unixwin/applets.toml | tee winux-gate.txt
+          bun scripts/unixwin-corpus-gate.ts winux-compare.txt winuxcmd/tests/differential/master-cases.json device/os/unixwin/applets.toml | tee winux-gate.txt
           gate=${PIPESTATUS[0]}
           { echo "### WinuxCmd corpus through ay applet"; cat winux-gate.txt; } >> "$GITHUB_STEP_SUMMARY"
           exit $gate

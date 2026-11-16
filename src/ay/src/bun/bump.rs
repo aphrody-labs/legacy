@@ -3,7 +3,7 @@
 //!
 //! Pins: src.lock.json `toolchains.bun`, tools.toml `[[tool]] name = "bun"` and its generated
 //! `[toolchain."bun"]` block (URLs and sha256 from the release's GitHub digests), package.json `engines.bun` / `packageManager`, `.bun-version`,
-//! workflow `bun-version:`, infra/docker `BUN_VERSION`, `.env.example`.
+//! workflow `bun-version:`, build/docker `BUN_VERSION`, `.env.example`.
 
 use super::watch::Gh;
 use super::{BumpArgs, bold, dim, error, parse_version, str_of, warn};
@@ -14,9 +14,9 @@ use std::process::{Command, Stdio};
 
 const FIXED: &[&str] = &[
     "src.lock.json",
-    "infra/up/tools.toml",
-    "infra/docker/Dockerfile",
-    "infra/docker/docker-bake.hcl",
+    "prebuilts/up/tools.toml",
+    "build/docker/Dockerfile",
+    "build/docker/docker-bake.hcl",
     ".env.example",
 ];
 
@@ -71,7 +71,7 @@ pub fn edits_for(file: &str, text: &str, to: &str, sums: &BTreeMap<String, Strin
     let (mut tool, mut lock) = (false, false);
     for (i, line) in text.lines().enumerate() {
         let after = match file {
-            "infra/up/tools.toml" => {
+            "prebuilts/up/tools.toml" => {
                 let t = line.trim();
                 if t.starts_with('[') {
                     tool = false;
@@ -281,8 +281,8 @@ mod tests {
     #[test]
     fn tools_toml_only_touches_the_bun_block() {
         let text = "[[tool]]\nname = \"ay\"\nversion = \"0.2.0\"\n\n[[tool]]\nname = \"bun\"\nversion = \"1.4.4\"\nlock = \"bun\"\n\n[[tool]]\nname = \"rustup\"\nversion = \"1.29.2\"\n";
-        let e = edits_for("infra/up/tools.toml", text, "1.4.5", &BTreeMap::new(), &mut vec![]);
-        assert_eq!(e, vec![Edit { file: "infra/up/tools.toml".into(), line: 7, before: "version = \"1.4.4\"".into(), after: "version = \"1.4.5\"".into() }]);
+        let e = edits_for("prebuilts/up/tools.toml", text, "1.4.5", &BTreeMap::new(), &mut vec![]);
+        assert_eq!(e, vec![Edit { file: "prebuilts/up/tools.toml".into(), line: 7, before: "version = \"1.4.4\"".into(), after: "version = \"1.4.5\"".into() }]);
     }
 
     #[test]
@@ -290,7 +290,7 @@ mod tests {
         let text = "[toolchain.\"protoc\"]\nversion = \"36.2\"\n\n[toolchain.\"bun\"]\nversion = \"1.4.4\"\nwindows-x86_64 = { url = \"https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-windows-x64.zip\", sha256 = \"cd2c\" }\nlinux-aarch64 = { url = \"https://github.com/oven-sh/bun/releases/download/bun-v1.4.4/bun-linux-aarch64.zip\", sha256 = \"baa6\" }\n\n[toolchain.\"just\"]\nversion = \"1.0.0\"\n";
         let release = json!({"assets": [{"name": "bun-windows-x64.zip", "digest": "sha256:ffff"}]});
         let mut warnings = vec![];
-        let e = edits_for("infra/up/tools.toml", text, "1.4.5", &digests(&release), &mut warnings);
+        let e = edits_for("prebuilts/up/tools.toml", text, "1.4.5", &digests(&release), &mut warnings);
         assert_eq!(e.len(), 2);
         assert_eq!(e[0].after, "version = \"1.4.5\"");
         assert_eq!(e[1].after, "windows-x86_64 = { url = \"https://github.com/oven-sh/bun/releases/download/bun-v1.4.5/bun-windows-x64.zip\", sha256 = \"ffff\" }");

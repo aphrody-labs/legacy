@@ -4,7 +4,7 @@
     { "id": "crate", "name": "Rust crate", "description": "A member of the Cargo workspace (src/*)" },
     { "id": "package", "name": "Bun package", "description": "A Bun workspace package (@aphrody/*)" },
     { "id": "app", "name": "App", "description": "An application or site (apps/*)" },
-    { "id": "infra", "name": "Infrastructure", "description": "Fleet, deploy and CI configuration (infra/*)" },
+    { "id": "infra", "name": "Infrastructure", "description": "Fleet, deploy and CI configuration (build/*, device/*, prebuilts/*)" },
     { "id": "third-party", "name": "Upstream", "description": "An upstream checkout or fork pinned in src.lock.json (third_party/*)" },
     { "id": "skill", "name": "Agent skill", "description": "A skill of .agents/skills" }
   ],

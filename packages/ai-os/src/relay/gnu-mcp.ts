@@ -1,6 +1,6 @@
 // GNU upstream tracker as a stdio MCP server (protocol 2025-11-25, one JSON message per line), reached through the
 // relay hub: hub_tools server=gnu, hub_call name=gnu__gnu_status | gnu__gnu_search | gnu__gnu_package | gnu__gnu_feed |
-// gnu__gnu_kernel. Registered by [[hub.mcp]] gnu in infra/agents/toolchain.toml (hub.json). Data: packages/gnu feed.
+// gnu__gnu_kernel. Registered by [[hub.mcp]] gnu in tools/agents/toolchain.toml (hub.json). Data: packages/gnu feed.
 import { GNU_TOOLS } from "../../../gnu/src/tools.ts";
 
 type Rpc = {

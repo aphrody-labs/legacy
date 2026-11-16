@@ -31,6 +31,24 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 portpicker = "0.1" # used in the example to pick a random free port
 tauri-plugin-localhost = "2.0.0"
 # alternatively with Git:
+
+<!-- catalog:begin unit -->
+> Expose your apps assets through a localhost server instead of the default custom protocol.
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-plugin-localhost` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-plugin-localhost
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
 tauri-plugin-localhost = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
 

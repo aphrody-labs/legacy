@@ -90,8 +90,8 @@ export function inventory(
     });
   }
   for (const base of [
-    "infra/cloudflare/workers",
-    "infra/fleet/workers",
+    "device/cloudflare/workers",
+    "device/fleet/workers",
     "packages",
   ]) {
     const b = join(root, base);

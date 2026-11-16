@@ -1,4 +1,4 @@
-# Base images of the Linux layer (infra/os/linux/images): built from upstream images pinned by digest,
+# Base images of the Linux layer (device/os/linux/images): built from upstream images pinned by digest,
 # pushed to ghcr.io/<owner>/base-<distro>, with build provenance. Consumers pin the digest printed in
 # the job summary (`<image>@sha256:...`), never a tag. Docs: docs/native/linux/OWNERSHIP.md.
 name: linux-images
@@ -7,8 +7,8 @@ on:
     branches: [main]
     paths:
       [
-        "infra/os/linux/images/**",
-        "infra/os/linux/cross-windows/**",
+        "device/os/linux/images/**",
+        "device/os/linux/cross-windows/**",
         ".github/workflows/linux-images.yml",
       ]
   schedule:
@@ -31,11 +31,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: arch-v3, context: infra/os/linux/images/arch }
-          - { name: alpine, context: infra/os/linux/images/alpine }
-          - { name: debian, context: infra/os/linux/images/debian }
-          - { name: nix, context: infra/os/linux/images/nix }
-          - { name: cross-windows, context: infra/os/linux/cross-windows }
+          - { name: arch-v3, context: device/os/linux/images/arch }
+          - { name: alpine, context: device/os/linux/images/alpine }
+          - { name: debian, context: device/os/linux/images/debian }
+          - { name: nix, context: device/os/linux/images/nix }
+          - { name: cross-windows, context: device/os/linux/cross-windows }
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4.4.1

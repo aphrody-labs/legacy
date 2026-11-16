@@ -1,4 +1,4 @@
-// WinuxCmd against uutils, per applet: the matrix of docs/native/UNIXWIN.md and the provider table infra/os/unixwin/applets.toml.
+// WinuxCmd against uutils, per applet: the matrix of docs/native/UNIXWIN.md and the provider table device/os/unixwin/applets.toml.
 //
 //   bun scripts/unixwin-applets.ts [--winux DIR] [--coreutils DIR] [--findutils DIR] [--diffutils DIR] [--proof FILE] [--write]
 //
@@ -249,7 +249,7 @@ if (import.meta.main) {
     const block = `${begin}\n${summary}\n\n${r.table}\n${end}`;
     text = text.includes(begin) ? text.replace(new RegExp(`${begin}[\\s\\S]*?${end}`), () => block) : `${text.trimEnd()}\n\n${block}\n`;
     writeFileSync(doc, text);
-    writeFileSync(join(ROOT, "infra/os/unixwin/applets.toml"), r.toml);
+    writeFileSync(join(ROOT, "device/os/unixwin/applets.toml"), r.toml);
   }
   console.log(summary);
 }

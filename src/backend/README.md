@@ -2,6 +2,24 @@
 
 # backend
 
+<!-- catalog:begin unit -->
+> Aphrody forensics and backend logic (Rust).
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/backend` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-backend
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 Material asset mirroring for the Aphrody CLI. The `aphrody mirror start` command
 consumes `Md3Mirror` from this crate. Its standalone binary is an optional
 compatibility entry point; `aphrody-kernel` remains the OS control plane.

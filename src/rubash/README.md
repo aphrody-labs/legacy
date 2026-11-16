@@ -4,6 +4,25 @@
 
 # Rubash — a Bash 5.3-compatible engine, from scratch in Rust
 
+<!-- catalog:begin unit -->
+> A Rust implementation of the GNU Bash shell
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/rubash` |
+
+**Commands**
+
+```sh
+cargo test -p rubash
+cargo run -p rubash --bin bash
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 **A GNU Bash 5.3-compatible shell engine, written from scratch in Rust.** Embeddable as a library, native on Windows with **no POSIX emulation layer** — the engine inside [niubash](https://github.com/unixwin/niubash), and a from-scratch alternative to Git Bash / MSYS2's ported bash.
 
 [中文](README.zh-CN.md) · [unixwin.dev](https://unixwin.dev)

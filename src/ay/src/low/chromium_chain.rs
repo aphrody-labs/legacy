@@ -4,7 +4,7 @@
 //! aphrody-remote, russh). The local tools of the PC checkout `third_party/chromium` stay where
 //! they are: `ay gclient`, `ay gn`, `ay ninja`, `ay fetch` (docs/DEPOT_TOOLS_RUST.md).
 //!
-//! Settings come from `infra/chromium-factory/factory.toml` (root, depot_tools, out_name, target,
+//! Settings come from `build/chromium-factory/factory.toml` (root, depot_tools, out_name, target,
 //! args), the file the factory on fr1 reads too; the compiler is the checkout's own clang, lld and
 //! rustc (`ay chromium toolchain` shows them next to ay's rustc, docs/llvm/UNIFIED-TOOLCHAIN.md).
 
@@ -14,7 +14,7 @@ const EXAMPLES: &str = "\
 Examples:
   ay chromium status                     checkout version, out dirs, depot_tools, load (on fr1)
   ay chromium sync                       gclient sync -D --force --nohooks --no-history --with_tags, runhooks
-  ay chromium gn                         gn gen out/<out_name> with infra/chromium-factory/args/<out_name>.gn
+  ay chromium gn                         gn gen out/<out_name> with build/chromium-factory/args/<out_name>.gn
   ay chromium gn args out/labs_agent --list=is_official_build
   ay chromium build                      autoninja -C out/<out_name> <target> (headless_shell)
   ay chromium build d8 dawn_end2end_tests --detach
@@ -72,7 +72,7 @@ pub enum ChromiumCmd {
     Toolchain,
 }
 
-/// Values of `infra/chromium-factory/factory.toml` that the chain uses.
+/// Values of `build/chromium-factory/factory.toml` that the chain uses.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Factory {
     pub root: String,
@@ -122,7 +122,7 @@ impl Factory {
     }
 
     pub fn load(repo: &Path) -> Self {
-        std::fs::read_to_string(repo.join("infra/chromium-factory/factory.toml")).map(|t| Self::parse(&t)).unwrap_or_default()
+        std::fs::read_to_string(repo.join("build/chromium-factory/factory.toml")).map(|t| Self::parse(&t)).unwrap_or_default()
     }
 }
 
@@ -258,7 +258,7 @@ mod tests {
         assert_eq!((f.root.as_str(), f.out_name.as_str(), f.depot_tools.as_str()), ("/r", "x", "/d"));
         assert_eq!(f.target, "headless_shell");
         let repo = Path::new(env!("SRC_ROOT"));
-        if repo.join("infra/chromium-factory/factory.toml").is_file() {
+        if repo.join("build/chromium-factory/factory.toml").is_file() {
             assert_eq!(Factory::load(&repo).root, "/srv/chromium");
         }
     }

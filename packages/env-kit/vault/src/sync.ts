@@ -329,7 +329,7 @@ export async function sync(opts: { force?: boolean; only?: string[] } = {}) {
 
 async function hostByName(name: string): Promise<Host> {
   const h = (await loadHosts()).find((x) => x.name === name);
-  if (!h) throw new Error(`unknown host ${name} (infra/vault/hosts.toml)`);
+  if (!h) throw new Error(`unknown host ${name} (device/vault/hosts.toml)`);
   return h;
 }
 

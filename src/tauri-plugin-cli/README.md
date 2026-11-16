@@ -26,6 +26,24 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 
 ```toml
 # you can add the dependencies on the `[dependencies]` section if you do not target mobile
+
+<!-- catalog:begin unit -->
+> Parse arguments from your Tauri application's command line interface.
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-plugin-cli` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-plugin-cli
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-cli = "2.0.0"
 # alternatively with Git:

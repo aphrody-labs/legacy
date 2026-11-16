@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Encrypted backups of the agents' Chromium profiles and of user data (infra/vault/profiles.toml):
+ * Encrypted backups of the agents' Chromium profiles and of user data (device/vault/profiles.toml):
  * `tar` streamed into `age -e` to the recipients of the entry's scope (the PC by default), kept as
  * <vault>/backups/<name>/<UTC stamp>.tar.age, last VAULT_BACKUPS_KEEP (3) kept.
  *

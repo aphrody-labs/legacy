@@ -31,7 +31,7 @@ export const ORCH_TOOLS: Tool[] = [
       "Engines available per fleet host (agent CLIs probed by the runner or on PATH, models discovered by llm_models with models.dev metadata) and the ordered providers list computed for a declared need.",
     inputSchema: s.object(
       {
-        host: s.string("Host id from infra/agents/fleet.toml (optional)"),
+        host: s.string("Host id from tools/agents/fleet.toml (optional)"),
         edit: s.boolean("Step edits files (optional)"),
         models: s.array(s.string("cli:model or provider/model"), {
           description: "Preferred models, tried first (optional)",

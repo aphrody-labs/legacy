@@ -6,11 +6,11 @@ How `ay`, the toolchain around it and the published assets are installed and kep
 | --- | --- | --- |
 | `ay` releases | [`dist-workspace.toml`](../../dist-workspace.toml), [`release.yml`](../../.github/workflows/release.yml) | push a `v<version>` tag |
 | `ay` self-update | [`src/ay/src/self_update.rs`](../../src/ay/src/self_update.rs) | `ay self-update [--check] [--version X]` |
-| Toolchain manifest | [`infra/up/tools.toml`](../up/tools.toml) and the overlays in `infra/up/tools.d/` | `ay up --list` |
+| Toolchain manifest | [`prebuilts/up/tools.toml`](../up/tools.toml) and the overlays in `prebuilts/up/tools.d/` | `ay up --list` |
 | Installer | [`src/up`](../../src/up) | `ay up`, `ay up --check`, `ay up <tool>...` |
 | Provider wiring | `src/up/src/setup.rs` | `ay up --setup` |
 | Workstation bootstrap | `src/up/src/bootstrap.rs` | `ay up --bootstrap` |
-| Host schedule | [`infra/up/systemd/ay-up.*`](../../infra/up/systemd) | daily, user units |
+| Host schedule | [`prebuilts/up/systemd/ay-up.*`](../../prebuilts/up/systemd) | daily, user units |
 | Asset manifests | `src/up/src/assets.rs` | `ay up --assets <dir> [--release <label>]` |
 
 ## Releasing `ay`
@@ -28,4 +28,4 @@ How `ay`, the toolchain around it and the published assets are installed and kep
 
 ## Hosts
 
-The user units in `infra/up/systemd/` run `ay up` daily. Fleet bootstraps read the same manifest (`infra/fleet/bootstrap/`, `just fleet-bootstrap <role>`).
+The user units in `prebuilts/up/systemd/` run `ay up` daily. Fleet bootstraps read the same manifest (`device/fleet/bootstrap/`, `just fleet-bootstrap <role>`).

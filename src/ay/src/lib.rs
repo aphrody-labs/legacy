@@ -111,7 +111,7 @@ pub enum Cmd {
     /// Linux system layer: patchset versions, sync, patch stacks, kernel builds on fr1 or CI (aphrody-omarchy)
     #[command(disable_help_flag = true)]
     Linux(Rest),
-    /// Package recipes for every distro: list, matrix, gen, build, check (aphrody-omarchy, infra/pkg)
+    /// Package recipes for every distro: list, matrix, gen, build, check (aphrody-omarchy, build/pkg)
     #[command(disable_help_flag = true)]
     Pkg(Rest),
     /// Release from fr1: tags, GitHub release, crates.io, npm, PyPI, vcpkg/CMake; dry-run unless `publish` (packages/release)
@@ -203,7 +203,7 @@ pub enum Cmd {
     Code(code::CodeArgs),
     /// Electron apps: analyze (JSON manifest), migrate --to tauri|gpui, optimize a generated project, bench against the original (aphrody-electron-migrate)
     Electron(electron::ElectronArgs),
-    /// Inference providers behind LiteLLM (infra/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up
+    /// Inference providers behind LiteLLM (tools/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up
     Ai(ai::AiArgs),
     #[command(flatten)]
     Low(low::LowCmd),
@@ -463,7 +463,7 @@ pub fn run(args: &[String]) -> i32 {
 
 /// Repository root: `$SRC_ROOT`, else the nearest ancestor of the current directory that holds
 /// `src.lock.json`, else the fleet's read-only checkout (`FLEET_CHECKOUT`)
-/// (infra/fleet `src-checkout-update`, on fr1, fr2 and prd), else the current directory.
+/// (device/fleet `src-checkout-update`, on fr1, fr2 and prd), else the current directory.
 pub fn repo_root() -> PathBuf {
     if let Some(root) = std::env::var_os("SRC_ROOT").filter(|v| !v.is_empty()) {
         return PathBuf::from(root);
@@ -479,7 +479,7 @@ pub fn repo_root() -> PathBuf {
         .unwrap_or(cwd)
 }
 
-/// Read-only src checkout kept up to date on every VPS (infra/fleet/*/resilience.conf `SRC_CHECKOUT`).
+/// Read-only src checkout kept up to date on every VPS (device/fleet/*/resilience.conf `SRC_CHECKOUT`).
 pub const FLEET_CHECKOUT: &str = "/srv/src"; // hygiene-ok: fleet checkout path (CLAUDE.md, VPS update)
 
 /// Spawn `cmd`, inherit stdio, return its exit code (127 when it cannot start).

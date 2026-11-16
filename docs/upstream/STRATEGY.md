@@ -1,11 +1,11 @@
 # Staying compatible with upstream
 
-Command: `ay upstream` (`packages/upstream`, run by bun). Stacks: `infra/upstream/stacks.toml` and `infra/upstream/stacks.d/*.toml`. Statuses: `infra/upstream/status/<stack>.toml`. Live state: `ay upstream status [stack] [--json|--markdown]`.
+Command: `ay upstream` (`packages/upstream`, run by bun). Stacks: `tools/upstream/stacks.toml` and `tools/upstream/stacks.d/*.toml`. Statuses: `tools/upstream/status/<stack>.toml`. Live state: `ay upstream status [stack] [--json|--markdown]`.
 
 ## Models
 
 - **Branch model** (bun and the web forks: next.js, shadcn-ui, base-ui, tailwindcss, better-auth): the fork's default branch is upstream plus a linear series of commits, one commit = one patch = one potential PR. See the stack with `git log upstream/main..origin/main`.
-- **Series model** (Chromium, Linux kernels): `.patch` files in `infra/upstream/patches/<stack>/`, in the order of `.patches`, applied on the upstream tip in a temporary index. The GitHub fork stays a mirror advanced by fast-forward; Chromium contributions go through Gerrit.
+- **Series model** (Chromium, Linux kernels): `.patch` files in `tools/upstream/patches/<stack>/`, in the order of `.patches`, applied on the upstream tip in a temporary index. The GitHub fork stays a mirror advanced by fast-forward; Chromium contributions go through Gerrit.
 
 The series format and export options follow Electron (`git format-patch --keep-subject --no-stat --no-signature --zero-commit --full-index`, `ay upstream export`), and the status vocabulary follows Yocto's `Upstream-Status`.
 
@@ -19,7 +19,7 @@ The series format and export options follow Electron (`git format-patch --keep-s
 | `Denied [reason]` | refused | rework or move to `Inappropriate` |
 | `Inappropriate [reason]` | specific to this project | kept; `check` refuses to make a PR of it |
 
-`ay upstream mark <stack> <patch> <status>` writes the register in `infra/upstream/status/`. A patch that becomes empty on a new base is dropped like a `Backport`.
+`ay upstream mark <stack> <patch> <status>` writes the register in `tools/upstream/status/`. A patch that becomes empty on a new base is dropped like a `Backport`.
 
 ## Commands
 
@@ -40,7 +40,7 @@ Everything lives on the default branch. GitHub needs a head branch to open a PR 
 
 ## Schedule
 
-`infra/upstream/install.sh` installs the daily `sync` and `gc` timer (unit `aphrody-upstream.timer`) on the hosts; Chromium builds and tests run on fr1 (`infra/upstream/chromium-verify.sh`). The `ay upstream` tests run in `ci.yml`. Nothing compiles on the workstation.
+`tools/upstream/install.sh` installs the daily `sync` and `gc` timer (unit `aphrody-upstream.timer`) on the hosts; Chromium builds and tests run on fr1 (`tools/upstream/chromium-verify.sh`). The `ay upstream` tests run in `ci.yml`. Nothing compiles on the workstation.
 
 ## Contribution rules checked by `check`
 

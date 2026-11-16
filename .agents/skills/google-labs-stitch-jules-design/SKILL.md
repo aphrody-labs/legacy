@@ -6,7 +6,7 @@ description: Google Labs in src (google-labs-code forks absorbed): Stitch UI gen
 # Google Labs (Stitch, DESIGN.md, Jules, Stax) in src
 
 The nine `google-labs-code` repositories are forked in `aphrody-labs` (`third_party/forks.txt`), checked out in
-`third_party/<name>` (pins in `src.lock.json`) and followed by `ay upstream sync google-labs` (`infra/upstream/stacks.d/google-labs.toml`).
+`third_party/<name>` (pins in `src.lock.json`) and followed by `ay upstream sync google-labs` (`tools/upstream/stacks.d/google-labs.toml`).
 Their code runs from src, bun-native, with no copy elsewhere.
 
 ## Surfaces

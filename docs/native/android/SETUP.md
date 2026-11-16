@@ -1,6 +1,6 @@
 # Android setup (reproducible)
 
-Manifest `infra/android/android.toml` (pins, sources, dates), lock `infra/android/android.lock.json` (repository sha1 per SDK archive, android CLI sha256), installer `scripts/android-setup.ts`, proof script `scripts/android-x64.ts`. Recipes: `infra/android/android.just`.
+Manifest `build/android/android.toml` (pins, sources, dates), lock `build/android/android.lock.json` (repository sha1 per SDK archive, android CLI sha256), installer `scripts/android-setup.ts`, proof script `scripts/android-x64.ts`. Recipes: `build/android/android.just`.
 
 ## One host
 

@@ -33,7 +33,7 @@ reference only. Read it to understand the behaviour, then reimplement it; never 
 | SteamRE/SteamKit                     | `steamkit`                                | LGPL-2.1    | `SteamKit2/Base/Generated` and `DepotManifest.cs`: reference for EMsg values and the manifest format.                                                                |
 | ValvePython/steam, steamctl          | `valvepython-steam`, `steamctl`           | MIT         | Python CM client plus CDN, and `steamctl depot info/list -f` (offline manifest reader). steamctl is installed on vps.                                                |
 | SteamTracking/SteamTracking          | `steamtracking` (sparse: root files only) | none stated | SteamDB tracking of client and web resources. Widen the sparse checkout when a specific file is needed.                                                              |
-| lancachenet/monolithic, lancache-dns | `lancache-monolithic`, `lancache-dns`     | MIT         | Cache rules ported to Alpine nginx in `infra/docker/lancache/` (the upstream image is Ubuntu-based).                                                                 |
+| lancachenet/monolithic, lancache-dns | `lancache-monolithic`, `lancache-dns`     | MIT         | Cache rules ported to Alpine nginx in `build/docker/lancache/` (the upstream image is Ubuntu-based).                                                                 |
 | tpill90/steam-lancache-prefill       | `steam-lancache-prefill`                  | MIT         | Lancache prefill (C#).                                                                                                                                               |
 
 ## Installed tools (vps, `~/.local/bin`)

@@ -1,5 +1,24 @@
 # `tauri-driver` _(pre-alpha)_
 
+<!-- catalog:begin unit -->
+> Webdriver server for Tauri applications
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-driver` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-driver
+cargo run -p aphrody-tauri-driver --bin tauri-driver
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 Cross-platform WebDriver server for Tauri applications.
 
 This is a [WebDriver Intermediary Node] that wraps the native WebDriver server

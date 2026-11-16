@@ -1,5 +1,5 @@
 // Orchestrator hosts and bounded execution on each.
-// Sources: infra/agents/fleet.toml (hosts, roles, runner `src` checkout, labs-1b layer) and infra/deploy.toml
+// Sources: tools/agents/fleet.toml (hosts, roles, runner `src` checkout, labs-1b layer) and device/deploy.toml
 // (`ssh_alias`). fr1 (`build` role in fleet.toml) receives builds, containers and heavy agents; prd: production backends.
 // Everything runs at low priority: `nice -n 19` + `timeout` remotely, BELOW_NORMAL locally (inherited by children).
 import { existsSync, readFileSync } from "node:fs";
@@ -12,7 +12,7 @@ export type Host = {
   local: boolean;
   ssh?: string; // alias ssh (deploy.toml ssh_alias)
   // ssh targets tried in order (fleet.toml `ssh`: <host>-mesh = sshd over the mTLS TCP mesh 7444,
-  // infra/cluster, independent of WireGuard; then direct ssh). Fallback only if ssh fails to connect (255).
+  // device/cluster, independent of WireGuard; then direct ssh). Fallback only if ssh fails to connect (255).
   sshTargets?: string[];
   src: string; // runner checkout on the host
   roles: string[];
@@ -52,8 +52,8 @@ const posInt = (v: unknown, d: number) => {
 };
 
 export function hosts(root = srcRoot()): Host[] {
-  const fleet = toml(join(root, "infra/agents/fleet.toml"));
-  const deploy = toml(join(root, "infra/deploy.toml"));
+  const fleet = toml(join(root, "tools/agents/fleet.toml"));
+  const deploy = toml(join(root, "device/deploy.toml"));
   const nodes = Object.entries<any>(deploy.nodes ?? {});
   const me = selfId();
   const out: Host[] = [];
@@ -98,7 +98,7 @@ export function hosts(root = srcRoot()): Host[] {
 
 /** Build and container host: first fleet.toml host that carries the `build` role (fr1). */
 export function buildHost(root = srcRoot()): string {
-  const fleet = toml(join(root, "infra/agents/fleet.toml"));
+  const fleet = toml(join(root, "tools/agents/fleet.toml"));
   const id = Object.entries<any>(fleet.hosts ?? {}).find(
     ([, h]) => Array.isArray(h.roles) && h.roles.includes("build"),
   )?.[0];

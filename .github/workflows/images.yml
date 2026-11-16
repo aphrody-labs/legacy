@@ -1,4 +1,4 @@
-# Container images of src (infra/docker): built on the self-hosted fr1 runners (factory, buildx builder `aphrody`, local layer
+# Container images of src (build/docker): built on the self-hosted fr1 runners (factory, buildx builder `aphrody`, local layer
 # cache plus registry cache) and pushed to ghcr.io/<repository owner>/* with GITHUB_TOKEN (aphrody-labs since the repo transfer).
 # Rust images cross-compile with cargo-zigbuild (no qemu for the Rust stages); Bun images are arch-neutral.
 # Action versions: latest releases read with `gh api repos/<action>/releases/latest` on 2026-11-13.
@@ -8,13 +8,13 @@ on:
     branches: [main]
     paths:
       [
-        "infra/docker/**",
+        "build/docker/**",
         "src/**",
         "bench/**",
         "test/**",
         "packages/**",
         "apps/web/**",
-        "infra/cloudflare/workers/api-gateway/**",
+        "device/cloudflare/workers/api-gateway/**",
         "Cargo.lock",
         "bun.lock",
         "rust-toolchain.toml",
@@ -49,7 +49,7 @@ jobs:
           mkdir -p "$DOCKER_CONFIG"; cp -a "$HOME/.docker/buildx" "$DOCKER_CONFIG/" 2>/dev/null || true
           printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
       - name: Build and push (heavy slot, registry cache shared with prd)
-        run: aphrody-heavy docker buildx bake --builder aphrody -f infra/docker/docker-bake.hcl --push --progress plain ${{ inputs.targets || 'default' }}
+        run: aphrody-heavy docker buildx bake --builder aphrody -f build/docker/docker-bake.hcl --push --progress plain ${{ inputs.targets || 'default' }}
 
   smoke:
     needs: bake
@@ -64,4 +64,4 @@ jobs:
             username: "${{ github.actor }}",
             password: "${{ secrets.GITHUB_TOKEN }}",
           }
-      - run: SRC_REGISTRY=ghcr.io/${{ github.repository_owner }} SRC_TAG=${{ github.sha }} sh infra/docker/smoke.sh
+      - run: SRC_REGISTRY=ghcr.io/${{ github.repository_owner }} SRC_TAG=${{ github.sha }} sh build/docker/smoke.sh

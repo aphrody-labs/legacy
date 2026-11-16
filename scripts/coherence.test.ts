@@ -49,7 +49,7 @@ describe("coherence", () => {
     expect(areaOf("docs/native/llvm/A.md")).toBe("native");
     expect(areaOf("docs/bun/BLOG.md")).toBe("docs");
     expect(areaOf(".agents/skills/bun/SKILL.md")).toBe("agents");
-    expect(areaOf("infra/fleet/x.toml")).toBe("infra");
+    expect(areaOf("device/fleet/x.toml")).toBe("infra");
   });
 
   test("commit uses a private index and leaves others' staged entries alone", () => {

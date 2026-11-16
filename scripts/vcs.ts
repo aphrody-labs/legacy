@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // SPDX-License-Identifier: Apache-2.0
 // Deterministic NHITL VCS & GitHub Forge controller (`ay-vcs` / `just vcs`).
-// Authenticated exclusively via the `aphrody-labs` GitHub App (`infra/agents/gh-token.ts`)
+// Authenticated exclusively via the `aphrody-labs` GitHub App (`tools/agents/gh-token.ts`)
 // and backed by Git 2.56 (Scalar/blobless), Gitoxide (`gix` 0.61), Jujutsu (`jj` 0.46),
 // and `src.lock.json` + `.gitmodules` + `third_party/forks.txt`.
 //
@@ -21,7 +21,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, join, resolve } from "node:path";
-import { token } from "../infra/agents/gh-token.ts";
+import { token } from "../tools/agents/gh-token.ts";
 import { findRoot, loadIdentity } from "./identity.ts";
 
 const API = "https://api.github.com";

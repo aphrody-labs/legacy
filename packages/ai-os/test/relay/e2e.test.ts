@@ -365,7 +365,7 @@ describe.skipIf(!alive)("relay e2e", () => {
 
   // ------------------------------------------------------------ 2. hub MCP servers
   describe("hub MCP servers", () => {
-    const toml = Bun.TOML.parse(readFileSync(join(SRC, "infra/agents/toolchain.toml"), "utf8")) as any;
+    const toml = Bun.TOML.parse(readFileSync(join(SRC, "tools/agents/toolchain.toml"), "utf8")) as any;
     const servers: string[] = (toml.hub?.mcp ?? []).map((s: any) => s.name);
     const cheap: Record<string, [string, unknown]> = {
       context7: ["context7__resolve-library-id", { libraryName: "bun", query: "test runner" }],
@@ -468,7 +468,7 @@ describe.skipIf(!alive)("relay e2e", () => {
 
   // ------------------------------------------------------------ 6. hook guard (before CLIs: pure, fast)
   describe("Claude PreToolUse guard", () => {
-    const settings = JSON.parse(readFileSync(join(SRC, "infra/agents/claude/settings.json"), "utf8"));
+    const settings = JSON.parse(readFileSync(join(SRC, "tools/agents/claude/settings.json"), "utf8"));
     const entry = settings.hooks.PreToolUse.find((h: any) => h.matcher === "Bash");
     const command: string = entry.hooks[0].command;
     const bash = Bun.which("bash");
@@ -502,7 +502,7 @@ describe.skipIf(!alive)("relay e2e", () => {
 
 // ------------------------------------------------------------ 5. CLIs (no relay needed, but kept in the gated suite below)
 describe.skipIf(!alive)("CLIs declared in tools.toml", () => {
-  const toml = Bun.TOML.parse(readFileSync(join(SRC, "infra/up/tools.toml"), "utf8")) as any;
+  const toml = Bun.TOML.parse(readFileSync(join(SRC, "prebuilts/up/tools.toml"), "utf8")) as any;
   const tools: any[] = (toml.tool ?? []).filter((t: any) => Array.isArray(t.bin) && t.bin.length);
   const PATH = [Bun.env.PATH ?? "", join(homedir(), ".local", "bin")].join(delimiter);
   const exe = (n: string) => Bun.which(n.replace(/\.exe$/i, ""), { PATH });

@@ -51,7 +51,7 @@ OAuth app and the contact section of `aphrody.com` (`identity.toml` `[contact]`)
   `personalAccount()` (packages/env-kit/src/accounts.ts); gcloud configurations are `owner` and `ai-agent`.
 - Commits: `aphrody-dev <324927936+aphrody-dev@users.noreply.github.com>` on the PC and on every fleet user.
 - Inbound mail: OVH MX today; Cloudflare Email Routing rules for the three addresses are declared in
-  `infra/cloudflare/cloudflare.toml` (`[email_routing]`, `bun infra/cloudflare/cf.ts plan email`).
+  `device/cloudflare/cloudflare.toml` (`[email_routing]`, `bun device/cloudflare/cf.ts plan email`).
 - History is not rewritten: older commits still carry personal data (audit 2026-11-13).
 
 ## Rules

@@ -16,7 +16,9 @@ A member of the Cargo workspace (src/*)
 | [bun_archive](../../../src/archive) | - |
 | [bun_ast](../../../src/ast) | - |
 | [bun_ast_jsc](../../../src/ast_jsc) | - |
+| [aphrody-audio](../../../src/audio) | Audio building blocks: FFT spectrum, mic bridge, Polaris indexer, Voicebox encoder, local voice loop, Jan agent tools, Rust audio catalog |
 | [aphrody](../../../src/ay) | ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build) |
+| [aphrody-backend](../../../src/backend) | Aphrody forensics and backend logic (Rust). |
 | [bun_base64](../../../src/base64) | - |
 | [bun_boringssl](../../../src/boringssl) | - |
 | [bun_boringssl_sys](../../../src/boringssl_sys) | - |
@@ -35,6 +37,7 @@ A member of the Cargo workspace (src/*)
 | [bun_clap](../../../src/clap) | - |
 | [bun_clap_macros](../../../src/clap_macros) | - |
 | [bun_collections](../../../src/collections) | - |
+| [aphrody-config](../../../src/config) | Codex-compatible config.toml model for aphrody: ConfigToml, model providers (managed llama-server, Ollama, LM Studio, vLLM, Antigravity, OpenAI, Anthropic, ChatGPT), layered mer... |
 | [aphrody-core](../../../src/core) | Common lib: tree-sitter parsing, symbol/ref index, content hashing (BLAKE3) |
 | [aphrody-core-capi](../../../src/core/capi) | One C ABI cdylib: core_* (aphrody-core), ai_os_*, depot_*, aphrody_re_* and Boq (aphrody_*), loaded by bun:ffi, Python, and Java |
 | [aphrody-core-py](../../../src/core/capi/py) | Native PyO3 (ABI3) Python core extension exposing aphrody-core (Tree-sitter, BLAKE3, index) and aphrody-re (RE triage, disasm, Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2) |
@@ -70,6 +73,7 @@ A member of the Cargo workspace (src/*)
 | [bun_format_conformance](../../../src/format/conformance) | - |
 | [game](../../../src/game) | Open-world vertical slice on Bevy: streamed procedural terrain, third-person controller, day/night, procedural audio |
 | [bun_glob](../../../src/glob) | - |
+| [aphrody-gpu-backend](../../../src/gpu-backend) | Shared wgpu instance, adapter, device and surface-configuration boundary for Aphrody and IECODE renderers, plus the process-wide GPU hub (wgpu + CUDA). |
 | [bun_hash](../../../src/hash) | - |
 | [bun_highway](../../../src/highway) | - |
 | [bun_histogram](../../../src/histogram) | - |
@@ -130,7 +134,11 @@ A member of the Cargo workspace (src/*)
 | [bun_mimalloc_sys](../../../src/mimalloc_sys) | - |
 | [aphrody-modele](../../../src/modele) | Commercial document model (invoice, quote, lines, parties, template) as JSON, with the totals computation shared by the TypeScript and Rust sides |
 | [aphrody-net](../../../src/net) | Unified network probe: DNS, TCP, TLS (rustls + platform verifier), ALPN, HTTP/1.1 and HTTP/2 with per-phase timings. |
+| [niubash](../../../src/niubash) | AI-native bash-compatible shell for Windows, built on rubash + winuxcmd |
+| [niubash-runtime](../../../src/niubash/runtime) | Runtime crate for niubash: rubash-backed shell REPL on Windows |
 | [bun_node_path](../../../src/node_path) | - |
+| [aphrody-ocr](../../../src/ocr) | Image-to-text pipeline for aphrody: drives a local vision-language model over one image or a whole directory, parses its DocTags output into markdown, and reports which pages ca... |
+| [aphrody-ocr-core](../../../src/ocr-core) | Portable versioned OCR result contract, provenance and quality states for aphrody. |
 | [bun_opaque](../../../src/opaque) | - |
 | [bun_options_types](../../../src/options_types) | - |
 | [bun_output](../../../src/output) | - |
@@ -146,6 +154,7 @@ A member of the Cargo workspace (src/*)
 | [aphrody-omarchy](../../../src/posix/omarchy) | Unified Omarchy + CachyOS + Arch/Linux orchestration engine: hardware probe, kernel/patchsets, multi-distro recipes, Aether themes, plugins, and WSL2 bundle builder |
 | [wslg-cli](../../../src/posix/wslg) | wslg-cli: part of the Aphrody monorepo |
 | [bun_ptr](../../../src/ptr) | - |
+| [aphrody-rag-core](../../../src/rag-core) | Pure, wasm32-safe core of the aphrody RAG layer: source-aware chunkers (Rust/JS-TS/Markdown/structural/prose), reciprocal-rank-fusion + MMR + vector helpers, and a bit-for-bit p... |
 | [aphrody-re](../../../src/re) | Unified Aphrody reverse engineering core: PE/ELF/Mach-O triage, byte-exact PE64 forge/COFF, .pdata/minidump/ASAR/Electron/Go/Android/SteamStub inspection, Ghidra P-Code/Pseudo-C... |
 | [bun_react_compiler](../../../src/react_compiler) | - |
 | [aphrody-remote](../../../src/remote) | Pure-Rust SSH client for `ay ssh`: exec, sftp copy, fleet hosts and health check (russh, no OpenSSH binary) |
@@ -153,6 +162,9 @@ A member of the Cargo workspace (src/*)
 | [bun_resolver](../../../src/resolver) | - |
 | [bun_router](../../../src/router) | - |
 | [aphrody-rt](../../../src/rt) | Runtime manager behind `ay rt`: Python engines and versions on uv (CPython, free-threaded, PyPy, GraalPy, Pyodide, RustPython), Node, Deno and Bun versions, runtime and engine c... |
+| [rubash](../../../src/rubash) | A Rust implementation of the GNU Bash shell |
+| [reedline](../../../src/ruline) | A GNU readline-compatible line editor for niubash |
+| [readline-abi](../../../src/ruline/readline-abi) | Clean-room GNU readline 8.x C ABI adapter for ruline |
 | [bun_runtime](../../../src/runtime) | - |
 | [bun_s3_signing](../../../src/s3_signing) | - |
 | [bun_safety](../../../src/safety) | - |
@@ -178,10 +190,58 @@ A member of the Cargo workspace (src/*)
 | [bun_sys](../../../src/sys) | - |
 | [bun_sys_jsc](../../../src/sys_jsc) | - |
 | [taffy](../../../src/taffy) | First-party Layer-0 UI, Wayland, terminal, and compositing layout engine (absorbed DioxusLabs/taffy) |
+| [aphrody-tao](../../../src/tao) | Cross-platform window manager library. |
+| [aphrody-tao-macros](../../../src/tao-macros) | Proc macros for tao |
 | [bun_tar](../../../src/tar) | - |
+| [aphrody-tauri](../../../src/tauri) | Make tiny, secure apps for all desktop platforms with Tauri |
+| [aphrody-tauri-build](../../../src/tauri-build) | build time code to pair with https://crates.io/crates/tauri |
+| [aphrody-tauri-bundler](../../../src/tauri-bundler) | Wrap rust executables in OS-specific app bundles for Tauri |
+| [aphrody-tauri-cli](../../../src/tauri-cli) | Command line interface for building Tauri apps |
+| [aphrody-tauri-cli-node](../../../src/tauri-cli-node) | - |
+| [aphrody-tauri-codegen](../../../src/tauri-codegen) | code generation meant to be consumed inside of `tauri` through `tauri-build` or `tauri-macros` |
+| [aphrody-tauri-driver](../../../src/tauri-driver) | Webdriver server for Tauri applications |
+| [aphrody-tauri-macos-sign](../../../src/tauri-macos-sign) | Code signing utilities for macOS and iOS apps |
+| [aphrody-tauri-macros](../../../src/tauri-macros) | Macros for the tauri crate. |
+| [aphrody-tauri-plugin](../../../src/tauri-plugin) | Build script and runtime Tauri plugin definitions |
+| [aphrody-tauri-plugin-autostart](../../../src/tauri-plugin-autostart) | Automatically launch your application at startup. |
+| [aphrody-tauri-plugin-barcode-scanner](../../../src/tauri-plugin-barcode-scanner) | Scan QR codes, EAN-13 and other kinds of barcodes on Android and iOS |
+| [aphrody-tauri-plugin-biometric](../../../src/tauri-plugin-biometric) | Prompt the user for biometric authentication on Android and iOS. |
+| [aphrody-tauri-plugin-cli](../../../src/tauri-plugin-cli) | Parse arguments from your Tauri application's command line interface. |
+| [aphrody-tauri-plugin-clipboard-manager](../../../src/tauri-plugin-clipboard-manager) | Read and write to the system clipboard. |
+| [aphrody-tauri-plugin-deep-link](../../../src/tauri-plugin-deep-link) | Set your Tauri application as the default handler for an URL |
+| [aphrody-tauri-plugin-dialog](../../../src/tauri-plugin-dialog) | Native system dialogs for opening and saving files along with message dialogs on your Tauri application. |
+| [aphrody-tauri-plugin-fs](../../../src/tauri-plugin-fs) | Access the file system. |
+| [aphrody-tauri-plugin-geolocation](../../../src/tauri-plugin-geolocation) | Get and track the device's current position |
+| [aphrody-tauri-plugin-global-shortcut](../../../src/tauri-plugin-global-shortcut) | Register global hotkeys listeners on your Tauri application. |
+| [aphrody-tauri-plugin-haptics](../../../src/tauri-plugin-haptics) | Haptic feedback and vibrations on Android and iOS |
+| [aphrody-tauri-plugin-http](../../../src/tauri-plugin-http) | Access an HTTP client written in Rust. |
+| [aphrody-tauri-plugin-localhost](../../../src/tauri-plugin-localhost) | Expose your apps assets through a localhost server instead of the default custom protocol. |
+| [aphrody-tauri-plugin-log](../../../src/tauri-plugin-log) | Configurable logging for your Tauri app. |
+| [aphrody-tauri-plugin-nfc](../../../src/tauri-plugin-nfc) | Read and write NFC tags on Android and iOS. |
+| [aphrody-tauri-plugin-notification](../../../src/tauri-plugin-notification) | Send desktop and mobile notifications on your Tauri application. |
+| [aphrody-tauri-plugin-opener](../../../src/tauri-plugin-opener) | Open files and URLs using their default application. |
+| [aphrody-tauri-plugin-os](../../../src/tauri-plugin-os) | Read information about the operating system. |
+| [aphrody-tauri-plugin-persisted-scope](../../../src/tauri-plugin-persisted-scope) | Save filesystem and asset scopes and restore them when the app is reopened. |
+| [aphrody-tauri-plugin-positioner](../../../src/tauri-plugin-positioner) | Position your windows at well-known locations. |
+| [aphrody-tauri-plugin-process](../../../src/tauri-plugin-process) | Access the current process of your Tauri application. |
+| [aphrody-tauri-plugin-shell](../../../src/tauri-plugin-shell) | Access the system shell. |
+| [aphrody-tauri-plugin-single-instance](../../../src/tauri-plugin-single-instance) | Ensure a single instance of your tauri app is running. |
+| [aphrody-tauri-plugin-store](../../../src/tauri-plugin-store) | Simple, persistent key-value store. |
+| [aphrody-tauri-plugin-stronghold](../../../src/tauri-plugin-stronghold) | Store secrets and keys using the IOTA Stronghold secret management engine. |
+| [aphrody-tauri-plugin-updater](../../../src/tauri-plugin-updater) | In-app updates for Tauri applications. |
+| [aphrody-tauri-plugin-upload](../../../src/tauri-plugin-upload) | Upload files from disk to a remote server over HTTP. |
+| [aphrody-tauri-plugin-websocket](../../../src/tauri-plugin-websocket) | Expose a WebSocket server to your Tauri frontend. |
+| [aphrody-tauri-plugin-window-state](../../../src/tauri-plugin-window-state) | Save window positions and sizes and restore them when the app is reopened. |
+| [aphrody-tauri-runtime](../../../src/tauri-runtime) | Runtime for Tauri applications |
+| [aphrody-tauri-runtime-cef](../../../src/tauri-runtime-cef) | Tauri runtime interface for Chromium Embedded Framework |
+| [aphrody-tauri-runtime-wry](../../../src/tauri-runtime-wry) | Wry bindings to the Tauri runtime |
+| [aphrody-tauri-schema-generator](../../../src/tauri-schema-generator) | - |
+| [aphrody-tauri-schema-worker](../../../src/tauri-schema-worker) | - |
+| [aphrody-tauri-utils](../../../src/tauri-utils) | Utilities for Tauri |
 | [bun_tcc_sys](../../../src/tcc_sys) | - |
 | [bun_text_diff](../../../src/text_diff) | - |
 | [bun_threading](../../../src/threading) | - |
+| [aphrody-toolchains](../../../src/toolchains) | Unified Bun / uv / Nushell runtime layer: shell-free discovery, repo-file version pins and consistent launch environment. |
 | [bun_transpiler](../../../src/transpiler) | - |
 | [bun_trim](../../../src/trim) | - |
 | [bun_removable_features](../../../src/trim/removable_features) | - |
@@ -205,6 +265,10 @@ A member of the Cargo workspace (src/*)
 | [hypr-tiler](../../../src/wayland/tiler) | hypr-tiler: part of the Aphrody monorepo |
 | [bun_which](../../../src/which) | - |
 | [bun_windows_sys](../../../src/windows_sys) | - |
+| [winux-cmds](../../../src/winux/cmds) | - |
+| [winux-core](../../../src/winux/core) | - |
+| [winux-extra](../../../src/winux/extra) | WinuxCmd applets ported from C++ to portable Rust (same shape contract as winux-cmds: run(args, io, ctx)) |
+| [winux-regex](../../../src/winux/regex) | - |
 | [bun_wyhash](../../../src/wyhash) | - |
 | [xtk](../../../src/xtask) | Monorepo maintenance library behind `ay doctor [--deps]`, `ay lock [--deps]`, `ay manifests` and `ay git slim --all` |
 | [bun_yarr](../../../src/yarr) | - |

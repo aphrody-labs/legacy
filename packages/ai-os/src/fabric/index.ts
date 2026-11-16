@@ -1,6 +1,6 @@
 // Distributed inference fabric: a coordinator llama-server (the PC's CUDA GPU) that delegates layers to
 // ggml-rpc-server reached only over WireGuard (llama.cpp RPC backend, upstream tools/rpc/README.md).
-// Configuration: infra/ai/fabric.toml. Linux nodes: infra/ai/fabric/node.sh (capped transient systemd unit,
+// Configuration: tools/ai/fabric.toml. Linux nodes: tools/ai/fabric/node.sh (capped transient systemd unit,
 // admission condition checked continuously). Health: orch/health.ts (host = node, provider = "fabric-rpc").
 // The served model appears in llm_models as `fabric/<alias>` (llm/models.ts), gone as soon as the coordinator drops.
 import {
@@ -73,7 +73,7 @@ const dataDir = () => expand("~/.local/share/ay/ai");
 const statePath = () => join(dataDir(), "fabric.json");
 
 export function loadFabric(root = srcRoot()): Fabric {
-  const p = Bun.env.AI_FABRIC_CONFIG ?? join(root, "infra/ai/fabric.toml");
+  const p = Bun.env.AI_FABRIC_CONFIG ?? join(root, "tools/ai/fabric.toml");
   const f = Bun.TOML.parse(expandSync(readFileSync(p, "utf8"))) as any;
   f.coordinator.mesh ??= [];
   f.node ??= [];
@@ -137,7 +137,7 @@ async function nodeSh(
   action: string,
   timeoutMs = 180_000,
 ) {
-  const script = readFileSync(join(root, "infra/ai/fabric/node.sh"));
+  const script = readFileSync(join(root, "tools/ai/fabric/node.sh"));
   const p = Bun.spawn(
     [
       "ssh",

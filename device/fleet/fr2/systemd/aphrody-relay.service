@@ -1,0 +1,25 @@
+# MCP relay origin of the public gateway (device/cloudflare/workers/aphrody-mcp-gateway, docs/infra/GEMINI-WEB-MCP.md).
+# Loopback only; reached by the fr2 tunnel hostname mcp-origin.aphrody.com (device/cloudflare/cloudflare.toml).
+# /etc/aphrody/relay.env (root:ubuntu 0640): RELAY_TOKEN=<32 random bytes hex>, the same value as the Worker secret RELAY_TOKEN.
+#   (create: bun -e 'console.log("RELAY_TOKEN="+Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString("hex"))' | sudo tee /etc/aphrody/relay.env)
+# Rollback: systemctl disable --now aphrody-relay
+[Unit]
+Description=Aphrody MCP relay (origin of mcp.aphrody.com)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/srv/src
+EnvironmentFile=/etc/aphrody/relay.env
+Environment=RELAY_HOST=127.0.0.1
+Environment=RELAY_PORT=8790
+Environment=PATH=/home/ubuntu/.local/bin:/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/home/ubuntu/.local/bin/bun /srv/src/packages/ai-os/src/relay/cli.ts serve
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

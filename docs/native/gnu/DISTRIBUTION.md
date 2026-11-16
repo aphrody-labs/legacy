@@ -31,7 +31,7 @@ Signatures : `sqv` avec le `gpg-keyring` GSRC du paquet. Les clés à liaisons S
 
 ```sh
 just gnu-service     # état du service, journal
-just gnu-deploy      # pull de /srv/src sur fr2 + infra/gnu/install.sh
+just gnu-deploy      # pull de /srv/src sur fr2 + device/gnu/install.sh
 ay gnu status        # fraîcheur du feed (stale si > 60 min)
 ```
 

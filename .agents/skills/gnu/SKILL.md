@@ -18,7 +18,7 @@ Site: https://gnu.aphrody.com (feed.json, feed.atom, events.json). Doc: `docs/na
 
 ## MCP (relay hub, server `gnu`)
 
-`hub_call` with `gnu__gnu_status`, `gnu__gnu_search` (query, filter, limit), `gnu__gnu_package` (id), `gnu__gnu_feed` (since, limit, format, changes), `gnu__gnu_kernel`. Server: `packages/ai-os/src/relay/gnu-mcp.ts`, declared by `[[hub.mcp]] gnu` in `infra/agents/toolchain.toml` (hub.json is re-read at every listing; no relay restart).
+`hub_call` with `gnu__gnu_status`, `gnu__gnu_search` (query, filter, limit), `gnu__gnu_package` (id), `gnu__gnu_feed` (since, limit, format, changes), `gnu__gnu_kernel`. Server: `packages/ai-os/src/relay/gnu-mcp.ts`, declared by `[[hub.mcp]] gnu` in `tools/agents/toolchain.toml` (hub.json is re-read at every listing; no relay restart).
 
 ## Feed semantics
 
@@ -31,7 +31,7 @@ Site: https://gnu.aphrody.com (feed.json, feed.atom, events.json). Doc: `docs/na
 
 - `aphrody-gnu.service` (system, Restart=always) runs `cli.ts daemon` every `GNU_INTERVAL` (600 s): feed, Atom, site in `/srv/gnu`, mirror of up to 8 tarballs per cycle, downloaded through ftpmirror.gnu.org (ftp.gnu.org rate-limits and blocked fr2 on 2026-11-14), signature checked against the GSRC keyring plus gnu-keyring.gpg, then `rclone copyto` to `r2:aphrody-gnu/gnu/<dir>/`), stable and longterm kernels to `kernel/v<N>.x/`, Rust release binaries to `rust/<repo>/<tag>/`.
 - `aphrody-gnu-watch.timer` (15 min): fast-forwards `/srv/src`, restarts the service when `feed.json` is older than 45 min.
-- Ops: `just gnu-service` (status, journal), `just gnu-deploy` (pull and `infra/gnu/install.sh`). Units and nginx vhost live in `infra/gnu/`. Public path: Cloudflare tunnel `fr2` ingress `gnu.aphrody.com` -> `http://127.0.0.1:80`, proxied CNAME.
+- Ops: `just gnu-service` (status, journal), `just gnu-deploy` (pull and `device/gnu/install.sh`). Units and nginx vhost live in `device/gnu/`. Public path: Cloudflare tunnel `fr2` ingress `gnu.aphrody.com` -> `http://127.0.0.1:80`, proxied CNAME.
 - Kernel signatures need `/srv/gnu/kernel-keyring.pgp` (WKD export of the kernel.org developer keys, trust on first fetch).
 
 ## Sources

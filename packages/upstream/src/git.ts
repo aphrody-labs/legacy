@@ -183,7 +183,7 @@ export function filesOf(cwd: string, sha: string): string[] {
 }
 
 // Long-lived credentials of the fleet runner user (Linux): `systemd-creds --user` in
-// ~/.config/credstore.encrypted/<NAME>, same store as infra/agents/runner.ts. Decrypted into the child
+// ~/.config/credstore.encrypted/<NAME>, same store as tools/agents/runner.ts. Decrypted into the child
 // environment only, never argv or files.
 let creds: Record<string, string> | null = null;
 function credEnv(): Record<string, string> {

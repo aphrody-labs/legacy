@@ -28,6 +28,24 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 [dependencies]
 tauri-plugin-dialog = "2.0.0"
 # alternatively with Git:
+
+<!-- catalog:begin unit -->
+> Native system dialogs for opening and saving files along with message dialogs on your Tauri application.
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-plugin-dialog` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-plugin-dialog
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
 tauri-plugin-dialog = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
 

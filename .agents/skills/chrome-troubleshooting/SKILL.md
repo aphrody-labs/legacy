@@ -8,7 +8,7 @@ description: Fix Chrome DevTools MCP connection and target failures - list_pages
 ## Local setup (aphrody)
 
 - Chrome DevTools MCP sits behind the relay, not in the client's tool list: `hub_tools` (server `chrome-devtools`) to list, `hub_call` with `name: "chrome-devtools__<tool>"` and the tool's arguments (e.g. `chrome-devtools__take_snapshot` with `{ "pageId": 1 }`). Wherever this text says "call `<tool>`", use that form.
-- The server is the `[[hub.mcp]] chrome-devtools` entry of `infra/agents/toolchain.toml`: headless, isolated profile, `--memoryDebugging --categoryExtensions --categoryNetworkMocks`, Google usage statistics off. Installed with `bun add -g chrome-devtools-mcp` (1.13.0); the shell CLI `chrome-devtools` ships with it.
+- The server is the `[[hub.mcp]] chrome-devtools` entry of `tools/agents/toolchain.toml`: headless, isolated profile, `--memoryDebugging --categoryExtensions --categoryNetworkMocks`, Google usage statistics off. Installed with `bun add -g chrome-devtools-mcp` (1.13.0); the shell CLI `chrome-devtools` ships with it.
 - The owner's logged-in Chrome is not reachable from it: use claude-in-chrome or agent-browser (skills `agent-browser`, `browser-engines`). To debug a Chromium build of this repo, start `headless_shell --remote-debugging-port=9222 <url>` (skill `chromium`) and point a separate server at it with `--browserUrl http://127.0.0.1:9222`.
 - Large outputs: pass `filePath`, then Read or `rg` the file; filter JSON with `jaq` or `bun -e`. No node, npx or bunx.
 
@@ -20,7 +20,7 @@ You are acting as a troubleshooting wizard to help the user configure and fix th
 
 ### Step 1: Find and Read Configuration
 
-Your first action should be to locate and read the MCP configuration file. Search for the following files in the user's workspace: `infra/agents/toolchain.toml` (`[[hub.mcp]] chrome-devtools`, the relay's copy is `%LOCALAPPDATA%\aphrody\relay\hub.json`), `.mcp.json`, `.vscode/mcp.json`, `gemini-extension.json`, or `.gemini/settings.json` (or user-scoped files such as `~/.claude.json` if accessible).
+Your first action should be to locate and read the MCP configuration file. Search for the following files in the user's workspace: `tools/agents/toolchain.toml` (`[[hub.mcp]] chrome-devtools`, the relay's copy is `%LOCALAPPDATA%\aphrody\relay\hub.json`), `.mcp.json`, `.vscode/mcp.json`, `gemini-extension.json`, or `.gemini/settings.json` (or user-scoped files such as `~/.claude.json` if accessible).
 
 If you find a configuration file, read and interpret it to identify potential issues such as:
 

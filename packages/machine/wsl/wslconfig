@@ -1,4 +1,4 @@
-# Applied to %USERPROFILE%\.wslconfig (copy by hand). Kernel + modules from infra/os/wsl/kernel/build-kernel.sh on fr1. Revert: delete the kernel= lines (Microsoft kernel keeps /dev/dxg).
+# Applied to %USERPROFILE%\.wslconfig (copy by hand). Kernel + modules from device/os/wsl/kernel/build-kernel.sh on fr1. Revert: delete the kernel= lines (Microsoft kernel keeps /dev/dxg).
 [wsl2]
 kernel=C:\\aphrody\\target\\wsl\\bzImage-aphrody-cachyos
 kernelModules=C:\\aphrody\\target\\wsl\\modules-aphrody-cachyos.vhdx

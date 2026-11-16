@@ -2,7 +2,7 @@
 
 - Reviewer: Gemini, mode "Carbon High", gemini.google.com (owner session, via claude-in-chrome; the relay `gemini_review` failed with Antigravity `RESOURCE_EXHAUSTED 429`).
 - Chat: https://gemini.google.com/app/299c488ff1de755c
-- Scope: `git diff 9c7471dc 83716e40` on `infra/agents/toolchain.toml`, `packages/machine/src/{toolchain,relay-headers}.ts`, `packages/ai-os/src/relay/{mcp-hub,protocols,server}.ts`, `packages/ai-os/src/brain/cli.ts`.
+- Scope: `git diff 9c7471dc 83716e40` on `tools/agents/toolchain.toml`, `packages/machine/src/{toolchain,relay-headers}.ts`, `packages/ai-os/src/relay/{mcp-hub,protocols,server}.ts`, `packages/ai-os/src/brain/cli.ts`.
 - Score: **8/20**.
 
 | # | Defect reported | Verdict | Outcome |

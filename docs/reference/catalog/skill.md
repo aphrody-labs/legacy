@@ -214,7 +214,7 @@ A skill of .agents/skills
 | [ui-system](../../../.agents/skills/ui-system) | Single UI rules of the monorepo. |
 | [ui-ux-pro-max](../../../.agents/skills/ui-ux-pro-max) | Searchable UI/UX knowledge base (BM25, bun) - 120 UX and accessibility rules, app/native interface rules, styles, product types, landing page structures, chart choices, filterab... |
 | [unixwin](../../../.agents/skills/unixwin) | The unixwin fusion in src: niu (Bash for Windows) and its Rust engine rubash, WinuxCmd applets and the one `ay applet` multicall, wpm folded into `ay up`, the oh-my-niu plugin b... |
-| [upstream-sources](../../../.agents/skills/upstream-sources) | Where upstream projects are pinned, forked and tracked in src (src.lock.json, third_party/forks.txt, infra/upstream/stacks.toml, ay upstream) and the canonical upstream repos fo... |
+| [upstream-sources](../../../.agents/skills/upstream-sources) | Where upstream projects are pinned, forked and tracked in src (src.lock.json, third_party/forks.txt, tools/upstream/stacks.toml, ay upstream) and the canonical upstream repos fo... |
 | [vercel-geist](../../../.agents/skills/vercel-geist) | Geist reference (Vercel's design system) and Vercel's front-end performance best practices, rewritten as specs in docs/design/specs. |
 | [vercel-labs](../../../.agents/skills/vercel-labs) | Index of Vercel Labs agent tools and skills. |
 | [vercel-optimize](../../../.agents/skills/vercel-optimize) | Use for Vercel cost and performance optimization on deployed projects, especially Next.js, SvelteKit, Nuxt, and limited Astro apps. |

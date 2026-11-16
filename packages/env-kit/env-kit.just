@@ -15,5 +15,5 @@ auth-daemon-install:
 [group('env')]
 [unix]
 auth-daemon-install:
-    install -Dm644 "{{root}}/infra/fleet/systemd/aphrody-auth-daemon.service" "$HOME/.config/systemd/user/aphrody-auth-daemon.service"
+    install -Dm644 "{{root}}/device/fleet/systemd/aphrody-auth-daemon.service" "$HOME/.config/systemd/user/aphrody-auth-daemon.service"
     systemctl --user daemon-reload && systemctl --user enable --now aphrody-auth-daemon

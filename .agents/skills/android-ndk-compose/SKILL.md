@@ -6,7 +6,7 @@ description: Android NDK Pure C11/JNI/ANativeWindow/AChoreographer and Jetpack C
 
 # Android NDK + Jetpack Compose Material 3 Expressive in src
 
-`android/skills` (`v1.0.21`, commit `5815d27fda56`, Apache-2.0) is forked at `aphrody-labs/android-skills` (`third_party/forks.txt`), checked out in `third_party/android-skills`, tracked by `infra/upstream/stacks.d/google-labs.toml`, and mirrored into 36 `.agents/skills/android-*` skills via `bun packages/ai-os/src/google/absorb.ts skills --write`.
+`android/skills` (`v1.0.21`, commit `5815d27fda56`, Apache-2.0) is forked at `aphrody-labs/android-skills` (`third_party/forks.txt`), checked out in `third_party/android-skills`, tracked by `tools/upstream/stacks.d/google-labs.toml`, and mirrored into 36 `.agents/skills/android-*` skills via `bun packages/ai-os/src/google/absorb.ts skills --write`.
 
 ## Live-Verified Toolchain Baseline (2026-11-14)
 

@@ -1,5 +1,23 @@
 # ruline — a GNU readline-compatible line editor
 
+<!-- catalog:begin unit -->
+> A GNU readline-compatible line editor for niubash
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/ruline` |
+
+**Commands**
+
+```sh
+cargo test -p reedline
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 ![CI](https://github.com/unixwin/ruline/actions/workflows/ci.yml/badge.svg?branch=main)
 

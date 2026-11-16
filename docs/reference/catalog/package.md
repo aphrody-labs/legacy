@@ -5,9 +5,9 @@ A Bun workspace package (@aphrody/*)
 | Name | Description |
 | :-- | :-- |
 | [@aphrody/nt](../../../apps/nt) | - |
-| [@aphrody/web](../../../apps/nt/modules/web) | - |
+| [@aphrody/nt-web](../../../apps/nt/modules/web) | - |
 | [@aphrody/site-ng](../../../apps/web/web) | Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT). |
-| [@aphrody/github-app](../../../infra/cloudflare/workers/github-app) | - |
+| [@aphrody/github-app](../../../device/cloudflare/workers/github-app) | - |
 | [@aphrody/ai-os](../../../packages/ai-os) | Aphrody AI OS: Unix/GNU-like agent OS distribution unifying LLM, RAG, World Model, and System 1 decision under one C ABI (aphrody_core_capi) |
 | [@aphrody/api](../../../packages/api) | Tauri API definitions |
 | [@aphrody/assets](../../../packages/assets) | Redistribution-safe asset library: manifest with SPDX license, sha256 and attribution; fetch, verify, list |
@@ -48,6 +48,7 @@ A Bun workspace package (@aphrody/*)
 | [@aphrody/omniu](../../../packages/omniu) | oh-my-niu for Bun: plugin bundle as data, validator, packager and scaffolder, and the host that loads the ay plugin into both Bun and niu |
 | [@aphrody/plugin-opener](../../../packages/plugin-opener) | Open files and URLs using their default application. |
 | [@aphrody/py2bun](../../../packages/py2bun) | Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun) |
+| [@aphrody/ghidra](../../../packages/re/ghidra) | Ghidra API for Bun (pyghidra parity), Bun plugin and native onBeforeParse plugin |
 | [@aphrody/release](../../../packages/release) | ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first |
 | [@aphrody/sql](../../../packages/sql) | Shared Bun database mechanics for Aphrody: env/URL resolution, Bun.SQL and Redis factories, bun:sqlite open policy with optional sqlite-vec |
 | [@aphrody/upstream](../../../packages/upstream) | Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks |

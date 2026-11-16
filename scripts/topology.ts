@@ -60,7 +60,7 @@ function walk(abs: string, unit: string) {
     if (!SRC.test(e.name) || statSync(p).size > 2_000_000) continue;
     const text = readFileSync(p, "utf8");
     if (!e.name.endsWith(".toml")) loc.set(unit, (loc.get(unit) ?? 0) + text.split("\n").length);
-    for (const m of text.matchAll(/["'`]((?:src|packages|apps|bench|test|infra)\/[\w./-]+)/g)) {
+    for (const m of text.matchAll(/["'`]((?:src|packages|apps|bench|test|build|device|prebuilts)\/[\w./-]+)/g)) {
       const t = ownerOf(m[1]!.replace(/\/+$/, ""));
       if (t && t !== unit) addEdge(unit, t, "dispatch");
     }
@@ -120,14 +120,14 @@ for (const u of units) {
 for (const u of units) if (/^(test|bench)\//.test(u.dir)) entries.add(u.dir);
 // Deployed units: a Worker (wrangler config) or a cloud function is invoked by its platform.
 for (const u of units)
-  if (["wrangler.toml", "wrangler.jsonc", "wrangler.json", "cloudflare.config.ts", "function.yaml"].some((f) => existsSync(join(root, u.dir, f))) || /^infra\/gcp\/.*function/.test(u.dir)) entries.add(u.dir);
+  if (["wrangler.toml", "wrangler.jsonc", "wrangler.json", "cloudflare.config.ts", "function.yaml"].some((f) => existsSync(join(root, u.dir, f))) || /^device\/gcloud\/.*function/.test(u.dir)) entries.add(u.dir);
 // justfile recipes: a virtual entry node dispatching to every unit path it names.
 const justText = [join(root, "justfile"), ...readdirSync(root).filter((f) => f.endsWith(".just")).map((f) => join(root, f))]
   .filter(existsSync)
   .map((f) => readFileSync(f, "utf8"))
   .join("\n");
 const JUST = "just";
-for (const m of justText.matchAll(/((?:src|packages|apps|bench|test|scripts|infra)\/[\w./-]+)/g)) {
+for (const m of justText.matchAll(/((?:src|packages|apps|bench|test|scripts|build|device|prebuilts)\/[\w./-]+)/g)) {
   const t = ownerOf(m[1]!);
   if (t) addEdge(JUST, t, "dispatch");
 }
@@ -153,7 +153,7 @@ const UV = "uv";
 const wfDir = join(root, ".github/workflows");
 if (existsSync(wfDir))
   for (const f of readdirSync(wfDir).filter((f) => /\.ya?ml$/.test(f)))
-    for (const m of readFileSync(join(wfDir, f), "utf8").matchAll(/((?:src|packages|apps|bench|test|scripts|infra|tools)\/[\w./-]+)/g)) {
+    for (const m of readFileSync(join(wfDir, f), "utf8").matchAll(/((?:src|packages|apps|bench|test|scripts|build|device|prebuilts|tools)\/[\w./-]+)/g)) {
       const t = ownerOf(m[1]!);
       if (t) addEdge(CI, t, "dispatch");
     }

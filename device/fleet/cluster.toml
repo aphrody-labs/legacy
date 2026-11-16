@@ -1,0 +1,56 @@
+# Single source of the "three hosts, one logical server" layer.
+# Read by device/fleet/bin/fleet-registry.sh (installed on every host as /etc/fleet/cluster.toml by fleet-offload.sh),
+# which feeds fleet-run (peers, allowed classes) and prints the service registry. Flat TOML only: [section], key = "value".
+# A host is a role: its ssh alias, user and mesh address are discovered (ssh_config, getent, wg), not listed here.
+# No secrets here (Valkey needs AUTH, the password stays in /etc/aphrody/secrets.env).
+
+[host.fr1]
+role = "factory"
+classes = "agent test lint research bench build"
+
+[host.fr2]
+role = "test-research-edge"
+classes = "agent test lint research bench"
+
+# prd runs production only: it is observed (status) and never receives a fleet-run job.
+[host.prd]
+role = "production"
+classes = ""
+
+# Same mount point and subdirectories on every host (volume per host: fleet-xfs.sh, <host>/offload/etc/fleet/xfs.conf).
+[storage]
+build_mount = "/srv/xbuild"
+subdirs = "target cache ci cas clones"
+cargo_target_dir = "/srv/xbuild/target/$CLASS"
+cargo_build_dir = "/srv/xbuild/target/$CLASS/{workspace-path-hash}"
+
+# Service registry: name -> `role:port` (or an SRV name). Every consumer resolves it with `fleet-registry endpoint <name>`;
+# the role becomes a mesh address through ssh -G, getent and the tunnel interface, never through a value written here.
+[service.valkey]
+host = "fr2"
+endpoint = "fr2:6379"
+auth = "env:VALKEY_PASSWORD"
+
+[service.nativelink-scheduler]
+host = "fr1"
+endpoint = "fr1:50051"
+
+[service.nativelink-cas]
+host = "fr1"
+endpoint = "fr1:50061"
+
+[service.cloudflared-tunnel]
+host = "all"
+endpoint = "mig-prd"
+
+# One directory layout on fr1, fr2 and prd (docs/infra/SINGLE-SERVER.md, table "Layout"). Names are variables: {repo} is
+# [product] repo of tools/identity.toml (shipped as /etc/fleet/identity.toml), {root} is this file's root. Scripts read it with
+# `fleet-registry layout <key>`; nothing under {root} outside these keys. Other checkouts: {root}/repos/<org>/<repo>, both read from the remote.
+[layout]
+root = "/srv"
+monorepo = "{root}/{repo}"
+repos = "{root}/repos"
+data = "{root}/data"
+www = "{root}/www"
+xbuild = "{root}/xbuild"
+xbuild_subdirs = "target cache ci cas clones tmp rescue backup shared"

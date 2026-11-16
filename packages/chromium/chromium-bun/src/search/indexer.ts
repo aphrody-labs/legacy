@@ -163,7 +163,7 @@ export const APHRODY_TOP1_SUBDOMAIN_CATALOG: readonly SubdomainAppEntry[] = [
     title: "Aphrody 3-VPS Datacenter Search & Chromium Crawler",
     category: "search",
     summary:
-      "End-to-end distributed search engine running crawl, indexing and both BM25 shards on the production node (role read from infra/deploy.toml), behind the edge proxy, merged via Reciprocal Rank Fusion (RRF k=60).",
+      "End-to-end distributed search engine running crawl, indexing and both BM25 shards on the production node (role read from device/deploy.toml), behind the edge proxy, merged via Reciprocal Rank Fusion (RRF k=60).",
     keywords: [
       "search",
       "crawler",
@@ -417,13 +417,13 @@ export const SEED_DOCUMENTS_FR2: readonly Omit<
     url: "https://aphrody.com/docs/cluster-3vps",
     title: "Aphrody 3-VPS WireGuard + Cloudflare MASQUE Datacenter Topology",
     description:
-      "Node placement is driven by the role of each node in infra/deploy.toml: production runs crawl, index and shards, the edge node proxies and serves the CDN, the build node is excluded.",
+      "Node placement is driven by the role of each node in device/deploy.toml: production runs crawl, index and shards, the edge node proxies and serves the CDN, the build node is excluded.",
     headings: [
       "production: crawl, index, shards",
       "cdn-edge-and-test: proxy and CDN",
       "build: excluded",
     ],
-    body: "The WireGuard mesh interconnects the nodes declared in infra/deploy.toml. Crawl, indexing and BM25 shards run only on the node whose role is production; the edge node proxies requests and serves the CDN; the build node takes no search workload.",
+    body: "The WireGuard mesh interconnects the nodes declared in device/deploy.toml. Crawl, indexing and BM25 shards run only on the node whose role is production; the edge node proxies requests and serves the CDN; the build node takes no search workload.",
     domain: "aphrody.com",
     category: "infra",
     shard: "shard1",
@@ -788,7 +788,7 @@ export function buildKnowledgeCard(
       { label: "Stack", value: top.stack.join(" · ") },
       {
         label: "Cluster Pinning",
-        value: "production node (role from infra/deploy.toml)",
+        value: "production node (role from device/deploy.toml)",
       },
     ],
   };

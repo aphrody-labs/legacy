@@ -28,6 +28,24 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 [dependencies]
 tauri-plugin-deep-link = "2.0.0"
 # alternatively with Git:
+
+<!-- catalog:begin unit -->
+> Set your Tauri application as the default handler for an URL
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-plugin-deep-link` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-plugin-deep-link
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
 tauri-plugin-deep-link = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
 

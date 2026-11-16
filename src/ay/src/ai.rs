@@ -1,6 +1,6 @@
 //! `ay ai`: local inference runtimes and remote providers behind one LiteLLM proxy.
 //!
-//! Everything comes from the manifest (`infra/ai/ai.toml`, else the embedded copy):
+//! Everything comes from the manifest (`tools/ai/ai.toml`, else the embedded copy):
 //! runtimes say how to install, serve and feed a local server; providers say which LiteLLM route
 //! a key or a local server enables. Models are never listed here: LiteLLM's wildcard routes
 //! (`<id>/*` with `check_provider_endpoint`) ask each provider. Secrets are read from the
@@ -15,13 +15,13 @@ use std::time::{Duration, Instant};
 use serde::Deserialize;
 use serde_json::{Value, json};
 
-const EMBEDDED: &str = include_str!("../../../infra/ai/ai.toml");
+const EMBEDDED: &str = include_str!("../../../tools/ai/ai.toml");
 
 #[derive(clap::Args, Debug, PartialEq, Default)]
 pub struct AiArgs {
     #[command(subcommand)]
     pub cmd: Option<AiCmd>,
-    /// Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+    /// Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
     #[arg(long, global = true, value_name = "PATH")]
     pub manifest: Option<PathBuf>,
     /// Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
@@ -81,7 +81,7 @@ pub enum AiCmd {
     },
     /// Add dotenv keys from stdin to the first env file; existing keys are kept (names printed only)
     Import,
-    /// Distributed inference fabric (infra/ai/fabric.toml): `up [--only a,b] [--split x,y]`, `status`, `warm`, `down`,
+    /// Distributed inference fabric (tools/ai/fabric.toml): `up [--only a,b] [--split x,y]`, `status`, `warm`, `down`,
     /// `bench`, `node <id>`; runs `ai-os fabric` from the checkout (bun), else the installed `ai-os`
     Fabric {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
@@ -315,7 +315,7 @@ fn load_registry(m: &Manifest) -> Value {
 fn manifest_path(arg: &Option<PathBuf>) -> Option<PathBuf> {
     arg.clone()
         .or_else(|| std::env::var_os("AY_AI_MANIFEST").filter(|v| !v.is_empty()).map(PathBuf::from))
-        .or_else(|| Some(crate::repo_root().join("infra").join("ai").join("ai.toml")).filter(|p| p.is_file()))
+        .or_else(|| Some(crate::repo_root().join("tools").join("ai").join("ai.toml")).filter(|p| p.is_file()))
 }
 
 fn load_manifest(arg: &Option<PathBuf>) -> Result<(Manifest, Option<PathBuf>), String> {

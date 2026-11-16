@@ -1,4 +1,4 @@
-//! Live versions of kernel patchsets, distro kernels, and GPU stacks (`infra/os/linux/patchsets.toml`).
+//! Live versions of kernel patchsets, distro kernels, and GPU stacks (`device/os/linux/patchsets.toml`).
 
 use anyhow::{Context, Result, bail};
 use regex::Regex;
@@ -10,7 +10,7 @@ use std::path::Path;
 use std::process::Command;
 use std::time::Duration;
 
-pub const PATCHSETS_REL_PATH: &str = "infra/os/linux/patchsets.toml";
+pub const PATCHSETS_REL_PATH: &str = "device/os/linux/patchsets.toml";
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Patchset {
@@ -49,7 +49,7 @@ struct PatchsetsDoc {
     patchset: Option<BTreeMap<String, Patchset>>,
 }
 
-/// Load every `[patchset.<name>]` entry from `infra/os/linux/patchsets.toml`.
+/// Load every `[patchset.<name>]` entry from `device/os/linux/patchsets.toml`.
 pub fn load_patchsets(root: &Path) -> Result<Vec<Patchset>> {
     let path = root.join(PATCHSETS_REL_PATH);
     let raw = fs::read_to_string(&path)
@@ -377,7 +377,7 @@ pub fn live_status(list: &[Patchset]) -> Vec<LivePatchset> {
         .collect()
 }
 
-/// Rewrite `pinned = "..."` in place inside `infra/os/linux/patchsets.toml` preserving comments and ordering.
+/// Rewrite `pinned = "..."` in place inside `device/os/linux/patchsets.toml` preserving comments and ordering.
 pub fn write_pins(root: &Path, moved: &[(String, String)]) -> Result<usize> {
     let file = root.join(PATCHSETS_REL_PATH);
     let content = fs::read_to_string(&file)?;
@@ -477,7 +477,7 @@ mod tests {
 
         let dir = std::env::temp_dir().join("aphrody_omarchy_patchsets_test");
         let _ = fs::remove_dir_all(&dir);
-        fs::create_dir_all(dir.join("infra").join("os").join("linux")).unwrap();
+        fs::create_dir_all(dir.join("device").join("os").join("linux")).unwrap();
         fs::copy(
             root.join(PATCHSETS_REL_PATH),
             dir.join(PATCHSETS_REL_PATH),

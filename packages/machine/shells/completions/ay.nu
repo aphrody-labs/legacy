@@ -646,13 +646,13 @@ export extern "ay bun install" [
   ...args: string
 ]
 export extern "ay ai" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
 ]
 export extern "ay ai ls" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
@@ -660,21 +660,21 @@ export extern "ay ai ls" [
 ]
 export extern "ay ai install" [
   --force  # 
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai config" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai serve" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
@@ -682,28 +682,28 @@ export extern "ay ai serve" [
 ]
 export extern "ay ai service" [
   --remove  # 
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai restart" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai pull" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai check" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
@@ -712,14 +712,14 @@ export extern "ay ai check" [
 export extern "ay ai auth" [
   --timeout: string  # Seconds to wait for each key [default: 600]
   --force  # Ask again even when a valid key is stored
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai up" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
@@ -727,21 +727,21 @@ export extern "ay ai up" [
 ]
 export extern "ay ai push" [
   --remote-env-file: string  # Dotenv file on the remote host (default: the remote `ay ai` default)
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai import" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help
   ...args: string
 ]
 export extern "ay ai fabric" [
-  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
   --help(-h)  # Print help

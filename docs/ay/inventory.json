@@ -13,7 +13,7 @@
       "command": "ai",
       "state": "current",
       "module": "ai",
-      "doc": "Inference providers behind LiteLLM (infra/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up"
+      "doc": "Inference providers behind LiteLLM (tools/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up"
     },
     {
       "command": "applet",
@@ -277,7 +277,7 @@
       "command": "pkg",
       "state": "current",
       "module": "omarchy",
-      "doc": "Package recipes for every distro: list, matrix, gen, build, check (aphrody-omarchy, infra/pkg)"
+      "doc": "Package recipes for every distro: list, matrix, gen, build, check (aphrody-omarchy, build/pkg)"
     },
     {
       "command": "plugin",

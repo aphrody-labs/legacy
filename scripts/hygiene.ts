@@ -72,7 +72,7 @@ const SKIP = [
   /^src\/(sys|bun-flat|gnu|ghidra[^/]*|electron-migrate)\//,
   /^packages\/(gnu|ghidra)\//,
   /^packages\/ai-os\/src\/relay\//,
-  /^infra\/android\//,
+  /^build\/android\//,
   /^scripts\/android-/,
   LOCK,
   /(^|\/)(Cargo\.toml)$/ /* root manifests are not edited by the purge */,
@@ -376,7 +376,7 @@ export const RULES: Rule[] = [
       !MANIFEST.test(f),
     line: (l, f) =>
       ABS_USER.test(l) ||
-      (CODE.test(f) && !/^(infra|scripts\/bench)\//.test(f) && ABS_SRC.test(l)),
+      (CODE.test(f) && !/^(build|device|prebuilts|scripts\/bench)\//.test(f) && ABS_SRC.test(l)),
   },
   {
     id: "literal-identity",
@@ -594,7 +594,7 @@ export function scan(
           if (
             /^[\w.-]+\/[\w.-]+$/.test(m[1]!) &&
             !/\.(ts|js|json|md|rs|css|html)$/.test(m[1]!) &&
-            !/^(node|src|dist|lib|bin|usr|var|etc|tmp|docs?|apps?|packages?|crates?|infra|scripts?|test|tests|bench|assets|plugins|third_party|roles|image|application|text|video|audio|font|multipart|Europe|America|Asia|shell|desktop|documentation|fournisseurs|clients|factures)\//.test(
+            !/^(node|src|dist|lib|bin|usr|var|etc|tmp|docs?|apps?|packages?|crates?|build|device|prebuilts|infra|scripts?|test|tests|bench|assets|plugins|third_party|roles|image|application|text|video|audio|font|multipart|Europe|America|Asia|shell|desktop|documentation|fournisseurs|clients|factures)\//.test(
               m[1]!,
             ) &&
             !m[1]!.includes("..")
@@ -627,7 +627,7 @@ export function scan(
 
 // dead-ref: repo-relative paths and relative markdown links that point to nothing (fiction and moved targets).
 const TOP =
-  "(?:docs|scripts|infra|packages|apps|third_party|src|tools|plugins|conformance|assets|\\.github|\\.agents)";
+  "(?:docs|scripts|build|device|prebuilts|infra|packages|apps|third_party|src|tools|plugins|conformance|assets|\\.github|\\.agents)";
 const REF = new RegExp("(?<![\\w./$-])(" + TOP + "/[A-Za-z0-9_@.+\\-/]+)", "g");
 const LINK = /\]\((?!https?:|#|mailto:)([^)\s#]+)/g;
 // MCP and JSON-RPC method names that look like paths.

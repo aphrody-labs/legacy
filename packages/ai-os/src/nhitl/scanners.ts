@@ -609,7 +609,7 @@ export function scanHook(): Violation[] {
     category: k.startsWith("ask") ? "hook_confirm" : "hook_deny",
     severity: (k.startsWith("ask") ? "high" : "low") as Severity,
     excerpt: `${n} ${k} decision(s)`,
-    fix: "Review infra/agents/plugins/aphrody-nhitl/src/policy.ts: denials reserved for guardrails, never ask.",
+    fix: "Review tools/agents/plugins/aphrody-nhitl/src/policy.ts: denials reserved for guardrails, never ask.",
     status: "open" as Status,
   }));
 }
@@ -619,9 +619,9 @@ type Target = { host: string; ssh?: string[]; local?: string; dir?: string };
 
 /** Queue hosts: fleet.toml (local pc, fr1, prd, fr2). ssh = targets tried in order, then hop. */
 export function queueTargets(root = srcRoot()): Target[] {
-  const fleet: any = existsSync(join(root, "infra/agents/fleet.toml"))
+  const fleet: any = existsSync(join(root, "tools/agents/fleet.toml"))
     ? Bun.TOML.parse(
-        expandSync(readFileSync(join(root, "infra/agents/fleet.toml"), "utf8")),
+        expandSync(readFileSync(join(root, "tools/agents/fleet.toml"), "utf8")),
       )
     : {};
   const out: Target[] = [];

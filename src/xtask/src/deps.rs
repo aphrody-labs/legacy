@@ -510,7 +510,7 @@ fn p_name(pkg: &serde_json::Value) -> String {
 
 /// First-party trees scanned for Python manifests. `apps/*` are separate repositories (their
 /// own lock), `third_party/*` belongs to upstreams.
-const FIRST_PARTY: &[&str] = &["src", "bench", "test", "packages", "infra", "tools", "scripts", "plugins", "docs"];
+const FIRST_PARTY: &[&str] = &["src", "bench", "test", "packages", "build", "device", "prebuilts", "tools", "scripts", "plugins", "docs"];
 const SKIP: &[&str] = &["node_modules", "target", ".venv", "dist", ".git", "__pycache__", ".urc", ".lore"];
 
 fn walk_files(dir: &Path, depth: usize, names: &[&str], out: &mut Vec<PathBuf>) {
@@ -620,7 +620,9 @@ fn check_containers(root: &Path, out: &mut Vec<Finding>) {
             n.starts_with("dockerfile") || n.starts_with("compose") || n.ends_with(".containerfile")
         }));
     }
-    walk_files(&root.join("infra"), 5, &["Dockerfile", "Containerfile", "compose.yaml", "docker-compose.yml"], &mut files);
+    for top in ["build", "device"] {
+        walk_files(&root.join(top), 5, &["Dockerfile", "Containerfile", "compose.yaml", "docker-compose.yml"], &mut files);
+    }
     for f in files {
         let Some(text) = read(&f) else { continue };
         let path = rel(root, &f);
@@ -643,7 +645,7 @@ fn check_containers(root: &Path, out: &mut Vec<Finding>) {
 }
 
 fn check_tools(root: &Path, out: &mut Vec<Finding>) {
-    let Some(doc) = parse(&root.join("infra/up/tools.toml")) else {
+    let Some(doc) = parse(&root.join("prebuilts/up/tools.toml")) else {
         return;
     };
     let Some(tools) = doc.get("tool").and_then(Item::as_array_of_tables) else {
@@ -655,7 +657,7 @@ fn check_tools(root: &Path, out: &mut Vec<Finding>) {
         let source = t.get("source").and_then(Item::as_str).unwrap_or("");
         let version = t.get("version").and_then(Item::as_str).unwrap_or("");
         if version.is_empty() || version == "latest" {
-            push(out, Level::Error, "TOOLS-PIN", "infra/up/tools.toml", format!("{name}: version must be pinned"));
+            push(out, Level::Error, "TOOLS-PIN", "prebuilts/up/tools.toml", format!("{name}: version must be pinned"));
         }
         let verified = t.contains_key("checksum") || t.contains_key("sha256");
         match source {
@@ -665,7 +667,7 @@ fn check_tools(root: &Path, out: &mut Vec<Finding>) {
         }
     }
     if !unverified.is_empty() {
-        push(out, Level::Error, "TOOLS-UNVERIFIED", "infra/up/tools.toml", format!("{} tools without checksum: {}", unverified.len(), unverified.join(" ")));
+        push(out, Level::Error, "TOOLS-UNVERIFIED", "prebuilts/up/tools.toml", format!("{} tools without checksum: {}", unverified.len(), unverified.join(" ")));
     }
 }
 

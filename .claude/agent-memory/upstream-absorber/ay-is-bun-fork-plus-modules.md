@@ -5,7 +5,7 @@ metadata:
   type: project
 ---
 
-Owner direction (2026-11-15): `ay` is the Bun binary built from the fork `aphrody-labs/bun` (Bun's own CLI), first-party features are cargo-feature modules, no feature lost; steam/epic/gaming/tv/craft are ecosystem consumers, their subcommands stay until another agent gives them entry points. Inventory: `infra/ay/modules.toml`, `scripts/ay-inventory.ts --check`, `docs/ay/MODULES.md`; extensions: `docs/ay/EXTENSIONS.md`.
+Owner direction (2026-11-15): `ay` is the Bun binary built from the fork `aphrody-labs/bun` (Bun's own CLI), first-party features are cargo-feature modules, no feature lost; steam/epic/gaming/tv/craft are ecosystem consumers, their subcommands stay until another agent gives them entry points. Inventory: `build/ay/modules.toml`, `scripts/ay-inventory.ts --check`, `docs/ay/MODULES.md`; extensions: `docs/ay/EXTENSIONS.md`.
 
 **Why:** the owner wants a universal runner (JS/TS, bash, Rust scripts) that is Bun, not a Rust CLI with Bun crates linked in.
 

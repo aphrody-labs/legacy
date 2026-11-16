@@ -46,7 +46,7 @@ cached sessions as booleans only. See [`docs/auth.md`](../../docs/auth.md).
 `bun-steam-depot` (feature `depot`) replaces steamcmd for our use: `login <user>`, `update`
 (resume: valid files skipped), `verify` (every file hashed against the manifest), `list`,
 `auth status`, `auth export --to <store>`. Windows depots are selected with `--os windows` on any
-host OS. Container: `infra/docker/steam-depot`.
+host OS. Container: `build/docker/steam-depot`.
 
 Shared fixtures in `tests/fixtures` (`text.vdf`, `shortcuts.vdf`, `types.bin.vdf` and their
 `*.expected.json`) are parsed by both implementations.

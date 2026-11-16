@@ -1,0 +1,163 @@
+# Target layout: source of the table in docs/project/layout.md and of `bun scripts/relayout.ts`.
+# `[[area]]` rows describe a top-level directory; `[[move]]` rows are applied once by `bun scripts/relayout.ts apply`
+# (directory rename, then every textual reference to `from` is rewritten to `to`). `check` fails while a `from` path
+# still exists or is still referenced.
+
+[[area]]
+dir = "apps"
+role = "end-user applications (web, auto, nt, craft, game, ...)"
+why = "AOSP packages/apps and Chromium chrome/: products stay apart from the platform"
+
+[[area]]
+dir = "build"
+role = "CI, container images, package recipes, SDK pins, Chromium factory"
+why = "AOSP build/ and Chromium build/: how the tree is built"
+
+[[area]]
+dir = "device"
+role = "targets and fleet: hosts, cluster, OS images, cloud, secrets, deploy"
+why = "AOSP device/: per-target configuration"
+
+[[area]]
+dir = "docs"
+role = "documentation, generated index"
+why = "Chromium docs/"
+
+[[area]]
+dir = "packages"
+role = "Bun workspace packages (@aphrody/*)"
+why = "Bun layout; split into system/ and frameworks/ is a later stage"
+
+[[area]]
+dir = "prebuilts"
+role = "binary pins installed by ay up"
+why = "AOSP prebuilts/: binaries are pinned, not built here"
+
+[[area]]
+dir = "scripts"
+role = "gates and generators run by CI and just"
+why = "Bun and Chromium both keep scripts/ and tools/ at the root"
+
+[[area]]
+dir = "src"
+role = "Rust crates (oven-sh/bun layout), C core, assembly, WebAssembly"
+why = "kept: crates taken from oven-sh/bun main (Cargo.toml header), so the paths stay the upstream paths; moving it needs a CI-verified pass of its own"
+
+[[area]]
+dir = "test"
+role = "workspace tests and conformance"
+why = "Bun test/"
+
+[[area]]
+dir = "third_party"
+role = "upstream checkouts (linux, chromium) and pins"
+why = "Chromium third_party/; AOSP external/"
+
+[[area]]
+dir = "tools"
+role = "agent tooling, upstream machinery, identity, generators"
+why = "AOSP tools/ and Chromium tools/"
+
+[[move]]
+from = "infra/ci"
+to = "build/ci"
+
+[[move]]
+from = "infra/chromium-factory"
+to = "build/chromium-factory"
+
+[[move]]
+from = "infra/docker"
+to = "build/docker"
+
+[[move]]
+from = "infra/pkg"
+to = "build/pkg"
+
+[[move]]
+from = "infra/android"
+to = "build/android"
+
+[[move]]
+from = "infra/ay"
+to = "build/ay"
+
+[[move]]
+from = "infra/browser-engines.just"
+to = "build/browser-engines.just"
+
+[[move]]
+from = "infra/up"
+to = "prebuilts/up"
+
+[[move]]
+from = "infra/agents"
+to = "tools/agents"
+
+[[move]]
+from = "infra/ai"
+to = "tools/ai"
+
+[[move]]
+from = "infra/upstream"
+to = "tools/upstream"
+
+[[move]]
+from = "infra/fleet"
+to = "device/fleet"
+
+[[move]]
+from = "infra/cluster"
+to = "device/cluster"
+
+[[move]]
+from = "infra/os"
+to = "device/os"
+
+[[move]]
+from = "infra/gamescope-web"
+to = "device/gamescope-web"
+
+[[move]]
+from = "infra/gaming"
+to = "device/gaming"
+
+[[move]]
+from = "infra/mail"
+to = "device/mail"
+
+[[move]]
+from = "infra/db"
+to = "device/db"
+
+[[move]]
+from = "infra/cloudflare"
+to = "device/cloudflare"
+
+[[move]]
+from = "infra/gcloud"
+to = "device/gcloud"
+
+[[move]]
+from = "infra/gnu"
+to = "device/gnu"
+
+[[move]]
+from = "infra/vault"
+to = "device/vault"
+
+[[move]]
+from = "infra/deploy.toml"
+to = "device/deploy.toml"
+
+[[move]]
+from = "infra/README.md"
+to = "device/README.md"
+
+[[move]]
+from = "infra/DEPS.rules"
+to = "device/DEPS.rules"
+
+[[move]]
+from = "infra/mesh-vn"
+to = "device/mesh-vn"

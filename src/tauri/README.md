@@ -1,5 +1,23 @@
 # Tauri
 
+<!-- catalog:begin unit -->
+> Make tiny, secure apps for all desktop platforms with Tauri
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
  <img align="right" src="https://github.com/tauri-apps/tauri/raw/dev/.github/icon.png" height="128" width="128">
 
 [![status](https://img.shields.io/badge/status-stable-blue.svg)](https://github.com/tauri-apps/tauri/tree/dev)

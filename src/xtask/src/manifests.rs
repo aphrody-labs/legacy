@@ -4,7 +4,7 @@
 //! - `DEPS` (gclient): every locked repository with a remote and a commit;
 //! - `.gitmodules`: the gitlinks of the superproject index, with URL and branch from the lock;
 //!   `--check` also fails when a gitlink commit differs from the locked commit;
-//! - `docs/patches/series` and `infra/upstream/patches/bun-parity/series` (quilt indexes of patches tracked in
+//! - `docs/patches/series` and `tools/upstream/patches/bun-parity/series` (quilt indexes of patches tracked in
 //!   this tree; `third_party/` is not versioned, so nothing under it is indexed).
 //!
 //! `OWNERS` is hand-maintained (kernel format) and never generated. The org URL in the DEPS
@@ -169,7 +169,7 @@ pub fn render_all(
     let bun = patch_names(&bun_patches);
     series.extend(
         bun.iter()
-            .map(|n| format!("../../infra/upstream/patches/bun-parity/{n} -p1")),
+            .map(|n| format!("../../tools/upstream/patches/bun-parity/{n} -p1")),
     );
     files.push((
         root.join("docs").join("patches").join("series"),

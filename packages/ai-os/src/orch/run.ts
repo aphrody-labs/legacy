@@ -1,5 +1,5 @@
 // Orchestrator: workflow = graph of steps computed at run time, executed in parallel on the fleet hosts.
-//   - `cmd` steps (sh line, low priority), `tool` (relay tool), `agent` (sub-agent: infra/agents/runner.ts queue
+//   - `cmd` steps (sh line, low priority), `tool` (relay tool), `agent` (sub-agent: tools/agents/runner.ts queue
 //     if a worker of the role is beating on the host, otherwise direct read-only execution);
 //   - `expand`: a step's output may add steps ({"steps":[…]}), bounded in count and depth;
 //   - fallback: each failure is classified (classify.ts); quota/auth/missing -> next provider (`providers` list

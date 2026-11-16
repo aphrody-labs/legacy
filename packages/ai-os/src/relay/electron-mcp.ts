@@ -1,6 +1,6 @@
 // Electron migration toolkit as a stdio MCP server (protocol 2025-11-25, one JSON message per line), reached through
 // the relay hub: hub_tools server=electron, hub_call name=electron__electron_analyze | electron__electron_migrate |
-// electron__electron_optimize | electron__electron_bench. Registered by [[hub.mcp]] electron in infra/agents/toolchain.toml.
+// electron__electron_optimize | electron__electron_bench. Registered by [[hub.mcp]] electron in tools/agents/toolchain.toml.
 // Each tool runs `ay electron <sub> ... --json` (src/electron-migrate through src/ay); AY_BIN overrides the `ay` binary.
 
 type Rpc = { jsonrpc: "2.0"; id?: number | string; method?: string; params?: any };

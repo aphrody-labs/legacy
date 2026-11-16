@@ -30,7 +30,7 @@ const DAY = 86_400_000;
 const PC =
   process.platform === "win32" || process.env.AY_AUTH_REFRESH_ALL === "1";
 /**
- * Credentials a Linux runner needs (infra/agents/runner.ts: gh for push, claude and codex for the
+ * Credentials a Linux runner needs (tools/agents/runner.ts: gh for push, claude and codex for the
  * tasks); the other CLIs (cf, wrangler, vercel, gcloud, gh admin scopes) are the PC's business, which pushes the
  * values. AY_AUTH_TARGETS (comma-separated list) replaces this list.
  */

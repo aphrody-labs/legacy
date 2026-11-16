@@ -9,12 +9,12 @@ The orchestrator runs a graph of steps computed at run time, in parallel, on the
 | Layer                                                                             | Owner                                         | Role                                                                                                                                         |
 | --------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/ai-os/src/orch`                                                         | ai-os (this document)                         | graph, routing, failover, repair, lifecycle, guardrails                                                                                      |
-| `infra/agents/runner.ts`, `infra/agents/fleet.toml`, `docs/agents/AGENT-FIRST.md` | labs-1b                                       | execution on the hosts: one tmux session per host (one window per role), queue `var/agents/queue`, commit bounded to paths, acceptance check |
+| `tools/agents/runner.ts`, `tools/agents/fleet.toml`, `docs/agents/AGENT-FIRST.md` | labs-1b                                       | execution on the hosts: one tmux session per host (one window per role), queue `var/agents/queue`, commit bounded to paths, acceptance check |
 | `src/llm`                                                                         | ai-os                                         | discovered providers and models (`llm_models`, `llm_ask`)                                                                                    |
 | `src/relay`                                                                       | ai-os                                         | tools `orch_run`, `orch_engines`, `fleet_status`, `gemini_review` (MCP, A2A, JSON-RPC)                                                       |
 | ssh, WireGuard, cloudflared                                                       | infra agent (`ay auth`, `docs/infra/AUTH.md`) | access to the hosts; the orchestrator creates no tunnel                                                                                      |
 
-Hosts: `infra/agents/fleet.toml` (`[hosts.*]`, roles, runner checkout), cross-referenced with `infra/deploy.toml` (`ssh_alias`, `role`). A node with role `build` (fr1, reserved for Chromium and LLVM) is excluded outright. Cap per host: `ORCH_MAX_AGENTS_<HOST>`, otherwise `ORCH_MAX_AGENTS`, otherwise 3 locally and 2 remotely.
+Hosts: `tools/agents/fleet.toml` (`[hosts.*]`, roles, runner checkout), cross-referenced with `device/deploy.toml` (`ssh_alias`, `role`). A node with role `build` (fr1, reserved for Chromium and LLVM) is excluded outright. Cap per host: `ORCH_MAX_AGENTS_<HOST>`, otherwise `ORCH_MAX_AGENTS`, otherwise 3 locally and 2 remotely.
 
 ## Commands
 

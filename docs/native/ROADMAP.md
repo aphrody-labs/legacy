@@ -20,10 +20,10 @@ A report never says "not verified" or "not run". If a step cannot complete, the 
 | --- | --- | --- | --- |
 | 1 | GNU in Rust (`src/gnu`, uutils) | every GNU program passes the GNU test suite, as `ay gnu` | which, time 100 %; bc, m4, ed partial |
 | 2 | GNU distribution (`packages/gnu`) | live feed of GNU, Rust and kernel upstream at gnu.aphrody.com, MCP `gnu__*` | running on fr2 |
-| 3 | Android/AOSP toolchain (`infra/android`) | reproducible SDK, NDK, JDK and Kotlin setup and `libaysys.so` for Android; the Compose shell moved to aphrody-labs/open | running |
+| 3 | Android/AOSP toolchain (`build/android`) | reproducible SDK, NDK, JDK and Kotlin setup and `libaysys.so` for Android; the Compose shell moved to aphrody-labs/open | running |
 | 4 | Ghidra fork, bun-ghidra, py2bun | converted Ghidra scripts run under bun-ghidra, with an LLVM LTO and AOT build | parity proven; Java exports open |
 | 5 | Gemini web MCP gateway (mcp.aphrody.com) | Gemini web uses the relay tools through OAuth | needs owner consent |
-| 6 | Index pipeline (`ay index`) | shared SQLite and Valkey index across hosts | skill `ay-index`, magika on; open: `cargo check --workspace` red on a clean checkout (src/bun_core/build.rs needs `build_options.rs` from a Bun configure step the repo does not provide), Windows `ay.exe` from CI `deps.yml` then `infra/ci/pipeline/pc-install.ts` |
+| 6 | Index pipeline (`ay index`) | shared SQLite and Valkey index across hosts | skill `ay-index`, magika on; open: `cargo check --workspace` red on a clean checkout (src/bun_core/build.rs needs `build_options.rs` from a Bun configure step the repo does not provide), Windows `ay.exe` from CI `deps.yml` then `build/ci/pipeline/pc-install.ts` |
 | 7 | Electron migrator (`ay electron`) | an Electron app migrated to Tauri or GPUI and benchmarked | skill `electron-migrate` |
 | 8 | Build science (`docs/native/BUILD-SCIENCE.md`) | each measured gain is adopted in `just` | sccache adopted |
 | 9 | Fleet offload | fr1 PSI below saturation, no yolo legacy, clean file systems | slices and `fleet-run` live |

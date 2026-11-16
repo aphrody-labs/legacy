@@ -9,7 +9,7 @@ toolchains-lock:
 [group('machine')]
 terminal-prd step="all" jobs="4":
     bun -e "if (!/^(cpp|rust|all)$/.test(process.argv[1]) || !/^[1-8]$/.test(process.argv[2])) process.exit(2)" "{{step}}" "{{jobs}}"
-    ay ssh cp "{{root}}/infra/fleet/bin/terminal-prd-build.sh" prd:terminal-prd-build.sh
+    ay ssh cp "{{root}}/device/fleet/bin/terminal-prd-build.sh" prd:terminal-prd-build.sh
     ay ssh exec prd -- "JOBS={{jobs}} PINS='$(bun -e "const l = await Bun.file(process.argv[1]).json(); console.log(process.argv.slice(2).map((n) => n + '=' + l.repositories['third_party/' + n].commit).join(' '))" "{{root}}/src.lock.json" fmt GSL jsoncpp CLI11 cmark ratatui crossterm tui-markdown acp-rust-sdk terminal-control)' sh terminal-prd-build.sh {{step}}"
 
 # Windows build of intelligent-terminal (WindowsTerminal.exe, wta.exe, installer, C++ and Rust tests): PR CI of the fork, workflow_dispatch on main

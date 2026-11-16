@@ -21,7 +21,7 @@ Earlier PC (Windows) measurements: [BUILD_SPEED.md](BUILD_SPEED.md).
 | Claim | Source | Measured (mean +- sd, change) | Adopted |
 | --- | --- | --- | --- |
 | sccache warm cache after clean build (local disk) | mozilla/sccache v0.19.0 | clean `depot-core`: no wrapper 77.1 +- 10.7 s (N=3) vs warm cache 14.13 +- 0.85 s (N=5): -82%; cold fill 90.6 s (N=1, +17%). 83% hit rate | Yes, as `just cargo-cached` for fresh target dirs (fr1/fr2/agents). Not in `.cargo/config.toml`: breaks the PC (os error 206, incremental 2x slower, BUILD_SPEED.md) |
-| sccache with R2 backend (ticket taskgraph-001) | sccache docs (S3/R2 backends); repo: `infra/fleet/reinstall/50-mesh-caches.sh` already points fleet clients to a mesh S3 (`SCCACHE_BUCKET=sccache` at <fr1-mesh-ip>:9000) | not measured: needs bucket credentials (owner), no secret read or printed | No (owner action) |
+| sccache with R2 backend (ticket taskgraph-001) | sccache docs (S3/R2 backends); repo: `device/fleet/reinstall/50-mesh-caches.sh` already points fleet clients to a mesh S3 (`SCCACHE_BUCKET=sccache` at <fr1-mesh-ip>:9000) | not measured: needs bucket credentials (owner), no secret read or printed | No (owner action) |
 | LTO off vs thin vs fat, release, edit core then rebuild a bin | rustc codegen docs | off (cgu16) 8.45 +- 0.67 s; thin 37.84 +- 0.90 s (4.5x); fat (cgu1) 105.98 +- 0.72 s (12.5x). Clean release: off 74 s, thin 90 s, fat 175 s (N=1 each). Binary 21.08 MB off, 21.22 MB thin | No change: `[profile.iteration]` (lto off, cgu16) already gives the fast path; release stays fat |
 | -Zthreads=16 (repo default) vs none vs 4 | rustc parallel frontend | edit core 2.21 +- 0.18 (16) vs 2.19 +- 0.17 (none) vs 2.00 +- 0.15 (4): no wall gain; CPU user+sys +17% (16 vs none). On 6 cores 16 threads oversubscribe | No change (fr2 6 cores; 12-core fr1 not measured) |
 | -Zshare-generics=n vs default | rustc | edit core 2.00 +- 0.03 vs 2.19 +- 0.17: within drift | No (already the dev default, BUILD_SPEED.md) |
@@ -49,7 +49,7 @@ verified after the run. fr1 untouched (busy, shared); prd never touched.
 | CachyOS: swappiness 100, dirty_ratio 10, background 3, kyber, THP defer+madvise | 0.055 to 0.080 s | 0.41 to 0.49 s | 1.16 to 1.20 s | 80.20 +- 0.69 s (+11%) |
 
 Already set on both nodes before this work: zram zstd (fr1 12 GiB, fr2 5.7 GiB), `vm.page-cluster=0`, `kernel.nmi_watchdog=0`, swappiness 100 (fr1) or 150 (fr2), THP defer+madvise (fr1).
-Result: no benefit, clean build worse: nothing persisted in `infra/fleet`, no rollback needed. Scheduler kernels (bore, eevdf, sched-ext): not evaluated, no kernel switched.
+Result: no benefit, clean build worse: nothing persisted in `device/fleet`, no rollback needed. Scheduler kernels (bore, eevdf, sched-ext): not evaluated, no kernel switched.
 
 ## Owner actions
 

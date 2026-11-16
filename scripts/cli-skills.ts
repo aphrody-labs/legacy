@@ -240,7 +240,7 @@ export function render(tool: Tool, m: Manual): string {
 export async function generate(
   opts: { check?: boolean; only?: string[]; tools?: string } = {},
 ) {
-  const toml = opts.tools ?? (await Bun.file(join(ROOT, "infra/up/tools.toml")).text());
+  const toml = opts.tools ?? (await Bun.file(join(ROOT, "prebuilts/up/tools.toml")).text());
   const result = {
     written: 0,
     same: 0,

@@ -1,4 +1,4 @@
-//! Kernel flavors (`infra/os/linux/kernels.toml`) -> environment for `infra/os/linux/build/kernel.sh`.
+//! Kernel flavors (`device/os/linux/kernels.toml`) -> environment for `device/os/linux/build/kernel.sh`.
 
 use anyhow::{Context, Result, bail};
 use regex::Regex;
@@ -34,9 +34,9 @@ pub struct KernelsConfig {
     pub flavors: Vec<Flavor>,
 }
 
-/// Load kernel flavors from `infra/os/linux/kernels.toml`.
+/// Load kernel flavors from `device/os/linux/kernels.toml`.
 pub fn load_kernels(root: &Path) -> Result<KernelsConfig> {
-    let path = root.join("infra").join("os").join("linux").join("kernels.toml");
+    let path = root.join("device").join("os").join("linux").join("kernels.toml");
     let raw = fs::read_to_string(&path)
         .with_context(|| format!("failed to read {}", path.display()))?;
     let doc: RawKernelsDoc = toml::from_str(&raw)
@@ -64,7 +64,7 @@ pub fn build_env(k: &KernelsConfig, flavor: &str, host: &str) -> Result<BTreeMap
         bail!("flavor '{}' unknown ({})", flavor, names.join(", "));
     };
     let Some(image) = k.image.get(&f.image) else {
-        bail!("image '{}' missing from infra/os/linux/kernels.toml", f.image);
+        bail!("image '{}' missing from device/os/linux/kernels.toml", f.image);
     };
     if !image.contains("@sha256:") {
         bail!("image '{}' is not pinned by digest", f.image);

@@ -191,9 +191,9 @@ function repo(): {
   git(co, ["remote", "add", "origin", fork]);
   git(co, ["fetch", "-q", "origin"]);
   git(co, ["branch", "-q", "--set-upstream-to=origin/main", "main"]);
-  mkdirSync(join(root, "infra", "upstream"), { recursive: true });
+  mkdirSync(join(root, "tools", "upstream"), { recursive: true });
   writeFileSync(
-    join(root, "infra", "upstream", "stacks.toml"),
+    join(root, "tools", "upstream", "stacks.toml"),
     `[stack.t]\nmodel = "branch"\nupstream = "x/up"\nupstream_url = "${up.replace(/\\/g, "/")}"\nref = "main"\nfork = "x/fork"\nbranch = "main"\ncheckout = "co"\nforge = "github"\nrules = "bun"\nrunner = "pc"\n`,
   );
   writeFileSync(join(root, "src.lock.json"), "");
@@ -320,7 +320,7 @@ describe("sync", () => {
     ).toBe(0);
     expect(git(co, ["rev-parse", "HEAD"])).toBe(head);
     const reg = Bun.TOML.parse(
-      await Bun.file(join(root, "infra/upstream/status/t.toml")).text(),
+      await Bun.file(join(root, "tools/upstream/status/t.toml")).text(),
     ) as any;
     expect(reg.patch.feat_b.status).toBe("submitted");
     expect(reg.patch.feat_b.owner).toBe("bun-windows");

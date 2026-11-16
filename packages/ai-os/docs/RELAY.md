@@ -21,7 +21,7 @@ bun src/relay/cli.ts mcp-add    # Claude Code : serveur MCP « relay » (portée
 bun src/relay/cli.ts ask "…"    # test
 ```
 
-Linux : `infra/fleet/prd/systemd/aphrody-relay.service (racine de src)` (unité utilisateur, Antigravity CLI `agy`).
+Linux : `device/fleet/prd/systemd/aphrody-relay.service (racine de src)` (unité utilisateur, Antigravity CLI `agy`).
 
 Revue automatique : le hook `src/relay/hook.ts` (PostToolUse Bash, asynchrone, dans `~/.claude/settings.json`) soumet chaque `git commit` d'un dépôt de `SRC_ROOT` à `gemini_review` et archive le verdict dans `docs/reviews/auto/<sha>.md`. Revue de livrables à la demande : workflow `.claude/workflows/gemini-review.js` (racine de src).
 

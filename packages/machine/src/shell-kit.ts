@@ -926,7 +926,7 @@ export async function syncPinnedCliTools(
   check: boolean,
   install: boolean,
 ) {
-  const tomlPath = join(ROOT, "infra/up/tools.toml");
+  const tomlPath = join(ROOT, "prebuilts/up/tools.toml");
   if (!existsSync(tomlPath)) return;
   const parsed = Bun.TOML.parse(readFileSync(tomlPath, "utf8")) as {
     tool?: ToolsTomlEntry[];

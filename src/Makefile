@@ -63,7 +63,7 @@ windows:
 		-nostdlib -Wl,/NOENTRY -Wl,/DLL \
 		$(C_SRCS) $(ASM_X86_64) -o $(OUT_DIR)/aysys.dll
 
-# Android x86_64 (bionic): NDK clang resolved from ANDROID_NDK_HOME (infra/android/android.toml, scripts/android-setup.ts env).
+# Android x86_64 (bionic): NDK clang resolved from ANDROID_NDK_HOME (build/android/android.toml, scripts/android-setup.ts env).
 ANDROID_API ?= 29
 NDK_LLVM    ?= $(ANDROID_NDK_HOME)/toolchains/llvm/prebuilt/linux-x86_64/bin
 ANDROID_CC  ?= $(NDK_LLVM)/clang --target=x86_64-linux-android$(ANDROID_API)

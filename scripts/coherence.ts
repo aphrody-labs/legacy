@@ -28,7 +28,9 @@ const OUT = join(ROOT, "var", "coherence");
 export const DEFAULT_ROOTS = [
   "docs",
   "scripts",
-  "infra",
+  "build",
+  "device",
+  "prebuilts",
   ".agents",
   ".claude",
   "README.md",
@@ -43,7 +45,7 @@ export const DEFAULT_ROOTS = [
 const SCANNED =
   /\.(md|mdx|ts|js|just|ya?ml|toml|sh|ps1|json|txt|lock)$|justfile$/;
 const TOP =
-  "(?:docs|scripts|infra|crates|packages|apps|third_party|src|tools|plugins|conformance|assets|bench|test|\\.github|\\.agents|\\.claude)";
+  "(?:docs|scripts|build|device|prebuilts|crates|packages|apps|third_party|src|tools|plugins|conformance|assets|bench|test|\\.github|\\.agents|\\.claude)";
 const REF = new RegExp(`(?<![\\w./@-])(${TOP}/[A-Za-z0-9_@.+\\-/]+)`, "g");
 const LINK = /\]\((?!https?:|#|mailto:|data:)([^)\s#?]+)/g;
 
@@ -73,7 +75,7 @@ export const AREAS: [string, RegExp][] = [
   ["native", /^docs\/native\//],
   ["docs", /^docs\//],
   ["agents", /^(\.agents|\.claude)\/|^(README|AGENTS|GEMINI|CLAUDE)\.md$/],
-  ["infra", /^(scripts|infra|tools\.toml|third_party)/],
+  ["infra", /^(scripts|build|device|prebuilts|tools|third_party)/],
 ];
 export const areaOf = (f: string) =>
   AREAS.find(([, r]) => r.test(f))?.[0] ?? "other";

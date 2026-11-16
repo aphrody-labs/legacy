@@ -1433,12 +1433,12 @@
       "file": "packages/machine"
      },
      {
-      "id": "infra/cloudflare/workers/github-app",
+      "id": "device/cloudflare/workers/github-app",
       "name": "@aphrody/github-app",
       "kind": "module",
       "language": "typescript",
       "loc": 389,
-      "file": "infra/cloudflare/workers/github-app"
+      "file": "device/cloudflare/workers/github-app"
      },
      {
       "id": "infra/gcp/billing-agent/cap-function",
@@ -1449,12 +1449,12 @@
       "file": "infra/gcp/billing-agent/cap-function"
      },
      {
-      "id": "infra/mesh-vn",
+      "id": "device/mesh-vn",
       "name": "@aphrody/mesh-vn",
       "kind": "module",
       "language": "typescript",
       "loc": 1889,
-      "file": "infra/mesh-vn"
+      "file": "device/mesh-vn"
      }
     ]
    },
@@ -9029,9 +9029,9 @@
  "entryPoints": [
   "apps/nt",
   "ci",
-  "infra/cloudflare/workers/github-app",
+  "device/cloudflare/workers/github-app",
   "infra/gcp/billing-agent/cap-function",
-  "infra/mesh-vn",
+  "device/mesh-vn",
   "just",
   "packages/ai-os",
   "packages/ai-os/python/hermes_agent_memory",

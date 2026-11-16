@@ -8,7 +8,7 @@ description: Debug, inspect and automate a browser through Chrome DevTools MCP -
 ## Local setup (aphrody)
 
 - Chrome DevTools MCP sits behind the relay, not in the client's tool list: `hub_tools` (server `chrome-devtools`) to list, `hub_call` with `name: "chrome-devtools__<tool>"` and the tool's arguments (e.g. `chrome-devtools__take_snapshot` with `{ "pageId": 1 }`). Wherever this text says "call `<tool>`", use that form.
-- The server is the `[[hub.mcp]] chrome-devtools` entry of `infra/agents/toolchain.toml`: headless, isolated profile, `--memoryDebugging --categoryExtensions --categoryNetworkMocks`, Google usage statistics off. Installed with `bun add -g chrome-devtools-mcp` (1.13.0); the shell CLI `chrome-devtools` ships with it.
+- The server is the `[[hub.mcp]] chrome-devtools` entry of `tools/agents/toolchain.toml`: headless, isolated profile, `--memoryDebugging --categoryExtensions --categoryNetworkMocks`, Google usage statistics off. Installed with `bun add -g chrome-devtools-mcp` (1.13.0); the shell CLI `chrome-devtools` ships with it.
 - The owner's logged-in Chrome is not reachable from it: use claude-in-chrome or agent-browser (skills `agent-browser`, `browser-engines`). To debug a Chromium build of this repo, start `headless_shell --remote-debugging-port=9222 <url>` (skill `chromium`) and point a separate server at it with `--browserUrl http://127.0.0.1:9222`.
 - Large outputs: pass `filePath`, then Read or `rg` the file; filter JSON with `jaq` or `bun -e`. No node, npx or bunx.
 
@@ -56,7 +56,7 @@ You can send multiple tool calls in parallel, but maintain correct order: naviga
 
 ### Testing an extension
 
-> Extension tools (`install_extension`, `list_extensions`, ...) need `--categoryExtensions`, already set in the `[[hub.mcp]] chrome-devtools` entry of `infra/agents/toolchain.toml`. If `hub_tools` (server `chrome-devtools`) does not list `install_extension`, run `just agents-sync` and restart the relay.
+> Extension tools (`install_extension`, `list_extensions`, ...) need `--categoryExtensions`, already set in the `[[hub.mcp]] chrome-devtools` entry of `tools/agents/toolchain.toml`. If `hub_tools` (server `chrome-devtools`) does not list `install_extension`, run `just agents-sync` and restart the relay.
 
 1. **Install**: Use `install_extension` with the path to the unpacked extension.
 2. **Identify**: Get the extension ID from the response or by calling `list_extensions`.

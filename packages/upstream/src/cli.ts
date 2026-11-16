@@ -57,7 +57,7 @@ import {
   type StackConfig,
 } from "./stack.ts";
 
-const USAGE = `ay upstream <command> [stack] [options]   (stacks: infra/upstream/stacks.toml)
+const USAGE = `ay upstream <command> [stack] [options]   (stacks: tools/upstream/stacks.toml)
 
   status [stack...] [--json] [--markdown] [--no-fetch]  state of the stacks, patches, statuses, reviews in progress
   sync <stack[,stack]|all> [--push] [--no-fetch]        replays the stack on upstream, drops merged patches,
@@ -68,7 +68,7 @@ const USAGE = `ay upstream <command> [stack] [options]   (stacks: infra/upstream
                                                         --lint runs the fork's upstream CI on it; --open opens the PR
   mark <stack> <patch> <status> [note] [--pr URL] [--owner NAME] [--trailer [--push]]
                                                         status: ${STATUSES.join(" | ")}; written to
-                                                        infra/upstream/status/<stack>.toml, or into the
+                                                        tools/upstream/status/<stack>.toml, or into the
                                                         commit message with --trailer (rewrites the stack)
   gc <stack> [--dry-run]                                deletes the up/* heads whose PR is merged or closed
   export <stack> <folder>                               .patch files + .patches (Electron format)

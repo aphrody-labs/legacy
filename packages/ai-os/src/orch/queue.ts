@@ -1,4 +1,4 @@
-// Agent queue of infra/agents/runner.ts (execution layer of labs-1b, doc docs/agents/AGENT-FIRST.md), v1 format
+// Agent queue of tools/agents/runner.ts (execution layer of labs-1b, doc docs/agents/AGENT-FIRST.md), v1 format
 // produced and read as is: <host src>/var/agents/queue/{tmp,new,claimed,done,failed}/<id>.json,
 // results results/<id>/result.json, state state/{health.json,heartbeat-<role>,cooldown-<provider>}.
 // Atomic drop: write into tmp/ then rename into new/. Remote: one ssh session per operation.

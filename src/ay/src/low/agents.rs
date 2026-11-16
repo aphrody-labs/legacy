@@ -2,7 +2,7 @@
 //! from `packages/ai-os`, as `just orch` does. `ay agents run <workflow.json>`, `ay agents plan
 //! "<goal>"`, `ay agents lifecycle --task ...`; see packages/ai-os/docs/ORCHESTRATOR.md.
 //! `ay agents install|sync|check|list` drive the agent toolchain instead (skills, plugins, MCP for Claude Code,
-//! Codex, agy, Gemini CLI): `packages/machine/src/toolchain.ts`, manifest infra/agents/toolchain.toml.
+//! Codex, agy, Gemini CLI): `packages/machine/src/toolchain.ts`, manifest tools/agents/toolchain.toml.
 
 use std::process::Command;
 

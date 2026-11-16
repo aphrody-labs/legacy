@@ -37,15 +37,15 @@ jobs:
       - name: Personal-data gate (generic patterns; the discovery cache is absent in CI)
         run: bun scripts/hygiene.ts --rule personal-data
       - name: Test output holds no secret (env-kit suite)
-        run: bun scripts/test-leak-guard.ts packages/env-kit infra/agents
+        run: bun scripts/test-leak-guard.ts packages/env-kit tools/agents
       - name: Identity gate
         env:
           APHRODY_PII_TERMS: ${{ secrets.APHRODY_PII_TERMS }}
         run: "[ ! -f scripts/identity.ts ] || bun scripts/identity.ts check"
       - name: Agent runner parses and answers
-        run: AGENTS_HOME="$RUNNER_TEMP/agents" bun --no-env-file infra/agents/runner.ts status
+        run: AGENTS_HOME="$RUNNER_TEMP/agents" bun --no-env-file tools/agents/runner.ts status
       - name: Agent runner tests (no shell, prompts with shell metacharacters)
-        run: AGENTS_HOME="$RUNNER_TEMP/agents" bun --no-env-file test infra/agents
+        run: AGENTS_HOME="$RUNNER_TEMP/agents" bun --no-env-file test tools/agents
       - name: JS supply chain (bun workspace deps)
         run: bun packages/machine/src/js-deps-check.ts
       - name: Toolchain (Chromium's rustc, the rustup toolchain named by rust-toolchain.toml)

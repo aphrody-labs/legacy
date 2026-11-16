@@ -1,4 +1,4 @@
-// Stack engine: load infra/upstream/stacks.toml, read the series, replay it on upstream, mark statuses,
+// Stack engine: load tools/upstream/stacks.toml, read the series, replay it on upstream, mark statuses,
 // build ephemeral PR heads. Branch-model stacks are rebuilt with plumbing only (merge-tree + commit-tree):
 // the working tree of the checkout is never written, except a `git reset --keep` of the default branch
 // when it is the checked-out branch.
@@ -69,7 +69,7 @@ export function repoRoot(): string {
 
 export function loadStacks(
   root = repoRoot(),
-  file = join(root, "infra", "upstream", "stacks.toml"),
+  file = join(root, "tools", "upstream", "stacks.toml"),
 ): StackConfig[] {
   // stacks.toml, then every stacks.d/<group>.toml next to it (group = file name unless set).
   const read = (f: string, group?: string): StackConfig[] => {

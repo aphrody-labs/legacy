@@ -1,7 +1,7 @@
 # @aphrody/runtime-adapter
 
 <!-- catalog:begin unit -->
-> One app entrypoint for Cloudflare Workers, Vercel Functions and Bun.serve on the VPS: storage, KV, SQL, cron and env selected by infra/deploy.toml + env
+> One app entrypoint for Cloudflare Workers, Vercel Functions and Bun.serve on the VPS: storage, KV, SQL, cron and env selected by device/deploy.toml + env
 
 | Type | Path |
 | :-- | :-- |

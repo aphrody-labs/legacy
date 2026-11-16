@@ -14,7 +14,7 @@
       "apps/web/web",
       "apps/nt",
       "apps/nt/modules/web",
-      "infra/cloudflare/workers/*"
+      "device/cloudflare/workers/*"
     ],
     "catalog": {
       "@angular/build": "22.3.0-rc.0",

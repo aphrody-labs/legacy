@@ -3,10 +3,10 @@ import { join } from "node:path";
 import { cronToCalendar, render } from "../../../../scripts/deploy-target";
 
 const toml = Bun.TOML.parse(
-  await Bun.file(join(import.meta.dir, "../../../../infra/deploy.toml")).text(),
+  await Bun.file(join(import.meta.dir, "../../../../device/deploy.toml")).text(),
 ) as Record<string, any>;
 
-test("downloads renders for all three targets from infra/deploy.toml", () => {
+test("downloads renders for all three targets from device/deploy.toml", () => {
   const cf = render("downloads", "cf", toml)["cloudflare.config.ts"]!;
   expect(cf).toContain('bindings.r2({ name: "aphrody-dist" })');
   expect(cf).toContain('"downloads.aphrody.com"');

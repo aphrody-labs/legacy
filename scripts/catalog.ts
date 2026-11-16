@@ -9,7 +9,7 @@
 //                                          a GitHub profile README ranked live from the GitHub API (scripts/catalog.config.json)
 //
 // Types come from `types` of scripts/catalog.config.json: Rust workspace members of Cargo.toml (crate), Bun workspaces of
-// package.json (package), apps/* (app), infra/* (infra), the pins of src.lock.json (third-party) and .agents/skills/*
+// package.json (package), apps/* (app), build/*, device/*, prebuilts/* (infra), the pins of src.lock.json (third-party) and .agents/skills/*
 // (skill). The logo is docs/logo/aphrody.png (the avatar of the aphrody-labs organisation). Outputs:
 //   - README.md: the `header` and `types` blocks between `<!-- catalog:begin NAME -->` and `<!-- catalog:end -->`;
 //   - one README per crate, package and own app: a `unit` block from its manifest; any hand-written text around the
@@ -160,7 +160,8 @@ function apps(): Entry[] {
   });
 }
 
-const infra = (): Entry[] => dirs("infra").map((d) => ({ name: d, description: firstParagraph(`infra/${d}/README.md`), path: `infra/${d}` }));
+const INFRA_ROOTS = ["build", "device", "prebuilts"];
+const infra = (): Entry[] => INFRA_ROOTS.flatMap((top) => dirs(top).map((d) => ({ name: d, description: firstParagraph(`//README.md`), path: `/` })));
 
 function thirdParty(): Entry[] {
   const file = opt("lock");
@@ -240,7 +241,7 @@ const logoBlock = (from: string) => `<img alt="${projectName}" src="${relLink(fr
 function rootBlocks(data: Record<string, Entry[]>): { header: string; types: string } {
   const header = logoBlock("README.md");
   const rows = kinds.filter((k) => data[k.id]).map((k) => {
-    const where = k.id === "third-party" ? "third_party" : k.id === "skill" ? ".agents/skills" : k.id === "crate" ? "src" : k.id === "package" ? "packages" : k.id === "app" ? "apps" : "infra";
+    const where = k.id === "third-party" ? "third_party" : k.id === "skill" ? ".agents/skills" : k.id === "crate" ? "src" : k.id === "package" ? "packages" : k.id === "app" ? "apps" : INFRA_ROOTS.join("/`, `");
     return `| [${k.name}](docs/reference/catalog/${k.id}.md) | \`${where}/\` | ${k.description} |`;
   });
   const types = [`## ${t("catalog")}`, "", t("catalog_intro"), "", `| ${t("type")} | ${t("path")} | ${t("description")} |`, "| :-- | :-- | :-- |", ...rows].join("\n");

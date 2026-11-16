@@ -28,6 +28,24 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 [dependencies]
 tauri-plugin-log = "2.0.0"
 # alternatively with Git:
+
+<!-- catalog:begin unit -->
+> Configurable logging for your Tauri app.
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-plugin-log` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-plugin-log
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
 tauri-plugin-log = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
 

@@ -119,4 +119,4 @@ export function localStore(): LocalStoreInfo {
 }
 
 /** Repository files describing the vault (public data only: names, scopes, recipients). */
-export const infraDir = (): string => join(srcRoot(), "infra", "vault");
+export const infraDir = (): string => join(srcRoot(), "device", "vault");

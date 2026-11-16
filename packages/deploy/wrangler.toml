@@ -18,7 +18,7 @@ bucket_name = "aphrody-dist"
 [vars]
 ZONE = "aphrody.app"
 ACCESS_TEAM = "aphrody-labs.cloudflareaccess.com"
-# AUD tag of the Access application "aphrody-app-dashboard" (infra/cloudflare/cloudflare.toml).
+# AUD tag of the Access application "aphrody-app-dashboard" (device/cloudflare/cloudflare.toml).
 ACCESS_AUD = "bf80ec94abb4a869ceac0c0ff77ffa99de7ed36b1f4ed022afd863035a4cc67b"
 
 [observability]

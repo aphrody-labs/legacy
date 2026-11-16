@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Hosts (infra/vault/hosts.toml: public age recipients, ssh targets), scope policy
- * (infra/vault/policy.toml) and the local registry (<vault>/registry.json: kind and scope per
+ * Hosts (device/vault/hosts.toml: public age recipients, ssh targets), scope policy
+ * (device/vault/policy.toml) and the local registry (<vault>/registry.json: kind and scope per
  * secret, names only). `scopeOf()` is the single place that decides what may leave the PC.
  */
 

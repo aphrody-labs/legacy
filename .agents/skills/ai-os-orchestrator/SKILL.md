@@ -5,7 +5,7 @@ description: "Run multi-agent work across the fleet without a human: task graphs
 
 # ai-os orchestrator
 
-Reference: `packages/ai-os/docs/ORCHESTRATOR.md`. Code: `packages/ai-os/src/orch/`. Host execution (tmux sessions, queue) belongs to `infra/agents/runner.ts`: do not re-implement it, enqueue into it.
+Reference: `packages/ai-os/docs/ORCHESTRATOR.md`. Code: `packages/ai-os/src/orch/`. Host execution (tmux sessions, queue) belongs to `tools/agents/runner.ts`: do not re-implement it, enqueue into it.
 
 ## Commands (JSON on stdout)
 
@@ -19,7 +19,7 @@ Reference: `packages/ai-os/docs/ORCHESTRATOR.md`. Code: `packages/ai-os/src/orch
 
 1. Never write a model or provider chain into a workflow: declare `needs` (`edit`, `context`, `tools`, `prefer`, `only`, `ignore`, `models` as preferences) and let `select.ts` compute `providers` from the probe, `llm_models`, models.dev and observed health.
 2. Steps that edit files need `needs.edit` and go through the runner queue with `check` and `commit.paths`; read-only steps may run inline.
-3. Compilation, containers and heavy agent steps run on fr1 (`nice -n 19`, `-j 4`; host = the one carrying role `build` in `infra/agents/fleet.toml`, never a literal); prd keeps production backends only.
+3. Compilation, containers and heavy agent steps run on fr1 (`nice -n 19`, `-j 4`; host = the one carrying role `build` in `tools/agents/fleet.toml`, never a literal); prd keeps production backends only.
 4. Publication, messages and spending are `effect: "external"`: held in `var/agents/outbox/` unless `.agents/owner-rules.json` (owner-written) has a matching rule.
 5. Judges' verdicts go to `docs/reviews/` (`out` field); verify every defect before fixing.
 6. Budgets are mandatory for long runs: `limits.budgetUsd`, `tokenBudget`, `maxSteps`, `deadlineMs`; the run stops after `maxConsecutiveFailures`.

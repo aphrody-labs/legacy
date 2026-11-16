@@ -267,7 +267,7 @@ for (const target of activeTargets) {
 // 5. Shells: env.toml -> env.{sh,ps1,nu,fish}, ay completions, manifest configs, lock, HKCU (shells.ts).
 results.push(...shells({ check }));
 
-// 5b. Outillage agent : infra/agents/toolchain.toml (marketplaces, plugins, MCP, skills epinglees), voir toolchain.ts.
+// 5b. Outillage agent : tools/agents/toolchain.toml (marketplaces, plugins, MCP, skills epinglees), voir toolchain.ts.
 results.push(...(await toolchain({ check })));
 
 // 6. Controles en lecture seule : elevation (ce script ne modifie ni l'UAC ni sudo).

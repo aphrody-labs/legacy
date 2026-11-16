@@ -28,6 +28,24 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 [dependencies]
 tauri-plugin-autostart = "2.0.0"
 # alternatively with Git:
+
+<!-- catalog:begin unit -->
+> Automatically launch your application at startup.
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-plugin-autostart` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-plugin-autostart
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
 tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
 

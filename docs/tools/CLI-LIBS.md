@@ -1,6 +1,6 @@
 # CLI tools: which one for what
 
-The toolchain is declared in [`infra/up/tools.toml`](../../infra/up/tools.toml): `ay up --list` shows every tool with its pinned version and `ay up` installs them. Versions are never written here; read them from the manifest or `gh api repos/<repo>/releases/latest`. A skill `cli-<tool>` is generated from each binary's manual (`just cli-skills`).
+The toolchain is declared in [`prebuilts/up/tools.toml`](../../prebuilts/up/tools.toml): `ay up --list` shows every tool with its pinned version and `ay up` installs them. Versions are never written here; read them from the manifest or `gh api repos/<repo>/releases/latest`. A skill `cli-<tool>` is generated from each binary's manual (`just cli-skills`).
 
 Rule: Bun replaces every JavaScript tool it covers (node, npm, npx, pnpm, tsc, prettier, esbuild, swc). The tools below replace the classic Unix ones.
 

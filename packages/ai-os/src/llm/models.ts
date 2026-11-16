@@ -115,7 +115,7 @@ export function providers(): Provider[] {
       })),
     chat: { base: () => ollama, headers: () => ({}) },
   });
-  // Distributed inference fabric (src/fabric, infra/ai/fabric.toml): llama-server coordinator + WireGuard rpc-server.
+  // Distributed inference fabric (src/fabric, tools/ai/fabric.toml): llama-server coordinator + WireGuard rpc-server.
   // Gone from the list as soon as the coordinator stops answering: selection switches to the other providers.
   out.push({
     ...compat(

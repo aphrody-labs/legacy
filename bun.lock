@@ -46,7 +46,7 @@
         "typescript": "catalog:",
       },
     },
-    "infra/cloudflare/workers/github-app": {
+    "device/cloudflare/workers/github-app": {
       "name": "@aphrody/github-app",
       "devDependencies": {
         "@cloudflare/vite-plugin": "catalog:",
@@ -705,7 +705,7 @@
 
     "@aphrody/ghidra": ["@aphrody/ghidra@workspace:packages/re/ghidra"],
 
-    "@aphrody/github-app": ["@aphrody/github-app@workspace:infra/cloudflare/workers/github-app"],
+    "@aphrody/github-app": ["@aphrody/github-app@workspace:device/cloudflare/workers/github-app"],
 
     "@aphrody/gnu": ["@aphrody/gnu@workspace:packages/gnu"],
 

@@ -1,4 +1,4 @@
-// Status registry: infra/upstream/status/<stack>.toml, keyed by patch slug. It records the upstream status
+// Status registry: tools/upstream/status/<stack>.toml, keyed by patch slug. It records the upstream status
 // of patches whose commit carries no trailer (several agents push to the fork's default branch at once;
 // rewriting its history for a status change would make every one of them rebase). A value here wins
 // over the commit trailer.
@@ -17,7 +17,7 @@ export type Entry = {
 };
 
 export function registryFile(root: string, s: StackConfig): string {
-  return join(root, "infra", "upstream", "status", `${s.name}.toml`);
+  return join(root, "tools", "upstream", "status", `${s.name}.toml`);
 }
 
 export function loadRegistry(

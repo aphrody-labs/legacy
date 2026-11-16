@@ -31,4 +31,4 @@ Proof run, measured numbers, 1:1 / stubbed / unsupported tables and open items: 
 
 ## MCP (relay hub, server `electron`)
 
-`hub_call` with `electron__electron_analyze` (input, node_modules), `electron__electron_migrate` (to, input, out, no_sidecar_app), `electron__electron_optimize` (project, opt_level, build), `electron__electron_bench` (electron, migrated, runs, ipc_expr_electron, ready). Server: `packages/ai-os/src/relay/electron-mcp.ts`, declared by `[[hub.mcp]] electron` in `infra/agents/toolchain.toml`; it runs `ay electron ...` (`AY_BIN` overrides the binary).
+`hub_call` with `electron__electron_analyze` (input, node_modules), `electron__electron_migrate` (to, input, out, no_sidecar_app), `electron__electron_optimize` (project, opt_level, build), `electron__electron_bench` (electron, migrated, runs, ipc_expr_electron, ready). Server: `packages/ai-os/src/relay/electron-mcp.ts`, declared by `[[hub.mcp]] electron` in `tools/agents/toolchain.toml`; it runs `ay electron ...` (`AY_BIN` overrides the binary).

@@ -1,4 +1,4 @@
-// headersHelper of the HTTP MCP servers of infra/agents/toolchain.toml: reads each secret from the env-kit vault
+// headersHelper of the HTTP MCP servers of tools/agents/toolchain.toml: reads each secret from the env-kit vault
 // and prints the JSON headers object on stdout, which Claude Code reads alone (never written to settings or argv).
 // Usage (set by toolchain.ts): bun packages/machine/src/mcp-headers.ts <Header>=<SECRET_NAME> ...
 import { secretGet } from "@aphrody/env-kit/vault/sync";

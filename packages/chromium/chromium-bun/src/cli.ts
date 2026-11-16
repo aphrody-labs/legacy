@@ -128,7 +128,7 @@ async function main(): Promise<void> {
           "chromium-bun — Bun v1.4.4 + Chromium Browser, Crawler & 3-VPS Search Engine",
           "",
           "Commands:",
-          "  search <query>                                    Query the RRF search cluster (nodes from infra/deploy.toml)",
+          "  search <query>                                    Query the RRF search cluster (nodes from device/deploy.toml)",
           "  cluster [--probe]                                 Show 3-VPS WireGuard/MASQUE cluster topology & health",
           "  crawl <url> [--chromium] [--allow-private]        Crawl and index a page on the production node",
           "  audit-url <url> [--lighthouse] [--agent-browser]  Run real headless Chromium Web Vitals & QA audit",

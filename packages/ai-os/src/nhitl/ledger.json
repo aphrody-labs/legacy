@@ -105,7 +105,7 @@
       "severity": "high",
       "status": "inevitable",
       "excerpt": "clé WireGuard révoquée encore active sur le PC",
-      "fix": "bash infra/fleet/wg/rotate-wg-win.sh",
+      "fix": "bash device/fleet/wg/rotate-wg-win.sh",
       "reason": "invite UAC (service Windows), hors de portée d'un agent"
     },
     {
@@ -140,7 +140,7 @@
       "severity": "high",
       "status": "fixed",
       "excerpt": "LiteLLM de prd sans fournisseur valide (Cloudflare 401, vLLM et mistral.rs arrêtés)",
-      "fix": "infra/ai/litellm-serve.ts + drop-in 10-creds.conf : identifiants systemd-creds, routes vllm/mistralrs retirées, Vertex litellm-prd@aphrody (aiplatform.user), Anthropic avec anthropic-workspace-id et plafond 2 USD/j (5 USD/j global)",
+      "fix": "tools/ai/litellm-serve.ts + drop-in 10-creds.conf : identifiants systemd-creds, routes vllm/mistralrs retirées, Vertex litellm-prd@aphrody (aiplatform.user), Anthropic avec anthropic-workspace-id et plafond 2 USD/j (5 USD/j global)",
       "reason": "2026-11-13 : appels réels OK pour anthropic et google-vertex-aphrody"
     },
     {
@@ -175,7 +175,7 @@
       "severity": "high",
       "status": "fixed",
       "excerpt": "jeton du relais commons passé en argv (--token, visible par ps)",
-      "fix": "LoadCredentialEncrypted=commons-relay-token, jeton lu en Python depuis $CREDENTIALS_DIRECTORY (infra/fleet/prd/systemd/commons-relay.service) ; fichier en clair supprimé ; clients PC et fr2 mis à jour et repointés sur <prd-mesh-ip>:8766",
+      "fix": "LoadCredentialEncrypted=commons-relay-token, jeton lu en Python depuis $CREDENTIALS_DIRECTORY (device/fleet/prd/systemd/commons-relay.service) ; fichier en clair supprimé ; clients PC et fr2 mis à jour et repointés sur <prd-mesh-ip>:8766",
       "reason": "2026-11-13 : jeton tourné ; nouveau accepté, ancien refusé (401) ; plus de --token dans ps"
     },
     {
@@ -184,7 +184,7 @@
       "severity": "medium",
       "status": "open",
       "excerpt": "un runtime local déclaré sans `serve` garde sa route LiteLLM (vllm/*, mistralrs/* sur prd)",
-      "fix": "ignorer local_declared quand serve est vide ; d'ici là [drop] de infra/ai/litellm-overlay.toml"
+      "fix": "ignorer local_declared quand serve est vide ; d'ici là [drop] de tools/ai/litellm-overlay.toml"
     },
     {
       "location": "src/ay agents|secret|auth",
@@ -203,7 +203,7 @@
       "fix": "porter les étapes vers judge.yml (runner GitHub hébergé) ou un runner prd"
     },
     {
-      "location": "infra/agents deps-update",
+      "location": "tools/agents deps-update",
       "category": "queue_failed",
       "severity": "medium",
       "status": "open",
@@ -251,7 +251,7 @@
       "severity": "medium",
       "status": "inevitable",
       "excerpt": "Second hôte Windows à GPU NVIDIA demandé pour le tissu d inférence, absent de deploy.toml, fleet.toml, docs/infra, ~/.ssh/config et des pairs WireGuard",
-      "fix": "nœud gpu2 prêt dans infra/ai/fabric.toml (reach vide), admis dès que son port 50052 répond ; étapes dans docs/ai/DISTRIBUTED-INFERENCE.md §4",
+      "fix": "nœud gpu2 prêt dans tools/ai/fabric.toml (reach vide), admis dès que son port 50052 répond ; étapes dans docs/ai/DISTRIBUTED-INFERENCE.md §4",
       "reason": "2026-11-13 : hôte non déclaré par le propriétaire"
     },
     {
@@ -269,7 +269,7 @@
       "severity": "low",
       "status": "fixed",
       "excerpt": "runner PC : psmux session agents (health, coder, reviewer, designer, growth), tâches planifiées Aphrody\\AgentsHealth (5 min) et AgentsLogon (ouverture de session), file vide (done 12, failed 3), CLI claude/codex/opencode/agy OK, pi absent",
-      "fix": "infra/agents/install-pc.sh",
+      "fix": "tools/agents/install-pc.sh",
       "reason": "2026-11-13 04:50 : relevé merge+sync"
     },
     {
@@ -278,7 +278,7 @@
       "severity": "low",
       "status": "fixed",
       "excerpt": "runner prd : aphrody-agents.service enabled+active (systemd --user, linger agent), timers pull/health actifs, tmux agents 8 fenêtres recréées après le reboot de 03:41 UTC, file vide (done 3, failed 22)",
-      "fix": "infra/agents/install.sh",
+      "fix": "tools/agents/install.sh",
       "reason": "2026-11-13 04:50 : survie au reboot constatée (uptime 0, unités remontées seules)"
     },
     {
@@ -287,7 +287,7 @@
       "severity": "low",
       "status": "fixed",
       "excerpt": "runner fr1 (rôle chromium seul, tâches lourdes) : aphrody-agents enabled+active, linger agent, tmux agents 2 fenêtres",
-      "fix": "infra/agents/fleet.toml [hosts.fr1]",
+      "fix": "tools/agents/fleet.toml [hosts.fr1]",
       "reason": "2026-11-13 04:50 : relevé merge+sync"
     },
     {
@@ -296,11 +296,11 @@
       "severity": "low",
       "status": "fixed",
       "excerpt": "runner fr2 (linter, sre) : aphrody-agents enabled+active, linger agent, tmux agents 3 fenêtres",
-      "fix": "infra/agents/fleet.toml [hosts.fr2]",
+      "fix": "tools/agents/fleet.toml [hosts.fr2]",
       "reason": "2026-11-13 04:50 : relevé merge+sync"
     },
     {
-      "location": "prd:infra/agents/runner.ts ciWatch",
+      "location": "prd:tools/agents/runner.ts ciWatch",
       "category": "queue_failed",
       "severity": "high",
       "status": "open",

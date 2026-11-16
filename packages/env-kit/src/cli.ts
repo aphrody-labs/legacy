@@ -513,7 +513,7 @@ Usage:
   env-kit auth mint cloudflare --perm "<group>,..." [--ttl s] -- <cmd>   Scoped, expiring token for one command
   env-kit auth mint gcp --sa <email> [--ttl s] -- <cmd>                  Keyless service-account token (impersonation)
   env-kit auth github-app [create|install|status|hook|token|user|user-token|retire|crates-trust]  GitHub App "aphrody-labs"
-  env-kit auth gh-secrets [--dry-run]  gh secret set from the store (infra/deploy.toml [auth.github])
+  env-kit auth gh-secrets [--dry-run]  gh secret set from the store (device/deploy.toml [auth.github])
   env-kit auth tunnels [--dry-run]     cloudflared tokens from the Cloudflare API into systemd-creds
   env-kit auth rotate cloudflare       Roll CLOUDFLARE_API_TOKEN through the API; store, .env, user env, then gh-secrets
 `);

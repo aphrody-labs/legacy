@@ -57,7 +57,7 @@ Claims the code does not back:
 - `ROADMAP.md:6` states a license, while `AGENTS.md` §4 says none is chosen.
 - `ROADMAP.md:19` item 6 lists A2A, ACP and MCP over HTTP as future work; the relay already has them. `LEGACY-INVENTORY.md:35` places A2A/ACP in the gateway "(roadmap)".
 
-Backed: `src/core/{cabi,agent,council,secrets,context}.ts`, `src/{llm,gateway,orch,fabric,brain,research,review,nhitl}`, `src/relay/hook.ts`, `infra/fleet/prd/systemd/aphrody-relay.service`.
+Backed: `src/core/{cabi,agent,council,secrets,context}.ts`, `src/{llm,gateway,orch,fabric,brain,research,review,nhitl}`, `src/relay/hook.ts`, `device/fleet/prd/systemd/aphrody-relay.service`.
 
 ## 4. Current reality
 - Protocols written by hand: MCP (2025-11-25 and 2026-07-28), A2A 1.0.1, ACP v1, OAuth 2.1, JSON-RPC over HTTP, WS, TCP and TLS (`RELAY.md:5-10`). No `@modelcontextprotocol/*` or `rmcp` dependency.

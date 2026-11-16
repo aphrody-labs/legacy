@@ -323,15 +323,12 @@ fn scan_repo_tree(dir: &Path, depth: usize, max_depth: usize, repos: &mut Vec<Pa
 
 pub fn discover_repos(root: &Path) -> Vec<PathBuf> {
     let mut repos = Vec::new();
-    let canonical_groups = ["apps", "packages", "src", "bench", "test", "infra", "third_party"];
+    let canonical_groups = ["apps", "packages", "src", "bench", "test", "build", "device", "prebuilts", "third_party"];
     for group in canonical_groups {
         let gp = root.join(group);
         if gp.is_dir() && !is_reparse_point(&gp) {
             scan_repo_tree(&gp, 1, 3, &mut repos);
         }
-    }
-    if root.join("infra").join(".git").exists() {
-        repos.push(root.join("infra"));
     }
     repos.sort();
     repos.dedup();

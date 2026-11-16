@@ -19,7 +19,7 @@ One owner per function (map: `docs/gaming/OWNERSHIP.md`):
   steam-runtime-tools, steam-devices, GameNetworkingSockets, umu-launcher, MangoHud, gamemode.
   One Wine, one Proton, one DXVK: variants are remotes and fork branches
   (`ay gaming forks` lists them).
-- Image infra: `infra/gaming/` (downloads manifest of the proprietary pieces, image sources).
+- Image infra: `device/gaming/` (downloads manifest of the proprietary pieces, image sources).
 
 ## Procedure
 
@@ -36,7 +36,7 @@ One owner per function (map: `docs/gaming/OWNERSHIP.md`):
    - `ay gaming run <exe> --prefix /srv/pfx/<app> --tool-path /srv/steam/proton-exp [--app <id>] [-- args]`:
      umu-run when installed, else `<proton>/proton waitforexitandrun` with `ay steam env`; `--dry-run`.
      On Windows `ay gaming run` starts the exe natively.
-6. Upstream updates of the forks: `ay upstream status` (stacks in `infra/upstream/stacks.toml`).
+6. Upstream updates of the forks: `ay upstream status` (stacks in `tools/upstream/stacks.toml`).
 
 ## Rules
 
@@ -44,7 +44,7 @@ One owner per function (map: `docs/gaming/OWNERSHIP.md`):
   downloaded at run time from the official source, never committed. The repo holds wrappers, the
   download manifest, docs and skills.
 - Credential files (`config.vdf`, `loginusers.vdf`, `local.vdf`, `ssfn*`) are refused by `ay steam vdf`.
-- Never build on the workstation or on prd: CI, or fr1 with `nice -n 19` (`infra/agents/fleet.toml`: heavy roles run on fr1 only).
+- Never build on the workstation or on prd: CI, or fr1 with `nice -n 19` (`tools/agents/fleet.toml`: heavy roles run on fr1 only).
 
 ## Sources
 

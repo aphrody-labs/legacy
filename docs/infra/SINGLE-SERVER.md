@@ -13,4 +13,4 @@
 | prd mount | Not done: prd has no NFS client (`nfs-utils` absent) and a package install on that host is the risky partial-upgrade case noted in `CLUSTER.md`; left for the owner window with `prd.window.sh` |
 | fr1 layout | monorepo `/srv/src` moved to `/srv/aphrody` (+ symlink), `rosegriffon` checkout to `/srv/repos/aphrody-labs/rosegriffon`, 6 unit files repointed, `ay-index-worker` restarted and runs `--root /srv/aphrody`; 3 duplicates (`/srv/ghidra`, two `ay` clones) kept (modified within 7 days); checkouts with dirty work (`/srv/scratch/forks/*`) left in place |
 
-Not recovered by design (owner order, no long copies): the remaining part of `/srv/artifacts/assets`, the GitHub Actions runners (disabled, their directories were on the pool; re-registration needed), the NativeLink CAS content (a cache), `/opt/android-sdk` (reinstalled by `infra/android`).
+Not recovered by design (owner order, no long copies): the remaining part of `/srv/artifacts/assets`, the GitHub Actions runners (disabled, their directories were on the pool; re-registration needed), the NativeLink CAS content (a cache), `/opt/android-sdk` (reinstalled by `build/android`).

@@ -106,10 +106,10 @@ S:	Supported
 W:	https://about.aphrody.com
 T:	git https://github.com/aphrody-dev/infra.git
 T:	git https://github.com/aphrody-dev/mesh-vn.git
-F:	infra/deploy.toml
+F:	device/deploy.toml
 F:	infra/
 F:	packages/ffi-bridge/
-F:	infra/mesh-vn/
+F:	device/mesh-vn/
 
 GRAPHICS, WAYLAND COMPOSITOR & GAMESCOPE WEBGPU
 M:	Aphrody Engineering <contact@aphrody.com>
@@ -234,7 +234,7 @@ LAYER L4 AGENT
 M:	agent:claude skill:claude-api <contact@aphrody.com>
 S:	Supported
 F:	src/agent/context/
-F:	infra/fleet/prd/systemd/aphrody-relay.service
+F:	device/fleet/prd/systemd/aphrody-relay.service
 F:	packages/ai-os/
 
 LAYER RULES, CHECKDEPS & TASK GRAPH
@@ -252,7 +252,7 @@ L:	contact@aphrody.com
 S:	Supported
 T:	git https://github.com/aphrody-labs/bun.git
 F:	docs/upstream/
-F:	infra/upstream/
+F:	tools/upstream/
 F:	packages/upstream/
 
 THE REST

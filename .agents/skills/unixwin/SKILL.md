@@ -12,7 +12,7 @@ Map of the org (`docs/native/UNIXWIN.md` has one row per repo, with target, dedu
 | Bash 5.3 engine (Rust) | `src/rubash` | `ay sh -c 'echo hi'`, `ay sh script.sh`; no bash is spawned |
 | The `niu` shell, `niu skill install`, `niu doctor` | `src/niubash` (+ `src/ruline` line editor) | `cargo build -p niubash` (fleet), `niu --help` |
 | Unix applets in one multicall | `src/winux/{core,regex,cmds}` + uutils | `ay applet --list`, `ay applet <name> args` |
-| wpm packages | `infra/up/tools.d/wpm.toml` (generated), `infra/up/tools.toml` | `ay up --list`, `ay up <tool>`; regenerate with `bun scripts/wpm-import.ts --write` |
+| wpm packages | `prebuilts/up/tools.d/wpm.toml` (generated), `prebuilts/up/tools.toml` | `ay up --list`, `ay up <tool>`; regenerate with `bun scripts/wpm-import.ts --write` |
 | oh-my-niu plugins, validator, packager | `packages/omniu` | `bun packages/omniu/src/cli.ts validate | package | new-pack | plugins` |
 | `ay` as a plugin of Bun and niu | `ay plugin manifest`, `packages/omniu/plugins/ay` | Bun: `import { run, sh } from "ay"` after the preload; niu: `NIU_PLUGINS=(ay)` |
 | Shell benchmark | `bench/shell` | `bun bench/shell/cli.ts run --shell "<cmd>" --name N` |

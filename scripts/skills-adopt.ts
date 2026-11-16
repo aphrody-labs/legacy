@@ -67,7 +67,7 @@ const GEMINI_NOTES = `## Local setup (aphrody)
 const CHROME_NOTES = `## Local setup (aphrody)
 
 - Chrome DevTools MCP sits behind the relay, not in the client's tool list: \`hub_tools\` (server \`chrome-devtools\`) to list, \`hub_call\` with \`name: "chrome-devtools__<tool>"\` and the tool's arguments (e.g. \`chrome-devtools__take_snapshot\` with \`{ "pageId": 1 }\`). Wherever this text says "call \`<tool>\`", use that form.
-- The server is the \`[[hub.mcp]] chrome-devtools\` entry of \`infra/agents/toolchain.toml\`: headless, isolated profile, \`--memoryDebugging --categoryExtensions --categoryNetworkMocks\`, Google usage statistics off. Installed with \`bun add -g chrome-devtools-mcp\` (1.13.0); the shell CLI \`chrome-devtools\` ships with it.
+- The server is the \`[[hub.mcp]] chrome-devtools\` entry of \`tools/agents/toolchain.toml\`: headless, isolated profile, \`--memoryDebugging --categoryExtensions --categoryNetworkMocks\`, Google usage statistics off. Installed with \`bun add -g chrome-devtools-mcp\` (1.13.0); the shell CLI \`chrome-devtools\` ships with it.
 - The owner's logged-in Chrome is not reachable from it: use claude-in-chrome or agent-browser (skills \`agent-browser\`, \`browser-engines\`). To debug a Chromium build of this repo, start \`headless_shell --remote-debugging-port=9222 <url>\` (skill \`chromium\`) and point a separate server at it with \`--browserUrl http://127.0.0.1:9222\`.
 - Large outputs: pass \`filePath\`, then Read or \`rg\` the file; filter JSON with \`jaq\` or \`bun -e\`. No node, npx or bunx.`;
 
@@ -324,7 +324,7 @@ If that fails (401, 403, any credential error), substitute \`gcloud auth applica
       between(
         "> **Before proceeding**",
         "1. **Install**",
-        "> Extension tools (`install_extension`, `list_extensions`, ...) need `--categoryExtensions`, already set in the `[[hub.mcp]] chrome-devtools` entry of `infra/agents/toolchain.toml`. If `hub_tools` (server `chrome-devtools`) does not list `install_extension`, run `just agents-sync` and restart the relay.\n\n",
+        "> Extension tools (`install_extension`, `list_extensions`, ...) need `--categoryExtensions`, already set in the `[[hub.mcp]] chrome-devtools` entry of `tools/agents/toolchain.toml`. If `hub_tools` (server `chrome-devtools`) does not list `install_extension`, run `just agents-sync` and restart the relay.\n\n",
       ),
     ],
   },
@@ -401,7 +401,7 @@ If that fails (401, 403, any credential error), substitute \`gcloud auth applica
     description: "Fix Chrome DevTools MCP connection and target failures: list_pages, new_page or navigate_page errors, DevToolsActivePort, server will not start.",
     notes: CHROME_NOTES,
     skill: [
-      rep("`.mcp.json`, `.vscode/mcp.json`, `gemini-extension.json`", "`infra/agents/toolchain.toml` (`[[hub.mcp]] chrome-devtools`, the relay's copy is `%LOCALAPPDATA%\\aphrody\\relay\\hub.json`), `.mcp.json`, `.vscode/mcp.json`, `gemini-extension.json`"),
+      rep("`.mcp.json`, `.vscode/mcp.json`, `gemini-extension.json`", "`tools/agents/toolchain.toml` (`[[hub.mcp]] chrome-devtools`, the relay's copy is `%LOCALAPPDATA%\\aphrody\\relay\\hub.json`), `.mcp.json`, `.vscode/mcp.json`, `gemini-extension.json`"),
       rep("Run `npx chrome-devtools-mcp@latest --help` to verify the installation and Node.js environment.", "Run `chrome-devtools-mcp --help` to verify the installation (`bun add -g chrome-devtools-mcp`; no node or npx)."),
       rep(
         "run `NODE_DEBUG=* npx chrome-devtools-mcp@latest --logFile=/tmp/cdm-test.log` to capture verbose logs.",

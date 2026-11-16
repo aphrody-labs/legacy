@@ -67,9 +67,19 @@
           "path": "src/ast_jsc"
         },
         {
+          "name": "aphrody-audio",
+          "description": "Audio building blocks: FFT spectrum, mic bridge, Polaris indexer, Voicebox encoder, local voice loop, Jan agent tools, Rust audio catalog",
+          "path": "src/audio"
+        },
+        {
           "name": "aphrody",
           "description": "ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build)",
           "path": "src/ay"
+        },
+        {
+          "name": "aphrody-backend",
+          "description": "Aphrody forensics and backend logic (Rust).",
+          "path": "src/backend"
         },
         {
           "name": "bun_base64",
@@ -160,6 +170,11 @@
           "name": "bun_collections",
           "description": "",
           "path": "src/collections"
+        },
+        {
+          "name": "aphrody-config",
+          "description": "Codex-compatible config.toml model for aphrody: ConfigToml, model providers (managed llama-server, Ollama, LM Studio, vLLM, Antigravity, OpenAI, Anthropic, ChatGPT), layered merge (built-ins < Codex-compat < user < project < profile < -c overrides < CLI flags), dotted -c override parsing, and the No-Human-In-The-Loop policy defaults. Pure, no filesystem access in the core, wasm32-safe.",
+          "path": "src/config"
         },
         {
           "name": "aphrody-core",
@@ -335,6 +350,11 @@
           "name": "bun_glob",
           "description": "",
           "path": "src/glob"
+        },
+        {
+          "name": "aphrody-gpu-backend",
+          "description": "Shared wgpu instance, adapter, device and surface-configuration boundary for Aphrody and IECODE renderers, plus the process-wide GPU hub (wgpu + CUDA).",
+          "path": "src/gpu-backend"
         },
         {
           "name": "bun_hash",
@@ -637,9 +657,29 @@
           "path": "src/net"
         },
         {
+          "name": "niubash",
+          "description": "AI-native bash-compatible shell for Windows, built on rubash + winuxcmd",
+          "path": "src/niubash"
+        },
+        {
+          "name": "niubash-runtime",
+          "description": "Runtime crate for niubash: rubash-backed shell REPL on Windows",
+          "path": "src/niubash/runtime"
+        },
+        {
           "name": "bun_node_path",
           "description": "",
           "path": "src/node_path"
+        },
+        {
+          "name": "aphrody-ocr",
+          "description": "Image-to-text pipeline for aphrody: drives a local vision-language model over one image or a whole directory, parses its DocTags output into markdown, and reports which pages carry no text at all.",
+          "path": "src/ocr"
+        },
+        {
+          "name": "aphrody-ocr-core",
+          "description": "Portable versioned OCR result contract, provenance and quality states for aphrody.",
+          "path": "src/ocr-core"
         },
         {
           "name": "bun_opaque",
@@ -717,6 +757,11 @@
           "path": "src/ptr"
         },
         {
+          "name": "aphrody-rag-core",
+          "description": "Pure, wasm32-safe core of the aphrody RAG layer: source-aware chunkers (Rust/JS-TS/Markdown/structural/prose), reciprocal-rank-fusion + MMR + vector helpers, and a bit-for-bit port of shenron's retrieval eval harness.",
+          "path": "src/rag-core"
+        },
+        {
           "name": "aphrody-re",
           "description": "Unified Aphrody reverse engineering core: PE/ELF/Mach-O triage, byte-exact PE64 forge/COFF, .pdata/minidump/ASAR/Electron/Go/Android/SteamStub inspection, Ghidra P-Code/Pseudo-C & ghidra-decompiler, MinGW-REA, Lua 5.2, CRIWARE CPK/CRILAYLA, DBXV2 formats, AOB/live memory, YARA-X, Magika",
           "path": "src/re"
@@ -750,6 +795,21 @@
           "name": "aphrody-rt",
           "description": "Runtime manager behind `ay rt`: Python engines and versions on uv (CPython, free-threaded, PyPy, GraalPy, Pyodide, RustPython), Node, Deno and Bun versions, runtime and engine combinations, package managers, PyTorch backends",
           "path": "src/rt"
+        },
+        {
+          "name": "rubash",
+          "description": "A Rust implementation of the GNU Bash shell",
+          "path": "src/rubash"
+        },
+        {
+          "name": "reedline",
+          "description": "A GNU readline-compatible line editor for niubash",
+          "path": "src/ruline"
+        },
+        {
+          "name": "readline-abi",
+          "description": "Clean-room GNU readline 8.x C ABI adapter for ruline",
+          "path": "src/ruline/readline-abi"
         },
         {
           "name": "bun_runtime",
@@ -877,9 +937,244 @@
           "path": "src/taffy"
         },
         {
+          "name": "aphrody-tao",
+          "description": "Cross-platform window manager library.",
+          "path": "src/tao"
+        },
+        {
+          "name": "aphrody-tao-macros",
+          "description": "Proc macros for tao",
+          "path": "src/tao-macros"
+        },
+        {
           "name": "bun_tar",
           "description": "",
           "path": "src/tar"
+        },
+        {
+          "name": "aphrody-tauri",
+          "description": "Make tiny, secure apps for all desktop platforms with Tauri",
+          "path": "src/tauri"
+        },
+        {
+          "name": "aphrody-tauri-build",
+          "description": "build time code to pair with https://crates.io/crates/tauri",
+          "path": "src/tauri-build"
+        },
+        {
+          "name": "aphrody-tauri-bundler",
+          "description": "Wrap rust executables in OS-specific app bundles for Tauri",
+          "path": "src/tauri-bundler"
+        },
+        {
+          "name": "aphrody-tauri-cli",
+          "description": "Command line interface for building Tauri apps",
+          "path": "src/tauri-cli"
+        },
+        {
+          "name": "aphrody-tauri-cli-node",
+          "description": "",
+          "path": "src/tauri-cli-node"
+        },
+        {
+          "name": "aphrody-tauri-codegen",
+          "description": "code generation meant to be consumed inside of `tauri` through `tauri-build` or `tauri-macros`",
+          "path": "src/tauri-codegen"
+        },
+        {
+          "name": "aphrody-tauri-driver",
+          "description": "Webdriver server for Tauri applications",
+          "path": "src/tauri-driver"
+        },
+        {
+          "name": "aphrody-tauri-macos-sign",
+          "description": "Code signing utilities for macOS and iOS apps",
+          "path": "src/tauri-macos-sign"
+        },
+        {
+          "name": "aphrody-tauri-macros",
+          "description": "Macros for the tauri crate.",
+          "path": "src/tauri-macros"
+        },
+        {
+          "name": "aphrody-tauri-plugin",
+          "description": "Build script and runtime Tauri plugin definitions",
+          "path": "src/tauri-plugin"
+        },
+        {
+          "name": "aphrody-tauri-plugin-autostart",
+          "description": "Automatically launch your application at startup.",
+          "path": "src/tauri-plugin-autostart"
+        },
+        {
+          "name": "aphrody-tauri-plugin-barcode-scanner",
+          "description": "Scan QR codes, EAN-13 and other kinds of barcodes on Android and iOS",
+          "path": "src/tauri-plugin-barcode-scanner"
+        },
+        {
+          "name": "aphrody-tauri-plugin-biometric",
+          "description": "Prompt the user for biometric authentication on Android and iOS.",
+          "path": "src/tauri-plugin-biometric"
+        },
+        {
+          "name": "aphrody-tauri-plugin-cli",
+          "description": "Parse arguments from your Tauri application's command line interface.",
+          "path": "src/tauri-plugin-cli"
+        },
+        {
+          "name": "aphrody-tauri-plugin-clipboard-manager",
+          "description": "Read and write to the system clipboard.",
+          "path": "src/tauri-plugin-clipboard-manager"
+        },
+        {
+          "name": "aphrody-tauri-plugin-deep-link",
+          "description": "Set your Tauri application as the default handler for an URL",
+          "path": "src/tauri-plugin-deep-link"
+        },
+        {
+          "name": "aphrody-tauri-plugin-dialog",
+          "description": "Native system dialogs for opening and saving files along with message dialogs on your Tauri application.",
+          "path": "src/tauri-plugin-dialog"
+        },
+        {
+          "name": "aphrody-tauri-plugin-fs",
+          "description": "Access the file system.",
+          "path": "src/tauri-plugin-fs"
+        },
+        {
+          "name": "aphrody-tauri-plugin-geolocation",
+          "description": "Get and track the device's current position",
+          "path": "src/tauri-plugin-geolocation"
+        },
+        {
+          "name": "aphrody-tauri-plugin-global-shortcut",
+          "description": "Register global hotkeys listeners on your Tauri application.",
+          "path": "src/tauri-plugin-global-shortcut"
+        },
+        {
+          "name": "aphrody-tauri-plugin-haptics",
+          "description": "Haptic feedback and vibrations on Android and iOS",
+          "path": "src/tauri-plugin-haptics"
+        },
+        {
+          "name": "aphrody-tauri-plugin-http",
+          "description": "Access an HTTP client written in Rust.",
+          "path": "src/tauri-plugin-http"
+        },
+        {
+          "name": "aphrody-tauri-plugin-localhost",
+          "description": "Expose your apps assets through a localhost server instead of the default custom protocol.",
+          "path": "src/tauri-plugin-localhost"
+        },
+        {
+          "name": "aphrody-tauri-plugin-log",
+          "description": "Configurable logging for your Tauri app.",
+          "path": "src/tauri-plugin-log"
+        },
+        {
+          "name": "aphrody-tauri-plugin-nfc",
+          "description": "Read and write NFC tags on Android and iOS.",
+          "path": "src/tauri-plugin-nfc"
+        },
+        {
+          "name": "aphrody-tauri-plugin-notification",
+          "description": "Send desktop and mobile notifications on your Tauri application.",
+          "path": "src/tauri-plugin-notification"
+        },
+        {
+          "name": "aphrody-tauri-plugin-opener",
+          "description": "Open files and URLs using their default application.",
+          "path": "src/tauri-plugin-opener"
+        },
+        {
+          "name": "aphrody-tauri-plugin-os",
+          "description": "Read information about the operating system.",
+          "path": "src/tauri-plugin-os"
+        },
+        {
+          "name": "aphrody-tauri-plugin-persisted-scope",
+          "description": "Save filesystem and asset scopes and restore them when the app is reopened.",
+          "path": "src/tauri-plugin-persisted-scope"
+        },
+        {
+          "name": "aphrody-tauri-plugin-positioner",
+          "description": "Position your windows at well-known locations.",
+          "path": "src/tauri-plugin-positioner"
+        },
+        {
+          "name": "aphrody-tauri-plugin-process",
+          "description": "Access the current process of your Tauri application.",
+          "path": "src/tauri-plugin-process"
+        },
+        {
+          "name": "aphrody-tauri-plugin-shell",
+          "description": "Access the system shell. Allows you to spawn child processes.",
+          "path": "src/tauri-plugin-shell"
+        },
+        {
+          "name": "aphrody-tauri-plugin-single-instance",
+          "description": "Ensure a single instance of your tauri app is running.",
+          "path": "src/tauri-plugin-single-instance"
+        },
+        {
+          "name": "aphrody-tauri-plugin-store",
+          "description": "Simple, persistent key-value store.",
+          "path": "src/tauri-plugin-store"
+        },
+        {
+          "name": "aphrody-tauri-plugin-stronghold",
+          "description": "Store secrets and keys using the IOTA Stronghold secret management engine.",
+          "path": "src/tauri-plugin-stronghold"
+        },
+        {
+          "name": "aphrody-tauri-plugin-updater",
+          "description": "In-app updates for Tauri applications.",
+          "path": "src/tauri-plugin-updater"
+        },
+        {
+          "name": "aphrody-tauri-plugin-upload",
+          "description": "Upload files from disk to a remote server over HTTP.",
+          "path": "src/tauri-plugin-upload"
+        },
+        {
+          "name": "aphrody-tauri-plugin-websocket",
+          "description": "Expose a WebSocket server to your Tauri frontend.",
+          "path": "src/tauri-plugin-websocket"
+        },
+        {
+          "name": "aphrody-tauri-plugin-window-state",
+          "description": "Save window positions and sizes and restore them when the app is reopened.",
+          "path": "src/tauri-plugin-window-state"
+        },
+        {
+          "name": "aphrody-tauri-runtime",
+          "description": "Runtime for Tauri applications",
+          "path": "src/tauri-runtime"
+        },
+        {
+          "name": "aphrody-tauri-runtime-cef",
+          "description": "Tauri runtime interface for Chromium Embedded Framework",
+          "path": "src/tauri-runtime-cef"
+        },
+        {
+          "name": "aphrody-tauri-runtime-wry",
+          "description": "Wry bindings to the Tauri runtime",
+          "path": "src/tauri-runtime-wry"
+        },
+        {
+          "name": "aphrody-tauri-schema-generator",
+          "description": "",
+          "path": "src/tauri-schema-generator"
+        },
+        {
+          "name": "aphrody-tauri-schema-worker",
+          "description": "",
+          "path": "src/tauri-schema-worker"
+        },
+        {
+          "name": "aphrody-tauri-utils",
+          "description": "Utilities for Tauri",
+          "path": "src/tauri-utils"
         },
         {
           "name": "bun_tcc_sys",
@@ -895,6 +1190,11 @@
           "name": "bun_threading",
           "description": "",
           "path": "src/threading"
+        },
+        {
+          "name": "aphrody-toolchains",
+          "description": "Unified Bun / uv / Nushell runtime layer: shell-free discovery, repo-file version pins and consistent launch environment.",
+          "path": "src/toolchains"
         },
         {
           "name": "bun_transpiler",
@@ -1012,6 +1312,26 @@
           "path": "src/windows_sys"
         },
         {
+          "name": "winux-cmds",
+          "description": "",
+          "path": "src/winux/cmds"
+        },
+        {
+          "name": "winux-core",
+          "description": "",
+          "path": "src/winux/core"
+        },
+        {
+          "name": "winux-extra",
+          "description": "WinuxCmd applets ported from C++ to portable Rust (same shape contract as winux-cmds: run(args, io, ctx))",
+          "path": "src/winux/extra"
+        },
+        {
+          "name": "winux-regex",
+          "description": "",
+          "path": "src/winux/regex"
+        },
+        {
           "name": "bun_wyhash",
           "description": "",
           "path": "src/wyhash"
@@ -1074,7 +1394,7 @@
           "path": "apps/nt"
         },
         {
-          "name": "@aphrody/web",
+          "name": "@aphrody/nt-web",
           "description": "",
           "path": "apps/nt/modules/web"
         },
@@ -1086,7 +1406,7 @@
         {
           "name": "@aphrody/github-app",
           "description": "",
-          "path": "infra/cloudflare/workers/github-app"
+          "path": "device/cloudflare/workers/github-app"
         },
         {
           "name": "@aphrody/ai-os",
@@ -1289,6 +1609,11 @@
           "path": "packages/py2bun"
         },
         {
+          "name": "@aphrody/ghidra",
+          "description": "Ghidra API for Bun (pyghidra parity), Bun plugin and native onBeforeParse plugin",
+          "path": "packages/re/ghidra"
+        },
+        {
           "name": "@aphrody/release",
           "description": "ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first",
           "path": "packages/release"
@@ -1405,137 +1730,102 @@
     {
       "id": "infra",
       "name": "Infrastructure",
-      "description": "Fleet, deploy and CI configuration (infra/*)",
+      "description": "Fleet, deploy and CI configuration (build/*, device/*, prebuilts/*)",
       "entries": [
         {
-          "name": "agents",
-          "description": "",
-          "path": "infra/agents"
-        },
-        {
-          "name": "ai",
-          "description": "",
-          "path": "infra/ai"
-        },
-        {
           "name": "android",
-          "description": "",
-          "path": "infra/android"
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
           "name": "ay",
-          "description": "",
-          "path": "infra/ay"
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
           "name": "chromium-factory",
-          "description": "",
-          "path": "infra/chromium-factory"
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
           "name": "ci",
-          "description": "",
-          "path": "infra/ci"
-        },
-        {
-          "name": "cloudflare",
-          "description": "",
-          "path": "infra/cloudflare"
-        },
-        {
-          "name": "cluster",
-          "description": "",
-          "path": "infra/cluster"
-        },
-        {
-          "name": "db",
-          "description": "",
-          "path": "infra/db"
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
           "name": "docker",
-          "description": "",
-          "path": "infra/docker"
-        },
-        {
-          "name": "fleet",
-          "description": "",
-          "path": "infra/fleet"
-        },
-        {
-          "name": "gamescope-web",
-          "description": "",
-          "path": "infra/gamescope-web"
-        },
-        {
-          "name": "gaming",
-          "description": "",
-          "path": "infra/gaming"
-        },
-        {
-          "name": "gcloud",
-          "description": "Canonical multi-account Google Cloud identity and IAM sharing reference for GCP project `aphrody` (`#<gcp-project-numbers>`).",
-          "path": "infra/gcloud"
-        },
-        {
-          "name": "gnu",
-          "description": "",
-          "path": "infra/gnu"
-        },
-        {
-          "name": "lfs",
-          "description": "",
-          "path": "infra/lfs"
-        },
-        {
-          "name": "linux",
-          "description": "",
-          "path": "infra/linux"
-        },
-        {
-          "name": "mail",
-          "description": "Production-ready mail infrastructure for `aphrody.com` powered by **Stalwart Mail Server** (`stalwartlabs/mail-server:latest`) — a 100% pure-Rust all-in-one JMAP, IMAP4rev2, SMTP, ManageSieve, and built-in SPF/DKIM/DMARC/ARC/MTA-STS/TLS-RPT/ACME engine with zero Java, PHP, or Python runtime bloat.",
-          "path": "infra/mail"
-        },
-        {
-          "name": "mesh-vn",
-          "description": "",
-          "path": "infra/mesh-vn"
-        },
-        {
-          "name": "nix",
-          "description": "",
-          "path": "infra/nix"
-        },
-        {
-          "name": "os",
-          "description": "",
-          "path": "infra/os"
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
           "name": "pkg",
-          "description": "",
-          "path": "infra/pkg"
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
-          "name": "up",
-          "description": "",
-          "path": "infra/up"
+          "name": "cloudflare",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
-          "name": "upstream",
-          "description": "",
-          "path": "infra/upstream"
+          "name": "cluster",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "db",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "fleet",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "gamescope-web",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "gaming",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "gcloud",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "gnu",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "mail",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "mesh-vn",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
+        },
+        {
+          "name": "os",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
           "name": "vault",
-          "description": "",
-          "path": "infra/vault"
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         },
         {
-          "name": "wsl-distro",
-          "description": "",
-          "path": "infra/wsl-distro"
+          "name": "up",
+          "description": "`ay`: Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), one runner for TS/JS, bash and Rust, and extensions through crates.io and npm. Around it: the platform, the front ends (web, CLI, TUI, GUI, mobile) and ecosystem apps (games on our Bevy fork with Steam and Epic, the Craft Apps, media).",
+          "path": "/"
         }
       ]
     },
@@ -2602,7 +2892,7 @@
         },
         {
           "name": "upstream-sources",
-          "description": "Where upstream projects are pinned, forked and tracked in src (src.lock.json, third_party/forks.txt, infra/upstream/stacks.toml, ay upstream) and the canonical upstream repos for Bun, Google, Microsoft, Cloudflare and uutils. Use before absorbing, forking, bumping or citing an upstream.",
+          "description": "Where upstream projects are pinned, forked and tracked in src (src.lock.json, third_party/forks.txt, tools/upstream/stacks.toml, ay upstream) and the canonical upstream repos for Bun, Google, Microsoft, Cloudflare and uutils. Use before absorbing, forking, bumping or citing an upstream.",
           "path": ".agents/skills/upstream-sources"
         },
         {

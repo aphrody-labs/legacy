@@ -5,7 +5,7 @@ description: Scan the tracked tree for hardcoded values (pinned versions, magic 
 
 # hygiene
 
-One engine, `scripts/hygiene.ts`, three front ends: `just hygiene [--summary | --rule id | --json | --paths a,b]`, the relay hub tool `hygiene__hygiene_scan` and `hygiene__hygiene_rules` (server `hygiene`, `scripts/hygiene-mcp.ts`, declared in `infra/agents/toolchain.toml`), and the library import. It lists hits; it never edits.
+One engine, `scripts/hygiene.ts`, three front ends: `just hygiene [--summary | --rule id | --json | --paths a,b]`, the relay hub tool `hygiene__hygiene_scan` and `hygiene__hygiene_rules` (server `hygiene`, `scripts/hygiene-mcp.ts`, declared in `tools/agents/toolchain.toml`), and the library import. It lists hits; it never edits.
 
 ## Rules
 

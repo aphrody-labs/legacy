@@ -1,4 +1,4 @@
-// Applique infra/agents/toolchain.toml (outillage agent : Claude Code, Codex, agy, OpenCode, Pi, Gemini CLI), idempotent, PC et Linux.
+// Applique tools/agents/toolchain.toml (outillage agent : Claude Code, Codex, agy, OpenCode, Pi, Gemini CLI), idempotent, PC et Linux.
 // Sections : [[claude.marketplace]] (repo, ou path relatif à src), [[claude.plugin]] (state present|absent|disabled ;
 // refresh = recopie quand le HEAD de src change), [[claude.mcp]] (command ou url ; secrets injectés par env-kit),
 // [[claude.skill]] (dossier SKILL.md copié depuis un commit épinglé), [[skill.private]], [codex], [agy] (mcp = liste
@@ -102,7 +102,7 @@ type Installed = {
 };
 
 const SRC = resolve(import.meta.dir, "..", "..", "..");
-const MANIFEST = join(SRC, "infra", "agents", "toolchain.toml");
+const MANIFEST = join(SRC, "tools", "agents", "toolchain.toml");
 const HOME = process.env.USERPROFILE ?? process.env.HOME ?? "";
 const SKILLS = join(HOME, ".claude", "skills");
 const STATE = join(HOME, ".cache", "aphrody", "agents-sync.json");

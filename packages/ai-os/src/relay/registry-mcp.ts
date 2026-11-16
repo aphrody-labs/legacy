@@ -1,6 +1,6 @@
 // Package registries as a stdio MCP server (protocol 2025-11-25, one JSON message per line), reached through the relay
 // hub: hub_tools server=registry, hub_call name=registry__crates_search | registry__crate_info | registry__crate_readme |
-// registry__npm_search | registry__npm_info. Registered by [[hub.mcp]] registry in infra/agents/toolchain.toml.
+// registry__npm_search | registry__npm_info. Registered by [[hub.mcp]] registry in tools/agents/toolchain.toml.
 // Every answer is read live from the registry's own API (crates.io v1, docs.rs, registry.npmjs.org); nothing is cached
 // or pinned here. Library documentation itself comes from the context7 server.
 

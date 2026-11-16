@@ -7,22 +7,22 @@ use std::process::Command;
 use thiserror::Error;
 use crate::cachyos::{CachyOsConfigGenerator, SystemHardwareProfile};
 
-// Single source of truth: infra/os/wsl. The builder re-emits these files (optionally re-parameterized).
+// Single source of truth: device/os/wsl. The builder re-emits these files (optionally re-parameterized).
 const WSLCONFIG: &str = include_str!("../../../../packages/machine/wsl/wslconfig");
-const WSLC_SETTINGS: &str = include_str!("../../../../infra/os/wsl/wslc-settings.yaml");
-const WSL_CONF: &str = include_str!("../../../../infra/os/wsl/rootfs/etc/wsl.conf");
+const WSLC_SETTINGS: &str = include_str!("../../../../device/os/wsl/wslc-settings.yaml");
+const WSL_CONF: &str = include_str!("../../../../device/os/wsl/rootfs/etc/wsl.conf");
 const WSL_DISTRIBUTION_CONF: &str =
-    include_str!("../../../../infra/os/wsl/rootfs/etc/wsl-distribution.conf");
-const LOCALE_CONF: &str = include_str!("../../../../infra/os/wsl/rootfs/etc/locale.conf");
-const ZRAM_CONF: &str = include_str!("../../../../infra/os/wsl/rootfs/etc/systemd/zram-generator.conf");
+    include_str!("../../../../device/os/wsl/rootfs/etc/wsl-distribution.conf");
+const LOCALE_CONF: &str = include_str!("../../../../device/os/wsl/rootfs/etc/locale.conf");
+const ZRAM_CONF: &str = include_str!("../../../../device/os/wsl/rootfs/etc/systemd/zram-generator.conf");
 const MASKED_UNITS: &str =
-    include_str!("../../../../infra/os/wsl/rootfs/etc/systemd/masked-wsl-units.list");
+    include_str!("../../../../device/os/wsl/rootfs/etc/systemd/masked-wsl-units.list");
 const FIRST_SETUP: &str =
-    include_str!("../../../../infra/os/wsl/rootfs/usr/lib/wsl/first-setup-aphrody-omarchy.sh");
-const BUILD_IMAGE: &str = include_str!("../../../../infra/os/wsl/scripts/build-image.sh");
-const BUILD_ON_FR1: &str = include_str!("../../../../infra/os/wsl/scripts/build-on-fr1.sh");
-const TAR_EXCLUDE: &str = include_str!("../../../../infra/os/wsl/scripts/exclude");
-const BUILD_KERNEL: &str = include_str!("../../../../infra/os/wsl/kernel/build-kernel.sh");
+    include_str!("../../../../device/os/wsl/rootfs/usr/lib/wsl/first-setup-aphrody-omarchy.sh");
+const BUILD_IMAGE: &str = include_str!("../../../../device/os/wsl/scripts/build-image.sh");
+const BUILD_ON_FR1: &str = include_str!("../../../../device/os/wsl/scripts/build-on-fr1.sh");
+const TAR_EXCLUDE: &str = include_str!("../../../../device/os/wsl/scripts/exclude");
+const BUILD_KERNEL: &str = include_str!("../../../../device/os/wsl/kernel/build-kernel.sh");
 
 fn replace_line(text: &str, prefix: &str, value: &str) -> String {
     let mut out = String::with_capacity(text.len());
@@ -101,7 +101,7 @@ impl SovereignWslBuilder {
         }
     }
 
-    /// %USERPROFILE%\.wslconfig from infra/os/wsl/.wslconfig with this builder's kernel, memory and CPUs.
+    /// %USERPROFILE%\.wslconfig from device/os/wsl/.wslconfig with this builder's kernel, memory and CPUs.
     pub fn generate_wslconfig(&self) -> String {
         let mut out = String::with_capacity(WSLCONFIG.len());
         for line in WSLCONFIG.lines() {

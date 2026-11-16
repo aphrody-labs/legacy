@@ -30,6 +30,24 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 [dependencies]
 tauri-plugin-haptics = "2.0.0"
 # alternatively with Git:
+
+<!-- catalog:begin unit -->
+> Haptic feedback and vibrations on Android and iOS
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-plugin-haptics` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-plugin-haptics
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
 tauri-plugin-haptics = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
 

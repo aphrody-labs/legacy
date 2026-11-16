@@ -82,6 +82,6 @@ Our public zones are on Cloudflare; Hostinger DNS only matters for domains still
 
 ## Tooling
 
-- MCP: the token server `hostinger-api` is declared `state = "absent"` in `infra/agents/toolchain.toml` (not installed); upstream is `hostinger/api-mcp-server` on GitHub. Skill `cli-hostinger-api-mcp` covers it.
+- MCP: the token server `hostinger-api` is declared `state = "absent"` in `tools/agents/toolchain.toml` (not installed); upstream is `hostinger/api-mcp-server` on GitHub. Skill `cli-hostinger-api-mcp` covers it.
 - CLI: `hostinger/api-cli` on GitHub (Go; `go build` gives `hostinger`); not installed on the PC.
 - SDK: `hostinger/api-typescript-sdk`. Upstream skills: `hostinger/hostinger-agent-skills`.

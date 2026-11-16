@@ -17,7 +17,7 @@ import { clisOn, type Host } from "./fleet";
 import type { Health } from "./health";
 import type { RunnerState } from "./queue";
 
-/** CLIs the runner can launch (infra/agents/runner.ts providerCmd), addressed "cli" or "cli:model". */
+/** CLIs the runner can launch (tools/agents/runner.ts providerCmd), addressed "cli" or "cli:model". */
 export const AGENT_CLIS = ["claude", "codex", "opencode", "pi", "agy"];
 /** Remote runner provider ("jules[:owner/repo]", ai-os jules run --wait): never chosen without a request. */
 export const JULES = "jules";

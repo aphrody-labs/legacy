@@ -240,7 +240,7 @@ pub struct LinuxArgs {
 
 #[derive(Subcommand, Debug)]
 pub enum LinuxCommand {
-    /// Live upstream versions vs pins (infra/os/linux/patchsets.toml)
+    /// Live upstream versions vs pins (device/os/linux/patchsets.toml)
     Status {
         #[arg(long)]
         json: bool,
@@ -261,7 +261,7 @@ pub enum LinuxCommand {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
     },
-    /// List kernel flavors from infra/os/linux/kernels.toml
+    /// List kernel flavors from device/os/linux/kernels.toml
     Flavors,
     /// Build kernel flavor on fr1 (preemptible) or CI (never on workstation or prd)
     Build {
@@ -321,7 +321,7 @@ struct StandaloneLinuxCli {
 }
 
 #[derive(Parser, Debug)]
-#[command(name = "ay pkg", about = "Unified multi-distro package recipes (infra/pkg)")]
+#[command(name = "ay pkg", about = "Unified multi-distro package recipes (build/pkg)")]
 struct StandalonePkgCli {
     #[command(subcommand)]
     command: PkgCommand,
@@ -391,7 +391,7 @@ fn gen_all(
         .filter(|r| name == "all" || r.name == name)
         .collect();
     if selected.is_empty() {
-        bail!("recipe '{name}' not found in infra/pkg/recipes");
+        bail!("recipe '{name}' not found in build/pkg/recipes");
     }
     let distros = load_distros(root)?;
     let mut done = Vec::new();
@@ -731,7 +731,7 @@ pub fn handle_linux(root: &Path, cmd: LinuxCommand) -> Result<i32> {
             }
             if write {
                 let n = write_pins(root, &moved)?;
-                println!("{n} pin(s) updated in infra/os/linux/patchsets.toml");
+                println!("{n} pin(s) updated in device/os/linux/patchsets.toml");
             }
             let mut up_args = vec!["sync".to_string(), LINUX_STACKS.join(",")];
             if push {
@@ -798,13 +798,13 @@ pub fn handle_linux(root: &Path, cmd: LinuxCommand) -> Result<i32> {
                 let st = Command::new("gh").args(args).status()?;
                 return Ok(st.code().unwrap_or(1));
             }
-            let script_path = root.join("infra").join("os").join("linux").join("build").join("kernel.sh");
+            let script_path = root.join("device").join("os").join("linux").join("build").join("kernel.sh");
             let script = fs::read(&script_path)?;
             let remote = format!(
                 "f=$(mktemp -t aphrody-kernel.XXXXXX) && cat > \"$f\" && {} systemd-run --user --collect --unit=aphrody-kernel-{flavor} --nice=19 -p IOSchedulingClass=idle -E FLAVOR -E IMAGE -E HOST -E LLVM_DIR -E KNOBS sh \"$f\"",
                 shell_env(&vars)
             );
-            println!("ssh fr1 \"{remote}\" < infra/os/linux/build/kernel.sh");
+            println!("ssh fr1 \"{remote}\" < device/os/linux/build/kernel.sh");
             if !run {
                 return Ok(0);
             }
@@ -885,7 +885,7 @@ pub fn handle_pkg(root: &Path, cmd: PkgCommand) -> Result<i32> {
             }
             let distros = load_distros(root)?;
             let Some(d) = distros.into_iter().find(|x| x.name == distro) else {
-                bail!("distro '{distro}' missing from infra/pkg/distros.toml");
+                bail!("distro '{distro}' missing from build/pkg/distros.toml");
             };
             let recipes = load_recipes(root)?;
             let Some(r) = recipes.into_iter().find(|x| x.name == recipe) else {

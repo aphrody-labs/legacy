@@ -1,4 +1,4 @@
-// Inference fabric: reading infra/ai/fabric.toml, -ts order (RPC nodes then CUDA0), coordinator arguments
+// Inference fabric: reading tools/ai/fabric.toml, -ts order (RPC nodes then CUDA0), coordinator arguments
 // (never listening off loopback), ssh line (quoted values), closed port. No remote host contacted.
 import { expect, test } from "bun:test";
 import { mkdtempSync } from "node:fs";

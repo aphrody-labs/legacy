@@ -249,7 +249,7 @@ export function scanMonorepoRepos(
       isVcsRepo(meshVnPath) &&
       !seenPaths.has(meshVnPath.toLowerCase())
     ) {
-      const info = inspectRepo(meshVnPath, "infra/mesh-vn", { fast });
+      const info = inspectRepo(meshVnPath, "device/mesh-vn", { fast });
       if (info) {
         repos.push(info);
         seenPaths.add(meshVnPath.toLowerCase());

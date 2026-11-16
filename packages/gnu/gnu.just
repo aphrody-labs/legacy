@@ -13,7 +13,7 @@ gnu-service:
 # Pull the checkout on fr2 and restart the tracker
 [group('gnu')]
 gnu-deploy:
-    ssh fr2 "git -C /srv/src fetch -q --no-recurse-submodules origin main && git -C /srv/src merge -q --ff-only FETCH_HEAD && sh /srv/src/infra/gnu/install.sh"
+    ssh fr2 "git -C /srv/src fetch -q --no-recurse-submodules origin main && git -C /srv/src merge -q --ff-only FETCH_HEAD && sh /srv/src/device/gnu/install.sh"
 
 # Tests of the tracker package
 [group('gnu')]

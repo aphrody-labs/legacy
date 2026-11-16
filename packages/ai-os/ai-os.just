@@ -61,11 +61,11 @@ review *args:
 relay-install exe:
     pwsh -NoProfile -File "{{root}}/packages/ai-os/native/relay-windows/install.ps1" -ServiceExe "{{exe}}"
 
-# Linux user unit of the relay (prd and Linux hosts; source in infra/fleet/prd/systemd)
+# Linux user unit of the relay (prd and Linux hosts; source in device/fleet/prd/systemd)
 [group('ai-os')]
 [unix]
 relay-install:
-    install -Dm644 "{{root}}/infra/fleet/prd/systemd/aphrody-relay.service" "$HOME/.config/systemd/user/aphrody-relay.service"
+    install -Dm644 "{{root}}/device/fleet/prd/systemd/aphrody-relay.service" "$HOME/.config/systemd/user/aphrody-relay.service"
     systemctl --user daemon-reload
     systemctl --user enable --now aphrody-relay
     systemctl --user restart aphrody-relay

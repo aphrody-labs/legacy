@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Tracking of the absorbed copies of google-labs-code / android and skill mirrors. Single source: the forks
-// third_party/<checkout> described by infra/upstream/stacks.d/google-labs.toml (`absorbed` section).
+// third_party/<checkout> described by tools/upstream/stacks.d/google-labs.toml (`absorbed` section).
 //   check            for each absorbed copy: upstream files modified since the recorded commit
 //                    (missing fork = ignored, except with --strict)
 //   skills [--write] generated mirrors of the stitch-skills, jules-skills and android-skills skills in
@@ -24,7 +24,7 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 const root = resolve(
   Bun.env.SRC_ROOT ?? join(import.meta.dir, "..", "..", "..", ".."),
 );
-const STACKS = join(root, "infra", "upstream", "stacks.d", "google-labs.toml");
+const STACKS = join(root, "tools", "upstream", "stacks.d", "google-labs.toml");
 
 type Absorbed = { commit: string; paths: string[]; into: string };
 type Stack = {

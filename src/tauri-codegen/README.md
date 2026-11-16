@@ -1,5 +1,23 @@
 # tauri-codegen
 
+<!-- catalog:begin unit -->
+> code generation meant to be consumed inside of `tauri` through `tauri-build` or `tauri-macros`
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tauri-codegen` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tauri-codegen
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
  <img align="right" src="https://github.com/tauri-apps/tauri/raw/dev/.github/icon.png" height="128" width="128">
 
 [![status](https://img.shields.io/badge/Status-Stable-green.svg)](https://github.com/tauri-apps/tauri)

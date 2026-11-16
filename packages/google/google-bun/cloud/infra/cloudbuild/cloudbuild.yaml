@@ -6,7 +6,7 @@ steps:
       - "-t"
       - "europe-west9-docker.pkg.dev/$PROJECT_ID/aphrody-docker/google-bun:latest"
       - "-f"
-      - "infra/docker/Dockerfile.google-sovereign"
+      - "build/docker/Dockerfile.google-sovereign"
       - "."
 
   # Étape 2 : Push vers Artifact Registry europe-west9 (Paris)

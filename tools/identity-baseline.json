@@ -1162,53 +1162,53 @@
   "crate-prefix": 1,
   "binary-call": 22
  },
- "infra/agents/claude/CLAUDE.md": {
+ "tools/agents/claude/CLAUDE.md": {
   "checkout-path": 3
  },
- "infra/agents/fleet.toml": {
+ "tools/agents/fleet.toml": {
   "checkout-path": 1,
   "crate-prefix": 1
  },
- "infra/agents/gh-token.test.ts": {
+ "tools/agents/gh-token.test.ts": {
   "env-prefix": 2
  },
- "infra/agents/gh-token.ts": {
+ "tools/agents/gh-token.ts": {
   "npm-scope": 2,
   "env-prefix": 2
  },
- "infra/agents/github-events.test.ts": {
+ "tools/agents/github-events.test.ts": {
   "product-name": 1
  },
- "infra/agents/github-events.ts": {
+ "tools/agents/github-events.ts": {
   "product-name": 1,
   "crate-prefix": 1,
   "binary-call": 2
  },
- "infra/agents/install-pc.sh": {
+ "tools/agents/install-pc.sh": {
   "checkout-path": 1
  },
- "infra/agents/install.sh": {
+ "tools/agents/install.sh": {
   "crate-prefix": 5
  },
- "infra/agents/plugins/aphrody-nhitl/.claude-plugin/plugin.json": {
+ "tools/agents/plugins/aphrody-nhitl/.claude-plugin/plugin.json": {
   "crate-prefix": 1
  },
- "infra/agents/plugins/aphrody-nhitl/README.md": {
+ "tools/agents/plugins/aphrody-nhitl/README.md": {
   "checkout-path": 2,
   "product-name": 1,
   "npm-scope": 2,
   "crate-prefix": 3
  },
- "infra/agents/plugins/aphrody-nhitl/hooks/hooks.json": {
+ "tools/agents/plugins/aphrody-nhitl/hooks/hooks.json": {
   "crate-prefix": 1
  },
- "infra/agents/plugins/aphrody-nhitl/src/lib.ts": {
+ "tools/agents/plugins/aphrody-nhitl/src/lib.ts": {
   "crate-prefix": 1
  },
- "infra/agents/plugins/aphrody-nhitl/test/launcher.test.ts": {
+ "tools/agents/plugins/aphrody-nhitl/test/launcher.test.ts": {
   "checkout-path": 9
  },
- "infra/agents/runner.ts": {
+ "tools/agents/runner.ts": {
   "checkout-path": 1,
   "product-name": 2,
   "npm-scope": 1,
@@ -1216,175 +1216,175 @@
   "env-prefix": 6,
   "binary-call": 1
  },
- "infra/agents/toolchain.toml": {
+ "tools/agents/toolchain.toml": {
   "product-name": 2,
   "npm-scope": 7,
   "crate-prefix": 6,
   "binary-call": 2
  },
- "infra/ai/ai.toml": {
+ "tools/ai/ai.toml": {
   "binary-call": 6
  },
- "infra/ai/fabric.toml": {
+ "tools/ai/fabric.toml": {
   "binary-call": 1
  },
- "infra/ai/fabric/node.sh": {
+ "tools/ai/fabric/node.sh": {
   "crate-prefix": 2,
   "c-prefix": 3
  },
- "infra/ai/litellm-overlay.toml": {
+ "tools/ai/litellm-overlay.toml": {
   "binary-call": 1
  },
- "infra/ai/litellm-serve.ts": {
+ "tools/ai/litellm-serve.ts": {
   "binary-call": 3
  },
  "infra/bench/os-bench/os-bench.sh": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "infra/browser-engines.just": {
+ "build/browser-engines.just": {
   "npm-scope": 1
  },
- "infra/chromium-factory/args/labs_agent.gn": {
+ "build/chromium-factory/args/labs_agent.gn": {
   "crate-prefix": 1
  },
- "infra/chromium-factory/chromium-factory.just": {
+ "build/chromium-factory/chromium-factory.just": {
   "product-name": 7,
   "crate-prefix": 2
  },
- "infra/chromium-factory/chromium-factory.sh": {
+ "build/chromium-factory/chromium-factory.sh": {
   "crate-prefix": 1
  },
- "infra/chromium-factory/cros-factory.sh": {
+ "build/chromium-factory/cros-factory.sh": {
   "crate-prefix": 1
  },
- "infra/chromium-factory/factory.toml": {
+ "build/chromium-factory/factory.toml": {
   "product-name": 1,
   "crate-prefix": 2,
   "binary-call": 1
  },
- "infra/chromium-factory/systemd/chromium-factory.service": {
+ "build/chromium-factory/systemd/chromium-factory.service": {
   "crate-prefix": 1
  },
- "infra/chromium-factory/systemd/cros-factory.service": {
+ "build/chromium-factory/systemd/cros-factory.service": {
   "crate-prefix": 1
  },
- "infra/cloudflare/aop.ts": {
+ "device/cloudflare/aop.ts": {
   "product-name": 1
  },
- "infra/cloudflare/cloudflare.toml": {
+ "device/cloudflare/cloudflare.toml": {
   "product-name": 2,
   "crate-prefix": 17,
   "c-prefix": 2,
   "env-prefix": 1
  },
- "infra/cloudflare/expected-status.json": {
+ "device/cloudflare/expected-status.json": {
   "product-name": 1,
   "crate-prefix": 4
  },
- "infra/cloudflare/proof.ts": {
+ "device/cloudflare/proof.ts": {
   "product-name": 1,
   "crate-prefix": 10,
   "env-prefix": 2
  },
- "infra/cloudflare/workers/aphrody-email-worker/index.js": {
+ "device/cloudflare/workers/aphrody-email-worker/index.js": {
   "crate-prefix": 1
  },
- "infra/cloudflare/workers/aphrody-email-worker/index.js.map": {
+ "device/cloudflare/workers/aphrody-email-worker/index.js.map": {
   "crate-prefix": 2
  },
- "infra/cloudflare/workers/aphrody-email-worker/wrangler.jsonc": {
+ "device/cloudflare/workers/aphrody-email-worker/wrangler.jsonc": {
   "crate-prefix": 2
  },
- "infra/cloudflare/workers/aphrody-mcp-gateway/deploy.ts": {
+ "device/cloudflare/workers/aphrody-mcp-gateway/deploy.ts": {
   "crate-prefix": 2,
   "env-prefix": 3
  },
- "infra/cloudflare/workers/aphrody-mcp-gateway/index.ts": {
+ "device/cloudflare/workers/aphrody-mcp-gateway/index.ts": {
   "crate-prefix": 1,
   "env-prefix": 1
  },
- "infra/cloudflare/workers/aphrody-webos/index.js": {
+ "device/cloudflare/workers/aphrody-webos/index.js": {
   "checkout-path": 10,
   "product-name": 4,
   "npm-scope": 2,
   "crate-prefix": 5
  },
- "infra/cloudflare/workers/aphrody-webos/wrangler.jsonc": {
+ "device/cloudflare/workers/aphrody-webos/wrangler.jsonc": {
   "crate-prefix": 3
  },
- "infra/cloudflare/workers/api-gateway/api.aphrody.com.toml": {
+ "device/cloudflare/workers/api-gateway/api.aphrody.com.toml": {
   "product-name": 1,
   "crate-prefix": 3
  },
- "infra/cloudflare/workers/bun-video-showcase/wrangler.jsonc": {
+ "device/cloudflare/workers/bun-video-showcase/wrangler.jsonc": {
   "crate-prefix": 1
  },
- "infra/cloudflare/workers/creator-aphrody-com/wrangler.jsonc": {
+ "device/cloudflare/workers/creator-aphrody-com/wrangler.jsonc": {
   "crate-prefix": 3
  },
- "infra/cloudflare/workers/github-app/README.md": {
+ "device/cloudflare/workers/github-app/README.md": {
   "npm-scope": 1
  },
- "infra/cloudflare/workers/github-app/cloudflare.config.ts": {
+ "device/cloudflare/workers/github-app/cloudflare.config.ts": {
   "product-name": 1,
   "crate-prefix": 1,
   "binary-call": 1
  },
- "infra/cloudflare/workers/github-app/package.json": {
+ "device/cloudflare/workers/github-app/package.json": {
   "npm-scope": 1
  },
- "infra/cloudflare/workers/github-app/src/index.ts": {
+ "device/cloudflare/workers/github-app/src/index.ts": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "infra/cluster/compose.capped.yaml": {
+ "device/cluster/compose.capped.yaml": {
   "product-name": 2,
   "crate-prefix": 5
  },
- "infra/cluster/dedup.ts": {
+ "device/cluster/dedup.ts": {
   "crate-prefix": 1
  },
- "infra/cluster/deploy.sh": {
+ "device/cluster/deploy.sh": {
   "crate-prefix": 12
  },
- "infra/cluster/gen.ts": {
+ "device/cluster/gen.ts": {
   "crate-prefix": 4,
   "env-prefix": 2
  },
- "infra/cluster/generated/fr1/nginx-cluster.conf": {
+ "device/cluster/generated/fr1/nginx-cluster.conf": {
   "product-name": 2
  },
- "infra/cluster/generated/fr2/nginx-cluster.conf": {
+ "device/cluster/generated/fr2/nginx-cluster.conf": {
   "product-name": 2
  },
- "infra/cluster/generated/prd/nginx-cluster.conf": {
+ "device/cluster/generated/prd/nginx-cluster.conf": {
   "product-name": 2
  },
- "infra/cluster/generated/ssh/aphrody-ssh-mesh": {
+ "device/cluster/generated/ssh/aphrody-ssh-mesh": {
   "crate-prefix": 1,
   "env-prefix": 2
  },
- "infra/cluster/pki.sh": {
+ "device/cluster/pki.sh": {
   "product-name": 1,
   "env-prefix": 2
  },
- "infra/cluster/proof.sh": {
+ "device/cluster/proof.sh": {
   "product-name": 1,
   "crate-prefix": 9
  },
- "infra/cluster/standby.sh": {
+ "device/cluster/standby.sh": {
   "product-name": 4,
   "crate-prefix": 2
  },
- "infra/cluster/systemd/aphrody-cluster-haproxy.service": {
+ "device/cluster/systemd/aphrody-cluster-haproxy.service": {
   "product-name": 1,
   "crate-prefix": 3
  },
- "infra/cluster/systemd/cloudflared-mig-prd.service": {
+ "device/cluster/systemd/cloudflared-mig-prd.service": {
   "crate-prefix": 2
  },
- "infra/deploy.toml": {
+ "device/deploy.toml": {
   "checkout-path": 11,
   "product-name": 8,
   "npm-scope": 1,
@@ -1392,210 +1392,210 @@
   "env-prefix": 3,
   "binary-call": 5
  },
- "infra/docker/Dockerfile": {
+ "build/docker/Dockerfile": {
   "product-name": 1,
   "npm-scope": 1,
   "crate-prefix": 1
  },
- "infra/docker/compose.yaml": {
+ "build/docker/compose.yaml": {
   "checkout-path": 2,
   "product-name": 2,
   "crate-prefix": 8,
   "env-prefix": 1
  },
- "infra/docker/docker.just": {
+ "build/docker/docker.just": {
   "product-name": 1,
   "crate-prefix": 2,
   "binary-call": 1
  },
- "infra/fleet/ACME.md": {
+ "device/fleet/ACME.md": {
   "binary-call": 1
  },
- "infra/fleet/RUNBOOK.md": {
+ "device/fleet/RUNBOOK.md": {
   "checkout-path": 1,
   "crate-prefix": 6,
   "binary-call": 3
  },
- "infra/fleet/bin/agents-sync.sh": {
+ "device/fleet/bin/agents-sync.sh": {
   "checkout-path": 2,
   "crate-prefix": 1
  },
- "infra/fleet/bin/build-all.sh": {
+ "device/fleet/bin/build-all.sh": {
   "checkout-path": 2,
   "product-name": 5,
   "crate-prefix": 8
  },
- "infra/fleet/bin/deploy-images.sh": {
+ "device/fleet/bin/deploy-images.sh": {
   "checkout-path": 4
  },
- "infra/fleet/bin/fleet-backup.sh": {
+ "device/fleet/bin/fleet-backup.sh": {
   "crate-prefix": 1
  },
- "infra/fleet/bin/fleet-mesh-hosts.sh": {
+ "device/fleet/bin/fleet-mesh-hosts.sh": {
   "crate-prefix": 5
  },
- "infra/fleet/bin/fleet-notify.sh": {
+ "device/fleet/bin/fleet-notify.sh": {
   "binary-call": 1
  },
- "infra/fleet/bin/fleet-offload.sh": {
+ "device/fleet/bin/fleet-offload.sh": {
   "crate-prefix": 1
  },
- "infra/fleet/bin/fleet-ping.sh": {
+ "device/fleet/bin/fleet-ping.sh": {
   "checkout-path": 1
  },
- "infra/fleet/bin/fleet-rebuild.sh": {
+ "device/fleet/bin/fleet-rebuild.sh": {
   "crate-prefix": 5
  },
- "infra/fleet/bin/fleet-resilience-remote.sh": {
+ "device/fleet/bin/fleet-resilience-remote.sh": {
   "checkout-path": 2,
   "crate-prefix": 3
  },
- "infra/fleet/bin/fleet-setup.sh": {
+ "device/fleet/bin/fleet-setup.sh": {
   "checkout-path": 12
  },
- "infra/fleet/bin/fleet-tune.sh": {
+ "device/fleet/bin/fleet-tune.sh": {
   "crate-prefix": 1
  },
- "infra/fleet/bin/fleet-valkey-rotate.sh": {
+ "device/fleet/bin/fleet-valkey-rotate.sh": {
   "binary-call": 2
  },
- "infra/fleet/bin/heavy.sh": {
+ "device/fleet/bin/heavy.sh": {
   "crate-prefix": 7
  },
- "infra/fleet/bin/src-checkout-update.sh": {
+ "device/fleet/bin/src-checkout-update.sh": {
   "checkout-path": 2,
   "crate-prefix": 1
  },
- "infra/fleet/bin/ssh22-probe-install.sh": {
+ "device/fleet/bin/ssh22-probe-install.sh": {
   "checkout-path": 1
  },
- "infra/fleet/bin/third-party-sync.sh": {
+ "device/fleet/bin/third-party-sync.sh": {
   "checkout-path": 2,
   "binary-call": 1
  },
- "infra/fleet/bootstrap/common.sh": {
+ "device/fleet/bootstrap/common.sh": {
   "product-name": 3,
   "crate-prefix": 7
  },
- "infra/fleet/bootstrap/fr1.sh": {
+ "device/fleet/bootstrap/fr1.sh": {
   "crate-prefix": 1
  },
- "infra/fleet/cache.toml": {
+ "device/fleet/cache.toml": {
   "checkout-path": 2,
   "crate-prefix": 1
  },
- "infra/fleet/cache.ts": {
+ "device/fleet/cache.ts": {
   "checkout-path": 1
  },
- "infra/fleet/ci-local.ts": {
+ "device/fleet/ci-local.ts": {
   "product-name": 2,
   "crate-prefix": 6
  },
- "infra/fleet/ffmpeg-lgpl/build.sh": {
+ "device/fleet/ffmpeg-lgpl/build.sh": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "infra/fleet/fleet.just": {
+ "device/fleet/fleet.just": {
   "checkout-path": 10
  },
- "infra/fleet/fr1/offload/etc/udev/rules.d/66-fleet-bfq.rules": {
+ "device/fleet/fr1/offload/etc/udev/rules.d/66-fleet-bfq.rules": {
   "crate-prefix": 2
  },
- "infra/fleet/fr1/offload/systemd/aphrody.slice.d/50-offload.conf": {
+ "device/fleet/fr1/offload/systemd/aphrody.slice.d/50-offload.conf": {
   "crate-prefix": 1
  },
- "infra/fleet/fr1/orphans/bin/fr1-r2.sh": {
+ "device/fleet/fr1/orphans/bin/fr1-r2.sh": {
   "crate-prefix": 1
  },
- "infra/fleet/fr1/resilience.conf": {
+ "device/fleet/fr1/resilience.conf": {
   "checkout-path": 3,
   "crate-prefix": 6
  },
- "infra/fleet/fr2/nginx/sites/api.aphrody.com.conf": {
+ "device/fleet/fr2/nginx/sites/api.aphrody.com.conf": {
   "c-prefix": 26
  },
- "infra/fleet/fr2/nginx/sites/cdn.aphrody.com.conf": {
+ "device/fleet/fr2/nginx/sites/cdn.aphrody.com.conf": {
   "crate-prefix": 2,
   "c-prefix": 13
  },
- "infra/fleet/fr2/nginx/sites/creator.aphrody.com.conf": {
+ "device/fleet/fr2/nginx/sites/creator.aphrody.com.conf": {
   "crate-prefix": 1
  },
- "infra/fleet/fr2/nginx/sites/downloads.aphrody.com.conf": {
+ "device/fleet/fr2/nginx/sites/downloads.aphrody.com.conf": {
   "crate-prefix": 1,
   "c-prefix": 7
  },
- "infra/fleet/fr2/resilience.conf": {
+ "device/fleet/fr2/resilience.conf": {
   "checkout-path": 2,
   "crate-prefix": 6
  },
- "infra/fleet/fr2/systemd/aphrody-relay.service": {
+ "device/fleet/fr2/systemd/aphrody-relay.service": {
   "checkout-path": 2,
   "crate-prefix": 1
  },
- "infra/fleet/fr2/systemd/skills-archive.service": {
+ "device/fleet/fr2/systemd/skills-archive.service": {
   "checkout-path": 5,
   "crate-prefix": 1
  },
- "infra/fleet/migrations/prd.window.sh": {
+ "device/fleet/migrations/prd.window.sh": {
   "checkout-path": 15
  },
- "infra/fleet/nix/flake.nix": {
+ "device/fleet/nix/flake.nix": {
   "checkout-path": 1,
   "product-name": 1
  },
- "infra/fleet/prd/nginx/conf.d/aphrody-cluster.conf": {
+ "device/fleet/prd/nginx/conf.d/aphrody-cluster.conf": {
   "product-name": 2
  },
- "infra/fleet/prd/nginx/conf.d/rosegriffon-stack.conf": {
+ "device/fleet/prd/nginx/conf.d/rosegriffon-stack.conf": {
   "crate-prefix": 1
  },
- "infra/fleet/prd/orphans/systemd/lore-r2-backup.service": {
+ "device/fleet/prd/orphans/systemd/lore-r2-backup.service": {
   "crate-prefix": 2
  },
- "infra/fleet/prd/resilience.conf": {
+ "device/fleet/prd/resilience.conf": {
   "checkout-path": 1,
   "crate-prefix": 13
  },
- "infra/fleet/prd/systemd/aphrody-gpu-depot.service": {
+ "device/fleet/prd/systemd/aphrody-gpu-depot.service": {
   "env-prefix": 1
  },
- "infra/fleet/prd/systemd/aphrody-relay.service": {
+ "device/fleet/prd/systemd/aphrody-relay.service": {
   "checkout-path": 2,
   "npm-scope": 1,
   "crate-prefix": 2
  },
- "infra/fleet/reinstall/00-preflight.sh": {
+ "device/fleet/reinstall/00-preflight.sh": {
   "binary-call": 1
  },
- "infra/fleet/reinstall/50-mesh-caches.sh": {
+ "device/fleet/reinstall/50-mesh-caches.sh": {
   "product-name": 1
  },
- "infra/fleet/sysctl/90-aphrody-fr1-god.conf": {
+ "device/fleet/sysctl/90-aphrody-fr1-god.conf": {
   "crate-prefix": 1
  },
- "infra/fleet/sysctl/90-aphrody-serve.conf": {
+ "device/fleet/sysctl/90-aphrody-serve.conf": {
   "crate-prefix": 1
  },
- "infra/fleet/systemd/aphrody-agents-sync.service": {
+ "device/fleet/systemd/aphrody-agents-sync.service": {
   "checkout-path": 1
  },
- "infra/fleet/systemd/aphrody-auth-daemon.service": {
+ "device/fleet/systemd/aphrody-auth-daemon.service": {
   "crate-prefix": 2
  },
- "infra/fleet/systemd/src-checkout-update.service": {
+ "device/fleet/systemd/src-checkout-update.service": {
   "checkout-path": 1
  },
- "infra/fleet/systemd/third-party-sync.service": {
+ "device/fleet/systemd/third-party-sync.service": {
   "checkout-path": 1
  },
- "infra/gcloud/README.md": {
+ "device/gcloud/README.md": {
   "product-name": 8,
   "npm-scope": 3,
   "crate-prefix": 2,
   "env-prefix": 1
  },
- "infra/gcloud/share-aphrody-project-iam.sh": {
+ "device/gcloud/share-aphrody-project-iam.sh": {
   "npm-scope": 1,
   "env-prefix": 4
  },
@@ -1619,93 +1619,93 @@
   "checkout-path": 1,
   "product-name": 1
  },
- "infra/gnu/install.sh": {
+ "device/gnu/install.sh": {
   "checkout-path": 2,
   "crate-prefix": 7
  },
- "infra/gnu/systemd/aphrody-gnu-watch.service": {
+ "device/gnu/systemd/aphrody-gnu-watch.service": {
   "checkout-path": 2,
   "crate-prefix": 1
  },
- "infra/gnu/systemd/aphrody-gnu.service": {
+ "device/gnu/systemd/aphrody-gnu.service": {
   "checkout-path": 1,
   "crate-prefix": 1
  },
- "infra/mail/README.md": {
+ "device/mail/README.md": {
   "checkout-path": 5
  },
- "infra/mail/dns/cloudflare-mail-records.zone": {
+ "device/mail/dns/cloudflare-mail-records.zone": {
   "checkout-path": 1
  },
- "infra/mail/docker-compose.mail.yml": {
+ "device/mail/docker-compose.mail.yml": {
   "crate-prefix": 2,
   "c-prefix": 3
  },
- "infra/os/linux/android/local_manifests/aphrody-gki.xml": {
+ "device/os/linux/android/local_manifests/aphrody-gki.xml": {
   "crate-prefix": 1
  },
- "infra/os/linux/build/kernel.sh": {
+ "device/os/linux/build/kernel.sh": {
   "crate-prefix": 1,
   "binary-call": 1
  },
- "infra/os/linux/gpu/manifest.toml": {
+ "device/os/linux/gpu/manifest.toml": {
   "binary-call": 1
  },
- "infra/os/linux/images/debian/Dockerfile": {
+ "device/os/linux/images/debian/Dockerfile": {
   "crate-prefix": 2,
   "binary-call": 1
  },
- "infra/os/linux/images/nix/Dockerfile": {
+ "device/os/linux/images/nix/Dockerfile": {
   "binary-call": 1
  },
- "infra/os/linux/kernels.toml": {
+ "device/os/linux/kernels.toml": {
   "binary-call": 1
  },
- "infra/os/linux/patchsets.toml": {
+ "device/os/linux/patchsets.toml": {
   "binary-call": 3
  },
- "infra/os/unixwin/fr1-test.sh": {
+ "device/os/unixwin/fr1-test.sh": {
   "crate-prefix": 2
  },
- "infra/os/unixwin/unixwin.just": {
+ "device/os/unixwin/unixwin.just": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "infra/os/unixwin/unixwin.ts": {
+ "device/os/unixwin/unixwin.ts": {
   "product-name": 3
  },
- "infra/os/wsl/arch-gitlab-manifest.json": {
+ "device/os/wsl/arch-gitlab-manifest.json": {
   "crate-prefix": 1
  },
- "infra/os/wsl/kernel/build-kernel.sh": {
+ "device/os/wsl/kernel/build-kernel.sh": {
   "product-name": 1,
   "crate-prefix": 8
  },
- "infra/os/wsl/kernel/wsl2-cachyos-omarchy-7.4.config": {
+ "device/os/wsl/kernel/wsl2-cachyos-omarchy-7.4.config": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "infra/os/wsl/rootfs/etc/wsl-distribution.conf": {
+ "device/os/wsl/rootfs/etc/wsl-distribution.conf": {
   "crate-prefix": 3
  },
- "infra/os/wsl/rootfs/etc/wsl.conf": {
+ "device/os/wsl/rootfs/etc/wsl.conf": {
   "product-name": 1
  },
- "infra/os/wsl/rootfs/usr/lib/wsl/first-setup-aphrody-omarchy.sh": {
+ "device/os/wsl/rootfs/usr/lib/wsl/first-setup-aphrody-omarchy.sh": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "infra/os/wsl/scripts/build-image.sh": {
+ "device/os/wsl/scripts/build-image.sh": {
   "product-name": 1,
   "crate-prefix": 2
  },
- "infra/os/wsl/scripts/build-on-fr1.sh": {
+ "device/os/wsl/scripts/build-on-fr1.sh": {
   "crate-prefix": 2
  },
- "infra/os/wsl/scripts/mount-data.ps1": {
+ "device/os/wsl/scripts/mount-data.ps1": {
   "crate-prefix": 1
  },
- "infra/os/wsl/scripts/proof.sh": {
+ "device/os/wsl/scripts/proof.sh": {
   "product-name": 1
  },
  "infra/pipeline/ay-index-worker.service": {
@@ -1721,92 +1721,92 @@
  "infra/pipeline/pc-install.ts": {
   "binary-call": 1
  },
- "infra/pkg/distros.toml": {
+ "build/pkg/distros.toml": {
   "binary-call": 1
  },
- "infra/pkg/recipes/aphrody-gpu-setup.toml": {
+ "build/pkg/recipes/aphrody-gpu-setup.toml": {
   "crate-prefix": 1
  },
- "infra/pkg/recipes/aphrody-sysctl.toml": {
+ "build/pkg/recipes/aphrody-sysctl.toml": {
   "crate-prefix": 4,
   "binary-call": 1
  },
- "infra/up/tools.d/wpm.toml": {
+ "prebuilts/up/tools.d/wpm.toml": {
   "binary-call": 1
  },
- "infra/up/tools.toml": {
+ "prebuilts/up/tools.toml": {
   "product-name": 2,
   "crate-prefix": 5,
   "binary-call": 8
  },
- "infra/upstream/install.sh": {
+ "tools/upstream/install.sh": {
   "crate-prefix": 4
  },
- "infra/upstream/patches/bun-parity/RUST_INTEGRATION_SPEC.md": {
+ "tools/upstream/patches/bun-parity/RUST_INTEGRATION_SPEC.md": {
   "checkout-path": 1
  },
- "infra/upstream/stacks.d/gaming.toml": {
+ "tools/upstream/stacks.d/gaming.toml": {
   "crate-prefix": 1,
   "binary-call": 1
  },
- "infra/upstream/stacks.d/google-labs.toml": {
+ "tools/upstream/stacks.d/google-labs.toml": {
   "binary-call": 2
  },
- "infra/upstream/stacks.d/web.toml": {
+ "tools/upstream/stacks.d/web.toml": {
   "product-name": 1,
   "binary-call": 2
  },
- "infra/upstream/stacks.toml": {
+ "tools/upstream/stacks.toml": {
   "binary-call": 4
  },
- "infra/upstream/status/base-ui.toml": {
+ "tools/upstream/status/base-ui.toml": {
   "product-name": 3,
   "c-prefix": 3,
   "binary-call": 1
  },
- "infra/upstream/status/better-auth.toml": {
+ "tools/upstream/status/better-auth.toml": {
   "product-name": 3,
   "c-prefix": 3,
   "binary-call": 1
  },
- "infra/upstream/status/bun.toml": {
+ "tools/upstream/status/bun.toml": {
   "product-name": 1,
   "crate-prefix": 15,
   "binary-call": 1
  },
- "infra/upstream/status/jules-action.toml": {
+ "tools/upstream/status/jules-action.toml": {
   "binary-call": 1
  },
- "infra/upstream/status/nextjs.toml": {
+ "tools/upstream/status/nextjs.toml": {
   "product-name": 5,
   "crate-prefix": 3,
   "c-prefix": 5,
   "binary-call": 1
  },
- "infra/upstream/status/shadcn-ui.toml": {
+ "tools/upstream/status/shadcn-ui.toml": {
   "product-name": 2,
   "c-prefix": 2,
   "binary-call": 1
  },
- "infra/upstream/status/tailwindcss.toml": {
+ "tools/upstream/status/tailwindcss.toml": {
   "product-name": 2,
   "c-prefix": 2,
   "binary-call": 1
  },
- "infra/vault/hosts.toml": {
+ "device/vault/hosts.toml": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "infra/vault/policy.toml": {
+ "device/vault/policy.toml": {
   "crate-prefix": 1
  },
- "infra/vault/systemd/aphrody-vault-apply.service": {
+ "device/vault/systemd/aphrody-vault-apply.service": {
   "product-name": 1
  },
- "infra/vault/systemd/aphrody-vault-apply.timer": {
+ "device/vault/systemd/aphrody-vault-apply.timer": {
   "product-name": 1
  },
- "infra/vault/vault-host.sh": {
+ "device/vault/vault-host.sh": {
   "product-name": 1,
   "crate-prefix": 4
  },

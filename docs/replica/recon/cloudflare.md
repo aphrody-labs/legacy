@@ -1,8 +1,8 @@
 # Recon Cloudflare — compte aphrody (lecture seule)
 
 Relevé du 2026-11-13, compte `<cloudflare-account-ids>`, plan Free sur les 5 zones.
-Sources : API v4 via `cf` 1.0.0-beta.31 (connexion OAuth `cf auth login`, toutes portées) et `infra/cloudflare/recon.ts`
-(GET seulement, `CF_AUTH=oauth bun infra/cloudflare/recon.ts <dir>`), `bun infra/cloudflare/cf.ts plan` (aucune dérive :
+Sources : API v4 via `cf` 1.0.0-beta.31 (connexion OAuth `cf auth login`, toutes portées) et `device/cloudflare/recon.ts`
+(GET seulement, `CF_AUTH=oauth bun device/cloudflare/recon.ts <dir>`), `bun device/cloudflare/cf.ts plan` (aucune dérive :
 `no changes`), captures du dashboard par Chrome via Claude in Chrome (session existante), dépôts GitHub via `gh api`.
 Aucune écriture, aucune suppression. Aucun secret ni contenu TXT recopié (seule la nature de l'enregistrement est notée).
 
@@ -54,15 +54,15 @@ Réglages communs aux 4 zones actives : HTTP/3, 0-RTT, TLS 1.3 + 0-RTT, ECH, Ear
 | cdn-aphrody-com         | fetch                                  | R2 `aphrody-assets` (racine)                                                                    | cdn.aphrody.com                                                                      | source retirée du dépôt                         |
 | creator-aphrody-com     | fetch                                  | R2 `aphrody-dist` (`sites/creator.aphrody.com`, SPA)                                            | creator.aphrody.com                                                                  | r2-site                                         |
 | downloads-aphrody-com   | fetch                                  | R2 `aphrody-dist` (`aphrody/`)                                                                  | downloads.aphrody.com                                                                | r2-site                                         |
-| downloads-portable      | fetch, scheduled (sans cron)           | R2 `aphrody-dist`                                                                               | workers.dev seulement                                                                | `infra/deploy.toml`                             |
-| api-aphrody-com         | fetch                                  | R2 `aphrody-dist` (`sites/api.aphrody.com/v1/openapi`)                                          | api.aphrody.com                                                                      | `infra/cloudflare/workers/api-gateway`          |
-| aphrody-github          | fetch                                  | Queue `github-events`, secret webhook                                                           | workers.dev seulement                                                                | `infra/cloudflare/workers/github-app`           |
+| downloads-portable      | fetch, scheduled (sans cron)           | R2 `aphrody-dist`                                                                               | workers.dev seulement                                                                | `device/deploy.toml`                             |
+| api-aphrody-com         | fetch                                  | R2 `aphrody-dist` (`sites/api.aphrody.com/v1/openapi`)                                          | api.aphrody.com                                                                      | `device/cloudflare/workers/api-gateway`          |
+| aphrody-github          | fetch                                  | Queue `github-events`, secret webhook                                                           | workers.dev seulement                                                                | `device/cloudflare/workers/github-app`           |
 | aphrody-email-worker    | email, fetch                           | KV, D1                                                                                          | Email Routing `inbound@aphrody.app`                                                  | non localisée                                   |
 | aphrody-webos           | fetch                                  | service `aphrody-app`, R2 `aphrody-assets`                                                      | 15 domaines `*craft.aphrody.app` + apt, 19 routes aphrody.app, 15 routes aphrody.com | non localisée                                   |
 | yolo-aphrody-com        | fetch                                  | —                                                                                               | yolo.aphrody.com                                                                     | source retirée du dépôt                         |
 | bun-video-showcase      | fetch                                  | R2 `aphrody-video` (`showcase/20261022-v3`)                                                     | route `video.aphrody.com/*` (masquée par la redirection vers bun.aphrody.com)        | non localisée                                   |
 | shenron-cdn             | fetch                                  | R2 `shenron-cdn`, manifestes JSON                                                               | route `cdn.dragonballfr.com/*`                                                       | `apps/shenron/deploy/cloudflare`                |
-| rosegriffon-maintenance | fetch                                  | assets                                                                                          | **aucune**                                                                           | `apps/rosegriffon/infra/cloudflare/maintenance` |
+| rosegriffon-maintenance | fetch                                  | assets                                                                                          | **aucune**                                                                           | `apps/rosegriffon/device/cloudflare/maintenance` |
 
 Observabilité : logs persistés activés (échantillonnage 1), traces désactivées, Logpush désactivé.
 
@@ -129,8 +129,8 @@ enregistrement DNS.
 
 Lecture : « Service (edge) » est ce qui répond en premier (custom domain Worker > route Worker > tunnel/proxy) ;
 « Origine » est la cible réseau si le Worker ou le proxy va jusqu'à l'origine. `100::` est un placeholder (Worker seul).
-« LB cluster » = HAProxy présent sur fr1, fr2 et prd (`infra/cluster`). Hôtes : fr1 = OVH VPS, fr2 = OVH Public Cloud,
-prd = Hostinger (`infra/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphrody.app/`) ne capte que la racine.
+« LB cluster » = HAProxy présent sur fr1, fr2 et prd (`device/cluster`). Hôtes : fr1 = OVH VPS, fr2 = OVH Public Cloud,
+prd = Hostinger (`device/fleet/RUNBOOK.md`). Une route sans `*` (ex. `assets.aphrody.app/`) ne capte que la racine.
 
 ### 3dland.tech (2 enregistrements, zone pending)
 
@@ -375,8 +375,8 @@ Vérifiés par `gh api` le 2026-11-13 (étoiles, dernier push, licence, dernièr
 
 | Fonctionnalité                               | Source                       | Notre équivalent                                                                                                   |
 | -------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| DNS autoritaire + IaC                        | Cloudflare DNS (189 enr.)    | `infra/cloudflare/cloudflare.toml` [dns] + `cf.ts plan/apply` (aphrody.com/app seulement ; zones produit hors IaC) |
-| Workers (custom domains, routes)             | 17 Workers                   | `apps/web`, `packages/deploy`, `infra/cloudflare/workers/*`, `infra/deploy.toml` ; 3 sources non localisées    |
+| DNS autoritaire + IaC                        | Cloudflare DNS (189 enr.)    | `device/cloudflare/cloudflare.toml` [dns] + `cf.ts plan/apply` (aphrody.com/app seulement ; zones produit hors IaC) |
+| Workers (custom domains, routes)             | 17 Workers                   | `apps/web`, `packages/deploy`, `device/cloudflare/workers/*`, `device/deploy.toml` ; 3 sources non localisées    |
 | Framework Next.js sur Workers                | vinext                       | absent (sites = Workers bun maison)                                                                                |
 | CDN objets                                   | R2 + custom domains          | `aphrody-assets` (ay brand build → `brand/v1/`), `aphrody-dist` (`sites/`, `deploys/`)                             |
 | Cache rules / page rules                     | Rulesets cache               | `cloudflare.toml` [[rules]] ; 2 page rules héritées hors IaC                                                       |

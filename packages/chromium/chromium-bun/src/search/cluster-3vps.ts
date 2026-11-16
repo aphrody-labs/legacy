@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 /**
- * Search cluster coordinator. The topology is read from infra/deploy.toml (`[nodes.*]`): a node's
+ * Search cluster coordinator. The topology is read from device/deploy.toml (`[nodes.*]`): a node's
  * `role` decides which workloads it may run. Nothing here names a host.
  *   - role "production": crawl, indexing, BM25 shards, app hosting, search egress
  *   - role "cdn-edge-and-test": proxy / CDN only
  *   - any other role (for example "build"): excluded from the search cluster
  */
-import fleet from "../../../../../infra/deploy.toml";
+import fleet from "../../../../../device/deploy.toml";
 import { ChromiumBunCrawler, type CrawlPageResult } from "./crawler.ts";
 import {
   APHRODY_TOP1_SUBDOMAIN_CATALOG,
@@ -50,7 +50,7 @@ export interface ClusterNodeSpec {
   region: string;
   publicIp: string;
   wireguardIp: string;
-  /** Verbatim `role` from infra/deploy.toml. */
+  /** Verbatim `role` from device/deploy.toml. */
   role: string;
   workloads: readonly WorkloadKind[];
 }
@@ -100,7 +100,7 @@ export function productionNode(
   const node = nodesWithRole("production", topology)[0];
   if (!node) {
     throw new Error(
-      'infra/deploy.toml declares no node with role = "production"',
+      'device/deploy.toml declares no node with role = "production"',
     );
   }
   return node;
@@ -117,7 +117,7 @@ export function assertNodeWorkloadAllowed(
   }
   if (!spec.workloads.includes(workload)) {
     throw new Error(
-      `Placement Policy Violation: node "${nodeId}" (role "${spec.role}") may not run "${workload}"; it belongs on a node with the matching role in infra/deploy.toml.`,
+      `Placement Policy Violation: node "${nodeId}" (role "${spec.role}") may not run "${workload}"; it belongs on a node with the matching role in device/deploy.toml.`,
     );
   }
 }

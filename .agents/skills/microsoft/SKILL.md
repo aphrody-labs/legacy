@@ -24,4 +24,4 @@ Investigation: `docs/research/rust-in-windows.md`.
 
 ## Plugins
 
-The Learn MCP (`microsoft_docs_*`) comes from `microsoft-docs@anthropic-plugin-directory`, which `infra/agents/toolchain.toml` currently declares `state = "absent"`; when the tools are not loaded, fetch learn.microsoft.com pages with `xh`. Third-party .NET, WinUI and Azure skill plugins are not installed. Use `windows-machine` for the local install.
+The Learn MCP (`microsoft_docs_*`) comes from `microsoft-docs@anthropic-plugin-directory`, which `tools/agents/toolchain.toml` currently declares `state = "absent"`; when the tools are not loaded, fetch learn.microsoft.com pages with `xh`. Third-party .NET, WinUI and Azure skill plugins are not installed. Use `windows-machine` for the local install.

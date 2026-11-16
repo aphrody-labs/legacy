@@ -93,10 +93,10 @@ const EXACT = /^\d+\.\d+\.\d+(-[\w.]+)?(\+[\w.]+)?$/;
 
 // Build delegates imposed by a vendor CLI: `cf build`/`cf deploy` only build through the Cloudflare Vite plugin
 // (or Wrangler), https://developers.cloudflare.com/cf/projects/ ("cf does not run a dev server or bundler itself").
-// Declared as devDependencies of infra/cloudflare/workers/*, never shipped (the Worker bundle runs on workerd).
+// Declared as devDependencies of device/cloudflare/workers/*, never shipped (the Worker bundle runs on workerd).
 // Their transitive closure is exempt from the builtin and duplicate rules only when nothing else reaches it.
 const DELEGATES: Record<string, string[]> = {
-  "infra/cloudflare/workers/": ["@cloudflare/vite-plugin", "vite"],
+  "device/cloudflare/workers/": ["@cloudflare/vite-plugin", "vite"],
   // Asset optimizers run at build time by `ay assets` (no bun built-in replaces them; wawoff2 is google/woff2 as wasm,
   // svgo has no maintained alternative); never shipped in an app bundle.
   "packages/assets/": ["svgo", "wawoff2", "gltf-validator"],

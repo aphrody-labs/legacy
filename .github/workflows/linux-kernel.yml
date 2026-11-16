@@ -1,4 +1,4 @@
-# Kernel flavor build (infra/os/linux/kernels.toml) from aphrody-labs/linux-cachyos + our series, in the
+# Kernel flavor build (device/os/linux/kernels.toml) from aphrody-labs/linux-cachyos + our series, in the
 # CachyOS container pinned by digest. Manual only: `ay linux build <flavor> --host ci --run`. The fleet
 # alternative is fr1 (preemptible, Chromium LLVM); never the PC, never prd. Docs: docs/native/linux/PATCHSETS.md.
 name: linux-kernel
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       flavor:
-        { description: "flavor of infra/os/linux/kernels.toml", default: "prd" }
+        { description: "flavor of device/os/linux/kernels.toml", default: "prd" }
 permissions: { contents: read }
 jobs:
   kernel:
@@ -18,7 +18,7 @@ jobs:
       - name: Disk space for a ThinLTO kernel tree
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h /
       - run: cargo run -q -p aphrody-omarchy --bin omarchy -- linux build "${{ inputs.flavor }}" --host ci --env >> "$GITHUB_ENV"
-      - run: WORK="$RUNNER_TEMP/kernel" SRC="$GITHUB_WORKSPACE" sh infra/os/linux/build/kernel.sh
+      - run: WORK="$RUNNER_TEMP/kernel" SRC="$GITHUB_WORKSPACE" sh device/os/linux/build/kernel.sh
       - name: KVM for QEMU (GitHub-hosted Linux runners expose /dev/kvm to root only)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -27,7 +27,7 @@ jobs:
       - name: Boot proof in QEMU (uname + APHRODY-BOOT-OK)
         run: |
           pkg=$(ls "$RUNNER_TEMP"/kernel/out/linux-*.pkg.tar.zst | grep -v -e '-headers-' -e '-dbg-' -e '-nvidia' -e '-zfs-' | head -1)
-          REQUIRE_KVM=1 sh infra/os/linux/build/boot.sh "$pkg" "$RUNNER_TEMP/kernel/out/boot.log" | tee -a "$GITHUB_STEP_SUMMARY"
+          REQUIRE_KVM=1 sh device/os/linux/build/boot.sh "$pkg" "$RUNNER_TEMP/kernel/out/boot.log" | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: kernel-${{ inputs.flavor }}

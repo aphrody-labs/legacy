@@ -1,4 +1,4 @@
-// ai-os fabric: distributed inference fabric (infra/ai/fabric.toml). JSON output on stdout.
+// ai-os fabric: distributed inference fabric (tools/ai/fabric.toml). JSON output on stdout.
 //   ai-os fabric up [--only fr1,prd] [--split 1,7] [--local] [--no-warm] [--model alias]  admits the nodes, starts rpc-server then the coordinator
 //   ai-os fabric status                                        coordinator, nodes (condition, load, systemd caps)
 //   ai-os fabric warm [--only fr1]                            nodes: local GGUF verified, tensor cache filled

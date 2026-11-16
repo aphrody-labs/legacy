@@ -1,4 +1,4 @@
-// Reproducible Android toolchain installer. Manifest: infra/android/android.toml, lock: infra/android/android.lock.json.
+// Reproducible Android toolchain installer. Manifest: build/android/android.toml, lock: build/android/android.lock.json.
 // Usage: bun scripts/android-setup.ts [install|check|lock|env|avd] [--profile pc|ci|studio|studio-canary,...] [--only <substr>]
 // Idempotent; Windows (PC) and Linux (fr1, fr2). Downloads and SDK installs only, nothing is compiled.
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, chmodSync, rmSync, statSync } from "node:fs";
@@ -6,8 +6,8 @@ import { homedir, platform } from "node:os";
 import { dirname, join, resolve } from "node:path";
 
 const ROOT = resolve(import.meta.dir, "..");
-const MANIFEST = join(ROOT, "infra/android/android.toml");
-const LOCK = join(ROOT, "infra/android/android.lock.json");
+const MANIFEST = join(ROOT, "build/android/android.toml");
+const LOCK = join(ROOT, "build/android/android.lock.json");
 const WIN = platform() === "win32";
 const HOST = WIN ? "windows" : "linux";
 const argv = process.argv.slice(2);

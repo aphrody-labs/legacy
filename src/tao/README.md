@@ -1,3 +1,21 @@
+<!-- catalog:begin unit -->
+> Cross-platform window manager library.
+
+| Type | Path |
+| :-- | :-- |
+| Rust crate | `src/tao` |
+
+**Commands**
+
+```sh
+cargo test -p aphrody-tao
+```
+
+Rust builds run on the build host or in CI, not on a workstation.
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+<!-- catalog:end -->
+
 <img src=".github/splash.png" alt="TAO - Window Creation Library" />
 
 [![](https://img.shields.io/crates/v/tao?style=flat-square)](https://crates.io/crates/tao)

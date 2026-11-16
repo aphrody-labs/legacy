@@ -531,9 +531,9 @@ pub const EXTERNALS: &[ExternalAdapter] = &[
         "re-steam",
         Acquire,
         Crate,
-        "infra/docker/steam-depot",
+        "build/docker/steam-depot",
         ["steam"],
-        Probe::RePath("infra/docker/steam-depot"),
+        Probe::RePath("build/docker/steam-depot"),
         None
     ),
     ext!(

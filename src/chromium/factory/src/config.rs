@@ -1,5 +1,5 @@
 //! Factory configuration: built-in defaults matching fr1, overridable by `factory.toml`
-//! (infra/chromium-factory/factory.toml, deployed next to the binary in /srv/chromium/factory).
+//! (build/chromium-factory/factory.toml, deployed next to the binary in /srv/chromium/factory).
 
 use std::path::{Path, PathBuf};
 
@@ -262,7 +262,7 @@ mod tests {
 
     #[test]
     fn deployed_file_matches_defaults() {
-        let c = Config::parse(include_str!("../../../../infra/chromium-factory/factory.toml")).unwrap();
+        let c = Config::parse(include_str!("../../../../build/chromium-factory/factory.toml")).unwrap();
         let d = Config::default();
         assert_eq!((c.out(), c.total_worker_jobs(), c.reapi.remote_jobs), (d.out(), d.total_worker_jobs(), d.reapi.remote_jobs));
         assert_eq!(c.doctor.conflicting, d.doctor.conflicting);

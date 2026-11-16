@@ -23,7 +23,7 @@ Sources de vérité, toutes sous `docs/research/` :
 | paquets GNU (coreutils, findutils, diffutils, sed, grep, tar, gzip, bc, ed, m4, which, time, make...) | `src/gnu/<id GSRC>`, une unité par paquet ; `src/gnu/{which,time,bc,ed,m4}` écrits, forks uutils pinnés (PLAN.md) | en cours |
 | shell (bash) | niubash puis brush (PLAN.md n°2) | en cours |
 | init et services (shepherd) | systemd sur la flotte ; `ay` côté machine | hors périmètre (PLAN.md) |
-| gestion de paquets et de système (Guix) | `ay up` (`tools.toml`), `ay machine`, images `infra/os` | existant |
+| gestion de paquets et de système (Guix) | `ay up` (`tools.toml`), `ay machine`, images `device/os` | existant |
 | manuels Texinfo et info | Texinfo conservé (`.texi`, `info`) ; les `.md` de `docs/native/gnu/<id>.md` le complètent sans le remplacer ; `--help` et `--version` au format GNU (D8) | à faire |
 
 ## Règles

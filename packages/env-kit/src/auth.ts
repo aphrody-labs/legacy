@@ -5,7 +5,7 @@
  * Actions secrets from the OS store; `tunnels` moves cloudflared tokens into systemd credentials.
  *
  * The inventory (hosts, tunnels, WireGuard interfaces, renewal units, GitHub secrets) is the
- * `[nodes.*]` and `[auth.*]` tables of infra/deploy.toml. Secret values come from the OS store
+ * `[nodes.*]` and `[auth.*]` tables of device/deploy.toml. Secret values come from the OS store
  * (@aphrody/env-kit/vault/sync), then from `.env`; they are never printed. Browser logins (gcloud, npm, vercel,
  * wrangler) only start with `--browser`: they open the default Chrome profile, where the owner
  * clicks the sign-in and consent screens himself.
@@ -145,7 +145,7 @@ function clean(s: string, max = 140): string {
 }
 
 export function loadManifest(root: string): Manifest {
-  const raw = expandSync(readFileSync(join(root, "infra", "deploy.toml"), "utf8"));
+  const raw = expandSync(readFileSync(join(root, "device", "deploy.toml"), "utf8"));
   const m = Bun.TOML.parse(raw) as unknown as Manifest;
   m.auth ??= {};
   return m;
@@ -837,7 +837,7 @@ for i in ${q(h.wireguard ?? [])}; do
   st=ok; [ $fresh = 0 ] && st=invalid; [ $fresh != 0 ] && [ $fresh != $tot ] && st=action
   p wireguard "$i" $st "wg show $i latest-handshakes: $fresh/$tot pairs < 180 s\${stale:+ ; sans handshake:$stale}"
   for r in ${q(revoked)}; do
-    grep -qF "$r" <<< "$hs" && p wireguard-key "$i:\${r:0:8}" invalid "pair encore actif avec une clé révoquée (infra/deploy.toml [auth.wireguard].revoked)"
+    grep -qF "$r" <<< "$hs" && p wireguard-key "$i:\${r:0:8}" invalid "pair encore actif avec une clé révoquée (device/deploy.toml [auth.wireguard].revoked)"
   done
 done
 for u in ${q(h.units ?? [])}; do

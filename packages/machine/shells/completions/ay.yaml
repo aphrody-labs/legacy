@@ -518,7 +518,7 @@
       },
       {
         "name": "pkg",
-        "description": "Package recipes for every distro: list, matrix, gen, build, check (packages/linux, infra/pkg)",
+        "description": "Package recipes for every distro: list, matrix, gen, build, check (packages/linux, build/pkg)",
       },
       {
         "name": "lfs",
@@ -554,7 +554,7 @@
             },
             {
               "name": "hosts",
-              "description": "List fleet nodes (infra/deploy.toml) and their resolved ssh settings",
+              "description": "List fleet nodes (device/deploy.toml) and their resolved ssh settings",
               "flags": { "-h, --help": "Print help" },
             },
             {
@@ -998,10 +998,10 @@
       },
       {
         "name": "ai",
-        "description": "Inference providers behind LiteLLM (infra/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up",
+        "description": "Inference providers behind LiteLLM (tools/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up",
         "flags":
           {
-            "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+            "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
             "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
             "--json": "JSON output (ls, check)",
             "-h, --help": "Print help",
@@ -1013,7 +1013,7 @@
               "description": "Providers and runtimes with their state (default)",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1025,7 +1025,7 @@
               "flags":
                 {
                   "--force": "",
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1036,7 +1036,7 @@
               "description": "Write the LiteLLM config from the keys and servers present",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1047,7 +1047,7 @@
               "description": "Run one runtime in the foreground (what the services start)",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1059,7 +1059,7 @@
               "flags":
                 {
                   "--remove": "",
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1070,7 +1070,7 @@
               "description": "Stop then start a runtime service",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1081,7 +1081,7 @@
               "description": "Fetch the models a runtime lists",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1092,7 +1092,7 @@
               "description": "LiteLLM health, model list and one real call per provider",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1105,7 +1105,7 @@
                 {
                   "--timeout=": "Seconds to wait for each key [default: 600]",
                   "--force": "Ask again even when a valid key is stored",
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1116,7 +1116,7 @@
               "description": "install, service, pull, config, restart LiteLLM, check",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1128,7 +1128,7 @@
               "flags":
                 {
                   "--remote-env-file=": "Dotenv file on the remote host (default: the remote `ay ai` default)",
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1139,7 +1139,7 @@
               "description": "Add dotenv keys from stdin to the first env file; existing keys are kept (names printed only)",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",
@@ -1147,10 +1147,10 @@
             },
             {
               "name": "fabric",
-              "description": "Distributed inference fabric (infra/ai/fabric.toml): `up [--only a,b] [--split x,y]`, `status`, `warm`, `down`, `bench`, `node <id>`; runs `ai-os fabric` from the checkout (bun), else the installed `ai-os`",
+              "description": "Distributed inference fabric (tools/ai/fabric.toml): `up [--only a,b] [--split x,y]`, `status`, `warm`, `down`, `bench`, `node <id>`; runs `ai-os fabric` from the checkout (bun), else the installed `ai-os`",
               "flags":
                 {
-                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/tools/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
                   "-h, --help": "Print help",

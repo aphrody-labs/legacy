@@ -19,9 +19,9 @@ Modules: 58. keep 23, migrate 33, delete 2. TS lines covered: 132482.
 | `packages/assets` | 20 | 4364 | Asset manifest, fetch, verify, list | Rust or Go | rclone (fetch and verify with checksums), b3sum | migrate | Plan: manifest in the ay CLI; transfers through rclone. |
 | `packages/vault` | 22 | 3890 | Secret vault: DPAPI, Windows Hello, systemd-creds, age envelopes | Rust (windows-rs, age crate) | age (Go and Rust), systemd-creds, keyring crates | migrate | Plan: Rust crate with the age crate and windows-rs; Bun binding via bun:ffi. |
 | `packages/gnu` | 15 | 3638 | GNU upstream tracker and distributor: feeds, static site, MCP tools | Python (feed scraping) or Rust | GSRC, Guix (data), feedparser | migrate | Plan: scraping and feed generation in Python under uv; MCP tool surface through the relay. |
-| `infra/agents` | 13 | 3103 | Agent bootstrap, GitHub tokens and events | Go for GitHub tooling | gh CLI (Go), github-app-token flows | migrate | Plan: token minting through gh; events through the gh webhook forwarder. |
+| `tools/agents` | 13 | 3103 | Agent bootstrap, GitHub tokens and events | Go for GitHub tooling | gh CLI (Go), github-app-token flows | migrate | Plan: token minting through gh; events through the gh webhook forwarder. |
 | `packages/py2bun` | 16 | 2975 | Python to Bun TypeScript transpiler | None: Python runs as Python (uv) | uv, CPython | delete | Converting Python to TypeScript goes against the language rule. Blocked on the Rust crate src/py2bun, the catalog entry and docs; delete in one change. |
-| `infra/cloudflare` | 16 | 2963 | Cloudflare API: zones, tunnels, SSH CA, proofs, workers | Go (cloud tooling) | cloudflared, wrangler, terraform provider, cf CLI | migrate | Plan: replace cf.ts and proof.ts with wrangler and cloudflared calls; tunnel-token needs an API token so cloudflared tunnel token is not equivalent. |
+| `device/cloudflare` | 16 | 2963 | Cloudflare API: zones, tunnels, SSH CA, proofs, workers | Go (cloud tooling) | cloudflared, wrangler, terraform provider, cf CLI | migrate | Plan: replace cf.ts and proof.ts with wrangler and cloudflared calls; tunnel-token needs an API token so cloudflared tunnel token is not equivalent. |
 | `packages/ai-os/src/review` | 5 | 2952 | Gemini review through the web UI, schema, sources | TypeScript (browser automation) | Playwright or CDP clients | keep | Justified: drives gemini.google.com through the browser; web-bound. |
 | `packages/ai-os/src/orch` | 10 | 2646 | Task orchestration: classify, queue, fleet, policy | Rust core | temporal, apalis (Rust job queues) | migrate | Plan with the relay move; policy tables stay data. |
 | `packages/ai-os/src/core` | 14 | 2488 | Agent loop, memory, skills, sandbox, secrets | Rust core, Python for ML parts | rig, goose, codex (Rust agents) | migrate | Plan: Rust agent core; skills stay markdown. Not done here. |
@@ -34,13 +34,13 @@ Modules: 58. keep 23, migrate 33, delete 2. TS lines covered: 132482.
 | `packages/gcp` | 5 | 1675 | gcloud configurations, IAM bindings plan, billing | Go (Google cloud tooling) | gcloud CLI, terraform google provider | migrate | Plan: IAM plan as terraform or gcloud commands; keep a thin wrapper. |
 | `packages/ai-os/src/term` | 6 | 1670 | PTY terminal server and agent bridge | Rust | portable-pty, wezterm-term (Rust) | migrate | Plan with relay; web client part stays TS. |
 | `packages/omniu` | 17 | 1654 | oh-my-niu plugin bundle, validator, packager, host | TypeScript (Bun plugin host) | - | keep | Justified: loads plugins into Bun itself. |
-| `packages/ai-os/src/router` | 9 | 1605 | LLM router, catalog, stats, HTTP gateway | Python (LiteLLM) or Rust | litellm (proxy already used in infra/ai), llm crate | migrate | Plan: route through LiteLLM proxy; infra/ai already runs it. |
+| `packages/ai-os/src/router` | 9 | 1605 | LLM router, catalog, stats, HTTP gateway | Python (LiteLLM) or Rust | litellm (proxy already used in tools/ai), llm crate | migrate | Plan: route through LiteLLM proxy; tools/ai already runs it. |
 | `packages/i18n` | 16 | 1501 | i18n catalogs, MessageFormat 2, locale negotiation | TypeScript (web and Bun i18n) | messageformat (npm), ICU4X for Rust | keep | Justified: browser Intl layer shared by web UIs; Rust side uses Fluent/ICU4X. |
 | `packages/ai-os/src/nhitl` | 5 | 1490 | No-human-in-the-loop scanners and ledger | Rust or Python | gitleaks (Go), trufflehog (Go), semgrep | migrate | Scanning duplicates gitleaks; keep the ledger. |
 | `tools/gnu-index` | 4 | 1371 | GNU distro index builder | Python (data) | - | migrate | Plan with packages/gnu. |
 | `packages/ai-os/src/llm` | 9 | 1343 | LLM client, schema, retry, model catalog | Python or Rust | litellm, genai crate, rig | migrate | Plan with the router. |
 | `packages/ai-os/src/fabric` | 2 | 874 | Model fabric config | Python (LiteLLM config) | litellm | migrate | Plan with the router. |
-| `infra/fleet` | 5 | 754 | Fleet budget, cache, local CI | Go (container and CI tooling) | sccache (Rust), act (Go) | migrate | Plan: sccache and act replace cache.ts and ci-local.ts. |
+| `device/fleet` | 5 | 754 | Fleet budget, cache, local CI | Go (container and CI tooling) | sccache (Rust), act (Go) | migrate | Plan: sccache and act replace cache.ts and ci-local.ts. |
 | `packages/ai-os/src/brain` | 5 | 721 | Memory sync and skill archive across agent CLIs | Python (ML/AI memory) or Rust | mem0, letta (Python) | migrate | Larger migration; row with plan, not done here. |
 | `scripts/hygiene.ts` | 1 | 667 | Repository hygiene checks | Rust or tree-sitter based | tree-sitter, typos, ast-grep | migrate | Being moved to tree-sitter by another agent; not touched here. |
 | `packages/ffi-bridge` | 6 | 565 | bun:ffi bindings to Rust cdylibs | TypeScript (bun:ffi) | - | keep | Justified: Bun-native FFI binding. |
@@ -49,10 +49,10 @@ Modules: 58. keep 23, migrate 33, delete 2. TS lines covered: 132482.
 | `packages/ai-os/src/research` | 3 | 439 | Context7 lookups, fact checks | Python (research) | context7 MCP, requests | migrate | Plan: Python research tools under uv. |
 | `scripts/identity.ts` | 1 | 438 | Identity naming checks | Bun-native tooling | - | keep | Justified: repo tooling. |
 | `scripts/catalog.ts` | 1 | 426 | Catalog generation | Bun-native tooling | tree-sitter | migrate | Being moved to tree-sitter by another agent; not touched here. |
-| `infra/cluster` | 2 | 415 | Cluster compose generation and dedup | Go (container tooling) | docker compose, kompose | migrate | Plan: compose files by hand or kompose; drop gen.ts. |
+| `device/cluster` | 2 | 415 | Cluster compose generation and dedup | Go (container tooling) | docker compose, kompose | migrate | Plan: compose files by hand or kompose; drop gen.ts. |
 | `scripts/android-setup.ts` | 1 | 402 | Android SDK setup | Bun-native tooling | sdkmanager, android-cli | migrate | Plan: call the android CLI directly. |
 | `scripts/checkdeps.ts` | 1 | 402 | Dependency layer checks | Bun-native tooling | - | keep | Justified: DEPS.rules layer gate. |
-| `infra/os` | 1 | 375 | unixwin tooling | Rust | - | migrate | Plan with the unixwin Rust crates. |
+| `device/os` | 1 | 375 | unixwin tooling | Rust | - | migrate | Plan with the unixwin Rust crates. |
 | `scripts/topology.ts` | 1 | 302 | Repository topology | Bun-native tooling | - | keep | Justified: repo tooling. |
 | `scripts/cli-skills.ts` | 1 | 300 | CLI skill generation | Bun-native tooling | - | keep | Justified: generates markdown skills. |
 | `scripts/unixwin-applets.ts` | 1 | 256 | unixwin applet table | Bun-native tooling | - | keep | Justified: repo tooling. |
@@ -60,7 +60,7 @@ Modules: 58. keep 23, migrate 33, delete 2. TS lines covered: 132482.
 | `scripts/restore-inventory.ts` | 1 | 206 | Restore inventory generator over GitHub, npm, crates.io and VPS scans | Bun-native tooling | - | keep | Justified: repo tooling merging JSON outputs; owned by another session. |
 | `packages/ai-os/src/providers` | 1 | 204 | Provider sources CLI | Follows the router | litellm | migrate | Plan with the router. |
 | `scripts/gnu-check.ts` | 1 | 165 | GNU package checks | Bun-native tooling | - | keep | Justified: repo tooling over packages/gnu. |
-| `infra/ai` | 1 | 162 | LiteLLM proxy launcher | Python (LiteLLM) | litellm | keep | Justified: launcher glue for systemd credentials; the proxy is upstream. |
+| `tools/ai` | 1 | 162 | LiteLLM proxy launcher | Python (LiteLLM) | litellm | keep | Justified: launcher glue for systemd credentials; the proxy is upstream. |
 | `scripts/identity.test.ts` | 1 | 152 | Tests of identity.ts | Bun-native tooling | - | keep | Test of kept code. |
 | `packages/native` | 2 | 137 | bun:ffi bindings for the Zig native SDK | TypeScript (bun:ffi) | - | keep | Justified: Bun-native FFI binding. |
 | `infra/pipeline` | 1 | 49 | Windows scheduled task for ay index watch | Bun-native tooling | schtasks | keep | Under 50 lines of schtasks glue. |

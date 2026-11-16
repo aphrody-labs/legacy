@@ -1,5 +1,5 @@
 // Outbound HTTP calls of the relay (LLM providers, OpenAI-compatible APIs, aggregated HTTP MCP servers), client-side
-// complement of the cluster's nginx coalescing (infra/cluster, docs/infra/CLUSTER.md):
+// complement of the cluster's nginx coalescing (device/cluster, docs/infra/CLUSTER.md):
 //   - singleflight: identical in-flight requests share a single upstream call; the body (JSON or SSE stream) is
 //     broadcast to all subscribers, latecomers first receive the chunks already read;
 //   - bun:sqlite response cache (<relayHome>/cache.sqlite, RELAY_CACHE_DB): key = sha256(method, URL, canonical body,
@@ -8,7 +8,7 @@
 //     TTL RELAY_CACHE_TTL_MS (default 120 s), RELAY_CACHE=0 disables the cache; `Cache-Control: no-store` and
 //     `x-aphrody-cache: bypass` (request) or `no-store` (response) bypass it;
 //   - Idempotency-Key = the sha256 key on POSTs that go through a cluster LB port (nginx replays them for 24 h);
-//   - mesh: a cross-host URL whose host:port is the target of a [cluster.services] entry of infra/deploy.toml
+//   - mesh: a cross-host URL whose host:port is the target of a [cluster.services] entry of device/deploy.toml
 //     goes to 127.0.0.1:<lb_port> when that port listens (HAProxy mTLS, TCP 7444), falling back to the original URL.
 // Metrics: stats() (relay_cache_stats tool, GET /metrics of the server).
 import { Database } from "bun:sqlite";
@@ -92,7 +92,7 @@ export function deterministic(
 type MeshRoute = { lbPort: number; cached: boolean };
 type Mesh = { routes: Map<string, MeshRoute>; lbPorts: Map<number, boolean> };
 
-/** Remote host:port -> local LB port table, from infra/deploy.toml [cluster] (SRC_ROOT, otherwise the repository copy). */
+/** Remote host:port -> local LB port table, from device/deploy.toml [cluster] (SRC_ROOT, otherwise the repository copy). */
 export function loadMesh(text?: string): Mesh {
   const routes = new Map<string, MeshRoute>();
   const lbPorts = new Map<number, boolean>();
@@ -101,8 +101,8 @@ export function loadMesh(text?: string): Mesh {
     if (text === undefined) {
       const file = [
         Bun.env.RELAY_DEPLOY_TOML,
-        Bun.env.SRC_ROOT && join(Bun.env.SRC_ROOT, "infra", "deploy.toml"),
-        join(import.meta.dir, "..", "..", "..", "..", "infra", "deploy.toml"),
+        Bun.env.SRC_ROOT && join(Bun.env.SRC_ROOT, "device", "deploy.toml"),
+        join(import.meta.dir, "..", "..", "..", "..", "device", "deploy.toml"),
       ].find((f) => f && existsSync(f));
       if (!file) return { routes, lbPorts };
       text = expandSync(readFileSync(file, "utf8"));

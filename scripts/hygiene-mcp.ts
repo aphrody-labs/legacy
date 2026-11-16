@@ -1,6 +1,6 @@
 // Hardcode and slop scanner as a stdio MCP server (protocol 2025-11-25, one JSON message per line), reached through
 // the relay hub: hub_tools server=hygiene, hub_call name=hygiene__hygiene_scan | hygiene__hygiene_rules.
-// Registered by [[hub.mcp]] hygiene in infra/agents/toolchain.toml. Engine: scripts/hygiene.ts.
+// Registered by [[hub.mcp]] hygiene in tools/agents/toolchain.toml. Engine: scripts/hygiene.ts.
 import { RULES, deadRefs, scan, summarize, type Hit } from "./hygiene.ts";
 
 const root = import.meta.dir.replace(/[\\/]scripts$/, "");
