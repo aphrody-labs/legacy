@@ -17,7 +17,7 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 - Core: `ay` is Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), a universal TS/JS, bash and Rust runner, and modules and extensions through crates.io and npm (AOT, LTO).
 - Around it: the platform (OS layers, deploy, the fleet as one server, agents) and the front ends (web, CLI, TUI, GUI, mobile) built on the `open` and `auto` libraries.
 - Ecosystem apps and frameworks on that core: games (Bevy fork with Steam and Epic), the Craft Apps, media.
-- Layout follows Bun ([`docs/project/layout.md`](docs/project/layout.md)): `src/` Rust and C, `packages/` libraries by language manifest, `apps/` (`web`, `auto`, `nt`; `open` is its own repo; `rosegriffon`, `shenron` are submodules), `infra/`, `third_party/` (pins in `src.lock.json`).
+- Layout follows Bun ([`docs/project/layout.md`](docs/project/layout.md)): `src/` Rust and C, `packages/` libraries by language manifest, `apps/` (`web`, `auto`, `nt`; `open` is its own repo; `shenron` and `rosegriffon` are separate products checked out next to this repo, not part of it), `build/` (CI, images, SDK pins), `device/` (fleet, cluster, OS images, cloud, deploy), `prebuilts/` (`ay up` pins), `tools/` (agents, upstream, identity), `third_party/` (pins in `src.lock.json`).
 
 ## How
 - "Purge legacy" means fixing legacy errors, deleting dead code and modernizing old architecture; it never removes a feature or causes a regression.
@@ -38,5 +38,5 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 ## Antigravity and Gemini CLI
 - Both read this file: `.gemini/settings.json` sets `context.fileName` to `AGENTS.md` (Gemini CLI settings reference, `context.fileName`: string or array); there is no separate `GEMINI.md`.
 - `packages/ai-os` is the sole AI and MCP owner. MCP over stdio: `ai-os relay mcp-stdio` (`packages/ai-os/src/relay/cli.ts`); over HTTP: the relay `POST /mcp` (`packages/ai-os/docs/RELAY.md`). Providers and models are discovered at run time, never hard-coded.
-- Antigravity `PreToolUse` hooks are disabled (`{}` in `.agents/hooks.json`); GitHub auth runs through the `aphrody-labs` GitHub App (`infra/agents/gh-token.ts`).
+- Antigravity `PreToolUse` hooks are disabled (`{}` in `.agents/hooks.json`); GitHub auth runs through the `aphrody-labs` GitHub App (`tools/agents/gh-token.ts`).
 - Run `bun fmt`, `bun check` and the affected `bun test` (a package, never bare `bun test` at root). Use `graphify` first when `graphify-out/` exists.

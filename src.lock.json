@@ -966,7 +966,10 @@
       "remotes": {
         "origin": "https://gitlab.archlinux.org/archlinux/archlinux-docker.git"
       },
-      "sparse_paths": ["/*", "!/*/"]
+      "sparse_paths": [
+        "/*",
+        "!/*/"
+      ]
     },
     "third_party/archlinux-wsl": {
       "path": "third_party/archlinux-wsl",
@@ -2446,7 +2449,10 @@
       "remotes": {
         "origin": "https://github.com/alpinelinux/docker-alpine.git"
       },
-      "sparse_paths": ["/*", "!/*/"]
+      "sparse_paths": [
+        "/*",
+        "!/*/"
+      ]
     },
     "third_party/docker-docs": {
       "path": "third_party/docker-docs",
@@ -2458,7 +2464,11 @@
       "remotes": {
         "origin": "https://github.com/docker/docs.git"
       },
-      "sparse_paths": ["/*", "!/*/", "/content/"]
+      "sparse_paths": [
+        "/*",
+        "!/*/",
+        "/content/"
+      ]
     },
     "third_party/dotnet-runtime": {
       "path": "third_party/dotnet-runtime",
@@ -4092,7 +4102,11 @@
       "remotes": {
         "origin": "https://github.com/NixOS/nix.dev.git"
       },
-      "sparse_paths": ["/*", "!/*/", "/source/"]
+      "sparse_paths": [
+        "/*",
+        "!/*/",
+        "/source/"
+      ]
     },
     "third_party/node": {
       "path": "third_party/node",
@@ -5373,7 +5387,10 @@
       "remotes": {
         "origin": "https://github.com/SteamTracking/SteamTracking.git"
       },
-      "sparse_paths": ["/*", "!/*/"]
+      "sparse_paths": [
+        "/*",
+        "!/*/"
+      ]
     },
     "third_party/steamworks-rs": {
       "path": "third_party/steamworks-rs",
@@ -7237,7 +7254,13 @@
         "origin": "https://github.com/aphrody-labs/unixwin-apt.git",
         "upstream": "https://github.com/unixwin/apt.git"
       },
-      "sparse_paths": ["/*", "!/*/", "/.github/", "/conf/", "/meta/"]
+      "sparse_paths": [
+        "/*",
+        "!/*/",
+        "/.github/",
+        "/conf/",
+        "/meta/"
+      ]
     },
     "third_party/unixwin-github": {
       "path": "third_party/unixwin-github",
@@ -7614,7 +7637,10 @@
         "origin": "https://github.com/aphrody-labs/winget-pkgs.git",
         "upstream": "https://github.com/microsoft/winget-pkgs.git"
       },
-      "sparse_paths": ["/*", "!/*/"]
+      "sparse_paths": [
+        "/*",
+        "!/*/"
+      ]
     },
     "third_party/winit": {
       "path": "third_party/winit",
