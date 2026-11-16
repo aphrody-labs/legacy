@@ -241,7 +241,7 @@ wireguard = ["wg1"]
 units = ["certbot"]
 
 [auth.hosts.usa]
-tunnels = { cloudflared-mig-prd = "mig-prd", cloudflared-prod = "prod" }
+tunnels = { cloudflared-mig-prd = "aphrody" }
 wireguard = ["prod", "vps"]
 units = ["shenron-cloudflare-s3-renew", "rg-steam-depot"]
 
