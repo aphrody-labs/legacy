@@ -1,6 +1,6 @@
 # Repository layout
 
-The root follows [`oven-sh/bun`](https://github.com/oven-sh/bun): manifests plus `bench`, `completions`, `docs`, `packages`, `scripts`, `src`, `test`, `tools`. A root entry stays only when Bun has it or a tool requires the path; everything else moves under the directory that owns it. Check with `fd -d 1 -H`. The root directories allowed by `archguard` are in `src/archguard/src/constants.rs`.
+The root follows [`oven-sh/bun`](https://github.com/oven-sh/bun): manifests plus `bench`, `completions`, `docs`, `packages`, `scripts`, `src`, `test`, `tools`. A root entry stays only when Bun has it or a tool requires the path; everything else moves under the directory that owns it. Check with `fd -d 1 -H`.
 
 ## Root
 

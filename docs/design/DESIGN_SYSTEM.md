@@ -1,10 +1,7 @@
-# Aphrody design system
+# Design system
 
-- Tokens: `packages/design` (`DESIGN.md`, `tokens/tokens.json`, `tokens.css`, `tokens.rs`, `tokens.zig`, `tokens/themes.json`, `tokens/themes.css`, `tokens/hyprland.conf`, `tokens/adapters/taffy_tokens.rs`, `tokens/figma-mockup.json` targeting `2xsZi5wLPAYLGNCLZ2ZJUv`, `tokens/figma-sync.js`, `tokens/figma-themes-sync.js`, `ansi.json`, Figma variable files), Material 3 through Material Color Utilities. Sources and versions: `docs/ui/STACK.md`; surfaces: `docs/ui/INVENTORY.md`.
-- Rust core: `src/taffy` (`0.15.1` first-party layout kernel) and `src/ui/kit`, one crate with the modules `color` (HCT, CAM16, palettes, schemes, contrast, checked against `@material/material-color-utilities` 0.4.0 fixtures), `components` (Material 3 contracts: states, variants, ARIA, focus, measures), `layout` (CSS and Tailwind utilities lowered to `taffy`), `fusion` (23 shared `UiKind`s, 9 theme presets, 4 canonical pages rendered via `ay ui` across 11 targets: TUI, CLI, Web WASM/SSR via `dioxus-ssr`, WebGPU via `anyrender`/`vello`/`wgpu`, GPUI, `embedded_gpui`, `winit`/`wgpu`, WinUI 3, Mobile `nsh`, Linux Wayland, Unix POSIX), `shared`, `react`, `next` and `brand` (binary `aphrody-brand`, `ay brand build`). `src/ui/brand-gpu` holds the geometry shared with the wasm renderer.
-- Features of `aphrody-ui`: default `std`, `serde`, `layout`, `fusion`, `anyrender`, `dioxus`, `tui`, `editor`, `react`, `next`; optional `vello`, `tui-crossterm`, `image`, `embedded-fonts`, `bevy` (`layout::css_to_bevy_node`) and `egui` (`layout::to_egui`). A renderer can depend on it with `default-features = false`.
-- UI frameworks: free since the owner amendment of 2026-11-13; the criteria are rendering quality, performance and function. Tokens stay the single source whatever the framework.
-- Removed: the crates `aphrody-design-shared`, `-tokens`, `-layout`, `-icons` and `-emit` no longer exist; their code was merged into `aphrody-ui`.
-- Reference specifications (not targets): `docs/design` (441 rewritten rules, sources and licenses in `sources.toml`) and the skills `material-3`, `vercel-geist`, `web-quality`, `webgpu-wasm-ui`.
-- Gate: Design-First Gate of `AGENTS.md` section 2 (`gds verify`, `wck`).
-- External system read for comparison: the Craft Apps have no shared token file, `craft-ui` takes application-supplied styles.
+- Tokens: [`packages/design`](../../packages/design) generates them from `design.toml` (seed, variant, typeface) with Material Color Utilities: CSS, JSON, Rust, Zig, themes and the Figma sync files in `tokens/`. Rules for the generator: [`DESIGN.md`](../../packages/design/DESIGN.md).
+- Rust core: [`src/ui/kit`](../../src/ui/kit), one crate with `color`, `components` (Material 3 contracts), `layout` (CSS and Tailwind lowered to `taffy`), `fusion` (shared UI kinds rendered to every target), `react`, `next` and `shared`. The feature list is in its `Cargo.toml`.
+- Icons: Material Symbols subset in [`packages/design/symbols`](../../packages/design/symbols).
+- The UI framework is free; the criteria are rendering quality, performance and function. Tokens stay the single source whatever the framework.
+- Skills: `ui-system` (rules before any interface work), `material-3`, `vercel-geist`, `web-quality`, `webgpu-wasm-ui`.
