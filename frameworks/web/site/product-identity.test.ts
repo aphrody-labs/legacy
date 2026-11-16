@@ -27,7 +27,7 @@ const data: SiteData = {
     lastUpstreamMerge: null,
     docs: { added: [], modified: [] },
     modules: ["bun:native-only"],
-    commands: ["src/runtime/cli/source_only_command.rs"],
+    commands: ["system/runtime/cli/source_only_command.rs"],
     packages: [],
     windowsBindings: null,
     npm: null,
@@ -44,8 +44,8 @@ test("runtime inventory preserves attribution and distinguishes declarations fro
   expect(page.markdown).toContain("MIT");
   expect(page.markdown).toContain("Source package version");
   expect(page.markdown).not.toContain("base version");
-  expect(page.markdown).toContain(`${source}/src/resolve_builtins/HardcodedModule.rs`);
-  expect(page.markdown).not.toContain("src/js/bun/native-only.ts");
+  expect(page.markdown).toContain(`${source}/system/resolve_builtins/HardcodedModule.rs`);
+  expect(page.markdown).not.toContain("system/js/bun/native-only.ts");
   expect(page.markdown).toContain("does not establish platform availability");
   expect(page.markdown).toContain("command registration and behavior require their own runtime evidence");
   expect(page.markdown).toContain("2 since 2026-10-13");

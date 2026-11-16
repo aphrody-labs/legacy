@@ -459,907 +459,907 @@
         {
           "name": "bun_aot",
           "description": "",
-          "path": "src/aot"
+          "path": "system/aot"
         },
         {
           "name": "bun_aot_absent",
           "description": "",
-          "path": "src/aot/absent"
+          "path": "system/aot/absent"
         },
         {
           "name": "bun_aot_builtins",
           "description": "",
-          "path": "src/aot/builtins"
+          "path": "system/aot/builtins"
         },
         {
           "name": "bun_aot_interface",
           "description": "",
-          "path": "src/aot/interface"
+          "path": "system/aot/interface"
         },
         {
           "name": "aphrody-apm",
           "description": "Rust port of Microsoft APM (Agent Package Manager): apm.yml, apm.lock.yaml, resolution, install/compile for Claude Code and Copilot.",
-          "path": "src/apm"
+          "path": "system/apm"
         },
         {
           "name": "bun_archive",
           "description": "",
-          "path": "src/archive"
+          "path": "system/archive"
         },
         {
           "name": "bun_ast",
           "description": "",
-          "path": "src/ast"
+          "path": "system/ast"
         },
         {
           "name": "bun_ast_jsc",
           "description": "",
-          "path": "src/ast_jsc"
+          "path": "system/ast_jsc"
         },
         {
           "name": "aphrody",
           "description": "ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build)",
-          "path": "src/ay"
+          "path": "system/ay"
         },
         {
           "name": "aphrody-backend",
           "description": "Aphrody forensics and backend logic (Rust).",
-          "path": "src/backend"
+          "path": "system/backend"
         },
         {
           "name": "bun_base64",
           "description": "",
-          "path": "src/base64"
+          "path": "system/base64"
         },
         {
           "name": "bun_boringssl",
           "description": "",
-          "path": "src/boringssl"
+          "path": "system/boringssl"
         },
         {
           "name": "bun_boringssl_sys",
           "description": "",
-          "path": "src/boringssl_sys"
+          "path": "system/boringssl_sys"
         },
         {
           "name": "bun_brotli",
           "description": "",
-          "path": "src/brotli"
+          "path": "system/brotli"
         },
         {
           "name": "bun_brotli_sys",
           "description": "",
-          "path": "src/brotli_sys"
+          "path": "system/brotli_sys"
         },
         {
           "name": "bun_builtin_sources",
           "description": "",
-          "path": "src/builtin_sources"
+          "path": "system/builtin_sources"
         },
         {
           "name": "bun_alloc",
           "description": "",
-          "path": "src/bun_alloc"
+          "path": "system/bun_alloc"
         },
         {
           "name": "bun_core",
           "description": "",
-          "path": "src/bun_core"
+          "path": "system/bun_core"
         },
         {
           "name": "bun_core_macros",
           "description": "",
-          "path": "src/bun_core_macros"
+          "path": "system/bun_core_macros"
         },
         {
           "name": "bun_output_tags",
           "description": "",
-          "path": "src/bun_output_tags"
+          "path": "system/bun_output_tags"
         },
         {
           "name": "bun_bundler",
           "description": "",
-          "path": "src/bundler"
+          "path": "system/bundler"
         },
         {
           "name": "bun_bundler_jsc",
           "description": "",
-          "path": "src/bundler_jsc"
+          "path": "system/bundler_jsc"
         },
         {
           "name": "bun_bunfig",
           "description": "",
-          "path": "src/bunfig"
+          "path": "system/bunfig"
         },
         {
           "name": "bun_cares_sys",
           "description": "",
-          "path": "src/cares_sys"
+          "path": "system/cares_sys"
         },
         {
           "name": "bun_clap",
           "description": "",
-          "path": "src/clap"
+          "path": "system/clap"
         },
         {
           "name": "bun_clap_macros",
           "description": "",
-          "path": "src/clap_macros"
+          "path": "system/clap_macros"
         },
         {
           "name": "bun_collections",
           "description": "",
-          "path": "src/collections"
+          "path": "system/collections"
         },
         {
           "name": "aphrody-config",
           "description": "Codex-compatible config.toml model for aphrody: ConfigToml, model providers (managed llama-server, Ollama, LM Studio, vLLM, Antigravity, OpenAI, Anthropic, ChatGPT), layered merge (built-ins < Codex-compat < user < project < profile < -c overrides < CLI flags), dotted -c override parsing, and the No-Human-In-The-Loop policy defaults. Pure, no filesystem access in the core, wasm32-safe.",
-          "path": "src/config"
+          "path": "system/config"
         },
         {
           "name": "aphrody-core",
           "description": "Common lib: tree-sitter parsing, symbol/ref index, content hashing (BLAKE3)",
-          "path": "src/core"
+          "path": "system/core"
         },
         {
           "name": "aphrody-core-capi",
           "description": "One C ABI cdylib: core_* (aphrody-core), ai_os_*, depot_*, aphrody_re_* and Boq (aphrody_*), loaded by bun:ffi, Python, and Java",
-          "path": "src/core/capi"
+          "path": "system/core/capi"
         },
         {
           "name": "aphrody-core-py",
           "description": "Native PyO3 (ABI3) Python core extension exposing aphrody-core (Tree-sitter, BLAKE3, index) and aphrody-re (RE triage, disasm, Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2)",
-          "path": "src/core/capi/py"
+          "path": "system/core/capi/py"
         },
         {
           "name": "aphrody-core-jni",
           "description": "Native JNI (Java 25+) core bridge exposing aphrody-core (Tree-sitter, BLAKE3, index) and aphrody-re (RE triage, disasm, Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2)",
-          "path": "src/core/jni"
+          "path": "system/core/jni"
         },
         {
           "name": "bun_crash_handler",
           "description": "",
-          "path": "src/crash_handler"
+          "path": "system/crash_handler"
         },
         {
           "name": "bun_csrf",
           "description": "",
-          "path": "src/csrf"
+          "path": "system/csrf"
         },
         {
           "name": "bun_css",
           "description": "",
-          "path": "src/css"
+          "path": "system/css"
         },
         {
           "name": "bun_css_jsc",
           "description": "",
-          "path": "src/css_jsc"
+          "path": "system/css_jsc"
         },
         {
           "name": "depot-cas",
           "description": "Content-addressed artifact store for depot tooling, after Lore: FastCDC v2020 fragments (32/64/256 KiB), blake3 ids, zstd, sha256 file index",
-          "path": "src/depot/cas"
+          "path": "system/depot/cas"
         },
         {
           "name": "depot-cipd",
           "description": "CIPD client in Rust: `cipd ensure` with the luci-go site root layout, instances cached in depot-cas (`ay cipd ensure`)",
-          "path": "src/depot/cipd"
+          "path": "system/depot/cipd"
         },
         {
           "name": "depot-cli",
           "description": "depot command set (VCS, depot_tools, ingest, code graph) behind `ay git`, `ay ingest` and `ay graph`",
-          "path": "src/depot/cli"
+          "path": "system/depot/cli"
         },
         {
           "name": "depot-core",
           "description": "depot-core: part of the Aphrody monorepo",
-          "path": "src/depot/core"
+          "path": "system/depot/core"
         },
         {
           "name": "depot-forge",
           "description": "depot-forge: part of the Aphrody monorepo",
-          "path": "src/depot/forge"
+          "path": "system/depot/forge"
         },
         {
           "name": "depot-gclient",
           "description": "gclient in Rust: DEPS/.gclient evaluator, revinfo, getdep/setdep, sync planner on gix (`ay gclient`, `ay fetch`)",
-          "path": "src/depot/gclient"
+          "path": "system/depot/gclient"
         },
         {
           "name": "depot-graph",
           "description": "depot-graph: part of the Aphrody monorepo",
-          "path": "src/depot/graph"
+          "path": "system/depot/graph"
         },
         {
           "name": "depot-ingest",
           "description": "depot-ingest: part of the Aphrody monorepo",
-          "path": "src/depot/ingest"
+          "path": "system/depot/ingest"
         },
         {
           "name": "depot-migrate",
           "description": "depot-migrate: part of the Aphrody monorepo",
-          "path": "src/depot/migrate"
+          "path": "system/depot/migrate"
         },
         {
           "name": "depot-vpython",
           "description": "`ay vpy`: run Chromium vpython specs (vpython.toml + .uv.lock, PEP 723) on uv",
-          "path": "src/depot/vpython"
+          "path": "system/depot/vpython"
         },
         {
           "name": "aphrody-diffutils-flat",
           "description": "POSIX basic regular expression translation from the aphrody-labs/diffutils fork (uutils), flattened by `ay flat sync --fork third_party/diffutils`",
-          "path": "src/diffutils-flat"
+          "path": "system/diffutils-flat"
         },
         {
           "name": "bun_dispatch",
           "description": "",
-          "path": "src/dispatch"
+          "path": "system/dispatch"
         },
         {
           "name": "bun_dns",
           "description": "",
-          "path": "src/dns"
+          "path": "system/dns"
         },
         {
           "name": "aphrody-docs",
           "description": "`ay docs`: imports the documentation of Bun, Linux, Chromium, ChromiumOS and Android (data-driven sources.toml: local, git, llms.txt, sitemap) into a SQLite FTS5 index and serves search for people and agents",
-          "path": "src/docs"
+          "path": "system/docs"
         },
         {
           "name": "bun_dotenv",
           "description": "",
-          "path": "src/dotenv"
+          "path": "system/dotenv"
         },
         {
           "name": "aphrody-env",
           "description": "Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/aphrody/.env",
-          "path": "src/env"
+          "path": "system/env"
         },
         {
           "name": "bun_errno",
           "description": "",
-          "path": "src/errno"
+          "path": "system/errno"
         },
         {
           "name": "bun_event_loop",
           "description": "",
-          "path": "src/event_loop"
+          "path": "system/event_loop"
         },
         {
           "name": "bun_exe_format",
           "description": "",
-          "path": "src/exe_format"
+          "path": "system/exe_format"
         },
         {
           "name": "bun_executable",
           "description": "",
-          "path": "src/executable"
+          "path": "system/executable"
         },
         {
           "name": "bun_format",
           "description": "",
-          "path": "src/format"
+          "path": "system/format"
         },
         {
           "name": "bun_format_conformance",
           "description": "",
-          "path": "src/format/conformance"
+          "path": "system/format/conformance"
         },
         {
           "name": "bun_glob",
           "description": "",
-          "path": "src/glob"
+          "path": "system/glob"
         },
         {
           "name": "aphrody-gpu-backend",
           "description": "Shared wgpu instance, adapter, device and surface-configuration boundary for Aphrody and IECODE renderers, plus the process-wide GPU hub (wgpu + CUDA).",
-          "path": "src/gpu-backend"
+          "path": "system/gpu-backend"
         },
         {
           "name": "bun_hash",
           "description": "",
-          "path": "src/hash"
+          "path": "system/hash"
         },
         {
           "name": "bun_highway",
           "description": "",
-          "path": "src/highway"
+          "path": "system/highway"
         },
         {
           "name": "bun_histogram",
           "description": "",
-          "path": "src/histogram"
+          "path": "system/histogram"
         },
         {
           "name": "bun_http",
           "description": "",
-          "path": "src/http"
+          "path": "system/http"
         },
         {
           "name": "bun_http_jsc",
           "description": "",
-          "path": "src/http_jsc"
+          "path": "system/http_jsc"
         },
         {
           "name": "bun_http_types",
           "description": "",
-          "path": "src/http_types"
+          "path": "system/http_types"
         },
         {
           "name": "bun_ini",
           "description": "",
-          "path": "src/ini"
+          "path": "system/ini"
         },
         {
           "name": "bun_install",
           "description": "",
-          "path": "src/install"
+          "path": "system/install"
         },
         {
           "name": "bun_install_jsc",
           "description": "",
-          "path": "src/install_jsc"
+          "path": "system/install_jsc"
         },
         {
           "name": "bun_install_types",
           "description": "",
-          "path": "src/install_types"
+          "path": "system/install_types"
         },
         {
           "name": "bun_shim_impl",
           "description": "",
-          "path": "src/install/windows-shim"
+          "path": "system/install/windows-shim"
         },
         {
           "name": "bun_io",
           "description": "",
-          "path": "src/io"
+          "path": "system/io"
         },
         {
           "name": "bun_js_parser",
           "description": "",
-          "path": "src/js_parser"
+          "path": "system/js_parser"
         },
         {
           "name": "bun_js_parser_jsc",
           "description": "",
-          "path": "src/js_parser_jsc"
+          "path": "system/js_parser_jsc"
         },
         {
           "name": "bun_js_printer",
           "description": "",
-          "path": "src/js_printer"
+          "path": "system/js_printer"
         },
         {
           "name": "bun_jsc",
           "description": "",
-          "path": "src/jsc"
+          "path": "system/jsc"
         },
         {
           "name": "bun_jsc_macros",
           "description": "",
-          "path": "src/jsc_macros"
+          "path": "system/jsc_macros"
         },
         {
           "name": "bun_libdeflate_sys",
           "description": "",
-          "path": "src/libdeflate_sys"
+          "path": "system/libdeflate_sys"
         },
         {
           "name": "bun_libuv_sys",
           "description": "",
-          "path": "src/libuv_sys"
+          "path": "system/libuv_sys"
         },
         {
           "name": "bun_lint",
           "description": "",
-          "path": "src/lint"
+          "path": "system/lint"
         },
         {
           "name": "bun_lint_conformance",
           "description": "",
-          "path": "src/lint/conformance"
+          "path": "system/lint/conformance"
         },
         {
           "name": "bun_lint_driver",
           "description": "",
-          "path": "src/lint/driver"
+          "path": "system/lint/driver"
         },
         {
           "name": "bun_lint_eslint",
           "description": "",
-          "path": "src/lint/eslint"
+          "path": "system/lint/eslint"
         },
         {
           "name": "bun_lint_graph",
           "description": "",
-          "path": "src/lint/graph"
+          "path": "system/lint/graph"
         },
         {
           "name": "bun_lint_jest",
           "description": "",
-          "path": "src/lint/jest"
+          "path": "system/lint/jest"
         },
         {
           "name": "bun_lint_json",
           "description": "",
-          "path": "src/lint/json"
+          "path": "system/lint/json"
         },
         {
           "name": "bun_lint_markdown",
           "description": "",
-          "path": "src/lint/markdown"
+          "path": "system/lint/markdown"
         },
         {
           "name": "bun_lint_oxlint",
           "description": "",
-          "path": "src/lint/oxlint"
+          "path": "system/lint/oxlint"
         },
         {
           "name": "bun_lint_plugins",
           "description": "",
-          "path": "src/lint/plugins"
+          "path": "system/lint/plugins"
         },
         {
           "name": "bun_lint_react",
           "description": "",
-          "path": "src/lint/react"
+          "path": "system/lint/react"
         },
         {
           "name": "bun_lint_react_compiler",
           "description": "",
-          "path": "src/lint/react_compiler"
+          "path": "system/lint/react_compiler"
         },
         {
           "name": "bun_lint_typescript",
           "description": "",
-          "path": "src/lint/typescript"
+          "path": "system/lint/typescript"
         },
         {
           "name": "bun_lint_unicorn",
           "description": "",
-          "path": "src/lint/unicorn"
+          "path": "system/lint/unicorn"
         },
         {
           "name": "bun_lsquic_sys",
           "description": "",
-          "path": "src/lsquic_sys"
+          "path": "system/lsquic_sys"
         },
         {
           "name": "aphrody-machine",
           "description": "Low-level machine profile for `ay sys`: SMBIOS, CPUID, PCI, GPUs, storage, virtualization, toolchains",
-          "path": "src/machine"
+          "path": "system/machine"
         },
         {
           "name": "bun_md",
           "description": "",
-          "path": "src/md"
+          "path": "system/md"
         },
         {
           "name": "bun_mimalloc_sys",
           "description": "",
-          "path": "src/mimalloc_sys"
+          "path": "system/mimalloc_sys"
         },
         {
           "name": "aphrody-net",
           "description": "Unified network probe: DNS, TCP, TLS (rustls + platform verifier), ALPN, HTTP/1.1 and HTTP/2 with per-phase timings.",
-          "path": "src/net"
+          "path": "system/net"
         },
         {
           "name": "niubash",
           "description": "AI-native bash-compatible shell for Windows, built on rubash + winuxcmd",
-          "path": "src/niubash"
+          "path": "system/niubash"
         },
         {
           "name": "niubash-runtime",
           "description": "Runtime crate for niubash: rubash-backed shell REPL on Windows",
-          "path": "src/niubash/runtime"
+          "path": "system/niubash/runtime"
         },
         {
           "name": "bun_node_path",
           "description": "",
-          "path": "src/node_path"
+          "path": "system/node_path"
         },
         {
           "name": "bun_opaque",
           "description": "",
-          "path": "src/opaque"
+          "path": "system/opaque"
         },
         {
           "name": "bun_options_types",
           "description": "",
-          "path": "src/options_types"
+          "path": "system/options_types"
         },
         {
           "name": "bun_output",
           "description": "",
-          "path": "src/output"
+          "path": "system/output"
         },
         {
           "name": "bun_parsers",
           "description": "",
-          "path": "src/parsers"
+          "path": "system/parsers"
         },
         {
           "name": "bun_patch",
           "description": "",
-          "path": "src/patch"
+          "path": "system/patch"
         },
         {
           "name": "bun_patch_jsc",
           "description": "",
-          "path": "src/patch_jsc"
+          "path": "system/patch_jsc"
         },
         {
           "name": "bun_paths",
           "description": "",
-          "path": "src/paths"
+          "path": "system/paths"
         },
         {
           "name": "bun_perf",
           "description": "",
-          "path": "src/perf"
+          "path": "system/perf"
         },
         {
           "name": "bun_picohttp",
           "description": "",
-          "path": "src/picohttp"
+          "path": "system/picohttp"
         },
         {
           "name": "bun_platform",
           "description": "",
-          "path": "src/platform"
+          "path": "system/platform"
         },
         {
           "name": "bun_png",
           "description": "",
-          "path": "src/png"
+          "path": "system/png"
         },
         {
           "name": "bun_pod",
           "description": "",
-          "path": "src/pod"
+          "path": "system/pod"
         },
         {
           "name": "aphrody-omarchy",
           "description": "Unified Omarchy + CachyOS + Arch/Linux orchestration engine: hardware probe, kernel/patchsets, multi-distro recipes, Aether themes, plugins, and WSL2 bundle builder",
-          "path": "src/posix/omarchy"
+          "path": "system/posix/omarchy"
         },
         {
           "name": "wslg-cli",
           "description": "wslg-cli: part of the Aphrody monorepo",
-          "path": "src/posix/wslg"
+          "path": "system/posix/wslg"
         },
         {
           "name": "bun_ptr",
           "description": "",
-          "path": "src/ptr"
+          "path": "system/ptr"
         },
         {
           "name": "bun_react_compiler",
           "description": "",
-          "path": "src/react_compiler"
+          "path": "system/react_compiler"
         },
         {
           "name": "aphrody-remote",
           "description": "Pure-Rust SSH client for `ay ssh`: exec, sftp copy, fleet hosts and health check (russh, no OpenSSH binary)",
-          "path": "src/remote"
+          "path": "system/remote"
         },
         {
           "name": "bun_resolve_builtins",
           "description": "",
-          "path": "src/resolve_builtins"
+          "path": "system/resolve_builtins"
         },
         {
           "name": "bun_resolver",
           "description": "",
-          "path": "src/resolver"
+          "path": "system/resolver"
         },
         {
           "name": "bun_router",
           "description": "",
-          "path": "src/router"
+          "path": "system/router"
         },
         {
           "name": "aphrody-rt",
           "description": "Runtime manager behind `ay rt`: Python engines and versions on uv (CPython, free-threaded, PyPy, GraalPy, Pyodide, RustPython), Node, Deno and Bun versions, runtime and engine combinations, package managers, PyTorch backends",
-          "path": "src/rt"
+          "path": "system/rt"
         },
         {
           "name": "rubash",
           "description": "A Rust implementation of the GNU Bash shell",
-          "path": "src/rubash"
+          "path": "system/rubash"
         },
         {
           "name": "reedline",
           "description": "A GNU readline-compatible line editor for niubash",
-          "path": "src/ruline"
+          "path": "system/ruline"
         },
         {
           "name": "readline-abi",
           "description": "Clean-room GNU readline 8.x C ABI adapter for ruline",
-          "path": "src/ruline/readline-abi"
+          "path": "system/ruline/readline-abi"
         },
         {
           "name": "bun_runtime",
           "description": "",
-          "path": "src/runtime"
+          "path": "system/runtime"
         },
         {
           "name": "bun_s3_signing",
           "description": "",
-          "path": "src/s3_signing"
+          "path": "system/s3_signing"
         },
         {
           "name": "bun_sema",
           "description": "",
-          "path": "src/sema"
+          "path": "system/sema"
         },
         {
           "name": "bun_sema_baselines",
           "description": "",
-          "path": "src/sema/baselines"
+          "path": "system/sema/baselines"
         },
         {
           "name": "bun_sema_driver",
           "description": "",
-          "path": "src/sema/driver"
+          "path": "system/sema/driver"
         },
         {
           "name": "bun_sema_parser",
           "description": "",
-          "path": "src/sema/parser"
+          "path": "system/sema/parser"
         },
         {
           "name": "bun_sema_standalone",
           "description": "",
-          "path": "src/sema/standalone"
+          "path": "system/sema/standalone"
         },
         {
           "name": "bun_semver",
           "description": "",
-          "path": "src/semver"
+          "path": "system/semver"
         },
         {
           "name": "bun_semver_jsc",
           "description": "",
-          "path": "src/semver_jsc"
+          "path": "system/semver_jsc"
         },
         {
           "name": "bun_sha_hmac",
           "description": "",
-          "path": "src/sha_hmac"
+          "path": "system/sha_hmac"
         },
         {
           "name": "bun_shell_parser",
           "description": "",
-          "path": "src/shell_parser"
+          "path": "system/shell_parser"
         },
         {
           "name": "bun_simdutf_sys",
           "description": "",
-          "path": "src/simdutf_sys"
+          "path": "system/simdutf_sys"
         },
         {
           "name": "bun_sort_by_number",
           "description": "",
-          "path": "src/sort_by_number"
+          "path": "system/sort_by_number"
         },
         {
           "name": "bun_sourcemap",
           "description": "",
-          "path": "src/sourcemap"
+          "path": "system/sourcemap"
         },
         {
           "name": "bun_sourcemap_jsc",
           "description": "",
-          "path": "src/sourcemap_jsc"
+          "path": "system/sourcemap_jsc"
         },
         {
           "name": "bun_spawn",
           "description": "",
-          "path": "src/spawn"
+          "path": "system/spawn"
         },
         {
           "name": "bun_spawn_sys",
           "description": "",
-          "path": "src/spawn_sys"
+          "path": "system/spawn_sys"
         },
         {
           "name": "bun_sql",
           "description": "",
-          "path": "src/sql"
+          "path": "system/sql"
         },
         {
           "name": "bun_sql_jsc",
           "description": "",
-          "path": "src/sql_jsc"
+          "path": "system/sql_jsc"
         },
         {
           "name": "bun_standalone_graph",
           "description": "",
-          "path": "src/standalone_graph"
+          "path": "system/standalone_graph"
         },
         {
           "name": "bun_sys",
           "description": "",
-          "path": "src/sys"
+          "path": "system/sys"
         },
         {
           "name": "bun_sys_jsc",
           "description": "",
-          "path": "src/sys_jsc"
+          "path": "system/sys_jsc"
         },
         {
           "name": "bun_tar",
           "description": "",
-          "path": "src/tar"
+          "path": "system/tar"
         },
         {
           "name": "bun_tcc_sys",
           "description": "",
-          "path": "src/tcc_sys"
+          "path": "system/tcc_sys"
         },
         {
           "name": "bun_text_diff",
           "description": "",
-          "path": "src/text_diff"
+          "path": "system/text_diff"
         },
         {
           "name": "bun_threading",
           "description": "",
-          "path": "src/threading"
+          "path": "system/threading"
         },
         {
           "name": "aphrody-toolchains",
           "description": "Unified Bun / uv / Nushell runtime layer: shell-free discovery, repo-file version pins and consistent launch environment.",
-          "path": "src/toolchains"
+          "path": "system/toolchains"
         },
         {
           "name": "bun_transpiler",
           "description": "",
-          "path": "src/transpiler"
+          "path": "system/transpiler"
         },
         {
           "name": "bun_trim",
           "description": "",
-          "path": "src/trim"
+          "path": "system/trim"
         },
         {
           "name": "bun_removable_features",
           "description": "",
-          "path": "src/trim/removable_features"
+          "path": "system/trim/removable_features"
         },
         {
           "name": "aphrody-up",
           "description": "Toolchain installer and updater behind `ay up`: tools.toml manifest, GitHub release and URL sources, sha256 checks, provider setup",
-          "path": "src/up"
+          "path": "system/up"
         },
         {
           "name": "bun_url",
           "description": "",
-          "path": "src/url"
+          "path": "system/url"
         },
         {
           "name": "bun_uws",
           "description": "",
-          "path": "src/uws"
+          "path": "system/uws"
         },
         {
           "name": "bun_uws_sys",
           "description": "",
-          "path": "src/uws_sys"
+          "path": "system/uws_sys"
         },
         {
           "name": "bun_valkey",
           "description": "",
-          "path": "src/valkey"
+          "path": "system/valkey"
         },
         {
           "name": "aphrody-vault",
           "description": "",
-          "path": "src/vault"
+          "path": "system/vault"
         },
         {
           "name": "bun_watcher",
           "description": "",
-          "path": "src/watcher"
+          "path": "system/watcher"
         },
         {
           "name": "cosmic-compat",
           "description": "cosmic-compat: part of the Aphrody monorepo",
-          "path": "src/wayland/cosmic"
+          "path": "system/wayland/cosmic"
         },
         {
           "name": "gamescope-cli",
           "description": "Gamescope CLI micro-compositor runtime, benchmarker, and window presenter",
-          "path": "src/wayland/gamescope/cli"
+          "path": "system/wayland/gamescope/cli"
         },
         {
           "name": "gamescope-core",
           "description": "Gamescope core micro-compositor frame pacing, scaling math, layer composition, and HDR color science",
-          "path": "src/wayland/gamescope/core"
+          "path": "system/wayland/gamescope/core"
         },
         {
           "name": "gamescope-web-wasm",
           "description": "Gamescope WebAssembly / WebGPU client for Chromium",
-          "path": "src/wayland/gamescope/web-wasm"
+          "path": "system/wayland/gamescope/web-wasm"
         },
         {
           "name": "gamescope-wgsl",
           "description": "Gamescope WGSL compute shaders (FSR 1.0 EASU, RCAS, HDR Compositor) and wgpu pipeline runner",
-          "path": "src/wayland/gamescope/wgsl"
+          "path": "system/wayland/gamescope/wgsl"
         },
         {
           "name": "smithay-wayland-wire",
           "description": "smithay-wayland-wire: part of the Aphrody monorepo",
-          "path": "src/wayland/smithay"
+          "path": "system/wayland/smithay"
         },
         {
           "name": "hypr-tiler",
           "description": "hypr-tiler: part of the Aphrody monorepo",
-          "path": "src/wayland/tiler"
+          "path": "system/wayland/tiler"
         },
         {
           "name": "bun_which",
           "description": "",
-          "path": "src/which"
+          "path": "system/which"
         },
         {
           "name": "bun_windows_sys",
           "description": "",
-          "path": "src/windows_sys"
+          "path": "system/windows_sys"
         },
         {
           "name": "winux-cmds",
           "description": "",
-          "path": "src/winux/cmds"
+          "path": "system/winux/cmds"
         },
         {
           "name": "winux-core",
           "description": "",
-          "path": "src/winux/core"
+          "path": "system/winux/core"
         },
         {
           "name": "winux-extra",
           "description": "WinuxCmd applets ported from C++ to portable Rust (same shape contract as winux-cmds: run(args, io, ctx))",
-          "path": "src/winux/extra"
+          "path": "system/winux/extra"
         },
         {
           "name": "winux-regex",
           "description": "",
-          "path": "src/winux/regex"
+          "path": "system/winux/regex"
         },
         {
           "name": "bun_wyhash",
           "description": "",
-          "path": "src/wyhash"
+          "path": "system/wyhash"
         },
         {
           "name": "xtk",
           "description": "Monorepo maintenance library behind `ay doctor [--deps]`, `ay lock [--deps]`, `ay manifests` and `ay git slim --all`",
-          "path": "src/xtask"
+          "path": "system/xtask"
         },
         {
           "name": "bun_yarr",
           "description": "",
-          "path": "src/yarr"
+          "path": "system/yarr"
         },
         {
           "name": "bun_zlib",
           "description": "",
-          "path": "src/zlib"
+          "path": "system/zlib"
         },
         {
           "name": "bun_zlib_sys",
           "description": "",
-          "path": "src/zlib_sys"
+          "path": "system/zlib_sys"
         },
         {
           "name": "bun_zstd",
           "description": "",
-          "path": "src/zstd"
+          "path": "system/zstd"
         },
         {
           "name": "asset-test",
@@ -1565,7 +1565,7 @@
         },
         {
           "name": "@aphrody/core",
-          "description": "bun:ffi bridge to src/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON)",
+          "description": "bun:ffi bridge to system/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON)",
           "path": "system/core-ts"
         },
         {
@@ -1620,7 +1620,7 @@
         },
         {
           "name": "@aphrody/py2bun",
-          "description": "Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun)",
+          "description": "Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at system/py2bun)",
           "path": "system/py2bun-ts"
         },
         {
@@ -2057,7 +2057,7 @@
         },
         {
           "name": "ay-monorepo-migrator",
-          "description": "Audit and migrate legacy Node.js, V8, Electron, node-api-dotnet and Lua repositories with the `migrate` subcommand of depot-cli (crate `src/depot/migrate`): AST codemods, LLVM IR checks, .NET CoreCLR readiness. Use when a legacy tree must be audited or transformed; the target language follows the domain (AGENTS.md section 4).",
+          "description": "Audit and migrate legacy Node.js, V8, Electron, node-api-dotnet and Lua repositories with the `migrate` subcommand of depot-cli (crate `system/depot/migrate`): AST codemods, LLVM IR checks, .NET CoreCLR readiness. Use when a legacy tree must be audited or transformed; the target language follows the domain (AGENTS.md section 4).",
           "path": ".agents/skills/ay-monorepo-migrator"
         },
         {
@@ -2462,7 +2462,7 @@
         },
         {
           "name": "electron-migrate",
-          "description": "Analyze an Electron app (app.asar + .unpacked, Electron version and fuses, windows, preloads, IPC channels, contextBridge, Node APIs, natives, protocols, menus, tray, updater, deep links), migrate it to Tauri v3 (aphrody-labs/tauri fork) or GPUI with a Bun sidecar, tune the generated project (fat LTO, PGO, bun --compile --minify --bytecode) and bench it against the original. Use for `ay electron`, the electron MCP tools, or src/electron-migrate.",
+          "description": "Analyze an Electron app (app.asar + .unpacked, Electron version and fuses, windows, preloads, IPC channels, contextBridge, Node APIs, natives, protocols, menus, tray, updater, deep links), migrate it to Tauri v3 (aphrody-labs/tauri fork) or GPUI with a Bun sidecar, tune the generated project (fat LTO, PGO, bun --compile --minify --bytecode) and bench it against the original. Use for `ay electron`, the electron MCP tools, or system/electron-migrate.",
           "path": ".agents/skills/electron-migrate"
         },
         {
@@ -2592,7 +2592,7 @@
         },
         {
           "name": "llvm-toolchain",
-          "description": "Shared LLVM toolchain (clang, lld, wasm-ld, wasi-sdk, binaryen, rustc on the same LLVM) for the C/ASM/Wasm core in src/ and the C ABI in src/core/capi. Use before writing or changing code that is compiled with it.",
+          "description": "Shared LLVM toolchain (clang, lld, wasm-ld, wasi-sdk, binaryen, rustc on the same LLVM) for the C/ASM/Wasm core in src/ and the C ABI in system/core/capi. Use before writing or changing code that is compiled with it.",
           "path": ".agents/skills/llvm-toolchain"
         },
         {
@@ -2627,7 +2627,7 @@
         },
         {
           "name": "py2bun",
-          "description": "Python to Bun TypeScript transpiler (crate src/py2bun, package system/py2bun-ts) with Ghidra script idioms. Use to convert a Python 3 or Jython-era Ghidra script to Bun TypeScript, check why a construct is unsupported, or change the transpiler or its runtime.",
+          "description": "Python to Bun TypeScript transpiler (crate system/py2bun, package system/py2bun-ts) with Ghidra script idioms. Use to convert a Python 3 or Jython-era Ghidra script to Bun TypeScript, check why a construct is unsupported, or change the transpiler or its runtime.",
           "path": ".agents/skills/py2bun"
         },
         {
@@ -2862,7 +2862,7 @@
         },
         {
           "name": "tree-sitter",
-          "description": "tree-sitter in src. Multi-language parsing, symbol/call/import extraction and S-expression queries via src/core (aphrody-core); C ABI core_parse_json/core_query_json; TS @aphrody/core parse()/query(). Use before writing or modifying tree-sitter code.",
+          "description": "tree-sitter in src. Multi-language parsing, symbol/call/import extraction and S-expression queries via system/core (aphrody-core); C ABI core_parse_json/core_query_json; TS @aphrody/core parse()/query(). Use before writing or modifying tree-sitter code.",
           "path": ".agents/skills/tree-sitter"
         },
         {

@@ -1,8 +1,8 @@
 # Electron migration (`ay electron`): proof run
 
-Crate `src/electron-migrate`, CLI `src/ay/src/electron.rs`, skill `.agents/skills/electron-migrate`. Run date 2026-11-15. Everything here was measured in that run; anything not measured says so.
+Crate `system/electron-migrate`, CLI `system/ay/src/electron.rs`, skill `.agents/skills/electron-migrate`. Run date 2026-11-15. Everything here was measured in that run; anything not measured says so.
 
-Hosts: fr1 (build, load average 55 to 100 during the run: builds are slow, timings of builds are not a result), fr2 (hyperfine of the CLI and of the sidecars, load 1), the PC (Windows 11, WebView2, relay hub + agent-desktop). The `ay` workspace build is red on HEAD (other sessions' manifests), so the CLI ran through a harness binary that compiles `src/ay/src/electron.rs` unchanged next to the crate (`ay-electron-check`: Linux release on fr1 and fr2, `x86_64-pc-windows-msvc` through cargo-xwin on nightly-2026-11-13 for the PC).
+Hosts: fr1 (build, load average 55 to 100 during the run: builds are slow, timings of builds are not a result), fr2 (hyperfine of the CLI and of the sidecars, load 1), the PC (Windows 11, WebView2, relay hub + agent-desktop). The `ay` workspace build is red on HEAD (other sessions' manifests), so the CLI ran through a harness binary that compiles `system/ay/src/electron.rs` unchanged next to the crate (`ay-electron-check`: Linux release on fr1 and fr2, `x86_64-pc-windows-msvc` through cargo-xwin on nightly-2026-11-13 for the PC).
 
 ## Inputs
 

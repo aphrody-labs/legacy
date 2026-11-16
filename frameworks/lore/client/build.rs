@@ -3,7 +3,7 @@
 #![allow(clippy::disallowed_macros)]
 use std::error::Error;
 
-include!("../../../src/build-helper.rs");
+include!("../../../system/build-helper.rs");
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("cargo:rerun-if-changed=build.rs");

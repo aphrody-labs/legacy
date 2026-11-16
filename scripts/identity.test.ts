@@ -41,11 +41,11 @@ function repo(scope: string, org: string, aiDeps: Record<string, string>) {
     `[workspace.package]\nauthors = [\n  "old-org", # owner\n]\nrepository = "https://github.com/old-org/src" # repo\nhomepage = "https://labs.x.org"\n`,
   );
   w(
-    "src/ay/Cargo.toml",
+    "system/ay/Cargo.toml",
     `[package]\nname = "x"\nrepository = "https://github.com/old-org/src"\n\n[[bin]]\nname = "xy"\n`,
   );
   w(
-    "src/net/Cargo.toml",
+    "system/net/Cargo.toml",
     `[package] # net crate\nname = "y-net" # "quoted # hash"\n`,
   );
   w("crates/legacy/Cargo.toml", `[package]\nname = "old-legacy"\n`);
@@ -106,14 +106,14 @@ test("identity: crate prefix, comments, multi-line arrays, npm names; apply conv
   expect(what).toEqual([
     "Cargo.toml [workspace.package] authors",
     "Cargo.toml [workspace.package] repository",
-    "src/ay/Cargo.toml [package] repository",
-    "src/net/Cargo.toml [package] name",
+    "system/ay/Cargo.toml [package] repository",
+    "system/net/Cargo.toml [package] name",
     'crates/use/Cargo.toml package = "y-net"',
     "packages/ai/package.json name",
   ]);
   applyAll(r);
   expect(plan(r)).toEqual([]);
-  expect(readFileSync(join(r, "src/net/Cargo.toml"), "utf8")).toBe(
+  expect(readFileSync(join(r, "system/net/Cargo.toml"), "utf8")).toBe(
     `[package] # net crate\nname = "x-net" # "quoted # hash"\n`,
   );
   expect(readFileSync(join(r, "crates/use/Cargo.toml"), "utf8")).toContain(

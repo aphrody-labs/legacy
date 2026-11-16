@@ -11,10 +11,10 @@ for d in "$src"/lore "$src"/lore-*; do
   n="$(basename "$d")"
   rm -rf "$root/crates/$n"; mv "$d" "$root/crates/$n"
 done
-cp "$src/build-helper.rs" "$root/src/build-helper.rs"
+cp "$system/build-helper.rs" "$root/system/build-helper.rs"
 mkdir -p "$root/docs/lore" "$root/tools/lore" "$root/licenses/lore" "$root/.cargo"
 rm -rf "$root/docs/lore" "$root/tools/lore" "$root/licenses/lore"; mkdir -p "$root/licenses/lore"
-mv "$src/docs" "$root/docs/lore"
+mv "$system/docs" "$root/docs/lore"
 mkdir -p "$root/tools/lore"
 for t in scripts contrib notices mkdocs.yml pyproject.toml pyrightconfig.json uv.lock about.toml .pre-commit-clippy.py .vale.ini .markdownlint-cli2.jsonc; do
   [ -e "$src/$t" ] && mv "$src/$t" "$root/tools/lore/"

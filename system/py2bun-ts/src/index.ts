@@ -1,4 +1,4 @@
-// Bun-side wrapper: shells to the Rust CLI (`py2bun-rs`, crate src/py2bun).
+// Bun-side wrapper: shells to the Rust CLI (`py2bun-rs`, crate system/py2bun).
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -25,7 +25,7 @@ export function findBinary(): string | null {
   const onPath = Bun.which("py2bun-rs");
   if (onPath) return onPath;
   const here = import.meta.dir;
-  const crate = join(here, "..", "..", "..", "src", "py2bun");
+  const crate = join(here, "..", "..", "..", "system", "py2bun");
   const targets = [process.env.CARGO_TARGET_DIR, join(crate, "target")].filter((t): t is string => !!t);
   for (const t of targets) for (const prof of ["release", "debug"]) {
     const p = join(t, prof, `py2bun-rs${exe}`);
@@ -36,7 +36,7 @@ export function findBinary(): string | null {
 
 /** Transpile Python source to Bun TypeScript. */
 export function transpile(source: string, bin: string | null = findBinary(), mode: "auto" | "async" | "sync" = "auto"): TranspileResult {
-  if (!bin) throw new Error("py2bun-rs not found: set PY2BUN_BIN or build src/py2bun (cargo build --release)");
+  if (!bin) throw new Error("py2bun-rs not found: set PY2BUN_BIN or build system/py2bun (cargo build --release)");
   const args = [bin, "-", "--json", ...(mode === "async" ? ["--async"] : mode === "sync" ? ["--sync"] : [])];
   const p = Bun.spawnSync(args, { stdin: new TextEncoder().encode(source), stdout: "pipe", stderr: "pipe" });
   if (p.exitCode === 2 || p.exitCode === null || p.signalCode) {

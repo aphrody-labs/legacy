@@ -514,8 +514,8 @@ def test_merge_resolve_nested_directories(new_lore_repo):
     incoming = ["incoming\n"]
 
     files = {
-        "src/core/a.txt": (base, current, incoming),
-        "src/core/util/b.txt": (base, current, incoming),
+        "system/core/a.txt": (base, current, incoming),
+        "system/core/util/b.txt": (base, current, incoming),
         "src/other/c.txt": (base, current, incoming),
         "docs/d.txt": (base, current, incoming),
     }
@@ -524,13 +524,13 @@ def test_merge_resolve_nested_directories(new_lore_repo):
     conflicted = repo.unresolved_paths(offline=True)
     assert len(conflicted) == 4, f"Expected 4 conflicted files, got {conflicted}"
 
-    # Resolve only src/core/ with theirs (should get a.txt and util/b.txt)
-    repo.branch_merge_resolve_theirs("src/core", offline=True, json=True)
+    # Resolve only system/core/ with theirs (should get a.txt and util/b.txt)
+    repo.branch_merge_resolve_theirs("system/core", offline=True, json=True)
 
     still_conflicted = repo.unresolved_paths(offline=True)
-    assert "src/core/a.txt" not in still_conflicted, "src/core/a.txt should be resolved"
-    assert "src/core/util/b.txt" not in still_conflicted, (
-        "src/core/util/b.txt should be resolved"
+    assert "system/core/a.txt" not in still_conflicted, "system/core/a.txt should be resolved"
+    assert "system/core/util/b.txt" not in still_conflicted, (
+        "system/core/util/b.txt should be resolved"
     )
     assert "src/other/c.txt" in still_conflicted, (
         "src/other/c.txt should still be conflicted"
@@ -538,7 +538,7 @@ def test_merge_resolve_nested_directories(new_lore_repo):
     assert "docs/d.txt" in still_conflicted, "docs/d.txt should still be conflicted"
 
     # Verify content of resolved files
-    for path in ["src/core/a.txt", "src/core/util/b.txt"]:
+    for path in ["system/core/a.txt", "system/core/util/b.txt"]:
         with repo.open_file(path, "r") as f:
             content = f.read()
         assert content == "incoming\n", (

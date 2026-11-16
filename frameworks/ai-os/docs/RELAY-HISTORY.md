@@ -81,14 +81,14 @@ Live versions (crates.io API and `bun info`, 2026-11-15):
 | `oauth2` | 5.0.0 | 2025-01-21 |
 | `@modelcontextprotocol/sdk` (npm) | 1.32.2 | 2026-10-23 |
 
-Rust already in src: `src/ay/src/{applet,plugin,sh}.rs`, `src/core/capi/src/ai_os.rs`, `src/remote`, `src/up`, `src/winux/*`. Their APIs are not reviewed in this document.
+Rust already in src: `system/ay/src/{applet,plugin,sh}.rs`, `src/core/capi/src/ai_os.rs`, `system/remote`, `system/up`, `system/winux/*`. Their APIs are not reviewed in this document.
 
 Scope: one Rust host that assembles the operating system's tools for agents. It exposes process, file system, shell (`ay sh`, rubash), git (`gix`), ssh (`russh`), browser (CDP), desktop (UIA on Windows), the session mailbox and the external MCP hub as MCP tools through `rmcp`. It speaks A2A through an A2A crate and ACP through `agent-client-protocol`. Model routing stays in aphrody-labs/open (`ai-router`); src keeps the host and the tools.
 
 Migration, each step with its proof:
 1. Baseline: measure the TS relay (p50 and p99 latency of `tools/list` and one tool call, resident memory, cold start) with `hyperfine` and `oha`. Proof: numbers archived here.
 2. Mailbox and hub proxy in Rust on `rmcp`, behind the same `/mcp` routes. Proof: the e2e suite (`2943cbaa3`) passes against both, and the benchmark beats the baseline.
-3. Tools one family at a time (process, fs, shell, git, ssh, CDP, UIA), reusing `src/ay` and `src/winux`. Proof: one test per tool plus the same e2e call.
+3. Tools one family at a time (process, fs, shell, git, ssh, CDP, UIA), reusing `system/ay` and `system/winux`. Proof: one test per tool plus the same e2e call.
 4. A2A and ACP through the SDKs. Proof: conformance of the agent card and of the session methods in `RELAY.md:9-10`.
 5. OAuth: replace the 1032-line `oauth.ts` with a maintained crate; the review fixes of `66f3ad1dc` become tests.
 6. Delete each TS module after its proof; the service runs a built binary, not source.

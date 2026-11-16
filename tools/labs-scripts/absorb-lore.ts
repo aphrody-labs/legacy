@@ -284,8 +284,8 @@ for (const d of ["contrib/aws-migrate-0.9.0", "contrib/bazel"]) rmSync(join(tool
   writeFileSync(f, s);
 }
 
-// --- Single-copy side files shared with the root: build helper (src/build-helper.rs) and rustup/cargo config pieces.
-writeFileSync(join(root, "src/build-helper.rs"), readFileSync(join(src, "build-helper.rs")));
+// --- Single-copy side files shared with the root: build helper (system/build-helper.rs) and rustup/cargo config pieces.
+writeFileSync(join(root, "system/build-helper.rs"), readFileSync(join(src, "build-helper.rs")));
 if (existsSync(join(src, ".cargo/neoverse-512tvb.toml"))) writeFileSync(join(root, ".cargo/neoverse-512tvb.toml"), readFileSync(join(src, ".cargo/neoverse-512tvb.toml")));
 
 // --- Provenance: UPSTREAM files (topology and audit read them) and the DEPS.rules header.

@@ -245,14 +245,14 @@ name = "gnu"
 command = ["{home}/.bun/bin/bun.exe", "{src}/frameworks/ai-os/src/relay/gnu-mcp.ts"]
 hosts = ["pc"]
 
-# Electron migration toolkit (src/electron-migrate through `ay electron`): analyze, migrate to Tauri v3 or GPUI, optimize, bench.
+# Electron migration toolkit (system/electron-migrate through `ay electron`): analyze, migrate to Tauri v3 or GPUI, optimize, bench.
 # hub_call electron__electron_analyze | electron__electron_migrate | electron__electron_optimize | electron__electron_bench; AY_BIN overrides `ay`.
 [[hub.mcp]]
 name = "electron"
 command = ["{home}/.bun/bin/bun.exe", "{src}/frameworks/ai-os/src/relay/electron-mcp.ts"]
 hosts = ["pc"]
 
-# py2bun: Python to Bun TypeScript transpiler (system/py2bun-ts, crate src/py2bun). hub_call py2bun__py2bun_transpile.
+# py2bun: Python to Bun TypeScript transpiler (system/py2bun-ts, crate system/py2bun). hub_call py2bun__py2bun_transpile.
 [[hub.mcp]]
 name = "py2bun"
 command = ["{home}/.bun/bin/bun.exe", "{src}/frameworks/ai-os/src/relay/py2bun-mcp.ts"]

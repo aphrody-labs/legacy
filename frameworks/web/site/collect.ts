@@ -449,7 +449,7 @@ export function collectRuntime(
         .split("\n")
         .filter(p => p && tree.has(p)),
     );
-  const added = changed("A", "docs", "packages", "src/js/bun", "src/runtime/cli");
+  const added = changed("A", "docs", "packages", "system/js/bun", "system/runtime/cli");
   const modified = changed("M", "docs");
 
   const pkg = JSON.parse(tree.text("package.json") ?? "{}");
@@ -527,11 +527,11 @@ export function collectRuntime(
     },
     lastUpstreamMerge: merge ? { sha: merge[0]!, date: merge[1]!, subject: merge[2]! } : null,
     docs: { added: addedDocs, modified: pages(modified).filter(d => !addedSlugs.has(d.slug)) },
-    modules: tree.has("src/resolve_builtins/HardcodedModule.rs")
-      ? moduleNames(tree.text("src/resolve_builtins/HardcodedModule.rs")!)
+    modules: tree.has("system/resolve_builtins/HardcodedModule.rs")
+      ? moduleNames(tree.text("system/resolve_builtins/HardcodedModule.rs")!)
       : [...added]
           .filter(p => /^src\/js\/bun\/[^/]+\.ts$/.test(p))
-          .map(p => `bun:${p.slice("src/js/bun/".length, -3)}`)
+          .map(p => `bun:${p.slice("system/js/bun/".length, -3)}`)
           .sort(),
     commands: [...added].filter(p => /^src\/runtime\/cli\/[^/]+_command\.rs$/.test(p)).sort(),
     packages: packages.sort((a, b) => a.name.localeCompare(b.name)),

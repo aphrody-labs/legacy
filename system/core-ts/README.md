@@ -1,7 +1,7 @@
 # @aphrody/core
 
 <!-- catalog:begin unit -->
-> bun:ffi bridge to src/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON)
+> bun:ffi bridge to system/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON)
 
 | Type | Path |
 | :-- | :-- |

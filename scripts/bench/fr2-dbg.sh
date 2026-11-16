@@ -1,5 +1,5 @@
 #!/bin/sh
-rg -n 'benchbin|"src/core"' /srv/bench/src-lto/Cargo.toml | head
+rg -n 'benchbin|"system/core"' /srv/bench/src-lto/Cargo.toml | head
 command -v sd
 rg -a 'cold-fill|wall=' /srv/bench/sccache.log
 rg -a 'passed|FAIL|failed' /srv/bench/nextest.log | head -6

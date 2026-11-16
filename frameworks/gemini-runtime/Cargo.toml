@@ -39,7 +39,7 @@ name = "mcp_smoke"
 path = "tests/mcp_smoke.rs"
 
 [dependencies.aphrody-config]
-path = "../../src/config"
+path = "../../system/config"
 version = "1.4.7"
 
 [dependencies.aphrody-mcp-client]

@@ -510,7 +510,7 @@ def test_link_merge_file_conflict_in_nested_subdirectory(new_lore_repo):
         new_lore_repo,
         files=[
             {
-                "path": "src/core/engine/config.txt",
+                "path": "system/core/engine/config.txt",
                 "base": "base config\n",
                 "mine": "mine config\n",
                 "theirs": "theirs config\n",
@@ -520,7 +520,7 @@ def test_link_merge_file_conflict_in_nested_subdirectory(new_lore_repo):
 
     urc.branch_merge_start("feature-branch", link=link_path, no_commit=True)
 
-    conflict_file = f"{link_path}/src/core/engine/config.txt"
+    conflict_file = f"{link_path}/system/core/engine/config.txt"
     assert urc.file_exists(conflict_file), "Deeply nested conflict file should exist"
 
     with urc.open_file(conflict_file, "w+") as f:

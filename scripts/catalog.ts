@@ -241,7 +241,7 @@ const logoBlock = (from: string) => `<img alt="${projectName}" src="${relLink(fr
 function rootBlocks(data: Record<string, Entry[]>): { header: string; types: string } {
   const header = logoBlock("README.md");
   const rows = kinds.filter((k) => data[k.id]).map((k) => {
-    const where = k.id === "third-party" ? "third_party" : k.id === "skill" ? ".agents/skills" : k.id === "crate" ? "src" : k.id === "package" ? "frameworks/`, `system" : k.id === "app" ? "apps" : INFRA_ROOTS.join("/`, `");
+    const where = k.id === "third-party" ? "third_party" : k.id === "skill" ? ".agents/skills" : k.id === "crate" || k.id === "package" ? "frameworks/`, `system/`, `hardware" : k.id === "app" ? "apps" : INFRA_ROOTS.join("/`, `");
     return `| [${k.name}](docs/reference/catalog/${k.id}.md) | \`${where}/\` | ${k.description} |`;
   });
   const types = [`## ${t("catalog")}`, "", t("catalog_intro"), "", `| ${t("type")} | ${t("path")} | ${t("description")} |`, "| :-- | :-- | :-- |", ...rows].join("\n");

@@ -7,15 +7,15 @@ on:
     branches: [main, dev]
     paths:
       - "hardware/drivers/gpu/dx12/**"
-      - "src/posix/wslg/**"
-      - "src/wayland/smithay/**"
+      - "system/posix/wslg/**"
+      - "system/wayland/smithay/**"
       - "system/ffi-bridge/**"
       - ".github/workflows/hal.yml"
   pull_request:
     paths:
       - "hardware/drivers/gpu/dx12/**"
-      - "src/posix/wslg/**"
-      - "src/wayland/smithay/**"
+      - "system/posix/wslg/**"
+      - "system/wayland/smithay/**"
       - "system/ffi-bridge/**"
       - ".github/workflows/hal.yml"
   workflow_dispatch:

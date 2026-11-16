@@ -18,7 +18,7 @@ You absorb upstream code into C:\aphrody and remove duplicate copies.
 - Absorb, flatten and refactor the maximum of upstream code.
 - Use the newest canary, nightly, pre-release or rc.
 - Licenses never decide anything (memory `licenses-go-to-human`).
-- The target layout is docs/ARCHITECTURE.md §9: oven-sh/bun monorepo layout, Linux-style C core in `src/`, Chromium and NT on top.
+- The target layout is docs/ARCHITECTURE.md §9: oven-sh/bun monorepo layout, Linux-style C core in `kernel/`, Chromium and NT on top.
 
 ## Method
 1. Resolve the real upstream head first, with `gh api repos/<o>/<r>/commits/<branch>` or `git ls-remote`, and cite sha and date.

@@ -7,7 +7,7 @@ metadata:
 
 - Never pipe `git archive HEAD` from the PC over ssh: it ran 15+ min and stalled at 70 MB. On fr2 run `cd /srv/src && git fetch -q --no-recurse-submodules origin main && git archive FETCH_HEAD | tar -x -C <dir>` (5 s, 470 MB), then overlay only your files with `tar -cf - <files> | ssh fr2 'tar -x -C <dir>'`.
 - `/srv/xbuild` is root-owned: `sudo mkdir -p /srv/xbuild/<name> && sudo chown ubuntu:ubuntu` it, and `sudo touch` + chown any log or script file there before `tee`/redirects.
-- Package names differ from dirs: `src/ay` is package `aphrody` (bin `ay`); `src/core` is `aphrody-core`; `src/core/capi` is `aphrody-core-capi`. `cargo test -p ay` fails with "did not match any packages".
+- Package names differ from dirs: `system/ay` is package `aphrody` (bin `ay`); `system/core` is `aphrody-core`; `system/core/capi` is `aphrody-core-capi`. `cargo test -p ay` fails with "did not match any packages".
 - The scratch tree is origin/main, not the local HEAD: overlay HEAD-based copies of files that other sessions have uncommitted edits in (build them from `git show HEAD:path`), never the working-tree copy.
 - A full `cargo build -p aphrody` in dev profile compiles ~all bun_* crates: expect 30+ min on 6 cores; do core and capi tests first (a minute).
 - Tool tests that need node_modules (hygiene imports `eld`): `bun add eld@<ver>` in a scratch dir and symlink it into `<tree>/node_modules/eld` instead of a full workspace `bun install`. `git init && git add -A && git commit` the archive so `git ls-files` works.

@@ -8,8 +8,8 @@
 
 | Path | Content |
 | :-- | :-- |
-| [`src/`](src) | Rust crates and the C core |
-| [`system/`](system), [`frameworks/`](frameworks) | platform and framework packages, one manifest per language |
+| [`kernel/`](kernel), [`hardware/`](hardware) | the C and assembly core (`kernel/Makefile`), drivers |
+| [`system/`](system), [`frameworks/`](frameworks) | Rust crates and Bun packages: platform (ay, Bun fork core, userland, compat) and frameworks (AI, Google services, media, UI) |
 | [`apps/`](apps) | [`web`](apps/web), `auto`, `nt`; `open` is its own repo |
 | [`build/`](build), [`device/`](device), [`prebuilts/`](prebuilts) | CI and images, fleet and deploy, `ay up` pins |
 | [`third_party/`](third_party) | upstream checkouts and forks pinned in `src.lock.json` |
@@ -21,8 +21,8 @@ The global types of the monorepo, listed from its manifests.
 
 | Type | Path | Description |
 | :-- | :-- | :-- |
-| [Rust crate](docs/reference/catalog/crate.md) | `src/` | A member of the Cargo workspace (src/*) |
-| [Bun package](docs/reference/catalog/package.md) | `frameworks/`, `system/` | A Bun workspace package (@aphrody/*) |
+| [Rust crate](docs/reference/catalog/crate.md) | `frameworks/`, `system/`, `hardware/` | A member of the Cargo workspace (src/*) |
+| [Bun package](docs/reference/catalog/package.md) | `frameworks/`, `system/`, `hardware/` | A Bun workspace package (@aphrody/*) |
 | [App](docs/reference/catalog/app.md) | `apps/` | An application or site (apps/*) |
 | [Infrastructure](docs/reference/catalog/infra.md) | `build/`, `device/`, `prebuilts/` | Fleet, deploy and CI configuration (build/*, device/*, prebuilts/*) |
 | [Upstream](docs/reference/catalog/third-party.md) | `third_party/` | An upstream checkout or fork pinned in src.lock.json (third_party/*) |

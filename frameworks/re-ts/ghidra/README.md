@@ -16,7 +16,7 @@ bun run --cwd frameworks/re-ts/ghidra test
 Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
-Ghidra for Bun: the pyghidra API surface, a Bun plugin (`?ghidra`, `ghidra:`), a script context for translated GhidraScripts, and a native `onBeforeParse` plugin (Rust, `src/ghidra-bun`). Bun only, no npm dependency.
+Ghidra for Bun: the pyghidra API surface, a Bun plugin (`?ghidra`, `ghidra:`), a script context for translated GhidraScripts, and a native `onBeforeParse` plugin (Rust, `system/ghidra-bun`). Bun only, no npm dependency.
 
 - Full API: a headless Ghidra JVM (official release) driven through `bridge/Bridge.java` (reflection JSON-RPC over stdio). Any Ghidra class/method is reachable by name; every call is `async`.
 - Fast path: `aphrody-re` (Rust) through the NAPI addon, no JVM.
@@ -73,9 +73,9 @@ import x from "ghidra:./a.exe";                              // namespace form
 
 `ghidraPlugin(opts)` is a `BunPlugin` (`onStart` clears the cache, `onResolve` maps `?ghidra`/`ghidra:` to namespace `ghidra`, `onLoad` returns a JS module; with `deferAnalysis` and `Bun.build` it awaits `defer()` first). Bun's documented hooks are `onStart/onResolve/onLoad/onBeforeParse` (bun.com/docs/runtime/plugins); there is no `onEnd`.
 
-## Native plugin (`src/ghidra-bun`)
+## Native plugin (`system/ghidra-bun`)
 
-Crate `aphrody-ghidra-bun` (cdylib, `bun-native-plugin` 0.2.0 + `napi` 3.16.2). Standalone workspace; root `Cargo.toml` member line: `"src/ghidra-bun",`. Build on fr1: `cargo build --release` in `src/ghidra-bun` (feature `decompile` adds ghidra-decompiler C output). Copy the cdylib (`libaphrody_ghidra_bun.so`, `libaphrody_ghidra_bun.dylib` or `aphrody_ghidra_bun.dll`) to `aphrody_ghidra_bun.node`. The crate stays on edition 2021 until it is promoted to the root workspace (edition 2024).
+Crate `aphrody-ghidra-bun` (cdylib, `bun-native-plugin` 0.2.0 + `napi` 3.16.2). Standalone workspace; root `Cargo.toml` member line: `"system/ghidra-bun",`. Build on fr1: `cargo build --release` in `system/ghidra-bun` (feature `decompile` adds ghidra-decompiler C output). Copy the cdylib (`libaphrody_ghidra_bun.so`, `libaphrody_ghidra_bun.dylib` or `aphrody_ghidra_bun.dll`) to `aphrody_ghidra_bun.node`. The crate stays on edition 2021 until it is promoted to the root workspace (edition 2024).
 
 ```ts
 import { nativeGhidraPlugin } from "@aphrody/ghidra/plugin";

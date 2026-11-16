@@ -18,14 +18,14 @@ commands = ["test", "self-update"]
 
 [module.bash]
 kind = "module"
-crate = "bun_modules::bash (rubash, src/rubash)"
+crate = "bun_modules::bash (rubash, system/rubash)"
 feature = "bash"
 upstream = "unixwin/rubash"
 commands = ["sh"]
 
 [module.applets]
 kind = "module"
-crate = "bun_modules::applets (uutils coreutils, findutils, grep, sed; src/winux for the Windows WinuxCmd port)"
+crate = "bun_modules::applets (uutils coreutils, findutils, grep, sed; system/winux for the Windows WinuxCmd port)"
 feature = "applets"
 upstream = "uutils/coreutils, uutils/findutils, uutils/grep, uutils/sed, WinuxCmd"
 commands = ["applet"]
@@ -48,21 +48,21 @@ commands = []
 
 [module.depot]
 kind = "module"
-crate = "src/depot/* (depot-cli, depot-gclient, depot-cipd, depot-vpython, depot-cas, depot-forge, depot-graph, depot-ingest)"
+crate = "system/depot/* (depot-cli, depot-gclient, depot-cipd, depot-vpython, depot-cas, depot-forge, depot-graph, depot-ingest)"
 feature = "depot"
 upstream = "chromium/depot_tools"
 commands = ["git", "gclient", "fetch", "vpy", "cl", "cipd", "ninja", "gn", "ingest", "graph", "chromium", "forge"]
 
 [module.repo]
 kind = "module"
-crate = "src/xtask (xtk)"
+crate = "system/xtask (xtk)"
 feature = "repo"
 upstream = "aphrody-labs (lock, manifests, doctor)"
 commands = ["lock", "manifests", "doctor"]
 
 [module.remote]
 kind = "module"
-crate = "src/remote (aphrody-remote)"
+crate = "system/remote (aphrody-remote)"
 feature = "remote"
 upstream = "Eugeny/russh"
 commands = ["ssh"]
@@ -83,7 +83,7 @@ commands = ["conformance"]
 
 [module.toolchain]
 kind = "module"
-crate = "src/up (aphrody-up), src/rt (aphrody-rt), src/machine (aphrody-machine)"
+crate = "system/up (aphrody-up), system/rt (aphrody-rt), system/machine (aphrody-machine)"
 feature = "toolchain"
 upstream = "astral-sh/uv, oven-sh/bun versions, axo-dev/cargo-dist"
 note = "`up` installs the tools of tools.toml the way `bun install` installs packages (shims included); `rt` installs runtimes; `sys` profiles the machine; `bin` and `path` manage PATH."
@@ -91,21 +91,21 @@ commands = ["up", "rt", "sys", "bin", "path"]
 
 [module.docs]
 kind = "module"
-crate = "src/docs (aphrody-docs)"
+crate = "system/docs (aphrody-docs)"
 feature = "docs"
 upstream = "oven-sh/bun docs, bun.com llms-full.txt"
 commands = ["docs"]
 
 [module.flat]
 kind = "module"
-crate = "src/ay/src/low/flat.rs, flat_sync.rs (moves to its own crate)"
+crate = "system/ay/src/low/flat.rs, flat_sync.rs (moves to its own crate)"
 feature = "flat"
 upstream = "oven-sh/bun (bun_wyhash, bun_histogram), uutils/diffutils"
 commands = ["flat", "hash", "time"]
 
 [module.omarchy]
 kind = "module"
-crate = "src/posix/omarchy (aphrody-omarchy), src/posix/wslg"
+crate = "system/posix/omarchy (aphrody-omarchy), system/posix/wslg"
 feature = "omarchy"
 upstream = "basecamp/omarchy, CachyOS, microsoft/wslg"
 commands = ["omarchy", "linux", "pkg", "wsl", "wl"]
@@ -119,7 +119,7 @@ commands = ["ui", "design"]
 
 [module.electron]
 kind = "module"
-crate = "src/electron-migrate"
+crate = "system/electron-migrate"
 feature = "electron"
 upstream = "electron/asar, tauri-apps/tauri, zed-industries/gpui"
 commands = ["electron"]
@@ -133,35 +133,35 @@ commands = ["bench"]
 
 [module.index]
 kind = "module"
-crate = "src/core (aphrody-core, pipeline), src/ay/src/code (tree-sitter refactoring)"
+crate = "system/core (aphrody-core, pipeline), system/ay/src/code (tree-sitter refactoring)"
 feature = "index"
 upstream = "tree-sitter/tree-sitter, google/magika"
 commands = ["index", "code"]
 
 [module.build]
 kind = "module"
-crate = "src/ay/src/build.rs (cross-compilation presets over cargo)"
+crate = "system/ay/src/build.rs (cross-compilation presets over cargo)"
 feature = "build"
 upstream = "rust-lang/cargo"
 commands = ["build"]
 
 [module.env]
 kind = "module"
-crate = "src/ay/src/envcmd.rs"
+crate = "system/ay/src/envcmd.rs"
 feature = "env"
 upstream = "allan2/dotenvy"
 commands = ["env"]
 
 [module.ai]
 kind = "module"
-crate = "src/ay/src/ai.rs (LiteLLM provider config)"
+crate = "system/ay/src/ai.rs (LiteLLM provider config)"
 feature = "ai"
 upstream = "BerriAI/litellm, ollama/ollama"
 commands = ["ai"]
 
 [module.upstream]
 kind = "module"
-crate = "src/ay/src/bun (watch, bump, schedule), src/ay/src/bump.rs"
+crate = "system/ay/src/bun (watch, bump, schedule), system/ay/src/bump.rs"
 feature = "upstream"
 upstream = "oven-sh/bun"
 note = "Bun fork watch and bump; the patch stacks run in system/upstream."
@@ -182,7 +182,7 @@ commands = ["engines"]
 
 [module.plugin]
 kind = "module"
-crate = "src/ay/src/plugin.rs (plugin surface read by the Bun and niu hosts)"
+crate = "system/ay/src/plugin.rs (plugin surface read by the Bun and niu hosts)"
 feature = "plugin"
 upstream = "(first party)"
 note = "Becomes the extension registry of the architecture (docs/ay/EXTENSIONS.md)."

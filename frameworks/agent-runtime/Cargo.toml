@@ -51,7 +51,7 @@ version = "1.4.7"
 features = []
 
 [dependencies.aphrody-config]
-path = "../../src/config"
+path = "../../system/config"
 version = "1.4.7"
 features = []
 
@@ -145,7 +145,7 @@ version = "8"
 features = []
 
 [dev-dependencies.aphrody-jev]
-path = "../../src/jev"
+path = "../../system/jev"
 version = "1.4.7"
 features = ["client"]
 default-features = false

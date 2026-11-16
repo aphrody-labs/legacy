@@ -87,15 +87,15 @@ T:	git https://chromium.googlesource.com/chromium/src.git
 T:	git https://chromium.googlesource.com/chromium/tools/depot_tools.git
 T:	git https://github.com/aphrody-dev/depot.git
 F:	DEPS
-F:	src/depot/cli/
-F:	src/depot/core/
+F:	system/depot/cli/
+F:	system/depot/core/
 F:	src/ffi/
-F:	src/depot/forge/
-F:	src/depot/graph/
-F:	src/depot/ingest/
-F:	src/depot/migrate/
+F:	system/depot/forge/
+F:	system/depot/graph/
+F:	system/depot/ingest/
+F:	system/depot/migrate/
 F:	crates/depot-re/
-F:	src/core/
+F:	system/core/
 F:	third_party/chromium/
 F:	third_party/depot_tools/
 
@@ -118,15 +118,15 @@ S:	Supported
 W:	https://about.aphrody.com
 T:	git https://github.com/aphrody-dev/wayland.git
 T:	git https://github.com/aphrody-dev/gamescope-rs.git
-F:	src/wayland/gamescope/cli/
-F:	src/wayland/gamescope/core/
-F:	src/wayland/gamescope/web-wasm/
-F:	src/wayland/gamescope/wgsl/
-F:	src/posix/wslg/
-F:	src/wayland/tiler/
-F:	src/wayland/cosmic/
+F:	system/wayland/gamescope/cli/
+F:	system/wayland/gamescope/core/
+F:	system/wayland/gamescope/web-wasm/
+F:	system/wayland/gamescope/wgsl/
+F:	system/posix/wslg/
+F:	system/wayland/tiler/
+F:	system/wayland/cosmic/
 F:	hardware/drivers/gpu/dx12/
-F:	src/wayland/smithay/
+F:	system/wayland/smithay/
 F:	third_party/wgpu/
 F:	third_party/winit/
 
@@ -141,7 +141,7 @@ T:	git https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git
 T:	git https://github.com/aphrody-dev/unix.git
 T:	quilt docs/native/patches/
 F:	MAINTAINERS
-F:	src/posix/omarchy/
+F:	system/posix/omarchy/
 F:	docs/native/linux/
 F:	docs/native/linux-kernel-story/
 F:	docs/native/patches/
@@ -181,8 +181,8 @@ T:	git https://github.com/aphrody-dev/forge.git
 F:	.gitattributes
 F:	.gitignore
 F:	.gitmodules
-F:	src/ay/
-F:	src/xtask/
+F:	system/ay/
+F:	system/xtask/
 F:	docs/native/VCS-FORGE.md
 F:	justfile
 F:	system/env-kit/
@@ -209,15 +209,15 @@ T:	git https://github.com/aphrody-dev/pi-opencode.git
 F:	.agents/
 F:	frameworks/ai-os/
 
-LAYER L1 BASE (src/core, net, machine, design tokens, lore-base/io, depot-core/cas)
+LAYER L1 BASE (system/core, net, machine, design tokens, lore-base/io, depot-core/cas)
 M:	skill:bun agent:claude <contact@aphrody.com>
 S:	Supported
-F:	src/core/
+F:	system/core/
 F:	frameworks/corelib/
-F:	src/net/
-F:	src/machine/
-F:	src/depot/core/
-F:	src/depot/cas/
+F:	system/net/
+F:	system/machine/
+F:	system/depot/core/
+F:	system/depot/cas/
 F:	frameworks/lore/base/
 F:	frameworks/lore/io/
 F:	system/core-ts/
@@ -225,9 +225,9 @@ F:	system/core-ts/
 LAYER L2 PLATFORM ABSTRACTION (Windows, Linux, Cloudflare, Vercel, C ABI)
 M:	skill:microsoft skill:windows-machine agent:claude <contact@aphrody.com>
 S:	Supported
-F:	src/core/capi/
+F:	system/core/capi/
 F:	hardware/drivers/gpu/dx12/
-F:	src/remote/
+F:	system/remote/
 F:	system/ffi-bridge/
 
 LAYER L4 AGENT

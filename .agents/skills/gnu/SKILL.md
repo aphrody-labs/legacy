@@ -24,7 +24,7 @@ Site: https://gnu.aphrody.com (feed.json, feed.atom, events.json). Doc: `docs/na
 
 - One entry per package: GSRC ids, the inventory, plus ftp directories that have tarballs. `upstream` = newest stable tarball on ftp.gnu.org (ls-lrRt.txt.gz, UTC minutes); `gsrc` is a pin; `drift.gsrc` = ftp newer than GSRC.
 - `signature`: `verified` (sqv, GSRC `gpg-keyring`; a "legacy policy" note means SHA-1 key bindings), `unverified`, `invalid` (only on a clear mismatch), `missing` (no `.sig`). `sha256` comes from GSRC when the file matches, else from the mirror download.
-- `rust`: equivalents from `system/gnu-ts/src/rust.ts` (RUST_MAP, GitHub releases with ETag, crates.io). `rust_status` = best of `drop-in`, `partial`, `alt`, `lib`. `proof` reads `src/gnu/<id>/PROOF.md`.
+- `rust`: equivalents from `system/gnu-ts/src/rust.ts` (RUST_MAP, GitHub releases with ETag, crates.io). `rust_status` = best of `drop-in`, `partial`, `alt`, `lib`. `proof` reads `system/gnu/<id>/PROOF.md`.
 - `kernel`: kernel.org releases.json, sha256sums.asc, tree heads (git smart HTTP), gitiles GKI and ChromeOS branches, Rust in tree per series, google/kernel-research; `android` = per-branch analysis of every GKI branch (`pollAndroid` in `system/gnu-ts/src/kernel.ts`, gitiles reads of Makefile, `bazel/constants.scl`, `BUILD.bazel`, `gki_defconfig` at the branch head, redone only when the head moves: kernel, base, KMI phase, clang and rustc pins, Rust Binder). No per-branch timer, no clone.
 
 ## Service (fr2)

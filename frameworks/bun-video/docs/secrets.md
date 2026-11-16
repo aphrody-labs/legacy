@@ -7,7 +7,7 @@ root is absent. An optional JsonSecretStore supports deterministic local tests.
 No provider errors, JSON values, tokens or cookies are logged or written to plaintext
 files. The caller must keep returned JSON and its own original protected files private.
 
-The native Windows implementation in `src/jsc/bindings/SecretsWindows.cpp` places
+The native Windows implementation in `system/jsc/bindings/SecretsWindows.cpp` places
 UTF-8 bytes directly in the CredentialBlob and maps `persist: "local"` to the local
 machine persistence option. This module explicitly uses that persistence on every
 write instead of Bun's default enterprise persistence. It does not enumerate other

@@ -431,7 +431,7 @@ export function runtimePage(d: SiteData, ctx: PageContext): GeneratedPage | null
     );
   if (rt.modules.length)
     out.push(
-      `## Built-in module declarations\n\nNames come from the ${link("source registry", `${gh}/blob/${rt.commit}/src/resolve_builtins/HardcodedModule.rs`)}. A declaration does not establish platform availability or runtime qualification.\n\n${rt.modules.map(m => `- ${code(m)}`).join("\n")}`,
+      `## Built-in module declarations\n\nNames come from the ${link("source registry", `${gh}/blob/${rt.commit}/system/resolve_builtins/HardcodedModule.rs`)}. A declaration does not establish platform availability or runtime qualification.\n\n${rt.modules.map(m => `- ${code(m)}`).join("\n")}`,
     );
   if (rt.commands.length)
     out.push(

@@ -486,7 +486,7 @@
           "domain": "data-assets",
           "name": "Chromium Upstream Primary MIME Table",
           "chromiumSource": "net/base/mime_util.cc (kPrimaryMappings)",
-          "bunTarget": "src/http_types/MimeType.rs",
+          "bunTarget": "system/http_types/MimeType.rs",
           "status": "partial",
           "details": "68 upstream Chromium MIME entries indexed. Full parity achieved via 0001-mime-chromium-types.patch & preload.",
           "patchAvailable": true,
@@ -564,7 +564,7 @@
           "domain": "tls",
           "name": "Post-Quantum Hybrid Key Exchange (X25519MLKEM768 0x11ec)",
           "chromiumSource": "third_party/boringssl/src/include/openssl/ssl.h (#define SSL_GROUP_X25519_MLKEM768 0x11ec)",
-          "bunTarget": "src/boringssl (SSL_CTX_set1_curves)",
+          "bunTarget": "system/boringssl (SSL_CTX_set1_curves)",
           "status": "parity",
           "details": "BoringSSL upstream defines SSL_GROUP_X25519_MLKEM768 (0x11ec). Ready for PQ TLS negotiation.",
           "patchAvailable": false

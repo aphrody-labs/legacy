@@ -34,7 +34,7 @@ describe("coherence", () => {
   test("protected paths and areas", () => {
     for (const p of [
       "Cargo.toml",
-      "src/ay/src/lib.rs",
+      "system/ay/src/lib.rs",
       "docs/ARCHITECTURE.md",
       "scripts/scripts.just",
       ".github/workflows/ci.yml",

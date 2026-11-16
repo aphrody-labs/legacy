@@ -3,7 +3,7 @@
  * Versioned matrix of the engines: latest version read live from the official source (JSON API
  * Chrome for Testing, product-details de Mozilla, GitHub releases, npm, PyPI, crates.io, browsers.json
  * of Playwright at the pinned version), installed version and resolved executable. Consumed by
- * `ay rt matrix` (src/rt), which adds the runtimes (Node, Deno, Bun, Python) and V8 / Dawn per channel.
+ * `ay rt matrix` (system/rt), which adds the runtimes (Node, Deno, Bun, Python) and V8 / Dawn per channel.
  */
 import { basename, dirname } from "node:path";
 import {

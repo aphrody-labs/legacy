@@ -8,7 +8,7 @@ use std::path::MAIN_SEPARATOR;
 use glob::glob;
 use regex::Regex;
 
-include!("../../../src/build-helper.rs");
+include!("../../../system/build-helper.rs");
 
 fn main() -> Result<(), Box<dyn Error>> {
     let path_sep = MAIN_SEPARATOR;

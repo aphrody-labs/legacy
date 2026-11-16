@@ -1,5 +1,5 @@
 // Generated sources of the Bun crates in src/ (build/debug-codegen/codegen): build_options.rs, the *_byte_class.rs,
-// aot_schema*.rs, aot_builtin_*.rs, cpp.rs, bindgen output. The generators are Bun's own (src/codegen, scripts/build)
+// aot_schema*.rs, aot_builtin_*.rs, cpp.rs, bindgen output. The generators are Bun's own (system/codegen, scripts/build)
 // and run from the pinned fork checkout third_party/bun (src.lock.json), whose src/ is the tree imported here;
 // the AOT generators belong to oven-sh/WebKit (Source/JavaScriptCore/aot), a sparse clone pinned by the fork's
 // WEBKIT_VERSION. Run on fr1 (Linux): `bun scripts/bun-codegen.ts`, then `cargo check --workspace`.
@@ -71,7 +71,7 @@ const list = resolve(fork, "build/debug-codegen/builtins.sources");
 writeFileSync(list, bind.sort().join("\n") + "\n");
 run(
   [
-    "bun", "run", "src/codegen/builtins/index.ts", `--codegen-path=${codegen}`, "--target=Linux", `--sources=@${list}`,
+    "bun", "run", "system/codegen/builtins/index.ts", `--codegen-path=${codegen}`, "--target=Linux", `--sources=@${list}`,
     `--engine-directory=${resolve(jsc, "aot")}`, `--javascriptcore=${jsc}`, `--engine-out=${resolve(codegen, "engine-out")}`,
   ],
   fork,

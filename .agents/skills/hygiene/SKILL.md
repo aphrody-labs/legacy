@@ -27,7 +27,7 @@ One engine, `scripts/hygiene.ts`, three front ends: `just hygiene [--summary | -
 
 ## Tree-sitter engine
 
-Rules that read code do not match text lines: `node-builtin` reads import specifiers (import, export-from, dynamic import, require) and calls, `literal-identity` and `personal-data` read string literals, `non-english` reads comments and string literals. `scripts/ay-facts.ts` asks `ay code query` (src/core/src/facts.rs, queries in `src/core/queries/facts`) for the nodes of every code file in one parallel call; a quote inside a comment, a regex literal or an identifier is not a hit. Files without a grammar (ps1, just, zig, cs, docs, manifests) and runs without the binary (build `aphrody-code`: `cargo build -p aphrody-core --features cli`, or set `APHRODY_CODE_BIN`) keep the line scanners; `HYGIENE_ENGINE=lines` forces them. `bun scripts/hygiene-compare.ts` prints both engines side by side on the whole tree.
+Rules that read code do not match text lines: `node-builtin` reads import specifiers (import, export-from, dynamic import, require) and calls, `literal-identity` and `personal-data` read string literals, `non-english` reads comments and string literals. `scripts/ay-facts.ts` asks `ay code query` (system/core/src/facts.rs, queries in `system/core/queries/facts`) for the nodes of every code file in one parallel call; a quote inside a comment, a regex literal or an identifier is not a hit. Files without a grammar (ps1, just, zig, cs, docs, manifests) and runs without the binary (build `aphrody-code`: `cargo build -p aphrody-core --features cli`, or set `APHRODY_CODE_BIN`) keep the line scanners; `HYGIENE_ENGINE=lines` forces them. `bun scripts/hygiene-compare.ts` prints both engines side by side on the whole tree.
 
 ## Suppression
 

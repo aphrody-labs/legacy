@@ -31,7 +31,7 @@ name = "aphrody_agent_tools"
 path = "src/lib.rs"
 
 [dependencies.aphrody-jev]
-path = "../../src/jev"
+path = "../../system/jev"
 version = "1.4.7"
 features = ["client"]
 default-features = false

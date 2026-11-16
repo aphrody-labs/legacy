@@ -10,7 +10,7 @@ Recensement, classification et verdicts pour notre stack (LLVM seul, Rust en pri
 - [MODERN.md](MODERN.md) : équivalents et réécritures, avec maturité et taux de tests
 - [PLAN.md](PLAN.md) : notre feuille de route de remplacement (top 10)
 - [gnu-packages.json](gnu-packages.json) : données machine, générées par `tools/gnu-index/build.ts` (curation dans `curated.ts`), puis complétées par `tools/gnu-index/merge.ts` : `purpose` depuis les blurbs officiels (`docs/research/gnu-blurbs.json`, texte complet dans `blurb`), `gsrc` (id, version, sha256, dépendances) et `latest_release` quand GSRC est plus récent (`docs/research/gsrc-gnu.json`), 13 répertoires ftp absents ajoutés (guile-debbugs, micron, sauce, speedx, aspell-dict-{csb,ga,hr,is,it,sk} ; cfengine, flex et git marqués `hosted_only` : projets hors GNU hébergés sur ftp.gnu.org)
-- [OS.md](OS.md) : cible « Aphrody système GNU » ; `src/gnu/packages.toml` (généré par `scripts/gnu-packages.ts`, gate de dérive `just gnu-drift`) et un `PROOF.md` par paquet dans `src/gnu/<id>/`
+- [OS.md](OS.md) : cible « Aphrody système GNU » ; `system/gnu/packages.toml` (généré par `scripts/gnu-packages.ts`, gate de dérive `just gnu-drift`) et un `PROOF.md` par paquet dans `system/gnu/<id>/`
 
 ## Comptes par catégorie
 

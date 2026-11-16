@@ -1,5 +1,5 @@
 // Source facts through `aphrody-code query` (or `ay code query`): comments, strings, imports, calls (code) and headings, paragraphs (Markdown)
-// as tree-sitter nodes, from the one engine of src/core (src/core/src/facts.rs; queries in src/core/queries/facts).
+// as tree-sitter nodes, from the one engine of system/core (system/core/src/facts.rs; queries in system/core/queries/facts).
 // Analysis lives in Rust; the tools in this directory keep their rules and call this module for the nodes.
 // Every function returns undefined when `ay` (or its `code query` command) is absent, and the caller keeps its own
 // scanner as the fallback: a tool must still run where ay is not built.
@@ -16,7 +16,7 @@ export type FileFacts = {
   matches: { p: number; c: Capture[] }[];
 };
 
-/** Files that the facts layer parses as code (the dedicated grammars of src/core with comments and strings). */
+/** Files that the facts layer parses as code (the dedicated grammars of system/core with comments and strings). */
 export const CODE_FACTS = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|rs|py|pyi|sh|bash|c|h|cc|cpp|cxx|hpp|go|lua)$/;
 
 type Runner = { bin: string; prefix: string[] };

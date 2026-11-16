@@ -439,7 +439,7 @@
       "name": "yasb",
       "manifests": [
         "pyproject.toml",
-        "src/core/widgets/services/systray/hook/CMakeLists.txt",
+        "system/core/widgets/services/systray/hook/CMakeLists.txt",
         "Windows workflow"
       ],
       "hostDependencies": [

@@ -255,7 +255,7 @@ const specs: Spec[] = [
     hosts: ["pc", "fr1"],
     source: "crate",
     pkg: "cbindgen",
-    why: "just core-header (src/core/capi)",
+    why: "just core-header (system/core/capi)",
   },
   {
     name: "cargo-nextest",

@@ -45,20 +45,20 @@ Names breaking the scheme: 121 rows below (a name can appear in two tables). Syn
 | nt-brand | apps/nt/sdk/rust/brand | aphrody-nt-sdk-rust-brand | 4 |  |
 | reactor-winui-hello | apps/nt/sdk/rust/winui-hello | aphrody-nt-sdk-rust-winui-hello | 4 |  |
 | stack-bench | bench | aphrody-bench | 26 | identity.toml [naming.crate_names] |
-| aphrody | src/ay | aphrody-ay | 1540 | identity.toml [cli].crate |
+| aphrody | system/ay | aphrody-ay | 1540 | identity.toml [cli].crate |
 | craft-formats | frameworks/craft | aphrody-craft | 16 |  |
 | dx12-hal | hardware/drivers/gpu/dx12 | aphrody-drivers-gpu-dx12 | 37 |  |
-| wslg-cli | src/posix/wslg | aphrody-posix-wslg | 17 |  |
+| wslg-cli | system/posix/wslg | aphrody-posix-wslg | 17 |  |
 | steam-depot | frameworks/steam | aphrody-steam | 43 |  |
 | aphrody-ui | frameworks/ui/kit | aphrody-ui-kit | 51 |  |
-| cosmic-compat | src/wayland/cosmic | aphrody-wayland-cosmic | 20 |  |
-| gamescope-cli | src/wayland/gamescope/cli | aphrody-wayland-gamescope-cli | 18 |  |
-| gamescope-core | src/wayland/gamescope/core | aphrody-wayland-gamescope-core | 21 |  |
-| gamescope-web-wasm | src/wayland/gamescope/web-wasm | aphrody-wayland-gamescope-web-wasm | 22 |  |
-| gamescope-wgsl | src/wayland/gamescope/wgsl | aphrody-wayland-gamescope-wgsl | 20 |  |
-| smithay-wayland-wire | src/wayland/smithay | aphrody-wayland-smithay | 22 |  |
-| hypr-tiler | src/wayland/tiler | aphrody-wayland-tiler | 18 |  |
-| xtk | src/xtask | aphrody-xtask | 22 | identity.toml [naming.crate_names] |
+| cosmic-compat | system/wayland/cosmic | aphrody-wayland-cosmic | 20 |  |
+| gamescope-cli | system/wayland/gamescope/cli | aphrody-wayland-gamescope-cli | 18 |  |
+| gamescope-core | system/wayland/gamescope/core | aphrody-wayland-gamescope-core | 21 |  |
+| gamescope-web-wasm | system/wayland/gamescope/web-wasm | aphrody-wayland-gamescope-web-wasm | 22 |  |
+| gamescope-wgsl | system/wayland/gamescope/wgsl | aphrody-wayland-gamescope-wgsl | 20 |  |
+| smithay-wayland-wire | system/wayland/smithay | aphrody-wayland-smithay | 22 |  |
+| hypr-tiler | system/wayland/tiler | aphrody-wayland-tiler | 18 |  |
+| xtk | system/xtask | aphrody-xtask | 22 | identity.toml [naming.crate_names] |
 | asset-test | test/assets | aphrody-assets | 19 |  |
 | aphrody-lore-integration-tests | test/lore | aphrody-lore | 8 |  |
 
@@ -73,52 +73,52 @@ Names breaking the scheme: 121 rows below (a name can appear in two tables). Syn
 
 | Kind | Name | Canonical | Defined in | Files referencing |
 |---|---|---|---|---|
-| flag | --output-json | --out | src/depot/gclient/src/cli.rs | 4 |
-| flag | --output | --out | src/posix/omarchy/src/cli.rs | 140 |
-| flag | --run | --runs | src/ay/src/bun/mod.rs, src/posix/omarchy/src/cli.rs | 29 |
-| flag | --iterations | --runs | frameworks/lore/chaos-client/src/cli.rs, src/posix/wslg/src/app.rs | 9 |
-| flag | --timeout-ms | --timeout | src/ay/src/electron.rs | 6 |
+| flag | --output-json | --out | system/depot/gclient/src/cli.rs | 4 |
+| flag | --output | --out | system/posix/omarchy/src/cli.rs | 140 |
+| flag | --run | --runs | system/ay/src/bun/mod.rs, system/posix/omarchy/src/cli.rs | 29 |
+| flag | --iterations | --runs | frameworks/lore/chaos-client/src/cli.rs, system/posix/wslg/src/app.rs | 9 |
+| flag | --timeout-ms | --timeout | system/ay/src/electron.rs | 6 |
 | flag | --time-limit-mins | --timeout | frameworks/lore/chaos-client/src/cli.rs | 1 |
-| flag | --apply | --write | src/ay/src/bun/mod.rs, src/depot/gclient/src/cli.rs | 27 |
-| flag | --no-write | --dry-run | src/rt/src/lib.rs | 3 |
-| subcommand | up | update | src/ay/src/ai.rs, src/ay/src/lib.rs | 3036 |
-| subcommand | bump | update | src/ay/src/bun/mod.rs, src/ay/src/lib.rs | 337 |
-| subcommand | self-update | update | src/ay/src/lib.rs | 50 |
-| subcommand | sh | shell | src/ay/src/lib.rs | 2685 |
-| subcommand | shell-matrix | shell | src/ay/src/lib.rs | 17 |
-| subcommand | pull | sync | src/ay/src/ai.rs | 398 |
-| subcommand | fetch | sync | src/ay/src/lib.rs | 990 |
-| subcommand | ls | list | src/ay/src/ai.rs, src/rt/src/lib.rs | 484 |
+| flag | --apply | --write | system/ay/src/bun/mod.rs, system/depot/gclient/src/cli.rs | 27 |
+| flag | --no-write | --dry-run | system/rt/src/lib.rs | 3 |
+| subcommand | up | update | system/ay/src/ai.rs, system/ay/src/lib.rs | 3036 |
+| subcommand | bump | update | system/ay/src/bun/mod.rs, system/ay/src/lib.rs | 337 |
+| subcommand | self-update | update | system/ay/src/lib.rs | 50 |
+| subcommand | sh | shell | system/ay/src/lib.rs | 2685 |
+| subcommand | shell-matrix | shell | system/ay/src/lib.rs | 17 |
+| subcommand | pull | sync | system/ay/src/ai.rs | 398 |
+| subcommand | fetch | sync | system/ay/src/lib.rs | 990 |
+| subcommand | ls | list | system/ay/src/ai.rs, system/rt/src/lib.rs | 484 |
 
 ## Codenames
 
 | Kind | Name | Path | Files referencing |
 |---|---|---|---|
-| clap-subcommand | fabric | src/ay/src/ai.rs | 27 |
-| clap-subcommand | scope | src/ay/src/lib.rs | 2348 |
-| clap-subcommand | jules | src/ay/src/lib.rs | 75 |
-| clap-subcommand | gnu | src/ay/src/lib.rs | 406 |
-| clap-subcommand | omarchy | src/ay/src/lib.rs | 82 |
-| clap-subcommand | low | src/ay/src/lib.rs | 569 |
-| cargo-bin | niu | src/niubash/Cargo.toml | 622 |
-| cargo-bin | omarchy | src/posix/omarchy/Cargo.toml | 82 |
-| cargo-bin | wslg-rs | src/posix/wslg/Cargo.toml | 10 |
-| cargo-bin | py2bun-rs | src/py2bun/Cargo.toml | 8 |
-| cargo-bin | gamescope-rs | src/wayland/gamescope/cli/Cargo.toml | 16 |
+| clap-subcommand | fabric | system/ay/src/ai.rs | 27 |
+| clap-subcommand | scope | system/ay/src/lib.rs | 2348 |
+| clap-subcommand | jules | system/ay/src/lib.rs | 75 |
+| clap-subcommand | gnu | system/ay/src/lib.rs | 406 |
+| clap-subcommand | omarchy | system/ay/src/lib.rs | 82 |
+| clap-subcommand | low | system/ay/src/lib.rs | 569 |
+| cargo-bin | niu | system/niubash/Cargo.toml | 622 |
+| cargo-bin | omarchy | system/posix/omarchy/Cargo.toml | 82 |
+| cargo-bin | wslg-rs | system/posix/wslg/Cargo.toml | 10 |
+| cargo-bin | py2bun-rs | system/py2bun/Cargo.toml | 8 |
+| cargo-bin | gamescope-rs | system/wayland/gamescope/cli/Cargo.toml | 16 |
 
 ## Bin names
 
 | Name | Path | Target | Files referencing |
 |---|---|---|---|
 | aphrody-factory | frameworks/chromium/factory/Cargo.toml | aphrody-factory | 18 |
-| bun-shim-impl | src/install/windows-shim/Cargo.toml | bun-shim-impl | 10 |
+| bun-shim-impl | system/install/windows-shim/Cargo.toml | bun-shim-impl | 10 |
 | lore_chaos_client | frameworks/lore/chaos-client/Cargo.toml | lore-chaos-client | 5 |
 | decode_request | frameworks/lore/fuse/fuzz/Cargo.toml | decode-request | 3 |
-| wslg-rs | src/posix/wslg/Cargo.toml | wslg | 10 |
-| py2bun-rs | src/py2bun/Cargo.toml | py2bun | 8 |
-| bun-sema | src/sema/standalone/Cargo.toml | bun-sema | 4 |
+| wslg-rs | system/posix/wslg/Cargo.toml | wslg | 10 |
+| py2bun-rs | system/py2bun/Cargo.toml | py2bun | 8 |
+| bun-sema | system/sema/standalone/Cargo.toml | bun-sema | 4 |
 | bun-steam-depot | frameworks/steam/Cargo.toml | bun-steam-depot | 7 |
-| gamescope-rs | src/wayland/gamescope/cli/Cargo.toml | gamescope | 16 |
+| gamescope-rs | system/wayland/gamescope/cli/Cargo.toml | gamescope | 16 |
 
 ## CI workflow names versus file stems
 

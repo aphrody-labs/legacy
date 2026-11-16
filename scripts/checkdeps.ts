@@ -18,7 +18,7 @@
 //
 // Units: Cargo.toml [package], package.json, pyproject.toml [project] (uv; edges from [tool.uv.sources]).
 // --imports: also read the edges from the code. The imports of every first-party TS/JS file are tree-sitter nodes
-// (`aphrody-code query`, src/core/src/facts.rs); a bare specifier naming another workspace package, or a relative one that
+// (`aphrody-code query`, system/core/src/facts.rs); a bare specifier naming another workspace package, or a relative one that
 // leaves its unit, is an edge even when package.json does not declare it, and goes through the same layer rules.
 // Usage: bun scripts/checkdeps.ts [--root DIR] [--json] [--graph] [--units] [--affected REF] [--imports]
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";

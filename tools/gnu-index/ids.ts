@@ -1,4 +1,4 @@
-// Shared by merge.ts (inventory) and scripts/gnu-packages.ts (src/gnu/packages.toml).
+// Shared by merge.ts (inventory) and scripts/gnu-packages.ts (system/gnu/packages.toml).
 
 /** Inventory name (gnu-packages.json) -> GSRC id (pkg/gnu directory), where they differ. */
 export const GSRC_ID: Record<string, string> = { libc: "glibc", gcc: "gcc16" };

@@ -1,11 +1,11 @@
 ---
 name: electron-migrate
-description: Analyze an Electron app (app.asar + .unpacked, Electron version and fuses, windows, preloads, IPC channels, contextBridge, Node APIs, natives, protocols, menus, tray, updater, deep links), migrate it to Tauri v3 (aphrody-labs/tauri fork) or GPUI with a Bun sidecar, tune the generated project (fat LTO, PGO, bun --compile --minify --bytecode) and bench it against the original. Use for `ay electron`, the electron MCP tools, or src/electron-migrate.
+description: Analyze an Electron app (app.asar + .unpacked, Electron version and fuses, windows, preloads, IPC channels, contextBridge, Node APIs, natives, protocols, menus, tray, updater, deep links), migrate it to Tauri v3 (aphrody-labs/tauri fork) or GPUI with a Bun sidecar, tune the generated project (fat LTO, PGO, bun --compile --minify --bytecode) and bench it against the original. Use for `ay electron`, the electron MCP tools, or system/electron-migrate.
 ---
 
 # Electron migration (`ay electron`)
 
-Crate `src/electron-migrate` (package `aphrody-electron-migrate`, layer 4), wired by `src/ay/src/electron.rs`. ASAR parsing is `aphrody_re::asar`; version and fuses are `aphrody_re::electron`.
+Crate `system/electron-migrate` (package `aphrody-electron-migrate`, layer 4), wired by `system/ay/src/electron.rs`. ASAR parsing is `aphrody_re::asar`; version and fuses are `aphrody_re::electron`.
 
 Proof run, measured numbers, 1:1 / stubbed / unsupported tables and open items: [docs/native/ui/ELECTRON-MIGRATION.md](../../../docs/native/ui/ELECTRON-MIGRATION.md).
 
@@ -16,7 +16,7 @@ Proof run, measured numbers, 1:1 / stubbed / unsupported tables and open items: 
 - `ay electron optimize <project> [--opt-level 3|2|1|s|z] [--build]`: `[profile.release]` (lto fat, codegen-units 1, panic abort, strip symbols), `scripts/pgo.ts`, `scripts/build-sidecar.ts` with `--compile --minify --bytecode` (checked against `bun build --help`), `optimize-report.json` with sizes.
 - `ay electron bench --electron <exe> --migrated <exe> [--ipc-expr-electron <js>] [--runs N] [--out r.json]`: hyperfine cold start (launch to first committed page over CDP), RSS of the process tree, sizes, IPC round trip; Markdown table, JSON with `--json`. WebKitGTK has no CDP: `--ready alive`.
 
-## Pins (generator constants, `src/electron-migrate/src/tauri.rs` and `gpui.rs`)
+## Pins (generator constants, `system/electron-migrate/src/tauri.rs` and `gpui.rs`)
 
 - Tauri: aphrody-labs/tauri `v3` rev `271c15e1eaebb8e12aac8c4e63eead1ff17fd93a` (3.0.0-alpha.6), applied through `[patch.crates-io]`; plugins from tauri-apps/plugins-workspace `v3`; npm `@tauri-apps/api` `^3.0.0-alpha.3`. v3 takes the runtime as a value: `Builder::default().runtime(tauri_runtime_wry::Wry::default())`.
 - GPUI: aphrody-labs/zed `main` rev `2de90a45a393db5f5e7dc64eceaaaa2fbdd5dfb4`; `gpui_platform::application().run`, menus through `cx.set_menus`. GPUI renders no HTML: the `webview` feature hosts the renderer in wry (stubbed).

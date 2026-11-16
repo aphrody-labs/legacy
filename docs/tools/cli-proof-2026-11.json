@@ -34,30 +34,30 @@
   },
   "benchmarks": {
     "hyperfine -N -w 2 -r 10 (hyperfine 2.0.0)": {
-      "cargo-machete vs cargo-shear on src/up (unused deps)": [
+      "cargo-machete vs cargo-shear on system/up (unused deps)": [
         {
-          "command": "cargo-machete C:/aphrody/src/up",
+          "command": "cargo-machete C:/aphrody/system/up",
           "mean_ms": 23.6,
           "stddev_ms": 0.8,
           "runs": 10
         },
         {
-          "command": "cargo-shear C:/aphrody/src/up",
+          "command": "cargo-shear C:/aphrody/system/up",
           "mean_ms": 1366,
           "stddev_ms": 18.6,
           "runs": 10
         }
       ],
       "note": "machete = heuristic, fast gate; shear = cargo metadata, precise; both kept",
-      "fd vs rg --files (*.toml in src/up)": [
+      "fd vs rg --files (*.toml in system/up)": [
         {
-          "command": "fd -e toml . C:/aphrody/src/up",
+          "command": "fd -e toml . C:/aphrody/system/up",
           "mean_ms": 16.8,
           "stddev_ms": 1.1,
           "runs": 10
         },
         {
-          "command": "rg --files -g *.toml C:/aphrody/src/up",
+          "command": "rg --files -g *.toml C:/aphrody/system/up",
           "mean_ms": 13.6,
           "stddev_ms": 2.9,
           "runs": 10

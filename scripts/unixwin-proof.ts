@@ -34,7 +34,7 @@ export const CASES: Case[] = [
   { name: "printenv", args: A("printenv", "AY_PROOF"), env: { AY_PROOF: "bar" }, stdout: "bar\n", win: true },
   { name: "true", args: A("true"), stdout: "", code: 0, win: true },
   { name: "false", args: A("false"), stdout: "", code: 1, win: true },
-  // Portable ports (src/winux/extra), every host.
+  // Portable ports (system/winux/extra), every host.
   { name: "unix2dos", args: A("unix2dos"), stdin: "a\nb\n", stdout: "a\r\nb\r\n" },
   { name: "dos2unix", args: A("dos2unix"), stdin: "a\r\nb\r\n", stdout: "a\nb\n" },
   { name: "envsubst", args: A("envsubst"), stdin: "v=$AY_PROOF ${AY_PROOF}\n", env: { AY_PROOF: "x" }, stdout: "v=x x\n" },

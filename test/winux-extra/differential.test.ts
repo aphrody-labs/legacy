@@ -1,4 +1,4 @@
-// The ported applets (src/winux/extra) against the originals installed on the host: envsubst (gettext), look (util-linux), strings (binutils).
+// The ported applets (system/winux/extra) against the originals installed on the host: envsubst (gettext), look (util-linux), strings (binutils).
 // `AY_BIN=<target>/debug/ay bun test test/winux-extra` on a POSIX host with those tools. dos2unix/unix2dos have no reference binary here:
 // they are checked against their definition (round trip and in-place conversion).
 import { describe, expect, test } from "bun:test";

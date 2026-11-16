@@ -223,7 +223,8 @@ export function liveScanToStore(
   options: ScanOptions = {},
 ): { mode: "ffi" | "fallback"; files: number } {
   const includes = options.includes ?? [
-    "src",
+    "kernel",
+    "hardware",
     "bench",
     "test",
     "frameworks",
@@ -490,7 +491,7 @@ function collectApps(srcRoot: string): AppInfo[] {
 }
 
 function collectHeaders(srcRoot: string): HeaderInfo[] {
-  const incDir = join(srcRoot, "src", "core", "capi", "include");
+  const incDir = join(srcRoot, "system", "core", "capi", "include");
   if (!existsSync(incDir)) return [];
   const out: HeaderInfo[] = [];
   for (const ent of readdirSync(incDir, { withFileTypes: true })) {

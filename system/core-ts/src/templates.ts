@@ -160,7 +160,7 @@ ${layerTable}
 
 ## 3. Pure C23 LLVM ABI Core
 
-All native cross-language boundaries converge on C ABI headers in \`src/core/capi/include/\` consumed by Bun (\`bun:ffi\`), Rust (\`src/core/capi\`), and Zig.
+All native cross-language boundaries converge on C ABI headers in \`system/core/capi/include/\` consumed by Bun (\`bun:ffi\`), Rust (\`system/core/capi\`), and Zig.
 
 ${headersTable}
 
@@ -197,10 +197,10 @@ export function buildPureCLlvmMdx(snap: MonorepoSnapshot): string {
   const body = `# Pure C23 LLVM Core and C ABI
 
 <Callout type="warn" title="Compiler & ABI Contract">
-Every header in \`src/core/capi/include/*.h\` must pass \`clang -std=c23 -Wall -Wextra -Wpedantic -Werror -fsyntax-only\` and \`clang++ -std=c++23 -Wall -Wextra -Werror -fno-exceptions -fno-rtti -fsyntax-only\` with zero warnings.
+Every header in \`system/core/capi/include/*.h\` must pass \`clang -std=c23 -Wall -Wextra -Wpedantic -Werror -fsyntax-only\` and \`clang++ -std=c++23 -Wall -Wextra -Werror -fno-exceptions -fno-rtti -fsyntax-only\` with zero warnings.
 </Callout>
 
-Generated from \`src/core/capi/include/*.h\`, \`src/*/DEPS.rules\` and the root \`Cargo.toml\`.
+Generated from \`system/core/capi/include/*.h\`, \`src/*/DEPS.rules\` and the root \`Cargo.toml\`.
 
 ## 1. Compiler and ABI Rigor
 
@@ -226,14 +226,14 @@ ${bunCratesTable}
 <Tab value="C23">
 
 \`\`\`sh
-clang -std=c23 -Wall -Wextra -Wpedantic -Werror -fsyntax-only -x c src/core/capi/include/aphrody_core.h src/core/capi/include/aphrody_zig.h src/core/capi/include/aphrody_mwg.h
+clang -std=c23 -Wall -Wextra -Wpedantic -Werror -fsyntax-only -x c system/core/capi/include/aphrody_core.h system/core/capi/include/aphrody_zig.h system/core/capi/include/aphrody_mwg.h
 \`\`\`
 
 </Tab>
 <Tab value="C++23">
 
 \`\`\`sh
-clang++ -std=c++23 -Wall -Wextra -Werror -fno-exceptions -fno-rtti -fsyntax-only -x c++ src/core/capi/include/aphrody_zig.h src/core/capi/include/aphrody_mwg.h
+clang++ -std=c++23 -Wall -Wextra -Werror -fno-exceptions -fno-rtti -fsyntax-only -x c++ system/core/capi/include/aphrody_zig.h system/core/capi/include/aphrody_mwg.h
 \`\`\`
 
 </Tab>
@@ -266,13 +266,13 @@ export function buildModernWebGuidanceMdx(snap: MonorepoSnapshot): string {
 \`@aphrody/wck\` runs with zero external npm dependencies on Bun, pairing \`mwg_capi.dll\` (\`bun:ffi\`) with a deterministic pure-Bun fallback.
 </Callout>
 
-Generated from \`system/wck\`, \`src/core/capi/include/\`, and \`frameworks/ai-os\`.
+Generated from \`system/wck\`, \`system/core/capi/include/\`, and \`frameworks/ai-os\`.
 
 ## 1. Package Overview
 
 - **Package**: \`${wckPkg?.name ?? "@aphrody/wck"}\` v${wckPkg?.version ?? "1.0.0"} (${wckPkg?.depsCount ?? 0} external npm dependencies).
 - **Description**: ${wckPkg?.description ?? "Compile-Time Web Validator (Google SEO + AI Mode SEO + Modern Web Guidelines + Core Web Vitals + Lighthouse 100 + WASM + WebGPU Chromium Spec)"}.
-- **Native Core**: \`mwg_capi.dll\` compiled from \`src/core/capi/c/mwg_core.c\` with C23 strict flags and \`bun:ffi\` bridge (\`system/wck/src/mwg-ffi.ts\`) plus deterministic pure-Bun fallback.
+- **Native Core**: \`mwg_capi.dll\` compiled from \`system/core/capi/c/mwg_core.c\` with C23 strict flags and \`bun:ffi\` bridge (\`system/wck/src/mwg-ffi.ts\`) plus deterministic pure-Bun fallback.
 
 ## 2. C ABI Surface (\`aphrody_mwg.h\`)
 

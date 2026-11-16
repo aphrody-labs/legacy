@@ -126,7 +126,7 @@ export function ghidraPlugin(o: GhidraPluginOptions = {}): BunPlugin {
   };
 }
 
-/** Build-only native onBeforeParse plugin (Rust cdylib in src/ghidra-bun): files `*.ghidra.js` become analysis modules. */
+/** Build-only native onBeforeParse plugin (Rust cdylib in system/ghidra-bun): files `*.ghidra.js` become analysis modules. */
 export function nativeGhidraPlugin(addonPath: string, filter = /\.ghidra\.js$/): BunPlugin {
   return {
     name: "aphrody-ghidra-native",

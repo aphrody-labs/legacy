@@ -182,8 +182,8 @@ test("JIT metadata refuses a workspace symlink into another owner", async () => 
 
 test("graph frontend receipt binds exported source bytes and refuses a changed loader", async () => {
   const paths = [
-    "src/js/bun/graph-index.ts",
-    "src/js/bun/graphx.ts",
+    "system/js/bun/graph-index.ts",
+    "system/js/bun/graphx.ts",
     "scripts/aphrody/graph-index.ts",
     "scripts/aphrody/release-graph-index.ts",
     "scripts/aphrody/fork-graph-docs.ts",
@@ -204,8 +204,8 @@ test("graph frontend receipt binds exported source bytes and refuses a changed l
   const receipt = await verifyJitGraphFrontendSources(tree, root);
   expect(receipt.source).toBe(tree.sha);
   expect(receipt.changedBinaryQualified).toBe(false);
-  expect(receipt.files.find(file => file.path === "src/js/bun/graph-index.ts")?.gitBlob).toBe(
-    tree.files.get("src/js/bun/graph-index.ts"),
+  expect(receipt.files.find(file => file.path === "system/js/bun/graph-index.ts")?.gitBlob).toBe(
+    tree.files.get("system/js/bun/graph-index.ts"),
   );
   await Bun.write(join(root, "scripts/aphrody/graph-index.ts"), "export const owner = 'changed';\n");
   await expect(verifyJitGraphFrontendSources(tree, root)).rejects.toThrow("immutable source");

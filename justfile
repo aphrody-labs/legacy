@@ -12,8 +12,8 @@ set dotenv-load := false
 root := env("SRC_ROOT", justfile_directory())
 image := env("SRC_IMAGE", "aphrody/monorepo-dev:local")
 
-import "src/ay/ay.just"
-import "src/gnu/gnu.just"
+import "system/ay/ay.just"
+import "system/gnu/gnu.just"
 import "scripts/scripts.just"
 import "build/android/android.just"
 import "frameworks/ai-os/ai-os.just"

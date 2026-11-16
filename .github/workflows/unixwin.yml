@@ -6,10 +6,10 @@ on:
   push:
     branches: [main, dev]
     paths:
-      - "src/winux/**"
-      - "src/ay/**"
-      - "src/docs/**"
-      - "src/up/**"
+      - "system/winux/**"
+      - "system/ay/**"
+      - "system/docs/**"
+      - "system/up/**"
       - "device/os/unixwin/**"
       - "scripts/unixwin-applets.ts"
       - "Cargo.toml"

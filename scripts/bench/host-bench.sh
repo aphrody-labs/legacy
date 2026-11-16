@@ -44,4 +44,4 @@ if [ "$CLEAN" = 1 ]; then
   hyperfine --runs 3 --warmup 0 --style basic --prepare "rm -rf $CARGO_TARGET_DIR" --export-json $R/host-$C-$TS-cargoclean.json "cargo build -q -p depot-core"
 fi
 cargo build -q -p depot-core 2>/dev/null
-$H --prepare "sed -i '/__b_/d' src/depot/core/src/lib.rs; echo \"pub fn __b_\$(date +%s%N)() {}\" >> src/depot/core/src/lib.rs" --export-json $R/host-$C-$TS-cargoinc.json "cargo build -q -p depot-core"
+$H --prepare "sed -i '/__b_/d' system/depot/core/src/lib.rs; echo \"pub fn __b_\$(date +%s%N)() {}\" >> system/depot/core/src/lib.rs" --export-json $R/host-$C-$TS-cargoinc.json "cargo build -q -p depot-core"

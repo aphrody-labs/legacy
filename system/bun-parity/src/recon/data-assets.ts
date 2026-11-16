@@ -105,7 +105,7 @@ export async function scanDataAssetsDomain(
     domain: "data-assets",
     name: "Chromium Upstream Primary MIME Table",
     chromiumSource: "net/base/mime_util.cc (kPrimaryMappings)",
-    bunTarget: "src/http_types/MimeType.rs",
+    bunTarget: "system/http_types/MimeType.rs",
     status: "partial",
     details: `${chromiumMimeCount} upstream Chromium MIME entries indexed. Full parity achieved via 0001-mime-chromium-types.patch & preload.`,
     patchAvailable: true,

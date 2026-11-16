@@ -4,10 +4,10 @@
 //
 // Inputs (checkouts of the pins; defaults under third_party/):
 //   WinuxCmd:  DOCS/2.0-inventory.tsv (state, engine, oracle status), tests/differential/baseline.json (case buckets per command),
-//              the niubash completion catalog src/niubash/runtime/assets/completions/winuxcmd/*.toml (options per applet)
+//              the niubash completion catalog system/niubash/runtime/assets/completions/winuxcmd/*.toml (options per applet)
 //   uutils:    procps, util-linux, acl, bsdutils, hostname, shadow, tar (src/uu/<applet>) and grep, sed, awk (one crate each) under --uutils-dir (default third_party/<repo>);
 //              coreutils src/uu/<applet>/src/*.rs (options scanned from the clap definitions), Cargo.toml (unix-only feature lists),
-//              findutils (find, xargs, locate, updatedb), diffutils (cmp, diff), src/gnu/coreutils/PROOF.md (GNU suite failures)
+//              findutils (find, xargs, locate, updatedb), diffutils (cmp, diff), system/gnu/coreutils/PROOF.md (GNU suite failures)
 //
 // Rule (owner, 2026-11-15): WinuxCmd is the base. An applet WinuxCmd has stays WinuxCmd's. uutils fills what WinuxCmd lacks, and
 // what the one multicall cannot carry (C++ applets that are not yet Rust: `ay` links Rust only).
@@ -22,8 +22,8 @@ const coreutils = opt("--coreutils", join(ROOT, "third_party/coreutils"));
 const findutils = opt("--findutils", join(ROOT, "third_party/findutils"));
 const diffutils = opt("--diffutils", join(ROOT, "third_party/diffutils"));
 const uutilsDir = opt("--uutils-dir", join(ROOT, "third_party"));
-const proofPath = opt("--proof", join(ROOT, "src/gnu/coreutils/PROOF.md"));
-const catalog = opt("--catalog", join(ROOT, "src/niubash/runtime/assets/completions/winuxcmd"));
+const proofPath = opt("--proof", join(ROOT, "system/gnu/coreutils/PROOF.md"));
+const catalog = opt("--catalog", join(ROOT, "system/niubash/runtime/assets/completions/winuxcmd"));
 
 export interface Winux {
   state: string;
@@ -181,7 +181,7 @@ export function uutilsBinary(repo: string, applet: string): { bin: string; multi
   }
 }
 
-/** Names of a `registry()` function (src/winux/extra/src/lib.rs, src/winux/cmds/src/lib.rs). */
+/** Names of a `registry()` function (system/winux/extra/src/lib.rs, system/winux/cmds/src/lib.rs). */
 export function portedApplets(libRs: string): Set<string> {
   const body = libRs.match(/pub fn registry\(\)[\s\S]*?\n}\n/)?.[0] ?? "";
   return new Set([...body.matchAll(/\("([^"]+)",/g)].map((m) => m[1]!));
@@ -192,7 +192,7 @@ export type Provider = "winux" | "winux-cxx" | "uutils";
 /** The provider of one applet in the `ay` multicall (WinuxCmd is the base). */
 export function decide(w: Winux | undefined, u: Uutils | undefined, native: Set<string> = new Set(), name = ""): { provider: Provider | "none"; reason: string } {
   // `winux` means "the library registers it": the inventory state label alone (wired, rust-ready) never decides.
-  if (w && native.has(name)) return { provider: "winux", reason: "WinuxCmd applet in the Rust library (src/winux)" };
+  if (w && native.has(name)) return { provider: "winux", reason: "WinuxCmd applet in the Rust library (system/winux)" };
   if (w && u) return { provider: "uutils", reason: "WinuxCmd applet is still C++ (not linkable); uutils fills in the multicall, WinuxCmd stays the Windows applet" };
   if (w) return { provider: "winux-cxx", reason: "WinuxCmd C++ only; no uutils applet" };
   if (u) return { provider: "uutils", reason: "absent from WinuxCmd" };
@@ -235,9 +235,9 @@ function render({ W, U }: ReturnType<typeof build>, ported: Set<string>, registe
 
 if (import.meta.main) {
   const data = build();
-  const extraLib = join(ROOT, "src/winux/extra/src/lib.rs");
+  const extraLib = join(ROOT, "system/winux/extra/src/lib.rs");
   const ported = existsSync(extraLib) ? portedApplets(readFileSync(extraLib, "utf8")) : new Set<string>();
-  const cmdsLib = join(ROOT, "src/winux/cmds/src/lib.rs");
+  const cmdsLib = join(ROOT, "system/winux/cmds/src/lib.rs");
   const registered = existsSync(cmdsLib) ? portedApplets(readFileSync(cmdsLib, "utf8")) : new Set<string>();
   const r = render(data, ported, registered);
   const summary = `Applets: ${r.total} (WinuxCmd ${data.W.size}, uutils ${data.U.size}; in both ${r.both}, WinuxCmd only ${r.winuxOnly}, uutils only ${r.uutilsOnly}). Providers in the multicall: winux ${r.tally.winux}, uutils ${r.tally.uutils}, winux-cxx ${r.tally["winux-cxx"]}.`;

@@ -38,5 +38,5 @@ ay gnu status        # fraîcheur du feed (stale si > 60 min)
 ## Limites connues
 
 - Téléchargements via `ftpmirror.gnu.org` : `ftp.gnu.org` a bloqué fr2 (2026-11-14) après un miroir trop rapide ; seul le listing `ls-lrRt.txt.gz` reste sur `ftp.gnu.org` (copie en cache si le serveur ne répond pas). 8 tarballs par cycle (plafond 400 Mo), rattrapage sur plusieurs heures. Un fichier sans `.sig` ou sans trousseau GSRC reste `missing` ou `unverified`.
-- La couverture Rust n'est affichée que si elle est mesurée (coreutils : 94,0 %, PLAN.md) ; `proof` reste `none` tant que `src/gnu/<id>/PROOF.md` n'existe pas.
+- La couverture Rust n'est affichée que si elle est mesurée (coreutils : 94,0 %, PLAN.md) ; `proof` reste `none` tant que `system/gnu/<id>/PROOF.md` n'existe pas.
 - `ay gnu` exige un `ay` reconstruit (sinon `just gnu` ou `bun system/gnu-ts/src/cli.ts`).

@@ -1,7 +1,7 @@
 {
   "name": "@aphrody/py2bun",
   "version": "0.1.0",
-  "description": "Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun)",
+  "description": "Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at system/py2bun)",
   "type": "module",
   "private": true,
   "exports": {

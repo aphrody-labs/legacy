@@ -19,9 +19,9 @@ async function fixture() {
   const insert = db.prepare("INSERT INTO release_files VALUES(?,?,?,?)");
   insert.run("docs/runtime/video.mdx", "docs", content, hash(content));
   insert.run("docs/secrets/token.md", "docs", "PRIVATE", hash("PRIVATE"));
-  insert.run("src/runtime/video.rs", "src/runtime", null, null);
-  db.exec(`INSERT INTO release_domains VALUES('docs',2),('src/runtime',1),('.codex',1);
-    INSERT INTO release_links VALUES('docs/runtime/video.mdx','src/runtime/video.rs','relative-reference');`);
+  insert.run("system/runtime/video.rs", "system/runtime", null, null);
+  db.exec(`INSERT INTO release_domains VALUES('docs',2),('system/runtime',1),('.codex',1);
+    INSERT INTO release_links VALUES('docs/runtime/video.mdx','system/runtime/video.rs','relative-reference');`);
   db.close(true);
   await Bun.write(join(directory, "releases.json"), "[]");
   const manifest = {
@@ -46,8 +46,8 @@ test("public release projection selects hash-qualified docs and graph without pr
     expect(snapshot.documents.map(doc => doc.path)).toEqual(["docs/runtime/video.mdx"]);
     expect(snapshot.documents[0].title).toBe("Bun Video");
     expect(snapshot.documents[0].chunks[0].body).toContain("Bun.Video");
-    expect(snapshot.domains.map(domain => domain.name)).toEqual(["docs", "src/runtime"]);
-    expect(snapshot.links).toEqual([{ source: "docs", target: "src/runtime", references_count: 1 }]);
+    expect(snapshot.domains.map(domain => domain.name)).toEqual(["docs", "system/runtime"]);
+    expect(snapshot.links).toEqual([{ source: "docs", target: "system/runtime", references_count: 1 }]);
     await expect(readPublicSiteSnapshot(input.directory, "f".repeat(64))).rejects.toThrow("differs");
     const db = new Database(join(input.directory, "monorepo.sqlite"));
     db.exec("UPDATE release_files SET content='changed' WHERE path='docs/runtime/video.mdx'");
@@ -174,7 +174,7 @@ test("native graph export verifies profile, revision, namespace and public extra
     db.prepare("INSERT INTO repositories VALUES(?,?,?)").run(
       repository,
       revision,
-      JSON.stringify({ profile: "bun", domain: "src/runtime", source: "graph:bun:src:runtime" }),
+      JSON.stringify({ profile: "bun", domain: "system/runtime", source: "graph:bun:src:runtime" }),
     );
     db.prepare("INSERT INTO graph_snapshots VALUES(?,?,?,?,?)").run(
       "selected",
@@ -186,13 +186,13 @@ test("native graph export verifies profile, revision, namespace and public extra
         nodes: 3,
         edges: 2,
         graph: {
-          domain: "src/runtime",
+          domain: "system/runtime",
           scope: { profile: "bun", source: "graph:bun:src:runtime" },
           producerSHA256: producerSHA,
         },
       }),
     );
-    db.prepare("INSERT INTO release_files VALUES(?,?)").run("src/runtime/video.rs", "d".repeat(64));
+    db.prepare("INSERT INTO release_files VALUES(?,?)").run("system/runtime/video.rs", "d".repeat(64));
     const node = db.prepare("INSERT INTO nodes VALUES(?,?,?,?,?,?,?)");
     node.run(namespace + "frame", repository, "code", "BunVideo.frame", "video.rs", 12, "EXTRACTED");
     node.run(namespace + "resize", repository, "code", "resize", "video.rs", 21, "EXTRACTED");
@@ -205,11 +205,11 @@ test("native graph export verifies profile, revision, namespace and public extra
       namespace: "bun",
       producerSHA256: producerSHA,
       revision,
-      domains: [{ domain: "src/runtime", repository, snapshot: "selected", sha256: graphSHA }],
+      domains: [{ domain: "system/runtime", repository, snapshot: "selected", sha256: graphSHA }],
     };
     const result = readPublicNativeGraph(db, revision, index);
     expect(result.nodes.map(node => node.label)).toEqual(["BunVideo.frame", "resize"]);
-    expect(result.nodes.map(node => node.path)).toEqual(["src/runtime/video.rs", "src/runtime/video.rs"]);
+    expect(result.nodes.map(node => node.path)).toEqual(["system/runtime/video.rs", "system/runtime/video.rs"]);
     expect(result.edges).toHaveLength(1);
     expect(result.edges[0].provenance).toBe("EXTRACTED");
     expect(result.coverage.truncated).toBe(true);

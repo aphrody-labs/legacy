@@ -1,4 +1,4 @@
-# Inference providers for `ay ai` (src/ay/src/ai.rs), single LiteLLM gateway.
+# Inference providers for `ay ai` (system/ay/src/ai.rs), single LiteLLM gateway.
 # Nothing is pinned in the code: a provider is active if its key is in the vault (`--env-file`,
 # `$AY_ENV_FILE` or `<repo>/.env`, then the environment) or if its local server answers; its models
 # come from the provider's API, through LiteLLM wildcard routes (`<id>/*`, check_provider_endpoint).

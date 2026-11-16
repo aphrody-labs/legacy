@@ -179,7 +179,7 @@
       "reason": "2026-11-13 : jeton tourné ; nouveau accepté, ancien refusé (401) ; plus de --token dans ps"
     },
     {
-      "location": "src/ay/src/ai.rs routes()",
+      "location": "system/ay/src/ai.rs routes()",
       "category": "config_drift",
       "severity": "medium",
       "status": "open",
@@ -187,7 +187,7 @@
       "fix": "ignorer local_declared quand serve est vide ; d'ici là [drop] de tools/ai/litellm-overlay.toml"
     },
     {
-      "location": "src/ay agents|secret|auth",
+      "location": "system/ay agents|secret|auth",
       "category": "missing_command",
       "severity": "medium",
       "status": "open",

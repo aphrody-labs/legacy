@@ -32,18 +32,18 @@ Legacy demangler hardening, `RustTypes`, `RustPanicAnalyzer` (fork commits 783fb
 
 ## bun ghidra
 
-`packages/ghidra` (`@aphrody/ghidra`), `src/ghidra-bun`, parity in `packages/ghidra/PARITY.md`; python-to-bun in `system/py2bun-ts`. API, plugin and script surface: `packages/ghidra/README.md`.
+`packages/ghidra` (`@aphrody/ghidra`), `system/ghidra-bun`, parity in `packages/ghidra/PARITY.md`; python-to-bun in `system/py2bun-ts`. API, plugin and script surface: `packages/ghidra/README.md`.
 
 ### Backends and why
 
 | backend | use | choice |
 |---|---|---|
-| (a) `aphrody-re` / `ghidra-decompiler` 2.1.0 (Rust; only with `--features decompile`, not enabled in the default build nor in `src/core/capi`; the default `src/ghidra-bun` build has no decompiler, `src/ghidra-bun` NAPI addon, same engine as the relay tool `core_ghidra_decompile` and `aphrody_ghidra_decompile_json`) | fast path: sections, imports, CFG, P-Code, pseudo-C in milliseconds, no JVM; native `onBeforeParse` plugin | kept for triage and bundling |
+| (a) `aphrody-re` / `ghidra-decompiler` 2.1.0 (Rust; only with `--features decompile`, not enabled in the default build nor in `system/core/capi`; the default `system/ghidra-bun` build has no decompiler, `system/ghidra-bun` NAPI addon, same engine as the relay tool `core_ghidra_decompile` and `aphrody_ghidra_decompile_json`) | fast path: sections, imports, CFG, P-Code, pseudo-C in milliseconds, no JVM; native `onBeforeParse` plugin | kept for triage and bundling |
 | (b) headless Ghidra JVM, full API | everything pyghidra exposes (program DB, analysis, decompiler, listing, xrefs, data types, scripts, projects) | `bridge/Bridge.java`, reflection JSON-RPC over the JVM's stdio |
 
 Bridge transport decision (measured/verified in this tree):
 
-- JNI (`src/core/jni`): rejected for the full API. It exposes a fixed Rust-side surface; Ghidra needs the arbitrary class/method graph, and embedding a JVM in the Bun process means `JNI_CreateJavaVM` inside Bun with its own signal handling (JVM and JSC both install SIGSEGV handlers) and no way to restart a wedged JVM without losing Bun.
+- JNI (`system/core/jni`): rejected for the full API. It exposes a fixed Rust-side surface; Ghidra needs the arbitrary class/method graph, and embedding a JVM in the Bun process means `JNI_CreateJavaVM` inside Bun with its own signal handling (JVM and JSC both install SIGSEGV handlers) and no way to restart a wedged JVM without losing Bun.
 - Local socket server: equivalent to stdio but needs port/permission management and a launcher handshake; stdio of the child gives lifecycle coupling for free (the JVM dies with Bun) and works unchanged on Windows and Linux.
 - jpype-equivalent in-process: not possible from Bun (no JNI bridge in JavaScriptCore).
 - Chosen: a pure-JDK reflection bridge (`Bridge.java`, no dependency, own JSON reader) started through `ghidra.Ghidra GhidraBridge` so the Ghidra class loader (`-Djava.system.class.loader=ghidra.GhidraClassLoader`, VM args from `LaunchSupport -vmargs`) is exactly the one the stock launcher uses. Protocol: line-delimited JSON; ops `ping/layout/new/call/static/field/setfield/list/str/class/instanceof/release/batch`; objects are handles (same Java object, same id, ref-counted on the Bun side through FinalizationRegistry); longs with abs(v) >= 2^53 and BigInteger are `{"$long"}` (BigInt in Bun), `byte[]` is `{"$bytes"}` (Uint8Array); overloads are resolved by argument cost like jpype. No callbacks from Java into Bun (pyghidra only needs one: `analyze()` listener, replaced by reading `AutoAnalysisManager.getMessageLog()`).

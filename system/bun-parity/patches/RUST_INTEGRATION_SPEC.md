@@ -5,14 +5,14 @@ This specification details the architectural blueprint for natively integrating 
 
 ---
 
-## 1. MIME System Integration (`src/http_types`)
+## 1. MIME System Integration (`system/http_types`)
 - **Target Files**:
-  - `src/http_types/mime_type_list.txt`
-  - `src/http_types/MimeType.rs`
-  - `src/http_types/mime_type_list.generate.ts`
+  - `system/http_types/mime_type_list.txt`
+  - `system/http_types/MimeType.rs`
+  - `system/http_types/mime_type_list.generate.ts`
 - **Modifications**:
   1. Append `image/jxl`, `text/wgsl`, `application/vnd.bun.aot`, `audio/opus` to `mime_type_list.txt`.
-  2. Execute `bun src/http_types/mime_type_list.generate.ts` to update `mime_type_list_sorted.rs`.
+  2. Execute `bun system/http_types/mime_type_list.generate.ts` to update `mime_type_list_sorted.rs`.
   3. Wire extensions in `MimeType::from_extension` in `MimeType.rs`.
 
 ---
@@ -20,7 +20,7 @@ This specification details the architectural blueprint for natively integrating 
 ## 2. Prioritized Task Scheduling (`scheduler`) in JavaScriptCore
 - **Target Files**:
   - `src/bun.js/bindings/webcore/JSScheduler.cpp` / `JSScheduler.h`
-  - `src/js/bun/scheduler.ts`
+  - `system/js/bun/scheduler.ts`
 - **Rust Integration**:
   - Utilize `bun_core` event loop priority queues:
     - User-blocking: Microtask queue level 0
@@ -53,8 +53,8 @@ This specification details the architectural blueprint for natively integrating 
 
 ## 5. RFC 8484 DNS-over-HTTPS (DoH) & HTTPS RR Type 65
 - **Target Files**:
-  - `src/dns/doh.rs`
-  - `src/http/alpn.rs`
+  - `system/dns/doh.rs`
+  - `system/http/alpn.rs`
 - **Rust Integration**:
   - Integrate RFC 8484 wire query generator in `cares_sys` or Bun's Rust network client.
   - Parse Type 65 HTTPS Resource Records during DNS resolution to dynamically populate ALPN (`h3`, `h2`) hints before TCP/QUIC handshake.

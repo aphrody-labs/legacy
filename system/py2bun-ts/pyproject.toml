@@ -17,7 +17,7 @@ py2bun = "py2bun.cli:main"
 dev = ["pytest>=8"]
 
 [tool.maturin]
-manifest-path = "../../src/py2bun/Cargo.toml"
+manifest-path = "../py2bun/Cargo.toml"
 python-source = "python"
 module-name = "py2bun._py2bun"
 features = ["python"]

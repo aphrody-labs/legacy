@@ -127,10 +127,10 @@ def test_push_fast_forward_merge(new_lore_repo):
     repo: Lore = new_lore_repo()
 
     # Create initial content with a deep directory tree on main
-    repo.make_dirs(os.path.join("src", "core", "utils"))
-    with repo.open_file(os.path.join("src", "core", "utils", "helpers.txt"), "w+") as f:
+    repo.make_dirs(os.path.join("system", "core", "utils"))
+    with repo.open_file(os.path.join("system", "core", "utils", "helpers.txt"), "w+") as f:
         f.write("initial helpers content\n")
-    with repo.open_file(os.path.join("src", "core", "engine.txt"), "w+") as f:
+    with repo.open_file(os.path.join("system", "core", "engine.txt"), "w+") as f:
         f.write("initial engine content\n")
     with repo.open_file("readme.txt", "w+") as f:
         f.write("initial readme\n")
@@ -140,12 +140,12 @@ def test_push_fast_forward_merge(new_lore_repo):
 
     # Create a feature branch with changes in the deep tree
     repo.branch_create("feature-branch")
-    repo.make_dirs(os.path.join("src", "core", "utils", "extra"))
+    repo.make_dirs(os.path.join("system", "core", "utils", "extra"))
     with repo.open_file(
-        os.path.join("src", "core", "utils", "extra", "new_util.txt"), "w+"
+        os.path.join("system", "core", "utils", "extra", "new_util.txt"), "w+"
     ) as f:
         f.write("new utility from feature branch\n")
-    with repo.open_file(os.path.join("src", "core", "utils", "helpers.txt"), "w+") as f:
+    with repo.open_file(os.path.join("system", "core", "utils", "helpers.txt"), "w+") as f:
         f.write("modified helpers from feature branch\n")
     repo.stage(scan=True, offline=True)
     repo.commit("Feature branch changes in deep tree", offline=True)
@@ -197,9 +197,9 @@ def test_push_fast_forward_merge(new_lore_repo):
     # - feature branch (helpers.txt modified, extra/new_util.txt added)
     # - concurrent push from clone_b (sky.bin, reference.txt)
     expected_files = {
-        "src/core/utils/helpers.txt",
-        "src/core/utils/extra/new_util.txt",
-        "src/core/engine.txt",
+        "system/core/utils/helpers.txt",
+        "system/core/utils/extra/new_util.txt",
+        "system/core/engine.txt",
         "readme.txt",
         "docs/api/v2/reference.txt",
         "assets/textures/hdr/sky.bin",
@@ -255,8 +255,8 @@ def test_push_fast_forward_merge_conflict(new_lore_repo):
     repo: Lore = new_lore_repo()
 
     # Create initial content with deep tree
-    repo.make_dirs(os.path.join("src", "core", "utils"))
-    with repo.open_file(os.path.join("src", "core", "utils", "shared.txt"), "w+") as f:
+    repo.make_dirs(os.path.join("system", "core", "utils"))
+    with repo.open_file(os.path.join("system", "core", "utils", "shared.txt"), "w+") as f:
         f.write("initial shared content\n")
     repo.stage(scan=True)
     repo.commit("Initial commit", offline=True)
@@ -264,7 +264,7 @@ def test_push_fast_forward_merge_conflict(new_lore_repo):
 
     # Create feature branch that modifies the shared file
     repo.branch_create("feature-conflict")
-    with repo.open_file(os.path.join("src", "core", "utils", "shared.txt"), "w+") as f:
+    with repo.open_file(os.path.join("system", "core", "utils", "shared.txt"), "w+") as f:
         f.write("feature branch modified shared content\n")
     repo.stage(scan=True, offline=True)
     repo.commit("Feature modifies shared file", offline=True)
@@ -279,7 +279,7 @@ def test_push_fast_forward_merge_conflict(new_lore_repo):
     # feature branch) and the concurrent push (which also changes shared.txt)
     clone_b = repo.clone()
     with clone_b.open_file(
-        os.path.join("src", "core", "utils", "shared.txt"), "w+"
+        os.path.join("system", "core", "utils", "shared.txt"), "w+"
     ) as f:
         f.write("concurrent change to shared file on main\n")
     clone_b.stage(scan=True, offline=True)
@@ -298,8 +298,8 @@ def test_push_fast_forward_merge_non_merge(new_lore_repo):
     repo: Lore = new_lore_repo()
 
     # Create initial content with a deep tree
-    repo.make_dirs(os.path.join("src", "core", "utils"))
-    with repo.open_file(os.path.join("src", "core", "utils", "config.txt"), "w+") as f:
+    repo.make_dirs(os.path.join("system", "core", "utils"))
+    with repo.open_file(os.path.join("system", "core", "utils", "config.txt"), "w+") as f:
         f.write("initial config\n")
     with repo.open_file("readme.txt", "w+") as f:
         f.write("initial readme\n")
@@ -308,7 +308,7 @@ def test_push_fast_forward_merge_non_merge(new_lore_repo):
     repo.push()
 
     # Make a regular (non-merge) commit modifying a file
-    with repo.open_file(os.path.join("src", "core", "utils", "config.txt"), "w+") as f:
+    with repo.open_file(os.path.join("system", "core", "utils", "config.txt"), "w+") as f:
         f.write("modified config\n")
     repo.stage(scan=True, offline=True)
     repo.commit("Regular commit", offline=True)
@@ -342,7 +342,7 @@ def test_push_fast_forward_merge_non_merge(new_lore_repo):
 
     # Verify all files present
     expected_files = {
-        "src/core/utils/config.txt",
+        "system/core/utils/config.txt",
         "readme.txt",
         "docs/guides/setup/install.txt",
     }

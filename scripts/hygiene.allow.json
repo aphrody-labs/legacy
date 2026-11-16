@@ -13,10 +13,10 @@
     "system/machine-ts/matrix/test/**",
     ".claude/agents/coherence-fixer.md",
     "frameworks/ai-os/test/relay/sessions.test.ts",
-    "src/rubash/**",
-    "src/niubash/**",
-    "src/ruline/**",
-    "src/winux/**"
+    "system/rubash/**",
+    "system/niubash/**",
+    "system/ruline/**",
+    "system/winux/**"
   ],
   "stub": [
     "scripts/hygiene.ts"
@@ -24,7 +24,7 @@
   "ai-filler": [
     ".agents/skills/gemini-omni-flash-api/SKILL.md",
     ".agents/skills/stitch-design-md/examples/DESIGN.md",
-    "src/runtime/cli/add_completions.txt",
+    "system/runtime/cli/add_completions.txt",
     "docs/reference/catalog/**"
   ],
   "hardcoded-list": [
@@ -149,23 +149,23 @@
     "scripts/hygiene.ts"
   ],
   "non-english": [
-    "src/rubash/**",
-    "src/niubash/**",
-    "src/ruline/**",
-    "src/winux/**",
+    "system/rubash/**",
+    "system/niubash/**",
+    "system/ruline/**",
+    "system/winux/**",
     "system/omniu/**",
     "docs/reference/catalog/**"
   ],
   "dated-snapshot": [
-    "src/rubash/**",
-    "src/niubash/**",
-    "src/ruline/**",
-    "src/winux/**"
+    "system/rubash/**",
+    "system/niubash/**",
+    "system/ruline/**",
+    "system/winux/**"
   ],
   "dated-filename": [
-    "src/rubash/**",
-    "src/niubash/**",
-    "src/ruline/**",
-    "src/winux/**"
+    "system/rubash/**",
+    "system/niubash/**",
+    "system/ruline/**",
+    "system/winux/**"
   ]
 }

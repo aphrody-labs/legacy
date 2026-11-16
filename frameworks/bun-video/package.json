@@ -12,7 +12,7 @@
     "bun-video-shortcuts": "./labs/crunchyroll-shortcuts.ts"
   },
   "files": [
-    "src",
+    "system",
     "docs",
     "labs",
     "assets",

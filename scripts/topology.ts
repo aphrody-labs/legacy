@@ -133,17 +133,17 @@ for (const m of justText.matchAll(/((?:src|packages|apps|bench|test|scripts|buil
 }
 // ay External routes resolve to the unit owning that binary; Package routes run packages/<name>/src/cli.ts.
 const unresolved: string[] = [];
-const ayLib = join(root, "src/ay/src/lib.rs");
+const ayLib = join(root, "system/ay/src/lib.rs");
 if (existsSync(ayLib)) {
   const ayText = readFileSync(ayLib, "utf8");
   for (const m of ayText.matchAll(/Route::External\("([^"]+)"/g)) {
     const t = binOwner.get(m[1]!);
-    if (t) addEdge("src/ay", t, "dispatch");
+    if (t) addEdge("system/ay", t, "dispatch");
     else if (!["just"].includes(m[1]!)) unresolved.push(m[1]!);
   }
   for (const m of ayText.matchAll(/Route::Package\("([\w-]+)"/g)) {
     const t = ownerOf(`system/${m[1]}`) ?? ownerOf(`system/${m[1]}-ts`) ?? ownerOf(`frameworks/${m[1]}`) ?? ownerOf(`frameworks/${m[1]}-ts`);
-    if (t) addEdge("src/ay", t, "dispatch");
+    if (t) addEdge("system/ay", t, "dispatch");
   }
 }
 // CI workflows run units by path (`bun system/deploy/src/cli.ts`, `cargo test -p`), and the root uv

@@ -46,7 +46,7 @@ export const PILLARS: Pillar[] = [
     ],
     localClones: ["third_party/tree-sitter", "third_party/tree-sitter-*"],
     summary:
-      "Multi-language parsing, symbol/call/import extraction and S-expression queries via src/core (aphrody-core); C ABI core_parse_json/core_query_json; TS @aphrody/core parse()/query().",
+      "Multi-language parsing, symbol/call/import extraction and S-expression queries via system/core (aphrody-core); C ABI core_parse_json/core_query_json; TS @aphrody/core parse()/query().",
   },
   {
     skill: "llvm-toolchain",
@@ -69,7 +69,7 @@ export const PILLARS: Pillar[] = [
     ],
     localClones: ["third_party/llvm-project"],
     summary:
-      "Native C ABI (src/core/capi, cdylib) built with the shared LLVM toolchain for cross-language LTO.",
+      "Native C ABI (system/core/capi, cdylib) built with the shared LLVM toolchain for cross-language LTO.",
   },
   {
     skill: "bun-ffi",

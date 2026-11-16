@@ -32,7 +32,7 @@ default = ["applets", "bash"]
 # Unix applets compiled in: uutils coreutils, findutils, grep and sed behind one dispatch table (applets.rs).
 applets = [${[...tier1, ...unixOnly].map((n) => `"dep:uu_${n}"`).join(", ")}, "dep:findutils", "dep:uu_grep", "dep:sed"]
 
-# sh and bash on rubash (GNU Bash 5.3 in Rust), from the monorepo crate src/rubash.
+# sh and bash on rubash (GNU Bash 5.3 in Rust), from the monorepo crate system/rubash.
 bash = ["dep:rubash"]
 
 [dependencies]

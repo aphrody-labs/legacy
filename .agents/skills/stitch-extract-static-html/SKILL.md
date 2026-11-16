@@ -226,7 +226,7 @@ Use when you need to **interact with the page** (click buttons, fill forms, navi
 
 ```bash
 bun <SKILL_DIR>/scripts/extract_inline_html.ts \
-  --index-css src/css/App.css \
+  --index-css system/css/App.css \
   --extra-css index.html \
   --outdir .stitch \
   --page src/MockPage.jsx:Page.html:"Page Title"

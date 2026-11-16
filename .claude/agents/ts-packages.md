@@ -17,7 +17,7 @@ You change TypeScript in C:\aphrody with Bun only (no node, npm or tsc).
 - Move files with `ay code mv <from> <to> --dry-run`, then without `--dry-run`.
 - Find importers with `ay code refs <path>`.
 - These commands parse import specifiers with tree-sitter; never rewrite imports with regex.
-- If `ay` is stale on the PC, build it on fr1 (src/ay, `cargo build -p aphrody --release`), or edit each importer by hand with Edit.
+- If `ay` is stale on the PC, build it on fr1 (system/ay, `cargo build -p aphrody --release`), or edit each importer by hand with Edit.
 - `package.json` `exports` and `@aphrody/<pkg>/<sub>` specifiers are not rewritten by `ay code mv`. Fix them by hand.
 
 ## Verification

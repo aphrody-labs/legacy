@@ -87,8 +87,8 @@ export async function exportJitWorkspaceMetadata(tree: GitTree, destination: str
 export async function verifyJitGraphFrontendSources(tree: GitTree, destination: string) {
   const root = resolve(destination);
   const paths = [
-    "src/js/bun/graph-index.ts",
-    "src/js/bun/graphx.ts",
+    "system/js/bun/graph-index.ts",
+    "system/js/bun/graphx.ts",
     "scripts/aphrody/graph-index.ts",
     "scripts/aphrody/release-graph-index.ts",
     "scripts/aphrody/fork-graph-docs.ts",

@@ -75,7 +75,7 @@ public final class NativeLibraryLoader {
     private static Path findRepoRoot() {
         Path cur = Path.of("").toAbsolutePath().normalize();
         while (cur != null) {
-            if (Files.isRegularFile(cur.resolve("Cargo.toml")) && Files.isDirectory(cur.resolve("src/core"))) {
+            if (Files.isRegularFile(cur.resolve("Cargo.toml")) && Files.isDirectory(cur.resolve("system/core"))) {
                 return cur;
             }
             cur = cur.getParent();

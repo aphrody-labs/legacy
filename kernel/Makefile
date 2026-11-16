@@ -5,9 +5,9 @@
 #   arch/           x86_64, aarch64, wasm32 assembly & CPU entry
 #   core/           syscalls, freestanding runtime, FNV-1a, CPUID
 #   ../hardware/drivers/gpu/  Linux 7.4-rc2 DRM/KMS + Mesa 26.3 GBM/EGL 1.5/D3D12
-#   ../src/wayland/ Wayland 1.26 wire, XCB 1.17, XWayland 26.0.99 XWM, dynamic tiler
-#   ../src/nt/      NT Executive / ReactOS NTSTATUS <-> POSIX -errno
-#   ../src/wine/    wineserver 64-byte fixed request protocol
+#   ../system/wayland/ Wayland 1.26 wire, XCB 1.17, XWayland 26.0.99 XWM, dynamic tiler
+#   ../system/nt/      NT Executive / ReactOS NTSTATUS <-> POSIX -errno
+#   ../system/wine/    wineserver 64-byte fixed request protocol
 #   wasm/           WebAssembly 3.0 binary parser, SIMD128 kernels, WASI-SDK 34 CLI, browser Wayland compositor
 
 # make's built-in default CC is `cc`, absent on Windows: only an explicit CC overrides clang.
@@ -36,11 +36,11 @@ WASM_FEATURES := -msimd128 -mbulk-memory -mmultivalue -mnontrapping-fptoint -msi
 C_SRCS := \
 	core/sys.c \
 	../hardware/drivers/gpu/drm/drm_mesa.c \
-	../src/wayland/wire.c \
-	../src/wayland/xwm.c \
-	../src/wayland/tiler.c \
-	../src/nt/status.c \
-	../src/wine/server_proto.c \
+	../system/wayland/wire.c \
+	../system/wayland/xwm.c \
+	../system/wayland/tiler.c \
+	../system/nt/status.c \
+	../system/wine/server_proto.c \
 	wasm/module.c \
 	../frameworks/ui/m3.c \
 	../frameworks/ui/shell_kit.c \

@@ -1,6 +1,6 @@
-src/depot/core
-src/depot/forge
-src/depot/graph
-src/depot/ingest
-src/depot/migrate
-src/depot/cli
+system/depot/core
+system/depot/forge
+system/depot/graph
+system/depot/ingest
+system/depot/migrate
+system/depot/cli

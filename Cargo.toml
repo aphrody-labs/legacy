@@ -1,11 +1,11 @@
 cargo-features = ["codegen-backend", "panic-immediate-abort"]
 
-# Bun crates in src/: oven-sh/bun main 9b72307ac3e1ea390441819e69fa2dfbb115dfe5 (2026-11-14T21:45:23Z), taken through the fork aphrody-labs/bun main fa5d5b862662a904a9e3cfafa4e8503fa27eae28
+# Bun crates in system/ (were src/): oven-sh/bun main 9b72307ac3e1ea390441819e69fa2dfbb115dfe5 (2026-11-14T21:45:23Z), taken through the fork aphrody-labs/bun main fa5d5b862662a904a9e3cfafa4e8503fa27eae28
 # (upstream plus the fork's commits, rebased 2026-11-14). Pin: src.lock.json third_party/bun. Resync: scripts/bun-sync.ts.
 # Native inputs of the Bun crates (generated sources, WebKit/JSC): docs/ARCHITECTURE.md section 9.
 
 # Root Cargo workspace for every first-party Rust crate in this repository.
-# First-party crates live in src/ (oven-sh/bun layout), bench/ and test/; members are explicit (docs/ARCHITECTURE.md §9).
+# First-party crates live in system/, frameworks/ and hardware/ (names and relative layout of oven-sh/bun), bench/ and test/; members are explicit (docs/ARCHITECTURE.md §9).
 # See docs/core/ARCHITECTURE-ROOT.md.
 [workspace]
 resolver = "3"
@@ -14,106 +14,106 @@ members = [
   "bench",
   "frameworks/agent/context",
   "frameworks/analytics",
-  "src/aot",
-  "src/aot/absent",
-  "src/aot/builtins",
-  "src/aot/interface",
-  "src/apm",
-  "src/archive",
-  "src/ast",
-  "src/ast_jsc",
+  "system/aot",
+  "system/aot/absent",
+  "system/aot/builtins",
+  "system/aot/interface",
+  "system/apm",
+  "system/archive",
+  "system/ast",
+  "system/ast_jsc",
   "frameworks/audio",
-  "src/ay",
-  "src/backend",
-  "src/base64",
-  "src/boringssl",
-  "src/boringssl_sys",
-  "src/brotli",
-  "src/brotli_sys",
-  "src/builtin_sources",
-  "src/bun_alloc",
-  "src/bun_core",
-  "src/bun_core_macros",
-  "src/bun_output_tags",
-  "src/bundler",
-  "src/bundler_jsc",
-  "src/bunfig",
-  "src/cares_sys",
+  "system/ay",
+  "system/backend",
+  "system/base64",
+  "system/boringssl",
+  "system/boringssl_sys",
+  "system/brotli",
+  "system/brotli_sys",
+  "system/builtin_sources",
+  "system/bun_alloc",
+  "system/bun_core",
+  "system/bun_core_macros",
+  "system/bun_output_tags",
+  "system/bundler",
+  "system/bundler_jsc",
+  "system/bunfig",
+  "system/cares_sys",
   "frameworks/chromium/factory",
-  "src/clap",
-  "src/clap_macros",
-  "src/collections",
-  "src/config",
-  "src/core",
-  "src/core/capi",
-  "src/core/capi/py",
-  "src/core/jni",
+  "system/clap",
+  "system/clap_macros",
+  "system/collections",
+  "system/config",
+  "system/core",
+  "system/core/capi",
+  "system/core/capi/py",
+  "system/core/jni",
   "frameworks/corelib",
   "frameworks/craft",
-  "src/crash_handler",
-  "src/csrf",
-  "src/css",
-  "src/css_jsc",
-  "src/depot/cas",
-  "src/depot/cipd",
-  "src/depot/cli",
-  "src/depot/core",
-  "src/depot/forge",
-  "src/depot/gclient",
-  "src/depot/graph",
-  "src/depot/ingest",
-  "src/depot/migrate",
-  "src/depot/vpython",
-  "src/diffutils-flat",
-  "src/dispatch",
-  "src/dns",
-  "src/docs",
-  "src/dotenv",
+  "system/crash_handler",
+  "system/csrf",
+  "system/css",
+  "system/css_jsc",
+  "system/depot/cas",
+  "system/depot/cipd",
+  "system/depot/cli",
+  "system/depot/core",
+  "system/depot/forge",
+  "system/depot/gclient",
+  "system/depot/graph",
+  "system/depot/ingest",
+  "system/depot/migrate",
+  "system/depot/vpython",
+  "system/diffutils-flat",
+  "system/dispatch",
+  "system/dns",
+  "system/docs",
+  "system/dotenv",
   "hardware/drivers/gpu/dx12",
-  "src/env",
-  "src/errno",
-  "src/event_loop",
-  "src/exe_format",
-  "src/executable",
-  "src/format",
-  "src/format/conformance",
+  "system/env",
+  "system/errno",
+  "system/event_loop",
+  "system/exe_format",
+  "system/executable",
+  "system/format",
+  "system/format/conformance",
   "frameworks/game",
-  "src/glob",
-  "src/gpu-backend",
-  "src/hash",
-  "src/highway",
-  "src/histogram",
-  "src/http",
-  "src/http_jsc",
-  "src/http_types",
+  "system/glob",
+  "system/gpu-backend",
+  "system/hash",
+  "system/highway",
+  "system/histogram",
+  "system/http",
+  "system/http_jsc",
+  "system/http_types",
   "frameworks/i18n",
-  "src/ini",
-  "src/install",
-  "src/install/windows-shim",
-  "src/install_jsc",
-  "src/install_types",
-  "src/io",
-  "src/js_parser",
-  "src/js_parser_jsc",
-  "src/js_printer",
-  "src/jsc",
-  "src/jsc_macros",
-  "src/libdeflate_sys",
-  "src/libuv_sys",
-  "src/lint",
-  "src/lint/conformance",
-  "src/lint/driver",
-  "src/lint/eslint",
-  "src/lint/graph",
-  "src/lint/jest",
-  "src/lint/json",
-  "src/lint/markdown",
-  "src/lint/oxlint",
-  "src/lint/plugins",
-  "src/lint/react",
-  "src/lint/react_compiler",
-  "src/lint/typescript",
-  "src/lint/unicorn",
+  "system/ini",
+  "system/install",
+  "system/install/windows-shim",
+  "system/install_jsc",
+  "system/install_types",
+  "system/io",
+  "system/js_parser",
+  "system/js_parser_jsc",
+  "system/js_printer",
+  "system/jsc",
+  "system/jsc_macros",
+  "system/libdeflate_sys",
+  "system/libuv_sys",
+  "system/lint",
+  "system/lint/conformance",
+  "system/lint/driver",
+  "system/lint/eslint",
+  "system/lint/graph",
+  "system/lint/jest",
+  "system/lint/json",
+  "system/lint/markdown",
+  "system/lint/oxlint",
+  "system/lint/plugins",
+  "system/lint/react",
+  "system/lint/react_compiler",
+  "system/lint/typescript",
+  "system/lint/unicorn",
   "frameworks/lore",
   "frameworks/lore/aws",
   "frameworks/lore/base",
@@ -134,71 +134,71 @@ members = [
   "frameworks/lore/storage",
   "frameworks/lore/telemetry",
   "frameworks/lore/transport",
-  "src/lsquic_sys",
-  "src/machine",
-  "src/md",
-  "src/mimalloc_sys",
+  "system/lsquic_sys",
+  "system/machine",
+  "system/md",
+  "system/mimalloc_sys",
   "frameworks/modele",
-  "src/net",
-  "src/niubash",
-  "src/niubash/runtime",
-  "src/node_path",
+  "system/net",
+  "system/niubash",
+  "system/niubash/runtime",
+  "system/node_path",
   "frameworks/ocr",
   "frameworks/ocr-core",
-  "src/opaque",
-  "src/options_types",
-  "src/output",
-  "src/parsers",
-  "src/patch",
-  "src/patch_jsc",
-  "src/paths",
-  "src/perf",
-  "src/picohttp",
-  "src/platform",
-  "src/png",
-  "src/pod",
-  "src/posix/omarchy",
-  "src/posix/wslg",
-  "src/ptr",
+  "system/opaque",
+  "system/options_types",
+  "system/output",
+  "system/parsers",
+  "system/patch",
+  "system/patch_jsc",
+  "system/paths",
+  "system/perf",
+  "system/picohttp",
+  "system/platform",
+  "system/png",
+  "system/pod",
+  "system/posix/omarchy",
+  "system/posix/wslg",
+  "system/ptr",
   "frameworks/rag-core",
   "frameworks/re",
-  "src/react_compiler",
-  "src/remote",
-  "src/resolve_builtins",
-  "src/resolver",
-  "src/router",
-  "src/rt",
-  "src/rubash",
-  "src/ruline",
-  "src/ruline/readline-abi",
-  "src/runtime",
-  "src/s3_signing",
+  "system/react_compiler",
+  "system/remote",
+  "system/resolve_builtins",
+  "system/resolver",
+  "system/router",
+  "system/rt",
+  "system/rubash",
+  "system/ruline",
+  "system/ruline/readline-abi",
+  "system/runtime",
+  "system/s3_signing",
   "frameworks/safety",
-  "src/sema",
-  "src/sema/baselines",
-  "src/sema/driver",
-  "src/sema/parser",
-  "src/sema/standalone",
-  "src/semver",
-  "src/semver_jsc",
-  "src/sha_hmac",
-  "src/shell_parser",
-  "src/simdutf_sys",
-  "src/sort_by_number",
-  "src/sourcemap",
-  "src/sourcemap_jsc",
-  "src/spawn",
-  "src/spawn_sys",
-  "src/sql",
-  "src/sql_jsc",
-  "src/standalone_graph",
+  "system/sema",
+  "system/sema/baselines",
+  "system/sema/driver",
+  "system/sema/parser",
+  "system/sema/standalone",
+  "system/semver",
+  "system/semver_jsc",
+  "system/sha_hmac",
+  "system/shell_parser",
+  "system/simdutf_sys",
+  "system/sort_by_number",
+  "system/sourcemap",
+  "system/sourcemap_jsc",
+  "system/spawn",
+  "system/spawn_sys",
+  "system/sql",
+  "system/sql_jsc",
+  "system/standalone_graph",
   "frameworks/steam",
-  "src/sys",
-  "src/sys_jsc",
+  "system/sys",
+  "system/sys_jsc",
   "frameworks/taffy",
   "frameworks/tao",
   "frameworks/tao-macros",
-  "src/tar",
+  "system/tar",
   "frameworks/tauri",
   "frameworks/tauri-build",
   "frameworks/tauri-bundler",
@@ -244,43 +244,43 @@ members = [
   "frameworks/tauri-schema-generator",
   "frameworks/tauri-schema-worker",
   "frameworks/tauri-utils",
-  "src/tcc_sys",
-  "src/text_diff",
-  "src/threading",
-  "src/toolchains",
-  "src/transpiler",
-  "src/trim",
-  "src/trim/removable_features",
+  "system/tcc_sys",
+  "system/text_diff",
+  "system/threading",
+  "system/toolchains",
+  "system/transpiler",
+  "system/trim",
+  "system/trim/removable_features",
   "frameworks/tv/cli",
   "frameworks/tv/core",
   "frameworks/tv/ffmpeg",
   "frameworks/ui/kit",
-  "src/up",
-  "src/url",
-  "src/uws",
-  "src/uws_sys",
-  "src/valkey",
-  "src/vault",
-  "src/watcher",
-  "src/wayland/cosmic",
-  "src/wayland/gamescope/cli",
-  "src/wayland/gamescope/core",
-  "src/wayland/gamescope/web-wasm",
-  "src/wayland/gamescope/wgsl",
-  "src/wayland/smithay",
-  "src/wayland/tiler",
-  "src/which",
-  "src/windows_sys",
-  "src/winux/cmds",
-  "src/winux/core",
-  "src/winux/extra",
-  "src/winux/regex",
-  "src/wyhash",
-  "src/xtask",
-  "src/yarr",
-  "src/zlib",
-  "src/zlib_sys",
-  "src/zstd",
+  "system/up",
+  "system/url",
+  "system/uws",
+  "system/uws_sys",
+  "system/valkey",
+  "system/vault",
+  "system/watcher",
+  "system/wayland/cosmic",
+  "system/wayland/gamescope/cli",
+  "system/wayland/gamescope/core",
+  "system/wayland/gamescope/web-wasm",
+  "system/wayland/gamescope/wgsl",
+  "system/wayland/smithay",
+  "system/wayland/tiler",
+  "system/which",
+  "system/windows_sys",
+  "system/winux/cmds",
+  "system/winux/core",
+  "system/winux/extra",
+  "system/winux/regex",
+  "system/wyhash",
+  "system/xtask",
+  "system/yarr",
+  "system/zlib",
+  "system/zlib_sys",
+  "system/zstd",
   "test/assets",
   "test/conformance",
   "test/lore",
@@ -302,26 +302,26 @@ homepage = "https://labs.aphrody.com"
 c-abi = { git = "https://github.com/aphrody-labs/open", branch = "main" }
 # First-party crates
 corelib = { version = "0.4.0", package = "aphrody-corelib", path = "frameworks/corelib", default-features = false }
-depot-cli = { version = "0.4.0", path = "src/depot/cli" }
-depot-core = { version = "0.4.0", path = "src/depot/core" }
-depot-cas = { version = "0.4.0", path = "src/depot/cas" }
-depot-cipd = { version = "0.4.0", path = "src/depot/cipd" }
+depot-cli = { version = "0.4.0", path = "system/depot/cli" }
+depot-core = { version = "0.4.0", path = "system/depot/core" }
+depot-cas = { version = "0.4.0", path = "system/depot/cas" }
+depot-cipd = { version = "0.4.0", path = "system/depot/cipd" }
 agent-context = { version = "0.1.0", path = "frameworks/agent/context" }
-aphrody-core = { version = "0.4.0", path = "src/core" }
-aphrody-core-capi = { version = "0.4.0", path = "src/core/capi" }
+aphrody-core = { version = "0.4.0", path = "system/core" }
+aphrody-core-capi = { version = "0.4.0", path = "system/core/capi" }
 aphrody-re = { version = "0.4.0", path = "frameworks/re" }
 # WSLg stack: Windows host crates and the portable Wayland wire (docs/ARCHITECTURE.md §6).
 dx12-hal = { version = "0.4.0", path = "hardware/drivers/gpu/dx12" }
-smithay-wayland-wire = { version = "0.4.0", path = "src/wayland/smithay" }
-depot-migrate = { version = "0.4.0", path = "src/depot/migrate" }
-depot-forge = { version = "0.4.0", path = "src/depot/forge" }
-depot-ingest = { version = "0.4.0", path = "src/depot/ingest" }
-depot-graph = { version = "0.4.0", path = "src/depot/graph" }
-gamescope-core = { version = "0.1.0", path = "src/wayland/gamescope/core" }
-gamescope-wgsl = { version = "0.1.0", path = "src/wayland/gamescope/wgsl" }
+smithay-wayland-wire = { version = "0.4.0", path = "system/wayland/smithay" }
+depot-migrate = { version = "0.4.0", path = "system/depot/migrate" }
+depot-forge = { version = "0.4.0", path = "system/depot/forge" }
+depot-ingest = { version = "0.4.0", path = "system/depot/ingest" }
+depot-graph = { version = "0.4.0", path = "system/depot/graph" }
+gamescope-core = { version = "0.1.0", path = "system/wayland/gamescope/core" }
+gamescope-wgsl = { version = "0.1.0", path = "system/wayland/gamescope/wgsl" }
 taffy = { version = "0.15.1", path = "frameworks/taffy" }
 stack-bench = { version = "0.1.0", path = "bench" }
-xtk = { version = "0.1.0", path = "src/xtask" }
+xtk = { version = "0.1.0", path = "system/xtask" }
 # Labs (merged from C:\labs): Lore VCS, APM, conformance harness, aphrody CLI
 lore = { version = "0.13.1-nightly", path = "frameworks/lore", package = "aphrody-lore" }
 lore-aws = { version = "0.13.1-nightly", path = "frameworks/lore/aws", package = "aphrody-lore-aws" }
@@ -650,7 +650,7 @@ dotenvy = "0.15.7"
 ed25519-dalek = "3.0.0"
 flate2 = "1.1.11"
 getrandom = "0.4.3"
-# src/vault (aphrody-vault).
+# system/vault (aphrody-vault).
 age = { version = "0.12.1", default-features = false }
 aes-gcm = "0.11.1"
 zeroize = "1.9.1"
@@ -700,8 +700,8 @@ zstd = "0.14.3"
 bstr = { version = "1.13.1", default-features = false, features = ["alloc"] }
 
 
-# Bun crates (src/<name>, upstream names and layout). Where a key is also ours, ours is kept when it is the same major and
-# not older (getrandom, bstr, libc, bitflags, thiserror, smallvec); rustix keeps Bun's 0.38 and src/machine depends on 1.x directly.
+# Bun crates (system/<name>, upstream names and layout). Where a key is also ours, ours is kept when it is the same major and
+# not older (getrandom, bstr, libc, bitflags, thiserror, smallvec); rustix keeps Bun's 0.38 and system/machine depends on 1.x directly.
 # lol_html and rust-argon2 are vendor/ path dependencies upstream; here the aphrody-labs forks pinned by rev (deny.toml).
 rust-argon2 = { git = "https://github.com/aphrody-labs/rust-argon2", rev = "bc5b8b86b9ccd7158af9140ac4bfd0e2a750eeca" }
 bcrypt = "0.19"
@@ -724,136 +724,136 @@ rustix = { version = "0.38", default-features = false, features = ["std", "fs", 
 itoa = "1"
 encoding_rs = "0.8.35"
 lol_html = { git = "https://github.com/aphrody-labs/lol-html", rev = "725ce499aa9b71e38b7a2d0a9fbb6d7294a4079e" }
-bun_opaque = { path = "src/opaque" }
-bun_pod = { path = "src/pod" }
+bun_opaque = { path = "system/opaque" }
+bun_pod = { path = "system/pod" }
 bun_analytics = { path = "frameworks/analytics" }
-bun_base64 = { path = "src/base64" }
-bun_bundler = { path = "src/bundler" }
-bun_collections = { path = "src/collections" }
-bun_css = { path = "src/css" }
-bun_errno = { path = "src/errno" }
-bun_glob = { path = "src/glob" }
-bun_http = { path = "src/http" }
-bun_install = { path = "src/install" }
-bun_parsers = { path = "src/parsers" }
-bun_io = { path = "src/io" }
-bun_archive = { path = "src/archive" }
-bun_md = { path = "src/md" }
-bun_paths = { path = "src/paths" }
-bun_resolver = { path = "src/resolver" }
+bun_base64 = { path = "system/base64" }
+bun_bundler = { path = "system/bundler" }
+bun_collections = { path = "system/collections" }
+bun_css = { path = "system/css" }
+bun_errno = { path = "system/errno" }
+bun_glob = { path = "system/glob" }
+bun_http = { path = "system/http" }
+bun_install = { path = "system/install" }
+bun_parsers = { path = "system/parsers" }
+bun_io = { path = "system/io" }
+bun_archive = { path = "system/archive" }
+bun_md = { path = "system/md" }
+bun_paths = { path = "system/paths" }
+bun_resolver = { path = "system/resolver" }
 bun_safety = { path = "frameworks/safety" }
-bun_aot = { path = "src/aot" }
-bun_aot_absent = { path = "src/aot/absent" }
-bun_aot_builtins = { path = "src/aot/builtins" }
-bun_aot_interface = { path = "src/aot/interface" }
-bun_builtin_sources = { path = "src/builtin_sources" }
-bun_sema = { path = "src/sema" }
-bun_sema_baselines = { path = "src/sema/baselines" }
-bun_sema_driver = { path = "src/sema/driver" }
-bun_sema_parser = { path = "src/sema/parser" }
-bun_lint = { path = "src/lint" }
-bun_lint_eslint = { path = "src/lint/eslint" }
-bun_lint_typescript = { path = "src/lint/typescript" }
-bun_lint_plugins = { path = "src/lint/plugins" }
-bun_lint_oxlint = { path = "src/lint/oxlint" }
-bun_lint_unicorn = { path = "src/lint/unicorn" }
-bun_lint_react = { path = "src/lint/react" }
-bun_lint_jest = { path = "src/lint/jest" }
-bun_lint_json = { path = "src/lint/json" }
-bun_lint_markdown = { path = "src/lint/markdown" }
-bun_lint_graph = { path = "src/lint/graph" }
-bun_lint_react_compiler = { path = "src/lint/react_compiler" }
-bun_format = { path = "src/format" }
-bun_format_conformance = { path = "src/format/conformance" }
-bun_lint_driver = { path = "src/lint/driver" }
-bun_lint_conformance = { path = "src/lint/conformance" }
-bun_semver = { path = "src/semver" }
-bun_sourcemap = { path = "src/sourcemap" }
-bun_sql = { path = "src/sql" }
-bun_sys = { path = "src/sys" }
-bun_tar = { path = "src/tar" }
-bun_threading = { path = "src/threading" }
-bun_valkey = { path = "src/valkey" }
-bun_watcher = { path = "src/watcher" }
-bun_cares_sys = { path = "src/cares_sys" }
-bun_clap = { path = "src/clap" }
-bun_clap_macros = { path = "src/clap_macros" }
-bun_crash_handler = { path = "src/crash_handler" }
-bun_csrf = { path = "src/csrf" }
-bun_css_jsc = { path = "src/css_jsc" }
-bun_dns = { path = "src/dns" }
-bun_dotenv = { path = "src/dotenv" }
-bun_event_loop = { path = "src/event_loop" }
-bun_exe_format = { path = "src/exe_format" }
-bun_sort_by_number = { path = "src/sort_by_number" }
-bun_trim = { path = "src/trim" }
-bun_removable_features = { path = "src/trim/removable_features" }
-bun_highway = { path = "src/highway" }
-bun_histogram = { path = "src/histogram" }
-bun_http_jsc = { path = "src/http_jsc" }
-bun_http_types = { path = "src/http_types" }
-bun_ini = { path = "src/ini" }
-bun_install_jsc = { path = "src/install_jsc" }
-bun_install_types = { path = "src/install_types" }
-bun_js_parser = { path = "src/js_parser" }
-bun_js_parser_jsc = { path = "src/js_parser_jsc" }
-bun_js_printer = { path = "src/js_printer" }
-bun_libdeflate_sys = { path = "src/libdeflate_sys" }
-bun_libuv_sys = { path = "src/libuv_sys" }
-bun_ast = { path = "src/ast" }
-bun_ast_jsc = { path = "src/ast_jsc" }
-bun_picohttp = { path = "src/picohttp" }
-bun_png = { path = "src/png" }
-bun_s3_signing = { path = "src/s3_signing" }
-bun_sql_jsc = { path = "src/sql_jsc" }
-bun_zlib = { path = "src/zlib" }
-bun_patch = { path = "src/patch" }
-bun_platform = { path = "src/platform" }
-bun_sha_hmac = { path = "src/sha_hmac" }
-bun_sys_jsc = { path = "src/sys_jsc" }
-bun_zlib_sys = { path = "src/zlib_sys" }
-bun_dispatch = { path = "src/dispatch" }
-bun_brotli = { path = "src/brotli" }
-bun_bundler_jsc = { path = "src/bundler_jsc" }
-bun_perf = { path = "src/perf" }
-bun_resolve_builtins = { path = "src/resolve_builtins" }
-bun_sourcemap_jsc = { path = "src/sourcemap_jsc" }
-bun_url = { path = "src/url" }
-bun_windows_sys = { path = "src/windows_sys" }
-bun_jsc = { path = "src/jsc" }
-bun_jsc_macros = { path = "src/jsc_macros" }
-bun_ptr = { path = "src/ptr" }
-bun_boringssl = { path = "src/boringssl" }
-bun_brotli_sys = { path = "src/brotli_sys" }
-bun_alloc = { path = "src/bun_alloc" }
-bun_mimalloc_sys = { path = "src/mimalloc_sys" }
-bun_semver_jsc = { path = "src/semver_jsc" }
-bun_standalone_graph = { path = "src/standalone_graph" }
-bun_uws = { path = "src/uws" }
-bun_wyhash = { path = "src/wyhash" }
-bun_yarr = { path = "src/yarr" }
-bun_node_path = { path = "src/node_path" }
-bun_text_diff = { path = "src/text_diff" }
-bun_hash = { path = "src/hash" }
-bun_boringssl_sys = { path = "src/boringssl_sys" }
-bun_core = { path = "src/bun_core" }
-bun_core_macros = { path = "src/bun_core_macros" }
-bun_output_tags = { path = "src/bun_output_tags" }
-bun_patch_jsc = { path = "src/patch_jsc" }
-bun_router = { path = "src/router" }
-bun_shell_parser = { path = "src/shell_parser" }
-bun_spawn = { path = "src/spawn" }
-bun_spawn_sys = { path = "src/spawn_sys" }
-bun_tcc_sys = { path = "src/tcc_sys" }
-bun_uws_sys = { path = "src/uws_sys" }
-bun_lsquic_sys = { path = "src/lsquic_sys" }
-bun_zstd = { path = "src/zstd" }
-bun_options_types = { path = "src/options_types" }
-bun_bunfig = { path = "src/bunfig" }
-bun_output = { path = "src/output" }
-bun_simdutf_sys = { path = "src/simdutf_sys" }
-bun_which = { path = "src/which" }
-bun_transpiler = { path = "src/transpiler" }
+bun_aot = { path = "system/aot" }
+bun_aot_absent = { path = "system/aot/absent" }
+bun_aot_builtins = { path = "system/aot/builtins" }
+bun_aot_interface = { path = "system/aot/interface" }
+bun_builtin_sources = { path = "system/builtin_sources" }
+bun_sema = { path = "system/sema" }
+bun_sema_baselines = { path = "system/sema/baselines" }
+bun_sema_driver = { path = "system/sema/driver" }
+bun_sema_parser = { path = "system/sema/parser" }
+bun_lint = { path = "system/lint" }
+bun_lint_eslint = { path = "system/lint/eslint" }
+bun_lint_typescript = { path = "system/lint/typescript" }
+bun_lint_plugins = { path = "system/lint/plugins" }
+bun_lint_oxlint = { path = "system/lint/oxlint" }
+bun_lint_unicorn = { path = "system/lint/unicorn" }
+bun_lint_react = { path = "system/lint/react" }
+bun_lint_jest = { path = "system/lint/jest" }
+bun_lint_json = { path = "system/lint/json" }
+bun_lint_markdown = { path = "system/lint/markdown" }
+bun_lint_graph = { path = "system/lint/graph" }
+bun_lint_react_compiler = { path = "system/lint/react_compiler" }
+bun_format = { path = "system/format" }
+bun_format_conformance = { path = "system/format/conformance" }
+bun_lint_driver = { path = "system/lint/driver" }
+bun_lint_conformance = { path = "system/lint/conformance" }
+bun_semver = { path = "system/semver" }
+bun_sourcemap = { path = "system/sourcemap" }
+bun_sql = { path = "system/sql" }
+bun_sys = { path = "system/sys" }
+bun_tar = { path = "system/tar" }
+bun_threading = { path = "system/threading" }
+bun_valkey = { path = "system/valkey" }
+bun_watcher = { path = "system/watcher" }
+bun_cares_sys = { path = "system/cares_sys" }
+bun_clap = { path = "system/clap" }
+bun_clap_macros = { path = "system/clap_macros" }
+bun_crash_handler = { path = "system/crash_handler" }
+bun_csrf = { path = "system/csrf" }
+bun_css_jsc = { path = "system/css_jsc" }
+bun_dns = { path = "system/dns" }
+bun_dotenv = { path = "system/dotenv" }
+bun_event_loop = { path = "system/event_loop" }
+bun_exe_format = { path = "system/exe_format" }
+bun_sort_by_number = { path = "system/sort_by_number" }
+bun_trim = { path = "system/trim" }
+bun_removable_features = { path = "system/trim/removable_features" }
+bun_highway = { path = "system/highway" }
+bun_histogram = { path = "system/histogram" }
+bun_http_jsc = { path = "system/http_jsc" }
+bun_http_types = { path = "system/http_types" }
+bun_ini = { path = "system/ini" }
+bun_install_jsc = { path = "system/install_jsc" }
+bun_install_types = { path = "system/install_types" }
+bun_js_parser = { path = "system/js_parser" }
+bun_js_parser_jsc = { path = "system/js_parser_jsc" }
+bun_js_printer = { path = "system/js_printer" }
+bun_libdeflate_sys = { path = "system/libdeflate_sys" }
+bun_libuv_sys = { path = "system/libuv_sys" }
+bun_ast = { path = "system/ast" }
+bun_ast_jsc = { path = "system/ast_jsc" }
+bun_picohttp = { path = "system/picohttp" }
+bun_png = { path = "system/png" }
+bun_s3_signing = { path = "system/s3_signing" }
+bun_sql_jsc = { path = "system/sql_jsc" }
+bun_zlib = { path = "system/zlib" }
+bun_patch = { path = "system/patch" }
+bun_platform = { path = "system/platform" }
+bun_sha_hmac = { path = "system/sha_hmac" }
+bun_sys_jsc = { path = "system/sys_jsc" }
+bun_zlib_sys = { path = "system/zlib_sys" }
+bun_dispatch = { path = "system/dispatch" }
+bun_brotli = { path = "system/brotli" }
+bun_bundler_jsc = { path = "system/bundler_jsc" }
+bun_perf = { path = "system/perf" }
+bun_resolve_builtins = { path = "system/resolve_builtins" }
+bun_sourcemap_jsc = { path = "system/sourcemap_jsc" }
+bun_url = { path = "system/url" }
+bun_windows_sys = { path = "system/windows_sys" }
+bun_jsc = { path = "system/jsc" }
+bun_jsc_macros = { path = "system/jsc_macros" }
+bun_ptr = { path = "system/ptr" }
+bun_boringssl = { path = "system/boringssl" }
+bun_brotli_sys = { path = "system/brotli_sys" }
+bun_alloc = { path = "system/bun_alloc" }
+bun_mimalloc_sys = { path = "system/mimalloc_sys" }
+bun_semver_jsc = { path = "system/semver_jsc" }
+bun_standalone_graph = { path = "system/standalone_graph" }
+bun_uws = { path = "system/uws" }
+bun_wyhash = { path = "system/wyhash" }
+bun_yarr = { path = "system/yarr" }
+bun_node_path = { path = "system/node_path" }
+bun_text_diff = { path = "system/text_diff" }
+bun_hash = { path = "system/hash" }
+bun_boringssl_sys = { path = "system/boringssl_sys" }
+bun_core = { path = "system/bun_core" }
+bun_core_macros = { path = "system/bun_core_macros" }
+bun_output_tags = { path = "system/bun_output_tags" }
+bun_patch_jsc = { path = "system/patch_jsc" }
+bun_router = { path = "system/router" }
+bun_shell_parser = { path = "system/shell_parser" }
+bun_spawn = { path = "system/spawn" }
+bun_spawn_sys = { path = "system/spawn_sys" }
+bun_tcc_sys = { path = "system/tcc_sys" }
+bun_uws_sys = { path = "system/uws_sys" }
+bun_lsquic_sys = { path = "system/lsquic_sys" }
+bun_zstd = { path = "system/zstd" }
+bun_options_types = { path = "system/options_types" }
+bun_bunfig = { path = "system/bunfig" }
+bun_output = { path = "system/output" }
+bun_simdutf_sys = { path = "system/simdutf_sys" }
+bun_which = { path = "system/which" }
+bun_transpiler = { path = "system/transpiler" }
 
 # Bun's lint tables, verbatim. First-party crates declare their own [lints] inline (one table per manifest).
 [workspace.lints.rust]
@@ -1042,7 +1042,7 @@ inherits = "release"
 debug = "line-tables-only"
 strip = "none"
 
-# Windows .bin launcher PE of bun_install (src/install/windows-shim), size-optimized.
+# Windows .bin launcher PE of bun_install (system/install/windows-shim), size-optimized.
 [profile.shim]
 inherits = "release"
 panic = "abort"

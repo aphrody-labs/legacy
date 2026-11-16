@@ -34,7 +34,7 @@ name = "aphrody_gateway"
 path = "src/lib.rs"
 
 [dependencies.aphrody-config]
-path = "../../src/config"
+path = "../../system/config"
 version = "1.4.7"
 features = []
 

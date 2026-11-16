@@ -49,7 +49,7 @@ A skill of .agents/skills
 | [aphrody-stack](../../../.agents/skills/aphrody-stack) | Pointer to Aphrody's stack roadmaps. |
 | [axum](../../../.agents/skills/axum) | Axum 0.8 and tower-http 0.7 rules for writing, reviewing or porting Rust HTTP services (routes, extractors, state, body limits, error envelopes, middleware order, CORS, tracing,... |
 | [ay-index](../../../.agents/skills/ay-index) | The monorepo index pipeline (detect, tree-sitter, triage, Ghidra, SQLite+FTS5, Valkey). |
-| [ay-monorepo-migrator](../../../.agents/skills/ay-monorepo-migrator) | Audit and migrate legacy Node.js, V8, Electron, node-api-dotnet and Lua repositories with the `migrate` subcommand of depot-cli (crate `src/depot/migrate`): AST codemods, LLVM I... |
+| [ay-monorepo-migrator](../../../.agents/skills/ay-monorepo-migrator) | Audit and migrate legacy Node.js, V8, Electron, node-api-dotnet and Lua repositories with the `migrate` subcommand of depot-cli (crate `system/depot/migrate`): AST codemods, LLV... |
 | [browser-engines](../../../.agents/skills/browser-engines) | Use when choosing, driving, building or comparing a browser engine for Aphrody — render oracle, agent browser, embedded browser, cross-engine diff, conformance runs, CDP/WebDriv... |
 | [bun](../../../.agents/skills/bun) | bun reference (CLI, runtime API, upstream docs), bun:ffi bridge to native C ABIs, zero-dependency / zero-bunx package rules with native replacements (Bun.SQL, bun:sqlite, Bun.S3... |
 | [chrome-devtools](../../../.agents/skills/chrome-devtools) | Debug, inspect and automate a browser through Chrome DevTools MCP - snapshots, network, console, CSS, performance, emulation, extensions. |
@@ -156,14 +156,14 @@ A skill of .agents/skills
 | [jules-automate-github-issues](../../../.agents/skills/jules-automate-github-issues) | Set up automated GitHub issue triage and resolution using parallel Jules coding agents |
 | [jules-local-action-verification](../../../.agents/skills/jules-local-action-verification) | Set up a repository for local GitHub Actions verification using act, so Jules can validate CI before pushing |
 | [learn](../../../.agents/skills/learn) | Local learning loop (Hermes style). |
-| [llvm-toolchain](../../../.agents/skills/llvm-toolchain) | Shared LLVM toolchain (clang, lld, wasm-ld, wasi-sdk, binaryen, rustc on the same LLVM) for the C/ASM/Wasm core in src/ and the C ABI in src/core/capi. |
+| [llvm-toolchain](../../../.agents/skills/llvm-toolchain) | Shared LLVM toolchain (clang, lld, wasm-ld, wasi-sdk, binaryen, rustc on the same LLVM) for the C/ASM/Wasm core in src/ and the C ABI in system/core/capi. |
 | [lua52-engineering](../../../.agents/skills/lua52-engineering) | End-to-end Lua 5.2 engineering reference covering PUC-Rio Lua 5.2.4 specifications, _ENV lexical scoping, bytecode structure, 40 opcodes, mlua Rust integration, REA disassembly,... |
 | [material-3](../../../.agents/skills/material-3) | Material Design 3 rules (including M3 Expressive) normalized for this monorepo. |
 | [memory-leak-debugging](../../../.agents/skills/memory-leak-debugging) | Find JavaScript memory leaks - capture, compare and inspect heap snapshots with Chrome DevTools MCP memory tools. |
 | [microsoft](../../../.agents/skills/microsoft) | Method and references for any Microsoft topic (Windows, DirectX/D3D12, .NET 10/11, C#, MSVC/STL, Microsoft's Rust, WinUI/WinAppSDK, Edge/WebGPU, Azure, GitHub org microsoft). |
 | [niubash](../../../.agents/skills/niubash) | Run Windows tasks in Niubash, the GNU Bash-compatible Windows-native shell. |
 | [os-minimal-computer-use](../../../.agents/skills/os-minimal-computer-use) | Minimal computer use on the PC with the fewest tools in context: desktop accessibility tree (agent-desktop) and browser (agent-browser). |
-| [py2bun](../../../.agents/skills/py2bun) | Python to Bun TypeScript transpiler (crate src/py2bun, package system/py2bun-ts) with Ghidra script idioms. |
+| [py2bun](../../../.agents/skills/py2bun) | Python to Bun TypeScript transpiler (crate system/py2bun, package system/py2bun-ts) with Ghidra script idioms. |
 | [r2](../../../.agents/skills/r2) | Send/fetch artifacts on Cloudflare R2 via rclone (buckets aphrody-chromium for Chromium builds and toolchains, aphrody-lore for Lore backups). |
 | [rea-analysis-optimization](../../../.agents/skills/rea-analysis-optimization) | Optimize REA providers and shared analysis workflows for agent context, latency, CPU, and memory while preserving correctness and Evidence. |
 | [rea-changelog-update](../../../.agents/skills/rea-changelog-update) | Prepare or rewrite REA release changelogs and GitHub release notes from pinned Git history, with verified contributor thanks and Release Please synchronization. |

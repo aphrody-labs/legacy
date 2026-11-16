@@ -20,7 +20,7 @@ Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/r
 <!-- catalog:end -->
 
 Compile-Time Web Validator and Modern Web Guidance (MWG) RAG engine for the `src` monorepo.
-100% pure Bun (`zero` external npm dependencies) paired with a Pure C23 LLVM native core (`src/core/capi/c/mwg_core.c` -> `native/mwg_capi.dll`) via `bun:ffi`.
+100% pure Bun (`zero` external npm dependencies) paired with a Pure C23 LLVM native core (`system/core/capi/c/mwg_core.c` -> `native/mwg_capi.dll`) via `bun:ffi`.
 
 ## Capabilities
 

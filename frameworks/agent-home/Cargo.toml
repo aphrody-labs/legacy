@@ -47,7 +47,7 @@ path = "benches/agent_home_bench.rs"
 harness = false
 
 [dependencies.aphrody-config]
-path = "../../src/config"
+path = "../../system/config"
 version = "1.4.7"
 features = []
 

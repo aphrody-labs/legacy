@@ -1,4 +1,4 @@
-# Toolchain manifest for `ay up` (src/up). One [[tool]] per tool:
+# Toolchain manifest for `ay up` (system/up). One [[tool]] per tool:
 #   version   pinned version; `lock = "<key>"` takes it from src.lock.json `toolchains.<key>` instead
 #   bin       executables it provides (first one is probed); for layout = "tree", paths in the archive
 #   verify    argv printing the version (default: <bin> --version)
@@ -1197,7 +1197,7 @@ version = "0.29.4"
 source = "crate"
 package = "cbindgen"
 hosts = ["pc", "fr1"]
-why = "just core-header (src/core/capi)"
+why = "just core-header (system/core/capi)"
 note = "crates.io cbindgen@0.29.4 cksum 2ecb53484c9c167ba674026b656d8a27d7657a58e6066aa902bfb1a4aa00ae20"
 
 [toolchain."cargo-nextest"]
@@ -1402,7 +1402,7 @@ version = "25.0.5"
 source = "github"
 repo = "adoptium/temurin25-binaries"
 hosts = ["pc", "fr1"]
-why = "Java 25 FFM API + JNI core (`system/core-java`, `src/core/jni`) and Ghidra (`aphrody-labs/ghidra`) toolchain"
+why = "Java 25 FFM API + JNI core (`system/core-java`, `system/core/jni`) and Ghidra (`aphrody-labs/ghidra`) toolchain"
 
 [toolchain."gradle"]
 version = "9.2.1"

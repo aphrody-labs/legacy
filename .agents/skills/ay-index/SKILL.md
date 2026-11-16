@@ -5,7 +5,7 @@ description: The monorepo index pipeline (detect, tree-sitter, triage, Ghidra, S
 
 # ay index
 
-One stage graph per file, one SQLite (`var/index/core.db`, WAL, FTS5), one Valkey on fr2. Code: `src/core/src/pipeline` (engine, store, RESP client), `frameworks/re/src/index.rs` (triage, ghidra, Magika detector), `src/ay/src/index.rs` (CLI). Full design and measurements: `docs/native/PIPELINE.md`.
+One stage graph per file, one SQLite (`var/index/core.db`, WAL, FTS5), one Valkey on fr2. Code: `system/core/src/pipeline` (engine, store, RESP client), `frameworks/re/src/index.rs` (triage, ghidra, Magika detector), `system/ay/src/index.rs` (CLI). Full design and measurements: `docs/native/PIPELINE.md`.
 
 - Index: `ay index [root] [--all] [--include a,b] [--deep off|queue|inline] [--no-shared]` (unchanged files cost one `stat`; changed ones are BLAKE3-addressed). Bun path, same engine: `bun system/core-ts/src/cli.ts index [root]`.
 - Query: `ay index query <name> [--exact]`, `ay index text <words>`, `ay index status`. Relay MCP tools (via `hub_call`): `core_pipeline` (incremental run), `core_symbols` (lookup in the same DB).

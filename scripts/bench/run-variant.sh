@@ -44,9 +44,9 @@ case $A in
   buildcore) cargo build -q -p depot-core $PROFILE_ARGS ;;
   buildgraph) cargo build -q -p depot-graph $PROFILE_ARGS ;;
   tests) cargo test -q --no-run -p depot-core -p depot-forge -p depot-graph -p depot-ingest -p depot-migrate $PROFILE_ARGS ;;
-  editcore) echo "pub fn __bench_edit_$(date +%s%N)() {}" >> src/depot/core/src/lib.rs ;;
-  editleaf) echo "pub fn __bench_edit_$(date +%s%N)() {}" >> src/depot/graph/src/lib.rs ;;
-  touchcore) touch src/depot/core/src/lib.rs ;;
+  editcore) echo "pub fn __bench_edit_$(date +%s%N)() {}" >> system/depot/core/src/lib.rs ;;
+  editleaf) echo "pub fn __bench_edit_$(date +%s%N)() {}" >> system/depot/graph/src/lib.rs ;;
+  touchcore) touch system/depot/core/src/lib.rs ;;
   wsclean) cargo clean -q -p depot-core -p depot-forge -p depot-graph -p depot-ingest -p depot-migrate -p depot-cli -p aphrody-core ;;
   release) cargo build -q --release -p depot-cli $PROFILE_ARGS ;;
   *) echo "unknown action $A"; exit 2 ;;

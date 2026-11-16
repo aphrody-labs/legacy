@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Chrome extension and web app manifest validation (fork src/js/internal/chrome-manifests.ts).
+// Chrome extension and web app manifest validation (fork system/js/internal/chrome-manifests.ts).
 const ObjectKeys = Object.keys;
 const ObjectGetPrototypeOf = Object.getPrototypeOf;
 const ObjectDefineProperty = Object.defineProperty;

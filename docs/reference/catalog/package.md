@@ -39,7 +39,7 @@ A Bun workspace package (@aphrody/*)
 | [@aphrody/bun-steam](../../../system/bun-steam) | Bun OS Steam owner (Bun half): VDF text/binary/appinfo parser and writer, Steam client configuration, steamcmd with a cached session, libraries, Proton management and launch tun... |
 | [@aphrody/bun-test-dom](../../../system/bun-test-dom) | - |
 | [@aphrody/bunify](../../../system/bunify) | legacy Node/TS/JS -> Bun -> Rust migrator |
-| [@aphrody/core](../../../system/core-ts) | bun:ffi bridge to src/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON) |
+| [@aphrody/core](../../../system/core-ts) | bun:ffi bridge to system/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON) |
 | [@aphrody/deploy](../../../system/deploy) | aphrody.app: first-party deployment platform of the monorepo (previews per commit, production pointer, rollback, logs) on Cloudflare Workers and R2 |
 | [@aphrody/env-kit](../../../system/env-kit) | Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/google/gcp) for C:/aphrody |
 | [@aphrody/ffi-bridge](../../../system/ffi-bridge) | bun:ffi bindings and tests of the Rust cdylibs (dx12-hal, unix-distro probes) |
@@ -50,7 +50,7 @@ A Bun workspace package (@aphrody/*)
 | [@aphrody/native](../../../system/native) | bun:ffi bindings for the Zig native desktop SDK (third_party/native, vercel-labs/native) |
 | [@aphrody/next-bun](../../../system/next-bun) | Next.js on Bun: run next with no Node.js (Turbopack workers included), build the Pages Router with Bun.build (experimental), Next 16 / Tailwind 4 codemods, instant navigation te... |
 | [@aphrody/omniu](../../../system/omniu) | oh-my-niu for Bun: plugin bundle as data, validator, packager and scaffolder, and the host that loads the ay plugin into both Bun and niu |
-| [@aphrody/py2bun](../../../system/py2bun-ts) | Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun) |
+| [@aphrody/py2bun](../../../system/py2bun-ts) | Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at system/py2bun) |
 | [@aphrody/release](../../../system/release) | ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first |
 | [@aphrody/sql](../../../system/sql-ts) | Shared Bun database mechanics for Aphrody: env/URL resolution, Bun.SQL and Redis factories, bun:sqlite open policy with optional sqlite-vec |
 | [@aphrody/upstream](../../../system/upstream) | Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks |

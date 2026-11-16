@@ -12,5 +12,5 @@ Folded from the former rea-ghidra-sre skill. Use for in-repo native analysis wit
   ```powershell
   ay re <path to aphrody_core_capi.dll>
   ```
-- **Unified Bun / Rust C-ABI Bridge (`system/core-ts/src/re.ts`, `src/core/capi/src/re.rs`)**:
+- **Unified Bun / Rust C-ABI Bridge (`system/core-ts/src/re.ts`, `system/core/capi/src/re.rs`)**:
   Calls `aphrody_abi_version`, `aphrody_ghidra_decompile_json`, `aphrody_re_audit_json`, `aphrody_mingw_audit_json`, and `depot_dotnet_doctor_json` in `aphrody_core_capi.dll`.

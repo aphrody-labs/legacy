@@ -24,7 +24,7 @@ fn main() {
     std::process::exit(depot_cli::run(&c, &a));
 }
 E
-  sed -i 's#  "src/depot/cli",#  "src/depot/cli",\n  "src/benchbin",#' $D/Cargo.toml
+  sed -i 's#  "system/depot/cli",#  "system/depot/cli",\n  "src/benchbin",#' $D/Cargo.toml
   rg -c benchbin $D/Cargo.toml
 fi
 cd $D
@@ -38,7 +38,7 @@ for L in off thin fat; do
   echo "== lto=$L start $(date +%T) load $(cut -d' ' -f1-3 /proc/loadavg)"
   /usr/bin/time -f "initial wall=%e user=%U sys=%S" cargo build -q --release -p benchbin 2>&1 | tail -3
   hyperfine --runs 5 --warmup 0 --style basic \
-    --prepare "echo \"pub fn __b_\$(date +%s%N)() {}\" >> src/depot/core/src/lib.rs" \
+    --prepare "echo \"pub fn __b_\$(date +%s%N)() {}\" >> system/depot/core/src/lib.rs" \
     --export-json $R/lto-$L.json "cargo build -q --release -p benchbin"
   ls -l $CARGO_TARGET_DIR/release/benchbin | awk '{print "binsize", $5}'
   echo "== lto=$L done $(date +%T)"

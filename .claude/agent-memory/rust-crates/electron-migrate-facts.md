@@ -1,6 +1,6 @@
 ---
 name: electron-migrate-facts
-description: Verified facts behind src/electron-migrate (ay electron): Tauri v3 fork pin, gpui fork rev, bun flags, fr1 build traps
+description: Verified facts behind system/electron-migrate (ay electron): Tauri v3 fork pin, gpui fork rev, bun flags, fr1 build traps
 metadata:
   type: project
 ---
@@ -11,4 +11,4 @@ metadata:
 - Cargo rejects `branch` together with `rev`: generated manifests pin the rev only.
 - fr1 build: scratch dir needs `env -C <dir> cargo ...` (nightly toolchain from rust-toolchain, not manifest-path); load average is often high, cargo waits on /srv/src/target lock.
 
-**Why:** these pins and traps cost time to rediscover. **How to apply:** reuse when touching src/electron-migrate or verifying on fr1; re-check pins before trusting them.
+**Why:** these pins and traps cost time to rediscover. **How to apply:** reuse when touching system/electron-migrate or verifying on fr1; re-check pins before trusting them.

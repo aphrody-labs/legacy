@@ -10,9 +10,9 @@ on:
       - "kernel/.clang-*"
       - "kernel/tests/**"
       - "kernel/core/**"
-      - "src/wayland/**"
-      - "src/nt/**"
-      - "src/wine/**"
+      - "system/wayland/**"
+      - "system/nt/**"
+      - "system/wine/**"
       - "kernel/wasm/**"
       - "frameworks/ui/*.c"
       - "hardware/drivers/**/*.c"
@@ -62,7 +62,7 @@ jobs:
           base="${{ github.event.before }}"
           [ -n "$base" ] && git cat-file -e "$base^{commit}" 2>/dev/null || base=HEAD~1
           command -v git-clang-format >/dev/null || sudo apt-get install -y clang-format
-          out=$(git clang-format --diff "$base" -- 'kernel/**/*.c' 'kernel/**/*.h' 'hardware/**/*.c' 'src/**/*.c' 'src/**/*.h' || true)
+          out=$(git clang-format --diff "$base" -- 'kernel/**/*.c' 'kernel/**/*.h' 'hardware/**/*.c' 'system/**/*.c' 'system/**/*.h' 'frameworks/**/*.c' 'frameworks/**/*.h' || true)
           case "$out" in "no modified files to format" | "clang-format did not modify any files") exit 0 ;; esac
           echo "$out"; exit 1
       - name: Section sizes of libaysys.so (llvm-objdump)

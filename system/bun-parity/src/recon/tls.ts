@@ -49,7 +49,7 @@ export async function scanTlsDomain(
     name: "Post-Quantum Hybrid Key Exchange (X25519MLKEM768 0x11ec)",
     chromiumSource:
       "third_party/boringssl/src/include/openssl/ssl.h (#define SSL_GROUP_X25519_MLKEM768 0x11ec)",
-    bunTarget: "src/boringssl (SSL_CTX_set1_curves)",
+    bunTarget: "system/boringssl (SSL_CTX_set1_curves)",
     status: mlkemDefinedInChromium ? "parity" : "partial",
     details:
       "BoringSSL upstream defines SSL_GROUP_X25519_MLKEM768 (0x11ec). Ready for PQ TLS negotiation.",

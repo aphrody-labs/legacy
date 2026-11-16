@@ -2,7 +2,7 @@
 // ay-index: recursive tree-sitter index of src (+ third_party/vendor clones) into sqlite + JSON,
 // then skill/doc generation and symbol/doc search from it.
 //   bun system/core-ts/src/cli.ts index [root] [--all] [--include a,b] [--db path] [--json path] [--legacy] [--no-shared]
-//   (index runs the in-process pipeline of src/core when the library has it; `ay index` is the same engine, in Rust)
+//   (index runs the in-process pipeline of system/core when the library has it; `ay index` is the same engine, in Rust)
 //   bun system/core-ts/src/cli.ts gen [root] [--db path]
 //   bun system/core-ts/src/cli.ts gen-docs [root] [--scan] [--only readme,plan,llvm,mwg,reference] [--db path]
 //   bun system/core-ts/src/cli.ts search <query> [--limit 20] [--db path]

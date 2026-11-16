@@ -24,8 +24,8 @@ echo "## unchanged tree"
 $OLDIDX >/dev/null; $NEWIDX >/dev/null
 $HF --runs 10 --warmup 1 --export-json "$R/noop.json" -n "bun + C ABI (before)" "$OLDIDX" -n "ay index (after)" "$NEWIDX" 2>&1 | rg -v "^$"
 
-echo "## one file changed (append a comment to src/core/src/hash.rs)"
-EDIT="echo \"// bench \$RANDOM\" >> $T/src/core/src/hash.rs"
+echo "## one file changed (append a comment to system/core/src/hash.rs)"
+EDIT="echo \"// bench \$RANDOM\" >> $T/system/core/src/hash.rs"
 $HF --runs 10 --warmup 1 --export-json "$R/edit.json" --prepare "$EDIT" \
   -n "bun + C ABI (before, no incremental)" "$OLDIDX" -n "ay index (after)" "$NEWIDX" 2>&1 | rg -v "^$"
 

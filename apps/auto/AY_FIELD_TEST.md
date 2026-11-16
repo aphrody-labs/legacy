@@ -1,6 +1,6 @@
 # Field test of `ay` on auto
 
-2026-11-12, Windows machine, `ay` built from `src/ay` (`RUSTC_WRAPPER= cargo build -p aphrody`).
+2026-11-12, Windows machine, `ay` built from `system/ay` (`RUSTC_WRAPPER= cargo build -p aphrody`).
 
 | Command                                                            | Expected                                 | Got                                                                                             | Fix                                                                                             |
 | ------------------------------------------------------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |

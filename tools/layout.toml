@@ -25,13 +25,23 @@ why = "Chromium docs/"
 
 [[area]]
 dir = "frameworks"
-role = "AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends (Bun packages and the Rust crates of the AI, agent, media, UI and game families)"
+role = "AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends, games (Rust crates and Bun packages)"
 why = "AOSP frameworks/: the services applications are built on"
 
 [[area]]
 dir = "system"
-role = "ay, the Bun fork core, shell, userland, compat (nt, wine, posix) (Bun packages; crates follow in batch 5)"
+role = "ay, the Bun fork core (oven-sh/bun crate names), shell, userland, init, compat (nt, wine, posix, winux) (Rust crates and Bun packages)"
 why = "AOSP system/: the core userland"
+
+[[area]]
+dir = "kernel"
+role = "C and assembly core (libaysys, wasm, uapi headers), built by kernel/Makefile"
+why = "AOSP kernel/ and Linux: the lowest layer, freestanding"
+
+[[area]]
+dir = "hardware"
+role = "drivers: DRM/KMS and Mesa glue in C, the DX12 HAL crate"
+why = "AOSP hardware/: what talks to devices"
 
 [[area]]
 dir = "prebuilts"
@@ -42,11 +52,6 @@ why = "AOSP prebuilts/: binaries are pinned, not built here"
 dir = "scripts"
 role = "gates and generators run by CI and just"
 why = "Bun and Chromium both keep scripts/ and tools/ at the root"
-
-[[area]]
-dir = "src"
-role = "Rust crates (oven-sh/bun layout), C core, assembly, WebAssembly"
-why = "kept: crates taken from oven-sh/bun main (Cargo.toml header), so the paths stay the upstream paths; moving it needs a CI-verified pass of its own"
 
 [[area]]
 dir = "test"

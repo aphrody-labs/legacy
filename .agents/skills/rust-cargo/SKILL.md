@@ -15,7 +15,7 @@ Virtual workspaces have `[workspace]` without `[package]`, so `resolver` must be
 ```toml
 [workspace]
 resolver = "3"
-members = ["src/ay", "src/core"]   # the root Cargo.toml lists members explicitly
+members = ["system/ay", "system/core"]   # the root Cargo.toml lists members explicitly
 
 [workspace.package]
 edition = "2024"

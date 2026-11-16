@@ -1,6 +1,6 @@
 package com.aphrody.core;
 
-/** JNI native entrypoints backed by `aphrody_jni` (`src/core/jni`). */
+/** JNI native entrypoints backed by `aphrody_jni` (`system/core/jni`). */
 public final class AphrodyNative {
     static {
         NativeLibraryLoader.loadJniLibrary("aphrody_jni", "release", "debug");

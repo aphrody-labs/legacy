@@ -45,7 +45,7 @@ graphify-out/
 !/device/
 !/prebuilts/
 !/tools/
-# Shell completions of Bun, embedded by src/runtime/cli/shell_completions.rs.
+# Shell completions of Bun, embedded by system/runtime/cli/shell_completions.rs.
 !/completions/
 !/third_party/
 /test/conformance/upstream/

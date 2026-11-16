@@ -12,7 +12,7 @@ Context: calling .NET 11 from bun without the Node-API layer of node-api-dotnet.
 | Microsoft Learn                                                                     | "Building native libraries", "Native code interop with Native AOT", "Disabled runtime marshalling", "NativeAOT uses lib prefix… (.NET 11)", "MSBuild reference: EnableDynamicLoading" |
 | Measurements                                                                        | local and CI, `docs/research/bench/dotnet-ffi-*.json` (section 2)                                                                                                                     |
 
-Architecture point established in the source: since this version, `dlopen`, `CFunction` and `JSCallback` are compiled by JavaScriptCore (`JSC::FFI`, JIT invoke thunks, DFG intrinsic `FFIDFGCodegen.cpp:90-107`); TinyCC is only used by `cc()` (`src/runtime/ffi/ffi_body.rs:1019-1292`, `JSCFFIBridge.cpp:65-97`). Any marshalling fix therefore touches the WebKit fork first, not the bun repository.
+Architecture point established in the source: since this version, `dlopen`, `CFunction` and `JSCallback` are compiled by JavaScriptCore (`JSC::FFI`, JIT invoke thunks, DFG intrinsic `FFIDFGCodegen.cpp:90-107`); TinyCC is only used by `cc()` (`system/runtime/ffi/ffi_body.rs:1019-1292`, `JSCFFIBridge.cpp:65-97`). Any marshalling fix therefore touches the WebKit fork first, not the bun repository.
 
 ## 1. Delivered prototype
 
@@ -61,7 +61,7 @@ Notation: `bun:` = bun repository @ `4b8463ee11cb`; `jsc:` = oven-sh/WebKit @ `6
 
 ### L1. No aggregate type: no struct by value
 
-- `jsc:FFIType.h:40-63`: 22 scalar tags (integers, floats, `Pointer`, `CString`, `Function`, `JSValue`, `Buffer`, `BufferLength`); `bun:src/runtime/ffi/abi_type.rs:13-49` (mirror); `bun:src/js/bun/ffi.ts:1-63` (`FFIType` table).
+- `jsc:FFIType.h:40-63`: 22 scalar tags (integers, floats, `Pointer`, `CString`, `Function`, `JSValue`, `Buffer`, `BufferLength`); `bun:system/runtime/ffi/abi_type.rs:13-49` (mirror); `bun:system/js/bun/ffi.ts:1-63` (`FFIType` table).
 - Handled conventions: `jsc:FFICallingConvention.h:44-56` (`SysV64`, `AAPCS64`, `Win64`) without aggregate classification.
 - .NET effect: `Guid`, `DateTime`, `Vector2`, wrapped `nint`, `HRESULT` structs, `(int, int)` returns are impossible; `model.ts` rejects them, a pointer must be used (done for `NtSystemInfo`).
 - Fix (WebKit): `Type::Struct` + layout descriptor (size, alignment, field classes) in `FFISignature`, classification per convention in `FFICallingConvention.cpp` (Win64: 1/2/4/8 bytes in a register otherwise hidden pointer; SysV: INTEGER/SSE classes per 8-byte word; AAPCS64: HFA/HVA), argument accepted from a `{ ptr }` object/TypedArray, return as `Uint8Array`. bun side: `"struct"` tag in `abi_type.rs:56-101` and `ffi.ts:1-63`, `layout` field in the definition. The generator already provides the layout (`Struct.size/align/fields`).
@@ -82,35 +82,35 @@ Notation: `bun:` = bun repository @ `4b8463ee11cb`; `jsc:` = oven-sh/WebKit @ `6
 ### L4. Callbacks and .NET threads
 
 - Not `threadsafe`: `jsc:FFICallbackThunk.cpp:436-441` takes `JSLockHolder` on the calling thread: a callback coming from a ThreadPool thread, a `Task` or a finalizer runs JS outside the event loop; if the JS thread waits for that thread in a synchronous FFI call, deadlock.
-- `threadsafe: true`: `jsc:FFICallbackThunk.cpp:419-433` queues the call (`bun:src/jsc/bindings/JSCFFIBridge.cpp:99-104`, `postTaskTo`) and forces the return to 0 (432): no synchronous result; `cstring`s are copied (`JSFFICallback.cpp:144`).
-- Lifetime: `bun:src/runtime/ffi/ffi_body.rs:1334` (`// TODO: WeakRefHandle that automatically frees it?`); a `JSCallback` must be closed by hand, and a pointer kept by .NET after `close()` crashes.
-- Fixes: (a) WebKit: `threadsafe: "blocking"` mode (queue + condition wait, direct call if already on the JS thread, error if the loop is stopped); (b) bun: automatic closing through `FinalizationRegistry` in `src/js/bun/ffi.ts:87-111` + `ref()/unref()` for the loop; (c) nt side right now: synchronous callbacks only (the generator creates and closes the `JSCallback` around the call), asynchronous .NET events through `threadsafe: true` without a return value.
+- `threadsafe: true`: `jsc:FFICallbackThunk.cpp:419-433` queues the call (`bun:system/jsc/bindings/JSCFFIBridge.cpp:99-104`, `postTaskTo`) and forces the return to 0 (432): no synchronous result; `cstring`s are copied (`JSFFICallback.cpp:144`).
+- Lifetime: `bun:system/runtime/ffi/ffi_body.rs:1334` (`// TODO: WeakRefHandle that automatically frees it?`); a `JSCallback` must be closed by hand, and a pointer kept by .NET after `close()` crashes.
+- Fixes: (a) WebKit: `threadsafe: "blocking"` mode (queue + condition wait, direct call if already on the JS thread, error if the loop is stopped); (b) bun: automatic closing through `FinalizationRegistry` in `system/js/bun/ffi.ts:87-111` + `ref()/unref()` for the loop; (c) nt side right now: synchronous callbacks only (the generator creates and closes the `JSCallback` around the call), asynchronous .NET events through `threadsafe: true` without a return value.
 
 ### L5. No pinning or lifetime for buffers
 
-- `jsc:FFIConversions.cpp:316-371`: a TypedArray/ArrayBuffer passed as `ptr`/`buffer` yields `view->vector()`/`impl()->data()` without a kept reference; `bun:src/runtime/ffi/FFIObject.rs:420-470`: `ptr()` returns a bare number.
+- `jsc:FFIConversions.cpp:316-371`: a TypedArray/ArrayBuffer passed as `ptr`/`buffer` yields `view->vector()`/`impl()->data()` without a kept reference; `bun:system/runtime/ffi/FFIObject.rs:420-470`: `ptr()` returns a bare number.
 - .NET effect: safe for a synchronous call (the argument stays alive during the call); dangerous as soon as .NET keeps the pointer (asynchronous I/O, `Task`, work queue): the buffer can be collected, detached (`transfer()`) or resized.
 - Fix (bun): `Bun.FFI.pin(view) -> { ptr, release() }` (strong reference + refusal to detach/resize while pinned) in `FFIObject.rs` and `FFIObject.bind.ts`. Reverse direction already available: .NET memory (`NativeMemory.Alloc`) exposed without copy by `toArrayBuffer(ptr, off, len, ctx, deallocator)` (`FFIObject.rs:590-640`), the deallocator being a .NET export.
 
 ### L6. `napi_env`/`napi_value` rejected outside `cc()`
 
-- `bun:src/runtime/ffi/ffi_body.rs:2373-2380` rejects `napi_env`/`napi_value` for `dlopen`/`linkSymbols`/`CFunction`/`JSCallback`, while JSC handles `Type::JSValue` (`jsc:FFIType.h:60`, `FFIConversions.cpp:492-493`); only `cc()` builds a `napi_env` (`ffi_body.rs:1237`, `2748`).
+- `bun:system/runtime/ffi/ffi_body.rs:2373-2380` rejects `napi_env`/`napi_value` for `dlopen`/`linkSymbols`/`CFunction`/`JSCallback`, while JSC handles `Type::JSValue` (`jsc:FFIType.h:60`, `FFIConversions.cpp:492-493`); only `cc()` builds a `napi_env` (`ffi_body.rs:1237`, `2748`).
 - .NET effect: a .NET function can neither receive nor return a JS object; this is precisely what node-api-dotnet obtains through Node-API.
 - Fix (bun, no WebKit): accept `"jsvalue"` (= `napi_value`, tag 19) in `dlopen`/`CFunction`/`JSCallback` by limiting the rejection to `napi_env`, plus `Bun.FFI.protect(value)/unprotect` for values kept by .NET; then `napi_env` per `dlopen` library by reusing `make_napi_env_if_needed`: .NET would then call the Node-API exports of bun.exe directly through function pointers, without node-api-dotnet.
 
 ### L7. Unloading incompatible with NativeAOT
 
-- `lib.close()` -> `bun:src/runtime/ffi/ffi_body.rs:1362-1390` -> `bun:src/sys/lib.rs:6141-6150`: `dlclose` on Unix, no effect on Windows. Learn: "Unloading Native AOT libraries (via dlclose or FreeLibrary) is not supported".
+- `lib.close()` -> `bun:system/runtime/ffi/ffi_body.rs:1362-1390` -> `bun:system/sys/lib.rs:6141-6150`: `dlclose` on Unix, no effect on Windows. Learn: "Unloading Native AOT libraries (via dlclose or FreeLibrary) is not supported".
 - Fix (bun): option `dlopen(path, symbols, { unload: false })` (or detection of the `DotNetRuntimeContractDescriptor` export, present in the .NET 11 NativeAOT binary of Nt.Interop) that makes `close()` release the JS functions only. The generator does not expose `close()`.
 
 ### L8. Other verified constraints
 
 - At most 32 arguments: `jsc:FFISignature.h:65`.
 - DFG fast path at exact arity only: `jsc:FFIDFG.cpp:63` (extra argument: 2.2 -> 8 ns, section 2).
-- JIT mandatory, x64/arm64 only: `jsc:JSFFIFunction.cpp:104-108`; bun:ffi unavailable if the `Ffi` feature is removed (`bun:src/trim/features/trim-features.def:62` `native-code`, `:128` `ffi`): a `bun build --compile` executable of nt must keep it.
+- JIT mandatory, x64/arm64 only: `jsc:JSFFIFunction.cpp:104-108`; bun:ffi unavailable if the `Ffi` feature is removed (`bun:system/trim/features/trim-features.def:62` `native-code`, `:128` `ffi`): a `bun build --compile` executable of nt must keep it.
 - Returned pointers: `null` for 0, BigInt beyond 2⁵³ (`jsc:FFIConversions.cpp:66-73`); the generated `.d.ts` exposes it (`Pointer | bigint | null`).
 - Returned booleans: normalized on 8 bits (`jsc:FFIInvokeThunk.cpp:114-141`): the .NET `bool` (1 byte, marshalling disabled) is safe.
-- DLL lookup: absolute path -> `LoadLibraryExW(LOAD_WITH_ALTERED_SEARCH_PATH)` (`bun:src/sys/lib.rs:6168-6200`): native dependencies of a NativeAOT library resolved next to it.
+- DLL lookup: absolute path -> `LoadLibraryExW(LOAD_WITH_ALTERED_SEARCH_PATH)` (`bun:system/sys/lib.rs:6168-6200`): native dependencies of a NativeAOT library resolved next to it.
 - No WebGPU in this runtime: `bun:scripts/build/deps/webkit.ts:450` (`ENABLE_WEBGPU 0`); see `feature-graph.md`.
 
 ### L9. CoreCLR host side (hostfxr)
@@ -126,7 +126,7 @@ Notation: `bun:` = bun repository @ `4b8463ee11cb`; `jsc:` = oven-sh/WebKit @ `6
 | 1     | L6: `jsvalue` in dlopen/CFunction/JSCallback + `protect/unprotect` | bun (`ffi_body.rs`, `abi_type.rs`, `ffi.ts`, `ffi.d.ts`)                 | small  | JS objects passed to .NET without Node-API  |
 | 2     | L7: `dlopen(…, { unload: false })`                                 | bun (`ffi_body.rs`, `ffi.ts`)                                            | small  | safe `close()` with NativeAOT               |
 | 3     | L5: `Bun.FFI.pin()`                                                | bun (`FFIObject.rs`, `FFIObject.bind.ts`)                                | medium | asynchronous .NET I/O on JS buffers         |
-| 4     | L4b: automatic closing of `JSCallback`s                            | bun (`src/js/bun/ffi.ts`)                                                | small  | end of callback leaks/crashes               |
+| 4     | L4b: automatic closing of `JSCallback`s                            | bun (`system/js/bun/ffi.ts`)                                                | small  | end of callback leaks/crashes               |
 | 5     | L2: `u16string` type                                               | WebKit (`FFIType.h`, `FFIConversions.cpp`) + bun                         | medium | .NET strings ×2.4 faster on input           |
 | 6     | L4a: `threadsafe: "blocking"`                                      | WebKit (`FFICallbackThunk.cpp`, `FFIContext`) + bun (`JSCFFIBridge.cpp`) | medium | callbacks with a result from the ThreadPool |
 | 7     | L1: structs by value                                               | WebKit (`FFISignature`, `FFICallingConvention`, thunks) + bun            | large  | idiomatic .NET signatures                   |

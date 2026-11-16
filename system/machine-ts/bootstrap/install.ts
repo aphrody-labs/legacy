@@ -11,7 +11,7 @@ const run = async (cmd: string[], extra: Record<string, string> = {}) =>
 
 if (!Bun.which("ay", { PATH: env.PATH })) {
   const code = await run(
-    ["cargo", "install", "--path", join(root, "src", "ay"), "--root", local, "--locked", "--no-track"],
+    ["cargo", "install", "--path", join(root, "system", "ay"), "--root", local, "--locked", "--no-track"],
     { RUSTC_WRAPPER: "" },
   );
   if (code) process.exit(code);

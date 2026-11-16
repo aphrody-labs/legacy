@@ -178,12 +178,12 @@ export async function loadInventory(root = repoRoot()): Promise<Inventory> {
 
 /** PROOF.md of a package, written by `just gnu-check <id>`: first percentage found is the pass rate. */
 export async function readProof(id: string, root = repoRoot()) {
-  const f = Bun.file(join(root, "src", "gnu", id, "PROOF.md"));
+  const f = Bun.file(join(root, "system", "gnu", id, "PROOF.md"));
   if (!existsSync(f.name!)) return { status: "none" as const };
   const m = /(\d{1,3}(?:[.,]\d+)?)\s*%/.exec(await f.text());
   return {
     status: "present" as const,
-    path: `src/gnu/${id}/PROOF.md`,
+    path: `system/gnu/${id}/PROOF.md`,
     ...(m ? { rate: `${m[1]!.replace(",", ".")} %` } : {}),
   };
 }

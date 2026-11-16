@@ -1,7 +1,7 @@
 // Feature graph of bun (upstream), extracted from the source tree without compiling anything.
 // Usage: bun sdk/tools/bun-graph.ts <bun-root> [--out docs/bun] -> feature-graph.json + feature-graph.md
-// Sources read: src/trim/features/*.def (trim model), src/codegen/builtins/host/features-*.builtins.ts (built-in -> feature),
-// Cargo.toml (crates), scripts/build/deps (vendors), BunObject.cpp (Bun.*), packages/bun-types, src/js, *.bind.ts, C++, build scripts.
+// Sources read: system/trim/features/*.def (trim model), system/codegen/builtins/host/features-*.builtins.ts (built-in -> feature),
+// Cargo.toml (crates), scripts/build/deps (vendors), BunObject.cpp (Bun.*), packages/bun-types, system/js, *.bind.ts, C++, build scripts.
 import {
   existsSync,
   mkdirSync,
@@ -46,22 +46,22 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "bun-apis",
     label: "Bun.* (API runtime)",
-    dirs: ["src/runtime/api"],
-    files: ["src/jsc/bindings/BunObject*"],
+    dirs: ["system/runtime/api"],
+    files: ["system/jsc/bindings/BunObject*"],
     features: ["BunUtilities", "BunInfo"],
     apis: ["Bun"],
   },
   {
     id: "ffi",
     label: "bun:ffi",
-    dirs: ["src/runtime/ffi", "src/tcc_sys"],
+    dirs: ["system/runtime/ffi", "system/tcc_sys"],
     files: [
-      "src/jsc/FFI.rs",
-      "src/jsc/bindings/ffi.cpp",
-      "src/jsc/bindings/JSFFI*",
-      "src/jsc/bindings/JSCFFIBridge.cpp",
-      "src/js/bun/ffi.ts",
-      "src/js/ahead-of-time/bun/ffi.ts",
+      "system/jsc/FFI.rs",
+      "system/jsc/bindings/ffi.cpp",
+      "system/jsc/bindings/JSFFI*",
+      "system/jsc/bindings/JSCFFIBridge.cpp",
+      "system/js/bun/ffi.ts",
+      "system/js/ahead-of-time/bun/ffi.ts",
       "packages/bun-types/ffi.d.ts",
     ],
     features: ["Ffi"],
@@ -70,24 +70,24 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "napi",
     label: "Node-API / addons natifs",
-    dirs: ["src/runtime/napi", "src/jsc/bindings/v8"],
-    files: ["src/jsc/bindings/napi*", "src/jsc/bindings/Napi*"],
+    dirs: ["system/runtime/napi", "system/jsc/bindings/v8"],
+    files: ["system/jsc/bindings/napi*", "system/jsc/bindings/Napi*"],
     features: ["NativeAddons"],
     apis: ["process.dlopen"],
   },
   {
     id: "sqlite",
     label: "bun:sqlite",
-    dirs: ["src/jsc/bindings/sqlite"],
-    files: ["src/js/bun/sqlite.ts", "packages/bun-types/sqlite.d.ts"],
+    dirs: ["system/jsc/bindings/sqlite"],
+    files: ["system/js/bun/sqlite.ts", "packages/bun-types/sqlite.d.ts"],
     features: ["Sqlite", "SqliteExtensions"],
     apis: ["bun:sqlite", "node:sqlite"],
   },
   {
     id: "sql",
     label: "Bun.sql (Postgres/MySQL)",
-    dirs: ["src/sql", "src/sql_jsc"],
-    files: ["src/js/bun/sql.ts", "packages/bun-types/sql.d.ts"],
+    dirs: ["system/sql", "system/sql_jsc"],
+    files: ["system/js/bun/sql.ts", "packages/bun-types/sql.d.ts"],
     features: ["Sql"],
     apis: ["Bun.sql", "Bun.SQL", "bun:sql"],
   },
@@ -95,13 +95,13 @@ const DOMAINS: DomainSpec[] = [
     id: "serve",
     label: "Bun.serve / HTTP",
     dirs: [
-      "src/runtime/server",
-      "src/http",
-      "src/http_types",
-      "src/http_jsc",
-      "src/uws",
-      "src/uws_sys",
-      "src/picohttp",
+      "system/runtime/server",
+      "system/http",
+      "system/http_types",
+      "system/http_jsc",
+      "system/uws",
+      "system/uws_sys",
+      "system/picohttp",
     ],
     files: ["packages/bun-types/serve.d.ts"],
     features: ["Serve", "ServeHttp2", "Http3", "HttpClient", "Fetch"],
@@ -111,12 +111,12 @@ const DOMAINS: DomainSpec[] = [
     id: "sockets",
     label: "Sockets / TLS / DNS",
     dirs: [
-      "src/runtime/socket",
-      "src/dns",
-      "src/cares_sys",
-      "src/lsquic_sys",
-      "src/boringssl",
-      "src/boringssl_sys",
+      "system/runtime/socket",
+      "system/dns",
+      "system/cares_sys",
+      "system/lsquic_sys",
+      "system/boringssl",
+      "system/boringssl_sys",
     ],
     features: ["Sockets", "TlsSockets", "Tls", "Dns", "Udp"],
     apis: ["Bun.connect", "Bun.listen", "Bun.udpSocket", "Bun.dns"],
@@ -124,7 +124,7 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "shell",
     label: "Bun.$ (shell)",
-    dirs: ["src/runtime/shell", "src/shell_parser"],
+    dirs: ["system/runtime/shell", "system/shell_parser"],
     files: ["packages/bun-types/shell.d.ts"],
     features: ["Shell"],
     apis: ["Bun.$"],
@@ -132,14 +132,14 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "spawn",
     label: "Bun.spawn / processus",
-    dirs: ["src/spawn", "src/spawn_sys"],
+    dirs: ["system/spawn", "system/spawn_sys"],
     features: ["Spawn", "BunSpawn", "BunSpawnSync", "ChildProcess", "Terminal"],
     apis: ["Bun.spawn", "Bun.spawnSync", "node:child_process"],
   },
   {
     id: "test-runner",
     label: "bun test",
-    dirs: ["src/runtime/test_runner"],
+    dirs: ["system/runtime/test_runner"],
     files: ["packages/bun-types/test.d.ts"],
     features: ["Test", "TestCommand"],
     apis: ["bun:test", "node:test"],
@@ -148,15 +148,15 @@ const DOMAINS: DomainSpec[] = [
     id: "install",
     label: "bun install (gestionnaire de paquets)",
     dirs: [
-      "src/install",
-      "src/install_jsc",
-      "src/install_types",
-      "src/semver",
-      "src/semver_jsc",
-      "src/patch",
-      "src/patch_jsc",
-      "src/tar",
-      "src/archive",
+      "system/install",
+      "system/install_jsc",
+      "system/install_types",
+      "system/semver",
+      "system/semver_jsc",
+      "system/patch",
+      "system/patch_jsc",
+      "system/tar",
+      "system/archive",
     ],
     features: ["Install", "Semver", "Archive"],
     apis: ["Bun.semver", "Bun.Archive"],
@@ -165,16 +165,16 @@ const DOMAINS: DomainSpec[] = [
     id: "bundler",
     label: "Bundler (bun build, Bun.build)",
     dirs: [
-      "src/bundler",
-      "src/bundler_jsc",
-      "src/css",
-      "src/css_jsc",
-      "src/css_derive",
-      "src/sourcemap",
-      "src/sourcemap_jsc",
-      "src/runtime/bake",
-      "src/standalone_graph",
-      "src/router",
+      "system/bundler",
+      "system/bundler_jsc",
+      "system/css",
+      "system/css_jsc",
+      "system/css_derive",
+      "system/sourcemap",
+      "system/sourcemap_jsc",
+      "system/runtime/bake",
+      "system/standalone_graph",
+      "system/router",
     ],
     files: [
       "packages/bun-types/bundle.d.ts",
@@ -193,16 +193,16 @@ const DOMAINS: DomainSpec[] = [
     id: "transpiler",
     label: "Transpiler (parser, printer, resolver)",
     dirs: [
-      "src/transpiler",
-      "src/js_parser",
-      "src/js_parser_jsc",
-      "src/js_printer",
-      "src/ast",
-      "src/ast_jsc",
-      "src/resolver",
-      "src/resolve_builtins",
-      "src/react_compiler",
-      "src/parsers",
+      "system/transpiler",
+      "system/js_parser",
+      "system/js_parser_jsc",
+      "system/js_printer",
+      "system/ast",
+      "system/ast_jsc",
+      "system/resolver",
+      "system/resolve_builtins",
+      "system/react_compiler",
+      "system/parsers",
     ],
     features: ["RuntimeTranspiler", "DataFileLoaders"],
     apis: ["Bun.Transpiler"],
@@ -210,14 +210,14 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "lint-check-fmt",
     label: "bun lint / check / fmt",
-    dirs: ["src/lint", "src/format", "src/sema"],
+    dirs: ["system/lint", "system/format", "system/sema"],
     features: ["Lint", "Check", "Fmt"],
     apis: [],
   },
   {
     id: "aot",
     label: "Compilateur AOT (bun compile --aot)",
-    dirs: ["src/aot", "src/executable", "src/exe_format"],
+    dirs: ["system/aot", "system/executable", "system/exe_format"],
     features: ["AotCompiler", "ImageCompiler"],
     apis: [],
   },
@@ -225,10 +225,10 @@ const DOMAINS: DomainSpec[] = [
     id: "node-compat",
     label: "Node compatibility (node:*)",
     dirs: [
-      "src/js/node",
-      "src/runtime/node",
-      "src/jsc/bindings/node",
-      "src/node_path",
+      "system/js/node",
+      "system/runtime/node",
+      "system/jsc/bindings/node",
+      "system/node_path",
     ],
     features: [
       "NodeFs",
@@ -245,10 +245,10 @@ const DOMAINS: DomainSpec[] = [
     id: "web-apis",
     label: "API Web (WebCore)",
     dirs: [
-      "src/runtime/webcore",
-      "src/jsc/bindings/webcore",
-      "src/jsc/bindings/webcrypto",
-      "src/js/builtins",
+      "system/runtime/webcore",
+      "system/jsc/bindings/webcore",
+      "system/jsc/bindings/webcrypto",
+      "system/js/builtins",
     ],
     features: [
       "WebStreams",
@@ -268,10 +268,10 @@ const DOMAINS: DomainSpec[] = [
     label: "WebAssembly / WASI",
     dirs: [],
     files: [
-      "src/js/builtins/WasmStreaming.ts",
-      "src/jsc/bindings/webcore/JSWasmStreamingCompiler.*",
-      "src/runtime/webcore/wasm_streaming.rs",
-      "src/js/wasi-runner.js",
+      "system/js/builtins/WasmStreaming.ts",
+      "system/jsc/bindings/webcore/JSWasmStreamingCompiler.*",
+      "system/runtime/webcore/wasm_streaming.rs",
+      "system/js/wasi-runner.js",
       "packages/bun-types/wasm.d.ts",
     ],
     features: ["WebAssembly"],
@@ -280,14 +280,14 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "webview",
     label: "Bun.WebView",
-    dirs: ["src/runtime/webview"],
+    dirs: ["system/runtime/webview"],
     features: ["WebView"],
     apis: ["Bun.WebView"],
   },
   {
     id: "valkey",
     label: "Bun.redis (Valkey)",
-    dirs: ["src/valkey", "src/runtime/valkey_jsc"],
+    dirs: ["system/valkey", "system/runtime/valkey_jsc"],
     files: ["packages/bun-types/redis.d.ts"],
     features: ["Valkey"],
     apis: ["Bun.redis", "Bun.RedisClient"],
@@ -295,7 +295,7 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "s3",
     label: "Bun.s3",
-    dirs: ["src/s3_signing"],
+    dirs: ["system/s3_signing"],
     files: ["packages/bun-types/s3.d.ts"],
     features: ["S3Client", "S3Responses"],
     apis: ["Bun.s3", "Bun.S3Client"],
@@ -303,14 +303,14 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "image",
     label: "Bun.Image",
-    dirs: ["src/runtime/image", "src/png"],
+    dirs: ["system/runtime/image", "system/png"],
     features: ["Image"],
     apis: ["Bun.Image"],
   },
   {
     id: "engine",
     label: "Liaison JavaScriptCore",
-    dirs: ["src/jsc", "src/jsc_macros", "src/yarr"],
+    dirs: ["system/jsc", "system/jsc_macros", "system/yarr"],
     features: ["BunJsc"],
     apis: ["bun:jsc"],
   },
@@ -318,16 +318,16 @@ const DOMAINS: DomainSpec[] = [
     id: "event-loop-io",
     label: "Event loop, I/O, system",
     dirs: [
-      "src/event_loop",
-      "src/io",
-      "src/threading",
-      "src/sys",
-      "src/sys_jsc",
-      "src/libuv_sys",
-      "src/windows_sys",
-      "src/platform",
-      "src/watcher",
-      "src/runtime/timer",
+      "system/event_loop",
+      "system/io",
+      "system/threading",
+      "system/sys",
+      "system/sys_jsc",
+      "system/libuv_sys",
+      "system/windows_sys",
+      "system/platform",
+      "system/watcher",
+      "system/runtime/timer",
     ],
     features: [],
     apis: [],
@@ -335,7 +335,7 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "cli",
     label: "Ligne de commande bun",
-    dirs: ["src/runtime/cli", "src/clap", "src/clap_macros", "src/bunfig"],
+    dirs: ["system/runtime/cli", "system/clap", "system/clap_macros", "system/bunfig"],
     features: ["Tools", "Repl", "Create", "Upgrade", "Bunfig"],
     apis: [],
   },
@@ -343,19 +343,19 @@ const DOMAINS: DomainSpec[] = [
     id: "core",
     label: "Foundation (alloc, collections, strings)",
     dirs: [
-      "src/bun_core",
-      "src/bun_core_macros",
-      "src/bun_alloc",
-      "src/collections",
-      "src/ptr",
+      "system/bun_core",
+      "system/bun_core_macros",
+      "system/bun_alloc",
+      "system/collections",
+      "system/ptr",
       "frameworks/safety",
-      "src/mimalloc_sys",
-      "src/simdutf_sys",
-      "src/highway",
-      "src/errno",
-      "src/paths",
-      "src/opaque",
-      "src/pod",
+      "system/mimalloc_sys",
+      "system/simdutf_sys",
+      "system/highway",
+      "system/errno",
+      "system/paths",
+      "system/opaque",
+      "system/pod",
     ],
     features: [],
     apis: [],
@@ -363,14 +363,14 @@ const DOMAINS: DomainSpec[] = [
   {
     id: "trim",
     label: "Trim model (removable features)",
-    dirs: ["src/trim"],
+    dirs: ["system/trim"],
     features: [],
     apis: [],
   },
   {
     id: "build-system",
     label: "Build system and codegen",
-    dirs: ["scripts/build", "src/codegen"],
+    dirs: ["scripts/build", "system/codegen"],
     files: ["Cargo.toml", "package.json"],
     features: [],
     apis: [],
@@ -545,7 +545,7 @@ const pkg = JSON.parse(
   read("package.json") || readFileSync(join(root, "package.json"), "utf8"),
 ) as { version?: string };
 
-// ---------- 1. Trim model (src/trim/features/*.def) ----------
+// ---------- 1. Trim model (system/trim/features/*.def) ----------
 
 type FeatureRec = {
   name: string;
@@ -577,7 +577,7 @@ if (typeof trimApi.loadFeatures !== "function")
 const model = trimApi.loadFeatures(root);
 if (!Array.isArray(model.features) || !Array.isArray(model.trimFeatures))
   throw new Error("trim model: unexpected shape");
-const featureDefs = new Bun.Glob("src/trim/features/*.def").scanSync({
+const featureDefs = new Bun.Glob("system/trim/features/*.def").scanSync({
   cwd: root,
 });
 const featureWhere = new Map<string, string>();
@@ -629,7 +629,7 @@ try {
   const gen = join(shimDir, "builtins", "generator");
   mkdirSync(gen, { recursive: true });
   const namesOf = (file: string) => {
-    const t = read(`src/codegen/builtins/${file}`);
+    const t = read(`system/codegen/builtins/${file}`);
     const s = new Set<string>();
     for (const m of t.matchAll(/export const \{([^}]*)\} = engineModule/g))
       for (const part of (m[1] ?? "").split(",")) {
@@ -672,7 +672,7 @@ try {
   const isRec = (x: unknown): x is Rec =>
     typeof x === "function" && typeof (x as unknown as Rec).__b === "string";
   for (const part of ["bun", "node", "web", "process"]) {
-    const file = `src/codegen/builtins/host/features-${part}.builtins.ts`;
+    const file = `system/codegen/builtins/host/features-${part}.builtins.ts`;
     const found: [unknown, unknown][] = [];
     try {
       const mod: { default?: unknown } = await import(
@@ -899,7 +899,7 @@ for (const pkgDir of ["system/bun-usockets", "packages/bun-uws"])
 // ---------- 4. Surface publique ----------
 
 // 4a. Table de l'objet Bun (BunObject.cpp).
-const bunObjectCpp = "src/jsc/bindings/BunObject.cpp";
+const bunObjectCpp = "system/jsc/bindings/BunObject.cpp";
 {
   const t = read(bunObjectCpp);
   const begin = t.indexOf("@begin bunObjectTable");
@@ -1028,11 +1028,11 @@ for (const f of bindFiles) {
   }
 }
 
-// 4d. Built-in JS modules (src/js): specifier, exports, imports, native calls.
+// 4d. Built-in JS modules (system/js): specifier, exports, imports, native calls.
 const moduleFiles = new Map<string, string>();
 const specOf = (f: string): string | undefined => {
   const m = /^src\/js\/(bun|node|internal|thirdparty)\/(.+)\.(ts|js)$/.exec(f);
-  if (f === "src/js/internal-for-testing.ts") return "bun:internal-for-testing";
+  if (f === "system/js/internal-for-testing.ts") return "bun:internal-for-testing";
   if (!m) return undefined;
   const [, dir, name = ""] = m;
   if (dir === "bun") return `bun:${name}`;
@@ -1118,11 +1118,11 @@ for (const [spec, f] of [...moduleFiles].sort()) {
   }
 }
 {
-  const builtinsDir = "src/js/builtins";
+  const builtinsDir = "system/js/builtins";
   const n = node(
     "module:(js builtins)",
     "module",
-    "src/js/builtins (WebCore JS builtins)",
+    "system/js/builtins (WebCore JS builtins)",
   );
   addPath(n, builtinsDir);
   n.loc = sumLoc(filesUnder(builtinsDir));
@@ -1478,7 +1478,7 @@ for (let i = 0; i < Math.max(nk.length, ek.length); i++)
   );
 md.push("");
 md.push(
-  "Sources: trim model `src/trim/features/*.def` (features, trim-features); `src/codegen/builtins/host/features-*.builtins.ts` (built-in -> feature); `Cargo.toml` (crates, `path` dependencies); `scripts/build/deps/*.ts` (vendors, `fetchDeps`); `src/jsc/bindings/BunObject.cpp` (`bunObjectTable`); `packages/bun-types/*.d.ts`; `src/js/**` (modules, `require`, `$bindgen`/`$newCppFunction`); `*.bind.ts` (bindgen); C/C++ by directory; relative imports of `scripts/build` and `src/codegen`.",
+  "Sources: trim model `system/trim/features/*.def` (features, trim-features); `system/codegen/builtins/host/features-*.builtins.ts` (built-in -> feature); `Cargo.toml` (crates, `path` dependencies); `scripts/build/deps/*.ts` (vendors, `fetchDeps`); `system/jsc/bindings/BunObject.cpp` (`bunObjectTable`); `packages/bun-types/*.d.ts`; `system/js/**` (modules, `require`, `$bindgen`/`$newCppFunction`); `*.bind.ts` (bindgen); C/C++ by directory; relative imports of `scripts/build` and `system/codegen`.",
 );
 md.push("");
 md.push("## Domaines");
@@ -1559,9 +1559,9 @@ for (const f of ["Ffi", "NativeAddons"]) {
   );
 }
 for (const id of [
-  "binding:src/runtime/ffi/ffi.bind.ts",
-  "binding:src/runtime/ffi/FFIObject.bind.ts",
-  "binding:src/runtime/napi/napi_body.bind.ts",
+  "binding:system/runtime/ffi/ffi.bind.ts",
+  "binding:system/runtime/ffi/FFIObject.bind.ts",
+  "binding:system/runtime/napi/napi_body.bind.ts",
   "module:bun:ffi",
 ]) {
   const n = nodes.get(id);
@@ -1585,7 +1585,7 @@ md.push(
   `- Features pulled by FFI APIs: ${[...new Set(nativeDeps)].sort().join(", ")}`,
 );
 md.push("");
-md.push("## Trim-features (src/trim/features/trim-features.def)");
+md.push("## Trim-features (system/trim/features/trim-features.def)");
 md.push("");
 md.push(
   "| Trim-feature | Features | Linux / macOS saving (MB) | Description |",
@@ -1617,7 +1617,7 @@ md.push(
 );
 md.push("");
 md.push(
-  "- `DOMAINS`: each domain = directories + file patterns (checked at run time), trim feature names (checked against the model) and attached API prefixes. A crate belongs to the domain whose directory contains its `Cargo.toml` (longest prefix wins); a domain housed in a larger crate (e.g. `src/runtime/ffi` in `bun_runtime`) receives it as `part-of`.",
+  "- `DOMAINS`: each domain = directories + file patterns (checked at run time), trim feature names (checked against the model) and attached API prefixes. A crate belongs to the domain whose directory contains its `Cargo.toml` (longest prefix wins); a domain housed in a larger crate (e.g. `system/runtime/ffi` in `bun_runtime`) receives it as `part-of`.",
 );
 md.push(
   `- \`VENDOR_ALIASES\`: ${Object.entries(VENDOR_ALIASES)
@@ -1627,7 +1627,7 @@ md.push(
     )}; otherwise crate \`bun_<x>[_sys]\` <-> dependency \`<x>\` by normalized name. \`system/bun-usockets\` and \`packages/bun-uws\` are attached to \`bun_uws_sys\`.`,
 );
 md.push(
-  "- Module specifiers: `src/js/bun/x.ts` -> `bun:x`, `src/js/node/a.b.ts` -> `node:a/b`, `src/js/internal/**` -> `internal/**`, `src/js/thirdparty/x.ts` -> `x`.",
+  "- Module specifiers: `system/js/bun/x.ts` -> `bun:x`, `system/js/node/a.b.ts` -> `node:a/b`, `system/js/internal/**` -> `internal/**`, `system/js/thirdparty/x.ts` -> `x`.",
 );
 md.push(
   `- \`WEBGPU_TERMS\`: \`${String(WEBGPU_TERMS)}\` (absence search of the WebGPU domain).`,
