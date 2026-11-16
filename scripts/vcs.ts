@@ -15,12 +15,15 @@
 
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { basename, join, resolve } from "node:path";
+import { basename, delimiter, dirname, join, resolve } from "node:path";
 import { token } from "../tools/agents/gh-token.ts";
 import { findRoot, loadIdentity } from "./identity.ts";
 
@@ -267,6 +270,96 @@ export function inspectSubmodules(root: string): SubmoduleEntry[] {
   });
 }
 
+/** The superproject's fetch URL: the remote of the current branch, else `origin`. */
+function superprojectUrl(root: string): string | null {
+  const branch = run(
+    ["git", "symbolic-ref", "--short", "-q", "HEAD"],
+    root,
+  ).out;
+  const remote =
+    (branch &&
+      run(["git", "config", "--get", `branch.${branch}.remote`], root).out) ||
+    "origin";
+  const url = run(["git", "remote", "get-url", remote], root);
+  return url.code === 0 && url.out ? url.out : null;
+}
+
+/** A `.gitmodules` URL as git resolves it: `../name.git` is relative to the superproject's URL. */
+export function resolveSubmoduleUrl(url: string, base: string | null): string {
+  if (!url.startsWith("./") && !url.startsWith("../")) return url;
+  if (!base) return url;
+  const parts = base.replace(/\/+$/, "").split("/");
+  for (const seg of url.split("/")) {
+    if (seg === "..") parts.pop();
+    else if (seg !== ".") parts.push(seg);
+  }
+  return parts.join("/");
+}
+
+const sameRepo = (a: string, b: string) =>
+  a.replace(/\.git$/, "").toLowerCase() ===
+  b.replace(/\.git$/, "").toLowerCase();
+
+/**
+ * Folders searched for existing checkouts of submodule repositories: `AY_CHECKOUTS` (a list in the
+ * platform's PATH format, relative entries taken from the repository root), else the folder that
+ * holds the repository.
+ */
+export function checkoutRoots(root: string, env = process.env): string[] {
+  const raw = env.AY_CHECKOUTS?.trim();
+  const list = raw ? raw.split(delimiter).filter(Boolean) : [".."];
+  return list.map((p) => resolve(root, p));
+}
+
+/** The first checkout under `roots` whose `origin` is `url`, matched by the repository's own name. */
+function findCheckout(roots: string[], url: string): string | null {
+  const name = basename(url).replace(/\.git$/, "");
+  for (const dir of roots) {
+    const candidate = join(dir, name);
+    if (!existsSync(join(candidate, ".git"))) continue;
+    const origin = run(["git", "remote", "get-url", "origin"], candidate);
+    if (origin.code === 0 && sameRepo(origin.out, url)) return candidate;
+  }
+  return null;
+}
+
+/**
+ * A submodule whose repository is already checked out in one of `checkoutRoots` (same origin) is
+ * linked to that checkout (a junction on Windows, a symlink elsewhere) instead of being cloned a
+ * second time; git reads the link as the submodule's work tree. Returns the paths linked,
+ * including those linked before.
+ */
+export function linkSiblingCheckouts(root: string): string[] {
+  const gm = join(root, ".gitmodules");
+  if (!existsSync(gm)) return [];
+  const base = superprojectUrl(root);
+  const roots = checkoutRoots(root);
+  const linked: string[] = [];
+  for (const m of parseGitmodules(readFileSync(gm, "utf8"))) {
+    const want = resolveSubmoduleUrl(m.url, base);
+    const sibling = findCheckout(roots, want);
+    if (!sibling) continue;
+    const dest = join(root, m.path);
+    if (existsSync(dest)) {
+      if (
+        lstatSync(dest).isSymbolicLink() &&
+        resolve(realpathSync(dest)) === resolve(realpathSync(sibling))
+      ) {
+        linked.push(m.path);
+      }
+      continue;
+    }
+    mkdirSync(dirname(dest), { recursive: true });
+    symlinkSync(
+      sibling,
+      dest,
+      process.platform === "win32" ? "junction" : "dir",
+    );
+    linked.push(m.path);
+  }
+  return linked;
+}
+
 async function cmdAuth(root: string, argv: string[]): Promise<number> {
   const repo = opt(argv, "-R") ?? opt(argv, "--repo") ?? defaultRepo(root);
   const tok = await token("aphrody-labs");
@@ -305,13 +398,39 @@ async function cmdSubmodules(root: string, argv: string[]): Promise<number> {
       console.error(syncRes.err || syncRes.out);
       return 1;
     }
-    const upd = run(
-      ["git", "submodule", "update", "--init", "--depth", "1", "--jobs", "4"],
-      root,
-    );
-    if (upd.code !== 0) {
-      console.error(upd.err || upd.out);
-      return 1;
+    const linked = linkSiblingCheckouts(root);
+    const rest = parseGitmodules(
+      readFileSync(join(root, ".gitmodules"), "utf8"),
+    )
+      .map((m) => m.path)
+      .filter((p) => !linked.includes(p));
+    if (linked.length > 0) {
+      const reg = run(["git", "submodule", "init", "--", ...linked], root);
+      if (reg.code !== 0) {
+        console.error(reg.err || reg.out);
+        return 1;
+      }
+    }
+    if (rest.length > 0) {
+      const upd = run(
+        [
+          "git",
+          "submodule",
+          "update",
+          "--init",
+          "--depth",
+          "1",
+          "--jobs",
+          "4",
+          "--",
+          ...rest,
+        ],
+        root,
+      );
+      if (upd.code !== 0) {
+        console.error(upd.err || upd.out);
+        return 1;
+      }
     }
   } else if (sub === "sync") {
     run(["git", "submodule", "sync", "--recursive"], root);

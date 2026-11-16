@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, test } from "bun:test";
-import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { delimiter, resolve } from "node:path";
 import {
+  checkoutRoots,
   defaultRepo,
+  resolveSubmoduleUrl,
   inspectSubmodules,
   parseForksManifest,
   parseGitmodules,
@@ -90,9 +93,32 @@ describe("vcs parsers & repo identity", () => {
     ]);
   });
 
-  test("inspectSubmodules reads live monorepo gitlinks (none since the products left) and src.lock.json", () => {
+  test("resolveSubmoduleUrl resolves relative URLs against the superproject", () => {
+    const base = "https://github.com/o/ay.git";
+    expect(resolveSubmoduleUrl("../bun.git", base)).toBe(
+      "https://github.com/o/bun.git",
+    );
+    expect(resolveSubmoduleUrl("https://x/y.git", base)).toBe(
+      "https://x/y.git",
+    );
+    expect(resolveSubmoduleUrl("../bun.git", null)).toBe("../bun.git");
+  });
+
+  test("checkoutRoots: AY_CHECKOUTS list, else the folder holding the repository", () => {
+    expect(checkoutRoots(root, {})).toEqual([resolve(root, "..")]);
+    expect(
+      checkoutRoots(root, {
+        AY_CHECKOUTS: ["a", resolve("/b")].join(delimiter),
+      }),
+    ).toEqual([resolve(root, "a"), resolve("/b")]);
+  });
+
+  test("inspectSubmodules reads the gitlinks .gitmodules declares and src.lock.json", () => {
     const subs = inspectSubmodules(root);
-    expect(subs.map((s) => s.path)).toEqual([]);
+    const declared = parseGitmodules(
+      readFileSync(resolve(root, ".gitmodules"), "utf8"),
+    ).map((m) => m.path);
+    expect(subs.map((s) => s.path)).toEqual(declared);
     for (const s of subs) {
       expect(s.gitlinkSha).toMatch(/^[0-9a-f]{40}$/);
       expect(s.lockSha).toMatch(/^[0-9a-f]{40}$/);

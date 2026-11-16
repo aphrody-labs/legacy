@@ -1218,7 +1218,7 @@
       "path": "third_party/bun",
       "url": "https://github.com/aphrody-labs/bun.git",
       "upstream_url": "https://github.com/oven-sh/bun.git",
-      "commit": "fa5d5b862662a904a9e3cfafa4e8503fa27eae28",
+      "commit": "0f48784fadcdb747bb7f4dae4de3a36a71f47fc7",
       "branch": "main",
       "engine": "git",
       "pillar": "git",
@@ -1400,7 +1400,7 @@
       "engine": "git",
       "pillar": "chromium",
       "remotes": {
-        "aphrody": "https://github.com/aphrody-labs/chromium-dashboard.git",
+        "aphrody": "https://github.com/aphrody-labs/browser-dashboard.git",
         "origin": "https://github.com/GoogleChrome/chromium-dashboard.git"
       },
       "sparse_paths": null
