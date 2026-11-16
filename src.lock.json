@@ -783,6 +783,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/anicraft": {
+      "path": "third_party/anicraft",
+      "url": "https://github.com/aphrody-labs/anicraft.git",
+      "upstream_url": "https://github.com/storytold/anicraft.git",
+      "commit": "9f423e6abbd1e30236d0dc4b74315fa547e62bea",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/anicraft.git",
+        "upstream": "https://github.com/storytold/anicraft.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/anthropic-sdk-python": {
       "path": "third_party/anthropic-sdk-python",
       "url": "https://github.com/anthropics/anthropic-sdk-python.git",
@@ -968,13 +982,43 @@
     },
     "third_party/artcraft": {
       "path": "third_party/artcraft",
-      "url": "https://github.com/storytold/artcraft.git",
-      "commit": "83aad5eb544e7f98b924f9b3652cfdb0a1023f47",
+      "url": "https://github.com/aphrody-labs/artcraft.git",
+      "upstream_url": "https://github.com/storytold/artcraft.git",
+      "commit": "84a6a7dcf5ccd5f8f577e5dafe84494532cc14fb",
       "branch": "main",
       "engine": "git",
       "pillar": "git",
       "remotes": {
-        "origin": "https://github.com/storytold/artcraft.git"
+        "origin": "https://github.com/aphrody-labs/artcraft.git",
+        "upstream": "https://github.com/storytold/artcraft.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/artcraft-services": {
+      "path": "third_party/artcraft-services",
+      "url": "https://github.com/aphrody-labs/artcraft-services.git",
+      "upstream_url": "https://github.com/storytold/artcraft-services.git",
+      "commit": "4c72ed543753f4ef71d75691e3c106c294b77cbd",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/artcraft-services.git",
+        "upstream": "https://github.com/storytold/artcraft-services.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/artcraftx": {
+      "path": "third_party/artcraftx",
+      "url": "https://github.com/aphrody-labs/artcraftx.git",
+      "upstream_url": "https://github.com/storytold/artcraftx.git",
+      "commit": "2bcbdd1ac0c06666b7fb33fd240e5df0cc3dac86",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/artcraftx.git",
+        "upstream": "https://github.com/storytold/artcraftx.git"
       },
       "sparse_paths": null
     },
@@ -1038,6 +1082,34 @@
       "pillar": "git",
       "remotes": {
         "origin": "https://github.com/better-auth-rs/better-auth-rs.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/bevy": {
+      "path": "third_party/bevy",
+      "url": "https://github.com/aphrody-labs/bevy.git",
+      "upstream_url": "https://github.com/bevyengine/bevy.git",
+      "commit": "ef5312a29994d66c6b2610a76e743de06a5bd3b7",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/bevy.git",
+        "upstream": "https://github.com/bevyengine/bevy.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/bevy_steamworks": {
+      "path": "third_party/bevy_steamworks",
+      "url": "https://github.com/aphrody-labs/bevy_steamworks.git",
+      "upstream_url": "https://github.com/HouraiTeahouse/bevy_steamworks.git",
+      "commit": "649838f9fec757703a817b08d6fdfd66ad88cb3c",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/bevy_steamworks.git",
+        "upstream": "https://github.com/HouraiTeahouse/bevy_steamworks.git"
       },
       "sparse_paths": null
     },
@@ -1221,6 +1293,20 @@
       "pillar": "linux-kernel",
       "remotes": {
         "origin": "https://github.com/CachyOS/cachyos-wsl.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/cadcraft": {
+      "path": "third_party/cadcraft",
+      "url": "https://github.com/aphrody-labs/cadcraft.git",
+      "upstream_url": "https://github.com/storytold/cadcraft.git",
+      "commit": "2974d74bdc55cf6264f69a28c3d70d2241093a0f",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/cadcraft.git",
+        "upstream": "https://github.com/storytold/cadcraft.git"
       },
       "sparse_paths": null
     },
@@ -2011,6 +2097,104 @@
       },
       "sparse_paths": null
     },
+    "third_party/craft-ai-integrations": {
+      "path": "third_party/craft-ai-integrations",
+      "url": "https://github.com/aphrody-labs/craft-ai-integrations.git",
+      "upstream_url": "https://github.com/storytold/craft-ai-integrations.git",
+      "commit": "d94a3593adcff504eaaad9e5aee4c84fd2f07a72",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/craft-ai-integrations.git",
+        "upstream": "https://github.com/storytold/craft-ai-integrations.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/craft-anything": {
+      "path": "third_party/craft-anything",
+      "url": "https://github.com/aphrody-labs/craft-anything.git",
+      "upstream_url": "https://github.com/storytold/craft-anything.git",
+      "commit": "0e32cd474c6834989131989479273f5867e2f9cd",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/craft-anything.git",
+        "upstream": "https://github.com/storytold/craft-anything.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/craft-extensions": {
+      "path": "third_party/craft-extensions",
+      "url": "https://github.com/aphrody-labs/craft-extensions.git",
+      "upstream_url": "https://github.com/storytold/craft-extensions.git",
+      "commit": "964c71574affa68da560a19d0efc4bb1f0263aee",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/craft-extensions.git",
+        "upstream": "https://github.com/storytold/craft-extensions.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/craft-fonts": {
+      "path": "third_party/craft-fonts",
+      "url": "https://github.com/aphrody-labs/craft-fonts.git",
+      "upstream_url": "https://github.com/storytold/craft-fonts.git",
+      "commit": "cc9269cd8d8258785dac603fba3122e5d2556795",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/craft-fonts.git",
+        "upstream": "https://github.com/storytold/craft-fonts.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/craft-i18n": {
+      "path": "third_party/craft-i18n",
+      "url": "https://github.com/aphrody-labs/craft-i18n.git",
+      "upstream_url": "https://github.com/storytold/craft-i18n.git",
+      "commit": "866aff71dd63d8369eb100b9c432b5af1400c22a",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/craft-i18n.git",
+        "upstream": "https://github.com/storytold/craft-i18n.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/craft-launcher": {
+      "path": "third_party/craft-launcher",
+      "url": "https://github.com/aphrody-labs/craft-launcher.git",
+      "upstream_url": "https://github.com/storytold/craft-launcher.git",
+      "commit": "cbe639c5927712db69ce43476509d5ee97dc2cad",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/craft-launcher.git",
+        "upstream": "https://github.com/storytold/craft-launcher.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/craft-libs": {
+      "path": "third_party/craft-libs",
+      "url": "https://github.com/aphrody-labs/craft-libs.git",
+      "upstream_url": "https://github.com/storytold/craft-libs.git",
+      "commit": "a499742a9389f47d10cdc61e4cdbf4e5f07f48cd",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/craft-libs.git",
+        "upstream": "https://github.com/storytold/craft-libs.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/crawlee": {
       "path": "third_party/crawlee",
       "url": "https://github.com/apify/crawlee.git",
@@ -2092,6 +2276,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/deckcraft": {
+      "path": "third_party/deckcraft",
+      "url": "https://github.com/aphrody-labs/deckcraft.git",
+      "upstream_url": "https://github.com/storytold/deckcraft.git",
+      "commit": "bb2c2254ee60761b2b4dab2053fe33d7190b6804",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/deckcraft.git",
+        "upstream": "https://github.com/storytold/deckcraft.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/defguard": {
       "path": "third_party/defguard",
       "url": "https://github.com/DefGuard/defguard.git",
@@ -2153,6 +2351,20 @@
       "remotes": {
         "origin": "https://github.com/aphrody-labs/design.md.git",
         "upstream": "https://github.com/google-labs-code/design.md.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/designcraft": {
+      "path": "third_party/designcraft",
+      "url": "https://github.com/aphrody-labs/designcraft.git",
+      "upstream_url": "https://github.com/storytold/designcraft.git",
+      "commit": "11ad84fd696c596931870396564d067d367439b7",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/designcraft.git",
+        "upstream": "https://github.com/storytold/designcraft.git"
       },
       "sparse_paths": null
     },
@@ -2350,6 +2562,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/effectcraft": {
+      "path": "third_party/effectcraft",
+      "url": "https://github.com/aphrody-labs/effectcraft.git",
+      "upstream_url": "https://github.com/storytold/effectcraft.git",
+      "commit": "6c70694a049552219643cb498556c32e297ae3de",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/effectcraft.git",
+        "upstream": "https://github.com/storytold/effectcraft.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/embedded_gpui": {
       "path": "third_party/embedded_gpui",
       "url": "https://github.com/aphrody-labs/embedded_gpui.git",
@@ -2361,6 +2587,20 @@
       "remotes": {
         "origin": "https://github.com/aphrody-labs/embedded_gpui.git",
         "upstream": "https://github.com/zed-industries/embedded_gpui.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/eos": {
+      "path": "third_party/eos",
+      "url": "https://github.com/aphrody-labs/eos.git",
+      "upstream_url": "https://github.com/devphmd/eos.git",
+      "commit": "ec374ff6198fa85ba4c639739f4e5869f4aa6512",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/eos.git",
+        "upstream": "https://github.com/devphmd/eos.git"
       },
       "sparse_paths": null
     },
@@ -2390,6 +2630,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/figcraft": {
+      "path": "third_party/figcraft",
+      "url": "https://github.com/aphrody-labs/figcraft.git",
+      "upstream_url": "https://github.com/storytold/figcraft.git",
+      "commit": "64132ad9e0ff5e14594575d5150e3a47cacdd35b",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/figcraft.git",
+        "upstream": "https://github.com/storytold/figcraft.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/filelock": {
       "path": "third_party/filelock",
       "url": "https://github.com/tox-dev/filelock.git",
@@ -2400,6 +2654,20 @@
       "remotes": {
         "aphrody": "https://github.com/aphrody-labs/filelock.git",
         "origin": "https://github.com/tox-dev/filelock.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/filmcraft": {
+      "path": "third_party/filmcraft",
+      "url": "https://github.com/aphrody-labs/filmcraft.git",
+      "upstream_url": "https://github.com/storytold/filmcraft.git",
+      "commit": "7215e46c8ff42d40bd4aa73f9fb688baf5524b18",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/filmcraft.git",
+        "upstream": "https://github.com/storytold/filmcraft.git"
       },
       "sparse_paths": null
     },
@@ -2775,6 +3043,20 @@
       "remotes": {
         "aphrody": "https://github.com/aphrody-labs/cts.git",
         "origin": "https://github.com/gpuweb/cts.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/gridcraft": {
+      "path": "third_party/gridcraft",
+      "url": "https://github.com/aphrody-labs/gridcraft.git",
+      "upstream_url": "https://github.com/storytold/gridcraft.git",
+      "commit": "19f07f3a25939a70c53471641890b11b82abf3d0",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/gridcraft.git",
+        "upstream": "https://github.com/storytold/gridcraft.git"
       },
       "sparse_paths": null
     },
@@ -3235,6 +3517,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/legendary": {
+      "path": "third_party/legendary",
+      "url": "https://github.com/aphrody-labs/legendary.git",
+      "upstream_url": "https://github.com/legendary-gl/legendary.git",
+      "commit": "170964e75affc0c04be467ec2b12879376738ef5",
+      "branch": "master",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/legendary.git",
+        "upstream": "https://github.com/legendary-gl/legendary.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/lfs": {
       "path": "third_party/lfs",
       "url": "https://github.com/aphrody-labs/lfs.git",
@@ -3261,6 +3557,20 @@
       "remotes": {
         "origin": "https://github.com/aphrody-labs/libcosmic.git",
         "upstream": "https://github.com/pop-os/libcosmic.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/lightcraft": {
+      "path": "third_party/lightcraft",
+      "url": "https://github.com/aphrody-labs/lightcraft.git",
+      "upstream_url": "https://github.com/storytold/lightcraft.git",
+      "commit": "a4676b12497d8a8213fae0dca715c29fef7c3149",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/lightcraft.git",
+        "upstream": "https://github.com/storytold/lightcraft.git"
       },
       "sparse_paths": null
     },
@@ -3482,6 +3792,20 @@
       "remotes": {
         "aphrody": "https://github.com/aphrody-labs/markitdown.git",
         "origin": "https://github.com/microsoft/markitdown.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/materialcraft": {
+      "path": "third_party/materialcraft",
+      "url": "https://github.com/aphrody-labs/materialcraft.git",
+      "upstream_url": "https://github.com/storytold/materialcraft.git",
+      "commit": "627fbedd37ce39b08ecae32c4024974779a080da",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/materialcraft.git",
+        "upstream": "https://github.com/storytold/materialcraft.git"
       },
       "sparse_paths": null
     },
@@ -4183,6 +4507,34 @@
       },
       "sparse_paths": null
     },
+    "third_party/pdfcraft": {
+      "path": "third_party/pdfcraft",
+      "url": "https://github.com/aphrody-labs/pdfcraft.git",
+      "upstream_url": "https://github.com/storytold/pdfcraft.git",
+      "commit": "e191b0ea69b7dcc4e554c1c4e51b6214bec1c590",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/pdfcraft.git",
+        "upstream": "https://github.com/storytold/pdfcraft.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/photocraft": {
+      "path": "third_party/photocraft",
+      "url": "https://github.com/aphrody-labs/photocraft.git",
+      "upstream_url": "https://github.com/storytold/photocraft.git",
+      "commit": "ea6ced03b13d04c5601e5b1947f28e832027be00",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/photocraft.git",
+        "upstream": "https://github.com/storytold/photocraft.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/pi": {
       "path": "third_party/pi",
       "url": "https://github.com/earendil-works/pi.git",
@@ -4803,6 +5155,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/soundcraft": {
+      "path": "third_party/soundcraft",
+      "url": "https://github.com/aphrody-labs/soundcraft.git",
+      "upstream_url": "https://github.com/storytold/soundcraft.git",
+      "commit": "4898ff03eed9c2a44914d2cd2415c1ea9a5e9427",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/soundcraft.git",
+        "upstream": "https://github.com/storytold/soundcraft.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/spacedrive": {
       "path": "third_party/spacedrive",
       "url": "https://github.com/aphrody-labs/spacedrive.git",
@@ -5011,13 +5377,15 @@
     },
     "third_party/steamworks-rs": {
       "path": "third_party/steamworks-rs",
-      "url": "https://github.com/Noxime/steamworks-rs.git",
+      "url": "https://github.com/aphrody-labs/steamworks-rs.git",
+      "upstream_url": "https://github.com/Noxime/steamworks-rs.git",
       "commit": "d8114185613be4dbfe4897c8484d0b2670fd3cd7",
       "branch": "master",
       "engine": "git",
       "pillar": "git",
       "remotes": {
-        "origin": "https://github.com/Noxime/steamworks-rs.git"
+        "origin": "https://github.com/aphrody-labs/steamworks-rs.git",
+        "upstream": "https://github.com/Noxime/steamworks-rs.git"
       },
       "sparse_paths": null
     },
@@ -5178,6 +5546,20 @@
       "remotes": {
         "aphrody": "https://github.com/aphrody-labs/test262.git",
         "origin": "https://github.com/tc39/test262.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/texturecraft": {
+      "path": "third_party/texturecraft",
+      "url": "https://github.com/aphrody-labs/texturecraft.git",
+      "upstream_url": "https://github.com/storytold/texturecraft.git",
+      "commit": "cce9adafb84f1c1759888fb9e6ff9d7f15200e30",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/texturecraft.git",
+        "upstream": "https://github.com/storytold/texturecraft.git"
       },
       "sparse_paths": null
     },
@@ -6934,6 +7316,20 @@
       },
       "sparse_paths": null
     },
+    "third_party/vectorcraft": {
+      "path": "third_party/vectorcraft",
+      "url": "https://github.com/aphrody-labs/vectorcraft.git",
+      "upstream_url": "https://github.com/storytold/vectorcraft.git",
+      "commit": "26c137334ba32193e736382f85aa3cf161c328bc",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/vectorcraft.git",
+        "upstream": "https://github.com/storytold/vectorcraft.git"
+      },
+      "sparse_paths": null
+    },
     "third_party/vello": {
       "path": "third_party/vello",
       "url": "https://github.com/linebender/vello.git",
@@ -7322,6 +7718,20 @@
       "remotes": {
         "aphrody": "https://github.com/aphrody-labs/wireguard-windows.git",
         "origin": "https://github.com/WireGuard/wireguard-windows.git"
+      },
+      "sparse_paths": null
+    },
+    "third_party/wordcraft": {
+      "path": "third_party/wordcraft",
+      "url": "https://github.com/aphrody-labs/wordcraft.git",
+      "upstream_url": "https://github.com/storytold/wordcraft.git",
+      "commit": "cc90520b9d8fb0d1e6be2c2688e6f915319e850a",
+      "branch": "main",
+      "engine": "git",
+      "pillar": "git",
+      "remotes": {
+        "origin": "https://github.com/aphrody-labs/wordcraft.git",
+        "upstream": "https://github.com/storytold/wordcraft.git"
       },
       "sparse_paths": null
     },

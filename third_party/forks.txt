@@ -175,3 +175,33 @@ PurpleDoubleD/locally-uncensored TypeScript
 tokio-rs/axum Rust
 tower-rs/tower Rust
 tower-rs/tower-http Rust
+storytold/artcraft-services 
+storytold/craft-extensions 
+storytold/photocraft Rust
+storytold/craft-launcher Rust
+storytold/anicraft Rust
+storytold/figcraft Rust
+storytold/materialcraft Rust
+storytold/craft-libs Rust
+storytold/pdfcraft Rust
+storytold/cadcraft Rust
+storytold/effectcraft Rust
+storytold/craft-i18n 
+storytold/lightcraft Rust
+storytold/wordcraft Rust
+storytold/craft-ai-integrations Rust
+storytold/texturecraft Rust
+storytold/gridcraft Rust
+storytold/craft-fonts 
+bevyengine/bevy Rust
+storytold/artcraftx 
+storytold/soundcraft Rust
+storytold/vectorcraft Rust
+storytold/craft-anything Rust
+storytold/filmcraft Rust
+storytold/deckcraft Rust
+storytold/designcraft Rust
+legendary-gl/legendary Python
+Noxime/steamworks-rs Rust
+HouraiTeahouse/bevy_steamworks Rust
+devphmd/eos Rust
