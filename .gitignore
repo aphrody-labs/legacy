@@ -42,6 +42,10 @@ graphify-out/
 !/kernel/
 !/hardware/
 !/build/
+# Bun codegen and build outputs land in build/ too
+/build/debug*/
+/build/release*/
+/build/ci-target/
 !/device/
 !/prebuilts/
 !/tools/
