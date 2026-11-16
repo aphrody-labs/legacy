@@ -48,7 +48,7 @@ OAuth app and the contact section of `aphrody.com` (`identity.toml` `[contact]`)
 
 - Never in the repository, logs or reports: real name, personal mailbox, phone, postal address, photo. Personal
   Google accounts are vault keys (`APHRODY_OWNER_GOOGLE_ACCOUNT`, `APHRODY_AI_GOOGLE_ACCOUNT`), read by
-  `personalAccount()` (packages/env-kit/src/accounts.ts); gcloud configurations are `owner` and `ai-agent`.
+  `personalAccount()` (system/env-kit/src/accounts.ts); gcloud configurations are `owner` and `ai-agent`.
 - Commits: `aphrody-dev <324927936+aphrody-dev@users.noreply.github.com>` on the PC and on every fleet user.
 - Inbound mail: OVH MX today; Cloudflare Email Routing rules for the three addresses are declared in
   `device/cloudflare/cloudflare.toml` (`[email_routing]`, `bun device/cloudflare/cf.ts plan email`).

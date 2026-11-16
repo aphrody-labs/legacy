@@ -26,7 +26,7 @@ import {
   type OperationAtelier,
 } from "@auto/services/atelier";
 import type { BunRequest } from "bun";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import { avecId, brut, enumere, liste, objet, op, str, uuid, type Schema } from "../openapi-outils";
 function segment(s: unknown, permis: readonly string[]): string {
   if (typeof s !== "string" || !permis.includes(s)) throw new ErreurApi("segment_forbidden", [], 403);

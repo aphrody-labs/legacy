@@ -8,7 +8,7 @@ unixwin-status:
 # Missing unixwin clones (forks.ts), then pins in src.lock.json
 [group('unixwin')]
 unixwin-sync:
-    bun "{{root}}/packages/machine/src/forks.ts" niubash rubash WinuxCmd niu-git ruline oh-my-niu shellbench diffcorpus wpm-source wpm-artifacts winuxcmd-i18n winuxsh-profiles unixwin-github unixwin-apt unixwin.dev wpm-gui
+    bun "{{root}}/system/machine-ts/src/forks.ts" niubash rubash WinuxCmd niu-git ruline oh-my-niu shellbench diffcorpus wpm-source wpm-artifacts winuxcmd-i18n winuxsh-profiles unixwin-github unixwin-apt unixwin.dev wpm-gui
     bun "{{root}}/device/os/unixwin/unixwin.ts" lock
 
 # niu (niubash + rubash at the pins) built on prd: nice -n 19, 4 tasks, cargo xwin for Windows
@@ -34,4 +34,4 @@ unixwin-test-fr1 filter:
 # End-to-end Bun suite (niubash, rubash, WinuxCmd) against GNU bash and uutils
 [group('unixwin')]
 unixwin-test:
-    bun test "{{root}}/packages/machine/matrix/test/unixwin"
+    bun test "{{root}}/system/machine-ts/matrix/test/unixwin"

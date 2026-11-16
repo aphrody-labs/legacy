@@ -14,7 +14,7 @@ Rules for Axum 0.8 services, checked against the aphrody-labs forks (`third_part
 ## When to Apply
 
 - Adding or changing a route, extractor, middleware or server setup in a crate that depends on `axum`.
-- Porting a route from the Shenron TypeScript host (`../shenron/packages/api`) to `../shenron/crates/shenron-api`. The golden cases are in `../shenron/data/api/fixtures`; see `../shenron/docs/decisions/0004-migration-typescript-rust.md`.
+- Porting a route from the Shenron TypeScript host (`../shenron/frameworks/api`) to `../shenron/crates/shenron-api`. The golden cases are in `../shenron/data/api/fixtures`; see `../shenron/docs/decisions/0004-migration-typescript-rust.md`.
 - Reviewing an HTTP service for limits, error envelopes, CORS or layer order.
 
 ## Rule Categories by Priority

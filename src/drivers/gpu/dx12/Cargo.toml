@@ -7,7 +7,7 @@ edition.workspace = true
 authors.workspace = true
 license.workspace = true
 
-# rlib for wslg-cli and smithay-wayland-wire; cdylib `dx12_hal.dll` for bun:ffi (packages/ffi-bridge, apps/nt).
+# rlib for wslg-cli and smithay-wayland-wire; cdylib `dx12_hal.dll` for bun:ffi (system/ffi-bridge, apps/nt).
 [lib]
 crate-type = ["rlib", "cdylib"]
 

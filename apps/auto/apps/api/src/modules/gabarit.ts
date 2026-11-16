@@ -1,9 +1,9 @@
 // Batch L4: per-tenant document template (accent color, logo, footer).
 import { ErreurApi, refus } from "../i18n";
 import { enregistrerGabarit, enregistrerLogo, ErreurMetier, lireGabarit, withTenant } from "@auto/store";
-import type { Module } from "../modules";
+import type { Module } from ".";
 import { brut, objet, op, str } from "../openapi-outils";
-import type { Chemins } from "../modules";
+import type { Chemins } from ".";
 
 /** Maximum width of the stored logo (pixels): enough for print at 48 pt high. */
 const LARGEUR_LOGO = 600;

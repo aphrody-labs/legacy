@@ -38,4 +38,4 @@ just android-x64                                                 # all of the ab
 
 ## Skills
 
-Official skills come from `android/skills` through `bun packages/ai-os/src/google/absorb.ts skills --write` into `.agents/skills/android-*` (single source); `android skills list` and `android skills find` show what the CLI itself offers.
+Official skills come from `android/skills` through `bun frameworks/ai-os/src/google/absorb.ts skills --write` into `.agents/skills/android-*` (single source); `android skills list` and `android skills find` show what the CLI itself offers.

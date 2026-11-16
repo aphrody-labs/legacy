@@ -5,7 +5,7 @@
 //! and the `appinfo.vdf` / `packageinfo.vdf` container readers.
 //!
 //! Pure functions over `&str` / `&[u8]`: no filesystem access, usable from `wasm32`. The Bun
-//! counterpart is `packages/bun-steam/src/vdf.ts`; both parse the shared fixtures in
+//! counterpart is `system/bun-steam/src/vdf.ts`; both parse the shared fixtures in
 //! `crates/bun-steam/tests/fixtures`.
 
 use serde::{Deserialize, Serialize};

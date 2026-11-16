@@ -11,7 +11,7 @@ import {
   PRODUCTS,
   type HoldingLocale as Locale,
 } from "../holding/page";
-import { catalogs } from "../../../../packages/i18n/src/index.ts";
+import { catalogs } from "../../../../frameworks/i18n-ts/src/index.ts";
 
 /** Route of the home page per locale: fr at the root, the others under /<locale>. */
 const localizedPath = (path: string, l: Locale): string =>

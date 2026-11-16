@@ -1,5 +1,5 @@
 # Manifeste versionné de l'outillage agent (Claude Code, Codex, agy, OpenCode, Pi, Gemini CLI ; PC et flotte). Toute installation passe ici ;
-# applier : packages/machine/src/toolchain.ts (`ay agents install|sync|check|list`).
+# applier : system/machine-ts/src/toolchain.ts (`ay agents install|sync|check|list`).
 # Nettoyé le 2026-11-14 : plugins de skills tiers désinstallés ; les skills utiles (dont android-*, issues de android/skills) sont versionnées dans .agents/skills et servies par `aphrody-skills`. Outils AI : `relay`, `agent-desktop`, `agent-browser`.
 
 # Global Claude Code config, versioned in tools/agents/claude ({src} and {home} substituted).
@@ -177,9 +177,9 @@ state = "absent"
 name = "relay"
 url = "http://127.0.0.1:8790/mcp/core"
 shared_url = "http://127.0.0.1:8790/mcp"
-headers_helper = "bun {src}/packages/ai-os/src/relay/headers.ts"
+headers_helper = "bun {src}/frameworks/ai-os/src/relay/headers.ts"
 # agy has neither verifiable OAuth nor a header without a plaintext secret: same server over stdio, without authorization.
-stdio_command = ["bun", "{src}/packages/ai-os/src/relay/cli.ts", "mcp-stdio"]
+stdio_command = ["bun", "{src}/frameworks/ai-os/src/relay/cli.ts", "mcp-stdio"]
 hosts = ["pc"]
 
 [[claude.mcp]]
@@ -236,33 +236,33 @@ headers = { CONTEXT7_API_KEY = "CTX7_API_KEY" }
 # registry__npm_search | registry__npm_info. Library docs come from context7; every host runs it with its own bun.
 [[hub.mcp]]
 name = "registry"
-command = ["bun", "{src}/packages/ai-os/src/relay/registry-mcp.ts"]
+command = ["bun", "{src}/frameworks/ai-os/src/relay/registry-mcp.ts"]
 
-# GNU upstream tracker (packages/gnu feed: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix, Rust equivalents, Linux kernel).
+# GNU upstream tracker (system/gnu-ts feed: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix, Rust equivalents, Linux kernel).
 # hub_call gnu__gnu_status | gnu__gnu_search | gnu__gnu_package | gnu__gnu_feed | gnu__gnu_kernel; feed from GNU_FEED, GNU_HOME or https://gnu.aphrody.com/feed.json.
 [[hub.mcp]]
 name = "gnu"
-command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/gnu-mcp.ts"]
+command = ["{home}/.bun/bin/bun.exe", "{src}/frameworks/ai-os/src/relay/gnu-mcp.ts"]
 hosts = ["pc"]
 
 # Electron migration toolkit (src/electron-migrate through `ay electron`): analyze, migrate to Tauri v3 or GPUI, optimize, bench.
 # hub_call electron__electron_analyze | electron__electron_migrate | electron__electron_optimize | electron__electron_bench; AY_BIN overrides `ay`.
 [[hub.mcp]]
 name = "electron"
-command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/electron-mcp.ts"]
+command = ["{home}/.bun/bin/bun.exe", "{src}/frameworks/ai-os/src/relay/electron-mcp.ts"]
 hosts = ["pc"]
 
-# py2bun: Python to Bun TypeScript transpiler (packages/py2bun, crate src/py2bun). hub_call py2bun__py2bun_transpile.
+# py2bun: Python to Bun TypeScript transpiler (system/py2bun-ts, crate src/py2bun). hub_call py2bun__py2bun_transpile.
 [[hub.mcp]]
 name = "py2bun"
-command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/py2bun-mcp.ts"]
+command = ["{home}/.bun/bin/bun.exe", "{src}/frameworks/ai-os/src/relay/py2bun-mcp.ts"]
 hosts = ["pc"]
 
 # unixwin fusion: applet providers, the ay plugin manifest, the oh-my-niu bundle validator, the embedded Bash engine.
 # hub_call unixwin__unixwin_applets | unixwin__unixwin_plugin_manifest | unixwin__unixwin_validate_bundle | unixwin__unixwin_sh; AY_BIN overrides `ay`.
 [[hub.mcp]]
 name = "unixwin"
-command = ["{home}/.bun/bin/bun.exe", "{src}/packages/ai-os/src/relay/unixwin-mcp.ts"]
+command = ["{home}/.bun/bin/bun.exe", "{src}/frameworks/ai-os/src/relay/unixwin-mcp.ts"]
 hosts = ["pc"]
 
 # Hardcode and slop scanner (scripts/hygiene.ts). hub_call hygiene__hygiene_scan | hygiene__hygiene_rules.

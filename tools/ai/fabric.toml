@@ -1,5 +1,5 @@
 # Distributed inference fabric (llama.cpp RPC): a coordinator llama-server on the PC's GPU, ggml-rpc-server on
-# the other hosts, reached only over WireGuard. Read by packages/ai-os/src/fabric
+# the other hosts, reached only over WireGuard. Read by frameworks/ai-os/src/fabric
 # (`ai-os fabric up|status|down`, `ay ai fabric ...`).
 #
 # [release]  official ggml-org/llama.cpp binaries, fingerprints = `digest` of the GitHub assets API

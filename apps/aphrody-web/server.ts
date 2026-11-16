@@ -262,7 +262,7 @@ export const server = serve({
     }
 
     // 12. No-JavaScript search results page (noindex)
-    // The former AI mode pages are gone for good (AI features live only in packages/ai-os).
+    // The former AI mode pages are gone for good (AI features live only in frameworks/ai-os).
     if (
       pathname === "/search/ai-gemini" ||
       pathname === "/en/search/ai-gemini"

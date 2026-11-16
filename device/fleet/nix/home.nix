@@ -2,7 +2,7 @@
 { pkgs, ... }:
 let
   # Copied as is into the store: the relative paths of the configs (../env.nu, status dirname) stay valid.
-  shells = ../../../packages/machine/shells;
+  shells = ../../../system/machine-ts/shells;
 in
 {
   home.stateVersion = "25.11";

@@ -23,7 +23,7 @@ import { dossierSource, racinesFichiers, synchroniserSource } from "@auto/servic
 import { deposerDevis, reextraireDevis } from "@auto/services/devis-recus";
 import { lireDepot } from "@auto/services/ingest";
 import type { BunRequest } from "bun";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import { avecId, brut, objet, op, liste, str, uuid, enumere, ref, type Schema } from "../openapi-outils";
 function decoder(v: string) {
   try {

@@ -27,8 +27,8 @@ metadata:
     - Vulnerability
 ---
 
-> Mirror generated from android/skills (android-skills/security/android-intent-security) by `bun packages/ai-os/src/google/absorb.ts skills --write`; do not edit here.
-> In src: entry skill `.agents/skills/android-ndk-compose/SKILL.md`, Material 3 Expressive tokens `packages/design/tokens/adapters/Theme.kt`,
+> Mirror generated from android/skills (android-skills/security/android-intent-security) by `bun frameworks/ai-os/src/google/absorb.ts skills --write`; do not edit here.
+> In src: entry skill `.agents/skills/android-ndk-compose/SKILL.md`, Material 3 Expressive tokens `frameworks/design/tokens/adapters/Theme.kt`,
 > Pure C11/JNI/NDK ABI `src/include/ay/sys.h` (`src/include/uapi/ay/ui.h`, `libaysys.so`). JS/TS: bun only.
 
 This skill provides guidelines and patterns to secure Android components

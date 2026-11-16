@@ -182,7 +182,7 @@ try {
     [
       "bun",
       "run",
-      join(import.meta.dir, "../../packages/env-kit/src/cli.ts"),
+      join(import.meta.dir, "../../system/env-kit/src/cli.ts"),
       "secret",
       "set",
       "AOP_CA_KEY",

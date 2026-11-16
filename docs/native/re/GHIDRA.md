@@ -32,7 +32,7 @@ Legacy demangler hardening, `RustTypes`, `RustPanicAnalyzer` (fork commits 783fb
 
 ## bun ghidra
 
-`packages/ghidra` (`@aphrody/ghidra`), `src/ghidra-bun`, parity in `packages/ghidra/PARITY.md`; python-to-bun in `packages/py2bun`. API, plugin and script surface: `packages/ghidra/README.md`.
+`packages/ghidra` (`@aphrody/ghidra`), `src/ghidra-bun`, parity in `packages/ghidra/PARITY.md`; python-to-bun in `system/py2bun-ts`. API, plugin and script surface: `packages/ghidra/README.md`.
 
 ### Backends and why
 

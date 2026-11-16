@@ -1,7 +1,7 @@
 # Gemini review: Ghidra deliverables (2026-11-15)
 
-- Reviewer: Gemini through the relay tool `gemini_review` (`packages/ai-os/src/relay/tools.ts:121`), default engine Antigravity `agy` (`packages/ai-os/src/relay/backends.ts:174`, `RELAY_GEMINI` unset). The relay did not fail, so the gemini.google.com fallback was not used. The relay returns neither a chat URL nor the model name: "Carbon High" cannot be confirmed from the relay output.
-- Scope: `docs/native/re/GHIDRA.md`, `packages/ghidra`, `packages/py2bun`, `src/ghidra-bun`, `src/py2bun`; commits d2a9d994, 55193ac0, d18f303f, 07972ae4, ed2e0142, 78c7c0ac, 20cd22c4, c41d98c5, f140055b, 24aa7d35.
+- Reviewer: Gemini through the relay tool `gemini_review` (`frameworks/ai-os/src/relay/tools.ts:121`), default engine Antigravity `agy` (`frameworks/ai-os/src/relay/backends.ts:174`, `RELAY_GEMINI` unset). The relay did not fail, so the gemini.google.com fallback was not used. The relay returns neither a chat URL nor the model name: "Carbon High" cannot be confirmed from the relay output.
+- Scope: `docs/native/re/GHIDRA.md`, `packages/ghidra`, `system/py2bun-ts`, `src/ghidra-bun`, `src/py2bun`; commits d2a9d994, 55193ac0, d18f303f, 07972ae4, ed2e0142, 78c7c0ac, 20cd22c4, c41d98c5, f140055b, 24aa7d35.
 - Method: the 120 000-character cap of `gemini_review` required 10 bundles (files with line numbers, one call each). Verification of each reported defect against the code: reviewer (sections 1, 2b and 5b, plus fork state read over ssh on fr1) and read-only headless Claude verifiers (Read/Grep/Glob) for sections 2a, 3a, 3b, 4a, 4b, 5a, 6a, 6b, each followed by reviewer spot checks (`rpc.ts:85`, `emit.rs:1461-1463`, `json.ts:20`, `re.ts:68`, `Bridge.java:327,345`, `py2.rs:71`, `cli.ts:8`).
 - Scores (Gemini): docs 11, 2a Bridge.java 8, 2b native crate and scripts 8, 3a ghidra core 11, 3b ghidra rest 11, 4a emit.rs 1-860 11, 4b emit.rs 861-1942 9, 5 py2bun Rust rest 9 (second call; the first answered with a plan and no score), 6a runtime index.ts 6, 6b runtime rest 11. **Mean 9.5/20.**
 - Verdict counts (rows, sub-claims counted separately): 309 confirmed, 81 partial, 17 refuted.
@@ -9,7 +9,7 @@
 
 ## Fixed (2026-11-15, regression test per fix; commits 5d180347, b2c2899b, fc4c79db, 3daa49a2, dabd4979, d44622cf, 4c404a62, 4e0fa08e, eb85763c, b1ee291a, 4ebda615, 21e813dd, 20d0493c)
 
-Checks: `cargo test` py2bun on fr2 (31 transpile + 8 py2_fallback + 6 async), `bun test packages/py2bun/test` with the fresh binary on fr2 (41 pass), `bun test packages/ghidra` (23 pass, 0 fail), `tsc --strict` clean on `packages/ghidra` (fr2), `Bridge.java` protocol test on fr2 (JDK only), `cargo check` of `src/ghidra-bun` default features on fr1 (no error; `decompile` feature not built), corpus re-run on 146 Ghidra `.py` files: 144 valid TS, 36 without error diagnostic (unchanged vs before).
+Checks: `cargo test` py2bun on fr2 (31 transpile + 8 py2_fallback + 6 async), `bun test system/py2bun-ts/test` with the fresh binary on fr2 (41 pass), `bun test packages/ghidra` (23 pass, 0 fail), `tsc --strict` clean on `packages/ghidra` (fr2), `Bridge.java` protocol test on fr2 (JDK only), `cargo check` of `src/ghidra-bun` default features on fr1 (no error; `decompile` feature not built), corpus re-run on 146 Ghidra `.py` files: 144 valid TS, 36 without error diagnostic (unchanged vs before).
 
 - Section 2a (Bridge.java): rows 1, 2.x, 3.x, 4.x, 5, 6, 7.x, 8, 9, 10, 11.x, 12.x, 13.2, 14.x fixed (InlineList, reqHandle, idJson, parser hardening, BigInteger/Float, ties by specificity, exit on EOF, `layout` op). 13.1 refuted (unchanged).
 - Section 2b: rows 3 (name@addr keys, errors reported, `decompile_many` opens once), 4 (documented), 5 (catch_unwind, stub read errors logged), 6, 7, 9, 10, 11, 12 fixed. Rows 1, 2, 8 need the crate promoted to the root workspace (the root `Cargo.toml` members may not be edited by this task); row 13 (`gen-script-exports` types) stays: `Flat` is itself indexed by `any` functions.
@@ -33,8 +33,8 @@ Checks: `cargo test` py2bun on fr2 (31 transpile + 8 py2_fallback + 6 async), `b
 8. `json.ts:20`: `dumps` rewrites `,` and `:` inside string literals. `re.ts:68`: `re.split(p, s, maxsplit)` signature wrong. `format.ts:165`: `%X` emits lowercase. `index.ts:1010-1020,1115-1118`, `index.ts:229-234` (`pow` modular), `index.ts:259` (`eq` bigint/number): Python-semantics divergences.
 9. `py2.rs:71,67-69`: a bare `print` statement is not rewritten and `py2_fallback.rs:11` asserts 3 rewrites for 4 statements (the test encodes the bug). `py2.rs:154,169`: continuation rewrite puts `)` after a trailing comment. `py2.rs:112`: `except (A, B), e:` refused. `main.rs:46`: Rust `{:?}` produces invalid JSON (`\u{1b}`) and `index.ts:43` swallows the parse error.
 10. Docs: `GHIDRA.md:7` states no Chromium clang exists on fr1 (clang 24.0.0git is there, dated 2026-11-12); `provision-fr2.sh:2,6` installs JDK 21 while `README.md:7` requires JDK 25; `GHIDRA.md:41` presents the Rust fast path as the `ghidra-decompiler` 2.1.0 engine although the default build and `src/ffi` do not enable `decompile`.
-11. Defect found by the reviewer, not reported by Gemini: `packages/py2bun/src/cli.ts:8`: with no `-o`, `oi` is -1 so `i !== oi + 1` excludes index 0 and `py2bun script.py` prints the usage and exits 2. Fix: `i !== (oi >= 0 ? oi + 1 : -1)`.
-12. Reviewer correction to a verifier row: section 4a row 20.2 says `__py.aiter` is missing from the runtime; it is defined at `packages/py2bun/src/runtime/async.ts:19` and re-exported by `runtime/index.ts:1123`. Only the missing `aiter` wrapper for `async for` (`emit.rs:827-828`) stands.
+11. Defect found by the reviewer, not reported by Gemini: `system/py2bun-ts/src/cli.ts:8`: with no `-o`, `oi` is -1 so `i !== oi + 1` excludes index 0 and `py2bun script.py` prints the usage and exits 2. Fix: `i !== (oi >= 0 ? oi + 1 : -1)`.
+12. Reviewer correction to a verifier row: section 4a row 20.2 says `__py.aiter` is missing from the runtime; it is defined at `system/py2bun-ts/src/runtime/async.ts:19` and re-exported by `runtime/index.ts:1123`. Only the missing `aiter` wrapper for `async for` (`emit.rs:827-828`) stands.
 
 ## 1. Docs: GHIDRA.md, PARITY.md, README.md (Gemini 11/20, 25 defects; verified by the reviewer)
 
@@ -294,14 +294,14 @@ The `score` row is Gemini's justification claims (type-check failures, parity in
 | 25.4 | CONFIRMED | emit.rs:408 `user_funcs` holds top-level functions only, but 1837 `self.lookup(nm)` is also true for a local that shadows the name | Apply only when `nm` resolves in the module scope (`scopes[0]`) and in no inner scope |
 | 26 | CONFIRMED | emit.rs:1928 `c == '_' && i > 0` gives `__init__` -> `_Init`, `foo__bar` -> `fooBar`, `foo_` -> `foo`; 1529 has no `ident()` | Keep leading/trailing `_` and dunders, convert only internal `_[a-z0-9]`, wrap the result in `ident()` |
 
-## 5a. src/py2bun Rust rest and packages/py2bun CLI/wrapper/packaging (first call: plan with 16 defects, no score)
+## 5a. src/py2bun Rust rest and system/py2bun-ts CLI/wrapper/packaging (first call: plan with 16 defects, no score)
 
 | # | verdict | evidence (file:line) | fix |
 |---|---|---|---|
-| 1.1 | CONFIRMED | packages/py2bun/src/cli.ts:5-8: seuls `-o` et un fichier positionnel sont lus. Aucun support de stdin, `--output`, `--strict`, `--json`, `--async`, `--sync` ni `-h`. | Analyser les mêmes options que main.rs et les transmettre au binaire. |
+| 1.1 | CONFIRMED | system/py2bun-ts/src/cli.ts:5-8: seuls `-o` et un fichier positionnel sont lus. Aucun support de stdin, `--output`, `--strict`, `--json`, `--async`, `--sync` ni `-h`. | Analyser les mêmes options que main.rs et les transmettre au binaire. |
 | 1.2 | CONFIRMED | cli.ts:7 `args[oi + 1]` vaut `undefined` si `-o` est le dernier argument, donc la sortie part sur stdout. Avec `--foo bar`, `bar` devient l'entrée via `find` (L8). | Exiger une valeur après `-o`, rejeter les flags inconnus et sortir en code 2. |
 | 1.3 | CONFIRMED | cli.ts:11 appelle `process.exit(2)`. | Remplacer par `process.exitCode = 2` suivi d'un `return` ou d'un bloc `else`. |
-| 2.1 | CONFIRMED | packages/py2bun/src/index.ts:35 : la signature est `transpile(source, bin)` et le spawn L37 n'a pas de mode. | Ajouter un paramètre `mode` qui ajoute `--async` ou `--sync` aux arguments du spawn. |
+| 2.1 | CONFIRMED | system/py2bun-ts/src/index.ts:35 : la signature est `transpile(source, bin)` et le spawn L37 n'a pas de mode. | Ajouter un paramètre `mode` qui ajoute `--async` ou `--sync` aux arguments du spawn. |
 | 2.2 | CONFIRMED | index.ts:37-46 : ni `p.exitCode` ni `p.signalCode` ne sont lus. Les lignes `py2bun: ...` sont ignorées (L40). | Si `exitCode` vaut 2 ou si un signal est présent, lever une erreur contenant le stderr brut. |
 | 2.3 | REFUTED | src/py2bun/src/main.rs:45 : `eprintln!` émet `\n`, pas CRLF, et `JSON.parse` tolère de toute façon un `\r` final. | - |
 | 3.1 | CONFIRMED | main.rs:14 `out = it.next()` donne `None` silencieusement si `-o` est le dernier argument. | Écrire `it.next()` ou afficher l'usage et retourner `ExitCode::from(2)`. |
@@ -310,7 +310,7 @@ The `score` row is Gemini's justification claims (type-check failures, parity in
 | 3.4 | CONFIRMED | main.rs:4 : `USAGE` indique `py2bun` alors que le binaire s'appelle `py2bun-rs` (Cargo.toml:17), et ne mentionne pas `--output`. | Écrire `usage: py2bun-rs ... [-o|--output OUT]`. |
 | 3.5 | PARTIAL | main.rs:56 `syntax_fail = res.ts.is_empty()` : c'est un couplage implicite, pas un bug observé. | Ajouter `syntax_error: bool` dans `Output`. |
 | 3.6 | CONFIRMED | main.rs:66 `let _ = ...write_all(...)` : l'erreur d'écriture est ignorée et le code de sortie est 0. | Sur une erreur autre que `BrokenPipe`, écrire sur stderr et retourner le code 2. |
-| 4.1 | CONFIRMED | packages/py2bun/python/py2bun/cli.py:10-13 : pas de `--async`, `--sync` ni `--json`, et L16 appelle `transpile_with_diagnostics(src)` sans mode. | Ajouter `--async` et `--sync` (transmis comme `mode`) ainsi que `--json`. |
+| 4.1 | CONFIRMED | system/py2bun-ts/python/py2bun/cli.py:10-13 : pas de `--async`, `--sync` ni `--json`, et L16 appelle `transpile_with_diagnostics(src)` sans mode. | Ajouter `--async` et `--sync` (transmis comme `mode`) ainsi que `--json`. |
 | 4.2 | CONFIRMED | cli.py:15 `open(...).read()` sans `with` et sans `try`. Un `OSError` ou un `UnicodeDecodeError` produit une traceback et le code 1. Même problème pour L21. | Utiliser `with open` et `try/except (OSError, UnicodeDecodeError)`, puis afficher un message et retourner 2. |
 | 5.1 | PARTIAL | src/py2bun/src/pymod.rs:1 omet `mode`. En revanche, l'affirmation sur L15 est fausse : emit.rs:385 émet bien `// py2bun {d}`. | Corriger seulement L1 : `transpile(source, mode="auto") -> str`. |
 | 5.2 | CONFIRMED | pymod.rs:22-23 : seul `diagnostics.first()` est gardé et l'exception levée est `PyValueError`. | Joindre tous les diagnostics et lever `PySyntaxError`. |
@@ -331,8 +331,8 @@ The `score` row is Gemini's justification claims (type-check failures, parity in
 | 14 | PARTIAL | names.rs:50-58 et 103-111 contiennent des lignes vides doublées, mais en Rust les `///` restent attachés à l'item : c'est cosmétique. | Supprimer les lignes vides. |
 | 15.1 | PARTIAL | Le Cargo.toml racine (L12 `members`, L230 `exclude`) ne mentionne pas `src/py2bun`. src/py2bun/Cargo.toml:1-3 déclare son propre `[workspace]`, donc il n'y a pas de conflit Cargo, seulement un `target/` séparé. | Ajouter `src/py2bun` aux `members` racine et supprimer son `[workspace]`. |
 | 15.2 | CONFIRMED | src/py2bun/Cargo.toml:14 `crate-type = ["rlib", "cdylib"]` : la `cdylib` est compilée même sans la feature `python`. | Garder seulement `rlib` et passer `--crate-type cdylib` dans la configuration maturin. |
-| 16.1 | CONFIRMED | packages/py2bun/package.json:1-16 : aucune `devDependencies` ni `peerDependencies`. | Ajouter `"devDependencies": {"@types/bun": "latest"}` et `"peerDependencies": {"@aphrody/ghidra": "workspace:*"}`. |
-| 16.2 | CONFIRMED | package.json:10 `"./runtime/*"` expose aussi `async.ts` et `format.ts`, qui sont dans packages/py2bun/src/runtime mais pas dans `STDLIB`. | Lister explicitement les modules de `STDLIB` dans `exports`. |
+| 16.1 | CONFIRMED | system/py2bun-ts/package.json:1-16 : aucune `devDependencies` ni `peerDependencies`. | Ajouter `"devDependencies": {"@types/bun": "latest"}` et `"peerDependencies": {"@aphrody/ghidra": "workspace:*"}`. |
+| 16.2 | CONFIRMED | package.json:10 `"./runtime/*"` expose aussi `async.ts` et `format.ts`, qui sont dans system/py2bun-ts/src/runtime mais pas dans `STDLIB`. | Lister explicitement les modules de `STDLIB` dans `exports`. |
 
 ## 5b. Same bundle, second call: Gemini 9/20 (15 defects; verified by the reviewer)
 
@@ -354,7 +354,7 @@ The `score` row is Gemini's justification claims (type-check failures, parity in
 | 14 | Test asserts 3 rewrites for 4 statements, hiding a bare-`print` bug | Confirmed | `py2_fallback.rs:5,11`; `py2.rs:70-72`: `rest` empty fails `starts_with([' ','\t'])` and returns `None`, so `print` stays a no-op expression. | Rewrite bare `print` to `print()` and assert 4. |
 | 15 | `FLAT_AMBIGUOUS` misaligned with `GHIDRA_FLAT` | Confirmed | `names.rs:104` lists four dead names; `run` (`:94`) and `find` (`:69`) are in `GHIDRA_FLAT` and not ambiguous; `emit.rs:239` sets `ghidra_hit` for any flat name, which forces async mode (`emit.rs:418`). | Move `run`, `find` to the ambiguous list; drop dead names. |
 
-## 6a. packages/py2bun/src/runtime/index.ts: Gemini 6/20, defects 1-22
+## 6a. system/py2bun-ts/src/runtime/index.ts: Gemini 6/20, defects 1-22
 
 | # | verdict | evidence (file:line) | fix |
 |---|---|---|---|

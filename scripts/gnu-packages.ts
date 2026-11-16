@@ -6,7 +6,7 @@
 //           c = C source of the GSRC tarball built by our LLVM toolchain; upstream = taken from the distro or not carried.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadGsrc } from "../packages/gnu/src/store.ts";
+import { loadGsrc } from "../system/gnu-ts/src/store.ts";
 import { cmpVer, gsrcId, inventoryName } from "../tools/gnu-index/ids.ts";
 
 const root = join(import.meta.dir, "..");

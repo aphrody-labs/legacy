@@ -341,8 +341,8 @@ const panel = (x: number, y: number, w: number, h: number, c: RGB, a = 0.85) =>
   sprite(true, x, y, 0, w, h, 0, 0, SOLID, c, a);
 
 // --- Couleurs ------------------------------------------------------------------------------------------------------------
-// Chrome (text, backgrounds, plates, titles) = dark M3 roles of the brand (packages/design, Material Color Utilities from
-// packages/design/design.toml); data colors (user, kernel, DPC, ISR, states, waits) remain a visualization palette.
+// Chrome (text, backgrounds, plates, titles) = dark M3 roles of the brand (frameworks/design, Material Color Utilities from
+// frameworks/design/design.toml); data colors (user, kernel, DPC, ISR, states, waits) remain a visualization palette.
 const hex = (h: string): RGB => [
   Number.parseInt(h.slice(1, 3), 16) / 255,
   Number.parseInt(h.slice(3, 5), 16) / 255,

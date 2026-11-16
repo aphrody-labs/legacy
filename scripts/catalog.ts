@@ -4,7 +4,7 @@
 //   bun scripts/catalog.ts --check         exit 1 listing the outputs that differ from the tree (CI)
 //   bun scripts/catalog.ts --base <ref> --out-dir <dir>  read the hand-written text from a git ref, write elsewhere
 //   bun scripts/catalog.ts --lock <file>   read the third-party pins from another src.lock.json
-//   bun scripts/catalog.ts --locale <tag>  text language (default: the source locale of packages/i18n/i18n.config.json)
+//   bun scripts/catalog.ts --locale <tag>  text language (default: the source locale of frameworks/i18n-ts/i18n.config.json)
 //   bun scripts/catalog.ts profile <id> [--out <file>] [--check]
 //                                          a GitHub profile README ranked live from the GitHub API (scripts/catalog.config.json)
 //
@@ -17,7 +17,7 @@
 //   - docs/reference/catalog/<type>.md, one index per type;
 //   - apps/web/public/catalog.json, read by apps/web/build.ts (the site pages).
 // Nothing is typed here: no version, count or date goes into a text, the text comes from the i18n catalogs
-// (packages/i18n/catalogs/catalog/<locale>.json, same format and fallback chain as @aphrody/i18n; this file has no
+// (frameworks/i18n-ts/catalogs/catalog/<locale>.json, same format and fallback chain as @aphrody/i18n; this file has no
 // dependency so a profile repository can run it from a sparse checkout).
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
@@ -37,9 +37,9 @@ const dirs = (p: string) => (isDir(p) ? readdirSync(join(root, p), { withFileTyp
 const toml = (p: string) => Bun.TOML.parse(read(p)) as Record<string, any>;
 
 // ---------------------------------------------------------------------------------------------
-// i18n: the catalogs of packages/i18n, resolved the way @aphrody/i18n does (exact tag, language, source locale)
+// i18n: the catalogs of frameworks/i18n-ts, resolved the way @aphrody/i18n does (exact tag, language, source locale)
 
-const i18nDir = "packages/i18n";
+const i18nDir = "frameworks/i18n-ts";
 const sourceLocale = process.env.APHRODY_I18N_SOURCE || (exists(`${i18nDir}/i18n.config.json`) ? JSON.parse(read(`${i18nDir}/i18n.config.json`)).sourceLocale : undefined) || "en";
 const locale = opt("locale") ?? sourceLocale;
 /** Hand-written text is read from this git ref instead of the working tree (another session's edits stay out). */
@@ -241,7 +241,7 @@ const logoBlock = (from: string) => `<img alt="${projectName}" src="${relLink(fr
 function rootBlocks(data: Record<string, Entry[]>): { header: string; types: string } {
   const header = logoBlock("README.md");
   const rows = kinds.filter((k) => data[k.id]).map((k) => {
-    const where = k.id === "third-party" ? "third_party" : k.id === "skill" ? ".agents/skills" : k.id === "crate" ? "src" : k.id === "package" ? "packages" : k.id === "app" ? "apps" : INFRA_ROOTS.join("/`, `");
+    const where = k.id === "third-party" ? "third_party" : k.id === "skill" ? ".agents/skills" : k.id === "crate" ? "src" : k.id === "package" ? "frameworks/`, `system" : k.id === "app" ? "apps" : INFRA_ROOTS.join("/`, `");
     return `| [${k.name}](docs/reference/catalog/${k.id}.md) | \`${where}/\` | ${k.description} |`;
   });
   const types = [`## ${t("catalog")}`, "", t("catalog_intro"), "", `| ${t("type")} | ${t("path")} | ${t("description")} |`, "| :-- | :-- | :-- |", ...rows].join("\n");

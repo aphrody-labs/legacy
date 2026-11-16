@@ -1,6 +1,6 @@
 # Reviews
 
-Verdicts of the ai-os review tribunal (`packages/ai-os/src/review`): `<voice>-<date>-<slug>.md` per voice (gemini, claude, judge), one row per review in `INDEX.md`, checklists distilled from past verdicts in `CHECKLISTS.md`, screenshots proving a run in `proofs/`. The judge's score is final; the gate is `threshold` in `packages/ai-os/config/review.json`.
+Verdicts of the ai-os review tribunal (`frameworks/ai-os/src/review`): `<voice>-<date>-<slug>.md` per voice (gemini, claude, judge), one row per review in `INDEX.md`, checklists distilled from past verdicts in `CHECKLISTS.md`, screenshots proving a run in `proofs/`. The judge's score is final; the gate is `threshold` in `frameworks/ai-os/config/review.json`.
 
 ## Headless run (first route)
 
@@ -17,9 +17,9 @@ ai-os review --selftest gemini-web [--send]
 
 ## Gemini web engine
 
-`src/review/gemini-web.ts`: gemini.google.com in the relay's dedicated headless Chrome over CDP (`relay/cdp.ts`, no claude-in-chrome). Each run opens a fresh chat, picks the mode (Carbon, then Argon) and thinking level from the `web` block, inserts the prompt with `Input.insertText` (split into several messages above `max_message_bytes`), waits for the Stop button to appear then disappear, reads the last `model-response message-content`, and records the chat URL and id in the verdict. Selectors live in one table (`SELECTORS`, references to `packages/ai-os/docs/gemini-web/RECON.md`); `--selftest gemini-web` checks each on the live page and names the broken one.
+`src/review/gemini-web.ts`: gemini.google.com in the relay's dedicated headless Chrome over CDP (`relay/cdp.ts`, no claude-in-chrome). Each run opens a fresh chat, picks the mode (Carbon, then Argon) and thinking level from the `web` block, inserts the prompt with `Input.insertText` (split into several messages above `max_message_bytes`), waits for the Stop button to appear then disappear, reads the last `model-response message-content`, and records the chat URL and id in the verdict. Selectors live in one table (`SELECTORS`, references to `frameworks/ai-os/docs/gemini-web/RECON.md`); `--selftest gemini-web` checks each on the live page and names the broken one.
 
-- No Google session: health `login` (10 minute cooldown, then `--fresh` ignores it). Normal case: the tool raises one Windows toast (auth daemon, `packages/env-kit`); one click opens the relay Chrome headful on Google sign-in, the owner signs in, the window closes by itself as soon as the page shows the session, and the waiting review resumes (`web.login_wait_s`). Manual entry point: `ay auth login gemini-web` (or `ay auth login` to pick; `ay auth status` lists every service). Credentials are never typed by the tool.
+- No Google session: health `login` (10 minute cooldown, then `--fresh` ignores it). Normal case: the tool raises one Windows toast (auth daemon, `system/env-kit`); one click opens the relay Chrome headful on Google sign-in, the owner signs in, the window closes by itself as soon as the page shows the session, and the waiting review resumes (`web.login_wait_s`). Manual entry point: `ay auth login gemini-web` (or `ay auth login` to pick; `ay auth status` lists every service). Credentials are never typed by the tool.
 - Other engines of the gemini voice follow: `agy`, then the `fallback` families; each failure is classified (`orch/classify.ts`) and skipped engines appear in the JSON (`voices[].skipped`, `voices[].attempts`).
 
 ## Manual fallback (last)

@@ -17,9 +17,9 @@ import {
 } from "@auto/store";
 import { entreprise } from "@auto/tenancy";
 import { writeXlsx, lireTableur } from "@auto/native";
-import type { Module } from "../modules";
+import type { Module } from ".";
 import { brut, date, liste, objet, op, str } from "../openapi-outils";
-import type { Chemins } from "../modules";
+import type { Chemins } from ".";
 
 /** Maximum size of an imported file (the spreadsheet is decoded in memory). */
 const MAX_OCTETS = 10 * 1024 * 1024;

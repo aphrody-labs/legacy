@@ -392,7 +392,7 @@ mod tests {
         assert!(d.is_virtual);
         assert_eq!(d.virtual_path.as_deref(), Some("skills/foo"));
         assert_eq!(d.unique_key(), "owner/repo/skills/foo");
-        for p in ["./packages/x", "../x", "/abs/x", "~/x", "C:\\x", "C:/x"] {
+        for p in ["./system/x", "../x", "/abs/x", "~/x", "C:\\x", "C:/x"] {
             assert!(is_local_path(p), "{p}");
         }
         assert!(!is_local_path("//host/x"));

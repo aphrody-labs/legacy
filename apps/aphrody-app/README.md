@@ -28,7 +28,7 @@ wck ./dist
 
 ## Multi-OS Packaging
 
-- **Cloudflare Workers**: `wrangler.toml`; the built shell is served at https://shell.aphrody.app (Worker `aphrody-app-site`, R2 `aphrody-dist/sites/aphrody.app`). The apex https://aphrody.app is the deployment platform (`packages/deploy`).
+- **Cloudflare Workers**: `wrangler.toml`; the built shell is served at https://shell.aphrody.app (Worker `aphrody-app-site`, R2 `aphrody-dist/sites/aphrody.app`). The apex https://aphrody.app is the deployment platform (`system/deploy`).
 - **Windows 11**: `aphrody-app.exe` (`x86_64-pc-windows-msvc`)
 - **Arch / CachyOS**: `packaging/arch/PKGBUILD`
 - **NixOS**: `packaging/nix/default.nix`

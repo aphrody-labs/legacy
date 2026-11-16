@@ -21,8 +21,8 @@
 - **Package:** `@aphrody/m3-theme`
 - **Selector:** `.dark (also :root under @media (prefers-color-scheme: dark))`
 - **Color scheme:** dark
-- **Radius:** `12px (--md-sys-shape-corner-medium, packages/m3-tokens/src/m3-tokens.css)`
-- **Source:** `packages/m3-theme/tokens.css` (tokens extracted verbatim; use the CSS custom properties, not raw hex)
+- **Radius:** `12px (--md-sys-shape-corner-medium, frameworks/m3-tokens/src/m3-tokens.css)`
+- **Source:** `frameworks/m3-theme/tokens.css` (tokens extracted verbatim; use the CSS custom properties, not raw hex)
 
 ### Color Palette
 

@@ -401,7 +401,7 @@ Two products, both currently unhelpful:
   `winuxcmd\bin\bash.exe` — the niu face — before ever reaching the unclaimed
   Program Files candidates.
 - **Source:** source-verified (2026-10-21 HEAD):
-  `QwenLM/qwen-code` `packages/core/src/utils/shell-utils.ts`
+  `QwenLM/qwen-code` `system/core-ts/src/utils/shell-utils.ts`
   (`getShellConfiguration()` / `findGitBashPath()`). Read-code conclusion, not
   yet run per-machine; a successful live run promotes this to ready.
 

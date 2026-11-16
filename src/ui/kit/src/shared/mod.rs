@@ -169,7 +169,7 @@ impl fmt::Display for RgbaColor {
 /// By default, `aphrody-design` uses [`YoloThemePreset::Neutral`] (`"yolo-neutral"`), ensuring
 /// zero vendor lock-in while allowing instant switching to M3, Fluent 2, Apple HIG Liquid Glass,
 /// Omacom Omarchy (`Tokyo Night` + 23 official subthemes), Hyprland (`#33ccff` -> `#00ff99` active border + kawase blur),
-/// or Aphrody (Material 3 vibrant, seed of `packages/design/design.toml`).
+/// or Aphrody (Material 3 vibrant, seed of `frameworks/design/design.toml`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum YoloThemePreset {
@@ -186,7 +186,7 @@ pub enum YoloThemePreset {
     Omarchy,
     /// `"yolo-hyprland"` — Hyprwm / Hyprland / `hyprtoolkit` / `hyprqt6engine` Wayland compositor design system (`#33ccff` -> `#00ff99` 45deg active border, kawase blur).
     Hyprland,
-    /// `"yolo-aphrody"` — Aphrody brand theme (`packages/design/design.toml`: M3 vibrant, roles from `packages/design/tokens`).
+    /// `"yolo-aphrody"` — Aphrody brand theme (`frameworks/design/design.toml`: M3 vibrant, roles from `frameworks/design/tokens`).
     Aphrody,
     /// `"yolo-chromium"` — Chromium Views and WebUI design language with editable HCT accent and light/dark surfaces.
     Chromium,
@@ -1240,7 +1240,7 @@ pub const YOLO_HYPRLAND_LIGHT_THEME: YoloThemeTokens = YoloThemeTokens {
     border_subtle: "rgba(15, 23, 42, 0.14)",
 };
 
-/// 7. `YoloThemePreset::Aphrody` Dark Tokens: M3 dark roles of packages/design/tokens/tokens.json (brand seed #3355FF, vibrant).
+/// 7. `YoloThemePreset::Aphrody` Dark Tokens: M3 dark roles of frameworks/design/tokens/tokens.json (brand seed #3355FF, vibrant).
 pub const YOLO_APHRODY_DARK_THEME: YoloThemeTokens = YoloThemeTokens {
     name: "yolo-aphrody-dark",
     bg_primary: "#11131C",
@@ -1253,7 +1253,7 @@ pub const YOLO_APHRODY_DARK_THEME: YoloThemeTokens = YoloThemeTokens {
     border_subtle: "rgba(255, 255, 255, 0.08)",
 };
 
-/// 7b. `YoloThemePreset::Aphrody` Light Tokens: M3 light roles of packages/design/tokens/tokens.json.
+/// 7b. `YoloThemePreset::Aphrody` Light Tokens: M3 light roles of frameworks/design/tokens/tokens.json.
 pub const YOLO_APHRODY_LIGHT_THEME: YoloThemeTokens = YoloThemeTokens {
     name: "yolo-aphrody-light",
     bg_primary: "#FBF8FF",

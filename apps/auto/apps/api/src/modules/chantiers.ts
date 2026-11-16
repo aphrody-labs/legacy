@@ -18,7 +18,7 @@ import {
   withTenant,
 } from "@auto/store";
 import type { BunRequest } from "bun";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import { avecId, brut, cents, date, enumere, liste, objet, op, ref, str, uuid } from "../openapi-outils";
 import { classeurGestion, rapportGestion } from "@auto/services/gestion";
 import { writeXlsx } from "@auto/native";

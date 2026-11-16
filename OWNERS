@@ -64,8 +64,8 @@ T:	git https://github.com/aphrody-dev/aphrody-app.git
 T:	git https://github.com/aphrody-dev/google-design.git
 T:	git https://github.com/aphrody-dev/wck.git
 F:	apps/web/
-F:	packages/native/
-F:	packages/wck/
+F:	system/native/
+F:	system/wck/
 
 BUN V1.4.5 FULL-RUST RUNTIME & UPSTREAM PATCH ENGINE
 M:	Aphrody Engineering <contact@aphrody.com>
@@ -75,7 +75,7 @@ W:	https://about.aphrody.com
 T:	git https://github.com/aphrody-labs/bun.git
 T:	git https://github.com/oven-sh/bun.git
 F:	docs/bun/
-F:	packages/upstream/
+F:	system/upstream/
 F:	third_party/bun/
 
 CHROMIUM, BLINK, V8 & DEPOT_TOOLS INTEGRATION
@@ -108,7 +108,7 @@ T:	git https://github.com/aphrody-dev/infra.git
 T:	git https://github.com/aphrody-dev/mesh-vn.git
 F:	device/deploy.toml
 F:	infra/
-F:	packages/ffi-bridge/
+F:	system/ffi-bridge/
 F:	device/mesh-vn/
 
 GRAPHICS, WAYLAND COMPOSITOR & GAMESCOPE WEBGPU
@@ -185,7 +185,7 @@ F:	src/ay/
 F:	src/xtask/
 F:	docs/native/VCS-FORGE.md
 F:	justfile
-F:	packages/env-kit/
+F:	system/env-kit/
 F:	scripts/vcs.ts
 F:	src.lock.json
 
@@ -207,7 +207,7 @@ T:	git https://github.com/aphrody-dev/ai-triad.git
 T:	git https://github.com/aphrody-dev/knowledge-engine.git
 T:	git https://github.com/aphrody-dev/pi-opencode.git
 F:	.agents/
-F:	packages/ai-os/
+F:	frameworks/ai-os/
 
 LAYER L1 BASE (src/core, net, machine, design tokens, lore-base/io, depot-core/cas)
 M:	skill:bun agent:claude <contact@aphrody.com>
@@ -220,7 +220,7 @@ F:	src/depot/core/
 F:	src/depot/cas/
 F:	src/lore/base/
 F:	src/lore/io/
-F:	packages/core/
+F:	system/core-ts/
 
 LAYER L2 PLATFORM ABSTRACTION (Windows, Linux, Cloudflare, Vercel, C ABI)
 M:	skill:microsoft skill:windows-machine agent:claude <contact@aphrody.com>
@@ -228,14 +228,14 @@ S:	Supported
 F:	src/core/capi/
 F:	src/drivers/gpu/dx12/
 F:	src/remote/
-F:	packages/ffi-bridge/
+F:	system/ffi-bridge/
 
 LAYER L4 AGENT
 M:	agent:claude skill:claude-api <contact@aphrody.com>
 S:	Supported
 F:	src/agent/context/
 F:	device/fleet/prd/systemd/aphrody-relay.service
-F:	packages/ai-os/
+F:	frameworks/ai-os/
 
 LAYER RULES, CHECKDEPS & TASK GRAPH
 M:	agent:claude skill:bun <contact@aphrody.com>
@@ -253,7 +253,7 @@ S:	Supported
 T:	git https://github.com/aphrody-labs/bun.git
 F:	docs/upstream/
 F:	tools/upstream/
-F:	packages/upstream/
+F:	system/upstream/
 
 THE REST
 M:	Aphrody Engineering <contact@aphrody.com>

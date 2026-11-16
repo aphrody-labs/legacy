@@ -18,7 +18,7 @@ result_chars = 900
 [sources]
 # Paths relative to the shenron checkout shipped to the trainer.
 code_roots = [
-  "packages/api/src",
+  "frameworks/api/src",
   "packages/db/src",
   "packages/config/src",
   "crates/shenron-mcp/src",

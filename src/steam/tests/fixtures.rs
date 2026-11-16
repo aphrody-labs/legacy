@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Shared Bun/Rust VDF fixtures (`tests/fixtures`). The Bun parser of `packages/bun-steam` reads
+//! Shared Bun/Rust VDF fixtures (`tests/fixtures`). The Bun parser of `system/bun-steam` reads
 //! the same files and must produce the same `*.expected.json`. `BUN_STEAM_WRITE_FIXTURES=1`
 //! regenerates the binary fixtures from the typed documents below.
 

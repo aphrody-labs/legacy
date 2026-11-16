@@ -8,7 +8,7 @@ on:
     branches: [main]
     paths:
       - "assets/library/**"
-      - "packages/assets/**"
+      - "frameworks/assets/**"
       - "test/assets/**"
       - "src/tv/ffmpeg/**"
       - "src/craft/**"
@@ -40,13 +40,13 @@ jobs:
         id: fp
         run: |
           export PATH="$HOME/.bun/bin:$PATH"
-          (cd packages/assets && bun install --frozen-lockfile)
-          bun -e 'import {fingerprint} from "./packages/assets/src/retest.ts"; console.log("fp=" + await fingerprint(process.cwd()))' >> "$GITHUB_OUTPUT"
+          (cd frameworks/assets && bun install --frozen-lockfile)
+          bun -e 'import {fingerprint} from "./frameworks/assets/src/retest.ts"; console.log("fp=" + await fingerprint(process.cwd()))' >> "$GITHUB_OUTPUT"
       - name: Fetch remote assets into the store
         run: |
           export PATH="$HOME/.bun/bin:$PATH"
           mkdir -p "$ASSETS_STORE"
-          bun packages/assets/src/cli.ts fetch --remote
+          bun frameworks/assets/src/cli.ts fetch --remote
       - name: Build asset-test (FFmpeg, resvg, craft-libs, gltf, Bevy headless)
         run: cargo build -q -j8 -p asset-test --profile iteration
       - name: Rust validators
@@ -54,11 +54,11 @@ jobs:
       - name: Recursive test, merged report
         run: |
           export PATH="$HOME/.bun/bin:$PATH"
-          bun packages/assets/src/cli.ts test --recursive --strict --rust-results=asset-test.jsonl --out=var/assets-test --md=var/assets-test/ASSET-TESTS.md
+          bun frameworks/assets/src/cli.ts test --recursive --strict --rust-results=asset-test.jsonl --out=var/assets-test --md=var/assets-test/ASSET-TESTS.md
       - name: Bun tests of the tester
         run: |
           export PATH="$HOME/.bun/bin:$PATH"
-          bun test ./packages/assets/tests/asset-test
+          bun test ./frameworks/assets/tests/asset-test
       - uses: actions/upload-artifact@v5
         if: always()
         with:

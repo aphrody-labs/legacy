@@ -18,7 +18,7 @@ Environment=GNU_GSRC=/srv/research/gsrc
 Environment=GNU_KERNEL_KEYRING=/srv/gnu/kernel-keyring.pgp
 Environment=GNU_BUCKET=aphrody-gnu
 Environment=GNU_INTERVAL=600
-ExecStart=/home/ubuntu/.local/bin/bun --no-env-file /srv/src/packages/gnu/src/cli.ts daemon
+ExecStart=/home/ubuntu/.local/bin/bun --no-env-file /srv/src/system/gnu-ts/src/cli.ts daemon
 Restart=always
 RestartSec=20s
 Nice=10

@@ -48,7 +48,7 @@ git config --global credential.https://source.developers.google.com.helper gclou
 echo "[Tri-Forge Setup] Configured git credential helper for source.developers.google.com -> gcloud.sh"
 
 # 4. Run frg Tri-Forge orchestration
-cd "${SRC_ROOT}/packages/forge"
+cd "${SRC_ROOT}/system/forge"
 if [[ "$DRY_RUN" == "1" ]]; then
   bun run src/cli.ts remotes
   bun run src/cli.ts gitlab-init --dry-run

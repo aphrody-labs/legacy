@@ -164,14 +164,14 @@ kind = "module"
 crate = "src/ay/src/bun (watch, bump, schedule), src/ay/src/bump.rs"
 feature = "upstream"
 upstream = "oven-sh/bun"
-note = "Bun fork watch and bump; the patch stacks run in packages/upstream."
+note = "Bun fork watch and bump; the patch stacks run in system/upstream."
 commands = ["bun", "bump"]
 
 [module.packages]
 kind = "js"
 crate = "packages/{deploy,assets,env-kit,ai-os,upstream,gnu,release,i18n,machine,wck}"
 upstream = "(first party Bun packages)"
-note = "Bun runs them natively: `ay deploy` is `bun packages/deploy/src/cli.ts`."
+note = "Bun runs them natively: `ay deploy` is `bun system/deploy/src/cli.ts`."
 commands = ["deploy", "assets", "auth", "secret", "vault", "upstream", "gnu", "release", "i18n", "shell-matrix", "jules", "agents", "web", "lfs"]
 
 [module.engines]
@@ -190,7 +190,7 @@ commands = ["plugin"]
 
 [module.gaming]
 kind = "ecosystem"
-crate = "src/steam, packages/gaming, gamescope-rs"
+crate = "src/steam, frameworks/gaming, gamescope-rs"
 upstream = "ValveSoftware/steam, Bevy fork"
 note = "Bevy fork with Steam and Epic, Craft Apps, tv: ecosystem apps, consumers of ay. Their subcommands stay until the owning agent provides each app's entry point."
 commands = ["steam", "gaming", "scope"]

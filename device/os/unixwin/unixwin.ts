@@ -22,7 +22,7 @@ const repo = join(import.meta.dir, "..", "..", "..");
 const lockPath = join(repo, "src.lock.json");
 const gh = (r: string) => `https://github.com/${r}.git`;
 
-// unixwin clones (same list as the unixwin block of packages/machine/src/forks.ts).
+// unixwin clones (same list as the unixwin block of system/machine-ts/src/forks.ts).
 const DIRS = [
   ...[
     "niubash",
@@ -109,7 +109,7 @@ async function lock() {
   for (const rel of DIRS) {
     if (!existsSync(join(repo, rel, ".git"))) {
       console.log(
-        `missing  ${rel} (bun packages/machine/src/forks.ts ${rel.split("/").pop()})`,
+        `missing  ${rel} (bun system/machine-ts/src/forks.ts ${rel.split("/").pop()})`,
       );
       continue;
     }

@@ -41,7 +41,7 @@ contact = "contact@aphrody.com"
 # Sub-products with their own binary; their npm name is <npm_scope>/<binary>.
 [products.ai-os]
 binary = "ai-os"
-path = "packages/ai-os"
+path = "frameworks/ai-os"
 home_env = "AGENT_HOME"
 home_default = "~/.agent"
 

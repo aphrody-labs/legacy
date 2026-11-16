@@ -54,7 +54,7 @@
         "vite": "catalog:",
       },
     },
-    "packages/ai-os": {
+    "frameworks/ai-os": {
       "name": "@aphrody/ai-os",
       "version": "0.2.0",
       "bin": {
@@ -67,11 +67,11 @@
         "@aphrody/design": "workspace:*",
       },
     },
-    "packages/api": {
+    "frameworks/api": {
       "name": "@aphrody/api",
       "version": "3.0.0-alpha.5",
     },
-    "packages/assets": {
+    "frameworks/assets": {
       "name": "@aphrody/assets",
       "version": "0.1.0",
       "devDependencies": {
@@ -80,79 +80,14 @@
         "wawoff2": "catalog:",
       },
     },
-    "packages/automate": {
+    "frameworks/automate": {
       "name": "@aphrody/automate",
       "version": "0.1.0",
       "dependencies": {
         "zod": "^4",
       },
     },
-    "packages/bun-parity": {
-      "name": "@aphrody/bun-parity",
-      "version": "1.0.0",
-      "bin": {
-        "bpt": "./bin/bpt.ts",
-      },
-    },
-    "packages/bun-plugin-tailwind": {
-      "name": "@aphrody/bun-plugin-tailwind",
-      "version": "1.4.7",
-      "dependencies": {
-        "@aphrody/m3-tailwind": "^3.3.7",
-        "@aphrody/m3-tokens": "^3.3.7",
-        "@tailwindcss/node": "^4.3.3",
-        "@tailwindcss/oxide": "^4.3.3",
-        "enhanced-resolve": "^5.26.0",
-        "tailwindcss": "^4.3.3",
-      },
-      "devDependencies": {
-        "@types/bun": "catalog:",
-        "postcss": "^8.5.6",
-      },
-      "peerDependencies": {
-        "postcss": "^8",
-      },
-      "optionalPeers": [
-        "postcss",
-      ],
-    },
-    "packages/bun-plugins": {
-      "name": "@aphrody/bun-plugins",
-      "version": "1.0.0",
-    },
-    "packages/bun-runtime-sdk": {
-      "name": "@aphrody/bun-runtime-sdk",
-      "version": "1.4.11",
-    },
-    "packages/bun-sql": {
-      "name": "@aphrody/bun-sql",
-      "version": "1.4.7",
-      "dependencies": {
-        "@neondatabase/serverless": "1.2.0",
-        "@supabase/supabase-js": "2.118.0",
-      },
-      "devDependencies": {
-        "@aphrody/bun-types": "1.4.7",
-      },
-    },
-    "packages/bun-steam": {
-      "name": "@aphrody/bun-steam",
-      "version": "1.4.7",
-      "bin": {
-        "bun-steam": "src/cli.ts",
-      },
-      "dependencies": {
-        "@aphrody/env-kit": "workspace:*",
-      },
-    },
-    "packages/bun-test-dom": {
-      "name": "@aphrody/bun-test-dom",
-      "version": "0.1.1",
-      "dependencies": {
-        "@happy-dom/global-registrator": "^20.14.5",
-      },
-    },
-    "packages/bun-video": {
+    "frameworks/bun-video": {
       "name": "@aphrody/bun-video",
       "version": "1.4.4-video.0",
       "bin": {
@@ -178,15 +113,7 @@
         "remotion": "4.0.534",
       },
     },
-    "packages/bunify": {
-      "name": "@aphrody/bunify",
-      "version": "0.1.0",
-      "bin": {
-        "bunify": "./src/cli.ts",
-        "n2r": "./src/cli.ts",
-      },
-    },
-    "packages/canvas": {
+    "frameworks/canvas": {
       "name": "@aphrody/canvas",
       "version": "1.4.7",
       "devDependencies": {
@@ -212,22 +139,14 @@
         "@aphrody/bun",
       ],
     },
-    "packages/chromium": {
+    "frameworks/chromium-ts": {
       "name": "@aphrody/chromium",
       "version": "1.4.7",
       "bin": {
         "bun-chromium": "./src/cli.ts",
       },
     },
-    "packages/core": {
-      "name": "@aphrody/core",
-      "version": "0.1.0",
-    },
-    "packages/deploy": {
-      "name": "@aphrody/deploy",
-      "version": "0.1.0",
-    },
-    "packages/design": {
+    "frameworks/design": {
       "name": "@aphrody/design",
       "version": "0.1.0",
       "dependencies": {
@@ -242,7 +161,7 @@
         "rxjs": "catalog:",
       },
     },
-    "packages/discord-kit": {
+    "frameworks/discord-kit": {
       "name": "@aphrody/discord-kit",
       "version": "1.4.7",
       "dependencies": {
@@ -258,36 +177,11 @@
         "tsdown": "^0.23.0",
       },
     },
-    "packages/env-kit": {
-      "name": "@aphrody/env-kit",
-      "version": "1.0.0",
-    },
-    "packages/ffi-bridge": {
-      "name": "@aphrody/ffi-bridge",
-      "version": "1.27.0",
-    },
-    "packages/forge": {
-      "name": "@aphrody/forge",
-      "version": "1.1.0",
-      "bin": {
-        "frg": "src/cli.ts",
-      },
-      "dependencies": {
-        "@aphrody/core": "workspace:*",
-      },
-    },
-    "packages/gaming": {
+    "frameworks/gaming": {
       "name": "@aphrody/gaming",
       "version": "1.0.0",
     },
-    "packages/gnu": {
-      "name": "@aphrody/gnu",
-      "version": "0.1.0",
-      "bin": {
-        "gnu": "./src/cli.ts",
-      },
-    },
-    "packages/google": {
+    "frameworks/google-ts": {
       "name": "@aphrody/google",
       "version": "1.4.7",
       "bin": {
@@ -315,14 +209,7 @@
         "react": "^18.0.0 || ^19.0.0",
       },
     },
-    "packages/http": {
-      "name": "@aphrody/http",
-      "version": "0.1.1",
-      "devDependencies": {
-        "@types/bun": "1.4.2",
-      },
-    },
-    "packages/i18n": {
+    "frameworks/i18n-ts": {
       "name": "@aphrody/i18n",
       "version": "0.1.0",
       "dependencies": {
@@ -336,7 +223,7 @@
         "@aphrody/ai-os",
       ],
     },
-    "packages/m3-ai": {
+    "frameworks/m3-ai": {
       "name": "@aphrody/m3-ai",
       "version": "1.4.7",
       "dependencies": {
@@ -363,7 +250,7 @@
         "tailwindcss": ">=4.1.0",
       },
     },
-    "packages/m3-os-themes": {
+    "frameworks/m3-os-themes": {
       "name": "@aphrody/m3-os-themes",
       "version": "1.4.7",
       "bin": {
@@ -377,7 +264,7 @@
         "@aphrody/m3-config": "1.4.7",
       },
     },
-    "packages/m3-primitives": {
+    "frameworks/m3-primitives": {
       "name": "@aphrody/m3-primitives",
       "version": "1.4.7",
       "dependencies": {
@@ -400,7 +287,7 @@
         "tailwindcss": ">=4.1.0",
       },
     },
-    "packages/m3-reader": {
+    "frameworks/m3-reader": {
       "name": "@aphrody/m3-reader",
       "version": "1.4.7",
       "dependencies": {
@@ -417,7 +304,7 @@
         "tailwindcss": ">=4.1.0",
       },
     },
-    "packages/m3-theme": {
+    "frameworks/m3-theme": {
       "name": "@aphrody/m3-theme",
       "version": "1.4.7",
       "dependencies": {
@@ -432,7 +319,7 @@
         "react": ">=18.0.0",
       },
     },
-    "packages/m3-tokens": {
+    "frameworks/m3-tokens": {
       "name": "@aphrody/m3-tokens",
       "version": "1.4.7",
       "dependencies": {
@@ -442,11 +329,7 @@
         "@aphrody/m3-config": "1.4.7",
       },
     },
-    "packages/machine": {
-      "name": "@aphrody/machine",
-      "version": "0.1.0",
-    },
-    "packages/messaging": {
+    "frameworks/messaging": {
       "name": "@aphrody/messaging",
       "version": "0.1.1",
       "dependencies": {
@@ -457,11 +340,160 @@
         "typescript": "7.0.2",
       },
     },
-    "packages/native": {
+    "frameworks/plugin-opener": {
+      "name": "@aphrody/plugin-opener",
+      "version": "3.0.0-alpha.5",
+      "dependencies": {
+        "@aphrody/api": "3.0.0-alpha.5",
+      },
+    },
+    "frameworks/re-ts/ghidra": {
+      "name": "@aphrody/ghidra",
+      "version": "0.1.0",
+      "bin": {
+        "bun-ghidra": "./src/cli.ts",
+      },
+    },
+    "frameworks/web": {
+      "name": "@aphrody/web",
+      "version": "1.4.7",
+      "dependencies": {
+        "@aphrody/bun-sql": "1.4.7",
+        "@aphrody/typesafe-sdk": "0.6.2",
+      },
+    },
+    "frameworks/web-crawl": {
+      "name": "@aphrody/web-crawl",
+      "version": "1.4.7",
+      "bin": {
+        "aphrody-web": "./src/cli.ts",
+      },
+      "devDependencies": {
+        "bun-types": "1.4.4-canary.20261028T141247",
+      },
+    },
+    "system/bun-parity": {
+      "name": "@aphrody/bun-parity",
+      "version": "1.0.0",
+      "bin": {
+        "bpt": "./bin/bpt.ts",
+      },
+    },
+    "system/bun-plugin-tailwind": {
+      "name": "@aphrody/bun-plugin-tailwind",
+      "version": "1.4.7",
+      "dependencies": {
+        "@aphrody/m3-tailwind": "^3.3.7",
+        "@aphrody/m3-tokens": "^3.3.7",
+        "@tailwindcss/node": "^4.3.3",
+        "@tailwindcss/oxide": "^4.3.3",
+        "enhanced-resolve": "^5.26.0",
+        "tailwindcss": "^4.3.3",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "postcss": "^8.5.6",
+      },
+      "peerDependencies": {
+        "postcss": "^8",
+      },
+      "optionalPeers": [
+        "postcss",
+      ],
+    },
+    "system/bun-plugins": {
+      "name": "@aphrody/bun-plugins",
+      "version": "1.0.0",
+    },
+    "system/bun-runtime-sdk": {
+      "name": "@aphrody/bun-runtime-sdk",
+      "version": "1.4.11",
+    },
+    "system/bun-sql": {
+      "name": "@aphrody/bun-sql",
+      "version": "1.4.7",
+      "dependencies": {
+        "@neondatabase/serverless": "1.2.0",
+        "@supabase/supabase-js": "2.118.0",
+      },
+      "devDependencies": {
+        "@aphrody/bun-types": "1.4.7",
+      },
+    },
+    "system/bun-steam": {
+      "name": "@aphrody/bun-steam",
+      "version": "1.4.7",
+      "bin": {
+        "bun-steam": "src/cli.ts",
+      },
+      "dependencies": {
+        "@aphrody/env-kit": "workspace:*",
+      },
+    },
+    "system/bun-test-dom": {
+      "name": "@aphrody/bun-test-dom",
+      "version": "0.1.1",
+      "dependencies": {
+        "@happy-dom/global-registrator": "^20.14.5",
+      },
+    },
+    "system/bunify": {
+      "name": "@aphrody/bunify",
+      "version": "0.1.0",
+      "bin": {
+        "bunify": "./src/cli.ts",
+        "n2r": "./src/cli.ts",
+      },
+    },
+    "system/core-ts": {
+      "name": "@aphrody/core",
+      "version": "0.1.0",
+    },
+    "system/deploy": {
+      "name": "@aphrody/deploy",
+      "version": "0.1.0",
+    },
+    "system/env-kit": {
+      "name": "@aphrody/env-kit",
+      "version": "1.0.0",
+    },
+    "system/ffi-bridge": {
+      "name": "@aphrody/ffi-bridge",
+      "version": "1.27.0",
+    },
+    "system/forge": {
+      "name": "@aphrody/forge",
+      "version": "1.1.0",
+      "bin": {
+        "frg": "src/cli.ts",
+      },
+      "dependencies": {
+        "@aphrody/core": "workspace:*",
+      },
+    },
+    "system/gnu-ts": {
+      "name": "@aphrody/gnu",
+      "version": "0.1.0",
+      "bin": {
+        "gnu": "./src/cli.ts",
+      },
+    },
+    "system/http-ts": {
+      "name": "@aphrody/http",
+      "version": "0.1.1",
+      "devDependencies": {
+        "@types/bun": "1.4.2",
+      },
+    },
+    "system/machine-ts": {
+      "name": "@aphrody/machine",
+      "version": "0.1.0",
+    },
+    "system/native": {
       "name": "@aphrody/native",
       "version": "0.1.0",
     },
-    "packages/next-bun": {
+    "system/next-bun": {
       "name": "@aphrody/next-bun",
       "version": "1.4.7",
       "bin": {
@@ -480,21 +512,14 @@
         "react-server-dom-parcel",
       ],
     },
-    "packages/omniu": {
+    "system/omniu": {
       "name": "@aphrody/omniu",
       "version": "0.1.0",
       "bin": {
         "omniu": "./src/cli.ts",
       },
     },
-    "packages/plugin-opener": {
-      "name": "@aphrody/plugin-opener",
-      "version": "3.0.0-alpha.5",
-      "dependencies": {
-        "@aphrody/api": "3.0.0-alpha.5",
-      },
-    },
-    "packages/py2bun": {
+    "system/py2bun-ts": {
       "name": "@aphrody/py2bun",
       "version": "0.1.0",
       "bin": {
@@ -504,54 +529,29 @@
         "@aphrody/ghidra": "workspace:*",
       },
     },
-    "packages/re/ghidra": {
-      "name": "@aphrody/ghidra",
-      "version": "0.1.0",
-      "bin": {
-        "bun-ghidra": "./src/cli.ts",
-      },
-    },
-    "packages/release": {
+    "system/release": {
       "name": "@aphrody/release",
       "version": "1.0.0",
     },
-    "packages/sql": {
+    "system/sql-ts": {
       "name": "@aphrody/sql",
       "version": "1.4.7",
       "dependencies": {
         "sqlite-vec": "^0.1.9",
       },
     },
-    "packages/upstream": {
+    "system/upstream": {
       "name": "@aphrody/upstream",
       "version": "1.0.0",
     },
-    "packages/wck": {
+    "system/wck": {
       "name": "@aphrody/wck",
       "version": "1.0.0",
       "bin": {
         "wck": "./src/cli.ts",
       },
     },
-    "packages/web": {
-      "name": "@aphrody/web",
-      "version": "1.4.7",
-      "dependencies": {
-        "@aphrody/bun-sql": "1.4.7",
-        "@aphrody/typesafe-sdk": "0.6.2",
-      },
-    },
-    "packages/web-crawl": {
-      "name": "@aphrody/web-crawl",
-      "version": "1.4.7",
-      "bin": {
-        "aphrody-web": "./src/cli.ts",
-      },
-      "devDependencies": {
-        "bun-types": "1.4.4-canary.20261028T141247",
-      },
-    },
-    "packages/x": {
+    "system/x": {
       "name": "@aphrody/x",
       "version": "1.4.7",
       "dependencies": {
@@ -649,133 +649,133 @@
 
     "@angular/platform-browser": ["@angular/platform-browser@22.3.0-rc.0", "", { "dependencies": { "tslib": "^2.3.0" }, "peerDependencies": { "@angular/animations": "22.3.0-rc.0", "@angular/common": "22.3.0-rc.0", "@angular/core": "22.3.0-rc.0" }, "optionalPeers": ["@angular/animations"] }, "sha512-WKdVt19N3Akatok4rMA64DJnTXr60Tv4CVgpq+e1VNdFOOfhiAxte6IzsHU4RbL/Nj44oaJx981M8C5FKlAY7w=="],
 
-    "@aphrody/ai-os": ["@aphrody/ai-os@workspace:packages/ai-os"],
+    "@aphrody/ai-os": ["@aphrody/ai-os@workspace:frameworks/ai-os"],
 
     "@aphrody/ai-router": ["@aphrody/ai-router@https://github.com/aphrody-labs/open/releases/download/libraries-v0.4.0/aphrody-ai-router-0.4.0.tgz", {}, "sha512-HGlJ1vIFHb1je2hOnTleGINnEpuTpaIpdq9knrrOTOwnwGUsBLIKAya4XRr/Sroy/ht8qFruJ65L4jGpIMkn9A=="],
 
-    "@aphrody/api": ["@aphrody/api@workspace:packages/api"],
+    "@aphrody/api": ["@aphrody/api@workspace:frameworks/api"],
 
-    "@aphrody/assets": ["@aphrody/assets@workspace:packages/assets"],
+    "@aphrody/assets": ["@aphrody/assets@workspace:frameworks/assets"],
 
-    "@aphrody/automate": ["@aphrody/automate@workspace:packages/automate"],
+    "@aphrody/automate": ["@aphrody/automate@workspace:frameworks/automate"],
 
     "@aphrody/bun": ["@aphrody/bun@1.4.7", "", { "dependencies": { "@aphrody/bun-runtime-sdk": "npm:@aphrody/bun-runtime-sdk@1.4.4", "@aphrody/paths": "1.4.7", "@aphrody/update": "1.4.7" } }, "sha512-EuMowIkz8Y+WxyTlam5J1kYSuhJVLIgLklEYREi2jvAvNBJap0rYcOgGI3XafZ8yLNNUMzeQroZyqMYET+7QlA=="],
 
     "@aphrody/bun-google": ["@aphrody/bun-google@1.4.7", "", { "bin": { "bun-google": "src/cli.ts", "bun-google-index-public": "src/public-index-cli.ts" } }, "sha512-ETZQU+AajVOk9hkWarGvQgkef0+3hBbQjj5zreytTfGvorYQmNtQhyulg8tj5sX8+rbfHBWuR+DBAt+MtKFo/w=="],
 
-    "@aphrody/bun-parity": ["@aphrody/bun-parity@workspace:packages/bun-parity"],
+    "@aphrody/bun-parity": ["@aphrody/bun-parity@workspace:system/bun-parity"],
 
-    "@aphrody/bun-plugin-tailwind": ["@aphrody/bun-plugin-tailwind@workspace:packages/bun-plugin-tailwind"],
+    "@aphrody/bun-plugin-tailwind": ["@aphrody/bun-plugin-tailwind@workspace:system/bun-plugin-tailwind"],
 
-    "@aphrody/bun-plugins": ["@aphrody/bun-plugins@workspace:packages/bun-plugins"],
+    "@aphrody/bun-plugins": ["@aphrody/bun-plugins@workspace:system/bun-plugins"],
 
-    "@aphrody/bun-runtime-sdk": ["@aphrody/bun-runtime-sdk@workspace:packages/bun-runtime-sdk"],
+    "@aphrody/bun-runtime-sdk": ["@aphrody/bun-runtime-sdk@workspace:system/bun-runtime-sdk"],
 
-    "@aphrody/bun-sql": ["@aphrody/bun-sql@workspace:packages/bun-sql"],
+    "@aphrody/bun-sql": ["@aphrody/bun-sql@workspace:system/bun-sql"],
 
-    "@aphrody/bun-steam": ["@aphrody/bun-steam@workspace:packages/bun-steam"],
+    "@aphrody/bun-steam": ["@aphrody/bun-steam@workspace:system/bun-steam"],
 
-    "@aphrody/bun-test-dom": ["@aphrody/bun-test-dom@workspace:packages/bun-test-dom"],
+    "@aphrody/bun-test-dom": ["@aphrody/bun-test-dom@workspace:system/bun-test-dom"],
 
     "@aphrody/bun-types": ["@aphrody/bun-types@1.4.7", "", { "dependencies": { "@types/node": "*", "undici-types": "*" } }, "sha512-5WlW+5Uof9BY1ukqn2B8O/txrOqk5pGG+lCaDRGupaRBsgTtv3DjITjNklRdyrt1Aq+Kn53YEH3sDN0Ga/xT0g=="],
 
-    "@aphrody/bun-video": ["@aphrody/bun-video@workspace:packages/bun-video"],
+    "@aphrody/bun-video": ["@aphrody/bun-video@workspace:frameworks/bun-video"],
 
-    "@aphrody/bunify": ["@aphrody/bunify@workspace:packages/bunify"],
+    "@aphrody/bunify": ["@aphrody/bunify@workspace:system/bunify"],
 
-    "@aphrody/canvas": ["@aphrody/canvas@workspace:packages/canvas"],
+    "@aphrody/canvas": ["@aphrody/canvas@workspace:frameworks/canvas"],
 
-    "@aphrody/chromium": ["@aphrody/chromium@workspace:packages/chromium"],
+    "@aphrody/chromium": ["@aphrody/chromium@workspace:frameworks/chromium-ts"],
 
-    "@aphrody/core": ["@aphrody/core@workspace:packages/core"],
+    "@aphrody/core": ["@aphrody/core@workspace:system/core-ts"],
 
-    "@aphrody/deploy": ["@aphrody/deploy@workspace:packages/deploy"],
+    "@aphrody/deploy": ["@aphrody/deploy@workspace:system/deploy"],
 
-    "@aphrody/design": ["@aphrody/design@workspace:packages/design"],
+    "@aphrody/design": ["@aphrody/design@workspace:frameworks/design"],
 
-    "@aphrody/discord-kit": ["@aphrody/discord-kit@workspace:packages/discord-kit"],
+    "@aphrody/discord-kit": ["@aphrody/discord-kit@workspace:frameworks/discord-kit"],
 
-    "@aphrody/env-kit": ["@aphrody/env-kit@workspace:packages/env-kit"],
+    "@aphrody/env-kit": ["@aphrody/env-kit@workspace:system/env-kit"],
 
-    "@aphrody/ffi-bridge": ["@aphrody/ffi-bridge@workspace:packages/ffi-bridge"],
+    "@aphrody/ffi-bridge": ["@aphrody/ffi-bridge@workspace:system/ffi-bridge"],
 
-    "@aphrody/forge": ["@aphrody/forge@workspace:packages/forge"],
+    "@aphrody/forge": ["@aphrody/forge@workspace:system/forge"],
 
-    "@aphrody/gaming": ["@aphrody/gaming@workspace:packages/gaming"],
+    "@aphrody/gaming": ["@aphrody/gaming@workspace:frameworks/gaming"],
 
-    "@aphrody/ghidra": ["@aphrody/ghidra@workspace:packages/re/ghidra"],
+    "@aphrody/ghidra": ["@aphrody/ghidra@workspace:frameworks/re-ts/ghidra"],
 
     "@aphrody/github-app": ["@aphrody/github-app@workspace:device/cloudflare/workers/github-app"],
 
-    "@aphrody/gnu": ["@aphrody/gnu@workspace:packages/gnu"],
+    "@aphrody/gnu": ["@aphrody/gnu@workspace:system/gnu-ts"],
 
-    "@aphrody/google": ["@aphrody/google@workspace:packages/google"],
+    "@aphrody/google": ["@aphrody/google@workspace:frameworks/google-ts"],
 
-    "@aphrody/http": ["@aphrody/http@workspace:packages/http"],
+    "@aphrody/http": ["@aphrody/http@workspace:system/http-ts"],
 
-    "@aphrody/i18n": ["@aphrody/i18n@workspace:packages/i18n"],
+    "@aphrody/i18n": ["@aphrody/i18n@workspace:frameworks/i18n-ts"],
 
-    "@aphrody/m3-ai": ["@aphrody/m3-ai@workspace:packages/m3-ai"],
+    "@aphrody/m3-ai": ["@aphrody/m3-ai@workspace:frameworks/m3-ai"],
 
     "@aphrody/m3-config": ["@aphrody/m3-config@1.4.7", "", { "dependencies": { "@happy-dom/global-registrator": "^20.14.5", "element-internals-polyfill": "^3.0.2" } }, "sha512-IBuFRuwcU1zSECbjE3Xno7TueYY6GpoE8PzNY4YH9t1XiuoqziyYYbZ28SN9B6zBFRH5F1blmuGX1QdsFVV3RA=="],
 
     "@aphrody/m3-motion": ["@aphrody/m3-motion@1.4.7", "", { "dependencies": { "motion": "^13.4.4" }, "peerDependencies": { "react": ">=18.0.0" } }, "sha512-J5qHdPnyKFBRIXTX0Ls2XAwKDqxe/GU1AEvQKN32vXrAVAD3gq6Ott1ofKsWHPs5Ny7PMAbsi2CjUerTZgFTpw=="],
 
-    "@aphrody/m3-os-themes": ["@aphrody/m3-os-themes@workspace:packages/m3-os-themes"],
+    "@aphrody/m3-os-themes": ["@aphrody/m3-os-themes@workspace:frameworks/m3-os-themes"],
 
-    "@aphrody/m3-primitives": ["@aphrody/m3-primitives@workspace:packages/m3-primitives"],
+    "@aphrody/m3-primitives": ["@aphrody/m3-primitives@workspace:frameworks/m3-primitives"],
 
-    "@aphrody/m3-reader": ["@aphrody/m3-reader@workspace:packages/m3-reader"],
+    "@aphrody/m3-reader": ["@aphrody/m3-reader@workspace:frameworks/m3-reader"],
 
     "@aphrody/m3-tailwind": ["@aphrody/m3-tailwind@3.3.11", "", { "dependencies": { "@aphrody/m3-tokens": "3.3.11" }, "peerDependencies": { "tailwindcss": "^4.0.0" } }, "sha512-yKEKdjbMi4v1jBgTZpFA8S/ACiFSr2eL+CfqRzrXeJRrABX14CMyShiJtDghQZEJ5po2aCoO/RCWvi+iPb5UkA=="],
 
-    "@aphrody/m3-theme": ["@aphrody/m3-theme@workspace:packages/m3-theme"],
+    "@aphrody/m3-theme": ["@aphrody/m3-theme@workspace:frameworks/m3-theme"],
 
-    "@aphrody/m3-tokens": ["@aphrody/m3-tokens@workspace:packages/m3-tokens"],
+    "@aphrody/m3-tokens": ["@aphrody/m3-tokens@workspace:frameworks/m3-tokens"],
 
-    "@aphrody/machine": ["@aphrody/machine@workspace:packages/machine"],
+    "@aphrody/machine": ["@aphrody/machine@workspace:system/machine-ts"],
 
     "@aphrody/mcp-ui": ["@aphrody/mcp-ui@7.1.1-aphrody.1", "", { "dependencies": { "@modelcontextprotocol/client": "^2.2.0", "@modelcontextprotocol/core": "^2.2.0", "@modelcontextprotocol/ext-apps": "^2.0.3", "@modelcontextprotocol/sdk": "^1.32.0", "zod": "^3.25.76 || ^4.0.0" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" } }, "sha512-nvi/YuU8lSKjc0bPCZzOfpNU/w3NrgmygN2VaI3ptd2eN4yydFUmpNQivgUp01cApjjndGN3kgGa4YZYM1MDXw=="],
 
-    "@aphrody/messaging": ["@aphrody/messaging@workspace:packages/messaging"],
+    "@aphrody/messaging": ["@aphrody/messaging@workspace:frameworks/messaging"],
 
-    "@aphrody/native": ["@aphrody/native@workspace:packages/native"],
+    "@aphrody/native": ["@aphrody/native@workspace:system/native"],
 
-    "@aphrody/next-bun": ["@aphrody/next-bun@workspace:packages/next-bun"],
+    "@aphrody/next-bun": ["@aphrody/next-bun@workspace:system/next-bun"],
 
     "@aphrody/nt": ["@aphrody/nt@workspace:apps/nt"],
 
     "@aphrody/nt-web": ["@aphrody/nt-web@workspace:apps/nt/modules/web"],
 
-    "@aphrody/omniu": ["@aphrody/omniu@workspace:packages/omniu"],
+    "@aphrody/omniu": ["@aphrody/omniu@workspace:system/omniu"],
 
     "@aphrody/paths": ["@aphrody/paths@1.4.7", "", {}, "sha512-oaC4+DYK9xemt/s40fuyxAGA14Co9mkn9D1Tb9CRzbC6FLmPX29MMM5J36rADHr7mhF2xF2/REuhxuBaUzsKJw=="],
 
-    "@aphrody/plugin-opener": ["@aphrody/plugin-opener@workspace:packages/plugin-opener"],
+    "@aphrody/plugin-opener": ["@aphrody/plugin-opener@workspace:frameworks/plugin-opener"],
 
-    "@aphrody/py2bun": ["@aphrody/py2bun@workspace:packages/py2bun"],
+    "@aphrody/py2bun": ["@aphrody/py2bun@workspace:system/py2bun-ts"],
 
-    "@aphrody/release": ["@aphrody/release@workspace:packages/release"],
+    "@aphrody/release": ["@aphrody/release@workspace:system/release"],
 
     "@aphrody/runtime-sdk": ["@aphrody/runtime-sdk@0.1.3", "", {}, "sha512-lzyl6HAGhVHP68kniJ3y4/qby1092iAHicubcPiHZcaWzxYs1Eg4uQbuCaPWE4ZsJDEfmMKFvNpqFCizfEZ4GQ=="],
 
     "@aphrody/site-ng": ["@aphrody/site-ng@workspace:apps/web/web"],
 
-    "@aphrody/sql": ["@aphrody/sql@workspace:packages/sql"],
+    "@aphrody/sql": ["@aphrody/sql@workspace:system/sql-ts"],
 
     "@aphrody/typesafe-sdk": ["@aphrody/typesafe-sdk@0.6.2", "", {}, "sha512-Pnj7gUKWCcTjztzmMBVLX7FNGJVlJKfrwuE3pLDnjGABlZHW7/wb6SakGllIAz65Qjx7+oYd+MYxWbxEpGyVRw=="],
 
     "@aphrody/update": ["@aphrody/update@1.4.7", "", { "dependencies": { "@aphrody/paths": "1.4.7" } }, "sha512-Vf7KPqBt95RFx3b5mxkJmFdQ+J1g7K2RkyVYJAeiz5uo4i6n73w3oQAeJ4CI7bOpCQv75IAork/73IOgFS1dYQ=="],
 
-    "@aphrody/upstream": ["@aphrody/upstream@workspace:packages/upstream"],
+    "@aphrody/upstream": ["@aphrody/upstream@workspace:system/upstream"],
 
-    "@aphrody/wck": ["@aphrody/wck@workspace:packages/wck"],
+    "@aphrody/wck": ["@aphrody/wck@workspace:system/wck"],
 
-    "@aphrody/web": ["@aphrody/web@workspace:packages/web"],
+    "@aphrody/web": ["@aphrody/web@workspace:frameworks/web"],
 
-    "@aphrody/web-crawl": ["@aphrody/web-crawl@workspace:packages/web-crawl"],
+    "@aphrody/web-crawl": ["@aphrody/web-crawl@workspace:frameworks/web-crawl"],
 
-    "@aphrody/x": ["@aphrody/x@workspace:packages/x"],
+    "@aphrody/x": ["@aphrody/x@workspace:system/x"],
 
     "@babel/code-frame": ["@babel/code-frame@8.0.6", "", { "dependencies": { "@babel/helper-validator-identifier": "^8.0.6", "js-tokens": "^10.0.0" } }, "sha512-uMHhvmDmwFiLuiozaoRYTZHqMFuu3fem/X9JY78lohAuLoh8LSGGC8JqUzo2cVuBsBxkjMZNk56CE7ock8Xxkw=="],
 

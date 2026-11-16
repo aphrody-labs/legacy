@@ -43,7 +43,7 @@ ssh: keys only on all three nodes (`PasswordAuthentication no`, root `prohibit-p
   - `nofail` on secondary mounts (`NOFAIL`), dead units disabled (`DISABLE`, `DISABLE_USER`), low priority for backups and syncs (`BATCH`).
     Filtering stays `fleet-firewall` (`/etc/fleet/firewall.nft`); `check` verifies that ufw and nftables.service stay inactive.
 - No `WatchdogSec`: none of these services emits `WATCHDOG=1`. The HTTP `PROBES` of `fleet-resilience.sh heal` (3 failures: restart) take its place.
-- prd: the ai-os relay runs from the read-only git checkout `/srv/src` (partial and sparse clone), kept up to date by `src-checkout-update.timer` (10 min, `--ff-only`, relay restarted if `packages/ai-os` changes).
+- prd: the ai-os relay runs from the read-only git checkout `/srv/src` (partial and sparse clone), kept up to date by `src-checkout-update.timer` (10 min, `--ff-only`, relay restarted if `frameworks/ai-os` changes).
 - PC: `device/fleet/pc/resilience.ps1`. AphrodyRelay and WireGuard as Automatic (Delayed Start) with recovery restart 5/10/30 s; `Aphrody\Agents*` and `ay-ai-*` tasks restartable, StartWhenAvailable.
 - Crash: `bash device/fleet/bin/fleet-kill-test.sh <host> <unit|user:unit|wg:iface>...`. Real reboot: `just fleet-resilience-proof <host>` (only one at a time, lock on the PC, refused if a host booted less than 15 min ago).
 

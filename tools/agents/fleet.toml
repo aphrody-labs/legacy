@@ -1,5 +1,5 @@
 # Agent fleet: which roles run on which host, with per-role timeout and budget.
-# No provider list here: ai-os (packages/ai-os) names the CLI/model in each task (`providers`),
+# No provider list here: ai-os (frameworks/ai-os) names the CLI/model in each task (`providers`),
 # otherwise the runner asks the relay (llm_models). growth tasks are drafts only (approval = owner).
 # heavy = true: builds/tests/training, fr1 only (enforced by runner.ts at enqueue and claim; prd and fr2
 # never run them, tasks landing there are forwarded to fr1 by health). prd keeps light prod roles only.

@@ -1,7 +1,7 @@
 # google-labs-code forks (aphrody-labs/<repo>, third_party/<checkout>): mirror model, no patch on the fork.
 # The bun-native code lives in src (absorbed); each [stack.<x>.absorbed] records the upstream commit the copy
 # was taken from, the upstream paths and where they live in src. `ay upstream sync google-labs [--push]` keeps the
-# forks even (daily on prd), `ay upstream status <stack>` shows one; `bun packages/ai-os/src/google/absorb.ts check` lists upstream changes to absorbed paths since that
+# forks even (daily on prd), `ay upstream status <stack>` shows one; `bun frameworks/ai-os/src/google/absorb.ts check` lists upstream changes to absorbed paths since that
 # commit. Roles: .agents/skills/google-labs-stitch-jules-design. A real fix goes to the fork as a branch, then a PR upstream.
 
 [stack.design-md]
@@ -40,7 +40,7 @@ paths = [
   "packages/sdk/generated/src",
   "packages/sdk/test/fixtures/responses",
 ]
-into = "packages/ai-os/src/google/stitch"
+into = "frameworks/ai-os/src/google/stitch"
 
 [stack.jules-sdk]
 model = "mirror"
@@ -56,8 +56,8 @@ runner = "prd"
 
 [stack.jules-sdk.absorbed]
 commit = "19fc117ac5cb961f393257b99d0b939848e75b52"
-paths = ["packages/core/src"]
-into = "packages/ai-os/src/google/jules"
+paths = ["system/core-ts/src"]
+into = "frameworks/ai-os/src/google/jules"
 
 [stack.stitch-skills]
 model = "mirror"

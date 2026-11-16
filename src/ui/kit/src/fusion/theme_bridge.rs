@@ -14,7 +14,7 @@ use crate::color::{
 };
 use crate::shared::YoloThemePreset;
 
-/// Canonical 9-preset family shared by Rust (`aphrody-ui`), `packages/design`, Figma variables,
+/// Canonical 9-preset family shared by Rust (`aphrody-ui`), `frameworks/design`, Figma variables,
 /// Hyprland/Omarchy, and all GPUI/Dioxus/WinUI/TUI targets.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -59,7 +59,7 @@ impl FusionThemePreset {
         Self::Gruvbox,
     ];
 
-    /// Kebab-case canonical identifier matching `packages/design/src/themes.ts`.
+    /// Kebab-case canonical identifier matching `frameworks/design/src/themes.ts`.
     #[must_use]
     pub const fn id(self) -> &'static str {
         match self {
@@ -92,7 +92,7 @@ impl FusionThemePreset {
         }
     }
 
-    /// Static specification matching `packages/design/src/themes.ts`.
+    /// Static specification matching `frameworks/design/src/themes.ts`.
     #[must_use]
     pub const fn spec(self) -> ThemePresetSpec {
         match self {

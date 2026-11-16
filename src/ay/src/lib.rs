@@ -41,8 +41,8 @@ Areas:
   linux      omarchy, linux, pkg (Omarchy quattro command center + CachyOS kernel/pkg/WSL2 via aphrody-omarchy)
   measure    bench, time
   design     design (DESIGN.md lint/export/spec via aphrody-ui; stitch/push via ai-os), jules (ai-os jules), ui (aphrody-ui fusion)
-  gaming     gaming (Steam, Proton, Vulkan, DirectX via packages/gaming), steam (Steam data as JSON)
-  assets     assets (fetch, optimize, bundle, publish via packages/assets)
+  gaming     gaming (Steam, Proton, Vulkan, DirectX via frameworks/gaming), steam (Steam data as JSON)
+  assets     assets (fetch, optimize, bundle, publish via frameworks/assets)
   migrate    electron (analyze, migrate to Tauri or GPUI, optimize, bench)
 
 Every command takes --help; machine output is --json where offered.
@@ -75,7 +75,7 @@ pub enum Cmd {
     /// Tree-sitter code graph: `ay graph <path>` builds; build, query, path, explain, mcp
     #[command(disable_help_flag = true)]
     Graph(Rest),
-    /// aphrody.app: `ay deploy <project>|ls|logs|rollback|promote` (packages/deploy); containers: `ay deploy build|smoke|up|ps|products|shell|runtime|run` runs `just docker-<sub>`
+    /// aphrody.app: `ay deploy <project>|ls|logs|rollback|promote` (system/deploy); containers: `ay deploy build|smoke|up|ps|products|shell|runtime|run` runs `just docker-<sub>`
     #[command(disable_help_flag = true)]
     Deploy(Rest),
     /// Hardware and compiler benchmarks (Windows)
@@ -84,10 +84,10 @@ pub enum Cmd {
     /// Gamescope mode (runs the `gamescope-rs` binary)
     #[command(disable_help_flag = true)]
     Scope(Rest),
-    /// Gaming stack (packages/gaming): status, apps, proton, layers, dx, steamcmd, run, skills
+    /// Gaming stack (frameworks/gaming): status, apps, proton, layers, dx, steamcmd, run, skills
     #[command(disable_help_flag = true)]
     Gaming(Rest),
-    /// Assets, download to deploy (packages/assets): list, verify, fetch, optimize, bundle, publish, attribution
+    /// Assets, download to deploy (frameworks/assets): list, verify, fetch, optimize, bundle, publish, attribution
     #[command(disable_help_flag = true)]
     Assets(Rest),
     /// DESIGN.md lint, export, spec (aphrody-ui); Stitch client / push (ai-os)
@@ -99,10 +99,10 @@ pub enum Cmd {
     /// Google Jules coding agent: run [--wait], sessions, show, activities, approve, send, sources (ai-os jules)
     #[command(disable_help_flag = true)]
     Jules(Rest),
-    /// Patch stacks of the bun and Chromium forks: status, sync, check, pr, mark, gc, export (packages/upstream)
+    /// Patch stacks of the bun and Chromium forks: status, sync, check, pr, mark, gc, export (system/upstream)
     #[command(disable_help_flag = true)]
     Upstream(Rest),
-    /// GNU upstream tracker and distributor: status, search, package, feed, diff, kernel, sync, site (packages/gnu)
+    /// GNU upstream tracker and distributor: status, search, package, feed, diff, kernel, sync, site (system/gnu-ts)
     #[command(disable_help_flag = true)]
     Gnu(Rest),
     /// Omarchy (quattro) + CachyOS command center: commands, theme, plugin, font, manual, kernel, pkg, wsl
@@ -114,7 +114,7 @@ pub enum Cmd {
     /// Package recipes for every distro: list, matrix, gen, build, check (aphrody-omarchy, build/pkg)
     #[command(disable_help_flag = true)]
     Pkg(Rest),
-    /// Release from fr1: tags, GitHub release, crates.io, npm, PyPI, vcpkg/CMake; dry-run unless `publish` (packages/release)
+    /// Release from fr1: tags, GitHub release, crates.io, npm, PyPI, vcpkg/CMake; dry-run unless `publish` (system/release)
     #[command(disable_help_flag = true)]
     Release(Rest),
     /// bun-LFS (third_party/lfs/bun, GitHub CI): build, logs, wsl (runs `just lfs-<sub>`)
@@ -129,7 +129,7 @@ pub enum Cmd {
     /// Embedded Bash 5.3 engine (rubash): `-c CMD`, a script file, or stdin; no external bash needed
     #[command(disable_help_flag = true)]
     Sh(Rest),
-    /// Plugin surface read by the Bun and niu hosts (packages/omniu): `manifest` (JSON), `names`
+    /// Plugin surface read by the Bun and niu hosts (system/omniu): `manifest` (JSON), `names`
     #[command(disable_help_flag = true)]
     Plugin(Rest),
     /// gclient in Rust: revinfo, getdep, setdep, sync (gitoxide), hooks, root
@@ -171,23 +171,23 @@ pub enum Cmd {
     Sys(SysArgs),
     /// Install and update the toolchain from tools.toml: --check, --list, --setup
     Up(up::UpArgs),
-    /// Cross-platform binary & PATH manager (packages/machine): status, purge, which, add, rm, link, unlink
+    /// Cross-platform binary & PATH manager (system/machine-ts): status, purge, which, add, rm, link, unlink
     #[command(disable_help_flag = true)]
     Bin(Rest),
-    /// Cross-platform PATH manager alias (packages/machine)
+    /// Cross-platform PATH manager alias (system/machine-ts)
     #[command(disable_help_flag = true)]
     Path(Rest),
     /// Content-addressed index pipeline (detect, tree-sitter, triage, Ghidra, SQLite+FTS5, Valkey): [root], watch, worker, sync, query, text, status, bench
-    /// (gen, gen-docs, search, users: packages/core)
+    /// (gen, gen-docs, search, users: system/core-ts)
     #[command(disable_help_flag = true)]
     Index(Rest),
-    /// Localization catalog checker & key extractor (packages/i18n)
+    /// Localization catalog checker & key extractor (frameworks/i18n-ts)
     #[command(disable_help_flag = true)]
     I18n(Rest),
     /// Inspect a dotenv file without printing values (aphrody-env): `ay env [--file p] [--required A,B]`
     #[command(disable_help_flag = true)]
     Env(Rest),
-    /// Cross-shell conformance matrix (packages/machine/matrix)
+    /// Cross-shell conformance matrix (system/machine-ts/matrix)
     #[command(disable_help_flag = true)]
     ShellMatrix(Rest),
     /// Reverse engineering, Ghidra P-Code/Pseudo-C, MinGW-REA, and Lua 5.2 bytecode analysis (aphrody-re)
@@ -239,7 +239,7 @@ pub enum Route {
     Pkg(Vec<String>),
     Bench(Vec<String>),
     External(&'static str, Vec<String>),
-    /// `bun packages/env-kit/src/cli.ts <args>` (TypeScript, run in place by bun).
+    /// `bun system/env-kit/src/cli.ts <args>` (TypeScript, run in place by bun).
     EnvKit(Vec<String>),
     /// `bun packages/<name>/src/cli.ts <args>` (a Bun package CLI of the monorepo, run in place).
     Package(&'static str, Vec<String>),
@@ -248,7 +248,7 @@ pub enum Route {
     Ssh(Vec<String>),
     Conformance(Vec<String>),
     Re(Vec<String>),
-    /// In-process index pipeline ([`index`]); `gen`, `gen-docs`, `search`, `users` still go to packages/core.
+    /// In-process index pipeline ([`index`]); `gen`, `gen-docs`, `search`, `users` still go to system/core-ts.
     Index(Vec<String>),
     Rt(Vec<String>),
     Sh(Vec<String>),

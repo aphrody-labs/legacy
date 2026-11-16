@@ -16,14 +16,14 @@ import "src/ay/ay.just"
 import "src/gnu/gnu.just"
 import "scripts/scripts.just"
 import "build/android/android.just"
-import "packages/ai-os/ai-os.just"
-import "packages/core/core.just"
+import "frameworks/ai-os/ai-os.just"
+import "system/core-ts/core.just"
 import "build/browser-engines.just"
-import "packages/env-kit/env-kit.just"
-import "packages/gnu/gnu.just"
-import "packages/machine/machine.just"
-import "packages/release/release.just"
-import "packages/upstream/upstream.just"
+import "system/env-kit/env-kit.just"
+import "system/gnu-ts/gnu.just"
+import "system/machine-ts/machine.just"
+import "system/release/release.just"
+import "system/upstream/upstream.just"
 import "tools/agents/agents.just"
 import "build/chromium-factory/chromium-factory.just"
 import "device/cloudflare/cloudflare.just"
@@ -58,8 +58,8 @@ fmt:
 [group('dev')]
 verify-all:
     ay doctor
-    bun test "{{root}}/packages/env-kit"
-    bun --cwd "{{root}}/packages/ai-os" test
+    bun test "{{root}}/system/env-kit"
+    bun --cwd "{{root}}/frameworks/ai-os" test
     # Rust compiles in CI only (never on the workstation): run ci.yml on this commit and wait for it.
     gh workflow run ci.yml --ref main && sleep 5 && gh run watch "$(gh run list --workflow ci.yml -L 1 --json databaseId --jq '.[0].databaseId')" --exit-status
 

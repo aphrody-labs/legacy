@@ -1530,7 +1530,7 @@ pub(crate) fn move_node_modules_aside(
             continue;
         }
 
-        // Don't use the folder's name, because `apps/web` and `packages/web` would collide.
+        // Don't use the folder's name, because `apps/web` and `frameworks/web` would collide.
         let old_modules_len = old_modules.len();
         old_modules
             .append_fmt(format_args!(".old_{i}_modules"))

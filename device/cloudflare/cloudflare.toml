@@ -44,7 +44,7 @@ ingress = [
   { hostname = "aphrody.com", service = "http://127.0.0.1:19300" },
   { hostname = "*.aphrody.com", service = "http://127.0.0.1:19300" },
   # aphrody-app VPS port (deploy.toml hosting.aphrody-app.port): same target fr2 used, nothing listens yet (502 parity).
-  # *.aphrody.app is the Worker aphrody-deploy (packages/deploy); names it passes through without a backend answer 404, not 502.
+  # *.aphrody.app is the Worker aphrody-deploy (system/deploy); names it passes through without a backend answer 404, not 502.
   { hostname = "*.aphrody.app", service = "http_status:404" },
   { service = "http_status:404" },
 ]
@@ -64,7 +64,7 @@ ingress = [
 
 # DNS: name -> desired single record. rollback = the record before migration (one line, also in the doc).
 # Service discovery (cf.ts apply srv): targets are <role>.mesh names, resolved on each host from its WireGuard peers.
-# packages/env-kit/src/discover.ts srv(<service>, <zone>) reads them; ports mirror device/fleet/cluster.toml.
+# system/env-kit/src/discover.ts srv(<service>, <zone>) reads them; ports mirror device/fleet/cluster.toml.
 [srv."aphrody.com"]
 "_valkey._tcp.aphrody.com" = { target = "fr2.mesh", port = 6379 }
 "_nativelink-scheduler._tcp.aphrody.com" = { target = "fr1.mesh", port = 50051 }
@@ -276,7 +276,7 @@ apps = [
   { name = "aphrody-admin", type = "self_hosted", domain = "admin.aphrody.com" },
   { name = "aphrody-control", type = "self_hosted", domain = "control.aphrody.com" },
   { name = "aphrody-console", type = "self_hosted", domain = "console.aphrody.com" },
-  # aphrody.app dashboard (packages/deploy): owner only, the Worker re-verifies the JWT (ACCESS_AUD in its wrangler.toml).
+  # aphrody.app dashboard (system/deploy): owner only, the Worker re-verifies the JWT (ACCESS_AUD in its wrangler.toml).
   { name = "aphrody-app-dashboard", type = "self_hosted", domain = "aphrody.app/dashboard" },
 ]
 

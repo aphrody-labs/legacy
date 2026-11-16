@@ -3,8 +3,8 @@
 // No secret typed: existing Gemini session only; E2E_GEMINI_PROMPT=0 skips the input.
 import { mkdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { call } from "../packages/ai-os/src/relay/protocols.ts";
-import * as hubMod from "../packages/ai-os/src/relay/mcp-hub.ts";
+import { call } from "../frameworks/ai-os/src/relay/protocols.ts";
+import * as hubMod from "../frameworks/ai-os/src/relay/mcp-hub.ts";
 const closeHub = () => (hubMod as { closeHub?: () => void }).closeHub?.();
 
 const ROOT = join(import.meta.dir, "..");

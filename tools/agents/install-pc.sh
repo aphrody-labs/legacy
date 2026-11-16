@@ -14,7 +14,7 @@ TR="conhost.exe --headless \"$WBUN\" --no-env-file \"$RUNNER\" health"
 schtasks.exe /Create /F /TN "Aphrody\\AgentsHealth" /SC MINUTE /MO 5 /TR "$TR" >/dev/null
 schtasks.exe /Create /F /TN "Aphrody\\AgentsLogon" /SC ONLOGON /TR "$TR" >/dev/null
 # Agent tooling (tools/agents/toolchain.toml): drift fix every hour and at session start.
-SYNC="conhost.exe --headless \"$WBUN\" \"$SRC/packages/machine/src/toolchain.ts\" sync"
+SYNC="conhost.exe --headless \"$WBUN\" \"$SRC/system/machine-ts/src/toolchain.ts\" sync"
 schtasks.exe /Create /F /TN "Aphrody\\AgentsSync" /SC HOURLY /TR "$SYNC" >/dev/null
 schtasks.exe /Create /F /TN "Aphrody\\AgentsSyncLogon" /SC ONLOGON /TR "$SYNC" >/dev/null
 SRC_ROOT=$SRC "$BUN" "$RUNNER" health

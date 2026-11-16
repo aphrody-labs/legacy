@@ -6,7 +6,7 @@
 // Vantage points: this machine = "internet" (not in the fr2 allow-list), ssh fr2/prd for fleet-side checks.
 import { connect } from "node:tls";
 import { join } from "node:path";
-import { resolve } from "../../packages/env-kit/src/discover.ts";
+import { resolve } from "../../system/env-kit/src/discover.ts";
 import { api, cfg } from "./lib.ts";
 
 const fr2 = await resolve("fr2");
@@ -440,7 +440,7 @@ for (const from of ["fr2", "prd"]) {
   }
 }
 
-// 10. aphrody.com (holding page) and aphrody.app (deployment platform, packages/deploy).
+// 10. aphrody.com (holding page) and aphrody.app (deployment platform, system/deploy).
 {
   const page = async (u: string) => {
     const r = await fetch(u, {
@@ -488,7 +488,7 @@ for (const from of ["fr2", "prd"]) {
   // ancestor of a ready deployment whose preview answers with that sha.
   const reg = Bun.TOML.parse(
     await Bun.file(
-      join(import.meta.dir, "..", "..", "packages", "deploy", "projects.toml"),
+      join(import.meta.dir, "..", "..", "system", "deploy", "projects.toml"),
     ).text(),
   ) as any;
   for (const [name, p] of Object.entries<any>(reg.project ?? {})) {

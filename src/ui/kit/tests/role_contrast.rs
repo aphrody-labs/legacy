@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Every `on-X` role of packages/design/tokens/tokens.rs meets WCAG contrast against `X` in all six modes.
+//! Every `on-X` role of frameworks/design/tokens/tokens.rs meets WCAG contrast against `X` in all six modes.
 
 fn luminance(argb: u32) -> f64 {
     let channel = |shift: u32| {
@@ -17,7 +17,7 @@ fn contrast(a: u32, b: u32) -> f64 {
 #[test]
 fn every_on_role_meets_contrast_in_all_six_modes() {
     mod tokens {
-        include!(concat!(env!("SRC_ROOT"), "/packages/design/tokens/tokens.rs"));
+        include!(concat!(env!("SRC_ROOT"), "/frameworks/design/tokens/tokens.rs"));
     }
     use tokens::md;
     let modes: [(&str, &[(&str, u32)]); 6] = [

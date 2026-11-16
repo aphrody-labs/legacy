@@ -1,6 +1,6 @@
 # Deployment and rollback
 
-Single source: [`device/deploy.toml`](../../device/deploy.toml) (`[services.*]` placement and blue/green ports, `[hosting.*]` target `cf | vercel | vps`, `[containers]` images). The per-service matrix lives there, not here. Rendering for one target: `bun packages/deploy/src/deploy-target.ts <app> <cf|vercel|vps>`. Images: [`build/docker/`](../../build/docker) (Dockerfile, `docker-bake.hcl`, `compose.yaml`, `smoke.sh`) built by `.github/workflows/images.yml`. There is no in-house engine: `ay deploy <sub>` is `just docker-<sub>`.
+Single source: [`device/deploy.toml`](../../device/deploy.toml) (`[services.*]` placement and blue/green ports, `[hosting.*]` target `cf | vercel | vps`, `[containers]` images). The per-service matrix lives there, not here. Rendering for one target: `bun system/deploy/src/deploy-target.ts <app> <cf|vercel|vps>`. Images: [`build/docker/`](../../build/docker) (Dockerfile, `docker-bake.hcl`, `compose.yaml`, `smoke.sh`) built by `.github/workflows/images.yml`. There is no in-house engine: `ay deploy <sub>` is `just docker-<sub>`.
 
 Hosts and roles: [FLEET.md](FLEET.md). Heavy jobs run only on fr1 (`ssh <fr1> aphrody-heavy <cmd>`).
 

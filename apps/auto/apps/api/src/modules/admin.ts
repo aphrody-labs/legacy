@@ -14,7 +14,7 @@ import {
 } from "@auto/store";
 import { revoquerJeton, humainSuperAdmin, agentAdministrateur, ipAdministration, type Auth } from "@auto/tenancy";
 import type { BunRequest } from "bun";
-import type { Chemins, Module } from "../modules";
+import type { Chemins, Module } from ".";
 import { avecId, enumere, liste, objet, op, str } from "../openapi-outils";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

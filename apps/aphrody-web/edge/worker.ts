@@ -1,7 +1,7 @@
 /**
  * Cloudflare Worker of aphrody.com (route `aphrody.com/*`, custom domain www.aphrody.com).
  * Static pages come from the production deployment of project "aphrody" on aphrody.app
- * (R2 bucket aphrody-dist, pointer deploys/aphrody/_state.json, packages/deploy): a deploy or a
+ * (R2 bucket aphrody-dist, pointer deploys/aphrody/_state.json, system/deploy): a deploy or a
  * rollback moves the pointer, this Worker is not redeployed. Dynamic endpoints (/api/*, /g/*,
  * /search) go to the Bun origin on prd (ORIGIN_URL, or the zone origin through the tunnel when
  * ORIGIN_URL is empty).
@@ -62,7 +62,7 @@ export default {
       return fetch(new Request(target, request));
     }
     const project = env.PROJECT ?? "aphrody";
-    // /_aphrody/*: analytics beacon, speed insights, image optimization, edge config (packages/deploy/src/runtime.ts).
+    // /_aphrody/*: analytics beacon, speed insights, image optimization, edge config (system/deploy/src/runtime.ts).
     if (url.pathname.startsWith("/_aphrody/")) {
       const st = await readState(env.BUCKET, project);
       const rt = await runtime(

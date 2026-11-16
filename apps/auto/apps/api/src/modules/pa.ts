@@ -37,7 +37,7 @@ import {
 } from "@auto/store";
 import { entreprise } from "@auto/tenancy";
 import type { BunRequest } from "bun";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import { avecId, brut, enumere, liste, objet, op, uuid } from "../openapi-outils";
 import {
   type EvenementLot,

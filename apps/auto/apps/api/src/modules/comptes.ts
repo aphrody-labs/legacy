@@ -34,7 +34,7 @@ import {
   type Role,
 } from "@auto/tenancy";
 import type { BunRequest } from "bun";
-import type { Chemins, Module } from "../modules";
+import type { Chemins, Module } from ".";
 import { avecId, enumere, liste, objet, op, ref, str, uuid } from "../openapi-outils";
 
 /** Wires the real mail delivery (invitations, magic links...); by default they are logged. */

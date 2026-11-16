@@ -10,8 +10,8 @@ import {
 } from "fs";
 import { dirname, extname, join } from "path";
 import { brotliCompressSync, constants as zc } from "node:zlib";
-import { validateWeb, formatReport } from "../../packages/wck/src/index";
-import { componentsBundle, tokensCss } from "../../packages/deploy/src/m3";
+import { validateWeb, formatReport } from "../../system/wck/src/index";
+import { componentsBundle, tokensCss } from "../../system/deploy/src/m3";
 import { buildCsp, readGoogleConfig } from "./src/google/config";
 import {
   adsTxt,
@@ -87,12 +87,12 @@ for (const r of [bootBuild]) {
 // 2. CSS: legacy stylesheet + generated M3 token subset + M3 layer, minified.
 const rawCss = [
   readFileSync(join(ROOT, "src", "style.css"), "utf-8"),
-  tokensCss(join(ROOT, "..", "..")), // packages/design/tokens/tokens.css (skill ui-system)
+  tokensCss(join(ROOT, "..", "..")), // frameworks/design/tokens/tokens.css (skill ui-system)
   readFileSync(join(ROOT, "src", "m3.css"), "utf-8"),
 ].join("\n");
 emit("style.css", minifyCss(rawCss));
 
-// 3. Static HTML (SSG): home page in the five locales of packages/i18n.
+// 3. Static HTML (SSG): home page in the five locales of frameworks/i18n-ts.
 // Public site = the holding page only (fr, en, zh-CN, ja, es): no technical hubs, package catalogs or changelogs.
 const SRC_ROOT = join(ROOT, "..", "..");
 for (const l of HOME_LOCALES)
@@ -256,7 +256,7 @@ if (existsSync(publicDir)) {
   for (const f of readdirSync(publicDir))
     cpSync(join(publicDir, f), join(DIST_DIR, f), { recursive: true });
 }
-// Material Web (packages/design/src/components.ts), loaded as a module by the holding page.
+// Material Web (frameworks/design/src/components.ts), loaded as a module by the holding page.
 emit("md.js", await componentsBundle(join(ROOT, "..", "..")));
 emit("holding.css", minifyCss(holdingCss(join(ROOT, "..", ".."))));
 

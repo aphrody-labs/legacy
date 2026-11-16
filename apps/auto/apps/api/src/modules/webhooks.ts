@@ -4,7 +4,7 @@ import { ErreurApi } from "../i18n";
 import { creerWebhook, listerWebhooks, supprimerWebhook, withTenant } from "@auto/store";
 import { chiffrer } from "@auto/tenancy";
 import type { BunRequest } from "bun";
-import type { Chemins, Module } from "../modules";
+import type { Chemins, Module } from ".";
 import { avecId, liste, objet, op, str } from "../openapi-outils";
 import { infoSecret, verifierUrl, TYPE } from "@auto/services/webhooks";
 

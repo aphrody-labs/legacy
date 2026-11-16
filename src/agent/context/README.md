@@ -1,7 +1,7 @@
 # agent-context
 
 <!-- catalog:begin unit -->
-> Native reader/writer for the agent Context store (same SQLite schema as packages/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python.
+> Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python.
 
 | Type | Path |
 | :-- | :-- |

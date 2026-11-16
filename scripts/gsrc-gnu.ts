@@ -2,8 +2,8 @@
 // Get the tree without history on any host with uv:  uvx --from breezy brz export <dir> https://bzr.savannah.gnu.org/r/gsrc/trunk
 // Usage: bun scripts/gsrc-gnu.ts <gsrc-root> > docs/research/gsrc-gnu.json   (revno read live from the branch)
 import { Glob } from "bun";
-import { vars } from "../packages/gnu/src/mk.ts";
-import { GSRC_REVNO, get, parseRevno } from "../packages/gnu/src/upstream.ts";
+import { vars } from "../system/gnu-ts/src/mk.ts";
+import { GSRC_REVNO, get, parseRevno } from "../system/gnu-ts/src/upstream.ts";
 const root = process.argv[2];
 if (!root) throw new Error("usage: bun scripts/gsrc-gnu.ts <gsrc-root>");
 const r = await get(GSRC_REVNO, {}, 20_000);

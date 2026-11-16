@@ -1,6 +1,6 @@
 # User systemd unit of the @aphrody/ai-os relay (Linux: prd and workstations), without a browser.
-# Source : packages/ai-os/src/relay, lu depuis un checkout git en lecture seule (SRC_ROOT, prd : /srv/src, clone
-# partial sparse checkout kept up to date by src-checkout-update.timer, which restarts the relay if packages/ai-os changes).
+# Source : frameworks/ai-os/src/relay, lu depuis un checkout git en lecture seule (SRC_ROOT, prd : /srv/src, clone
+# partial sparse checkout kept up to date by src-checkout-update.timer, which restarts the relay if frameworks/ai-os changes).
 # Installation : install -Dm644 aphrody-relay.service ~/.config/systemd/user/aphrody-relay.service
 #                systemctl --user daemon-reload && systemctl --user enable --now aphrody-relay
 #                loginctl enable-linger "$USER"   (start without an open session)
@@ -16,7 +16,7 @@ Environment=RELAY_PORT=8790
 Environment=RELAY_TCP_PORT=8791
 Environment=SRC_ROOT=/srv/src
 EnvironmentFile=-%h/.config/aphrody/relay.env
-ExecStart=%h/.bun/bin/bun ${SRC_ROOT}/packages/ai-os/src/relay/cli.ts serve
+ExecStart=%h/.bun/bin/bun ${SRC_ROOT}/frameworks/ai-os/src/relay/cli.ts serve
 Restart=always
 RestartSec=5
 NoNewPrivileges=true

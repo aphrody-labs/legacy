@@ -4,7 +4,7 @@
 
 [[profile]]
 name = "relay-chrome"
-# CDP relay of ai-os (packages/ai-os/src/relay/cdp.ts): Chrome stable, dedicated --user-data-dir.
+# CDP relay of ai-os (frameworks/ai-os/src/relay/cdp.ts): Chrome stable, dedicated --user-data-dir.
 path = "%LOCALAPPDATA%/aphrody/relay/chrome"
 engine = "chrome-stable"
 

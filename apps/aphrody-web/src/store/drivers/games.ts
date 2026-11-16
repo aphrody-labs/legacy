@@ -1,4 +1,4 @@
-/** Steam and Epic: the game index (packages/assets/data/games.sqlite, FTS5), else apps/aphrody/src/data/games.json. */
+/** Steam and Epic: the game index (frameworks/assets/data/games.sqlite, FTS5), else apps/aphrody/src/data/games.json. */
 
 import { Database } from "bun:sqlite";
 import { existsSync, readFileSync } from "fs";
@@ -26,7 +26,7 @@ export const GAMES_DB = join(
   "..",
   "..",
   "..",
-  "packages",
+  "frameworks",
   "assets",
   "data",
   "games.sqlite",

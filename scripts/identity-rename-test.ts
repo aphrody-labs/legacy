@@ -110,7 +110,7 @@ writeFileSync(oldToml, oldText);
 const CHECKS: [string, string[]][] = [
   ["identity check", ["bun", join(copy, "scripts/identity.ts"), "check", "--root", copy]],
   ["checkdeps", ["bun", join(copy, "scripts/checkdeps.ts")]],
-  ["bun tests (targeted)", ["bun", "test", "scripts/identity.test.ts", "packages/env-kit/tests/auth.test.ts", "scripts/hygiene-bun-dependency.test.ts"]],
+  ["bun tests (targeted)", ["bun", "test", "scripts/identity.test.ts", "system/env-kit/tests/auth.test.ts", "scripts/hygiene-bun-dependency.test.ts"]],
 ];
 for (const [name, cmd] of CHECKS) pre(cmd, copy, name);
 const upstreamBefore = run(["bun", join(copy, "scripts/identity-literals.ts"), "upstream", "--root", copy], copy, "upstream namespaces: count before");

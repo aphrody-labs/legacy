@@ -19,7 +19,7 @@ pub struct Tier5Metrics {
 }
 
 pub fn run_benchmark() -> Tier5Metrics {
-    let script_path = concat!(env!("SRC_ROOT"), "/packages/ffi-bridge/src/tier5-bun-bench.ts");
+    let script_path = concat!(env!("SRC_ROOT"), "/system/ffi-bridge/src/tier5-bun-bench.ts");
     let output = Command::new("bun")
         .args(["run", script_path, "--json"])
         .output()

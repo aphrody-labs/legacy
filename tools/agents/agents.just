@@ -25,7 +25,7 @@ agents-install host:
 # Agent tooling (tools/agents/toolchain.toml): skills, plugins, MCP for Claude Code, Codex, agy, Gemini CLI (usage: just agents-sync [--check])
 [group('agents')]
 agents-sync *args:
-    bun "{{root}}/packages/machine/src/toolchain.ts" {{args}}
+    bun "{{root}}/system/machine-ts/src/toolchain.ts" {{args}}
 
 # Install the runner on this Windows PC (scheduled tasks + psmux session)
 [group('agents')]

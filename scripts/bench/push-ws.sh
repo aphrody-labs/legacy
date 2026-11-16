@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$(git rev-parse --show-toplevel)/packages/env-kit/loaders/shell/site.sh"; FR1=$(site_ssh fr1)
+. "$(git rev-parse --show-toplevel)/system/env-kit/loaders/shell/site.sh"; FR1=$(site_ssh fr1)
 # Local: ship a trimmed copy of the workspace sources to fr1:/srv/bench and set it up.
 set -e
 git -C C:/aphrody archive HEAD Cargo.toml Cargo.lock rust-toolchain.toml .cargo src/depot src/core src/taffy | timeout 300 ssh "$FR1" 'mkdir -p /srv/bench && cat > /srv/bench/in.tar'

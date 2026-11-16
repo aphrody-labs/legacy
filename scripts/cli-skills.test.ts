@@ -7,7 +7,7 @@ import {
   subcommands,
   summary,
 } from "./cli-skills.ts";
-import { parseSkill } from "../packages/ai-os/src/core/skill-lint.ts";
+import { parseSkill } from "../frameworks/ai-os/src/core/skill-lint.ts";
 
 const HELP =
   "\x1b[1mtool 1.0\x1b[0m\r\nA fast finder.\n\n\n\nUsage: tool [OPTIONS] <CMD>\n\nCommands:\n  run     Run it\n  help    Print help\n  scan, s  Scan\n\nOptions:\n  -h, --help  Help\n";

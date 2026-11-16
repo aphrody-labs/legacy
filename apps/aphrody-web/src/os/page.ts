@@ -1,6 +1,6 @@
-// /os: the browser OS shell (launcher on the WebGPU stage, windows, apps). Texts come from packages/i18n
+// /os: the browser OS shell (launcher on the WebGPU stage, windows, apps). Texts come from frameworks/i18n-ts
 // (keys os.*, en fr zh-CN ja es); the catalog subset is embedded as JSON so the client needs no fetch.
-import { catalogs } from "../../../../packages/i18n/src/index.ts";
+import { catalogs } from "../../../../frameworks/i18n-ts/src/index.ts";
 
 export const OS_LOCALES = ["en", "fr", "zh-CN", "ja", "es"] as const;
 export type OsLocale = (typeof OS_LOCALES)[number];

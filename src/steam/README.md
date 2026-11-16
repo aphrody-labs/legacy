@@ -22,7 +22,7 @@ Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/r
 <!-- catalog:end -->
 
 Rust half of the Bun OS Steam owner; the Bun half (CLI `bun-steam`, steamcmd driving, Proton
-installs) is [`packages/bun-steam`](../../packages/bun-steam).
+installs) is [`system/bun-steam`](../../system/bun-steam).
 
 | Module        | Scope                                                                                                                                                                                                            |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

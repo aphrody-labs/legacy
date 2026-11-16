@@ -1,6 +1,6 @@
 # Service d'authentification de l'hôte (unité utilisateur : root sur prd, agent/ubuntu pour les runners).
 # Sonde réelle toutes les 5 min, rafraîchissement sans humain toutes les 30 min, au plus un signalement groupé
-# par identifiant et par 24 h (aucune page ouverte, aucune relance). Code : packages/env-kit/src/auth-daemon.ts.
+# par identifiant et par 24 h (aucune page ouverte, aucune relance). Code : system/env-kit/src/auth-daemon.ts.
 # Installation : install -Dm644 aphrody-auth-daemon.service ~/.config/systemd/user/ && systemctl --user enable --now aphrody-auth-daemon
 [Unit]
 Description=ay auth daemon (sondes, rafraîchissement, signalement unique)
@@ -11,7 +11,7 @@ After=network-online.target
 Type=simple
 Environment=SRC_ROOT=%h/agents/src
 Environment=PATH=%h/.bun/bin:%h/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/bin/sh -c 'exec bun run --cwd "$SRC_ROOT/packages/env-kit" src/cli.ts auth daemon --every 5 --refresh 30'
+ExecStart=/bin/sh -c 'exec bun run --cwd "$SRC_ROOT/system/env-kit" src/cli.ts auth daemon --every 5 --refresh 30'
 Restart=on-failure
 RestartSec=60
 Nice=19

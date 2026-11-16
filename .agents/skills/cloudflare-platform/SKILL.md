@@ -8,7 +8,7 @@ description: Cloudflare Developer Platform reference covering Workers (workerd, 
 ## Tooling
 
 - Default CLI: `cf` (`~/.bun/bin/cf.exe`). Find a command with `cf cli search "<task>"`, preview with `--dry-run` before executing. R2: `cf r2 buckets list`, `cf r2 objects list --bucket-name <b>` (skill `r2`).
-- Projects with a Wrangler config (`packages/deploy/wrangler.toml`) use `wrangler` (`~/.bun/bin/wrangler.exe`; install `bun add -g wrangler`; never `bunx wrangler`): `wrangler dev`, `wrangler deploy`, `wrangler tail`, `wrangler types`.
+- Projects with a Wrangler config (`system/deploy/wrangler.toml`) use `wrangler` (`~/.bun/bin/wrangler.exe`; install `bun add -g wrangler`; never `bunx wrangler`): `wrangler dev`, `wrangler deploy`, `wrangler tail`, `wrangler types`.
 - Engine: `workerd` (open-source JavaScript / Wasm runtime).
 
 ## Storage and database primitives

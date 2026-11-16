@@ -1,7 +1,7 @@
 import { ErreurApi, refus } from "../i18n";
 import { humainSuperAdmin, ipAdministration } from "@auto/tenancy";
 import { ErreurMetier } from "@auto/store";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import type { BunRequest } from "bun";
 export const routes: Module = ({ sql, ba, pub }) => {
   const humain = <R extends Request>(fn: (req: R, user: string) => Promise<Response>) =>

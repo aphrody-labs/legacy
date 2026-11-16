@@ -1,0 +1,44 @@
+{
+  "name": "@aphrody/i18n",
+  "version": "0.1.0",
+  "description": "Shared i18n layer: catalogs discovered from locales/, Unicode MessageFormat 2 (messageformat) behind a format-adapter interface, Intl-based locale negotiation, check/extract/translate CLI",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./locales/*": "./locales/*",
+    "./browser": "./src/browser.ts",
+    "./detect": "./src/detect.ts"
+  },
+  "scripts": {
+    "check": "bun check",
+    "fmt": "bun fmt",
+    "test": "bun test",
+    "i18n:check": "bun run src/cli.ts check",
+    "i18n:translate": "bun run src/cli.ts translate"
+  },
+  "dependencies": {
+    "eld": "2.1.1",
+    "messageformat": "4.1.0"
+  },
+  "devDependencies": {},
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aphrody-labs/aphrody.git",
+    "directory": "frameworks/i18n-ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "peerDependencies": {
+    "@aphrody/ai-os": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@aphrody/ai-os": {
+      "optional": true
+    }
+  }
+}

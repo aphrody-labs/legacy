@@ -157,7 +157,7 @@
         "@auto/store": "workspace:*",
       },
     },
-    "packages/automate": {
+    "frameworks/automate": {
       "name": "@auto/automate",
       "version": "0.0.0",
       "dependencies": {
@@ -185,7 +185,7 @@
       "name": "@auto/domain",
       "version": "0.0.0",
     },
-    "packages/i18n": {
+    "frameworks/i18n-ts": {
       "name": "@auto/i18n",
       "version": "0.0.0",
       "dependencies": {
@@ -207,7 +207,7 @@
         "@auto/i18n": "workspace:*",
       },
     },
-    "packages/native": {
+    "system/native": {
       "name": "@auto/native",
       "version": "0.0.0",
     },
@@ -311,7 +311,7 @@
 
     "@auto/api": ["@auto/api@workspace:apps/api"],
 
-    "@auto/automate": ["@auto/automate@workspace:packages/automate"],
+    "@auto/automate": ["@auto/automate@workspace:frameworks/automate"],
 
     "@auto/billing": ["@auto/billing@workspace:packages/billing"],
 
@@ -325,13 +325,13 @@
 
     "@auto/extension": ["@auto/extension@workspace:apps/extension"],
 
-    "@auto/i18n": ["@auto/i18n@workspace:packages/i18n"],
+    "@auto/i18n": ["@auto/i18n@workspace:frameworks/i18n-ts"],
 
     "@auto/ingest": ["@auto/ingest@workspace:packages/ingest"],
 
     "@auto/mail": ["@auto/mail@workspace:packages/mail"],
 
-    "@auto/native": ["@auto/native@workspace:packages/native"],
+    "@auto/native": ["@auto/native@workspace:system/native"],
 
     "@auto/pa": ["@auto/pa@workspace:packages/pa"],
 

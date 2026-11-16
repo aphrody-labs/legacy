@@ -10,8 +10,8 @@ import { ThreeVpsSearchCluster } from "@aphrody/chromium-bun/search";
 import {
   generatedSymbols,
   symbolSvg,
-} from "../../packages/design/src/bun-plugin.ts";
-import { searchSymbols } from "../../packages/design/src/runtime.ts";
+} from "../../frameworks/design/src/bun-plugin.ts";
+import { searchSymbols } from "../../frameworks/design/src/runtime.ts";
 import { buildYoloApp } from "./build.ts";
 import { YoloModuleGraph } from "./src/framework/graph.ts";
 import { runBunFullstackDiagnostics } from "./src/framework/primitives.ts";

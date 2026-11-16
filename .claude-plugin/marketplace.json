@@ -3,7 +3,7 @@
   "owner": {
     "name": "aphrody-dev"
   },
-  "description": "Marketplace cross-agent du monorepo src (Claude Code, Codex, agy). Source de vérité : tools/agents/toolchain.toml ; généré et vérifié par packages/machine/src/toolchain.ts.",
+  "description": "Marketplace cross-agent du monorepo src (Claude Code, Codex, agy). Source de vérité : tools/agents/toolchain.toml ; généré et vérifié par system/machine-ts/src/toolchain.ts.",
   "plugins": [
     {
       "name": "aphrody-skills",

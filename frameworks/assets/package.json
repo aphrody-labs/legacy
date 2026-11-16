@@ -1,0 +1,28 @@
+{
+  "name": "@aphrody/assets",
+  "version": "0.1.0",
+  "description": "Redistribution-safe asset library: manifest with SPDX license, sha256 and attribution; fetch, verify, list",
+  "type": "module",
+  "main": "./src/manifest.ts",
+  "types": "./src/manifest.ts",
+  "scripts": {
+    "verify": "bun run src/cli.ts verify",
+    "meta": "bun run src/cli.ts bevy-meta",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "gltf-validator": "catalog:",
+    "svgo": "catalog:",
+    "wawoff2": "catalog:"
+  },
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aphrody-labs/aphrody.git",
+    "directory": "frameworks/assets"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

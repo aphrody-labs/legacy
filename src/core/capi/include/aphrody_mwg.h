@@ -2,7 +2,7 @@
 #define APHRODY_MWG_H
 
 /* Canonical C23/C11/C++23 ABI header for the Modern Web Guidance Pure-C LLVM Core:
- * - src/core/capi/c/mwg_core.c -> packages/wck/native/mwg_capi.dll
+ * - src/core/capi/c/mwg_core.c -> system/wck/native/mwg_capi.dll
  * Consumed by C, C++23, Rust (src/core/capi/src/mwg.rs), and Bun (bun:ffi).
  */
 

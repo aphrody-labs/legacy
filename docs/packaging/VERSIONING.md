@@ -2,11 +2,11 @@
 
 Frozen: changing this file needs a tribunal verdict (process rule, not checked
 by code). The version rules below are checked by code: `ay release freeze --check`
-(packages/release/src/freeze.ts) in `judge.yml`, `canary.yml` and `release.yml` (dist).
+(system/release/src/freeze.ts) in `judge.yml`, `canary.yml` and `release.yml` (dist).
 
 ## One version, one file
 
-- `packages/release/VERSION` (one line) is the only hand-written version of the monorepo: SemVer `MAJOR.MINOR.PATCH`.
+- `system/release/VERSION` (one line) is the only hand-written version of the monorepo: SemVer `MAJOR.MINOR.PATCH`.
 - `ay release freeze` copies it into `Cargo.toml` `[workspace.package] version` (every crate with
   `version.workspace = true`), into the `version` of every path dependency on such a crate, and into the root
   `package.json`, then refreshes `Cargo.lock` offline. `--check` writes nothing and fails on any drift, on a

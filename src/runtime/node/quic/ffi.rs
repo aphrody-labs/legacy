@@ -6,7 +6,7 @@ use core::ffi::c_void;
 ///   (`ea_stream_if_ctx` / `peer_ctx`), a conn-ctx, or a stream-ctx — is a
 ///   pointer we ourselves installed: a `QuicEndpoint`, `QuicSession`, or
 ///   `QuicStream` stored inline in its JS wrapper, whose first field is the
-///   `*const NqVtable` that `packages/bun-usockets/src/node_quic_shim.c` reads
+///   `*const NqVtable` that `system/bun-usockets/src/node_quic_shim.c` reads
 ///   back via `*(us_nq_vtable**)ctx`. Those structs are `#[repr(C)]` precisely
 ///   so that first-field read stays valid, and the shim never invents or
 ///   offsets a context pointer.

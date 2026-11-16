@@ -3,14 +3,14 @@
 #   bash bench.sh <new-ay> <old-capi.so> <checkout> [binary]
 #     new-ay     the built `ay` with `ay index`
 #     old-capi   libaphrody_core_capi.so built from the commit before the pipeline (baseline C ABI)
-#     checkout   a src checkout whose packages/core/src/cli.ts is the baseline bun indexer
+#     checkout   a src checkout whose system/core-ts/src/cli.ts is the baseline bun indexer
 #     binary     a native binary for the triage comparison (default /usr/bin/hyperfine)
-# Baseline = `bun packages/core/src/cli.ts index` over the old C ABI (Rust walk+parse -> JSON per file -> JSCallback ->
+# Baseline = `bun system/core-ts/src/cli.ts index` over the old C ABI (Rust walk+parse -> JSON per file -> JSCallback ->
 # bun:sqlite). New = `ay index` (in process). Tree = `git archive HEAD src` extracted to $W/tree.
 set -euo pipefail
 AY="${1:?new ay}"; OLD="${2:?old capi}"; CK="${3:?checkout}"; BIN="${4:-/usr/bin/hyperfine}"
 W="${BENCH_DIR:-/srv/bench}"; T="$W/tree"; R="$W/results"; mkdir -p "$R"
-CLI="$CK/packages/core/src/cli.ts"
+CLI="$CK/system/core-ts/src/cli.ts"
 OLDIDX="env APHRODY_CORE_LIB=$OLD bun $CLI index $T --include src --db $W/b.db"
 NEWIDX="$AY index $T --include src --db $W/n.db --no-shared"
 HF="hyperfine --style basic --time-unit millisecond"

@@ -1,5 +1,5 @@
 // Motion core of the stage: critically damped springs whose rate comes from the M3 duration tokens
-// (packages/design/tokens/tokens.css, read by the macro), and the reduced-motion switch.
+// (frameworks/design/tokens/tokens.css, read by the macro), and the reduced-motion switch.
 import { motionTokens } from "./tokens.macro.ts" with { type: "macro" };
 
 export const MOTION = motionTokens();

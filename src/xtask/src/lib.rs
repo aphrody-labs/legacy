@@ -323,7 +323,7 @@ fn scan_repo_tree(dir: &Path, depth: usize, max_depth: usize, repos: &mut Vec<Pa
 
 pub fn discover_repos(root: &Path) -> Vec<PathBuf> {
     let mut repos = Vec::new();
-    let canonical_groups = ["apps", "packages", "src", "bench", "test", "build", "device", "prebuilts", "third_party"];
+    let canonical_groups = ["apps", "frameworks", "system", "src", "bench", "test", "build", "device", "prebuilts", "third_party"];
     for group in canonical_groups {
         let gp = root.join(group);
         if gp.is_dir() && !is_reparse_point(&gp) {
@@ -337,7 +337,7 @@ pub fn discover_repos(root: &Path) -> Vec<PathBuf> {
 
 /// Dépôts tiers par pilier. third_party/ est à plat (modèle Chromium) : la catégorie n'est plus dans le chemin.
 /// Liste issue de la classification par chemin d'avant le flatten du 2026-11-12
-/// (packages/machine/src/flatten-third-party.ts, plan dans var/flatten-third-party.json).
+/// (system/machine-ts/src/flatten-third-party.ts, plan dans var/flatten-third-party.json).
 const LINUX_THIRD_PARTY: &[&str] = &[
     "CachyOS-PKGBUILDS",
     "WSL",

@@ -1,18 +1,18 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/assets" },
-    { "path": "packages/core" },
-    { "path": "packages/deploy" },
-    { "path": "packages/env-kit" },
-    { "path": "packages/ffi-bridge" },
-    { "path": "packages/gaming" },
-    { "path": "packages/google" },
-    { "path": "packages/re/ghidra" },
-    { "path": "packages/i18n" },
-    { "path": "packages/native" },
-    { "path": "packages/release" },
-    { "path": "packages/upstream" },
-    { "path": "packages/wck" }
+    { "path": "frameworks/assets" },
+    { "path": "system/core-ts" },
+    { "path": "system/deploy" },
+    { "path": "system/env-kit" },
+    { "path": "system/ffi-bridge" },
+    { "path": "frameworks/gaming" },
+    { "path": "frameworks/google-ts" },
+    { "path": "frameworks/re-ts/ghidra" },
+    { "path": "frameworks/i18n-ts" },
+    { "path": "system/native" },
+    { "path": "system/release" },
+    { "path": "system/upstream" },
+    { "path": "system/wck" }
   ]
 }

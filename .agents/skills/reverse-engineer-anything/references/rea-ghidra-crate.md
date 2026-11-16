@@ -4,7 +4,7 @@ Folded from the former rea-ghidra-sre skill. Use for in-repo native analysis wit
 
 ## Execution Paths
 
-- **Native Rust Ghidra Decompiler & REA (`src/re` (`aphrody-re`) + `packages/core/src/re.ts`)**:
+- **Native Rust Ghidra Decompiler & REA (`src/re` (`aphrody-re`) + `system/core-ts/src/re.ts`)**:
   ```powershell
   ay re --ghidra target/debug/ay.exe
   ```
@@ -12,5 +12,5 @@ Folded from the former rea-ghidra-sre skill. Use for in-repo native analysis wit
   ```powershell
   ay re <path to aphrody_core_capi.dll>
   ```
-- **Unified Bun / Rust C-ABI Bridge (`packages/core/src/re.ts`, `src/core/capi/src/re.rs`)**:
+- **Unified Bun / Rust C-ABI Bridge (`system/core-ts/src/re.ts`, `src/core/capi/src/re.rs`)**:
   Calls `aphrody_abi_version`, `aphrody_ghidra_decompile_json`, `aphrody_re_audit_json`, `aphrody_mingw_audit_json`, and `depot_dotnet_doctor_json` in `aphrody_core_capi.dll`.

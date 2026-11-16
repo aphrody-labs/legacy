@@ -12,5 +12,5 @@ EnvironmentFile=/etc/aphrody/relay.env
 Environment=PATH=/home/ubuntu/.local/bin:/home/ubuntu/.bun/bin:/usr/local/bin:/usr/bin:/bin
 ExecStartPre=/usr/bin/git -C /srv/src fetch -q --no-recurse-submodules origin main
 ExecStartPre=/usr/bin/git -C /srv/src merge -q --ff-only FETCH_HEAD
-ExecStart=/home/ubuntu/.local/bin/bun /srv/src/packages/ai-os/src/brain/skills-archive.ts --publish
-ExecStartPost=/home/ubuntu/.local/bin/bun /srv/src/packages/ai-os/src/brain/memory-sync.ts
+ExecStart=/home/ubuntu/.local/bin/bun /srv/src/frameworks/ai-os/src/brain/skills-archive.ts --publish
+ExecStartPost=/home/ubuntu/.local/bin/bun /srv/src/frameworks/ai-os/src/brain/memory-sync.ts

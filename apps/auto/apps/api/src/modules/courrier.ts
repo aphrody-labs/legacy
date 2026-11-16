@@ -10,7 +10,7 @@ import {
 } from "@auto/services/courrier";
 import { configurationCourrier } from "@auto/mail";
 import type { BunRequest } from "bun";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import { estSuperAdmin, type Auth } from "@auto/tenancy";
 
 const id = (s: string) => {

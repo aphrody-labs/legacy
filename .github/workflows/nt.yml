@@ -9,12 +9,12 @@ on:
     {
       branches: [main, dev],
       paths:
-        ["apps/nt/**", "packages/ffi-bridge/**", ".github/workflows/nt.yml"],
+        ["apps/nt/**", "system/ffi-bridge/**", ".github/workflows/nt.yml"],
     }
   pull_request:
     {
       paths:
-        ["apps/nt/**", "packages/ffi-bridge/**", ".github/workflows/nt.yml"],
+        ["apps/nt/**", "system/ffi-bridge/**", ".github/workflows/nt.yml"],
     }
   workflow_dispatch:
 concurrency:

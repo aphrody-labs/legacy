@@ -1,5 +1,5 @@
 # Fleet Linux shells through home-manager (standalone): same environment as the Windows workstation,
-# lu depuis packages/machine/shells (env.toml -> env.sh/env.nu/env.fish, configs nu/fish/bash, spec ay).
+# lu depuis system/machine-ts/shells (env.toml -> env.sh/env.nu/env.fish, configs nu/fish/bash, spec ay).
 # Nix is installed on no host (2026-11-13); evaluated in the nixos/nix container on prd.
 # Usage (host with nix, git checkout of src):
 #   nix run home-manager/master -- switch --flake ~/src/device/fleet/nix#root@prd

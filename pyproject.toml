@@ -3,11 +3,11 @@
 [tool.uv.workspace]
 members = [
   "tools/lore",
-  "packages/core-py",
+  "system/core-py",
   "src/agent/context",
-  "packages/ai-os/python/hermes_agent_memory",
-  "packages/env-kit/loaders/python",
-  "packages/re/ghidra/scripts/parity",
-  "packages/machine/matrix/scripts",
+  "frameworks/ai-os/python/hermes_agent_memory",
+  "system/env-kit/loaders/python",
+  "frameworks/re-ts/ghidra/scripts/parity",
+  "system/machine-ts/matrix/scripts",
   "tools/factory",
 ]

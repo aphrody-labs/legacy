@@ -1,5 +1,5 @@
 //! Rust bindings for the lsquic-backed QUIC transport in
-//! `packages/bun-usockets/src/quic.{c,h}`. One opaque per C handle; the
+//! `system/bun-usockets/src/quic.{c,h}`. One opaque per C handle; the
 //! HTTP/3 server uses these via the C++ uWS layer (`uws.H3`), the HTTP/3
 //! fetch client (`src/http/H3Client.rs`) uses them directly.
 //!

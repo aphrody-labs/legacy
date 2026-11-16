@@ -7,7 +7,7 @@
 set -eu
 [ "$(id -u)" != 0 ] || { echo "upstream install: not as root" >&2; exit 1; }
 SRC=${AGENTS_SRC:-$HOME/agents/src}
-[ -f "$SRC/packages/upstream/src/cli.ts" ] || { echo "upstream install: $SRC has no packages/upstream (git -C $SRC pull)" >&2; exit 1; }
+[ -f "$SRC/system/upstream/src/cli.ts" ] || { echo "upstream install: $SRC has no system/upstream (git -C $SRC pull)" >&2; exit 1; }
 export PATH="$HOME/.bun/bin:$HOME/.local/bin:/usr/local/bin:$PATH"
 BUN=$(command -v bun) || { echo "upstream install: bun missing" >&2; exit 1; }
 command -v gh >/dev/null || { echo "upstream install: gh missing" >&2; exit 1; }
@@ -34,6 +34,6 @@ export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}
 systemctl --user daemon-reload
 systemctl --user enable --now aphrody-upstream.timer >/dev/null
 [ -z "${LINUX_TIMER:-}" ] || systemctl --user enable --now "$LINUX_TIMER" >/dev/null
-SRC_ROOT=$SRC "$BUN" "$SRC/packages/upstream/src/cli.ts" status $(echo "$STACKS" | tr , ' ') --no-fetch || true
+SRC_ROOT=$SRC "$BUN" "$SRC/system/upstream/src/cli.ts" status $(echo "$STACKS" | tr , ' ') --no-fetch || true
 echo "upstream install: ok host=$(hostname) stacks=$STACKS"
 systemctl --user list-timers aphrody-upstream.timer --no-pager | head -3

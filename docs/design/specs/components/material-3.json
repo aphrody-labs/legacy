@@ -310,7 +310,7 @@
     {
       "id": "m3.comp.measures-from-tokens",
       "level": "MUST",
-      "rule": "Les mesures dp listées ici sont des valeurs de contrôle ; le code consomme les tokens générés (packages/design) et un écart se corrige dans le générateur.",
+      "rule": "Les mesures dp listées ici sont des valeurs de contrôle ; le code consomme les tokens générés (frameworks/design) et un écart se corrige dans le générateur.",
       "source": "https://github.com/material-components/material-web/tree/37aa14b843dcaeb3a46f898679fa6fcd109b1905/tokens/versions/latest/sass"
     },
     {

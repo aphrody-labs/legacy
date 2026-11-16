@@ -10,7 +10,7 @@ import {
   withTenant,
 } from "@auto/store";
 import type { BunRequest } from "bun";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import { avecId, brut, liste, objet, op, str } from "../openapi-outils";
 import {
   USAGE,

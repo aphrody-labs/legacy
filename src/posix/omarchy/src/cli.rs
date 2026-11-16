@@ -256,7 +256,7 @@ pub enum LinuxCommand {
         #[arg(long)]
         push: bool,
     },
-    /// Manage Linux patch stacks via packages/upstream
+    /// Manage Linux patch stacks via system/upstream
     Patch {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
@@ -413,13 +413,13 @@ fn gen_all(
 
 fn run_upstream_bun(root: &Path, args: &[String]) -> Result<i32> {
     let bun = std::env::var_os("AY_BUN").unwrap_or_else(|| "bun".into());
-    let cli = root.join("packages").join("upstream").join("src").join("cli.ts");
+    let cli = root.join("system").join("upstream").join("src").join("cli.ts");
     let status = Command::new(bun)
         .arg(cli)
         .args(args)
         .env("SRC_ROOT", root)
         .status()
-        .context("failed to execute bun packages/upstream/src/cli.ts")?;
+        .context("failed to execute bun system/upstream/src/cli.ts")?;
     Ok(status.code().unwrap_or(1))
 }
 

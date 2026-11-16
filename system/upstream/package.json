@@ -1,0 +1,25 @@
+{
+  "name": "@aphrody/upstream",
+  "version": "1.0.0",
+  "description": "Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "check": "bun check",
+    "fmt": "bun fmt",
+    "test": "bun test"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "license": "MIT OR Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aphrody-labs/aphrody.git",
+    "directory": "system/upstream"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

@@ -42,7 +42,7 @@ static uint32_t g_pointer_down = 0u;
 static uint32_t g_last_time_ms = 0u;
 static uint32_t g_dark_mode = 1u;
 
-/* M3 tokens from packages/design/tokens/tokens.css (seed #135B82, MCU 0.4.0 vibrant; packed ABGR) */
+/* M3 tokens from frameworks/design/tokens/tokens.css (seed #135B82, MCU 0.4.0 vibrant; packed ABGR) */
 static uint32_t pack_rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
   return ((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)g << 8) | (uint32_t)r;
 }

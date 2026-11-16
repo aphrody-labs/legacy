@@ -6,7 +6,7 @@
 //! - `ay plugin manifest`: JSON, `{ api, name, version, engine, commands: [{ name, about }], hosts }`.
 //! - `ay plugin names`: one command name per line (shell completion).
 //!
-//! The host adapters live in `packages/omniu` (`plugins/ay/plugin.toml` for niu, `src/ay.ts` for Bun).
+//! The host adapters live in `system/omniu` (`plugins/ay/plugin.toml` for niu, `src/ay.ts` for Bun).
 
 use clap::CommandFactory;
 use serde_json::{json, Value};
@@ -34,8 +34,8 @@ pub fn manifest() -> Value {
         "engine": { "name": "rubash", "build": rubash::build_info::build_hash() },
         "commands": commands,
         "hosts": {
-            "niu": { "api": "niubash:plugin@0.1.0", "manifest": "packages/omniu/plugins/ay/plugin.toml" },
-            "bun": { "module": "ay", "entry": "packages/omniu/src/ay.ts" },
+            "niu": { "api": "niubash:plugin@0.1.0", "manifest": "system/omniu/plugins/ay/plugin.toml" },
+            "bun": { "module": "ay", "entry": "system/omniu/src/ay.ts" },
         },
     })
 }

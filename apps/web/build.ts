@@ -1,6 +1,6 @@
-// Site generator of aphrody.com: the home page and the catalog page in every locale of packages/i18n/catalogs/site.
+// Site generator of aphrody.com: the home page and the catalog page in every locale of frameworks/i18n-ts/catalogs/site.
 // Content is read, never typed here: texts from the i18n catalogs, counts and entries from public/catalog.json (written by
-// scripts/catalog.ts), colors and type from packages/design/tokens/tokens.css, the logo is public/favicon.png.
+// scripts/catalog.ts), colors and type from frameworks/design/tokens/tokens.css, the logo is public/favicon.png.
 //
 //   bun apps/web/build.ts            write public/index.html, public/<locale>/index.html, public/catalog/..., public/tokens.css
 //   bun apps/web/build.ts --check    exit 1 listing the outputs that differ
@@ -18,8 +18,8 @@ const slug = (JSON.parse(readFileSync(join(root, "package.json"), "utf8")).repos
 if (!slug) throw new Error("package.json repository.url: no GitHub slug");
 const repo = `https://github.com/${slug}`;
 
-// i18n: the catalogs of packages/i18n, resolved the way @aphrody/i18n does (exact tag, language, source locale).
-const i18n = join(root, "packages/i18n");
+// i18n: the catalogs of frameworks/i18n-ts, resolved the way @aphrody/i18n does (exact tag, language, source locale).
+const i18n = join(root, "frameworks/i18n-ts");
 const source: string = JSON.parse(readFileSync(join(i18n, "i18n.config.json"), "utf8")).sourceLocale;
 const dir = join(i18n, "catalogs/site");
 const catalogs: Record<string, Record<string, string>> = Object.fromEntries(
@@ -139,7 +139,7 @@ for (const l of locales) {
   out.set(`${prefix(l)}/catalog/index.html`.replace(/^\//, ""), page(l, "catalog"));
   out.set(`${prefix(l)}/automations/index.html`.replace(/^\//, ""), page(l, "automations"));
 }
-const tokens = readFileSync(join(root, "packages/design/tokens/tokens.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{};,])\s*/g, "$1").trim() + "\n";
+const tokens = readFileSync(join(root, "frameworks/design/tokens/tokens.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{};,])\s*/g, "$1").trim() + "\n";
 out.set("tokens.css", tokens);
 const alt = (path: string) => locales.map((l) => `<xhtml:link rel="alternate" hreflang="${l}" href="${origin}${prefix(l)}${path}"/>`).join("");
 out.set("sitemap-core.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +

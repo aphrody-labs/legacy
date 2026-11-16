@@ -1,4 +1,4 @@
-# Patch stacks of the forks we keep compatible with upstream. Read by `ay upstream` (packages/upstream).
+# Patch stacks of the forks we keep compatible with upstream. Read by `ay upstream` (system/upstream).
 # Process, statuses and calendar: docs/upstream/STRATEGY.md.
 #
 # model = "branch": the fork's default branch is upstream/<ref> plus a linear series of patch commits

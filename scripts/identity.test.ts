@@ -61,7 +61,7 @@ function repo(scope: string, org: string, aiDeps: Record<string, string>) {
       2,
     ),
   );
-  w("packages/core/package.json", JSON.stringify({ name: "@x/core" }, null, 2));
+  w("system/core-ts/package.json", JSON.stringify({ name: "@x/core" }, null, 2));
   w(
     "packages/ai/package.json",
     JSON.stringify({ name: "@x/whatever", dependencies: aiDeps }, null, 2),

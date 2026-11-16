@@ -4,13 +4,13 @@ English is the source language of every file in the repository; user-facing text
 
 ## Configuration
 
-`packages/i18n/i18n.config.json`: `sourceLocale` (default `en`, override with `APHRODY_I18N_SOURCE`) and `format` (message format id; detected from the catalogs when absent).
+`frameworks/i18n-ts/i18n.config.json`: `sourceLocale` (default `en`, override with `APHRODY_I18N_SOURCE`) and `format` (message format id; detected from the catalogs when absent).
 
 ## Catalogs
 
-One set of flat JSON catalogs, `packages/i18n/locales/<locale>.json` (key to message), read by both runtimes:
+One set of flat JSON catalogs, `frameworks/i18n-ts/locales/<locale>.json` (key to message), read by both runtimes:
 
-- TypeScript: `@aphrody/i18n` (`packages/i18n`, Bun). `createTranslator(catalogs, locale).t(key, args)`, `negotiate(acceptLanguage, supported, fallback)`, `discoverLocales(dir)`.
+- TypeScript: `@aphrody/i18n` (`frameworks/i18n-ts`, Bun). `createTranslator(catalogs, locale).t(key, args)`, `negotiate(acceptLanguage, supported, fallback)`, `discoverLocales(dir)`.
 - Rust: `src/i18n` (`aphrody-i18n`) embeds the catalogs found at build time (`build.rs`) or reads a directory (`Catalogs::from_dir`). `I18n::new(locale).t_args(key, args)`, `negotiate(header)`.
 
 The media domain (`src/tv/cli`) reads its strings from the same catalogs under the `tv.` prefix (converted from the former Fluent catalogs; `tv-i18n` is gone). Locales that only hold `tv.*` keys so far (ar, de, hi, it, ko, nl, pl, pt, ru, tr, uk) fall back to the source locale for everything else; `ay i18n translate` fills them and `ay i18n check --strict` fails while keys are missing.
@@ -42,13 +42,13 @@ ay i18n check                                  # missing/extra keys, placeholder
 ay i18n extract <paths...>                     # t("key") call sites; unknown and unused keys
 ay i18n translate [--to pt-BR,de] [--model provider/model] [--refresh-stale] [--dry-run]
 ay i18n review <locale> [key...]               # mark machine translations as human-reviewed
-bun test packages/i18n
+bun test frameworks/i18n-ts
 cargo test -p aphrody-i18n                     # on fr1 or CI
 ```
 
 `translate` fills the missing keys of every catalog (and creates the `--to` locales) from the source locale through the ai-os model layer: the model is the first discovered provider (local servers first), or `--model`, or `AGENT_MODEL`. The reply must parse as MF2 and use the same variables as the source, otherwise it is retried once and then reported. Machine output is recorded in `locales/_machine/<locale>.json` with the hash of the source text; a key that is in a catalog and not in the sidecar is human-reviewed and is never overwritten. `--refresh-stale` redoes machine keys whose source text changed.
 
-`packages/i18n/tests/fixtures/format.json` holds shared cases run by both the Bun and the Rust tests.
+`frameworks/i18n-ts/tests/fixtures/format.json` holds shared cases run by both the Bun and the Rust tests.
 
 ## Detection
 

@@ -14,7 +14,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { brotliCompressSync, constants as zlibConstants } from "node:zlib";
-import { symbolsPlugin } from "../../packages/design/src/bun-plugin.ts";
+import { symbolsPlugin } from "../../frameworks/design/src/bun-plugin.ts";
 import { YoloModuleGraph } from "./src/framework/graph.ts";
 
 const APP_ROOT = import.meta.dir;

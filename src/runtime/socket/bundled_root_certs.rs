@@ -1,9 +1,9 @@
-//! Mozilla's root CAs (NSS certdata.txt, via packages/bun-usockets/generate-root-certs.mjs), embedded as DER.
+//! Mozilla's root CAs (NSS certdata.txt, via system/bun-usockets/generate-root-certs.mjs), embedded as DER.
 //! `root_certs.cpp` hands them to BoringSSL as an `X509_LAZY_CERT_SET`, so a root is parsed only when a chain names
 //! it, and `NodeTLS.cpp` re-encodes them for `tls.rootCertificates`.
 
 /// `u32 count`, `u32 offsets[count + 1]`, then the certificates back to back; little-endian.
-static BLOB: &[u8] = include_bytes!("../../../packages/bun-usockets/root_certs.der");
+static BLOB: &[u8] = include_bytes!("../../../system/bun-usockets/root_certs.der");
 
 fn u32_at(i: usize) -> usize {
     u32::from_le_bytes(BLOB[i * 4..i * 4 + 4].try_into().unwrap()) as usize

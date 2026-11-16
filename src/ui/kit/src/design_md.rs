@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Pure-Rust parser, linter, spec reporter, and token exporter for `DESIGN.md`.
 //!
-//! Replaces the legacy TypeScript `packages/design/google` linter (`google-labs-code/design.md`)
+//! Replaces the legacy TypeScript `frameworks/design/google` linter (`google-labs-code/design.md`)
 //! with a zero-JS, zero-`unsafe` implementation backed by `aphrody-ui`.
 
 use serde::{Deserialize, Serialize};
@@ -927,7 +927,7 @@ pub fn design_layout_report(
 
 fn default_design_md_path(repo_root: &Path) -> PathBuf {
     let candidates = [
-        repo_root.join("packages").join("design").join("DESIGN.md"),
+        repo_root.join("frameworks").join("design").join("DESIGN.md"),
         repo_root.join("DESIGN.md"),
     ];
     for p in candidates {
@@ -935,7 +935,7 @@ fn default_design_md_path(repo_root: &Path) -> PathBuf {
             return p;
         }
     }
-    repo_root.join("packages").join("design").join("DESIGN.md")
+    repo_root.join("frameworks").join("design").join("DESIGN.md")
 }
 
 /// Native CLI entrypoint for `ay design <lint|spec|export>`.
@@ -1118,14 +1118,14 @@ mod tests {
     #[test]
     fn canonical_repo_design_md_lints_cleanly() {
         let path = PathBuf::from(env!("SRC_ROOT"))
-            .join("packages")
+            .join("frameworks")
             .join("design")
             .join("DESIGN.md");
-        let raw = fs::read_to_string(&path).expect("packages/design/DESIGN.md");
+        let raw = fs::read_to_string(&path).expect("frameworks/design/DESIGN.md");
         let report = lint_design_md(&raw);
         assert!(
             report.ok,
-            "packages/design/DESIGN.md had lint errors: {:?}",
+            "frameworks/design/DESIGN.md had lint errors: {:?}",
             report.findings
         );
         assert_eq!(report.summary.errors, 0);

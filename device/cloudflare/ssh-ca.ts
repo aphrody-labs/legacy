@@ -5,7 +5,7 @@
 // prefix (Access always sets the certificate principal to it; the browser terminal needs principal == Unix user).
 // Additive only: existing keys and logins are untouched. The new config is validated on a copy of /etc/ssh
 // (sshd -t -f) before it is installed, then again live (drop-in removed on failure) before the reload.
-//   just cf-ssh-ca   (bun packages/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN -- bun device/cloudflare/ssh-ca.ts)
+//   just cf-ssh-ca   (bun system/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN -- bun device/cloudflare/ssh-ca.ts)
 import { api, cfg } from "./lib";
 
 const OWNER = "contact"; // contact@aphrody.com (policy mig-owner-only)

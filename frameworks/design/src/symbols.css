@@ -1,0 +1,12 @@
+/* Material Symbols Rounded (Apache-2.0), seule police d'icônes du monorepo : sous-ensemble variable
+   (FILL, GRAD, opsz, wght) des icônes de frameworks/design/symbols (symbols.json).
+   Usage : <mat-icon fontSet="material-symbols-rounded">terminal</mat-icon> ou <span class="material-symbols-rounded">terminal</span>. */
+@import "../symbols/symbols.css";
+mat-icon {
+  font-family: "Material Symbols Rounded";
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}

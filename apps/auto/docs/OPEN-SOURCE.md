@@ -7,7 +7,7 @@ Craft building blocks actually used. "Taken" points to code in the repository; "
 
 | Project      | Idea retained                                                            | In auto                                                                                                                                           |
 | ------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| n8n          | Node graph, `json` items, `{{ }}` expressions, multiple outputs          | Taken: `packages/automate` engine, n8n workflow import (`importerN8n`), n8n itself in the Aphrody Box                                             |
+| n8n          | Node graph, `json` items, `{{ }}` expressions, multiple outputs          | Taken: `frameworks/automate` engine, n8n workflow import (`importerN8n`), n8n itself in the Aphrody Box                                             |
 | n8n          | "Retry On Fail", "Continue On Fail", Code node                           | Taken: `tentatives` and `delaiEssaiMs` per node (doubling wait), `continuerSurErreur`, Code node in QuickJS isolated in a Worker                  |
 | Activepieces | Pieces typed by schema, catalog exposed to the AI                        | Taken: Zod parameters, JSON Schema catalog (`GET /v1/automatisations/catalogue`), MCP tools to create and run                                     |
 | Node-RED     | Community nodes for home and IoT services                                | Taken: Home Assistant, ntfy, Gotify, Matrix, Mastodon, Nextcloud (documented HTTP APIs, no SDK)                                                   |

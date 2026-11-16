@@ -3,7 +3,7 @@
 #   docker buildx bake -f build/docker/docker-bake.hcl            (all images, see `just docker-build`)
 #   docker buildx build -f build/docker/Dockerfile --target ai-os .
 # No Debian anywhere (repo policy): Alpine runtimes, Arch for the heavy dev image.
-# Pins: build args below = tools.toml (packages/machine/src/toolchains-lock.ts); bake passes them.
+# Pins: build args below = tools.toml (system/machine-ts/src/toolchains-lock.ts); bake passes them.
 # Rust: cargo-chef dependency layer + cargo-zigbuild cross-compile on $BUILDPLATFORM to static musl
 # (amd64 and arm64 from one native builder, no qemu). Bun: frozen lockfile, bundled server per app.
 # Runtime images run as non-root, carry a HEALTHCHECK, never contain secrets (env at run time only).
@@ -145,9 +145,9 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
 # @aphrody/ai-os: one image, two services (relay = default CMD, gateway = `bun src/cli.ts gateway`).
 FROM bun-runtime AS ai-os
 COPY --from=bun-deps --chown=bun:bun /src/node_modules /app/node_modules
-COPY --chown=bun:bun packages/ai-os/ /app/
-# src/relay/oauth.ts and src/nhitl/login.ts import @aphrody/env-kit/vault (packages/env-kit, linked as a workspace in the deps stage).
-COPY --chown=bun:bun packages/env-kit/ /app/node_modules/@aphrody/env-kit/
+COPY --chown=bun:bun frameworks/ai-os/ /app/
+# src/relay/oauth.ts and src/nhitl/login.ts import @aphrody/env-kit/vault (system/env-kit, linked as a workspace in the deps stage).
+COPY --chown=bun:bun system/env-kit/ /app/node_modules/@aphrody/env-kit/
 ENV RELAY_HOST=0.0.0.0 RELAY_PORT=8790 RELAY_TCP_PORT=8791 AGENT_HOST=0.0.0.0 AGENT_PORT=4000 \
     AGENT_HOME=/home/bun/.ai-os PORT=8790 HEALTH_PATH=/health
 EXPOSE 8790 8791 4000

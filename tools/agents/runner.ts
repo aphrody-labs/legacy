@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Agent fleet runner: executes queued tasks with the agent CLIs, inside one tmux session per host.
-// Routing belongs to packages/ai-os: it writes `providers` into each task (or the relay answers
+// Routing belongs to frameworks/ai-os: it writes `providers` into each task (or the relay answers
 // llm_models). This file only executes them in the given order, moves to the next one on a
 // quota/rate/auth error, judges with the task's acceptance check, commits on main, keeps tmux alive.
 // Doc: docs/agents/AGENT-FIRST.md. Zero npm dependencies.
@@ -27,7 +27,7 @@ import {
 import { homedir, hostname } from "node:os";
 import { join, resolve } from "node:path";
 import { resolveExe } from "@aphrody/ai-os/llm/agents";
-import { expandSync } from "../../packages/env-kit/src/discover.ts";
+import { expandSync } from "../../system/env-kit/src/discover.ts";
 
 type Role = { timeout_s: number; budget_usd: number; heavy?: boolean };
 type Host = { roles: string[]; src: string; ssh?: string[] };
@@ -365,11 +365,11 @@ export function providerCmd(
         ]),
       };
     case "jules":
-      // Remote agent (packages/ai-os/src/google): works on the GitHub repo, not on the local checkout.
+      // Remote agent (frameworks/ai-os/src/google): works on the GitHub repo, not on the local checkout.
       return {
         cmd: [
           process.execPath,
-          join(SRC, "packages", "ai-os", "src", "cli.ts"),
+          join(SRC, "frameworks", "ai-os", "src", "cli.ts"),
           "jules",
           "run",
           "--wait",

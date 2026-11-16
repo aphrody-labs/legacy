@@ -1,6 +1,6 @@
 # Staying compatible with upstream
 
-Command: `ay upstream` (`packages/upstream`, run by bun). Stacks: `tools/upstream/stacks.toml` and `tools/upstream/stacks.d/*.toml`. Statuses: `tools/upstream/status/<stack>.toml`. Live state: `ay upstream status [stack] [--json|--markdown]`.
+Command: `ay upstream` (`system/upstream`, run by bun). Stacks: `tools/upstream/stacks.toml` and `tools/upstream/stacks.d/*.toml`. Statuses: `tools/upstream/status/<stack>.toml`. Live state: `ay upstream status [stack] [--json|--markdown]`.
 
 ## Models
 

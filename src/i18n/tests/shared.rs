@@ -2,7 +2,7 @@ use aphrody_i18n::*;
 use std::collections::BTreeSet;
 
 fn fixtures() -> Vec<serde_json::Value> {
-    let raw = include_str!("../../../packages/i18n/tests/fixtures/format.json");
+    let raw = include_str!("../../../frameworks/i18n-ts/tests/fixtures/format.json");
     serde_json::from_str(raw).unwrap()
 }
 

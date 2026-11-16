@@ -39,8 +39,8 @@ lint-anti-slop-gate:
     - docker
   script:
     - test ! -f .env || (echo "FATAL: .env must never be committed" && exit 1)
-    - bun --cwd packages/design lint
-    - bun --cwd packages/design test
+    - bun --cwd frameworks/design lint
+    - bun --cwd frameworks/design test
 
 # 2. Build Rust CLI, Unix/Wayland Crates & Depot Engine
 build-bun-packages:
@@ -49,9 +49,9 @@ build-bun-packages:
   tags:
     - docker
   script:
-    - bun --cwd packages/core check
-    - bun --cwd packages/ffi-bridge check
-    - bun test packages/machine/matrix
+    - bun --cwd system/core-ts check
+    - bun --cwd system/ffi-bridge check
+    - bun test system/machine-ts/matrix
 
 build-rust-unix-wayland:
   stage: build-bun-rust-go
@@ -77,8 +77,8 @@ test-bun-workspace:
   tags:
     - docker
   script:
-    - bun --cwd packages/design test
-    - bun test packages/machine/matrix
+    - bun --cwd frameworks/design test
+    - bun test system/machine-ts/matrix
 
 test-rust-unix-wayland:
   stage: test-gate
@@ -118,8 +118,8 @@ wck-seo-100-gate:
     - docker
   script:
     - |
-      if [ -f packages/wck/src/cli.ts ]; then
-        bun test --cwd packages/wck
+      if [ -f system/wck/src/cli.ts ]; then
+        bun test --cwd system/wck
       fi
 
 # 6. Tri-Forge Mirror Synchronization (GitHub + GitLab + Google Cloud Git)

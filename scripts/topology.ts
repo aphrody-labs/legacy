@@ -142,11 +142,11 @@ if (existsSync(ayLib)) {
     else if (!["just"].includes(m[1]!)) unresolved.push(m[1]!);
   }
   for (const m of ayText.matchAll(/Route::Package\("([\w-]+)"/g)) {
-    const t = ownerOf(`packages/${m[1]}`);
+    const t = ownerOf(`system/${m[1]}`) ?? ownerOf(`system/${m[1]}-ts`) ?? ownerOf(`frameworks/${m[1]}`) ?? ownerOf(`frameworks/${m[1]}-ts`);
     if (t) addEdge("src/ay", t, "dispatch");
   }
 }
-// CI workflows run units by path (`bun packages/deploy/src/cli.ts`, `cargo test -p`), and the root uv
+// CI workflows run units by path (`bun system/deploy/src/cli.ts`, `cargo test -p`), and the root uv
 // workspace lists its Python members: both are outer invokers.
 const CI = "ci";
 const UV = "uv";

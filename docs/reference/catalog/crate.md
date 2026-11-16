@@ -6,7 +6,7 @@ A member of the Cargo workspace (src/*)
 | :-- | :-- |
 | [aphrody-game](../../../apps/game) | Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary |
 | [stack-bench](../../../bench) | Hardware and compiler benchmark suite behind `ay bench` (Windows) |
-| [agent-context](../../../src/agent/context) | Native reader/writer for the agent Context store (same SQLite schema as packages/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python. |
+| [agent-context](../../../src/agent/context) | Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python. |
 | [bun_analytics](../../../src/analytics) | - |
 | [bun_aot](../../../src/aot) | - |
 | [bun_aot_absent](../../../src/aot/absent) | - |
@@ -80,7 +80,7 @@ A member of the Cargo workspace (src/*)
 | [bun_http](../../../src/http) | - |
 | [bun_http_jsc](../../../src/http_jsc) | - |
 | [bun_http_types](../../../src/http_types) | - |
-| [aphrody-i18n](../../../src/i18n) | Shared i18n catalogs (packages/i18n/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from... |
+| [aphrody-i18n](../../../src/i18n) | Shared i18n catalogs (frameworks/i18n-ts/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered... |
 | [bun_ini](../../../src/ini) | - |
 | [bun_install](../../../src/install) | - |
 | [bun_install_jsc](../../../src/install_jsc) | - |

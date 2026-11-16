@@ -1328,7 +1328,7 @@ fn key_valid(p: &Provider, key: &str) -> bool {
 /// to the first dotenv file (created 0600).
 fn store_secret(env: &Env, name: &str, value: &str) -> Result<(), String> {
     // env-kit from the checkout (bun on its TypeScript source, as `ay` runs it), else installed.
-    let src = crate::repo_root().join("packages").join("env-kit").join("src").join("cli.ts");
+    let src = crate::repo_root().join("system").join("env-kit").join("src").join("cli.ts");
     let envkit: Vec<String> = if src.is_file() && which_in("bun", &extra_path(None)).is_some() {
         vec!["bun".into(), src.display().to_string()]
     } else if which_in("env-kit", &extra_path(None)).is_some() {
@@ -1544,7 +1544,7 @@ pub fn fabric_argv(src: Option<&Path>, bun: bool, args: &[String]) -> Vec<String
 }
 
 fn cmd_fabric(args: &[String]) -> i32 {
-    let src = crate::repo_root().join("packages").join("ai-os").join("src").join("cli.ts");
+    let src = crate::repo_root().join("frameworks").join("ai-os").join("src").join("cli.ts");
     let bun = which_in("bun", &extra_path(None)).is_some();
     run_status(&fabric_argv(src.is_file().then_some(src.as_path()), bun, args), None)
 }
@@ -1614,8 +1614,8 @@ mod tests {
     #[test]
     fn fabric_runs_checkout_with_bun_else_installed() {
         let args = vec!["up".to_string(), "--only".into(), "fr1".into()];
-        let src = Path::new("/r/packages/ai-os/src/cli.ts");
-        assert_eq!(fabric_argv(Some(src), true, &args), ["bun", "/r/packages/ai-os/src/cli.ts", "fabric", "up", "--only", "fr1"]);
+        let src = Path::new("/r/frameworks/ai-os/src/cli.ts");
+        assert_eq!(fabric_argv(Some(src), true, &args), ["bun", "/r/frameworks/ai-os/src/cli.ts", "fabric", "up", "--only", "fr1"]);
         assert_eq!(fabric_argv(Some(src), false, &args)[..2], ["ai-os", "fabric"]);
         assert_eq!(fabric_argv(None, true, &[]), ["ai-os", "fabric"]);
     }

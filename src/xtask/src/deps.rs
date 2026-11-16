@@ -510,7 +510,7 @@ fn p_name(pkg: &serde_json::Value) -> String {
 
 /// First-party trees scanned for Python manifests. `apps/*` are separate repositories (their
 /// own lock), `third_party/*` belongs to upstreams.
-const FIRST_PARTY: &[&str] = &["src", "bench", "test", "packages", "build", "device", "prebuilts", "tools", "scripts", "plugins", "docs"];
+const FIRST_PARTY: &[&str] = &["src", "bench", "test", "frameworks", "system", "build", "device", "prebuilts", "tools", "scripts", "plugins", "docs"];
 const SKIP: &[&str] = &["node_modules", "target", ".venv", "dist", ".git", "__pycache__", ".urc", ".lore"];
 
 fn walk_files(dir: &Path, depth: usize, names: &[&str], out: &mut Vec<PathBuf>) {

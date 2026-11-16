@@ -3,7 +3,7 @@ name: env-auth
 description: Safe cross-language loading of .env (Bun, Rust, uv/Python, C/C++, .NET, Go, Lua, Vercel, Cloudflare) and automated credential management across gh, npm, crates.io, PyPI, NuGet, gcloud, Figma, Neon, OpenCode, Zed, and Pi without leaking secrets.
 ---
 
-# `.env` & Multi-Registry Auth (`packages/env-kit`)
+# `.env` & Multi-Registry Auth (`system/env-kit`)
 
 Activate this skill whenever wiring environment variables, API keys, cloud/registry tokens, or editor AI provider configs (`OpenCode`, `Zed`, `Pi`, `Antigravity`).
 
@@ -13,6 +13,6 @@ Activate this skill whenever wiring environment variables, API keys, cloud/regis
 2. **Cross-Language Loading**:
    - **Bun / TS**: `bun --env-file=.env run ...` or `import { loadMonorepoEnv } from "@aphrody/env-kit"`.
    - **Rust**: Use crate `aphrody-env` (`src/env`) with `SecretString` redaction.
-   - **Python / `uv`**: `uv run --env-file .env ...` or `packages/env-kit/loaders/python/sovereign_env.py` (other loaders in `packages/env-kit/loaders/`: cpp, dotnet, go, lua, shell).
+   - **Python / `uv`**: `uv run --env-file .env ...` or `system/env-kit/loaders/python/sovereign_env.py` (other loaders in `system/env-kit/loaders/`: cpp, dotnet, go, lua, shell).
    - **Cloudflare Workers**: Generate gitignored `.dev.vars` via `env-kit dev-vars <projectDir>`.
    - **All AI Editors**: Run `env-kit set <KEY> <VALUE>` followed by `env-kit sync-editors` to propagate keys to `.env`, User Env, `OpenCode`, `Zed`, and `Pi`.

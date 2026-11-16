@@ -3,7 +3,7 @@
 //! One parser per format for the whole monorepo: text and binary KeyValues, `appinfo.vdf`,
 //! `appmanifest_*.acf`, `libraryfolders.vdf`, compatibility tools and the Proton launch
 //! environment live in `src/steam`; `ay steam` prints them as JSON for the Bun side
-//! (`packages/gaming`, the `steam` plugin MCP). Credential files are never read
+//! (`frameworks/gaming`, the `steam` plugin MCP). Credential files are never read
 //! (`config.vdf`, `loginusers.vdf`, `local.vdf`, `ssfn*`). Ownership: docs/gaming/OWNERSHIP.md.
 
 use bun_steam::config::library_folders;

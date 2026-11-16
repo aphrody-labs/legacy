@@ -4,7 +4,7 @@
 //! - Wayland layer-shell anchored zone decomposition (`cosmic-compat`, `smithay-wayland-wire`, Wayland-in-browser).
 //! - Hyprland-style tiling geometry (`hypr-tiler`) solved via Taffy Flexbox & CSS Grid.
 //! - Recursive terminal splitter layouts for Microsoft `IntelligentTerminal`.
-//! - Figma AutoLayout -> `taffy::Style` translation for `packages/design` and `aphrody-ui`.
+//! - Figma AutoLayout -> `taffy::Style` translation for `frameworks/design` and `aphrody-ui`.
 
 #[cfg(not(feature = "std"))]
 use alloc::vec;

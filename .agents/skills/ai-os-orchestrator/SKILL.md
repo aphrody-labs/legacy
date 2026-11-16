@@ -5,7 +5,7 @@ description: "Run multi-agent work across the fleet without a human: task graphs
 
 # ai-os orchestrator
 
-Reference: `packages/ai-os/docs/ORCHESTRATOR.md`. Code: `packages/ai-os/src/orch/`. Host execution (tmux sessions, queue) belongs to `tools/agents/runner.ts`: do not re-implement it, enqueue into it.
+Reference: `frameworks/ai-os/docs/ORCHESTRATOR.md`. Code: `frameworks/ai-os/src/orch/`. Host execution (tmux sessions, queue) belongs to `tools/agents/runner.ts`: do not re-implement it, enqueue into it.
 
 ## Commands (JSON on stdout)
 

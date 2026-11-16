@@ -1,9 +1,9 @@
 // Runs `bun test <args>` and fails when its output contains a secret: a value of a secret-looking variable of the
 // environment or of the monorepo .env, or a token-shaped string. It prints key names and shapes, never a value.
-//   bun scripts/test-leak-guard.ts packages/env-kit      (CI: the environment holds the repository secrets)
+//   bun scripts/test-leak-guard.ts system/env-kit      (CI: the environment holds the repository secrets)
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseDotEnv, resolveMonorepoEnvPath } from "../packages/env-kit/src/index.ts";
+import { parseDotEnv, resolveMonorepoEnvPath } from "../system/env-kit/src/index.ts";
 
 const SECRET_NAME = /(KEY|TOKEN|SECRET|PASSWORD|CREDENTIAL|PASSPHRASE)/i;
 const SHAPES: [string, RegExp][] = [

@@ -2,7 +2,7 @@ import { ErreurApi } from "../i18n";
 import { ErreurMetier } from "@auto/store";
 import { segmentsDe, authentifier } from "@auto/tenancy";
 import { importerFichier, cheminImport } from "@auto/services/imports-fichiers";
-import type { Module, Chemins } from "../modules";
+import type { Module, Chemins } from ".";
 import { op, objet, str, uuid } from "../openapi-outils";
 const MAX = 20 * 1024 * 1024 + 65536;
 async function formulaire(req: Request) {

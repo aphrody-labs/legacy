@@ -19,7 +19,7 @@ A report never says "not verified" or "not run". If a step cannot complete, the 
 | # | Workstream | Ship target | State |
 | --- | --- | --- | --- |
 | 1 | GNU in Rust (`src/gnu`, uutils) | every GNU program passes the GNU test suite, as `ay gnu` | which, time 100 %; bc, m4, ed partial |
-| 2 | GNU distribution (`packages/gnu`) | live feed of GNU, Rust and kernel upstream at gnu.aphrody.com, MCP `gnu__*` | running on fr2 |
+| 2 | GNU distribution (`system/gnu-ts`) | live feed of GNU, Rust and kernel upstream at gnu.aphrody.com, MCP `gnu__*` | running on fr2 |
 | 3 | Android/AOSP toolchain (`build/android`) | reproducible SDK, NDK, JDK and Kotlin setup and `libaysys.so` for Android; the Compose shell moved to aphrody-labs/open | running |
 | 4 | Ghidra fork, bun-ghidra, py2bun | converted Ghidra scripts run under bun-ghidra, with an LLVM LTO and AOT build | parity proven; Java exports open |
 | 5 | Gemini web MCP gateway (mcp.aphrody.com) | Gemini web uses the relay tools through OAuth | needs owner consent |

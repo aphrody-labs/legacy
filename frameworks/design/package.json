@@ -1,0 +1,42 @@
+{
+  "name": "@aphrody/design",
+  "version": "0.1.0",
+  "description": "Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis frameworks/design/design.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; composants Angular Material (thème M3 généré) ; Material Symbols (SVG et police : frameworks/design/symbols ; material-symbols ne sert qu au catalogue des noms).",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens.json": "./tokens/tokens.json",
+    "./tokens.css": "./tokens/tokens.css",
+    "./themes.css": "./tokens/themes.css",
+    "./themes.json": "./tokens/themes.json",
+    "./components": "./src/components.ts",
+    "./symbols.css": "./src/symbols.css",
+    "./bun-plugin": "./src/bun-plugin.ts",
+    "./runtime": "./src/runtime.ts",
+    "./web": "./src/web.ts",
+    "./angular-theme": "./tokens/angular-theme.scss",
+    "./angular-material.css": "./tokens/angular-material.css"
+  },
+  "scripts": {
+    "build": "bun run src/build.ts",
+    "check": "bun run src/build.ts --check",
+    "test": "bun test",
+    "figma": "bun run src/figma.ts --modes 4",
+    "themes": "bun run src/cli.ts themes",
+    "screenshots": "bun run src/cli.ts screenshots",
+    "lint": "bun run src/cli.ts lint DESIGN.md"
+  },
+  "dependencies": {
+    "@material/material-color-utilities": "catalog:",
+    "@angular/cdk": "catalog:",
+    "@angular/common": "catalog:",
+    "@angular/core": "catalog:",
+    "@angular/forms": "catalog:",
+    "@angular/material": "catalog:",
+    "@angular/platform-browser": "catalog:",
+    "material-symbols": "catalog:",
+    "rxjs": "catalog:"
+  },
+  "license": "MIT OR Apache-2.0"
+}

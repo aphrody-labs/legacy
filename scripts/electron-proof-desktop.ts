@@ -3,8 +3,8 @@
 // Writes <out-dir>/<label>-a11y.json (tree + timings) and <out-dir>/<label>.png. No input is injected; the app is killed at the end.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { call } from "../packages/ai-os/src/relay/protocols.ts";
-import * as hubMod from "../packages/ai-os/src/relay/mcp-hub.ts";
+import { call } from "../frameworks/ai-os/src/relay/protocols.ts";
+import * as hubMod from "../frameworks/ai-os/src/relay/mcp-hub.ts";
 
 const [exe, outDir, labelArg] = process.argv.slice(2);
 if (!exe || !outDir)

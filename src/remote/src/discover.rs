@@ -1,4 +1,4 @@
-//! Site discovery, Rust twin of `packages/env-kit/src/discover.ts` and `loaders/shell/discover.sh`: a role (`fr1`,
+//! Site discovery, Rust twin of `system/env-kit/src/discover.ts` and `loaders/shell/discover.sh`: a role (`fr1`,
 //! `fr2`, `prd`) is a `Host` alias of `~/.ssh/config`, and everything else (address, user, port, mesh or public
 //! address) is read from there or learned from the host's own interfaces. Nothing is stored in the repository.
 //! Tracked configs (`device/deploy.toml`) carry `@@hosts.<role>.<key>@@` tokens that [`expand`] fills at load time;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-//! Canonical Steam owner of Bun OS (Rust half; the Bun half is `packages/bun-steam`).
+//! Canonical Steam owner of Bun OS (Rust half; the Bun half is `system/bun-steam`).
 //!
 //! - [`vdf`]: text KeyValues parser/writer, binary KeyValues parser/writer (`shortcuts.vdf`),
 //!   `appinfo.vdf` / `packageinfo.vdf` readers. Pure and `wasm32`-friendly.

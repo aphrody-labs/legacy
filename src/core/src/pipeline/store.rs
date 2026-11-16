@@ -1,5 +1,5 @@
 //! The one SQLite schema of the monorepo index (WAL, FTS5). The first five tables keep the exact
-//! columns of the historical `var/index/core.db` so every existing reader (packages/core, ai-os)
+//! columns of the historical `var/index/core.db` so every existing reader (system/core-ts, ai-os)
 //! keeps working; the rest is additive. Binary and IR facts, cross-host `pending` jobs and the
 //! `edges` view live in the same file.
 

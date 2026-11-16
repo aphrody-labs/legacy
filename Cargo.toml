@@ -286,7 +286,7 @@ members = [
   "test/lore",
   "tools/build-model",
 ]
-exclude = ["third_party", "apps", "packages", "build", "device", "prebuilts"]
+exclude = ["third_party", "apps", "build", "device", "prebuilts"]
 
 [workspace.package]
 version = "0.4.0"

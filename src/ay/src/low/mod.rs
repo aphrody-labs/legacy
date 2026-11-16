@@ -35,7 +35,7 @@ pub enum LowCmd {
     /// Engines facade (V8, JavaScriptCore, Dawn, wgpu, browsers): list, matrix, js, path, install, launch, build
     #[command(disable_help_flag = true)]
     Engines(crate::Rest),
-    /// ai-os orchestrator (packages/ai-os, `orch`): run <workflow.json>, plan "<goal>", lifecycle --task ... ; agent toolchain: install, sync, check, list (packages/machine/src/toolchain.ts)
+    /// ai-os orchestrator (frameworks/ai-os, `orch`): run <workflow.json>, plan "<goal>", lifecycle --task ... ; agent toolchain: install, sync, check, list (system/machine-ts/src/toolchain.ts)
     #[command(disable_help_flag = true)]
     Agents(crate::Rest),
     /// Steam data as JSON (src/steam): root, libraries, apps, vdf, compat, host, env

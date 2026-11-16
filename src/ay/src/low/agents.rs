@@ -1,8 +1,8 @@
-//! `ay agents`: the ai-os orchestrator (`packages/ai-os/src/cli.ts orch`), run in place by bun
-//! from `packages/ai-os`, as `just orch` does. `ay agents run <workflow.json>`, `ay agents plan
-//! "<goal>"`, `ay agents lifecycle --task ...`; see packages/ai-os/docs/ORCHESTRATOR.md.
+//! `ay agents`: the ai-os orchestrator (`frameworks/ai-os/src/cli.ts orch`), run in place by bun
+//! from `frameworks/ai-os`, as `just orch` does. `ay agents run <workflow.json>`, `ay agents plan
+//! "<goal>"`, `ay agents lifecycle --task ...`; see frameworks/ai-os/docs/ORCHESTRATOR.md.
 //! `ay agents install|sync|check|list` drive the agent toolchain instead (skills, plugins, MCP for Claude Code,
-//! Codex, agy, Gemini CLI): `packages/machine/src/toolchain.ts`, manifest tools/agents/toolchain.toml.
+//! Codex, agy, Gemini CLI): `system/machine-ts/src/toolchain.ts`, manifest tools/agents/toolchain.toml.
 
 use std::process::Command;
 
@@ -17,7 +17,7 @@ fn is_help(args: &[String]) -> bool {
     matches!(args, [a] if a == "--help" || a == "-h" || a == "help")
 }
 
-/// Toolchain verbs, routed to packages/machine/src/toolchain.ts rather than the orchestrator.
+/// Toolchain verbs, routed to system/machine-ts/src/toolchain.ts rather than the orchestrator.
 pub fn is_toolchain(args: &[String]) -> bool {
     matches!(args.first().map(String::as_str), Some("install" | "sync" | "check" | "list"))
 }
@@ -25,14 +25,14 @@ pub fn is_toolchain(args: &[String]) -> bool {
 pub fn run(args: &[String]) -> i32 {
     let root = crate::repo_root();
     if is_toolchain(args) {
-        let cli = root.join("packages").join("machine").join("src").join("toolchain.ts");
+        let cli = root.join("system").join("machine-ts").join("src").join("toolchain.ts");
         if !cli.is_file() {
             eprintln!("ay agents: {} not found (set SRC_ROOT to the monorepo root)", cli.display());
             return 127;
         }
         return crate::status_of(Command::new(crate::exec::locate("bun")).arg(cli).args(args).env("SRC_ROOT", &root));
     }
-    let dir = root.join("packages").join("ai-os");
+    let dir = root.join("frameworks").join("ai-os");
     if !dir.join("src").join("cli.ts").is_file() {
         eprintln!("ay agents: {} not found (set SRC_ROOT to the monorepo root)", dir.display());
         return 127;

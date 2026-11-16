@@ -37,7 +37,7 @@ jobs:
       - name: Personal-data gate (generic patterns; the discovery cache is absent in CI)
         run: bun scripts/hygiene.ts --rule personal-data
       - name: Test output holds no secret (env-kit suite)
-        run: bun scripts/test-leak-guard.ts packages/env-kit tools/agents
+        run: bun scripts/test-leak-guard.ts system/env-kit tools/agents
       - name: Identity gate
         env:
           APHRODY_PII_TERMS: ${{ secrets.APHRODY_PII_TERMS }}
@@ -47,13 +47,13 @@ jobs:
       - name: Agent runner tests (no shell, prompts with shell metacharacters)
         run: AGENTS_HOME="$RUNNER_TEMP/agents" bun --no-env-file test tools/agents
       - name: JS supply chain (bun workspace deps)
-        run: bun packages/machine/src/js-deps-check.ts
+        run: bun system/machine-ts/src/js-deps-check.ts
       - name: Toolchain (Chromium's rustc, the rustup toolchain named by rust-toolchain.toml)
         run: bun scripts/toolchain.ts install
       - name: Cargo graph resolves (members and path dependencies present, no compilation)
         run: cargo metadata --locked --no-deps --format-version 1 >/dev/null
       - name: Version frozen (VERSION = Cargo.toml = path deps = package.json, above the last stable tag; docs/packaging/VERSIONING.md)
-        run: bun packages/release/src/cli.ts freeze --check
+        run: bun system/release/src/cli.ts freeze --check
       - name: No workflow targets prd or fr2 (owner fleet rule; self-hosted CI = fr1 only)
         run: |
           bad=$(grep -lE '^[[:space:]]*runs-on:.*\b(prd|fr2|cdn|usa)\b' .github/workflows/*.yml || true)
@@ -68,15 +68,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { suite: env-kit, run: "bun --no-env-file test packages/env-kit" }
-          - { suite: upstream, run: "bun --no-env-file test packages/upstream" }
+          - { suite: env-kit, run: "bun --no-env-file test system/env-kit" }
+          - { suite: upstream, run: "bun --no-env-file test system/upstream" }
           - {
               suite: ai-os,
-              run: "cd packages/ai-os && bun --no-env-file test test",
+              run: "cd frameworks/ai-os && bun --no-env-file test test",
             }
           - {
               suite: design,
-              run: "bun --no-env-file --cwd packages/design test && bun --no-env-file run --cwd packages/design lint",
+              run: "bun --no-env-file --cwd frameworks/design test && bun --no-env-file run --cwd frameworks/design lint",
             }
     steps:
       - uses: actions/checkout@v7
@@ -122,4 +122,4 @@ jobs:
             range="$BEFORE..$SHA"
           fi
           AGENT_HOME="$RUNNER_TEMP/agent" NHITL_DB="$RUNNER_TEMP/nhitl.sqlite" \
-            bun --no-env-file packages/ai-os/src/cli.ts review "$range" --out "$RUNNER_TEMP/reviews" --summary "$GITHUB_STEP_SUMMARY" --quiet
+            bun --no-env-file frameworks/ai-os/src/cli.ts review "$range" --out "$RUNNER_TEMP/reviews" --summary "$GITHUB_STEP_SUMMARY" --quiet

@@ -72,10 +72,10 @@ jobs:
         with: { submodules: false }
       - name: Toolchain
         run: bun scripts/toolchain.ts install
-      - name: Design tokens (packages/design/tokens/tokens.rs via nt-brand, tokens.zig)
-        # tokens.rs et tokens.zig sont générés par bun (packages/design/src/build.ts) ; on les compile ici.
+      - name: Design tokens (frameworks/design/tokens/tokens.rs via nt-brand, tokens.zig)
+        # tokens.rs et tokens.zig sont générés par bun (frameworks/design/src/build.ts) ; on les compile ici.
         run: |
           CARGO_MANIFEST_DIR="$PWD/apps/nt/sdk/rust/brand" aphrody-heavy rustc --edition 2024 --test -D warnings \
             -o "$RUNNER_TEMP/nt-brand-test" apps/nt/sdk/rust/brand/src/lib.rs
           "$RUNNER_TEMP/nt-brand-test"
-          aphrody-heavy zig test packages/design/tokens/tokens_test.zig
+          aphrody-heavy zig test frameworks/design/tokens/tokens_test.zig

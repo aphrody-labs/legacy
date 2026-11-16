@@ -9,9 +9,9 @@ import {
   s3DepuisEnv,
 } from "@auto/store";
 import { entreprise, verifierMotDePasse, type Auth } from "@auto/tenancy";
-import type { Module } from "../modules";
+import type { Module } from ".";
 import { brut, objet, op, str } from "../openapi-outils";
-import type { Chemins } from "../modules";
+import type { Chemins } from ".";
 
 const owner = (a: Auth) => {
   if (a.role !== "owner") throw new ErreurApi("owner_only", [], 403);

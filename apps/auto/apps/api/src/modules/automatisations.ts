@@ -33,7 +33,7 @@ import {
 } from "@auto/store";
 import type { BunRequest } from "bun";
 import { z } from "zod";
-import { origineApp, type Chemins, type Module } from "../modules";
+import { origineApp, type Chemins, type Module } from ".";
 import { avecId, enumere, liste, objet, op, param, str } from "../openapi-outils";
 
 type Corps = { nom?: unknown; description?: unknown; actif?: unknown; definition?: unknown; donnees?: unknown };

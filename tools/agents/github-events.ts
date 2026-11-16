@@ -13,7 +13,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { join, resolve } from "node:path";
-import { expandSync } from "../../packages/env-kit/src/discover.ts";
+import { expandSync } from "../../system/env-kit/src/discover.ts";
 
 export type GithubEvent = {
   v: 1;

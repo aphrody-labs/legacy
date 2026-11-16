@@ -1,4 +1,4 @@
-# CWV alerts: p75 LCP/INP/CLS of every project with `budgets` (packages/deploy/projects.toml), read from
+# CWV alerts: p75 LCP/INP/CLS of every project with `budgets` (system/deploy/projects.toml), read from
 # GET /api/projects/<p>/insights (7 days). Over budget -> the run fails with a visible ::error and an NHITL
 # entry (issue labelled nhitl, reused while open).
 name: observe
@@ -18,7 +18,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with: { bun-version-file: package.json }
       - name: budgets
-        run: bun packages/deploy/src/cli.ts observe 2>&1 | tee observe.log; exit "${PIPESTATUS[0]}"
+        run: bun system/deploy/src/cli.ts observe 2>&1 | tee observe.log; exit "${PIPESTATUS[0]}"
         shell: bash
       - name: nhitl entry
         if: failure()

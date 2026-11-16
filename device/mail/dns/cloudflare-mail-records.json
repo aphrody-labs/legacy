@@ -92,7 +92,7 @@
   {
     "type": "TXT",
     "name": "default._bimi.aphrody.com",
-    "content": "v=BIMI1; l=https://aphrody.com/packages/design/brand/aphrody-monogram-bimi.svg; a=",
+    "content": "v=BIMI1; l=https://aphrody.com/frameworks/design/brand/aphrody-monogram-bimi.svg; a=",
     "ttl": 3600,
     "proxied": false,
     "comment": "BIMI brand indicator SVG Tiny PS monogram for aphrody.com"

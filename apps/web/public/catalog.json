@@ -18,7 +18,7 @@
         },
         {
           "name": "agent-context",
-          "description": "Native reader/writer for the agent Context store (same SQLite schema as packages/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python.",
+          "description": "Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python.",
           "path": "src/agent/context"
         },
         {
@@ -388,7 +388,7 @@
         },
         {
           "name": "aphrody-i18n",
-          "description": "Shared i18n catalogs (packages/i18n/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs.",
+          "description": "Shared i18n catalogs (frameworks/i18n-ts/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs.",
           "path": "src/i18n"
         },
         {
@@ -1411,242 +1411,242 @@
         {
           "name": "@aphrody/ai-os",
           "description": "Aphrody AI OS: Unix/GNU-like agent OS distribution unifying LLM, RAG, World Model, and System 1 decision under one C ABI (aphrody_core_capi)",
-          "path": "packages/ai-os"
+          "path": "frameworks/ai-os"
         },
         {
           "name": "@aphrody/api",
           "description": "Tauri API definitions",
-          "path": "packages/api"
+          "path": "frameworks/api"
         },
         {
           "name": "@aphrody/assets",
           "description": "Redistribution-safe asset library: manifest with SPDX license, sha256 and attribution; fetch, verify, list",
-          "path": "packages/assets"
+          "path": "frameworks/assets"
         },
         {
           "name": "@aphrody/automate",
           "description": "Workflow automation engine: definitions (zod schema), node catalog, expression language, executor with injected services, templates, n8n import/export. No outside access of its own.",
-          "path": "packages/automate"
-        },
-        {
-          "name": "@aphrody/bun-parity",
-          "description": "Automated Chromium Upstream vs Bun Full-Stack Parity Recon & Auto-Patcher",
-          "path": "packages/bun-parity"
-        },
-        {
-          "name": "@aphrody/bun-plugin-tailwind",
-          "description": "Tailwind CSS v4 for Bun: Bun.build, the HTML dev server and Bun.serve, a PostCSS plugin on the same engine, and a Material 3 preset",
-          "path": "packages/bun-plugin-tailwind"
-        },
-        {
-          "name": "@aphrody/bun-plugins",
-          "description": "Sovereign Bun Plugins: Just Recipes, Turbo Blake3 Cache, and VCS Metadata",
-          "path": "packages/bun-plugins"
-        },
-        {
-          "name": "@aphrody/bun-runtime-sdk",
-          "description": "SDK of the buv native runtime: versioned buv C ABI with compatible yolo exports and Bun, .NET and Python bindings",
-          "path": "packages/bun-runtime-sdk"
-        },
-        {
-          "name": "@aphrody/bun-sql",
-          "description": "Native Bun.SQL provider connections and official Neon and Supabase SDKs",
-          "path": "packages/bun-sql"
-        },
-        {
-          "name": "@aphrody/bun-steam",
-          "description": "Bun OS Steam owner (Bun half): VDF text/binary/appinfo parser and writer, Steam client configuration, steamcmd with a cached session, libraries, Proton management and launch tuning, Remote Play state, the local Steam index and the bun-steam CLI.",
-          "path": "packages/bun-steam"
-        },
-        {
-          "name": "@aphrody/bun-test-dom",
-          "description": "",
-          "path": "packages/bun-test-dom"
+          "path": "frameworks/automate"
         },
         {
           "name": "@aphrody/bun-video",
           "description": "Bun video protocols, native capture adapters, and official Remotion and HyperFrames integrations",
-          "path": "packages/bun-video"
-        },
-        {
-          "name": "@aphrody/bunify",
-          "description": "legacy Node/TS/JS -> Bun -> Rust migrator",
-          "path": "packages/bunify"
+          "path": "frameworks/bun-video"
         },
         {
           "name": "@aphrody/canvas",
           "description": "Aphrody native Skia canvas facade over the pinned upstream @napi-rs/canvas runtime",
-          "path": "packages/canvas"
+          "path": "frameworks/canvas"
         },
         {
           "name": "@aphrody/chromium",
           "description": "Chromium CDP client and launcher, Obscura alias, Brave adblock-rust and privacy cryptography for upstream Bun: the owner of the aphrody-labs/bun fork's bun:chromium, bun:chrome, bun:obscura, bun:adblock, bun:privacy and bun:fetch, served as a Bun OS plugin.",
-          "path": "packages/chromium"
-        },
-        {
-          "name": "@aphrody/core",
-          "description": "bun:ffi bridge to src/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON)",
-          "path": "packages/core"
-        },
-        {
-          "name": "@aphrody/deploy",
-          "description": "aphrody.app: first-party deployment platform of the monorepo (previews per commit, production pointer, rollback, logs) on Cloudflare Workers and R2",
-          "path": "packages/deploy"
+          "path": "frameworks/chromium-ts"
         },
         {
           "name": "@aphrody/design",
-          "description": "Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis packages/design/design.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; composants Angular Material (thème M3 généré) ; Material Symbols (SVG et police : packages/design/symbols ; material-symbols ne sert qu au catalogue des noms).",
-          "path": "packages/design"
+          "description": "Systeme de design unique du monorepo : tokens Material 3 (Material Color Utilities) depuis frameworks/design/design.toml, sorties CSS, Rust (GPUI), Zig, ANSI, Figma, DESIGN.md ; composants Angular Material (thème M3 généré) ; Material Symbols (SVG et police : frameworks/design/symbols ; material-symbols ne sert qu au catalogue des noms).",
+          "path": "frameworks/design"
         },
         {
           "name": "@aphrody/discord-kit",
           "description": "Unified Discord bot core kit: pre-flight intent negotiation, memory-bounded caching, resilient interaction dispatching, lifecycle management and guards for Bun.",
-          "path": "packages/discord-kit"
-        },
-        {
-          "name": "@aphrody/env-kit",
-          "description": "Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/google/gcp) for C:/aphrody",
-          "path": "packages/env-kit"
-        },
-        {
-          "name": "@aphrody/ffi-bridge",
-          "description": "bun:ffi bindings and tests of the Rust cdylibs (dx12-hal, unix-distro probes)",
-          "path": "packages/ffi-bridge"
-        },
-        {
-          "name": "@aphrody/forge",
-          "description": "Sovereign Rust + TypeScript Tri-Forge (GitHub + GitLab + Google Git + Arch Upstreams) CLI (frg)",
-          "path": "packages/forge"
+          "path": "frameworks/discord-kit"
         },
         {
           "name": "@aphrody/gaming",
           "description": "Gaming stack of the monorepo: Steam (web API, SteamID, local paths over `ay steam`), Proton, Vulkan layers, DirectX, steamcmd and Proton wrappers; `ay gaming`",
-          "path": "packages/gaming"
-        },
-        {
-          "name": "@aphrody/gnu",
-          "description": "GNU upstream tracker and distributor: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix and the Rust equivalents, as a JSON feed, an Atom feed, a static site and MCP tools",
-          "path": "packages/gnu"
+          "path": "frameworks/gaming"
         },
         {
           "name": "@aphrody/google",
           "description": "Aphrody Google: Cloud, Gemini, Drive, Docs, REST services (src/rest), gcloud principals and billing (src/gcp), document translation (src/doc-ai), Drive client (src/drive-client).",
-          "path": "packages/google"
-        },
-        {
-          "name": "@aphrody/http",
-          "description": "Portable in-process JSON transport shared by Aphrody service clients",
-          "path": "packages/http"
+          "path": "frameworks/google-ts"
         },
         {
           "name": "@aphrody/i18n",
           "description": "Shared i18n layer: catalogs discovered from locales/, Unicode MessageFormat 2 (messageformat) behind a format-adapter interface, Intl-based locale negotiation, check/extract/translate CLI",
-          "path": "packages/i18n"
+          "path": "frameworks/i18n-ts"
         },
         {
           "name": "@aphrody/m3-ai",
           "description": "Material Design 3 agent-interaction components (tool calls, markdown, chat composer, workers, tasks): the SpaceUI (@spacedrive/ai) set rebuilt on @aphrody/m3-primitives.",
-          "path": "packages/m3-ai"
+          "path": "frameworks/m3-ai"
         },
         {
           "name": "@aphrody/m3-os-themes",
           "description": "Material 3 OS theme generators and installers (Windows 11, GNOME Shell, COSMIC, Chromium browsers) derived from @aphrody/m3-tokens dynamic colour roles.",
-          "path": "packages/m3-os-themes"
+          "path": "frameworks/m3-os-themes"
         },
         {
           "name": "@aphrody/m3-primitives",
           "description": "Material Design 3 React primitives: the SpaceUI (@spacedrive/primitives) component set rebuilt on the M3 roles, shape, typescale, state layers and motion of the aphrody design system.",
-          "path": "packages/m3-primitives"
+          "path": "frameworks/m3-primitives"
         },
         {
           "name": "@aphrody/m3-reader",
           "description": "Material 3 manga and illustrated book readers for React",
-          "path": "packages/m3-reader"
+          "path": "frameworks/m3-reader"
         },
         {
           "name": "@aphrody/m3-theme",
           "description": "Canonical Material 3 fusion sheets: tokens.css (M3 + shadcn/ui + Tailwind v4 aliases), tailwind.css (every M3 system token as a Tailwind v4 utility) and spaceui.css (the SpaceUI themes rebuilt as M3 dynamic schemes, with SpaceUI compatibility aliases).",
-          "path": "packages/m3-theme"
+          "path": "frameworks/m3-theme"
         },
         {
           "name": "@aphrody/m3-tokens",
           "description": "Material 3 design tokens (--md-sys-*) for the @aphrody/material-web fork: MUI-theme → M3 token CSS generation and runtime Material You dynamic colour via material-color-utilities.",
-          "path": "packages/m3-tokens"
-        },
-        {
-          "name": "@aphrody/machine",
-          "description": "Reproducible Windows workstation: WinGet DSC v3 (niubash, Coreutils), Claude Code shell/MCP setup, aphrody-labs forks, flat third_party",
-          "path": "packages/machine"
+          "path": "frameworks/m3-tokens"
         },
         {
           "name": "@aphrody/messaging",
           "description": "Aphrody messaging channel contracts and Discord REST adapter.",
-          "path": "packages/messaging"
-        },
-        {
-          "name": "@aphrody/native",
-          "description": "bun:ffi bindings for the Zig native desktop SDK (third_party/native, vercel-labs/native)",
-          "path": "packages/native"
-        },
-        {
-          "name": "@aphrody/next-bun",
-          "description": "Next.js on Bun: run next with no Node.js (Turbopack workers included), build the Pages Router with Bun.build (experimental), Next 16 / Tailwind 4 codemods, instant navigation testing and a Next-compatible App Router on Bun.build + Bun.serve without Next (`@aphrody/next-bun/app`)",
-          "path": "packages/next-bun"
-        },
-        {
-          "name": "@aphrody/omniu",
-          "description": "oh-my-niu for Bun: plugin bundle as data, validator, packager and scaffolder, and the host that loads the ay plugin into both Bun and niu",
-          "path": "packages/omniu"
+          "path": "frameworks/messaging"
         },
         {
           "name": "@aphrody/plugin-opener",
           "description": "Open files and URLs using their default application.",
-          "path": "packages/plugin-opener"
-        },
-        {
-          "name": "@aphrody/py2bun",
-          "description": "Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun)",
-          "path": "packages/py2bun"
+          "path": "frameworks/plugin-opener"
         },
         {
           "name": "@aphrody/ghidra",
           "description": "Ghidra API for Bun (pyghidra parity), Bun plugin and native onBeforeParse plugin",
-          "path": "packages/re/ghidra"
-        },
-        {
-          "name": "@aphrody/release",
-          "description": "ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first",
-          "path": "packages/release"
-        },
-        {
-          "name": "@aphrody/sql",
-          "description": "Shared Bun database mechanics for Aphrody: env/URL resolution, Bun.SQL and Redis factories, bun:sqlite open policy with optional sqlite-vec",
-          "path": "packages/sql"
-        },
-        {
-          "name": "@aphrody/upstream",
-          "description": "Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks",
-          "path": "packages/upstream"
-        },
-        {
-          "name": "@aphrody/wck",
-          "description": "Compile-Time Web Validator (Google SEO + AI Mode SEO + Modern Web Guidelines + Core Web Vitals + Lighthouse 100 + WASM + WebGPU Chromium Spec)",
-          "path": "packages/wck"
+          "path": "frameworks/re-ts/ghidra"
         },
         {
           "name": "@aphrody/web",
           "description": "",
-          "path": "packages/web"
+          "path": "frameworks/web"
         },
         {
           "name": "@aphrody/web-crawl",
           "description": "Typed Bun client for the Aphrody Web crawler CLI",
-          "path": "packages/web-crawl"
+          "path": "frameworks/web-crawl"
+        },
+        {
+          "name": "@aphrody/bun-parity",
+          "description": "Automated Chromium Upstream vs Bun Full-Stack Parity Recon & Auto-Patcher",
+          "path": "system/bun-parity"
+        },
+        {
+          "name": "@aphrody/bun-plugin-tailwind",
+          "description": "Tailwind CSS v4 for Bun: Bun.build, the HTML dev server and Bun.serve, a PostCSS plugin on the same engine, and a Material 3 preset",
+          "path": "system/bun-plugin-tailwind"
+        },
+        {
+          "name": "@aphrody/bun-plugins",
+          "description": "Sovereign Bun Plugins: Just Recipes, Turbo Blake3 Cache, and VCS Metadata",
+          "path": "system/bun-plugins"
+        },
+        {
+          "name": "@aphrody/bun-runtime-sdk",
+          "description": "SDK of the buv native runtime: versioned buv C ABI with compatible yolo exports and Bun, .NET and Python bindings",
+          "path": "system/bun-runtime-sdk"
+        },
+        {
+          "name": "@aphrody/bun-sql",
+          "description": "Native Bun.SQL provider connections and official Neon and Supabase SDKs",
+          "path": "system/bun-sql"
+        },
+        {
+          "name": "@aphrody/bun-steam",
+          "description": "Bun OS Steam owner (Bun half): VDF text/binary/appinfo parser and writer, Steam client configuration, steamcmd with a cached session, libraries, Proton management and launch tuning, Remote Play state, the local Steam index and the bun-steam CLI.",
+          "path": "system/bun-steam"
+        },
+        {
+          "name": "@aphrody/bun-test-dom",
+          "description": "",
+          "path": "system/bun-test-dom"
+        },
+        {
+          "name": "@aphrody/bunify",
+          "description": "legacy Node/TS/JS -> Bun -> Rust migrator",
+          "path": "system/bunify"
+        },
+        {
+          "name": "@aphrody/core",
+          "description": "bun:ffi bridge to src/core/capi: tree-sitter parse/query, BLAKE3, recursive index (sqlite + JSON)",
+          "path": "system/core-ts"
+        },
+        {
+          "name": "@aphrody/deploy",
+          "description": "aphrody.app: first-party deployment platform of the monorepo (previews per commit, production pointer, rollback, logs) on Cloudflare Workers and R2",
+          "path": "system/deploy"
+        },
+        {
+          "name": "@aphrody/env-kit",
+          "description": "Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/google/gcp) for C:/aphrody",
+          "path": "system/env-kit"
+        },
+        {
+          "name": "@aphrody/ffi-bridge",
+          "description": "bun:ffi bindings and tests of the Rust cdylibs (dx12-hal, unix-distro probes)",
+          "path": "system/ffi-bridge"
+        },
+        {
+          "name": "@aphrody/forge",
+          "description": "Sovereign Rust + TypeScript Tri-Forge (GitHub + GitLab + Google Git + Arch Upstreams) CLI (frg)",
+          "path": "system/forge"
+        },
+        {
+          "name": "@aphrody/gnu",
+          "description": "GNU upstream tracker and distributor: ftp.gnu.org, info-gnu, Savannah, GSRC, Guix and the Rust equivalents, as a JSON feed, an Atom feed, a static site and MCP tools",
+          "path": "system/gnu-ts"
+        },
+        {
+          "name": "@aphrody/http",
+          "description": "Portable in-process JSON transport shared by Aphrody service clients",
+          "path": "system/http-ts"
+        },
+        {
+          "name": "@aphrody/machine",
+          "description": "Reproducible Windows workstation: WinGet DSC v3 (niubash, Coreutils), Claude Code shell/MCP setup, aphrody-labs forks, flat third_party",
+          "path": "system/machine-ts"
+        },
+        {
+          "name": "@aphrody/native",
+          "description": "bun:ffi bindings for the Zig native desktop SDK (third_party/native, vercel-labs/native)",
+          "path": "system/native"
+        },
+        {
+          "name": "@aphrody/next-bun",
+          "description": "Next.js on Bun: run next with no Node.js (Turbopack workers included), build the Pages Router with Bun.build (experimental), Next 16 / Tailwind 4 codemods, instant navigation testing and a Next-compatible App Router on Bun.build + Bun.serve without Next (`@aphrody/next-bun/app`)",
+          "path": "system/next-bun"
+        },
+        {
+          "name": "@aphrody/omniu",
+          "description": "oh-my-niu for Bun: plugin bundle as data, validator, packager and scaffolder, and the host that loads the ay plugin into both Bun and niu",
+          "path": "system/omniu"
+        },
+        {
+          "name": "@aphrody/py2bun",
+          "description": "Python 3 to Bun TypeScript transpiler: runtime and CLI wrapper (Rust crate at src/py2bun)",
+          "path": "system/py2bun-ts"
+        },
+        {
+          "name": "@aphrody/release",
+          "description": "ay release: tags, GitHub releases, crates.io, npm, PyPI and vcpkg/CMake from fr1, dry-run first",
+          "path": "system/release"
+        },
+        {
+          "name": "@aphrody/sql",
+          "description": "Shared Bun database mechanics for Aphrody: env/URL resolution, Bun.SQL and Redis factories, bun:sqlite open policy with optional sqlite-vec",
+          "path": "system/sql-ts"
+        },
+        {
+          "name": "@aphrody/upstream",
+          "description": "Patch stacks of the bun and Chromium forks: status, rebase on upstream, ephemeral PR heads, contribution checks",
+          "path": "system/upstream"
+        },
+        {
+          "name": "@aphrody/wck",
+          "description": "Compile-Time Web Validator (Google SEO + AI Mode SEO + Modern Web Guidelines + Core Web Vitals + Lighthouse 100 + WASM + WebGPU Chromium Spec)",
+          "path": "system/wck"
         },
         {
           "name": "@aphrody/x",
           "description": "Headless X (Twitter) client for Bun: a thin import over the Rust crate aphrody-x (aphrody-ffi), with batch jobs for mass scripting. Cookie-auth GraphQL + REST, no API key. Includes local For You algo (x-algorithm port), store, and X function tools (XTools, x_* JSON Schema definitions) for Grok or any tool-calling model.",
-          "path": "packages/x"
+          "path": "system/x"
         }
       ]
     },
@@ -2527,7 +2527,7 @@
         },
         {
           "name": "gnu",
-          "description": "GNU upstream tracker and distributor (packages/gnu): real-time releases of every GNU package and the Linux kernel, their Rust equivalents, JSON and Atom feeds, the gnu.aphrody.com site, the aphrody-gnu service on fr2 and the R2 mirror. Use to check a GNU or kernel version, find the Rust replacement of a GNU package, read or operate the feeds, or change the tracker.",
+          "description": "GNU upstream tracker and distributor (system/gnu-ts): real-time releases of every GNU package and the Linux kernel, their Rust equivalents, JSON and Atom feeds, the gnu.aphrody.com site, the aphrody-gnu service on fr2 and the R2 mirror. Use to check a GNU or kernel version, find the Rust replacement of a GNU package, read or operate the feeds, or change the tracker.",
           "path": ".agents/skills/gnu"
         },
         {
@@ -2602,7 +2602,7 @@
         },
         {
           "name": "material-3",
-          "description": "Material Design 3 rules (including M3 Expressive) normalized for this monorepo. Use for any M3 decision on color, type, shape, elevation, state, motion, adaptive layout, accessibility or component (buttons, FAB, bars, navigation, fields, sheets, dialogs, menus, chips, lists, sliders, tabs, etc.), or to check that a UI follows M3. Also holds the general design.google principles (inclusion, low connectivity, AI, voice, wellbeing, design review) for framing or critiquing an experience beyond tokens. Complements ui-system (targets and tools); values are consumed from packages/design, never copied.",
+          "description": "Material Design 3 rules (including M3 Expressive) normalized for this monorepo. Use for any M3 decision on color, type, shape, elevation, state, motion, adaptive layout, accessibility or component (buttons, FAB, bars, navigation, fields, sheets, dialogs, menus, chips, lists, sliders, tabs, etc.), or to check that a UI follows M3. Also holds the general design.google principles (inclusion, low connectivity, AI, voice, wellbeing, design review) for framing or critiquing an experience beyond tokens. Complements ui-system (targets and tools); values are consumed from frameworks/design, never copied.",
           "path": ".agents/skills/material-3"
         },
         {
@@ -2627,7 +2627,7 @@
         },
         {
           "name": "py2bun",
-          "description": "Python to Bun TypeScript transpiler (crate src/py2bun, package packages/py2bun) with Ghidra script idioms. Use to convert a Python 3 or Jython-era Ghidra script to Bun TypeScript, check why a construct is unsupported, or change the transpiler or its runtime.",
+          "description": "Python to Bun TypeScript transpiler (crate src/py2bun, package system/py2bun-ts) with Ghidra script idioms. Use to convert a Python 3 or Jython-era Ghidra script to Bun TypeScript, check why a construct is unsupported, or change the transpiler or its runtime.",
           "path": ".agents/skills/py2bun"
         },
         {
@@ -2867,7 +2867,7 @@
         },
         {
           "name": "ui-system",
-          "description": "Single UI rules of the monorepo. Use BEFORE creating or changing any interface (site, web app, dashboard, desktop, TUI, component, icon, color, font, Figma or Stitch mockup). Requires @aphrody/design (Material 3 tokens generated by Material Color Utilities from packages/design/design.toml), consumed through the adapter of the target framework, Material Symbols for icons, and routes to the Figma and Stitch MCPs.",
+          "description": "Single UI rules of the monorepo. Use BEFORE creating or changing any interface (site, web app, dashboard, desktop, TUI, component, icon, color, font, Figma or Stitch mockup). Requires @aphrody/design (Material 3 tokens generated by Material Color Utilities from frameworks/design/design.toml), consumed through the adapter of the target framework, Material Symbols for icons, and routes to the Figma and Stitch MCPs.",
           "path": ".agents/skills/ui-system"
         },
         {

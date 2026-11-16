@@ -6,7 +6,7 @@ description: Android NDK Pure C11/JNI/ANativeWindow/AChoreographer and Jetpack C
 
 # Android NDK + Jetpack Compose Material 3 Expressive in src
 
-`android/skills` (`v1.0.21`, commit `5815d27fda56`, Apache-2.0) is forked at `aphrody-labs/android-skills` (`third_party/forks.txt`), checked out in `third_party/android-skills`, tracked by `tools/upstream/stacks.d/google-labs.toml`, and mirrored into 36 `.agents/skills/android-*` skills via `bun packages/ai-os/src/google/absorb.ts skills --write`.
+`android/skills` (`v1.0.21`, commit `5815d27fda56`, Apache-2.0) is forked at `aphrody-labs/android-skills` (`third_party/forks.txt`), checked out in `third_party/android-skills`, tracked by `tools/upstream/stacks.d/google-labs.toml`, and mirrored into 36 `.agents/skills/android-*` skills via `bun frameworks/ai-os/src/google/absorb.ts skills --write`.
 
 ## Live-Verified Toolchain Baseline (2026-11-14)
 
@@ -22,7 +22,7 @@ description: Android NDK Pure C11/JNI/ANativeWindow/AChoreographer and Jetpack C
 ## Architecture in `src`: Shared Tokens + Pure C ABI (`libaysys.so`)
 
 1. **Single Token Source (`design.toml` -> `Theme.kt` + `tokens.h` + `ndk_theme.h` + `ui.h`)**:
-   - `packages/design/tokens/adapters/Theme.kt` (`package com.aphrody.design`, `object AphrodyTheme`) and `packages/design/tokens/adapters/ndk_theme.h` (`AY_NDK_ROLE_*`, 48 roles aligned 1:1 with `Theme.kt`, plus `AY_NDK_*_CLEAR_RGBA8888` and `ay_ndk_clear_color_t` for `VkClearColorValue` / `glClearColor`) are generated from `packages/design/design.toml` (seed `#135B82`, Material Color Utilities `0.4.0` vibrant) by `packages/design/src/adapters.ts`, alongside `packages/design/tokens/adapters/tokens.h`.
+   - `frameworks/design/tokens/adapters/Theme.kt` (`package com.aphrody.design`, `object AphrodyTheme`) and `frameworks/design/tokens/adapters/ndk_theme.h` (`AY_NDK_ROLE_*`, 48 roles aligned 1:1 with `Theme.kt`, plus `AY_NDK_*_CLEAR_RGBA8888` and `ay_ndk_clear_color_t` for `VkClearColorValue` / `glClearColor`) are generated from `frameworks/design/design.toml` (seed `#135B82`, Material Color Utilities `0.4.0` vibrant) by `frameworks/design/src/adapters.ts`, alongside `frameworks/design/tokens/adapters/tokens.h`.
    - `src/include/uapi/ay/ui.h` and `src/ui/m3.c` expose the exact same color roles (`ay_ui_color_argb`, `ay_ui_argb_to_abgr`, `ay_ui_state_blend_argb`), M3 Expressive springs (`ay_ui_spring_init`, `ay_ui_spring_step`), and adaptive window classes (`ay_ui_window_class`, `ay_ui_compute_shell`) over the C ABI (`src/include/ay/sys.h`).
 
 2. **Pure Native Path (`ANativeActivity` + `ANativeWindow` + `AChoreographer`)**:
@@ -36,7 +36,7 @@ description: Android NDK Pure C11/JNI/ANativeWindow/AChoreographer and Jetpack C
    - Wrap screens in `MaterialExpressiveTheme(colorScheme = AphrodyTheme.dark, shapes = AphrodyTheme.shapes, typography = AphrodyTheme.typography, motionScheme = MotionScheme.expressive())`, enabling edge-to-edge (`android-edge-to-edge`) and adaptive Navigation 3 scenes (`android-adaptive`, `android-navigation-3`).
    - Heavy Android/Gradle/NDK builds run in CI or on `fr1`, never on the local workstation.
 
-## Mirrored Skills (`bun packages/ai-os/src/google/absorb.ts skills --write`, do not edit)
+## Mirrored Skills (`bun frameworks/ai-os/src/google/absorb.ts skills --write`, do not edit)
 
 - **Jetpack Compose & Material 3**: `android-adaptive`, `android-jetpack-compose-performance`, `android-migrate-xml-views-to-jetpack-compose`, `android-ink-app-builder`, `android-ink-custom-brush-builder`
 - **Navigation & System UI**: `android-navigation-3`, `android-navigation-event`, `android-edge-to-edge`, `android-glance-appwidget-updates-and-memory`, `android-glance-canonical-layouts`

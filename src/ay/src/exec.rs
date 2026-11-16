@@ -29,11 +29,16 @@ pub fn run_external(program: &str, args: &[String]) -> i32 {
     crate::status_of(Command::new(locate(program)).args(args))
 }
 
-/// A Bun package CLI of the monorepo (`packages/<name>/src/cli.ts`), run in place by bun with
-/// `SRC_ROOT` set: `ay upstream` -> packages/upstream.
+/// A Bun package CLI of the monorepo (`system/<name>/src/cli.ts` or `frameworks/<name>/src/cli.ts`, `-ts` suffix where a crate has the same name), run in place by bun with
+/// `SRC_ROOT` set: `ay upstream` -> system/upstream.
 pub fn run_package(name: &str, args: &[String]) -> i32 {
     let root = crate::repo_root();
-    let cli = root.join("packages").join(name).join("src").join("cli.ts");
+    let ts = format!("{name}-ts");
+    let cli = ["system", "frameworks"]
+        .iter()
+        .flat_map(|top| [name, ts.as_str()].map(|d| root.join(top).join(d).join("src").join("cli.ts")))
+        .find(|c| c.is_file())
+        .unwrap_or_else(|| root.join("system").join(name).join("src").join("cli.ts"));
     if !cli.is_file() {
         eprintln!("ay: {} not found (set SRC_ROOT to the monorepo root)", cli.display());
         return 127;
@@ -41,11 +46,11 @@ pub fn run_package(name: &str, args: &[String]) -> i32 {
     crate::status_of(Command::new(locate("bun")).arg(cli).args(args).env("SRC_ROOT", &root))
 }
 
-/// The env-kit CLI (`packages/env-kit/src/cli.ts`), run in place by bun: `ay auth` and `ay secret`.
+/// The env-kit CLI (`system/env-kit/src/cli.ts`), run in place by bun: `ay auth` and `ay secret`.
 /// `SRC_ROOT` is passed on so env-kit finds device/deploy.toml from any working directory.
 pub fn run_env_kit(args: &[String]) -> i32 {
     let root = crate::repo_root();
-    let cli = root.join("packages").join("env-kit").join("src").join("cli.ts");
+    let cli = root.join("system").join("env-kit").join("src").join("cli.ts");
     if !cli.is_file() {
         eprintln!("ay: {} not found (set SRC_ROOT to the monorepo root)", cli.display());
         return 127;

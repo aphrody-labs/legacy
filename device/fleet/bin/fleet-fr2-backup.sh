@@ -9,7 +9,7 @@
 # Restore = zstd -dc <archive> | sudo tar -C / -x on the reinstalled host. Nothing is deleted by this script.
 set -eu
 here=$(cd "$(dirname "$0")" && pwd); root=$(git -C "$here" rev-parse --show-toplevel)
-. "$root/packages/env-kit/loaders/shell/site.sh"
+. "$root/system/env-kit/loaders/shell/site.sh"
 src=$(site_ssh fr2); dst=$(site_ssh fr1); from=$(site_get hosts.fr2.mesh_ip)
 timeout 60 ssh "$dst" 'cat > /tmp/fleet-recv.sh' < "$here/fleet-recv.sh"
 timeout 60 ssh "$dst" 'sudo install -m 0755 /tmp/fleet-recv.sh /usr/local/bin/fleet-recv; rm /tmp/fleet-recv.sh; sudo install -d -m 0700 -o ubuntu /srv/xbuild/backup /srv/xbuild/backup/fr2'

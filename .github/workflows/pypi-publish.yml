@@ -1,4 +1,4 @@
-# Publication PyPI sans jeton (trusted publishing OIDC), dispatchée depuis fr1 par `ay release publish` (packages/release).
+# Publication PyPI sans jeton (trusted publishing OIDC), dispatchée depuis fr1 par `ay release publish` (system/release).
 # docs.pypi.org/trusted-publishers : pypa/gh-action-pypi-publish + `id-token: write` au niveau du job. Pré-requis par
 # projet : un trusted publisher (dépôt aphrody-labs/src, workflow pypi-publish.yml, environnement pypi) ; pour un
 # projet neuf, un « pending publisher ». Les crates PyO3 sont construites par maturin (roue abi3 + sdist).
@@ -40,7 +40,7 @@ jobs:
           set -euo pipefail
           for c in $CRATES; do
             case "$c" in /*|*..*) echo "::error::chemin refusé : $c"; exit 1;; esac
-            [ -f "$c/pyproject.toml" ] || bun packages/release/src/pyproject.ts "$c" > "$c/pyproject.toml"
+            [ -f "$c/pyproject.toml" ] || bun system/release/src/pyproject.ts "$c" > "$c/pyproject.toml"
             uvx maturin@1.16.0 build --release --sdist -m "$c/Cargo.toml" -o dist
           done
           uvx twine check --strict dist/*

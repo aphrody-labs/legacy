@@ -6,7 +6,7 @@
  * (`clang --target=wasm32-wasip1`) + Binaryen `wasm-opt -O3`.
  *
  * Emits a complete, WCAG 2.2 AA & Modern Web Guidelines compliant Material 3 Expressive page to stdout
- * consuming `/tokens.css` (`packages/design/tokens/tokens.css`), `ay_ui_emit_m3_card_html`, `ay_ui_color_argb`,
+ * consuming `/tokens.css` (`frameworks/design/tokens/tokens.css`), `ay_ui_emit_m3_card_html`, `ay_ui_color_argb`,
  * `ay_ui_compute_shell`, and linking the interactive WebGPU/WebAssembly surface (`/m3/` + `/wayland/`).
  */
 

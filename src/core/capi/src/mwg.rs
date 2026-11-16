@@ -1,7 +1,7 @@
 //! Dynamic FFI bridge from Rust (`aphrody-core-capi`) to the `mwg` Pure-C23 LLVM core (`mwg_capi.dll` / `libmwg_capi.so`).
 //!
 //! Contract mirrored by `src/core/capi/include/aphrody_mwg.h`, `src/core/capi/c/mwg_core.c`,
-//! and `packages/wck/src/mwg-ffi.ts`.
+//! and `system/wck/src/mwg-ffi.ts`.
 
 use std::ffi::{CStr, CString, c_char, c_void};
 use std::path::Path;
@@ -72,7 +72,7 @@ unsafe fn load_sym<T>(handle: *mut c_void, name: &str) -> Result<T, String> {
 }
 
 impl MwgCore {
-    /// Load `mwg_capi` from an explicit path (e.g. `packages/wck/native/mwg_capi.dll`).
+    /// Load `mwg_capi` from an explicit path (e.g. `system/wck/native/mwg_capi.dll`).
     pub fn load(path: impl AsRef<Path>) -> Result<Self, String> {
         let p = path.as_ref().to_string_lossy();
         let cpath = CString::new(p.as_ref()).map_err(|e| e.to_string())?;

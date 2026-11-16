@@ -378,7 +378,7 @@ flowchart LR
 The only hand-written data in the script; everything else is read from the tree.
 
 - `DOMAINS`: each domain = directories + file patterns (checked at run time), trim feature names (checked against the model) and attached API prefixes. A crate belongs to the domain whose directory contains its `Cargo.toml` (longest prefix wins); a domain housed in a larger crate (e.g. `src/runtime/ffi` in `bun_runtime`) receives it as `part-of`.
-- `VENDOR_ALIASES`: `tcc` -> `tinycc`; otherwise crate `bun_<x>[_sys]` <-> dependency `<x>` by normalized name. `packages/bun-usockets` and `packages/bun-uws` are attached to `bun_uws_sys`.
+- `VENDOR_ALIASES`: `tcc` -> `tinycc`; otherwise crate `bun_<x>[_sys]` <-> dependency `<x>` by normalized name. `system/bun-usockets` and `packages/bun-uws` are attached to `bun_uws_sys`.
 - Module specifiers: `src/js/bun/x.ts` -> `bun:x`, `src/js/node/a.b.ts` -> `node:a/b`, `src/js/internal/**` -> `internal/**`, `src/js/thirdparty/x.ts` -> `x`.
 - `WEBGPU_TERMS`: `/webgpu|navigator\.gpu|GPUAdapter|GPUDevice|wgpu|dawn/i` (absence search of the WebGPU domain).
 - LOC: lines of the .rs .cpp .cc .c .h .hpp .mm .ts .tsx .js .mjs .cjs .toml .idl .def files (test fixtures included); `sqlite3.[ch]` counted as vendored.

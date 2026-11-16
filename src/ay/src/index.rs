@@ -7,7 +7,7 @@
 //!   ay index sync                apply finished deep results from the shared cache
 //!   ay index query <name> [--exact] [--limit N]    ay index text <words>    ay index status
 //!   ay index bench [--queries N] [--binary path]   latency percentiles
-//!   ay index gen|gen-docs|search|users             forwarded to packages/core (bun)
+//!   ay index gen|gen-docs|search|users             forwarded to system/core-ts (bun)
 
 use aphrody_core::pipeline::{Deep, Engine, Options, Shared, Stage, Store, WorkOptions};
 use std::collections::{HashMap, HashSet};
@@ -18,7 +18,7 @@ use std::time::{Duration, Instant};
 const USAGE: &str = "ay index [root] [--all] [--include a,b] [--db path] [--deep off|queue|inline] [--sniff] [--force] [--no-shared]
 ay index watch [root] | worker [--role heavy] [--once] | sync | status
 ay index query <name> [--exact] [--limit N] | text <words> | bench [--queries N] [--binary path] [--publish]
-ay index gen | gen-docs | search | users   (packages/core, bun)";
+ay index gen | gen-docs | search | users   (system/core-ts, bun)";
 
 const VALUE_FLAGS: &[&str] = &["include", "db", "deep", "limit", "role", "queries", "binary", "root", "consumer"];
 

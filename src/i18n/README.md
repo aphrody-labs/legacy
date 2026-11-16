@@ -1,7 +1,7 @@
 # aphrody-i18n
 
 <!-- catalog:begin unit -->
-> Shared i18n catalogs (packages/i18n/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs.
+> Shared i18n catalogs (frameworks/i18n-ts/locales/*.json): Unicode MessageFormat 2 evaluator on ICU4X plurals and number formatting, ICU4X locale negotiation, locales discovered from the catalogs.
 
 | Type | Path |
 | :-- | :-- |

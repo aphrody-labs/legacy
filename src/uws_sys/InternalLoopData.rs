@@ -6,7 +6,7 @@ use crate::Timer;
 use crate::{ConnectingSocket, Loop, SocketGroup, udp, us_socket_t};
 
 /// Layout placeholder for the `mutex` field of `us_internal_loop_data_t`.
-/// Must match `zig_mutex_t` in `packages/bun-usockets/src/internal/loop_data.h`
+/// Must match `zig_mutex_t` in `system/bun-usockets/src/internal/loop_data.h`
 /// and `bun_threading::mutex::ReleaseImpl` (which exports `Bun__lock__size`):
 ///   - Windows: `SRWLOCK` (pointer-sized)
 ///   - macOS:   `os_unfair_lock` (4-byte u32)
@@ -55,7 +55,7 @@ pub struct InternalLoopData {
     dns_ready_head: Cell<*mut ConnectingSocket>,
     closed_connecting_head: Cell<*mut ConnectingSocket>,
     /// `bun.Mutex.ReleaseImpl.Type` — must match the C-side `zig_mutex_t`
-    /// (`packages/bun-usockets/src/internal/loop_data.h`). `Bun__lock`/`Bun__unlock`
+    /// (`system/bun-usockets/src/internal/loop_data.h`). `Bun__lock`/`Bun__unlock`
     /// are called on this field by C, and `loop.c` runtime-checks
     /// `Bun__lock__size == sizeof(loop->data.mutex)`. This crate is tier-0 and
     /// cannot name `bun_threading::ReleaseImpl` directly, so use a layout-only

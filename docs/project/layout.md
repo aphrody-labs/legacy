@@ -10,12 +10,12 @@ The root follows [`oven-sh/bun`](https://github.com/oven-sh/bun) for manifests a
 | `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `deny.toml`, `.cargo/` | cargo, rustup and cargo-deny read the workspace root |
 | `dist-workspace.toml` | cargo-dist: "Your workspace dist config in dist-workspace.toml or dist.toml" |
 | `package.json`, `bun.lock`, `bunfig.toml`, `tsconfig.json` | bun |
-| `pyproject.toml`, `uv.lock` | uv workspace root (Lore, `packages/ai-os/python`, `packages/core-py`); `scripts/checkdeps.ts` and CI read both |
+| `pyproject.toml`, `uv.lock` | uv workspace root (Lore, `frameworks/ai-os/python`, `system/core-py`); `scripts/checkdeps.ts` and CI read both |
 | `justfile` | just; recipes are imported from `*/*.just` |
 | `DEPS`, `DEPS.rules`, `OWNERS`, `src.lock.json` | `scripts/checkdeps.ts`, `ay upstream`; `src.lock.json` is also the repository-root marker for `ay` |
 | `.github/`, `.claude/`, `.agents/`, `.claude-plugin/` | GitHub and the agent CLIs; the plugin marketplace root is the checkout |
 | `.gitattributes`, `.gitignore`, `.gitmodules`, `.env.example`, `.graphifyignore` | git, env tooling and graphify |
-| `apps/`, `build/`, `device/`, `packages/`, `prebuilts/`, `src/`, `third_party/`, `docs/`, `bench/`, `test/`, `scripts/`, `tools/`, `completions/` | the trees; table below, generated from `tools/layout.toml` |
+| `apps/`, `frameworks/`, `build/`, `device/`, `prebuilts/`, `src/`, `system/`, `third_party/`, `docs/`, `bench/`, `test/`, `scripts/`, `tools/`, `completions/` | the trees; table below, generated from `tools/layout.toml` |
 
 ## Top-level directories
 
@@ -28,10 +28,11 @@ Generated: `bun scripts/relayout.ts table --write` from the `[[area]]` rows of `
 | `build/` | CI, container images, package recipes, SDK pins, Chromium factory | AOSP build/ and Chromium build/: how the tree is built |
 | `device/` | targets and fleet: hosts, cluster, OS images, cloud, secrets, deploy | AOSP device/: per-target configuration |
 | `docs/` | documentation, generated index | Chromium docs/ |
-| `packages/` | Bun workspace packages (@aphrody/*) | Bun layout; split into system/ and frameworks/ is a later stage |
+| `frameworks/` | AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends (Bun packages; crates follow in batch 4) | AOSP frameworks/: the services applications are built on |
 | `prebuilts/` | binary pins installed by ay up | AOSP prebuilts/: binaries are pinned, not built here |
 | `scripts/` | gates and generators run by CI and just | Bun and Chromium both keep scripts/ and tools/ at the root |
 | `src/` | Rust crates (oven-sh/bun layout), C core, assembly, WebAssembly | kept: crates taken from oven-sh/bun main (Cargo.toml header), so the paths stay the upstream paths; moving it needs a CI-verified pass of its own |
+| `system/` | ay, the Bun fork core, shell, userland, compat (nt, wine, posix) (Bun packages; crates follow in batch 5) | AOSP system/: the core userland |
 | `test/` | workspace tests and conformance | Bun test/ |
 | `third_party/` | upstream checkouts (linux, chromium) and pins | Chromium third_party/; AOSP external/ |
 | `tools/` | agent tooling, upstream machinery, identity, generators | AOSP tools/ and Chromium tools/ |
@@ -41,9 +42,9 @@ Generated: `bun scripts/relayout.ts table --write` from the `[[area]]` rows of `
 
 | Was | Now | Reader |
 | --- | --- | --- |
-| `tools.toml` | `prebuilts/up/tools.toml` | `ay up` (`src/up`), `ay bun bump`, `xtask deps`, `packages/machine`, fleet bootstraps |
+| `tools.toml` | `prebuilts/up/tools.toml` | `ay up` (`src/up`), `ay bun bump`, `xtask deps`, `system/machine-ts`, fleet bootstraps |
 | `identity.toml` | `tools/identity.toml` | `scripts/identity.ts`, `src/xtask` |
-| `VERSION` | `packages/release/VERSION` | `ay release freeze` |
+| `VERSION` | `system/release/VERSION` | `ay release freeze` |
 | `plugins/` | `tools/agents/plugins/` | `.claude-plugin/marketplace.json`, `tools/agents/runner.ts` |
 | `conformance/` | `test/conformance/` | the crate `test/conformance` |
 | `LICENSE-MIT`, `LICENSE-APACHE` | `LICENSE.md` | vcpkg port, package recipes |
@@ -51,7 +52,7 @@ Generated: `bun scripts/relayout.ts table --write` from the `[[area]]` rows of `
 
 ## Purged
 
-`device/fleet/fr1-orig` and `fr2-orig` (nginx captures), stale generated files in `infra/generated`, the frozen upstream tracking snapshots of six forks (now ignored and rewritten by `packages/upstream/src/upstream-scan.ts`), and the legacy and frozen documents of `docs/` (git is the history). Left in place with their owner: `tools/labs-scripts/{vendor.sh,absorb-lore.*}` and `tools/monorepo-merge/` (untracked work of another session).
+`device/fleet/fr1-orig` and `fr2-orig` (nginx captures), stale generated files in `infra/generated`, the frozen upstream tracking snapshots of six forks (now ignored and rewritten by `system/upstream/src/upstream-scan.ts`), and the legacy and frozen documents of `docs/` (git is the history). Left in place with their owner: `tools/labs-scripts/{vendor.sh,absorb-lore.*}` and `tools/monorepo-merge/` (untracked work of another session).
 
 ## Outside the tree
 
@@ -68,7 +69,7 @@ Generated: `bun scripts/relayout.ts table --write` from the `[[area]]` rows of `
 
 | Script | Verdict |
 | --- | --- |
-| `tools/agents/runner.ts` (1288 lines) | candidate: fold into `packages/ai-os` orchestration |
+| `tools/agents/runner.ts` (1288 lines) | candidate: fold into `frameworks/ai-os` orchestration |
 | `device/cloudflare/{proof,cf,aop}.ts` | candidate: OpenTofu Cloudflare provider or the `cf` CLI |
 | `device/fleet/bin/fleet-{resilience,tune}.sh`, `bootstrap/common.sh` | candidate: systemd and `sysctl.d` drop-ins, `ay up --bootstrap` |
 | `scripts/android-setup.ts` | candidate: `sdkmanager` driven by `build/android/android.toml` |
@@ -82,13 +83,13 @@ Merges keep every capability; `git log -- <path>` is the history of the absorbed
 | Area | Target | Evidence for the choice |
 | --- | --- | --- |
 | Pins | `src.lock.json` is the source; `DEPS` stays the generated gclient view (`ay manifests`) | `DEPS` is generated from `src.lock.json`, which also holds toolchains and hardware that `DEPS` cannot |
-| Owners | done: `MAINTAINERS` renamed `OWNERS` (kernel section format kept: `ay git maintainer` and `packages/forge` parse `M:`/`S:`/`T:`/`F:`); readers rewritten in `src/xtask`, `src/depot`, `packages/forge`; `src/ay` still names the old file in two comments | `rg -l MAINTAINERS` |
+| Owners | done: `MAINTAINERS` renamed `OWNERS` (kernel section format kept: `ay git maintainer` and `system/forge` parse `M:`/`S:`/`T:`/`F:`); readers rewritten in `src/xtask`, `src/depot`, `system/forge`; `src/ay` still names the old file in two comments | `rg -l MAINTAINERS` |
 | `GEMINI.md` | done: merged into `AGENTS.md`; `.gemini/settings.json` `context.fileName` = `["AGENTS.md"]` | Gemini CLI configuration reference: `context.fileName` is a string or an array |
 | `completions/` | generated by `ay`, not tracked | |
-| `packages/google` | done: `bun-google` (`src/rest`), `gcp` (`src/gcp`), `doc-ai` (`src/doc-ai`), `drive-client` (`src/drive-client`), `google-dream` (`dream/`), `google-bun` and `gcloud-learn` (own subtrees, relocated as they are); `google-design` into `design` | `google-bun` and `gcloud-learn` carry their own manifests, tests and (for `gcloud-learn`) a cargo workspace: relocated whole, capability merge left |
-| `packages/ai-os` | `ai-triad`, `brain`, `knowledge-engine`, `rag-core`, `inference`, `xai`, `gemma-web`, `agy`, `pi-opencode`; protocols `a2a`, `ag-ui`, `ag-ui-client`, `mcp-ui`, `agent-browser` as submodules | |
-| `packages/chromium` | `bun-chromium`, `chromium-bun` | |
-| `packages/web` | `bun-web`, `webos`, `webos-wasm`, `shell-web`, `site`, `bun-webview-page` | |
+| `frameworks/google-ts` | done: `bun-google` (`src/rest`), `gcp` (`src/gcp`), `doc-ai` (`src/doc-ai`), `drive-client` (`src/drive-client`), `google-dream` (`dream/`), `google-bun` and `gcloud-learn` (own subtrees, relocated as they are); `google-design` into `design` | `google-bun` and `gcloud-learn` carry their own manifests, tests and (for `gcloud-learn`) a cargo workspace: relocated whole, capability merge left |
+| `frameworks/ai-os` | `ai-triad`, `brain`, `knowledge-engine`, `rag-core`, `inference`, `xai`, `gemma-web`, `agy`, `pi-opencode`; protocols `a2a`, `ag-ui`, `ag-ui-client`, `mcp-ui`, `agent-browser` as submodules | |
+| `frameworks/chromium-ts` | `bun-chromium`, `chromium-bun` | |
+| `frameworks/web` | `bun-web`, `webos`, `webos-wasm`, `shell-web`, `site`, `bun-webview-page` | |
 | Bun fork | `bun-parity`, `bun-plugins`, `bun-sql`, `bun-usockets` | `third_party/bun` is a clone: the merge happens in the fork, not here |
 | Others | `core` takes `native` and `ffi-bridge`; `env-kit` takes `vault`, `identity`, `paths`; `release` takes `deploy`, `upstream`, `runtime-adapter`, `runtime-sdk`, `typesafe-sdk`; `machine` takes `omniu`; `re` takes `ghidra`; `gaming` goes to the games app; `py2bun` goes to the migration feature | |
 | `src/` | one crate per family behind features: `a2a-*`, `agent-*`, `gemini-*`/`google`/`antigravity`/`model-*`, `llama*`/`ml-*`/`models`/`infer`/`embed`, `flowcat-*`, voice and audio | |

@@ -25,4 +25,4 @@ Local upstream docs: `third_party/bun/docs`. Release notes: https://bun.com/blog
 ## References
 
 - [references/zero-dep.md](references/zero-dep.md): zero `bunx`, empty `dependencies`, `bun check` without `@types/bun`, canonical package.json/tsconfig, replacement table, code idioms, verification checklist.
-- [references/ffi.md](references/ffi.md): `bun:ffi` bridge to the C ABI (`packages/core/src/ffi.ts`).
+- [references/ffi.md](references/ffi.md): `bun:ffi` bridge to the C ABI (`system/core-ts/src/ffi.ts`).

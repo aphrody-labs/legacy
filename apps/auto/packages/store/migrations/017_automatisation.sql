@@ -1,5 +1,5 @@
 -- Automatisations (workflows) de chaque entreprise, leurs exécutions et leurs secrets. Le moteur est dans
--- packages/automate ; le worker exécute les workflows déclenchés par un événement, un cron ou un webhook.
+-- frameworks/automate ; le worker exécute les workflows déclenchés par un événement, un cron ou un webhook.
 
 CREATE TABLE automatisation (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

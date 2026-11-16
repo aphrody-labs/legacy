@@ -1,4 +1,4 @@
-# aphrody.app: every push on main builds the projects it touches (packages/deploy/projects.toml, `watch`),
+# aphrody.app: every push on main builds the projects it touches (system/deploy/projects.toml, `watch`),
 # uploads each one as an immutable deployment (R2 through the aphrody.app API), publishes the preview
 # https://<project>-<sha7>.aphrody.app, records a GitHub deployment, then moves production when
 # production = "auto". `ay deploy <project>` dispatches this workflow; rollback is `ay deploy rollback`.
@@ -9,7 +9,7 @@ on:
     inputs:
       project:
         {
-          description: "project of packages/deploy/projects.toml (empty: affected projects)",
+          description: "project of system/deploy/projects.toml (empty: affected projects)",
           required: false,
           default: "",
         }
@@ -45,4 +45,4 @@ jobs:
         run: |
           set -eu
           case "${PROJECT:-}" in ""|[a-z]*) ;; *) echo "bad project"; exit 1 ;; esac
-          bun packages/deploy/src/cli.ts ci --after "$GITHUB_SHA" ${BEFORE:+--before "$BEFORE"} ${PROJECT:+--project "$PROJECT"}
+          bun system/deploy/src/cli.ts ci --after "$GITHUB_SHA" ${BEFORE:+--before "$BEFORE"} ${PROJECT:+--project "$PROJECT"}

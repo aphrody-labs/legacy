@@ -52,7 +52,7 @@ test-affected ref="origin/main":
     set -eu
     out=$(bun "{{root}}/scripts/checkdeps.ts" --root "{{root}}" --affected "{{ref}}")
     pkgs=$(printf '%s\n' "$out" | awk -F'\t' '$1=="cargo" && $3 !~ /^third_party\// {printf "-p %s ", $2}')
-    bunp=$(printf '%s\n' "$out" | awk -F'\t' '$1=="bun" && $3 ~ /^packages\// {printf "%s/%s ", "{{root}}", $3}')
+    bunp=$(printf '%s\n' "$out" | awk -F'\t' '$1=="bun" && $3 ~ /^(frameworks|system)\// {printf "%s/%s ", "{{root}}", $3}')
     [ -z "$pkgs" ] || cargo test $pkgs
     [ -z "$bunp" ] || bun test $bunp
     pyp=$(printf '%s\n' "$out" | awk -F'\t' '$1=="uv" {printf "%s/%s ", "{{root}}", $3}')

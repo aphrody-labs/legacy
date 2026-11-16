@@ -4,9 +4,9 @@ compatibility_date = "2026-11-01"
 workers_dev = false
 
 # aphrody.com is served from the production deployment of project "aphrody" on aphrody.app
-# (packages/deploy: R2 aphrody-dist, deploys/aphrody/<sha>/, pointer deploys/aphrody/_state.json).
+# (system/deploy: R2 aphrody-dist, deploys/aphrody/<sha>/, pointer deploys/aphrody/_state.json).
 # `ay deploy aphrody` builds dist/ in CI and moves the pointer; this Worker is deployed only when
-# edge/worker.ts or packages/deploy/src/serve.ts change. Headers (HSTS, CSP, Link preload) come
+# edge/worker.ts or system/deploy/src/serve.ts change. Headers (HSTS, CSP, Link preload) come
 # from dist/_headers of each deployment.
 routes = [
   { pattern = "aphrody.com/*", zone_name = "aphrody.com" },

@@ -6,7 +6,7 @@
 -- store::scoped(profile_id); there is no row level security in SQLite. Tables without profile_id are shared
 -- device data (settings scope 'device', games catalogue, achievements definitions).
 -- The games catalogue is read-only and attached at run time:
---   ATTACH DATABASE 'packages/assets/data/games.sqlite' AS idx;   (table idx.games, FTS idx.games_fts)
+--   ATTACH DATABASE 'frameworks/assets/data/games.sqlite' AS idx;   (table idx.games, FTS idx.games_fts)
 -- game_ref below is the pair (store, ext_id) of idx.games, never a copy of third-party art.
 
 PRAGMA foreign_keys = ON;

@@ -6,7 +6,7 @@ d'exécutions, isolés par la RLS. n8n reste utilisable en plus (webhooks signé
 
 | Couche  | Où                                                     | Rôle                                                                  |
 | ------- | ------------------------------------------------------ | --------------------------------------------------------------------- |
-| Moteur  | `packages/automate`                                    | Schéma (Zod 4), expressions, catalogue de nœuds, exécution, modèles   |
+| Moteur  | `frameworks/automate`                                    | Schéma (Zod 4), expressions, catalogue de nœuds, exécution, modèles   |
 | Données | `packages/store/src/automatisations.ts`, migration 017 | Workflows, exécutions (200 conservées par workflow), secrets chiffrés |
 | Savoir  | `packages/store/src/connaissance.ts`, migration 019    | Morceaux et embeddings des bases de connaissances                     |
 | Accès   | `packages/services/src/automatisations.ts`             | Garde réseau, boîte mail, API d'auto, secrets, URL de webhook signée  |
@@ -109,7 +109,7 @@ de vos documents (base de connaissances).
 
 ## Tests
 
-`bun test packages/automate apps/api/src/automatisations.test.ts apps/api/src/connaissance.test.ts apps/worker/src/automatisations.test.ts` ; la
+`bun test frameworks/automate apps/api/src/automatisations.test.ts apps/api/src/connaissance.test.ts apps/worker/src/automatisations.test.ts` ; la
 bibliothèque native (`bun run build:native`) sert aux essais de tableurs et de fichiers PDF, Word et PowerPoint de l'API.
 
 ## Import depuis n8n

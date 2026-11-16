@@ -31,7 +31,7 @@ The core is the Bun binary built from the fork (`third_party/bun`), with Bun's o
 | packages | js | packages/{deploy,assets,env-kit,ai-os,upstream,gnu,release,i18n,machine,wck} |  | (first party Bun packages) | deploy, assets, auth, secret, vault, upstream, gnu, release, i18n, shell-matrix, jules, agents, web (legacy), lfs |
 | engines | js | apps/open/packages/browser-engines (aphrody-labs/open) |  | (first party) | engines |
 | plugin | module | src/ay/src/plugin.rs (plugin surface read by the Bun and niu hosts) | plugin | (first party) | plugin |
-| gaming | ecosystem | src/steam, packages/gaming, gamescope-rs |  | ValveSoftware/steam, Bevy fork | steam, gaming, scope |
+| gaming | ecosystem | src/steam, frameworks/gaming, gamescope-rs |  | ValveSoftware/steam, Bevy fork | steam, gaming, scope |
 | removed | removed |  |  |  | arch (legacy), brand (legacy) |
 
 Commands: 60 current, 8 legacy; unmapped: 0.

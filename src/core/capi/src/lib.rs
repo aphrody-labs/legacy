@@ -12,7 +12,7 @@
 //!   `src/adblock-capi`); framed buffers released with `aphrody_chromium_buf_free`.
 //! Symbol names are a stable contract with their consumers and never change.
 //!
-//! Contract (mirrored by `packages/core/src/ffi.ts` and `include/aphrody_core.h`):
+//! Contract (mirrored by `system/core-ts/src/ffi.ts` and `include/aphrody_core.h`):
 //! - Strings in are NUL-terminated UTF-8; strings out are NUL-terminated UTF-8 JSON owned by
 //!   the library and released with [`core_free`] or [`aphrody_free`].
 //! - Errors come back as `{"error": "..."}` JSON; null only when the output holds a NUL byte.

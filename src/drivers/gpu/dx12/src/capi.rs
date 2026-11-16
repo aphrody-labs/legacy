@@ -1,6 +1,6 @@
 //! C ABI of the HAL, shipped as `dx12_hal.dll` (replaces infra/winnt-sdk's `native_nt_gpu.dll`).
 //!
-//! Contract (mirrored by `packages/ffi-bridge/src/dx12-hal.ts`):
+//! Contract (mirrored by `system/ffi-bridge/src/dx12-hal.ts`):
 //! - Resolve [`dx12_hal_abi_version`] alone first and refuse a different version.
 //! - Strings out are NUL-terminated UTF-8 JSON owned by the library, released with [`dx12_hal_free`].
 //! - Errors come back as `{"error": "..."}` JSON.

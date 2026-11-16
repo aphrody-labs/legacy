@@ -18,8 +18,8 @@
 !docs/ALPHABET.md
 !docs/reviews/
 !third_party/forks.txt
-!packages/design/design.toml
-!packages/design/symbols/
+!frameworks/design/design.toml
+!frameworks/design/symbols/
 !assets/library/icons/vendors/
 !assets/generated/wallpapers/thumbs/
 !assets/library/textures/polyhaven/aerial_grass_rock/
@@ -36,4 +36,4 @@
 **/*.pem
 **/*.key
 **/secrets*
-!packages/ai-os/src/core/secrets.ts
+!frameworks/ai-os/src/core/secrets.ts

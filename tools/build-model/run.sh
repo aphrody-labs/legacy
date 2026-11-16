@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-. "$(git rev-parse --show-toplevel)/packages/env-kit/loaders/shell/site.sh"; FR1=$(site_ssh fr1)
+. "$(git rev-parse --show-toplevel)/system/env-kit/loaders/shell/site.sh"; FR1=$(site_ssh fr1)
 # Usage: run from a machine with `ssh <fr1>` and `ssh prd`. No Chromium build is started.
 set -euo pipefail
 OUT=/srv/chromium/src/out/labs_agent-157.0.8103.78

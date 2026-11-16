@@ -1,6 +1,6 @@
-//! Reads the catalogs shared with `@aphrody/i18n` (`packages/i18n/locales/*.json`) and formats their Unicode
+//! Reads the catalogs shared with `@aphrody/i18n` (`frameworks/i18n-ts/locales/*.json`) and formats their Unicode
 //! MessageFormat 2 messages. Locales are the catalogs that exist (discovered at build time for the embedded set,
-//! at run time with [`Catalogs::from_dir`]); the source locale comes from `packages/i18n/i18n.config.json`.
+//! at run time with [`Catalogs::from_dir`]); the source locale comes from `frameworks/i18n-ts/i18n.config.json`.
 //! Locale negotiation uses ICU4X likely subtags, plural rules and number formatting come from ICU4X.
 
 mod mf2;
@@ -152,7 +152,7 @@ fn source_from_config(raw: &str) -> String {
 }
 
 impl Catalogs {
-    /// Catalogs embedded at build time from `packages/i18n/locales`.
+    /// Catalogs embedded at build time from `frameworks/i18n-ts/locales`.
     pub fn embedded() -> &'static Catalogs {
         static C: OnceLock<Catalogs> = OnceLock::new();
         C.get_or_init(|| {

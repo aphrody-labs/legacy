@@ -7,7 +7,7 @@
       "command": "agents",
       "state": "current",
       "module": "packages",
-      "doc": "ai-os orchestrator (packages/ai-os, `orch`): run <workflow.json>, plan \"<goal>\", lifecycle --task ... ; agent toolchain: install, sync, check, list (packages/machine/src/toolchain.ts)"
+      "doc": "ai-os orchestrator (frameworks/ai-os, `orch`): run <workflow.json>, plan \"<goal>\", lifecycle --task ... ; agent toolchain: install, sync, check, list (system/machine-ts/src/toolchain.ts)"
     },
     {
       "command": "ai",
@@ -31,7 +31,7 @@
       "command": "assets",
       "state": "current",
       "module": "packages",
-      "doc": "Assets, download to deploy (packages/assets): list, verify, fetch, optimize, bundle, publish, attribution"
+      "doc": "Assets, download to deploy (frameworks/assets): list, verify, fetch, optimize, bundle, publish, attribution"
     },
     {
       "command": "auth",
@@ -49,7 +49,7 @@
       "command": "bin",
       "state": "current",
       "module": "toolchain",
-      "doc": "Cross-platform binary & PATH manager (packages/machine): status, purge, which, add, rm, link, unlink"
+      "doc": "Cross-platform binary & PATH manager (system/machine-ts): status, purge, which, add, rm, link, unlink"
     },
     {
       "command": "brand",
@@ -109,7 +109,7 @@
       "command": "deploy",
       "state": "current",
       "module": "packages",
-      "doc": "aphrody.app: `ay deploy <project>|ls|logs|rollback|promote` (packages/deploy); containers: `ay deploy build|smoke|up|ps|products|shell|runtime|run` runs `just docker-<sub>`"
+      "doc": "aphrody.app: `ay deploy <project>|ls|logs|rollback|promote` (system/deploy); containers: `ay deploy build|smoke|up|ps|products|shell|runtime|run` runs `just docker-<sub>`"
     },
     {
       "command": "design",
@@ -169,7 +169,7 @@
       "command": "gaming",
       "state": "current",
       "module": "gaming",
-      "doc": "Gaming stack (packages/gaming): status, apps, proton, layers, dx, steamcmd, run, skills"
+      "doc": "Gaming stack (frameworks/gaming): status, apps, proton, layers, dx, steamcmd, run, skills"
     },
     {
       "command": "gclient",
@@ -193,7 +193,7 @@
       "command": "gnu",
       "state": "current",
       "module": "packages",
-      "doc": "GNU upstream tracker and distributor: status, search, package, feed, diff, kernel, sync, site (packages/gnu)"
+      "doc": "GNU upstream tracker and distributor: status, search, package, feed, diff, kernel, sync, site (system/gnu-ts)"
     },
     {
       "command": "graph",
@@ -211,13 +211,13 @@
       "command": "i18n",
       "state": "current",
       "module": "packages",
-      "doc": "Localization catalog checker & key extractor (packages/i18n)"
+      "doc": "Localization catalog checker & key extractor (frameworks/i18n-ts)"
     },
     {
       "command": "index",
       "state": "current",
       "module": "index",
-      "doc": "(gen, gen-docs, search, users: packages/core)"
+      "doc": "(gen, gen-docs, search, users: system/core-ts)"
     },
     {
       "command": "ingest",
@@ -271,7 +271,7 @@
       "command": "path",
       "state": "current",
       "module": "toolchain",
-      "doc": "Cross-platform PATH manager alias (packages/machine)"
+      "doc": "Cross-platform PATH manager alias (system/machine-ts)"
     },
     {
       "command": "pkg",
@@ -283,7 +283,7 @@
       "command": "plugin",
       "state": "current",
       "module": "plugin",
-      "doc": "Plugin surface read by the Bun and niu hosts (packages/omniu): `manifest` (JSON), `names`"
+      "doc": "Plugin surface read by the Bun and niu hosts (system/omniu): `manifest` (JSON), `names`"
     },
     {
       "command": "re",
@@ -295,7 +295,7 @@
       "command": "release",
       "state": "current",
       "module": "packages",
-      "doc": "Release from fr1: tags, GitHub release, crates.io, npm, PyPI, vcpkg/CMake; dry-run unless `publish` (packages/release)"
+      "doc": "Release from fr1: tags, GitHub release, crates.io, npm, PyPI, vcpkg/CMake; dry-run unless `publish` (system/release)"
     },
     {
       "command": "rt",
@@ -331,7 +331,7 @@
       "command": "shell-matrix",
       "state": "current",
       "module": "packages",
-      "doc": "Cross-shell conformance matrix (packages/machine/matrix)"
+      "doc": "Cross-shell conformance matrix (system/machine-ts/matrix)"
     },
     {
       "command": "ssh",
@@ -379,7 +379,7 @@
       "command": "upstream",
       "state": "current",
       "module": "packages",
-      "doc": "Patch stacks of the bun and Chromium forks: status, sync, check, pr, mark, gc, export (packages/upstream)"
+      "doc": "Patch stacks of the bun and Chromium forks: status, sync, check, pr, mark, gc, export (system/upstream)"
     },
     {
       "command": "vault",

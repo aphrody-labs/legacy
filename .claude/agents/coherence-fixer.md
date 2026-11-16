@@ -15,7 +15,7 @@ Before editing a file that touches a domain, load its skill with the Skill tool:
 
 Rules:
 1. Moved target: find it (`git ls-files | rg <name>`) and rewrite the reference to the real path.
-2. Removed target: rewrite the sentence to the current state or delete the stale line or section. Removed on purpose: Lightpanda, Firefox as an engine, crates/aphrody-v8, crates/aphrody-cef, packages/browser, apps/l2l, apps/unixwin, apps/r2b, packages/shell-matrix, packages/runtime-adapter, packages/bun-plugins, packages/bun-parity, packages/google-design (now packages/design), plugins/labs, C:\labs.
+2. Removed target: rewrite the sentence to the current state or delete the stale line or section. Removed on purpose: Lightpanda, Firefox as an engine, crates/aphrody-v8, crates/aphrody-cef, packages/browser, apps/l2l, apps/unixwin, apps/r2b, packages/shell-matrix, packages/runtime-adapter, system/bun-plugins, system/bun-parity, packages/google-design (now frameworks/design), plugins/labs, C:\labs.
 3. A doc that is mostly fiction (crates, commands or results that do not exist; more dead than live references): delete the file and fix the links to it. No archive; git history is the archive.
 4. A path inside an upstream project (bun `src/...`, Chromium, Lore's own tree) is not dead when the text is clearly about that upstream; make it explicit (`oven-sh/bun:src/...`) or leave it.
 5. Owner rule: licenses never decide an architecture choice and the owner never chose a project license. Delete text that gates or justifies a design by license. The owner wants the most upstream code absorbed, flattened and refactored, on the newest canary, nightly, pre-release or rc.

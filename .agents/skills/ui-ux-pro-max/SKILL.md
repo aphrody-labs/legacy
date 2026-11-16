@@ -27,7 +27,7 @@ Domains: `ux` (UX/a11y rules, default), `web` (app and native interface: safe ar
 
 | Upstream result                     | src translation                                                                                               |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Palette, hex color, "Primary"       | M3 role `--md-sys-color-*`; brand hue = `packages/design/design.toml`                                             |
+| Palette, hex color, "Primary"       | M3 role `--md-sys-color-*`; brand hue = `frameworks/design/design.toml`                                             |
 | Font pair, Tailwind config          | Google Sans Flex (brand); `google-fonts --ofl` only for a secondary family, shipped as woff2 from an OFL fork |
 | Icons (Lucide, Heroicons, Phosphor) | Material Symbols Rounded (`<mat-icon>`)                                                                        |
 | React/Next/shadcn/Tailwind code     | Angular Material (`mat-*`), GPUI or WebUI; keep the rule, rewrite the example                      |
@@ -37,7 +37,7 @@ Domains: `ux` (UX/a11y rules, default), `web` (app and native interface: safe ar
 
 ## Priorities (verification order)
 
-1. Accessibility: contrast 4.5:1 (AA verified by `bun test --cwd packages/design`), visible focus, labels, keyboard.
+1. Accessibility: contrast 4.5:1 (AA verified by `bun test --cwd frameworks/design`), visible focus, labels, keyboard.
 2. Interaction: 44x44 px minimum targets (48 dp in M3), loading feedback, no hover-only state.
 3. Performance: src internal targets CLS 0, LCP < 1.2 s, INP < 50 ms ("good" Core Web Vitals thresholds: LCP 2.5 s, INP 200 ms, CLS 0.1); space reserved for media.
 

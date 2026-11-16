@@ -27,7 +27,7 @@ if [ -f "$d/prd/systemd/aphrody-relay.service" ]; then
   . "$d/$h/resilience.conf"; [ -n "${SRC_CHECKOUT:-}" ] && SRC_CHECKOUT=$SRC_CHECKOUT SRC_SPARSE="$SRC_SPARSE" "$d"/bin/src-checkout-update.sh ensure 2>/dev/null || true
   rd=/root/.config/systemd/user; ch=0
   for f in aphrody-relay.service aphrody-relay.service.d/10-litellm.conf; do cmp -s "$d/prd/systemd/$f" "$rd/$f" || { install -D -m 0644 "$d/prd/systemd/$f" "$rd/$f"; ch=1; }; done
-  [ $ch = 1 ] && [ -f "${SRC_CHECKOUT:-/srv/src}/packages/ai-os/src/relay/cli.ts" ] && systemctl --user -M root@ daemon-reload && systemctl --user -M root@ restart aphrody-relay.service && echo "relay switched to ${SRC_CHECKOUT:-/srv/src}"
+  [ $ch = 1 ] && [ -f "${SRC_CHECKOUT:-/srv/src}/frameworks/ai-os/src/relay/cli.ts" ] && systemctl --user -M root@ daemon-reload && systemctl --user -M root@ restart aphrody-relay.service && echo "relay switched to ${SRC_CHECKOUT:-/srv/src}"
 fi
 install -d -m 0755 /etc/fleet
 install -m 0644 "$d/$h/resilience.conf" /etc/fleet/resilience.conf

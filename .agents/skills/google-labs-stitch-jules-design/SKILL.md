@@ -15,14 +15,14 @@ Their code runs from src, bun-native, with no copy elsewhere.
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Stitch from an agent                                                  | relay MCP tools `stitch__<tool>` (`mcp__relay__stitch__generate_screen_from_text`, `get_screen`, `upload_design_md`, ...), gcloud OAuth, no API key                                                                              |
 | Stitch from a script                                                  | `ay design stitch projects\|create\|generate\|screens\|html\|upload\|download\|design-md\|tools\|call`, or `import { Stitch, StitchToolClient } from "@aphrody/ai-os/stitch"`                                                    |
-| DESIGN.md                                                             | `ay design lint [file]`, `ay design export --format css-vars\|dtcg\|css-tailwind\|json-tailwind`, `ay design spec`; library `aphrody-ui::design_md` (`src/ui/kit`). The design system of the monorepo is `packages/design/DESIGN.md` |
+| DESIGN.md                                                             | `ay design lint [file]`, `ay design export --format css-vars\|dtcg\|css-tailwind\|json-tailwind`, `ay design spec`; library `aphrody-ui::design_md` (`src/ui/kit`). The design system of the monorepo is `frameworks/design/DESIGN.md` |
 | DESIGN.md to Stitch                                                   | `ay design push <projectId> [file]`                                                                                                                                                                                              |
 | Jules (cloud agent on GitHub, ends with a PR)                         | `ay jules run "<task>" [--repo o/r] [--wait]`, `ay jules sessions`, relay tools `jules_run` / `jules_status` / `jules_sessions`, orchestrator step `models: ["jules:aphrody-labs/src"]`, CI `.github/workflows/jules.yml`        |
 | Stax (AI evaluation platform: Spring Boot, Next.js, Terraform on GCP) | reference only, `third_party/stax`                                                                                                                                                                                               |
 
 ## Mirrored skills (generated, do not edit)
 
-`bun packages/ai-os/src/google/absorb.ts skills --write` regenerates them from the forks (npx/npm/node rewritten to bun):
+`bun frameworks/ai-os/src/google/absorb.ts skills --write` regenerates them from the forks (npx/npm/node rewritten to bun):
 
 - Stitch design: `stitch-generate-design`, `stitch-manage-design-system`, `stitch-extract-design-md`, `stitch-code-to-design`, `stitch-extract-static-html`, `stitch-upload-to-stitch`
 - Stitch build: `stitch-react-components`, `stitch-react-native`, `stitch-react-vite-dashboard`, `stitch-remotion`, `stitch-shadcn-ui`

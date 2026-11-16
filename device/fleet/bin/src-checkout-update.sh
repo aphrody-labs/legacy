@@ -3,7 +3,7 @@
 # fast-forward only. Config from /etc/fleet/resilience.conf:
 #   SRC_CHECKOUT=/srv/src            checkout path (owned by the user the service runs as)
 #   SRC_SPARSE="packages infra"      cone patterns; empty or unset = full tree (the fleet default since 2026-11-13)
-#   SRC_RESTART="packages/ai-os=root:aphrody-relay.service ..."   path=unit restarted when the path changed
+#   SRC_RESTART="frameworks/ai-os=root:aphrody-relay.service ..."   path=unit restarted when the path changed
 #   SRC_POST="ay manifests --check"  command run in the checkout after a fast-forward (fr1: lock/manifest drift check)
 #   src-checkout-update.sh ensure   clone if absent (called by fleet-resilience.sh apply and fleet-setup.sh)
 #   src-checkout-update.sh          fetch, fast-forward main, restart the units whose watched path changed

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 // game: entry point of the game app (Bevy game of src/game with the Steam and Epic storefront services).
 // game play | probe | epic <legendary args> | steam <ay steam args> | <gaming command: status, apps, proton, layers, dx, forks, steamcmd, run, skills>
-// Epic goes through legendary (aphrody-labs/legendary pin), Steam data through `ay steam` (src/steam), the host gaming stack through packages/gaming.
+// Epic goes through legendary (aphrody-labs/legendary pin), Steam data through `ay steam` (src/steam), the host gaming stack through frameworks/gaming.
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
@@ -28,6 +28,6 @@ switch (cmd) {
     console.log("game play | probe | epic <legendary args> | steam <ay steam args> | status | apps | proton | layers | dx | forks | steamcmd | run | skills");
     break;
   default:
-    process.exit(run(["bun", join(root, "packages", "gaming", "src", "cli.ts"), cmd, ...rest]));
+    process.exit(run(["bun", join(root, "frameworks", "gaming", "src", "cli.ts"), cmd, ...rest]));
 }
 

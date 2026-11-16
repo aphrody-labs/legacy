@@ -5,7 +5,7 @@ use thiserror::Error;
 
 const KERNEL_FRAGMENT: &str = include_str!("../../../../device/os/wsl/kernel/wsl2-cachyos-omarchy-7.4.config");
 const KERNEL_BUILD_SCRIPT: &str = include_str!("../../../../device/os/wsl/kernel/build-kernel.sh");
-const WSLCONFIG_TEMPLATE: &str = include_str!("../../../../packages/machine/wsl/wslconfig");
+const WSLCONFIG_TEMPLATE: &str = include_str!("../../../../system/machine-ts/wsl/wslconfig");
 
 #[derive(Error, Debug)]
 pub enum PackageEngineError {

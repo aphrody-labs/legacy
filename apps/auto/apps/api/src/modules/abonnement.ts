@@ -48,9 +48,9 @@ import {
 } from "@auto/store";
 import { appelant, entreprise, type Entreprise } from "@auto/tenancy";
 import type { BunRequest } from "bun";
-import type { Module } from "../modules";
+import type { Module } from ".";
 import { enumere, liste, objet, op, str } from "../openapi-outils";
-import type { Chemins } from "../modules";
+import type { Chemins } from ".";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EN_COURS = new Set(["trialing", "active", "past_due"]);

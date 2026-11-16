@@ -1,4 +1,4 @@
-// Bun macro: reads the M3 motion tokens of packages/design/tokens/tokens.css at bundle time so the
+// Bun macro: reads the M3 motion tokens of frameworks/design/tokens/tokens.css at bundle time so the
 // browser bundle carries numbers, not the 27 KB stylesheet.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -38,7 +38,7 @@ export function motionTokens(): MotionTokens {
       "..",
       "..",
       "..",
-      "packages",
+      "frameworks",
       "design",
       "tokens",
       "tokens.css",

@@ -1,10 +1,10 @@
 // Deploys the gateway Worker with the Cloudflare REST API (no wrangler): bundle, upload (existing secrets kept), R2 bucket +
 // binding, custom domain, secrets. Run with the vault values in the environment, never printed:
-//   bun packages/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN APHRODY_OWNER_GOOGLE_ACCOUNT [GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET] -- bun device/cloudflare/workers/aphrody-mcp-gateway/deploy.ts
+//   bun system/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN APHRODY_OWNER_GOOGLE_ACCOUNT [GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET] -- bun device/cloudflare/workers/aphrody-mcp-gateway/deploy.ts
 // Secrets set when present in the env: OWNER_GOOGLE_ACCOUNT (from APHRODY_OWNER_GOOGLE_ACCOUNT), GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET.
 // RELAY_TOKEN is read from fr2 (/etc/aphrody/relay.env) over ssh, OAUTH_SECRET is generated on first deploy.
 import { join } from "node:path";
-import { expandSync } from "../../../../packages/env-kit/src/discover.ts";
+import { expandSync } from "../../../../system/env-kit/src/discover.ts";
 
 const NAME = "aphrody-mcp-gateway";
 const HOST = "mcp.aphrody.com";

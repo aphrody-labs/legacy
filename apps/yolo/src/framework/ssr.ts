@@ -4,13 +4,13 @@
  * Injects cryptographic per-request CSP nonces, Material 3 color roles (@aphrody/design, Material Color Utilities),
  * canonical metadata, and initial deterministic JSON hydration state.
  */
-import { tokens } from "../../../../packages/design/src/index.ts";
+import { tokens } from "../../../../frameworks/design/src/index.ts";
 import {
   schemeCss,
   type Variant,
-} from "../../../../packages/design/src/runtime.ts";
+} from "../../../../frameworks/design/src/runtime.ts";
 
-/** Brand seed (assets/brand/brand.toml via packages/design/tokens). */
+/** Brand seed (assets/brand/brand.toml via frameworks/design/tokens). */
 export const BRAND_SEED = tokens.source.seed;
 
 export interface YoloSsrRenderOptions {

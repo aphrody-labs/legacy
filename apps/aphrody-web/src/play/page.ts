@@ -1,7 +1,7 @@
 // /play: full-screen canvas for the wasm game (crates/game). WebGPU is required: without it the page
-// shows a message instead of a canvas that stays black. Texts come from packages/i18n (keys play.*), the page
+// shows a message instead of a canvas that stays black. Texts come from frameworks/i18n-ts (keys play.*), the page
 // is server-rendered per locale: /play (en), /play/fr, /play/zh-CN, /play/ja, /play/es.
-import { catalogs } from "../../../../packages/i18n/src/index.ts";
+import { catalogs } from "../../../../frameworks/i18n-ts/src/index.ts";
 
 export const PLAY_LOCALES = ["en", "fr", "zh-CN", "ja", "es"] as const;
 export type PlayLocale = (typeof PLAY_LOCALES)[number];

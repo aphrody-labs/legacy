@@ -57,7 +57,7 @@ export const ROOT = join(import.meta.dir, "..", ".."); // C:\src
 
 const which = (b: string) => Bun.which(b) ?? null;
 const NIE = which("nie") ?? "nie.exe";
-const ASSETS_CLI = join(ROOT, "packages", "assets", "src", "cli.ts");
+const ASSETS_CLI = join(ROOT, "frameworks", "assets", "src", "cli.ts");
 const AY = which("ay");
 const AY_HAS_ASSETS = (() => {
   if (!AY) return false;

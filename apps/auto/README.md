@@ -23,7 +23,7 @@ Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/r
 
 Multi-tenant automation platform for freelancers and small businesses: n8n-style visual workflows (triggers on events, cron or webhooks; HTTP, web, RSS, spreadsheets, Slack, Discord, Telegram, mail, AI models, data actions), with business management built in as an event source: e-invoicing, purchasing, mail, employees, office documents, AI agents. A single `/v1` API, several surfaces: web app, desktop app, mobile app, CLI, MCP server, Claude Code plugin and Chrome extension.
 
-User-facing text is English at the source and translated through the catalogs of `packages/i18n` (Unicode MessageFormat 2); locales are whatever catalogs are present, and the source locale comes from `packages/i18n/locales/config.json`. French legal and fiscal terms (Factur-X, SIRET, TVA, FEC, URSSAF) stay as data. Many docs, file names and code identifiers are still French (see [docs/I18N.md](docs/I18N.md)).
+User-facing text is English at the source and translated through the catalogs of `frameworks/i18n-ts` (Unicode MessageFormat 2); locales are whatever catalogs are present, and the source locale comes from `frameworks/i18n-ts/locales/config.json`. French legal and fiscal terms (Factur-X, SIRET, TVA, FEC, URSSAF) stay as data. Many docs, file names and code identifiers are still French (see [docs/I18N.md](docs/I18N.md)).
 
 ## Surfaces
 
@@ -49,7 +49,7 @@ Online: https://auto.aphrody.com (production on an OVH server, see `docs/DEPLOYM
 
 | Domain                       | Content                                                                                                                                              | Component                                                    | Status                                           |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------ |
-| Automations                  | Visual workflows, 27 nodes, expressions, encrypted secrets, history, templates, n8n import (`docs/AUTOMATISATIONS.md`)                               | `packages/automate`, `/v1/automatisations`                   | in place                                         |
+| Automations                  | Visual workflows, 27 nodes, expressions, encrypted secrets, history, templates, n8n import (`docs/AUTOMATISATIONS.md`)                               | `frameworks/automate`, `/v1/automatisations`                   | in place                                         |
 | Invoicing                    | Quotes, invoices, deposits, partial credit notes, discounts, customers and products, payments, D+7/D+30 reminders, Factur-X EN 16931 frozen at issue | `packages/domain`, `crates/auto-facturx`, `crates/auto-docs` | in place                                         |
 | Templates                    | Accent colour, logo, footer per company, PDF/A-3b preserved                                                                                          | `/v1/parametres/gabarit`                                     | in place                                         |
 | E-invoicing                  | Approved platform: submission, lifecycle statuses, reception, directory, e-reporting; `mock` and B2Brouter adapters                                  | `packages/pa`, `/v1/pa`                                      | in place (to qualify in sandbox, `docs/PA.md`)   |
@@ -91,9 +91,9 @@ executable with an embedded runtime, without reimplementing their logic.
 | `packages/agent`                                                                      | API tools, LLM agent loop, MCP server (CLI and plugin)                        |
 | `packages/client`                                                                     | Typed HTTP client of the API and same-origin proxy (web, admin)               |
 | `packages/ui`                                                                         | Material 3 design system: tokens, React components, formats, base styles      |
-| `packages/i18n`                                                                       | Catalogs (Unicode MessageFormat 2), translator, locale negotiation            |
+| `frameworks/i18n-ts`                                                                       | Catalogs (Unicode MessageFormat 2), translator, locale negotiation            |
 | `crates/auto-facturx`, `crates/auto-docs`, `crates/auto-modele`, `crates/auto-sheets` | Factur-X, PDF rendering, shared model, spreadsheets                           |
-| `crates/auto-ffi`, `packages/native`                                                  | bun:ffi bridge to Rust                                                        |
+| `crates/auto-ffi`, `system/native`                                                  | bun:ffi bridge to Rust                                                        |
 | `infra/n8n`, `docker/`                                                                | n8n workflows, production and build images                                    |
 | `docs/`                                                                               | Architecture, deployment, PA, mail, agent, pricing, compliance, OpenAPI       |
 

@@ -6,7 +6,7 @@ import { DUREE_LIEN_MS, signerLien, verifierLien } from "@auto/services/devis-pu
 import { changerStatut, journaliser, lire, lireFichier, withTenant } from "@auto/store";
 import { entreprise } from "@auto/tenancy";
 import type { BunRequest } from "bun";
-import { origineApp, type Chemins, type Module } from "../modules";
+import { origineApp, type Chemins, type Module } from ".";
 import { avecId, brut, cents, enumere, objet, op, str } from "../openapi-outils";
 
 const DECIDABLE = ["emis", "envoye"];

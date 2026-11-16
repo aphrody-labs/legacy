@@ -36,14 +36,14 @@ const lines = (p: string) => {
 export function moduleOf(path: string): string {
   const p = path.split("/");
   if (p[0] === "scripts") return "scripts/*";
-  if (p[0] === "packages" && p[1] === "ai-os" && p[2] === "src" && p.length > 4) return `packages/ai-os/src/${p[3]}`;
-  if (p[0] === "packages" && p[1] === "ai-os") return "packages/ai-os (entry, tests, bench)";
-  if (p[0] === "packages" || p[0] === "build" || p[0] === "device" || p[0] === "prebuilts" || p[0] === "tools") return `${p[0]}/${p[1]}`;
+  if (p[0] === "frameworks" && p[1] === "ai-os" && p[2] === "src" && p.length > 4) return `frameworks/ai-os/src/${p[3]}`;
+  if (p[0] === "frameworks" && p[1] === "ai-os") return "frameworks/ai-os (entry, tests, bench)";
+  if (p[0] === "frameworks" || p[0] === "system" || p[0] === "build" || p[0] === "device" || p[0] === "prebuilts" || p[0] === "tools") return `${p[0]}/${p[1]}`;
   return "";
 }
 
 export function collect() {
-  const files = ls(["packages", "scripts", "build", "device", "prebuilts", "tools"]).filter((f) => TS.test(f));
+  const files = ls(["frameworks", "system", "scripts", "build", "device", "prebuilts", "tools"]).filter((f) => TS.test(f));
   const mods = new Map<string, { files: number; loc: number }>();
   for (const f of files) {
     const n = lines(f);

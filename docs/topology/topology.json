@@ -1417,20 +1417,20 @@
       "file": "src/wayland/wslg-transport"
      },
      {
-      "id": "packages/ffi-bridge",
+      "id": "system/ffi-bridge",
       "name": "@aphrody/ffi-bridge",
       "kind": "module",
       "language": "typescript",
       "loc": 570,
-      "file": "packages/ffi-bridge"
+      "file": "system/ffi-bridge"
      },
      {
-      "id": "packages/machine",
+      "id": "system/machine-ts",
       "name": "@aphrody/machine",
       "kind": "module",
       "language": "typescript",
       "loc": 7000,
-      "file": "packages/machine"
+      "file": "system/machine-ts"
      },
      {
       "id": "device/cloudflare/workers/github-app",
@@ -1776,20 +1776,20 @@
       "file": "test/conformance"
      },
      {
-      "id": "packages/assets",
+      "id": "frameworks/assets",
       "name": "@aphrody/assets",
       "kind": "module",
       "language": "typescript",
       "loc": 5379,
-      "file": "packages/assets"
+      "file": "frameworks/assets"
      },
      {
-      "id": "packages/bunify",
+      "id": "system/bunify",
       "name": "@aphrody/bunify",
       "kind": "module",
       "language": "typescript",
       "loc": 1677,
-      "file": "packages/bunify"
+      "file": "system/bunify"
      },
      {
       "id": "packages/chromium-bun",
@@ -1800,52 +1800,52 @@
       "file": "packages/chromium-bun"
      },
      {
-      "id": "packages/core",
+      "id": "system/core-ts",
       "name": "@aphrody/core",
       "kind": "module",
       "language": "typescript",
       "loc": 5754,
-      "file": "packages/core"
+      "file": "system/core-ts"
      },
      {
-      "id": "packages/core-py",
+      "id": "system/core-py",
       "name": "aphrody-core",
       "kind": "module",
       "language": "python",
       "loc": 461,
-      "file": "packages/core-py"
+      "file": "system/core-py"
      },
      {
-      "id": "packages/deploy",
+      "id": "system/deploy",
       "name": "@aphrody/deploy",
       "kind": "module",
       "language": "typescript",
       "loc": 4439,
-      "file": "packages/deploy"
+      "file": "system/deploy"
      },
      {
-      "id": "packages/design",
+      "id": "frameworks/design",
       "name": "@aphrody/design",
       "kind": "module",
       "language": "typescript",
       "loc": 8764,
-      "file": "packages/design"
+      "file": "frameworks/design"
      },
      {
-      "id": "packages/env-kit",
+      "id": "system/env-kit",
       "name": "@aphrody/env-kit",
       "kind": "module",
       "language": "typescript",
       "loc": 6635,
-      "file": "packages/env-kit"
+      "file": "system/env-kit"
      },
      {
-      "id": "packages/gaming",
+      "id": "frameworks/gaming",
       "name": "@aphrody/gaming",
       "kind": "module",
       "language": "typescript",
       "loc": 2059,
-      "file": "packages/gaming"
+      "file": "frameworks/gaming"
      },
      {
       "id": "packages/gcp",
@@ -1864,52 +1864,52 @@
       "file": "packages/ghidra"
      },
      {
-      "id": "packages/gnu",
+      "id": "system/gnu-ts",
       "name": "@aphrody/gnu",
       "kind": "module",
       "language": "typescript",
       "loc": 3638,
-      "file": "packages/gnu"
+      "file": "system/gnu-ts"
      },
      {
-      "id": "packages/i18n",
+      "id": "frameworks/i18n-ts",
       "name": "@aphrody/i18n",
       "kind": "module",
       "language": "typescript",
       "loc": 1447,
-      "file": "packages/i18n"
+      "file": "frameworks/i18n-ts"
      },
      {
-      "id": "packages/native",
+      "id": "system/native",
       "name": "@aphrody/native",
       "kind": "module",
       "language": "typescript",
       "loc": 137,
-      "file": "packages/native"
+      "file": "system/native"
      },
      {
-      "id": "packages/py2bun",
+      "id": "system/py2bun-ts",
       "name": "@aphrody/py2bun",
       "kind": "module",
       "language": "typescript",
       "loc": 3067,
-      "file": "packages/py2bun"
+      "file": "system/py2bun-ts"
      },
      {
-      "id": "packages/release",
+      "id": "system/release",
       "name": "@aphrody/release",
       "kind": "module",
       "language": "typescript",
       "loc": 1872,
-      "file": "packages/release"
+      "file": "system/release"
      },
      {
-      "id": "packages/upstream",
+      "id": "system/upstream",
       "name": "@aphrody/upstream",
       "kind": "module",
       "language": "typescript",
       "loc": 5505,
-      "file": "packages/upstream"
+      "file": "system/upstream"
      },
      {
       "id": "packages/vault",
@@ -1920,12 +1920,12 @@
       "file": "packages/vault"
      },
      {
-      "id": "packages/wck",
+      "id": "system/wck",
       "name": "@aphrody/wck",
       "kind": "module",
       "language": "typescript",
       "loc": 4639,
-      "file": "packages/wck"
+      "file": "system/wck"
      }
     ]
    },
@@ -1951,20 +1951,20 @@
       "file": "src/electron-migrate"
      },
      {
-      "id": "packages/ai-os",
+      "id": "frameworks/ai-os",
       "name": "@aphrody/ai-os",
       "kind": "module",
       "language": "typescript",
       "loc": 48871,
-      "file": "packages/ai-os"
+      "file": "frameworks/ai-os"
      },
      {
-      "id": "packages/ai-os/python/hermes_agent_memory",
+      "id": "frameworks/ai-os/python/hermes_agent_memory",
       "name": "hermes-agent-memory",
       "kind": "module",
       "language": "python",
       "loc": 129,
-      "file": "packages/ai-os/python/hermes_agent_memory"
+      "file": "frameworks/ai-os/python/hermes_agent_memory"
      }
     ]
    },
@@ -2117,22 +2117,22 @@
  "edges": [
   {
    "source": "src/agent/context",
-   "target": "packages/ai-os",
+   "target": "frameworks/ai-os",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/env-kit",
+   "target": "system/env-kit",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/ai-os",
+   "target": "frameworks/ai-os",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/machine",
+   "target": "system/machine-ts",
    "kind": "dispatch"
   },
   {
@@ -2152,7 +2152,7 @@
   },
   {
    "source": "src/ay",
-   "target": "packages/gaming",
+   "target": "frameworks/gaming",
    "kind": "dispatch"
   },
   {
@@ -2202,12 +2202,12 @@
   },
   {
    "source": "src/core/capi",
-   "target": "packages/core",
+   "target": "system/core-ts",
    "kind": "dispatch"
   },
   {
    "source": "src/core/capi",
-   "target": "packages/wck",
+   "target": "system/wck",
    "kind": "dispatch"
   },
   {
@@ -2217,7 +2217,7 @@
   },
   {
    "source": "src/drivers/gpu/dx12",
-   "target": "packages/ffi-bridge",
+   "target": "system/ffi-bridge",
    "kind": "dispatch"
   },
   {
@@ -2242,7 +2242,7 @@
   },
   {
    "source": "src/i18n",
-   "target": "packages/i18n",
+   "target": "frameworks/i18n-ts",
    "kind": "dispatch"
   },
   {
@@ -2307,12 +2307,12 @@
   },
   {
    "source": "src/taffy",
-   "target": "packages/design",
+   "target": "frameworks/design",
    "kind": "dispatch"
   },
   {
    "source": "src/ui/kit",
-   "target": "packages/design",
+   "target": "frameworks/design",
    "kind": "dispatch"
   },
   {
@@ -2336,17 +2336,17 @@
    "kind": "dispatch"
   },
   {
-   "source": "packages/ai-os",
+   "source": "frameworks/ai-os",
    "target": "ds:sqlite",
    "kind": "call"
   },
   {
-   "source": "packages/assets",
+   "source": "frameworks/assets",
    "target": "ds:sqlite",
    "kind": "call"
   },
   {
-   "source": "packages/assets",
+   "source": "frameworks/assets",
    "target": "src/game",
    "kind": "dispatch"
   },
@@ -2367,56 +2367,56 @@
   },
   {
    "source": "packages/chromium-bun",
-   "target": "packages/design",
+   "target": "frameworks/design",
    "kind": "dispatch"
   },
   {
-   "source": "packages/core",
+   "source": "system/core-ts",
    "target": "ds:sqlite",
    "kind": "call"
   },
   {
-   "source": "packages/core",
+   "source": "system/core-ts",
    "target": "ds:s3",
    "kind": "call"
   },
   {
-   "source": "packages/core",
+   "source": "system/core-ts",
    "target": "ds:postgres",
    "kind": "call"
   },
   {
-   "source": "packages/core",
-   "target": "packages/wck",
+   "source": "system/core-ts",
+   "target": "system/wck",
    "kind": "dispatch"
   },
   {
-   "source": "packages/core",
-   "target": "packages/native",
+   "source": "system/core-ts",
+   "target": "system/native",
    "kind": "dispatch"
   },
   {
-   "source": "packages/core",
-   "target": "packages/ai-os",
+   "source": "system/core-ts",
+   "target": "frameworks/ai-os",
    "kind": "dispatch"
   },
   {
-   "source": "packages/deploy",
-   "target": "packages/design",
+   "source": "system/deploy",
+   "target": "frameworks/design",
    "kind": "dispatch"
   },
   {
-   "source": "packages/deploy",
-   "target": "packages/wck",
+   "source": "system/deploy",
+   "target": "system/wck",
    "kind": "dispatch"
   },
   {
-   "source": "packages/deploy",
+   "source": "system/deploy",
    "target": "apps/nt",
    "kind": "dispatch"
   },
   {
-   "source": "packages/deploy",
+   "source": "system/deploy",
    "target": "ds:sqlite",
    "kind": "call"
   },
@@ -2431,58 +2431,58 @@
    "kind": "dispatch"
   },
   {
-   "source": "packages/machine",
+   "source": "system/machine-ts",
    "target": "ds:sqlite",
    "kind": "call"
   },
   {
-   "source": "packages/machine",
-   "target": "packages/assets",
+   "source": "system/machine-ts",
+   "target": "frameworks/assets",
    "kind": "dispatch"
   },
   {
-   "source": "packages/machine",
+   "source": "system/machine-ts",
    "target": "ds:valkey",
    "kind": "call"
   },
   {
-   "source": "packages/machine",
-   "target": "packages/core",
+   "source": "system/machine-ts",
+   "target": "system/core-ts",
    "kind": "dispatch"
   },
   {
-   "source": "packages/machine",
-   "target": "packages/ai-os",
+   "source": "system/machine-ts",
+   "target": "frameworks/ai-os",
    "kind": "dispatch"
   },
   {
-   "source": "packages/machine",
-   "target": "packages/env-kit",
+   "source": "system/machine-ts",
+   "target": "system/env-kit",
    "kind": "dispatch"
   },
   {
-   "source": "packages/machine",
+   "source": "system/machine-ts",
    "target": "apps/nt",
    "kind": "dispatch"
   },
   {
-   "source": "packages/machine",
+   "source": "system/machine-ts",
    "target": "src/tv/ffmpeg",
    "kind": "dispatch"
   },
   {
-   "source": "packages/release",
+   "source": "system/release",
    "target": "src/agent/context",
    "kind": "dispatch"
   },
   {
-   "source": "packages/release",
+   "source": "system/release",
    "target": "src/core/capi",
    "kind": "dispatch"
   },
   {
-   "source": "packages/release",
-   "target": "packages/env-kit",
+   "source": "system/release",
+   "target": "system/env-kit",
    "kind": "dispatch"
   },
   {
@@ -2492,7 +2492,7 @@
   },
   {
    "source": "apps/nt",
-   "target": "packages/design",
+   "target": "frameworks/design",
    "kind": "dispatch"
   },
   {
@@ -8711,38 +8711,38 @@
    "kind": "call"
   },
   {
-   "source": "packages/ai-os",
-   "target": "packages/core",
+   "source": "frameworks/ai-os",
+   "target": "system/core-ts",
    "kind": "call"
   },
   {
-   "source": "packages/ai-os",
-   "target": "packages/design",
+   "source": "frameworks/ai-os",
+   "target": "frameworks/design",
    "kind": "call"
   },
   {
-   "source": "packages/core",
+   "source": "system/core-ts",
    "target": "src/core/capi",
    "kind": "call"
   },
   {
-   "source": "packages/core-py",
+   "source": "system/core-py",
    "target": "src/core/capi",
    "kind": "call"
   },
   {
-   "source": "packages/env-kit",
+   "source": "system/env-kit",
    "target": "packages/vault",
    "kind": "call"
   },
   {
-   "source": "packages/ffi-bridge",
+   "source": "system/ffi-bridge",
    "target": "src/drivers/gpu/dx12",
    "kind": "call"
   },
   {
    "source": "packages/gcp",
-   "target": "packages/env-kit",
+   "target": "system/env-kit",
    "kind": "call"
   },
   {
@@ -8751,18 +8751,18 @@
    "kind": "call"
   },
   {
-   "source": "packages/i18n",
-   "target": "packages/ai-os",
+   "source": "frameworks/i18n-ts",
+   "target": "frameworks/ai-os",
    "kind": "call"
   },
   {
-   "source": "packages/py2bun",
+   "source": "system/py2bun-ts",
    "target": "packages/ghidra",
    "kind": "call"
   },
   {
    "source": "apps/nt",
-   "target": "packages/ffi-bridge",
+   "target": "system/ffi-bridge",
    "kind": "call"
   },
   {
@@ -8802,12 +8802,12 @@
   },
   {
    "source": "just",
-   "target": "packages/ai-os",
+   "target": "frameworks/ai-os",
    "kind": "dispatch"
   },
   {
    "source": "just",
-   "target": "packages/core",
+   "target": "system/core-ts",
    "kind": "dispatch"
   },
   {
@@ -8817,27 +8817,27 @@
   },
   {
    "source": "just",
-   "target": "packages/env-kit",
+   "target": "system/env-kit",
    "kind": "dispatch"
   },
   {
    "source": "just",
-   "target": "packages/gnu",
+   "target": "system/gnu-ts",
    "kind": "dispatch"
   },
   {
    "source": "just",
-   "target": "packages/machine",
+   "target": "system/machine-ts",
    "kind": "dispatch"
   },
   {
    "source": "just",
-   "target": "packages/release",
+   "target": "system/release",
    "kind": "dispatch"
   },
   {
    "source": "just",
-   "target": "packages/upstream",
+   "target": "system/upstream",
    "kind": "dispatch"
   },
   {
@@ -8852,37 +8852,37 @@
   },
   {
    "source": "src/ay",
-   "target": "packages/deploy",
+   "target": "system/deploy",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/assets",
+   "target": "frameworks/assets",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/upstream",
+   "target": "system/upstream",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/gnu",
+   "target": "system/gnu-ts",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/release",
+   "target": "system/release",
    "kind": "dispatch"
   },
   {
    "source": "src/ay",
-   "target": "packages/i18n",
+   "target": "frameworks/i18n-ts",
    "kind": "dispatch"
   },
   {
    "source": "ci",
-   "target": "packages/ai-os",
+   "target": "frameworks/ai-os",
    "kind": "dispatch"
   },
   {
@@ -8897,7 +8897,7 @@
   },
   {
    "source": "ci",
-   "target": "packages/assets",
+   "target": "frameworks/assets",
    "kind": "dispatch"
   },
   {
@@ -8917,7 +8917,7 @@
   },
   {
    "source": "ci",
-   "target": "packages/design",
+   "target": "frameworks/design",
    "kind": "dispatch"
   },
   {
@@ -8927,7 +8927,7 @@
   },
   {
    "source": "ci",
-   "target": "packages/deploy",
+   "target": "system/deploy",
    "kind": "dispatch"
   },
   {
@@ -8937,7 +8937,7 @@
   },
   {
    "source": "ci",
-   "target": "packages/gaming",
+   "target": "frameworks/gaming",
    "kind": "dispatch"
   },
   {
@@ -8972,27 +8972,27 @@
   },
   {
    "source": "ci",
-   "target": "packages/ffi-bridge",
+   "target": "system/ffi-bridge",
    "kind": "dispatch"
   },
   {
    "source": "ci",
-   "target": "packages/machine",
+   "target": "system/machine-ts",
    "kind": "dispatch"
   },
   {
    "source": "ci",
-   "target": "packages/release",
+   "target": "system/release",
    "kind": "dispatch"
   },
   {
    "source": "ci",
-   "target": "packages/env-kit",
+   "target": "system/env-kit",
    "kind": "dispatch"
   },
   {
    "source": "ci",
-   "target": "packages/upstream",
+   "target": "system/upstream",
    "kind": "dispatch"
   },
   {
@@ -9012,7 +9012,7 @@
   },
   {
    "source": "uv",
-   "target": "packages/core-py",
+   "target": "system/core-py",
    "kind": "dispatch"
   },
   {
@@ -9022,7 +9022,7 @@
   },
   {
    "source": "uv",
-   "target": "packages/ai-os/python/hermes_agent_memory",
+   "target": "frameworks/ai-os/python/hermes_agent_memory",
    "kind": "dispatch"
   }
  ],
@@ -9033,22 +9033,22 @@
   "infra/gcp/billing-agent/cap-function",
   "device/mesh-vn",
   "just",
-  "packages/ai-os",
-  "packages/ai-os/python/hermes_agent_memory",
-  "packages/assets",
-  "packages/bunify",
+  "frameworks/ai-os",
+  "frameworks/ai-os/python/hermes_agent_memory",
+  "frameworks/assets",
+  "system/bunify",
   "packages/chromium-bun",
-  "packages/deploy",
-  "packages/design",
-  "packages/env-kit",
+  "system/deploy",
+  "frameworks/design",
+  "system/env-kit",
   "packages/gcp",
   "packages/ghidra",
-  "packages/gnu",
-  "packages/i18n",
-  "packages/machine",
-  "packages/py2bun",
+  "system/gnu-ts",
+  "frameworks/i18n-ts",
+  "system/machine-ts",
+  "system/py2bun-ts",
   "packages/vault",
-  "packages/wck",
+  "system/wck",
   "src/agent/context",
   "src/apm",
   "src/ay",
@@ -9117,7 +9117,7 @@
     {
      "label": "just uses @aphrody/ai-os",
      "nodes": [
-      "packages/ai-os"
+      "frameworks/ai-os"
      ]
     },
     {
@@ -9142,7 +9142,7 @@
     {
      "label": "aphrody uses @aphrody/ai-os",
      "nodes": [
-      "packages/ai-os"
+      "frameworks/ai-os"
      ]
     },
     {
@@ -9167,7 +9167,7 @@
     {
      "label": "ci uses @aphrody/ai-os",
      "nodes": [
-      "packages/ai-os"
+      "frameworks/ai-os"
      ]
     },
     {

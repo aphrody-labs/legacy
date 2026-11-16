@@ -1,5 +1,5 @@
 #!/bin/sh
-. "$(git rev-parse --show-toplevel)/packages/env-kit/loaders/shell/site.sh"; FR1=$(site_ssh fr1)
+. "$(git rev-parse --show-toplevel)/system/env-kit/loaders/shell/site.sh"; FR1=$(site_ssh fr1)
 # Local: block until all chain logs on fr1 contain 'lld done'/'t4 done'/'sgn done' (or 40 min), printing progress.
 i=0
 while [ $i -lt 80 ]; do

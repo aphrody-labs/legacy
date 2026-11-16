@@ -2,7 +2,7 @@
 // Fleet Cloudflare token (fleet-health, VPS automation): one account token per host, with minimal
 // privileges (Zone Read + DNS Write on the declared zones only), 1 year, idempotent rotation (the old token of the same
 // name is deleted after the new one is set). The value only goes through ssh stdin, never argv or stdout.
-//   bun packages/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN -- bun device/cloudflare/fleet-token.ts [fr2 prd]
+//   bun system/env-kit/src/cli.ts secret exec CLOUDFLARE_API_TOKEN -- bun device/cloudflare/fleet-token.ts [fr2 prd]
 // Set in /etc/aphrody/secrets.env (600): CLOUDFLARE_API_TOKEN and CF_API_TOKEN (fleet-health.sh).
 import { cfg } from "./lib";
 

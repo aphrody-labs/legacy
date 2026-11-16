@@ -9,9 +9,9 @@ allowed-tools:
   - "Bash"
 ---
 
-> Mirror generated from google-labs-code/stitch-skills (stitch-skills/plugins/stitch-utilities/skills/stitch-loop) by `bun packages/ai-os/src/google/absorb.ts skills --write`; do not edit here.
+> Mirror generated from google-labs-code/stitch-skills (stitch-skills/plugins/stitch-utilities/skills/stitch-loop) by `bun frameworks/ai-os/src/google/absorb.ts skills --write`; do not edit here.
 > In src: relay Stitch tools `stitch__<tool>` (MCP `mcp__relay__stitch__*`, gcloud auth), CLI `ay design stitch <cmd>`
-> (upload, design-md, generate, html, download), DESIGN.md `ay design lint|export` (system: packages/design/DESIGN.md),
+> (upload, design-md, generate, html, download), DESIGN.md `ay design lint|export` (system: frameworks/design/DESIGN.md),
 > Jules `ay jules run|sessions` and tools `jules_run`, `jules_status`. JS/TS: bun only.
 
 # Stitch Build Loop

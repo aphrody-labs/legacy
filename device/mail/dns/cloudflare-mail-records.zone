@@ -37,4 +37,4 @@ _mta-sts.aphrody.com.                  3600   IN TXT   "v=STSv1; id=20261111T000
 _smtp._tls.aphrody.com.                3600   IN TXT   "v=TLSRPTv1; rua=mailto:dmarc@aphrody.com"
 
 ; BIMI brand indicator SVG Tiny PS monogram for aphrody.com
-default._bimi.aphrody.com.             3600   IN TXT   "v=BIMI1; l=https://aphrody.com/packages/design/brand/aphrody-monogram-bimi.svg; a="
+default._bimi.aphrody.com.             3600   IN TXT   "v=BIMI1; l=https://aphrody.com/frameworks/design/brand/aphrody-monogram-bimi.svg; a="

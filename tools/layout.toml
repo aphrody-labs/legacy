@@ -24,9 +24,14 @@ role = "documentation, generated index"
 why = "Chromium docs/"
 
 [[area]]
-dir = "packages"
-role = "Bun workspace packages (@aphrody/*)"
-why = "Bun layout; split into system/ and frameworks/ is a later stage"
+dir = "frameworks"
+role = "AI OS frameworks: ai-os, Google services, a2a, inference, media, UI backends (Bun packages; crates follow in batch 4)"
+why = "AOSP frameworks/: the services applications are built on"
+
+[[area]]
+dir = "system"
+role = "ay, the Bun fork core, shell, userland, compat (nt, wine, posix) (Bun packages; crates follow in batch 5)"
+why = "AOSP system/: the core userland"
 
 [[area]]
 dir = "prebuilts"
@@ -161,3 +166,18 @@ to = "device/DEPS.rules"
 [[move]]
 from = "infra/mesh-vn"
 to = "device/mesh-vn"
+
+# Batch 2: Bun packages. A name that exists as a crate in src/ keeps the crate name there and gets the suffix -ts here.
+[[group]]
+batch = 2
+from = "packages"
+to = "frameworks"
+names = ["ai-os", "api", "assets", "automate", "bun-video", "canvas", "chromium", "design", "discord-kit", "gaming", "google", "i18n", "m3-ai", "m3-os-themes", "m3-primitives", "m3-reader", "m3-theme", "m3-tokens", "messaging", "plugin-opener", "re", "web", "web-crawl"]
+rename = { chromium = "chromium-ts", google = "google-ts", i18n = "i18n-ts", re = "re-ts" }
+
+[[group]]
+batch = 2
+from = "packages"
+to = "system"
+names = ["bun-parity", "bun-plugin-tailwind", "bun-plugins", "bun-runtime-sdk", "bun-sql", "bun-steam", "bun-test-dom", "bun-usockets", "bunify", "core", "core-java", "core-py", "deploy", "env-kit", "ffi-bridge", "forge", "gnu", "http", "machine", "native", "next-bun", "omniu", "py2bun", "release", "sql", "third_party", "upstream", "wck", "x"]
+rename = { core = "core-ts", gnu = "gnu-ts", http = "http-ts", machine = "machine-ts", py2bun = "py2bun-ts", sql = "sql-ts" }

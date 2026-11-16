@@ -5,7 +5,7 @@
 set -uo pipefail
 . /etc/fleet/resilience.conf
 D=${SRC_CHECKOUT:-/srv/src}; verb=${1:-sync}; rc=0
-T=$D/packages/machine/src/toolchain.ts
+T=$D/system/machine-ts/src/toolchain.ts
 [ -f "$T" ] || { logger -t agents-sync -p daemon.err "$T missing (SRC_SPARSE)"; exit 1; }
 for u in ${AGENTS_SYNC_USERS:-root agent}; do
   home=$(getent passwd "$u" | cut -d: -f6) || continue

@@ -143,7 +143,7 @@ A skill of .agents/skills
 | [gemini-omni-flash-api](../../../.agents/skills/gemini-omni-flash-api) | Video generation and editing with Gemini Omni 1.2 Flash - text/image/video-to-video, frame transitions, extensions, ffmpeg prep scripts. |
 | [gh-fork](../../../.agents/skills/gh-fork) | Fork upstream repositories into the aphrody-labs org (or aphrody-dev) and register them in third_party/forks.txt. |
 | [github-workflow](../../../.agents/skills/github-workflow) | GitHub upstream developer workflow reference covering gh CLI, git hygiene, GitHub Actions CI/CD, Releases, PR management, and GitHub Packages (ghcr.io). |
-| [gnu](../../../.agents/skills/gnu) | GNU upstream tracker and distributor (packages/gnu): real-time releases of every GNU package and the Linux kernel, their Rust equivalents, JSON and Atom feeds, the gnu.aphrody.c... |
+| [gnu](../../../.agents/skills/gnu) | GNU upstream tracker and distributor (system/gnu-ts): real-time releases of every GNU package and the Linux kernel, their Rust equivalents, JSON and Atom feeds, the gnu.aphrody.... |
 | [google-cloud-recipe-auth](../../../.agents/skills/google-cloud-recipe-auth) | Authenticate and authorize to Google Cloud - IAM, human users, service accounts, ADC, impersonation, Workload Identity Federation, API keys, OIDC ID tokens. |
 | [google-cloud-recipe-onboarding](../../../.agents/skills/google-cloud-recipe-onboarding) | First steps on Google Cloud for one developer - account, gcloud auth, first project, billing link. |
 | [google-labs-stitch-jules-design](../../../.agents/skills/google-labs-stitch-jules-design) | Google Labs in src (google-labs-code forks absorbed): Stitch UI generation and design systems, DESIGN.md lint/export, Jules cloud coding agent, Stax evaluation. |
@@ -163,7 +163,7 @@ A skill of .agents/skills
 | [microsoft](../../../.agents/skills/microsoft) | Method and references for any Microsoft topic (Windows, DirectX/D3D12, .NET 10/11, C#, MSVC/STL, Microsoft's Rust, WinUI/WinAppSDK, Edge/WebGPU, Azure, GitHub org microsoft). |
 | [niubash](../../../.agents/skills/niubash) | Run Windows tasks in Niubash, the GNU Bash-compatible Windows-native shell. |
 | [os-minimal-computer-use](../../../.agents/skills/os-minimal-computer-use) | Minimal computer use on the PC with the fewest tools in context: desktop accessibility tree (agent-desktop) and browser (agent-browser). |
-| [py2bun](../../../.agents/skills/py2bun) | Python to Bun TypeScript transpiler (crate src/py2bun, package packages/py2bun) with Ghidra script idioms. |
+| [py2bun](../../../.agents/skills/py2bun) | Python to Bun TypeScript transpiler (crate src/py2bun, package system/py2bun-ts) with Ghidra script idioms. |
 | [r2](../../../.agents/skills/r2) | Send/fetch artifacts on Cloudflare R2 via rclone (buckets aphrody-chromium for Chromium builds and toolchains, aphrody-lore for Lore backups). |
 | [rea-analysis-optimization](../../../.agents/skills/rea-analysis-optimization) | Optimize REA providers and shared analysis workflows for agent context, latency, CPU, and memory while preserving correctness and Evidence. |
 | [rea-changelog-update](../../../.agents/skills/rea-changelog-update) | Prepare or rewrite REA release changelogs and GitHub release notes from pinned Git history, with verified contributor thanks and Release Please synchronization. |

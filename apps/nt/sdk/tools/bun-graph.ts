@@ -888,7 +888,7 @@ for (const [, name] of crateDirs) {
   const v = vendorByNorm.get(norm(VENDOR_ALIASES[short] ?? short));
   if (v) edge(`crate:${name}`, v, "links");
 }
-for (const pkgDir of ["packages/bun-usockets", "packages/bun-uws"])
+for (const pkgDir of ["system/bun-usockets", "packages/bun-uws"])
   if (existsSync(join(root, pkgDir))) {
     const n = node(`vendor:${posix.basename(pkgDir)}`, "vendor");
     addPath(n, pkgDir);
@@ -1624,7 +1624,7 @@ md.push(
     .map(([k, v]) => `\`${k}\` -> \`${v}\``)
     .join(
       ", ",
-    )}; otherwise crate \`bun_<x>[_sys]\` <-> dependency \`<x>\` by normalized name. \`packages/bun-usockets\` and \`packages/bun-uws\` are attached to \`bun_uws_sys\`.`,
+    )}; otherwise crate \`bun_<x>[_sys]\` <-> dependency \`<x>\` by normalized name. \`system/bun-usockets\` and \`packages/bun-uws\` are attached to \`bun_uws_sys\`.`,
 );
 md.push(
   "- Module specifiers: `src/js/bun/x.ts` -> `bun:x`, `src/js/node/a.b.ts` -> `node:a/b`, `src/js/internal/**` -> `internal/**`, `src/js/thirdparty/x.ts` -> `x`.",

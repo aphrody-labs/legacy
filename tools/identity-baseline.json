@@ -1817,498 +1817,498 @@
   "npm-scope": 1,
   "binary-call": 1
  },
- "packages/ai-os/README.md": {
+ "frameworks/ai-os/README.md": {
   "npm-scope": 2,
   "c-prefix": 4
  },
- "packages/ai-os/ai-os.just": {
+ "frameworks/ai-os/ai-os.just": {
   "npm-scope": 2,
   "crate-prefix": 4
  },
- "packages/ai-os/bench/term-bench.ts": {
+ "frameworks/ai-os/bench/term-bench.ts": {
   "npm-scope": 1,
   "crate-prefix": 3
  },
- "packages/ai-os/docs/ARCHITECTURE.md": {
+ "frameworks/ai-os/docs/ARCHITECTURE.md": {
   "npm-scope": 1,
   "c-prefix": 2
  },
- "packages/ai-os/docs/BRAIN.md": {
+ "frameworks/ai-os/docs/BRAIN.md": {
   "checkout-path": 1,
   "npm-scope": 1
  },
- "packages/ai-os/docs/FUSION.md": {
+ "frameworks/ai-os/docs/FUSION.md": {
   "checkout-path": 1
  },
- "packages/ai-os/docs/NHITL.md": {
+ "frameworks/ai-os/docs/NHITL.md": {
   "crate-prefix": 2
  },
- "packages/ai-os/docs/NOTE-core-hash.md": {
+ "frameworks/ai-os/docs/NOTE-core-hash.md": {
   "npm-scope": 2
  },
- "packages/ai-os/docs/ORCHESTRATOR.md": {
+ "frameworks/ai-os/docs/ORCHESTRATOR.md": {
   "product-name": 2,
   "crate-prefix": 1,
   "binary-call": 2
  },
- "packages/ai-os/docs/RELAY.md": {
+ "frameworks/ai-os/docs/RELAY.md": {
   "npm-scope": 1
  },
- "packages/ai-os/docs/ROADMAP.md": {
+ "frameworks/ai-os/docs/ROADMAP.md": {
   "checkout-path": 1
  },
- "packages/ai-os/docs/SECURITY_FINDINGS.md": {
+ "frameworks/ai-os/docs/SECURITY_FINDINGS.md": {
   "npm-scope": 2
  },
- "packages/ai-os/docs/cli-reference/agy.md": {
+ "frameworks/ai-os/docs/cli-reference/agy.md": {
   "checkout-path": 3
  },
- "packages/ai-os/docs/cli-reference/claude-code.md": {
+ "frameworks/ai-os/docs/cli-reference/claude-code.md": {
   "checkout-path": 1
  },
- "packages/ai-os/native/relay-windows/Relay.Service.csproj": {
+ "frameworks/ai-os/native/relay-windows/Relay.Service.csproj": {
   "crate-prefix": 1
  },
- "packages/ai-os/native/relay-windows/install.ps1": {
+ "frameworks/ai-os/native/relay-windows/install.ps1": {
   "product-name": 1,
   "crate-prefix": 2
  },
- "packages/ai-os/package.json": {
+ "frameworks/ai-os/package.json": {
   "npm-scope": 3,
   "c-prefix": 1
  },
- "packages/ai-os/src/brain/skills-archive.ts": {
+ "frameworks/ai-os/src/brain/skills-archive.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/cli.ts": {
+ "frameworks/ai-os/src/cli.ts": {
   "npm-scope": 1
  },
- "packages/ai-os/src/core/cabi.ts": {
+ "frameworks/ai-os/src/core/cabi.ts": {
   "crate-prefix": 1,
   "c-prefix": 3,
   "env-prefix": 1
  },
- "packages/ai-os/src/fabric/index.ts": {
+ "frameworks/ai-os/src/fabric/index.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/google/absorb.ts": {
+ "frameworks/ai-os/src/google/absorb.ts": {
   "binary-call": 3
  },
- "packages/ai-os/src/google/cli.ts": {
+ "frameworks/ai-os/src/google/cli.ts": {
   "binary-call": 3
  },
- "packages/ai-os/src/google/stitch/src/client.ts": {
+ "frameworks/ai-os/src/google/stitch/src/client.ts": {
   "npm-scope": 1
  },
- "packages/ai-os/src/index.ts": {
+ "frameworks/ai-os/src/index.ts": {
   "npm-scope": 1
  },
- "packages/ai-os/src/llm/models.ts": {
+ "frameworks/ai-os/src/llm/models.ts": {
   "npm-scope": 1
  },
- "packages/ai-os/src/nhitl/ledger.json": {
+ "frameworks/ai-os/src/nhitl/ledger.json": {
   "product-name": 2,
   "npm-scope": 3,
   "crate-prefix": 4,
   "binary-call": 2
  },
- "packages/ai-os/src/nhitl/login.ts": {
+ "frameworks/ai-os/src/nhitl/login.ts": {
   "npm-scope": 2
  },
- "packages/ai-os/src/nhitl/scanners.ts": {
+ "frameworks/ai-os/src/nhitl/scanners.ts": {
   "crate-prefix": 1,
   "binary-call": 1
  },
- "packages/ai-os/src/orch/lifecycle.ts": {
+ "frameworks/ai-os/src/orch/lifecycle.ts": {
   "product-name": 1
  },
- "packages/ai-os/src/providers/cli.ts": {
+ "frameworks/ai-os/src/providers/cli.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/a2a.ts": {
+ "frameworks/ai-os/src/relay/a2a.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/accounts.ts": {
+ "frameworks/ai-os/src/relay/accounts.ts": {
   "env-prefix": 2
  },
- "packages/ai-os/src/relay/acp.ts": {
+ "frameworks/ai-os/src/relay/acp.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/agent-tools.ts": {
+ "frameworks/ai-os/src/relay/agent-tools.ts": {
   "npm-scope": 3
  },
- "packages/ai-os/src/relay/cdp.ts": {
+ "frameworks/ai-os/src/relay/cdp.ts": {
   "product-name": 2
  },
- "packages/ai-os/src/relay/core-tools.ts": {
+ "frameworks/ai-os/src/relay/core-tools.ts": {
   "npm-scope": 28,
   "binary-call": 1
  },
- "packages/ai-os/src/relay/electron-mcp.ts": {
+ "frameworks/ai-os/src/relay/electron-mcp.ts": {
   "crate-prefix": 1,
   "binary-call": 2
  },
- "packages/ai-os/src/relay/gnu-mcp.ts": {
+ "frameworks/ai-os/src/relay/gnu-mcp.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/mcp-http.ts": {
+ "frameworks/ai-os/src/relay/mcp-http.ts": {
   "crate-prefix": 2
  },
- "packages/ai-os/src/relay/mcp-hub.ts": {
+ "frameworks/ai-os/src/relay/mcp-hub.ts": {
   "crate-prefix": 2
  },
- "packages/ai-os/src/relay/oauth.ts": {
+ "frameworks/ai-os/src/relay/oauth.ts": {
   "npm-scope": 1,
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/outbound.ts": {
+ "frameworks/ai-os/src/relay/outbound.ts": {
   "crate-prefix": 6,
   "c-prefix": 1
  },
- "packages/ai-os/src/relay/protocols.ts": {
+ "frameworks/ai-os/src/relay/protocols.ts": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/py2bun-mcp.ts": {
+ "frameworks/ai-os/src/relay/py2bun-mcp.ts": {
   "npm-scope": 1,
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/registry-mcp.ts": {
+ "frameworks/ai-os/src/relay/registry-mcp.ts": {
   "crate-prefix": 2
  },
- "packages/ai-os/src/relay/server.ts": {
+ "frameworks/ai-os/src/relay/server.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/relay/tools.ts": {
+ "frameworks/ai-os/src/relay/tools.ts": {
   "crate-prefix": 1,
   "env-prefix": 2
  },
- "packages/ai-os/src/relay/unixwin-mcp.ts": {
+ "frameworks/ai-os/src/relay/unixwin-mcp.ts": {
   "crate-prefix": 1,
   "binary-call": 6
  },
- "packages/ai-os/src/relay/webmcp.ts": {
+ "frameworks/ai-os/src/relay/webmcp.ts": {
   "product-name": 1
  },
- "packages/ai-os/src/review/index.ts": {
+ "frameworks/ai-os/src/review/index.ts": {
   "crate-prefix": 2
  },
- "packages/ai-os/src/router/http.ts": {
+ "frameworks/ai-os/src/router/http.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/term/agent-bridge.ts": {
+ "frameworks/ai-os/src/term/agent-bridge.ts": {
   "npm-scope": 1
  },
- "packages/ai-os/src/term/cli.ts": {
+ "frameworks/ai-os/src/term/cli.ts": {
   "crate-prefix": 2
  },
- "packages/ai-os/src/term/mcp-tools.ts": {
+ "frameworks/ai-os/src/term/mcp-tools.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/src/term/pty.ts": {
+ "frameworks/ai-os/src/term/pty.ts": {
   "product-name": 1,
   "npm-scope": 2,
   "crate-prefix": 2
  },
- "packages/ai-os/src/term/server.ts": {
+ "frameworks/ai-os/src/term/server.ts": {
   "product-name": 2,
   "npm-scope": 1,
   "crate-prefix": 2
  },
- "packages/ai-os/src/term/web/term-host.js": {
+ "frameworks/ai-os/src/term/web/term-host.js": {
   "checkout-path": 2,
   "crate-prefix": 2
  },
- "packages/ai-os/src/term/web/vterm-wasm.js": {
+ "frameworks/ai-os/src/term/web/vterm-wasm.js": {
   "crate-prefix": 1
  },
- "packages/ai-os/test/core/ai-os-cabi.test.ts": {
+ "frameworks/ai-os/test/core/ai-os-cabi.test.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/test/google/jules.test.ts": {
+ "frameworks/ai-os/test/google/jules.test.ts": {
   "product-name": 2
  },
- "packages/ai-os/test/relay/e2e.test.ts": {
+ "frameworks/ai-os/test/relay/e2e.test.ts": {
   "crate-prefix": 4
  },
- "packages/ai-os/test/relay/outbound.test.ts": {
+ "frameworks/ai-os/test/relay/outbound.test.ts": {
   "crate-prefix": 9
  },
- "packages/ai-os/test/relay/registry-mcp.test.ts": {
+ "frameworks/ai-os/test/relay/registry-mcp.test.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/test/relay/sessions.test.ts": {
+ "frameworks/ai-os/test/relay/sessions.test.ts": {
   "checkout-path": 2
  },
- "packages/ai-os/test/relay/sockets.test.ts": {
+ "frameworks/ai-os/test/relay/sockets.test.ts": {
   "crate-prefix": 1
  },
- "packages/ai-os/test/relay/unixwin-mcp.test.ts": {
+ "frameworks/ai-os/test/relay/unixwin-mcp.test.ts": {
   "crate-prefix": 1
  },
- "packages/assets/README.md": {
+ "frameworks/assets/README.md": {
   "npm-scope": 1
  },
- "packages/assets/package.json": {
+ "frameworks/assets/package.json": {
   "npm-scope": 1
  },
- "packages/assets/src/cli.ts": {
+ "frameworks/assets/src/cli.ts": {
   "binary-call": 1
  },
- "packages/assets/src/games.ts": {
+ "frameworks/assets/src/games.ts": {
   "product-name": 1
  },
- "packages/assets/src/manifest.ts": {
+ "frameworks/assets/src/manifest.ts": {
   "binary-call": 1
  },
- "packages/assets/src/material-symbols.ts": {
+ "frameworks/assets/src/material-symbols.ts": {
   "npm-scope": 1
  },
- "packages/assets/src/publish.ts": {
+ "frameworks/assets/src/publish.ts": {
   "binary-call": 1
  },
- "packages/assets/src/repos.ts": {
+ "frameworks/assets/src/repos.ts": {
   "binary-call": 2
  },
- "packages/assets/src/sources.ts": {
+ "frameworks/assets/src/sources.ts": {
   "crate-prefix": 1,
   "binary-call": 1
  },
- "packages/bunify/README.md": {
+ "system/bunify/README.md": {
   "npm-scope": 3,
   "env-prefix": 1
  },
- "packages/bunify/package.json": {
+ "system/bunify/package.json": {
   "npm-scope": 1
  },
- "packages/bunify/src/fullbun.ts": {
+ "system/bunify/src/fullbun.ts": {
   "npm-scope": 1,
   "c-prefix": 1,
   "env-prefix": 2
  },
- "packages/bunify/src/index.ts": {
+ "system/bunify/src/index.ts": {
   "npm-scope": 2
  },
- "packages/bunify/src/rust.ts": {
+ "system/bunify/src/rust.ts": {
   "npm-scope": 1
  },
- "packages/core/README.md": {
+ "system/core-ts/README.md": {
   "npm-scope": 1
  },
- "packages/core/core.just": {
+ "system/core-ts/core.just": {
   "npm-scope": 2,
   "crate-prefix": 2,
   "c-prefix": 5
  },
- "packages/core/package.json": {
+ "system/core-ts/package.json": {
   "npm-scope": 1
  },
- "packages/core/src/cli.ts": {
+ "system/core-ts/src/cli.ts": {
   "crate-prefix": 1,
   "c-prefix": 1,
   "binary-call": 2
  },
- "packages/core/src/depot.ts": {
+ "system/core-ts/src/depot.ts": {
   "crate-prefix": 1,
   "c-prefix": 6,
   "env-prefix": 1
  },
- "packages/core/src/ffi.ts": {
+ "system/core-ts/src/ffi.ts": {
   "c-prefix": 3,
   "env-prefix": 3
  },
- "packages/core/src/generate.ts": {
+ "system/core-ts/src/generate.ts": {
   "npm-scope": 2,
   "crate-prefix": 1,
   "c-prefix": 3
  },
- "packages/core/src/re.ts": {
+ "system/core-ts/src/re.ts": {
   "crate-prefix": 1,
   "c-prefix": 18
  },
- "packages/core/src/scanner.ts": {
+ "system/core-ts/src/scanner.ts": {
   "npm-scope": 1,
   "c-prefix": 1
  },
- "packages/core/src/templates.ts": {
+ "system/core-ts/src/templates.ts": {
   "npm-scope": 8,
   "c-prefix": 8
  },
- "packages/core/test/ffi.test.ts": {
+ "system/core-ts/test/ffi.test.ts": {
   "c-prefix": 1
  },
- "packages/core/test/generate.test.ts": {
+ "system/core-ts/test/generate.test.ts": {
   "product-name": 1,
   "crate-prefix": 1,
   "c-prefix": 2
  },
- "packages/deploy/README.md": {
+ "system/deploy/README.md": {
   "npm-scope": 1,
   "crate-prefix": 5,
   "env-prefix": 1,
   "binary-call": 6
  },
- "packages/deploy/package.json": {
+ "system/deploy/package.json": {
   "npm-scope": 1
  },
- "packages/deploy/projects.toml": {
+ "system/deploy/projects.toml": {
   "product-name": 1,
   "binary-call": 1
  },
- "packages/deploy/src/cli.ts": {
+ "system/deploy/src/cli.ts": {
   "crate-prefix": 1,
   "env-prefix": 4,
   "binary-call": 2
  },
- "packages/deploy/src/pages.ts": {
+ "system/deploy/src/pages.ts": {
   "npm-scope": 1
  },
- "packages/deploy/src/registry.ts": {
+ "system/deploy/src/registry.ts": {
   "crate-prefix": 1
  },
- "packages/deploy/src/serve.ts": {
+ "system/deploy/src/serve.ts": {
   "crate-prefix": 3
  },
- "packages/deploy/src/state.ts": {
+ "system/deploy/src/state.ts": {
   "binary-call": 1
  },
- "packages/deploy/src/ui.ts": {
+ "system/deploy/src/ui.ts": {
   "npm-scope": 1,
   "crate-prefix": 2
  },
- "packages/deploy/src/worker.ts": {
+ "system/deploy/src/worker.ts": {
   "npm-scope": 1,
   "crate-prefix": 2
  },
- "packages/deploy/tests/deploy.test.ts": {
+ "system/deploy/tests/deploy.test.ts": {
   "product-name": 5,
   "crate-prefix": 3
  },
- "packages/deploy/tests/pages-i18n.test.ts": {
+ "system/deploy/tests/pages-i18n.test.ts": {
   "npm-scope": 1
  },
- "packages/deploy/wrangler.toml": {
+ "system/deploy/wrangler.toml": {
   "crate-prefix": 3,
   "env-prefix": 1,
   "binary-call": 1
  },
- "packages/design/DESIGN.md": {
+ "frameworks/design/DESIGN.md": {
   "npm-scope": 2
  },
- "packages/design/README.md": {
+ "frameworks/design/README.md": {
   "npm-scope": 1
  },
- "packages/design/package.json": {
+ "frameworks/design/package.json": {
   "npm-scope": 1
  },
- "packages/design/src/adapters.ts": {
+ "frameworks/design/src/adapters.ts": {
   "product-name": 2,
   "npm-scope": 4,
   "crate-prefix": 3,
   "c-prefix": 5
  },
- "packages/design/src/build.ts": {
+ "frameworks/design/src/build.ts": {
   "npm-scope": 4,
   "crate-prefix": 2
  },
- "packages/design/src/bun-plugin.ts": {
+ "frameworks/design/src/bun-plugin.ts": {
   "crate-prefix": 1
  },
- "packages/design/src/cli.ts": {
+ "frameworks/design/src/cli.ts": {
   "npm-scope": 1
  },
- "packages/design/src/components.ts": {
+ "frameworks/design/src/components.ts": {
   "env-prefix": 2
  },
- "packages/design/src/design-mirror.ts": {
+ "frameworks/design/src/design-mirror.ts": {
   "crate-prefix": 1
  },
- "packages/design/src/figma.ts": {
+ "frameworks/design/src/figma.ts": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "packages/design/src/index.ts": {
+ "frameworks/design/src/index.ts": {
   "npm-scope": 1
  },
- "packages/design/src/themes.ts": {
+ "frameworks/design/src/themes.ts": {
   "product-name": 1
  },
- "packages/design/src/web.ts": {
+ "frameworks/design/src/web.ts": {
   "npm-scope": 1
  },
- "packages/design/tests/adapters.test.ts": {
+ "frameworks/design/tests/adapters.test.ts": {
   "c-prefix": 5
  },
- "packages/design/tests/themes.test.ts": {
+ "frameworks/design/tests/themes.test.ts": {
   "product-name": 1
  },
- "packages/design/tests/web.test.ts": {
+ "frameworks/design/tests/web.test.ts": {
   "npm-scope": 1,
   "env-prefix": 1
  },
- "packages/design/tokens/adapters/_angular-theme.scss": {
+ "frameworks/design/tokens/adapters/_angular-theme.scss": {
   "product-name": 1,
   "npm-scope": 1
  },
- "packages/design/tokens/adapters/bevy_theme.rs": {
+ "frameworks/design/tokens/adapters/bevy_theme.rs": {
   "c-prefix": 1
  },
- "packages/design/tokens/adapters/egui_theme.rs": {
+ "frameworks/design/tokens/adapters/egui_theme.rs": {
   "c-prefix": 1
  },
- "packages/design/tokens/adapters/gpui-kit.json": {
+ "frameworks/design/tokens/adapters/gpui-kit.json": {
   "product-name": 1
  },
- "packages/design/tokens/adapters/iced_theme.rs": {
+ "frameworks/design/tokens/adapters/iced_theme.rs": {
   "c-prefix": 1
  },
- "packages/design/tokens/adapters/leptos_dioxus_tokens.rs": {
+ "frameworks/design/tokens/adapters/leptos_dioxus_tokens.rs": {
   "npm-scope": 1,
   "crate-prefix": 1,
   "c-prefix": 1
  },
- "packages/design/tokens/adapters/taffy_tokens.rs": {
+ "frameworks/design/tokens/adapters/taffy_tokens.rs": {
   "product-name": 1
  },
- "packages/design/tokens/adapters/tailwind.css": {
+ "frameworks/design/tokens/adapters/tailwind.css": {
   "npm-scope": 1,
   "crate-prefix": 1
  },
- "packages/design/tokens/adapters/webui-tokens.json": {
+ "frameworks/design/tokens/adapters/webui-tokens.json": {
   "product-name": 1,
   "crate-prefix": 6
  },
- "packages/design/tokens/angular-theme.scss": {
+ "frameworks/design/tokens/angular-theme.scss": {
   "npm-scope": 1
  },
- "packages/design/tokens/figma-mockup.json": {
+ "frameworks/design/tokens/figma-mockup.json": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "packages/design/tokens/figma-sync.js": {
+ "frameworks/design/tokens/figma-sync.js": {
   "product-name": 1,
   "crate-prefix": 1
  },
- "packages/design/tokens/figma-themes-sync.js": {
+ "frameworks/design/tokens/figma-themes-sync.js": {
   "product-name": 2
  },
- "packages/design/tokens/hyprland.conf": {
+ "frameworks/design/tokens/hyprland.conf": {
   "product-name": 1,
   "c-prefix": 36
  },
- "packages/design/tokens/themes.css": {
+ "frameworks/design/tokens/themes.css": {
   "product-name": 3
  },
- "packages/design/tokens/themes.json": {
+ "frameworks/design/tokens/themes.json": {
   "product-name": 2
  },
- "packages/design/tokens/tokens.css": {
+ "frameworks/design/tokens/tokens.css": {
   "crate-prefix": 1
  },
- "packages/design/tokens/tokens.json": {
+ "frameworks/design/tokens/tokens.json": {
   "crate-prefix": 1
  },
- "packages/env-kit/README.md": {
+ "system/env-kit/README.md": {
   "checkout-path": 17,
   "product-name": 2,
   "npm-scope": 3,
@@ -2316,151 +2316,151 @@
   "c-prefix": 1,
   "binary-call": 7
  },
- "packages/env-kit/env-kit.just": {
+ "system/env-kit/env-kit.just": {
   "crate-prefix": 3
  },
- "packages/env-kit/loaders/cpp/CMakeLists.txt": {
+ "system/env-kit/loaders/cpp/CMakeLists.txt": {
   "c-prefix": 1
  },
- "packages/env-kit/loaders/cpp/sovereign_env.h": {
+ "system/env-kit/loaders/cpp/sovereign_env.h": {
   "checkout-path": 2
  },
- "packages/env-kit/loaders/cpp/sovereign_env.hpp": {
+ "system/env-kit/loaders/cpp/sovereign_env.hpp": {
   "checkout-path": 1
  },
- "packages/env-kit/loaders/dotnet/SovereignEnv.cs": {
+ "system/env-kit/loaders/dotnet/SovereignEnv.cs": {
   "checkout-path": 2
  },
- "packages/env-kit/loaders/go/envkit.go": {
+ "system/env-kit/loaders/go/envkit.go": {
   "checkout-path": 4
  },
- "packages/env-kit/loaders/go/envkit_test.go": {
+ "system/env-kit/loaders/go/envkit_test.go": {
   "product-name": 2
  },
- "packages/env-kit/loaders/lua/sovereign_env.lua": {
+ "system/env-kit/loaders/lua/sovereign_env.lua": {
   "checkout-path": 2
  },
- "packages/env-kit/loaders/python/pyproject.toml": {
+ "system/env-kit/loaders/python/pyproject.toml": {
   "crate-prefix": 1
  },
- "packages/env-kit/loaders/python/sovereign_env.py": {
+ "system/env-kit/loaders/python/sovereign_env.py": {
   "checkout-path": 2
  },
- "packages/env-kit/loaders/shell/discover.sh": {
+ "system/env-kit/loaders/shell/discover.sh": {
   "env-prefix": 1
  },
- "packages/env-kit/loaders/shell/load-env.ps1": {
+ "system/env-kit/loaders/shell/load-env.ps1": {
   "checkout-path": 4
  },
- "packages/env-kit/loaders/shell/load-env.sh": {
+ "system/env-kit/loaders/shell/load-env.sh": {
   "checkout-path": 6
  },
- "packages/env-kit/package.json": {
+ "system/env-kit/package.json": {
   "checkout-path": 1,
   "npm-scope": 3
  },
- "packages/env-kit/scripts/registry-cleanup.ts": {
+ "system/env-kit/scripts/registry-cleanup.ts": {
   "npm-scope": 22,
   "crate-prefix": 5
  },
- "packages/env-kit/src/auth-daemon.ts": {
+ "system/env-kit/src/auth-daemon.ts": {
   "npm-scope": 1,
   "binary-call": 2
  },
- "packages/env-kit/src/auth-paths.ts": {
+ "system/env-kit/src/auth-paths.ts": {
   "product-name": 2
  },
- "packages/env-kit/src/auth.ts": {
+ "system/env-kit/src/auth.ts": {
   "product-name": 1,
   "npm-scope": 2,
   "env-prefix": 2,
   "binary-call": 15
  },
- "packages/env-kit/src/cli.ts": {
+ "system/env-kit/src/cli.ts": {
   "product-name": 1,
   "npm-scope": 2
  },
- "packages/env-kit/src/discover.ts": {
+ "system/env-kit/src/discover.ts": {
   "checkout-path": 1,
   "product-name": 2,
   "crate-prefix": 1,
   "env-prefix": 6
  },
- "packages/env-kit/src/github-app.test.ts": {
+ "system/env-kit/src/github-app.test.ts": {
   "product-name": 1
  },
- "packages/env-kit/src/github-app.ts": {
+ "system/env-kit/src/github-app.ts": {
   "product-name": 5,
   "npm-scope": 2,
   "crate-prefix": 2,
   "env-prefix": 30,
   "binary-call": 10
  },
- "packages/env-kit/src/google-context.ts": {
+ "system/env-kit/src/google-context.ts": {
   "product-name": 3,
   "npm-scope": 1,
   "env-prefix": 1
  },
- "packages/env-kit/src/index.ts": {
+ "system/env-kit/src/index.ts": {
   "env-prefix": 1
  },
- "packages/env-kit/src/whoami.ts": {
+ "system/env-kit/src/whoami.ts": {
   "crate-prefix": 1
  },
- "packages/env-kit/tests/auth.test.ts": {
+ "system/env-kit/tests/auth.test.ts": {
   "npm-scope": 1
  },
- "packages/env-kit/tests/discover.test.ts": {
+ "system/env-kit/tests/discover.test.ts": {
   "crate-prefix": 2,
   "env-prefix": 1
  },
- "packages/env-kit/tests/env-kit.test.ts": {
+ "system/env-kit/tests/env-kit.test.ts": {
   "product-name": 3,
   "crate-prefix": 4
  },
- "packages/env-kit/tests/google-context.test.ts": {
+ "system/env-kit/tests/google-context.test.ts": {
   "product-name": 3
  },
- "packages/ffi-bridge/README.md": {
+ "system/ffi-bridge/README.md": {
   "npm-scope": 1
  },
- "packages/ffi-bridge/package.json": {
+ "system/ffi-bridge/package.json": {
   "npm-scope": 1
  },
- "packages/ffi-bridge/src/stack-bench-runner.ts": {
+ "system/ffi-bridge/src/stack-bench-runner.ts": {
   "checkout-path": 1
  },
- "packages/gaming/README.md": {
+ "frameworks/gaming/README.md": {
   "npm-scope": 1,
   "binary-call": 2
  },
- "packages/gaming/package.json": {
+ "frameworks/gaming/package.json": {
   "npm-scope": 1,
   "binary-call": 2
  },
- "packages/gaming/src/cli.ts": {
+ "frameworks/gaming/src/cli.ts": {
   "binary-call": 4
  },
- "packages/gaming/src/downloads.toml": {
+ "frameworks/gaming/src/downloads.toml": {
   "binary-call": 3
  },
- "packages/gaming/src/dx.ts": {
+ "frameworks/gaming/src/dx.ts": {
   "binary-call": 1
  },
- "packages/gaming/src/index.ts": {
+ "frameworks/gaming/src/index.ts": {
   "npm-scope": 1,
   "binary-call": 1
  },
- "packages/gaming/src/native.ts": {
+ "frameworks/gaming/src/native.ts": {
   "binary-call": 6
  },
- "packages/gaming/src/proton.ts": {
+ "frameworks/gaming/src/proton.ts": {
   "binary-call": 3
  },
- "packages/gaming/src/skills.ts": {
+ "frameworks/gaming/src/skills.ts": {
   "binary-call": 2
  },
- "packages/gaming/src/steam.ts": {
+ "frameworks/gaming/src/steam.ts": {
   "binary-call": 2
  },
  "packages/gcp/README.md": {
@@ -2515,275 +2515,275 @@
  "packages/ghidra/src/script.ts": {
   "npm-scope": 2
  },
- "packages/gnu/README.md": {
+ "system/gnu-ts/README.md": {
   "npm-scope": 1
  },
- "packages/gnu/gnu.just": {
+ "system/gnu-ts/gnu.just": {
   "checkout-path": 3,
   "crate-prefix": 4
  },
- "packages/gnu/package.json": {
+ "system/gnu-ts/package.json": {
   "npm-scope": 1
  },
- "packages/gnu/src/cli.ts": {
+ "system/gnu-ts/src/cli.ts": {
   "crate-prefix": 3
  },
- "packages/gnu/src/feed.ts": {
+ "system/gnu-ts/src/feed.ts": {
   "npm-scope": 2
  },
- "packages/gnu/src/site.ts": {
+ "system/gnu-ts/src/site.ts": {
   "product-name": 1
  },
- "packages/gnu/src/sync.ts": {
+ "system/gnu-ts/src/sync.ts": {
   "crate-prefix": 1
  },
- "packages/gnu/src/tools.ts": {
+ "system/gnu-ts/src/tools.ts": {
   "crate-prefix": 2
  },
- "packages/gnu/src/upstream.ts": {
+ "system/gnu-ts/src/upstream.ts": {
   "crate-prefix": 1
  },
- "packages/i18n/README.md": {
+ "frameworks/i18n-ts/README.md": {
   "npm-scope": 1
  },
- "packages/i18n/package.json": {
+ "frameworks/i18n-ts/package.json": {
   "npm-scope": 3
  },
- "packages/i18n/src/cli.ts": {
+ "frameworks/i18n-ts/src/cli.ts": {
   "npm-scope": 1,
   "crate-prefix": 1
  },
- "packages/i18n/src/config.ts": {
+ "frameworks/i18n-ts/src/config.ts": {
   "env-prefix": 2
  },
- "packages/machine/README.md": {
+ "system/machine-ts/README.md": {
   "binary-call": 3
  },
- "packages/machine/bootstrap/install.ts": {
+ "system/machine-ts/bootstrap/install.ts": {
   "binary-call": 1
  },
- "packages/machine/matrix/scripts/pyproject.toml": {
+ "system/machine-ts/matrix/scripts/pyproject.toml": {
   "crate-prefix": 1
  },
- "packages/machine/matrix/test/unixwin/paths.test.ts": {
+ "system/machine-ts/matrix/test/unixwin/paths.test.ts": {
   "checkout-path": 1
  },
- "packages/machine/package.json": {
+ "system/machine-ts/package.json": {
   "npm-scope": 1
  },
- "packages/machine/shell.dsc.winget": {
+ "system/machine-ts/shell.dsc.winget": {
   "checkout-path": 1
  },
- "packages/machine/shells/bash/bashrc": {
+ "system/machine-ts/shells/bash/bashrc": {
   "checkout-path": 2
  },
- "packages/machine/shells/bash/niubashrc": {
+ "system/machine-ts/shells/bash/niubashrc": {
   "checkout-path": 1
  },
- "packages/machine/shells/completions/ay.fish": {
+ "system/machine-ts/shells/completions/ay.fish": {
   "checkout-path": 1,
   "binary-call": 13
  },
- "packages/machine/shells/completions/ay.nu": {
+ "system/machine-ts/shells/completions/ay.nu": {
   "checkout-path": 1,
   "binary-call": 5
  },
- "packages/machine/shells/completions/ay.yaml": {
+ "system/machine-ts/shells/completions/ay.yaml": {
   "checkout-path": 1,
   "binary-call": 13
  },
- "packages/machine/shells/env.nu": {
+ "system/machine-ts/shells/env.nu": {
   "checkout-path": 1
  },
- "packages/machine/shells/env.ps1": {
+ "system/machine-ts/shells/env.ps1": {
   "checkout-path": 1
  },
- "packages/machine/shells/env.sh": {
+ "system/machine-ts/shells/env.sh": {
   "checkout-path": 1
  },
- "packages/machine/shells/env.toml": {
+ "system/machine-ts/shells/env.toml": {
   "checkout-path": 2,
   "binary-call": 1
  },
- "packages/machine/shells/pwsh/profile.ps1": {
+ "system/machine-ts/shells/pwsh/profile.ps1": {
   "checkout-path": 1
  },
- "packages/machine/src/apply-user.ts": {
+ "system/machine-ts/src/apply-user.ts": {
   "checkout-path": 1,
   "npm-scope": 3
  },
- "packages/machine/src/binpath.ts": {
+ "system/machine-ts/src/binpath.ts": {
   "checkout-path": 1,
   "crate-prefix": 2
  },
- "packages/machine/src/cli.ts": {
+ "system/machine-ts/src/cli.ts": {
   "binary-call": 1
  },
- "packages/machine/src/flatten-third-party.ts": {
+ "system/machine-ts/src/flatten-third-party.ts": {
   "binary-call": 1
  },
- "packages/machine/src/forks.ts": {
+ "system/machine-ts/src/forks.ts": {
   "product-name": 1,
   "binary-call": 3
  },
- "packages/machine/src/js-deps-check.ts": {
+ "system/machine-ts/src/js-deps-check.ts": {
   "binary-call": 1
  },
- "packages/machine/src/mcp-headers.ts": {
+ "system/machine-ts/src/mcp-headers.ts": {
   "npm-scope": 1
  },
- "packages/machine/src/shell-kit.ts": {
+ "system/machine-ts/src/shell-kit.ts": {
   "npm-scope": 1,
   "crate-prefix": 8
  },
- "packages/machine/src/toolchain.ts": {
+ "system/machine-ts/src/toolchain.ts": {
   "product-name": 2,
   "npm-scope": 1,
   "crate-prefix": 4,
   "binary-call": 2
  },
- "packages/machine/src/toolchains-lock.ts": {
+ "system/machine-ts/src/toolchains-lock.ts": {
   "binary-call": 2
  },
- "packages/machine/tests/shells.test.ts": {
+ "system/machine-ts/tests/shells.test.ts": {
   "npm-scope": 1
  },
- "packages/machine/wsl/wslconfig": {
+ "system/machine-ts/wsl/wslconfig": {
   "checkout-path": 2,
   "crate-prefix": 2
  },
- "packages/native/README.md": {
+ "system/native/README.md": {
   "npm-scope": 1
  },
- "packages/native/package.json": {
+ "system/native/package.json": {
   "npm-scope": 1
  },
- "packages/native/src/index.test.ts": {
+ "system/native/src/index.test.ts": {
   "npm-scope": 1
  },
- "packages/native/src/index.ts": {
+ "system/native/src/index.ts": {
   "env-prefix": 2
  },
- "packages/omniu/README.md": {
+ "system/omniu/README.md": {
   "npm-scope": 1,
   "binary-call": 1
  },
- "packages/omniu/envs/modern-cli.toml": {
+ "system/omniu/envs/modern-cli.toml": {
   "binary-call": 1
  },
- "packages/omniu/framework-plugins.toml": {
+ "system/omniu/framework-plugins.toml": {
   "product-name": 1
  },
- "packages/omniu/package.json": {
+ "system/omniu/package.json": {
   "npm-scope": 1
  },
- "packages/omniu/plugins/ay/ay.plugin.niu": {
+ "system/omniu/plugins/ay/ay.plugin.niu": {
   "binary-call": 2
  },
- "packages/omniu/plugins/ay/plugin.toml": {
+ "system/omniu/plugins/ay/plugin.toml": {
   "npm-scope": 1,
   "binary-call": 1
  },
- "packages/omniu/src/ay.ts": {
+ "system/omniu/src/ay.ts": {
   "product-name": 2,
   "binary-call": 4
  },
- "packages/omniu/src/validate.ts": {
+ "system/omniu/src/validate.ts": {
   "npm-scope": 1
  },
- "packages/omniu/test/ay.test.ts": {
+ "system/omniu/test/ay.test.ts": {
   "product-name": 5
  },
- "packages/omniu/test/fixtures/fake-ay.ts": {
+ "system/omniu/test/fixtures/fake-ay.ts": {
   "product-name": 1
  },
- "packages/py2bun/README.md": {
+ "system/py2bun-ts/README.md": {
   "npm-scope": 12
  },
- "packages/py2bun/package.json": {
+ "system/py2bun-ts/package.json": {
   "npm-scope": 2
  },
- "packages/py2bun/src/runtime/index.ts": {
+ "system/py2bun-ts/src/runtime/index.ts": {
   "npm-scope": 1
  },
- "packages/py2bun/test/wrapper.test.ts": {
+ "system/py2bun-ts/test/wrapper.test.ts": {
   "npm-scope": 1
  },
- "packages/py2bun/tests/test_py2bun.py": {
+ "system/py2bun-ts/tests/test_py2bun.py": {
   "npm-scope": 3
  },
- "packages/release/README.md": {
+ "system/release/README.md": {
   "npm-scope": 1,
   "binary-call": 1
  },
- "packages/release/package.json": {
+ "system/release/package.json": {
   "npm-scope": 1
  },
- "packages/release/release.just": {
+ "system/release/release.just": {
   "crate-prefix": 1
  },
- "packages/release/release.toml": {
+ "system/release/release.toml": {
   "product-name": 1,
   "crate-prefix": 2,
   "c-prefix": 2,
   "binary-call": 2
  },
- "packages/release/src/cli.ts": {
+ "system/release/src/cli.ts": {
   "npm-scope": 1,
   "crate-prefix": 6,
   "binary-call": 3
  },
- "packages/release/src/freeze.ts": {
+ "system/release/src/freeze.ts": {
   "binary-call": 4
  },
- "packages/release/src/npm.ts": {
+ "system/release/src/npm.ts": {
   "product-name": 1,
   "npm-scope": 4
  },
- "packages/release/src/plan.ts": {
+ "system/release/src/plan.ts": {
   "binary-call": 1
  },
- "packages/release/tests/plan.test.ts": {
+ "system/release/tests/plan.test.ts": {
   "product-name": 2,
   "crate-prefix": 4,
   "c-prefix": 2
  },
- "packages/upstream/README.md": {
+ "system/upstream/README.md": {
   "npm-scope": 1
  },
- "packages/upstream/package.json": {
+ "system/upstream/package.json": {
   "npm-scope": 1
  },
- "packages/upstream/src/cli.ts": {
+ "system/upstream/src/cli.ts": {
   "binary-call": 2
  },
- "packages/upstream/src/labs-arena/cli.ts": {
+ "system/upstream/src/labs-arena/cli.ts": {
   "checkout-path": 1
  },
- "packages/upstream/src/labs-arena/json-render-arena.ts": {
+ "system/upstream/src/labs-arena/json-render-arena.ts": {
   "checkout-path": 1
  },
- "packages/upstream/src/labs-arena/monorepo-build-arena.ts": {
+ "system/upstream/src/labs-arena/monorepo-build-arena.ts": {
   "checkout-path": 8,
   "product-name": 1
  },
- "packages/upstream/src/labs-arena/portless-router.ts": {
+ "system/upstream/src/labs-arena/portless-router.ts": {
   "checkout-path": 9,
   "product-name": 6
  },
- "packages/upstream/src/labs-arena/skills-compat.ts": {
+ "system/upstream/src/labs-arena/skills-compat.ts": {
   "checkout-path": 2
  },
- "packages/upstream/src/registry.ts": {
+ "system/upstream/src/registry.ts": {
   "binary-call": 1
  },
- "packages/upstream/src/stack.ts": {
+ "system/upstream/src/stack.ts": {
   "binary-call": 1
  },
- "packages/upstream/src/upstream-recon.ts": {
+ "system/upstream/src/upstream-recon.ts": {
   "crate-prefix": 1
  },
- "packages/upstream/tests/upstream.test.ts": {
+ "system/upstream/tests/upstream.test.ts": {
   "crate-prefix": 3
  },
  "packages/vault/README.md": {
@@ -2829,16 +2829,16 @@
  "packages/vault/tests/vault.test.ts": {
   "env-prefix": 1
  },
- "packages/wck/README.md": {
+ "system/wck/README.md": {
   "npm-scope": 1
  },
- "packages/wck/package.json": {
+ "system/wck/package.json": {
   "npm-scope": 1
  },
- "packages/wck/src/mwg-ffi.ts": {
+ "system/wck/src/mwg-ffi.ts": {
   "env-prefix": 1
  },
- "packages/wck/tests/mwg-rag.test.ts": {
+ "system/wck/tests/mwg-rag.test.ts": {
   "product-name": 2
  },
  "scripts/android-x64.ts": {

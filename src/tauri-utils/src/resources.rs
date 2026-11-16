@@ -470,7 +470,7 @@ mod tests {
         // `empty-directory` should not affect anything
         "../empty-directory".into(),
         "../src/script.js".into(),
-        "../src/assets".into(),
+        "assets".into(),
         "../src/index.html".into(),
         "../src/sounds".into(),
         // Should be the same as `../src/textures/` or `../src/textures`
@@ -487,7 +487,7 @@ mod tests {
     let expected = expected_resources(&[
       // From `../src/script.js`
       ("../src/script.js", "_up_/src/script.js"),
-      // From `../src/assets`
+      // From `assets`
       (
         "../src/assets/javascript.svg",
         "_up_/src/assets/javascript.svg",
@@ -537,7 +537,7 @@ mod tests {
 
     let patterns = [
       "../src/script.js".into(),
-      "../src/assets".into(),
+      "assets".into(),
       "../src/textures/**/*".into(),
       "*.toml".into(),
     ];
@@ -551,7 +551,7 @@ mod tests {
       resources.rerun_if_changed(),
       &[
         normalize(Path::new("../src/script.js")),
-        normalize(Path::new("../src/assets")),
+        normalize(Path::new("assets")),
         normalize(Path::new("../src/textures")),
         PathBuf::from("."),
       ]
@@ -569,7 +569,7 @@ mod tests {
     let resources = ResourcePaths::new(
       &[
         "../src/script.js".into(),
-        "../src/assets".into(),
+        "assets".into(),
         "../src/index.html".into(),
         "../src/sounds".into(),
         "*.toml".into(),
@@ -608,7 +608,7 @@ mod tests {
     let resources = ResourcePaths::from_map(
       &resources_map(&[
         ("../src/script.js", "main.js"),
-        ("../src/assets", ""),
+        ("assets", ""),
         ("../src/index.html", "frontend/index.html"),
         ("../src/sounds", "voices"),
         ("../src/textures/*", "textures"),
@@ -669,7 +669,7 @@ mod tests {
     let resources = ResourcePaths::from_map(
       &resources_map(&[
         ("../src/script.js", "main.js"),
-        ("../src/assets", ""),
+        ("assets", ""),
         ("../src/index.html", "frontend/index.html"),
         ("../src/sounds", "voices"),
         ("*.toml", ""),
@@ -709,7 +709,7 @@ mod tests {
     let resources = ResourcePaths::new(
       &[
         "../src/script.js".into(),
-        "../src/assets".into(),
+        "assets".into(),
         "../src/textures/**/*".into(),
         "*.toml".into(),
         "some-folder".into(),
@@ -772,7 +772,7 @@ mod tests {
     let resources = ResourcePaths::from_map(
       &resources_map(&[
         ("../src/script.js", "main.js"),
-        ("../src/assets", ""),
+        ("assets", ""),
         ("../src/sounds", "voices"),
         ("../src/textures/*", "textures"),
         ("*.conf.json", "json"),
@@ -832,7 +832,7 @@ mod tests {
         ("../non-existent-file", "file"),
         ("../non-existent-dir", "dir"),
         // exists but not allowed to walk
-        ("../src", "dir2"),
+        (".", "dir2"),
         // doesn't exist but it is a glob and will return an error
         ("../non-existent-glob-dir/*", "glob"),
         // exists but only contains directories and will not produce any values

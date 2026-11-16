@@ -2888,7 +2888,7 @@ pub fn __runtime_embed_load(kind: EmbedKind, sub: &'static str) -> String {
 /// `Src` paths are relative to `<repo>/src/`; `Codegen` paths are relative
 /// to `BUN_CODEGEN_DIR`. The embed arm resolves both via the *call-site
 /// crate's* `CARGO_MANIFEST_DIR` / `BUN_CODEGEN_DIR` (every workspace crate
-/// lives at `src/<crate>/`, so `../../src/` is the repo `src/`;
+/// lives at `src/<crate>/`, so `../` is the repo `src/`;
 /// `BUN_CODEGEN_DIR` is exported to every rustc by `scripts/build/rust.ts`
 /// whenever `bun_codegen_embed` is set).
 #[macro_export]
@@ -2918,7 +2918,7 @@ macro_rules! __runtime_embed_impl {
             #[cfg(bun_codegen_embed)]
             {
                 // Every workspace crate's manifest is at `<repo>/src/<crate>/`,
-                // so `../../src/` is `<repo>/src/` regardless of call site.
+                // so `../` is `<repo>/src/` regardless of call site.
                 ::core::include_str!(::core::concat!(
                     ::core::env!("CARGO_MANIFEST_DIR"), "/../../src/", $sub
                 ))

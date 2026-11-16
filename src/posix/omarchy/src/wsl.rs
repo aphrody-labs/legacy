@@ -8,7 +8,7 @@ use thiserror::Error;
 use crate::cachyos::{CachyOsConfigGenerator, SystemHardwareProfile};
 
 // Single source of truth: device/os/wsl. The builder re-emits these files (optionally re-parameterized).
-const WSLCONFIG: &str = include_str!("../../../../packages/machine/wsl/wslconfig");
+const WSLCONFIG: &str = include_str!("../../../../system/machine-ts/wsl/wslconfig");
 const WSLC_SETTINGS: &str = include_str!("../../../../device/os/wsl/wslc-settings.yaml");
 const WSL_CONF: &str = include_str!("../../../../device/os/wsl/rootfs/etc/wsl.conf");
 const WSL_DISTRIBUTION_CONF: &str =

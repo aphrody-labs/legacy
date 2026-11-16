@@ -17,7 +17,7 @@ import {
 } from "@auto/store";
 import { entreprise } from "@auto/tenancy";
 import type { BunRequest } from "bun";
-import { origineApp, type Chemins, type Module } from "../modules";
+import { origineApp, type Chemins, type Module } from ".";
 import { avecId, brut, cents, objet, op, str } from "../openapi-outils";
 
 const PAYABLE = ["emis", "envoye", "depose"];

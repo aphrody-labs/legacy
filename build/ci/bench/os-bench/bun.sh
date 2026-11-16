@@ -1,5 +1,5 @@
 #!/bin/sh
-# Workload 3: bun install (warm cache, frozen lockfile) + bun build --compile of packages/bunify. Same bun binary (1.4.4) on every distro (musl build on Alpine).
+# Workload 3: bun install (warm cache, frozen lockfile) + bun build --compile of system/bunify. Same bun binary (1.4.4) on every distro (musl build on Alpine).
 export PATH=/bunbin:$PATH BUN_INSTALL_CACHE_DIR=/work/.bun-cache
 case $1 in
 prep) rm -rf /work/bunify; mkdir -p /work; cp -r /src-ro/bunify /work/bunify ;;

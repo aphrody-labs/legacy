@@ -1556,7 +1556,7 @@ pub mod ssl_wrapper {
 // ═══════════════════════════════════════════════════════════════════════════
 // Loop / InternalLoopData
 // ═══════════════════════════════════════════════════════════════════════════
-// Mirrors `struct us_internal_loop_data_t` (packages/bun-usockets/src/internal/
+// Mirrors `struct us_internal_loop_data_t` (system/bun-usockets/src/internal/
 // loop_data.h) and `struct us_loop_t` (epoll_kqueue.h / libuv.h). Re-exported
 // from bun_uws_sys so `bun_uws::Loop` and `bun_uws_sys::Loop` are the same
 // type (bun_io's EventLoopCtxVTable is typed against the uws_sys version).

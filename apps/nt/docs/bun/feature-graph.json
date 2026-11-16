@@ -56637,7 +56637,7 @@
    "kind": "vendor",
    "label": "bun-usockets",
    "paths": [
-    "packages/bun-usockets"
+    "system/bun-usockets"
    ]
   },
   {

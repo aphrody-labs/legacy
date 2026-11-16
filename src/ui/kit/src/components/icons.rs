@@ -8,7 +8,7 @@
 pub use crate::components::facade::icons::{IconSpec, Variation};
 pub use crate::components::facade::platform::IconStyle;
 
-include!(concat!(env!("SRC_ROOT"), "/packages/design/tokens/symbols.rs"));
+include!(concat!(env!("SRC_ROOT"), "/frameworks/design/tokens/symbols.rs"));
 
 /// Return a compile-time checked outlined icon spec for a [`Symbol`].
 #[must_use]

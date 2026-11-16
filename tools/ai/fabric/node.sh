@@ -1,7 +1,7 @@
 #!/bin/sh
 # Inference fabric compute node (Linux): official llama.cpp ggml-rpc-server, bound to a
 # WireGuard address, in a capped transient systemd unit, removed on its own when its admission condition drops.
-# Installed and driven by packages/ai-os/src/fabric (`ai-os fabric up|status|down`), never by hand:
+# Installed and driven by frameworks/ai-os/src/fabric (`ai-os fabric up|status|down`), never by hand:
 #   env TAG= ASSET= SHA= BIND= PORT= THREADS= CPU= MEM= GATE= LOCK= PRIO= WATCH= COORD= sh node.sh <action>
 # Actions: gate (code 0 = admitted, otherwise reason on stdout), up, down, status (one JSON line), watch (unit),
 #   warm (MODEL_URL MODEL_SHA MODEL_FILE): GGUF pulled at data-center speed, verified, then loaded once

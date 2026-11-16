@@ -1,4 +1,4 @@
-//! File reads for the native CA loaders in `packages/bun-usockets/src/crypto/root_certs*.cpp`, which keep to the
+//! File reads for the native CA loaders in `system/bun-usockets/src/crypto/root_certs*.cpp`, which keep to the
 //! BoringSSL side (PEM, X509) and take bytes from here rather than opening files themselves.
 
 use core::ffi::{c_char, c_int, c_void};

@@ -184,7 +184,7 @@ try {
     apiCandidat,
     "bun",
     "-e",
-    "import {creerDocx,remplacerDocx,texteDocx} from './packages/native/src/index.ts';const b=remplacerDocx(creerDocx({paragraphes:[{texte:'Élodie'}]}),[{chercher:'Élodie',remplacer:'François'}]);if(!texteDocx(b).includes('François'))throw Error('FFI invalide');console.log('FFI qualifiée')",
+    "import {creerDocx,remplacerDocx,texteDocx} from './system/native/src/index.ts';const b=remplacerDocx(creerDocx({paragraphes:[{texte:'Élodie'}]}),[{chercher:'Élodie',remplacer:'François'}]);if(!texteDocx(b).includes('François'))throw Error('FFI invalide');console.log('FFI qualifiée')",
   ]);
   await commande([
     "docker",

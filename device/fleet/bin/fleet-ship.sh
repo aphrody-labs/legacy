@@ -1,15 +1,15 @@
 #!/bin/bash
 # Ship device/fleet of the committed HEAD to a host and apply the offload layer, with site tokens rendered (run from the workstation).
 #   fleet-ship.sh <role>        role = fr1|fr2   (the role is a Host alias of ~/.ssh/config)
-# Files carry @@role.key@@ tokens instead of addresses (packages/env-kit/loaders/shell/site.sh); they are rendered here, never on the host
+# Files carry @@role.key@@ tokens instead of addresses (system/env-kit/loaders/shell/site.sh); they are rendered here, never on the host
 # from the repo, and nothing rendered is committed. A host checkout is not used: it may hold local changes.
 set -e
 role=${1:?role fr1|fr2}
 root=$(git rev-parse --show-toplevel)
-. "$root/packages/env-kit/loaders/shell/site.sh"
+. "$root/system/env-kit/loaders/shell/site.sh"
 alias=$(site_ssh "$role")
 tmp=$(mktemp -d)
-git -C "$root" archive HEAD device/fleet packages/env-kit/loaders/shell/site.sh tools/identity.toml -o "$tmp/a.tar"
+git -C "$root" archive HEAD device/fleet system/env-kit/loaders/shell/site.sh tools/identity.toml -o "$tmp/a.tar"
 tar -xf "$tmp/a.tar" -C "$tmp"
 rg -l '@@[A-Za-z0-9_.]+@@' "$tmp" > "$tmp.list" || true
 for f in $(cat "$tmp.list"); do site_render "$f" > "$f.r" && mv "$f.r" "$f"; done

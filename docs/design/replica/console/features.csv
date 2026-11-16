@@ -23,7 +23,7 @@ Clock and month calendar,widgets,could,yes,no,S19
 Launcher card grid with bracket selection,home,could,yes,no,S20
 Local chat rooms with whiteboard,social,could,yes,no,S21 companion party chat
 Nearby host list,social,could,yes,no,S22
-Theme and color schemes,theming,should,yes,no,tokens from packages/design
+Theme and color schemes,theming,should,yes,no,tokens from frameworks/design
 HDR and frame pacing of the shell,render,should,yes,no,hdr.rs pacing.rs
 Companion app home mirroring console state,companion,should,yes,no,apps/aphrody-app
 Companion remote controller pad,companion,could,yes,no,

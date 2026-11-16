@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM"],
+    "types": ["bun"],
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@gcloud-learn/core": ["./system/core-ts/src/index.ts"],
+      "@gcloud-learn/rag": ["./packages/rag/src/index.ts"],
+      "@gcloud-learn/larry-soul": ["./packages/larry-soul/src/index.ts"],
+      "@gcloud-learn/finops": ["./packages/finops/src/index.ts"],
+      "@gcloud-learn/seo-llms": ["./packages/seo-llms/src/index.ts"],
+      "@gcloud-learn/browser-studio": ["./packages/browser-studio/src/index.ts"]
+    }
+  },
+  "include": [
+    "apps/**/*.ts",
+    "packages/**/*.ts",
+    "plugins/**/*.ts",
+    "tests/**/*.ts"
+  ]
+}

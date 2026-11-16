@@ -4,7 +4,7 @@
  *
  * Implements:
  *   1. Exact Aphrody M3 ColorScheme lookup (Light + Dark, seed #135B82, MCU 0.4.0 vibrant)
- *      matching `packages/design/tokens/tokens.json`, `Theme.kt`, `aphrody_theme.dart`, and `tokens.rs`.
+ *      matching `frameworks/design/tokens/tokens.json`, `Theme.kt`, `aphrody_theme.dart`, and `tokens.rs`.
  *   2. Material 3 Expressive Spring Physics (`androidx` Compose Material3 v0_14_0 spatial & effects
  *      springs: semi-implicit Euler + analytical harmonic damping, 120Hz/240Hz frame-rate independent).
  *   3. Adaptive Window Size Classes (`compact`, `medium`, `expanded`, `large`, `extra-large`) and

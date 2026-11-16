@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Native reader/writer for the agent Context store (same SQLite schema as packages/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python."
+description = "Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python."
 
 [lib]
 # The crate and the Python module share one name: maturin loads `PyInit_agent_core` from this cdylib.

@@ -13,7 +13,7 @@ The games app is a [Bevy](https://github.com/bevyengine/bevy) fork integrated wi
 | Area | Where |
 | --- | --- |
 | Bevy vertical slice (terrain, controller, day/night, audio) | [`src/game`](../../src/game) |
-| Steam client, web API and content CDN tooling | [`src/steam`](../../src/steam) (`ay steam`), [`packages/gaming`](../../packages/gaming) (`ay gaming`) |
+| Steam client, web API and content CDN tooling | [`src/steam`](../../src/steam) (`ay steam`), [`frameworks/gaming`](../../frameworks/gaming) (`ay gaming`) |
 | Format layer from the Craft libraries | [`src/craft`](../../src/craft) |
 | UI tokens and Bevy layout adapter | [`src/ui/kit`](../../src/ui/kit), feature `bevy` |
 | Asset validators | [`test/assets`](../../test/assets) |

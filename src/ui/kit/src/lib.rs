@@ -9,7 +9,7 @@
 //! - [`shared`]: theme presets and manifest types shared by the hosts.
 //! - [`react`], [`next`]: React/Next.js analysis and migration front ends.
 //!
-//! Colors come from `packages/design` (Material Color Utilities from packages/design/design.toml);
+//! Colors come from `frameworks/design` (Material Color Utilities from frameworks/design/design.toml);
 //!.
 #![allow(clippy::struct_excessive_bools, clippy::doc_markdown, clippy::too_many_lines)]
 

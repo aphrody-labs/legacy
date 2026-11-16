@@ -12,8 +12,8 @@
 //   statements that rot (https://developers.google.com/style/timeless-documentation).
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { sensitiveValues } from "../packages/env-kit/src/discover.ts";
-import { isNonSourceProse, sourceLanguage } from "../packages/i18n/src/detect.ts";
+import { sensitiveValues } from "../system/env-kit/src/discover.ts";
+import { isNonSourceProse, sourceLanguage } from "../frameworks/i18n-ts/src/detect.ts";
 import { findRoot, loadIdentity } from "./identity.ts";
 import { classes, dataPattern, namesOf, trackedSkip } from "./identity-literals.ts";
 import { CODE_FACTS, factsOf, innerText, segmentLines, type FileFacts } from "./ay-facts.ts";
@@ -95,7 +95,7 @@ const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, (c) => "\\" + c);
 let siteRe: RegExp | null | undefined;
 /**
  * Values the discovery cache last saw (owner identity, Windows user and home, host names and addresses; see
- * packages/env-kit/src/discover.ts): the list lives in ~/.cache/aphrody, never in the repository. A host's /24 covers
+ * system/env-kit/src/discover.ts): the list lives in ~/.cache/aphrody, never in the repository. A host's /24 covers
  * its whole mesh. An all-caps machine name is also a brand word, so it matches in hostname contexts only.
  */
 function sitePattern(): RegExp | null {
@@ -282,7 +282,7 @@ const IDENTITY = (() => {
 export const RULES: Rule[] = [
   {
     id: "non-english",
-    why: "Source is English (the sourceLocale of packages/i18n/i18n.config.json); user-facing text goes through i18n catalogues and nothing else is written in another language (language detector: eld)",
+    why: "Source is English (the sourceLocale of frameworks/i18n-ts/i18n.config.json); user-facing text goes through i18n catalogues and nothing else is written in another language (language detector: eld)",
     files: (f) => (CODE.test(f) || DOC.test(f)) && !LOCALE_FILE.test(f),
     line: (l, f) => isNonSourceProse(l, CODE.test(f), SOURCE_LANG),
     scope: "text",
@@ -390,7 +390,7 @@ export const RULES: Rule[] = [
   },
   {
     id: "personal-data",
-    why: "Personal or site-specific value (identity, account, host, address, user path); resolve it at run time (packages/env-kit/src/discover.ts, loaders/shell/discover.sh) and name roles in prose. The rule also flags every value the discovery cache holds; it skips that part when the cache is absent (CI)",
+    why: "Personal or site-specific value (identity, account, host, address, user path); resolve it at run time (system/env-kit/src/discover.ts, loaders/shell/discover.sh) and name roles in prose. The rule also flags every value the discovery cache holds; it skips that part when the cache is absent (CI)",
     files: (f) => !MANIFEST.test(f) && !/(^|\/)site\.example\.toml$/.test(f) && !/\.test\.|(^|\/)(tests?|e2e|fixtures?)\/|cloudflare|^src\/|^docs\/proofs\/|^\.agents\/skills\//i.test(f) && !/\.(png|jpg|svg|wasm|woff2?|ico|pdf|lock|der)$/.test(f),
     line: (l) => personalData(l),
     scope: "strings",

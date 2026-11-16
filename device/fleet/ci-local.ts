@@ -26,7 +26,7 @@ const J: Job[] = [
     group: "gates",
     cmd: "AGENTS_HOME=var/ci-local/agents bun --no-env-file tools/agents/runner.ts status && AGENTS_HOME=var/ci-local/agents bun --no-env-file test tools/agents",
   },
-  { name: "js-deps", group: "gates", cmd: "bun packages/machine/src/js-deps-check.ts" },
+  { name: "js-deps", group: "gates", cmd: "bun system/machine-ts/src/js-deps-check.ts" },
   {
     name: "metadata",
     group: "gates",
@@ -36,22 +36,22 @@ const J: Job[] = [
   {
     name: "version-freeze",
     group: "gates",
-    cmd: "bun packages/release/src/cli.ts freeze --check",
+    cmd: "bun system/release/src/cli.ts freeze --check",
   },
   {
     name: "bun-env-kit",
     group: "suites",
-    cmd: "bun --no-env-file test packages/env-kit",
+    cmd: "bun --no-env-file test system/env-kit",
   },
   {
     name: "bun-upstream",
     group: "suites",
-    cmd: "bun --no-env-file test packages/upstream",
+    cmd: "bun --no-env-file test system/upstream",
   },
   {
     name: "bun-ai-os",
     group: "suites",
-    cmd: "cd packages/ai-os && bun --no-env-file test test",
+    cmd: "cd frameworks/ai-os && bun --no-env-file test test",
   },
   {
     name: "bun-browser-engines",
@@ -61,7 +61,7 @@ const J: Job[] = [
   {
     name: "bun-design",
     group: "suites",
-    cmd: "bun --no-env-file --cwd packages/design test && bun --no-env-file run --cwd packages/design lint",
+    cmd: "bun --no-env-file --cwd frameworks/design test && bun --no-env-file run --cwd frameworks/design lint",
   },
   {
     name: "rust",
@@ -79,7 +79,7 @@ const J: Job[] = [
     name: "tokens",
     group: "tokens",
     cargo: true,
-    cmd: `CARGO_MANIFEST_DIR="$PWD/apps/nt/sdk/rust/brand" ${heavy}rustc --edition 2024 --test -D warnings -o var/ci-local/nt-brand-test apps/nt/sdk/rust/brand/src/lib.rs && var/ci-local/nt-brand-test && ${heavy}zig test packages/design/tokens/tokens_test.zig`,
+    cmd: `CARGO_MANIFEST_DIR="$PWD/apps/nt/sdk/rust/brand" ${heavy}rustc --edition 2024 --test -D warnings -o var/ci-local/nt-brand-test apps/nt/sdk/rust/brand/src/lib.rs && var/ci-local/nt-brand-test && ${heavy}zig test frameworks/design/tokens/tokens_test.zig`,
   },
 ];
 

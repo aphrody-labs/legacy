@@ -348,7 +348,7 @@ pub fn normalize_idle_timeout_seconds(raw: u64) -> c_uint {
     if raw == 0 {
         return 0;
     }
-    /// `LIBUS_TIMEOUT_GRANULARITY` (packages/bun-usockets/src/libusockets.h).
+    /// `LIBUS_TIMEOUT_GRANULARITY` (system/bun-usockets/src/libusockets.h).
     const SHORT_WHEEL_PERIOD_SECONDS: u64 = 4;
     const LONG_WHEEL_PERIOD_SECONDS: u64 = 60;
     /// `SocketTimeout::set_timeout` routes values above this to the long wheel.
@@ -1514,7 +1514,7 @@ fn write_to_socket_with_buffer_fallback<const IS_SSL: bool>(
 // ────────────────────────────────────────────────────────────────────────
 
 /// The `error` uSockets reports for a handshake that failed for a reason other
-/// than the certificate (`packages/bun-usockets/src/crypto/openssl.c`) when the
+/// than the certificate (`system/bun-usockets/src/crypto/openssl.c`) when the
 /// peer went away. The other one, -71, is a fatal protocol error such as a peer
 /// that does not speak TLS. Certificate problems are the positive `X509_V_ERR_*`.
 const US_HANDSHAKE_ECONNRESET: i32 = uws::us_bun_verify_error_t::PEER_DISCONNECTED;

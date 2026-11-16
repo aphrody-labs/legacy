@@ -16,7 +16,7 @@ pub const NOW_NS_UNKNOWN: u64 = 0;
 
 // ───────────────────────────── PosixLoop ─────────────────────────────
 
-// Mirrors C `struct us_loop_t` (packages/bun-usockets/src/internal/eventing/
+// Mirrors C `struct us_loop_t` (system/bun-usockets/src/internal/eventing/
 // epoll_kqueue.h). The C struct has `alignas(LIBUS_EXT_ALIGNMENT /* 16 */)` on
 // both `data` and `ready_polls`; Rust cannot align individual fields, so the
 // struct head gets `#[repr(C, align(16))]` and `ready_polls` is preceded by a
