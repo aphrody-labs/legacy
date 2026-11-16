@@ -4,7 +4,7 @@
     {
       "id": "crate",
       "name": "Rust crate",
-      "description": "A member of the Cargo workspace (src/*)",
+      "description": "A member of the Cargo workspace (frameworks/*, system/*, hardware/*)",
       "entries": [
         {
           "name": "aphrody-game",

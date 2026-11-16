@@ -21,7 +21,7 @@ The global types of the monorepo, listed from its manifests.
 
 | Type | Path | Description |
 | :-- | :-- | :-- |
-| [Rust crate](docs/reference/catalog/crate.md) | `frameworks/`, `system/`, `hardware/` | A member of the Cargo workspace (src/*) |
+| [Rust crate](docs/reference/catalog/crate.md) | `frameworks/`, `system/`, `hardware/` | A member of the Cargo workspace (frameworks/*, system/*, hardware/*) |
 | [Bun package](docs/reference/catalog/package.md) | `frameworks/`, `system/`, `hardware/` | A Bun workspace package (@aphrody/*) |
 | [App](docs/reference/catalog/app.md) | `apps/` | An application or site (apps/*) |
 | [Infrastructure](docs/reference/catalog/infra.md) | `build/`, `device/`, `prebuilts/` | Fleet, deploy and CI configuration (build/*, device/*, prebuilts/*) |

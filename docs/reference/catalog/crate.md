@@ -1,6 +1,6 @@
 # Rust crate
 
-A member of the Cargo workspace (src/*)
+A member of the Cargo workspace (frameworks/*, system/*, hardware/*)
 
 | Name | Description |
 | :-- | :-- |
