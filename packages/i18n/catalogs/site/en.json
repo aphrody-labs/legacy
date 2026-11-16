@@ -26,5 +26,9 @@
   "footer": "Built in the open on GitHub.",
   "catalog_title": "Catalog",
   "catalog_intro": "Everything in the repository, listed from its manifests.",
-  "catalog_entries": "Show the list"
+  "catalog_entries": "Show the list",
+  "automations_title": "Automations",
+  "automations_intro": "Ready-made workflows from the automation library that powers the apps, the command line and the terminal UI.",
+  "automations_nodes": "Nodes",
+  "automations_categories": "Categories"
 }

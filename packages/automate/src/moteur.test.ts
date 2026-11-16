@@ -1,7 +1,16 @@
 import { describe, expect, test } from "bun:test";
-import { catalogueJson, executer, MODELES, resoudre, valider, type Services } from "./index";
+import {
+  catalogueJson,
+  executer,
+  MODELES,
+  resoudre,
+  valider,
+  type Services,
+} from "./index";
 
-const services = (reponses: Record<string, unknown> = {}): Services & { appels: unknown[] } => {
+const services = (
+  reponses: Record<string, unknown> = {},
+): Services & { appels: unknown[] } => {
   const appels: unknown[] = [];
   return {
     appels,
@@ -15,13 +24,30 @@ const services = (reponses: Record<string, unknown> = {}): Services & { appels: 
         return {
           statut: 200,
           corps: [
-            { numero: "F-1", client: { nom: "A" }, resteCents: 12000, joursRetard: 3 },
-            { numero: "F-2", client: { nom: "B" }, resteCents: 5050, joursRetard: 40 },
+            {
+              numero: "F-1",
+              client: { nom: "A" },
+              resteCents: 12000,
+              joursRetard: 3,
+            },
+            {
+              numero: "F-2",
+              client: { nom: "B" },
+              resteCents: 5050,
+              joursRetard: 40,
+            },
           ],
         };
       return {
         statut: 200,
-        corps: { id: "x", numero: "F-9", data: { client: { nom: "Zoé", email: "z@ex.fr" }, emetteur: { nom: "Moi" } } },
+        corps: {
+          id: "x",
+          numero: "F-9",
+          data: {
+            client: { nom: "Zoé", email: "z@ex.fr" },
+            emetteur: { nom: "Moi" },
+          },
+        },
       };
     },
     async envoyerMail(m) {
@@ -53,7 +79,9 @@ describe("expressions", () => {
     expect(resoudre("{{ $json.absent | defaut:'?' }}", p)).toBe("?");
     expect(resoudre("{{ 1234 | centimes }}", p)).toMatch(/12,34\s€/);
     expect(() => resoudre("{{ process.env }}", p)).toThrow();
-    expect(() => resoudre("{{ $json.a | inconnu }}", p)).toThrow("unknown filter");
+    expect(() => resoudre("{{ $json.a | inconnu }}", p)).toThrow(
+      "unknown filter",
+    );
   });
 });
 
@@ -68,7 +96,9 @@ describe("validation", () => {
       nom: id,
       parametres: type === "donnees.limiter" ? { max: 1 } : {},
     });
-    expect(() => valider({ noeuds: [n("a"), n("b")], connexions: [] })).toThrow();
+    expect(() =>
+      valider({ noeuds: [n("a"), n("b")], connexions: [] }),
+    ).toThrow();
     expect(() =>
       valider({
         noeuds: [n("t", "declencheur.manuel"), n("a"), n("b")],
@@ -79,12 +109,19 @@ describe("validation", () => {
         ],
       }),
     ).toThrow();
-    expect(() => valider({ noeuds: [n("t", "declencheur.manuel"), n("a", "x.y")], connexions: [] })).toThrow();
+    expect(() =>
+      valider({
+        noeuds: [n("t", "declencheur.manuel"), n("a", "x.y")],
+        connexions: [],
+      }),
+    ).toThrow();
   });
   test("catalogue en JSON Schema", () => {
     const c = catalogueJson();
     expect(c.length).toBeGreaterThan(15);
-    expect(c.find((x) => x.type === "reseau.http")!.parametres).toHaveProperty("properties.url");
+    expect(c.find((x) => x.type === "reseau.http")!.parametres).toHaveProperty(
+      "properties.url",
+    );
   });
 });
 
@@ -94,7 +131,11 @@ describe("execution", () => {
     const evt = {
       id: "1",
       type: "document.emis",
-      data: { numero: "F-7", data: { type: "facture", client: { nom: "Zoé" } }, totaux: { ttcCents: 12000 } },
+      data: {
+        numero: "F-7",
+        data: { type: "facture", client: { nom: "Zoé" } },
+        totaux: { ttcCents: 12000 },
+      },
     };
     const r = await executer(
       valider(MODELES[0]!.definition),
@@ -102,21 +143,37 @@ describe("execution", () => {
       opts(s, { slack_ventes: "https://hooks.slack.test/x" }),
     );
     expect(r.statut).toBe("succes");
-    expect(r.etapes.map((e) => e.noeud)).toEqual(["declencheur", "facture", "slack"]);
-    expect(JSON.parse(String((s.appels[0] as { corps: string }).corps)).text).toMatch(/F-7.*Zoé.*120,00/);
+    expect(r.etapes.map((e) => e.noeud)).toEqual([
+      "declencheur",
+      "facture",
+      "slack",
+    ]);
+    expect(
+      JSON.parse(String((s.appels[0] as { corps: string }).corps)).text,
+    ).toMatch(/F-7.*Zoé.*120,00/);
     const devis = await executer(
       valider(MODELES[0]!.definition),
       [{ json: { ...evt, data: { ...evt.data, data: { type: "devis" } } } }],
       opts(s),
     );
-    expect(devis.etapes.map((e) => e.noeud)).toEqual(["declencheur", "facture"]);
+    expect(devis.etapes.map((e) => e.noeud)).toEqual([
+      "declencheur",
+      "facture",
+    ]);
   });
   test("summary: split, sort, group, mail", async () => {
     const s = services();
-    const r = await executer(valider(MODELES[2]!.definition), [], opts(s, { mail_gerant: "g@ex.fr" }));
+    const r = await executer(
+      valider(MODELES[2]!.definition),
+      [],
+      opts(s, { mail_gerant: "g@ex.fr" }),
+    );
     expect(r.statut).toBe("succes");
-    const mail = (s.appels.find((a) => (a as { mail?: unknown }).mail) as { mail: { texte: string; sujet: string } })
-      .mail;
+    const mail = (
+      s.appels.find((a) => (a as { mail?: unknown }).mail) as {
+        mail: { texte: string; sujet: string };
+      }
+    ).mail;
     expect(mail.sujet).toBe("2 factures en retard");
     expect(mail.texte.split("\n")[0]).toStartWith("F-2");
   });
@@ -124,36 +181,63 @@ describe("execution", () => {
     const d = {
       noeuds: [
         { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
-        { id: "x", type: "logique.arreter", nom: "x", parametres: { message: "stop" } },
+        {
+          id: "x",
+          type: "logique.arreter",
+          nom: "x",
+          parametres: { message: "stop" },
+        },
       ],
       connexions: [{ de: "t", vers: "x" }],
     };
     const r = await executer(valider(d), [{ json: {} }], opts(services()));
-    expect(r).toMatchObject({ statut: "erreur", erreur: { noeud: "x", message: "stop" } });
+    expect(r).toMatchObject({
+      statut: "erreur",
+      erreur: { noeud: "x", message: "stop" },
+    });
     d.noeuds[1] = { ...d.noeuds[1]!, continuerSurErreur: true } as never;
-    const r2 = await executer(valider(d), [{ json: { a: 1 } }], opts(services()));
+    const r2 = await executer(
+      valider(d),
+      [{ json: { a: 1 } }],
+      opts(services()),
+    );
     expect(r2.statut).toBe("succes");
     expect(r2.sortie[0]!.json).toEqual({ a: 1, erreur: "stop" });
   });
   test("AI switch: output by category", async () => {
     const s = services({
       "http://localhost:11434/v1/chat/completions": {
-        choices: [{ message: { content: '{"categorie":"support","resume":"panne"}' } }],
+        choices: [
+          { message: { content: '{"categorie":"support","resume":"panne"}' } },
+        ],
       },
     });
     const r = await executer(
       valider(MODELES[5]!.definition),
       [{ json: { corps: { message: "ça marche pas" } } }],
-      opts(s, { slack_support: "https://hooks.slack.test/s", slack_ventes: "https://hooks.slack.test/v" }),
+      opts(s, {
+        slack_support: "https://hooks.slack.test/s",
+        slack_ventes: "https://hooks.slack.test/v",
+      }),
     );
     expect(r.statut).toBe("succes");
-    expect(r.etapes.map((e) => e.noeud)).toEqual(["declencheur", "ia", "aiguillage", "support"]);
+    expect(r.etapes.map((e) => e.noeud)).toEqual([
+      "declencheur",
+      "ia",
+      "aiguillage",
+      "support",
+    ]);
   });
   test("maximum duration", async () => {
     const d = valider({
       noeuds: [
         { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
-        { id: "w", type: "logique.attendre", nom: "w", parametres: { secondes: 5 } },
+        {
+          id: "w",
+          type: "logique.attendre",
+          nom: "w",
+          parametres: { secondes: 5 },
+        },
       ],
       connexions: [{ de: "t", vers: "w" }],
     });
@@ -174,7 +258,11 @@ describe("web natif", () => {
         { nom: "absent", selecteur: "table", attribut: "", tous: false },
       ]),
     ).toEqual({ titre: "Prix du jour", liens: ["/a", "/b"], absent: null });
-    expect(lireFlux(`<rss><channel><item><title>Solo</title><link>http://s</link></item></channel></rss>`)).toEqual([
+    expect(
+      lireFlux(
+        `<rss><channel><item><title>Solo</title><link>http://s</link></item></channel></rss>`,
+      ),
+    ).toEqual([
       { titre: "Solo", lien: "http://s", date: "", resume: "", id: "http://s" },
     ]);
     const atom = lireFlux(
@@ -214,19 +302,42 @@ describe("PDF and Word files", () => {
         enPdf: (docx) => enc(`%PDF-${dec(docx)}`),
       },
     };
-    const pdf = (nom: string) => ({ nom, type: "application/pdf", base64: b64(`%PDF-${nom}`) });
+    const pdf = (nom: string) => ({
+      nom,
+      type: "application/pdf",
+      base64: b64(`%PDF-${nom}`),
+    });
     const d = valider({
       noeuds: [
         { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
-        { id: "f", type: "fichier.pdf_fusionner", nom: "f", parametres: { nom: "dossier" } },
-        { id: "p", type: "fichier.pdf_pages", nom: "p", parametres: { fichier: "{{ $json.fichier }}", pages: "2-" } },
-        { id: "x", type: "fichier.pdf_texte", nom: "x", parametres: { fichier: "{{ $json.fichier }}" } },
+        {
+          id: "f",
+          type: "fichier.pdf_fusionner",
+          nom: "f",
+          parametres: { nom: "dossier" },
+        },
+        {
+          id: "p",
+          type: "fichier.pdf_pages",
+          nom: "p",
+          parametres: { fichier: "{{ $json.fichier }}", pages: "2-" },
+        },
+        {
+          id: "x",
+          type: "fichier.pdf_texte",
+          nom: "x",
+          parametres: { fichier: "{{ $json.fichier }}" },
+        },
         {
           id: "w",
           type: "fichier.document",
           nom: "w",
           parametres: {
-            gabarit: { nom: "g.docx", type: "application/octet-stream", base64: b64("PK") },
+            gabarit: {
+              nom: "g.docx",
+              type: "application/octet-stream",
+              base64: b64("PK"),
+            },
             champs: [{ nom: "numero", valeur: "{{ $json.pages }}" }],
             format: "docx_pdf",
           },
@@ -239,16 +350,29 @@ describe("PDF and Word files", () => {
         { de: "x", vers: "w" },
       ],
     });
-    const r = await executer(d, [{ json: { fichier: pdf("a.pdf") } }, { json: { fichier: pdf("b.pdf") } }], opts(s));
+    const r = await executer(
+      d,
+      [
+        { json: { fichier: pdf("a.pdf") } },
+        { json: { fichier: pdf("b.pdf") } },
+      ],
+      opts(s),
+    );
     expect(r.statut).toBe("succes");
     const [el] = r.sortie as { json: Record<string, any> }[];
     expect(el!.json.texte).toBe("%PDF-a.pdf+b.pdf[2,3,4]\n\nfin");
     expect(el!.json.pages).toBe(2);
     expect(el!.json.manquants).toEqual(["client.nom", "absent"]);
-    expect(dec(Uint8Array.fromBase64(el!.json.fichier.base64))).toBe(`{"numero":"2"}`);
+    expect(dec(Uint8Array.fromBase64(el!.json.fichier.base64))).toBe(
+      `{"numero":"2"}`,
+    );
     expect(el!.json.fichier.nom).toBe("document.docx");
     expect(el!.json.pdf.type).toBe("application/pdf");
-    const sansNatif = await executer(d, [{ json: { fichier: pdf("a.pdf") } }], opts(services()));
+    const sansNatif = await executer(
+      d,
+      [{ json: { fichier: pdf("a.pdf") } }],
+      opts(services()),
+    );
     expect(sansNatif.statut).toBe("erreur");
   });
 });
@@ -263,14 +387,20 @@ describe("redaction, signature, presentation", () => {
       documents: {
         caviarder: (pdf, o) => {
           appels.push(o);
-          return { pdf: enc(`${dec(pdf)}-caviarde`), rapport: { occurrences: 3, pages: [1, 2], par_recherche: [] } };
+          return {
+            pdf: enc(`${dec(pdf)}-caviarde`),
+            rapport: { occurrences: 3, pages: [1, 2], par_recherche: [] },
+          };
         },
         signer: (pdf, p12, o) => {
           appels.push({ p12: dec(p12), ...o });
           return enc(`${dec(pdf)}-signe`);
         },
         signatures: (pdf, confiance) => [
-          { signee: dec(pdf).endsWith("-signe"), statut: confiance ? "valide" : "inconnue" },
+          {
+            signee: dec(pdf).endsWith("-signe"),
+            statut: confiance ? "valide" : "inconnue",
+          },
         ],
         presentation: (p) => enc(JSON.stringify(p)),
         presentationEnPdf: (pptx) => enc(`%PDF-${dec(pptx).length}`),
@@ -303,7 +433,12 @@ describe("redaction, signature, presentation", () => {
             certifier: "formulaires",
           },
         },
-        { id: "v", type: "fichier.pdf_verifier_signature", nom: "v", parametres: { fichier: "{{ $json.fichier }}" } },
+        {
+          id: "v",
+          type: "fichier.pdf_verifier_signature",
+          nom: "v",
+          parametres: { fichier: "{{ $json.fichier }}" },
+        },
       ],
       connexions: [
         { de: "t", vers: "c" },
@@ -311,7 +446,11 @@ describe("redaction, signature, presentation", () => {
         { de: "s", vers: "v" },
       ],
     });
-    const fichier = { nom: "releve.pdf", type: "application/pdf", base64: enc("%PDF").toBase64() };
+    const fichier = {
+      nom: "releve.pdf",
+      type: "application/pdf",
+      base64: enc("%PDF").toBase64(),
+    };
     const o = opts(s, { p12: enc("P12").toBase64(), mdp: "secret" });
     const r = await executer(d, [{ json: { fichier, client: "Marc" } }], o);
     expect(r.statut).toBe("succes");
@@ -332,7 +471,9 @@ describe("redaction, signature, presentation", () => {
       certifier: 2,
     });
     expect(el!.json.fichier.nom).toBe("releve-caviarde-signe.pdf");
-    expect(dec(Uint8Array.fromBase64(el!.json.fichier.base64))).toBe("%PDF-caviarde-signe");
+    expect(dec(Uint8Array.fromBase64(el!.json.fichier.base64))).toBe(
+      "%PDF-caviarde-signe",
+    );
     expect(el!.json).toMatchObject({
       occurrences: 3,
       pagesCaviardees: [1, 2],
@@ -348,7 +489,12 @@ describe("redaction, signature, presentation", () => {
           id: "p",
           type: "fichier.presentation",
           nom: "p",
-          parametres: { titre: "Bilan", champTitre: "nom", champPuces: "points", format: "pptx_pdf" },
+          parametres: {
+            titre: "Bilan",
+            champTitre: "nom",
+            champPuces: "points",
+            format: "pptx_pdf",
+          },
         },
       ],
       connexions: [{ de: "t", vers: "p" }],
@@ -364,7 +510,9 @@ describe("redaction, signature, presentation", () => {
     expect(sortie!.json.diapositives).toBe(3);
     expect(sortie!.json.fichier.nom).toBe("presentation.pptx");
     expect(sortie!.json.pdf.type).toBe("application/pdf");
-    expect(JSON.parse(dec(Uint8Array.fromBase64(sortie!.json.fichier.base64)))).toEqual({
+    expect(
+      JSON.parse(dec(Uint8Array.fromBase64(sortie!.json.fichier.base64))),
+    ).toEqual({
       titre: "Bilan",
       sous_titre: "",
       diapositives: [
@@ -384,8 +532,18 @@ describe("knowledge base", () => {
     const recherches: unknown[] = [];
     const s: Services = {
       ...services(),
-      pdf: { fusionner: () => enc(""), pages: () => enc(""), nombrePages: () => 1, texte: () => ["page 1", "page 2"] },
-      word: { creer: () => enc(""), champs: () => [], remplir: () => enc(""), enPdf: () => enc("") },
+      pdf: {
+        fusionner: () => enc(""),
+        pages: () => enc(""),
+        nombrePages: () => 1,
+        texte: () => ["page 1", "page 2"],
+      },
+      word: {
+        creer: () => enc(""),
+        champs: () => [],
+        remplir: () => enc(""),
+        enPdf: () => enc(""),
+      },
       connaissance: {
         async indexer(o) {
           indexes.push(o);
@@ -394,13 +552,27 @@ describe("knowledge base", () => {
         async rechercher(o) {
           recherches.push(o);
           return [
-            { source: "cgv.pdf", position: 0, texte: "Garantie de deux ans.", score: 0.91 },
-            { source: "faq", position: 3, texte: "Retours sous trente jours.", score: 0.72 },
+            {
+              source: "cgv.pdf",
+              position: 0,
+              texte: "Garantie de deux ans.",
+              score: 0.91,
+            },
+            {
+              source: "faq",
+              position: 3,
+              texte: "Retours sous trente jours.",
+              score: 0.72,
+            },
           ];
         },
       },
     };
-    const fichier = { nom: "cgv.pdf", type: "application/pdf", base64: enc("%PDF-1.7 cgv").toBase64() };
+    const fichier = {
+      nom: "cgv.pdf",
+      type: "application/pdf",
+      base64: enc("%PDF-1.7 cgv").toBase64(),
+    };
     const d = valider({
       noeuds: [
         { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
@@ -419,7 +591,13 @@ describe("knowledge base", () => {
           id: "r",
           type: "ia.rechercher",
           nom: "r",
-          parametres: { question: "Quelle garantie ?", k: 2, scoreMin: 0.5, diversite: 0.7, modele: "bge-m3" },
+          parametres: {
+            question: "Quelle garantie ?",
+            k: 2,
+            scoreMin: 0.5,
+            diversite: 0.7,
+            modele: "bge-m3",
+          },
         },
       ],
       connexions: [
@@ -429,7 +607,16 @@ describe("knowledge base", () => {
     });
     const r = await executer(
       d,
-      [{ json: { fichier } }, { json: { fichier: null, texte: "# FAQ\n\nRetours sous trente jours.", source: "faq" } }],
+      [
+        { json: { fichier } },
+        {
+          json: {
+            fichier: null,
+            texte: "# FAQ\n\nRetours sous trente jours.",
+            source: "faq",
+          },
+        },
+      ],
       opts(s, { emb: "sk-test" }),
     );
     expect(r.statut).toBe("succes");
@@ -439,18 +626,34 @@ describe("knowledge base", () => {
         source: "cgv.pdf",
         texte: "page 1\n\npage 2",
         taille: 1400,
-        embeddings: { url: "http://localhost:11434/v1", modele: "nomic-embed-text", cle: "sk-test" },
+        embeddings: {
+          url: "http://localhost:11434/v1",
+          modele: "nomic-embed-text",
+          cle: "sk-test",
+        },
       },
       {
         base: "documents",
         source: "faq",
         texte: "# FAQ\n\nRetours sous trente jours.",
         taille: 1400,
-        embeddings: { url: "http://localhost:11434/v1", modele: "nomic-embed-text", cle: "sk-test" },
+        embeddings: {
+          url: "http://localhost:11434/v1",
+          modele: "nomic-embed-text",
+          cle: "sk-test",
+        },
       },
     ]);
-    expect(recherches[0]).toMatchObject({ base: "documents", question: "Quelle garantie ?", k: 2, scoreMin: 0.5 });
-    expect(recherches[0]).toMatchObject({ diversite: 0.7, embeddings: { modele: "bge-m3" } });
+    expect(recherches[0]).toMatchObject({
+      base: "documents",
+      question: "Quelle garantie ?",
+      k: 2,
+      scoreMin: 0.5,
+    });
+    expect(recherches[0]).toMatchObject({
+      diversite: 0.7,
+      embeddings: { modele: "bge-m3" },
+    });
     const [el] = r.sortie as { json: Record<string, any> }[];
     expect(el!.json.trouves).toBe(2);
     expect(el!.json.morceaux).toBe(2);
@@ -462,16 +665,28 @@ describe("knowledge base", () => {
     const vide = valider({
       noeuds: [
         { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
-        { id: "i", type: "ia.indexer", nom: "i", parametres: { texte: "  ", source: "x" } },
+        {
+          id: "i",
+          type: "ia.indexer",
+          nom: "i",
+          parametres: { texte: "  ", source: "x" },
+        },
       ],
       connexions: [{ de: "t", vers: "i" }],
     });
-    expect((await executer(vide, [{ json: {} }], opts(s))).erreur?.message).toMatch(/no text to index/);
+    expect(
+      (await executer(vide, [{ json: {} }], opts(s))).erreur?.message,
+    ).toMatch(/no text to index/);
     expect(() =>
       valider({
         noeuds: [
           { id: "t", type: "declencheur.manuel", nom: "t", parametres: {} },
-          { id: "r", type: "ia.rechercher", nom: "r", parametres: { base: "Mauvaise Base", question: "q" } },
+          {
+            id: "r",
+            type: "ia.rechercher",
+            nom: "r",
+            parametres: { base: "Mauvaise Base", question: "q" },
+          },
         ],
         connexions: [{ de: "t", vers: "r" }],
       }),

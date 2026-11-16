@@ -135,6 +135,7 @@ members = [
   "src/machine",
   "src/md",
   "src/mimalloc_sys",
+  "src/modele",
   "src/net",
   "src/niubash",
   "src/niubash/runtime",

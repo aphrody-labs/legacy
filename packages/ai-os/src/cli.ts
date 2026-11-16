@@ -2,7 +2,8 @@
 // @aphrody/ai-os entry point: `ai-os relay <cmd>` runs the relay CLI (src/relay/cli.ts), `ai-os orch <cmd>` the
 // orchestrator (src/orch/cli.ts), `ai-os fabric <cmd>` the distributed inference fabric (src/fabric/cli.ts),
 // `ai-os nhitl <cmd>` the index of human-in-the-loop violations (src/nhitl/cli.ts), `ai-os review <target>` the
-// three-voice review tribunal (src/review/cli.ts, docs/reviews/README.md),
+// three-voice review tribunal (src/review/cli.ts, docs/reviews/README.md), `ai-os automate <list|run|tui>` the automations of
+// @aphrody/automate (src/automate/cli.ts),
 // anything else the agent CLI (src/agent-cli.ts: init, run, context, schedule, heartbeat, skills, research, gateway, tui).
 const subs: Record<string, string> = {
   relay: "./relay/cli.ts",
@@ -12,6 +13,7 @@ const subs: Record<string, string> = {
   providers: "./providers/cli.ts",
   nhitl: "./nhitl/cli.ts",
   review: "./review/cli.ts",
+  automate: "./automate/cli.ts",
   term: "./term/cli.ts",
 };
 const sub = Bun.argv[2];

@@ -19,7 +19,11 @@ const workflow = {
         conditions: {
           combinator: "and",
           conditions: [
-            { leftValue: "={{ $json.body.budget }}", rightValue: 1000, operator: { type: "number", operation: "gt" } },
+            {
+              leftValue: "={{ $json.body.budget }}",
+              rightValue: 1000,
+              operator: { type: "number", operation: "gt" },
+            },
           ],
         },
       },
@@ -31,7 +35,11 @@ const workflow = {
       parameters: {
         assignments: {
           assignments: [
-            { name: "texte", value: "=Lead {{ $json.body.nom }} ({{ $('Webhook').item.json.body.budget }} €)" },
+            {
+              name: "texte",
+              value:
+                "=Lead {{ $json.body.nom }} ({{ $('Webhook').item.json.body.budget }} €)",
+            },
           ],
         },
       },
@@ -47,13 +55,26 @@ const workflow = {
         jsonBody: '={"nom": "{{ $json.texte }}"}',
       },
     },
-    { name: "Résumé IA", type: "@n8n/n8n-nodes-langchain.agent", position: [660, 100], parameters: {} },
-    { name: "Code", type: "n8n-nodes-base.code", position: [880, 0], parameters: { jsCode: "return items" } },
+    {
+      name: "Résumé IA",
+      type: "@n8n/n8n-nodes-langchain.agent",
+      position: [660, 100],
+      parameters: {},
+    },
+    {
+      name: "Code",
+      type: "n8n-nodes-base.code",
+      position: [880, 0],
+      parameters: { jsCode: "return items" },
+    },
   ],
   connections: {
     Webhook: { main: [[{ node: "Est qualifié ?", type: "main", index: 0 }]] },
     "Est qualifié ?": {
-      main: [[{ node: "Préparer", type: "main", index: 0 }], [{ node: "Résumé IA", type: "main", index: 0 }]],
+      main: [
+        [{ node: "Préparer", type: "main", index: 0 }],
+        [{ node: "Résumé IA", type: "main", index: 0 }],
+      ],
     },
     Préparer: { main: [[{ node: "Enrichir", type: "main", index: 0 }]] },
   },
@@ -73,12 +94,21 @@ test("n8n import: nodes, expressions, connections and warnings", () => {
   ]);
   expect(d.noeuds[0]!.parametres).toEqual({ reponse: "fin" });
   expect(d.noeuds[1]!.parametres).toMatchObject({
-    conditions: [{ gauche: "{{ $json.body.budget }}", operateur: "superieur", droite: 1000 }],
+    conditions: [
+      {
+        gauche: "{{ $json.body.budget }}",
+        operateur: "superieur",
+        droite: 1000,
+      },
+    ],
   });
-  expect((d.noeuds[2]!.parametres.champs as { valeur: string }[])[0]!.valeur).toBe(
-    "Lead {{ $json.body.nom }} ({{ $noeud.webhook.json.body.budget }} €)",
-  );
-  expect(d.noeuds[3]!.parametres).toMatchObject({ methode: "POST", corps: { nom: "{{ $json.texte }}" } });
+  expect(
+    (d.noeuds[2]!.parametres.champs as { valeur: string }[])[0]!.valeur,
+  ).toBe("Lead {{ $json.body.nom }} ({{ $noeud.webhook.json.body.budget }} €)");
+  expect(d.noeuds[3]!.parametres).toMatchObject({
+    methode: "POST",
+    corps: { nom: "{{ $json.texte }}" },
+  });
   expect(d.connexions).toEqual([
     { de: "webhook", sortie: 0, vers: "est-qualifie" },
     { de: "est-qualifie", sortie: 0, vers: "preparer" },
@@ -86,12 +116,15 @@ test("n8n import: nodes, expressions, connections and warnings", () => {
     { de: "preparer", sortie: 0, vers: "enrichir" },
   ]);
   expect(r.avertissements).toEqual([
-    "\"Résumé IA\": node @n8n/n8n-nodes-langchain.agent not supported, left as \"Pass through\" to replace",
+    '"Résumé IA": node @n8n/n8n-nodes-langchain.agent not supported, left as "Pass through" to replace',
     "1 nodes without a recognized trigger: manual start added",
     "2 triggers: imported as 2 workflows",
   ]);
   expect(r.autres).toHaveLength(1);
-  expect(r.autres[0]!.definition.noeuds.map((n) => n.id)).toEqual(["code", "declencheur"]);
+  expect(r.autres[0]!.definition.noeuds.map((n) => n.id)).toEqual([
+    "code",
+    "declencheur",
+  ]);
   expect(r.autres[0]!.definition.noeuds[0]).toMatchObject({
     type: "donnees.code",
     parametres: { mode: "lot", code: "return items" },
@@ -104,29 +137,43 @@ test("n8n import: schedule and added trigger", () => {
       {
         name: "Chaque jour",
         type: "n8n-nodes-base.scheduleTrigger",
-        parameters: { rule: { interval: [{ field: "cronExpression", expression: "0 30 8 * * 1-5" }] } },
+        parameters: {
+          rule: {
+            interval: [
+              { field: "cronExpression", expression: "0 30 8 * * 1-5" },
+            ],
+          },
+        },
       },
     ],
     connections: {},
   });
-  expect(cron.definition.noeuds[0]!.parametres).toMatchObject({ cron: "30 8 * * 1-5" });
+  expect(cron.definition.noeuds[0]!.parametres).toMatchObject({
+    cron: "30 8 * * 1-5",
+  });
   const sans = importerN8n({
-    nodes: [{ name: "Limiter", type: "n8n-nodes-base.limit", parameters: { maxItems: 3 } }],
+    nodes: [
+      {
+        name: "Limiter",
+        type: "n8n-nodes-base.limit",
+        parameters: { maxItems: 3 },
+      },
+    ],
     connections: {},
   });
   expect(() => valider(sans.definition)).not.toThrow();
-  expect(sans.avertissements).toContain("no recognized trigger: manual start added");
+  expect(sans.avertissements).toContain(
+    "no recognized trigger: manual start added",
+  );
 });
 
 test("n8n import: several triggers, notes ignored, graph kept across an unsupported node", async () => {
   const j = await Bun.file(
-    new URL(
-      "../../../docs/modeles/automatisation-factures/workflow/Workflow_n8n_Factures_Fournisseurs.json",
-      import.meta.url,
-    ),
+    new URL("../fixtures/suppliers-invoices.n8n.json", import.meta.url),
   ).json();
   const r = importerN8n(j);
-  for (const w of [r, ...r.autres]) expect(() => valider(w.definition)).not.toThrow();
+  for (const w of [r, ...r.autres])
+    expect(() => valider(w.definition)).not.toThrow();
   expect(r.avertissements.some((a) => a.includes("stickyNote"))).toBe(false);
   // Schedule → Excel (to replace) → summary (to replace) → mail: chain intact.
   expect(r.definition.noeuds[0]!.type).toBe("declencheur.planifie");

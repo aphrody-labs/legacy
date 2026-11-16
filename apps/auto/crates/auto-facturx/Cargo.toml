@@ -7,7 +7,7 @@ license.workspace = true
 description = "Factur-X (profil EN 16931) : XML CII, PDF/A-3b avec XML embarqué, extraction"
 
 [dependencies]
-auto-modele = { path = "../auto-modele" }
+auto-modele = { package = "aphrody-modele", path = "../../../../src/modele" }
 pdfcraft-cos.workspace = true
 pdfcraft-preflight.workspace = true
 thiserror.workspace = true

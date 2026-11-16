@@ -32,7 +32,9 @@
   },
   "dependencies": {
     "@aphrody/core": "workspace:*",
-    "@aphrody/design": "workspace:*"
+    "@aphrody/design": "workspace:*",
+    "@aphrody/automate": "workspace:*",
+    "@aphrody/ai-router": "https://github.com/aphrody-labs/open/releases/download/libraries-v0.4.0/aphrody-ai-router-0.4.0.tgz"
   },
   "devDependencies": {},
   "license": "MIT OR Apache-2.0",

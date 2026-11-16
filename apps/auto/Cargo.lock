@@ -189,7 +189,7 @@ name = "auto-docs"
 version = "0.0.0"
 dependencies = [
  "auto-facturx",
- "auto-modele",
+ "aphrody-modele",
  "pdfcraft-cos",
  "pdfcraft-create",
  "pdfcraft-fonts",
@@ -201,7 +201,7 @@ dependencies = [
 name = "auto-facturx"
 version = "0.0.0"
 dependencies = [
- "auto-modele",
+ "aphrody-modele",
  "pdfcraft-cos",
  "pdfcraft-create",
  "pdfcraft-preflight",
@@ -216,7 +216,7 @@ dependencies = [
  "auto-docs",
  "auto-facturx",
  "auto-fichiers",
- "auto-modele",
+ "aphrody-modele",
  "auto-sheets",
  "serde",
  "serde_json",
@@ -227,7 +227,7 @@ name = "auto-fichiers"
 version = "0.0.0"
 dependencies = [
  "auto-docs",
- "auto-modele",
+ "aphrody-modele",
  "deckcraft-model",
  "deckcraft-pdf",
  "deckcraft-pptx",
@@ -246,8 +246,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "auto-modele"
-version = "0.0.0"
+name = "aphrody-modele"
+version = "0.4.0"
 dependencies = [
  "serde",
  "serde_json",

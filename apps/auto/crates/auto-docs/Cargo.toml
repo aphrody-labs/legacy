@@ -7,7 +7,7 @@ license.workspace = true
 description = "Rendu PDF des devis, factures, acomptes et avoirs (A4, polices Inter embarquées)"
 
 [dependencies]
-auto-modele = { path = "../auto-modele" }
+auto-modele = { package = "aphrody-modele", path = "../../../../src/modele" }
 pdfcraft-cos.workspace = true
 pdfcraft-create.workspace = true
 pdfcraft-fonts.workspace = true

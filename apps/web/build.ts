@@ -6,6 +6,8 @@
 //   bun apps/web/build.ts --check    exit 1 listing the outputs that differ
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+// The automation templates come from the library extracted from apps/auto, the same one the CLI and the TUI use.
+import { MODELES } from "@aphrody/automate";
 
 const root = join(import.meta.dir, "..", "..").replaceAll("\\", "/");
 const pub = join(import.meta.dir, "public").replaceAll("\\", "/");
@@ -97,19 +99,21 @@ footer a{display:inline-flex;align-items:center;min-height:48px}
 
 const fontLink = '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@100..1000&display=optional">';
 
-function page(locale: string, kind: "home" | "catalog"): string {
+function page(locale: string, kind: "home" | "catalog" | "automations"): string {
   const chain = [catalogs[locale], catalogs[locale.split("-")[0]!], catalogs[source]];
   const t = (k: string): string => {
     const hit = chain.map((c) => c?.[k]).find((m) => m !== undefined);
     if (hit === undefined) throw new Error(`site message missing: ${k} (${dir}/${source}.json)`);
     return hit;
   };
-  const here = `${prefix(locale)}${kind === "catalog" ? "/catalog" : ""}/`;
-  const alternates = locales.map((l) => `<link rel="alternate" hreflang="${l}" href="${origin}${prefix(l)}${kind === "catalog" ? "/catalog" : ""}/">`).join("");
-  const title = kind === "home" ? "Aphrody" : `${t("catalog_title")} - Aphrody`;
-  const description = kind === "home" ? t("description") : t("catalog_intro");
-  const langs = locales.filter((l) => l !== locale).map((l) => `<a href="${prefix(l)}${kind === "catalog" ? "/catalog" : ""}/" hreflang="${l}" lang="${l}" aria-label="${esc(t("lang"))}">${l.toUpperCase()}</a>`).join("");
-  const bar = `<header class="bar">${kind === "catalog" ? `<a class="home" href="${prefix(locale) || "/"}" aria-label="Aphrody"><img src="/favicon.png" width="40" height="40" alt="">Aphrody</a>` : ""}<a${kind === "home" ? ` class="first"` : ""} href="${prefix(locale)}/catalog/">${esc(t("nav_catalog"))}</a><a class="nav-source" href="${repo}">${esc(t("nav_source"))}</a>${langs}</header>`;
+  const seg = kind === "home" ? "" : `/${kind}`;
+  const here = `${prefix(locale)}${seg}/`;
+  const alternates = locales.map((l) => `<link rel="alternate" hreflang="${l}" href="${origin}${prefix(l)}${seg}/">`).join("");
+  const key = kind === "automations" ? "automations" : "catalog";
+  const title = kind === "home" ? "Aphrody" : `${t(`${key}_title`)} - Aphrody`;
+  const description = kind === "home" ? t("description") : t(`${key}_intro`);
+  const langs = locales.filter((l) => l !== locale).map((l) => `<a href="${prefix(l)}${seg}/" hreflang="${l}" lang="${l}" aria-label="${esc(t("lang"))}">${l.toUpperCase()}</a>`).join("");
+  const bar = `<header class="bar">${kind !== "home" ? `<a class="home" href="${prefix(locale) || "/"}" aria-label="Aphrody"><img src="/favicon.png" width="40" height="40" alt="">Aphrody</a>` : ""}<a${kind === "home" ? ` class="first"` : ""} href="${prefix(locale)}/catalog/">${esc(t("nav_catalog"))}</a><a class="nav-source" href="${repo}">${esc(t("nav_source"))}</a>${langs}</header>`;
   const bg = '<div class="bg"><img src="/shots/desktop.webp" width="638" height="373" alt="" fetchpriority="high" decoding="async"></div>';
   let body: string;
   if (kind === "home") {
@@ -118,18 +122,22 @@ function page(locale: string, kind: "home" | "catalog"): string {
     body = `<section class="hero" data-theme="dark">${bg}<div class="wrap"><img class="logo" src="/favicon.png" width="112" height="112" alt="Aphrody"><h1>Aphrody</h1><p class="lead">${esc(t("description"))}</p><div class="actions"><a class="btn filled" href="${prefix(locale)}/catalog/">${esc(t("cta_catalog"))}</a><a class="btn tonal" href="${repo}">${esc(t("cta_source"))}</a></div></div></section>` +
       `<main id="main"><h2>${esc(t("demos"))}</h2>${demo("term", "/term/", "terminal", 1280, 800)}${demo("desktop", "/wayland/", "desktop", 638, 373)}${demo("studio", "/m3/", "studio", 720, 261)}` +
       `<h2>${esc(t("inside"))}</h2><ul class="inside">${data.types.map((k) => `<li><a href="${prefix(locale)}/catalog/#${k.id}">${esc(t(`type_${k.id}`))}<span>${k.entries.length}</span></a></li>`).join("")}</ul></main>`;
+  } else if (kind === "automations") {
+    const cards = MODELES.map((m) => `<section class="type" id="${m.id}"><h2>${esc(m.nom)}</h2><p>${esc(m.description)}</p><ul class="entries"><li><span>${esc(t("automations_nodes"))}: ${m.definition.noeuds.length}</span><span>${esc(t("automations_categories"))}: ${esc(m.categories.join(", "))}</span></li></ul></section>`);
+    body = `<section class="hero short" data-theme="dark">${bg}<div class="wrap"><h1>${esc(t("automations_title"))}</h1><p class="lead">${esc(t("automations_intro"))}</p></div></section><main id="main">${cards.join("")}</main>`;
   } else {
     const sections = data.types.map((k) => `<section class="type" id="${k.id}"><h2>${esc(t(`type_${k.id}`))}</h2><details><summary>${esc(t("catalog_entries"))} (${k.entries.length})</summary><ul class="entries">${k.entries.map((e) => `<li><a href="${repo}/tree/main/${esc(e.path)}">${esc(e.name)}</a>${e.description ? `<span>${esc(short(e.description))}</span>` : ""}</li>`).join("")}</ul></details></section>`);
     body = `<section class="hero short" data-theme="dark">${bg}<div class="wrap"><h1>${esc(t("catalog_title"))}</h1><p class="lead">${esc(t("catalog_intro"))}</p></div></section><main id="main">${sections.join("")}</main>`;
   }
   const ld = JSON.stringify({ "@context": "https://schema.org", "@graph": [{ "@type": "Organization", name: "Aphrody", url: `${origin}/`, logo: `${origin}/favicon.png`, sameAs: [repo.replace(/\/[^/]+$/, "")] }, { "@type": "WebSite", name: "Aphrody", url: `${origin}/`, inLanguage: locale }] });
-  return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${origin}${here}">${alternates}<link rel="alternate" hreflang="x-default" href="${origin}${kind === "catalog" ? "/catalog" : ""}/"><meta property="og:type" content="website"><meta property="og:site_name" content="Aphrody"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${here}"><meta property="og:image" content="${origin}/favicon.png"><meta name="twitter:card" content="summary"><meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/favicon.png"><link rel="manifest" href="/site.webmanifest"><link rel="stylesheet" href="/tokens.css">${fontLink}<style>${css}</style><script type="application/ld+json">${ld}</script></head><body><a class="skip" href="#main">${esc(t("skip"))}</a>${bar}${body}<footer><div class="wrap"><span>${esc(t("footer"))}</span><a href="${repo}">${esc(t("cta_source"))}</a></div></footer></body></html>\n`;
+  return `<!doctype html><html lang="${locale}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${origin}${here}">${alternates}<link rel="alternate" hreflang="x-default" href="${origin}${seg}/"><meta property="og:type" content="website"><meta property="og:site_name" content="Aphrody"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(description)}"><meta property="og:url" content="${origin}${here}"><meta property="og:image" content="${origin}/favicon.png"><meta name="twitter:card" content="summary"><meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"><link rel="icon" type="image/png" href="/favicon.png"><link rel="apple-touch-icon" href="/favicon.png"><link rel="manifest" href="/site.webmanifest"><link rel="stylesheet" href="/tokens.css">${fontLink}<style>${css}</style><script type="application/ld+json">${ld}</script></head><body><a class="skip" href="#main">${esc(t("skip"))}</a>${bar}${body}<footer><div class="wrap"><span>${esc(t("footer"))}</span><a href="${repo}">${esc(t("cta_source"))}</a></div></footer></body></html>\n`;
 }
 
 const out = new Map<string, string>();
 for (const l of locales) {
   out.set(`${prefix(l)}/index.html`.replace(/^\//, ""), page(l, "home"));
   out.set(`${prefix(l)}/catalog/index.html`.replace(/^\//, ""), page(l, "catalog"));
+  out.set(`${prefix(l)}/automations/index.html`.replace(/^\//, ""), page(l, "automations"));
 }
 const tokens = readFileSync(join(root, "packages/design/tokens/tokens.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{};,])\s*/g, "$1").trim() + "\n";
 out.set("tokens.css", tokens);

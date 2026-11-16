@@ -8,6 +8,7 @@
     "packages/*"
   ],
   "catalog": {
+    "@aphrody/automate": "0.1.0",
     "@aphrody/m3-tokens": "1.4.7",
     "@better-auth/api-key": "1.7.16",
     "@better-auth/mcp": "1.7.16",

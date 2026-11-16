@@ -49,14 +49,17 @@ function litteral(s: string): { ok: true; v: unknown } | { ok: false } {
   return { ok: false };
 }
 
-const SEGMENT = /^\.([\p{L}_$][\p{L}\p{N}_$-]*)|^\[\s*(?:(\d+)|"([^"]*)"|'([^']*)')\s*\]/u;
+const SEGMENT =
+  /^\.([\p{L}_$][\p{L}\p{N}_$-]*)|^\[\s*(?:(\d+)|"([^"]*)"|'([^']*)')\s*\]/u;
 
 function chemin(source: string, p: Portee): unknown {
   const tete = /^\$([a-z]+)/i.exec(source);
   if (!tete) throw new ErreurExpression(`invalid expression: ${source}`);
   const racines: Record<string, unknown> = {
     json: p.json,
-    noeud: Object.fromEntries(Object.entries(p.noeuds).map(([k, v]) => [k, { json: v }])),
+    noeud: Object.fromEntries(
+      Object.entries(p.noeuds).map(([k, v]) => [k, { json: v }]),
+    ),
     secret: p.secrets,
     execution: p.execution,
     workflow: p.workflow,
@@ -65,21 +68,29 @@ function chemin(source: string, p: Portee): unknown {
     maintenant: (p.maintenant ?? new Date()).toISOString(),
     aujourdhui: (p.maintenant ?? new Date()).toISOString().slice(0, 10),
   };
-  if (!(tete[1]! in racines)) throw new ErreurExpression(`unknown variable: $${tete[1]}`);
+  if (!(tete[1]! in racines))
+    throw new ErreurExpression(`unknown variable: $${tete[1]}`);
   let v: unknown = racines[tete[1]!];
   let reste = source.slice(tete[0].length).trim();
   while (reste) {
     const m = SEGMENT.exec(reste);
     if (!m) throw new ErreurExpression(`invalid path: ${source}`);
     const cle = m[1] ?? m[3] ?? m[4] ?? Number(m[2]);
-    v = v != null && typeof v === "object" ? (v as Record<string | number, unknown>)[cle] : undefined;
+    v =
+      v != null && typeof v === "object"
+        ? (v as Record<string | number, unknown>)[cle]
+        : undefined;
     reste = reste.slice(m[0].length).trim();
   }
   return v;
 }
 
 const texte = (v: unknown): string =>
-  v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v as string | number | boolean);
+  v == null
+    ? ""
+    : typeof v === "object"
+      ? JSON.stringify(v)
+      : String(v as string | number | boolean);
 
 const nombre = (v: unknown): number => {
   const n =
@@ -90,7 +101,8 @@ const nombre = (v: unknown): number => {
             .replace(/\s/g, "")
             .replace(",", "."),
         );
-  if (!Number.isFinite(n)) throw new ErreurExpression(`number expected: ${texte(v)}`);
+  if (!Number.isFinite(n))
+    throw new ErreurExpression(`number expected: ${texte(v)}`);
   return n;
 };
 
@@ -107,20 +119,33 @@ export const FILTRES: Record<string, Filtre> = {
     const f = 10 ** Number(a ?? 0);
     return Math.round(nombre(v) * f) / f;
   },
-  euros: (v) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(nombre(v)),
+  euros: (v) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    }).format(nombre(v)),
   /** Amount in cents (auto convention) shown in euros. */
-  centimes: (v) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR" }).format(nombre(v) / 100),
+  centimes: (v) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    }).format(nombre(v) / 100),
   longueur: (v) => (Array.isArray(v) ? v.length : texte(v).length),
   premier: (v) => (Array.isArray(v) ? v[0] : v),
   dernier: (v) => (Array.isArray(v) ? v.at(-1) : v),
-  joindre: (v, a) => (Array.isArray(v) ? v.map(texte).join(texte(a ?? ", ")) : texte(v)),
+  joindre: (v, a) =>
+    Array.isArray(v) ? v.map(texte).join(texte(a ?? ", ")) : texte(v),
   defaut: (v, a) => (v == null || v === "" ? a : v),
   date: (v, a) => {
     const d = new Date(texte(v) || Date.now());
-    if (Number.isNaN(d.getTime())) throw new ErreurExpression(`invalid date: ${texte(v)}`);
+    if (Number.isNaN(d.getTime()))
+      throw new ErreurExpression(`invalid date: ${texte(v)}`);
     if (a === "iso") return d.toISOString();
     if (a === "jour") return d.toISOString().slice(0, 10);
-    return new Intl.DateTimeFormat("fr-FR", { dateStyle: "long", timeZone: "Europe/Paris" }).format(d);
+    return new Intl.DateTimeFormat("fr-FR", {
+      dateStyle: "long",
+      timeZone: "Europe/Paris",
+    }).format(d);
   },
   plus_jours: (v, a) => {
     const d = new Date(texte(v) || Date.now());
@@ -159,33 +184,51 @@ export function resoudre(valeur: unknown, p: Portee): unknown {
   }
   if (Array.isArray(valeur)) return valeur.map((v) => resoudre(v, p));
   if (valeur && typeof valeur === "object")
-    return Object.fromEntries(Object.entries(valeur).map(([k, v]) => [k, resoudre(v, p)]));
+    return Object.fromEntries(
+      Object.entries(valeur).map(([k, v]) => [k, resoudre(v, p)]),
+    );
   return valeur;
 }
 
 /** Names of the referenced secrets (`$secret.nom`): the API refuses a workflow that cites a missing secret. */
 export function secretsCites(valeur: unknown): string[] {
   const s = JSON.stringify(valeur ?? null);
-  return [...new Set([...s.matchAll(/\$secret\.([\p{L}\p{N}_-]+)/gu)].map((m) => m[1]!))];
+  return [
+    ...new Set(
+      [...s.matchAll(/\$secret\.([\p{L}\p{N}_-]+)/gu)].map((m) => m[1]!),
+    ),
+  ];
 }
 
 /** Reads a field by dotted path (`client.adresse.ville`). */
 export function lire(o: unknown, champ: string): unknown {
   return champ
     .split(".")
-    .reduce<unknown>((v, k) => (v != null && typeof v === "object" ? (v as Record<string, unknown>)[k] : undefined), o);
+    .reduce<unknown>(
+      (v, k) =>
+        v != null && typeof v === "object"
+          ? (v as Record<string, unknown>)[k]
+          : undefined,
+      o,
+    );
 }
 
 /** Writes a field by dotted path, creating the intermediate objects. */
-export function ecrire(o: Record<string, unknown>, champ: string, valeur: unknown): void {
+export function ecrire(
+  o: Record<string, unknown>,
+  champ: string,
+  valeur: unknown,
+): void {
   const cles = champ.split(".");
   let cour = o;
   for (const k of cles.slice(0, -1)) {
-    if (k === "__proto__" || k === "constructor" || k === "prototype") throw new ErreurExpression("forbidden field");
+    if (k === "__proto__" || k === "constructor" || k === "prototype")
+      throw new ErreurExpression("forbidden field");
     if (cour[k] == null || typeof cour[k] !== "object") cour[k] = {};
     cour = cour[k] as Record<string, unknown>;
   }
   const fin = cles.at(-1)!;
-  if (fin === "__proto__" || fin === "constructor" || fin === "prototype") throw new ErreurExpression("forbidden field");
+  if (fin === "__proto__" || fin === "constructor" || fin === "prototype")
+    throw new ErreurExpression("forbidden field");
   cour[fin] = valeur;
 }

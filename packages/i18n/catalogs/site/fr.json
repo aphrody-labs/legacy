@@ -26,5 +26,9 @@
   "footer": "Construit en open source sur GitHub.",
   "catalog_title": "Catalogue",
   "catalog_intro": "Tout ce que contient le dépôt, listé depuis ses manifestes.",
-  "catalog_entries": "Afficher la liste"
+  "catalog_entries": "Afficher la liste",
+  "automations_title": "Automatisations",
+  "automations_intro": "Des workflows prêts à l'emploi de la bibliothèque d'automatisation qui alimente les applications, la ligne de commande et l'interface terminal.",
+  "automations_nodes": "Nœuds",
+  "automations_categories": "Catégories"
 }

@@ -1,5 +1,5 @@
-//! Modèle des documents commerciaux, identique au JSON de `@auto/domain` (`Document` + `numero`,
-//! en camelCase), et calcul des totaux à l'identique (arrondi de `Math.round`).
+//! Model of the commercial documents, identical to the JSON of `@auto/domain` (`Document` + `numero`,
+//! in camelCase), and identical totals computation (rounding of `Math.round`).
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
@@ -22,7 +22,7 @@ pub struct Ligne {
     pub designation: String,
     pub quantite: f64,
     pub prix_unitaire_ht_cents: i64,
-    /// Taux en dixièmes de pourcent : 200 = 20 %.
+    /// Rate in tenths of a percent: 200 = 20%.
     pub tva: i64,
     pub unite: Option<String>,
     /// Remise en points de base : 1000 = 10 %.
@@ -36,7 +36,7 @@ impl Ligne {
         round_js(self.quantite * self.prix_unitaire_ht_cents as f64)
     }
 
-    /// HT net : même ordre d'opérations que `htLigne` de @auto/domain.
+    /// Net amount excl. VAT: same order of operations as `htLigne` of @auto/domain.
     pub fn ht_cents(&self) -> i64 {
         round_js(self.quantite * self.prix_unitaire_ht_cents as f64 * (10000 - self.remise_bp) as f64 / 10000.0)
     }
@@ -98,28 +98,28 @@ pub struct Facture {
     pub gabarit: Option<Gabarit>,
 }
 
-/// Mise en forme d'un tenant. Le logo est un JPEG RVB (converti côté Bun), embarqué tel quel.
+/// Layout of a tenant. The logo is an RGB JPEG (converted on the Bun side), embedded as is.
 #[derive(Clone, Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Gabarit {
     /// Couleur d'accent « #RRGGBB ».
     pub couleur: Option<String>,
     pub logo: Option<Logo>,
-    /// Ligne ajoutée au pied de page (capital, RCS, coordonnées bancaires…).
+    /// Line added to the footer (capital, RCS, bank details...).
     pub pied_de_page: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Logo {
-    /// JPEG encodé en base64.
+    /// JPEG encoded in base64.
     pub jpeg: String,
     pub largeur: u32,
     pub hauteur: u32,
 }
 
 impl Gabarit {
-    /// Couleur d'accent en composantes 0..1 ; `None` si absente ou mal formée.
+    /// Accent color as components 0..1; `None` if absent or malformed.
     pub fn rvb(&self) -> Option<(f64, f64, f64)> {
         let h = self.couleur.as_deref()?.strip_prefix('#')?;
         if h.len() != 6 {
@@ -130,7 +130,7 @@ impl Gabarit {
     }
 }
 
-/// Décodage base64 standard (avec ou sans remplissage) ; `None` si un caractère est invalide.
+/// Standard base64 decoding (with or without padding); `None` if a character is invalid.
 pub fn base64(s: &str) -> Option<Vec<u8>> {
     let val = |c: u8| match c {
         b'A'..=b'Z' => Some(c - b'A'),
@@ -156,13 +156,13 @@ pub fn base64(s: &str) -> Option<Vec<u8>> {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Totaux {
     pub ht_cents: i64,
-    /// Taux (dixièmes de %) → (base HT, TVA).
+    /// Rate (tenths of %) → (base excl. VAT, VAT).
     pub par_taux: BTreeMap<i64, (i64, i64)>,
     pub tva_cents: i64,
     pub ttc_cents: i64,
 }
 
-/// `Math.round` de JavaScript (demi vers +∞), pour des totaux identiques à `@auto/domain`.
+/// JavaScript `Math.round` (half towards +∞), for totals identical to `@auto/domain`.
 pub fn round_js(x: f64) -> i64 {
     (x + 0.5).floor() as i64
 }
@@ -219,7 +219,7 @@ pub fn eur(c: i64) -> String {
     format!("{s}{groupes},{:02} €", c.abs() % 100)
 }
 
-/// Dixièmes de % → « 20 % », « 5,5 % ».
+/// Tenths of % → "20 %", "5,5 %".
 pub fn pourcent(t: i64) -> String {
     if t % 10 == 0 { format!("{} %", t / 10) } else { format!("{},{} %", t / 10, t % 10) }
 }
@@ -261,7 +261,7 @@ mod tests {
 mod remises {
     use super::*;
 
-    /// Mêmes valeurs que le test « remises identiques à auto-modele » de @auto/domain.
+    /// Same values as the "remises identiques à auto-modele" test of @auto/domain.
     #[test]
     fn totaux_avec_remises() {
         let l = |q: f64, pu: i64, bp: i64| Ligne {

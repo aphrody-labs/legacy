@@ -2,7 +2,14 @@
 // applies its outputs to the connections and records each step. Bounds: number of steps, items per node and total
 // duration, so that one company's workflow does not monopolize the worker.
 import { ErreurExpression, resoudre, type Portee } from "./expressions";
-import { CATALOGUE, sortiesDe, type Contexte, type Services, type Sorties, type TypeNoeud } from "./noeuds";
+import {
+  CATALOGUE,
+  sortiesDe,
+  type Contexte,
+  type Services,
+  type Sorties,
+  type TypeNoeud,
+} from "./noeuds";
 import { Definition, estDeclencheur, type Element, type Noeud } from "./schema";
 
 export interface Etape {
@@ -71,24 +78,30 @@ export function valider(brute: unknown): Definition {
       const p = type.parametres.safeParse(n.parametres);
       if (!p.success)
         for (const i of p.error.issues)
-          details.push(`node ${n.id}: ${i.path.join(".") || "parameters"}: ${i.message}`);
+          details.push(
+            `node ${n.id}: ${i.path.join(".") || "parameters"}: ${i.message}`,
+          );
     }
   }
   const declencheurs = d.noeuds.filter((n) => estDeclencheur(n.type));
-  if (declencheurs.length !== 1) details.push("exactly one trigger per workflow");
+  if (declencheurs.length !== 1)
+    details.push("exactly one trigger per workflow");
   for (const c of d.connexions) {
-    if (!ids.has(c.de) || !ids.has(c.vers)) details.push(`connection ${c.de} → ${c.vers}: missing node`);
+    if (!ids.has(c.de) || !ids.has(c.vers))
+      details.push(`connection ${c.de} → ${c.vers}: missing node`);
     else if (estDeclencheur(d.noeuds.find((n) => n.id === c.vers)!.type))
       details.push(`connection ${c.de} → ${c.vers}: a trigger has no input`);
   }
-  if (!details.length && aUnCycle(d)) details.push("le graphe contient un cycle");
+  if (!details.length && aUnCycle(d))
+    details.push("le graphe contient un cycle");
   if (details.length) throw new ErreurDefinition("invalid definition", details);
   return d;
 }
 
 function aUnCycle(d: Definition): boolean {
   const suivants = new Map<string, string[]>();
-  for (const c of d.connexions) suivants.set(c.de, [...(suivants.get(c.de) ?? []), c.vers]);
+  for (const c of d.connexions)
+    suivants.set(c.de, [...(suivants.get(c.de) ?? []), c.vers]);
   const etat = new Map<string, 1 | 2>();
   const visiter = (id: string): boolean => {
     if (etat.get(id) === 1) return true;
@@ -101,14 +114,17 @@ function aUnCycle(d: Definition): boolean {
   return d.noeuds.some((n) => visiter(n.id));
 }
 
-export const declencheurDe = (d: Definition): Noeud => d.noeuds.find((n) => estDeclencheur(n.type))!;
+export const declencheurDe = (d: Definition): Noeud =>
+  d.noeuds.find((n) => estDeclencheur(n.type))!;
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 function apercu(els: Element[]): Element[] {
   return els.slice(0, 5).map((e) => {
     const s = JSON.stringify(e.json);
-    return s.length <= 4000 ? e : { json: { apercu: `${s.slice(0, 4000)}…`, tronque: true } };
+    return s.length <= 4000
+      ? e
+      : { json: { apercu: `${s.slice(0, 4000)}…`, tronque: true } };
   });
 }
 
@@ -116,15 +132,28 @@ function apercu(els: Element[]): Element[] {
  * Call of a node with its retries (`tentatives`, wait `delaiEssaiMs` doubled each time). A parameter or expression
  * error cannot be fixed by retrying: it is not retried.
  */
-export async function essayer<T>(noeud: Noeud, signal: AbortSignal, appel: () => Promise<T>): Promise<T> {
+export async function essayer<T>(
+  noeud: Noeud,
+  signal: AbortSignal,
+  appel: () => Promise<T>,
+): Promise<T> {
   for (let essai = 0; ; essai++) {
     try {
       return await appel();
     } catch (e) {
-      if (essai >= noeud.tentatives || signal.aborted || e instanceof ErreurExpression) throw e;
+      if (
+        essai >= noeud.tentatives ||
+        signal.aborted ||
+        e instanceof ErreurExpression
+      )
+        throw e;
       await new Promise<void>((ok, ko) => {
         const t = setTimeout(ok, noeud.delaiEssaiMs * 2 ** essai);
-        signal.addEventListener("abort", () => (clearTimeout(t), ko(signal.reason)), { once: true });
+        signal.addEventListener(
+          "abort",
+          () => (clearTimeout(t), ko(signal.reason)),
+          { once: true },
+        );
       });
     }
   }
@@ -142,7 +171,9 @@ async function lancerNoeud(
     const p = type.parametres.safeParse(resolus);
     if (!p.success)
       throw new ErreurExpression(
-        p.error.issues.map((x) => `${x.path.join(".") || "parameters"}: ${x.message}`).join("; "),
+        p.error.issues
+          .map((x) => `${x.path.join(".") || "parameters"}: ${x.message}`)
+          .join("; "),
       );
     return p.data;
   };
@@ -153,7 +184,8 @@ async function lancerNoeud(
   const nb = sortiesDe(type, noeud.parametres).length;
   const sorties: Sorties = [];
   for (const [i, el] of els.entries()) {
-    if (ctx.signal.aborted) throw new Error("execution interrupted (maximum duration reached)");
+    if (ctx.signal.aborted)
+      throw new Error("execution interrupted (maximum duration reached)");
     let r: Sorties;
     try {
       const p = parametres(el, i);
@@ -169,9 +201,16 @@ async function lancerNoeud(
 }
 
 /** Runs a validated workflow with the items of the trigger. */
-export async function executer(def: Definition, entree: Element[], o: OptionsExecution): Promise<Resultat> {
+export async function executer(
+  def: Definition,
+  entree: Element[],
+  o: OptionsExecution,
+): Promise<Resultat> {
   const { maxEtapes = 500, maxElements = 5000, dureeMaxMs = 5 * 60_000 } = o;
-  const signal = AbortSignal.any([AbortSignal.timeout(dureeMaxMs), ...(o.signal ? [o.signal] : [])]);
+  const signal = AbortSignal.any([
+    AbortSignal.timeout(dureeMaxMs),
+    ...(o.signal ? [o.signal] : []),
+  ]);
   const vus: Record<string, Record<string, unknown>> = {};
   const ctx: Contexte = {
     services: o.services,
@@ -183,7 +222,8 @@ export async function executer(def: Definition, entree: Element[], o: OptionsExe
   };
   const parId = new Map(def.noeuds.map((n) => [n.id, n]));
   const sortants = new Map<string, { sortie: number; vers: string }[]>();
-  for (const c of def.connexions) sortants.set(c.de, [...(sortants.get(c.de) ?? []), c]);
+  for (const c of def.connexions)
+    sortants.set(c.de, [...(sortants.get(c.de) ?? []), c]);
 
   const etapes: Etape[] = [];
   const terminaux: Element[] = [];
@@ -205,12 +245,19 @@ export async function executer(def: Definition, entree: Element[], o: OptionsExe
     const noeud = parId.get(id)!;
     const type = CATALOGUE.get(noeud.type)!;
     if (etapes.length >= maxEtapes)
-      return { statut: "erreur", etapes, erreur: { noeud: id, message: `more than ${maxEtapes} steps` }, sortie: [] };
+      return {
+        statut: "erreur",
+        etapes,
+        erreur: { noeud: id, message: `more than ${maxEtapes} steps` },
+        sortie: [],
+      };
     const debut = new Date();
     let sorties: Sorties;
     try {
-      if (signal.aborted) throw new Error("execution interrupted (maximum duration reached)");
-      if (els.length > maxElements) throw new Error(`more than ${maxElements} input items`);
+      if (signal.aborted)
+        throw new Error("execution interrupted (maximum duration reached)");
+      if (els.length > maxElements)
+        throw new Error(`more than ${maxElements} input items`);
       sorties =
         estDeclencheur(noeud.type) || noeud.desactive
           ? [els]
@@ -227,7 +274,12 @@ export async function executer(def: Definition, entree: Element[], o: OptionsExe
         apercu: [],
         erreur: message(e),
       });
-      return { statut: "erreur", etapes, erreur: { noeud: id, message: message(e) }, sortie: [] };
+      return {
+        statut: "erreur",
+        etapes,
+        erreur: { noeud: id, message: message(e) },
+        sortie: [],
+      };
     }
     etapes.push({
       noeud: id,

@@ -30,7 +30,10 @@ const essais = (n: NoeudN8n) =>
 interface WorkflowN8n {
   name?: string;
   nodes: NoeudN8n[];
-  connections: Record<string, { main?: ({ node: string; index?: number }[] | null)[] }>;
+  connections: Record<
+    string,
+    { main?: ({ node: string; index?: number }[] | null)[] }
+  >;
 }
 
 export interface ImportN8n {
@@ -100,34 +103,60 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
     if (typeof v !== "string" || !v.startsWith("=")) return v;
     const s = v
       .slice(1)
-      .replace(/\$\(\s*['"]([^'"]+)['"]\s*\)\.(?:item|first\(\)|last\(\))\.json/g, (_, nom: string) =>
-        ids.has(nom) ? `$noeud.${ids.get(nom)}.json` : `$noeud.${nom}.json`,
+      .replace(
+        /\$\(\s*['"]([^'"]+)['"]\s*\)\.(?:item|first\(\)|last\(\))\.json/g,
+        (_, nom: string) =>
+          ids.has(nom) ? `$noeud.${ids.get(nom)}.json` : `$noeud.${nom}.json`,
       )
-      .replace(/\$node\[\s*['"]([^'"]+)['"]\s*\]\.json/g, (_, nom: string) => `$noeud.${ids.get(nom) ?? nom}.json`)
+      .replace(
+        /\$node\[\s*['"]([^'"]+)['"]\s*\]\.json/g,
+        (_, nom: string) => `$noeud.${ids.get(nom) ?? nom}.json`,
+      )
       .replace(/\$now\b/g, "$maintenant")
       .replace(/\$today\b/g, "$aujourdhui");
     for (const m of s.matchAll(/\{\{([\s\S]+?)\}\}/g))
-      if (!/^\s*\$[a-z]+(\.[\p{L}\p{N}_$-]+|\[\d+\]|\["[^"]*"\])*\s*$/iu.test(m[1]!))
-        avertissements.push(`${ou}: expression to review ({{${m[1]}}}), only paths are supported`);
+      if (
+        !/^\s*\$[a-z]+(\.[\p{L}\p{N}_$-]+|\[\d+\]|\["[^"]*"\])*\s*$/iu.test(
+          m[1]!,
+        )
+      )
+        avertissements.push(
+          `${ou}: expression to review ({{${m[1]}}}), only paths are supported`,
+        );
     return s;
   };
   const tout = (o: unknown, ou: string): unknown =>
     Array.isArray(o)
       ? o.map((x) => tout(x, ou))
       : o && typeof o === "object"
-        ? Object.fromEntries(Object.entries(o).map(([k, x]) => [k, tout(x, ou)]))
+        ? Object.fromEntries(
+            Object.entries(o).map(([k, x]) => [k, tout(x, ou)]),
+          )
         : expr(o, ou);
 
   const conditions = (p: Record<string, unknown>, ou: string) => {
-    const c = (p.conditions ?? {}) as { conditions?: Record<string, unknown>[]; combinator?: string };
+    const c = (p.conditions ?? {}) as {
+      conditions?: Record<string, unknown>[];
+      combinator?: string;
+    };
     const liste = (c.conditions ?? []).map((x) => {
-      const op = (x.operator as { operation?: string } | undefined)?.operation ?? "equals";
-      if (!OPERATIONS[op]) avertissements.push(`${ou}: operator ${op} replaced by "egal" (equal)`);
-      return { gauche: expr(x.leftValue, ou), operateur: OPERATIONS[op] ?? "egal", droite: expr(x.rightValue, ou) };
+      const op =
+        (x.operator as { operation?: string } | undefined)?.operation ??
+        "equals";
+      if (!OPERATIONS[op])
+        avertissements.push(`${ou}: operator ${op} replaced by "egal" (equal)`);
+      return {
+        gauche: expr(x.leftValue, ou),
+        operateur: OPERATIONS[op] ?? "egal",
+        droite: expr(x.rightValue, ou),
+      };
     });
-    if (!liste.length) avertissements.push(`${ou}: conditions in the old format, to re-enter`);
+    if (!liste.length)
+      avertissements.push(`${ou}: conditions in the old format, to re-enter`);
     return {
-      conditions: liste.length ? liste : [{ gauche: "", operateur: "non_vide" }],
+      conditions: liste.length
+        ? liste
+        : [{ gauche: "", operateur: "non_vide" }],
       combinaison: c.combinator === "or" ? "ou" : "et",
     };
   };
@@ -148,24 +177,37 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
       case "webhook":
       case "formTrigger":
         type = "declencheur.webhook";
-        parametres = { reponse: p.responseMode === "lastNode" ? "fin" : "immediate" };
+        parametres = {
+          reponse: p.responseMode === "lastNode" ? "fin" : "immediate",
+        };
         break;
       case "scheduleTrigger":
       case "cron": {
         type = "declencheur.planifie";
-        const i = ((p.rule as { interval?: Record<string, unknown>[] })?.interval ?? [])[0] ?? {};
+        const i =
+          ((p.rule as { interval?: Record<string, unknown>[] })?.interval ??
+            [])[0] ?? {};
         let cron = typeof i.expression === "string" ? i.expression : null;
         if (!cron && typeof i.field === "string" && INTERVALLES[i.field])
           cron = INTERVALLES[i.field]!(Number(i[`${i.field}Interval`] ?? 1));
-        if (cron && cron.trim().split(/\s+/).length === 6) cron = cron.trim().split(/\s+/).slice(1).join(" ");
-        if (!cron) avertissements.push(`${ou}: schedule not recognized, every hour by default`);
+        if (cron && cron.trim().split(/\s+/).length === 6)
+          cron = cron.trim().split(/\s+/).slice(1).join(" ");
+        if (!cron)
+          avertissements.push(
+            `${ou}: schedule not recognized, every hour by default`,
+          );
         parametres = { cron: cron ?? "0 * * * *", fuseau: "Europe/Paris" };
         break;
       }
       case "httpRequest": {
         type = "reseau.http";
         const paires = (k: string) =>
-          (((p[k] as { parameters?: { name: string; value: unknown }[] }) ?? {}).parameters ?? []).map((x) => ({
+          (
+            (
+              (p[k] as { parameters?: { name: string; value: unknown }[] }) ??
+              {}
+            ).parameters ?? []
+          ).map((x) => ({
             nom: x.name,
             valeur: expr(x.value, ou),
           }));
@@ -178,7 +220,10 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
             } catch {
               corps = brut;
             }
-          } else corps = Object.fromEntries(paires("bodyParameters").map((x) => [x.nom, x.valeur]));
+          } else
+            corps = Object.fromEntries(
+              paires("bodyParameters").map((x) => [x.nom, x.valeur]),
+            );
         }
         parametres = {
           methode: String(p.method ?? "GET").toUpperCase(),
@@ -188,7 +233,9 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
           ...(corps === undefined ? {} : { corps }),
         };
         if (p.authentication && p.authentication !== "none")
-          avertissements.push(`${ou}: n8n authentication to replace with a header using {{ $secret.nom }}`);
+          avertissements.push(
+            `${ou}: n8n authentication to replace with a header using {{ $secret.nom }}`,
+          );
         break;
       }
       case "if":
@@ -201,18 +248,29 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         break;
       case "set": {
         type = "donnees.definir";
-        const a = ((p.assignments as { assignments?: { name: string; value: unknown }[] }) ?? {}).assignments ?? [];
+        const a =
+          (
+            (p.assignments as {
+              assignments?: { name: string; value: unknown }[];
+            }) ?? {}
+          ).assignments ?? [];
         parametres = {
           champs: a.map((x) => ({ nom: x.name, valeur: expr(x.value, ou) })),
           conserver: Boolean(p.includeOtherFields ?? false),
         };
-        if (!a.length) avertissements.push(`${ou}: fields in the old format, to re-enter`);
+        if (!a.length)
+          avertissements.push(`${ou}: fields in the old format, to re-enter`);
         if (!a.length) parametres.champs = [{ nom: "champ", valeur: "" }];
         break;
       }
       case "wait":
         type = "logique.attendre";
-        parametres = { secondes: Math.min(60, Number(p.amount ?? 1) * (p.unit === "minutes" ? 60 : 1)) };
+        parametres = {
+          secondes: Math.min(
+            60,
+            Number(p.amount ?? 1) * (p.unit === "minutes" ? 60 : 1),
+          ),
+        };
         if (Number(p.amount ?? 1) * (p.unit === "minutes" ? 60 : 1) > 60)
           avertissements.push(`${ou}: wait capped at 60 seconds`);
         break;
@@ -222,8 +280,15 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         break;
       case "sort": {
         type = "donnees.trier";
-        const f = ((p.sortFieldsUi as { sortField?: { fieldName: string; order?: string }[] }) ?? {}).sortField?.[0];
-        parametres = { champ: f?.fieldName ?? "id", ordre: f?.order === "descending" ? "decroissant" : "croissant" };
+        const f = (
+          (p.sortFieldsUi as {
+            sortField?: { fieldName: string; order?: string }[];
+          }) ?? {}
+        ).sortField?.[0];
+        parametres = {
+          champ: f?.fieldName ?? "id",
+          ordre: f?.order === "descending" ? "decroissant" : "croissant",
+        };
         break;
       }
       case "removeDuplicates":
@@ -249,26 +314,48 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         break;
       case "stopAndError":
         type = "logique.arreter";
-        parametres = { message: String(expr(p.errorMessage, ou) ?? "error") || "error" };
+        parametres = {
+          message: String(expr(p.errorMessage, ou) ?? "error") || "error",
+        };
         break;
       case "discord":
         type = "communication.discord";
-        parametres = { webhook: "{{ $secret.discord }}", texte: expr(p.content ?? p.text, ou) };
-        avertissements.push(`${ou}: Discord webhook to provide in the "discord" secret`);
+        parametres = {
+          webhook: "{{ $secret.discord }}",
+          texte: expr(p.content ?? p.text, ou),
+        };
+        avertissements.push(
+          `${ou}: Discord webhook to provide in the "discord" secret`,
+        );
         break;
       case "telegram":
         type = "communication.telegram";
-        parametres = { jeton: "{{ $secret.telegram_bot }}", chat: expr(p.chatId, ou), texte: expr(p.text, ou) };
-        avertissements.push(`${ou}: bot token to provide in the "telegram_bot" secret`);
+        parametres = {
+          jeton: "{{ $secret.telegram_bot }}",
+          chat: expr(p.chatId, ou),
+          texte: expr(p.text, ou),
+        };
+        avertissements.push(
+          `${ou}: bot token to provide in the "telegram_bot" secret`,
+        );
         break;
       case "emailSend":
         type = "communication.mail";
-        parametres = { a: expr(p.toEmail, ou), sujet: expr(p.subject, ou), texte: expr(p.text ?? p.html, ou) };
+        parametres = {
+          a: expr(p.toEmail, ou),
+          sujet: expr(p.subject, ou),
+          texte: expr(p.text ?? p.html, ou),
+        };
         break;
       case "slack":
         type = "communication.slack";
-        parametres = { webhook: "{{ $secret.slack }}", texte: expr(p.text, ou) };
-        avertissements.push(`${ou}: message sent through an incoming webhook ("slack" secret), channel set by that webhook`);
+        parametres = {
+          webhook: "{{ $secret.slack }}",
+          texte: expr(p.text, ou),
+        };
+        avertissements.push(
+          `${ou}: message sent through an incoming webhook ("slack" secret), channel set by that webhook`,
+        );
         break;
       case "noOp":
         type = "logique.passer";
@@ -278,16 +365,22 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         const js = String(p.jsCode ?? "");
         parametres = {
           mode: p.mode === "runOnceForEachItem" ? "element" : "lot",
-          code: js.replace(/\$\(\s*(['"])([^'"]+)\1\s*\)/g, (m, q: string, nom: string) =>
-            ids.has(nom) ? `$(${q}${ids.get(nom)}${q})` : m,
+          code: js.replace(
+            /\$\(\s*(['"])([^'"]+)\1\s*\)/g,
+            (m, q: string, nom: string) =>
+              ids.has(nom) ? `$(${q}${ids.get(nom)}${q})` : m,
           ),
         };
         if (p.language && p.language !== "javaScript") {
           type = "logique.passer";
           parametres = {};
           note = `To replace: ${String(p.language)} code not supported`;
-          avertissements.push(`${ou}: ${String(p.language)} code not supported, left as "Pass through"`);
-        } else if (/this\.helpers|\$binary|\brequire\(|\$env|\$vars|\bfetch\(/.test(js))
+          avertissements.push(
+            `${ou}: ${String(p.language)} code not supported, left as "Pass through"`,
+          );
+        } else if (
+          /this\.helpers|\$binary|\brequire\(|\$env|\$vars|\bfetch\(/.test(js)
+        )
           avertissements.push(
             `${ou}: the code uses n8n functions missing from the sandbox (helpers, binary, require, network): to adapt`,
           );
@@ -299,7 +392,8 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
           parametres,
           position: [n.position?.[0] ?? 0, n.position?.[1] ?? 0],
           desactive: Boolean(n.disabled),
-          continuerSurErreur: Boolean(n.continueOnFail) || n.onError === "continueRegularOutput",
+          continuerSurErreur:
+            Boolean(n.continueOnFail) || n.onError === "continueRegularOutput",
           ...essais(n),
           ...(note ? { note } : {}),
         });
@@ -312,7 +406,9 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
         // Slot kept in the graph (connections intact), to replace in the editor.
         type = "logique.passer";
         note = `To replace: n8n node ${n.type}`;
-        avertissements.push(`${ou}: node ${n.type} not supported, left as "Pass through" to replace`);
+        avertissements.push(
+          `${ou}: node ${n.type} not supported, left as "Pass through" to replace`,
+        );
     }
     if (!type) continue;
     noeuds.push({
@@ -322,7 +418,8 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
       parametres: tout(parametres, ou) as Record<string, unknown>,
       position: [n.position?.[0] ?? 0, n.position?.[1] ?? 0],
       desactive: Boolean(n.disabled),
-      continuerSurErreur: Boolean(n.continueOnFail) || n.onError === "continueRegularOutput",
+      continuerSurErreur:
+        Boolean(n.continueOnFail) || n.onError === "continueRegularOutput",
       ...essais(n),
       ...(note ? { note } : {}),
     });
@@ -335,13 +432,15 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
       for (const c of liste ?? []) {
         const de = ids.get(source);
         const vers = ids.get(c.node);
-        if (de && vers && presents.has(de) && presents.has(vers)) connexions.push({ de, sortie, vers });
+        if (de && vers && presents.has(de) && presents.has(vers))
+          connexions.push({ de, sortie, vers });
       }
 
   // One graph per trigger (reachable nodes); nodes reached by no recognized trigger
   // get a manual start.
   const suivants = new Map<string, string[]>();
-  for (const c of connexions) suivants.set(c.de, [...(suivants.get(c.de) ?? []), c.vers]);
+  for (const c of connexions)
+    suivants.set(c.de, [...(suivants.get(c.de) ?? []), c.vers]);
   const atteints = (depart: string) => {
     const vus = new Set([depart]);
     for (const file = [depart]; file.length;)
@@ -366,13 +465,20 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
   const orphelins = noeuds.filter((n) => !couverts.has(n.id));
   if (orphelins.length) {
     const ids = new Set(orphelins.map((n) => n.id));
-    const cibles = new Set(connexions.filter((c) => ids.has(c.de) && ids.has(c.vers)).map((c) => c.vers));
+    const cibles = new Set(
+      connexions
+        .filter((c) => ids.has(c.de) && ids.has(c.vers))
+        .map((c) => c.vers),
+    );
     const manuel: Noeud = {
       id: slug("declencheur", pris),
       type: "declencheur.manuel",
       nom: "Lancement manuel",
       parametres: {},
-      position: [Math.min(0, ...orphelins.map((n) => n.position[0])) - 280, orphelins[0]!.position[1]],
+      position: [
+        Math.min(0, ...orphelins.map((n) => n.position[0])) - 280,
+        orphelins[0]!.position[1],
+      ],
       desactive: false,
       continuerSurErreur: false,
       tentatives: 0,
@@ -390,7 +496,12 @@ export function importerN8n(w: WorkflowN8n): ImportN8n {
     );
   }
   if (parties.length > 1)
-    avertissements.push(`${parties.length} triggers: imported as ${parties.length} workflows`);
-  const [premier, ...autres] = parties.map((p) => ({ nom: p.nom.slice(0, 120), definition: graphe(p.ids) }));
+    avertissements.push(
+      `${parties.length} triggers: imported as ${parties.length} workflows`,
+    );
+  const [premier, ...autres] = parties.map((p) => ({
+    nom: p.nom.slice(0, 120),
+    definition: graphe(p.ids),
+  }));
   return { ...premier!, avertissements, autres };
 }

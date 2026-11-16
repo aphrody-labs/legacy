@@ -1,0 +1,28 @@
+$ ai-os automate list
+facture-slack         3 nodes  Announce each issued invoice on Slack
+paiement-merci        4 nodes  Thank the customer when the payment arrives
+retards-lundi         6 nodes  Unpaid invoices summary every Monday
+formulaire-client     3 nodes  Create a customer from your website form
+absence-telegram      2 nodes  Notify the manager of an absence request
+ia-tri-messages       5 nodes  Sort incoming messages with a local model
+veille-api            4 nodes  Monitor an API and alert on Discord
+veille-rss            5 nodes  Watch: new articles of a feed summarized on Slack
+questions-documents   4 nodes  Answer questions with your documents
+
+$ ai-os automate run facture-slack --input {...}
+  [dry] POST https://dry-run.invalid/slack_ventes
+facture-slack: succes
+  declencheur    declencheur.evenement         0 ms  out 1
+  facture        logique.si                    2 ms  out 1/0
+  slack          communication.slack           2 ms  out 1
+
+$ ai-os automate models auto --limit 8
+local local:127.0.0.1:11434 gemma4:e2b                           in      0 out      0  ctx 0
+local local:127.0.0.1:8080 gemma4-e2b                           in      0 out      0  ctx 0
+cloud cloudflare-workers-ai @cf/ibm-granite/granite-4.0-h-micro  in  0.017 out  0.112  ctx 131000
+cloud cloudflare-workers-ai @cf/meta/llama-3.2-1b-instruct       in  0.027 out  0.201  ctx 60000
+cloud cloudflare-workers-ai @cf/meta/llama-3.2-3b-instruct       in 0.0509 out  0.335  ctx 80000
+cloud cloudflare-workers-ai @cf/qwen/qwen3-30b-a3b-fp8           in 0.0509 out  0.335  ctx 32768
+cloud cloudflare-workers-ai @cf/google/gemma-4-26b-a4b-it        in    0.1 out    0.3  ctx 256000
+cloud cloudflare-workers-ai @cf/meta/llama-3.1-8b-instruct-fp8   in  0.152 out  0.287  ctx 32000
+88 offers for policy auto

@@ -9,9 +9,18 @@ import type { Element } from "./schema";
 export interface Services {
   /** Guarded `fetch`: refuses internal addresses in production. */
   fetch(url: string, init: RequestInit): Promise<Response>;
-  envoyerMail?(m: { a: string; sujet: string; texte: string; pieces?: Fichier[] }): Promise<void>;
+  envoyerMail?(m: {
+    a: string;
+    sujet: string;
+    texte: string;
+    pieces?: Fichier[];
+  }): Promise<void>;
   /** Runs another workflow of the company and returns its output items (100 at most). */
-  sousWorkflow?(id: string, entree: Element[], signal: AbortSignal): Promise<Element[]>;
+  sousWorkflow?(
+    id: string,
+    entree: Element[],
+    signal: AbortSignal,
+  ): Promise<Element[]>;
   /** Spreadsheets through the native library (crate auto-sheets). */
   tableur?: {
     ecrire(feuille: {
@@ -19,7 +28,12 @@ export interface Services {
       colonnes: { titre: string }[];
       lignes: (string | number | boolean | null)[][];
     }): Uint8Array;
-    lire(octets: Uint8Array): { feuilles: { nom: string; lignes: (string | number | boolean | null)[][] }[] };
+    lire(octets: Uint8Array): {
+      feuilles: {
+        nom: string;
+        lignes: (string | number | boolean | null)[][];
+      }[];
+    };
   };
   /** PDF through the native library (crate auto-fichiers, pdfcraft); pages numbered from 1. */
   pdf?: {
@@ -39,7 +53,14 @@ export interface Services {
         mots_entiers: boolean;
         texte_superpose: string;
       },
-    ): { pdf: Uint8Array; rapport: { occurrences: number; pages: number[]; par_recherche: unknown[] } };
+    ): {
+      pdf: Uint8Array;
+      rapport: {
+        occurrences: number;
+        pages: number[];
+        par_recherche: unknown[];
+      };
+    };
     signer(
       pdf: Uint8Array,
       p12: Uint8Array,
@@ -53,11 +74,18 @@ export interface Services {
         certifier?: 1 | 2 | 3;
       },
     ): Uint8Array;
-    signatures(pdf: Uint8Array, confiance: string): { signee: boolean; statut: string }[];
+    signatures(
+      pdf: Uint8Array,
+      confiance: string,
+    ): { signee: boolean; statut: string }[];
     presentation(p: {
       titre: string;
       sous_titre: string;
-      diapositives: { titre: string; puces: (string | { texte: string; niveau: number })[]; notes: string }[];
+      diapositives: {
+        titre: string;
+        puces: (string | { texte: string; niveau: number })[];
+        notes: string;
+      }[];
     }): Uint8Array;
     presentationEnPdf(pptx: Uint8Array): Uint8Array;
   };
@@ -65,7 +93,11 @@ export interface Services {
   word?: {
     creer(d: {
       titre?: string;
-      paragraphes: { texte: string; style?: "titre" | "titre1" | "titre2" | "titre3"; gras?: boolean }[];
+      paragraphes: {
+        texte: string;
+        style?: "titre" | "titre1" | "titre2" | "titre3";
+        gras?: boolean;
+      }[];
     }): Uint8Array;
     champs(docx: Uint8Array): string[];
     remplir(docx: Uint8Array, valeurs: Record<string, string>): Uint8Array;
@@ -87,28 +119,70 @@ export interface Services {
   /** Videos through Bun.Video (native FilmCraft provider). */
   video?: {
     metadonnees(octets: Uint8Array): Promise<Record<string, unknown>>;
-    image(octets: Uint8Array, secondes: number, largeur?: number): Promise<Uint8Array>;
-    gif(octets: Uint8Array, debut: number, duree: number, largeur: number): Promise<Uint8Array>;
+    image(
+      octets: Uint8Array,
+      secondes: number,
+      largeur?: number,
+    ): Promise<Uint8Array>;
+    gif(
+      octets: Uint8Array,
+      debut: number,
+      duree: number,
+      largeur: number,
+    ): Promise<Uint8Array>;
   };
   /** Web page rendered by Bun.WebView (JavaScript executed, as in a browser). */
   navigateur?(
     url: string,
-    o: { largeur: number; hauteur: number; attendreMs: number; texte: boolean; capture: boolean },
-  ): Promise<{ titre: string; texte: string | null; capture: Uint8Array | null }>;
+    o: {
+      largeur: number;
+      hauteur: number;
+      attendreMs: number;
+      texte: boolean;
+      capture: boolean;
+    },
+  ): Promise<{
+    titre: string;
+    texte: string | null;
+    capture: Uint8Array | null;
+  }>;
   /** Call of the auto API on behalf of the company of the workflow. */
-  appelerAuto?(methode: string, chemin: string, corps?: unknown): Promise<{ statut: number; corps: unknown }>;
+  appelerAuto?(
+    methode: string,
+    chemin: string,
+    corps?: unknown,
+  ): Promise<{ statut: number; corps: unknown }>;
   /** User JavaScript in a sandbox (no network, no files, no Bun), bounded time and memory. */
-  script?(code: string, donnees: DonneesScript): Promise<{ resultat: unknown; journal: string[] }>;
+  script?(
+    code: string,
+    donnees: DonneesScript,
+  ): Promise<{ resultat: unknown; journal: string[] }>;
   /** Workflow memory kept from one run to the next (key per node). */
-  memoire?: { lire(cle: string): Promise<unknown>; ecrire(cle: string, valeur: unknown): Promise<void> };
+  memoire?: {
+    lire(cle: string): Promise<unknown>;
+    ecrire(cle: string, valeur: unknown): Promise<void>;
+  };
   /** Knowledge base of the company (RAG): native chunking and search, embeddings through the given API. */
   connaissance?: {
     indexer(
-      o: { base: string; source: string; texte: string; taille?: number; embeddings: ApiEmbeddings },
+      o: {
+        base: string;
+        source: string;
+        texte: string;
+        taille?: number;
+        embeddings: ApiEmbeddings;
+      },
       signal: AbortSignal,
     ): Promise<{ morceaux: number; remplaces: number }>;
     rechercher(
-      o: { base: string; question: string; k: number; scoreMin: number; diversite?: number; embeddings: ApiEmbeddings },
+      o: {
+        base: string;
+        question: string;
+        k: number;
+        scoreMin: number;
+        diversite?: number;
+        embeddings: ApiEmbeddings;
+      },
       signal: AbortSignal,
     ): Promise<MorceauTrouve[]>;
   };
@@ -187,7 +261,14 @@ export interface Contexte {
   workflow: { id: string; nom: string };
 }
 
-export type Categorie = "declencheur" | "logique" | "donnees" | "reseau" | "communication" | "ia" | "auto";
+export type Categorie =
+  | "declencheur"
+  | "logique"
+  | "donnees"
+  | "reseau"
+  | "communication"
+  | "ia"
+  | "auto";
 
 /** Outputs of a node: one array of items per output. */
 export type Sorties = Element[][];
@@ -238,16 +319,26 @@ const Conditions = z.object({
   combinaison: z.enum(["et", "ou"]).default("et"),
 });
 
-const t = (v: unknown) => (v == null ? "" : typeof v === "object" ? JSON.stringify(v) : String(v as string));
-const n = (v: unknown) => (typeof v === "number" ? v : Number(t(v).replace(",", ".")));
+const t = (v: unknown) =>
+  v == null
+    ? ""
+    : typeof v === "object"
+      ? JSON.stringify(v)
+      : String(v as string);
+const n = (v: unknown) =>
+  typeof v === "number" ? v : Number(t(v).replace(",", "."));
 
 export function tester(c: z.output<typeof Condition>): boolean {
   const { gauche: g, droite: d } = c;
   switch (c.operateur) {
     case "egal":
-      return typeof g === "number" || typeof d === "number" ? n(g) === n(d) : t(g) === t(d);
+      return typeof g === "number" || typeof d === "number"
+        ? n(g) === n(d)
+        : t(g) === t(d);
     case "different":
-      return typeof g === "number" || typeof d === "number" ? n(g) !== n(d) : t(g) !== t(d);
+      return typeof g === "number" || typeof d === "number"
+        ? n(g) !== n(d)
+        : t(g) !== t(d);
     case "contient":
       return Array.isArray(g) ? g.map(t).includes(t(d)) : t(g).includes(t(d));
     case "ne_contient_pas":
@@ -268,14 +359,17 @@ export function tester(c: z.output<typeof Condition>): boolean {
       return !(g === true || g === "true" || g === 1);
     case "correspond": {
       const motif = t(d);
-      if (motif.length > 200) throw new ErreurExpression("pattern too long (200 characters at most)");
+      if (motif.length > 200)
+        throw new ErreurExpression("pattern too long (200 characters at most)");
       return new RegExp(motif, "u").test(t(g));
     }
   }
 }
 
 const verifier = (p: z.output<typeof Conditions>) =>
-  p.combinaison === "et" ? p.conditions.every(tester) : p.conditions.some(tester);
+  p.combinaison === "et"
+    ? p.conditions.every(tester)
+    : p.conditions.some(tester);
 
 // ── Network ────────────────────────────────────────────────────────────────
 
@@ -284,8 +378,10 @@ const Paire = z.object({ nom: z.string().min(1), valeur: z.unknown() });
 async function lireReponse(r: Response, format: "json" | "texte" | "auto") {
   const type = r.headers.get("content-type") ?? "";
   const brut = await r.text();
-  if (brut.length > 5_000_000) throw new Error("response too large (5 MB at most)");
-  if (format === "texte" || (format === "auto" && !type.includes("json"))) return brut;
+  if (brut.length > 5_000_000)
+    throw new Error("response too large (5 MB at most)");
+  if (format === "texte" || (format === "auto" && !type.includes("json")))
+    return brut;
   try {
     return brut ? JSON.parse(brut) : null;
   } catch {
@@ -305,8 +401,18 @@ async function appeler(
   const brut = typeof corps === "string" || corps instanceof Uint8Array;
   const r = await ctx.services.fetch(url, {
     method: methode,
-    headers: { ...(brut || corps === undefined ? {} : { "content-type": "application/json" }), ...entetes },
-    body: corps === undefined ? undefined : brut ? (corps as BodyInit) : JSON.stringify(corps),
+    headers: {
+      ...(brut || corps === undefined
+        ? {}
+        : { "content-type": "application/json" }),
+      ...entetes,
+    },
+    body:
+      corps === undefined
+        ? undefined
+        : brut
+          ? (corps as BodyInit)
+          : JSON.stringify(corps),
     signal: ctx.signal,
   });
   const reponse = await lireReponse(r, "auto");
@@ -314,13 +420,18 @@ async function appeler(
   return reponse;
 }
 
-const poster = (ctx: Contexte, url: string, corps: unknown, entetes: Record<string, string> = {}) =>
-  appeler(ctx, "POST", url, corps, entetes);
+const poster = (
+  ctx: Contexte,
+  url: string,
+  corps: unknown,
+  entetes: Record<string, string> = {},
+) => appeler(ctx, "POST", url, corps, entetes);
 
 /** 32-bit FNV-1a fingerprint (pure JS: the engine also runs in the browser). */
 function empreinte(texte: string) {
   let h = 0x811c9dc5;
-  for (let i = 0; i < texte.length; i++) h = Math.imul(h ^ texte.charCodeAt(i), 0x01000193);
+  for (let i = 0; i < texte.length; i++)
+    h = Math.imul(h ^ texte.charCodeAt(i), 0x01000193);
   return (h >>> 0).toString(36);
 }
 
@@ -333,7 +444,9 @@ const base = (url: string) => url.replace(/\/+$/, "");
 const porteur = (jeton: string) => ({ authorization: `Bearer ${jeton}` });
 
 const une = (els: Element[]): Sorties => [els];
-const avec = (el: Element, champs: Record<string, unknown>): Element => ({ json: { ...el.json, ...champs } });
+const avec = (el: Element, champs: Record<string, unknown>): Element => ({
+  json: { ...el.json, ...champs },
+});
 
 // ── PDF and Word files ─────────────────────────────────────────────────────
 
@@ -345,14 +458,27 @@ const SourceFichier = z.object({
 
 const OCTETS_MAX = 20_000_000;
 
-async function source(p: { fichier: Fichier | "" | null; url: string }, ctx: Contexte) {
-  if (p.fichier) return { nom: p.fichier.nom, octets: Uint8Array.fromBase64(p.fichier.base64) };
+async function source(
+  p: { fichier: Fichier | "" | null; url: string },
+  ctx: Contexte,
+) {
+  if (p.fichier)
+    return {
+      nom: p.fichier.nom,
+      octets: Uint8Array.fromBase64(p.fichier.base64),
+    };
   if (!p.url) throw new Error("file or URL required");
   const r = await ctx.services.fetch(p.url, { signal: ctx.signal });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const octets = await r.bytes();
-  if (octets.length > OCTETS_MAX) throw new Error("fichier trop volumineux (20 Mo au plus)");
-  return { nom: decodeURIComponent(new URL(p.url).pathname.split("/").pop() || "fichier"), octets };
+  if (octets.length > OCTETS_MAX)
+    throw new Error("fichier trop volumineux (20 Mo au plus)");
+  return {
+    nom: decodeURIComponent(
+      new URL(p.url).pathname.split("/").pop() || "fichier",
+    ),
+    octets,
+  };
 }
 
 function natif(ctx: Contexte) {
@@ -384,11 +510,14 @@ export function plagesPages(spec: string, total: number): number[] {
     .map((x) => x.trim())
     .filter(Boolean)) {
     const m = /^(\d+)?\s*(-)?\s*(\d+)?$/.exec(morceau);
-    if (!m || (!m[1] && !m[3])) throw new Error(`pages invalides : « ${morceau} »`);
+    if (!m || (!m[1] && !m[3]))
+      throw new Error(`pages invalides : « ${morceau} »`);
     const debut = Number(m[1] ?? 1);
     const fin = m[2] ? Number(m[3] ?? total) : debut;
     if (debut < 1 || fin > total || debut > fin)
-      throw new Error(`pages outside the document (${total} page${total > 1 ? "s" : ""}): "${morceau}"`);
+      throw new Error(
+        `pages outside the document (${total} page${total > 1 ? "s" : ""}): "${morceau}"`,
+      );
     for (let i = debut; i <= fin; i++) pages.push(i);
   }
   if (pages.length > 5000) throw new Error("5 000 pages au plus");
@@ -399,8 +528,8 @@ export function plagesPages(spec: string, total: number): number[] {
 
 /** Default OpenAI-compatible API of the AI nodes: `AUTO_IA_URL` of the server (Ollama of the Aphrody Box), else local. */
 const IA_URL =
-  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.AUTO_IA_URL ||
-  "http://localhost:11434/v1";
+  (globalThis as { process?: { env?: Record<string, string | undefined> } })
+    .process?.env?.AUTO_IA_URL || "http://localhost:11434/v1";
 
 const BASE_CONNAISSANCE = /^[a-z0-9_-]{1,60}$/;
 
@@ -411,14 +540,19 @@ const ParametresEmbeddings = {
   cle: z.string().default(""),
 };
 
-const embeddingsDe = (p: { api: string; modele: string; cle: string }): ApiEmbeddings => ({
+const embeddingsDe = (p: {
+  api: string;
+  modele: string;
+  cle: string;
+}): ApiEmbeddings => ({
   url: p.api,
   modele: p.modele,
   ...(p.cle ? { cle: p.cle } : {}),
 });
 
 function connaissance(ctx: Contexte) {
-  if (!ctx.services.connaissance) throw new Error("base de connaissances indisponible");
+  if (!ctx.services.connaissance)
+    throw new Error("base de connaissances indisponible");
   return ctx.services.connaissance;
 }
 
@@ -436,7 +570,13 @@ function texteDocument(nom: string, octets: Uint8Array, ctx: Contexte): string {
 
 // ── Redaction, signature, presentations ────────────────────────────────────
 
-export const MOTIFS_CAVIARDAGE = ["iban", "email", "telephone", "carte", "date"] as const;
+export const MOTIFS_CAVIARDAGE = [
+  "iban",
+  "email",
+  "telephone",
+  "carte",
+  "date",
+] as const;
 export type MotifCaviardage = (typeof MOTIFS_CAVIARDAGE)[number];
 
 function documents(ctx: Contexte) {
@@ -451,7 +591,10 @@ const Diapositive = z.object({
     .array(
       z.union([
         z.string().max(5000),
-        z.object({ texte: z.string().max(5000), niveau: z.number().int().min(0).max(4).default(0) }),
+        z.object({
+          texte: z.string().max(5000),
+          niveau: z.number().int().min(0).max(4).default(0),
+        }),
       ]),
     )
     .max(100)
@@ -490,12 +633,22 @@ export function extraireHtml(
     });
   }
   rw.transform(html);
-  return Object.fromEntries(champs.map((c, i) => [c.nom, c.tous ? valeurs[i]! : (valeurs[i]![0] ?? null)]));
+  return Object.fromEntries(
+    champs.map((c, i) => [
+      c.nom,
+      c.tous ? valeurs[i]! : (valeurs[i]![0] ?? null),
+    ]),
+  );
 }
 
-const enListe = (v: unknown): unknown[] => (v == null ? [] : Array.isArray(v) ? v : [v]);
+const enListe = (v: unknown): unknown[] =>
+  v == null ? [] : Array.isArray(v) ? v : [v];
 const enTexte = (v: unknown): string =>
-  v == null ? "" : typeof v === "object" ? t((v as Record<string, unknown>)["#text"] ?? "") : t(v);
+  v == null
+    ? ""
+    : typeof v === "object"
+      ? t((v as Record<string, unknown>)["#text"] ?? "")
+      : t(v);
 
 /** Items of an RSS 2.0 or Atom feed, through the native XML parser of Bun. */
 export function lireFlux(xml: string): Record<string, unknown>[] {
@@ -517,7 +670,9 @@ export function lireFlux(xml: string): Record<string, unknown>[] {
     return enListe(doc.feed.entry).map((x) => {
       const i = x as Record<string, unknown>;
       const liens = enListe(i.link) as Record<string, unknown>[];
-      const lien = liens.find((l) => !l?.["@rel"] || l["@rel"] === "alternate") ?? liens[0];
+      const lien =
+        liens.find((l) => !l?.["@rel"] || l["@rel"] === "alternate") ??
+        liens[0];
       return {
         titre: enTexte(i.title),
         lien: t(lien?.["@href"] ?? ""),
@@ -535,15 +690,19 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "declencheur.manuel",
     libelle: "Manual start",
-    description: "Starts the workflow from the editor, the API or the CLI, with test data.",
+    description:
+      "Starts the workflow from the editor, the API or the CLI, with test data.",
     categorie: "declencheur",
     icone: "play_circle",
-    parametres: z.object({ donnees: z.record(z.string(), z.unknown()).default({}) }),
+    parametres: z.object({
+      donnees: z.record(z.string(), z.unknown()).default({}),
+    }),
   }),
   def({
     type: "declencheur.evenement",
     libelle: "auto event",
-    description: "Starts on each event of the company: invoice issued, payment received, absence...",
+    description:
+      "Starts on each event of the company: invoice issued, payment received, absence...",
     categorie: "declencheur",
     icone: "bolt",
     parametres: z.object({
@@ -556,7 +715,8 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "declencheur.planifie",
     libelle: "Schedule",
-    description: "Starts on a cron expression (minute hour day month day-of-week).",
+    description:
+      "Starts on a cron expression (minute hour day month day-of-week).",
     categorie: "declencheur",
     icone: "schedule",
     parametres: z.object({
@@ -574,7 +734,8 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "declencheur.webhook",
     libelle: "Incoming webhook",
-    description: "Starts on each request received at the secret URL of the workflow.",
+    description:
+      "Starts on each request received at the secret URL of the workflow.",
     categorie: "declencheur",
     icone: "webhook",
     parametres: z.object({
@@ -585,7 +746,8 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "logique.si",
     libelle: "If",
-    description: "Routes each item to \"vrai\" (true) or \"faux\" (false) depending on conditions.",
+    description:
+      'Routes each item to "vrai" (true) or "faux" (false) depending on conditions.',
     categorie: "logique",
     icone: "call_split",
     parametres: Conditions,
@@ -598,11 +760,17 @@ export const TYPES: TypeNoeud[] = [
     description: "Routes each item to the output whose value matches.",
     categorie: "logique",
     icone: "alt_route",
-    parametres: z.object({ valeur: z.unknown(), cas: z.array(z.string()).min(1).max(10) }),
+    parametres: z.object({
+      valeur: z.unknown(),
+      cas: z.array(z.string()).min(1).max(10),
+    }),
     sorties: (p) => [...p.cas, "autre"],
     element: async (p, el) => {
       const i = p.cas.indexOf(t(p.valeur));
-      const sorties: Sorties = Array.from({ length: p.cas.length + 1 }, () => []);
+      const sorties: Sorties = Array.from(
+        { length: p.cas.length + 1 },
+        () => [],
+      );
       sorties[i < 0 ? p.cas.length : i]!.push(el);
       return sorties;
     },
@@ -617,9 +785,13 @@ export const TYPES: TypeNoeud[] = [
     lot: async (p, els, ctx) => {
       await new Promise<void>((ok, ko) => {
         const h = setTimeout(ok, p.secondes * 1000);
-        ctx.signal.addEventListener("abort", () => (clearTimeout(h), ko(new Error("execution interrupted"))), {
-          once: true,
-        });
+        ctx.signal.addEventListener(
+          "abort",
+          () => (clearTimeout(h), ko(new Error("execution interrupted"))),
+          {
+            once: true,
+          },
+        );
       });
       return une(els);
     },
@@ -627,7 +799,8 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "logique.passer",
     libelle: "Pass through",
-    description: "Passes the items on unchanged: a junction point, or the place of a node to replace.",
+    description:
+      "Passes the items on unchanged: a junction point, or the place of a node to replace.",
     categorie: "logique",
     icone: "arrow_forward",
     parametres: z.object({}),
@@ -656,7 +829,9 @@ export const TYPES: TypeNoeud[] = [
       conserver: z.boolean().default(true),
     }),
     element: async (p, el) => {
-      const json: Record<string, unknown> = p.conserver ? structuredClone(el.json) : {};
+      const json: Record<string, unknown> = p.conserver
+        ? structuredClone(el.json)
+        : {};
       for (const c of p.champs) ecrire(json, c.nom, c.valeur);
       return une([{ json }]);
     },
@@ -682,8 +857,13 @@ export const TYPES: TypeNoeud[] = [
       mode: z.enum(["lot", "element"]).default("lot"),
     }),
     async lot(p, els, ctx) {
-      if (!ctx.services.script) throw new Error("JavaScript sandbox unavailable");
-      const base = { noeuds: ctx.vus, execution: ctx.execution, workflow: ctx.workflow };
+      if (!ctx.services.script)
+        throw new Error("JavaScript sandbox unavailable");
+      const base = {
+        noeuds: ctx.vus,
+        execution: ctx.execution,
+        workflow: ctx.workflow,
+      };
       if (p.mode === "lot") {
         const r = await ctx.services.script(p.code, {
           ...base,
@@ -694,7 +874,11 @@ export const TYPES: TypeNoeud[] = [
       }
       const sortie: Element[] = [];
       for (const e of els) {
-        const r = await ctx.services.script(p.code, { ...base, elements: [e.json], json: e.json });
+        const r = await ctx.services.script(p.code, {
+          ...base,
+          elements: [e.json],
+          json: e.json,
+        });
         sortie.push(...elementsDe(r.resultat));
       }
       return une(sortie);
@@ -716,7 +900,8 @@ export const TYPES: TypeNoeud[] = [
         els.toSorted((a, b) => {
           const x = lire(a.json, p.champ);
           const y = lire(b.json, p.champ);
-          if (typeof x === "number" && typeof y === "number") return (x - y) * s;
+          if (typeof x === "number" && typeof y === "number")
+            return (x - y) * s;
           return t(x).localeCompare(t(y), "fr") * s;
         }),
       );
@@ -740,16 +925,26 @@ export const TYPES: TypeNoeud[] = [
     parametres: z.object({ champ: z.string().min(1) }),
     lot: async (p, els) => {
       const vus = new Set<string>();
-      return une(els.filter((e) => !vus.has(t(lire(e.json, p.champ))) && vus.add(t(lire(e.json, p.champ)))));
+      return une(
+        els.filter(
+          (e) =>
+            !vus.has(t(lire(e.json, p.champ))) &&
+            vus.add(t(lire(e.json, p.champ))),
+        ),
+      );
     },
   }),
   def({
     type: "donnees.nouveaux",
     libelle: "Only new ones",
-    description: "Lets through only the items never seen in previous runs (monitoring, feeds, APIs).",
+    description:
+      "Lets through only the items never seen in previous runs (monitoring, feeds, APIs).",
     categorie: "donnees",
     icone: "fiber_new",
-    parametres: z.object({ champ: z.string().min(1), memoire: z.number().int().min(10).max(10_000).default(1000) }),
+    parametres: z.object({
+      champ: z.string().min(1),
+      memoire: z.number().int().min(10).max(10_000).default(1000),
+    }),
     lot: async (p, els, ctx) => {
       const m = ctx.services.memoire;
       if (!m) throw new Error("workflow memory unavailable");
@@ -778,7 +973,16 @@ export const TYPES: TypeNoeud[] = [
       valeur: z.string().default(""),
     }),
     lot: async (p, els) =>
-      une([{ json: { [p.champ]: els.map((e) => (p.valeur ? lire(e.json, p.valeur) : e.json)), nombre: els.length } }]),
+      une([
+        {
+          json: {
+            [p.champ]: els.map((e) =>
+              p.valeur ? lire(e.json, p.valeur) : e.json,
+            ),
+            nombre: els.length,
+          },
+        },
+      ]),
   }),
   def({
     type: "donnees.separer",
@@ -791,7 +995,12 @@ export const TYPES: TypeNoeud[] = [
       const liste = lire(el.json, p.champ);
       if (!Array.isArray(liste)) throw new Error(`"${p.champ}" is not a list`);
       return une(
-        liste.map((v) => ({ json: v && typeof v === "object" && !Array.isArray(v) ? { ...v } : { valeur: v } })),
+        liste.map((v) => ({
+          json:
+            v && typeof v === "object" && !Array.isArray(v)
+              ? { ...v }
+              : { valeur: v },
+        })),
       );
     },
   }),
@@ -799,7 +1008,8 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "fichier.tableur",
     libelle: "Create a spreadsheet",
-    description: "Gathers the items into an Excel workbook (one row per item), ready to attach to a mail.",
+    description:
+      "Gathers the items into an Excel workbook (one row per item), ready to attach to a mail.",
     categorie: "donnees",
     icone: "table_view",
     parametres: z.object({
@@ -814,10 +1024,16 @@ export const TYPES: TypeNoeud[] = [
       const lignes = els.map((e) =>
         p.colonnes.map((c) => {
           const v = lire(e.json, c.champ);
-          return v == null || typeof v === "number" || typeof v === "boolean" ? (v ?? null) : t(v);
+          return v == null || typeof v === "number" || typeof v === "boolean"
+            ? (v ?? null)
+            : t(v);
         }),
       );
-      const octets = ctx.services.tableur.ecrire({ nom: p.nom.slice(0, 31), colonnes: p.colonnes, lignes });
+      const octets = ctx.services.tableur.ecrire({
+        nom: p.nom.slice(0, 31),
+        colonnes: p.colonnes,
+        lignes,
+      });
       const fichier: Fichier = {
         nom: `${p.nom.replace(/[^\p{L}\p{N} _-]/gu, "_")}.xlsx`,
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -833,20 +1049,30 @@ export const TYPES: TypeNoeud[] = [
       "Downloads a workbook (xlsx, ods, csv) and produces one item per row, the first serving as header.",
     categorie: "donnees",
     icone: "grid_on",
-    parametres: z.object({ url: z.string().min(1), feuille: z.string().default("") }),
+    parametres: z.object({
+      url: z.string().min(1),
+      feuille: z.string().default(""),
+    }),
     element: async (p, _el, ctx) => {
       if (!ctx.services.tableur) throw new Error("native library unavailable");
       const r = await ctx.services.fetch(p.url, { signal: ctx.signal });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const octets = await r.bytes();
-      if (octets.length > 20_000_000) throw new Error("classeur trop volumineux (20 Mo au plus)");
+      if (octets.length > 20_000_000)
+        throw new Error("classeur trop volumineux (20 Mo au plus)");
       const { feuilles } = ctx.services.tableur.lire(octets);
-      const f = p.feuille ? feuilles.find((x) => x.nom === p.feuille) : feuilles[0];
+      const f = p.feuille
+        ? feuilles.find((x) => x.nom === p.feuille)
+        : feuilles[0];
       if (!f) throw new Error(`feuille introuvable : ${p.feuille}`);
       const [entete = [], ...lignes] = f.lignes;
       const cles = entete.map((c, i) => t(c) || `colonne_${i + 1}`);
       return une(
-        lignes.slice(0, 5000).map((l) => ({ json: Object.fromEntries(cles.map((c, i) => [c, l[i] ?? null])) })),
+        lignes
+          .slice(0, 5000)
+          .map((l) => ({
+            json: Object.fromEntries(cles.map((c, i) => [c, l[i] ?? null])),
+          })),
       );
     },
   }),
@@ -869,18 +1095,30 @@ export const TYPES: TypeNoeud[] = [
         ? p.fichiers
         : els.flatMap((e) => {
             const v = lire(e.json, p.champ);
-            return (Array.isArray(v) ? v : [v]).filter((f) => f != null && f !== "").map((f) => Fichier.parse(f));
+            return (Array.isArray(v) ? v : [v])
+              .filter((f) => f != null && f !== "")
+              .map((f) => Fichier.parse(f));
           });
       if (!fichiers.length) throw new Error(`no file in "${p.champ}"`);
       if (fichiers.length > 50) throw new Error("50 PDF au plus");
-      const octets = pdf.fusionner(fichiers.map((f) => ({ nom: f.nom, octets: octetsPdf(f) })));
-      return une([{ json: { fichier: fichierPdf(p.nom, octets), fichiers: fichiers.length } }]);
+      const octets = pdf.fusionner(
+        fichiers.map((f) => ({ nom: f.nom, octets: octetsPdf(f) })),
+      );
+      return une([
+        {
+          json: {
+            fichier: fichierPdf(p.nom, octets),
+            fichiers: fichiers.length,
+          },
+        },
+      ]);
     },
   }),
   def({
     type: "fichier.pdf_pages",
     libelle: "Extract pages from a PDF",
-    description: "Keeps the chosen pages of a PDF (\"1-3, 5, 8-\"), in the order given.",
+    description:
+      'Keeps the chosen pages of a PDF ("1-3, 5, 8-"), in the order given.',
     categorie: "donnees",
     icone: "auto_stories",
     parametres: SourceFichier.extend({
@@ -891,7 +1129,10 @@ export const TYPES: TypeNoeud[] = [
       const pdf = natif(ctx).pdf;
       const { nom, octets } = await source(p, ctx);
       const pages = plagesPages(p.pages, pdf.nombrePages(octets));
-      const fichier = fichierPdf(p.nom || `${nom.replace(/\.pdf$/i, "")}-pages`, pdf.pages(octets, pages));
+      const fichier = fichierPdf(
+        p.nom || `${nom.replace(/\.pdf$/i, "")}-pages`,
+        pdf.pages(octets, pages),
+      );
       return une([avec(el, { fichier, pages: pages.length })]);
     },
   }),
@@ -902,7 +1143,9 @@ export const TYPES: TypeNoeud[] = [
       "Extracts the text of a PDF in reading order (for example before an AI node). A scan without a text layer gives an empty text.",
     categorie: "donnees",
     icone: "text_snippet",
-    parametres: SourceFichier.extend({ champ: z.string().min(1).default("texte") }),
+    parametres: SourceFichier.extend({
+      champ: z.string().min(1).default("texte"),
+    }),
     element: async (p, el, ctx) => {
       const pages = natif(ctx).pdf.texte((await source(p, ctx)).octets);
       const sortie = { ...el.json };
@@ -919,7 +1162,12 @@ export const TYPES: TypeNoeud[] = [
     icone: "ink_eraser",
     parametres: SourceFichier.extend({
       /** Texts or expressions: a list (`{{ $json.noms }}`) or one per line. */
-      textes: z.union([z.array(z.string().max(256)).max(1000), z.string().max(256_000)]).default([]),
+      textes: z
+        .union([
+          z.array(z.string().max(256)).max(1000),
+          z.string().max(256_000),
+        ])
+        .default([]),
       motifs: z.array(z.enum(MOTIFS_CAVIARDAGE)).max(5).default([]),
       casse: z.boolean().default(false),
       motsEntiers: z.boolean().default(false),
@@ -929,10 +1177,13 @@ export const TYPES: TypeNoeud[] = [
     }),
     element: async (p, el, ctx) => {
       const { nom, octets } = await source(p, ctx);
-      const textes = (typeof p.textes === "string" ? p.textes.split("\n") : p.textes)
+      const textes = (
+        typeof p.textes === "string" ? p.textes.split("\n") : p.textes
+      )
         .map((x) => x.trim())
         .filter(Boolean);
-      if (!textes.length && !p.motifs.length) throw new Error("texts or patterns required");
+      if (!textes.length && !p.motifs.length)
+        throw new Error("texts or patterns required");
       const { pdf, rapport } = documents(ctx).caviarder(octets, {
         textes,
         motifs: p.motifs,
@@ -940,7 +1191,10 @@ export const TYPES: TypeNoeud[] = [
         mots_entiers: p.motsEntiers,
         texte_superpose: p.texteSuperpose,
       });
-      const fichier = fichierPdf(p.nom || `${nom.replace(/\.pdf$/i, "")}-caviarde`, pdf);
+      const fichier = fichierPdf(
+        p.nom || `${nom.replace(/\.pdf$/i, "")}-caviarde`,
+        pdf,
+      );
       return une([
         avec(el, {
           fichier,
@@ -970,14 +1224,32 @@ export const TYPES: TypeNoeud[] = [
       page: z.number().int().min(1).default(1),
       /** `[x0, y0, x1, y1]` in points from the bottom left corner; default 200 × 60 at the bottom left. */
       rectangle: z.array(z.number()).length(4).nullable().default(null),
-      certifier: z.enum(["non", "aucune_modification", "formulaires", "commentaires"]).default("non"),
+      certifier: z
+        .enum(["non", "aucune_modification", "formulaires", "commentaires"])
+        .default("non"),
       nom: z.string().max(120).default(""),
     }),
     element: async (p, el, ctx) => {
       const { nom, octets } = await source(p, ctx);
-      const p12 = Uint8Array.fromBase64(typeof p.certificat === "string" ? p.certificat.trim() : p.certificat.base64);
-      const rectangle = p.visible ? ((p.rectangle ?? [36, 36, 236, 96]) as [number, number, number, number]) : null;
-      const certifier = { non: null, aucune_modification: 1, formulaires: 2, commentaires: 3 } as const;
+      const p12 = Uint8Array.fromBase64(
+        typeof p.certificat === "string"
+          ? p.certificat.trim()
+          : p.certificat.base64,
+      );
+      const rectangle = p.visible
+        ? ((p.rectangle ?? [36, 36, 236, 96]) as [
+            number,
+            number,
+            number,
+            number,
+          ])
+        : null;
+      const certifier = {
+        non: null,
+        aucune_modification: 1,
+        formulaires: 2,
+        commentaires: 3,
+      } as const;
       const niveau = certifier[p.certifier];
       const signe = documents(ctx).signer(octets, p12, {
         mot_de_passe: p.motDePasse,
@@ -988,7 +1260,14 @@ export const TYPES: TypeNoeud[] = [
         ...(rectangle ? { rectangle } : {}),
         ...(niveau ? { certifier: niveau } : {}),
       });
-      return une([avec(el, { fichier: fichierPdf(p.nom || `${nom.replace(/\.pdf$/i, "")}-signe`, signe) })]);
+      return une([
+        avec(el, {
+          fichier: fichierPdf(
+            p.nom || `${nom.replace(/\.pdf$/i, "")}-signe`,
+            signe,
+          ),
+        }),
+      ]);
     },
   }),
   def({
@@ -1003,14 +1282,19 @@ export const TYPES: TypeNoeud[] = [
       confiance: z.string().max(1_000_000).default(""),
     }),
     element: async (p, el, ctx) => {
-      const signatures = documents(ctx).signatures((await source(p, ctx)).octets, p.confiance);
+      const signatures = documents(ctx).signatures(
+        (await source(p, ctx)).octets,
+        p.confiance,
+      );
       const signees = signatures.filter((s) => s.signee);
       return une([
         avec(el, {
           signatures,
           signe: signees.length > 0,
-          intacte: signees.length > 0 && signees.every((s) => s.statut !== "invalide"),
-          valide: signees.length > 0 && signees.every((s) => s.statut === "valide"),
+          intacte:
+            signees.length > 0 && signees.every((s) => s.statut !== "invalide"),
+          valide:
+            signees.length > 0 && signees.every((s) => s.statut === "valide"),
         }),
       ]);
     },
@@ -1039,14 +1323,26 @@ export const TYPES: TypeNoeud[] = [
         ? p.diapositives
         : els.map((e) => {
             const v = lire(e.json, p.champPuces);
-            const puces: unknown[] = Array.isArray(v) ? v : v == null || v === "" ? [] : t(v).split("\n");
+            const puces: unknown[] = Array.isArray(v)
+              ? v
+              : v == null || v === ""
+                ? []
+                : t(v).split("\n");
             return Diapositive.parse({
               titre: t(lire(e.json, p.champTitre)),
               puces: puces.map((x) =>
                 x && typeof x === "object" && "texte" in x
                   ? {
                       texte: t(x.texte),
-                      niveau: Math.min(4, Math.max(0, Math.trunc(Number((x as { niveau?: unknown }).niveau)) || 0)),
+                      niveau: Math.min(
+                        4,
+                        Math.max(
+                          0,
+                          Math.trunc(
+                            Number((x as { niveau?: unknown }).niveau),
+                          ) || 0,
+                        ),
+                      ),
                     }
                   : t(x),
               ),
@@ -1054,11 +1350,22 @@ export const TYPES: TypeNoeud[] = [
             });
           });
       const diapositives = sources
-        .map((x) => ({ ...x, puces: x.puces.filter((y) => (typeof y === "string" ? y : y.texte).trim()) }))
+        .map((x) => ({
+          ...x,
+          puces: x.puces.filter((y) =>
+            (typeof y === "string" ? y : y.texte).trim(),
+          ),
+        }))
         .filter((x) => x.titre || x.puces.length);
-      if (diapositives.length > 500) throw new Error("500 diapositives au plus");
-      if (!p.titre && !diapositives.length) throw new Error("title or slides required");
-      const pptx = d.presentation({ titre: p.titre, sous_titre: p.sousTitre, diapositives });
+      if (diapositives.length > 500)
+        throw new Error("500 diapositives au plus");
+      if (!p.titre && !diapositives.length)
+        throw new Error("title or slides required");
+      const pptx = d.presentation({
+        titre: p.titre,
+        sous_titre: p.sousTitre,
+        diapositives,
+      });
       const fichierPptx: Fichier = {
         nom: `${nomFichier(p.nom)}.pptx`,
         type: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -1069,8 +1376,19 @@ export const TYPES: TypeNoeud[] = [
           ? { fichier: fichierPptx }
           : p.format === "pdf"
             ? { fichier: fichierPdf(p.nom, d.presentationEnPdf(pptx)) }
-            : { fichier: fichierPptx, pdf: fichierPdf(p.nom, d.presentationEnPdf(pptx)) };
-      return une([{ json: { ...sortie, diapositives: diapositives.length + (p.titre || p.sousTitre ? 1 : 0) } }]);
+            : {
+                fichier: fichierPptx,
+                pdf: fichierPdf(p.nom, d.presentationEnPdf(pptx)),
+              };
+      return une([
+        {
+          json: {
+            ...sortie,
+            diapositives:
+              diapositives.length + (p.titre || p.sousTitre ? 1 : 0),
+          },
+        },
+      ]);
     },
   }),
   def({
@@ -1091,7 +1409,9 @@ export const TYPES: TypeNoeud[] = [
         .array(
           z.object({
             texte: z.string().max(50_000),
-            style: z.enum(["normal", "titre1", "titre2", "titre3"]).default("normal"),
+            style: z
+              .enum(["normal", "titre1", "titre2", "titre3"])
+              .default("normal"),
             gras: z.boolean().default(false),
           }),
         )
@@ -1105,17 +1425,21 @@ export const TYPES: TypeNoeud[] = [
       let docx: Uint8Array;
       const manquants: string[] = [];
       if (p.gabarit || p.url) {
-        const gabarit = (await source({ fichier: p.gabarit, url: p.url }, ctx)).octets;
+        const gabarit = (await source({ fichier: p.gabarit, url: p.url }, ctx))
+          .octets;
         const fournis = new Map(p.champs.map((c) => [c.nom.trim(), c.valeur]));
         const valeurs: Record<string, string> = {};
         for (const nom of word.champs(gabarit)) {
-          const v = fournis.has(nom) ? fournis.get(nom) : lire(el.json, nom.replace(/^\$json\./, ""));
+          const v = fournis.has(nom)
+            ? fournis.get(nom)
+            : lire(el.json, nom.replace(/^\$json\./, ""));
           if (v === undefined) manquants.push(nom);
           else valeurs[nom] = t(v);
         }
         docx = word.remplir(gabarit, valeurs);
       } else {
-        if (!p.titre && !p.paragraphes.length) throw new Error("template, URL, title or paragraphs required");
+        if (!p.titre && !p.paragraphes.length)
+          throw new Error("template, URL, title or paragraphs required");
         docx = word.creer({
           titre: p.titre,
           paragraphes: p.paragraphes.map((x) => ({
@@ -1135,14 +1459,18 @@ export const TYPES: TypeNoeud[] = [
           ? { fichier: fichierDocx }
           : p.format === "pdf"
             ? { fichier: fichierPdf(p.nom, word.enPdf(docx)) }
-            : { fichier: fichierDocx, pdf: fichierPdf(p.nom, word.enPdf(docx)) };
+            : {
+                fichier: fichierDocx,
+                pdf: fichierPdf(p.nom, word.enPdf(docx)),
+              };
       return une([avec(el, { ...sortie, manquants })]);
     },
   }),
   def({
     type: "media.image",
     libelle: "Transform an image",
-    description: "Resizes, crops, rotates, converts (JPEG, PNG, WebP) and compresses an image.",
+    description:
+      "Resizes, crops, rotates, converts (JPEG, PNG, WebP) and compresses an image.",
     categorie: "donnees",
     icone: "image",
     parametres: z.object({
@@ -1159,31 +1487,42 @@ export const TYPES: TypeNoeud[] = [
           height: z.number().int().min(1),
         })
         .optional(),
-      rotation: z.union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)]).default(0),
+      rotation: z
+        .union([z.literal(0), z.literal(90), z.literal(180), z.literal(270)])
+        .default(0),
       niveauxDeGris: z.boolean().default(false),
       luminosite: z.number().min(0).max(3).default(1),
       format: z.enum(["origine", "jpeg", "png", "webp"]).default("webp"),
       qualite: z.number().int().min(1).max(100).default(80),
     }),
     element: async (p, el, ctx) => {
-      if (!ctx.services.image) throw new Error("traitement d'image indisponible");
+      if (!ctx.services.image)
+        throw new Error("traitement d'image indisponible");
       const { nom, octets } = await source(p, ctx);
       const r = await ctx.services.image(octets, p);
-      const extension = r.type.split("/")[1] === "jpeg" ? "jpg" : r.type.split("/")[1];
+      const extension =
+        r.type.split("/")[1] === "jpeg" ? "jpg" : r.type.split("/")[1];
       const fichier: Fichier = {
         nom: `${nomFichier(nom.replace(/\.[^.]+$/, ""))}.${extension}`,
         type: r.type,
         base64: r.octets.toBase64(),
       };
       return une([
-        avec(el, { fichier, largeur: r.largeur, hauteur: r.hauteur, source: r.source, octets: r.octets.length }),
+        avec(el, {
+          fichier,
+          largeur: r.largeur,
+          hauteur: r.hauteur,
+          source: r.source,
+          octets: r.octets.length,
+        }),
       ]);
     },
   }),
   def({
     type: "media.video",
     libelle: "Video",
-    description: "Reads the metadata of a video, extracts a frame or an animated GIF from it.",
+    description:
+      "Reads the metadata of a video, extracts a frame or an animated GIF from it.",
     categorie: "donnees",
     icone: "movie",
     parametres: z.object({
@@ -1203,11 +1542,32 @@ export const TYPES: TypeNoeud[] = [
       if (p.action === "image") {
         const o = await ctx.services.video.image(octets, p.secondes, p.largeur);
         return une([
-          avec(el, { video, fichier: { nom: `${base}-${p.secondes}s.jpg`, type: "image/jpeg", base64: o.toBase64() } }),
+          avec(el, {
+            video,
+            fichier: {
+              nom: `${base}-${p.secondes}s.jpg`,
+              type: "image/jpeg",
+              base64: o.toBase64(),
+            },
+          }),
         ]);
       }
-      const o = await ctx.services.video.gif(octets, p.secondes, p.duree, p.largeur);
-      return une([avec(el, { video, fichier: { nom: `${base}.gif`, type: "image/gif", base64: o.toBase64() } })]);
+      const o = await ctx.services.video.gif(
+        octets,
+        p.secondes,
+        p.duree,
+        p.largeur,
+      );
+      return une([
+        avec(el, {
+          video,
+          fichier: {
+            nom: `${base}.gif`,
+            type: "image/gif",
+            base64: o.toBase64(),
+          },
+        }),
+      ]);
     },
   }),
   def({
@@ -1229,9 +1589,20 @@ export const TYPES: TypeNoeud[] = [
       if (!ctx.services.navigateur) throw new Error("navigateur indisponible");
       const r = await ctx.services.navigateur(p.url, p);
       const fichier: Fichier | null = r.capture
-        ? { nom: `${nomFichier(new URL(p.url).hostname)}.png`, type: "image/png", base64: r.capture.toBase64() }
+        ? {
+            nom: `${nomFichier(new URL(p.url).hostname)}.png`,
+            type: "image/png",
+            base64: r.capture.toBase64(),
+          }
         : null;
-      return une([avec(el, { url: p.url, titre: r.titre, texte: r.texte, ...(fichier ? { fichier } : {}) })]);
+      return une([
+        avec(el, {
+          url: p.url,
+          titre: r.titre,
+          texte: r.texte,
+          ...(fichier ? { fichier } : {}),
+        }),
+      ]);
     },
   }),
   def({
@@ -1252,12 +1623,17 @@ export const TYPES: TypeNoeud[] = [
     element: async (p, el, ctx) => {
       const u = new URL(p.url);
       for (const q of p.requete) u.searchParams.append(q.nom, t(q.valeur));
-      const entetes = new Headers(p.entetes.map((h) => [h.nom, t(h.valeur)] as [string, string]));
+      const entetes = new Headers(
+        p.entetes.map((h) => [h.nom, t(h.valeur)] as [string, string]),
+      );
       let body: string | undefined;
       if (p.corps !== undefined && p.corps !== "" && p.methode !== "GET") {
         body = typeof p.corps === "string" ? p.corps : JSON.stringify(p.corps);
         if (!entetes.has("content-type"))
-          entetes.set("content-type", typeof p.corps === "string" ? "text/plain" : "application/json");
+          entetes.set(
+            "content-type",
+            typeof p.corps === "string" ? "text/plain" : "application/json",
+          );
       }
       const r = await ctx.services.fetch(u.toString(), {
         method: p.methode,
@@ -1266,15 +1642,26 @@ export const TYPES: TypeNoeud[] = [
         signal: ctx.signal,
       });
       const corps = await lireReponse(r, p.format);
-      if (!r.ok && p.echecSiErreur) throw new Error(`HTTP ${r.status} : ${t(corps).slice(0, 300)}`);
-      return une([{ json: { statut: r.status, entetes: Object.fromEntries(r.headers), corps, entree: el.json } }]);
+      if (!r.ok && p.echecSiErreur)
+        throw new Error(`HTTP ${r.status} : ${t(corps).slice(0, 300)}`);
+      return une([
+        {
+          json: {
+            statut: r.status,
+            entetes: Object.fromEntries(r.headers),
+            corps,
+            entree: el.json,
+          },
+        },
+      ]);
     },
   }),
 
   def({
     type: "reseau.extraire",
     libelle: "Extract from a web page",
-    description: "Reads an HTML page and extracts values by CSS selector (text or attribute).",
+    description:
+      "Reads an HTML page and extracts values by CSS selector (text or attribute).",
     categorie: "reseau",
     icone: "travel_explore",
     parametres: z.object({
@@ -1292,20 +1679,28 @@ export const TYPES: TypeNoeud[] = [
         .max(30),
     }),
     element: async (p, el, ctx) => {
-      const r = await ctx.services.fetch(p.url, { headers: { accept: "text/html" }, signal: ctx.signal });
+      const r = await ctx.services.fetch(p.url, {
+        headers: { accept: "text/html" },
+        signal: ctx.signal,
+      });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       const html = await r.text();
-      if (html.length > 5_000_000) throw new Error("page trop volumineuse (5 Mo au plus)");
+      if (html.length > 5_000_000)
+        throw new Error("page trop volumineuse (5 Mo au plus)");
       return une([{ json: { url: p.url, ...extraireHtml(html, p.champs) } }]);
     },
   }),
   def({
     type: "reseau.flux",
     libelle: "Read an RSS feed",
-    description: "Reads an RSS or Atom feed and produces one item per article (title, link, date, summary).",
+    description:
+      "Reads an RSS or Atom feed and produces one item per article (title, link, date, summary).",
     categorie: "reseau",
     icone: "rss_feed",
-    parametres: z.object({ url: z.string().min(1), max: z.number().int().min(1).max(500).default(50) }),
+    parametres: z.object({
+      url: z.string().min(1),
+      max: z.number().int().min(1).max(500).default(50),
+    }),
     element: async (p, _el, ctx) => {
       const r = await ctx.services.fetch(p.url, { signal: ctx.signal });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -1331,9 +1726,17 @@ export const TYPES: TypeNoeud[] = [
       piece: z.union([Fichier, z.literal(""), z.null()]).default(null),
     }),
     element: async (p, el, ctx) => {
-      if (!ctx.services.envoyerMail) throw new Error("no mailbox configured for the company");
-      await ctx.services.envoyerMail({ a: p.a, sujet: p.sujet, texte: p.texte, pieces: p.piece ? [p.piece] : [] });
-      return une([avec(el, { mail: { a: p.a, sujet: p.sujet, envoye: true } })]);
+      if (!ctx.services.envoyerMail)
+        throw new Error("no mailbox configured for the company");
+      await ctx.services.envoyerMail({
+        a: p.a,
+        sujet: p.sujet,
+        texte: p.texte,
+        pieces: p.piece ? [p.piece] : [],
+      });
+      return une([
+        avec(el, { mail: { a: p.a, sujet: p.sujet, envoye: true } }),
+      ]);
     },
   }),
   def({
@@ -1342,7 +1745,10 @@ export const TYPES: TypeNoeud[] = [
     description: "Posts a message to a channel through its incoming webhook.",
     categorie: "communication",
     icone: "forum",
-    parametres: z.object({ webhook: z.url(), texte: z.string().min(1).max(40_000) }),
+    parametres: z.object({
+      webhook: z.url(),
+      texte: z.string().min(1).max(40_000),
+    }),
     element: async (p, el, ctx) => {
       await poster(ctx, p.webhook, { text: p.texte });
       return une([avec(el, { slack: { envoye: true } })]);
@@ -1354,7 +1760,10 @@ export const TYPES: TypeNoeud[] = [
     description: "Posts a message to a channel through its webhook.",
     categorie: "communication",
     icone: "chat",
-    parametres: z.object({ webhook: z.url(), texte: z.string().min(1).max(2000) }),
+    parametres: z.object({
+      webhook: z.url(),
+      texte: z.string().min(1).max(2000),
+    }),
     element: async (p, el, ctx) => {
       await poster(ctx, p.webhook, { content: p.texte });
       return une([avec(el, { discord: { envoye: true } })]);
@@ -1366,12 +1775,20 @@ export const TYPES: TypeNoeud[] = [
     description: "Sends a message through a Telegram bot.",
     categorie: "communication",
     icone: "send",
-    parametres: z.object({ jeton: z.string().min(10), chat: z.string().min(1), texte: z.string().min(1).max(4096) }),
+    parametres: z.object({
+      jeton: z.string().min(10),
+      chat: z.string().min(1),
+      texte: z.string().min(1).max(4096),
+    }),
     element: async (p, el, ctx) => {
-      const r = await poster(ctx, `https://api.telegram.org/bot${p.jeton}/sendMessage`, {
-        chat_id: p.chat,
-        text: p.texte,
-      });
+      const r = await poster(
+        ctx,
+        `https://api.telegram.org/bot${p.jeton}/sendMessage`,
+        {
+          chat_id: p.chat,
+          text: p.texte,
+        },
+      );
       return une([avec(el, { telegram: r })]);
     },
   }),
@@ -1380,7 +1797,8 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "communication.ntfy",
     libelle: "ntfy notification",
-    description: "Pushes a notification to an ntfy topic (ntfy.sh or your server), received on phone and desktop.",
+    description:
+      "Pushes a notification to an ntfy topic (ntfy.sh or your server), received on phone and desktop.",
     categorie: "communication",
     icone: "notifications_active",
     parametres: z.object({
@@ -1394,21 +1812,28 @@ export const TYPES: TypeNoeud[] = [
       jeton: z.string().default(""),
     }),
     element: async (p, el, ctx) => {
-      const r = await appeler(ctx, "POST", `${base(p.serveur)}/${p.sujet}`, p.texte, {
-        "content-type": "text/plain; charset=utf-8",
-        priority: String(p.priorite),
-        ...(p.titre ? { title: p.titre } : {}),
-        ...(p.etiquettes ? { tags: p.etiquettes } : {}),
-        ...(p.lien ? { click: p.lien } : {}),
-        ...(p.jeton ? porteur(p.jeton) : {}),
-      });
+      const r = await appeler(
+        ctx,
+        "POST",
+        `${base(p.serveur)}/${p.sujet}`,
+        p.texte,
+        {
+          "content-type": "text/plain; charset=utf-8",
+          priority: String(p.priorite),
+          ...(p.titre ? { title: p.titre } : {}),
+          ...(p.etiquettes ? { tags: p.etiquettes } : {}),
+          ...(p.lien ? { click: p.lien } : {}),
+          ...(p.jeton ? porteur(p.jeton) : {}),
+        },
+      );
       return une([avec(el, { ntfy: r })]);
     },
   }),
   def({
     type: "communication.gotify",
     libelle: "Gotify notification",
-    description: "Sends a message to your Gotify server with an application token.",
+    description:
+      "Sends a message to your Gotify server with an application token.",
     categorie: "communication",
     icone: "campaign",
     parametres: z.object({
@@ -1422,7 +1847,11 @@ export const TYPES: TypeNoeud[] = [
       const r = await poster(
         ctx,
         `${base(p.serveur)}/message`,
-        { message: p.texte, priority: p.priorite, ...(p.titre ? { title: p.titre } : {}) },
+        {
+          message: p.texte,
+          priority: p.priorite,
+          ...(p.titre ? { title: p.titre } : {}),
+        },
         { "x-gotify-key": p.jeton },
       );
       return une([avec(el, { gotify: r })]);
@@ -1438,7 +1867,9 @@ export const TYPES: TypeNoeud[] = [
     parametres: z.object({
       serveur: z.url(),
       jeton: z.string().min(1),
-      salon: z.string().regex(/^!.+:.+$/, "identifiant de salon, ex. !abc:matrix.org"),
+      salon: z
+        .string()
+        .regex(/^!.+:.+$/, "identifiant de salon, ex. !abc:matrix.org"),
       texte: z.string().min(1).max(60_000),
     }),
     element: async (p, el, ctx) => {
@@ -1456,33 +1887,43 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "communication.mastodon",
     libelle: "Mastodon post",
-    description: "Posts a status to a Mastodon instance (or compatible) with an application token.",
+    description:
+      "Posts a status to a Mastodon instance (or compatible) with an application token.",
     categorie: "communication",
     icone: "public",
     parametres: z.object({
       instance: z.url(),
       jeton: z.string().min(1),
       texte: z.string().min(1).max(5000),
-      visibilite: z.enum(["public", "unlisted", "private", "direct"]).default("unlisted"),
+      visibilite: z
+        .enum(["public", "unlisted", "private", "direct"])
+        .default("unlisted"),
       avertissement: z.string().max(500).default(""),
     }),
     element: async (p, el, ctx) => {
       const r = (await poster(
         ctx,
         `${base(p.instance)}/api/v1/statuses`,
-        { status: p.texte, visibility: p.visibilite, ...(p.avertissement ? { spoiler_text: p.avertissement } : {}) },
+        {
+          status: p.texte,
+          visibility: p.visibilite,
+          ...(p.avertissement ? { spoiler_text: p.avertissement } : {}),
+        },
         {
           ...porteur(p.jeton),
           "idempotency-key": cleUnique(ctx, el),
         },
       )) as { id?: string; url?: string } | null;
-      return une([avec(el, { mastodon: { id: r?.id ?? null, url: r?.url ?? null } })]);
+      return une([
+        avec(el, { mastodon: { id: r?.id ?? null, url: r?.url ?? null } }),
+      ]);
     },
   }),
   def({
     type: "reseau.home_assistant",
     libelle: "Home Assistant",
-    description: "Calls a service of your home (turn on, open, notify...) or reads the state of an entity.",
+    description:
+      "Calls a service of your home (turn on, open, notify...) or reads the state of an entity.",
     categorie: "reseau",
     icone: "home_iot_device",
     parametres: z.object({
@@ -1493,12 +1934,20 @@ export const TYPES: TypeNoeud[] = [
         .string()
         .regex(/^[a-z_]+\.[a-z0-9_]+$/, "domaine.service, ex. light.turn_on")
         .default("homeassistant.toggle"),
-      entite: z.string().regex(/^[a-z_]+\.[a-z0-9_]+$/, "domaine.objet, ex. light.salon"),
+      entite: z
+        .string()
+        .regex(/^[a-z_]+\.[a-z0-9_]+$/, "domaine.objet, ex. light.salon"),
       donnees: z.record(z.string(), z.unknown()).default({}),
     }),
     element: async (p, el, ctx) => {
       if (p.operation === "etat") {
-        const r = await appeler(ctx, "GET", `${base(p.url)}/api/states/${p.entite}`, undefined, porteur(p.jeton));
+        const r = await appeler(
+          ctx,
+          "GET",
+          `${base(p.url)}/api/states/${p.entite}`,
+          undefined,
+          porteur(p.jeton),
+        );
         return une([avec(el, { home_assistant: r })]);
       }
       const [domaine, service] = p.service.split(".");
@@ -1514,7 +1963,8 @@ export const TYPES: TypeNoeud[] = [
   def({
     type: "reseau.nextcloud",
     libelle: "Upload to Nextcloud",
-    description: "Uploads a file to your Nextcloud through WebDAV, with an application password.",
+    description:
+      "Uploads a file to your Nextcloud through WebDAV, with an application password.",
     categorie: "reseau",
     icone: "cloud_upload",
     parametres: z.object({
@@ -1528,22 +1978,37 @@ export const TYPES: TypeNoeud[] = [
     element: async (p, el, ctx) => {
       const f = await source(p, ctx);
       const nom = (p.nom || f.nom).replaceAll("/", "_");
-      const dossier = p.dossier.split("/").filter(Boolean).map(encodeURIComponent).join("/");
+      const dossier = p.dossier
+        .split("/")
+        .filter(Boolean)
+        .map(encodeURIComponent)
+        .join("/");
       const chemin = `${dossier ? `${dossier}/` : ""}${encodeURIComponent(nom)}`;
-      const auth = { authorization: `Basic ${Buffer.from(`${p.utilisateur}:${p.motDePasse}`).toString("base64")}` };
+      const auth = {
+        authorization: `Basic ${Buffer.from(`${p.utilisateur}:${p.motDePasse}`).toString("base64")}`,
+      };
       const r = await ctx.services.fetch(
         `${base(p.serveur)}/remote.php/dav/files/${encodeURIComponent(p.utilisateur)}/${chemin}`,
         { method: "PUT", headers: auth, body: f.octets, signal: ctx.signal },
       );
-      if (!r.ok) throw new Error(`HTTP ${r.status} : ${(await r.text()).slice(0, 300)}`);
-      return une([avec(el, { nextcloud: { chemin: `/${decodeURIComponent(chemin)}`, octets: f.octets.length } })]);
+      if (!r.ok)
+        throw new Error(`HTTP ${r.status} : ${(await r.text()).slice(0, 300)}`);
+      return une([
+        avec(el, {
+          nextcloud: {
+            chemin: `/${decodeURIComponent(chemin)}`,
+            octets: f.octets.length,
+          },
+        }),
+      ]);
     },
   }),
 
   def({
     type: "ia.texte",
     libelle: "Language model",
-    description: "Generates or analyzes a text with an OpenAI-compatible model: Ollama, Mistral, OpenAI...",
+    description:
+      "Generates or analyzes a text with an OpenAI-compatible model: Ollama, Mistral, OpenAI...",
     categorie: "ia",
     icone: "auto_awesome",
     parametres: z.object({
@@ -1600,14 +2065,19 @@ export const TYPES: TypeNoeud[] = [
       consigne: z
         .string()
         .max(20_000)
-        .default("Transcribe all the text of the image faithfully, line by line, without comment."),
+        .default(
+          "Transcribe all the text of the image faithfully, line by line, without comment.",
+        ),
       json: z.boolean().default(false),
       largeurMax: z.number().int().min(256).max(4096).default(1600),
     }),
     element: async (p, el, ctx) => {
       const { nom, octets } = await source(p, ctx);
       // Image downscaled and re-encoded by Bun.Image: lighter request, exotic formats normalized.
-      let image: { octets: Uint8Array; type: string } = { octets, type: "image/png" };
+      let image: { octets: Uint8Array; type: string } = {
+        octets,
+        type: "image/png",
+      };
       if (ctx.services.image) {
         const r = await ctx.services.image(octets, {
           largeur: p.largeurMax,
@@ -1630,7 +2100,12 @@ export const TYPES: TypeNoeud[] = [
               role: "user",
               content: [
                 { type: "text", text: p.consigne },
-                { type: "image_url", image_url: { url: `data:${image.type};base64,${image.octets.toBase64()}` } },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:${image.type};base64,${image.octets.toBase64()}`,
+                  },
+                },
               ],
             },
           ],
@@ -1658,7 +2133,10 @@ export const TYPES: TypeNoeud[] = [
     categorie: "ia",
     icone: "library_add",
     parametres: SourceFichier.extend({
-      base: z.string().regex(BASE_CONNAISSANCE, "base: lowercase letters, digits, - or _").default("documents"),
+      base: z
+        .string()
+        .regex(BASE_CONNAISSANCE, "base: lowercase letters, digits, - or _")
+        .default("documents"),
       /** Name of the source (replaced if it exists); empty: file name. */
       source: z.string().max(300).default(""),
       /** Text to index; empty: the file or URL. */
@@ -1676,23 +2154,41 @@ export const TYPES: TypeNoeud[] = [
       }
       nom ||= "texte";
       if (!texte.trim())
-        throw new Error("no text to index (a scan without a text layer goes through \"Read an image (OCR)\" first)");
+        throw new Error(
+          'no text to index (a scan without a text layer goes through "Read an image (OCR)" first)',
+        );
       const r = await connaissance(ctx).indexer(
-        { base: p.base, source: nom, texte, taille: p.taille, embeddings: embeddingsDe(p) },
+        {
+          base: p.base,
+          source: nom,
+          texte,
+          taille: p.taille,
+          embeddings: embeddingsDe(p),
+        },
         ctx.signal,
       );
-      return une([avec(el, { base: p.base, source: nom, morceaux: r.morceaux, remplaces: r.remplaces })]);
+      return une([
+        avec(el, {
+          base: p.base,
+          source: nom,
+          morceaux: r.morceaux,
+          remplaces: r.remplaces,
+        }),
+      ]);
     },
   }),
   def({
     type: "ia.rechercher",
     libelle: "Search the knowledge base",
     description:
-      "Finds the document chunks closest to a question (embedding similarity) and prepares a \"context\" to give to the language model.",
+      'Finds the document chunks closest to a question (embedding similarity) and prepares a "context" to give to the language model.',
     categorie: "ia",
     icone: "manage_search",
     parametres: z.object({
-      base: z.string().regex(BASE_CONNAISSANCE, "base: lowercase letters, digits, - or _").default("documents"),
+      base: z
+        .string()
+        .regex(BASE_CONNAISSANCE, "base: lowercase letters, digits, - or _")
+        .default("documents"),
       question: z.string().min(1).max(10_000),
       k: z.number().int().min(1).max(20).default(4),
       /** Minimum cosine similarity (0 to 1) of a retained chunk. */
@@ -1713,8 +2209,12 @@ export const TYPES: TypeNoeud[] = [
         },
         ctx.signal,
       );
-      const contexte = resultats.map((r) => `[${r.source}, partie ${r.position + 1}]\n${r.texte}`).join("\n\n---\n\n");
-      return une([avec(el, { resultats, contexte, trouves: resultats.length })]);
+      const contexte = resultats
+        .map((r) => `[${r.source}, partie ${r.position + 1}]\n${r.texte}`)
+        .join("\n\n---\n\n");
+      return une([
+        avec(el, { resultats, contexte, trouves: resultats.length }),
+      ]);
     },
   }),
   def({
@@ -1725,42 +2225,67 @@ export const TYPES: TypeNoeud[] = [
     categorie: "auto",
     icone: "account_tree",
     parametres: z.object({
-      workflow: z.string().regex(/^[0-9a-f-]{36}$/i, "workflow identifier (UUID)"),
+      workflow: z
+        .string()
+        .regex(/^[0-9a-f-]{36}$/i, "workflow identifier (UUID)"),
       mode: z.enum(["ensemble", "par_element"]).default("ensemble"),
     }),
     lot: async (p, els, ctx) => {
       const lancer = ctx.services.sousWorkflow;
       if (!lancer) throw new Error("sub-workflows unavailable here");
-      if (p.mode === "ensemble") return une(await lancer(p.workflow, els, ctx.signal));
+      if (p.mode === "ensemble")
+        return une(await lancer(p.workflow, els, ctx.signal));
       const sortie: Element[] = [];
-      for (const el of els) sortie.push(...(await lancer(p.workflow, [el], ctx.signal)));
+      for (const el of els)
+        sortie.push(...(await lancer(p.workflow, [el], ctx.signal)));
       return une(sortie);
     },
   }),
   def({
     type: "auto.requete",
     libelle: "auto action",
-    description: "Reads or changes the data of the company: customers, documents, products, absences...",
+    description:
+      "Reads or changes the data of the company: customers, documents, products, absences...",
     categorie: "auto",
     icone: "deployed_code",
     parametres: z.object({
       methode: z.enum(["GET", "POST", "PUT", "DELETE"]).default("GET"),
-      chemin: z.string().regex(/^\/v1\/[\w\-/.?=&%]*$/, "chemin de l'API d'auto, par exemple /v1/clients"),
+      chemin: z
+        .string()
+        .regex(
+          /^\/v1\/[\w\-/.?=&%]*$/,
+          "chemin de l'API d'auto, par exemple /v1/clients",
+        ),
       corps: z.unknown().optional(),
       eclater: z.boolean().default(false),
     }),
     element: async (p, el, ctx) => {
       if (!ctx.services.appelerAuto) throw new Error("API d'auto indisponible");
-      if (/^\/v1\/(auth|jetons|membres|automatisations|crochets)/.test(p.chemin))
-        throw new Error("reserved path: accounts, tokens and automations are not accessible");
-      const r = await ctx.services.appelerAuto(p.methode, p.chemin, p.methode === "GET" ? undefined : p.corps);
-      if (r.statut >= 400) throw new Error(`auto ${r.statut} : ${t(r.corps).slice(0, 300)}`);
+      if (
+        /^\/v1\/(auth|jetons|membres|automatisations|crochets)/.test(p.chemin)
+      )
+        throw new Error(
+          "reserved path: accounts, tokens and automations are not accessible",
+        );
+      const r = await ctx.services.appelerAuto(
+        p.methode,
+        p.chemin,
+        p.methode === "GET" ? undefined : p.corps,
+      );
+      if (r.statut >= 400)
+        throw new Error(`auto ${r.statut} : ${t(r.corps).slice(0, 300)}`);
       if (p.eclater && Array.isArray(r.corps))
-        return une(r.corps.map((v) => ({ json: v && typeof v === "object" ? { ...v } : { valeur: v } })));
+        return une(
+          r.corps.map((v) => ({
+            json: v && typeof v === "object" ? { ...v } : { valeur: v },
+          })),
+        );
       return une([
         {
           json:
-            r.corps && typeof r.corps === "object" && !Array.isArray(r.corps) ? { ...r.corps } : { resultat: r.corps },
+            r.corps && typeof r.corps === "object" && !Array.isArray(r.corps)
+              ? { ...r.corps }
+              : { resultat: r.corps },
         },
       ]);
     },
@@ -1786,7 +2311,14 @@ export function catalogueJson() {
     description: x.description,
     categorie: x.categorie,
     icone: x.icone,
-    sorties: Array.isArray(x.sorties) ? x.sorties : x.sorties ? "dynamiques" : ["principale"],
-    parametres: z.toJSONSchema(x.parametres, { io: "input", unrepresentable: "any" }),
+    sorties: Array.isArray(x.sorties)
+      ? x.sorties
+      : x.sorties
+        ? "dynamiques"
+        : ["principale"],
+    parametres: z.toJSONSchema(x.parametres, {
+      io: "input",
+      unrepresentable: "any",
+    }),
   }));
 }
