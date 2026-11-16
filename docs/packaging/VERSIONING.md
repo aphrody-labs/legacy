@@ -1,8 +1,8 @@
-# Versioning and release channels (frozen 2026-11-13)
+# Versioning and release channels
 
-Frozen: changing this file needs a tribunal verdict in `docs/reviews/INDEX.md` (process rule, not checked
+Frozen: changing this file needs a tribunal verdict (process rule, not checked
 by code). The version rules below are checked by code: `ay release freeze --check`
-(packages/release/src/freeze.ts) in `judge.yml`, `ay arch check` (ARCH-013), `canary.yml` and `release.yml` (dist).
+(packages/release/src/freeze.ts) in `judge.yml`, `canary.yml` and `release.yml` (dist).
 
 ## One version, one file
 
