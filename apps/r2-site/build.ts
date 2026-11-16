@@ -19,6 +19,7 @@ const result = await Bun.build({
     name: "aphrody-workspace",
     setup(b) {
       b.onResolve({ filter: /^@aphrody\/runtime-adapter$/ }, () => ({ path: alias["@aphrody/runtime-adapter"]! }))
+      b.onResolve({ filter: /^@aphrody\/deploy\// }, (a) => ({ path: resolve(root, "system/deploy", a.path.slice("@aphrody/deploy/".length)) }))
     },
   }],
 })
