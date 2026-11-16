@@ -1,7 +1,7 @@
 // Restore tool, history side: bring back a directory as it was just before the commit that deleted it.
 // Files whose blob or path is still in HEAD are skipped with --gone-only (a lost feature, not a moved one).
 // The result goes through restore-import (gitleaks gate, never overwrites).
-// Usage: bun scripts/restore-history-extract.ts --commit <deleting sha> --dir packages/x --to packages/x [--gone-only] [--only <regex>] [--dry]
+// Usage: bun scripts/restore-history-extract.ts --commit <deleting sha> --dir system/x --to system/x [--gone-only] [--only <regex>] [--dry]
 import { mkdirSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 

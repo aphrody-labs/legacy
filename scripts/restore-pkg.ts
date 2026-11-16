@@ -1,7 +1,7 @@
 // Restore tool: unpack a package we published (npm tarball or crates.io crate) into the monorepo through restore-import
 // (gitleaks gate, never overwrites). In-memory untar, path-sanitised; build output (dist/, *.map) and crate packaging
 // leftovers (Cargo.toml.orig, .cargo_vcs_info.json) are dropped.
-// Usage: bun scripts/restore-pkg.ts --npm @aphrody/google --to packages/google [--version x] [--dry]
+// Usage: bun scripts/restore-pkg.ts --npm @aphrody/google --to frameworks/google-ts [--version x] [--dry]
 //        bun scripts/restore-pkg.ts --crate aphrody-google --to src/google [--version x] [--dry]
 import { gunzipSync } from "bun";
 import { mkdirSync, rmSync } from "node:fs";

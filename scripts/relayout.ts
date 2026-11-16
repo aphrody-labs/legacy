@@ -28,7 +28,7 @@ const alt = moves.map((m) => esc(m.from)).join("|");
 
 // root-relative reference: starts after a non-path char, the checkout folder, a variable or a just/ts root helper
 const re = new RegExp(
-  `(?<=^|[^\\w./\\-]|(?:(?<!\\bdocs)(?<!apps/[\\w-]+)(?<!third_party/[\\w-]+)(?<!\\.\\.)(?<!\\./)/)|\\$\\{?\\w+\\}?/)(${alt})(?=$|[^\\w\\-.]|\\.(?!\\w))`,
+  `(?<=^|[^\\w./\\-}\\])]|(?:aphrody|SRC|ROOT|root|repo|checkout|srv/src|agents/src|\\{\\{root\\}\\}|\\{root\\}|\\$\\{?\\w+\\}?|[})\\]])/)(${alt})(?=$|[^\\w\\-.]|\\.(?!\\w))`,
   "gm",
 );
 const mapPath = (p: string): string => {
@@ -64,7 +64,7 @@ if (mode === "table") {
     noExt.add(f.replace(/\.[^./]+$/, ""));
   }
   const exists = (p: string) => fileSet.has(p) || dirSet.has(p) || noExt.has(p) || fileSet.has(p + "/index.ts") || fileSet.has(p + "/mod.rs");
-  const relRe = /(?<![\w./@\-])(\.{1,2}\/(?:[\w@+.\-]+\/)*[\w@+.\-]*)/g;
+  const relRe = /(?<![\w./@\-])(\/?\.{1,2}\/(?:[\w@+.\-]+\/)*[\w@+.\-]*)/g;
   const joinRe = /(["'])(packages|src)\1(\s*,\s*)(["'])([\w.\-]+)\4/g;
   const rustJoinRe = /\.join\("(packages|src)"\)(\s*\.join\()"([\w.\-]+)"/g;
   const seqMoves = new Map<string, string>(); // "packages/name" -> "top/newname"
@@ -80,17 +80,24 @@ if (mode === "table") {
     const nf = mapPath(f);
     const dirOld = posix.dirname(f);
     const dirNew = posix.dirname(nf);
-    let out = src.replace(relRe, (tok) => {
+    // a reference to src/<name> or packages/<name> from inside a unit that has its own src/<name> is local
+    const local = (name: string) => {
+      for (let d = dirOld; d !== "." && d !== ""; d = posix.dirname(d)) if (dirSet.has(`${d}/src/${name}`) || dirSet.has(`${d}/packages/${name}`)) return true;
+      return false;
+    };
+    let out = src.replace(relRe, (full) => {
+      const lead = full.startsWith("/") ? "/" : "";
+      const tok = lead ? full.slice(1) : full;
       const resolved = posix.join(dirOld, tok);
-      if (resolved.startsWith("..") || !exists(resolved.replace(/\/$/, ""))) return tok;
+      if (resolved.startsWith("..") || !exists(resolved.replace(/\/$/, ""))) return full;
       const target = mapPath(resolved.replace(/\/$/, ""));
       let rel = posix.relative(dirNew, target) || ".";
       if (tok.startsWith("./") && !rel.startsWith(".")) rel = "./" + rel;
       if (tok.endsWith("/") && rel !== "." && !rel.endsWith("/")) rel += "/";
       const same = posix.normalize(tok).replace(/\/$/, "") === rel.replace(/\/$/, "");
-      return same ? tok : rel;
+      return lead + (same ? tok : rel);
     });
-    out = out.replace(re, (x) => map.get(x) ?? x);
+    out = out.replace(re, (x, _a, offset: number) => (/^(src|packages)\//.test(x) && local(x.split("/")[1]!) ? x : map.get(x) ?? x));
     out = out.replace(joinRe, (all, q, top, sep, q2, name) => {
       const to = seqMoves.get(`${top}/${name}`);
       if (!to) return all;
