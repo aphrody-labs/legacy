@@ -1,0 +1,120 @@
+# LLVM tooling on the one toolchain of src (scripts/toolchain.ts: Chromium's clang, lld, llvm-* and the rustc on the
+# same LLVM): sanitizers and static analysis of the C core, llvm-cov coverage of C and Rust, and the size report of a
+# release binary. Runs on the fr1 runners like ci.yml; the heavy cargo steps go through aphrody-heavy.
+name: llvm
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/Makefile"
+      - "src/.clang-*"
+      - "src/tests/**"
+      - "src/kernel/**"
+      - "src/wayland/**"
+      - "src/nt/**"
+      - "src/wine/**"
+      - "src/wasm/**"
+      - "src/ui/*.c"
+      - "src/drivers/**/*.c"
+      - "src/arch/**"
+      - "src/include/**"
+      - "scripts/toolchain.ts"
+      - "third_party/toolchain-*.toml"
+      - ".github/workflows/llvm.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+concurrency:
+  group: llvm-${{ github.sha }}
+  cancel-in-progress: false
+permissions: { contents: read }
+env:
+  RUSTC_WRAPPER: ""
+  CARGO_TERM_COLOR: never
+  CARGO_TARGET_DIR: /home/ubuntu/build/llvm-target
+  HEAVY_WAIT_MAX: "2700"
+jobs:
+  c-core:
+    name: C core (ASan + UBSan, clang-tidy, clang-format, size)
+    runs-on: [self-hosted, fr1]
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: false, fetch-depth: 0 }
+      - name: Toolchain
+        run: |
+          bun scripts/toolchain.ts install
+          bun scripts/toolchain.ts bin >> "$GITHUB_PATH"
+      - name: ASan + UBSan over every exported function
+        run: make -C src sanitize
+      - name: clang-tidy
+        run: make -C src tidy
+      - name: clang-format (lines changed by the push)
+        # clang-format is not in Chromium's clang package: the LLVM release of apt.llvm.org on the runner. The sources
+        # predate .clang-format, so only the lines a push touches are held to it (git-clang-format against the base).
+        run: |
+          base="${{ github.event.before }}"
+          [ -n "$base" ] && git cat-file -e "$base^{commit}" 2>/dev/null || base=HEAD~1
+          llvm=$(ls -d /usr/lib/llvm-*/bin | sort -V | tail -n 1)
+          out=$("$llvm/git-clang-format" --binary "$llvm/clang-format" --diff "$base" -- src/**/*.c src/**/*.h || true)
+          case "$out" in "no modified files to format" | "clang-format did not modify any files") exit 0 ;; esac
+          echo "$out"; exit 1
+      - name: Section sizes of libaysys.so (llvm-objdump)
+        run: make -C src size | tee "$RUNNER_TEMP/libaysys-size.txt"
+      - uses: actions/upload-artifact@v4
+        with: { name: libaysys-size, path: "${{ runner.temp }}/libaysys-size.txt" }
+  coverage:
+    name: coverage (llvm-cov: C core and Rust)
+    runs-on: [self-hosted, fr1]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: false }
+      - name: Toolchain
+        run: |
+          bun scripts/toolchain.ts install
+          bun scripts/toolchain.ts bin >> "$GITHUB_PATH"
+      - name: C core coverage (sanitize driver, source-based, llvm-cov of the toolchain)
+        working-directory: src
+        run: |
+          clang -std=gnu11 -O0 -funsigned-char -fno-common -Iinclude -fprofile-instr-generate -fcoverage-mapping \
+            -fuse-ld=lld kernel/sys.c drivers/gpu/drm/drm_mesa.c wayland/wire.c wayland/xwm.c wayland/tiler.c \
+            nt/status.c wine/server_proto.c wasm/module.c ui/m3.c ui/shell_kit.c ui/vterm.c arch/x86/entry_64.S \
+            tests/sanitize.c -o "$RUNNER_TEMP/cov-c"
+          LLVM_PROFILE_FILE="$RUNNER_TEMP/cov-c.profraw" "$RUNNER_TEMP/cov-c"
+          llvm-profdata merge -sparse "$RUNNER_TEMP/cov-c.profraw" -o "$RUNNER_TEMP/cov-c.profdata"
+          llvm-cov report "$RUNNER_TEMP/cov-c" -instr-profile="$RUNNER_TEMP/cov-c.profdata" \
+            kernel wayland nt wine wasm ui drivers | tee "$RUNNER_TEMP/coverage-c.txt"
+      - name: Rust coverage (cargo-llvm-cov on the chromium rustc, LLVM tools of the same revision)
+        run: |
+          command -v cargo-llvm-cov >/dev/null || aphrody-heavy cargo install --locked cargo-llvm-cov
+          export LLVM_COV="$(command -v llvm-cov)" LLVM_PROFDATA="$(command -v llvm-profdata)"
+          aphrody-heavy cargo llvm-cov --summary-only -p aphrody-core | tee "$RUNNER_TEMP/coverage-rust.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            ${{ runner.temp }}/coverage-c.txt
+            ${{ runner.temp }}/coverage-rust.txt
+  release-size:
+    name: release binary size (llvm-objdump, llvm-nm)
+    if: github.event_name != 'push'
+    runs-on: [self-hosted, fr1]
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v7
+        with: { submodules: false }
+      - name: Toolchain
+        run: |
+          bun scripts/toolchain.ts install
+          bun scripts/toolchain.ts bin >> "$GITHUB_PATH"
+      - name: Release build of ay (profile release, strip off to read symbols)
+        env:
+          CARGO_PROFILE_RELEASE_STRIP: none
+        run: aphrody-heavy cargo build --release -p aphrody --bin ay
+      - name: Sections and the largest symbols
+        run: |
+          ay="$CARGO_TARGET_DIR/release/ay"
+          { ls -l "$ay"; llvm-objdump -h "$ay"; llvm-nm --print-size --size-sort --radix=d "$ay" | tail -n 40; } | tee "$RUNNER_TEMP/ay-size.txt"
+      - uses: actions/upload-artifact@v4
+        with: { name: ay-size, path: "${{ runner.temp }}/ay-size.txt" }

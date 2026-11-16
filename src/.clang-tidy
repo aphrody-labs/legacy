@@ -1,0 +1,17 @@
+# clang-tidy of the C core (`make -C src tidy`): static analysis, not style (style is .clang-format).
+# clang-analyzer-* is the path-sensitive analyzer; bugprone-* only the checks that report defects.
+# Names that the ABI fixes (`__u32`, `wl_*`, `ay_*`) are not renamed by any check here.
+Checks: >
+  -*,
+  clang-analyzer-*,
+  -clang-analyzer-optin.performance.Padding,
+  -clang-analyzer-security.insecureAPI.*,
+  bugprone-integer-division,
+  bugprone-misplaced-widening-cast,
+  bugprone-sizeof-expression,
+  bugprone-suspicious-memset-usage,
+  bugprone-suspicious-string-compare,
+  bugprone-not-null-terminated-result,
+  bugprone-unused-return-value
+WarningsAsErrors: ""
+HeaderFilterRegex: 'src/(include|kernel|wayland|nt|wine|wasm|ui|drivers)/'

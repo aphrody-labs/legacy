@@ -48,7 +48,7 @@ C_SRCS := \
 
 ASM_X86_64 := arch/x86/entry_64.S
 
-.PHONY: all linux windows android-x64 wasm wasi compositor verify clean
+.PHONY: all linux windows android-x64 wasm wasi compositor verify clean sanitize tidy format size
 
 all: wasm compositor verify
 
@@ -116,6 +116,33 @@ compositor:
 		--enable-nontrapping-float-to-int --enable-sign-ext --strip-debug \
 		$(OUT_DIR)/wayland.raw.wasm -o ../apps/web/public/wayland.wasm
 	rm -f $(OUT_DIR)/wayland.raw.wasm
+
+# LLVM tooling on the C core (same clang/lld as every other build, scripts/toolchain.ts).
+#   sanitize   ASan + UBSan over every exported function (tests/sanitize.c: exact-size heap buffers, xorshift corpus)
+#   tidy       clang-tidy (.clang-tidy: clang-analyzer-* and the bug-finding bugprone-* checks) with -warnings-as-errors
+#   format     clang-format --dry-run on the files given in FORMAT_SRCS (default: the sources written to .clang-format)
+#   size       llvm-objdump section sizes of libaysys.so: the release-size report of the C core
+CLANG_TIDY   ?= clang-tidy
+CLANG_FORMAT ?= clang-format
+LLVM_OBJDUMP ?= llvm-objdump
+FORMAT_SRCS  ?= tests/sanitize.c
+SAN_FLAGS    := -fsanitize=address,undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer
+
+sanitize:
+	mkdir -p $(OUT_DIR)
+	$(CC) -std=gnu11 -g -O1 -funsigned-char -fno-common -fno-strict-aliasing -Wall -Wextra -Werror -Iinclude \
+		$(SAN_FLAGS) -fuse-ld=lld $(C_SRCS) $(ASM_X86_64) tests/sanitize.c -o $(OUT_DIR)/sanitize
+	$(OUT_DIR)/sanitize
+
+tidy:
+	$(CLANG_TIDY) -warnings-as-errors='*' $(C_SRCS) wasm/compositor.c tests/sanitize.c -- \
+		-std=gnu11 -funsigned-char -Iinclude
+
+format:
+	$(CLANG_FORMAT) --dry-run -Werror $(FORMAT_SRCS)
+
+size: linux
+	$(LLVM_OBJDUMP) -h $(OUT_DIR)/libaysys.so
 
 verify:
 	$(WASM_VAL) --enable-all $(OUT_DIR)/aysys.wasm
