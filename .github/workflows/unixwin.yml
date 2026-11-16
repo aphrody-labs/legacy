@@ -75,13 +75,13 @@ jobs:
           path: winuxcmd
       - uses: actions/download-artifact@v8
         with: { name: gnu-results }
-      - name: Toolchain (rustup chromium-157)
+      - name: Toolchain (rustup chromium-160)
         run: bun scripts/toolchain.ts install
-      # The Chromium 157 rust toolchain carries no rust-lld: link with the lld-link of its LLVM, against the MSVC libraries.
+      # The Chromium rust toolchain carries no rust-lld: link with the lld-link of its LLVM, against the MSVC libraries.
       - name: Linker (lld-link of the Chromium LLVM)
         shell: pwsh
         run: |
-          $dir = Join-Path $env:USERPROFILE ".local/share/aphrody/toolchain/157/clang/bin"
+          $dir = Join-Path $env:USERPROFILE ".local/share/aphrody/toolchain/160/clang/bin"
           $l = Join-Path $dir "lld-link.exe"
           if (-not (Test-Path $l)) { Get-ChildItem $dir | Select-Object -First 40 | ForEach-Object Name; exit 1 }
           "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$l" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
@@ -90,6 +90,13 @@ jobs:
         run: cargo build --release -p aphrody --no-default-features
       - name: Unit tests of ay applet and ay sh
         run: cargo test --release -p aphrody --lib --no-default-features -- applet sh
+      - name: uutils multicall for Windows (the executables behind the uutils providers)
+        shell: pwsh
+        run: |
+          cargo install coreutils --locked --root uutils --features windows
+          Join-Path $PWD "uutils/bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+      - name: Unit tests of the Rust date applet (military zones, times of day)
+        run: cargo test --release -p winux-cmds --lib -- date
       - name: Provider table and an applet in process
         shell: bash
         run: |
@@ -108,8 +115,6 @@ jobs:
         run: |
           cp target/release/ay.exe winuxcmd.exe
           python winuxcmd/tests/differential/master-oracle.py --winuxcmd ./winuxcmd.exe --compare gnu-results.json --cases winuxcmd/tests/differential/master-cases.json | tee winux-compare.txt
-      - name: uutils multicall for Windows
-        run: cargo install coreutils --locked --root uutils --features windows
       # uutils is not the product under test here: its differences from GNU are data, reported in the job summary, not a gate.
       # The step itself must run (a missing binary or a crash of the harness stays red); only the differences are tolerated.
       - name: uutils against the same GNU results
@@ -129,4 +134,5 @@ jobs:
         with: { name: windows-proof, path: "proof-windows.*" }
       # The binary the proof ran, for installing on the workstation (ay and niu run there; see docs/proofs).
       - uses: actions/upload-artifact@v7
+        if: always()
         with: { name: ay-windows-x86_64, path: target/release/ay.exe, if-no-files-found: error }

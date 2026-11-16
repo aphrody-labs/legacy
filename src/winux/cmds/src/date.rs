@@ -684,6 +684,45 @@ struct ParsedDate {
     /// "<N unit> ago" anchors on now
     from_now: bool,
     rels: Vec<RelAmount>,
+    /// A military time-zone letter (RFC 822: A-I +1..+9, K-M +10..+12, N-Y -1..-12, Z 0), in seconds east of UTC.
+    zone_offset: Option<i64>,
+    /// A time of day without a date: the date is today's in the zone in use.
+    today: bool,
+}
+
+/// Seconds east of UTC of a military zone letter (J is not used).
+fn military_offset(c: char) -> Option<i64> {
+    let c = c.to_ascii_uppercase();
+    let hours = match c {
+        'A'..='I' => c as i64 - 'A' as i64 + 1,
+        'K'..='M' => c as i64 - 'K' as i64 + 10,
+        'N'..='Y' => -(c as i64 - 'N' as i64 + 1),
+        'Z' => 0,
+        _ => return None,
+    };
+    Some(hours * 3600)
+}
+
+/// `HH:MM[:SS]`, `HHMM` or `HH` (digits only: GNU reads 3 or 4 digits as hours and minutes).
+fn parse_clock(w: &str) -> Option<(i64, i64, i64)> {
+    if w.contains(':') {
+        let mut t = w.split(':');
+        let hh = t.next()?.parse().ok()?;
+        let mm = t.next()?.parse().ok()?;
+        let ss = t.next().map(|v| v.parse().ok()).unwrap_or(Some(0))?;
+        return if t.next().is_none() { Some((hh, mm, ss)) } else { None };
+    }
+    if !w.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    match w.len() {
+        1 | 2 => Some((w.parse().ok()?, 0, 0)),
+        3 | 4 => {
+            let n: i64 = w.parse().ok()?;
+            Some((n / 100, n % 100, 0))
+        }
+        _ => None,
+    }
 }
 
 fn parse_rel_groups(s: &str) -> Option<Vec<RelAmount>> {
@@ -736,6 +775,8 @@ fn parse_date_string(s: &str) -> Option<ParsedDate> {
             force_utc: true,
             from_now: false,
             rels: Vec::new(),
+            zone_offset: None,
+            today: false,
         });
     }
     let mut rels: Vec<RelAmount> = Vec::new();
@@ -757,6 +798,8 @@ fn parse_date_string(s: &str) -> Option<ParsedDate> {
             force_utc: true,
             from_now,
             rels,
+            zone_offset: None,
+            today: false,
         });
     }
     // "<base> + N unit[ + ...]" / "<base> - N unit"
@@ -780,10 +823,40 @@ fn parse_date_string(s: &str) -> Option<ParsedDate> {
             words.pop();
         }
     }
-    // ISO: Y-M-D [H:M[:S]]
     if words.is_empty() {
         return None;
     }
+    // A trailing military zone letter, alone (`10:24:30 T`) or glued to a digit time (`1024t`).
+    let mut zone_offset = None;
+    let mut glued: Option<String> = None;
+    if !force_utc {
+        let last = words.last().unwrap();
+        if last.len() == 1 && words.len() > 1 && last.chars().all(|c| c.is_ascii_alphabetic()) {
+            zone_offset = military_offset(last.chars().next().unwrap());
+            if zone_offset.is_some() {
+                words.pop();
+            }
+        } else if words.len() == 1 && last.len() > 1 {
+            let (head, tail) = last.split_at(last.len() - 1);
+            if head.bytes().all(|b| b.is_ascii_digit()) && tail.chars().all(|c| c.is_ascii_alphabetic()) {
+                if let Some(off) = military_offset(tail.chars().next().unwrap()) {
+                    zone_offset = Some(off);
+                    glued = Some(head.to_string());
+                }
+            }
+        }
+    }
+    // A time of day alone: today's date.
+    let single: Option<&str> = glued.as_deref().or(if words.len() == 1 { Some(words[0]) } else { None });
+    if let Some(w) = single.filter(|w| !w.contains('-')) {
+        if let Some((hh, mm, ss)) = parse_clock(w) {
+            if hh > 23 || mm > 59 || ss > 60 {
+                return None;
+            }
+            return Some(ParsedDate { y: 1970, m: 1, d: 1, hh, mm, ss, force_utc, from_now: false, rels, zone_offset, today: true });
+        }
+    }
+    // ISO: Y-M-D [H:M[:S]]
     let mut dmy = words[0].split('-');
     let y: i64 = dmy.next()?.parse().ok()?;
     let m: i64 = dmy.next()?.parse().ok()?;
@@ -811,6 +884,8 @@ fn parse_date_string(s: &str) -> Option<ParsedDate> {
         force_utc,
         from_now,
         rels,
+        zone_offset,
+        today: false,
     })
 }
 
@@ -821,7 +896,23 @@ fn resolve_parsed(p: &ParsedDate, zone: &TimeZone, now_epoch: i64) -> DateTime {
         let (off, name) = zone.at(now_epoch);
         return apply_rels(DateTime::from_epoch(now_epoch, off, name), &p.rels, zone);
     }
-    let epoch0 = if p.force_utc {
+    let epoch0 = if let Some(off) = p.zone_offset {
+        // military zone letter: the wall fields are in that zone
+        let (y, m, d) = if p.today {
+            let (zoff, _) = zone.at(now_epoch);
+            civil_from_days((now_epoch + zoff).div_euclid(86400))
+        } else {
+            (p.y, p.m, p.d)
+        };
+        days_from_civil(y, m, d) * 86400 + p.hh * 3600 + p.mm * 60 + p.ss - off
+    } else if p.today {
+        // a bare time of day: today's date in `zone`, the time in `zone`
+        let (zoff, _) = zone.at(now_epoch);
+        let (y, m, d) = civil_from_days((now_epoch + zoff).div_euclid(86400));
+        let wall = days_from_civil(y, m, d) * 86400 + p.hh * 3600 + p.mm * 60 + p.ss;
+        let (off, _) = zone.at(wall - zone.std_offset_west());
+        wall - off
+    } else if p.force_utc {
         // @EPOCH and explicit-zone forms: the wall fields already ARE UTC
         days_from_civil(p.y, p.m, p.d) * 86400 + p.hh * 3600 + p.mm * 60 + p.ss
     } else {
@@ -1337,6 +1428,26 @@ mod tests {
         let owned: Vec<OsString> = args.iter().map(Into::into).collect();
         let r = date_cmd(&owned, &mut io.split(), &ctx).unwrap();
         (r, io.out(), io.err())
+    }
+
+    #[test]
+    fn military_zone_letters_and_times_of_day() {
+        // GNU: a time of day alone is today's, a trailing letter is a military zone (T = UTC-7, A = UTC+1, Z = UTC).
+        for (args, want) in [
+            (vec!["-u", "-d", "1024t", "+%H:%M"], "17:24\n"),
+            (vec!["-u", "-d", "1024T", "+%H:%M"], "17:24\n"),
+            (vec!["-u", "-d", "10:24:30 T", "+%H:%M:%S"], "17:24:30\n"),
+            (vec!["-u", "-d", "10:24 A", "+%H:%M"], "09:24\n"),
+            (vec!["-u", "-d", "10:24 Z", "+%H:%M"], "10:24\n"),
+            (vec!["-u", "-d", "2020-01-02 10:24 N", "+%F %H:%M"], "2020-01-02 11:24\n"),
+            (vec!["-u", "-d", "0930", "+%H:%M"], "09:30\n"),
+        ] {
+            let (r, out, err) = tz("UTC", &args);
+            assert_eq!((r, out.as_str(), err.as_str()), (0, want, ""), "{args:?}");
+        }
+        // J is not a zone, and a bad clock is still invalid.
+        assert_eq!(tz("UTC", &["-u", "-d", "10:24 J"]).0, 1);
+        assert_eq!(tz("UTC", &["-u", "-d", "2599t"]).0, 1);
     }
 
     #[test]
