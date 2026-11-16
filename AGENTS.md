@@ -14,6 +14,7 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 
 ## What
 - Aphrody is an AI OS with self-hosted Google services (Gemini, Google APIs and apps, Chromium, A2A, local inference...); those packages and crates are features, never legacy to purge.
+- OS family, orchestrated from this monorepo by the repo manifest [`build/os/default.xml`](build/os/default.xml): `ay` (Aphrody YOLO, the CLI and runner), `ANU` (Aphrody's Not Unix: uutils, GNU and Linux on the Arch family), `ayNT` (Windows 11 NT, fork of LiberNT), `aydroid` (AOSP with Aphrody in place of Android). This monorepo is the userland for each OS. Nix is the package manager everywhere.
 - Core: `ay` is Bun built from its fork without JSC and WebKit, plus the Unix userland (bash, coreutils, binutils), a universal TS/JS, bash and Rust runner, and modules and extensions through crates.io and npm (AOT, LTO).
 - Around it: the platform (OS layers, deploy, the fleet as one server, agents) and the front ends (web, CLI, TUI, GUI, mobile) built on the `open` and `auto` libraries.
 - Ecosystem apps and frameworks on that core: games (Bevy fork with Steam and Epic), the Craft Apps, media.

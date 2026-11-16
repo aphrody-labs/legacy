@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The Aphrody OS family, orchestrated from this monorepo (repo manifest, as ChromiumOS does):
+     repo init -u https://github.com/aphrody-labs/aphrody -m build/os/default.xml && repo sync -->
+<manifest>
+  <remote name="dev" fetch="https://github.com/aphrody-dev" />
+  <remote name="labs" fetch="https://github.com/aphrody-labs" />
+  <default remote="dev" revision="main" sync-j="4" />
+  <project name="aphrody" remote="labs" path="aphrody" revision="dev" />
+  <project name="ay" path="ay" />
+  <project name="ANU" path="anu" />
+  <project name="ayNT" path="aynt" revision="main-nt10" />
+  <project name="aydroid" path="aydroid" />
+</manifest>
