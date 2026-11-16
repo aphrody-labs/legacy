@@ -24,3 +24,9 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 ## Limits
 - Secrets are never printed, logged or committed; the repo is public; no personal data.
 - Licenses never decide anything. No emoji, no AI attribution. `C:\Windows\System32` is never modified.
+
+## Antigravity and Gemini CLI
+- Both read this file: `.gemini/settings.json` sets `context.fileName` to `AGENTS.md` (Gemini CLI settings reference, `context.fileName`: string or array); there is no separate `GEMINI.md`.
+- `packages/ai-os` is the sole AI and MCP owner. MCP over stdio: `ai-os relay mcp-stdio` (`packages/ai-os/src/relay/cli.ts`); over HTTP: the relay `POST /mcp` (`packages/ai-os/docs/RELAY.md`). Providers and models are discovered at run time, never hard-coded.
+- Antigravity `PreToolUse` hooks are disabled (`{}` in `.agents/hooks.json`); GitHub auth runs through the `aphrody-labs` GitHub App (`infra/agents/gh-token.ts`).
+- Run `bun fmt`, `bun check` and the affected `bun test` (a package, never bare `bun test` at root). Use `graphify` first when `graphify-out/` exists.

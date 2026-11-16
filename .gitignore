@@ -20,6 +20,7 @@ graphify-out/
 # Allowlist: the root repo is the manifest of the monorepo (units are submodules, upstreams are pinned in src.lock.json)
 /*
 !/.agents/
+!/.gemini/
 # dist-generated release workflow (dist-workspace.toml)
 !/.github/
 # Repo-wide cargo build settings only; credentials stay in $CARGO_HOME, never here.
@@ -56,7 +57,6 @@ graphify-out/
 !/MAINTAINERS
 !/AGENTS.md
 !/CLAUDE.md
-!/GEMINI.md
 !/README.md
 !/LICENSE.md
 !/justfile
