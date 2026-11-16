@@ -1,5 +1,5 @@
 # CMake toolchain: x86_64-pc-windows-msvc from Linux with clang-cl + lld-link and an xwin splat in
-# $XWIN (default /xwin). Same layout as infra/vcpkg/toolchains/windows-llvm.cmake on Windows.
+# $XWIN (default /xwin). Same layout as infra/fleet/vcpkg/toolchains/windows-llvm.cmake on Windows.
 set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_PROCESSOR AMD64)
 if(NOT DEFINED ENV{XWIN})

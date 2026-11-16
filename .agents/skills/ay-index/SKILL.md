@@ -12,4 +12,4 @@ One stage graph per file, one SQLite (`var/index/core.db`, WAL, FTS5), one Valke
 - Fleet: `ay index watch` (PC, notify), `ay index worker` (fr1, fr2: heavy stages from `ay:1:jobs:heavy`), `ay index sync`. Valkey URL: `AY_VALKEY_URL` or `~/.config/ay/valkey.url` (never print it); unset means purely local.
 - Add a stage: implement `aphrody_core::pipeline::Stage` (`name`, `version`, `accepts`, `heavy`, `run -> Facts`), register it in `aphrody_re::index::engine()`. Bump `version` when the output changes: it is part of the cache key.
 - Build and test on fr1 only: `cargo test -p aphrody-core --features pipeline` (live Valkey test with `AY_TEST_VALKEY`), `cargo test -p aphrody-re --features index index::`.
-- Services: fr2 `valkey-server`, `ay-index-worker`, `ay-index.timer`, `ay-index-bench.timer`; fr1 `ay-index-worker`, `ay-index.timer`; PC task `AyIndexWatch`. Install: `infra/pipeline/`.
+- Services: fr2 `valkey-server`, `ay-index-worker`, `ay-index.timer`, `ay-index-bench.timer`; fr1 `ay-index-worker`, `ay-index.timer`; PC task `AyIndexWatch`. Install: `infra/ci/pipeline/`.

@@ -1,4 +1,4 @@
-# GitLab & Tri-Forge Infrastructure (`infra/gitlab`)
+# GitLab & Tri-Forge Infrastructure (`infra/ci/gitlab`)
 
 Production deployment manifests, Omnibus configuration, Arch Linux / CachyOS / Omarchy CI builder image, and Tri-Forge bootstrap scripts uniting **GitHub**, **GitLab**, and **Google Cloud Git** across all 26 `C:\aphrody` repositories.
 
@@ -57,9 +57,9 @@ Reverse-proxy `git.aphrody.com` to `127.0.0.1:8929` and `registry.aphrody.com` t
 
 ## Pipeline file
 
-The pipeline is `infra/gitlab/gitlab-ci.yml` (moved out of the repository root on 2026-11-13). GitLab only reads it once the project's CI configuration path points to it:
+The pipeline is `infra/ci/gitlab/gitlab-ci.yml` (moved out of the repository root on 2026-11-13). GitLab only reads it once the project's CI configuration path points to it:
 
 ```sh
-glab api -X PUT projects/aphrody-dev%2Fsrc -f ci_config_path=infra/gitlab/gitlab-ci.yml
+glab api -X PUT projects/aphrody-dev%2Fsrc -f ci_config_path=infra/ci/gitlab/gitlab-ci.yml
 # rollback: glab api -X PUT projects/aphrody-dev%2Fsrc -f ci_config_path=
 ```

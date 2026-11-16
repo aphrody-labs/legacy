@@ -1,5 +1,5 @@
 # labs triplet: Linux x64, shared LLVM toolchain (clang + lld + llvm-ar), ThinLTO.
-# Usage: vcpkg install <port>:x64-linux-llvm --overlay-triplets=infra/vcpkg/triplets
+# Usage: vcpkg install <port>:x64-linux-llvm --overlay-triplets=infra/fleet/vcpkg/triplets
 # Docs: https://learn.microsoft.com/vcpkg/users/triplets (VCPKG_CHAINLOAD_TOOLCHAIN_FILE)
 set(VCPKG_TARGET_ARCHITECTURE x64)
 set(VCPKG_CRT_LINKAGE dynamic)

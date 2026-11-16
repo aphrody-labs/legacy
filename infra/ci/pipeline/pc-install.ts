@@ -1,5 +1,5 @@
 // Register the PC file watcher as a scheduled task (survives reboot): `ay index watch <root>`.
-//   bun infra/pipeline/pc-install.ts [root] [--remove]
+//   bun infra/ci/pipeline/pc-install.ts [root] [--remove]
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 

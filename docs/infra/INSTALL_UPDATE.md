@@ -10,7 +10,7 @@ How `ay`, the toolchain around it and the published assets are installed and kep
 | Installer | [`src/up`](../../src/up) | `ay up`, `ay up --check`, `ay up <tool>...` |
 | Provider wiring | `src/up/src/setup.rs` | `ay up --setup` |
 | Workstation bootstrap | `src/up/src/bootstrap.rs` | `ay up --bootstrap` |
-| Host schedule | [`infra/generated/systemd/ay-up.*`](../generated/systemd) | daily, user units |
+| Host schedule | [`infra/up/systemd/ay-up.*`](../../infra/up/systemd) | daily, user units |
 | Asset manifests | `src/up/src/assets.rs` | `ay up --assets <dir> [--release <label>]` |
 
 ## Releasing `ay`
@@ -28,4 +28,4 @@ How `ay`, the toolchain around it and the published assets are installed and kep
 
 ## Hosts
 
-The user units in `infra/generated/systemd/` run `ay up` daily. Fleet bootstraps read the same manifest (`infra/fleet/bootstrap/`, `just fleet-bootstrap <role>`).
+The user units in `infra/up/systemd/` run `ay up` daily. Fleet bootstraps read the same manifest (`infra/fleet/bootstrap/`, `just fleet-bootstrap <role>`).
