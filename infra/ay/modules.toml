@@ -1,0 +1,201 @@
+# Target architecture of `ay`: the Bun binary of the fork (third_party/bun, aphrody-labs/bun) is the core and keeps Bun's own CLI; every
+# other feature is a module. Source of docs/ay/MODULES.md and of the coverage check of scripts/ay-inventory.ts (a current or legacy
+# `ay` command without a module fails the check, so nothing is lost).
+#
+# kind:
+#   core       the Bun binary itself (its commands, flags and help are Bun's)
+#   module     first-party Rust crate compiled into the binary by cargo feature (AOT and LTO see it; no dynamic loading)
+#   js         a Bun package run natively by the core (`bun packages/<name>/src/cli.ts`), reached as `ay <command>`
+#   ecosystem  an app or framework that consumes ay (Bevy, Steam, Epic, Craft Apps, tv): its subcommand stays until the app has its own entry point
+#   removed    nothing real uses it any more; the reason is in `note`
+
+[module.bun]
+kind = "core"
+crate = "bun_runtime (third_party/bun)"
+upstream = "oven-sh/bun"
+note = "run, install, add, remove, update, x, pm, build, test, upgrade, shell, fetch, s3, sql, glob, semver, archive: Bun's own CLI. `ay test` is `bun test`; `ay self-update` is `bun upgrade`."
+commands = ["test", "self-update"]
+
+[module.bash]
+kind = "module"
+crate = "bun_modules::bash (rubash, src/rubash)"
+feature = "bash"
+upstream = "unixwin/rubash"
+commands = ["sh"]
+
+[module.applets]
+kind = "module"
+crate = "bun_modules::applets (uutils coreutils, findutils, grep, sed; src/winux for the Windows WinuxCmd port)"
+feature = "applets"
+upstream = "uutils/coreutils, uutils/findutils, uutils/grep, uutils/sed, WinuxCmd"
+commands = ["applet"]
+
+[module.binutils]
+kind = "module"
+crate = "bun_modules::binutils (llvm-nm, llvm-objdump, llvm-ar, llvm-objcopy, llvm-strip, ...)"
+feature = "always on, no dependency"
+upstream = "llvm/llvm-project"
+note = "LLVM tools: the toolchain Bun and Chromium are built with, one code base for ELF, PE/COFF, Mach-O and wasm."
+commands = []
+
+[module.script]
+kind = "module"
+crate = "bun_modules::script (cargo -Zscript, rubash)"
+feature = "always on"
+upstream = "rust-lang/cargo"
+note = "`run` detects the language by extension or shebang: JavaScript and TypeScript (Bun), bash (rubash), Rust single-file scripts (cargo -Zscript with the frontmatter manifest and cargo's script build cache)."
+commands = []
+
+[module.depot]
+kind = "module"
+crate = "src/depot/* (depot-cli, depot-gclient, depot-cipd, depot-vpython, depot-cas, depot-forge, depot-graph, depot-ingest)"
+feature = "depot"
+upstream = "chromium/depot_tools"
+commands = ["git", "gclient", "fetch", "vpy", "cl", "cipd", "ninja", "gn", "ingest", "graph", "chromium", "forge"]
+
+[module.repo]
+kind = "module"
+crate = "src/xtask (xtk)"
+feature = "repo"
+upstream = "aphrody-labs (lock, manifests, doctor)"
+commands = ["lock", "manifests", "doctor"]
+
+[module.remote]
+kind = "module"
+crate = "src/remote (aphrody-remote)"
+feature = "remote"
+upstream = "Eugeny/russh"
+commands = ["ssh"]
+
+[module.re]
+kind = "module"
+crate = "src/re (aphrody-re)"
+feature = "re"
+upstream = "NationalSecurityAgency/ghidra, google/magika"
+commands = ["re"]
+
+[module.conformance]
+kind = "module"
+crate = "test/conformance (aphrody-conformance)"
+feature = "conformance"
+upstream = "web-platform-tests/wpt, test262"
+commands = ["conformance"]
+
+[module.toolchain]
+kind = "module"
+crate = "src/up (aphrody-up), src/rt (aphrody-rt), src/machine (aphrody-machine)"
+feature = "toolchain"
+upstream = "astral-sh/uv, oven-sh/bun versions, axo-dev/cargo-dist"
+note = "`up` installs the tools of tools.toml the way `bun install` installs packages (shims included); `rt` installs runtimes; `sys` profiles the machine; `bin` and `path` manage PATH."
+commands = ["up", "rt", "sys", "bin", "path"]
+
+[module.docs]
+kind = "module"
+crate = "src/docs (aphrody-docs)"
+feature = "docs"
+upstream = "oven-sh/bun docs, bun.com llms-full.txt"
+commands = ["docs"]
+
+[module.flat]
+kind = "module"
+crate = "src/ay/src/low/flat.rs, flat_sync.rs (moves to its own crate)"
+feature = "flat"
+upstream = "oven-sh/bun (bun_wyhash, bun_histogram), uutils/diffutils"
+commands = ["flat", "hash", "time"]
+
+[module.omarchy]
+kind = "module"
+crate = "src/posix/omarchy (aphrody-omarchy), src/posix/wslg"
+feature = "omarchy"
+upstream = "basecamp/omarchy, CachyOS, microsoft/wslg"
+commands = ["omarchy", "linux", "pkg", "wsl", "wl"]
+
+[module.ui]
+kind = "module"
+crate = "src/ui/kit (aphrody-ui)"
+feature = "ui"
+upstream = "DioxusLabs/dioxus, DioxusLabs/blitz, linebender/vello, google-labs-code/design.md"
+commands = ["ui", "design"]
+
+[module.electron]
+kind = "module"
+crate = "src/electron-migrate"
+feature = "electron"
+upstream = "electron/asar, tauri-apps/tauri, zed-industries/gpui"
+commands = ["electron"]
+
+[module.bench]
+kind = "module"
+crate = "bench (stack-bench)"
+feature = "bench"
+upstream = "(first party; Win32 benchmarks)"
+commands = ["bench"]
+
+[module.index]
+kind = "module"
+crate = "src/core (aphrody-core, pipeline), src/ay/src/code (tree-sitter refactoring)"
+feature = "index"
+upstream = "tree-sitter/tree-sitter, google/magika"
+commands = ["index", "code"]
+
+[module.build]
+kind = "module"
+crate = "src/ay/src/build.rs (cross-compilation presets over cargo)"
+feature = "build"
+upstream = "rust-lang/cargo"
+commands = ["build"]
+
+[module.env]
+kind = "module"
+crate = "src/ay/src/envcmd.rs"
+feature = "env"
+upstream = "allan2/dotenvy"
+commands = ["env"]
+
+[module.ai]
+kind = "module"
+crate = "src/ay/src/ai.rs (LiteLLM provider config)"
+feature = "ai"
+upstream = "BerriAI/litellm, ollama/ollama"
+commands = ["ai"]
+
+[module.upstream]
+kind = "module"
+crate = "src/ay/src/bun (watch, bump, schedule), src/ay/src/bump.rs"
+feature = "upstream"
+upstream = "oven-sh/bun"
+note = "Bun fork watch and bump; the patch stacks run in packages/upstream."
+commands = ["bun", "bump"]
+
+[module.packages]
+kind = "js"
+crate = "packages/{deploy,assets,env-kit,ai-os,upstream,gnu,release,i18n,machine,wck}"
+upstream = "(first party Bun packages)"
+note = "Bun runs them natively: `ay deploy` is `bun packages/deploy/src/cli.ts`."
+commands = ["deploy", "assets", "auth", "secret", "vault", "upstream", "gnu", "release", "i18n", "shell-matrix", "jules", "agents", "web", "lfs"]
+
+[module.engines]
+kind = "js"
+crate = "apps/open/packages/browser-engines (aphrody-labs/open)"
+upstream = "(first party)"
+commands = ["engines"]
+
+[module.plugin]
+kind = "module"
+crate = "src/ay/src/plugin.rs (plugin surface read by the Bun and niu hosts)"
+feature = "plugin"
+upstream = "(first party)"
+note = "Becomes the extension registry of the architecture (docs/ay/EXTENSIONS.md)."
+commands = ["plugin"]
+
+[module.gaming]
+kind = "ecosystem"
+crate = "src/steam, packages/gaming, gamescope-rs"
+upstream = "ValveSoftware/steam, Bevy fork"
+note = "Bevy fork with Steam and Epic, Craft Apps, tv: ecosystem apps, consumers of ay. Their subcommands stay until the owning agent provides each app's entry point."
+commands = ["steam", "gaming", "scope"]
+
+[module.removed]
+kind = "removed"
+note = "arch: archguard deleted (no blocking gates). brand: logo is docs/logo/aphrody.png, the generator is purged."
+commands = ["arch", "brand"]

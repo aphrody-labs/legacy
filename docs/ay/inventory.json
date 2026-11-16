@@ -1,0 +1,415 @@
+{
+  "generator": "scripts/ay-inventory.ts",
+  "current": 60,
+  "legacy": 8,
+  "rows": [
+    {
+      "command": "agents",
+      "state": "current",
+      "module": "packages",
+      "doc": "ai-os orchestrator (packages/ai-os, `orch`): run <workflow.json>, plan \"<goal>\", lifecycle --task ... ; agent toolchain: install, sync, check, list (packages/machine/src/toolchain.ts)"
+    },
+    {
+      "command": "ai",
+      "state": "current",
+      "module": "ai",
+      "doc": "Inference providers behind LiteLLM (infra/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up"
+    },
+    {
+      "command": "applet",
+      "state": "legacy",
+      "module": "applets",
+      "doc": ""
+    },
+    {
+      "command": "arch",
+      "state": "legacy",
+      "module": "removed",
+      "doc": ""
+    },
+    {
+      "command": "assets",
+      "state": "current",
+      "module": "packages",
+      "doc": "Assets, download to deploy (packages/assets): list, verify, fetch, optimize, bundle, publish, attribution"
+    },
+    {
+      "command": "auth",
+      "state": "current",
+      "module": "packages",
+      "doc": "Every authentication of the fleet (env-kit): status, repair [--browser], gh-secrets, tunnels, rotate"
+    },
+    {
+      "command": "bench",
+      "state": "current",
+      "module": "bench",
+      "doc": "Hardware and compiler benchmarks (Windows)"
+    },
+    {
+      "command": "bin",
+      "state": "current",
+      "module": "toolchain",
+      "doc": "Cross-platform binary & PATH manager (packages/machine): status, purge, which, add, rm, link, unlink"
+    },
+    {
+      "command": "brand",
+      "state": "legacy",
+      "module": "removed",
+      "doc": ""
+    },
+    {
+      "command": "build",
+      "state": "current",
+      "module": "build",
+      "doc": "Build the workspace for a cross-compilation preset (--list shows toolchain status)"
+    },
+    {
+      "command": "bump",
+      "state": "current",
+      "module": "upstream",
+      "doc": "Unified monorepo auto-bump via `bun pm`, `depot-gclient`, `crates.io` (`cargo update`) and `ay bun bump`"
+    },
+    {
+      "command": "bun",
+      "state": "current",
+      "module": "upstream",
+      "doc": "Upstream watch of oven-sh/bun for the fork: watch [--json] [--apply] [--install-schedule], bump [--write]"
+    },
+    {
+      "command": "chromium",
+      "state": "current",
+      "module": "depot",
+      "doc": "Chromium build chain on fr1: status, sync, gn, build, autoninja, toolchain (delegated over ay ssh)"
+    },
+    {
+      "command": "cipd",
+      "state": "current",
+      "module": "depot",
+      "doc": "Official CIPD client from depot_tools"
+    },
+    {
+      "command": "cl",
+      "state": "current",
+      "module": "depot",
+      "doc": "git cl on jj and Gerrit REST: upload, status, issue"
+    },
+    {
+      "command": "code",
+      "state": "current",
+      "module": "index",
+      "doc": "Parser-backed refactoring and staging: refs <path>, mv <from> <to> [--dry-run], stage <file> --match <text>"
+    },
+    {
+      "command": "conformance",
+      "state": "current",
+      "module": "conformance",
+      "doc": "Conformance suites: [--fetch] [suite...] writes conformance/results/; `channels [platform]` refreshes Chrome pins"
+    },
+    {
+      "command": "deploy",
+      "state": "current",
+      "module": "packages",
+      "doc": "aphrody.app: `ay deploy <project>|ls|logs|rollback|promote` (packages/deploy); containers: `ay deploy build|smoke|up|ps|products|shell|runtime|run` runs `just docker-<sub>`"
+    },
+    {
+      "command": "design",
+      "state": "current",
+      "module": "ui",
+      "doc": "DESIGN.md lint, export, spec (aphrody-ui); Stitch client / push (ai-os)"
+    },
+    {
+      "command": "docs",
+      "state": "current",
+      "module": "docs",
+      "doc": "Bun docs in ay: sync (fork md/mdx, bun.com llms-full.txt, skills), bun <query> [--json], show, stats, schedule"
+    },
+    {
+      "command": "doctor",
+      "state": "current",
+      "module": "repo",
+      "doc": "Toolchain doctor"
+    },
+    {
+      "command": "electron",
+      "state": "current",
+      "module": "electron",
+      "doc": "Electron apps: analyze (JSON manifest), migrate --to tauri|gpui, optimize a generated project, bench against the original (aphrody-electron-migrate)"
+    },
+    {
+      "command": "engines",
+      "state": "current",
+      "module": "engines",
+      "doc": "Engines facade (V8, JavaScriptCore, Dawn, wgpu, browsers): list, matrix, js, path, install, launch, build"
+    },
+    {
+      "command": "env",
+      "state": "current",
+      "module": "env",
+      "doc": "Inspect a dotenv file without printing values (aphrody-env): `ay env [--file p] [--required A,B]`"
+    },
+    {
+      "command": "fetch",
+      "state": "current",
+      "module": "depot",
+      "doc": "Write .gclient for a depot_tools fetch config (chromium, v8, webrtc, ...) and sync it"
+    },
+    {
+      "command": "flat",
+      "state": "current",
+      "module": "flat",
+      "doc": "Leaf crates of a fork flattened into src/<fork>-flat (default: diffutils): list, sync, check"
+    },
+    {
+      "command": "forge",
+      "state": "legacy",
+      "module": "depot",
+      "doc": ""
+    },
+    {
+      "command": "gaming",
+      "state": "current",
+      "module": "gaming",
+      "doc": "Gaming stack (packages/gaming): status, apps, proton, layers, dx, steamcmd, run, skills"
+    },
+    {
+      "command": "gclient",
+      "state": "current",
+      "module": "depot",
+      "doc": "gclient in Rust: revinfo, getdep, setdep, sync (gitoxide), hooks, root"
+    },
+    {
+      "command": "git",
+      "state": "current",
+      "module": "depot",
+      "doc": "VCS tooling: worktree, fork, slim [--all], clone, gix, forge, audit, depot_tools shims, ..."
+    },
+    {
+      "command": "gn",
+      "state": "current",
+      "module": "depot",
+      "doc": "The checkout's gn binary (buildtools/<platform>/gn)"
+    },
+    {
+      "command": "gnu",
+      "state": "current",
+      "module": "packages",
+      "doc": "GNU upstream tracker and distributor: status, search, package, feed, diff, kernel, sync, site (packages/gnu)"
+    },
+    {
+      "command": "graph",
+      "state": "current",
+      "module": "depot",
+      "doc": "Tree-sitter code graph: `ay graph <path>` builds; build, query, path, explain, mcp"
+    },
+    {
+      "command": "hash",
+      "state": "current",
+      "module": "flat",
+      "doc": "wyhash (bun's hash) of files or stdin"
+    },
+    {
+      "command": "i18n",
+      "state": "current",
+      "module": "packages",
+      "doc": "Localization catalog checker & key extractor (packages/i18n)"
+    },
+    {
+      "command": "index",
+      "state": "current",
+      "module": "index",
+      "doc": "(gen, gen-docs, search, users: packages/core)"
+    },
+    {
+      "command": "ingest",
+      "state": "current",
+      "module": "depot",
+      "doc": "Repository digest for LLM context"
+    },
+    {
+      "command": "jules",
+      "state": "current",
+      "module": "packages",
+      "doc": "Google Jules coding agent: run [--wait], sessions, show, activities, approve, send, sources (ai-os jules)"
+    },
+    {
+      "command": "lfs",
+      "state": "current",
+      "module": "packages",
+      "doc": "bun-LFS (third_party/lfs/bun, GitHub CI): build, logs, wsl (runs `just lfs-<sub>`)"
+    },
+    {
+      "command": "linux",
+      "state": "current",
+      "module": "omarchy",
+      "doc": "Linux system layer: patchset versions, sync, patch stacks, kernel builds on fr1 or CI (aphrody-omarchy)"
+    },
+    {
+      "command": "lock",
+      "state": "current",
+      "module": "repo",
+      "doc": "Regenerate src.lock.json, DEPS, .repo manifest and MAINTAINERS"
+    },
+    {
+      "command": "manifests",
+      "state": "current",
+      "module": "repo",
+      "doc": "Generate governance manifests; `ay manifests verify` checks them"
+    },
+    {
+      "command": "ninja",
+      "state": "current",
+      "module": "depot",
+      "doc": "autoninja logic: n2 or ninja locally, upstream autoninja for Siso output directories"
+    },
+    {
+      "command": "omarchy",
+      "state": "current",
+      "module": "omarchy",
+      "doc": "Omarchy (quattro) + CachyOS command center: commands, theme, plugin, font, manual, kernel, pkg, wsl"
+    },
+    {
+      "command": "path",
+      "state": "current",
+      "module": "toolchain",
+      "doc": "Cross-platform PATH manager alias (packages/machine)"
+    },
+    {
+      "command": "pkg",
+      "state": "current",
+      "module": "omarchy",
+      "doc": "Package recipes for every distro: list, matrix, gen, build, check (aphrody-omarchy, infra/pkg)"
+    },
+    {
+      "command": "plugin",
+      "state": "current",
+      "module": "plugin",
+      "doc": "Plugin surface read by the Bun and niu hosts (packages/omniu): `manifest` (JSON), `names`"
+    },
+    {
+      "command": "re",
+      "state": "current",
+      "module": "re",
+      "doc": "Reverse engineering, Ghidra P-Code/Pseudo-C, MinGW-REA, and Lua 5.2 bytecode analysis (aphrody-re)"
+    },
+    {
+      "command": "release",
+      "state": "current",
+      "module": "packages",
+      "doc": "Release from fr1: tags, GitHub release, crates.io, npm, PyPI, vcpkg/CMake; dry-run unless `publish` (packages/release)"
+    },
+    {
+      "command": "rt",
+      "state": "current",
+      "module": "toolchain",
+      "doc": "Runtimes: Python engines (uv, RustPython), Bun versions, package managers, PyTorch"
+    },
+    {
+      "command": "scope",
+      "state": "current",
+      "module": "gaming",
+      "doc": "Gamescope mode (runs the `gamescope-rs` binary)"
+    },
+    {
+      "command": "secret",
+      "state": "current",
+      "module": "packages",
+      "doc": "OS secret store (DPAPI on Windows, systemd-creds on Linux): info, list, set, exec, pipe, import"
+    },
+    {
+      "command": "self-update",
+      "state": "current",
+      "module": "bun",
+      "doc": "Update `ay` itself from the dist GitHub Releases (axoupdater)"
+    },
+    {
+      "command": "sh",
+      "state": "current",
+      "module": "bash",
+      "doc": "Embedded Bash 5.3 engine (rubash): `-c CMD`, a script file, or stdin; no external bash needed"
+    },
+    {
+      "command": "shell-matrix",
+      "state": "current",
+      "module": "packages",
+      "doc": "Cross-shell conformance matrix (packages/machine/matrix)"
+    },
+    {
+      "command": "ssh",
+      "state": "current",
+      "module": "remote",
+      "doc": "Pure-Rust SSH (russh): exec <host|all|a,b> -- cmd, cp, hosts, check"
+    },
+    {
+      "command": "steam",
+      "state": "current",
+      "module": "gaming",
+      "doc": "Steam data as JSON (src/steam): root, libraries, apps, vdf, compat, host, env"
+    },
+    {
+      "command": "sys",
+      "state": "current",
+      "module": "toolchain",
+      "doc": "Machine profile: OS, firmware/SMBIOS, CPUID, PCI, GPUs, disks, virtualization, toolchains"
+    },
+    {
+      "command": "test",
+      "state": "legacy",
+      "module": "bun",
+      "doc": ""
+    },
+    {
+      "command": "time",
+      "state": "current",
+      "module": "flat",
+      "doc": "Run a command N times and print p50/p90/p99 wall time (bun's HdrHistogram)"
+    },
+    {
+      "command": "ui",
+      "state": "current",
+      "module": "ui",
+      "doc": "Unified full-stack UI framework (`aphrody-ui::fusion`): targets, presets, components, manifest, render"
+    },
+    {
+      "command": "up",
+      "state": "current",
+      "module": "toolchain",
+      "doc": "Install and update the toolchain from tools.toml: --check, --list, --setup"
+    },
+    {
+      "command": "upstream",
+      "state": "current",
+      "module": "packages",
+      "doc": "Patch stacks of the bun and Chromium forks: status, sync, check, pr, mark, gc, export (packages/upstream)"
+    },
+    {
+      "command": "vault",
+      "state": "current",
+      "module": "packages",
+      "doc": "Vault: init, add, import-chrome-csv, export-chrome-csv, sync, status, rotate, hosts"
+    },
+    {
+      "command": "vpy",
+      "state": "current",
+      "module": "depot",
+      "doc": "vpython on uv: run Python in a vpython.toml / PEP 723 environment"
+    },
+    {
+      "command": "web",
+      "state": "legacy",
+      "module": "packages",
+      "doc": ""
+    },
+    {
+      "command": "wl",
+      "state": "legacy",
+      "module": "omarchy",
+      "doc": ""
+    },
+    {
+      "command": "wsl",
+      "state": "legacy",
+      "module": "omarchy",
+      "doc": ""
+    }
+  ]
+}
