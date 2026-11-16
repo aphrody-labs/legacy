@@ -6,7 +6,7 @@ import { DEFAULT_INSTALL } from "../src/engines/install.ts";
 import { freePort } from "../src/engines/launch.ts";
 import { ENGINES, getEngine, repoRoot } from "../src/engines/registry.ts";
 
-const tools = readFileSync(join(repoRoot(), "tools.toml"), "utf8");
+const tools = readFileSync(join(repoRoot(), "infra", "up", "tools.toml"), "utf8");
 const forks = readFileSync(
   join(repoRoot(), "third_party", "forks.txt"),
   "utf8",
@@ -18,7 +18,7 @@ describe("engines registry", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  test("every ay-installed engine is pinned in tools.toml", () => {
+  test("every ay-installed engine is pinned in infra/up/tools.toml", () => {
     for (const e of ENGINES)
       if (e.install.via === "ay")
         expect(tools).toContain(`name = "${e.install.tool}"`);

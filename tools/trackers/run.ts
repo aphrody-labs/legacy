@@ -195,7 +195,7 @@ export async function refresh(
   return {
     schema: 1,
     generated_at: nowIso(),
-    generator: "packages/chromium-bun/src/trackers",
+    generator: "packages/chromium/chromium-bun/src/trackers",
     config: "third_party/ECOSYSTEM.toml [tracker.*]",
     channels,
     targets,

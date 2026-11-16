@@ -3,10 +3,10 @@
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
-// packages/chromium-bun/src -> repository root
+// packages/chromium/chromium-bun/src -> repository root
 export const REPO_ROOT = process.env.SRC_ROOT
   ? resolve(process.env.SRC_ROOT)
-  : resolve(import.meta.dir, "..", "..", "..");
+  : resolve(import.meta.dir, "..", "..", "..", "..");
 
 export const CHROMIUM_ROOT =
   process.env.CHROMIUM_ROOT ??

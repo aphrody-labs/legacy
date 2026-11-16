@@ -54,7 +54,7 @@ export async function runFullE2eRealConditionSuite(options?: {
   prodUrl?: string;
 }): Promise<FullE2eSuiteReport> {
   const root = resolve(
-    options?.monorepoRoot ?? join(import.meta.dir, "../../../.."),
+    options?.monorepoRoot ?? join(import.meta.dir, "../../../../.."),
   );
   const withLighthouse = options?.withLighthouse ?? true;
   const withAgentBrowser = options?.withAgentBrowser ?? true;

@@ -26,6 +26,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aphrody-labs/aphrody.git",
-    "directory": "packages/chromium-bun"
+    "directory": "packages/chromium/chromium-bun"
   }
 }

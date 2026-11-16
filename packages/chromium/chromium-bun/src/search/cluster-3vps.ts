@@ -6,7 +6,7 @@
  *   - role "cdn-edge-and-test": proxy / CDN only
  *   - any other role (for example "build"): excluded from the search cluster
  */
-import fleet from "../../../../infra/deploy.toml";
+import fleet from "../../../../../infra/deploy.toml";
 import { ChromiumBunCrawler, type CrawlPageResult } from "./crawler.ts";
 import {
   APHRODY_TOP1_SUBDOMAIN_CATALOG,

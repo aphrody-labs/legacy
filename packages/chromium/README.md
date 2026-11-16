@@ -58,8 +58,8 @@ Type declarations for the `bun:` specifiers are in `types/` (reference `@aphrody
 
 Migrated from aphrody-labs/bun at `7c57ac563e12c35be817697c4b5488b0fd64cc09`: `src/js/bun/{chromium,obscura,adblock,privacy,fetch}.ts`,
 `src/js/internal/chrome-manifests.ts`, `packages/bun-types/{chromium,chrome,obscura,adblock,privacy}.d.ts`,
-`packages/bun-chromium` (also published as aphrody-labs/bun-chromium), `src/adblock`, `src/privacy`
+the former `packages/bun-chromium` wrapper (merged into this package; also published as aphrody-labs/bun-chromium), `src/adblock`, `src/privacy`
 and the JSC bindings `src/runtime/adblock/mod.rs` and `src/runtime/privacy.rs`, rewritten for
-`bun:ffi`. Bun's original source is MIT (`LICENSE`); `packages/bun-chromium` files are
+`bun:ffi`. Bun's original source is MIT (`LICENSE`); the wrapper files were
 Apache-2.0; adblock-rust and the Brave privacy sources keep their MPL-2.0 headers and the
 `crates/aphrody-adblock/LICENSE` file.

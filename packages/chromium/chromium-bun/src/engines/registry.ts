@@ -65,7 +65,7 @@ export const PINS = {
 } as const;
 
 export const repoRoot = (): string =>
-  Bun.env.SRC_ROOT || join(import.meta.dir, "..", "..", "..", "..");
+  Bun.env.SRC_ROOT || join(import.meta.dir, "..", "..", "..", "..", "..");
 
 export const binDir = (): string => join(homedir(), ".local", "bin");
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // chromium-bun engines list | matrix | channels | path <id> | install [id...] | launch <id> [--port N]
-// Standalone executable (bun packages/chromium-bun/src/engines/cli.ts ...) without loading the rest of the package; `ay rt` calls it that way.
+// Standalone executable (bun packages/chromium/chromium-bun/src/engines/cli.ts ...) without loading the rest of the package; `ay rt` calls it that way.
 import { runBackendCommand } from "./backend.ts";
 import { DEFAULT_INSTALL, installEngines } from "./install.ts";
 import { launchEngine } from "./launch.ts";
