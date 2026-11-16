@@ -10,6 +10,7 @@ Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](do
 - Layout follows Bun ([`docs/project/layout.md`](docs/project/layout.md)): `src/` Rust and C, `packages/` libraries by language manifest, `apps/` (`web`, `auto`, `nt`; `open` is its own repo; `rosegriffon`, `shenron` are submodules), `infra/`, `third_party/` (pins in `src.lock.json`).
 
 ## How
+- "Purge legacy" means fixing legacy errors, deleting dead code and modernizing old architecture; it never removes a feature or causes a regression.
 - No human in the loop: decide, execute, prove, report done, not done and failed. No approval gates, blocking warnings or slow backups.
 - Everything on `main` through `bun scripts/commit.ts`; never stash, reset, branch or use worktrees.
 - Upstream first at the newest canary, nightly or rc; assemble, never reinvent; dedupe.
