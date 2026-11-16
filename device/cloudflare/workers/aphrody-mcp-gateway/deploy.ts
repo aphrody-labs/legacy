@@ -8,7 +8,7 @@ import { expandSync } from "../../../../system/env-kit/src/discover.ts";
 
 const NAME = "aphrody-mcp-gateway";
 const HOST = "mcp.aphrody.com";
-const BUCKET = "aphrody-skills-archive";
+const BUCKET = "aphrody-backups"; // private bucket of every backup and archive; the skills archive lives under skills/
 const ORIGIN = "https://mcp-origin.aphrody.com";
 const dir = import.meta.dir;
 const toml = Bun.TOML.parse(expandSync(await Bun.file(join(dir, "../../cloudflare.toml")).text())) as any;

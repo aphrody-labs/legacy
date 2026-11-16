@@ -5,7 +5,8 @@
 #   zones     DNS zones the project owns; hostnames below the zone belong to it
 #   tunnel    Cloudflare tunnel (named like the project) that carries its origin traffic; "" = none
 #   workers   Workers; the sources live in the repo, deploys come from CI, not from the dashboard
-#   buckets   R2 buckets (not renameable; one bucket per kind of content, 336 GB aphrody-archive is never copied)
+#   buckets   R2 buckets (not renameable). Public content keeps one bucket per host family; every backup and archive of every project
+#             lives in the private aphrody-backups (fleet/, skills/, dbfr/), the old aphrody-archive, aphrody-skills-archive and dbfr-backups are gone.
 # Adding a site to aphrody-sites (apps/r2-site) or a Worker: edit its wrangler config in the repo AND list it here.
 
 [project.aphrody]
@@ -13,19 +14,19 @@ repo = "aphrody-labs/ay"
 zones = ["aphrody.com", "aphrody.app"]
 tunnel = "aphrody"
 workers = ["aphrody", "aphrody-app", "aphrody-deploy", "aphrody-github", "aphrody-mcp-gateway", "aphrody-sites", "aphrody-webos", "api-aphrody-com", "bun-video-showcase"]
-buckets = ["aphrody-archive", "aphrody-assets", "aphrody-chromium", "aphrody-dist", "aphrody-gnu", "aphrody-lore", "aphrody-skills-archive", "aphrody-video", "bun-lib"]
+buckets = ["aphrody-assets", "aphrody-backups", "aphrody-chromium", "aphrody-dist", "aphrody-gnu", "aphrody-lore", "aphrody-video", "bun-lib"]
 
 [project.shenron]
 repo = "aphrody-labs/shenron"
 zones = ["dragonballfr.com"]
 tunnel = "shenron"
 workers = ["shenron-cdn"]
-buckets = ["shenron-cdn", "dbfr-backups"]
+buckets = ["shenron-cdn"]
 
 [project.rosegriffon]
 repo = "aphrody-labs/rosegriffon"
 zones = ["rosegriffon.fr"]
-tunnel = ""
+tunnel = "rosegriffon"
 workers = ["rosegriffon-edge"]
 buckets = ["rosegriffon-cdn"]
 

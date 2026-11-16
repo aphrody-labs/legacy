@@ -11,7 +11,7 @@ account = "@@accounts.cloudflare_account_id@@"
 [zones]
 "aphrody.com" = "@@zones.aphrody.com@@"
 "aphrody.app" = "@@zones.aphrody.app@@"
-# Product zones: only the [[rules]] refs below are managed here (content and DNS stay with shenron / rosegriffon).
+# Product zones: dragonballfr.com only through its [[rules]] refs (content and DNS stay with shenron); rosegriffon.fr: tunnel and DNS here too.
 "dragonballfr.com" = "@@zones.dragonballfr.com@@"
 "rosegriffon.fr" = "@@zones.rosegriffon.fr@@"
 
@@ -59,6 +59,27 @@ ingress = [
   # Origin of the public MCP gateway (Worker mcp.aphrody.com, docs/infra/GEMINI-WEB-MCP.md): relay on fr2 loopback, bearer token.
   { hostname = "mcp-origin.aphrody.com", service = "http://127.0.0.1:8790" },
   { hostname = "gnu.aphrody.com", service = "http://127.0.0.1:80" }, # live ingress kept as is (gnu mirror), not managed by the MCP work
+  { service = "http_status:404" },
+]
+
+# rosegriffon: the product zone rosegriffon.fr (checkout ../rosegriffon, edge Worker rosegriffon-edge on cdn.rosegriffon.fr/static/*). Same origin ports as the
+# zone Origin Rule it replaces (8443; 9443 for the cacheable apex and www), now reached through this tunnel instead of the public IP of prd.
+# Rollback: point the DNS records back to the A record in their rollback field.
+[tunnels.rosegriffon]
+id = "13472279-6bb9-4753-9cd1-a6acb388e03c"
+host = "prd"
+ingress = [
+  { hostname = "rosegriffon.fr", service = "https://127.0.0.1:9443", originRequest = { noTLSVerify = true } },
+  { hostname = "www.rosegriffon.fr", service = "https://127.0.0.1:9443", originRequest = { noTLSVerify = true } },
+  { hostname = "achillea.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "azalee.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "shop.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "ranked.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "api.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "bot.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "mcp.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "db.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
+  { hostname = "cdn.rosegriffon.fr", service = "https://127.0.0.1:8443", originRequest = { noTLSVerify = true } },
   { service = "http_status:404" },
 ]
 
@@ -312,3 +333,16 @@ content = "send.forge.rmta.net"
 type = "CNAME"
 name = "ovhmo-selector-1._domainkey.aphrody.com"
 content = "ovhmo-selector-1._domainkey.4861041.dp.dkim.mail.ovh.net"
+
+[dns."rosegriffon.fr"]
+"rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"www.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"achillea.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"azalee.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"shop.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"ranked.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"api.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"bot.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"mcp.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"db.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }
+"cdn.rosegriffon.fr" = { type = "CNAME", content = "tunnel:rosegriffon", proxied = true, rollback = "A @@hosts.prd.public_ip@@" }

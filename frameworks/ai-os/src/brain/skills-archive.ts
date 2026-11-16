@@ -269,7 +269,7 @@ if (import.meta.main) {
     `skills-archive: ${r.skills} skills -> ${r.files} files, ${(r.bytes / 1e6).toFixed(2)} MB, ${r.refsTruncated} refs truncated, ${r.out}`,
   );
   if (a.includes("--publish")) {
-    const bucket = Bun.env.SKILLS_ARCHIVE_BUCKET ?? "aphrody-skills-archive";
+    const bucket = Bun.env.SKILLS_ARCHIVE_BUCKET ?? "aphrody-backups";
     const files = readdirSync(r.out);
     // Cloudflare REST: PUT /accounts/<id>/r2/buckets/<bucket>/objects/<key> (token from the vault, account id from device/cloudflare/cloudflare.toml).
     const acct =
@@ -285,7 +285,7 @@ if (import.meta.main) {
       throw new Error("CLOUDFLARE_API_TOKEN missing");
     for (const f of files) {
       const res = await fetch(
-        `https://api.cloudflare.com/client/v4/accounts/${acct}/r2/buckets/${bucket}/objects/${encodeURIComponent(f)}`,
+        `https://api.cloudflare.com/client/v4/accounts/${acct}/r2/buckets/${bucket}/objects/${encodeURIComponent(`skills/${f}`)}`,
         {
           method: "PUT",
           headers: {

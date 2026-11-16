@@ -1,5 +1,5 @@
 # Regenerates the markdown skills archive and the Gemini memory pull, then publishes to R2.
-# /etc/aphrody/relay.env also holds CLOUDFLARE_API_TOKEN (R2 write on bucket aphrody-skills-archive) for `cf`.
+# /etc/aphrody/relay.env also holds CLOUDFLARE_API_TOKEN (R2 write on bucket aphrody-backups) for `cf`.
 [Unit]
 Description=Aphrody skills archive build and publish
 After=network-online.target

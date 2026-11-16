@@ -5,7 +5,7 @@
 # Steps (each idempotent, rerunnable after a failure):
 #   1. sshd: keys only (prd/00-fleet-sshd.conf);
 #   2. toolchains and runtime: just fleet-bootstrap <host> (packages, docker, nginx, wireguard, cloudflared, agents user);
-#   3. state: latest age-encrypted backup r2:aphrody-archive/fleet/<host>/ fetched through a peer that holds the R2
+#   3. state: latest age-encrypted backup r2:aphrody-backups/fleet/<host>/ fetched through a peer that holds the R2
 #      remote, decrypted on the PC (~/.ssh/fleet/backup-age.key), restored on the host: /etc (wireguard, fleet,
 #      nginx, letsencrypt, credstore, systemd units and drop-ins), the systemd-creds host key, user units and
 #      credstores, SQLite copies back in place, app state paths of BACKUP_PATHS;
@@ -30,12 +30,12 @@ echo "== 2. bootstrap"
 run just --justfile "$root/justfile" fleet-bootstrap "$h"
 
 echo "== 3. restore state from R2"
-last=$(timeout 60 ssh "$peer" "$S \$S rclone lsf $peer_r2:aphrody-archive/fleet/$h/ --files-only 2>/dev/null || rclone lsf $peer_r2:aphrody-archive/fleet/$h/ --files-only" | grep '\.tar\.zst\.age$' | sort | tail -1)
+last=$(timeout 60 ssh "$peer" "$S \$S rclone lsf $peer_r2:aphrody-backups/fleet/$h/ --files-only 2>/dev/null || rclone lsf $peer_r2:aphrody-backups/fleet/$h/ --files-only" | grep '\.tar\.zst\.age$' | sort | tail -1)
 [ -n "$last" ] || { echo "no encrypted backup for $h"; exit 1; }
 echo "backup: $last (via $peer)"
 if [ "$dry" != --dry-run ]; then
   tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
-  timeout 900 ssh "$peer" "$S \$S rclone cat $peer_r2:aphrody-archive/fleet/$h/$last 2>/dev/null || rclone cat $peer_r2:aphrody-archive/fleet/$h/$last" > "$tmp/b.age" || exit 1
+  timeout 900 ssh "$peer" "$S \$S rclone cat $peer_r2:aphrody-backups/fleet/$h/$last 2>/dev/null || rclone cat $peer_r2:aphrody-backups/fleet/$h/$last" > "$tmp/b.age" || exit 1
   age -d -i "$id" -o "$tmp/b.tar.zst" "$tmp/b.age" || { echo "decrypt failed"; exit 1; }
   rm -f "$tmp/b.age"
   # The archive is extracted on the host into /var/tmp/fleet-restore, then copied over / except live mounts.

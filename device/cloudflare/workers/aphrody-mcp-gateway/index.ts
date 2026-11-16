@@ -245,7 +245,7 @@ export default {
     if (p.startsWith("/archive/")) {
       const key = decodeURIComponent(p.slice(9));
       if (!env.ARCHIVE || !/^[\w.\-]+(\/[\w.\-]+)*$/.test(key) || key.includes("..")) return json({ error: "not_found" }, 404);
-      const obj = await env.ARCHIVE.get(key);
+      const obj = await env.ARCHIVE.get(`skills/${key}`);
       return obj ? new Response(obj.body, { headers: { "content-type": "text/markdown; charset=utf-8", etag: obj.httpEtag, "cache-control": "private, max-age=300" } }) : json({ error: "not_found" }, 404);
     }
     const up = await fetch(`${env.ORIGIN_URL.replace(/\/$/, "")}${p}`, {

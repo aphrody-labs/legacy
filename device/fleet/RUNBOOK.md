@@ -23,15 +23,15 @@ ssh: keys only on all three nodes (`PasswordAuthentication no`, root `prohibit-p
 
 - Topology: fr1 hub `wg1` <mesh-cidr> (port 51821). fr2 (45667) and prd (`vps`, 52245) have a direct peer between them, and `fleet-wg-failover@` (30 s timer) removes the direct route when the handshake is older than 150 s: the hub then takes over. The PC goes through the hub, plus a direct link with prd (`prod`, <mesh-cidr>).
 - Known issue (2026-11-12): UDP from OVH (fr1 and fr2) to prd is intermittently filtered upstream after large volumes, for about 15 to 20 min. ICMP still passes. Large transfers to prd therefore go over TCP: NativeLink via `fleet-tunnel-nativelink` (ssh -L), rsync via `ssh root@<prd-public-ip>`.
-- Configs: `/etc/wireguard/*.conf` (0600), backed up every day to `r2:aphrody-archive/fleet/<host>/` (tar of `/etc`).
+- Configs: `/etc/wireguard/*.conf` (0600), backed up every day to `r2:aphrody-backups/fleet/<host>/` (tar of `/etc`).
 - Rotation of the PC key: `wg/rotate-wg-win.sh`.
 
 ## Backups
 
 - Each host backs itself up: `fleet-backup.timer` (03:30, 09:30, 15:30, 21:30 UTC, `Persistent`). The unit runs at Nice 19, idle I/O, CPUWeight 10, rclone limited to 2 transfers and 10 MB/s; on prd, under `flock /var/lock/aphrody-heavy.lock`. Content: `BACKUP_PATHS` of `device/fleet/<host>/resilience.conf` (`/etc` with the systemd-creds credstores, the host key `/var/lib/systemd/credential.secret`, user units and credstores, application state), plus a consistent copy (`sqlite3 .backup`) of each database in `BACKUP_SQLITE`, stored under `.fleet-sqlite/<path>` in the archive.
-- age encryption to `device/fleet/backup-age.pub`. The identity stays on the PC (`~/.ssh/fleet/backup-age.key`, 0600, outside the repository). Destination: `r2:aphrody-archive/fleet/<host>/<UTC>.tar.zst.age`, 30-day retention.
+- age encryption to `device/fleet/backup-age.pub`. The identity stays on the PC (`~/.ssh/fleet/backup-age.key`, 0600, outside the repository). Destination: `r2:aphrody-backups/fleet/<host>/<UTC>.tar.zst.age`, 30-day retention.
 - Restore test: `just fleet-restore-test <host>`. The latest archive is decrypted on the host (identity passed over ssh into a 0600 tmpfs file, erased afterwards), then `PRAGMA integrity_check` of each database and check of `/etc/fstab`, `resilience.conf` and the credstore key.
-- Manual restore: `rclone cat r2:aphrody-archive/fleet/<host>/<f>.tar.zst.age | age -d -i backup-age.key | zstd -d | tar -x -C /restore`.
+- Manual restore: `rclone cat r2:aphrody-backups/fleet/<host>/<f>.tar.zst.age | age -d -i backup-age.key | zstd -d | tar -x -C /restore`.
 - Lore: hourly backup `lore-r2-backup` to `r2-lore:aphrody-lore`, same priority regime (drop-in `BATCH`).
 
 ## Resilience (reboot, crash, kill)

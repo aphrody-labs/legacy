@@ -9,7 +9,7 @@
 #   fleet-backup.sh restore-test <identity-file>   fetch latest, decrypt, list, sqlite integrity_check (prints, no writes outside a temp dir)
 set -uo pipefail
 . /etc/fleet/resilience.conf
-R=${BACKUP_REMOTE:-r2:aphrody-archive/fleet}/$HOST
+R=${BACKUP_REMOTE:-r2:aphrody-backups/fleet}/$HOST
 RU=${BACKUP_RCLONE_USER:-root}
 rcl() { if [ "$RU" = root ]; then rclone "$@"; else sudo -u "$RU" rclone "$@"; fi; }
 
