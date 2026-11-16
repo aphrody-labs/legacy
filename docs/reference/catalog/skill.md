@@ -47,7 +47,6 @@ A skill of .agents/skills
 | [android-wear-compose-m3](../../../.agents/skills/android-wear-compose-m3) | Guidance for Wear OS Compose Material3 (Wear Compose Material 3 / Wear |
 | [android-wear-widgets](../../../.agents/skills/android-wear-widgets) | Create, migrate, update, and verify Wear OS widgets using Glance Wear |
 | [aphrody-stack](../../../.agents/skills/aphrody-stack) | Pointer to Aphrody's stack roadmaps. |
-| [archguard](../../../.agents/skills/archguard) | Architecture gate (ARCH-001..017) of the monorepo: domain purity, boundaries, hygiene, dependency graph. |
 | [axum](../../../.agents/skills/axum) | Axum 0.8 and tower-http 0.7 rules for writing, reviewing or porting Rust HTTP services (routes, extractors, state, body limits, error envelopes, middleware order, CORS, tracing,... |
 | [ay-index](../../../.agents/skills/ay-index) | The monorepo index pipeline (detect, tree-sitter, triage, Ghidra, SQLite+FTS5, Valkey). |
 | [ay-monorepo-migrator](../../../.agents/skills/ay-monorepo-migrator) | Audit and migrate legacy Node.js, V8, Electron, node-api-dotnet and Lua repositories with the `migrate` subcommand of depot-cli (crate `src/depot/migrate`): AST codemods, LLVM I... |

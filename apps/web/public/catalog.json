@@ -47,11 +47,6 @@
           "path": "src/apm"
         },
         {
-          "name": "archguard",
-          "description": "Monorepo architecture, domain-purity, boundary and hygiene gate (library behind `ay arch`)",
-          "path": "src/archguard"
-        },
-        {
           "name": "bun_archive",
           "description": "",
           "path": "src/archive"
@@ -68,7 +63,7 @@
         },
         {
           "name": "aphrody",
-          "description": "ay: one multicall CLI for the Aphrody monorepo (arch gate, lock, git, ingest, graph, deploy, bench, build)",
+          "description": "ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build)",
           "path": "src/ay"
         },
         {
@@ -627,6 +622,11 @@
           "path": "src/mimalloc_sys"
         },
         {
+          "name": "aphrody-modele",
+          "description": "Commercial document model (invoice, quote, lines, parties, template) as JSON, with the totals computation shared by the TypeScript and Rust sides",
+          "path": "src/modele"
+        },
+        {
           "name": "aphrody-net",
           "description": "Unified network probe: DNS, TCP, TLS (rustls + platform verifier), ALPN, HTTP/1.1 and HTTP/2 with per-phase timings.",
           "path": "src/net"
@@ -1064,11 +1064,6 @@
       "description": "A Bun workspace package (@aphrody/*)",
       "entries": [
         {
-          "name": "@aphrody/site-ng",
-          "description": "Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT).",
-          "path": "apps/web/web"
-        },
-        {
           "name": "@aphrody/nt",
           "description": "",
           "path": "apps/nt"
@@ -1077,6 +1072,11 @@
           "name": "@aphrody/web",
           "description": "",
           "path": "apps/nt/modules/web"
+        },
+        {
+          "name": "@aphrody/site-ng",
+          "description": "Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT).",
+          "path": "apps/web/web"
         },
         {
           "name": "@aphrody/github-app",
@@ -1122,6 +1122,11 @@
           "name": "@aphrody/assets",
           "description": "Redistribution-safe asset library: manifest with SPDX license, sha256 and attribution; fetch, verify, list",
           "path": "packages/assets"
+        },
+        {
+          "name": "@aphrody/automate",
+          "description": "Workflow automation engine: definitions (zod schema), node catalog, expression language, executor with injected services, templates, n8n import/export. No outside access of its own.",
+          "path": "packages/automate"
         },
         {
           "name": "@aphrody/brain",
@@ -1406,34 +1411,9 @@
       "description": "An application or site (apps/*)",
       "entries": [
         {
-          "name": "C",
-          "description": "",
-          "path": "apps/C"
-        },
-        {
-          "name": "aphrody",
-          "description": "Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`.",
-          "path": "apps/web"
-        },
-        {
-          "name": "aphrody-app",
-          "description": "Pure-Rust (Edition 2024, zero TypeScript) multi-target desktop & web application combining WebGPU/WGSL Mica rendering, Wayland wire-protocol & tiling layouts, Fluid-style total-order CRDT state (`SharedMap`, `SharedString`, `SharedCounter`), Blake3 content-addressed OPFS/WAL storage, and W3C WebMCP (`navigator.modelContext` + HTTP JSON-RPC `/mcp`).",
-          "path": "apps/aphrody-app"
-        },
-        {
-          "name": "aphrody-web",
-          "description": "aphrody.com - Aphrody brand homepage, search with package catalog, and runtime benchmarks, in pure Bun web standards",
-          "path": "apps/aphrody-web"
-        },
-        {
           "name": "auto",
           "description": "Multi-tenant automation platform for freelancers and small businesses: n8n-style visual workflows (triggers on events, cron or webhooks; HTTP, web, RSS, spreadsheets, Slack, Discord, Telegram, mail, AI models, data actions), with business management built in as an event source: e-invoicing, purchasing, mail, employees, office documents, AI agents. A single `/v1` API, several surfaces: web app, desktop app, mobile app, CLI, MCP server, Claude Code plugin and Chrome extension.",
           "path": "apps/auto"
-        },
-        {
-          "name": "gemini-super-app",
-          "description": "Unified November 2026 Monorepo (Rust Crates + Bun v1.4.5 Packages + Python uv + Tauri v3 Alpha) for the One Big Gemini Voice, Audio & Music Super App",
-          "path": "apps/gemini-super-app"
         },
         {
           "name": "nt",
@@ -1446,11 +1426,6 @@
           "path": "apps/open"
         },
         {
-          "name": "r2-site",
-          "description": "Portable large-file/static site (downloads, cdn) on @aphrody/runtime-adapter",
-          "path": "apps/r2-site"
-        },
-        {
           "name": "rosegriffon",
           "description": "Rose Griffon monorepo: website, Discord bot, unified API, Achillea ranked, and Azalee",
           "path": "apps/rosegriffon"
@@ -1461,9 +1436,9 @@
           "path": "apps/shenron"
         },
         {
-          "name": "yolo",
-          "description": "Reproducible Fullstack Aphrody Bun v1.4.4 Framework, AST Module Graph, Material Design 3 Stack, Aphrody Pets & 3-VPS Search Inspector",
-          "path": "apps/yolo"
+          "name": "web",
+          "description": "Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`.",
+          "path": "apps/web"
         }
       ]
     },
@@ -1861,11 +1836,6 @@
           "path": ".agents/skills/aphrody-stack"
         },
         {
-          "name": "archguard",
-          "description": "Architecture gate (ARCH-001..017) of the monorepo: domain purity, boundaries, hygiene, dependency graph. Use before pushing structural changes or when `ay arch` / `just arch-check` fails.",
-          "path": ".agents/skills/archguard"
-        },
-        {
           "name": "axum",
           "description": "Axum 0.8 and tower-http 0.7 rules for writing, reviewing or porting Rust HTTP services (routes, extractors, state, body limits, error envelopes, middleware order, CORS, tracing, graceful shutdown, in-process tests). Use when code imports axum or tower_http, when porting a TypeScript/Bun route to Rust (Shenron crates/shenron-api), or on \"add an endpoint\", \"axum middleware\", \"port this route to Rust\".",
           "path": ".agents/skills/axum"
@@ -1877,7 +1847,7 @@
         },
         {
           "name": "ay-monorepo-migrator",
-          "description": "Audit and migrate legacy Node.js, V8, Electron, VS Code, Discord, Microsoft TypeScript/Rust, node-api-dotnet, and Unreal Engine monorepos to Bun v1.4.4 Full-Rust + Rust LTO/AOT using ay (`src/depot/migrate`).",
+          "description": "Audit and migrate legacy Node.js, V8, Electron, node-api-dotnet and Lua repositories with the `migrate` subcommand of depot-cli (crate `src/depot/migrate`): AST codemods, LLVM IR checks, .NET CoreCLR readiness. Use when a legacy tree must be audited or transformed; the target language follows the domain (AGENTS.md section 4).",
           "path": ".agents/skills/ay-monorepo-migrator"
         },
         {
@@ -2302,7 +2272,7 @@
         },
         {
           "name": "fleet",
-          "description": "Run a command, deploy or check on the 3 VPS (ssh <fr1> = fr1 Chromium/LLVM builds, ssh <fr2> = fr2 tests/lint/bench/research without limits plus edge proxy/CDN, ssh prd = usa production). Use for any remote ssh/scp/systemctl/build; never a heavy build on the PC.",
+          "description": "Run a command, deploy or check on the 3 VPS (ssh <fr1> = fr1 builds (Chromium, LLVM), CI, training, heavy agents, ssh <fr2> = fr2 tests/lint/bench/research without limits plus edge proxy/CDN, ssh prd = usa production). Use for any remote ssh/scp/systemctl/build; never a heavy build on the PC.",
           "path": ".agents/skills/fleet"
         },
         {
@@ -2552,7 +2522,7 @@
         },
         {
           "name": "rust-cargo",
-          "description": "Rust and Cargo reference for src, grounded in upstream rust-lang/cargo, rust-lang/rust and crates.io (aphrody-labs forks): Edition 2024, resolver v3, workspace inheritance, sparse registry and credential providers, cargo-deny, crates.io sparse index and live API, publishing, the pinned chromium-157 nightly toolchain with LLVM cross-language LTO and lld, windows-rs, plus jj, gix, just, sccache, nextest, binstall, xwin and xtask. Use for any Cargo.toml, rust-toolchain, crate lookup or publish, Rust build speed or Rust VCS/task tooling question.",
+          "description": "Rust and Cargo reference for src, grounded in upstream rust-lang/cargo, rust-lang/rust and crates.io (aphrody-labs forks): Edition 2024, resolver v3, workspace inheritance, sparse registry and credential providers, cargo-deny, crates.io sparse index and live API, publishing, the pinned Chromium nightly toolchain (rust-toolchain.toml) with LLVM cross-language LTO and lld, windows-rs, plus jj, gix, just, sccache, nextest, binstall, xwin and xtask. Use for any Cargo.toml, rust-toolchain, crate lookup or publish, Rust build speed or Rust VCS/task tooling question.",
           "path": ".agents/skills/rust-cargo"
         },
         {

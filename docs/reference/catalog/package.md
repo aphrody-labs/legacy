@@ -4,9 +4,9 @@ A Bun workspace package (@aphrody/*)
 
 | Name | Description |
 | :-- | :-- |
-| [@aphrody/site-ng](../../../apps/web/web) | Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT). |
 | [@aphrody/nt](../../../apps/nt) | - |
 | [@aphrody/web](../../../apps/nt/modules/web) | - |
+| [@aphrody/site-ng](../../../apps/web/web) | Angular Material app of aphrody.com (M3 studio page): standalone, zoneless, tokens from @aphrody/design, built by Angular's esbuild application builder (AOT). |
 | [@aphrody/github-app](../../../infra/cloudflare/workers/github-app) | - |
 | [@aphrody/a2a](../../../packages/a2a) | A2A 1.0 client for Bun and the web platform: Agent Card discovery, JSON-RPC and HTTP+JSON bindings, SSE streaming, push notification configs, and a legacy-dialect shim |
 | [@aphrody/ag-ui](../../../packages/ag-ui) | Aphrody AG-UI Protocol — Pure Bun & TypeScript 7 suite connecting Agentic UI events, streaming lifecycle, Protobuf codec, A2UI surfaces, and Agent-to-User bridges. |
@@ -16,6 +16,7 @@ A Bun workspace package (@aphrody/*)
 | [@aphrody/ai-os](../../../packages/ai-os) | Aphrody AI OS: Unix/GNU-like agent OS distribution unifying LLM, RAG, World Model, and System 1 decision under one C ABI (aphrody_core_capi) |
 | [@aphrody/ai-triad](../../../packages/ai-triad) | Cross-AI CLI, TUI, GUI, OAuth 2.1/PKCE/Device-Code, MCP & Multi-Protocol Gateway across OpenAI Codex, Google Antigravity/Gemini, Anthropic Claude Code, OpenCode, Pi, and Zed |
 | [@aphrody/assets](../../../packages/assets) | Redistribution-safe asset library: manifest with SPDX license, sha256 and attribution; fetch, verify, list |
+| [@aphrody/automate](../../../packages/automate) | Workflow automation engine: definitions (zod schema), node catalog, expression language, executor with injected services, templates, n8n import/export. |
 | [@aphrody/brain](../../../packages/brain) | Autonomous-agent memory: AGY sessions merged into a redacted Obsidian vault, graphify code graph, Google Drive sync for NotebookLM sources |
 | [@aphrody/bun-chromium](../../../packages/bun-chromium) | Chromium CDP SDK over the existing Aphrody Bun Chromium and Chrome builtins. |
 | [@aphrody/bun-google](../../../packages/bun-google) | Google REST services over the Aphrody Bun runtime, with explicit credential ownership. |

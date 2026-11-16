@@ -12,11 +12,10 @@ A member of the Cargo workspace (src/*)
 | [bun_aot_builtins](../../../src/aot/builtins) | - |
 | [bun_aot_interface](../../../src/aot/interface) | - |
 | [aphrody-apm](../../../src/apm) | Rust port of Microsoft APM (Agent Package Manager): apm.yml, apm.lock.yaml, resolution, install/compile for Claude Code and Copilot. |
-| [archguard](../../../src/archguard) | Monorepo architecture, domain-purity, boundary and hygiene gate (library behind `ay arch`) |
 | [bun_archive](../../../src/archive) | - |
 | [bun_ast](../../../src/ast) | - |
 | [bun_ast_jsc](../../../src/ast_jsc) | - |
-| [aphrody](../../../src/ay) | ay: one multicall CLI for the Aphrody monorepo (arch gate, lock, git, ingest, graph, deploy, bench, build) |
+| [aphrody](../../../src/ay) | ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build) |
 | [bun_base64](../../../src/base64) | - |
 | [bun_boringssl](../../../src/boringssl) | - |
 | [bun_boringssl_sys](../../../src/boringssl_sys) | - |
@@ -128,6 +127,7 @@ A member of the Cargo workspace (src/*)
 | [aphrody-machine](../../../src/machine) | Low-level machine profile for `ay sys`: SMBIOS, CPUID, PCI, GPUs, storage, virtualization, toolchains |
 | [bun_md](../../../src/md) | - |
 | [bun_mimalloc_sys](../../../src/mimalloc_sys) | - |
+| [aphrody-modele](../../../src/modele) | Commercial document model (invoice, quote, lines, parties, template) as JSON, with the totals computation shared by the TypeScript and Rust sides |
 | [aphrody-net](../../../src/net) | Unified network probe: DNS, TCP, TLS (rustls + platform verifier), ALPN, HTTP/1.1 and HTTP/2 with per-phase timings. |
 | [bun_node_path](../../../src/node_path) | - |
 | [bun_opaque](../../../src/opaque) | - |
