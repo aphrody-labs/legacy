@@ -113,11 +113,22 @@ jobs:
         run: |
           bun scripts/unixwin-proof.ts target/release/ay.exe --md proof-windows.md | tee proof-windows.txt
           cat proof-windows.md >> "$GITHUB_STEP_SUMMARY"
+      # Byte comparison with the GNU results. A difference gates only on an applet the WinuxCmd Rust library provides; one on an applet
+      # provided by uutils is reported with its provider (scripts/unixwin-corpus-gate.ts).
       - name: WinuxCmd corpus through ay applet (argv0 winuxcmd)
         shell: bash
         run: |
           cp target/release/ay.exe winuxcmd.exe
-          python winuxcmd/tests/differential/master-oracle.py --winuxcmd ./winuxcmd.exe --compare gnu-results.json --cases winuxcmd/tests/differential/master-cases.json | tee winux-compare.txt
+          set +e
+          python winuxcmd/tests/differential/master-oracle.py --winuxcmd ./winuxcmd.exe --compare gnu-results.json --cases winuxcmd/tests/differential/master-cases.json > winux-compare.txt
+          code=$?
+          cat winux-compare.txt
+          # 0 = identical, 1 = differences; anything else is a harness error
+          test "$code" = 0 -o "$code" = 1 || exit 1
+          bun scripts/unixwin-corpus-gate.ts winux-compare.txt winuxcmd/tests/differential/master-cases.json infra/os/unixwin/applets.toml | tee winux-gate.txt
+          gate=${PIPESTATUS[0]}
+          { echo "### WinuxCmd corpus through ay applet"; cat winux-gate.txt; } >> "$GITHUB_STEP_SUMMARY"
+          exit $gate
       # uutils is not the product under test here: its differences from GNU are data, reported in the job summary, not a gate.
       # The step itself must run (a missing binary or a crash of the harness stays red); only the differences are tolerated.
       - name: uutils against the same GNU results
@@ -131,7 +142,7 @@ jobs:
           test "$code" = 0 -o "$code" = 1
       - uses: actions/upload-artifact@v7
         if: always()
-        with: { name: windows-compare, path: "*-compare.txt" }
+        with: { name: windows-compare, path: "*-compare.txt\n*-gate.txt" }
       - uses: actions/upload-artifact@v7
         if: always()
         with: { name: windows-proof, path: "proof-windows.*" }

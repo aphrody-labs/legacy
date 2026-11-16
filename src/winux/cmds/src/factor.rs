@@ -23,8 +23,9 @@
 //!   < 1000 by trial division, then deterministic Miller-Rabin +
 //!   Pollard-Brent rho, which factor any u64 in milliseconds (probed
 //!   worst cases 2^64-1 and 4295109041 match GNU output). Operands
-//!   beyond u64::MAX cannot be honored and are rejected with rc 1 where
-//!   GNU prints factors with rc 0; gate cases stay inside u64.
+//!   beyond u64::MAX are factored in u128 (trial division, then Miller-Rabin
+//!   and Pollard rho on 128-bit modular arithmetic); only operands beyond
+//!   u128::MAX (GNU uses GMP there) are rejected with rc 1.
 
 use std::ffi::OsString;
 
@@ -146,7 +147,7 @@ fn print_factors(
         let _ = writeln!(err, "factor: '{text}' is not a valid positive integer");
         return false;
     };
-    let mut factors = factorize(n);
+    let mut factors = factorize_wide(n);
     factors.sort_unstable();
     let _ = write!(out, "{n}:");
     if exponents {
@@ -173,8 +174,8 @@ fn print_factors(
 }
 
 /// factor.c parse: skip leading ' ' only, one optional '+', all digits,
-/// no trailing characters; the value must fit u64 (documented subset).
-fn parse_operand(text: &str) -> Option<u64> {
+/// no trailing characters; the value must fit u128 (documented subset).
+fn parse_operand(text: &str) -> Option<u128> {
     let bytes = text.as_bytes();
     let mut pos = 0usize;
     while pos < bytes.len() && bytes[pos] == b' ' {
@@ -187,7 +188,7 @@ fn parse_operand(text: &str) -> Option<u64> {
     if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
         return None;
     }
-    digits.parse::<u64>().ok()
+    digits.parse::<u128>().ok()
 }
 
 // ---------------------------------------------------------------------------
@@ -374,6 +375,135 @@ fn factorize(n: u64) -> Vec<u64> {
     out
 }
 
+// ---------------------------------------------------------------------------
+// 128-bit path: operands above u64::MAX. Modular products by shift-and-add
+// (no 256-bit intermediate), so every step stays inside u128.
+// ---------------------------------------------------------------------------
+
+fn addmod128(a: u128, b: u128, m: u128) -> u128 {
+    if a >= m - b {
+        a - (m - b)
+    } else {
+        a + b
+    }
+}
+
+fn mulmod128(a: u128, b: u128, m: u128) -> u128 {
+    let (mut a, mut b, mut r) = (a % m, b % m, 0u128);
+    while b > 0 {
+        if b & 1 == 1 {
+            r = addmod128(r, a, m);
+        }
+        a = addmod128(a, a, m);
+        b >>= 1;
+    }
+    r
+}
+
+fn powmod128(mut base: u128, mut exp: u128, m: u128) -> u128 {
+    let mut result = 1u128 % m;
+    base %= m;
+    while exp > 0 {
+        if exp & 1 == 1 {
+            result = mulmod128(result, base, m);
+        }
+        base = mulmod128(base, base, m);
+        exp >>= 1;
+    }
+    result
+}
+
+fn gcd128(mut a: u128, mut b: u128) -> u128 {
+    while b != 0 {
+        let t = a % b;
+        a = b;
+        b = t;
+    }
+    a
+}
+
+/// Miller-Rabin with the first 20 primes as bases (above u64 this is probabilistic in theory; no counterexample is known for this set).
+fn is_prime128(n: u128) -> bool {
+    const BASES: [u128; 20] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71];
+    if n < 2 {
+        return false;
+    }
+    for p in BASES {
+        if n % p == 0 {
+            return n == p;
+        }
+    }
+    let (mut d, mut r) = (n - 1, 0u32);
+    while d % 2 == 0 {
+        d /= 2;
+        r += 1;
+    }
+    'witness: for a in BASES {
+        let mut x = powmod128(a, d, n);
+        if x == 1 || x == n - 1 {
+            continue;
+        }
+        for _ in 1..r {
+            x = mulmod128(x, x, n);
+            if x == n - 1 {
+                continue 'witness;
+            }
+        }
+        return false;
+    }
+    true
+}
+
+/// A non-trivial divisor of the composite odd `n` (Floyd cycle detection on x^2 + c).
+fn pollard128(n: u128) -> u128 {
+    let mut c = 1u128;
+    loop {
+        let step = |x: u128| addmod128(mulmod128(x, x, n), c, n);
+        let (mut x, mut y, mut d) = (2u128, 2u128, 1u128);
+        while d == 1 {
+            x = step(x);
+            y = step(step(y));
+            d = gcd128(x.abs_diff(y), n);
+        }
+        if d != n {
+            return d;
+        }
+        c += 1;
+    }
+}
+
+/// Prime factors of any u128, with repeats.
+fn factorize_wide(n: u128) -> Vec<u128> {
+    if n <= u64::MAX as u128 {
+        return factorize(n as u64).into_iter().map(u128::from).collect();
+    }
+    let mut out = Vec::new();
+    let mut rest = n;
+    for p in small_primes() {
+        let p = p as u128;
+        while rest % p == 0 {
+            out.push(p);
+            rest /= p;
+        }
+    }
+    let mut stack = vec![rest];
+    while let Some(x) = stack.pop() {
+        if x == 1 {
+            continue;
+        }
+        if x <= u64::MAX as u128 {
+            out.extend(factorize(x as u64).into_iter().map(u128::from));
+        } else if is_prime128(x) {
+            out.push(x);
+        } else {
+            let d = pollard128(x);
+            stack.push(d);
+            stack.push(x / d);
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use std::ffi::OsString;
@@ -461,9 +591,12 @@ mod tests {
         let (r, _, err) = run(&["\t12"], "");
         assert_eq!(r, 1);
         assert!(err.contains("is not a valid positive integer"));
-        // beyond u64: documented subset — GNU factors these (rc 0); we
-        // reject with rc 1
-        let (r, _, err) = run(&["18446744073709551616"], "");
+        // beyond u64: factored in u128 (GNU prints the same, rc 0)
+        let (r, out, _) = run(&["18446744073709551616"], "");
+        assert_eq!(r, 0);
+        assert_eq!(out, format!("18446744073709551616:{}\n", " 2".repeat(64)));
+        // beyond u128: documented subset, rejected
+        let (r, _, err) = run(&["340282366920938463463374607431768211456"], "");
         assert_eq!(r, 1);
         assert!(err.contains("is not a valid positive integer"));
     }
@@ -524,6 +657,30 @@ mod tests {
         let (r, _, err) = run(&["--bogus", "12"], "");
         assert_eq!(r, 1);
         assert!(err.contains("unrecognized option '--bogus'"));
+    }
+
+    #[test]
+    fn wide_operands_factor_correctly() {
+        // two 33-bit primes times 3 (above u64), checked by multiplication back
+        let mut p: u128 = (1u128 << 33) + 1;
+        while !is_prime128(p) {
+            p += 2;
+        }
+        let mut q = p + 2;
+        while !is_prime128(q) {
+            q += 2;
+        }
+        let n = 3 * p * q;
+        let mut f = factorize_wide(n);
+        f.sort_unstable();
+        assert_eq!(f, vec![3, p, q]);
+        assert_eq!(f.iter().product::<u128>(), n);
+        // u128::MAX = 3 * 5 * 17 * 257 * 641 * 65537 * 274177 * 6700417 * 67280421310721
+        let mut m = factorize_wide(u128::MAX);
+        m.sort_unstable();
+        assert_eq!(m, vec![3, 5, 17, 257, 641, 65537, 274177, 6700417, 67280421310721]);
+        assert!(!is_prime128((1u128 << 100) + 1));
+        assert!(is_prime128((1u128 << 89) - 1)); // Mersenne prime M89
     }
 
     #[test]
