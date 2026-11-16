@@ -7,17 +7,37 @@
 //   bun scripts/toolchain.ts install   idempotent: skips packages already unpacked, replaces stale ones
 //   bun scripts/toolchain.ts status    paths, clang and rustc versions checked against the manifest
 //   bun scripts/toolchain.ts env       CC/CXX/AR/linker/LLVM tool lines for a shell (eval "$(...)")
+//   bun scripts/toolchain.ts list      the generations that have a third_party/toolchain-<milestone>.toml, the pinned one marked
+//   bun scripts/toolchain.ts use <N>   switch the pin to chromium-<N> (rust-toolchain.toml) and install it: `just toolchain-use <N>`
 //   bun scripts/toolchain.ts bin       the clang/bin directory (PATH entry: clang, ld.lld, llvm-cov, clang-tidy, ...)
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { $ } from "bun";
 
 const root = join(import.meta.dir, "..");
+const pinFile = join(root, "rust-toolchain.toml");
+const available = () =>
+  readdirSync(join(root, "third_party"))
+    .map((n) => /^toolchain-(\d+)\.toml$/.exec(n)?.[1])
+    .filter((n): n is string => !!n)
+    .sort((a, b) => Number(a) - Number(b));
+// `use <N>` rewrites the one pin (the channel line of rust-toolchain.toml) before anything reads it.
+if (process.argv[2] === "use") {
+  const n = process.argv[3] ?? "";
+  if (!available().includes(n)) {
+    console.error(`toolchain: no third_party/toolchain-${n || "<N>"}.toml (available: ${available().join(", ")})`);
+    process.exit(2);
+  }
+  const cur = readFileSync(pinFile, "utf8");
+  const next = cur.replace(/^channel = ".*"$/m, `channel = "chromium-${n}"`);
+  if (next === cur && !cur.includes(`channel = "chromium-${n}"`)) throw new Error("rust-toolchain.toml has no channel line");
+  writeFileSync(pinFile, next);
+}
 // The generation is the one rust-toolchain.toml names (`chromium-<milestone>`): a bump is that line plus the new
 // third_party/toolchain-<milestone>.toml, nothing in this script or in CI names a number.
 const channel = (
-  Bun.TOML.parse(await Bun.file(join(root, "rust-toolchain.toml")).text()) as {
+  Bun.TOML.parse(await Bun.file(pinFile).text()) as {
     toolchain: { channel: string };
   }
 ).toolchain.channel;
@@ -165,10 +185,14 @@ function env(): number {
 
 // `bin` prints the directory of clang, lld and the llvm-* tools: `bun scripts/toolchain.ts bin >> $GITHUB_PATH`.
 const cmd = process.argv[2] ?? "status";
+if (cmd === "list") {
+  for (const n of available()) console.log(`${n === named[1] ? "*" : " "} chromium-${n}`);
+  process.exit(0);
+}
 if (cmd === "bin") {
   console.log(join(dir, "clang/bin"));
   process.exit(0);
 }
 process.exit(
-  cmd === "install" ? await install() : cmd === "env" ? env() : await status(),
+  cmd === "install" || cmd === "use" ? await install() : cmd === "env" ? env() : await status(),
 );

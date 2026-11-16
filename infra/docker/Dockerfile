@@ -41,7 +41,7 @@ ARG BUILDARCH
 # hadolint ignore=DL3018
 RUN apk add --no-cache bash build-base clang cmake curl git linux-headers perl pkgconf protobuf-dev protoc python3 rustup xz
 # RUSTUP_TOOLCHAIN overrides rust-toolchain.toml (rust-toolchain.toml): Chromium ships no musl std, so the
-# Alpine musl images keep the pinned nightly (docs/native/llvm/CHROMIUM-TOOLCHAIN.md, exceptions).
+# Alpine musl images keep the pinned nightly (skill llvm-toolchain, exceptions).
 ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo PATH=/opt/cargo/bin:/opt/zig:$PATH \
     CARGO_NET_GIT_FETCH_WITH_CLI=true CARGO_TERM_COLOR=never RUSTC_WRAPPER= RUSTUP_TOOLCHAIN=${RUST_TOOLCHAIN}
 RUN rustup-init -y --no-modify-path --profile minimal --default-toolchain "${RUST_TOOLCHAIN}" \

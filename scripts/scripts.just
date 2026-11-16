@@ -57,3 +57,13 @@ test-affected ref="origin/main":
     [ -z "$bunp" ] || bun test $bunp
     pyp=$(printf '%s\n' "$out" | awk -F'\t' '$1=="uv" {printf "%s/%s ", "{{root}}", $3}')
     [ -z "$pyp" ] || uv run pytest $pyp
+
+# Toolchain pin (one line, rust-toolchain.toml): `just toolchain` lists generations and status, `just toolchain-use <milestone>` switches and installs
+[group('gates')]
+toolchain:
+    bun "{{root}}/scripts/toolchain.ts" list
+    bun "{{root}}/scripts/toolchain.ts" status
+
+[group('gates')]
+toolchain-use milestone:
+    bun "{{root}}/scripts/toolchain.ts" use {{milestone}}
