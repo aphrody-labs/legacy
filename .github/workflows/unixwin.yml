@@ -92,7 +92,8 @@ jobs:
       - name: Build ay (WinuxCmd library linked)
         run: cargo build --release -p aphrody --no-default-features
       - name: Unit tests of ay applet and ay sh
-        run: cargo test --release -p aphrody --lib --no-default-features -- applet sh
+        # The embedded engine mutates process-wide state (environment, handles): its tests run one at a time, as upstream does (RUST_TEST_THREADS=1).
+        run: cargo test --release -p aphrody --lib --no-default-features -- --test-threads=1 applet sh
       - name: uutils multicall for Windows (the executables behind the uutils providers)
         shell: pwsh
         run: |
