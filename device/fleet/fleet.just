@@ -90,7 +90,7 @@ fleet-offload mode host:
 fleet-run class *cmd:
     timeout 7200 ssh fr1 fleet-run -c {{class}} -C /srv/src -- {{cmd}}
 
-# Install units captured from live hosts (device/fleet/<role>/orphans; docs/infra/PROD-MAP.md); usage: just fleet-orphans prd|fr1
+# Install units captured from live hosts (device/fleet/<role>/orphans; docs/infra/FLEET.md); usage: just fleet-orphans prd|fr1
 [group('fleet')]
 fleet-orphans role:
     sh "{{root}}/device/fleet/bin/orphans-install.sh" {{role}}
