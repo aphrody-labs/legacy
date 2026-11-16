@@ -144,7 +144,7 @@ Generated from live monorepo metadata on \`${snap.collectedAt}\` (${snap.crates.
 
 ## 1. Monorepo Topology
 
-- **Rust Workspace**: edition \`${snap.workspace.edition}\`, MSRV \`${snap.workspace.rustVersion}\`, \`${snap.crates.length}\` crates in \`src/*\`, \`${snap.workspace.workspaceDepsCount}\` workspace dependencies in \`Cargo.toml\`.
+- **Rust Workspace**: edition \`${snap.workspace.edition}\`, MSRV \`${snap.workspace.rustVersion}\`, \`${snap.crates.length}\` crates in \`frameworks/*\`, \`system/*\` and \`hardware/*\`, \`${snap.workspace.workspaceDepsCount}\` workspace dependencies in \`Cargo.toml\`.
 - **Bun Packages**: \`${snap.packages.length}\` zero-dependency \`@aphrody/*\` packages in \`packages/*\` on Bun.
 - **Applications**: \`${snap.apps.length}\` directories in \`apps/*\`.
 ${snap.graphify ? `- **Code Graph**: \`${snap.graphify.nodes}\` nodes, \`${snap.graphify.edges}\` edges, \`${snap.graphify.communities}\` communities (\`${snap.graphify.source}\`).` : ""}
@@ -200,7 +200,7 @@ export function buildPureCLlvmMdx(snap: MonorepoSnapshot): string {
 Every header in \`system/core/capi/include/*.h\` must pass \`clang -std=c23 -Wall -Wextra -Wpedantic -Werror -fsyntax-only\` and \`clang++ -std=c++23 -Wall -Wextra -Werror -fno-exceptions -fno-rtti -fsyntax-only\` with zero warnings.
 </Callout>
 
-Generated from \`system/core/capi/include/*.h\`, \`src/*/DEPS.rules\` and the root \`Cargo.toml\`.
+Generated from \`system/core/capi/include/*.h\`, \`system/*/DEPS.rules\` and the root \`Cargo.toml\`.
 
 ## 1. Compiler and ABI Rigor
 

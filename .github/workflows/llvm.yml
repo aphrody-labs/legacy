@@ -52,9 +52,9 @@ jobs:
           "$(bun scripts/toolchain.ts bin)/clang" --version
           "$(bun scripts/toolchain.ts bin)/ld.lld" --version
       - name: ASan + UBSan over every exported function
-        run: make -C src sanitize
+        run: make -C kernel sanitize
       - name: clang-tidy
-        run: make -C src tidy
+        run: make -C kernel tidy
       - name: clang-format (lines changed by the push)
         # clang-format is not in Chromium's clang package: the one of the runner image (apt). The sources
         # predate .clang-format, so only the lines a push touches are held to it (git-clang-format against the base).
@@ -66,7 +66,7 @@ jobs:
           case "$out" in "no modified files to format" | "clang-format did not modify any files") exit 0 ;; esac
           echo "$out"; exit 1
       - name: Section sizes of libaysys.so (llvm-objdump)
-        run: make -C src size | tee "$RUNNER_TEMP/libaysys-size.txt"
+        run: make -C kernel size | tee "$RUNNER_TEMP/libaysys-size.txt"
       - uses: actions/upload-artifact@v4
         with: { name: libaysys-size, path: "${{ runner.temp }}/libaysys-size.txt" }
   coverage:

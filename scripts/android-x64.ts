@@ -39,7 +39,7 @@ mkdirSync(OUT, { recursive: true });
 
 await must("setup", `bun scripts/android-setup.ts install --profile ci && bun scripts/android-setup.ts check --profile ci`);
 await must("versions", `echo "NDK=$ANDROID_NDK_HOME"; clang --version | head -1; $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/clang --version | head -1; java -version 2>&1 | head -1; adb version | head -1; emulator -version 2>/dev/null | head -2`);
-await must("libaysys.so + ay_smoke (NDK clang, x86_64-linux-android)", `make -C src android-x64 && file target/sys/android-x86_64/libaysys.so target/sys/android-x86_64/ay_smoke 2>/dev/null; true`);
+await must("libaysys.so + ay_smoke (NDK clang, x86_64-linux-android)", `make -C kernel android-x64 && file target/sys/android-x86_64/libaysys.so target/sys/android-x86_64/ay_smoke 2>/dev/null; true`);
 const crate = process.env.AY_ANDROID_RUST_CRATE ?? "aphrody-env";
 await must(
   `rust tests ${crate} (x86_64-linux-android, -Zbuild-std)`,

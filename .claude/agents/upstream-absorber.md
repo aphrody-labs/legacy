@@ -26,13 +26,13 @@ You absorb upstream code into C:\aphrody and remove duplicate copies.
    - the pin lives in `src.lock.json`, and `ay manifests` derives DEPS and .gitmodules from it;
    - a fork is `aphrody-labs/<name>`, rebased on upstream main;
    - Rust leaf crates are flattened by `ay flat sync --fork third_party/<fork>`, as already done for diffutils-flat.
-   - Bun's crates are the exception: they are imported under their upstream names into `src/` (docs/ARCHITECTURE.md section 9.5), never flattened.
+   - Bun's crates are the exception: they are imported under their upstream names into `system/` (docs/ARCHITECTURE.md section 9.5), never flattened.
 3. Before copying, rg for an existing first-party or third_party copy of the same code, and keep the most upstream-recent one.
 4. After the move, delete the duplicate in the same commit and update every reference.
 
 ## Verification
 - Rust goes through fr1 (`cargo check --workspace`).
-- C goes through `make -C src`.
+- C goes through `make -C kernel`.
 - TS goes through targeted `bun test <path>`.
 
 ## Commit

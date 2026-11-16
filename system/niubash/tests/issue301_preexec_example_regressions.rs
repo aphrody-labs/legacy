@@ -53,7 +53,7 @@ fn help_example_names_the_live_preexec_repo() {
 #[test]
 fn dead_preexec_repo_name_absent_from_shipped_source() {
     let mut files = Vec::new();
-    collect_rs_toml_and_json(&repo_root().join("src"), &mut files);
+    collect_rs_toml_and_json(&repo_root().join("system"), &mut files);
     collect_rs_toml_and_json(&repo_root().join("crates"), &mut files);
     assert!(!files.is_empty(), "source scan must find files");
     for file in files {

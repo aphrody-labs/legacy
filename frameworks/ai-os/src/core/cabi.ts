@@ -1,5 +1,5 @@
-// Unified C ABI bridge to src/core/capi (`aphrody_core_capi`, `ai_os_*` symbols).
-// Contract: src/core/capi/include/aphrody_core.h.
+// Unified C ABI bridge to system/core/capi (`aphrody_core_capi`, `ai_os_*` symbols).
+// Contract: system/core/capi/include/aphrody_core.h.
 // Falls back to native bun:sqlite / JS implementation with identical schema & semantics when
 // the compiled cdylib is not present locally (e.g. on Windows workstation before CI/fr1 build).
 import { Database } from "bun:sqlite";

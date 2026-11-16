@@ -54,7 +54,7 @@ fn dirs(root: Option<PathBuf>, fork: Option<PathBuf>, manifest: Option<PathBuf>)
         Some(m) => root.join(m),
         None => {
             let name = fork.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-            root.join("src").join(format!("{name}-flat")).join(sync::MANIFEST)
+            root.join("system").join(format!("{name}-flat")).join(sync::MANIFEST)
         }
     };
     let crate_dir = manifest.parent().map(Path::to_path_buf).unwrap_or_default();
@@ -338,7 +338,7 @@ mod tests {
     fn manifests_of_the_checkout_pass_the_license_gate() {
         let root = Path::new(env!("SRC_ROOT"));
         let allow = sync::allow_list(&std::fs::read_to_string(root.join("deny.toml")).unwrap()).unwrap();
-        for entry in std::fs::read_dir(root.join("src")).unwrap().flatten() {
+        for entry in std::fs::read_dir(root.join("system")).unwrap().flatten() {
             let path = entry.path().join(sync::MANIFEST);
             if path.is_file() {
                 Manifest::load_file(&path).unwrap().check_licenses(&allow).unwrap_or_else(|e| panic!("{}: {e}", path.display()));

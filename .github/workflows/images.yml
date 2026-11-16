@@ -9,7 +9,8 @@ on:
     paths:
       [
         "build/docker/**",
-        "src/**",
+        "kernel/**",
+        "hardware/**",
         "bench/**",
         "test/**",
         "frameworks/**",

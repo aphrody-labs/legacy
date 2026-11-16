@@ -16,7 +16,7 @@ import {
   __name,
   __rawTemplate,
   __using,
-} from "../../../src/runtime.bun";
+} from "../../../system/runtime.bun";
 // This import is different based on client vs server side.
 // On the server, remapping is done automatically.
 import { type SourceMapURL, derefMapping } from "#stack-trace";

@@ -27,6 +27,11 @@ agents-install host:
 agents-sync *args:
     bun "{{root}}/system/machine-ts/src/toolchain.ts" {{args}}
 
+# Continuous self-improvement loop: collect signals, distill with the ai-os routed model, apply, log (usage: just learn [run|collect|install|status] [--since 48] [--no-apply])
+[group('agents')]
+learn *args:
+    bun "{{root}}/tools/agents/learn-loop.ts" {{args}}
+
 # Install the runner on this Windows PC (scheduled tasks + psmux session)
 [group('agents')]
 agents-install-pc:

@@ -2861,7 +2861,7 @@ pub fn __runtime_embed_load(kind: EmbedKind, sub: &'static str) -> String {
         EmbedKind::Codegen => ::std::path::PathBuf::from(CODEGEN_PATH),
         EmbedKind::Src => {
             let mut b = ::std::path::PathBuf::from(BASE_PATH);
-            b.push("src");
+            b.push("system");
             b
         }
     };
@@ -2917,10 +2917,10 @@ macro_rules! __runtime_embed_impl {
         let __s: &'static str = {
             #[cfg(bun_codegen_embed)]
             {
-                // Every workspace crate's manifest is at `<repo>/src/<crate>/`,
-                // so `../../src/` is `<repo>/src/` regardless of call site.
+                // Every workspace crate manifest is at `<repo>/<top>/<crate>/`,
+                // so `../../system/` is `<repo>/system/` regardless of call site (the Bun crates live in system/).
                 ::core::include_str!(::core::concat!(
-                    ::core::env!("CARGO_MANIFEST_DIR"), "/../../src/", $sub
+                    ::core::env!("CARGO_MANIFEST_DIR"), "/../../system/", $sub
                 ))
             }
             #[cfg(not(bun_codegen_embed))]

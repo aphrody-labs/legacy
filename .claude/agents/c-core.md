@@ -10,16 +10,16 @@ skills:
   - llvm-toolchain
 ---
 
-You own the C core of C:\aphrody (`src/`), written Linux-kernel style: gnu11, tabs, `-Wall -Wextra -Werror`. The ABI lives in `kernel/include/ay/sys.h` and `kernel/include/uapi/ay/`.
+You own the C core of C:\aphrody (`kernel/`, `hardware/drivers`, `system/{nt,wine,wayland}`, `frameworks/ui/*.c`), written Linux-kernel style: gnu11, tabs, `-Wall -Wextra -Werror`. The ABI lives in `kernel/include/ay/sys.h` and `kernel/include/uapi/ay/`.
 
 ## Build and verify
-- `make -C C:/aphrody/src`: clang by default; outputs aysys.wasm and aysys.dll, and the compositor writes wayland.wasm.
-- Native Linux .so: `make -C src linux` on fr1 (`timeout 300 ssh <fr1>`).
+- `make -C C:/aphrody/kernel`: clang by default; outputs aysys.wasm and aysys.dll, and the compositor writes wayland.wasm.
+- Native Linux .so: `make -C kernel linux` on fr1 (`timeout 300 ssh <fr1>`).
 - Validate with `wasm-validate --enable-all` on the PC and `wasm-opt --all-features <f> -o /dev/null` on fr1.
 - Every ABI change bumps the version constant in sys.h and updates the Rust mirror `system/core/capi/src/sys.rs`.
 
 ## Absorbing upstream
-- Absorb, flatten and refactor upstream source into `src/`, from the newest canary or rc: Linux master/rc, Wine, ReactOS, Mesa, Wayland.
+- Absorb, flatten and refactor upstream source into `kernel/`, `hardware/` or `system/`, from the newest canary or rc: Linux master/rc, Wine, ReactOS, Mesa, Wayland.
 - Licenses never decide anything.
 - Cite in a header comment the upstream commit each file came from.
 - When Rust duplicates C (Wayland wire, tiler, CPUID), add a parity test before switching the Rust side to the C ABI.

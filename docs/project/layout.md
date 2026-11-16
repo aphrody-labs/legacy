@@ -1,6 +1,6 @@
 # Repository layout
 
-The root follows [`oven-sh/bun`](https://github.com/oven-sh/bun) for manifests and `src/`, and AOSP and Chromium for the directories around it: `apps`, `build`, `device`, `prebuilts`, `third_party`, `tools`. A root entry stays only when Bun, AOSP or Chromium has it or a tool requires the path; everything else moves under the directory that owns it. Check with `fd -d 1 -H`.
+The root follows [`oven-sh/bun`](https://github.com/oven-sh/bun) for manifests (`Cargo.toml`, `package.json`, `bunfig.toml`; the Bun crates keep their upstream names under `system/`) and AOSP and Chromium for the directories: `apps`, `build`, `device`, `frameworks`, `hardware`, `kernel`, `prebuilts`, `system`, `third_party`, `tools`. A root entry stays only when Bun, AOSP or Chromium has it or a tool requires the path; everything else moves under the directory that owns it. Check with `fd -d 1 -H`.
 
 ## Root
 
@@ -15,7 +15,7 @@ The root follows [`oven-sh/bun`](https://github.com/oven-sh/bun) for manifests a
 | `DEPS`, `DEPS.rules`, `OWNERS`, `src.lock.json` | `scripts/checkdeps.ts`, `ay upstream`; `src.lock.json` is also the repository-root marker for `ay` |
 | `.github/`, `.claude/`, `.agents/`, `.claude-plugin/` | GitHub and the agent CLIs; the plugin marketplace root is the checkout |
 | `.gitattributes`, `.gitignore`, `.gitmodules`, `.env.example`, `.graphifyignore` | git, env tooling and graphify |
-| `apps/`, `frameworks/`, `build/`, `device/`, `prebuilts/`, `src/`, `system/`, `third_party/`, `docs/`, `bench/`, `test/`, `scripts/`, `tools/`, `completions/` | the trees; table below, generated from `tools/layout.toml` |
+| `apps/`, `build/`, `device/`, `frameworks/`, `hardware/`, `kernel/`, `prebuilts/`, `system/`, `third_party/`, `docs/`, `bench/`, `test/`, `scripts/`, `tools/`, `completions/` | the trees; table below, generated from `tools/layout.toml` |
 
 ## Top-level directories
 
@@ -93,5 +93,5 @@ Merges keep every capability; `git log -- <path>` is the history of the absorbed
 | `frameworks/web` | `bun-web`, `webos`, `webos-wasm`, `shell-web`, `site`, `bun-webview-page` | |
 | Bun fork | `bun-parity`, `bun-plugins`, `bun-sql`, `bun-usockets` | `third_party/bun` is a clone: the merge happens in the fork, not here |
 | Others | `core` takes `native` and `ffi-bridge`; `env-kit` takes `vault`, `identity`, `paths`; `release` takes `deploy`, `upstream`, `runtime-adapter`, `runtime-sdk`, `typesafe-sdk`; `machine` takes `omniu`; `re` takes `ghidra`; `gaming` goes to the games app; `py2bun` goes to the migration feature | |
-| `src/` | one crate per family behind features: `a2a-*`, `agent-*`, `gemini-*`/`google`/`antigravity`/`model-*`, `llama*`/`ml-*`/`models`/`infer`/`embed`, `flowcat-*`, voice and audio | |
+| `src/` (now `system/` and `frameworks/`) | one crate per family behind features: `a2a-*`, `agent-*`, `gemini-*`/`google`/`antigravity`/`model-*`, `llama*`/`ml-*`/`models`/`infer`/`embed`, `flowcat-*`, voice and audio | |
 | `infra/` | removed 2026-11-16: split into `build/` (ci, chromium-factory, docker, pkg, android, ay), `device/` (fleet, cluster, os, cloudflare, gcloud, gnu, vault, mail, db, gaming, gamescope-web, deploy.toml), `prebuilts/up`, `tools/` (agents, ai, upstream); `system/ay`, `system/xtask`, `justfile` and `.github/workflows` read the new paths | `bun scripts/relayout.ts check` |
