@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT OR Apache-2.0 */
 /*
- * src/include/uapi/ay/shell.h - Pure C ABI definitions for Terminal Palettes & 2026 Shell/CLI/TUI Index
+ * kernel/include/uapi/ay/shell.h - Pure C ABI definitions for Terminal Palettes & 2026 Shell/CLI/TUI Index
  *
  * Fixed-width LP64 / LLP64 / WASM32 invariant structures (zero pointers inside structs).
  */

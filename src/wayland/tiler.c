@@ -2,7 +2,7 @@
 /*
  * sys/wayland/tiler.c - Pure C Dynamic Tiling (Dwindle / Master-Stack / Monocle) & Damage Union
  */
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 static __u32 clamp_u32(__u32 v, __u32 lo, __u32 hi)
 {

@@ -11,7 +11,7 @@ const US_PER_MS: i64 = 1000;
 pub(crate) fn from_binary(bytes: &[u8]) -> f64 {
     let microseconds =
         i64::from_be_bytes(bytes[0..8].try_into().expect("infallible: size matches"));
-    // Postgres src/include/datatype/timestamp.h: DT_NOEND / DT_NOBEGIN are the
+    // Postgres kernel/include/datatype/timestamp.h: DT_NOEND / DT_NOBEGIN are the
     // i64 endpoints. Return ±Infinity so the JS side can surface the value as a
     // Number (see SQLClient.cpp toJS Date case); without this the arithmetic
     // below yields ~9.224e15 ms, past JS Date's ±8.64e15 range, and timeClip

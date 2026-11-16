@@ -69,7 +69,7 @@ members = [
   "src/dns",
   "src/docs",
   "src/dotenv",
-  "src/drivers/gpu/dx12",
+  "hardware/drivers/gpu/dx12",
   "src/env",
   "src/errno",
   "src/event_loop",
@@ -311,7 +311,7 @@ aphrody-core = { version = "0.4.0", path = "src/core" }
 aphrody-core-capi = { version = "0.4.0", path = "src/core/capi" }
 aphrody-re = { version = "0.4.0", path = "src/re" }
 # WSLg stack: Windows host crates and the portable Wayland wire (docs/ARCHITECTURE.md §6).
-dx12-hal = { version = "0.4.0", path = "src/drivers/gpu/dx12" }
+dx12-hal = { version = "0.4.0", path = "hardware/drivers/gpu/dx12" }
 smithay-wayland-wire = { version = "0.4.0", path = "src/wayland/smithay" }
 depot-migrate = { version = "0.4.0", path = "src/depot/migrate" }
 depot-forge = { version = "0.4.0", path = "src/depot/forge" }

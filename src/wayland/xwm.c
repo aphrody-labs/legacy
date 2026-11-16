@@ -2,7 +2,7 @@
 /*
  * sys/wayland/xwm.c - Freedesktop X11 (XCB 1.17 Async) & Rootless XWayland 26.0.99 XWM
  */
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 AY_API __s32 xcb_build_setup_req(struct xcb_setup_req *out_req)
 {

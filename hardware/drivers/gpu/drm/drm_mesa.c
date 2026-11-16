@@ -2,7 +2,7 @@
 /*
  * sys/drivers/gpu/drm/drm_mesa.c - Linux 7.4-rc2 DRM/KMS & Mesa 26.3 GBM/EGL 1.5/D3D12
  */
-#include "../../../include/ay/sys.h"
+#include "../../../../kernel/include/ay/sys.h"
 
 static __u32 drm_bpp_for_fourcc(__u32 fourcc)
 {

@@ -11,7 +11,7 @@
  */
 
 #include <stdio.h>
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 int main(void)
 {

@@ -11,7 +11,7 @@
  *      Nerd Fonts, icon packs, and themes with upstream repo, official docs URL, and repo config path.
  */
 
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 struct sk_palette_entry {
 	const char *slug;

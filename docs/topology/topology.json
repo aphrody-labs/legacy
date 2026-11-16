@@ -1241,12 +1241,12 @@
     "kind": "domain",
     "children": [
      {
-      "id": "src/drivers/gpu/dx12",
+      "id": "hardware/drivers/gpu/dx12",
       "name": "dx12-hal",
       "kind": "module",
       "language": "rust",
       "loc": 808,
-      "file": "src/drivers/gpu/dx12"
+      "file": "hardware/drivers/gpu/dx12"
      },
      {
       "id": "src/gnu/bc",
@@ -2216,7 +2216,7 @@
    "kind": "dispatch"
   },
   {
-   "source": "src/drivers/gpu/dx12",
+   "source": "hardware/drivers/gpu/dx12",
    "target": "system/ffi-bridge",
    "kind": "dispatch"
   },
@@ -6707,7 +6707,7 @@
   },
   {
    "source": "src/posix/wslg",
-   "target": "src/drivers/gpu/dx12",
+   "target": "hardware/drivers/gpu/dx12",
    "kind": "call"
   },
   {
@@ -8597,7 +8597,7 @@
   },
   {
    "source": "src/wayland/smithay",
-   "target": "src/drivers/gpu/dx12",
+   "target": "hardware/drivers/gpu/dx12",
    "kind": "call"
   },
   {
@@ -8607,7 +8607,7 @@
   },
   {
    "source": "src/wayland/wslg-transport",
-   "target": "src/drivers/gpu/dx12",
+   "target": "hardware/drivers/gpu/dx12",
    "kind": "call"
   },
   {
@@ -8737,7 +8737,7 @@
   },
   {
    "source": "system/ffi-bridge",
-   "target": "src/drivers/gpu/dx12",
+   "target": "hardware/drivers/gpu/dx12",
    "kind": "call"
   },
   {
@@ -8957,7 +8957,7 @@
   },
   {
    "source": "ci",
-   "target": "src/drivers/gpu/dx12",
+   "target": "hardware/drivers/gpu/dx12",
    "kind": "dispatch"
   },
   {
@@ -9057,7 +9057,7 @@
   "src/core/capi/py",
   "src/core/jni",
   "src/corelib/adblock-capi",
-  "src/drivers/gpu/dx12",
+  "hardware/drivers/gpu/dx12",
   "src/game",
   "src/ghidra-bun",
   "src/gnu/bc",

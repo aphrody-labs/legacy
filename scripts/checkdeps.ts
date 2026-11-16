@@ -58,6 +58,8 @@ const SCAN = [
   "frameworks",
   "system",
   "apps",
+  "kernel",
+  "hardware",
   "build",
   "device",
   "prebuilts",

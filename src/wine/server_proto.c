@@ -2,7 +2,7 @@
 /*
  * sys/wine/server_proto.c - Wine 64-byte fixed server request framing (wine/server/request.h)
  */
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 static void put_u32_le(__u8 *p, __u32 v)
 {

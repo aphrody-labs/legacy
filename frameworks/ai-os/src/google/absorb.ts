@@ -156,7 +156,7 @@ const BANNER = (repo: string, rel: string) =>
   repo === "android/skills"
     ? `> Mirror generated from ${repo} (${rel}) by \`bun frameworks/ai-os/src/google/absorb.ts skills --write\`; do not edit here.
 > In src: entry skill \`.agents/skills/android-ndk-compose/SKILL.md\`, Material 3 Expressive tokens \`frameworks/design/tokens/adapters/Theme.kt\`,
-> Pure C11/JNI/NDK ABI \`src/include/ay/sys.h\` (\`src/include/uapi/ay/ui.h\`, \`libaysys.so\`). JS/TS: bun only.
+> Pure C11/JNI/NDK ABI \`kernel/include/ay/sys.h\` (\`kernel/include/uapi/ay/ui.h\`, \`libaysys.so\`). JS/TS: bun only.
 `
     : `> Mirror generated from ${repo} (${rel}) by \`bun frameworks/ai-os/src/google/absorb.ts skills --write\`; do not edit here.
 > In src: relay Stitch tools \`stitch__<tool>\` (MCP \`mcp__relay__stitch__*\`, gcloud auth), CLI \`ay design stitch <cmd>\`

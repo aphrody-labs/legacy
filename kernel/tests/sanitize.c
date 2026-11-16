@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT OR Apache-2.0 */
 /*
- * src/tests/sanitize.c - AddressSanitizer + UndefinedBehaviorSanitizer driver for the C core (`make
+ * kernel/tests/sanitize.c - AddressSanitizer + UndefinedBehaviorSanitizer driver for the C core (`make
  * -C src sanitize`).
  *
  * Calls every exported function of include/ay/sys.h with valid and hostile arguments: every output

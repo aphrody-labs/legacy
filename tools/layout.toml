@@ -181,3 +181,49 @@ from = "packages"
 to = "system"
 names = ["bun-parity", "bun-plugin-tailwind", "bun-plugins", "bun-runtime-sdk", "bun-sql", "bun-steam", "bun-test-dom", "bun-usockets", "bunify", "core", "core-java", "core-py", "deploy", "env-kit", "ffi-bridge", "forge", "gnu", "http", "machine", "native", "next-bun", "omniu", "py2bun", "release", "sql", "third_party", "upstream", "wck", "x"]
 rename = { core = "core-ts", gnu = "gnu-ts", http = "http-ts", machine = "machine-ts", py2bun = "py2bun-ts", sql = "sql-ts" }
+
+# Batch 3: the C core and its drivers. src/kernel becomes kernel/core (kernel/kernel would repeat itself).
+[[move]]
+batch = 3
+from = "src/arch"
+to = "kernel/arch"
+
+[[move]]
+batch = 3
+from = "src/kernel"
+to = "kernel/core"
+
+[[move]]
+batch = 3
+from = "src/include"
+to = "kernel/include"
+
+[[move]]
+batch = 3
+from = "src/wasm"
+to = "kernel/wasm"
+
+[[move]]
+batch = 3
+from = "src/tests"
+to = "kernel/tests"
+
+[[move]]
+batch = 3
+from = "src/Makefile"
+to = "kernel/Makefile"
+
+[[move]]
+batch = 3
+from = "src/.clang-format"
+to = "kernel/.clang-format"
+
+[[move]]
+batch = 3
+from = "src/.clang-tidy"
+to = "kernel/.clang-tidy"
+
+[[move]]
+batch = 3
+from = "src/drivers"
+to = "hardware/drivers"

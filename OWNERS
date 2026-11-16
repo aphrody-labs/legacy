@@ -125,7 +125,7 @@ F:	src/wayland/gamescope/wgsl/
 F:	src/posix/wslg/
 F:	src/wayland/tiler/
 F:	src/wayland/cosmic/
-F:	src/drivers/gpu/dx12/
+F:	hardware/drivers/gpu/dx12/
 F:	src/wayland/smithay/
 F:	third_party/wgpu/
 F:	third_party/winit/
@@ -226,7 +226,7 @@ LAYER L2 PLATFORM ABSTRACTION (Windows, Linux, Cloudflare, Vercel, C ABI)
 M:	skill:microsoft skill:windows-machine agent:claude <contact@aphrody.com>
 S:	Supported
 F:	src/core/capi/
-F:	src/drivers/gpu/dx12/
+F:	hardware/drivers/gpu/dx12/
 F:	src/remote/
 F:	system/ffi-bridge/
 

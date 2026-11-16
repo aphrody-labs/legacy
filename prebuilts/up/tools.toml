@@ -1340,7 +1340,7 @@ version = "133"
 source = "github"
 repo = "WebAssembly/binaryen"
 hosts = ["pc", "fr1"]
-why = "wasm-opt -O4 SIMD128 optimizer for src/Makefile (aysys.wasm, wayland.wasm)"
+why = "wasm-opt -O4 SIMD128 optimizer for kernel/Makefile (aysys.wasm, wayland.wasm)"
 
 [toolchain."wabt"]
 version = "1.0.42"
@@ -1354,7 +1354,7 @@ version = "34.0"
 source = "github"
 repo = "WebAssembly/wasi-sdk"
 hosts = ["pc", "fr1"]
-why = "clang 23 + wasi-libc toolchain targeting wasm32-wasip1 / wasm32-wasip2 (src/Makefile)"
+why = "clang 23 + wasi-libc toolchain targeting wasm32-wasip1 / wasm32-wasip2 (kernel/Makefile)"
 
 [toolchain."ktx-software"]
 version = "4.4.2"

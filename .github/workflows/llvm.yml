@@ -6,18 +6,18 @@ on:
   push:
     branches: [main, dev]
     paths:
-      - "src/Makefile"
-      - "src/.clang-*"
-      - "src/tests/**"
-      - "src/kernel/**"
+      - "kernel/Makefile"
+      - "kernel/.clang-*"
+      - "kernel/tests/**"
+      - "kernel/core/**"
       - "src/wayland/**"
       - "src/nt/**"
       - "src/wine/**"
-      - "src/wasm/**"
+      - "kernel/wasm/**"
       - "src/ui/*.c"
-      - "src/drivers/**/*.c"
-      - "src/arch/**"
-      - "src/include/**"
+      - "hardware/drivers/**/*.c"
+      - "kernel/arch/**"
+      - "kernel/include/**"
       - "scripts/toolchain.ts"
       - "third_party/toolchain-*.toml"
       - ".github/workflows/llvm.yml"
@@ -62,7 +62,7 @@ jobs:
           base="${{ github.event.before }}"
           [ -n "$base" ] && git cat-file -e "$base^{commit}" 2>/dev/null || base=HEAD~1
           command -v git-clang-format >/dev/null || sudo apt-get install -y clang-format
-          out=$(git clang-format --diff "$base" -- 'src/**/*.c' 'src/**/*.h' || true)
+          out=$(git clang-format --diff "$base" -- 'kernel/**/*.c' 'kernel/**/*.h' 'hardware/**/*.c' 'src/**/*.c' 'src/**/*.h' || true)
           case "$out" in "no modified files to format" | "clang-format did not modify any files") exit 0 ;; esac
           echo "$out"; exit 1
       - name: Section sizes of libaysys.so (llvm-objdump)
@@ -82,16 +82,16 @@ jobs:
           bun scripts/toolchain.ts install
           bun scripts/toolchain.ts bin >> "$GITHUB_PATH"
       - name: C core coverage (sanitize driver, source-based, llvm-cov of the toolchain)
-        working-directory: src
+        working-directory: kernel
         run: |
           clang -std=gnu11 -O0 -funsigned-char -fno-common -Iinclude -fprofile-instr-generate -fcoverage-mapping \
-            -fuse-ld=lld kernel/sys.c drivers/gpu/drm/drm_mesa.c wayland/wire.c wayland/xwm.c wayland/tiler.c \
-            nt/status.c wine/server_proto.c wasm/module.c ui/m3.c ui/shell_kit.c ui/vterm.c arch/x86/entry_64.S \
+            -fuse-ld=lld core/sys.c ../hardware/drivers/gpu/drm/drm_mesa.c ../src/wayland/wire.c ../src/wayland/xwm.c ../src/wayland/tiler.c \
+            ../src/nt/status.c ../src/wine/server_proto.c wasm/module.c ../src/ui/m3.c ../src/ui/shell_kit.c ../src/ui/vterm.c arch/x86/entry_64.S \
             tests/sanitize.c -o "$RUNNER_TEMP/cov-c"
           LLVM_PROFILE_FILE="$RUNNER_TEMP/cov-c.profraw" "$RUNNER_TEMP/cov-c"
           llvm-profdata merge -sparse "$RUNNER_TEMP/cov-c.profraw" -o "$RUNNER_TEMP/cov-c.profdata"
           llvm-cov report "$RUNNER_TEMP/cov-c" -instr-profile="$RUNNER_TEMP/cov-c.profdata" \
-            kernel wayland nt wine wasm ui drivers | tee "$RUNNER_TEMP/coverage-c.txt"
+            core ../src/wayland ../src/nt ../src/wine wasm ../src/ui ../hardware/drivers | tee "$RUNNER_TEMP/coverage-c.txt"
       - name: Rust coverage (cargo-llvm-cov on the chromium rustc, LLVM tools of the same revision)
         run: |
           command -v cargo-llvm-cov >/dev/null || cargo install --locked cargo-llvm-cov

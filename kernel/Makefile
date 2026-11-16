@@ -1,13 +1,13 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# src/Makefile - Central Pure C, Assembly & WebAssembly Core (`libaysys` / `aysys.dll` / `aysys.wasm` / `wayland.wasm`)
+# kernel/Makefile - Central Pure C, Assembly & WebAssembly Core (`libaysys` / `aysys.dll` / `aysys.wasm` / `wayland.wasm`)
 #
 # Subsystems:
 #   arch/           x86_64, aarch64, wasm32 assembly & CPU entry
-#   kernel/         syscalls, freestanding runtime, FNV-1a, CPUID
-#   drivers/gpu/    Linux 7.4-rc2 DRM/KMS + Mesa 26.3 GBM/EGL 1.5/D3D12
-#   wayland/        Wayland 1.26 wire, XCB 1.17, XWayland 26.0.99 XWM, dynamic tiler
-#   nt/             NT Executive / ReactOS NTSTATUS <-> POSIX -errno
-#   wine/           wineserver 64-byte fixed request protocol
+#   core/           syscalls, freestanding runtime, FNV-1a, CPUID
+#   ../hardware/drivers/gpu/  Linux 7.4-rc2 DRM/KMS + Mesa 26.3 GBM/EGL 1.5/D3D12
+#   ../src/wayland/ Wayland 1.26 wire, XCB 1.17, XWayland 26.0.99 XWM, dynamic tiler
+#   ../src/nt/      NT Executive / ReactOS NTSTATUS <-> POSIX -errno
+#   ../src/wine/    wineserver 64-byte fixed request protocol
 #   wasm/           WebAssembly 3.0 binary parser, SIMD128 kernels, WASI-SDK 34 CLI, browser Wayland compositor
 
 # make's built-in default CC is `cc`, absent on Windows: only an explicit CC overrides clang.
@@ -34,17 +34,17 @@ CFLAGS_BASE := \
 WASM_FEATURES := -msimd128 -mbulk-memory -mmultivalue -mnontrapping-fptoint -msign-ext
 
 C_SRCS := \
-	kernel/sys.c \
-	drivers/gpu/drm/drm_mesa.c \
-	wayland/wire.c \
-	wayland/xwm.c \
-	wayland/tiler.c \
-	nt/status.c \
-	wine/server_proto.c \
+	core/sys.c \
+	../hardware/drivers/gpu/drm/drm_mesa.c \
+	../src/wayland/wire.c \
+	../src/wayland/xwm.c \
+	../src/wayland/tiler.c \
+	../src/nt/status.c \
+	../src/wine/server_proto.c \
 	wasm/module.c \
-	ui/m3.c \
-	ui/shell_kit.c \
-	ui/vterm.c
+	../src/ui/m3.c \
+	../src/ui/shell_kit.c \
+	../src/ui/vterm.c
 
 ASM_X86_64 := arch/x86/entry_64.S
 
@@ -101,7 +101,7 @@ wasi:
 		$(OUT_DIR)/ay-wasm-inspect.raw.wasm -o $(OUT_DIR)/ay-wasm-inspect.wasm
 	rm -f $(OUT_DIR)/ay-wasm-inspect.raw.wasm
 	$(WASI_CC) $(CFLAGS_BASE) $(WASM_FEATURES) --target=wasm32-wasip1 \
-		$(C_SRCS) ui/site_wasi.c -o $(OUT_DIR)/ay-m3-site.raw.wasm
+		$(C_SRCS) ../src/ui/site_wasi.c -o $(OUT_DIR)/ay-m3-site.raw.wasm
 	$(WASM_OPT) -O3 --enable-simd --enable-bulk-memory --enable-multivalue \
 		--enable-nontrapping-float-to-int --enable-sign-ext --strip-debug \
 		$(OUT_DIR)/ay-m3-site.raw.wasm -o $(OUT_DIR)/ay-m3-site.wasm

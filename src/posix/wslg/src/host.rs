@@ -1,5 +1,5 @@
 //! WinUI 3 host side of the compositor (L5): the DispatcherQueue that drives presentation.
-//! Split from the D3D12 + DirectComposition HAL (src/drivers/gpu/dx12) by ticket dx12-001.
+//! Split from the D3D12 + DirectComposition HAL (hardware/drivers/gpu/dx12) by ticket dx12-001.
 
 use tracing::info;
 use windows::System::DispatcherQueueController;

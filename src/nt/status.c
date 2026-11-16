@@ -2,7 +2,7 @@
 /*
  * sys/nt/status.c - ReactOS / Windows NT Executive NTSTATUS <-> Linux -errno bijection
  */
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 AY_API NTSTATUS nt_errno_to_ntstatus(__s32 neg_errno)
 {

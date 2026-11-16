@@ -39,6 +39,8 @@ graphify-out/
 !/system/
 !/bench/
 !/test/
+!/kernel/
+!/hardware/
 !/build/
 !/device/
 !/prebuilts/

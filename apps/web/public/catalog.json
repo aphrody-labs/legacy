@@ -17,6 +17,11 @@
           "path": "bench"
         },
         {
+          "name": "dx12-hal",
+          "description": "dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo",
+          "path": "hardware/drivers/gpu/dx12"
+        },
+        {
           "name": "agent-context",
           "description": "Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python.",
           "path": "src/agent/context"
@@ -293,18 +298,13 @@
         },
         {
           "name": "aphrody-docs",
-          "description": "`ay docs`: imports Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) into a SQLite FTS5 index and serves search for people and agents",
+          "description": "`ay docs`: imports the documentation of Bun, Linux, Chromium, ChromiumOS and Android (data-driven sources.toml: local, git, llms.txt, sitemap) into a SQLite FTS5 index and serves search for people and agents",
           "path": "src/docs"
         },
         {
           "name": "bun_dotenv",
           "description": "",
           "path": "src/dotenv"
-        },
-        {
-          "name": "dx12-hal",
-          "description": "dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo",
-          "path": "src/drivers/gpu/dx12"
         },
         {
           "name": "aphrody-env",

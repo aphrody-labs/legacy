@@ -1,6 +1,6 @@
 # Aphrody, système GNU (cible, 2026-11-14)
 
-Ordre du propriétaire (2026-11-14) : refactoriser Aphrody en système d'exploitation GNU. Définition retenue, d'après gnu.org (`gnu/linux-and-gnu.html`, `gnu/gnu.html`) : GNU est le système entier, noyau excepté. Aphrody fournit le noyau (`src/kernel`, rôle de Linux ou de Hurd) ainsi que chaque paquet GNU, réécrit ou repris en Rust ou en C sur l'ABI `src/include/ay/sys.h`.
+Ordre du propriétaire (2026-11-14) : refactoriser Aphrody en système d'exploitation GNU. Définition retenue, d'après gnu.org (`gnu/linux-and-gnu.html`, `gnu/gnu.html`) : GNU est le système entier, noyau excepté. Aphrody fournit le noyau (`kernel/core`, rôle de Linux ou de Hurd) ainsi que chaque paquet GNU, réécrit ou repris en Rust ou en C sur l'ABI `kernel/include/ay/sys.h`.
 
 Revue Gemini (Carbon High, 10,5/20, archive `docs/reviews/gemini-2026-11-14-gnu-os.md`) : les corrections D1 à D9 sont acceptées et inscrites ci-dessous. Réserve : fr2 n'héberge pas de production, c'est le VPS de tests, benchmarks et recherche depuis le 2026-11-14 ; D7 reste appliquée pour protéger les secrets R2.
 
@@ -17,7 +17,7 @@ Sources de vérité, toutes sous `docs/research/` :
 
 | Composant du système GNU | Aphrody | État |
 | --- | --- | --- |
-| noyau (Linux, Hurd) | Linux amont de référence (stable 7.3, LTS, GKI Android, ChromeOS ; `ay gnu kernel`) ; couche propre `src/kernel`, `src/arch`, `src/drivers` (C, style Linux) | suivi, existant |
+| noyau (Linux, Hurd) | Linux amont de référence (stable 7.3, LTS, GKI Android, ChromeOS ; `ay gnu kernel`) ; couche propre `kernel/core`, `kernel/arch`, `hardware/drivers` (C, style Linux) | suivi, existant |
 | GNU libc | `src/posix` (personnalité POSIX/Linux) ; glibc de la distro sous Linux | existant, partiel |
 | chaîne d'outils (gcc, binutils, gdb) | LLVM partagé avec Chromium (PLAN.md n°3, n°10) | décidé |
 | paquets GNU (coreutils, findutils, diffutils, sed, grep, tar, gzip, bc, ed, m4, which, time, make...) | `src/gnu/<id GSRC>`, une unité par paquet ; `src/gnu/{which,time,bc,ed,m4}` écrits, forks uutils pinnés (PLAN.md) | en cours |

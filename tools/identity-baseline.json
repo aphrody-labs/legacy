@@ -3528,7 +3528,7 @@
  "src/i18n/tests/shared.rs": {
   "c-prefix": 1
  },
- "src/include/uapi/ay/ui.h": {
+ "kernel/include/uapi/ay/ui.h": {
   "crate-prefix": 1
  },
  "src/lore/Cargo.toml": {
@@ -4193,7 +4193,7 @@
   "npm-scope": 1,
   "c-prefix": 4
  },
- "src/wasm/wayland_wire.h": {
+ "kernel/wasm/wayland_wire.h": {
   "env-prefix": 3
  },
  "src/wayland/cosmic/Cargo.toml": {

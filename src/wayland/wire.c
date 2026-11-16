@@ -2,7 +2,7 @@
 /*
  * sys/wayland/wire.c - Freedesktop Wayland 1.26.0 Wire Framing & Codec
  */
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 static void put_u32_le(__u8 *p, __u32 v)
 {

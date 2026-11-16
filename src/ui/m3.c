@@ -13,7 +13,7 @@
  *      with strict XSS HTML-entity escaping, usable from WASI, Bun FFI, Rust, Android NDK, or Cloudflare Workers.
  */
 
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 static const __u32 g_m3_light_argb[AY_UI_ROLE_COUNT] = {
 	0xFFF6FAFFu, /* SURFACE                   */

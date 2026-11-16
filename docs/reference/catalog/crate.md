@@ -6,6 +6,7 @@ A member of the Cargo workspace (src/*)
 | :-- | :-- |
 | [aphrody-game](../../../apps/game) | Game app: the Bevy game of src/game with the Steam and Epic storefront services, as one binary |
 | [stack-bench](../../../bench) | Hardware and compiler benchmark suite behind `ay bench` (Windows) |
+| [dx12-hal](../../../hardware/drivers/gpu/dx12) | dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo |
 | [agent-context](../../../src/agent/context) | Native reader/writer for the agent Context store (same SQLite schema as frameworks/ai-os/src/core/context.ts), with an optional pyo3 module `agent_core` for Python. |
 | [bun_analytics](../../../src/analytics) | - |
 | [bun_aot](../../../src/aot) | - |
@@ -61,9 +62,8 @@ A member of the Cargo workspace (src/*)
 | [aphrody-diffutils-flat](../../../src/diffutils-flat) | POSIX basic regular expression translation from the aphrody-labs/diffutils fork (uutils), flattened by `ay flat sync --fork third_party/diffutils` |
 | [bun_dispatch](../../../src/dispatch) | - |
 | [bun_dns](../../../src/dns) | - |
-| [aphrody-docs](../../../src/docs) | `ay docs`: imports Bun's docs (fork md/mdx, bun.com llms-full.txt, bun skills) into a SQLite FTS5 index and serves search for people and agents |
+| [aphrody-docs](../../../src/docs) | `ay docs`: imports the documentation of Bun, Linux, Chromium, ChromiumOS and Android (data-driven sources.toml: local, git, llms.txt, sitemap) into a SQLite FTS5 index and serve... |
 | [bun_dotenv](../../../src/dotenv) | - |
-| [dx12-hal](../../../src/drivers/gpu/dx12) | dx12-hal: D3D12 + DirectComposition hardware layer (L2) with a C ABI, part of the Aphrody monorepo |
 | [aphrody-env](../../../src/env) | Zero-dependency Rust 2024 loader and SecretString redaction guard for C:/aphrody/.env |
 | [bun_errno](../../../src/errno) | - |
 | [bun_event_loop](../../../src/event_loop) | - |

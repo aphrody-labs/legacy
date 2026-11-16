@@ -4,7 +4,7 @@
 //   /api/icon?path=  real icon of a PE (.ico)                   /api/index/{stats,tree,search}: SQLite (winindex.ts)
 //   /desktop.svg     whole desktop (UI Automation)              /stats: display measurements (?report=1)
 //   /api/msindex/{stats,search,node/:id}: indexed and proven Microsoft stack (sdk/tools/msindex)
-//   /api/gpu         real DXGI adapters and D3D12 device (src/drivers/gpu/dx12 via @aphrody/ffi-bridge)
+//   /api/gpu         real DXGI adapters and D3D12 device (hardware/drivers/gpu/dx12 via @aphrody/ffi-bridge)
 // Usage: bun src/host/server.ts   [PORT=8787] [NT_HZ=15]
 import {
   dx12Adapters,

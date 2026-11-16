@@ -4,7 +4,7 @@
   "description": "Rust WebAssembly backend of the Aphrody browser OS: OPFS-persisted file system, explorer wire protocol, local shell and terminal, binary triage and patches.",
   "license": "Apache-2.0",
   "files": [
-    "src",
+    "kernel",
     "wasm",
     "README.md",
     "stage-notices.ts"

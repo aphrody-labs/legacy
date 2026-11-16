@@ -47,7 +47,7 @@ Names breaking the scheme: 121 rows below (a name can appear in two tables). Syn
 | stack-bench | bench | aphrody-bench | 26 | identity.toml [naming.crate_names] |
 | aphrody | src/ay | aphrody-ay | 1540 | identity.toml [cli].crate |
 | craft-formats | src/craft | aphrody-craft | 16 |  |
-| dx12-hal | src/drivers/gpu/dx12 | aphrody-drivers-gpu-dx12 | 37 |  |
+| dx12-hal | hardware/drivers/gpu/dx12 | aphrody-drivers-gpu-dx12 | 37 |  |
 | wslg-cli | src/posix/wslg | aphrody-posix-wslg | 17 |  |
 | steam-depot | src/steam | aphrody-steam | 43 |  |
 | aphrody-ui | src/ui/kit | aphrody-ui-kit | 51 |  |

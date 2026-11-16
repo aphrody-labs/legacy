@@ -10,7 +10,7 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.nio.charset.StandardCharsets;
 
-/** Java 25 Foreign Function &amp; Memory (FFM) bindings for Aphrody Layer-0 C core (`src/include/ay/sys.h` / `aysys.dll`). */
+/** Java 25 Foreign Function &amp; Memory (FFM) bindings for Aphrody Layer-0 C core (`kernel/include/ay/sys.h` / `aysys.dll`). */
 public final class AphrodySys {
     public record CpuCaps(int vendorId, int family, int model, int stepping, long features) {}
 

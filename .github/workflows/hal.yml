@@ -6,14 +6,14 @@ on:
   push:
     branches: [main, dev]
     paths:
-      - "src/drivers/gpu/dx12/**"
+      - "hardware/drivers/gpu/dx12/**"
       - "src/posix/wslg/**"
       - "src/wayland/smithay/**"
       - "system/ffi-bridge/**"
       - ".github/workflows/hal.yml"
   pull_request:
     paths:
-      - "src/drivers/gpu/dx12/**"
+      - "hardware/drivers/gpu/dx12/**"
       - "src/posix/wslg/**"
       - "src/wayland/smithay/**"
       - "system/ffi-bridge/**"

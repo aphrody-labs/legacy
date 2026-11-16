@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 /*
- * src/wasm/wasi_cli.c - Portable WASI Preview 1/2 CLI inspector (`ay-wasm-inspect.wasm`)
+ * kernel/wasm/wasi_cli.c - Portable WASI Preview 1/2 CLI inspector (`ay-wasm-inspect.wasm`)
  * Compiled with WebAssembly/wasi-sdk 34.0 (`clang --target=wasm32-wasip1`) + optimized via Binaryen `wasm-opt`.
  */
 #include <stdio.h>

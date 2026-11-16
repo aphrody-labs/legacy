@@ -5,7 +5,7 @@
 
 | Type | Path |
 | :-- | :-- |
-| Rust crate | `src/drivers/gpu/dx12` |
+| Rust crate | `hardware/drivers/gpu/dx12` |
 
 **Commands**
 

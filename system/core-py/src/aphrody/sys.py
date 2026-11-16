@@ -1,4 +1,4 @@
-"""Bindings over Aphrody Layer-0 C core (`src/include/ay/sys.h` / `aysys.dll`)."""
+"""Bindings over Aphrody Layer-0 C core (`kernel/include/ay/sys.h` / `aysys.dll`)."""
 
 from __future__ import annotations
 

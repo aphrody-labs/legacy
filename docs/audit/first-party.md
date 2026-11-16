@@ -83,7 +83,7 @@ Generated from `docs/audit/first-party.jsonl` (one object per unit: provenance, 
 | `src/depot/graph` | first-party; 5d7e8036 2026-11-12 | Tree-sitter code graph, query/path/explain/MCP | keep; merge with aphrody-core index if overlap confirmed | M | low |
 | `src/depot/ingest` | first-party; 5d7e8036 2026-11-12 | Repo-to-LLM context ingest (scanner, tokenizer, tree, formatter) | keep (small) | S | low |
 | `src/depot/vpython` | first-party; 4b6bb63e 2026-11-12 | `ay vpy`: run Chromium vpython specs on uv | keep; candidate to fold into depot-gclient | S | low |
-| `src/drivers/gpu/dx12` | first-party; split 180e8387 2026-11-13 (dx12-winui-core -> dx12-hal) | D3D12 + DirectComposition HAL with C ABI | keep only the DirectComposition/C-ABI part; replace rendering with wgpu if redundant | M | medium |
+| `hardware/drivers/gpu/dx12` | first-party; split 180e8387 2026-11-13 (dx12-winui-core -> dx12-hal) | D3D12 + DirectComposition HAL with C ABI | keep only the DirectComposition/C-ABI part; replace rendering with wgpu if redundant | M | medium |
 | `src/game` | first-party; f2c17b18 2026-11-13 vertical slice | Bevy open-world slice: streamed terrain, controller, day/night, procedural audio | keep | S | low |
 | `src/ghidra-bun` | first-party; d18f303f 2026-11-15, built on upstream bun-native-plugin 0.2.0 + napi | Bun onBeforeParse NAPI plugin analysing binaries via aphrody-re for @aphrody/ghidra | keep | S | low |
 | `src/gnu/bc` | first-party clean-room Rust port; d539a2e3 2026-11-14 | GNU bc in Rust | keep but re-add to workspace members; dc still to do (OS.md:50) | S | low |

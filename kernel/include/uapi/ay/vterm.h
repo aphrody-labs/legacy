@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT OR Apache-2.0 */
 /*
- * src/include/uapi/ay/vterm.h - Pure C11 / WASM32 Zero-Alloc Virtual Terminal ABI (v2)
+ * kernel/include/uapi/ay/vterm.h - Pure C11 / WASM32 Zero-Alloc Virtual Terminal ABI (v2)
  *
  * Designed for dual execution:
  *   1. Native Windows/Linux FFI (`aysys.dll` / `libaysys.so`) for daemon PTY shadow grids & MCP/ACP reading.

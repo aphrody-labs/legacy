@@ -25,7 +25,7 @@ metadata:
 
 > Mirror generated from android/skills (android-skills/device-ai/litert/litert-runtime) by `bun frameworks/ai-os/src/google/absorb.ts skills --write`; do not edit here.
 > In src: entry skill `.agents/skills/android-ndk-compose/SKILL.md`, Material 3 Expressive tokens `frameworks/design/tokens/adapters/Theme.kt`,
-> Pure C11/JNI/NDK ABI `src/include/ay/sys.h` (`src/include/uapi/ay/ui.h`, `libaysys.so`). JS/TS: bun only.
+> Pure C11/JNI/NDK ABI `kernel/include/ay/sys.h` (`kernel/include/uapi/ay/ui.h`, `libaysys.so`). JS/TS: bun only.
 
 This skill provides step-by-step guidance for building an Android app that runs
 a `.tflite` model with the [LiteRT CompiledModel API](https://ai.google.dev/edge/litert/android)

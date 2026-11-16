@@ -1,0 +1,29 @@
+name: layout
+
+# The tree matches tools/layout.toml: no moved path is left or referenced, every Cargo member and path dependency
+# resolves, the Bun workspaces install from the lockfile, the dependency layers hold. Runs on GitHub-hosted runners
+# (no compilation), so it does not depend on the fr1 runners.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+      - run: bun scripts/relayout.ts check --upto 3
+      - run: bun install --frozen-lockfile
+      - run: cargo metadata --format-version 1 > /dev/null
+      - run: |
+          bun scripts/checkdeps.ts | tee checkdeps.out || true
+          # three known upward or unknown-unit errors are the baseline
+          test "$(grep -c '^ERROR' checkdeps.out)" -le 3

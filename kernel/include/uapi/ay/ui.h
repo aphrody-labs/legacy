@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT OR Apache-2.0 */
 /*
- * src/include/uapi/ay/ui.h - Pure C Material 3 Expressive UI, Spring Motion, Layout & HTML/WGSL ABI
+ * kernel/include/uapi/ay/ui.h - Pure C Material 3 Expressive UI, Spring Motion, Layout & HTML/WGSL ABI
  *
  * Canonical C ABI shared identically across:
  *   - WebAssembly 3.0 browser runtime (`aysys.wasm`, `m3.wasm`) + WebGPU WGSL + DOM A11y tree

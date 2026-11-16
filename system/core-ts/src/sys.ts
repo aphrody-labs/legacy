@@ -1,5 +1,5 @@
 // Direct bun:ffi + WebAssembly bridge to the central Layer-0 Pure C, Assembly & WebAssembly Core (`src/` -> `libaysys`).
-// Contract: src/include/ay/sys.h
+// Contract: kernel/include/ay/sys.h
 import { dlopen, FFIType, ptr, suffix } from "bun:ffi";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";

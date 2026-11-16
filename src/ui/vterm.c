@@ -7,7 +7,7 @@
  * synchronized output (?2026), OSC 7/8/10/11/52/133, and 20-byte WebGPU cell
  * packing with shared palettes from `src/ui/shell_kit.c`.
  */
-#include "../include/ay/sys.h"
+#include "../../kernel/include/ay/sys.h"
 
 enum {
 	VT_GROUND = 0,

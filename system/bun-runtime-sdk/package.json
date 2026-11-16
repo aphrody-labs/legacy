@@ -9,7 +9,7 @@
     "directory": "system/bun-runtime-sdk"
   },
   "files": [
-    "src",
+    "kernel",
     "include",
     "runtime.d.ts",
     "docs/core-native-source-receipt.json",

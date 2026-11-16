@@ -1,6 +1,6 @@
 // Applies the [[move]] and [[group]] rows of tools/layout.toml: renames each path, then rewrites every reference to it
 // (relative paths recomputed against the old tree, root-relative paths by prefix, join("a","b") sequences).
-// usage: bun scripts/relayout.ts apply|check [--batch N] | table [--write]
+// usage: bun scripts/relayout.ts apply|check [--batch N | --upto N] | table [--write]
 import { existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { posix } from "node:path";
 import { dirname, join } from "node:path";
@@ -15,6 +15,8 @@ const cfg = Bun.TOML.parse(readFileSync(join(root, "tools/layout.toml"), "utf8")
 const mode = Bun.argv[2] ?? "check";
 const bi = Bun.argv.indexOf("--batch");
 const batch = bi > 0 ? Number(Bun.argv[bi + 1]) : undefined;
+const ui = Bun.argv.indexOf("--upto");
+const upto = ui > 0 ? Number(Bun.argv[ui + 1]) : undefined;
 
 const all: Move[] = [...(cfg.move ?? [])];
 for (const g of cfg.group ?? [])

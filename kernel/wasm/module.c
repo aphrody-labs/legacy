@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 /*
- * src/wasm/module.c - Zero-allocation WebAssembly 3.0 binary parser, LEB128 codec & SIMD128 kernels
+ * kernel/wasm/module.c - Zero-allocation WebAssembly 3.0 binary parser, LEB128 codec & SIMD128 kernels
  */
 #include "../include/ay/sys.h"
 

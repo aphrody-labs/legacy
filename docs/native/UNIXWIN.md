@@ -71,7 +71,7 @@ Owner update (2026-11-15): merge third-party and first-party linux, unix, posix 
 | --- | --- | --- | --- | --- |
 | Unix tools | `src/gnu` (first-party GNU ports), `src/winux/*`, `ay applet` | coreutils, findutils, diffutils, sed (uutils forks) | `src/gnu` against uutils against WinuxCmd: resolved per applet above | fold `src/gnu` packages that WinuxCmd and uutils both cover into the provider table |
 | Shell | `src/rubash`, `src/ruline`, `src/niubash` | rubash, ruline, niubash (re-import source), fish-shell, tree-sitter-bash | `system/machine-ts/shells` and the shell matrix entry for niubash | point the matrix at `cargo build -p niubash` and drop the pin-based `just unixwin-*` build |
-| C core and kernel | `src/arch`, `src/kernel`, `src/drivers`, `src/include` | linux, linux-cachyos, kernel-patches, glibc | `infra/linux/{kernels,patchsets}.toml` carry kernel config next to the pins | none: sources stay pins, config stays data |
+| C core and kernel | `kernel/arch`, `kernel/core`, `hardware/drivers`, `kernel/include` | linux, linux-cachyos, kernel-patches, glibc | `infra/linux/{kernels,patchsets}.toml` carry kernel config next to the pins | none: sources stay pins, config stays data |
 | POSIX personality | `src/posix/{omarchy,wslg}` | archlinux-docker, archlinux-wsl, cachyos-*, cachy-chroot, pkg-linux | `infra/wsl-distro`, `infra/linux/images`, `system/machine-ts/wsl` | move to `device/os/*` as `docs/ARCHITECTURE.md` 9.3 plans |
 | NT personality | `src/nt/status.c`, `src/wine/server_proto.c`, `apps/nt` | wine, vkd3d-proton | `infra/linux/cross-windows` | none yet |
 
