@@ -4,7 +4,7 @@
 
 # Aphrody
 
-Generalist monorepo built in the open; the core is `ay`: Bun built from its fork without JavaScriptCore and WebKit, with the Unix userland in their place (bash, coreutils, binutils...), a universal runner for TypeScript/JavaScript, bash and Rust, and a module and extension system with Cargo/crates.io and Bun/npm built in (AOT, LTO). Around it: the platform (OS layers, deploy, the fleet as one server, agents) and the front ends (web, CLI, TUI, GUI, mobile) consuming the `open` and `auto` libraries. Media and games (`src/tv`, Bevy) are domains among others. Spec and work order: [docs/native/ROADMAP.md](docs/native/ROADMAP.md). Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Logo: [docs/logo/aphrody.png](docs/logo/aphrody.png).
+Generalist monorepo built in the open; the core is `ay`: Bun built from its fork without JavaScriptCore and WebKit, with the Unix userland in their place (bash, coreutils, binutils...), a universal runner for TypeScript/JavaScript, bash and Rust, and a module and extension system with Cargo/crates.io and Bun/npm built in (AOT, LTO). Around it: the platform (OS layers, deploy, the fleet as one server, agents) and the front ends (web, CLI, TUI, GUI, mobile) consuming the `open` and `auto` libraries. Ecosystem apps and frameworks consume that core: our Bevy fork assembled with Steam and Epic Games is one, the Craft Apps another, media (`src/tv`) another. Spec and work order: [docs/native/ROADMAP.md](docs/native/ROADMAP.md). Contract: [AGENTS.md](AGENTS.md) and [GEMINI.md](GEMINI.md). Logo: [docs/logo/aphrody.png](docs/logo/aphrody.png).
 
 ## Layout
 

@@ -4,7 +4,7 @@ Read by every agent CLI (Claude Code, Codex, Antigravity, OpenCode, Pi, Zed). Th
 
 ## 1. What Aphrody is
 
-Aphrody (`aphrody-labs/aphrody`, checkout folder named after `tools/identity.toml`) is a public, generalist monorepo; the core is `ay`: Bun built from its fork without JavaScriptCore and WebKit, with the Unix userland in their place (bash, coreutils, binutils...), a universal runner for TypeScript/JavaScript, bash and Rust, and a module and extension system with Cargo/crates.io and Bun/npm built in (AOT, LTO). Around it: the platform (OS layers, deploy, the fleet as one server, agents) and the front ends (web, CLI, TUI, GUI, mobile) consuming the `open` and `auto` libraries. Media and games (`src/tv`, Bevy) are domains among others. Say what is built and what is not.
+Aphrody (`aphrody-labs/aphrody`, checkout folder named after `tools/identity.toml`) is a public, generalist monorepo; the core is `ay`: Bun built from its fork without JavaScriptCore and WebKit, with the Unix userland in their place (bash, coreutils, binutils...), a universal runner for TypeScript/JavaScript, bash and Rust, and a module and extension system with Cargo/crates.io and Bun/npm built in (AOT, LTO). Around it: the platform (OS layers, deploy, the fleet as one server, agents) and the front ends (web, CLI, TUI, GUI, mobile) consuming the `open` and `auto` libraries. Ecosystem apps and frameworks consume that core: our Bevy fork assembled with Steam and Epic Games is one app and framework, the Craft Apps another, media (`src/tv`) another. Say what is built and what is not.
 
 ## 2. Layout (check with `fd -d 1`; the lists are examples)
 
