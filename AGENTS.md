@@ -3,6 +3,7 @@
 Contract for every agent CLI. Spec and work order: [`docs/native/ROADMAP.md`](docs/native/ROADMAP.md). Repo, folder, binary and scope names come from [`tools/identity.toml`](tools/identity.toml).
 
 ## Sources of truth
+- The only third-party code and sources of truth in the tree are `third_party/linux` and `third_party/chromium`. Everything else (other upstreams, sites, repos) is ideas and inspiration, never a pin or a dependency.
 - Vision: [storytold/craft-anything](https://github.com/storytold/craft-anything).
 - Stack: [zed-industries/zed](https://github.com/zed-industries/zed).
 - Design, UI and UX: [design.google](https://design.google/).
