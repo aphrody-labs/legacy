@@ -1,0 +1,89 @@
+# Craft Apps: one entry per app. Sources are the pins `third_party/<repo>` of src.lock.json (aphrody-labs forks of storytold/<repo>),
+# built from upstream by `craft build`; nothing is copied into this tree. `package` is the native app, `cli` its command-line sibling.
+[app.photocraft]
+repo = "photocraft"
+package = "photocraft"
+cli = "photocraft-cli"
+
+[app.pdfcraft]
+repo = "pdfcraft"
+package = "pdfcraft"
+cli = "pdfcraft-cli"
+
+[app.filmcraft]
+repo = "filmcraft"
+package = "filmcraft"
+cli = "filmcraft-cli"
+
+[app.wordcraft]
+repo = "wordcraft"
+package = "wordcraft"
+cli = "wordcraft-cli"
+
+[app.lightcraft]
+repo = "lightcraft"
+package = "lightcraft"
+cli = "lightcraft-cli"
+
+[app.vectorcraft]
+repo = "vectorcraft"
+package = "vectorcraft"
+cli = "vectorcraft-cli"
+
+[app.effectcraft]
+repo = "effectcraft"
+package = "effectcraft"
+cli = "effectcraft-cli"
+
+[app.cadcraft]
+repo = "cadcraft"
+package = "cadcraft"
+cli = "cadcraft-cli"
+
+[app.gridcraft]
+repo = "gridcraft"
+package = "gridcraft"
+cli = "gridcraft-cli"
+
+[app.designcraft]
+repo = "designcraft"
+package = "designcraft"
+cli = "designcraft-cli"
+
+[app.figcraft]
+repo = "figcraft"
+package = "figcraft"
+cli = "figcraft-cli"
+
+[app.deckcraft]
+repo = "deckcraft"
+package = "deckcraft"
+cli = "deckcraft-cli"
+
+[app.soundcraft]
+repo = "soundcraft"
+package = "soundcraft"
+cli = "soundcraft-cli"
+
+[app.anicraft]
+repo = "anicraft"
+package = "anicraft"
+
+[app.texturecraft]
+repo = "texturecraft"
+package = "texturecraft"
+cli = "texturecraft-cli"
+
+[app.materialcraft]
+repo = "materialcraft"
+package = "materialcraft"
+cli = "materialcraft-cli"
+
+[app.craft-anything]
+repo = "craft-anything"
+package = "craft-anything"
+cli = "craft-anything-cli"
+
+[app.launcher]
+repo = "craft-launcher"
+package = "artcraft-launcher"
