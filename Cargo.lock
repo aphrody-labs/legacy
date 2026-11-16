@@ -502,6 +502,7 @@ dependencies = [
  "aphrody-core",
  "aphrody-docs",
  "aphrody-electron-migrate",
+ "aphrody-env",
  "aphrody-machine",
  "aphrody-omarchy",
  "aphrody-re",
