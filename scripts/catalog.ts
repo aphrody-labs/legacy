@@ -21,6 +21,7 @@
 // dependency so a profile repository can run it from a sparse checkout).
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
+import { captures, factsOfSources } from "./ay-facts.ts";
 
 const root = join(import.meta.dir, "..").replaceAll("\\", "/");
 const args = Bun.argv.slice(2);
@@ -130,8 +131,15 @@ function packages(): Entry[] {
   });
 }
 
+/** First prose paragraph of a README: a top-level paragraph node of the Markdown grammar (tree-sitter through `aphrody-code query`); the block scanner below runs where ay is absent. */
 function firstParagraph(file: string): string {
   if (!exists(file)) return "";
+  const text = read(file).replace(/<!-- catalog:begin [\s\S]*?<!-- catalog:end -->/g, "");
+  const ff = factsOfSources(new Map([["README.md", text]]), ["paragraph"])?.get("README.md");
+  if (ff && !ff.error) {
+    const p = captures(ff, "paragraph").find((c) => (c.k === "section" || c.k === "document") && !/^(!\[|<)/.test(c.t));
+    return oneLine(p?.t);
+  }
   const body = read(file).replace(/<!-- catalog:begin [\s\S]*?<!-- catalog:end -->/g, "").replace(/<!--[\s\S]*?-->/g, "").split(/\r?\n\r?\n/).map((b) => b.trim()).find((b) => b && !b.startsWith("#") && !b.startsWith("<") && !b.startsWith("|") && !b.startsWith("```") && !b.startsWith("!["));
   return oneLine(body);
 }

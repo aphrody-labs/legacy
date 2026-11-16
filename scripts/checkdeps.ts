@@ -17,9 +17,13 @@
 // -> error unless ! rule. Unlayered units -> error. Exit code 1 on any error.
 //
 // Units: Cargo.toml [package], package.json, pyproject.toml [project] (uv; edges from [tool.uv.sources]).
-// Usage: bun scripts/checkdeps.ts [--root DIR] [--json] [--graph] [--units] [--affected REF]
+// --imports: also read the edges from the code. The imports of every first-party TS/JS file are tree-sitter nodes
+// (`aphrody-code query`, src/core/src/facts.rs); a bare specifier naming another workspace package, or a relative one that
+// leaves its unit, is an edge even when package.json does not declare it, and goes through the same layer rules.
+// Usage: bun scripts/checkdeps.ts [--root DIR] [--json] [--graph] [--units] [--affected REF] [--imports]
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, join, posix, relative, resolve } from "node:path";
+import { factsOf } from "./ay-facts.ts";
 
 type Rule = { kind: "+" | "!" | "-"; path: string; from: string };
 type Scope = {
@@ -218,6 +222,42 @@ for (const u of units.values()) {
   u.deps = [...out].sort();
 }
 
+// 2b. Edges read from the code (--imports). Tests, fixtures and declaration files are exempt like dev-dependencies.
+const undeclared: Finding[] = [];
+if (args.includes("--imports")) {
+  const bunDirs = [...units.values()].filter((u) => u.kind === "bun").map((u) => u.dir);
+  const listed = Bun.spawnSync(["git", "-C", root, "ls-files", "-z", "--", ...bunDirs]).stdout.toString().split("\0");
+  const files = listed.filter(
+    (p) =>
+      /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/.test(p) &&
+      !/(^|\/)(node_modules|tests?|__tests__|fixtures?|examples?|benches)\//.test(p) &&
+      !/\.(test|spec|d)\./.test(p),
+  );
+  const facts = factsOf(root, files, ["import.source"]);
+  if (!facts) {
+    console.error("checkdeps: --imports needs aphrody-code with `code query` (cargo build -p aphrody-core --features cli, or APHRODY_CODE_BIN)");
+    process.exit(2);
+  }
+  const dirsByDepth = [...units.keys()].sort((a, b) => b.length - a.length);
+  const unitFor = (p: string) => dirsByDepth.find((d) => p === d || p.startsWith(d + "/"));
+  const seen = new Set<string>();
+  for (const [file, ff] of facts) {
+    const from = unitFor(file);
+    const u = from ? units.get(from) : undefined;
+    if (!u || u.kind !== "bun") continue;
+    for (const c of ff.matches.flatMap((m) => m.c)) {
+      const spec = c.t.replace(/^["'`]|["'`]$/g, "");
+      const to = spec.startsWith(".")
+        ? unitFor(posix.normalize(posix.join(posix.dirname(file), spec)))
+        : byJsName.get(spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0]!);
+      if (!to || to === from || u.deps.includes(to) || seen.has(from + ">" + to)) continue;
+      seen.add(from + ">" + to);
+      u.deps = [...u.deps, to].sort();
+      undeclared.push({ level: "warn", from: from!, to, msg: `imported in the code, not declared in package.json (${file}:${c.l})` });
+    }
+  }
+}
+
 // 3. Scopes from DEPS.rules, inherited downward.
 // A line `sub/dir: directive` applies to that subdirectory. It lets the parent repo declare
 // rules for gitlinked submodules (apps/*) without writing into them.
@@ -274,7 +314,7 @@ const matchRule = (s: Scope, target: string) =>
     .sort((a, b) => b.path.length - a.path.length)[0];
 
 // 4. Check edges.
-const findings: Finding[] = [];
+const findings: Finding[] = [...undeclared];
 for (const u of units.values())
   for (const p of scopeFor(u.dir).uses) {
     if (units.has(p)) u.deps = [...new Set([...u.deps, p])].sort();

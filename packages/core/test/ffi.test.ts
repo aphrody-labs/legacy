@@ -6,6 +6,7 @@ import {
   blake3Hex,
   classification,
   contentHash,
+  facts,
   index,
   indexEach,
   languages,
@@ -59,6 +60,17 @@ native("bun:ffi round-trip with aphrody_core_capi", () => {
       "(function_item name: (identifier) @n)",
     );
     expect(caps).toHaveLength(2);
+  });
+
+  test("facts: comments and strings are nodes, a regex literal is not a string", () => {
+    const f = facts("a.ts", "import { a } from 'node:zlib'; // note\nconst r = /from 'node:fs'/; const s = \"x\";");
+    const cap = (n: string) => f.matches.flatMap((m) => m.c).filter((c) => c.n === n).map((c) => c.t);
+    expect(f.lang).toBe("typescript");
+    expect(cap("import.source")).toEqual(["'node:zlib'"]);
+    expect(cap("import.name")).toEqual(["a"]);
+    expect(cap("comment")).toEqual(["// note"]);
+    expect(cap("string")).toEqual(["'node:zlib'", '"x"']);
+    expect(() => facts("a.unknown", "")).toThrow();
   });
 
   test("indexEach streams through JSCallback and matches index()", () => {

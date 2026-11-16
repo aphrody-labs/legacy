@@ -19,8 +19,18 @@ default = []
 # One content-addressed stage graph over the monorepo: detect -> parse/triage -> deep -> SQLite
 # (WAL, FTS5), with a Valkey cache/queue shared by the fleet (src/core/src/pipeline, docs/native/PIPELINE.md).
 pipeline = ["dep:rusqlite", "dep:zstd"]
+# The `aphrody-code` binary and `aphrody_core::cli`: facts queries, outlines, grammar registry and its upstream sync.
+cli = ["dep:clap", "dep:ureq", "dep:toml", "dep:zstd"]
+
+[[bin]]
+name = "aphrody-code"
+path = "src/bin/code.rs"
+required-features = ["cli"]
 
 [dependencies]
+clap = { workspace = true, optional = true }
+ureq = { workspace = true, optional = true }
+toml = { workspace = true, optional = true }
 rusqlite = { workspace = true, features = ["bundled"], optional = true }
 zstd = { workspace = true, optional = true }
 blake3.workspace = true
@@ -41,6 +51,7 @@ tree-sitter-bash.workspace = true
 tree-sitter-html.workspace = true
 tree-sitter-css.workspace = true
 tree-sitter-lua.workspace = true
+tree-sitter-md.workspace = true
 serde.workspace = true
 streaming-iterator.workspace = true
 ropey.workspace = true

@@ -16,6 +16,7 @@ import { sensitiveValues } from "../packages/env-kit/src/discover.ts";
 import { isNonSourceProse, sourceLanguage } from "../packages/i18n/src/detect.ts";
 import { findRoot, loadIdentity } from "./identity.ts";
 import { classes, dataPattern, namesOf, trackedSkip } from "./identity-literals.ts";
+import { CODE_FACTS, factsOf, innerText, segmentLines, type FileFacts } from "./ay-facts.ts";
 
 export type Hit = { rule: string; file: string; line: number; text: string };
 export type Rule = {
@@ -27,6 +28,20 @@ export type Rule = {
   line?: (l: string, f: string) => boolean;
   /** path scanner (file names) */
   path?: (f: string) => boolean;
+  /**
+   * Code files with a grammar (CODE_FACTS) are read as tree-sitter nodes through `aphrody-code query`: "strings" matches
+   * only string literals, "text" comments and string literals; identifiers, regex literals and the rest of the code
+   * are never matched. Without ay, or for a file without a grammar, `line` runs on the whole line.
+   */
+  scope?: "strings" | "text";
+  /** Matcher for one comment or string line under `scope`; default `line`. `ctx` is the physical line. */
+  seg?: (text: string, kind: "comment" | "string", f: string, ctx: () => string) => boolean;
+  /** With `seg`: reduce each comment or string piece to its prose; the pieces of one source line are joined and `seg` runs once on the line. */
+  prep?: (kind: "comment" | "string", text: string) => string;
+  /** Rule over the imports and calls of a file's tree-sitter facts: the hit lines. */
+  ast?: (ff: FileFacts) => number[];
+  /** The rule's own tree-sitter query for `ast` (it must compile for every file the rule's `files` accepts): only what the rule reads leaves the parser. */
+  query?: string;
 };
 
 const SOURCE_LANG = sourceLanguage();
@@ -103,13 +118,14 @@ const PD_EMAIL = /[\w.+-]+@(?!example\.|exemple\.|users\.noreply\.github\.com|ap
 // Lines where a dotted quad is a version, an OID or a user agent, and where an e-mail credits an upstream author or is a sample.
 const PD_VERSIONISH = /version|chrom(e|ium)|mozilla|user.?agent|rustc|\bv8\b|\boid\b|cargo|\bbun\b|\bnode\b|\{text\}|CN=|\b\d+\.\d+\.\d+\.\d+\s*(release|build|nightly)|"ua"|"EN-|"[A-Z]+_?VERSION/i;
 const PD_CREDIT = /copyright|\(c\)|author|signed-off|co-authored|maintainer|contact|mailto:|user:pass@|git@github|jane\.doe/i;
-export function personalData(l: string): boolean {
+/** `ctx`: the whole source line when `l` is only a string literal of it (version and credit words live around the literal); read only when a pattern matched. */
+export function personalData(l: string, ctx: () => string = () => l): boolean {
   const re = sitePattern();
   return (
     (re?.test(l) ?? false) ||
     PD_USERPATH.test(l) ||
-    (PD_IPV4.test(l) && !PD_VERSIONISH.test(l)) ||
-    (PD_EMAIL.test(l) && !PD_CREDIT.test(l))
+    (PD_IPV4.test(l) && !PD_VERSIONISH.test(ctx())) ||
+    (PD_EMAIL.test(l) && !PD_CREDIT.test(ctx()))
   );
 }
 const ABS_SRC = /\b[A-Za-z]:[\\/]src\b|\/srv\/src\b/; // the checkout location: fine in prose and fleet host config, not in code
@@ -190,6 +206,58 @@ for (const [names, what, page] of [
 ] as [string, string, string][])
   for (const n of names.split(" ")) BUN_REPLACED[n] = bunAlt(what, page);
 
+const ZLIB_SYNC = /^(gzipSync|gunzipSync|deflateSync|inflateSync|zstdCompressSync|zstdDecompressSync)$/;
+const NODE_MODULES = /^node:(child_process|https?|test|assert(\/strict)?|sqlite|readline)$/;
+/**
+ * node-builtin on tree-sitter facts (the same set as NODE_REPLACED): import specifiers (import, export-from, dynamic
+ * import, require) of those modules, named imports of node:zlib that Bun has sync twins for, and the calls
+ * fileURLToPath(), createHash() and promisify(). Text inside comments, strings and regex literals is not code.
+ */
+export function nodeBuiltinLines(ff: FileFacts): number[] {
+  const lines = new Set<number>();
+  const zlib = new Map<number, { line: number; hit: boolean }>();
+  for (const m of ff.matches) {
+    const src = m.c.find((c) => c.n === "import.source");
+    if (src) {
+      const spec = src.t.replace(/^["'`]|["'`]$/g, "");
+      if (NODE_MODULES.test(spec)) lines.add(src.l);
+      if (spec === "node:zlib") {
+        const z = zlib.get(src.s) ?? { line: src.l, hit: false };
+        z.hit ||= m.c.some((c) => c.n === "import.name" && ZLIB_SYNC.test(c.t));
+        zlib.set(src.s, z);
+      }
+    }
+    for (const c of m.c) {
+      if (c.n !== "call") continue;
+      const last = c.t.split(".").pop();
+      if (c.t === "fileURLToPath" || last === "createHash" || last === "promisify") lines.add(c.l);
+    }
+  }
+  for (const z of zlib.values()) if (z.hit) lines.add(z.line);
+  return [...lines];
+}
+
+/** JavaScript, TypeScript and TSX: what nodeBuiltinLines reads, with the module and callee filters in the query. */
+const NODE_BUILTIN_QUERY = `
+(import_statement
+  (import_clause
+    [(identifier) @import.name
+     (named_imports (import_specifier name: (_) @import.name))
+     (namespace_import (identifier) @import.name)])?
+  source: (string) @import.source (#match? @import.source "^.node:"))
+(export_statement source: (string) @import.source (#match? @import.source "^.node:"))
+(call_expression function: (import) arguments: (arguments . (string) @import.source (#match? @import.source "^.node:")))
+((call_expression function: (identifier) @_fn arguments: (arguments . (string) @import.source)) (#eq? @_fn "require") (#match? @import.source "^.node:"))
+((call_expression function: (identifier) @call) (#any-of? @call "fileURLToPath" "createHash" "promisify"))
+((call_expression function: (member_expression) @call) (#match? @call "[.](createHash|promisify)$"))
+`;
+
+/** The human-language part of one comment or string line: markers and quotes removed; a string needs 24+ characters. */
+function proseOfSegment(kind: "comment" | "string", text: string): string {
+  const t = innerText(kind, text);
+  return kind === "string" && t.length < 24 ? "" : t;
+}
+
 /** Locale catalogues are the only place a non-English string may live. */
 const LOCALE_FILE =
   /(^|\/)(locales?|messages|i18n|l10n|translations?)\/|(^|[./])(fr|fr-FR)\.(json|ftl|arb|po|xlf|xliff|properties|ts)$|\/values-fr\/|\.fr\.(md|mdx|html)$|(^|\/)(fr|es|ja|zh-CN|de|it|pt)\//;
@@ -217,6 +285,9 @@ export const RULES: Rule[] = [
     why: "Source is English (the sourceLocale of packages/i18n/i18n.config.json); user-facing text goes through i18n catalogues and nothing else is written in another language (language detector: eld)",
     files: (f) => (CODE.test(f) || DOC.test(f)) && !LOCALE_FILE.test(f),
     line: (l, f) => isNonSourceProse(l, CODE.test(f), SOURCE_LANG),
+    scope: "text",
+    prep: proseOfSegment,
+    seg: (t) => t !== "" && isNonSourceProse(t, false, SOURCE_LANG),
   },
   {
     id: "node-builtin",
@@ -229,6 +300,8 @@ export const RULES: Rule[] = [
       !/^\.agents\/skills\/(vercel-|jules-|stitch-)/.test(f) /* skills mirrored from Vercel and Google keep their upstream code */ &&
       !/\/test\/.*\.test\.ts$/.test(f) /* fixtures quote node: imports as data */,
     line: (l) => NODE_REPLACED.some(([re]) => re.test(l)),
+    ast: nodeBuiltinLines,
+    query: NODE_BUILTIN_QUERY,
   },
   {
     id: "bun-dependency",
@@ -313,12 +386,15 @@ export const RULES: Rule[] = [
       const t = IDENTITY!.data ? l.replace(IDENTITY!.data, " ") : l;
       return IDENTITY!.cls.some((re) => ((re.lastIndex = 0), re.test(t)));
     },
+    scope: "strings",
   },
   {
     id: "personal-data",
     why: "Personal or site-specific value (identity, account, host, address, user path); resolve it at run time (packages/env-kit/src/discover.ts, loaders/shell/discover.sh) and name roles in prose. The rule also flags every value the discovery cache holds; it skips that part when the cache is absent (CI)",
     files: (f) => !MANIFEST.test(f) && !/(^|\/)site\.example\.toml$/.test(f) && !/\.test\.|(^|\/)(tests?|e2e|fixtures?)\/|cloudflare|^src\/|^docs\/proofs\/|^\.agents\/skills\//i.test(f) && !/\.(png|jpg|svg|wasm|woff2?|ico|pdf|lock|der)$/.test(f),
     line: (l) => personalData(l),
+    scope: "strings",
+    seg: (t, _kind, _f, ctx) => personalData(t, ctx),
   },
   {
     id: "ssh-alias",
@@ -416,15 +492,48 @@ export function listFiles(root: string, paths: string[] = []): string[] {
     .filter((f) => !skipped(f));
 }
 
+const ASPECTS = { text: ["comment", "string"], strings: ["string"] } as const;
+
+/** Rules that read the same nodes share one query call: the key names the call. */
+const groupKey = (r: Rule) => (r.query ? `query:${r.id}` : r.ast ? "imports" : r.scope!);
+
+/**
+ * Facts for the files whose rules read tree-sitter nodes: one `aphrody-code query` call per kind of node wanted (a rule
+ * that needs imports does not pay for the strings of the whole tree), each parsed in parallel and cached by content.
+ * undefined when the binary is absent (every rule then keeps its line scanner).
+ */
+function prefetchFacts(root: string, files: string[], rules: Rule[]): Map<string, Map<string, FileFacts>> | undefined {
+  const groups = new Map<string, { only: string[]; query?: string; files: Set<string> }>();
+  for (const f of files) {
+    if (!CODE_FACTS.test(f)) continue;
+    for (const r of rules) {
+      if (!(r.scope || r.ast) || !(r.files?.(f) ?? true) || allowed(r.id, f)) continue;
+      const g = groups.get(groupKey(r)) ?? groups.set(groupKey(r), { only: r.ast ? ["import", "call"] : [...ASPECTS[r.scope!]], query: r.query, files: new Set() }).get(groupKey(r))!;
+      g.files.add(f);
+    }
+  }
+  const out = new Map<string, Map<string, FileFacts>>();
+  for (const [key, g] of groups) {
+    const got = factsOf(root, [...g.files], g.query ? [] : g.only, undefined, join(root, "var", "cache", "facts"), g.query);
+    if (!got) return undefined;
+    out.set(key, got);
+  }
+  return out;
+}
+
+/** engine "lines" (or HYGIENE_ENGINE=lines) forces the line scanners: the reference of `hygiene-compare.ts`. */
 export function scan(
   root: string,
-  opts: { rules?: string[]; paths?: string[] } = {},
+  opts: { rules?: string[]; paths?: string[]; engine?: "ast" | "lines" } = {},
 ): Hit[] {
   const rules = RULES.filter(
     (r) => !opts.rules?.length || opts.rules.includes(r.id),
   );
   const hits: Hit[] = [];
-  for (const f of listFiles(root, opts.paths)) {
+  const files = listFiles(root, opts.paths);
+  const engine = opts.engine ?? (process.env.HYGIENE_ENGINE === "lines" ? "lines" : "ast");
+  const facts = engine === "ast" ? prefetchFacts(root, files, rules) : undefined;
+  for (const f of files) {
     const abs = join(root, f);
     for (const r of rules)
       if (r.path?.(f) && !allowed(r.id, f))
@@ -436,15 +545,45 @@ export function scan(
         !allowed(r.id, f),
     );
     if (!need.length) continue;
-    let text: string;
-    try {
-      if (!existsSync(abs) || statSync(abs).size > 512_000) continue;
-      text = readFileSync(abs, "utf8");
-    } catch {
-      continue;
-    }
-    const lines = text.split("\n");
+    // The source is read on first use: a file whose rules all run on tree-sitter nodes is read only when a node hits.
+    let src: { text: string; lines: string[] } | null | undefined;
+    const source = () => {
+      if (src !== undefined) return src;
+      try {
+        src = !existsSync(abs) || statSync(abs).size > 512_000 ? null : ((t) => ({ text: t, lines: t.split("\n") }))(readFileSync(abs, "utf8"));
+      } catch {
+        src = null;
+      }
+      return src;
+    };
     for (const r of need) {
+      const ff = facts?.get(groupKey(r))?.get(f);
+      const parsed = ff && !ff.error ? ff : undefined;
+      if (parsed && (r.ast || r.scope)) {
+        const seen = new Set<number>();
+        const physical = (ln: number) => source()?.lines[ln - 1] ?? "";
+        const flag = (ln: number) => {
+          if (seen.has(ln)) return;
+          const phys = physical(ln);
+          if (phys.length > 600 || phys.includes("hygiene-ok")) return;
+          seen.add(ln);
+          hits.push({ rule: r.id, file: f, line: ln, text: phys.trim().slice(0, 160) });
+        };
+        if (r.ast) r.ast(parsed).forEach(flag);
+        else {
+          const rows = segmentLines(parsed, [...ASPECTS[r.scope!]]);
+          const match = r.seg ?? ((t: string) => r.line!(t, f));
+          if (r.prep) {
+            const byLine = new Map<number, string[]>();
+            for (const [ln, kind, seg] of rows) (byLine.get(ln) ?? byLine.set(ln, []).get(ln)!).push(r.prep(kind, seg));
+            for (const [ln, parts] of byLine) if (match(parts.filter(Boolean).join(" "), "string", f, () => physical(ln))) flag(ln);
+          } else for (const [ln, kind, seg] of rows) if (match(seg, kind, f, () => physical(ln))) flag(ln);
+        }
+        continue;
+      }
+      const body = source();
+      if (!body) continue;
+      const { text, lines } = body;
       if (r.id === "bun-dependency") {
         hits.push(...bunDependencyHits(f, text));
         continue;

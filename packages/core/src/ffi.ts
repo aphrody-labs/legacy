@@ -26,6 +26,10 @@ const symbols = {
     args: [FFIType.ptr, FFIType.ptr, FFIType.ptr],
     returns: FFIType.ptr,
   },
+  core_facts_json: {
+    args: [FFIType.ptr, FFIType.ptr, FFIType.ptr],
+    returns: FFIType.ptr,
+  },
   core_blake3_hex: {
     args: [FFIType.ptr, FFIType.u64, FFIType.ptr],
     returns: FFIType.i32,
@@ -179,6 +183,40 @@ export function query(path: string, content: string, sexpr: string): unknown[] {
       ptr(cstr(path)),
       ptr(cstr(content)),
       ptr(cstr(sexpr)),
+    ),
+  );
+}
+
+export interface FactCapture {
+  /** capture name: comment, string, import.source, import.name, call (code); heading, paragraph, ... (Markdown) */
+  n: string;
+  /** 1-based start and end line */
+  l: number;
+  el: number;
+  /** UTF-8 byte range */
+  s: number;
+  e: number;
+  t: string;
+  /** kind of the parent node */
+  k: string;
+}
+export interface FileFacts {
+  file: string;
+  lang: string;
+  error: string | null;
+  has_error: boolean;
+  matches: { p: number; c: FactCapture[] }[];
+}
+
+/** Facts of one file through the shared tree-sitter layer: the built-in facts query, or `sexpr` when given. */
+export function facts(path: string, content: string, sexpr?: string): FileFacts {
+  const lib = need();
+  return json(
+    lib,
+    lib.symbols.core_facts_json(
+      ptr(cstr(path)),
+      ptr(cstr(content)),
+      ptr(cstr(sexpr ?? "")),
     ),
   );
 }

@@ -87,6 +87,27 @@ mod core_exports {
         }
     }
 
+    /// Facts of one file (`aphrody_core::facts`): comments, strings, imports, calls, Markdown blocks. `query` is
+    /// null or empty for the built-in facts query of the grammar picked from `path`, else an S-expression query.
+    /// Returns a `FileMatches` JSON (short keys, see the module docs of `aphrody_core::facts`).
+    #[unsafe(no_mangle)]
+    pub extern "C" fn core_facts_json(
+        path: *const c_char,
+        content: *const c_char,
+        query: *const c_char,
+    ) -> *mut c_char {
+        use aphrody_core::facts::{Engine, Lang, Selector, scan_content};
+        // SAFETY: caller passes NUL-terminated strings valid for the call; `query` may be null.
+        let path_str = unsafe { c_str(path) };
+        let content_str = unsafe { c_str(content) };
+        let custom = if query.is_null() { "" } else { unsafe { c_str(query) } };
+        let Some(lang) = Lang::for_path(Path::new(path_str)) else {
+            return json_err(format!("unsupported language: {path_str}"));
+        };
+        let selector = if custom.is_empty() { Selector::Facts } else { Selector::Custom(custom.to_string()) };
+        json_ok(&scan_content(&mut Engine::new(selector), path_str, lang, content_str, &[]))
+    }
+
     /// BLAKE3 of `len` bytes at `data`, written as 64 hex chars + NUL into `out65`. 0 on success.
     #[unsafe(no_mangle)]
     pub extern "C" fn core_blake3_hex(data: *const u8, len: usize, out65: *mut u8) -> i32 {
@@ -282,6 +303,19 @@ mod tests {
         let p = CString::new("script.lua").unwrap();
         let c = CString::new("local function calc() goto done ::done:: return 1 end\n").unwrap();
         assert!(take(core_parse_json(p.as_ptr(), c.as_ptr())).contains("calc"));
+    }
+
+    #[test]
+    fn facts_json_reports_comments_strings_and_custom_queries() {
+        let p = CString::new("src/t.rs").unwrap();
+        let c = CString::new("fn f() { let s = \"lit\"; } // note\n").unwrap();
+        let out = take(core_facts_json(p.as_ptr(), c.as_ptr(), std::ptr::null()));
+        assert!(out.contains("\"n\":\"comment\"") && out.contains("// note") && out.contains("lit"), "{out}");
+        let q = CString::new("(function_item name: (identifier) @name)").unwrap();
+        let out = take(core_facts_json(p.as_ptr(), c.as_ptr(), q.as_ptr()));
+        assert!(out.contains("\"n\":\"name\"") && !out.contains("\"comment\""), "{out}");
+        let u = CString::new("x.unknown").unwrap();
+        assert!(take(core_facts_json(u.as_ptr(), c.as_ptr(), std::ptr::null())).contains("\"error\""));
     }
 
     #[test]

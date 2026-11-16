@@ -5,8 +5,12 @@
 //
 // Title: front-matter `title`, else the first `# ` heading, else the file name. One line: the first prose line after the
 // title, cut at the first sentence end. Nothing typed by hand: no count, date or version goes into the output.
+// Front matter, headings and paragraphs are nodes of the Markdown grammar (tree-sitter through `aphrody-code query`): a `# `
+// inside a code fence is not a heading, a paragraph inside a list or a quote is not the summary. Where ay is absent the
+// line scanner (describeLines) produces the index.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, posix } from "node:path";
+import { captures, factsOfSources, type FileFacts } from "./ay-facts.ts";
 
 const root = join(import.meta.dir, "..").replaceAll("\\", "/");
 const docs = join(root, "docs").replaceAll("\\", "/");
@@ -31,8 +35,50 @@ const clean = (s: string) =>
     .replace(/\|/g, "/")
     .trim();
 
-function describe(file: string): { title: string; line: string } {
-  const text = Bun.spawnSync(["git", "-C", root, "show", `HEAD:${file.slice(root.length + 1)}`]).stdout.toString().replace(/\r\n/g, "\n");
+const headText = (file: string): string =>
+  Bun.spawnSync(["git", "-C", root, "show", `HEAD:${file.slice(root.length + 1)}`]).stdout.toString().replace(/\r\n/g, "\n");
+
+const baseName = (file: string) => file.slice(file.lastIndexOf("/") + 1).replace(/\.mdx?$/, "");
+const finish = (file: string, title: string, line: string) => {
+  const cut = line.search(/[.:;]\s/);
+  if (cut > 20) line = line.slice(0, cut);
+  if (line.length > 120) line = `${line.slice(0, 117).trimEnd()}...`;
+  return { title: clean(title) || baseName(file), line: line.replace(/[.:;]$/, "") };
+};
+const EMBED = /^(!\[|\[!|:::|<)/;
+
+function describeNodes(file: string, ff: FileFacts): { title: string; line: string } {
+  let title = "";
+  let from = 0;
+  const fm = captures(ff, "frontmatter")[0];
+  if (fm) {
+    try {
+      const y = Bun.YAML.parse(fm.t.replace(/^---[ \t]*\n/, "").replace(/\n?---[ \t]*\n?$/, "")) as { title?: unknown } | null;
+      if (typeof y?.title === "string") title = y.title;
+    } catch {}
+    from = fm.e;
+  }
+  if (!title) {
+    const h1 = captures(ff, "heading").find((h) => /^#[ \t]+\S/.test(h.t) || /\n=+[ \t]*\n?$/.test(h.t));
+    if (h1) {
+      title = h1.t.split("\n")[0]!.replace(/^#[ \t]+/, "");
+      from = h1.e;
+    }
+  }
+  let line = "";
+  for (const p of captures(ff, "paragraph")) {
+    if (p.s < from || (p.k !== "section" && p.k !== "document")) continue;
+    for (const l of p.t.split("\n")) {
+      if (EMBED.test(l.trim())) continue;
+      line = clean(l);
+      if (line) break;
+    }
+    if (line) break;
+  }
+  return finish(file, title, line);
+}
+
+function describeLines(file: string, text: string): { title: string; line: string } {
   let body = text;
   let title = "";
   const fm = text.match(/^---\n([\s\S]*?)\n---\n/);
@@ -54,19 +100,19 @@ function describe(file: string): { title: string; line: string } {
     line = clean(l);
     if (line) break;
   }
-  const cut = line.search(/[.:;]\s/);
-  if (cut > 20) line = line.slice(0, cut);
-  if (line.length > 120) line = `${line.slice(0, 117).trimEnd()}...`;
-  const base = file.slice(file.lastIndexOf("/") + 1).replace(/\.mdx?$/, "");
-  return { title: clean(title) || base, line: line.replace(/[.:;]$/, "") };
+  return finish(file, title, line);
 }
 
 function render(): string {
   const groups = new Map<string, string[]>();
-  for (const f of walk(docs)) {
+  const files = walk(docs);
+  const texts = new Map(files.map((f) => [f, headText(f)]));
+  const facts = factsOfSources(new Map([...texts].map(([f, t]) => [posix.relative(root, f), t])), ["frontmatter", "heading", "paragraph"]);
+  for (const f of files) {
     const rel = posix.relative(docs, f);
     const top = rel.includes("/") ? rel.slice(0, rel.indexOf("/")) : ".";
-    const d = describe(f);
+    const ff = facts?.get(posix.relative(root, f));
+    const d = ff && !ff.error ? describeNodes(f, ff) : describeLines(f, texts.get(f)!);
     const row = `- [${d.title.replace(/[\[\]]/g, "")}](${encodeURI(rel)})${d.line ? `: ${d.line}` : ""}`;
     (groups.get(top) ?? groups.set(top, []).get(top)!).push(row);
   }

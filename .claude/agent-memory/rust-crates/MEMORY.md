@@ -1,2 +1,5 @@
 - [fr1 build traps](fr1-build-traps.md) — cargo lock stampede on loaded fr1, remote script upload, sd multiline, stale manifests, commit.ts
+- [fr1 cargo lock bypass](fr1-cargo-lock-bypass.md) — unshare+bind-mount a private package-cache lock, nested cargo target dirs, hung autocfg probe, broken main workspace
 - [electron-migrate facts](electron-migrate-facts.md) — Tauri v3/gpui fork pins, bun flags, fr1 scratch-build traps for src/electron-migrate
+- [fr2 scratch build, fast](fr2-scratch-build-fast.md) — git archive on fr2 (5 s), /srv/xbuild perms, package names (ay = aphrody), node_modules trick
+- [LLVM toolchain bump traps](llvm-toolchain-bump-traps.md) — rust-toolchain.toml clobbering, gitignored manifests, fr1 reboot/runners, ay size = tree-sitter clones, sd and $

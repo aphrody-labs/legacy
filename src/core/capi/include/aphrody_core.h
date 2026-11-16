@@ -85,6 +85,13 @@ char *core_parse_json(const char *path, const char *content);
 char *core_query_json(const char *path, const char *content, const char *query);
 
 /**
+ * Facts of one file (`aphrody_core::facts`): comments, strings, imports, calls, Markdown blocks. `query` is
+ * null or empty for the built-in facts query of the grammar picked from `path`, else an S-expression query.
+ * Returns a `FileMatches` JSON (short keys, see the module docs of `aphrody_core::facts`).
+ */
+char *core_facts_json(const char *path, const char *content, const char *query);
+
+/**
  * BLAKE3 of `len` bytes at `data`, written as 64 hex chars + NUL into `out65`. 0 on success.
  */
 int32_t core_blake3_hex(const uint8_t *data, size_t len, uint8_t *out65);

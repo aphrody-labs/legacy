@@ -1,4 +1,7 @@
+#[cfg(feature = "cli")]
+pub mod cli;
 pub mod extractor;
+pub mod facts;
 pub mod grammars;
 pub mod hash;
 pub mod index;
