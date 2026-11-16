@@ -35,6 +35,7 @@
 # where `BinLinkingShim.rs` embeds it from.
 
 [package]
+publish = false
 name = "bun_shim_impl"
 version.workspace = true
 edition.workspace = true

@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_sort_by_number"
 version.workspace = true
 edition.workspace = true

@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_js_printer"
 version.workspace = true
 edition.workspace = true

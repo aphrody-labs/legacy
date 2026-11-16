@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_csrf"
 version.workspace = true
 edition.workspace = true

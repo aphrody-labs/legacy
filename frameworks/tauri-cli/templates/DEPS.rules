@@ -1,0 +1,2 @@
+# checkdeps layer rules. Scaffolds of generated apps and plugins: surfaces that consume the published packages.
+layer = 5

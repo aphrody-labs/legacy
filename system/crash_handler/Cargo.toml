@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_crash_handler"
 version.workspace = true
 edition.workspace = true

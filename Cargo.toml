@@ -299,7 +299,7 @@ homepage = "https://labs.aphrody.com"
 
 [workspace.dependencies]
 # Common C ABI primitives (aphrody-labs/open crates/c-abi; one copy, pinned by Cargo.lock)
-c-abi = { git = "https://github.com/aphrody-labs/open", branch = "main" }
+c-abi = { git = "https://github.com/aphrody-labs/open", rev = "4598109aed3dd8b1230a61a1afaad3ca247a967e" }
 # First-party crates
 corelib = { version = "0.4.0", package = "aphrody-corelib", path = "frameworks/corelib", default-features = false }
 depot-cli = { version = "0.4.0", path = "system/depot/cli" }

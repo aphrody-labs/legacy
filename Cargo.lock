@@ -8459,8 +8459,8 @@ dependencies = [
 
 [[package]]
 name = "c-abi"
-version = "0.4.0"
-source = "git+https://github.com/aphrody-labs/open?branch=main#396f9669b97c4cb28fc5fd2e1a6d67bab394db9a"
+version = "0.5.0"
+source = "git+https://github.com/aphrody-labs/open?rev=4598109aed3dd8b1230a61a1afaad3ca247a967e#4598109aed3dd8b1230a61a1afaad3ca247a967e"
 dependencies = [
  "serde",
  "serde_json",

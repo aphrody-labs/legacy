@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_install"
 version.workspace = true
 edition.workspace = true

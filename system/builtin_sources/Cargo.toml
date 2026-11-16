@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_builtin_sources"
 version.workspace = true
 edition.workspace = true

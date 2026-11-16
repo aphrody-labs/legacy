@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_standalone_graph"
 version.workspace = true
 edition.workspace = true

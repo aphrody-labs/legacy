@@ -1,4 +1,5 @@
 [package]
+publish = false
 name = "bun_patch_jsc"
 version.workspace = true
 edition.workspace = true

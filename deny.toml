@@ -47,6 +47,10 @@ deny = [
   { name = "serde_yaml", reason = "archived; serde-saphyr or toml" },
 ]
 
+# Crates that are never published (publish = false: the Bun fork crates keep upstream manifests, which carry no license field).
+[licenses.private]
+ignore = true
+
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"

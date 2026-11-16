@@ -17,12 +17,19 @@ const docs = join(root, "docs").replaceAll("\\", "/");
 const OUT = join(docs, "README.md");
 const SKIP = new Set(["README.md", "node_modules", "graph"]); // graph/: generated graph reports
 
-// Committed files only (HEAD): the output must not depend on the working tree of one machine.
+// Tracked files plus new files git does not ignore, read from the working tree: a new doc and its index line land in
+// the same commit, and a clean checkout (CI) gives the same output as HEAD.
 const walk = (_dir: string): string[] =>
-  Bun.spawnSync(["git", "-C", root, "ls-tree", "-r", "-z", "--name-only", "HEAD", "--", "docs"])
+  Bun.spawnSync(["git", "-C", root, "ls-files", "-z", "-c", "-o", "--exclude-standard", "--", "docs"])
     .stdout.toString()
     .split("\0")
-    .filter((p) => /\.mdx?$/.test(p) && p !== "docs/README.md" && !p.split("/").some((s) => SKIP.has(s) || s.startsWith(".")))
+    .filter(
+      (p) =>
+        /\.mdx?$/.test(p) &&
+        p !== "docs/README.md" &&
+        existsSync(`${root}/${p}`) &&
+        !p.split("/").some((s) => SKIP.has(s) || s.startsWith(".")),
+    )
     .map((p) => `${root}/${p}`)
     .sort();
 
@@ -36,7 +43,7 @@ const clean = (s: string) =>
     .trim();
 
 const headText = (file: string): string =>
-  Bun.spawnSync(["git", "-C", root, "show", `HEAD:${file.slice(root.length + 1)}`]).stdout.toString().replace(/\r\n/g, "\n");
+  readFileSync(file, "utf8").replace(/\r\n/g, "\n");
 
 const baseName = (file: string) => file.slice(file.lastIndexOf("/") + 1).replace(/\.mdx?$/, "");
 const finish = (file: string, title: string, line: string) => {

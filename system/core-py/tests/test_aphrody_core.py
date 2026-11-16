@@ -1,4 +1,4 @@
-"""End-to-end tests for Aphrody Python core (C `aysys.dll`, `aphrody_core_capi.dll`, `aphrody_ffi.dll`, and PyO3 `aphrody_native`)."""
+"""End-to-end tests for Aphrody Python core (C `aysys.dll`, `aphrody_core_capi.dll`, and PyO3 `aphrody_native`)."""
 
 from __future__ import annotations
 

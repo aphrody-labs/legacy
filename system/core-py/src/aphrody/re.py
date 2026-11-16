@@ -1,4 +1,4 @@
-"""Reverse-engineering bindings over `aphrody-re` (`aphrody_native` PyO3 or `aphrody_ffi.dll` ctypes)."""
+"""Reverse-engineering bindings over `aphrody-re` (`aphrody_native` PyO3 or `aphrody_core_capi` ctypes, which absorbed the former `aphrody_ffi`)."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover
 
 @lru_cache(maxsize=1)
 def _ffi_lib() -> ctypes.CDLL:
-    lib = load_cdll("aphrody_ffi", subdirs=("release", "debug"))
+    lib = load_cdll("aphrody_core_capi", subdirs=("release", "debug"))
     lib.aphrody_abi_version.argtypes = []
     lib.aphrody_abi_version.restype = ctypes.c_uint32
 
@@ -48,7 +48,7 @@ def _ffi_lib() -> ctypes.CDLL:
 
 def _consume_ffi_str(ptr: int | None) -> str:
     if not ptr:
-        raise RuntimeError("aphrody_ffi returned NULL string pointer")
+        raise RuntimeError("aphrody_core_capi returned NULL string pointer")
     lib = _ffi_lib()
     try:
         raw = ctypes.cast(ptr, ctypes.c_char_p).value

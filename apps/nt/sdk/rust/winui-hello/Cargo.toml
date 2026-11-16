@@ -1,5 +1,6 @@
 # windows-rs sample conventions (crates/samples/reactor/*): version 0.0.0, edition 2024, unpublished.
 [package]
+publish = false
 name = "reactor-winui-hello"
 version = "0.0.0"
 edition.workspace = true

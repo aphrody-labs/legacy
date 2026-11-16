@@ -1,2 +1,2 @@
 # checkdeps layer rules. Inherited by subdirectories.
-layer = 3
+layer = 5 # agent-interaction components: a surface over the agent layer (imports @aphrody/mcp-ui, L4)
