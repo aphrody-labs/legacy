@@ -2,7 +2,7 @@
 // Never overwrites: identical files are skipped, differing files are reported as conflicts (the monorepo copy is kept).
 // Gate: gitleaks on the source tree first; files with findings are not copied (reported by path and rule, never by value).
 // --overwrite replaces differing files (only for directories created by the same restore run).
-// Usage: bun scripts/restore-import.ts --repo owner/name --to packages/x [--from sub] [--skip regex] [--dry] [--ref branch]
+// Usage: bun scripts/restore-import.ts --repo owner/name --to system/x [--from sub] [--skip regex] [--dry] [--ref branch]
 //        bun scripts/restore-import.ts --dir <path> --to <dest> ...
 import { existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";

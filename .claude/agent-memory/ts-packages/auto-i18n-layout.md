@@ -1,11 +1,11 @@
 ---
 name: auto-i18n-layout
-description: How apps/auto does i18n (packages/i18n, per-package catalogs, MF2), what is migrated, what stays French on purpose, and test-environment traps
+description: How apps/auto does i18n (frameworks/i18n-ts, per-package catalogs, MF2), what is migrated, what stays French on purpose, and test-environment traps
 metadata:
   type: project
 ---
 
-apps/auto is a standalone bun workspace (own bun.lock, @aphrody/* from npm), so it uses `messageformat` 4.x directly via `@auto/i18n` (packages/i18n), not `@aphrody/i18n`.
+apps/auto is a standalone bun workspace (own bun.lock, @aphrody/* from npm), so it uses `messageformat` 4.x directly via `@auto/i18n` (frameworks/i18n-ts), not `@aphrody/i18n`.
 Locales = catalogs present (`locales/registry.ts`), source locale in `locales/config.json`; no code path may name a language. Packages with own strings ship `locales/<tag>.json` + `src/i18n.ts` calling `createTranslator(locale, catalogs)`. Done: apps/extension, packages/{tenancy,mail,services,client}; packages store, pa, billing, domain, native are English comments only.
 **Why:** owner order 2026-11-15 (English source, multilingual via i18n, generalist: no hardcoded locale/format) and apps/auto core may move into open later, so catalogs stay next to each package.
 **How to apply:** left on purpose (needs request-locale plumbing or is immutable): `ErreurMetier`/`ErreurPa`/`ErreurMail`/`ErreurApi` messages and `verifier()` strings (API text, asserted by tests), `store/migrations/*.sql` (sha256 checksum in `schema_migration`: never edit applied migrations), SQL-built labels in `recherche-gestion.ts`, stored data keys/values (`bail expiré`, statuts). Customer-facing texts (dunning, renewal, document mail, xlsx/pdf exports) take `locale`; default is `AUTO_LOCALE_DOCUMENTS` or `fr` (tenants store no language yet). Roles/segments: `libellesRoles(locale)`/`libellesSegments(locale)`; the `LIBELLES*` constants stay French until apps/web picks a language. Next: apps/web screens, apps/api error codes + Accept-Language into `classeurGestion`/`texteRelance`, docs.

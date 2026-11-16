@@ -1,2 +1,3 @@
 - [Instruction audit traps](instruction-audit-traps.md) — untracked var/coh helpers, sd multiline, no shell-deny hook, stale ay binary, memory dir outside repo
 - [Identity rename tooling](identity-rename-tooling.md) — identity-literals / rename-test / literal-identity rule, forbidden-file handoffs, traps
+- [Relayout tooling](relayout-tooling.md) — tools/layout.toml + scripts/relayout.ts, infra split done, traps (untracked files, sd multiline, gh shim paths)

@@ -1,9 +1,9 @@
-// winuxcmd-i18n catalogs -> the repo i18n stack (packages/i18n): MF2 messages in packages/i18n/catalogs/winuxcmd/<locale>.json.
+// winuxcmd-i18n catalogs -> the repo i18n stack (frameworks/i18n-ts): MF2 messages in frameworks/i18n-ts/catalogs/winuxcmd/<locale>.json.
 //
 //   bun scripts/winuxcmd-i18n-import.ts [--src DIR] [--write]
 //
 // A WinuxCmd catalog is `{ schema, locale, messages: { "<key>": "<text with {name} placeholders>" } }`; the stack's format is MF2 (flat
-// key -> message, placeholders `{$name}`, see packages/i18n/i18n.config.json). The source locale of the namespace is English: its
+// key -> message, placeholders `{$name}`, see frameworks/i18n-ts/i18n.config.json). The source locale of the namespace is English: its
 // messages are the fallbacks compiled into WinuxCmd (winux-core `tr!`), so only translated locales are carried here.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -62,7 +62,7 @@ if (import.meta.main) {
     process.exit(2);
   }
   const src = srcAt >= 0 ? args[srcAt + 1]! : join(ROOT, "third_party/winuxcmd-i18n/catalogs");
-  const out = join(ROOT, "packages/i18n/catalogs/winuxcmd");
+  const out = join(ROOT, "frameworks/i18n-ts/catalogs/winuxcmd");
   let n = 0;
   for (const loc of existsSync(src) ? readdirSync(src) : []) {
     const file = join(src, loc, "catalog.json");
