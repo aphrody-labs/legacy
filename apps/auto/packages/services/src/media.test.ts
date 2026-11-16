@@ -1,5 +1,5 @@
 import { afterAll, expect, test } from "bun:test";
-import { executer, valider, type Services } from "@auto/automate";
+import { executer, valider, type Services } from "@aphrody/automate";
 import { gardeUrl } from "./automatisations";
 import { servicesMedia } from "./media";
 

@@ -1,5 +1,9 @@
 // Translator core without file access (safe in a browser bundle); `createTranslator` in i18n.ts adds the config defaults.
-import { getAdapter, type MessageAdapter, type MessageArgs } from "./adapter.ts";
+import {
+  getAdapter,
+  type MessageAdapter,
+  type MessageArgs,
+} from "./adapter.ts";
 import { isRtl } from "./mf2.ts";
 import { matchLocale } from "./match.ts";
 

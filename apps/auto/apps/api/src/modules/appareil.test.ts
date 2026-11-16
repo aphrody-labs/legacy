@@ -29,7 +29,7 @@ beforeAll(async () => {
   });
   const creer = async (email: string) => {
     const r = await api("/sign-up/email", { email, password: "mot-de-passe-test-appareil", name: "Appareil QA" });
-    if (r.status !== 200) throw Error("Inscription QA échouée");
+    if (r.status !== 200) throw Error("QA sign-up failed");
     return r.headers
       .getSetCookie()
       .map((x) => x.split(";")[0])
@@ -44,7 +44,7 @@ afterAll(async () => {
   await server?.stop(true);
   await drop?.();
 });
-test("Appareil : client autorisé, attente/poll borné, approbation liée et cookie HttpOnly sans jeton URL", async () => {
+test("Device: authorized client, bounded wait/poll, bound approval and HttpOnly cookie without URL token", async () => {
   expect((await api("/device/code", { client_id: "inconnu" })).status).toBe(400);
   const c = await api("/device/code", { client_id: "auto-native" });
   expect(c.status).toBe(200);
@@ -72,7 +72,7 @@ test("Appareil : client autorisé, attente/poll borné, approbation liée et coo
   expect(session.body.user.email).toBe("device-a@example.test");
   expect((await poll(c.body.device_code)).status).toBe(400);
 });
-test("Appareil : refus et expiration ne créent aucune session", async () => {
+test("Device: refusal and expiry create no session", async () => {
   const c = (await api("/device/code", { client_id: "auto-native" })).body;
   await api(`/device?user_code=${c.user_code}`, undefined, cookieA);
   expect((await api("/device/deny", { userCode: c.user_code }, cookieA)).status).toBe(200);
@@ -83,7 +83,7 @@ test("Appareil : refus et expiration ne créent aucune session", async () => {
   await sql`UPDATE device_code SET expires_at=now()-interval '1 second' WHERE device_code=${expire.device_code}`;
   expect((await poll(expire.device_code)).body.error).toBe("expired_token");
 });
-test("Appareil : une approbation ne peut être consommée que par un seul poll concurrent", async () => {
+test("Device: an approval can only be consumed by a single concurrent poll", async () => {
   const c = (await api("/device/code", { client_id: "auto-native" })).body;
   await api(`/device?user_code=${c.user_code}`, undefined, cookieA);
   await api("/device/approve", { userCode: c.user_code }, cookieA);

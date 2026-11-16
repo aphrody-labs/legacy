@@ -64,8 +64,12 @@ export function checkCatalogs(
   return reports;
 }
 
-export const reportOk = (r: LocaleReport) =>
-  !r.missing.length &&
+/**
+ * A locale is ok when nothing it has is wrong. Missing keys fall back to the source locale by design, so they only
+ * fail the check in strict mode (`--strict` or `"strictCoverage": true` in i18n.config.json).
+ */
+export const reportOk = (r: LocaleReport, strict = false) =>
+  (!strict || !r.missing.length) &&
   !r.extra.length &&
   !r.placeholders.length &&
   !r.syntax.length;

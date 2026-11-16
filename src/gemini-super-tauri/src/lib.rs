@@ -5,37 +5,37 @@
 //! architecture featuring immersive Full-Duplex Voice-to-Voice (`gemini-3.8-live`).
 //!
 //! Bridges all consolidated Rust crates in `crates/`:
-//! - [`voice_dsp`] (32-band FFT spectrum & RMS for the animated Gemini SVG Orb)
-//! - [`mic_bridge`] (`127.0.0.1:24713` 16 kHz PCM16 TCP stream)
+//! - [`aphrody_audio::dsp`] (32-band FFT spectrum & RMS for the animated Gemini SVG Orb)
+//! - [`aphrody_audio::mic`] (`127.0.0.1:24713` 16 kHz PCM16 TCP stream)
 //! - [`flowcat_core`] (Native Rust `GeminiLive` S2S WebSocket client, SIP UA, RTP/SDP, VAD)
-//! - [`polaris_audio`] (Lossless FLAC/Opus/MP3/WAV music indexer & waveform analyzer)
-//! - [`voicebox_audio`] (Multi-speaker voice cloning, resampling, WAV encoding, speak monitor)
-//! - [`lu_voice_engine`] (`uv`-managed local Whisper STT, Piper TTS, ACE-Step 1.5 & AudioCraft runner)
-//! - [`jan_agent_audio`] (ADK hardware capabilities & Gemini Live function-calling tools)
-//! - [`awesome_rust_audio`] (Curated `#audio-and-music` & `#google-gemini` crate registry)
+//! - [`aphrody_audio::polaris`] (Lossless FLAC/Opus/MP3/WAV music indexer & waveform analyzer)
+//! - [`aphrody_audio::voicebox`] (Multi-speaker voice cloning, resampling, WAV encoding, speak monitor)
+//! - [`aphrody_audio::lu_voice`] (`uv`-managed local Whisper STT, Piper TTS, ACE-Step 1.5 & AudioCraft runner)
+//! - [`aphrody_audio::jan_agent`] (ADK hardware capabilities & Gemini Live function-calling tools)
+//! - [`aphrody_audio::awesome`] (Curated `#audio-and-music` & `#google-gemini` crate registry)
 
-use awesome_rust_audio::{load_awesome_rust_audio_catalog, RustAudioCrateEntry};
+use aphrody_audio::awesome::{load_awesome_rust_audio_catalog, RustAudioCrateEntry};
 use base64::Engine as _;
 use flowcat_core::realtime::gemini_live::GeminiLive;
 use flowcat_core::realtime::RealtimeLlm;
 use flowcat_core::types::{AudioChunk, RealtimeEvent, RealtimeSetup};
-use jan_agent_audio::{
+use aphrody_audio::jan_agent::{
     default_gemini_super_app_tools, to_gemini_live_function_declarations,
     HardwareAudioCapabilities, VoiceAgentTool,
 };
-use lu_voice_engine::{LuVoiceLoopConfig, MusicGenerationSpec};
-use mic_bridge::MicStreamConfig;
+use aphrody_audio::lu_voice::{LuVoiceLoopConfig, MusicGenerationSpec};
+use aphrody_audio::mic::MicStreamConfig;
 use openpets_core::{
     default_mochi_emote_catalogue, export_mesh_to_glb, extrude_rgba_to_3d_mesh,
     GeminiPetCareState, MochiBondState, MochiEmoteSpec, MochiFocusPlan, OpenPets3dExtrudeConfig,
     OPENPETS_3D_WGPU_SHADER_WGSL,
 };
-use polaris_audio::{AudioCodecFormat, IndexedTrack, PolarisLibraryIndex};
+use aphrody_audio::polaris::{AudioCodecFormat, IndexedTrack, PolarisLibraryIndex};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::{Path, PathBuf};
-use voice_dsp::{compute_spectrum_32, SpectrumFrame};
-use voicebox_audio::{default_gemini_voice_profiles, encode_wav_pcm16_mono, VoiceProfile};
+use aphrody_audio::dsp::{compute_spectrum_32, SpectrumFrame};
+use aphrody_audio::voicebox::{default_gemini_voice_profiles, encode_wav_pcm16_mono, VoiceProfile};
 
 pub mod wallpaper_win32;
 pub use wallpaper_win32::{
@@ -393,7 +393,7 @@ pub fn ipc_index_pcm16_track(
 pub fn ipc_build_music_uv_command(
     prompt: &str,
     duration_secs: u32,
-) -> Result<Vec<String>, lu_voice_engine::LuVoiceError> {
+) -> Result<Vec<String>, aphrody_audio::lu_voice::LuVoiceError> {
     let spec = MusicGenerationSpec {
         engine: "audiocraft-musicgen-stereo-large".to_string(),
         prompt: prompt.to_string(),

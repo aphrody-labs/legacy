@@ -2,6 +2,26 @@
 
 # @aphrody/m3-primitives
 
+<!-- catalog:begin unit -->
+> Material Design 3 React primitives: the SpaceUI (@spacedrive/primitives) component set rebuilt on the M3 roles, shape, typescale, state layers and motion of the aphrody design system.
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/m3-primitives` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/m3-primitives build
+bun run --cwd packages/m3-primitives typecheck
+bun run --cwd packages/m3-primitives typecheck:fast
+bun run --cwd packages/m3-primitives test
+bun run --cwd packages/m3-primitives prepack
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Material Design 3 React primitives (buttons, fields, menus, dialogs, cards, toasts) on Base UI, rebuilt from SpaceUI's `@spacedrive/primitives`.
 
 ```sh

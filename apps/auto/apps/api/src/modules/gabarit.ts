@@ -1,18 +1,19 @@
-// Lot L4 : gabarit des documents par tenant (couleur d'accent, logo, pied de page).
+// Batch L4: per-tenant document template (accent color, logo, footer).
+import { ErreurApi, refus } from "../i18n";
 import { enregistrerGabarit, enregistrerLogo, ErreurMetier, lireGabarit, withTenant } from "@auto/store";
 import type { Module } from "../modules";
 import { brut, objet, op, str } from "../openapi-outils";
 import type { Chemins } from "../modules";
 
-/** Largeur maximale du logo stocké (pixels) : assez pour l'impression à 48 pt de haut. */
+/** Maximum width of the stored logo (pixels): enough for print at 48 pt high. */
 const LARGEUR_LOGO = 600;
 const MAX_OCTETS = 5 * 1024 * 1024;
 
-/** Image quelconque (PNG, JPEG, WebP…) → JPEG RVB réduit, prêt à embarquer tel quel dans le PDF. */
+/** Any image (PNG, JPEG, WebP...) → reduced RGB JPEG, ready to embed as is in the PDF. */
 export async function preparerLogo(
   octets: Uint8Array,
 ): Promise<{ jpeg: Uint8Array; largeur: number; hauteur: number }> {
-  if (octets.length > MAX_OCTETS) throw new ErreurMetier("logo trop volumineux (5 Mo au plus)", [], 413);
+  if (octets.length > MAX_OCTETS) throw new ErreurApi("logo_too_large", [], 413);
   try {
     const source = new Bun.Image(octets.slice(), { maxPixels: 40_000_000 });
     const m = await source.metadata();
@@ -22,13 +23,13 @@ export async function preparerLogo(
     return { jpeg, largeur, hauteur };
   } catch (e) {
     if (e instanceof ErreurMetier) throw e;
-    throw new ErreurMetier("logo : image illisible (PNG, JPEG ou WebP attendu)");
+    throw new ErreurApi("logo_unreadable");
   }
 }
 
 export const routes: Module = ({ sql, auth }) => ({
   "/v1/parametres/gabarit": {
-    GET: auth("lire", async (_req, a) => {
+    GET: auth("lire", async (req, a) => {
       const g = await withTenant(sql, a.tenantId, (tx) => lireGabarit(tx));
       return Response.json({
         couleur: g?.couleur ?? null,
@@ -43,31 +44,31 @@ export const routes: Module = ({ sql, auth }) => ({
     }),
   },
   "/v1/parametres/gabarit/logo": {
-    GET: auth("lire", async (_req, a) => {
+    GET: auth("lire", async (req, a) => {
       const g = await withTenant(sql, a.tenantId, (tx) => lireGabarit(tx));
-      if (!g?.logo) return Response.json({ erreur: "aucun logo" }, { status: 404 });
+      if (!g?.logo) return refus(req, "no_logo", 404);
       return new Response(Uint8Array.fromBase64(g.logo.jpeg), { headers: { "content-type": "image/jpeg" } });
     }),
     PUT: auth("parametres", async (req, a) => {
       const { image } = (await req.json()) as { image?: string };
-      if (typeof image !== "string") throw new ErreurMetier("image (base64) manquante");
+      if (typeof image !== "string") throw new ErreurApi("image_missing");
       const logo = await preparerLogo(Uint8Array.fromBase64(image));
       await withTenant(sql, a.tenantId, (tx) => enregistrerLogo(tx, a.userId, logo));
       return Response.json({ largeur: logo.largeur, hauteur: logo.hauteur });
     }),
-    DELETE: auth("parametres", async (_req, a) => {
+    DELETE: auth("parametres", async (req, a) => {
       await withTenant(sql, a.tenantId, (tx) => enregistrerLogo(tx, a.userId, null));
       return new Response(null, { status: 204 });
     }),
   },
 });
 
-/** Description OpenAPI des routes du lot. */
+/** OpenAPI description of the batch routes. */
 export const openapi: Chemins = {
   "/v1/parametres/gabarit": {
     get: op({
-      resume: "Gabarit des documents (couleur, pied de page, dimensions du logo)",
-      tag: "Paramètres",
+      resume: "Document template (color, footer, logo dimensions)",
+      tag: "Settings",
       droit: "lire",
       succes: {
         200: objet({
@@ -78,8 +79,8 @@ export const openapi: Chemins = {
       },
     }),
     put: op({
-      resume: "Modifier la couleur d'accent et le pied de page",
-      tag: "Paramètres",
+      resume: "Edit the accent color and the footer",
+      tag: "Settings",
       droit: "parametres",
       corps: objet({
         couleur: { type: "string", pattern: "^#[0-9A-Fa-f]{6}$" },
@@ -92,19 +93,19 @@ export const openapi: Chemins = {
   "/v1/parametres/gabarit/logo": {
     get: op({
       resume: "Logo (JPEG)",
-      tag: "Paramètres",
+      tag: "Settings",
       droit: "lire",
       succes: { 200: brut("image/jpeg") },
       erreurs: [404],
     }),
     put: op({
-      resume: "Déposer un logo (PNG, JPEG ou WebP, converti en JPEG RVB de 600 px de large au plus)",
-      tag: "Paramètres",
+      resume: "Upload a logo (PNG, JPEG or WebP, converted to an RGB JPEG at most 600 px wide)",
+      tag: "Settings",
       droit: "parametres",
       corps: objet({ image: { type: "string", contentEncoding: "base64" } }, ["image"]),
       succes: { 200: objet({ largeur: { type: "integer" }, hauteur: { type: "integer" } }) },
       erreurs: [413, 422],
     }),
-    delete: op({ resume: "Retirer le logo", tag: "Paramètres", droit: "parametres", succes: { 204: null } }),
+    delete: op({ resume: "Remove the logo", tag: "Settings", droit: "parametres", succes: { 204: null } }),
   },
 };

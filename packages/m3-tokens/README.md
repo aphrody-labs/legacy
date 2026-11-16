@@ -2,6 +2,27 @@
 
 # @aphrody/m3-tokens
 
+<!-- catalog:begin unit -->
+> Material 3 design tokens (--md-sys-*) for the @aphrody/material-web fork: MUI-theme → M3 token CSS generation and runtime Material You dynamic colour via material-color-utilities.
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/m3-tokens` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/m3-tokens build
+bun run --cwd packages/m3-tokens typecheck
+bun run --cwd packages/m3-tokens lint
+bun run --cwd packages/m3-tokens test
+bun run --cwd packages/m3-tokens demo
+bun run --cwd packages/m3-tokens generate:expressive
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Material 3 design tokens (`--md-sys-*`) as Bun-native TypeScript and CSS, with seed-based dynamic colour.
 
 ```sh

@@ -1,4 +1,4 @@
-# Image de la console de l'Aphrody Box : serveur Leptos (axum) et paquet WebAssembly construits par cargo-leptos.
+# Image of the Aphrody Box console: Leptos (axum) server and WebAssembly bundle built by cargo-leptos.
 # Contexte : box/console.
 
 FROM rust:1.99 AS construction

@@ -1,5 +1,6 @@
-// Bout en bout API ↔ n8n : facture émise → outbox → worker → webhook signé → n8n relit le Factur-X via l'API → archive.
-// Prérequis : Postgres de l'API (DATABASE_URL) et n8n (compose). Usage : bun apps/api/e2e/n8n.ts
+// End to end API ↔ n8n: issued invoice → outbox → worker → signed webhook → n8n re-reads the Factur-X through the API → archive.
+// Prerequisites: the API's Postgres (DATABASE_URL) and n8n (compose). Usage: bun apps/api/e2e/n8n.ts
+import { refus } from "../src/i18n";
 import { testDb } from "@auto/store";
 import { verifierPdfA } from "@auto/native";
 import { creerApp } from "../src/app";
@@ -7,7 +8,7 @@ import { expediteur } from "../../worker/src/expediteur";
 import { creerWorker } from "../../worker/src/worker";
 import { N8N_URL, provisionner } from "../../../scripts/n8n";
 
-const PORT = Number(Bun.env.AUTO_E2E_PORT ?? 3000); // AUTO_API_URL de n8n : host.docker.internal:3000
+const PORT = Number(Bun.env.AUTO_E2E_PORT ?? 3000); // n8n AUTO_API_URL: host.docker.internal:3000
 const SECRET = Bun.env.N8N_WEBHOOK_SECRET ?? "auto-dev-secret-webhook";
 const ARCHIVES = new URL("../../../data/n8n/archives/", import.meta.url);
 
@@ -16,9 +17,9 @@ const server = Bun.serve({
   port: PORT,
   hostname: "0.0.0.0",
   routes: creerApp(sql),
-  fetch: () => Response.json({ erreur: "route inconnue" }, { status: 404 }),
+  fetch: (req) => refus(req, "route_not_found", 404),
 });
-// Livraison de l'outbox par le worker, dans ce processus.
+// Outbox delivery by the worker, in this process.
 const worker = creerWorker(sql, expediteur(sql, { url: `${N8N_URL}/webhook/auto-evenements`, secret: SECRET }), {
   intervalleMs: 200,
 });
@@ -37,11 +38,11 @@ async function api<T = any>(path: string, token?: string, body?: unknown): Promi
 try {
   const a = await api("/v1/auth/inscription", undefined, {
     email: "e2e-n8n@exemple.fr",
-    motDePasse: "un mot de passe long",
+    motDePasse: "a long password",
     entreprise: { nom: "E2E n8n SAS", siret: "73282932000074", adresse: "1 rue de la Paix, 75002 Paris" },
   });
   const { jeton } = await api("/v1/jetons", a.session, { nom: "n8n" });
-  console.log(`n8n provisionné : ${(await provisionner(jeton)).join(", ")}`);
+  console.log(`n8n provisioned: ${(await provisionner(jeton)).join(", ")}`);
 
   const d = await api("/v1/documents", jeton, {
     type: "facture",
@@ -51,14 +52,14 @@ try {
     echeance: new Date(Date.now() + 30 * 86400_000).toISOString().slice(0, 10),
   });
   const e = await api(`/v1/documents/${d.id}/emettre`, jeton, {});
-  console.log(`facture émise : ${e.numero}`);
+  console.log(`invoice issued: ${e.numero}`);
 
   const archive = Bun.file(new URL(`${a.tenantId}_${e.numero}.pdf`, ARCHIVES));
-  // Écriture par n8n via un montage : attendre une taille non nulle et stable.
+  // Written by n8n through a mount: wait for a non-zero, stable size.
   const fin = Date.now() + 60_000;
   let taille = -1;
   while (Date.now() < fin) {
-    const f = Bun.file(archive.name!); // taille relue à chaque tour
+    const f = Bun.file(archive.name!); // size re-read on every turn
     const t = (await f.exists()) ? f.size : -1;
     if (t > 0 && t === taille) break;
     taille = t;
@@ -76,11 +77,11 @@ try {
   if (sha(archivee) !== sha(officielle)) {
     const i = archivee.findIndex((o, k) => o !== officielle[k]);
     throw new Error(
-      `archive différente du Factur-X de l'API : ${archivee.length} / ${officielle.length} octets, premier écart à ${i}`,
+      `archive differs from the API's Factur-X: ${archivee.length} / ${officielle.length} bytes, first difference at ${i}`,
     );
   }
   const nonConformites = verifierPdfA(archivee);
-  if (nonConformites.length) throw new Error(`archive non PDF/A-3b : ${nonConformites.join("; ")}`);
+  if (nonConformites.length) throw new Error(`archive is not PDF/A-3b: ${nonConformites.join("; ")}`);
   await archive.delete();
   console.log(`OK : ${archive.name} (${archivee.length} octets, SHA-256 ${sha(archivee).slice(0, 16)}…, PDF/A-3b)`);
 } finally {

@@ -33,7 +33,7 @@ async function api(path: string, token?: string, body?: unknown) {
   return { status: res.status, body: await res.json() };
 }
 
-test("cron dû selon le fuseau du workflow", () => {
+test("cron due according to the workflow time zone", () => {
   const huitHeuresParis = new Date("2026-10-26T07:00:00Z"); // lundi, heure d'hiver
   expect(estDue("0 8 * * 1", huitHeuresParis, "Europe/Paris")).toBe(true);
   expect(estDue("0 8 * * 1", huitHeuresParis, "UTC")).toBe(false);
@@ -41,7 +41,7 @@ test("cron dû selon le fuseau du workflow", () => {
   expect(estDue("pas un cron", huitHeuresParis, "UTC")).toBe(false);
 });
 
-test("workflow planifié : enfilé une fois par minute due, exécuté par le worker", async () => {
+test("scheduled workflow: queued once per due minute, run by the worker", async () => {
   const a = await api("/v1/auth/inscription", undefined, {
     email: `${crypto.randomUUID()}@exemple.fr`,
     motDePasse: "un mot de passe long",
@@ -67,7 +67,7 @@ test("workflow planifié : enfilé une fois par minute due, exécuté par le wor
   expect(w.status).toBe(201);
   const minute = new Date("2026-10-26T07:15:00Z");
   expect(await planifierAutomatisations(sql, minute)).toBe(1);
-  expect(await planifierAutomatisations(sql, minute)).toBe(1); // même clé : un seul job
+  expect(await planifierAutomatisations(sql, minute)).toBe(1); // same key: a single job
   expect(await planifierAutomatisations(sql, new Date("2026-10-26T07:16:00Z"))).toBe(0);
   const worker = creerWorker(sql, automatisations(sql), { delai: () => 0 });
   expect(await worker.vider()).toBe(1);

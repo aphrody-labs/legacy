@@ -1,7 +1,7 @@
-//! Factur-X, profil EN 16931 : génération du XML CII (UN/CEFACT D16B), assemblage du PDF/A-3b
-//! avec `factur-x.xml` embarqué (relation `Alternative`), contrôle PDF/A et extraction.
+//! Factur-X, EN 16931 profile: generation of the CII XML (UN/CEFACT D16B), assembly of the PDF/A-3b
+//! with embedded `factur-x.xml` (`Alternative` relationship), PDF/A check and extraction.
 //!
-//! Le modèle d'entrée reprend le JSON de `@auto/domain` (`Document` + `numero`), en camelCase.
+//! The input model follows the JSON of `@auto/domain` (`Document` + `numero`), in camelCase.
 
 mod cii;
 mod pdf;

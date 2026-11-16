@@ -1,3 +1,4 @@
+import { ErreurApi } from "../i18n";
 import {
   creerAtelier,
   lireAtelier,
@@ -8,7 +9,6 @@ import {
   classerAtelier,
   fichierIndexe,
   withTenant,
-  ErreurMetier,
   identifiant,
   type FormatAtelier,
 } from "@auto/store";
@@ -29,11 +29,11 @@ import type { BunRequest } from "bun";
 import type { Module, Chemins } from "../modules";
 import { avecId, brut, enumere, liste, objet, op, str, uuid, type Schema } from "../openapi-outils";
 function segment(s: unknown, permis: readonly string[]): string {
-  if (typeof s !== "string" || !permis.includes(s)) throw new ErreurMetier("accès refusé à ce segment", [], 403);
+  if (typeof s !== "string" || !permis.includes(s)) throw new ErreurApi("segment_forbidden", [], 403);
   return s;
 }
 function revision(v: unknown) {
-  if (!Number.isSafeInteger(v) || Number(v) < 1) throw new ErreurMetier("révision du document requise");
+  if (!Number.isSafeInteger(v) || Number(v) < 1) throw new ErreurApi("document_revision_required");
   return v as number;
 }
 function telecharger(contenu: Uint8Array, mime: string, nom: string, rev?: number) {
@@ -49,15 +49,15 @@ function telecharger(contenu: Uint8Array, mime: string, nom: string, rev?: numbe
 export const routes: Module = ({ sql, auth }) => ({
   "/v1/atelier/:id/extraire-devis": {
     POST: auth("ecrire", async (req: BunRequest<"/v1/atelier/:id/extraire-devis">, a) => {
-      if (!accesSegment(a, "fournisseurs")) throw new ErreurMetier("accès au segment fournisseurs requis", [], 403);
+      if (!accesSegment(a, "fournisseurs")) throw new ErreurApi("suppliers_segment_required", [], 403);
       const b = (await req.json()) as { revision: number };
       const rev = revision(b.revision);
       const f = await withTenant(sql, a.tenantId, (tx) =>
         fichierAtelier(tx, identifiant(req.params.id), segmentsDe(a)),
       );
       if (f.document.revision !== rev)
-        throw new ErreurMetier("le document a changé : rechargez sa dernière version", [], 409);
-      if (!["word", "pdf"].includes(f.document.format)) throw new ErreurMetier("devis Word ou PDF attendu");
+        throw new ErreurApi("document_changed_reload", [], 409);
+      if (!["word", "pdf"].includes(f.document.format)) throw new ErreurApi("quote_word_pdf_expected");
       return Response.json(
         await deposerDevis(sql, a.tenantId, a.userId, {
           contenu: f.contenu,
@@ -74,7 +74,7 @@ export const routes: Module = ({ sql, auth }) => ({
     ),
     POST: auth("ecrire", async (req, a) => {
       const b = (await req.json()) as { nom?: string; format: FormatAtelier; segment: string };
-      if (!["word", "excel"].includes(b?.format)) throw new ErreurMetier("format Word ou Excel attendu");
+      if (!["word", "excel"].includes(b?.format)) throw new ErreurApi("word_excel_expected");
       const s = segment(b.segment, segmentsDe(a));
       const nom = nomAtelier(b.nom ?? (b.format === "word" ? "Document.docx" : "Classeur.xlsx"), b.format);
       const contenu = nouveauAtelier(b.format);
@@ -183,8 +183,8 @@ export const routes: Module = ({ sql, auth }) => ({
       const b = (await req.json()) as { revision: number; operation: OperationAtelier };
       const rev = revision(b?.revision);
       const f = await withTenant(sql, a.tenantId, (tx) => fichierAtelier(tx, req.params.id, segmentsDe(a)));
-      if (f.document.revision !== rev) throw new ErreurMetier("le document a changé", [], 409);
-      if (!b.operation || typeof b.operation !== "object") throw new ErreurMetier("opération absente");
+      if (f.document.revision !== rev) throw new ErreurApi("document_changed", [], 409);
+      if (!b.operation || typeof b.operation !== "object") throw new ErreurApi("operation_missing");
       const contenu = modifierAtelier(f.contenu, f.document.format, b.operation);
       inspecterAtelier(contenu, f.document.format);
       return Response.json(
@@ -223,7 +223,7 @@ const doc = objet({
 const operation = (resume: string, droit: "lire" | "ecrire", sortie: Schema, corps?: Schema, creation = false) =>
   op({
     resume,
-    tag: "Atelier Craft",
+    tag: "Craft workshop",
     droit,
     corps,
     succes: { [creation ? 201 : 200]: sortie },
@@ -232,16 +232,16 @@ const operation = (resume: string, droit: "lire" | "ecrire", sortie: Schema, cor
 export const openapi: Chemins = {
   "/v1/atelier/{id}/extraire-devis": avecId({
     post: operation(
-      "Extraire un devis depuis la révision sauvegardée Word/PDF, sans toucher à l’original",
+      "Extract a quote from the saved Word/PDF revision, without touching the original",
       "ecrire",
       objet({ devis: objet({}), doublon: { type: "boolean" } }),
       objet({ revision: { type: "integer", minimum: 1 } }, ["revision"]),
     ),
   }),
   "/v1/atelier": {
-    get: operation("Documents de travail accessibles par segment", "lire", liste(doc)),
+    get: operation("Working documents accessible by segment", "lire", liste(doc)),
     post: operation(
-      "Créer un document Word ou un classeur Excel",
+      "Create a Word document or an Excel workbook",
       "ecrire",
       doc,
       objet({ nom: str, format: enumere("word", "excel"), segment: str }, ["format", "segment"]),
@@ -250,7 +250,7 @@ export const openapi: Chemins = {
   },
   "/v1/atelier/importer": {
     post: operation(
-      "Importer DOCX, XLSX ou PDF, ou copier une pièce indexée autorisée",
+      "Import DOCX, XLSX or PDF, or copy an authorized indexed document",
       "ecrire",
       doc,
       objet({ nom: str, segment: str, fichier: { type: "string", contentEncoding: "base64" }, indexId: uuid }, [
@@ -260,9 +260,9 @@ export const openapi: Chemins = {
     ),
   },
   "/v1/atelier/{id}": avecId({
-    get: operation("Métadonnées et aperçu natif", "lire", objet({ document: doc, inspection: objet({}) })),
+    get: operation("Metadata and native preview", "lire", objet({ document: doc, inspection: objet({}) })),
     patch: operation(
-      "Archiver ou restaurer un document de travail",
+      "Archive or restore a working document",
       "ecrire",
       doc,
       objet({ archive: { type: "boolean" } }, ["archive"]),
@@ -270,15 +270,15 @@ export const openapi: Chemins = {
   }),
   "/v1/atelier/{id}/fichier": avecId({
     get: op({
-      resume: "Télécharger une version originale (révision courante par défaut)",
-      tag: "Atelier Craft",
+      resume: "Download an original version (current revision by default)",
+      tag: "Craft workshop",
       droit: "lire",
       requete: [{ nom: "revision", schema: { type: "integer", minimum: 1 }, description: "Version historique" }],
       succes: { 200: brut("application/octet-stream") },
       erreurs: [404],
     }),
     put: operation(
-      "Sauvegarder sans écraser une modification concurrente",
+      "Save without overwriting a concurrent change",
       "ecrire",
       doc,
       objet({ revision: { type: "integer" }, fichier: { type: "string", contentEncoding: "base64" } }, [
@@ -289,14 +289,14 @@ export const openapi: Chemins = {
   }),
   "/v1/atelier/{id}/versions": avecId({
     get: operation(
-      "Historique des versions conservées",
+      "History of the kept versions",
       "lire",
       liste(objet({ revision: { type: "integer" }, createdAt: str })),
     ),
   }),
   "/v1/atelier/{id}/restaurer": avecId({
     post: operation(
-      "Restaurer une ancienne version en créant une nouvelle révision",
+      "Restore an older version by creating a new revision",
       "ecrire",
       doc,
       objet({ revision: { type: "integer" }, version: { type: "integer" } }, ["revision", "version"]),
@@ -304,7 +304,7 @@ export const openapi: Chemins = {
   }),
   "/v1/atelier/{id}/operations": avecId({
     post: operation(
-      "Modifier cellules/formules Excel, texte/champs Word ou ordre des pages PDF via les bibliothèques Rust",
+      "Edit Excel cells/formulas, Word text/fields or PDF page order through the Rust libraries",
       "ecrire",
       doc,
       objet(
@@ -335,8 +335,8 @@ export const openapi: Chemins = {
   }),
   "/v1/atelier/{id}/export.pdf": avecId({
     get: op({
-      resume: "Exporter Word en PDF avec Wordcraft, ou télécharger un PDF",
-      tag: "Atelier Craft",
+      resume: "Export Word to PDF with Wordcraft, or download a PDF",
+      tag: "Craft workshop",
       droit: "lire",
       succes: { 200: brut("application/pdf") },
       erreurs: [404, 422],

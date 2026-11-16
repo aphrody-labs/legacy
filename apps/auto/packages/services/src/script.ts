@@ -2,7 +2,7 @@
 // no `Bun`, no `process`; a fresh runtime per call (no state shared between companies), bounded memory and stack,
 // interruption at the deadline (infinite loops included). Bun's `ShadowRealm` does not isolate: it exposes
 // `Bun`, `fetch` and `process` to the evaluated code (verified on Bun 1.4.6), hence this separate engine.
-import type { DonneesScript } from "@auto/automate";
+import type { DonneesScript } from "@aphrody/automate";
 import { getQuickJS, shouldInterruptAfterDeadline } from "quickjs-emscripten";
 
 export const LIMITES_SCRIPT = { memoire: 64 * 1024 * 1024, pile: 1024 * 1024, dureeMs: 5_000, sortie: 5_000_000 };

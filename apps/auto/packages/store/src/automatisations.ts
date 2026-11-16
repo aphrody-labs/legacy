@@ -1,5 +1,5 @@
 // Automations, executions and secrets (migration 017). Validation of the definitions belongs to the engine
-// (`@auto/automate`) and to the services; here, persistence under RLS and trigger routing.
+// (`@aphrody/automate`) and to the services; here, persistence under RLS and trigger routing.
 import type { Sql, Tx } from "./db";
 import { avecWorker, enfiler } from "./outbox";
 import { ErreurMetier, journaliser } from "./index";

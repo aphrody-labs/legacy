@@ -1,0 +1,3 @@
+layer = 3
+use src/core/capi
+use src/core/jni

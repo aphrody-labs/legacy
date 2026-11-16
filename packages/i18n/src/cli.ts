@@ -14,7 +14,8 @@ import {
 } from "./translate.ts";
 
 const USAGE = `aphrody-i18n <command>
-  check [--dir locales] [--json]       compare every catalog with the source locale: missing/extra keys, placeholders, syntax
+  check [--dir locales] [--json] [--strict]  compare every catalog with the source locale: extra keys, placeholders, syntax;
+                                       missing keys are listed as coverage and fail only with --strict
   extract <path...> [--dir locales]    list t("key") call sites; with a catalog, report unknown and unused keys
   translate [--to tag,tag] [--dir locales] [--model provider/model] [--refresh-stale] [--dry-run]
                                        fill the missing keys of every catalog (and of each --to tag, creating it) from the
@@ -93,20 +94,24 @@ async function main(argv: string[]): Promise<number> {
     );
     const { [src]: _, ...others } = all;
     const reports = checkCatalogs(source, others, adapter, src);
+    const strict = rest.includes("--strict") || cfg.strictCoverage === true;
     if (rest.includes("--json")) console.log(JSON.stringify(reports, null, 2));
     else {
       for (const r of reports) {
-        console.log(`${r.locale}: ${reportOk(r) ? "ok" : "FAIL"}`);
+        console.log(
+          `${r.locale}: ${reportOk(r, strict) ? "ok" : "FAIL"}${r.missing.length ? ` (${r.missing.length} missing, falls back to ${src})` : ""}`,
+        );
         for (const [label, list] of [
           ["missing", r.missing],
           ["extra", r.extra],
           ["placeholders", r.placeholders],
           ["syntax", r.syntax],
         ] as const)
-          if (list.length) console.log(`  ${label}: ${list.join(", ")}`);
+          if (list.length && label !== "missing")
+            console.log(`  ${label}: ${list.join(", ")}`);
       }
     }
-    return reports.every(reportOk) ? 0 : 1;
+    return reports.every((r) => reportOk(r, strict)) ? 0 : 1;
   }
   if (cmd === "extract") {
     const paths = rest.filter(

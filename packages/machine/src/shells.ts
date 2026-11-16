@@ -1,8 +1,8 @@
-// Shared shell layer: env.toml -> env.{sh,ps1,nu,fish}, `ay` completions (carapace spec, fish, nu)
-// generated from `ay --help`, stubs/copies of manifest.toml, check of shells.lock.toml and of HKCU.
-// Usage: bun packages/machine/src/shells.ts [--gen | --check] [--only nu,fish,bash,pwsh,carapace]
-//   (none)  generate + install (idempotent)     --gen  generate only     --check  report drift (exit code 1)
-// Also called by apply-user.ts (export `shells`). Windows and Linux (fleet: bun present).
+// Couche partagée des shells : env.toml -> env.{sh,ps1,nu,fish}, complétions `ay` (spec carapace, fish, nu)
+// générées depuis `ay --help`, stubs/copier de manifest.toml, contrôle de shells.lock.toml et de HKCU.
+// Usage : bun packages/machine/src/shells.ts [--gen | --check] [--only nu,fish,bash,pwsh,carapace]
+//   (aucun)  génère + installe (idempotent)     --gen  génère seulement     --check  rapporte l'écart (code 1)
+// Appelé aussi par apply-user.ts (export `shells`). Windows et Linux (flotte : bun présent).
 import {
   existsSync,
   mkdirSync,
@@ -12,15 +12,30 @@ import {
 } from "node:fs";
 import { hostname } from "node:os";
 import { dirname, join, normalize } from "node:path";
+import {
+  deployFontsToFleet,
+  ensureGitDeltaInclude,
+  formatCatalogCli,
+  syncNerdFonts,
+  syncPinnedCliTools,
+  syncWindowsTerminalTheme,
+  writeCustomizationIndexDoc,
+} from "./shell-kit.ts";
 
 const SH = join(import.meta.dir, "..", "shells");
 const WIN = process.platform === "win32";
+const DARWIN = process.platform === "darwin";
 const HOME = (WIN ? process.env.USERPROFILE : process.env.HOME) ?? "";
 const HEADER =
   "généré par packages/machine/src/shells.ts depuis shells/env.toml — ne pas éditer";
 
-type Plat = "windows" | "linux";
-type VarDef = { all?: string; windows?: string; linux?: string };
+type Plat = "windows" | "linux" | "darwin";
+type VarDef = {
+  all?: string;
+  windows?: string;
+  linux?: string;
+  darwin?: string;
+};
 type EnvToml = {
   var: Record<string, VarDef>;
   path: Partial<Record<Plat | "front", string[]>>;
@@ -43,11 +58,11 @@ function parts(v: string): Part[] {
 
 const vars = (e: EnvToml, p: Plat) =>
   Object.entries(e.var).flatMap(([name, d]) => {
-    const v = d[p] ?? d.all;
+    const v = d[p] ?? (p === "darwin" ? d.linux : undefined) ?? d.all;
     return v === undefined ? [] : [{ name, value: parts(v) }];
   }) as { name: string; value: Part[] }[];
 
-// --- emitters --------------------------------------------------------------------------------------------
+// --- émetteurs -------------------------------------------------------------------------------------------
 
 const sq = (s: string) => `'${s.replaceAll("'", `'\\''`)}'`;
 
@@ -152,7 +167,7 @@ function emitNu(e: EnvToml): string {
     const xs = ps.map((x) => {
       if ("lit" in x) {
         if (x.lit.includes("'"))
-          throw new Error(`apostrophe not supported for nu: ${x.lit}`);
+          throw new Error(`apostrophe non supportée pour nu : ${x.lit}`);
         return `'${x.lit}'`;
       }
       return "home" in x ? "$h" : `$env.${x.ref}`;
@@ -192,7 +207,7 @@ function emitFish(e: EnvToml): string {
   const l: string[] = [];
   for (const v of vars(e, "linux")) l.push(`set -gx ${v.name} ${val(v.value)}`);
   const dirs = (e.path.linux ?? []).map((d) => val(parts(d)));
-  // fish_add_path: -g global, -P changes $PATH (not fish_user_paths), -m moves the existing entry; missing folders ignored.
+  // fish_add_path : -g global, -P modifie $PATH (pas fish_user_paths), -m déplace l'existant ; dossiers absents ignorés.
   if (dirs.length) l.push(`fish_add_path -gPm ${dirs.join(" ")}`);
   return `# ${HEADER}
 # fish 4.x (Linux seulement : pas de build Windows natif amont). Sourcé par fish/config.fish.
@@ -200,7 +215,7 @@ ${l.join("\n")}
 `;
 }
 
-// --- `ay` completions from clap --help -------------------------------------------------------------------
+// --- complétions `ay` depuis clap --help -----------------------------------------------------------------
 
 type Opt = { short?: string; long?: string; value: boolean; desc: string };
 type Cmd = { name: string; desc: string; opts: Opt[]; cmds: Cmd[] };
@@ -222,7 +237,7 @@ function parseHelp(text: string): {
   const cmds: { name: string; desc: string }[] = [];
   const opts: Opt[] = [];
   let sec = "";
-  // argh (ay arch): options with a value are visible only in the Usage line (`--root <root>`).
+  // argh : options à valeur visibles seulement dans la ligne Usage (`--root <root>`).
   const usage = text.match(/^Usage:.*$/m)?.[0] ?? "";
   const valued = new Set([...usage.matchAll(/(--[\w-]+) </g)].map((x) => x[1]));
   for (const line of text.split(/\r?\n/)) {
@@ -390,7 +405,7 @@ function generate(res: Results, check: boolean) {
   const ay = Bun.which("ay");
   if (!ay) {
     res.push(
-      "info ay missing: ay completions not regenerated (repository files used)",
+      "info ay absent : complétions ay non régénérées (fichiers du dépôt utilisés)",
     );
     return;
   }
@@ -446,14 +461,17 @@ function links(res: Results, check: boolean, only?: string[]) {
   const m = Bun.TOML.parse(readFileSync(join(SH, "manifest.toml"), "utf8")) as {
     link?: Link[];
   };
-  const plat: Plat = WIN ? "windows" : "linux";
+  const plat: Plat = WIN ? "windows" : DARWIN ? "darwin" : "linux";
   for (const l of m.link ?? []) {
-    const d = typeof l.dst === "string" ? l.dst : l.dst[plat];
+    const d =
+      typeof l.dst === "string"
+        ? l.dst
+        : (l.dst[plat] ?? (!WIN && !DARWIN ? l.dst.linux : undefined));
     if (!d || (only && !only.includes(l.shell))) continue;
     const dst = expand(d);
     const src = join(SH, l.src);
     if (!existsSync(src)) {
-      res.push(`DIFF ${l.src} missing (manifest)`);
+      res.push(`DIFF ${l.src} absent (manifest)`);
       continue;
     }
     const content =
@@ -462,7 +480,7 @@ function links(res: Results, check: boolean, only?: string[]) {
   }
 }
 
-// nushell init caches in the vendor/autoload folder (upstream mechanism: loaded after config.nu).
+// Caches d'init nushell dans le dossier vendor/autoload (mécanisme amont : chargé après config.nu).
 function nuCaches(res: Results, check: boolean) {
   const nu = Bun.which("nu");
   if (!nu) return;
@@ -474,12 +492,14 @@ function nuCaches(res: Results, check: boolean) {
   const gens: [string, string[]][] = [
     ["ay-zoxide.nu", ["zoxide", "init", "nushell"]],
     ["ay-carapace.nu", ["carapace", "_carapace", "nushell"]],
+    ["ay-starship.nu", ["starship", "init", "nu"]],
+    ["ay-atuin.nu", ["atuin", "init", "nu", "--disable-up-arrow"]],
   ];
   for (const [file, argv] of gens) {
     const exe = Bun.which(argv[0]);
     const f = join(dir, file);
     if (!exe) {
-      res.push(`info ${argv[0]} missing: ${file} not generated`);
+      res.push(`info ${argv[0]} absent : ${file} non généré`);
       continue;
     }
     if (check) {
@@ -491,7 +511,7 @@ function nuCaches(res: Results, check: boolean) {
     }).stdout.toString();
     put(res, false, f, out, `nu autoload ${file}`);
   }
-  // Old flat config (replaced by the repository + autoload): purge.
+  // Ancienne config à plat (remplacée par le dépôt + autoload) : purge.
   const old = process.env.APPDATA
     ? join(process.env.APPDATA, "nushell")
     : join(HOME, ".config", "nushell");
@@ -502,7 +522,7 @@ function nuCaches(res: Results, check: boolean) {
   ]) {
     const p = join(old, f);
     if (existsSync(p)) {
-      res.push(`${check ? "DIFF" : "rm  "} ${p} (obsolete)`);
+      res.push(`${check ? "DIFF" : "rm  "} ${p} (obsolète)`);
       if (!check) rmSync(p);
     }
   }
@@ -542,7 +562,7 @@ function lock(res: Results) {
     if (!raw) continue;
     const exe = expand(raw);
     if (!existsSync(exe)) {
-      res.push(`DIFF lock ${name} ${s.version}: ${exe} missing`);
+      res.push(`DIFF lock ${name} ${s.version} : ${exe} absent`);
       continue;
     }
     const v = Bun.spawnSync([exe, ...(s.verify ?? ["--version"])], {
@@ -561,7 +581,7 @@ function lock(res: Results) {
           .stdout.toString()
           .trim() === sum;
     res.push(
-      `${vok && hok ? "ok  " : "DIFF"} lock ${name} ${want}${vok ? "" : ` (version: ${vout.split("\n")[0].trim()})`}${hok ? "" : " (b3sum differs)"}`,
+      `${vok && hok ? "ok  " : "DIFF"} lock ${name} ${want}${vok ? "" : ` (version: ${vout.split("\n")[0].trim()})`}${hok ? "" : " (b3sum diffère)"}`,
     );
   }
 }
@@ -575,8 +595,8 @@ const winExpand = (s: string) =>
 const pathKey = (s: string) =>
   winExpand(s).replaceAll("/", "\\").replace(/\\+$/, "").toLowerCase();
 
-// HKCU\Environment: [persist.windows] variables (setx: writes and broadcasts WM_SETTINGCHANGE) and
-// head of the user PATH [persist_path] (reg add REG_EXPAND_SZ, rest of the PATH kept).
+// HKCU\Environment : variables [persist.windows] (setx : écrit et diffuse WM_SETTINGCHANGE) et
+// tête du PATH utilisateur [persist_path] (reg add REG_EXPAND_SZ, reste du PATH conservé).
 function persist(res: Results, check: boolean) {
   if (!WIN) return;
   const e = envToml() as EnvToml & { persist_path?: { windows?: string[] } };
@@ -591,23 +611,38 @@ function persist(res: Results, check: boolean) {
     const cur = have.get(k.toLowerCase());
     const ok = cur !== undefined && winExpand(cur) === v;
     res.push(
-      `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment ${k}=${v}${ok ? "" : ` (current: ${cur ?? "missing"})`}`,
+      `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment ${k}=${v}${ok ? "" : ` (actuel: ${cur ?? "absent"})`}`,
     );
     if (!ok && !check) run(["setx", k, v]);
   }
-  const front = (e.persist_path?.windows ?? []).map(expand);
+  const machineQ = run([
+    "reg",
+    "query",
+    "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment",
+    "/v",
+    "Path",
+  ]).stdout.toString();
+  const machineKeys = new Set<string>();
+  const mm = machineQ.match(/^\s+Path\s+REG_(?:EXPAND_)?SZ\s+(.*)$/m);
+  if (mm) {
+    for (const part of mm[1].split(";").filter(Boolean))
+      machineKeys.add(pathKey(part));
+  }
+  const front = (e.persist_path?.windows ?? [])
+    .map(expand)
+    .filter((d) => existsSync(d) && !machineKeys.has(pathKey(d)));
   if (!front.length) return;
   const cur = (have.get("path") ?? "").split(";").filter(Boolean);
   const keys = new Set(front.map(pathKey));
   const next = [
-    ...front.filter((d) => existsSync(d)),
-    ...cur.filter((x) => !keys.has(pathKey(x))),
+    ...front,
+    ...cur.filter((x) => !keys.has(pathKey(x)) && !machineKeys.has(pathKey(x))),
   ];
   const ok =
-    next.slice(0, front.length).map(pathKey).join(";") ===
-    cur.slice(0, front.length).map(pathKey).join(";");
+    next.length === cur.length &&
+    next.map(pathKey).join(";") === cur.map(pathKey).join(";");
   res.push(
-    `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment Path: head = ${front.join(" ; ")}`,
+    `${ok ? "ok  " : check ? "DIFF" : "set "} HKCU\\Environment Path : tête = ${front.join(" ; ")}`,
   );
   if (!ok && !check)
     run([
@@ -624,7 +659,7 @@ function persist(res: Results, check: boolean) {
     ]);
 }
 
-// Windows Terminal: [terminal] of manifest.toml compared with settings.json (read-only).
+// Windows Terminal : [terminal] de manifest.toml comparé à settings.json (lecture seule).
 function terminal(res: Results) {
   if (!WIN) return;
   const m = Bun.TOML.parse(readFileSync(join(SH, "manifest.toml"), "utf8")) as {
@@ -666,12 +701,12 @@ function terminal(res: Results) {
         : have !== v;
     });
     res.push(
-      `${p && !bad.length ? "ok  " : "DIFF"} Windows Terminal profile ${name}${p ? bad.map(([k, v]) => ` ${k}≠${v}`).join("") : " missing"}`,
+      `${p && !bad.length ? "ok  " : "DIFF"} Windows Terminal profil ${name}${p ? bad.map(([k, v]) => ` ${k}≠${v}`).join("") : " absent"}`,
     );
   }
 }
 
-// Duplicate binaries ([[duplicate]] of the lock): removed without --check.
+// Binaires en double ([[duplicate]] du lock) : retirés sans --check.
 function duplicates(res: Results, check: boolean) {
   if (!WIN) return;
   const t = Bun.TOML.parse(
@@ -682,7 +717,7 @@ function duplicates(res: Results, check: boolean) {
   for (const d of t.duplicate ?? []) {
     const p = expand(d.path);
     if (!existsSync(p)) {
-      res.push(`ok   duplicate missing: ${p}`);
+      res.push(`ok   doublon absent : ${p}`);
       continue;
     }
     res.push(
@@ -692,13 +727,13 @@ function duplicates(res: Results, check: boolean) {
       const r = run(d.run);
       if (r.exitCode !== 0)
         res.push(
-          `DIFF failed ${d.run.join(" ")}: ${r.stderr.toString().trim().split("\n")[0]}`,
+          `DIFF échec ${d.run.join(" ")} : ${r.stderr.toString().trim().split("\n")[0]}`,
         );
     }
   }
 }
 
-// Pinned folders of env.toml that no longer exist (JDK, SDK): drift to report.
+// Dossiers épinglés de env.toml qui n'existent plus (JDK, SDK) : écart à signaler.
 function pins(res: Results) {
   const e = envToml();
   const p: Plat = WIN ? "windows" : "linux";
@@ -710,34 +745,94 @@ function pins(res: Results) {
       /_HOME$|_DIR$|_INSTALL$|_ROOT$/.test(v.name) &&
       !existsSync(s)
     )
-      res.push(`info ${v.name}=${s} missing`);
+      res.push(`info ${v.name}=${s} absent`);
   }
 }
 
-// only: restricts the deployed [[link]] entries to these shells (e.g. ["nu", "fish", "carapace"]).
+// only : restreint les [[link]] déployés à ces shells (ex. ["nu", "fish", "carapace"]).
 export function shells(opts: {
   check: boolean;
   genOnly?: boolean;
   only?: string[];
+  theme?: string;
 }): Results {
   const res: Results = [];
   generate(res, opts.check);
+  writeCustomizationIndexDoc(res, opts.check);
   if (opts.genOnly) return res;
   links(res, opts.check, opts.only);
+  ensureGitDeltaInclude(res, opts.check);
   nuCaches(res, opts.check);
   lock(res);
   persist(res, opts.check);
   duplicates(res, opts.check);
+  syncWindowsTerminalTheme(res, opts.check, opts.theme);
   terminal(res);
   pins(res);
   return res;
 }
 
+export async function shellsAll(opts: {
+  check: boolean;
+  genOnly?: boolean;
+  only?: string[];
+  theme?: string;
+  installFonts?: boolean;
+  installTools?: boolean;
+  deployVps?: boolean;
+}): Promise<Results> {
+  const res = shells(opts);
+  if (!opts.genOnly) {
+    await syncNerdFonts(res, opts.check, Boolean(opts.installFonts));
+    await syncPinnedCliTools(res, opts.check, Boolean(opts.installTools));
+    if (!opts.check && opts.installTools) {
+      nuCaches(res, false);
+    }
+    if (opts.deployVps) {
+      await deployFontsToFleet(res, opts.check);
+    }
+  }
+  return res;
+}
+
+function argVal(flag: string): string | undefined {
+  const i = process.argv.indexOf(flag);
+  return i > 0 ? process.argv[i + 1] : undefined;
+}
+
 if (import.meta.main) {
+  if (process.argv.includes("--index") || process.argv.includes("--themes")) {
+    console.log(formatCatalogCli());
+    process.exit(0);
+  }
+  const searchQ = argVal("--search");
+  if (searchQ !== undefined) {
+    console.log(formatCatalogCli(searchQ));
+    process.exit(0);
+  }
+  const docsSlug = argVal("--docs");
+  if (docsSlug !== undefined) {
+    console.log(formatCatalogCli(undefined, docsSlug));
+    process.exit(0);
+  }
   const check = process.argv.includes("--check");
-  const i = process.argv.indexOf("--only");
-  const only = i > 0 ? process.argv[i + 1]?.split(",") : undefined;
-  const res = shells({ check, genOnly: process.argv.includes("--gen"), only });
+  const all =
+    process.argv.includes("--all") || process.argv.includes("--sync-all");
+  const installFonts = all || process.argv.includes("--fonts");
+  const installTools = all || process.argv.includes("--install");
+  const deployVps =
+    all || process.argv.includes("--vps") || process.argv.includes("--fleet");
+  const only = argVal("--only")?.split(",");
+  const theme = argVal("--theme");
+  const res = await shellsAll({
+    check,
+    genOnly: process.argv.includes("--gen"),
+    only,
+    theme,
+    installFonts,
+    installTools,
+    deployVps,
+  });
   console.log(res.join("\n"));
   process.exit(check && res.some((r) => r.startsWith("DIFF")) ? 1 : 0);
 }

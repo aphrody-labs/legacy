@@ -78,7 +78,7 @@ async function get(path: string, token = A.session) {
   const r = await fetch(new URL(path, server.url), { headers: { authorization: "Bearer " + token } });
   return { statut: r.status, body: (await r.json()) as any };
 }
-test("multipart : originaux immuables, chemin conservé, reprise dédupliquée et concurrence atomique", async () => {
+test("multipart: immutable originals, path kept, deduplicated resume and atomic concurrency", async () => {
   const r = await poster(form());
   expect(r.status).toBe(201);
   const d: any = await r.json();
@@ -109,7 +109,7 @@ test("multipart : originaux immuables, chemin conservé, reprise dédupliquée e
   expect(corps[0].id).toBe(corps[1].id);
   expect((await get("/v1/sources-fichiers")).body).toHaveLength(0);
 });
-test("multipart : CSRF étroit, Bearer sans Origin, traversée/SSRF/tailles et extractions hors segment refusées", async () => {
+test("multipart: narrow CSRF, Bearer without Origin, traversal/SSRF/sizes and out-of-segment extractions refused", async () => {
   const sansOrigin = await fetch(new URL("/v1/imports-fichiers", server.url), {
     method: "POST",
     headers: { authorization: "Bearer " + A.session, "x-auto-import": "1" },
@@ -171,7 +171,7 @@ test("multipart : CSRF étroit, Bearer sans Origin, traversée/SSRF/tailles et e
   ).toBe(413);
 });
 
-test("reprise : un doublon est retrouvé avant tout OCR ou parsing, et un devis Word garde ses octets", async () => {
+test("resume: a duplicate is found before any OCR or parsing, and a Word quote keeps its bytes", async () => {
   const parse = spyOn(sourcesService, "texteDocument").mockRejectedValue(new Error("parse indisponible"));
   try {
     expect(await (await poster(form())).json()).toMatchObject({ doublon: true });
@@ -199,7 +199,7 @@ test("reprise : un doublon est retrouvé avant tout OCR ou parsing, et un devis 
     reglages.llm = avantLlm;
   }
 });
-test("sources distantes : curseur persistant sur plusieurs relèves, tri par segments, nouveau cycle et remise à zéro", async () => {
+test("remote sources: persistent cursor across several fetches, sort by segments, new cycle and reset", async () => {
   await mkdir(join(dossier, "a"));
   await mkdir(join(dossier, "b"));
   for (const p of ["a/1.txt", "a/2.txt", "a.txt", "b/1.txt", "z.txt"])
@@ -247,7 +247,7 @@ test("sources distantes : curseur persistant sur plusieurs relèves, tri par seg
   expect(m.status).toBe(200);
   expect(((await m.json()) as any).curseur).toBeNull();
 });
-test("pagination : retrouve les fichiers au-delà des 500, filtre SQL et reste segmentée", async () => {
+test("pagination: finds files beyond 500, SQL filter and stays segmented", async () => {
   const r: any = await (await poster(form("graine.txt", "Archive/graine.txt", "chantiers"))).json();
   await withTenant(sql, A.tenantId, async (tx) => {
     const [f] = await tx`SELECT source_id,empreinte FROM fichier_indexe WHERE id=${r.id}`;
@@ -264,7 +264,7 @@ test("pagination : retrouve les fichiers au-delà des 500, filtre SQL et reste s
   expect((await get("/v1/fichiers-indexes/recherche?page=0")).statut).toBe(422);
 });
 
-test("même entreprise : import, recherche et téléchargement respectent les segments du membre", async () => {
+test("same company: import, search and download respect the member's segments", async () => {
   await sql`INSERT INTO membership(tenant_id,user_id,role) VALUES (${A.tenantId},${B.userId},'comptable')`;
   await sql`UPDATE session SET active_organization_id=${A.tenantId} WHERE token=${B.session}`;
   await sql`INSERT INTO membre_segments(tenant_id,user_id,segments) VALUES (${A.tenantId},${B.userId},ARRAY(SELECT jsonb_array_elements_text(${JSON.stringify(["clients"])}::text::jsonb)))`;

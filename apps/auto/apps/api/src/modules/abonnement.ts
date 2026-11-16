@@ -1,5 +1,6 @@
-// Lot abonnement : plans, consommation, Stripe (Checkout, portail, webhooks) et garde des quotas.
-// Les factures de l'abonnement sont émises par le tenant opérateur (AUTO_TENANT_OPERATEUR), en Factur-X.
+// Subscription batch: plans, consumption, Stripe (Checkout, portal, webhooks) and quota guard.
+// Subscription invoices are issued by the operator tenant (AUTO_TENANT_OPERATEUR), in Factur-X.
+import { ErreurApi, refus, reponseErreur } from "../i18n";
 import {
   configStripeDepuisEnv,
   consommation,
@@ -56,17 +57,17 @@ const EN_COURS = new Set(["trialing", "active", "past_due"]);
 
 export interface ConfigAbonnement {
   stripe: ConfigStripe | null;
-  /** Tenant qui émet les factures de l'abonnement. */
+  /** Tenant issuing the subscription invoices. */
   operateur: string | null;
-  /** Adresse de contact facturation de l'opérateur, portée sur ses factures. */
+  /** Billing contact address of the operator, carried on its invoices. */
   emailOperateur: string;
-  /** Base des URL de retour (Checkout, portail). */
+  /** Base of the return URLs (Checkout, portal). */
   urlApp: string;
 }
 
 export const EMAIL_OPERATEUR = "contact@aphrody.com";
 
-/** Relue à chaque requête : `STRIPE_*`, `AUTO_TENANT_OPERATEUR`, `AUTO_URL_APP`. */
+/** Re-read on each request: `STRIPE_*`, `AUTO_TENANT_OPERATEUR`, `AUTO_URL_APP`. */
 export function configAbonnement(env: Record<string, string | undefined> = Bun.env): ConfigAbonnement {
   return {
     stripe: configStripeDepuisEnv(env),
@@ -77,7 +78,7 @@ export function configAbonnement(env: Record<string, string | undefined> = Bun.e
 }
 
 function exigerStripe(c: ConfigAbonnement): ConfigStripe {
-  if (!c.stripe) throw new ErreurMetier("paiement en ligne non configuré (STRIPE_SECRET_KEY)", [], 503);
+  if (!c.stripe) throw new ErreurApi("online_payment_unconfigured", [], 503);
   return c.stripe;
 }
 
@@ -96,7 +97,7 @@ const GERES = new Set([
   "invoice.payment_failed",
 ]);
 
-// Objets Stripe : seuls les champs lus sont typés.
+// Stripe objects: only the fields read are typed.
 interface Meta {
   tenant_id?: string;
   plan?: string;
@@ -129,7 +130,7 @@ interface ObjetStripe {
   subscription_details?: { metadata?: Meta };
 }
 
-/** Tenant d'un événement : métadonnées posées par l'application sur le client, le Checkout et l'abonnement. */
+/** Tenant of an event: metadata set by the application on the customer, the Checkout and the subscription. */
 function tenantDe(o: ObjetStripe): string | null {
   const t =
     o.client_reference_id ??
@@ -166,8 +167,8 @@ async function clientOperateur(tx: Tx, abonne: Entreprise): Promise<string> {
 }
 
 /**
- * Facture de l'abonnement, émise par le tenant opérateur (tenant courant de `tx`) avec les fonctions
- * de l'API : brouillon, émission numérotée, Factur-X figé contrôlé, puis paiement carte qui la solde.
+ * Subscription invoice, issued by the operator tenant (current tenant of `tx`) with the API
+ * functions: draft, numbered issue, checked frozen Factur-X, then card payment settling it.
  */
 async function emettreFactureAbonnement(tx: Tx, p: Parties, inv: ObjetStripe, ab: Abonnement): Promise<Ligne> {
   const meta = metaDe(inv);
@@ -211,9 +212,9 @@ async function emettreFactureAbonnement(tx: Tx, p: Parties, inv: ObjetStripe, ab
   } satisfies Document);
   const ttc = totaux(doc.lignes).ttcCents;
   if (ttc !== inv.amount_paid)
-    throw new ErreurMetier(
-      "facture Stripe : montant payé différent du TTC de la facture à émettre",
-      [`HT ${ht}`, `TTC calculé ${ttc}`, `payé ${inv.amount_paid}`, "vérifier le taux de TVA Stripe (STRIPE_TAUX_TVA)"],
+    throw new ErreurApi(
+      "stripe_amount_mismatch",
+      [`excl. VAT ${ht}`, `computed incl. VAT ${ttc}`, `paid ${inv.amount_paid}`, "check the Stripe VAT rate (STRIPE_TAUX_TVA)"],
       422,
     );
   const b = await creerBrouillon(tx, null, doc, await clientOperateur(tx, p.abonne));
@@ -221,13 +222,13 @@ async function emettreFactureAbonnement(tx: Tx, p: Parties, inv: ObjetStripe, ab
   const fx = facturx({ ...e.data, numero: e.numero }, new Date(e.emisAt!));
   const ttcXml = totalTtcCents(extraireXml(fx) ?? "");
   if (ttcXml !== e.ttcCents)
-    throw new ErreurMetier("Factur-X incohérent avec la facture : émission annulée", [`TTC du XML ${ttcXml}`], 500);
+    throw new ErreurApi("facturx_inconsistent", [`XML incl. VAT ${ttcXml}`], 500);
   await enregistrerFichier(tx, null, e.id, "facturx", fx);
   await enregistrerPaiement(tx, null, e.id, { date: jour, montantCents: e.ttcCents, mode: "carte", reference: inv.id });
   return (await lire(tx, e.id))!;
 }
 
-/** Applique un événement, dans `tx` passée au rôle `auto_app`. */
+/** Applies an event, in a `tx` passed to the `auto_app` role. */
 async function appliquer(
   tx: Tx,
   c: ConfigAbonnement,
@@ -301,8 +302,8 @@ async function appliquer(
 }
 
 /**
- * Traitement idempotent : l'événement est inscrit (clé primaire = id Stripe) dans la transaction qui
- * l'applique. Un rejeu répond sans effet ; un échec annule tout et Stripe renverra l'événement.
+ * Idempotent processing: the event is recorded (primary key = Stripe id) in the transaction that
+ * applies it. A replay answers with no effect; a failure rolls everything back and Stripe will resend the event.
  */
 export async function traiterEvenementStripe(sql: Sql, c: ConfigAbonnement, evt: EvenementStripe): Promise<Resultat> {
   const o = evt.data.object as ObjetStripe;
@@ -311,7 +312,7 @@ export async function traiterEvenementStripe(sql: Sql, c: ConfigAbonnement, evt:
   let parties: Parties | null = null;
   if (evt.type === "invoice.paid" && tenantId && (o.amount_paid ?? 0) > 0) {
     if (!c.operateur || !UUID.test(c.operateur))
-      throw new ErreurMetier("AUTO_TENANT_OPERATEUR non configuré : facture d'abonnement non émise", [], 503);
+      throw new ErreurApi("operator_tenant_unconfigured", [], 503);
     parties = {
       operateur: { ...(await entreprise(sql, c.operateur)), email: c.emailOperateur },
       abonne: await entreprise(sql, tenantId),
@@ -340,14 +341,14 @@ export async function traiterEvenementStripe(sql: Sql, c: ConfigAbonnement, evt:
   });
 }
 
-// Garde des quotas -------------------------------------------------------------
+// Quota guard -------------------------------------------------------------
 
 type Regle = (tx: Tx, req: Request) => Promise<void>;
 
 /**
- * Points d'entrée soumis à quota (chemin Bun.serve → méthode → contrôle dans la transaction du tenant).
- * Les lots mail (boîtes) et agent (appels LLM) ajoutent leur entrée ici, ou appellent `exigerQuota`
- * et `consommerAppelsLlm` depuis leur route.
+ * Entry points subject to quota (Bun.serve path → method → check in the tenant's transaction).
+ * The mail (mailboxes) and agent (LLM calls) batches add their entry here, or call `exigerQuota`
+ * and `consommerAppelsLlm` from their route.
  */
 export const REGLES: Record<string, Partial<Record<"POST" | "PUT", Regle>>> = {
   "/v1/documents/:id/emettre": {
@@ -361,7 +362,7 @@ export const REGLES: Record<string, Partial<Record<"POST" | "PUT", Regle>>> = {
     },
   },
   "/v1/employes": { POST: (tx) => verifierQuota(tx, "employes") },
-  // Une boîte déjà connectée est remplacée : seul l'ajout d'une première boîte consomme le quota.
+  // An already connected mailbox is replaced: only adding a first mailbox consumes the quota.
   "/v1/mail/boite": {
     PUT: async (tx) => {
       if (!(await tx`SELECT 1 FROM boite_mail LIMIT 1`).length) await verifierQuota(tx, "boites_mail");
@@ -374,10 +375,10 @@ definirJauge("boites_mail", async (tx) => (await tx<{ n: number }[]>`SELECT coun
 type Handler = (req: Request) => Response | Promise<Response>;
 
 /**
- * Hook de l'intégrateur : enveloppe les routes `Bun.serve` concernées par `regles`. Avant le
- * gestionnaire, l'appelant authentifié est contrôlé sous RLS ; quota dépassé : 402 explicite. Les
- * requêtes non authentifiées passent telles quelles (le gestionnaire répond 401). Le compteur des
- * factures est tenu par la base (déclencheur `consommation_facture`), dans la transaction d'émission.
+ * Integrator hook: wraps the `Bun.serve` routes covered by `regles`. Before the
+ * handler, the authenticated caller is checked under RLS; quota exceeded: explicit 402. Unauthenticated
+ * requests pass through unchanged (the handler answers 401). The invoice counter
+ * is kept by the database (`consommation_facture` trigger), in the issue transaction.
  */
 export function appliquerQuotas<T extends Record<string, unknown>>(sql: Sql, routes: T, regles = REGLES): T {
   const res: Record<string, unknown> = { ...routes };
@@ -395,7 +396,7 @@ export function appliquerQuotas<T extends Record<string, unknown>>(sql: Sql, rou
             await withTenant(sql, a.tenantId, (tx) => regle(tx, req));
           } catch (e) {
             if (!(e instanceof ErreurMetier)) throw e;
-            return Response.json({ erreur: e.message, details: e.details }, { status: e.status });
+            return reponseErreur(e, req);
           }
         }
         return h(req);
@@ -406,11 +407,11 @@ export function appliquerQuotas<T extends Record<string, unknown>>(sql: Sql, rou
   return res as T;
 }
 
-/** Pour les autres lots : 402 si le quota de `r` est atteint pour le tenant. */
+/** For the other batches: 402 if the quota of `r` is reached for the tenant. */
 export const exigerQuota = (sql: Sql, tenantId: string, r: Ressource, ajout = 1) =>
   withTenant(sql, tenantId, (tx) => verifierQuota(tx, r, ajout));
 
-/** Pour le lot agent : vérifie et compte `n` appels LLM du mois. */
+/** For the agent batch: checks and counts `n` LLM calls of the month. */
 export const consommerAppelsLlm = (sql: Sql, tenantId: string, n = 1) =>
   withTenant(sql, tenantId, (tx) => consommer(tx, "appels_llm", n));
 
@@ -448,13 +449,13 @@ export const routes: Module = ({ sql, publier, pub, auth }) => ({
       const s = exigerStripe(c);
       const b = (await req.json()) as { plan?: PlanId; periodicite?: Periodicite };
       const periodicite = b.periodicite ?? "mensuel";
-      if (!b.plan || !PAYANTS.includes(b.plan)) throw new ErreurMetier("plan attendu : pro ou business");
-      if (!estPeriodicite(periodicite)) throw new ErreurMetier("périodicité attendue : mensuel ou annuel");
+      if (!b.plan || !PAYANTS.includes(b.plan)) throw new ErreurApi("plan_expected");
+      if (!estPeriodicite(periodicite)) throw new ErreurApi("interval_expected");
       const ab = await withTenant(sql, a.tenantId, lireAbonnement);
       if (EN_COURS.has(ab.statut))
-        throw new ErreurMetier("abonnement déjà en cours : changer de plan depuis le portail", [], 409);
+        throw new ErreurApi("subscription_active", [], 409);
       const prix = s.tarifs[`${b.plan as "pro" | "business"}_${periodicite}`];
-      if (!prix) throw new ErreurMetier(`prix Stripe non configuré pour ${b.plan} ${periodicite}`, [], 503);
+      if (!prix) throw new ErreurApi("stripe_price_unconfigured", [], 503, { plan: b.plan, interval: periodicite });
       const stripe = new Stripe(s);
       let client = ab.stripeCustomerId;
       if (!client) {
@@ -485,7 +486,7 @@ export const routes: Module = ({ sql, publier, pub, auth }) => ({
       const c = configAbonnement();
       const s = exigerStripe(c);
       const ab = await withTenant(sql, a.tenantId, lireAbonnement);
-      if (!ab.stripeCustomerId) throw new ErreurMetier("aucun abonnement Stripe pour cette entreprise", [], 409);
+      if (!ab.stripeCustomerId) throw new ErreurApi("no_stripe_subscription", [], 409);
       const p = await new Stripe(s).creerPortail(ab.stripeCustomerId, `${c.urlApp}/app/parametres`);
       return Response.json({ url: p.url }, { status: 201 });
     }),
@@ -497,10 +498,10 @@ export const routes: Module = ({ sql, publier, pub, auth }) => ({
       const s = exigerStripe(c);
       const corps = await req.text();
       if (!verifierSignatureStripe(corps, req.headers.get("stripe-signature"), s.secretWebhook))
-        return Response.json({ erreur: "signature Stripe invalide" }, { status: 400 });
+        return refus(req, "stripe_signature_invalid", 400);
       const evt = JSON.parse(corps) as EvenementStripe;
       if (typeof evt?.id !== "string" || typeof evt.type !== "string" || !evt.data?.object)
-        return Response.json({ erreur: "événement Stripe invalide" }, { status: 400 });
+        return refus(req, "stripe_event_invalid", 400);
       const r = await traiterEvenementStripe(sql, c, evt);
       if (r.emis && c.operateur)
         await withTenant(sql, c.operateur, (tx) =>
@@ -511,23 +512,23 @@ export const routes: Module = ({ sql, publier, pub, auth }) => ({
   },
 });
 
-/** Description OpenAPI des routes du lot. */
+/** OpenAPI description of the batch routes. */
 export const openapi: Chemins = {
   "/v1/abonnement/plans": {
-    get: op({ resume: "Plans, prix HT et quotas", tag: "Abonnement", succes: { 200: liste(objet({})) } }),
+    get: op({ resume: "Plans, prices excl. VAT and quotas", tag: "Subscription", succes: { 200: liste(objet({})) } }),
   },
   "/v1/abonnement": {
     get: op({
-      resume: "Abonnement courant et consommation de la période",
-      tag: "Abonnement",
+      resume: "Current subscription and consumption of the period",
+      tag: "Subscription",
       droit: "lire",
       succes: { 200: objet({}) },
     }),
   },
   "/v1/abonnement/checkout": {
     post: op({
-      resume: "Démarrer un paiement Stripe Checkout",
-      tag: "Abonnement",
+      resume: "Start a Stripe Checkout payment",
+      tag: "Subscription",
       droit: "parametres",
       corps: objet({ plan: enumere("pro", "business"), periodicite: enumere("mensuel", "annuel") }, ["plan"]),
       succes: { 201: objet({ url: str }) },
@@ -536,8 +537,8 @@ export const openapi: Chemins = {
   },
   "/v1/abonnement/portail": {
     post: op({
-      resume: "Ouvrir le portail client Stripe",
-      tag: "Abonnement",
+      resume: "Open the Stripe customer portal",
+      tag: "Subscription",
       droit: "parametres",
       succes: { 201: objet({ url: str }) },
       erreurs: [409, 503],
@@ -545,8 +546,8 @@ export const openapi: Chemins = {
   },
   "/v1/abonnement/webhook": {
     post: op({
-      resume: "Webhook Stripe (signature Stripe-Signature vérifiée)",
-      tag: "Abonnement",
+      resume: "Stripe webhook (Stripe-Signature verified)",
+      tag: "Subscription",
       corps: objet({}),
       succes: { 200: objet({ recu: { type: "boolean" } }) },
       erreurs: [400],

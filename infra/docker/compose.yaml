@@ -67,13 +67,6 @@ services:
     ports: ["127.0.0.1:${YOLO_HOST_PORT:-23092}:3092"]
     read_only: false
 
-  rust-stack:
-    <<: *svc
-    profiles: [core]
-    image: ${SRC_REGISTRY:-ghcr.io/aphrody-labs}/rust-stack:${SRC_TAG:-latest}
-    ports: ["127.0.0.1:${RUST_STACK_HOST_PORT:-24100}:4100"]
-    volumes: [rust-stack-data:/data]
-
   r3d:
     <<: *svc
     profiles: [core]
@@ -191,7 +184,6 @@ services:
 volumes:
   aphrody-var:
   ai-os-home:
-  rust-stack-data:
   lore-data:
   llama-models:
   node-modules:

@@ -69,7 +69,7 @@ const facture = {
   echeance: "2099-12-31",
 };
 
-test("Factur-X émis par un tenant, reçu par un autre : lu, validé, isolé", async () => {
+test("Factur-X issued by one tenant, received by another: read, validated, isolated", async () => {
   const a = (await api("/v1/auth/inscription", "", { body: inscription("fa@exemple.fr", "Alpha") })).body.session;
   const b = (await api("/v1/auth/inscription", "", { body: inscription("fb@exemple.fr", "Beta") })).body.session;
 
@@ -95,13 +95,13 @@ test("Factur-X émis par un tenant, reçu par un autre : lu, validé, isolé", a
     { designation: "Conseil", quantite: 2, prixUnitaireHtCents: 45000, tauxTva: 200, htCents: 90000 },
   ]);
 
-  // Même fichier : pas de doublon.
+  // Same file: no duplicate.
   const bis = await deposer(b, fx);
   expect(bis.status).toBe(200);
   expect(bis.body).toMatchObject({ id: r.body.id, doublon: true });
   expect(await octets(`/v1/factures-recues/${r.body.id}/fichier`, b)).toEqual(fx);
 
-  // Isolation : A ne voit pas les factures reçues par B ; le même fichier déposé chez A est une autre ligne.
+  // Isolation: A does not see the invoices received by B; the same file submitted at A is another row.
   expect((await api("/v1/factures-recues", a)).body).toEqual([]);
   expect((await api(`/v1/factures-recues/${r.body.id}`, a)).status).toBe(404);
   expect((await api(`/v1/factures-recues/${r.body.id}/fichier`, a)).status).toBe(404);
@@ -113,7 +113,7 @@ test("Factur-X émis par un tenant, reçu par un autre : lu, validé, isolé", a
   expect((await api("/v1/factures-recues/pas-un-uuid", b)).status).toBe(404);
 });
 
-test("PDF sans XML : OCR + LLM, file à vérifier, correction puis validation manuelle", async () => {
+test("PDF without XML: OCR + LLM, queue to check, correction then manual validation", async () => {
   const t = (await api("/v1/auth/inscription", "", { body: inscription("fc@exemple.fr", "Gamma") })).body.session;
   const devis = await api("/v1/documents", t, { body: { ...facture, type: "devis" } });
   await api(`/v1/documents/${devis.body.id}/emettre`, t, { body: {} });
@@ -154,7 +154,7 @@ test("PDF sans XML : OCR + LLM, file à vérifier, correction puis validation ma
   expect((await api(`/v1/factures-recues/${r.body.id}/decision`, t, { body: { statut: "validee" } })).status).toBe(409);
   expect((await api("/v1/audit/verification", t)).body.ok).toBe(true);
 
-  // Type de contenu refusé.
+  // Content type refused.
   const res = await fetch(new URL("/v1/factures-recues", server.url), {
     method: "POST",
     headers: { "content-type": "image/png", authorization: `Bearer ${t}` },

@@ -1,8 +1,8 @@
-// Observabilité : un journal JSON par requête et des métriques Prometheus par route.
+// Observability: one JSON log per request and Prometheus metrics per route.
 //
-// Pas de données personnelles : la route est le motif (`/v1/documents/:id`), jamais l'URL réelle ;
-// ni requête, ni corps, ni IP, ni email. Le tenant est un identifiant opaque (uuid), posé par la route
-// authentifiée via `noterTenant` (aucune requête de plus).
+// No personal data: the route is the pattern (`/v1/documents/:id`), never the real URL;
+// no query, body, IP or email. The tenant is an opaque identifier (uuid), set by the
+// authenticated route through `noterTenant` (no extra query).
 import { AsyncLocalStorage } from "node:async_hooks";
 
 export interface Journal {
@@ -17,7 +17,7 @@ export interface Journal {
 
 const contexte = new AsyncLocalStorage<{ tenant?: string }>();
 
-/** Appelée par la route authentifiée une fois l'appelant résolu. */
+/** Called by the authenticated route once the caller is resolved. */
 export function noterTenant(tenantId: string) {
   const c = contexte.getStore();
   if (c) c.tenant = tenantId;
@@ -51,11 +51,11 @@ export class Metriques {
   texte(): string {
     const l = (v: string) => v.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
     const req = [
-      "# HELP auto_http_requetes_total Requêtes HTTP par route, méthode et statut.",
+      "# HELP auto_http_requetes_total HTTP requests by route, method and status.",
       "# TYPE auto_http_requetes_total counter",
     ];
     const dur = [
-      "# HELP auto_http_duree_secondes Durée des requêtes HTTP par route et méthode.",
+      "# HELP auto_http_duree_secondes HTTP request duration by route and method.",
       "# TYPE auto_http_duree_secondes histogram",
     ];
     for (const [k, s] of [...this.series].sort(([a], [b]) => a.localeCompare(b))) {
@@ -77,11 +77,11 @@ type Gestionnaire = (req: Request, server?: unknown) => Response | Promise<Respo
 export interface OptionsObservabilite {
   journal?: (j: Journal) => void;
   metriques?: Metriques;
-  /** Jeton Bearer exigé sur /metrics (`AUTO_METRICS_JETON`) ; sans jeton, /metrics est ouvert (dev). */
+  /** Bearer token required on /metrics (`AUTO_METRICS_JETON`); without a token, /metrics is open (dev). */
   jetonMetriques?: string;
 }
 
-/** Enveloppe chaque route (`Bun.serve({ routes })`) et ajoute `GET /metrics`. */
+/** Wraps every route (`Bun.serve({ routes })`) and adds `GET /metrics`. */
 export function instrumenter<T extends Record<string, unknown>>(
   routes: T,
   {
@@ -133,7 +133,7 @@ export function instrumenter<T extends Record<string, unknown>>(
   sortie["/metrics"] = {
     GET: (req: Request) => {
       if (jetonMetriques && req.headers.get("authorization") !== `Bearer ${jetonMetriques}`)
-        return new Response("non authentifié\n", { status: 401 });
+        return new Response("Not authenticated\n", { status: 401 });
       return new Response(metriques.texte(), { headers: { "content-type": "text/plain; version=0.0.4" } });
     },
   };

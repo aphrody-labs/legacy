@@ -1,0 +1,54 @@
+---
+title: HCT Color Utilities & CAM16 Math
+description: Perceptual color space, tonal palettes, and dynamic scheme generation powered by Google Material Color Utilities.
+---
+
+## What is HCT?
+
+**HCT** (Hue, Chroma, Tone) combines the perceptual accuracy of CAM16 with the lightness metric $L^*$ from CIELAB. Unlike sRGB or HSL where identical values produce wildly different perceived brightness, HCT tone ($0..100$) maps directly to human visual perception.
+
+<CardGroup cols={3}>
+  <Card title="Hue (0° - 360°)" icon="palette">
+    Perceptual color family (e.g. 265° for Google Blue).
+  </Card>
+  <Card title="Chroma (0 - 120+)" icon="sparkles">
+    Color saturation and purity.
+  </Card>
+  <Card title="Tone (0 - 100)" icon="sun">
+    Perceived luminance. Tone 100 is pure white, Tone 0 is pure black.
+  </Card>
+</CardGroup>
+
+---
+
+## Active Tonal Palette Sample
+
+Derived from Google Blue (`#4285F4`):
+
+| Tone         | Hex Color | Description                    |
+| :----------- | :-------- | :----------------------------- |
+| **Tone 100** | `#ffffff` | Maximum luminance (Pure White) |
+| **Tone 90**  | `#d8e2ff` | Light mode primary container   |
+| **Tone 80**  | `#adc6ff` | Dark mode primary accent       |
+| **Tone 40**  | `#005ac1` | Light mode primary fill        |
+| **Tone 20**  | `#002e69` | Dark mode primary container    |
+| **Tone 0**   | `#000000` | Minimum luminance (Pure Black) |
+
+---
+
+## Dynamic Scheme Variants
+
+<Tabs>
+  <Tab title="Tonal Spot">
+    The default Material 3 variant. Balanced chroma with serene tonal harmony.
+  </Tab>
+  <Tab title="Expressive">
+    Higher chroma with shifted secondary and tertiary hues for high energy.
+  </Tab>
+  <Tab title="Vibrant">
+    Pushes chroma to gamut limits while maintaining strict WCAG 2.2 contrast.
+  </Tab>
+  <Tab title="Monochrome">
+    Zero chroma across all tones. Grayscale precision for austere interfaces.
+  </Tab>
+</Tabs>

@@ -1,6 +1,7 @@
-//! Préparation d'une boîte : secrets tirés au hasard dans `.env` (les valeurs déjà présentes sont conservées),
-//! configuration de Hermes branchée sur Ollama, coffre Obsidian ouvert d'office avec une note d'accueil.
-//! `aphrody-box preparer /box [--gpu|--sans-gpu] [--email a@b.fr] [--domaine exemple.fr]`
+//! Box preparation: random secrets in `.env` (values already present are kept), Hermes configuration
+//! wired to Ollama, Obsidian vault opened by default with a welcome note (in the language of `BOX_LANG`, `LC_ALL`
+//! or `LANG`, English by default).
+//! `aphrody-box prepare /box [--gpu|--no-gpu] [--email a@b.com] [--domain example.com]`
 use base64::Engine;
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -10,9 +11,9 @@ pub struct Options {
     pub gpu: Option<bool>,
     pub email: Option<String>,
     pub domaine: Option<String>,
-    /// Adresse de la machine vue des navigateurs (IP ou nom), pour les liens envoyés par courriel.
+    /// Address of the machine as seen by browsers (IP or name), for the links sent by mail.
     pub hote: Option<String>,
-    /// Utilisateur et groupe propriétaires des fichiers de la boîte (ceux du dossier ; 1000 si c'est root).
+    /// User and group owning the box files (those of the folder; 1000 if root).
     pub proprietaire: Option<(u32, u32)>,
 }
 
@@ -22,11 +23,11 @@ fn fixe(v: &'static str) -> impl Fn() -> String {
 
 fn aleatoire(octets: usize) -> String {
     let mut o = vec![0u8; octets];
-    getrandom::fill(&mut o).expect("source d'aléa du système");
+    getrandom::fill(&mut o).expect("system randomness source");
     base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(o)
 }
 
-/// Valeurs d'un `.env` (guillemets simples ou doubles retirés, commentaires ignorés).
+/// Values of a `.env` (single or double quotes removed, comments ignored).
 pub fn lire_env(texte: &str) -> BTreeMap<String, String> {
     texte
         .lines()
@@ -47,7 +48,7 @@ pub fn lire_env(texte: &str) -> BTreeMap<String, String> {
         .collect()
 }
 
-/// Contenu du `.env` ; guillemets simples : compose n'interpole pas les `$` des empreintes bcrypt.
+/// Content of the `.env`; single quotes: compose does not interpolate the `$` of bcrypt hashes.
 pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> String {
     let garder = |cle: &str, defaut: &dyn Fn() -> String| existant.get(cle).filter(|v| !v.is_empty()).cloned().unwrap_or_else(defaut);
     let n8n_mdp = garder("N8N_MOT_DE_PASSE", &|| aleatoire(12));
@@ -62,7 +63,7 @@ pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> Strin
     };
     let cle_maitre = || {
         let mut o = [0u8; 32];
-        getrandom::fill(&mut o).expect("source d'aléa du système");
+        getrandom::fill(&mut o).expect("system randomness source");
         base64::engine::general_purpose::STANDARD.encode(o)
     };
     let domaine = o.domaine.clone().unwrap_or_else(|| existant.get("BOX_DOMAINE").cloned().unwrap_or_default());
@@ -74,7 +75,7 @@ pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> Strin
     };
     let sections: Vec<(&str, Vec<(&str, String)>)> = vec![
         (
-            "Accès",
+            "Access",
             vec![
                 ("BOX_ECOUTE", garder("BOX_ECOUTE", &fixe("0.0.0.0"))),
                 ("BOX_DOMAINE", domaine.clone()),
@@ -86,14 +87,14 @@ pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> Strin
             ],
         ),
         (
-            "Modèles d'IA téléchargés au premier démarrage",
+            "AI models downloaded on the first start",
             vec![
                 ("BOX_MODELE", garder("BOX_MODELE", &fixe("qwen3:4b"))),
                 ("BOX_MODELE_EMBEDDINGS", garder("BOX_MODELE_EMBEDDINGS", &fixe("nomic-embed-text"))),
             ],
         ),
         (
-            "Secrets des services (ne pas partager)",
+            "Service secrets (do not share)",
             vec![
                 ("BOX_PG_MOT_DE_PASSE", garder("BOX_PG_MOT_DE_PASSE", &|| aleatoire(24))),
                 ("AUTO_CLE_MAITRE", garder("AUTO_CLE_MAITRE", &cle_maitre)),
@@ -107,7 +108,7 @@ pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> Strin
             ],
         ),
         (
-            "Relais de courriel réel (facultatif ; par défaut, courriels lisibles dans « Courrier »)",
+            "Real mail relay (optional; by default, mails are readable in \"Mail\")",
             vec![
                 ("AUTO_SMTP_HOTE", garder("AUTO_SMTP_HOTE", &fixe("mailpit"))),
                 ("AUTO_SMTP_PORT", garder("AUTO_SMTP_PORT", &fixe("1025"))),
@@ -117,7 +118,7 @@ pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> Strin
             ],
         ),
         (
-            "Adresses publiques (déduites de BOX_DOMAINE et BOX_HOTE à chaque préparation)",
+            "Public addresses (derived from BOX_DOMAINE and BOX_HOTE on each preparation)",
             vec![
                 ("BOX_URL_AUTO", url_auto),
                 ("BOX_URL_N8N", url_n8n),
@@ -135,7 +136,7 @@ pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> Strin
     let connues: Vec<&str> = sections.iter().flat_map(|(_, v)| v.iter().map(|(k, _)| *k)).collect();
     let autres: Vec<(&str, String)> =
         existant.iter().filter(|(k, _)| !connues.contains(&k.as_str())).map(|(k, v)| (k.as_str(), v.clone())).collect();
-    let mut texte = String::from("# Aphrody Box : généré par `aphrody-box preparer`, vos modifications sont conservées.\n");
+    let mut texte = String::from("# Aphrody Box: generated by `aphrody-box prepare`, your changes are kept.\n");
     for (titre, valeurs) in sections.iter().chain(std::iter::once(&("Ajouts", autres))) {
         if valeurs.is_empty() {
             continue;
@@ -150,17 +151,17 @@ pub fn construire_env(existant: &BTreeMap<String, String>, o: &Options) -> Strin
 
 pub fn config_hermes(modele: &str) -> String {
     format!(
-        "# Configuration de Hermes préparée par la boîte : modèle local servi par Ollama.
-# Installez d'autres modèles depuis la console (Modèles d'IA), puis changez-le ici ou avec `hermes model`.
+        "# Hermes configuration prepared by the box: local model served by Ollama.
+# Install other models from the console (AI models), then change it here or with `hermes model`.
 model:
   provider: custom
   default: {modele}
   base_url: http://ollama:11434/v1
   api_key: none
-  # Hermes exige au moins 64 000 jetons : Ollama sert la même fenêtre (OLLAMA_CONTEXT_LENGTH du compose).
+  # Hermes requires at least 64,000 tokens: Ollama serves the same window (OLLAMA_CONTEXT_LENGTH of the compose file).
   context_length: 65536
 
-# Tâches auxiliaires (compression, vision, compétences, MCP) sur le même modèle local, sans service extérieur.
+# Auxiliary tasks (compression, vision, skills, MCP) on the same local model, without any outside service.
 auxiliary:
   compression:
     provider: main
@@ -174,15 +175,11 @@ auxiliary:
     )
 }
 
-const ACCUEIL: &str = "# Bienvenue dans votre coffre
-
-Ce dossier est le coffre Obsidian de la boîte. Il est aussi lisible :
-
-- par **Hermes**, dans `/opt/data/coffre` : demandez-lui de résumer ou de ranger vos notes ;
-- par **n8n**, dans `/coffre` : un workflow peut y écrire un compte rendu chaque soir.
-
-Sur la machine qui héberge la boîte, ce sont de simples fichiers Markdown du dossier `coffre`.
-";
+/// Welcome note of the vault, in the language of the environment (`BOX_LANG`, `LC_ALL`, `LANG`), English by default.
+fn accueil() -> String {
+    let tag = ["BOX_LANG", "LC_ALL", "LANG"].iter().find_map(|k| std::env::var(k).ok().filter(|v| !v.is_empty()));
+    crate::i18n::translate(crate::i18n::negotiate(&tag.unwrap_or_default()), "vault.welcome", &[])
+}
 
 fn ecrire_si_absent(chemin: &Path, contenu: &str) -> std::io::Result<()> {
     if chemin.exists() {
@@ -194,8 +191,8 @@ fn ecrire_si_absent(chemin: &Path, contenu: &str) -> std::io::Result<()> {
     std::fs::write(chemin, contenu)
 }
 
-/// Propriétaire du dossier de la boîte ; root (préparateur lancé dans un conteneur sans correspondance
-/// d'utilisateurs, Docker Desktop) devient 1000, l'utilisateur des images Hermes, Obsidian et n8n.
+/// Owner of the box folder; root (preparer run in a container without user mapping,
+/// Docker Desktop) becomes 1000, the user of the Hermes, Obsidian and n8n images.
 fn proprietaire(dossier: &Path) -> (u32, u32) {
     #[cfg(unix)]
     {
@@ -210,7 +207,7 @@ fn proprietaire(dossier: &Path) -> (u32, u32) {
     (1000, 1000)
 }
 
-/// Rend `chemin` (récursivement) à `(uid, gid)` ; sans effet hors Unix ou sans droit de changer de propriétaire.
+/// Gives `chemin` (recursively) to `(uid, gid)`; no effect outside Unix or without the right to change owner.
 fn rendre(chemin: &Path, (uid, gid): (u32, u32)) -> std::io::Result<()> {
     #[cfg(unix)]
     {
@@ -246,18 +243,18 @@ pub fn preparer(dossier: &Path, o: &Options) -> std::io::Result<BTreeMap<String,
     }
     let v = lire_env(&env);
     ecrire_si_absent(&dossier.join("donnees/hermes/config.yaml"), &config_hermes(&v["BOX_MODELE"]))?;
-    // Coffre déjà enregistré et ouvert : Obsidian démarre dessus au lieu du sélecteur de coffres.
+    // Vault already registered and open: Obsidian starts on it instead of the vault picker.
     let ts = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis()).unwrap_or(0);
     ecrire_si_absent(
         &dossier.join("donnees/obsidian/.config/obsidian/obsidian.json"),
         &format!("{{\"vaults\":{{\"coffre\":{{\"path\":\"/config/Coffre\",\"ts\":{ts},\"open\":true}}}}}}\n"),
     )?;
     ecrire_si_absent(&dossier.join("coffre/.obsidian/app.json"), "{\"promptDelete\":true}\n")?;
-    ecrire_si_absent(&dossier.join("coffre/Bienvenue.md"), ACCUEIL)?;
+    ecrire_si_absent(&dossier.join("coffre/Welcome.md"), &accueil())?;
     for chemin in [".env", "donnees", "coffre"] {
         rendre(&dossier.join(chemin), qui)?;
     }
-    // Coffre partagé avec n8n (utilisateur 1000, membre du groupe de la boîte) : écriture par le groupe.
+    // Vault shared with n8n (user 1000, member of the box group): group write access.
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -308,7 +305,7 @@ mod tests {
         std::fs::create_dir_all(&d).unwrap();
         let v = preparer(&d, &Options::default()).unwrap();
         assert!(std::fs::read_to_string(d.join("donnees/hermes/config.yaml")).unwrap().contains(&v["BOX_MODELE"]));
-        assert!(d.join("coffre/Bienvenue.md").exists());
+        assert!(d.join("coffre/Welcome.md").exists());
         let avant = std::fs::read_to_string(d.join(".env")).unwrap();
         preparer(&d, &Options::default()).unwrap();
         assert_eq!(lire_env(&avant), lire_env(&std::fs::read_to_string(d.join(".env")).unwrap()));

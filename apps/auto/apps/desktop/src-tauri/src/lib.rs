@@ -1,40 +1,42 @@
-//! Coque native d'auto (bureau et mobile) : une seule fenêtre qui charge le front web (`apps/web`) d'une instance auto.
+//! Native shell of auto (desktop and mobile): a single window loading the web front (`apps/web`) of an auto instance.
 //!
-//! L'URL de l'instance vient de `AUTO_URL` (par défaut `https://auto.aphrody.com` ; `http://localhost:3001` pour le
-//! front de dev). Le front reste
-//! servi par Bun : la coque n'embarque ni API ni données, n'expose aucune commande IPC au contenu distant, et
-//! n'ouvre dans la fenêtre que l'origine de l'instance (les autres liens partent dans le navigateur du système).
+//! The instance URL comes from `AUTO_URL` (default `https://auto.aphrody.com`; `http://localhost:3001` for the
+//! dev front). The front stays
+//! served by Bun: the shell embeds neither API nor data, exposes no IPC command to remote content, and
+//! opens in the window only the instance origin (other links go to the system browser).
 
 use tauri::{WebviewUrl, WebviewWindowBuilder};
 use tauri_plugin_opener::OpenerExt;
 use url::Url;
 #[cfg(desktop)]
+mod i18n;
+#[cfg(desktop)]
 mod mise_a_jour;
 
-/// Instance par défaut : le service en ligne. Une instance auto-hébergée ou de dev se choisit par `AUTO_URL`.
+/// Default instance: the online service. A self-hosted or dev instance is chosen with `AUTO_URL`.
 pub const URL_DEFAUT: &str = match option_env!("AUTO_INSTANCE_URL") {
     Some(url) => url,
     None => "https://auto.aphrody.com",
 };
 
-/// URL de l'application (`/app`) pour une instance donnée ; seuls `http` et `https` sont admis.
+/// URL of the application (`/app`) for a given instance; only `http` and `https` are accepted.
 pub fn url_application(instance: &str) -> Result<Url, String> {
-    let base = Url::parse(instance.trim()).map_err(|e| format!("AUTO_URL invalide : {e}"))?;
+    let base = Url::parse(instance.trim()).map_err(|e| format!("invalid AUTO_URL: {e}"))?;
     if !matches!(base.scheme(), "http" | "https") {
-        return Err(format!("AUTO_URL : schéma {} refusé (http ou https)", base.scheme()));
+        return Err(format!("AUTO_URL: scheme {} refused (http or https)", base.scheme()));
     }
     if !base.username().is_empty() || base.password().is_some() {
-        return Err("AUTO_URL : identifiants dans l'URL refusés".into());
+        return Err("AUTO_URL: credentials in the URL refused".into());
     }
     base.join("/app").map_err(|e| e.to_string())
 }
 
-/// Vrai si `cible` reste sur l'origine de l'instance (schéma, hôte et port identiques).
+/// True if `cible` stays on the instance origin (same scheme, host and port).
 pub fn meme_origine(instance: &Url, cible: &Url) -> bool {
     instance.origin() == cible.origin()
 }
 
-/// Le code utilisateur est public et à usage unique ; aucun jeton de session ne transite dans cette URL.
+/// The user code is public and single-use; no session token passes through this URL.
 pub fn verification_appareil(instance: &Url, cible: &Url) -> bool {
     if !meme_origine(instance, cible)
         || cible.path() != "/app/verification-appareil"
@@ -79,7 +81,7 @@ pub fn destination(instance: &Url, cible: &Url) -> Navigation {
     }
 }
 
-/// Point d'entrée commun : `main` sur ordinateur, bibliothèque chargée par l'application Android ou iOS sur mobile.
+/// Common entry point: `main` on desktop, library loaded by the Android or iOS application on mobile.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn lancer() {
     let instance = std::env::var("AUTO_URL").unwrap_or_else(|_| URL_DEFAUT.to_owned());
@@ -94,7 +96,7 @@ pub fn lancer() {
         .menu(|app| {
             use tauri::menu::{Menu, MenuItem, Submenu};
             let verifier =
-                MenuItem::with_id(app, "auto-mise-a-jour", "Rechercher des mises à jour…", true, None::<&str>)?;
+                MenuItem::with_id(app, "auto-mise-a-jour", i18n::t("update.menu", &[]), true, None::<&str>)?;
             let sous_menu = Submenu::with_items(app, "Auto", true, &[&verifier])?;
             Menu::with_items(app, &[&sous_menu])
         })
@@ -108,7 +110,7 @@ pub fn lancer() {
         .setup(move |app| {
             let handle = app.handle().clone();
             let fenetre = WebviewWindowBuilder::new(app, "principale", WebviewUrl::External(url.clone()))
-                // Laisser le navigateur traiter les fichiers/dossiers déposés en HTML5, sans IPC distant.
+                // Let the browser handle files/folders dropped in HTML5, without remote IPC.
                 .disable_drag_drop_handler()
                 .initialization_script(
                     "Object.defineProperty(window,'__AUTO_NATIVE__',{value:true,configurable:false});",
@@ -118,10 +120,10 @@ pub fn lancer() {
                     Navigation::Navigateur => {
                         let handle = handle.clone();
                         let cible = cible.to_string();
-                        // Ne jamais bloquer le thread de navigation Android pendant l'ouverture système.
+                        // Never block the Android navigation thread while the system opens the link.
                         tauri::async_runtime::spawn_blocking(move || {
                             if handle.opener().open_url(cible, None::<&str>).is_err() {
-                                eprintln!("Ouverture du navigateur système impossible");
+                                eprintln!("Could not open the system browser");
                             }
                         });
                         false
@@ -136,7 +138,7 @@ pub fn lancer() {
             Ok(())
         })
         .run(tauri::generate_context!())
-        .expect("échec du lancement de la coque auto");
+        .expect("auto shell failed to start");
 }
 
 #[cfg(test)]
@@ -148,7 +150,7 @@ mod tests {
         assert_eq!(url_application("http://localhost:3001").unwrap().as_str(), "http://localhost:3001/app");
         assert_eq!(url_application(" https://auto.exemple.fr/ ").unwrap().as_str(), "https://auto.exemple.fr/app");
         assert!(url_application("file:///C:/app").is_err());
-        assert!(url_application("pas une url").is_err());
+        assert!(url_application("not a url").is_err());
     }
 
     #[test]

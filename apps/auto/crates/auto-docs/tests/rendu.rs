@@ -29,7 +29,7 @@ fn pages(pdf: &[u8]) -> usize {
     pdfcraft_model::pages(&Document::open(Arc::new(pdf.to_vec())).unwrap()).len()
 }
 
-/// Texte de la première page, décodé comme un lecteur : suit `Tf`, décode `<…> Tj` par ToUnicode.
+/// Text of the first page, decoded like a reader: follows `Tf`, decodes `<…> Tj` through ToUnicode.
 fn texte_page1(pdf: &[u8]) -> String {
     let doc = Document::open(Arc::new(pdf.to_vec())).unwrap();
     let page = pdfcraft_model::pages(&doc).remove(0);

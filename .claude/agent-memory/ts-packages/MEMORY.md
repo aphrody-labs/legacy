@@ -1,0 +1,1 @@
+- [i18n stack traps](i18n-stack-traps.md) — eld detector choice, checkdeps ticket for ai-os, fr1 cargo contention workaround, commit.ts --content meaning

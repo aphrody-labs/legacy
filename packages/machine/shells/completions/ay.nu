@@ -5,18 +5,28 @@ export extern "ay" [
   --version(-V)  # Print version
 ]
 export extern "ay doctor" [
+  --deps  # check the supply-chain policy (docs/deps/POLICY.md) instead
+  --dups  # with --deps: list every crate resolved at several versions
+  --json  # with --deps: JSON report
+  --root: string  # repository root (default: $SRC_ROOT, else the nearest
   --help  # display usage information
   ...args: string
 ]
 export extern "ay lock" [
-  --root: string  # target root directory (defaults to C:\aphrody)
-  --out: string  # output lockfile path (defaults to C:\aphrody\src.lock.json)
-  --lock-only  # skip emitting DEPS, .repo/manifests/default.xml, and
+  --root: string  # repository root (default: $SRC_ROOT, else the nearest
+  --out: string  # output lockfile path (default: <root>/src.lock.json)
+  --lock-only  # write src.lock.json only (no derived manifests)
+  --deps  # refresh the language locks (Cargo.lock, bun.lock, uv.lock)
+  --bump  # with --deps: upgrade within the declared requirements (cargo
+  --breaking  # with --deps: also raise Cargo requirements across major
+  --hoist  # with --deps: move inline member requirements into
+  --dedupe  # with --deps: collapse duplicate crate versions where a lower
   --help  # display usage information
   ...args: string
 ]
 export extern "ay manifests" [
-  --root: string  # target root directory (defaults to C:\aphrody)
+  --root: string  # repository root (default: $SRC_ROOT, else the nearest
+  --check  # verify instead of writing: exit 1 when a derived file or a
   --help  # display usage information
   ...args: string
 ]
@@ -206,10 +216,6 @@ export extern "ay git artifacts init" [
   --help  # display usage information
   ...args: string
 ]
-export extern "ay git manifests" [
-  --help  # display usage information
-  ...args: string
-]
 export extern "ay git maintainer" [
   --root(-r)  # monorepo root path (default: C:\aphrody)
   --help  # display usage information
@@ -306,6 +312,21 @@ export extern "ay bench report" [
 export extern "ay scope" [
   ...args: string
 ]
+export extern "ay gaming" [
+  ...args: string
+]
+export extern "ay upstream" [
+  ...args: string
+]
+export extern "ay linux" [
+  ...args: string
+]
+export extern "ay pkg" [
+  ...args: string
+]
+export extern "ay lfs" [
+  ...args: string
+]
 export extern "ay ssh" [
   --help(-h)  # Print help
 ]
@@ -338,6 +359,24 @@ export extern "ay rt" [
   --help(-h)  # Print help
 ]
 export extern "ay rt ls" [
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay rt matrix" [
+  --json  # 
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay rt detect" [
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay rt switch" [
+  --runtime: string  # runtime[@version|range|lts|latest], repeatable (node, deno, bun, python)
+  --engine: string  # engine id from `browser-engines engines list` (chrome@<channel>, firefox@<channel>, servo, ...)
+  --gpu: string  # Require this WebGPU implementation (dawn, wgpu)
+  --auto  # Take runtimes and engine from the project files, latest stable otherwise
+  --no-write  # Install only; do not write version files
   --help(-h)  # Print help
   ...args: string
 ]
@@ -530,6 +569,18 @@ export extern "ay ninja" [
 export extern "ay gn" [
   ...args: string
 ]
+export extern "ay auth" [
+  ...args: string
+]
+export extern "ay secret" [
+  ...args: string
+]
+export extern "ay vault" [
+  ...args: string
+]
+export extern "ay conformance" [
+  ...args: string
+]
 export extern "ay build" [
   --target(-t): string  # Preset name or target triple; repeat for several targets (see --list)
   --list  # Print presets with Rust target and native toolchain status, then exit
@@ -561,6 +612,36 @@ export extern "ay up" [
 export extern "ay self-update" [
   --check  # Only report whether a newer release exists (exit 1 when one does)
   --version: string  # Install this version instead of the latest (`0.3.0`)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay bun" [
+  --help(-h)  # Print help
+]
+export extern "ay bun watch" [
+  --json  # Print the report as JSON
+  --apply  # Also propose the version bumps (`ay bun bump`), without writing them
+  --dry-run  # Do not save the state (the next run reports the same changes again)
+  --state: string  # State file (default ~/.local/share/ay/bun-watch/state.json, or $AY_BUN_WATCH_STATE)
+  --checkout: string  # Fork checkout (default <repo>/third_party/bun); read only, never fetched
+  --install-schedule  # Register the watch as a scheduled task (Windows) or systemd user timer (Linux)
+  --remove-schedule  # Remove the scheduled task or timer
+  --every: string  # Hours between scheduled runs [default: 6]
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay bun bump" [
+  --to: string  # Target version (default: the latest stable release of oven-sh/bun)
+  --write  # Apply the edits (default: only list them)
+  --json  # Print the proposals as JSON
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay bun install" [
+  --fork  # The fork's build (the only source: stable and canary come from `ay rt install bun@<v>`)
+  --run: string  # Workflow run id (default: the last successful run on main)
+  --activate  # Copy it to ~/.bun/bin/bun, keeping the previous binary as bun.previous
+  --json  # Print the result as JSON
   --help(-h)  # Print help
   ...args: string
 ]
@@ -656,6 +737,209 @@ export extern "ay ai import" [
   --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
   --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
   --json  # JSON output (ls, check)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay ai fabric" [
+  --manifest: string  # Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)
+  --env-file: string  # Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)
+  --json  # JSON output (ls, check)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay docs" [
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+]
+export extern "ay docs sync" [
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --source(-s): string  # Only these sources: fork, upstream, skills (repeatable)
+  --offline  # Do not fetch bun.com
+  --json  # JSON report (schema ay-docs-sync/1)
+  --quiet(-q)  # Print nothing unless a source fails
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay docs bun" [
+  --limit(-n): string  # Maximum results [default: 8]
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --source(-s): string  # Only one source: fork, upstream, skills
+  --json  # JSON (schema ay-docs-search/1)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay docs show" [
+  --json  # 
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay docs stats" [
+  --json  # 
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay docs schedule" [
+  --every: string  # Hours between runs [default: 6]
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --remove  # Remove the schedule
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay flat" [
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --fork: string  # Fork checkout (default: <root>/third_party/bun)
+  --help(-h)  # Print help
+]
+export extern "ay flat list" [
+  --json  # 
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --fork: string  # Fork checkout (default: <root>/third_party/bun)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay flat sync" [
+  --dry-run  # Show what would change, write nothing
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --fork: string  # Fork checkout (default: <root>/third_party/bun)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay flat check" [
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --strict  # Fail (exit 3) when the fork is not checked out instead of skipping
+  --fork: string  # Fork checkout (default: <root>/third_party/bun)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay hash" [
+  --seed: string  # Seed [default: 0]
+  --legacy  # The legacy Wyhash11 variant instead of wyhash final4
+  --json  # 
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay time" [
+  --runs(-n): string  # Runs [default: 20]
+  --warmup: string  # Unmeasured runs first [default: 1]
+  --show-output  # Keep the command's stdout and stderr
+  --json  # 
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay chromium" [
+  --host: string  # Fleet node that builds Chromium [default: fr1]
+  --out: string  # Output directory name under src/out (default: out_name of factory.toml)
+  --dry-run  # Print the host and the script, run nothing
+  --detach  # Run in the background on the host (nohup, log under the checkout root); print the log path
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+]
+export extern "ay chromium status" [
+  --host: string  # Fleet node that builds Chromium [default: fr1]
+  --out: string  # Output directory name under src/out (default: out_name of factory.toml)
+  --dry-run  # Print the host and the script, run nothing
+  --detach  # Run in the background on the host (nohup, log under the checkout root); print the log path
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay chromium sync" [
+  --host: string  # Fleet node that builds Chromium [default: fr1]
+  --no-hooks  # Skip `gclient runhooks`
+  --out: string  # Output directory name under src/out (default: out_name of factory.toml)
+  --dry-run  # Print the host and the script, run nothing
+  --detach  # Run in the background on the host (nohup, log under the checkout root); print the log path
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay chromium gn" [
+  --host: string  # Fleet node that builds Chromium [default: fr1]
+  --out: string  # Output directory name under src/out (default: out_name of factory.toml)
+  --dry-run  # Print the host and the script, run nothing
+  --detach  # Run in the background on the host (nohup, log under the checkout root); print the log path
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay chromium build" [
+  --host: string  # Fleet node that builds Chromium [default: fr1]
+  --out: string  # Output directory name under src/out (default: out_name of factory.toml)
+  --dry-run  # Print the host and the script, run nothing
+  --detach  # Run in the background on the host (nohup, log under the checkout root); print the log path
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay chromium autoninja" [
+  --host: string  # Fleet node that builds Chromium [default: fr1]
+  --out: string  # Output directory name under src/out (default: out_name of factory.toml)
+  --dry-run  # Print the host and the script, run nothing
+  --detach  # Run in the background on the host (nohup, log under the checkout root); print the log path
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay chromium toolchain" [
+  --host: string  # Fleet node that builds Chromium [default: fr1]
+  --out: string  # Output directory name under src/out (default: out_name of factory.toml)
+  --dry-run  # Print the host and the script, run nothing
+  --detach  # Run in the background on the host (nohup, log under the checkout root); print the log path
+  --root: string  # Monorepo root (default: $SRC_ROOT, else the enclosing checkout)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay engines" [
+  ...args: string
+]
+export extern "ay agents" [
+  ...args: string
+]
+export extern "ay steam" [
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --help(-h)  # Print help
+]
+export extern "ay steam root" [
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay steam libraries" [
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay steam apps" [
+  --filter: string  # Keep apps whose id equals, or whose name contains, this text (case-insensitive)
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay steam vdf" [
+  --format: string  # auto (default), text, binary, appinfo [default: auto]
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --app: string  # appinfo: this app's KeyValues (default: header summary)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay steam compat" [
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay steam host" [
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --help(-h)  # Print help
+  ...args: string
+]
+export extern "ay steam env" [
+  --prefix: string  # Proton prefix directory (STEAM_COMPAT_DATA_PATH; default: <library>/steamapps/compatdata/<app>)
+  --root: string  # Steam root (default: $STEAM_PATH, else the first installation found)
+  --install-path: string  # Game directory (default: the installed app's directory)
+  --cache-root: string  # Shader caches root (<root>/dxvk, <root>/vkd3d, <root>/mesa)
+  --gamemode  # Wrap with gamemoderun when installed
   --help(-h)  # Print help
   ...args: string
 ]

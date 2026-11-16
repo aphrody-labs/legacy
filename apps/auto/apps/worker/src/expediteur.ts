@@ -1,5 +1,5 @@
-// Expéditeur de l'outbox : premier type de job du worker. Livraison au moins une fois ; le récepteur
-// dédoublonne par l'identifiant d'événement (corps signé et en-tête x-auto-evenement).
+// Outbox sender: first job type of the worker. At-least-once delivery; the receiver
+// deduplicates by event id (signed body and x-auto-evenement header).
 import { livrer, type Webhook } from "@auto/services";
 import { infoSecret } from "@auto/services/webhooks";
 import { JOB_LIVRAISON, JOB_WEBHOOK, lireEvenement, lireWebhook, noterLivraison, type Sql } from "@auto/store";
@@ -8,7 +8,7 @@ import type { Traitements } from "./worker";
 
 const id = (payload: Record<string, unknown>) => String(payload.evenementId);
 
-/** Livraison opérateur (n8n de l'opérateur) : l'état de livraison est porté par l'événement. */
+/** Operator delivery (the operator's n8n): the delivery state is carried by the event. */
 export function expediteur(sql: Sql, w: Webhook): Traitements {
   return {
     [JOB_LIVRAISON]: {
@@ -31,8 +31,8 @@ export function expediteur(sql: Sql, w: Webhook): Traitements {
 }
 
 /**
- * Abonnements webhook des tenants : même corps signé, secret propre à l'abonnement (déchiffré à chaque
- * envoi) ; l'état de livraison est celui du job. Actif même sans livraison opérateur.
+ * Tenant webhook subscriptions: same signed body, secret specific to the subscription (decrypted on each
+ * send); the delivery state is the job's. Active even without operator delivery.
  */
 export function abonnementsTenants(sql: Sql): Traitements {
   return {

@@ -1,5 +1,5 @@
-/* Console de l'Aphrody Box. Salle de contrôle claire : fond brume, encre marine, une couleur par application
-   (sa bande d'identité), états toujours doublés d'un libellé. Thème sombre par prefers-color-scheme. */
+/* Aphrody Box console. Light control room: mist background, navy ink, one color per application
+      (its identity band), states always doubled by a label. Dark theme through prefers-color-scheme. */
 
 :root {
   --fond: #e7ecf1;
@@ -278,7 +278,7 @@ section > p {
   max-inline-size: 70ch;
 }
 
-/* La phrase d'état est l'élément fort de la page. */
+/* The state sentence is the strong element of the page. */
 .tete {
   padding-block-start: 1.5rem;
   gap: 0.75rem;
@@ -378,7 +378,7 @@ section > p {
   }
 }
 
-/* Applications : bande d'identité colorée à gauche, la couleur du service ne porte jamais seule l'état. */
+/* Applications: colored identity band on the left, the service color never carries the state alone. */
 
 .apps {
   list-style: none;
@@ -511,7 +511,7 @@ section > p {
   }
 }
 
-/* Installation de modèles */
+/* Model installation */
 
 .installer {
   display: grid;

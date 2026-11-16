@@ -1,5 +1,5 @@
-// Console opérateur : santé, plans publics et, connecté au tenant opérateur (AUTO_TENANT_OPERATEUR), ses factures
-// d'abonnement, puis les routes /v1/admin : entreprises, suspension, événements en échec, audit de tous les tenants.
+// Operator console: health, public plans and, signed in to the operator tenant (AUTO_TENANT_OPERATEUR), its
+// subscription invoices, then the /v1/admin routes: companies, suspension, failed events, audit of all tenants.
 import { api, ErreurApi, type Moi } from "@auto/client";
 import { dateFr, emailValide, eur, nombre } from "@auto/ui/format";
 import {
@@ -18,6 +18,7 @@ import {
 import { Activity, Ban, LogIn, LogOut, RotateCcw, ShieldCheck } from "@auto/ui/symboles";
 import { useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
+import { initLocale, t as tr } from "./i18n";
 
 function Connexion({ onSession }: { onSession: () => void }) {
   const [email, setEmail] = useState("");
@@ -29,13 +30,13 @@ function Connexion({ onSession }: { onSession: () => void }) {
   const [envoi, setEnvoi] = useState(false);
   async function soumettre(e: FormEvent) {
     e.preventDefault();
-    if (!emailValide(email)) return setErrEmail("Adresse e-mail invalide.");
+    if (!emailValide(email)) return setErrEmail(tr("login.invalid_email"));
     setErrEmail(null);
     setEnvoi(true);
     setErreur(null);
     try {
       if (defi) {
-        // Second facteur (Better Auth) : code TOTP ou code de secours.
+        // Second factor (Better Auth): TOTP code or backup code.
         await admin("/v1/auth/2fa", { defi, code: code.trim() });
         return onSession();
       }
@@ -51,10 +52,10 @@ function Connexion({ onSession }: { onSession: () => void }) {
   if (defi)
     return (
       <form className="carte grille" noValidate onSubmit={soumettre} aria-labelledby="titre-connexion">
-        <h2 id="titre-connexion">Double authentification</h2>
+        <h2 id="titre-connexion">{tr("twofa.title")}</h2>
         <ResumeErreurs erreur={erreur} />
         <ChampTexte
-          libelle="Code de l'application ou code de secours"
+          libelle={tr("twofa.code")}
           autoComplete="one-time-code"
           requis
           value={code}
@@ -62,18 +63,18 @@ function Connexion({ onSession }: { onSession: () => void }) {
         />
         <div>
           <Bouton type="submit" variante="primaire" icone={ShieldCheck} chargement={envoi}>
-            Valider
+            {tr("twofa.submit")}
           </Bouton>
         </div>
       </form>
     );
   return (
     <form className="carte grille" noValidate onSubmit={soumettre} aria-labelledby="titre-connexion">
-      <h2 id="titre-connexion">Connexion opérateur</h2>
+      <h2 id="titre-connexion">{tr("login.title")}</h2>
       <ResumeErreurs erreur={erreur} />
       <div className="grille grille-2">
         <ChampTexte
-          libelle="E-mail"
+          libelle={tr("login.email")}
           type="email"
           autoComplete="email"
           requis
@@ -82,7 +83,7 @@ function Connexion({ onSession }: { onSession: () => void }) {
           onChange={(e) => setEmail(e.target.value)}
         />
         <ChampTexte
-          libelle="Mot de passe"
+          libelle={tr("login.password")}
           type="password"
           autoComplete="current-password"
           requis
@@ -92,7 +93,7 @@ function Connexion({ onSession }: { onSession: () => void }) {
       </div>
       <div>
         <Bouton type="submit" variante="primaire" icone={LogIn} chargement={envoi}>
-          Se connecter
+          {tr("login.submit")}
         </Bouton>
       </div>
     </form>
@@ -109,7 +110,7 @@ interface TenantAdmin {
   suspendu: { depuis: string; motif: string | null } | null;
 }
 
-/** Appel d'une route opérateur avec la session en cookie (mutations en JSON, comme l'exige l'anti-CSRF). */
+/** Calls an operator route with the cookie session (mutations in JSON, as the anti-CSRF requires). */
 async function admin<T>(chemin: string, corps?: unknown): Promise<T> {
   const r = await fetch(chemin, {
     method: corps === undefined ? "GET" : "POST",
@@ -152,7 +153,7 @@ function Entreprises() {
       setEnCours(null);
     }
   }
-  /** Rétablir est immédiat ; suspendre ouvre un formulaire qui exige un motif (tracé dans l'audit du tenant). */
+  /** Restoring is immediate; suspending opens a form that requires a reason (traced in the tenant audit). */
   function basculer(t: TenantAdmin) {
     if (t.suspendu) return envoyer(t);
     setASuspendre(t);
@@ -161,58 +162,61 @@ function Entreprises() {
   function confirmer(e: FormEvent) {
     e.preventDefault();
     if (!aSuspendre) return;
-    if (!motif.trim())
-      return setErreurMotif("Indiquez le motif : il est enregistré dans le journal d'audit de l'entreprise.");
+    if (!motif.trim()) return setErreurMotif(tr("companies.reason_required"));
     void envoyer(aSuspendre, motif.trim());
   }
   return (
     <section className="carte pile-serree" aria-labelledby="sec-entreprises">
-      <h2 id="sec-entreprises">Entreprises</h2>
+      <h2 id="sec-entreprises">{tr("companies.title")}</h2>
       <p className="attenue">
-        {nombre(d.donnees.tenants.length)} entreprises ; {nombre(d.donnees.echecs)} événements en échec ;{" "}
-        {d.donnees.auditRompus
-          ? `${nombre(d.donnees.auditRompus)} journaux d'audit rompus`
-          : "tous les journaux d'audit sont intègres"}
-        .
+        {tr("companies.summary", {
+          companies: tr("companies.count", { count: d.donnees.tenants.length }),
+          failed: tr("companies.failed", { count: d.donnees.echecs }),
+          audit: d.donnees.auditRompus
+            ? tr("companies.audit_broken", { count: d.donnees.auditRompus })
+            : tr("companies.audit_ok"),
+        })}
       </p>
       <div className="tableau-conteneur">
         <table className="tableau">
           <thead>
             <tr>
-              <th scope="col">Entreprise</th>
+              <th scope="col">{tr("companies.company")}</th>
               <th scope="col">SIREN</th>
-              <th scope="col">Plan</th>
+              <th scope="col">{tr("plans.plan")}</th>
               <th scope="col" className="num">
-                Membres
+                {tr("companies.members")}
               </th>
-              <th scope="col">État</th>
+              <th scope="col">{tr("companies.state")}</th>
               <th scope="col">
-                <span className="visuellement-cache">Action</span>
+                <span className="visuellement-cache">{tr("companies.action")}</span>
               </th>
             </tr>
           </thead>
           <tbody>
             {d.donnees.tenants.map((t) => (
               <tr key={t.id}>
-                <td data-libelle="Entreprise">{t.nom}</td>
+                <td data-libelle={tr("companies.company")}>{t.nom}</td>
                 <td data-libelle="SIREN" className="chiffres">
                   {t.siren}
                 </td>
-                <td data-libelle="Plan">
+                <td data-libelle={tr("plans.plan")}>
                   {t.plan} ({t.statut})
                 </td>
-                <td data-libelle="Membres" className="num">
+                <td data-libelle={tr("companies.members")} className="num">
                   {nombre(t.membres)}
                 </td>
-                <td data-libelle="État">{t.suspendu ? `Suspendue : ${t.suspendu.motif ?? ""}` : "Active"}</td>
-                <td data-libelle="Action">
+                <td data-libelle={tr("companies.state")}>
+                  {t.suspendu ? tr("companies.suspended", { reason: t.suspendu.motif ?? "" }) : tr("companies.active")}
+                </td>
+                <td data-libelle={tr("companies.action")}>
                   <Bouton
                     variante="secondaire"
                     icone={t.suspendu ? RotateCcw : Ban}
                     chargement={enCours === t.id}
                     onClick={() => basculer(t)}
                   >
-                    {t.suspendu ? "Rétablir" : "Suspendre"}
+                    {t.suspendu ? tr("companies.restore") : tr("companies.suspend")}
                   </Bouton>
                 </td>
               </tr>
@@ -222,10 +226,10 @@ function Entreprises() {
       </div>
       {aSuspendre && (
         <form className="pile-serree" onSubmit={confirmer} aria-labelledby="titre-suspension">
-          <h3 id="titre-suspension">Suspendre « {aSuspendre.nom} »</h3>
-          <p className="attenue">Les membres ne pourront plus se connecter ; les données restent intactes.</p>
+          <h3 id="titre-suspension">{tr("companies.suspend_title", { name: aSuspendre.nom })}</h3>
+          <p className="attenue">{tr("companies.suspend_note")}</p>
           <ChampTexte
-            libelle="Motif de la suspension"
+            libelle={tr("companies.reason")}
             requis
             autoFocus
             value={motif}
@@ -234,10 +238,10 @@ function Entreprises() {
           />
           <div className="rangee">
             <Bouton type="submit" variante="danger" icone={Ban} chargement={enCours === aSuspendre.id}>
-              Suspendre
+              {tr("companies.suspend")}
             </Bouton>
             <Bouton type="button" variante="secondaire" onClick={() => setASuspendre(null)}>
-              Annuler
+              {tr("companies.cancel")}
             </Bouton>
           </div>
         </form>
@@ -258,39 +262,36 @@ function Operateur({ moi }: { moi: Moi }) {
   return (
     <>
       <section className="carte pile-serree" aria-labelledby="sec-factures">
-        <h2 id="sec-factures">Factures émises par {moi.entreprise.nom}</h2>
-        <p className="attenue">
-          {nombre(emises.length)} factures, {eur(total)} HT. Pour le tenant opérateur, ce sont les factures d'abonnement
-          émises en Factur-X.
-        </p>
+        <h2 id="sec-factures">{tr("operator.title", { name: moi.entreprise.nom })}</h2>
+        <p className="attenue">{tr("operator.summary", { count: emises.length, total: eur(total) })}</p>
         {emises.length > 0 && (
           <div className="tableau-conteneur">
             <table className="tableau">
               <thead>
                 <tr>
-                  <th scope="col">Numéro</th>
-                  <th scope="col">Client</th>
-                  <th scope="col">Date</th>
+                  <th scope="col">{tr("operator.number")}</th>
+                  <th scope="col">{tr("operator.client")}</th>
+                  <th scope="col">{tr("operator.date")}</th>
                   <th scope="col" className="num">
-                    TTC
+                    {tr("operator.total")}
                   </th>
-                  <th scope="col">Statut</th>
+                  <th scope="col">{tr("operator.status")}</th>
                 </tr>
               </thead>
               <tbody>
                 {emises.map((f) => (
                   <tr key={f.id}>
-                    <td data-libelle="Numéro" className="chiffres">
+                    <td data-libelle={tr("operator.number")} className="chiffres">
                       {f.numero}
                     </td>
-                    <td data-libelle="Client">{f.data.client.nom}</td>
-                    <td data-libelle="Date" className="num">
+                    <td data-libelle={tr("operator.client")}>{f.data.client.nom}</td>
+                    <td data-libelle={tr("operator.date")} className="num">
                       {dateFr(f.data.date)}
                     </td>
-                    <td data-libelle="TTC" className="num">
+                    <td data-libelle={tr("operator.total")} className="num">
                       {eur(f.ttcCents)}
                     </td>
-                    <td data-libelle="Statut">{f.statut}</td>
+                    <td data-libelle={tr("operator.status")}>{f.statut}</td>
                   </tr>
                 ))}
               </tbody>
@@ -300,11 +301,11 @@ function Operateur({ moi }: { moi: Moi }) {
       </section>
       <Bandeau
         ton={d.donnees.audit.ok ? "succes" : "erreur"}
-        titre={d.donnees.audit.ok ? "Journal d'audit intègre" : "Journal d'audit rompu"}
+        titre={d.donnees.audit.ok ? tr("audit.ok") : tr("audit.broken")}
       >
         <p>
-          <ShieldCheck className="icone icone-sm" aria-hidden="true" /> {nombre(d.donnees.audit.entrees)} entrées
-          vérifiées pour ce tenant.
+          <ShieldCheck className="icone icone-sm" aria-hidden="true" />{" "}
+          {tr("audit.entries", { count: d.donnees.audit.entrees })}
         </p>
       </Bandeau>
     </>
@@ -322,7 +323,7 @@ interface Utilisateur {
   createdAt: string;
 }
 
-/** Appel du plugin admin de Better Auth (rôle global `admin` des owner et admin du tenant opérateur). */
+/** Calls the Better Auth admin plugin (global `admin` role of the operator tenant's owners and admins). */
 async function adminAuth<T>(chemin: string, corps?: unknown): Promise<T> {
   const r = await fetch(`/api/auth/admin/${chemin}`, {
     method: corps === undefined ? "GET" : "POST",
@@ -335,7 +336,7 @@ async function adminAuth<T>(chemin: string, corps?: unknown): Promise<T> {
   return j as T;
 }
 
-/** Comptes de toutes les entreprises : recherche, suspension (bannissement) et fermeture des sessions. */
+/** Accounts of all companies: search, suspension (ban) and closing of sessions. */
 function Utilisateurs() {
   const [recherche, setRecherche] = useState("");
   const [filtre, setFiltre] = useState("");
@@ -360,7 +361,7 @@ function Utilisateurs() {
   }
   return (
     <section className="carte pile-serree" aria-labelledby="sec-utilisateurs">
-      <h2 id="sec-utilisateurs">Utilisateurs</h2>
+      <h2 id="sec-utilisateurs">{tr("users.title")}</h2>
       <form
         className="rangee rangee-bas"
         onSubmit={(e) => {
@@ -368,12 +369,8 @@ function Utilisateurs() {
           setFiltre(recherche.trim());
         }}
       >
-        <ChampTexte
-          libelle="Adresse e-mail contient"
-          value={recherche}
-          onChange={(e) => setRecherche(e.target.value)}
-        />
-        <Bouton type="submit">Chercher</Bouton>
+        <ChampTexte libelle={tr("users.search")} value={recherche} onChange={(e) => setRecherche(e.target.value)} />
+        <Bouton type="submit">{tr("users.search_button")}</Bouton>
       </form>
       {d.etat === "chargement" && <EtatChargement lignes={2} />}
       {d.etat === "erreur" && <EtatErreur message={d.erreur} onReessayer={d.recharger} />}
@@ -382,25 +379,29 @@ function Utilisateurs() {
           <table className="tableau">
             <thead>
               <tr>
-                <th scope="col">Compte</th>
-                <th scope="col">2FA</th>
-                <th scope="col">État</th>
+                <th scope="col">{tr("users.account")}</th>
+                <th scope="col">{tr("users.twofa")}</th>
+                <th scope="col">{tr("users.state")}</th>
                 <th scope="col">
-                  <span className="visuellement-cache">Actions</span>
+                  <span className="visuellement-cache">{tr("users.actions")}</span>
                 </th>
               </tr>
             </thead>
             <tbody>
               {d.donnees.users.map((u) => (
                 <tr key={u.id}>
-                  <td data-libelle="Compte">
-                    {u.email} {u.role === "admin" && <strong>(opérateur)</strong>}
+                  <td data-libelle={tr("users.account")}>
+                    {u.email} {u.role === "admin" && <strong>{tr("users.operator")}</strong>}
                   </td>
-                  <td data-libelle="2FA">{u.twoFactorEnabled ? "active" : "—"}</td>
-                  <td data-libelle="État">
-                    {u.banned ? `suspendu${u.banReason ? ` : ${u.banReason}` : ""}` : "actif"}
+                  <td data-libelle={tr("users.twofa")}>{u.twoFactorEnabled ? tr("users.twofa_on") : "—"}</td>
+                  <td data-libelle={tr("users.state")}>
+                    {u.banned
+                      ? u.banReason
+                        ? tr("users.banned_reason", { reason: u.banReason })
+                        : tr("users.banned")
+                      : tr("users.active")}
                   </td>
-                  <td data-libelle="Actions">
+                  <td data-libelle={tr("users.actions")}>
                     <div className="rangee">
                       <Bouton
                         variante={u.banned ? "secondaire" : "danger"}
@@ -410,11 +411,11 @@ function Utilisateurs() {
                           agir(u, () =>
                             u.banned
                               ? adminAuth("unban-user", { userId: u.id })
-                              : adminAuth("ban-user", { userId: u.id, banReason: "suspendu par l'opérateur" }),
+                              : adminAuth("ban-user", { userId: u.id, banReason: "suspended by the operator" }),
                           )
                         }
                       >
-                        {u.banned ? "Rétablir" : "Suspendre"}
+                        {u.banned ? tr("companies.restore") : tr("companies.suspend")}
                       </Bouton>
                       <Bouton
                         variante="fantome"
@@ -422,7 +423,7 @@ function Utilisateurs() {
                         chargement={enCours === u.id}
                         onClick={() => agir(u, () => adminAuth("revoke-user-sessions", { userId: u.id }))}
                       >
-                        Fermer ses sessions
+                        {tr("users.revoke")}
                       </Bouton>
                     </div>
                   </td>
@@ -430,7 +431,7 @@ function Utilisateurs() {
               ))}
             </tbody>
           </table>
-          <p className="attenue petit">{nombre(d.donnees.total)} comptes au total.</p>
+          <p className="attenue petit">{tr("users.total", { count: d.donnees.total })}</p>
         </div>
       )}
     </section>
@@ -450,7 +451,7 @@ function Console() {
   return (
     <main className="console" id="contenu">
       <div className="console-entete">
-        <h1>Console opérateur</h1>
+        <h1>{tr("console.title")}</h1>
         <BasculeTheme />
         {session.etat === "ok" && session.donnees && (
           <Bouton
@@ -461,18 +462,18 @@ function Console() {
               session.recharger();
             }}
           >
-            Se déconnecter
+            {tr("logout")}
           </Bouton>
         )}
       </div>
 
       <section className="carte pile-serree" aria-labelledby="sec-sante">
-        <h2 id="sec-sante">Santé de l'API</h2>
+        <h2 id="sec-sante">{tr("health.title")}</h2>
         {sante.etat === "chargement" && <EtatChargement lignes={1} />}
         {sante.etat !== "chargement" && (
           <Bandeau
             ton={sante.donnees ? "succes" : "erreur"}
-            titre={sante.donnees ? "API joignable" : "API injoignable"}
+            titre={sante.donnees ? tr("health.up") : tr("health.down")}
           >
             <p>
               <Activity className="icone icone-sm" aria-hidden="true" /> <code>GET /health</code>
@@ -482,7 +483,7 @@ function Console() {
       </section>
 
       <section className="carte pile-serree" aria-labelledby="sec-plans">
-        <h2 id="sec-plans">Plans publiés</h2>
+        <h2 id="sec-plans">{tr("plans.title")}</h2>
         {plans.etat === "chargement" && <EtatChargement lignes={2} />}
         {plans.etat === "erreur" && <EtatErreur message={plans.erreur} onReessayer={plans.recharger} />}
         {plans.etat === "ok" && (
@@ -490,36 +491,36 @@ function Console() {
             <table className="tableau">
               <thead>
                 <tr>
-                  <th scope="col">Plan</th>
+                  <th scope="col">{tr("plans.plan")}</th>
                   <th scope="col" className="num">
-                    Mensuel HT
+                    {tr("plans.monthly")}
                   </th>
                   <th scope="col" className="num">
-                    Annuel HT
+                    {tr("plans.yearly")}
                   </th>
                   <th scope="col" className="num">
-                    Essai
+                    {tr("plans.trial")}
                   </th>
                   <th scope="col" className="num">
-                    Factures par mois
+                    {tr("plans.invoices")}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {plans.donnees.map((p) => (
                   <tr key={p.id}>
-                    <td data-libelle="Plan">{p.nom}</td>
-                    <td data-libelle="Mensuel HT" className="num">
+                    <td data-libelle={tr("plans.plan")}>{p.nom}</td>
+                    <td data-libelle={tr("plans.monthly")} className="num">
                       {eur(p.prixHtCents.mensuel)}
                     </td>
-                    <td data-libelle="Annuel HT" className="num">
+                    <td data-libelle={tr("plans.yearly")} className="num">
                       {eur(p.prixHtCents.annuel)}
                     </td>
-                    <td data-libelle="Essai" className="num">
-                      {p.essaiJours ? `${nombre(p.essaiJours)} jours` : "—"}
+                    <td data-libelle={tr("plans.trial")} className="num">
+                      {p.essaiJours ? tr("plans.trial_days", { count: p.essaiJours }) : "—"}
                     </td>
-                    <td data-libelle="Factures par mois" className="num">
-                      {p.quotas.factures === null ? "illimité" : nombre(p.quotas.factures ?? 0)}
+                    <td data-libelle={tr("plans.invoices")} className="num">
+                      {p.quotas.factures === null ? tr("plans.unlimited") : nombre(p.quotas.factures ?? 0)}
                     </td>
                   </tr>
                 ))}
@@ -539,6 +540,7 @@ function Console() {
   );
 }
 
+initLocale();
 appliquerTheme(themeEnregistre());
 createRoot(document.getElementById("racine")!).render(
   <FournisseurToasts>

@@ -1,4 +1,4 @@
-// Pas de console supplémentaire sous Windows en version publiée.
+// No extra console on Windows in the published build.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {

@@ -1,23 +1,23 @@
-// Boucle du worker : prend les jobs Postgres (SKIP LOCKED, bail), exécute, termine ou reporte.
+// Worker loop: takes Postgres jobs (SKIP LOCKED, lease), runs, completes or defers.
 import { delaiNouvelEssai, prendreJobs, reporterJob, terminerJob, type Job, type Sql } from "@auto/store";
 
 export interface Traitement {
-  /** Exécute le job ; une exception (ou le dépassement du bail) déclenche un nouvel essai. */
+  /** Runs the job; an exception (or exceeding the lease) triggers a new attempt. */
   executer(job: Job, signal: AbortSignal): Promise<void>;
-  /** Appelé une fois les essais épuisés. */
+  /** Called once the attempts are exhausted. */
   echec?(job: Job, erreur: string): Promise<void>;
 }
 
 export type Traitements = Record<string, Traitement>;
 
 export interface OptionsWorker {
-  /** Jobs pris par tour. */
+  /** Jobs taken per round. */
   lot?: number;
-  /** Durée du bail : au-delà, le job est abandonné ici et repris par un autre tour. */
+  /** Lease duration: beyond it, the job is abandoned here and taken again by another round. */
   bailMs?: number;
-  /** Attente entre deux tours sans job. */
+  /** Wait between two rounds without a job. */
   intervalleMs?: number;
-  /** Délai avant l'essai suivant, selon le nombre d'essais déjà faits. */
+  /** Delay before the next attempt, depending on the number of attempts already made. */
   delai?: (essais: number) => number;
 }
 
@@ -29,26 +29,26 @@ export function creerWorker(sql: Sql, traitements: Traitements, o: OptionsWorker
 
   async function executer(job: Job) {
     const t = traitements[job.type]!;
-    // Marge sur le bail : le job est abandonné avant qu'un autre worker puisse le reprendre.
+    // Margin on the lease: the job is abandoned before another worker can take it again.
     const signal = AbortSignal.timeout(Math.max(1, bailMs - Math.min(1_000, bailMs / 10)));
     try {
       await Promise.race([
         t.executer(job, signal),
         new Promise<never>((_, rejeter) =>
-          signal.addEventListener("abort", () => rejeter(new Error(`délai dépassé (${bailMs} ms)`)), { once: true }),
+          signal.addEventListener("abort", () => rejeter(new Error(`timeout exceeded (${bailMs} ms)`)), { once: true }),
         ),
       ]);
       await terminerJob(sql, job.id);
     } catch (e) {
       const erreur = message(e);
       if ((await reporterJob(sql, job, erreur, delai(job.essais))) === "echec") {
-        console.error(`job ${job.type} ${job.id} en échec après ${job.essais} essais : ${erreur}`);
+        console.error(`job ${job.type} ${job.id} failed after ${job.essais} attempts: ${erreur}`);
         await t.echec?.(job, erreur);
       }
     }
   }
 
-  /** Un tour : prend au plus `lot` jobs et les traite en parallèle ; renvoie le nombre traité. */
+  /** One round: takes at most `lot` jobs and processes them in parallel; returns the number processed. */
   async function traiterLot(): Promise<number> {
     const jobs = await prendreJobs(sql, types, lot, bailMs);
     await Promise.all(jobs.map(executer));
@@ -61,7 +61,7 @@ export function creerWorker(sql: Sql, traitements: Traitements, o: OptionsWorker
 
   return {
     traiterLot,
-    /** Traite jusqu'à ce que plus aucun job ne soit exécutable maintenant. */
+    /** Processes until no job is runnable right now. */
     async vider(): Promise<number> {
       let total = 0;
       for (let n = await traiterLot(); n > 0; n = await traiterLot()) total += n;
@@ -76,7 +76,7 @@ export function creerWorker(sql: Sql, traitements: Traitements, o: OptionsWorker
           try {
             n = await traiterLot();
           } catch (e) {
-            console.error(`worker : ${message(e)}`);
+            console.error(`worker: ${message(e)}`);
           }
           if (n === 0 && actif)
             await new Promise<void>((r) => {
@@ -86,7 +86,7 @@ export function creerWorker(sql: Sql, traitements: Traitements, o: OptionsWorker
         }
       })();
     },
-    /** Arrêt propre : le tour en cours se termine. */
+    /** Clean stop: the current round finishes. */
     async arreter() {
       actif = false;
       reveil?.();

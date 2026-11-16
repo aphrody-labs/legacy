@@ -5,68 +5,30 @@
   "commands":
     [
       {
-        "name": "arch",
-        "description": "Architecture gate ARCH-001..017: check, rules, graph",
-        "flags":
-          {
-            "--root=": "target monorepo root directory (default: $SRC_ROOT, else",
-            "--json": "emit structured deterministic JSON report",
-            "--quiet": "print compact one-line summary",
-            "--strict": "treat warnings as hard errors",
-            "--rule=": "filter to a specific rule ID (e.g. ARCH-001) or category",
-            "-v, --version": "print version and exit",
-            "--help": "display usage information",
-          },
-        "commands":
-          [
-            {
-              "name": "check",
-              "description": "run full architectural & domain-purity verification across",
-              "flags":
-                {
-                  "--root=": "target monorepo root directory (default: $SRC_ROOT, else",
-                  "--json": "emit structured deterministic JSON report",
-                  "--quiet": "print compact one-line summary",
-                  "--strict": "treat warnings as hard errors",
-                  "--rule=": "filter to a specific rule ID (e.g. ARCH-001) or category",
-                  "--help": "display usage information",
-                },
-            },
-            {
-              "name": "rules",
-              "description": "list all enforced architectural rules and severity levels",
-              "flags":
-                {
-                  "--json": "emit rules list as JSON",
-                  "--help": "display usage information",
-                },
-            },
-            {
-              "name": "graph",
-              "description": "generate monorepo architecture dependency graph (Mermaid,",
-              "flags":
-                {
-                  "--root=": "target monorepo root directory (default: $SRC_ROOT, else",
-                  "--format=": "output format: mermaid (default), dot, or json",
-                  "-o, --output": "optional file path to write output to",
-                  "--help": "display usage information",
-                },
-            },
-          ],
-      },
-      {
         "name": "doctor",
         "description": "Toolchain doctor",
-        "flags": { "--help": "display usage information" },
+        "flags":
+          {
+            "--deps": "check the supply-chain policy instead",
+            "--dups": "with --deps: list every crate resolved at several versions",
+            "--json": "with --deps: JSON report",
+            "--root=": "repository root (default: $SRC_ROOT, else the nearest",
+            "--help": "display usage information",
+          },
       },
       {
         "name": "lock",
         "description": "Regenerate src.lock.json, DEPS, .repo manifest and MAINTAINERS",
         "flags":
           {
-            "--root=": "target root directory (defaults to C:\\aphrody)",
-            "--out=": "output lockfile path (defaults to C:\\aphrody\\src.lock.json)",
-            "--lock-only": "skip emitting DEPS, .repo/manifests/default.xml, and",
+            "--root=": "repository root (default: $SRC_ROOT, else the nearest",
+            "--out=": "output lockfile path (default: <root>/src.lock.json)",
+            "--lock-only": "write src.lock.json only (no derived manifests)",
+            "--deps": "refresh the language locks (Cargo.lock, bun.lock, uv.lock)",
+            "--bump": "with --deps: upgrade within the declared requirements (cargo",
+            "--breaking": "with --deps: also raise Cargo requirements across major",
+            "--hoist": "with --deps: move inline member requirements into",
+            "--dedupe": "with --deps: collapse duplicate crate versions where a lower",
             "--help": "display usage information",
           },
       },
@@ -75,7 +37,8 @@
         "description": "Generate governance manifests; `ay manifests verify` checks them",
         "flags":
           {
-            "--root=": "target root directory (defaults to C:\\aphrody)",
+            "--root=": "repository root (default: $SRC_ROOT, else the nearest",
+            "--check": "verify instead of writing: exit 1 when a derived file or a",
             "--help": "display usage information",
           },
       },
@@ -394,11 +357,6 @@
                 ],
             },
             {
-              "name": "manifests",
-              "description": "Verify Chromium DEPS, AOSP .repo/manifests/default.xml,",
-              "flags": { "--help": "display usage information" },
-            },
-            {
               "name": "maintainer",
               "description": "Lookup Linux Kernel style MAINTAINERS ownership for any",
               "flags":
@@ -482,7 +440,7 @@
       },
       {
         "name": "deploy",
-        "description": "Deploy engine (runs the Go `src-deploy` binary)",
+        "description": "aphrody.app: `ay deploy <project>|ls|logs|rollback|promote` (packages/deploy); containers: `ay deploy build|smoke|up|ps|products|shell|runtime|run` runs `just docker-<sub>`",
       },
       {
         "name": "bench",
@@ -547,6 +505,26 @@
         "description": "Gamescope mode (runs the `gamescope-rs` binary)",
       },
       {
+        "name": "gaming",
+        "description": "Gaming stack (packages/gaming): status, apps, proton, layers, dx, steamcmd, run, skills",
+      },
+      {
+        "name": "upstream",
+        "description": "Patch stacks of the bun and Chromium forks: status, sync, check, pr, mark, gc, export (packages/upstream)",
+      },
+      {
+        "name": "linux",
+        "description": "Linux system layer: patchset versions, sync, patch stacks, kernel builds on fr1 or CI (packages/linux)",
+      },
+      {
+        "name": "pkg",
+        "description": "Package recipes for every distro: list, matrix, gen, build, check (packages/linux, infra/pkg)",
+      },
+      {
+        "name": "lfs",
+        "description": "bun-LFS (third_party/lfs/bun, GitHub CI): build, logs, wsl (runs `just lfs-<sub>`)",
+      },
+      {
         "name": "ssh",
         "description": "Pure-Rust SSH (russh): exec <host|all|a,b> -- cmd, cp, hosts, check",
         "flags": { "-h, --help": "Print help" },
@@ -576,7 +554,7 @@
             },
             {
               "name": "hosts",
-              "description": "List fleet nodes (deploy.toml) and their resolved ssh settings",
+              "description": "List fleet nodes (infra/deploy.toml) and their resolved ssh settings",
               "flags": { "-h, --help": "Print help" },
             },
             {
@@ -604,8 +582,31 @@
               "flags": { "-h, --help": "Print help" },
             },
             {
+              "name": "matrix",
+              "description": "Versioned matrix: runtimes, JS engines, WebGPU, browsers and render engines (latest from the official source, installed, active)",
+              "flags": { "--json": "", "-h, --help": "Print help" },
+            },
+            {
+              "name": "detect",
+              "description": "What this project declares (.nvmrc, .node-version, .dvmrc, .bun-version, package.json engines / packageManager, deno.json, bunfig.toml, .engine-version) and what it resolves to",
+              "flags": { "-h, --help": "Print help" },
+            },
+            {
+              "name": "switch",
+              "description": "Install and activate a combination: `--runtime node@lts --engine chrome@beta --gpu dawn`",
+              "flags":
+                {
+                  "--runtime=": "runtime[@version|range|lts|latest], repeatable (node, deno, bun, python)",
+                  "--engine=": "engine id from `browser-engines engines list` (chrome@<channel>, firefox@<channel>, servo, ...)",
+                  "--gpu=": "Require this WebGPU implementation (dawn, wgpu)",
+                  "--auto": "Take runtimes and engine from the project files, latest stable otherwise",
+                  "--no-write": "Install only; do not write version files",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
               "name": "install",
-              "description": "Install `python[@version]` or `bun[@version|canary]`",
+              "description": "Install `python[@version]`, `bun[@version|canary]`, `node[@version|range|lts]`, `deno[@version]`",
               "flags":
                 {
                   "--engine=": "Python engine: cpython, freethreaded, pypy, graalpy, pyodide, rustpython [default: cpython]",
@@ -883,6 +884,22 @@
         "description": "The checkout's gn binary (buildtools/<platform>/gn)",
       },
       {
+        "name": "auth",
+        "description": "Every authentication of the fleet (env-kit): status, repair [--browser], gh-secrets, tunnels, rotate",
+      },
+      {
+        "name": "secret",
+        "description": "OS secret store (DPAPI on Windows, systemd-creds on Linux): info, list, set, exec, pipe, import",
+      },
+      {
+        "name": "vault",
+        "description": "Vault: init, add, import-chrome-csv, export-chrome-csv, sync, status, rotate, hosts",
+      },
+      {
+        "name": "conformance",
+        "description": "Conformance suites: [--fetch] [suite...] writes conformance/results/; `channels [platform]` refreshes Chrome pins",
+      },
+      {
         "name": "build",
         "description": "Build the workspace for a cross-compilation preset (--list shows toolchain status)",
         "flags":
@@ -933,8 +950,55 @@
           },
       },
       {
+        "name": "bun",
+        "description": "Upstream watch of oven-sh/bun for the fork: watch [--json] [--apply] [--install-schedule], bump [--write]",
+        "flags": { "-h, --help": "Print help" },
+        "commands":
+          [
+            {
+              "name": "watch",
+              "description": "Report what changed in oven-sh/bun since the last run and what touches the fork's patches",
+              "flags":
+                {
+                  "--json": "Print the report as JSON",
+                  "--apply": "Also propose the version bumps (`ay bun bump`), without writing them",
+                  "--dry-run": "Do not save the state (the next run reports the same changes again)",
+                  "--state=": "State file (default ~/.local/share/ay/bun-watch/state.json, or $AY_BUN_WATCH_STATE)",
+                  "--checkout=": "Fork checkout (default <repo>/third_party/bun); read only, never fetched",
+                  "--install-schedule": "Register the watch as a scheduled task (Windows) or systemd user timer (Linux)",
+                  "--remove-schedule": "Remove the scheduled task or timer",
+                  "--every=": "Hours between scheduled runs [default: 6]",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "bump",
+              "description": "Propose the Bun version bumps in the monorepo; --write applies them",
+              "flags":
+                {
+                  "--to=": "Target version (default: the latest stable release of oven-sh/bun)",
+                  "--write": "Apply the edits (default: only list them)",
+                  "--json": "Print the proposals as JSON",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "install",
+              "description": "Install the aphrody-labs/bun CI build as bun@fork (ay rt), sha256-checked; --activate puts it in ~/.bun/bin",
+              "flags":
+                {
+                  "--fork": "The fork's build (the only source: stable and canary come from `ay rt install bun@<v>`)",
+                  "--run=": "Workflow run id (default: the last successful run on main)",
+                  "--activate": "Copy it to ~/.bun/bin/bun, keeping the previous binary as bun.previous",
+                  "--json": "Print the result as JSON",
+                  "-h, --help": "Print help",
+                },
+            },
+          ],
+      },
+      {
         "name": "ai",
-        "description": "Inference providers behind LiteLLM (infra/ai/ai.toml): ls, install, service, pull, config, check, auth, up",
+        "description": "Inference providers behind LiteLLM (infra/ai/ai.toml): ls, install, service, pull, config, check, auth, push, up",
         "flags":
           {
             "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
@@ -1078,6 +1142,339 @@
                   "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
                   "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
                   "--json": "JSON output (ls, check)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "fabric",
+              "description": "Distributed inference fabric (infra/ai/fabric.toml): `up [--only a,b] [--split x,y]`, `status`, `warm`, `down`, `bench`, `node <id>`; runs `ai-os fabric` from the checkout (bun), else the installed `ai-os`",
+              "flags":
+                {
+                  "--manifest=": "Manifest (default: $AY_AI_MANIFEST, <repo>/infra/ai/ai.toml, then the embedded copy)",
+                  "--env-file=": "Secrets in dotenv format, repeatable (default: $AY_ENV_FILE, then <repo>/.env)",
+                  "--json": "JSON output (ls, check)",
+                  "-h, --help": "Print help",
+                },
+            },
+          ],
+      },
+      {
+        "name": "docs",
+        "description": "Bun docs in ay: sync (fork md/mdx, bun.com llms-full.txt, skills), bun <query> [--json], show, stats, schedule",
+        "flags":
+          {
+            "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+            "-h, --help": "Print help",
+          },
+        "commands":
+          [
+            {
+              "name": "sync",
+              "description": "Import and index the sources (incremental, by content hash); the command the upstream watch runs",
+              "flags":
+                {
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-s, --source=": "Only these sources: fork, upstream, skills (repeatable)",
+                  "--offline": "Do not fetch bun.com",
+                  "--json": "JSON report (schema ay-docs-sync/1)",
+                  "-q, --quiet": "Print nothing unless a source fails",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "bun",
+              "description": "Search Bun's docs [alias: search]",
+              "flags":
+                {
+                  "-n, --limit=": "Maximum results [default: 8]",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-s, --source=": "Only one source: fork, upstream, skills",
+                  "--json": "JSON (schema ay-docs-search/1)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "show",
+              "description": "Print one page",
+              "flags":
+                {
+                  "--json": "",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "stats",
+              "description": "Documents per source, fork commit, last sync",
+              "flags":
+                {
+                  "--json": "",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "schedule",
+              "description": "Run `ay docs sync` every N hours (Task Scheduler on Windows, systemd user timer on Linux)",
+              "flags":
+                {
+                  "--every=": "Hours between runs [default: 6]",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "--remove": "Remove the schedule",
+                  "-h, --help": "Print help",
+                },
+            },
+          ],
+      },
+      {
+        "name": "flat",
+        "description": "Rust crates of the bun fork flattened into src/bun-flat: list, sync, check",
+        "flags":
+          {
+            "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+            "--fork=": "Fork checkout (default: <root>/third_party/bun)",
+            "-h, --help": "Print help",
+          },
+        "commands":
+          [
+            {
+              "name": "list",
+              "description": "Modules, upstream crates, files, licenses",
+              "flags":
+                {
+                  "--json": "",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "--fork=": "Fork checkout (default: <root>/third_party/bun)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "sync",
+              "description": "Regenerate the modules from the fork's HEAD and record the commit in flat.toml",
+              "flags":
+                {
+                  "--dry-run": "Show what would change, write nothing",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "--fork=": "Fork checkout (default: <root>/third_party/bun)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "check",
+              "description": "Compare the modules with the fork at the recorded commit; report upstream changes since",
+              "flags":
+                {
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "--strict": "Fail (exit 3) when the fork is not checked out instead of skipping",
+                  "--fork=": "Fork checkout (default: <root>/third_party/bun)",
+                  "-h, --help": "Print help",
+                },
+            },
+          ],
+      },
+      {
+        "name": "hash",
+        "description": "wyhash (bun's hash) of files or stdin",
+        "flags":
+          {
+            "--seed=": "Seed [default: 0]",
+            "--legacy": "The legacy Wyhash11 variant instead of wyhash final4",
+            "--json": "",
+            "-h, --help": "Print help",
+          },
+      },
+      {
+        "name": "time",
+        "description": "Run a command N times and print p50/p90/p99 wall time (bun's HdrHistogram)",
+        "flags":
+          {
+            "-n, --runs=": "Runs [default: 20]",
+            "--warmup=": "Unmeasured runs first [default: 1]",
+            "--show-output": "Keep the command's stdout and stderr",
+            "--json": "",
+            "-h, --help": "Print help",
+          },
+      },
+      {
+        "name": "chromium",
+        "description": "Chromium build chain on fr1: status, sync, gn, build, autoninja, toolchain (delegated over ay ssh)",
+        "flags":
+          {
+            "--host=": "Fleet node that builds Chromium [default: fr1]",
+            "--out=": "Output directory name under src/out (default: out_name of factory.toml)",
+            "--dry-run": "Print the host and the script, run nothing",
+            "--detach": "Run in the background on the host (nohup, log under the checkout root); print the log path",
+            "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+            "-h, --help": "Print help",
+          },
+        "commands":
+          [
+            {
+              "name": "status",
+              "description": "Version of the checkout, out dirs, depot_tools tools, disk and load",
+              "flags":
+                {
+                  "--host=": "Fleet node that builds Chromium [default: fr1]",
+                  "--out=": "Output directory name under src/out (default: out_name of factory.toml)",
+                  "--dry-run": "Print the host and the script, run nothing",
+                  "--detach": "Run in the background on the host (nohup, log under the checkout root); print the log path",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "sync",
+              "description": "gclient sync (extra flags appended) then gclient runhooks",
+              "flags":
+                {
+                  "--host=": "Fleet node that builds Chromium [default: fr1]",
+                  "--no-hooks": "Skip `gclient runhooks`",
+                  "--out=": "Output directory name under src/out (default: out_name of factory.toml)",
+                  "--dry-run": "Print the host and the script, run nothing",
+                  "--detach": "Run in the background on the host (nohup, log under the checkout root); print the log path",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "gn",
+              "description": "`gn gen out/<out>` (args.gn from the factory when missing); with arguments, `gn <args>`",
+              "flags":
+                {
+                  "--host=": "Fleet node that builds Chromium [default: fr1]",
+                  "--out=": "Output directory name under src/out (default: out_name of factory.toml)",
+                  "--dry-run": "Print the host and the script, run nothing",
+                  "--detach": "Run in the background on the host (nohup, log under the checkout root); print the log path",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "build",
+              "description": "gn gen when needed, then autoninja -C out/<out> <targets> (default: target of factory.toml)",
+              "flags":
+                {
+                  "--host=": "Fleet node that builds Chromium [default: fr1]",
+                  "--out=": "Output directory name under src/out (default: out_name of factory.toml)",
+                  "--dry-run": "Print the host and the script, run nothing",
+                  "--detach": "Run in the background on the host (nohup, log under the checkout root); print the log path",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "autoninja",
+              "description": "autoninja with these arguments (-C out/<out> added when absent)",
+              "flags":
+                {
+                  "--host=": "Fleet node that builds Chromium [default: fr1]",
+                  "--out=": "Output directory name under src/out (default: out_name of factory.toml)",
+                  "--dry-run": "Print the host and the script, run nothing",
+                  "--detach": "Run in the background on the host (nohup, log under the checkout root); print the log path",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "toolchain",
+              "description": "The checkout's clang, lld and rustc, and their LLVM next to the host's rustc",
+              "flags":
+                {
+                  "--host=": "Fleet node that builds Chromium [default: fr1]",
+                  "--out=": "Output directory name under src/out (default: out_name of factory.toml)",
+                  "--dry-run": "Print the host and the script, run nothing",
+                  "--detach": "Run in the background on the host (nohup, log under the checkout root); print the log path",
+                  "--root=": "Monorepo root (default: $SRC_ROOT, else the enclosing checkout)",
+                  "-h, --help": "Print help",
+                },
+            },
+          ],
+      },
+      {
+        "name": "engines",
+        "description": "Engines facade (V8, JavaScriptCore, Dawn, wgpu, browsers): list, matrix, js, path, install, launch, build",
+      },
+      {
+        "name": "agents",
+        "description": 'ai-os orchestrator (packages/ai-os, `orch`): run <workflow.json>, plan "<goal>", lifecycle --task ...',
+      },
+      {
+        "name": "steam",
+        "description": "Steam data as JSON (src/steam): root, libraries, apps, vdf, compat, host, env",
+        "flags":
+          {
+            "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+            "-h, --help": "Print help",
+          },
+        "commands":
+          [
+            {
+              "name": "root",
+              "description": "Steam installations found on this host and the selected root",
+              "flags":
+                {
+                  "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "libraries",
+              "description": "Library folders (libraryfolders.vdf) and the app ids each one holds",
+              "flags":
+                {
+                  "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "apps",
+              "description": "Installed apps from every appmanifest_*.acf",
+              "flags":
+                {
+                  "--filter=": "Keep apps whose id equals, or whose name contains, this text (case-insensitive)",
+                  "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "vdf",
+              "description": "Parse a KeyValues file: text (VDF/ACF), binary (shortcuts.vdf) or appcache/appinfo.vdf",
+              "flags":
+                {
+                  "--format=": "auto (default), text, binary, appinfo [default: auto]",
+                  "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+                  "--app=": "appinfo: this app's KeyValues (default: header summary)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "compat",
+              "description": "Compatibility tools: Valve Proton, Steam Linux Runtime, compatibilitytools.d (GE, CachyOS, umu)",
+              "flags":
+                {
+                  "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "host",
+              "description": "Host capabilities that shape a Proton launch (ntsync, gamemoderun, CPUs, software rendering)",
+              "flags":
+                {
+                  "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+                  "-h, --help": "Print help",
+                },
+            },
+            {
+              "name": "env",
+              "description": "Proton launch environment for an app outside the client (proton run, umu)",
+              "flags":
+                {
+                  "--prefix=": "Proton prefix directory (STEAM_COMPAT_DATA_PATH; default: <library>/steamapps/compatdata/<app>)",
+                  "--root=": "Steam root (default: $STEAM_PATH, else the first installation found)",
+                  "--install-path=": "Game directory (default: the installed app's directory)",
+                  "--cache-root=": "Shader caches root (<root>/dxvk, <root>/vkd3d, <root>/mesa)",
+                  "--gamemode": "Wrap with gamemoderun when installed",
                   "-h, --help": "Print help",
                 },
             },

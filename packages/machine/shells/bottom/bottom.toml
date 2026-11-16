@@ -1,0 +1,38 @@
+# Official bottom (btm) v0.15.0 configuration (Catppuccin Mocha colors)
+[flags]
+battery = true
+mem_as_value = true
+show_table_scroll_position = true
+rate = "1s"
+theme = "default"
+group_processes = true
+
+[styles.cpu]
+all_entry_color = "#cdd6f4"
+avg_entry_color = "#94e2d5"
+cpu_core_colors = [
+  "#f38ba8",
+  "#fab387",
+  "#f9e2af",
+  "#a6e3a1",
+  "#89dceb",
+  "#89b4fa",
+  "#cba6f7",
+]
+
+[styles.memory]
+ram_color = "#a6e3a1"
+swap_color = "#fab387"
+
+[styles.network]
+rx_color = "#a6e3a1"
+tx_color = "#89b4fa"
+
+[styles.tables]
+headers = { color = "#89b4fa", bold = true }
+
+[styles.widgets]
+widget_title = { color = "#cba6f7", bold = true }
+border_color = { color = "#585b70" }
+selected_border_color = { color = "#89b4fa" }
+selected_text = { color = "#1e1e2e", bg_color = "#89b4fa" }

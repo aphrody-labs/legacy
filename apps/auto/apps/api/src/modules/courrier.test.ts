@@ -75,7 +75,7 @@ afterAll(async () => {
   await server?.stop(true);
   await drop?.();
 });
-test("Messagerie personnelle sans entreprise : session obligatoire et isolation des comptes, messages et mutations", async () => {
+test("Personal mailbox without company: required session and isolation of accounts, messages and mutations", async () => {
   expect((await appeler("/v1/courrier/comptes")).status).toBe(401);
   expect((await appeler("/v1/courrier/comptes", a.cookie)).body.comptes.length).toBe(1);
   expect((await appeler("/v1/courrier/comptes", b.cookie)).body.comptes.length).toBe(0);
@@ -88,7 +88,7 @@ test("Messagerie personnelle sans entreprise : session obligatoire et isolation 
   expect((await appeler("/v1/courrier/comptes/aphrody", b.cookie, "POST", {})).status).toBe(403);
   expect((await appeler("/v1/courrier/oauth/google/retour?state=inconnu&code=factice", a.cookie)).status).toBe(409);
 });
-test("Super-admin vérifié et agent nominatif : administration autorisée, mails privés et création agents refusés au jeton", async () => {
+test("Verified super-admin and named agent: administration allowed, private mails and agent creation refused to the token", async () => {
   Bun.env.AUTO_SUPER_ADMIN_EMAILS = "proprietaire-courrier@example.test";
   await synchroniserOperateurs(sql);
   expect((await sql`SELECT role FROM app_user WHERE id=${a.id}`)[0]!.role).not.toBe("admin");

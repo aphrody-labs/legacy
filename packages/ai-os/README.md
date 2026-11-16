@@ -47,7 +47,7 @@ Cross-platform sandboxed Unix/GNU-like operating system distribution for autonom
 | `src/review`           | -                     | Multi-engine tribunal review & NHITL scoring                                                                                                                                                                   |
 | `src/nhitl`            | -                     | No-Human-In-The-Loop ledger & violation scanner                                                                                                                                                                |
 | `src/google`           | `./jules`, `./stitch` | Absorbed Google Jules (`jules.googleapis.com/v1alpha`) and Stitch MCP clients                                                                                                                                  |
-| `python`               | -                     | `uv` workspace: `pyo3` bridge `agent_core` (`src/agent/py`) + Hermes memory provider                                                                                                                        |
+| `python`               | -                     | `uv` workspace: `pyo3` bridge `agent_core` (`src/agent/context`, feature `python`) + Hermes memory provider                                                                                                                        |
 | `native/relay-windows` | -                     | Windows service `AphrodyRelay` (.NET 11 NativeAOT)                                                                                                                                                             |
 
 ## Verification & Usage

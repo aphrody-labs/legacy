@@ -1,6 +1,6 @@
-//! Signature PAdES B-B (`pdfcraft-sign` : `ETSI.CAdES.detached`, SHA-256/384, mise à jour
-//! incrémentale) avec une identité PKCS #12, et vérification des signatures d'un PDF.
-//! Aucun service extérieur : pas d'horodatage (B-T), ni de récupération de révocations.
+//! PAdES B-B signature (`pdfcraft-sign`: `ETSI.CAdES.detached`, SHA-256/384, incremental update) with a
+//! PKCS #12 identity, and verification of the signatures of a PDF.
+//! No external service: no timestamp (B-T), no revocation lookup.
 
 use crate::{Erreur, R, ouvrir};
 use pdfcraft_sign::{Modification, SignOptions, Status, TrustStore, pkcs12, x509};
@@ -10,28 +10,28 @@ use serde::{Deserialize, Serialize};
 #[serde(default)]
 pub struct Signature {
     pub mot_de_passe: String,
-    /// Date PDF (`D:AAAAMMJJHHmmSSZ`), de l'horloge de l'appelant.
+    /// PDF date (`D:YYYYMMDDHHmmSSZ`), from the caller's clock.
     pub date: String,
     pub raison: Option<String>,
     pub lieu: Option<String>,
     pub contact: Option<String>,
-    /// Champ de signature existant à signer ; sinon un nouveau champ.
+    /// Existing signature field to sign; otherwise a new field.
     pub champ: Option<String>,
-    /// Page du nouveau champ (à partir de 0) et rectangle visible `[x0, y0, x1, y1]` en points
-    /// (origine en bas à gauche) ; sans rectangle, signature invisible.
+    /// Page of the new field (from 0) and visible rectangle `[x0, y0, x1, y1]` in points
+    /// (origin at the bottom left); without a rectangle, invisible signature.
     pub page: usize,
     pub rectangle: Option<[f64; 4]>,
-    /// Certification DocMDP : 1 aucune modification, 2 formulaires et signatures, 3 aussi commentaires.
+    /// DocMDP certification: 1 no change, 2 forms and signatures, 3 comments too.
     pub certifier: Option<u8>,
 }
 
-/// Signe le PDF avec l'identité PKCS #12 (`.p12`, `.pfx`).
+/// Signs the PDF with the PKCS #12 identity (`.p12`, `.pfx`).
 pub fn signer_pdf(pdf: &[u8], p12: &[u8], s: &Signature) -> R<Vec<u8>> {
     if s.date.is_empty() {
         return Err(Erreur::Donnees("date de signature requise".into()));
     }
     if s.certifier.is_some_and(|c| !(1..=3).contains(&c)) {
-        return Err(Erreur::Donnees("certification : 1, 2 ou 3".into()));
+        return Err(Erreur::Donnees("certification: 1, 2 or 3".into()));
     }
     let id = pkcs12::open(p12, &s.mot_de_passe)?;
     let options = SignOptions {
@@ -52,8 +52,8 @@ pub fn signer_pdf(pdf: &[u8], p12: &[u8], s: &Signature) -> R<Vec<u8>> {
 pub struct Verification {
     pub champ: String,
     pub signee: bool,
-    /// `valide` (intacte, identité de confiance), `inconnue` (intacte, identité non reconnue),
-    /// `invalide` (octets signés modifiés, signature fausse ou changements interdits).
+    /// `valide` (intact, trusted identity), `inconnue` (intact, unrecognized identity),
+    /// `invalide` (signed bytes modified, forged signature or forbidden changes).
     pub statut: &'static str,
     pub signataire: Option<String>,
     pub date: Option<String>,
@@ -63,14 +63,14 @@ pub struct Verification {
     pub algorithme: Option<String>,
     pub certification: Option<u8>,
     pub horodatage: bool,
-    /// `aucune` (la signature couvre tout le fichier), `permises` ou `interdites`.
+    /// `aucune` (the signature covers the whole file), `permises` or `interdites` (changes allowed or forbidden).
     pub modifications: &'static str,
     pub changements: Vec<&'static str>,
     pub empreinte: Option<String>,
     pub details: Vec<String>,
 }
 
-/// Signatures du PDF, vérifiées ; `confiance` : certificats de confiance (PEM ou DER), vide sinon.
+/// Signatures of the PDF, verified; `confiance`: trusted certificates (PEM or DER), empty otherwise.
 pub fn verifier_signatures(pdf: &[u8], confiance: &[u8]) -> R<Vec<Verification>> {
     let doc = ouvrir(pdf)?;
     let trust = TrustStore {
@@ -142,7 +142,7 @@ mod tests {
         let original = pdf();
         assert!(verifier_signatures(&original, b"").unwrap().is_empty());
         let signe = signer_pdf(&original, P12, &options()).unwrap();
-        assert!(signe.starts_with(&original), "mise à jour incrémentale");
+        assert!(signe.starts_with(&original), "incremental update");
         let v = verifier_signatures(&signe, b"").unwrap();
         assert_eq!(v.len(), 1);
         let s = &v[0];
@@ -152,9 +152,9 @@ mod tests {
         assert_eq!((s.raison.as_deref(), s.lieu.as_deref()), (Some("Accord"), Some("Lyon")));
         // Certificat de confiance : valide.
         assert_eq!(verifier_signatures(&signe, CERT).unwrap()[0].statut, "valide");
-        // Octets signés modifiés : invalide.
+        // Signed bytes modified: invalid.
         let mut altere = signe.clone();
-        // Au milieu de la révision signée : dans les données d'un flux (polices embarquées).
+        // In the middle of the signed revision: in the data of a stream (embedded fonts).
         altere[original.len() / 2] ^= 1;
         assert_eq!(verifier_signatures(&altere, CERT).unwrap()[0].statut, "invalide");
     }

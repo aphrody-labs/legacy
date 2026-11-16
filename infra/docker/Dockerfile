@@ -21,7 +21,7 @@ ARG CARGO_CHEF_VERSION=0.1.77
 ARG CARGO_ZIGBUILD_VERSION=0.24.1
 # release = fat LTO (production). iteration = no LTO, for quick smoke builds.
 ARG CARGO_PROFILE=release
-ARG RUST_PACKAGES="-p aphrody -p aphrody-lore-server -p ring3-agent -p rust-stack"
+ARG RUST_PACKAGES="-p aphrody -p aphrody-lore-server -p ring3-agent"
 # Parallel rustc jobs (each runs -Zthreads=16 from .cargo/config.toml): keep low on a shared host (prd: 2).
 ARG CARGO_BUILD_JOBS=4
 
@@ -83,7 +83,7 @@ RUN --mount=type=cache,id=cargo-registry,target=/opt/cargo/registry,sharing=lock
     set -eu; t=$([ "$TARGETARCH" = arm64 ] && echo aarch64-unknown-linux-musl || echo x86_64-unknown-linux-musl); \
     cargo zigbuild --locked --profile "${CARGO_PROFILE}" --target "$t" ${RUST_PACKAGES} --bins; \
     d=target/$t/$([ "${CARGO_PROFILE}" = dev ] && echo debug || echo "${CARGO_PROFILE}"); mkdir -p /out; \
-    for b in ay loreserver r3d rust-stack; do cp "$d/$b" /out/; done; ls -l /out
+    for b in ay loreserver r3d; do cp "$d/$b" /out/; done; ls -l /out
 
 # Static musl binaries on a minimal Alpine (busybox wget for the healthcheck, CA bundle, tzdata).
 FROM alpine:${ALPINE_VERSION} AS rust-runtime
@@ -118,13 +118,6 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD wget -qO /dev/null http://127.0.0.1:8080/ok || exit 1
 ENTRYPOINT ["r3d", "-c", "/etc/r3d/ring3-agent.toml", "-b", "0.0.0.0:8080"]
 CMD ["serve"]
-
-# rust-stack gateway: HTTP /health on 4100, SQLite in /data.
-FROM rust-runtime AS rust-stack
-COPY --from=rust-build /out/rust-stack /usr/local/bin/rust-stack
-EXPOSE 4100
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s CMD wget -qO /dev/null http://127.0.0.1:4100/health || exit 1
-ENTRYPOINT ["rust-stack", "serve", "--host", "0.0.0.0", "--port", "4100", "--db", "/data/sovereign.sqlite3"]
 
 # =============================================================================================
 # Bun: workspace install (frozen lockfile), then per-app bundles.

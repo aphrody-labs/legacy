@@ -1,13 +1,14 @@
-//! Catalogue des services de la boîte : ce que l'administrateur voit, où le service répond dans le réseau compose
-//! (sonde) et où il s'ouvre depuis son navigateur (port publié, ou sous-domaine quand BOX_DOMAINE est défini).
+//! Catalog of the box services: what the administrator sees, where the service answers in the compose network
+//! (probe) and where it opens from the browser (published port, or subdomain when BOX_DOMAINE is set).
 
 pub struct Service {
     pub id: &'static str,
     pub nom: &'static str,
+    /// Catalog key of the description (`service.<id>.role`).
     pub role: &'static str,
-    /// Service compose (étiquette com.docker.compose.service).
+    /// Compose service (label com.docker.compose.service).
     pub conteneur: &'static str,
-    /// URL interne sondée ; une réponse < 500 compte comme « répond ».
+    /// Internal URL probed; an answer < 500 counts as "answering".
     pub sonde: Option<&'static str>,
     pub port: Option<u16>,
     pub https: bool,
@@ -54,7 +55,7 @@ pub const SERVICES: &[Service] = &[
     app(
         "auto",
         "Auto",
-        "Vos automatisations, factures et devis. Créez votre compte à la première visite.",
+        "service.auto.role",
         "auto-web",
         "http://auto-web:3001/",
         8081,
@@ -64,7 +65,7 @@ pub const SERVICES: &[Service] = &[
     app(
         "n8n",
         "n8n",
-        "Éditeur de workflows : plus de 400 applications connectées.",
+        "service.n8n.role",
         "n8n",
         "http://n8n:5678/healthz",
         5678,
@@ -74,7 +75,7 @@ pub const SERVICES: &[Service] = &[
     app(
         "hermes",
         "Hermes",
-        "Assistant IA qui agit pour vous : mémoire, outils, Telegram, Discord, Slack.",
+        "service.hermes.role",
         "hermes",
         "http://hermes:9119/",
         9119,
@@ -86,7 +87,7 @@ pub const SERVICES: &[Service] = &[
         ..app(
             "obsidian",
             "Obsidian",
-            "Vos notes dans le navigateur, rangées dans le dossier « coffre » de la boîte.",
+            "service.obsidian.role",
             "obsidian",
             "http://obsidian:3000/",
             3001,
@@ -96,26 +97,32 @@ pub const SERVICES: &[Service] = &[
     },
     app(
         "courrier",
-        "Courrier",
-        "Les courriels envoyés par la boîte, lisibles ici tant qu'aucun relais n'est configuré.",
+        "Mail",
+        "service.courrier.role",
         "mailpit",
         "http://mailpit:8025/",
         8025,
         "courrier",
         "#1d4ed8",
     ),
-    coulisse("ollama", "Ollama", "Modèles d'IA locaux", "ollama", Some("http://ollama:11434/api/version")),
-    coulisse("api", "API Auto", "Serveur d'Auto", "auto-api", Some("http://auto-api:3000/health")),
-    coulisse("worker", "Tâches Auto", "Exécutions planifiées", "auto-worker", None),
-    coulisse("postgres", "Base de données", "PostgreSQL", "postgres", None),
-    coulisse("caddy", "HTTPS", "Certificats et domaines", "caddy", None),
+    coulisse("ollama", "Ollama", "service.ollama.role", "ollama", Some("http://ollama:11434/api/version")),
+    coulisse("api", "Auto API", "service.api.role", "auto-api", Some("http://auto-api:3000/health")),
+    coulisse("worker", "Auto tasks", "service.worker.role", "auto-worker", None),
+    coulisse("postgres", "Database", "service.postgres.role", "postgres", None),
+    coulisse("caddy", "HTTPS", "service.caddy.role", "caddy", None),
 ];
 
 pub fn service(id: &str) -> Option<&'static Service> {
     SERVICES.iter().find(|s| s.id == id)
 }
 
-/// Lien « Ouvrir » : sous-domaine HTTPS derrière Caddy, sinon port publié sur l'hôte de la requête.
+/// Name shown for the service: the catalog entry `service.<id>.name` when the locale has one, else the name above.
+pub fn nom(locale: &str, s: &Service) -> String {
+    let key = format!("service.{}.name", s.id);
+    if crate::i18n::has(locale, &key) { crate::i18n::translate(locale, &key, &[]) } else { s.nom.to_owned() }
+}
+
+/// "Open" link: HTTPS subdomain behind Caddy, otherwise the published port on the request host.
 pub fn lien(s: &Service, domaine: Option<&str>, hote: &str) -> Option<String> {
     match (domaine, s.sous, s.port) {
         (Some(d), Some(sous), _) => Some(format!("https://{sous}.{d}")),
@@ -124,7 +131,7 @@ pub fn lien(s: &Service, domaine: Option<&str>, hote: &str) -> Option<String> {
     }
 }
 
-/// Nom d'hôte d'un en-tête Host (« 192.168.1.20:8080 », « [::1]:8080 ») ; seuls des caractères d'hôte passent.
+/// Host name of a Host header ("192.168.1.20:8080", "[::1]:8080"); only host characters pass.
 pub fn nom_hote(host: &str) -> String {
     let h = if host.starts_with('[') {
         host.split_once(']').map(|(a, _)| format!("{a}]")).unwrap_or_default()
@@ -137,6 +144,17 @@ pub fn nom_hote(host: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn names_and_roles_come_from_the_catalog() {
+        let courrier = service("courrier").unwrap();
+        assert_eq!(nom("en", courrier), "Mail");
+        assert_eq!(nom("fr", courrier), "Courrier");
+        assert_eq!(nom("fr", service("n8n").unwrap()), "n8n");
+        for s in SERVICES {
+            assert!(crate::i18n::has("en", s.role), "{}", s.role);
+        }
+    }
 
     #[test]
     fn liens() {

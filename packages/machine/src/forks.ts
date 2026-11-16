@@ -214,8 +214,8 @@ const FORKS: Fork[] = [
     ],
   },
   // unixwin ecosystem (2026-11-13): all repositories of the org. Code and
-  // data in third_party/<name>; site and GUI in apps/unixwin/upstream/<name>; build and installation by
-  // scripts/unixwin (just unixwin-*). unixwin/codex is not a clone: remote `unixwin` of third_party/codex.
+  // data in third_party/<name>; build and installation by infra/unixwin (just unixwin-*).
+  // unixwin/codex n'est pas un clone : remote `unixwin` de third_party/codex.
   ...[
     "niubash",
     "rubash",
@@ -229,6 +229,8 @@ const FORKS: Fork[] = [
     "wpm-artifacts",
     "winuxcmd-i18n",
     "winuxsh-profiles",
+    "unixwin.dev",
+    "wpm-gui",
   ].map((n) => ({ name: n, upstream: gh(`unixwin/${n}`) })),
   { name: "unixwin-github", upstream: gh("unixwin/.github") }, // org profile; ".github" reserved on the aphrody-labs side
   // Signed APT archive: out of the chain; scripts and metadata, no packages.
@@ -237,11 +239,6 @@ const FORKS: Fork[] = [
     upstream: gh("unixwin/apt"),
     sparse: [".github", "conf", "meta"],
   },
-  ...["unixwin.dev", "wpm-gui"].map((n) => ({
-    name: n,
-    upstream: gh(`unixwin/${n}`),
-    dir: `apps/unixwin/upstream/${n}`,
-  })),
 ];
 
 const repo = join(import.meta.dir, "..", "..", "..");

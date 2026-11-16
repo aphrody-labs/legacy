@@ -1,11 +1,21 @@
 import { expect, test } from "bun:test";
-import { cleanHelp, parseTools, render, skillName, subcommands, summary } from "./cli-skills.ts";
+import {
+  cleanHelp,
+  parseTools,
+  render,
+  skillName,
+  subcommands,
+  summary,
+} from "./cli-skills.ts";
 import { parseSkill } from "../packages/ai-os/src/core/skill-lint.ts";
 
-const HELP = "\x1b[1mtool 1.0\x1b[0m\r\nA fast finder.\n\n\n\nUsage: tool [OPTIONS] <CMD>\n\nCommands:\n  run     Run it\n  help    Print help\n  scan, s  Scan\n\nOptions:\n  -h, --help  Help\n";
+const HELP =
+  "\x1b[1mtool 1.0\x1b[0m\r\nA fast finder.\n\n\n\nUsage: tool [OPTIONS] <CMD>\n\nCommands:\n  run     Run it\n  help    Print help\n  scan, s  Scan\n\nOptions:\n  -h, --help  Help\n";
 
 test("parseTools keeps only tables with a bin", () => {
-  const t = parseTools('[[tool]]\nname = "a"\nbin = ["a"]\n[[tool]]\nname = "b"\n[toolchain.c]\nversion = "1"\n');
+  const t = parseTools(
+    '[[tool]]\nname = "a"\nbin = ["a"]\n[[tool]]\nname = "b"\n[toolchain.c]\nversion = "1"\n',
+  );
   expect(t.map((x) => x.name)).toEqual(["a"]);
 });
 
@@ -22,14 +32,20 @@ test("cleanHelp strips ANSI, CR and double blanks", () => {
 });
 
 test("cleanHelp drops emoji, non-ASCII and author emails", () => {
-  const l = cleanHelp("just \u{1F916} runner for tasks\nAuthor Name <a@b.dev>\nstar \u2604\u{1F30C} prompt");
+  const l = cleanHelp(
+    "just \u{1F916} runner for tasks\nAuthor Name <a@b.dev>\nstar \u2604\u{1F30C} prompt",
+  );
   expect(l.join("\n")).toBe("just  runner for tasks\nstar  prompt");
 });
 
 test("summary skips junk and falls back to why", () => {
   const t = { name: "x", bin: ["x"], why: "does things" };
-  expect(summary(t, ["(env: A_B)", "values: text, json]", "Usage: x"])).toBe("does things");
-  expect(summary(t, ["x 1.0.0", "A tiny file finder.", "", "Usage: x"])).toBe("A tiny file finder.");
+  expect(summary(t, ["(env: A_B)", "values: text, json]", "Usage: x"])).toBe(
+    "does things",
+  );
+  expect(summary(t, ["x 1.0.0", "A tiny file finder.", "", "Usage: x"])).toBe(
+    "A tiny file finder.",
+  );
 });
 
 test("subcommands reads the Commands section", () => {

@@ -1,7 +1,7 @@
-# Aphrody Box : Auto, n8n, Hermes Agent, Obsidian et Ollama prêts à l'emploi sur une seule machine, avec une
-# console d'administration. Installation : ./installer.sh (Linux, macOS) ou installer.ps1 (Windows).
-# Tous les secrets viennent de .env, écrit par `aphrody-box preparer` ; vos fichiers vivent dans ./coffre et
-# ./donnees, les bases dans des volumes Docker.
+# Aphrody Box: Auto, n8n, Hermes Agent, Obsidian and Ollama ready to use on a single machine, with an
+# administration console. Installation: ./installer.sh (Linux, macOS) or installer.ps1 (Windows).
+# All secrets come from .env, written by `aphrody-box preparer`; your files live in ./coffre and
+# ./donnees, the databases in Docker volumes.
 name: aphrody-box
 
 x-redemarrage: &redemarrage
@@ -25,18 +25,18 @@ x-auto: &auto
     AUTO_SMTP_UTILISATEUR: ${AUTO_SMTP_UTILISATEUR:-}
     AUTO_SMTP_MOT_DE_PASSE: ${AUTO_SMTP_MOT_DE_PASSE:-}
     AUTO_API_URL: http://auto-api:3000
-    # Nœuds IA d'Auto branchés sur l'Ollama de la boîte (seul hôte interne joignable par les workflows).
+    # Auto AI nodes wired to the box's Ollama (the only internal host reachable by the workflows).
     AUTO_IA_URL: http://ollama:11434/v1
     AUTO_LLM_URL: ${AUTO_LLM_URL:-http://ollama:11434/v1}
     AUTO_LLM_MODEL: ${AUTO_LLM_MODEL:-${BOX_MODELE:-qwen3:4b}}
     AUTO_HOTES_PERMIS: ollama
-    # « permis » : les workflows atteignent le réseau local (Home Assistant, Nextcloud…). Seulement si vous
-    # contrôlez tous les comptes de la boîte.
+    # "permis": workflows reach the local network (Home Assistant, Nextcloud...). Only if you
+    # control every account of the box.
     AUTO_RESEAU_LOCAL: ${BOX_RESEAU_LOCAL:-}
 
 services:
-  # Console d'administration (Rust, Leptos) : seule à voir le moteur Docker, pour l'état, les journaux et les
-  # redémarrages des conteneurs de ce projet.
+  # Administration console (Rust, Leptos): the only one to see the Docker engine, for the state, logs and
+  # restarts of the containers of this project.
   console:
     <<: *redemarrage
     image: ${BOX_IMAGE_CONSOLE:-ghcr.io/aphrody-labs/aphrody-box:latest}
@@ -73,7 +73,7 @@ services:
   auto-worker:
     <<: *auto
     command: ["bun", "apps/worker/src/index.ts"]
-    # Le worker n'écoute aucun port : la sonde HTTP de l'image ne s'applique pas.
+    # The worker listens on no port: the image's HTTP probe does not apply.
     healthcheck:
       disable: true
     depends_on:
@@ -105,7 +105,7 @@ services:
       DB_POSTGRESDB_USER: auto
       DB_POSTGRESDB_PASSWORD: ${BOX_PG_MOT_DE_PASSE}
       N8N_ENCRYPTION_KEY: ${N8N_CLE_CHIFFREMENT}
-      # Propriétaire créé d'office : aucun écran de première configuration.
+      # Owner created automatically: no first-run setup screen.
       N8N_INSTANCE_OWNER_MANAGED_BY_ENV: "true"
       N8N_INSTANCE_OWNER_EMAIL: ${BOX_EMAIL}
       N8N_INSTANCE_OWNER_FIRST_NAME: Admin
@@ -118,7 +118,7 @@ services:
       WEBHOOK_URL: ${BOX_URL_N8N}
       GENERIC_TIMEZONE: Europe/Paris
       TZ: Europe/Paris
-    # n8n tourne en 1000 : le groupe de la boîte lui ouvre le coffre en écriture.
+    # n8n runs as 1000: the box group gives it write access to the vault.
     group_add:
       - ${BOX_GID:-1000}
     volumes:
@@ -132,8 +132,8 @@ services:
       timeout: 3s
       retries: 60
 
-  # Identifiants n8n créés d'office : Ollama de la boîte et Hermes (API compatible OpenAI). Réimportés à chaque
-  # démarrage, sous les mêmes identifiants : rien n'est dupliqué.
+  # n8n credentials created automatically: the box's Ollama and Hermes (OpenAI-compatible API). Re-imported on each
+  # start, under the same ids: nothing is duplicated.
   n8n-identifiants:
     image: n8nio/n8n:2.45.2
     depends_on:
@@ -151,7 +151,7 @@ services:
       - sh
       - -c
       - >-
-        printf '[{"id":"boxOllama0000001","name":"Ollama de la boîte","type":"ollamaApi","data":{"baseUrl":"http://ollama:11434"}},{"id":"boxHermes0000001","name":"Hermes de la boîte","type":"openAiApi","data":{"apiKey":"%s","url":"http://hermes:8642/v1"}}]'
+        printf '[{"id":"boxOllama0000001","name":"Box Ollama","type":"ollamaApi","data":{"baseUrl":"http://ollama:11434"}},{"id":"boxHermes0000001","name":"Box Hermes","type":"openAiApi","data":{"apiKey":"%s","url":"http://hermes:8642/v1"}}]'
         "$$HERMES_CLE_API" > /tmp/identifiants.json
         && n8n import:credentials --input=/tmp/identifiants.json
         && rm /tmp/identifiants.json
@@ -162,7 +162,7 @@ services:
     image: ollama/ollama:latest
     environment:
       OLLAMA_KEEP_ALIVE: 10m
-      # Fenêtre minimale de Hermes Agent (64 000 jetons).
+      # Minimum context window of Hermes Agent (64,000 tokens).
       OLLAMA_CONTEXT_LENGTH: "65536"
     volumes:
       - ollama:/root/.ollama
@@ -172,7 +172,7 @@ services:
       timeout: 5s
       retries: 30
 
-  # Modèles du premier démarrage (conversation et embeddings) ; les suivants s'installent depuis la console.
+  # Models of the first start (chat and embeddings); later ones are installed from the console.
   ollama-modeles:
     image: ollama/ollama:latest
     depends_on:
@@ -225,7 +225,7 @@ services:
     ports:
       - "${BOX_ECOUTE:-0.0.0.0}:3001:3001"
 
-  # Courriels de la boîte (inscriptions, factures…) tant qu'aucun relais réel n'est configuré dans .env.
+  # Box mails (sign-ups, invoices...) as long as no real relay is configured in .env.
   mailpit:
     <<: *redemarrage
     image: axllent/mailpit:latest
@@ -238,8 +238,8 @@ services:
     ports:
       - "${BOX_ECOUTE:-0.0.0.0}:8025:8025"
 
-  # HTTPS sur un domaine (profil activé par le préparateur avec --domaine) : un sous-domaine par application,
-  # certificats Let's Encrypt automatiques. Les enregistrements DNS *.domaine doivent pointer vers la machine.
+  # HTTPS on a domain (profile enabled by the preparer with --domaine): one subdomain per application,
+  # automatic Let's Encrypt certificates. The *.domain DNS records must point to the machine.
   caddy:
     <<: *redemarrage
     image: caddy:2

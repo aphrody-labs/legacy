@@ -1,5 +1,5 @@
-//! Écrit des XML CII représentatifs (facture, acompte, avoir, franchise, taux multiples)
-//! dans le répertoire donné, pour la validation XSD + Schematron EN 16931.
+//! Writes representative CII XML files (invoice, down payment, credit note, VAT exemption, multiple rates)
+//! into the given directory, for the XSD + Schematron EN 16931 validation.
 
 use auto_facturx::{Facture, xml};
 
@@ -17,7 +17,7 @@ fn json(numero: &str, type_: &str, franchise: bool, lignes: &str) -> String {
 }
 
 fn main() {
-    let dir = std::env::args().nth(1).expect("usage: echantillons <répertoire>");
+    let dir = std::env::args().nth(1).expect("usage: echantillons <directory>");
     std::fs::create_dir_all(&dir).unwrap();
     let simple = r#"[{ "designation": "Développement", "quantite": 3, "prixUnitaireHtCents": 60000, "tva": 200 }]"#;
     let multi = r#"[

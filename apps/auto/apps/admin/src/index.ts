@@ -5,5 +5,5 @@ const server = demarrerAdmin({
   port: Number(Bun.env.PORT ?? 3002),
   development: Bun.env.NODE_ENV !== "production",
 });
-
+console.log(`auto admin: ${server.url}`);
 console.log(`auto admin : ${server.url}`);

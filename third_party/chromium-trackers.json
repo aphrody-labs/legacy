@@ -191,7 +191,7 @@
         "head": "ef68a767a544b5544e46944e4b3be15e9ce0b6d4",
         "date": "2026-11-11",
         "origin": "https://chromium.googlesource.com/chromium/src.git",
-        "repo_root": "C:/aphrody/third_party/chromium/src"
+        "repo_root": "C:/src/third_party/chromium/src"
       },
       "links": {
         "issues": {
@@ -340,7 +340,7 @@
         "head": "ef68a767a544b5544e46944e4b3be15e9ce0b6d4",
         "date": "2026-11-11",
         "origin": "https://chromium.googlesource.com/chromium/src.git",
-        "repo_root": "C:/aphrody/third_party/chromium/src"
+        "repo_root": "C:/src/third_party/chromium/src"
       },
       "links": {
         "issues": {
@@ -437,7 +437,7 @@
         "head": "e4e354fb9e409c178a647af015b5fa330461081e",
         "date": "2026-11-11",
         "origin": "https://chromium.googlesource.com/v8/v8.git",
-        "repo_root": "C:/aphrody/third_party/chromium/src/v8"
+        "repo_root": "C:/src/third_party/chromium/src/v8"
       },
       "links": {
         "issues": {
@@ -543,7 +543,7 @@
         "head": "d67d0f22e3ecbb8794223e2ebd008d1650246cb9",
         "date": "2026-11-11",
         "origin": "https://skia.googlesource.com/skia.git",
-        "repo_root": "C:/aphrody/third_party/chromium/src/third_party/skia"
+        "repo_root": "C:/src/third_party/chromium/src/third_party/skia"
       },
       "links": {
         "issues": {
@@ -651,7 +651,7 @@
         "head": "e327e2a60b08179ee8a04056f58dad8ca4b69b5f",
         "date": "2026-11-11",
         "origin": "https://dawn.googlesource.com/dawn.git",
-        "repo_root": "C:/aphrody/third_party/chromium/src/third_party/dawn"
+        "repo_root": "C:/src/third_party/chromium/src/third_party/dawn"
       },
       "links": {
         "issues": {
@@ -755,7 +755,7 @@
         "head": "c2cfebd8f340d74749b3511e487bac3f10834976",
         "date": "2026-11-11",
         "origin": "https://chromium.googlesource.com/angle/angle.git",
-        "repo_root": "C:/aphrody/third_party/chromium/src/third_party/angle"
+        "repo_root": "C:/src/third_party/chromium/src/third_party/angle"
       },
       "links": {
         "issues": {
@@ -855,7 +855,7 @@
         "head": "ec77017fb3e090ff02bffb9c6980ebcdd3006ddc",
         "date": "2026-11-14",
         "origin": "https://chromium.googlesource.com/chromium/tools/depot_tools.git",
-        "repo_root": "C:/aphrody/third_party/depot_tools"
+        "repo_root": "C:/src/third_party/depot_tools"
       },
       "links": {
         "issues": {
@@ -932,7 +932,7 @@
         "head": "d56d98583d9634cc9ed35eda0743f4ce5671338e",
         "date": "2026-11-12",
         "origin": "https://github.com/aphrody-labs/chrome-for-testing.git",
-        "repo_root": "C:/aphrody/third_party/chrome-for-testing"
+        "repo_root": "C:/src/third_party/chrome-for-testing"
       },
       "github": {
         "full_name": "GoogleChromeLabs/chrome-for-testing",
@@ -1103,7 +1103,7 @@
         "head": "9aa78c450489eddb828eb982eaee6c104a89d348",
         "date": "2026-11-07",
         "origin": "https://github.com/aphrody-labs/cef-rs.git",
-        "repo_root": "C:/aphrody/third_party/cef-rs"
+        "repo_root": "C:/src/third_party/cef-rs"
       },
       "github": {
         "full_name": "tauri-apps/cef-rs",
@@ -1185,7 +1185,7 @@
         "head": "55ca54ea97dbfcf80c5457924861b681bd83def2",
         "date": "2026-10-21",
         "origin": "https://github.com/aphrody-labs/rusty_v8.git",
-        "repo_root": "C:/aphrody/third_party/rusty_v8"
+        "repo_root": "C:/src/third_party/rusty_v8"
       },
       "github": {
         "full_name": "denoland/rusty_v8",
@@ -1379,7 +1379,7 @@
         "head": "6728a1cfe024be07f560f09ffa73f394704b5442",
         "date": "2026-11-12",
         "origin": "https://github.com/aphrody-labs/node.git",
-        "repo_root": "C:/aphrody/third_party/node"
+        "repo_root": "C:/src/third_party/node"
       },
       "github": {
         "full_name": "nodejs/node",
@@ -1605,7 +1605,7 @@
         "head": "0d9a2f764ffdb097269da048002c593865e83a9e",
         "date": "2026-11-14",
         "origin": "https://github.com/aphrody-labs/obscura.git",
-        "repo_root": "C:/aphrody/third_party/obscura"
+        "repo_root": "C:/src/third_party/obscura"
       },
       "github": {
         "full_name": "h4ckf0r0day/obscura",
@@ -1726,7 +1726,7 @@
         "head": "d129226078e0fc8ee5dec48fbc96a46df5d0aafd",
         "date": "2026-11-10",
         "origin": "https://github.com/aphrody-labs/agent-browser.git",
-        "repo_root": "C:/aphrody/third_party/agent-browser"
+        "repo_root": "C:/src/third_party/agent-browser"
       },
       "github": {
         "full_name": "vercel-labs/agent-browser",

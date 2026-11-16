@@ -4,7 +4,7 @@ import { testDb, type Sql } from "@auto/store";
 import { creerApp } from "../app";
 import type { Emetteur } from "@auto/services";
 
-Bun.env.AUTO_CLE_MAITRE ??= "cle maitre de test, 32 caracteres au moins";
+Bun.env.AUTO_CLE_MAITRE ??= "test master key, at least 32 characters";
 
 let sql: Sql;
 let drop: () => Promise<void>;
@@ -36,7 +36,7 @@ async function api(path: string, token?: string, init: { method?: string; body?:
   return { status: res.status, body: text ? JSON.parse(text) : null };
 }
 
-/** Webhook signé par la PA simulée. */
+/** Webhook signed by the simulated PA. */
 async function webhook(tenantId: string, secret: string, evs: EvenementPa[]) {
   const w = bacMock.webhook(secret, evs);
   const res = await fetch(new URL(`/v1/pa/webhook/${tenantId}`, server.url), {
@@ -64,13 +64,13 @@ const facture = {
 
 const mandat = { signataire: "Alice Martin", qualite: "gérante", date: "2026-10-22" };
 
-test("PA mock : émission → dépôt → déposée → webhook encaissée ; réception ; isolation", async () => {
+test("mock PA: issue → submission → submitted → paid webhook; reception; isolation", async () => {
   const a = (await api("/v1/auth/inscription", undefined, { body: inscription("pa-a@exemple.fr", "Alpha") })).body;
   const b = (await api("/v1/auth/inscription", undefined, { body: inscription("pa-b@exemple.fr", "Beta") })).body;
   const ta: string = a.tenantId;
   const tb: string = b.tenantId;
 
-  // Connexion : mandat exigé, identifiants chiffrés au repos.
+  // Connection: mandate required, credentials encrypted at rest.
   expect((await api("/v1/pa", a.session)).status).toBe(404);
   expect((await api("/v1/pa", a.session, { method: "PUT", body: { plateforme: "mock" } })).status).toBe(422);
   expect((await api("/v1/pa", a.session, { method: "PUT", body: { plateforme: "inconnue", mandat } })).status).toBe(
@@ -89,7 +89,7 @@ test("PA mock : émission → dépôt → déposée → webhook encaissée ; ré
   expect(Buffer.from(brut.identifiants).toString("latin1")).not.toContain(secretA);
   expect((await api("/v1/pa", a.session)).body).toMatchObject({ plateforme: "mock", mandat: { siren: "732829320" } });
 
-  // Facture émise puis déposée : l'exemplaire Factur-X figé part à la PA.
+  // Invoice issued then submitted: the frozen Factur-X copy goes to the PA.
   const d = (await api("/v1/documents", a.session, { body: facture })).body;
   expect((await api("/v1/pa/depots", a.session, { body: { documentId: d.id } })).status).toBe(409); // brouillon
   expect((await api(`/v1/documents/${d.id}/emettre`, a.session, { body: {} })).status).toBe(200);
@@ -100,9 +100,9 @@ test("PA mock : émission → dépôt → déposée → webhook encaissée ; ré
   const [fx] = await sql`SELECT sha256 FROM fichier WHERE document_id = ${d.id}`;
   expect(dep.body.sha256).toBe(fx.sha256);
   expect((await api(`/v1/documents/${d.id}`, a.session)).body.statut).toBe("depose");
-  expect((await api("/v1/pa/depots", a.session, { body: { documentId: d.id } })).status).toBe(409); // déjà déposée
+  expect((await api("/v1/pa/depots", a.session, { body: { documentId: d.id } })).status).toBe(409); // already submitted
 
-  // Webhook encaissée : signature vérifiée, statut et document mis à jour, événement publié, rejeu sans effet.
+  // Paid webhook: signature verified, status and document updated, event published, replay without effect.
   const ev = bacMock.avancer(ta, dep.body.idPa, "encaissee", new Date(Date.now() + 60_000).toISOString());
   expect((await webhook(ta, "mauvais secret", [ev])).status).toBe(401);
   expect(await webhook(ta, secretA, [ev])).toEqual({ status: 200, body: { traites: 1 } });
@@ -119,7 +119,7 @@ test("PA mock : émission → dépôt → déposée → webhook encaissée ; ré
   const statutsPa = evenements.filter((e) => e.type === "pa.statut" && e.tenantId === ta);
   expect(statutsPa.map((e) => e.data.statut)).toEqual(["deposee", "encaissee"]);
 
-  // Isolation : B ne voit ni la connexion, ni les dépôts, ni les documents de A.
+  // Isolation: B sees neither the connection, nor the submissions, nor A's documents.
   expect((await api("/v1/pa", b.session)).status).toBe(404);
   expect((await api("/v1/pa/depots", b.session)).body).toEqual([]);
   expect((await api(`/v1/pa/depots/${dep.body.id}`, b.session)).status).toBe(404);
@@ -127,12 +127,12 @@ test("PA mock : émission → dépôt → déposée → webhook encaissée ; ré
   const cb = await api("/v1/pa", b.session, { method: "PUT", body: { plateforme: "mock", mandat } });
   const secretB: string = cb.body.secretWebhook;
   expect(secretB).not.toBe(secretA);
-  // Secret de B sur l'URL de A : refusé ; événement de A rejoué chez B : aucun dépôt de B concerné.
+  // B's secret on A's URL: refused; A's event replayed at B: no submission of B concerned.
   expect((await webhook(ta, secretB, [ev])).status).toBe(401);
   expect((await webhook(tb, secretB, [ev])).body).toEqual({ traites: 0 });
   expect((await webhook("00000000-0000-0000-0000-000000000000", secretA, [ev])).status).toBe(404);
 
-  // Réception : B reçoit le Factur-X émis par A, XML extrait, événement facture.recue.
+  // Reception: B receives the Factur-X issued by A, XML extracted, facture.recue event.
   const pdfA = new Uint8Array(
     await (
       await fetch(new URL(`/v1/documents/${d.id}/pdf`, server.url), {
@@ -152,18 +152,18 @@ test("PA mock : émission → dépôt → déposée → webhook encaissée ; ré
   });
   expect(new Uint8Array(await pdfB.arrayBuffer())).toEqual(pdfA);
   expect(evenements.some((e) => e.type === "facture.recue" && e.tenantId === tb)).toBe(true);
-  // La facture reçue par la PA est aussi passée à l'ingestion, chez B seulement.
+  // The invoice received by the PA is also passed to ingestion, at B only.
   expect((await api("/v1/factures-recues", b.session)).body).toMatchObject([{ canal: "pa" }]);
   expect((await api("/v1/factures-recues", a.session)).body).toEqual([]);
   expect((await api("/v1/pa/recues", a.session)).body).toEqual([]);
   expect((await api(`/v1/pa/recues/${recues[0].id}`, a.session)).status).toBe(404);
 
-  // Synchronisation : nouvelle facture entrante relevée sans webhook, l'ancienne n'est pas dupliquée.
+  // Synchronization: new incoming invoice fetched without webhook, the old one is not duplicated.
   bacMock.livrer(tb, pdfA, "2026-10-24T08:00:00.000Z");
   expect((await api("/v1/pa/synchroniser", b.session, { body: {} })).body).toEqual({ statuts: 0, recues: 1 });
   expect((await api("/v1/pa/synchroniser", b.session, { body: {} })).body).toEqual({ statuts: 0, recues: 0 });
 
-  // Annuaire et e-reporting.
+  // Directory and e-reporting.
   expect((await api("/v1/pa/annuaire/732829320", a.session)).body).toEqual({ siren: "732829320", plateforme: "mock" });
   expect((await api("/v1/pa/annuaire/123456789", a.session)).status).toBe(404);
   const er = await api("/v1/pa/ereporting", a.session, {
@@ -176,7 +176,7 @@ test("PA mock : émission → dépôt → déposée → webhook encaissée ; ré
   ).toBe(422);
   expect((await api("/v1/pa/ereporting", b.session)).body).toEqual([]);
 
-  // Statut posé par le vendeur, piste d'audit intacte, déconnexion.
+  // Status set by the seller, audit trail intact, disconnection.
   expect((await api(`/v1/pa/depots/${dep.body.id}/statut`, a.session, { body: { statut: "deposee" } })).status).toBe(
     422,
   );

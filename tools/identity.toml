@@ -7,8 +7,8 @@
 [product]
 name = "aphrody"
 display = "Aphrody Labs"
-repo = "src"
-repo_org = "lab" # key of [orgs] owning the repository: github.com/aphrody-labs/src (moved 2026-11-13)
+repo = "aphrody"
+repo_org = "lab" # key of [orgs] owning the repository: github.com/aphrody-labs/aphrody (renamed 2026-11-14)
 
 [cli]
 binary = "ay" # [[bin]] of src/ay

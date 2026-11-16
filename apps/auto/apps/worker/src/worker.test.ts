@@ -14,7 +14,7 @@ afterAll(() => drop());
 const ajouter = (type: string, payload: object = {}, maxEssais?: number) =>
   avecWorker(sql, (tx) => enfiler(tx, type, payload, { tenantId: null, maxEssais }));
 
-test("deux workers concurrents : chaque job exécuté une seule fois", async () => {
+test("two concurrent workers: each job run exactly once", async () => {
   const vus: number[] = [];
   const t = {
     "test.unique": {
@@ -31,7 +31,7 @@ test("deux workers concurrents : chaque job exécuté une seule fois", async () 
   expect(vus.sort((x, y) => x - y)).toEqual([...Array(20).keys()]);
 });
 
-test("délai dépassé : job abandonné puis réessayé, échec signalé au bout des essais", async () => {
+test("timeout exceeded: job abandoned then retried, failure reported after the attempts", async () => {
   const echecs: string[] = [];
   let appels = 0;
   const w = creerWorker(
@@ -40,7 +40,7 @@ test("délai dépassé : job abandonné puis réessayé, échec signalé au bout
       "test.lent": {
         executer: () => {
           appels++;
-          return new Promise(() => {}); // ne se termine jamais
+          return new Promise(() => {}); // never ends
         },
         echec: async (_j, e) => {
           echecs.push(e);
@@ -52,11 +52,11 @@ test("délai dépassé : job abandonné puis réessayé, échec signalé au bout
   const id = (await ajouter("test.lent", {}, 2))!;
   await w.vider();
   expect(appels).toBe(2);
-  expect(echecs).toEqual(["délai dépassé (50 ms)"]);
+  expect(echecs).toEqual(["timeout exceeded (50 ms)"]);
   expect(await lireJob(sql, id)).toMatchObject({ statut: "echec", essais: 2 });
 });
 
-test("types inconnus ignorés : le job reste en attente", async () => {
+test("unknown types ignored: the job stays pending", async () => {
   const id = (await ajouter("test.autre"))!;
   expect(await creerWorker(sql, { "test.rien": { executer: async () => {} } }).vider()).toBe(0);
   expect((await lireJob(sql, id))?.statut).toBe("en_attente");

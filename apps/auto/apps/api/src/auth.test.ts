@@ -1,6 +1,6 @@
-// Better Auth de bout en bout par HTTP : routes /api/auth (session, bearer, organisation, clés d'API,
-// limitation de débit), serveur MCP distant protégé par OAuth 2.1 (inscription dynamique du client, PKCE,
-// consentement, jeton lié à l'entreprise), isolation de deux entreprises en REST et en MCP.
+// Better Auth end to end over HTTP: /api/auth routes (session, bearer, organization, API keys,
+// rate limiting), remote MCP server protected by OAuth 2.1 (dynamic client registration, PKCE,
+// consent, company-bound token), isolation of two companies in REST and MCP.
 import { afterAll, beforeAll, expect, test } from "bun:test";
 import { testDb, type Sql } from "@auto/store";
 import { creerApp } from "./app";
@@ -10,11 +10,11 @@ let drop: () => Promise<void>;
 let server: ReturnType<typeof Bun.serve>;
 let base: string;
 
-const vide = () => Response.json({ erreur: "route inconnue" }, { status: 404 });
+const vide = () => Response.json({ erreur: "Unknown route" }, { status: 404 });
 
 beforeAll(async () => {
   ({ sql, drop } = await testDb());
-  // L'origine publique doit être connue de Better Auth (émetteur OAuth, ressource /mcp) : port d'abord.
+  // The public origin must be known to Better Auth (OAuth issuer, /mcp resource): port first.
   server = Bun.serve({ port: 0, fetch: vide });
   base = server.url.origin;
   server.reload({ routes: creerApp(sql, undefined, { auth: { baseURL: base } }), fetch: vide });
@@ -65,11 +65,11 @@ async function entreprise(email: string, nom: string) {
 
 const bearer = (t: string) => ({ authorization: `Bearer ${t}` });
 
-test("routes Better Auth : connexion, session par cookie et par bearer, organisation active, clé d'API", async () => {
+test("Better Auth routes: sign-in, session by cookie and by bearer, active organization, API key", async () => {
   const a = await entreprise("ba@alpha.fr", "Alpha");
   expect((await http("/api/auth/ok")).corps).toEqual({ ok: true });
 
-  // Connexion directe par Better Auth : cookie et jeton (plugin bearer).
+  // Direct sign-in through Better Auth: cookie and token (bearer plugin).
   const s = await http("/api/auth/sign-in/email", { method: "POST", json: { email: "ba@alpha.fr", password: MDP } });
   expect(s.status).toBe(200);
   expect(s.headers.getSetCookie().join()).toContain("auto.session_token=");
@@ -81,7 +81,7 @@ test("routes Better Auth : connexion, session par cookie et par bearer, organisa
   expect((await http("/v1/moi", { headers: bearer(jeton) })).corps.tenantId).toBe(a.tenantId);
   expect((await http("/v1/moi", { headers: { cookie: cookieDe(s.headers) } })).status).toBe(200);
 
-  // Organisation : liste, membres, rôle personnalisé du contrôle d'accès.
+  // Organization: list, members, custom access-control role.
   const orgs = await http("/api/auth/organization/list", { headers: bearer(jeton) });
   expect(orgs.corps.map((o: { id: string; name: string }) => o.name)).toEqual(["Alpha"]);
   const perm = await http("/api/auth/organization/has-permission", {
@@ -91,7 +91,7 @@ test("routes Better Auth : connexion, session par cookie et par bearer, organisa
   });
   expect(perm.corps.success).toBe(true);
 
-  // Clé d'API d'entreprise créée par le client Better Auth, utilisée par x-api-key et par Bearer.
+  // Company API key created by the Better Auth client, used through x-api-key and Bearer.
   const k = await http("/api/auth/api-key/create", {
     method: "POST",
     headers: bearer(jeton),
@@ -102,12 +102,12 @@ test("routes Better Auth : connexion, session par cookie et par bearer, organisa
   expect((await http("/v1/moi", { headers: { "x-api-key": k.corps.key } })).corps.role).toBe("owner");
   expect((await http("/v1/moi", { headers: bearer(k.corps.key) })).corps.tenantId).toBe(a.tenantId);
 
-  // Déconnexion : le jeton ne sert plus.
+  // Sign-out: the token no longer works.
   await http("/api/auth/sign-out", { method: "POST", headers: bearer(jeton), json: {} });
   expect((await http("/v1/moi", { headers: bearer(jeton) })).status).toBe(401);
 });
 
-test("limitation de débit des connexions (activée comme en production)", async () => {
+test("sign-in rate limiting (enabled as in production)", async () => {
   const s = Bun.serve({ port: 0, fetch: vide });
   const { sql: sql2, drop: drop2 } = await testDb();
   s.reload({ routes: creerApp(sql2, undefined, { auth: { baseURL: s.url.origin, limiteDebit: true } }), fetch: vide });
@@ -129,7 +129,7 @@ test("limitation de débit des connexions (activée comme en production)", async
   }
 });
 
-/** PKCE (RFC 7636) : vérificateur aléatoire, défi S256. */
+/** PKCE (RFC 7636): random verifier, S256 challenge. */
 async function pkce() {
   const verificateur = crypto
     .getRandomValues(new Uint8Array(32))
@@ -138,9 +138,9 @@ async function pkce() {
   return { verificateur, defi: empreinte.toBase64({ alphabet: "base64url", omitPadding: true }) };
 }
 
-/** Client MCP de test : découverte, inscription dynamique, autorisation PKCE, consentement, jeton. */
+/** Test MCP client: discovery, dynamic registration, PKCE authorization, consent, token. */
 async function jetonMcp(cookie: string) {
-  // Sans jeton : 401 et défi RFC 9728 qui désigne les métadonnées de la ressource.
+  // Without a token: 401 and RFC 9728 challenge pointing to the resource metadata.
   const refus = await http("/mcp", { method: "POST", json: { jsonrpc: "2.0", id: 1, method: "ping" } });
   expect(refus.status).toBe(401);
   expect(refus.headers.get("www-authenticate")).toContain("resource_metadata=");
@@ -228,7 +228,7 @@ async function mcp(jeton: string, method: string, params: object = {}) {
   return r.corps.result;
 }
 
-test("MCP distant : OAuth de bout en bout, outils, isolation de deux entreprises", async () => {
+test("remote MCP: OAuth end to end, tools, isolation of two companies", async () => {
   const a = await entreprise("mcp@alpha.fr", "Alpha MCP");
   const b = await entreprise("mcp@beta.fr", "Beta MCP");
   const d = await http("/v1/documents", {
@@ -256,7 +256,7 @@ test("MCP distant : OAuth de bout en bout, outils, isolation de deux entreprises
   });
   expect(notif.status).toBe(202);
 
-  // A voit son devis ; B, avec son propre jeton, ne le voit ni ne le lit.
+  // A sees their quote; B, with their own token, neither sees nor reads it.
   const listeA = await mcp(ja, "tools/call", { name: "lister_documents", arguments: {} });
   expect(listeA.isError).toBe(false);
   expect(listeA.content[0].text).toContain(d.corps.id);
@@ -265,11 +265,11 @@ test("MCP distant : OAuth de bout en bout, outils, isolation de deux entreprises
   const lectureB = await mcp(jb, "tools/call", { name: "lire_document", arguments: { id: d.corps.id } });
   expect(lectureB.isError).toBe(true);
 
-  // Le jeton OAuth vaut aussi pour le REST, avec la même entreprise et le même rôle.
+  // The OAuth token is also valid for REST, with the same company and the same role.
   expect((await http("/v1/moi", { headers: bearer(ja) })).corps).toMatchObject({ tenantId: a.tenantId, role: "owner" });
   expect((await http(`/v1/documents/${d.corps.id}`, { headers: bearer(jb) })).status).toBe(404);
 
-  // Jeton altéré ou membre retiré : refusé.
+  // Altered token or removed member: refused.
   expect(
     (await http("/mcp", { method: "POST", headers: bearer(`${ja}x`), json: { jsonrpc: "2.0", id: 2, method: "ping" } }))
       .status,
@@ -282,7 +282,7 @@ test("MCP distant : OAuth de bout en bout, outils, isolation de deux entreprises
   await sql`UPDATE tenant SET suspendu_at = NULL WHERE id = ${a.tenantId}`;
 });
 
-test("REST : isolation de deux entreprises par session, clé d'API et invitation", async () => {
+test("REST: isolation of two companies by session, API key and invitation", async () => {
   const a = await entreprise("iso@alpha.fr", "Iso A");
   const b = await entreprise("iso@beta.fr", "Iso B");
   const cle = (await http("/v1/jetons", { method: "POST", headers: bearer(a.session), json: { nom: "n8n" } })).corps
@@ -304,7 +304,7 @@ test("REST : isolation de deux entreprises par session, clé d'API et invitation
     404,
   );
 
-  // B invite le propriétaire de A : après acceptation, il choisit son entreprise active.
+  // B invites A's owner: after acceptance, they choose their active company.
   const inv = await http("/v1/invitations", {
     method: "POST",
     headers: bearer(b.session),
@@ -329,7 +329,7 @@ test("REST : isolation de deux entreprises par session, clé d'API et invitation
   expect((await http("/v1/documents", { method: "POST", headers: bearer(a.session), json: {} })).status).toBe(403);
 });
 
-test("plugin admin : opérateur (owner du tenant opérateur), liste des comptes, bannissement", async () => {
+test("admin plugin: operator (owner of the operator tenant), account list, ban", async () => {
   const o = await entreprise("op@aphrody.fr", "Opérateur");
   const c = await entreprise("client@gamma.fr", "Gamma");
   const { synchroniserOperateurs } = await import("@auto/tenancy");
@@ -344,7 +344,7 @@ test("plugin admin : opérateur (owner du tenant opérateur), liste des comptes,
     json: { userId: c.userId, banReason: "impayé" },
   });
   expect(ban.status).toBe(200);
-  // Sessions révoquées par le bannissement, nouvelle connexion refusée.
+  // Sessions revoked by the ban, new sign-in refused.
   expect((await http("/v1/moi", { headers: bearer(c.session) })).status).toBe(401);
   const r = await http("/v1/auth/connexion", { method: "POST", json: { email: "client@gamma.fr", motDePasse: MDP } });
   expect(r.status).toBe(403);

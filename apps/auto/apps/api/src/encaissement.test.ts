@@ -12,7 +12,7 @@ let cleRecue = "";
 
 beforeAll(async () => {
   ({ sql, drop } = await testDb());
-  // Faux Stripe : compte, création et lecture de sessions Checkout.
+  // Fake Stripe: account, creation and reading of Checkout sessions.
   stripe = Bun.serve({
     port: 0,
     routes: {
@@ -73,7 +73,7 @@ async function api(path: string, token?: string, body?: unknown, method?: string
   return { status: res.status, body: t && res.headers.get("content-type")?.includes("json") ? JSON.parse(t) : t };
 }
 
-test("paiement en ligne : clé vérifiée, session du reste dû, confirmation unique, facture soldée", async () => {
+test("online payment: verified key, session for the balance due, single confirmation, settled invoice", async () => {
   const a = await api("/v1/auth/inscription", undefined, {
     email: "vendeur@exemple.fr",
     motDePasse: "un mot de passe long",
@@ -90,7 +90,7 @@ test("paiement en ligne : clé vérifiée, session du reste dû, confirmation un
   await api(`/v1/documents/${d.body.id}/emettre`, s, {});
   await api(`/v1/documents/${d.body.id}/paiements`, s, { date: "2026-10-20", montantCents: 20000, mode: "virement" });
 
-  // Sans clé : pas de lien de paiement.
+  // Without a key: no payment link.
   expect((await api(`/v1/documents/${d.body.id}/lien-paiement`, s, {})).status).toBe(409);
   expect((await api("/v1/parametres/encaissement", s, { cle: "pas-une-cle" }, "PUT")).status).toBe(422);
   expect((await api("/v1/parametres/encaissement", s, { cle: "sk_test_refusee0000" }, "PUT")).status).toBe(502);
@@ -108,9 +108,9 @@ test("paiement en ligne : clé vérifiée, session du reste dû, confirmation un
   const p = await api(`/v1/public/factures/${l.body.jeton}/paiement`, undefined, {});
   expect(p.body.url).toStartWith("https://checkout.stripe.test/cs_test_");
   const id = p.body.url.split("/").at(-1)!;
-  expect(sessions.get(id)!.montant).toBe(100000); // reste dû, pas le TTC
+  expect(sessions.get(id)!.montant).toBe(100000); // balance due, not the incl. VAT total
 
-  // Retour sans paiement : rien n'est enregistré.
+  // Return without payment: nothing is recorded.
   const nonPaye = await api(`/v1/public/factures/${l.body.jeton}/confirmation`, undefined, { session: id });
   expect(nonPaye.body).toMatchObject({ enregistre: false, resteCents: 100000 });
 
@@ -123,7 +123,7 @@ test("paiement en ligne : clé vérifiée, session du reste dû, confirmation un
   const paiements = await api(`/v1/documents/${d.body.id}/paiements`, s);
   expect(paiements.body.paiements ?? paiements.body).toHaveLength(2);
 
-  // Session d'une autre facture ou inventée : refusée.
+  // Session of another invoice or made up: refused.
   expect((await api(`/v1/public/factures/${l.body.jeton}/confirmation`, undefined, { session: "cs_x" })).status).toBe(
     502,
   );

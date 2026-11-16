@@ -5,127 +5,127 @@
   "sources": [
     {
       "url": "https://developer.chrome.com/docs/web-platform/webgpu/overview",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/docs/web-platform/webgpu/overview.md"
     },
     {
       "url": "https://developer.chrome.com/docs/web-platform/webgpu/news",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/docs/web-platform/webgpu/news.md"
     },
     {
       "url": "https://developer.chrome.com/blog/webgpu-release",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/webgpu-release.md"
     },
     {
       "url": "https://developer.chrome.com/blog/new-in-webgpu-121",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/new-in-webgpu-121.md"
     },
     {
       "url": "https://developer.chrome.com/blog/new-in-webgpu-144",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/new-in-webgpu-144.md"
     },
     {
       "url": "https://developer.chrome.com/blog/new-in-webgpu-146",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/new-in-webgpu-146.md"
     },
     {
       "url": "https://developer.chrome.com/blog/new-in-webgpu-147-148",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/new-in-webgpu-147-148.md"
     },
     {
       "url": "https://developer.chrome.com/blog/new-in-webgpu-153-154",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/new-in-webgpu-153-154.md"
     },
     {
       "url": "https://developer.chrome.com/blog/new-in-webgpu-155-156",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/new-in-webgpu-155-156.md"
     },
     {
       "url": "https://developer.chrome.com/blog/next-for-webgpu",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/next-for-webgpu.md"
     },
     {
       "url": "https://developer.chrome.com/docs/web-platform/webgpu/from-webgl-to-webgpu",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/docs/web-platform/webgpu/from-webgl-to-webgpu.md"
     },
     {
       "url": "https://developer.chrome.com/docs/web-platform/webgpu/troubleshooting-tips",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/docs/web-platform/webgpu/troubleshooting-tips.md"
     },
     {
       "url": "https://developer.chrome.com/docs/web-platform/webgpu/build-app",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/docs/web-platform/webgpu/build-app.md"
     },
     {
       "url": "https://developer.chrome.com/docs/web-platform/webgpu/developer-features",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/docs/web-platform/webgpu/developer-features.md"
     },
     {
       "url": "https://web.dev/articles/webassembly-feature-detection",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/webassembly-feature-detection.md"
     },
     {
       "url": "https://web.dev/articles/loading-wasm",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/loading-wasm.md"
     },
     {
       "url": "https://web.dev/articles/webassembly-threads",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/webassembly-threads.md"
     },
     {
       "url": "https://web.dev/articles/webassembly-performance-patterns-for-web-apps",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/webassembly-performance-patterns-for-web-apps.md"
     },
     {
       "url": "https://web.dev/articles/webassembly-memory-debugging",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/webassembly-memory-debugging.md"
     },
     {
       "url": "https://developer.chrome.com/blog/faster-wasm-debugging",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/faster-wasm-debugging.md"
     },
     {
       "url": "https://developer.chrome.com/blog/wasm-module-sharing-restricted-to-same-origin",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/wasm-module-sharing-restricted-to-same-origin.md"
     },
     {
       "url": "https://developer.chrome.com/blog/wasmgc",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/developer.chrome.com/blog/wasmgc.md"
     },
     {
       "url": "https://web.dev/articles/offscreen-canvas",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/offscreen-canvas.md"
     },
     {
       "url": "https://web.dev/articles/module-workers",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/module-workers.md"
     },
     {
       "url": "https://web.dev/articles/optimize-long-tasks",
-      "license": "CC-BY-4.0 (texte), Apache-2.0 (code)",
+      "license": "CC-BY-4.0 (text), Apache-2.0 (code)",
       "mirror": "third_party/design-mirror/web.dev/articles/optimize-long-tasks.md"
     }
   ],
@@ -133,7 +133,7 @@
     {
       "id": "web.webgpu.availability",
       "level": "MUST",
-      "rule": "Considérer WebGPU disponible par défaut dans Chrome : depuis 113 sur Windows (Direct3D 12), macOS et ChromeOS (Vulkan) ; Android 12+ (GPU Qualcomm et ARM) depuis 121 ; Linux à partir de 144 (Intel Gen12+, Vulkan pour WebGPU, OpenGL pour le reste de Chromium) puis 147-148 (NVIDIA récents sous Wayland), en déploiement progressif. Hors Chrome : Firefox 141 sur Windows, Safari 26.",
+      "rule": "Consider WebGPU available by default in Chrome: since 113 on Windows (Direct3D 12), macOS and ChromeOS (Vulkan); Android 12+ (Qualcomm and ARM GPUs) since 121; Linux from 144 onwards (Intel Gen12+, Vulkan for WebGPU, OpenGL for the rest of Chromium) then 147-148 (recent NVIDIA under Wayland), in progressive rollout. Outside Chrome: Firefox 141 on Windows, Safari 26.",
       "value": {
         "chrome": {
           "windows_d3d12": 113,
@@ -151,13 +151,13 @@
     {
       "id": "web.webgpu.feature-detect",
       "level": "MUST",
-      "rule": "Détecter navigator.gpu puis traiter un adaptateur null (accélération désactivée, plateforme non prise en charge, liste de blocage, options sans correspondance, absence de GPU, crashs répétés du processus GPU) avec un repli fonctionnel (WebGL ou rendu DOM).",
+      "rule": "Detect navigator.gpu then handle a null adapter (acceleration disabled, unsupported platform, blocklist, mismatched options, no GPU, repeated GPU process crashes) with a functional fallback (WebGL or DOM rendering).",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/troubleshooting-tips"
     },
     {
       "id": "web.webgpu.compat-mode",
       "level": "SHOULD",
-      "rule": "Pour couvrir le matériel ancien, demander l'adaptateur avec featureLevel: \"compatibility\" (Chrome 146, OpenGL ES 3.1) et rester dans ses limites, sauf activation explicite de core-features-and-limits.",
+      "rule": "To support legacy hardware, request the adapter with featureLevel: \"compatibility\" (Chrome 146, OpenGL ES 3.1) and stay within its limits, except explicit activation of core-features-and-limits.",
       "value": {
         "chrome": 146
       },
@@ -166,37 +166,37 @@
     {
       "id": "web.webgpu.limits-explicit",
       "level": "MUST",
-      "rule": "Ne jamais supposer les limites du matériel : requestDevice() renvoie par défaut des limites de plus petit dénominateur commun ; demander explicitement requiredLimits et requiredFeatures après lecture de adapter.limits et adapter.features, et prévoir un chemin sans la fonctionnalité.",
+      "rule": "Never assume hardware limits: requestDevice() returns lowest-common-denominator limits by default; explicitly request requiredLimits and requiredFeatures after reading adapter.limits and adapter.features, and plan a path without the feature.",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/from-webgl-to-webgpu"
     },
     {
       "id": "web.webgpu.windows-adapter",
       "level": "MUST",
-      "rule": "Sous Windows, ne pas compter sur powerPreference : Chrome utilise l'adaptateur déjà alloué à ses autres charges (souvent l'iGPU sur portable) et ne gère pas plusieurs adaptateurs simultanés.",
+      "rule": "On Windows, do not rely on powerPreference: Chrome uses the adapter already allocated to its other workloads (often the iGPU on laptops) and does not manage multiple adapters simultaneously.",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/troubleshooting-tips"
     },
     {
       "id": "web.webgpu.device-lost",
       "level": "MUST",
-      "rule": "Prévoir la perte du device (crashs répétés du processus GPU) et la recréation complète adaptateur, device et ressources, selon les bonnes pratiques de perte de device référencées par Chrome.",
+      "rule": "Plan for device loss (repeated GPU process crashes) and complete recreation of adapter, device and resources, according to device-loss best practices referenced by Chrome.",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/troubleshooting-tips"
     },
     {
       "id": "web.webgpu.async-errors",
       "level": "MUST",
-      "rule": "Concevoir pour le modèle d’erreur entièrement asynchrone : une création peut sembler réussir et n’échouer qu’ensuite ; ne jamais attendre de réponse synchrone du processus GPU ; nommer chaque objet avec label pour des messages et outils exploitables.",
+      "rule": "Design for a fully asynchronous error model: a creation may appear to succeed and fail only later; never wait for synchronous GPU process response; name each object with label for actionable messages and tools.",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/from-webgl-to-webgpu"
     },
     {
       "id": "web.webgpu.pipelines",
       "level": "SHOULD",
-      "rule": "Créer les pipelines immuables à l'avance et les réutiliser ; ne pas transposer littéralement des concepts WebGL (état global, attente synchrone).",
+      "rule": "Create immutable pipelines ahead of time and reuse them; do not literally transpose WebGL concepts (global state, synchronous waiting).",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/from-webgl-to-webgpu"
     },
     {
       "id": "web.webgpu.canvas",
       "level": "SHOULD",
-      "rule": "Gérer soi-même le canvas (multisample puis resolve pour l'anticrénelage) ; un seul GPUDevice peut servir plusieurs canvas, sans limite de nombre, contrairement à WebGL (16 canvas dans Chrome et Safari).",
+      "rule": "Manage the canvas yourself (multisample then resolve for antialiasing); a single GPUDevice can serve multiple canvases, with no limit on number, unlike WebGL (16 canvases in Chrome and Safari).",
       "value": {
         "webgl_canvas_limit_chrome_safari": 16,
         "webgpu_canvas_limit": "aucune"
@@ -206,13 +206,13 @@
     {
       "id": "web.webgpu.compute",
       "level": "MAY",
-      "rule": "Déporter calculs lourds (mise en page massive, filtres, ML) en compute shaders, absents de WebGL.",
+      "rule": "Offload heavy computations (massive layout, filters, ML) to compute shaders, absent in WebGL.",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/from-webgl-to-webgpu"
     },
     {
       "id": "web.webgpu.wgsl-extensions",
       "level": "SHOULD",
-      "rule": "N’utiliser une extension de langage WGSL récente (linear_indexing 147-148, buffer_view et swizzle_assignment 153-154, fragment_depth 155-156) qu’après test de navigator.gpu.wgslLanguageFeatures, avec directive requires en tête du shader et shader de repli.",
+      "rule": "Use a recent WGSL language extension (linear_indexing 147-148, buffer_view and swizzle_assignment 153-154, fragment_depth 155-156) only after testing navigator.gpu.wgslLanguageFeatures, with requires directive at shader head and fallback shader.",
       "value": {
         "linear_indexing": "147-148",
         "buffer_view": "153-154",
@@ -224,19 +224,19 @@
     {
       "id": "web.webgpu.check-hw",
       "level": "MUST",
-      "rule": "Avant tout diagnostic de lenteur, vérifier dans chrome://gpu « WebGPU: Hardware accelerated » ; un mode logiciel invalide les mesures.",
+      "rule": "Before any slowness diagnosis, check in chrome://gpu \"WebGPU: Hardware accelerated\"; software mode invalidates measurements.",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/troubleshooting-tips"
     },
     {
       "id": "web.webgpu.native-dawn",
       "level": "MAY",
-      "rule": "Partager le code de rendu natif et web via Dawn (C++, webgpu.h) compilé en WebAssembly avec Emscripten.",
+      "rule": "Share native and web rendering code via Dawn (C++, webgpu.h) compiled to WebAssembly with Emscripten.",
       "source": "https://developer.chrome.com/docs/web-platform/webgpu/build-app"
     },
     {
       "id": "web.webgpu.ui-a11y",
       "level": "MUST",
-      "rule": "Une UI rendue au GPU garde un arbre DOM accessible (rôles, noms, focus) synchronisé, et respecte les specs a11y et perf : le canvas seul n'est pas accessible. Règle maison.",
+      "rule": "A GPU-rendered UI maintains a synchronized accessible DOM tree (roles, names, focus) and respects a11y and perf specs: canvas alone is not accessible. House rule.",
       "value": {
         "see": ["web.a11y", "web.core-web-vitals"]
       }
@@ -244,7 +244,7 @@
     {
       "id": "web.wasm.streaming",
       "level": "MUST",
-      "rule": "Charger les modules avec WebAssembly.compileStreaming ou instantiateStreaming sur la réponse fetch, servie en Content-Type: application/wasm.",
+      "rule": "Load modules with WebAssembly.compileStreaming or instantiateStreaming on the fetch response, served with Content-Type: application/wasm.",
       "value": {
         "content_type": "application/wasm"
       },
@@ -253,19 +253,19 @@
     {
       "id": "web.wasm.compile-once",
       "level": "SHOULD",
-      "rule": "Exécuter le wasm lourd dans un Worker ; compiler le module une seule fois (compileStreaming) puis l'instancier dans le worker, sans course entre chargement et messages.",
+      "rule": "Run heavy wasm in a Worker; compile the module once (compileStreaming) then instantiate it in the worker, without races between loading and messages.",
       "source": "https://web.dev/articles/webassembly-performance-patterns-for-web-apps"
     },
     {
       "id": "web.wasm.feature-cohorts",
       "level": "MUST",
-      "rule": "Construire un binaire par cohorte de fonctionnalités (SIMD, threads, exceptions…) plus un binaire de base, et choisir à l'exécution avec wasm-feature-detect.",
+      "rule": "Build one binary per feature cohort (SIMD, threads, exceptions…) plus a baseline binary, and choose at runtime with wasm-feature-detect.",
       "source": "https://web.dev/articles/webassembly-feature-detection"
     },
     {
       "id": "web.wasm.threads-coi",
       "level": "MUST",
-      "rule": "Les threads wasm exigent SharedArrayBuffer donc l'isolation cross-origin : en-têtes Cross-Origin-Embedder-Policy: require-corp et Cross-Origin-Opener-Policy: same-origin ; fournir une variante sans threads.",
+      "rule": "Wasm threads require SharedArrayBuffer thus cross-origin isolation: headers Cross-Origin-Embedder-Policy: require-corp and Cross-Origin-Opener-Policy: same-origin; provide a variant without threads.",
       "value": {
         "COEP": "require-corp",
         "COOP": "same-origin"
@@ -275,7 +275,7 @@
     {
       "id": "web.wasm.same-origin-modules",
       "level": "MUST",
-      "rule": "Ne transmettre un WebAssembly.Module par postMessage qu’entre contextes de même origine (Chrome 95+) ; SharedArrayBuffer et WebAssembly.Memory ne passent plus non plus vers une page même site mais d’une autre origine (Chrome 92+).",
+      "rule": "Pass a WebAssembly.Module via postMessage only between same-origin contexts (Chrome 95+); SharedArrayBuffer and WebAssembly.Memory also no longer pass to a page of the same site but different origin (Chrome 92+).",
       "value": {
         "module_chrome": 95,
         "sab_memory_chrome": 92
@@ -285,25 +285,25 @@
     {
       "id": "web.wasm.memory-views",
       "level": "MUST-NOT",
-      "rule": "Ne pas conserver une vue mémoire adossée au wasm au-delà d’un appel (memory.grow invalide l’ArrayBuffer et toutes ses vues) : copier côté JS ; ne pas exposer d’objets non gérés au JS ; pas d’état mutable global.",
+      "rule": "Do not hold a memory view backed by wasm beyond a call (memory.grow invalidates the ArrayBuffer and all its views): copy on JS side; do not expose unmanaged objects to JS; no global mutable state.",
       "source": "https://web.dev/articles/webassembly-memory-debugging"
     },
     {
       "id": "web.wasm.sanitizers",
       "level": "SHOULD",
-      "rule": "Exécuter les builds de développement sous sanitizers ; préférer un langage sûr ou des enveloppes typées aux pointeurs bruts.",
+      "rule": "Run development builds under sanitizers; prefer a safe language or typed wrappers over raw pointers.",
       "source": "https://web.dev/articles/webassembly-memory-debugging"
     },
     {
       "id": "web.wasm.debug-dwarf",
       "level": "SHOULD",
-      "rule": "Déboguer avec DWARF 5 séparé (-g -gsplit-dwarf -gdwarf-5, fichiers .dwo) et retirer la section name pour réduire build et chargement du débogueur.",
+      "rule": "Debug with separate DWARF 5 (-g -gsplit-dwarf -gdwarf-5, .dwo files) and strip the name section to reduce build and debugger loading.",
       "source": "https://developer.chrome.com/blog/faster-wasm-debugging"
     },
     {
       "id": "web.wasm.gc",
       "level": "MAY",
-      "rule": "Pour les langages à ramasse-miettes (Kotlin, Dart), cibler WasmGC : Chrome 119, Firefox 120, Safari 18.2.",
+      "rule": "For garbage-collected languages (Kotlin, Dart), target WasmGC: Chrome 119, Firefox 120, Safari 18.2.",
       "value": {
         "chrome": 119,
         "firefox": 120,
@@ -314,7 +314,7 @@
     {
       "id": "web.workers.offscreen-canvas",
       "level": "SHOULD",
-      "rule": "Déplacer le rendu canvas/WebGPU dans un Worker via OffscreenCanvas transféré (second argument de postMessage) et cadencer avec requestAnimationFrame du worker, pas commit().",
+      "rule": "Move canvas/WebGPU rendering into a Worker via transferred OffscreenCanvas (second argument of postMessage) and pace with the worker's requestAnimationFrame, not commit().",
       "value": {
         "support": {
           "chrome": 69,
@@ -327,13 +327,13 @@
     {
       "id": "web.workers.module",
       "level": "SHOULD",
-      "rule": "Utiliser des module workers (new Worker(url, { type: \"module\" })) et les précharger avec modulepreload.",
+      "rule": "Use module workers (new Worker(url, { type: \"module\" })) and preload them with modulepreload.",
       "source": "https://web.dev/articles/module-workers"
     },
     {
       "id": "web.workers.main-thread-budget",
       "level": "MUST",
-      "rule": "Le thread principal ne garde que l'entrée et la présentation : aucune tâche de plus de 50 ms ; le reste (wasm, décodage, préparation GPU) en worker ou découpé avec scheduler.yield.",
+      "rule": "The main thread keeps only input and presentation: no task longer than 50 ms; the rest (wasm, decoding, GPU prep) in a worker or split with scheduler.yield.",
       "value": {
         "long_task_ms": 50
       },

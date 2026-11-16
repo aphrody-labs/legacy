@@ -34,7 +34,7 @@ else { console.error("need --repo or --dir"); process.exit(2); }
 
 const files = repo
   ? (await Bun.$`git -C ${src} ls-files -z`.quiet().text()).split("\0").filter(Boolean)
-  : [...new Bun.Glob("**/*").scanSync({ cwd: src, dot: true, onlyFiles: true })].filter((f) => !/(^|\/)(node_modules|target|\.git)\//.test(f));
+  : [...new Bun.Glob("**/*").scanSync({ cwd: src, dot: true, onlyFiles: true })].map((p) => p.replace(/\\/g, "/")).filter((f) => !/(^|\/)(node_modules|target|\.git)\//.test(f));
 const picked = files.filter((f) => (!from || f.startsWith(`${from}/`)) && !skip.some((r) => r.test(f)));
 
 // Secret gate on the source tree.

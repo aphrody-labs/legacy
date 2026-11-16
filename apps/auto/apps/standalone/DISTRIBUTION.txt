@@ -1,59 +1,59 @@
-AUTO — SERVEUR AUTONOME
+AUTO — STANDALONE SERVER
 
-Ce paquet contient le runtime, la bibliothèque native, les migrations et les
-ressources web/Craft. Conserver et extraire le dossier complet. Bun, Node et un
-gestionnaire de paquets JavaScript ne sont pas nécessaires sur la machine cible.
+This package contains the runtime, the native library, the migrations and the
+web/Craft resources. Keep and extract the whole folder. Bun, Node and a
+JavaScript package manager are not needed on the target machine.
 
-Pour utiliser simplement le service Auto, ouvrir https://auto.aphrody.com/app
-ou installer l'application depuis https://auto.aphrody.com/telechargements.
+To simply use the Auto service, open https://auto.aphrody.com/app
+or install the application from https://auto.aphrody.com/telechargements.
 
-HEBERGER SA PROPRE INSTANCE
+HOSTING YOUR OWN INSTANCE
 
-1. Préparer une base PostgreSQL et son compte de migration. Les migrations
-   initiales créent le rôle auto_app : le compte utilisé doit y être autorisé.
-2. Fournir les variables d'environnement ci-dessous, avec vos propres valeurs.
-   Ne publier ni vos mots de passe ni la clé maître. Garder cette clé stable pour
-   relire les secrets chiffrés après redémarrage.
+1. Prepare a PostgreSQL database and its migration account. The initial
+   migrations create the auto_app role: the account used must be allowed to do so.
+2. Provide the environment variables below, with your own values.
+   Do not publish your passwords or the master key. Keep this key stable so
+   encrypted secrets can be read again after a restart.
 
    NODE_ENV=production
-   DATABASE_URL=postgres://auto:MOT_DE_PASSE@127.0.0.1:5432/auto
-   AUTO_CLE_MAITRE=VOTRE_CLE_ALEATOIRE_DE_64_CARACTERES_HEXADECIMAUX
-   AUTO_URL_APP=https://auto.votre-domaine.fr
+   DATABASE_URL=postgres://auto:PASSWORD@127.0.0.1:5432/auto
+   AUTO_CLE_MAITRE=YOUR_RANDOM_KEY_OF_64_HEXADECIMAL_CHARACTERS
+   AUTO_URL_APP=https://auto.your-domain.example
    AUTO_API_URL=http://127.0.0.1:3000
    AUTO_BIND_HOST=127.0.0.1
-   AUTO_SMTP_HOTE=smtp.votre-domaine.fr
+   AUTO_SMTP_HOTE=smtp.your-domain.example
    AUTO_SMTP_PORT=587
    AUTO_SMTP_SECURITE=starttls
-   AUTO_SMTP_UTILISATEUR=auto@votre-domaine.fr
-   AUTO_SMTP_MOT_DE_PASSE=VOTRE_SECRET
+   AUTO_SMTP_UTILISATEUR=auto@your-domain.example
+   AUTO_SMTP_MOT_DE_PASSE=YOUR_SECRET
 
-   Sous Linux, utiliser export NOM=valeur dans le shell ou votre gestionnaire de
-   services. Sous PowerShell, utiliser $env:NOM='valeur' dans chaque terminal.
+   On Linux, use export NAME=value in the shell or your service manager.
+   On PowerShell, use $env:NAME='value' in each terminal.
 
-3. Lancer les migrations : ./auto migrate (Linux) ou .\auto.exe migrate (Windows).
-4. Lancer trois processus distincts, avec le même environnement :
-   - PORT=3000 : auto api
+3. Run the migrations: ./auto migrate (Linux) or .\auto.exe migrate (Windows).
+4. Start three separate processes, with the same environment:
+   - PORT=3000: auto api
    - auto worker
-   - PORT=3001 : auto web
-   Sous PowerShell, définir $env:PORT='3000' ou '3001' avant la commande.
-5. Configurer votre reverse proxy HTTPS vers le front local sur le port 3001.
-   L'API et PostgreSQL restent sur le réseau privé. L'inscription crée une
-   entreprise ; les collègues la rejoignent via les invitations de l'équipe.
+   - PORT=3001: auto web
+   On PowerShell, set $env:PORT='3000' or '3001' before the command.
+5. Configure your HTTPS reverse proxy to the local front end on port 3001.
+   The API and PostgreSQL stay on the private network. Sign-up creates a
+   company; colleagues join it through the team invitations.
 
-La clé maître, le relais mail réel et l'URL publique sont nécessaires en
-production. OAuth Google/Microsoft, stockage documentaire, IA et intégrations
-externes se configurent séparément. Les fonctions OCR/conversion utilisent
-Chromium, Tesseract et Poppler lorsqu'elles en ont besoin ; leurs exécutables
-restent des dépendances de l'hôte. auto outils donne les diagnostics disponibles.
+The master key, the real mail relay and the public URL are required in
+production. Google/Microsoft OAuth, document storage, AI and external
+integrations are configured separately. The OCR/conversion functions use
+Chromium, Tesseract and Poppler when they need them; their executables
+remain host dependencies. auto tools gives the available diagnostics.
 
-VERIFICATION ET MISE A NIVEAU
+VERIFICATION AND UPGRADE
 
-SHA256SUMS.json contient les empreintes des fichiers du paquet. Comparer aussi
-le SHA-256 de l'archive au catalogue public avant extraction. Sauvegarder la base
-et les documents avant une nouvelle version ; un retour à un ancien binaire ne
-restaure pas un schéma déjà migré. Les services doivent être supervisés et
-redémarrés avec leur environnement privé conservé.
+SHA256SUMS.json contains the fingerprints of the package files. Also compare
+the SHA-256 of the archive with the public catalog before extraction. Back up the
+database and the documents before a new version; going back to an older binary
+does not restore a schema that was already migrated. The services must be
+supervised and restarted with their private environment kept.
 
-LICENSE et NOTICE accompagnent le projet. Les notices des distributions Craft
-sont présentes dans public/craft. Sources et documentation :
+LICENSE and NOTICE come with the project. The notices of the Craft distributions
+are in public/craft. Sources and documentation:
 https://github.com/aphrody-labs/auto

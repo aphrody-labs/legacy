@@ -1,5 +1,5 @@
-# Carte graphique NVIDIA pour Ollama (pilote et NVIDIA Container Toolkit installés sur la machine).
-# Activé par le préparateur avec --gpu (COMPOSE_FILE dans .env).
+# NVIDIA graphics card for Ollama (driver and NVIDIA Container Toolkit installed on the machine).
+# Enabled by the preparer with --gpu (COMPOSE_FILE in .env).
 services:
   ollama:
     deploy:

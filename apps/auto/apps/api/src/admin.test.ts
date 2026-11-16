@@ -36,7 +36,7 @@ const inscrire = async (email: string, nom: string) =>
     })
   ).body as { session: string; tenantId: string };
 
-test("restriction réseau admin : le rôle opérateur historique ne contourne pas la liste IP", async () => {
+test("admin network restriction: the legacy operator role does not bypass the IP list", async () => {
   const avant = {
     ips: Bun.env.AUTO_ADMIN_IPS,
     source: Bun.env.AUTO_ADMIN_IP_SOURCE,
@@ -67,7 +67,7 @@ test("restriction réseau admin : le rôle opérateur historique ne contourne pa
   }
 });
 
-test("membres et jetons : liste sans secret, révocation", async () => {
+test("members and tokens: list without secret, revocation", async () => {
   const a = await inscrire("membres@exemple.fr", "Membres");
   expect((await api("/v1/membres", a.session)).body).toEqual([
     {
@@ -101,7 +101,7 @@ test("membres et jetons : liste sans secret, révocation", async () => {
   );
 });
 
-test("console opérateur : réservée, transverse, suspension tracée et levée", async () => {
+test("operator console: reserved, cross-tenant, suspension traced and lifted", async () => {
   const o = await inscrire("operateur@exemple.fr", "Opérateur");
   const a = await inscrire("client-a@exemple.fr", "Client A");
   Bun.env.AUTO_TENANT_OPERATEUR = o.tenantId;

@@ -1,0 +1,9 @@
+{
+  "update.available": "Auto {version} is available. Save your documents before continuing. The application will restart after the installation.",
+  "update.current": "This Auto application is up to date.",
+  "update.failed": "The update could not be checked or installed. Try again later from the Auto menu.",
+  "update.install": "Install and restart",
+  "update.later": "Later",
+  "update.menu": "Check for updates…",
+  "update.title": "Auto update"
+}

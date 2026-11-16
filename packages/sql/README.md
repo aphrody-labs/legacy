@@ -2,6 +2,25 @@
 
 # @aphrody/sql
 
+<!-- catalog:begin unit -->
+> Shared Bun database mechanics for Aphrody: env/URL resolution, Bun.SQL and Redis factories, bun:sqlite open policy with optional sqlite-vec
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/sql` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/sql build
+bun run --cwd packages/sql test
+bun run --cwd packages/sql typecheck
+bun run --cwd packages/sql lint
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Shared Bun database mechanics for Aphrody. The package implements decisions
 D6, D7, D9 and D10 of
 [ADR sql-convergence](../../docs/aphrody/decisions/infra/sql-convergence.md). The

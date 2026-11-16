@@ -1,5 +1,5 @@
-//! Assemblage PDF/A-3b : conversion par `pdfcraft-preflight`, puis `factur-x.xml` embarqué
-//! (`/AF`, `/Names /EmbeddedFiles`, `AFRelationship /Alternative`) et extension XMP Factur-X.
+//! PDF/A-3b assembly: conversion by `pdfcraft-preflight`, then embedded `factur-x.xml`
+//! (`/AF`, `/Names /EmbeddedFiles`, `AFRelationship /Alternative`) and Factur-X XMP extension.
 
 use crate::Erreur;
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, SaveOptions, Stream, pdf_date, write_full};
@@ -38,15 +38,15 @@ xmlns:pdfaSchema=\"http://www.aiim.org/pdfa/ns/schema#\" xmlns:pdfaProperty=\"ht
 }
 
 fn catalogue(doc: &Document) -> Result<(ObjRef, Dict), Erreur> {
-    let root = doc.root().ok_or_else(|| Erreur::Invalide("PDF sans catalogue".into()))?;
+    let root = doc.root().ok_or_else(|| Erreur::Invalide("PDF without catalog".into()))?;
     let cat = doc.dict(&Object::Ref(root)).ok_or_else(|| Erreur::Invalide("catalogue illisible".into()))?;
     Ok((root, cat))
 }
 
-/// PDF visuel + XML CII → PDF/A-3b Factur-X (non re-vérifié : voir [`verifier_pdfa`]).
+/// Visual PDF + CII XML → Factur-X PDF/A-3b (not re-verified: see [`verifier_pdfa`]).
 pub fn assembler(pdf: &[u8], xml: &str, date_unix: i64) -> Result<Vec<u8>, Erreur> {
     let mut doc = Document::open(Arc::new(pdf.to_vec()))?;
-    // D'abord la conversion : elle retirerait une pièce jointe ajoutée avant elle.
+    // Conversion first: it would remove an attachment added before it.
     convert(&mut doc, Level::A3b)?;
     let date = pdf_date(date_unix);
 
@@ -73,17 +73,17 @@ pub fn assembler(pdf: &[u8], xml: &str, date_unix: i64) -> Result<Vec<u8>, Erreu
 
     let (root, cat) = catalogue(&doc)?;
 
-    // XMP : la conversion vient de l'écrire non compressé ; on y ajoute l'extension Factur-X.
+    // XMP: the conversion just wrote it uncompressed; the Factur-X extension is added to it.
     let mref = match cat.get(b"Metadata") {
         Some(Object::Ref(r)) => *r,
-        _ => return Err(Erreur::Invalide("XMP absent après conversion PDF/A".into())),
+        _ => return Err(Erreur::Invalide("XMP missing after PDF/A conversion".into())),
     };
     let meta = doc.get(mref);
     let Object::Stream(s) = &*meta else {
         return Err(Erreur::Invalide("XMP illisible".into()));
     };
     let packet = String::from_utf8(s.decoded()?).map_err(|_| Erreur::Invalide("XMP non UTF-8".into()))?;
-    let at = packet.rfind("</rdf:RDF>").ok_or_else(|| Erreur::Invalide("XMP sans rdf:RDF".into()))?;
+    let at = packet.rfind("</rdf:RDF>").ok_or_else(|| Erreur::Invalide("XMP without rdf:RDF".into()))?;
     let packet = format!("{}{}{}", &packet[..at], xmp_facturx(), &packet[at..]);
     let mut md = s.dict.clone();
     md.remove(b"Filter");
@@ -103,13 +103,13 @@ pub fn assembler(pdf: &[u8], xml: &str, date_unix: i64) -> Result<Vec<u8>, Erreu
     Ok(write_full(&doc, &opts)?)
 }
 
-/// Problèmes PDF/A-3b restants (vide = conforme).
+/// Remaining PDF/A-3b problems (empty = conformant).
 pub fn verifier_pdfa(pdf: &[u8]) -> Result<Vec<String>, Erreur> {
     let doc = Document::open(Arc::new(pdf.to_vec()))?;
     Ok(verify(&doc, Level::A3b).into_iter().map(|i| format!("{} {}", i.clause, i.message)).collect())
 }
 
-/// XML Factur-X embarqué d'un PDF reçu, s'il y en a un.
+/// Factur-X XML embedded in a received PDF, if there is one.
 pub fn extraire(pdf: &[u8]) -> Result<Option<String>, Erreur> {
     let doc = Document::open(Arc::new(pdf.to_vec()))?;
     let (_, cat) = catalogue(&doc)?;

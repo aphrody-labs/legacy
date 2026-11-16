@@ -1,4 +1,4 @@
-# HTTPS de l'Aphrody Box : un sous-domaine par application (profil « https » du compose).
+# HTTPS of the Aphrody Box: one subdomain per application ("https" profile of the compose file).
 {
 	email {$BOX_EMAIL}
 }

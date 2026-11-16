@@ -50,7 +50,7 @@ fn xml_en16931() {
     assert!(x.contains("<ram:GrandTotalAmount>2760.00</ram:GrandTotalAmount>"));
     assert!(x.contains("<ram:DueDateDateTime><udt:DateTimeString format=\"102\">20261121</udt:DateTimeString>"));
     assert!(x.contains("<ram:SubjectCode>PMT</ram:SubjectCode>"));
-    // La référence d'origine n'est émise que pour un avoir.
+    // The original reference is only issued for a credit note.
     assert!(!x.contains("InvoiceReferencedDocument"));
     let a = xml(&facture("avoir", false)).unwrap();
     assert!(a.contains("<ram:TypeCode>381</ram:TypeCode>"));
@@ -72,7 +72,7 @@ fn facturx_pdfa3b_conforme_et_extractible() {
     let out = generer(&f, &pdf_vierge(), DATE).unwrap();
     assert_eq!(verifier_pdfa(&out).unwrap(), Vec::<String>::new());
     assert_eq!(extraire(&out).unwrap().unwrap(), xml(&f).unwrap());
-    // Structure : /AF du catalogue → Filespec factur-x.xml en relation Alternative ; XMP Factur-X.
+    // Structure: /AF of the catalog → factur-x.xml Filespec with Alternative relationship; Factur-X XMP.
     let doc = Document::open(Arc::new(out)).unwrap();
     let cat = doc.dict(&Object::Ref(doc.root().unwrap())).unwrap();
     let af = doc.resolve(cat.get(b"AF").unwrap()).as_array().unwrap().clone();

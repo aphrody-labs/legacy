@@ -1,4 +1,5 @@
-import { avecCourrier, comptesCourrier, ErreurMetier } from "@auto/store";
+import { ErreurApi, refus } from "../i18n";
+import { avecCourrier, comptesCourrier } from "@auto/store";
 import {
   debutCourrier,
   retourCourrier,
@@ -13,29 +14,29 @@ import type { Module, Chemins } from "../modules";
 import { estSuperAdmin, type Auth } from "@auto/tenancy";
 
 const id = (s: string) => {
-  if (!/^[0-9a-f-]{36}$/i.test(s)) throw new ErreurMetier("Identifiant invalide");
+  if (!/^[0-9a-f-]{36}$/i.test(s)) throw new ErreurApi("invalid_id");
   return s;
 };
 export const routes: Module = ({ sql, ba, pub }) => {
-  // La messagerie personnelle ne nécessite aucune entreprise ni identité juridique fictive.
+  // Personal mail needs no company nor fictitious legal identity.
   const auth = <R extends Request>(_droit: string, fn: (req: R, a: Auth) => Promise<Response>) =>
     pub(async (req: R) => {
       if (
         ["POST", "PUT", "PATCH", "DELETE"].includes(req.method) &&
         !req.headers.get("content-type")?.toLowerCase().startsWith("application/json")
       )
-        return Response.json({ erreur: "Content-Type application/json requis" }, { status: 415 });
+        return refus(req, "json_content_type_required", 415);
       const session = await ba.api.getSession({ headers: req.headers, query: { disableRefresh: true } });
-      if (!session) return Response.json({ erreur: "non authentifié" }, { status: 401 });
+      if (!session) return refus(req, "unauthenticated", 401);
       let userId = session.user.id;
-      // Les alias SSO explicitement autorisés du propriétaire ouvrent son même espace privé.
+      // Explicitly authorized SSO aliases of the owner open the same private space.
       if (
         Bun.env.AUTO_COURRIER_PROPRIETAIRE &&
         estSuperAdmin(session.user.email, session.user.emailVerified, (session.user as { role?: string | null }).role)
       ) {
         const [principal] =
           await sql`SELECT id FROM app_user WHERE lower(email)=${Bun.env.AUTO_COURRIER_PROPRIETAIRE.toLowerCase()} AND email_verified`;
-        if (!principal) throw new ErreurMetier("Compte principal du propriétaire indisponible", [], 503);
+        if (!principal) throw new ErreurApi("owner_account_unavailable", [], 503);
         userId = String(principal.id);
       }
       const response = await fn(req, { userId, tenantId: userId, role: "owner" });
@@ -104,7 +105,7 @@ export const routes: Module = ({ sql, ba, pub }) => {
         );
         return rows.length
           ? new Response(null, { status: 204 })
-          : Response.json({ erreur: "Compte absent" }, { status: 404 });
+          : refus(req, "account_missing", 404);
       }),
     },
     "/v1/courrier/comptes/:id/synchroniser": {
@@ -120,7 +121,7 @@ export const routes: Module = ({ sql, ba, pub }) => {
           dossier = u.searchParams.get("dossier") === "envoyes" ? "envoyes" : "reception";
         if (compte) id(compte);
         const page = Number(u.searchParams.get("page") ?? 0);
-        if (!Number.isInteger(page) || page < 0 || page > 10000) throw new ErreurMetier("Page invalide");
+        if (!Number.isInteger(page) || page < 0 || page > 10000) throw new ErreurApi("invalid_page");
         const rows = await avecCourrier(
           sql,
           a.tenantId,
@@ -142,7 +143,7 @@ export const routes: Module = ({ sql, ba, pub }) => {
         const data = await avecCourrier(sql, a.tenantId, a.userId, async (tx) => {
           const [m] =
             await tx`SELECT m.*,c.adresse,c.fournisseur FROM courrier_message m JOIN courrier_compte c ON c.id=m.compte_id WHERE m.id=${id(req.params.id)}`;
-          if (!m) throw new ErreurMetier("Message absent", [], 404);
+          if (!m) throw new ErreurApi("message_missing", [], 404);
           const pieces =
             await tx`SELECT id,nom,type,octet_length(contenu) AS taille FROM courrier_piece WHERE message_id=${m.id} ORDER BY rang`;
           return { ...m, pieces };
@@ -151,14 +152,14 @@ export const routes: Module = ({ sql, ba, pub }) => {
       }),
       PATCH: auth("lire", async (req: BunRequest<"/v1/courrier/messages/:id">, a) => {
         const b = (await req.json()) as { lu?: boolean };
-        if (typeof b.lu !== "boolean") throw new ErreurMetier("État de lecture invalide");
+        if (typeof b.lu !== "boolean") throw new ErreurApi("read_state_invalid");
         const r = await avecCourrier(
           sql,
           a.tenantId,
           a.userId,
           (tx) => tx`UPDATE courrier_message SET lu=${b.lu} WHERE id=${id(req.params.id)} RETURNING id`,
         );
-        return r.length ? Response.json({ ok: true }) : Response.json({ erreur: "Message absent" }, { status: 404 });
+        return r.length ? Response.json({ ok: true }) : refus(req, "message_missing", 404);
       }),
     },
     "/v1/courrier/pieces/:id": {
@@ -169,7 +170,7 @@ export const routes: Module = ({ sql, ba, pub }) => {
           a.userId,
           async (tx) => (await tx`SELECT nom,type,contenu FROM courrier_piece WHERE id=${id(req.params.id)}`)[0],
         );
-        if (!p) throw new ErreurMetier("Pièce absente", [], 404);
+        if (!p) throw new ErreurApi("attachment_missing", [], 404);
         return new Response(new Uint8Array(p.contenu), {
           headers: {
             "content-type": "application/octet-stream",
@@ -188,19 +189,19 @@ export const routes: Module = ({ sql, ba, pub }) => {
 const operation = (summary: string) => ({
   summary,
   responses: {
-    "200": { description: "Résultat privé de la boîte unifiée" },
+    "200": { description: "Private result of the unified mailbox" },
     "401": { description: "Session requise" },
   },
 });
 export const openapi: Chemins = {
   "/v1/courrier/comptes": { get: operation("Lister mes comptes mail") },
-  "/v1/courrier/oauth/{fournisseur}/connecter": { post: operation("Connecter ma boîte OAuth en lecture seule") },
-  "/v1/courrier/oauth/{fournisseur}/retour": { get: operation("Valider le consentement de ma boîte") },
-  "/v1/courrier/comptes/aphrody": { post: operation("Connecter ma boîte Aphrody") },
-  "/v1/courrier/comptes/{id}": { delete: operation("Déconnecter sans supprimer les messages") },
-  "/v1/courrier/comptes/{id}/synchroniser": { post: operation("Synchroniser ma boîte") },
-  "/v1/courrier/messages": { get: operation("Lister ma réception unifiée") },
-  "/v1/courrier/messages/{id}": { get: operation("Lire mon message"), patch: operation("Noter la lecture dans Auto") },
-  "/v1/courrier/pieces/{id}": { get: operation("Télécharger ma pièce jointe") },
+  "/v1/courrier/oauth/{fournisseur}/connecter": { post: operation("Connect my mailbox over OAuth, read-only") },
+  "/v1/courrier/oauth/{fournisseur}/retour": { get: operation("Validate the consent of my mailbox") },
+  "/v1/courrier/comptes/aphrody": { post: operation("Connect my Aphrody mailbox") },
+  "/v1/courrier/comptes/{id}": { delete: operation("Disconnect without deleting the messages") },
+  "/v1/courrier/comptes/{id}/synchroniser": { post: operation("Synchronize my mailbox") },
+  "/v1/courrier/messages": { get: operation("List my unified inbox") },
+  "/v1/courrier/messages/{id}": { get: operation("Read my message"), patch: operation("Record the read state in Auto") },
+  "/v1/courrier/pieces/{id}": { get: operation("Download my attachment") },
   "/v1/courrier/envoyer": { post: operation("Envoyer via Resend") },
 };

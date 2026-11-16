@@ -1,3 +1,4 @@
+import { ErreurApi } from "../i18n";
 import { avecMentionsParDefaut, totaux, type Tva } from "@auto/domain";
 import { verifierDevis, SCHEMA_DEVIS, type DevisExtrait } from "@auto/ingest";
 import {
@@ -15,7 +16,6 @@ import {
   affecterDocument,
   identifiant,
   journaliser,
-  ErreurMetier,
   type SourceFichiers,
 } from "@auto/store";
 import { SEGMENTS, segmentsDe, accesSegment, entreprise, type Segment } from "@auto/tenancy";
@@ -29,7 +29,7 @@ function decoder(v: string) {
   try {
     return Uint8Array.fromBase64(v);
   } catch {
-    throw new ErreurMetier("contenu du fichier invalide");
+    throw new ErreurApi("file_content_invalid");
   }
 }
 const fichier = (r: { nom: string | null; contenu: Uint8Array<ArrayBuffer>; type_mime: string }) =>
@@ -52,13 +52,13 @@ export const routes: Module = ({ sql, auth }) => ({
     PUT: auth("membres", async (req: BunRequest<"/v1/membres/:id/segments">, a) => {
       const b = (await req.json()) as { segments: unknown };
       if (!Array.isArray(b?.segments) || b.segments.some((s) => !SEGMENTS.includes(s)))
-        throw new ErreurMetier("segments invalides");
+        throw new ErreurApi("invalid_segments");
       const segments = [...new Set(b.segments)] as Segment[];
       const id = identifiant(req.params.id);
       const [m] = await sql`SELECT role FROM membership WHERE user_id=${id} AND tenant_id=${a.tenantId}`;
-      if (!m) throw new ErreurMetier("membre introuvable", [], 404);
+      if (!m) throw new ErreurApi("member_not_found", [], 404);
       if (["owner", "admin"].includes(m.role))
-        throw new ErreurMetier("les propriétaires et administrateurs conservent tous les segments");
+        throw new ErreurApi("owners_keep_segments");
       await withTenant(sql, a.tenantId, async (tx) => {
         await tx`INSERT INTO membre_segments (user_id,segments) VALUES (${id},ARRAY(SELECT jsonb_array_elements_text(${JSON.stringify(segments)}::text::jsonb))) ON CONFLICT (tenant_id,user_id) DO UPDATE SET segments=excluded.segments`;
         await journaliser(tx, a.userId, "membre.segments", id, { segments });
@@ -120,7 +120,7 @@ export const routes: Module = ({ sql, auth }) => ({
       const b = req.headers.get("content-type")?.startsWith("application/json")
         ? ((await req.json()) as { fichier?: string; nom?: string; typeMime?: string })
         : null;
-      if (b && (!b.fichier || b.fichier.length > 28000000)) throw new ErreurMetier("pièce invalide", [], 413);
+      if (b && (!b.fichier || b.fichier.length > 28000000)) throw new ErreurApi("invalid_attachment", [], 413);
       const e = b
         ? { contenu: decoder(b.fichier!), nom: b.nom, typeMime: b.typeMime || "application/pdf" }
         : await lireDepot(req);
@@ -148,15 +148,15 @@ export const routes: Module = ({ sql, auth }) => ({
   "/v1/devis-recus/:id/decision": {
     POST: auth("ecrire", async (req: BunRequest<"/v1/devis-recus/:id/decision">, a) => {
       const b = (await req.json()) as { statut: string; data?: DevisExtrait };
-      if (!["valide", "rejete"].includes(b?.statut)) throw new ErreurMetier("statut invalide");
+      if (!["valide", "rejete"].includes(b?.statut)) throw new ErreurApi("invalid_status");
       const d = await withTenant(sql, a.tenantId, async (tx) => {
         await tx`SELECT id FROM devis_recu WHERE id=${identifiant(req.params.id)} FOR UPDATE`;
         const d = await lireDevisRecu(tx, req.params.id);
-        if (d.statut === "rejete" || d.brouillonId) throw new ErreurMetier("devis déjà traité", [], 409);
+        if (d.statut === "rejete" || d.brouillonId) throw new ErreurApi("quote_already_processed", [], 409);
         const data = b.data ?? d.data;
         const anomalies = b.statut === "valide" ? verifierDevis(data) : d.anomalies;
         if (b.statut === "valide" && anomalies.length)
-          throw new ErreurMetier("devis à corriger avant validation", anomalies);
+          throw new ErreurApi("quote_needs_fixes", anomalies);
         await tx`UPDATE devis_recu SET data=${JSON.stringify(data)}::text::jsonb,anomalies=${JSON.stringify(anomalies)}::text::jsonb,statut=${b.statut} WHERE id=${d.id}`;
         await journaliser(tx, a.userId, "devis_recu.decider", d.id, { statut: b.statut });
         return lireDevisRecu(tx, d.id);
@@ -166,22 +166,22 @@ export const routes: Module = ({ sql, auth }) => ({
   },
   "/v1/devis-recus/:id/brouillon": {
     POST: auth("ecrire", async (req: BunRequest<"/v1/devis-recus/:id/brouillon">, a) => {
-      if (!accesSegment(a, "clients")) throw new ErreurMetier("accès au segment clients requis", [], 403);
+      if (!accesSegment(a, "clients")) throw new ErreurApi("clients_segment_required", [], 403);
       const b = (await req.json()) as { clientId: string; chantierId?: string; type?: "devis" | "facture" };
       const type = b.type ?? "devis";
-      if (!["devis", "facture"].includes(type)) throw new ErreurMetier("type de brouillon invalide");
+      if (!["devis", "facture"].includes(type)) throw new ErreurApi("invalid_draft_type");
       const doc = await withTenant(sql, a.tenantId, async (tx) => {
         await tx`SELECT id FROM devis_recu WHERE id=${identifiant(req.params.id)} FOR UPDATE`;
         const d = await lireDevisRecu(tx, req.params.id);
         if (d.brouillonId) {
           const existant = await lire(tx, d.brouillonId);
-          if (existant?.type !== type) throw new ErreurMetier("un brouillon a déjà été créé pour ce devis", [], 409);
+          if (existant?.type !== type) throw new ErreurApi("draft_exists", [], 409);
           return existant;
         }
         if (d.statut !== "valide" || !d.data)
-          throw new ErreurMetier("validez le devis reçu avant de créer un brouillon");
+          throw new ErreurApi("quote_validate_first");
         const client = await lireClient(tx, identifiant(b.clientId));
-        if (!client) throw new ErreurMetier("client introuvable", [], 404);
+        if (!client) throw new ErreurApi("client_not_found", [], 404);
         const e = await entreprise(sql, a.tenantId);
         const lignes = d.data.lignes.map((l) => ({
           designation: l.designation,
@@ -190,7 +190,7 @@ export const routes: Module = ({ sql, auth }) => ({
           tva: l.tauxTva as Tva,
         }));
         if (totaux(lignes).ttcCents !== d.data.totaux.ttcCents)
-          throw new ErreurMetier("les remises ou arrondis du devis source nécessitent une saisie manuelle");
+          throw new ErreurApi("manual_entry_needed");
         const doc = await creerBrouillon(
           tx,
           a.userId,
@@ -206,7 +206,7 @@ export const routes: Module = ({ sql, auth }) => ({
             emetteur: { nom: e.nom, siret: e.siret, adresse: e.adresse },
             client,
             lignes,
-            notes: "Prérempli depuis le devis reçu " + d.data.numero,
+            notes: "Prefilled from received quote " + d.data.numero,
             franchiseTva: e.franchiseTva,
           }),
           client.id,
@@ -280,7 +280,7 @@ const operation = (
 ) =>
   op({
     resume,
-    tag: "Arrivages et permissions",
+    tag: "Arrivals and permissions",
     droit,
     corps,
     succes: { [creation ? 201 : 200]: sortie },
@@ -288,11 +288,11 @@ const operation = (
   });
 export const openapi: Chemins = {
   "/v1/membres/segments": {
-    get: operation("Restrictions par segment des membres", "membres", false, liste(permissions)),
+    get: operation("Per-segment restrictions of the members", "membres", false, liste(permissions)),
   },
   "/v1/membres/{id}/segments": avecId({
     put: operation(
-      "Attribuer les segments d’un membre (userId)",
+      "Set the segments of a member (userId)",
       "membres",
       false,
       permissions,
@@ -300,34 +300,34 @@ export const openapi: Chemins = {
     ),
   }),
   "/v1/sources-fichiers/racines": {
-    get: operation("Alias des montages accordés à cette entreprise", "parametres", false, liste(str)),
+    get: operation("Aliases of the mounts granted to this company", "parametres", false, liste(str)),
   },
   "/v1/sources-fichiers": {
-    get: operation("Sources du serveur de fichiers", "parametres", false, liste(sourceSortie)),
-    post: operation("Connecter un dossier autorisé", "parametres", true, sourceSortie, sourceEntree),
+    get: operation("File server sources", "parametres", false, liste(sourceSortie)),
+    post: operation("Connect an authorized folder", "parametres", true, sourceSortie, sourceEntree),
   },
   "/v1/sources-fichiers/{id}": avecId({
-    put: operation("Modifier ou désactiver une source", "parametres", false, sourceSortie, sourceEntree),
+    put: operation("Edit or disable a source", "parametres", false, sourceSortie, sourceEntree),
   }),
   "/v1/sources-fichiers/{id}/synchroniser": avecId({
-    post: operation("Synchroniser une source (copies immuables, extraction et indexation)", "parametres", false, bilan),
+    post: operation("Synchronize a source (immutable copies, extraction and indexing)", "parametres", false, bilan),
   }),
-  "/v1/fichiers-indexes": { get: operation("Fichiers accessibles par segment", "lire", false, liste(indexSortie)) },
+  "/v1/fichiers-indexes": { get: operation("Files accessible by segment", "lire", false, liste(indexSortie)) },
   "/v1/fichiers-indexes/recherche": {
     get: op({
-      resume: "Rechercher dans tout l’index autorisé, 100 fichiers par page",
-      tag: "Arrivages",
+      resume: "Search the whole authorized index, 100 files per page",
+      tag: "Arrivals",
       droit: "lire",
       requete: [
         {
           nom: "q",
           schema: { type: "string", maxLength: 200 },
-          description: "Texte littéral recherché dans le nom, le chemin et le contenu indexé",
+          description: "Literal text searched in the name, path and indexed content",
         },
         {
           nom: "page",
           schema: { type: "integer", minimum: 1, maximum: 10000 },
-          description: "Page à partir de 1 ; 100 résultats par page",
+          description: "Page starting at 1; 100 results per page",
         },
       ],
       succes: { 200: objet({ fichiers: liste(indexSortie), suite: { type: "boolean" } }) },
@@ -336,17 +336,17 @@ export const openapi: Chemins = {
   },
   "/v1/fichiers-indexes/{id}/fichier": avecId({
     get: op({
-      resume: "Télécharger une pièce indexée autorisée",
-      tag: "Arrivages et permissions",
+      resume: "Download an authorized indexed document",
+      tag: "Arrivals and permissions",
       droit: "lire",
       succes: { 200: brut("application/octet-stream") },
       erreurs: [404],
     }),
   }),
   "/v1/devis-recus": {
-    get: operation("Devis extraits à vérifier", "lire", false, liste(devisSortie)),
+    get: operation("Extracted quotes to review", "lire", false, liste(devisSortie)),
     post: operation(
-      "Extraire un devis PDF ou image (base64 en JSON ou dépôt binaire)",
+      "Extract a PDF or image quote (base64 in JSON or binary upload)",
       "ecrire",
       true,
       objet({ devis: devisSortie, doublon: { type: "boolean" } }),
@@ -355,19 +355,19 @@ export const openapi: Chemins = {
   },
   "/v1/devis-recus/{id}/fichier": avecId({
     get: op({
-      resume: "Télécharger le devis reçu original",
-      tag: "Arrivages et permissions",
+      resume: "Download the original received quote",
+      tag: "Arrivals and permissions",
       droit: "lire",
       succes: { 200: brut("application/octet-stream") },
       erreurs: [404],
     }),
   }),
   "/v1/devis-recus/{id}/reextraire": avecId({
-    post: operation("Relancer l’extraction depuis l’original conservé", "ecrire", false, devisSortie),
+    post: operation("Re-run the extraction from the kept original", "ecrire", false, devisSortie),
   }),
   "/v1/devis-recus/{id}/decision": avecId({
     post: operation(
-      "Corriger, valider ou rejeter les informations extraites",
+      "Correct, validate or reject the extracted information",
       "ecrire",
       false,
       devisSortie,
@@ -376,7 +376,7 @@ export const openapi: Chemins = {
   }),
   "/v1/devis-recus/{id}/brouillon": avecId({
     post: operation(
-      "Créer une seule fois un devis ou une facture client préremplis, jamais émis automatiquement",
+      "Create once a prefilled client quote or invoice, never issued automatically",
       "ecrire",
       true,
       ref("Document"),

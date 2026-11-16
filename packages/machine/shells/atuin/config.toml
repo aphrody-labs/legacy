@@ -1,0 +1,24 @@
+# Official Atuin v18.24.8 configuration
+dialect = "uk"
+auto_sync = true
+sync_frequency = "10m"
+search_mode = "fuzzy"
+filter_mode = "global"
+filter_mode_shell_up_key_binding = "directory"
+style = "compact"
+inline_height = 20
+invert = false
+show_preview = true
+max_preview_height = 4
+show_help = true
+enter_accept = false
+keymap_mode = "auto"
+secrets_filter = true
+workspaces = true
+
+[stats]
+common_subcommands = ["ay", "bun", "cargo", "git", "just", "jj", "rg", "fd"]
+common_prefix = ["sudo"]
+
+[sync]
+records = true

@@ -1,12 +1,13 @@
-// Exécution des workflows par le worker : déclenchés par un événement de l'outbox (job enfilé dans la
-// transaction de l'événement) ou par leur cron (tâche minute, un job par workflow dû, clé par minute).
-// Une erreur du workflow est consignée dans son exécution et ne relance pas le job : les effets déjà produits
-// (mail, message) ne doivent pas être répétés. Seule une panne d'infrastructure provoque un nouvel essai.
+// Workflow execution by the worker: triggered by an outbox event (job queued in the
+// event transaction) or by their cron (minute task, one job per due workflow, keyed by minute).
+// A workflow error is recorded in its run and does not retry the job: effects already produced
+// (mail, message) must not be repeated. Only an infrastructure failure causes a new attempt.
 import { lancer } from "@auto/services/automatisations";
 import {
   automatisationsPlanifiees,
   avecWorker,
   enfiler,
+  ErreurMetier,
   JOB_AUTOMATISATION,
   type ChargeExecution,
   type Job,
@@ -14,7 +15,7 @@ import {
 } from "@auto/store";
 import type { Traitements } from "./worker";
 
-/** Le cron tombe-t-il sur cette minute (début de minute, fuseau du workflow) ? */
+/** Does the cron fall on this minute (start of minute, workflow time zone)? */
 export function estDue(cron: string, minute: Date, fuseau: string): boolean {
   try {
     return Bun.cron.parse(cron, new Date(minute.getTime() - 1000), { tz: fuseau })?.getTime() === minute.getTime();
@@ -25,7 +26,7 @@ export function estDue(cron: string, minute: Date, fuseau: string): boolean {
 
 export const debutMinute = (d: Date) => new Date(Math.floor(d.getTime() / 60_000) * 60_000);
 
-/** Enfile les workflows planifiés dus à cette minute ; renvoie le nombre enfilé. */
+/** Queues the scheduled workflows due at this minute; returns the number queued. */
 export async function planifierAutomatisations(sql: Sql, minute: Date): Promise<number> {
   const dus = (await automatisationsPlanifiees(sql)).filter((a) => estDue(a.cron, minute, a.fuseau));
   const iso = minute.toISOString().slice(0, 16);
@@ -55,7 +56,7 @@ export function automatisations(sql: Sql): Traitements {
     },
     [JOB_AUTOMATISATION]: {
       async executer(job: Job, signal: AbortSignal) {
-        if (!job.tenantId) throw new Error("exécution sans tenant");
+        if (!job.tenantId) throw new Error("run without tenant");
         const c = job.payload as unknown as ChargeExecution;
         try {
           await lancer(sql, {
@@ -66,8 +67,8 @@ export function automatisations(sql: Sql): Traitements {
             signal,
           });
         } catch (e) {
-          // Workflow supprimé entre l'enfilage et l'exécution : rien à faire.
-          if (e instanceof Error && e.message === "automatisation introuvable") return;
+          // Workflow deleted between queuing and execution: nothing to do.
+          if (e instanceof ErreurMetier && e.status === 404) return;
           throw e;
         }
       },

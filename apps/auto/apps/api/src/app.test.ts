@@ -9,7 +9,7 @@ let server: ReturnType<typeof Bun.serve>;
 
 beforeAll(async () => {
   ({ sql, drop } = await testDb());
-  // Origine publique HTTPS : cookies `Secure` et préfixe `__Secure-`, comme en production.
+  // HTTPS public origin: `Secure` cookies and `__Secure-` prefix, as in production.
   server = Bun.serve({
     port: 0,
     routes: creerApp(sql, undefined, { auth: { baseURL: "https://auto.test" } }),
@@ -52,7 +52,7 @@ const brouillon = {
   echeance: "2026-11-21",
 };
 
-test("parcours complet, isolation, rôles, jetons", async () => {
+test("full journey, isolation, roles, tokens", async () => {
   const a = await api("/v1/auth/inscription", undefined, { body: inscription("a@exemple.fr", "Alpha") });
   expect(a.status).toBe(201);
   const b = await api("/v1/auth/inscription", undefined, { body: inscription("b@exemple.fr", "Beta") });
@@ -64,7 +64,7 @@ test("parcours complet, isolation, rôles, jetons", async () => {
   expect(moi.body.role).toBe("owner");
   expect(moi.body.entreprise.tvaIntracom).toBe("FR44732829320");
 
-  // Brouillon : l'émetteur est imposé par le serveur.
+  // Draft: the issuer is imposed by the server.
   const d = await api("/v1/documents", a.body.session, {
     body: { ...brouillon, emetteur: { nom: "Usurpateur", siret: "0", adresse: "?" } },
   });
@@ -80,7 +80,7 @@ test("parcours complet, isolation, rôles, jetons", async () => {
   expect(e.status).toBe(200);
   expect(e.body.numero).toBe("F-2026-0001");
 
-  // Exemplaire figé : Factur-X conforme PDF/A-3b, XML EN 16931, stable (ETag = SHA-256).
+  // Frozen copy: PDF/A-3b compliant Factur-X, EN 16931 XML, stable (ETag = SHA-256).
   const pdf = await brut(`/v1/documents/${d.body.id}/pdf`, a.body.session);
   expect(pdf.status).toBe(200);
   expect(pdf.headers.get("content-type")).toBe("application/pdf");
@@ -94,7 +94,7 @@ test("parcours complet, isolation, rôles, jetons", async () => {
   );
   expect((await api(`/v1/documents/${d.body.id}/emettre`, a.body.session, { body: {} })).status).toBe(409);
 
-  // Isolation : B ne voit ni ne modifie le document de A.
+  // Isolation: B neither sees nor edits A's document.
   expect((await api(`/v1/documents/${d.body.id}`, b.body.session)).status).toBe(404);
   expect((await brut(`/v1/documents/${d.body.id}/pdf`, b.body.session)).status).toBe(404);
   expect((await brut(`/v1/documents/${d.body.id}/xml`, b.body.session)).status).toBe(404);
@@ -103,7 +103,7 @@ test("parcours complet, isolation, rôles, jetons", async () => {
     404,
   );
 
-  // Rôle lecture : écriture refusée.
+  // Read role: write refused.
   await api("/v1/auth/inscription", undefined, { body: inscription("c@exemple.fr", "Gamma") });
   expect((await api("/v1/membres", a.body.session, { body: { email: "c@exemple.fr", role: "lecture" } })).status).toBe(
     204,
@@ -114,14 +114,14 @@ test("parcours complet, isolation, rôles, jetons", async () => {
   expect((await api("/v1/documents", c.body.session)).body).toHaveLength(1);
   expect((await api("/v1/documents", c.body.session, { body: brouillon })).status).toBe(403);
 
-  // Jeton API (agent, CLI) et piste d'audit.
+  // API token (agent, CLI) and audit trail.
   const j = await api("/v1/jetons", a.body.session, { body: { nom: "agent" } });
   expect(j.body.jeton).toStartWith("auto_");
   const paye = await api(`/v1/documents/${d.body.id}/statut`, j.body.jeton, { body: { statut: "paye" } });
   expect(paye.body.statut).toBe("paye");
   expect((await api("/v1/audit/verification", j.body.jeton)).body.ok).toBe(true);
 
-  // Mauvais mot de passe, déconnexion.
+  // Wrong password, sign-out.
   expect(
     (await api("/v1/auth/connexion", undefined, { body: { email: "a@exemple.fr", motDePasse: "faux" } })).status,
   ).toBe(401);
@@ -129,7 +129,7 @@ test("parcours complet, isolation, rôles, jetons", async () => {
   expect((await api("/v1/moi", a.body.session)).status).toBe(401);
 });
 
-test("client enregistré, remise, paiements, relances", async () => {
+test("saved client, discount, payments, reminders", async () => {
   const a = await api("/v1/auth/inscription", undefined, { body: inscription("p@exemple.fr", "Paiements SAS") });
   const t = a.body.session;
   const c = await api("/v1/clients", t, {
@@ -174,7 +174,7 @@ test("client enregistré, remise, paiements, relances", async () => {
   expect((await api(`/v1/documents/${d.body.id}`, t)).body.statut).toBe("paye");
   expect((await api(`/v1/documents/${d.body.id}/paiements`, t)).body.paiements).toHaveLength(1);
 
-  // Autre entreprise : ni le client ni les paiements ne sont visibles.
+  // Other company: neither the client nor the payments are visible.
   const b = await api("/v1/auth/inscription", undefined, { body: inscription("q@exemple.fr", "Autre") });
   expect((await api(`/v1/clients/${c.body.id}`, b.body.session)).status).toBe(404);
   expect(
@@ -184,7 +184,7 @@ test("client enregistré, remise, paiements, relances", async () => {
   expect((await api(`/v1/documents/${d.body.id}/paiements`, b.body.session)).status).toBe(404);
 });
 
-test("employés et absences : droit rh, solde de congés, décision", async () => {
+test("employees and absences: hr right, leave balance, decision", async () => {
   const o = await api("/v1/auth/inscription", undefined, { body: inscription("rh@exemple.fr", "RH SARL") });
   const autre = await api("/v1/auth/inscription", undefined, { body: inscription("rh2@exemple.fr", "Autre") });
   const emp = await api("/v1/employes", o.body.session, {
@@ -215,7 +215,7 @@ test("employés et absences : droit rh, solde de congés, décision", async () =
     422,
   );
 
-  // Les données RH ne sont pas ouvertes aux rôles comptable et lecture.
+  // HR data is not open to the accountant and read roles.
   await api("/v1/auth/inscription", undefined, { body: inscription("compta@exemple.fr", "Compta") });
   await api("/v1/membres", o.body.session, { body: { email: "compta@exemple.fr", role: "comptable" } });
   const c = await api("/v1/auth/connexion", undefined, {
@@ -225,7 +225,7 @@ test("employés et absences : droit rh, solde de congés, décision", async () =
   expect((await api("/v1/documents", c.body.session)).status).toBe(200);
 });
 
-test("cookie de session : attributs, CSRF, déconnexion", async () => {
+test("session cookie: attributes, CSRF, sign-out", async () => {
   const res = await fetch(new URL("/v1/auth/inscription", server.url), {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -244,7 +244,7 @@ test("cookie de session : attributs, CSRF, déconnexion", async () => {
       body: method === "GET" ? undefined : "{}",
     });
   expect((await appel("GET", "/v1/moi")).status).toBe(200);
-  // Formulaire d'un autre site : refusé avant tout traitement.
+  // Form from another site: refused before any processing.
   expect((await appel("POST", "/v1/jetons", "text/plain")).status).toBe(415);
   expect((await appel("POST", "/v1/jetons", "application/x-www-form-urlencoded")).status).toBe(415);
   expect((await appel("POST", "/v1/jetons", "application/json")).status).toBe(201);
@@ -254,13 +254,13 @@ test("cookie de session : attributs, CSRF, déconnexion", async () => {
   expect((await appel("GET", "/v1/moi")).status).toBe(401);
 });
 
-test("événements écrits dans l'outbox avec la transaction métier", async () => {
+test("events written to the outbox with the business transaction", async () => {
   const a = await api("/v1/auth/inscription", undefined, { body: inscription("outbox@exemple.fr", "Outbox") });
   const t = a.body.session;
   const d = await api("/v1/documents", t, { body: brouillon });
   const e = await api(`/v1/documents/${d.body.id}/emettre`, t, { body: {} });
   expect(e.status).toBe(200);
-  // Deuxième émission refusée : transaction annulée, aucun événement.
+  // Second issue refused: transaction rolled back, no event.
   expect((await api(`/v1/documents/${d.body.id}/emettre`, t, { body: {} })).status).toBe(409);
   await api(`/v1/documents/${d.body.id}/statut`, t, { body: { statut: "envoye" } });
   const evts = await withTenant(sql, a.body.tenantId, (tx) => listerEvenements(tx));

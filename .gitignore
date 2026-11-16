@@ -109,3 +109,9 @@ apps/.lst-*
 /docs/*/PRS.md
 /docs/*/RELEASES.md
 /docs/*/data/prs.json
+
+# aphrody-labs/open is its own repository (local clone)
+/apps/open/
+
+# build outputs
+*.pyd

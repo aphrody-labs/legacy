@@ -1,5 +1,23 @@
 # Aphrody HTTP transport
 
+<!-- catalog:begin unit -->
+> Portable in-process JSON transport shared by Aphrody service clients
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/http` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/http typecheck
+bun run --cwd packages/http test
+bun run --cwd packages/http lint
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 `@aphrody/http` owns the portable HTTP/JSON mechanism used by Aphrody compute and
 OCR clients and by consumers such as the Shenron API. It has no production dependencies, environment
 lookup, subprocess, service or domain store.

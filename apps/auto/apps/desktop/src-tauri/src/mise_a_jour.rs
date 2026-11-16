@@ -1,4 +1,5 @@
-//! Les mises à jour restent dans l'hôte natif : aucune commande IPC ouverte au site distant.
+//! Updates stay in the native host: no IPC command is open to the remote site.
+use crate::i18n::t;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
@@ -13,10 +14,10 @@ pub fn verifier(app: tauri::AppHandle, manuel: bool) {
     tauri::async_runtime::spawn(async move {
         let resultat = verifier_et_installer(&app, manuel).await;
         if resultat.is_err() {
-            eprintln!("Vérification ou installation de la mise à jour impossible");
+            eprintln!("Update check or installation failed");
             if manuel {
-                app.dialog().message("La mise à jour n’a pas pu être vérifiée ou installée. Réessayez plus tard depuis le menu Auto.")
-                    .title("Mise à jour Auto").kind(MessageDialogKind::Error).show(|_| {});
+                app.dialog().message(t("update.failed", &[]))
+                    .title(t("update.title", &[])).kind(MessageDialogKind::Error).show(|_| {});
             }
         }
         EN_COURS.store(false, Ordering::SeqCst);
@@ -27,21 +28,18 @@ async fn verifier_et_installer(app: &tauri::AppHandle, manuel: bool) -> tauri_pl
     let updater = app.updater_builder().timeout(Duration::from_secs(30)).build()?;
     let Some(update) = updater.check().await? else {
         if manuel {
-            app.dialog().message("Cette application Auto est à jour.").title("Mise à jour Auto").show(|_| {});
+            app.dialog().message(t("update.current", &[])).title(t("update.title", &[])).show(|_| {});
         }
         return Ok(());
     };
     let dialog = app.clone();
-    let message = format!(
-        "Auto {} est disponible. Enregistrez vos documents avant de continuer. L’application redémarrera après l’installation.",
-        update.version
-    );
+    let message = t("update.available", &[("version", &update.version)]);
     let accord = tauri::async_runtime::spawn_blocking(move || {
         dialog
             .dialog()
             .message(message)
-            .title("Mise à jour Auto")
-            .buttons(MessageDialogButtons::OkCancelCustom("Installer et redémarrer".into(), "Plus tard".into()))
+            .title(t("update.title", &[]))
+            .buttons(MessageDialogButtons::OkCancelCustom(t("update.install", &[]), t("update.later", &[])))
             .blocking_show()
     })
     .await
@@ -49,7 +47,7 @@ async fn verifier_et_installer(app: &tauri::AppHandle, manuel: bool) -> tauri_pl
     if !accord {
         return Ok(());
     }
-    // Le plugin vérifie la signature et sa version signée avant toute exécution de l'installateur.
+    // The plugin verifies the signature and its signed version before running the installer.
     update.download_and_install(|_, _| {}, || {}).await?;
     app.restart();
 }

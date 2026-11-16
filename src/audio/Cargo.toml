@@ -1,0 +1,30 @@
+[package]
+name = "aphrody-audio"
+version.workspace = true
+edition.workspace = true
+description = "Audio building blocks: FFT spectrum, mic bridge, Polaris indexer, Voicebox encoder, local voice loop, Jan agent tools, Rust audio catalog"
+
+[features]
+default = []
+full = ["dsp", "mic", "polaris", "voicebox", "lu-voice", "jan-agent", "awesome"]
+dsp = ["dep:rustfft", "dep:serde_json"]
+mic = ["dsp", "dep:anyhow", "dep:tokio"]
+polaris = ["dsp", "dep:hound", "dep:thiserror"]
+voicebox = ["dep:hound", "dep:thiserror"]
+lu-voice = ["dep:thiserror"]
+jan-agent = ["dep:serde_json"]
+awesome = []
+
+[[bin]]
+name = "voice-dsp"
+path = "src/bin/voice-dsp.rs"
+required-features = ["dsp"]
+
+[dependencies]
+serde.workspace = true
+serde_json = { workspace = true, optional = true }
+anyhow = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+thiserror = { workspace = true, optional = true }
+hound = { version = "3.5", optional = true }
+rustfft = { version = "6.4.1", optional = true }

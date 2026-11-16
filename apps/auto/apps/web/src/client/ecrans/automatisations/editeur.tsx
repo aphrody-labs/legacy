@@ -1,8 +1,8 @@
 // Éditeur plein écran d'un workflow : canevas React Flow (fond à points, mini-carte, contrôles), palette des
 // nœuds, panneau du nœud sélectionné, essai sans enregistrement avec résultats superposés aux nœuds,
 // enregistrement, activation. Raccourcis : Ctrl+S enregistre, Ctrl+Entrée teste, Suppr retire la sélection.
-import type { Definition, Noeud } from "@auto/automate";
-import type { Portee } from "@auto/automate/expressions";
+import type { Definition, Noeud } from "@aphrody/automate";
+import type { Portee } from "@aphrody/automate/expressions";
 import {
   api,
   ErreurApi,

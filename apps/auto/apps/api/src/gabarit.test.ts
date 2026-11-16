@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { deflateSync } from "node:zlib"; // hygiene-ok: Bun.deflateSync emits raw deflate, PNG IDAT needs the zlib header
+import { deflateSync } from "node:zlib";
 import { testDb, type Sql } from "@auto/store";
 import { verifierPdfA } from "@auto/native";
 import { creerApp } from "./app";
@@ -41,7 +41,7 @@ async function api(method: string, path: string, body?: unknown) {
   };
 }
 
-/** PNG RVBA minimal (largeur × hauteur, une couleur) construit à la main. */
+/** Minimal RGBA PNG (width × height, one color) built by hand. */
 function png(largeur: number, hauteur: number, rvba: [number, number, number, number]): Uint8Array {
   const morceau = (type: string, data: Uint8Array) => {
     const t = new TextEncoder().encode(type);
@@ -63,7 +63,7 @@ function png(largeur: number, hauteur: number, rvba: [number, number, number, nu
   const parts = [
     new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
     morceau("IHDR", ihdr),
-    // Flux zlib (en-tête 78) exigé par PNG : Bun.deflateSync de ce runtime ignore windowBits et produit du deflate brut.
+    // zlib stream (header 78) required by PNG: this runtime's Bun.deflateSync ignores windowBits and produces raw deflate.
     morceau("IDAT", deflateSync(brut)),
     morceau("IEND", new Uint8Array()),
   ];
@@ -78,7 +78,7 @@ function png(largeur: number, hauteur: number, rvba: [number, number, number, nu
 
 const contient = (octets: Uint8Array, motif: string) => new TextDecoder("latin1").decode(octets).includes(motif);
 
-test("gabarit : logo converti en JPEG, couleur, pied de page, Factur-X toujours PDF/A-3b", async () => {
+test("template: logo converted to JPEG, color, footer, Factur-X always PDF/A-3b", async () => {
   expect((await api("GET", "/v1/parametres/gabarit")).json).toEqual({ couleur: null, piedDePage: null, logo: null });
   expect((await api("PUT", "/v1/parametres/gabarit", { couleur: "vert" })).status).toBe(422);
   expect(

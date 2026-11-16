@@ -5,6 +5,7 @@ requires-python = ">=3.13, <3.15"
 [manifest]
 members = [
     "agent-core",
+    "aphrody-core",
     "hermes-agent-memory",
     "urc",
 ]
@@ -12,7 +13,12 @@ members = [
 [[package]]
 name = "agent-core"
 version = "0.1.0"
-source = { editable = "packages/ai-os/python/agent_core" }
+source = { editable = "src/agent/context" }
+
+[[package]]
+name = "aphrody-core"
+version = "0.4.0"
+source = { editable = "packages/core-py" }
 
 [[package]]
 name = "cffi"
@@ -189,7 +195,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "agent-core", editable = "packages/ai-os/python/agent_core" }]
+requires-dist = [{ name = "agent-core", editable = "src/agent/context" }]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest", specifier = ">=8" }]

@@ -31,6 +31,7 @@ import {
   useTitrePage,
   useToast,
 } from "@auto/ui/react";
+import { t } from "../i18n";
 
 function FormulaireEmploye({ onFin }: { onFin: (ok: boolean) => void }) {
   const toast = useToast();
@@ -53,12 +54,12 @@ function FormulaireEmploye({ onFin }: { onFin: (ok: boolean) => void }) {
     const salaire = versCentimes(e.salaire);
     const temps = Number(e.tempsTravail);
     const x = {
-      prenom: e.prenom.trim() ? undefined : "Prénom obligatoire.",
-      nom: e.nom.trim() ? undefined : "Nom obligatoire.",
-      poste: e.poste.trim() ? undefined : "Poste obligatoire.",
-      email: !e.email || emailValide(e.email) ? undefined : "Adresse e-mail invalide.",
-      tempsTravail: temps > 0 && temps <= 100 ? undefined : "Entre 1 et 100 %.",
-      salaire: salaire === null ? "Montant en euros, par exemple 2 100." : undefined,
+      prenom: e.prenom.trim() ? undefined : t("emp.err.first_name"),
+      nom: e.nom.trim() ? undefined : t("emp.err.last_name"),
+      poste: e.poste.trim() ? undefined : t("emp.err.position"),
+      email: !e.email || emailValide(e.email) ? undefined : t("customers.err.email"),
+      tempsTravail: temps > 0 && temps <= 100 ? undefined : t("emp.err.time"),
+      salaire: salaire === null ? t("emp.err.salary") : undefined,
     };
     setErr(x);
     if (Object.values(x).some(Boolean)) return;
@@ -76,7 +77,7 @@ function FormulaireEmploye({ onFin }: { onFin: (ok: boolean) => void }) {
     };
     try {
       await api.creerEmploye(corps);
-      toast("Employé ajouté");
+      toast(t("emp.added"));
       onFin(true);
     } catch (y) {
       setErreur(y as ErreurApi);
@@ -95,12 +96,12 @@ function FormulaireEmploye({ onFin }: { onFin: (ok: boolean) => void }) {
     <form className="grille" noValidate onSubmit={soumettre}>
       <ResumeErreurs erreur={erreur} />
       <div className="grille grille-2">
-        <ChampTexte libelle="Prénom" requis autoComplete="off" {...champ("prenom")} />
-        <ChampTexte libelle="Nom" requis autoComplete="off" {...champ("nom")} />
-        <ChampTexte libelle="Poste" requis {...champ("poste")} />
-        <ChampTexte libelle="E-mail" type="email" {...champ("email")} />
+        <ChampTexte libelle={t("emp.first_name")} requis autoComplete="off" {...champ("prenom")} />
+        <ChampTexte libelle={t("emp.last_name")} requis autoComplete="off" {...champ("nom")} />
+        <ChampTexte libelle={t("emp.position")} requis {...champ("poste")} />
+        <ChampTexte libelle={t("common.email")} type="email" {...champ("email")} />
         <ChampListe
-          libelle="Contrat"
+          libelle={t("emp.contract")}
           value={e.contrat}
           onChange={(x) => setE({ ...e, contrat: x.target.value as Contrat })}
         >
@@ -110,15 +111,15 @@ function FormulaireEmploye({ onFin }: { onFin: (ok: boolean) => void }) {
             </option>
           ))}
         </ChampListe>
-        <ChampTexte libelle="Date d'entrée" type="date" requis {...champ("dateEntree")} />
-        <ChampTexte libelle="Temps de travail (%)" inputMode="numeric" {...champ("tempsTravail")} />
-        <ChampTexte libelle="Salaire brut mensuel (€)" inputMode="decimal" requis {...champ("salaire")} />
+        <ChampTexte libelle={t("emp.start_date")} type="date" requis {...champ("dateEntree")} />
+        <ChampTexte libelle={t("emp.working_time")} inputMode="numeric" {...champ("tempsTravail")} />
+        <ChampTexte libelle={t("emp.salary_input")} inputMode="decimal" requis {...champ("salaire")} />
       </div>
       <div className="rangee">
         <span className="espace" />
-        <Bouton onClick={() => onFin(false)}>Annuler</Bouton>
+        <Bouton onClick={() => onFin(false)}>{t("common.cancel")}</Bouton>
         <Bouton type="submit" variante="primaire" chargement={envoi}>
-          Enregistrer
+          {t("common.save")}
         </Bouton>
       </div>
     </form>
@@ -126,7 +127,7 @@ function FormulaireEmploye({ onFin }: { onFin: (ok: boolean) => void }) {
 }
 
 function ListeEmployes() {
-  useTitrePage("Employés");
+  useTitrePage(t("emp.title"));
   const [tous, setTous] = useState(false);
   const [ouvert, setOuvert] = useState(false);
   const d = useDonnees(() => api.employes(tous), [tous]);
@@ -136,8 +137,8 @@ function ListeEmployes() {
   else if (d.etat === "erreur") corps = <EtatErreur message={d.erreur} onReessayer={d.recharger} />;
   else if (d.donnees.length === 0)
     corps = (
-      <EtatVide icone={UserRound} titre="Aucun employé">
-        <p>Ajoutez vos salariés pour suivre leurs absences et leurs congés payés.</p>
+      <EtatVide icone={UserRound} titre={t("emp.none")}>
+        <p>{t("emp.none_text")}</p>
       </EtatVide>
     );
   else
@@ -146,29 +147,29 @@ function ListeEmployes() {
         <table className="tableau">
           <thead>
             <tr>
-              <th scope="col">Nom</th>
-              <th scope="col">Poste</th>
-              <th scope="col">Contrat</th>
-              <th scope="col">Entrée</th>
+              <th scope="col">{t("common.name")}</th>
+              <th scope="col">{t("emp.position")}</th>
+              <th scope="col">{t("emp.contract")}</th>
+              <th scope="col">{t("emp.col.start")}</th>
               <th scope="col" className="num">
-                Temps
+                {t("emp.col.time")}
               </th>
             </tr>
           </thead>
           <tbody>
             {d.donnees.map((e) => (
               <tr key={e.id}>
-                <td data-libelle="Nom">
+                <td data-libelle={t("common.name")}>
                   <Lien href={`/app/employes/${e.id}`}>
                     {e.prenom} {e.nom}
                   </Lien>
                 </td>
-                <td data-libelle="Poste">{e.poste}</td>
-                <td data-libelle="Contrat">{LIBELLE_CONTRAT[e.contrat]}</td>
-                <td data-libelle="Entrée" className="num">
+                <td data-libelle={t("emp.position")}>{e.poste}</td>
+                <td data-libelle={t("emp.contract")}>{LIBELLE_CONTRAT[e.contrat]}</td>
+                <td data-libelle={t("emp.col.start")} className="num">
                   {dateFr(e.dateEntree)}
                 </td>
-                <td data-libelle="Temps" className="num">
+                <td data-libelle={t("emp.col.time")} className="num">
                   {nombre(e.tempsTravail)} %
                 </td>
               </tr>
@@ -181,17 +182,17 @@ function ListeEmployes() {
   return (
     <div className="page">
       <div className="page-entete">
-        <h1>Employés</h1>
+        <h1>{t("emp.title")}</h1>
         <Bouton variante="primaire" icone={UserPlus} onClick={() => setOuvert(true)}>
-          Ajouter un employé
+          {t("emp.add")}
         </Bouton>
       </div>
       <label className="case">
         <input type="checkbox" checked={tous} onChange={(e) => setTous(e.target.checked)} />
-        Inclure les employés sortis
+        {t("emp.include_left")}
       </label>
       {corps}
-      <Modale ouverte={ouvert} titre="Ajouter un employé" onFermer={() => setOuvert(false)}>
+      <Modale ouverte={ouvert} titre={t("emp.add")} onFermer={() => setOuvert(false)}>
         <FormulaireEmploye
           onFin={(ok) => {
             setOuvert(false);
@@ -216,7 +217,7 @@ function DemandeAbsence({ employe, onFin }: { employe: FicheEmploye; onFin: () =
   async function soumettre(e: FormEvent) {
     e.preventDefault();
     if (fin < debut) {
-      setErrFin("La fin doit suivre le début.");
+      setErrFin(t("emp.err.end"));
       return;
     }
     setErrFin(null);
@@ -229,7 +230,7 @@ function DemandeAbsence({ employe, onFin }: { employe: FicheEmploye; onFin: () =
         fin,
         ...(motif.trim() ? { motif: motif.trim() } : {}),
       });
-      toast(`Absence demandée : ${jours(a.joursOuvrables)} ouvrables`);
+      toast(t("emp.absence_requested", { n: a.joursOuvrables }));
       onFin();
     } catch (x) {
       setErreur(x as ErreurApi);
@@ -240,19 +241,19 @@ function DemandeAbsence({ employe, onFin }: { employe: FicheEmploye; onFin: () =
 
   return (
     <form className="carte grille" noValidate onSubmit={soumettre} aria-labelledby="sec-demande">
-      <h2 id="sec-demande">Demander une absence</h2>
+      <h2 id="sec-demande">{t("emp.request_absence")}</h2>
       <ResumeErreurs erreur={erreur} />
       <div className="grille grille-3">
-        <ChampListe libelle="Type" value={type} onChange={(e) => setType(e.target.value as TypeAbsence)}>
-          {TYPES_ABSENCE.map((t) => (
-            <option key={t} value={t}>
-              {LIBELLE_ABSENCE[t]}
+        <ChampListe libelle={t("col.type")} value={type} onChange={(e) => setType(e.target.value as TypeAbsence)}>
+          {TYPES_ABSENCE.map((k) => (
+            <option key={k} value={k}>
+              {LIBELLE_ABSENCE[k]}
             </option>
           ))}
         </ChampListe>
-        <ChampTexte libelle="Du" type="date" requis value={debut} onChange={(e) => setDebut(e.target.value)} />
+        <ChampTexte libelle={t("emp.from")} type="date" requis value={debut} onChange={(e) => setDebut(e.target.value)} />
         <ChampTexte
-          libelle="Au (inclus)"
+          libelle={t("emp.to_inclusive")}
           type="date"
           requis
           value={fin}
@@ -260,10 +261,10 @@ function DemandeAbsence({ employe, onFin }: { employe: FicheEmploye; onFin: () =
           onChange={(e) => setFin(e.target.value)}
         />
       </div>
-      <ChampZone libelle="Motif" rows={2} value={motif} onChange={(e) => setMotif(e.target.value)} />
+      <ChampZone libelle={t("emp.reason")} rows={2} value={motif} onChange={(e) => setMotif(e.target.value)} />
       <div>
         <Bouton type="submit" icone={CalendarPlus} chargement={envoi}>
-          Envoyer la demande
+          {t("emp.send_request")}
         </Bouton>
       </div>
     </form>
@@ -275,7 +276,7 @@ function FicheEmployeEcran({ id }: { id: string }) {
     const [e, solde, absences] = await Promise.all([api.employe(id), api.conges(id), api.absencesEmploye(id)]);
     return { e, solde, absences };
   }, [id]);
-  useTitrePage(d.etat === "ok" ? `${d.donnees.e.prenom} ${d.donnees.e.nom}` : "Employé");
+  useTitrePage(d.etat === "ok" ? `${d.donnees.e.prenom} ${d.donnees.e.nom}` : t("emp.one"));
   if (d.etat === "chargement")
     return (
       <div className="page">
@@ -285,7 +286,7 @@ function FicheEmployeEcran({ id }: { id: string }) {
   if (d.etat === "erreur")
     return (
       <div className="page">
-        <h1>Employé</h1>
+        <h1>{t("emp.one")}</h1>
         <EtatErreur message={d.erreur} onReessayer={d.recharger} />
       </div>
     );
@@ -293,7 +294,7 @@ function FicheEmployeEcran({ id }: { id: string }) {
   return (
     <div className="page">
       <p className="fil">
-        <Lien href="/app/employes">Employés</Lien>
+        <Lien href="/app/employes">{t("emp.title")}</Lien>
       </p>
       <div className="page-entete">
         <h1>
@@ -302,44 +303,44 @@ function FicheEmployeEcran({ id }: { id: string }) {
       </div>
       <div className="grille grille-2">
         <section className="carte resume" aria-labelledby="sec-fiche">
-          <h2 id="sec-fiche">Fiche</h2>
+          <h2 id="sec-fiche">{t("emp.sheet")}</h2>
           <dl>
-            <dt>Poste</dt>
+            <dt>{t("emp.position")}</dt>
             <dd>{e.poste}</dd>
-            <dt>Contrat</dt>
+            <dt>{t("emp.contract")}</dt>
             <dd>{LIBELLE_CONTRAT[e.contrat]}</dd>
-            <dt>Entrée</dt>
+            <dt>{t("emp.col.start")}</dt>
             <dd className="chiffres">{dateFr(e.dateEntree)}</dd>
             {e.dateSortie && (
               <>
-                <dt>Sortie</dt>
+                <dt>{t("emp.end_date")}</dt>
                 <dd className="chiffres">{dateFr(e.dateSortie)}</dd>
               </>
             )}
-            <dt>Temps de travail</dt>
+            <dt>{t("emp.working_time")}</dt>
             <dd className="chiffres">{nombre(e.tempsTravail)} %</dd>
-            <dt>Salaire brut</dt>
-            <dd className="chiffres">{eur(e.salaireBrutMensuelCents)} par mois</dd>
+            <dt>{t("emp.gross_salary")}</dt>
+            <dd className="chiffres">{t("emp.per_month", { amount: eur(e.salaireBrutMensuelCents) })}</dd>
           </dl>
         </section>
         <section className="carte resume" aria-labelledby="sec-solde">
-          <h2 id="sec-solde">Congés payés, période du {dateFr(solde.periode) || solde.periode}</h2>
-          <p className="kpi-valeur">{jours(solde.disponible)} disponibles</p>
+          <h2 id="sec-solde">{t("emp.leave_title", { date: dateFr(solde.periode) || solde.periode })}</h2>
+          <p className="kpi-valeur">{t("emp.available", { days: jours(solde.disponible) })}</p>
           <dl>
-            <dt>Acquis</dt>
+            <dt>{t("emp.accrued")}</dt>
             <dd className="chiffres">{jours(solde.acquis)}</dd>
-            <dt>Pris</dt>
+            <dt>{t("emp.taken")}</dt>
             <dd className="chiffres">{jours(solde.pris)}</dd>
-            <dt>En attente</dt>
+            <dt>{t("emp.pending")}</dt>
             <dd className="chiffres">{jours(solde.demandes)}</dd>
           </dl>
-          <p className="attenue petit">2,5 jours ouvrables par mois de travail effectif, 30 au plus par période.</p>
+          <p className="attenue petit">{t("emp.leave_rule")}</p>
         </section>
       </div>
       <DemandeAbsence employe={e} onFin={d.recharger} />
       <section className="pile-serree" aria-labelledby="sec-absences">
-        <h2 id="sec-absences">Absences</h2>
-        {absences.length === 0 ? <p className="attenue">Aucune absence.</p> : <TableauAbsences absences={absences} />}
+        <h2 id="sec-absences">{t("absences.title")}</h2>
+        {absences.length === 0 ? <p className="attenue">{t("absences.empty")}.</p> : <TableauAbsences absences={absences} />}
       </section>
     </div>
   );
@@ -359,17 +360,17 @@ export function TableauAbsences({
       <table className="tableau">
         <thead>
           <tr>
-            {noms && <th scope="col">Employé</th>}
-            <th scope="col">Type</th>
-            <th scope="col">Du</th>
-            <th scope="col">Au</th>
+            {noms && <th scope="col">{t("emp.col.employee")}</th>}
+            <th scope="col">{t("col.type")}</th>
+            <th scope="col">{t("emp.from")}</th>
+            <th scope="col">{t("emp.to")}</th>
             <th scope="col" className="num">
-              Jours ouvrables
+              {t("emp.col.business_days")}
             </th>
-            <th scope="col">Statut</th>
+            <th scope="col">{t("col.status")}</th>
             {decider && (
               <th scope="col">
-                <span className="visuellement-cache">Décision</span>
+                <span className="visuellement-cache">{t("emp.col.decision")}</span>
               </th>
             )}
           </tr>
@@ -377,30 +378,30 @@ export function TableauAbsences({
         <tbody>
           {absences.map((a) => (
             <tr key={a.id}>
-              {noms && <td data-libelle="Employé">{noms[a.employeId] ?? "—"}</td>}
-              <td data-libelle="Type">{LIBELLE_ABSENCE[a.type]}</td>
-              <td data-libelle="Du" className="num">
+              {noms && <td data-libelle={t("emp.col.employee")}>{noms[a.employeId] ?? "—"}</td>}
+              <td data-libelle={t("col.type")}>{LIBELLE_ABSENCE[a.type]}</td>
+              <td data-libelle={t("emp.from")} className="num">
                 {dateFr(a.debut)}
               </td>
-              <td data-libelle="Au" className="num">
+              <td data-libelle={t("emp.to")} className="num">
                 {dateFr(a.fin)}
               </td>
-              <td data-libelle="Jours ouvrables" className="num">
+              <td data-libelle={t("emp.col.business_days")} className="num">
                 {nombre(a.joursOuvrables)}
               </td>
-              <td data-libelle="Statut">{LIBELLE_STATUT_ABSENCE[a.statut]}</td>
+              <td data-libelle={t("col.status")}>{LIBELLE_STATUT_ABSENCE[a.statut]}</td>
               {decider && (
-                <td data-libelle="Décision">
+                <td data-libelle={t("emp.col.decision")}>
                   {a.statut === "demandee" ? (
                     <div className="rangee">
                       <Bouton variante="primaire" onClick={() => decider(a.id, "validee")}>
-                        Valider
+                        {t("received.approve")}
                       </Bouton>
-                      <Bouton onClick={() => decider(a.id, "refusee")}>Refuser</Bouton>
+                      <Bouton onClick={() => decider(a.id, "refusee")}>{t("emp.refuse")}</Bouton>
                     </div>
                   ) : a.statut === "validee" ? (
                     <Bouton variante="fantome" onClick={() => decider(a.id, "annulee")}>
-                      Annuler
+                      {t("common.cancel")}
                     </Bouton>
                   ) : null}
                 </td>
@@ -418,9 +419,9 @@ export function Employes({ id }: { id?: string }) {
   if (!peut(moi.role, "rh"))
     return (
       <div className="page">
-        <h1>Employés</h1>
-        <Bandeau ton="avertissement" titre="Accès réservé">
-          <p>La gestion des employés est réservée aux propriétaires et administrateurs.</p>
+        <h1>{t("emp.title")}</h1>
+        <Bandeau ton="avertissement" titre={t("absences.restricted")}>
+          <p>{t("emp.restricted_text")}</p>
         </Bandeau>
       </div>
     );

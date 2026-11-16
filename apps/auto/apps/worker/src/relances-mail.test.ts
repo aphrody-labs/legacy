@@ -6,7 +6,7 @@ import { boiteJetable, greenmailDisponible } from "@auto/mail/greenmail";
 import { avecWorker, majAbonnement, testDb, withTenant, type Sql } from "@auto/store";
 import { relancer } from "./planification";
 
-Bun.env.AUTO_CLE_MAITRE ??= "cle maitre de test, 32 caracteres au moins";
+Bun.env.AUTO_CLE_MAITRE ??= "test master key, at least 32 characters";
 Bun.env.AUTO_MAIL_DEV = "1";
 
 let sql: Sql;
@@ -33,7 +33,7 @@ async function api(path: string, token?: string, body?: unknown, method = body =
   return { status: r.status, body: t ? JSON.parse(t) : null };
 }
 
-test("texte des relances : trois paliers, montant et mentions légales", () => {
+test("reminder text: three levels, amount and legal mentions", () => {
   const r = { numero: "F-2026-0007", echeance: "2026-09-30", joursRetard: 31, niveau: 2 as const, resteCents: 123456 };
   const t = texteRelance(r, "Alpha");
   expect(t.sujet).toBe("Deuxième relance : facture F-2026-0007 — Alpha");
@@ -43,7 +43,7 @@ test("texte des relances : trois paliers, montant et mentions légales", () => {
   expect(texteRelance({ ...r, niveau: 3 }, "Alpha").sujet).toStartWith("Dernière relance avant mise en demeure");
 });
 
-test.skipIf(!greenmailDisponible)("relance J+7 envoyée depuis la boîte de l'entreprise", async () => {
+test.skipIf(!greenmailDisponible)("D+7 reminder sent from the company mailbox", async () => {
   const v = (
     await api("/v1/auth/inscription", undefined, {
       email: `relance-${crypto.randomUUID()}@exemple.fr`,
@@ -89,6 +89,6 @@ test.skipIf(!greenmailDisponible)("relance J+7 envoyée depuis la boîte de l'en
       >`SELECT corps FROM evenement WHERE type = 'relance.a_envoyer' AND tenant_id = ${v.tenantId}`,
   );
   expect(JSON.parse(e!.corps).data).toMatchObject({ niveau: 1, envoyeParMail: true });
-  // Rejouée le même jour : rien de plus.
+  // Replayed the same day: nothing more.
   expect(await relancer(sql, v.tenantId, "2026-10-09")).toBe(0);
 });

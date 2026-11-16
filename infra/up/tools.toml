@@ -811,7 +811,7 @@ unsupported = [
 ] # ay ai only uses it on prd
 
 # ---------------------------------------------------------------------------------------------
-# Headless browsers and automation: apps/open/packages/browser-engines/src/engines facade (aphrody-labs/open; `just browsers`).
+# Headless browsers and automation: apps/open/packages/browser-engines/src/engines facade (aphrody-labs/open) (`just browsers`).
 # Here the binaries published as releases; Chrome for Testing, Playwright browsers and Python
 # tools (uv tool) go through `browser-engines engines install`. Nothing is compiled on the workstation.
 # ---------------------------------------------------------------------------------------------
@@ -1145,7 +1145,7 @@ version = "0.13.7"
 source = "github"
 repo = "astral-sh/uv"
 hosts = ["pc", "prd", "fr1"]
-why = "packages/ai-os/python, src/agent/py (pyproject + uv.lock)"
+why = "packages/ai-os/python, src/agent/context (pyproject + uv.lock)"
 windows-x86_64 = { url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-x86_64-pc-windows-msvc.zip", sha256 = "0cdc5b38fe5a8168ed6a25814f5ba43c21d313dd3187314fccb37b7cec46e021" }
 linux-x86_64 = { url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-x86_64-unknown-linux-musl.tar.gz", sha256 = "287491da03f2a785c70fa75b13e1f849918c2f2b5415fe84876b8214eeb792f9" }
 linux-aarch64 = { url = "https://github.com/astral-sh/uv/releases/download/0.13.7/uv-aarch64-unknown-linux-musl.tar.gz", sha256 = "2d3ec076a0c4c0e8250bb6418c44080828b544f1a3be0b6e46adf9fb6923de45" }

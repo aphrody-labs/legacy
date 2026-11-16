@@ -29,7 +29,7 @@ First-party deployment platform of the monorepo (the role Vercel plays for its u
 
 ## Flow
 
-1. Push on `main` -> `.github/workflows/deploy.yml` -> `bun packages/deploy/src/cli.ts ci`: uploads the registry (projects, monorepo inventory, labs cards, Material 3 tokens from `packages/design/brand`), builds each affected project, uploads it through the API, records a GitHub deployment (environment `preview/<project>`, then `production/<project>`), moves production when `production = "auto"`.
+1. Push on `main` -> `.github/workflows/deploy.yml` -> `bun packages/deploy/src/cli.ts ci`: uploads the registry (projects, monorepo inventory, labs cards, Material 3 tokens from `packages/design`), builds each affected project, uploads it through the API, records a GitHub deployment (environment `preview/<project>`, then `production/<project>`), moves production when `production = "auto"`.
 2. `ay deploy <project>` dispatches the same workflow and waits for the preview (nothing is built on the workstation); `--local` builds here with the vault environment.
 3. `ay deploy ls [project]`, `ay deploy logs <project> [sha]`, `ay deploy rollback <project> [sha]`, `ay deploy promote <project> <sha>`.
 

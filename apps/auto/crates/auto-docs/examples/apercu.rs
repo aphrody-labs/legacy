@@ -1,9 +1,9 @@
-//! Écrit un devis et une facture Factur-X d'exemple dans le répertoire donné.
+//! Writes a sample Factur-X quote and invoice into the given directory.
 
 use auto_modele::Facture;
 
 fn main() {
-    let dir = std::env::args().nth(1).expect("usage: apercu <répertoire>");
+    let dir = std::env::args().nth(1).expect("usage: apercu <directory>");
     std::fs::create_dir_all(&dir).unwrap();
     let lignes = r#"[
       { "designation": "Développement de l'application de facturation (sprint 1)", "quantite": 5, "prixUnitaireHtCents": 65000, "tva": 200, "unite": "jour" },

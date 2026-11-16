@@ -3,7 +3,8 @@
 [tool.uv.workspace]
 members = [
   "tools/lore",
-  "packages/ai-os/python/agent_core",
+  "packages/core-py",
+  "src/agent/context",
   "packages/ai-os/python/hermes_agent_memory",
   "packages/env-kit/loaders/python",
   "packages/re/ghidra/scripts/parity",

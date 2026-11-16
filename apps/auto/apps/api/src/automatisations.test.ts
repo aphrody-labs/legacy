@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { MODELES } from "@auto/automate";
+import { MODELES } from "@aphrody/automate";
 import { creerDocx, nombrePagesPdf, textePdf, texteDocx, verifierSignaturesPdf } from "@auto/native";
 import { lancer } from "@auto/services/automatisations";
 import { avecWorker, JOB_AUTOMATISATION, testDb, type Sql } from "@auto/store";
@@ -14,7 +14,7 @@ const recus: unknown[] = [];
 beforeAll(async () => {
   ({ sql, drop } = await testDb());
   server = Bun.serve({ port: 0, routes: creerApp(sql), fetch: () => new Response("404", { status: 404 }) });
-  // Les nœuds « Action auto » rappellent l'API : celle du test.
+  // The "Action auto" nodes call the API back: the test one.
   Bun.env.AUTO_API_URL = server.url.origin;
   recepteur = Bun.serve({
     port: 0,
@@ -54,7 +54,7 @@ const manuel = (noeuds: object[], connexions: object[] = []) => ({
   connexions,
 });
 
-test("catalogue, modèles et validation des définitions", async () => {
+test("catalog, templates and definition validation", async () => {
   const { session } = await entreprise();
   const c = await api("/v1/automatisations/catalogue", session);
   expect(c.body.map((x: { type: string }) => x.type)).toContain("reseau.http");
@@ -77,7 +77,7 @@ test("catalogue, modèles et validation des définitions", async () => {
   expect(ko.body.details).toContain("le graphe contient un cycle");
 });
 
-test("essai, action auto, secrets masqués, exécution consignée, isolation des tenants", async () => {
+test("trial, auto action, masked secrets, recorded run, tenant isolation", async () => {
   const { session, tenantId } = await entreprise();
   await api("/v1/clients", session, { nom: "Zoé Martin", adresse: "3 rue C, Lyon", email: "zoe@exemple.fr" });
   const s = await api("/v1/secrets", session, { nom: "recepteur", valeur: recepteur.url.href });
@@ -106,9 +106,9 @@ test("essai, action auto, secrets masqués, exécution consignée, isolation des
   const essai = await api("/v1/automatisations/essai", session, { definition });
   expect(essai.body.statut).toBe("succes");
   expect(recus.at(-1)).toEqual({ client: "Zoé Martin", cle: recepteur.url.href });
-  // La valeur du secret n'apparaît pas dans les étapes renvoyées.
+  // The secret value does not appear in the returned steps.
   expect(JSON.stringify(essai.body.etapes)).not.toContain(recepteur.url.href);
-  // Le jeton temporaire de l'action auto est révoqué.
+  // The temporary token of the auto action is revoked.
   const [{ n }] = await sql`SELECT count(*)::int AS n FROM apikey WHERE name LIKE 'automatisation:%'`;
   expect(n).toBe(0);
 
@@ -128,11 +128,11 @@ test("essai, action auto, secrets masqués, exécution consignée, isolation des
   expect((await api("/v1/automatisations", autre.session)).body).toEqual([]);
   await expect(
     lancer(sql, { tenantId: autre.tenantId, automatisationId: w.body.id, origine: "x", entree: [] }),
-  ).rejects.toThrow("introuvable");
+  ).rejects.toThrow("Not found");
   expect(tenantId).not.toBe(autre.tenantId);
 });
 
-test("un secret inconnu empêche l'activation", async () => {
+test("an unknown secret prevents activation", async () => {
   const { session } = await entreprise();
   const r = await api("/v1/automatisations", session, {
     nom: "Slack",
@@ -143,7 +143,7 @@ test("un secret inconnu empêche l'activation", async () => {
   expect(r.body.details).toEqual(["$secret.slack_ventes"]);
 });
 
-test("événement : un workflow actif abonné reçoit un job dans la transaction de l'événement", async () => {
+test("event: an active subscribed workflow receives a job in the event transaction", async () => {
   const { session, tenantId } = await entreprise();
   await api("/v1/secrets", session, { nom: "slack_ventes", valeur: "https://hooks.slack.test/x" });
   const w = await api("/v1/automatisations", session, {
@@ -170,7 +170,7 @@ test("événement : un workflow actif abonné reçoit un job dans la transaction
   expect(jobs[0]!.payload.origine).toStartWith("evenement:");
 });
 
-test("webhook entrant : URL signée, réponse en fin de workflow, jeton falsifié refusé", async () => {
+test("incoming webhook: signed URL, answer at workflow end, forged token refused", async () => {
   const { session } = await entreprise();
   const definition = {
     noeuds: [
@@ -194,7 +194,7 @@ test("webhook entrant : URL signée, réponse en fin de workflow, jeton falsifi�
   expect((await api(`${chemin}x`, undefined, {})).status).toBe(404);
 });
 
-test("seulement les nouveaux : la mémoire du workflow persiste entre exécutions, pas entre essais", async () => {
+test("only the new ones: the workflow memory persists across runs, not across trials", async () => {
   const { session } = await entreprise();
   const definition = manuel(
     [
@@ -217,7 +217,7 @@ test("seulement les nouveaux : la mémoire du workflow persiste entre exécution
   expect(essai.body.etapes.at(-1).sorties[0]).toBe(3);
 });
 
-test("tableurs natifs : créer un xlsx depuis les éléments, puis le relire par URL", async () => {
+test("native spreadsheets: create an xlsx from the items, then read it back by URL", async () => {
   const { session } = await entreprise();
   const ecrire = manuel(
     [
@@ -269,7 +269,7 @@ test("tableurs natifs : créer un xlsx depuis les éléments, puis le relire par
   }
 });
 
-test("fichiers natifs : deux PDF générés fusionnés, texte extrait, gabarit Word rempli puis relu", async () => {
+test("native files: two generated PDFs merged, text extracted, Word template filled then read back", async () => {
   const { session } = await entreprise();
   const gabarit = creerDocx({
     titre: "Synthèse pour {{ client }}",
@@ -345,7 +345,7 @@ test("fichiers natifs : deux PDF générés fusionnés, texte extrait, gabarit W
   expect(docx).toContain("Client Marc à Brest");
   expect(docx).toContain("Pages : 2");
   expect(textePdf(octets(json.pdf)).join(" ")).toContain("Client Marc à Brest");
-  // Le nœud « Page 2 » a gardé la seule fiche de Marc.
+  // The "Page 2" node kept only Marc's record.
   const garde = (id: string) => id !== "synthese" && id !== "texte";
   const lot = await api("/v1/automatisations/essai", session, {
     definition: {
@@ -364,7 +364,7 @@ test("fichiers natifs : deux PDF générés fusionnés, texte extrait, gabarit W
   expect(textePdf(page)[0]).toContain("Fiche Marc");
 });
 
-test("caviardage, signature PAdES et présentation natifs", async () => {
+test("native redaction, PAdES signature and presentation", async () => {
   const { session } = await entreprise();
   const p12 = await Bun.file(
     new URL("../../../vendor/suite/crates/pdfcraft-sign/tests/data/rsa-aes.p12", import.meta.url),
@@ -429,7 +429,7 @@ test("caviardage, signature PAdES et présentation natifs", async () => {
   expect(texte).toContain("Relevé");
   for (const absent of ["Zoé", "zoe@", "FR76"]) expect(texte).not.toContain(absent);
   expect(verifierSignaturesPdf(pdf)[0]!.modifications).toBe("aucune");
-  // Le certificat et son mot de passe ne figurent pas dans les étapes renvoyées.
+  // The certificate and its password do not appear in the returned steps.
   expect(JSON.stringify(e.body.etapes)).not.toContain(p12.toBase64().slice(0, 40));
 
   const p = await api("/v1/automatisations/essai", session, {
@@ -464,7 +464,7 @@ test("caviardage, signature PAdES et présentation natifs", async () => {
   expect(pages[1]).toContain("Trois nouveaux clients");
 });
 
-test("import n8n par l'API", async () => {
+test("n8n import through the API", async () => {
   const { session } = await entreprise();
   const r = await api("/v1/automatisations/importer-n8n", session, {
     workflow: {
@@ -484,7 +484,7 @@ test("import n8n par l'API", async () => {
   expect((await api("/v1/automatisations/importer-n8n", session, { workflow: { a: 1 } })).status).toBe(422);
 });
 
-test("sous-workflows : résultat repris, appel de soi-même refusé, 3 niveaux au plus", async () => {
+test("sub-workflows: result carried over, self call refused, 3 levels at most", async () => {
   const { session } = await entreprise();
   const creer = async (nom: string, noeuds: object[], connexions: object[]) =>
     (await api("/v1/automatisations", session, { nom, definition: manuel(noeuds, connexions) })).body.id as string;
@@ -509,7 +509,7 @@ test("sous-workflows : résultat repris, appel de soi-même refusé, 3 niveaux a
   const r = await api(`/v1/automatisations/${parent}/executer`, session, { donnees: { client: "zoé" } });
   expect(r.body.statut).toBe("succes");
   expect(r.body.etapes.at(-1).apercu[0].json).toMatchObject({ client: "zoé", client_maj: "ZOÉ" });
-  // L'exécution du sous-workflow est consignée de son côté, avec son origine.
+  // The sub-workflow run is recorded on its own side, with its origin.
   const ex = await api(`/v1/automatisations/${enfant}/executions`, session);
   expect(ex.body[0].origine).toBe(`workflow:${parent}`);
 
@@ -526,7 +526,7 @@ test("sous-workflows : résultat repris, appel de soi-même refusé, 3 niveaux a
   expect(p.body.erreur).toContain("niveaux de sous-workflows");
 });
 
-test("versions : contenu précédent conservé, activation seule ignorée, restauration réversible", async () => {
+test("versions: previous content kept, activation alone ignored, reversible restore", async () => {
   const { session } = await entreprise();
   const etape = (texte: string) =>
     manuel(
@@ -547,7 +547,7 @@ test("versions : contenu précédent conservé, activation seule ignorée, resta
   expect(r.body.nom).toBe("V1");
   expect(r.body.actif).toBe(true);
   expect(r.body.definition.noeuds[1].parametres.champs[0].valeur).toBe("un");
-  // L'état remplacé (V2) est devenu la version 2 : la restauration se défait.
+  // The replaced state (V2) became version 2: the restore can be undone.
   expect((await versions()).map((x: { nom: string }) => x.nom)).toEqual(["V2", "V1"]);
   expect((await api(`/v1/automatisations/${w}/versions/9/restaurer`, session, {})).status).toBe(404);
 

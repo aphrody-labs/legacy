@@ -40,7 +40,7 @@ async function api(path: string, body?: unknown) {
 
 const b64 = (s: string) => new TextEncoder().encode(s).toBase64();
 
-test("import guidé de clients et de produits depuis un CSV", async () => {
+test("guided import of clients and products from a CSV", async () => {
   const csv =
     "Raison sociale;SIRET;Adresse;E-mail\nDupont SARL;73282932000074;2 rue B, Lyon;d@x.fr\n;;;\nSans adresse;;;\n";
   const ap = await api("/v1/imports/apercu", { fichier: b64(csv) });
@@ -70,7 +70,7 @@ test("import guidé de clients et de produits depuis un CSV", async () => {
   ]);
 });
 
-test("exports : journal des ventes, créances et FEC équilibré", async () => {
+test("exports: sales journal, receivables and balanced FEC", async () => {
   const d = await api("/v1/documents", {
     type: "facture",
     date: "2026-10-01",

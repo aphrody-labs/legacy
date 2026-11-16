@@ -186,7 +186,7 @@ const specs: Spec[] = [
     source: "github",
     repo: "astral-sh/uv",
     tag: "{version}",
-    why: "packages/ai-os/python, src/agent/py (pyproject + uv.lock)",
+    why: "packages/ai-os/python, src/agent/context (pyproject + uv.lock)",
     assets: {
       "windows-x86_64": "uv-x86_64-pc-windows-msvc.zip",
       "linux-x86_64": "uv-x86_64-unknown-linux-musl.tar.gz",
@@ -386,7 +386,7 @@ const specs: Spec[] = [
       "linux-aarch64": "caddy_{version}_linux_arm64.tar.gz",
     },
   },
-  // Brand asset pipeline (`ay brand build`, src/ui/kit brand::web; assets/brand/capture.ts), fr1 only.
+  // Media encoders and font tools, fr1 only.
   {
     name: "harfbuzz",
     version: "12.3",
@@ -425,7 +425,7 @@ const specs: Spec[] = [
     hosts: ["fr1"],
     source: "distro",
     pkg: "ffmpeg",
-    why: "SVT-AV1 and VP9 video, capture muxing (ay brand build, assets/brand/capture.ts)",
+    why: "SVT-AV1 and VP9 video, still scaling",
   },
   {
     name: "binaryen",
@@ -451,7 +451,7 @@ const specs: Spec[] = [
     hosts: ["fr1"],
     source: "npm",
     pkg: "@gltf-transform/cli",
-    why: "glTF validation of gen/model/*.glb (assets/brand/check.ts)",
+    why: "glTF validation (3D assets of `ay assets test`)",
   },
   {
     name: "nginx",

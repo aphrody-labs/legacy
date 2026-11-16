@@ -1,42 +1,42 @@
-//! Base de connaissances des automatisations (RAG), par `aphrody-rag-core` :
+//! Knowledge base of the automations (RAG), through `aphrody-rag-core`:
 //!
-//! - découpage d'un document en morceaux adressés par position : `MarkdownChunker` (sections par titres,
-//!   fil des titres en tête de chaque morceau) pour une source `.md`, sinon `ProseChunker` (phrases
-//!   regroupées jusqu'à la taille voulue, chevauchement de 15 %) ;
-//! - recherche exacte des `k` vecteurs les plus proches d'une question par similarité cosinus
-//!   (`fusion::top_k_exact`), avec diversification facultative par MMR (`fusion::mmr`).
+//! - splitting a document into chunks addressed by position: `MarkdownChunker` (sections by headings, heading
+//!   trail at the top of each chunk) for a `.md` source, else `ProseChunker` (sentences grouped up to the wanted
+//!   size, 15% overlap);
+//! - exact search of the `k` vectors closest to a question by cosine similarity
+//!   (`fusion::top_k_exact`), with optional diversification by MMR (`fusion::mmr`).
 //!
-//! Les vecteurs (embeddings) sont calculés hors de cette crate, par une API compatible OpenAI.
+//! The vectors (embeddings) are computed outside this crate, by an OpenAI-compatible API.
 
 use aphrody_rag_core::{ChunkOptions, Chunker, Language, MarkdownChunker, ProseChunker, detect_language, fusion};
 use serde::Serialize;
 
-/// Taille d'un morceau par défaut, en unités UTF-16 (celle d'`aphrody-rag-core`).
+/// Default chunk size, in UTF-16 units (that of `aphrody-rag-core`).
 pub const TAILLE_DEFAUT: usize = 1400;
-/// Texte accepté par appel de découpage.
+/// Text accepted per splitting call.
 pub const TEXTE_MAX: usize = 5_000_000;
-/// Résultats d'une recherche au plus.
+/// Results of a search, at most.
 pub const K_MAX: usize = 100;
 
 #[derive(Debug, thiserror::Error, PartialEq)]
 pub enum Erreur {
-    #[error("taille de morceau : 200 à 8000")]
+    #[error("chunk size: 200 to 8000")]
     Taille,
     #[error("texte trop volumineux (5 Mo au plus)")]
     Texte,
     #[error("dimension nulle")]
     Dimension,
-    #[error("la question a {0} composantes, la base {1}")]
+    #[error("the question has {0} components, the base {1}")]
     Question(usize, usize),
-    #[error("matrice de {0} nombres : pas un multiple de la dimension {1}")]
+    #[error("matrix of {0} numbers: not a multiple of dimension {1}")]
     Matrice(usize, usize),
-    #[error("k : 1 à 100")]
+    #[error("k: 1 to 100")]
     K,
-    #[error("diversité : entre 0 et 1")]
+    #[error("diversity: between 0 and 1")]
     Diversite,
 }
 
-/// Morceau d'un document : position (à partir de 0), texte, fil des titres (Markdown), lignes couvertes.
+/// Chunk of a document: position (from 0), text, heading trail (Markdown), lines covered.
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct Morceau {
     pub position: u32,
@@ -46,7 +46,7 @@ pub struct Morceau {
     pub ligne_fin: u32,
 }
 
-/// Découpe `texte` (lu depuis `source`, dont l'extension choisit le découpeur) en morceaux non vides.
+/// Splits `texte` (read from `source`, whose extension picks the splitter) into non-empty chunks.
 pub fn decouper(source: &str, texte: &str, taille: Option<usize>) -> Result<Vec<Morceau>, Erreur> {
     let taille = taille.unwrap_or(TAILLE_DEFAUT);
     if !(200..=8000).contains(&taille) {
@@ -74,16 +74,16 @@ pub fn decouper(source: &str, texte: &str, taille: Option<usize>) -> Result<Vec<
         .collect())
 }
 
-/// Résultat d'une recherche : ligne de la matrice et similarité cosinus avec la question.
+/// Result of a search: matrix row and cosine similarity with the question.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 pub struct Proche {
     pub indice: u32,
     pub score: f32,
 }
 
-/// Les `k` lignes de `matrice` (ligne par ligne, `dimension` nombres chacune) les plus proches de `question`,
-/// par score décroissant. Avec `diversite` (λ de MMR, 1 = pertinence seule), les `4k` meilleurs candidats
-/// sont réordonnés pour écarter les quasi-doublons ; les scores restent les cosinus.
+/// The `k` rows of `matrice` (row by row, `dimension` numbers each) closest to `question`, by decreasing
+/// score. With `diversite` (MMR lambda, 1 = relevance only), the `4k` best candidates are reordered to drop
+/// near-duplicates; the scores remain the cosines.
 pub fn plus_proches(
     question: &[f32],
     matrice: &[f32],
@@ -152,7 +152,7 @@ mod tests {
         let r = plus_proches(&[1.0, 0.0], &matrice, 2, 2, None).unwrap();
         assert_eq!(r.iter().map(|p| p.indice).collect::<Vec<_>>(), [0, 1]);
         assert!((r[0].score - 1.0).abs() < 1e-6 && r[0].score > r[1].score);
-        // Diversité forte : le quasi-doublon cède la place à une autre direction.
+        // Strong diversity: the near-duplicate gives way to another direction.
         let d = plus_proches(&[1.0, 0.0], &matrice, 2, 2, Some(0.3)).unwrap();
         assert_eq!(d[0].indice, 0);
         assert_ne!(d[1].indice, 1);

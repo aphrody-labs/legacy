@@ -50,7 +50,7 @@ async function devisEmis() {
   return { session: a.body.session as string, id: d.body.id as string };
 }
 
-test("lien public : consultation, PDF figé, acceptation unique, signataire journalisé", async () => {
+test("public link: viewing, frozen PDF, single acceptance, signer logged", async () => {
   const { session, id } = await devisEmis();
   expect((await api(`/v1/documents/${id}/lien-public`, session, {})).status).toBe(409); // brouillon
   await api(`/v1/documents/${id}/emettre`, session, {});
@@ -89,7 +89,7 @@ test("lien public : consultation, PDF figé, acceptation unique, signataire jour
   expect((await api(`/v1/documents/${id}`, session)).body.statut).toBe("accepte");
 });
 
-test("jetons falsifiés, expirés ou d'une autre clé : refusés", async () => {
+test("forged, expired or other-key tokens: refused", async () => {
   const { session, id } = await devisEmis();
   await api(`/v1/documents/${id}/emettre`, session, {});
   const { jeton } = (await api(`/v1/documents/${id}/lien-public`, session, {})).body;

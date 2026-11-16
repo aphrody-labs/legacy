@@ -1,5 +1,5 @@
-# PRD: `apps/web` (Merged Static SEO & Assets)
+# PRD: `apps/web`
 
-1. Serve canonical static HTML metadata (`fr`, `en`, `es`, `ja`, `zh-CN`), `sitemap*.xml`, `robots.txt`, `llms*.txt`, and `.well-known/*` for `aphrody.com` and `aphrody.app`.
-2. Ship brand icons, OpenGraph images, screenshots (`public/shots/`), and Wayland desktop metadata (`assets/wayland/aphrody.desktop`).
-3. Maintain zero JS/TS/Rust source code inside `apps/web/`.
+1. Serve static HTML (`en`, `fr`), `sitemap*.xml`, `robots.txt`, and `.well-known/*` linked to `aphrody-labs/aphrody`.
+2. Host the Pure C11 -> WASI + WebAssembly 3.0 Material 3 Expressive UI studio (`public/m3/index.html` + `public/m3/aysys.wasm`, built from `src/ui/m3.c` + `src/ui/site_wasi.c`) and the freestanding Wayland compositor (`public/wayland.wasm`, built from `src/wasm/compositor.c`) rendered over WebGPU.
+3. Maintain zero npm dependencies, zero `node_modules`, and zero bundlers.

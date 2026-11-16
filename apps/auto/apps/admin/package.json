@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@auto/client": "workspace:*",
+    "@auto/i18n": "workspace:*",
     "@auto/ui": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"

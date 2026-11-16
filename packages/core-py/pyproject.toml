@@ -1,0 +1,18 @@
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "aphrody-core"
+version = "0.4.0"
+description = "Complete Python core for Aphrody: Tree-sitter AST, BLAKE3, index, Layer-0 C/ASM primitives (aysys), and unified RE engine (Ghidra P-Code/Pseudo-C, MinGW-REA, Lua 5.2, PE/.pdata)"
+requires-python = ">=3.10"
+dependencies = []
+
+[tool.maturin]
+manifest-path = "../../src/core/py/Cargo.toml"
+module-name = "aphrody_native"
+python-source = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

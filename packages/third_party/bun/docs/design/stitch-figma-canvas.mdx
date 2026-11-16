@@ -1,0 +1,38 @@
+---
+title: Stitch, Figma & Gemini Canvas Integration
+description: Interactive prompt-to-screen compilation, DESIGN.md specs, and Nano Banana asset slot synchronization.
+---
+
+## Workflow Integration
+
+`gds` connects three generative design surfaces:
+
+<Steps>
+  <Step title="Figma Code Connect">
+    Every UI component is linked to its Figma component node and typed design
+    variables, ensuring zero drift between Figma and production code.
+  </Step>
+  <Step title="Google Stitch Engine">
+    Transforms text prompts into structured Material 3 screens adhering to
+    `DESIGN.md` specifications and harmonic spatial grids.
+  </Step>
+  <Step title="Gemini Web Canvas & Nano Banana">
+    Generative UI canvas with embedded `gemini-2.5-flash-image` asset slots
+    matched to the primary tonal palette.
+  </Step>
+</Steps>
+
+---
+
+## DESIGN.md Specification
+
+The `DESIGN.md` format captures visual identity, prose rationale, and token constraints for coding agents:
+
+```yaml
+# DESIGN.md
+name: Google Material 3 Sovereign
+colors:
+  paper: "#F9F9FF"
+  ink: "#1A1C1E"
+  primary: "#445E91"
+```

@@ -1,6 +1,7 @@
-// Automatisations (workflows type n8n) : édition, essai, exécution, historique, secrets et webhooks entrants.
-// Le moteur et son catalogue sont dans @auto/automate ; l'exécution réelle dans @auto/services/automatisations.
-import { catalogueJson, Definition, estN8n, importerN8n, MODELES, valider, type Element } from "@auto/automate";
+// Automations (n8n-like workflows): editing, trial, execution, history, secrets and incoming webhooks.
+// The engine and its catalog are in @aphrody/automate; actual execution in @auto/services/automatisations.
+import { ErreurApi } from "../i18n";
+import { catalogueJson, Definition, estN8n, importerN8n, MODELES, valider, type Element } from "@aphrody/automate";
 import {
   chiffrerSecret,
   ecriture,
@@ -14,7 +15,6 @@ import {
   creerAutomatisation,
   enfiler,
   enregistrerSecret,
-  ErreurMetier,
   JOB_AUTOMATISATION,
   lireAutomatisation,
   lireVersion,
@@ -38,12 +38,12 @@ import { avecId, enumere, liste, objet, op, param, str } from "../openapi-outils
 
 type Corps = { nom?: unknown; description?: unknown; actif?: unknown; definition?: unknown; donnees?: unknown };
 
-/** Données d'essai du lancement manuel : un objet (un élément) ou une liste d'objets. */
+/** Trial data of a manual run: an object (one item) or a list of objects. */
 function entree(donnees: unknown): Element[] {
   if (donnees == null) return [{ json: {} }];
   const liste = Array.isArray(donnees) ? donnees : [donnees];
   if (liste.length > 100 || liste.some((d) => !d || typeof d !== "object" || Array.isArray(d)))
-    throw new ErreurMetier("donnees : un objet ou une liste de 100 objets au plus");
+    throw new ErreurApi("data_object_or_list");
   return liste.map((d) => ({ json: d as Record<string, unknown> }));
 }
 
@@ -71,22 +71,22 @@ export const routes: Module = ({ sql, auth, pub }) => ({
   "/v1/automatisations/importer-n8n": {
     POST: auth("ecrire", async (req) => {
       const b = (await req.json()) as { workflow?: unknown };
-      if (!estN8n(b.workflow)) throw new ErreurMetier("workflow : export JSON de n8n attendu (nodes, connections)");
-      if (b.workflow.nodes.length > 100) throw new ErreurMetier("100 nœuds au plus");
+      if (!estN8n(b.workflow)) throw new ErreurApi("workflow_export_expected");
+      if (b.workflow.nodes.length > 100) throw new ErreurApi("max_100_nodes");
       return Response.json(importerN8n(b.workflow));
     }),
   },
   "/v1/automatisations/:id": {
     GET: auth("lire", async (req: BunRequest<"/v1/automatisations/:id">, a) => {
       const w = await withTenant(sql, a.tenantId, (tx) => lireAutomatisation(tx, req.params.id));
-      if (!w) throw new ErreurMetier("automatisation introuvable", [], 404);
+      if (!w) throw new ErreurApi("automation_not_found", [], 404);
       return Response.json(w);
     }),
     PUT: auth("ecrire", async (req: BunRequest<"/v1/automatisations/:id">, a) => {
       const b = (await req.json()) as Corps;
       const w = await withTenant(sql, a.tenantId, async (tx) => {
         const avant = await lireAutomatisation(tx, req.params.id);
-        if (!avant) throw new ErreurMetier("automatisation introuvable", [], 404);
+        if (!avant) throw new ErreurApi("automation_not_found", [], 404);
         return modifierAutomatisation(tx, a.userId, avant.id, await ecriture(tx, b, avant));
       });
       return Response.json(w);
@@ -115,13 +115,13 @@ export const routes: Module = ({ sql, auth, pub }) => ({
     ),
   },
   "/v1/automatisations/:id/versions/:numero/restaurer": {
-    // La restauration est une modification comme une autre : l'état remplacé devient lui-même une version.
+    // A restore is a change like any other: the replaced state itself becomes a version.
     POST: auth("ecrire", async (req: BunRequest<"/v1/automatisations/:id/versions/:numero/restaurer">, a) => {
       const w = await withTenant(sql, a.tenantId, async (tx) => {
         const avant = await lireAutomatisation(tx, req.params.id);
-        if (!avant) throw new ErreurMetier("automatisation introuvable", [], 404);
+        if (!avant) throw new ErreurApi("automation_not_found", [], 404);
         const v = await lireVersion(tx, avant.id, Number(req.params.numero));
-        if (!v) throw new ErreurMetier("version introuvable", [], 404);
+        if (!v) throw new ErreurApi("version_not_found", [], 404);
         const b = { nom: v.nom, description: v.description, definition: v.definition };
         return modifierAutomatisation(tx, a.userId, avant.id, await ecriture(tx, b, avant));
       });
@@ -136,7 +136,7 @@ export const routes: Module = ({ sql, auth, pub }) => ({
   "/v1/automatisations/:id/webhook": {
     GET: auth("ecrire", async (req: BunRequest<"/v1/automatisations/:id/webhook">, a) => {
       const w = await withTenant(sql, a.tenantId, (tx) => lireAutomatisation(tx, req.params.id));
-      if (!w) throw new ErreurMetier("automatisation introuvable", [], 404);
+      if (!w) throw new ErreurApi("automation_not_found", [], 404);
       const jeton = await signerCrochet({ t: a.tenantId, a: w.id });
       return Response.json({ url: `${origineApp(req)}/v1/public/crochets/${jeton}` });
     }),
@@ -144,7 +144,7 @@ export const routes: Module = ({ sql, auth, pub }) => ({
   "/v1/executions/:id": {
     GET: auth("lire", async (req: BunRequest<"/v1/executions/:id">, a) => {
       const e = await withTenant(sql, a.tenantId, (tx) => lireExecution(tx, req.params.id));
-      if (!e) throw new ErreurMetier("exécution introuvable", [], 404);
+      if (!e) throw new ErreurApi("run_not_found", [], 404);
       return Response.json(e);
     }),
   },
@@ -156,8 +156,8 @@ export const routes: Module = ({ sql, auth, pub }) => ({
     POST: auth("parametres", async (req, a) => {
       const b = (await req.json()) as { nom?: unknown; valeur?: unknown };
       const valeur = typeof b.valeur === "string" ? b.valeur : "";
-      // 32 000 : un certificat PKCS #12 en base64 avec sa chaîne (nœud « Signer un PDF »).
-      if (!valeur || valeur.length > 32_000) throw new ErreurMetier("valeur : 1 à 32 000 caractères");
+      // 32,000: a PKCS #12 certificate in base64 with its chain ("Sign a PDF" node).
+      if (!valeur || valeur.length > 32_000) throw new ErreurApi("value_length");
       const chiffre = await chiffrerSecret(a.tenantId, valeur);
       const s = await withTenant(sql, a.tenantId, (tx) =>
         enregistrerSecret(tx, a.userId, String(b.nom ?? ""), chiffre),
@@ -172,7 +172,7 @@ export const routes: Module = ({ sql, auth, pub }) => ({
     }),
   },
 
-  // Base de connaissances (nœuds ia.indexer, ia.rechercher) : comptes par base, suppression d'une base ou d'une source.
+  // Knowledge bases (ia.indexer, ia.rechercher nodes): counts per base, deletion of a base or a source.
   "/v1/connaissances": {
     GET: auth("lire", async (_req, a) => Response.json(await withTenant(sql, a.tenantId, (tx) => listerBases(tx)))),
   },
@@ -186,16 +186,16 @@ export const routes: Module = ({ sql, auth, pub }) => ({
     }),
   },
 
-  // Webhook entrant : l'URL secrète porte le tenant et le workflow (jeton signé, sans état).
+  // Incoming webhook: the secret URL carries the tenant and the workflow (signed token, stateless).
   "/v1/public/crochets/:jeton": Object.fromEntries(
     ["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => [
       m,
       pub(async (req: BunRequest<"/v1/public/crochets/:jeton">) => {
         const c = await verifierCrochet(req.params.jeton);
-        if (!c) throw new ErreurMetier("webhook introuvable", [], 404);
+        if (!c) throw new ErreurApi("webhook_not_found", [], 404);
         const w = await withTenant(sql, c.t, (tx) => lireAutomatisation(tx, c.a));
-        if (!w || w.declencheur !== "webhook") throw new ErreurMetier("webhook introuvable", [], 404);
-        if (!w.actif) throw new ErreurMetier("workflow inactif", [], 409);
+        if (!w || w.declencheur !== "webhook") throw new ErreurApi("webhook_not_found", [], 404);
+        if (!w.actif) throw new ErreurApi("workflow_inactive", [], 409);
         const el = await elementWebhook(req);
         const def = valider(w.definition);
         const reponse = (def.noeuds.find((n) => n.type === "declencheur.webhook")?.parametres as { reponse?: string })
@@ -277,15 +277,15 @@ const ECRITURE = objet({ nom: str, description: str, actif: { type: "boolean" },
   "nom",
   "definition",
 ]);
-const DONNEES = objet({ donnees: { description: "Objet ou liste d'objets : éléments du déclencheur" } });
-const T = "Automatisations";
+const DONNEES = objet({ donnees: { description: "Object or list of objects: trigger items" } });
+const T = "Automations";
 
-/** Description OpenAPI des routes du module. */
+/** OpenAPI description of the module routes. */
 export const openapi: Chemins = {
   "/v1/automatisations": {
-    get: op({ resume: "Workflows de l'entreprise", tag: T, droit: "lire", succes: { 200: liste(RESUME) } }),
+    get: op({ resume: "Company workflows", tag: T, droit: "lire", succes: { 200: liste(RESUME) } }),
     post: op({
-      resume: "Créer un workflow (définition validée : nœuds, connexions, un déclencheur, sans cycle)",
+      resume: "Create a workflow (validated definition: nodes, connections, one trigger, no cycle)",
       tag: T,
       droit: "ecrire",
       corps: ECRITURE,
@@ -295,7 +295,7 @@ export const openapi: Chemins = {
   },
   "/v1/automatisations/catalogue": {
     get: op({
-      resume: "Types de nœuds disponibles, paramètres en JSON Schema",
+      resume: "Available node types, parameters as JSON Schema",
       tag: T,
       droit: "lire",
       succes: { 200: liste({ type: "object" }) },
@@ -303,7 +303,7 @@ export const openapi: Chemins = {
   },
   "/v1/automatisations/modeles": {
     get: op({
-      resume: "Modèles de workflows prêts à l'emploi",
+      resume: "Ready-to-use workflow templates",
       tag: T,
       droit: "lire",
       succes: { 200: liste({ type: "object" }) },
@@ -311,7 +311,7 @@ export const openapi: Chemins = {
   },
   "/v1/automatisations/essai": {
     post: op({
-      resume: "Essayer une définition sans l'enregistrer",
+      resume: "Try a definition without saving it",
       tag: T,
       droit: "ecrire",
       corps: objet({ definition: DEFINITION, donnees: {} }, ["definition"]),
@@ -321,7 +321,7 @@ export const openapi: Chemins = {
   },
   "/v1/automatisations/importer-n8n": {
     post: op({
-      resume: "Convertir un workflow exporté de n8n en définition auto (rien n'est enregistré)",
+      resume: "Convert a workflow exported from n8n into an auto definition (nothing is saved)",
       tag: T,
       droit: "ecrire",
       corps: objet({ workflow: { type: "object" } }, ["workflow"]),
@@ -337,20 +337,20 @@ export const openapi: Chemins = {
     }),
   },
   "/v1/automatisations/{id}": avecId({
-    get: op({ resume: "Lire un workflow", tag: T, droit: "lire", succes: { 200: AUTOMATISATION }, erreurs: [404] }),
+    get: op({ resume: "Read a workflow", tag: T, droit: "lire", succes: { 200: AUTOMATISATION }, erreurs: [404] }),
     put: op({
-      resume: "Modifier un workflow (champs partiels)",
+      resume: "Edit a workflow (partial fields)",
       tag: T,
       droit: "ecrire",
       corps: objet({ nom: str, description: str, actif: { type: "boolean" }, definition: DEFINITION }),
       succes: { 200: AUTOMATISATION },
       erreurs: [404, 422],
     }),
-    delete: op({ resume: "Supprimer un workflow", tag: T, droit: "ecrire", succes: { 204: null }, erreurs: [404] }),
+    delete: op({ resume: "Delete a workflow", tag: T, droit: "ecrire", succes: { 204: null }, erreurs: [404] }),
   }),
   "/v1/automatisations/{id}/executer": avecId({
     post: op({
-      resume: "Exécuter maintenant (lancement manuel, synchrone)",
+      resume: "Run now (manual run, synchronous)",
       tag: T,
       droit: "ecrire",
       corps: DONNEES,
@@ -360,7 +360,7 @@ export const openapi: Chemins = {
   }),
   "/v1/automatisations/{id}/versions": avecId({
     get: op({
-      resume: "Versions précédentes (50 au plus), la plus récente d'abord",
+      resume: "Previous versions (50 at most), most recent first",
       tag: T,
       droit: "lire",
       succes: { 200: liste(VERSION) },
@@ -369,7 +369,7 @@ export const openapi: Chemins = {
   "/v1/automatisations/{id}/versions/{numero}/restaurer": {
     parameters: [param("id"), param("numero", { type: "integer" })],
     post: op({
-      resume: "Restaurer une version (l'état remplacé devient lui-même une version)",
+      resume: "Restore a version (the replaced state itself becomes a version)",
       tag: T,
       droit: "ecrire",
       succes: { 200: AUTOMATISATION },
@@ -377,11 +377,11 @@ export const openapi: Chemins = {
     }),
   },
   "/v1/automatisations/{id}/executions": avecId({
-    get: op({ resume: "Historique des exécutions", tag: T, droit: "lire", succes: { 200: liste(EXECUTION) } }),
+    get: op({ resume: "Run history", tag: T, droit: "lire", succes: { 200: liste(EXECUTION) } }),
   }),
   "/v1/automatisations/{id}/webhook": avecId({
     get: op({
-      resume: "URL secrète du webhook entrant",
+      resume: "Secret URL of the incoming webhook",
       tag: T,
       droit: "ecrire",
       succes: { 200: objet({ url: str }) },
@@ -390,7 +390,7 @@ export const openapi: Chemins = {
   }),
   "/v1/executions/{id}": avecId({
     get: op({
-      resume: "Détail d'une exécution, étape par étape",
+      resume: "Detail of a run, step by step",
       tag: T,
       droit: "lire",
       succes: { 200: EXECUTION },
@@ -399,13 +399,13 @@ export const openapi: Chemins = {
   }),
   "/v1/secrets": {
     get: op({
-      resume: "Secrets des workflows (noms seulement)",
+      resume: "Workflow secrets (names only)",
       tag: T,
       droit: "parametres",
       succes: { 200: liste(objet({ id: str, nom: str, createdAt: str })) },
     }),
     post: op({
-      resume: "Enregistrer un secret (chiffré, cité par {{ $secret.nom }})",
+      resume: "Save a secret (encrypted, referenced as {{ $secret.nom }})",
       tag: T,
       droit: "parametres",
       corps: objet({ nom: str, valeur: str }, ["nom", "valeur"]),
@@ -414,11 +414,11 @@ export const openapi: Chemins = {
     }),
   },
   "/v1/secrets/{id}": avecId({
-    delete: op({ resume: "Supprimer un secret", tag: T, droit: "parametres", succes: { 204: null }, erreurs: [404] }),
+    delete: op({ resume: "Delete a secret", tag: T, droit: "parametres", succes: { 204: null }, erreurs: [404] }),
   }),
   "/v1/connaissances": {
     get: op({
-      resume: "Bases de connaissances de l'entreprise : sources, morceaux, modèle et dimension des embeddings",
+      resume: "Company knowledge bases: sources, chunks, embedding model and dimension",
       tag: T,
       droit: "lire",
       succes: {
@@ -438,11 +438,11 @@ export const openapi: Chemins = {
   "/v1/connaissances/{base}": avecId(
     {
       delete: op({
-        resume: "Supprimer une base de connaissances, ou une seule de ses sources avec ?source=",
+        resume: "Delete a knowledge base, or just one of its sources with ?source=",
         tag: T,
         droit: "ecrire",
-        requete: [{ nom: "source", schema: str, description: "Source à supprimer seule (nom donné à l'indexation)" }],
-        succes: { 200: objet({ morceaux: { type: "integer", description: "Morceaux supprimés" } }) },
+        requete: [{ nom: "source", schema: str, description: "Single source to delete (name given at indexing)" }],
+        succes: { 200: objet({ morceaux: { type: "integer", description: "Chunks deleted" } }) },
         erreurs: [404, 422],
       }),
     },
@@ -454,7 +454,7 @@ export const openapi: Chemins = {
       ["get", "post", "put", "patch", "delete"].map((m) => [
         m,
         op({
-          resume: "Webhook entrant d'un workflow (202 : exécution en file ; réponse « fin » : sortie du workflow)",
+          resume: "Incoming webhook of a workflow (202: run queued; \"end\" answer: workflow output)",
           tag: T,
           succes: { 200: { type: "object" }, 202: objet({ recu: { type: "boolean" } }) },
           erreurs: [404, 409],

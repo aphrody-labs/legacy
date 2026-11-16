@@ -1,0 +1,38 @@
+# Official Lazygit v0.66.3 configuration (Nerd Font v3 + delta + Catppuccin Mocha Blue)
+gui:
+  nerdFontsVersion: "3"
+  showFileIcons: true
+  border: rounded
+  mouseEvents: true
+  showBranchCommitHash: true
+  theme:
+    activeBorderColor:
+      - "#89b4fa"
+      - bold
+    inactiveBorderColor:
+      - "#a6adc8"
+    optionsTextColor:
+      - "#89b4fa"
+    selectedLineBgColor:
+      - "#313244"
+    cherryPickedCommitBgColor:
+      - "#45475a"
+    cherryPickedCommitFgColor:
+      - "#89b4fa"
+    unstagedChangesColor:
+      - "#f38ba8"
+    defaultFgColor:
+      - "#cdd6f4"
+    searchingActiveBorderColor:
+      - "#f9e2af"
+
+git:
+  diffRenderers:
+    - type: stdinFilter
+      colorArg: always
+      command: delta --dark --paging=never
+  autoFetch: false
+  overrideGpg: false
+
+os:
+  editPreset: hx

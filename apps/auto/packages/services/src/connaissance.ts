@@ -1,7 +1,7 @@
 // Automations knowledge base (RAG): native chunking (aphrody-rag-core through auto-ffi), embeddings
 // through an OpenAI-compatible API (`POST <url>/embeddings`: aphrody-llama-server, Ollama, OpenAI…) called by the workflow's
 // guarded `fetch`, storage under RLS (knowledge table) and exact cosine-similarity search.
-import type { ApiEmbeddings, MorceauTrouve, Services } from "@auto/automate";
+import type { ApiEmbeddings, MorceauTrouve, Services } from "@aphrody/automate";
 import { decouperTexte, plusProches } from "@auto/native";
 import { lireMorceaux, remplacerSource, vecteursBase, withTenant, type Sql } from "@auto/store";
 

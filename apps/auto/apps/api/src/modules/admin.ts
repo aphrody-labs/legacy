@@ -1,10 +1,10 @@
-// Console opérateur : lecture transverse des tenants, suspension, support et files. Réservée aux owner et
-// admin du tenant opérateur (AUTO_TENANT_OPERATEUR). Les lectures par tenant passent par withTenant : la
-// RLS reste la seule voie d'accès aux données métier, l'opérateur ne la contourne pas.
+// Operator console: cross-tenant read, suspension, support and queues. Reserved to the owner and
+// admin of the operator tenant (AUTO_TENANT_OPERATEUR). Per-tenant reads go through withTenant: RLS
+// remains the only way into business data, the operator does not bypass it.
+import { ErreurApi, refus } from "../i18n";
 import { consommation, planEffectif } from "@auto/billing";
 import {
   avecWorker,
-  ErreurMetier,
   journaliser,
   lireAbonnement,
   lister,
@@ -19,10 +19,10 @@ import { avecId, enumere, liste, objet, op, str } from "../openapi-outils";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/** Opérateur : owner ou admin du tenant désigné par AUTO_TENANT_OPERATEUR ; sinon 403. */
+/** Operator: owner or admin of the tenant named by AUTO_TENANT_OPERATEUR; otherwise 403. */
 export function exigerOperateur(a: Auth, operateur = Bun.env.AUTO_TENANT_OPERATEUR) {
   if (!operateur || a.tenantId !== operateur || (a.role !== "owner" && a.role !== "admin"))
-    throw new ErreurMetier("réservé à l'opérateur", [], 403);
+    throw new ErreurApi("operator_only", [], 403);
 }
 
 interface TenantRow {
@@ -61,17 +61,17 @@ const TENANTS = (sql: Sql, id?: string) => sql<TenantRow[]>`
   ORDER BY t.created_at DESC LIMIT 500`;
 
 export const routes: Module = ({ sql, auth, ba, pub }) => {
-  /** Route opérateur : droit « lire » sur son tenant, puis contrôle opérateur. */
+  /** Operator route: "read" right on its tenant, then operator check. */
   const op_ = <R extends Request>(fn: (req: R, a: Auth) => Promise<Response>) =>
     pub(async (req: R) => {
       if (
         ["POST", "PUT", "PATCH", "DELETE"].includes(req.method) &&
         !req.headers.get("content-type")?.toLowerCase().startsWith("application/json")
       )
-        return Response.json({ erreur: "Content-Type application/json requis" }, { status: 415 });
+        return refus(req, "json_content_type_required", 415);
       const agent = await agentAdministrateur(sql, req);
       if (!agent && !ipAdministration(req).autorise)
-        return Response.json({ erreur: "Réseau non autorisé pour l’administration" }, { status: 403 });
+        return refus(req, "admin_network_forbidden", 403);
       const humain = agent ? null : await humainSuperAdmin(ba, req);
       if (agent || humain) {
         const a: Auth = {
@@ -105,7 +105,7 @@ export const routes: Module = ({ sql, auth, ba, pub }) => {
       GET: op_(async (req: BunRequest<"/v1/admin/tenants/:id">) => {
         const id = req.params.id;
         const [t] = UUID.test(id) ? await TENANTS(sql, id) : [];
-        if (!t) return Response.json({ erreur: "introuvable" }, { status: 404 });
+        if (!t) return refus(req, "not_found", 404);
         const membres = await sql<{ email: string; role: string }[]>`
           SELECT u.email, m.role FROM membership m JOIN app_user u ON u.id = m.user_id
           WHERE m.tenant_id = ${id} ORDER BY u.email`;
@@ -127,15 +127,15 @@ export const routes: Module = ({ sql, auth, ba, pub }) => {
       POST: op_(async (req: BunRequest<"/v1/admin/tenants/:id/suspension">, a) => {
         const id = req.params.id;
         const { suspendu, motif } = (await req.json()) as { suspendu?: boolean; motif?: string };
-        if (typeof suspendu !== "boolean") throw new ErreurMetier("suspendu : booléen attendu");
-        if (id === a.tenantId) throw new ErreurMetier("le tenant opérateur ne peut pas être suspendu", [], 409);
-        if (suspendu && !motif?.trim()) throw new ErreurMetier("motif de suspension obligatoire");
+        if (typeof suspendu !== "boolean") throw new ErreurApi("suspended_boolean");
+        if (id === a.tenantId) throw new ErreurApi("operator_tenant_not_suspendable", [], 409);
+        if (suspendu && !motif?.trim()) throw new ErreurApi("suspension_reason_required");
         const r = UUID.test(id)
           ? await sql`UPDATE tenant SET suspendu_at = ${suspendu ? new Date() : null},
               suspension_motif = ${suspendu ? motif!.trim() : null} WHERE id = ${id} RETURNING id`
           : [];
-        if (!r.length) return Response.json({ erreur: "introuvable" }, { status: 404 });
-        // Trace dans la piste d'audit du tenant concerné, avec l'opérateur comme auteur.
+        if (!r.length) return refus(req, "not_found", 404);
+        // Trace in the audit trail of the tenant concerned, with the operator as author.
         await withTenant(sql, id, (tx) =>
           journaliser(tx, a.userId, suspendu ? "tenant.suspendre" : "tenant.retablir", id, { motif: motif ?? null }),
         );
@@ -145,14 +145,14 @@ export const routes: Module = ({ sql, auth, ba, pub }) => {
     "/v1/admin/utilisateurs": {
       GET: op_(async (req) => {
         const email = new URL(req.url).searchParams.get("email")?.trim().toLowerCase();
-        if (!email) throw new ErreurMetier("email requis");
+        if (!email) throw new ErreurApi("email_required");
         const rows = await sql<
           { id: string; email: string; created_at: Date; tenant_id: string; nom: string; role: string }[]
         >`
           SELECT u.id, u.email, u.created_at, m.tenant_id, t.nom, m.role FROM app_user u
           LEFT JOIN membership m ON m.user_id = u.id LEFT JOIN tenant t ON t.id = m.tenant_id
           WHERE u.email = ${email}`;
-        if (!rows.length) return Response.json({ erreur: "introuvable" }, { status: 404 });
+        if (!rows.length) return refus(req, "not_found", 404);
         return Response.json({
           id: rows[0]!.id,
           email: rows[0]!.email,
@@ -225,12 +225,12 @@ export const routes: Module = ({ sql, auth, ba, pub }) => {
 
 const OPERATEUR = "Opérateur";
 
-/** Description OpenAPI des routes du module. */
+/** OpenAPI description of the module routes. */
 export const openapi: Chemins = {
   "/v1/jetons/{id}": avecId({
     delete: op({
-      resume: "Révoquer une clé d'API",
-      tag: "Comptes",
+      resume: "Revoke an API key",
+      tag: "Accounts",
       droit: "parametres",
       succes: { 204: null },
       erreurs: [404],
@@ -246,7 +246,7 @@ export const openapi: Chemins = {
   },
   "/v1/admin/tenants/{id}": avecId({
     get: op({
-      resume: "Fiche d'une entreprise : membres, quotas, derniers documents, audit",
+      resume: "Company record: members, quotas, latest documents, audit",
       tag: OPERATEUR,
       droit: "lire",
       succes: { 200: objet({}) },
@@ -255,7 +255,7 @@ export const openapi: Chemins = {
   }),
   "/v1/admin/tenants/{id}/suspension": avecId({
     post: op({
-      resume: "Suspendre ou rétablir une entreprise (trace dans son audit)",
+      resume: "Suspend or reinstate a company (traced in its audit)",
       tag: OPERATEUR,
       droit: "lire",
       corps: objet({ suspendu: { type: "boolean" }, motif: str }, ["suspendu"]),
@@ -265,17 +265,17 @@ export const openapi: Chemins = {
   }),
   "/v1/admin/utilisateurs": {
     get: op({
-      resume: "Retrouver un compte et ses adhésions (support)",
+      resume: "Find an account and its memberships (support)",
       tag: OPERATEUR,
       droit: "lire",
-      requete: [{ nom: "email", schema: str, description: "Email exact" }],
+      requete: [{ nom: "email", schema: str, description: "Exact email" }],
       succes: { 200: objet({}) },
       erreurs: [404, 422],
     }),
   },
   "/v1/admin/stripe/evenements": {
     get: op({
-      resume: "Journal des webhooks Stripe reçus",
+      resume: "Log of received Stripe webhooks",
       tag: OPERATEUR,
       droit: "lire",
       succes: { 200: liste(objet({})) },
@@ -283,16 +283,16 @@ export const openapi: Chemins = {
   },
   "/v1/admin/evenements": {
     get: op({
-      resume: "File des événements (outbox) et leurs échecs",
+      resume: "Event queue (outbox) and their failures",
       tag: OPERATEUR,
       droit: "lire",
-      requete: [{ nom: "statut", schema: enumere("a_livrer", "livre", "echec"), description: "Filtre de statut" }],
+      requete: [{ nom: "statut", schema: enumere("a_livrer", "livre", "echec"), description: "Status filter" }],
       succes: { 200: liste(objet({})) },
     }),
   },
   "/v1/admin/audit": {
     get: op({
-      resume: "Vérification des chaînes d'audit de toutes les entreprises",
+      resume: "Verification of the audit chains of all companies",
       tag: OPERATEUR,
       droit: "lire",
       succes: { 200: liste(objet({})) },

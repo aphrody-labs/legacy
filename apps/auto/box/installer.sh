@@ -1,32 +1,32 @@
 #!/bin/sh
-# Installation de l'Aphrody Box (Linux, macOS) : récupère la boîte si besoin, prépare les secrets, détecte une
-# carte graphique NVIDIA, puis démarre tout. Relancer le script met à jour sans toucher à vos données.
+# Aphrody Box installation (Linux, macOS): fetches the box if needed, prepares the secrets, detects an NVIDIA
+# graphics card, then starts everything. Running the script again updates without touching your data.
 #   curl -fsSL https://raw.githubusercontent.com/aphrody-labs/auto/main/box/installer.sh | sh
-# Options : BOX_DOSSIER (défaut ~/aphrody-box), BOX_EMAIL, BOX_DOMAINE (HTTPS sur sous-domaines).
+# Options: BOX_DOSSIER (default ~/aphrody-box), BOX_EMAIL, BOX_DOMAINE (HTTPS on subdomains).
 set -eu
 
-dire() { printf '\033[1m%s\033[0m\n' "$*"; }
-echec() { printf 'Erreur : %s\n' "$*" >&2; exit 1; }
+say() { printf '\033[1m%s\033[0m\n' "$*"; }
+fail() { printf 'Error: %s\n' "$*" >&2; exit 1; }
 
-command -v docker >/dev/null 2>&1 || echec "Docker est requis : https://docs.docker.com/engine/install/"
-docker compose version >/dev/null 2>&1 || echec "le module « docker compose » est requis (Docker 24 ou plus récent)."
-docker info >/dev/null 2>&1 || echec "Docker ne répond pas : démarrez-le, ou lancez ce script avec sudo."
+command -v docker >/dev/null 2>&1 || fail "Docker is required: https://docs.docker.com/engine/install/"
+docker compose version >/dev/null 2>&1 || fail "the \"docker compose\" module is required (Docker 24 or newer)."
+docker info >/dev/null 2>&1 || fail "Docker is not responding: start it, or run this script with sudo."
 
 DOSSIER=${BOX_DOSSIER:-"$HOME/aphrody-box"}
 if [ -f "./compose.yaml" ] && grep -q "name: aphrody-box" ./compose.yaml; then DOSSIER=$(pwd); fi
 mkdir -p "$DOSSIER"
 cd "$DOSSIER"
 
-# Fichiers de la boîte : téléchargés s'ils manquent, ou remplacés avec BOX_MAJ=1 (.env, donnees et coffre restent).
+# Box files: downloaded if missing, or replaced with BOX_MAJ=1 (.env, donnees and coffre stay).
 if [ ! -f compose.yaml ] || [ "${BOX_MAJ:-0}" = 1 ]; then
-  dire "Téléchargement de la boîte dans $DOSSIER…"
+    say "Downloading the box into $DOSSIER…"
   curl -fsSL https://codeload.github.com/aphrody-labs/auto/tar.gz/refs/heads/main \
     | tar -xz --strip-components=2 auto-main/box
 fi
 
 IMAGE=${BOX_IMAGE_CONSOLE:-ghcr.io/aphrody-labs/aphrody-box:latest}
 if ! docker pull -q "$IMAGE" >/dev/null 2>&1; then
-  dire "Image de la console introuvable en ligne : construction sur cette machine (quelques minutes)…"
+    say "Console image not found online: building on this machine (a few minutes)…"
   docker build -q -t "$IMAGE" console >/dev/null
 fi
 
@@ -45,15 +45,15 @@ set -- preparer /box "$GPU" --hote "$HOTE"
 [ -n "${BOX_DOMAINE:-}" ] && set -- "$@" --domaine "$BOX_DOMAINE"
 docker run --rm -v "$DOSSIER:/box" "$IMAGE" "$@"
 
-dire "Démarrage des services (le premier lancement télécharge les images et un modèle d'IA de 2,5 Go)…"
+say "Starting the services (the first launch downloads the images and a 2.5 GB AI model)…"
 docker compose up -d --remove-orphans
 
 PORT_CONSOLE=8080
 if [ -n "${BOX_DOMAINE:-}" ]; then URL="https://console.$BOX_DOMAINE"; else URL="http://$HOTE:$PORT_CONSOLE"; fi
 MDP=$(sed -n "s/^BOX_ADMIN_MOT_DE_PASSE='\(.*\)'$/\1/p" .env)
-dire ""
-dire "L'Aphrody Box est lancée."
-echo "  Console : $URL"
-echo "  Identifiant : admin"
-echo "  Mot de passe : $MDP"
-echo "Les accès d'Auto, n8n, Hermes et Obsidian sont dans la console, section « Accès »."
+say ""
+say "The Aphrody Box is running."
+echo "  Console: $URL"
+echo "  Username: admin"
+echo "  Password: $MDP"
+echo "The access details of Auto, n8n, Hermes and Obsidian are in the console, \"Access\" section."

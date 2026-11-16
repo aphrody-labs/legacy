@@ -16,7 +16,7 @@
   "dependencies": {
     "@aphrody/m3-tailwind": "1.4.7",
     "@aphrody/m3-tokens": "catalog:",
-    "@auto/automate": "workspace:*",
+    "@aphrody/automate": "catalog:",
     "@auto/client": "workspace:*",
     "@auto/domain": "workspace:*",
     "@auto/i18n": "workspace:*",

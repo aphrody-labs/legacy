@@ -1,4 +1,4 @@
-// Bun side: projects.toml, monorepo inventory, labs cards and brand tokens, assembled into the Registry that
+// Bun side: projects.toml, monorepo inventory, labs cards and design tokens, assembled into the Registry that
 // CI uploads to aphrody.app on every push (single source: the repository).
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -126,7 +126,7 @@ export async function labs(
   const a = parseAlphabet(
     readFileSync(join(root, "docs", "ALPHABET.md"), "utf8"),
   );
-  const bets = section(a, "Paris")?.table?.rows ?? [];
+  const bets = section(a, "Bets")?.table?.rows ?? [];
   const cards: LabCard[] = bets.map((r) => {
     const path = firstPath(r[1] ?? "");
     return {

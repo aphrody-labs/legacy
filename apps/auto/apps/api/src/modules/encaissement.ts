@@ -1,5 +1,6 @@
-// Paiement en ligne des factures : clé Stripe de l'entreprise (paramètres), lien de paiement signé, page publique
-// /facture/<jeton> (consultation, PDF Factur-X, paiement par carte, confirmation au retour de Stripe).
+// Online invoice payment: the company's Stripe key (settings), signed payment link, public page
+// /facture/<token> (viewing, Factur-X PDF, card payment, confirmation on return from Stripe).
+import { ErreurApi } from "../i18n";
 import { totaux } from "@auto/domain";
 import { DUREE_LIEN_MS, signerLien, verifierLien } from "@auto/services/devis-public";
 import { chiffrerCle, confirmerPaiement, creerSessionPaiement, verifierCle } from "@auto/services/encaissement";
@@ -27,7 +28,7 @@ async function vue(sql: Sql, tenantId: string, documentId: string) {
     if (!d || !["facture", "acompte"].includes(d.type)) return null;
     return { d, reste: (await resteDu(tx, d.id)).resteCents, actif: !!(await lireEncaissement(tx)) };
   });
-  if (!r) throw new ErreurMetier("lien invalide ou expiré", [], 404);
+  if (!r) throw new ErreurApi("link_invalid_or_expired", [], 404);
   const t = totaux(r.d.data.lignes);
   return {
     numero: r.d.numero,
@@ -45,7 +46,7 @@ async function vue(sql: Sql, tenantId: string, documentId: string) {
 export const routes: Module = ({ sql, publier, pub, auth }) => {
   async function parJeton(jeton: string) {
     const c = await verifierLien(jeton);
-    if (!c) throw new ErreurMetier("lien invalide ou expiré", [], 404);
+    if (!c) throw new ErreurApi("link_invalid_or_expired", [], 404);
     return c;
   }
   const base = origineApp;
@@ -72,13 +73,9 @@ export const routes: Module = ({ sql, publier, pub, auth }) => {
     "/v1/documents/:id/lien-paiement": {
       POST: auth("ecrire", async (req: BunRequest<"/v1/documents/:id/lien-paiement">, a) => {
         const v = await vue(sql, a.tenantId, req.params.id).catch(() => null);
-        if (!v) throw new ErreurMetier("facture introuvable", [], 404);
+        if (!v) throw new ErreurApi("invoice_not_found", [], 404);
         if (!v.payable)
-          throw new ErreurMetier(
-            "lien de paiement impossible : facture soldée, non émise, ou paiement en ligne non configuré",
-            [],
-            409,
-          );
+          throw new ErreurApi("payment_link_unavailable", [], 409);
         const expire = Date.now() + DUREE_LIEN_MS;
         const jeton = await signerLien({ t: a.tenantId, d: req.params.id, e: expire });
         return Response.json(
@@ -102,7 +99,7 @@ export const routes: Module = ({ sql, publier, pub, auth }) => {
           const d = await lire(tx, c.d);
           return d && ["facture", "acompte"].includes(d.type) ? { d, f: await lireFichier(tx, d.id, "facturx") } : null;
         });
-        if (!r?.f) throw new ErreurMetier("lien invalide ou expiré", [], 404);
+        if (!r?.f) throw new ErreurApi("link_invalid_or_expired", [], 404);
         return new Response(r.f.contenu, {
           headers: {
             "content-type": "application/pdf",
@@ -121,7 +118,7 @@ export const routes: Module = ({ sql, publier, pub, auth }) => {
           succes: `${page}?session={CHECKOUT_SESSION_ID}`,
           annulation: page,
         });
-        if (!s) throw new ErreurMetier("paiement en ligne non proposé pour cette facture", [], 409);
+        if (!s) throw new ErreurApi("online_payment_unavailable", [], 409);
         return Response.json(s, { status: 201 });
       }),
     },
@@ -153,29 +150,29 @@ const jeton = (ops: Record<string, unknown>) => avecId(ops, "jeton", str);
 export const openapi: Chemins = {
   "/v1/parametres/encaissement": {
     get: op({
-      resume: "Paiement en ligne : état (clé masquée)",
-      tag: "Paramètres",
+      resume: "Online payment: status (key masked)",
+      tag: "Settings",
       droit: "lire",
       succes: { 200: objet({ actif: { type: "boolean" }, fournisseur: str, apercu: str }) },
     }),
     put: op({
-      resume: "Paiement en ligne : enregistrer la clé Stripe de l'entreprise (vérifiée chez Stripe)",
-      tag: "Paramètres",
+      resume: "Online payment: save the company's Stripe key (verified with Stripe)",
+      tag: "Settings",
       droit: "parametres",
       corps: objet({ cle: str }, ["cle"]),
       succes: { 204: null },
       erreurs: [422, 502],
     }),
     delete: op({
-      resume: "Paiement en ligne : retirer la clé Stripe",
-      tag: "Paramètres",
+      resume: "Online payment: remove the Stripe key",
+      tag: "Settings",
       droit: "parametres",
       succes: { 204: null },
     }),
   },
   "/v1/documents/{id}/lien-paiement": avecId({
     post: op({
-      resume: "Créer le lien de paiement en ligne d'une facture (30 jours)",
+      resume: "Create the online payment link of an invoice (30 days)",
       tag: "Documents",
       droit: "ecrire",
       succes: { 201: objet({ url: str, jeton: str, expire: str }) },
@@ -184,32 +181,32 @@ export const openapi: Chemins = {
   }),
   "/v1/public/factures/{jeton}": jeton({
     get: op({
-      resume: "Facture vue par le client (lien public)",
-      tag: "Paiement en ligne",
+      resume: "Invoice as seen by the client (public link)",
+      tag: "Online payment",
       succes: { 200: VUE },
       erreurs: [404],
     }),
   }),
   "/v1/public/factures/{jeton}/pdf": jeton({
     get: op({
-      resume: "Factur-X de la facture (lien public)",
-      tag: "Paiement en ligne",
+      resume: "Factur-X of the invoice (public link)",
+      tag: "Online payment",
       succes: { 200: brut("application/pdf") },
       erreurs: [404],
     }),
   }),
   "/v1/public/factures/{jeton}/paiement": jeton({
     post: op({
-      resume: "Ouvrir une session de paiement par carte (Stripe Checkout) pour le reste dû",
-      tag: "Paiement en ligne",
+      resume: "Open a card payment session (Stripe Checkout) for the balance due",
+      tag: "Online payment",
       succes: { 201: objet({ url: str }) },
       erreurs: [404, 409, 502],
     }),
   }),
   "/v1/public/factures/{jeton}/confirmation": jeton({
     post: op({
-      resume: "Confirmer le paiement au retour de Stripe (session relue chez Stripe, enregistrement unique)",
-      tag: "Paiement en ligne",
+      resume: "Confirm the payment on return from Stripe (session re-read at Stripe, single recording)",
+      tag: "Online payment",
       corps: objet({ session: str }, ["session"]),
       succes: { 200: VUE },
       erreurs: [404, 409, 502],

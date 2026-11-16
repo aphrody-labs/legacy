@@ -1,5 +1,23 @@
 # @aphrody/messaging
 
+<!-- catalog:begin unit -->
+> Aphrody messaging channel contracts and Discord REST adapter.
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/messaging` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/messaging build
+bun run --cwd packages/messaging test
+bun run --cwd packages/messaging typecheck
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Bun-first TypeScript port of Aphrody's shared messaging channel contract and
 Discord REST adapter. It uses the maintained `@discordjs/rest` client for
 authentication, rate limits, and retries. Filesystem uploads use `Bun.file`.

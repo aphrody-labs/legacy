@@ -6,6 +6,8 @@ export interface I18nConfig {
   sourceLocale: string;
   /** Message format id (see adapter.ts); detected from the catalogs when absent. */
   format?: string;
+  /** `check` fails on keys missing from a locale (default: they fall back to the source locale). */
+  strictCoverage?: boolean;
 }
 
 /** Package root: i18n.config.json and locales/ live here. */

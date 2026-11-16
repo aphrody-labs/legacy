@@ -1,5 +1,22 @@
 # @aphrody/api
 
+<!-- catalog:begin unit -->
+> Tauri API definitions
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/api` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/api typecheck
+bun run --cwd packages/api build
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
  <img align="right" src="https://github.com/tauri-apps/tauri/raw/dev/.github/icon.png" height="128" width="128">
 
 [![status](https://img.shields.io/badge/status-stable-blue.svg)](https://github.com/tauri-apps/tauri/tree/dev)

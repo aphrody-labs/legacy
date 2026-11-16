@@ -1,6 +1,6 @@
-//! Tableurs par gridcraft : lecture de tout classeur courant (xlsx, xlsm, xls, xlsb, ods, csv) en
-//! lignes de valeurs JSON, et écriture d'un xlsx typé (texte, nombre, euros, date, pourcentage) avec
-//! en-tête en gras figée et largeurs de colonnes.
+//! Spreadsheets through gridcraft: reading of any common workbook (xlsx, xlsm, xls, xlsb, ods, csv) as rows of
+//! JSON values, and writing of a typed xlsx (text, number, euros, date, percentage) with a frozen bold header and
+//! column widths.
 
 use gridcraft_core::{CellRef, DateSystem, Value, date::serial_from_ymd};
 use gridcraft_model::{Color, Fill, LineInfo, NumFmt, Sheet, Style, Workbook};
@@ -10,11 +10,11 @@ use std::sync::Arc;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Erreur {
-    #[error("tableur : {0}")]
+    #[error("spreadsheet: {0}")]
     Io(#[from] gridcraft_xlsx::IoError),
-    #[error("format non pris en charge : {0}")]
+    #[error("unsupported format: {0}")]
     Format(String),
-    #[error("données invalides : {0}")]
+    #[error("invalid data: {0}")]
     Donnees(String),
 }
 
@@ -23,7 +23,7 @@ pub enum Erreur {
 #[derive(Debug, Serialize)]
 pub struct Feuille {
     pub nom: String,
-    /// Lignes de la plage utilisée ; cellule vide = `null`.
+    /// Rows of the used range; empty cell = `null`.
     pub lignes: Vec<Vec<serde_json::Value>>,
 }
 
@@ -44,7 +44,7 @@ fn valeur(v: &Value) -> serde_json::Value {
     }
 }
 
-/// Plafond de lignes lues par feuille (un import n'a pas besoin de plus).
+/// Cap on rows read per sheet (an import needs no more).
 pub const MAX_LIGNES: u32 = 100_000;
 
 pub fn lire(octets: &[u8]) -> Result<Lecture, Erreur> {
@@ -57,7 +57,7 @@ pub fn lire(octets: &[u8]) -> Result<Lecture, Erreur> {
             let opts = CsvOptions { delimiter: 0, parse_values: true, ..CsvOptions::default() };
             ("csv", (read_csv(octets, &opts)?, Default::default()))
         }
-        Format::Encrypted => return Err(Erreur::Format("classeur protégé par mot de passe".into())),
+        Format::Encrypted => return Err(Erreur::Format("workbook protected by a password".into())),
         autre => return Err(Erreur::Format(format!("{autre:?}"))),
     };
     let mut feuilles = Vec::new();
@@ -82,9 +82,9 @@ pub enum TypeColonne {
     #[default]
     Texte,
     Nombre,
-    /// Valeur en centimes (entier), affichée en euros.
+    /// Value in cents (integer), shown in euros.
     Euros,
-    /// « AAAA-MM-JJ », écrite en date Excel.
+    /// "YYYY-MM-DD", written as an Excel date.
     Date,
     /// Valeur en points de base (1000 = 10 %).
     Pourcent,
@@ -95,7 +95,7 @@ pub struct Colonne {
     pub titre: String,
     #[serde(default, rename = "type")]
     pub type_: TypeColonne,
-    /// Largeur en caractères.
+    /// Width in characters.
     pub largeur: Option<f32>,
 }
 
@@ -161,7 +161,7 @@ fn feuille(wb: &mut Workbook, spec: &FeuilleSpec) -> Result<Sheet, Erreur> {
         s.set_value(r, Value::text(c.titre.as_str()));
         s.set_style(r, entete);
         let largeur = c.largeur.unwrap_or_else(|| (c.titre.chars().count() as f32 + 4.0).max(12.0));
-        // Taille en pixels pour gridcraft (caractères = (px − 5) / 7).
+        // Size in pixels for gridcraft (characters = (px − 5) / 7).
         s.cols.insert(col as u32, LineInfo { size: Some(largeur * 7.0 + 5.0), ..LineInfo::default() });
     }
     for (i, ligne) in spec.lignes.iter().enumerate() {
@@ -198,7 +198,7 @@ pub fn ecrire(c: &Classeur) -> Result<Vec<u8>, Erreur> {
     Ok(write_xlsx(&wb)?)
 }
 
-/// Édition ciblée : coordonnées Excel à partir de 1 ; mise en forme et autres feuilles conservées.
+/// Targeted edit: Excel coordinates from 1; formatting and other sheets kept.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct EditionCellule {
@@ -213,16 +213,16 @@ pub struct EditionCellule {
 pub fn modifier(octets: &[u8], editions: &[EditionCellule]) -> Result<Vec<u8>, Erreur> {
     use gridcraft_model::{Cell, Formula};
     if editions.is_empty() || editions.len() > 10_000 {
-        return Err(Erreur::Donnees("entre 1 et 10 000 cellules attendues".into()));
+        return Err(Erreur::Donnees("between 1 and 10,000 cells expected".into()));
     }
     let (mut wb, _) = read_xlsx(octets)?;
     let cellules: usize = wb.sheets.iter().map(|s| s.cells.iter().count()).sum();
     if cellules > 500_000 {
-        return Err(Erreur::Donnees("plus de 500 000 cellules : édition serveur limitée".into()));
+        return Err(Erreur::Donnees("more than 500,000 cells: server-side editing is limited".into()));
     }
     for e in editions {
         if !(1..=1_048_576).contains(&e.ligne) || !(1..=16_384).contains(&e.colonne) {
-            return Err(Erreur::Donnees("coordonnées hors du classeur Excel".into()));
+        return Err(Erreur::Donnees("coordinates outside the Excel workbook".into()));
         }
         let index = wb.sheet_index(&e.feuille).ok_or_else(|| Erreur::Donnees("feuille introuvable".into()))?;
         let s = wb.sheet_mut(index).ok_or_else(|| Erreur::Donnees("feuille introuvable".into()))?;

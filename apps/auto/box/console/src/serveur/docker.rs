@@ -1,5 +1,5 @@
-//! Client minimal du Docker Engine par son socket Unix (HTTP/1.1 avec hyper) : conteneurs du projet compose,
-//! redémarrage, journal et capacités de l'hôte. Aucun SDK : l'API HTTP du moteur suffit.
+//! Minimal Docker Engine client over its Unix socket (HTTP/1.1 with hyper): containers of the compose project,
+//! restart, logs and host capacities. No SDK: the engine's HTTP API is enough.
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -32,7 +32,7 @@ struct InfoBrute {
     mem_total: u64,
 }
 
-/// Santé lue dans le statut (« Up 2 minutes (healthy) ») : la liste ne la donne pas autrement.
+/// Health read from the status ("Up 2 minutes (healthy)"): the list gives it no other way.
 pub fn sante(statut: &str) -> Option<&'static str> {
     if statut.contains("(healthy)") {
         Some("healthy")
@@ -45,7 +45,7 @@ pub fn sante(statut: &str) -> Option<&'static str> {
     }
 }
 
-/// Flux multiplexé stdout/stderr (en-têtes de 8 octets) en texte ; un flux TTY est déjà brut.
+/// Multiplexed stdout/stderr stream (8-byte headers) as text; a TTY stream is already raw.
 pub fn demultiplexer(o: &[u8]) -> String {
     if o.len() < 8 || o[0] > 2 || o[1..4] != [0, 0, 0] {
         return String::from_utf8_lossy(o).into_owned();
@@ -77,7 +77,7 @@ impl Docker {
         use hyper::body::Bytes;
         let flux = tokio::net::UnixStream::connect(&self.socket)
             .await
-            .map_err(|e| format!("socket Docker {} : {e}", self.socket))?;
+            .map_err(|e| format!("Docker socket {}: {e}", self.socket))?;
         let (mut envoi, connexion) = hyper::client::conn::http1::handshake(hyper_util::rt::TokioIo::new(flux))
             .await
             .map_err(|e| e.to_string())?;
@@ -90,7 +90,7 @@ impl Docker {
             .map_err(|e| e.to_string())?;
         let reponse = tokio::time::timeout(std::time::Duration::from_secs(20), envoi.send_request(requete))
             .await
-            .map_err(|_| "Docker ne répond pas".to_string())?
+            .map_err(|_| "docker_unreachable".to_string())?
             .map_err(|e| e.to_string())?;
         let statut = reponse.status();
         let corps = reponse.into_body().collect().await.map_err(|e| e.to_string())?.to_bytes().to_vec();
@@ -102,7 +102,7 @@ impl Docker {
 
     #[cfg(not(unix))]
     async fn appel(&self, _methode: &str, _chemin: &str) -> Result<Vec<u8>, String> {
-        Err(format!("socket Docker {} : Unix uniquement", self.socket))
+        Err(format!("Docker socket {}: Unix only", self.socket))
     }
 
     pub async fn conteneurs(&self) -> Result<Vec<Conteneur>, String> {
@@ -136,7 +136,7 @@ impl Docker {
     }
 }
 
-/// Encodage d'URL des caractères hors [A-Za-z0-9-._~].
+/// URL encoding of the characters outside [A-Za-z0-9-._~].
 fn encoder(s: &str) -> String {
     s.bytes()
         .map(|b| match b {

@@ -1,5 +1,15 @@
 # @aphrody/bun-video
 
+<!-- catalog:begin unit -->
+> Bun video protocols, native capture adapters, and official Remotion and HyperFrames integrations
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/bun-video` |
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Source package for Bun with HLS, DASH/MPD, HAR inspection, Bitmovin integration,
 an isolated Crunchyroll client, OAuth PKCE, and native OS secret storage. It
 also preserves the Remotion and HyperFrames integration API, using official

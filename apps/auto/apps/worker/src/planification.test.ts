@@ -39,7 +39,7 @@ beforeAll(async () => {
 
 afterAll(() => drop());
 
-test("dates locales et expressions cron valides", () => {
+test("local dates and valid cron expressions", () => {
   expect(jourLocal(new Date("2026-10-21T23:30:00Z"), "Europe/Paris")).toBe("2026-10-22");
   expect(moisPrecedent("2026-01-01")).toBe("2025-12");
   expect(moisPrecedent("2026-10-01")).toBe("2026-09");
@@ -49,7 +49,7 @@ test("dates locales et expressions cron valides", () => {
   for (const c of crons) c.stop();
 });
 
-test("relances : J+7 puis J+30, événement relance.a_envoyer par tenant, sans doublon", async () => {
+test("reminders: D+7 then D+30, relance.a_envoyer event per tenant, no duplicate", async () => {
   const f = await withTenant(sql, A, (tx) =>
     creerBrouillon(tx, null, facture(jour(-10))).then((d) => emettre(tx, null, d.id)),
   );
@@ -57,7 +57,7 @@ test("relances : J+7 puis J+30, événement relance.a_envoyer par tenant, sans d
 
   const t = tache("relances");
   expect(await declencher(sql, t)).not.toBeNull();
-  expect(await declencher(sql, t)).toBeNull(); // même jour : un seul job
+  expect(await declencher(sql, t)).toBeNull(); // same day: a single job
   await w.vider();
   const r1 = await evenements(A, "relance.a_envoyer");
   expect(r1.map((e) => e.data)).toEqual([
@@ -72,18 +72,18 @@ test("relances : J+7 puis J+30, événement relance.a_envoyer par tenant, sans d
   expect((r1[0]!.data.client as { email: string }).email).toBe("compta@client.fr");
   expect(await evenements(B, "relance.a_envoyer")).toEqual([]);
 
-  // Lendemain : le palier 1 déjà envoyé n'est pas renvoyé.
+  // Next day: level 1 already sent is not sent again.
   await declencher(sql, t, new Date(Date.now() + 86_400_000));
   await w.vider();
   expect((await evenements(A, "relance.a_envoyer")).length).toBe(1);
 
-  // 25 jours plus tard (J+35) : palier 2.
+  // 25 days later (D+35): level 2.
   await declencher(sql, t, new Date(Date.now() + 25 * 86_400_000));
   await w.vider();
   expect((await evenements(A, "relance.a_envoyer")).map((e) => e.data.niveau).sort()).toEqual([1, 2]);
 });
 
-test("export mensuel : récapitulatif du mois précédent, tenants sans activité ignorés", async () => {
+test("monthly export: summary of the previous month, tenants without activity ignored", async () => {
   const mois = new Date().toISOString().slice(0, 7);
   const [a, m] = mois.split("-").map(Number) as [number, number];
   const premierDuMoisSuivant = new Date(Date.UTC(a, m, 1, 12));

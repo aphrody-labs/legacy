@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { executer, valider } from "@auto/automate";
+import { executer, valider } from "@aphrody/automate";
 import { executerScript, LIMITES_SCRIPT } from "./script";
 
 const donnees = (elements: Record<string, unknown>[]) => ({

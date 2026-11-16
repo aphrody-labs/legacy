@@ -1,6 +1,8 @@
-//! Interface de la console : connexion, puis tableau de bord (état des services, modèles, accès, coulisses).
-//! Les données sont chargées côté navigateur par les fonctions serveur et rafraîchies à intervalle fixe ; les listes
-//! sont clés par état pour que le focus clavier ne saute pas à chaque rafraîchissement.
+//! Console interface: sign-in, then dashboard (state of the services, models, credentials, behind the scenes).
+//! Data is loaded in the browser through the server functions and refreshed at a fixed interval; lists
+//! are keyed by state so that keyboard focus does not jump on every refresh. Texts come from the catalogs
+//! (`locales/<tag>.json`) in the locale negotiated for the page.
+use crate::i18n::{self, t};
 use crate::types::*;
 use leptos::prelude::*;
 use leptos::task::spawn_local;
@@ -11,9 +13,10 @@ use std::time::Duration;
 
 #[cfg(feature = "ssr")]
 pub fn shell(options: LeptosOptions) -> impl IntoView {
+    let lang = i18n::page_locale();
     view! {
         <!DOCTYPE html>
-        <html lang="fr">
+        <html lang=lang>
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -28,7 +31,43 @@ pub fn shell(options: LeptosOptions) -> impl IntoView {
     }
 }
 
-// Fonctions serveur
+// Server functions
+
+/// Error text of a server function that is not shown: the client matches it to refresh the session.
+const AUTH_REQUIRED: &str = "auth_required";
+
+/// Locale negotiated from the Accept-Language header of the current request.
+#[cfg(feature = "ssr")]
+async fn request_locale() -> &'static str {
+    use axum::http::{HeaderMap, header};
+    match leptos_axum::extract::<HeaderMap>().await {
+        Ok(h) => h
+            .get(header::ACCEPT_LANGUAGE)
+            .and_then(|v| v.to_str().ok())
+            .map(i18n::negotiate_accept)
+            .unwrap_or(i18n::SOURCE),
+        Err(_) => i18n::SOURCE,
+    }
+}
+
+/// Error shown to the user, from a catalog key (`error.<key>`) translated for the current request.
+#[cfg(feature = "ssr")]
+async fn failure(key: &str, args: &[(&str, &str)]) -> ServerFnError {
+    ServerFnError::new(i18n::translate(request_locale().await, &format!("error.{key}"), args))
+}
+
+/// Result of the Docker or Ollama clients: a catalog code (`docker_unreachable`) is translated, any other
+/// diagnostic (HTTP status, socket path) is passed through as is.
+#[cfg(feature = "ssr")]
+async fn diagnostic<T>(r: Result<T, String>) -> Result<T, ServerFnError> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            let (locale, key) = (request_locale().await, format!("error.{e}"));
+            Err(ServerFnError::new(if i18n::has(locale, &key) { i18n::translate(locale, &key, &[]) } else { e }))
+        }
+    }
+}
 
 #[cfg(feature = "ssr")]
 async fn exiger_session() -> Result<(), ServerFnError> {
@@ -41,13 +80,13 @@ async fn exiger_session() -> Result<(), ServerFnError> {
         .and_then(session::lire_cookie)
         .is_some_and(|c| session::valide(&etat().config.secret, c));
     if !connecte {
-        return Err(ServerFnError::new("connexion requise"));
+        return Err(ServerFnError::new(AUTH_REQUIRED));
     }
-    // Requête venue d'une autre page : refusée, même avec le cookie (qui est déjà SameSite=Strict).
+    // Request coming from another page: refused, even with the cookie (which is already SameSite=Strict).
     if let (Some(origine), Some(hote)) = (texte(header::ORIGIN), texte(header::HOST))
         && origine.split_once("://").map(|(_, h)| h) != Some(hote.as_str())
     {
-        return Err(ServerFnError::new("origine refusée"));
+        return Err(failure("origin_refused", &[]).await);
     }
     Ok(())
 }
@@ -66,12 +105,12 @@ pub async fn connecter(utilisateur: String, mot_de_passe: String) -> Result<(), 
     let ConnectInfo(adresse): ConnectInfo<std::net::SocketAddr> = leptos_axum::extract().await?;
     let ip = adresse.ip();
     if e.tentatives.bloquee(ip) {
-        return Err(ServerFnError::new("Trop de tentatives : réessayez dans un quart d'heure."));
+        return Err(ServerFnError::new(i18n::translate(request_locale().await, "login.too_many", &[])));
     }
     let bon = session::egal(&utilisateur, &e.config.utilisateur) & session::egal(&mot_de_passe, &e.config.mot_de_passe);
     if !bon {
         e.tentatives.echec(ip);
-        return Err(ServerFnError::new("Identifiant ou mot de passe incorrect."));
+        return Err(ServerFnError::new(i18n::translate(request_locale().await, "login.bad_credentials", &[])));
     }
     e.tentatives.reussite(ip);
     let cookie = format!(
@@ -105,8 +144,9 @@ pub async fn lire_etat() -> Result<EtatBoite, ServerFnError> {
     let h: HeaderMap = leptos_axum::extract().await?;
     let hote = services::nom_hote(h.get(header::HOST).and_then(|v| v.to_str().ok()).unwrap_or("localhost"));
     let e = etat();
+    let locale = request_locale().await;
     let (conteneurs, info) = tokio::join!(e.docker.conteneurs(), e.docker.info());
-    let conteneurs = conteneurs.map_err(ServerFnError::new)?;
+    let conteneurs = diagnostic(conteneurs).await?;
     let vus = futures_util::future::join_all(services::SERVICES.iter().map(|s| {
         let c = conteneurs.iter().find(|c| c.service == s.conteneur).cloned();
         let hote = hote.clone();
@@ -125,8 +165,8 @@ pub async fn lire_etat() -> Result<EtatBoite, ServerFnError> {
             };
             ServiceVu {
                 id: s.id.into(),
-                nom: s.nom.into(),
-                role: s.role.into(),
+                nom: services::nom(locale, s),
+                role: i18n::translate(locale, s.role, &[]),
                 couleur: s.couleur.into(),
                 technique: s.technique,
                 lien: services::lien(s, e.config.domaine.as_deref(), &hote),
@@ -147,48 +187,45 @@ pub async fn lire_etat() -> Result<EtatBoite, ServerFnError> {
 #[server]
 pub async fn acces_boite() -> Result<Vec<Acces>, ServerFnError> {
     exiger_session().await?;
+    let locale = request_locale().await;
+    let tr = |key: &str| i18n::translate(locale, key, &[]);
     let c = &crate::serveur::etat().config;
-    let ligne = |service: &str, identifiant: String, mot_de_passe: String| Acces {
-        service: service.into(),
-        identifiant,
-        mot_de_passe,
-    };
+    let ligne = |service: String, identifiant: String, mot_de_passe: String| Acces { service, identifiant, mot_de_passe };
     Ok(vec![
-        ligne("Console", c.utilisateur.clone(), c.mot_de_passe.clone()),
-        ligne("n8n", c.val("BOX_EMAIL"), c.val("N8N_MOT_DE_PASSE")),
-        ligne("Hermes", "admin".into(), c.val("HERMES_MOT_DE_PASSE")),
-        ligne("Hermes, API compatible OpenAI (port 8642)", "clé".into(), c.val("HERMES_CLE_API")),
-        ligne("Obsidian", c.utilisateur.clone(), c.val("OBSIDIAN_MOT_DE_PASSE")),
-        ligne("Auto", "compte à créer à la première visite".into(), String::new()),
+        ligne(tr("access.console"), c.utilisateur.clone(), c.mot_de_passe.clone()),
+        ligne("n8n".into(), c.val("BOX_EMAIL"), c.val("N8N_MOT_DE_PASSE")),
+        ligne("Hermes".into(), "admin".into(), c.val("HERMES_MOT_DE_PASSE")),
+        ligne(tr("access.hermes_api"), tr("access.key"), c.val("HERMES_CLE_API")),
+        ligne("Obsidian".into(), c.utilisateur.clone(), c.val("OBSIDIAN_MOT_DE_PASSE")),
+        ligne("Auto".into(), tr("access.auto"), String::new()),
     ])
 }
 
 #[cfg(feature = "ssr")]
 async fn conteneur_de(id: &str) -> Result<crate::serveur::docker::Conteneur, ServerFnError> {
     use crate::serveur::{etat, services};
-    let s = services::service(id).ok_or_else(|| ServerFnError::new(format!("service inconnu : {id}")))?;
-    etat()
-        .docker
-        .conteneurs()
-        .await
-        .map_err(ServerFnError::new)?
-        .into_iter()
-        .find(|c| c.service == s.conteneur)
-        .ok_or_else(|| ServerFnError::new(format!("{} n'est pas installé dans cette boîte", s.nom)))
+    let Some(s) = services::service(id) else {
+        return Err(failure("service_unknown", &[("id", id)]).await);
+    };
+    let conteneurs = diagnostic(etat().docker.conteneurs().await).await?;
+    match conteneurs.into_iter().find(|c| c.service == s.conteneur) {
+        Some(c) => Ok(c),
+        None => Err(failure("not_installed", &[("name", &services::nom(request_locale().await, s))]).await),
+    }
 }
 
 #[server]
 pub async fn lire_journal(id: String) -> Result<String, ServerFnError> {
     exiger_session().await?;
     let c = conteneur_de(&id).await?;
-    crate::serveur::etat().docker.journal(&c.id, 400).await.map_err(ServerFnError::new)
+    diagnostic(crate::serveur::etat().docker.journal(&c.id, 400).await).await
 }
 
 #[server]
 pub async fn redemarrer(id: String) -> Result<(), ServerFnError> {
     exiger_session().await?;
     let c = conteneur_de(&id).await?;
-    crate::serveur::etat().docker.redemarrer(&c.id).await.map_err(ServerFnError::new)
+    diagnostic(crate::serveur::etat().docker.redemarrer(&c.id).await).await
 }
 
 #[server]
@@ -196,18 +233,19 @@ pub async fn lire_modeles() -> Result<Modeles, ServerFnError> {
     use crate::serveur::{etat, ollama};
     exiger_session().await?;
     let e = etat();
+    let locale = request_locale().await;
     let (installes, erreur) = match e.ollama.modeles().await {
         Ok(m) => (m, None),
-        Err(x) => (Vec::new(), Some(x)),
+        Err(x) => (Vec::new(), Some(diagnostic::<()>(Err(x)).await.err().map(|e| message(&e)).unwrap_or_default())),
     };
     let en_cours = {
         let mut t = e.telechargements.lock().unwrap();
         let v: Vec<Progression> = t.values().cloned().collect();
-        // Un téléchargement terminé est montré une fois, puis oublié.
+        // A finished download is shown once, then forgotten.
         t.retain(|_, p| !p.termine);
         v
     };
-    Ok(Modeles { installes, suggestions: ollama::suggestions(), en_cours, erreur })
+    Ok(Modeles { installes, suggestions: ollama::suggestions(locale), en_cours, erreur })
 }
 
 #[server]
@@ -216,11 +254,11 @@ pub async fn installer_modele(nom: String) -> Result<(), ServerFnError> {
     exiger_session().await?;
     let nom = nom.trim().to_string();
     if !ollama::nom_valide(&nom) {
-        return Err(ServerFnError::new("Nom de modèle invalide (exemple : qwen3:4b)."));
+        return Err(failure("invalid_model_name", &[]).await);
     }
     let e = etat();
     if e.telechargements.lock().unwrap().get(&nom).is_some_and(|p| !p.termine) {
-        return Err(ServerFnError::new(format!("{nom} est déjà en cours de téléchargement.")));
+        return Err(failure("already_downloading", &[("name", &nom)]).await);
     }
     e.ollama.telecharger(nom, e.telechargements.clone());
     Ok(())
@@ -231,9 +269,9 @@ pub async fn supprimer_modele(nom: String) -> Result<(), ServerFnError> {
     use crate::serveur::{etat, ollama};
     exiger_session().await?;
     if !ollama::nom_valide(&nom) {
-        return Err(ServerFnError::new("Nom de modèle invalide."));
+        return Err(failure("invalid_model", &[]).await);
     }
-    etat().ollama.supprimer(&nom).await.map_err(ServerFnError::new)
+    diagnostic(etat().ollama.supprimer(&nom).await).await
 }
 
 // Interface
@@ -250,16 +288,18 @@ fn resume(services: &[ServiceVu]) -> String {
         services.iter().filter(|s| matches!(s.etat, EtatService::Panne | EtatService::Arret)).collect();
     let demarrent: Vec<&ServiceVu> = services.iter().filter(|s| s.etat == EtatService::Demarrage).collect();
     match (soucis.as_slice(), demarrent.as_slice()) {
-        ([s], _) => format!("{} est {}.", s.nom, if s.etat == EtatService::Panne { "en panne" } else { "arrêté" }),
-        ([_, ..], _) => format!("{} services ont besoin de vous.", soucis.len()),
-        ([], [s]) => format!("{} démarre…", s.nom),
-        ([], [_, ..]) => format!("{} services démarrent…", demarrent.len()),
-        ([], []) if services.iter().any(|s| s.etat == EtatService::Marche) => "Tout fonctionne.".into(),
-        _ => "Aucun service lancé.".into(),
+        ([s], _) => {
+            t(if s.etat == EtatService::Panne { "summary.down" } else { "summary.stopped" }, &[("name", &s.nom)])
+        }
+        ([_, ..], _) => t("summary.need_you", &[("count", &soucis.len().to_string())]),
+        ([], [s]) => t("summary.starting_one", &[("name", &s.nom)]),
+        ([], [_, ..]) => t("summary.starting_many", &[("count", &demarrent.len().to_string())]),
+        ([], []) if services.iter().any(|s| s.etat == EtatService::Marche) => t("summary.all_ok", &[]),
+        _ => t("summary.none", &[]),
     }
 }
 
-/// Appelle `f` tout de suite puis toutes les `periode`, côté navigateur seulement ; arrêt au démontage.
+/// Calls `f` right away then every `periode`, in the browser only; stops on unmount.
 fn periodique(periode: Duration, f: impl Fn() + Clone + 'static) {
     Effect::new(move |_| {
         f();
@@ -272,12 +312,13 @@ fn periodique(periode: Duration, f: impl Fn() + Clone + 'static) {
 #[component]
 pub fn App() -> impl IntoView {
     provide_meta_context();
+    provide_context(i18n::Locale(i18n::page_locale()));
     let session = Resource::new(|| (), |_| est_connecte());
     view! {
         <Stylesheet id="leptos" href="/pkg/aphrody-box.css" />
         <Title text="Aphrody Box" />
         <Meta name="robots" content="noindex" />
-        <Suspense fallback=|| view! { <p class="attente">"Chargement…"</p> }>
+        <Suspense fallback=|| view! { <p class="attente">{t("loading", &[])}</p> }>
             {move || Suspend::new(async move {
                 if matches!(session.await, Ok(true)) {
                     view! { <Console session /> }.into_any()
@@ -302,30 +343,24 @@ fn Connexion(session: Resource<Result<bool, ServerFnError>>) -> impl IntoView {
         <main class="connexion">
             <div class="carte-connexion">
                 <p class="marque">"Aphrody Box"</p>
-                <h1>"Administration"</h1>
+                <h1>{t("login.heading", &[])}</h1>
                 <ActionForm action>
                     <label>
-                        "Identifiant"
+                        {t("login.username", &[])}
                         <input name="utilisateur" autocomplete="username" value="admin" required />
                     </label>
                     <label>
-                        "Mot de passe"
+                        {t("login.password", &[])}
                         <input name="mot_de_passe" type="password" autocomplete="current-password" required />
                     </label>
                     <p class="erreur" role="alert">
                         {erreur}
                     </p>
                     <button class="bouton principal" type="submit" disabled=move || action.pending().get()>
-                        "Se connecter"
+                        {t("login.submit", &[])}
                     </button>
                 </ActionForm>
-                <p class="aide">
-                    "Le mot de passe a été affiché à l'installation. Il se trouve aussi dans le fichier "
-                    <code>".env"</code>
-                    " de la boîte, à la ligne "
-                    <code>"BOX_ADMIN_MOT_DE_PASSE"</code>
-                    "."
-                </p>
+                <p class="aide">{t("login.help", &[])}</p>
             </div>
         </main>
     }
@@ -343,7 +378,7 @@ fn Console(session: Resource<Result<bool, ServerFnError>>) -> impl IntoView {
                     donnees.set(Some(e));
                     erreur.set(None);
                 }
-                Err(x) if message(&x) == "connexion requise" => session.refetch(),
+                Err(x) if message(&x) == AUTH_REQUIRED => session.refetch(),
                 Err(x) => erreur.set(Some(message(&x))),
             }
         })
@@ -366,21 +401,21 @@ fn Console(session: Resource<Result<bool, ServerFnError>>) -> impl IntoView {
     let services = move || donnees.with(|d| d.as_ref().map(|e| e.services.clone()).unwrap_or_default());
     let apps = move || services().into_iter().filter(|s| !s.technique).collect::<Vec<_>>();
     let coulisses = move || services().into_iter().filter(|s| s.technique).collect::<Vec<_>>();
-    let titre = move || donnees.with(|d| d.as_ref().map(|e| resume(&e.services)).unwrap_or_else(|| "Lecture de l'état…".into()));
+    let titre = move || donnees.with(|d| d.as_ref().map(|e| resume(&e.services)).unwrap_or_else(|| t("summary.reading", &[])));
     let systeme = move || donnees.with(|d| d.as_ref().map(|e| e.systeme.clone()));
 
     view! {
         <div class="console">
             <header class="barre">
                 <span class="marque">"Aphrody Box"</span>
-                <nav aria-label="Sections">
-                    <a href="#applications">"Applications"</a>
-                    <a href="#modeles">"Modèles d'IA"</a>
-                    <a href="#acces">"Accès"</a>
-                    <a href="#coulisses">"Coulisses"</a>
+                <nav aria-label=t("nav.label", &[])>
+                    <a href="#applications">{t("nav.apps", &[])}</a>
+                    <a href="#modeles">{t("nav.models", &[])}</a>
+                    <a href="#acces">{t("nav.access", &[])}</a>
+                    <a href="#coulisses">{t("nav.backstage", &[])}</a>
                 </nav>
                 <button class="bouton discret" type="button" on:click=move |_| { sortie.dispatch(Deconnecter {}); }>
-                    "Se déconnecter"
+                    {t("logout", &[])}
                 </button>
             </header>
 
@@ -390,7 +425,11 @@ fn Console(session: Resource<Result<bool, ServerFnError>>) -> impl IntoView {
                     {move || {
                         let s = services();
                         let n = s.iter().filter(|s| !s.technique).count();
-                        if s.is_empty() { String::new() } else { format!("{n} applications et {} services en coulisses.", s.len() - n) }
+                        if s.is_empty() {
+                            String::new()
+                        } else {
+                            t("summary.counts", &[("apps", &n.to_string()), ("backstage", &(s.len() - n).to_string())])
+                        }
                     }}
                 </p>
                 {move || erreur.get().map(|e| view! { <p class="erreur" role="alert">{e}</p> })}
@@ -398,7 +437,7 @@ fn Console(session: Resource<Result<bool, ServerFnError>>) -> impl IntoView {
             </section>
 
             <section id="applications" aria-labelledby="t-apps">
-                <h2 id="t-apps">"Applications"</h2>
+                <h2 id="t-apps">{t("apps.title", &[])}</h2>
                 <ul class="apps">
                     <For each=apps key=|s| (s.id.clone(), s.etat, s.lien.clone()) let:s>
                         <CarteApp s journal_de relance />
@@ -410,8 +449,8 @@ fn Console(session: Resource<Result<bool, ServerFnError>>) -> impl IntoView {
             <SectionAcces />
 
             <section id="coulisses" aria-labelledby="t-coulisses">
-                <h2 id="t-coulisses">"Coulisses"</h2>
-                <p class="doux">"Les services qui font tourner les applications. Ils n'ont pas d'écran à ouvrir."</p>
+                <h2 id="t-coulisses">{t("backstage.title", &[])}</h2>
+                <p class="doux">{t("backstage.note", &[])}</p>
                 <ul class="coulisses">
                     <For each=coulisses key=|s| (s.id.clone(), s.etat, s.statut.clone()) let:s>
                         <li data-etat=s.etat.classe()>
@@ -426,7 +465,7 @@ fn Console(session: Resource<Result<bool, ServerFnError>>) -> impl IntoView {
                                     move |_| journal_de.set(Some((id.clone(), nom.clone())))
                                 }
                             >
-                                "Journal"
+                                {t("logs", &[])}
                             </button>
                         </li>
                     </For>
@@ -457,17 +496,17 @@ fn Jauges(systeme: Signal<Option<Systeme>>) -> impl IntoView {
     view! {
         <dl class="jauges">
             <div>
-                <dt>"Processeurs"</dt>
+                <dt>{t("gauge.cpus", &[])}</dt>
                 <dd>{valeur(|s| s.cpus.map(|c| c.to_string()))}</dd>
             </div>
             <div>
-                <dt>"Mémoire"</dt>
+                <dt>{t("gauge.memory", &[])}</dt>
                 <dd>{valeur(|s| s.memoire.map(octets))}</dd>
             </div>
             <div class="disque">
-                <dt>"Disque"</dt>
+                <dt>{t("gauge.disk", &[])}</dt>
                 <dd>
-                    {valeur(|s| Some(format!("{} libres sur {}", octets(s.disque_libre?), octets(s.disque_total?))))}
+                    {valeur(|s| Some(t("gauge.disk_free", &[("free", &octets(s.disque_libre?)), ("total", &octets(s.disque_total?))])))}
                     <span class="barre-disque" aria-hidden="true">
                         <span
                             data-alerte=move || (rempli() > 0.9).to_string()
@@ -497,14 +536,14 @@ fn CarteApp(s: ServiceVu, journal_de: RwSignal<Option<(String, String)>>, relanc
             <p>{s.role.clone()}</p>
             <div class="actions">
                 {s.lien.clone().filter(|_| installe).map(|l| view! {
-                    <a class="bouton principal" href=l target="_blank" rel="noopener">"Ouvrir"<span class="sr">{format!(" {}", s.nom)}</span></a>
+                    <a class="bouton principal" href=l target="_blank" rel="noopener">{t("card.open", &[])}<span class="sr">{format!(" {}", s.nom)}</span></a>
                 })}
                 {installe.then(|| {
                     let (id_j, nom_j, id_r) = (id.clone(), nom.clone(), id.clone());
                     let (desactive, libelle) = (en_cours.clone(), en_cours.clone());
                     view! {
                         <button class="bouton discret" type="button" on:click=move |_| journal_de.set(Some((id_j.clone(), nom_j.clone())))>
-                            "Journal"
+                            {t("logs", &[])}
                         </button>
                         <button
                             class="bouton discret"
@@ -512,7 +551,7 @@ fn CarteApp(s: ServiceVu, journal_de: RwSignal<Option<(String, String)>>, relanc
                             disabled=desactive
                             on:click=move |_| { relance.dispatch(Redemarrer { id: id_r.clone() }); }
                         >
-                            {move || if libelle() { "Redémarrage…" } else { "Redémarrer" }}
+                            {move || if libelle() { t("card.restarting", &[]) } else { t("card.restart", &[]) }}
                         </button>
                     }
                 })}
@@ -528,17 +567,17 @@ fn Journal(journal_de: RwSignal<Option<(String, String)>>) -> impl IntoView {
     let pre_ref = NodeRef::<leptos::html::Pre>::new();
     Effect::new(move |_| {
         if let Some((id, _)) = journal_de.get() {
-            texte.set("Chargement…".into());
+            texte.set(t("loading", &[]));
             spawn_local(async move {
                 texte.set(match lire_journal(id).await {
-                    Ok(t) if t.is_empty() => "(journal vide)".into(),
-                    Ok(t) => t,
+                    Ok(texte) if texte.is_empty() => t("logs.empty", &[]),
+                    Ok(texte) => texte,
                     Err(e) => message(&e),
                 })
             });
         }
     });
-    // Focus sur « Fermer » à l'ouverture, dernières lignes visibles à chaque chargement.
+    // Focus on "Close" when opening, last lines visible on every load.
     Effect::new(move |_| {
         if let Some(b) = fermer_ref.get() {
             let _ = b.focus();
@@ -547,12 +586,12 @@ fn Journal(journal_de: RwSignal<Option<(String, String)>>) -> impl IntoView {
     Effect::new(move |_| {
         texte.track();
         if let Some(pre) = pre_ref.get() {
-            // Après la mise en page du nouveau texte.
+            // After the layout of the new text.
             request_animation_frame(move || pre.set_scroll_top(pre.scroll_height()));
         }
     });
     let fermer = move || journal_de.set(None);
-    // Échap ferme, où que soit le focus.
+    // Escape closes, wherever the focus is.
     Effect::new(move |_| {
         let h = window_event_listener(leptos::ev::keydown, move |e| {
             if e.key() == "Escape" && journal_de.with_untracked(Option::is_some) {
@@ -573,10 +612,10 @@ fn Journal(journal_de: RwSignal<Option<(String, String)>>) -> impl IntoView {
                 >
                     <header>
                         <h2 id="t-journal">
-                            {move || journal_de.get().map(|(_, n)| format!("Journal de {n}")).unwrap_or_default()}
+                            {move || journal_de.get().map(|(_, n)| t("logs.title", &[("name", &n)])).unwrap_or_default()}
                         </h2>
                         <button class="bouton discret" type="button" node_ref=fermer_ref on:click=move |_| fermer()>
-                            "Fermer"
+                            {t("close", &[])}
                         </button>
                     </header>
                     <pre tabindex="0" node_ref=pre_ref>{move || texte.get()}</pre>
@@ -629,31 +668,27 @@ fn SectionModeles() -> impl IntoView {
     };
     view! {
         <section id="modeles" aria-labelledby="t-modeles">
-            <h2 id="t-modeles">"Modèles d'IA"</h2>
-            <p class="doux">
-                "Servis par Ollama sur cette machine, pour Hermes, n8n et les nœuds IA d'Auto (adresse interne "
-                <code>"http://ollama:11434/v1"</code>
-                ")."
-            </p>
+            <h2 id="t-modeles">{t("models.title", &[])}</h2>
+            <p class="doux">{t("models.note", &[("url", "http://ollama:11434/v1")])}</p>
             {move || liste.with(|l| l.as_ref().and_then(|m| m.erreur.clone())).map(|e| view! { <p class="erreur" role="alert">{e}</p> })}
             <table class="table">
                 <thead>
                     <tr>
-                        <th scope="col">"Modèle"</th>
-                        <th scope="col" class="nombre">"Taille"</th>
-                        <th scope="col">"Détails"</th>
-                        <th scope="col"><span class="sr">"Actions"</span></th>
+                        <th scope="col">{t("models.model", &[])}</th>
+                        <th scope="col" class="nombre">{t("models.size", &[])}</th>
+                        <th scope="col">{t("models.details", &[])}</th>
+                        <th scope="col"><span class="sr">{t("models.actions", &[])}</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <Show when=move || !installes().is_empty() fallback=|| view! {
-                        <tr><td colspan="4" class="doux">"Aucun modèle pour l'instant : installez-en un ci-dessous."</td></tr>
+                        <tr><td colspan="4" class="doux">{t("models.none", &[])}</td></tr>
                     }>
                         <For each=installes key=|m| (m.nom.clone(), m.charge) let:m>
                             <tr>
                                 <th scope="row">
                                     {m.nom.clone()}
-                                    {m.charge.then(|| view! { <span class="charge">"en mémoire"</span> })}
+                                    {m.charge.then(|| view! { <span class="charge">{t("models.in_memory", &[])}</span> })}
                                 </th>
                                 <td class="nombre">{octets(m.taille)}</td>
                                 <td class="doux">{m.details.clone()}</td>
@@ -666,7 +701,7 @@ fn SectionModeles() -> impl IntoView {
                                             move |_| { supprimer.dispatch(SupprimerModele { nom: nom.clone() }); }
                                         }
                                     >
-                                        "Supprimer"<span class="sr">{format!(" {}", m.nom)}</span>
+                                        {t("models.delete", &[])}<span class="sr">{format!(" {}", m.nom)}</span>
                                     </button>
                                 </td>
                             </tr>
@@ -677,10 +712,10 @@ fn SectionModeles() -> impl IntoView {
 
             <div class="installer">
                 <ActionForm action=installer>
-                    <label for="nom-modele">"Installer un modèle"</label>
+                    <label for="nom-modele">{t("models.install_label", &[])}</label>
                     <div class="ligne">
                         <input id="nom-modele" name="nom" placeholder="qwen3:4b" autocomplete="off" required />
-                        <button class="bouton principal" type="submit">"Installer"</button>
+                        <button class="bouton principal" type="submit">{t("models.install", &[])}</button>
                     </div>
                 </ActionForm>
                 <div class="suggestions">
@@ -704,9 +739,11 @@ fn SectionModeles() -> impl IntoView {
                         <li>
                             <span>
                                 {match (&p.erreur, p.total) {
-                                    (Some(e), _) => format!("{} : échec, {e}", p.nom),
-                                    (None, t) if t > 0 && !p.termine => format!("{} : {} sur {}", p.nom, octets(p.fait), octets(t)),
-                                    _ => format!("{} : {}", p.nom, p.statut),
+                                    (Some(e), _) => t("models.failed", &[("name", &p.nom), ("error", e)]),
+                                    (None, total) if total > 0 && !p.termine => {
+                                        t("models.progress", &[("name", &p.nom), ("done", &octets(p.fait)), ("total", &octets(total))])
+                                    }
+                                    _ => t("models.status", &[("name", &p.nom), ("status", &p.statut)]),
                                 }}
                             </span>
                             <progress max="1" value=format!("{:.3}", if p.termine { 1.0 } else if p.total > 0 { p.fait as f64 / p.total as f64 } else { 0.0 })></progress>
@@ -730,14 +767,14 @@ fn SectionAcces() -> impl IntoView {
     });
     view! {
         <section id="acces" aria-labelledby="t-acces">
-            <h2 id="t-acces">"Accès"</h2>
-            <p class="doux">"Identifiants préparés à l'installation. Vous pouvez les changer depuis chaque application."</p>
+            <h2 id="t-acces">{t("access.title", &[])}</h2>
+            <p class="doux">{t("access.note", &[])}</p>
             <table class="table">
                 <thead>
                     <tr>
-                        <th scope="col">"Application"</th>
-                        <th scope="col">"Identifiant"</th>
-                        <th scope="col">"Mot de passe"</th>
+                        <th scope="col">{t("access.application", &[])}</th>
+                        <th scope="col">{t("access.username", &[])}</th>
+                        <th scope="col">{t("access.password", &[])}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -765,7 +802,7 @@ fn LigneAcces(a: Acces) -> impl IntoView {
                     view! {
                         <code class="secret">{move || if visible.get() { mdp.clone() } else { "••••••••••".into() }}</code>
                         <button class="bouton discret" type="button" aria-pressed=move || visible.get().to_string() on:click=move |_| visible.update(|v| *v = !*v)>
-                            {move || if visible.get() { "Masquer" } else { "Afficher" }}
+                            {move || if visible.get() { t("access.hide", &[]) } else { t("access.show", &[]) }}
                         </button>
                     }
                     .into_any()

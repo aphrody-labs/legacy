@@ -9,7 +9,7 @@ let sql: Sql;
 let drop: () => Promise<void>;
 let A: string;
 
-/** Récepteur local : réponses programmées (statuts successifs), puis 204. */
+/** Local receiver: scripted answers (successive statuses), then 204. */
 function recepteur(port = 0) {
   const recus: { corps: string; signature: string | null; id: string | null }[] = [];
   const reponses: number[] = [];
@@ -42,10 +42,10 @@ beforeAll(async () => {
 
 afterAll(() => drop());
 
-// Chaque test part d'une file vide : les jobs des tests précédents sont clos.
+// Each test starts from an empty queue: the jobs of previous tests are closed.
 const purger = () => avecWorker(sql, (tx) => tx`UPDATE job SET statut = 'fait' WHERE statut <> 'fait'`);
 
-test("livraison signée, marquée livrée, une seule fois", async () => {
+test("signed delivery, marked delivered, only once", async () => {
   await purger();
   const r = recepteur();
   const w = creerWorker(sql, expediteur(sql, { url: r.url, secret: SECRET }));
@@ -58,7 +58,7 @@ test("livraison signée, marquée livrée, une seule fois", async () => {
   r.server.stop(true);
 });
 
-test("récepteur en erreur : nouvel essai, même événement et même signature", async () => {
+test("failing receiver: new attempt, same event and same signature", async () => {
   await purger();
   const r = recepteur();
   r.reponses.push(500, 502);
@@ -71,7 +71,7 @@ test("récepteur en erreur : nouvel essai, même événement et même signature"
   r.server.stop(true);
 });
 
-test("récepteur arrêté : rien n'est perdu, livraison à son retour", async () => {
+test("stopped receiver: nothing is lost, delivery when it returns", async () => {
   await purger();
   const ancien = recepteur();
   const port = ancien.server.port!;
@@ -93,7 +93,7 @@ test("récepteur arrêté : rien n'est perdu, livraison à son retour", async ()
   r.server.stop(true);
 });
 
-test("essais épuisés : événement en échec, conservé", async () => {
+test("attempts exhausted: event failed, kept", async () => {
   await purger();
   const r = recepteur();
   r.reponses.push(500, 500, 500);
@@ -105,7 +105,7 @@ test("essais épuisés : événement en échec, conservé", async () => {
   r.server.stop(true);
 });
 
-test("boucle en arrière-plan : livre les événements publiés après le démarrage", async () => {
+test("background loop: delivers events published after startup", async () => {
   await purger();
   const r = recepteur();
   const w = creerWorker(sql, expediteur(sql, { url: r.url, secret: SECRET }), { intervalleMs: 20 });

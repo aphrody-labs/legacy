@@ -15,10 +15,10 @@ afterAll(async () => {
   await api.stop(true);
 });
 
-test("console servie en HTML, proxy /v1 et /health vers l'API", async () => {
+test("console served as HTML, /v1 and /health proxied to the API", async () => {
   const page = await fetch(new URL("/", admin.url));
   expect(page.headers.get("content-type")).toContain("text/html");
-  expect(await page.text()).toContain("Console opérateur");
+  expect(await page.text()).toContain("Operator console");
   expect(await (await fetch(new URL("/v1/abonnement/plans", admin.url))).json()).toEqual({
     chemin: "/v1/abonnement/plans",
   });
@@ -26,7 +26,7 @@ test("console servie en HTML, proxy /v1 et /health vers l'API", async () => {
   expect((await fetch(new URL("/app", admin.url))).status).toBe(404);
 });
 
-test("points d'entrée manquants documentés dans docs/UI.md", async () => {
+test("missing entry points documented in docs/UI.md", async () => {
   const doc = await Bun.file(new URL("../../../docs/UI.md", import.meta.url)).text();
   for (const m of MANQUANTS) expect(doc).toContain(m.route);
 });

@@ -1,6 +1,6 @@
-//! Rendu PDF A4 d'un devis, d'une facture, d'un acompte ou d'un avoir : en-têtes émetteur et
-//! client, tableau paginé, totaux par taux de TVA, mentions légales, pied de page numéroté.
-//! Polices Inter (OFL) embarquées : la sortie peut être convertie en PDF/A-3b pour Factur-X.
+//! A4 PDF rendering of a quote, invoice, down payment or credit note: issuer and customer headers, paginated
+//! table, totals per VAT rate, legal mentions, numbered footer. Inter fonts (OFL) embedded: the output can be
+//! converted to PDF/A-3b for Factur-X. The printed labels are French: they are legal mentions.
 
 use auto_modele::{Facture, INDEMNITE, MENTION_FRANCHISE, TypeDocument, date_fr, eur, pourcent};
 use pdfcraft_cos::{Dict, Document, ObjRef, Object, PdfString, SaveOptions, Stream, write_full};
@@ -47,7 +47,7 @@ impl Police {
         self.m.codes(&bytes).into_iter().map(|(c, _)| self.m.width(c)).sum::<f64>() * taille
     }
 
-    /// Découpe en lignes de largeur ≤ `max` (mots longs coupés).
+    /// Splits into lines of width ≤ `max` (long words cut).
     fn couper(&self, texte: &str, taille: f64, max: f64) -> Vec<String> {
         let mut lignes = Vec::new();
         for para in texte.split('\n') {
@@ -87,7 +87,7 @@ struct Rendu {
     sb: Police,
     pages: Vec<Page>,
     y: f64,
-    /// Couleur d'accent du gabarit (composantes 0..1).
+    /// Accent color of the template (components 0..1).
     accent: Option<(f64, f64, f64)>,
 }
 
@@ -103,7 +103,7 @@ enum Align {
 
 impl Rendu {
     fn page(&mut self) -> &mut String {
-        &mut self.pages.last_mut().expect("au moins une page").ops
+        &mut self.pages.last_mut().expect("at least one page").ops
     }
 
     fn texte(&mut self, St(gras, taille, gris): St, x: f64, y: f64, align: Align, s: &str) {
@@ -116,7 +116,7 @@ impl Rendu {
         let _ = writeln!(self.page(), "BT {gris:.2} g /{res} {taille} Tf 1 0 0 1 {x:.2} {y:.2} Tm <{hex}> Tj ET");
     }
 
-    /// Fond teinté : 12 % de l'accent sur blanc, sinon gris clair.
+    /// Tinted background: 12% of the accent on white, else light gray.
     fn fond(&mut self, x: f64, y: f64, w: f64, h: f64) {
         match self.accent {
             Some((r, g, b)) => {
@@ -141,7 +141,7 @@ impl Rendu {
         self.y = H - MARGE;
     }
 
-    /// Bloc de lignes (gauche) ; renvoie le y sous le bloc.
+    /// Block of lines (left); returns the y below the block.
     fn bloc(&mut self, x: f64, mut y: f64, max: f64, lignes: &[(bool, f64, String)]) -> f64 {
         for (gras, taille, t) in lignes {
             let p = if *gras { &self.sb } else { &self.reg };
@@ -154,7 +154,7 @@ impl Rendu {
     }
 }
 
-// Colonnes du tableau : désignation | qté | PU HT | TVA | total HT (bords droits).
+// Table columns: description | qty | unit price excl. VAT | VAT | total excl. VAT (right edges).
 const C_DESIGNATION: f64 = MARGE + 6.0;
 const C_QTE: f64 = 352.0;
 const C_PU: f64 = 432.0;
@@ -173,7 +173,7 @@ fn embarquer(doc: &mut Document, fonts: &mut Dict, bytes: &[u8], famille: &str) 
     Ok(Police { res, m })
 }
 
-/// PDF A4 du document. `numero` vide : brouillon.
+/// A4 PDF of the document. Empty `numero`: draft.
 pub fn rendre(f: &Facture) -> Result<Vec<u8>, Erreur> {
     let mut doc = pdfcraft_create::blank(L, H, 1).map_err(|e| Erreur::Rendu(e.to_string()))?;
     let mut fonts = Dict::new();
@@ -182,7 +182,7 @@ pub fn rendre(f: &Facture) -> Result<Vec<u8>, Erreur> {
     let gabarit = f.gabarit.clone().unwrap_or_default();
     let mut r = Rendu { reg, sb, pages: vec![Page { ops: String::new() }], y: H - MARGE, accent: gabarit.rvb() };
     let mut xobjets = Dict::new();
-    // Logo en haut à gauche : 48 pt de haut au plus, 160 pt de large au plus.
+    // Logo at the top left: 48 pt high at most, 160 pt wide at most.
     let mut haut_logo = 0.0;
     if let Some(l) = &gabarit.logo {
         let jpeg = auto_modele::base64(&l.jpeg).ok_or_else(|| Erreur::Rendu("logo : base64 invalide".into()))?;
@@ -207,7 +207,7 @@ pub fn rendre(f: &Facture) -> Result<Vec<u8>, Erreur> {
     let t = f.totaux();
     let est_facture = f.type_ != TypeDocument::Devis;
 
-    // En-tête : émetteur à gauche, titre et dates à droite.
+    // Header: issuer on the left, title and dates on the right.
     let e = &f.emetteur;
     let mut lignes = vec![(true, 13.0, e.nom.clone()), (false, 9.0, e.adresse.clone())];
     if !e.siret.is_empty() {
@@ -226,7 +226,7 @@ pub fn rendre(f: &Facture) -> Result<Vec<u8>, Erreur> {
     let mut y = H - MARGE - 10.0;
     r.texte(St(true, 18.0, 0.0), x_droite, y, Align::Gauche, f.type_.libelle());
     if let Some((cr, cg, cb)) = r.accent {
-        // Filet d'accent sous le titre.
+        // Accent rule under the title.
         let _ = writeln!(
             r.page(),
             "{cr:.3} {cg:.3} {cb:.3} RG 1.5 w {x_droite:.2} {:.2} m {:.2} {:.2} l S",
@@ -311,7 +311,7 @@ pub fn rendre(f: &Facture) -> Result<Vec<u8>, Erreur> {
         let taux = if f.franchise_tva { "—".to_string() } else { pourcent(l.tva) };
         r.texte(St(false, 9.5, 0.0), C_TVA, y0, Align::Droite, &taux);
         r.texte(St(false, 9.5, 0.0), C_TOTAL, y0, Align::Droite, &eur(l.ht_cents()));
-        // Filet sous la dernière ligne de texte (descendantes comprises).
+        // Rule under the last text line (descenders included).
         r.trait_h(MARGE, L - MARGE, y0 - (lignes.len() as f64 - 1.0) * 12.5 - 5.5);
         r.y -= hauteur;
     }

@@ -1,3 +1,4 @@
+import { ErreurApi } from "../i18n";
 import {
   affectationAchat,
   affectationDocument,
@@ -15,7 +16,6 @@ import {
   listerPieces,
   rechercherGestion,
   withTenant,
-  ErreurMetier,
 } from "@auto/store";
 import type { BunRequest } from "bun";
 import type { Module, Chemins } from "../modules";
@@ -168,9 +168,9 @@ export const routes: Module = ({ sql, auth }) => ({
     ),
     POST: auth("ecrire", async (req, a) => {
       const b = await req.json();
-      if (!accesSegment(a, segmentPiece(b?.type))) throw new ErreurMetier("accès refusé à ce type de pièce", [], 403);
+      if (!accesSegment(a, segmentPiece(b?.type))) throw new ErreurApi("document_kind_forbidden", [], 403);
       if (b?.recueId && !accesSegment(a, "fournisseurs"))
-        throw new ErreurMetier("accès fournisseurs requis pour rapprocher une facture", [], 403);
+        throw new ErreurApi("suppliers_access_match", [], 403);
       return Response.json(await withTenant(sql, a.tenantId, (tx) => enregistrerPiece(tx, a.userId, b)), {
         status: 201,
       });
@@ -179,14 +179,14 @@ export const routes: Module = ({ sql, auth }) => ({
   "/v1/pieces-chantier/:id": {
     PUT: auth("ecrire", async (req: BunRequest<"/v1/pieces-chantier/:id">, a) => {
       const b = await req.json();
-      if (!accesSegment(a, segmentPiece(b?.type))) throw new ErreurMetier("accès refusé à ce type de pièce", [], 403);
+      if (!accesSegment(a, segmentPiece(b?.type))) throw new ErreurApi("document_kind_forbidden", [], 403);
       return Response.json(
         await withTenant(sql, a.tenantId, async (tx) => {
           const avant = (await listerPieces(tx)).find((p) => p.id === req.params.id);
           if (!avant || !accesSegment(a, segmentPiece(avant.type)))
-            throw new ErreurMetier("pièce introuvable", [], 404);
+            throw new ErreurApi("attachment_not_found", [], 404);
           if ((b?.recueId ?? null) !== avant.recueId && !accesSegment(a, "fournisseurs"))
-            throw new ErreurMetier("accès fournisseurs requis pour modifier un rapprochement", [], 403);
+            throw new ErreurApi("suppliers_access_edit_match", [], 403);
           return enregistrerPiece(tx, a.userId, b, req.params.id);
         }),
       );
@@ -232,7 +232,7 @@ const piece = objet(
 const operation = (resume: string, droit: "lire" | "ecrire", corps?: Record<string, unknown>, creation = false) =>
   op({
     resume,
-    tag: "Chantiers et fournisseurs",
+    tag: "Worksites and suppliers",
     droit,
     corps,
     succes: { [creation ? 201 : 200]: objet({}) },
@@ -241,16 +241,16 @@ const operation = (resume: string, droit: "lire" | "ecrire", corps?: Record<stri
 export const openapi: Chemins = {
   "/v1/exports/gestion.xlsx": {
     get: op({
-      resume: "Classeur de gestion complet : fournisseurs, clients, analytique, livraisons, commandes",
-      tag: "Chantiers et fournisseurs",
+      resume: "Complete management workbook: suppliers, clients, analytics, deliveries, orders",
+      tag: "Worksites and suppliers",
       droit: "lire",
       succes: { 200: brut("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") },
     }),
   },
   "/v1/exports/gestion.pdf": {
     get: op({
-      resume: "Rapport PDF des cinq espaces, données et archives comprises",
-      tag: "Chantiers et fournisseurs",
+      resume: "PDF report of the five spaces, data and archives included",
+      tag: "Worksites and suppliers",
       droit: "lire",
       succes: { 200: brut("application/pdf") },
       erreurs: [413],
@@ -258,67 +258,67 @@ export const openapi: Chemins = {
   },
   "/v1/recherche-gestion": {
     get: op({
-      resume: "Recherche dans les pièces enregistrées, archives comprises (100 résultats maximum, total retourné)",
-      tag: "Chantiers et fournisseurs",
+      resume: "Search the recorded documents, archives included (100 results at most, total returned)",
+      tag: "Worksites and suppliers",
       droit: "lire",
-      requete: [{ nom: "q", schema: str, description: "2 à 200 caractères" }],
+      requete: [{ nom: "q", schema: str, description: "2 to 200 characters" }],
       succes: { 200: objet({}) },
       erreurs: [422],
     }),
   },
   "/v1/fournisseurs/{id}/dossier": avecId({
-    get: operation("Dossier fournisseur : factures classées et pièces rapprochées", "lire"),
+    get: operation("Supplier file: filed invoices and matched documents", "lire"),
   }),
   "/v1/fournisseurs": {
     get: op({
-      resume: "Répertoire fournisseurs",
-      tag: "Chantiers et fournisseurs",
+      resume: "Supplier directory",
+      tag: "Worksites and suppliers",
       droit: "lire",
       succes: { 200: liste(fournisseur) },
     }),
-    post: operation("Créer un fournisseur", "ecrire", fournisseur, true),
+    post: operation("Create a supplier", "ecrire", fournisseur, true),
   },
   "/v1/fournisseurs/{id}": avecId({
-    get: operation("Lire un fournisseur", "lire"),
-    put: operation("Modifier ou archiver un fournisseur", "ecrire", fournisseur),
+    get: operation("Read a supplier", "lire"),
+    put: operation("Edit or archive a supplier", "ecrire", fournisseur),
   }),
   "/v1/chantiers": {
     get: op({
-      resume: "Liste des chantiers",
-      tag: "Chantiers et fournisseurs",
+      resume: "List of worksites",
+      tag: "Worksites and suppliers",
       droit: "lire",
       succes: { 200: liste(chantier) },
     }),
-    post: operation("Créer un chantier", "ecrire", chantier, true),
+    post: operation("Create a worksite", "ecrire", chantier, true),
   },
   "/v1/chantiers/{id}": avecId({
-    get: operation("Dossier et analytique : ventes émises, achats validés en EUR, commandes non facturées", "lire"),
-    put: operation("Modifier ou archiver un chantier", "ecrire", chantier),
+    get: operation("File and analytics: issued sales, validated purchases in EUR, uninvoiced orders", "lire"),
+    put: operation("Edit or archive a worksite", "ecrire", chantier),
   }),
   "/v1/documents/{id}/chantier": avecId({
-    get: operation("Affectation analytique d'un document", "lire"),
+    get: operation("Analytical assignment of a document", "lire"),
     put: operation(
-      "Affecter un document au chantier de son client (null pour retirer)",
+      "Assign a document to its client's worksite (null to remove)",
       "ecrire",
       objet({ chantierId: { type: ["string", "null"], format: "uuid" } }, ["chantierId"]),
     ),
   }),
   "/v1/factures-recues/{id}/affectation": avecId({
-    get: operation("Affectation d'un achat reçu", "lire"),
+    get: operation("Assignment of a received purchase", "lire"),
     put: operation(
-      "Classer un achat par fournisseur et chantier",
+      "File a purchase by supplier and worksite",
       "ecrire",
       objet({ fournisseurId: uuid, chantierId: { type: ["string", "null"], format: "uuid" } }, ["fournisseurId"]),
     ),
   }),
   "/v1/pieces-chantier": {
     get: op({
-      resume: "Bons de livraison et confirmations de commande, archives comprises",
-      tag: "Chantiers et fournisseurs",
+      resume: "Delivery notes and order confirmations, archives included",
+      tag: "Worksites and suppliers",
       droit: "lire",
       succes: { 200: liste(piece) },
     }),
-    post: operation("Créer une pièce de chantier", "ecrire", piece, true),
+    post: operation("Create a worksite document", "ecrire", piece, true),
   },
-  "/v1/pieces-chantier/{id}": avecId({ put: operation("Modifier, rapprocher ou archiver une pièce", "ecrire", piece) }),
+  "/v1/pieces-chantier/{id}": avecId({ put: operation("Edit, match or archive a document", "ecrire", piece) }),
 };

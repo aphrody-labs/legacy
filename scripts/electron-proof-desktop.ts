@@ -48,23 +48,33 @@ try {
   }
   report.window_seen_ms = Math.round(performance.now() - t0);
   report.apps = apps?.apps;
-  await Bun.sleep(2000);
-  const snap = await timed(() =>
-    hub("agent-desktop__desktop_snapshot", {
-      app: APP,
-      compact: true,
-      max_depth: 10,
-      timeout_ms: 60000,
-    }),
+  await Bun.sleep(2500);
+  // One snapshot + screenshot per window: an app with several windows is an AMBIGUOUS_TARGET without window_id.
+  const wins = dataOf(
+    await hub("agent-desktop__desktop_list_windows", { app: APP }),
   );
-  report.snapshot_ms = snap.ms;
-  report.snapshot = dataOf(snap.v);
-  const png = join(outDir, `${label}.png`).replaceAll("\\", "/");
-  const shot = await timed(() =>
-    hub("agent-desktop__desktop_screenshot", { app: APP, output_path: png }),
-  );
-  report.screenshot_ms = shot.ms;
-  report.screenshot = png;
+  const list: any[] = Array.isArray(wins) ? wins : (wins?.windows ?? []);
+  report.windows = list.map((w) => ({ id: w.id, title: w.title }));
+  const shots: string[] = [];
+  const trees: unknown[] = [];
+  for (const [i, w] of (list.length ? list : [{ id: undefined }]).entries()) {
+    const target = w.id ? { window_id: w.id } : {};
+    const snap = await timed(() =>
+      hub("agent-desktop__desktop_snapshot", {
+        app: APP,
+        ...target,
+        compact: true,
+        max_depth: 10,
+        timeout_ms: 60000,
+      }),
+    );
+    trees.push({ window: w.id, title: w.title, ms: snap.ms, snapshot: dataOf(snap.v) });
+    const png = join(outDir, `${label}-${i}.png`).replaceAll("\\", "/");
+    await hub("agent-desktop__desktop_screenshot", { app: APP, ...target, output_path: png });
+    shots.push(png);
+  }
+  report.snapshots = trees;
+  report.screenshots = shots;
 } catch (e: any) {
   report.error = String(e?.message ?? e).slice(0, 600);
 } finally {
@@ -80,7 +90,7 @@ console.log(
     label,
     error: report.error ?? null,
     window_seen_ms: report.window_seen_ms,
-    snapshot_ms: report.snapshot_ms,
-    screenshot: report.screenshot ?? null,
+    windows: report.windows ?? null,
+    screenshots: report.screenshots ?? null,
   }),
 );

@@ -1,0 +1,39 @@
+[
+  {
+    "repo": "anomalyco/rune"
+  },
+  {
+    "repo": "longbridge/nsh"
+  },
+  {
+    "repo": "microsoft/webui"
+  },
+  {
+    "repo": "vercel-labs/ui"
+  },
+  {
+    "repo": "vercel-labs/native"
+  },
+  {
+    "repo": "vercel-labs/wterm"
+  },
+  {
+    "repo": "zed-industries/zed",
+    "crate": "crates/gpui"
+  },
+  {
+    "repo": "aphrody-labs/opentui"
+  },
+  {
+    "repo": "aphrody-labs/iced"
+  },
+  {
+    "repo": "aphrody-labs/egui"
+  },
+  {
+    "repo": "aphrody-labs/ui"
+  },
+  {
+    "repo": "aphrody-labs/base-ui"
+  }
+]

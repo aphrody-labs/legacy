@@ -1,0 +1,2 @@
+- [Fleet agent tooling facts](fleet-agent-tooling-facts.md) — ay version skew, CTX7 key via credstore, yq/ollama/codex traps (2026-11-15)
+- [Fleet offload facts](fleet-offload-facts.md) — fr1 IO = rotational /home + cargo flock; sccache needs pinned target dir; fleet-run/slices deployed 2026-11-15

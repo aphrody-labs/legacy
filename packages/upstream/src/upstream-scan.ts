@@ -101,10 +101,10 @@ async function prs() {
   ]);
   const row = (p: any) =>
     `| [#${p.number}](${p.url}) | ${md(p.title)} | ${p.author?.login ?? ""} | ${(p.mergedAt ?? p.createdAt).slice(0, 10)} | ${p.labels.map((l: any) => l.name).join(", ")} |`;
-  const head = "| PR | Titre | Auteur | Date | Labels |\n|---|---|---|---|---|";
+  const head = "| PR | Title | Author | Date | Labels |\n|---|---|---|---|---|";
   await write(
     "PRS.md",
-    `# Pull requests ${T.gh}\n\nInstantané du ${new Date().toISOString().slice(0, 10)}.\n\n## Fusionnées sur ${T.base} depuis ${since} (${merged.length})\n\n${head}\n${merged.map(row).join("\n")}\n\n## Ouvertes (${open.length})\n\n${head}\n${open.map(row).join("\n")}`,
+    `# Pull requests ${T.gh}\n\nSnapshot of ${new Date().toISOString().slice(0, 10)}.\n\n## Merged into ${T.base} since ${since} (${merged.length})\n\n${head}\n${merged.map(row).join("\n")}\n\n## Open (${open.length})\n\n${head}\n${open.map(row).join("\n")}`,
   );
   await Bun.write(
     join(OUT, "data/prs.json"),
@@ -127,7 +127,7 @@ async function commits() {
     });
   await write(
     "COMMITS.md",
-    `# Commits ${T.base} depuis ${since} (${rows.length})\n\n| SHA | Date | Auteur | Sujet |\n|---|---|---|---|\n${rows.join("\n")}`,
+    `# Commits ${T.base} since ${since} (${rows.length})\n\n| SHA | Date | Author | Subject |\n|---|---|---|---|\n${rows.join("\n")}`,
   );
 }
 
@@ -139,7 +139,7 @@ async function releases() {
         `## ${r.tag_name} (${r.published_at?.slice(0, 10)})${r.prerelease ? " canary" : ""}\n\n${(r.body ?? "").trim()}`,
     )
     .join("\n\n");
-  await write("RELEASES.md", `# Releases ${T.gh} (60 dernières)\n\n${body}`);
+  await write("RELEASES.md", `# Releases ${T.gh} (latest 60)\n\n${body}`);
 }
 
 async function blog() {
@@ -174,7 +174,7 @@ function workspace() {
   );
   const pkgRows = pkgs.map((d) => {
     const p = require(join(REPO, "packages", d, "package.json"));
-    return `| \`${p.name}\` | ${p.version ?? ""} | ${p.private ? "privé" : "publié"} | ${md(p.description ?? "")} |`;
+    return `| \`${p.name}\` | ${p.version ?? ""} | ${p.private ? "private" : "published"} | ${md(p.description ?? "")} |`;
   });
   const plugins = pkgs.filter((d) =>
     /plugin|bun-|eslint|codemod|mdx|font|swc|env|third-parties|bundle-analyzer|polyfill/.test(
@@ -195,7 +195,7 @@ function workspace() {
   }
   return write(
     "WORKSPACE.md",
-    `# Espace de travail ${T.gh} ${T.base}\n\n## Paquets npm (${pkgRows.length})\n\n| Paquet | Version | Statut | Description |\n|---|---|---|---|\n${pkgRows.join("\n")}\n\n## Plugins et outils (${plugins.length})\n\n${plugins.map((p) => `- \`packages/${p}\``).join("\n")}\n\n## Crates Rust (${crates.length})\n\n| Crate | Dossier | Description |\n|---|---|---|\n${crates.join("\n")}`,
+    `# Workspace ${T.gh} ${T.base}\n\n## npm packages (${pkgRows.length})\n\n| Package | Version | Status | Description |\n|---|---|---|---|\n${pkgRows.join("\n")}\n\n## Plugins and tools (${plugins.length})\n\n${plugins.map((p) => `- \`packages/${p}\``).join("\n")}\n\n## Rust crates (${crates.length})\n\n| Crate | Directory | Description |\n|---|---|---|\n${crates.join("\n")}`,
   );
 }
 

@@ -1,0 +1,57 @@
+---
+title: Multi-Surface Token Compiler
+description: Compiles verified design tokens simultaneously across Web CSS, Figma W3C, Desktop Rust, Mobile, and TUI.
+---
+
+## Universal Token Architecture
+
+The `gds` compiler takes a seed hex and generates synchronized tokens for all 7 surfaces:
+
+<Tabs>
+  <Tab title="Web CSS">
+    ```css
+    :root {
+      --md-sys-color-primary: #445e91;
+      --md-sys-color-on-primary: #ffffff;
+      --md-sys-color-surface: #f9f9ff;
+      --md-sys-color-on-surface: #1a1b20;
+    }
+    ```
+  </Tab>
+  <Tab title="Figma W3C JSON">
+    ```json
+    {
+      "color": {
+        "primary": {
+          "$value": "#445e91",
+          "$type": "color"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Desktop Rust (Taffy)">
+    ```rust
+    pub const LIGHT_THEME: GoogleDesignTheme = GoogleDesignTheme {
+        primary: M3Color::from_hex(0x445e91),
+        surface: M3Color::from_hex(0xf9f9ff),
+    };
+    ```
+  </Tab>
+  <Tab title="Android Jetpack Compose">
+    ```kotlin
+    val LightColorScheme = lightColorScheme(
+        primary = Color(0xFF445E91),
+        surface = Color(0xFFF9F9FF)
+    )
+    ```
+  </Tab>
+  <Tab title="TUI TrueColor">
+    ```toml
+    [colors]
+    background = "#111318"
+    foreground = "#e2e2e9"
+    cursor = "#adc6ff"
+    ```
+  </Tab>
+</Tabs>

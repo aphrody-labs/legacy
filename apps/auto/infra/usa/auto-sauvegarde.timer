@@ -1,5 +1,5 @@
 [Unit]
-Description=Sauvegarde nocturne d'auto, 03:15 UTC
+Description=Nightly auto backup, 03:15 UTC
 
 [Timer]
 OnCalendar=*-*-* 03:15:00 UTC

@@ -5,7 +5,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
-description = "ay: one multicall CLI for the Aphrody monorepo (arch gate, lock, git, ingest, graph, deploy, bench, build)"
+description = "ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build)"
 repository = "https://github.com/aphrody-labs/aphrody"
 
 # Released with dist (dist-workspace.toml); the only dist package in the workspace.
@@ -26,6 +26,8 @@ doctest = false
 # Magika (ONNX Runtime) as the detector of `ay index --sniff` for files that extension and magic bytes cannot place.
 default = ["magika"]
 magika = ["aphrody-re/magika"]
+# The grammar registry of aphrody-core (third_party/tree-sitter-* clones); adds about 160 MB to `ay` with the 127 clones of fr1.
+grammars = ["aphrody-core/grammars"]
 
 [dependencies]
 aphrody-conformance = { version = "0.4.0", path = "../../test/conformance" }
@@ -58,9 +60,6 @@ up = { version = "0.4.0", package = "aphrody-up", path = "../up" }
 rt = { version = "0.4.0", package = "aphrody-rt", path = "../rt" }
 # `ay sh`: the embedded Bash 5.3 engine (src/rubash), linked through its Session API.
 rubash = { version = "1.5.0", path = "../rubash" }
-# `ay applet`: applets ported from WinuxCmd C++ to portable Rust, in process on every host.
-winux-core = { version = "0.1.0", path = "../winux/core" }
-winux-extra = { version = "0.1.0", path = "../winux/extra" }
 # `ay docs` (Bun docs index) and `ay flat` / `ay hash` / `ay time` (bun fork crates, flattened).
 aphrody-docs = { version = "0.4.0", path = "../docs" }
 aphrody-omarchy = { version = "0.4.0", path = "../posix/omarchy" }
@@ -78,8 +77,6 @@ axoupdater = { workspace = true, features = ["blocking"] }
 # The benchmark suite measures Win32 APIs; `ay bench` reports unsupported elsewhere.
 [target.'cfg(windows)'.dependencies]
 stack-bench.workspace = true
-# `ay applet`: the WinuxCmd Rust applets (src/winux), Win32 implementations, linked on Windows only.
-winux-cmds = { version = "0.1.0", path = "../winux/cmds" }
 
 # Version resource of ay.exe (build.rs).
 [build-dependencies]

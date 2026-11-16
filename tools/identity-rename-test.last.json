@@ -1,0 +1,72 @@
+{
+ "identity": {
+  "folder": "zeta-checkout",
+  "name": "zeta",
+  "repo": "zeta",
+  "binary": "zt",
+  "crate": "zeta",
+  "scope": "@zeta",
+  "prefix": "zeta-",
+  "orgMain": "zeta-dev",
+  "orgLab": "zeta-labs",
+  "domain": "zeta.example"
+ },
+ "ok": false,
+ "steps": [
+  {
+   "name": "export: working tree",
+   "ok": true,
+   "detail": "22103 files"
+  },
+  {
+   "name": "upstream namespaces: count before",
+   "ok": true,
+   "detail": "{\"win32\":2190,\"ffmpeg\":582,\"linux\":208919,\"chromium\":5079,\"upstream_env\":4350}"
+  },
+  {
+   "name": "apply: other identity",
+   "ok": true,
+   "detail": "identity: packages/i18n/package.json repository.url: git+https://github.com/aphrody-labs/aphrody.git -> git+https://github.com/zeta-labs/zeta.git\nidentity: packages/machine/package.json repository.url: git+https://github.com/aphrody-labs/aphrody.git -> git+https://github.com/zeta-labs/zeta.git\nidentity: packages/release/package.json repository.url: git+https://github.com/aphrody-labs/aphrody.git -> git+https://github.com/zeta-labs/zeta.git\nidentity: packages/upstream/package.json repository.url: git+https://github.com/aphrody-labs/aphrody.git -> git+https://github.com/zeta-labs/zeta.git\nidentity: packages/wck/package.json repository.url: git+https://github.com/aphrody-labs/aphrody.git -> git+https://github.com/zeta-labs/zeta.git\nidentity: apps/nt/modules/web/package.json and apps/web/web/package.json would both be @zeta/web"
+  },
+  {
+   "name": "identity check",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "checkdeps",
+   "ok": true,
+   "detail": "SAME as before the rename (pre-existing failure)"
+  },
+  {
+   "name": "bun tests (targeted)",
+   "ok": true,
+   "detail": "SAME as before the rename (pre-existing failure)"
+  },
+  {
+   "name": "residual: no literal of the old identity",
+   "ok": false,
+   "detail": "residual checkout-path: 704"
+  },
+  {
+   "name": "upstream namespaces: count after",
+   "ok": true,
+   "detail": "{\"win32\":2190,\"ffmpeg\":582,\"linux\":208919,\"chromium\":5079,\"upstream_env\":4350}"
+  },
+  {
+   "name": "upstream namespaces unchanged",
+   "ok": true,
+   "detail": "{\"win32\":2190,\"ffmpeg\":582,\"linux\":208919,\"chromium\":5079,\"upstream_env\":4350} vs {\"win32\":2190,\"ffmpeg\":582,\"linux\":208919,\"chromium\":5079,\"upstream_env\":4350}"
+  },
+  {
+   "name": "cargo: send to fr2",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "cargo check -p zeta -p zeta-core (fr2)",
+   "ok": false,
+   "detail": "    Updating crates.io index\n    Updating git repository `https://github.com/storytold/craft-libs`\nerror: no matching package named `zeta-lore-base` found\nlocation searched: /tmp/identity-rename-1794738830813/src/lore/base\nrequired by package `aphrody-lore v0.13.1-nightly (/tmp/identity-rename-1794738830813/src/lore)`\nhelp: package `aphrody-lore-base` exists at `/tmp/identity-rename-1794738830813/src/lore/base`"
+  }
+ ]
+}

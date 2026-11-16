@@ -107,11 +107,6 @@ forge cmd="status":
 serve-forge port="4000":
     frg serve --port {{port}}
 
-# Run Pure-Rust Sovereign Stack
-[group('ay')]
-rust-stack cmd="serve":
-    rust-stack {{cmd}}
-
 # Supply-chain gates (docs/DEPS-MINIMIZE.md): cargo-deny (licenses, advisories, bans, sources pinned by rev) and the bun workspace check
 [group('ay')]
 deny *flags:

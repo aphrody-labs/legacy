@@ -2,6 +2,25 @@
 
 # @aphrody/m3-os-themes
 
+<!-- catalog:begin unit -->
+> Material 3 OS theme generators and installers (Windows 11, GNOME Shell, COSMIC, Chromium browsers) derived from @aphrody/m3-tokens dynamic colour roles.
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/m3-os-themes` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/m3-os-themes generate
+bun run --cwd packages/m3-os-themes test
+bun run --cwd packages/m3-os-themes typecheck
+bun run --cwd packages/m3-os-themes lint
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Generates and installs Material 3 OS themes (Windows 11, GNOME Shell, COSMIC, Chromium browsers) from a seed colour, with the colour roles of `@aphrody/m3-tokens/dynamic-color`.
 
 ```sh

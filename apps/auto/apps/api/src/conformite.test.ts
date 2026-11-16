@@ -65,11 +65,11 @@ const facture = {
   echeance: "2026-11-21",
 };
 
-test("invitation et 2FA par l'API", async () => {
+test("invitation and 2FA through the API", async () => {
   const a = await api("/v1/auth/inscription", undefined, { body: inscription("owner@alpha.fr", "Alpha") });
   const inv = await api("/v1/invitations", a.body.session, { body: { email: "compta@alpha.fr", role: "comptable" } });
   expect(inv.status).toBe(201);
-  // Lien Better Auth : l'identifiant de l'invitation, envoyé seulement par mail au destinataire.
+  // Better Auth link: the invitation id, sent only by mail to the recipient.
   expect(boite.at(-1)!.texte).toContain(`/app/invitation?id=${inv.body.id}`);
   expect(evenements.at(-1)).toMatchObject({ type: "invitation.creee", data: { id: inv.body.id } });
   expect((await api("/v1/invitations", a.body.session)).body).toHaveLength(1);
@@ -80,10 +80,10 @@ test("invitation et 2FA par l'API", async () => {
   expect(acc.status).toBe(201);
   expect(acc.headers.get("set-cookie")).toContain("auto.session_token=");
   expect((await api("/v1/moi", acc.body.session)).body.role).toBe("comptable");
-  // Un comptable ne gère pas les invitations.
+  // An accountant does not manage invitations.
   expect((await api("/v1/invitations", acc.body.session)).status).toBe(403);
 
-  // 2FA : enrôlement, confirmation, connexion en deux étapes.
+  // 2FA: enrollment, confirmation, two-step sign-in.
   expect((await api("/v1/2fa/enrolement", acc.body.session, { body: { motDePasse: "faux" } })).status).toBe(401);
   const e = await api("/v1/2fa/enrolement", acc.body.session, { body: { motDePasse: MDP } });
   expect(e.body.codesSecours).toHaveLength(10);
@@ -92,7 +92,7 @@ test("invitation et 2FA par l'API", async () => {
   expect(conf.body).toEqual({ actif: true });
   const c = await api("/v1/auth/connexion", undefined, { body: { email: "compta@alpha.fr", motDePasse: MDP } });
   expect(c.body).toEqual({ deuxFacteurs: true, defi: expect.any(String) });
-  // Seul le cookie signé du défi est posé, jamais de session.
+  // Only the signed challenge cookie is set, never a session.
   expect(c.headers.get("set-cookie")).not.toMatch(/session_token=[^;]/);
   expect((await api("/v1/moi", c.body.defi)).status).toBe(401);
   const s = await api("/v1/auth/2fa", undefined, { body: { defi: c.body.defi, code: await totp(brut) } });
@@ -104,7 +104,7 @@ test("invitation et 2FA par l'API", async () => {
   expect(d.status).toBe(204);
 });
 
-test("observabilité : journaux JSON et /metrics sans données personnelles", async () => {
+test("observability: JSON logs and /metrics without personal data", async () => {
   const j = journaux.find((x) => x.route === "/v1/moi" && x.statut === 200)!;
   expect(j).toMatchObject({ niveau: "info", methode: "GET", tenant: expect.any(String) });
   expect(j.dureeMs).toBeGreaterThanOrEqual(0);
@@ -119,7 +119,7 @@ test("observabilité : journaux JSON et /metrics sans données personnelles", as
   expect(m).not.toContain("@");
 });
 
-test("export complet, suppression avec délai de grâce, conservation légale puis purge", async () => {
+test("full export, deletion with grace period, legal retention then purge", async () => {
   const a = await api("/v1/auth/inscription", undefined, { body: inscription("owner@gamma.fr", "Gamma") });
   const t = a.body.session;
   const d = await api("/v1/documents", t, { body: facture });
@@ -138,7 +138,7 @@ test("export complet, suppression avec délai de grâce, conservation légale pu
     },
   });
 
-  // Export : archive tar.gz, une table par JSON, exemplaire figé en fichier, sans secret.
+  // Export: tar.gz archive, one table per JSON, frozen copy as a file, no secret.
   const res = await fetch(new URL("/v1/conformite/export", server.url), { headers: { authorization: `Bearer ${t}` } });
   expect(res.headers.get("content-type")).toBe("application/gzip");
   const fichiers = await new Bun.Archive(await res.bytes()).files();
@@ -157,7 +157,7 @@ test("export complet, suppression avec délai de grâce, conservation légale pu
   expect(tout).not.toContain("password_hash");
   expect(tout).not.toContain("token_hash");
 
-  // Suppression : owner, nom exact, mot de passe ; annulable.
+  // Deletion: owner, exact name, password; cancelable.
   expect(
     (await api("/v1/conformite/suppression", t, { body: { confirmation: "gamma", motDePasse: MDP } })).status,
   ).toBe(422);
@@ -170,7 +170,7 @@ test("export complet, suppression avec délai de grâce, conservation légale pu
   expect((await api("/v1/conformite/suppression", t, { method: "DELETE" })).body.effectiveAt).toBeNull();
   await api("/v1/conformite/suppression", t, { body: { confirmation: "Gamma", motDePasse: MDP } });
 
-  // Délai non écoulé : rien ; écoulé : exécution.
+  // Grace period not elapsed: nothing; elapsed: execution.
   expect(await executerSuppressionsEchues(sql)).not.toContain(a.body.tenantId);
   await sql`UPDATE tenant SET suppression_effective_at = now() - interval '1 second' WHERE id = ${a.body.tenantId}`;
   expect(await executerSuppressionsEchues(sql)).toEqual([a.body.tenantId]);
@@ -190,7 +190,7 @@ test("export complet, suppression avec délai de grâce, conservation légale pu
   const [tn] = await sql`SELECT conservation_jusqua::text c FROM tenant WHERE id = ${a.body.tenantId}`;
   expect(tn.c).toBe("2036-12-31");
 
-  // Immuabilité maintenue pendant la conservation, purge après son échéance.
+  // Immutability kept during retention, purge after its deadline.
   expect(await purgerConservationsEchues(sql)).toEqual([]);
   await expect(
     sql.begin(async (tx) => {
@@ -204,7 +204,7 @@ test("export complet, suppression avec délai de grâce, conservation légale pu
   expect(await sql`SELECT 1 FROM audit WHERE tenant_id = ${a.body.tenantId}`).toHaveLength(0);
 });
 
-// MinIO de compose.yaml (service minio) ; sans lui, test sauté explicitement.
+// MinIO of compose.yaml (minio service); without it, the test is explicitly skipped.
 const S3 = {
   endpoint: Bun.env.S3_ENDPOINT ?? "http://localhost:9010",
   bucket: Bun.env.S3_BUCKET ?? "auto-archives",
@@ -214,9 +214,9 @@ const S3 = {
 const minio = await fetch(`${S3.endpoint}/minio/health/live`, { signal: AbortSignal.timeout(1000) })
   .then((r) => r.ok)
   .catch(() => false);
-if (!minio) console.warn(`archivage S3 : MinIO absent (${S3.endpoint}), test sauté`);
+if (!minio) console.warn(`S3 archiving: MinIO absent (${S3.endpoint}), test skipped`);
 
-test.skipIf(!minio)("archivage des exemplaires figés sur S3 (MinIO, verrou d'objet)", async () => {
+test.skipIf(!minio)("archiving of frozen copies on S3 (MinIO, object lock)", async () => {
   const s3 = new Bun.S3Client({ ...S3, region: "eu-west-3" });
   const a = await api("/v1/auth/inscription", undefined, { body: inscription("owner@delta.fr", "Delta") });
   const d = await api("/v1/documents", a.body.session, { body: facture });

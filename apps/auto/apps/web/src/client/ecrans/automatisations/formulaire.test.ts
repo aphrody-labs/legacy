@@ -1,4 +1,4 @@
-import { catalogueJson } from "@auto/automate";
+import { catalogueJson } from "@aphrody/automate";
 import type { SchemaJson, TypeNoeudApi } from "@auto/client";
 import { expect, test } from "bun:test";
 import {

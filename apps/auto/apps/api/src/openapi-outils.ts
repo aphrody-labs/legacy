@@ -1,4 +1,4 @@
-// Briques de description OpenAPI partagées par openapi.ts et les modules de lot.
+// OpenAPI description building blocks shared by openapi.ts and the batch modules.
 import type { Action } from "@auto/tenancy";
 
 export type Schema = Record<string, unknown>;
@@ -16,18 +16,18 @@ export const objet = (properties: Record<string, Schema>, required: string[] = [
   ...(required.length ? { required } : {}),
 });
 export const enumere = (...valeurs: (string | number)[]): Schema => ({ enum: valeurs });
-export const tva: Schema = { ...enumere(0, 21, 55, 100, 200), description: "Taux en dixièmes de pourcent" };
-/** Réponse non JSON (PDF, XML). */
+export const tva: Schema = { ...enumere(0, 21, 55, 100, 200), description: "Rate in tenths of a percent" };
+/** Non-JSON response (PDF, XML). */
 export const brut = (mime: string) => ({ mime });
 
 export interface Op {
   resume: string;
   tag: string;
-  /** Droit exigé ; absent : route publique. */
+  /** Required right; absent: public route. */
   droit?: Action;
   corps?: Schema;
   requete?: { nom: string; schema: Schema; description: string }[];
-  /** Réponse de succès : statut → schéma (null : sans corps) ou contenu brut. */
+  /** Success response: status → schema (null: no body) or raw content. */
   succes: Record<number, Schema | null | { mime: string }>;
   erreurs?: number[];
 }
@@ -35,7 +35,7 @@ export interface Op {
 export function op(o: Op) {
   const responses: Record<string, unknown> = {};
   for (const [code, s] of Object.entries(o.succes)) {
-    if (s === null) responses[code] = { description: "Sans contenu" };
+    if (s === null) responses[code] = { description: "No content" };
     else if (typeof s.mime === "string")
       responses[code] = { description: "OK", content: { [s.mime]: { schema: { type: "string", format: "binary" } } } };
     else responses[code] = { description: "OK", ...json(s as Schema) };

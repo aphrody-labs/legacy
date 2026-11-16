@@ -1,7 +1,7 @@
 // Reproducible src lifecycle workflows, no human involved: they pin neither engine nor model (selection by
 // select.ts), only the steps, their hosts and their guardrails. Compilation and containers on the host with the role
 // build role of fleet.toml (fr1; nice -n 19, -j 4); prd keeps production only; the workstation only formats, type-checks, runs bun tests and judges.
-//   software : code -> fmt -> check/arch/clippy -> tests -> tribunal (ai-os review) -> correction -> build/docker
+//   software : code -> fmt -> check/clippy -> tests -> tribunal (ai-os review) -> correction -> build/docker
 //              -> deployment (dry-run unless --apply) -> monitoring -> optimization (generated steps)
 //   design   : PRD + DESIGN.md (gds plan) -> gds verify -> wck 100/100 -> juge
 //   market   : drafts written and queued; publishing is a withheld external effect (policy.ts)

@@ -38,7 +38,7 @@ Legacy demangler hardening, `RustTypes`, `RustPanicAnalyzer` (fork commits 783fb
 
 | backend | use | choice |
 |---|---|---|
-| (a) `aphrody-re` / `ghidra-decompiler` 2.1.0 (Rust; only with `--features decompile`, not enabled in the default build nor in `src/ffi`; the default `src/ghidra-bun` build has no decompiler, `src/ghidra-bun` NAPI addon, same engine as the relay tool `core_ghidra_decompile` and `aphrody_ghidra_decompile_json`) | fast path: sections, imports, CFG, P-Code, pseudo-C in milliseconds, no JVM; native `onBeforeParse` plugin | kept for triage and bundling |
+| (a) `aphrody-re` / `ghidra-decompiler` 2.1.0 (Rust; only with `--features decompile`, not enabled in the default build nor in `src/core/capi`; the default `src/ghidra-bun` build has no decompiler, `src/ghidra-bun` NAPI addon, same engine as the relay tool `core_ghidra_decompile` and `aphrody_ghidra_decompile_json`) | fast path: sections, imports, CFG, P-Code, pseudo-C in milliseconds, no JVM; native `onBeforeParse` plugin | kept for triage and bundling |
 | (b) headless Ghidra JVM, full API | everything pyghidra exposes (program DB, analysis, decompiler, listing, xrefs, data types, scripts, projects) | `bridge/Bridge.java`, reflection JSON-RPC over the JVM's stdio |
 
 Bridge transport decision (measured/verified in this tree):

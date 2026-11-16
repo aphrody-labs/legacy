@@ -5,67 +5,67 @@
   "sources": [
     {
       "url": "https://vercel.com/docs/speed-insights/metrics",
-      "license": "Propriétaire Vercel (https://vercel.com/legal/terms) : seuils repris comme faits, texte réécrit"
+      "license": "Vercel owner (https://vercel.com/legal/terms): thresholds taken as facts, text rewritten"
     },
     {
       "url": "https://vercel.com/docs/speed-insights/package",
-      "license": "Propriétaire Vercel : noms d'options repris, texte réécrit"
+      "license": "Vercel owner: option names taken, text rewritten"
     },
     {
       "url": "https://vercel.com/docs/image-optimization",
-      "license": "Propriétaire Vercel : texte réécrit"
+      "license": "Vercel owner: text rewritten"
     },
     {
       "url": "https://vercel.com/docs/image-optimization/managing-image-optimization-costs",
-      "license": "Propriétaire Vercel : valeurs reprises, texte réécrit"
+      "license": "Vercel owner: values taken, text rewritten"
     },
     {
       "url": "https://vercel.com/docs/caching/cache-control-headers",
-      "license": "Propriétaire Vercel : directives et valeurs reprises, texte réécrit"
+      "license": "Vercel owner: directives and values taken, text rewritten"
     },
     {
       "url": "https://vercel.com/docs/caching/cdn-cache",
-      "license": "Propriétaire Vercel : texte réécrit"
+      "license": "Vercel owner: text rewritten"
     },
     {
       "url": "https://vercel.com/docs/incremental-static-regeneration",
-      "license": "Propriétaire Vercel : valeurs reprises, texte réécrit"
+      "license": "Vercel owner: values taken, text rewritten"
     },
     {
       "url": "https://vercel.com/docs/functions/streaming-functions",
-      "license": "Propriétaire Vercel : texte réécrit"
+      "license": "Vercel owner: text rewritten"
     },
     {
       "url": "https://vercel.com/font",
-      "license": "Propriétaire Vercel (page) ; police Geist OFL-1.1"
+      "license": "Vercel owner (page); Geist font OFL-1.1"
     }
   ],
   "rules": [
     {
       "id": "vercel.cwv.lcp",
       "level": "MUST",
-      "rule": "Largest Contentful Paint au 75e centile : 2,5 s ou moins.",
+      "rule": "Largest Contentful Paint at 75th percentile: 2.5 s or less.",
       "value": "<=2.5s @p75",
       "source": "https://vercel.com/docs/speed-insights/metrics"
     },
     {
       "id": "vercel.cwv.inp",
       "level": "MUST",
-      "rule": "Interaction to Next Paint : 200 ms ou moins.",
+      "rule": "Interaction to Next Paint: 200 ms or less.",
       "value": "<=200ms @p75",
       "source": "https://vercel.com/docs/speed-insights/metrics"
     },
     {
       "id": "vercel.cwv.cls",
       "level": "MUST",
-      "rule": "Cumulative Layout Shift : 0,1 ou moins.",
+      "rule": "Cumulative Layout Shift: 0.1 or less.",
       "value": "<=0.1 @p75",
       "source": "https://vercel.com/docs/speed-insights/metrics"
     },
     {
       "id": "vercel.cwv.fcp",
       "level": "SHOULD",
-      "rule": "First Contentful Paint : 1,8 s ou moins.",
+      "rule": "First Contentful Paint: 1.8 s or less.",
       "value": "<=1.8s @p75",
       "source": "https://vercel.com/docs/speed-insights/metrics"
     },
@@ -79,14 +79,14 @@
     {
       "id": "vercel.cwv.percentile",
       "level": "MUST",
-      "rule": "Juger sur données de terrain (RUM) au P75 par défaut ; consulter P90/P95/P99 pour la traîne.",
+      "rule": "Judge on field data (RUM) at P75 by default; consult P90/P95/P99 for the tail.",
       "value": "p75",
       "source": "https://vercel.com/docs/speed-insights/metrics"
     },
     {
       "id": "vercel.cwv.score-bands",
       "level": "SHOULD",
-      "rule": "Scores 0-100 en trois bandes : 90-100 bon, 50-89 à améliorer, 0-49 mauvais ; viser le passage de bande plutôt que le 100, dont le coût marginal explose.",
+      "rule": "Scores 0-100 in three bands: 90-100 good, 50-89 needs improvement, 0-49 poor; target band passage over 100, whose marginal cost explodes.",
       "value": {
         "good": "90-100",
         "needs-improvement": "50-89",
@@ -97,119 +97,119 @@
     {
       "id": "vercel.cwv.lab-vs-field",
       "level": "SHOULD",
-      "rule": "Compléter la mesure réelle par un score de laboratoire avant mise en production pour éviter les régressions ; en labo, TBT remplace INP.",
+      "rule": "Complement real measurement with a lab score before production to avoid regressions; in lab, TBT replaces INP.",
       "source": "https://vercel.com/docs/speed-insights/metrics"
     },
     {
       "id": "vercel.rum.route",
       "level": "SHOULD",
-      "rule": "Agréger la mesure par route dynamique (modèle /blog/[slug]) plutôt que par URL concrète.",
+      "rule": "Aggregate measurement by dynamic route (pattern /blog/[slug]) rather than concrete URL.",
       "source": "https://vercel.com/docs/speed-insights/package"
     },
     {
       "id": "vercel.rum.redact",
       "level": "MUST",
-      "rule": "Filtrer ou expurger les données sensibles des événements de mesure avant envoi (hook beforeSend) ; réduire l'échantillon (sampleRate) pour maîtriser le coût.",
+      "rule": "Filter or expunge sensitive data from measurement events before sending (beforeSend hook); reduce sample (sampleRate) to control cost.",
       "source": "https://vercel.com/docs/speed-insights/package"
     },
     {
       "id": "vercel.img.modern-formats",
       "level": "SHOULD",
-      "rule": "Servir des images redimensionnées par appareil dans des formats modernes (AVIF, WebP), mises en cache après transformation ; un seul format cible suffit souvent.",
+      "rule": "Serve device-resized images in modern formats (AVIF, WebP), cached after transformation; single target format often suffices.",
       "value": ["image/avif", "image/webp"],
       "source": "https://vercel.com/docs/image-optimization"
     },
     {
       "id": "vercel.img.skip-small",
       "level": "SHOULD-NOT",
-      "rule": "Ne pas faire transiter par l'optimiseur les sources qui n'y gagnent rien : images de moins de 10 Ko, vectorielles (SVG), animées (GIF).",
+      "rule": "Do not route through the optimizer sources that gain nothing from it: images under 10 KB, vectorial (SVG), animated (GIF).",
       "value": "<10KB, svg, gif",
       "source": "https://vercel.com/docs/image-optimization/managing-image-optimization-costs"
     },
     {
       "id": "vercel.img.allowlists",
       "level": "MUST",
-      "rule": "Restreindre l'optimiseur par listes blanches (motifs d'hôtes et de chemins distants et locaux, qualités, largeurs) pour limiter les variantes et les abus ; inclure un identifiant de compte dans le chemin quand l'hôte n'est pas à soi.",
+      "rule": "Restrict the optimizer with whitelists (remote and local host and path patterns, qualities, widths) to limit variants and abuse; include account identifier in path when host is not yours.",
       "source": "https://vercel.com/docs/image-optimization"
     },
     {
       "id": "vercel.img.ttl",
       "level": "SHOULD",
-      "rule": "Si les images changent moins d'une fois par mois, durée de cache d'au moins 31 jours.",
+      "rule": "If images change less than once per month, cache duration at least 31 days.",
       "value": "max-age=2678400",
       "source": "https://vercel.com/docs/image-optimization/managing-image-optimization-costs"
     },
     {
       "id": "vercel.img.quality-range",
       "level": "MAY",
-      "rule": "Le paramètre de qualité va de 1 à 100 ; baisser la qualité réduit poids et coût.",
+      "rule": "Quality parameter ranges 1 to 100; lowering quality reduces weight and cost.",
       "value": "1-100",
       "source": "https://vercel.com/docs/image-optimization"
     },
     {
       "id": "vercel.font.subset-scope",
       "level": "SHOULD",
-      "rule": "Ne charger que les familles et variantes réellement utilisées (points d'entrée séparés par variante) et déclarer font-display swap ; conserver les axes variables nécessaires lors du chargement.",
+      "rule": "Load only actually used families and variants (entry points separated by variant) and declare font-display swap; preserve necessary variable axes when loading.",
       "value": "display: swap",
       "source": "https://vercel.com/font"
     },
     {
       "id": "vercel.cache.default",
       "level": "MUST",
-      "rule": "Sans en-tête explicite, une réponse dynamique n'est cachée ni par le CDN ni par le navigateur (public, max-age=0, must-revalidate) : tout contenu partageable doit déclarer sa politique.",
+      "rule": "Without explicit header, dynamic response not cached by CDN or browser (public, max-age=0, must-revalidate): all shareable content must declare its policy.",
       "value": "public, max-age=0, must-revalidate",
       "source": "https://vercel.com/docs/caching/cache-control-headers"
     },
     {
       "id": "vercel.cache.ssr-start",
       "level": "SHOULD",
-      "rule": "Page rendue côté serveur identique pour tous : point de départ max-age=0 et s-maxage d'un jour (cache CDN invalidé au déploiement, navigateur toujours frais) ; ajouter un max-age court (60-120 s) pour soulager les visites répétées.",
+      "rule": "Server-rendered page identical for all: starting point max-age=0 and s-maxage of one day (CDN cache invalidated on deployment, browser always fresh); add short max-age (60-120 s) to ease repeated visits.",
       "value": "max-age=0, s-maxage=86400",
       "source": "https://vercel.com/docs/caching/cache-control-headers"
     },
     {
       "id": "vercel.cache.swr",
       "level": "SHOULD",
-      "rule": "Associer s-maxage à stale-while-revalidate pour servir le cache périmé pendant la régénération en arrière-plan, et stale-if-error pour servir le périmé en cas d'erreur d'origine.",
+      "rule": "Pair s-maxage with stale-while-revalidate to serve stale cache during background regeneration, and stale-if-error to serve stale on origin error.",
       "value": "s-maxage=1, stale-while-revalidate=59 ; s-maxage=604800, stale-if-error=86400",
       "source": "https://vercel.com/docs/caching/cache-control-headers"
     },
     {
       "id": "vercel.cache.bounds",
       "level": "MUST",
-      "rule": "Durée de cache CDN entre 1 s et 1 an.",
+      "rule": "CDN cache duration between 1 s and 1 year.",
       "value": "1..31536000s",
       "source": "https://vercel.com/docs/caching/cache-control-headers"
     },
     {
       "id": "vercel.cache.no-store",
       "level": "MUST",
-      "rule": "no-store pour toute réponse sensible ou temps réel ; private pour un contenu propre à l'utilisateur.",
+      "rule": "no-store for any sensitive or real-time response; private for user-specific content.",
       "value": "no-store",
       "source": "https://vercel.com/docs/caching/cache-control-headers"
     },
     {
       "id": "vercel.cache.cdn-header",
       "level": "SHOULD",
-      "rule": "Séparer la politique navigateur (Cache-Control) de la politique CDN (CDN-Cache-Control, ou un en-tête propre au fournisseur) quand elles diffèrent.",
+      "rule": "Separate browser policy (Cache-Control) from CDN policy (CDN-Cache-Control, or provider-specific header) when they differ.",
       "source": "https://vercel.com/docs/caching/cache-control-headers"
     },
     {
       "id": "vercel.cache.vary",
       "level": "SHOULD-NOT",
-      "rule": "Éviter Vary sur des en-têtes à forte cardinalité (Cookie notamment, non caché) ; pour du contenu par utilisateur, utiliser un cache applicatif.",
+      "rule": "Avoid Vary on high-cardinality headers (Cookie notably, not cached); for per-user content, use application cache.",
       "source": "https://vercel.com/docs/caching/cdn-cache"
     },
     {
       "id": "vercel.cache.immutable-assets",
       "level": "MUST",
-      "rule": "Les ressources statiques à nom haché sont servies immuables avec la durée maximale ; elles survivent aux déploiements.",
+      "rule": "Static resources with hashed names served immutable with maximum duration; survive deployments.",
       "source": "https://vercel.com/docs/caching/cdn-cache"
     },
     {
       "id": "vercel.render.isr",
       "level": "SHOULD",
-      "rule": "Pour le contenu rarement modifié, préférer la régénération statique incrémentale (modèle stale-while-revalidate) : réponse en cache immédiate, régénération par intervalle ou à la demande, contenu précédent conservé en cas d'échec avec nouvel essai à 30 s.",
+      "rule": "For rarely modified content, prefer incremental static regeneration (stale-while-revalidate pattern): immediate cached response, regeneration by interval or on demand, previous content retained on failure with retry at 30 s.",
       "value": {
         "retryOnFailure": "30s",
         "globalPurge": "300ms",
@@ -220,13 +220,13 @@
     {
       "id": "vercel.render.collapse",
       "level": "SHOULD",
-      "rule": "Regrouper les requêtes simultanées sur une même entrée non cachée pour n'invoquer l'origine qu'une fois.",
+      "rule": "Coalesce simultaneous requests on the same uncached entry to invoke origin only once.",
       "source": "https://vercel.com/docs/caching"
     },
     {
       "id": "vercel.render.streaming",
       "level": "SHOULD",
-      "rule": "Diffuser les réponses longues (dont les sorties de LLM) en flux plutôt que d'attendre la réponse complète.",
+      "rule": "Stream long responses (including LLM outputs) rather than wait for complete response.",
       "source": "https://vercel.com/docs/functions/streaming-functions"
     }
   ]

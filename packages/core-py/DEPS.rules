@@ -1,0 +1,4 @@
+# checkdeps layer rules (see docs/ARCHITECTURE.md). Inherited by subdirectories.
+layer = 3
+use src/core/capi
+use src/ffi

@@ -1,6 +1,6 @@
 // Éléments partagés des écrans d'automatisation : catégories et rôles de couleur M3, icônes du catalogue
 // (police Material Symbols, noms fournis par l'API), libellés des déclencheurs et des statuts.
-import type { Categorie, Definition } from "@auto/automate";
+import type { Categorie, Definition } from "@aphrody/automate";
 import { api, type ResumeAutomatisation, type StatutExecution, type TypeNoeudApi } from "@auto/client";
 import { pluriel } from "@auto/ui/format";
 

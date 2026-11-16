@@ -1,9 +1,10 @@
-// Comptes : Better Auth monté sous /api/auth (et /.well-known pour OAuth), façades /v1 historiques
-// (inscription avec SIRET, connexion, 2FA, clés d'API, membres, invitations) et serveur MCP distant
-// (POST /mcp, OAuth 2.1, jetons liés à l'entreprise). Voir docs/AUTH.md.
+// Accounts: Better Auth mounted under /api/auth (and /.well-known for OAuth), legacy /v1 facades
+// (sign-up with SIRET, sign-in, 2FA, API keys, members, invitations) and remote MCP server
+// (POST /mcp, OAuth 2.1, tokens bound to the company). See docs/AUTH.md.
+import { corpsErreur, ErreurApi, refus, traducteur } from "../i18n";
 import { ApiAuto, ServeurMcp } from "@auto/agent";
 import { requireMcpAuth } from "@better-auth/mcp";
-import { ErreurMetier, withTenant } from "@auto/store";
+import { withTenant } from "@auto/store";
 import {
   accepterInvitation,
   ajouterMembre,
@@ -36,14 +37,14 @@ import type { BunRequest } from "bun";
 import type { Chemins, Module } from "../modules";
 import { avecId, enumere, liste, objet, op, ref, str, uuid } from "../openapi-outils";
 
-/** Branche l'envoi réel des mails (invitations, liens magiques…) ; par défaut, ils sont journalisés. */
+/** Wires the real mail delivery (invitations, magic links...); by default they are logged. */
 export function brancherEnvoyeur(e: EnvoyeurMail) {
   brancher(e);
 }
 
 const corps = async <T>(req: Request) => ((await req.json()) ?? {}) as Partial<T>;
 
-/** Réponse JSON avec les cookies de Better Auth (session, défi 2FA) ; le champ `cookies` n'est pas renvoyé. */
+/** JSON response with the Better Auth cookies (session, 2FA challenge); the `cookies` field is not returned. */
 function avecCookies(r: { cookies?: string[] } & object, status = 200) {
   const { cookies = [], ...corpsReponse } = r;
   const h = new Headers({ "content-type": "application/json" });
@@ -53,9 +54,9 @@ function avecCookies(r: { cookies?: string[] } & object, status = 200) {
 
 export const routes: Module = ({ sql, publier, pub, auth, ba }) => {
   /**
-   * MCP distant : jeton d'accès OAuth vérifié par `requireMcpAuth` (signature, émetteur, audience = /mcp,
-   * expiration), entreprise = revendication `auto_tenant`. Les outils de packages/agent appellent l'API
-   * en boucle locale avec ce même jeton : droits et RLS identiques au REST.
+   * Remote MCP: OAuth access token verified by `requireMcpAuth` (signature, issuer, audience = /mcp,
+   * expiry), company = `auto_tenant` claim. The packages/agent tools call the API
+   * over loopback with this same token: same rights and RLS as REST.
    */
   const mcp = async (req: Request) => {
     const interne = new URL(req.url).origin;
@@ -64,19 +65,19 @@ export const routes: Module = ({ sql, publier, pub, auth, ba }) => {
       ba,
       async (r, claims) => {
         const a = claims.sub ? await resoudre(sql, claims.sub, claims.auto_tenant as string | undefined) : null;
-        if (!a) return Response.json({ erreur: "entreprise inaccessible" }, { status: 403 });
+        if (!a) return refus(req, "company_unreachable", 403);
         const jeton = r.headers.get("authorization")!.replace(/^Bearer\s+/i, "");
         const serveur = new ServeurMcp(new ApiAuto(interne, jeton));
         let message: unknown;
         try {
           message = await r.json();
         } catch {
-          return Response.json({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "JSON invalide" } });
+          return Response.json({ jsonrpc: "2.0", id: null, error: { code: -32700, message: "Invalid JSON" } });
         }
         const reponse = await serveur.traiter(message);
         return reponse ? Response.json(reponse) : new Response(null, { status: 202 });
       },
-      // Ressource = /mcp de l'origine publique ; clés lues en boucle locale (pas de sortie vers Internet).
+      // Resource = /mcp of the public origin; keys read over loopback (no outbound call to the Internet).
       { resource: `${publique}/mcp`, jwksUrl: `${interne}/api/auth/jwks` },
     )(req);
   };
@@ -86,13 +87,12 @@ export const routes: Module = ({ sql, publier, pub, auth, ba }) => {
     "/.well-known/*": (req: Request) => ba.handler(req),
     "/mcp": {
       POST: mcp,
-      // Transport Streamable HTTP sans flux SSE serveur : seul POST (JSON-RPC) est servi, GET le dit explicitement.
-      GET: () =>
+      // Streamable HTTP transport without a server SSE stream: only POST (JSON-RPC) is served, GET says so explicitly.
+      GET: (req: Request) =>
         Response.json(
           {
-            erreur: "Méthode non autorisée",
-            message:
-              "Serveur MCP d'auto (Streamable HTTP) : envoyez les requêtes JSON-RPC en POST, avec un jeton OAuth.",
+            ...corpsErreur(req, "method_not_allowed"),
+            message: traducteur(req).t("mcp.post_only"),
           },
           { status: 405, headers: { allow: "POST", "cache-control": "no-store" } },
         ),
@@ -104,7 +104,7 @@ export const routes: Module = ({ sql, publier, pub, auth, ba }) => {
     "/v1/auth/connexion": {
       POST: pub(async (req) => {
         const b = await corps<{ email: string; motDePasse: string; tenantId?: string }>(req);
-        // 2FA active : pas de session, un défi à compléter par POST /v1/auth/2fa.
+        // 2FA enabled: no session, a challenge to complete with POST /v1/auth/2fa.
         return avecCookies(await connecter(sql, b.email ?? "", b.motDePasse ?? "", b.tenantId));
       }),
     },
@@ -148,10 +148,10 @@ export const routes: Module = ({ sql, publier, pub, auth, ba }) => {
       }),
     },
     "/v1/entreprises": {
-      // Session exigée, entreprise non : premier tenant d'un compte ouvert par lien magique ou Google.
+      // Session required, company not: first tenant of an account opened through magic link or Google.
       POST: pub(async (req) => {
         const s = await ba.api.getSession({ headers: req.headers, query: { disableRefresh: true } }).catch(() => null);
-        if (!s) return Response.json({ erreur: "non authentifié" }, { status: 401 });
+        if (!s) return refus(req, "unauthenticated", 401);
         const e = await corps<{ nom: string; siret: string; adresse: string; franchiseTva?: boolean }>(req);
         const id = await creerEntreprise(sql, s.user.id, e as { nom: string; siret: string; adresse: string });
         await sql`UPDATE session SET active_organization_id = ${id} WHERE id = ${s.session.id}`;
@@ -204,7 +204,7 @@ export const routes: Module = ({ sql, publier, pub, auth, ba }) => {
     "/v1/invitations/acceptation": {
       POST: pub(async (req) => {
         const { jeton, id, motDePasse } = await corps<{ jeton: string; id: string; motDePasse: string }>(req);
-        if (!(jeton ?? id)) throw new ErreurMetier("jeton et mot de passe requis");
+        if (!(jeton ?? id)) throw new ErreurApi("token_password_required");
         return avecCookies(await accepterInvitation(sql, (jeton ?? id)!, motDePasse!), 201);
       }),
     },
@@ -240,12 +240,12 @@ export const routes: Module = ({ sql, publier, pub, auth, ba }) => {
 const ROLE = ref("Role");
 const CODE = { type: "string", pattern: "^[0-9]{6}$" };
 
-/** Description OpenAPI des routes du lot (les routes Better Auth sont fusionnées par openapi.ts). */
+/** OpenAPI description of the batch routes (Better Auth routes are merged by openapi.ts). */
 export const openapi: Chemins = {
   "/v1/auth/2fa": {
     post: op({
-      resume: "Second facteur de connexion : défi + code TOTP ou code de secours",
-      tag: "Comptes",
+      resume: "Second sign-in factor: challenge + TOTP code or backup code",
+      tag: "Accounts",
       corps: objet({ defi: str, code: str }, ["defi", "code"]),
       succes: { 200: ref("Session") },
       erreurs: [401, 429],
@@ -253,8 +253,8 @@ export const openapi: Chemins = {
   },
   "/v1/auth/methodes": {
     get: op({
-      resume: "Méthodes de connexion proposées (mot de passe, lien magique, passkey, fournisseurs configurés)",
-      tag: "Comptes",
+      resume: "Offered sign-in methods (password, magic link, passkey, configured providers)",
+      tag: "Accounts",
       succes: {
         200: objet({
           motDePasse: { type: "boolean" },
@@ -267,8 +267,8 @@ export const openapi: Chemins = {
   },
   "/v1/entreprises": {
     post: op({
-      resume: "Créer une entreprise (SIRET) dont l'utilisateur de la session devient owner ; elle devient active",
-      tag: "Comptes",
+      resume: "Create a company (SIRET) whose owner becomes the session user; it becomes active",
+      tag: "Accounts",
       corps: objet({ nom: str, siret: str, adresse: str, franchiseTva: { type: "boolean" } }, [
         "nom",
         "siret",
@@ -280,8 +280,8 @@ export const openapi: Chemins = {
   },
   "/v1/membres/{id}": avecId({
     delete: op({
-      resume: "Retirer un membre (le dernier owner reste)",
-      tag: "Comptes",
+      resume: "Remove a member (the last owner stays)",
+      tag: "Accounts",
       droit: "membres",
       succes: { 204: null },
       erreurs: [404, 409],
@@ -289,14 +289,14 @@ export const openapi: Chemins = {
   }),
   "/v1/invitations": {
     get: op({
-      resume: "Invitations de l'entreprise",
-      tag: "Comptes",
+      resume: "Company invitations",
+      tag: "Accounts",
       droit: "membres",
       succes: { 200: liste(objet({})) },
     }),
     post: op({
-      resume: "Inviter un email avec un rôle (lien à usage unique, 7 jours)",
-      tag: "Comptes",
+      resume: "Invite an email with a role (single-use link, 7 days)",
+      tag: "Accounts",
       droit: "membres",
       corps: objet({ email: str, role: ROLE }, ["email", "role"]),
       succes: { 201: objet({}) },
@@ -305,8 +305,8 @@ export const openapi: Chemins = {
   },
   "/v1/invitations/{id}": avecId({
     delete: op({
-      resume: "Révoquer une invitation",
-      tag: "Comptes",
+      resume: "Revoke an invitation",
+      tag: "Accounts",
       droit: "membres",
       succes: { 204: null },
       erreurs: [404],
@@ -314,8 +314,8 @@ export const openapi: Chemins = {
   }),
   "/v1/invitations/acceptation": {
     post: op({
-      resume: "Accepter une invitation (création de compte ou rattachement par mot de passe)",
-      tag: "Comptes",
+      resume: "Accept an invitation (account creation or attachment by password)",
+      tag: "Accounts",
       corps: objet({ id: uuid, jeton: str, motDePasse: str }, ["motDePasse"]),
       succes: { 201: ref("Session") },
       erreurs: [401, 403, 410, 422],
@@ -323,8 +323,8 @@ export const openapi: Chemins = {
   },
   "/v1/2fa/enrolement": {
     post: op({
-      resume: "Enrôler un authentificateur TOTP (mot de passe exigé) : secret, URI otpauth, codes de secours",
-      tag: "Comptes",
+      resume: "Enroll a TOTP authenticator (password required): secret, otpauth URI, backup codes",
+      tag: "Accounts",
       droit: "lire",
       corps: objet({ motDePasse: str }, ["motDePasse"]),
       succes: { 201: objet({ secret: str, uri: str, codesSecours: liste(str) }) },
@@ -333,8 +333,8 @@ export const openapi: Chemins = {
   },
   "/v1/2fa/confirmation": {
     post: op({
-      resume: "Confirmer l'enrôlement par un premier code : la 2FA devient active",
-      tag: "Comptes",
+      resume: "Confirm enrollment with a first code: 2FA becomes active",
+      tag: "Accounts",
       droit: "lire",
       corps: objet({ code: CODE }, ["code"]),
       succes: { 200: objet({ actif: { type: "boolean" } }) },
@@ -343,8 +343,8 @@ export const openapi: Chemins = {
   },
   "/v1/2fa/codes-secours": {
     post: op({
-      resume: "Régénérer les codes de secours (mot de passe exigé)",
-      tag: "Comptes",
+      resume: "Regenerate the backup codes (password required)",
+      tag: "Accounts",
       droit: "lire",
       corps: objet({ motDePasse: str }, ["motDePasse"]),
       succes: { 200: objet({ codesSecours: liste(str) }) },
@@ -353,8 +353,8 @@ export const openapi: Chemins = {
   },
   "/v1/2fa/desactivation": {
     post: op({
-      resume: "Désactiver la 2FA (mot de passe et code)",
-      tag: "Comptes",
+      resume: "Disable 2FA (password and code)",
+      tag: "Accounts",
       droit: "lire",
       corps: objet({ motDePasse: str, code: str }, ["motDePasse", "code"]),
       succes: { 204: null },

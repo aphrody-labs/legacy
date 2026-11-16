@@ -18,12 +18,12 @@ const ENV = [
   "AUTO_URL_APP",
 ];
 
-/** Requêtes reçues par le faux Stripe : chemin, clé, corps décodé. */
+/** Requests received by the fake Stripe: path, key, decoded body. */
 const recues: { chemin: string; auth: string | null; idem: string | null; corps: URLSearchParams }[] = [];
 
 beforeAll(async () => {
   ({ sql, drop } = await testDb());
-  // Faux serveur Stripe : mêmes chemins, même encodage de formulaire que l'API REST.
+  // Fake Stripe server: same paths, same form encoding as the REST API.
   stripe = Bun.serve({
     port: 0,
     async fetch(req) {
@@ -104,7 +104,7 @@ test("plans publics", async () => {
   expect(r.body[1]).toMatchObject({ prixHtCents: { mensuel: 1400, annuel: 14000 }, essaiJours: 30, prix: "HT" });
 });
 
-test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur", async () => {
+test("Checkout, signed and idempotent webhooks, invoice issued by the operator", async () => {
   const op = await api("/v1/auth/inscription", undefined, { body: inscription("contact@aphrody.com", "Aphrody SAS") });
   Bun.env.AUTO_TENANT_OPERATEUR = op.body.tenantId;
   const a = await api("/v1/auth/inscription", undefined, { body: inscription("abonne@exemple.fr", "Abonné SARL") });
@@ -119,12 +119,12 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
   });
   expect(ab0.body.stripeCustomerId).toBeUndefined();
 
-  // Portail sans client Stripe ; plan invalide ; prix non configuré.
+  // Portal without Stripe customer; invalid plan; price not configured.
   expect((await api("/v1/abonnement/portail", t, { body: {} })).status).toBe(409);
   expect((await api("/v1/abonnement/checkout", t, { body: { plan: "gratuit" } })).status).toBe(422);
   expect((await api("/v1/abonnement/checkout", t, { body: { plan: "pro", periodicite: "annuel" } })).status).toBe(503);
 
-  // Checkout : client Stripe créé (idempotent par tenant), essai de 30 jours sur Pro.
+  // Checkout: Stripe customer created (idempotent per tenant), 30-day trial on Pro.
   const co = await api("/v1/abonnement/checkout", t, { body: { plan: "pro" } });
   expect(co.status).toBe(201);
   expect(co.body).toEqual({ id: "cs_test_1", url: "https://checkout.stripe.test/c/cs_test_1", essaiJours: 30 });
@@ -145,7 +145,7 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
   );
   expect(session!.corps.get("cancel_url")).toBe("https://app.auto.test/app/parametres?checkout=annule");
 
-  // Signature absente, fausse ou périmée : 400.
+  // Missing, wrong or stale signature: 400.
   const e1 = evenement("evt_1", "checkout.session.completed", {
     id: "cs_test_1",
     object: "checkout.session",
@@ -159,7 +159,7 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
   expect((await webhook(e1, signerStripe("whsec_autre", JSON.stringify(e1)))).status).toBe(400);
   expect((await webhook(e1, signerStripe(SECRET, JSON.stringify(e1), 1_000_000))).status).toBe(400);
 
-  // Checkout terminé : abonnement en essai ; rejeu sans effet.
+  // Checkout completed: subscription in trial; replay without effect.
   expect((await webhook(e1)).body).toMatchObject({ recu: true, resultat: "abonnement" });
   expect((await webhook(e1)).body).toMatchObject({ recu: true, resultat: "rejeu" });
   const ab1 = await api("/v1/abonnement", t);
@@ -170,7 +170,7 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
   expect(recues.at(-1)!.corps.get("customer")).toBe("cus_1");
   expect(recues.at(-1)!.corps.get("return_url")).toBe("https://app.auto.test/app/parametres");
 
-  // Mise à jour d'abonnement : prix → plan ; un événement plus ancien est ignoré.
+  // Subscription update: price → plan; an older event is ignored.
   const maintenant = Math.floor(Date.now() / 1000);
   const sub = {
     id: "sub_1",
@@ -194,7 +194,7 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
     statut: "active",
   });
 
-  // Portail Stripe en mode flexible : cancel_at est renseigné, cancel_at_period_end reste false.
+  // Stripe portal in flexible mode: cancel_at is set, cancel_at_period_end stays false.
   const annulation = await webhook(
     evenement(
       "evt_2_annulation",
@@ -218,7 +218,7 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
   );
   expect((await api("/v1/abonnement", t)).body.annulationFinPeriode).toBe(false);
 
-  // Facture Stripe payée : facture émise par l'opérateur, Factur-X figé, soldée par carte.
+  // Paid Stripe invoice: invoice issued by the operator, frozen Factur-X, settled by card.
   const facture = {
     id: "in_1",
     object: "invoice",
@@ -243,24 +243,24 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
     headers: { authorization: `Bearer ${op.body.session}` },
   });
   expect(await xml.text()).toContain("<ram:GrandTotalAmount>468.00</ram:GrandTotalAmount>");
-  // Invisible pour l'abonné (tenant opérateur).
+  // Invisible to the subscriber (operator tenant).
   expect((await api(`/v1/documents/${paye.body.documentId}`, t)).status).toBe(404);
-  // Rejeu et doublon d'événement pour la même facture : une seule facture.
+  // Event replay and duplicate for the same invoice: a single invoice.
   expect((await webhook(evenement("evt_3", "invoice.paid", facture))).body.resultat).toBe("rejeu");
   expect((await webhook(evenement("evt_3b", "invoice.paid", facture))).body.resultat).toBe("facture_deja_emise");
   expect((await api("/v1/documents", op.body.session)).body).toHaveLength(1);
-  // Montant incohérent (TVA absente côté Stripe) : refus, Stripe renverra l'événement.
+  // Inconsistent amount (VAT missing on the Stripe side): refused, Stripe will resend the event.
   const ko = await webhook(evenement("evt_4", "invoice.paid", { ...facture, id: "in_2", amount_paid: 39000 }));
   expect(ko.status).toBe(422);
   expect((await webhook(evenement("evt_4", "invoice.paid", { ...facture, id: "in_2" }))).body.resultat).toBe(
     "facture_emise",
   );
 
-  // Facture d'essai à 0 € : rien à émettre.
+  // Trial invoice at 0 EUR: nothing to issue.
   const zero = await webhook(evenement("evt_5", "invoice.paid", { ...facture, id: "in_0", amount_paid: 0 }));
   expect(zero.body.resultat).toBe("montant_nul");
 
-  // Impayé puis résiliation : retour aux quotas Gratuit.
+  // Unpaid then cancellation: back to the Free quotas.
   expect((await webhook(evenement("evt_6", "invoice.payment_failed", { ...facture, id: "in_3" }))).body.resultat).toBe(
     "impaye",
   );
@@ -269,7 +269,7 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
   expect(fin.body.resultat).toBe("resilie");
   expect((await api("/v1/abonnement", t)).body).toMatchObject({ statut: "canceled", planEffectif: "gratuit" });
 
-  // Événement non géré, tenant inconnu, client incohérent.
+  // Unhandled event, unknown tenant, inconsistent customer.
   expect((await webhook(evenement("evt_8", "customer.created", { id: "cus_9" }))).body.resultat).toBe("ignore");
   expect(
     (await webhook(evenement("evt_9", "customer.subscription.updated", { ...sub, metadata: {} }))).body.resultat,
@@ -279,12 +279,12 @@ test("Checkout, webhooks signés et idempotents, facture émise par l'opérateur
       .resultat,
   ).toBe("client_incoherent");
 
-  // Journal opérateur : non lisible par le rôle applicatif.
+  // Operator log: not readable by the application role.
   expect(await sql`SELECT count(*)::int AS n FROM stripe_evenement`).toEqual([{ n: 14 }]);
   await expect(withTenant(sql, tenant, (tx) => tx`SELECT * FROM stripe_evenement`)).rejects.toThrow();
 });
 
-test("quotas : factures émises par mois, employés, erreur 402 explicite", async () => {
+test("quotas: invoices issued per month, employees, explicit 402 error", async () => {
   const g = await api("/v1/auth/inscription", undefined, { body: inscription("gratuit@exemple.fr", "Gratuit SARL") });
   const t = g.body.session;
   const brouillon = (type = "facture") => ({
@@ -307,10 +307,10 @@ test("quotas : factures émises par mois, employés, erreur 402 explicite", asyn
   expect(refus.body.erreur).toBe("quota atteint : 10 factures émises par mois sur le plan Gratuit");
   expect(refus.body.details).toContain("ressource factures");
   expect((await api(`/v1/documents/${d2.body.id}`, t)).body.statut).toBe("brouillon");
-  // Un devis ne compte pas.
+  // A quote does not count.
   const devis = await api("/v1/documents", t, { body: { ...brouillon("devis"), validiteJours: 30 } });
   expect((await api(`/v1/documents/${devis.body.id}/emettre`, t, { body: {} })).status).toBe(200);
-  // Sans authentification, le gestionnaire répond 401.
+  // Without authentication, the handler answers 401.
   expect((await api(`/v1/documents/${d2.body.id}/emettre`, undefined, { body: {} })).status).toBe(401);
 
   const employe = (nom: string) => ({

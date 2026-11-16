@@ -1,5 +1,27 @@
 # @aphrody/canvas
 
+<!-- catalog:begin unit -->
+> Aphrody native Skia canvas facade over the pinned upstream @napi-rs/canvas runtime
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/canvas` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/canvas typecheck
+bun run --cwd packages/canvas test
+bun run --cwd packages/canvas lint
+bun run --cwd packages/canvas format:check
+bun run --cwd packages/canvas vendor
+bun run --cwd packages/canvas vendor:check
+bun run --cwd packages/canvas prepack
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Aphrody's canvas package: a stable `@aphrody/*` namespace over the pinned upstream Skia
 runtime [`@napi-rs/canvas`](https://github.com/Brooooooklyn/canvas) (1.0.9, commit `8411071`),
 plus the M3 surface contract used by the M3 packages, SpaceUI, Tauri and the render crates.

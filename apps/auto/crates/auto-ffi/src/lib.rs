@@ -1,39 +1,39 @@
-//! C ABI pour `bun:ffi`. Un seul point d'entrée :
+//! C ABI for `bun:ffi`. A single entry point:
 //!
 //! `auto_call(op, op_len, entree, entree_len, sortie_len) -> *mut u8`
 //!
-//! Le tampon renvoyé commence par un octet d'état (0 = succès, 1 = erreur), suivi de la charge
-//! utile : octets du PDF, texte XML ou JSON, ou message d'erreur UTF-8. L'appelant le libère avec
-//! `auto_free(ptr, len)`, `len` étant la valeur écrite dans `sortie_len`.
+//! The returned buffer starts with a status byte (0 = success, 1 = error), followed by the payload: PDF bytes,
+//! XML or JSON text, or a UTF-8 error message. The caller frees it with `auto_free(ptr, len)`, `len` being the
+//! value written to `sortie_len`.
 //!
-//! Opérations : `rendre` (JSON → PDF), `facturx` (JSON + date unix en tête → Factur-X),
-//! `xml` (JSON → XML CII), `extraire` (PDF → XML, vide si absent), `verifier_pdfa` (PDF → JSON),
+//! Operations: `rendre` (JSON → PDF), `facturx` (JSON + unix date first → Factur-X),
+//! `xml` (JSON → CII XML), `extraire` (PDF → XML, empty if absent), `verifier_pdfa` (PDF → JSON),
 //! `tableur_lire` (xlsx/xls/xlsb/ods/csv → JSON), `xlsx_ecrire` (JSON → xlsx).
 //!
-//! Fichiers (auto-fichiers) ; une entrée « en trames » est une suite de `u32` little-endian
-//! (longueur) suivis d'autant d'octets :
-//! `pdf_fusionner` (trames nom, PDF, nom, PDF… → PDF), `pdf_pages` (trames JSON `[pages]`, PDF → PDF),
-//! `pdf_nombre_pages` (PDF → nombre), `pdf_texte` (PDF → JSON `{ pages: [texte] }`), `docx_creer` (JSON → DOCX),
-//! `docx_champs` (DOCX → JSON `[noms]`), `docx_remplir` (trames JSON `{ nom: valeur }`, DOCX → DOCX),
-//! `docx_texte` (DOCX → texte), `docx_pdf` (DOCX → PDF),
-//! `pdf_caviarder` (trames JSON options, PDF → trames JSON rapport, PDF), `pdf_signer` (trames JSON
-//! options, PKCS #12, PDF → PDF), `pdf_signatures` (trames certificats de confiance PEM, PDF → JSON),
+//! Files (auto-fichiers); an input "in frames" is a sequence of little-endian `u32`
+//! (length) each followed by that many bytes:
+//! `pdf_fusionner` (frames name, PDF, name, PDF... → PDF), `pdf_pages` (frames JSON `[pages]`, PDF → PDF),
+//! `pdf_nombre_pages` (PDF → number), `pdf_texte` (PDF → JSON `{ pages: [text] }`), `docx_creer` (JSON → DOCX),
+//! `docx_champs` (DOCX → JSON `[names]`), `docx_remplir` (frames JSON `{ name: value }`, DOCX → DOCX),
+//! `docx_texte` (DOCX → text), `docx_pdf` (DOCX → PDF),
+//! `pdf_caviarder` (frames JSON options, PDF → frames JSON report, PDF), `pdf_signer` (frames JSON
+//! options, PKCS #12, PDF → PDF), `pdf_signatures` (frames PEM trusted certificates, PDF → JSON),
 //! `pptx_creer` (JSON → PPTX), `pptx_pdf` (PPTX → PDF).
 //!
-//! Base de connaissances (auto-connaissance) : `rag_decouper` (JSON `{ source, texte, taille? }` → JSON
-//! `[{ position, texte, titre, ligne_debut, ligne_fin }]`), `rag_topk` (trames JSON `{ dimension, k, diversite? }`,
-//! question puis matrice en `f32` little-endian → JSON `[{ indice, score }]`, score cosinus décroissant).
+//! Knowledge base (auto-connaissance): `rag_decouper` (JSON `{ source, texte, taille? }` → JSON
+//! `[{ position, texte, titre, ligne_debut, ligne_fin }]`), `rag_topk` (frames JSON `{ dimension, k, diversite? }`,
+//! question then matrix as little-endian `f32` → JSON `[{ indice, score }]`, decreasing cosine score).
 
 use auto_modele::Facture;
 use std::collections::BTreeMap;
 
-/// Découpe une entrée en trames (`u32` LE de longueur puis les octets).
+/// Splits an input into frames (`u32` LE length then the bytes).
 fn trames(mut entree: &[u8]) -> Result<Vec<&[u8]>, String> {
     let mut v = Vec::new();
     while !entree.is_empty() {
-        let (n, reste) = entree.split_at_checked(4).ok_or("trame tronquée")?;
+        let (n, reste) = entree.split_at_checked(4).ok_or("truncated frame")?;
         let n = u32::from_le_bytes(n.try_into().map_err(|_| "trame invalide")?) as usize;
-        let (t, reste) = reste.split_at_checked(n).ok_or("trame tronquée")?;
+        let (t, reste) = reste.split_at_checked(n).ok_or("truncated frame")?;
         v.push(t);
         entree = reste;
     }
@@ -71,13 +71,13 @@ fn facture(entree: &[u8]) -> Result<Facture, String> {
     Facture::depuis_json(std::str::from_utf8(entree).map_err(|e| e.to_string())?).map_err(|e| e.to_string())
 }
 
-/// Exécute une opération ; utilisable aussi depuis Rust.
+/// Runs an operation; also usable from Rust.
 pub fn appeler(op: &str, entree: &[u8]) -> Result<Vec<u8>, String> {
     match op {
         "rendre" => auto_docs::rendre(&facture(entree)?).map_err(|e| e.to_string()),
         "facturx" => {
-            // 8 octets de date unix (little-endian) puis le JSON.
-            let (date, json) = entree.split_at_checked(8).ok_or("entrée trop courte")?;
+            // 8 bytes of unix date (little-endian) then the JSON.
+            let (date, json) = entree.split_at_checked(8).ok_or("input too short")?;
             let date = i64::from_le_bytes(date.try_into().map_err(|_| "date invalide")?);
             let f = facture(json)?;
             let pdf = auto_docs::rendre(&f).map_err(|e| e.to_string())?;
@@ -98,7 +98,7 @@ pub fn appeler(op: &str, entree: &[u8]) -> Result<Vec<u8>, String> {
             auto_sheets::ecrire(&c).map_err(|e| e.to_string())
         }
         "xlsx_modifier" => {
-            let [editions, octets] = trames(entree)?[..] else { return Err("trames éditions, XLSX attendues".into()) };
+            let [editions, octets] = trames(entree)?[..] else { return Err("frames edits, XLSX expected".into()) };
             auto_sheets::modifier(octets, &json::<Vec<auto_sheets::EditionCellule>>(editions)?)
                 .map_err(|e| e.to_string())
         }
@@ -188,14 +188,14 @@ pub fn appeler(op: &str, entree: &[u8]) -> Result<Vec<u8>, String> {
                 diversite: Option<f64>,
             }
             let [p, question, matrice] = trames(entree)?[..] else {
-                return Err("trames paramètres, question, matrice attendues".into());
+                return Err("frames parameters, question, matrix expected".into());
             };
             let p: Parametres = json(p)?;
             auto_connaissance::plus_proches(&f32s(question)?, &f32s(matrice)?, p.dimension, p.k, p.diversite)
                 .map_err(|e| e.to_string())
                 .and_then(|r| serde_json::to_vec(&r).map_err(|e| e.to_string()))
         }
-        _ => Err(format!("opération inconnue : {op}")),
+        _ => Err(format!("unknown operation: {op}")),
     }
 }
 
@@ -204,14 +204,14 @@ fn tampon(etat: u8, charge: &[u8], sortie_len: *mut usize) -> *mut u8 {
     v.push(etat);
     v.extend_from_slice(charge);
     let b = v.into_boxed_slice();
-    // SAFETY: l'appelant fournit un pointeur valide vers un usize.
+    // SAFETY: the caller provides a valid pointer to a usize.
     unsafe { *sortie_len = b.len() };
     Box::into_raw(b).cast()
 }
 
 /// # Safety
-/// `op`/`entree` pointent vers `op_len`/`entree_len` octets lisibles (`entree` peut être nul si
-/// `entree_len` vaut 0) ; `sortie_len` pointe vers un usize inscriptible.
+/// `op`/`entree` point to `op_len`/`entree_len` readable bytes (`entree` may be null if
+/// `entree_len` is 0); `sortie_len` points to a writable usize.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn auto_call(
     op: *const u8,
@@ -220,7 +220,7 @@ pub unsafe extern "C" fn auto_call(
     entree_len: usize,
     sortie_len: *mut usize,
 ) -> *mut u8 {
-    // SAFETY: garanti par l'appelant (voir la documentation).
+    // SAFETY: guaranteed by the caller (see the documentation).
     let op = unsafe { std::slice::from_raw_parts(op, op_len) };
     let entree = if entree_len == 0 { &[][..] } else { unsafe { std::slice::from_raw_parts(entree, entree_len) } };
     let resultat = std::panic::catch_unwind(|| {
@@ -230,16 +230,16 @@ pub unsafe extern "C" fn auto_call(
     match resultat {
         Ok(Ok(v)) => tampon(0, &v, sortie_len),
         Ok(Err(e)) => tampon(1, e.as_bytes(), sortie_len),
-        Err(_) => tampon(1, "panique dans auto-ffi".as_bytes(), sortie_len),
+        Err(_) => tampon(1, "panic in auto-ffi".as_bytes(), sortie_len),
     }
 }
 
 /// # Safety
-/// `ptr`/`len` proviennent d'un appel à `auto_call`, et ne sont libérés qu'une fois.
+/// `ptr`/`len` come from a call to `auto_call`, and are only freed once.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn auto_free(ptr: *mut u8, len: usize) {
     if !ptr.is_null() {
-        // SAFETY: reconstruit la boîte allouée par `tampon`.
+        // SAFETY: rebuilds the box allocated by `tampon`.
         drop(unsafe { Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, len)) });
     }
 }

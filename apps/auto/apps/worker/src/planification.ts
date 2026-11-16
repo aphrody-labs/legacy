@@ -1,5 +1,5 @@
-// Tâches périodiques par Bun.cron (en processus). Chaque déclenchement n'ajoute qu'un job système à clé
-// unique (plusieurs workers planifiés : un seul job), éclaté ensuite en un job par tenant, rejouable seul.
+// Periodic tasks through Bun.cron (in process). Each trigger only adds one system job with a unique
+// key (several scheduled workers: a single job), then split into one job per tenant, replayable alone.
 import {
   aRelancer,
   lireBoite,
@@ -26,16 +26,16 @@ export const TZ = "Europe/Paris";
 
 export interface Tache {
   nom: string;
-  /** Expression cron (5 champs), interprétée dans le fuseau `TZ`. */
+  /** Cron expression (5 fields), interpreted in the `TZ` time zone. */
   cron: string;
   job(date: Date, tz: string): { type: string; cle: string; payload: Record<string, string> };
 }
 
-/** AAAA-MM-JJ dans le fuseau donné. */
+/** YYYY-MM-DD in the given time zone. */
 export const jourLocal = (d: Date, tz = TZ) =>
   new Intl.DateTimeFormat("sv-SE", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(d);
 
-/** AAAA-MM du mois précédant le jour donné. */
+/** YYYY-MM of the month preceding the given day. */
 export const moisPrecedent = (jour: string) => {
   const [a, m] = jour.split("-").map(Number) as [number, number];
   return new Date(Date.UTC(a, m - 2, 1)).toISOString().slice(0, 7);
@@ -53,7 +53,7 @@ export const TACHES: Tache[] = [
     job: (d) => ({ type: "sources.planifier", cle: "sources:" + Math.floor(d.getTime() / 300000), payload: {} }),
   },
   {
-    // Paliers J+7, J+30 (et J+60) de PALIERS : la relance part par n8n (événement relance.a_envoyer).
+    // D+7, D+30 (and D+60) levels of PALIERS: the reminder goes out through n8n (relance.a_envoyer event).
     nom: "relances",
     cron: "0 8 * * *",
     job: (d, tz) => {
@@ -62,7 +62,7 @@ export const TACHES: Tache[] = [
     },
   },
   {
-    // Sept jours avant un renouvellement ou une fin d'essai : rappel au propriétaire (services/renouvellement.ts).
+    // Seven days before a renewal or a trial end: reminder to the owner (services/renouvellement.ts).
     nom: "renouvellements",
     cron: "0 9 * * *",
     job: (d, tz) => {
@@ -79,7 +79,7 @@ export const TACHES: Tache[] = [
     },
   },
   {
-    // Statuts des dépôts et factures entrantes de la PA, pour les tenants sans webhook.
+    // Statuses of PA submissions and incoming invoices, for tenants without webhook.
     nom: "mail-releve",
     cron: "*/5 * * * *",
     job: (d) => {
@@ -88,7 +88,7 @@ export const TACHES: Tache[] = [
     },
   },
   {
-    // Workflows planifiés des entreprises (automatisations.ts) : chacun selon son cron et son fuseau.
+    // Company scheduled workflows (automatisations.ts): each according to its cron and time zone.
     nom: "automatisations",
     cron: "* * * * *",
     job: (d) => {
@@ -106,13 +106,13 @@ export const TACHES: Tache[] = [
   },
 ];
 
-/** Ajoute le job système d'une tâche ; null si déjà ajouté pour cette période. */
+/** Adds the system job of a task; null if already added for this period. */
 export function declencher(sql: Sql, t: Tache, date = new Date(), tz = TZ): Promise<string | null> {
   const j = t.job(date, tz);
   return avecWorker(sql, (tx) => enfiler(tx, j.type, j.payload, { cle: j.cle, tenantId: null }));
 }
 
-/** Enregistre les tâches dans Bun.cron ; `.stop()` sur chaque CronJob pour arrêter. */
+/** Registers the tasks in Bun.cron; `.stop()` on each CronJob to stop. */
 export function planifier(sql: Sql, taches = TACHES, tz = TZ): Bun.CronJob[] {
   return taches.map((t) =>
     Bun.cron(
@@ -121,7 +121,7 @@ export function planifier(sql: Sql, taches = TACHES, tz = TZ): Bun.CronJob[] {
         try {
           await declencher(sql, t, new Date(), tz);
         } catch (e) {
-          console.error(`tâche ${t.nom} : ${e instanceof Error ? e.message : e}`);
+          console.error(`task ${t.nom}: ${e instanceof Error ? e.message : e}`);
         }
       },
       { tz },
@@ -129,13 +129,13 @@ export function planifier(sql: Sql, taches = TACHES, tz = TZ): Bun.CronJob[] {
   );
 }
 
-/** Factures échues d'un tenant : relance notée et événement relance.a_envoyer, une transaction par facture. */
+/** Overdue invoices of a tenant: reminder recorded and relance.a_envoyer event, one transaction per invoice. */
 export async function relancer(sql: Sql, tenantId: string, jour: string): Promise<number> {
   const liste = await withTenant(sql, tenantId, (tx) => aRelancer(tx, jour));
   let n = 0;
   for (const r of liste) {
     const fait = await withTenant(sql, tenantId, async (tx) => {
-      // Verrou sur la facture : deux workers ne relancent pas deux fois le même palier.
+      // Lock on the invoice: two workers do not chase the same level twice.
       await tx`SELECT 1 FROM document WHERE id = ${r.documentId} FOR UPDATE`;
       const [deja] = await tx`SELECT 1 FROM relance WHERE document_id = ${r.documentId} AND niveau >= ${r.niveau}`;
       if (deja) return false;
@@ -144,8 +144,8 @@ export async function relancer(sql: Sql, tenantId: string, jour: string): Promis
     });
     if (!fait) continue;
     n++;
-    // Envoi direct depuis la boîte de l'entreprise si elle en a une et si le client a une adresse ; sinon
-    // l'événement laisse n8n (ou l'utilisateur) s'en charger. Un échec d'envoi n'annule pas la relance notée.
+    // Direct send from the company's mailbox if it has one and the client has an address; otherwise
+    // the event leaves n8n (or the user) to handle it. A send failure does not cancel the recorded reminder.
     let envoyeParMail = false;
     if (r.client.email && (await withTenant(sql, tenantId, (tx) => lireBoite(tx)))) {
       try {
@@ -153,7 +153,7 @@ export async function relancer(sql: Sql, tenantId: string, jour: string): Promis
         await envoyerDocument(sql, outbox, tenantId, null, r.documentId, texteRelance(r, e.nom));
         envoyeParMail = true;
       } catch (err) {
-        console.error(`relance ${r.numero} (${tenantId}) : ${err instanceof Error ? err.message : err}`);
+        console.error(`reminder ${r.numero} (${tenantId}): ${err instanceof Error ? err.message : err}`);
       }
     }
     await withTenant(sql, tenantId, (tx) => ajouterEvenement(tx, "relance.a_envoyer", { ...r, jour, envoyeParMail }));
@@ -161,7 +161,7 @@ export async function relancer(sql: Sql, tenantId: string, jour: string): Promis
   return n;
 }
 
-/** Récapitulatif des documents émis sur le mois (AAAA-MM) : événement export.mensuel, s'il y en a. */
+/** Summary of the documents issued over the month (YYYY-MM): export.mensuel event, if there are any. */
 export async function exporterMois(sql: Sql, tenantId: string, mois: string): Promise<boolean> {
   return withTenant(sql, tenantId, async (tx) => {
     const rows = await tx<{ type: string; nombre: number; ht: string; tva: string; ttc: string }[]>`
@@ -184,7 +184,7 @@ export async function exporterMois(sql: Sql, tenantId: string, mois: string): Pr
   });
 }
 
-/** Job système → un job par tenant, de clé `<clé système>:<tenant>`. */
+/** System job → one job per tenant, keyed `<system key>:<tenant>`. */
 function eclater(sql: Sql, typeTenant: string): Traitements[string] {
   return {
     async executer(job: Job) {
@@ -199,12 +199,12 @@ function eclater(sql: Sql, typeTenant: string): Traitements[string] {
 
 const parTenant = (fn: (tenantId: string, p: Record<string, string>) => Promise<unknown>): Traitements[string] => ({
   async executer(job: Job) {
-    if (!job.tenantId) throw new Error(`job ${job.type} sans tenant`);
+    if (!job.tenantId) throw new Error(`job ${job.type} without tenant`);
     await fn(job.tenantId, job.payload as Record<string, string>);
   },
 });
 
-/** Relais SMTP de l'opérateur ; sans relais configuré (production incluse), le rappel part seulement en événement. */
+/** Operator SMTP relay; without a configured relay (production included), the reminder goes out only as an event. */
 function relais(): EnvoyeurMail | null {
   try {
     return envoyeurDepuisEnv();
@@ -255,7 +255,7 @@ export function tachesPlanifiees(sql: Sql, envoyeur: EnvoyeurMail | null = relai
     },
     "sources.tenant": {
       async executer(job, signal) {
-        if (!job.tenantId) throw new Error("source sans tenant");
+        if (!job.tenantId) throw new Error("source without tenant");
         const [t] =
           await sql`SELECT id FROM tenant WHERE id=${job.tenantId} AND supprime_at IS NULL AND suspendu_at IS NULL`;
         if (!t) return;
@@ -269,7 +269,7 @@ export function tachesPlanifiees(sql: Sql, envoyeur: EnvoyeurMail | null = relai
               echecs++;
             }
           }
-        if (echecs) throw new Error(`${echecs} source(s) inaccessible(s)`);
+        if (echecs) throw new Error(`${echecs} source(s) unreachable`);
       },
     },
     "renouvellements.planifier": eclater(sql, "renouvellements.tenant"),

@@ -1,0 +1,9 @@
+{
+  "update.available": "Auto {version} est disponible. Enregistrez vos documents avant de continuer. L’application redémarrera après l’installation.",
+  "update.current": "Cette application Auto est à jour.",
+  "update.failed": "La mise à jour n’a pas pu être vérifiée ou installée. Réessayez plus tard depuis le menu Auto.",
+  "update.install": "Installer et redémarrer",
+  "update.later": "Plus tard",
+  "update.menu": "Rechercher des mises à jour…",
+  "update.title": "Mise à jour Auto"
+}

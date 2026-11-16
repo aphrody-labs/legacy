@@ -28,6 +28,23 @@ Install the Core plugin by adding the following to your `Cargo.toml` file:
 [dependencies]
 tauri-plugin-opener = "2.0.0"
 # alternatively with Git:
+
+<!-- catalog:begin unit -->
+> Open files and URLs using their default application.
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/plugin-opener` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/plugin-opener typecheck
+bun run --cwd packages/plugin-opener build
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
 tauri-plugin-opener = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v2" }
 ```
 

@@ -1,0 +1,10 @@
+# Official bat 0.26.1 configuration (built-in Catppuccin Mocha syntax theme)
+--theme="Catppuccin Mocha"
+--style="numbers,changes,header,grid"
+--italic-text=always
+--paging=auto
+--tabs=2
+--map-syntax "*.wgsl:Rust"
+--map-syntax "*.ron:Rust"
+--map-syntax "*.nu:Python"
+--map-syntax "*.gitignore:Git Ignore"

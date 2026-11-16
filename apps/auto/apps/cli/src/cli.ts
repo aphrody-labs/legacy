@@ -1,35 +1,36 @@
 #!/usr/bin/env bun
-// CLI `auto` : `auto agent [demande]` (boucle d'agent), `auto mcp` (serveur MCP stdio) et `auto flux` (workflows).
+// `auto` CLI: `auto agent [request]` (agent loop), `auto mcp` (stdio MCP server) and `auto flows` (workflows).
+// The French command names (`outils`, `flux`, `importer`, `lancer`, `catalogue`, `aide`) stay as aliases.
 import { clientOpenAi, configLlmDepuisEnv, type Message } from "@auto/ingest/llm";
 import { apiDepuisEnv, executerAgent, outil, OUTILS, ServeurMcp } from "@auto/agent";
 
-const AIDE = `auto : agent et serveur MCP de l'API Auto
+const AIDE = `auto: agent and MCP server of the Auto API
 
-Usage :
-  auto agent [demande…]   exécute une demande (sans demande : conversation sur l'entrée standard)
-  auto mcp                serveur MCP sur stdio (pour Claude Code, Claude Desktop, etc.)
-  auto outils             liste les outils
-  auto flux               liste les workflows d'automatisation
-  auto flux importer <fichier.json>   crée un workflow depuis sa définition ou un export n8n
-  auto flux lancer <id> [json]        exécute un workflow, données d'entrée facultatives
-  auto flux catalogue     types de nœuds et modèles
+Usage:
+  auto agent [request…]   runs a request (without a request: conversation on standard input)
+  auto mcp                MCP server on stdio (for Claude Code, Claude Desktop, etc.)
+  auto tools              lists the tools
+  auto flows              lists the automation workflows
+  auto flows import <file.json>   creates a workflow from its definition or an n8n export
+  auto flows run <id> [json]      runs a workflow, optional input data
+  auto flows catalog      node types and templates
 
-Variables :
-  AUTO_API_URL   URL de l'API (défaut https://auto.aphrody.com ; http://localhost:3000 en développement)
-  AUTO_TOKEN     jeton API de l'utilisateur (POST /v1/jetons) — obligatoire
-  AUTO_LLM_URL   API compatible OpenAI pour \`auto agent\` (ex. http://localhost:8080/v1)
+Variables:
+  AUTO_API_URL   API URL (default https://auto.aphrody.com; http://localhost:3000 in development)
+  AUTO_TOKEN     user API token (POST /v1/jetons), required
+  AUTO_LLM_URL   OpenAI-compatible API for \`auto agent\` (e.g. http://localhost:8080/v1)
   AUTO_LLM_MODEL, AUTO_LLM_KEY, AUTO_LLM_TIMEOUT_MS`;
 
 const erreur = (m: string): never => {
-  console.error(`auto : ${m}`);
+  console.error(`auto: ${m}`);
   process.exit(1);
 };
 
 async function agent(demande: string[]) {
   const api = apiDepuisEnv();
-  const c = configLlmDepuisEnv() ?? erreur("AUTO_LLM_URL manquant (llama-server, Ollama…)");
+  const c = configLlmDepuisEnv() ?? erreur("AUTO_LLM_URL missing (llama-server, Ollama…)");
   const llm = clientOpenAi(c);
-  const surOutil = (nom: string, _args: unknown, ok: boolean) => console.error(`  · ${nom}${ok ? "" : " (erreur)"}`);
+  const surOutil = (nom: string, _args: unknown, ok: boolean) => console.error(`  · ${nom}${ok ? "" : " (error)"}`);
   if (demande.length) {
     console.log((await executerAgent(demande.join(" "), { llm, api, surOutil })).reponse);
     return;
@@ -46,27 +47,27 @@ async function agent(demande: string[]) {
   }
 }
 
-/** Workflows : mêmes outils que le serveur MCP (un seul propriétaire des appels). */
+/** Workflows: same tools as the MCP server (a single owner of the calls). */
 async function flux([action, ...args]: string[]) {
   const api = apiDepuisEnv();
   const lancer = (nom: string, a: Record<string, unknown> = {}) => outil(nom)!.executer(api, a);
   let r: unknown;
   if (!action) r = await lancer("lister_automatisations");
-  else if (action === "catalogue") r = await lancer("catalogue_automatisation");
-  else if (action === "importer") {
-    const chemin = args[0] ?? erreur("fichier manquant : auto flux importer <fichier.json>");
+  else if (action === "catalog" || action === "catalogue") r = await lancer("catalogue_automatisation");
+  else if (action === "import" || action === "importer") {
+    const chemin = args[0] ?? erreur("file missing: auto flows import <file.json>");
     const f = Bun.file(chemin);
-    if (!(await f.exists())) erreur(`fichier introuvable : ${chemin}`);
+    if (!(await f.exists())) erreur(`file not found: ${chemin}`);
     const j = (await f.json()) as Record<string, unknown>;
-    // Export n8n reconnu à sa forme (nodes, connections) : converti par l'API.
+    // An n8n export is recognized by its shape (nodes, connections): converted by the API.
     r =
       Array.isArray(j.nodes) && j.connections
         ? await lancer("importer_n8n", { workflow: j })
         : await lancer("creer_automatisation", "definition" in j ? j : { nom: chemin, definition: j });
-  } else if (action === "lancer") {
-    const id = args[0] ?? erreur("identifiant manquant : auto flux lancer <id> [json]");
+  } else if (action === "run" || action === "lancer") {
+    const id = args[0] ?? erreur("identifier missing: auto flows run <id> [json]");
     r = await lancer("executer_automatisation", { id, donnees: args[1] ? JSON.parse(args[1]) : undefined });
-  } else erreur(`action inconnue : flux ${action}`);
+  } else erreur(`unknown action: flows ${action}`);
   console.log(JSON.stringify(r, null, 2));
 }
 
@@ -80,18 +81,21 @@ switch (commande) {
     await s.servir(Bun.stdin.stream(), (l) => process.stdout.write(`${l}\n`));
     break;
   }
+  case "flows":
   case "flux":
     await flux(reste);
     break;
+  case "tools":
   case "outils":
     for (const o of OUTILS) console.log(`${o.nom.padEnd(24)} ${o.description}`);
     break;
   case undefined:
+  case "help":
   case "aide":
   case "--help":
   case "-h":
     console.log(AIDE);
     break;
   default:
-    erreur(`commande inconnue : ${commande}\n\n${AIDE}`);
+    erreur(`unknown command: ${commande}\n\n${AIDE}`);
 }

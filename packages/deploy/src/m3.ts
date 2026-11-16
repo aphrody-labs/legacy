@@ -1,6 +1,6 @@
 // Design inputs of the aphrody.com and aphrody.app pages, all from the monorepo design system (skill ui-system):
-// tokens from packages/design/tokens/tokens.css (Material Color Utilities from packages/design/brand/brand.toml), Angular
-// Material M3 theme (--mat-sys-*) lives in packages/design; these server pages use its token twins. Google Sans Flex, the brand mark.
+// tokens from packages/design/tokens/tokens.css (Material Color Utilities from packages/design/design.toml), Angular
+// Material M3 theme (--mat-sys-*) lives in packages/design; these server pages use its token twins. Google Sans Flex.
 // No color, radius, duration or font value is written here: CSS only references `--md-sys-*` / `--md-ref-*`.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -10,63 +10,17 @@ export interface SiteLogo {
   mark: string;
 }
 
-/** Brand name and mark from packages/design/brand (brand.toml, src/mark.svg). */
+/** Name from packages/design/design.toml; the mark is the logo image served by aphrody.com. */
 export function readLogo(root: string): SiteLogo {
-  const toml = join(root, "packages", "design", "brand", "brand.toml");
-  const svg = join(root, "packages", "design", "brand", "src", "mark.svg");
-  const b = existsSync(toml)
-    ? ((Bun.TOML.parse(readFileSync(toml, "utf8")) as any).brand ?? {})
+  const toml = join(root, "packages", "design", "design.toml");
+  const d = existsSync(toml)
+    ? ((Bun.TOML.parse(readFileSync(toml, "utf8")) as any).design ?? {})
     : {};
-  let mark = existsSync(svg)
-    ? readFileSync(svg, "utf8")
-        .replace(/<\?xml[^>]*>\s*/, "")
-        .replace(/<!--[\s\S]*?-->/g, "")
-        .trim()
-    : "";
-  // mark.svg is a template for `ay brand build`: its {container}/{glyph}/{bolt} slots become M3 roles here,
-  // so the inline mark follows the page theme (light and dark) instead of rendering unfilled.
-  const role: Record<string, string> = {
-    container: "var(--md-sys-color-primary)",
-    glyph: "var(--md-sys-color-on-primary)",
-    bolt: `var(--aphrody-bolt,${b.accent ?? "#FFB300"})`,
+  return {
+    name: d.name ?? "Aphrody",
+    mark: '<img src="https://aphrody.com/favicon.png" alt="" width="32" height="32">',
   };
-  mark = mark.replace(
-    /(fill|stroke)="\{(\w+)\}"/g,
-    (_, attr: string, slot: string) =>
-      `style="${attr}:${role[slot] ?? "currentColor"}"`,
-  );
-  mark = mark.replace(
-    '<path style="fill:var(--aphrody-bolt',
-    '<path class="bolt" style="fill:var(--aphrody-bolt',
-  );
-  if (mark && !/aria-hidden/.test(mark))
-    mark = mark.replace("<svg", '<svg aria-hidden="true"');
-  return { name: b.name ?? "Aphrody", mark };
 }
-
-/** Paint the placeholders of packages/design/brand/src/mark.svg ({container}, {glyph}, {bolt}, filled by `ay brand build`
- * in the generated files) with the theme roles, for inline use: the mark follows light and dark. The bolt gets
- * class `bolt` (animated by MARK_CSS when motion is allowed). Idempotent on an already painted mark. */
-export function paintMark(svg: string): string {
-  return svg
-    .replace(
-      /fill="\{container\}"/g,
-      'style="fill:var(--md-sys-color-primary)"',
-    )
-    .replace(
-      /stroke="\{container\}"/g,
-      'style="stroke:var(--md-sys-color-primary)"',
-    )
-    .replace(/fill="\{glyph\}"/g, 'style="fill:var(--md-sys-color-on-primary)"')
-    .replace(
-      /<path fill="\{bolt\}"/g,
-      '<path class="bolt" style="fill:var(--aphrody-bolt)"',
-    )
-    .replace(/<svg[^>]*>/, (tag) => tag.replace(/ (width|height)="48"/g, ""));
-}
-
-/** Entrance of the bolt (transform and opacity only, once), skipped under prefers-reduced-motion. */
-export const MARK_CSS = `@media (prefers-reduced-motion:no-preference){.bolt{transform-box:fill-box;transform-origin:left center;animation:bolt .9s cubic-bezier(.2,0,0,1) .2s both}}@keyframes bolt{from{transform:scaleX(0);opacity:0}to{transform:none;opacity:1}}`;
 
 /** packages/design/tokens/tokens.css, minified (comments and whitespace only). */
 export function tokensCss(root: string): string {
@@ -84,7 +38,7 @@ export function tokensCss(root: string): string {
 export const type = (role: string) =>
   `font:var(--md-sys-typescale-${role}-weight) var(--md-sys-typescale-${role}-size)/var(--md-sys-typescale-${role}-line-height) var(--md-sys-typescale-${role}-font);letter-spacing:var(--md-sys-typescale-${role}-tracking)`;
 
-/** Google Sans Flex (brand.toml `font`), served by Google Fonts. display=optional: the swap of a late font moved
+/** Google Sans Flex (design.toml `font`), served by Google Fonts. display=optional: the swap of a late font moved
  * whole sections (CLS 0.30 traced on aphrody.com, 2026-11-13); a font that misses the first frame waits for the
  * next visit instead of shifting the page. */
 export const FONT_LINK =
@@ -94,8 +48,7 @@ export const FONT_LINK =
  * parent for axe (aria-required-parent), and labels must not wait for JavaScript. Buttons are native a/button
  * twins of the Angular Material M3 buttons (Angular components need the Angular runtime, absent from these server
  * rendered pages), styled by the same --md-sys-* tokens that feed Angular Material (packages/design). */
-export const NATIVE_CSS = `${MARK_CSS}
-.m3-list{list-style:none;margin:0;padding:8px 0;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container-low)}
+export const NATIVE_CSS = `.m3-list{list-style:none;margin:0;padding:8px 0;border-radius:var(--md-sys-shape-corner-medium);background:var(--md-sys-color-surface-container-low)}
 .m3-list a,.m3-list .row{display:flex;gap:16px;align-items:center;min-height:72px;padding:12px 24px 12px 16px;color:var(--md-sys-color-on-surface);text-decoration:none}
 .m3-list a:hover{background:color-mix(in srgb,var(--md-sys-color-on-surface) 8%,transparent)}
 .m3-list a:focus-visible{outline:3px solid var(--md-sys-color-secondary);outline-offset:-3px}

@@ -1,5 +1,5 @@
-// Lanceur compilé : une commande explicite évite de démarrer un service par accident.
-// La validation X.509 de WebAuthn utilise tsyringe : initialiser les métadonnées avant les imports différés.
+// Compiled launcher: an explicit command avoids starting a service by accident.
+// The WebAuthn X.509 validation uses tsyringe: initialize the metadata before the deferred imports.
 import "reflect-metadata";
 const dossier = new URL("./", Bun.pathToFileURL(process.execPath));
 Bun.env.AUTO_FFI_LIB ??= Bun.fileURLToPath(
@@ -10,7 +10,7 @@ Bun.env.AUTO_PUBLIC_DIR ??= Bun.fileURLToPath(new URL("public/", dossier));
 const commande = Bun.argv[2];
 if (!commande || commande === "--help" || commande === "-h") {
   console.log(
-    "auto <api|worker|web|migrate>\nauto <agent|mcp|outils|flux>\nConfiguration : variables d’environnement de Auto.",
+    "auto <api|worker|web|migrate>\nauto <agent|mcp|tools|flows>\nConfiguration: Auto environment variables.",
   );
 } else {
   switch (commande) {
@@ -28,12 +28,14 @@ if (!commande || commande === "--help" || commande === "-h") {
       break;
     case "agent":
     case "mcp":
+    case "tools":
+    case "flows":
     case "outils":
     case "flux":
       await import("../../cli/src/cli");
       break;
     default:
-      console.error(`Commande inconnue : ${commande}. Utiliser auto --help.`);
+      console.error(`Unknown command: ${commande}. Use auto --help.`);
       process.exitCode = 1;
   }
 }

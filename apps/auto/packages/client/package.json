@@ -9,7 +9,7 @@
     "./proxy": "./src/proxy.ts"
   },
   "dependencies": {
-    "@auto/automate": "workspace:*",
+    "@aphrody/automate": "catalog:",
     "@auto/domain": "workspace:*",
     "@auto/i18n": "workspace:*",
     "@auto/store": "workspace:*"

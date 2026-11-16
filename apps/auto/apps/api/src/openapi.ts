@@ -1,6 +1,6 @@
-// Description OpenAPI 3.1 de l'API /v1, servie sur GET /v1/openapi.json et écrite dans docs/openapi.json
-// (bun scripts/openapi.ts). Un module de lot documente ses routes par `export const openapi: Chemins`.
-// openapi.test.ts échoue si une route de creerApp n'est pas décrite ici.
+// OpenAPI 3.1 description of the /v1 API, served at GET /v1/openapi.json and written to docs/openapi.json
+// (bun scripts/openapi.ts). A batch module documents its routes through `export const openapi: Chemins`.
+// openapi.test.ts fails if a creerApp route is not described here.
 import { MODULES } from "./app";
 import type { Chemins } from "./modules";
 
@@ -39,7 +39,7 @@ const SCHEMAS: Record<string, Schema> = {
       designation: str,
       quantite: { type: "number" },
       prixUnitaireHtCents: cents,
-      remiseBp: { type: "integer", description: "Remise en points de base (1000 = 10 %)" },
+      remiseBp: { type: "integer", description: "Discount in basis points (1000 = 10%)" },
       tva,
       unite: str,
     },
@@ -60,7 +60,7 @@ const SCHEMAS: Record<string, Schema> = {
       penalitesRetard: str,
       escompte: str,
       franchiseTva: { type: "boolean" },
-      origine: { type: "string", description: "Avoir : numéro de la facture rectifiée" },
+      origine: { type: "string", description: "Credit note: number of the corrected invoice" },
       validiteJours: { type: "integer" },
       notes: str,
     },
@@ -68,7 +68,7 @@ const SCHEMAS: Record<string, Schema> = {
   ),
   DocumentEntree: {
     description:
-      "Émetteur imposé par la fiche entreprise ; `clientId` relit le client enregistré ; `chantierId` affecte le brouillon dans la même transaction, sans figer cette affectation dans son contenu.",
+      "Issuer imposed by the company record; `clientId` re-reads the saved client; `chantierId` assigns the draft in the same transaction, without freezing this assignment in its content.",
     ...objet(
       {
         type: ref("TypeDocument"),
@@ -152,7 +152,7 @@ const SCHEMAS: Record<string, Schema> = {
       client: ref("Partie"),
       echeance: date,
       joursRetard: { type: "integer" },
-      niveau: { ...enumere(1, 2, 3), description: "Palier atteint : J+7, J+30, J+60 après l'échéance" },
+      niveau: { ...enumere(1, 2, 3), description: "Level reached: D+7, D+30, D+60 after the due date" },
       resteCents: cents,
     },
     ["documentId", "numero", "client", "echeance", "joursRetard", "niveau", "resteCents"],
@@ -167,7 +167,7 @@ const SCHEMAS: Record<string, Schema> = {
       contrat: enumere("cdi", "cdd", "apprentissage", "professionnalisation", "stage", "interim"),
       dateEntree: date,
       dateSortie: date,
-      tempsTravail: { type: "integer", description: "Pourcentage d'un temps plein" },
+      tempsTravail: { type: "integer", description: "Percentage of full time" },
       salaireBrutMensuelCents: cents,
     },
     ["nom", "prenom", "poste", "contrat", "dateEntree", "tempsTravail", "salaireBrutMensuelCents"],
@@ -242,8 +242,8 @@ const SCHEMAS: Record<string, Schema> = {
   VerificationAudit: objet({ ok: { type: "boolean" }, entrees: { type: "integer" } }, ["ok", "entrees"]),
   Evenement: {
     description:
-      "Corps d'un webhook sortant. En-têtes : `x-auto-signature: sha256=<hex>` (HMAC-SHA256 du corps brut) et " +
-      "`x-auto-evenement: <id>` (clé d'idempotence, un même événement peut être livré plus d'une fois).",
+      "Body of an outgoing webhook. Headers: `x-auto-signature: sha256=<hex>` (HMAC-SHA256 of the raw body) and " +
+      "`x-auto-evenement: <id>` (idempotency key, the same event may be delivered more than once).",
     ...objet(
       {
         id: { type: "string", format: "uuid", description: "UUID v7" },
@@ -258,19 +258,19 @@ const SCHEMAS: Record<string, Schema> = {
 };
 
 const ERREURS: Record<number, string> = {
-  400: "JSON invalide",
-  401: "Non authentifié",
+  400: "Invalid JSON",
+  401: "Not authenticated",
   403: "Droit insuffisant",
   404: "Introuvable",
-  402: "Quota du plan atteint",
-  409: "Conflit (état ou unicité)",
+  402: "Plan quota reached",
+  409: "Conflict (state or uniqueness)",
   413: "Fichier trop volumineux",
-  415: "Content-Type application/json requis (session par cookie)",
-  410: "Expiré ou déjà utilisé",
-  422: "Règle métier non respectée",
-  429: "Trop de tentatives",
+  415: "Content-Type application/json required (cookie session)",
+  410: "Expired or already used",
+  422: "Business rule not met",
+  429: "Too many attempts",
   502: "Service tiers indisponible",
-  503: "Service non configuré (Stripe, PA)",
+  503: "Service not configured (Stripe, PA)",
 };
 
 const D = "Documents";
@@ -279,8 +279,8 @@ const doc = ref("DocumentEnregistre");
 const CHEMINS: Chemins = {
   "/v1/auth/inscription": {
     post: op({
-      resume: "Créer un compte et son entreprise",
-      tag: "Comptes",
+      resume: "Create an account and its company",
+      tag: "Accounts",
       corps: ref("Inscription"),
       succes: { 201: ref("Session") },
       erreurs: [409, 422],
@@ -288,21 +288,21 @@ const CHEMINS: Chemins = {
   },
   "/v1/auth/connexion": {
     post: op({
-      resume: "Ouvrir une session Better Auth (cookie auto.session_token et jeton Bearer) ou un défi 2FA",
-      tag: "Comptes",
+      resume: "Open a Better Auth session (auto.session_token cookie and Bearer token) or a 2FA challenge",
+      tag: "Accounts",
       corps: objet({ email: str, motDePasse: str, tenantId: uuid }, ["email", "motDePasse"]),
       succes: { 200: ref("Session") },
       erreurs: [401, 403],
     }),
   },
   "/v1/auth/deconnexion": {
-    post: op({ resume: "Fermer la session", tag: "Comptes", succes: { 204: null } }),
+    post: op({ resume: "Close the session", tag: "Accounts", succes: { 204: null } }),
   },
   "/v1/siren/{siren}": avecId(
     {
       get: op({
-        resume: "Rechercher une entreprise dans l'annuaire",
-        tag: "Comptes",
+        resume: "Search a company in the directory",
+        tag: "Accounts",
         succes: { 200: ref("Siren") },
         erreurs: [404, 422, 502],
       }),
@@ -311,12 +311,12 @@ const CHEMINS: Chemins = {
     { type: "string", pattern: "^\\d{9}$" },
   ),
   "/v1/moi": {
-    get: op({ resume: "Appelant et entreprise", tag: "Comptes", droit: "lire", succes: { 200: ref("Moi") } }),
+    get: op({ resume: "Caller and company", tag: "Accounts", droit: "lire", succes: { 200: ref("Moi") } }),
   },
   "/v1/jetons": {
     get: op({
-      resume: "Clés d'API de l'entreprise (sans le secret)",
-      tag: "Comptes",
+      resume: "Company API keys (without the secret)",
+      tag: "Accounts",
       droit: "parametres",
       succes: {
         200: liste(
@@ -325,8 +325,8 @@ const CHEMINS: Chemins = {
       },
     }),
     post: op({
-      resume: "Créer une clé d'API `auto_…` (renvoyée une seule fois)",
-      tag: "Comptes",
+      resume: "Create an `auto_…` API key (returned only once)",
+      tag: "Accounts",
       droit: "parametres",
       corps: objet({ nom: str, expireEnJours: { type: "integer", minimum: 1 } }),
       succes: { 201: objet({ jeton: str }, ["jeton"]) },
@@ -334,14 +334,14 @@ const CHEMINS: Chemins = {
   },
   "/v1/membres": {
     get: op({
-      resume: "Membres de l'entreprise",
-      tag: "Comptes",
+      resume: "Company members",
+      tag: "Accounts",
       droit: "membres",
       succes: { 200: liste(objet({ id: uuid, userId: uuid, email: str, nom: str, role: ref("Role"), depuis: str })) },
     }),
     post: op({
-      resume: "Ajouter un utilisateur existant ou changer son rôle",
-      tag: "Comptes",
+      resume: "Add an existing user or change their role",
+      tag: "Accounts",
       droit: "membres",
       corps: objet({ email: str, role: ref("Role") }, ["email", "role"]),
       succes: { 204: null },
@@ -350,14 +350,14 @@ const CHEMINS: Chemins = {
   },
   "/v1/documents": {
     get: op({
-      resume: "Lister les documents",
+      resume: "List documents",
       tag: D,
       droit: "lire",
-      requete: [{ nom: "type", schema: ref("TypeDocument"), description: "Filtre par type" }],
+      requete: [{ nom: "type", schema: ref("TypeDocument"), description: "Filter by type" }],
       succes: { 200: liste(doc) },
     }),
     post: op({
-      resume: "Créer un brouillon",
+      resume: "Create a draft",
       tag: D,
       droit: "ecrire",
       corps: ref("DocumentEntree"),
@@ -366,20 +366,20 @@ const CHEMINS: Chemins = {
     }),
   },
   "/v1/documents/{id}": avecId({
-    get: op({ resume: "Lire un document", tag: D, droit: "lire", succes: { 200: doc }, erreurs: [404] }),
+    get: op({ resume: "Read a document", tag: D, droit: "lire", succes: { 200: doc }, erreurs: [404] }),
     put: op({
-      resume: "Modifier un brouillon",
+      resume: "Edit a draft",
       tag: D,
       droit: "ecrire",
       corps: ref("DocumentEntree"),
       succes: { 200: doc },
       erreurs: [404, 422],
     }),
-    delete: op({ resume: "Supprimer un brouillon", tag: D, droit: "ecrire", succes: { 204: null }, erreurs: [404] }),
+    delete: op({ resume: "Delete a draft", tag: D, droit: "ecrire", succes: { 204: null }, erreurs: [404] }),
   }),
   "/v1/documents/{id}/emettre": avecId({
     post: op({
-      resume: "Émettre : numéro, exemplaire figé (PDF ou Factur-X), événement document.emis",
+      resume: "Issue: number, frozen copy (PDF or Factur-X), document.emis event",
       tag: D,
       droit: "ecrire",
       succes: { 200: doc },
@@ -388,7 +388,7 @@ const CHEMINS: Chemins = {
   }),
   "/v1/documents/{id}/pdf": avecId({
     get: op({
-      resume: "PDF (Factur-X PDF/A-3b pour une facture émise) ; ETag = SHA-256",
+      resume: "PDF (Factur-X PDF/A-3b for an issued invoice); ETag = SHA-256",
       tag: D,
       droit: "lire",
       succes: { 200: brut("application/pdf") },
@@ -397,7 +397,7 @@ const CHEMINS: Chemins = {
   }),
   "/v1/documents/{id}/xml": avecId({
     get: op({
-      resume: "XML CII EN 16931 extrait du Factur-X",
+      resume: "CII XML EN 16931 extracted from the Factur-X",
       tag: D,
       droit: "lire",
       succes: { 200: brut("application/xml") },
@@ -406,7 +406,7 @@ const CHEMINS: Chemins = {
   }),
   "/v1/documents/{id}/statut": avecId({
     post: op({
-      resume: "Changer le statut d'un document émis (événement document.statut)",
+      resume: "Change the status of an issued document (document.statut event)",
       tag: D,
       droit: "ecrire",
       corps: objet({ statut: ref("Statut") }, ["statut"]),
@@ -416,14 +416,14 @@ const CHEMINS: Chemins = {
   }),
   "/v1/clients": {
     get: op({
-      resume: "Lister ou rechercher les clients",
+      resume: "List or search clients",
       tag: "Clients",
       droit: "lire",
-      requete: [{ nom: "q", schema: str, description: "Nom (contient) ou début de SIRET" }],
+      requete: [{ nom: "q", schema: str, description: "Name (contains) or start of SIRET" }],
       succes: { 200: liste(ref("Client")) },
     }),
     post: op({
-      resume: "Créer un client",
+      resume: "Create a client",
       tag: "Clients",
       droit: "ecrire",
       corps: ref("Partie"),
@@ -433,14 +433,14 @@ const CHEMINS: Chemins = {
   },
   "/v1/clients/{id}": avecId({
     get: op({
-      resume: "Lire un client",
+      resume: "Read a client",
       tag: "Clients",
       droit: "lire",
       succes: { 200: ref("Client") },
       erreurs: [404],
     }),
     put: op({
-      resume: "Modifier un client",
+      resume: "Edit a client",
       tag: "Clients",
       droit: "ecrire",
       corps: ref("Partie"),
@@ -449,10 +449,10 @@ const CHEMINS: Chemins = {
     }),
   }),
   "/v1/produits": {
-    get: op({ resume: "Lister les produits", tag: "Produits", droit: "lire", succes: { 200: liste(ref("Produit")) } }),
+    get: op({ resume: "List products", tag: "Products", droit: "lire", succes: { 200: liste(ref("Produit")) } }),
     post: op({
-      resume: "Créer un produit",
-      tag: "Produits",
+      resume: "Create a product",
+      tag: "Products",
       droit: "ecrire",
       corps: ref("ProduitEntree"),
       succes: { 201: ref("Produit") },
@@ -461,15 +461,15 @@ const CHEMINS: Chemins = {
   },
   "/v1/documents/{id}/paiements": avecId({
     get: op({
-      resume: "Paiements et reste dû",
-      tag: "Paiements",
+      resume: "Payments and balance due",
+      tag: "Payments",
       droit: "lire",
       succes: { 200: ref("Paiements") },
       erreurs: [404],
     }),
     post: op({
-      resume: "Enregistrer un paiement (événement paiement.enregistre)",
-      tag: "Paiements",
+      resume: "Record a payment (paiement.enregistre event)",
+      tag: "Payments",
       droit: "ecrire",
       corps: ref("PaiementEntree"),
       succes: { 201: ref("ResultatPaiement") },
@@ -478,17 +478,17 @@ const CHEMINS: Chemins = {
   }),
   "/v1/relances": {
     get: op({
-      resume: "Factures échues à relancer",
-      tag: "Paiements",
+      resume: "Overdue invoices to chase",
+      tag: "Payments",
       droit: "lire",
-      requete: [{ nom: "date", schema: date, description: "Jour de référence (défaut : aujourd'hui)" }],
+      requete: [{ nom: "date", schema: date, description: "Reference day (default: today)" }],
       succes: { 200: liste(ref("ARelancer")) },
     }),
   },
   "/v1/documents/{id}/relances": avecId({
     post: op({
-      resume: "Noter une relance envoyée",
-      tag: "Paiements",
+      resume: "Record a reminder sent",
+      tag: "Payments",
       droit: "ecrire",
       corps: ref("RelanceEntree"),
       succes: { 204: null },
@@ -497,15 +497,15 @@ const CHEMINS: Chemins = {
   }),
   "/v1/employes": {
     get: op({
-      resume: "Lister les employés",
-      tag: "RH",
+      resume: "List employees",
+      tag: "HR",
       droit: "rh",
-      requete: [{ nom: "tous", schema: str, description: "Présent : inclure les employés sortis" }],
+      requete: [{ nom: "tous", schema: str, description: "Present: include employees who left" }],
       succes: { 200: liste(ref("FicheEmploye")) },
     }),
     post: op({
-      resume: "Créer un employé",
-      tag: "RH",
+      resume: "Create an employee",
+      tag: "HR",
       droit: "rh",
       corps: ref("Employe"),
       succes: { 201: ref("FicheEmploye") },
@@ -514,15 +514,15 @@ const CHEMINS: Chemins = {
   },
   "/v1/employes/{id}": avecId({
     get: op({
-      resume: "Lire un employé",
-      tag: "RH",
+      resume: "Read an employee",
+      tag: "HR",
       droit: "rh",
       succes: { 200: ref("FicheEmploye") },
       erreurs: [404],
     }),
     put: op({
-      resume: "Modifier un employé",
-      tag: "RH",
+      resume: "Edit an employee",
+      tag: "HR",
       droit: "rh",
       corps: ref("Employe"),
       succes: { 200: ref("FicheEmploye") },
@@ -531,24 +531,24 @@ const CHEMINS: Chemins = {
   }),
   "/v1/employes/{id}/conges": avecId({
     get: op({
-      resume: "Solde de congés payés",
-      tag: "RH",
+      resume: "Paid leave balance",
+      tag: "HR",
       droit: "rh",
-      requete: [{ nom: "au", schema: date, description: "Jour de référence" }],
+      requete: [{ nom: "au", schema: date, description: "Reference day" }],
       succes: { 200: ref("SoldeConges") },
       erreurs: [404],
     }),
   }),
   "/v1/employes/{id}/absences": avecId({
     get: op({
-      resume: "Absences d'un employé",
-      tag: "RH",
+      resume: "Absences of an employee",
+      tag: "HR",
       droit: "rh",
       succes: { 200: liste(ref("Absence")) },
     }),
     post: op({
-      resume: "Demander une absence (événement absence.demandee)",
-      tag: "RH",
+      resume: "Request an absence (absence.demandee event)",
+      tag: "HR",
       droit: "rh",
       corps: ref("AbsenceEntree"),
       succes: { 201: ref("Absence") },
@@ -557,17 +557,17 @@ const CHEMINS: Chemins = {
   }),
   "/v1/absences": {
     get: op({
-      resume: "Lister les absences",
-      tag: "RH",
+      resume: "List absences",
+      tag: "HR",
       droit: "rh",
-      requete: [{ nom: "statut", schema: ref("StatutAbsence"), description: "Filtre par statut" }],
+      requete: [{ nom: "statut", schema: ref("StatutAbsence"), description: "Filter by status" }],
       succes: { 200: liste(ref("Absence")) },
     }),
   },
   "/v1/absences/{id}/decision": avecId({
     post: op({
-      resume: "Valider, refuser ou annuler une absence (événement absence.decidee)",
-      tag: "RH",
+      resume: "Approve, refuse or cancel an absence (absence.decidee event)",
+      tag: "HR",
       droit: "rh",
       corps: objet({ statut: enumere("validee", "refusee", "annulee") }, ["statut"]),
       succes: { 200: ref("Absence") },
@@ -576,28 +576,28 @@ const CHEMINS: Chemins = {
   }),
   "/v1/audit/verification": {
     get: op({
-      resume: "Vérifier la chaîne SHA-256 de la piste d'audit",
+      resume: "Verify the SHA-256 chain of the audit trail",
       tag: "Audit",
       droit: "lire",
       succes: { 200: ref("VerificationAudit") },
     }),
   },
   "/v1/openapi.json": {
-    get: op({ resume: "Cette description OpenAPI 3.1", tag: "Méta", succes: { 200: { type: "object" } } }),
+    get: op({ resume: "This OpenAPI 3.1 description", tag: "Meta", succes: { 200: { type: "object" } } }),
   },
 };
 
 const TYPES_EVENEMENTS: [string, string][] = [
-  ["document.emis", "Document émis (data : document enregistré avec totaux)"],
-  ["document.statut", "Statut d'un document changé (data : document enregistré)"],
-  ["paiement.enregistre", "Paiement enregistré (data : documentId, paiement, resteCents)"],
-  ["absence.demandee", "Absence demandée (data : absence)"],
-  ["absence.decidee", "Absence décidée (data : absence)"],
-  ["relance.a_envoyer", "Relance planifiée à envoyer (data : facture à relancer, jour)"],
-  ["export.mensuel", "Récapitulatif mensuel des documents émis (data : mois, totaux par type)"],
+  ["document.emis", "Document issued (data: saved document with totals)"],
+  ["document.statut", "Document status changed (data: saved document)"],
+  ["paiement.enregistre", "Payment recorded (data: documentId, payment, resteCents)"],
+  ["absence.demandee", "Absence requested (data: absence)"],
+  ["absence.decidee", "Absence decided (data: absence)"],
+  ["relance.a_envoyer", "Reminder scheduled to send (data: invoice to chase, day)"],
+  ["export.mensuel", "Monthly summary of issued documents (data: month, totals per type)"],
 ];
 
-/** Spécification complète : routes du cœur et des modules, schémas, webhooks sortants. */
+/** Full specification: core and module routes, schemas, outgoing webhooks. */
 export function specification() {
   const paths: Chemins = { ...CHEMINS };
   for (const m of MODULES) Object.assign(paths, (m as { openapi?: Chemins }).openapi ?? {});
@@ -607,8 +607,8 @@ export function specification() {
       title: "auto",
       version: "1",
       description:
-        "API de l'administration d'entreprise auto : facturation Factur-X, clients, paiements, RH. " +
-        "Montants entiers en centimes, TVA en dixièmes de pourcent. Chaque route authentifiée exige le droit `x-droit`.",
+        "API of the auto company administration: Factur-X invoicing, clients, payments, HR. " +
+        "Integer amounts in cents, VAT in tenths of a percent. Each authenticated route requires the `x-droit` right.",
     },
     servers: [{ url: "/" }],
     security: [{ jeton: [] }, { session: [] }],
@@ -620,7 +620,7 @@ export function specification() {
           post: {
             summary: resume,
             requestBody: { required: true, ...json(ref("Evenement")) },
-            responses: { 200: { description: "Reçu (tout 2xx) ; sinon nouvel essai exponentiel" } },
+            responses: { 200: { description: "Received (any 2xx); otherwise exponential retry" } },
           },
         },
       ]),
@@ -630,13 +630,13 @@ export function specification() {
         jeton: {
           type: "http",
           scheme: "bearer",
-          description: "Clé d'API `auto_…`, jeton de session Better Auth ou jeton d'accès OAuth (clients MCP)",
+          description: "`auto_…` API key, Better Auth session token or OAuth access token (MCP clients)",
         },
         session: { type: "apiKey", in: "cookie", name: "auto.session_token" },
         oauth: {
           type: "oauth2",
           description:
-            "OAuth 2.1 + PKCE (clients MCP) ; métadonnées : /.well-known/oauth-authorization-server/api/auth",
+            "OAuth 2.1 + PKCE (MCP clients); metadata: /.well-known/oauth-authorization-server/api/auth",
           flows: {
             authorizationCode: {
               authorizationUrl: "/api/auth/oauth2/authorize",
@@ -646,7 +646,7 @@ export function specification() {
                 openid: "Identité",
                 profile: "Profil",
                 email: "Adresse",
-                offline_access: "Jeton de rafraîchissement",
+                offline_access: "Refresh token",
               },
             },
           },
@@ -666,8 +666,8 @@ interface SpecAuth {
 }
 
 /**
- * Spécification servie : celle de l'API et celle de Better Auth (plugin openAPI), chemins préfixés par
- * /api/auth, étiquette « Authentification », schémas préfixés `Auth` (aucune collision avec ceux d'auto).
+ * Served specification: the API's and Better Auth's (openAPI plugin), paths prefixed by
+ * /api/auth, tag "Authentication", schemas prefixed `Auth` (no collision with auto's).
  */
 export async function specificationComplete(genererAuth: () => Promise<unknown>) {
   const base = specification();
@@ -676,7 +676,7 @@ export async function specificationComplete(genererAuth: () => Promise<unknown>)
   const paths: Record<string, unknown> = { ...base.paths };
   for (const [chemin, ops] of Object.entries(a.paths ?? {}).sort(([x], [y]) => x.localeCompare(y)))
     paths[`/api/auth${chemin}`] = Object.fromEntries(
-      Object.entries(ops).map(([m, o]) => [m, { ...o, tags: ["Authentification"] }]),
+      Object.entries(ops).map(([m, o]) => [m, { ...o, tags: ["Authentication"] }]),
     );
   const schemas = Object.fromEntries(Object.entries(a.components?.schemas ?? {}).map(([n, v]) => [`Auth${n}`, v]));
   return { ...base, paths, components: { ...base.components, schemas: { ...base.components.schemas, ...schemas } } };

@@ -1,6 +1,6 @@
-//! Présentations (`deckcraft-model`, `deckcraft-pptx`, `deckcraft-pdf`) : diapositive de titre
-//! puis diapositives titre et puces, sur le masque et les dispositions standard de DeckCraft
-//! (16:9) ; export PPTX et PDF (diapositives rendues, couche texte réelle, signets).
+//! Presentations (`deckcraft-model`, `deckcraft-pptx`, `deckcraft-pdf`): title slide then title-and-bullets slides,
+//! on the standard DeckCraft master and layouts (16:9); PPTX and PDF export (rendered slides, real text layer,
+//! bookmarks).
 
 use crate::{Erreur, R};
 use deckcraft_model::defaults::{layout_of_kind, new_presentation, new_slide};
@@ -20,7 +20,7 @@ pub enum Puce {
     Texte(String),
     Niveau {
         texte: String,
-        /// 0 à 4.
+        /// 0 to 4.
         #[serde(default)]
         niveau: u8,
     },
@@ -47,8 +47,8 @@ fn une_ligne(t: &str) -> String {
     t.replace(['\r', '\n', '\u{b}'], " ")
 }
 
-/// Remplit les espaces réservés de la diapositive : titre, puis corps (sous-titre ou contenu) ;
-/// un espace resté vide est retiré, pour ne pas montrer son invite.
+/// Fills the placeholders of the slide: title, then body (subtitle or content);
+/// a placeholder left empty is removed, so its prompt is not shown.
 fn remplir(s: &mut Slide, titre: &str, corps: Vec<Paragraph>) {
     let mut corps = Some(corps).filter(|c| !c.is_empty());
     s.shapes.retain_mut(|sh| {
@@ -75,7 +75,7 @@ pub fn creer_presentation(n: &NouvellePresentation) -> R<Presentation> {
         return Err(Erreur::Donnees(format!("{DIAPOSITIVES_MAX} diapositives au plus")));
     }
     if n.titre.is_empty() && n.diapositives.is_empty() {
-        return Err(Erreur::Donnees("titre ou diapositives requis".into()));
+        return Err(Erreur::Donnees("title or slides required".into()));
     }
     let mut p = new_presentation(None);
     p.props.title = n.titre.clone();
@@ -86,7 +86,7 @@ pub fn creer_presentation(n: &NouvellePresentation) -> R<Presentation> {
         remplir(Arc::make_mut(s), &n.titre, sous_titre);
     }
     let disposition = layout_of_kind(&p, LayoutType::TitleAndContent)
-        .ok_or_else(|| Erreur::Donnees("disposition « titre et contenu » absente".into()))?;
+        .ok_or_else(|| Erreur::Donnees("\"title and content\" layout missing".into()))?;
     for d in &n.diapositives {
         let mut s = new_slide(&mut p, disposition);
         let puces = d
@@ -117,12 +117,12 @@ pub fn lire_pptx(octets: &[u8]) -> R<Presentation> {
     Ok(deckcraft_pptx::import(octets)?)
 }
 
-/// PDF d'une diapositive par page (rendu à 150 ppp, texte sélectionnable).
+/// PDF with one slide per page (rendered at 150 dpi, selectable text).
 pub fn presentation_en_pdf(p: &Presentation) -> R<Vec<u8>> {
     Ok(deckcraft_pdf::export(p, &deckcraft_pdf::PdfOptions { dpi: 150.0, ..Default::default() })?)
 }
 
-/// Titre et texte de chaque diapositive (une ligne par paragraphe).
+/// Title and text of each slide (one line per paragraph).
 pub fn texte_presentation(p: &Presentation) -> Vec<String> {
     p.slides
         .iter()

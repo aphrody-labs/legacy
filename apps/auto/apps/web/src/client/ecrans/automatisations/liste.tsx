@@ -1,6 +1,6 @@
 // Écran « Automatisations » : workflows en cartes (déclencheur, interrupteur actif, dernière exécution),
 // galerie des modèles prêts à l'emploi et secrets référencés par `{{ $secret.nom }}`.
-import type { Modele } from "@auto/automate";
+import type { Modele } from "@aphrody/automate";
 import { api, ErreurApi, type ResumeAutomatisation } from "@auto/client";
 import { FileInput, KeyRound, Plus, Trash2, Workflow } from "@auto/ui/symboles";
 import {

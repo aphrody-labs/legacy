@@ -33,6 +33,11 @@ do --env {
     $env.WRANGLER_SEND_METRICS = 'false'
     $env.CHECKPOINT_DISABLE = '1'
     $env.FZF_DEFAULT_COMMAND = 'fd --type f --hidden --exclude .git --path-separator /'
+    $env.FZF_DEFAULT_OPTS = '--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8'
+    $env.STARSHIP_CONFIG = ([$h '\.config\starship.toml'] | str join)
+    $env.EZA_CONFIG_DIR = ([$h '\.config\eza'] | str join)
+    $env.BAT_CONFIG_PATH = ([$h '\.config\bat\config'] | str join)
+    $env.ATUIN_CONFIG_DIR = ([$h '\.config\atuin'] | str join)
     ['C:\Program Files\coreutils\bin' ([$h '\.local\bin'] | str join) ([$env.CARGO_HOME '\bin'] | str join) ([$env.BUN_INSTALL '\bin'] | str join) ([$env.DENO_INSTALL '\bin'] | str join) 'C:\Program Files\nodejs' ([$env.JAVA_HOME '\bin'] | str join) ([$env.ANDROID_HOME '\cmdline-tools\latest\bin'] | str join) ([$env.ANDROID_HOME '\platform-tools'] | str join) $env.GHIDRA_INSTALL_DIR]
   } else {
     $env.SRC_ROOT = ([$h '/src'] | str join)
@@ -63,6 +68,11 @@ do --env {
     $env.WRANGLER_SEND_METRICS = 'false'
     $env.CHECKPOINT_DISABLE = '1'
     $env.FZF_DEFAULT_COMMAND = 'fd --type f --hidden --exclude .git --path-separator /'
+    $env.FZF_DEFAULT_OPTS = '--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8'
+    $env.STARSHIP_CONFIG = ([$h '/.config/starship.toml'] | str join)
+    $env.EZA_CONFIG_DIR = ([$h '/.config/eza'] | str join)
+    $env.BAT_CONFIG_PATH = ([$h '/.config/bat/config'] | str join)
+    $env.ATUIN_CONFIG_DIR = ([$h '/.config/atuin'] | str join)
     [([$h '/.local/bin'] | str join) ([$env.CARGO_HOME '/bin'] | str join) ([$env.BUN_INSTALL '/bin'] | str join)]
   }
   let key = {|x| $x | str lowercase | str replace -a '\' '/' | str trim -r -c '/' }

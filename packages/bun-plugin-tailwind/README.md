@@ -1,5 +1,23 @@
 # @aphrody/bun-plugin-tailwind
 
+<!-- catalog:begin unit -->
+> Tailwind CSS v4 for Bun: Bun.build, the HTML dev server and Bun.serve, a PostCSS plugin on the same engine, and a Material 3 preset
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/bun-plugin-tailwind` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/bun-plugin-tailwind build
+bun run --cwd packages/bun-plugin-tailwind types:prepare
+bun run --cwd packages/bun-plugin-tailwind check:types
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Tailwind CSS v4 for Bun, on `@tailwindcss/node` and the Oxide scanner, with no Node.js involved:
 
 - `Bun.build` plugin, `Bun.serve` HTML imports and the `bun ./index.html` dev server (with hot reload),

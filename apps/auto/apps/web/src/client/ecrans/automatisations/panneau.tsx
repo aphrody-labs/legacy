@@ -1,7 +1,7 @@
 // Panneau du nœud sélectionné : paramètres (formulaire déduit du JSON Schema), résultat du dernier essai
 // (éléments par sortie, erreur, aperçu JSON) et réglages (désactivation, erreurs tolérées, note).
-import type { Noeud } from "@auto/automate";
-import type { Portee } from "@auto/automate/expressions";
+import type { Noeud } from "@aphrody/automate";
+import type { Portee } from "@aphrody/automate/expressions";
 import { api, type Etape, type TypeNoeudApi } from "@auto/client";
 import { Copy, Trash2, X } from "@auto/ui/symboles";
 import { Bouton, useToast } from "@auto/ui/react";

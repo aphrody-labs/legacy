@@ -9,7 +9,7 @@ import {
   type MessageArgs,
   type Translator,
 } from "@aphrody/i18n";
-import { FONT_LINK, NATIVE_CSS, m3List, paintMark, type } from "./m3.ts";
+import { FONT_LINK, NATIVE_CSS, m3List, type } from "./m3.ts";
 import { UI_CSS, themeButton } from "./ui.ts";
 import { METRICS, rating, type Summary } from "./runtime.ts";
 import {
@@ -140,7 +140,7 @@ const ORG = {
   "@id": "https://aphrody.com/#org",
   name: "Aphrody",
   url: "https://aphrody.com/",
-  logo: "https://aphrody.com/icon-512.png",
+  logo: "https://aphrody.com/favicon.png",
   email: "contact@aphrody.com",
 };
 
@@ -186,7 +186,7 @@ export function layout(
     tab === "home" || tab === "platform"
       ? `<nav class="langs" aria-label="${esc(t("home.lang"))}">${LOCALES.map((x) => `<a href="${pagePath(tab, x)}" hreflang="${x}" lang="${x}"${x === l ? ' aria-current="page"' : ""}>${esc(nativeName(x))}</a>`).join("")}</nav>`
       : "";
-  return `<!doctype html><html lang="${l}" dir="${dirOf(l)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${desc ? `<meta name="description" content="${esc(desc)}">` : ""}<meta name="color-scheme" content="light dark"><link rel="canonical" href="${url}">${alt}<link rel="icon" href="https://aphrody.com/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="https://aphrody.com/apple-touch-icon.png"><meta property="og:type" content="website"><meta property="og:site_name" content="aphrody.app"><meta property="og:locale" content="${ogLocale(l)}"><meta property="og:title" content="${esc(title)}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}<meta property="og:url" content="${url}"><meta property="og:image" content="https://aphrody.com/og-image.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">${tab === "dashboard" ? '<meta name="robots" content="noindex">' : '<meta name="robots" content="index, follow, max-image-preview:large">'}${FONT_LINK}<style>${reg.css}${NATIVE_CSS}${BASE_CSS}${UI_CSS}${HERO_CSS}</style><script src="/_/theme.js"></script><script src="/_/hero.js" defer></script><script src="/_aphrody/insights.js" defer></script>${graph}</head><body><a class="skip" href="#main">${esc(t("plat.skip"))}</a><header class="top-app-bar"><a class="logo" href="${localePath(l)}">${paintMark(reg.mark)}<span>aphrody.app</span></a><nav aria-label="${esc(t("plat.nav.label"))}">${nav("home", localePath(l), esc(t("plat.nav.home")))}${nav("platform", pagePath("platform", l), esc(t("plat.nav.platform")))}${nav("dashboard", "/dashboard", esc(t("plat.nav.dash")))}</nav>${langs}${themeButton(t("home.theme"))}</header>${o.hero ?? ""}<main id="main">${body}</main><footer><p>Aphrody. <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>. ${esc(t("plat.footer"))} <a href="https://aphrody.com/">aphrody.com</a>.</p></footer></body></html>`;
+  return `<!doctype html><html lang="${l}" dir="${dirOf(l)}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title>${desc ? `<meta name="description" content="${esc(desc)}">` : ""}<meta name="color-scheme" content="light dark"><link rel="canonical" href="${url}">${alt}<link rel="icon" href="https://aphrody.com/favicon.png" type="image/png"><link rel="apple-touch-icon" href="https://aphrody.com/favicon.png"><meta property="og:type" content="website"><meta property="og:site_name" content="aphrody.app"><meta property="og:locale" content="${ogLocale(l)}"><meta property="og:title" content="${esc(title)}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}<meta property="og:url" content="${url}"><meta property="og:image" content="https://aphrody.com/favicon.png"><meta name="twitter:card" content="summary">${tab === "dashboard" ? '<meta name="robots" content="noindex">' : '<meta name="robots" content="index, follow, max-image-preview:large">'}${FONT_LINK}<style>${reg.css}${NATIVE_CSS}${BASE_CSS}${UI_CSS}${HERO_CSS}</style><script src="/_/theme.js"></script><script src="/_/hero.js" defer></script><script src="/_aphrody/insights.js" defer></script>${graph}</head><body><a class="skip" href="#main">${esc(t("plat.skip"))}</a><header class="top-app-bar"><a class="logo" href="${localePath(l)}">${reg.mark}<span>aphrody.app</span></a><nav aria-label="${esc(t("plat.nav.label"))}">${nav("home", localePath(l), esc(t("plat.nav.home")))}${nav("platform", pagePath("platform", l), esc(t("plat.nav.platform")))}${nav("dashboard", "/dashboard", esc(t("plat.nav.dash")))}</nav>${langs}${themeButton(t("home.theme"))}</header>${o.hero ?? ""}<main id="main">${body}</main><footer><p>Aphrody. <a href="mailto:contact@aphrody.com">contact@aphrody.com</a>. ${esc(t("plat.footer"))} <a href="https://aphrody.com/">aphrody.com</a>.</p></footer></body></html>`;
 }
 
 const when = (iso: string | undefined, l: Locale) =>
@@ -243,7 +243,7 @@ export function platform(
         name: "aphrody.app",
         url: "https://aphrody.app/",
         description: desc,
-        image: "https://aphrody.com/og-image.png",
+        image: "https://aphrody.com/favicon.png",
         brand: { "@id": "https://aphrody.com/#org" },
         category: t("plat.category"),
       },

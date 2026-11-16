@@ -1,6 +1,6 @@
-# Canonical PowerShell profile (pwsh 7.7 + Windows PowerShell 5.1). Source: C:\aphrody\packages\machine\shells\pwsh\profile.ps1.
+# Profil PowerShell canonique (pwsh 7.7 + Windows PowerShell 5.1). Source : packages\machine\shells\pwsh\profile.ps1.
 # Deployed as a copy by packages/machine (shells/manifest.toml) to $PROFILE.CurrentUserCurrentHost of both editions.
-# Settings, versions and sources: docs/native/shell/pwsh-setup.md. 5.1-compatible code (no ??, no ternary, no &&).
+# Settings, versions and sources: docs/shell/pwsh-setup.md. 5.1-compatible code (no ??, no ternary, no &&).
 # No network, no module imported at startup; everything interactive is deferred until after the first prompt.
 
 # The startup path calls no cmdlet: the first one (Select-Object, Remove-Variable…) loads
@@ -36,9 +36,22 @@ $__ay_batch = $null; $__ay_noexit = $null; $__ay_a = $null
 
 # 4. Shortcuts to native tools (cat stays Get-Content; bat by its name).
 function ll { eza -la --git --icons=auto @args }
+function lt { eza -T --level=2 --icons=auto @args }
 function gs { git status -sb @args }
 function gd { git diff @args }
 function gl { git log --oneline --graph -20 @args }
+function lg { lazygit @args }
+function ff { fastfetch @args }
+function y {
+    $tmp = [System.IO.Path]::GetTempFileName()
+    try {
+        yazi @args --cwd-file="$tmp"
+        $cwd = [System.IO.File]::ReadAllText($tmp).Trim()
+        if ($cwd -and (Test-Path -LiteralPath $cwd)) { Set-Location -LiteralPath $cwd }
+    } finally {
+        Remove-Item -LiteralPath $tmp -Force -ErrorAction Ignore
+    }
+}
 
 # Visual Studio environment on demand (vswhere, no startup cost).
 function global:vs-env {
@@ -65,10 +78,12 @@ $global:__ay_generators = [ordered]@{
     # cobra: "2>&1" put on Invoke-Expression does not capture the native stderr of `gh __complete`
     # ("Completion ended with directive…" prints on the line); the redirection is moved into the command.
     gh     = @('gh', { (gh completion -s powershell) -replace '"\$RequestComp" 2>&1', '"$$RequestComp 2>`$$null"' })
-    cargo  = @('carapace', { carapace cargo powershell })
-    bun    = @('carapace', { carapace bun powershell })
-    git    = @('carapace', { carapace git powershell })
-    ay     = @('carapace', { if ([IO.File]::Exists("$env:APPDATA\carapace\specs\ay.yaml")) { carapace ay powershell } })
+    cargo    = @('carapace', { carapace cargo powershell })
+    bun      = @('carapace', { carapace bun powershell })
+    git      = @('carapace', { carapace git powershell })
+    ay       = @('carapace', { if ([IO.File]::Exists("$env:APPDATA\carapace\specs\ay.yaml")) { carapace ay powershell } })
+    starship = @('starship', { starship init powershell })
+    atuin    = @('atuin', { atuin init powershell --disable-up-arrow })
 }
 
 function global:Update-AyCompletions {

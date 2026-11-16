@@ -79,7 +79,7 @@ export interface Registry {
   inventory: InventoryItem[];
   labs: LabCard[];
   css: string; // Material 3 tokens from the design seed
-  mark: string; // brand mark SVG
+  mark: string; // logo markup
 }
 
 export const keys = {

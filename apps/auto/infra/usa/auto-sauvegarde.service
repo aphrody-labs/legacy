@@ -1,5 +1,5 @@
 [Unit]
-Description=Sauvegarde nocturne d'auto (Postgres chiffré et seau RustFS)
+Description=Nightly auto backup (encrypted Postgres and RustFS bucket)
 Requires=docker.service
 After=docker.service
 

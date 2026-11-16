@@ -7,6 +7,8 @@ description: Analyze an Electron app (app.asar + .unpacked, Electron version and
 
 Crate `src/electron-migrate` (package `aphrody-electron-migrate`, layer 4), wired by `src/ay/src/electron.rs`. ASAR parsing is `aphrody_re::asar`; version and fuses are `aphrody_re::electron`.
 
+Proof run, measured numbers, 1:1 / stubbed / unsupported tables and open items: [docs/native/ui/ELECTRON-MIGRATION.md](../../../docs/native/ui/ELECTRON-MIGRATION.md).
+
 ## CLI
 
 - `ay electron analyze <app dir|install dir|app.asar> [--out manifest.json] [--node-modules]`: JSON manifest (schema `ay-electron-manifest/1`). Version order: `version` file, executable bytes, package.json range. Every fact has `confidence` (`resolved` through the scope-aware alias table, `heuristic` by distinctive name such as `ipcMain` when a bundler hid the import). `limits` lists what a static scan cannot know (dynamic channel names, bytenode, webpack externals).

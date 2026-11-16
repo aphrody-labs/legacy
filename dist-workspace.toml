@@ -26,7 +26,7 @@ install-updater = false
 hosting = "github"
 pr-run-mode = "plan"
 # Build only the `aphrody` package (`--package`), not `--workspace`: cdylib members such as
-# src/agent/py cannot build for musl targets (release v0.2.0, 2026-11-13).
+# src/agent/context (cdylib) cannot build for musl targets (release v0.2.0, 2026-11-13).
 precise-builds = true
 # release.yml carries two manual patches (checkout token for private submodules; ubuntu-24.04
 # instead of 22.04, unsupported 2027-04-17, docs/infra/RUNNERS.md); re-apply them

@@ -2,6 +2,22 @@
 
 # @aphrody/bun-test-dom
 
+<!-- catalog:begin unit -->
+> No description in the manifest.
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/bun-test-dom` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/bun-test-dom typecheck
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Shared Bun test preload for happy-dom. It registers DOM globals and restores
 Bun's native fetch, request, response and abort primitives so network tests and
 `Bun.serve` keep Bun-compatible behavior.

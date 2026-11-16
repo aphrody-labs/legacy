@@ -1,5 +1,15 @@
 # @aphrody/next-bun
 
+<!-- catalog:begin unit -->
+> Next.js on Bun: run next with no Node.js (Turbopack workers included), build the Pages Router with Bun.build (experimental), Next 16 / Tailwind 4 codemods, instant navigation testing and a Next-compatible App Router on Bun.build + Bun.serve without Next (`@aphrody/next-bun/app`)
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/next-bun` |
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Next.js on Bun, for Next 16. One package, several entry points:
 
 | Entry point                                                 | What it does                                                                                                                                                                                                                 |

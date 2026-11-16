@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type { Moi } from "@auto/client";
-import { LIBELLES, peut as peutRole } from "@auto/tenancy/droits";
+import { libellesRoles, peut as peutRole } from "@auto/tenancy/droits";
+import { locale } from "./i18n";
 
 export interface Session {
   moi: Moi;
@@ -18,4 +19,5 @@ export function useSession(): Session {
 /** Rights per role, shared with the API (`@auto/tenancy/droits`); the API alone has the final say. */
 export const peut = peutRole;
 
-export const LIBELLE_ROLE = LIBELLES;
+/** Role labels in the language of the page. */
+export const LIBELLE_ROLE = libellesRoles(locale);

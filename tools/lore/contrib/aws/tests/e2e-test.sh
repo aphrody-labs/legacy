@@ -125,7 +125,7 @@ TEST_CMD_ID=$(aws ssm send-command \
   --instance-ids "$INSTANCE_ID" \
   --document-name "AWS-RunShellScript" \
   --timeout-seconds 600 \
-  --parameters "{\"commands\":[\"docker run --rm --network host -v /tmp/lore-src:/src -v /tmp/combined-ca.pem:/certs/ca.pem -v /tmp/e2e-payload.sh:/e2e-payload.sh -w /tmp rust:latest bash /e2e-payload.sh $PRIMARY_DNS $EDGE_DNS\"]}" \
+  --parameters "{\"commands\":[\"docker run --rm --network host -v /tmp/lore-src:/aphrody -v /tmp/combined-ca.pem:/certs/ca.pem -v /tmp/e2e-payload.sh:/e2e-payload.sh -w /tmp rust:latest bash /e2e-payload.sh $PRIMARY_DNS $EDGE_DNS\"]}" \
   --query 'Command.CommandId' --output text --region "$REGION")
 
 info "Command: $TEST_CMD_ID"

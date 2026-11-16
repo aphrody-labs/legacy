@@ -1,6 +1,6 @@
 // Automations of a company: validation of definitions, execution (API for trials and
 // synchronous webhooks, worker for events and crons), encrypted secrets and signed webhook URL.
-// The engine (`@auto/automate`) makes no outside access itself: the services below carry them,
+// The engine (`@aphrody/automate`) makes no outside access itself: the services below carry them,
 // with the network guard, the tenant's mailbox and the auto API under the rights of the workflow's author.
 import {
   declencheurDe,
@@ -12,7 +12,7 @@ import {
   type Element,
   type Resultat,
   type Services,
-} from "@auto/automate";
+} from "@aphrody/automate";
 import {
   debuterExecution,
   ecrireMemoire,

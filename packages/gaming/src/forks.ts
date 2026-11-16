@@ -28,6 +28,11 @@ export const GAMING_CHECKOUTS = [
   "MangoHud",
   "gamemode",
   "steamroom",
+  "bevy",
+  "bevy_steamworks",
+  "steamworks-rs",
+  "eos",
+  "legendary",
 ] as const;
 
 export interface ForkPin {

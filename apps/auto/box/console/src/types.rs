@@ -1,4 +1,4 @@
-//! Données échangées entre le serveur et la page (sérialisées par les fonctions serveur).
+//! Data exchanged between the server and the page (serialized by the server functions).
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -11,14 +11,18 @@ pub enum EtatService {
 }
 
 impl EtatService {
-    pub fn libelle(self) -> &'static str {
-        match self {
-            Self::Marche => "En marche",
-            Self::Demarrage => "Démarre",
-            Self::Panne => "En panne",
-            Self::Arret => "Arrêté",
-            Self::Absent => "Non installé",
-        }
+    /// Label in the current page locale.
+    pub fn libelle(self) -> String {
+        crate::i18n::t(
+            match self {
+                Self::Marche => "state.running",
+                Self::Demarrage => "state.starting",
+                Self::Panne => "state.down",
+                Self::Arret => "state.stopped",
+                Self::Absent => "state.absent",
+            },
+            &[],
+        )
     }
     pub fn classe(self) -> &'static str {
         match self {
@@ -38,7 +42,7 @@ pub struct ServiceVu {
     pub role: String,
     pub couleur: String,
     pub technique: bool,
-    /// Lien « Ouvrir », calculé par le serveur depuis l'hôte de la requête (ou le domaine de la boîte).
+    /// "Open" link, computed by the server from the request host (or the box domain).
     pub lien: Option<String>,
     pub etat: EtatService,
     pub statut: Option<String>,
@@ -97,28 +101,37 @@ pub struct Acces {
     pub mot_de_passe: String,
 }
 
-/// Taille lisible : 1,5 Go, 300 Mo…
+/// Readable size in the current page locale: 1.5 GB, 300 MB...
 pub fn octets(n: u64) -> String {
-    const UNITES: [&str; 5] = ["o", "Ko", "Mo", "Go", "To"];
+    octets_in(crate::i18n::current(), n)
+}
+
+/// Readable size in `locale`: units and decimal separator come from its catalog.
+pub fn octets_in(locale: &str, n: u64) -> String {
+    use crate::i18n::translate;
+    let units = translate(locale, "size.units", &[]);
+    let units: Vec<&str> = units.split(',').collect();
     let mut v = n as f64;
     let mut i = 0;
-    while v >= 1024.0 && i < UNITES.len() - 1 {
+    while v >= 1024.0 && i < units.len() - 1 {
         v /= 1024.0;
         i += 1;
     }
     let texte = if v < 10.0 && i > 0 { format!("{v:.1}") } else { format!("{v:.0}") };
-    format!("{} {}", texte.replace('.', ","), UNITES[i])
+    format!("{} {}", texte.replace('.', &translate(locale, "number.decimal", &[])), units[i])
 }
 
 #[cfg(test)]
 mod tests {
-    use super::octets;
+    use super::octets_in;
 
     #[test]
-    fn tailles_lisibles() {
-        assert_eq!(octets(512), "512 o");
-        assert_eq!(octets(1536), "1,5 Ko");
-        assert_eq!(octets(2_684_354_560), "2,5 Go");
-        assert_eq!(octets(300 * 1024 * 1024), "300 Mo");
+    fn readable_sizes() {
+        assert_eq!(octets_in("en", 512), "512 B");
+        assert_eq!(octets_in("en", 1536), "1.5 KB");
+        assert_eq!(octets_in("fr", 512), "512 o");
+        assert_eq!(octets_in("fr", 1536), "1,5 Ko");
+        assert_eq!(octets_in("fr", 2_684_354_560), "2,5 Go");
+        assert_eq!(octets_in("en", 300 * 1024 * 1024), "300 MB");
     }
 }

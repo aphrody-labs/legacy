@@ -2,7 +2,7 @@
 // encoding), Bun.Video (metadata, extracted frame, GIF; Rust FilmCraft provider) and Bun.WebView (rendered web
 // page, capture, text). Verified on the production runtime (bun 1.4.5: Bun.Image, Bun.Video.available,
 // Bun.WebView present). The browser requires Chrome or Chromium on the machine: without it, the node fails clearly.
-import type { OperationsImage, Services } from "@auto/automate";
+import type { OperationsImage, Services } from "@aphrody/automate";
 
 const TYPES = { jpeg: "image/jpeg", png: "image/png", webp: "image/webp" } as const;
 type Encodable = keyof typeof TYPES;

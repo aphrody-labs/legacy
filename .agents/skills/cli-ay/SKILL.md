@@ -18,7 +18,6 @@ Aphrody monorepo CLI
 Usage: ay <COMMAND>
 
 Commands:
-  arch         Architecture gate ARCH-001..017: check, rules, graph
   doctor       Toolchain doctor
   lock         Regenerate src.lock.json, DEPS, .repo manifest and MAINTAINERS
   manifests    Generate governance manifests; `ay manifests verify` checks them
@@ -45,7 +44,7 @@ Commands:
   auth         Every authentication of the fleet (env-kit): status, repair [--browser], gh-secrets, tunnels...
   secret       OS secret store (DPAPI on Windows, systemd-creds on Linux): info, list, set, exec, pipe, import
   vault        Vault: init, add, import-chrome-csv, export-chrome-csv, sync, status, ...
-  conformance  Conformance suites: [--fetch] [suite...] writes test/conformance/results/; `channels [platform]` ...
+  conformance  Conformance suites: [--fetch] [suite...] writes conformance/results/; `channels [platform]` ...
   build        Build the workspace for a cross-compilation preset (--list shows toolchain status)
   sys          Machine profile: OS, firmware/SMBIOS, CPUID, PCI, GPUs, disks, virtualization, toolchains
   up           Install and update the toolchain from tools.toml: --check, --list, --setup
@@ -68,7 +67,7 @@ Options:
 Areas:
   repo       arch, lock, manifests, git, ingest, graph, conformance
   toolchain  up, doctor, sys, build, self-update, rt
-  bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in crates/bun-flat), hash, time
+  bun        bun (upstream watch), docs (Bun docs index), flat (resync src/<fork>-flat crates from a fork checkout), hash, time
   chromium   chromium (fr1 build chain), gclient, fetch, gn, ninja, cipd, cl, vpy, engines (V8, JSC, Dawn, ...
   fleet      ssh, deploy, auth, secret, vault, ai, agents
   measure    bench, time

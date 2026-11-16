@@ -1,0 +1,32 @@
+---
+title: Core Web Vitals & Lighthouse Gates
+description: Compile-time verification for CLS = 0, sub-second LCP, WCAG 2.2 AA contrast, and 100% Lighthouse audit compliance.
+---
+
+## Performance Directives
+
+Google Design surfaces must enforce strict performance standards:
+
+| Metric                              | Target          | Verification Method                                                 |
+| :---------------------------------- | :-------------- | :------------------------------------------------------------------ |
+| **CLS (Cumulative Layout Shift)**   | `0.0`           | Explicit aspect ratios and reservation slots for all dynamic assets |
+| **LCP (Largest Contentful Paint)**  | `< 800ms`       | Inlined critical CSS tokens and optimized SVG symbols               |
+| **INP (Interaction to Next Paint)** | `< 50ms`        | Passive event listeners and zero heavy JavaScript runtimes          |
+| **WCAG 2.2 Contrast**               | `>= 4.5:1 (AA)` | Mathematical HCT tone delta $\Delta \text{Tone} \ge 40$             |
+
+---
+
+## UI Gate Verifier (`gds verify`)
+
+Audit any directory with the 3-letter CLI:
+
+```bash terminal icon="terminal"
+gds verify C:\aphrody\apps\web
+```
+
+The gate checks:
+
+- Strict M3 token usage (flags rogue hex codes).
+- 4dp/8dp grid adherence for margins, paddings, and gaps.
+- Material Symbols viewBox integrity.
+- Contrast ratio mathematical verification.

@@ -1,5 +1,5 @@
-//! Modèles d'Ollama : liste, modèles chargés, téléchargement en tâche de fond (progression NDJSON suivie en
-//! mémoire et relue par la page) et suppression.
+//! Ollama models: list, loaded models, background download (NDJSON progress tracked in
+//! memory and re-read by the page) and deletion.
 use futures_util::StreamExt;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -7,22 +7,19 @@ use std::sync::{Arc, Mutex};
 
 use crate::types::{Modele, Progression, Suggestion};
 
-/// Modèles proposés à l'installation, du plus léger au plus capable.
-pub fn suggestions() -> Vec<Suggestion> {
-    [
-        ("qwen3:4b", "Conversation et agents, léger (2,5 Go)"),
-        ("llama3.2:3b", "Rapide, pour les petites machines (2 Go)"),
-        ("qwen2.5vl:7b", "Lit les images et les documents scannés (6 Go)"),
-        ("mistral-small3.2", "Plus capable, en français (15 Go)"),
-        ("gpt-oss:20b", "Raisonnement, carte graphique conseillée (14 Go)"),
-        ("nomic-embed-text", "Recherche dans vos documents (300 Mo)"),
-    ]
-    .into_iter()
-    .map(|(nom, usage)| Suggestion { nom: nom.into(), usage: usage.into() })
-    .collect()
+/// Models offered at installation, from the lightest to the most capable; the usage text is in `locale`.
+pub fn suggestions(locale: &str) -> Vec<Suggestion> {
+    ["qwen3:4b", "llama3.2:3b", "qwen2.5vl:7b", "mistral-small3.2", "gpt-oss:20b", "nomic-embed-text"]
+        .into_iter()
+        .enumerate()
+        .map(|(i, nom)| Suggestion {
+            nom: nom.into(),
+            usage: crate::i18n::translate(locale, &format!("suggestion.{}", i + 1), &[]),
+        })
+        .collect()
 }
 
-/// Nom de modèle Ollama : « famille[:étiquette] », espace de noms facultatif ; rien d'autre ne passe.
+/// Ollama model name: "family[:tag]", optional namespace; nothing else passes.
 pub fn nom_valide(nom: &str) -> bool {
     let (base, etiquette) = nom.split_once(':').unwrap_or((nom, "latest"));
     let segment = |s: &str| {
@@ -81,7 +78,7 @@ impl Ollama {
             .timeout(std::time::Duration::from_secs(5))
             .send()
             .await
-            .map_err(|_| "Ollama ne répond pas : service en cours de démarrage ou arrêté.".to_string())?;
+            .map_err(|_| "ollama_unreachable".to_string())?;
         if !r.status().is_success() {
             return Err(format!("Ollama {}", r.status()));
         }
@@ -123,7 +120,7 @@ impl Ollama {
         Ok(())
     }
 
-    /// Téléchargement suivi dans `suivi` ; rend la main tout de suite.
+    /// Download tracked in `suivi`; returns immediately.
     pub fn telecharger(&'static self, nom: String, suivi: Arc<Mutex<HashMap<String, Progression>>>) {
         let maj = {
             let suivi = suivi.clone();

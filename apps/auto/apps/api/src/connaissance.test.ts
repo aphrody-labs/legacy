@@ -1,8 +1,8 @@
-// Base de connaissances de bout en bout : indexation de deux documents (PDF et Word) par les nœuds, recherche,
-// modèle « Répondre aux questions avec vos documents » par webhook, comptes et suppression par l'API, isolation.
-// Un faux serveur compatible OpenAI renvoie des embeddings déterministes (sac de mots haché) et une réponse de chat.
+// Knowledge base end to end: indexing of two documents (PDF and Word) by the nodes, search,
+// "Answer questions with your documents" template by webhook, counts and deletion through the API, isolation.
+// A fake OpenAI-compatible server returns deterministic embeddings (hashed bag of words) and a chat answer.
 import { afterAll, beforeAll, expect, test } from "bun:test";
-import { MODELES } from "@auto/automate";
+import { MODELES } from "@aphrody/automate";
 import { creerDocx, docxEnPdf } from "@auto/native";
 import { testDb, type Sql } from "@auto/store";
 import { creerApp } from "./app";
@@ -14,7 +14,7 @@ let ia: ReturnType<typeof Bun.serve>;
 const DIMENSION = 64;
 const lots: number[] = [];
 
-/** Vecteur d'un texte : un compte par mot (sans accents, 4 lettres au moins) haché sur 64 composantes. */
+/** Vector of a text: one count per word (no accents, at least 4 letters) hashed over 64 components. */
 function vecteur(texte: string): number[] {
   const v = Array.from({ length: DIMENSION }, () => 0);
   for (const mot of texte
@@ -89,7 +89,7 @@ const EMBEDDINGS = () => ({ api: `${ia.url.origin}/v1`, modele: "hachage-64", cl
 
 const fichier = (nom: string, type: string, octets: Uint8Array) => ({ nom, type, base64: octets.toBase64() });
 
-/** Essai d'un workflow manuel à un nœud (indexer ou rechercher) ; renvoie l'exécution. */
+/** Trial of a one-node manual workflow (index or search); returns the run. */
 async function essai(session: string, type: string, parametres: object, donnees?: unknown) {
   const definition = {
     noeuds: [
@@ -119,10 +119,10 @@ const LIVRAISON = creerDocx({
   ],
 });
 
-test("indexer deux documents, rechercher, répondre par le modèle, comptes, suppression, isolation", async () => {
+test("index two documents, search, answer with the template, counts, deletion, isolation", async () => {
   const a = await entreprise("Atelier Morel");
 
-  // Indexation : un PDF (couche texte lue par pdfcraft) et un document Word (texte lu par wordcraft).
+  // Indexing: a PDF (text layer read by pdfcraft) and a Word document (text read by wordcraft).
   const pdf = await essai(
     a,
     "ia.indexer",
@@ -147,7 +147,7 @@ test("indexer deux documents, rechercher, répondre par le modèle, comptes, sup
   expect(docx.statut).toBe("succes");
   expect(docx.sortie[0].json).toMatchObject({ source: "livraison.docx", morceaux: 1 });
 
-  // Recherche : le bon morceau en tête, contexte prêt pour ia.texte.
+  // Search: the right chunk first, context ready for ia.texte.
   const r = await essai(a, "ia.rechercher", { question: "Combien de temps dure la garantie constructeur ?", k: 3 });
   expect(r.statut).toBe("succes");
   const el = r.sortie[0].json as { resultats: { source: string; texte: string; score: number }[]; contexte: string };
@@ -158,10 +158,10 @@ test("indexer deux documents, rechercher, répondre par le modèle, comptes, sup
   expect(el.contexte.startsWith("[garantie.pdf, partie ")).toBe(true);
   const port = await essai(a, "ia.rechercher", { question: "Les frais de port de la commande", k: 1 });
   expect(port.sortie[0].json.resultats[0].source).toBe("livraison.docx");
-  // La clé d'API (secret) n'apparaît pas dans les étapes.
+  // The API key (secret) does not appear in the steps.
   expect(JSON.stringify(r.etapes)).not.toContain("cle-test");
 
-  // Modèle « Répondre aux questions avec vos documents » : webhook → recherche → modèle de langage → réponse.
+  // "Answer questions with your documents" template: webhook → search → language model → answer.
   const modele = MODELES.find((m) => m.id === "questions-documents")!;
   const definition = structuredClone(modele.definition);
   for (const n of definition.noeuds) {
@@ -176,7 +176,7 @@ test("indexer deux documents, rechercher, répondre par le modèle, comptes, sup
   expect(reponse.body.reponse).toBe("La garantie dure deux ans [garantie.pdf].");
   expect(reponse.body.sources[0].source).toBe("garantie.pdf");
 
-  // Comptes par base ; réindexer une source la remplace.
+  // Counts per base; re-indexing a source replaces it.
   const bases = (await api("/v1/connaissances", a)).body;
   expect(bases).toHaveLength(1);
   expect(bases[0]).toMatchObject({ base: "documents", sources: 2, modele: "hachage-64", dimension: DIMENSION });
@@ -192,12 +192,12 @@ test("indexer deux documents, rechercher, répondre par le modèle, comptes, sup
   expect(encore.sortie[0].json).toMatchObject({ morceaux: 1, remplaces: 1 });
   expect((await api("/v1/connaissances", a)).body[0].morceaux).toBe(total);
 
-  // Un autre modèle d'embeddings sur la même base est refusé.
+  // Another embedding model on the same base is refused.
   const autreModele = await essai(a, "ia.indexer", { texte: "Autre texte", source: "x", modele: "autre" });
   expect(autreModele.statut).toBe("erreur");
   expect(autreModele.erreur).toContain("même modèle");
 
-  // Isolation : la seconde entreprise ne voit ni ne retrouve rien de la première.
+  // Isolation: the second company neither sees nor finds anything of the first.
   const b = await entreprise("Autre");
   expect((await api("/v1/connaissances", b)).body).toEqual([]);
   const rien = await essai(b, "ia.rechercher", { question: "garantie" });
@@ -209,7 +209,7 @@ test("indexer deux documents, rechercher, répondre par le modèle, comptes, sup
   expect((await api("/v1/connaissances/documents", b, undefined, "DELETE")).body.morceaux).toBe(1);
   expect((await api("/v1/connaissances", a)).body[0].morceaux).toBe(total);
 
-  // Suppression d'une source puis de la base.
+  // Deletion of a source then of the base.
   const s = await api("/v1/connaissances/documents?source=livraison.docx", a, undefined, "DELETE");
   expect(s).toEqual({ status: 200, body: { morceaux: 1 } });
   expect((await api("/v1/connaissances", a)).body[0]).toMatchObject({ sources: 1, morceaux: total - 1 });

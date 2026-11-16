@@ -14,12 +14,13 @@ import {
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { delimiter, join, resolve } from "node:path";
+import { delimiter, dirname, join, resolve } from "node:path";
 
 const HOME = process.env.USERPROFILE ?? process.env.HOME ?? "";
 const LOCAL_BIN = join(HOME, ".local", "bin");
 const CARGO_BIN = join(HOME, ".cargo", "bin");
 const BUN_BIN = join(HOME, ".bun", "bin");
+const SRC_BIN = "C:\\aphrody\\node_modules\\.bin";
 
 const BLOCK_START = "# >>> aphrody-path >>>";
 const BLOCK_END = "# <<< aphrody-path <<<";
@@ -134,13 +135,65 @@ export function scanCmdBrokenTargets(
   content: string,
   baseDir: string,
 ): string[] {
+  const vars = new Map<string, string>([
+    ["userprofile", HOME],
+    ["home", HOME],
+    [
+      "localappdata",
+      process.env.LOCALAPPDATA ?? join(HOME, "AppData", "Local"),
+    ],
+    ["appdata", process.env.APPDATA ?? join(HOME, "AppData", "Roaming")],
+  ]);
+  const expand = (raw: string): string => {
+    let out = raw.replace(/^%~dp0/i, `${baseDir}\\`);
+    out = out.replace(/%([A-Za-z_][A-Za-z0-9_]*)%/g, (full, k: string) => {
+      return vars.get(k.toLowerCase()) ?? process.env[k] ?? full;
+    });
+    return out;
+  };
+  for (const m of content.matchAll(
+    /^\s*set\s+"?([A-Za-z_][A-Za-z0-9_]*)=([^"\r\n]+)"?/gim,
+  )) {
+    const val = expand(m[2]!.trim());
+    if (!val.includes("%")) vars.set(m[1]!.toLowerCase(), val);
+  }
   const missing: string[] = [];
-  const re = /(?:%~dp0|[A-Za-z]:\\)[^"\r\n]+\.(?:exe|ts|js|jar|bat|cmd|ps1)/gi;
+  const seen = new Set<string>();
+  const re =
+    /(?:%~dp0|%(?:USERPROFILE|LOCALAPPDATA|APPDATA|GHIDRA_INSTALL_DIR|JAVA_HOME|PYTHONHOME)%|[A-Za-z]:\\)[^"\r\n]+\.(?:exe|ts|js|mjs|cjs|jar|bat|cmd|ps1)/gi;
   for (const m of content.matchAll(re)) {
-    const raw = m[0]!.replace(/^%~dp0/i, `${baseDir}\\`);
-    if (!existsSync(raw)) missing.push(raw);
+    const expanded = expand(m[0]!);
+    if (expanded.includes("%")) continue;
+    const resolved = resolve(baseDir, expanded);
+    if (!existsSync(resolved) && !seen.has(resolved)) {
+      seen.add(resolved);
+      missing.push(resolved);
+    }
+  }
+  for (const v of ["pythonhome", "helix_runtime", "ghidra_install_dir"]) {
+    const val = vars.get(v);
+    if (val && /^[A-Za-z]:\\/.test(val) && !existsSync(val) && !seen.has(val)) {
+      seen.add(val);
+      missing.push(val);
+    }
   }
   return missing;
+}
+
+export function scanBunxBrokenTarget(
+  buf: Buffer,
+  binDir: string,
+): string | null {
+  const u16 = buf.toString("utf16le");
+  const m = u16.match(/^([^\x00-\x1f"]+)/);
+  if (!m) return "unparseable .bunx";
+  const target = m[1]!;
+  const isGlobalBun = binDir.toLowerCase().endsWith("\\.bun\\bin");
+  const baseDir = isGlobalBun ? join(HOME, ".bun") : dirname(binDir);
+  const resolved = /^[A-Za-z]:/.test(target)
+    ? target
+    : resolve(baseDir, target);
+  return existsSync(resolved) ? null : resolved;
 }
 
 export function scanBinDir(dir: string): BinIssue[] {
@@ -148,7 +201,9 @@ export function scanBinDir(dir: string): BinIssue[] {
   const issues: BinIssue[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
-    if (/\.(?:old|bak|tmp)(?:\.\d+)*$/i.test(entry.name)) {
+    if (
+      /\.(?:old|bak|tmp|outdated|previous)(?:[-.]\d+|\.exe)*$/i.test(entry.name)
+    ) {
       issues.push({ kind: "stale", path: full, detail: "stale backup file" });
       continue;
     }
@@ -172,6 +227,7 @@ export function scanBinDir(dir: string): BinIssue[] {
       }
       continue;
     }
+    if (st.isDirectory()) continue;
     if (st.isFile() && st.size === 0) {
       issues.push({
         kind: "zero-byte",
@@ -180,10 +236,11 @@ export function scanBinDir(dir: string): BinIssue[] {
       });
       continue;
     }
+    const lower = entry.name.toLowerCase();
     if (
       process.platform === "win32" &&
       entry.isFile() &&
-      entry.name.toLowerCase().endsWith(".cmd")
+      lower.endsWith(".cmd")
     ) {
       try {
         const text = readFileSync(full, "utf8");
@@ -194,6 +251,48 @@ export function scanBinDir(dir: string): BinIssue[] {
             path: full,
             detail: `missing ${missing.join(", ")}`,
           });
+        }
+      } catch {}
+    } else if (entry.isFile() && lower.endsWith(".bunx")) {
+      try {
+        const broken = scanBunxBrokenTarget(readFileSync(full), dir);
+        if (broken) {
+          issues.push({
+            kind: "broken-cmd",
+            path: full,
+            detail: `missing ${broken}`,
+          });
+        }
+      } catch {}
+    } else if (entry.isFile() && lower.endsWith(".shim")) {
+      try {
+        const text = readFileSync(full, "utf8");
+        const m = text.match(/^\s*path\s*=\s*"?([^"\r\n]+)"?/m);
+        if (m?.[1] && !existsSync(m[1])) {
+          issues.push({
+            kind: "broken-cmd",
+            path: full,
+            detail: `missing ${m[1]}`,
+          });
+        }
+      } catch {}
+    } else if (entry.isFile() && !entry.name.includes(".") && st.size < 8192) {
+      try {
+        const text = readFileSync(full, "utf8");
+        if (text.startsWith("#!")) {
+          const missing: string[] = [];
+          for (const m of text.matchAll(
+            /"([A-Za-z]:\/[^"\r\n]+\.(?:exe|ts|js|mjs|cjs|jar|bat|cmd))"/gi,
+          )) {
+            if (!existsSync(m[1]!)) missing.push(m[1]!);
+          }
+          if (missing.length > 0) {
+            issues.push({
+              kind: "broken-cmd",
+              path: full,
+              detail: `missing ${missing.join(", ")}`,
+            });
+          }
         }
       } catch {}
     }
@@ -222,7 +321,11 @@ export function getMachineEntries(): string[] {
   return [];
 }
 
-export function audit(binDirs = [LOCAL_BIN, CARGO_BIN, BUN_BIN]): PathAudit {
+export function audit(
+  binDirs = existsSync(SRC_BIN)
+    ? [LOCAL_BIN, CARGO_BIN, BUN_BIN, SRC_BIN]
+    : [LOCAL_BIN, CARGO_BIN, BUN_BIN],
+): PathAudit {
   const userEntries = getUserEntries();
   const machineEntries = getMachineEntries();
   const seenUser = new Set<string>();
@@ -303,11 +406,19 @@ export function linkBinary(name: string, target: string): string {
   if (!existsSync(abs)) throw new Error(`target does not exist: ${abs}`);
   if (process.platform === "win32") {
     const shim = join(LOCAL_BIN, `${name}.cmd`);
-    const body =
-      abs.endsWith(".ts") || abs.endsWith(".js")
-        ? `@echo off\r\nbun run "${abs}" %*\r\n`
-        : `@echo off\r\n"${abs}" %*\r\n`;
+    const isScript = abs.endsWith(".ts") || abs.endsWith(".js");
+    const body = isScript
+      ? `@echo off\r\nbun run "${abs}" %*\r\n`
+      : `@echo off\r\n"${abs}" %*\r\n`;
     writeFileSync(shim, body);
+    const posix = join(LOCAL_BIN, name);
+    const fwd = abs.replaceAll("\\", "/");
+    writeFileSync(
+      posix,
+      isScript
+        ? `#!/bin/sh\nexec bun run "${fwd}" "$@"\n`
+        : `#!/bin/sh\nexec "${fwd}" "$@"\n`,
+    );
     return shim;
   }
   const dest = join(LOCAL_BIN, name);

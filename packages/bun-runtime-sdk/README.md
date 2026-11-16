@@ -1,5 +1,28 @@
 # @aphrody/bun-runtime-sdk
 
+<!-- catalog:begin unit -->
+> SDK of the buv native runtime: versioned buv C ABI with compatible yolo exports and Bun, .NET and Python bindings
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/bun-runtime-sdk` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/bun-runtime-sdk build
+bun run --cwd packages/bun-runtime-sdk test
+bun run --cwd packages/bun-runtime-sdk test:rust
+bun run --cwd packages/bun-runtime-sdk test:dotnet
+bun run --cwd packages/bun-runtime-sdk typecheck
+bun run --cwd packages/bun-runtime-sdk stage
+bun run --cwd packages/bun-runtime-sdk test:python
+bun run --cwd packages/bun-runtime-sdk prepack
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 ## Bun-native typed decisions
 
 `@aphrody/bun-runtime-sdk/yolo` reexports the default and named exports of

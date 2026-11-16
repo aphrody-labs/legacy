@@ -1,10 +1,13 @@
 # Aphrody
 
-Open-source Rust game engine (Bevy + ArtCraft), creative suite, WebGPU/WGSL Wayland shell, Omarchy + CachyOS orchestration, and zero-MSYS Unix/Windows portability layer.
+Open-source Pure C (`-std=gnu11`), Assembly, LLVM, and WebAssembly 3.0 / WASI / WebGPU platform (`src/` -> `aysys.dll`, `aysys.wasm`, `ay-m3-site.wasm`, `wayland.wasm`) sharing exact Material 3 Expressive tokens across Android NDK, Jetpack Compose, Flutter, Rust (`aphrody-ui`, `taffy`, `egui`, `iced`, `libcosmic`, `bevy`, `leptos`, `dioxus`, `tauri`), Pure Bun, React, WinUI 3, Figma, and Google Stitch.
 
 ## Domains
 - https://aphrody.com/
+- https://aphrody.com/m3/
+- https://aphrody.com/wayland/
 - https://aphrody.app/
+- https://github.com/aphrody-labs/aphrody
 
 ## Contact
 - contact@aphrody.com

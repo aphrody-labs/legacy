@@ -25,6 +25,7 @@ tauri-v3-shell = [
 ]
 
 [dependencies]
+aphrody-audio = { path = "../audio", features = ["full"] }
 anyhow = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }
 base64 = "0.22.1"
@@ -35,14 +36,7 @@ serde_json = { workspace = true }
 tokio = { workspace = true }
 
 # Internal consolidated workspace crates
-voice_dsp = { path = "../voice_dsp" }
-mic_bridge = { path = "../mic_bridge" }
 flowcat-core = { path = "../flowcat-core" }
-polaris-audio = { path = "../polaris-audio" }
-voicebox-audio = { path = "../voicebox-audio" }
-lu-voice-engine = { path = "../lu-voice-engine" }
-jan-agent-audio = { path = "../jan-agent-audio" }
-awesome-rust-audio = { path = "../awesome-rust-audio" }
 openpets-core = { path = "../openpets-core" }
 
 # Tauri v3 Alpha (November 2026 release line)

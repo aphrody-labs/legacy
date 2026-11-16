@@ -1,11 +1,11 @@
-// Lot L3 : imports de tableurs (aperçu et correspondance guidée) et exports comptables (xlsx, FEC).
+// Batch L3: spreadsheet imports (preview and guided mapping) and accounting exports (xlsx, FEC).
+import { ErreurApi } from "../i18n";
 import { desequilibres, ecritureEncaissement, ecritureVente, fec, latin9, nomFec } from "@auto/domain";
 import {
   CHAMPS_CLIENT,
   CHAMPS_PRODUIT,
   creances,
   encaissements,
-  ErreurMetier,
   importerClients,
   importerProduits,
   piecesVente,
@@ -21,24 +21,24 @@ import type { Module } from "../modules";
 import { brut, date, liste, objet, op, str } from "../openapi-outils";
 import type { Chemins } from "../modules";
 
-/** Taille maximale d'un fichier importé (le tableur est décodé en mémoire). */
+/** Maximum size of an imported file (the spreadsheet is decoded in memory). */
 const MAX_OCTETS = 10 * 1024 * 1024;
 
 interface CorpsImport {
   /** Fichier en base64 (xlsx, xls, xlsb, ods, csv). */
   fichier: string;
   feuille?: number;
-  /** Index de la ligne d'en-tête (0 par défaut) ; les données suivent. */
+  /** Index of the header row (0 by default); the data follow. */
   entete?: number;
 }
 
 function decoder(b: CorpsImport) {
-  if (typeof b?.fichier !== "string") throw new ErreurMetier("fichier (base64) manquant");
+  if (typeof b?.fichier !== "string") throw new ErreurApi("file_missing");
   const octets = Uint8Array.fromBase64(b.fichier);
-  if (octets.length > MAX_OCTETS) throw new ErreurMetier("fichier trop volumineux (10 Mo au plus)", [], 413);
+  if (octets.length > MAX_OCTETS) throw new ErreurApi("file_too_large_10mb", [], 413);
   const lecture = lireTableur(octets);
   const f = lecture.feuilles[b.feuille ?? 0];
-  if (!f) throw new ErreurMetier("feuille introuvable");
+  if (!f) throw new ErreurApi("sheet_not_found");
   const entete = b.entete ?? 0;
   return {
     lecture,
@@ -55,7 +55,7 @@ const periode = (req: Request) => {
   const du = q.get("du") ?? `${annee}-01-01`;
   const au = q.get("au") ?? `${annee}-12-31`;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(du) || !/^\d{4}-\d{2}-\d{2}$/.test(au) || au < du)
-    throw new ErreurMetier("période invalide : du ≤ au, au format AAAA-MM-JJ");
+    throw new ErreurApi("invalid_period");
   return { du, au };
 };
 
@@ -174,7 +174,7 @@ export const routes: Module = ({ sql, auth }) => ({
       }));
       const lignes = [...ventes.flatMap((p) => ecritureVente(p)), ...banque.flatMap(ecritureEncaissement)];
       const ecarts = desequilibres(lignes);
-      if (ecarts.length) throw new ErreurMetier("écritures déséquilibrées", ecarts, 500);
+      if (ecarts.length) throw new ErreurApi("entries_unbalanced", ecarts, 500);
       const e = await entreprise(sql, a.tenantId);
       return fichier(latin9(fec(lignes)), nomFec(e.siret.slice(0, 9), au), "text/plain; charset=iso-8859-15");
     }),
@@ -182,9 +182,9 @@ export const routes: Module = ({ sql, auth }) => ({
 });
 
 const PERIODE = [
-  { nom: "annee", schema: str, description: "Année civile (par défaut l'année en cours)" },
-  { nom: "du", schema: date, description: "Début de période" },
-  { nom: "au", schema: date, description: "Fin de période" },
+  { nom: "annee", schema: str, description: "Calendar year (current year by default)" },
+  { nom: "du", schema: date, description: "Start of period" },
+  { nom: "au", schema: date, description: "End of period" },
 ];
 const CORPS_IMPORT = objet(
   {
@@ -201,11 +201,11 @@ const RESULTAT = objet({
   erreurs: liste(objet({ ligne: { type: "integer" }, message: str })),
 });
 
-/** Description OpenAPI des routes du lot. */
+/** OpenAPI description of the batch routes. */
 export const openapi: Chemins = {
   "/v1/imports/apercu": {
     post: op({
-      resume: "Aperçu d'un tableur (xlsx, xls, xlsb, ods, csv) et correspondance de colonnes proposée",
+      resume: "Preview of a spreadsheet (xlsx, xls, xlsb, ods, csv) and proposed column mapping",
       tag: "Imports",
       droit: "ecrire",
       corps: objet(
@@ -230,7 +230,7 @@ export const openapi: Chemins = {
   },
   "/v1/imports/clients": {
     post: op({
-      resume: "Importer des clients (SIRET déjà connu ignoré, ligne invalide signalée)",
+      resume: "Import clients (already known SIRET ignored, invalid line reported)",
       tag: "Imports",
       droit: "ecrire",
       corps: CORPS_IMPORT,
@@ -240,7 +240,7 @@ export const openapi: Chemins = {
   },
   "/v1/imports/produits": {
     post: op({
-      resume: "Importer des produits (prix HT et taux de TVA lus en français)",
+      resume: "Import products (prices excl. VAT and VAT rates read in French format)",
       tag: "Imports",
       droit: "ecrire",
       corps: CORPS_IMPORT,
@@ -250,7 +250,7 @@ export const openapi: Chemins = {
   },
   "/v1/exports/ventes.xlsx": {
     get: op({
-      resume: "Journal des ventes (xlsx)",
+      resume: "Sales journal (xlsx)",
       tag: "Exports",
       droit: "lire",
       requete: PERIODE,
@@ -260,16 +260,16 @@ export const openapi: Chemins = {
   },
   "/v1/exports/creances.xlsx": {
     get: op({
-      resume: "Créances clients non soldées avec retard (xlsx)",
+      resume: "Unsettled client receivables with delay (xlsx)",
       tag: "Exports",
       droit: "lire",
-      requete: [{ nom: "au", schema: date, description: "Date d'arrêté (aujourd'hui par défaut)" }],
+      requete: [{ nom: "au", schema: date, description: "Cut-off date (today by default)" }],
       succes: { 200: brut(XLSX) },
     }),
   },
   "/v1/exports/fec": {
     get: op({
-      resume: "Fichier des écritures comptables (A47 A-1 LPF, ISO 8859-15)",
+      resume: "File of accounting entries (A47 A-1 LPF, ISO 8859-15)",
       tag: "Exports",
       droit: "lire",
       requete: PERIODE,

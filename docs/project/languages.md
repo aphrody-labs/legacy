@@ -51,7 +51,7 @@ Modules: 58. keep 23, migrate 33, delete 2. TS lines covered: 132482.
 | `scripts/catalog.ts` | 1 | 426 | Catalog generation | Bun-native tooling | tree-sitter | migrate | Being moved to tree-sitter by another agent; not touched here. |
 | `infra/cluster` | 2 | 415 | Cluster compose generation and dedup | Go (container tooling) | docker compose, kompose | migrate | Plan: compose files by hand or kompose; drop gen.ts. |
 | `scripts/android-setup.ts` | 1 | 402 | Android SDK setup | Bun-native tooling | sdkmanager, android-cli | migrate | Plan: call the android CLI directly. |
-| `scripts/checkdeps.ts` | 1 | 402 | Dependency layer checks | Rust (archguard) | ay arch check | migrate | Overlaps ARCH-017; being handled by another agent; not touched here. |
+| `scripts/checkdeps.ts` | 1 | 402 | Dependency layer checks | Bun-native tooling | - | keep | Justified: DEPS.rules layer gate. |
 | `infra/os` | 1 | 375 | unixwin tooling | Rust | - | migrate | Plan with the unixwin Rust crates. |
 | `scripts/topology.ts` | 1 | 302 | Repository topology | Bun-native tooling | - | keep | Justified: repo tooling. |
 | `scripts/cli-skills.ts` | 1 | 300 | CLI skill generation | Bun-native tooling | - | keep | Justified: generates markdown skills. |

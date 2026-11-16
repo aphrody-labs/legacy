@@ -36,7 +36,7 @@ async function api(path: string, method = "GET", body?: unknown, token?: string)
   return { status: r.status, body: await r.json() };
 }
 const ligne = { designation: "Prestation", quantite: 1, prixUnitaireHtCents: 10000, tva: 200 };
-test("API authentifiée, documents préremplis affectés atomiquement et conservation du rattachement", async () => {
+test("authenticated API, prefilled documents assigned atomically and assignment kept", async () => {
   const client = (await api("/v1/clients", "POST", { nom: "Client", adresse: "2 rue B", siret: "" })).body;
   const c = await api("/v1/chantiers", "POST", {
     nom: "Villa",
@@ -62,7 +62,7 @@ test("API authentifiée, documents préremplis affectés atomiquement et conserv
   expect((await api("/v1/fournisseurs", "POST", { nom: "Partenaire" })).status).toBe(201);
   expect((await api("/v1/fournisseurs")).body[0].nom).toBe("Partenaire");
 });
-test("identifiants invalides et mutations en lecture seule refusés", async () => {
+test("invalid identifiers and read-only mutations refused", async () => {
   expect((await api("/v1/chantiers/invalide")).status).toBe(422);
   await sql`UPDATE membership SET role='lecture' WHERE tenant_id=${tenantId} AND user_id=${userId}`;
   expect((await api("/v1/fournisseurs")).status).toBe(200);
@@ -72,7 +72,7 @@ test("identifiants invalides et mutations en lecture seule refusés", async () =
   await sql`UPDATE membership SET role='owner' WHERE tenant_id=${tenantId} AND user_id=${userId}`;
 });
 
-test("cinq onglets Excel, rapport PDF et recherche des archives isolée par entreprise", async () => {
+test("five Excel tabs, PDF report and archive search isolated per company", async () => {
   const c = (await api("/v1/chantiers")).body[0];
   const f = (await api("/v1/fournisseurs")).body[0];
   expect(

@@ -1,4 +1,4 @@
-//! Écrit un classeur d'exemple dans le fichier donné.
+//! Writes a sample workbook into the given file.
 fn main() {
     let out = std::env::args().nth(1).expect("usage: exemple <fichier.xlsx>");
     let c: auto_sheets::Classeur = serde_json::from_str(

@@ -13,9 +13,9 @@ variable "PUSH_CACHE" { default = "false" }
 variable "CARGO_BUILD_JOBS" { default = "4" }
 
 group "default" { targets = ["services", "runtime"] }
-group "services" { targets = ["ai-os", "api-gateway", "loreserver", "r3d", "rust-stack"] }
+group "services" { targets = ["ai-os", "api-gateway", "loreserver", "r3d"] }
 group "bun" { targets = ["ai-os", "api-gateway"] }
-group "rust" { targets = ["loreserver", "r3d", "rust-stack", "runtime"] }
+group "rust" { targets = ["loreserver", "r3d", "runtime"] }
 group "smoke" { targets = ["services"] }
 group "products" { targets = ["shenron"] }
 
@@ -68,11 +68,6 @@ target "r3d" {
   inherits = ["loreserver"]
   target = "r3d"
   tags = ["${REGISTRY}/r3d:${TAG}", "${REGISTRY}/r3d:latest"]
-}
-target "rust-stack" {
-  inherits = ["loreserver"]
-  target = "rust-stack"
-  tags = ["${REGISTRY}/rust-stack:${TAG}", "${REGISTRY}/rust-stack:latest"]
 }
 target "runtime" {
   inherits = ["loreserver"]

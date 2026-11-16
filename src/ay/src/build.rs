@@ -72,7 +72,7 @@ pub struct BuildArgs {
     /// silently drops `cdylib` crate types on musl targets (for example a `bun:ffi` library)
     #[arg(long)]
     pub dylib: bool,
-    /// Extra cargo arguments after `--` (e.g. `-- -p ffi`); `-p` replaces the preset's crates
+    /// Extra cargo arguments after `--` (e.g. `-- -p aphrody-core-capi`); `-p` replaces the preset's crates
     #[arg(last = true)]
     pub cargo_args: Vec<String>,
 }

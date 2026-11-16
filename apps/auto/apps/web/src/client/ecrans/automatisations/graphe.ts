@@ -1,7 +1,7 @@
-// Conversion entre la définition d'un workflow (moteur `@auto/automate`) et l'état du canevas React Flow.
+// Conversion entre la définition d'un workflow (moteur `@aphrody/automate`) et l'état du canevas React Flow.
 // Une connexion `{ de, sortie, vers }` devient une arête dont la poignée source vaut `s<sortie>` ; l'aller-retour
 // est sans perte (positions arrondies au pixel).
-import type { Connexion, Definition, Noeud } from "@auto/automate";
+import type { Connexion, Definition, Noeud } from "@aphrody/automate";
 import type { Etape, TypeNoeudApi } from "@auto/client";
 import type { Edge, Node, XYPosition } from "@xyflow/react";
 import { valeursInitiales } from "./formulaire";

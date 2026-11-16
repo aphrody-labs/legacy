@@ -59,9 +59,112 @@ async function loadWaylandWasm() {
   return instance;
 }
 
+async function createWebGpuPresenter(canvas, width, height) {
+  if (!navigator.gpu) return null;
+  const adapter = await navigator.gpu.requestAdapter({
+    powerPreference: "high-performance",
+  });
+  if (!adapter) return null;
+  const device = await adapter.requestDevice();
+  const context = canvas.getContext("webgpu");
+  if (!context) return null;
+
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device,
+    format,
+    alphaMode: "opaque",
+  });
+
+  const shader = device.createShaderModule({
+    code: `
+      struct VsOut {
+        @builtin(position) pos: vec4<f32>,
+        @location(0) uv: vec2<f32>,
+      };
+      @vertex
+      fn vs_main(@builtin(vertex_index) vid: u32) -> VsOut {
+        var pos = array<vec2<f32>, 3>(
+          vec2<f32>(-1.0, -3.0),
+          vec2<f32>(3.0, 1.0),
+          vec2<f32>(-1.0, 1.0)
+        );
+        var uv = array<vec2<f32>, 3>(
+          vec2<f32>(0.0, 2.0),
+          vec2<f32>(2.0, 0.0),
+          vec2<f32>(0.0, 0.0)
+        );
+        var out: VsOut;
+        out.pos = vec4<f32>(pos[vid], 0.0, 1.0);
+        out.uv = uv[vid];
+        return out;
+      }
+      @group(0) @binding(0) var wl_sampler: sampler;
+      @group(0) @binding(1) var wl_surface_tex: texture_2d<f32>;
+      @fragment
+      fn fs_main(in: VsOut) -> @location(0) vec4<f32> {
+        return textureSample(wl_surface_tex, wl_sampler, in.uv);
+      }
+    `,
+  });
+
+  const texture = device.createTexture({
+    size: [width, height, 1],
+    format: "rgba8unorm",
+    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST,
+  });
+
+  const sampler = device.createSampler({
+    magFilter: "linear",
+    minFilter: "linear",
+  });
+
+  const pipeline = device.createRenderPipeline({
+    layout: "auto",
+    vertex: { module: shader, entryPoint: "vs_main" },
+    fragment: { module: shader, entryPoint: "fs_main", targets: [{ format }] },
+    primitive: { topology: "triangle-list" },
+  });
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: sampler },
+      { binding: 1, resource: texture.createView() },
+    ],
+  });
+
+  return {
+    backend: "webgpu",
+    present(pixels) {
+      device.queue.writeTexture(
+        { texture },
+        pixels,
+        { bytesPerRow: width * 4, rowsPerImage: height },
+        { width, height, depthOrArrayLayers: 1 },
+      );
+      const encoder = device.createCommandEncoder();
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: context.getCurrentTexture().createView(),
+            loadOp: "clear",
+            clearValue: { r: 0.07, g: 0.07, b: 0.11, a: 1 },
+            storeOp: "store",
+          },
+        ],
+      });
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.draw(3);
+      pass.end();
+      device.queue.submit([encoder.finish()]);
+    },
+  };
+}
+
 async function main() {
   const canvas = document.getElementById("wl-canvas");
-  const ctx = canvas.getContext("2d", { alpha: false });
   const statusEl = document.getElementById("wl-status");
   const wireBody = document.getElementById("wl-wire-body");
   const announceEl = document.getElementById("wl-announce");
@@ -72,6 +175,26 @@ async function main() {
   const w = canvas.width;
   const h = canvas.height;
   ex.wl_init(w, h);
+
+  let presenter = await createWebGpuPresenter(
+    canvas,
+    ex.wl_width(),
+    ex.wl_height(),
+  );
+  if (!presenter) {
+    const ctx = canvas.getContext("2d", { alpha: false });
+    presenter = {
+      backend: "canvas2d",
+      present(pixels) {
+        const img = new ImageData(
+          new Uint8ClampedArray(pixels),
+          ex.wl_width(),
+          ex.wl_height(),
+        );
+        ctx.putImageData(img, 0, 0);
+      },
+    };
+  }
 
   const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
   ex.wl_set_dark_mode(darkQuery.matches ? 1 : 0);
@@ -124,16 +247,15 @@ async function main() {
     const focused = ex.wl_focused_surface_id();
     const msgs = ex.wl_wire_total_messages();
     const layout = LAYOUT_NAMES[ex.wl_layout_mode()] ?? "DwindleMaster";
-    statusEl.textContent = `surfaces: ${surfaces} | focus: wl_surface#${focused} | layout: ${layout} | wire msgs: ${msgs}`;
+    statusEl.textContent = `gpu: ${presenter.backend} | surfaces: ${surfaces} | focus: wl_surface#${focused} | layout: ${layout} | wire msgs: ${msgs}`;
   }
 
   function renderFrame(now) {
     ex.wl_tick(now >>> 0);
     const ptr = ex.wl_framebuffer_ptr();
     const bytes = ex.wl_framebuffer_bytes();
-    const pixels = new Uint8ClampedArray(ex.memory.buffer, ptr, bytes);
-    const img = new ImageData(pixels, ex.wl_width(), ex.wl_height());
-    ctx.putImageData(img, 0, 0);
+    const pixels = new Uint8Array(ex.memory.buffer, ptr, bytes);
+    presenter.present(pixels);
     updateStatus();
     updateWireLog();
     requestAnimationFrame(renderFrame);

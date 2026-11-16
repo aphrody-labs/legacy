@@ -1,26 +1,26 @@
 {
   "id": "autoEvenements01",
-  "name": "auto : événements métier",
+  "name": "auto: business events",
   "active": false,
   "settings": { "executionOrder": "v1" },
   "connections": {
-    "Événement auto": { "main": [[{ "node": "Vérifier la signature", "type": "main", "index": 0 }]] },
-    "Vérifier la signature": {
+    "Auto event": { "main": [[{ "node": "Verify signature", "type": "main", "index": 0 }]] },
+    "Verify signature": {
       "main": [
         [
-          { "node": "Facture émise ?", "type": "main", "index": 0 },
-          { "node": "Relance ?", "type": "main", "index": 0 }
+          { "node": "Invoice issued?", "type": "main", "index": 0 },
+          { "node": "Reminder?", "type": "main", "index": 0 }
         ]
       ]
     },
-    "Relance ?": { "main": [[{ "node": "Transmettre aux relances", "type": "main", "index": 0 }], []] },
-    "Facture émise ?": { "main": [[{ "node": "Télécharger le Factur-X", "type": "main", "index": 0 }], []] },
-    "Télécharger le Factur-X": { "main": [[{ "node": "Archiver", "type": "main", "index": 0 }]] }
+    "Reminder?": { "main": [[{ "node": "Forward to reminders", "type": "main", "index": 0 }], []] },
+    "Invoice issued?": { "main": [[{ "node": "Download the Factur-X", "type": "main", "index": 0 }], []] },
+    "Download the Factur-X": { "main": [[{ "node": "Archive", "type": "main", "index": 0 }]] }
   },
   "nodes": [
     {
       "id": "8f0c2a0e-1b4e-4c55-9d3f-0a1b2c3d4e01",
-      "name": "Événement auto",
+      "name": "Auto event",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [0, 0],
@@ -29,17 +29,17 @@
     },
     {
       "id": "8f0c2a0e-1b4e-4c55-9d3f-0a1b2c3d4e02",
-      "name": "Vérifier la signature",
+      "name": "Verify signature",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [240, 0],
       "parameters": {
-        "jsCode": "// Le corps est le JSON.stringify de l'événement : le re-sérialiser redonne les octets signés.\nconst crypto = require('crypto');\nconst secret = $env.N8N_WEBHOOK_SECRET;\nreturn $input.all().map((item) => {\n  const corps = JSON.stringify(item.json.body);\n  const attendu = 'sha256=' + crypto.createHmac('sha256', secret).update(corps).digest('hex');\n  const recu = String(item.json.headers['x-auto-signature'] ?? '');\n  if (recu.length !== attendu.length || !crypto.timingSafeEqual(Buffer.from(recu), Buffer.from(attendu))) {\n    throw new Error('signature invalide');\n  }\n  return { json: item.json.body };\n});"
+        "jsCode": "// The body is the JSON.stringify of the event: re-serializing it gives back the signed bytes.\nconst crypto = require('crypto');\nconst secret = $env.N8N_WEBHOOK_SECRET;\nreturn $input.all().map((item) => {\n  const corps = JSON.stringify(item.json.body);\n  const attendu = 'sha256=' + crypto.createHmac('sha256', secret).update(corps).digest('hex');\n  const recu = String(item.json.headers['x-auto-signature'] ?? '');\n  if (recu.length !== attendu.length || !crypto.timingSafeEqual(Buffer.from(recu), Buffer.from(attendu))) {\n    throw new Error('Invalid signature');\n  }\n  return { json: item.json.body };\n});"
       }
     },
     {
       "id": "8f0c2a0e-1b4e-4c55-9d3f-0a1b2c3d4e03",
-      "name": "Facture émise ?",
+      "name": "Invoice issued?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [480, 0],
@@ -67,7 +67,7 @@
     },
     {
       "id": "8f0c2a0e-1b4e-4c55-9d3f-0a1b2c3d4e04",
-      "name": "Télécharger le Factur-X",
+      "name": "Download the Factur-X",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [720, -80],
@@ -81,19 +81,19 @@
     },
     {
       "id": "8f0c2a0e-1b4e-4c55-9d3f-0a1b2c3d4e05",
-      "name": "Archiver",
+      "name": "Archive",
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [960, -80],
       "parameters": {
         "operation": "write",
-        "fileName": "=/archives/{{ $('Facture émise ?').item.json.tenantId }}_{{ $('Facture émise ?').item.json.data.numero }}.pdf",
+        "fileName": "=/archives/{{ $('Invoice issued?').item.json.tenantId }}_{{ $('Invoice issued?').item.json.data.numero }}.pdf",
         "options": {}
       }
     },
     {
       "id": "8f0c2a0e-1b4e-4c55-9d3f-0a1b2c3d4e06",
-      "name": "Relance ?",
+      "name": "Reminder?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [480, 200],
@@ -115,18 +115,18 @@
     },
     {
       "id": "8f0c2a0e-1b4e-4c55-9d3f-0a1b2c3d4e07",
-      "name": "Transmettre aux relances",
+      "name": "Forward to reminders",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [720, 200],
-      "notes": "Corps et signature d'origine : auto-relances revérifie la signature.",
+      "notes": "Original body and signature: auto-relances verifies the signature again.",
       "parameters": {
         "method": "POST",
         "url": "http://localhost:5678/webhook/auto-relances",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-auto-signature", "value": "={{ $('Événement auto').item.json.headers['x-auto-signature'] }}" },
+            { "name": "x-auto-signature", "value": "={{ $('Auto event').item.json.headers['x-auto-signature'] }}" },
             { "name": "x-auto-evenement", "value": "={{ $json.id }}" }
           ]
         },

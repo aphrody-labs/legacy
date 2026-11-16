@@ -43,7 +43,7 @@
   "scripts/identity.ts": {"domain": "Identity naming checks", "language": "Bun-native tooling", "upstream": "-", "verdict": "keep", "note": "Justified: repo tooling."},
   "scripts/catalog.ts": {"domain": "Catalog generation", "language": "Bun-native tooling", "upstream": "tree-sitter", "verdict": "migrate", "note": "Being moved to tree-sitter by another agent; not touched here."},
   "infra/cluster": {"domain": "Cluster compose generation and dedup", "language": "Go (container tooling)", "upstream": "docker compose, kompose", "verdict": "migrate", "note": "Plan: compose files by hand or kompose; drop gen.ts."},
-  "scripts/checkdeps.ts": {"domain": "Dependency layer checks", "language": "Rust (archguard)", "upstream": "ay arch check", "verdict": "migrate", "note": "Overlaps ARCH-017; being handled by another agent; not touched here."},
+  "scripts/checkdeps.ts": {"domain": "Dependency layer checks", "language": "Bun-native tooling", "upstream": "-", "verdict": "keep", "note": "Justified: DEPS.rules layer gate."},
   "scripts/android-setup.ts": {"domain": "Android SDK setup", "language": "Bun-native tooling", "upstream": "sdkmanager, android-cli", "verdict": "migrate", "note": "Plan: call the android CLI directly."},
   "infra/os": {"domain": "unixwin tooling", "language": "Rust", "upstream": "-", "verdict": "migrate", "note": "Plan with the unixwin Rust crates."},
   "scripts/topology.ts": {"domain": "Repository topology", "language": "Bun-native tooling", "upstream": "-", "verdict": "keep", "note": "Justified: repo tooling."},

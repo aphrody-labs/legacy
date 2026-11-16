@@ -5,7 +5,7 @@ import { creerApp } from "@auto/api/app";
 import { tenantsConnectes } from "@auto/services/pa";
 import { tachesPlanifiees } from "./planification";
 
-// Clé maître de test : chiffrement des identifiants de la PA.
+// Test master key: encryption of the PA credentials.
 Bun.env.AUTO_CLE_MAITRE ??= "cle-maitre-de-test-pour-la-synchro-pa";
 
 let sql: Sql;
@@ -38,7 +38,7 @@ const inscrire = (email: string, nom: string) =>
     entreprise: { nom, siret: "73282932000074", adresse: "1 rue A, Paris" },
   });
 
-test("tâche PA : seuls les tenants connectés sont relevés, le statut relevé atteint le document", async () => {
+test("PA task: only connected tenants are fetched, the fetched status reaches the document", async () => {
   const a = await inscrire("synchro-a@exemple.fr", "Alpha");
   const b = await inscrire("synchro-b@exemple.fr", "Beta");
   const mandat = { signataire: "Alice Martin", qualite: "gérante", date: "2026-10-22" };

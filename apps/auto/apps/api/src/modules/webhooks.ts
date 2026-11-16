@@ -1,6 +1,7 @@
-// Abonnements webhook par tenant : chaque entreprise reçoit ses propres événements signés (son n8n, son
-// outil d'automatisation), en plus de la livraison opérateur. Même format et même signature que l'outbox.
-import { creerWebhook, ErreurMetier, listerWebhooks, supprimerWebhook, withTenant } from "@auto/store";
+// Per-tenant webhook subscriptions: each company receives its own signed events (its n8n, its
+// automation tool), in addition to the operator delivery. Same format and signature as the outbox.
+import { ErreurApi } from "../i18n";
+import { creerWebhook, listerWebhooks, supprimerWebhook, withTenant } from "@auto/store";
 import { chiffrer } from "@auto/tenancy";
 import type { BunRequest } from "bun";
 import type { Chemins, Module } from "../modules";
@@ -17,11 +18,11 @@ export const routes: Module = ({ sql, auth }) => ({
       const url = verifierUrl(b.url ?? "");
       const types = b.types ?? [];
       if (!Array.isArray(types) || types.some((t) => typeof t !== "string" || !TYPE.test(t)))
-        throw new ErreurMetier("types : liste de types d'événements « domaine.fait »");
+        throw new ErreurApi("event_types_invalid");
       const secret = crypto.getRandomValues(new Uint8Array(32)).toBase64({ alphabet: "base64url", omitPadding: true });
       const secretChiffre = await chiffrer(infoSecret(a.tenantId), new TextEncoder().encode(secret));
       const w = await withTenant(sql, a.tenantId, (tx) => creerWebhook(tx, a.userId, { url, types, secretChiffre }));
-      // Le secret n'est montré qu'une fois : le récepteur s'en sert pour vérifier x-auto-signature.
+      // The secret is shown only once: the receiver uses it to verify x-auto-signature.
       return Response.json({ ...w, secret }, { status: 201 });
     }),
   },
@@ -35,18 +36,18 @@ export const routes: Module = ({ sql, auth }) => ({
 
 const WEBHOOK = objet({ id: str, url: str, types: liste(str), actif: { type: "boolean" }, createdAt: str });
 
-/** Description OpenAPI des routes du module. */
+/** OpenAPI description of the module routes. */
 export const openapi: Chemins = {
   "/v1/webhooks": {
     get: op({
-      resume: "Abonnements webhook de l'entreprise",
-      tag: "Automatisation",
+      resume: "Company webhook subscriptions",
+      tag: "Automation",
       droit: "parametres",
       succes: { 200: liste(WEBHOOK) },
     }),
     post: op({
-      resume: "S'abonner aux événements (URL https, types filtrés ; secret de signature montré une seule fois)",
-      tag: "Automatisation",
+      resume: "Subscribe to events (https URL, filtered types; signing secret shown only once)",
+      tag: "Automation",
       droit: "parametres",
       corps: objet({ url: str, types: liste(str) }, ["url"]),
       succes: { 201: objet({ id: str, url: str, types: liste(str), secret: str }) },
@@ -55,8 +56,8 @@ export const openapi: Chemins = {
   },
   "/v1/webhooks/{id}": avecId({
     delete: op({
-      resume: "Supprimer un abonnement",
-      tag: "Automatisation",
+      resume: "Delete a subscription",
+      tag: "Automation",
       droit: "parametres",
       succes: { 204: null },
       erreurs: [404],

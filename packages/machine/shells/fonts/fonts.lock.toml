@@ -1,0 +1,74 @@
+# Nerd Fonts v3.5.1 (2026-08-21) + Google Fonts & Material Symbols Variable (2026) — pinned SHA-256.
+[release]
+repo = "ryanoasis/nerd-fonts"
+version = "3.5.1"
+tag = "v3.5.1"
+
+[[font]]
+slug = "nerd-fonts-symbols"
+family = "Symbols Nerd Font Mono"
+zip = "NerdFontsSymbolsOnly.zip"
+zip_sha256 = "fdca3682534f6f65e1ccb2345b0362ccf67d9b8eca7c8025330946e93e2473bc"
+tar_xz = "NerdFontsSymbolsOnly.tar.xz"
+tar_xz_sha256 = "01172f37db8543edb102e5cb5c64101c9f4686630804d49b419aa07b23a69996"
+
+[[font]]
+slug = "cascadia-code-nf"
+family = "CaskaydiaCove Nerd Font"
+zip = "CascadiaCode.zip"
+zip_sha256 = "1298bf92698afa06185cf1d05e6ae05f2d8a1e8c3cb45ddf4c3035168ab342a1"
+tar_xz = "CascadiaCode.tar.xz"
+tar_xz_sha256 = "ae598e9401e2846aa3ee364513715de0490b844a4b54f0768991f45f23aa8369"
+
+[[font]]
+slug = "jetbrains-mono-nf"
+family = "JetBrainsMono Nerd Font"
+zip = "JetBrainsMono.zip"
+zip_sha256 = "fab782a66f7d3019da64f6572db9fc5d3a4bcb19f9fa13e2d8a62e3693d6396e"
+tar_xz = "JetBrainsMono.tar.xz"
+tar_xz_sha256 = "04d5e8f903693f9dd13e16f867e994834e681eb3c72c0d337a770dcda09010cf"
+
+[[google]]
+slug = "google-sans-code"
+family = "Google Sans Code"
+file = "GoogleSansCode[wght].ttf"
+url = "https://raw.githubusercontent.com/google/fonts/main/ofl/googlesanscode/GoogleSansCode%5Bwght%5D.ttf"
+sha256 = "c9649573afcd966f61096b1e9c3c3115e7b54315ca2adf9839c6f8b17d5f8e1f"
+
+[[google]]
+slug = "google-sans-code-italic"
+family = "Google Sans Code"
+file = "GoogleSansCode-Italic[wght].ttf"
+url = "https://raw.githubusercontent.com/google/fonts/main/ofl/googlesanscode/GoogleSansCode-Italic%5Bwght%5D.ttf"
+sha256 = "bdf116292f27aca16e2aefb5534042a25f244d3a9187a521ce97fc2117a4a844"
+
+[[google]]
+slug = "google-sans-flex"
+family = "Google Sans Flex"
+file = "GoogleSansFlex[ROND,opsz,slnt,wdth,wght].ttf"
+url = "https://raw.githubusercontent.com/google/fonts/main/ofl/googlesansflex/GoogleSansFlex%5BROND%2Copsz%2Cslnt%2Cwdth%2Cwght%5D.ttf"
+sha256 = "a9ac770798857d5e8ac593ced42b22e40a7c08cec98319f92b0eccc2783a77ba"
+
+[[google]]
+slug = "material-symbols-outlined"
+family = "Material Symbols Outlined"
+file = "MaterialSymbolsOutlined[FILL,GRAD,opsz,wght].ttf"
+stale_alias = "MaterialSymbolsOutlined.ttf"
+url = "https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsOutlined%5BFILL%2CGRAD%2Copsz%2Cwght%5D.ttf"
+sha256 = "f7837ba8573d9a7a74931618ced8307bc81f96d49af296bf6c8052c772ed5282"
+
+[[google]]
+slug = "material-symbols-rounded"
+family = "Material Symbols Rounded"
+file = "MaterialSymbolsRounded[FILL,GRAD,opsz,wght].ttf"
+stale_alias = "MaterialSymbolsRounded.ttf"
+url = "https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsRounded%5BFILL%2CGRAD%2Copsz%2Cwght%5D.ttf"
+sha256 = "7e74e36533ccee12c2b81e75bfcf3ccf123d3bb7e7e46d65d94445f23db0c97c"
+
+[[google]]
+slug = "material-symbols-sharp"
+family = "Material Symbols Sharp"
+file = "MaterialSymbolsSharp[FILL,GRAD,opsz,wght].ttf"
+stale_alias = "MaterialSymbolsSharp.ttf"
+url = "https://raw.githubusercontent.com/google/material-design-icons/master/variablefont/MaterialSymbolsSharp%5BFILL%2CGRAD%2Copsz%2Cwght%5D.ttf"
+sha256 = "1fd72f99ec1f44ec461c74f99341c1dcfa8c140d7087a2902e747d4ee01e379b"

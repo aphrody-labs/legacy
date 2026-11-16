@@ -1,0 +1,48 @@
+---
+title: Unified Sovereign Design System
+description: Google Design, Material 3 Expressive, Fluent 2 Desktop, macOS Windowing, and GUI/TUI/Web/Desktop/Mobile parity in pure Bun.
+---
+
+## Overview
+
+The Sovereign Design System provides a unified, cross-surface design architecture implemented in 100% pure Bun v1.4.4. It bridges Google Design, Material Design 3 (M3 Expressive), Microsoft Fluent 2, and Apple macOS windowing ergonomics across 7 distinct execution targets.
+
+<CardGroup cols={3}>
+  <Card title="Web Standards" icon="globe">
+    Native CSS custom properties (`--md-sys-color-*`), responsive layout grids,
+    and zero-layout-shift (`CLS = 0`).
+  </Card>
+  <Card title="Desktop Rust" icon="laptop">
+    Direct bindings for `taffy`, Zed `GPUI`, System76 `COSMIC` RON, and
+    Microsoft WinUI 3 Fluent 2 parity.
+  </Card>
+  <Card title="TUI & Terminals" icon="terminal">
+    24-bit TrueColor ANSI escape sequences and Rio terminal configs with crisp
+    Unicode box-drawing glyphs.
+  </Card>
+</CardGroup>
+
+---
+
+## Architecture Principles
+
+<Steps>
+  <Step title="CAM16 & HCT Perceptual Math">
+    Color luminance and chroma are calculated via Google's official CAM16 color
+    appearance model, guaranteeing contrast accessibility.
+  </Step>
+  <Step title="Universal Multi-Surface Compilation">
+    From any single seed hex or image palette, design tokens compile
+    simultaneously for Web, Figma, Stitch, Gemini Canvas, Desktop Rust, Mobile,
+    and TUI.
+  </Step>
+  <Step title="Automated Gate Verification">
+    Compile-time gates audit design artifacts against rogue hex values, off-grid
+    dimensions, and contrast regressions.
+  </Step>
+</Steps>
+
+<Info>
+  All components and utilities are powered natively by Bun with zero external
+  npm dependencies.
+</Info>

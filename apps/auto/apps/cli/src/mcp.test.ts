@@ -21,7 +21,7 @@ beforeAll(async () => {
 });
 afterAll(() => t.fermer());
 
-/** Lance `auto mcp` dans un sous-processus avec le jeton donné et échange des lignes JSON-RPC. */
+/** Runs `auto mcp` in a subprocess with the given token and exchanges JSON-RPC lines. */
 async function session(jeton: string, messages: unknown[]) {
   const p = Bun.spawn([process.execPath, Bun.fileURLToPath(new URL("./cli.ts", import.meta.url)), "mcp"], {
     env: { ...Bun.env, AUTO_API_URL: t.url, AUTO_TOKEN: jeton },
@@ -91,7 +91,7 @@ test("MCP stdio : initialize, tools/list, tools/call, erreurs JSON-RPC", async (
   expect(r(7).result).toEqual({});
 });
 
-test("MCP : le jeton du tenant B ne voit jamais les données du tenant A", async () => {
+test("MCP: tenant B's token never sees tenant A's data", async () => {
   const r = await session(B.jeton, [
     rq(1, "initialize", {
       protocolVersion: "2024-11-05",
@@ -109,11 +109,11 @@ test("MCP : le jeton du tenant B ne voit jamais les données du tenant A", async
   expect(JSON.parse(r(3).result.content[0].text).status).toBe(404);
   expect(r(4).result.isError).toBe(true);
   expect(JSON.parse(r(5).result.content[0].text)).toEqual([]);
-  // Toujours brouillon chez A.
+  // Still a draft at A.
   expect((await t.appel(`/v1/documents/${docA}`, A.jeton)).statut).toBe("brouillon");
 });
 
-test("MCP en mémoire : version inconnue, notifications, lots, requête invalide", async () => {
+test("in-memory MCP: unknown version, notifications, batches, invalid request", async () => {
   const s = new ServeurMcp(new ApiAuto(t.url, A.jeton));
   expect(
     (

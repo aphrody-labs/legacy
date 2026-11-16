@@ -1,4 +1,4 @@
-//! XML CII EN 16931 (Factur-X 1.0, profil EN 16931). L'ordre des éléments suit le XSD D16B.
+//! EN 16931 CII XML (Factur-X 1.0, EN 16931 profile). Element order follows the XSD D16B.
 
 use crate::Erreur;
 use auto_modele::{Facture, INDEMNITE, Ligne, MENTION_FRANCHISE, Partie, TypeDocument};
@@ -26,7 +26,7 @@ fn montant(c: i64) -> String {
     format!("{s}{}.{:02}", c.abs() / 100, c.abs() % 100)
 }
 
-/// Dixièmes de % → « 20.00 », « 5.50 ».
+/// Tenths of % → "20.00", "5.50".
 fn taux(t: i64) -> String {
     format!("{}.{}0", t / 10, t % 10)
 }
@@ -151,15 +151,15 @@ fn note(out: &mut String, contenu: &str, code: &str) {
     );
 }
 
-/// XML CII EN 16931 d'une facture, d'un acompte ou d'un avoir émis.
+/// EN 16931 CII XML of an issued invoice, down payment or credit note.
 pub fn xml(f: &Facture) -> Result<String, Erreur> {
     if f.numero.is_empty() {
-        return Err(Erreur::Invalide("numéro manquant (document non émis)".into()));
+        return Err(Erreur::Invalide("missing number (document not issued)".into()));
     }
     if f.lignes.is_empty() {
         return Err(Erreur::Invalide("aucune ligne".into()));
     }
-    let code = f.type_document().code().ok_or_else(|| Erreur::Invalide("un devis n'est pas une facture".into()))?;
+    let code = f.type_document().code().ok_or_else(|| Erreur::Invalide("a quote is not an invoice".into()))?;
     let t = f.totaux();
     let mut o = String::with_capacity(8192);
     o.push_str(

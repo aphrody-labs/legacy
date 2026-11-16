@@ -1,7 +1,7 @@
 # `@aphrody/env-kit` — Monorepo Environment & Secret Architecture
 
 <!-- catalog:begin unit -->
-> Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/gcp) for C:/aphrody
+> Zero-dependency cross-language environment sharing, secret redaction, and editor/agent sync toolkit (Google Cloud IAM and billing live in @aphrody/google/gcp) for C:/aphrody
 
 | Type | Path |
 | :-- | :-- |

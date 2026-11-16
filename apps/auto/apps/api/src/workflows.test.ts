@@ -1,5 +1,5 @@
-// Contrat avec les workflows n8n de infra/n8n/workflows : structure, et code des nœuds de vérification
-// exécuté ici sur un corps signé comme le fait le worker.
+// Contract with the n8n workflows of infra/n8n/workflows: structure, and code of the verification nodes
+// run here on a body signed the way the worker does.
 import { expect, test } from "bun:test";
 import { signer } from "@auto/services";
 
@@ -19,7 +19,7 @@ const DOSSIER = new URL("../../../infra/n8n/workflows/", import.meta.url);
 const lire = (nom: string) => Bun.file(new URL(nom, DOSSIER)).json() as Promise<Workflow>;
 const SECRET = "secret-de-test";
 
-/** Exécute un nœud Code n8n (mode « tous les éléments ») avec $input, $env et l'état statique donnés. */
+/** Runs an n8n Code node ("all items" mode) with the given $input, $env and static state. */
 function executer(n: Noeud, items: { json: unknown }[], statique: Record<string, unknown> = {}) {
   const fn = new Function("require", "$input", "$env", "$getWorkflowStaticData", n.parameters.jsCode!);
   return fn(
@@ -50,7 +50,7 @@ const recu = (corps: string, signature: string) => ({
   json: { body: JSON.parse(corps), headers: { "x-auto-signature": signature } },
 });
 
-test("workflows : connexions vers des nœuds existants, chemins de webhook distincts", async () => {
+test("workflows: connections to existing nodes, distinct webhook paths", async () => {
   const chemins: string[] = [];
   for await (const f of new Bun.Glob("*.json").scan(Bun.fileURLToPath(DOSSIER))) {
     const w = await lire(f);
@@ -64,36 +64,36 @@ test("workflows : connexions vers des nœuds existants, chemins de webhook disti
   expect(chemins.sort()).toEqual(["auto-evenements", "auto-relances"]);
 });
 
-test("auto-relances : signature vérifiée, dédoublonnage, mail préparé, envoi désactivé", async () => {
+test("auto-relances: signature verified, deduplication, mail prepared, sending disabled", async () => {
   const w = await lire("auto-relances.json");
   const noeud = (nom: string) => w.nodes.find((n) => n.name === nom)!;
   const corps = JSON.stringify(relance);
 
-  expect(() => executer(noeud("Vérifier la signature"), [recu(corps, signer("autre", corps))])).toThrow(
-    "signature invalide",
+  expect(() => executer(noeud("Verify signature"), [recu(corps, signer("autre", corps))])).toThrow(
+    "Invalid signature",
   );
-  const verifies = executer(noeud("Vérifier la signature"), [recu(corps, signer(SECRET, corps))]);
+  const verifies = executer(noeud("Verify signature"), [recu(corps, signer(SECRET, corps))]);
   expect(verifies.map((i) => i.json)).toEqual([relance]);
 
   const statique = {};
-  expect(executer(noeud("Dédoublonner"), verifies, statique).length).toBe(1);
-  expect(executer(noeud("Dédoublonner"), verifies, statique).length).toBe(0); // même id : ignoré
+  expect(executer(noeud("Deduplicate"), verifies, statique).length).toBe(1);
+  expect(executer(noeud("Deduplicate"), verifies, statique).length).toBe(0); // same id: ignored
 
-  const [mail] = executer(noeud("Préparer le mail"), verifies);
+  const [mail] = executer(noeud("Prepare mail"), verifies);
   expect(mail!.json).toMatchObject({ a: "compta@client.fr", objet: "Rappel : facture F-2026-0007 échue", niveau: 1 });
   expect(String(mail!.json.texte)).toContain("10 jours de retard");
   const sansEmail = { json: { ...relance, data: { ...relance.data, client: { nom: "X" } } } };
-  expect(executer(noeud("Préparer le mail"), [sansEmail])).toEqual([]);
+  expect(executer(noeud("Prepare mail"), [sansEmail])).toEqual([]);
   const dejaEnvoyee = { json: { ...relance, data: { ...relance.data, envoyeParMail: true } } };
-  expect(executer(noeud("Préparer le mail"), [dejaEnvoyee])).toEqual([]);
+  expect(executer(noeud("Prepare mail"), [dejaEnvoyee])).toEqual([]);
 
-  expect(noeud("Envoyer le mail")).toMatchObject({ type: "n8n-nodes-base.emailSend", disabled: true });
+  expect(noeud("Send mail")).toMatchObject({ type: "n8n-nodes-base.emailSend", disabled: true });
 });
 
-test("auto-evenements : même vérification de signature sur le corps de l'outbox", async () => {
+test("auto-evenements: same signature verification on the outbox body", async () => {
   const w = await lire("auto-evenements.json");
-  const v = w.nodes.find((n) => n.name === "Vérifier la signature")!;
+  const v = w.nodes.find((n) => n.name === "Verify signature")!;
   const corps = JSON.stringify(relance);
   expect(executer(v, [recu(corps, signer(SECRET, corps))]).map((i) => i.json)).toEqual([relance]);
-  expect(w.connections["Vérifier la signature"]!.main[0]!.map((x) => x.node)).toContain("Relance ?");
+  expect(w.connections["Verify signature"]!.main[0]!.map((x) => x.node)).toContain("Reminder?");
 });

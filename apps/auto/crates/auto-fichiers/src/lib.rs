@@ -1,11 +1,11 @@
-//! Fichiers des automatisations, par la suite Craft :
+//! Files of the automations, through the Craft suite:
 //!
-//! - PDF : fusion (`pdfcraft-organize::combine`), extraction de pages (`extract_pages`), texte dans
-//!   l'ordre de lecture (`pdfcraft-render`, couche texte de hayro).
-//! - Word : lecture et écriture DOCX (`wordcraft-docx`), remplissage d'un gabarit à champs
-//!   `{{ nom }}`, création d'un document simple, export PDF (`wordcraft-pdf`, polices embarquées).
-//! - Caviardage définitif (`pdfcraft-redact`), signature PAdES et vérification (`pdfcraft-sign`).
-//! - Présentations PPTX et PDF (`deckcraft-pptx`, `deckcraft-pdf`).
+//! - PDF: merge (`pdfcraft-organize::combine`), page extraction (`extract_pages`), text in reading order
+//!   (`pdfcraft-render`, text layer of hayro).
+//! - Word: DOCX reading and writing (`wordcraft-docx`), filling of a template with `{{ nom }}` fields, creation
+//!   of a simple document, PDF export (`wordcraft-pdf`, embedded fonts).
+//! - Permanent redaction (`pdfcraft-redact`), PAdES signature and verification (`pdfcraft-sign`).
+//! - PPTX and PDF presentations (`deckcraft-pptx`, `deckcraft-pdf`).
 
 mod caviardage;
 mod presentation;
@@ -44,7 +44,7 @@ pub enum Erreur {
     Signature(#[from] pdfcraft_sign::SignError),
     #[error("PPTX : {0}")]
     Pptx(#[from] deckcraft_pptx::PptxError),
-    #[error("présentation en PDF : {0}")]
+    #[error("presentation to PDF: {0}")]
     PresentationPdf(#[from] deckcraft_pdf::PdfError),
     #[error("{0}")]
     Donnees(String),
@@ -52,7 +52,7 @@ pub enum Erreur {
 
 pub(crate) type R<T> = Result<T, Erreur>;
 
-/// Pages au plus lues par `texte_pdf` (au-delà, le texte est tronqué).
+/// Pages read at most by `texte_pdf` (beyond that, the text is truncated).
 pub const PAGES_TEXTE_MAX: usize = 500;
 
 pub(crate) fn ouvrir(octets: &[u8]) -> R<Pdf> {
@@ -65,38 +65,38 @@ pub(crate) fn enregistrer(doc: &Pdf) -> R<Vec<u8>> {
 
 // PDF -------------------------------------------------------------------------------------------
 
-/// Fusionne des PDF dans l'ordre ; chacun reçoit un signet à son nom.
+/// Merges PDFs in order; each gets a bookmark with its name.
 pub fn fusionner(pdfs: &[(&str, &[u8])]) -> R<Vec<u8>> {
     if pdfs.is_empty() {
-        return Err(Erreur::Donnees("aucun PDF à fusionner".into()));
+        return Err(Erreur::Donnees("no PDF to merge".into()));
     }
     let docs = pdfs.iter().map(|(_, o)| ouvrir(o)).collect::<R<Vec<_>>>()?;
     let sources: Vec<(&str, &Pdf)> = pdfs.iter().zip(&docs).map(|((nom, _), d)| (*nom, d)).collect();
     enregistrer(&pdfcraft_organize::combine(&sources)?)
 }
 
-/// Nombre de pages d'un PDF.
+/// Number of pages of a PDF.
 pub fn nombre_pages(pdf: &[u8]) -> R<usize> {
     Ok(pdfcraft_organize::page_count(&ouvrir(pdf)?)?)
 }
 
-/// Nouveau PDF fait des pages `pages` (numérotées à partir de 0, dans l'ordre donné).
+/// New PDF made of the pages `pages` (numbered from 0, in the given order).
 pub fn extraire_pages(pdf: &[u8], pages: &[usize]) -> R<Vec<u8>> {
     if pages.is_empty() {
-        return Err(Erreur::Donnees("aucune page demandée".into()));
+        return Err(Erreur::Donnees("no page requested".into()));
     }
     enregistrer(&pdfcraft_organize::extract_pages(&ouvrir(pdf)?, pages)?)
 }
 
-/// Texte de chaque page, dans l'ordre de lecture (vide pour une page sans couche texte, un scan).
+/// Text of each page, in reading order (empty for a page without a text layer, a scan).
 pub fn texte_pdf(pdf: &[u8]) -> R<Vec<String>> {
     use pdfcraft_render::{PageRenderer, RenderConfig, RenderRequest, RequestKind};
     let mut r = PageRenderer::new(Arc::new(pdf.to_vec()), RenderConfig::default());
     let n = r.page_count();
     if n == 0 {
-        // Le PDF n'a pas pu être analysé : l'erreur précise vient du lecteur cos.
+        // The PDF could not be parsed: the precise error comes from the cos reader.
         ouvrir(pdf)?;
-        return Err(Erreur::Donnees("PDF sans page".into()));
+        return Err(Erreur::Donnees("PDF without a page".into()));
     }
     Ok((0..n.min(PAGES_TEXTE_MAX))
         .map(|page| {
@@ -108,11 +108,11 @@ pub fn texte_pdf(pdf: &[u8]) -> R<Vec<String>> {
 
 // Word ------------------------------------------------------------------------------------------
 
-/// Paragraphe d'un document créé.
+/// Paragraph of a created document.
 #[derive(Debug, Deserialize)]
 pub struct Para {
     pub texte: String,
-    /// `titre`, `titre1`, `titre2`, `titre3` ou normal.
+    /// `titre`, `titre1`, `titre2`, `titre3` or normal.
     #[serde(default)]
     pub style: Option<String>,
     #[serde(default)]
@@ -147,7 +147,7 @@ fn paragraphe(texte: &str, style: Option<&str>, gras: bool) -> Arc<Block> {
     })
 }
 
-/// Crée un document Word (A4, marges de 2 cm).
+/// Creates a Word document (A4, 2 cm margins).
 pub fn creer_docx(n: &Nouveau) -> R<Docx> {
     let mut d = Docx::new();
     let mut corps: Blocks = Vec::new();
@@ -156,7 +156,7 @@ pub fn creer_docx(n: &Nouveau) -> R<Docx> {
         d.core.title = n.titre.clone();
     }
     for p in &n.paragraphes {
-        // Un paragraphe par ligne : les retours à la ligne du texte restent visibles.
+        // One paragraph per line: the line breaks of the text stay visible.
         for ligne in p.texte.split('\n') {
             corps.push(paragraphe(ligne, style(p.style.as_deref()), p.gras));
         }
@@ -183,12 +183,12 @@ pub fn docx_en_pdf(d: &Docx) -> R<Vec<u8>> {
     Ok(wordcraft_pdf::export(d, &wordcraft_pdf::PdfOptions::default())?)
 }
 
-/// Texte du corps du document, un paragraphe par ligne.
+/// Body text of the document, one paragraph per line.
 pub fn texte_docx(d: &Docx) -> String {
     d.plain_text(StoryRef::Body)
 }
 
-/// Champs `{{ nom }}` d'un paragraphe : (début, fin, nom) en octets.
+/// `{{ nom }}` fields of a paragraph: (start, end, name) in bytes.
 fn champs_de(texte: &str) -> Vec<(usize, usize, String)> {
     let mut v = Vec::new();
     let mut i = 0;
@@ -205,7 +205,7 @@ fn champs_de(texte: &str) -> Vec<(usize, usize, String)> {
     v
 }
 
-/// Applique `f` à chaque paragraphe du document : corps, tableaux, en-têtes, pieds, notes, zones de texte.
+/// Applies `f` to each paragraph of the document: body, tables, headers, footers, notes, text boxes.
 fn chaque_para(d: &mut Docx, f: &mut dyn FnMut(&mut Paragraph) -> R<()>) -> R<()> {
     fn blocs(bl: &mut Blocks, f: &mut dyn FnMut(&mut Paragraph) -> R<()>) -> R<()> {
         for b in bl.iter_mut() {
@@ -234,7 +234,7 @@ fn chaque_para(d: &mut Docx, f: &mut dyn FnMut(&mut Paragraph) -> R<()>) -> R<()
     Ok(())
 }
 
-/// Noms des champs `{{ nom }}` d'un gabarit, sans doublon, dans l'ordre d'apparition.
+/// Names of the `{{ nom }}` fields of a template, without duplicates, in order of appearance.
 pub fn champs_docx(d: &Docx) -> Vec<String> {
     fn blocs(bl: &Blocks, noms: &mut Vec<String>) {
         for b in bl {
@@ -256,7 +256,7 @@ pub fn champs_docx(d: &Docx) -> Vec<String> {
     noms
 }
 
-/// Remplace chaque champ `{{ nom }}` connu par sa valeur, avec la mise en forme du `{{`.
+/// Replaces each known `{{ nom }}` field with its value, with the formatting of the `{{`.
 /// Les champs absents de `valeurs` restent tels quels.
 pub fn remplir_docx(d: &mut Docx, valeurs: &BTreeMap<String, String>) -> R<usize> {
     if valeurs.len() > 200 || valeurs.iter().any(|(k, v)| k.len() > 200 || v.len() > 100_000) {
@@ -273,7 +273,7 @@ pub fn remplir_docx(d: &mut Docx, valeurs: &BTreeMap<String, String>) -> R<usize
             let Some(v) = valeurs.get(&nom) else { continue };
             ajouts = ajouts.saturating_add(v.len());
             if n >= 10_000 || ajouts > 20 * 1024 * 1024 {
-                return Err(Erreur::Donnees("gabarit rempli supérieur aux limites".into()));
+                return Err(Erreur::Donnees("filled template above the limits".into()));
             }
             let props = p.props_of_char(a).clone();
             p.delete(a, b)?;
@@ -292,7 +292,7 @@ pub struct Remplacement {
     pub remplacer: String,
 }
 
-/// Remplacements littéraux, y compris tableaux et parties liées, avec les attributs du premier caractère.
+/// Literal replacements, including tables and linked parts, with the attributes of the first character.
 pub fn remplacer_docx(d: &mut Docx, remplacements: &[Remplacement]) -> R<usize> {
     if remplacements.is_empty()
         || remplacements.len() > 100
@@ -310,7 +310,7 @@ pub fn remplacer_docx(d: &mut Docx, remplacements: &[Remplacement]) -> R<usize> 
             }
             ajouts = ajouts.saturating_add(positions.len().saturating_mul(r.remplacer.len()));
             if ajouts > 20 * 1024 * 1024 {
-                return Err(Erreur::Donnees("texte remplacé supérieur à 20 Mo".into()));
+                return Err(Erreur::Donnees("replaced text above 20 MB".into()));
             }
             for (a, longueur) in positions.into_iter().rev() {
                 let props = p.props_of_char(a).clone();
@@ -355,7 +355,7 @@ mod tests {
     fn gabarit_rempli() {
         let d = creer_docx(&nouveau("Devis {{ numero }}", &["Client : {{client.nom}} ({{ ville }})", "{{ inconnu }}"]))
             .unwrap();
-        // Aller-retour DOCX : le gabarit vient d'un fichier.
+        // DOCX round trip: the template comes from a file.
         let mut d = lire_docx(&ecrire_docx(&d).unwrap()).unwrap();
         assert_eq!(champs_docx(&d), ["numero", "client.nom", "ville", "inconnu"]);
         let valeurs: BTreeMap<String, String> =

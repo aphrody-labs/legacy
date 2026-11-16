@@ -181,13 +181,13 @@ External effects are refused by default: publication, sending a message, spendin
 
 1. code (`coder` sub-agent, if `--task`);
 2. `bun fmt --check` of the paths (a drift opens a coder ticket that formats and commits); single git sync of prd;
-3. in parallel: `bun check`, `ay arch check --strict`, and `cargo clippy` on prd;
+3. in parallel: `bun check` and `cargo clippy` on prd;
 4. tests: `bun test` (packages), `cargo test` and `go test` on prd;
 5. judges in parallel:
    - Gemini web via `gemini_review` (relay Chrome);
    - a Claude judge (role `reviewer`, context ≥ 100,000);
    - verdicts written to `docs/reviews/<judge>-<date>-<subject>.md`;
-6. fix of the verified defects (`check`: `bun check && ay arch check --strict`);
+6. fix of the verified defects (`check`: `bun check`);
 7. `docker build --target runtime` on prd (Alpine, root `Dockerfile`);
 8. `ay deploy up --all --dry-run` (`--apply` to deploy);
 9. `fleet_status`;

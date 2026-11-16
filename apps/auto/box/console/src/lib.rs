@@ -1,10 +1,11 @@
-//! Console d'administration de l'Aphrody Box : interface Leptos rendue par le serveur puis hydratée en
-//! WebAssembly ; fonctions serveur pour l'état des services (moteur Docker, sondes HTTP), les journaux, le
-//! redémarrage, les modèles d'Ollama et les accès. Le binaire porte aussi le préparateur (`aphrody-box preparer`).
+//! Administration console of the Aphrody Box: Leptos interface rendered by the server then hydrated in
+//! WebAssembly; server functions for the state of the services (Docker engine, HTTP probes), the logs, the
+//! restart, the Ollama models and the credentials. The binary also carries the preparer (`aphrody-box preparer`).
 
 #![recursion_limit = "512"]
 
 pub mod app;
+pub mod i18n;
 pub mod types;
 
 #[cfg(feature = "ssr")]

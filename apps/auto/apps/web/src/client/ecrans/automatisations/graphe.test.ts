@@ -1,4 +1,4 @@
-import { MODELES, catalogueJson, valider, type Definition } from "@auto/automate";
+import { MODELES, catalogueJson, valider, type Definition } from "@aphrody/automate";
 import type { TypeNoeudApi } from "@auto/client";
 import { expect, test } from "bun:test";
 import { filtrerCatalogue } from "./palette";

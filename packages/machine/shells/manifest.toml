@@ -21,7 +21,7 @@ src = "nu/config.nu"
 dst = { windows = "{appdata}/nushell/config.nu", linux = "{config}/nushell/config.nu" }
 mode = "source"
 
-# fish (agent C): Linux only, no native upstream Windows build (README 4.9.3: WSL, Cygwin, MSYS2).
+# fish (agent C) : Linux seulement, pas de build Windows natif amont (README 4.9.3 : WSL, Cygwin, MSYS2).
 [[link]]
 shell = "fish"
 src = "fish/config.fish"
@@ -101,3 +101,106 @@ commandline = "pwsh.exe -NoLogo"
 commandline = '%USERPROFILE%\.local\share\brush-main\brush.exe -l'
 [terminal.profile.Nushell]
 source = "nu"
+
+# --- Modern 2026 Prompt, CLI, TUI & Terminal configs ---
+[[link]]
+shell = "zsh"
+src = "zsh/zshrc"
+dst = { linux = "~/.zshrc", darwin = "~/.zshrc" }
+mode = "source"
+
+[[link]]
+shell = "starship"
+src = "starship/starship.toml"
+dst = { windows = "~/.config/starship.toml", linux = "{config}/starship.toml", darwin = "{config}/starship.toml" }
+mode = "copy"
+
+[[link]]
+shell = "atuin"
+src = "atuin/config.toml"
+dst = { windows = "~/.config/atuin/config.toml", linux = "{config}/atuin/config.toml", darwin = "{config}/atuin/config.toml" }
+mode = "copy"
+
+[[link]]
+shell = "eza"
+src = "eza/theme.yml"
+dst = { windows = "~/.config/eza/theme.yml", linux = "{config}/eza/theme.yml", darwin = "{config}/eza/theme.yml" }
+mode = "copy"
+
+[[link]]
+shell = "bat"
+src = "bat/config"
+dst = { windows = "~/.config/bat/config", linux = "{config}/bat/config", darwin = "{config}/bat/config" }
+mode = "copy"
+
+[[link]]
+shell = "delta"
+src = "git/delta.gitconfig"
+dst = { windows = "~/.config/git/delta.gitconfig", linux = "{config}/git/delta.gitconfig", darwin = "{config}/git/delta.gitconfig" }
+mode = "copy"
+
+[[link]]
+shell = "yazi"
+src = "yazi/yazi.toml"
+dst = { windows = "{appdata}/yazi/config/yazi.toml", linux = "{config}/yazi/yazi.toml", darwin = "{config}/yazi/yazi.toml" }
+mode = "copy"
+
+[[link]]
+shell = "yazi"
+src = "yazi/theme.toml"
+dst = { windows = "{appdata}/yazi/config/theme.toml", linux = "{config}/yazi/theme.toml", darwin = "{config}/yazi/theme.toml" }
+mode = "copy"
+
+[[link]]
+shell = "yazi"
+src = "yazi/keymap.toml"
+dst = { windows = "{appdata}/yazi/config/keymap.toml", linux = "{config}/yazi/keymap.toml", darwin = "{config}/yazi/keymap.toml" }
+mode = "copy"
+
+[[link]]
+shell = "helix"
+src = "helix/config.toml"
+dst = { windows = "{appdata}/helix/config.toml", linux = "{config}/helix/config.toml", darwin = "{config}/helix/config.toml" }
+mode = "copy"
+
+[[link]]
+shell = "lazygit"
+src = "lazygit/config.yml"
+dst = { windows = "{localappdata}/lazygit/config.yml", linux = "{config}/lazygit/config.yml", darwin = "~/Library/Application Support/lazygit/config.yml" }
+mode = "copy"
+
+[[link]]
+shell = "bottom"
+src = "bottom/bottom.toml"
+dst = { windows = "{appdata}/bottom/bottom.toml", linux = "{config}/bottom/bottom.toml", darwin = "{config}/bottom/bottom.toml" }
+mode = "copy"
+
+[[link]]
+shell = "fastfetch"
+src = "fastfetch/config.jsonc"
+dst = { windows = "~/.config/fastfetch/config.jsonc", linux = "{config}/fastfetch/config.jsonc", darwin = "{config}/fastfetch/config.jsonc" }
+mode = "copy"
+
+[[link]]
+shell = "tmux"
+src = "tmux/tmux.conf"
+dst = "~/.tmux.conf"
+mode = "copy"
+
+[[link]]
+shell = "wezterm"
+src = "wezterm/wezterm.lua"
+dst = "~/.wezterm.lua"
+mode = "copy"
+
+[[link]]
+shell = "alacritty"
+src = "alacritty/alacritty.toml"
+dst = { windows = "{appdata}/alacritty/alacritty.toml", linux = "{config}/alacritty/alacritty.toml", darwin = "{config}/alacritty/alacritty.toml" }
+mode = "copy"
+
+[[link]]
+shell = "ghostty"
+src = "ghostty/config"
+dst = { linux = "{config}/ghostty/config", darwin = "{config}/ghostty/config" }
+mode = "copy"

@@ -1,4 +1,4 @@
-//! Qualification réseau/signature du plugin réel, sans installation et sans fenêtre ni IPC.
+//! Network/signature qualification of the real plugin, without installation, window or IPC.
 #[cfg(desktop)]
 fn main() {
     use std::time::Duration;
@@ -13,13 +13,13 @@ fn main() {
             tauri::async_runtime::spawn(async move {
                 let resultat = async {
                     let updater = handle.updater_builder().timeout(Duration::from_secs(20)).build()?;
-                    println!("Recherche de mise à jour native");
+                    println!("Checking for a native update");
                     if let Some(update) = updater.check().await? {
-                        println!("Version disponible : {}", update.version);
+                        println!("Version available: {}", update.version);
                         let octets = update.download(|_, _| {}, || {}).await?;
-                        println!("SIGNATURE_NATIVE_OK : {} octets, version signée {}", octets.len(), update.version);
+                        println!("SIGNATURE_NATIVE_OK: {} bytes, signed version {}", octets.len(), update.version);
                     } else {
-                        println!("Aucune mise à jour");
+                        println!("No update");
                     }
                     Ok::<(), tauri_plugin_updater::Error>(())
                 }

@@ -43,11 +43,12 @@ export type QueueTask = {
   created_at: string;
 };
 
-const SRC_REPO = "aphrody-labs/src";
-// Repositories whose code lives in the runner checkout (src and its submodules under apps/): only these give
+const SRC_REPO = "aphrody-labs/aphrody";
+// Repositories whose code lives in the runner checkout (aphrody and its submodules under apps/): only these give
 // tasks that modify and commit; the others produce a report.
 const inCheckout = (repo = "") =>
   repo === SRC_REPO ||
+  repo === "aphrody-labs/src" ||
   /^aphrody-labs\/(rosegriffon|shenron|r2b|auto)$/.test(repo);
 const short = (s = "") => s.slice(0, 12);
 // Data coming from the payload: formats validated before entering a prompt; free text (titles) is quoted
@@ -89,7 +90,7 @@ export function eventTask(
       return {
         ...base,
         id:
-          repo === SRC_REPO
+          repo === SRC_REPO || repo === "aphrody-labs/src"
             ? `ci-fix-${short(e.sha)}`
             : `gh-ci-${repo.replace("/", "-")}-${short(e.sha)}`,
         role: "coder", // builds and tests: heavy, forwarded to fr1 by runner.ts route()

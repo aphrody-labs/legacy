@@ -1,5 +1,5 @@
-//! Session de l'administrateur : cookie `box_session=<expiration>.<HMAC-SHA256>`, HttpOnly et SameSite=Strict ;
-//! limite de tentatives de connexion par adresse.
+//! Administrator session: cookie `box_session=<expiry>.<HMAC-SHA256>`, HttpOnly and SameSite=Strict;
+//! limit on sign-in attempts per address.
 use base64::Engine;
 use hmac::{Hmac, Mac};
 use sha2::Sha256;
@@ -12,7 +12,7 @@ pub const COOKIE: &str = "box_session";
 pub const DUREE: u64 = 12 * 3600;
 
 fn mac(secret: &str, valeur: &str) -> Hmac<Sha256> {
-    let mut m = Hmac::<Sha256>::new_from_slice(secret.as_bytes()).expect("HMAC accepte toute longueur de clé");
+    let mut m = Hmac::<Sha256>::new_from_slice(secret.as_bytes()).expect("HMAC accepts any key length");
     m.update(valeur.as_bytes());
     m
 }
@@ -21,21 +21,21 @@ fn maintenant() -> u64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0)
 }
 
-/// Valeur du cookie, valable `DUREE` secondes.
+/// Cookie value, valid for `DUREE` seconds.
 pub fn emettre(secret: &str) -> String {
     let exp = (maintenant() + DUREE).to_string();
     let sig = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(mac(secret, &exp).finalize().into_bytes());
     format!("{exp}.{sig}")
 }
 
-/// Vérification en temps constant de la signature, puis de l'expiration.
+/// Constant-time check of the signature, then of the expiry.
 pub fn valide(secret: &str, valeur: &str) -> bool {
     let Some((exp, sig)) = valeur.split_once('.') else { return false };
     let Ok(sig) = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(sig) else { return false };
     mac(secret, exp).verify_slice(&sig).is_ok() && exp.parse::<u64>().is_ok_and(|e| e > maintenant())
 }
 
-/// Cookie de session de l'en-tête `Cookie`.
+/// Session cookie of the `Cookie` header.
 pub fn lire_cookie(entete: &str) -> Option<&str> {
     entete.split(';').map(str::trim).find_map(|c| c.strip_prefix(COOKIE)?.strip_prefix('='))
 }
@@ -44,7 +44,7 @@ pub fn egal(a: &str, b: &str) -> bool {
     a.len() == b.len() && a.bytes().zip(b.bytes()).fold(0u8, |acc, (x, y)| acc | (x ^ y)) == 0
 }
 
-/// 10 tentatives par quart d'heure et par adresse.
+/// 10 attempts per quarter of an hour and per address.
 #[derive(Default)]
 pub struct Tentatives(Mutex<HashMap<IpAddr, (u32, Instant)>>);
 

@@ -5,141 +5,141 @@
   "sources": [
     {
       "url": "https://vercel.com/geist/introduction",
-      "license": "Propriétaire Vercel (https://vercel.com/legal/terms) : lecture seule ; noms de props et valeurs repris comme faits, descriptions réécrites, aucun code ni asset"
+      "license": "Vercel owner (https://vercel.com/legal/terms): read-only; prop names and values taken as facts, descriptions rewritten, no code or assets"
     },
     {
       "url": "https://vercel.com/geist/<composant>",
-      "license": "Propriétaire Vercel : 75 pages lues en text/markdown le 2026-11-13"
+      "license": "Vercel owner: 75 pages read as text/markdown on 2026-11-13"
     }
   ],
   "rules": [
     {
       "id": "geist.comp.package",
       "level": "MAY",
-      "rule": "Les composants Geist sont publiés pour React sous @vercel/geistcn ; dans src ils ne sont pas une dépendance (cible web = Material Web), seulement une référence de comportement.",
+      "rule": "Geist components are published for React under @vercel/geistcn; in src they are not a dependency (web target = Material Web), only a behavior reference.",
       "source": "https://vercel.com/geist/introduction"
     },
     {
       "id": "geist.comp.button-vs-link",
       "level": "MUST",
-      "rule": "Bouton pour une action qui modifie un état ; lien stylé en bouton pour une navigation qui change l'URL ; menu ou bouton scindé quand plusieurs actions liées partagent une ligne.",
+      "rule": "Button for an action that modifies state; link styled as button for navigation that changes URL; menu or split button when multiple related actions share a line.",
       "source": "https://vercel.com/geist/button"
     },
     {
       "id": "geist.comp.button-label",
       "level": "SHOULD",
-      "rule": "Le libellé nomme le résultat (verbe + objet : Deploy Project, Invite Member), jamais un verbe nu ni OK/Confirm ; un bouton destructif et son toast se répondent (Delete Project puis Project deleted).",
+      "rule": "Label names the result (verb + object: Deploy Project, Invite Member), never a bare verb or OK/Confirm; a destructive button and its toast answer each other (Delete Project then Project deleted).",
       "source": "https://vercel.com/geist/button"
     },
     {
       "id": "geist.comp.loading-in-place",
       "level": "MUST",
-      "rule": "État de chargement porté par le contrôle lui-même : il reste focusable, garde son libellé et annonce l'occupation (aria-busy) au lieu d'être remplacé par un spinner.",
+      "rule": "Loading state carried by the control itself: it remains focusable, keeps its label and announces occupancy (aria-busy) instead of being replaced by a spinner.",
       "source": "https://vercel.com/geist/button"
     },
     {
       "id": "geist.comp.disabled-explained",
       "level": "SHOULD",
-      "rule": "Désactiver seulement si l'action est impossible maintenant (entrée manquante, droits) et expliquer pourquoi dans une infobulle.",
+      "rule": "Disable only if the action is impossible now (missing input, permissions) and explain why in a tooltip.",
       "source": "https://vercel.com/geist/button"
     },
     {
       "id": "geist.comp.icon-only-name",
       "level": "MUST",
-      "rule": "Tout contrôle icône seule porte un nom accessible qui décrit l'action et sa cible (Copy deployment URL), pas l'icône ; un contrôle avec texte visible ne reçoit pas d'aria-label.",
+      "rule": "Any icon-only control carries an accessible name describing the action and its target (Copy deployment URL), not the icon; a control with visible text does not receive an aria-label.",
       "source": "https://vercel.com/geist/button"
     },
     {
       "id": "geist.comp.hover-delay",
       "level": "SHOULD",
-      "rule": "Infobulles et cartes contextuelles s'ouvrent au survol et au focus clavier après un délai d'environ 150 ms pour ne pas clignoter lors d'un balayage ; Échap ferme et rend le focus au déclencheur.",
+      "rule": "Tooltips and context cards open on hover and keyboard focus after a delay of about 150 ms to avoid flickering during sweep; Esc closes and returns focus to trigger.",
       "value": "150ms",
       "source": "https://vercel.com/geist/tooltip"
     },
     {
       "id": "geist.comp.overlay-focus",
       "level": "MUST",
-      "rule": "Modale, tiroir, panneau latéral, calendrier et listes déroulantes piègent le focus pendant l'ouverture et le rendent au déclencheur à la fermeture ; le titre est relié par aria-labelledby.",
+      "rule": "Modal, drawer, sidebar, calendar and dropdowns trap focus while open and return it to trigger on close; title is linked by aria-labelledby.",
       "source": "https://vercel.com/geist/modal"
     },
     {
       "id": "geist.comp.cancel-literal",
       "level": "SHOULD",
-      "rule": "Le bouton de renoncement d'une modale s'appelle littéralement Cancel (Annuler) pour rester stable d'un flux destructif à l'autre.",
+      "rule": "The modal's cancel button is literally called Cancel to remain stable across destructive flows.",
       "source": "https://vercel.com/geist/modal"
     },
     {
       "id": "geist.comp.destructive-gate",
       "level": "MUST",
-      "rule": "Une suppression irréversible exige la saisie exacte d'une phrase de confirmation ; la phrase et le champ sont exclus de la traduction automatique (translate=no) pour que la comparaison exacte reste possible.",
+      "rule": "Irreversible deletion requires exact entry of a confirmation phrase; phrase and field are excluded from automatic translation (translate=no) so exact comparison remains possible.",
       "source": "https://vercel.com/geist/destructive-action-modal"
     },
     {
       "id": "geist.comp.live-regions",
       "level": "MUST",
-      "rule": "Toasts, erreurs asynchrones, chargements et décomptes de résultats s'annoncent en aria-live polite ; assertive est réservé aux erreurs bloquantes.",
+      "rule": "Toasts, async errors, loading and result counts announce as aria-live polite; assertive is reserved for blocking errors.",
       "source": "https://vercel.com/geist/toast"
     },
     {
       "id": "geist.comp.toast-no-nav",
       "level": "MUST-NOT",
-      "rule": "Ne pas placer de navigation essentielle dans un toast : il disparaît avant d'être atteint au clavier.",
+      "rule": "Do not place essential navigation in a toast: it disappears before being reached by keyboard.",
       "source": "https://vercel.com/geist/toast"
     },
     {
       "id": "geist.comp.group-fieldset",
       "level": "MUST",
-      "rule": "Cases à cocher, radios et choiceboxes liés sont regroupés dans fieldset + legend ; une case de sélection de ligne sans libellé visible reçoit un aria-label nommant la ligne.",
+      "rule": "Related checkboxes, radios and choiceboxes are grouped in fieldset + legend; a row selection checkbox without visible label receives an aria-label naming the row.",
       "source": "https://vercel.com/geist/checkbox"
     },
     {
       "id": "geist.comp.color-not-only",
       "level": "MUST",
-      "rule": "La couleur n'est jamais le seul signal (sélection, seuil, statut) : texte, coche ou titre redondant obligatoire.",
+      "rule": "Color is never the only signal (selection, threshold, status): text, check or redundant title required.",
       "source": "https://vercel.com/geist/status-dot"
     },
     {
       "id": "geist.comp.reduced-motion",
       "level": "MUST",
-      "rule": "Spinners, points de chargement, squelettes et vidéos en lecture auto respectent prefers-reduced-motion ; un seul indicateur animé par ligne.",
+      "rule": "Spinners, loading dots, skeletons and autoplay videos respect prefers-reduced-motion; one animated indicator per row.",
       "source": "https://vercel.com/geist/loading-dots"
     },
     {
       "id": "geist.comp.progress-throttle",
       "level": "SHOULD",
-      "rule": "Limiter la mise à jour d'aria-valuenow d'une barre de progression à environ une fois par seconde.",
+      "rule": "Limit aria-valuenow updates of a progress bar to about once per second.",
       "value": "1s",
       "source": "https://vercel.com/geist/progress"
     },
     {
       "id": "geist.comp.keyboard-menus",
       "level": "MUST",
-      "rule": "Menus : flèches haut/bas, Début/Fin, Entrée/Espace, recherche par première lettre (le libellé visible vient en premier), Échap ferme ; menu contextuel ouvrable par Maj+F10 ou touche menu, un seul niveau de sous-menu pour les actions destructives.",
+      "rule": "Menus: up/down arrows, Home/End, Enter/Space, search by first letter (visible label comes first), Esc closes; context menu openable by Shift+F10 or menu key, single submenu level for destructive actions.",
       "source": "https://vercel.com/geist/menu"
     },
     {
       "id": "geist.comp.tabs-keys",
       "level": "MUST",
-      "rule": "Onglets : flèches gauche/droite déplacent le focus, Entrée/Espace activent, anneau de focus visible sur l'onglet actif, aria-label sur la liste si aucun titre visible.",
+      "rule": "Tabs: left/right arrows move focus, Enter/Space activate, focus ring visible on active tab, aria-label on list if no visible title.",
       "source": "https://vercel.com/geist/tabs"
     },
     {
       "id": "geist.comp.decorative-frames",
       "level": "MUST",
-      "rule": "Cadres de présentation (navigateur, téléphone, couverture de livre, guides de grille) sont aria-hidden et sans contrôle focusable ; le sens est porté par l'image interne et son texte alternatif.",
+      "rule": "Presentation frames (browser, phone, book cover, grid guides) are aria-hidden and without focusable control; meaning is carried by internal image and its alt text.",
       "source": "https://vercel.com/geist/browser"
     },
     {
       "id": "geist.comp.sheet-measures",
       "level": "SHOULD",
-      "rule": "Panneau latéral en variante inset par défaut : marge 12 px, coins 16 px, hauteur pleine, largeur maximale 512 px ; bouton Close visible car un clic extérieur ne ferme pas.",
+      "rule": "Sidebar in inset variant by default: 12 px margin, 16 px corners, full height, max width 512 px; Close button visible because outside click does not close.",
       "value": { "margin": "12px", "radius": "16px", "maxWidth": "512px" },
       "source": "https://vercel.com/geist/sheet"
     },
     {
       "id": "geist.comp.avatar-pairing",
       "level": "SHOULD",
-      "rule": "Taille d'avatar accordée au texte voisin : 20-24 px avec label-14, 32 px avec label-16, 48-64 px en en-tête ou onboarding.",
+      "rule": "Avatar size matched to nearby text: 20-24 px with label-14, 32 px with label-16, 48-64 px in header or onboarding.",
       "value": {
         "label-14": "20-24px",
         "label-16": "32px",
@@ -150,13 +150,13 @@
     {
       "id": "geist.comp.url-state",
       "level": "SHOULD",
-      "rule": "Les filtres de liste vivent dans l'URL (partage, rechargement, précédent/suivant).",
+      "rule": "List filters live in the URL (sharing, reload, back/forward).",
       "source": "https://vercel.com/geist/filter-params"
     },
     {
       "id": "geist.comp.web-guidelines",
       "level": "MUST",
-      "rule": "Les règles transverses d'interface (focus, cibles, formulaires, contenu, performance perçue) ne sont pas dupliquées ici : appliquer la skill vercel-agent-skills:web-design-guidelines (fork aphrody-labs/agent-skills, .agents/skills/web-design-guidelines).",
+      "rule": "Cross-cutting UI rules (focus, targets, forms, content, perceived performance) are not duplicated here: apply skill vercel-agent-skills:web-design-guidelines (fork aphrody-labs/agent-skills, .agents/skills/web-design-guidelines).",
       "source": "https://vercel.com/design/guidelines"
     }
   ],
@@ -165,7 +165,7 @@
       "name": "Address Input",
       "source": "https://vercel.com/geist/address-input",
       "variants": [
-        "recherche + édition",
+        "search + edit",
         "recherche en direct",
         "saisie manuelle",
         "recherche indisponible"
@@ -177,10 +177,10 @@
       "source": "https://vercel.com/geist/avatar",
       "variants": [
         "seul",
-        "groupe empilé",
+        "stacked group",
         "chevauchement fixe",
         "git",
-        "icône personnalisée",
+        "custom icon",
         "lettre",
         "placeholder"
       ],
@@ -201,7 +201,7 @@
         "inverted",
         "trial",
         "turbo",
-        "avec icône",
+        "with icon",
         "pill"
       ],
       "measures": { "size": ["sm", "md", "lg"] }
@@ -209,7 +209,7 @@
     {
       "name": "Banner",
       "source": "https://vercel.com/geist/banner",
-      "variants": ["pleine largeur du conteneur"]
+      "variants": ["full container width"]
     },
     {
       "name": "Book",
@@ -217,29 +217,29 @@
       "variants": [
         "simple",
         "stripe",
-        "couleur, icône ou illustration personnalisée",
-        "texturé",
+        "custom color, icon or illustration",
+        "textured",
         "responsive"
       ],
       "a11y": [
-        "couverture décorative, titre porté par le titre sous-jacent",
-        "focus sur le lien, pas sur la couverture"
+        "decorative cover, title carried by underlying title",
+        "focus on link, not on cover"
       ]
     },
     {
       "name": "Breadcrumbs",
       "source": "https://vercel.com/geist/breadcrumbs",
       "variants": ["text", "menu"],
-      "states": ["actif", "désactivé"]
+      "states": ["actif", "disabled"]
     },
     {
       "name": "Browser",
       "source": "https://vercel.com/geist/browser",
-      "variants": ["cadre navigateur autour d'une capture ou d'un contenu"],
+      "variants": ["browser frame around a screenshot or content"],
       "a11y": [
         "cadre aria-hidden",
-        "alt descriptif sur la capture",
-        "aucun faux contrôle focusable"
+        "descriptive alt on screenshot",
+        "no fake focusable controls"
       ]
     },
     {
@@ -253,15 +253,15 @@
         "warning",
         "shape square/circle/rounded",
         "rounded + shadow (marketing)",
-        "préfixe/suffixe",
+        "prefix/suffix",
         "ButtonLink",
-        "CustomButton (couleurs par état)"
+        "CustomButton (colors per state)"
       ],
       "states": ["repos", "survol", "actif", "loading", "disabled"],
-      "measures": { "size": ["tiny", "small", "medium (défaut)", "large"] },
+      "measures": { "size": ["tiny", "small", "medium (default)", "large"] },
       "a11y": [
-        "icône seule : svgOnly + aria-label obligatoires",
-        "type HTML porté par typeName, type visuel par type"
+        "icon only: svgOnly + aria-label required",
+        "HTML type carried by typeName, visual type by type"
       ]
     },
     {
@@ -272,23 +272,23 @@
         "plage",
         "horizontal",
         "compact",
-        "empilé",
-        "préréglages",
-        "fuseau épinglé",
+        "stacked",
+        "presets",
+        "pinned timezone",
         "bornes min/max"
       ],
-      "measures": { "size": ["small", "défaut"] },
+      "measures": { "size": ["small", "default"] },
       "a11y": [
-        "focus piégé dans le popover",
-        "flèches jour, Maj+flèche semaine, PgPréc/PgSuiv mois",
-        "plage annoncée en aria-live polite"
+        "focus trapped in the popover",
+        "arrows day, Shift+arrow week, PgUp/PgDn month",
+        "range announced in aria-live polite"
       ]
     },
     {
       "name": "Checkbox",
       "source": "https://vercel.com/geist/checkbox",
-      "states": ["non coché", "coché", "indéterminé", "désactivé"],
-      "a11y": ["fieldset + legend", "zone de clic étendue au label"]
+      "states": ["unchecked", "checked", "indeterminate", "disabled"],
+      "a11y": ["fieldset + legend", "click area extended to label"]
     },
     {
       "name": "Choicebox",
@@ -296,79 +296,79 @@
       "variants": [
         "radio (choix unique)",
         "checkbox (choix multiple)",
-        "contenu personnalisé",
+        "custom content",
         "blue",
         "trial"
       ],
-      "states": ["sélectionné", "désactivé"],
+      "states": ["selected", "disabled"],
       "a11y": [
         "fieldset + legend",
-        "flèches en choix unique, Espace en multiple",
-        "coche d'angle en plus de la bordure"
+        "arrows in single choice, Space in multiple",
+        "corner checkmark in addition to border"
       ]
     },
     {
       "name": "Clearable Input",
       "source": "https://vercel.com/geist/clearable-input",
-      "variants": ["avec label", "avec raccourci ⌘K", "callback d'effacement"],
-      "states": ["rempli", "vide", "désactivé"],
-      "a11y": ["Échap efface la valeur"]
+      "variants": ["with label", "with shortcut ⌘K", "callback d'effacement"],
+      "states": ["rempli", "vide", "disabled"],
+      "a11y": ["Escape clears the value"]
     },
     {
       "name": "Code",
       "source": "https://vercel.com/geist/code",
-      "variants": ["extrait coloré"]
+      "variants": ["colored excerpt"]
     },
     {
       "name": "Code Block",
       "source": "https://vercel.com/geist/code-block",
       "variants": [
-        "avec ou sans nom de fichier",
-        "lignes surlignées",
-        "lignes ajoutées/retirées",
-        "lignes référencées",
-        "sélecteur de langage (liste ou onglets)",
-        "sans numéros de ligne"
+        "with or without filename",
+        "highlighted lines",
+        "added/removed lines",
+        "referenced lines",
+        "language selector (list or tabs)",
+        "without line numbers"
       ]
     },
     {
       "name": "Collapse",
       "source": "https://vercel.com/geist/collapse",
       "variants": ["simple", "multiple", "small"],
-      "states": ["replié", "déplié"],
+      "states": ["collapsed", "expanded"],
       "a11y": [
-        "déclencheur button avec aria-expanded et aria-controls",
-        "Entrée/Espace basculent",
-        "contenu replié gardé dans le DOM (hidden) pour la recherche"
+        "button trigger with aria-expanded and aria-controls",
+        "Enter/Space toggle",
+        "collapsed content kept in DOM (hidden) for search"
       ]
     },
     {
       "name": "Combobox",
       "source": "https://vercel.com/geist/combobox",
       "variants": [
-        "contrôlé",
-        "non contrôlé",
-        "effaçable",
-        "icônes préfixe/suffixe",
-        "largeur d'entrée ou de liste personnalisée",
-        "message vide personnalisé",
-        "dans une modale ou un panneau"
+        "controlled",
+        "uncontrolled",
+        "clearable",
+        "prefix/suffix icons",
+        "input or custom list width",
+        "custom empty message",
+        "in a modal or panel"
       ],
-      "states": ["désactivé", "erreur"],
-      "measures": { "size": ["small", "défaut", "large"] },
+      "states": ["disabled", "erreur"],
+      "measures": { "size": ["small", "default", "large"] },
       "a11y": [
-        "label frère relié par htmlFor ou aria-label sur la racine",
-        "focus piégé dans le popover"
+        "sibling label linked by htmlFor or aria-label on root",
+        "focus trapped in popover"
       ]
     },
     {
       "name": "Command Menu",
       "source": "https://vercel.com/geist/command-menu",
-      "variants": ["plein écran", "séparateurs", "suffixe"],
+      "variants": ["fullscreen", "separators", "suffixe"],
       "a11y": [
-        "nombre de résultats en aria-live polite",
-        "haut/bas, Entrée, Échap ; Retour arrière sur champ vide dépile la page",
-        "raccourci affiché en Kbd"
+        "result count in aria-live polite",
+        "up/down, Enter, Esc; Backspace on empty field closes the page",
+        "shortcut displayed in Kbd"
       ]
     },
     {
@@ -379,63 +379,63 @@
         "align start/center/end",
         "render prop"
       ],
-      "states": ["fermée", "ouverte au survol ou au focus"],
-      "a11y": ["déclencheur garde son nom", "Échap ferme et rend le focus"]
+      "states": ["closed", "opened on hover or focus"],
+      "a11y": ["trigger keeps its name", "Esc closes and returns focus"]
     },
     {
       "name": "Context Menu",
       "source": "https://vercel.com/geist/context-menu",
-      "variants": ["éléments lien", "préfixe/suffixe"],
-      "states": ["élément désactivé"],
+      "variants": ["link elements", "prefix/suffix"],
+      "states": ["disabled element"],
       "a11y": [
         "ouvrable au clavier (Maj+F10, touche menu)",
-        "un seul niveau pour le destructif"
+        "single level for destructive"
       ]
     },
     {
       "name": "Copy Button",
       "source": "https://vercel.com/geist/copy-button",
-      "states": ["repos", "copié (retour visuel)"]
+      "states": ["repos", "copied (visual feedback)"]
     },
     {
       "name": "Description",
       "source": "https://vercel.com/geist/description",
-      "variants": ["titre + sous-titre", "texte à droite", "ellipse"]
+      "variants": ["titre + sous-titre", "text on the right", "ellipse"]
     },
     {
       "name": "Destructive Action Modal",
       "source": "https://vercel.com/geist/destructive-action-modal",
-      "variants": ["irréversible (bande d'avertissement)", "réversible"],
+      "variants": ["irreversible (warning band)", "reversible"],
       "states": ["loading", "erreur"],
       "a11y": [
-        "champ relié à l'invite par aria-labelledby",
-        "translate=no sur la phrase",
-        "icône d'avertissement aria-hidden"
+        "field linked to prompt by aria-labelledby",
+        "translate=no on the sentence",
+        "warning icon aria-hidden"
       ]
     },
     {
       "name": "Destructive Confirmation Input",
       "source": "https://vercel.com/geist/destructive-confirmation-input",
       "states": ["vide", "correspondance", "erreur"],
-      "a11y": ["aria-labelledby vers l'invite, pas d'aria-label séparé"]
+      "a11y": ["aria-labelledby to prompt, no separate aria-label"]
     },
     {
       "name": "Dots Menu",
       "source": "https://vercel.com/geist/dots-menu",
-      "variants": ["menu de débordement trois points"],
-      "states": ["désactivé", "élément désactivé"],
+      "variants": ["overflow menu three dots"],
+      "states": ["disabled", "disabled element"],
       "measures": {
-        "size": "plusieurs tailles (valeurs non publiées en clair)"
+        "size": "multiple sizes (undocumented values)"
       }
     },
     {
       "name": "Drawer",
       "source": "https://vercel.com/geist/drawer",
-      "variants": ["hauteur par défaut", "hauteur personnalisée"],
+      "variants": ["default height", "custom height"],
       "a11y": [
-        "focus piégé et rendu",
-        "Échap et geste retour mobile ferment",
-        "défilement du body verrouillé"
+        "focus trapped and rendered",
+        "Esc and mobile back gesture close",
+        "body scroll locked"
       ]
     },
     {
@@ -448,9 +448,9 @@
       "source": "https://vercel.com/geist/entity",
       "variants": [
         "deux colonnes contenu/actions",
-        "avec squelette",
-        "avec liste",
-        "liste + case à cocher",
+        "with skeleton",
+        "with list",
+        "list + checkbox",
         "fill",
         "classes de colonnes"
       ]
@@ -459,12 +459,12 @@
       "name": "Error",
       "source": "https://vercel.com/geist/error",
       "variants": [
-        "label par défaut",
-        "label personnalisé",
-        "sans label",
-        "propriété error"
+        "default label",
+        "custom label",
+        "no label",
+        "error property"
       ],
-      "measures": { "size": ["small", "défaut", "large"] },
+      "measures": { "size": ["small", "default", "large"] },
       "a11y": ["erreur asynchrone en aria-live polite, assertive si bloquante"]
     },
     {
@@ -478,25 +478,25 @@
       "variants": [
         "popover",
         "inline",
-        "avec select",
-        "métadonnées",
-        "préfixe/suffixe"
+        "with select",
+        "metadata",
+        "prefix/suffix"
       ],
-      "states": ["émotion choisie", "envoyé"]
+      "states": ["chosen emotion", "sent"]
     },
     {
       "name": "Fieldset",
       "source": "https://vercel.com/geist/fieldset",
       "variants": [
-        "avec ou sans titre",
-        "avec ou sans pied d'actions",
+        "with or without title",
+        "with or without action footer",
         "highlight",
         "secondary",
         "type error",
         "type warning",
-        "mur de désactivation"
+        "disabled wall"
       ],
-      "states": ["désactivé", "erreur", "avertissement"]
+      "states": ["disabled", "erreur", "avertissement"]
     },
     {
       "name": "File Tree",
@@ -505,7 +505,7 @@
         "dossiers repliables",
         "types de fichier lambda/edge-function/middleware"
       ],
-      "states": ["replié", "déplié"]
+      "states": ["collapsed", "expanded"]
     },
     {
       "name": "Filter Params",
@@ -516,72 +516,72 @@
         "filtres en lecture seule",
         "filtres persistants"
       ],
-      "a11y": ["libellés de filtre et d'option explicites"]
+      "a11y": ["explicit filter and option labels"]
     },
     {
       "name": "Gauge",
       "source": "https://vercel.com/geist/gauge",
       "variants": [
         "label",
-        "échelle de couleurs par défaut",
-        "plage de couleurs personnalisée",
+        "default color scale",
+        "custom color range",
         "couleur secondaire",
-        "priorité d'arc"
+        "arc priority"
       ],
-      "states": ["déterminé", "indéterminé"],
+      "states": ["determined", "indeterminate"],
       "measures": { "size": ["tiny", "small", "medium", "large"] },
       "a11y": [
-        "role=progressbar avec aria-valuemin/max/now",
-        "nom via aria-labelledby du label voisin",
-        "seuil jamais signalé par la seule couleur"
+        "role=progressbar with aria-valuemin/max/now",
+        "name via aria-labelledby of neighboring label",
+        "threshold never signaled by color alone"
       ]
     },
     {
       "name": "Grid",
       "source": "https://vercel.com/geist/grid",
       "variants": [
-        "sans cellules",
+        "no cells",
         "auto",
         "cellules solid",
         "responsive sm/md/lg",
-        "guides de lignes ou de colonnes masqués",
-        "cellules superposées",
+        "hidden row or column guides",
+        "overlapping cells",
         "croix",
-        "pointillés",
+        "dotted",
         "GridPage"
       ],
-      "a11y": ["guides aria-hidden", "contraste des guides ≥ 3:1"]
+      "a11y": ["guides aria-hidden", "guide contrast ≥ 3:1"]
     },
     {
       "name": "Input",
       "source": "https://vercel.com/geist/input",
       "variants": [
-        "préfixe/suffixe (stylés ou non)",
+        "prefix/suffix (styled or not)",
         "recherche",
         "⌘K",
         "label",
-        "préfixe arrondi"
+        "rounded prefix"
       ],
-      "states": ["repos", "focus", "désactivé", "erreur"],
+      "states": ["repos", "focus", "disabled", "erreur"],
       "measures": { "size": ["small", "medium", "large"] },
       "a11y": [
-        "label texte exige un id",
-        "placeholder de recherche nomme la portée"
+        "text label requires an id",
+        "search placeholder names the scope"
       ]
     },
     {
       "name": "JSON View",
       "source": "https://vercel.com/geist/json-view",
       "variants": [
-        "une ligne",
-        "intégré",
-        "retour à la ligne",
-        "replié",
-        "surligné"
+        "one line",
+        "embedded",
+        "line break",
+        "collapsed",
+        "highlighted"
       ],
       "a11y": [
-        "arbre : flèches entre nœuds, Entrée/Espace basculent, Début/Fin",
-        "texte sélectionnable conservé"
+        "tree: arrows between nodes, Enter/Space toggle, Home/End",
+        "selectable text preserved"
       ]
     },
     {
@@ -592,123 +592,123 @@
     {
       "name": "Label",
       "source": "https://vercel.com/geist/label",
-      "variants": ["seul", "avec input", "casse libre (bypass)"]
+      "variants": ["seul", "with input", "casse libre (bypass)"]
     },
     {
       "name": "Load More Button",
       "source": "https://vercel.com/geist/load-more-button",
-      "variants": ["sans écart", "sans rayon", "texte personnalisé"],
+      "variants": ["without gap", "without radius", "custom text"],
       "states": ["repos", "loading"]
     },
     {
       "name": "Loading Dots",
       "source": "https://vercel.com/geist/loading-dots",
-      "variants": ["seul", "avec texte"],
+      "variants": ["seul", "with text"],
       "measures": { "size": ["sm", "md", "lg"] },
       "a11y": [
-        "aria-live polite sur le conteneur",
-        "points décoratifs sans aria-label"
+        "aria-live polite on container",
+        "decorative dots without aria-label"
       ]
     },
     {
       "name": "Menu",
       "source": "https://vercel.com/geist/menu",
       "variants": [
-        "avec chevron",
-        "éléments lien",
-        "déclencheur personnalisé",
-        "préfixe/suffixe",
+        "with chevron",
+        "link elements",
+        "custom trigger",
+        "prefix/suffix",
         "sections",
         "position (ex. left-start)",
-        "élément error"
+        "error element"
       ],
-      "states": ["élément désactivé", "élément verrouillé"],
+      "states": ["disabled element", "locked element"],
       "a11y": [
-        "haut/bas, Début/Fin, Entrée/Espace, recherche par lettre",
-        "focus rendu au déclencheur"
+        "up/down, Home/End, Enter/Space, search by letter",
+        "focus returned to trigger"
       ]
     },
     {
       "name": "Middle Truncate",
       "source": "https://vercel.com/geist/middle-truncate",
-      "variants": ["troncature centrale conservant début et fin"],
-      "a11y": ["chaîne complète exposée comme nom accessible"]
+      "variants": ["center truncation preserving start and end"],
+      "a11y": ["full string exposed as accessible name"]
     },
     {
       "name": "Modal",
       "source": "https://vercel.com/geist/modal",
       "variants": [
-        "défaut",
+        "default",
         "sticky",
         "bouton unique",
         "inset",
-        "feuille mobile avec champs"
+        "mobile sheet with fields"
       ],
       "states": [
-        "actions désactivées",
-        "focus initial contrôlé",
+        "disabled actions",
+        "initial focus controlled",
         "erreur interne"
       ],
       "a11y": [
-        "aria-labelledby vers le titre",
-        "focus gardé dedans après erreur, rendu au déclencheur après succès",
-        "toasts compatibles avec le piège de focus"
+        "aria-labelledby to title",
+        "focus kept inside after error, returned to trigger after success",
+        "toasts compatible with focus trap"
       ]
     },
     {
       "name": "Multi Select",
       "source": "https://vercel.com/geist/multi-select",
-      "variants": ["actions de sélection", "contrôlé"],
+      "variants": ["selection actions", "controlled"],
       "a11y": [
-        "case de chaque ligne nommée (Select us-east-1)",
-        "déclencheur nommé même à zéro sélection",
-        "focus piégé puis rendu"
+        "each row's checkbox named (Select us-east-1)",
+        "trigger named even at zero selection",
+        "focus trapped then returned"
       ]
     },
     {
       "name": "Note",
       "source": "https://vercel.com/geist/note",
       "variants": [
-        "info (défaut)",
+        "info (default)",
         "success",
         "error",
         "warning",
         "secondary",
         "violet",
         "cyan",
-        "avec action",
+        "with action",
         "label",
-        "icône personnalisée"
+        "custom icon"
       ],
-      "states": ["désactivé"],
-      "measures": { "size": ["small", "défaut"] }
+      "states": ["disabled"],
+      "measures": { "size": ["small", "default"] }
     },
     {
       "name": "Pagination",
       "source": "https://vercel.com/geist/pagination",
-      "variants": ["précédent/suivant"]
+      "variants": ["previous/next"]
     },
     {
       "name": "Phone",
       "source": "https://vercel.com/geist/phone",
-      "variants": ["cadre téléphone autour d'une capture"],
+      "variants": ["phone frame around screenshot"],
       "a11y": [
         "cadre aria-hidden",
-        "alt décrivant l'écran",
-        "vidéo auto : reduced-motion + affiche"
+        "alt describing screen",
+        "auto video: reduced-motion + display"
       ]
     },
     {
       "name": "Pie Gauge",
       "source": "https://vercel.com/geist/pie-gauge",
       "variants": ["couleurs (ex. blue-900, amber-900, red-900)"],
-      "measures": { "size": "16px par défaut, 13px en surface compacte" }
+      "measures": { "size": "16px by default, 13px on compact surface" }
     },
     {
       "name": "Progress",
       "source": "https://vercel.com/geist/progress",
       "variants": [
-        "max personnalisé",
+        "custom max",
         "couleurs dynamiques",
         "secondary/success/warning/error",
         "jalons (stops)",
@@ -717,25 +717,25 @@
       ],
       "a11y": [
         "role=progressbar",
-        "aria-valuenow limité à ~1/s",
-        "chaque jalon nommé"
+        "aria-valuenow limited to ~1/s",
+        "each milestone named"
       ]
     },
     {
       "name": "Project Banner",
       "source": "https://vercel.com/geist/project-banner",
-      "variants": ["défaut", "success", "warning", "error"]
+      "variants": ["default", "success", "warning", "error"]
     },
     {
       "name": "Radio",
       "source": "https://vercel.com/geist/radio",
       "variants": ["groupe", "headless", "standalone"],
-      "states": ["sélectionné", "désactivé", "requis"],
-      "measures": { "size": ["small", "défaut"] },
+      "states": ["selected", "disabled", "requis"],
+      "measures": { "size": ["small", "default"] },
       "a11y": [
         "fieldset + legend",
-        "radio isolé nommé par aria-label",
-        "anneau de focus natif conservé"
+        "isolated radio named by aria-label",
+        "native focus ring preserved"
       ]
     },
     {
@@ -746,89 +746,89 @@
     {
       "name": "Scroller",
       "source": "https://vercel.com/geist/scroller",
-      "variants": ["vertical", "horizontal", "libre", "avec boutons"],
+      "variants": ["vertical", "horizontal", "libre", "with buttons"],
       "a11y": [
         "ordre DOM = ordre de lecture",
-        "boutons nommés avec direction et contenu",
-        "élément focalisé ramené dans la vue"
+        "buttons named with direction and content",
+        "focused element brought into view"
       ]
     },
     {
       "name": "Search Input",
       "source": "https://vercel.com/geist/search-input",
-      "variants": ["⌘K", "préfixe personnalisé"],
-      "states": ["désactivé", "loading"]
+      "variants": ["⌘K", "custom prefix"],
+      "states": ["disabled", "loading"]
     },
     {
       "name": "Select",
       "source": "https://vercel.com/geist/select",
-      "variants": ["préfixe/suffixe", "label", "options"],
-      "states": ["désactivé", "erreur", "requis"],
-      "measures": { "size": ["small", "défaut", "large"] }
+      "variants": ["prefix/suffix", "label", "options"],
+      "states": ["disabled", "erreur", "requis"],
+      "measures": { "size": ["small", "default", "large"] }
     },
     {
       "name": "Separator",
       "source": "https://vercel.com/geist/separator",
       "variants": ["horizontal", "vertical", "inset"],
-      "measures": { "inset": "1px réservé à chaque extrémité, gray-400 opaque" }
+      "measures": { "inset": "1px reserved at each end, gray-400 opaque" }
     },
     {
       "name": "Sheet",
       "source": "https://vercel.com/geist/sheet",
       "variants": [
-        "inset (défaut)",
+        "inset (default)",
         "edge",
         "secondary",
         "side gauche/droite/haut/bas"
       ],
       "measures": { "margin": "12px", "radius": "16px", "maxWidth": "512px" },
       "a11y": [
-        "focus piégé et rendu à la ligne déclenchante",
+        "focus trapped and wrapped at trigger line",
         "bouton Close visible",
-        "aria-labelledby vers le titre"
+        "aria-labelledby to title"
       ]
     },
     {
       "name": "Show More",
       "source": "https://vercel.com/geist/show-more",
-      "variants": ["avec ou sans bordure"],
-      "states": ["replié", "déplié"]
+      "variants": ["with or without border"],
+      "states": ["collapsed", "expanded"]
     },
     {
       "name": "Skeleton",
       "source": "https://vercel.com/geist/skeleton",
       "variants": [
         "largeur fixe",
-        "hauteur de boîte",
+        "box height",
         "enveloppe d'enfants",
         "pill",
         "rounded",
         "squared",
-        "sans animation",
+        "without animation",
         "bouton"
       ],
       "a11y": [
-        "aria-busy sur la région, fin annoncée sur le conteneur cible",
-        "aucun contrôle focusable dedans"
+        "aria-busy on region, end announced on target container",
+        "no focusable control inside"
       ]
     },
     {
       "name": "Slider",
       "source": "https://vercel.com/geist/slider",
-      "variants": ["label", "plage avec champs", "validation au relâchement"],
-      "states": ["désactivé"]
+      "variants": ["label", "range with fields", "validation on release"],
+      "states": ["disabled"]
     },
     {
       "name": "Snippet",
       "source": "https://vercel.com/geist/snippet",
       "variants": [
-        "inversé",
+        "inverted",
         "multiligne",
-        "sans invite",
+        "without prompt",
         "success/error/warning",
-        "valeur secrète"
+        "secret value"
       ],
-      "states": ["copié (contrôlable)"]
+      "states": ["copied (controllable)"]
     },
     {
       "name": "Spinner",
@@ -836,77 +836,77 @@
       "variants": ["couleurs"],
       "measures": { "size": ["sm", "md", "lg", "xl", "2xl", "3xl", "4xl"] },
       "a11y": [
-        "aria-busy sur l'élément en cours",
-        "déclencheur reste focusable"
+        "aria-busy on current element",
+        "trigger remains focusable"
       ]
     },
     {
       "name": "Split Button",
       "source": "https://vercel.com/geist/split-button",
-      "variants": ["alignement du menu", "icône", "titre avec icône"]
+      "variants": ["menu alignment", "icon", "title with icon"]
     },
     {
       "name": "Status Dot",
       "source": "https://vercel.com/geist/status-dot",
-      "variants": ["seul", "avec label"],
-      "states": ["états de déploiement (chacun avec titre distinct)"],
+      "variants": ["seul", "with label"],
+      "states": ["deployment states (each with distinct title)"],
       "a11y": [
-        "aria-label composé automatiquement, ne pas remplacer",
-        "aria-hidden si le texte voisin nomme déjà l'état"
+        "aria-label auto-composed, do not replace",
+        "aria-hidden if neighboring text already names the state"
       ]
     },
     {
       "name": "Switch",
       "source": "https://vercel.com/geist/switch",
       "variants": [
-        "sélecteur segmenté",
+        "segmented selector",
         "pleine largeur",
         "infobulle",
-        "icône"
+        "icon"
       ],
-      "states": ["sélectionné", "désactivé"],
-      "measures": { "size": ["small", "défaut", "large"] }
+      "states": ["selected", "disabled"],
+      "measures": { "size": ["small", "default", "large"] }
     },
     {
       "name": "Table",
       "source": "https://vercel.com/geist/table",
       "variants": [
         "basique",
-        "zébrée",
-        "bordée",
+        "striped",
+        "bordered",
         "interactive",
-        "complète",
-        "virtualisée"
+        "full",
+        "virtualized"
       ],
-      "a11y": ["table HTML sémantique"]
+      "a11y": ["semantic HTML table"]
     },
     {
       "name": "Tabs",
       "source": "https://vercel.com/geist/tabs",
-      "variants": ["défaut", "secondary", "avec icônes"],
-      "states": ["actif", "désactivé (global ou par onglet)"],
+      "variants": ["default", "secondary", "with icons"],
+      "states": ["actif", "disabled (global or per tab)"],
       "a11y": [
-        "flèches gauche/droite, Entrée/Espace",
-        "aria-label de la liste sans titre visible"
+        "left/right arrows, Enter/Space",
+        "aria-label of list with no visible title"
       ]
     },
     {
       "name": "Text With Copy Button",
       "source": "https://vercel.com/geist/text-with-copy-button",
-      "variants": ["défaut", "small + tertiary"]
+      "variants": ["default", "small + tertiary"]
     },
     {
       "name": "Textarea",
       "source": "https://vercel.com/geist/textarea",
       "variants": ["nombre de lignes"],
-      "states": ["désactivé", "erreur", "lecture seule"],
+      "states": ["disabled", "erreur", "lecture seule"],
       "measures": { "size": ["small", "medium", "large"] }
     },
     {
       "name": "Theme Switcher",
       "source": "https://vercel.com/geist/theme-switcher",
-      "variants": ["système/clair/sombre", "small"],
-      "states": ["désactivé"]
+      "variants": ["system/light/dark", "small"],
+      "states": ["disabled"]
     },
     {
       "name": "Toast",
@@ -922,23 +922,23 @@
         "warning",
         "error"
       ],
-      "a11y": ["région aria-live polite", "pas de navigation principale dedans"]
+      "a11y": ["aria-live polite region", "no main navigation inside"]
     },
     {
       "name": "Toggle",
       "source": "https://vercel.com/geist/toggle",
-      "variants": ["couleur personnalisée (amber, red)", "avec label"],
-      "states": ["activé", "désactivé (off)", "disabled"],
-      "measures": { "size": ["défaut", "medium", "large"] }
+      "variants": ["custom color (amber, red)", "with label"],
+      "states": ["enabled", "disabled (off)", "disabled"],
+      "measures": { "size": ["default", "medium", "large"] }
     },
     {
       "name": "Tooltip",
       "source": "https://vercel.com/geist/tooltip",
       "variants": [
         "position top/bottom/left/right",
-        "sans délai",
-        "alignement de boîte",
-        "contenu personnalisé",
+        "no delay",
+        "box alignment",
+        "custom content",
         "type success/error/warning/violet"
       ],
       "measures": {
@@ -946,15 +946,15 @@
         "material": "material-tooltip (6px, pointe)"
       },
       "a11y": [
-        "déclencheur icône nommé par aria-label",
-        "Échap ferme et rend le focus"
+        "icon trigger named by aria-label",
+        "Esc closes and returns focus"
       ]
     },
     {
       "name": "Video",
       "source": "https://vercel.com/geist/video",
-      "variants": ["boucle (défaut)", "sans boucle", "sans contrôles"],
-      "states": ["chargement différé"]
+      "variants": ["loop (default)", "no loop", "no controls"],
+      "states": ["deferred loading"]
     }
   ]
 }

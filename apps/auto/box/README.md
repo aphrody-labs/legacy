@@ -1,89 +1,90 @@
 # Aphrody Box
 
-Une seule commande installe sur votre machine ou votre serveur un ensemble prêt à l'emploi :
+A single command installs a ready-to-use set of applications on your machine or server:
 
-| Application  | Rôle                                                                                        | Adresse                  |
-| ------------ | ------------------------------------------------------------------------------------------- | ------------------------ |
-| **Console**  | Tableau de bord : état de chaque service, journaux, redémarrage, modèles d'IA, identifiants | `http://<machine>:8080`  |
-| **Auto**     | Automatisations, factures et devis                                                          | `http://<machine>:8081`  |
-| **n8n**      | Éditeur de workflows (plus de 400 applications)                                             | `http://<machine>:5678`  |
-| **Hermes**   | Assistant IA qui agit pour vous : mémoire, outils, Telegram, Discord, Slack                 | `http://<machine>:9119`  |
-| **Obsidian** | Vos notes dans le navigateur                                                                | `https://<machine>:3001` |
-| **Courrier** | Les courriels envoyés par la boîte                                                          | `http://<machine>:8025`  |
+| Application  | Role                                                                                         | Address                  |
+| ------------ | -------------------------------------------------------------------------------------------- | ------------------------ |
+| **Console**  | Dashboard: state of each service, logs, restart, AI models, credentials                      | `http://<machine>:8080`  |
+| **Auto**     | Automations, invoices and quotes                                                             | `http://<machine>:8081`  |
+| **n8n**      | Workflow editor (more than 400 applications)                                                 | `http://<machine>:5678`  |
+| **Hermes**   | AI assistant that acts for you: memory, tools, Telegram, Discord, Slack                      | `http://<machine>:9119`  |
+| **Obsidian** | Your notes in the browser                                                                    | `https://<machine>:3001` |
+| **Mail**     | The mails sent by the box                                                                    | `http://<machine>:8025`  |
 
-Tout fonctionne sur la machine : les modèles d'IA sont servis par **Ollama**, aucune donnée ne part chez un
-fournisseur d'IA.
+Everything runs on the machine: the AI models are served by **Ollama**, no data leaves for an AI provider.
 
-## Installer
+## Install
 
-Il faut [Docker](https://docs.docker.com/engine/install/) (Docker Desktop sous Windows et macOS), 16 Go de mémoire
-conseillés et 25 Go de disque libre.
+You need [Docker](https://docs.docker.com/engine/install/) (Docker Desktop on Windows and macOS), 16 GB of memory
+recommended and 25 GB of free disk.
 
-Sans carte graphique, Hermes est lent : chaque tour lui envoie environ 12 000 jetons d'instructions et d'outils, que
-le processeur traite en plusieurs minutes. Une carte NVIDIA, ou un modèle distant compatible OpenAI réglé dans
-`donnees/hermes/config.yaml`, le rend interactif. Hermes exige un modèle d'au moins 64 000 jetons de contexte
-(`qwen3:4b`, le modèle par défaut, en accepte 262 144).
+Without a graphics card, Hermes is slow: each turn sends it about 12,000 tokens of instructions and tools, which the
+processor takes several minutes to process. An NVIDIA card, or a remote OpenAI-compatible model set in
+`donnees/hermes/config.yaml`, makes it interactive. Hermes requires a model with at least 64,000 tokens of context
+(`qwen3:4b`, the default model, accepts 262,144).
 
-Linux et macOS :
+Linux and macOS:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/aphrody-labs/auto/main/box/installer.sh | sh
 ```
 
-Windows (PowerShell) :
+Windows (PowerShell):
 
 ```powershell
 irm https://raw.githubusercontent.com/aphrody-labs/auto/main/box/installer.ps1 | iex
 ```
 
-À la fin, le script affiche l'adresse de la console et son mot de passe. Les identifiants de chaque application sont
-dans la console, section « Accès ».
+At the end, the script prints the console address and its password. The credentials of each application are in the
+console, "Access" section.
 
-Le premier démarrage télécharge les images et le modèle `qwen3:4b` (2,5 Go) : comptez quelques minutes. La console
-montre chaque service passer de « Démarre » à « En marche ».
+The first start downloads the images and the `qwen3:4b` model (2.5 GB): allow a few minutes. The console shows each
+service going from "Starting" to "Running".
 
-## Ce qui est déjà prêt
+The console follows the language of your browser (`Accept-Language`) among the catalogs it ships in `console/locales`;
+English is the source and French is provided.
 
-- **n8n** : compte propriétaire créé (votre e-mail et le mot de passe affiché dans « Accès »), identifiants
-  « Ollama de la boîte » et « Hermes de la boîte » déjà enregistrés, dossier `coffre` lisible et inscriptible
-  (`/coffre`).
-- **Hermes** : branché sur Ollama, tableau de bord protégé par mot de passe, API compatible OpenAI sur le port 8642
-  (clé dans « Accès »), coffre visible dans `/opt/data/coffre`.
-- **Obsidian** : le coffre `coffre` est ouvert d'office ; ce sont des fichiers Markdown du dossier `coffre` de la
-  boîte, que vous pouvez sauvegarder ou synchroniser.
-- **Auto** : nœuds IA reliés à Ollama ; les courriels (inscription, factures) arrivent dans « Courrier » tant
-  qu'aucun relais réel n'est configuré.
-- **Services de la maison** : les workflows d'Auto pilotent Home Assistant, déposent dans Nextcloud et notifient
-  par ntfy, Gotify, Matrix ou Mastodon. Pour atteindre des appareils du réseau local, ajoutez
-  `BOX_RESEAU_LOCAL='permis'` dans `.env`, seulement si vous contrôlez tous les comptes de la boîte.
-- **Carte graphique NVIDIA** détectée et utilisée par Ollama si le NVIDIA Container Toolkit est installé.
+## What is already set up
 
-## Sur un domaine, en HTTPS
+- **n8n**: owner account created (your email and the password shown in "Access"), "Box Ollama" and "Box Hermes"
+  credentials already registered, `coffre` folder readable and writable (`/coffre`).
+- **Hermes**: wired to Ollama, dashboard protected by a password, OpenAI-compatible API on port 8642
+  (key in "Access"), vault visible in `/opt/data/coffre`.
+- **Obsidian**: the `coffre` vault is opened by default; these are Markdown files of the box's `coffre` folder,
+  which you can back up or synchronize.
+- **Auto**: AI nodes linked to Ollama; mails (sign-up, invoices) arrive in "Mail" as long as no real relay is
+  configured.
+- **Home services**: Auto workflows drive Home Assistant, drop files in Nextcloud and notify through ntfy, Gotify,
+  Matrix or Mastodon. To reach devices of the local network, add `BOX_RESEAU_LOCAL='permis'` to `.env`, only if you
+  control every account of the box.
+- **NVIDIA graphics card** detected and used by Ollama if the NVIDIA Container Toolkit is installed.
 
-Faites pointer `*.mondomaine.fr` vers la machine (ports 80 et 443 ouverts), puis :
+## On a domain, over HTTPS
+
+Point `*.mydomain.com` to the machine (ports 80 and 443 open), then:
 
 ```sh
-BOX_DOMAINE=mondomaine.fr BOX_EMAIL=vous@mondomaine.fr sh installer.sh
+BOX_DOMAINE=mydomain.com BOX_EMAIL=you@mydomain.com sh installer.sh
 ```
 
-Chaque application a son sous-domaine (`console.`, `auto.`, `n8n.`, `agent.`, `notes.`, `courrier.`), avec des
-certificats Let's Encrypt renouvelés automatiquement.
+Each application has its subdomain (`console.`, `auto.`, `n8n.`, `agent.`, `notes.`, `courrier.`), with Let's Encrypt
+certificates renewed automatically.
 
-## Au quotidien
+## Day to day
 
-| Besoin                     | Commande, dans le dossier de la boîte                                                                         |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Arrêter                    | `docker compose stop`                                                                                         |
-| Relancer                   | `docker compose up -d`                                                                                        |
-| Mettre à jour              | `BOX_MAJ=1 sh installer.sh` (vos données et `.env` sont conservés)                                            |
-| Sauvegarder                | copier `.env`, `coffre/` et `donnees/`, et `docker compose exec postgres pg_dumpall -U auto > sauvegarde.sql` |
-| Envoyer de vrais courriels | renseigner `AUTO_SMTP_*` dans `.env`, puis `docker compose up -d`                                             |
+| Need                 | Command, in the box folder                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Stop                 | `docker compose stop`                                                                                      |
+| Restart              | `docker compose up -d`                                                                                     |
+| Update               | `BOX_MAJ=1 sh installer.sh` (your data and `.env` are kept)                                                |
+| Back up              | copy `.env`, `coffre/` and `donnees/`, and `docker compose exec postgres pg_dumpall -U auto > backup.sql`  |
+| Send real mails      | fill in `AUTO_SMTP_*` in `.env`, then `docker compose up -d`                                               |
 
-Le fichier `.env` contient tous les secrets de la boîte : ne le partagez pas.
+The `.env` file holds all the secrets of the box: do not share it.
 
-## Pour les développeurs
+## For developers
 
-La console est écrite en Rust : [Leptos](https://leptos.dev) (rendu serveur puis hydratation WebAssembly), axum,
-client du moteur Docker par son socket Unix. `console/` se construit avec `cargo leptos build --release` ou
-`docker build console` ; `cargo test --features ssr --lib` lance ses tests. Le préparateur des secrets est la
-sous-commande `aphrody-box preparer`.
+The console is written in Rust: [Leptos](https://leptos.dev) (server rendering then WebAssembly hydration), axum,
+client of the Docker engine through its Unix socket. `console/` is built with `cargo leptos build --release` or
+`docker build console`; `cargo test --features ssr --lib` runs its tests. The secret preparer is the
+`aphrody-box preparer` subcommand.

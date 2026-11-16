@@ -9,7 +9,7 @@
     "./*": "./src/*.ts"
   },
   "dependencies": {
-    "@auto/automate": "workspace:*",
+    "@aphrody/automate": "catalog:",
     "@auto/billing": "workspace:*",
     "@auto/domain": "workspace:*",
     "@auto/i18n": "workspace:*",

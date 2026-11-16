@@ -8,13 +8,13 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub mod ai;
-pub mod applet;
 pub mod build;
 pub mod bump;
 pub mod bun;
 pub mod chromium;
 pub mod code;
 pub mod electron;
+pub mod envcmd;
 mod exec;
 pub mod index;
 pub mod low;
@@ -35,7 +35,7 @@ const OVERVIEW: &str = "\
 Areas:
   repo       lock, manifests, git, ingest, graph, conformance
   toolchain  up, doctor, sys, build, self-update, rt
-  bun        bun (upstream watch), docs (Bun docs index), flat (fork crates in src/bun-flat), hash, time
+  bun        bun (upstream watch), docs (Bun docs index), flat (resync src/<fork>-flat crates from a fork checkout), hash, time
   chromium   chromium (fr1 build chain), gclient, fetch, gn, ninja, cipd, cl, vpy, engines (V8, JSC, Dawn, wgpu)
   fleet      ssh, deploy, auth, secret, vault, ai, agents
   linux      omarchy, linux, pkg (Omarchy quattro command center + CachyOS kernel/pkg/WSL2 via aphrody-omarchy)
@@ -129,9 +129,6 @@ pub enum Cmd {
     /// Embedded Bash 5.3 engine (rubash): `-c CMD`, a script file, or stdin; no external bash needed
     #[command(disable_help_flag = true)]
     Sh(Rest),
-    /// Unix applets in one multicall (WinuxCmd base, uutils fills the gaps): `--list`, `NAME [ARGS...]`
-    #[command(disable_help_flag = true)]
-    Applet(Rest),
     /// Plugin surface read by the Bun and niu hosts (packages/omniu): `manifest` (JSON), `names`
     #[command(disable_help_flag = true)]
     Plugin(Rest),
@@ -165,7 +162,7 @@ pub enum Cmd {
     /// Vault: init, add, import-chrome-csv, export-chrome-csv, sync, status, rotate, hosts
     #[command(disable_help_flag = true)]
     Vault(Rest),
-    /// Conformance suites: [--fetch] [suite...] writes test/conformance/results/; `channels [platform]` refreshes Chrome pins
+    /// Conformance suites: [--fetch] [suite...] writes conformance/results/; `channels [platform]` refreshes Chrome pins
     #[command(disable_help_flag = true)]
     Conformance(Rest),
     /// Build the workspace for a cross-compilation preset (--list shows toolchain status)
@@ -187,6 +184,9 @@ pub enum Cmd {
     /// Localization catalog checker & key extractor (packages/i18n)
     #[command(disable_help_flag = true)]
     I18n(Rest),
+    /// Inspect a dotenv file without printing values (aphrody-env): `ay env [--file p] [--required A,B]`
+    #[command(disable_help_flag = true)]
+    Env(Rest),
     /// Cross-shell conformance matrix (packages/machine/matrix)
     #[command(disable_help_flag = true)]
     ShellMatrix(Rest),
@@ -243,6 +243,8 @@ pub enum Route {
     EnvKit(Vec<String>),
     /// `bun packages/<name>/src/cli.ts <args>` (a Bun package CLI of the monorepo, run in place).
     Package(&'static str, Vec<String>),
+    /// `ay env`: dotenv inspection with redaction, in process.
+    Env(Vec<String>),
     Ssh(Vec<String>),
     Conformance(Vec<String>),
     Re(Vec<String>),
@@ -250,7 +252,6 @@ pub enum Route {
     Index(Vec<String>),
     Rt(Vec<String>),
     Sh(Vec<String>),
-    Applet(Vec<String>),
     Plugin(Vec<String>),
     Chromium(chromium::Tool, Vec<String>),
     Build(build::BuildArgs),
@@ -336,7 +337,6 @@ pub fn route(cmd: Cmd) -> Route {
         Cmd::Conformance(r) => Route::Conformance(r.args),
         Cmd::Rt(r) => Route::Rt(r.args),
         Cmd::Sh(r) => Route::Sh(r.args),
-        Cmd::Applet(r) => Route::Applet(r.args),
         Cmd::Plugin(r) => Route::Plugin(r.args),
         Cmd::Gclient(r) => Route::Chromium(chromium::Tool::Gclient, r.args),
         Cmd::Fetch(r) => Route::Chromium(chromium::Tool::Fetch, r.args),
@@ -354,6 +354,7 @@ pub fn route(cmd: Cmd) -> Route {
         Cmd::Bin(r) | Cmd::Path(r) => Route::Package("machine", prefixed(&["binpath"], &r.args)),
         Cmd::Index(r) => Route::Index(r.args),
         Cmd::I18n(r) => Route::Package("i18n", r.args),
+        Cmd::Env(r) => Route::Env(r.args),
         Cmd::ShellMatrix(r) => Route::Package("machine", prefixed(&["matrix"], &r.args)),
         Cmd::Re(r) => Route::Re(r.args),
         Cmd::SelfUpdate(a) => Route::SelfUpdate(a),
@@ -395,13 +396,13 @@ fn run_route(route: Route) -> i32 {
         Route::External(program, args) => exec::run_external(program, &args),
         Route::Package(name, args) => exec::run_package(name, &args),
         Route::EnvKit(args) => exec::run_env_kit(&args),
+        Route::Env(args) => envcmd::run(&args),
         Route::Ssh(args) => remote::run("ay ssh", &args, &repo_root()),
         Route::Conformance(args) => run_conformance(&args),
         Route::Re(args) => aphrody_re::cli::run(&args),
         Route::Index(args) => index::run(&args),
         Route::Rt(args) => rt::run("ay rt", &args),
         Route::Sh(args) => sh::run(&args),
-        Route::Applet(args) => applet::run(&args),
         Route::Plugin(args) => plugin::run(&args),
         Route::Chromium(tool, args) => chromium::run(tool, &args),
         Route::Build(args) => build::run(args),
@@ -446,8 +447,7 @@ pub fn run(args: &[String]) -> i32 {
     // The embedded engine respawns itself for process substitution, coprocs and background jobs as `<current exe> -c BODY`:
     // for the ay binary that is `ay -c BODY`, so a leading `-c` is the engine respawn and runs as `ay sh -c BODY`.
     if args.first().map(String::as_str) == Some("-c") {
-        let name = std::env::args().next().unwrap_or_else(|| "ay".to_string());
-        return sh::run_named(args, &name);
+        return sh::run(args);
     }
     let argv = std::iter::once("ay".to_string()).chain(args.iter().cloned());
     let cli = match Cli::try_parse_from(argv) {
@@ -507,10 +507,6 @@ mod tests {
     }
 
     #[test]
-    fn arch_forwards_flags_and_help() {
-    }
-
-    #[test]
     fn xtk_commands() {
         assert_eq!(parse("doctor"), Route::Xtk(v(&["doctor"])));
         assert_eq!(parse("lock --lock-only"), Route::Xtk(v(&["lock", "--lock-only"])));
@@ -543,6 +539,12 @@ mod tests {
         assert_eq!(parse("scope serve-web"), Route::External("gamescope-rs", v(&["serve-web"])));
         assert_eq!(parse("lfs logs"), Route::External("just", v(&["lfs-logs"])));
         assert_eq!(parse("lfs"), Route::External("just", v(&["lfs-build"])));
+    }
+
+    #[test]
+    fn env_runs_in_process() {
+        assert_eq!(parse("i18n check"), Route::Package("i18n", v(&["check"])));
+        assert_eq!(parse("env --required A,B"), Route::Env(v(&["--required", "A,B"])));
     }
 
     #[test]

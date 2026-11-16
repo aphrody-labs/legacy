@@ -339,9 +339,9 @@ describe("sources", () => {
     const a = parseAlphabet(
       readFileSync(join(root, "docs", "ALPHABET.md"), "utf8"),
     );
-    expect(section(a, "Noyau")?.table?.rows.length).toBeGreaterThan(3);
-    expect(section(a, "Paris")?.table?.rows.length).toBeGreaterThan(3);
-    expect(isTodo(section(a, "Lettre"))).toBe(true);
+    expect(section(a, "Core")?.table?.rows.length).toBeGreaterThan(3);
+    expect(section(a, "Bets")?.table?.rows.length).toBeGreaterThan(3);
+    expect(isTodo(section(a, "Founder"))).toBe(true);
     expect(
       firstPath(
         "`docs/unixwin`, `apps/unixwin`, `third_party/{niubash,rubash}`",

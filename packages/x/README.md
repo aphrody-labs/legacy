@@ -1,5 +1,26 @@
 # @aphrody/x
 
+<!-- catalog:begin unit -->
+> Headless X (Twitter) client for Bun: a thin import over the Rust crate aphrody-x (aphrody-ffi), with batch jobs for mass scripting. Cookie-auth GraphQL + REST, no API key. Includes local For You algo (x-algorithm port), store, and X function tools (XTools, x_* JSON Schema definitions) for Grok or any tool-calling model.
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/x` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/x build
+bun run --cwd packages/x typecheck
+bun run --cwd packages/x lint
+bun run --cwd packages/x test
+bun run --cwd packages/x catalog:sync
+bun run --cwd packages/x coverage
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Headless **X (Twitter)** client for Bun, built for mass scripting. It is a thin import over the Rust crate `bun_x` (`src/x`), reached in process through the `aphrody-ffi` library (`@aphrody/bun/x`): the client, parsers, store, retry, rate-limit waiting, pacing and checkpoint are Rust, one implementation shared with the `aphrody x` CLI and the MCP tool. Cookie-auth GraphQL + REST, no official API key required. Local state (SQLite store + FTS), catalog sync, and X function tools (`XTools`) that let Grok or any tool-calling model use X.
 
 **Zero keys, fully native**: Uses real browser cookies (`auth_token` + `ct0`) and a query ID catalog synced from live X bundles. The native library is opened by the first call, never on import.

@@ -1,7 +1,7 @@
 # aphrody
 
 <!-- catalog:begin unit -->
-> ay: one multicall CLI for the Aphrody monorepo (arch gate, lock, git, ingest, graph, deploy, bench, build)
+> ay: one multicall CLI for the Aphrody monorepo (lock, git, ingest, graph, deploy, bench, build)
 
 | Type | Path |
 | :-- | :-- |

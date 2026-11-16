@@ -1,7 +1,7 @@
 // Champs du formulaire des paramètres, un composant par genre (voir formulaire.ts). Les champs texte
 // s'inscrivent comme cible d'insertion : une puce de l'aide aux expressions s'insère au curseur, et un
 // aperçu montre la valeur résolue sur les données du dernier essai.
-import { FILTRES, resoudre, type Portee } from "@auto/automate/expressions";
+import { FILTRES, resoudre, type Portee } from "@aphrody/automate/expressions";
 import { Plus, Trash2 } from "@auto/ui/symboles";
 import { Bouton } from "@auto/ui/react";
 import { Switch } from "@base-ui/react/switch";

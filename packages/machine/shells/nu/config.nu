@@ -27,6 +27,16 @@ alias gp = git pull --ff-only
 alias gaa = git add -A
 alias b = bun
 alias bx = bunx
+alias lg = lazygit
+alias ff = fastfetch
+
+def --env y [...args] {
+  let tmp = (mktemp -t "yazi-cwd.XXXXXX")
+  yazi ...$args $"--cwd-file=($tmp)"
+  let cwd = (open $tmp)
+  if $cwd != "" and $cwd != $env.PWD { cd $cwd }
+  rm -fp $tmp
+}
 
 # Native completion of `ay` (external signatures generated from `ay --help`).
 source ../completions/ay.nu

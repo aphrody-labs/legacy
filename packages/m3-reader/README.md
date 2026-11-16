@@ -2,6 +2,26 @@
 
 # @aphrody/m3-reader
 
+<!-- catalog:begin unit -->
+> Material 3 manga and illustrated book readers for React
+
+| Type | Path |
+| :-- | :-- |
+| Bun package | `packages/m3-reader` |
+
+**Commands**
+
+```sh
+bun run --cwd packages/m3-reader build
+bun run --cwd packages/m3-reader typecheck
+bun run --cwd packages/m3-reader test
+bun run --cwd packages/m3-reader typecheck:fast
+bun run --cwd packages/m3-reader prepack
+```
+
+Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+<!-- catalog:end -->
+
 Material 3 React readers for paged and vertical manga and illustrated books.
 
 ```sh

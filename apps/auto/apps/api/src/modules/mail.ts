@@ -1,4 +1,4 @@
-// Lot mail : boîte IMAP/SMTP du tenant, relève classée, envoi des devis et factures (voir docs/MAIL.md).
+// Mail batch: the tenant's IMAP/SMTP mailbox, sorted fetch, sending of quotes and invoices (see docs/MAIL.md).
 import { ErreurApi, refus } from "../i18n";
 import { chiffrer, fournisseursPour } from "@auto/mail";
 import {
@@ -103,11 +103,11 @@ const BOITE = objet({
   email: str,
 });
 
-/** Description OpenAPI des routes du lot. */
+/** OpenAPI description of the batch routes. */
 export const openapi: Chemins = {
   "/v1/mail/fournisseurs": {
     get: op({
-      resume: "Préréglages IMAP/SMTP des fournisseurs (OVH, Google, Microsoft…)",
+      resume: "IMAP/SMTP presets of providers (OVH, Google, Microsoft...)",
       tag: "Mail",
       droit: "lire",
       succes: { 200: liste(objet({})) },
@@ -115,25 +115,25 @@ export const openapi: Chemins = {
   },
   "/v1/mail/boite": {
     get: op({
-      resume: "Boîte connectée (sans mot de passe)",
+      resume: "Connected mailbox (without password)",
       tag: "Mail",
       droit: "lire",
       succes: { 200: objet({}) },
       erreurs: [404],
     }),
     put: op({
-      resume: "Connecter la boîte IMAP/SMTP (connexion testée, identifiants chiffrés au repos)",
+      resume: "Connect the IMAP/SMTP mailbox (connection tested, credentials encrypted at rest)",
       tag: "Mail",
       droit: "parametres",
       corps: BOITE,
       succes: { 200: objet({}) },
       erreurs: [422, 502],
     }),
-    delete: op({ resume: "Déconnecter la boîte", tag: "Mail", droit: "parametres", succes: { 204: null } }),
+    delete: op({ resume: "Disconnect the mailbox", tag: "Mail", droit: "parametres", succes: { 204: null } }),
   },
   "/v1/mail/boite/test": {
     post: op({
-      resume: "Tester la connexion IMAP et SMTP",
+      resume: "Test the IMAP and SMTP connection",
       tag: "Mail",
       droit: "parametres",
       succes: { 200: objet({}) },
@@ -142,7 +142,7 @@ export const openapi: Chemins = {
   },
   "/v1/mail/releve": {
     post: op({
-      resume: "Relever les nouveaux messages (idempotent) et classer les pièces jointes",
+      resume: "Fetch new messages (idempotent) and sort the attachments",
       tag: "Mail",
       droit: "ecrire",
       succes: { 200: objet({}) },
@@ -150,11 +150,11 @@ export const openapi: Chemins = {
     }),
   },
   "/v1/mail/messages": {
-    get: op({ resume: "Messages relevés", tag: "Mail", droit: "lire", succes: { 200: liste(objet({})) } }),
+    get: op({ resume: "Fetched messages", tag: "Mail", droit: "lire", succes: { 200: liste(objet({})) } }),
   },
   "/v1/mail/pieces/{id}": avecId({
     get: op({
-      resume: "Pièce jointe",
+      resume: "Attachment",
       tag: "Mail",
       droit: "lire",
       succes: { 200: brut("application/octet-stream") },
@@ -163,7 +163,7 @@ export const openapi: Chemins = {
   }),
   "/v1/documents/{id}/envoyer": avecId({
     post: op({
-      resume: "Envoyer un document émis par la boîte de l'entreprise (PDF figé en pièce jointe ; facture → envoyée)",
+      resume: "Send an issued document from the company mailbox (frozen PDF attached; invoice → sent)",
       tag: "Mail",
       droit: "ecrire",
       corps: objet({ a: liste(str), objet: str, message: str }),

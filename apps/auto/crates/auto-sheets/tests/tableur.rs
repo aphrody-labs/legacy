@@ -30,7 +30,7 @@ fn aller_retour_xlsx() {
     assert_eq!(v[1][2], "Dupont & Fils");
     assert_eq!(v[1][3].as_f64().unwrap(), 2160.0);
     assert_eq!(v[1][4].as_f64().unwrap(), 0.125);
-    // 22/10/2026 = série Excel 46317.
+    // 22/10/2026 = Excel serial 46317.
     assert_eq!(v[1][0].as_f64().unwrap(), 46317.0);
     assert_eq!(v[2][2], "Été « spécial »");
     assert_eq!(v[2][3].as_f64().unwrap(), 0.99);

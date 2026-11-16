@@ -1,3 +1,4 @@
+import { ErreurApi, refus, reponseErreur } from "./i18n";
 import {
   avecMentionsParDefaut,
   totaux,
@@ -18,7 +19,6 @@ import {
   enregistrerFichier,
   lireFichier,
   lireGabarit,
-  ErreurMetier,
   lire,
   lister,
   modifierBrouillon,
@@ -109,27 +109,20 @@ export const MODULES = [
 ];
 
 const TYPES: Type[] = ["devis", "facture", "acompte", "avoir"];
-function erreur(e: unknown): Response {
-  if (e instanceof ErreurMetier) return Response.json({ erreur: e.message, details: e.details }, { status: e.status });
-  if (e instanceof SyntaxError) return Response.json({ erreur: "JSON invalide" }, { status: 400 });
-  console.error(e);
-  return Response.json({ erreur: "erreur interne" }, { status: 500 });
-}
-
-/** Session Better Auth portée par cookie (`auto.session_token`, préfixé `__Secure-` en HTTPS). */
+/** Better Auth session carried by cookie (`auto.session_token`, prefixed `__Secure-` over HTTPS). */
 const cookieSession = (req: Request) =>
   /(?:^|;\s*)(?:__Secure-)?auto\.session_token=/.test(req.headers.get("cookie") ?? "");
 
 const MUTATIONS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
 /**
- * Anti-CSRF : une modification authentifiée par cookie doit être en JSON. Un formulaire d'un autre
- * site ne peut pas envoyer ce type sans pré-requête CORS. Les jetons Bearer ne sont pas concernés.
+ * Anti-CSRF: a cookie-authenticated mutation must be JSON. A form from another
+ * site cannot send that type without a CORS preflight. Bearer tokens are not affected.
  */
 function csrfRefuse(req: Request): boolean {
   if (!MUTATIONS.has(req.method) || req.headers.get("authorization")?.startsWith("Bearer ")) return false;
   if (!cookieSession(req)) return false;
-  // Cette route vérifie ensuite l’Origin exact de Better Auth avant de lire le formulaire.
+  // This route then checks Better Auth's exact Origin before reading the form.
   if (
     req.method === "POST" &&
     new URL(req.url).pathname === "/v1/imports-fichiers" &&
@@ -141,29 +134,29 @@ function csrfRefuse(req: Request): boolean {
 }
 
 export interface OptionsApp {
-  /** Better Auth : origine publique, secret, limitation de débit (packages/tenancy/src/auth.ts). */
+  /** Better Auth: public origin, secret, rate limiting (packages/tenancy/src/auth.ts). */
   auth?: OptionsAuth;
 }
 
 export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsApp = {}) {
   const ba = enregistrerAuth(sql, creerAuth(sql, options.auth));
-  /** Route publique : erreurs métier converties en réponses JSON. */
+  /** Public route: business errors converted to JSON responses. */
   const pub =
     <R extends Request>(fn: (req: R) => Promise<Response>) =>
     async (req: R) => {
       try {
         return await fn(req);
       } catch (e) {
-        return erreur(e);
+        return reponseErreur(e, req);
       }
     };
 
-  /** Route authentifiée : droit exigé, puis transaction isolée sur le tenant de l'appelant. */
+  /** Authenticated route: required right, then a transaction isolated on the caller's tenant. */
   const auth = <R extends Request>(action: Action, fn: (req: R, a: Auth) => Promise<Response>) =>
     pub(async (req: R) => {
-      if (csrfRefuse(req)) return Response.json({ erreur: "Content-Type application/json requis" }, { status: 415 });
+      if (csrfRefuse(req)) return refus(req, "json_content_type_required", 415);
       const a = await appelant(sql, req);
-      if (!a) return Response.json({ erreur: "non authentifié" }, { status: 401 });
+      if (!a) return refus(req, "unauthenticated", 401);
       noterTenant(a.tenantId);
       exiger(a, action);
       exigerSegments(a, req);
@@ -171,8 +164,8 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
     });
 
   /**
-   * Mentions de l'émetteur imposées par le serveur depuis la fiche entreprise ; avec `clientId`,
-   * le client est relu (sous RLS) depuis la fiche client enregistrée.
+   * Issuer mentions imposed by the server from the company record; with `clientId`,
+   * the client is re-read (under RLS) from the saved client record.
    */
   async function normaliser(
     a: Auth,
@@ -184,16 +177,16 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
       chantierId,
       ...d
     } = (body ?? {}) as Partial<Document> & { clientId?: string | null; chantierId?: string | null };
-    if (!TYPES.includes(d.type as Type)) throw new ErreurMetier("type invalide", [`attendu : ${TYPES.join(", ")}`]);
-    if (!Array.isArray(d.lignes)) throw new ErreurMetier("lignes manquantes");
+    if (!TYPES.includes(d.type as Type)) throw new ErreurApi("invalid_type", [`expected: ${TYPES.join(", ")}`]);
+    if (!Array.isArray(d.lignes)) throw new ErreurApi("lines_missing");
     let client = d.client;
     if (clientId) {
       const c = await lireClient(tx, clientId);
-      if (!c) throw new ErreurMetier("client enregistré introuvable", [], 404);
+      if (!c) throw new ErreurApi("saved_client_not_found", [], 404);
       const { id: _, ...partie } = c;
       client = partie;
     }
-    if (!client) throw new ErreurMetier("client manquant");
+    if (!client) throw new ErreurApi("client_missing");
     const e = await entreprise(sql, a.tenantId);
     const doc = avecMentionsParDefaut({
       ...(d as Document),
@@ -208,10 +201,10 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
   const avecTotaux = <T extends { data: Document }>(d: T) => ({ ...d, totaux: totaux(d.data.lignes) });
   const ctx: Contexte = { sql, publier, pub, auth, ba };
 
-  // Quotas du plan (lot abonnement) appliqués aux points d'entrée concernés.
+  // Plan quotas (subscription batch) applied to the relevant entry points.
   return abonnement.appliquerQuotas(sql, {
     ...Object.assign({}, ...MODULES.map((m) => m.routes(ctx))),
-    // Version livrée : identifiant de livraison et commit Git posés par scripts/release-vps.ts.
+    // Delivered version: delivery id and Git commit set by scripts/release-vps.ts.
     "/health": () =>
       Response.json({ ok: true, version: Bun.env.AUTO_VERSION ?? null, commit: Bun.env.AUTO_COMMIT ?? null }),
     "/v1/openapi.json": {
@@ -221,7 +214,7 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
     "/v1/siren/:siren": {
       GET: pub(async (req: BunRequest<"/v1/siren/:siren">) => {
         const r = await rechercherSiren(req.params.siren);
-        return r ? Response.json(r) : Response.json({ erreur: "siren inconnu" }, { status: 404 });
+        return r ? Response.json(r) : refus(req, "siren_unknown", 404);
       }),
     },
 
@@ -246,7 +239,7 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
     "/v1/documents/:id": {
       GET: auth("lire", async (req: BunRequest<"/v1/documents/:id">, a) => {
         const d = await withTenant(sql, a.tenantId, (tx) => lire(tx, req.params.id));
-        return d ? Response.json(avecTotaux(d)) : Response.json({ erreur: "introuvable" }, { status: 404 });
+        return d ? Response.json(avecTotaux(d)) : refus(req, "not_found", 404);
       }),
       PUT: auth("ecrire", async (req: BunRequest<"/v1/documents/:id">, a) => {
         const body = await req.json();
@@ -267,20 +260,19 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
 
     "/v1/documents/:id/emettre": {
       POST: auth("ecrire", async (req: BunRequest<"/v1/documents/:id/emettre">, a) => {
-        // Numérotation et exemplaire figé dans la même transaction : une facture dont le Factur-X
-        // n'est pas conforme n'est pas émise.
+        // Numbering and frozen copy in the same transaction: an invoice whose Factur-X
+        // is not compliant is not issued.
         const d = await withTenant(sql, a.tenantId, async (tx) => {
           const e = await emettre(tx, a.userId, req.params.id);
           const doc = { ...e.data, numero: e.numero, gabarit: await lireGabarit(tx) };
           if (e.type === "devis") await enregistrerFichier(tx, a.userId, e.id, "pdf", rendrePdf(doc));
           else {
             const fx = facturx(doc, new Date(e.emisAt!));
-            // Le Factur-X (calculé en Rust) doit porter exactement le TTC enregistré (calculé en TS).
+            // The Factur-X (computed in Rust) must carry exactly the recorded TTC (computed in TS).
             const ttcXml = totalTtcCents(extraireXml(fx) ?? "");
             if (ttcXml !== e.ttcCents)
-              throw new ErreurMetier(
-                "Factur-X incohérent avec la facture : émission annulée",
-                [`TTC enregistré ${e.ttcCents}, TTC du XML ${ttcXml}`],
+              throw new ErreurApi("facturx_inconsistent",
+                [`recorded incl. VAT ${e.ttcCents}, XML incl. VAT ${ttcXml}`],
                 500,
               );
             await enregistrerFichier(tx, a.userId, e.id, "facturx", fx);
@@ -302,7 +294,7 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
           const f = await lireFichier(tx, d.id, d.type === "devis" ? "pdf" : "facturx");
           return f && { nom: d.numero!, contenu: f.contenu, sha256: f.sha256 };
         });
-        if (!r) return Response.json({ erreur: "introuvable" }, { status: 404 });
+        if (!r) return refus(req, "not_found", 404);
         return new Response(r.contenu, {
           headers: {
             "content-type": "application/pdf",
@@ -317,7 +309,7 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
       GET: auth("lire", async (req: BunRequest<"/v1/documents/:id/xml">, a) => {
         const f = await withTenant(sql, a.tenantId, (tx) => lireFichier(tx, req.params.id, "facturx"));
         const xml = f && extraireXml(f.contenu);
-        if (!xml) return Response.json({ erreur: "aucune facture émise" }, { status: 404 });
+        if (!xml) return refus(req, "no_issued_invoice", 404);
         return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8" } });
       }),
     },
@@ -347,7 +339,7 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
     "/v1/clients/:id": {
       GET: auth("lire", async (req: BunRequest<"/v1/clients/:id">, a) => {
         const c = await withTenant(sql, a.tenantId, (tx) => lireClient(tx, req.params.id));
-        return c ? Response.json(c) : Response.json({ erreur: "introuvable" }, { status: 404 });
+        return c ? Response.json(c) : refus(req, "not_found", 404);
       }),
       PUT: auth("ecrire", async (req: BunRequest<"/v1/clients/:id">, a) => {
         const p = (await req.json()) as Partie;
@@ -415,7 +407,7 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
     "/v1/employes/:id": {
       GET: auth("rh", async (req: BunRequest<"/v1/employes/:id">, a) => {
         const e = await withTenant(sql, a.tenantId, (tx) => lireEmploye(tx, req.params.id));
-        return e ? Response.json(e) : Response.json({ erreur: "introuvable" }, { status: 404 });
+        return e ? Response.json(e) : refus(req, "not_found", 404);
       }),
       PUT: auth("rh", async (req: BunRequest<"/v1/employes/:id">, a) => {
         const e = (await req.json()) as Employe;
@@ -454,7 +446,7 @@ export function creerApp(sql: Sql, publier: Emetteur = outbox, options: OptionsA
       POST: auth("rh", async (req: BunRequest<"/v1/absences/:id/decision">, a) => {
         const { statut } = (await req.json()) as { statut: Exclude<StatutAbsence, "demandee"> };
         if (!["validee", "refusee", "annulee"].includes(statut))
-          throw new ErreurMetier("statut attendu : validee, refusee ou annulee");
+          throw new ErreurApi("absence_decision_status");
         const r = await withTenant(sql, a.tenantId, async (tx) => {
           const r = await deciderAbsence(tx, a.userId, req.params.id, statut);
           await publier(tx, "absence.decidee", r);

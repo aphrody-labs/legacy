@@ -19,7 +19,7 @@ import {
   resolveAdapter,
   UnsupportedFormatError,
 } from "../src/index.ts";
-import { extractKeys } from "../src/check.ts";
+import { extractKeys, reportOk } from "../src/check.ts";
 import { detectLanguage, isNonSourceProse, proseOf } from "../src/detect.ts";
 import {
   hashText,
@@ -157,16 +157,26 @@ describe("catalogs", () => {
   test("config", () => {
     expect(readConfig().sourceLocale).toBe("en");
   });
-  test("every locale matches en", () => {
+  test("no locale has extra keys, broken syntax or drifting placeholders; coverage is reported", () => {
     const { en, ...others } = catalogs;
-    for (const r of checkCatalogsForTest(en!, others))
-      expect(r).toEqual({
+    for (const r of checkCatalogsForTest(en!, others)) {
+      expect({ ...r, missing: [] }).toEqual({
         locale: r.locale,
         missing: [],
         extra: [],
         placeholders: [],
         syntax: [],
       });
+      expect(r.missing.length).toBe(
+        Object.keys(en!).length - Object.keys(others[r.locale]!).length,
+      );
+      expect(reportOk(r)).toBe(true);
+    }
+  });
+  test("strict mode fails on missing keys", () => {
+    const [r] = checkCatalogsForTest({ a: "A", b: "B" }, { fr: { a: "AA" } });
+    expect(reportOk(r!)).toBe(true);
+    expect(reportOk(r!, true)).toBe(false);
   });
   test("check detects drift", () => {
     const rs = checkCatalogsForTest(

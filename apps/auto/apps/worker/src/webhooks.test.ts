@@ -55,7 +55,7 @@ const inscrire = async (email: string, nom: string) =>
     })
   ).body;
 
-test("abonnements par tenant : filtrés par type, signés avec le secret de l'abonnement, isolés", async () => {
+test("per-tenant subscriptions: filtered by type, signed with the subscription secret, isolated", async () => {
   const a = await inscrire("wh-a@exemple.fr", "Alpha");
   const b = await inscrire("wh-b@exemple.fr", "Beta");
   expect((await api("/v1/webhooks", a.session, { url: "http://exemple.fr/x" })).status).toBe(422);
@@ -88,7 +88,7 @@ test("abonnements par tenant : filtrés par type, signés avec le secret de l'ab
   expect(r!.signature).toBe(signer(wa.body.secret, r!.corps));
   expect(r!.signature).not.toBe(signer(wb.body.secret, r!.corps));
 
-  // Abonnement supprimé : plus de livraison ; B ne peut pas supprimer celui de A.
+  // Subscription deleted: no more delivery; B cannot delete A's.
   expect((await api(`/v1/webhooks/${wa.body.id}`, b.session, undefined, "DELETE")).status).toBe(404);
   expect((await api(`/v1/webhooks/${wa.body.id}`, a.session, undefined, "DELETE")).status).toBe(204);
   await api(`/v1/documents/${d.id}/paiements`, a.session, { date: "2026-10-24", montantCents: 1000, mode: "virement" });

@@ -1,0 +1,8 @@
+{
+  "enabledPlugins": {
+    "vercel@anthropic-plugin-directory": true,
+    "code-review-anthropics@anthropic-plugin-directory": true,
+    "code-simplifier@anthropic-plugin-directory": true,
+    "stripe@anthropic-plugin-directory": true
+  }
+}

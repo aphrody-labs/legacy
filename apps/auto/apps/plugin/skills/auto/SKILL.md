@@ -1,36 +1,36 @@
 ---
 name: auto
-description: Automatiser et gérer l'entreprise de l'utilisateur dans auto (workflows d'automatisation type n8n, devis, factures Factur-X, paiements, relances, factures fournisseurs reçues, absences, exports) avec les outils MCP du serveur « auto ». À utiliser dès que l'utilisateur parle d'automatiser une tâche, de workflows, de ses devis, factures, clients, impayés, relances, factures reçues ou congés.
+description: Automate and manage the user's company in auto (n8n-like automation workflows, quotes, Factur-X invoices, payments, reminders, received supplier invoices, absences, exports) with the MCP tools of the "auto" server. Use as soon as the user talks about automating a task, workflows, their quotes, invoices, clients, unpaid invoices, reminders, received invoices or leave.
 ---
 
 # auto
 
-Les outils `mcp__auto__*` agissent sur le compte auto de l'utilisateur, dans l'entreprise choisie lors de
-l'autorisation OAuth, avec ses seuls droits.
+The `mcp__auto__*` tools act on the user's auto account, in the company chosen during the OAuth
+authorization, with their rights only.
 
-- Chercher avant de créer : `chercher_client`, puis `creer_devis` ou `creer_facture` avec le `clientId` trouvé.
-- Les montants sont en centimes, la TVA en dixièmes de point (200 = 20 %).
-- `creer_facture` crée un brouillon. `emettre_document` lui donne son numéro définitif et fige le Factur-X : c'est
-  irréversible, demander confirmation à l'utilisateur avant de l'appeler.
-- Impayés : `lister_relances` à la date du jour, puis `relancer` au palier indiqué.
-- Factures fournisseurs : `lister_factures_recues` (statut `a_verifier` pour celles à contrôler).
+- Search before creating: `chercher_client`, then `creer_devis` or `creer_facture` with the `clientId` found.
+- Amounts are in cents, VAT in tenths of a point (200 = 20%).
+- `creer_facture` creates a draft. `emettre_document` gives it its final number and freezes the Factur-X: this is
+  irreversible, ask the user for confirmation before calling it.
+- Unpaid invoices: `lister_relances` at today's date, then `relancer` at the level indicated.
+- Supplier invoices: `lister_factures_recues` (status `a_verifier` for those to check).
 
 ## Workflows
 
-- `catalogue_automatisation` d'abord : types de nœuds, paramètres (JSON Schema) et modèles. Partir d'un modèle
-  proche plutôt que d'une page blanche.
-- Une définition a un seul déclencheur (`declencheur.manuel`, `.evenement`, `.planifie`, `.webhook`), des nœuds
-  `{ id, type, nom, parametres, position: [x, y] }` espacés de 280 px en x, et des connexions `{ de, sortie, vers }`
-  (`logique.si` : sortie 0 vrai, 1 faux), sans cycle.
-- Expressions : `{{ $json.champ }}`, `{{ $noeud.<id>.json.champ }}`, filtres `| centimes`, `| date`, `| defaut:'x'`.
-  Les jetons et URL de webhook vont dans des secrets (`{{ $secret.nom }}`, créés par l'utilisateur dans auto),
-  jamais en clair dans la définition.
-- `creer_automatisation` crée le workflow inactif ; `executer_automatisation` pour l'essayer, `lire_execution`
-  pour voir chaque étape. L'activer seulement après accord de l'utilisateur.
-- Workflow en code : `auto flux importer workflow.json`.
+- `catalogue_automatisation` first: node types, parameters (JSON Schema) and templates. Start from a close
+  template rather than a blank page.
+- A definition has a single trigger (`declencheur.manuel`, `.evenement`, `.planifie`, `.webhook`), nodes
+  `{ id, type, nom, parametres, position: [x, y] }` spaced 280 px apart in x, and connections `{ de, sortie, vers }`
+  (`logique.si`: output 0 true, 1 false), without cycle.
+- Expressions: `{{ $json.champ }}`, `{{ $noeud.<id>.json.champ }}`, filters `| centimes`, `| date`, `| defaut:'x'`.
+  Tokens and webhook URLs go in secrets (`{{ $secret.nom }}`, created by the user in auto),
+  never in clear in the definition.
+- `creer_automatisation` creates the workflow inactive; `executer_automatisation` to try it, `lire_execution`
+  to see each step. Activate it only after the user agrees.
+- Workflow as code: `auto flows import workflow.json`.
 
-Configuration : le plugin déclare le serveur MCP distant `https://auto.aphrody.com/mcp` (variable
-`AUTO_MCP_URL` pour une autre instance). Au premier appel, Claude Code ouvre le navigateur : connexion à auto,
-choix de l'entreprise, autorisation ; le jeton se renouvelle seul. Révocation : auto, Paramètres, Sécurité,
-Applications autorisées. Sans navigateur (CI, scripts) : `claude mcp add auto -e AUTO_TOKEN=auto_… -- auto mcp`
-avec une clé d'API créée dans Paramètres, Clés d'API.
+Configuration: the plugin declares the remote MCP server `https://auto.aphrody.com/mcp` (variable
+`AUTO_MCP_URL` for another instance). On the first call, Claude Code opens the browser: sign in to auto,
+choose the company, authorize; the token renews itself. Revocation: auto, Settings, Security,
+Authorized applications. Without a browser (CI, scripts): `claude mcp add auto -e AUTO_TOKEN=auto_… -- auto mcp`
+with an API key created in Settings, API keys.

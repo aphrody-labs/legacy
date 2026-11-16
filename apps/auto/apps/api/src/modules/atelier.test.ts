@@ -29,7 +29,7 @@ afterAll(async () => {
   await server?.stop(true);
   if (drop) await drop();
 });
-test("atelier Excel : formules natives, conflit concurrent, versions et restauration", async () => {
+test("Excel workshop: native formulas, concurrent conflict, versions and restore", async () => {
   const d = (await appel("/v1/atelier", A.session, { format: "excel", nom: "Chantier.xlsx", segment: "chantiers" }))
     .body;
   expect(d.revision).toBe(1);
@@ -65,7 +65,7 @@ test("atelier Excel : formules natives, conflit concurrent, versions et restaura
   expect((await appel(`/v1/atelier/${d.id}`, A.session, { archive: true }, "PATCH")).body.archive).toBe(true);
   expect((await appel(`/v1/atelier/${d.id}/restaurer`, A.session, { revision: 4, version: 1 })).status).toBe(409);
 });
-test("atelier Word : remplacement natif, gabarit et export PDF", async () => {
+test("Word workshop: native replacement, template and PDF export", async () => {
   const original = creerDocx({ titre: "Courrier", paragraphes: [{ texte: "Bonjour Client, chantier {{code}}." }] });
   const r = await appel("/v1/atelier/importer", A.session, {
     nom: "Courrier.docx",
@@ -95,7 +95,7 @@ test("atelier Word : remplacement natif, gabarit et export PDF", async () => {
   expect(pdf.status).toBe(200);
   expect((await pdf.text()).startsWith("%PDF-")).toBe(true);
 });
-test("atelier PDF et segments : pièces illisibles refusées, consultations et modifications cloisonnées", async () => {
+test("PDF workshop and segments: unreadable documents refused, views and edits partitioned", async () => {
   const pdf = rendrePdf({
     type: "devis",
     numero: "D-TEST",

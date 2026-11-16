@@ -1,6 +1,6 @@
 // Typed client of the `/v1` API. In the browser: same origin, HttpOnly session cookie sent by the
 // browser; every mutation goes out as `application/json` (required by the API's anti-CSRF).
-import type { Categorie, Declencheur, Definition, Etape, Modele } from "@auto/automate";
+import type { Categorie, Declencheur, Definition, Etape, Modele } from "@aphrody/automate";
 import { traducteur } from "./i18n";
 import type { Document, Employe, Ligne, Partie, Statut, Totaux, Type, TypeAbsence } from "@auto/domain";
 import type {

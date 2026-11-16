@@ -9,7 +9,7 @@ Done (2026-11-12)
 - Scheduler + HEARTBEAT.md heartbeat (`agent schedule`, `agent heartbeat`); Hermes skill linter, usage, stale/archive curation, `skill_view`.
 - TUI on `@earendil-works/pi-tui` (`agent tui`), multi-turn sessions.
 - Gateway (`agent gateway`, src/gateway): WebSocket sessions, OpenAI-compatible chat, A2A agent card + message/send, channel webhooks; skills hub (`agent skills search/install`, ClawHub + GitHub); native bash resolution from the windows-native patches; TUI e2e through ConPTY.
-- Hermes bridge: src/agent/context (Rust, same SQLite schema) + src/agent/py (pyo3 `agent_core`) + python/hermes_agent_memory (Hermes MemoryProvider `agent`, entry point hermes_agent.memory_providers). Verified on prd: TS writes, Python reads, and the reverse. Context fusion: weighted RRF with tuned weights, porter stemming.
+- Hermes bridge: src/agent/context (Rust, same SQLite schema, pyo3 `agent_core` behind the `python` feature) + python/hermes_agent_memory (Hermes MemoryProvider `agent`, entry point hermes_agent.memory_providers). Verified on prd: TS writes, Python reads, and the reverse. Context fusion: weighted RRF with tuned weights, porter stemming.
 - shenron-chat-v2 on prd restarted with --jinja: raw tool calls work, but the LoRA model does not drive the agent loop (it claims success without calling tools).
 - CI green on windows-latest + ubuntu-latest.
 - legacy/ dissolved and deleted (context7 + fact-check tools in research).

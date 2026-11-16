@@ -1,0 +1,11 @@
+# Official Yazi v26 keymap extensions
+"$schema" = "https://yazi-rs.github.io/schemas/keymap.json"
+
+[mgr]
+prepend_keymap = [
+  { on = ["g", "s"], run = "cd C:/aphrody", desc = "Jump to C:/aphrody" },
+  { on = ["g", "c"], run = "shell 'lazygit' --block", desc = "Open Lazygit" },
+  { on = ["e"], run = "shell 'hx \"$@\"' --block --for unix", desc = "Edit in Helix" },
+  { on = ["z"], run = "plugin zoxide", desc = "Jump with zoxide" },
+  { on = ["f"], run = "plugin fzf", desc = "Jump with fzf" },
+]

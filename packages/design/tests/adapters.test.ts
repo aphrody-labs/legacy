@@ -113,7 +113,15 @@ test("Compose et Flutter : six schémas, valeurs exactes", async () => {
     );
   }
   expect(dart).toContain("onInverseSurface:");
+  expect(dart).toContain("useMaterial3: true,");
   expect(dart).not.toMatch(/^\s+(background|onBackground|surfaceVariant):/m);
+  expect(kt).toContain("object ExpressiveSprings");
+  expect(kt).toContain("SPATIAL_FAST_STIFFNESS = 800.0f");
+  expect(kt).toContain("SPATIAL_DEFAULT_STIFFNESS = 380.0f");
+  expect(kt).toContain("EFFECTS_DEFAULT_STIFFNESS = 1600.0f");
+  expect(kt).toContain(
+    "val motionScheme: MotionScheme = MotionScheme.expressive()",
+  );
 });
 
 test("Fluent : rampe de marque 10..160 du sombre au clair, rôles exacts", async () => {
@@ -178,4 +186,129 @@ test("WebUI : themes = les six modes, rôles, échelles et 9 presets", async () 
   expect(taffy).toContain("pub const FUSION_PRESETS:");
   expect(taffy).toContain('"hyprland"');
   expect(taffy).toContain('"cachyos"');
+});
+
+test("Pure C (tokens.h) et Android NDK (ndk_theme.h) : palettes ARGB32, struct statique, ressorts M3 Expressive et table JNI/ANativeWindow", async () => {
+  const h = await text("tokens.h");
+  const ndk = await text("ndk_theme.h");
+
+  // ARGB 0xAARRGGBBu + hex strings dans struct ay_m3_scheme
+  const lp = tokens.color.light.primary;
+  const dp = tokens.color.dark.primary;
+  expect(h).toContain(
+    `#define AY_M3_LIGHT_PRIMARY ((ay_m3_argb_t)0xFF${lp.slice(1)}u)`,
+  );
+  expect(h).toContain(
+    `#define AY_M3_DARK_PRIMARY ((ay_m3_argb_t)0xFF${dp.slice(1)}u)`,
+  );
+  expect(h).toContain(
+    "static const struct ay_m3_scheme ay_m3_light_scheme = {",
+  );
+  expect(h).toContain("static const struct ay_m3_scheme ay_m3_dark_scheme = {");
+  expect(h).toContain(`"${lp.toLowerCase()}"`);
+  expect(h).toContain(`"${dp.toLowerCase()}"`);
+
+  // Rayons, opacités d'état M3, breakpoints et ressorts M3 Expressive
+  expect(h).toContain("#define AY_M3_CORNER_MEDIUM_PX 12.0f");
+  expect(h).toContain("#define AY_M3_CORNER_EXTRA_LARGE_PX 28.0f");
+  expect(h).toContain("#define AY_M3_STATE_HOVER_OPACITY 0.08f");
+  expect(h).toContain("#define AY_M3_STATE_FOCUS_OPACITY 0.10f");
+  expect(h).toContain("#define AY_M3_STATE_PRESSED_OPACITY 0.10f");
+  expect(h).toContain("#define AY_M3_STATE_DRAGGED_OPACITY 0.16f");
+  expect(h).toContain("#define AY_M3_BREAKPOINT_COMPACT_PX 600");
+  expect(h).toContain("#define AY_M3_BREAKPOINT_MEDIUM_PX 840");
+  expect(h).toContain("#define AY_M3_BREAKPOINT_EXPANDED_PX 1200");
+  expect(h).toContain("#define AY_M3_BREAKPOINT_LARGE_PX 1600");
+  expect(h).toContain("#define AY_M3_SPRING_SPATIAL_FAST_STIFFNESS 800.0f");
+  expect(h).toContain("#define AY_M3_SPRING_SPATIAL_FAST_DAMPING 0.6f");
+  expect(h).toContain("#define AY_M3_SPRING_SPATIAL_DEFAULT_STIFFNESS 380.0f");
+  expect(h).toContain("#define AY_M3_SPRING_SPATIAL_SLOW_STIFFNESS 200.0f");
+  expect(h).toContain("#define AY_M3_SPRING_EFFECTS_FAST_STIFFNESS 3800.0f");
+  expect(h).toContain("#define AY_M3_SPRING_EFFECTS_DEFAULT_STIFFNESS 1600.0f");
+  expect(h).toContain("#define AY_M3_SPRING_EFFECTS_SLOW_STIFFNESS 800.0f");
+
+  // Android NDK RGBA8888 (0xAABBGGRRu) + table alignée sur les 48 rôles de Theme.kt
+  expect(ndk).toContain('#include "tokens.h"');
+  expect(ndk).toContain("AY_NDK_LIGHT_CLEAR_RGBA8888");
+  expect(ndk).toContain("AY_NDK_DARK_CLEAR_RGBA8888");
+  expect(ndk).toContain("AY_NDK_ROLE_COUNT = 48");
+  expect(ndk).toContain(`{ "primary", (ay_m3_argb_t)0xFF${lp.slice(1)}u,`);
+  expect(ndk).toContain(`{ "primary", (ay_m3_argb_t)0xFF${dp.slice(1)}u,`);
+  expect(ndk).toContain("ay_ndk_get_roles(int is_dark)");
+});
+
+test("Egui, Iced, COSMIC RON, Bevy et Leptos/Dioxus : adaptateurs Rust et RON complets et fidèles à tokens.json", async () => {
+  const egui = await text("egui_theme.rs");
+  const iced = await text("iced_theme.rs");
+  const cosmic = await text("cosmic_theme.ron");
+  const bevy = await text("bevy_theme.rs");
+  const ld = await text("leptos_dioxus_tokens.rs");
+
+  const [lr, lg, lb] = [1, 3, 5].map((i) =>
+    parseInt(tokens.color.light.primary.slice(i, i + 2), 16),
+  );
+  const [dr, dg, db] = [1, 3, 5].map((i) =>
+    parseInt(tokens.color.dark.primary.slice(i, i + 2), 16),
+  );
+
+  // Egui Visuals & Style
+  expect(egui).toContain("pub mod aphrody_egui");
+  expect(egui).toContain(
+    `pub const PRIMARY: Color32 = Color32::from_rgb(${lr}, ${lg}, ${lb});`,
+  );
+  expect(egui).toContain(
+    `pub const PRIMARY: Color32 = Color32::from_rgb(${dr}, ${dg}, ${db});`,
+  );
+  expect(egui).toContain("CornerRadius::same(12)");
+  expect(egui).toContain("Stroke::new(");
+  expect(egui).toContain("pub fn light_visuals() -> Visuals");
+  expect(egui).toContain("pub fn dark_visuals() -> Visuals");
+  expect(egui).toContain("pub fn style(dark: bool) -> Style");
+
+  // Iced Palette & Theme
+  expect(iced).toContain("pub mod aphrody_iced");
+  expect(iced).toContain(
+    `pub const PRIMARY: Color = Color::from_rgb8(${lr}, ${lg}, ${lb});`,
+  );
+  expect(iced).toContain(
+    `pub const PRIMARY: Color = Color::from_rgb8(${dr}, ${dg}, ${db});`,
+  );
+  expect(iced).toContain("pub const LIGHT_PALETTE: Palette = Palette {");
+  expect(iced).toContain("pub const DARK_PALETTE: Palette = Palette {");
+
+  // System76 libcosmic RON
+  expect(cosmic).toContain("light: Light((");
+  expect(cosmic).toContain('name: "Aphrody M3 Light"');
+  expect(cosmic).toContain(`accent_blue: "${tokens.color.light.primary}FF"`);
+  expect(cosmic).toContain("dark: Dark((");
+  expect(cosmic).toContain('name: "Aphrody M3 Dark"');
+  expect(cosmic).toContain(`accent_blue: "${tokens.color.dark.primary}FF"`);
+  expect(cosmic).toContain("neutral_0:");
+  expect(cosmic).toContain("neutral_10:");
+
+  // Bevy Srgba + Val::Px
+  expect(bevy).toContain("pub mod aphrody_bevy");
+  expect(bevy).toContain("use bevy_color::Srgba;");
+  expect(bevy).toContain("use bevy_ui::Val;");
+  expect(bevy).toContain("pub const CORNER_MEDIUM: Val = Val::Px(12.0);");
+  expect(bevy).toContain("pub const SPACE_MD: Val = Val::Px(16.0);");
+  expect(bevy).toContain("Srgba::new(");
+
+  // Leptos / Dioxus / Tauri / React / Pure Bun zero-dep CSS tokens
+  expect(ld).toContain("pub mod aphrody_web_tokens");
+  expect(ld).toContain(
+    'pub const M3_TOKENS_CSS: &str = include_str!("../tokens.css");',
+  );
+  expect(ld).toContain(
+    'pub const PRIMARY_PROP: &str = "--md-sys-color-primary";',
+  );
+  expect(ld).toContain(
+    'pub const PRIMARY: &str = "var(--md-sys-color-primary)";',
+  );
+  expect(ld).toContain(
+    `("primary", "var(--md-sys-color-primary)", "${tokens.color.light.primary}", "${tokens.color.dark.primary}")`,
+  );
+  expect(ld.match(/\("[a-z0-9-]+", "var\(--md-sys-color-/g)?.length).toBe(
+    roles.length,
+  );
 });

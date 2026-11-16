@@ -1472,14 +1472,6 @@
       "file": "src/apm"
      },
      {
-      "id": "src/archguard",
-      "name": "archguard",
-      "kind": "module",
-      "language": "rust",
-      "loc": 3555,
-      "file": "src/archguard"
-     },
-     {
       "id": "src/chromium/factory",
       "name": "aphrody-factory",
       "kind": "module",
@@ -2126,26 +2118,6 @@
   {
    "source": "src/agent/context",
    "target": "packages/ai-os",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/archguard",
-   "target": "infra/mesh-vn",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/archguard",
-   "target": "packages/ai-os",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/archguard",
-   "target": "src/posix/omarchy",
-   "kind": "dispatch"
-  },
-  {
-   "source": "src/archguard",
-   "target": "packages/core",
    "kind": "dispatch"
   },
   {
@@ -3301,11 +3273,6 @@
   {
    "source": "src/ay",
    "target": "bench",
-   "kind": "call"
-  },
-  {
-   "source": "src/ay",
-   "target": "src/archguard",
    "kind": "call"
   },
   {
@@ -8950,11 +8917,6 @@
   },
   {
    "source": "ci",
-   "target": "src/archguard",
-   "kind": "dispatch"
-  },
-  {
-   "source": "ci",
    "target": "packages/design",
    "kind": "dispatch"
   },
@@ -9135,7 +9097,7 @@
   "Most depended-on units (single points of failure): bun_core (108), bun_alloc (59), bun_collections (45), bun_sys (43), bun_ast (35).",
   "1 units have no inbound edge, no binary and are never named elsewhere: unwired candidates for wiring into ay or deletion.",
   "1 more units have no manifest or path edge but are named in other sources; their use is dynamic (FFI, generated code, docs) and is not counted dead.",
-  "136 of 224 Rust units are absorbed Bun crates (bun_*).",
+  "136 of 223 Rust units are absorbed Bun crates (bun_*).",
   "Units linking a data-store client (manifest dependency or Bun built-in API; read/write not measured): SQLite 12, S3 / R2 4, Valkey / Redis 2, Postgres 2.",
   "No dependency cycle (checkdeps).",
   "Every ay External route resolves to a binary in the tree."

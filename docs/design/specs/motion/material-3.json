@@ -17,40 +17,40 @@
     },
     {
       "url": "https://m3.material.io/styles/motion/overview/how-it-works",
-      "license": "Google Terms of Service (propriétaire, reformulé ; valeurs factuelles seules)"
+      "license": "Google Terms of Service (proprietary, restated; factual values only)"
     },
     {
       "url": "https://m3.material.io/styles/motion/overview/specs",
-      "license": "Google Terms of Service (propriétaire, reformulé ; valeurs factuelles seules)"
+      "license": "Google Terms of Service (proprietary, restated; factual values only)"
     },
     {
       "url": "https://m3.material.io/styles/motion/easing-and-duration/tokens-specs",
-      "license": "Google Terms of Service (propriétaire, reformulé ; valeurs factuelles seules)"
+      "license": "Google Terms of Service (proprietary, restated; factual values only)"
     },
     {
       "url": "https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration",
-      "license": "Google Terms of Service (propriétaire, reformulé ; valeurs factuelles seules)"
+      "license": "Google Terms of Service (proprietary, restated; factual values only)"
     },
     {
       "url": "https://m3.material.io/styles/motion/transitions/transition-patterns",
-      "license": "Google Terms of Service (propriétaire, reformulé ; valeurs factuelles seules)"
+      "license": "Google Terms of Service (proprietary, restated; factual values only)"
     },
     {
       "url": "https://m3.material.io/styles/motion/transitions/applying-transitions",
-      "license": "Google Terms of Service (propriétaire, reformulé ; valeurs factuelles seules)"
+      "license": "Google Terms of Service (proprietary, restated; factual values only)"
     }
   ],
   "rules": [
     {
       "id": "m3.motion.springs-first",
       "level": "SHOULD",
-      "rule": "Animer les composants et interactions avec le système physique à ressorts (M3 Expressive, mai 2025) ; le couple easing + durée reste un repli, encore employé pour les transitions de page, mais n'évolue plus.",
+      "rule": "Animate components and interactions with the spring-physics system (M3 Expressive, May 2025); easing + duration remains a fallback, still used for page transitions, but no longer evolves.",
       "source": "https://m3.material.io/styles/motion/overview/how-it-works"
     },
     {
       "id": "m3.motion.scheme",
       "level": "SHOULD",
-      "rule": "Choisir un schéma de mouvement au niveau du produit : expressive (rebond, défaut recommandé, moments clés) ou standard (sans rebond marqué, produits utilitaires) ; les tokens de ressort ne portent pas le nom du schéma.",
+      "rule": "Choose a motion schema at product level: expressive (bounce, recommended default, key moments) or standard (no pronounced bounce, utility products); spring tokens do not carry the schema name.",
       "value": {
         "standard": {
           "fast-spatial": {
@@ -110,25 +110,25 @@
     {
       "id": "m3.motion.spatial-vs-effects",
       "level": "MUST",
-      "rule": "Ressorts spatial pour position, taille, rotation et rayon d'angle (dépassement autorisé) ; ressorts effects pour couleur et opacité (aucun dépassement, amortissement 1).",
+      "rule": "Spatial springs for position, size, rotation, and corner radius (overshoot allowed); effects springs for color and opacity (no overshoot, damping 1).",
       "source": "https://m3.material.io/styles/motion/overview/how-it-works"
     },
     {
       "id": "m3.motion.speed",
       "level": "SHOULD",
-      "rule": "Vitesse default par défaut ; fast pour les petits éléments (bouton, switch) ; slow pour les animations plein écran.",
+      "rule": "Default speed by default; fast for small elements (button, switch); slow for fullscreen animations.",
       "source": "https://m3.material.io/styles/motion/overview/how-it-works"
     },
     {
       "id": "m3.motion.component-defaults",
       "level": "SHOULD",
-      "rule": "Le mouvement interne des composants repose sur les deux ressorts fast-spatial et fast-effects du schéma courant.",
+      "rule": "Component internal motion relies on the two fast-spatial and fast-effects springs of the current schema.",
       "source": "https://m3.material.io/styles/motion/overview/how-it-works"
     },
     {
       "id": "m3.motion.web-curves",
       "level": "MAY",
-      "rule": "Sur le web sans moteur de ressorts, approcher chaque ressort par la courbe de Bézier et la durée de conversion publiées, uniquement pour les animations non interrompues et sans geste.",
+      "rule": "On the web without a spring engine, approximate each spring using the published Bézier curve and conversion duration, only for uninterrupted animations without gestures.",
       "value": {
         "expressive": {
           "fast-spatial": ["cubic-bezier(0.42, 1.67, 0.21, 0.90)", "350ms"],
@@ -152,37 +152,37 @@
     {
       "id": "m3.motion.easing-pairs",
       "level": "SHOULD",
-      "rule": "En repli easing + durée : emphasized pour les transitions principales, standard pour les petites transitions utilitaires ; decelerate à l'entrée, accelerate à la sortie, selon les couples de référence.",
+      "rule": "As easing + duration fallback: emphasized for main transitions, standard for small utility transitions; decelerate on entry, accelerate on exit, per reference pairs.",
       "value": [
         {
           "easing": "emphasized",
           "duration": "500ms",
-          "use": "début et fin à l'écran"
+          "use": "start and end on screen"
         },
         {
           "easing": "emphasized-decelerate",
           "duration": "400ms",
-          "use": "entrée à l'écran"
+          "use": "entry on screen"
         },
         {
           "easing": "emphasized-accelerate",
           "duration": "200ms",
-          "use": "sortie de l'écran"
+          "use": "exit from screen"
         },
         {
           "easing": "standard",
           "duration": "300ms",
-          "use": "début et fin à l'écran"
+          "use": "start and end on screen"
         },
         {
           "easing": "standard-decelerate",
           "duration": "250ms",
-          "use": "entrée à l'écran"
+          "use": "entry on screen"
         },
         {
           "easing": "standard-accelerate",
           "duration": "200ms",
-          "use": "sortie de l'écran"
+          "use": "exit from screen"
         }
       ],
       "source": "https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration"
@@ -190,19 +190,19 @@
     {
       "id": "m3.motion.css-emphasized-fallback",
       "level": "MUST",
-      "rule": "En CSS, emphasized (courbe à deux segments) n'existe pas en cubic-bezier : utiliser standard en repli, ou une fonction linear() échantillonnée.",
+      "rule": "In CSS, emphasized (two-segment curve) does not exist in cubic-bezier: use standard as fallback, or a sampled linear() function.",
       "source": "https://m3.material.io/styles/motion/easing-and-duration/tokens-specs"
     },
     {
       "id": "m3.motion.transition-patterns",
       "level": "SHOULD",
-      "rule": "Choisir le motif de transition selon la relation entre vues : transformation de conteneur, avant/arrière, latéral, niveau supérieur, entrée/sortie ; squelettes pour le chargement.",
+      "rule": "Choose the transition pattern based on the relationship between views: container transform, forward/back, lateral, higher level, entry/exit; skeletons for loading.",
       "source": "https://m3.material.io/styles/motion/transitions/transition-patterns"
     },
     {
       "id": "m3.motion.reduced-motion",
       "level": "MUST",
-      "rule": "Respecter la préférence de réduction des animations (prefers-reduced-motion, réglage OS) : remplacer déplacements et rebonds par un fondu court ou un changement immédiat.",
+      "rule": "Respect the animation reduction preference (prefers-reduced-motion, OS setting): replace movements and bounces with a short fade or immediate change.",
       "source": "https://m3.material.io/styles/motion/transitions/applying-transitions"
     }
   ],
@@ -315,32 +315,32 @@
       {
         "easing": "emphasized",
         "duration": "500ms",
-        "use": "début et fin à l'écran"
+        "use": "start and end on screen"
       },
       {
         "easing": "emphasized-decelerate",
         "duration": "400ms",
-        "use": "entrée à l'écran"
+        "use": "entry on screen"
       },
       {
         "easing": "emphasized-accelerate",
         "duration": "200ms",
-        "use": "sortie de l'écran"
+        "use": "exit from screen"
       },
       {
         "easing": "standard",
         "duration": "300ms",
-        "use": "début et fin à l'écran"
+        "use": "start and end on screen"
       },
       {
         "easing": "standard-decelerate",
         "duration": "250ms",
-        "use": "entrée à l'écran"
+        "use": "entry on screen"
       },
       {
         "easing": "standard-accelerate",
         "duration": "200ms",
-        "use": "sortie de l'écran"
+        "use": "exit from screen"
       }
     ]
   }

@@ -5,7 +5,7 @@
 //! - `GET /api/tauri/snapshot` — Full Tauri v3 + localized Gemini Windows App installation report
 //! - `POST /api/tauri/voice-to-voice` — Native Rust `flowcat_core::GeminiLive` (`BidiGenerateContent`)
 //!   Full-Duplex Voice-to-Voice turn (16 kHz PCM16 mic in -> 24 kHz WAV out + 32-band FFT Orb spectrum)
-//! - `POST /api/tauri/spectrum` — Native Rust `voice_dsp::compute_spectrum_32` IPC command
+//! - `POST /api/tauri/spectrum` — Native Rust `aphrody_audio::dsp::compute_spectrum_32` IPC command
 //! - `--snapshot` CLI flag for instant JSON inspection
 //! - `--voice-turn "<prompt>"` CLI flag for direct terminal Voice-to-Voice execution
 
@@ -87,7 +87,7 @@ async fn handle_voice_to_voice(
 
 async fn handle_spectrum(
     Json(req): Json<SpectrumRequest>,
-) -> Json<voice_dsp::SpectrumFrame> {
+) -> Json<aphrody_audio::dsp::SpectrumFrame> {
     let sr = req.sample_rate_hz.unwrap_or(16_000);
     Json(ipc_compute_orb_spectrum(&req.samples, sr))
 }

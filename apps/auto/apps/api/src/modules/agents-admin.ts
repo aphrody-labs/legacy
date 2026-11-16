@@ -1,3 +1,4 @@
+import { ErreurApi, refus } from "../i18n";
 import { humainSuperAdmin, ipAdministration } from "@auto/tenancy";
 import { ErreurMetier } from "@auto/store";
 import type { Module, Chemins } from "../modules";
@@ -6,9 +7,9 @@ export const routes: Module = ({ sql, ba, pub }) => {
   const humain = <R extends Request>(fn: (req: R, user: string) => Promise<Response>) =>
     pub(async (req: R) => {
       if (req.method !== "GET" && !req.headers.get("content-type")?.toLowerCase().startsWith("application/json"))
-        return Response.json({ erreur: "JSON requis" }, { status: 415 });
+        return refus(req, "json_required", 415);
       const s = await humainSuperAdmin(ba, req);
-      if (!s) return Response.json({ erreur: "Super-administrateur humain requis" }, { status: 403 });
+      if (!s) return refus(req, "human_superadmin_required", 403);
       return fn(req, s.user.id);
     });
   return {
@@ -26,7 +27,7 @@ export const routes: Module = ({ sql, ba, pub }) => {
       POST: humain(async (req, user) => {
         const b = (await req.json()) as { nom?: string };
         if (typeof b.nom !== "string" || !b.nom.trim() || b.nom.length > 100)
-          throw new ErreurMetier("Nom de l’agent requis");
+          throw new ErreurApi("agent_name_required");
         const token =
             "auto_agent_" +
             crypto.getRandomValues(new Uint8Array(32)).toBase64({ alphabet: "base64url", omitPadding: true }),
@@ -38,7 +39,7 @@ export const routes: Module = ({ sql, ba, pub }) => {
     },
     "/v1/admin/agents/:id": {
       DELETE: humain(async (req: BunRequest<"/v1/admin/agents/:id">, user) => {
-        if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) throw new ErreurMetier("Identifiant invalide");
+        if (!/^[0-9a-f-]{36}$/i.test(req.params.id)) throw new ErreurApi("invalid_id");
         const r =
           await sql`UPDATE agent_admin SET actif=false WHERE id=${req.params.id} AND proprietaire_id=${user} RETURNING id`;
         return new Response(null, { status: r.length ? 204 : 404 });
@@ -48,10 +49,10 @@ export const routes: Module = ({ sql, ba, pub }) => {
 };
 const op = (summary: string) => ({
   summary,
-  responses: { 200: { description: "Super-administrateur humain authentifié" }, 403: { description: "Accès refusé" } },
+  responses: { 200: { description: "Authenticated human super-administrator" }, 403: { description: "Access denied" } },
 });
 export const openapi: Chemins = {
-  "/v1/admin/moi": { get: op("Mon accès super-administrateur") },
-  "/v1/admin/agents": { get: op("Mes accès agents"), post: op("Créer un accès agent nominatif") },
-  "/v1/admin/agents/{id}": { delete: op("Révoquer un agent") },
+  "/v1/admin/moi": { get: op("My super-administrator access") },
+  "/v1/admin/agents": { get: op("My agent accesses"), post: op("Create a named agent access") },
+  "/v1/admin/agents/{id}": { delete: op("Revoke an agent") },
 };

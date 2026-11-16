@@ -12,7 +12,7 @@ const paths = spec.paths as Record<string, Record<string, unknown>>;
 /** `/v1/documents/:id` → `/v1/documents/{id}`. */
 const chemin = (r: string) => r.replace(/:(\w+)/g, "{$1}");
 
-test("chaque route /v1 de creerApp est documentée, méthode par méthode", () => {
+test("every /v1 route of creerApp is documented, method by method", () => {
   const manquantes: string[] = [];
   for (const [route, h] of Object.entries(routes)) {
     if (!route.startsWith("/v1/")) continue;
@@ -22,12 +22,12 @@ test("chaque route /v1 de creerApp est documentée, méthode par méthode", () =
   expect(manquantes).toEqual([]);
 });
 
-test("aucune route documentée sans implémentation", () => {
+test("no documented route without implementation", () => {
   const implementees = new Set(Object.keys(routes).map(chemin));
   expect(Object.keys(paths).filter((p) => !implementees.has(p))).toEqual([]);
 });
 
-test("références de schémas résolues", () => {
+test("schema references resolved", () => {
   const refs = [...JSON.stringify(spec).matchAll(/"\$ref":"#\/components\/(\w+)\/([^"]+)"/g)];
   expect(refs.length).toBeGreaterThan(50);
   const comps = spec.components as Record<string, Record<string, unknown>>;
@@ -39,12 +39,12 @@ const complete = () =>
     creerAuth({} as Sql, { baseURL: "https://auto.aphrody.com", validerSchema: false }).api.generateOpenAPISchema(),
   );
 
-test("docs/openapi.json à jour (bun scripts/openapi.ts)", async () => {
+test("docs/openapi.json up to date (bun scripts/openapi.ts)", async () => {
   const fichier = await Bun.file(new URL("../../../docs/openapi.json", import.meta.url)).json();
   expect(fichier).toEqual(JSON.parse(JSON.stringify(await complete())));
 });
 
-test("servie sur GET /v1/openapi.json, routes Better Auth fusionnées", async () => {
+test("served on GET /v1/openapi.json, Better Auth routes merged", async () => {
   const r = await (routes["/v1/openapi.json"] as { GET: () => Promise<Response> }).GET();
   expect(r.headers.get("content-type")).toContain("application/json");
   const s = (await r.json()) as { openapi: string; paths: Record<string, unknown> };

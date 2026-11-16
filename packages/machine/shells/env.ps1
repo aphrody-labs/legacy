@@ -35,6 +35,11 @@ if ($_ayW) {
   $env:WRANGLER_SEND_METRICS = 'false'
   $env:CHECKPOINT_DISABLE = '1'
   $env:FZF_DEFAULT_COMMAND = 'fd --type f --hidden --exclude .git --path-separator /'
+  $env:FZF_DEFAULT_OPTS = '--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8'
+  $env:STARSHIP_CONFIG = $_ayH + '\.config\starship.toml'
+  $env:EZA_CONFIG_DIR = $_ayH + '\.config\eza'
+  $env:BAT_CONFIG_PATH = $_ayH + '\.config\bat\config'
+  $env:ATUIN_CONFIG_DIR = $_ayH + '\.config\atuin'
   $_ayD = @(('C:\Program Files\coreutils\bin'), ($_ayH + '\.local\bin'), ($env:CARGO_HOME + '\bin'), ($env:BUN_INSTALL + '\bin'), ($env:DENO_INSTALL + '\bin'), ('C:\Program Files\nodejs'), ($env:JAVA_HOME + '\bin'), ($env:ANDROID_HOME + '\cmdline-tools\latest\bin'), ($env:ANDROID_HOME + '\platform-tools'), ($env:GHIDRA_INSTALL_DIR))
 } else {
   $env:SRC_ROOT = $_ayH + '/src'
@@ -65,6 +70,11 @@ if ($_ayW) {
   $env:WRANGLER_SEND_METRICS = 'false'
   $env:CHECKPOINT_DISABLE = '1'
   $env:FZF_DEFAULT_COMMAND = 'fd --type f --hidden --exclude .git --path-separator /'
+  $env:FZF_DEFAULT_OPTS = '--color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#b4befe,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8'
+  $env:STARSHIP_CONFIG = $_ayH + '/.config/starship.toml'
+  $env:EZA_CONFIG_DIR = $_ayH + '/.config/eza'
+  $env:BAT_CONFIG_PATH = $_ayH + '/.config/bat/config'
+  $env:ATUIN_CONFIG_DIR = $_ayH + '/.config/atuin'
   $_ayD = @(($_ayH + '/.local/bin'), ($env:CARGO_HOME + '/bin'), ($env:BUN_INSTALL + '/bin'))
 }
 $_ayS = [IO.Path]::PathSeparator

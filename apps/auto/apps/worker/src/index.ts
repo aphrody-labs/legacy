@@ -1,4 +1,4 @@
-// Worker : file de jobs Postgres (outbox des événements, tâches planifiées). Usage : bun run worker
+// Worker: Postgres job queue (event outbox, scheduled tasks). Usage: bun run worker
 import { webhookDepuisEnv } from "@auto/services";
 import { connect } from "@auto/store";
 import { automatisations } from "./automatisations";
@@ -21,18 +21,18 @@ const courrierWorker = creerWorker(
   { bailMs: 10 * 60_000, lot: 1 },
 );
 delete planifies["courrier.compte"];
-// Sans webhook, les événements restent dans l'outbox jusqu'à ce qu'un worker configuré les livre.
+// Without a webhook, events stay in the outbox until a configured worker delivers them.
 const worker = creerWorker(sql, {
   ...(webhook ? expediteur(sql, webhook) : {}),
   ...abonnementsTenants(sql),
   ...planifies,
   ...automatisations(sql),
 });
-// Les jobs serverless déclenchent une tâche explicite ou vident un nombre borné de lots.
+// Serverless jobs trigger an explicit task or drain a bounded number of batches.
 const commande = process.argv[2];
 if (commande === "--schedule") {
   const tache = TACHES.find((t) => t.nom === process.argv[3]);
-  if (!tache) throw new Error(`Tâche inconnue : ${process.argv[3] ?? ""}`);
+  if (!tache) throw new Error(`Unknown task: ${process.argv[3] ?? ""}`);
   try {
     await declencher(sql, tache);
   } finally {
@@ -40,7 +40,7 @@ if (commande === "--schedule") {
   }
 } else if (commande === "--once") {
   try {
-    // Repasser sur les trois files : une tâche système peut créer des jobs dans une autre file.
+    // Go over the three queues again: a system task may create jobs in another queue.
     for (let tour = 0; tour < 100; tour++) {
       const nombres = await Promise.all([worker.traiterLot(), sourcesWorker.traiterLot(), courrierWorker.traiterLot()]);
       if (nombres.every((n) => n === 0)) break;
@@ -49,7 +49,7 @@ if (commande === "--schedule") {
     await sql.close();
   }
 } else if (commande) {
-  throw new Error(`Option worker inconnue : ${commande}`);
+  throw new Error(`Unknown worker option: ${commande}`);
 } else {
   const crons = Bun.env.AUTO_PLANIFICATION === "0" ? [] : planifier(sql);
 
@@ -57,8 +57,8 @@ if (commande === "--schedule") {
   sourcesWorker.demarrer();
   courrierWorker.demarrer();
   console.log(
-    `auto worker : livraison ${webhook ? webhook.url : "désactivée (N8N_WEBHOOK_URL absent)"}, ` +
-      `${crons.length} tâches planifiées`,
+    `auto worker: delivery ${webhook ? webhook.url : "disabled (N8N_WEBHOOK_URL missing)"}, ` +
+      `${crons.length} scheduled tasks`,
   );
 
   async function arreter() {

@@ -1,5 +1,5 @@
-# Coque de bureau Tauri 2 : une fenêtre WebView2 / WKWebView / WebKitGTK sur le front web d'auto.
-# Hors du workspace Cargo racine (dépendances Tauri lourdes) : `gates:rust` ne la compile pas.
+# Tauri 2 desktop shell: a WebView2 / WKWebView / WebKitGTK window on the auto web front.
+# Outside the root Cargo workspace (heavy Tauri dependencies): `gates:rust` does not compile it.
 [package]
 name = "auto-desktop"
 version = "0.2.0"
@@ -26,6 +26,7 @@ serde_json = "1"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
 tauri-plugin-dialog = "2"
+sys-locale = "0.3"
 
 [profile.release]
 strip = true

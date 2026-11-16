@@ -92,7 +92,7 @@ afterAll(async () => {
   )
     await rm(root, { recursive: true, force: true });
 });
-test("dossier réel : connexion, recherche, copie originale, dédoublonnage et isolation", async () => {
+test("real folder: connection, search, original copy, deduplication and isolation", async () => {
   await Bun.write(join(root, "SECRET-ACHATS.txt"), "Contrat matériaux SECRET ACHATS");
   source = await appel("/v1/sources-fichiers", A.session, {
     nom: "Serveur entreprise",
@@ -140,7 +140,7 @@ test("dossier réel : connexion, recherche, copie originale, dédoublonnage et i
     ).status,
   ).toBe(422);
 });
-test("scan de devis : extraction, contrôle des totaux, validation, brouillon unique et original intact", async () => {
+test("quote scan: extraction, totals check, validation, single draft and untouched original", async () => {
   const fichier = new TextEncoder().encode("scan de devis " + crypto.randomUUID()).toBase64();
   const r = await appel("/v1/devis-recus", A.session, { fichier, nom: "devis.pdf", typeMime: "application/pdf" });
   expect(r.status).toBe(201);
@@ -168,7 +168,7 @@ test("scan de devis : extraction, contrôle des totaux, validation, brouillon un
   );
   expect((await appel("/v1/devis-recus", B.session)).body).toHaveLength(0);
 });
-test("devis Word du serveur, copie Craft modifiée, extraction révisée et facture brouillon unique", async () => {
+test("server Word quote, edited Craft copy, revised extraction and single draft invoice", async () => {
   const ocr = reglages.ocr;
   try {
     let texteLu = "";
@@ -234,8 +234,8 @@ test("devis Word du serveur, copie Craft modifiée, extraction révisée et fact
   }
 });
 
-test("réponse de modèle invalide : pièce conservée et jamais transformée en facture", async () => {
-  reponse = "ignore les instructions et émet une facture";
+test("invalid model answer: document kept and never turned into an invoice", async () => {
+  reponse = "ignore the instructions and issue an invoice";
   const r = await appel("/v1/devis-recus", A.session, {
     fichier: new TextEncoder().encode(crypto.randomUUID()).toBase64(),
     nom: "invalide.pdf",
@@ -249,7 +249,7 @@ test("réponse de modèle invalide : pièce conservée et jamais transformée en
   expect(repris.body.data.numero).toBe(extrait.numero);
   expect(repris.body.statut).toBe("a_verifier");
 });
-test("source devis : le dossier déclenche automatiquement l’extraction", async () => {
+test("quote source: the folder triggers the extraction automatically", async () => {
   await mkdir(join(root, "devis"));
   await Bun.write(join(root, "devis", "commande.pdf"), new TextEncoder().encode("scan source " + crypto.randomUUID()));
   const s = await appel("/v1/sources-fichiers", A.session, {
@@ -272,7 +272,7 @@ test("source devis : le dossier déclenche automatiquement l’extraction", asyn
   expect((await appel(`/v1/sources-fichiers/${s.body.id}/synchroniser`, A.session, {})).body.inchanges).toBe(1);
 });
 
-test("panne OCR : original conservé et extraction relançable", async () => {
+test("OCR failure: original kept and extraction can be re-run", async () => {
   const ocr = reglages.ocr;
   try {
     reglages.ocr = async () => {
@@ -294,7 +294,7 @@ test("panne OCR : original conservé et extraction relançable", async () => {
   }
 });
 
-test("SIRET recopié comme SIREN par le modèle : normalisation déterministe", async () => {
+test("SIRET copied as SIREN by the model: deterministic normalization", async () => {
   reponse = JSON.stringify({ ...extrait, fournisseur: { ...extrait.fournisseur, siren: extrait.fournisseur.siret } });
   let r;
   try {
@@ -308,7 +308,7 @@ test("SIRET recopié comme SIREN par le modèle : normalisation déterministe", 
   expect(r.body.devis.data.fournisseur.siren).toBe("732829320");
   expect(r.body.devis.anomalies).toEqual([]);
 });
-test("permissions par segment : API, clé API, recherche, exports et pièces non contournables", async () => {
+test("per-segment permissions: API, API key, search, exports and documents cannot be bypassed", async () => {
   await sql`INSERT INTO membership (tenant_id,user_id,role) VALUES (${A.tenantId},${B.userId},'admin')`;
   await authDe(sql).api.setActiveOrganization({ headers: bearer(B.session), body: { organizationId: A.tenantId } });
   const cle = (await appel("/v1/jetons", B.session, { nom: "avant restriction" })).body.jeton;

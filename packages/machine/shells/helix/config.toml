@@ -1,0 +1,41 @@
+# Official Helix 25.07.1 configuration
+theme = "catppuccin_mocha"
+
+[editor]
+line-number = "relative"
+mouse = true
+true-color = true
+bufferline = "multiple"
+cursorline = true
+color-modes = true
+rulers = [100]
+auto-format = true
+idle-timeout = 120
+completion-timeout = 100
+
+[editor.cursor-shape]
+insert = "bar"
+normal = "block"
+select = "underline"
+
+[editor.statusline]
+left = [
+  "mode",
+  "spinner",
+  "version-control",
+  "file-name",
+  "file-modification-indicator",
+]
+right = ["diagnostics", "selections", "position", "file-encoding", "file-type"]
+separator = "│"
+
+[editor.lsp]
+display-messages = true
+display-inlay-hints = true
+
+[editor.indent-guides]
+render = true
+character = "┆"
+
+[editor.soft-wrap]
+enable = true
