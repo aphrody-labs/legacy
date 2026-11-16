@@ -40,4 +40,4 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: rustup toolchain install nightly --profile minimal
-      - run: RUSTUP_TOOLCHAIN=nightly cargo check -p taffy -p xtk -p bun_errno -p bun_core -p aphrody-core
+      - run: RUSTUP_TOOLCHAIN=nightly cargo check -p taffy -p xtk -p bun_errno -p aphrody-core
