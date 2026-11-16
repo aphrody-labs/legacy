@@ -3,7 +3,7 @@ name: docs-index
 # docs/README.md is generated from the tracked markdown files of docs/ (scripts/docs-index.ts).
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "docs/**"
       - "scripts/docs-index.ts"

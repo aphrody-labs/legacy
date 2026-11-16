@@ -43,9 +43,9 @@ docker-ps profile="core" ctx="prd":
 # Products with their own container flows (sources untouched): shenron lanes + runtime, rosegriffon compose build
 [group('docker')]
 docker-products:
-    cd "{{root}}/apps/shenron" && {{docker}} --context fr1 buildx bake -f docker-bake.hcl lanes
+    cd "{{root}}/../shenron" && {{docker}} --context fr1 buildx bake -f docker-bake.hcl lanes
     cd "{{root}}" && TAG={{docker_tag}} {{docker}} --context fr1 buildx bake -f build/docker/docker-bake.hcl --push products
-    RG_REGISTRY=ghcr.io/aphrody-labs/rosegriffon RG_TAG={{docker_tag}} {{docker}} --context fr1 compose -f "{{root}}/apps/rosegriffon/compose.yaml" build
+    RG_REGISTRY=ghcr.io/aphrody-labs/rosegriffon RG_TAG={{docker_tag}} {{docker}} --context fr1 compose -f "{{root}}/../rosegriffon/compose.yaml" build
 
 # Arch Linux workstation shell with the monorepo mounted at /src
 [group('docker')]

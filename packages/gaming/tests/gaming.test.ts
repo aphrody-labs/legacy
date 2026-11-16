@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import {
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -189,14 +190,14 @@ test("skill mirrors rewrite plugin paths", () => {
   expect(
     rewrite("bun ${CLAUDE_PLUGIN_ROOT}/servers/x.ts and plugins/steam/lib"),
   ).toBe(
-    "bun apps/rosegriffon/plugins/steam/servers/x.ts and apps/rosegriffon/plugins/steam/lib",
+    "bun ../rosegriffon/plugins/steam/servers/x.ts and ../rosegriffon/plugins/steam/lib",
   );
-  expect(rewrite("apps/rosegriffon/plugins/steam/x")).toBe(
-    "apps/rosegriffon/plugins/steam/x",
+  expect(rewrite("../rosegriffon/plugins/steam/x")).toBe(
+    "../rosegriffon/plugins/steam/x",
   );
 });
 
-test("skill mirrors are in sync", () => {
+test.skipIf(!existsSync(join(root, "../rosegriffon/plugins/steam/skills")))("skill mirrors are in sync", () => {
   expect(syncSkills(root, false)).toEqual([]);
 });
 

@@ -18,7 +18,7 @@ Rust builds run on the build host or in CI, not on a workstation.
 Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 
-Unified sovereign core library consolidating GPU, RE (Reverse Engineering), Emulation, and WASM surfaces for **Shenron** (`apps/shenron`) and **RoseGriffon** (`apps/rosegriffon`).
+Unified sovereign core library consolidating GPU, RE (Reverse Engineering), Emulation, and WASM surfaces for **Shenron** (`../shenron`) and **RoseGriffon** (`../rosegriffon`).
 
 ---
 
@@ -32,14 +32,14 @@ flowchart TD
     Corelib --> EMU["Emulation Surface (SimulationClock, InputState, SovereignVfs)"]
     Corelib --> WASM["WASM Surface (WasmBrowserConfig, Zero-Copy Buffers, Telemetry)"]
     
-    GPU --> ShenronGPU["apps/shenron (Manga, 3D Viewport, Vello)"]
-    GPU --> RoseGriffonGPU["apps/rosegriffon (Nie render3d, model inspection)"]
+    GPU --> ShenronGPU["../shenron (Manga, 3D Viewport, Vello)"]
+    GPU --> RoseGriffonGPU["../rosegriffon (Nie render3d, model inspection)"]
     
-    RE --> ShenronRE["apps/shenron/crates/shenron-re (DBXV2, CPK, AOB)"]
-    RE --> RoseGriffonRE["apps/rosegriffon/src/re & aphrody-nie-formats"]
+    RE --> ShenronRE["../shenron/crates/shenron-re (DBXV2, CPK, AOB)"]
+    RE --> RoseGriffonRE["../rosegriffon/src/re & aphrody-nie-formats"]
     
-    EMU --> ShenronEngine["apps/shenron/crates/shenron-engine"]
-    EMU --> RoseGriffonEngine["apps/rosegriffon/crates/aphrody-nie-runtime"]
+    EMU --> ShenronEngine["../shenron/crates/shenron-engine"]
+    EMU --> RoseGriffonEngine["../rosegriffon/crates/aphrody-nie-runtime"]
     
     WASM --> WebClient["Browser / Web Workers / WebGPU Canvas"]
 ```

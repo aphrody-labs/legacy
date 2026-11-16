@@ -15,8 +15,6 @@ describe("4-Pillar VCS Governance (Git + Chromium + Kernel + AOSP)", () => {
     expect(repos.length).toBeGreaterThanOrEqual(6);
     const names = repos.map((r) => r.name);
     expect(names).toContain("src");
-    expect(names).toContain("apps/shenron");
-    expect(names).toContain("apps/rosegriffon");
     expect(names).toContain("crates/rust-stack");
     expect(names).toContain("crates/bench");
     expect(names).toContain("crates/ring3-agent");

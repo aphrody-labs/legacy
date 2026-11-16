@@ -5,7 +5,7 @@ description: End-to-end Lua 5.2 engineering reference covering PUC-Rio Lua 5.2.4
 
 # Lua 5.2 Engineering Reference
 
-This skill guides development, reverse-engineering, AST analysis, and runtime embedding for **Lua 5.2.4 (PUC-Rio)** in this monorepo (Lua code and tooling live in `apps/rosegriffon/crates/aphrody-nie-lua`, `apps/rosegriffon/crates/aphrody-nie-wasm`, `apps/shenron/docs/lua-5-2`; bytecode analysis in `src/re`).
+This skill guides development, reverse-engineering, AST analysis, and runtime embedding for **Lua 5.2.4 (PUC-Rio)** in this monorepo (Lua code and tooling live in `../rosegriffon/crates/aphrody-nie-lua`, `../rosegriffon/crates/aphrody-nie-wasm`, `../shenron/docs/lua-5-2`; bytecode analysis in `src/re`).
 
 ---
 
@@ -99,7 +99,7 @@ All instructions are 32 bits wide with 6-bit opcode:
 
 ## 3. Rust integration
 
-`apps/rosegriffon/crates/aphrody-nie-lua/Cargo.toml` declares the VM behind an optional `vm` feature: `mlua = { version = "0.11", optional = true, features = ["lua52", "vendored"] }`. `aphrody-nie-wasm` decodes Lua 5.2 bytecode without the VM (`default-features = false` drops mlua). Read those manifests for the current versions.
+`../rosegriffon/crates/aphrody-nie-lua/Cargo.toml` declares the VM behind an optional `vm` feature: `mlua = { version = "0.11", optional = true, features = ["lua52", "vendored"] }`. `aphrody-nie-wasm` decodes Lua 5.2 bytecode without the VM (`default-features = false` drops mlua). Read those manifests for the current versions.
 
 ```rust
 use mlua::Lua;

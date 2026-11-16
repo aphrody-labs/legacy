@@ -14,7 +14,5 @@ An application or site (apps/*)
 | [open](../../../apps/open) | Aphrody open ecosystem monorepo: the anomalyco repositories (opencode, opentui, sst, openauth, models.dev, ...) plus OpenAI and OpenAPI ecosystem repositories, flattened into on... |
 | [r2-site](../../../apps/r2-site) | Portable large-file/static site (downloads, cdn) on @aphrody/runtime-adapter |
 | [r2b](../../../apps/r2b) | - |
-| [rosegriffon](../../../apps/rosegriffon) | Rose Griffon monorepo: website, Discord bot, unified API, Achillea ranked, and Azalee |
-| [shenron](../../../apps/shenron) | Shenron (dragonballfr.com): Dragon Ball site, Discord bot, editorial pipeline, Koharu manga translation and the Shenron agent tooling, built on published Aphrody packages. |
 | [web](../../../apps/web) | Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`. |
 | [yolo](../../../apps/yolo) | Reproducible Fullstack Aphrody Bun v1.4.4 Framework, AST Module Graph, Material Design 3 Stack, Aphrody Pets & 3-VPS Search Inspector |

@@ -4,7 +4,7 @@
 name: llvm
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "src/Makefile"
       - "src/.clang-*"

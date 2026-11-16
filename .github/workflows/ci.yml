@@ -11,7 +11,7 @@
 name: ci
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths-ignore: ["docs/**", "**/*.md", "LICENSE*"]
   pull_request:
     paths-ignore: ["docs/**", "**/*.md", "LICENSE*"]

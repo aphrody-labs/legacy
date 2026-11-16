@@ -12,7 +12,7 @@ Upstream repositories are cited by GitHub name; only steamlocate-rs is cloned un
   The live site returned HTTP 403 to `curl -I` from vps and a Cloudflare challenge in the
   browser (2026-11-12), which was not bypassed.
 - In this plugin: build links with the MCP tool `steamdb_link`; it does not fetch pages.
-- Related: `SteamTracking/SteamTracking` (client and web resources) and `SteamTracking/Protobufs` (canonical `.proto` files), see `src/steam/UPSTREAM.md`.
+- Related: `SteamTracking/SteamTracking` (client and web resources) and `SteamTracking/Protobufs` (canonical `.proto` files), see the upstream source.
 
 ## SteamCMD
 
@@ -38,7 +38,7 @@ Upstream repositories are cited by GitHub name; only steamlocate-rs is cloned un
 - Commands (upstream README): `login`, `download`, `info`, `manifests`, `save-manifest`, `files`, `diff`, `packages`, `workshop`, `local-info`.
 - Examples: `steamroom info --app 730 --os linux --format json`; `steamroom manifests --app 480 --branch previous`; `steamroom download --app 480 --depot 481 --manifest <id> --file-regex '\.dll$' --verify -o out/`; `--branch-password`, `--max-downloads 16`, `--local-keys`.
 - Offline manifest read: `steamroom files --manifest-file <file.manifest>`.
-- vps: `~/.local/bin/steamroom` (checked 2026-11-14). `src/steam` depends on the `steamroom` crates (`src/steam/UPSTREAM.md`).
+- vps: `~/.local/bin/steamroom` (checked 2026-11-14). the upstream source depends on the `steamroom` crates .
 
 ## steamctl (ValvePython/steamctl)
 
@@ -49,18 +49,18 @@ Upstream repositories are cited by GitHub name; only steamlocate-rs is cloned un
 
 ## Libraries
 
-| Library                | Lang | Repository                                   | Notes                                                |
-| ---------------------- | ---- | -------------------------------------------- | ---------------------------------------------------- |
-| SteamKit2              | C#   | `SteamRE/SteamKit`                           | EMsg, manifest format reference                      |
-| node-steam-user        | JS   | `DoctorMcKay/node-steam-user`                | CM client; runs under Bun                            |
-| node-steam-session     | JS   | `DoctorMcKay/node-steam-session`             | IAuthenticationService login                         |
-| ValvePython steam      | Py   | `ValvePython/steam`                          | CM client and CDN                                    |
-| steam-vent             | Rust | crates.io `steam-vent` (repository on Codeberg) | CM client                                            |
-| steamworks-rs          | Rust | `Noxime/steamworks-rs`                       | needs running Steam client                           |
-| steam-rs               | Rust | `garhow/steam-rs`                            | Web API                                              |
-| keyvalues-parser       | Rust | crates.io `keyvalues-parser` (vdf-rs)          | text VDF parser                                      |
-| steamlocate-rs         | Rust | `WilliamVenner/steamlocate-rs`               | library discovery, StateFlags (`third_party/steamlocate-rs`) |
-| steam-lancache-prefill | C#   | `tpill90/steam-lancache-prefill`             | lancache prefill                                     |
+| Library                | Lang | Repository                                      | Notes                                                        |
+| ---------------------- | ---- | ----------------------------------------------- | ------------------------------------------------------------ |
+| SteamKit2              | C#   | `SteamRE/SteamKit`                              | EMsg, manifest format reference                              |
+| node-steam-user        | JS   | `DoctorMcKay/node-steam-user`                   | CM client; runs under Bun                                    |
+| node-steam-session     | JS   | `DoctorMcKay/node-steam-session`                | IAuthenticationService login                                 |
+| ValvePython steam      | Py   | `ValvePython/steam`                             | CM client and CDN                                            |
+| steam-vent             | Rust | crates.io `steam-vent` (repository on Codeberg) | CM client                                                    |
+| steamworks-rs          | Rust | `Noxime/steamworks-rs`                          | needs running Steam client                                   |
+| steam-rs               | Rust | `garhow/steam-rs`                               | Web API                                                      |
+| keyvalues-parser       | Rust | crates.io `keyvalues-parser` (vdf-rs)           | text VDF parser                                              |
+| steamlocate-rs         | Rust | `WilliamVenner/steamlocate-rs`                  | library discovery, StateFlags  |
+| steam-lancache-prefill | C#   | `tpill90/steam-lancache-prefill`                | lancache prefill                                             |
 
 ## Ecosystem applications
 

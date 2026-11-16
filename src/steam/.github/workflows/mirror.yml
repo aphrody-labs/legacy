@@ -1,5 +1,5 @@
 # Read-only mirror of aphrody-labs/src src/steam (consumed as a cargo git dependency by
-# apps/rosegriffon). Runs in aphrody-labs/steam-depot itself: src is public, so the clone needs no
+# ../rosegriffon). Runs in aphrody-labs/steam-depot itself: src is public, so the clone needs no
 # credential, and the push uses this repository's own GITHUB_TOKEN (contents: write). No PAT, no
 # deploy key (disabled for the aphrody-labs organization), no secret. This file travels with the split.
 name: mirror

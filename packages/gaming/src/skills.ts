@@ -1,4 +1,4 @@
-// Generated mirrors of the steam plugin skills. Source of truth: apps/rosegriffon/plugins/steam/skills/<name>;
+// Generated mirrors of the steam plugin skills. Source of truth: ../rosegriffon/plugins/steam/skills/<name>;
 // mirror: .agents/skills/<name> (read by every agent, and by Claude Code through .claude/skills).
 // `ay gaming skills sync` rewrites the mirror; `ay gaming skills check` fails when it drifts.
 import {
@@ -12,7 +12,7 @@ import {
 } from "node:fs";
 import { dirname, join, relative } from "node:path";
 
-export const PLUGIN = "apps/rosegriffon/plugins/steam";
+export const PLUGIN = "../rosegriffon/plugins/steam";
 
 /** Plugin-relative paths become repo-relative in the mirror. */
 export function rewrite(text: string): string {

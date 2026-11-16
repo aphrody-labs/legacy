@@ -19,7 +19,7 @@ https://api.steampowered.com/<Interface>/<Method>/v<N>/?<params>   (key in the x
 - Partner host and publisher key rules: [`../steam-auth/references/keys.md`](../steam-auth/references/keys.md).
 - Always use HTTPS when a key is attached. How a key is passed is in [`../steam-auth/references/keys.md`](../steam-auth/references/keys.md).
 - For `*Service` interfaces (IPlayerService, IStoreService, IPublishedFileService, IUserReviewsService), parameters can go into a URL-encoded JSON blob in `input_json`. Keep `format` as a separate parameter; the key goes in the header ([`../steam-auth/references/keys.md`](../steam-auth/references/keys.md)). Source: https://partner.steamgames.com/doc/webapi_overview
-- `format` accepts `json` (default), `xml` and `vdf`. The overview does not list the values; verified with keyless calls to `ISteamWebAPIUtil/GetServerInfo/v1/?format=vdf` and `?format=xml`; re-run to confirm.
+- `format` accepts `json` (default), `xml` and `vdf`. The overview does not list the values; verified with keyless calls to `ISteamWebAPIUtil/GetServerInfo/v1/?format=vdf` and `?format=xml` on 2026-11-12.
 - Array parameters use indexed names such as `publishedfileids[0]` and `name[0]`. Source: https://partner.steamgames.com/doc/webapi/ISteamRemoteStorage
 
 ## Keys and limits
@@ -67,7 +67,7 @@ Prefer the plugin tools over hand-built HTTP calls:
 
 - `web_api_call`: generic `<Interface>/<Method>/v<N>` call. It adds `STEAM_WEB_API_KEY` when that variable is set. Without it, only keyless methods work. A keyless call to `ISteamWebAPIUtil/GetSupportedAPIList/v1/` (2026-11-12) lists exactly the methods that take no `key` parameter. The keyless methods, interface by interface, and the common methods that need a key are listed in [`references/interfaces.md`](references/interfaces.md).
 - `store_appdetails`: wraps `store.steampowered.com/api/appdetails` with `cc`, `l`, and `filters`.
-- `resolve_steamid`: turns a vanity name, profile URL, or SteamID form into a SteamID64. Vanity names use ResolveVanityURL when a key is set, otherwise the public `steamcommunity.com/id/<name>/?xml=1` feed (`apps/rosegriffon/plugins/steam/servers/steam-mcp.ts`).
+- `resolve_steamid`: turns a vanity name, profile URL, or SteamID form into a SteamID64. Vanity names use ResolveVanityURL when a key is set, otherwise the public `steamcommunity.com/id/<name>/?xml=1` feed (`../rosegriffon/plugins/steam/servers/steam-mcp.ts`).
 
 If a call fails, report the HTTP status and the error body. Do not retry the same call in a loop.
 

@@ -30,6 +30,5 @@ ignorePatterns = [
   "node_modules/**",
   "target/**",
   "graphify-out/**",
-  "apps/shenron/data/catalogues/pages/**",
   "tools/lore/contrib/helm/templates/**",
 ]

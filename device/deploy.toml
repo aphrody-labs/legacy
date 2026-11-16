@@ -59,7 +59,7 @@ r2_bucket = "aphrody-assets"
 verify_gate = "wck check C:/aphrody/apps/web"
 
 [services.shenron]
-path = "C:/aphrody/apps/shenron"
+path = "C:/shenron"
 runtime = "bun-fullstack"
 region = "eu-fr"
 nodes = ["usa"]
@@ -70,7 +70,7 @@ green_port = 23100
 r2_bucket = "shenron-cdn"
 
 [services.rosegriffon]
-path = "C:/aphrody/apps/rosegriffon"
+path = "C:/rosegriffon"
 runtime = "bun-fullstack"
 region = "eu-fr"
 nodes = ["usa"]

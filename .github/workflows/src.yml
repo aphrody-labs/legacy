@@ -3,7 +3,7 @@
 name: src
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths: ["src/**", ".github/workflows/src.yml"]
   pull_request:
     paths: ["src/**", ".github/workflows/src.yml"]

@@ -96,7 +96,7 @@
       "severity": "medium",
       "status": "fixed",
       "excerpt": "dépôts de l'app 2799860 refusés en anonyme ; image reconstruite avec steam-depot d098b41 (login-qr)",
-      "fix": "bun scripts/steam-login.ts --qr (apps/rosegriffon) : QR affiché dans Chrome",
+      "fix": "bun scripts/steam-login.ts --qr (../rosegriffon) : QR affiché dans Chrome",
       "reason": "2026-11-13 : QR approuvé par le propriétaire (image d098b41)"
     },
     {
@@ -327,7 +327,7 @@
       "reason": "2026-11-13 : aucune source vérifiable dans les dépôts"
     },
     {
-      "location": "apps/rosegriffon/plugins/steam + packages/gaming",
+      "location": "../rosegriffon/plugins/steam + packages/gaming",
       "category": "coordination",
       "severity": "info",
       "status": "fixed",

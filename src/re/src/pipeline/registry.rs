@@ -943,7 +943,7 @@ mod workspace_probe_tests {
         let mut options = Options::new("", TargetKind::Os, ".");
         options.root = None;
         if find_re_root().is_none() {
-            return eprintln!("skip: apps/rosegriffon (yolo-re workspace) is not checked out");
+            return eprintln!("skip: ../rosegriffon (yolo-re workspace) is not checked out");
         }
         for id in ["re-steam", "nie-formats", "rea", "re-nie", "re-dbxv2"] {
             if id == "rea"

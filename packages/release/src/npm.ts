@@ -18,12 +18,12 @@ const REGISTRY = "https://registry.npmjs.org";
 const OWNED = ["@aphrody", "@rosegriffon"]; // orgs npm dont <npm-owner> est owner (GET /-/org/<scope>/user)
 const ORG = "aphrody-labs";
 const WORKFLOW = "npm-publish.yml"; // name of the calling workflow, checked by npm on every OIDC publish
-const SUBMODULES = ["apps/rosegriffon", "apps/shenron", "apps/auto"];
+const SUBMODULES = ["apps/auto", "../rosegriffon", "../shenron"]; // the two products are sibling checkouts
 /** Name duplicates: the canonical copy is shenron's (media domain). */
 const CANONICAL: Record<string, string> = {
-  "@aphrody/remotion": "apps/shenron",
-  "@aphrody/hyperframes": "apps/shenron",
-  "@aphrody/filmcraft": "apps/shenron",
+  "@aphrody/remotion": join(ROOT, "../shenron").replaceAll("\\", "/"),
+  "@aphrody/hyperframes": join(ROOT, "../shenron").replaceAll("\\", "/"),
+  "@aphrody/filmcraft": join(ROOT, "../shenron").replaceAll("\\", "/"),
 };
 const SESSION = join(
   process.env.LOCALAPPDATA ?? join(process.env.HOME ?? "~", ".local/share"),

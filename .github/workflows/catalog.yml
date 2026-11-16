@@ -4,7 +4,7 @@ name: catalog
 # (scripts/catalog.ts); this gate fails when a manifest changed and the outputs did not.
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "Cargo.toml"
       - "package.json"

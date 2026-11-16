@@ -4,7 +4,7 @@
 name: hal
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "src/drivers/gpu/dx12/**"
       - "src/posix/wslg/**"

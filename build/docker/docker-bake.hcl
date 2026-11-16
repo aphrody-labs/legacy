@@ -83,9 +83,9 @@ target "dev" {
 
 # Products: built from their own Dockerfiles, sources untouched. amd64 (their native deps are x64-only).
 # rosegriffon builds through its compose (build secret rg_env): `just docker-products`.
-# Packages the sealed dist/server + dist/bot produced by apps/shenron/docker-bake.hcl (lanes) first.
+# Packages the sealed dist/server + dist/bot produced by ../shenron/docker-bake.hcl (lanes) first.
 target "shenron" {
-  context = "apps/shenron"
+  context = "../shenron"
   dockerfile = "deploy/docker/Dockerfile"
   platforms = ["linux/amd64"]
   args = { SHENRON_REVISION = TAG }

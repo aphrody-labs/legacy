@@ -45,7 +45,7 @@ state = "absent"
 
 [[claude.marketplace]]
 name = "rosegriffon-plugins"
-path = "apps/rosegriffon"
+path = "../rosegriffon"
 hosts = ["pc"]
 
 # --- Aphrody plugins (kept) ---

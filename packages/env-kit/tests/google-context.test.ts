@@ -15,12 +15,12 @@ test("contexts are ordered with a catch-all default last", () => {
   );
 });
 
-// Needs the real checkout layout (apps/rosegriffon is its own repository): skipped elsewhere (CI Linux).
+// Needs the real checkout layout (../rosegriffon is its own repository): skipped elsewhere (CI Linux).
 const SRC = require("node:path").resolve(import.meta.dir, "..", "..", "..");
-test.skipIf(!require("node:fs").existsSync(`${SRC}/apps/rosegriffon/.git`))(
-  "detectContext picks rosegriffon inside apps/rosegriffon and aphrody at the src root",
+test.skipIf(!require("node:fs").existsSync(`${SRC}/../rosegriffon/.git`))(
+  "detectContext picks rosegriffon inside the sibling rosegriffon checkout and aphrody at the src root",
   () => {
-    expect(detectContext(`${SRC}/apps/rosegriffon/apps/rg-website`).name).toBe(
+    expect(detectContext(`${SRC}/../rosegriffon/apps/rg-website`).name).toBe(
       "rosegriffon",
     );
     // A path with no rosegriffon fragment falls through to the default aphrody context.

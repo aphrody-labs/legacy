@@ -4,7 +4,7 @@ name: profiles
 # repositories; when the logo or the organisations change here, run them at once.
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "docs/logo/**"
       - "scripts/catalog.*"

@@ -4,7 +4,7 @@
 name: unixwin
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "src/winux/**"
       - "src/ay/**"

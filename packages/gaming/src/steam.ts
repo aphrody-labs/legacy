@@ -1,7 +1,7 @@
 // Steam helpers of the monorepo (Bun half): local install data over `ay steam` (Rust parsers in
 // src/steam), local path map of an app, SteamID forms, SteamDB/store links and the
 // credential-file guard. Consumed by `ay gaming` and the `steam` plugin MCP
-// (apps/rosegriffon/plugins/steam/servers/steam-mcp.ts). Ownership: docs/gaming/OWNERSHIP.md.
+// (../rosegriffon/plugins/steam/servers/steam-mcp.ts). Ownership: docs/gaming/OWNERSHIP.md.
 
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";

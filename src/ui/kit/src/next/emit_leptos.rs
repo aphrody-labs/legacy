@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 //! Leptos 0.8 lane emitter: `Cargo.toml`, `src/app.rs` (`leptos_router`), `src/main.rs` (axum).
 //!
-//! Shaped after `apps/shenron/crates/shenron-site`, the only Leptos consumer: every page route
+//! Shaped after `../shenron/crates/shenron-site`, the only Leptos consumer: every page route
 //! carries a `:lang` locale prefix and is prerendered with `SsrMode::Static` when Next.js
 //! would have rendered it statically (`generateStaticParams`, `dynamic = "force-static"` or a
 //! numeric `revalidate`); visible strings go through `i18n::t`; head tags go through

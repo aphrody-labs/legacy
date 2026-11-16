@@ -8,7 +8,7 @@
 name: game
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "src/game/**"
       - "packages/gaming/src/game-fps.ts"

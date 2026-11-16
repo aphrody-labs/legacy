@@ -4,7 +4,7 @@
 name: gamescope
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - "src/wayland/gamescope/core/**"
       - "src/wayland/gamescope/web-wasm/**"

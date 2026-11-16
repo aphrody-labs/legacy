@@ -73,8 +73,6 @@ export const CANONICAL_MONOREPO_SUBMODULES: ReadonlyArray<{
   tier: TriForgeRepoSpec["tier"];
 }> = [
   { name: "src", relPath: ".", tier: "root" },
-  { name: "shenron", relPath: "apps/shenron", tier: "apps" },
-  { name: "rosegriffon", relPath: "apps/rosegriffon", tier: "apps" },
   { name: "bench", relPath: "crates/bench", tier: "crates" },
   { name: "ring3-agent", relPath: "crates/ring3-agent", tier: "crates" },
   { name: "rust-stack", relPath: "crates/rust-stack", tier: "crates" },

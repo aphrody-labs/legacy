@@ -12,8 +12,6 @@ vars = {
 }
 
 deps = {
-  'apps/rosegriffon': 'https://github.com/aphrody-labs/rosegriffon.git@d6277391f790f1414930206bd67f92f42b5b3b70',
-  'apps/shenron': 'https://github.com/aphrody-labs/shenron.git@6ad93e79a7f72cb8d88102537164034748507833',
   'apps/unixwin/upstream/unixwin.dev': 'https://github.com/aphrody-labs/unixwin.dev.git@bfacdea5dec87fbaf7ce2f7f323051472519ac30',
   'apps/unixwin/upstream/wpm-gui': 'https://github.com/aphrody-labs/wpm-gui.git@c1178078c2441568a61e1017e7d3a7b673d03a7a',
   'bench': 'https://github.com/aphrody-labs/bench.git@938ba8bef3943d46f523c8287062ee8537c389ce',

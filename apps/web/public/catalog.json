@@ -1706,16 +1706,6 @@
           "path": "apps/r2b"
         },
         {
-          "name": "rosegriffon",
-          "description": "Rose Griffon monorepo: website, Discord bot, unified API, Achillea ranked, and Azalee",
-          "path": "apps/rosegriffon"
-        },
-        {
-          "name": "shenron",
-          "description": "Shenron (dragonballfr.com): Dragon Ball site, Discord bot, editorial pipeline, Koharu manga translation and the Shenron agent tooling, built on published Aphrody packages.",
-          "path": "apps/shenron"
-        },
-        {
           "name": "web",
           "description": "Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`.",
           "path": "apps/web"
@@ -2497,7 +2487,7 @@
         },
         {
           "name": "gaming-stack",
-          "description": "This skill should be used when the user asks about \"the gaming stack of src\", \"ay gaming\", \"which Proton, Wine, DXVK or vkd3d-proton source do we use\", \"Vulkan layers or ICDs on this host\", \"DirectX 12 / Agility SDK of a game\", \"install Proton or steamcmd headless on prd or fr1\", \"run a Windows exe with Proton outside Steam\", or \"Bazzite, SteamOS or CachyOS images\". For Steam client layout, steam-client-windows and steam-local-inspect apply; for Proton troubleshooting, steam-linux-proton.",
+          "description": "Use when asked how to run a Windows game through Proton or Wine on Linux, Vulkan or DirectX layers of a host, headless steamcmd on a build host, or the launch environment of a Steam app (Inazuma Eleven: Victory Road for nie).",
           "path": ".agents/skills/gaming-stack"
         },
         {

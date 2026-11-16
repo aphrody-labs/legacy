@@ -90,7 +90,6 @@
     "docs/native/gnu/OS.md",
     "docs/native/gnu/PACKAGES.md",
     "docs/reference/bun-ffi.md",
-    "tools/agents/tasks/product-page-rosegriffon.json",
     "build/chromium-factory/chromium-factory.sh",
     "build/chromium-factory/chromium-factory.just",
     "device/cloudflare/cloudflare.toml",

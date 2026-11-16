@@ -205,7 +205,7 @@ pub fn find_re_root() -> Option<PathBuf> {
         if is_ws(path) {
             return Some(path.to_path_buf());
         }
-        let rg = path.join("apps/rosegriffon");
+        let rg = path.join("../rosegriffon");
         if is_ws(&rg) {
             return Some(rg);
         }
