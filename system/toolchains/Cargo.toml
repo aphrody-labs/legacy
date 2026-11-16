@@ -33,7 +33,7 @@ keywords = [
 ]
 categories = ["development-tools"]
 license = "Apache-2.0"
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 
 [lib]
 name = "aphrody_toolchains"

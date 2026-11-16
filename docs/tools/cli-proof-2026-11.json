@@ -75,7 +75,7 @@
       "install_path": "~\\.local\\bin\\ay.exe",
       "installed_binary_sha256": "80c24b877963e1d6dd74b3a4ab857e708c573254137a7527acd3897fa0e3aea2",
       "manifest_sha256_windows_x86_64": null,
-      "source_url_windows_x86_64": "https://github.com/aphrody-labs/aphrody/releases/download/v0.2.0/aphrody-x86_64-pc-windows-msvc.zip"
+      "source_url_windows_x86_64": "https://github.com/aphrody-labs/ay/releases/download/v0.2.0/aphrody-x86_64-pc-windows-msvc.zip"
     },
     {
       "name": "bun",

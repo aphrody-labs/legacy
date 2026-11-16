@@ -16,7 +16,7 @@ bun run --cwd system/wck check
 bun run --cwd system/wck fmt
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Compile-Time Web Validator and Modern Web Guidance (MWG) RAG engine for the `src` monorepo.

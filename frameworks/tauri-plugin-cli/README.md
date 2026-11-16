@@ -42,7 +42,7 @@ cargo test -p aphrody-tauri-plugin-cli
 
 Rust builds run on the build host or in CI, not on a workstation.
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-cli = "2.0.0"

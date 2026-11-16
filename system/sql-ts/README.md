@@ -18,7 +18,7 @@ bun run --cwd system/sql-ts typecheck
 bun run --cwd system/sql-ts lint
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Shared Bun database mechanics for Aphrody. The package implements decisions

@@ -5,7 +5,7 @@ version = "1.4.7"
 edition = "2024"
 rust-version = "1.97"
 authors = ["aphrody-code"]
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 license = "Apache-2.0"
 description            = "Pure, wasm32-safe core of the aphrody RAG layer: source-aware chunkers (Rust/JS-TS/Markdown/structural/prose), reciprocal-rank-fusion + MMR + vector helpers, and a bit-for-bit port of a TypeScript retrieval eval harness."
 

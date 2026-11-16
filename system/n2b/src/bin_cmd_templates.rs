@@ -184,7 +184,7 @@ pub(super) fn render_readme(name: &str, desc: &str) -> String {
 
 {desc}
 
-Scaffolded by [n2b](https://github.com/aphrody-labs/aphrody).
+Scaffolded by [n2b](https://github.com/aphrody-labs/ay).
 
 ## Build
 

@@ -215,7 +215,7 @@ vps_exec = "bun run server.ts"
 # GitHub Actions secrets pushed by `ay auth gh-secrets` (`gh secret set --body -`, value on stdin).
 # AI provider keys (ANTHROPIC_API_KEY...) are synced by the AI provider tooling, not listed here.
 [auth.github.repo_secrets]
-"aphrody-labs/aphrody" = [
+"aphrody-labs/ay" = [
   "CLOUDFLARE_API_TOKEN",
   "CLOUDFLARE_ACCOUNT_ID",
   "HOSTINGER_API_TOKEN",
@@ -258,7 +258,7 @@ provider = "aphrody-dev"
 issuer = "https://token.actions.githubusercontent.com"
 condition = "assertion.repository_owner=='aphrody-labs'"
 service_account = "yolo-automation@aphrody.iam.gserviceaccount.com"
-repos = ["aphrody-labs/aphrody"]
+repos = ["aphrody-labs/ay"]
 # caller account: APHRODY_OWNER_GOOGLE_ACCOUNT (vault), never written here
 
 [auth.oidc.replaces]

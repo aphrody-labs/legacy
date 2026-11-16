@@ -14,7 +14,7 @@ bun run --cwd system/release/runtime-sdk test
 bun run --cwd system/release/runtime-sdk typecheck
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Light TypeScript SDK of the YOLO native runtime: loads the precompiled `yolo_runtime` library through

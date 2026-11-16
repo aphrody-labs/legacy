@@ -13,7 +13,7 @@ const npm = opt("--npm");
 const crate = opt("--crate");
 const to = opt("--to")!;
 const dry = argv.includes("--dry");
-const UA = "aphrody-restore/1.0 (+https://github.com/aphrody-labs/aphrody)";
+const UA = "aphrody-restore/1.0 (+https://github.com/aphrody-labs/ay)";
 const name = (npm ?? crate)!;
 
 let url: string; let version = opt("--version");

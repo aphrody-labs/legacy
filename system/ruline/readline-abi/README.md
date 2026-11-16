@@ -15,7 +15,7 @@ cargo test -p readline-abi
 
 Rust builds run on the build host or in CI, not on a workstation.
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/crate.md).
+Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 
 Clean-room GNU readline 8.x C ABI adapter for ruline.  The crate builds

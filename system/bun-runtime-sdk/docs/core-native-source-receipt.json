@@ -1,6 +1,6 @@
 {
   "schema": "bun-core-native-source/1",
-  "sourceRepository": "https://github.com/aphrody-labs/aphrody",
+  "sourceRepository": "https://github.com/aphrody-labs/ay",
   "sourceRevision": "bf395a25873a78b3a06f214da38932dc8187fe8d",
   "sources": [
     {

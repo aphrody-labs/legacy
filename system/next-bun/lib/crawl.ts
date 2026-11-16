@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// From aphrody-labs/aphrody@5b36d40c6c58 (m3/packages/m3-next/src/crawl.ts).
+// From aphrody-labs/ay@5b36d40c6c58 (m3/packages/m3-next/src/crawl.ts).
 // Crawler-facing files for an App Router site: sitemap.xml, robots.txt, llms.txt and a
 // script-safe JSON-LD serializer. Pure functions (no React, no Node, no Next): call them from a
 // route handler (`app/sitemap.xml/route.ts`), from a build script, or from a test.

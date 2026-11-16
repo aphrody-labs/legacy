@@ -20,7 +20,7 @@ bun run --cwd frameworks/design/google mdx
 bun run --cwd frameworks/design/google verify
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Complete local mirror, HCT perceptual color engine, universal multi-surface token compiler, and UI gate verification engine for Google Design (`design.google`), Material Design 3 (`m3.material.io`), Google Stitch, Figma Code Connect, and Gemini Web Canvas.

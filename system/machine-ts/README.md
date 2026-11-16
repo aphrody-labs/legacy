@@ -18,7 +18,7 @@ bun run --cwd system/machine-ts shells:check
 bun run --cwd system/machine-ts binpath
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Décisions et preuves : [aphrody-labs/nt docs/research](https://github.com/aphrody-labs/nt/tree/main/docs/research) (`shell-replacement.md`, `claude-to-nt-stack.md`, `fork-merge-plan.md`, `rust-in-windows.md`). Profil matériel : skill `windows-machine`.

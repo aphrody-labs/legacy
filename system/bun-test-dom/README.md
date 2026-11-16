@@ -15,7 +15,7 @@
 bun run --cwd system/bun-test-dom typecheck
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Shared Bun test preload for happy-dom. It registers DOM globals and restores

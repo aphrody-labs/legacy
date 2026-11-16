@@ -44,7 +44,7 @@ export class App {
       title: "Rust + Pure Bun + WinUI 3 + Figma & Stitch",
       text: "Zero-drift adapters for Taffy, egui, iced, libcosmic, Bevy, Leptos, Dioxus, Tauri, React, WinUI 3, DESIGN.md, and Stitch.",
       label: "GitHub Repository",
-      href: "https://github.com/aphrody-labs/aphrody",
+      href: "https://github.com/aphrody-labs/ay",
     },
   ];
 

@@ -20,7 +20,7 @@ bun run --cwd system/release/typesafe-sdk test:integration
 bun run --cwd system/release/typesafe-sdk test:coverage
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 JavaScript and TypeScript SDK for [TypeSafe AI](https://typesafe.ai).

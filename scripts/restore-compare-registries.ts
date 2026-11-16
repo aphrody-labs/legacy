@@ -9,7 +9,7 @@ const inp = arg("--in")!;
 const out = arg("--out")!;
 const jobs = Number(arg("--jobs", "8"));
 const root = join(import.meta.dir, "..").replace(/\\/g, "/");
-const UA = "aphrody-restore/1.0 (+https://github.com/aphrody-labs/aphrody)";
+const UA = "aphrody-restore/1.0 (+https://github.com/aphrody-labs/ay)";
 
 const lsTree = await Bun.$`git -C ${root} ls-tree -r HEAD`.quiet().text();
 const oidPath = new Map<string, string>();

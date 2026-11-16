@@ -14,7 +14,7 @@ bun run --cwd frameworks/web/bun-web/webview-page test
 bun run --cwd frameworks/web/bun-web/webview-page check:types
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Playwright-shaped `Browser`, `Page`, `Locator`, routing and events over [`Bun.WebView`](https://bun.com/docs/runtime/webview) with the Chrome backend (CDP). No Playwright install, no Node: one Bun process drives one Chrome.

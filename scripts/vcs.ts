@@ -25,7 +25,7 @@ import { token } from "../tools/agents/gh-token.ts";
 import { findRoot, loadIdentity } from "./identity.ts";
 
 const API = "https://api.github.com";
-const UA = "aphrody-vcs/1.0 (+https://github.com/aphrody-labs/aphrody)";
+const UA = "aphrody-vcs/1.0 (+https://github.com/aphrody-labs/ay)";
 
 export type SubmoduleEntry = {
   name: string;

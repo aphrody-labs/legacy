@@ -19,7 +19,7 @@ bun run --cwd frameworks/m3-ai test
 bun run --cwd frameworks/m3-ai prepack
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Material Design 3 React components for agent interfaces (tool-call cards, markdown, chat bubbles and composer, model selector, task board) and a streaming client for OpenAI-compatible chat servers, rebuilt from SpaceUI's `@spacedrive/ai`.

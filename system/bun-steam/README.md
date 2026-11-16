@@ -16,7 +16,7 @@ bun run --cwd system/bun-steam lint
 bun run --cwd system/bun-steam typecheck
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Bun half of the Bun OS Steam owner. The Rust half is [`crates/bun-steam`](../../crates/bun-steam)

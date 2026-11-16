@@ -15,7 +15,7 @@ bun run --cwd frameworks/ai-os check
 bun run --cwd frameworks/ai-os relay
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Cross-platform sandboxed Unix/GNU-like operating system distribution for autonomous agents, unifying POSIX/FHS VFS, LLM runtime discovery, hybrid RAG, causal World Model, and sub-millisecond System 1 decision routing behind **one single C ABI** (`ai_os_*` in [src/core/capi](../../system/core/capi), header [aphrody_core.h](../../system/core/capi/include/aphrody_core.h)).

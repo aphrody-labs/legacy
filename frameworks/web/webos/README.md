@@ -17,7 +17,7 @@ bun run --cwd frameworks/web/webos deploy
 bun run --cwd frameworks/web/webos typecheck
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 This app assembles the WebOS desktop, the canonical App UI under `/workspace/`,

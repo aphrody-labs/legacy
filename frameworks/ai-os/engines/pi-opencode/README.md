@@ -20,7 +20,7 @@ bun run --cwd frameworks/ai-os/engines/pi-opencode fmt
 bun run --cwd frameworks/ai-os/engines/pi-opencode fmt:check
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Unified minimalist, autonomous coding harness synthesized from the real late-2026 open-source ecosystem and engineered around **Linus Torvalds**, **Jarred Sumner**, and **Larry Page** principles:

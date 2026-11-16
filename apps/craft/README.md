@@ -5,7 +5,7 @@
 | :-- | :-- |
 | App | `apps/craft` |
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->
 
 Entry point of the Craft Apps (photocraft, pdfcraft, filmcraft, wordcraft, lightcraft, vectorcraft, effectcraft, cadcraft, gridcraft, designcraft, figcraft, deckcraft, soundcraft, anicraft, texturecraft, materialcraft, craft-anything and the launcher).

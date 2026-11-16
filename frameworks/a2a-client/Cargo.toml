@@ -37,7 +37,7 @@ categories = [
     "web-programming",
 ]
 license = "Apache-2.0"
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 
 [features]
 default = ["rustls-tls"]

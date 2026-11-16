@@ -12,8 +12,8 @@ import {
 const root = resolve(import.meta.dir, "..");
 
 describe("vcs parsers & repo identity", () => {
-  test("defaultRepo resolves to aphrody-labs/aphrody", () => {
-    expect(defaultRepo(root)).toBe("aphrody-labs/aphrody");
+  test("defaultRepo resolves to aphrody-labs/ay", () => {
+    expect(defaultRepo(root)).toBe("aphrody-labs/ay");
   });
 
   test("parseGitmodules parses .gitmodules cleanly", () => {

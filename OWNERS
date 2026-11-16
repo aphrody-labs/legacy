@@ -1,4 +1,4 @@
-Owners list (aphrody-labs/aphrody Monorepo)
+Owners list (aphrody-labs/ay Monorepo)
 ===============================================
 
 Descriptions of section entries and preferred order
@@ -175,7 +175,7 @@ M:	Aphrody Engineering <contact@aphrody.com>
 L:	contact@aphrody.com
 S:	Supported
 W:	https://about.aphrody.com
-T:	git https://github.com/aphrody-labs/aphrody.git
+T:	git https://github.com/aphrody-labs/ay.git
 T:	git https://github.com/aphrody-dev/xtask.git
 T:	git https://github.com/aphrody-dev/forge.git
 F:	.gitattributes

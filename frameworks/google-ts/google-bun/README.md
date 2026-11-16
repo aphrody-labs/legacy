@@ -18,7 +18,7 @@ bun run --cwd frameworks/google-ts/google-bun fmt
 bun run --cwd frameworks/google-ts/google-bun lint
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Organized strictly according to Google internal (`google3` / `depot_tools` / Bazel `bzlmod`) engineering conventions:

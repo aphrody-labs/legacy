@@ -24,7 +24,7 @@ autobenches = false
 description = "Aphrody product identity: brand icons, favicon and webmanifest, the measured palette (design tokens, M3 seed), and the typed 2D pet runtime (RGBA atlas, timed animations, directions)."
 readme = "README.md"
 license = "Apache-2.0"
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 
 [features]
 default = ["fs"]

@@ -21,7 +21,7 @@ cargo run -p niubash --bin bash
 
 Rust builds run on the build host or in CI, not on a workstation.
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 
 > **Real Bash, native on Windows, Linux, and macOS.** No WSL. No VM. No `/mnt/c`. No cmdlet dialect. One binary: the shell your fingers already know — and the one your AI agent actually speaks.

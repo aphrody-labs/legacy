@@ -16,7 +16,7 @@ bun run --cwd frameworks/ai-os/protocols/mcp-ui build
 bun run --cwd frameworks/ai-os/protocols/mcp-ui prepack
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 MCP interactive app client with sandbox readiness and cancellation fixes.

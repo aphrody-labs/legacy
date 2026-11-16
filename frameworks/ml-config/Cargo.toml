@@ -33,7 +33,7 @@ keywords = [
     "machine-learning",
 ]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 
 [lib]
 name = "aphrody_ml_config"

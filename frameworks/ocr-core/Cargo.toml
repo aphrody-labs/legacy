@@ -24,7 +24,7 @@ autobenches = false
 description = "Portable versioned OCR result contract, provenance and quality states for aphrody."
 readme = false
 license = "Apache-2.0"
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 
 [features]
 default = []

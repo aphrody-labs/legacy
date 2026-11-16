@@ -20,5 +20,5 @@ bun run --cwd frameworks/google-ts google:status
 bun run --cwd frameworks/google-ts google:sync
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->

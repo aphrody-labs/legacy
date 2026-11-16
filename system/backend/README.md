@@ -17,7 +17,7 @@ cargo test -p aphrody-backend
 
 Rust builds run on the build host or in CI, not on a workstation.
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 
 Material asset mirroring for the Aphrody CLI. The `aphrody mirror start` command

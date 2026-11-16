@@ -36,7 +36,7 @@ applets = [${[...tier1, ...unixOnly].map((n) => `"dep:uu_${n}"`).join(", ")}, "d
 bash = ["dep:rubash"]
 
 [dependencies]
-rubash = { git = "https://github.com/aphrody-labs/aphrody", rev = "43a01a4c1936b7b8b523ed172cfe3ddb5e02dc75", optional = true }
+rubash = { git = "https://github.com/aphrody-labs/ay", rev = "43a01a4c1936b7b8b523ed172cfe3ddb5e02dc75", optional = true }
 `;
 for (const n of tier1) toml += `uu_${n} = ${git("coreutils", core, `uu_${n}`)}\n`;
 toml += `\n[target.'cfg(unix)'.dependencies]\n`;

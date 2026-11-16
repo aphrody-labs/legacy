@@ -17,7 +17,7 @@ bun run --cwd frameworks/ai-os/engines/rag-core typecheck
 bun run --cwd frameworks/ai-os/engines/rag-core test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 The RAG core of Aphrody (source-aware chunkers, rank fusion, MMR, source weighting, vector kernels,

@@ -15,7 +15,7 @@ bun run --cwd system/http-ts test
 bun run --cwd system/http-ts lint
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 `@aphrody/http` owns the portable HTTP/JSON mechanism used by Aphrody compute and

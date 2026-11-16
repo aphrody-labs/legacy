@@ -6,7 +6,7 @@
 // Identifiants : ~/.aphrody/config/cloudflare.env de l'hôte (CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_API_TOKEN, APP_SECRET).
 //
 //   bun frameworks/web/site/publish.ts [--git <checkout du fork>] [--ref origin/main]
-//       [--distribution <checkout aphrody-labs/aphrody>] [--distribution-ref origin/main]
+//       [--distribution <checkout aphrody-labs/ay>] [--distribution-ref origin/main]
 //       [--perf <dossier> | --no-perf] [--offline] [--dry-run] [--if-changed]
 // Sans --distribution, c'est le site du runtime seul ; --distribution ajoute les pages de la distribution.
 // --if-changed ne fait rien si ${ORIGIN}/publish.json porte déjà le même commit, la même release, le même run perf et

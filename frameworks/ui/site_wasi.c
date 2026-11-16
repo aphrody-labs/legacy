@@ -47,7 +47,7 @@ int main(void)
 		"Rust + Pure Bun + WinUI 3 + Figma & Stitch", 42u,
 		"Zero-drift adapters for Taffy, egui, iced, libcosmic, Bevy, Leptos, Dioxus, Tauri, React, WinUI 3, DESIGN.md, and Stitch.", 121u,
 		"GitHub Repository", 17u,
-		"https://github.com/aphrody-labs/aphrody", 39u);
+		"https://github.com/aphrody-labs/ay", 39u);
 
 	printf("<!doctype html>\n"
 	       "<html lang=\"en\">\n"

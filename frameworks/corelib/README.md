@@ -15,7 +15,7 @@ cargo test -p aphrody-corelib
 
 Rust builds run on the build host or in CI, not on a workstation.
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 
 Unified sovereign core library consolidating GPU, RE (Reverse Engineering), Emulation, and WASM surfaces for **Shenron** (`../shenron`) and **RoseGriffon** (`../rosegriffon`).

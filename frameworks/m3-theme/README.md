@@ -22,7 +22,7 @@ bun run --cwd frameworks/m3-theme generate:fusion
 bun run --cwd frameworks/m3-theme test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 One generated Material 3 stylesheet (`tokens.css`, light and dark) that maps the shadcn/ui and Tailwind v4 colour aliases

@@ -15,5 +15,5 @@ bun run --cwd apps/r2-site test
 bun run --cwd apps/r2-site check
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->

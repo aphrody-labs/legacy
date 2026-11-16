@@ -14,7 +14,7 @@ bun run --cwd frameworks/chromium-ts status
 bun run --cwd frameworks/chromium-ts build:native
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 The Bun OS owner of the browser builtins of the aphrody-labs/bun fork, running on upstream Bun

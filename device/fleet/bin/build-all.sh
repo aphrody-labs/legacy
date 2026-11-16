@@ -28,7 +28,7 @@ if step images; then
   TAG=$sha REGISTRY=ghcr.io/aphrody-labs PLATFORMS=${PLATFORMS:-linux/amd64} PUSH_CACHE=true \
     aphrody-heavy docker buildx bake --builder aphrody -f build/docker/docker-bake.hcl --push --progress plain ${TARGETS:-default} \
     2>&1 | tail -40
-  docker buildx imagetools inspect "ghcr.io/aphrody-labs/aphrody:$sha" >/dev/null && log "ghcr.io/aphrody-labs/*:$sha pushed"
+  docker buildx imagetools inspect "ghcr.io/aphrody-labs/ay:$sha" >/dev/null && log "ghcr.io/aphrody-labs/*:$sha pushed"
 fi
 
 if step ay; then

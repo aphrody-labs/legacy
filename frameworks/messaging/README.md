@@ -15,7 +15,7 @@ bun run --cwd frameworks/messaging test
 bun run --cwd frameworks/messaging typecheck
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Bun-first TypeScript port of Aphrody's shared messaging channel contract and

@@ -20,5 +20,5 @@ bun run --cwd apps/aphrody-web nie:archive
 bun run --cwd apps/aphrody-web bench
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->

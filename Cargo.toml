@@ -294,7 +294,7 @@ edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 authors = ["aphrody-dev"]
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 homepage = "https://labs.aphrody.com"
 
 [workspace.dependencies]

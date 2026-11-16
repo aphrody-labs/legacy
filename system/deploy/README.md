@@ -15,7 +15,7 @@ bun run --cwd system/deploy fmt
 bun run --cwd system/deploy test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 First-party deployment platform of the monorepo (the role Vercel plays for its users, `docs/ALPHABET.md`), on Cloudflare Workers and R2. No `vercel.json`, no Vercel dependency.

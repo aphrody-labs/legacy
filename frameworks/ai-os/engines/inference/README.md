@@ -16,7 +16,7 @@ bun run --cwd frameworks/ai-os/engines/inference typecheck
 bun run --cwd frameworks/ai-os/engines/inference test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 `NativeInference` loads the `aphrody_ffi` library (cargo feature `inference` of `aphrody-ffi`) and uses

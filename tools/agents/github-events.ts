@@ -43,7 +43,7 @@ export type QueueTask = {
   created_at: string;
 };
 
-const SRC_REPO = "aphrody-labs/aphrody";
+const SRC_REPO = "aphrody-labs/ay";
 // Repositories whose code lives in the runner checkout (aphrody and its submodules under apps/): only these give
 // tasks that modify and commit; the others produce a report.
 const inCheckout = (repo = "") =>

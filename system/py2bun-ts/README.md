@@ -13,7 +13,7 @@
 bun run --cwd system/py2bun-ts test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Python 3 to Bun TypeScript transpiler, built for Ghidra (PyGhidra) scripts.

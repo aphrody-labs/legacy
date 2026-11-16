@@ -14,7 +14,7 @@ bun run --cwd frameworks/ai-os/protocols/ag-ui typecheck
 bun run --cwd frameworks/ai-os/protocols/ag-ui test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 One import for the AG-UI protocol in Aphrody surfaces: the `@ag-ui/core` event schema, the

@@ -1,6 +1,6 @@
 // Discover what we published: npm (maintainer + scopes), crates.io (users/teams), PyPI.
 // Prints JSON rows to stdout; never publishes. Usage: bun scripts/restore-registries.ts [--out file]
-const UA = "aphrody-restore/1.0 (+https://github.com/aphrody-labs/aphrody)";
+const UA = "aphrody-restore/1.0 (+https://github.com/aphrody-labs/ay)";
 const out = Bun.argv.includes("--out") ? Bun.argv[Bun.argv.indexOf("--out") + 1] : undefined;
 
 const getJson = async (url: string, headers: Record<string, string> = {}) => {

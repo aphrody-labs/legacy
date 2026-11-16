@@ -13,7 +13,7 @@
 bun run --cwd frameworks/re-ts/ghidra test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Ghidra for Bun: the pyghidra API surface, a Bun plugin (`?ghidra`, `ghidra:`), a script context for translated GhidraScripts, and a native `onBeforeParse` plugin (Rust, `system/ghidra-bun`). Bun only, no npm dependency.

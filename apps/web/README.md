@@ -5,7 +5,7 @@
 | :-- | :-- |
 | App | `apps/web` |
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->
 
 Static HTML, Material 3 Expressive tokens, Pure-C WASI/WebGPU UI studio (`/m3/`), and WebAssembly/WebGPU Wayland compositor surface (`/wayland/`) for `aphrody.com` / `aphrody.app`.

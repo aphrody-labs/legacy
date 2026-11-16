@@ -20,7 +20,7 @@ bun run --cwd system/bun-runtime-sdk test:python
 bun run --cwd system/bun-runtime-sdk prepack
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 ## Bun-native typed decisions

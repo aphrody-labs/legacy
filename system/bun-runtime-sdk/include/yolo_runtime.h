@@ -5,7 +5,7 @@
  * (`yolo_runtime.dll`, `libyolo_runtime.so`, `libyolo_runtime.dylib`).
  *
  * Origin: section "yolo_* runtime ABI" of crates/interop/ffi/include/aphrody.h in
- * aphrody-labs/aphrody, where the same symbols are re-exported by `aphrody_ffi`.
+ * aphrody-labs/ay, where the same symbols are re-exported by `aphrody_ffi`.
  * Contract and ownership rules: ../docs/RUNTIME-ABI.md. The browser and GPU
  * extensions are only exported by builds that enable those features.
  */

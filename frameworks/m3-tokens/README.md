@@ -20,7 +20,7 @@ bun run --cwd frameworks/m3-tokens demo
 bun run --cwd frameworks/m3-tokens generate:expressive
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Material 3 design tokens (`--md-sys-*`) as Bun-native TypeScript and CSS, with seed-based dynamic colour.

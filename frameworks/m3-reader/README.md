@@ -19,7 +19,7 @@ bun run --cwd frameworks/m3-reader typecheck:fast
 bun run --cwd frameworks/m3-reader prepack
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Material 3 React readers for paged and vertical manga and illustrated books.

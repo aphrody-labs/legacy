@@ -5,7 +5,7 @@
 | :-- | :-- |
 | App | `apps/nt` |
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->
 
 Model of the **real** Windows NT of this machine, live and rendered entirely by the GPU, on the Microsoft stack.

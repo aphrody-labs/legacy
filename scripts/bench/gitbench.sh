@@ -1,5 +1,5 @@
 #!/bin/bash
-# Git packfile/transport tuning on COPIES of /srv/bench/repo (full-history clone of aphrody-labs/aphrody), never /srv/src.
+# Git packfile/transport tuning on COPIES of /srv/bench/repo (full-history clone of aphrody-labs/ay), never /srv/src.
 B=/srv/bench; R=$B/repo; W=$B/gcopies; rm -rf $W; mkdir -p $W
 git --version; echo "load: $(cut -d' ' -f1-3 /proc/loadavg) cores: $(nproc)"
 git -C $R count-objects -v | grep -E 'in-pack|size-pack|packs'

@@ -3,7 +3,7 @@
 //
 //   bun frameworks/web/site/collect.ts --out site-data.json
 //       [--runtime <checkout aphrody-labs/bun>] [--runtime-ref HEAD]
-//       [--distribution <checkout aphrody-labs/aphrody>] [--distribution-ref HEAD]
+//       [--distribution <checkout aphrody-labs/ay>] [--distribution-ref HEAD]
 //       [--org aphrody-labs] [--fork-author contact@aphrody.com] [--downloads <url de latest.json> | none] [--offline]
 //
 // Sources :
@@ -551,7 +551,7 @@ export function collectRuntime(
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// Distribution : aphrody-labs/aphrody
+// Distribution : aphrody-labs/ay
 
 const DOCUMENTS: Record<string, string> = {
   identity: "docs/reference/ai/IDENTITY.md",

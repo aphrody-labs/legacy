@@ -15,7 +15,7 @@ bun run --cwd frameworks/discord-kit test
 bun run --cwd frameworks/discord-kit typecheck
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Shared Discord bot core kit, published as `@aphrody/discord-kit` and used by the Shenron and Rose Griffon bots.

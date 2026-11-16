@@ -18,7 +18,7 @@ bun run --cwd frameworks/m3-os-themes typecheck
 bun run --cwd frameworks/m3-os-themes lint
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Generates and installs Material 3 OS themes (Windows 11, GNOME Shell, COSMIC, Chromium browsers) from a seed colour, with the colour roles of `@aphrody/m3-tokens/dynamic-color`.

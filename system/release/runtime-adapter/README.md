@@ -15,5 +15,5 @@ bun run --cwd system/release/runtime-adapter check
 bun run --cwd system/release/runtime-adapter fmt
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->

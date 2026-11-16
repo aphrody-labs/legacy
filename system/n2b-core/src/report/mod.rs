@@ -426,7 +426,7 @@ pub fn render_sarif(fixes: &[FileFix], opts: &RunOptions) -> String {
                 "driver": {
                     "name": TOOL,
                     "version": VERSION,
-                    "informationUri": "https://github.com/aphrody-labs/aphrody",
+                    "informationUri": "https://github.com/aphrody-labs/ay",
                     "rules": rules,
                 }
             },

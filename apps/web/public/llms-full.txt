@@ -7,7 +7,7 @@ Open-source Pure C (`-std=gnu11`), Assembly, LLVM, and WebAssembly 3.0 / WASI / 
 - https://aphrody.com/m3/
 - https://aphrody.com/wayland/
 - https://aphrody.app/
-- https://github.com/aphrody-labs/aphrody
+- https://github.com/aphrody-labs/ay
 
 ## Contact
 - contact@aphrody.com

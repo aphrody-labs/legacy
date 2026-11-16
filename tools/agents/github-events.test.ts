@@ -16,10 +16,10 @@ describe("eventTask", () => {
       ev({
         kind: "ci_red",
         event: "workflow_run",
-        repo: "aphrody-labs/aphrody",
+        repo: "aphrody-labs/ay",
         sha: "0123456789ab" + "c".repeat(28),
         title: "ci : failure",
-        url: "https://github.com/aphrody-labs/aphrody/actions/runs/1",
+        url: "https://github.com/aphrody-labs/ay/actions/runs/1",
       }),
       "prd",
     )!;

@@ -24,7 +24,7 @@ const PROJECT = process.env.LEARN_PROJECT ?? "C--aphrody";
 const MEM = `${HOME}/.claude/projects/${PROJECT}/memory`;
 const REPOS = (
   process.env.LEARN_REPOS ??
-  "aphrody-labs/aphrody,aphrody-labs/shenron,aphrody-labs/rosegriffon,aphrody-labs/open,aphrody-labs/dioxus-monorepo,aphrody-labs/browser"
+  "aphrody-labs/ay,aphrody-labs/shenron,aphrody-labs/rosegriffon,aphrody-labs/open,aphrody-labs/dioxus-monorepo,aphrody-labs/browser"
 ).split(",");
 const TEST_TARGETS = (process.env.LEARN_TESTS ?? "frameworks/ai-os/src/brain").split(",");
 const TASK = "Aphrody\\LearnLoop";

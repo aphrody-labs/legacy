@@ -19,7 +19,7 @@ bun run --cwd frameworks/canvas vendor:check
 bun run --cwd frameworks/canvas prepack
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Aphrody's canvas package: a stable `@aphrody/*` namespace over the pinned upstream Skia

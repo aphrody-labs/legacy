@@ -7,7 +7,7 @@
 | :-- | :-- |
 | Bun package | `frameworks/bun-video` |
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Source package for Bun with HLS, DASH/MPD, HAR inspection, Bitmovin integration,

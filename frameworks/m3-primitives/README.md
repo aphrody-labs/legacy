@@ -19,7 +19,7 @@ bun run --cwd frameworks/m3-primitives test
 bun run --cwd frameworks/m3-primitives prepack
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Material Design 3 React primitives (buttons, fields, menus, dialogs, cards, toasts) on Base UI, rebuilt from SpaceUI's `@spacedrive/primitives`.

@@ -5,7 +5,7 @@
 | :-- | :-- |
 | App | `apps/game` |
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->
 
 Game app: the Bevy game of `frameworks/game` with the Steam and Epic storefront services, as one binary (`aphrody-game`) and one entry point (`cli.ts`).

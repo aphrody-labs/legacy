@@ -13,7 +13,7 @@
 bun run --cwd frameworks/web-crawl typecheck
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Typed Bun client and small CLI for the Aphrody Web crawler. It delegates crawl

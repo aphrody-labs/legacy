@@ -15,7 +15,7 @@ bun run --cwd system/bun-plugin-tailwind types:prepare
 bun run --cwd system/bun-plugin-tailwind check:types
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Tailwind CSS v4 for Bun, on `@tailwindcss/node` and the Oxide scanner, with no Node.js involved:

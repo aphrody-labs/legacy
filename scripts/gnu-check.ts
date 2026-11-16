@@ -47,7 +47,7 @@ version = "0.4.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 authors = ["aphrody-dev"]
-repository = "https://github.com/aphrody-labs/aphrody"
+repository = "https://github.com/aphrody-labs/ay"
 
 [workspace.dependencies]
 regex = "1.13.1"

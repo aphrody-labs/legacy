@@ -14,4 +14,4 @@ npm-pins-schedule:
 # CI dry-run of npm publication (trusted publishing OIDC, NPM_TOKEN fallback) for package folders
 [group('release')]
 npm-publish-ci pkgs="system/wck" dry="true":
-    gh workflow run npm-publish.yml -R aphrody-labs/aphrody -f packages="{{pkgs}}" -f dry_run={{dry}}
+    gh workflow run npm-publish.yml -R aphrody-labs/ay -f packages="{{pkgs}}" -f dry_run={{dry}}

@@ -18,7 +18,7 @@ bun run --cwd apps/auto lint
 bun run --cwd apps/auto fmt
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/app.md).
 <!-- catalog:end -->
 
 Multi-tenant automation platform for freelancers and small businesses: n8n-style visual workflows (triggers on events, cron or webhooks; HTTP, web, RSS, spreadsheets, Slack, Discord, Telegram, mail, AI models, data actions), with business management built in as an event source: e-invoicing, purchasing, mail, employees, office documents, AI agents. A single `/v1` API, several surfaces: web app, desktop app, mobile app, CLI, MCP server, Claude Code plugin and Chrome extension.

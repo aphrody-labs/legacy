@@ -15,7 +15,7 @@ bun run --cwd frameworks/web/bun-web lint
 bun run --cwd frameworks/web/bun-web test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Browser SDK of the Bun fork. It is a library, not an additional executable or published product: the browser

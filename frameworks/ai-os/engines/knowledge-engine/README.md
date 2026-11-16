@@ -20,7 +20,7 @@ bun run --cwd frameworks/ai-os/engines/knowledge-engine mcp-stdio
 bun run --cwd frameworks/ai-os/engines/knowledge-engine build
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../../../README.md), [Catalog](../../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Unified **Context7 v2 + 5-Channel Deep Research + Deterministic Fact-Checker + Monorepo Docs & Skills Generator + Continuous AGY Session Reviewer** built in 100% pure **Bun v1.4.4** (`bun:sqlite` WAL + `bun:ffi` `rust_stack_ffi.dll` Blake3).

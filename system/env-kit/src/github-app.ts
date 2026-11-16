@@ -717,7 +717,7 @@ async function retire(a: string[]): Promise<number> {
  */
 async function cratesTrust(a: string[]): Promise<number> {
   const crates = (opt(a, "--crates") ?? "").split(",").filter(Boolean);
-  const [owner, repo] = (opt(a, "--repo") ?? "aphrody-labs/aphrody").split("/");
+  const [owner, repo] = (opt(a, "--repo") ?? "aphrody-labs/ay").split("/");
   const workflow = opt(a, "--workflow") ?? "crates-publish.yml";
   const token = cred("CARGO_REGISTRY_TOKEN");
   if (!crates.length || !token)

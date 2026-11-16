@@ -7,7 +7,7 @@
 | :-- | :-- |
 | Bun package | `system/bun-sql` |
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Native PostgreSQL connections use `Bun.SQL`. Provider SDKs retain their official APIs and separate entrypoints.

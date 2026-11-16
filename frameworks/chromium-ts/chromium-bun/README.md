@@ -20,5 +20,5 @@ bun run --cwd frameworks/chromium-ts/chromium-bun test:e2e-auth
 bun run --cwd frameworks/chromium-ts/chromium-bun probe
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->

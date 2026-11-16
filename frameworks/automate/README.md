@@ -15,7 +15,7 @@ bun run --cwd frameworks/automate fmt
 bun run --cwd frameworks/automate test
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Workflow automation engine extracted from apps/auto, consumed by every front end (web, CLI, TUI, desktop, mobile).

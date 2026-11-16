@@ -9,4 +9,4 @@ Merged portal metadata for aphrody.com and aphrody.app. Static SEO and brand ass
 - [Sitemap index](https://aphrody.com/sitemap.xml)
 - [Full content](https://aphrody.com/llms-full.txt)
 - [Pure-C Material 3 Expressive WASI + WebGPU](https://aphrody.com/m3/)
-- [Source repository](https://github.com/aphrody-labs/aphrody)
+- [Source repository](https://github.com/aphrody-labs/ay)

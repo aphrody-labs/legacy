@@ -20,5 +20,5 @@ bun run --cwd system/bun-parity fmt
 bun run --cwd system/bun-parity fmt:check
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
 <!-- catalog:end -->

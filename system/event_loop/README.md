@@ -15,7 +15,7 @@ cargo test -p bun_event_loop
 
 Rust builds run on the build host or in CI, not on a workstation.
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
+Part of Aphrody: [aphrody-labs/ay](../../README.md), [Catalog](../../docs/reference/catalog/crate.md).
 <!-- catalog:end -->
 
 This document explains how Bun's event loop works, including task draining, microtasks, process.nextTick, setTimeout ordering, and I/O polling integration.
