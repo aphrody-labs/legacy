@@ -42,6 +42,7 @@ const git = (args: string[], priv = false, stdin?: string) => {
 const count = (tree: string) => git(["ls-tree", "-r", "--name-only", tree]).split("\n").filter(Boolean).length;
 
 try {
+  const branch = git(["symbolic-ref", "--short", "HEAD"]);
   const old = git(["rev-parse", "HEAD"]);
   const before = count(old);
   git(["read-tree", old], true);
@@ -59,7 +60,7 @@ try {
     throw new Error(`tree would lose ${before - after} files (${before} -> ${after}); pass --allow-shrink ${before - after} if intended`);
   if (tree === git(["rev-parse", `${old}^{tree}`])) throw new Error("nothing to commit for these paths");
   const commit = git(["commit-tree", tree, "-p", old, "-F", "-"], false, msg);
-  git(["update-ref", "refs/heads/main", commit, old]);
+  git(["update-ref", `refs/heads/${branch}`, commit, old]);
   // shared index: these paths only, to the new HEAD (other sessions' staged entries stay untouched)
   const changed = git(["diff", "--name-only", "--no-renames", old, commit]).split("\n").filter(Boolean);
   const present = new Set(git(["ls-tree", "-r", "--name-only", commit]).split("\n"));
@@ -69,7 +70,7 @@ try {
   if (gone.length) git(["rm", "-q", "--cached", "--ignore-unmatch", "--pathspec-from-file=-"], false, gone.join("\n"));
   console.log(`${commit.slice(0, 10)} ${changed.length} files (${before} -> ${after})`);
   if (push) {
-    const r = Bun.spawnSync(["git", "-C", root, "push", "-q", "aphrody", "HEAD:main"]);
+    const r = Bun.spawnSync(["git", "-C", root, "push", "-q", "aphrody", `HEAD:${branch}`]);
     if (r.exitCode !== 0) throw new Error(`push: ${r.stderr.toString().trim()}`);
     console.log("pushed");
   }
