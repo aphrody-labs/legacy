@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Client of the explorer wire protocol (`{"Query"|"Action": {method, library_id, payload}}`) served by
-// crates/aphrody-webos-wasm/src/rpc.rs through `os.rpc`. Same envelopes as @aphrody/drive-client.
+// crates/aphrody-webos-wasm/src/rpc.rs through `os.rpc`. Same envelopes as @aphrody/google/drive-client.
 import type { WebOs } from "@aphrody/webos-wasm";
 import { type Entry, extOf, base } from "./files-ops";
 

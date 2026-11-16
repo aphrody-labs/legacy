@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 import { describe, expect, it } from "bun:test";
-import { YouTubeEngine } from "../youtube/downloader/youtube-engine.ts";
-import { StargardtAssistiveShaderEngine } from "../assistive-os/gemini-vision-audio/stargardt-shader.ts";
-import { GoogleDrive20TbSyncEngine } from "../sync-engine/20tb-drive-sync/drive-sync.ts";
-import { GOOGLE_OFFICIAL_REPOS, GOOGLE_CLOUD_QUIZZES } from "../google-repos/indexer/repo-catalog.ts";
+import { YouTubeEngine } from "../dream/youtube/downloader/youtube-engine.ts";
+import { StargardtAssistiveShaderEngine } from "../dream/assistive-os/gemini-vision-audio/stargardt-shader.ts";
+import { GoogleDrive20TbSyncEngine } from "../dream/sync-engine/20tb-drive-sync/drive-sync.ts";
+import { GOOGLE_OFFICIAL_REPOS, GOOGLE_CLOUD_QUIZZES } from "../dream/google-repos/indexer/repo-catalog.ts";
 
 describe("Google Dream Ecosystem Test Suite", () => {
   it("initializes YouTubeEngine and handles metadata lookup gracefully", async () => {

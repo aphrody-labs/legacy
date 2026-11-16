@@ -5,20 +5,20 @@
 
 | Type | Path |
 | :-- | :-- |
-| Bun package | `packages/google-bun` |
+| Bun package | `packages/google/google-bun` |
 
 **Commands**
 
 ```sh
-bun run --cwd packages/google-bun google
-bun run --cwd packages/google-bun test
-bun run --cwd packages/google-bun test:go
-bun run --cwd packages/google-bun check
-bun run --cwd packages/google-bun fmt
-bun run --cwd packages/google-bun lint
+bun run --cwd packages/google/google-bun google
+bun run --cwd packages/google/google-bun test
+bun run --cwd packages/google/google-bun test:go
+bun run --cwd packages/google/google-bun check
+bun run --cwd packages/google/google-bun fmt
+bun run --cwd packages/google/google-bun lint
 ```
 
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
+Part of Aphrody: [aphrody-labs/aphrody](../../../README.md), [Catalog](../../../docs/reference/catalog/package.md).
 <!-- catalog:end -->
 
 Organized strictly according to Google internal (`google3` / `depot_tools` / Bazel `bzlmod`) engineering conventions:

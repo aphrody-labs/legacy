@@ -28,7 +28,7 @@ import {
   SchemeFidelity,
   SchemeContent,
   Variant,
-} from "../../upstream/material-color-utilities/typescript/index.ts";
+} from "@material/material-color-utilities";
 
 export {
   argbFromHex,

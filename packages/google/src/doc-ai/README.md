@@ -1,25 +1,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 
-# @aphrody/doc-ai
+# @aphrody/google/doc-ai
 
-<!-- catalog:begin unit -->
-> AI-first documentation and automatic translation system
-
-| Type | Path |
-| :-- | :-- |
-| Bun package | `packages/doc-ai` |
-
-**Commands**
-
-```sh
-bun run --cwd packages/doc-ai build
-bun run --cwd packages/doc-ai typecheck
-bun run --cwd packages/doc-ai typecheck:fast
-bun run --cwd packages/doc-ai test
-```
-
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
-<!-- catalog:end -->
 
 Documentation and translation module of the Aphrody repository (command line: `yolo doc-ai`). It translates
 Markdown, generates Lit component API guides, and syncs the root `docs/` folder.

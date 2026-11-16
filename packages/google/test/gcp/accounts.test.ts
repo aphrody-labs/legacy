@@ -17,7 +17,7 @@ import {
   ORG_PROVIDER_SURFACES,
   resolvePrincipal,
   switchGcloudPrincipal,
-} from "../src/accounts";
+} from "../../src/gcp/accounts";
 
 function withTempDir(fn: (dir: string) => void | Promise<void>) {
   const dir = mkdtempSync(join(tmpdir(), "env-kit-accounts-test-"));

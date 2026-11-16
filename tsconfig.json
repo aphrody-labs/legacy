@@ -7,7 +7,7 @@
     { "path": "packages/env-kit" },
     { "path": "packages/ffi-bridge" },
     { "path": "packages/gaming" },
-    { "path": "packages/gcp" },
+    { "path": "packages/google" },
     { "path": "packages/ghidra" },
     { "path": "packages/i18n" },
     { "path": "packages/native" },

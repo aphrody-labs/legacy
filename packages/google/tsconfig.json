@@ -3,17 +3,11 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ESNext", "DOM"],
-    "types": ["bun"],
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "forceConsistentCasingInFileNames": true
+    "types": ["bun"]
   },
-  "include": [
-    "**/*.ts"
-  ]
+  "include": ["src/gcp/**/*.ts", "test/gcp/**/*.ts"]
 }

@@ -1,25 +1,5 @@
-# @spacedrive/client
+# @aphrody/google/drive-client
 
-<!-- catalog:begin unit -->
-> Type-safe TypeScript client for Spacedrive daemon
-
-| Type | Path |
-| :-- | :-- |
-| Bun package | `packages/drive-client` |
-
-**Commands**
-
-```sh
-bun run --cwd packages/drive-client build
-bun run --cwd packages/drive-client lint
-bun run --cwd packages/drive-client typecheck
-bun run --cwd packages/drive-client test
-bun run --cwd packages/drive-client test:integration
-bun run --cwd packages/drive-client generate-types
-```
-
-Part of Aphrody: [aphrody-labs/aphrody](../../README.md), [Catalog](../../docs/reference/catalog/package.md).
-<!-- catalog:end -->
 
 Type-safe TypeScript client for the Spacedrive daemon, automatically generated from Rust core types using Specta.
 

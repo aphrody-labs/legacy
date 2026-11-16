@@ -74,7 +74,7 @@ function runAccountsCommand(envPath: string, args: readonly string[]): number {
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const envPath = process.env.ENV_KIT_FILE ?? DEFAULT_MONOREPO_ENV_PATH;
   if (argv[0] === "accounts") return runAccountsCommand(envPath, argv.slice(1));
-  if (argv[0] === "billing") return runBillingCommand(resolve(import.meta.dir, "../../.."), argv.slice(1));
+  if (argv[0] === "billing") return runBillingCommand(resolve(import.meta.dir, "../../../.."), argv.slice(1));
   console.error("Usage: gcp accounts <status [--json]|init-gcloud|switch <ai|owner|org|sa>|iam-bindings [--json]> | gcp billing <status|plan|apply|lift|relink>");
   return 1;
 }

@@ -490,7 +490,7 @@ Usage:
   env-kit google-auth <gmail|calendar|drive>  One-click OAuth: approve in the browser, token to vault
   env-kit gmail <status|list|send>      Gmail automation (send needs --yes)
   env-kit doctor                       Audit masked status of all credentials, ACLs, and editors
-  env-kit accounts status [--json]     (-> packages/gcp) Inspect 3-principal gcloud configs, rclone, and org provider surfaces
+  env-kit accounts status [--json]     (-> packages/google/src/gcp) Inspect 3-principal gcloud configs, rclone, and org provider surfaces
   env-kit accounts init-gcloud         Idempotently initialize ai-agent, owner, org-contact, sa-automation
   env-kit accounts switch <principal>  Activate gcloud configuration for <ai|owner|org|sa>
   env-kit billing <status|plan|apply|lift|relink>  GCP billing via billing-agent (keyless): budgets, spend, idle resources
@@ -607,8 +607,8 @@ ${formatIdentities(ids)}`);
   }
 
   if (cmd === "accounts" || cmd === "billing") {
-    // Google Cloud lives in packages/gcp (split from env-kit); same commands.
-    const gcp = Bun.resolveSync("@aphrody/gcp/cli", import.meta.dir);
+    // Google Cloud lives in packages/google/src/gcp (split from env-kit); same commands.
+    const gcp = Bun.resolveSync("@aphrody/google/gcp/cli", import.meta.dir);
     return spawnSync(process.execPath, [gcp, ...argv], { stdio: "inherit", env: process.env }).status ?? 1;
   }
 
