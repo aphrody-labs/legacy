@@ -1,4 +1,6 @@
 - [ay lock/manifests rewrite the whole lock](ay-lock-manifests-regenerate-everything.md) — bump a pin by hand-editing 2 files; never run `ay manifests` on the shared tree
 - [Restore everything run](restore-everything-2026-11-15.md) — inventory + restore scripts, gates (hygiene on untracked, gitleaks), purged layer, traps
 - [ay = Bun fork + modules](ay-is-bun-fork-plus-modules.md) — bun_modules crate in the fork, build traps (units.ts, lock, systemd-run), fr2 disk, scp
+- [open as one Rust workspace](open-rust-monorepo.md) — apps/open layout after 2026-11-16, pins, fr1 build/proof traps, kept Bun bindings
+- [browser monorepo](browser-monorepo-2026-11-16.md) — aphrody-labs/browser: Bun+Servo+Obscura+agent-browser, tools/ workflow, ssh/gh/disk/push traps
 - [Google skills adoption](google-skills-adoption.md) — scripts/skills-adopt.ts, chrome-devtools hub entry, token budget, open gaps
